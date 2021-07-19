@@ -2,6 +2,6 @@ numpy
 scipy
 cython
 pypardiso
-composites >= 0.4.0
+composites
 pytest
 pytest-cov
