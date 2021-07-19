@@ -68,7 +68,7 @@ def read(fname):
 install_requires = [
         "numpy",
         "scipy",
-        "composites >= 0.4.0",
+        "composites",
         ]
 
 #Trove classifiers
