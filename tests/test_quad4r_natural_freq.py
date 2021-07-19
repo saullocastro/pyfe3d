@@ -2,7 +2,6 @@ import sys
 sys.path.append('..')
 
 import numpy as np
-from scipy.linalg import eigh
 from scipy.sparse.linalg import eigsh, eigs
 from scipy.sparse import coo_matrix
 from composites import isotropic_plate
@@ -123,7 +122,6 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
         print('eig solver begin')
         # solves Ax = lambda M x
         # we have Ax - lambda M x = 0, with lambda = omegan**2
-        #eigvals, eigvecsu = eigh(a=Kuu.toarray(), b=Muu.toarray(), subset_by_index=(0, 3))
         eigvals, eigvecsu = eigsh(A=Kuu, M=Muu, sigma=-1., which='LM',
                 k=num_eigenvalues, tol=1e-3)
         print('eig solver end')
