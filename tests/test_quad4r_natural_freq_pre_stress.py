@@ -3,8 +3,7 @@ sys.path.append('..')
 
 import numpy as np
 from numpy import isclose
-from scipy.sparse.linalg import eigsh, eigs
-from pypardiso import spsolve
+from scipy.sparse.linalg import eigsh, eigs, spsolve
 from scipy.sparse import coo_matrix
 from composites import isotropic_plate
 
