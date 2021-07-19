@@ -7,7 +7,7 @@ Github Actions status:
 
 Coverage status:
 
-[![Codecov Status](https://codecov.io/gh/saullocastro/pyfe3d/branch/master/graph/badge.svg?token=3LL2MRKMX3)](https://codecov.io/gh/saullocastro/pyfe3d)
+[![Codecov Status](https://codecov.io/gh/saullocastro/pyfe3d/branch/master/graph/badge.svg?token=KVZCRIACL7)](https://codecov.io/gh/saullocastro/pyfe3d)
 
 Important features of this library
 ----------------------------------
