@@ -1,0 +1,23 @@
+version.py
+# Build related
+quad4r.c 
+quad4r.html 
+quad4r.cpp
+build
+dist
+.coverage
+.pytest_cache
+*.egg-info
+# Temp files
+.ipynb_checkpoints
+tmp*
+temp*
+tmp*.*
+temp*.*
+.cache
+
+# Python compiled files
+*.pyc
+*.pyo
+*.pyd
+
