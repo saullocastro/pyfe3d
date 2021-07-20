@@ -21,3 +21,5 @@ temp*.*
 *.pyo
 *.pyd
 
+shellprop.cpp 
+derive_*.txt 
