@@ -7,7 +7,6 @@ from setuptools import setup, find_packages
 from distutils.extension import Extension
 
 import numpy as np
-import composites
 from Cython.Build import cythonize
 
 
@@ -68,7 +67,6 @@ def read(fname):
 install_requires = [
         "numpy",
         "scipy",
-        "composites >= 0.4.0",
         ]
 
 #Trove classifiers
@@ -99,10 +97,17 @@ else:
     link_args = ['-fopenmp', '-static-libgcc', '-static-libstdc++']
 include_dirs = [
             np.get_include(),
-            composites.get_include(),
             ]
 
 extensions = [
+    Extension('pyfe3d.shellprop',
+        sources=[
+            './pyfe3d/shellprop.pyx',
+            ],
+        include_dirs=include_dirs,
+        extra_compile_args=compile_args,
+        extra_link_args=link_args,
+        language='c++'),
     Extension('pyfe3d.quad4r',
         sources=[
             './pyfe3d/quad4r.pyx',
