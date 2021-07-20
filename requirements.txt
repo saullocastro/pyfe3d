@@ -1,6 +1,5 @@
 numpy
 scipy
 cython
-composites >= 0.4.0
 pytest
 pytest-cov

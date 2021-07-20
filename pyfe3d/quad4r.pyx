@@ -10,7 +10,7 @@ Quad4R - Implementation of the S4R general 3D plate element
 """
 import numpy as np
 cimport numpy as np
-from composites.core cimport Laminate
+from .shellprop cimport ShellProp
 from libc.math cimport fabs
 
 ctypedef np.int64_t cINT
@@ -192,7 +192,6 @@ cdef class Quad4R:
         """Update element area
 
         """
-        cdef cINT c1, c2, c3, c4, k
         cdef double x1, x2, x3, x4, y1, y2, y3, y4
         with nogil:
             #NOTE ignoring z in local coordinates
@@ -215,7 +214,7 @@ cdef class Quad4R:
             np.ndarray[cINT, ndim=1] KC0r,
             np.ndarray[cINT, ndim=1] KC0c,
             np.ndarray[cDOUBLE, ndim=1] KC0v,
-            Laminate prop,
+            ShellProp prop,
             int update_KC0v_only=0
             ):
         """Update sparse vectors for linear constitutive stiffness matrix KC0
@@ -228,9 +227,9 @@ cdef class Quad4R:
             Array to store column positions of sparse values
         KC0v : np.array
             Array to store sparse values
-        prop : :class:`Laminate` object
-            From the `composites` module, shell property object from where the
-            stiffness and mass attributes are read from.
+        prop : :class:`ShellProp` object
+            Shell property object from where the stiffness and mass attributes
+            are read from.
         update_KC0v_only : int
             The default `0` means that only `KC0v` is updated. Any other value will
             lead to `KC0r` and `KC0c` also being updated.
@@ -3244,7 +3243,7 @@ cdef class Quad4R:
             np.ndarray[cINT, ndim=1] KGr,
             np.ndarray[cINT, ndim=1] KGc,
             np.ndarray[cDOUBLE, ndim=1] KGv,
-            Laminate prop,
+            ShellProp prop,
             int update_KGv_only=0
             ):
         """Update sparse vectors for geometric stiffness matrix KG
@@ -3257,9 +3256,9 @@ cdef class Quad4R:
            Array to store column positions of sparse values
         KGv : np.array
             Array to store sparse values
-        prop : :class:`Laminate` object
-            From the `composites` module, shell property object from where the
-            stiffness and mass attributes are read from.
+        prop : :class:`ShellProp` object
+            Shell property object from where the stiffness and mass attributes
+            are read from.
         update_KGv_only : int
             The default `0` means that only `KGv` is updated. Any other value will
             lead to `KGr` and `KGc` also being updated.
@@ -4086,7 +4085,7 @@ cdef class Quad4R:
             np.ndarray[cINT, ndim=1] Mr,
             np.ndarray[cINT, ndim=1] Mc,
             np.ndarray[cDOUBLE, ndim=1] Mv,
-            Laminate prop,
+            ShellProp prop,
             int mtype=0,
             ):
         """Update sparse vectors for mass matrix M

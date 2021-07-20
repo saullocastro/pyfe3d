@@ -4,8 +4,8 @@ sys.path.append('..')
 import numpy as np
 from scipy.sparse.linalg import cg
 from scipy.sparse import coo_matrix
-from composites import isotropic_plate
 
+from pyfe3d.shellprop import isotropic_plate
 from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
 
 
