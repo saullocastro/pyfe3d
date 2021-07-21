@@ -7,7 +7,7 @@
 Shell property module (:mod:`pyfe3d.shellprop`)
 ==============================================================
 
-Highly based on `composites` module.
+Highly based on the `composites <https://saullocastro.github.io/composites/>`_. module.
 
 .. currentmodule:: pyfe3d.shellprop
 
@@ -17,59 +17,100 @@ import numpy as np
 INT = np.int64
 DOUBLE = np.float64
 
-cdef class LaminationParameters(object):
-    """Lamination parameters"""
-    #xiA lamination parameters for extensional matrix A
-    #xiB lamination parameters for extension-bending matrix B
-    #xiD lamination parameters for bending matrix D
-    #xiD lamination parameters for transverse shear matrix E
+cdef class LaminationParameters:
+    r"""Lamination parameters
+
+    Attributes
+    ----------
+    xiA1, xiA2, xiA3, xiA4 : float
+        Lamination parameters `\xi_{Ai}` (in-plane)
+    xiB1, xiB2, xiB3, xiB4 : float
+        Lamination parameters `\xi_{Bi}` (in-plane coupling with bending)
+    xiD1, xiD2, xiD3, xiD4 : float
+        Lamination parameters `\xi_{Di}` (bending)
+    xiE1, xiE2, xiE3, xiE4 : float
+        Lamination parameters `\xi_{Ei}` (transverse shear)
+
+    """
     def __init__(LaminationParameters self):
         self.xiA1=0; self.xiA2=0; self.xiA3=0; self.xiA4=0
         self.xiB1=0; self.xiB2=0; self.xiB3=0; self.xiB4=0
         self.xiD1=0; self.xiD2=0; self.xiD3=0; self.xiD4=0
         self.xiE1=0; self.xiE2=0; self.xiE3=0; self.xiE4=0
 
-cdef class MatLamina(object):
+cdef class MatLamina:
     r"""
     Orthotropic material lamina
 
-    ==========  ==========================================================
-    attributes  description
-    ==========  ==========================================================
-    e1          Young Modulus in direction 1
-    e2          Young Modulus in direction 2
-    g12         in-plane shear modulus
-    g13         transverse shear modulus for plane 1-Z
-    g23         transverse shear modulus for plane 2-Z
-    nu12        Poisson's ratio 12
-    nu13        Poisson's ratio 13
-    nu23        Poisson's ratio 23
-    nu21        Poisson's ratio 21: use formula nu12/e1 = nu21/e2
-    nu31        Poisson's ratio 31: use formula nu31/e3 = nu13/e1
-    nu32        Poisson's ratio 32: use formula nu23/e2 = nu32/e3
-    rho         especific mass (mass / volume)
-    a1          thermal expansion coeffiecient in direction 1
-    a2          thermal expansion coeffiecient in direction 2
-    a3          thermal expansion coeffiecient in direction 3
-    tref        reference temperature
-    st1,st2     allowable tensile stresses for directions 1 and 2
-    sc1,sc2     allowable compressive stresses for directions 1 and 2
-    ss12        allowable in-plane stress for shear
-    q11         lamina constitutive constant 11
-    q12         lamina constitutive constant 12
-    q13         lamina constitutive constant 13
-    q21         lamina constitutive constant 21
-    q22         lamina constitutive constant 22
-    q23         lamina constitutive constant 23
-    q31         lamina constitutive constant 31
-    q32         lamina constitutive constant 32
-    q33         lamina constitutive constant 33
-    q44         lamina constitutive constant 44
-    q55         lamina constitutive constant 55
-    q66         lamina constitutive constant 66
-    ci          lamina stiffness constants
-    ui          lamina material invariants
-    ==========  ==========================================================
+    Attributes
+    ----------
+
+    e1 : float
+        Young Modulus in direction 1
+    e2 : float
+        Young Modulus in direction 2
+    g12 : float
+        in-plane shear modulus
+    g13 : float
+        transverse shear modulus for plane 1-Z
+    g23 : float
+        transverse shear modulus for plane 2-Z
+    nu12 :
+        Poisson's ratio 12
+    nu13 :
+        Poisson's ratio 13
+    nu23 :
+        Poisson's ratio 23
+    nu21 :
+        Poisson's ratio 21: use formula nu12/e1 = nu21/e2
+    nu31 :
+        Poisson's ratio 31: use formula nu31/e3 = nu13/e1
+    nu32 :
+        Poisson's ratio 32: use formula nu23/e2 = nu32/e3
+    rho :
+        especific mass (mass / volume)
+    a1 :
+        thermal expansion coeffiecient in direction 1
+    a2 :
+        thermal expansion coeffiecient in direction 2
+    a3 :
+        thermal expansion coeffiecient in direction 3
+    tref :
+        reference temperature
+    st1,st2 :
+        allowable tensile stresses for directions 1 and 2
+    sc1,sc2 :
+        allowable compressive stresses for directions 1 and 2
+    ss12 :
+        allowable in-plane stress for shear
+    q11 :
+        lamina constitutive constant 11
+    q12 :
+        lamina constitutive constant 12
+    q13 :
+        lamina constitutive constant 13
+    q21 :
+        lamina constitutive constant 21
+    q22 :
+        lamina constitutive constant 22
+    q23 :
+        lamina constitutive constant 23
+    q31 :
+        lamina constitutive constant 31
+    q32 :
+        lamina constitutive constant 32
+    q33 :
+        lamina constitutive constant 33
+    q44 :
+        lamina constitutive constant 44
+    q55 :
+        lamina constitutive constant 55
+    q66 :
+        lamina constitutive constant 66
+    ci :
+        lamina stiffness constants
+    ui :
+        lamina material invariants
 
     Notes
     -----
@@ -84,11 +125,13 @@ cdef class MatLamina(object):
 
     cpdef void rebuild(MatLamina self):
         """Update constitutive and invariant terms
+
+        Reference:
+
+            Reddy, J. N., Mechanics of laminated composite plates and shells.
+            Theory and analysis. Second Edition. CRC Press, 2004.
+
         """
-        #
-        # from references:
-        #   Reddy, J. N., Mechanics of laminated composite plates and shells.
-        #   Theory and analysis. Second Edition. CRC Press, 2004.
         cdef double e1, e2, e3, nu12, nu21, nu13, nu31, nu23, nu32, delta, den
         e1 = self.e1
         e2 = self.e2
@@ -176,21 +219,19 @@ cdef class MatLamina(object):
              [ 0,   0, self.u2/2.,   0, -self.u3]], dtype=DOUBLE) # q24
 
 
-cdef class Lamina(object):
+cdef class Lamina:
     """
-    =========  ===========================================================
-    attribute  description
-    =========  ===========================================================
-    plyid      id of the composite lamina
-    matlamina  a pointer to a :class:`.MatLamina` object
-    h          ply thickness
-    thetadeg   ply angle in degrees
-    =========  ===========================================================
+    Attributes
+    ----------
 
-    References:
-    -----------
-    .. [1] Reddy, J. N., Mechanics of Laminated Composite Plates and
-       Shells - Theory and Analysys. Second Edition. CRC PRESS, 2004.
+    plyid : int
+        Identificaiton of the composite lamina
+    matlamina : :class:`.MatLamina` object
+        A :class:`.MatLamina` object
+    h : float
+        Ply thickness
+    thetadeg : float
+        Ply angle in degrees
 
     """
     def __init__(Lamina self):
@@ -198,6 +239,12 @@ cdef class Lamina(object):
 
     cpdef void rebuild(Lamina self):
         """Update constitutive matrices
+
+        Reference:
+
+            Reddy, J. N., Mechanics of Laminated Composite Plates and
+            Shells - Theory and Analysys. Second Edition. CRC PRESS, 2004.
+
         """
         cdef double thetarad, e1, e2, nu12, nu21, g12, g13, g23
         cdef double q11, q12, q22, q44, q55, q16, q26, q66
@@ -299,31 +346,34 @@ cdef class Lamina(object):
              [sincos, -sincos, 0, 0, 0, cos2-sin2]], dtype=DOUBLE)
 
 
-cdef class ShellProp(object):
+cdef class ShellProp:
     r"""
-    =========  ===========================================================
-    attribute  description
-    =========  ===========================================================
-    plies      list of plies
-    h          total thickness of the laminate
-    offset     offset at the normal direction
-    e1         equivalent laminate modulus in 1 direction
-    e2         equivalent laminate modulus in 2 direction
-    g12        equivalent laminate shear modulus in 12 direction
-    nu12       equivalent laminate Poisson ratio in 12 direction
-    nu21       equivalent laminate Poisson ratio in 21 direction
-    scf_k13    shear correction factor 13
-    scf_k23    shear correction factor 23
-    intrho     integral `\int_{-h/2+offset}^{+h/2+offset} \rho(z) dz`,
-               used in equivalent single layer finite element mass
-               matrices
-    intrhoz    integral `\int_{-h/2+offset}^{+h/2+offset} \rho(z)z dz`,
-               used in equivalent single layer finite element mass
-               matrices
-    intrhoz2   integral `\int_{-h/2+offset}^{+h/2+offset} \rho(z)z^2 dz`,
-               used in equivalent single layer finite element mass
-               matrices
-    =========  ===========================================================
+    Attributes
+    ----------
+
+    plies : list
+        List of plies
+    h : float
+        Total thickness of the laminate
+    offset : float
+        Offset at the normal direction
+    e1, e2 : float
+        Equivalent laminate moduli in directions 1 and 2
+    g12 : float
+        Equivalent laminate shear modulus in the 12 direction
+    nu12, n21 : float
+        Equivalent laminate Poisson ratios in the 12 and 21 directions
+    scf_k13, scf_k23 : float
+        Shear correction factor in the 13 and 23 directions
+    intrho : float
+        Integral `\int_{-h/2+offset}^{+h/2+offset} \rho(z) dz`, used in
+        equivalent single layer finite element mass matrices
+    intrhoz : float
+        Integral `\int_{-h/2+offset}^{+h/2+offset} \rho(z)z dz`, used in
+        equivalent single layer finite element mass matrices
+    intrhoz2 : float
+        Integral `\int_{-h/2+offset}^{+h/2+offset} \rho(z)z^2 dz`, used in
+        equivalent single layer finite element mass matrices
 
     """
     def __init__(ShellProp self):
