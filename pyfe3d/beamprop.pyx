@@ -54,4 +54,19 @@ cdef class BeamProp:
     """
     def __cinit__(BeamProp self):
         self.scf = 5/6.
+        self.A = 0
+        self.E = 0
+        self.G = 0
+        self.scf = 0
+        self.Iyy = 0
+        self.Izz = 0
+        self.J = 0
+        self.Ay = 0
+        self.Az = 0
+        self.intrho = 0
+        self.intrhoy = 0
+        self.intrhoz = 0
+        self.intrhoy2 = 0
+        self.intrhoz2 = 0
+        self.intrhoyz = 0
 
