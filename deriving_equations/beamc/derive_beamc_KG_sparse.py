@@ -20,20 +20,15 @@ DOF = 6
 num_nodes = 2
 
 var('x, xi', real=True)
-sympy.var('hy, hz, dy, dz, L, E, Iyy, k, G, A, Ay, Az, Izz, J', real=True, positive=True)
-
-#NOTE shear correction factor should be applied to E44, E45 and E55
-#     in the finite element code
-
-ONE = sympy.Integer(1)
-
+sympy.var('hy, hz, dy, dz, L, E, Iyy, scf, G, A, Ay, Az, Izz, J', real=True, positive=True)
 
 # definitions of Eqs. 20 and 21 of Luo, Y., 2008
 xi = x/L
-alphay = 12*E*Iyy/(k*G*A*L**2)
-alphaz = 12*E*Izz/(k*G*A*L**2)
-betay = ONE/(ONE - alphay)
-betaz = ONE/(ONE - alphaz)
+#TODO replace G by G12 and G13, but how to do for the D matrix?
+alphay = 12*E*Iyy/(scf*G*A*L**2)
+alphaz = 12*E*Izz/(scf*G*A*L**2)
+betay = 1/(1 - alphay)
+betaz = 1/(1 - alphaz)
 
 N1 = 1 - xi
 N2 = xi
@@ -91,9 +86,9 @@ D = Matrix([
     [ E*A, E*Ay, E*Az, 0, 0, 0],
     [E*Ay, E*Iyy,  E*J, 0, 0, 0],
     [E*Az,  E*J, E*Izz, 0, 0, 0],
-    [   0,    0,    0,   k*G*A,      0, -k*G*Az],
-    [   0,    0,    0,       0,  k*G*A, -k*G*Ay],
-    [   0,    0,    0, -k*G*Az, k*G*Ay, -k*G*(Iyy + Izz)]])
+    [   0,    0,    0,   scf*G*A,      0, -scf*G*Az],
+    [   0,    0,    0,       0,  scf*G*A, -scf*G*Ay],
+    [   0,    0,    0, -scf*G*Az, scf*G*Ay, -scf*G*(Iyy + Izz)]])
 #From Eq. 8 in Luo, Y. 2008
 #epsilon = u,x
 #kappay = -theta,x = -rz,x
@@ -126,8 +121,8 @@ Nmembrane = G*BL*ue
 
 N = simplify(Nmembrane[0])
 print('N =', N)
-
-#var('N')
+#NOTE for constant properties, N will be constant along x
+N = var('N', real=True)
 
 # G is dv/dx + dw/dx = rz - ry
 G = Nrz - Nry

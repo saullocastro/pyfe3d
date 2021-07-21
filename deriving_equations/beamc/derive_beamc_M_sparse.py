@@ -19,17 +19,18 @@ r"""
 DOF = 6
 num_nodes = 2
 
-var('x, xi', real=True)
+var('x, xi, eta', real=True)
 var('L, E, Iyy, scf, G, A, Ay, Az, Izz, J', real=True, positive=True)
 
 # definitions of Eqs. 20 and 21 of Luo, Y., 2008
-xi = x/L
+#xi = x/L
 #TODO replace G by G12 and G13, but how to do for the D matrix?
 alphay = 12*E*Iyy/(scf*G*A*L**2)
 alphaz = 12*E*Izz/(scf*G*A*L**2)
 betay = 1/(1 - alphay)
 betaz = 1/(1 - alphaz)
 
+xi = (eta + 1)/2
 N1 = 1 - xi
 N2 = xi
 Hv1 = betay*(2*xi**3 - 3*xi**2 + alphay*xi + 1 - alphay)
@@ -66,49 +67,55 @@ Nry = Matrix([[0, 0, Gw1, 0, Gry1, 0,
 Nrz = Matrix([[0, Gv1, 0, 0, 0, Grz1,
                0, Gv2, 0, 0, 0, Grz2]])
 
-# u v w  rx  ry  rz  (rows are node 1, node2, node3, node4)
+var('intrho, intrhoy, intrhoz, intrhoy2, intrhoz2, intrhoyz')
 
-#From Eqs. 8 and 9 in Luo, Y. 2008
-#exx = u,x + (-rz,x)*y + (ry,x)*z
-#exy = (v.diff(x) - rz) - (rx)*z
-#exz = (w.diff(x) + ry) + (rx)*y
-#BL = Matrix([
-    #Nu.diff(x) + (-Nrz.diff(x))*y + Nry.diff(x)*z,
-    #(Nv.diff(x) - Nrz) - Nrx*z,
-    #(Nw.diff(x) + Nry) + Nrx*y,
-    #])
-#dy = dz = 0
-#BL = integrate(BL, (y, -hy/2+dy, +hy/2+dy))
-#BL = simplify(integrate(BL, (z, -hz/2+dz, +hz/2+dz)))
+#NOTE while performing any of the integrations below,
+#     offsets should be considered
+#   intrho     integral ``\int_{y_e} \int_{z_e} \rho(y, z) dy dz``, where ``\rho``
+#              is the density
+#   intrhoy    integral ``\int_y \int_z y \rho(y, z) dy dz``
+#   intrhoz    integral ``\int_y \int_z z \rho(y, z) dy dz``
+#   intrhoy2   integral ``\int_y \int_z y^2 \rho(y, z) dy dz``
+#   intrhoz2   integral ``\int_y \int_z z^2 \rho(y, z) dy dz``
+#   intrhoyz   integral ``\int_y \int_z y z \rho(y, z) dy dz``
+#
+# Fully integrated mass matrix using kinematics from Luo 2008
+Me = (
+    # contributions from u displacement, u(xe, ye, ze) = uc - rz*ye + ry*ze
+    intrho*Nu.T*Nu
+    - intrhoy*(Nu.T*Nrz + Nrz.T*Nu) + intrhoz*(Nu.T*Nry + Nry.T*Nu)
+    - intrhoyz*(Nrz.T*Nry + Nry.T*Nrz) + intrhoy2*Nrz.T*Nrz + intrhoz2*Nry.T*Nry
+    # contributions from v displacement, v(xe, ye, ze) = vc - rx*ze
+    + intrho*Nv.T*Nv
+    - intrhoz*(Nv.T*Nrx + Nrx.T*Nv) + intrhoz2*Nrx.T*Nrx
+    # contributions from w displacement, w(xe, ye, ze) = wc + rx*ye
+    + intrho*Nw.T*Nw
+    + intrhoy*(Nw.T*Nrx + Nrx.T*Nw) + intrhoy2*Nrx.T*Nrx
+    )
+print('finished calculating Me', flush=True)
+Me = simplify(Me)
+print('finished simplifying Me', flush=True)
+Me_cons = L/2*integrate(Me, (eta, -1, 1))
+print('finished integrating Me', flush=True)
+Me_cons = simplify(Me_cons)
+print('finished simplifying Me_cos', flush=True)
 
-#From Eqs. 12 in Luo, Y. 2008
-D = Matrix([
-    [ E*A, E*Ay, E*Az, 0, 0, 0],
-    [E*Ay, E*Iyy,  E*J, 0, 0, 0],
-    [E*Az,  E*J, E*Izz, 0, 0, 0],
-    [   0,    0,    0,   scf*G*A,      0, -scf*G*Az],
-    [   0,    0,    0,       0,  scf*G*A, -scf*G*Ay],
-    [   0,    0,    0, -scf*G*Az, scf*G*Ay, -scf*G*(Iyy + Izz)]])
-#From Eq. 8 in Luo, Y. 2008
-#epsilon = u,x
-#kappay = -theta,x = -rz,x
-#kappaz = psi,x = ry,x
-#gammay = v,x - theta = v,x - rz
-#gammaz = w,x + psi = w,x + ry
-#kappax = phi,x
-# putting in a BL matrix
-BL = Matrix([
-    Nu.diff(x),
-    -Nrz.diff(x),
-    Nry.diff(x),
-    Nv.diff(x) - Nrz,
-    Nw.diff(x) + Nry,
-    Nrx.diff(x)])
+# Lumped mass matrix using Lobatto integration, where integration points are placed at the nodes
+# Brockman 1987 as reference, and A. Ralston, A First Course in Nurnericul Analysis, McGraw-Hill. Ncw York, 196
+# Forcing intrhoz=intrhoy=intrhoxy=0 to end up with a diagonal matrix
+#NOTE two-point Gauss-Lobatto quadrature
+wi = 1
+# points[0] = -1., here it would be x=0
+# points[1] = +1., here it would be x=L
+Me_lump = L/2*(
+        + wi*Me.expand().subs({eta: -1, intrhoy: 0, intrhoz: 0, intrhoyz: 0})
+        + wi*Me.expand().subs({eta: +1, intrhoy: 0, intrhoz: 0, intrhoyz: 0})
+            )
+print('finished calculating Me_lump', flush=True)
+Me_lump = simplify(Me_lump)
+print('finished simplifying Me_lump', flush=True)
 
-KC0e = BL.T*D*BL
-KC0e = simplify(integrate(KC0e, (x, 0, L)))
-
-# KC0 represents the global linear stiffness matrix
+# M represents the global matrix, Me the element matrix
 # see mapy https://github.com/saullocastro/mapy/blob/master/mapy/model/coords.py#L284
 var('cosa, cosb, cosg, sina, sinb, sing')
 R2local = Matrix([
@@ -148,45 +155,77 @@ R = sympy.zeros(num_nodes*DOF, num_nodes*DOF)
 for i in range(2*num_nodes):
     R[i*DOF//2:(i+1)*DOF//2, i*DOF//2:(i+1)*DOF//2] += R2global
 
-#NOTE line below to visually check the Rmatrix
-#np.savetxt('Rmatrix.txt', R, fmt='% 3s')
-
-KC0 = R.T*KC0e*R
+M_cons = R.T*Me_cons*R
+M_lump = R.T*Me_lump*R
 
 def name_ind(i):
     if i >= 0*DOF and i < 1*DOF:
         return 'c1'
     elif i >= 1*DOF and i < 2*DOF:
         return 'c2'
+    elif i >= 2*DOF and i < 3*DOF:
+        return 'c3'
+    elif i >= 3*DOF and i < 4*DOF:
+        return 'c4'
     else:
         raise
 
 print()
 print()
 print('_______________________________________')
-print()
+print('')
 print('printing code for sparse implementation')
 print('_______________________________________')
 print()
+print('consistent mass matrix')
+print('M_cons')
 print()
-KC0_SPARSE_SIZE = 0
-for ind, val in np.ndenumerate(KC0):
-    if sympy.expand(val) == 0:
+print()
+M_SPARSE_SIZE = 0
+for ind, val in np.ndenumerate(M_cons):
+    if val == 0:
         continue
-    KC0_SPARSE_SIZE += 1
+    M_SPARSE_SIZE += 1
     i, j = ind
     si = name_ind(i)
     sj = name_ind(j)
     print('            k += 1')
-    print('            KC0r[k] = %d+%s' % (i%DOF, si))
-    print('            KC0c[k] = %d+%s' % (j%DOF, sj))
-print('KC0_SPARSE_SIZE', KC0_SPARSE_SIZE)
+    print('            Mr[k] = %d+%s' % (i%DOF, si))
+    print('            Mc[k] = %d+%s' % (j%DOF, sj))
+print('M_SPARSE_SIZE', M_SPARSE_SIZE)
 print()
 print()
-for ind, val in np.ndenumerate(KC0):
-    if sympy.expand(val) == 0:
+print()
+for ind, val in np.ndenumerate(M_cons):
+    if val == 0:
         continue
     print('            k += 1')
-    print('            KC0v[k] +=', val)
+    print('            Mv[k] +=', M_cons[ind])
 print()
 print()
+print()
+print('lumped mass matrix using Lobatto method, integration points at 2 nodes')
+print('M_lump')
+print()
+print()
+M_SPARSE_SIZE = 0
+for ind, val in np.ndenumerate(M_lump):
+    if val == 0:
+        continue
+    M_SPARSE_SIZE += 1
+    i, j = ind
+    si = name_ind(i)
+    sj = name_ind(j)
+    print('            k += 1')
+    print('            Mr[k] = %d+%s' % (i%DOF, si))
+    print('            Mc[k] = %d+%s' % (j%DOF, sj))
+print('M_SPARSE_SIZE', M_SPARSE_SIZE)
+for ind, val in np.ndenumerate(M_lump):
+    if val == 0:
+        continue
+    print('            k += 1')
+    print('            Mv[k] +=', M_lump[ind])
+print()
+print()
+print()
+
