@@ -11,13 +11,13 @@ cdef extern from "math.h":
 cdef inline double deg2rad(double thetadeg) nogil:
     return thetadeg*4*atan(1.)/180.
 
-cdef class LaminationParameters(object):
+cdef class LaminationParameters:
     cdef public double xiA1, xiA2, xiA3, xiA4
     cdef public double xiB1, xiB2, xiB3, xiB4
     cdef public double xiD1, xiD2, xiD3, xiD4
     cdef public double xiE1, xiE2, xiE3, xiE4
 
-cdef class MatLamina(object):
+cdef class MatLamina:
     cdef public double e1, e2, e3, g12, g13, g23, nu12, nu21, nu13, nu31, nu23, nu32
     cdef public double rho, a1, a2, a3, tref
     cdef public double st1, st2, sc1, sc2, ss12
@@ -29,7 +29,7 @@ cdef class MatLamina(object):
     cpdef cDOUBLE[:, :] get_invariant_matrix(MatLamina)
 
 
-cdef class Lamina(object):
+cdef class Lamina:
     cdef public cINT plyid
     cdef public double h, thetadeg, cost, cos2t, cos4t, sint, sin2t, sin4t
     cdef public double q11L, q12L, q22L, q16L, q26L, q66L, q44L, q45L, q55L
@@ -40,7 +40,7 @@ cdef class Lamina(object):
     cpdef cDOUBLE[:, :] get_transf_matrix_stress_to_lamina(Lamina)
     cpdef cDOUBLE[:, :] get_transf_matrix_stress_to_laminate(Lamina)
 
-cdef class ShellProp(object):
+cdef class ShellProp:
     cdef public double A11, A12, A16, A22, A26, A66
     cdef public double B11, B12, B16, B22, B26, B66
     cdef public double D11, D12, D16, D22, D26, D66

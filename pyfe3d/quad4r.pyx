@@ -4,8 +4,10 @@
 #cython: nonecheck=False
 #cython: infer_types=False
 """
-Quad4R - Implementation of the S4R general 3D plate element
------------------------------------------------------------
+Quadrilateral element with reduced integration (:mod:`pyfe3d.quad4r`)
+=====================================================================
+
+.. currentmodule:: pyfe3d.quad4r
 
 """
 import numpy as np
@@ -5621,7 +5623,7 @@ cdef class Quad4R:
                     xi = points[i]
                     for j in range(2):
                         eta = points[j]
-                        detJ = (-2*x1 + 2*x2 + (eta + 1)*(x1 - x2 + x3 - x4))*(-2*y1 + 2*y4 + (xi + 1)*(y1 - y2) + (xi + 1)*(y3 - y4))/16 - (-2*y1 + 2*y2 + (eta + 1)*(y1 - y2 + y3 - y4))*(-2*x1 + 2*x4 + (x1 - x2)*(xi + 1) + (x3 - x4)*(xi + 1))/16.
+                        detJ = (-2*x1 + 2*x2 + (eta + 1)*(x1 - x2 + x3 - x4))*(-2*y1 + 2*y4 + (xi + 1)*(y1 - y2) + (xi + 1)*(y3 - y4))/16. - (-2*y1 + 2*y2 + (eta + 1)*(y1 - y2 + y3 - y4))*(-2*x1 + 2*x4 + (x1 - x2)*(xi + 1) + (x3 - x4)*(xi + 1))/16.
                         N1 = eta*xi/4. - eta/4. - xi/4. + 1/4.
                         N2 = -eta*xi/4. - eta/4. + xi/4. + 1/4.
                         N3 = eta*xi/4. + eta/4. + xi/4. + 1/4.
@@ -9885,7 +9887,7 @@ cdef class Quad4R:
                     xi = points[i]
                     for j in range(2):
                         eta = points[j]
-                        detJ = (-2*x1 + 2*x2 + (eta + 1)*(x1 - x2 + x3 - x4))*(-2*y1 + 2*y4 + (xi + 1)*(y1 - y2) + (xi + 1)*(y3 - y4))/16 - (-2*y1 + 2*y2 + (eta + 1)*(y1 - y2 + y3 - y4))*(-2*x1 + 2*x4 + (x1 - x2)*(xi + 1) + (x3 - x4)*(xi + 1))/16.
+                        detJ = (-2*x1 + 2*x2 + (eta + 1)*(x1 - x2 + x3 - x4))*(-2*y1 + 2*y4 + (xi + 1)*(y1 - y2) + (xi + 1)*(y3 - y4))/16. - (-2*y1 + 2*y2 + (eta + 1)*(y1 - y2 + y3 - y4))*(-2*x1 + 2*x4 + (x1 - x2)*(xi + 1) + (x3 - x4)*(xi + 1))/16.
                         N1 = eta*xi/4. - eta/4. - xi/4. + 1/4.
                         N2 = -eta*xi/4. - eta/4. + xi/4. + 1/4.
                         N3 = eta*xi/4. + eta/4. + xi/4. + 1/4.
@@ -11941,7 +11943,7 @@ cdef class Quad4R:
            #        xi = points[i]
            #        for j in range(2):
            #            eta = points[j]
-           #            detJ = (-2*x1 + 2*x2 + (eta + 1)*(x1 - x2 + x3 - x4))*(-2*y1 + 2*y4 + (xi + 1)*(y1 - y2) + (xi + 1)*(y3 - y4))/16 - (-2*y1 + 2*y2 + (eta + 1)*(y1 - y2 + y3 - y4))*(-2*x1 + 2*x4 + (x1 - x2)*(xi + 1) + (x3 - x4)*(xi + 1))/16.
+           #            detJ = (-2*x1 + 2*x2 + (eta + 1)*(x1 - x2 + x3 - x4))*(-2*y1 + 2*y4 + (xi + 1)*(y1 - y2) + (xi + 1)*(y3 - y4))/16. - (-2*y1 + 2*y2 + (eta + 1)*(y1 - y2 + y3 - y4))*(-2*x1 + 2*x4 + (x1 - x2)*(xi + 1) + (x3 - x4)*(xi + 1))/16.
            #            N1 = eta*xi/4. - eta/4. - xi/4. + 1/4.
            #            N2 = -eta*xi/4. - eta/4. + xi/4. + 1/4.
            #            N3 = eta*xi/4. + eta/4. + xi/4. + 1/4.
@@ -14409,7 +14411,7 @@ cdef class Quad4R:
            #        xi = points[i]
            #        for j in range(2):
            #            eta = points[j]
-           #            detJ = (-2*x1 + 2*x2 + (eta + 1)*(x1 - x2 + x3 - x4))*(-2*y1 + 2*y4 + (xi + 1)*(y1 - y2) + (xi + 1)*(y3 - y4))/16 - (-2*y1 + 2*y2 + (eta + 1)*(y1 - y2 + y3 - y4))*(-2*x1 + 2*x4 + (x1 - x2)*(xi + 1) + (x3 - x4)*(xi + 1))/16.
+           #            detJ = (-2*x1 + 2*x2 + (eta + 1)*(x1 - x2 + x3 - x4))*(-2*y1 + 2*y4 + (xi + 1)*(y1 - y2) + (xi + 1)*(y3 - y4))/16. - (-2*y1 + 2*y2 + (eta + 1)*(y1 - y2 + y3 - y4))*(-2*x1 + 2*x4 + (x1 - x2)*(xi + 1) + (x3 - x4)*(xi + 1))/16.
            #            N1 = eta*xi/4. - eta/4. - xi/4. + 1/4.
            #            N2 = -eta*xi/4. - eta/4. + xi/4. + 1/4.
            #            N3 = eta*xi/4. + eta/4. + xi/4. + 1/4.
