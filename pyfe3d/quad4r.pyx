@@ -10,10 +10,12 @@ Quadrilateral element with reduced integration (:mod:`pyfe3d.quad4r`)
 .. currentmodule:: pyfe3d.quad4r
 
 """
+from libc.math cimport fabs
+
 import numpy as np
 cimport numpy as np
+
 from .shellprop cimport ShellProp
-from libc.math cimport fabs
 
 ctypedef np.int64_t cINT
 INT = np.int64
