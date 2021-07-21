@@ -10,7 +10,8 @@ BeamC - Consistent Timoshenko 3D beam element
 """
 import numpy as np
 cimport numpy as np
-from libc.math cimport fabs
+
+from .beamprop cimport BeamProp
 
 ctypedef np.int64_t cINT
 INT = np.int64
@@ -1011,7 +1012,6 @@ cdef class BeamC:
             E = prop.E
             G = prop.G
             scf = prop.scf
-            Az = prop.Az
             Iyy = prop.Iyy
             Izz = prop.Izz
 
@@ -1786,13 +1786,9 @@ cdef class BeamC:
         """
         cdef cINT c1, c2, k
         cdef double intrho, intrhoy, intrhoz, intrhoy2, intrhoz2, intrhoyz
-        cdef double A
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double L, A, E, G, scf, Iyy, Izz
         cdef double sina, sinb, sing
-        cdef double eta
-        cdef double points[2]
-        cdef double weights[2]
 
         with nogil:
             L = self.length
