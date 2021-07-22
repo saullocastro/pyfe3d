@@ -67,6 +67,7 @@ def read(fname):
 install_requires = [
         "numpy",
         "scipy",
+        "alg3dpy",
         ]
 
 #Trove classifiers
