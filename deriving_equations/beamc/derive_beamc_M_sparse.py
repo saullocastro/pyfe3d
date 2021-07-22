@@ -24,9 +24,15 @@ var('L, E, Iyy, scf, G, A, Ay, Az, Izz, J', real=True, positive=True)
 
 # definitions of Eqs. 20 and 21 of Luo, Y., 2008
 #xi = x/L
+#NOTE in Luo 2008 Iy represents the area moment of inertia in the plane of y
+#     or rotating about the z axis. Here we say that Izz = Iy
+#NOTE in Luo 2008 Iz represents the area moment of inertia in the plane of z
+#     or rotating about the y axis. Here we say that Iyy = Iz
+Iy = Izz
+Iz = Iyy
 #TODO replace G by G12 and G13, but how to do for the D matrix?
-alphay = 12*E*Iyy/(scf*G*A*L**2)
-alphaz = 12*E*Izz/(scf*G*A*L**2)
+alphay = 12*E*Iy/(scf*G*A*L**2)
+alphaz = 12*E*Iz/(scf*G*A*L**2)
 betay = 1/(1 - alphay)
 betaz = 1/(1 - alphaz)
 
