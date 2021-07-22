@@ -1,5 +1,6 @@
 import sys
 sys.path.append('..')
+sys.path.append(r'c:\repositories\alg3dpy')
 
 import numpy as np
 from scipy.sparse.linalg import eigsh
@@ -7,6 +8,7 @@ from scipy.sparse import coo_matrix
 
 from pyfe3d.beamprop import BeamProp
 from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
+from pyfe3d.coord import CoordR
 
 def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
     for mtype in mtypes:
@@ -14,7 +16,7 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
         n = 50*refinement
         # comparing with:
         # https://www.sciencedirect.com/science/article/pii/S0168874X06000916
-        #NOTE 2D problem, using only Izz, ignoring any out of XY plane displacement
+        #NOTE 2D problem, using only Izz, ignoring any out of XZ plane displacement
         #                 ignoring torsion (rx) as well
         # see section 5.5
         E = 206.8e9 # Pa
@@ -28,10 +30,10 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
         r = 2.438
         thetas = np.linspace(thetabeam, 0, n)
         x = r*np.cos(thetas)
-        y = r*np.sin(thetas)
+        z = r*np.sin(thetas)
 
         # getting nodes
-        ncoords = np.vstack((x, y, np.zeros_like(x))).T
+        ncoords = np.vstack((x, np.zeros_like(x), z)).T
         nids = 1 + np.arange(ncoords.shape[0])
         nid_pos = dict(zip(nids, np.arange(len(nids))))
 
@@ -70,6 +72,8 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
             pos2 = nid_pos[n2]
             x1, y1, z1 = ncoords[pos1]
             x2, y2, z2 = ncoords[pos2]
+            csys = CoordR(1, o=[x1, y1, z1], z=[0, -1, 0], vecxz=[x2-x1, 0, z2-z1])
+            cosa, cosb, cosg = csys.cosines_to_global()
             beam = BeamC(p)
             beam.init_k_KC0 = init_k_KC0
             beam.init_k_M = init_k_M
@@ -77,9 +81,9 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
             beam.n2 = n2
             beam.c1 = DOF*pos1
             beam.c2 = DOF*pos2
-            beam.cosa = 1
-            beam.cosb = 1
-            beam.cosg = np.cos(np.arctan2(y2 - y1, x2 - x1))
+            beam.cosa = cosa
+            beam.cosb = cosb
+            beam.cosg = cosg
             beam.update_xe(ncoords.flatten())
             beam.update_KC0(KC0r, KC0c, KC0v, prop)
             beam.update_M(Mr, Mc, Mv, prop, mtype=mtype)
@@ -99,11 +103,11 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
         check = np.isclose(x, x.min()) | np.isclose(x, x.max()) # locating nodes at both ends
         # simply supporting at both ends
         bk[0::DOF] = check # u
-        bk[1::DOF] = check # v
-        # removing out of XY plane displacements
-        bk[2::DOF] = True # w
+        bk[2::DOF] = check # w
+        # removing out of XZ plane displacements
+        bk[1::DOF] = True # v
         bk[3::DOF] = True # rx
-        bk[4::DOF] = True # ry
+        bk[5::DOF] = True # rz
         bu = ~bk # same as np.logical_not, defining unknown DOFs
 
         # sub-matrices corresponding to unknown DOFs
