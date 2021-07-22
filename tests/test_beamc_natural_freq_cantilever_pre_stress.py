@@ -113,7 +113,7 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         # defining external force vector
         # applying load along u at x=L
         fext = np.zeros(N)
-        load = -170
+        load = -28900
         check = np.isclose(x, L)
         fext[0::DOF][check] = load
 
@@ -135,6 +135,13 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         KGuu = KG[bu, :][:, bu]
         print('sparse KG created')
 
+        # linear buckling check
+        eigvals, eigvecsu = eigsh(A=Kuu, k=1, which='SM', M=KGuu,
+                tol=1e-9, sigma=1., mode='buckling')
+        load_mult = -eigvals
+        print('linear buckling Pcr=', load_mult*load)
+
+        # natural frequency
         num_eigenvalues = 3
         eigvals, eigvecsu = eigsh(A=Kuu + KGuu, M=Muu, sigma=-1., which='LM',
                 k=num_eigenvalues, tol=1e-3)
@@ -142,7 +149,7 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
 
         alpha123 = np.array([1.875, 4.694, 7.885])
         omega123 = alpha123**2*np.sqrt(E*Izz/(rho*A*L**4))
-        omega123_expected = [9.30871773, 165.77285337, 490.97045362]
+        omega123_expected = [1.62676526, 164.26253389, 489.88418717]
         print('Theoretical omega123', omega123)
         print('Expected omega123 with pre-stress', omega123_expected)
         print('Numerical omega123', omegan)

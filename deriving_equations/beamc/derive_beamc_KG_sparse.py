@@ -88,10 +88,11 @@ Nrz = Matrix([[0, Gv1, 0, 0, 0, Grz1,
 #BL = simplify(integrate(BL, (z, -hz/2+dz, +hz/2+dz)))
 
 #From Eqs. 12 in Luo, Y. 2008
+#NOTE assuming Ay=Az=0 to have Nmembrane constant
 D = Matrix([
-    [ E*A, E*Ay, E*Az, 0, 0, 0],
-    [E*Ay, E*Iy,  E*J, 0, 0, 0],
-    [E*Az,  E*J, E*Iz, 0, 0, 0],
+    [ E*A, E*Ay*0, E*Az*0, 0, 0, 0],
+    [E*Ay*0, E*Iy,  E*J, 0, 0, 0],
+    [E*Az*0,  E*J, E*Iz, 0, 0, 0],
     [   0,    0,    0,   scf*G*A,      0, -scf*G*Az],
     [   0,    0,    0,       0,  scf*G*A, -scf*G*Ay],
     [   0,    0,    0, -scf*G*Az, scf*G*Ay, -scf*G*(Iy + Iz)]])
@@ -123,17 +124,17 @@ BL = Matrix([
 
 # displacements in global coordinates corresponding to one finite element
 ue = Matrix([symbols(r'ue[%d]' % i) for i in range(0, BL.shape[1])])
-Nmembrane = G*BL*ue
+Nmembrane = D*BL*ue
 
 N = simplify(Nmembrane[0])
-print('N =', N)
+print('N =', N, flush=True)
 #NOTE for constant properties, N will be constant along x
 N = var('N', real=True)
 
 # G is dv/dx + dw/dx = rz - ry
-G = Nrz - Nry
+Gmatrix = Nrz - Nry
 
-KGe = simplify(integrate((G.T*G)*N, (x, 0, L)))
+KGe = simplify(integrate((Gmatrix.T*Gmatrix)*N, (x, 0, L)))
 
 # KG represents the global linear stiffness matrix
 # see mapy https://github.com/saullocastro/mapy/blob/master/mapy/model/coords.py#L284

@@ -93,6 +93,7 @@ cdef class BeamC:
         cdef double sw[3]
         cdef double sina, sinb, sing
 
+        #FIXME double check all this part
         with nogil:
             # positions in the global stiffness matrix
             c[0] = self.c1
@@ -1469,7 +1470,7 @@ cdef class BeamC:
                 KGr[k] = 5+c2
                 KGc[k] = 5+c2
 
-            N = G*(-ue[0] + ue[6])/L
+            N = A*E*(-ue[0] + ue[6])/L
 
             k = self.init_k_KG
             KGv[k] += r12*(6*A**2*G**2*L**3*N*r12*scf**2/(5*(A**2*G**2*L**4*scf**2 - 24*A*E*G*Izz*L**2*scf + 144*E**2*Izz**2)) - 6*A**2*G**2*L**3*N*r13*scf**2/(5*A**2*G**2*L**4*scf**2 - 60*A*E*G*Iyy*L**2*scf - 60*A*E*G*Izz*L**2*scf + 720*E**2*Iyy*Izz)) + r13*(-6*A**2*G**2*L**3*N*r12*scf**2/(5*A**2*G**2*L**4*scf**2 - 60*A*E*G*Iyy*L**2*scf - 60*A*E*G*Izz*L**2*scf + 720*E**2*Iyy*Izz) + 6*A**2*G**2*L**3*N*r13*scf**2/(5*(A**2*G**2*L**4*scf**2 - 24*A*E*G*Iyy*L**2*scf + 144*E**2*Iyy**2)))
