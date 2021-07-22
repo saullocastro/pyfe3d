@@ -504,12 +504,12 @@ R = sympy.zeros(num_nodes*DOF, num_nodes*DOF)
 for i in range(2*num_nodes):
     R[i*DOF//2:(i+1)*DOF//2, i*DOF//2:(i+1)*DOF//2] += R2global
 
-M = R.T*Me*R
-M_brock = R.T*Me_brock*R
-M_cons = R.T*Me_cons*R
-M_proj = R.T*Me_proj*R
-M_red = R.T*Me_red*R
-M_lump = R.T*Me_lump*R
+M = R*Me*R.T
+M_brock = R*Me_brock*R.T
+M_cons = R*Me_cons*R.T
+M_proj = R*Me_proj*R.T
+M_red = R*Me_red*R.T
+M_lump = R*Me_lump*R.T
 
 def name_ind(i):
     if i >= 0*DOF and i < 1*DOF:

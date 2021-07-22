@@ -383,7 +383,7 @@ for i in range(2*num_nodes):
 #NOTE line below to visually check the Rmatrix
 #np.savetxt('Rmatrix.txt', R, fmt='% 3s')
 
-KC0 = R.T*KC0e*R
+KC0 = R*KC0e*R.T
 
 def name_ind(i):
     if i >= 0*DOF and i < 1*DOF:

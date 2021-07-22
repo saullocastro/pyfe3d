@@ -150,7 +150,7 @@ R = sympy.zeros(num_nodes*DOF, num_nodes*DOF)
 for i in range(2*num_nodes):
     R[i*DOF//2:(i+1)*DOF//2, i*DOF//2:(i+1)*DOF//2] += R2global
 
-KG = R.T*KGe*R
+KG = R*KGe*R.T
 
 def name_ind(i):
     if i >= 0*DOF and i < 1*DOF:
