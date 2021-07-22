@@ -10,11 +10,6 @@ Beam property module (:mod:`pyfe3d.beamprop`)
 .. currentmodule:: pyfe3d.beamprop
 
 """
-import numpy as np
-
-INT = np.int64
-DOUBLE = np.float64
-
 cdef class BeamProp:
     r"""
     Attributes
