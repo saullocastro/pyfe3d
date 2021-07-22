@@ -1,3 +1,8 @@
+cimport numpy as np
+
+ctypedef np.int64_t cINT
+ctypedef np.double_t cDOUBLE
+
 cdef inline double dummy() nogil:
     return 0.
 
