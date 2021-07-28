@@ -19,7 +19,7 @@ Elements implemented
 --------------------
 - 'Quad4R' - 4-node plate with linear interpolation, equivalent to Abaqus' S4R finite element
 - 'BeamLR' - 2-node Timoshenko beam element with linear interpolation and reduced integration
-- 'BeamC' - 2-node Timoshenko beam element with consisten shape functions and analytical integration
+- 'BeamC' - 2-node Timoshenko beam element with consistent shape functions and analytical integration
 
 License
 -------
