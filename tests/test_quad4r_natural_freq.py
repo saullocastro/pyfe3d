@@ -5,7 +5,7 @@ import numpy as np
 from scipy.sparse.linalg import eigsh, eigs
 from scipy.sparse import coo_matrix
 
-from pyfe3d.shellprop import isotropic_plate
+from pyfe3d.shellprop_utils import isotropic_plate
 from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
 
 

@@ -29,7 +29,6 @@ cdef class MatLamina:
     cpdef cDOUBLE[:, :] get_constitutive_matrix(MatLamina)
     cpdef cDOUBLE[:, :] get_invariant_matrix(MatLamina)
 
-
 cdef class Lamina:
     cdef public cINT plyid
     cdef public double h, thetadeg, cost, cos2t, cos4t, sint, sin2t, sin4t
