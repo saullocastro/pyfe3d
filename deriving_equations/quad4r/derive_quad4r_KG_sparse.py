@@ -93,34 +93,33 @@ print()
 ue = Matrix([symbols(r'ue[%d]' % i) for i in range(0, Bb.shape[1])])
 Nmembrane = A*Bm*ue + B*Bb*ue
 
-print('Nxx =', simplify(Nmembrane[0]))
-print('Nyy =', simplify(Nmembrane[1]))
-print('Nxy =', simplify(Nmembrane[2]))
+print('Nxx =', simplify(Nmembrane[0, 0]))
+print('Nyy =', simplify(Nmembrane[1, 0]))
+print('Nxy =', simplify(Nmembrane[2, 0]))
 
 var('Nxx, Nyy, Nxy')
 # G is [[Nxx, Nxy], [Nxy, Nyy]].T (see Eq. B.1, for Donnell's equations, in https://www.sciencedirect.com/science/article/pii/S0263822314003602)
 Nmatrix = Matrix([[Nxx, Nxy],
                   [Nxy, Nyy]])
 
-#phix = -dw/dx
-Nphix = Matrix([[0, 0, 0, 0, N1, 0,
-                 0, 0, 0, 0, N2, 0,
-                 0, 0, 0, 0, N3, 0,
-                 0, 0, 0, 0, N4, 0]])
-#phiy = -dw/dy
-Nphiy = Matrix([[0, 0, 0, -N1, 0, 0,
-                 0, 0, 0, -N2, 0, 0,
-                 0, 0, 0, -N3, 0, 0,
-                 0, 0, 0, -N4, 0, 0]])
+#dw/dx
+Nwx = Matrix([[0, 0, N1x, 0, 0, 0,
+               0, 0, N2x, 0, 0, 0,
+               0, 0, N3x, 0, 0, 0,
+               0, 0, N4x, 0, 0, 0]])
+#dw/dy
+Nwy = Matrix([[0, 0, N1y, 0, 0, 0,
+               0, 0, N2y, 0, 0, 0,
+               0, 0, N3y, 0, 0, 0,
+               0, 0, N4y, 0, 0, 0]])
 
 # G is [[dw/dx, dw/dy]].T (see Eq. A.10, for Donnell's equations, in https://www.sciencedirect.com/science/article/pii/S0263822314003602)
 G = Matrix([
-    -Nphix,
-    -Nphiy
+    Nwx,
+    Nwy
     ])
 
-KGe = sympy.zeros(num_nodes*DOF, num_nodes*DOF)
-KGe[:, :] = wij*detJ*G.T*Nmatrix*G
+KGe = wij*detJ*G.T*Nmatrix*G
 
 # KG represents the global linear stiffness matrix
 # see mapy https://github.com/saullocastro/mapy/blob/master/mapy/model/coords.py#L284
