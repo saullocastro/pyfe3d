@@ -6,29 +6,26 @@ from scipy.sparse.linalg import eigsh
 from scipy.sparse import coo_matrix
 
 from pyfe3d.beamprop import BeamProp
-from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
+from pyfe3d import BeamLR, BeamLRData, BeamLRProbe, DOF, INT, DOUBLE
 
-def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
+def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
     for mtype in mtypes:
         print('mtype', mtype)
         n = 50*refinement
-        # comparing with:
-        # https://www.sciencedirect.com/science/article/pii/S0168874X06000916
-        #NOTE 2D problem, using only Izz, ignoring any out of XY plane displacement
-        #                 ignoring torsion (rx) as well
-        # see section 5.5
-        E = 206.8e9 # Pa
-        #nu = 0.3
-        G = 77.9e9 # Pa
-        rho = 7855 # kg/m3
-        A = 4.071e-3
-        Izz = 6.456e-6
+        L = 3 # total size of the beam along x
 
-        thetabeam = np.deg2rad(97)
-        r = 2.438
-        thetas = np.linspace(thetabeam, 0, n)
-        x = r*np.cos(thetas)
-        y = r*np.sin(thetas)
+        # Material Lastrobe Lescalloy
+        E = 203.e9 # Pa
+        rho = 7.83e3 # kg/m3
+
+        x = np.linspace(0, L, n)
+        # path
+        y = np.ones_like(x)
+        # tapered properties
+        b = 0.05 # m
+        h = 0.05 # m
+        A = h*b
+        Izz = b*h**3/12
 
         # getting nodes
         ncoords = np.vstack((x, y, np.zeros_like(x))).T
@@ -41,8 +38,8 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
         num_elements = len(n1s)
         print('num_elements', num_elements)
 
-        p = BeamCProbe()
-        data = BeamCData()
+        p = BeamLRProbe()
+        data = BeamLRData()
 
         KC0r = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
         KC0c = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
@@ -56,7 +53,7 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
         prop = BeamProp()
         prop.A = A
         prop.E = E
-        prop.G = G
+        prop.G = E/2/(1+0.3)
         prop.scf = 5/6.
         prop.Izz = Izz
         prop.intrho = rho*A
@@ -72,7 +69,7 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
             pos2 = nid_pos[n2]
             x1, y1, z1 = ncoords[pos1]
             x2, y2, z2 = ncoords[pos2]
-            beam = BeamC(p)
+            beam = BeamLR(p)
             beam.init_k_KC0 = init_k_KC0
             beam.init_k_M = init_k_M
             beam.n1 = n1
@@ -98,12 +95,13 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
 
         # applying boundary conditions
         bk = np.zeros(N, dtype=bool) #array to store known DOFs
-        check = np.isclose(x, x.min()) | np.isclose(x, x.max()) # locating nodes at both ends
-        # simply supporting at both ends
+        check = np.isclose(x, 0.)
+        # clamping
         bk[0::DOF] = check # u
         bk[1::DOF] = check # v
+        bk[2::DOF] = check # w
+        bk[5::DOF] = check # rz
         # removing out of XY plane displacements
-        bk[2::DOF] = True # w
         bk[3::DOF] = True # rx
         bk[4::DOF] = True # ry
         bu = ~bk # same as np.logical_not, defining unknown DOFs
@@ -116,13 +114,13 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
         eigvals, eigvecsu = eigsh(A=Kuu, M=Muu, sigma=-1., which='LM',
                 k=num_eigenvalues, tol=1e-3)
         omegan = eigvals**0.5
-        omega123_from_paper = [396.98, 931.22, 1797.31]
-        omega123_expected_here = [400.51471445, 948.87085772, 1758.88752016]
-        print('Reference omega123_from_paper', omega123_from_paper)
-        print('Reference omega123_expected_here', omega123_expected_here)
+
+        alpha123 = np.array([1.875, 4.694, 7.885])
+        omega123 = alpha123**2*np.sqrt(E*Izz/(rho*A*L**4))
+        print('Theoretical omega123', omega123)
         print('Numerical omega123', omegan)
         print()
-        assert np.allclose(omega123_expected_here, omegan, rtol=1e-3)
+        assert np.allclose(omega123, omegan, rtol=0.015)
 
 if __name__ == '__main__':
-    test_nat_freq_curved_beam(refinement=1)
+    test_nat_freq_cantilever(refinement=1)
