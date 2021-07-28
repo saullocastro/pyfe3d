@@ -67,6 +67,7 @@ def read(fname):
 install_requires = [
         "numpy",
         "scipy",
+        "alg3dpy",
         ]
 
 #Trove classifiers
@@ -100,9 +101,25 @@ include_dirs = [
             ]
 
 extensions = [
+    Extension('pyfe3d.beamprop',
+        sources=[
+            './pyfe3d/beamprop.pyx',
+            ],
+        include_dirs=include_dirs,
+        extra_compile_args=compile_args,
+        extra_link_args=link_args,
+        language='c++'),
     Extension('pyfe3d.shellprop',
         sources=[
             './pyfe3d/shellprop.pyx',
+            ],
+        include_dirs=include_dirs,
+        extra_compile_args=compile_args,
+        extra_link_args=link_args,
+        language='c++'),
+    Extension('pyfe3d.beamc',
+        sources=[
+            './pyfe3d/beamc.pyx',
             ],
         include_dirs=include_dirs,
         extra_compile_args=compile_args,
@@ -126,6 +143,7 @@ ext_modules = cythonize(extensions,
 
 data_files = [('', [
         'README.md',
+        'AUTHORS',
         'LICENSE',
         ])]
 

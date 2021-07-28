@@ -1,3 +1,5 @@
 [run]
 plugins = Cython.Coverage
 source = pyfe3d
+omit =
+    pyfe3d/beamprop.pxd
