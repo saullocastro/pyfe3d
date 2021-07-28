@@ -24,9 +24,15 @@ var('L, E, Iyy, scf, G, A, Ay, Az, Izz, J', real=True, positive=True)
 
 # definitions of Eqs. 20 and 21 of Luo, Y., 2008
 #xi = x/L
+#NOTE in Luo 2008 Iy represents the area moment of inertia in the plane of y
+#     or rotating about the z axis. Here we say that Izz = Iy
+#NOTE in Luo 2008 Iz represents the area moment of inertia in the plane of z
+#     or rotating about the y axis. Here we say that Iyy = Iz
+Iy = Izz
+Iz = Iyy
 #TODO replace G by G12 and G13, but how to do for the D matrix?
-alphay = 12*E*Iyy/(scf*G*A*L**2)
-alphaz = 12*E*Izz/(scf*G*A*L**2)
+alphay = 12*E*Iy/(scf*G*A*L**2)
+alphaz = 12*E*Iz/(scf*G*A*L**2)
 betay = 1/(1 - alphay)
 betaz = 1/(1 - alphaz)
 
@@ -155,8 +161,8 @@ R = sympy.zeros(num_nodes*DOF, num_nodes*DOF)
 for i in range(2*num_nodes):
     R[i*DOF//2:(i+1)*DOF//2, i*DOF//2:(i+1)*DOF//2] += R2global
 
-M_cons = R.T*Me_cons*R
-M_lump = R.T*Me_lump*R
+M_cons = R*Me_cons*R.T
+M_lump = R*Me_lump*R.T
 
 def name_ind(i):
     if i >= 0*DOF and i < 1*DOF:

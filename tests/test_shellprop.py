@@ -3,10 +3,11 @@ sys.path.append('..')
 
 import numpy as np
 
-from pyfe3d.shellprop import (laminate_from_lamination_parameters,
-        laminate_from_lamination_parameters2,
-        force_balanced_LP, force_symmetric_LP, Lamina, read_laminaprop,
-        laminated_plate, isotropic_plate)
+from pyfe3d.shellprop import (Lamina, shellprop_from_lamination_parameters,
+        shellprop_from_lamination_parameters2, force_balanced_LP,
+        force_symmetric_LP)
+from pyfe3d.shellprop_utils import (read_laminaprop, laminated_plate,
+        isotropic_plate)
 
 
 def test_lampar():
@@ -25,7 +26,7 @@ def test_lampar():
     ply.get_transf_matrix_stress_to_lamina()
     ply.get_transf_matrix_stress_to_laminate()
 
-    lam = laminate_from_lamination_parameters2(thickness, matlamina,
+    prop = shellprop_from_lamination_parameters2(thickness, matlamina,
         0.5, 0.4, -0.3, -0.6,
         0.5, 0.4, -0.3, -0.6,
         0.5, 0.4, -0.3, -0.6,
@@ -41,15 +42,15 @@ def test_lampar():
                   [0.00000000e+00, 0.00000000e+00, 2.22431078e+09]])
     E = np.array([[2.66917293e+10,  0.00000000e+00],
                   [0.00000000e+00,  2.66917293e+10]])
-    assert np.allclose(lam.A, A)
-    lam.force_symmetric()
-    assert np.allclose(lam.B, B)
-    assert np.allclose(lam.D, D)
-    assert np.allclose(lam.E, E)
-    ABD = lam.ABD
+    assert np.allclose(prop.A, A)
+    prop.force_symmetric()
+    assert np.allclose(prop.B, B)
+    assert np.allclose(prop.D, D)
+    assert np.allclose(prop.E, E)
+    ABD = prop.ABD
     assert np.allclose(ABD[:3, :3], A)
     assert np.allclose(ABD[3:, 3:], D)
-    ABDE = lam.ABDE
+    ABDE = prop.ABDE
     assert np.allclose(ABDE[:3, :3], A)
     assert np.allclose(ABDE[3:6, 3:6], D)
 
@@ -59,7 +60,7 @@ def test_laminated_plate():
     lamprop = (71e9, 7e9, 0.28, 7e9, 7e9, 7e9)
     stack = [0, 45, 90]
     plyt = 0.000125
-    lam = laminated_plate(stack, plyt, lamprop)
+    prop = laminated_plate(stack, plyt, lamprop)
     A = np.array([[ 13280892.30559593, 2198758.85719477, 2015579.57848837],
                   [  2198758.85719477,13280892.30559593, 2015579.57848837],
                   [  2015579.57848837, 2015579.57848837, 4083033.36210029]])
@@ -71,16 +72,16 @@ def test_laminated_plate():
                   [ 0.00262445, 0.00262445, 0.0326602 ]])
     E = np.array([[ 2625000.,       0.],
                   [       0., 2625000.]])
-    assert np.allclose(lam.A, A)
-    assert np.allclose(lam.B, B)
-    assert np.allclose(lam.D, D)
-    assert np.allclose(lam.E, E)
-    lam.calc_scf()
-    lam.calc_equivalent_properties()
-    lp = lam.calc_lamination_parameters()
-    matlamina = lam.plies[0].matlamina
-    thickness = lam.h
-    lam = laminate_from_lamination_parameters(thickness, matlamina, lp)
+    assert np.allclose(prop.A, A)
+    assert np.allclose(prop.B, B)
+    assert np.allclose(prop.D, D)
+    assert np.allclose(prop.E, E)
+    prop.calc_scf()
+    prop.calc_equivalent_properties()
+    lp = prop.calc_lamination_parameters()
+    matlamina = prop.plies[0].matlamina
+    thickness = prop.h
+    prop = shellprop_from_lamination_parameters(thickness, matlamina, lp)
     #TODO A, B and D are changing from the original, check!
     A = np.array([[ 13589503.90225179,  2502486.88587513,  2026742.01957523],
                   [  2502486.88587513, 13589503.90225179,  2026742.01957523],
@@ -93,12 +94,12 @@ def test_laminated_plate():
                   [ 0.00263899, 0.00263899, 0.03266179]])
     E = np.array([[ 2625000.,       0.],
                   [       0., 2625000.]])
-    assert np.allclose(lam.A, A)
-    assert np.allclose(lam.B, B), print(np.asarray(lam.B), B)
-    assert np.allclose(lam.D, D)
-    assert np.allclose(lam.E, E)
+    assert np.allclose(prop.A, A)
+    assert np.allclose(prop.B, B), print(np.asarray(prop.B), B)
+    assert np.allclose(prop.D, D)
+    assert np.allclose(prop.E, E)
 
-    lam.force_orthotropic()
+    prop.force_orthotropic()
     A = np.array([[ 13589503.90225179,  2502486.88587513,  0],
                   [  2502486.88587513, 13589503.90225179,  0],
                   [  0,  0,  4084254.25409417]])
@@ -108,12 +109,12 @@ def test_laminated_plate():
     D = np.array([[ 0.17445256, 0.01412545, 0],
                   [ 0.01412545, 0.17445256, 0],
                   [ 0, 0, 0.03266179]])
-    assert np.allclose(lam.A, A)
-    assert np.allclose(lam.B, B)
-    assert np.allclose(lam.D, D)
+    assert np.allclose(prop.A, A)
+    assert np.allclose(prop.B, B)
+    assert np.allclose(prop.D, D)
 
-    lam.force_symmetric()
-    assert np.allclose(lam.B, 0*B)
+    prop.force_symmetric()
+    assert np.allclose(prop.B, 0*B)
 
     force_balanced_LP(lp)
     force_symmetric_LP(lp)
@@ -122,7 +123,7 @@ def test_isotropic_plate():
     E = 71e9
     nu = 0.28
     thick = 0.000125
-    lam = isotropic_plate(thickness=thick, E=E, nu=nu)
+    prop = isotropic_plate(thickness=thick, E=E, nu=nu)
     A = np.array([[9629991.31944444, 2696397.56944444,       0.   ],
                   [2696397.56944444, 9629991.31944444,       0.   ],
                   [      0.        ,       0.        , 3466796.875]])
@@ -131,26 +132,26 @@ def test_isotropic_plate():
                   [0.        , 0.        , 0.00451406]])
     E = np.array([[3466796.875,       0.   ],
                   [      0.   , 3466796.875]])
-    assert np.allclose(lam.A, A)
-    assert np.allclose(lam.B, 0)
-    assert np.allclose(lam.D, D)
-    assert np.allclose(lam.E, E)
-    return lam
+    assert np.allclose(prop.A, A)
+    assert np.allclose(prop.B, 0)
+    assert np.allclose(prop.D, D)
+    assert np.allclose(prop.E, E)
+    return prop
 
 def test_errors():
-    lam = test_isotropic_plate()
-    lam.offset = 1.
+    prop = test_isotropic_plate()
+    prop.offset = 1.
     try:
-        lam.force_orthotropic()
+        prop.force_orthotropic()
     except RuntimeError:
         pass
     try:
-        lam.force_symmetric()
+        prop.force_symmetric()
     except RuntimeError:
         pass
     try:
-        lam.plies = []
-        lam.calc_lamination_parameters()
+        prop.plies = []
+        prop.calc_lamination_parameters()
     except ValueError:
         pass
 

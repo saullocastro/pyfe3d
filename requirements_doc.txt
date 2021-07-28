@@ -1,5 +1,6 @@
 numpy
 scipy
 cython
+alg3dpy
 sphinx
 numpydoc

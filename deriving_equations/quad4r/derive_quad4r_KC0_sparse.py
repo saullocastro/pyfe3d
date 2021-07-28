@@ -338,7 +338,7 @@ var('wij')
 #subs(xi=0, eta=0) in many places above was used
 KC0e = wij*detJ*(BL.T*ABDE*BL
         + Bhourglass.T*Egamma*Bhourglass
-        + 2*alphat*A66/h*BLdrilling.T*BLdrilling)
+        + alphat*A66/h*BLdrilling.T*BLdrilling)
 
 # KC0 represents the global linear stiffness matrix
 # see mapy https://github.com/saullocastro/mapy/blob/master/mapy/model/coords.py#L284
@@ -383,7 +383,7 @@ for i in range(2*num_nodes):
 #NOTE line below to visually check the Rmatrix
 #np.savetxt('Rmatrix.txt', R, fmt='% 3s')
 
-KC0 = R.T*KC0e*R
+KC0 = R*KC0e*R.T
 
 def name_ind(i):
     if i >= 0*DOF and i < 1*DOF:

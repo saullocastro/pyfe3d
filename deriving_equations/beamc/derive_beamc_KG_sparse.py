@@ -24,9 +24,15 @@ sympy.var('hy, hz, dy, dz, L, E, Iyy, scf, G, A, Ay, Az, Izz, J', real=True, pos
 
 # definitions of Eqs. 20 and 21 of Luo, Y., 2008
 xi = x/L
+#NOTE in Luo 2008 Iy represents the area moment of inertia in the plane of y
+#     or rotating about the z axis. Here we say that Izz = Iy
+#NOTE in Luo 2008 Iz represents the area moment of inertia in the plane of z
+#     or rotating about the y axis. Here we say that Iyy = Iz
+Iy = Izz
+Iz = Iyy
 #TODO replace G by G12 and G13, but how to do for the D matrix?
-alphay = 12*E*Iyy/(scf*G*A*L**2)
-alphaz = 12*E*Izz/(scf*G*A*L**2)
+alphay = 12*E*Iy/(scf*G*A*L**2)
+alphaz = 12*E*Iz/(scf*G*A*L**2)
 betay = 1/(1 - alphay)
 betaz = 1/(1 - alphaz)
 
@@ -82,13 +88,14 @@ Nrz = Matrix([[0, Gv1, 0, 0, 0, Grz1,
 #BL = simplify(integrate(BL, (z, -hz/2+dz, +hz/2+dz)))
 
 #From Eqs. 12 in Luo, Y. 2008
+#NOTE assuming Ay=Az=0 to have Nmembrane constant
 D = Matrix([
-    [ E*A, E*Ay, E*Az, 0, 0, 0],
-    [E*Ay, E*Iyy,  E*J, 0, 0, 0],
-    [E*Az,  E*J, E*Izz, 0, 0, 0],
+    [ E*A, E*Ay*0, E*Az*0, 0, 0, 0],
+    [E*Ay*0, E*Iy,  E*J, 0, 0, 0],
+    [E*Az*0,  E*J, E*Iz, 0, 0, 0],
     [   0,    0,    0,   scf*G*A,      0, -scf*G*Az],
     [   0,    0,    0,       0,  scf*G*A, -scf*G*Ay],
-    [   0,    0,    0, -scf*G*Az, scf*G*Ay, -scf*G*(Iyy + Izz)]])
+    [   0,    0,    0, -scf*G*Az, scf*G*Ay, -scf*G*(Iy + Iz)]])
 #From Eq. 8 in Luo, Y. 2008
 #epsilon = u,x
 #kappay = -theta,x = -rz,x
@@ -117,17 +124,17 @@ BL = Matrix([
 
 # displacements in global coordinates corresponding to one finite element
 ue = Matrix([symbols(r'ue[%d]' % i) for i in range(0, BL.shape[1])])
-Nmembrane = G*BL*ue
+Nmembrane = D*BL*ue
 
 N = simplify(Nmembrane[0])
-print('N =', N)
+print('N =', N, flush=True)
 #NOTE for constant properties, N will be constant along x
 N = var('N', real=True)
 
 # G is dv/dx + dw/dx = rz - ry
-G = Nrz - Nry
+Gmatrix = Nrz - Nry
 
-KGe = simplify(integrate((G.T*G)*N, (x, 0, L)))
+KGe = simplify(integrate((Gmatrix.T*Gmatrix)*N, (x, 0, L)))
 
 # KG represents the global linear stiffness matrix
 # see mapy https://github.com/saullocastro/mapy/blob/master/mapy/model/coords.py#L284
@@ -157,7 +164,7 @@ R = sympy.zeros(num_nodes*DOF, num_nodes*DOF)
 for i in range(2*num_nodes):
     R[i*DOF//2:(i+1)*DOF//2, i*DOF//2:(i+1)*DOF//2] += R2global
 
-KG = R.T*KGe*R
+KG = R*KGe*R.T
 
 def name_ind(i):
     if i >= 0*DOF and i < 1*DOF:

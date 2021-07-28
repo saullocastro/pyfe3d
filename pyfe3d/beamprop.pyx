@@ -10,11 +10,6 @@ Beam property module (:mod:`pyfe3d.beamprop`)
 .. currentmodule:: pyfe3d.beamprop
 
 """
-import numpy as np
-
-INT = np.int64
-DOUBLE = np.float64
-
 cdef class BeamProp:
     r"""
     Attributes
@@ -52,7 +47,7 @@ cdef class BeamProp:
         Integral `\int_y \int_z y z \rho(y, z) dy dz`
 
     """
-    def __cinit__(BeamProp self):
+    def __init__(BeamProp self):
         self.scf = 5/6.
         self.A = 0
         self.E = 0

@@ -3,7 +3,7 @@ sys.path.append('..')
 
 import numpy as np
 from numpy import isclose
-from scipy.sparse.linalg import eigsh, cg
+from scipy.sparse.linalg import eigsh, spsolve, cg
 from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import isotropic_plate
@@ -14,10 +14,15 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
     data = Quad4RData()
     probe = Quad4RProbe()
     for mtype in mtypes:
-        nx = refinement*21
-        ny = refinement*13
+        nx = refinement*31
+        ny = refinement*15
+        if (nx % 2) == 0:
+            nx += 1
+        if (ny % 2) == 0:
+            ny += 1
 
-        a = 1.5
+        #a = 0.3
+        a = 2.0
         b = 0.5
 
         # Material Lastrobe Lescalloy
@@ -131,7 +136,7 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
         # applying load along u at x=a
         # nodes at vertices get 1/2 of the force
         fext = np.zeros(N)
-        ftotal = -12500.
+        ftotal = -1000.
         print('ftotal', ftotal)
         # at x=0
         check = (isclose(x, 0) & ~isclose(y, 0) & ~isclose(y, b))
@@ -156,18 +161,12 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
         # static solver
         #PREC = np.linalg.norm(1/Kuu.diagonal())
         PREC = np.max(1/Kuu.diagonal())
-        uu, out = cg(PREC*Kuu, PREC*fextu, atol=1e-30)
+        uu, out = cg(PREC*Kuu, PREC*fextu, atol=1e-8)
         assert out == 0, 'cg failed'
         u = np.zeros(N)
         u[bu] = uu
 
         print('u extremes', u[0::DOF].min(), u[0::DOF].max())
-        #u_min_expected = 4*ftotal/(E*(b*h)/a)
-        #print('u_min_expected', u_min_expected)
-        #assert np.isclose(u[0::DOF].min(), u_min_expected)
-        #v_max_expected = -nu*u_min_expected
-        #print(u[1::DOF].max()/v_max_expected)
-        #assert np.isclose(u[1::DOF].max(), v_max_expected)
         print('v extremes', u[1::DOF].min(), u[1::DOF].max())
         print('w extremes', u[2::DOF].min(), u[2::DOF].max())
         if False:
@@ -193,39 +192,31 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
         # linear buckling check
         num_eig_lb = max(mode+1, 1)
         eigvals, eigvecsu = eigsh(A=PREC*KGuu, k=num_eig_lb, which='SM',
-                M=PREC*Kuu, tol=0, sigma=1., mode='cayley')
+                M=PREC*Kuu, tol=1e-15, sigma=1., mode='cayley')
         eigvals = -1./eigvals
         load_mult = eigvals[0]
         P_cr_calc = load_mult*ftotal
         print('linear buckling load_mult =', load_mult)
         print('linear buckling P_cr_calc =', P_cr_calc)
 
-        # natural frequency
-        num_eigenvalues = max(2, mode+1)
-        print('eig solver begin')
-        # solves Ax = lambda M x
-        # we have Ax - lambda M x = 0, with lambda = omegan**2
-        eigvals, eigvecsu = eigsh(A=Kuu + KGuu, M=Muu, sigma=-1., which='LM',
-                k=num_eigenvalues, tol=1e-3)
-        print('eig solver end')
-        eigvecs = np.zeros((N, eigvecsu.shape[1]))
-        eigvecs[bu, :] = eigvecsu
-        omegan = eigvals**0.5
-
         # vector u containing displacements for all DOFs
         u = np.zeros(N)
         u[bu] = eigvecsu[:, mode]
 
         # theoretical reference
-        m = 1
-        n = 1
-        D = 2*h**3*E/(3*(1 - nu**2))
-        wmn = (m**2/a**2 + n**2/b**2)*np.sqrt(D*np.pi**4/(2*rho*h))/2
-
-        print('Theoretical omega123', wmn)
-        print('Numerical omega123', omegan[0:10])
-        wmn_at_buckling = 39.1 # approximately from my tryouts, with coarse mesh
-        assert isclose(wmn_at_buckling, omegan[0], rtol=0.05)
+        kcmin = 1e6
+        mmin = 0
+        for m in range(1, 21):
+            kc = (m*b/a + a/(m*b))**2
+            if kc <= kcmin:
+                kcmin = kc
+                mmin = m
+        print('kcmin =', kcmin)
+        print('m =', mmin)
+        sigma_cr = -kcmin*np.pi**2*E/(12*(1-nu**2))*h**2/b**2
+        P_cr_theory = sigma_cr*h*b
+        print('Theoretical P_cr_theory', P_cr_theory)
+        assert isclose(P_cr_theory, P_cr_calc, rtol=0.05)
 
     if plot:
         import matplotlib
