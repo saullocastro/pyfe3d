@@ -338,7 +338,7 @@ var('wij')
 #subs(xi=0, eta=0) in many places above was used
 KC0e = wij*detJ*(BL.T*ABDE*BL
         + Bhourglass.T*Egamma*Bhourglass
-        + 2*alphat*A66/h*BLdrilling.T*BLdrilling)
+        + alphat*A66/h*BLdrilling.T*BLdrilling)
 
 # KC0 represents the global linear stiffness matrix
 # see mapy https://github.com/saullocastro/mapy/blob/master/mapy/model/coords.py#L284
