@@ -25,6 +25,7 @@ cdef class MatLamina:
     cdef public double c11, c12, c13, c22, c23, c33, c44, c55, c66
     cdef public double u1, u2, u3, u4, u5, u6, u7
     cpdef void rebuild(MatLamina)
+    cpdef void trace_normalize_plane_stress(MatLamina)
     cpdef cDOUBLE[:, :] get_constitutive_matrix(MatLamina)
     cpdef cDOUBLE[:, :] get_invariant_matrix(MatLamina)
 
@@ -46,7 +47,7 @@ cdef class ShellProp:
     cdef public double D11, D12, D16, D22, D26, D66
     cdef public double E44, E45, E55
     cdef public double e1, e2, g12, nu12, nu21
-    cdef public double scf_k13, scf_k23, h, offset, rho, intrho, intrhoz, intrhoz2
+    cdef public double scf_k13, scf_k23, h, offset, intrho, intrhoz, intrhoz2
     cdef public list plies
     cdef public list stack
     cdef cDOUBLE[:, :] get_A(ShellProp)
@@ -55,7 +56,6 @@ cdef class ShellProp:
     cdef cDOUBLE[:, :] get_E(ShellProp)
     cdef cDOUBLE[:, :] get_ABD(ShellProp)
     cdef cDOUBLE[:, :] get_ABDE(ShellProp)
-    cpdef void rebuild(ShellProp)
     cpdef void calc_scf(ShellProp)
     cpdef void calc_equivalent_properties(ShellProp)
     cpdef void calc_constitutive_matrix(ShellProp)

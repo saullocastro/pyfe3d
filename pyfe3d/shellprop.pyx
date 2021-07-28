@@ -189,9 +189,45 @@ cdef class MatLamina:
         self.u2 = (self.q11 - self.q22) / 2.
         self.u3 = (self.q11 + self.q22 - 2*self.q12 - 4*self.q44) / 8.
         self.u4 = (self.q11 + self.q22 + 6*self.q12 - 4*self.q44) / 8.
-        self.u5 = (self.u1-self.u4) / 2.
+        self.u5 = (self.u1 - self.u4) / 2.
         self.u6 = (self.q55 + self.q66) / 2.
         self.u7 = (self.q55 - self.q66) / 2.
+
+    cpdef void trace_normalize_plane_stress(MatLamina self):
+        """Trace-normalize the lamina properties for plane stress
+
+        Modify the original :class:`.MatLamina` object with a
+        trace-normalization performed after calculating the trace according to
+        Eq. 1 of reference:
+
+            Melo, J. D. D., Bi, J., and Tsai, S. W., 2017, “A Novel
+            Invariant-Based Design Approach to Carbon Fiber Reinforced
+            Laminates,” Compos. Struct., 159, pp. 44–52.
+
+        The trace calculated as `tr = Q_{11} + Q_{22} + 2Q_{66}`.  The
+        universal in-plane stress stiffness components
+        `Q_{11},Q_{12},Q_{22},Q_{44},Q_{55},Q_{66}` are divided by `tr`, and
+        the invariants `U_1,U_2,U_3,U_4,U_5,U_6,U_7` are calculated with the
+        normalized stiffnesses, such they also become trace-normalized
+        invariants. These can be accessed using the ``u1,u2,u3,u4,u5,u6,u7``
+        attributes.
+
+        """
+        cdef double tr
+        tr = self.q11 + self.q22 + 2*self.q66
+        self.q11 /= tr
+        self.q12 /= tr
+        self.q22 /= tr
+        self.q44 /= tr
+        self.q55 /= tr
+        self.q66 /= tr
+        self.u1 /= tr
+        self.u2 /= tr
+        self.u3 /= tr
+        self.u4 /= tr
+        self.u5 /= tr
+        self.u6 /= tr
+        self.u7 /= tr
 
     cpdef cDOUBLE[:, :] get_constitutive_matrix(MatLamina self):
         """Return the constitutive matrix
@@ -244,7 +280,6 @@ cdef class Lamina:
 
             Reddy, J. N., Mechanics of Laminated Composite Plates and
             Shells - Theory and Analysys. Second Edition. CRC PRESS, 2004.
-
         """
         cdef double thetarad, e1, e2, nu12, nu21, g12, g13, g23
         cdef double q11, q12, q22, q44, q55, q16, q26, q66
@@ -361,7 +396,7 @@ cdef class ShellProp:
         Equivalent laminate moduli in directions 1 and 2
     g12 : float
         Equivalent laminate shear modulus in the 12 direction
-    nu12, n21 : float
+    nu12, nu21 : float
         Equivalent laminate Poisson ratios in the 12 and 21 directions
     scf_k13, scf_k23 : float
         Shear correction factor in the 13 and 23 directions
@@ -377,9 +412,18 @@ cdef class ShellProp:
 
     """
     def __init__(ShellProp self):
+        self.h = 0.
+        self.e1 = 0.
+        self.e2 = 0.
+        self.g12 = 0.
+        self.nu12 = 0.
+        self.nu21 = 0.
         self.offset = 0.
         self.scf_k13 = 5/6.
         self.scf_k23 = 5/6.
+        self.intrho = 0.
+        self.intrhoz = 0.
+        self.intrhoz2 = 0.
         self.plies = []
         self.stack = []
 
@@ -413,7 +457,7 @@ cdef class ShellProp:
                          [self.B12, self.B22, self.B26, self.D12, self.D22, self.D26, 0, 0],
                          [self.B16, self.B26, self.B66, self.D16, self.D26, self.D66, 0, 0],
                          [0, 0, 0, 0, 0, 0, self.E44, self.E45],
-                         [0, 0, 0, 0, 0, 0, self.E44, self.E55]], dtype=DOUBLE)
+                         [0, 0, 0, 0, 0, 0, self.E45, self.E55]], dtype=DOUBLE)
     @property
     def A(self):
         return np.asarray(self.get_A())
@@ -433,18 +477,6 @@ cdef class ShellProp:
     def ABDE(self):
         return np.asarray(self.get_ABDE())
 
-    cpdef void rebuild(ShellProp self):
-        """Update thickness and density"""
-        cdef double rhoh
-        self.h = 0.
-        rhoh = 0.
-        for ply in self.plies:
-            self.h += ply.h
-        for ply in self.plies:
-            ply.rebuild()
-            self.h += ply.h
-            rhoh += ply.matlamina.rho * ply.h
-        self.rho = rhoh / self.h
 
     cpdef void calc_scf(ShellProp self):
         """Update shear correction factors of the :class:`.ShellProp` object
@@ -468,8 +500,8 @@ cdef class ShellProp:
         -------
 
         k13, k23 : tuple
-            Shear correction factors. Also updates attributes: ``scf_k13``
-            and ``scf_k23``.
+            Shear correction factors. Also updates attributes: ``scf_k13`` and
+            ``scf_k23``.
 
         """
         cdef double D1, R1, den1, D2, R2, den2, offset, zbot, z1, z2, thetarad
@@ -586,11 +618,8 @@ cdef class ShellProp:
     cpdef void force_orthotropic(ShellProp self):
         r"""Force an orthotropic laminate
 
-        The attributes
-
-        `A_{16}`, `A_{26}`, `B_{16}`, `B_{26}`, `D_{16}`, `D_{26}`
-
-        are set to zero to force an orthotropic laminate.
+        The attributes :math:`A_{16}`, `A_{26}`, `B_{16}`, `B_{26}`, `D_{16}`,
+        `D_{26}` are set to zero to force an orthotropic laminate.
 
         """
         if self.offset != 0.:
@@ -674,8 +703,8 @@ cdef class ShellProp:
 cpdef LaminationParameters force_balanced_LP(LaminationParameters lp):
     r"""Force balanced lamination parameters
 
-    The lamination parameters `\xi_{A2}` and `\xi_{A4}` are set to null
-    to force a balanced laminate.
+    The lamination parameters `\xi_{A2}` and `\xi_{A4}` are set to null to
+    force a balanced laminate.
 
     """
     lp.xiA2 = 0
@@ -685,8 +714,8 @@ cpdef LaminationParameters force_balanced_LP(LaminationParameters lp):
 cpdef LaminationParameters force_symmetric_LP(LaminationParameters lp):
     r"""Force symmetric lamination parameters
 
-    The lamination parameters `\xi_{Bi}` are set to null
-    to force a symmetric laminate.
+    The lamination parameters `\xi_{Bi}` are set to null to force a symmetric
+    laminate.
 
     """
     lp.xiB1 = 0
@@ -751,8 +780,8 @@ cpdef ShellProp laminate_from_lamination_parameters2(double thickness, MatLamina
     matlamina : :class:`.MatLamina` object
         Material object
     xiA1 to xiD4 : float
-        The 16 lamination parameters `\xi_{A1} \cdots \xi_{A4}`,  `\xi_{B1}
-        \cdots \xi_{B4}`, `\xi_{C1} \cdots \xi_{C4}`,  `\xi_{D1} \cdots
+        The 16 lamination parameters `\xi_{A1} \cdots \xi_{A4}`, `\xi_{B1}
+        \cdots \xi_{B4}`, `\xi_{C1} \cdots \xi_{C4}`, `\xi_{D1} \cdots
         \xi_{D4}`, `\xi_{E1} \cdots \xi_{E4}`
 
 
@@ -848,9 +877,9 @@ def read_laminaprop(laminaprop, rho=0):
     return matlam
 
 
-def laminated_plate(stack, plyt=None, laminaprop=None, rho=0., plyts=None, laminaprops=None,
-        rhos=None, offset=0., calc_scf=True):
-    """Read a laminate stacking sequence data.
+def laminated_plate(stack, plyt=None, laminaprop=None, rho=0., plyts=None,
+        laminaprops=None, rhos=None, offset=0., calc_scf=True):
+    r"""Read a laminate stacking sequence data.
 
     :class:`.ShellProp` object is returned based on the inputs given.
 
@@ -912,16 +941,18 @@ def laminated_plate(stack, plyt=None, laminaprop=None, rho=0., plyts=None, lamin
         rhos = [rho for i in stack]
 
     plies = []
+    lam.h = 0.
     for plyt, laminaprop, thetadeg, rho in zip(plyts, laminaprops, stack, rhos):
         laminaprop = laminaprop
         ply = Lamina()
         ply.thetadeg = float(thetadeg)
         ply.h = plyt
+        lam.h += ply.h
         ply.matlamina = read_laminaprop(laminaprop, rho)
+        ply.rebuild()
         plies.append(ply)
     lam.plies = plies
 
-    lam.rebuild()
     lam.calc_constitutive_matrix()
     if calc_scf:
         lam.calc_scf()
