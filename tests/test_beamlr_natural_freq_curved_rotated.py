@@ -6,7 +6,7 @@ from scipy.sparse.linalg import eigsh
 from scipy.sparse import coo_matrix
 
 from pyfe3d.beamprop import BeamProp
-from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
+from pyfe3d import BeamLR, BeamLRData, BeamLRProbe, DOF, INT, DOUBLE
 from pyfe3d.coord import CoordR
 
 def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
@@ -45,8 +45,8 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
             num_elements = len(n1s)
             print('num_elements', num_elements)
 
-            p = BeamCProbe()
-            data = BeamCData()
+            p = BeamLRProbe()
+            data = BeamLRData()
 
             KC0r = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
             KC0c = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
@@ -78,7 +78,7 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
                 x2, y2, z2 = ncoords[pos2]
                 csys = CoordR(1, o=[x1, y1, z1], z=[0, -1, 0], vecxz=[x2-x1, 0, z2-z1])
                 cosa, cosb, cosg = csys.cosines_to_global()
-                beam = BeamC(p)
+                beam = BeamLR(p)
                 beam.init_k_KC0 = init_k_KC0
                 beam.init_k_M = init_k_M
                 beam.n1 = n1
@@ -123,12 +123,12 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
                     k=num_eigenvalues, tol=1e-3)
             omegan = eigvals**0.5
             omega123_from_paper = [396.98, 931.22, 1797.31]
-            omega123_expected_here = [400.51471445, 948.87085772, 1758.88752016]
+            omega123_expected_here = [400.21639012, 947.63794653, 1756.43147698]
             print('Reference omega123_from_paper', omega123_from_paper)
             print('Reference omega123_expected_here', omega123_expected_here)
             print('Numerical omega123', omegan)
             print()
-            assert np.allclose(omega123_expected_here, omegan, rtol=1e-3)
+            assert np.allclose(omega123_expected_here, omegan, rtol=1e-2)
 
 if __name__ == '__main__':
     test_nat_freq_curved_beam(refinement=1)

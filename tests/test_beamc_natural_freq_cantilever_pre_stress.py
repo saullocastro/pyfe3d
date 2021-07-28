@@ -11,7 +11,7 @@ from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
 def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
     for mtype in mtypes:
         print('mtype', mtype)
-        n = 100*refinement
+        n = 50*refinement
         L = 3 # total size of the beam along x
 
         # Material Lastrobe Lescalloy
@@ -62,6 +62,8 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         prop.intrho = rho*A
         prop.intrhoy2 = rho*Izz
 
+        ncoords_flatten = ncoords.flatten()
+
         beams = []
         init_k_KC0 = 0
         init_k_KG = 0
@@ -82,7 +84,7 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
             beam.cosa = 1
             beam.cosb = 1
             beam.cosg = np.cos(np.arctan2(y2 - y1, x2 - x1))
-            beam.update_xe(ncoords.flatten())
+            beam.update_xe(ncoords_flatten)
             beam.update_KC0(KC0r, KC0c, KC0v, prop)
             beam.update_M(Mr, Mc, Mv, prop, mtype=mtype)
             beams.append(beam)
@@ -149,12 +151,12 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
 
         alpha123 = np.array([1.875, 4.694, 7.885])
         omega123 = alpha123**2*np.sqrt(E*Izz/(rho*A*L**4))
-        omega123_expected = [1.62676526, 164.26253389, 489.88418717]
+        omega123_expected = [1.63753891, 164.43505923, 491.08289778]
         print('Theoretical omega123', omega123)
         print('Expected omega123 with pre-stress', omega123_expected)
         print('Numerical omega123', omegan)
         print()
-        assert np.allclose(omega123_expected, omegan, rtol=1e-3)
+        assert np.allclose(omega123_expected, omegan, rtol=1e-2)
 
 if __name__ == '__main__':
     test_nat_freq_cantilever(refinement=1)
