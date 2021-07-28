@@ -62,11 +62,12 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         prop.intrho = rho*A
         prop.intrhoy2 = rho*Izz
 
+        ncoords_flatten = ncoords.flatten()
+
         beams = []
         init_k_KC0 = 0
         init_k_KG = 0
         init_k_M = 0
-        ncoords_flatten = ncoords.flatten()
         for n1, n2 in zip(n1s, n2s):
             pos1 = nid_pos[n1]
             pos2 = nid_pos[n2]
