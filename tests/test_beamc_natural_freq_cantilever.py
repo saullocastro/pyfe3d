@@ -11,7 +11,7 @@ from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
 def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
     for mtype in mtypes:
         print('mtype', mtype)
-        n = 100*refinement
+        n = 50*refinement
         L = 3 # total size of the beam along x
 
         # Material Lastrobe Lescalloy
