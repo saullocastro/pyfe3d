@@ -38,7 +38,7 @@ def test_nat_freq_plate(plot=False, mode=0):
     x = ncoords[:, 0]
     y = ncoords[:, 1]
     z = ncoords[:, 2]
-    ncoords_flat = ncoords.flatten()
+    ncoords_flatten = ncoords.flatten()
 
     inner = np.logical_not(isclose(x, 0) | isclose(x, a) | isclose(y, 0) | isclose(y, b))
     np.random.seed(20)
@@ -101,7 +101,7 @@ def test_nat_freq_plate(plot=False, mode=0):
         quad.c4 = DOF*nid_pos[n4]
         quad.init_k_KC0 = init_k_KC0
         quad.init_k_M = init_k_M
-        quad.update_xe(ncoords_flat)
+        quad.update_xe(ncoords_flatten)
         quad.update_KC0(KC0r, KC0c, KC0v, prop)
         quad.update_M(Mr, Mc, Mv, prop, mtype=1)
         quads.append(quad)

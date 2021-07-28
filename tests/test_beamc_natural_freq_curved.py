@@ -62,6 +62,8 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
         prop.intrho = rho*A
         prop.intrhoy2 = rho*Izz
 
+        ncoords_flatten = ncoords.flatten()
+
         beams = []
         init_k_KC0 = 0
         init_k_M = 0
@@ -80,7 +82,7 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
             beam.cosa = 1
             beam.cosb = 1
             beam.cosg = np.cos(np.arctan2(y2 - y1, x2 - x1))
-            beam.update_xe(ncoords.flatten())
+            beam.update_xe(ncoords_flatten)
             beam.update_KC0(KC0r, KC0c, KC0v, prop)
             beam.update_M(Mr, Mc, Mv, prop, mtype=mtype)
             beams.append(beam)
