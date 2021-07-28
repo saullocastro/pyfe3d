@@ -3,7 +3,7 @@ sys.path.append('..')
 
 import numpy as np
 from numpy import isclose
-from scipy.sparse.linalg import eigsh, spsolve
+from scipy.sparse.linalg import eigsh, cg
 from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop import isotropic_plate
@@ -14,10 +14,10 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
     data = Quad4RData()
     probe = Quad4RProbe()
     for mtype in mtypes:
-        nx = refinement*9
-        ny = refinement*11
+        nx = refinement*21
+        ny = refinement*13
 
-        a = 0.3
+        a = 1.5
         b = 0.5
 
         # Material Lastrobe Lescalloy
@@ -25,7 +25,7 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
         nu = 0.33
 
         rho = 7.83e3 # kg/m3
-        h = 0.01 # m
+        h = 0.002 # m
 
         xtmp = np.linspace(0, a, nx)
         ytmp = np.linspace(0, b, ny)
@@ -61,8 +61,7 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
 
         # creating elements and populating global stiffness
 
-        prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True, rho=rho,
-                offset=0.01)
+        prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True, rho=rho)
         prop.calc_equivalent_properties()
 
         quads = []
@@ -111,17 +110,19 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
 
         print('sparse KC0 and M created')
 
-        # applying boundary conditions
+        # applying boundary conditions (leading to a constant Nxx)
         # simply supported in w
         bk = np.zeros(N, dtype=bool) #array to store known DOFs
         check = isclose(x, 0.) | isclose(x, a) | isclose(y, 0) | isclose(y, b)
         bk[2::DOF] = check
-        # constraining u at x = 0
-        check = isclose(x, 0.)
+        # constraining u at x = a/2, y = 0,b
+        check = isclose(x, a/2.) & (isclose(y, 0.) | isclose(y, b))
         bk[0::DOF] = check
-        # constraining v at y = 0
-        check = isclose(y, 0.)
+        # constraining v at x = 0,a y = b/2
+        check = isclose(y, b/2.) & (isclose(x, 0.) | isclose(x, a))
         bk[1::DOF] = check
+        # removing drilling
+        bk[5::DOF] = True
 
         # unconstrained nodes, unknown DOFs
         bu = ~bk # same as np.logical_not
@@ -130,13 +131,22 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
         # applying load along u at x=a
         # nodes at vertices get 1/2 of the force
         fext = np.zeros(N)
-        Nxx = -2650000/b
-        ftotal = Nxx*b # ny -> number of nodes along y
+        ftotal = -12500.
+        print('ftotal', ftotal)
+        # at x=0
+        check = (isclose(x, 0) & ~isclose(y, 0) & ~isclose(y, b))
+        fext[0::DOF][check] = -ftotal/(ny - 1)
+        check = ((isclose(x, 0) & isclose(y, 0))
+                |(isclose(x, 0) & isclose(y, b)))
+        fext[0::DOF][check] = -ftotal/(ny - 1)/2
+        assert np.isclose(fext.sum(), -ftotal)
+        # at x=a
         check = (isclose(x, a) & ~isclose(y, 0) & ~isclose(y, b))
         fext[0::DOF][check] = ftotal/(ny - 1)
         check = ((isclose(x, a) & isclose(y, 0))
                 |(isclose(x, a) & isclose(y, b)))
         fext[0::DOF][check] = ftotal/(ny - 1)/2
+        assert np.isclose(fext.sum(), 0)
 
         # sub-matrices corresponding to unknown DOFs
         Kuu = KC0[bu, :][:, bu]
@@ -144,11 +154,20 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
         fextu = fext[bu]
 
         # static solver
-        uu = spsolve(Kuu, fextu)
+        #PREC = np.linalg.norm(1/Kuu.diagonal())
+        PREC = np.max(1/Kuu.diagonal())
+        uu, out = cg(PREC*Kuu, PREC*fextu, atol=1e-30)
+        assert out == 0, 'cg failed'
         u = np.zeros(N)
         u[bu] = uu
 
         print('u extremes', u[0::DOF].min(), u[0::DOF].max())
+        #u_min_expected = 4*ftotal/(E*(b*h)/a)
+        #print('u_min_expected', u_min_expected)
+        #assert np.isclose(u[0::DOF].min(), u_min_expected)
+        #v_max_expected = -nu*u_min_expected
+        #print(u[1::DOF].max()/v_max_expected)
+        #assert np.isclose(u[1::DOF].max(), v_max_expected)
         print('v extremes', u[1::DOF].min(), u[1::DOF].max())
         print('w extremes', u[2::DOF].min(), u[2::DOF].max())
         if False:
@@ -165,12 +184,23 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
 
         # geometric stiffness
         for quad in quads:
-            quad.update_ue(u)
+            quad.update_ue(u) #NOTE update affects the Quad4RProbe class attribute ue
             quad.update_KG(KGr, KGc, KGv, prop)
         KG = coo_matrix((KGv, (KGr, KGc)), shape=(N, N)).tocsc()
         KGuu = KG[bu, :][:, bu]
         print('sparse KG created')
 
+        # linear buckling check
+        num_eig_lb = max(mode+1, 1)
+        eigvals, eigvecsu = eigsh(A=PREC*KGuu, k=num_eig_lb, which='SM',
+                M=PREC*Kuu, tol=0, sigma=1., mode='cayley')
+        eigvals = -1./eigvals
+        load_mult = eigvals[0]
+        P_cr_calc = load_mult*ftotal
+        print('linear buckling load_mult =', load_mult)
+        print('linear buckling P_cr_calc =', P_cr_calc)
+
+        # natural frequency
         num_eigenvalues = max(2, mode+1)
         print('eig solver begin')
         # solves Ax = lambda M x
@@ -194,7 +224,7 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
 
         print('Theoretical omega123', wmn)
         print('Numerical omega123', omegan[0:10])
-        wmn_at_buckling = 602. # approximately from my tryouts, with coarse mesh
+        wmn_at_buckling = 39.1 # approximately from my tryouts, with coarse mesh
         assert isclose(wmn_at_buckling, omegan[0], rtol=0.05)
 
     if plot:
