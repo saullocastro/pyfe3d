@@ -3,7 +3,7 @@
 #cython: cdivision=True
 #cython: nonecheck=False
 #cython: infer_types=False
-"""
+r"""
 Quadrilateral element with reduced integration (:mod:`pyfe3d.quad4r`)
 =====================================================================
 
@@ -34,7 +34,7 @@ cdef class Quad4RData:
         self.M_SPARSE_SIZE = 480
 
 cdef class Quad4RProbe:
-    """
+    r"""
     Probe used for local coordinates, local displacements, local stresses etc
     """
     cdef public cDOUBLE[:] xe
@@ -44,7 +44,7 @@ cdef class Quad4RProbe:
         self.ue = np.zeros(NUM_NODES*DOF, dtype=DOUBLE)
 
 cdef class Quad4R:
-    """
+    r"""
     Nodal connectivity for plate element
     similar to Nastran's CQUAD4::
 
@@ -89,7 +89,7 @@ cdef class Quad4R:
         self.cosg = 1.
 
     cpdef void update_ue(Quad4R self, np.ndarray[cDOUBLE, ndim=1] u):
-        """Update the local displacement vector of the element
+        r"""Update the local displacement vector of the element
 
         Parameters
         ----------
@@ -142,7 +142,7 @@ cdef class Quad4R:
                     self._p.ue[j*DOF + 5] += sw[i]*u[c[j] + 3 + i]
 
     cpdef void update_xe(Quad4R self, np.ndarray[cDOUBLE, ndim=1] x):
-        """Update the 3D coordinates of the element
+        r"""Update the 3D coordinates of the element
 
         Parameters
         ----------
@@ -192,7 +192,7 @@ cdef class Quad4R:
         self.update_area()
 
     cpdef void update_area(Quad4R self):
-        """Update element area
+        r"""Update element area
 
         """
         cdef double x1, x2, x3, x4, y1, y2, y3, y4
@@ -220,7 +220,7 @@ cdef class Quad4R:
             ShellProp prop,
             int update_KC0v_only=0
             ):
-        """Update sparse vectors for linear constitutive stiffness matrix KC0
+        r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
         Reduced integration is used with a single point in the centroid
         (`\xi=\eta=0`) and weight `w_{ij}=4`, preventing shear locking.
@@ -3264,7 +3264,7 @@ cdef class Quad4R:
             ShellProp prop,
             int update_KGv_only=0
             ):
-        """Update sparse vectors for geometric stiffness matrix KG
+        r"""Update sparse vectors for geometric stiffness matrix KG
 
         Two-point Gauss-Legendre quadrature is used, which showed more accuracy
         for linear buckling load predictions.
@@ -4121,7 +4121,7 @@ cdef class Quad4R:
             ShellProp prop,
             int mtype=0,
             ):
-        """Update sparse vectors for mass matrix M
+        r"""Update sparse vectors for mass matrix M
 
         Different integration schemes are available by means of the ``mtype``
         parameter.
