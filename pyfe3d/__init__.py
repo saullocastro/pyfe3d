@@ -9,6 +9,7 @@ from alg3dpy.constants import Z, O
 
 from .quad4r import Quad4R, Quad4RData, Quad4RProbe
 from .beamc import BeamC, BeamCData, BeamCProbe
+from .beamlr import BeamLR, BeamLRData, BeamLRProbe
 DOF = 6
 INT = np.int64
 DOUBLE = np.float64
