@@ -117,6 +117,14 @@ extensions = [
         extra_compile_args=compile_args,
         extra_link_args=link_args,
         language='c++'),
+    Extension('pyfe3d.beamlr',
+        sources=[
+            './pyfe3d/beamlr.pyx',
+            ],
+        include_dirs=include_dirs,
+        extra_compile_args=compile_args,
+        extra_link_args=link_args,
+        language='c++'),
     Extension('pyfe3d.beamc',
         sources=[
             './pyfe3d/beamc.pyx',
