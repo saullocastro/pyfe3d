@@ -65,3 +65,6 @@ cdef class BeamProp:
         self.intrhoz2 = 0
         self.intrhoyz = 0
 
+    cpdef void dummy(BeamProp self):
+        self.J = self.J
+
