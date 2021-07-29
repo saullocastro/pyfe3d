@@ -1,4 +1,4 @@
-"""
+r"""
 Finite elements for 3D problems in Python/Cython
 ================================================
 

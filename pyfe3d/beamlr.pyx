@@ -68,7 +68,7 @@ cdef class BeamLRProbe:
         self.ue = np.zeros(NUM_NODES*DOF, dtype=DOUBLE)
 
 cdef class BeamLR:
-    """
+   r"""
     Timoshenko 3D beam element with linear shape functions
 
     Formulation based on reference, replacing the consistent shape functions by
@@ -130,7 +130,7 @@ cdef class BeamLR:
         self.cosg = 1.
 
     cpdef void update_ue(BeamLR self, np.ndarray[cDOUBLE, ndim=1] u):
-        """Update the local displacement vector of the element
+       r"""Update the local displacement vector of the element
 
         Parameters
         ----------
@@ -185,7 +185,7 @@ cdef class BeamLR:
                     self._p.ue[j*DOF + 5] += sw[i]*u[c[j] + 3 + i]
 
     cpdef void update_xe(BeamLR self, np.ndarray[cDOUBLE, ndim=1] x):
-        """Update the 3D coordinates of the element
+       r"""Update the 3D coordinates of the element
 
         Parameters
         ----------
@@ -235,7 +235,7 @@ cdef class BeamLR:
         self.update_length()
 
     cpdef void update_length(BeamLR self):
-        """Update element length
+       r"""Update element length
 
         """
         cdef double x1, x2, y1, y2, z1, z2
@@ -256,7 +256,7 @@ cdef class BeamLR:
             BeamProp prop,
             int update_KC0v_only=0
             ):
-        """Update sparse vectors for linear constitutive stiffness matrix KC0
+       r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
         Properties
         ----------
@@ -1040,7 +1040,7 @@ cdef class BeamLR:
             BeamProp prop,
             int update_KGv_only=0
             ):
-        """Update sparse vectors for geometric stiffness matrix KG
+       r"""Update sparse vectors for geometric stiffness matrix KG
 
         Properties
         ----------
@@ -1282,7 +1282,7 @@ cdef class BeamLR:
             BeamProp prop,
             int mtype=0,
             ):
-        """Update sparse vectors for mass matrix M
+       r"""Update sparse vectors for mass matrix M
 
         Properties
         ----------
