@@ -9,112 +9,60 @@ r"""
    |
    ______   --> x axis
    1    2
-   Assumed 2D plane for all derivations
 
-   Timoshenko 3D beam element with consistent shape functions from:
+   Truss 3D element with linear shape functions and analytical integration
+
+   Adapted from the beam constitutive matrix of
    Luo, Y., 2008, “An Efficient 3D Timoshenko Beam Element with Consistent Shape Functions,” Adv. Theor. Appl. Mech., 1(3), pp. 95–106.
 
 """
+#NOTE not making sense to have KG for the truss element, because in theory we
+#     have that Izz=Iyy=0
+#     I would rather not have Truss and only work with BeamLR, which has
+#     physical meaning
 
 DOF = 6
 num_nodes = 2
 
-var('x, xi', real=True)
-sympy.var('hy, hz, dy, dz, L, E, Iyy, scf, G, A, Ay, Az, Izz, J', real=True, positive=True)
-
-# definitions of Eqs. 20 and 21 of Luo, Y., 2008
-xi = x/L
-#NOTE in Luo 2008 Iy represents the area moment of inertia in the plane of y
-#     or rotating about the z axis. Here we say that Izz = Iy
-#NOTE in Luo 2008 Iz represents the area moment of inertia in the plane of z
-#     or rotating about the y axis. Here we say that Iyy = Iz
+var('xi', real=True)
+sympy.var('hy, hz, dy, dz, L, E, Iyy, Izz, scf, G, A', real=True, positive=True)
 Iy = Izz
 Iz = Iyy
-#TODO replace G by G12 and G13, but how to do for the D matrix?
-alphay = 12*E*Iy/(scf*G*A*L**2)
-alphaz = 12*E*Iz/(scf*G*A*L**2)
-betay = 1/(1 - alphay)
-betaz = 1/(1 - alphaz)
 
-N1 = 1 - xi
-N2 = xi
-Hv1 = betay*(2*xi**3 - 3*xi**2 + alphay*xi + 1 - alphay)
-Hv2 = betay*(-2*xi**3 + 3*xi**2 - alphay*xi)
-Hw1 = betaz*(2*xi**3 - 3*xi**2 + alphaz*xi + 1 - alphaz)
-Hw2 = betaz*(-2*xi**3 + 3*xi**2 - alphaz*xi)
-Hrz1 = Htheta1 = L*betay*(xi**3 + (alphay/2 - 2)*xi**2 + (1 - alphay/2)*xi)
-Hrz2 = Htheta2 = L*betay*(xi**3 - (1 + alphay/2)*xi**2 + (alphay/2)*xi)
-Hry1 = Hpsi1 = L*betaz*(xi**3 + (alphaz/2 - 2)*xi**2 + (1 - alphaz/2)*xi)
-Hry2 = Hpsi2 = L*betaz*(xi**3 - (1 + alphaz/2)*xi**2 + (alphaz/2)*xi)
-Gv1 = 6*betay/L*(xi**2 - xi)
-Gv2 = 6*betay/L*(-xi**2 + xi)
-Gw1 = 6*betaz/L*(xi**2 - xi)
-Gw2 = 6*betaz/L*(-xi**2 + xi)
-Grz1 = Gtheta1 = betay*(3*xi**2 + (alphay - 4)*xi + 1 - alphay)
-Grz2 = Gtheta2 = betay*(3*xi**2 - (alphay + 2)*xi)
-Gry1 = Gpsi1 = betaz*(3*xi**2 + (alphaz - 4)*xi + 1 - alphaz)
-Gry2 = Gpsi2 = betaz*(3*xi**2 - (alphaz + 2)*xi)
+N1 = (1-xi)/2
+N2 = (1+xi)/2
+
+N1x = -1/L
+N2x = +1/L
 
 # Degrees-of-freedom illustrated in Fig. 1 of Luo, Y., 2008
 #              u, v, w, phi, psi, theta (for each node)
 #              u, v, w, rx, ry, rz
-# interpolation according to Eq. 19 of Luo, Y. 2008
+# linear interpolation for all field variables
 Nu =  Matrix([[N1, 0, 0, 0, 0, 0,
                N2, 0, 0, 0, 0, 0]])
-Nv =  Matrix([[0, Hv1, 0, 0, 0, Hrz1,
-               0, Hv2, 0, 0, 0, Hrz2]])
-Nw =  Matrix([[0, 0, Hw1, 0, Hry1, 0,
-               0, 0, Hw2, 0, Hry2, 0]])
-Nrx = Matrix([[0, 0, 0, N1, 0, 0,
-               0, 0, 0, N2, 0, 0]])
-Nry = Matrix([[0, 0, Gw1, 0, Gry1, 0,
-               0, 0, Gw2, 0, Gry2, 0]])
-Nrz = Matrix([[0, Gv1, 0, 0, 0, Grz1,
-               0, Gv2, 0, 0, 0, Grz2]])
+Nrx =  Matrix([[0, 0, 0, N1, 0, 0,
+                0, 0, 0, N2, 0, 0]])
 
-Nvx = simplify(Nv.diff(x))
-Nwx = simplify(Nw.diff(x))
+Nvx =  Matrix([[0, N1x, 0, 0, 0, 0,
+                0, N2x, 0, 0, 0, 0]])
+Nwx =  Matrix([[0, 0, N1x, 0, 0, 0,
+                0, 0, N2x, 0, 0, 0]])
 
 # u v w  rx  ry  rz  (rows are node 1, node2, node3, node4)
-
-#From Eqs. 8 and 9 in Luo, Y. 2008
-#exx = u,x + (-rz,x)*y + (ry,x)*z
-#exy = (v.diff(x) - rz) - (rx)*z
-#exz = (w.diff(x) + ry) + (rx)*y
-#BL = Matrix([
-    #Nu.diff(x) + (-Nrz.diff(x))*y + Nry.diff(x)*z,
-    #(Nv.diff(x) - Nrz) - Nrx*z,
-    #(Nw.diff(x) + Nry) + Nrx*y,
-    #])
-#dy = dz = 0
-#BL = integrate(BL, (y, -hy/2+dy, +hy/2+dy))
-#BL = simplify(integrate(BL, (z, -hz/2+dz, +hz/2+dz)))
 
 #From Eqs. 12 in Luo, Y. 2008
 #NOTE assuming Ay=Az=0 to have Nmembrane constant
 D = Matrix([
-    [ E*A, E*Ay*0, E*Az*0, 0, 0, 0],
-    [E*Ay*0, E*Iy,  E*J, 0, 0, 0],
-    [E*Az*0,  E*J, E*Iz, 0, 0, 0],
-    [   0,    0,    0,   scf*G*A,      0, -scf*G*Az],
-    [   0,    0,    0,       0,  scf*G*A, -scf*G*Ay],
-    [   0,    0,    0, -scf*G*Az, scf*G*Ay, -scf*G*(Iy + Iz)]])
-#From Eq. 8 in Luo, Y. 2008
+    [ E*A,  0],
+    [   0, -scf*G*(Iy + Iz)]])
+#From Eq. 8 in Luo, Y. 2008, keeping only terms pertaining the truss element
 #epsilon = u,x
-#kappay = -theta,x = -rz,x
-#kappaz = psi,x = ry,x
-#gammay = v,x - theta = v,x - rz
-#gammaz = w,x + psi = w,x + ry
 #kappax = phi,x
 # putting in a BL matrix
 BL = Matrix([
-    Nu.diff(x),
-    -Nrz.diff(x),
-    Nry.diff(x),
-    Nv.diff(x) - Nrz,
-    Nw.diff(x) + Nry,
-    Nrx.diff(x)])
-
+    2/L*Nu.diff(xi),
+    2/L*Nrx.diff(xi)])
 
 # Geometric stiffness matrix using Donnell's type of geometric nonlinearity
 # (or van Karman nonlinear terms)
@@ -137,7 +85,7 @@ N = var('N', real=True)
 # G is dv/dx + dw/dx
 Gmatrix = Nvx + Nwx
 
-KGe = simplify(integrate((Gmatrix.T*Gmatrix)*N, (x, 0, L)))
+KGe = L/2.*simplify(integrate((Gmatrix.T*Gmatrix)*N, (xi, -1, +1)))
 
 # KG represents the global linear stiffness matrix
 # see mapy https://github.com/saullocastro/mapy/blob/master/mapy/model/coords.py#L284
