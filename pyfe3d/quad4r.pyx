@@ -25,6 +25,21 @@ cdef cINT DOF = 6
 cdef cINT NUM_NODES = 4
 
 cdef class Quad4RData:
+    r"""
+    Used to allocate memory for the sparse matrices.
+
+    Attributes
+    ----------
+    KC0_SPARSE_SIZE : int
+        ``KC0_SPARSE_SIZE = 576``
+
+    KG_SPARSE_SIZE : int
+        ``KG_SPARSE_SIZE = 144``
+
+    M_SPARSE_SIZE : int
+        ``M_SPARSE_SIZE = 480``
+
+    """
     cdef public cINT KC0_SPARSE_SIZE
     cdef public cINT KG_SPARSE_SIZE
     cdef public cINT M_SPARSE_SIZE
@@ -36,6 +51,22 @@ cdef class Quad4RData:
 cdef class Quad4RProbe:
     r"""
     Probe used for local coordinates, local displacements, local stresses etc
+
+    Attributes
+    ----------
+    xe : array-like
+        Array of size ``NUM_NODES*DOF//2=12`` containing the nodal coordinates
+        in the element coordinate system, in the following order `{x_e}_1,
+        {y_e}_1, {z_e}_1, `{x_e}_2, {y_e}_2, {z_e}_2`, `{x_e}_3, {y_e}_3,
+        {z_e}_3`, `{x_e}_4, {y_e}_4, {z_e}_4`.
+    ue : array-like
+        Array of size ``NUM_NODES*DOF=24`` containing the element displacements
+        in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
+        {{r_y}_e}_1, {{r_z}_e}_1`, `{u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
+        {{r_y}_e}_2, {{r_z}_e}_2`, `{u_e}_3, {v_e}_3, {w_e}_3, {{r_x}_e}_3,
+        {{r_y}_e}_3, {{r_z}_e}_3`, `{u_e}_4, {v_e}_4, {w_e}_4, {{r_x}_e}_4,
+        {{r_y}_e}_4, {{r_z}_e}_4`.
+
     """
     cdef public cDOUBLE[:] xe
     cdef public cDOUBLE[:] ue
@@ -45,8 +76,7 @@ cdef class Quad4RProbe:
 
 cdef class Quad4R:
     r"""
-    Nodal connectivity for plate element
-    similar to Nastran's CQUAD4::
+    Nodal connectivity for the plate element similar to Nastran's CQUAD4::
 
          ^ y
          |
@@ -56,6 +86,24 @@ cdef class Quad4R:
          |       |
          |_______|
         1         2
+
+    Attributes
+    ----------
+    eid : int
+        Element identification number.
+    area : double
+        Element area.
+    cosa, cosb, cosg : double
+        Cossine of rotation angles that define the 3D position of the element.
+    c1, c2, c3, c4 : int
+        Position of each node in the global stiffness matrix.
+    n1, n2, n3, n4 : int
+        Node identification number.
+    init_k_KC0, init_k_KG, init_k_M : int
+        Position in the arrays storing the sparse data for the structural
+        matrices.
+    _p : :class:`.Quad4RProbe` object
+        Pointer to the probe.
 
     """
     cdef public cINT eid
@@ -94,7 +142,10 @@ cdef class Quad4R:
         Parameters
         ----------
         u : array-like
-            Global displacement vector
+            Array with global displacements, for a total of `M` nodes in
+            the model, this array will be arranged as: `u_1, v_1, w_1, {r_x}_1,
+            {r_y}_1, {r_z}_1, u_2, v_2, w_2, {r_x}_2, {r_y}_2, {r_z}_2, ...,
+            u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M`.
 
         """
         cdef int i, j
@@ -147,7 +198,9 @@ cdef class Quad4R:
         Parameters
         ----------
         x : array-like
-            Array with global nodal coordinates x1, y1, z1, x2, y2, z2, ...
+            Array with global nodal coordinates, for a total of `M` nodes in
+            the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
+            y_2, z_2, ..., x_M, y_M, z_M`.
 
         """
         cdef int i, j
