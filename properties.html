@@ -1,0 +1,611 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Beam property module (pyfe3d.beamprop) &#8212; pyfe3d 0.1.3 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="BeamC - Consistent Timoshenko 3D beam element" href="beamc.html" />
+    <link rel="prev" title="Finite elements for 3D problems in Python/Cython" href="index.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="beamc.html" title="BeamC - Consistent Timoshenko 3D beam element"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Finite elements for 3D problems in Python/Cython"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.1.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <span class="target" id="module-pyfe3d.beamprop"></span><section id="beam-property-module-pyfe3d-beamprop">
+<h1>Beam property module (<a class="reference internal" href="#module-pyfe3d.beamprop" title="pyfe3d.beamprop"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code></a>)<a class="headerlink" href="#beam-property-module-pyfe3d-beamprop" title="Permalink to this headline">¶</a></h1>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pyfe3d.beamprop.</span></span><span class="sig-name descname"><span class="pre">BeamProp</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>A</strong><span class="classifier">float</span></dt><dd><p>Area of the cross section</p>
+</dd>
+<dt><strong>E</strong><span class="classifier">float</span></dt><dd><p>Young modulus</p>
+</dd>
+<dt><strong>G</strong><span class="classifier">float</span></dt><dd><p>Shear modulus</p>
+</dd>
+<dt><strong>scf</strong><span class="classifier">float</span></dt><dd><p>Shear correction factor</p>
+</dd>
+<dt><strong>Iyy</strong><span class="classifier">float</span></dt><dd><p>Second moment of area about the y axis <span class="math notranslate nohighlight">\(\int_y \int_z y^2 dy dz\)</span></p>
+</dd>
+<dt><strong>Izz</strong><span class="classifier">float</span></dt><dd><p>Second moment of area about the z axis <span class="math notranslate nohighlight">\(\int_y \int_z z^2 dy dz\)</span></p>
+</dd>
+<dt><strong>J</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z y z dy dz\)</span></p>
+</dd>
+<dt><strong>Ay</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z y dy dz\)</span></p>
+</dd>
+<dt><strong>Az</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z z dy dz\)</span></p>
+</dd>
+<dt><strong>intrho</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_{y_e} \int_{z_e} \rho(y, z) dy dz\)</span>, where <span class="math notranslate nohighlight">\(\rho\)</span> Is the
+density</p>
+</dd>
+<dt><strong>intrhoy</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z y \rho(y, z) dy dz\)</span></p>
+</dd>
+<dt><strong>intrhoz</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z z \rho(y, z) dy dz\)</span></p>
+</dd>
+<dt><strong>intrhoy2</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z y^2 \rho(y, z) dy dz\)</span></p>
+</dd>
+<dt><strong>intrhoz2</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z z^2 \rho(y, z) dy dz\)</span></p>
+</dd>
+<dt><strong>intrhoyz</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z y z \rho(y, z) dy dz\)</span></p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+<span class="target" id="module-pyfe3d.shellprop"></span><section id="shell-property-module-pyfe3d-shellprop">
+<h1>Shell property module (<a class="reference internal" href="#module-pyfe3d.shellprop" title="pyfe3d.shellprop"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop</span></code></a>)<a class="headerlink" href="#shell-property-module-pyfe3d-shellprop" title="Permalink to this headline">¶</a></h1>
+<p>Highly based on the <a class="reference external" href="https://saullocastro.github.io/composites/">composites</a>. module.</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">Lamina</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl>
+<dt><strong>plyid</strong><span class="classifier">int</span></dt><dd><p>Identificaiton of the composite lamina</p>
+</dd>
+<dt><strong>matlamina</strong><span class="classifier"><a class="reference internal" href="#pyfe3d.shellprop.MatLamina" title="pyfe3d.shellprop.MatLamina"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatLamina</span></code></a> object</span></dt><dd><p>A <a class="reference internal" href="#pyfe3d.shellprop.MatLamina" title="pyfe3d.shellprop.MatLamina"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatLamina</span></code></a> object</p>
+</dd>
+<dt><strong>h</strong><span class="classifier">float</span></dt><dd><p>Ply thickness</p>
+</dd>
+<dt><strong>thetadeg</strong><span class="classifier">float</span></dt><dd><p>Ply angle in degrees</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.shellprop.Lamina.get_constitutive_matrix" title="pyfe3d.shellprop.Lamina.get_constitutive_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_constitutive_matrix</span></code></a></p></td>
+<td><p>Return the constitutive matrix</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.shellprop.Lamina.get_transf_matrix_displ_to_laminate" title="pyfe3d.shellprop.Lamina.get_transf_matrix_displ_to_laminate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_transf_matrix_displ_to_laminate</span></code></a></p></td>
+<td><p>Return displacement transformation matrix from lamina to laminate</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.shellprop.Lamina.get_transf_matrix_stress_to_lamina" title="pyfe3d.shellprop.Lamina.get_transf_matrix_stress_to_lamina"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_transf_matrix_stress_to_lamina</span></code></a></p></td>
+<td><p>Return stress transformation matrix from laminate to lamina</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.shellprop.Lamina.get_transf_matrix_stress_to_laminate" title="pyfe3d.shellprop.Lamina.get_transf_matrix_stress_to_laminate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_transf_matrix_stress_to_laminate</span></code></a></p></td>
+<td><p>Return stress transformation matrix from lamina to laminate</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.shellprop.Lamina.rebuild" title="pyfe3d.shellprop.Lamina.rebuild"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rebuild</span></code></a></p></td>
+<td><p>Update constitutive matrices</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.get_constitutive_matrix">
+<span class="sig-name descname"><span class="pre">get_constitutive_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.get_constitutive_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the constitutive matrix</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.get_transf_matrix_displ_to_laminate">
+<span class="sig-name descname"><span class="pre">get_transf_matrix_displ_to_laminate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.get_transf_matrix_displ_to_laminate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return displacement transformation matrix from lamina to laminate</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.get_transf_matrix_stress_to_lamina">
+<span class="sig-name descname"><span class="pre">get_transf_matrix_stress_to_lamina</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.get_transf_matrix_stress_to_lamina" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return stress transformation matrix from laminate to lamina</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.get_transf_matrix_stress_to_laminate">
+<span class="sig-name descname"><span class="pre">get_transf_matrix_stress_to_laminate</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.get_transf_matrix_stress_to_laminate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return stress transformation matrix from lamina to laminate</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.rebuild">
+<span class="sig-name descname"><span class="pre">rebuild</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.rebuild" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update constitutive matrices</p>
+<p>Reference:</p>
+<blockquote>
+<div><p>Reddy, J. N., Mechanics of Laminated Composite Plates and
+Shells - Theory and Analysys. Second Edition. CRC PRESS, 2004.</p>
+</div></blockquote>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.LaminationParameters">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">LaminationParameters</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Lamination parameters</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>xiA1, xiA2, xiA3, xiA4</strong><span class="classifier">float</span></dt><dd><p>Lamination parameters <span class="math notranslate nohighlight">\(\xi_{Ai}\)</span> (in-plane)</p>
+</dd>
+<dt><strong>xiB1, xiB2, xiB3, xiB4</strong><span class="classifier">float</span></dt><dd><p>Lamination parameters <span class="math notranslate nohighlight">\(\xi_{Bi}\)</span> (in-plane coupling with bending)</p>
+</dd>
+<dt><strong>xiD1, xiD2, xiD3, xiD4</strong><span class="classifier">float</span></dt><dd><p>Lamination parameters <span class="math notranslate nohighlight">\(\xi_{Di}\)</span> (bending)</p>
+</dd>
+<dt><strong>xiE1, xiE2, xiE3, xiE4</strong><span class="classifier">float</span></dt><dd><p>Lamination parameters <span class="math notranslate nohighlight">\(\xi_{Ei}\)</span> (transverse shear)</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">MatLamina</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina" title="Permalink to this definition">¶</a></dt>
+<dd><p>Orthotropic material lamina</p>
+<p class="rubric">Notes</p>
+<p>For isotropic materials when the user defines <span class="math notranslate nohighlight">\(\nu\)</span> and <span class="math notranslate nohighlight">\(E\)</span>, <span class="math notranslate nohighlight">\(G\)</span> will be
+recaculated based on equation: <span class="math notranslate nohighlight">\(G = E/(2 \times (1+\nu))\)</span>; in a lower
+priority if the user defines <span class="math notranslate nohighlight">\(\nu\)</span> and <span class="math notranslate nohighlight">\(G\)</span>, <span class="math notranslate nohighlight">\(E\)</span> will be recaculated based
+on equation: <span class="math notranslate nohighlight">\(E = 2 \times (1+\nu) \times G\)</span>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>e1</strong><span class="classifier">float</span></dt><dd><p>Young Modulus in direction 1</p>
+</dd>
+<dt><strong>e2</strong><span class="classifier">float</span></dt><dd><p>Young Modulus in direction 2</p>
+</dd>
+<dt><strong>g12</strong><span class="classifier">float</span></dt><dd><p>in-plane shear modulus</p>
+</dd>
+<dt><strong>g13</strong><span class="classifier">float</span></dt><dd><p>transverse shear modulus for plane 1-Z</p>
+</dd>
+<dt><strong>g23</strong><span class="classifier">float</span></dt><dd><p>transverse shear modulus for plane 2-Z</p>
+</dd>
+<dt><strong>nu12 :</strong></dt><dd><p>Poisson’s ratio 12</p>
+</dd>
+<dt><strong>nu13 :</strong></dt><dd><p>Poisson’s ratio 13</p>
+</dd>
+<dt><strong>nu23 :</strong></dt><dd><p>Poisson’s ratio 23</p>
+</dd>
+<dt><strong>nu21 :</strong></dt><dd><p>Poisson’s ratio 21: use formula nu12/e1 = nu21/e2</p>
+</dd>
+<dt><strong>nu31 :</strong></dt><dd><p>Poisson’s ratio 31: use formula nu31/e3 = nu13/e1</p>
+</dd>
+<dt><strong>nu32 :</strong></dt><dd><p>Poisson’s ratio 32: use formula nu23/e2 = nu32/e3</p>
+</dd>
+<dt><strong>rho :</strong></dt><dd><p>especific mass (mass / volume)</p>
+</dd>
+<dt><strong>a1 :</strong></dt><dd><p>thermal expansion coeffiecient in direction 1</p>
+</dd>
+<dt><strong>a2 :</strong></dt><dd><p>thermal expansion coeffiecient in direction 2</p>
+</dd>
+<dt><strong>a3 :</strong></dt><dd><p>thermal expansion coeffiecient in direction 3</p>
+</dd>
+<dt><strong>tref :</strong></dt><dd><p>reference temperature</p>
+</dd>
+<dt><strong>st1,st2 :</strong></dt><dd><p>allowable tensile stresses for directions 1 and 2</p>
+</dd>
+<dt><strong>sc1,sc2 :</strong></dt><dd><p>allowable compressive stresses for directions 1 and 2</p>
+</dd>
+<dt><strong>ss12 :</strong></dt><dd><p>allowable in-plane stress for shear</p>
+</dd>
+<dt><strong>q11 :</strong></dt><dd><p>lamina constitutive constant 11</p>
+</dd>
+<dt><strong>q12 :</strong></dt><dd><p>lamina constitutive constant 12</p>
+</dd>
+<dt><strong>q13 :</strong></dt><dd><p>lamina constitutive constant 13</p>
+</dd>
+<dt><strong>q21 :</strong></dt><dd><p>lamina constitutive constant 21</p>
+</dd>
+<dt><strong>q22 :</strong></dt><dd><p>lamina constitutive constant 22</p>
+</dd>
+<dt><strong>q23 :</strong></dt><dd><p>lamina constitutive constant 23</p>
+</dd>
+<dt><strong>q31 :</strong></dt><dd><p>lamina constitutive constant 31</p>
+</dd>
+<dt><strong>q32 :</strong></dt><dd><p>lamina constitutive constant 32</p>
+</dd>
+<dt><strong>q33 :</strong></dt><dd><p>lamina constitutive constant 33</p>
+</dd>
+<dt><strong>q44 :</strong></dt><dd><p>lamina constitutive constant 44</p>
+</dd>
+<dt><strong>q55 :</strong></dt><dd><p>lamina constitutive constant 55</p>
+</dd>
+<dt><strong>q66 :</strong></dt><dd><p>lamina constitutive constant 66</p>
+</dd>
+<dt><strong>ci :</strong></dt><dd><p>lamina stiffness constants</p>
+</dd>
+<dt><strong>ui :</strong></dt><dd><p>lamina material invariants</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.shellprop.MatLamina.get_constitutive_matrix" title="pyfe3d.shellprop.MatLamina.get_constitutive_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_constitutive_matrix</span></code></a></p></td>
+<td><p>Return the constitutive matrix</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.shellprop.MatLamina.get_invariant_matrix" title="pyfe3d.shellprop.MatLamina.get_invariant_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">get_invariant_matrix</span></code></a></p></td>
+<td><p>Return the invariant matrix</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.shellprop.MatLamina.rebuild" title="pyfe3d.shellprop.MatLamina.rebuild"><code class="xref py py-obj docutils literal notranslate"><span class="pre">rebuild</span></code></a></p></td>
+<td><p>Update constitutive and invariant terms</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.shellprop.MatLamina.trace_normalize_plane_stress" title="pyfe3d.shellprop.MatLamina.trace_normalize_plane_stress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">trace_normalize_plane_stress</span></code></a></p></td>
+<td><p>Trace-normalize the lamina properties for plane stress</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.get_constitutive_matrix">
+<span class="sig-name descname"><span class="pre">get_constitutive_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.get_constitutive_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the constitutive matrix</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.get_invariant_matrix">
+<span class="sig-name descname"><span class="pre">get_invariant_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.get_invariant_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the invariant matrix</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.rebuild">
+<span class="sig-name descname"><span class="pre">rebuild</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.rebuild" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update constitutive and invariant terms</p>
+<p>Reference:</p>
+<blockquote>
+<div><p>Reddy, J. N., Mechanics of laminated composite plates and shells.
+Theory and analysis. Second Edition. CRC Press, 2004.</p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.trace_normalize_plane_stress">
+<span class="sig-name descname"><span class="pre">trace_normalize_plane_stress</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.trace_normalize_plane_stress" title="Permalink to this definition">¶</a></dt>
+<dd><p>Trace-normalize the lamina properties for plane stress</p>
+<p>Modify the original <a class="reference internal" href="#pyfe3d.shellprop.MatLamina" title="pyfe3d.shellprop.MatLamina"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatLamina</span></code></a> object with a
+trace-normalization performed after calculating the trace according to
+Eq. 1 of reference:</p>
+<blockquote>
+<div><p>Melo, J. D. D., Bi, J., and Tsai, S. W., 2017, “A Novel
+Invariant-Based Design Approach to Carbon Fiber Reinforced
+Laminates,” Compos. Struct., 159, pp. 44–52.</p>
+</div></blockquote>
+<p>The trace calculated as <span class="math notranslate nohighlight">\(tr = Q_{11} + Q_{22} + 2Q_{66}\)</span>.  The
+universal in-plane stress stiffness components
+<span class="math notranslate nohighlight">\(Q_{11},Q_{12},Q_{22},Q_{44},Q_{55},Q_{66}\)</span> are divided by <span class="math notranslate nohighlight">\(tr\)</span>, and
+the invariants <span class="math notranslate nohighlight">\(U_1,U_2,U_3,U_4,U_5,U_6,U_7\)</span> are calculated with the
+normalized stiffnesses, such they also become trace-normalized
+invariants. These can be accessed using the <code class="docutils literal notranslate"><span class="pre">u1,u2,u3,u4,u5,u6,u7</span></code>
+attributes.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp">
+<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">ShellProp</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Attributes</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>plies</strong><span class="classifier">list</span></dt><dd><p>List of plies</p>
+</dd>
+<dt><strong>h</strong><span class="classifier">float</span></dt><dd><p>Total thickness of the laminate</p>
+</dd>
+<dt><strong>offset</strong><span class="classifier">float</span></dt><dd><p>Offset at the normal direction</p>
+</dd>
+<dt><strong>e1, e2</strong><span class="classifier">float</span></dt><dd><p>Equivalent laminate moduli in directions 1 and 2</p>
+</dd>
+<dt><strong>g12</strong><span class="classifier">float</span></dt><dd><p>Equivalent laminate shear modulus in the 12 direction</p>
+</dd>
+<dt><strong>nu12, nu21</strong><span class="classifier">float</span></dt><dd><p>Equivalent laminate Poisson ratios in the 12 and 21 directions</p>
+</dd>
+<dt><strong>scf_k13, scf_k23</strong><span class="classifier">float</span></dt><dd><p>Shear correction factor in the 13 and 23 directions</p>
+</dd>
+<dt><strong>intrho</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_{-h/2+offset}^{+h/2+offset} \rho(z) dz\)</span>, used in
+equivalent single layer finite element mass matrices</p>
+</dd>
+<dt><strong>intrhoz</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_{-h/2+offset}^{+h/2+offset} \rho(z)z dz\)</span>, used in
+equivalent single layer finite element mass matrices</p>
+</dd>
+<dt><strong>intrhoz2</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_{-h/2+offset}^{+h/2+offset} \rho(z)z^2 dz\)</span>, used in
+equivalent single layer finite element mass matrices</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<table class="longtable docutils align-default">
+<colgroup>
+<col style="width: 10%" />
+<col style="width: 90%" />
+</colgroup>
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.shellprop.ShellProp.calc_constitutive_matrix" title="pyfe3d.shellprop.ShellProp.calc_constitutive_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_constitutive_matrix</span></code></a></p></td>
+<td><p>Calculate the laminate constitutive terms</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.shellprop.ShellProp.calc_equivalent_properties" title="pyfe3d.shellprop.ShellProp.calc_equivalent_properties"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_equivalent_properties</span></code></a></p></td>
+<td><p>Calculate the equivalent laminate properties</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.shellprop.ShellProp.calc_lamination_parameters" title="pyfe3d.shellprop.ShellProp.calc_lamination_parameters"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_lamination_parameters</span></code></a></p></td>
+<td><p>Calculate the lamination parameters.</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.shellprop.ShellProp.calc_scf" title="pyfe3d.shellprop.ShellProp.calc_scf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">calc_scf</span></code></a></p></td>
+<td><p>Update shear correction factors of the <a class="reference internal" href="#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.shellprop.ShellProp.force_orthotropic" title="pyfe3d.shellprop.ShellProp.force_orthotropic"><code class="xref py py-obj docutils literal notranslate"><span class="pre">force_orthotropic</span></code></a></p></td>
+<td><p>Force an orthotropic laminate</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.shellprop.ShellProp.force_symmetric" title="pyfe3d.shellprop.ShellProp.force_symmetric"><code class="xref py py-obj docutils literal notranslate"><span class="pre">force_symmetric</span></code></a></p></td>
+<td><p>Force a symmetric laminate</p></td>
+</tr>
+</tbody>
+</table>
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.calc_constitutive_matrix">
+<span class="sig-name descname"><span class="pre">calc_constitutive_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.calc_constitutive_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the laminate constitutive terms</p>
+<p>This is the commonly called <code class="docutils literal notranslate"><span class="pre">ABD</span></code> matrix with <code class="docutils literal notranslate"><span class="pre">shape=(6,</span> <span class="pre">6)</span></code> when
+the classical laminated plate theory is used, or the <code class="docutils literal notranslate"><span class="pre">ABDE</span></code> matrix
+when the first-order shear deformation theory is used, containing the
+transverse shear terms.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.calc_equivalent_properties">
+<span class="sig-name descname"><span class="pre">calc_equivalent_properties</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.calc_equivalent_properties" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the equivalent laminate properties</p>
+<p>The following attributes are updated:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">e1</span></code>, <code class="docutils literal notranslate"><span class="pre">e2</span></code>, <code class="docutils literal notranslate"><span class="pre">g12</span></code>, <code class="docutils literal notranslate"><span class="pre">`u12</span></code>, <code class="docutils literal notranslate"><span class="pre">nu21</span></code></p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.calc_lamination_parameters">
+<span class="sig-name descname"><span class="pre">calc_lamination_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.calc_lamination_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculate the lamination parameters.</p>
+<p>The following attributes are calculated:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">xiA</span></code>, <code class="docutils literal notranslate"><span class="pre">xiB</span></code>, <code class="docutils literal notranslate"><span class="pre">xiD</span></code>, <code class="docutils literal notranslate"><span class="pre">xiE</span></code></p>
+</div></blockquote>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.calc_scf">
+<span class="sig-name descname"><span class="pre">calc_scf</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.calc_scf" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update shear correction factors of the <a class="reference internal" href="#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object</p>
+<p>Reference:</p>
+<blockquote>
+<div><p>Vlachoutsis, S. “Shear correction factors for plates and shells”,
+Int. Journal for Numerical Methods in Engineering, Vol. 33,
+1537-1552, 1992.</p>
+<p><a class="reference external" href="http://onlinelibrary.wiley.com/doi/10.1002/nme.1620330712/full">http://onlinelibrary.wiley.com/doi/10.1002/nme.1620330712/full</a></p>
+</div></blockquote>
+<p>Using “one shear correction factor” (see reference), assuming:</p>
+<ul class="simple">
+<li><p>constant G13, G23, E1, E2, nu12, nu21 within each ply</p></li>
+<li><p>g1 calculated using z at the middle of each ply</p></li>
+<li><p>zn1 = <a class="reference internal" href="#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> <code class="docutils literal notranslate"><span class="pre">offset</span></code> attribute</p></li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>k13, k23</strong><span class="classifier">tuple</span></dt><dd><p>Shear correction factors. Also updates attributes: <code class="docutils literal notranslate"><span class="pre">scf_k13</span></code> and
+<code class="docutils literal notranslate"><span class="pre">scf_k23</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.force_orthotropic">
+<span class="sig-name descname"><span class="pre">force_orthotropic</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.force_orthotropic" title="Permalink to this definition">¶</a></dt>
+<dd><p>Force an orthotropic laminate</p>
+<p>The attributes <span class="math notranslate nohighlight">\(A_{16}\)</span>, <span class="math notranslate nohighlight">\(A_{26}\)</span>, <span class="math notranslate nohighlight">\(B_{16}\)</span>, <span class="math notranslate nohighlight">\(B_{26}\)</span>, <span class="math notranslate nohighlight">\(D_{16}\)</span>,
+<span class="math notranslate nohighlight">\(D_{26}\)</span> are set to zero to force an orthotropic laminate.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.force_symmetric">
+<span class="sig-name descname"><span class="pre">force_symmetric</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.force_symmetric" title="Permalink to this definition">¶</a></dt>
+<dd><p>Force a symmetric laminate</p>
+<p>The <span class="math notranslate nohighlight">\(B_{ij}\)</span> terms of the constitutive matrix are set to zero.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.force_balanced_LP">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">force_balanced_LP</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop.force_balanced_LP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Force balanced lamination parameters</p>
+<p>The lamination parameters <span class="math notranslate nohighlight">\(\xi_{A2}\)</span> and <span class="math notranslate nohighlight">\(\xi_{A4}\)</span> are set to null to
+force a balanced laminate.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.force_symmetric_LP">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">force_symmetric_LP</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop.force_symmetric_LP" title="Permalink to this definition">¶</a></dt>
+<dd><p>Force symmetric lamination parameters</p>
+<p>The lamination parameters <span class="math notranslate nohighlight">\(\xi_{Bi}\)</span> are set to null to force a symmetric
+laminate.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.shellprop_from_lamination_parameters">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">shellprop_from_lamination_parameters</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop.shellprop_from_lamination_parameters" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a <a class="reference internal" href="#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object based in the thickness, material and
+lamination parameters</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>thickness</strong><span class="classifier">float</span></dt><dd><p>The total thickness of the laminate</p>
+</dd>
+<dt><strong>matlamina</strong><span class="classifier"><a class="reference internal" href="#pyfe3d.shellprop.MatLamina" title="pyfe3d.shellprop.MatLamina"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatLamina</span></code></a> object</span></dt><dd><p>Material object</p>
+</dd>
+<dt><strong>lp</strong><span class="classifier"><a class="reference internal" href="#pyfe3d.shellprop.LaminationParameters" title="pyfe3d.shellprop.LaminationParameters"><code class="xref py py-class docutils literal notranslate"><span class="pre">LaminationParameters</span></code></a> object</span></dt><dd><p>Lamination parameters</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl>
+<dt><strong>lam</strong><span class="classifier"><a class="reference internal" href="#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a></span></dt><dd><p>laminate with the ABD and ABDE matrices already calculated</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.shellprop.shellprop_from_lamination_parameters2">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">shellprop_from_lamination_parameters2</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop.shellprop_from_lamination_parameters2" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a <a class="reference internal" href="#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object based in the thickness, material and
+lamination parameters</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>thickness</strong><span class="classifier">float</span></dt><dd><p>The total thickness of the plate</p>
+</dd>
+<dt><strong>matlamina</strong><span class="classifier"><a class="reference internal" href="#pyfe3d.shellprop.MatLamina" title="pyfe3d.shellprop.MatLamina"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatLamina</span></code></a> object</span></dt><dd><p>Material object</p>
+</dd>
+<dt><strong>xiA1 to xiD4</strong><span class="classifier">float</span></dt><dd><p>The 16 lamination parameters <span class="math notranslate nohighlight">\(\xi_{A1} \cdots \xi_{A4}\)</span>, <span class="math notranslate nohighlight">\(\xi_{B1}
+\cdots \xi_{B4}\)</span>, <span class="math notranslate nohighlight">\(\xi_{C1} \cdots \xi_{C4}\)</span>, <span class="math notranslate nohighlight">\(\xi_{D1} \cdots
+\xi_{D4}\)</span>, <span class="math notranslate nohighlight">\(\xi_{E1} \cdots \xi_{E4}\)</span></p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl>
+<dt><strong>lam</strong><span class="classifier"><a class="reference internal" href="#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a></span></dt><dd><p>Shell property with the ABD and ABDE matrices already calculated</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
+<li><a class="reference internal" href="#shell-property-module-pyfe3d-shellprop">Shell property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop</span></code>)</a></li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="index.html"
+                        title="previous chapter">Finite elements for 3D problems in Python/Cython</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="beamc.html"
+                        title="next chapter">BeamC - Consistent Timoshenko 3D beam element</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/properties.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="beamc.html" title="BeamC - Consistent Timoshenko 3D beam element"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="index.html" title="Finite elements for 3D problems in Python/Cython"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.1.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021-, Saullo G. P. Castro.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.1.2.
+    </div>
+  </body>
+</html>
