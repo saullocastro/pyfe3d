@@ -7,6 +7,12 @@
 Truss - Linear truss 3D element with analytical integration
 -----------------------------------------------------------
 
+.. note:: The :class:`.BeamLR` element is recommended because of the better
+          physical representation.
+
+.. note:: The :class:`.Truss` element does not support linear buckling
+          analysis.
+
 """
 import numpy as np
 cimport numpy as np
@@ -21,17 +27,40 @@ cdef cINT DOF = 6
 cdef cINT NUM_NODES = 2
 
 cdef class TrussData:
+    r"""
+    Used to allocate memory for the sparse matrices.
+
+    Attributes
+    ----------
+    KC0_SPARSE_SIZE : int
+        ``KC0_SPARSE_SIZE = 72``
+
+    M_SPARSE_SIZE : int
+        ``M_SPARSE_SIZE = 72``
+
+    """
     cdef public cINT KC0_SPARSE_SIZE
-    cdef public cINT KG_SPARSE_SIZE
     cdef public cINT M_SPARSE_SIZE
     def __cinit__(TrussData self):
         self.KC0_SPARSE_SIZE = 72
-        self.KG_SPARSE_SIZE = 36
         self.M_SPARSE_SIZE = 72
 
 cdef class TrussProbe:
-    """
+    r"""
     Probe used for local coordinates, local displacements, local stresses etc
+
+    Attributes
+    ----------
+    xe : array-like
+        Array of size ``NUM_NODES*DOF//2=6`` containing the nodal coordinates
+        in the element coordinate system, in the following order `{x_e}_1,
+        {y_e}_1, {z_e}_1, {x_e}_2, {y_e}_2, {z_e}_2`.
+    ue : array-like
+        Array of size ``NUM_NODES*DOF=12`` containing the element displacements
+        in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
+        {{r_y}_e}_1, {{r_z}_e}_1, {u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
+        {{r_y}_e}_2, {{r_z}_e}_2`.
+
     """
     cdef public cDOUBLE[:] xe
     cdef public cDOUBLE[:] ue
@@ -41,22 +70,22 @@ cdef class TrussProbe:
 
 cdef class Truss:
     """
-       ^ y axis
-       |
-       |
-       ______   --> x axis
-       1    2
-       Assumed 2D plane for all derivations
+    Truss 3D element for axial- and torsion-only behavior
 
-       Timoshenko 3D beam element with consistent shape functions from:
-       Luo, Y., 2008, “An Efficient 3D Timoshenko Beam Element with Consistent Shape Functions,” Adv. Theor. Appl. Mech., 1(3), pp. 95–106.
+    Nodal connectivity for the truss element::
 
+        ______   --> u  ->>- rx
+        1    2
+
+
+    .. note:: The :class:`.BeamLR` is recommended because of the better
+              physical representation.
 
     """
     cdef public cINT eid
     cdef public cINT n1, n2
     cdef public cINT c1, c2
-    cdef public cINT init_k_KC0, init_k_KG, init_k_M
+    cdef public cINT init_k_KC0, init_k_M
     cdef public double length
     cdef public double cosa, cosb, cosg
     cdef TrussProbe _p
@@ -70,7 +99,6 @@ cdef class Truss:
         self.c2 = -1
         self.init_k_KC0 = 0
         #self.init_k_KCNL = 0
-        self.init_k_KG = 0
         self.init_k_M = 0
         self.length = 0
         self.cosa = 1.
@@ -83,7 +111,10 @@ cdef class Truss:
         Parameters
         ----------
         u : array-like
-            Global displacement vector
+            Array with global displacements, for a total of `M` nodes in
+            the model, this array will be arranged as: `u_1, v_1, w_1, {r_x}_1,
+            {r_y}_1, {r_z}_1, u_2, v_2, w_2, {r_x}_2, {r_y}_2, {r_z}_2, ...,
+            u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M`.
 
         """
         cdef int i, j
@@ -135,7 +166,9 @@ cdef class Truss:
         Parameters
         ----------
         x : array-like
-            Array with global nodal coordinates x1, y1, z1, x2, y2, z2, ...
+            Array with global nodal coordinates, for a total of `M` nodes in
+            the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
+            y_2, z_2, ..., x_M, y_M, z_M`.
 
         """
         cdef int i, j

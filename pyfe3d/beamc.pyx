@@ -21,6 +21,21 @@ cdef cINT DOF = 6
 cdef cINT NUM_NODES = 2
 
 cdef class BeamCData:
+    r"""
+    Used to allocate memory for the sparse matrices.
+
+    Attributes
+    ----------
+    KC0_SPARSE_SIZE : int
+        ``KC0_SPARSE_SIZE = 144``
+
+    KG_SPARSE_SIZE : int
+        ``KG_SPARSE_SIZE = 144``
+
+    M_SPARSE_SIZE : int
+        ``M_SPARSE_SIZE = 144``
+
+    """
     cdef public cINT KC0_SPARSE_SIZE
     cdef public cINT KG_SPARSE_SIZE
     cdef public cINT M_SPARSE_SIZE
@@ -30,8 +45,21 @@ cdef class BeamCData:
         self.M_SPARSE_SIZE = 144
 
 cdef class BeamCProbe:
-    """
+    r"""
     Probe used for local coordinates, local displacements, local stresses etc
+
+    Attributes
+    ----------
+    xe : array-like
+        Array of size ``NUM_NODES*DOF//2=6`` containing the nodal coordinates
+        in the element coordinate system, in the following order `{x_e}_1,
+        {y_e}_1, {z_e}_1, {x_e}_2, {y_e}_2, {z_e}_2`.
+    ue : array-like
+        Array of size ``NUM_NODES*DOF=12`` containing the element displacements
+        in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
+        {{r_y}_e}_1, {{r_z}_e}_1, {u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
+        {{r_y}_e}_2, {{r_z}_e}_2`.
+
     """
     cdef public cDOUBLE[:] xe
     cdef public cDOUBLE[:] ue
@@ -41,16 +69,38 @@ cdef class BeamCProbe:
 
 cdef class BeamC:
     """
-       ^ y axis
-       |
-       |
-       ______   --> x axis
-       1    2
-       Assumed 2D plane for all derivations
+    Timoshenko 3D beam element with consistent shape functions
 
-       Timoshenko 3D beam element with consistent shape functions from:
-       Luo, Y., 2008, “An Efficient 3D Timoshenko Beam Element with Consistent Shape Functions,” Adv. Theor. Appl. Mech., 1(3), pp. 95–106.
+    Formulation based on reference:
 
+        Luo, Y., 2008, “An Efficient 3D Timoshenko Beam Element with Consistent
+        Shape Functions,” Adv. Theor. Appl. Mech., 1(3), pp. 95–106.
+
+    Nodal connectivity for the beam element::
+
+        ^ y axis
+        |
+        |
+        ______   --> x axis
+        1    2
+
+    Attributes
+    ----------
+    eid : int
+        Element identification number.
+    length : double
+        Element length.
+    cosa, cosb, cosg : double
+        Cossine of rotation angles that define the 3D position of the element.
+    c1, c2 : int
+        Position of each node in the global stiffness matrix.
+    n1, n2 : int
+        Node identification number.
+    init_k_KC0, init_k_KG, init_k_M : int
+        Position in the arrays storing the sparse data for the structural
+        matrices.
+    _p : :class:`.BeamCProbe` object
+        Pointer to the probe.
 
     """
     cdef public cINT eid
@@ -83,7 +133,10 @@ cdef class BeamC:
         Parameters
         ----------
         u : array-like
-            Global displacement vector
+            Array with global displacements, for a total of `M` nodes in
+            the model, this array will be arranged as: `u_1, v_1, w_1, {r_x}_1,
+            {r_y}_1, {r_z}_1, u_2, v_2, w_2, {r_x}_2, {r_y}_2, {r_z}_2, ...,
+            u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M`.
 
         """
         cdef int i, j
@@ -135,7 +188,9 @@ cdef class BeamC:
         Parameters
         ----------
         x : array-like
-            Array with global nodal coordinates x1, y1, z1, x2, y2, z2, ...
+            Array with global nodal coordinates, for a total of `M` nodes in
+            the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
+            y_2, z_2, ..., x_M, y_M, z_M`.
 
         """
         cdef int i, j

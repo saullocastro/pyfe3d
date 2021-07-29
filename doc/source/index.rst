@@ -5,6 +5,9 @@ Finite elements for 3D problems in Python/Cython
     :maxdepth: 2
 
     properties.rst
+    beamc.rst
+    beamlr.rst
+    truss.rst
     quad4r.rst
 
 License
