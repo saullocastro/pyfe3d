@@ -3,7 +3,7 @@
 #cython: cdivision=True
 #cython: nonecheck=False
 #cython: infer_types=False
-"""
+r"""
 BeamC - Consistent Timoshenko 3D beam element
 ---------------------------------------------
 
@@ -68,7 +68,7 @@ cdef class BeamCProbe:
         self.ue = np.zeros(NUM_NODES*DOF, dtype=DOUBLE)
 
 cdef class BeamC:
-   r"""
+    r"""
     Timoshenko 3D beam element with consistent shape functions
 
     Formulation based on reference:
@@ -128,7 +128,7 @@ cdef class BeamC:
         self.cosg = 1.
 
     cpdef void update_ue(BeamC self, np.ndarray[cDOUBLE, ndim=1] u):
-       r"""Update the local displacement vector of the element
+        r"""Update the local displacement vector of the element
 
         Parameters
         ----------
@@ -183,7 +183,7 @@ cdef class BeamC:
                     self._p.ue[j*DOF + 5] += sw[i]*u[c[j] + 3 + i]
 
     cpdef void update_xe(BeamC self, np.ndarray[cDOUBLE, ndim=1] x):
-       r"""Update the 3D coordinates of the element
+        r"""Update the 3D coordinates of the element
 
         Parameters
         ----------
@@ -233,7 +233,7 @@ cdef class BeamC:
         self.update_length()
 
     cpdef void update_length(BeamC self):
-       r"""Update element length
+        r"""Update element length
 
         """
         cdef double x1, x2, y1, y2, z1, z2
@@ -254,7 +254,7 @@ cdef class BeamC:
             BeamProp prop,
             int update_KC0v_only=0
             ):
-       r"""Update sparse vectors for linear constitutive stiffness matrix KC0
+        r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
         Properties
         ----------
@@ -1038,7 +1038,7 @@ cdef class BeamC:
             BeamProp prop,
             int update_KGv_only=0
             ):
-       r"""Update sparse vectors for geometric stiffness matrix KG
+        r"""Update sparse vectors for geometric stiffness matrix KG
 
         Properties
         ----------
@@ -1824,7 +1824,7 @@ cdef class BeamC:
             BeamProp prop,
             int mtype=0,
             ):
-       r"""Update sparse vectors for mass matrix M
+        r"""Update sparse vectors for mass matrix M
 
         Properties
         ----------
