@@ -10,7 +10,7 @@ import numpy as np
 from Cython.Build import cythonize
 
 
-is_released = False
+is_released = True
 version = '0.1.0'
 
 
