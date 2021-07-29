@@ -16,6 +16,10 @@ r"""
    Luo, Y., 2008, “An Efficient 3D Timoshenko Beam Element with Consistent Shape Functions,” Adv. Theor. Appl. Mech., 1(3), pp. 95–106.
 
 """
+#NOTE not making sense to have KG for the truss element, because in theory we
+#     have that Izz=Iyy=0
+#     I would rather not have Truss and only work with BeamLR, which has
+#     physical meaning
 
 DOF = 6
 num_nodes = 2
