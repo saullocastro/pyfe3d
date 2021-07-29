@@ -17,9 +17,17 @@ Important features of this library
 
 Elements implemented
 --------------------
-- 'Quad4R' - 4-node plate with linear interpolation, equivalent to Abaqus' S4R finite element
-- 'BeamLR' - 2-node Timoshenko beam element with linear interpolation and reduced integration
-- 'BeamC' - 2-node Timoshenko beam element with consistent shape functions and analytical integration
+- 'Quad4R' - 4-node plate with linear interpolation, equivalent to Abaqus' S4R
+finite element.
+
+- 'BeamLR' - 2-node Timoshenko beam element with linear interpolation and
+reduced integration.
+
+- 'BeamC' - 2-node Timoshenko beam element with consistent shape functions and
+analytical integration.
+
+- 'Truss' - 2-node truss element with only axial and torsion stiffness. I
+recommend using the BeamLR instead, which has physical meaning.
 
 License
 -------
