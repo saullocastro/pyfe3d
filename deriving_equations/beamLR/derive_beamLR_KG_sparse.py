@@ -113,6 +113,7 @@ N = var('N', real=True)
 #      obtained for the truss element. Thus, I recommend keeping Nrz and Nry,
 #      which will become more inconsistent when the beam becomes thicker, i.e.
 #      when L/sqrt(A) becomes lower.
+
 Gmatrix = Nrz - Nry
 
 KGe = L/2.*simplify(integrate((Gmatrix.T*Gmatrix)*N, (xi, -1, +1)))
