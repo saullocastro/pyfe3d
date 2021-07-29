@@ -109,6 +109,10 @@ print('N =', N, flush=True)
 N = var('N', real=True)
 
 # G is dv/dx + dw/dx = rz - ry
+#NOTE, I tried Nvx and Nwx here and it does not work, leading to the same KG
+#      obtained for the truss element. Thus, I recommend keeping Nrz and Nry,
+#      which will become more inconsistent when the beam becomes thicker, i.e.
+#      when L/sqrt(A) becomes lower.
 Gmatrix = Nrz - Nry
 
 KGe = L/2.*simplify(integrate((Gmatrix.T*Gmatrix)*N, (xi, -1, +1)))
