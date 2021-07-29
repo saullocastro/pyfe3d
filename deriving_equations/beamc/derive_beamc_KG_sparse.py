@@ -72,6 +72,9 @@ Nry = Matrix([[0, 0, Gw1, 0, Gry1, 0,
 Nrz = Matrix([[0, Gv1, 0, 0, 0, Grz1,
                0, Gv2, 0, 0, 0, Grz2]])
 
+Nvx = simplify(Nv.diff(x))
+Nwx = simplify(Nw.diff(x))
+
 # u v w  rx  ry  rz  (rows are node 1, node2, node3, node4)
 
 #From Eqs. 8 and 9 in Luo, Y. 2008
@@ -131,8 +134,8 @@ print('N =', N, flush=True)
 #NOTE for constant properties, N will be constant along x
 N = var('N', real=True)
 
-# G is dv/dx + dw/dx = rz - ry
-Gmatrix = Nrz - Nry
+# G is dv/dx + dw/dx
+Gmatrix = Nvx + Nwx
 
 KGe = simplify(integrate((Gmatrix.T*Gmatrix)*N, (x, 0, L)))
 
