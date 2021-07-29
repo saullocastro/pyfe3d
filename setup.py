@@ -11,7 +11,7 @@ from Cython.Build import cythonize
 
 
 is_released = True
-version = '0.1.0'
+version = '0.1.1'
 
 
 def git_version():
@@ -174,6 +174,7 @@ s = setup(
     url = "https://github.com/saullocastro/pyfe3d",
     data_files=data_files,
     long_description=read('README.md'),
+    long_description_content_type = 'text/markdown',
     classifiers=[_f for _f in CLASSIFIERS.split('\n') if _f],
     install_requires=install_requires,
     ext_modules = ext_modules,
