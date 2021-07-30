@@ -1,0 +1,130 @@
+
+<!DOCTYPE html>
+
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+    <title>Quad4R useful functions (pyfe3d.quad4r_utils) &#8212; pyfe3d 0.1.4 documentation</title>
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
+    
+    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
+    <script src="_static/jquery.js"></script>
+    <script src="_static/underscore.js"></script>
+    <script src="_static/doctools.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Coordinate systems (pyfe3d.coord)" href="coord.html" />
+    <link rel="prev" title="Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r)" href="quad4r.html" /> 
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="coord.html" title="Coordinate systems (pyfe3d.coord)"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="quad4r.html" title="Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r)"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.1.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Quad4R useful functions (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r_utils</span></code>)</a></li> 
+      </ul>
+    </div>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <span class="target" id="module-pyfe3d.quad4r_utils"></span><section id="quad4r-useful-functions-pyfe3d-quad4r-utils">
+<h1>Quad4R useful functions (<a class="reference internal" href="#module-pyfe3d.quad4r_utils" title="pyfe3d.quad4r_utils"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r_utils</span></code></a>)<a class="headerlink" href="#quad4r-useful-functions-pyfe3d-quad4r-utils" title="Permalink to this headline">¶</a></h1>
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.quad4r_utils.quad4r_coord">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.quad4r_utils.</span></span><span class="sig-name descname"><span class="pre">quad4r_coord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quad</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><span class="pre">pyfe3d.quad4r.Quad4R</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncoords</span></span><span class="p"><span class="pre">:</span></span> <span class="n"><span class="pre">numpy.ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.quad4r_utils.quad4r_coord" title="Permalink to this definition">¶</a></dt>
+<dd><p>Determine the coordinate system of a <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a> element</p>
+<p>The element coordinate system is determined identically what is explained
+in Nastran’s quick reference guide for the CQUAD4 element, as illustrated
+below.</p>
+<img alt="_images/nastran_cquad4.svg" src="_images/nastran_cquad4.svg" /><dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>quad</strong><span class="classifier"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a> object</span></dt><dd><p>The quadilateral element.</p>
+</dd>
+<dt><strong>ncoords</strong><span class="classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code> object</span></dt><dd><p>An array with shape <span class="math notranslate nohighlight">\(N, 3\)</span> for a system with <span class="math notranslate nohighlight">\(N\)</span> nodes.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
+
+
+            <div class="clearer"></div>
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="quad4r.html"
+                        title="previous chapter">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="coord.html"
+                        title="next chapter">Coordinate systems (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.coord</span></code>)</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="_sources/quad4r_utils.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script>$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="coord.html" title="Coordinate systems (pyfe3d.coord)"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="quad4r.html" title="Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r)"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.1.4 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-this"><a href="">Quad4R useful functions (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r_utils</span></code>)</a></li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2021-, Saullo G. P. Castro.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.1.2.
+    </div>
+  </body>
+</html>
