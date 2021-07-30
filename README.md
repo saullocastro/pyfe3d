@@ -29,6 +29,11 @@ analytical integration.
 - 'Truss' - 2-node truss element with only axial and torsion stiffness. I
 recommend using the BeamLR instead, which has physical meaning.
 
+Documentation
+-------------
+
+The documentation is available on: https://saullocastro.github.io/pyfe3d.
+
 License
 -------
 Distrubuted in the 2-Clause BSD license (https://raw.github.com/saullocastro/pyfe3d/master/LICENSE).
