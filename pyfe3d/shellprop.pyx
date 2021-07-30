@@ -3,7 +3,7 @@
 #cython: cdivision=True
 #cython: nonecheck=False
 #cython: infer_types=False
-"""
+r"""
 Shell property module (:mod:`pyfe3d.shellprop`)
 ==============================================================
 

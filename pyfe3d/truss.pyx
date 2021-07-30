@@ -4,8 +4,10 @@
 #cython: nonecheck=False
 #cython: infer_types=False
 """
-Truss - Linear truss 3D element with analytical integration
------------------------------------------------------------
+Truss - Linear truss 3D element with analytical integration (:mod:`pyfe3d.truss`)
+=================================================================================
+
+.. currentmodule:: pyfe3d.truss
 
 .. note:: The :class:`.BeamLR` element is recommended because of the better
           physical representation.

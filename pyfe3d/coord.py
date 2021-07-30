@@ -1,12 +1,21 @@
-import numpy as np
+r"""
+Coordinate systems (:mod:`pyfe3d.coord`)
+========================================
 
+.. currentmodule:: pyfe3d.coord
+
+Useful classes and methods to define coordinate systems ("coordsys") and
+calculate transformation matrices bewteen coordinate systems.
+
+"""
+import numpy as np
 from alg3dpy.vector import Vec
 from alg3dpy.angles import cosplanevec, sinplanevec, cos2vecs, sin2vecs
 from alg3dpy.plane import Plane
 from alg3dpy.point import Point
 
 
-def common__str__(text, csys):
+def __common__str__(text, csys):
     return '%s ID %d:\n\
     \tO %2.3f i + %2.3f j + %2.3f k\n\
     \tX %2.3f i + %2.3f j + %2.3f k\n\
@@ -58,10 +67,20 @@ class Coord(object):
                   'xy','xz','yz','vecxz' ]
 
     def __init__(self, id, o, z, vecxz):
+        """
+        Parameters
+        ----------
+        o : :class:`.Point` object
+            The origin of the coordsys alg3dpy.Point
+        z : :class:`.Vec` object
+            The z vector of the coordsys
+        vecxz : :class:`.Vec` object
+            A vector laying in the xz plane of the coordsys
+        """
         # given
         self.id = id
         self.o = np.asarray(o).view(Point)
-        self.z = np.asarray(z).view(Vec)
+        self.z = np.asarray(z).view(Vec)/np.linalg.norm(z)
         self.vecxz = np.asarray(vecxz).view(Vec)
         # calculated
         self.y = self.z.cross(self.vecxz)
@@ -71,7 +90,7 @@ class Coord(object):
         self.yz = Plane(self.x[0],  self.x[1],  self.x[2], np.linalg.norm(self.o))
 
     def transform(self, vec, new_csys):
-        """
+        r"""
         The transformation will go as follows:
             - transform to cartesian in the local coordsys;
             - rotate to the new_csys (which is cartesian);
@@ -110,8 +129,7 @@ class Coord(object):
         """
         cosb = cosplanevec(newcr.xy, self.x)
         cosg = cosplanevec(newcr.xz, self.x)
-        y_in_YZ = np.array([0, self.y[1], self.y[2]]).view(Vec)
-        cosa = cos2vecs(y_in_YZ, newcr.y)
+        cosa = cosplanevec(newcr.xy, self.y)
         return cosa, cosb, cosg
 
     def cosines_to_global(self):
@@ -153,7 +171,7 @@ class CoordR(Coord):
         super(CoordR, self).__init__(id, o, z, vecxz)
 
     def __str__(self):
-        return common__str__('Cartesian Coord Sys', self)
+        return __common__str__('Cartesian Coord Sys', self)
 
     def vec2cr(self, vec):
         return vec
@@ -192,7 +210,7 @@ class CoordC(Coord):
         return np.dot(T, tmp)
 
     def __str__(self):
-        return common__str__('Cylindrical Coord Sys', self)
+        return __common__str__('Cylindrical Coord Sys', self)
 
 class CoordS(Coord):
     __slots__ = Coord.__slots__
@@ -225,7 +243,7 @@ class CoordS(Coord):
         return np.dot(T, tmp)
 
     def __str__(self):
-        return common__str__('Spherical Coord Sys', self)
+        return __common__str__('Spherical Coord Sys', self)
 
 # Weisstein, Eric W. "Rotation Matrix." From MathWorld--A Wolfram Web Resource.
 #   http://mathworld.wolfram.com/RotationMatrix.html

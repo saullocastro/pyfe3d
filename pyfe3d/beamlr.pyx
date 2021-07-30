@@ -4,8 +4,10 @@
 #cython: nonecheck=False
 #cython: infer_types=False
 r"""
-BeamLR - Linear Timoshenko 3D beam element with reduced integration
--------------------------------------------------------------------
+BeamLR - Linear Timoshenko 3D beam element with reduced integration (:mod: `pyfe3d.beamlr`)
+===========================================================================================
+
+.. currentmodule:: pyfe3d.beamlr
 
 """
 import numpy as np

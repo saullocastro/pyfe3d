@@ -4,8 +4,10 @@
 #cython: nonecheck=False
 #cython: infer_types=False
 r"""
-BeamC - Consistent Timoshenko 3D beam element
----------------------------------------------
+BeamC - Consistent Timoshenko 3D beam element (:mod: `pyfe3d.beamc`)
+====================================================================
+
+.. currentmodule:: pyfe3d.beamc
 
 """
 import numpy as np
