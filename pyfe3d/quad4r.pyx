@@ -4,8 +4,8 @@
 #cython: nonecheck=False
 #cython: infer_types=False
 r"""
-Quadrilateral element with reduced integration (:mod:`pyfe3d.quad4r`)
-=====================================================================
+Quad4R - Quadrilateral element with reduced integration (:mod:`pyfe3d.quad4r`)
+==============================================================================
 
 .. currentmodule:: pyfe3d.quad4r
 
@@ -86,6 +86,12 @@ cdef class Quad4R:
          |       |
          |_______|
         1         2
+
+    The element coordinate system is determined identically what is explained
+    in Nastran's quick reference guide for the CQUAD4 element, as illustrated
+    below.
+
+    .. image:: ../figures/nastran_cquad4.svg
 
     Attributes
     ----------

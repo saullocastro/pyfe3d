@@ -9,6 +9,8 @@ Finite elements for 3D problems in Python/Cython
     beamlr.rst
     truss.rst
     quad4r.rst
+    quad4r_utils.rst
+    coord.rst
 
 License
 -------
