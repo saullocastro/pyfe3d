@@ -99,8 +99,8 @@ cdef class Quad4R:
         Element identification number.
     area : double
         Element area.
-    cosa, cosb, cosg : double
-        Cossine of rotation angles that define the 3D position of the element.
+    r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
+        Rotation matrix to the global coordinate system.
     c1, c2, c3, c4 : int
         Position of each node in the global stiffness matrix.
     n1, n2, n3, n4 : int
@@ -118,8 +118,9 @@ cdef class Quad4R:
     cdef public cINT init_k_KC0, init_k_KG, init_k_M
     cdef public double area
     cdef public double alphat # drilling penalty factor for stiffness matrix, see Eq. 2.20 in F.M. Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013) 10–20. www.iosrjen.org (accessed April 20, 2020).
-    cdef public double cosa, cosb, cosg
+    cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef Quad4RProbe _p
+
 
     def __cinit__(Quad4R self, Quad4RProbe p):
         self._p = p
@@ -138,9 +139,85 @@ cdef class Quad4R:
         self.init_k_M = 0
         self.area = 0
         self.alphat = 1. # based on recommended value of reference F.M. Adam, A.E. Mohamed, A.E. Hassaballa
-        self.cosa = 1.
-        self.cosb = 1.
-        self.cosg = 1.
+        self.r11 = self.r12 = self.r13 = 0.
+        self.r21 = self.r22 = self.r23 = 0.
+        self.r31 = self.r32 = self.r33 = 0.
+
+
+    cpdef void update_rotation_matrix(Quad4R self, np.ndarray[cDOUBLE, ndim=1] x):
+        r"""Update the rotation matrix of the element
+
+        Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
+        corresponding to the rotation matrix from local to global coordinates.
+
+        The element coordinate system is determined, identifying the `ijk`
+        components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
+        {y_e}_j, {y_e}_k`; `{z_e}_i, {z_e}_j, {z_e}_k`.
+
+        The rotation matrix terms are calculated after solving 9 equations.
+
+        Parameters
+        ----------
+        x : array-like
+            Array with global nodal coordinates, for a total of `M` nodes in
+            the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
+            y_2, z_2, ..., x_M, y_M, z_M`.
+
+        """
+        cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk
+        cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k, x4i, x4j, x4k
+        cdef double v13i, v13j, v13k, v42i, v42j, v42k
+
+        with nogil:
+            x1i = x[self.c1//2 + 0]
+            x1j = x[self.c1//2 + 1]
+            x1k = x[self.c1//2 + 2]
+            x2i = x[self.c2//2 + 0]
+            x2j = x[self.c2//2 + 1]
+            x2k = x[self.c2//2 + 2]
+            x3i = x[self.c3//2 + 0]
+            x3j = x[self.c3//2 + 1]
+            x3k = x[self.c3//2 + 2]
+            x4i = x[self.c4//2 + 0]
+            x4j = x[self.c4//2 + 1]
+            x4k = x[self.c4//2 + 2]
+
+            v13i = x3i - x1i
+            v13j = x3j - x1j
+            v13k = x3k - x1k
+            v42i = x2i - x4i
+            v42j = x2j - x4j
+            v42k = x2k - x4k
+
+            xi = (v13i + v42i)/2.
+            xj = (v13j + v42j)/2.
+            xk = (v13k + v42k)/2.
+            xi /= (xi**2 + xj**2 + xk**2)**0.5
+            xj /= (xi**2 + xj**2 + xk**2)**0.5
+            xk /= (xi**2 + xj**2 + xk**2)**0.5
+            zi = v42j*v13k - v42k*v13j
+            zj = -v42i*v13k + v42k*v13i
+            zk = v42i*v13j - v42j*v13i
+            zi /= (zi**2 + zj**2 + zk**2)**0.5
+            zj /= (zi**2 + zj**2 + zk**2)**0.5
+            zk /= (zi**2 + zj**2 + zk**2)**0.5
+            yi = -xj*zk + xk*zj
+            yj = xi*zk - xk*zi
+            yk = -xi*zj + xj*zi
+            yi /= (yi**2 + yj**2 + yk**2)**0.5
+            yj /= (yi**2 + yj**2 + yk**2)**0.5
+            yk /= (yi**2 + yj**2 + yk**2)**0.5
+
+            self.r11 = (yj*zk - yk*zj)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+            self.r12 = (-yi*zk + yk*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+            self.r13 = (yi*zj - yj*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+            self.r21 = (-xj*zk + xk*zj)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+            self.r22 = (xi*zk - xk*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+            self.r23 = (-xi*zj + xj*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+            self.r31 = (xj*yk - xk*yj)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+            self.r32 = (-xi*yk + xk*yi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+            self.r33 = (xi*yj - xj*yi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+
 
     cpdef void update_ue(Quad4R self, np.ndarray[cDOUBLE, ndim=1] u):
         r"""Update the local displacement vector of the element
@@ -159,7 +236,6 @@ cdef class Quad4R:
         cdef double su[3]
         cdef double sv[3]
         cdef double sw[3]
-        cdef double sina, sinb, sing
 
         with nogil:
             # positions in the global stiffness matrix
@@ -169,19 +245,15 @@ cdef class Quad4R:
             c[3] = self.c4
 
             # global to local transformation of displacements
-            sina = (1. - self.cosa**2)**0.5
-            sinb = (1. - self.cosb**2)**0.5
-            sing = (1. - self.cosg**2)**0.5
-
-            su[0] = self.cosb*self.cosg
-            su[1] = self.cosb*sing
-            su[2] = -sinb
-            sv[0] = -self.cosa*sing + self.cosg*sina*sinb
-            sv[1] = self.cosa*self.cosg + sina*sinb*sing
-            sv[2] = self.cosb*sina
-            sw[0] = self.cosa*self.cosg*sinb + sina*sing
-            sw[1] = self.cosa*sinb*sing - self.cosg*sina
-            sw[2] = self.cosa*self.cosb
+            su[0] = self.r11
+            su[1] = self.r21
+            su[2] = self.r31
+            sv[0] = self.r12
+            sv[1] = self.r22
+            sv[2] = self.r32
+            sw[0] = self.r13
+            sw[1] = self.r23
+            sw[2] = self.r33
 
             for j in range(NUM_NODES):
                 for i in range(DOF):
@@ -197,6 +269,7 @@ cdef class Quad4R:
                     self._p.ue[j*DOF + 3] += su[i]*u[c[j] + 3 + i]
                     self._p.ue[j*DOF + 4] += sv[i]*u[c[j] + 3 + i]
                     self._p.ue[j*DOF + 5] += sw[i]*u[c[j] + 3 + i]
+
 
     cpdef void update_xe(Quad4R self, np.ndarray[cDOUBLE, ndim=1] x):
         r"""Update the 3D coordinates of the element
@@ -214,7 +287,6 @@ cdef class Quad4R:
         cdef double su[3]
         cdef double sv[3]
         cdef double sw[3]
-        cdef double sina, sinb, sing
 
         with nogil:
             # positions in the global stiffness matrix
@@ -224,19 +296,15 @@ cdef class Quad4R:
             c[3] = self.c4
 
             # global to local transformation of displacements
-            sina = (1. - self.cosa**2)**0.5
-            sinb = (1. - self.cosb**2)**0.5
-            sing = (1. - self.cosg**2)**0.5
-
-            su[0] = self.cosb*self.cosg
-            su[1] = self.cosb*sing
-            su[2] = -sinb
-            sv[0] = -self.cosa*sing + self.cosg*sina*sinb
-            sv[1] = self.cosa*self.cosg + sina*sinb*sing
-            sv[2] = self.cosb*sina
-            sw[0] = self.cosa*self.cosg*sinb + sina*sing
-            sw[1] = self.cosa*sinb*sing - self.cosg*sina
-            sw[2] = self.cosa*self.cosb
+            su[0] = self.r11
+            su[1] = self.r21
+            su[2] = self.r31
+            sv[0] = self.r12
+            sv[1] = self.r22
+            sv[2] = self.r32
+            sw[0] = self.r13
+            sw[1] = self.r23
+            sw[2] = self.r33
 
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
@@ -249,6 +317,7 @@ cdef class Quad4R:
                     self._p.xe[j*DOF//2 + 2] += sw[i]*x[c[j]//2 + i]
 
         self.update_area()
+
 
     cpdef void update_area(Quad4R self):
         r"""Update element area
@@ -325,7 +394,6 @@ cdef class Quad4R:
         cdef double j11, j12, j21, j22, N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
         cdef double N1, N2, N3, N4
         cdef double N1xy, N2xy, N3xy, N4xy, gamma1, gamma2, gamma3, gamma4
-        cdef double sina, sinb, sing
 
         with nogil:
             A11 = prop.A11
@@ -370,18 +438,15 @@ cdef class Quad4R:
             #z4 = self._p.xe[11]
 
             #Local to global transformation
-            sina = (1. - self.cosa**2)**0.5
-            sinb = (1. - self.cosb**2)**0.5
-            sing = (1. - self.cosg**2)**0.5
-            r11 = self.cosb*self.cosg
-            r12 = -self.cosa*sing + self.cosg*sina*sinb
-            r13 = self.cosa*self.cosg*sinb + sina*sing
-            r21 = self.cosb*sing
-            r22 = self.cosa*self.cosg + sina*sinb*sing
-            r23 = self.cosa*sinb*sing - self.cosg*sina
-            r31 = -sinb
-            r32 = self.cosb*sina
-            r33 = self.cosa*self.cosb
+            r11 = self.r11
+            r12 = self.r12
+            r13 = self.r13
+            r21 = self.r21
+            r22 = self.r22
+            r23 = self.r23
+            r31 = self.r31
+            r32 = self.r32
+            r33 = self.r33
 
             if update_KC0v_only == 0:
                 # positions in the global stiffness matrix
@@ -3361,7 +3426,6 @@ cdef class Quad4R:
         cdef double N1, N2, N3, N4
         cdef double N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
         cdef double Nxx, Nyy, Nxy
-        cdef double sina, sinb, sing
 
         with nogil:
             A11 = prop.A11
@@ -3378,18 +3442,15 @@ cdef class Quad4R:
             B66 = prop.B66
 
             #Local to global transformation
-            sina = (1. - self.cosa**2)**0.5
-            sinb = (1. - self.cosb**2)**0.5
-            sing = (1. - self.cosg**2)**0.5
-            r11 = self.cosb*self.cosg
-            r12 = -self.cosa*sing + self.cosg*sina*sinb
-            r13 = self.cosa*self.cosg*sinb + sina*sing
-            r21 = self.cosb*sing
-            r22 = self.cosa*self.cosg + sina*sinb*sing
-            r23 = self.cosa*sinb*sing - self.cosg*sina
-            r31 = -sinb
-            r32 = self.cosb*sina
-            r33 = self.cosa*self.cosb
+            r11 = self.r11
+            r12 = self.r12
+            r13 = self.r13
+            r21 = self.r21
+            r22 = self.r22
+            r23 = self.r23
+            r31 = self.r31
+            r32 = self.r32
+            r33 = self.r33
 
             #NOTE ignoring z in local coordinates
             x1 = self._p.xe[0]
@@ -4209,7 +4270,6 @@ cdef class Quad4R:
         cdef double N1y, N2y, N3y, N4y
         cdef double cxx, cyy, cxy
         cdef double h11, h12, h13, h14, h22, h23, h24, h33, h34, h44, valH1
-        cdef double sina, sinb, sing
         cdef double xi, eta, wij, detJ, N1, N2, N3, N4
         cdef double points[2]
         cdef double weights[2]
@@ -4237,18 +4297,15 @@ cdef class Quad4R:
             #z4 = self._p.xe[11]
 
             #Local to global transformation
-            sina = (1. - self.cosa**2)**0.5
-            sinb = (1. - self.cosb**2)**0.5
-            sing = (1. - self.cosg**2)**0.5
-            r11 = self.cosb*self.cosg
-            r12 = -self.cosa*sing + self.cosg*sina*sinb
-            r13 = self.cosa*self.cosg*sinb + sina*sing
-            r21 = self.cosb*sing
-            r22 = self.cosa*self.cosg + sina*sinb*sing
-            r23 = self.cosa*sinb*sing - self.cosg*sina
-            r31 = -sinb
-            r32 = self.cosb*sina
-            r33 = self.cosa*self.cosb
+            r11 = self.r11
+            r12 = self.r12
+            r13 = self.r13
+            r21 = self.r21
+            r22 = self.r22
+            r23 = self.r23
+            r31 = self.r31
+            r32 = self.r32
+            r33 = self.r33
 
             # positions the global matrices
             c1 = self.c1
