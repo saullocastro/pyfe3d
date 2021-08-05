@@ -11,6 +11,7 @@ from pyfe3d import DOF
 from .quad4r import Quad4R
 from .coord import CoordR
 
+
 def quad4r_coord(quad: Quad4R, ncoords: np.ndarray):
     r"""Determine the coordinate system of a :class:`.Quad4R` element
 
@@ -38,7 +39,4 @@ def quad4r_coord(quad: Quad4R, ncoords: np.ndarray):
     zaxis = np.cross(v42, v13)
     vecxz = xaxis + zaxis
     return CoordR(quad.eid, center, zaxis, vecxz)
-
-
-
 

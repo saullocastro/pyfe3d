@@ -9,8 +9,9 @@ calculate transformation matrices bewteen coordinate systems.
 
 """
 import numpy as np
+from scipy.spatial.transform import Rotation
 from alg3dpy.vector import Vec
-from alg3dpy.angles import cosplanevec, sinplanevec, cos2vecs, sin2vecs
+from alg3dpy.angles import cosplanevec, sinplanevec, cos2vecs, sin2vecs, angleplanevec
 from alg3dpy.plane import Plane
 from alg3dpy.point import Point
 
@@ -80,11 +81,13 @@ class Coord(object):
         # given
         self.id = id
         self.o = np.asarray(o).view(Point)
-        self.z = np.asarray(z).view(Vec)/np.linalg.norm(z)
+        self.z = (np.asarray(z)/np.linalg.norm(z)).view(Vec)
         self.vecxz = np.asarray(vecxz).view(Vec)
         # calculated
         self.y = self.z.cross(self.vecxz)
+        self.y /= np.linalg.norm(self.y)
         self.x = self.y.cross(self.z)
+        self.x /= np.linalg.norm(self.x)
         self.xy = Plane(self.z[0],  self.z[1],  self.z[2], np.linalg.norm(self.o))
         self.xz = Plane(-self.y[0], -self.y[1], -self.y[2], np.linalg.norm(self.o))
         self.yz = Plane(self.x[0],  self.x[1],  self.x[2], np.linalg.norm(self.o))
@@ -123,47 +126,29 @@ class Coord(object):
         vec_t = vec + newcr.o + self.o
         return vec_t
 
-    def cosines_to_new_coord(self, newcr):
-        """
-        Calculate the rotation cosines to a new cartesian system (newcr)
-        """
-        cosb = cosplanevec(newcr.xy, self.x)
-        cosg = cosplanevec(newcr.xz, self.x)
-        cosa = cosplanevec(newcr.xy, self.y)
-        return cosa, cosb, cosg
-
     def cosines_to_global(self):
         """
         Calculate the rotation cosines to the global coordinate system
         """
-        from pyfe3d import CSYSGLOBAL
-        return self.cosines_to_new_coord(CSYSGLOBAL)
+        r = Rotation.from_matrix(self.R2global())
+        a, b, g = r.as_euler('xyz', degrees=False)
+        return np.cos(a), np.cos(b), np.cos(g)
 
-    def Rmatrix(self, newcr):
-        """
-        Calculate the rotation matrix to a new cartesian system (newcr)
-        """
-        cosb = cosplanevec(newcr.xy, self.x)
-        sinb = sinplanevec(newcr.xy, self.x)
-        cosg = cosplanevec(newcr.xz, self.x)
-        sing = sinplanevec(newcr.xz, self.x)
-        tmpT =  np.array([\
-            [ -sing,  0, 0 ],
-            [   0, cosg, 0 ],
-            [   0,  0, 0 ]])
-        Y2 = (np.dot(tmpT, newcr.y.array)).view(Vec)
-        cosa = cos2vecs(Y2, self.y)
-        sina = sin2vecs(Y2, self.y)
-        Rself = np.array([\
-           [ cosb*cosg               ,  cosb*sing ,                  -sinb ], \
-           [-cosa*sing+cosg*sina*sinb,  cosa*cosg+sina*sinb*sing, cosb*sina], \
-           [ sina*sing+cosa*cosg*sinb, -cosg*sina+cosa*sinb*sing, cosa*cosb]])
-        R2new = Rself.transpose()
-        return R2new
+    def R2global(self):
+        xi, xj, xk = self.x
+        yi, yj, yk = self.y
+        zi, zj, zk = self.z
+        r11 = (yj*zk - yk*zj)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+        r12 = (-yi*zk + yk*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+        r13 = (yi*zj - yj*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+        r21 = (-xj*zk + xk*zj)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+        r22 = (xi*zk - xk*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+        r23 = (-xi*zj + xj*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+        r31 = (xj*yk - xk*yj)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+        r32 = (-xi*yk + xk*yi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+        r33 = (xi*yj - xj*yi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+        return np.array([[r11, r12, r13], [r21, r22, r23], [r31, r32, r33]])
 
-    def R2basic(self):
-        from pyfe3d import CSYSGLOBAL
-        return self.Rmatrix(CSYSGLOBAL)
 
 class CoordR(Coord):
     __slots__ = Coord.__slots__
