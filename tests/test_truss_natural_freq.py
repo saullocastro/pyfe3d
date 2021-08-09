@@ -6,7 +6,7 @@ from scipy.sparse.linalg import eigsh
 from scipy.sparse import coo_matrix
 
 from pyfe3d.beamprop import BeamProp
-from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
+from pyfe3d import Truss, TrussData, TrussProbe, DOF, INT, DOUBLE
 
 def test_nat_freq_axial(refinement=1, mtypes=range(2)):
     for mtype in mtypes:
@@ -37,8 +37,8 @@ def test_nat_freq_axial(refinement=1, mtypes=range(2)):
         num_elements = len(n1s)
         print('num_elements', num_elements)
 
-        p = BeamCProbe()
-        data = BeamCData()
+        p = TrussProbe()
+        data = TrussData()
 
         KC0r = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
         KC0c = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
@@ -64,16 +64,14 @@ def test_nat_freq_axial(refinement=1, mtypes=range(2)):
         for n1, n2 in zip(n1s, n2s):
             pos1 = nid_pos[n1]
             pos2 = nid_pos[n2]
-            truss = BeamC(p)
+            truss = Truss(p)
             truss.init_k_KC0 = init_k_KC0
             truss.init_k_M = init_k_M
             truss.n1 = n1
             truss.n2 = n2
             truss.c1 = DOF*pos1
             truss.c2 = DOF*pos2
-            truss.cosa = 1
-            truss.cosb = 1
-            truss.cosg = 1.
+            truss.update_rotation_matrix(ncoords_flatten)
             truss.update_xe(ncoords_flatten)
             truss.update_KC0(KC0r, KC0c, KC0v, prop)
             truss.update_M(Mr, Mc, Mv, prop, mtype=mtype)

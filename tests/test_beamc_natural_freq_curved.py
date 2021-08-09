@@ -70,8 +70,6 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
         for n1, n2 in zip(n1s, n2s):
             pos1 = nid_pos[n1]
             pos2 = nid_pos[n2]
-            x1, y1, z1 = ncoords[pos1]
-            x2, y2, z2 = ncoords[pos2]
             beam = BeamC(p)
             beam.init_k_KC0 = init_k_KC0
             beam.init_k_M = init_k_M
@@ -79,9 +77,11 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
             beam.n2 = n2
             beam.c1 = DOF*pos1
             beam.c2 = DOF*pos2
-            beam.cosa = 1
-            beam.cosb = 1
-            beam.cosg = np.cos(np.arctan2(y2 - y1, x2 - x1))
+            beam.update_rotation_matrix(10., 1., 0, ncoords_flatten)
+            print(beam.r11, beam.r12, beam.r13)
+            print(beam.r21, beam.r22, beam.r23)
+            print(beam.r31, beam.r32, beam.r33)
+            print()
             beam.update_xe(ncoords_flatten)
             beam.update_KC0(KC0r, KC0c, KC0v, prop)
             beam.update_M(Mr, Mc, Mv, prop, mtype=mtype)
@@ -117,7 +117,7 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
                 k=num_eigenvalues, tol=1e-3)
         omegan = eigvals**0.5
         omega123_from_paper = [396.98, 931.22, 1797.31]
-        omega123_expected_here = [400.51471445, 948.87085772, 1758.88752016]
+        omega123_expected_here = [395.50396255, 923.75280464, 1773.32657347]
         print('Reference omega123_from_paper', omega123_from_paper)
         print('Reference omega123_expected_here', omega123_expected_here)
         print('Numerical omega123', omegan)
