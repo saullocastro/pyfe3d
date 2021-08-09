@@ -164,7 +164,7 @@ cdef class Quad4R:
             y_2, z_2, ..., x_M, y_M, z_M`.
 
         """
-        cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk
+        cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk, tmp_norm
         cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k, x4i, x4j, x4k
         cdef double v13i, v13j, v13k, v42i, v42j, v42k
 
@@ -192,21 +192,24 @@ cdef class Quad4R:
             xi = (v13i + v42i)/2.
             xj = (v13j + v42j)/2.
             xk = (v13k + v42k)/2.
-            xi /= (xi**2 + xj**2 + xk**2)**0.5
-            xj /= (xi**2 + xj**2 + xk**2)**0.5
-            xk /= (xi**2 + xj**2 + xk**2)**0.5
+            tmp_norm = (xi**2 + xj**2 + xk**2)**0.5
+            xi /= tmp_norm
+            xj /= tmp_norm
+            xk /= tmp_norm
             zi = v42j*v13k - v42k*v13j
             zj = -v42i*v13k + v42k*v13i
             zk = v42i*v13j - v42j*v13i
-            zi /= (zi**2 + zj**2 + zk**2)**0.5
-            zj /= (zi**2 + zj**2 + zk**2)**0.5
-            zk /= (zi**2 + zj**2 + zk**2)**0.5
+            tmp_norm = (zi**2 + zj**2 + zk**2)**0.5
+            zi /= tmp_norm
+            zj /= tmp_norm
+            zk /= tmp_norm
             yi = -xj*zk + xk*zj
             yj = xi*zk - xk*zi
             yk = -xi*zj + xj*zi
-            yi /= (yi**2 + yj**2 + yk**2)**0.5
-            yj /= (yi**2 + yj**2 + yk**2)**0.5
-            yk /= (yi**2 + yj**2 + yk**2)**0.5
+            tmp_norm = (yi**2 + yj**2 + yk**2)**0.5
+            yi /= tmp_norm
+            yj /= tmp_norm
+            yk /= tmp_norm
 
             self.r11 = (yj*zk - yk*zj)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
             self.r12 = (-yi*zk + yk*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
