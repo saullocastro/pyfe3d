@@ -94,8 +94,8 @@ cdef class BeamLR:
         Element identification number.
     length : double
         Element length.
-    cosa, cosb, cosg : double
-        Cossine of rotation angles that define the 3D position of the element.
+    r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
+        Rotation matrix to the global coordinate system.
     c1, c2 : int
         Position of each node in the global stiffness matrix.
     n1, n2 : int
@@ -112,7 +112,7 @@ cdef class BeamLR:
     cdef public cINT c1, c2
     cdef public cINT init_k_KC0, init_k_KG, init_k_M
     cdef public double length
-    cdef public double cosa, cosb, cosg
+    cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef BeamLRProbe _p
 
     def __cinit__(BeamLR self, BeamLRProbe p):
@@ -127,9 +127,78 @@ cdef class BeamLR:
         self.init_k_KG = 0
         self.init_k_M = 0
         self.length = 0
-        self.cosa = 1.
-        self.cosb = 1.
-        self.cosg = 1.
+        self.r11 = self.r12 = self.r13 = 0.
+        self.r21 = self.r22 = self.r23 = 0.
+        self.r31 = self.r32 = self.r33 = 0.
+
+
+    cpdef void update_rotation_matrix(BeamLR self, double vxyi, double vxyj,
+            double vxyk, np.ndarray[cDOUBLE, ndim=1] x):
+        r"""Update the rotation matrix of the element
+
+        Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
+        corresponding to the rotation matrix from local to global coordinates.
+
+        The element coordinate system is determined, identifying the `ijk`
+        components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
+        {y_e}_j, {y_e}_k`; `{z_e}_i, {z_e}_j, {z_e}_k`.
+
+        The rotation matrix terms are calculated after solving 9 equations.
+
+        Parameters
+        ----------
+        vxyi, vxyj, vxyk : double
+            Components of a vector on the `XY` plane of the element coordinate
+            system.
+        x : array-like
+            Array with global nodal coordinates, for a total of `M` nodes in
+            the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
+            y_2, z_2, ..., x_M, y_M, z_M`.
+
+        """
+        cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk, tmp_norm
+        cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k, x4i, x4j, x4k
+
+        with nogil:
+            x1i = x[self.c1//2 + 0]
+            x1j = x[self.c1//2 + 1]
+            x1k = x[self.c1//2 + 2]
+            x2i = x[self.c2//2 + 0]
+            x2j = x[self.c2//2 + 1]
+            x2k = x[self.c2//2 + 2]
+
+            xi = x2i - x1i
+            xj = x2j - x1j
+            xk = x2k - x1k
+            tmp_norm = (xi**2 + xj**2 + xk**2)**0.5
+            xi /= tmp_norm
+            xj /= tmp_norm
+            xk /= tmp_norm
+            zi = xj*vxyk - xk*vxyj
+            zj = -xi*vxyk + xk*vxyi
+            zk = xi*vxyj - xj*vxyi
+            tmp_norm = (zi**2 + zj**2 + zk**2)**0.5
+            zi /= tmp_norm
+            zj /= tmp_norm
+            zk /= tmp_norm
+            yi = -xj*zk + xk*zj
+            yj = xi*zk - xk*zi
+            yk = -xi*zj + xj*zi
+            tmp_norm = (yi**2 + yj**2 + yk**2)**0.5
+            yi /= tmp_norm
+            yj /= tmp_norm
+            yk /= tmp_norm
+
+            self.r11 = (yj*zk - yk*zj)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+            self.r12 = (-yi*zk + yk*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+            self.r13 = (yi*zj - yj*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+            self.r21 = (-xj*zk + xk*zj)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+            self.r22 = (xi*zk - xk*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+            self.r23 = (-xi*zj + xj*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+            self.r31 = (xj*yk - xk*yj)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+            self.r32 = (-xi*yk + xk*yi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+            self.r33 = (xi*yj - xj*yi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+
 
     cpdef void update_ue(BeamLR self, np.ndarray[cDOUBLE, ndim=1] u):
         r"""Update the local displacement vector of the element
@@ -148,7 +217,6 @@ cdef class BeamLR:
         cdef double su[3]
         cdef double sv[3]
         cdef double sw[3]
-        cdef double sina, sinb, sing
 
         #FIXME double check all this part
         with nogil:
@@ -157,19 +225,15 @@ cdef class BeamLR:
             c[1] = self.c2
 
             # global to local transformation of displacements
-            sina = (1. - self.cosa**2)**0.5
-            sinb = (1. - self.cosb**2)**0.5
-            sing = (1. - self.cosg**2)**0.5
-
-            su[0] = self.cosb*self.cosg
-            su[1] = self.cosb*sing
-            su[2] = -sinb
-            sv[0] = -self.cosa*sing + self.cosg*sina*sinb
-            sv[1] = self.cosa*self.cosg + sina*sinb*sing
-            sv[2] = self.cosb*sina
-            sw[0] = self.cosa*self.cosg*sinb + sina*sing
-            sw[1] = self.cosa*sinb*sing - self.cosg*sina
-            sw[2] = self.cosa*self.cosb
+            su[0] = self.r11
+            su[1] = self.r21
+            su[2] = self.r31
+            sv[0] = self.r12
+            sv[1] = self.r22
+            sv[2] = self.r32
+            sw[0] = self.r13
+            sw[1] = self.r23
+            sw[2] = self.r33
 
             for j in range(NUM_NODES):
                 for i in range(DOF):
@@ -185,6 +249,7 @@ cdef class BeamLR:
                     self._p.ue[j*DOF + 3] += su[i]*u[c[j] + 3 + i]
                     self._p.ue[j*DOF + 4] += sv[i]*u[c[j] + 3 + i]
                     self._p.ue[j*DOF + 5] += sw[i]*u[c[j] + 3 + i]
+
 
     cpdef void update_xe(BeamLR self, np.ndarray[cDOUBLE, ndim=1] x):
         r"""Update the 3D coordinates of the element
@@ -202,7 +267,6 @@ cdef class BeamLR:
         cdef double su[3]
         cdef double sv[3]
         cdef double sw[3]
-        cdef double sina, sinb, sing
 
         with nogil:
             # positions in the global stiffness matrix
@@ -210,19 +274,15 @@ cdef class BeamLR:
             c[1] = self.c2
 
             # global to local transformation of displacements
-            sina = (1. - self.cosa**2)**0.5
-            sinb = (1. - self.cosb**2)**0.5
-            sing = (1. - self.cosg**2)**0.5
-
-            su[0] = self.cosb*self.cosg
-            su[1] = self.cosb*sing
-            su[2] = -sinb
-            sv[0] = -self.cosa*sing + self.cosg*sina*sinb
-            sv[1] = self.cosa*self.cosg + sina*sinb*sing
-            sv[2] = self.cosb*sina
-            sw[0] = self.cosa*self.cosg*sinb + sina*sing
-            sw[1] = self.cosa*sinb*sing - self.cosg*sina
-            sw[2] = self.cosa*self.cosb
+            su[0] = self.r11
+            su[1] = self.r21
+            su[2] = self.r31
+            sv[0] = self.r12
+            sv[1] = self.r22
+            sv[2] = self.r32
+            sw[0] = self.r13
+            sw[1] = self.r23
+            sw[2] = self.r33
 
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
@@ -235,6 +295,7 @@ cdef class BeamLR:
                     self._p.xe[j*DOF//2 + 2] += sw[i]*x[c[j]//2 + i]
 
         self.update_length()
+
 
     cpdef void update_length(BeamLR self):
         r"""Update element length
@@ -250,6 +311,7 @@ cdef class BeamLR:
             y2 = self._p.xe[4]
             z2 = self._p.xe[5]
             self.length = ((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)**2)**0.5
+
 
     cpdef void update_KC0(BeamLR self,
             np.ndarray[cINT, ndim=1] KC0r,
@@ -279,7 +341,6 @@ cdef class BeamLR:
         cdef cINT c1, c2, k
         cdef double L, A, E, G, scf, J, Ay, Az, Iyy, Izz
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
-        cdef double sina, sinb, sing
 
         with nogil:
             L = self.length
@@ -294,18 +355,15 @@ cdef class BeamLR:
             Izz = prop.Izz
 
             #Local to global transformation
-            sina = (1. - self.cosa**2)**0.5
-            sinb = (1. - self.cosb**2)**0.5
-            sing = (1. - self.cosg**2)**0.5
-            r11 = self.cosb*self.cosg
-            r12 = -self.cosa*sing + self.cosg*sina*sinb
-            r13 = self.cosa*self.cosg*sinb + sina*sing
-            r21 = self.cosb*sing
-            r22 = self.cosa*self.cosg + sina*sinb*sing
-            r23 = self.cosa*sinb*sing - self.cosg*sina
-            r31 = -sinb
-            r32 = self.cosb*sina
-            r33 = self.cosa*self.cosb
+            r11 = self.r11
+            r12 = self.r12
+            r13 = self.r13
+            r21 = self.r21
+            r22 = self.r22
+            r23 = self.r23
+            r31 = self.r31
+            r32 = self.r32
+            r33 = self.r33
 
             if update_KC0v_only == 0:
                 # positions in the global stiffness matrix
@@ -1064,7 +1122,6 @@ cdef class BeamLR:
         cdef cINT c1, c2, k
         cdef double L, A, E, N
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
-        cdef double sina, sinb, sing
 
         with nogil:
             L = self.length
@@ -1072,18 +1129,15 @@ cdef class BeamLR:
             E = prop.E
 
             #Local to global transformation
-            sina = (1. - self.cosa**2)**0.5
-            sinb = (1. - self.cosb**2)**0.5
-            sing = (1. - self.cosg**2)**0.5
-            r11 = self.cosb*self.cosg
-            r12 = -self.cosa*sing + self.cosg*sina*sinb
-            r13 = self.cosa*self.cosg*sinb + sina*sing
-            r21 = self.cosb*sing
-            r22 = self.cosa*self.cosg + sina*sinb*sing
-            r23 = self.cosa*sinb*sing - self.cosg*sina
-            r31 = -sinb
-            r32 = self.cosb*sina
-            r33 = self.cosa*self.cosb
+            r11 = self.r11
+            r12 = self.r12
+            r13 = self.r13
+            r21 = self.r21
+            r22 = self.r22
+            r23 = self.r23
+            r31 = self.r31
+            r32 = self.r32
+            r33 = self.r33
 
             ue = &self._p.ue[0]
 
@@ -1304,7 +1358,6 @@ cdef class BeamLR:
         cdef double intrho, intrhoy, intrhoz, intrhoy2, intrhoz2, intrhoyz
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double L, A, E
-        cdef double sina, sinb, sing
 
         with nogil:
             L = self.length
@@ -1318,18 +1371,15 @@ cdef class BeamLR:
             E = prop.E
 
             #Local to global transformation
-            sina = (1. - self.cosa**2)**0.5
-            sinb = (1. - self.cosb**2)**0.5
-            sing = (1. - self.cosg**2)**0.5
-            r11 = self.cosb*self.cosg
-            r12 = -self.cosa*sing + self.cosg*sina*sinb
-            r13 = self.cosa*self.cosg*sinb + sina*sing
-            r21 = self.cosb*sing
-            r22 = self.cosa*self.cosg + sina*sinb*sing
-            r23 = self.cosa*sinb*sing - self.cosg*sina
-            r31 = -sinb
-            r32 = self.cosb*sina
-            r33 = self.cosa*self.cosb
+            r11 = self.r11
+            r12 = self.r12
+            r13 = self.r13
+            r21 = self.r21
+            r22 = self.r22
+            r23 = self.r23
+            r31 = self.r31
+            r32 = self.r32
+            r33 = self.r33
 
             # positions the global matrices
             c1 = self.c1
