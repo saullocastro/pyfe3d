@@ -129,6 +129,12 @@ class Coord(object):
     def cosines_to_global(self):
         """
         Calculate the rotation cosines to the global coordinate system
+
+        .. note::
+
+            This must be improved, Gimbal lock is easily verified with Euler
+            angles. To use SciPy's :method:`.as_quat` in the future.
+
         """
         r = Rotation.from_matrix(self.R2global())
         a, b, g = r.as_euler('xyz', degrees=False)
@@ -138,15 +144,16 @@ class Coord(object):
         xi, xj, xk = self.x
         yi, yj, yk = self.y
         zi, zj, zk = self.z
-        r11 = (yj*zk - yk*zj)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
-        r12 = (-yi*zk + yk*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
-        r13 = (yi*zj - yj*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
-        r21 = (-xj*zk + xk*zj)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
-        r22 = (xi*zk - xk*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
-        r23 = (-xi*zj + xj*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
-        r31 = (xj*yk - xk*yj)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
-        r32 = (-xi*yk + xk*yi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
-        r33 = (xi*yj - xj*yi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+        den = xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi
+        r11 = (yj*zk - yk*zj)/den
+        r12 = (-xj*zk + xk*zj)/den
+        r13 = (xj*yk - xk*yj)/den
+        r21 = (-yi*zk + yk*zi)/den
+        r22 = (xi*zk - xk*zi)/den
+        r23 = (-xi*yk + xk*yi)/den
+        r31 = (yi*zj - yj*zi)/den
+        r32 = (-xi*zj + xj*zi)/den
+        r33 = (xi*yj - xj*yi)/den
         return np.array([[r11, r12, r13], [r21, r22, r23], [r31, r32, r33]])
 
 
