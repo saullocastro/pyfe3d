@@ -164,7 +164,7 @@ cdef class Quad4R:
             y_2, z_2, ..., x_M, y_M, z_M`.
 
         """
-        cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk, tmp_norm
+        cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk, tmp
         cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k, x4i, x4j, x4k
         cdef double v13i, v13j, v13k, v42i, v42j, v42k
 
@@ -192,34 +192,37 @@ cdef class Quad4R:
             xi = (v13i + v42i)/2.
             xj = (v13j + v42j)/2.
             xk = (v13k + v42k)/2.
-            tmp_norm = (xi**2 + xj**2 + xk**2)**0.5
-            xi /= tmp_norm
-            xj /= tmp_norm
-            xk /= tmp_norm
+            tmp = (xi**2 + xj**2 + xk**2)**0.5
+            xi /= tmp
+            xj /= tmp
+            xk /= tmp
+
             zi = v42j*v13k - v42k*v13j
             zj = -v42i*v13k + v42k*v13i
             zk = v42i*v13j - v42j*v13i
-            tmp_norm = (zi**2 + zj**2 + zk**2)**0.5
-            zi /= tmp_norm
-            zj /= tmp_norm
-            zk /= tmp_norm
+            tmp = (zi**2 + zj**2 + zk**2)**0.5
+            zi /= tmp
+            zj /= tmp
+            zk /= tmp
+
             yi = -xj*zk + xk*zj
             yj = xi*zk - xk*zi
             yk = -xi*zj + xj*zi
-            tmp_norm = (yi**2 + yj**2 + yk**2)**0.5
-            yi /= tmp_norm
-            yj /= tmp_norm
-            yk /= tmp_norm
+            tmp = (yi**2 + yj**2 + yk**2)**0.5
+            yi /= tmp
+            yj /= tmp
+            yk /= tmp
 
-            self.r11 = (yj*zk - yk*zj)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
-            self.r12 = (-yi*zk + yk*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
-            self.r13 = (yi*zj - yj*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
-            self.r21 = (-xj*zk + xk*zj)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
-            self.r22 = (xi*zk - xk*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
-            self.r23 = (-xi*zj + xj*zi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
-            self.r31 = (xj*yk - xk*yj)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
-            self.r32 = (-xi*yk + xk*yi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
-            self.r33 = (xi*yj - xj*yi)/(xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi)
+            tmp = xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi
+            self.r11 = (yj*zk - yk*zj)/tmp
+            self.r12 = (-xj*zk + xk*zj)/tmp
+            self.r13 = (xj*yk - xk*yj)/tmp
+            self.r21 = (-yi*zk + yk*zi)/tmp
+            self.r22 = (xi*zk - xk*zi)/tmp
+            self.r23 = (-xi*yk + xk*yi)/tmp
+            self.r31 = (yi*zj - yj*zi)/tmp
+            self.r32 = (-xi*zj + xj*zi)/tmp
+            self.r33 = (xi*yj - xj*yi)/tmp
 
 
     cpdef void update_ue(Quad4R self, np.ndarray[cDOUBLE, ndim=1] u):
