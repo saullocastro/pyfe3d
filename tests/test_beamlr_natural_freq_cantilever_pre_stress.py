@@ -71,8 +71,6 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         for n1, n2 in zip(n1s, n2s):
             pos1 = nid_pos[n1]
             pos2 = nid_pos[n2]
-            x1, y1, z1 = ncoords[pos1]
-            x2, y2, z2 = ncoords[pos2]
             beam = BeamLR(p)
             beam.init_k_KC0 = init_k_KC0
             beam.init_k_KG = init_k_KG
@@ -81,9 +79,7 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
             beam.n2 = n2
             beam.c1 = DOF*pos1
             beam.c2 = DOF*pos2
-            beam.cosa = 1
-            beam.cosb = 1
-            beam.cosg = np.cos(np.arctan2(y2 - y1, x2 - x1))
+            beam.update_rotation_matrix(1., 1., 0, ncoords_flatten)
             beam.update_xe(ncoords_flatten)
             beam.update_KC0(KC0r, KC0c, KC0v, prop)
             beam.update_M(Mr, Mc, Mv, prop, mtype=mtype)

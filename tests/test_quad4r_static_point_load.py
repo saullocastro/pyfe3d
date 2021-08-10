@@ -66,11 +66,6 @@ def test_static_plate_quad_point_load(plot=False):
         normal = np.cross(r2 - r1, r3 - r2)[2]
         assert normal > 0 # guaranteeing that all elements have CCW positive normal
         quad = Quad4R(probe)
-        #
-        quad.cosa = 1.
-        quad.cosb = 1.
-        quad.cosg = 1.
-        #
         quad.n1 = n1
         quad.n2 = n2
         quad.n3 = n3
@@ -80,6 +75,7 @@ def test_static_plate_quad_point_load(plot=False):
         quad.c3 = DOF*nid_pos[n3]
         quad.c4 = DOF*nid_pos[n4]
         quad.init_k_KC0 = init_k_KC0
+        quad.update_rotation_matrix(ncoords_flatten)
         quad.update_xe(ncoords_flatten)
         quad.update_KC0(KC0r, KC0c, KC0v, prop)
         quads.append(quad)

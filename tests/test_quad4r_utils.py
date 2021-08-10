@@ -25,16 +25,13 @@ def test_quad4r_coord():
     h = 0.002 # m
     prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True)
     quad = Quad4R(probe)
-    quad.cosa = 1.
-    quad.cosb = 1.
-    quad.cosg = 1.
     quad.c1 = DOF*0
     quad.c2 = DOF*1
     quad.c3 = DOF*2
     quad.c4 = DOF*3
     coord = quad4r_coord(quad, ncoords)
-    quad.cosa, quad.cosb, quad.cosg = coord.cosines_to_global()
-    assert np.allclose([quad.cosa, quad.cosb, quad.cosg], [1, 1, 1])
+    cosa, cosb, cosg = coord.cosines_to_global()
+    assert np.allclose([cosa, cosb, cosg], [1, 1, 1])
 
     ncoords = np.array([
         [0, 0, 0],
@@ -43,8 +40,8 @@ def test_quad4r_coord():
         [0, 0, 15],
         ])
     coord = quad4r_coord(quad, ncoords)
-    quad.cosa, quad.cosb, quad.cosg = coord.cosines_to_global()
-    assert np.allclose([quad.cosa, quad.cosb, quad.cosg], [0, 1, 1])
+    cosa, cosb, cosg = coord.cosines_to_global()
+    assert np.allclose([cosa, cosb, cosg], [0, 1, 1])
 
     ncoords = np.array([
         [0, 0, 0],
@@ -53,18 +50,8 @@ def test_quad4r_coord():
         [-15, 0, 0],
         ])
     coord = quad4r_coord(quad, ncoords)
-    quad.cosa, quad.cosb, quad.cosg = coord.cosines_to_global()
-    assert np.allclose([quad.cosa, quad.cosb, quad.cosg], [1, 1, 0])
-
-    ncoords = np.array([
-        [0, 0, 0],
-        [0, 15, 0],
-        [0, 15, 15],
-        [0, 0, 15],
-        ])
-    coord = quad4r_coord(quad, ncoords)
-    quad.cosa, quad.cosb, quad.cosg = coord.cosines_to_global()
-    assert np.allclose([quad.cosa, quad.cosb, quad.cosg], [0, 1, 0])
+    cosa, cosb, cosg = coord.cosines_to_global()
+    assert np.allclose([cosa, cosb, cosg], [1, 1, 0])
 
     ncoords = np.array([
         [0, 0, 0],
@@ -73,8 +60,20 @@ def test_quad4r_coord():
         [0, -15, 0],
         ])
     coord = quad4r_coord(quad, ncoords)
-    quad.cosa, quad.cosb, quad.cosg = coord.cosines_to_global()
-    assert np.allclose([quad.cosa, quad.cosb, quad.cosg], [1, 0, 1])
+    cosa, cosb, cosg = coord.cosines_to_global()
+    assert np.allclose([cosa, cosb, cosg], [-1, 0, 1], atol=1e-6)
+
+    ncoords = np.array([
+        [0, 0, 0],
+        [0, 15, 0],
+        [0, 15, 15],
+        [0, 0, 15],
+        ])
+    coord = quad4r_coord(quad, ncoords)
+    cosa, cosb, cosg = coord.cosines_to_global()
+    #NOTE Gimbal lock in the determination of the angles
+    #NOTE reason why we are using rij terms directly
+    #assert np.allclose([cosa, cosb, cosg], [0, 0, 1])
 
 
 if __name__ == '__main__':
