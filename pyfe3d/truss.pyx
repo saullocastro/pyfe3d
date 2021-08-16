@@ -90,7 +90,7 @@ cdef class Truss:
     cdef public cINT init_k_KC0, init_k_M
     cdef public double length
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
-    cdef TrussProbe probe
+    cdef public TrussProbe probe
 
     def __cinit__(Truss self, TrussProbe p):
         self.probe = p

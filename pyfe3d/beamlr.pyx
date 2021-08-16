@@ -113,7 +113,7 @@ cdef class BeamLR:
     cdef public cINT init_k_KC0, init_k_KG, init_k_M
     cdef public double length
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
-    cdef BeamLRProbe probe
+    cdef public BeamLRProbe probe
 
     def __cinit__(BeamLR self, BeamLRProbe p):
         self.probe = p
