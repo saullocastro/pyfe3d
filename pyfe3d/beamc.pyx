@@ -111,7 +111,7 @@ cdef class BeamC:
     cdef public cINT init_k_KC0, init_k_KG, init_k_M
     cdef public double length
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
-    cdef BeamCProbe probe
+    cdef public BeamCProbe probe
 
     def __cinit__(BeamC self, BeamCProbe p):
         self.probe = p

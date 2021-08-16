@@ -119,7 +119,7 @@ cdef class Quad4R:
     cdef public double area
     cdef public double alphat # drilling penalty factor for stiffness matrix, see Eq. 2.20 in F.M. Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013) 10–20. www.iosrjen.org (accessed April 20, 2020).
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
-    cdef Quad4RProbe probe
+    cdef public Quad4RProbe probe
 
 
     def __cinit__(Quad4R self, Quad4RProbe p):
