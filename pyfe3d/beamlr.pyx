@@ -103,7 +103,7 @@ cdef class BeamLR:
     init_k_KC0, init_k_KG, init_k_M : int
         Position in the arrays storing the sparse data for the structural
         matrices.
-    _p : :class:`.BeamLRProbe` object
+    probe : :class:`.BeamLRProbe` object
         Pointer to the probe.
 
     """
@@ -113,10 +113,10 @@ cdef class BeamLR:
     cdef public cINT init_k_KC0, init_k_KG, init_k_M
     cdef public double length
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
-    cdef BeamLRProbe _p
+    cdef BeamLRProbe probe
 
     def __cinit__(BeamLR self, BeamLRProbe p):
-        self._p = p
+        self.probe = p
         self.eid = -1
         self.n1 = -1
         self.n2 = -1
@@ -240,22 +240,25 @@ cdef class BeamLR:
 
             for j in range(NUM_NODES):
                 for i in range(DOF):
-                    self._p.ue[j*DOF + i] = 0
+                    self.probe.ue[j*DOF + i] = 0
 
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
                     #transforming translations
-                    self._p.ue[j*DOF + 0] += su[i]*u[c[j] + 0 + i]
-                    self._p.ue[j*DOF + 1] += sv[i]*u[c[j] + 0 + i]
-                    self._p.ue[j*DOF + 2] += sw[i]*u[c[j] + 0 + i]
+                    self.probe.ue[j*DOF + 0] += su[i]*u[c[j] + 0 + i]
+                    self.probe.ue[j*DOF + 1] += sv[i]*u[c[j] + 0 + i]
+                    self.probe.ue[j*DOF + 2] += sw[i]*u[c[j] + 0 + i]
                     #transforming rotations
-                    self._p.ue[j*DOF + 3] += su[i]*u[c[j] + 3 + i]
-                    self._p.ue[j*DOF + 4] += sv[i]*u[c[j] + 3 + i]
-                    self._p.ue[j*DOF + 5] += sw[i]*u[c[j] + 3 + i]
+                    self.probe.ue[j*DOF + 3] += su[i]*u[c[j] + 3 + i]
+                    self.probe.ue[j*DOF + 4] += sv[i]*u[c[j] + 3 + i]
+                    self.probe.ue[j*DOF + 5] += sw[i]*u[c[j] + 3 + i]
 
 
-    cpdef void update_xe(BeamLR self, np.ndarray[cDOUBLE, ndim=1] x):
-        r"""Update the 3D coordinates of the element
+    cpdef void update_probe_xe(BeamLR self, np.ndarray[cDOUBLE, ndim=1] x):
+        r"""Update the 3D coordinates of the probe of the element
+
+        .. note:: The ``probe`` attribute object :class:`.BeamLRProbe` is
+                  updated, not the element object.
 
         Parameters
         ----------
@@ -289,13 +292,13 @@ cdef class BeamLR:
 
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
-                    self._p.xe[j*DOF//2 + i] = 0
+                    self.probe.xe[j*DOF//2 + i] = 0
 
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
-                    self._p.xe[j*DOF//2 + 0] += su[i]*x[c[j]//2 + i]
-                    self._p.xe[j*DOF//2 + 1] += sv[i]*x[c[j]//2 + i]
-                    self._p.xe[j*DOF//2 + 2] += sw[i]*x[c[j]//2 + i]
+                    self.probe.xe[j*DOF//2 + 0] += su[i]*x[c[j]//2 + i]
+                    self.probe.xe[j*DOF//2 + 1] += sv[i]*x[c[j]//2 + i]
+                    self.probe.xe[j*DOF//2 + 2] += sw[i]*x[c[j]//2 + i]
 
         self.update_length()
 
@@ -307,12 +310,12 @@ cdef class BeamLR:
         cdef double x1, x2, y1, y2, z1, z2
         with nogil:
             #NOTE ignoring z in local coordinates
-            x1 = self._p.xe[0]
-            y1 = self._p.xe[1]
-            z1 = self._p.xe[2]
-            x2 = self._p.xe[3]
-            y2 = self._p.xe[4]
-            z2 = self._p.xe[5]
+            x1 = self.probe.xe[0]
+            y1 = self.probe.xe[1]
+            z1 = self.probe.xe[2]
+            x2 = self.probe.xe[3]
+            y2 = self.probe.xe[4]
+            z2 = self.probe.xe[5]
             self.length = ((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)**2)**0.5
 
 
@@ -1142,7 +1145,7 @@ cdef class BeamLR:
             r32 = self.r32
             r33 = self.r33
 
-            ue = &self._p.ue[0]
+            ue = &self.probe.ue[0]
 
             if update_KGv_only == 0:
                 # positions of nodes 1,2,3,4 in the global matrix

@@ -72,7 +72,7 @@ def test_nat_freq_axial(refinement=1, mtypes=range(2)):
             truss.c1 = DOF*pos1
             truss.c2 = DOF*pos2
             truss.update_rotation_matrix(ncoords_flatten)
-            truss.update_xe(ncoords_flatten)
+            truss.update_probe_xe(ncoords_flatten)
             truss.update_KC0(KC0r, KC0c, KC0v, prop)
             truss.update_M(Mr, Mc, Mv, prop, mtype=mtype)
             trusses.append(truss)

@@ -89,7 +89,7 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
                 print(beam.r21, beam.r22, beam.r23)
                 print(beam.r31, beam.r32, beam.r33)
                 print()
-                beam.update_xe(ncoords_flatten)
+                beam.update_probe_xe(ncoords_flatten)
                 beam.update_KC0(KC0r, KC0c, KC0v, prop)
                 beam.update_M(Mr, Mc, Mv, prop, mtype=mtype)
                 beams.append(beam)
