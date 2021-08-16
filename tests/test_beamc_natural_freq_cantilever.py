@@ -75,7 +75,7 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
             beam.c1 = DOF*pos1
             beam.c2 = DOF*pos2
             beam.update_rotation_matrix(1., 1., 0, ncoords_flatten)
-            beam.update_xe(ncoords_flatten)
+            beam.update_probe_xe(ncoords_flatten)
             beam.update_KC0(KC0r, KC0c, KC0v, prop)
             beam.update_M(Mr, Mc, Mv, prop, mtype=mtype)
             beams.append(beam)

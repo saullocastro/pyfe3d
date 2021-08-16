@@ -108,7 +108,7 @@ cdef class Quad4R:
     init_k_KC0, init_k_KG, init_k_M : int
         Position in the arrays storing the sparse data for the structural
         matrices.
-    _p : :class:`.Quad4RProbe` object
+    probe : :class:`.Quad4RProbe` object
         Pointer to the probe.
 
     """
@@ -119,11 +119,11 @@ cdef class Quad4R:
     cdef public double area
     cdef public double alphat # drilling penalty factor for stiffness matrix, see Eq. 2.20 in F.M. Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013) 10–20. www.iosrjen.org (accessed April 20, 2020).
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
-    cdef Quad4RProbe _p
+    cdef Quad4RProbe probe
 
 
     def __cinit__(Quad4R self, Quad4RProbe p):
-        self._p = p
+        self.probe = p
         self.eid = -1
         self.n1 = -1
         self.n2 = -1
@@ -263,22 +263,25 @@ cdef class Quad4R:
 
             for j in range(NUM_NODES):
                 for i in range(DOF):
-                    self._p.ue[j*DOF + i] = 0
+                    self.probe.ue[j*DOF + i] = 0
 
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
                     #transforming translations
-                    self._p.ue[j*DOF + 0] += su[i]*u[c[j] + 0 + i]
-                    self._p.ue[j*DOF + 1] += sv[i]*u[c[j] + 0 + i]
-                    self._p.ue[j*DOF + 2] += sw[i]*u[c[j] + 0 + i]
+                    self.probe.ue[j*DOF + 0] += su[i]*u[c[j] + 0 + i]
+                    self.probe.ue[j*DOF + 1] += sv[i]*u[c[j] + 0 + i]
+                    self.probe.ue[j*DOF + 2] += sw[i]*u[c[j] + 0 + i]
                     #transforming rotations
-                    self._p.ue[j*DOF + 3] += su[i]*u[c[j] + 3 + i]
-                    self._p.ue[j*DOF + 4] += sv[i]*u[c[j] + 3 + i]
-                    self._p.ue[j*DOF + 5] += sw[i]*u[c[j] + 3 + i]
+                    self.probe.ue[j*DOF + 3] += su[i]*u[c[j] + 3 + i]
+                    self.probe.ue[j*DOF + 4] += sv[i]*u[c[j] + 3 + i]
+                    self.probe.ue[j*DOF + 5] += sw[i]*u[c[j] + 3 + i]
 
 
-    cpdef void update_xe(Quad4R self, np.ndarray[cDOUBLE, ndim=1] x):
-        r"""Update the 3D coordinates of the element
+    cpdef void update_probe_xe(Quad4R self, np.ndarray[cDOUBLE, ndim=1] x):
+        r"""Update the 3D coordinates of the probe of the element
+
+        .. note:: The ``probe`` attribute object :class:`.Quad4RProbe` is
+                  updated, not the element object.
 
         Parameters
         ----------
@@ -314,13 +317,13 @@ cdef class Quad4R:
 
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
-                    self._p.xe[j*DOF//2 + i] = 0
+                    self.probe.xe[j*DOF//2 + i] = 0
 
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
-                    self._p.xe[j*DOF//2 + 0] += su[i]*x[c[j]//2 + i]
-                    self._p.xe[j*DOF//2 + 1] += sv[i]*x[c[j]//2 + i]
-                    self._p.xe[j*DOF//2 + 2] += sw[i]*x[c[j]//2 + i]
+                    self.probe.xe[j*DOF//2 + 0] += su[i]*x[c[j]//2 + i]
+                    self.probe.xe[j*DOF//2 + 1] += sv[i]*x[c[j]//2 + i]
+                    self.probe.xe[j*DOF//2 + 2] += sw[i]*x[c[j]//2 + i]
 
         self.update_area()
 
@@ -332,18 +335,18 @@ cdef class Quad4R:
         cdef double x1, x2, x3, x4, y1, y2, y3, y4
         with nogil:
             #NOTE ignoring z in local coordinates
-            x1 = self._p.xe[0]
-            y1 = self._p.xe[1]
-            #z1 = self._p.xe[2]
-            x2 = self._p.xe[3]
-            y2 = self._p.xe[4]
-            #z2 = self._p.xe[5]
-            x3 = self._p.xe[6]
-            y3 = self._p.xe[7]
-            #z3 = self._p.xe[8]
-            x4 = self._p.xe[9]
-            y4 = self._p.xe[10]
-            #z4 = self._p.xe[11]
+            x1 = self.probe.xe[0]
+            y1 = self.probe.xe[1]
+            #z1 = self.probe.xe[2]
+            x2 = self.probe.xe[3]
+            y2 = self.probe.xe[4]
+            #z2 = self.probe.xe[5]
+            x3 = self.probe.xe[6]
+            y3 = self.probe.xe[7]
+            #z3 = self.probe.xe[8]
+            x4 = self.probe.xe[9]
+            y4 = self.probe.xe[10]
+            #z4 = self.probe.xe[11]
             self.area = 1/2.*fabs((x1*y2 + x2*y3 + x3*y4 + x4*y1) - (x2*y1 + x3*y2 + x4*y3 + x1*y4))
 
 
@@ -430,18 +433,18 @@ cdef class Quad4R:
             E2eq = prop.e2
 
             #NOTE ignoring z in local coordinates
-            x1 = self._p.xe[0]
-            y1 = self._p.xe[1]
-            #z1 = self._p.xe[2]
-            x2 = self._p.xe[3]
-            y2 = self._p.xe[4]
-            #z2 = self._p.xe[5]
-            x3 = self._p.xe[6]
-            y3 = self._p.xe[7]
-            #z3 = self._p.xe[8]
-            x4 = self._p.xe[9]
-            y4 = self._p.xe[10]
-            #z4 = self._p.xe[11]
+            x1 = self.probe.xe[0]
+            y1 = self.probe.xe[1]
+            #z1 = self.probe.xe[2]
+            x2 = self.probe.xe[3]
+            y2 = self.probe.xe[4]
+            #z2 = self.probe.xe[5]
+            x3 = self.probe.xe[6]
+            y3 = self.probe.xe[7]
+            #z3 = self.probe.xe[8]
+            x4 = self.probe.xe[9]
+            y4 = self.probe.xe[10]
+            #z4 = self.probe.xe[11]
 
             #Local to global transformation
             r11 = self.r11
@@ -3459,20 +3462,20 @@ cdef class Quad4R:
             r33 = self.r33
 
             #NOTE ignoring z in local coordinates
-            x1 = self._p.xe[0]
-            y1 = self._p.xe[1]
-            #z1 = self._p.xe[2]
-            x2 = self._p.xe[3]
-            y2 = self._p.xe[4]
-            #z2 = self._p.xe[5]
-            x3 = self._p.xe[6]
-            y3 = self._p.xe[7]
-            #z3 = self._p.xe[8]
-            x4 = self._p.xe[9]
-            y4 = self._p.xe[10]
-            #z4 = self._p.xe[11]
+            x1 = self.probe.xe[0]
+            y1 = self.probe.xe[1]
+            #z1 = self.probe.xe[2]
+            x2 = self.probe.xe[3]
+            y2 = self.probe.xe[4]
+            #z2 = self.probe.xe[5]
+            x3 = self.probe.xe[6]
+            y3 = self.probe.xe[7]
+            #z3 = self.probe.xe[8]
+            x4 = self.probe.xe[9]
+            y4 = self.probe.xe[10]
+            #z4 = self.probe.xe[11]
 
-            ue = &self._p.ue[0]
+            ue = &self.probe.ue[0]
 
             if update_KGv_only == 0:
                 # positions of nodes 1,2,3,4 in the global matrix
@@ -4289,18 +4292,18 @@ cdef class Quad4R:
             valH1 = 0.0625*A
 
             #NOTE ignoring z in local coordinates
-            x1 = self._p.xe[0]
-            y1 = self._p.xe[1]
-            #z1 = self._p.xe[2]
-            x2 = self._p.xe[3]
-            y2 = self._p.xe[4]
-            #z2 = self._p.xe[5]
-            x3 = self._p.xe[6]
-            y3 = self._p.xe[7]
-            #z3 = self._p.xe[8]
-            x4 = self._p.xe[9]
-            y4 = self._p.xe[10]
-            #z4 = self._p.xe[11]
+            x1 = self.probe.xe[0]
+            y1 = self.probe.xe[1]
+            #z1 = self.probe.xe[2]
+            x2 = self.probe.xe[3]
+            y2 = self.probe.xe[4]
+            #z2 = self.probe.xe[5]
+            x3 = self.probe.xe[6]
+            y3 = self.probe.xe[7]
+            #z3 = self.probe.xe[8]
+            x4 = self.probe.xe[9]
+            y4 = self.probe.xe[10]
+            #z4 = self.probe.xe[11]
 
             #Local to global transformation
             r11 = self.r11
