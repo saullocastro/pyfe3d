@@ -77,15 +77,21 @@ physical representation.</p>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>c1</strong></dt><dd></dd>
 <dt><strong>c2</strong></dt><dd></dd>
-<dt><strong>cosa</strong></dt><dd></dd>
-<dt><strong>cosb</strong></dt><dd></dd>
-<dt><strong>cosg</strong></dt><dd></dd>
 <dt><strong>eid</strong></dt><dd></dd>
 <dt><strong>init_k_KC0</strong></dt><dd></dd>
 <dt><strong>init_k_M</strong></dt><dd></dd>
 <dt><strong>length</strong></dt><dd></dd>
 <dt><strong>n1</strong></dt><dd></dd>
 <dt><strong>n2</strong></dt><dd></dd>
+<dt><strong>r11</strong></dt><dd></dd>
+<dt><strong>r12</strong></dt><dd></dd>
+<dt><strong>r13</strong></dt><dd></dd>
+<dt><strong>r21</strong></dt><dd></dd>
+<dt><strong>r22</strong></dt><dd></dd>
+<dt><strong>r23</strong></dt><dd></dd>
+<dt><strong>r31</strong></dt><dd></dd>
+<dt><strong>r32</strong></dt><dd></dd>
+<dt><strong>r33</strong></dt><dd></dd>
 </dl>
 </dd>
 </dl>
@@ -105,10 +111,13 @@ physical representation.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.truss.Truss.update_length" title="pyfe3d.truss.Truss.update_length"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_length</span></code></a></p></td>
 <td><p>Update element length</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.truss.Truss.update_ue" title="pyfe3d.truss.Truss.update_ue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_ue</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.truss.Truss.update_rotation_matrix" title="pyfe3d.truss.Truss.update_rotation_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_rotation_matrix</span></code></a></p></td>
+<td><p>Update the rotation matrix of the element</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.truss.Truss.update_ue" title="pyfe3d.truss.Truss.update_ue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_ue</span></code></a></p></td>
 <td><p>Update the local displacement vector of the element</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.truss.Truss.update_xe" title="pyfe3d.truss.Truss.update_xe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_xe</span></code></a></p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.truss.Truss.update_xe" title="pyfe3d.truss.Truss.update_xe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_xe</span></code></a></p></td>
 <td><p>Update the 3D coordinates of the element</p></td>
 </tr>
 </tbody>
@@ -131,6 +140,28 @@ physical representation.</p>
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.update_length">
 <span class="sig-name descname"><span class="pre">update_length</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.truss.Truss.update_length" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update element length</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.truss.Truss.update_rotation_matrix">
+<span class="sig-name descname"><span class="pre">update_rotation_matrix</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.truss.Truss.update_rotation_matrix" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update the rotation matrix of the element</p>
+<p>Attributes <code class="docutils literal notranslate"><span class="pre">r11,r12,r13,r21,r22,r23,r31,r32,r33</span></code> are updated,
+corresponding to the rotation matrix from local to global coordinates.</p>
+<p>The element coordinate system is determined, identifying the <span class="math notranslate nohighlight">\(ijk\)</span>
+components of each axis: <span class="math notranslate nohighlight">\({x_e}_i, {x_e}_j, {x_e}_k\)</span>; <span class="math notranslate nohighlight">\({y_e}_i,
+{y_e}_j, {y_e}_k\)</span>; <span class="math notranslate nohighlight">\({z_e}_i, {z_e}_j, {z_e}_k\)</span>.</p>
+<p>The rotation matrix terms are calculated after solving 9 equations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Array with global nodal coordinates, for a total of <span class="math notranslate nohighlight">\(M\)</span> nodes in
+the model, this array will be arranged as: <span class="math notranslate nohighlight">\(x_1, y_1, z_1, x_2,
+y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">

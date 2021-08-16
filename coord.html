@@ -90,14 +90,8 @@ vecxz: a point laying in the azimuthal origin</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.coord.Coord.Rmatrix" title="pyfe3d.coord.Coord.Rmatrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Rmatrix</span></code></a>(newcr)</p></td>
-<td><p>Calculate the rotation matrix to a new cartesian system (newcr)</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.coord.Coord.cosines_to_global" title="pyfe3d.coord.Coord.cosines_to_global"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cosines_to_global</span></code></a>()</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.coord.Coord.cosines_to_global" title="pyfe3d.coord.Coord.cosines_to_global"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cosines_to_global</span></code></a>()</p></td>
 <td><p>Calculate the rotation cosines to the global coordinate system</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.coord.Coord.cosines_to_new_coord" title="pyfe3d.coord.Coord.cosines_to_new_coord"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cosines_to_new_coord</span></code></a>(newcr)</p></td>
-<td><p>Calculate the rotation cosines to a new cartesian system (newcr)</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.coord.Coord.transform" title="pyfe3d.coord.Coord.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(vec, new_csys)</p></td>
 <td><p>The transformation will go as follows:</p></td>
@@ -109,31 +103,24 @@ vecxz: a point laying in the azimuthal origin</p>
 </table>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 52%" />
-<col style="width: 48%" />
+<col style="width: 55%" />
+<col style="width: 45%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><strong>R2basic</strong></p></td>
+<tr class="row-odd"><td><p><strong>R2global</strong></p></td>
 <td></td>
 </tr>
 </tbody>
 </table>
 <dl class="py method">
-<dt class="sig sig-object py" id="pyfe3d.coord.Coord.Rmatrix">
-<span class="sig-name descname"><span class="pre">Rmatrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">newcr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.coord.Coord.Rmatrix" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate the rotation matrix to a new cartesian system (newcr)</p>
-</dd></dl>
-
-<dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.coord.Coord.cosines_to_global">
 <span class="sig-name descname"><span class="pre">cosines_to_global</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.coord.Coord.cosines_to_global" title="Permalink to this definition">¶</a></dt>
 <dd><p>Calculate the rotation cosines to the global coordinate system</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pyfe3d.coord.Coord.cosines_to_new_coord">
-<span class="sig-name descname"><span class="pre">cosines_to_new_coord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">newcr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.coord.Coord.cosines_to_new_coord" title="Permalink to this definition">¶</a></dt>
-<dd><p>Calculate the rotation cosines to a new cartesian system (newcr)</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>This must be improved, Gimbal lock is easily verified with Euler
+angles. To use SciPy’s <a href="#id1"><span class="problematic" id="id2">:method:`.as_quat`</span></a> in the future.</p>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -190,14 +177,8 @@ local cartesian to local something.</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Rmatrix</span></code>(newcr)</p></td>
-<td><p>Calculate the rotation matrix to a new cartesian system (newcr)</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cosines_to_global</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cosines_to_global</span></code>()</p></td>
 <td><p>Calculate the rotation cosines to the global coordinate system</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cosines_to_new_coord</span></code>(newcr)</p></td>
-<td><p>Calculate the rotation cosines to a new cartesian system (newcr)</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.coord.CoordC.cr2me" title="pyfe3d.coord.CoordC.cr2me"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cr2me</span></code></a>(vec)</p></td>
 <td><p>Transformation from cartesian to cylindrical vec must be in cartesian coordinates: [x, y, z]</p></td>
@@ -215,11 +196,11 @@ local cartesian to local something.</p>
 </table>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 52%" />
-<col style="width: 48%" />
+<col style="width: 55%" />
+<col style="width: 45%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><strong>R2basic</strong></p></td>
+<tr class="row-odd"><td><p><strong>R2global</strong></p></td>
 <td></td>
 </tr>
 </tbody>
@@ -265,14 +246,8 @@ vec must be in cylindrical cordinates: [r, theta, z]</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Rmatrix</span></code>(newcr)</p></td>
-<td><p>Calculate the rotation matrix to a new cartesian system (newcr)</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cosines_to_global</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cosines_to_global</span></code>()</p></td>
 <td><p>Calculate the rotation cosines to the global coordinate system</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cosines_to_new_coord</span></code>(newcr)</p></td>
-<td><p>Calculate the rotation cosines to a new cartesian system (newcr)</p></td>
 </tr>
 <tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code>(vec, new_csys)</p></td>
 <td><p>The transformation will go as follows:</p></td>
@@ -284,11 +259,11 @@ vec must be in cylindrical cordinates: [r, theta, z]</p>
 </table>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 52%" />
-<col style="width: 48%" />
+<col style="width: 55%" />
+<col style="width: 45%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><strong>R2basic</strong></p></td>
+<tr class="row-odd"><td><p><strong>R2global</strong></p></td>
 <td></td>
 </tr>
 <tr class="row-even"><td><p><strong>cr2me</strong></p></td>
@@ -326,14 +301,8 @@ vec must be in cylindrical cordinates: [r, theta, z]</p>
 <col style="width: 90%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">Rmatrix</span></code>(newcr)</p></td>
-<td><p>Calculate the rotation matrix to a new cartesian system (newcr)</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cosines_to_global</span></code>()</p></td>
+<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cosines_to_global</span></code>()</p></td>
 <td><p>Calculate the rotation cosines to the global coordinate system</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cosines_to_new_coord</span></code>(newcr)</p></td>
-<td><p>Calculate the rotation cosines to a new cartesian system (newcr)</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.coord.CoordS.cr2me" title="pyfe3d.coord.CoordS.cr2me"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cr2me</span></code></a>(vec)</p></td>
 <td><p>Transformation from cartesian to spherical vec must be in cartesian coordinates: [x, y, z]</p></td>
@@ -351,11 +320,11 @@ vec must be in cylindrical cordinates: [r, theta, z]</p>
 </table>
 <table class="docutils align-default">
 <colgroup>
-<col style="width: 52%" />
-<col style="width: 48%" />
+<col style="width: 55%" />
+<col style="width: 45%" />
 </colgroup>
 <tbody>
-<tr class="row-odd"><td><p><strong>R2basic</strong></p></td>
+<tr class="row-odd"><td><p><strong>R2global</strong></p></td>
 <td></td>
 </tr>
 </tbody>
