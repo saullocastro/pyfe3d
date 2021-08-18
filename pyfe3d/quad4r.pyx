@@ -4246,7 +4246,6 @@ cdef class Quad4R:
             np.ndarray[cINT, ndim=1] KGr,
             np.ndarray[cINT, ndim=1] KGc,
             np.ndarray[cDOUBLE, ndim=1] KGv,
-            ShellProp prop,
             int update_KGv_only=0
             ):
         r"""Update sparse vectors for geometric stiffness matrix KG
@@ -4269,9 +4268,6 @@ cdef class Quad4R:
            Array to store column positions of sparse values
         KGv : np.array
             Array to store sparse values
-        prop : :class:`ShellProp` object
-            Shell property object from where the stiffness and mass attributes
-            are read from.
         update_KGv_only : int
             The default `0` means that only `KGv` is updated. Any other value will
             lead to `KGr` and `KGc` also being updated.
@@ -4282,26 +4278,11 @@ cdef class Quad4R:
         cdef double y1, y2, y3, y4
         cdef double wij, detJ, xi, eta
         cdef double points[2]
-        cdef double A11, A12, A16, A22, A26, A66
-        cdef double B11, B12, B16, B22, B26, B66
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double j11, j12, j21, j22
         cdef double N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
 
         with nogil:
-            A11 = prop.A11
-            A12 = prop.A12
-            A16 = prop.A16
-            A22 = prop.A22
-            A26 = prop.A26
-            A66 = prop.A66
-            B11 = prop.B11
-            B12 = prop.B12
-            B16 = prop.B16
-            B22 = prop.B22
-            B26 = prop.B26
-            B66 = prop.B66
-
             #Local to global transformation
             r11 = self.r11
             r12 = self.r12
