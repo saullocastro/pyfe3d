@@ -3955,8 +3955,6 @@ cdef class Quad4R:
                     Nxx = ue[0]*(A11*N1x + A16*N1y) + ue[10]*(B11*N2x + B16*N2y) + ue[12]*(A11*N3x + A16*N3y) + ue[13]*(A12*N3y + A16*N3x) - ue[15]*(B12*N3y + B16*N3x) + ue[16]*(B11*N3x + B16*N3y) + ue[18]*(A11*N4x + A16*N4y) + ue[19]*(A12*N4y + A16*N4x) + ue[1]*(A12*N1y + A16*N1x) - ue[21]*(B12*N4y + B16*N4x) + ue[22]*(B11*N4x + B16*N4y) - ue[3]*(B12*N1y + B16*N1x) + ue[4]*(B11*N1x + B16*N1y) + ue[6]*(A11*N2x + A16*N2y) + ue[7]*(A12*N2y + A16*N2x) - ue[9]*(B12*N2y + B16*N2x)
                     Nyy = ue[0]*(A12*N1x + A26*N1y) + ue[10]*(B12*N2x + B26*N2y) + ue[12]*(A12*N3x + A26*N3y) + ue[13]*(A22*N3y + A26*N3x) - ue[15]*(B22*N3y + B26*N3x) + ue[16]*(B12*N3x + B26*N3y) + ue[18]*(A12*N4x + A26*N4y) + ue[19]*(A22*N4y + A26*N4x) + ue[1]*(A22*N1y + A26*N1x) - ue[21]*(B22*N4y + B26*N4x) + ue[22]*(B12*N4x + B26*N4y) - ue[3]*(B22*N1y + B26*N1x) + ue[4]*(B12*N1x + B26*N1y) + ue[6]*(A12*N2x + A26*N2y) + ue[7]*(A22*N2y + A26*N2x) - ue[9]*(B22*N2y + B26*N2x)
                     Nxy = ue[0]*(A16*N1x + A66*N1y) + ue[10]*(B16*N2x + B66*N2y) + ue[12]*(A16*N3x + A66*N3y) + ue[13]*(A26*N3y + A66*N3x) - ue[15]*(B26*N3y + B66*N3x) + ue[16]*(B16*N3x + B66*N3y) + ue[18]*(A16*N4x + A66*N4y) + ue[19]*(A26*N4y + A66*N4x) + ue[1]*(A26*N1y + A66*N1x) - ue[21]*(B26*N4y + B66*N4x) + ue[22]*(B16*N4x + B66*N4y) - ue[3]*(B26*N1y + B66*N1x) + ue[4]*(B16*N1x + B66*N1y) + ue[6]*(A16*N2x + A66*N2y) + ue[7]*(A26*N2y + A66*N2x) - ue[9]*(B26*N2y + B66*N2x)
-                    with gil:
-                        print('Nxx ', Nxx)
 
                     k = self.init_k_KG
                     KGv[k] += r13**2*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
