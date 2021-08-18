@@ -3,3 +3,6 @@
 
 .. automodule:: pyfe3d.shellprop
     :members:
+
+.. automodule:: pyfe3d.shellprop_utils
+    :members:
