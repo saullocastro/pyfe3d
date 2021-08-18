@@ -201,8 +201,11 @@ cdef class BeamC:
             self.r33 = (xi*yj - xj*yi)/tmp
 
 
-    cpdef void update_ue(BeamC self, np.ndarray[cDOUBLE, ndim=1] u):
-        r"""Update the local displacement vector of the element
+    cpdef void update_probe_ue(BeamC self, np.ndarray[cDOUBLE, ndim=1] u):
+        r"""Update the local displacement vector of the probe of the element
+
+        .. note:: The ``probe`` attribute object :class:`.Quad4RProbe` is
+                  updated, not the element object.
 
         Parameters
         ----------
@@ -215,9 +218,9 @@ cdef class BeamC:
         """
         cdef int i, j
         cdef cINT c[2]
-        cdef double su[3]
-        cdef double sv[3]
-        cdef double sw[3]
+        cdef double s1[3]
+        cdef double s2[3]
+        cdef double s3[3]
 
         #FIXME double check all this part
         with nogil:
@@ -226,15 +229,15 @@ cdef class BeamC:
             c[1] = self.c2
 
             # global to local transformation of displacements
-            su[0] = self.r11
-            su[1] = self.r21
-            su[2] = self.r31
-            sv[0] = self.r12
-            sv[1] = self.r22
-            sv[2] = self.r32
-            sw[0] = self.r13
-            sw[1] = self.r23
-            sw[2] = self.r33
+            s1[0] = self.r11
+            s1[1] = self.r21
+            s1[2] = self.r31
+            s2[0] = self.r12
+            s2[1] = self.r22
+            s2[2] = self.r32
+            s3[0] = self.r13
+            s3[1] = self.r23
+            s3[2] = self.r33
 
             for j in range(NUM_NODES):
                 for i in range(DOF):
@@ -243,13 +246,13 @@ cdef class BeamC:
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
                     #transforming translations
-                    self.probe.ue[j*DOF + 0] += su[i]*u[c[j] + 0 + i]
-                    self.probe.ue[j*DOF + 1] += sv[i]*u[c[j] + 0 + i]
-                    self.probe.ue[j*DOF + 2] += sw[i]*u[c[j] + 0 + i]
+                    self.probe.ue[j*DOF + 0] += s1[i]*u[c[j] + 0 + i]
+                    self.probe.ue[j*DOF + 1] += s2[i]*u[c[j] + 0 + i]
+                    self.probe.ue[j*DOF + 2] += s3[i]*u[c[j] + 0 + i]
                     #transforming rotations
-                    self.probe.ue[j*DOF + 3] += su[i]*u[c[j] + 3 + i]
-                    self.probe.ue[j*DOF + 4] += sv[i]*u[c[j] + 3 + i]
-                    self.probe.ue[j*DOF + 5] += sw[i]*u[c[j] + 3 + i]
+                    self.probe.ue[j*DOF + 3] += s1[i]*u[c[j] + 3 + i]
+                    self.probe.ue[j*DOF + 4] += s2[i]*u[c[j] + 3 + i]
+                    self.probe.ue[j*DOF + 5] += s3[i]*u[c[j] + 3 + i]
 
 
     cpdef void update_probe_xe(BeamC self, np.ndarray[cDOUBLE, ndim=1] x):
@@ -268,9 +271,9 @@ cdef class BeamC:
         """
         cdef int i, j
         cdef cINT c[2]
-        cdef double su[3]
-        cdef double sv[3]
-        cdef double sw[3]
+        cdef double s1[3]
+        cdef double s2[3]
+        cdef double s3[3]
 
         with nogil:
             # positions in the global stiffness matrix
@@ -278,15 +281,15 @@ cdef class BeamC:
             c[1] = self.c2
 
             # global to local transformation of displacements
-            su[0] = self.r11
-            su[1] = self.r21
-            su[2] = self.r31
-            sv[0] = self.r12
-            sv[1] = self.r22
-            sv[2] = self.r32
-            sw[0] = self.r13
-            sw[1] = self.r23
-            sw[2] = self.r33
+            s1[0] = self.r11
+            s1[1] = self.r21
+            s1[2] = self.r31
+            s2[0] = self.r12
+            s2[1] = self.r22
+            s2[2] = self.r32
+            s3[0] = self.r13
+            s3[1] = self.r23
+            s3[2] = self.r33
 
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
@@ -294,9 +297,9 @@ cdef class BeamC:
 
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
-                    self.probe.xe[j*DOF//2 + 0] += su[i]*x[c[j]//2 + i]
-                    self.probe.xe[j*DOF//2 + 1] += sv[i]*x[c[j]//2 + i]
-                    self.probe.xe[j*DOF//2 + 2] += sw[i]*x[c[j]//2 + i]
+                    self.probe.xe[j*DOF//2 + 0] += s1[i]*x[c[j]//2 + i]
+                    self.probe.xe[j*DOF//2 + 1] += s2[i]*x[c[j]//2 + i]
+                    self.probe.xe[j*DOF//2 + 2] += s3[i]*x[c[j]//2 + i]
 
         self.update_length()
 
