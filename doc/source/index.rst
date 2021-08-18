@@ -1,6 +1,9 @@
 Finite elements for 3D problems in Python/Cython
 ================================================
 
+Modules
+-------
+
 .. toctree::
     :maxdepth: 2
 
