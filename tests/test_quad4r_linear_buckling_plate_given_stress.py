@@ -3,20 +3,25 @@ sys.path.append('..')
 
 import numpy as np
 from numpy import isclose
-from scipy.sparse.linalg import eigsh, eigs
+from scipy.sparse.linalg import eigsh, spsolve, cg
 from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import isotropic_plate
 from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
 
 
-def test_nat_freq_plate(plot=False, mode=0):
+def test_linear_buckling(mode=0, refinement=1):
     data = Quad4RData()
     probe = Quad4RProbe()
-    nx = 9
-    ny = 11
+    nx = refinement*31
+    ny = refinement*15
+    if (nx % 2) == 0:
+        nx += 1
+    if (ny % 2) == 0:
+        ny += 1
 
-    a = 0.3
+    #a = 0.3
+    a = 2.0
     b = 0.5
 
     # Material Lastrobe Lescalloy
@@ -24,14 +29,10 @@ def test_nat_freq_plate(plot=False, mode=0):
     nu = 0.33
 
     rho = 7.83e3 # kg/m3
-    h = 0.01 # m
+    h = 0.002 # m
 
     xtmp = np.linspace(0, a, nx)
     ytmp = np.linspace(0, b, ny)
-
-    dx = xtmp[1] - xtmp[0]
-    dy = ytmp[1] - ytmp[0]
-
     xmesh, ymesh = np.meshgrid(xtmp, ytmp)
     ncoords = np.vstack((xmesh.T.flatten(), ymesh.T.flatten(), np.zeros_like(ymesh.T.flatten()))).T
 
@@ -39,14 +40,6 @@ def test_nat_freq_plate(plot=False, mode=0):
     y = ncoords[:, 1]
     z = ncoords[:, 2]
     ncoords_flatten = ncoords.flatten()
-
-    inner = np.logical_not(isclose(x, 0) | isclose(x, a) | isclose(y, 0) | isclose(y, b))
-    np.random.seed(20)
-    rdm = (-1 + 2*np.random.rand(x[inner].shape[0]))
-    np.random.seed(20)
-    rdm = (-1 + 2*np.random.rand(y[inner].shape[0]))
-    x[inner] += dx*rdm*0.4
-    y[inner] += dy*rdm*0.4
 
     nids = 1 + np.arange(ncoords.shape[0])
     nid_pos = dict(zip(nids, np.arange(len(nids))))
@@ -62,9 +55,9 @@ def test_nat_freq_plate(plot=False, mode=0):
     KC0r = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
     KC0c = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
     KC0v = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=DOUBLE)
-    Mr = np.zeros(data.M_SPARSE_SIZE*num_elements, dtype=INT)
-    Mc = np.zeros(data.M_SPARSE_SIZE*num_elements, dtype=INT)
-    Mv = np.zeros(data.M_SPARSE_SIZE*num_elements, dtype=DOUBLE)
+    KGr = np.zeros(data.KG_SPARSE_SIZE*num_elements, dtype=INT)
+    KGc = np.zeros(data.KG_SPARSE_SIZE*num_elements, dtype=INT)
+    KGv = np.zeros(data.KG_SPARSE_SIZE*num_elements, dtype=DOUBLE)
     N = DOF*nx*ny
 
     # creating elements and populating global stiffness
@@ -73,7 +66,7 @@ def test_nat_freq_plate(plot=False, mode=0):
 
     quads = []
     init_k_KC0 = 0
-    init_k_M = 0
+    init_k_KG = 0
     for n1, n2, n3, n4 in zip(n1s, n2s, n3s, n4s):
         pos1 = nid_pos[n1]
         pos2 = nid_pos[n2]
@@ -94,87 +87,80 @@ def test_nat_freq_plate(plot=False, mode=0):
         quad.c3 = DOF*nid_pos[n3]
         quad.c4 = DOF*nid_pos[n4]
         quad.init_k_KC0 = init_k_KC0
-        quad.init_k_M = init_k_M
+        quad.init_k_KG = init_k_KG
         quad.update_rotation_matrix(ncoords_flatten)
         quad.update_probe_xe(ncoords_flatten)
         quad.update_KC0(KC0r, KC0c, KC0v, prop)
-        quad.update_M(Mr, Mc, Mv, prop, mtype=1)
         quads.append(quad)
         init_k_KC0 += data.KC0_SPARSE_SIZE
-        init_k_M += data.M_SPARSE_SIZE
+        init_k_KG += data.KG_SPARSE_SIZE
 
     print('elements created')
 
     KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
-    M = coo_matrix((Mv, (Mr, Mc)), shape=(N, N)).tocsc()
 
-    print('sparse KC0 and M created')
+    print('sparse KC0 created')
 
-    # applying boundary conditions
-    # simply supported
+    # applying boundary conditions (leading to a constant Nxx)
+    # simply supported in w
     bk = np.zeros(N, dtype=bool) #array to store known DOFs
-    check = np.isclose(x, 0.) | np.isclose(x, a) | np.isclose(y, 0) | np.isclose(y, b)
-    bk[0::DOF] = check
-    bk[1::DOF] = check
+    check = isclose(x, 0.) | isclose(x, a) | isclose(y, 0) | isclose(y, b)
     bk[2::DOF] = check
-    #bk[5::DOF] = True
+    # constraining u at x = a/2, y = 0,b
+    check = isclose(x, a/2.) & (isclose(y, 0.) | isclose(y, b))
+    bk[0::DOF] = check
+    # constraining v at x = 0,a y = b/2
+    check = isclose(y, b/2.) & (isclose(x, 0.) | isclose(x, a))
+    bk[1::DOF] = check
+    # removing drilling
+    bk[5::DOF] = True
 
-    bu = ~bk # same as np.logical_not, defining unknown DOFs
+    # unconstrained nodes, unknown DOFs
+    bu = ~bk # same as np.logical_not
 
     # sub-matrices corresponding to unknown DOFs
     Kuu = KC0[bu, :][:, bu]
-    Muu = M[bu, :][:, bu]
 
-    num_eigenvalues = 2
-    print('eig solver begin')
-    # solves Ax = lambda M x
-    # we have Ax - lambda M x = 0, with lambda = omegan**2
-    eigvals, eigvecsu = eigsh(A=Kuu, M=Muu, sigma=-1., which='LM',
-            k=num_eigenvalues, tol=1e-9)
-    print('eig solver end')
-    eigvecs = np.zeros((N, eigvecsu.shape[1]), dtype=float)
-    eigvecs[bu, :] = eigvecsu
-    omegan = eigvals**0.5
+    Nxx = -1
+
+    # geometric stiffness
+    for quad in quads:
+        quad.update_probe_xe(ncoords_flatten)
+        quad.update_KG_given_stress(Nxx, 0, 0, KGr, KGc, KGv)
+    KG = coo_matrix((KGv, (KGr, KGc)), shape=(N, N)).tocsc()
+    KGuu = KG[bu, :][:, bu]
+    print('sparse KG created')
+
+    # linear buckling check
+    num_eig_lb = max(mode+1, 1)
+    PREC = np.max(1/Kuu.diagonal())
+    eigvals, eigvecsu = eigsh(A=PREC*KGuu, k=num_eig_lb, which='SM',
+            M=PREC*Kuu, tol=1e-15, sigma=1., mode='cayley')
+    eigvals = -1./eigvals
+    load_mult = eigvals[0]
+    P_cr_calc = load_mult*Nxx*b
+    print('linear buckling load_mult =', load_mult)
+    print('linear buckling P_cr_calc =', P_cr_calc)
 
     # vector u containing displacements for all DOFs
     u = np.zeros(N)
     u[bu] = eigvecsu[:, mode]
 
     # theoretical reference
-    m = 1
-    n = 1
-    D = 2*h**3*E/(3*(1 - nu**2))
-    wmn = (m**2/a**2 + n**2/b**2)*np.sqrt(D*np.pi**4/(2*rho*h))/2
-
-    print('Theoretical omega123', wmn)
-    wmn_ref = 2500
-    print('Numerical omega123', omegan[0:10])
-
-    if plot:
-        import matplotlib
-        matplotlib.use('TkAgg')
-        import matplotlib.pyplot as plt
-
-        plt.clf()
-        for n1, n2, n3, n4 in zip(n1s, n2s, n3s, n4s):
-            pos1 = nid_pos[n1]
-            pos2 = nid_pos[n2]
-            pos3 = nid_pos[n3]
-            pos4 = nid_pos[n4]
-            r1 = ncoords[pos1]
-            r2 = ncoords[pos2]
-            r3 = ncoords[pos3]
-            r4 = ncoords[pos4]
-            plt.plot([r1[0], r2[0]], [r1[1], r2[1]], 'k-')
-            plt.plot([r2[0], r3[0]], [r2[1], r3[1]], 'k-')
-            plt.plot([r3[0], r4[0]], [r3[1], r4[1]], 'k-')
-            plt.plot([r4[0], r1[0]], [r4[1], r1[1]], 'k-')
-        plt.contourf(xmesh, ymesh, u[2::DOF].reshape(nx, ny).T)
-        plt.show()
-
-    assert np.isclose(wmn_ref, omegan[0], rtol=0.05)
-
+    kcmin = 1e6
+    mmin = 0
+    for m in range(1, 21):
+        kc = (m*b/a + a/(m*b))**2
+        if kc <= kcmin:
+            kcmin = kc
+            mmin = m
+    print('kcmin =', kcmin)
+    print('m =', mmin)
+    sigma_cr = -kcmin*np.pi**2*E/(12*(1-nu**2))*h**2/b**2
+    P_cr_theory = sigma_cr*h*b
+    print('Theoretical P_cr_theory', P_cr_theory)
+    assert isclose(P_cr_theory, P_cr_calc, rtol=0.05)
 
 
 if __name__ == '__main__':
-    test_nat_freq_plate(plot=True, mode=0)
+    test_linear_buckling(mode=0, refinement=1)

@@ -62,7 +62,6 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
         # creating elements and populating global stiffness
 
         prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True, rho=rho)
-        prop.calc_equivalent_properties()
 
         quads = []
         init_k_KC0 = 0
@@ -180,7 +179,8 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
 
         # geometric stiffness
         for quad in quads:
-            quad.update_ue(u) #NOTE update affects the Quad4RProbe class attribute ue
+            quad.update_probe_ue(u) #NOTE update affects the Quad4RProbe class attribute ue
+            quad.update_probe_xe(ncoords_flatten)
             quad.update_KG(KGr, KGc, KGv, prop)
         KG = coo_matrix((KGv, (KGr, KGc)), shape=(N, N)).tocsc()
         KGuu = KG[bu, :][:, bu]

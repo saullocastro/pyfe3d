@@ -129,7 +129,7 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
 
         # geometric stiffness
         for beam in beams:
-            beam.update_ue(u)
+            beam.update_probe_ue(u)
             beam.update_KG(KGr, KGc, KGv, prop)
         KG = coo_matrix((KGv, (KGr, KGc)), shape=(N, N)).tocsc()
         KGuu = KG[bu, :][:, bu]

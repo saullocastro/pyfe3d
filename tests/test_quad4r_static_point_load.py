@@ -51,7 +51,6 @@ def test_static_plate_quad_point_load(plot=False):
     # creating elements and populating global stiffness
 
     prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True)
-    prop.calc_equivalent_properties()
 
     quads = []
     init_k_KC0 = 0

@@ -225,8 +225,11 @@ cdef class Quad4R:
             self.r33 = (xi*yj - xj*yi)/tmp
 
 
-    cpdef void update_ue(Quad4R self, np.ndarray[cDOUBLE, ndim=1] u):
-        r"""Update the local displacement vector of the element
+    cpdef void update_probe_ue(Quad4R self, np.ndarray[cDOUBLE, ndim=1] u):
+        r"""Update the local displacement vector of the probe of the element
+
+        .. note:: The ``probe`` attribute object :class:`.Quad4RProbe` is
+                  updated, not the element object.
 
         Parameters
         ----------
@@ -239,9 +242,9 @@ cdef class Quad4R:
         """
         cdef int i, j
         cdef cINT c[4]
-        cdef double su[3]
-        cdef double sv[3]
-        cdef double sw[3]
+        cdef double s1[3]
+        cdef double s2[3]
+        cdef double s3[3]
 
         with nogil:
             # positions in the global stiffness matrix
@@ -251,15 +254,15 @@ cdef class Quad4R:
             c[3] = self.c4
 
             # global to local transformation of displacements
-            su[0] = self.r11
-            su[1] = self.r21
-            su[2] = self.r31
-            sv[0] = self.r12
-            sv[1] = self.r22
-            sv[2] = self.r32
-            sw[0] = self.r13
-            sw[1] = self.r23
-            sw[2] = self.r33
+            s1[0] = self.r11
+            s1[1] = self.r21
+            s1[2] = self.r31
+            s2[0] = self.r12
+            s2[1] = self.r22
+            s2[2] = self.r32
+            s3[0] = self.r13
+            s3[1] = self.r23
+            s3[2] = self.r33
 
             for j in range(NUM_NODES):
                 for i in range(DOF):
@@ -268,13 +271,13 @@ cdef class Quad4R:
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
                     #transforming translations
-                    self.probe.ue[j*DOF + 0] += su[i]*u[c[j] + 0 + i]
-                    self.probe.ue[j*DOF + 1] += sv[i]*u[c[j] + 0 + i]
-                    self.probe.ue[j*DOF + 2] += sw[i]*u[c[j] + 0 + i]
+                    self.probe.ue[j*DOF + 0] += s1[i]*u[c[j] + 0 + i]
+                    self.probe.ue[j*DOF + 1] += s2[i]*u[c[j] + 0 + i]
+                    self.probe.ue[j*DOF + 2] += s3[i]*u[c[j] + 0 + i]
                     #transforming rotations
-                    self.probe.ue[j*DOF + 3] += su[i]*u[c[j] + 3 + i]
-                    self.probe.ue[j*DOF + 4] += sv[i]*u[c[j] + 3 + i]
-                    self.probe.ue[j*DOF + 5] += sw[i]*u[c[j] + 3 + i]
+                    self.probe.ue[j*DOF + 3] += s1[i]*u[c[j] + 3 + i]
+                    self.probe.ue[j*DOF + 4] += s2[i]*u[c[j] + 3 + i]
+                    self.probe.ue[j*DOF + 5] += s3[i]*u[c[j] + 3 + i]
 
 
     cpdef void update_probe_xe(Quad4R self, np.ndarray[cDOUBLE, ndim=1] x):
@@ -293,9 +296,9 @@ cdef class Quad4R:
         """
         cdef int i, j
         cdef cINT c[4]
-        cdef double su[3]
-        cdef double sv[3]
-        cdef double sw[3]
+        cdef double s1[3]
+        cdef double s2[3]
+        cdef double s3[3]
 
         with nogil:
             # positions in the global stiffness matrix
@@ -305,15 +308,15 @@ cdef class Quad4R:
             c[3] = self.c4
 
             # global to local transformation of displacements
-            su[0] = self.r11
-            su[1] = self.r21
-            su[2] = self.r31
-            sv[0] = self.r12
-            sv[1] = self.r22
-            sv[2] = self.r32
-            sw[0] = self.r13
-            sw[1] = self.r23
-            sw[2] = self.r33
+            s1[0] = self.r11
+            s1[1] = self.r21
+            s1[2] = self.r31
+            s2[0] = self.r12
+            s2[1] = self.r22
+            s2[2] = self.r32
+            s3[0] = self.r13
+            s3[1] = self.r23
+            s3[2] = self.r33
 
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
@@ -321,9 +324,9 @@ cdef class Quad4R:
 
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
-                    self.probe.xe[j*DOF//2 + 0] += su[i]*x[c[j]//2 + i]
-                    self.probe.xe[j*DOF//2 + 1] += sv[i]*x[c[j]//2 + i]
-                    self.probe.xe[j*DOF//2 + 2] += sw[i]*x[c[j]//2 + i]
+                    self.probe.xe[j*DOF//2 + 0] += s1[i]*x[c[j]//2 + i]
+                    self.probe.xe[j*DOF//2 + 1] += s2[i]*x[c[j]//2 + i]
+                    self.probe.xe[j*DOF//2 + 2] += s3[i]*x[c[j]//2 + i]
 
         self.update_area()
 
@@ -3402,9 +3405,10 @@ cdef class Quad4R:
         Two-point Gauss-Legendre quadrature is used, which showed more accuracy
         for linear buckling load predictions.
 
-        The probe :class:`.Quad4RProbe` attribute of the :class:`Quad4R` object
-        must be updated using :func:`.update_ue` with the correct pre-buckling
-        displacements before this function is called.
+        Before this function is called, the probe :class:`.Quad4RProbe`
+        attribute of the :class:`Quad4R` object must be updated using
+        :func:`.update_probe_ue` with the correct pre-buckling displacements;
+        and :func:`.update_probe_xe` with the node coordinates.
 
         Properties
         ----------
@@ -3432,7 +3436,6 @@ cdef class Quad4R:
         cdef double B11, B12, B16, B22, B26, B66
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double j11, j12, j21, j22
-        cdef double N1, N2, N3, N4
         cdef double N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
         cdef double Nxx, Nyy, Nxy
 
@@ -3934,11 +3937,6 @@ cdef class Quad4R:
                     j21 = 2.0*(x1*xi - x1 - x2*xi - x2 + x3*xi + x3 - x4*xi + x4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
                     j22 = 2.0*(-eta*x1 + eta*x2 - eta*x3 + eta*x4 + x1 - x2 - x3 + x4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
 
-                    N1 = 0.25*eta*xi - 0.25*eta - 0.25*xi + 0.25
-                    N2 = -0.25*eta*xi - 0.25*eta + 0.25*xi + 0.25
-                    N3 = 0.25*eta*xi + 0.25*eta + 0.25*xi + 0.25
-                    N4 = -0.25*eta*xi + 0.25*eta - 0.25*xi + 0.25
-
                     N1x = 0.25*j11*(eta - 1) + 0.25*j12*(xi - 1)
                     N2x = -0.25*eta*j11 + 0.25*j11 - 0.25*j12*xi - 0.25*j12
                     N3x = 0.25*j11*(eta + 1) + 0.25*j12*(xi + 1)
@@ -3952,6 +3950,830 @@ cdef class Quad4R:
                     Nxx = ue[0]*(A11*N1x + A16*N1y) + ue[10]*(B11*N2x + B16*N2y) + ue[12]*(A11*N3x + A16*N3y) + ue[13]*(A12*N3y + A16*N3x) - ue[15]*(B12*N3y + B16*N3x) + ue[16]*(B11*N3x + B16*N3y) + ue[18]*(A11*N4x + A16*N4y) + ue[19]*(A12*N4y + A16*N4x) + ue[1]*(A12*N1y + A16*N1x) - ue[21]*(B12*N4y + B16*N4x) + ue[22]*(B11*N4x + B16*N4y) - ue[3]*(B12*N1y + B16*N1x) + ue[4]*(B11*N1x + B16*N1y) + ue[6]*(A11*N2x + A16*N2y) + ue[7]*(A12*N2y + A16*N2x) - ue[9]*(B12*N2y + B16*N2x)
                     Nyy = ue[0]*(A12*N1x + A26*N1y) + ue[10]*(B12*N2x + B26*N2y) + ue[12]*(A12*N3x + A26*N3y) + ue[13]*(A22*N3y + A26*N3x) - ue[15]*(B22*N3y + B26*N3x) + ue[16]*(B12*N3x + B26*N3y) + ue[18]*(A12*N4x + A26*N4y) + ue[19]*(A22*N4y + A26*N4x) + ue[1]*(A22*N1y + A26*N1x) - ue[21]*(B22*N4y + B26*N4x) + ue[22]*(B12*N4x + B26*N4y) - ue[3]*(B22*N1y + B26*N1x) + ue[4]*(B12*N1x + B26*N1y) + ue[6]*(A12*N2x + A26*N2y) + ue[7]*(A22*N2y + A26*N2x) - ue[9]*(B22*N2y + B26*N2x)
                     Nxy = ue[0]*(A16*N1x + A66*N1y) + ue[10]*(B16*N2x + B66*N2y) + ue[12]*(A16*N3x + A66*N3y) + ue[13]*(A26*N3y + A66*N3x) - ue[15]*(B26*N3y + B66*N3x) + ue[16]*(B16*N3x + B66*N3y) + ue[18]*(A16*N4x + A66*N4y) + ue[19]*(A26*N4y + A66*N4x) + ue[1]*(A26*N1y + A66*N1x) - ue[21]*(B26*N4y + B66*N4x) + ue[22]*(B16*N4x + B66*N4y) - ue[3]*(B26*N1y + B66*N1x) + ue[4]*(B16*N1x + B66*N1y) + ue[6]*(A16*N2x + A66*N2y) + ue[7]*(A26*N2y + A66*N2x) - ue[9]*(B26*N2y + B66*N2x)
+
+                    k = self.init_k_KG
+                    KGv[k] += r13**2*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13**2*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13**2*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13**2*(N4x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N4y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N4x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N4y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N4x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N4y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23**2*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23**2*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23**2*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N4x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N4y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23**2*(N4x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N4y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N4x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N4y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r33**2*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r33**2*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r33**2*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N4x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N4y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N4x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N4y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r33**2*(N4x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N4y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13**2*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13**2*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13**2*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13**2*(N4x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N4y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N4x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N4y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N4x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N4y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23**2*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23**2*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23**2*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N4x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N4y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23**2*(N4x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N4y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N4x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N4y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r33**2*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r33**2*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r33**2*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N4x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N4y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N4x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N4y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r33**2*(N4x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N4y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13**2*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13**2*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13**2*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13**2*(N4x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N4y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N4x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N4y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N4x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N4y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23**2*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23**2*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23**2*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N4x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N4y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23**2*(N4x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N4y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N4x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N4y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r33**2*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r33**2*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r33**2*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N4x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N4y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N4x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N4y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r33**2*(N4x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N4y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13**2*(N1x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N1y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N1x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N1y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N1x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N1y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13**2*(N2x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N2y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N2x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N2y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N2x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N2y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13**2*(N3x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N3y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N3x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N3y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N3x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N3y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13**2*(N4x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N4y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N4x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N4y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N4x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N4y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N1x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N1y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23**2*(N1x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N1y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N1x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N1y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N2x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N2y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23**2*(N2x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N2y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N2x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N2y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N3x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N3y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23**2*(N3x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N3y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N3x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N3y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r23*(N4x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N4y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23**2*(N4x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N4y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N4x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N4y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N1x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N1y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N1x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N1y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r33**2*(N1x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N1y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N2x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N2y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N2x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N2y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r33**2*(N2x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N2y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N3x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N3y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N3x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N3y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r33**2*(N3x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N3y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r13*r33*(N4x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N4y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r23*r33*(N4x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N4y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+                    k += 1
+                    KGv[k] += r33**2*(N4x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N4y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
+
+
+    cpdef void update_KG_given_stress(Quad4R self,
+            double Nxx, double Nyy, double Nxy,
+            np.ndarray[cINT, ndim=1] KGr,
+            np.ndarray[cINT, ndim=1] KGc,
+            np.ndarray[cDOUBLE, ndim=1] KGv,
+            int update_KGv_only=0
+            ):
+        r"""Update sparse vectors for geometric stiffness matrix KG
+
+        .. note:: A constant stress state is assumed within the element,
+                  according to the given values of `N_{xx}, N_{yy}, N_{xy}`.
+
+        Two-point Gauss-Legendre quadrature is used, which showed more accuracy
+        for linear buckling load predictions.
+
+        Before this function is called, the probe :class:`.Quad4RProbe`
+        attribute of the :class:`Quad4R` object must be updated using
+        :func:`.update_probe_xe` with the node coordinates.
+
+        Properties
+        ----------
+        KGr : np.array
+           Array to store row positions of sparse values
+        KGc : np.array
+           Array to store column positions of sparse values
+        KGv : np.array
+            Array to store sparse values
+        update_KGv_only : int
+            The default `0` means that only `KGv` is updated. Any other value will
+            lead to `KGr` and `KGc` also being updated.
+
+        """
+        cdef cINT c1, c2, c3, c4, i, j, k
+        cdef double x1, x2, x3, x4
+        cdef double y1, y2, y3, y4
+        cdef double wij, detJ, xi, eta
+        cdef double points[2]
+        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
+        cdef double j11, j12, j21, j22
+        cdef double N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
+
+        with nogil:
+            #Local to global transformation
+            r11 = self.r11
+            r12 = self.r12
+            r13 = self.r13
+            r21 = self.r21
+            r22 = self.r22
+            r23 = self.r23
+            r31 = self.r31
+            r32 = self.r32
+            r33 = self.r33
+
+            #NOTE ignoring z in local coordinates
+            x1 = self.probe.xe[0]
+            y1 = self.probe.xe[1]
+            #z1 = self.probe.xe[2]
+            x2 = self.probe.xe[3]
+            y2 = self.probe.xe[4]
+            #z2 = self.probe.xe[5]
+            x3 = self.probe.xe[6]
+            y3 = self.probe.xe[7]
+            #z3 = self.probe.xe[8]
+            x4 = self.probe.xe[9]
+            y4 = self.probe.xe[10]
+            #z4 = self.probe.xe[11]
+
+            if update_KGv_only == 0:
+                # positions of nodes 1,2,3,4 in the global matrix
+                c1 = self.c1
+                c2 = self.c2
+                c3 = self.c3
+                c4 = self.c4
+
+                k = self.init_k_KG
+                KGr[k] = 0+c1
+                KGc[k] = 0+c1
+                k += 1
+                KGr[k] = 0+c1
+                KGc[k] = 1+c1
+                k += 1
+                KGr[k] = 0+c1
+                KGc[k] = 2+c1
+                k += 1
+                KGr[k] = 0+c1
+                KGc[k] = 0+c2
+                k += 1
+                KGr[k] = 0+c1
+                KGc[k] = 1+c2
+                k += 1
+                KGr[k] = 0+c1
+                KGc[k] = 2+c2
+                k += 1
+                KGr[k] = 0+c1
+                KGc[k] = 0+c3
+                k += 1
+                KGr[k] = 0+c1
+                KGc[k] = 1+c3
+                k += 1
+                KGr[k] = 0+c1
+                KGc[k] = 2+c3
+                k += 1
+                KGr[k] = 0+c1
+                KGc[k] = 0+c4
+                k += 1
+                KGr[k] = 0+c1
+                KGc[k] = 1+c4
+                k += 1
+                KGr[k] = 0+c1
+                KGc[k] = 2+c4
+                k += 1
+                KGr[k] = 1+c1
+                KGc[k] = 0+c1
+                k += 1
+                KGr[k] = 1+c1
+                KGc[k] = 1+c1
+                k += 1
+                KGr[k] = 1+c1
+                KGc[k] = 2+c1
+                k += 1
+                KGr[k] = 1+c1
+                KGc[k] = 0+c2
+                k += 1
+                KGr[k] = 1+c1
+                KGc[k] = 1+c2
+                k += 1
+                KGr[k] = 1+c1
+                KGc[k] = 2+c2
+                k += 1
+                KGr[k] = 1+c1
+                KGc[k] = 0+c3
+                k += 1
+                KGr[k] = 1+c1
+                KGc[k] = 1+c3
+                k += 1
+                KGr[k] = 1+c1
+                KGc[k] = 2+c3
+                k += 1
+                KGr[k] = 1+c1
+                KGc[k] = 0+c4
+                k += 1
+                KGr[k] = 1+c1
+                KGc[k] = 1+c4
+                k += 1
+                KGr[k] = 1+c1
+                KGc[k] = 2+c4
+                k += 1
+                KGr[k] = 2+c1
+                KGc[k] = 0+c1
+                k += 1
+                KGr[k] = 2+c1
+                KGc[k] = 1+c1
+                k += 1
+                KGr[k] = 2+c1
+                KGc[k] = 2+c1
+                k += 1
+                KGr[k] = 2+c1
+                KGc[k] = 0+c2
+                k += 1
+                KGr[k] = 2+c1
+                KGc[k] = 1+c2
+                k += 1
+                KGr[k] = 2+c1
+                KGc[k] = 2+c2
+                k += 1
+                KGr[k] = 2+c1
+                KGc[k] = 0+c3
+                k += 1
+                KGr[k] = 2+c1
+                KGc[k] = 1+c3
+                k += 1
+                KGr[k] = 2+c1
+                KGc[k] = 2+c3
+                k += 1
+                KGr[k] = 2+c1
+                KGc[k] = 0+c4
+                k += 1
+                KGr[k] = 2+c1
+                KGc[k] = 1+c4
+                k += 1
+                KGr[k] = 2+c1
+                KGc[k] = 2+c4
+                k += 1
+                KGr[k] = 0+c2
+                KGc[k] = 0+c1
+                k += 1
+                KGr[k] = 0+c2
+                KGc[k] = 1+c1
+                k += 1
+                KGr[k] = 0+c2
+                KGc[k] = 2+c1
+                k += 1
+                KGr[k] = 0+c2
+                KGc[k] = 0+c2
+                k += 1
+                KGr[k] = 0+c2
+                KGc[k] = 1+c2
+                k += 1
+                KGr[k] = 0+c2
+                KGc[k] = 2+c2
+                k += 1
+                KGr[k] = 0+c2
+                KGc[k] = 0+c3
+                k += 1
+                KGr[k] = 0+c2
+                KGc[k] = 1+c3
+                k += 1
+                KGr[k] = 0+c2
+                KGc[k] = 2+c3
+                k += 1
+                KGr[k] = 0+c2
+                KGc[k] = 0+c4
+                k += 1
+                KGr[k] = 0+c2
+                KGc[k] = 1+c4
+                k += 1
+                KGr[k] = 0+c2
+                KGc[k] = 2+c4
+                k += 1
+                KGr[k] = 1+c2
+                KGc[k] = 0+c1
+                k += 1
+                KGr[k] = 1+c2
+                KGc[k] = 1+c1
+                k += 1
+                KGr[k] = 1+c2
+                KGc[k] = 2+c1
+                k += 1
+                KGr[k] = 1+c2
+                KGc[k] = 0+c2
+                k += 1
+                KGr[k] = 1+c2
+                KGc[k] = 1+c2
+                k += 1
+                KGr[k] = 1+c2
+                KGc[k] = 2+c2
+                k += 1
+                KGr[k] = 1+c2
+                KGc[k] = 0+c3
+                k += 1
+                KGr[k] = 1+c2
+                KGc[k] = 1+c3
+                k += 1
+                KGr[k] = 1+c2
+                KGc[k] = 2+c3
+                k += 1
+                KGr[k] = 1+c2
+                KGc[k] = 0+c4
+                k += 1
+                KGr[k] = 1+c2
+                KGc[k] = 1+c4
+                k += 1
+                KGr[k] = 1+c2
+                KGc[k] = 2+c4
+                k += 1
+                KGr[k] = 2+c2
+                KGc[k] = 0+c1
+                k += 1
+                KGr[k] = 2+c2
+                KGc[k] = 1+c1
+                k += 1
+                KGr[k] = 2+c2
+                KGc[k] = 2+c1
+                k += 1
+                KGr[k] = 2+c2
+                KGc[k] = 0+c2
+                k += 1
+                KGr[k] = 2+c2
+                KGc[k] = 1+c2
+                k += 1
+                KGr[k] = 2+c2
+                KGc[k] = 2+c2
+                k += 1
+                KGr[k] = 2+c2
+                KGc[k] = 0+c3
+                k += 1
+                KGr[k] = 2+c2
+                KGc[k] = 1+c3
+                k += 1
+                KGr[k] = 2+c2
+                KGc[k] = 2+c3
+                k += 1
+                KGr[k] = 2+c2
+                KGc[k] = 0+c4
+                k += 1
+                KGr[k] = 2+c2
+                KGc[k] = 1+c4
+                k += 1
+                KGr[k] = 2+c2
+                KGc[k] = 2+c4
+                k += 1
+                KGr[k] = 0+c3
+                KGc[k] = 0+c1
+                k += 1
+                KGr[k] = 0+c3
+                KGc[k] = 1+c1
+                k += 1
+                KGr[k] = 0+c3
+                KGc[k] = 2+c1
+                k += 1
+                KGr[k] = 0+c3
+                KGc[k] = 0+c2
+                k += 1
+                KGr[k] = 0+c3
+                KGc[k] = 1+c2
+                k += 1
+                KGr[k] = 0+c3
+                KGc[k] = 2+c2
+                k += 1
+                KGr[k] = 0+c3
+                KGc[k] = 0+c3
+                k += 1
+                KGr[k] = 0+c3
+                KGc[k] = 1+c3
+                k += 1
+                KGr[k] = 0+c3
+                KGc[k] = 2+c3
+                k += 1
+                KGr[k] = 0+c3
+                KGc[k] = 0+c4
+                k += 1
+                KGr[k] = 0+c3
+                KGc[k] = 1+c4
+                k += 1
+                KGr[k] = 0+c3
+                KGc[k] = 2+c4
+                k += 1
+                KGr[k] = 1+c3
+                KGc[k] = 0+c1
+                k += 1
+                KGr[k] = 1+c3
+                KGc[k] = 1+c1
+                k += 1
+                KGr[k] = 1+c3
+                KGc[k] = 2+c1
+                k += 1
+                KGr[k] = 1+c3
+                KGc[k] = 0+c2
+                k += 1
+                KGr[k] = 1+c3
+                KGc[k] = 1+c2
+                k += 1
+                KGr[k] = 1+c3
+                KGc[k] = 2+c2
+                k += 1
+                KGr[k] = 1+c3
+                KGc[k] = 0+c3
+                k += 1
+                KGr[k] = 1+c3
+                KGc[k] = 1+c3
+                k += 1
+                KGr[k] = 1+c3
+                KGc[k] = 2+c3
+                k += 1
+                KGr[k] = 1+c3
+                KGc[k] = 0+c4
+                k += 1
+                KGr[k] = 1+c3
+                KGc[k] = 1+c4
+                k += 1
+                KGr[k] = 1+c3
+                KGc[k] = 2+c4
+                k += 1
+                KGr[k] = 2+c3
+                KGc[k] = 0+c1
+                k += 1
+                KGr[k] = 2+c3
+                KGc[k] = 1+c1
+                k += 1
+                KGr[k] = 2+c3
+                KGc[k] = 2+c1
+                k += 1
+                KGr[k] = 2+c3
+                KGc[k] = 0+c2
+                k += 1
+                KGr[k] = 2+c3
+                KGc[k] = 1+c2
+                k += 1
+                KGr[k] = 2+c3
+                KGc[k] = 2+c2
+                k += 1
+                KGr[k] = 2+c3
+                KGc[k] = 0+c3
+                k += 1
+                KGr[k] = 2+c3
+                KGc[k] = 1+c3
+                k += 1
+                KGr[k] = 2+c3
+                KGc[k] = 2+c3
+                k += 1
+                KGr[k] = 2+c3
+                KGc[k] = 0+c4
+                k += 1
+                KGr[k] = 2+c3
+                KGc[k] = 1+c4
+                k += 1
+                KGr[k] = 2+c3
+                KGc[k] = 2+c4
+                k += 1
+                KGr[k] = 0+c4
+                KGc[k] = 0+c1
+                k += 1
+                KGr[k] = 0+c4
+                KGc[k] = 1+c1
+                k += 1
+                KGr[k] = 0+c4
+                KGc[k] = 2+c1
+                k += 1
+                KGr[k] = 0+c4
+                KGc[k] = 0+c2
+                k += 1
+                KGr[k] = 0+c4
+                KGc[k] = 1+c2
+                k += 1
+                KGr[k] = 0+c4
+                KGc[k] = 2+c2
+                k += 1
+                KGr[k] = 0+c4
+                KGc[k] = 0+c3
+                k += 1
+                KGr[k] = 0+c4
+                KGc[k] = 1+c3
+                k += 1
+                KGr[k] = 0+c4
+                KGc[k] = 2+c3
+                k += 1
+                KGr[k] = 0+c4
+                KGc[k] = 0+c4
+                k += 1
+                KGr[k] = 0+c4
+                KGc[k] = 1+c4
+                k += 1
+                KGr[k] = 0+c4
+                KGc[k] = 2+c4
+                k += 1
+                KGr[k] = 1+c4
+                KGc[k] = 0+c1
+                k += 1
+                KGr[k] = 1+c4
+                KGc[k] = 1+c1
+                k += 1
+                KGr[k] = 1+c4
+                KGc[k] = 2+c1
+                k += 1
+                KGr[k] = 1+c4
+                KGc[k] = 0+c2
+                k += 1
+                KGr[k] = 1+c4
+                KGc[k] = 1+c2
+                k += 1
+                KGr[k] = 1+c4
+                KGc[k] = 2+c2
+                k += 1
+                KGr[k] = 1+c4
+                KGc[k] = 0+c3
+                k += 1
+                KGr[k] = 1+c4
+                KGc[k] = 1+c3
+                k += 1
+                KGr[k] = 1+c4
+                KGc[k] = 2+c3
+                k += 1
+                KGr[k] = 1+c4
+                KGc[k] = 0+c4
+                k += 1
+                KGr[k] = 1+c4
+                KGc[k] = 1+c4
+                k += 1
+                KGr[k] = 1+c4
+                KGc[k] = 2+c4
+                k += 1
+                KGr[k] = 2+c4
+                KGc[k] = 0+c1
+                k += 1
+                KGr[k] = 2+c4
+                KGc[k] = 1+c1
+                k += 1
+                KGr[k] = 2+c4
+                KGc[k] = 2+c1
+                k += 1
+                KGr[k] = 2+c4
+                KGc[k] = 0+c2
+                k += 1
+                KGr[k] = 2+c4
+                KGc[k] = 1+c2
+                k += 1
+                KGr[k] = 2+c4
+                KGc[k] = 2+c2
+                k += 1
+                KGr[k] = 2+c4
+                KGc[k] = 0+c3
+                k += 1
+                KGr[k] = 2+c4
+                KGc[k] = 1+c3
+                k += 1
+                KGr[k] = 2+c4
+                KGc[k] = 2+c3
+                k += 1
+                KGr[k] = 2+c4
+                KGc[k] = 0+c4
+                k += 1
+                KGr[k] = 2+c4
+                KGc[k] = 1+c4
+                k += 1
+                KGr[k] = 2+c4
+                KGc[k] = 2+c4
+
+            #NOTE full integration for KG with two-point Gauss-Legendre quadrature
+            wij = 1.
+            points[0] = -0.5773502691896257645092
+            points[1] = +0.5773502691896257645092
+
+            for i in range(2):
+                xi = points[i]
+                for j in range(2):
+                    eta = points[j]
+
+                    detJ = -0.125*eta*x1*y2 + 0.125*eta*x1*y3 + 0.125*eta*x2*y1 - 0.125*eta*x2*y4 - 0.125*eta*x3*y1 + 0.125*eta*x3*y4 + 0.125*eta*x4*y2 - 0.125*eta*x4*y3 - 0.125*x1*xi*y3 + 0.125*x1*xi*y4 + 0.125*x1*y2 - 0.125*x1*y4 + 0.125*x2*xi*y3 - 0.125*x2*xi*y4 - 0.125*x2*y1 + 0.125*x2*y3 + 0.125*x3*xi*y1 - 0.125*x3*xi*y2 - 0.125*x3*y2 + 0.125*x3*y4 - 0.125*x4*xi*y1 + 0.125*x4*xi*y2 + 0.125*x4*y1 - 0.125*x4*y3
+
+                    j11 = 2.0*(-xi*y1 + xi*y2 - xi*y3 + xi*y4 + y1 + y2 - y3 - y4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
+                    j12 = 2.0*(eta*y1 - eta*y2 + eta*y3 - eta*y4 - y1 + y2 + y3 - y4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
+                    j21 = 2.0*(x1*xi - x1 - x2*xi - x2 + x3*xi + x3 - x4*xi + x4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
+                    j22 = 2.0*(-eta*x1 + eta*x2 - eta*x3 + eta*x4 + x1 - x2 - x3 + x4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
+
+                    N1x = 0.25*j11*(eta - 1) + 0.25*j12*(xi - 1)
+                    N2x = -0.25*eta*j11 + 0.25*j11 - 0.25*j12*xi - 0.25*j12
+                    N3x = 0.25*j11*(eta + 1) + 0.25*j12*(xi + 1)
+                    N4x = -0.25*eta*j11 - 0.25*j11 - 0.25*j12*xi + 0.25*j12
+
+                    N1y = 0.25*j21*(eta - 1) + 0.25*j22*(xi - 1)
+                    N2y = -0.25*eta*j21 + 0.25*j21 - 0.25*j22*xi - 0.25*j22
+                    N3y = 0.25*j21*(eta + 1) + 0.25*j22*(xi + 1)
+                    N4y = -0.25*eta*j21 - 0.25*j21 - 0.25*j22*xi + 0.25*j22
 
                     k = self.init_k_KG
                     KGv[k] += r13**2*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
