@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Beam property module (pyfe3d.beamprop) &#8212; pyfe3d 0.1.9 documentation</title>
+    <title>Beam property module (pyfe3d.beamprop) &#8212; pyfe3d 0.1.13 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
@@ -18,7 +18,7 @@
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="BeamC - Consistent Timoshenko 3D beam element (:mod: \(pyfe3d.beamc\))" href="beamc.html" />
+    <link rel="next" title="BeamC - Consistent Timoshenko 3D beam element (pyfe3d.beamc)" href="beamc.html" />
     <link rel="prev" title="Finite elements for 3D problems in Python/Cython" href="index.html" /> 
   </head><body>
     <div class="related" role="navigation" aria-label="related navigation">
@@ -31,12 +31,12 @@
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="beamc.html" title="BeamC - Consistent Timoshenko 3D beam element (:mod: \(pyfe3d.beamc\))"
+          <a href="beamc.html" title="BeamC - Consistent Timoshenko 3D beam element (pyfe3d.beamc)"
              accesskey="N">next</a> |</li>
         <li class="right" >
           <a href="index.html" title="Finite elements for 3D problems in Python/Cython"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.1.9 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.1.13 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li> 
       </ul>
     </div>  
@@ -543,6 +543,164 @@ lamination parameters</p>
 </dd></dl>
 
 </section>
+<span class="target" id="module-pyfe3d.shellprop_utils"></span><section id="shell-property-utils-module-pyfe3d-shellprop-utils">
+<h1>Shell property utils module (<a class="reference internal" href="#module-pyfe3d.shellprop_utils" title="pyfe3d.shellprop_utils"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop_utils</span></code></a>)<a class="headerlink" href="#shell-property-utils-module-pyfe3d-shellprop-utils" title="Permalink to this headline">¶</a></h1>
+<p>Highly based on the <a class="reference external" href="https://saullocastro.github.io/composites/">composites</a>. module.</p>
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.shellprop_utils.isotropic_plate">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop_utils.</span></span><span class="sig-name descname"><span class="pre">isotropic_plate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thickness</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calc_scf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop_utils.isotropic_plate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read data for an isotropic plate</p>
+<p><a class="reference internal" href="#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object is returned based on the inputs given.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>thickness</strong><span class="classifier">float</span></dt><dd><p>Plate thickness.</p>
+</dd>
+<dt><strong>E</strong><span class="classifier">float</span></dt><dd><p>Young modulus.</p>
+</dd>
+<dt><strong>nu</strong><span class="classifier">float, optional</span></dt><dd><p>Poisson’s ratio.</p>
+</dd>
+<dt><strong>rho</strong><span class="classifier">float, optional</span></dt><dd><p>Material density</p>
+</dd>
+<dt><strong>offset</strong><span class="classifier">float, optional</span></dt><dd><p>Offset along the normal axis about the mid-surface, which influences
+the extension-bending coupling (B matrix).</p>
+</dd>
+<dt><strong>calc_scf</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, use <code class="xref py py-func docutils literal notranslate"><span class="pre">ShellProp.calc_scf()</span></code> to compute shear correction
+factors, otherwise the default value of 5/6 is used.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.shellprop_utils.laminated_plate">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop_utils.</span></span><span class="sig-name descname"><span class="pre">laminated_plate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stack</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plyt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">laminaprop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plyts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">laminaprops</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calc_scf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop_utils.laminated_plate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Read a laminate stacking sequence data.</p>
+<p><a class="reference internal" href="#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object is returned based on the inputs given.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>stack</strong><span class="classifier">list</span></dt><dd><p>Angles of the stacking sequence in degrees.</p>
+</dd>
+<dt><strong>plyt</strong><span class="classifier">float, optional</span></dt><dd><p>When all plies have the same thickness, <code class="docutils literal notranslate"><span class="pre">plyt</span></code> can be supplied.</p>
+</dd>
+<dt><strong>laminaprop</strong><span class="classifier">tuple, optional</span></dt><dd><p>When all plies have the same material properties, <code class="docutils literal notranslate"><span class="pre">laminaprop</span></code>
+can be supplied.</p>
+</dd>
+<dt><strong>rho</strong><span class="classifier">float, optional</span></dt><dd><p>Uniform material density to be used for all plies.</p>
+</dd>
+<dt><strong>plyts</strong><span class="classifier">list, optional</span></dt><dd><p>A list of floats with the thickness of each ply.</p>
+</dd>
+<dt><strong>laminaprops</strong><span class="classifier">list, optional</span></dt><dd><p>A list of tuples with a laminaprop for each ply.</p>
+</dd>
+<dt><strong>rhos</strong><span class="classifier">list, optional</span></dt><dd><p>A list of floats with the material density of each ply.</p>
+</dd>
+<dt><strong>offset</strong><span class="classifier">float, optional</span></dt><dd><p>Offset along the normal axis about the mid-surface, which influences
+the laminate properties.</p>
+</dd>
+<dt><strong>calc_scf</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, use <code class="xref py py-func docutils literal notranslate"><span class="pre">ShellProp.calc_scf()</span></code> to compute shear correction
+factors, otherwise the default value of 5/6 is used</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p><code class="docutils literal notranslate"><span class="pre">plyt</span></code> or <code class="docutils literal notranslate"><span class="pre">plyts</span></code> must be supplied
+<code class="docutils literal notranslate"><span class="pre">laminaprop</span></code> or <code class="docutils literal notranslate"><span class="pre">laminaprops</span></code> must be supplied</p>
+<p>For orthotropic plies, the <code class="docutils literal notranslate"><span class="pre">laminaprop</span></code> should be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">laminaprop</span> <span class="o">=</span> <span class="p">(</span><span class="n">E11</span><span class="p">,</span> <span class="n">E22</span><span class="p">,</span> <span class="n">nu12</span><span class="p">,</span> <span class="n">G12</span><span class="p">,</span> <span class="n">G13</span><span class="p">,</span> <span class="n">G23</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For isotropic plies, the <code class="docutils literal notranslate"><span class="pre">laminaprop</span></code> should be:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">laminaprop</span> <span class="o">=</span> <span class="p">(</span><span class="n">E</span><span class="p">,</span> <span class="n">nu</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.shellprop_utils.read_laminaprop">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop_utils.</span></span><span class="sig-name descname"><span class="pre">read_laminaprop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">laminaprop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop_utils.read_laminaprop" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a <a class="reference internal" href="#pyfe3d.shellprop.MatLamina" title="pyfe3d.shellprop.MatLamina"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatLamina</span></code></a> object based on an input <code class="docutils literal notranslate"><span class="pre">laminaprop</span></code> tuple</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><dl>
+<dt><strong>laminaprop</strong><span class="classifier">list or tuple</span></dt><dd><p>For the most general case of tri-axial stress, use a tuple containing
+the folliwing entries:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">laminaprop</span> <span class="o">=</span> <span class="p">(</span><span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">,</span> <span class="n">nu12</span><span class="p">,</span> <span class="n">g12</span><span class="p">,</span> <span class="n">g13</span><span class="p">,</span> <span class="n">g23</span><span class="p">,</span> <span class="n">e3</span><span class="p">,</span> <span class="n">nu13</span><span class="p">,</span> <span class="n">nu23</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For isotropic materials aiming calculations with tri-axial stresses,
+use:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">g</span> <span class="o">=</span> <span class="n">e</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span><span class="o">+</span><span class="n">nu</span><span class="p">))</span>
+<span class="n">laminaprop</span> <span class="o">=</span> <span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">g</span><span class="p">,</span> <span class="n">e</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">nu</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For othotropic materials with in-plane stresses the user can only
+supply:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">laminaprop</span> <span class="o">=</span> <span class="p">(</span><span class="n">e1</span><span class="p">,</span> <span class="n">e2</span><span class="p">,</span> <span class="n">nu12</span><span class="p">,</span> <span class="n">g12</span><span class="p">,</span> <span class="n">g13</span><span class="p">,</span> <span class="n">g23</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>For isotropic materials with in-plane stresses the user can only
+supply:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">laminaprop</span> <span class="o">=</span> <span class="p">(</span><span class="n">e</span><span class="p">,</span> <span class="n">nu</span><span class="p">)</span> <span class="c1"># new</span>
+</pre></div>
+</div>
+<table class="docutils align-default">
+<colgroup>
+<col style="width: 17%" />
+<col style="width: 83%" />
+</colgroup>
+<thead>
+<tr class="row-odd"><th class="head"><p>symbol</p></th>
+<th class="head"><p>value</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>e1</p></td>
+<td><p>Young Module in direction 1</p></td>
+</tr>
+<tr class="row-odd"><td><p>e2</p></td>
+<td><p>Young Module in direction 2</p></td>
+</tr>
+<tr class="row-even"><td><p>nu12</p></td>
+<td><p>12 Poisson’s ratio</p></td>
+</tr>
+<tr class="row-odd"><td><p>g12</p></td>
+<td><p>12 Shear Modulus</p></td>
+</tr>
+<tr class="row-even"><td><p>g13</p></td>
+<td><p>13 Shear Modulus</p></td>
+</tr>
+<tr class="row-odd"><td><p>g23</p></td>
+<td><p>13 Shear Modulus</p></td>
+</tr>
+<tr class="row-even"><td><p>e3</p></td>
+<td><p>Young Module in direction 3</p></td>
+</tr>
+<tr class="row-odd"><td><p>nu13</p></td>
+<td><p>13 Poisson’s ratio</p></td>
+</tr>
+<tr class="row-even"><td><p>nu23</p></td>
+<td><p>23 Poisson’s ratio</p></td>
+</tr>
+</tbody>
+</table>
+</dd>
+<dt><strong>rho</strong><span class="classifier">float, optional</span></dt><dd><p>Material density</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>matlam</strong><span class="classifier">MatLamina</span></dt><dd><p>A <a class="reference internal" href="#pyfe3d.shellprop.MatLamina" title="pyfe3d.shellprop.MatLamina"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatLamina</span></code></a> object.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</section>
 
 
             <div class="clearer"></div>
@@ -555,6 +713,7 @@ lamination parameters</p>
   <ul>
 <li><a class="reference internal" href="#">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
 <li><a class="reference internal" href="#shell-property-module-pyfe3d-shellprop">Shell property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop</span></code>)</a></li>
+<li><a class="reference internal" href="#shell-property-utils-module-pyfe3d-shellprop-utils">Shell property utils module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop_utils</span></code>)</a></li>
 </ul>
 
   <h4>Previous topic</h4>
@@ -562,7 +721,7 @@ lamination parameters</p>
                         title="previous chapter">Finite elements for 3D problems in Python/Cython</a></p>
   <h4>Next topic</h4>
   <p class="topless"><a href="beamc.html"
-                        title="next chapter">BeamC - Consistent Timoshenko 3D beam element (:mod: <span class="math notranslate nohighlight">\(pyfe3d.beamc\)</span>)</a></p>
+                        title="next chapter">BeamC - Consistent Timoshenko 3D beam element (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamc</span></code>)</a></p>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -594,12 +753,12 @@ lamination parameters</p>
           <a href="py-modindex.html" title="Python Module Index"
              >modules</a> |</li>
         <li class="right" >
-          <a href="beamc.html" title="BeamC - Consistent Timoshenko 3D beam element (:mod: \(pyfe3d.beamc\))"
+          <a href="beamc.html" title="BeamC - Consistent Timoshenko 3D beam element (pyfe3d.beamc)"
              >next</a> |</li>
         <li class="right" >
           <a href="index.html" title="Finite elements for 3D problems in Python/Cython"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.1.9 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.1.13 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li> 
       </ul>
     </div>

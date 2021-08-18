@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Finite elements for 3D problems in Python/Cython &#8212; pyfe3d 0.1.9 documentation</title>
+    <title>Finite elements for 3D problems in Python/Cython &#8212; pyfe3d 0.1.13 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
@@ -31,7 +31,7 @@
         <li class="right" >
           <a href="properties.html" title="Beam property module (pyfe3d.beamprop)"
              accesskey="N">next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">pyfe3d 0.1.9 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">pyfe3d 0.1.13 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Finite elements for 3D problems in Python/Cython</a></li> 
       </ul>
     </div>  
@@ -43,18 +43,22 @@
             
   <section id="finite-elements-for-3d-problems-in-python-cython">
 <h1>Finite elements for 3D problems in Python/Cython<a class="headerlink" href="#finite-elements-for-3d-problems-in-python-cython" title="Permalink to this headline">¶</a></h1>
+<section id="modules">
+<h2>Modules<a class="headerlink" href="#modules" title="Permalink to this headline">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="properties.html">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="properties.html#shell-property-module-pyfe3d-shellprop">Shell property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop</span></code>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="beamc.html">BeamC - Consistent Timoshenko 3D beam element (:mod: <span class="math notranslate nohighlight">\(pyfe3d.beamc\)</span>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="beamlr.html">BeamLR - Linear Timoshenko 3D beam element with reduced integration (:mod: <span class="math notranslate nohighlight">\(pyfe3d.beamlr\)</span>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html#shell-property-utils-module-pyfe3d-shellprop-utils">Shell property utils module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop_utils</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="beamc.html">BeamC - Consistent Timoshenko 3D beam element (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamc</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="beamlr.html">BeamLR - Linear Timoshenko 3D beam element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamlr</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="truss.html">Truss - Linear truss 3D element with analytical integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quad4r.html">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="quad4r_utils.html">Quad4R useful functions (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r_utils</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="coord.html">Coordinate systems (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.coord</span></code>)</a></li>
 </ul>
 </div>
+</section>
 <section id="license">
 <h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Copyright</span> <span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="mi">2021</span><span class="o">-</span><span class="p">,</span> <span class="n">Saullo</span> <span class="n">G</span><span class="o">.</span> <span class="n">P</span><span class="o">.</span> <span class="n">Castro</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">Castro</span><span class="nd">@tudelft</span><span class="o">.</span><span class="n">nl</span><span class="p">)</span>
@@ -109,6 +113,7 @@
   <h3><a href="#">Table of Contents</a></h3>
   <ul>
 <li><a class="reference internal" href="#">Finite elements for 3D problems in Python/Cython</a><ul>
+<li><a class="reference internal" href="#modules">Modules</a></li>
 <li><a class="reference internal" href="#license">License</a></li>
 <li><a class="reference internal" href="#authors">AUTHORS</a></li>
 <li><a class="reference internal" href="#indices-and-tables">Indices and tables</a></li>
@@ -152,7 +157,7 @@
         <li class="right" >
           <a href="properties.html" title="Beam property module (pyfe3d.beamprop)"
              >next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">pyfe3d 0.1.9 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">pyfe3d 0.1.13 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Finite elements for 3D problems in Python/Cython</a></li> 
       </ul>
     </div>
