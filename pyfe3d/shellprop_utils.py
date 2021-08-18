@@ -136,9 +136,9 @@ def laminated_plate(stack, plyt=None, laminaprop=None, rho=0., plyts=None,
         laminaprop = (E, nu)
 
     """
-    lam = ShellProp()
-    lam.offset = offset
-    lam.stack = list(stack)
+    prop = ShellProp()
+    prop.offset = offset
+    prop.stack = list(stack)
 
     if plyts is None:
         if plyt is None:
@@ -156,23 +156,24 @@ def laminated_plate(stack, plyt=None, laminaprop=None, rho=0., plyts=None,
         rhos = [rho for i in stack]
 
     plies = []
-    lam.h = 0.
+    prop.h = 0.
     for plyt, laminaprop, thetadeg, rho in zip(plyts, laminaprops, stack, rhos):
         laminaprop = laminaprop
         ply = Lamina()
         ply.thetadeg = float(thetadeg)
         ply.h = plyt
-        lam.h += ply.h
+        prop.h += ply.h
         ply.matlamina = read_laminaprop(laminaprop, rho)
         ply.rebuild()
         plies.append(ply)
-    lam.plies = plies
+    prop.plies = plies
 
-    lam.calc_constitutive_matrix()
+    prop.calc_constitutive_matrix()
+    prop.calc_equivalent_properties()
     if calc_scf:
-        lam.calc_scf()
+        prop.calc_scf()
 
-    return lam
+    return prop
 
 
 def isotropic_plate(thickness, E, nu, offset=0., calc_scf=True, rho=0.):
