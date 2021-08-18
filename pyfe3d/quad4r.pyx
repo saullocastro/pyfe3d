@@ -225,8 +225,11 @@ cdef class Quad4R:
             self.r33 = (xi*yj - xj*yi)/tmp
 
 
-    cpdef void update_ue(Quad4R self, np.ndarray[cDOUBLE, ndim=1] u):
-        r"""Update the local displacement vector of the element
+    cpdef void update_probe_ue(Quad4R self, np.ndarray[cDOUBLE, ndim=1] u):
+        r"""Update the local displacement vector of the probe of the element
+
+        .. note:: The ``probe`` attribute object :class:`.Quad4RProbe` is
+                  updated, not the element object.
 
         Parameters
         ----------
@@ -239,9 +242,9 @@ cdef class Quad4R:
         """
         cdef int i, j
         cdef cINT c[4]
-        cdef double su[3]
-        cdef double sv[3]
-        cdef double sw[3]
+        cdef double s1[3]
+        cdef double s2[3]
+        cdef double s3[3]
 
         with nogil:
             # positions in the global stiffness matrix
@@ -251,15 +254,15 @@ cdef class Quad4R:
             c[3] = self.c4
 
             # global to local transformation of displacements
-            su[0] = self.r11
-            su[1] = self.r21
-            su[2] = self.r31
-            sv[0] = self.r12
-            sv[1] = self.r22
-            sv[2] = self.r32
-            sw[0] = self.r13
-            sw[1] = self.r23
-            sw[2] = self.r33
+            s1[0] = self.r11
+            s1[1] = self.r21
+            s1[2] = self.r31
+            s2[0] = self.r12
+            s2[1] = self.r22
+            s2[2] = self.r32
+            s3[0] = self.r13
+            s3[1] = self.r23
+            s3[2] = self.r33
 
             for j in range(NUM_NODES):
                 for i in range(DOF):
@@ -268,13 +271,13 @@ cdef class Quad4R:
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
                     #transforming translations
-                    self.probe.ue[j*DOF + 0] += su[i]*u[c[j] + 0 + i]
-                    self.probe.ue[j*DOF + 1] += sv[i]*u[c[j] + 0 + i]
-                    self.probe.ue[j*DOF + 2] += sw[i]*u[c[j] + 0 + i]
+                    self.probe.ue[j*DOF + 0] += s1[i]*u[c[j] + 0 + i]
+                    self.probe.ue[j*DOF + 1] += s2[i]*u[c[j] + 0 + i]
+                    self.probe.ue[j*DOF + 2] += s3[i]*u[c[j] + 0 + i]
                     #transforming rotations
-                    self.probe.ue[j*DOF + 3] += su[i]*u[c[j] + 3 + i]
-                    self.probe.ue[j*DOF + 4] += sv[i]*u[c[j] + 3 + i]
-                    self.probe.ue[j*DOF + 5] += sw[i]*u[c[j] + 3 + i]
+                    self.probe.ue[j*DOF + 3] += s1[i]*u[c[j] + 3 + i]
+                    self.probe.ue[j*DOF + 4] += s2[i]*u[c[j] + 3 + i]
+                    self.probe.ue[j*DOF + 5] += s3[i]*u[c[j] + 3 + i]
 
 
     cpdef void update_probe_xe(Quad4R self, np.ndarray[cDOUBLE, ndim=1] x):
@@ -293,9 +296,9 @@ cdef class Quad4R:
         """
         cdef int i, j
         cdef cINT c[4]
-        cdef double su[3]
-        cdef double sv[3]
-        cdef double sw[3]
+        cdef double s1[3]
+        cdef double s2[3]
+        cdef double s3[3]
 
         with nogil:
             # positions in the global stiffness matrix
@@ -305,15 +308,15 @@ cdef class Quad4R:
             c[3] = self.c4
 
             # global to local transformation of displacements
-            su[0] = self.r11
-            su[1] = self.r21
-            su[2] = self.r31
-            sv[0] = self.r12
-            sv[1] = self.r22
-            sv[2] = self.r32
-            sw[0] = self.r13
-            sw[1] = self.r23
-            sw[2] = self.r33
+            s1[0] = self.r11
+            s1[1] = self.r21
+            s1[2] = self.r31
+            s2[0] = self.r12
+            s2[1] = self.r22
+            s2[2] = self.r32
+            s3[0] = self.r13
+            s3[1] = self.r23
+            s3[2] = self.r33
 
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
@@ -321,9 +324,9 @@ cdef class Quad4R:
 
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
-                    self.probe.xe[j*DOF//2 + 0] += su[i]*x[c[j]//2 + i]
-                    self.probe.xe[j*DOF//2 + 1] += sv[i]*x[c[j]//2 + i]
-                    self.probe.xe[j*DOF//2 + 2] += sw[i]*x[c[j]//2 + i]
+                    self.probe.xe[j*DOF//2 + 0] += s1[i]*x[c[j]//2 + i]
+                    self.probe.xe[j*DOF//2 + 1] += s2[i]*x[c[j]//2 + i]
+                    self.probe.xe[j*DOF//2 + 2] += s3[i]*x[c[j]//2 + i]
 
         self.update_area()
 
@@ -3403,7 +3406,7 @@ cdef class Quad4R:
         for linear buckling load predictions.
 
         The probe :class:`.Quad4RProbe` attribute of the :class:`Quad4R` object
-        must be updated using :func:`.update_ue` with the correct pre-buckling
+        must be updated using :func:`.update_probe_ue` with the correct pre-buckling
         displacements before this function is called.
 
         Properties
@@ -3952,6 +3955,8 @@ cdef class Quad4R:
                     Nxx = ue[0]*(A11*N1x + A16*N1y) + ue[10]*(B11*N2x + B16*N2y) + ue[12]*(A11*N3x + A16*N3y) + ue[13]*(A12*N3y + A16*N3x) - ue[15]*(B12*N3y + B16*N3x) + ue[16]*(B11*N3x + B16*N3y) + ue[18]*(A11*N4x + A16*N4y) + ue[19]*(A12*N4y + A16*N4x) + ue[1]*(A12*N1y + A16*N1x) - ue[21]*(B12*N4y + B16*N4x) + ue[22]*(B11*N4x + B16*N4y) - ue[3]*(B12*N1y + B16*N1x) + ue[4]*(B11*N1x + B16*N1y) + ue[6]*(A11*N2x + A16*N2y) + ue[7]*(A12*N2y + A16*N2x) - ue[9]*(B12*N2y + B16*N2x)
                     Nyy = ue[0]*(A12*N1x + A26*N1y) + ue[10]*(B12*N2x + B26*N2y) + ue[12]*(A12*N3x + A26*N3y) + ue[13]*(A22*N3y + A26*N3x) - ue[15]*(B22*N3y + B26*N3x) + ue[16]*(B12*N3x + B26*N3y) + ue[18]*(A12*N4x + A26*N4y) + ue[19]*(A22*N4y + A26*N4x) + ue[1]*(A22*N1y + A26*N1x) - ue[21]*(B22*N4y + B26*N4x) + ue[22]*(B12*N4x + B26*N4y) - ue[3]*(B22*N1y + B26*N1x) + ue[4]*(B12*N1x + B26*N1y) + ue[6]*(A12*N2x + A26*N2y) + ue[7]*(A22*N2y + A26*N2x) - ue[9]*(B22*N2y + B26*N2x)
                     Nxy = ue[0]*(A16*N1x + A66*N1y) + ue[10]*(B16*N2x + B66*N2y) + ue[12]*(A16*N3x + A66*N3y) + ue[13]*(A26*N3y + A66*N3x) - ue[15]*(B26*N3y + B66*N3x) + ue[16]*(B16*N3x + B66*N3y) + ue[18]*(A16*N4x + A66*N4y) + ue[19]*(A26*N4y + A66*N4x) + ue[1]*(A26*N1y + A66*N1x) - ue[21]*(B26*N4y + B66*N4x) + ue[22]*(B16*N4x + B66*N4y) - ue[3]*(B26*N1y + B66*N1x) + ue[4]*(B16*N1x + B66*N1y) + ue[6]*(A16*N2x + A66*N2y) + ue[7]*(A26*N2y + A66*N2x) - ue[9]*(B26*N2y + B66*N2x)
+                    with gil:
+                        print('Nxx ', Nxx)
 
                     k = self.init_k_KG
                     KGv[k] += r13**2*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
