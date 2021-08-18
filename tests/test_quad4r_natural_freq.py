@@ -58,7 +58,6 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
         # creating elements and populating global stiffness
 
         prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True, rho=rho)
-        prop.calc_equivalent_properties()
 
         quads = []
         init_k_KC0 = 0
