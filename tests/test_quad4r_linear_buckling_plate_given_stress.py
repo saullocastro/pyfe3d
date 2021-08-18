@@ -63,7 +63,6 @@ def test_linear_buckling(mode=0, refinement=1):
     # creating elements and populating global stiffness
 
     prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True, rho=rho)
-    prop.calc_equivalent_properties()
 
     quads = []
     init_k_KC0 = 0
@@ -127,7 +126,7 @@ def test_linear_buckling(mode=0, refinement=1):
     # geometric stiffness
     for quad in quads:
         quad.update_probe_xe(ncoords_flatten)
-        quad.update_KG_given_stress(Nxx, 0, 0, KGr, KGc, KGv, prop)
+        quad.update_KG_given_stress(Nxx, 0, 0, KGr, KGc, KGv)
     KG = coo_matrix((KGv, (KGr, KGc)), shape=(N, N)).tocsc()
     KGuu = KG[bu, :][:, bu]
     print('sparse KG created')
