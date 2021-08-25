@@ -96,59 +96,54 @@ if os.name == 'nt':
 else:
     compile_args = ['-fopenmp', '-static', '-static-libgcc', '-static-libstdc++']
     link_args = ['-fopenmp', '-static-libgcc', '-static-libstdc++']
+
 include_dirs = [
             np.get_include(),
             ]
+
+extension_kwargs = dict(
+    include_dirs=include_dirs,
+    extra_compile_args=compile_args,
+    extra_link_args=link_args,
+    language='c++',
+    )
 
 extensions = [
     Extension('pyfe3d.beamprop',
         sources=[
             './pyfe3d/beamprop.pyx',
             ],
-        include_dirs=include_dirs,
-        extra_compile_args=compile_args,
-        extra_link_args=link_args,
-        language='c++'),
+        **extension_kwargs),
     Extension('pyfe3d.shellprop',
         sources=[
             './pyfe3d/shellprop.pyx',
             ],
-        include_dirs=include_dirs,
-        extra_compile_args=compile_args,
-        extra_link_args=link_args,
-        language='c++'),
+        **extension_kwargs),
+    Extension('pyfe3d.spring',
+        sources=[
+            './pyfe3d/spring.pyx',
+            ],
+        **extension_kwargs),
     Extension('pyfe3d.truss',
         sources=[
             './pyfe3d/truss.pyx',
             ],
-        include_dirs=include_dirs,
-        extra_compile_args=compile_args,
-        extra_link_args=link_args,
-        language='c++'),
+        **extension_kwargs),
     Extension('pyfe3d.beamlr',
         sources=[
             './pyfe3d/beamlr.pyx',
             ],
-        include_dirs=include_dirs,
-        extra_compile_args=compile_args,
-        extra_link_args=link_args,
-        language='c++'),
+        **extension_kwargs),
     Extension('pyfe3d.beamc',
         sources=[
             './pyfe3d/beamc.pyx',
             ],
-        include_dirs=include_dirs,
-        extra_compile_args=compile_args,
-        extra_link_args=link_args,
-        language='c++'),
+        **extension_kwargs),
     Extension('pyfe3d.quad4r',
         sources=[
             './pyfe3d/quad4r.pyx',
             ],
-        include_dirs=include_dirs,
-        extra_compile_args=compile_args,
-        extra_link_args=link_args,
-        language='c++'),
+        **extension_kwargs),
 
     ]
 
