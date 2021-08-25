@@ -26,6 +26,9 @@ reduced integration.
 - 'BeamC' - 2-node Timoshenko beam element with consistent shape functions and
 analytical integration.
 
+- 'Spring' - 2-node spring element with 6 stiffenesses defined in the element
+  coordinate system.
+
 - 'Truss' - 2-node truss element with only axial and torsion stiffness. I
 recommend using the BeamLR instead, which has physical meaning.
 
