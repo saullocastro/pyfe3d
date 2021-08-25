@@ -42,7 +42,7 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         beamdata = BeamCData()
 
         springdata = SpringData()
-        springp = SpringProbe()
+        springprobe = SpringProbe()
 
         KC0r = np.zeros(springdata.KC0_SPARSE_SIZE*1 + beamdata.KC0_SPARSE_SIZE*(num_elements-1), dtype=INT)
         KC0c = np.zeros(springdata.KC0_SPARSE_SIZE*1 + beamdata.KC0_SPARSE_SIZE*(num_elements-1), dtype=INT)
@@ -68,14 +68,15 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         init_k_M = 0
 
         # assemblying spring element
-        spring = Spring()
+        spring = Spring(springprobe)
         spring.init_k_KC0 = init_k_KC0
         spring.n1 = 0
         spring.n2 = 1
         spring.c1 = 0*DOF
         spring.c2 = 1*DOF
         spring.kxe = spring.kye = spring.kze = 1e9
-        spring.krxe = spring.krye = spring.krze = 1e9
+        spring.krze = 1e9
+        spring.update_rotation_matrix(1, 0, 0, 1, 1, 0)
         spring.update_KC0(KC0r, KC0c, KC0v)
         init_k_KC0 += springdata.KC0_SPARSE_SIZE
 
@@ -127,6 +128,10 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         eigvals, eigvecsu = eigsh(A=Kuu, M=Muu, sigma=-1., which='LM',
                 k=num_eigenvalues, tol=1e-3)
         omegan = eigvals**0.5
+
+        eigvec = np.zeros(N)
+        eigvec[bu] = eigvecsu[:, 0]
+        spring.update_probe_ue(eigvec)
 
         alpha123 = np.array([1.875, 4.694, 7.885])
         omega123 = alpha123**2*np.sqrt(E*Izz/(rho*A*L**4))
