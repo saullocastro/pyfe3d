@@ -99,10 +99,13 @@ cdef class Spring:
     cdef public cINT n1, n2
     cdef public cINT c1, c2
     cdef public cINT init_k_KC0, init_k_KG, init_k_M
-    cdef public double kxe, kye, kze, krxe, krye, krze
+    cdef public double kxe, kye, kze
+    cdef public double krxe, krye, krze
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
+    cdef public SpringProbe probe
 
-    def __cinit__(Spring self):
+    def __cinit__(Spring self, SpringProbe p):
+        self.probe = p
         self.eid = -1
         self.n1 = -1
         self.n2 = -1
@@ -111,12 +114,127 @@ cdef class Spring:
         self.init_k_KC0 = 0
         self.init_k_KG = 0
         self.init_k_M = 0
+        self.kxe = self.kye = self.kze = 0
+        self.krxe = self.krye = self.krze = 0
         self.r11 = 1
         self.r22 = 1
         self.r33 = 1
         self.r12 = self.r13 = 0.
         self.r21 = self.r23 = 0.
         self.r31 = self.r32 = 0.
+
+
+    cpdef void update_rotation_matrix(Spring self, double xi, double xj, double xk,
+            double vxyi, double vxyj, double vxyk):
+        r"""Update the rotation matrix of the element
+
+        Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
+        corresponding to the rotation matrix from local to global coordinates.
+
+        The element coordinate system is determined, identifying the `ijk`
+        components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
+        {y_e}_j, {y_e}_k`; `{z_e}_i, {z_e}_j, {z_e}_k`.
+
+        The rotation matrix terms are calculated after solving 9 equations.
+
+        Parameters
+        ----------
+        xi, xj, xk : double
+            Components, in global coordinates, of the element x-axis.
+        vxyi, vxyj, vxyk : double
+            Components, in global coordinates, of a vector on the `XY` plane of
+            the element coordinate system.
+
+        """
+        cdef double yi, yj, yk, zi, zj, zk, tmp
+        cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k, x4i, x4j, x4k
+
+        with nogil:
+            tmp = (xi**2 + xj**2 + xk**2)**0.5
+            xi /= tmp
+            xj /= tmp
+            xk /= tmp
+
+            zi = xj*vxyk - xk*vxyj
+            zj = -xi*vxyk + xk*vxyi
+            zk = xi*vxyj - xj*vxyi
+            tmp = (zi**2 + zj**2 + zk**2)**0.5
+            zi /= tmp
+            zj /= tmp
+            zk /= tmp
+
+            yi = -xj*zk + xk*zj
+            yj = xi*zk - xk*zi
+            yk = -xi*zj + xj*zi
+            tmp = (yi**2 + yj**2 + yk**2)**0.5
+            yi /= tmp
+            yj /= tmp
+            yk /= tmp
+
+            tmp = xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi
+            self.r11 = (yj*zk - yk*zj)/tmp
+            self.r12 = (-xj*zk + xk*zj)/tmp
+            self.r13 = (xj*yk - xk*yj)/tmp
+            self.r21 = (-yi*zk + yk*zi)/tmp
+            self.r22 = (xi*zk - xk*zi)/tmp
+            self.r23 = (-xi*yk + xk*yi)/tmp
+            self.r31 = (yi*zj - yj*zi)/tmp
+            self.r32 = (-xi*zj + xj*zi)/tmp
+            self.r33 = (xi*yj - xj*yi)/tmp
+
+
+    cpdef void update_probe_ue(Spring self, np.ndarray[cDOUBLE, ndim=1] u):
+        r"""Update the local displacement vector of the probe of the element
+
+        .. note:: The ``probe`` attribute object :class:`.SpringProbe` is
+                  updated, not the element object.
+
+        Parameters
+        ----------
+        u : array-like
+            Array with global displacements, for a total of `M` nodes in
+            the model, this array will be arranged as: `u_1, v_1, w_1, {r_x}_1,
+            {r_y}_1, {r_z}_1, u_2, v_2, w_2, {r_x}_2, {r_y}_2, {r_z}_2, ...,
+            u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M`.
+
+        """
+        cdef int i, j
+        cdef cINT c[2]
+        cdef double s1[3]
+        cdef double s2[3]
+        cdef double s3[3]
+
+        #FIXME double check all this part
+        with nogil:
+            # positions in the global stiffness matrix
+            c[0] = self.c1
+            c[1] = self.c2
+
+            # global to local transformation of displacements
+            s1[0] = self.r11
+            s1[1] = self.r21
+            s1[2] = self.r31
+            s2[0] = self.r12
+            s2[1] = self.r22
+            s2[2] = self.r32
+            s3[0] = self.r13
+            s3[1] = self.r23
+            s3[2] = self.r33
+
+            for j in range(NUM_NODES):
+                for i in range(DOF):
+                    self.probe.ue[j*DOF + i] = 0
+
+            for j in range(NUM_NODES):
+                for i in range(DOF//2):
+                    #transforming translations
+                    self.probe.ue[j*DOF + 0] += s1[i]*u[c[j] + 0 + i]
+                    self.probe.ue[j*DOF + 1] += s2[i]*u[c[j] + 0 + i]
+                    self.probe.ue[j*DOF + 2] += s3[i]*u[c[j] + 0 + i]
+                    #transforming rotations
+                    self.probe.ue[j*DOF + 3] += s1[i]*u[c[j] + 3 + i]
+                    self.probe.ue[j*DOF + 4] += s2[i]*u[c[j] + 3 + i]
+                    self.probe.ue[j*DOF + 5] += s3[i]*u[c[j] + 3 + i]
 
 
     cpdef void update_KC0(Spring self,
