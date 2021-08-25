@@ -20,53 +20,6 @@ DOUBLE = np.float64
 cdef cINT DOF = 6
 cdef cINT NUM_NODES = 2
 
-cdef class SpringData:
-    r"""
-    Used to allocate memory for the sparse matrices.
-
-    Attributes
-    ----------
-    KC0_SPARSE_SIZE : int
-        ``KC0_SPARSE_SIZE = 72``
-
-    KG_SPARSE_SIZE : int
-        ``KG_SPARSE_SIZE = 0``
-
-    M_SPARSE_SIZE : int
-        ``M_SPARSE_SIZE = 0``
-
-    """
-    cdef public cINT KC0_SPARSE_SIZE
-    cdef public cINT KG_SPARSE_SIZE
-    cdef public cINT M_SPARSE_SIZE
-    def __cinit__(SpringData self):
-        self.KC0_SPARSE_SIZE = 72
-        self.KG_SPARSE_SIZE = 0
-        self.M_SPARSE_SIZE = 0
-
-cdef class SpringProbe:
-    r"""
-    Probe used for local coordinates, local displacements, local stresses etc
-
-    Attributes
-    ----------
-    xe : array-like
-        Array of size ``NUM_NODES*DOF//2=6`` containing the nodal coordinates
-        in the element coordinate system, in the following order `{x_e}_1,
-        {y_e}_1, {z_e}_1, {x_e}_2, {y_e}_2, {z_e}_2`.
-    ue : array-like
-        Array of size ``NUM_NODES*DOF=12`` containing the element displacements
-        in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
-        {{r_y}_e}_1, {{r_z}_e}_1, {u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
-        {{r_y}_e}_2, {{r_z}_e}_2`.
-
-    """
-    cdef public cDOUBLE[:] xe
-    cdef public cDOUBLE[:] ue
-    def __cinit__(SpringProbe self):
-        self.xe = np.zeros(NUM_NODES*DOF//2, dtype=DOUBLE)
-        self.ue = np.zeros(NUM_NODES*DOF, dtype=DOUBLE)
-
 cdef class Spring:
     r"""
     Spring 3D beam element with constant stiffnesses
@@ -101,7 +54,7 @@ cdef class Spring:
     cdef public double length
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
 
-    def __cinit__(Spring self, SpringProbe p):
+    def __cinit__(Spring self):
         self.eid = -1
         self.n1 = -1
         self.n2 = -1
