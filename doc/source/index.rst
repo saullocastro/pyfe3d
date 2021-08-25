@@ -10,6 +10,7 @@ Modules
     properties.rst
     beamc.rst
     beamlr.rst
+    spring.rst
     truss.rst
     quad4r.rst
     quad4r_utils.rst

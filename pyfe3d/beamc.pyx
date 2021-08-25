@@ -204,7 +204,7 @@ cdef class BeamC:
     cpdef void update_probe_ue(BeamC self, np.ndarray[cDOUBLE, ndim=1] u):
         r"""Update the local displacement vector of the probe of the element
 
-        .. note:: The ``probe`` attribute object :class:`.Quad4RProbe` is
+        .. note:: The ``probe`` attribute object :class:`.BeamCProbe` is
                   updated, not the element object.
 
         Parameters

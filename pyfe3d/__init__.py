@@ -11,6 +11,7 @@ from .quad4r import Quad4R, Quad4RData, Quad4RProbe
 from .beamc import BeamC, BeamCData, BeamCProbe
 from .beamlr import BeamLR, BeamLRData, BeamLRProbe
 from .truss import Truss, TrussData, TrussProbe
+from .spring import Spring, SpringData, SpringProbe
 DOF = 6
 INT = np.int64
 DOUBLE = np.float64
