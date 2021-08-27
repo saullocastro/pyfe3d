@@ -24,6 +24,11 @@ DOUBLE = np.float64
 cdef cINT DOF = 6
 cdef cINT NUM_NODES = 4
 
+cdef extern from "math.h":
+    double cos(double t) nogil
+    double sin(double t) nogil
+    double atan(double t) nogil
+
 cdef class Quad4RData:
     r"""
     Used to allocate memory for the sparse matrices.
@@ -144,7 +149,8 @@ cdef class Quad4R:
         self.r31 = self.r32 = self.r33 = 0.
 
 
-    cpdef void update_rotation_matrix(Quad4R self, np.ndarray[cDOUBLE, ndim=1] x):
+    cpdef void update_rotation_matrix(Quad4R self, np.ndarray[cDOUBLE, ndim=1] x,
+            double xmati=0., double xmatj=0., double xmatk=0.):
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
@@ -163,10 +169,18 @@ cdef class Quad4R:
             the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
             y_2, z_2, ..., x_M, y_M, z_M`.
 
+        gama: float
+            Angle in degrees to rotate the local coordinates in-plane
+
+        xmaterial: array-like
+            Global X vector to change the orientation of the element coordinate system
+
         """
-        cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk, tmp
+        cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk
         cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k, x4i, x4j, x4k
         cdef double v13i, v13j, v13k, v42i, v42j, v42k
+        cdef double tmp, xmatnorm
+        cdef double tol = 1e-10
 
         with nogil:
             x1i = x[self.c1//2 + 0]
@@ -189,14 +203,6 @@ cdef class Quad4R:
             v42j = x2j - x4j
             v42k = x2k - x4k
 
-            xi = (v13i + v42i)/2.
-            xj = (v13j + v42j)/2.
-            xk = (v13k + v42k)/2.
-            tmp = (xi**2 + xj**2 + xk**2)**0.5
-            xi /= tmp
-            xj /= tmp
-            xk /= tmp
-
             zi = v42j*v13k - v42k*v13j
             zj = -v42i*v13k + v42k*v13i
             zk = v42i*v13j - v42j*v13i
@@ -205,13 +211,71 @@ cdef class Quad4R:
             zj /= tmp
             zk /= tmp
 
-            yi = -xj*zk + xk*zj
-            yj = xi*zk - xk*zi
-            yk = -xi*zj + xj*zi
-            tmp = (yi**2 + yj**2 + yk**2)**0.5
-            yi /= tmp
-            yj /= tmp
-            yk /= tmp
+            xmatnorm = (xmati**2 + xmatj**2 + xmatk**2)**0.5
+            xmati /= xmatnorm
+            xmatj /= xmatnorm
+            xmatk /= xmatnorm
+
+            if xmatnorm < tol:
+                #NOTE using element coordinates
+                xi = (v13i + v42i)/2.
+                xj = (v13j + v42j)/2.
+                xk = (v13k + v42k)/2.
+                tmp = (xi**2 + xj**2 + xk**2)**0.5
+                xi /= tmp
+                xj /= tmp
+                xk /= tmp
+
+                # y = z X x
+                yi = zj*xk - zk*xj
+                yj = zk*xi - zi*xk
+                yk = zi*xj - zj*xi
+                tmp = (yi**2 + yj**2 + yk**2)**0.5
+                yi /= tmp
+                yj /= tmp
+                yk /= tmp
+
+            else:
+                # Project X Material Vector into Element CSYS
+                # y = z X x
+                yi = zj*xmatk - zk*xmatj
+                yj = zk*xmati - zi*xmatk
+                yk = zi*xmatj - zj*xmati
+                tmp = (yi**2 + yj**2 + yk**2)**0.5
+                yi /= tmp
+                yj /= tmp
+                yk /= tmp
+
+                if tmp < tol:
+                    with gil:
+                        print('ValueError cannot project material axis onto element for element %d. Assuming element coordinates' % self.eid)
+                    #NOTE using element coordinates
+                    xi = (v13i + v42i)/2.
+                    xj = (v13j + v42j)/2.
+                    xk = (v13k + v42k)/2.
+                    tmp = (xi**2 + xj**2 + xk**2)**0.5
+                    xi /= tmp
+                    xj /= tmp
+                    xk /= tmp
+
+                    # y = z X x
+                    yi = zj*xk - zk*xj
+                    yj = zk*xi - zi*xk
+                    yk = zi*xj - zj*xi
+                    tmp = (yi**2 + yj**2 + yk**2)**0.5
+                    yi /= tmp
+                    yj /= tmp
+                    yk /= tmp
+
+                else:
+                    # x = y X z
+                    xi = yj*zk - yk*zj
+                    xj = yk*zi - yi*zk
+                    xk = yi*zj - yj*zi
+                    tmp = (xi**2 + xj**2 + xk**2)**0.5
+                    xi /= tmp
+                    xj /= tmp
+                    xk /= tmp
 
             tmp = xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi
             self.r11 = (yj*zk - yk*zj)/tmp
@@ -223,7 +287,6 @@ cdef class Quad4R:
             self.r31 = (yi*zj - yj*zi)/tmp
             self.r32 = (-xi*zj + xj*zi)/tmp
             self.r33 = (xi*yj - xj*yi)/tmp
-
 
     cpdef void update_probe_ue(Quad4R self, np.ndarray[cDOUBLE, ndim=1] u):
         r"""Update the local displacement vector of the probe of the element
