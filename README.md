@@ -41,5 +41,5 @@ License
 -------
 Distrubuted in the 2-Clause BSD license (https://raw.github.com/saullocastro/pyfe3d/master/LICENSE).
 
-Contact: S.G.P.Castro@tudelft.nl
+Contacts: S.G.P.Castro@tudelft.nl
 
