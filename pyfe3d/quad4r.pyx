@@ -24,6 +24,11 @@ DOUBLE = np.float64
 cdef cINT DOF = 6
 cdef cINT NUM_NODES = 4
 
+cdef extern from "math.h":
+    double cos(double t) nogil
+    double sin(double t) nogil
+    double atan(double t) nogil
+
 cdef class Quad4RData:
     r"""
     Used to allocate memory for the sparse matrices.
@@ -144,7 +149,8 @@ cdef class Quad4R:
         self.r31 = self.r32 = self.r33 = 0.
 
 
-    cpdef void update_rotation_matrix(Quad4R self, np.ndarray[cDOUBLE, ndim=1] x, double gamadeg = 0.,  double xmateriali = 0., double xmaterialj = 0., double xmaterialk = 0.):
+    cpdef void update_rotation_matrix(Quad4R self, np.ndarray[cDOUBLE, ndim=1] x,
+            double xmati=0., double xmatj=0., double xmatk=0.):
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
@@ -170,10 +176,12 @@ cdef class Quad4R:
             Global X vector to change the orientation of the element coordinate system
 
         """
-        cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk, tmp
+        cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk
         cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k, x4i, x4j, x4k
         cdef double v13i, v13j, v13k, v42i, v42j, v42k
-        
+        cdef double tmp, xmatnorm
+        cdef double tol = 1e-10
+
         with nogil:
             x1i = x[self.c1//2 + 0]
             x1j = x[self.c1//2 + 1]
@@ -203,7 +211,13 @@ cdef class Quad4R:
             zj /= tmp
             zk /= tmp
 
-            if xmateriali == 0. and xmaterialj == 0. and xmaterialk == 0.:
+            xmatnorm = (xmati**2 + xmatj**2 + xmatk**2)**0.5
+            xmati /= xmatnorm
+            xmatj /= xmatnorm
+            xmatk /= xmatnorm
+
+            if xmatnorm < tol:
+                #NOTE using element coordinates
                 xi = (v13i + v42i)/2.
                 xj = (v13j + v42j)/2.
                 xk = (v13k + v42k)/2.
@@ -212,52 +226,49 @@ cdef class Quad4R:
                 xj /= tmp
                 xk /= tmp
 
-                yi = -xj*zk + xk*zj
-                yj = xi*zk - xk*zi
-                yk = -xi*zj + xj*zi
+                # y = z X x
+                yi = zj*xk - zk*xj
+                yj = zk*xi - zi*xk
+                yk = zi*xj - zj*xi
                 tmp = (yi**2 + yj**2 + yk**2)**0.5
                 yi /= tmp
                 yj /= tmp
                 yk /= tmp
 
-            elif gamadeg == 0.:
-                # Normalize Vector
-                tmp = (xmateriali**2 + xmaterialj**2 + xmaterialk**2)**0.5
-                xmateriali /= tmp
-                xmaterialj /= tmp
-                xmaterialk /= tmp
-
+            else:
                 # Project X Material Vector into Element CSYS
-                # Find Y - Z cross Xmaterial
-                yi = zj*xmaterialk - zk*xmaterialj
-                yj = zk*xmateriali - zi*xmaterialk
-                yk = zi*xmaterialj - zj*xmateriali
+                # y = z X x
+                yi = zj*xmatk - zk*xmatj
+                yj = zk*xmati - zi*xmatk
+                yk = zi*xmatj - zj*xmati
                 tmp = (yi**2 + yj**2 + yk**2)**0.5
                 yi /= tmp
                 yj /= tmp
                 yk /= tmp
 
-                if tmp < 1e-10:
+                if tmp < tol:
                     with gil:
-                        print('Value error cannot project i-axis onto element normal. Using element coordinates.')
-                        xi = (v13i + v42i)/2.
-                        xj = (v13j + v42j)/2.
-                        xk = (v13k + v42k)/2.
-                        tmp = (xi**2 + xj**2 + xk**2)**0.5
-                        xi /= tmp
-                        xj /= tmp
-                        xk /= tmp
+                        print('ValueError cannot project material axis onto element for element %d. Assuming element coordinates' % self.eid)
+                    #NOTE using element coordinates
+                    xi = (v13i + v42i)/2.
+                    xj = (v13j + v42j)/2.
+                    xk = (v13k + v42k)/2.
+                    tmp = (xi**2 + xj**2 + xk**2)**0.5
+                    xi /= tmp
+                    xj /= tmp
+                    xk /= tmp
 
-                        yi = -xj*zk + xk*zj
-                        yj = xi*zk - xk*zi
-                        yk = -xi*zj + xj*zi
-                        tmp = (yi**2 + yj**2 + yk**2)**0.5
-                        yi /= tmp
-                        yj /= tmp
-                        yk /= tmp
+                    # y = z X x
+                    yi = zj*xk - zk*xj
+                    yj = zk*xi - zi*xk
+                    yk = zi*xj - zj*xi
+                    tmp = (yi**2 + yj**2 + yk**2)**0.5
+                    yi /= tmp
+                    yj /= tmp
+                    yk /= tmp
 
                 else:
-                    # Find X - Y cross Z
+                    # x = y X z
                     xi = yj*zk - yk*zj
                     xj = yk*zi - yi*zk
                     xk = yi*zj - yj*zi
@@ -265,35 +276,6 @@ cdef class Quad4R:
                     xi /= tmp
                     xj /= tmp
                     xk /= tmp
-
-            else:
-                with gil:
-                    # Rotate X, Y
-                    gamarad = gamadeg*np.pi/180.
-
-                    xtmpi = (v13i + v42i)/2.
-                    xtmpj = (v13j + v42j)/2.
-                    xtmpk = (v13k + v42k)/2.
-                    tmp = (xtmpi**2 + xtmpj**2 + xtmpk**2)**0.5
-                    xtmpi /= tmp
-                    xtmpj /= tmp
-                    xtmpk /= tmp
-
-                    ytmpi = -xtmpj*zk + xtmpk*zj
-                    ytmpj = xtmpi*zk - xtmpk*zi
-                    ytmpk = -xtmpi*zj + xtmpj*zi
-                    tmp = (ytmpi**2 + ytmpj**2 + ytmpk**2)**0.5
-                    ytmpi /= tmp
-                    ytmpj /= tmp
-                    ytmpk /= tmp
-
-                    xi = xtmpi*np.cos(gamarad) + xtmpj*np.sin(gamarad) 
-                    xj = -1*xtmpi*np.sin(gamarad) + xtmpj*np.cos(gamarad) 
-                    xk = xtmpk
-
-                    yi = ytmpi*np.cos(gamarad) + ytmpj*np.sin(gamarad) 
-                    yj = -1*ytmpi*np.sin(gamarad) + ytmpj*np.cos(gamarad) 
-                    yk = ytmpk
 
             tmp = xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi
             self.r11 = (yj*zk - yk*zj)/tmp
