@@ -3,6 +3,7 @@ version.py
 quad4r.cpp
 beam*.cpp
 spring*.cpp
+truss*.cpp
 shell*.cpp
 build
 dist
