@@ -2341,6 +2341,9 @@ cdef class Quad4R:
 
             alphat = self.alphat
 
+            #TODO find a method of hourglass control that is derived for composites
+            #     in the future, use MITC4 elements that do not require
+            #     hourglass control
             Eu = 0.1*E1eq*h/(1.0 + 1.0/self.area)
             Ev = 0.1*E2eq*h/(1.0 + 1.0/self.area)
             Erx = 0.1*E2eq*h**3/(1.0 + 1.0/self.area)
