@@ -100,7 +100,7 @@ def test_linear_buckling_cylinder(mode=0):
         quad.c4 = DOF*nid_pos[n4]
         quad.init_k_KC0 = init_k_KC0
         quad.init_k_KG = init_k_KG
-        quad.update_rotation_matrix(ncoords_flatten)
+        quad.update_rotation_matrix(ncoords_flatten, 0, 0, 1)
         quad.update_probe_xe(ncoords_flatten)
         quad.update_KC0(KC0r, KC0c, KC0v, prop)
         quads.append(quad)
@@ -174,7 +174,8 @@ def test_linear_buckling_cylinder(mode=0):
     fext[bk] = fk
     Pcr = (eigvals[0]*fext[2::DOF][checkTopEdge]).sum()
     print('Pcr =', Pcr)
-    assert np.isclose(Pcr, -396407.4442094761, rtol=1e-4)
+    assert np.isclose(Pcr, -409522.60151502624, rtol=1e-4)
+
 
 if __name__ == '__main__':
     test_linear_buckling_cylinder(mode=0)
