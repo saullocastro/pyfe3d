@@ -10,7 +10,8 @@ from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
 
 
 def test_static_plate_quad_point_load(plot=False):
-    thetadegs = [0, 30, 60, 90]
+    #NOTE keep thetadeg = 0 as first, to work as reference wmax_ref
+    thetadegs = [0, -90, -60, -30, 30, 60, 90]
     for thetadeg in thetadegs:
         matx = (np.cos(np.deg2rad(thetadeg)), np.sin(np.deg2rad(thetadeg)), 0)
         print('matx', matx)
