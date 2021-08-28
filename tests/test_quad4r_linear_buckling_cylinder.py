@@ -101,11 +101,6 @@ def test_linear_buckling_cylinder(mode=0):
         quad.init_k_KC0 = init_k_KC0
         quad.init_k_KG = init_k_KG
         quad.update_rotation_matrix(ncoords_flatten, 0, 0, 1)
-        print(quad.m11, quad.m12, quad.m21, quad.m22)
-        quad.m11 = 1
-        quad.m12 = 0
-        quad.m21 = 0
-        quad.m22 = 1
         quad.update_probe_xe(ncoords_flatten)
         quad.update_KC0(KC0r, KC0c, KC0v, prop)
         quads.append(quad)
