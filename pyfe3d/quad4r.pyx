@@ -106,6 +106,9 @@ cdef class Quad4R:
         Element area.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix to the global coordinate system.
+    m11, m12, m21, m22 : double
+        Rotation matrix only for the constitutive relations. Used when a
+        material direction is used instead of the element local coordinates.
     c1, c2, c3, c4 : int
         Position of each node in the global stiffness matrix.
     n1, n2, n3, n4 : int
@@ -124,6 +127,7 @@ cdef class Quad4R:
     cdef public double area
     cdef public double alphat # drilling penalty factor for stiffness matrix, see Eq. 2.20 in F.M. Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013) 10–20. www.iosrjen.org (accessed April 20, 2020).
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
+    cdef public double m11, m12, m21, m22
     cdef public Quad4RProbe probe
 
 
@@ -147,6 +151,10 @@ cdef class Quad4R:
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.
         self.r31 = self.r32 = self.r33 = 0.
+        self.m11 = 1.
+        self.m12 = 0.
+        self.m21 = 0.
+        self.m22 = 1.
 
 
     cpdef void update_rotation_matrix(Quad4R self, np.ndarray[cDOUBLE, ndim=1] x,
@@ -172,15 +180,21 @@ cdef class Quad4R:
         gama: float
             Angle in degrees to rotate the local coordinates in-plane
 
-        xmaterial: array-like
-            Global X vector to change the orientation of the element coordinate system
+        xmati, xmatj, xmatj: array-like
+            Vector in global coordinates to change the orientation of the element coordinate system
 
         """
         cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk
         cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k, x4i, x4j, x4k
         cdef double v13i, v13j, v13k, v42i, v42j, v42k
-        cdef double tmp, xmatnorm
-        cdef double tol = 1e-10
+        cdef double tmp, xmatnorm, ymati, ymatj, ymatk
+        cdef double xmatglobi, xmatglobj, xmatglobk
+        cdef double ymatglobi, ymatglobj, ymatglobk
+        cdef double zmatglobi, zmatglobj, zmatglobk
+        cdef double xeleglobi, xeleglobj, xeleglobk
+        cdef double yeleglobi, yeleglobj, yeleglobk
+        cdef double zeleglobi, zeleglobj, zeleglobk
+        cdef double tol
 
         with nogil:
             x1i = x[self.c1//2 + 0]
@@ -210,72 +224,25 @@ cdef class Quad4R:
             zi /= tmp
             zj /= tmp
             zk /= tmp
+            #NOTE defining tolerance to be 1/1e10 of normal vector norm
+            tol = tmp/1e10
 
-            xmatnorm = (xmati**2 + xmatj**2 + xmatk**2)**0.5
-            xmati /= xmatnorm
-            xmatj /= xmatnorm
-            xmatk /= xmatnorm
+            xi = (v13i + v42i)/2.
+            xj = (v13j + v42j)/2.
+            xk = (v13k + v42k)/2.
+            tmp = (xi**2 + xj**2 + xk**2)**0.5
+            xi /= tmp
+            xj /= tmp
+            xk /= tmp
 
-            if xmatnorm < tol:
-                #NOTE using element coordinates
-                xi = (v13i + v42i)/2.
-                xj = (v13j + v42j)/2.
-                xk = (v13k + v42k)/2.
-                tmp = (xi**2 + xj**2 + xk**2)**0.5
-                xi /= tmp
-                xj /= tmp
-                xk /= tmp
-
-                # y = z X x
-                yi = zj*xk - zk*xj
-                yj = zk*xi - zi*xk
-                yk = zi*xj - zj*xi
-                tmp = (yi**2 + yj**2 + yk**2)**0.5
-                yi /= tmp
-                yj /= tmp
-                yk /= tmp
-
-            else:
-                # Project X Material Vector into Element CSYS
-                # y = z X x
-                yi = zj*xmatk - zk*xmatj
-                yj = zk*xmati - zi*xmatk
-                yk = zi*xmatj - zj*xmati
-                tmp = (yi**2 + yj**2 + yk**2)**0.5
-                yi /= tmp
-                yj /= tmp
-                yk /= tmp
-
-                if tmp < tol:
-                    with gil:
-                        print('ValueError cannot project material axis onto element for element %d. Assuming element coordinates' % self.eid)
-                    #NOTE using element coordinates
-                    xi = (v13i + v42i)/2.
-                    xj = (v13j + v42j)/2.
-                    xk = (v13k + v42k)/2.
-                    tmp = (xi**2 + xj**2 + xk**2)**0.5
-                    xi /= tmp
-                    xj /= tmp
-                    xk /= tmp
-
-                    # y = z X x
-                    yi = zj*xk - zk*xj
-                    yj = zk*xi - zi*xk
-                    yk = zi*xj - zj*xi
-                    tmp = (yi**2 + yj**2 + yk**2)**0.5
-                    yi /= tmp
-                    yj /= tmp
-                    yk /= tmp
-
-                else:
-                    # x = y X z
-                    xi = yj*zk - yk*zj
-                    xj = yk*zi - yi*zk
-                    xk = yi*zj - yj*zi
-                    tmp = (xi**2 + xj**2 + xk**2)**0.5
-                    xi /= tmp
-                    xj /= tmp
-                    xk /= tmp
+            # y = z X x
+            yi = zj*xk - zk*xj
+            yj = zk*xi - zi*xk
+            yk = zi*xj - zj*xi
+            tmp = (yi**2 + yj**2 + yk**2)**0.5
+            yi /= tmp
+            yj /= tmp
+            yk /= tmp
 
             tmp = xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi
             self.r11 = (yj*zk - yk*zj)/tmp
@@ -287,6 +254,50 @@ cdef class Quad4R:
             self.r31 = (yi*zj - yj*zi)/tmp
             self.r32 = (-xi*zj + xj*zi)/tmp
             self.r33 = (xi*yj - xj*yi)/tmp
+
+            xmatnorm = (xmati**2 + xmatj**2 + xmatk**2)**0.5
+            xmati /= xmatnorm
+            xmatj /= xmatnorm
+            xmatk /= xmatnorm
+
+            if xmatnorm > tol:
+                # Project X Material Vector into Element CSYS
+                # ymat = z X xmat
+                ymati = zj*xmatk - zk*xmatj
+                ymatj = zk*xmati - zi*xmatk
+                ymatk = zi*xmatj - zj*xmati
+                tmp = (ymati**2 + ymatj**2 + ymatk**2)**0.5
+                ymati /= tmp
+                ymatj /= tmp
+                ymatk /= tmp
+                if tmp > tol:
+                    #NOTE ovewriting xmati,xmatj,xmatk, they now represent the projected xmat axis
+                    # xmat_projected = ymat X z
+                    xmati = ymatj*zk - ymatk*zj
+                    xmatj = ymatk*zi - ymati*zk
+                    xmatk = ymati*zj - ymatj*zi
+                    tmp = (xmati**2 + xmatj**2 + xmatk**2)**0.5
+                    xmati /= tmp
+                    xmatj /= tmp
+                    xmatk /= tmp
+
+                    #NOTE angle between xmat_projected and xelem
+                    #NOTE assuming they are already normalized (no need to normalize)
+                    self.m11 = xmati*xi + xmatj*xj + xmatk*xk # costheta
+                    self.m22 = self.m11
+                    #NOTE sign of costheta
+                    #     - the sign is positive when rotating from the material
+                    #       to the element coordinate
+                    #     - the sign only affects sintheta
+                    # xmat dot_product y
+                    if (xmati*yi + xmatj*yj + xmatk*yk) > 0:
+                        self.m12 = -(1 - self.m11**2)**0.5 # sintheta
+                        self.m21 = -self.m12
+                    else:
+                        #NOTE theta is negative
+                        self.m12 = (1 - self.m11**2)**0.5 # sintheta
+                        self.m21 = -self.m12
+
 
     cpdef void update_probe_ue(Quad4R self, np.ndarray[cDOUBLE, ndim=1] u):
         r"""Update the local displacement vector of the probe of the element
@@ -458,45 +469,111 @@ cdef class Quad4R:
         """
         cdef cINT c1, c2, c3, c4, k
         cdef double x1, x2, x3, x4, y1, y2, y3, y4, wij, detJ
+        #NOTE ABD in the material direction
+        cdef double A11mat, A12mat, A16mat, A22mat, A26mat, A66mat
+        cdef double B11mat, B12mat, B16mat, B22mat, B26mat, B66mat
+        cdef double D11mat, D12mat, D16mat, D22mat, D26mat, D66mat
+        cdef double E44, E45, E55
+        #NOTE ABD in the element direction
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
-        cdef double E44, E45, E55
         cdef double E1eq, E2eq
         cdef double alphat
         cdef double Eu, Ev, Erx, Ery, Ew, h
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
+        cdef double m11, m12, m21, m22, a11, a22
         cdef double j11, j12, j21, j22, N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
         cdef double N1, N2, N3, N4
         cdef double N1xy, N2xy, N3xy, N4xy, gamma1, gamma2, gamma3, gamma4
 
         with nogil:
-            A11 = prop.A11
-            A12 = prop.A12
-            A16 = prop.A16
-            A22 = prop.A22
-            A26 = prop.A26
-            A66 = prop.A66
-            B11 = prop.B11
-            B12 = prop.B12
-            B16 = prop.B16
-            B22 = prop.B22
-            B26 = prop.B26
-            B66 = prop.B66
-            D11 = prop.D11
-            D12 = prop.D12
-            D16 = prop.D16
-            D22 = prop.D22
-            D26 = prop.D26
-            D66 = prop.D66
-            E44 = prop.E44*prop.scf_k23
-            E45 = prop.E45*0.5*(prop.scf_k13 + prop.scf_k23)
-            E55 = prop.E55*prop.scf_k13
+            A11mat = prop.A11
+            A12mat = prop.A12
+            A16mat = prop.A16
+            A22mat = prop.A22
+            A26mat = prop.A26
+            A66mat = prop.A66
+            B11mat = prop.B11
+            B12mat = prop.B12
+            B16mat = prop.B16
+            B22mat = prop.B22
+            B26mat = prop.B26
+            B66mat = prop.B66
+            D11mat = prop.D11
+            D12mat = prop.D12
+            D16mat = prop.D16
+            D22mat = prop.D22
+            D26mat = prop.D26
+            D66mat = prop.D66
+
+            #TODO is this a good criterion to check?
+            if self.m12 == 0:
+                A11 = A11mat
+                A12 = A12mat
+                A16 = A16mat
+                A22 = A22mat
+                A26 = A26mat
+                A66 = A66mat
+                B11 = B11mat
+                B12 = B12mat
+                B16 = B16mat
+                B22 = B22mat
+                B26 = B26mat
+                B66 = B66mat
+                D11 = D11mat
+                D12 = D12mat
+                D16 = D16mat
+                D22 = D22mat
+                D26 = D26mat
+                D66 = D66mat
+            else:
+                m11 = self.m11
+                m12 = self.m12
+                m21 = self.m21
+                m22 = self.m22
+                A11 = m11**2*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + 2*m11*m12*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12) + m12**2*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12)
+                A12 = m21**2*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + 2*m21*m22*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12) + m22**2*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12)
+                A16 = m11*m21*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + m12*m22*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12) + (m11*m22 + m12*m21)*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12)
+                #A21 = m11**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m11*m12*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m12**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
+                A22 = m21**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m21*m22*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m22**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
+                A26 = m11*m21*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + m12*m22*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22) + (m11*m22 + m12*m21)*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22)
+                #A61 = m11**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m12**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
+                #A62 = m21**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m22**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
+                A66 = m11*m21*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + m12*m22*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21))
+
+                B11 = m11**2*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + 2*m11*m12*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12) + m12**2*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12)
+                B12 = m21**2*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + 2*m21*m22*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12) + m22**2*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12)
+                B16 = m11*m21*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + m12*m22*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12) + (m11*m22 + m12*m21)*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12)
+                #B21 = m11**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m11*m12*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m12**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
+                B22 = m21**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m21*m22*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m22**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
+                B26 = m11*m21*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + m12*m22*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22) + (m11*m22 + m12*m21)*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22)
+                #B61 = m11**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m12**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
+                #B62 = m21**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m22**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
+                B66 = m11*m21*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + m12*m22*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21))
+
+                D11 = m11**2*(D11mat*m11**2 + D12mat*m12**2 + 2*D16mat*m11*m12) + 2*m11*m12*(D16mat*m11**2 + D26mat*m12**2 + 2*D66mat*m11*m12) + m12**2*(D12mat*m11**2 + D22mat*m12**2 + 2*D26mat*m11*m12)
+                D12 = m21**2*(D11mat*m11**2 + D12mat*m12**2 + 2*D16mat*m11*m12) + 2*m21*m22*(D16mat*m11**2 + D26mat*m12**2 + 2*D66mat*m11*m12) + m22**2*(D12mat*m11**2 + D22mat*m12**2 + 2*D26mat*m11*m12)
+                D16 = m11*m21*(D11mat*m11**2 + D12mat*m12**2 + 2*D16mat*m11*m12) + m12*m22*(D12mat*m11**2 + D22mat*m12**2 + 2*D26mat*m11*m12) + (m11*m22 + m12*m21)*(D16mat*m11**2 + D26mat*m12**2 + 2*D66mat*m11*m12)
+                #D21 = m11**2*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + 2*m11*m12*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22) + m12**2*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22)
+                D22 = m21**2*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + 2*m21*m22*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22) + m22**2*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22)
+                D26 = m11*m21*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + m12*m22*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22) + (m11*m22 + m12*m21)*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22)
+                #D61 = m11**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m12**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
+                #D62 = m21**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m22**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
+                D66 = m11*m21*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + m12*m22*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21))
 
             h = prop.h
 
-            E1eq = prop.e1
-            E2eq = prop.e2
+            #TODO, recalculating E1eq and E2eq based on rotated A matrix
+            #NOTE not considering effect of B matrix
+            a11 = (-A22*A66 + A26**2)/(-A11*A22*A66 + A11*A26**2 + A12**2*A66 - 2*A12*A16*A26 + A16**2*A22)
+            a22 = (-A11*A66 + A16**2)/(-A11*A22*A66 + A11*A26**2 + A12**2*A66 - 2*A12*A16*A26 + A16**2*A22)
+            E1eq = 1./(h*a11)
+            E2eq = 1./(h*a22)
+
+            E44 = prop.E44*prop.scf_k23
+            E45 = prop.E45*0.5*(prop.scf_k13 + prop.scf_k23)
+            E55 = prop.E55*prop.scf_k13
 
             #NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
