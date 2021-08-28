@@ -1,8 +1,10 @@
 version.py
 # Build related
-quad4r.c 
-quad4r.html 
 quad4r.cpp
+beam*.cpp
+spring*.cpp
+truss*.cpp
+shell*.cpp
 build
 dist
 .coverage
