@@ -2,6 +2,8 @@
 #cython: wraparound=False
 #cython: cdivision=True
 #cython: nonecheck=False
+#cython: overflowcheck=False
+#cython: embedsignature=True
 #cython: infer_types=False
 r"""
 BeamLR - Linear Timoshenko 3D beam element with reduced integration (:mod:`pyfe3d.beamlr`)
