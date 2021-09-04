@@ -2,6 +2,8 @@
 #cython: wraparound=False
 #cython: cdivision=True
 #cython: nonecheck=False
+#cython: overflowcheck=False
+#cython: embedsignature=True
 #cython: infer_types=False
 """
 Truss - Linear truss 3D element with analytical integration (:mod:`pyfe3d.truss`)

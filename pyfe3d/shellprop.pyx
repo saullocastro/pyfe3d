@@ -2,6 +2,8 @@
 #cython: wraparound=False
 #cython: cdivision=True
 #cython: nonecheck=False
+#cython: overflowcheck=False
+#cython: embedsignature=True
 #cython: infer_types=False
 r"""
 Shell property module (:mod:`pyfe3d.shellprop`)

@@ -2,6 +2,8 @@
 #cython: wraparound=False
 #cython: cdivision=True
 #cython: nonecheck=False
+#cython: overflowcheck=False
+#cython: embedsignature=True
 #cython: infer_types=False
 r"""
 BeamC - Consistent Timoshenko 3D beam element (:mod:`pyfe3d.beamc`)
