@@ -10,8 +10,8 @@ import numpy as np
 from Cython.Build import cythonize
 
 
-is_released = True
-version = '0.2.0'
+is_released = False
+version = '0.2.1'
 
 
 def git_version():
@@ -96,6 +96,10 @@ if os.name == 'nt':
 else:
     compile_args = ['-fopenmp', '-static', '-static-libgcc', '-static-libstdc++']
     link_args = ['-fopenmp', '-static-libgcc', '-static-libstdc++']
+
+if 'CYTHON_TRACE_NOGIL' in os.environ.keys():
+    compile_args = ['-O0']
+    link_args = []
 
 include_dirs = [
             np.get_include(),
