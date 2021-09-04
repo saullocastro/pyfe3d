@@ -100,6 +100,23 @@ cdef class Quad4R:
         Element identification number.
     area : double
         Element area.
+    alphat : double
+        Element drilling penalty factor for the plate drilling stiffness,
+        defined according to Eq. 2.20 in the reference below. The default value
+        of ``alphat = 1.`` comes from the same reference:
+
+            Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell
+            Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013)
+            10–20. www.iosrjen.org (accessed April 20, 2020).
+
+        For those familiar with NASTRAN, ``alphat`` can be calculated based on
+        NASTRAN's ``K6ROT`` parameters as ``alphat = 1.e-6*K6ROT``. The default
+        value according to AUTODESK NASTRAN's quick reference guide is ``K6ROT
+        = 100.`` for static analysis and ``K6ROT=1.e4`` for modal solutions.
+        MSC NASTRAN's quick reference guide states that ``K6ROT > 100.`` should
+        not be used, but this is controversion, already being controversial to
+        what AUTODESK NASTRAN's manual says.
+
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix to the global coordinate system.
     m11, m12, m21, m22 : double
