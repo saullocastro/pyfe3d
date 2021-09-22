@@ -336,7 +336,7 @@ cdef class Truss:
             A = prop.A
             E = prop.E
             G = prop.G
-            scf = prop.scf
+            scf = prop.scf #NOTE applied to the torsion stiffness
             Iyy = prop.Iyy
             Izz = prop.Izz
 
