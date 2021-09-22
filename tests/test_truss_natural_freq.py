@@ -55,6 +55,8 @@ def test_nat_freq_axial(refinement=1, mtypes=range(2)):
         prop.G = E/2/(1+0.3)
         prop.scf = 5/6.
         prop.intrho = rho*A
+        prop.intrhoy2 = 0 # used to calculate torsional constant
+        prop.intrhoz2 = 0 # used to calculate torsional constant
 
         ncoords_flatten = ncoords.flatten()
 
