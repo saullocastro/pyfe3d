@@ -30,7 +30,7 @@ analytical integration.
   coordinate system.
 
 - 'Truss' - 2-node truss element with only axial and torsion stiffness. I
-recommend using the BeamLR instead, which has physical meaning.
+recommend using the BeamLR instead, which is physically more consistent.
 
 Documentation
 -------------
