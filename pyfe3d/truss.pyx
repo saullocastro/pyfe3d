@@ -40,7 +40,7 @@ cdef class TrussData:
         ``KC0_SPARSE_SIZE = 72``
 
     M_SPARSE_SIZE : int
-        ``M_SPARSE_SIZE = 72``
+        ``M_SPARSE_SIZE = 144``
 
     """
     cdef public cINT KC0_SPARSE_SIZE
