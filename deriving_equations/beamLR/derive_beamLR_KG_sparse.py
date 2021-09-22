@@ -66,7 +66,10 @@ Nrz = Matrix([[0, 0, 0, 0, 0, N1,
 #BL = simplify(integrate(BL, (z, -hz/2+dz, +hz/2+dz)))
 
 #From Eqs. 12 in Luo, Y. 2008
-#NOTE assuming Ay=Az=0 to have Nmembrane constant
+#NOTE forcing Ay=Az=0 to have Nmembrane constant
+# p = D rho
+# p = [N My Mz Qy Qz Mx]
+# p = [e ky kz gammay gammaz kx]
 D = Matrix([
     [ E*A, E*Ay*0, E*Az*0, 0, 0, 0],
     [E*Ay*0, E*Iy,  E*J, 0, 0, 0],
