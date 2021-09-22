@@ -23,11 +23,13 @@ cdef class BeamProp:
     G : float
         Shear modulus
     scf : float
-        Shear correction factor
+        Shear correction factor accounding for different shapes of the beam
+        cross-section. For the truss element, it is applied only to the torsion
+        stiffness that is assumed to be `I_{zz} + I_{yy}`
     Iyy : float
-        Second moment of area about the y axis `\int_y \int_z y^2 dy dz`
+        Second moment of area about the y axis `\int_y \int_z z^2 dy dz`
     Izz : float
-        Second moment of area about the z axis `\int_y \int_z z^2 dy dz`
+        Second moment of area about the z axis `\int_y \int_z y^2 dy dz`
     J : float
         Integral `\int_y \int_z y z dy dz`
     Ay : float
