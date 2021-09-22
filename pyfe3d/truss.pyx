@@ -741,8 +741,7 @@ cdef class Truss:
             Array to store sparse values
         mtype : int, optional
             0 for consistent mass matrix using method from Brockman 1987
-            1 for reduced integration mass matrix using method from Brockman 1987
-            2 for lumped mass matrix using method from Brockman 1987
+            1 for lumped mass matrix using method from Brockman 1987
 
         """
         cdef cINT c1, c2, k
