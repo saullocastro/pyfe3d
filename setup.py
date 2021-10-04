@@ -11,7 +11,7 @@ from Cython.Build import cythonize
 
 
 is_released = True
-version = '0.2.5'
+version = '0.2.6'
 
 
 def git_version():
@@ -168,7 +168,7 @@ s = setup(
     author = "Saullo G. P. Castro",
     author_email = "S.G.P.Castro@tudelft.nl",
     description = ("Finite elements for 3D problems in Python/Cython"),
-    license = "2-Clause BSD",
+    license = "3-Clause BSD",
     keywords = "finite elements structural analysis static buckling vibration dynamics",
     url = "https://github.com/saullocastro/pyfe3d",
     data_files=data_files,
