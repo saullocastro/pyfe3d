@@ -44,5 +44,5 @@ Distrubuted under the 3-Clause BSD license
 
 Contacts:
 - Saullo G. P. Castro, S.G.P.Castro@tudelft.nl
-- Vinicius L. Lemos, vinicius.leite.lemos@outlook.com
+- Vinícius L. Lemos, vinicius.leite.lemos@outlook.com
 
