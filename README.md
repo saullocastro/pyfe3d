@@ -39,7 +39,10 @@ The documentation is available on: https://saullocastro.github.io/pyfe3d.
 
 License
 -------
-Distrubuted in the 2-Clause BSD license (https://raw.github.com/saullocastro/pyfe3d/master/LICENSE).
+Distrubuted under the 3-Clause BSD license
+(https://raw.github.com/saullocastro/pyfe3d/master/LICENSE).
 
-Contacts: S.G.P.Castro@tudelft.nl
+Contacts:
+- Saullo G. P. Castro, S.G.P.Castro@tudelft.nl
+- Vinicius L. Lemos, vinicius.leite.lemos@outlook.com
 
