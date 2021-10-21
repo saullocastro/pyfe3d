@@ -1,6 +1,7 @@
 version.py
 # Build related
 quad4r.cpp
+tria3r.cpp
 beam*.cpp
 spring*.cpp
 truss*.cpp
