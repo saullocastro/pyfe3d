@@ -440,7 +440,7 @@ cdef class Tria3R:
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
         Reduced integration is used with a single point in the centroid
-        (`\xi=\eta=0`) and weight `w_{ij}=4`, preventing shear locking.
+        (`N1=N2=N3=1/3`) and weight `weight=1`, preventing shear locking.
         Hourglass control is used according to Brockman 1987:
 
             Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
@@ -2289,6 +2289,7 @@ cdef class Tria3R:
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double m11, m12, m21, m22
         cdef double j11, j12, j21, j22
+        cdef double N1, N2, N3
         cdef double N1x, N2x, N3x, N1y, N2y, N3y
         cdef double Nxx, Nyy, Nxy
 
@@ -2856,14 +2857,15 @@ cdef class Tria3R:
         cdef cINT c1, c2, c3, i, k
         cdef double x1, x2, x3
         cdef double y1, y2, y3
-        cdef double wij, detJ
+        cdef double wij, detJ, A
         cdef double points[3]
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double j11, j12, j21, j22
-        cdef double N1x, N2x, N3x, N1y, N2y, N3y
+        cdef double N1, N2, N3, N1x, N2x, N3x, N1y, N2y, N3y
 
         with nogil:
-            detJ = 2*self.area
+            A = self.area
+            detJ = 2*A
 
             #Local to global transformation
             r11 = self.r11
@@ -3186,12 +3188,6 @@ cdef class Tria3R:
                 k += 1
                 KGv[k] += r13*r33*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
                 k += 1
-                KGv[k] += r13**2*(N4x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N4y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r23*(N4x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N4y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r33*(N4x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N4y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
-                k += 1
                 KGv[k] += r13*r23*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
                 k += 1
                 KGv[k] += r23**2*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
@@ -3209,12 +3205,6 @@ cdef class Tria3R:
                 KGv[k] += r23**2*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
                 k += 1
                 KGv[k] += r23*r33*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r23*(N4x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N4y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23**2*(N4x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N4y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23*r33*(N4x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N4y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
                 k += 1
                 KGv[k] += r13*r33*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
                 k += 1
@@ -3234,12 +3224,6 @@ cdef class Tria3R:
                 k += 1
                 KGv[k] += r33**2*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
                 k += 1
-                KGv[k] += r13*r33*(N4x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N4y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23*r33*(N4x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N4y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r33**2*(N4x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N4y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
-                k += 1
                 KGv[k] += r13**2*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
                 k += 1
                 KGv[k] += r13*r23*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
@@ -3257,12 +3241,6 @@ cdef class Tria3R:
                 KGv[k] += r13*r23*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
                 k += 1
                 KGv[k] += r13*r33*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13**2*(N4x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N4y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r23*(N4x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N4y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r33*(N4x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N4y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
                 k += 1
                 KGv[k] += r13*r23*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
                 k += 1
@@ -3282,12 +3260,6 @@ cdef class Tria3R:
                 k += 1
                 KGv[k] += r23*r33*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
                 k += 1
-                KGv[k] += r13*r23*(N4x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N4y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23**2*(N4x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N4y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23*r33*(N4x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N4y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
-                k += 1
                 KGv[k] += r13*r33*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
                 k += 1
                 KGv[k] += r23*r33*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
@@ -3305,12 +3277,6 @@ cdef class Tria3R:
                 KGv[k] += r23*r33*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
                 k += 1
                 KGv[k] += r33**2*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r33*(N4x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N4y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23*r33*(N4x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N4y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r33**2*(N4x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N4y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
                 k += 1
                 KGv[k] += r13**2*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
                 k += 1
@@ -3330,12 +3296,6 @@ cdef class Tria3R:
                 k += 1
                 KGv[k] += r13*r33*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
                 k += 1
-                KGv[k] += r13**2*(N4x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N4y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r23*(N4x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N4y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r33*(N4x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N4y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
-                k += 1
                 KGv[k] += r13*r23*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
                 k += 1
                 KGv[k] += r23**2*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
@@ -3354,12 +3314,6 @@ cdef class Tria3R:
                 k += 1
                 KGv[k] += r23*r33*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
                 k += 1
-                KGv[k] += r13*r23*(N4x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N4y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23**2*(N4x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N4y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23*r33*(N4x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N4y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
-                k += 1
                 KGv[k] += r13*r33*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
                 k += 1
                 KGv[k] += r23*r33*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
@@ -3377,84 +3331,6 @@ cdef class Tria3R:
                 KGv[k] += r23*r33*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
                 k += 1
                 KGv[k] += r33**2*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r33*(N4x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N4y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23*r33*(N4x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N4y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r33**2*(N4x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N4y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13**2*(N1x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N1y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r23*(N1x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N1y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r33*(N1x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N1y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13**2*(N2x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N2y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r23*(N2x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N2y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r33*(N2x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N2y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13**2*(N3x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N3y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r23*(N3x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N3y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r33*(N3x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N3y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13**2*(N4x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N4y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r23*(N4x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N4y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r33*(N4x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N4y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r23*(N1x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N1y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23**2*(N1x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N1y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23*r33*(N1x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N1y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r23*(N2x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N2y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23**2*(N2x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N2y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23*r33*(N2x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N2y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r23*(N3x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N3y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23**2*(N3x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N3y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23*r33*(N3x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N3y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r23*(N4x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N4y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23**2*(N4x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N4y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23*r33*(N4x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N4y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r33*(N1x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N1y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23*r33*(N1x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N1y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r33**2*(N1x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N1y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r33*(N2x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N2y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23*r33*(N2x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N2y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r33**2*(N2x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N2y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r33*(N3x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N3y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23*r33*(N3x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N3y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r33**2*(N3x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N3y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r13*r33*(N4x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N4y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r23*r33*(N4x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N4y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
-                k += 1
-                KGv[k] += r33**2*(N4x*(N4x*Nxx*detJ*wij + N4y*Nxy*detJ*wij) + N4y*(N4x*Nxy*detJ*wij + N4y*Nyy*detJ*wij))
 
 
     cpdef void update_M(Tria3R self,
@@ -3515,9 +3391,6 @@ cdef class Tria3R:
             x3 = self.probe.xe[6]
             y3 = self.probe.xe[7]
             #z3 = self.probe.xe[8]
-            x4 = self.probe.xe[9]
-            y4 = self.probe.xe[10]
-            #z4 = self.probe.xe[11]
 
             #Local to global transformation
             r11 = self.r11
@@ -4351,7 +4224,7 @@ cdef class Tria3R:
                 #GAUSSIAN QUADRATURE FORMULAS FOR TRIANGLES
                 #G. R. COWPER
                 #https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620070316
-                weight = 0.333333333333333333333333333333333333333333333
+                wij = 0.333333333333333333333333333333333333333333333
                 points[0] = 0.66666666666666666666666666666666666666666667
                 points[1] = 0.16666666666666666666666666666666666666666667
                 points[2] = 0.16666666666666666666666666666666666666666667
