@@ -12,8 +12,8 @@ var('wij, detJ')
 var('A11, A12, A16, A22, A26, A66')
 var('B11, B12, B16, B22, B26, B66')
 var('D11, D12, D16, D22, D26, D66')
-var('N1x, N2x, N3x, N4x')
-var('N1y, N2y, N3y, N4y')
+var('N1x, N2x, N3x')
+var('N1y, N2y, N3y')
 
 # u v w  rx  ry  rz  (rows are node 1, node2, node3, node4)
 
@@ -145,9 +145,6 @@ def name_ind(i):
         return 'c2'
     elif i >= 2*DOF and i < 3*DOF:
         return 'c3'
-    elif i >= 3*DOF and i < 4*DOF:
-        raise
-        return 'c4'
     else:
         raise
 

@@ -234,9 +234,6 @@ def name_ind(i):
         return 'c2'
     elif i >= 2*DOF and i < 3*DOF:
         return 'c3'
-    elif i >= 3*DOF and i < 4*DOF:
-        raise
-        return 'c4'
     else:
         raise
 
