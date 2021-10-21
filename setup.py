@@ -11,7 +11,7 @@ from Cython.Build import cythonize
 
 
 is_released = True
-version = '0.2.8'
+version = '0.3.0'
 
 
 def git_version():
@@ -141,6 +141,11 @@ extensions = [
     Extension('pyfe3d.beamc',
         sources=[
             './pyfe3d/beamc.pyx',
+            ],
+        **extension_kwargs),
+    Extension('pyfe3d.tria3r',
+        sources=[
+            './pyfe3d/tria3r.pyx',
             ],
         **extension_kwargs),
     Extension('pyfe3d.quad4r',
