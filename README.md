@@ -20,6 +20,8 @@ Elements implemented
 - 'Quad4R' - 4-node plate with linear interpolation, equivalent to Abaqus' S4R
 finite element.
 
+- 'Tria3R' - 3-node plate with linear interpolation.
+
 - 'BeamLR' - 2-node Timoshenko beam element with linear interpolation and
 reduced integration.
 

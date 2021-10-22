@@ -9,6 +9,7 @@ from alg3dpy.constants import Z, O
 
 from .version import __version__
 from .quad4r import Quad4R, Quad4RData, Quad4RProbe
+from .tria3r import Tria3R, Tria3RData, Tria3RProbe
 from .beamc import BeamC, BeamCData, BeamCProbe
 from .beamlr import BeamLR, BeamLRData, BeamLRProbe
 from .truss import Truss, TrussData, TrussProbe

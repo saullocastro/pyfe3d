@@ -7,12 +7,12 @@ from scipy.sparse.linalg import eigsh, eigs
 from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import isotropic_plate
-from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
+from pyfe3d import Tria3R, Tria3RData, Tria3RProbe, INT, DOUBLE, DOF
 
 
 def test_nat_freq_plate(plot=False, mode=0):
-    data = Quad4RData()
-    probe = Quad4RProbe()
+    data = Tria3RData()
+    probe = Tria3RProbe()
     nx = 9
     ny = 11
 
@@ -56,7 +56,7 @@ def test_nat_freq_plate(plot=False, mode=0):
     n3s = nids_mesh[1:, 1:].flatten()
     n4s = nids_mesh[:-1, 1:].flatten()
 
-    num_elements = len(n1s)
+    num_elements = len(n1s)*2
     print('num_elements', num_elements)
 
     KC0r = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
@@ -71,7 +71,7 @@ def test_nat_freq_plate(plot=False, mode=0):
 
     prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True, rho=rho)
 
-    quads = []
+    trias = []
     init_k_KC0 = 0
     init_k_M = 0
     for n1, n2, n3, n4 in zip(n1s, n2s, n3s, n4s):
@@ -82,24 +82,45 @@ def test_nat_freq_plate(plot=False, mode=0):
         r1 = ncoords[pos1]
         r2 = ncoords[pos2]
         r3 = ncoords[pos3]
-        normal = np.cross(r2 - r1, r3 - r2)[2]
+        r4 = ncoords[pos4]
+
+        #first tria
+        normal = np.cross(r2 - r1, r3 - r1)[2]
         assert normal > 0 # guaranteeing that all elements have CCW positive normal
-        quad = Quad4R(probe)
-        quad.n1 = n1
-        quad.n2 = n2
-        quad.n3 = n3
-        quad.n4 = n4
-        quad.c1 = DOF*nid_pos[n1]
-        quad.c2 = DOF*nid_pos[n2]
-        quad.c3 = DOF*nid_pos[n3]
-        quad.c4 = DOF*nid_pos[n4]
-        quad.init_k_KC0 = init_k_KC0
-        quad.init_k_M = init_k_M
-        quad.update_rotation_matrix(ncoords_flatten)
-        quad.update_probe_xe(ncoords_flatten)
-        quad.update_KC0(KC0r, KC0c, KC0v, prop)
-        quad.update_M(Mr, Mc, Mv, prop, mtype=1)
-        quads.append(quad)
+        tria = Tria3R(probe)
+        tria.n1 = n1
+        tria.n2 = n2
+        tria.n3 = n3
+        tria.c1 = DOF*nid_pos[n1]
+        tria.c2 = DOF*nid_pos[n2]
+        tria.c3 = DOF*nid_pos[n3]
+        tria.init_k_KC0 = init_k_KC0
+        tria.init_k_M = init_k_M
+        tria.update_rotation_matrix(ncoords_flatten)
+        tria.update_probe_xe(ncoords_flatten)
+        tria.update_KC0(KC0r, KC0c, KC0v, prop)
+        tria.update_M(Mr, Mc, Mv, prop, mtype=1)
+        trias.append(tria)
+        init_k_KC0 += data.KC0_SPARSE_SIZE
+        init_k_M += data.M_SPARSE_SIZE
+
+        #second tria
+        normal = np.cross(r3 - r1, r4 - r1)[2]
+        assert normal > 0 # guaranteeing that all elements have CCW positive normal
+        tria = Tria3R(probe)
+        tria.n1 = n1
+        tria.n2 = n3
+        tria.n3 = n4
+        tria.c1 = DOF*nid_pos[n1]
+        tria.c2 = DOF*nid_pos[n3]
+        tria.c3 = DOF*nid_pos[n4]
+        tria.init_k_KC0 = init_k_KC0
+        tria.init_k_M = init_k_M
+        tria.update_rotation_matrix(ncoords_flatten)
+        tria.update_probe_xe(ncoords_flatten)
+        tria.update_KC0(KC0r, KC0c, KC0v, prop)
+        tria.update_M(Mr, Mc, Mv, prop, mtype=1)
+        trias.append(tria)
         init_k_KC0 += data.KC0_SPARSE_SIZE
         init_k_M += data.M_SPARSE_SIZE
 
@@ -173,8 +194,6 @@ def test_nat_freq_plate(plot=False, mode=0):
         plt.show()
 
     assert np.isclose(wmn_ref, omegan[0], rtol=0.05)
-
-
 
 if __name__ == '__main__':
     test_nat_freq_plate(plot=True, mode=0)
