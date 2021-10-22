@@ -183,4 +183,4 @@ def test_linear_buckling(mode=0, refinement=1):
 
 
 if __name__ == '__main__':
-    test_linear_buckling(mode=0, refinement=5)
+    test_linear_buckling(mode=0, refinement=1)
