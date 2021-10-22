@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Tria3R - Triangular element with reduced integration (pyfe3d.tria3r) &#8212; pyfe3d 0.3.1 documentation</title>
+    <title>Tria3R - Triangular element with reduced integration (pyfe3d.tria3r) &#8212; pyfe3d 0.3.3 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
@@ -36,7 +36,7 @@
         <li class="right" >
           <a href="quad4r_utils.html" title="Quad4R useful functions (pyfe3d.quad4r_utils)"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</a></li> 
       </ul>
     </div>  
@@ -63,16 +63,42 @@
 <p>The element coordinate system is determined identically what is explained
 in Nastran’s quick reference guide for the CTRIA3 element, as illustrated
 below.</p>
-<img alt="../figures/nastran_cquad3.svg" src="../figures/nastran_cquad3.svg" /><dl class="field-list">
+<img alt="_images/nastran_ctria3.svg" src="_images/nastran_ctria3.svg" /><dl class="field-list">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl>
-<dt><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.eid" title="pyfe3d.tria3r.Tria3R.eid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eid</span></code></a><span class="classifier">int</span></dt><dd><p>eid: ‘cINT’</p>
+<dt><strong>eid,</strong><span class="classifier">int</span></dt><dd><p>Element identification number.</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.area" title="pyfe3d.tria3r.Tria3R.area"><code class="xref py py-obj docutils literal notranslate"><span class="pre">area</span></code></a><span class="classifier">double</span></dt><dd><p>area: ‘double’</p>
+<dt><strong>area,</strong><span class="classifier">double</span></dt><dd><p>Element area.</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.alpha_shear_locking" title="pyfe3d.tria3r.Tria3R.alpha_shear_locking"><code class="xref py py-obj docutils literal notranslate"><span class="pre">alpha_shear_locking</span></code></a><span class="classifier">double</span></dt><dd><p>alpha_shear_locking: ‘double’</p>
+<dt><strong>alpha_shear_locking,</strong><span class="classifier">double</span></dt><dd><p>Factor used to prevent shear locking, adopted from teh BFG element,
+affecting stiffness terms E44,E45,E45:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">maxl</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">edge_12</span><span class="p">,</span> <span class="n">edge_23</span><span class="p">,</span> <span class="n">edge_31</span><span class="p">)</span>
+<span class="n">factor</span> <span class="o">=</span> <span class="n">alpha_shear_locking</span><span class="o">*</span><span class="n">maxl</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">thickness</span><span class="o">**</span><span class="mi">2</span>
+<span class="n">E44</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">factor</span><span class="p">)</span> <span class="o">*</span> <span class="n">E44</span>
+<span class="c1"># E45 = 1 / (1 + factor) * E45</span>
+<span class="n">E55</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">factor</span><span class="p">)</span> <span class="o">*</span> <span class="n">E55</span>
+</pre></div>
+</div>
+<p>The adopted default is <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span> <span class="pre">=</span> <span class="pre">0.7</span></code>, based on a linear
+buckling analysis of a simply supported plate, such that the result
+approaches the one of the <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a> element for an equivalent
+mesh (see the test case <code class="docutils literal notranslate"><span class="pre">test_tria3r_linear_buckling_plate.py</span></code>).</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.alphat" title="pyfe3d.tria3r.Tria3R.alphat"><code class="xref py py-obj docutils literal notranslate"><span class="pre">alphat</span></code></a><span class="classifier">double</span></dt><dd><p>alphat: ‘double’</p>
+<dt><strong>alphat,</strong><span class="classifier">double</span></dt><dd><p>Element drilling penalty factor for the plate drilling stiffness,
+defined according to Eq. 2.20 in the reference below. The default value
+of <code class="docutils literal notranslate"><span class="pre">alphat</span> <span class="pre">=</span> <span class="pre">1.</span></code> comes from the same reference:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell
+Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013)
+10–20. www.iosrjen.org (accessed April 20, 2020).
+</pre></div>
+</div>
+<p>For those familiar with NASTRAN, <code class="docutils literal notranslate"><span class="pre">alphat</span></code> can be calculated based on
+NASTRAN’s <code class="docutils literal notranslate"><span class="pre">K6ROT</span></code> parameters as <code class="docutils literal notranslate"><span class="pre">alphat</span> <span class="pre">=</span> <span class="pre">1.e-6*K6ROT</span></code>. The default
+value according to AUTODESK NASTRAN’s quick reference guide is <code class="docutils literal notranslate"><span class="pre">K6ROT</span>
+<span class="pre">=</span> <span class="pre">100.</span></code> for static analysis and <code class="docutils literal notranslate"><span class="pre">K6ROT=1.e4</span></code> for modal solutions.
+MSC NASTRAN’s quick reference guide states that <code class="docutils literal notranslate"><span class="pre">K6ROT</span> <span class="pre">&gt;</span> <span class="pre">100.</span></code> should
+not be used, but this is controversion, already being controversial to
+what AUTODESK NASTRAN’s manual says.</p>
 </dd>
 <dt><strong>r11, r12, r13, r21, r22, r23, r31, r32, r33</strong><span class="classifier">double</span></dt><dd><p>Rotation matrix to the global coordinate system.</p>
 </dd>
@@ -86,7 +112,7 @@ material direction is used instead of the element local coordinates.</p>
 <dt><strong>init_k_KC0, init_k_KG, init_k_M</strong><span class="classifier">int</span></dt><dd><p>Position in the arrays storing the sparse data for the structural
 matrices.</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.probe" title="pyfe3d.tria3r.Tria3R.probe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">probe</span></code></a><span class="classifier"><a class="reference internal" href="#pyfe3d.tria3r.Tria3RProbe" title="pyfe3d.tria3r.Tria3RProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3RProbe</span></code></a> object</span></dt><dd><p>probe: pyfe3d.tria3r.Tria3RProbe</p>
+<dt><strong>probe,</strong><span class="classifier"><a class="reference internal" href="#pyfe3d.tria3r.Tria3RProbe" title="pyfe3d.tria3r.Tria3RProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3RProbe</span></code></a> object</span></dt><dd><p>Pointer to the probe.</p>
 </dd>
 </dl>
 </dd>
@@ -428,11 +454,11 @@ the element <span class="math notranslate nohighlight">\(x\)</span> axis while c
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><a class="reference internal" href="#pyfe3d.tria3r.Tria3RData.KC0_SPARSE_SIZE" title="pyfe3d.tria3r.Tria3RData.KC0_SPARSE_SIZE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">KC0_SPARSE_SIZE</span></code></a><span class="classifier">int</span></dt><dd><p>KC0_SPARSE_SIZE: ‘cINT’</p>
+<dt><strong>KC0_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KC0_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">324</span></code></p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.tria3r.Tria3RData.KG_SPARSE_SIZE" title="pyfe3d.tria3r.Tria3RData.KG_SPARSE_SIZE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">KG_SPARSE_SIZE</span></code></a><span class="classifier">int</span></dt><dd><p>KG_SPARSE_SIZE: ‘cINT’</p>
+<dt><strong>KG_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KG_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">81</span></code></p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.tria3r.Tria3RData.M_SPARSE_SIZE" title="pyfe3d.tria3r.Tria3RData.M_SPARSE_SIZE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">M_SPARSE_SIZE</span></code></a><span class="classifier">int</span></dt><dd><p>M_SPARSE_SIZE: ‘cINT’</p>
+<dt><strong>M_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">M_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">270</span></code></p>
 </dd>
 </dl>
 </dd>
@@ -464,9 +490,16 @@ the element <span class="math notranslate nohighlight">\(x\)</span> axis while c
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><a class="reference internal" href="#pyfe3d.tria3r.Tria3RProbe.xe" title="pyfe3d.tria3r.Tria3RProbe.xe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">xe</span></code></a><span class="classifier">array-like</span></dt><dd><p>xe: ‘cDOUBLE[:]’</p>
+<dt><strong>xe,</strong><span class="classifier">array-like</span></dt><dd><p>Array of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF//2=9</span></code> containing the nodal coordinates
+in the element coordinate system, in the following order
+<span class="math notranslate nohighlight">\({x_e}_1, {y_e}_1, {z_e}_1, \)</span>, <span class="math notranslate nohighlight">\({x_e}_3,
+{y_e}_3, {z_e}_3\)</span>.</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.tria3r.Tria3RProbe.ue" title="pyfe3d.tria3r.Tria3RProbe.ue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ue</span></code></a><span class="classifier">array-like</span></dt><dd><p>ue: ‘cDOUBLE[:]’</p>
+<dt><strong>ue,</strong><span class="classifier">array-like</span></dt><dd><p>Array of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF=18</span></code> containing the element displacements
+in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
+{{r_y}_e}_1, {{r_z}_e}_1\)</span>, <span class="math notranslate nohighlight">\({u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
+{{r_y}_e}_2, {{r_z}_e}_2\)</span>, <span class="math notranslate nohighlight">\({u_e}_3, {v_e}_3, {w_e}_3, {{r_x}_e}_3,
+{{r_y}_e}_3, {{r_z}_e}_3\)</span>.</p>
 </dd>
 </dl>
 </dd>
@@ -536,7 +569,7 @@ the element <span class="math notranslate nohighlight">\(x\)</span> axis while c
         <li class="right" >
           <a href="quad4r_utils.html" title="Quad4R useful functions (pyfe3d.quad4r_utils)"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</a></li> 
       </ul>
     </div>

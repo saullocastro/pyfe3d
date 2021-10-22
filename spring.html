@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Spring - 3D spring element with constant stiffnesses (pyfe3d.spring) &#8212; pyfe3d 0.3.1 documentation</title>
+    <title>Spring - 3D spring element with constant stiffnesses (pyfe3d.spring) &#8212; pyfe3d 0.3.3 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
@@ -36,7 +36,7 @@
         <li class="right" >
           <a href="beamlr.html" title="BeamLR - Linear Timoshenko 3D beam element with reduced integration (pyfe3d.beamlr)"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Spring - 3D spring element with constant stiffnesses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.spring</span></code>)</a></li> 
       </ul>
     </div>  
@@ -60,7 +60,7 @@ aligned with the global coordinate system</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><a class="reference internal" href="#pyfe3d.spring.Spring.eid" title="pyfe3d.spring.Spring.eid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eid</span></code></a><span class="classifier">int</span></dt><dd><p>eid: ‘cINT’</p>
+<dt><strong>eid,</strong><span class="classifier">int</span></dt><dd><p>Element identification number.</p>
 </dd>
 <dt><strong>kxe, kye, kze: double</strong></dt><dd><p>Translational stiffnesses in the element coordinate system.</p>
 </dd>
@@ -301,11 +301,11 @@ the element coordinate system.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><a class="reference internal" href="#pyfe3d.spring.SpringData.KC0_SPARSE_SIZE" title="pyfe3d.spring.SpringData.KC0_SPARSE_SIZE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">KC0_SPARSE_SIZE</span></code></a><span class="classifier">int</span></dt><dd><p>KC0_SPARSE_SIZE: ‘cINT’</p>
+<dt><strong>KC0_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KC0_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">72</span></code></p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.spring.SpringData.KG_SPARSE_SIZE" title="pyfe3d.spring.SpringData.KG_SPARSE_SIZE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">KG_SPARSE_SIZE</span></code></a><span class="classifier">int</span></dt><dd><p>KG_SPARSE_SIZE: ‘cINT’</p>
+<dt><strong>KG_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KG_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">0</span></code></p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.spring.SpringData.M_SPARSE_SIZE" title="pyfe3d.spring.SpringData.M_SPARSE_SIZE"><code class="xref py py-obj docutils literal notranslate"><span class="pre">M_SPARSE_SIZE</span></code></a><span class="classifier">int</span></dt><dd><p>M_SPARSE_SIZE: ‘cINT’</p>
+<dt><strong>M_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">M_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">0</span></code></p>
 </dd>
 </dl>
 </dd>
@@ -337,9 +337,14 @@ the element coordinate system.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><a class="reference internal" href="#pyfe3d.spring.SpringProbe.xe" title="pyfe3d.spring.SpringProbe.xe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">xe</span></code></a><span class="classifier">array-like</span></dt><dd><p>xe: ‘cDOUBLE[:]’</p>
+<dt><strong>xe,</strong><span class="classifier">array-like</span></dt><dd><p>Array of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF//2=6</span></code> containing the nodal coordinates
+in the element coordinate system, in the following order <span class="math notranslate nohighlight">\({x_e}_1,
+{y_e}_1, {z_e}_1, {x_e}_2, {y_e}_2, {z_e}_2\)</span>.</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.spring.SpringProbe.ue" title="pyfe3d.spring.SpringProbe.ue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ue</span></code></a><span class="classifier">array-like</span></dt><dd><p>ue: ‘cDOUBLE[:]’</p>
+<dt><strong>ue,</strong><span class="classifier">array-like</span></dt><dd><p>Array of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF=12</span></code> containing the element displacements
+in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
+{{r_y}_e}_1, {{r_z}_e}_1, {u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
+{{r_y}_e}_2, {{r_z}_e}_2\)</span>.</p>
 </dd>
 </dl>
 </dd>
@@ -409,7 +414,7 @@ the element coordinate system.</p>
         <li class="right" >
           <a href="beamlr.html" title="BeamLR - Linear Timoshenko 3D beam element with reduced integration (pyfe3d.beamlr)"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Spring - 3D spring element with constant stiffnesses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.spring</span></code>)</a></li> 
       </ul>
     </div>

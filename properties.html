@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Beam property module (pyfe3d.beamprop) &#8212; pyfe3d 0.3.1 documentation</title>
+    <title>Beam property module (pyfe3d.beamprop) &#8212; pyfe3d 0.3.3 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
@@ -36,7 +36,7 @@
         <li class="right" >
           <a href="truss.html" title="Truss - Linear truss 3D element with analytical integration (pyfe3d.truss)"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li> 
       </ul>
     </div>  
@@ -54,35 +54,38 @@
 <dd><dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><a class="reference internal" href="#pyfe3d.beamprop.BeamProp.A" title="pyfe3d.beamprop.BeamProp.A"><code class="xref py py-obj docutils literal notranslate"><span class="pre">A</span></code></a><span class="classifier">float</span></dt><dd><p>A: ‘double’</p>
+<dt><strong>A,</strong><span class="classifier">float</span></dt><dd><p>Area of the cross section</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.beamprop.BeamProp.E" title="pyfe3d.beamprop.BeamProp.E"><code class="xref py py-obj docutils literal notranslate"><span class="pre">E</span></code></a><span class="classifier">float</span></dt><dd><p>E: ‘double’</p>
+<dt><strong>E,</strong><span class="classifier">float</span></dt><dd><p>Young modulus</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.beamprop.BeamProp.G" title="pyfe3d.beamprop.BeamProp.G"><code class="xref py py-obj docutils literal notranslate"><span class="pre">G</span></code></a><span class="classifier">float</span></dt><dd><p>G: ‘double’</p>
+<dt><strong>G,</strong><span class="classifier">float</span></dt><dd><p>Shear modulus</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.beamprop.BeamProp.scf" title="pyfe3d.beamprop.BeamProp.scf"><code class="xref py py-obj docutils literal notranslate"><span class="pre">scf</span></code></a><span class="classifier">float</span></dt><dd><p>scf: ‘double’</p>
+<dt><strong>scf,</strong><span class="classifier">float</span></dt><dd><p>Shear correction factor accounding for different shapes of the beam
+cross-section. For the truss element, it is applied only to the torsion
+stiffness that is assumed to be <span class="math notranslate nohighlight">\(I_{zz} + I_{yy}\)</span></p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.beamprop.BeamProp.Iyy" title="pyfe3d.beamprop.BeamProp.Iyy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Iyy</span></code></a><span class="classifier">float</span></dt><dd><p>Iyy: ‘double’</p>
+<dt><strong>Iyy,</strong><span class="classifier">float</span></dt><dd><p>Second moment of area about the y axis <span class="math notranslate nohighlight">\(\int_y \int_z z^2 dy dz\)</span></p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.beamprop.BeamProp.Izz" title="pyfe3d.beamprop.BeamProp.Izz"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Izz</span></code></a><span class="classifier">float</span></dt><dd><p>Izz: ‘double’</p>
+<dt><strong>Izz,</strong><span class="classifier">float</span></dt><dd><p>Second moment of area about the z axis <span class="math notranslate nohighlight">\(\int_y \int_z y^2 dy dz\)</span></p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.beamprop.BeamProp.J" title="pyfe3d.beamprop.BeamProp.J"><code class="xref py py-obj docutils literal notranslate"><span class="pre">J</span></code></a><span class="classifier">float</span></dt><dd><p>J: ‘double’</p>
+<dt><strong>J,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z y z dy dz\)</span></p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.beamprop.BeamProp.Ay" title="pyfe3d.beamprop.BeamProp.Ay"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Ay</span></code></a><span class="classifier">float</span></dt><dd><p>Ay: ‘double’</p>
+<dt><strong>Ay,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z y dy dz\)</span></p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.beamprop.BeamProp.Az" title="pyfe3d.beamprop.BeamProp.Az"><code class="xref py py-obj docutils literal notranslate"><span class="pre">Az</span></code></a><span class="classifier">float</span></dt><dd><p>Az: ‘double’</p>
+<dt><strong>Az,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z z dy dz\)</span></p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.beamprop.BeamProp.intrho" title="pyfe3d.beamprop.BeamProp.intrho"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intrho</span></code></a><span class="classifier">float</span></dt><dd><p>intrho: ‘double’</p>
+<dt><strong>intrho,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_{y_e} \int_{z_e} \rho(y, z) dy dz\)</span>, where <span class="math notranslate nohighlight">\(\rho\)</span> Is the
+density</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.beamprop.BeamProp.intrhoy" title="pyfe3d.beamprop.BeamProp.intrhoy"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intrhoy</span></code></a><span class="classifier">float</span></dt><dd><p>intrhoy: ‘double’</p>
+<dt><strong>intrhoy,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z y \rho(y, z) dy dz\)</span></p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.beamprop.BeamProp.intrhoz" title="pyfe3d.beamprop.BeamProp.intrhoz"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intrhoz</span></code></a><span class="classifier">float</span></dt><dd><p>intrhoz: ‘double’</p>
+<dt><strong>intrhoz,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z z \rho(y, z) dy dz\)</span></p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.beamprop.BeamProp.intrhoy2" title="pyfe3d.beamprop.BeamProp.intrhoy2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intrhoy2</span></code></a><span class="classifier">float</span></dt><dd><p>intrhoy2: ‘double’</p>
+<dt><strong>intrhoy2,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z y^2 \rho(y, z) dy dz\)</span></p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.beamprop.BeamProp.intrhoz2" title="pyfe3d.beamprop.BeamProp.intrhoz2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intrhoz2</span></code></a><span class="classifier">float</span></dt><dd><p>intrhoz2: ‘double’</p>
+<dt><strong>intrhoz2,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z z^2 \rho(y, z) dy dz\)</span></p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.beamprop.BeamProp.intrhoyz" title="pyfe3d.beamprop.BeamProp.intrhoyz"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intrhoyz</span></code></a><span class="classifier">float</span></dt><dd><p>intrhoyz: ‘double’</p>
+<dt><strong>intrhoyz,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z y z \rho(y, z) dy dz\)</span></p>
 </dd>
 </dl>
 </dd>
@@ -189,13 +192,13 @@
 <dd><dl class="field-list">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl>
-<dt><a class="reference internal" href="#pyfe3d.shellprop.Lamina.plyid" title="pyfe3d.shellprop.Lamina.plyid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plyid</span></code></a><span class="classifier">int</span></dt><dd><p>plyid: ‘cINT’</p>
+<dt><strong>plyid,</strong><span class="classifier">int</span></dt><dd><p>Identificaiton of the composite lamina</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.shellprop.Lamina.matlamina" title="pyfe3d.shellprop.Lamina.matlamina"><code class="xref py py-obj docutils literal notranslate"><span class="pre">matlamina</span></code></a><span class="classifier"><a class="reference internal" href="#pyfe3d.shellprop.MatLamina" title="pyfe3d.shellprop.MatLamina"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatLamina</span></code></a> object</span></dt><dd><p>matlamina: pyfe3d.shellprop.MatLamina</p>
+<dt><strong>matlamina,</strong><span class="classifier"><a class="reference internal" href="#pyfe3d.shellprop.MatLamina" title="pyfe3d.shellprop.MatLamina"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatLamina</span></code></a> object</span></dt><dd><p>A <a class="reference internal" href="#pyfe3d.shellprop.MatLamina" title="pyfe3d.shellprop.MatLamina"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatLamina</span></code></a> object</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.shellprop.Lamina.h" title="pyfe3d.shellprop.Lamina.h"><code class="xref py py-obj docutils literal notranslate"><span class="pre">h</span></code></a><span class="classifier">float</span></dt><dd><p>h: ‘double’</p>
+<dt><strong>h,</strong><span class="classifier">float</span></dt><dd><p>Ply thickness</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.shellprop.Lamina.thetadeg" title="pyfe3d.shellprop.Lamina.thetadeg"><code class="xref py py-obj docutils literal notranslate"><span class="pre">thetadeg</span></code></a><span class="classifier">float</span></dt><dd><p>thetadeg: ‘double’</p>
+<dt><strong>thetadeg,</strong><span class="classifier">float</span></dt><dd><p>Ply angle in degrees</p>
 </dd>
 </dl>
 </dd>
@@ -503,71 +506,71 @@ on equation: <span class="math notranslate nohighlight">\(E = 2 \times (1+\nu) \
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><a class="reference internal" href="#pyfe3d.shellprop.MatLamina.e1" title="pyfe3d.shellprop.MatLamina.e1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">e1</span></code></a><span class="classifier">float</span></dt><dd><p>e1: ‘double’</p>
+<dt><strong>e1,</strong><span class="classifier">float</span></dt><dd><p>Young Modulus in direction 1</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.shellprop.MatLamina.e2" title="pyfe3d.shellprop.MatLamina.e2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">e2</span></code></a><span class="classifier">float</span></dt><dd><p>e2: ‘double’</p>
+<dt><strong>e2,</strong><span class="classifier">float</span></dt><dd><p>Young Modulus in direction 2</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.shellprop.MatLamina.g12" title="pyfe3d.shellprop.MatLamina.g12"><code class="xref py py-obj docutils literal notranslate"><span class="pre">g12</span></code></a><span class="classifier">float</span></dt><dd><p>g12: ‘double’</p>
+<dt><strong>g12,</strong><span class="classifier">float</span></dt><dd><p>in-plane shear modulus</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.shellprop.MatLamina.g13" title="pyfe3d.shellprop.MatLamina.g13"><code class="xref py py-obj docutils literal notranslate"><span class="pre">g13</span></code></a><span class="classifier">float</span></dt><dd><p>g13: ‘double’</p>
+<dt><strong>g13,</strong><span class="classifier">float</span></dt><dd><p>transverse shear modulus for plane 1-Z</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.shellprop.MatLamina.g23" title="pyfe3d.shellprop.MatLamina.g23"><code class="xref py py-obj docutils literal notranslate"><span class="pre">g23</span></code></a><span class="classifier">float</span></dt><dd><p>g23: ‘double’</p>
+<dt><strong>g23,</strong><span class="classifier">float</span></dt><dd><p>transverse shear modulus for plane 2-Z</p>
 </dd>
-<dt><strong>nu12 :</strong></dt><dd><p>Poisson’s ratio 12</p>
+<dt><strong>nu12, :</strong></dt><dd><p>Poisson’s ratio 12</p>
 </dd>
-<dt><strong>nu13 :</strong></dt><dd><p>Poisson’s ratio 13</p>
+<dt><strong>nu13, :</strong></dt><dd><p>Poisson’s ratio 13</p>
 </dd>
-<dt><strong>nu23 :</strong></dt><dd><p>Poisson’s ratio 23</p>
+<dt><strong>nu23, :</strong></dt><dd><p>Poisson’s ratio 23</p>
 </dd>
-<dt><strong>nu21 :</strong></dt><dd><p>Poisson’s ratio 21: use formula nu12/e1 = nu21/e2</p>
+<dt><strong>nu21, :</strong></dt><dd><p>Poisson’s ratio 21: use formula nu12/e1 = nu21/e2</p>
 </dd>
-<dt><strong>nu31 :</strong></dt><dd><p>Poisson’s ratio 31: use formula nu31/e3 = nu13/e1</p>
+<dt><strong>nu31, :</strong></dt><dd><p>Poisson’s ratio 31: use formula nu31/e3 = nu13/e1</p>
 </dd>
-<dt><strong>nu32 :</strong></dt><dd><p>Poisson’s ratio 32: use formula nu23/e2 = nu32/e3</p>
+<dt><strong>nu32, :</strong></dt><dd><p>Poisson’s ratio 32: use formula nu23/e2 = nu32/e3</p>
 </dd>
-<dt><strong>rho :</strong></dt><dd><p>especific mass (mass / volume)</p>
+<dt><strong>rho, :</strong></dt><dd><p>especific mass (mass / volume)</p>
 </dd>
-<dt><strong>a1 :</strong></dt><dd><p>thermal expansion coeffiecient in direction 1</p>
+<dt><strong>a1, :</strong></dt><dd><p>thermal expansion coeffiecient in direction 1</p>
 </dd>
-<dt><strong>a2 :</strong></dt><dd><p>thermal expansion coeffiecient in direction 2</p>
+<dt><strong>a2, :</strong></dt><dd><p>thermal expansion coeffiecient in direction 2</p>
 </dd>
-<dt><strong>a3 :</strong></dt><dd><p>thermal expansion coeffiecient in direction 3</p>
+<dt><strong>a3, :</strong></dt><dd><p>thermal expansion coeffiecient in direction 3</p>
 </dd>
-<dt><strong>tref :</strong></dt><dd><p>reference temperature</p>
+<dt><strong>tref, :</strong></dt><dd><p>reference temperature</p>
 </dd>
 <dt><strong>st1,st2 :</strong></dt><dd><p>allowable tensile stresses for directions 1 and 2</p>
 </dd>
 <dt><strong>sc1,sc2 :</strong></dt><dd><p>allowable compressive stresses for directions 1 and 2</p>
 </dd>
-<dt><strong>ss12 :</strong></dt><dd><p>allowable in-plane stress for shear</p>
+<dt><strong>ss12, :</strong></dt><dd><p>allowable in-plane stress for shear</p>
 </dd>
-<dt><strong>q11 :</strong></dt><dd><p>lamina constitutive constant 11</p>
+<dt><strong>q11, :</strong></dt><dd><p>lamina constitutive constant 11</p>
 </dd>
-<dt><strong>q12 :</strong></dt><dd><p>lamina constitutive constant 12</p>
+<dt><strong>q12, :</strong></dt><dd><p>lamina constitutive constant 12</p>
 </dd>
-<dt><strong>q13 :</strong></dt><dd><p>lamina constitutive constant 13</p>
+<dt><strong>q13, :</strong></dt><dd><p>lamina constitutive constant 13</p>
 </dd>
-<dt><strong>q21 :</strong></dt><dd><p>lamina constitutive constant 21</p>
+<dt><strong>q21, :</strong></dt><dd><p>lamina constitutive constant 21</p>
 </dd>
-<dt><strong>q22 :</strong></dt><dd><p>lamina constitutive constant 22</p>
+<dt><strong>q22, :</strong></dt><dd><p>lamina constitutive constant 22</p>
 </dd>
-<dt><strong>q23 :</strong></dt><dd><p>lamina constitutive constant 23</p>
+<dt><strong>q23, :</strong></dt><dd><p>lamina constitutive constant 23</p>
 </dd>
-<dt><strong>q31 :</strong></dt><dd><p>lamina constitutive constant 31</p>
+<dt><strong>q31, :</strong></dt><dd><p>lamina constitutive constant 31</p>
 </dd>
-<dt><strong>q32 :</strong></dt><dd><p>lamina constitutive constant 32</p>
+<dt><strong>q32, :</strong></dt><dd><p>lamina constitutive constant 32</p>
 </dd>
-<dt><strong>q33 :</strong></dt><dd><p>lamina constitutive constant 33</p>
+<dt><strong>q33, :</strong></dt><dd><p>lamina constitutive constant 33</p>
 </dd>
-<dt><strong>q44 :</strong></dt><dd><p>lamina constitutive constant 44</p>
+<dt><strong>q44, :</strong></dt><dd><p>lamina constitutive constant 44</p>
 </dd>
-<dt><strong>q55 :</strong></dt><dd><p>lamina constitutive constant 55</p>
+<dt><strong>q55, :</strong></dt><dd><p>lamina constitutive constant 55</p>
 </dd>
-<dt><strong>q66 :</strong></dt><dd><p>lamina constitutive constant 66</p>
+<dt><strong>q66, :</strong></dt><dd><p>lamina constitutive constant 66</p>
 </dd>
-<dt><strong>ci :</strong></dt><dd><p>lamina stiffness constants</p>
+<dt><strong>ci, :</strong></dt><dd><p>lamina stiffness constants</p>
 </dd>
-<dt><strong>ui :</strong></dt><dd><p>lamina material invariants</p>
+<dt><strong>ui, :</strong></dt><dd><p>lamina material invariants</p>
 </dd>
 </dl>
 </dd>
@@ -945,25 +948,28 @@ attributes.</p>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
-<dt><a class="reference internal" href="#pyfe3d.shellprop.ShellProp.plies" title="pyfe3d.shellprop.ShellProp.plies"><code class="xref py py-obj docutils literal notranslate"><span class="pre">plies</span></code></a><span class="classifier">list</span></dt><dd><p>plies: list</p>
+<dt><strong>plies,</strong><span class="classifier">list</span></dt><dd><p>List of plies</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.shellprop.ShellProp.h" title="pyfe3d.shellprop.ShellProp.h"><code class="xref py py-obj docutils literal notranslate"><span class="pre">h</span></code></a><span class="classifier">float</span></dt><dd><p>h: ‘double’</p>
+<dt><strong>h,</strong><span class="classifier">float</span></dt><dd><p>Total thickness of the laminate</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.shellprop.ShellProp.offset" title="pyfe3d.shellprop.ShellProp.offset"><code class="xref py py-obj docutils literal notranslate"><span class="pre">offset</span></code></a><span class="classifier">float</span></dt><dd><p>offset: ‘double’</p>
+<dt><strong>offset,</strong><span class="classifier">float</span></dt><dd><p>Offset at the normal direction</p>
 </dd>
 <dt><strong>e1, e2</strong><span class="classifier">float</span></dt><dd><p>Equivalent laminate moduli in directions 1 and 2</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.shellprop.ShellProp.g12" title="pyfe3d.shellprop.ShellProp.g12"><code class="xref py py-obj docutils literal notranslate"><span class="pre">g12</span></code></a><span class="classifier">float</span></dt><dd><p>g12: ‘double’</p>
+<dt><strong>g12,</strong><span class="classifier">float</span></dt><dd><p>Equivalent laminate shear modulus in the 12 direction</p>
 </dd>
 <dt><strong>nu12, nu21</strong><span class="classifier">float</span></dt><dd><p>Equivalent laminate Poisson ratios in the 12 and 21 directions</p>
 </dd>
 <dt><strong>scf_k13, scf_k23</strong><span class="classifier">float</span></dt><dd><p>Shear correction factor in the 13 and 23 directions</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.shellprop.ShellProp.intrho" title="pyfe3d.shellprop.ShellProp.intrho"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intrho</span></code></a><span class="classifier">float</span></dt><dd><p>intrho: ‘double’</p>
+<dt><strong>intrho,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_{-h/2+offset}^{+h/2+offset} \rho(z) dz\)</span>, used in
+equivalent single layer finite element mass matrices</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.shellprop.ShellProp.intrhoz" title="pyfe3d.shellprop.ShellProp.intrhoz"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intrhoz</span></code></a><span class="classifier">float</span></dt><dd><p>intrhoz: ‘double’</p>
+<dt><strong>intrhoz,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_{-h/2+offset}^{+h/2+offset} \rho(z)z dz\)</span>, used in
+equivalent single layer finite element mass matrices</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.shellprop.ShellProp.intrhoz2" title="pyfe3d.shellprop.ShellProp.intrhoz2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">intrhoz2</span></code></a><span class="classifier">float</span></dt><dd><p>intrhoz2: ‘double’</p>
+<dt><strong>intrhoz2,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_{-h/2+offset}^{+h/2+offset} \rho(z)z^2 dz\)</span>, used in
+equivalent single layer finite element mass matrices</p>
 </dd>
 </dl>
 </dd>
@@ -1564,7 +1570,7 @@ supply:</p>
         <li class="right" >
           <a href="truss.html" title="Truss - Linear truss 3D element with analytical integration (pyfe3d.truss)"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.1 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.3 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li> 
       </ul>
     </div>
