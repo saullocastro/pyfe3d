@@ -19,7 +19,7 @@ num_nodes = 3
 
 var('h', positive=True, real=True)
 var('x, y, x1, y1, x2, y2, x3, y3', real=True, positive=True)
-var('xi, eta, A, alphat')
+var('A, alphat')
 var('A11, A12, A16, A22, A26, A66')
 var('B11, B12, B16, B22, B26, B66')
 var('D11, D12, D16, D22, D26, D66')
@@ -35,7 +35,7 @@ r2 = x2*R.i + y2*R.j
 r3 = x3*R.i + y3*R.j
 r = x*R.i + y*R.j
 
-Aexpr = cross(r1 - r3, r2 - r3).components[R.k]/2
+Aexpr = cross(r2 - r1, r3 - r1).components[R.k]/2
 print('A =', Aexpr)
 
 AN1 = cross(r2 - r, r3 - r).components[R.k]/2
@@ -60,7 +60,8 @@ N3y = N3.diff(y)
 Jinv = Matrix([[N1x, N1y],
                [N2x, N2y]])
 detJ = Jinv.inv().det().simplify()
-detJ = 2*A # it can be easily shown
+print('detJ =', detJ)
+detJ = sympy.var('detJ')
 
 print('N1x =', N1x)
 print('N2x =', N2x)
@@ -139,8 +140,7 @@ var('wij')
 
 # Constitutive linear stiffness matrix
 #NOTE reduced integration of stiffness to remove shear locking
-KC0e = wij*detJ*(BL.T*ABDE*BL
-        + alphat*A66/h*BLdrilling.T*BLdrilling)
+KC0e = wij*detJ*(BL.T*ABDE*BL + alphat*A66/h*BLdrilling.T*BLdrilling)
 
 # KC0 represents the global linear stiffness matrix
 # see mapy https://github.com/saullocastro/mapy/blob/master/mapy/model/coords.py#L284
