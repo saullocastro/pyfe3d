@@ -92,7 +92,7 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
             init_k_KC0 += data.KC0_SPARSE_SIZE
             init_k_M += data.M_SPARSE_SIZE
 
-            #first tria
+            #second tria
             normal = np.cross(r3 - r1, r4 - r1)[2]
             assert normal > 0 # guaranteeing that all elements have CCW positive normal
             tria = Tria3R(probe)
