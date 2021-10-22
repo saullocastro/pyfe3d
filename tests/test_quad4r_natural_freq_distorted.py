@@ -147,7 +147,7 @@ def test_nat_freq_plate(plot=False, mode=0):
     wmn = (m**2/a**2 + n**2/b**2)*np.sqrt(D*np.pi**4/(2*rho*h))/2
 
     print('Theoretical omega123', wmn)
-    wmn_ref = 2500
+    wmn_ref = wmn
     print('Numerical omega123', omegan[0:10])
 
     if plot:
