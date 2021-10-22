@@ -29,7 +29,7 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
     nu = 0.33
 
     rho = 7.83e3 # kg/m3
-    h = 0.002 # m
+    h = 0.003 # m
 
     xtmp = np.linspace(0, a, nx)
     ytmp = np.linspace(0, b, ny)
@@ -159,7 +159,7 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
         matplotlib.use('TkAgg')
         import matplotlib.pyplot as plt
         plt.gca().set_aspect('equal')
-        uplot = u[2::DOF].reshape(nx, ny).T
+        uplot = u[0::DOF].reshape(nx, ny).T
         levels = np.linspace(uplot.min(), uplot.max(), 300)
         plt.contourf(xmesh, ymesh, uplot, levels=levels)
         plt.colorbar()
@@ -202,7 +202,6 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
     sigma_cr = -kcmin*np.pi**2*E/(12*(1-nu**2))*h**2/b**2
     P_cr_theory = sigma_cr*h*b
     print('Theoretical P_cr_theory', P_cr_theory)
-    assert isclose(P_cr_theory, P_cr_calc, rtol=0.05)
 
     if plot:
         import matplotlib
@@ -211,6 +210,8 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
         plt.clf()
         plt.contourf(xmesh, ymesh, u[2::DOF].reshape(nx, ny).T)
         plt.show()
+
+    assert isclose(P_cr_theory, P_cr_calc, rtol=0.05)
 
 
 if __name__ == '__main__':

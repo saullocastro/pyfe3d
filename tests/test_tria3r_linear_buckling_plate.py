@@ -29,7 +29,7 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
     nu = 0.33
 
     rho = 7.83e3 # kg/m3
-    h = 0.002 # m
+    h = 0.003 # m
 
     xtmp = np.linspace(0, a, nx)
     ytmp = np.linspace(0, b, ny)
@@ -87,6 +87,7 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
         tria.c1 = DOF*nid_pos[n1]
         tria.c2 = DOF*nid_pos[n2]
         tria.c3 = DOF*nid_pos[n3]
+        tria.alpha_shear_locking = 0.7
         tria.init_k_KC0 = init_k_KC0
         tria.init_k_KG = init_k_KG
         tria.update_rotation_matrix(ncoords_flatten)
@@ -106,6 +107,7 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
         tria.c1 = DOF*nid_pos[n1]
         tria.c2 = DOF*nid_pos[n3]
         tria.c3 = DOF*nid_pos[n4]
+        tria.alpha_shear_locking = 0.7
         tria.init_k_KC0 = init_k_KC0
         tria.init_k_KG = init_k_KG
         tria.update_rotation_matrix(ncoords_flatten)
@@ -235,4 +237,4 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
 
 
 if __name__ == '__main__':
-    test_linear_buckling_plate(plot=True, mode=0, refinement=5)
+    test_linear_buckling_plate(plot=True, mode=0, refinement=1)
