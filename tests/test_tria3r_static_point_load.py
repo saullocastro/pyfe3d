@@ -46,6 +46,7 @@ def test_static_plate_quad_point_load(plot=False, refinement=1):
     n4s = nids_mesh[:-1, 1:].flatten()
 
     num_elements = len(n1s)*2
+    print('num_elements', num_elements)
 
     KC0r = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
     KC0c = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
@@ -145,7 +146,7 @@ def test_static_plate_quad_point_load(plot=False, refinement=1):
     # obtained with bfsplate2d element, nx=ny=29
     wmax_ref = 6.594931610258557e-05
     # obtained with Tria3R nx=7, ny=11
-    wmax_ref = 5.8143934272350526e-05
+    wmax_ref = 5.219888791560321e-05
     print('w.max()', w.max())
     if plot:
         import matplotlib
@@ -161,4 +162,4 @@ def test_static_plate_quad_point_load(plot=False, refinement=1):
 
 
 if __name__ == '__main__':
-    test_static_plate_quad_point_load(plot=True, refinement=10)
+    test_static_plate_quad_point_load(plot=True, refinement=1)
