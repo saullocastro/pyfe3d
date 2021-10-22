@@ -33,13 +33,13 @@ cdef class Quad4RData:
 
     Attributes
     ----------
-    KC0_SPARSE_SIZE : int
+    KC0_SPARSE_SIZE, : int
         ``KC0_SPARSE_SIZE = 576``
 
-    KG_SPARSE_SIZE : int
+    KG_SPARSE_SIZE, : int
         ``KG_SPARSE_SIZE = 144``
 
-    M_SPARSE_SIZE : int
+    M_SPARSE_SIZE, : int
         ``M_SPARSE_SIZE = 480``
 
     """
@@ -57,12 +57,12 @@ cdef class Quad4RProbe:
 
     Attributes
     ----------
-    xe : array-like
+    xe, : array-like
         Array of size ``NUM_NODES*DOF//2=12`` containing the nodal coordinates
         in the element coordinate system, in the following order `{x_e}_1,
         {y_e}_1, {z_e}_1, `{x_e}_2, {y_e}_2, {z_e}_2`, `{x_e}_3, {y_e}_3,
         {z_e}_3`, `{x_e}_4, {y_e}_4, {z_e}_4`.
-    ue : array-like
+    ue, : array-like
         Array of size ``NUM_NODES*DOF=24`` containing the element displacements
         in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
         {{r_y}_e}_1, {{r_z}_e}_1`, `{u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
@@ -98,14 +98,14 @@ cdef class Quad4R:
 
     Attributes
     ----------
-    eid : int
+    eid, : int
         Element identification number.
-    area : double
+    area, : double
         Element area.
-    alphat : double
+    alphat, : double
         Element drilling penalty factor for the plate drilling stiffness,
         defined according to Eq. 2.20 in the reference below. The default value
-        of ``alphat = 1.`` comes from the same reference:
+        of ``alphat = 1.`` comes from the same reference::
 
             Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell
             Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013)
@@ -118,7 +118,6 @@ cdef class Quad4R:
         MSC NASTRAN's quick reference guide states that ``K6ROT > 100.`` should
         not be used, but this is controversion, already being controversial to
         what AUTODESK NASTRAN's manual says.
-
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix to the global coordinate system.
     m11, m12, m21, m22 : double
@@ -131,7 +130,7 @@ cdef class Quad4R:
     init_k_KC0, init_k_KG, init_k_M : int
         Position in the arrays storing the sparse data for the structural
         matrices.
-    probe : :class:`.Quad4RProbe` object
+    probe, : :class:`.Quad4RProbe` object
         Pointer to the probe.
 
     """

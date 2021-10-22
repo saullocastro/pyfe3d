@@ -30,13 +30,13 @@ cdef class BeamLRData:
 
     Attributes
     ----------
-    KC0_SPARSE_SIZE : int
+    KC0_SPARSE_SIZE, : int
         ``KC0_SPARSE_SIZE = 144``
 
-    KG_SPARSE_SIZE : int
+    KG_SPARSE_SIZE, : int
         ``KG_SPARSE_SIZE = 36``
 
-    M_SPARSE_SIZE : int
+    M_SPARSE_SIZE, : int
         ``M_SPARSE_SIZE = 144``
 
     """
@@ -54,11 +54,11 @@ cdef class BeamLRProbe:
 
     Attributes
     ----------
-    xe : array-like
+    xe, : array-like
         Array of size ``NUM_NODES*DOF//2=6`` containing the nodal coordinates
         in the element coordinate system, in the following order `{x_e}_1,
         {y_e}_1, {z_e}_1, {x_e}_2, {y_e}_2, {z_e}_2`.
-    ue : array-like
+    ue, : array-like
         Array of size ``NUM_NODES*DOF=12`` containing the element displacements
         in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
         {{r_y}_e}_1, {{r_z}_e}_1, {u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
@@ -92,9 +92,9 @@ cdef class BeamLR:
 
     Attributes
     ----------
-    eid : int
+    eid, : int
         Element identification number.
-    length : double
+    length, : double
         Element length.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix to the global coordinate system.

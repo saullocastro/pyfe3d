@@ -47,71 +47,71 @@ cdef class MatLamina:
     Attributes
     ----------
 
-    e1 : float
+    e1, : float
         Young Modulus in direction 1
-    e2 : float
+    e2, : float
         Young Modulus in direction 2
-    g12 : float
+    g12, : float
         in-plane shear modulus
-    g13 : float
+    g13, : float
         transverse shear modulus for plane 1-Z
-    g23 : float
+    g23, : float
         transverse shear modulus for plane 2-Z
-    nu12 :
+    nu12, :
         Poisson's ratio 12
-    nu13 :
+    nu13, :
         Poisson's ratio 13
-    nu23 :
+    nu23, :
         Poisson's ratio 23
-    nu21 :
+    nu21, :
         Poisson's ratio 21: use formula nu12/e1 = nu21/e2
-    nu31 :
+    nu31, :
         Poisson's ratio 31: use formula nu31/e3 = nu13/e1
-    nu32 :
+    nu32, :
         Poisson's ratio 32: use formula nu23/e2 = nu32/e3
-    rho :
+    rho, :
         especific mass (mass / volume)
-    a1 :
+    a1, :
         thermal expansion coeffiecient in direction 1
-    a2 :
+    a2, :
         thermal expansion coeffiecient in direction 2
-    a3 :
+    a3, :
         thermal expansion coeffiecient in direction 3
-    tref :
+    tref, :
         reference temperature
     st1,st2 :
         allowable tensile stresses for directions 1 and 2
     sc1,sc2 :
         allowable compressive stresses for directions 1 and 2
-    ss12 :
+    ss12, :
         allowable in-plane stress for shear
-    q11 :
+    q11, :
         lamina constitutive constant 11
-    q12 :
+    q12, :
         lamina constitutive constant 12
-    q13 :
+    q13, :
         lamina constitutive constant 13
-    q21 :
+    q21, :
         lamina constitutive constant 21
-    q22 :
+    q22, :
         lamina constitutive constant 22
-    q23 :
+    q23, :
         lamina constitutive constant 23
-    q31 :
+    q31, :
         lamina constitutive constant 31
-    q32 :
+    q32, :
         lamina constitutive constant 32
-    q33 :
+    q33, :
         lamina constitutive constant 33
-    q44 :
+    q44, :
         lamina constitutive constant 44
-    q55 :
+    q55, :
         lamina constitutive constant 55
-    q66 :
+    q66, :
         lamina constitutive constant 66
-    ci :
+    ci, :
         lamina stiffness constants
-    ui :
+    ui, :
         lamina material invariants
 
     Notes
@@ -262,13 +262,13 @@ cdef class Lamina:
     Attributes
     ----------
 
-    plyid : int
+    plyid, : int
         Identificaiton of the composite lamina
-    matlamina : :class:`.MatLamina` object
+    matlamina, : :class:`.MatLamina` object
         A :class:`.MatLamina` object
-    h : float
+    h, : float
         Ply thickness
-    thetadeg : float
+    thetadeg, : float
         Ply angle in degrees
 
     """
@@ -388,27 +388,27 @@ cdef class ShellProp:
     Attributes
     ----------
 
-    plies : list
+    plies, : list
         List of plies
-    h : float
+    h, : float
         Total thickness of the laminate
-    offset : float
+    offset, : float
         Offset at the normal direction
     e1, e2 : float
         Equivalent laminate moduli in directions 1 and 2
-    g12 : float
+    g12, : float
         Equivalent laminate shear modulus in the 12 direction
     nu12, nu21 : float
         Equivalent laminate Poisson ratios in the 12 and 21 directions
     scf_k13, scf_k23 : float
         Shear correction factor in the 13 and 23 directions
-    intrho : float
+    intrho, : float
         Integral `\int_{-h/2+offset}^{+h/2+offset} \rho(z) dz`, used in
         equivalent single layer finite element mass matrices
-    intrhoz : float
+    intrhoz, : float
         Integral `\int_{-h/2+offset}^{+h/2+offset} \rho(z)z dz`, used in
         equivalent single layer finite element mass matrices
-    intrhoz2 : float
+    intrhoz2, : float
         Integral `\int_{-h/2+offset}^{+h/2+offset} \rho(z)z^2 dz`, used in
         equivalent single layer finite element mass matrices
 
