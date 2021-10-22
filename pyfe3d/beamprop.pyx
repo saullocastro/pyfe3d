@@ -16,38 +16,38 @@ cdef class BeamProp:
     r"""
     Attributes
     ----------
-    A : float
+    A, : float
         Area of the cross section
-    E : float
+    E, : float
         Young modulus
-    G : float
+    G, : float
         Shear modulus
-    scf : float
+    scf, : float
         Shear correction factor accounding for different shapes of the beam
         cross-section. For the truss element, it is applied only to the torsion
         stiffness that is assumed to be `I_{zz} + I_{yy}`
-    Iyy : float
+    Iyy, : float
         Second moment of area about the y axis `\int_y \int_z z^2 dy dz`
-    Izz : float
+    Izz, : float
         Second moment of area about the z axis `\int_y \int_z y^2 dy dz`
-    J : float
+    J, : float
         Integral `\int_y \int_z y z dy dz`
-    Ay : float
+    Ay, : float
         Integral `\int_y \int_z y dy dz`
-    Az : float
+    Az, : float
         Integral `\int_y \int_z z dy dz`
-    intrho : float
+    intrho, : float
         Integral `\int_{y_e} \int_{z_e} \rho(y, z) dy dz`, where `\rho` Is the
         density
-    intrhoy : float
+    intrhoy, : float
         Integral `\int_y \int_z y \rho(y, z) dy dz`
-    intrhoz : float
+    intrhoz, : float
         Integral `\int_y \int_z z \rho(y, z) dy dz`
-    intrhoy2 : float
+    intrhoy2, : float
         Integral `\int_y \int_z y^2 \rho(y, z) dy dz`
-    intrhoz2 : float
+    intrhoz2, : float
         Integral `\int_y \int_z z^2 \rho(y, z) dy dz`
-    intrhoyz : float
+    intrhoyz, : float
         Integral `\int_y \int_z y z \rho(y, z) dy dz`
 
     """

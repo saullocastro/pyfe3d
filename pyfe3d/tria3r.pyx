@@ -33,13 +33,13 @@ cdef class Tria3RData:
 
     Attributes
     ----------
-    KC0_SPARSE_SIZE : int
+    KC0_SPARSE_SIZE, : int
         ``KC0_SPARSE_SIZE = 324``
 
-    KG_SPARSE_SIZE : int
+    KG_SPARSE_SIZE, : int
         ``KG_SPARSE_SIZE = 81``
 
-    M_SPARSE_SIZE : int
+    M_SPARSE_SIZE, : int
         ``M_SPARSE_SIZE = 270``
 
     """
@@ -57,12 +57,12 @@ cdef class Tria3RProbe:
 
     Attributes
     ----------
-    xe : array-like
+    xe, : array-like
         Array of size ``NUM_NODES*DOF//2=9`` containing the nodal coordinates
         in the element coordinate system, in the following order
         `{x_e}_1, {y_e}_1, {z_e}_1, `{x_e}_2, {y_e}_2, {z_e}_2`, `{x_e}_3,
         {y_e}_3, {z_e}_3`.
-    ue : array-like
+    ue, : array-like
         Array of size ``NUM_NODES*DOF=18`` containing the element displacements
         in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
         {{r_y}_e}_1, {{r_z}_e}_1`, `{u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
@@ -91,17 +91,17 @@ cdef class Tria3R:
     in Nastran's quick reference guide for the CTRIA3 element, as illustrated
     below.
 
-    .. image:: ../figures/nastran_cquad3.svg
+    .. image:: ../figures/nastran_ctria3.svg
 
     Attributes
     ----------
-    eid : int
+    eid, : int
         Element identification number.
-    area : double
+    area, : double
         Element area.
-    alpha_shear_locking : double
+    alpha_shear_locking, : double
         Factor used to prevent shear locking, adopted from teh BFG element,
-        affecting stiffness terms E44,E45,E45:
+        affecting stiffness terms E44,E45,E45::
 
             maxl = max(edge_12, edge_23, edge_31)
             factor = alpha_shear_locking*maxl**2/thickness**2
@@ -113,12 +113,10 @@ cdef class Tria3R:
         buckling analysis of a simply supported plate, such that the result
         approaches the one of the :class:`.Quad4R` element for an equivalent
         mesh (see the test case ``test_tria3r_linear_buckling_plate.py``).
-
-
-    alphat : double
+    alphat, : double
         Element drilling penalty factor for the plate drilling stiffness,
         defined according to Eq. 2.20 in the reference below. The default value
-        of ``alphat = 1.`` comes from the same reference:
+        of ``alphat = 1.`` comes from the same reference::
 
             Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell
             Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013)
@@ -131,7 +129,6 @@ cdef class Tria3R:
         MSC NASTRAN's quick reference guide states that ``K6ROT > 100.`` should
         not be used, but this is controversion, already being controversial to
         what AUTODESK NASTRAN's manual says.
-
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix to the global coordinate system.
     m11, m12, m21, m22 : double
@@ -144,7 +141,7 @@ cdef class Tria3R:
     init_k_KC0, init_k_KG, init_k_M : int
         Position in the arrays storing the sparse data for the structural
         matrices.
-    probe : :class:`.Tria3RProbe` object
+    probe, : :class:`.Tria3RProbe` object
         Pointer to the probe.
 
     """
