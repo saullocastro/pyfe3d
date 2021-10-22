@@ -510,7 +510,7 @@ cdef class Tria3R:
 
         with nogil:
             A = self.area
-            detJ = 2*A/2
+            detJ = 2*A
 
             A11mat = prop.A11
             A12mat = prop.A12
@@ -1618,7 +1618,7 @@ cdef class Tria3R:
             N2y = (x1 - x3)/(2*A)
             N3y = (-x1 + x2)/(2*A)
 
-            wij = 1.
+            wij = 0.5
             N1 = N2 = N3 = 0.333333333333333333333333333333333333333333333
 
             k = self.init_k_KC0
@@ -2322,7 +2322,7 @@ cdef class Tria3R:
 
         with nogil:
             A = self.area
-            detJ = 2*A/2
+            detJ = 2*A
 
             A11mat = prop.A11
             A12mat = prop.A12
@@ -2651,7 +2651,7 @@ cdef class Tria3R:
                 KGr[k] = 2+c3
                 KGc[k] = 2+c3
 
-            wij = 1.
+            wij = 0.5
 
             N1x = (y2 - y3)/(2*A)
             N2x = (-y1 + y3)/(2*A)
@@ -2869,7 +2869,7 @@ cdef class Tria3R:
 
         with nogil:
             A = self.area
-            detJ = 2*A/2
+            detJ = 2*A
 
             #Local to global transformation
             r11 = self.r11
@@ -3143,7 +3143,7 @@ cdef class Tria3R:
                 KGr[k] = 2+c3
                 KGc[k] = 2+c3
 
-            wij = 1.
+            wij = 0.5
 
             N1x = (y2 - y3)/(2*A)
             N2x = (-y1 + y3)/(2*A)
@@ -3361,8 +3361,8 @@ cdef class Tria3R:
             intrhoz2 = prop.intrhoz2
 
             A = self.area
-            detJ = 2*A/2
-            valH1 = detJ/9.
+            detJ = 2*A
+            valH1 = detJ/18.
 
             #NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
@@ -4207,7 +4207,7 @@ cdef class Tria3R:
                 #GAUSSIAN QUADRATURE FORMULAS FOR TRIANGLES
                 #G. R. COWPER
                 #https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620070316
-                wij = 0.333333333333333333333333333333333333333333333
+                wij = 0.5*0.333333333333333333333333333333333333333333333
                 points[0] = 0.66666666666666666666666666666666666666666667
                 points[1] = 0.16666666666666666666666666666666666666666667
                 points[2] = 0.16666666666666666666666666666666666666666667
@@ -6621,7 +6621,7 @@ cdef class Tria3R:
                 Mr[k] = 5+c3
                 Mc[k] = 5+c3
 
-                wij = 0.3333333333333333333333333333333333333
+                wij = 0.5*0.3333333333333333333333333333333333333
                 #NOTE three-point Gauss-Lobatto quadrature
                 points[0] = 1.
                 points[2] = 0.
