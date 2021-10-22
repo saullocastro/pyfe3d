@@ -79,6 +79,7 @@ def test_static_plate_quad_point_load(plot=False, refinement=1):
         tria.c1 = DOF*nid_pos[n1]
         tria.c2 = DOF*nid_pos[n2]
         tria.c3 = DOF*nid_pos[n3]
+        tria.alpha_shear_locking = 0.7
         tria.init_k_KC0 = init_k_KC0
         tria.update_rotation_matrix(ncoords_flatten)
         tria.update_probe_xe(ncoords_flatten)
@@ -96,6 +97,7 @@ def test_static_plate_quad_point_load(plot=False, refinement=1):
         tria.c1 = DOF*nid_pos[n1]
         tria.c2 = DOF*nid_pos[n3]
         tria.c3 = DOF*nid_pos[n4]
+        tria.alpha_shear_locking = 0.7
         tria.init_k_KC0 = init_k_KC0
         tria.update_rotation_matrix(ncoords_flatten)
         tria.update_probe_xe(ncoords_flatten)
@@ -146,7 +148,7 @@ def test_static_plate_quad_point_load(plot=False, refinement=1):
     # obtained with bfsplate2d element, nx=ny=29
     wmax_ref = 6.594931610258557e-05
     # obtained with Tria3R nx=7, ny=11
-    wmax_ref = 5.219888791560321e-05
+    wmax_ref = 8.324614783831663e-05
     print('w.max()', w.max())
     if plot:
         import matplotlib
