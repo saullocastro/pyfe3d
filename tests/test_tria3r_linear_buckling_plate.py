@@ -7,12 +7,12 @@ from scipy.sparse.linalg import eigsh, spsolve, cg
 from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import isotropic_plate
-from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
+from pyfe3d import Tria3R, Tria3RData, Tria3RProbe, INT, DOUBLE, DOF
 
 
 def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
-    data = Quad4RData()
-    probe = Quad4RProbe()
+    data = Tria3RData()
+    probe = Tria3RProbe()
     nx = refinement*31
     ny = refinement*15
     if (nx % 2) == 0:
@@ -49,7 +49,7 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
     n3s = nids_mesh[1:, 1:].flatten()
     n4s = nids_mesh[:-1, 1:].flatten()
 
-    num_elements = len(n1s)
+    num_elements = len(n1s)*2
     print('num_elements', num_elements)
 
     KC0r = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
@@ -64,7 +64,7 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
 
     prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True, rho=rho)
 
-    quads = []
+    trias = []
     init_k_KC0 = 0
     init_k_KG = 0
     for n1, n2, n3, n4 in zip(n1s, n2s, n3s, n4s):
@@ -75,23 +75,45 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
         r1 = ncoords[pos1]
         r2 = ncoords[pos2]
         r3 = ncoords[pos3]
-        normal = np.cross(r2 - r1, r3 - r2)[2]
+        r4 = ncoords[pos4]
+
+        #first tria
+        normal = np.cross(r2 - r1, r3 - r1)[2]
         assert normal > 0 # guaranteeing that all elements have CCW positive normal
-        quad = Quad4R(probe)
-        quad.n1 = n1
-        quad.n2 = n2
-        quad.n3 = n3
-        quad.n4 = n4
-        quad.c1 = DOF*nid_pos[n1]
-        quad.c2 = DOF*nid_pos[n2]
-        quad.c3 = DOF*nid_pos[n3]
-        quad.c4 = DOF*nid_pos[n4]
-        quad.init_k_KC0 = init_k_KC0
-        quad.init_k_KG = init_k_KG
-        quad.update_rotation_matrix(ncoords_flatten)
-        quad.update_probe_xe(ncoords_flatten)
-        quad.update_KC0(KC0r, KC0c, KC0v, prop)
-        quads.append(quad)
+        tria = Tria3R(probe)
+        tria.n1 = n1
+        tria.n2 = n2
+        tria.n3 = n3
+        tria.c1 = DOF*nid_pos[n1]
+        tria.c2 = DOF*nid_pos[n2]
+        tria.c3 = DOF*nid_pos[n3]
+        tria.alpha_shear_locking = 0.7
+        tria.init_k_KC0 = init_k_KC0
+        tria.init_k_KG = init_k_KG
+        tria.update_rotation_matrix(ncoords_flatten)
+        tria.update_probe_xe(ncoords_flatten)
+        tria.update_KC0(KC0r, KC0c, KC0v, prop)
+        trias.append(tria)
+        init_k_KC0 += data.KC0_SPARSE_SIZE
+        init_k_KG += data.KG_SPARSE_SIZE
+
+        #second tria
+        normal = np.cross(r3 - r1, r4 - r1)[2]
+        assert normal > 0 # guaranteeing that all elements have CCW positive normal
+        tria = Tria3R(probe)
+        tria.n1 = n1
+        tria.n2 = n3
+        tria.n3 = n4
+        tria.c1 = DOF*nid_pos[n1]
+        tria.c2 = DOF*nid_pos[n3]
+        tria.c3 = DOF*nid_pos[n4]
+        tria.alpha_shear_locking = 0.7
+        tria.init_k_KC0 = init_k_KC0
+        tria.init_k_KG = init_k_KG
+        tria.update_rotation_matrix(ncoords_flatten)
+        tria.update_probe_xe(ncoords_flatten)
+        tria.update_KC0(KC0r, KC0c, KC0v, prop)
+        trias.append(tria)
         init_k_KC0 += data.KC0_SPARSE_SIZE
         init_k_KG += data.KG_SPARSE_SIZE
 
@@ -99,7 +121,7 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
 
     KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
 
-    print('sparse KC0 and M created')
+    print('sparse KC0 created')
 
     # applying boundary conditions (leading to a constant Nxx)
     # simply supported in w
@@ -167,10 +189,10 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
         raise
 
     # geometric stiffness
-    for quad in quads:
-        quad.update_probe_ue(u) #NOTE update affects the Quad4RProbe class attribute ue
-        quad.update_probe_xe(ncoords_flatten)
-        quad.update_KG(KGr, KGc, KGv, prop)
+    for tria in trias:
+        tria.update_probe_ue(u) #NOTE update affects the Tria3RProbe class attribute ue
+        tria.update_probe_xe(ncoords_flatten)
+        tria.update_KG(KGr, KGc, KGv, prop)
     KG = coo_matrix((KGv, (KGr, KGc)), shape=(N, N)).tocsc()
     KGuu = KG[bu, :][:, bu]
     print('sparse KG created')
