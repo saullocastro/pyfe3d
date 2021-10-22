@@ -18,9 +18,10 @@ Important features of this library
 Elements implemented
 --------------------
 - 'Quad4R' - 4-node plate with linear interpolation, equivalent to Abaqus' S4R
-finite element.
+or Nastran's CQUAD4.
 
-- 'Tria3R' - 3-node plate with linear interpolation.
+- 'Tria3R' - 3-node plate with linear interpolation, equivalent to Abaqus' S3R
+or Nastran's CTRIA3.
 
 - 'BeamLR' - 2-node Timoshenko beam element with linear interpolation and
 reduced integration.
