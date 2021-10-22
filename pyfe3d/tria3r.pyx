@@ -100,14 +100,20 @@ cdef class Tria3R:
     area : double
         Element area.
     alpha_shear_locking : double
-        Factor used to prevent shear locking, affecting stiffness terms
-        E44,E45,E45. Adopted from the BFG element:
+        Factor used to prevent shear locking, adopted from teh BFG element,
+        affecting stiffness terms E44,E45,E45:
 
             maxl = max(edge_12, edge_23, edge_31)
             factor = alpha_shear_locking*maxl**2/thickness**2
             E44 = 1 / (1 + factor) * E44
             # E45 = 1 / (1 + factor) * E45
             E55 = 1 / (1 + factor) * E55
+
+        The adopted default is ``alpha_shear_locking = 0.7``, based on a linear
+        buckling analysis of a simply supported plate, such that the result
+        approaches the one of the :class:`.Quad4R` element for an equivalent
+        mesh (see the test case ``test_tria3r_linear_buckling_plate.py``).
+
 
     alphat : double
         Element drilling penalty factor for the plate drilling stiffness,
@@ -169,7 +175,7 @@ cdef class Tria3R:
         self.init_k_M = 0
         self.area = 0
         self.alphat = 1. # based on recommended value of reference F.M. Adam, A.E. Mohamed, A.E. Hassaballa
-        self.alpha_shear_locking = 1.15
+        self.alpha_shear_locking = 0.7
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.
         self.r31 = self.r32 = self.r33 = 0.
@@ -504,7 +510,7 @@ cdef class Tria3R:
 
         with nogil:
             A = self.area
-            detJ = 2*A
+            detJ = 2*A/2
 
             A11mat = prop.A11
             A12mat = prop.A12
@@ -2316,7 +2322,7 @@ cdef class Tria3R:
 
         with nogil:
             A = self.area
-            detJ = 2*A
+            detJ = 2*A/2
 
             A11mat = prop.A11
             A12mat = prop.A12
@@ -2863,7 +2869,7 @@ cdef class Tria3R:
 
         with nogil:
             A = self.area
-            detJ = 2*A
+            detJ = 2*A/2
 
             #Local to global transformation
             r11 = self.r11
@@ -3355,7 +3361,7 @@ cdef class Tria3R:
             intrhoz2 = prop.intrhoz2
 
             A = self.area
-            detJ = A
+            detJ = A/2
             valH1 = detJ/9.
 
             #NOTE ignoring z in local coordinates
