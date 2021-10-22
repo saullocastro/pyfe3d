@@ -3361,7 +3361,7 @@ cdef class Tria3R:
             intrhoz2 = prop.intrhoz2
 
             A = self.area
-            detJ = A/2
+            detJ = 2*A/2
             valH1 = detJ/9.
 
             #NOTE ignoring z in local coordinates
