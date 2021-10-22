@@ -7,13 +7,14 @@ Modules
 .. toctree::
     :maxdepth: 2
 
-    properties.rst
+    quad4r.rst
+    quad4r_utils.rst
+    tria3r.rst
     beamc.rst
     beamlr.rst
     spring.rst
     truss.rst
-    quad4r.rst
-    quad4r_utils.rst
+    properties.rst
     coord.rst
 
 License
