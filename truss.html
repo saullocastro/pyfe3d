@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Truss - Linear truss 3D element with analytical integration (pyfe3d.truss) &#8212; pyfe3d 0.3.3 documentation</title>
+    <title>Truss - Linear truss 3D element with analytical integration (pyfe3d.truss) &#8212; pyfe3d 0.3.4 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
@@ -14,7 +14,7 @@
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +36,7 @@
         <li class="right" >
           <a href="spring.html" title="Spring - 3D spring element with constant stiffnesses (pyfe3d.spring)"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Truss - Linear truss 3D element with analytical integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code>)</a></li> 
       </ul>
     </div>  
@@ -60,7 +60,7 @@ analysis.</p>
 </div>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pyfe3d.truss.</span></span><span class="sig-name descname"><span class="pre">Truss</span></span><a class="headerlink" href="#pyfe3d.truss.Truss" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.truss.</span></span><span class="sig-name descname"><span class="pre">Truss</span></span><a class="headerlink" href="#pyfe3d.truss.Truss" title="Permalink to this definition">¶</a></dt>
 <dd><p>Truss 3D element for axial- and torsion-only behavior</p>
 <p>Nodal connectivity for the truss element:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">______</span>   <span class="o">--&gt;</span> <span class="n">u</span>  <span class="o">-&gt;&gt;-</span> <span class="n">rx</span>
@@ -251,13 +251,13 @@ physical representation.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.update_KC0">
-<span class="sig-name descname"><span class="pre">update_KC0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self</span></em>, <em class="sig-param"><span class="pre">ndarray</span> <span class="pre">KC0r</span></em>, <em class="sig-param"><span class="pre">ndarray</span> <span class="pre">KC0c</span></em>, <em class="sig-param"><span class="pre">ndarray</span> <span class="pre">KC0v</span></em>, <em class="sig-param"><span class="pre">BeamProp</span> <span class="pre">prop</span></em>, <em class="sig-param"><span class="pre">int</span> <span class="pre">update_KC0v_only=0</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_KC0" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_KC0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">KC0r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">KC0c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">KC0v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeamProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KC0v_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_KC0" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update sparse vectors for linear constitutive stiffness matrix KC0</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.update_M">
-<span class="sig-name descname"><span class="pre">update_M</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self</span></em>, <em class="sig-param"><span class="pre">ndarray</span> <span class="pre">Mr</span></em>, <em class="sig-param"><span class="pre">ndarray</span> <span class="pre">Mc</span></em>, <em class="sig-param"><span class="pre">ndarray</span> <span class="pre">Mv</span></em>, <em class="sig-param"><span class="pre">BeamProp</span> <span class="pre">prop</span></em>, <em class="sig-param"><span class="pre">int</span> <span class="pre">mtype=0</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_M" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_M</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">Mr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">Mc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">Mv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeamProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">mtype=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_M" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update sparse vectors for mass matrix M</p>
 <p>For the <a class="reference internal" href="#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a> element, the inertial terms <code class="docutils literal notranslate"><span class="pre">intrho</span></code>,
 <code class="docutils literal notranslate"><span class="pre">intrhoy</span></code>, <code class="docutils literal notranslate"><span class="pre">intrhoz</span></code>, <code class="docutils literal notranslate"><span class="pre">intrhoy2</span></code> and <code class="docutils literal notranslate"><span class="pre">intrhoz2</span></code> of the beam
@@ -272,7 +272,7 @@ property are important.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.update_probe_ue">
-<span class="sig-name descname"><span class="pre">update_probe_ue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self</span></em>, <em class="sig-param"><span class="pre">ndarray</span> <span class="pre">u</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_probe_ue" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_probe_ue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">u</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_probe_ue" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the local displacement vector of the probe of the element</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -294,7 +294,7 @@ u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M\)</span>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.update_probe_xe">
-<span class="sig-name descname"><span class="pre">update_probe_xe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self</span></em>, <em class="sig-param"><span class="pre">ndarray</span> <span class="pre">x</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_probe_xe" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_probe_xe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_probe_xe" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the 3D coordinates of the probe of the element</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -315,7 +315,7 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.update_rotation_matrix">
-<span class="sig-name descname"><span class="pre">update_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="pre">self</span></em>, <em class="sig-param"><span class="pre">ndarray</span> <span class="pre">x</span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_rotation_matrix" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_rotation_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the rotation matrix of the element</p>
 <p>Attributes <code class="docutils literal notranslate"><span class="pre">r11,r12,r13,r21,r22,r23,r31,r32,r33</span></code> are updated,
 corresponding to the rotation matrix from local to global coordinates.</p>
@@ -339,7 +339,7 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.truss.TrussData">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pyfe3d.truss.</span></span><span class="sig-name descname"><span class="pre">TrussData</span></span><a class="headerlink" href="#pyfe3d.truss.TrussData" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.truss.</span></span><span class="sig-name descname"><span class="pre">TrussData</span></span><a class="headerlink" href="#pyfe3d.truss.TrussData" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used to allocate memory for the sparse matrices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
@@ -367,7 +367,7 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.truss.TrussProbe">
-<em class="property"><span class="pre">class</span> </em><span class="sig-prename descclassname"><span class="pre">pyfe3d.truss.</span></span><span class="sig-name descname"><span class="pre">TrussProbe</span></span><a class="headerlink" href="#pyfe3d.truss.TrussProbe" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.truss.</span></span><span class="sig-name descname"><span class="pre">TrussProbe</span></span><a class="headerlink" href="#pyfe3d.truss.TrussProbe" title="Permalink to this definition">¶</a></dt>
 <dd><p>Probe used for local coordinates, local displacements, local stresses etc</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
@@ -444,13 +444,13 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
         <li class="right" >
           <a href="spring.html" title="Spring - 3D spring element with constant stiffnesses (pyfe3d.spring)"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.3 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.4 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Truss - Linear truss 3D element with analytical integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code>)</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2021-, Saullo G. P. Castro.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.2.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.0.
     </div>
   </body>
 </html>
