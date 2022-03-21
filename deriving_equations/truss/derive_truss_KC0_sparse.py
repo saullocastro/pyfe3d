@@ -21,7 +21,7 @@ DOF = 6
 num_nodes = 2
 
 var('xi', real=True)
-sympy.var('hy, hz, dy, dz, L, E, Iyy, Izz, scf, G, A', real=True, positive=True)
+sympy.var('hy, hz, dy, dz, L, E, Iyy, Izz, J, G, A', real=True, positive=True)
 Iy = Izz
 Iz = Iyy
 
@@ -45,7 +45,7 @@ Nrx =  Matrix([[0, 0, 0, N1, 0, 0,
 #From Eqs. 12 in Luo, Y. 2008
 D = Matrix([
     [ E*A,  0],
-    [   0, -scf*G*(Iy + Iz)]])
+    [   0, G*J]])
 #From Eq. 8 in Luo, Y. 2008, keeping only terms pertaining the truss element
 #epsilon = u,x
 #kappax = phi,x

@@ -20,7 +20,7 @@ DOF = 6
 num_nodes = 2
 
 var('xi', real=True)
-sympy.var('hy, hz, dy, dz, L, E, Iyy, Izz, scf, G, A, Ay, Az, J', real=True, positive=True)
+sympy.var('hy, hz, dy, dz, L, E, Iyy, Izz, J, G, A, Ay, Az', real=True, positive=True)
 
 #NOTE in Luo 2008 Iy represents the area moment of inertia in the plane of y
 #     or rotating about the z axis. Here we say that Izz = Iy
