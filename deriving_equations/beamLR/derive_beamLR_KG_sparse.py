@@ -20,7 +20,7 @@ DOF = 6
 num_nodes = 2
 
 var('xi', real=True)
-sympy.var('hy, hz, dy, dz, L, E, Iyy, Izz, scf, G, A, Ay, Az, J', real=True, positive=True)
+sympy.var('hy, hz, dy, dz, L, E, Iyy, Izz, Iyz, J, G, A, Ay, Az', real=True, positive=True)
 
 # definitions of Eqs. 20 and 21 of Luo, Y., 2008
 #NOTE in Luo 2008 Iy represents the area moment of inertia in the plane of y
@@ -72,11 +72,11 @@ Nrz = Matrix([[0, 0, 0, 0, 0, N1,
 # p = [e ky kz gammay gammaz kx]
 D = Matrix([
     [ E*A, E*Ay*0, E*Az*0, 0, 0, 0],
-    [E*Ay*0, E*Iy,  E*J, 0, 0, 0],
-    [E*Az*0,  E*J, E*Iz, 0, 0, 0],
-    [   0,    0,    0,   scf*G*A,      0, -scf*G*Az],
-    [   0,    0,    0,       0,  scf*G*A, -scf*G*Ay],
-    [   0,    0,    0, -scf*G*Az, scf*G*Ay, -scf*G*(Iy + Iz)]])
+    [E*Ay*0, E*Iy,  E*Iyz, 0, 0, 0],
+    [E*Az*0,  E*Iyz, E*Iz, 0, 0, 0],
+    [   0,    0,    0,   G*A, 0, -G*Az],
+    [   0,    0,    0,  0,  G*A, G*Ay],
+    [   0,    0,    0, -G*Az, G*Ay, G*J]])
 #From Eq. 8 in Luo, Y. 2008
 #epsilon = u,x
 #kappay = -theta,x = -rz,x

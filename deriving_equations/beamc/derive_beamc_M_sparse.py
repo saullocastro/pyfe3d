@@ -20,7 +20,7 @@ DOF = 6
 num_nodes = 2
 
 var('x, xi, eta', real=True)
-var('L, E, Iyy, Izz, J, G, A, Ay, Az', real=True, positive=True)
+var('L, E, Iyy, Izz, Iyz, J, G, A, Ay, Az', real=True, positive=True)
 
 # definitions of Eqs. 20 and 21 of Luo, Y., 2008
 #xi = x/L
