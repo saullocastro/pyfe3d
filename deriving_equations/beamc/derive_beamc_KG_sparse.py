@@ -20,7 +20,7 @@ DOF = 6
 num_nodes = 2
 
 var('x, xi', real=True)
-sympy.var('hy, hz, dy, dz, L, E, Iyy, scf, G, A, Ay, Az, Izz, J', real=True, positive=True)
+sympy.var('hy, hz, dy, dz, L, E, Iyy, Izz, Iyz, J, G, A, Ay, Az', real=True, positive=True)
 
 # definitions of Eqs. 20 and 21 of Luo, Y., 2008
 xi = x/L
@@ -31,8 +31,8 @@ xi = x/L
 Iy = Izz
 Iz = Iyy
 #TODO replace G by G12 and G13, but how to do for the D matrix?
-alphay = 12*E*Iy/(scf*G*A*L**2)
-alphaz = 12*E*Iz/(scf*G*A*L**2)
+alphay = 12*E*Iy/(G*A*L**2)
+alphaz = 12*E*Iz/(G*A*L**2)
 betay = 1/(1 - alphay)
 betaz = 1/(1 - alphaz)
 
@@ -94,11 +94,11 @@ Nwx = simplify(Nw.diff(x))
 #NOTE assuming Ay=Az=0 to have Nmembrane constant
 D = Matrix([
     [ E*A, E*Ay*0, E*Az*0, 0, 0, 0],
-    [E*Ay*0, E*Iy,  E*J, 0, 0, 0],
-    [E*Az*0,  E*J, E*Iz, 0, 0, 0],
-    [   0,    0,    0,   scf*G*A,      0, -scf*G*Az],
-    [   0,    0,    0,       0,  scf*G*A, -scf*G*Ay],
-    [   0,    0,    0, -scf*G*Az, scf*G*Ay, -scf*G*(Iy + Iz)]])
+    [E*Ay*0, E*Iy,  E*Iyz, 0, 0, 0],
+    [E*Az*0,  E*Iyz, E*Iz, 0, 0, 0],
+    [   0,    0,    0,   G*A,      0, -G*Az],
+    [   0,    0,    0,       0,  G*A, G*Ay],
+    [   0,    0,    0, -G*Az, G*Ay, G*J]])
 #From Eq. 8 in Luo, Y. 2008
 #epsilon = u,x
 #kappay = -theta,x = -rz,x

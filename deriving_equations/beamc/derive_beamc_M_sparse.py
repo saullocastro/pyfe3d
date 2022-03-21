@@ -20,7 +20,7 @@ DOF = 6
 num_nodes = 2
 
 var('x, xi, eta', real=True)
-var('L, E, Iyy, scf, G, A, Ay, Az, Izz, J', real=True, positive=True)
+var('L, E, Iyy, Izz, J, G, A, Ay, Az', real=True, positive=True)
 
 # definitions of Eqs. 20 and 21 of Luo, Y., 2008
 #xi = x/L
@@ -31,8 +31,8 @@ var('L, E, Iyy, scf, G, A, Ay, Az, Izz, J', real=True, positive=True)
 Iy = Izz
 Iz = Iyy
 #TODO replace G by G12 and G13, but how to do for the D matrix?
-alphay = 12*E*Iy/(scf*G*A*L**2)
-alphaz = 12*E*Iz/(scf*G*A*L**2)
+alphay = 12*E*Iy/(G*A*L**2)
+alphaz = 12*E*Iz/(G*A*L**2)
 betay = 1/(1 - alphay)
 betaz = 1/(1 - alphaz)
 

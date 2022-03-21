@@ -20,7 +20,7 @@ DOF = 6
 num_nodes = 2
 
 var('x, xi', real=True)
-var('L, E, Iyy, scf, G, A, Ay, Az, Izz, J', real=True, positive=True)
+var('L, E, Iyy, Izz, Iyz, G, A, Ay, Az, J', real=True, positive=True)
 
 # definitions of Eqs. 20 and 21 of Luo, Y., 2008
 xi = x/L
@@ -31,8 +31,8 @@ xi = x/L
 Iy = Izz
 Iz = Iyy
 #TODO replace G by G12 and G13, but how to do for the D matrix?
-alphay = 12*E*Iy/(scf*G*A*L**2)
-alphaz = 12*E*Iz/(scf*G*A*L**2)
+alphay = 12*E*Iy/(G*A*L**2)
+alphaz = 12*E*Iz/(G*A*L**2)
 betay = 1/(1 - alphay)
 betaz = 1/(1 - alphaz)
 
@@ -76,8 +76,8 @@ Nrz = Matrix([[0, Gv1, 0, 0, 0, Grz1,
 
 #From Eqs. 8 and 9 in Luo, Y. 2008
 #exx = u,x + (-rz,x)*y + (ry,x)*z
-#exy = (v.diff(x) - rz) - (rx)*z
-#exz = (w.diff(x) + ry) + (rx)*y
+#exy = (v.diff(x) - rz*y) - (rx)*z #TODO
+#exz = (w.diff(x) + ry*z) + (rx)*y #TODO
 #BL = Matrix([
     #Nu.diff(x) + (-Nrz.diff(x))*y + Nry.diff(x)*z,
     #(Nv.diff(x) - Nrz) - Nrx*z,
@@ -90,11 +90,11 @@ Nrz = Matrix([[0, Gv1, 0, 0, 0, Grz1,
 #From Eqs. 12 in Luo, Y. 2008
 D = Matrix([
     [ E*A, E*Ay, E*Az, 0, 0, 0],
-    [E*Ay, E*Iy,  E*J, 0, 0, 0],
-    [E*Az,  E*J, E*Iz, 0, 0, 0],
-    [   0,    0,    0,   scf*G*A,      0, -scf*G*Az],
-    [   0,    0,    0,       0,  scf*G*A, -scf*G*Ay],
-    [   0,    0,    0, -scf*G*Az, scf*G*Ay, -scf*G*(Iy + Iz)]])
+    [E*Ay, E*Iy,  E*Iyz, 0, 0, 0],
+    [E*Az,  E*Iyz, E*Iz, 0, 0, 0],
+    [   0,    0,    0,   G*A,      0, -G*Az],
+    [   0,    0,    0,       0,  G*A, G*Ay],
+    [   0,    0,    0, -G*Az, G*Ay, G*J]])
 #From Eq. 8 in Luo, Y. 2008
 #epsilon = u,x
 #kappay = -theta,x = -rz,x
@@ -103,6 +103,14 @@ D = Matrix([
 #gammaz = w,x + psi = w,x + ry
 #kappax = phi,x
 # putting in a BL matrix
+# BL = derivative of NL
+
+#EXample of Solid element =
+# exx = u,x + 1/2(u,x*u,x + v,x*v,x + w,x*w,x)
+# exy = u,x + 1/2(v,x*u,y...)
+# eyy = v,y + 1/2(u,y*u,y + v,y*v,y + w,y*w,y)
+# ezz = w,z + 1/2(u,z*u,z + v,z*v,z + w,z*w,z)
+
 BL = Matrix([
     Nu.diff(x),
     -Nrz.diff(x),
