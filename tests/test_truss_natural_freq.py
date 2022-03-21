@@ -52,8 +52,8 @@ def test_nat_freq_axial(refinement=1, mtypes=range(2)):
         prop = BeamProp()
         prop.A = A
         prop.E = E
-        prop.G = E/2/(1+0.3)
-        prop.scf = 5/6.
+        scf = 5/6.
+        prop.G = scf*E/2/(1+0.3)
         prop.intrho = rho*A
         prop.intrhoy2 = 0 # used to calculate torsional constant
         prop.intrhoz2 = 0 # used to calculate torsional constant

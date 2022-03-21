@@ -56,8 +56,8 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
         prop = BeamProp()
         prop.A = A
         prop.E = E
-        prop.G = G
-        prop.scf = 5/6.
+        scf = 5/6.
+        prop.G = scf*G
         prop.Izz = Izz
         prop.intrho = rho*A
         prop.intrhoy2 = rho*Izz
