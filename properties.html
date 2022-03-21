@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
-    <title>Beam property module (pyfe3d.beamprop) &#8212; pyfe3d 0.3.6 documentation</title>
+    <title>Beam property module (pyfe3d.beamprop) &#8212; pyfe3d 0.3.8 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
@@ -14,7 +14,7 @@
     <script src="_static/jquery.js"></script>
     <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
-    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -36,7 +36,7 @@
         <li class="right" >
           <a href="truss.html" title="Truss - Linear truss 3D element with analytical integration (pyfe3d.truss)"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.6 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.8 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li> 
       </ul>
     </div>  
@@ -51,7 +51,27 @@
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.beamprop.</span></span><span class="sig-name descname"><span class="pre">BeamProp</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp" title="Permalink to this definition">¶</a></dt>
-<dd><dl class="field-list simple">
+<dd><p>General class to represent beam properties.</p>
+<p>About shear correction factors, usually one should only apply the shear
+correction factor to the shear modulus <code class="docutils literal notranslate"><span class="pre">G</span></code>. It is, however, possible to
+have more complex scenarios where the different cross section parameters
+<code class="docutils literal notranslate"><span class="pre">Ay</span></code>, <code class="docutils literal notranslate"><span class="pre">Az</span></code>, <code class="docutils literal notranslate"><span class="pre">J</span></code> have different corrections applied due to geometric
+properties. It is the user’s responsability to apply these correction
+factors properly to achieve a general representation of the beam element
+behaviour by means of this property class. No shear correction factors or
+geometric correction factors are applied internally during the calculation
+of the structural matrices.</p>
+<p class="rubric">Notes</p>
+<p>For beams with homogeneous material along the cross section some of the
+quantities above can be calculated as follows, assuming that <code class="docutils literal notranslate"><span class="pre">rho</span></code> is the
+material density:</p>
+<blockquote>
+<div><p><code class="docutils literal notranslate"><span class="pre">intrho</span> <span class="pre">=</span> <span class="pre">A*rho</span></code>
+<code class="docutils literal notranslate"><span class="pre">intrhoy2</span> <span class="pre">=</span> <span class="pre">Izz*rho</span></code>
+<code class="docutils literal notranslate"><span class="pre">intrhoz2</span> <span class="pre">=</span> <span class="pre">Iyy*rho</span></code>
+<code class="docutils literal notranslate"><span class="pre">intrhoyz</span> <span class="pre">=</span> <span class="pre">Iyz*rho</span></code></p>
+</div></blockquote>
+<dl class="field-list simple">
 <dt class="field-odd">Attributes</dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>A,</strong><span class="classifier">float</span></dt><dd><p>Area of the cross section</p>
@@ -60,15 +80,14 @@
 </dd>
 <dt><strong>G,</strong><span class="classifier">float</span></dt><dd><p>Shear modulus</p>
 </dd>
-<dt><strong>scf,</strong><span class="classifier">float</span></dt><dd><p>Shear correction factor accounding for different shapes of the beam
-cross-section. For the truss element, it is applied only to the torsion
-stiffness that is assumed to be <span class="math notranslate nohighlight">\(I_{zz} + I_{yy}\)</span></p>
-</dd>
 <dt><strong>Iyy,</strong><span class="classifier">float</span></dt><dd><p>Second moment of area about the y axis <span class="math notranslate nohighlight">\(\int_y \int_z z^2 dy dz\)</span></p>
 </dd>
 <dt><strong>Izz,</strong><span class="classifier">float</span></dt><dd><p>Second moment of area about the z axis <span class="math notranslate nohighlight">\(\int_y \int_z y^2 dy dz\)</span></p>
 </dd>
-<dt><strong>J,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z y z dy dz\)</span></p>
+<dt><strong>Iyz,</strong><span class="classifier">float</span></dt><dd><p>Product moment of area <span class="math notranslate nohighlight">\(\int_y \int_z y z dy dz\)</span></p>
+</dd>
+<dt><strong>J,</strong><span class="classifier">float</span></dt><dd><p>Torsion stiffness or torsion constant, see
+<a class="reference external" href="https://en.wikipedia.org/wiki/Torsion_constant">https://en.wikipedia.org/wiki/Torsion_constant</a>.</p>
 </dd>
 <dt><strong>Ay,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z y dy dz\)</span></p>
 </dd>
@@ -127,6 +146,12 @@ density</p>
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.Iyz">
+<span class="sig-name descname"><span class="pre">Iyz</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.Iyz" title="Permalink to this definition">¶</a></dt>
+<dd><p>Iyz: ‘double’</p>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.Izz">
 <span class="sig-name descname"><span class="pre">Izz</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.Izz" title="Permalink to this definition">¶</a></dt>
 <dd><p>Izz: ‘double’</p>
@@ -172,12 +197,6 @@ density</p>
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.intrhoz2">
 <span class="sig-name descname"><span class="pre">intrhoz2</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.intrhoz2" title="Permalink to this definition">¶</a></dt>
 <dd><p>intrhoz2: ‘double’</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.scf">
-<span class="sig-name descname"><span class="pre">scf</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.scf" title="Permalink to this definition">¶</a></dt>
-<dd><p>scf: ‘double’</p>
 </dd></dl>
 
 </dd></dl>
@@ -516,61 +535,61 @@ on equation: <span class="math notranslate nohighlight">\(E = 2 \times (1+\nu) \
 </dd>
 <dt><strong>g23,</strong><span class="classifier">float</span></dt><dd><p>transverse shear modulus for plane 2-Z</p>
 </dd>
-<dt><strong>nu12, :</strong></dt><dd><p>Poisson’s ratio 12</p>
+<dt><strong>nu12,</strong></dt><dd><p>Poisson’s ratio 12</p>
 </dd>
-<dt><strong>nu13, :</strong></dt><dd><p>Poisson’s ratio 13</p>
+<dt><strong>nu13,</strong></dt><dd><p>Poisson’s ratio 13</p>
 </dd>
-<dt><strong>nu23, :</strong></dt><dd><p>Poisson’s ratio 23</p>
+<dt><strong>nu23,</strong></dt><dd><p>Poisson’s ratio 23</p>
 </dd>
-<dt><strong>nu21, :</strong></dt><dd><p>Poisson’s ratio 21: use formula nu12/e1 = nu21/e2</p>
+<dt><strong>nu21,</strong></dt><dd><p>Poisson’s ratio 21: use formula nu12/e1 = nu21/e2</p>
 </dd>
-<dt><strong>nu31, :</strong></dt><dd><p>Poisson’s ratio 31: use formula nu31/e3 = nu13/e1</p>
+<dt><strong>nu31,</strong></dt><dd><p>Poisson’s ratio 31: use formula nu31/e3 = nu13/e1</p>
 </dd>
-<dt><strong>nu32, :</strong></dt><dd><p>Poisson’s ratio 32: use formula nu23/e2 = nu32/e3</p>
+<dt><strong>nu32,</strong></dt><dd><p>Poisson’s ratio 32: use formula nu23/e2 = nu32/e3</p>
 </dd>
-<dt><strong>rho, :</strong></dt><dd><p>especific mass (mass / volume)</p>
+<dt><strong>rho,</strong></dt><dd><p>especific mass (mass / volume)</p>
 </dd>
-<dt><strong>a1, :</strong></dt><dd><p>thermal expansion coeffiecient in direction 1</p>
+<dt><strong>a1,</strong></dt><dd><p>thermal expansion coeffiecient in direction 1</p>
 </dd>
-<dt><strong>a2, :</strong></dt><dd><p>thermal expansion coeffiecient in direction 2</p>
+<dt><strong>a2,</strong></dt><dd><p>thermal expansion coeffiecient in direction 2</p>
 </dd>
-<dt><strong>a3, :</strong></dt><dd><p>thermal expansion coeffiecient in direction 3</p>
+<dt><strong>a3,</strong></dt><dd><p>thermal expansion coeffiecient in direction 3</p>
 </dd>
-<dt><strong>tref, :</strong></dt><dd><p>reference temperature</p>
+<dt><strong>tref,</strong></dt><dd><p>reference temperature</p>
 </dd>
-<dt><strong>st1,st2 :</strong></dt><dd><p>allowable tensile stresses for directions 1 and 2</p>
+<dt><strong>st1,st2</strong></dt><dd><p>allowable tensile stresses for directions 1 and 2</p>
 </dd>
-<dt><strong>sc1,sc2 :</strong></dt><dd><p>allowable compressive stresses for directions 1 and 2</p>
+<dt><strong>sc1,sc2</strong></dt><dd><p>allowable compressive stresses for directions 1 and 2</p>
 </dd>
-<dt><strong>ss12, :</strong></dt><dd><p>allowable in-plane stress for shear</p>
+<dt><strong>ss12,</strong></dt><dd><p>allowable in-plane stress for shear</p>
 </dd>
-<dt><strong>q11, :</strong></dt><dd><p>lamina constitutive constant 11</p>
+<dt><strong>q11,</strong></dt><dd><p>lamina constitutive constant 11</p>
 </dd>
-<dt><strong>q12, :</strong></dt><dd><p>lamina constitutive constant 12</p>
+<dt><strong>q12,</strong></dt><dd><p>lamina constitutive constant 12</p>
 </dd>
-<dt><strong>q13, :</strong></dt><dd><p>lamina constitutive constant 13</p>
+<dt><strong>q13,</strong></dt><dd><p>lamina constitutive constant 13</p>
 </dd>
-<dt><strong>q21, :</strong></dt><dd><p>lamina constitutive constant 21</p>
+<dt><strong>q21,</strong></dt><dd><p>lamina constitutive constant 21</p>
 </dd>
-<dt><strong>q22, :</strong></dt><dd><p>lamina constitutive constant 22</p>
+<dt><strong>q22,</strong></dt><dd><p>lamina constitutive constant 22</p>
 </dd>
-<dt><strong>q23, :</strong></dt><dd><p>lamina constitutive constant 23</p>
+<dt><strong>q23,</strong></dt><dd><p>lamina constitutive constant 23</p>
 </dd>
-<dt><strong>q31, :</strong></dt><dd><p>lamina constitutive constant 31</p>
+<dt><strong>q31,</strong></dt><dd><p>lamina constitutive constant 31</p>
 </dd>
-<dt><strong>q32, :</strong></dt><dd><p>lamina constitutive constant 32</p>
+<dt><strong>q32,</strong></dt><dd><p>lamina constitutive constant 32</p>
 </dd>
-<dt><strong>q33, :</strong></dt><dd><p>lamina constitutive constant 33</p>
+<dt><strong>q33,</strong></dt><dd><p>lamina constitutive constant 33</p>
 </dd>
-<dt><strong>q44, :</strong></dt><dd><p>lamina constitutive constant 44</p>
+<dt><strong>q44,</strong></dt><dd><p>lamina constitutive constant 44</p>
 </dd>
-<dt><strong>q55, :</strong></dt><dd><p>lamina constitutive constant 55</p>
+<dt><strong>q55,</strong></dt><dd><p>lamina constitutive constant 55</p>
 </dd>
-<dt><strong>q66, :</strong></dt><dd><p>lamina constitutive constant 66</p>
+<dt><strong>q66,</strong></dt><dd><p>lamina constitutive constant 66</p>
 </dd>
-<dt><strong>ci, :</strong></dt><dd><p>lamina stiffness constants</p>
+<dt><strong>ci,</strong></dt><dd><p>lamina stiffness constants</p>
 </dd>
-<dt><strong>ui, :</strong></dt><dd><p>lamina material invariants</p>
+<dt><strong>ui,</strong></dt><dd><p>lamina material invariants</p>
 </dd>
 </dl>
 </dd>
@@ -1521,19 +1540,25 @@ supply:</p>
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
-  <h3><a href="index.html">Table of Contents</a></h3>
-  <ul>
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
 <li><a class="reference internal" href="#">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
 <li><a class="reference internal" href="#shell-property-module-pyfe3d-shellprop">Shell property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop</span></code>)</a></li>
 <li><a class="reference internal" href="#shell-property-utils-module-pyfe3d-shellprop-utils">Shell property utils module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop_utils</span></code>)</a></li>
 </ul>
 
-  <h4>Previous topic</h4>
-  <p class="topless"><a href="truss.html"
-                        title="previous chapter">Truss - Linear truss 3D element with analytical integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code>)</a></p>
-  <h4>Next topic</h4>
-  <p class="topless"><a href="coord.html"
-                        title="next chapter">Coordinate systems (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.coord</span></code>)</a></p>
+  </div>
+  <div>
+    <h4>Previous topic</h4>
+    <p class="topless"><a href="truss.html"
+                          title="previous chapter">Truss - Linear truss 3D element with analytical integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code>)</a></p>
+  </div>
+  <div>
+    <h4>Next topic</h4>
+    <p class="topless"><a href="coord.html"
+                          title="next chapter">Coordinate systems (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.coord</span></code>)</a></p>
+  </div>
   <div role="note" aria-label="source link">
     <h3>This Page</h3>
     <ul class="this-page-menu">
@@ -1570,13 +1595,13 @@ supply:</p>
         <li class="right" >
           <a href="truss.html" title="Truss - Linear truss 3D element with analytical integration (pyfe3d.truss)"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.6 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.8 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2021-, Saullo G. P. Castro.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.3.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.4.0.
     </div>
   </body>
 </html>
