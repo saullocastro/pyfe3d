@@ -328,7 +328,7 @@ cdef class Truss:
 
         """
         cdef cINT c1, c2, k
-        cdef double L, A, E, G, scf, Iyy, Izz
+        cdef double L, A, E, G, Iyy, Izz, J
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
 
         with nogil:
@@ -336,9 +336,9 @@ cdef class Truss:
             A = prop.A
             E = prop.E
             G = prop.G
-            scf = prop.scf #NOTE applied to the torsion stiffness
             Iyy = prop.Iyy
             Izz = prop.Izz
+            J = prop.J
 
             #Local to global transformation
             r11 = self.r11
@@ -610,41 +610,41 @@ cdef class Truss:
             k += 1
             KC0v[k] += -1.0*A*E*r31**2/L
             k += 1
-            KC0v[k] += -1.0*G*r11**2*scf*(Iyy + Izz)/L
+            KC0v[k] += 1.0*G*J*r11**2/L
             k += 1
-            KC0v[k] += -1.0*G*r11*r21*scf*(Iyy + Izz)/L
+            KC0v[k] += 1.0*G*J*r11*r21/L
             k += 1
-            KC0v[k] += -1.0*G*r11*r31*scf*(Iyy + Izz)/L
+            KC0v[k] += 1.0*G*J*r11*r31/L
             k += 1
-            KC0v[k] += 1.0*G*r11**2*scf*(Iyy + Izz)/L
+            KC0v[k] += -1.0*G*J*r11**2/L
             k += 1
-            KC0v[k] += 1.0*G*r11*r21*scf*(Iyy + Izz)/L
+            KC0v[k] += -1.0*G*J*r11*r21/L
             k += 1
-            KC0v[k] += 1.0*G*r11*r31*scf*(Iyy + Izz)/L
+            KC0v[k] += -1.0*G*J*r11*r31/L
             k += 1
-            KC0v[k] += -1.0*G*r11*r21*scf*(Iyy + Izz)/L
+            KC0v[k] += 1.0*G*J*r11*r21/L
             k += 1
-            KC0v[k] += -1.0*G*r21**2*scf*(Iyy + Izz)/L
+            KC0v[k] += 1.0*G*J*r21**2/L
             k += 1
-            KC0v[k] += -1.0*G*r21*r31*scf*(Iyy + Izz)/L
+            KC0v[k] += 1.0*G*J*r21*r31/L
             k += 1
-            KC0v[k] += 1.0*G*r11*r21*scf*(Iyy + Izz)/L
+            KC0v[k] += -1.0*G*J*r11*r21/L
             k += 1
-            KC0v[k] += 1.0*G*r21**2*scf*(Iyy + Izz)/L
+            KC0v[k] += -1.0*G*J*r21**2/L
             k += 1
-            KC0v[k] += 1.0*G*r21*r31*scf*(Iyy + Izz)/L
+            KC0v[k] += -1.0*G*J*r21*r31/L
             k += 1
-            KC0v[k] += -1.0*G*r11*r31*scf*(Iyy + Izz)/L
+            KC0v[k] += 1.0*G*J*r11*r31/L
             k += 1
-            KC0v[k] += -1.0*G*r21*r31*scf*(Iyy + Izz)/L
+            KC0v[k] += 1.0*G*J*r21*r31/L
             k += 1
-            KC0v[k] += -1.0*G*r31**2*scf*(Iyy + Izz)/L
+            KC0v[k] += 1.0*G*J*r31**2/L
             k += 1
-            KC0v[k] += 1.0*G*r11*r31*scf*(Iyy + Izz)/L
+            KC0v[k] += -1.0*G*J*r11*r31/L
             k += 1
-            KC0v[k] += 1.0*G*r21*r31*scf*(Iyy + Izz)/L
+            KC0v[k] += -1.0*G*J*r21*r31/L
             k += 1
-            KC0v[k] += 1.0*G*r31**2*scf*(Iyy + Izz)/L
+            KC0v[k] += -1.0*G*J*r31**2/L
             k += 1
             KC0v[k] += -1.0*A*E*r11**2/L
             k += 1
@@ -682,41 +682,41 @@ cdef class Truss:
             k += 1
             KC0v[k] += 1.0*A*E*r31**2/L
             k += 1
-            KC0v[k] += 1.0*G*r11**2*scf*(Iyy + Izz)/L
+            KC0v[k] += -1.0*G*J*r11**2/L
             k += 1
-            KC0v[k] += 1.0*G*r11*r21*scf*(Iyy + Izz)/L
+            KC0v[k] += -1.0*G*J*r11*r21/L
             k += 1
-            KC0v[k] += 1.0*G*r11*r31*scf*(Iyy + Izz)/L
+            KC0v[k] += -1.0*G*J*r11*r31/L
             k += 1
-            KC0v[k] += -1.0*G*r11**2*scf*(Iyy + Izz)/L
+            KC0v[k] += 1.0*G*J*r11**2/L
             k += 1
-            KC0v[k] += -1.0*G*r11*r21*scf*(Iyy + Izz)/L
+            KC0v[k] += 1.0*G*J*r11*r21/L
             k += 1
-            KC0v[k] += -1.0*G*r11*r31*scf*(Iyy + Izz)/L
+            KC0v[k] += 1.0*G*J*r11*r31/L
             k += 1
-            KC0v[k] += 1.0*G*r11*r21*scf*(Iyy + Izz)/L
+            KC0v[k] += -1.0*G*J*r11*r21/L
             k += 1
-            KC0v[k] += 1.0*G*r21**2*scf*(Iyy + Izz)/L
+            KC0v[k] += -1.0*G*J*r21**2/L
             k += 1
-            KC0v[k] += 1.0*G*r21*r31*scf*(Iyy + Izz)/L
+            KC0v[k] += -1.0*G*J*r21*r31/L
             k += 1
-            KC0v[k] += -1.0*G*r11*r21*scf*(Iyy + Izz)/L
+            KC0v[k] += 1.0*G*J*r11*r21/L
             k += 1
-            KC0v[k] += -1.0*G*r21**2*scf*(Iyy + Izz)/L
+            KC0v[k] += 1.0*G*J*r21**2/L
             k += 1
-            KC0v[k] += -1.0*G*r21*r31*scf*(Iyy + Izz)/L
+            KC0v[k] += 1.0*G*J*r21*r31/L
             k += 1
-            KC0v[k] += 1.0*G*r11*r31*scf*(Iyy + Izz)/L
+            KC0v[k] += -1.0*G*J*r11*r31/L
             k += 1
-            KC0v[k] += 1.0*G*r21*r31*scf*(Iyy + Izz)/L
+            KC0v[k] += -1.0*G*J*r21*r31/L
             k += 1
-            KC0v[k] += 1.0*G*r31**2*scf*(Iyy + Izz)/L
+            KC0v[k] += -1.0*G*J*r31**2/L
             k += 1
-            KC0v[k] += -1.0*G*r11*r31*scf*(Iyy + Izz)/L
+            KC0v[k] += 1.0*G*J*r11*r31/L
             k += 1
-            KC0v[k] += -1.0*G*r21*r31*scf*(Iyy + Izz)/L
+            KC0v[k] += 1.0*G*J*r21*r31/L
             k += 1
-            KC0v[k] += -1.0*G*r31**2*scf*(Iyy + Izz)/L
+            KC0v[k] += 1.0*G*J*r31**2/L
 
 
     cpdef void update_M(Truss self,
