@@ -26,6 +26,7 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         h = 0.05 # m
         A = h*b
         Izz = b*h**3/12
+        Iyy = b**3*h/12
 
         # getting nodes
         ncoords = np.vstack((x, y, np.zeros_like(x))).T
@@ -56,8 +57,11 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         scf = 5/6.
         prop.G = scf*E/2/(1+0.3)
         prop.Izz = Izz
+        prop.Iyy = Iyy
         prop.intrho = rho*A
         prop.intrhoy2 = rho*Izz
+        prop.intrhoz2 = rho*Iyy
+        prop.J = Izz + Iyy
 
         ncoords_flatten = ncoords.flatten()
 
@@ -93,20 +97,19 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         bk = np.zeros(N, dtype=bool) #array to store known DOFs
         check = np.isclose(x, 0.)
         # clamping
-        bk[0::DOF] = check # u
-        bk[1::DOF] = check # v
-        bk[2::DOF] = check # w
-        bk[5::DOF] = check # rz
-        # removing out of XY plane displacements
-        bk[3::DOF] = True # rx
-        bk[4::DOF] = True # ry
+        bk[0::DOF][check] = True # u
+        bk[1::DOF][check] = True # v
+        bk[2::DOF][check] = True # w
+        bk[3::DOF][check] = True # rx
+        bk[4::DOF][check] = True # ry
+        bk[5::DOF][check] = True # rz
         bu = ~bk # same as np.logical_not, defining unknown DOFs
 
         # sub-matrices corresponding to unknown DOFs
         Kuu = KC0[bu, :][:, bu]
         Muu = M[bu, :][:, bu]
 
-        num_eigenvalues = 3
+        num_eigenvalues = 6
         eigvals, eigvecsu = eigsh(A=Kuu, M=Muu, sigma=-1., which='LM',
                 k=num_eigenvalues, tol=1e-3)
         omegan = eigvals**0.5
@@ -116,7 +119,8 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         print('Theoretical omega123', omega123)
         print('Numerical omega123', omegan)
         print()
-        assert np.allclose(omega123, omegan, rtol=0.015)
+        assert np.allclose(np.repeat(omega123, 2), omegan, rtol=0.015)
+
 
 if __name__ == '__main__':
     test_nat_freq_cantilever(refinement=1)
