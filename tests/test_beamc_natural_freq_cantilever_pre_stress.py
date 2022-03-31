@@ -9,7 +9,7 @@ from pyfe3d.beamprop import BeamProp
 from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
 
 def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
-    for mtype in mtypes:
+    for mtype in range(2):
         print('mtype', mtype)
         n = 50*refinement
         L = 3 # total size of the beam along x
@@ -139,7 +139,7 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
 
         # linear buckling check
         eigvals, eigvecsu = eigsh(A=Kuu, k=1, which='SM', M=KGuu,
-                tol=1e-9, sigma=1., mode='buckling')
+                tol=1e-3, sigma=100., mode='buckling')
         load_mult = -eigvals
         print('linear buckling Pcr=', load_mult*load)
 
@@ -151,7 +151,7 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
 
         alpha123 = np.array([1.875, 4.694, 7.885])
         omega123 = alpha123**2*np.sqrt(E*Izz/(rho*A*L**4))
-        omega123_expected = [0.29323386, 28.7058331, 164.26790439]
+        omega123_expected = [0.29974857, 28.71131935, 164.37754793]
         print('Theoretical omega123', omega123)
         print('Expected omega123 with pre-stress', omega123_expected)
         print('Numerical omega123', omegan)
