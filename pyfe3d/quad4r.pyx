@@ -157,7 +157,7 @@ cdef class Quad4R:
         self.c3 = -1
         self.c4 = -1
         self.init_k_KC0 = 0
-        #self.init_k_KCNL = 0
+        # self.init_k_KCNL = 0
         self.init_k_KG = 0
         self.init_k_M = 0
         self.area = 0
@@ -239,7 +239,7 @@ cdef class Quad4R:
             zi /= tmp
             zj /= tmp
             zk /= tmp
-            #NOTE defining tolerance to be 1/1e10 of normal vector norm
+            # NOTE defining tolerance to be 1/1e10 of normal vector norm
             tol = tmp/1e10
 
             xi = (v13i + v42i)/2.
@@ -259,16 +259,15 @@ cdef class Quad4R:
             yj /= tmp
             yk /= tmp
 
-            tmp = xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi
-            self.r11 = (yj*zk - yk*zj)/tmp
-            self.r12 = (-xj*zk + xk*zj)/tmp
-            self.r13 = (xj*yk - xk*yj)/tmp
-            self.r21 = (-yi*zk + yk*zi)/tmp
-            self.r22 = (xi*zk - xk*zi)/tmp
-            self.r23 = (-xi*yk + xk*yi)/tmp
-            self.r31 = (yi*zj - yj*zi)/tmp
-            self.r32 = (-xi*zj + xj*zi)/tmp
-            self.r33 = (xi*yj - xj*yi)/tmp
+            self.r11 = xi
+            self.r21 = xj
+            self.r31 = xk
+            self.r12 = yi
+            self.r22 = yj
+            self.r32 = yk
+            self.r13 = zi
+            self.r23 = zj
+            self.r33 = zk
 
             xmatnorm = (xmati**2 + xmatj**2 + xmatk**2)**0.5
             xmati /= xmatnorm
@@ -286,7 +285,7 @@ cdef class Quad4R:
                 ymatj /= tmp
                 ymatk /= tmp
                 if tmp > tol:
-                    #NOTE ovewriting xmati,xmatj,xmatk, they now represent the projected xmat axis
+                    # NOTE ovewriting xmati,xmatj,xmatk, they now represent the projected xmat axis
                     # xmat_projected = ymat X z
                     xmati = ymatj*zk - ymatk*zj
                     xmatj = ymatk*zi - ymati*zk
@@ -296,11 +295,11 @@ cdef class Quad4R:
                     xmatj /= tmp
                     xmatk /= tmp
 
-                    #NOTE angle between xmat_projected and xelem
-                    #NOTE assuming they are already normalized (no need to normalize)
+                    # NOTE angle between xmat_projected and xelem
+                    # NOTE assuming they are already normalized (no need to normalize)
                     self.m11 = xmati*xi + xmatj*xj + xmatk*xk # costheta
                     self.m22 = self.m11
-                    #NOTE sign of costheta
+                    # NOTE sign of costheta
                     #     - the sign is positive when rotating from the material
                     #       to the element coordinate
                     #     - the sign only affects sintheta
@@ -309,7 +308,7 @@ cdef class Quad4R:
                         self.m12 = -(1 - self.m11**2)**0.5 # sintheta
                         self.m21 = -self.m12
                     else:
-                        #NOTE theta is negative
+                        # NOTE theta is negative
                         self.m12 = (1 - self.m11**2)**0.5 # sintheta
                         self.m21 = -self.m12
 
@@ -359,11 +358,11 @@ cdef class Quad4R:
 
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
-                    #transforming translations
+                    # transforming translations
                     self.probe.ue[j*DOF + 0] += s1[i]*u[c[j] + 0 + i]
                     self.probe.ue[j*DOF + 1] += s2[i]*u[c[j] + 0 + i]
                     self.probe.ue[j*DOF + 2] += s3[i]*u[c[j] + 0 + i]
-                    #transforming rotations
+                    # transforming rotations
                     self.probe.ue[j*DOF + 3] += s1[i]*u[c[j] + 3 + i]
                     self.probe.ue[j*DOF + 4] += s2[i]*u[c[j] + 3 + i]
                     self.probe.ue[j*DOF + 5] += s3[i]*u[c[j] + 3 + i]
@@ -426,19 +425,19 @@ cdef class Quad4R:
         """
         cdef double x1, x2, x3, x4, y1, y2, y3, y4
         with nogil:
-            #NOTE ignoring z in local coordinates
+            # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
             y1 = self.probe.xe[1]
-            #z1 = self.probe.xe[2]
+            # z1 = self.probe.xe[2]
             x2 = self.probe.xe[3]
             y2 = self.probe.xe[4]
-            #z2 = self.probe.xe[5]
+            # z2 = self.probe.xe[5]
             x3 = self.probe.xe[6]
             y3 = self.probe.xe[7]
-            #z3 = self.probe.xe[8]
+            # z3 = self.probe.xe[8]
             x4 = self.probe.xe[9]
             y4 = self.probe.xe[10]
-            #z4 = self.probe.xe[11]
+            # z4 = self.probe.xe[11]
             self.area = 1/2.*fabs((x1*y2 + x2*y3 + x3*y4 + x4*y1) - (x2*y1 + x3*y2 + x4*y3 + x1*y4))
 
 
@@ -484,12 +483,12 @@ cdef class Quad4R:
         """
         cdef cINT c1, c2, c3, c4, k
         cdef double x1, x2, x3, x4, y1, y2, y3, y4, wij, detJ
-        #NOTE ABD in the material direction
+        # NOTE ABD in the material direction
         cdef double A11mat, A12mat, A16mat, A22mat, A26mat, A66mat
         cdef double B11mat, B12mat, B16mat, B22mat, B26mat, B66mat
         cdef double D11mat, D12mat, D16mat, D22mat, D26mat, D66mat
         cdef double E44, E45, E55
-        #NOTE ABD in the element direction
+        # NOTE ABD in the element direction
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
@@ -522,7 +521,7 @@ cdef class Quad4R:
             D26mat = prop.D26
             D66mat = prop.D66
 
-            #NOTE using self.m12 as a criterion to check if material
+            # NOTE using self.m12 as a criterion to check if material
             #     coordinates were defined
             if self.m12 == 0:
                 A11 = A11mat
@@ -551,37 +550,37 @@ cdef class Quad4R:
                 A11 = m11**2*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + 2*m11*m12*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12) + m12**2*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12)
                 A12 = m21**2*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + 2*m21*m22*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12) + m22**2*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12)
                 A16 = m11*m21*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + m12*m22*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12) + (m11*m22 + m12*m21)*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12)
-                #A21 = m11**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m11*m12*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m12**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
+                # A21 = m11**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m11*m12*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m12**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
                 A22 = m21**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m21*m22*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m22**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
                 A26 = m11*m21*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + m12*m22*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22) + (m11*m22 + m12*m21)*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22)
-                #A61 = m11**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m12**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
-                #A62 = m21**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m22**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
+                # A61 = m11**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m12**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
+                # A62 = m21**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m22**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
                 A66 = m11*m21*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + m12*m22*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21))
 
                 B11 = m11**2*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + 2*m11*m12*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12) + m12**2*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12)
                 B12 = m21**2*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + 2*m21*m22*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12) + m22**2*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12)
                 B16 = m11*m21*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + m12*m22*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12) + (m11*m22 + m12*m21)*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12)
-                #B21 = m11**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m11*m12*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m12**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
+                # B21 = m11**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m11*m12*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m12**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
                 B22 = m21**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m21*m22*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m22**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
                 B26 = m11*m21*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + m12*m22*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22) + (m11*m22 + m12*m21)*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22)
-                #B61 = m11**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m12**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
-                #B62 = m21**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m22**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
+                # B61 = m11**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m12**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
+                # B62 = m21**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m22**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
                 B66 = m11*m21*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + m12*m22*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21))
 
                 D11 = m11**2*(D11mat*m11**2 + D12mat*m12**2 + 2*D16mat*m11*m12) + 2*m11*m12*(D16mat*m11**2 + D26mat*m12**2 + 2*D66mat*m11*m12) + m12**2*(D12mat*m11**2 + D22mat*m12**2 + 2*D26mat*m11*m12)
                 D12 = m21**2*(D11mat*m11**2 + D12mat*m12**2 + 2*D16mat*m11*m12) + 2*m21*m22*(D16mat*m11**2 + D26mat*m12**2 + 2*D66mat*m11*m12) + m22**2*(D12mat*m11**2 + D22mat*m12**2 + 2*D26mat*m11*m12)
                 D16 = m11*m21*(D11mat*m11**2 + D12mat*m12**2 + 2*D16mat*m11*m12) + m12*m22*(D12mat*m11**2 + D22mat*m12**2 + 2*D26mat*m11*m12) + (m11*m22 + m12*m21)*(D16mat*m11**2 + D26mat*m12**2 + 2*D66mat*m11*m12)
-                #D21 = m11**2*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + 2*m11*m12*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22) + m12**2*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22)
+                # D21 = m11**2*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + 2*m11*m12*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22) + m12**2*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22)
                 D22 = m21**2*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + 2*m21*m22*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22) + m22**2*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22)
                 D26 = m11*m21*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + m12*m22*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22) + (m11*m22 + m12*m21)*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22)
-                #D61 = m11**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m12**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
-                #D62 = m21**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m22**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
+                # D61 = m11**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m12**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
+                # D62 = m21**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m22**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
                 D66 = m11*m21*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + m12*m22*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21))
 
             h = prop.h
 
-            #TODO, recalculating E1eq and E2eq based on rotated A matrix
-            #NOTE not considering effect of B matrix
+            # TODO, recalculating E1eq and E2eq based on rotated A matrix
+            # NOTE not considering effect of B matrix
             a11 = (-A22*A66 + A26**2)/(-A11*A22*A66 + A11*A26**2 + A12**2*A66 - 2*A12*A16*A26 + A16**2*A22)
             a22 = (-A11*A66 + A16**2)/(-A11*A22*A66 + A11*A26**2 + A12**2*A66 - 2*A12*A16*A26 + A16**2*A22)
             E1eq = 1./(h*a11)
@@ -591,21 +590,21 @@ cdef class Quad4R:
             E45 = prop.E45*0.5*(prop.scf_k13 + prop.scf_k23)
             E55 = prop.E55*prop.scf_k13
 
-            #NOTE ignoring z in local coordinates
+            # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
             y1 = self.probe.xe[1]
-            #z1 = self.probe.xe[2]
+            # z1 = self.probe.xe[2]
             x2 = self.probe.xe[3]
             y2 = self.probe.xe[4]
-            #z2 = self.probe.xe[5]
+            # z2 = self.probe.xe[5]
             x3 = self.probe.xe[6]
             y3 = self.probe.xe[7]
-            #z3 = self.probe.xe[8]
+            # z3 = self.probe.xe[8]
             x4 = self.probe.xe[9]
             y4 = self.probe.xe[10]
-            #z4 = self.probe.xe[11]
+            # z4 = self.probe.xe[11]
 
-            #Local to global transformation
+            # Local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -2352,12 +2351,12 @@ cdef class Quad4R:
                 KC0r[k] = 5+c4
                 KC0c[k] = 5+c4
 
-            #NOTE reduced integration to remove shear locking
+            # NOTE reduced integration to remove shear locking
             wij = 4.
 
             alphat = self.alphat
 
-            #TODO find a method of hourglass control that is derived for composites
+            # TODO find a method of hourglass control that is derived for composites
             #     in the future, use MITC4 elements that do not require
             #     hourglass control
             Eu = 0.1*E1eq*h/(1.0 + 1.0/self.area)
@@ -2366,7 +2365,7 @@ cdef class Quad4R:
             Ery = 0.1*E1eq*h**3/(1.0 + 1.0/self.area)
             Ew = 0.5*(Erx + Ery)
 
-            #NOTE using only one integration point at xi=0, eta=0 to avoid shear locking
+            # NOTE using only one integration point at xi=0, eta=0 to avoid shear locking
             detJ = 0.125*x1*y2 - 0.125*x1*y4 - 0.125*x2*y1 + 0.125*x2*y3 - 0.125*x3*y2 + 0.125*x3*y4 + 0.125*x4*y1 - 0.125*x4*y3
 
             j11 = 2.0*(-y1 - y2 + y3 + y4)/(x1*y2 - x1*y4 - x2*y1 + x2*y3 - x3*y2 + x3*y4 + x4*y1 - x4*y3)
@@ -3591,10 +3590,10 @@ cdef class Quad4R:
         cdef double y1, y2, y3, y4
         cdef double wij, detJ, xi, eta
         cdef double points[2]
-        #NOTE ABD in the material direction
+        # NOTE ABD in the material direction
         cdef double A11mat, A12mat, A16mat, A22mat, A26mat, A66mat
         cdef double B11mat, B12mat, B16mat, B22mat, B26mat, B66mat
-        #NOTE ABD in the element direction
+        # NOTE ABD in the element direction
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
@@ -3617,7 +3616,7 @@ cdef class Quad4R:
             B26mat = prop.B26
             B66mat = prop.B66
 
-            #NOTE using self.m12 as a criterion to check if material
+            # NOTE using self.m12 as a criterion to check if material
             #     coordinates were defined
             if self.m12 == 0:
                 A11 = A11mat
@@ -3640,24 +3639,24 @@ cdef class Quad4R:
                 A11 = m11**2*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + 2*m11*m12*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12) + m12**2*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12)
                 A12 = m21**2*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + 2*m21*m22*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12) + m22**2*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12)
                 A16 = m11*m21*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + m12*m22*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12) + (m11*m22 + m12*m21)*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12)
-                #A21 = m11**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m11*m12*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m12**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
+                # A21 = m11**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m11*m12*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m12**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
                 A22 = m21**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m21*m22*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m22**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
                 A26 = m11*m21*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + m12*m22*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22) + (m11*m22 + m12*m21)*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22)
-                #A61 = m11**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m12**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
-                #A62 = m21**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m22**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
+                # A61 = m11**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m12**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
+                # A62 = m21**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m22**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
                 A66 = m11*m21*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + m12*m22*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21))
 
                 B11 = m11**2*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + 2*m11*m12*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12) + m12**2*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12)
                 B12 = m21**2*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + 2*m21*m22*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12) + m22**2*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12)
                 B16 = m11*m21*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + m12*m22*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12) + (m11*m22 + m12*m21)*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12)
-                #B21 = m11**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m11*m12*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m12**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
+                # B21 = m11**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m11*m12*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m12**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
                 B22 = m21**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m21*m22*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m22**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
                 B26 = m11*m21*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + m12*m22*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22) + (m11*m22 + m12*m21)*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22)
-                #B61 = m11**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m12**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
-                #B62 = m21**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m22**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
+                # B61 = m11**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m12**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
+                # B62 = m21**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m22**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
                 B66 = m11*m21*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + m12*m22*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21))
 
-            #Local to global transformation
+            # Local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -3668,19 +3667,19 @@ cdef class Quad4R:
             r32 = self.r32
             r33 = self.r33
 
-            #NOTE ignoring z in local coordinates
+            # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
             y1 = self.probe.xe[1]
-            #z1 = self.probe.xe[2]
+            # z1 = self.probe.xe[2]
             x2 = self.probe.xe[3]
             y2 = self.probe.xe[4]
-            #z2 = self.probe.xe[5]
+            # z2 = self.probe.xe[5]
             x3 = self.probe.xe[6]
             y3 = self.probe.xe[7]
-            #z3 = self.probe.xe[8]
+            # z3 = self.probe.xe[8]
             x4 = self.probe.xe[9]
             y4 = self.probe.xe[10]
-            #z4 = self.probe.xe[11]
+            # z4 = self.probe.xe[11]
 
             ue = &self.probe.ue[0]
 
@@ -4124,7 +4123,7 @@ cdef class Quad4R:
                 KGr[k] = 2+c4
                 KGc[k] = 2+c4
 
-            #NOTE full integration for KG with two-point Gauss-Legendre quadrature
+            # NOTE full integration for KG with two-point Gauss-Legendre quadrature
             wij = 1.
             points[0] = -0.5773502691896257645092
             points[1] = +0.5773502691896257645092
@@ -4487,7 +4486,7 @@ cdef class Quad4R:
         cdef double N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
 
         with nogil:
-            #Local to global transformation
+            # Local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -4498,19 +4497,19 @@ cdef class Quad4R:
             r32 = self.r32
             r33 = self.r33
 
-            #NOTE ignoring z in local coordinates
+            # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
             y1 = self.probe.xe[1]
-            #z1 = self.probe.xe[2]
+            # z1 = self.probe.xe[2]
             x2 = self.probe.xe[3]
             y2 = self.probe.xe[4]
-            #z2 = self.probe.xe[5]
+            # z2 = self.probe.xe[5]
             x3 = self.probe.xe[6]
             y3 = self.probe.xe[7]
-            #z3 = self.probe.xe[8]
+            # z3 = self.probe.xe[8]
             x4 = self.probe.xe[9]
             y4 = self.probe.xe[10]
-            #z4 = self.probe.xe[11]
+            # z4 = self.probe.xe[11]
 
             if update_KGv_only == 0:
                 # positions of nodes 1,2,3,4 in the global matrix
@@ -4952,7 +4951,7 @@ cdef class Quad4R:
                 KGr[k] = 2+c4
                 KGc[k] = 2+c4
 
-            #NOTE full integration for KG with two-point Gauss-Legendre quadrature
+            # NOTE full integration for KG with two-point Gauss-Legendre quadrature
             wij = 1.
             points[0] = -0.5773502691896257645092
             points[1] = +0.5773502691896257645092
@@ -5317,21 +5316,21 @@ cdef class Quad4R:
             A = self.area
             valH1 = 0.0625*A
 
-            #NOTE ignoring z in local coordinates
+            # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
             y1 = self.probe.xe[1]
-            #z1 = self.probe.xe[2]
+            # z1 = self.probe.xe[2]
             x2 = self.probe.xe[3]
             y2 = self.probe.xe[4]
-            #z2 = self.probe.xe[5]
+            # z2 = self.probe.xe[5]
             x3 = self.probe.xe[6]
             y3 = self.probe.xe[7]
-            #z3 = self.probe.xe[8]
+            # z3 = self.probe.xe[8]
             x4 = self.probe.xe[9]
             y4 = self.probe.xe[10]
-            #z4 = self.probe.xe[11]
+            # z4 = self.probe.xe[11]
 
-            #Local to global transformation
+            # Local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -6790,7 +6789,7 @@ cdef class Quad4R:
                 Mr[k] = 5+c4
                 Mc[k] = 5+c4
 
-                #NOTE two-point Gauss-Legendre quadrature
+                # NOTE two-point Gauss-Legendre quadrature
                 wij = 1.
                 points[0] = -0.5773502691896257645092
                 points[1] = +0.5773502691896257645092
@@ -11055,7 +11054,7 @@ cdef class Quad4R:
                 Mc[k] = 5+c4
 
                 wij = 1.
-                #NOTE two-point Gauss-Lobatto quadrature
+                # NOTE two-point Gauss-Lobatto quadrature
                 points[0] = -1.
                 points[1] = +1.
                 h11 = 0.
