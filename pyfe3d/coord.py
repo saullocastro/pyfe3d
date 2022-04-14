@@ -171,6 +171,7 @@ class CoordR(Coord):
     def cr2me(self, vec):
         return vec
 
+
 class CoordC(Coord):
     __slots__ = Coord.__slots__
     def __init__(self, id=None, o=None, z=None, vecxz=None):
@@ -203,6 +204,7 @@ class CoordC(Coord):
 
     def __str__(self):
         return __common__str__('Cylindrical Coord Sys', self)
+
 
 class CoordS(Coord):
     __slots__ = Coord.__slots__

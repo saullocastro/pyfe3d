@@ -167,7 +167,7 @@ cdef class Tria3R:
         self.c2 = -1
         self.c3 = -1
         self.init_k_KC0 = 0
-        #self.init_k_KCNL = 0
+        # self.init_k_KCNL = 0
         self.init_k_KG = 0
         self.init_k_M = 0
         self.area = 0
@@ -247,7 +247,7 @@ cdef class Tria3R:
             zi /= tmp
             zj /= tmp
             zk /= tmp
-            #NOTE defining tolerance to be 1/1e10 of normal vector norm
+            # NOTE defining tolerance to be 1/1e10 of normal vector norm
             tol = tmp/1e10
 
             xi = v12i
@@ -267,16 +267,15 @@ cdef class Tria3R:
             yj /= tmp
             yk /= tmp
 
-            tmp = xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi
-            self.r11 = (yj*zk - yk*zj)/tmp
-            self.r12 = (-xj*zk + xk*zj)/tmp
-            self.r13 = (xj*yk - xk*yj)/tmp
-            self.r21 = (-yi*zk + yk*zi)/tmp
-            self.r22 = (xi*zk - xk*zi)/tmp
-            self.r23 = (-xi*yk + xk*yi)/tmp
-            self.r31 = (yi*zj - yj*zi)/tmp
-            self.r32 = (-xi*zj + xj*zi)/tmp
-            self.r33 = (xi*yj - xj*yi)/tmp
+            self.r11 = xi
+            self.r21 = xj
+            self.r31 = xk
+            self.r12 = yi
+            self.r22 = yj
+            self.r32 = yk
+            self.r13 = zi
+            self.r23 = zj
+            self.r33 = zk
 
             xmatnorm = (xmati**2 + xmatj**2 + xmatk**2)**0.5
             xmati /= xmatnorm
@@ -294,7 +293,7 @@ cdef class Tria3R:
                 ymatj /= tmp
                 ymatk /= tmp
                 if tmp > tol:
-                    #NOTE ovewriting xmati,xmatj,xmatk, they now represent the projected xmat axis
+                    # NOTE ovewriting xmati,xmatj,xmatk, they now represent the projected xmat axis
                     # xmat_projected = ymat X z
                     xmati = ymatj*zk - ymatk*zj
                     xmatj = ymatk*zi - ymati*zk
@@ -304,11 +303,11 @@ cdef class Tria3R:
                     xmatj /= tmp
                     xmatk /= tmp
 
-                    #NOTE angle between xmat_projected and xelem
-                    #NOTE assuming they are already normalized (no need to normalize)
+                    # NOTE angle between xmat_projected and xelem
+                    # NOTE assuming they are already normalized (no need to normalize)
                     self.m11 = xmati*xi + xmatj*xj + xmatk*xk # costheta
                     self.m22 = self.m11
-                    #NOTE sign of costheta
+                    # NOTE sign of costheta
                     #     - the sign is positive when rotating from the material
                     #       to the element coordinate
                     #     - the sign only affects sintheta
@@ -317,7 +316,7 @@ cdef class Tria3R:
                         self.m12 = -(1 - self.m11**2)**0.5 # sintheta
                         self.m21 = -self.m12
                     else:
-                        #NOTE theta is negative
+                        # NOTE theta is negative
                         self.m12 = (1 - self.m11**2)**0.5 # sintheta
                         self.m21 = -self.m12
 
@@ -366,11 +365,11 @@ cdef class Tria3R:
 
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
-                    #transforming translations
+                    # transforming translations
                     self.probe.ue[j*DOF + 0] += s1[i]*u[c[j] + 0 + i]
                     self.probe.ue[j*DOF + 1] += s2[i]*u[c[j] + 0 + i]
                     self.probe.ue[j*DOF + 2] += s3[i]*u[c[j] + 0 + i]
-                    #transforming rotations
+                    # transforming rotations
                     self.probe.ue[j*DOF + 3] += s1[i]*u[c[j] + 3 + i]
                     self.probe.ue[j*DOF + 4] += s2[i]*u[c[j] + 3 + i]
                     self.probe.ue[j*DOF + 5] += s3[i]*u[c[j] + 3 + i]
@@ -432,16 +431,16 @@ cdef class Tria3R:
         """
         cdef double x1, x2, x3, y1, y2, y3
         with nogil:
-            #NOTE ignoring z in local coordinates
+            # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
             y1 = self.probe.xe[1]
-            #z1 = self.probe.xe[2]
+            # z1 = self.probe.xe[2]
             x2 = self.probe.xe[3]
             y2 = self.probe.xe[4]
-            #z2 = self.probe.xe[5]
+            # z2 = self.probe.xe[5]
             x3 = self.probe.xe[6]
             y3 = self.probe.xe[7]
-            #z3 = self.probe.xe[8]
+            # z3 = self.probe.xe[8]
             self.area = fabs((-x1 + x2)*(-y1 + y3)/2. + (x1 - x3)*(-y1 + y2)/2.)
 
 
@@ -487,12 +486,12 @@ cdef class Tria3R:
         """
         cdef cINT c1, c2, c3, i, k
         cdef double x1, x2, x3, y1, y2, y3, wij, detJ, A
-        #NOTE ABD in the material direction
+        # NOTE ABD in the material direction
         cdef double A11mat, A12mat, A16mat, A22mat, A26mat, A66mat
         cdef double B11mat, B12mat, B16mat, B22mat, B26mat, B66mat
         cdef double D11mat, D12mat, D16mat, D22mat, D26mat, D66mat
         cdef double E44, E45, E55
-        #NOTE ABD in the element direction
+        # NOTE ABD in the element direction
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
@@ -528,7 +527,7 @@ cdef class Tria3R:
             D26mat = prop.D26
             D66mat = prop.D66
 
-            #NOTE using self.m12 as a criterion to check if material
+            # NOTE using self.m12 as a criterion to check if material
             #     coordinates were defined
             if self.m12 == 0:
                 A11 = A11mat
@@ -557,31 +556,31 @@ cdef class Tria3R:
                 A11 = m11**2*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + 2*m11*m12*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12) + m12**2*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12)
                 A12 = m21**2*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + 2*m21*m22*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12) + m22**2*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12)
                 A16 = m11*m21*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + m12*m22*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12) + (m11*m22 + m12*m21)*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12)
-                #A21 = m11**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m11*m12*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m12**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
+                # A21 = m11**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m11*m12*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m12**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
                 A22 = m21**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m21*m22*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m22**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
                 A26 = m11*m21*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + m12*m22*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22) + (m11*m22 + m12*m21)*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22)
-                #A61 = m11**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m12**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
-                #A62 = m21**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m22**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
+                # A61 = m11**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m12**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
+                # A62 = m21**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m22**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
                 A66 = m11*m21*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + m12*m22*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21))
 
                 B11 = m11**2*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + 2*m11*m12*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12) + m12**2*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12)
                 B12 = m21**2*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + 2*m21*m22*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12) + m22**2*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12)
                 B16 = m11*m21*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + m12*m22*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12) + (m11*m22 + m12*m21)*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12)
-                #B21 = m11**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m11*m12*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m12**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
+                # B21 = m11**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m11*m12*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m12**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
                 B22 = m21**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m21*m22*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m22**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
                 B26 = m11*m21*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + m12*m22*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22) + (m11*m22 + m12*m21)*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22)
-                #B61 = m11**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m12**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
-                #B62 = m21**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m22**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
+                # B61 = m11**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m12**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
+                # B62 = m21**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m22**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
                 B66 = m11*m21*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + m12*m22*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21))
 
                 D11 = m11**2*(D11mat*m11**2 + D12mat*m12**2 + 2*D16mat*m11*m12) + 2*m11*m12*(D16mat*m11**2 + D26mat*m12**2 + 2*D66mat*m11*m12) + m12**2*(D12mat*m11**2 + D22mat*m12**2 + 2*D26mat*m11*m12)
                 D12 = m21**2*(D11mat*m11**2 + D12mat*m12**2 + 2*D16mat*m11*m12) + 2*m21*m22*(D16mat*m11**2 + D26mat*m12**2 + 2*D66mat*m11*m12) + m22**2*(D12mat*m11**2 + D22mat*m12**2 + 2*D26mat*m11*m12)
                 D16 = m11*m21*(D11mat*m11**2 + D12mat*m12**2 + 2*D16mat*m11*m12) + m12*m22*(D12mat*m11**2 + D22mat*m12**2 + 2*D26mat*m11*m12) + (m11*m22 + m12*m21)*(D16mat*m11**2 + D26mat*m12**2 + 2*D66mat*m11*m12)
-                #D21 = m11**2*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + 2*m11*m12*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22) + m12**2*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22)
+                # D21 = m11**2*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + 2*m11*m12*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22) + m12**2*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22)
                 D22 = m21**2*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + 2*m21*m22*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22) + m22**2*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22)
                 D26 = m11*m21*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + m12*m22*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22) + (m11*m22 + m12*m21)*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22)
-                #D61 = m11**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m12**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
-                #D62 = m21**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m22**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
+                # D61 = m11**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m12**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
+                # D62 = m21**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m22**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
                 D66 = m11*m21*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + m12*m22*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21))
 
             h = prop.h
@@ -590,16 +589,16 @@ cdef class Tria3R:
             E45 = prop.E45*0.5*(prop.scf_k13 + prop.scf_k23)
             E55 = prop.E55*prop.scf_k13
 
-            #NOTE ignoring z in local coordinates
+            # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
             y1 = self.probe.xe[1]
-            #z1 = self.probe.xe[2]
+            # z1 = self.probe.xe[2]
             x2 = self.probe.xe[3]
             y2 = self.probe.xe[4]
-            #z2 = self.probe.xe[5]
+            # z2 = self.probe.xe[5]
             x3 = self.probe.xe[6]
             y3 = self.probe.xe[7]
-            #z3 = self.probe.xe[8]
+            # z3 = self.probe.xe[8]
 
             l12 = ((x1 - x2)**2 + (y1 - y2)**2)**0.5
             l23 = ((x2 - x3)**2 + (y2 - y3)**2)**0.5
@@ -610,13 +609,13 @@ cdef class Tria3R:
             if l31 > maxl:
                 maxl = l31
 
-            #NOTE strategy to prevent shear locking used in BFG elements imported here...
+            # NOTE strategy to prevent shear locking used in BFG elements imported here...
             factor = self.alpha_shear_locking*maxl**2/h**2
             E44 = 1 / (1 + factor) * E44
             E45 = 1 / (1 + factor) * E45
             E55 = 1 / (1 + factor) * E55
 
-            #Local to global transformation
+            # Local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -2306,10 +2305,10 @@ cdef class Tria3R:
         cdef double x1, x2, x3
         cdef double y1, y2, y3
         cdef double wij, detJ, A
-        #NOTE ABD in the material direction
+        # NOTE ABD in the material direction
         cdef double A11mat, A12mat, A16mat, A22mat, A26mat, A66mat
         cdef double B11mat, B12mat, B16mat, B22mat, B26mat, B66mat
-        #NOTE ABD in the element direction
+        # NOTE ABD in the element direction
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
@@ -2334,7 +2333,7 @@ cdef class Tria3R:
             B26mat = prop.B26
             B66mat = prop.B66
 
-            #NOTE using self.m12 as a criterion to check if material
+            # NOTE using self.m12 as a criterion to check if material
             #     coordinates were defined
             if self.m12 == 0:
                 A11 = A11mat
@@ -2357,24 +2356,24 @@ cdef class Tria3R:
                 A11 = m11**2*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + 2*m11*m12*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12) + m12**2*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12)
                 A12 = m21**2*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + 2*m21*m22*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12) + m22**2*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12)
                 A16 = m11*m21*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + m12*m22*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12) + (m11*m22 + m12*m21)*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12)
-                #A21 = m11**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m11*m12*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m12**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
+                # A21 = m11**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m11*m12*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m12**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
                 A22 = m21**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m21*m22*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m22**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
                 A26 = m11*m21*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + m12*m22*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22) + (m11*m22 + m12*m21)*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22)
-                #A61 = m11**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m12**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
-                #A62 = m21**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m22**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
+                # A61 = m11**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m12**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
+                # A62 = m21**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m22**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
                 A66 = m11*m21*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + m12*m22*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21))
 
                 B11 = m11**2*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + 2*m11*m12*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12) + m12**2*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12)
                 B12 = m21**2*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + 2*m21*m22*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12) + m22**2*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12)
                 B16 = m11*m21*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + m12*m22*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12) + (m11*m22 + m12*m21)*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12)
-                #B21 = m11**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m11*m12*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m12**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
+                # B21 = m11**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m11*m12*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m12**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
                 B22 = m21**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m21*m22*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m22**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
                 B26 = m11*m21*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + m12*m22*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22) + (m11*m22 + m12*m21)*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22)
-                #B61 = m11**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m12**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
-                #B62 = m21**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m22**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
+                # B61 = m11**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m12**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
+                # B62 = m21**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m22**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
                 B66 = m11*m21*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + m12*m22*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21))
 
-            #Local to global transformation
+            # Local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -2385,16 +2384,16 @@ cdef class Tria3R:
             r32 = self.r32
             r33 = self.r33
 
-            #NOTE ignoring z in local coordinates
+            # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
             y1 = self.probe.xe[1]
-            #z1 = self.probe.xe[2]
+            # z1 = self.probe.xe[2]
             x2 = self.probe.xe[3]
             y2 = self.probe.xe[4]
-            #z2 = self.probe.xe[5]
+            # z2 = self.probe.xe[5]
             x3 = self.probe.xe[6]
             y3 = self.probe.xe[7]
-            #z3 = self.probe.xe[8]
+            # z3 = self.probe.xe[8]
 
             ue = &self.probe.ue[0]
 
@@ -2868,7 +2867,7 @@ cdef class Tria3R:
             A = self.area
             detJ = 2*A
 
-            #Local to global transformation
+            # Local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -2879,16 +2878,16 @@ cdef class Tria3R:
             r32 = self.r32
             r33 = self.r33
 
-            #NOTE ignoring z in local coordinates
+            # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
             y1 = self.probe.xe[1]
-            #z1 = self.probe.xe[2]
+            # z1 = self.probe.xe[2]
             x2 = self.probe.xe[3]
             y2 = self.probe.xe[4]
-            #z2 = self.probe.xe[5]
+            # z2 = self.probe.xe[5]
             x3 = self.probe.xe[6]
             y3 = self.probe.xe[7]
-            #z3 = self.probe.xe[8]
+            # z3 = self.probe.xe[8]
 
             if update_KGv_only == 0:
                 # positions of nodes 1,2,3,4 in the global matrix
@@ -3361,18 +3360,18 @@ cdef class Tria3R:
             detJ = 2*A
             valH1 = detJ/18.
 
-            #NOTE ignoring z in local coordinates
+            # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
             y1 = self.probe.xe[1]
-            #z1 = self.probe.xe[2]
+            # z1 = self.probe.xe[2]
             x2 = self.probe.xe[3]
             y2 = self.probe.xe[4]
-            #z2 = self.probe.xe[5]
+            # z2 = self.probe.xe[5]
             x3 = self.probe.xe[6]
             y3 = self.probe.xe[7]
-            #z3 = self.probe.xe[8]
+            # z3 = self.probe.xe[8]
 
-            #Local to global transformation
+            # Local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -4200,10 +4199,10 @@ cdef class Tria3R:
                 Mr[k] = 5+c3
                 Mc[k] = 5+c3
 
-                #NOTE 3-point Gauss-Legendre quadrature for KG
-                #GAUSSIAN QUADRATURE FORMULAS FOR TRIANGLES
-                #G. R. COWPER
-                #https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620070316
+                # NOTE 3-point Gauss-Legendre quadrature for KG
+                # GAUSSIAN QUADRATURE FORMULAS FOR TRIANGLES
+                # G. R. COWPER
+                # https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620070316
                 wij = 0.5*0.333333333333333333333333333333333333333333333
                 points[0] = 0.66666666666666666666666666666666666666666667
                 points[1] = 0.16666666666666666666666666666666666666666667
@@ -6619,7 +6618,7 @@ cdef class Tria3R:
                 Mc[k] = 5+c3
 
                 wij = 0.5*0.3333333333333333333333333333333333333
-                #NOTE three-point Gauss-Lobatto quadrature
+                # NOTE three-point Gauss-Lobatto quadrature
                 points[0] = 1.
                 points[2] = 0.
                 points[3] = 0.

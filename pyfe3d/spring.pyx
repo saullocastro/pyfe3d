@@ -173,16 +173,15 @@ cdef class Spring:
             yj /= tmp
             yk /= tmp
 
-            tmp = xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi
-            self.r11 = (yj*zk - yk*zj)/tmp
-            self.r12 = (-xj*zk + xk*zj)/tmp
-            self.r13 = (xj*yk - xk*yj)/tmp
-            self.r21 = (-yi*zk + yk*zi)/tmp
-            self.r22 = (xi*zk - xk*zi)/tmp
-            self.r23 = (-xi*yk + xk*yi)/tmp
-            self.r31 = (yi*zj - yj*zi)/tmp
-            self.r32 = (-xi*zj + xj*zi)/tmp
-            self.r33 = (xi*yj - xj*yi)/tmp
+            self.r11 = xi
+            self.r21 = xj
+            self.r31 = xk
+            self.r12 = yi
+            self.r22 = yj
+            self.r32 = yk
+            self.r13 = zi
+            self.r23 = zj
+            self.r33 = zk
 
 
     cpdef void update_probe_ue(Spring self, np.ndarray[cDOUBLE, ndim=1] u):
@@ -206,7 +205,7 @@ cdef class Spring:
         cdef double s2[3]
         cdef double s3[3]
 
-        #FIXME double check all this part
+        # TODO double check all this part
         with nogil:
             # positions in the global stiffness matrix
             c[0] = self.c1
@@ -229,11 +228,11 @@ cdef class Spring:
 
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
-                    #transforming translations
+                    # transforming translations
                     self.probe.ue[j*DOF + 0] += s1[i]*u[c[j] + 0 + i]
                     self.probe.ue[j*DOF + 1] += s2[i]*u[c[j] + 0 + i]
                     self.probe.ue[j*DOF + 2] += s3[i]*u[c[j] + 0 + i]
-                    #transforming rotations
+                    # transforming rotations
                     self.probe.ue[j*DOF + 3] += s1[i]*u[c[j] + 3 + i]
                     self.probe.ue[j*DOF + 4] += s2[i]*u[c[j] + 3 + i]
                     self.probe.ue[j*DOF + 5] += s3[i]*u[c[j] + 3 + i]
@@ -272,7 +271,7 @@ cdef class Spring:
             krye = self.krye
             krze = self.krze
 
-            #Local to global transformation
+            # Local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13

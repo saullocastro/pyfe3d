@@ -102,7 +102,7 @@ cdef class Truss:
         self.c1 = -1
         self.c2 = -1
         self.init_k_KC0 = 0
-        #self.init_k_KCNL = 0
+        # self.init_k_KCNL = 0
         self.init_k_M = 0
         self.length = 0
         self.r11 = self.r12 = self.r13 = 0.
@@ -131,7 +131,7 @@ cdef class Truss:
         cdef double s2[3]
         cdef double s3[3]
 
-        #FIXME double check all this part
+        # FIXME double check all this part
         with nogil:
             # positions in the global stiffness matrix
             c[0] = self.c1
@@ -154,11 +154,11 @@ cdef class Truss:
 
             for j in range(NUM_NODES):
                 for i in range(DOF//2):
-                    #transforming translations
+                    # transforming translations
                     self.probe.ue[j*DOF + 0] += s1[i]*u[c[j] + 0 + i]
                     self.probe.ue[j*DOF + 1] += s2[i]*u[c[j] + 0 + i]
                     self.probe.ue[j*DOF + 2] += s3[i]*u[c[j] + 0 + i]
-                    #transforming rotations
+                    # transforming rotations
                     self.probe.ue[j*DOF + 3] += s1[i]*u[c[j] + 3 + i]
                     self.probe.ue[j*DOF + 4] += s2[i]*u[c[j] + 3 + i]
                     self.probe.ue[j*DOF + 5] += s3[i]*u[c[j] + 3 + i]
@@ -204,7 +204,7 @@ cdef class Truss:
             xj /= tmp
             xk /= tmp
 
-            #NOTE arbitrary off-axis vector
+            # NOTE arbitrary off-axis vector
             vxyi = xj
             vxyj = xk
             vxyk = xi
@@ -225,16 +225,15 @@ cdef class Truss:
             yj /= tmp
             yk /= tmp
 
-            tmp = xi*yj*zk - xi*yk*zj - xj*yi*zk + xj*yk*zi + xk*yi*zj - xk*yj*zi
-            self.r11 = (yj*zk - yk*zj)/tmp
-            self.r12 = (-xj*zk + xk*zj)/tmp
-            self.r13 = (xj*yk - xk*yj)/tmp
-            self.r21 = (-yi*zk + yk*zi)/tmp
-            self.r22 = (xi*zk - xk*zi)/tmp
-            self.r23 = (-xi*yk + xk*yi)/tmp
-            self.r31 = (yi*zj - yj*zi)/tmp
-            self.r32 = (-xi*zj + xj*zi)/tmp
-            self.r33 = (xi*yj - xj*yi)/tmp
+            self.r11 = xi
+            self.r21 = xj
+            self.r31 = xk
+            self.r12 = yi
+            self.r22 = yj
+            self.r32 = yk
+            self.r13 = zi
+            self.r23 = zj
+            self.r33 = zk
 
 
     cpdef void update_probe_xe(Truss self, np.ndarray[cDOUBLE, ndim=1] x):
@@ -292,7 +291,7 @@ cdef class Truss:
         """
         cdef double x1, x2, y1, y2, z1, z2
         with nogil:
-            #NOTE ignoring z in local coordinates
+            # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
             y1 = self.probe.xe[1]
             z1 = self.probe.xe[2]
@@ -340,7 +339,7 @@ cdef class Truss:
             Izz = prop.Izz
             J = prop.J
 
-            #Local to global transformation
+            # Local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -760,7 +759,7 @@ cdef class Truss:
             A = prop.A
             E = prop.E
 
-            #Local to global transformation
+            # Local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -1608,7 +1607,7 @@ cdef class Truss:
                 Mr[k] = 5+c2
                 Mc[k] = 5+c2
 
-                #NOTE obtained with two-point Gauss-Lobatto quadrature
+                # NOTE obtained with two-point Gauss-Lobatto quadrature
 
                 k = self.init_k_M
                 Mv[k] += L*intrho*r11**2/2 + L*intrho*r12**2/2 + L*intrho*r13**2/2
