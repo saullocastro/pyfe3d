@@ -45,7 +45,7 @@ License
 Distrubuted under the 3-Clause BSD license
 (https://raw.github.com/saullocastro/pyfe3d/master/LICENSE)::
 
-    Copyright (c) 2021, Saullo G. P. Castro (S.G.P.Castro@tudelft.nl)
+    Copyright (c) 2021-2022, Saullo G. P. Castro (S.G.P.Castro@tudelft.nl)
     All rights reserved.
 
     Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
