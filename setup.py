@@ -11,7 +11,7 @@ from Cython.Build import cythonize
 
 
 is_released = True
-version = '0.3.9'
+version = '0.3.10'
 
 
 def git_version():
@@ -91,16 +91,23 @@ Operating System :: Unix
 
 fullversion = write_version_py(version, is_released)
 
-if os.name == 'nt':
+if os.name == 'nt': # Windows
     compile_args = ['/openmp', '/O2']
     link_args = []
-else:
+elif os.name == 'posix': # MAC-OS
+    compile_args = ['-fopenmp']
+    link_args = []
+else: # Linux
     compile_args = ['-fopenmp', '-static', '-static-libgcc', '-static-libstdc++']
     link_args = ['-fopenmp', '-static-libgcc', '-static-libstdc++']
 
 if 'CYTHON_TRACE_NOGIL' in os.environ.keys():
-    compile_args = ['-O0']
-    link_args = []
+    if os.name == 'nt': # Windows
+        compile_args = ['/O0']
+        link_args = []
+    else: # MAC-OS or Linux
+        compile_args = ['-O0']
+        link_args = []
 
 include_dirs = [
             np.get_include(),

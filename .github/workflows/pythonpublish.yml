@@ -19,22 +19,27 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
-      if: matrix.runs-on == 'windows-latest' || (matrix.runs-on == 'ubuntu-latest' && matrix.python-version == 3.9)
+      if: matrix.runs-on == 'windows-latest' || matrix.runs-on == 'macos-latest' || (matrix.runs-on == 'ubuntu-latest' && matrix.python-version == 3.9)
       run: |
         python3 -m pip install --upgrade pip
         python3 -m pip install --upgrade setuptools wheel twine
         pip3 install -r requirements.txt
+    - name: Install MAC-OS dependencies
+      if: matrix.runs-on == 'macos-latest'
+      run: |
+        brew update
+        brew install libomp
     - name: Build Windows Python wheels
       if: matrix.runs-on == 'windows-latest'
       run: |
         python3 setup.py sdist bdist_wheel
     - name: Publish Windows Python wheels
-      if: matrix.runs-on == 'windows-latest'
+      if: matrix.runs-on == 'windows-latest' || matrix.runs-on == 'macos-latest'
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
       run: |
-        python3 -m twine upload dist/*.whl
+        python3 -m twine upload dist
     - name: Build manylinux Python wheels
       if: matrix.runs-on == 'ubuntu-latest' && matrix.python-version == '3.10'
       uses: RalfG/python-wheels-manylinux-build@v0.4.2-manylinux2014_x86_64
