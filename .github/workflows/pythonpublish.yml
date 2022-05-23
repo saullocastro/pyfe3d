@@ -28,7 +28,7 @@ jobs:
       if: matrix.runs-on == 'macos-latest'
       run: |
         brew update
-        brew install llvm libomp
+        brew install gcc
     - name: Build Windows Python wheels
       if: matrix.runs-on == 'windows-latest'
       run: |
