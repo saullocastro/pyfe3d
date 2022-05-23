@@ -9,7 +9,7 @@ from pyfe3d.shellprop_utils import isotropic_plate
 from pyfe3d import Tria3R, Tria3RData, Tria3RProbe, INT, DOUBLE, DOF
 
 
-def test_static_plate_quad_point_load(plot=False, refinement=1):
+def test_tria3r_static_point_load(plot=False, refinement=1):
     data = Tria3RData()
     probe = Tria3RProbe()
     nx = 7*refinement
@@ -154,4 +154,4 @@ def test_static_plate_quad_point_load(plot=False, refinement=1):
 
 
 if __name__ == '__main__':
-    test_static_plate_quad_point_load(plot=True, refinement=1)
+    test_tria3r_static_point_load(plot=True, refinement=1)

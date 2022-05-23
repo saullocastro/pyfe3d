@@ -10,7 +10,7 @@ from pyfe3d.shellprop_utils import isotropic_plate
 from pyfe3d import Tria3R, Tria3RData, Tria3RProbe, INT, DOUBLE, DOF
 
 
-def test_linear_buckling(mode=0, refinement=1):
+def test_tria3r_linear_buckling_plate_given_stress(mode=0, refinement=1):
     data = Tria3RData()
     probe = Tria3RProbe()
     nx = refinement*31
@@ -174,4 +174,4 @@ def test_linear_buckling(mode=0, refinement=1):
 
 
 if __name__ == '__main__':
-    test_linear_buckling(mode=0, refinement=1)
+    test_tria3r_linear_buckling_plate_given_stress(mode=0, refinement=1)

@@ -9,7 +9,7 @@ from pyfe3d.shellprop_utils import isotropic_plate
 from pyfe3d import Tria3R, Tria3RData, Tria3RProbe, INT, DOUBLE, DOF
 
 
-def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
+def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
     data = Tria3RData()
     probe = Tria3RProbe()
     for mtype in mtypes:
@@ -164,4 +164,4 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
 
 
 if __name__ == '__main__':
-    test_nat_freq_plate(plot=True, mode=0, mtypes=[2], refinement=5)
+    test_tria3r_nat_freq(plot=True, mode=0, mtypes=[2], refinement=5)

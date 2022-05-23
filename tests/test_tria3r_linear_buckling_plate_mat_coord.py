@@ -10,7 +10,7 @@ from pyfe3d.shellprop_utils import laminated_plate
 from pyfe3d import Tria3R, Tria3RData, Tria3RProbe, INT, DOUBLE, DOF
 
 
-def test_linear_buckling_plate(plot=False, mode=0):
+def test_tria3r_linear_buckling_plate_mat_coord(plot=False, mode=0):
     # NOTE keep thetadeg = 0 as first, to work as reference wmax_ref
     thetadegs = [0, -90, -60, -30, 30, 60, 90]
     for thetadeg in thetadegs:
@@ -219,4 +219,4 @@ def test_linear_buckling_plate(plot=False, mode=0):
 
 
 if __name__ == '__main__':
-    test_linear_buckling_plate(plot=True, mode=0)
+    test_tria3r_linear_buckling_plate_mat_coord(plot=True, mode=0)

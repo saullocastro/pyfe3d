@@ -8,7 +8,7 @@ from scipy.sparse import coo_matrix
 from pyfe3d.beamprop import BeamProp
 from pyfe3d import Truss, TrussData, TrussProbe, DOF, INT, DOUBLE
 
-def test_nat_freq_axial(refinement=1, mtypes=range(2)):
+def test_truss_natural_freq(refinement=1, mtypes=range(2)):
     for mtype in mtypes:
         print('mtype', mtype)
         n = 101*refinement
@@ -115,4 +115,4 @@ def test_nat_freq_axial(refinement=1, mtypes=range(2)):
         assert np.allclose(omegan_theoretical, omegan, rtol=0.01)
 
 if __name__ == '__main__':
-    test_nat_freq_axial(refinement=1)
+    test_truss_natural_freq(refinement=1)
