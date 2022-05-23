@@ -21,8 +21,6 @@ jobs:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       if: matrix.runs-on == 'windows-latest' || matrix.runs-on == 'macos-latest' || (matrix.runs-on == 'ubuntu-latest' && matrix.python-version == 3.9)
-      env:
-          CI: false # NOTE workaround to prevent early termination on GitHub Actions
       run: |
         python3 -m pip install --upgrade pip
         python3 -m pip install --upgrade setuptools wheel twine
