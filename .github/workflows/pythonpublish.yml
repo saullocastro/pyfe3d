@@ -24,11 +24,6 @@ jobs:
         python3 -m pip install --upgrade pip
         python3 -m pip install --upgrade setuptools wheel twine
         pip3 install -r requirements.txt
-    - name: Install MAC-OS dependencies
-      if: matrix.runs-on == 'macos-latest'
-      run: |
-        brew update
-        brew install gcc
     - name: Build Windows Python wheels
       if: matrix.runs-on == 'windows-latest'
       run: |

@@ -95,7 +95,7 @@ if os.name == 'nt': # Windows
     compile_args = ['/openmp', '/O2']
     link_args = []
 elif os.name == 'posix': # MAC-OS
-    compile_args = ['-fopenmp']
+    compile_args = ['-O0']
     link_args = []
 else: # Linux
     compile_args = ['-fopenmp', '-static', '-static-libgcc', '-static-libstdc++']
