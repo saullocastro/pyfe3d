@@ -71,9 +71,9 @@ def test_quad4r_coord():
         ])
     coord = quad4r_coord(quad, ncoords)
     cosa, cosb, cosg = coord.cosines_to_global()
-    #NOTE Gimbal lock in the determination of the angles
-    #NOTE reason why we are using rij terms directly
-    #assert np.allclose([cosa, cosb, cosg], [0, 0, 1])
+    # NOTE Gimbal lock in the determination of the angles
+    # NOTE reason why we are using rij terms directly
+    # assert np.allclose([cosa, cosb, cosg], [0, 0, 1])
 
 
 if __name__ == '__main__':

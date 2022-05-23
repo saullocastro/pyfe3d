@@ -136,8 +136,8 @@ def test_laminated_plate_tri_axial():
     matlamina = prop.plies[0].matlamina
     thickness = prop.h
     prop = shellprop_from_lamination_parameters(thickness, matlamina, lp)
-    #TODO A, B and D are changing from the original, check!
-    #NOTE probably because of the initial tri-axial-based properties
+    # TODO A, B and D are changing from the original, check!
+    # NOTE probably because of the initial tri-axial-based properties
     A = np.array([[ 13589503.90225179,  2502486.88587513,  2026742.01957523],
                   [  2502486.88587513, 13589503.90225179,  2026742.01957523],
                   [  2026742.01957523,  2026742.01957523,  4084254.25409417]])

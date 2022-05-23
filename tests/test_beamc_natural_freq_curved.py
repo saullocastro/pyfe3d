@@ -30,7 +30,6 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
         x = r*np.cos(thetas)
         y = r*np.sin(thetas)
 
-        # getting nodes
         ncoords = np.vstack((x, y, np.zeros_like(x))).T
         nids = 1 + np.arange(ncoords.shape[0])
         nid_pos = dict(zip(nids, np.arange(len(nids))))
@@ -96,19 +95,15 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
 
         print('sparse KC0 and M created')
 
-        # applying boundary conditions
-        bk = np.zeros(N, dtype=bool) #array to store known DOFs
-        check = np.isclose(x, x.min()) | np.isclose(x, x.max()) # locating nodes at both ends
-        # simply supporting at both ends
-        bk[0::DOF] = check # u
-        bk[1::DOF] = check # v
-        # removing out of XY plane displacements
-        bk[2::DOF] = True # w
-        bk[3::DOF] = True # rx
-        bk[4::DOF] = True # ry
-        bu = ~bk # same as np.logical_not, defining unknown DOFs
+        bk = np.zeros(N, dtype=bool)
+        check = np.isclose(x, x.min()) | np.isclose(x, x.max())
+        bk[0::DOF] = check
+        bk[1::DOF] = check
+        bk[2::DOF] = True
+        bk[3::DOF] = True
+        bk[4::DOF] = True
+        bu = ~bk
 
-        # sub-matrices corresponding to unknown DOFs
         Kuu = KC0[bu, :][:, bu]
         Muu = M[bu, :][:, bu]
 

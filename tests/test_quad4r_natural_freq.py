@@ -19,7 +19,6 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
         a = 0.3
         b = 0.5
 
-        # Material Lastrobe Lescalloy
         E = 203.e9 # Pa
         nu = 0.33
 
@@ -55,8 +54,6 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
         Mv = np.zeros(data.M_SPARSE_SIZE*num_elements, dtype=DOUBLE)
         N = DOF*nx*ny
 
-        # creating elements and populating global stiffness
-
         prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True, rho=rho)
 
         quads = []
@@ -71,7 +68,7 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
             r2 = ncoords[pos2]
             r3 = ncoords[pos3]
             normal = np.cross(r2 - r1, r3 - r2)[2]
-            assert normal > 0 # guaranteeing that all elements have CCW positive normal
+            assert normal > 0
             quad = Quad4R(probe)
             quad.n1 = n1
             quad.n2 = n2
@@ -98,18 +95,14 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
 
         print('sparse KC0 and M created')
 
-        # applying boundary conditions
-        # simply supported
-        bk = np.zeros(N, dtype=bool) #array to store known DOFs
+        bk = np.zeros(N, dtype=bool)
         check = np.isclose(x, 0.) | np.isclose(x, a) | np.isclose(y, 0) | np.isclose(y, b)
         bk[0::DOF] = check
         bk[1::DOF] = check
         bk[2::DOF] = check
-        #bk[5::DOF] = True
 
-        bu = ~bk # same as np.logical_not, defining unknown DOFs
+        bu = ~bk
 
-        # sub-matrices corresponding to unknown DOFs
         Kuu = KC0[bu, :][:, bu]
         Muu = M[bu, :][:, bu]
 
@@ -124,7 +117,6 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
         eigvecs[bu, :] = eigvecsu
         omegan = eigvals**0.5
 
-        # vector u containing displacements for all DOFs
         u = np.zeros(N)
         u[bu] = eigvecsu[:, mode]
 

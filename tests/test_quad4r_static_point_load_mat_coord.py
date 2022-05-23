@@ -10,7 +10,7 @@ from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
 
 
 def test_static_plate_quad_point_load(plot=False):
-    #NOTE keep thetadeg = 0 as first, to work as reference wmax_ref
+    # NOTE keep thetadeg = 0 as first, to work as reference wmax_ref
     thetadegs = [0, -90, -60, -30, 30, 60, 90]
     for thetadeg in thetadegs:
         matx = (np.cos(np.deg2rad(thetadeg)), np.sin(np.deg2rad(thetadeg)), 0)
@@ -21,12 +21,10 @@ def test_static_plate_quad_point_load(plot=False):
         nx = 7
         ny = 11
 
-        # geometry
         a = 3
         b = 7
         h = 0.005 # m
 
-        # material
         E1 = 200e9
         E2 = 50e9
         nu12 = 0.3
@@ -56,8 +54,6 @@ def test_static_plate_quad_point_load(plot=False):
         KC0v = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=DOUBLE)
         N = DOF*nx*ny
 
-        # creating elements and populating global stiffness
-
         prop = laminated_plate(stack=[-thetadeg], laminaprop=(E1, E2, nu12, G12, G12, G12), plyt=h)
 
         quads = []
@@ -71,7 +67,7 @@ def test_static_plate_quad_point_load(plot=False):
             r2 = ncoords[pos2]
             r3 = ncoords[pos3]
             normal = np.cross(r2 - r1, r3 - r2)[2]
-            assert normal > 0 # guaranteeing that all elements have CCW positive normal
+            assert normal > 0
             quad = Quad4R(probe)
             quad.n1 = n1
             quad.n2 = n2
@@ -92,35 +88,28 @@ def test_static_plate_quad_point_load(plot=False):
 
         print('elements created')
 
-        # applying boundary conditions
-        # simply supported
-        bk = np.zeros(N, dtype=bool) #array to store known DOFs
+        bk = np.zeros(N, dtype=bool)
         check = np.isclose(x, 0.) | np.isclose(x, a) | np.isclose(y, 0) | np.isclose(y, b)
         bk[2::DOF] = check
 
-        # eliminating all u,v displacements
         bk[0::DOF] = True
         bk[1::DOF] = True
 
-        bu = ~bk # same as np.logical_not, defining unknown DOFs
+        bu = ~bk
 
-        # external force vector for point load at center
+        # point load at center node
         f = np.zeros(N)
         fmid = 1.
-        # force at center node
         check = np.isclose(x, a/2) & np.isclose(y, b/2)
         f[2::DOF][check] = fmid
 
-        # sub-matrices corresponding to unknown DOFs
         KC0uu = KC0[bu, :][:, bu]
         fu = f[bu]
         assert fu.sum() == fmid
 
-        # solving static problem
         uu, info = cg(KC0uu, fu, atol=1e-9)
         assert info == 0
 
-        # vector u containing displacements for all DOFs
         u = np.zeros(N)
         u[bu] = uu
 

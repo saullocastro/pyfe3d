@@ -13,25 +13,21 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
     for mtype in mtypes:
         print('mtype', mtype)
         n = 50*refinement
-        L = 3 # total size of the beam along x
+        L = 3
 
-        # Material Lastrobe Lescalloy
         E = 203.e9 # Pa
         rho = 7.83e3 # kg/m3
 
         x = np.zeros(n+1)
         x[0] = -L/100
         x[1:] = np.linspace(0, L, n)
-        # path
         y = np.ones_like(x)
-        # tapered properties
         b = 0.05 # m
         h = 0.05 # m
         A = h*b
         Izz = b*h**3/12
         Iyy = b**3*h/12
 
-        # getting nodes
         ncoords = np.vstack((x, y, np.zeros_like(x))).T
         nids = 1 + np.arange(ncoords.shape[0])
         nid_pos = dict(zip(nids, np.arange(len(nids))))
@@ -71,7 +67,6 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         init_k_KC0 = 0
         init_k_M = 0
 
-        # assemblying spring element
         spring = Spring(springprobe)
         spring.init_k_KC0 = init_k_KC0
         spring.n1 = 0
@@ -84,7 +79,6 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         spring.update_KC0(KC0r, KC0c, KC0v)
         init_k_KC0 += springdata.KC0_SPARSE_SIZE
 
-        # assemblying beam elements
         n1s = nids[1:-1]
         n2s = nids[2:]
         for n1, n2 in zip(n1s, n2s):
@@ -111,20 +105,17 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
 
         print('sparse KC0 and M created')
 
-        # applying boundary conditions
-        bk = np.zeros(N, dtype=bool) #array to store known DOFs
+        bk = np.zeros(N, dtype=bool)
         check = np.isclose(x, -L/100)
-        # clamping
-        bk[0::DOF][check] = True # u
-        bk[1::DOF][check] = True # v
-        bk[2::DOF][check] = True # w
-        bk[3::DOF][check] = True # rx
-        bk[4::DOF][check] = True # ry
-        bk[5::DOF][check] = True # rz
+        bk[0::DOF][check] = True
+        bk[1::DOF][check] = True
+        bk[2::DOF][check] = True
+        bk[3::DOF][check] = True
+        bk[4::DOF][check] = True
+        bk[5::DOF][check] = True
 
-        bu = ~bk # same as np.logical_not, defining unknown DOFs
+        bu = ~bk
 
-        # sub-matrices corresponding to unknown DOFs
         Kuu = KC0[bu, :][:, bu]
         Muu = M[bu, :][:, bu]
 

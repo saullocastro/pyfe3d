@@ -21,16 +21,13 @@ def test_linear_buckling_cylinder(mode=0):
     data = Quad4RData()
     probe = Quad4RProbe()
 
-    # geometry
     L = 0.510 # m
     R = 0.250 # m
     b = 2*np.pi*R # m
 
-    # number of nodes
     ntheta = 40 # circumferential
     nlength = 2*int(ntheta*L/b)
 
-    # material properties
     E11 = 123.55e9
     E22 = 8.7079e9
     nu12 = 0.319
@@ -40,13 +37,12 @@ def test_linear_buckling_cylinder(mode=0):
     plyt = 0.125e-3
     laminaprop = (E11, E22, nu12, G12, G13, G23)
 
-    #NOTE cylinder Z11, table 3 of reference
+    # NOTE cylinder Z11, table 3 of reference
     stack = [+60, -60, 0, 0, +68, -68, +52, -52, +37, -37]
     prop = laminated_plate(stack=stack, plyt=plyt, laminaprop=laminaprop)
 
     nids = 1 + np.arange(nlength*(ntheta+1))
     nids_mesh = nids.reshape(nlength, ntheta+1)
-    # closing the cylinder by reassigning last row of node-ids
     nids_mesh[:, -1] = nids_mesh[:, 0]
     nids = np.unique(nids_mesh)
     nid_pos = dict(zip(nids, np.arange(len(nids))))
@@ -60,7 +56,6 @@ def test_linear_buckling_cylinder(mode=0):
     xmesh = np.cos(thetamesh)*R
     ymesh = np.sin(thetamesh)*R
 
-    # node coordinates
     ncoords = np.vstack((xmesh.flatten(), ymesh.flatten(), zmesh.flatten())).T
     ncoords_flatten = ncoords.flatten()
     x = ncoords[:, 0]
@@ -82,8 +77,6 @@ def test_linear_buckling_cylinder(mode=0):
     KGc = np.zeros(data.KG_SPARSE_SIZE*num_elements, dtype=INT)
     KGv = np.zeros(data.KG_SPARSE_SIZE*num_elements, dtype=DOUBLE)
     N = DOF*nlength*ntheta
-
-    # creating elements and populating global stiffness
 
     quads = []
     init_k_KC0 = 0
@@ -113,19 +106,15 @@ def test_linear_buckling_cylinder(mode=0):
 
     print('sparse KC0 created')
 
-    # applying boundary conditions
-    bk = np.zeros(N, dtype=bool) #array to store known DOFs
+    bk = np.zeros(N, dtype=bool)
 
-    # simply supported cylinder
     checkSS = isclose(z, 0) | isclose(z, L)
     bk[0::DOF] = checkSS
     bk[1::DOF] = checkSS
     bk[2::DOF] = checkSS
 
-    # unconstrained nodes, unknown DOFs
-    bu = ~bk # same as np.logical_not
+    bu = ~bk
 
-    # axial compression applied at x=L
     u = np.zeros(N, dtype=DOUBLE)
 
     compression = -0.00007
@@ -133,35 +122,25 @@ def test_linear_buckling_cylinder(mode=0):
     u[2::DOF] += checkTopEdge*compression
     uk = u[bk]
 
-    # sub-matrices
     KC0uu = KC0[bu, :][:, bu]
     KC0uk = KC0[bu, :][:, bk]
     KC0kk = KC0[bk, :][:, bk]
 
     fextu = -KC0uk*uk
 
-    # static solver
     PREC = np.max(1/KC0uu.diagonal())
-    #uu, out = cg(PREC*KC0uu, PREC*fextu, atol=1e-6)
-    #assert out == 0, 'static analysis with cg failed'
     uu = spsolve(PREC*KC0uu, PREC*fextu)
     print('static analysis OK')
     u[bu] = uu
 
-    # geometric stiffness
-    #NOTE TODO FIXME
     for quad in quads:
-        quad.update_probe_ue(u) #NOTE update affects the Quad4RProbe class attribute ue
-        quad.update_probe_xe(ncoords_flatten) #NOTE update affects the Quad4RProbe class attribute xe
-        #if np.isclose(ncoords[nid_pos[quad.n2]][2], L):
-            #print(np.asarray(quad.probe.ue)[[3,4,5,9,10,11,15,16,17,21,22,23]])
-            #print(np.asarray(quad.probe.xe))
+        quad.update_probe_ue(u) # NOTE update affects the Quad4RProbe class attribute ue
+        quad.update_probe_xe(ncoords_flatten) # NOTE update affects the Quad4RProbe class attribute xe
         quad.update_KG(KGr, KGc, KGv, prop)
     KG = coo_matrix((KGv, (KGr, KGc)), shape=(N, N)).tocsc()
     KGuu = KG[bu, :][:, bu]
     print('sparse KG created')
 
-    # linear buckling check
     num_eig_lb = max(mode+1, 1)
     eigvals, eigvecsu = eigsh(A=PREC*KGuu, k=num_eig_lb, which='SM',
             M=PREC*KC0uu, tol=1e-9, sigma=1., mode='cayley')

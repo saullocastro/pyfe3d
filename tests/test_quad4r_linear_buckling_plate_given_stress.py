@@ -20,11 +20,9 @@ def test_linear_buckling(mode=0, refinement=1):
     if (ny % 2) == 0:
         ny += 1
 
-    #a = 0.3
     a = 2.0
     b = 0.5
 
-    # Material Lastrobe Lescalloy
     E = 203.e9 # Pa
     nu = 0.33
 
@@ -60,8 +58,6 @@ def test_linear_buckling(mode=0, refinement=1):
     KGv = np.zeros(data.KG_SPARSE_SIZE*num_elements, dtype=DOUBLE)
     N = DOF*nx*ny
 
-    # creating elements and populating global stiffness
-
     prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True, rho=rho)
 
     quads = []
@@ -76,7 +72,7 @@ def test_linear_buckling(mode=0, refinement=1):
         r2 = ncoords[pos2]
         r3 = ncoords[pos3]
         normal = np.cross(r2 - r1, r3 - r2)[2]
-        assert normal > 0 # guaranteeing that all elements have CCW positive normal
+        assert normal > 0
         quad = Quad4R(probe)
         quad.n1 = n1
         quad.n2 = n2
@@ -103,7 +99,7 @@ def test_linear_buckling(mode=0, refinement=1):
 
     # applying boundary conditions (leading to a constant Nxx)
     # simply supported in w
-    bk = np.zeros(N, dtype=bool) #array to store known DOFs
+    bk = np.zeros(N, dtype=bool)
     check = isclose(x, 0.) | isclose(x, a) | isclose(y, 0) | isclose(y, b)
     bk[2::DOF] = check
     # constraining u at x = a/2, y = 0,b
@@ -115,15 +111,12 @@ def test_linear_buckling(mode=0, refinement=1):
     # removing drilling
     bk[5::DOF] = True
 
-    # unconstrained nodes, unknown DOFs
-    bu = ~bk # same as np.logical_not
+    bu = ~bk
 
-    # sub-matrices corresponding to unknown DOFs
     Kuu = KC0[bu, :][:, bu]
 
     Nxx = -1
 
-    # geometric stiffness
     for quad in quads:
         quad.update_probe_xe(ncoords_flatten)
         quad.update_KG_given_stress(Nxx, 0, 0, KGr, KGc, KGv)
@@ -131,7 +124,6 @@ def test_linear_buckling(mode=0, refinement=1):
     KGuu = KG[bu, :][:, bu]
     print('sparse KG created')
 
-    # linear buckling check
     num_eig_lb = max(mode+1, 1)
     PREC = np.max(1/Kuu.diagonal())
     eigvals, eigvecsu = eigsh(A=PREC*KGuu, k=num_eig_lb, which='SM',
@@ -142,11 +134,9 @@ def test_linear_buckling(mode=0, refinement=1):
     print('linear buckling load_mult =', load_mult)
     print('linear buckling P_cr_calc =', P_cr_calc)
 
-    # vector u containing displacements for all DOFs
     u = np.zeros(N)
     u[bu] = eigvecsu[:, mode]
 
-    # theoretical reference
     kcmin = 1e6
     mmin = 0
     for m in range(1, 21):

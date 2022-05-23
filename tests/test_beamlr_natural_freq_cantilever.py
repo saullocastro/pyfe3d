@@ -12,22 +12,18 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
     for mtype in mtypes:
         print('mtype', mtype)
         n = 50*refinement
-        L = 3 # total size of the beam along x
+        L = 3
 
-        # Material Lastrobe Lescalloy
         E = 203.e9 # Pa
         rho = 7.83e3 # kg/m3
 
         x = np.linspace(0, L, n)
-        # path
         y = np.ones_like(x)
-        # tapered properties
         b = 0.05 # m
         h = 0.05 # m
         A = h*b
         Izz = b*h**3/12
 
-        # getting nodes
         ncoords = np.vstack((x, y, np.zeros_like(x))).T
         nids = 1 + np.arange(ncoords.shape[0])
         nid_pos = dict(zip(nids, np.arange(len(nids))))
@@ -89,20 +85,16 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
 
         print('sparse KC0 and M created')
 
-        # applying boundary conditions
-        bk = np.zeros(N, dtype=bool) #array to store known DOFs
+        bk = np.zeros(N, dtype=bool)
         check = np.isclose(x, 0.)
-        # clamping
-        bk[0::DOF] = check # u
-        bk[1::DOF] = check # v
-        bk[2::DOF] = check # w
-        bk[5::DOF] = check # rz
-        # removing out of XY plane displacements
-        bk[3::DOF] = True # rx
-        bk[4::DOF] = True # ry
-        bu = ~bk # same as np.logical_not, defining unknown DOFs
+        bk[0::DOF] = check
+        bk[1::DOF] = check
+        bk[2::DOF] = check
+        bk[5::DOF] = check
+        bk[3::DOF] = True
+        bk[4::DOF] = True
+        bu = ~bk
 
-        # sub-matrices corresponding to unknown DOFs
         Kuu = KC0[bu, :][:, bu]
         Muu = M[bu, :][:, bu]
 

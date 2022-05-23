@@ -12,21 +12,17 @@ def test_nat_freq_axial(refinement=1, mtypes=range(2)):
     for mtype in mtypes:
         print('mtype', mtype)
         n = 101*refinement
-        L = 3 # total size of the truss along x
+        L = 3
 
-        # Material Lastrobe Lescalloy
         E = 203.e9 # Pa
         rho = 7.83e3 # kg/m3
 
         x = np.linspace(0, L, n)
-        # path
         y = np.ones_like(x)
-        # tapered properties
         b = 0.05 # m
         h = 0.05 # m
         A = h*b
 
-        # getting nodes
         ncoords = np.vstack((x, y, np.zeros_like(x))).T
         nids = 1 + np.arange(ncoords.shape[0])
         nid_pos = dict(zip(nids, np.arange(len(nids))))
@@ -89,21 +85,20 @@ def test_nat_freq_axial(refinement=1, mtypes=range(2)):
         print('sparse KC0 and M created')
 
         # applying boundary conditions
-        bk = np.zeros(N, dtype=bool) #array to store known DOFs
+        bk = np.zeros(N, dtype=bool)
         # simply-supported with right-end free to move horizontally
         check = np.isclose(x, 0.)
         bk[0::DOF] = check # u
         check = np.isclose(x, L)
         # removing out-of-axis translations
-        bk[1::DOF] = True # v
-        bk[2::DOF] = True # w
+        bk[1::DOF] = True
+        bk[2::DOF] = True
         # removing rotations
-        bk[3::DOF] = True # rx
-        bk[4::DOF] = True # ry
-        bk[5::DOF] = True # rz
-        bu = ~bk # same as np.logical_not, defining unknown DOFs
+        bk[3::DOF] = True
+        bk[4::DOF] = True
+        bk[5::DOF] = True
+        bu = ~bk
 
-        # sub-matrices corresponding to unknown DOFs
         Kuu = KC0[bu, :][:, bu]
         Muu = M[bu, :][:, bu]
 

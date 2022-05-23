@@ -11,7 +11,7 @@ from pyfe3d import Tria3R, Tria3RData, Tria3RProbe, INT, DOUBLE, DOF
 
 
 def test_linear_buckling_plate(plot=False, mode=0):
-    #NOTE keep thetadeg = 0 as first, to work as reference wmax_ref
+    # NOTE keep thetadeg = 0 as first, to work as reference wmax_ref
     thetadegs = [0, -90, -60, -30, 30, 60, 90]
     for thetadeg in thetadegs:
         matx = (np.cos(np.deg2rad(thetadeg)), np.sin(np.deg2rad(thetadeg)), 0)
@@ -29,7 +29,6 @@ def test_linear_buckling_plate(plot=False, mode=0):
         b = 0.5
         h = 0.002 # m
 
-        # material
         E1 = 200e9
         E2 = 50e9
         nu12 = 0.3
@@ -64,8 +63,6 @@ def test_linear_buckling_plate(plot=False, mode=0):
         KGv = np.zeros(data.KG_SPARSE_SIZE*num_elements, dtype=DOUBLE)
         N = DOF*nx*ny
 
-        # creating elements and populating global stiffness
-
         prop = laminated_plate(stack=[-thetadeg], laminaprop=(E1, E2, nu12, G12, G12, G12), plyt=h)
 
         trias = []
@@ -81,9 +78,9 @@ def test_linear_buckling_plate(plot=False, mode=0):
             r3 = ncoords[pos3]
             r4 = ncoords[pos4]
 
-            #first tria
+            # first tria
             normal = np.cross(r2 - r1, r3 - r2)[2]
-            assert normal > 0 # guaranteeing that all elements have CCW positive normal
+            assert normal > 0
             tria = Tria3R(probe)
             tria.n1 = n1
             tria.n2 = n2
@@ -100,9 +97,9 @@ def test_linear_buckling_plate(plot=False, mode=0):
             init_k_KC0 += data.KC0_SPARSE_SIZE
             init_k_KG += data.KG_SPARSE_SIZE
 
-            #second tria
+            # second tria
             normal = np.cross(r3 - r1, r4 - r1)[2]
-            assert normal > 0 # guaranteeing that all elements have CCW positive normal
+            assert normal > 0
             tria = Tria3R(probe)
             tria.n1 = n1
             tria.n2 = n3
@@ -139,8 +136,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
         # removing drilling
         bk[5::DOF] = True
 
-        # unconstrained nodes, unknown DOFs
-        bu = ~bk # same as np.logical_not
+        bu = ~bk
 
         # defining external force vector
         # applying load along u at x=a
@@ -163,12 +159,9 @@ def test_linear_buckling_plate(plot=False, mode=0):
         fext[0::DOF][check] = ftotal/(ny - 1)/2
         assert np.isclose(fext.sum(), 0)
 
-        # sub-matrices corresponding to unknown DOFs
         Kuu = KC0[bu, :][:, bu]
         fextu = fext[bu]
 
-        # static solver
-        #PREC = np.linalg.norm(1/Kuu.diagonal())
         PREC = np.max(1/Kuu.diagonal())
         uu, out = cg(PREC*Kuu, PREC*fextu, atol=1e-8)
         assert out == 0, 'cg failed'
@@ -190,16 +183,14 @@ def test_linear_buckling_plate(plot=False, mode=0):
             plt.show()
             raise
 
-        # geometric stiffness
         for tria in trias:
-            tria.update_probe_ue(u) #NOTE update affects the Tria3RProbe class attribute ue
+            tria.update_probe_ue(u) # NOTE update affects the Tria3RProbe class attribute ue
             tria.update_probe_xe(ncoords_flatten)
             tria.update_KG(KGr, KGc, KGv, prop)
         KG = coo_matrix((KGv, (KGr, KGc)), shape=(N, N)).tocsc()
         KGuu = KG[bu, :][:, bu]
         print('sparse KG created')
 
-        # linear buckling check
         num_eig_lb = max(mode+1, 1)
         eigvals, eigvecsu = eigsh(A=PREC*KGuu, k=num_eig_lb, which='SM',
                 M=PREC*Kuu, tol=1e-15, sigma=1., mode='cayley')
@@ -209,7 +200,6 @@ def test_linear_buckling_plate(plot=False, mode=0):
         print('linear buckling load_mult =', load_mult)
         print('linear buckling P_cr_calc =', P_cr_calc)
 
-        # vector u containing displacements for all DOFs
         u = np.zeros(N)
         u[bu] = eigvecsu[:, mode]
 

@@ -19,12 +19,10 @@ def test_static_plate_quad_point_load(plot=False, refinement=1):
     if (ny % 2) == 0:
         ny += 1
 
-    # geometry
     a = 3
     b = 7
     h = 0.005 # m
 
-    # material
     E = 200e9
     nu = 0.3
 
@@ -53,8 +51,6 @@ def test_static_plate_quad_point_load(plot=False, refinement=1):
     KC0v = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=DOUBLE)
     N = DOF*nx*ny
 
-    # creating elements and populating global stiffness
-
     prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True)
 
     trias = []
@@ -69,9 +65,9 @@ def test_static_plate_quad_point_load(plot=False, refinement=1):
         r3 = ncoords[pos3]
         r4 = ncoords[pos4]
 
-        #first tria
+        # first tria
         normal = np.cross(r2 - r1, r3 - r1)[2]
-        assert normal > 0 # guaranteeing that all elements have CCW positive normal
+        assert normal > 0
         tria = Tria3R(probe)
         tria.n1 = n1
         tria.n2 = n2
@@ -87,9 +83,9 @@ def test_static_plate_quad_point_load(plot=False, refinement=1):
         trias.append(tria)
         init_k_KC0 += data.KC0_SPARSE_SIZE
 
-        #second tria
+        # second tria
         normal = np.cross(r3 - r1, r4 - r1)[2]
-        assert normal > 0 # guaranteeing that all elements have CCW positive normal
+        assert normal > 0
         tria = Tria3R(probe)
         tria.n1 = n1
         tria.n2 = n3
@@ -113,33 +109,27 @@ def test_static_plate_quad_point_load(plot=False, refinement=1):
 
     # applying boundary conditions
     # simply supported
-    bk = np.zeros(N, dtype=bool) #array to store known DOFs
+    bk = np.zeros(N, dtype=bool)
     check = np.isclose(x, 0.) | np.isclose(x, a) | np.isclose(y, 0) | np.isclose(y, b)
     bk[2::DOF] = check
+    bk[0::DOF] = check
+    bk[1::DOF] = check
 
-    # eliminating all u,v displacements
-    bk[0::DOF] = True
-    bk[1::DOF] = True
+    bu = ~bk
 
-    bu = ~bk # same as np.logical_not, defining unknown DOFs
-
-    # external force vector for point load at center
+    # point load at center node
     f = np.zeros(N)
     fmid = 1.
-    # force at center node
     check = np.isclose(x, a/2) & np.isclose(y, b/2)
     f[2::DOF][check] = fmid
 
-    # sub-matrices corresponding to unknown DOFs
     KC0uu = KC0[bu, :][:, bu]
     fu = f[bu]
     assert fu.sum() == fmid
 
-    # solving static problem
     uu, info = cg(KC0uu, fu, atol=1e-9)
     assert info == 0
 
-    # vector u containing displacements for all DOFs
     u = np.zeros(N)
     u[bu] = uu
 
