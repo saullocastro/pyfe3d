@@ -3,7 +3,7 @@ sys.path.append('..')
 
 import numpy as np
 from numpy import isclose
-from scipy.sparse.linalg import eigsh, eigs
+from scipy.sparse.linalg import eigsh
 from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import isotropic_plate

@@ -140,6 +140,7 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
     # obtained with Tria3R nx=7, ny=11
     wmax_ref = 8.324614783831663e-05
     print('w.max()', w.max())
+
     if plot:
         import matplotlib
         matplotlib.use('TkAgg')

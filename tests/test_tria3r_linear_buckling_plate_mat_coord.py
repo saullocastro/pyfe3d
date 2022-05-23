@@ -3,7 +3,7 @@ sys.path.append('..')
 
 import numpy as np
 from numpy import isclose
-from scipy.sparse.linalg import eigsh, spsolve, cg
+from scipy.sparse.linalg import eigsh, cg
 from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import laminated_plate
