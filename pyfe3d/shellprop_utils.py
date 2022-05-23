@@ -9,6 +9,7 @@ Highly based on the `composites <https://saullocastro.github.io/composites/>`_. 
 """
 from .shellprop import Lamina, MatLamina, ShellProp
 
+
 def read_laminaprop(laminaprop, rho=0):
     r"""Returns a :class:`.MatLamina` object based on an input ``laminaprop`` tuple
 
@@ -64,15 +65,15 @@ def read_laminaprop(laminaprop, rho=0):
     """
     matlam = MatLamina()
 
-    #laminaProp = (e1, e2, nu12, g12, g13, g23, e3, nu13, nu23)
+    # laminaProp = (e1, e2, nu12, g12, g13, g23, e3, nu13, nu23)
     assert len(laminaprop) in (2, 6, 9), ('Invalid entry for laminaprop: ' +
                                           str(laminaprop))
-    if len(laminaprop) == 2: #ISOTROPIC in-plane stress new
+    if len(laminaprop) == 2: # ISOTROPIC in-plane stress new
         e = laminaprop[0]
         nu = laminaprop[1]
         g = e/(2*(1+nu))
         laminaprop = (e, e, nu, g, g, g, 0, 0, 0)
-    elif len(laminaprop) == 6: #ORTHOTROPIC in-plane stress
+    elif len(laminaprop) == 6: # ORTHOTROPIC in-plane stress
         laminaprop = tuple(list(laminaprop) + [0, 0, 0])
     matlam.e1 = laminaprop[0]
     matlam.e2 = laminaprop[1]
@@ -201,4 +202,3 @@ def isotropic_plate(thickness, E, nu, offset=0., calc_scf=True, rho=0.):
     """
     return laminated_plate(plyt=thickness, stack=[0], laminaprop=(E, nu),
             rho=rho, offset=offset, calc_scf=calc_scf)
-

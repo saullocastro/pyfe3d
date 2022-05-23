@@ -11,22 +11,17 @@ calculate transformation matrices bewteen coordinate systems.
 import numpy as np
 from scipy.spatial.transform import Rotation
 from alg3dpy.vector import Vec
-from alg3dpy.angles import cosplanevec, sinplanevec, cos2vecs, sin2vecs, angleplanevec
 from alg3dpy.plane import Plane
 from alg3dpy.point import Point
 
 
 def __common__str__(text, csys):
-    return '%s ID %d:\n\
-    \tO %2.3f i + %2.3f j + %2.3f k\n\
-    \tX %2.3f i + %2.3f j + %2.3f k\n\
-    \tY %2.3f i + %2.3f j + %2.3f k\n\
-    \tZ %2.3f i + %2.3f j + %2.3f k' \
-    % (text, csys.id,\
-       csys.o[0], csys.o[1], csys.o[2],\
-       csys.x[0], csys.x[1], csys.x[2],\
-       csys.y[0], csys.y[1], csys.y[2],\
-       csys.z[0], csys.z[1], csys.z[2])
+    return ('%s ID %d:\n\tO %2.3f i + %2.3f j + %2.3f k\n\tX %2.3f i + %2.3f j + %2.3f k\n\tY %2.3f i + %2.3f j + %2.3f k\n\tZ %2.3f i + %2.3f j + %2.3f k' %
+        (text, csys.id,
+       csys.o[0], csys.o[1], csys.o[2],
+       csys.x[0], csys.x[1], csys.x[2],
+       csys.y[0], csys.y[1], csys.y[2],
+       csys.z[0], csys.z[1], csys.z[2]))
 
 
 class Coord(object):
@@ -77,6 +72,7 @@ class Coord(object):
             The z vector of the coordsys
         vecxz : :class:`.Vec` object
             A vector laying in the xz plane of the coordsys
+
         """
         # given
         self.id = id
@@ -88,9 +84,9 @@ class Coord(object):
         self.y /= np.linalg.norm(self.y)
         self.x = self.y.cross(self.z)
         self.x /= np.linalg.norm(self.x)
-        self.xy = Plane(self.z[0],  self.z[1],  self.z[2], np.linalg.norm(self.o))
+        self.xy = Plane(self.z[0], self.z[1], self.z[2], np.linalg.norm(self.o))
         self.xz = Plane(-self.y[0], -self.y[1], -self.y[2], np.linalg.norm(self.o))
-        self.yz = Plane(self.x[0],  self.x[1],  self.x[2], np.linalg.norm(self.o))
+        self.yz = Plane(self.x[0], self.x[1], self.x[2], np.linalg.norm(self.o))
 
     def transform(self, vec, new_csys):
         r"""
@@ -182,11 +178,10 @@ class CoordC(Coord):
         Transformation from cylindrical to cartesian
         vec must be in cylindrical cordinates: [r, theta, z]
         """
-        T =  np.array([\
-            [ np.cos(vec[1]), 0,   0 ],
-            [ 0, np.sin(vec[1]),   0 ],
-            [ 0,                0, 1 ]])
-        tmp = np.array([ vec[0], vec[0], vec[2] ])
+        T =  np.array([[np.cos(vec[1]), 0, 0],
+                       [0, np.sin(vec[1]), 0],
+                       [0, 0, 1]])
+        tmp = np.array([vec[0], vec[0], vec[2]])
         vec_cr = np.dot(T, tmp)
         return vec_cr
 
@@ -195,10 +190,9 @@ class CoordC(Coord):
         Transformation from cartesian to cylindrical
         vec must be in cartesian coordinates: [x, y, z]
         """
-        T = np.array([\
-            [ np.sqrt(vec[0] ** 2 + vec[1] ** 2), 0,   0 ],
-            [ 0,           np.arctan(vec[1] / vec[0]),   0 ],
-            [ 0,                                    0, 1 ]])
+        T = np.array([[np.sqrt(vec[0]**2 + vec[1] ** 2), 0, 0],
+                      [0, np.arctan(vec[1]/vec[0]), 0],
+                      [0, 0, 1]])
         tmp = np.array([ 1, 1, vec[2] ])
         return np.dot(T, tmp)
 
@@ -216,11 +210,10 @@ class CoordS(Coord):
         Transformation from spherical to cartesian
         vec must be in spherical coordinates: [r, theta, phi]
         """
-        T =  np.array([\
-            [ np.sin(vec[1])*np.cos(vec[2]), 0, 0 ],
-            [ 0, np.sin(vec[1])*np.sin(vec[2]), 0 ],
-            [ 0, 0,                  np.cos(vec[1]) ]])
-        tmp = np.array([ vec[0], vec[0], vec[0] ])
+        T =  np.array([[np.sin(vec[1])*np.cos(vec[2]), 0, 0],
+                       [0, np.sin(vec[1])*np.sin(vec[2]), 0],
+                       [0, 0, np.cos(vec[1])]])
+        tmp = np.array([vec[0], vec[0], vec[0]])
         return np.dot(T, tmp)
 
     def cr2me(self, vec):
@@ -228,12 +221,11 @@ class CoordS(Coord):
         Transformation from cartesian to spherical
         vec must be in cartesian coordinates: [x, y, z]
         """
-        h = vec[0] ** 2 + vec[1] ** 2
-        T = np.array([\
-            [ np.sqrt(h + vec[2] ** 2),     0,   0 ],
-            [ 0, np.arctan(np.sqrt(h) / vec[2]),   0 ],
-            [ 0,       0, np.arctan(vec[1] / vec[0]) ]])
-        tmp = np.array([ 1, 1, 1])
+        h = vec[0]**2 + vec[1]**2
+        T = np.array([[np.sqrt(h + vec[2]**2), 0, 0],
+                      [0, np.arctan(np.sqrt(h)/vec[2]), 0],
+                      [0, 0, np.arctan(vec[1]/vec[0])]])
+        tmp = np.array([1, 1, 1])
         return np.dot(T, tmp)
 
     def __str__(self):

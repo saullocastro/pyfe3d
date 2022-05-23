@@ -10,6 +10,7 @@ import numpy as np
 from pyfe3d import DOF
 from .coord import CoordR
 
+
 def beam_coord(beam, vecxy, ncoords: np.ndarray):
     r"""Determine the coordinate system of a beam element
 
@@ -32,7 +33,3 @@ def beam_coord(beam, vecxy, ncoords: np.ndarray):
     zaxis = np.cross(xaxis, vecxy)
     vecxz = xaxis + zaxis
     return CoordR(beam.eid, center, zaxis, vecxz)
-
-
-
-

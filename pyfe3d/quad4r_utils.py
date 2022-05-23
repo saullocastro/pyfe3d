@@ -39,4 +39,3 @@ def quad4r_coord(quad: Quad4R, ncoords: np.ndarray):
     zaxis = np.cross(v42, v13)
     vecxz = xaxis + zaxis
     return CoordR(quad.eid, center, zaxis, vecxz)
-
