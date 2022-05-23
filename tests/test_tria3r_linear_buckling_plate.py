@@ -165,6 +165,7 @@ def test_tria3r_linear_buckling_plate(plot=False, mode=0, refinement=1):
     print('u extremes', u[0::DOF].min(), u[0::DOF].max())
     print('v extremes', u[1::DOF].min(), u[1::DOF].max())
     print('w extremes', u[2::DOF].min(), u[2::DOF].max())
+
     if False:
         import matplotlib
         matplotlib.use('TkAgg')
