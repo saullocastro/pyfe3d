@@ -18,6 +18,10 @@ jobs:
       uses: actions/setup-python@v3
       with:
         python-version: ${{ matrix.python-version }}
+    - name: Workaround to prevent early termination on GitHub Actions
+      if: matrix.runs-on == 'windows-latest' || matrix.runs-on == 'macos-latest'
+      env:
+          CI: false
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
