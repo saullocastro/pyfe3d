@@ -135,7 +135,7 @@ def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
         # solves Ax = lambda M x
         # we have Ax - lambda M x = 0, with lambda = omegan**2
         eigvals, eigvecsu = eigsh(A=Kuu, M=Muu, sigma=-1., which='LM',
-                k=num_eigenvalues, tol=1e-6)
+                k=num_eigenvalues, tol=1e-9)
         print('eig solver end')
         eigvecs = np.zeros((N, eigvecsu.shape[1]), dtype=float)
         eigvecs[bu, :] = eigvecsu
