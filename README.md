@@ -9,6 +9,13 @@ Coverage status:
 
 [![Codecov Status](https://codecov.io/gh/saullocastro/pyfe3d/branch/master/graph/badge.svg?token=KVZCRIACL7)](https://codecov.io/gh/saullocastro/pyfe3d)
 
+Citing this library
+-------------------
+
+
+Saullo G P Castro. (2022). General-purpose finite element solver based on Python/Cython (Version 0.3.9). Zenodo. https://doi.org/10.5281/zenodo.6573490
+
+
 Important features of this library
 ----------------------------------
 - efficient and simple for linear and nonlinear analyses
