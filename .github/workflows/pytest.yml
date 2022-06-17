@@ -34,5 +34,4 @@ jobs:
         flake8 ./pyfe3d --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
     - name: Test with pytest
       run: |
-        cd tests
-        py.test .
+        pytest ./tests
