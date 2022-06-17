@@ -130,7 +130,7 @@ def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
         Kuu = KC0[bu, :][:, bu]
         Muu = M[bu, :][:, bu]
 
-        num_eigenvalues = max(2, mode+1)
+        num_eigenvalues = max(5, mode+1)
         print('eig solver begin')
         # solves Ax = lambda M x
         # we have Ax - lambda M x = 0, with lambda = omegan**2
