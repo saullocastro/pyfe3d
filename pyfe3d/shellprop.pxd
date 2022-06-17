@@ -58,6 +58,7 @@ cdef class ShellProp:
     cpdef void calc_scf(ShellProp)
     cpdef void calc_equivalent_properties(ShellProp)
     cpdef void calc_constitutive_matrix(ShellProp)
+    cpdef void force_balanced(ShellProp)
     cpdef void force_orthotropic(ShellProp)
     cpdef void force_symmetric(ShellProp)
     cpdef LaminationParameters calc_lamination_parameters(ShellProp)
