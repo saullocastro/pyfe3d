@@ -77,15 +77,19 @@ Development Status :: 3 - Alpha
 Intended Audience :: Education
 Intended Audience :: Science/Research
 Intended Audience :: Developers
-Topic :: Scientific/Engineering :: Mathematics
+Intended Audience :: End Users/Desktop
+Topic :: Scientific/Engineering
 Topic :: Education
-License :: OSI Approved :: BSD License
+Topic :: Software Development
+Topic :: Software Development :: Libraries :: Python Modules
+Operating System :: POSIX :: BSD
+Operating System :: Microsoft :: Windows
+Operating System :: Unix
 Programming Language :: Python :: 3.7
 Programming Language :: Python :: 3.8
 Programming Language :: Python :: 3.9
 Programming Language :: Python :: 3.10
-Operating System :: Microsoft :: Windows
-Operating System :: Unix
+License :: OSI Approved :: BSD License
 
 """
 
@@ -95,7 +99,7 @@ if os.name == 'nt': # Windows
     compile_args = ['/openmp', '/O2']
     link_args = []
 elif os.name == 'posix': # MAC-OS
-    compile_args = ['-O0']
+    compile_args = []
     link_args = []
 else: # Linux
     compile_args = ['-fopenmp', '-static', '-static-libgcc', '-static-libstdc++']
