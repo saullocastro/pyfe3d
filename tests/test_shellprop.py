@@ -3,9 +3,10 @@ sys.path.append('..')
 
 import numpy as np
 
-from pyfe3d.shellprop import (Lamina, shellprop_from_lamination_parameters,
-        shellprop_from_lamination_parameters2, force_balanced_LP,
-        force_symmetric_LP)
+from pyfe3d.shellprop import (Lamina, shellprop_from_LaminationParameters,
+        shellprop_from_lamination_parameters, force_balanced_LP,
+        force_orthotropic_LP, force_symmetric_LP, LaminationParameters,
+        shellprop_LP_gradients)
 from pyfe3d.shellprop_utils import (read_laminaprop, laminated_plate,
         isotropic_plate)
 
@@ -34,7 +35,7 @@ def test_lampar_tri_axial():
     ply.get_transf_matrix_stress_to_lamina()
     ply.get_transf_matrix_stress_to_laminate()
 
-    prop = shellprop_from_lamination_parameters2(thickness, matlamina,
+    prop = shellprop_from_lamination_parameters(thickness, matlamina,
         0.5, 0.4, -0.3, -0.6,
         0.5, 0.4, -0.3, -0.6,
         0.5, 0.4, -0.3, -0.6,
@@ -81,7 +82,7 @@ def test_lampar_plane_stress():
     ply.get_transf_matrix_stress_to_lamina()
     ply.get_transf_matrix_stress_to_laminate()
 
-    prop = shellprop_from_lamination_parameters2(thickness, matlamina,
+    prop = shellprop_from_lamination_parameters(thickness, matlamina,
         0.5, 0.4, -0.3, -0.6,
         0.5, 0.4, -0.3, -0.6,
         0.5, 0.4, -0.3, -0.6,
@@ -135,7 +136,7 @@ def test_laminated_plate_tri_axial():
     lp = prop.calc_lamination_parameters()
     matlamina = prop.plies[0].matlamina
     thickness = prop.h
-    prop = shellprop_from_lamination_parameters(thickness, matlamina, lp)
+    prop = shellprop_from_LaminationParameters(thickness, matlamina, lp)
     # TODO A, B and D are changing from the original, check!
     # NOTE probably because of the initial tri-axial-based properties
     A = np.array([[ 13589503.90225179,  2502486.88587513,  2026742.01957523],
@@ -200,40 +201,37 @@ def test_laminated_plate_plane_stress():
     lp = prop.calc_lamination_parameters()
     matlamina = prop.plies[0].matlamina
     thickness = prop.h
-    prop = shellprop_from_lamination_parameters(thickness, matlamina, lp)
-    assert np.allclose(prop.A, A)
-    assert np.allclose(prop.B, B), print(np.asarray(prop.B), B)
-    assert np.allclose(prop.D, D)
-    assert np.allclose(prop.E, E)
+    prop_2 = shellprop_from_LaminationParameters(thickness, matlamina, lp)
+    assert np.allclose(prop_2.A, prop.A)
+    assert np.allclose(prop_2.B, prop.B)
+    assert np.allclose(prop_2.D, prop.D)
+    assert np.allclose(prop_2.E, prop.E)
+
+    prop.force_balanced()
+    force_balanced_LP(lp)
+    prop_2 = shellprop_from_LaminationParameters(thickness, matlamina, lp)
+    assert np.allclose(prop_2.A, prop.A)
+    assert np.allclose(prop_2.B, prop.B)
+    assert np.allclose(prop_2.D, prop.D)
+    assert np.allclose(prop_2.E, prop.E)
 
     prop.force_orthotropic()
-    A = np.array([[ 13589503.90225179,  2502486.88587513,  0],
-                  [  2502486.88587513, 13589503.90225179,  0],
-                  [  0,  0,  4084254.25409417]])
-    B = np.array([[ -1.01337101e+03,  0.00000000e+00,  0],
-                  [  0.00000000e+00,  1.01337101e+03,  0],
-                  [  0,  0,  0.00000000e+00]])
-    D = np.array([[ 0.17445256, 0.01412545, 0],
-                  [ 0.01412545, 0.17445256, 0],
-                  [ 0, 0, 0.03266179]])
-    A = np.array([[ 13280892.30559593, 2198758.85719477, 0],
-                  [  2198758.85719477,13280892.30559593, 0],
-                  [  0, 0, 4083033.36210029]])
-    B = np.array([[ -1.00778979e+03, 0.00000000e+00, 0],
-                  [  0.00000000e+00, 1.00778979e+03, 0],
-                  [  0, 0, 0]])
-    D = np.array([[ 0.1708233 , 0.01057886, 0],
-                  [ 0.01057886, 0.1708233 , 0],
-                  [ 0, 0, 0.0326602 ]])
-    assert np.allclose(prop.A, A)
-    assert np.allclose(prop.B, B)
-    assert np.allclose(prop.D, D)
+    force_orthotropic_LP(lp)
+    prop_2 = shellprop_from_LaminationParameters(thickness, matlamina, lp)
+    assert np.allclose(prop_2.A, prop.A)
+    assert np.allclose(prop_2.B, prop.B)
+    assert np.allclose(prop_2.D, prop.D)
+    assert np.allclose(prop_2.E, prop.E)
 
+    prop = laminated_plate(stack, plyt, lamprop)
+    lp = prop.calc_lamination_parameters()
     prop.force_symmetric()
-    assert np.allclose(prop.B, 0*B)
-
-    force_balanced_LP(lp)
     force_symmetric_LP(lp)
+    prop_2 = shellprop_from_LaminationParameters(thickness, matlamina, lp)
+    assert np.allclose(prop_2.A, prop.A)
+    assert np.allclose(prop_2.B, prop.B)
+    assert np.allclose(prop_2.D, prop.D)
+    assert np.allclose(prop_2.E, prop.E)
 
 
 def test_isotropic_plate():
@@ -258,6 +256,10 @@ def test_isotropic_plate():
 def test_errors():
     prop = test_isotropic_plate()
     prop.offset = 1.
+    try:
+        lam.force_balanced()
+    except RuntimeError:
+        pass
     try:
         prop.force_orthotropic()
     except RuntimeError:
@@ -310,3 +312,24 @@ def test_trace_normalized():
         assert np.allclose(tr_norm_inv, tr_norm_inv2)
 
 
+def test_laminate_LP_gradients():
+    E = 71e9
+    nu = 0.33
+    lamprop = (E, nu)
+    rho = 0
+    thickness = 1
+    matlamina = read_laminaprop(lamprop, rho)
+    lp = LaminationParameters()
+    lp.xiA1 = 0.5
+    lp.xiA2 = 0.4
+    lp.xiA3 = -0.3
+    lp.xiA4 = -0.6
+    lp.xiB1 = 0.5
+    lp.xiB2 = 0.4
+    lp.xiB3 = -0.3
+    lp.xiB4 = -0.6
+    lp.xiD1 = 0.5
+    lp.xiD2 = 0.4
+    lp.xiD3 = -0.3
+    lp.xiD4 = -0.6
+    shellprop_LP_gradients(thickness, matlamina, lp)
