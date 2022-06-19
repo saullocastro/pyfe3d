@@ -123,7 +123,6 @@ def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
         bk[0::DOF] = check
         bk[1::DOF] = check
         bk[2::DOF] = check
-        bk[5::DOF] = True
 
         bu = ~bk
 
@@ -158,6 +157,7 @@ def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
         import matplotlib
         matplotlib.use('TkAgg')
         import matplotlib.pyplot as plt
+
         plt.clf()
         plt.contourf(xmesh, ymesh, u[2::DOF].reshape(nx, ny).T)
         plt.show()
