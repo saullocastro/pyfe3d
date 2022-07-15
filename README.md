@@ -18,12 +18,12 @@ Saullo G P Castro. (2022). General-purpose finite element solver based on Python
 
 Important features of this library
 ----------------------------------
-- efficient and simple for linear and nonlinear analyses
+- efficient and simple finite element solver for linear and nonlinear analyses
 - importable and cimportable code
 - 6 degrees-of-freedom per node
 
-Finite elements implemented
-----------------------------
+Available finite element models
+-------------------------------
 - 'Quad4R' - 4-node plate with linear interpolation, equivalent to Abaqus' S4R
 or Nastran's CQUAD4.
 
@@ -34,13 +34,14 @@ or Nastran's CTRIA3.
 reduced integration.
 
 - 'BeamC' - 2-node Timoshenko beam element with consistent shape functions and
-analytical integration.
+analytical integration, equivalent to Nastran' CBEAM.
 
 - 'Spring' - 2-node spring element with 6 stiffenesses defined in the element
-  coordinate system.
+  coordinate system, equivalent to Nastran's CELAS.
 
 - 'Truss' - 2-node truss element with only axial and torsion stiffness. I
-recommend using the BeamLR instead, which is physically more consistent.
+recommend using the BeamLR or BeamC instead, which are physically more
+consistent.
 
 Documentation
 -------------

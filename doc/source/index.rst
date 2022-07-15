@@ -1,5 +1,5 @@
-Finite elements for 3D problems in Python/Cython
-================================================
+General-purpose finite element solver based on Python/Cython
+============================================================
 
 Modules
 -------
