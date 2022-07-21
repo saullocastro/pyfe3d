@@ -24,6 +24,7 @@ DOUBLE = np.float64
 cdef cINT DOF = 6
 cdef cINT NUM_NODES = 2
 
+
 cdef class BeamLRData:
     r"""
     Used to allocate memory for the sparse matrices.
@@ -48,6 +49,7 @@ cdef class BeamLRData:
         self.KG_SPARSE_SIZE = 36
         self.M_SPARSE_SIZE = 144
 
+
 cdef class BeamLRProbe:
     r"""
     Probe used for local coordinates, local displacements, local stresses etc
@@ -70,6 +72,7 @@ cdef class BeamLRProbe:
     def __cinit__(BeamLRProbe self):
         self.xe = np.zeros(NUM_NODES*DOF//2, dtype=DOUBLE)
         self.ue = np.zeros(NUM_NODES*DOF, dtype=DOUBLE)
+
 
 cdef class BeamLR:
     r"""
