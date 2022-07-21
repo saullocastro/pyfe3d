@@ -12,6 +12,7 @@ from .quad4r import Quad4R, Quad4RData, Quad4RProbe
 from .tria3r import Tria3R, Tria3RData, Tria3RProbe
 from .beamc import BeamC, BeamCData, BeamCProbe
 from .beamlr import BeamLR, BeamLRData, BeamLRProbe
+from .beamcurvedlr import BeamCurvedLR, BeamCurvedLRData, BeamCurvedLRProbe
 from .truss import Truss, TrussData, TrussProbe
 from .spring import Spring, SpringData, SpringProbe
 DOF = 6

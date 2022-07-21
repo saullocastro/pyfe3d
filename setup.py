@@ -10,8 +10,8 @@ import numpy as np
 from Cython.Build import cythonize
 
 
-is_released = True
-version = '0.3.10'
+is_released = False
+version = '0.4.0'
 
 
 def git_version():
@@ -148,6 +148,11 @@ extensions = [
     Extension('pyfe3d.beamlr',
         sources=[
             './pyfe3d/beamlr.pyx',
+            ],
+        **extension_kwargs),
+    Extension('pyfe3d.beamcurvedlr',
+        sources=[
+            './pyfe3d/beamcurvedlr.pyx',
             ],
         **extension_kwargs),
     Extension('pyfe3d.beamc',
