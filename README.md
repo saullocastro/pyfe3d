@@ -1,5 +1,5 @@
-General-purpose finite elements solver based on Python/Cython
-=============================================================
+General-purpose finite element solver based on Python/Cython
+============================================================
 
 Github Actions status:
 
@@ -22,8 +22,8 @@ Important features of this library
 - importable and cimportable code
 - 6 degrees-of-freedom per node
 
-Elements implemented
---------------------
+Finite elements implemented
+----------------------------
 - 'Quad4R' - 4-node plate with linear interpolation, equivalent to Abaqus' S4R
 or Nastran's CQUAD4.
 
