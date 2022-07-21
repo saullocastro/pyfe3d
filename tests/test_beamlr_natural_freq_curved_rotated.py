@@ -9,6 +9,7 @@ from pyfe3d.beamprop import BeamProp
 from pyfe3d import BeamLR, BeamLRData, BeamLRProbe, DOF, INT, DOUBLE
 from pyfe3d.coord import CoordR
 
+
 def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
     for rotation_rad in [np.pi/2, 3*np.pi/2]:
         for mtype in mtypes:
@@ -26,7 +27,8 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
             A = 4.071e-3
             Izz = 6.456e-6
 
-            thetabeam = np.deg2rad(97)
+            arc_deg = 97
+            thetabeam = np.deg2rad(arc_deg)
             r = 2.438
             thetas = np.linspace(thetabeam, 0, n)
             x = r*np.cos(thetas)
@@ -100,6 +102,7 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
 
             print('sparse KC0 and M created')
 
+            # boundary conditions
             bk = np.zeros(N, dtype=bool)
             check = np.isclose(x, x.min()) | np.isclose(x, x.max())
             bk[0::DOF] = check
@@ -123,6 +126,7 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
             print('Numerical omega123', omegan)
             print()
             assert np.allclose(omega123_expected_here, omegan, rtol=1e-2)
+
 
 if __name__ == '__main__':
     test_nat_freq_curved_beam(refinement=1)
