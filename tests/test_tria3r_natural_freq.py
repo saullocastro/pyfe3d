@@ -2,6 +2,7 @@ import sys
 sys.path.append('..')
 
 import numpy as np
+from numpy import isclose
 from scipy.sparse.linalg import eigsh
 from scipy.sparse import coo_matrix
 
@@ -119,7 +120,7 @@ def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
         # applying boundary conditions
         # simply supported
         bk = np.zeros(N, dtype=bool)
-        check = np.isclose(x, 0.) | np.isclose(x, a) | np.isclose(y, 0) | np.isclose(y, b)
+        check = isclose(x, 0.) | isclose(x, a) | isclose(y, 0) | isclose(y, b)
         bk[0::DOF] = check
         bk[1::DOF] = check
         bk[2::DOF] = check
@@ -133,8 +134,8 @@ def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
         print('eig solver begin')
         # solves Ax = lambda M x
         # we have Ax - lambda M x = 0, with lambda = omegan**2
-        PREC = np.max(1/Kuu.diagonal())
-        eigvals, eigvecsu = eigsh(A=PREC*Kuu, M=PREC*Muu, sigma=-1., which='LM', k=num_eigenvalues, tol=1e-9)
+        eigvals, eigvecsu = eigsh(A=Kuu, M=Muu, sigma=-1., which='LM',
+                k=num_eigenvalues, tol=1e-9)
         print('eig solver end')
         eigvecs = np.zeros((N, eigvecsu.shape[1]), dtype=float)
         eigvecs[bu, :] = eigvecsu
@@ -151,7 +152,7 @@ def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
 
         print('Theoretical omega123', wmn)
         print('Numerical omega123', omegan[0:10])
-        assert np.isclose(wmn, omegan[0], rtol=0.05)
+        assert isclose(wmn, omegan[0], rtol=0.05)
 
     if plot:
         import matplotlib

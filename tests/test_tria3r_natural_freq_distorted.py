@@ -133,7 +133,7 @@ def test_tria3r_nat_freq_distorted(plot=False, mode=0):
         # applying boundary conditions
         # simply supported
         bk = np.zeros(N, dtype=bool)
-        check = np.isclose(x, 0.) | np.isclose(x, a) | np.isclose(y, 0) | np.isclose(y, b)
+        check = isclose(x, 0.) | isclose(x, a) | isclose(y, 0) | isclose(y, b)
         bk[0::DOF] = check
         bk[1::DOF] = check
         bk[2::DOF] = check
@@ -143,7 +143,7 @@ def test_tria3r_nat_freq_distorted(plot=False, mode=0):
         Kuu = KC0[bu, :][:, bu]
         Muu = M[bu, :][:, bu]
 
-        num_eigenvalues = max(2, mode+1)
+        num_eigenvalues = max(3, mode+1)
         print('eig solver begin')
         # solves Ax = lambda M x
         # we have Ax - lambda M x = 0, with lambda = omegan**2
@@ -165,7 +165,7 @@ def test_tria3r_nat_freq_distorted(plot=False, mode=0):
 
         print('Theoretical omega123', wmn)
         print('Numerical omega123', omegan[0:10])
-        assert np.isclose(wmn, omegan[0], rtol=0.05)
+        assert isclose(wmn, omegan[0], rtol=0.05)
 
     if plot:
         import matplotlib
