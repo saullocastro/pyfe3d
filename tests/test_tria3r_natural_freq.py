@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 
 import numpy as np
-from scipy.sparse.linalg import eigsh
+from scipy.sparse.linalg import eigs
 from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import isotropic_plate
@@ -134,7 +134,7 @@ def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
         # solves Ax = lambda M x
         # we have Ax - lambda M x = 0, with lambda = omegan**2
         PREC = np.max(1/Kuu.diagonal())
-        eigvals, eigvecsu = eigsh(A=PREC*Kuu, M=PREC*Muu, sigma=-1., which='LM',
+        eigvals, eigvecsu = eigs(A=PREC*Kuu, M=PREC*Muu, sigma=-1., which='LM',
                 k=num_eigenvalues, tol=1e-9)
         print('eig solver end')
         eigvecs = np.zeros((N, eigvecsu.shape[1]), dtype=float)
