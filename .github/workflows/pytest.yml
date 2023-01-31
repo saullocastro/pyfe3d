@@ -6,10 +6,9 @@ jobs:
   build:
 
     strategy:
-      max-parallel: 12
       matrix:
         runs-on: [ubuntu-latest, macos-latest, windows-latest]
-        python-version: [3.7, 3.8, 3.9, '3.10']
+        python-version: [3.8, 3.9, '3.10', '3.11']
     runs-on: ${{ matrix.runs-on }}
 
     steps:
@@ -24,7 +23,7 @@ jobs:
         pip install --upgrade -r requirements.txt
     - name: Install module
       run: |
-        python setup.py install
+        python -m pip install .
     - name: Lint with flake8
       run: |
         pip install flake8
