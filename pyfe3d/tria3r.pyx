@@ -6620,8 +6620,8 @@ cdef class Tria3R:
                 wij = 0.5*0.3333333333333333333333333333333333333
                 # NOTE three-point Gauss-Lobatto quadrature
                 points[0] = 1.
+                points[1] = 0.
                 points[2] = 0.
-                points[3] = 0.
                 h11 = 0.
                 h12 = 0.
                 h13 = 0.
