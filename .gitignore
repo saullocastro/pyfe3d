@@ -1,5 +1,6 @@
 version.py
 # Build related
+*.so
 quad4r.cpp
 tria3r.cpp
 beam*.cpp
