@@ -46,4 +46,5 @@ jobs:
       run: |
         python3 -m pip install twine
         python3 -m twine upload dist/*-manylinux*.whl
+        python3 setup.py sdist
         python3 -m twine upload dist/*.tar.gz
