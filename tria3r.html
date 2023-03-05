@@ -1,19 +1,18 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Tria3R - Triangular element with reduced integration (pyfe3d.tria3r) &#8212; pyfe3d 0.3.9 documentation</title>
+    <title>Tria3R - Triangular element with reduced integration (pyfe3d.tria3r) &#8212; pyfe3d 0.3.11 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
@@ -36,7 +35,7 @@
         <li class="right" >
           <a href="quad4r_utils.html" title="Quad4R useful functions (pyfe3d.quad4r_utils)"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.9 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.11 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</a></li> 
       </ul>
     </div>  
@@ -47,7 +46,8 @@
           <div class="body" role="main">
             
   <span class="target" id="module-pyfe3d.tria3r"></span><section id="tria3r-triangular-element-with-reduced-integration-pyfe3d-tria3r">
-<h1>Tria3R - Triangular element with reduced integration (<a class="reference internal" href="#module-pyfe3d.tria3r" title="pyfe3d.tria3r"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code></a>)<a class="headerlink" href="#tria3r-triangular-element-with-reduced-integration-pyfe3d-tria3r" title="Permalink to this headline">¶</a></h1>
+<h1>Tria3R - Triangular element with reduced integration (<a class="reference internal" href="#module-pyfe3d.tria3r" title="pyfe3d.tria3r"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code></a>)<a class="headerlink" href="#tria3r-triangular-element-with-reduced-integration-pyfe3d-tria3r" title="Permalink to this heading">¶</a></h1>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.tria3r.Tria3R">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.tria3r.</span></span><span class="sig-name descname"><span class="pre">Tria3R</span></span><a class="headerlink" href="#pyfe3d.tria3r.Tria3R" title="Permalink to this definition">¶</a></dt>
@@ -64,7 +64,7 @@
 in Nastran’s quick reference guide for the CTRIA3 element, as illustrated
 below.</p>
 <img alt="_images/nastran_ctria3.svg" src="_images/nastran_ctria3.svg" /><dl class="field-list">
-<dt class="field-odd">Attributes</dt>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
 <dt><strong>eid,</strong><span class="classifier">int</span></dt><dd><p>Element identification number.</p>
 </dd>
@@ -119,10 +119,6 @@ matrices.</p>
 </dl>
 <p class="rubric">Methods</p>
 <table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.update_KC0" title="pyfe3d.tria3r.Tria3R.update_KC0"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KC0</span></code></a>(self, ndarray KC0r, ndarray KC0c, ...)</p></td>
 <td><p>Update sparse vectors for linear constitutive stiffness matrix KC0</p></td>
@@ -384,7 +380,7 @@ parameter.</p>
 updated, not the element object.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>u</strong><span class="classifier">array-like</span></dt><dd><p>Array with global displacements, for a total of <span class="math notranslate nohighlight">\(M\)</span> nodes in
 the model, this array will be arranged as: <span class="math notranslate nohighlight">\(u_1, v_1, w_1, {r_x}_1,
@@ -406,7 +402,7 @@ u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M\)</span>.</p>
 updated, not the element object.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Array with global nodal coordinates, for a total of <span class="math notranslate nohighlight">\(M\)</span> nodes in
 the model, this array will be arranged as: <span class="math notranslate nohighlight">\(x_1, y_1, z_1, x_2,
@@ -428,7 +424,7 @@ components of each axis: <span class="math notranslate nohighlight">\({x_e}_i, {
 {y_e}_j, {y_e}_k\)</span>; <span class="math notranslate nohighlight">\({z_e}_i, {z_e}_j, {z_e}_k\)</span>.</p>
 <p>The rotation matrix terms are calculated after solving 9 equations.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Array with global nodal coordinates, for a total of <span class="math notranslate nohighlight">\(M\)</span> nodes in
 the model, this array will be arranged as: <span class="math notranslate nohighlight">\(x_1, y_1, z_1, x_2,
@@ -452,7 +448,7 @@ the element <span class="math notranslate nohighlight">\(x\)</span> axis while c
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.tria3r.</span></span><span class="sig-name descname"><span class="pre">Tria3RData</span></span><a class="headerlink" href="#pyfe3d.tria3r.Tria3RData" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used to allocate memory for the sparse matrices.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Attributes</dt>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>KC0_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KC0_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">324</span></code></p>
 </dd>
@@ -488,11 +484,11 @@ the element <span class="math notranslate nohighlight">\(x\)</span> axis while c
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.tria3r.</span></span><span class="sig-name descname"><span class="pre">Tria3RProbe</span></span><a class="headerlink" href="#pyfe3d.tria3r.Tria3RProbe" title="Permalink to this definition">¶</a></dt>
 <dd><p>Probe used for local coordinates, local displacements, local stresses etc</p>
 <dl class="field-list simple">
-<dt class="field-odd">Attributes</dt>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>xe,</strong><span class="classifier">array-like</span></dt><dd><p>Array of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF//2=9</span></code> containing the nodal coordinates
 in the element coordinate system, in the following order
-<span class="math notranslate nohighlight">\({x_e}_1, {y_e}_1, {z_e}_1, \)</span>, <span class="math notranslate nohighlight">\({x_e}_3,
+<span class="math notranslate nohighlight">\({x_e}_1, {y_e}_1, {z_e}_1, `{x_e}_2, {y_e}_2, {z_e}_2\)</span>, <span class="math notranslate nohighlight">\({x_e}_3,
 {y_e}_3, {z_e}_3\)</span>.</p>
 </dd>
 <dt><strong>ue,</strong><span class="classifier">array-like</span></dt><dd><p>Array of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF=18</span></code> containing the element displacements
@@ -518,7 +514,6 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
 
 </dd></dl>
 
-</section>
 
 
             <div class="clearer"></div>
@@ -527,6 +522,62 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R"><code class="docutils literal notranslate"><span class="pre">Tria3R</span></code></a><ul>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.alpha_shear_locking"><code class="docutils literal notranslate"><span class="pre">Tria3R.alpha_shear_locking</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.alphat"><code class="docutils literal notranslate"><span class="pre">Tria3R.alphat</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.area"><code class="docutils literal notranslate"><span class="pre">Tria3R.area</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.c1"><code class="docutils literal notranslate"><span class="pre">Tria3R.c1</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.c2"><code class="docutils literal notranslate"><span class="pre">Tria3R.c2</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.c3"><code class="docutils literal notranslate"><span class="pre">Tria3R.c3</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.eid"><code class="docutils literal notranslate"><span class="pre">Tria3R.eid</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.init_k_KC0"><code class="docutils literal notranslate"><span class="pre">Tria3R.init_k_KC0</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.init_k_KG"><code class="docutils literal notranslate"><span class="pre">Tria3R.init_k_KG</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.init_k_M"><code class="docutils literal notranslate"><span class="pre">Tria3R.init_k_M</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.m11"><code class="docutils literal notranslate"><span class="pre">Tria3R.m11</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.m12"><code class="docutils literal notranslate"><span class="pre">Tria3R.m12</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.m21"><code class="docutils literal notranslate"><span class="pre">Tria3R.m21</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.m22"><code class="docutils literal notranslate"><span class="pre">Tria3R.m22</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.n1"><code class="docutils literal notranslate"><span class="pre">Tria3R.n1</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.n2"><code class="docutils literal notranslate"><span class="pre">Tria3R.n2</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.n3"><code class="docutils literal notranslate"><span class="pre">Tria3R.n3</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.probe"><code class="docutils literal notranslate"><span class="pre">Tria3R.probe</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.r11"><code class="docutils literal notranslate"><span class="pre">Tria3R.r11</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.r12"><code class="docutils literal notranslate"><span class="pre">Tria3R.r12</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.r13"><code class="docutils literal notranslate"><span class="pre">Tria3R.r13</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.r21"><code class="docutils literal notranslate"><span class="pre">Tria3R.r21</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.r22"><code class="docutils literal notranslate"><span class="pre">Tria3R.r22</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.r23"><code class="docutils literal notranslate"><span class="pre">Tria3R.r23</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.r31"><code class="docutils literal notranslate"><span class="pre">Tria3R.r31</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.r32"><code class="docutils literal notranslate"><span class="pre">Tria3R.r32</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.r33"><code class="docutils literal notranslate"><span class="pre">Tria3R.r33</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.update_KC0"><code class="docutils literal notranslate"><span class="pre">Tria3R.update_KC0()</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.update_KG"><code class="docutils literal notranslate"><span class="pre">Tria3R.update_KG()</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.update_KG_given_stress"><code class="docutils literal notranslate"><span class="pre">Tria3R.update_KG_given_stress()</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.update_M"><code class="docutils literal notranslate"><span class="pre">Tria3R.update_M()</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.update_area"><code class="docutils literal notranslate"><span class="pre">Tria3R.update_area()</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.update_probe_ue"><code class="docutils literal notranslate"><span class="pre">Tria3R.update_probe_ue()</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.update_probe_xe"><code class="docutils literal notranslate"><span class="pre">Tria3R.update_probe_xe()</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3R.update_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">Tria3R.update_rotation_matrix()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3RData"><code class="docutils literal notranslate"><span class="pre">Tria3RData</span></code></a><ul>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3RData.KC0_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Tria3RData.KC0_SPARSE_SIZE</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3RData.KG_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Tria3RData.KG_SPARSE_SIZE</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3RData.M_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Tria3RData.M_SPARSE_SIZE</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3RProbe"><code class="docutils literal notranslate"><span class="pre">Tria3RProbe</span></code></a><ul>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3RProbe.ue"><code class="docutils literal notranslate"><span class="pre">Tria3RProbe.ue</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.tria3r.Tria3RProbe.xe"><code class="docutils literal notranslate"><span class="pre">Tria3RProbe.xe</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
   <div>
     <h4>Previous topic</h4>
     <p class="topless"><a href="quad4r_utils.html"
@@ -553,7 +604,7 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -573,13 +624,13 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
         <li class="right" >
           <a href="quad4r_utils.html" title="Quad4R useful functions (pyfe3d.quad4r_utils)"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.9 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.11 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2021-, Saullo G. P. Castro.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
     </div>
   </body>
 </html>

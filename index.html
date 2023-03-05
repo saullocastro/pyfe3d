@@ -1,19 +1,18 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Finite elements for 3D problems in Python/Cython &#8212; pyfe3d 0.3.9 documentation</title>
+    <title>Finite elements for 3D problems in Python/Cython &#8212; pyfe3d 0.3.11 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -31,7 +30,7 @@
         <li class="right" >
           <a href="quad4r.html" title="Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r)"
              accesskey="N">next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">pyfe3d 0.3.9 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">pyfe3d 0.3.11 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Finite elements for 3D problems in Python/Cython</a></li> 
       </ul>
     </div>  
@@ -42,27 +41,477 @@
           <div class="body" role="main">
             
   <section id="finite-elements-for-3d-problems-in-python-cython">
-<h1>Finite elements for 3D problems in Python/Cython<a class="headerlink" href="#finite-elements-for-3d-problems-in-python-cython" title="Permalink to this headline">¶</a></h1>
+<h1>Finite elements for 3D problems in Python/Cython<a class="headerlink" href="#finite-elements-for-3d-problems-in-python-cython" title="Permalink to this heading">¶</a></h1>
 <section id="modules">
-<h2>Modules<a class="headerlink" href="#modules" title="Permalink to this headline">¶</a></h2>
+<h2>Modules<a class="headerlink" href="#modules" title="Permalink to this heading">¶</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="quad4r.html">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R"><code class="docutils literal notranslate"><span class="pre">Quad4R</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.alphat"><code class="docutils literal notranslate"><span class="pre">Quad4R.alphat</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.area"><code class="docutils literal notranslate"><span class="pre">Quad4R.area</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.c1"><code class="docutils literal notranslate"><span class="pre">Quad4R.c1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.c2"><code class="docutils literal notranslate"><span class="pre">Quad4R.c2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.c3"><code class="docutils literal notranslate"><span class="pre">Quad4R.c3</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.c4"><code class="docutils literal notranslate"><span class="pre">Quad4R.c4</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.eid"><code class="docutils literal notranslate"><span class="pre">Quad4R.eid</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.init_k_KC0"><code class="docutils literal notranslate"><span class="pre">Quad4R.init_k_KC0</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.init_k_KG"><code class="docutils literal notranslate"><span class="pre">Quad4R.init_k_KG</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.init_k_M"><code class="docutils literal notranslate"><span class="pre">Quad4R.init_k_M</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.m11"><code class="docutils literal notranslate"><span class="pre">Quad4R.m11</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.m12"><code class="docutils literal notranslate"><span class="pre">Quad4R.m12</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.m21"><code class="docutils literal notranslate"><span class="pre">Quad4R.m21</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.m22"><code class="docutils literal notranslate"><span class="pre">Quad4R.m22</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.n1"><code class="docutils literal notranslate"><span class="pre">Quad4R.n1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.n2"><code class="docutils literal notranslate"><span class="pre">Quad4R.n2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.n3"><code class="docutils literal notranslate"><span class="pre">Quad4R.n3</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.n4"><code class="docutils literal notranslate"><span class="pre">Quad4R.n4</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.probe"><code class="docutils literal notranslate"><span class="pre">Quad4R.probe</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.r11"><code class="docutils literal notranslate"><span class="pre">Quad4R.r11</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.r12"><code class="docutils literal notranslate"><span class="pre">Quad4R.r12</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.r13"><code class="docutils literal notranslate"><span class="pre">Quad4R.r13</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.r21"><code class="docutils literal notranslate"><span class="pre">Quad4R.r21</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.r22"><code class="docutils literal notranslate"><span class="pre">Quad4R.r22</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.r23"><code class="docutils literal notranslate"><span class="pre">Quad4R.r23</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.r31"><code class="docutils literal notranslate"><span class="pre">Quad4R.r31</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.r32"><code class="docutils literal notranslate"><span class="pre">Quad4R.r32</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.r33"><code class="docutils literal notranslate"><span class="pre">Quad4R.r33</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.update_KC0"><code class="docutils literal notranslate"><span class="pre">Quad4R.update_KC0()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.update_KG"><code class="docutils literal notranslate"><span class="pre">Quad4R.update_KG()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.update_KG_given_stress"><code class="docutils literal notranslate"><span class="pre">Quad4R.update_KG_given_stress()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.update_M"><code class="docutils literal notranslate"><span class="pre">Quad4R.update_M()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.update_area"><code class="docutils literal notranslate"><span class="pre">Quad4R.update_area()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.update_probe_ue"><code class="docutils literal notranslate"><span class="pre">Quad4R.update_probe_ue()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.update_probe_xe"><code class="docutils literal notranslate"><span class="pre">Quad4R.update_probe_xe()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.update_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">Quad4R.update_rotation_matrix()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4RData"><code class="docutils literal notranslate"><span class="pre">Quad4RData</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4RData.KC0_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Quad4RData.KC0_SPARSE_SIZE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4RData.KG_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Quad4RData.KG_SPARSE_SIZE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4RData.M_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Quad4RData.M_SPARSE_SIZE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4RProbe"><code class="docutils literal notranslate"><span class="pre">Quad4RProbe</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4RProbe.ue"><code class="docutils literal notranslate"><span class="pre">Quad4RProbe.ue</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4RProbe.xe"><code class="docutils literal notranslate"><span class="pre">Quad4RProbe.xe</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="quad4r_utils.html">Quad4R useful functions (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r_utils</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quad4r_utils.html#pyfe3d.quad4r_utils.quad4r_coord"><code class="docutils literal notranslate"><span class="pre">quad4r_coord()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="tria3r.html">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R"><code class="docutils literal notranslate"><span class="pre">Tria3R</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.alpha_shear_locking"><code class="docutils literal notranslate"><span class="pre">Tria3R.alpha_shear_locking</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.alphat"><code class="docutils literal notranslate"><span class="pre">Tria3R.alphat</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.area"><code class="docutils literal notranslate"><span class="pre">Tria3R.area</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.c1"><code class="docutils literal notranslate"><span class="pre">Tria3R.c1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.c2"><code class="docutils literal notranslate"><span class="pre">Tria3R.c2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.c3"><code class="docutils literal notranslate"><span class="pre">Tria3R.c3</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.eid"><code class="docutils literal notranslate"><span class="pre">Tria3R.eid</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.init_k_KC0"><code class="docutils literal notranslate"><span class="pre">Tria3R.init_k_KC0</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.init_k_KG"><code class="docutils literal notranslate"><span class="pre">Tria3R.init_k_KG</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.init_k_M"><code class="docutils literal notranslate"><span class="pre">Tria3R.init_k_M</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.m11"><code class="docutils literal notranslate"><span class="pre">Tria3R.m11</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.m12"><code class="docutils literal notranslate"><span class="pre">Tria3R.m12</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.m21"><code class="docutils literal notranslate"><span class="pre">Tria3R.m21</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.m22"><code class="docutils literal notranslate"><span class="pre">Tria3R.m22</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.n1"><code class="docutils literal notranslate"><span class="pre">Tria3R.n1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.n2"><code class="docutils literal notranslate"><span class="pre">Tria3R.n2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.n3"><code class="docutils literal notranslate"><span class="pre">Tria3R.n3</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.probe"><code class="docutils literal notranslate"><span class="pre">Tria3R.probe</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.r11"><code class="docutils literal notranslate"><span class="pre">Tria3R.r11</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.r12"><code class="docutils literal notranslate"><span class="pre">Tria3R.r12</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.r13"><code class="docutils literal notranslate"><span class="pre">Tria3R.r13</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.r21"><code class="docutils literal notranslate"><span class="pre">Tria3R.r21</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.r22"><code class="docutils literal notranslate"><span class="pre">Tria3R.r22</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.r23"><code class="docutils literal notranslate"><span class="pre">Tria3R.r23</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.r31"><code class="docutils literal notranslate"><span class="pre">Tria3R.r31</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.r32"><code class="docutils literal notranslate"><span class="pre">Tria3R.r32</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.r33"><code class="docutils literal notranslate"><span class="pre">Tria3R.r33</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.update_KC0"><code class="docutils literal notranslate"><span class="pre">Tria3R.update_KC0()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.update_KG"><code class="docutils literal notranslate"><span class="pre">Tria3R.update_KG()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.update_KG_given_stress"><code class="docutils literal notranslate"><span class="pre">Tria3R.update_KG_given_stress()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.update_M"><code class="docutils literal notranslate"><span class="pre">Tria3R.update_M()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.update_area"><code class="docutils literal notranslate"><span class="pre">Tria3R.update_area()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.update_probe_ue"><code class="docutils literal notranslate"><span class="pre">Tria3R.update_probe_ue()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.update_probe_xe"><code class="docutils literal notranslate"><span class="pre">Tria3R.update_probe_xe()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R.update_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">Tria3R.update_rotation_matrix()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3RData"><code class="docutils literal notranslate"><span class="pre">Tria3RData</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3RData.KC0_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Tria3RData.KC0_SPARSE_SIZE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3RData.KG_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Tria3RData.KG_SPARSE_SIZE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3RData.M_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Tria3RData.M_SPARSE_SIZE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3RProbe"><code class="docutils literal notranslate"><span class="pre">Tria3RProbe</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3RProbe.ue"><code class="docutils literal notranslate"><span class="pre">Tria3RProbe.ue</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3RProbe.xe"><code class="docutils literal notranslate"><span class="pre">Tria3RProbe.xe</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="beamc.html">BeamC - Consistent Timoshenko 3D beam element (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamc</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC"><code class="docutils literal notranslate"><span class="pre">BeamC</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.c1"><code class="docutils literal notranslate"><span class="pre">BeamC.c1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.c2"><code class="docutils literal notranslate"><span class="pre">BeamC.c2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.eid"><code class="docutils literal notranslate"><span class="pre">BeamC.eid</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.init_k_KC0"><code class="docutils literal notranslate"><span class="pre">BeamC.init_k_KC0</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.init_k_KG"><code class="docutils literal notranslate"><span class="pre">BeamC.init_k_KG</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.init_k_M"><code class="docutils literal notranslate"><span class="pre">BeamC.init_k_M</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.length"><code class="docutils literal notranslate"><span class="pre">BeamC.length</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.n1"><code class="docutils literal notranslate"><span class="pre">BeamC.n1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.n2"><code class="docutils literal notranslate"><span class="pre">BeamC.n2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.probe"><code class="docutils literal notranslate"><span class="pre">BeamC.probe</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.r11"><code class="docutils literal notranslate"><span class="pre">BeamC.r11</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.r12"><code class="docutils literal notranslate"><span class="pre">BeamC.r12</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.r13"><code class="docutils literal notranslate"><span class="pre">BeamC.r13</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.r21"><code class="docutils literal notranslate"><span class="pre">BeamC.r21</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.r22"><code class="docutils literal notranslate"><span class="pre">BeamC.r22</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.r23"><code class="docutils literal notranslate"><span class="pre">BeamC.r23</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.r31"><code class="docutils literal notranslate"><span class="pre">BeamC.r31</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.r32"><code class="docutils literal notranslate"><span class="pre">BeamC.r32</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.r33"><code class="docutils literal notranslate"><span class="pre">BeamC.r33</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.update_KC0"><code class="docutils literal notranslate"><span class="pre">BeamC.update_KC0()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.update_KG"><code class="docutils literal notranslate"><span class="pre">BeamC.update_KG()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.update_M"><code class="docutils literal notranslate"><span class="pre">BeamC.update_M()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.update_length"><code class="docutils literal notranslate"><span class="pre">BeamC.update_length()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.update_probe_ue"><code class="docutils literal notranslate"><span class="pre">BeamC.update_probe_ue()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.update_probe_xe"><code class="docutils literal notranslate"><span class="pre">BeamC.update_probe_xe()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.update_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">BeamC.update_rotation_matrix()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamCData"><code class="docutils literal notranslate"><span class="pre">BeamCData</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamCData.KC0_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">BeamCData.KC0_SPARSE_SIZE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamCData.KG_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">BeamCData.KG_SPARSE_SIZE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamCData.M_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">BeamCData.M_SPARSE_SIZE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamCProbe"><code class="docutils literal notranslate"><span class="pre">BeamCProbe</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamCProbe.ue"><code class="docutils literal notranslate"><span class="pre">BeamCProbe.ue</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamCProbe.xe"><code class="docutils literal notranslate"><span class="pre">BeamCProbe.xe</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="beamlr.html">BeamLR - Linear Timoshenko 3D beam element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamlr</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR"><code class="docutils literal notranslate"><span class="pre">BeamLR</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.c1"><code class="docutils literal notranslate"><span class="pre">BeamLR.c1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.c2"><code class="docutils literal notranslate"><span class="pre">BeamLR.c2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.eid"><code class="docutils literal notranslate"><span class="pre">BeamLR.eid</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.init_k_KC0"><code class="docutils literal notranslate"><span class="pre">BeamLR.init_k_KC0</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.init_k_KG"><code class="docutils literal notranslate"><span class="pre">BeamLR.init_k_KG</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.init_k_M"><code class="docutils literal notranslate"><span class="pre">BeamLR.init_k_M</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.length"><code class="docutils literal notranslate"><span class="pre">BeamLR.length</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.n1"><code class="docutils literal notranslate"><span class="pre">BeamLR.n1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.n2"><code class="docutils literal notranslate"><span class="pre">BeamLR.n2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.probe"><code class="docutils literal notranslate"><span class="pre">BeamLR.probe</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.r11"><code class="docutils literal notranslate"><span class="pre">BeamLR.r11</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.r12"><code class="docutils literal notranslate"><span class="pre">BeamLR.r12</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.r13"><code class="docutils literal notranslate"><span class="pre">BeamLR.r13</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.r21"><code class="docutils literal notranslate"><span class="pre">BeamLR.r21</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.r22"><code class="docutils literal notranslate"><span class="pre">BeamLR.r22</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.r23"><code class="docutils literal notranslate"><span class="pre">BeamLR.r23</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.r31"><code class="docutils literal notranslate"><span class="pre">BeamLR.r31</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.r32"><code class="docutils literal notranslate"><span class="pre">BeamLR.r32</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.r33"><code class="docutils literal notranslate"><span class="pre">BeamLR.r33</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.update_KC0"><code class="docutils literal notranslate"><span class="pre">BeamLR.update_KC0()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.update_KG"><code class="docutils literal notranslate"><span class="pre">BeamLR.update_KG()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.update_M"><code class="docutils literal notranslate"><span class="pre">BeamLR.update_M()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.update_length"><code class="docutils literal notranslate"><span class="pre">BeamLR.update_length()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.update_probe_ue"><code class="docutils literal notranslate"><span class="pre">BeamLR.update_probe_ue()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.update_probe_xe"><code class="docutils literal notranslate"><span class="pre">BeamLR.update_probe_xe()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.update_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">BeamLR.update_rotation_matrix()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLRData"><code class="docutils literal notranslate"><span class="pre">BeamLRData</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLRData.KC0_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">BeamLRData.KC0_SPARSE_SIZE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLRData.KG_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">BeamLRData.KG_SPARSE_SIZE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLRData.M_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">BeamLRData.M_SPARSE_SIZE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLRProbe"><code class="docutils literal notranslate"><span class="pre">BeamLRProbe</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLRProbe.ue"><code class="docutils literal notranslate"><span class="pre">BeamLRProbe.ue</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLRProbe.xe"><code class="docutils literal notranslate"><span class="pre">BeamLRProbe.xe</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="spring.html">Spring - 3D spring element with constant stiffnesses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.spring</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring"><code class="docutils literal notranslate"><span class="pre">Spring</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.c1"><code class="docutils literal notranslate"><span class="pre">Spring.c1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.c2"><code class="docutils literal notranslate"><span class="pre">Spring.c2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.eid"><code class="docutils literal notranslate"><span class="pre">Spring.eid</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.init_k_KC0"><code class="docutils literal notranslate"><span class="pre">Spring.init_k_KC0</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.init_k_KG"><code class="docutils literal notranslate"><span class="pre">Spring.init_k_KG</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.init_k_M"><code class="docutils literal notranslate"><span class="pre">Spring.init_k_M</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.krxe"><code class="docutils literal notranslate"><span class="pre">Spring.krxe</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.krye"><code class="docutils literal notranslate"><span class="pre">Spring.krye</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.krze"><code class="docutils literal notranslate"><span class="pre">Spring.krze</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.kxe"><code class="docutils literal notranslate"><span class="pre">Spring.kxe</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.kye"><code class="docutils literal notranslate"><span class="pre">Spring.kye</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.kze"><code class="docutils literal notranslate"><span class="pre">Spring.kze</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.n1"><code class="docutils literal notranslate"><span class="pre">Spring.n1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.n2"><code class="docutils literal notranslate"><span class="pre">Spring.n2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.probe"><code class="docutils literal notranslate"><span class="pre">Spring.probe</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.r11"><code class="docutils literal notranslate"><span class="pre">Spring.r11</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.r12"><code class="docutils literal notranslate"><span class="pre">Spring.r12</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.r13"><code class="docutils literal notranslate"><span class="pre">Spring.r13</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.r21"><code class="docutils literal notranslate"><span class="pre">Spring.r21</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.r22"><code class="docutils literal notranslate"><span class="pre">Spring.r22</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.r23"><code class="docutils literal notranslate"><span class="pre">Spring.r23</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.r31"><code class="docutils literal notranslate"><span class="pre">Spring.r31</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.r32"><code class="docutils literal notranslate"><span class="pre">Spring.r32</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.r33"><code class="docutils literal notranslate"><span class="pre">Spring.r33</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.update_KC0"><code class="docutils literal notranslate"><span class="pre">Spring.update_KC0()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.update_probe_ue"><code class="docutils literal notranslate"><span class="pre">Spring.update_probe_ue()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring.update_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">Spring.update_rotation_matrix()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="spring.html#pyfe3d.spring.SpringData"><code class="docutils literal notranslate"><span class="pre">SpringData</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.SpringData.KC0_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">SpringData.KC0_SPARSE_SIZE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.SpringData.KG_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">SpringData.KG_SPARSE_SIZE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.SpringData.M_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">SpringData.M_SPARSE_SIZE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="spring.html#pyfe3d.spring.SpringProbe"><code class="docutils literal notranslate"><span class="pre">SpringProbe</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.SpringProbe.ue"><code class="docutils literal notranslate"><span class="pre">SpringProbe.ue</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.SpringProbe.xe"><code class="docutils literal notranslate"><span class="pre">SpringProbe.xe</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="truss.html">Truss - Linear truss 3D element with analytical integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss"><code class="docutils literal notranslate"><span class="pre">Truss</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.c1"><code class="docutils literal notranslate"><span class="pre">Truss.c1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.c2"><code class="docutils literal notranslate"><span class="pre">Truss.c2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.eid"><code class="docutils literal notranslate"><span class="pre">Truss.eid</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.init_k_KC0"><code class="docutils literal notranslate"><span class="pre">Truss.init_k_KC0</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.init_k_M"><code class="docutils literal notranslate"><span class="pre">Truss.init_k_M</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.length"><code class="docutils literal notranslate"><span class="pre">Truss.length</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.n1"><code class="docutils literal notranslate"><span class="pre">Truss.n1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.n2"><code class="docutils literal notranslate"><span class="pre">Truss.n2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.probe"><code class="docutils literal notranslate"><span class="pre">Truss.probe</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.r11"><code class="docutils literal notranslate"><span class="pre">Truss.r11</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.r12"><code class="docutils literal notranslate"><span class="pre">Truss.r12</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.r13"><code class="docutils literal notranslate"><span class="pre">Truss.r13</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.r21"><code class="docutils literal notranslate"><span class="pre">Truss.r21</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.r22"><code class="docutils literal notranslate"><span class="pre">Truss.r22</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.r23"><code class="docutils literal notranslate"><span class="pre">Truss.r23</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.r31"><code class="docutils literal notranslate"><span class="pre">Truss.r31</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.r32"><code class="docutils literal notranslate"><span class="pre">Truss.r32</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.r33"><code class="docutils literal notranslate"><span class="pre">Truss.r33</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.update_KC0"><code class="docutils literal notranslate"><span class="pre">Truss.update_KC0()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.update_M"><code class="docutils literal notranslate"><span class="pre">Truss.update_M()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.update_length"><code class="docutils literal notranslate"><span class="pre">Truss.update_length()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.update_probe_ue"><code class="docutils literal notranslate"><span class="pre">Truss.update_probe_ue()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.update_probe_xe"><code class="docutils literal notranslate"><span class="pre">Truss.update_probe_xe()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss.update_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">Truss.update_rotation_matrix()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="truss.html#pyfe3d.truss.TrussData"><code class="docutils literal notranslate"><span class="pre">TrussData</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.TrussData.KC0_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">TrussData.KC0_SPARSE_SIZE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.TrussData.M_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">TrussData.M_SPARSE_SIZE</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="truss.html#pyfe3d.truss.TrussProbe"><code class="docutils literal notranslate"><span class="pre">TrussProbe</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.TrussProbe.ue"><code class="docutils literal notranslate"><span class="pre">TrussProbe.ue</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.TrussProbe.xe"><code class="docutils literal notranslate"><span class="pre">TrussProbe.xe</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="properties.html">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.beamprop.BeamProp"><code class="docutils literal notranslate"><span class="pre">BeamProp</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.beamprop.BeamProp.A"><code class="docutils literal notranslate"><span class="pre">BeamProp.A</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.beamprop.BeamProp.Ay"><code class="docutils literal notranslate"><span class="pre">BeamProp.Ay</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.beamprop.BeamProp.Az"><code class="docutils literal notranslate"><span class="pre">BeamProp.Az</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.beamprop.BeamProp.E"><code class="docutils literal notranslate"><span class="pre">BeamProp.E</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.beamprop.BeamProp.G"><code class="docutils literal notranslate"><span class="pre">BeamProp.G</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.beamprop.BeamProp.Iyy"><code class="docutils literal notranslate"><span class="pre">BeamProp.Iyy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.beamprop.BeamProp.Iyz"><code class="docutils literal notranslate"><span class="pre">BeamProp.Iyz</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.beamprop.BeamProp.Izz"><code class="docutils literal notranslate"><span class="pre">BeamProp.Izz</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.beamprop.BeamProp.J"><code class="docutils literal notranslate"><span class="pre">BeamProp.J</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.beamprop.BeamProp.intrho"><code class="docutils literal notranslate"><span class="pre">BeamProp.intrho</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.beamprop.BeamProp.intrhoy"><code class="docutils literal notranslate"><span class="pre">BeamProp.intrhoy</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.beamprop.BeamProp.intrhoy2"><code class="docutils literal notranslate"><span class="pre">BeamProp.intrhoy2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.beamprop.BeamProp.intrhoyz"><code class="docutils literal notranslate"><span class="pre">BeamProp.intrhoyz</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.beamprop.BeamProp.intrhoz"><code class="docutils literal notranslate"><span class="pre">BeamProp.intrhoz</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.beamprop.BeamProp.intrhoz2"><code class="docutils literal notranslate"><span class="pre">BeamProp.intrhoz2</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="properties.html#shell-property-module-pyfe3d-shellprop">Shell property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina"><code class="docutils literal notranslate"><span class="pre">Lamina</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.cos2t"><code class="docutils literal notranslate"><span class="pre">Lamina.cos2t</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.cos4t"><code class="docutils literal notranslate"><span class="pre">Lamina.cos4t</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.cost"><code class="docutils literal notranslate"><span class="pre">Lamina.cost</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.get_constitutive_matrix"><code class="docutils literal notranslate"><span class="pre">Lamina.get_constitutive_matrix()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.get_transf_matrix_displ_to_laminate"><code class="docutils literal notranslate"><span class="pre">Lamina.get_transf_matrix_displ_to_laminate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.get_transf_matrix_stress_to_lamina"><code class="docutils literal notranslate"><span class="pre">Lamina.get_transf_matrix_stress_to_lamina()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.get_transf_matrix_stress_to_laminate"><code class="docutils literal notranslate"><span class="pre">Lamina.get_transf_matrix_stress_to_laminate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.h"><code class="docutils literal notranslate"><span class="pre">Lamina.h</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.matlamina"><code class="docutils literal notranslate"><span class="pre">Lamina.matlamina</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.plyid"><code class="docutils literal notranslate"><span class="pre">Lamina.plyid</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.q11L"><code class="docutils literal notranslate"><span class="pre">Lamina.q11L</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.q12L"><code class="docutils literal notranslate"><span class="pre">Lamina.q12L</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.q16L"><code class="docutils literal notranslate"><span class="pre">Lamina.q16L</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.q22L"><code class="docutils literal notranslate"><span class="pre">Lamina.q22L</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.q26L"><code class="docutils literal notranslate"><span class="pre">Lamina.q26L</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.q44L"><code class="docutils literal notranslate"><span class="pre">Lamina.q44L</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.q45L"><code class="docutils literal notranslate"><span class="pre">Lamina.q45L</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.q55L"><code class="docutils literal notranslate"><span class="pre">Lamina.q55L</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.q66L"><code class="docutils literal notranslate"><span class="pre">Lamina.q66L</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.rebuild"><code class="docutils literal notranslate"><span class="pre">Lamina.rebuild()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.sin2t"><code class="docutils literal notranslate"><span class="pre">Lamina.sin2t</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.sin4t"><code class="docutils literal notranslate"><span class="pre">Lamina.sin4t</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.sint"><code class="docutils literal notranslate"><span class="pre">Lamina.sint</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.thetadeg"><code class="docutils literal notranslate"><span class="pre">Lamina.thetadeg</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop.LaminationParameters"><code class="docutils literal notranslate"><span class="pre">LaminationParameters</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.LaminationParameters.xiA1"><code class="docutils literal notranslate"><span class="pre">LaminationParameters.xiA1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.LaminationParameters.xiA2"><code class="docutils literal notranslate"><span class="pre">LaminationParameters.xiA2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.LaminationParameters.xiA3"><code class="docutils literal notranslate"><span class="pre">LaminationParameters.xiA3</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.LaminationParameters.xiA4"><code class="docutils literal notranslate"><span class="pre">LaminationParameters.xiA4</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.LaminationParameters.xiB1"><code class="docutils literal notranslate"><span class="pre">LaminationParameters.xiB1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.LaminationParameters.xiB2"><code class="docutils literal notranslate"><span class="pre">LaminationParameters.xiB2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.LaminationParameters.xiB3"><code class="docutils literal notranslate"><span class="pre">LaminationParameters.xiB3</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.LaminationParameters.xiB4"><code class="docutils literal notranslate"><span class="pre">LaminationParameters.xiB4</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.LaminationParameters.xiD1"><code class="docutils literal notranslate"><span class="pre">LaminationParameters.xiD1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.LaminationParameters.xiD2"><code class="docutils literal notranslate"><span class="pre">LaminationParameters.xiD2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.LaminationParameters.xiD3"><code class="docutils literal notranslate"><span class="pre">LaminationParameters.xiD3</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.LaminationParameters.xiD4"><code class="docutils literal notranslate"><span class="pre">LaminationParameters.xiD4</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.LaminationParameters.xiE1"><code class="docutils literal notranslate"><span class="pre">LaminationParameters.xiE1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.LaminationParameters.xiE2"><code class="docutils literal notranslate"><span class="pre">LaminationParameters.xiE2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.LaminationParameters.xiE3"><code class="docutils literal notranslate"><span class="pre">LaminationParameters.xiE3</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.LaminationParameters.xiE4"><code class="docutils literal notranslate"><span class="pre">LaminationParameters.xiE4</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina"><code class="docutils literal notranslate"><span class="pre">MatLamina</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.a1"><code class="docutils literal notranslate"><span class="pre">MatLamina.a1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.a2"><code class="docutils literal notranslate"><span class="pre">MatLamina.a2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.a3"><code class="docutils literal notranslate"><span class="pre">MatLamina.a3</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.c11"><code class="docutils literal notranslate"><span class="pre">MatLamina.c11</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.c12"><code class="docutils literal notranslate"><span class="pre">MatLamina.c12</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.c13"><code class="docutils literal notranslate"><span class="pre">MatLamina.c13</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.c22"><code class="docutils literal notranslate"><span class="pre">MatLamina.c22</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.c23"><code class="docutils literal notranslate"><span class="pre">MatLamina.c23</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.c33"><code class="docutils literal notranslate"><span class="pre">MatLamina.c33</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.c44"><code class="docutils literal notranslate"><span class="pre">MatLamina.c44</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.c55"><code class="docutils literal notranslate"><span class="pre">MatLamina.c55</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.c66"><code class="docutils literal notranslate"><span class="pre">MatLamina.c66</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.e1"><code class="docutils literal notranslate"><span class="pre">MatLamina.e1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.e2"><code class="docutils literal notranslate"><span class="pre">MatLamina.e2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.e3"><code class="docutils literal notranslate"><span class="pre">MatLamina.e3</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.g12"><code class="docutils literal notranslate"><span class="pre">MatLamina.g12</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.g13"><code class="docutils literal notranslate"><span class="pre">MatLamina.g13</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.g23"><code class="docutils literal notranslate"><span class="pre">MatLamina.g23</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.get_constitutive_matrix"><code class="docutils literal notranslate"><span class="pre">MatLamina.get_constitutive_matrix()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.get_invariant_matrix"><code class="docutils literal notranslate"><span class="pre">MatLamina.get_invariant_matrix()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.nu12"><code class="docutils literal notranslate"><span class="pre">MatLamina.nu12</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.nu13"><code class="docutils literal notranslate"><span class="pre">MatLamina.nu13</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.nu21"><code class="docutils literal notranslate"><span class="pre">MatLamina.nu21</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.nu23"><code class="docutils literal notranslate"><span class="pre">MatLamina.nu23</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.nu31"><code class="docutils literal notranslate"><span class="pre">MatLamina.nu31</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.nu32"><code class="docutils literal notranslate"><span class="pre">MatLamina.nu32</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.q11"><code class="docutils literal notranslate"><span class="pre">MatLamina.q11</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.q12"><code class="docutils literal notranslate"><span class="pre">MatLamina.q12</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.q13"><code class="docutils literal notranslate"><span class="pre">MatLamina.q13</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.q21"><code class="docutils literal notranslate"><span class="pre">MatLamina.q21</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.q22"><code class="docutils literal notranslate"><span class="pre">MatLamina.q22</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.q23"><code class="docutils literal notranslate"><span class="pre">MatLamina.q23</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.q31"><code class="docutils literal notranslate"><span class="pre">MatLamina.q31</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.q32"><code class="docutils literal notranslate"><span class="pre">MatLamina.q32</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.q33"><code class="docutils literal notranslate"><span class="pre">MatLamina.q33</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.q44"><code class="docutils literal notranslate"><span class="pre">MatLamina.q44</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.q55"><code class="docutils literal notranslate"><span class="pre">MatLamina.q55</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.q66"><code class="docutils literal notranslate"><span class="pre">MatLamina.q66</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.rebuild"><code class="docutils literal notranslate"><span class="pre">MatLamina.rebuild()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.rho"><code class="docutils literal notranslate"><span class="pre">MatLamina.rho</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.sc1"><code class="docutils literal notranslate"><span class="pre">MatLamina.sc1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.sc2"><code class="docutils literal notranslate"><span class="pre">MatLamina.sc2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.ss12"><code class="docutils literal notranslate"><span class="pre">MatLamina.ss12</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.st1"><code class="docutils literal notranslate"><span class="pre">MatLamina.st1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.st2"><code class="docutils literal notranslate"><span class="pre">MatLamina.st2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.trace_normalize_plane_stress"><code class="docutils literal notranslate"><span class="pre">MatLamina.trace_normalize_plane_stress()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.tref"><code class="docutils literal notranslate"><span class="pre">MatLamina.tref</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.u1"><code class="docutils literal notranslate"><span class="pre">MatLamina.u1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.u2"><code class="docutils literal notranslate"><span class="pre">MatLamina.u2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.u3"><code class="docutils literal notranslate"><span class="pre">MatLamina.u3</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.u4"><code class="docutils literal notranslate"><span class="pre">MatLamina.u4</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.u5"><code class="docutils literal notranslate"><span class="pre">MatLamina.u5</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.u6"><code class="docutils literal notranslate"><span class="pre">MatLamina.u6</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina.u7"><code class="docutils literal notranslate"><span class="pre">MatLamina.u7</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp"><code class="docutils literal notranslate"><span class="pre">ShellProp</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.A11"><code class="docutils literal notranslate"><span class="pre">ShellProp.A11</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.A12"><code class="docutils literal notranslate"><span class="pre">ShellProp.A12</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.A16"><code class="docutils literal notranslate"><span class="pre">ShellProp.A16</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.A22"><code class="docutils literal notranslate"><span class="pre">ShellProp.A22</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.A26"><code class="docutils literal notranslate"><span class="pre">ShellProp.A26</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.A66"><code class="docutils literal notranslate"><span class="pre">ShellProp.A66</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.B11"><code class="docutils literal notranslate"><span class="pre">ShellProp.B11</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.B12"><code class="docutils literal notranslate"><span class="pre">ShellProp.B12</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.B16"><code class="docutils literal notranslate"><span class="pre">ShellProp.B16</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.B22"><code class="docutils literal notranslate"><span class="pre">ShellProp.B22</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.B26"><code class="docutils literal notranslate"><span class="pre">ShellProp.B26</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.B66"><code class="docutils literal notranslate"><span class="pre">ShellProp.B66</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.D11"><code class="docutils literal notranslate"><span class="pre">ShellProp.D11</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.D12"><code class="docutils literal notranslate"><span class="pre">ShellProp.D12</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.D16"><code class="docutils literal notranslate"><span class="pre">ShellProp.D16</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.D22"><code class="docutils literal notranslate"><span class="pre">ShellProp.D22</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.D26"><code class="docutils literal notranslate"><span class="pre">ShellProp.D26</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.D66"><code class="docutils literal notranslate"><span class="pre">ShellProp.D66</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.E44"><code class="docutils literal notranslate"><span class="pre">ShellProp.E44</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.E45"><code class="docutils literal notranslate"><span class="pre">ShellProp.E45</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.E55"><code class="docutils literal notranslate"><span class="pre">ShellProp.E55</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.calc_constitutive_matrix"><code class="docutils literal notranslate"><span class="pre">ShellProp.calc_constitutive_matrix()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.calc_equivalent_properties"><code class="docutils literal notranslate"><span class="pre">ShellProp.calc_equivalent_properties()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.calc_lamination_parameters"><code class="docutils literal notranslate"><span class="pre">ShellProp.calc_lamination_parameters()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.calc_scf"><code class="docutils literal notranslate"><span class="pre">ShellProp.calc_scf()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.e1"><code class="docutils literal notranslate"><span class="pre">ShellProp.e1</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.e2"><code class="docutils literal notranslate"><span class="pre">ShellProp.e2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.force_balanced"><code class="docutils literal notranslate"><span class="pre">ShellProp.force_balanced()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.force_orthotropic"><code class="docutils literal notranslate"><span class="pre">ShellProp.force_orthotropic()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.force_symmetric"><code class="docutils literal notranslate"><span class="pre">ShellProp.force_symmetric()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.g12"><code class="docutils literal notranslate"><span class="pre">ShellProp.g12</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.h"><code class="docutils literal notranslate"><span class="pre">ShellProp.h</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.intrho"><code class="docutils literal notranslate"><span class="pre">ShellProp.intrho</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.intrhoz"><code class="docutils literal notranslate"><span class="pre">ShellProp.intrhoz</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.intrhoz2"><code class="docutils literal notranslate"><span class="pre">ShellProp.intrhoz2</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.nu12"><code class="docutils literal notranslate"><span class="pre">ShellProp.nu12</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.nu21"><code class="docutils literal notranslate"><span class="pre">ShellProp.nu21</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.offset"><code class="docutils literal notranslate"><span class="pre">ShellProp.offset</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.plies"><code class="docutils literal notranslate"><span class="pre">ShellProp.plies</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.scf_k13"><code class="docutils literal notranslate"><span class="pre">ShellProp.scf_k13</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.scf_k23"><code class="docutils literal notranslate"><span class="pre">ShellProp.scf_k23</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp.stack"><code class="docutils literal notranslate"><span class="pre">ShellProp.stack</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop.force_balanced_LP"><code class="docutils literal notranslate"><span class="pre">force_balanced_LP()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop.force_orthotropic_LP"><code class="docutils literal notranslate"><span class="pre">force_orthotropic_LP()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop.force_symmetric_LP"><code class="docutils literal notranslate"><span class="pre">force_symmetric_LP()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop.shellprop_LP_gradients"><code class="docutils literal notranslate"><span class="pre">shellprop_LP_gradients()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop.shellprop_from_LaminationParameters"><code class="docutils literal notranslate"><span class="pre">shellprop_from_LaminationParameters()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop.shellprop_from_lamination_parameters"><code class="docutils literal notranslate"><span class="pre">shellprop_from_lamination_parameters()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="properties.html#shell-property-utils-module-pyfe3d-shellprop-utils">Shell property utils module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop_utils</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop_utils.isotropic_plate"><code class="docutils literal notranslate"><span class="pre">isotropic_plate()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop_utils.laminated_plate"><code class="docutils literal notranslate"><span class="pre">laminated_plate()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop_utils.read_laminaprop"><code class="docutils literal notranslate"><span class="pre">read_laminaprop()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="coord.html">Coordinate systems (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.coord</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html#pyfe3d.coord.Coord"><code class="docutils literal notranslate"><span class="pre">Coord</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="coord.html#pyfe3d.coord.Coord.cosines_to_global"><code class="docutils literal notranslate"><span class="pre">Coord.cosines_to_global()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="coord.html#pyfe3d.coord.Coord.transform"><code class="docutils literal notranslate"><span class="pre">Coord.transform()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="coord.html#pyfe3d.coord.Coord.translate"><code class="docutils literal notranslate"><span class="pre">Coord.translate()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html#pyfe3d.coord.CoordC"><code class="docutils literal notranslate"><span class="pre">CoordC</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="coord.html#pyfe3d.coord.CoordC.cr2me"><code class="docutils literal notranslate"><span class="pre">CoordC.cr2me()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="coord.html#pyfe3d.coord.CoordC.vec2cr"><code class="docutils literal notranslate"><span class="pre">CoordC.vec2cr()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html#pyfe3d.coord.CoordR"><code class="docutils literal notranslate"><span class="pre">CoordR</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="coord.html#pyfe3d.coord.CoordS"><code class="docutils literal notranslate"><span class="pre">CoordS</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="coord.html#pyfe3d.coord.CoordS.cr2me"><code class="docutils literal notranslate"><span class="pre">CoordS.cr2me()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="coord.html#pyfe3d.coord.CoordS.vec2cr"><code class="docutils literal notranslate"><span class="pre">CoordS.vec2cr()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
 <section id="license">
-<h2>License<a class="headerlink" href="#license" title="Permalink to this headline">¶</a></h2>
+<h2>License<a class="headerlink" href="#license" title="Permalink to this heading">¶</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Copyright</span> <span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="mi">2021</span><span class="o">-</span><span class="mi">2022</span><span class="p">,</span> <span class="n">Saullo</span> <span class="n">G</span><span class="o">.</span> <span class="n">P</span><span class="o">.</span> <span class="n">Castro</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">Castro</span><span class="nd">@tudelft</span><span class="o">.</span><span class="n">nl</span><span class="p">)</span>
 <span class="n">All</span> <span class="n">rights</span> <span class="n">reserved</span><span class="o">.</span>
 
@@ -79,13 +528,13 @@
 </div>
 </section>
 <section id="authors">
-<h2>AUTHORS<a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h2>
+<h2>AUTHORS<a class="headerlink" href="#authors" title="Permalink to this heading">¶</a></h2>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Saullo</span> <span class="n">G</span><span class="o">.</span> <span class="n">P</span><span class="o">.</span> <span class="n">Castro</span><span class="p">,</span> <span class="n">S</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">Castro</span><span class="nd">@tudelft</span><span class="o">.</span><span class="n">nl</span>
 </pre></div>
 </div>
 </section>
 <section id="indices-and-tables">
-<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this headline">¶</a></h2>
+<h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Permalink to this heading">¶</a></h2>
 <ul class="simple">
 <li><p><a class="reference internal" href="genindex.html"><span class="std std-ref">Index</span></a></p></li>
 <li><p><a class="reference internal" href="py-modindex.html"><span class="std std-ref">Module Index</span></a></p></li>
@@ -135,7 +584,7 @@
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -152,13 +601,13 @@
         <li class="right" >
           <a href="quad4r.html" title="Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r)"
              >next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">pyfe3d 0.3.9 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">pyfe3d 0.3.11 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Finite elements for 3D problems in Python/Cython</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2021-, Saullo G. P. Castro.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
     </div>
   </body>
 </html>

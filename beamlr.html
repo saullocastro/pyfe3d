@@ -1,19 +1,18 @@
 
 <!DOCTYPE html>
 
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>BeamLR - Linear Timoshenko 3D beam element with reduced integration (pyfe3d.beamlr) &#8212; pyfe3d 0.3.9 documentation</title>
+    <title>BeamLR - Linear Timoshenko 3D beam element with reduced integration (pyfe3d.beamlr) &#8212; pyfe3d 0.3.11 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/jquery.js"></script>
-    <script src="_static/underscore.js"></script>
     <script src="_static/doctools.js"></script>
+    <script src="_static/sphinx_highlight.js"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     
     <link rel="index" title="Index" href="genindex.html" />
@@ -36,7 +35,7 @@
         <li class="right" >
           <a href="beamc.html" title="BeamC - Consistent Timoshenko 3D beam element (pyfe3d.beamc)"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.9 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.11 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">BeamLR - Linear Timoshenko 3D beam element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamlr</span></code>)</a></li> 
       </ul>
     </div>  
@@ -47,7 +46,8 @@
           <div class="body" role="main">
             
   <span class="target" id="module-pyfe3d.beamlr"></span><section id="beamlr-linear-timoshenko-3d-beam-element-with-reduced-integration-pyfe3d-beamlr">
-<h1>BeamLR - Linear Timoshenko 3D beam element with reduced integration (<a class="reference internal" href="#module-pyfe3d.beamlr" title="pyfe3d.beamlr"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamlr</span></code></a>)<a class="headerlink" href="#beamlr-linear-timoshenko-3d-beam-element-with-reduced-integration-pyfe3d-beamlr" title="Permalink to this headline">¶</a></h1>
+<h1>BeamLR - Linear Timoshenko 3D beam element with reduced integration (<a class="reference internal" href="#module-pyfe3d.beamlr" title="pyfe3d.beamlr"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamlr</span></code></a>)<a class="headerlink" href="#beamlr-linear-timoshenko-3d-beam-element-with-reduced-integration-pyfe3d-beamlr" title="Permalink to this heading">¶</a></h1>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.beamlr.BeamLR">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.beamlr.</span></span><span class="sig-name descname"><span class="pre">BeamLR</span></span><a class="headerlink" href="#pyfe3d.beamlr.BeamLR" title="Permalink to this definition">¶</a></dt>
@@ -68,7 +68,7 @@ Shape Functions,” Adv. Theor. Appl. Mech., 1(3), pp. 95–106.</p>
 </pre></div>
 </div>
 <dl class="field-list">
-<dt class="field-odd">Attributes</dt>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
 <dt><strong>eid,</strong><span class="classifier">int</span></dt><dd><p>Element identification number.</p>
 </dd>
@@ -90,10 +90,6 @@ matrices.</p>
 </dl>
 <p class="rubric">Methods</p>
 <table class="autosummary longtable docutils align-default">
-<colgroup>
-<col style="width: 10%" />
-<col style="width: 90%" />
-</colgroup>
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_KC0" title="pyfe3d.beamlr.BeamLR.update_KC0"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KC0</span></code></a>(self, ndarray KC0r, ndarray KC0c, ...)</p></td>
 <td><p>Update sparse vectors for linear constitutive stiffness matrix KC0</p></td>
@@ -266,7 +262,7 @@ matrices.</p>
 updated, not the element object.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>u</strong><span class="classifier">array-like</span></dt><dd><p>Array with global displacements, for a total of <span class="math notranslate nohighlight">\(M\)</span> nodes in
 the model, this array will be arranged as: <span class="math notranslate nohighlight">\(u_1, v_1, w_1, {r_x}_1,
@@ -288,7 +284,7 @@ u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M\)</span>.</p>
 updated, not the element object.</p>
 </div>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Array with global nodal coordinates, for a total of <span class="math notranslate nohighlight">\(M\)</span> nodes in
 the model, this array will be arranged as: <span class="math notranslate nohighlight">\(x_1, y_1, z_1, x_2,
@@ -310,7 +306,7 @@ components of each axis: <span class="math notranslate nohighlight">\({x_e}_i, {
 {y_e}_j, {y_e}_k\)</span>; <span class="math notranslate nohighlight">\({z_e}_i, {z_e}_j, {z_e}_k\)</span>.</p>
 <p>The rotation matrix terms are calculated after solving 9 equations.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>vxyi, vxyj, vxyk</strong><span class="classifier">double</span></dt><dd><p>Components of a vector on the <span class="math notranslate nohighlight">\(XY\)</span> plane of the element coordinate
 system.</p>
@@ -331,7 +327,7 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.beamlr.</span></span><span class="sig-name descname"><span class="pre">BeamLRData</span></span><a class="headerlink" href="#pyfe3d.beamlr.BeamLRData" title="Permalink to this definition">¶</a></dt>
 <dd><p>Used to allocate memory for the sparse matrices.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Attributes</dt>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>KC0_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KC0_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">144</span></code></p>
 </dd>
@@ -367,7 +363,7 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.beamlr.</span></span><span class="sig-name descname"><span class="pre">BeamLRProbe</span></span><a class="headerlink" href="#pyfe3d.beamlr.BeamLRProbe" title="Permalink to this definition">¶</a></dt>
 <dd><p>Probe used for local coordinates, local displacements, local stresses etc</p>
 <dl class="field-list simple">
-<dt class="field-odd">Attributes</dt>
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>xe,</strong><span class="classifier">array-like</span></dt><dd><p>Array of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF//2=6</span></code> containing the nodal coordinates
 in the element coordinate system, in the following order <span class="math notranslate nohighlight">\({x_e}_1,
@@ -395,7 +391,6 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
 
 </dd></dl>
 
-</section>
 
 
             <div class="clearer"></div>
@@ -404,6 +399,53 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
       </div>
       <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
         <div class="sphinxsidebarwrapper">
+  <div>
+    <h3><a href="index.html">Table of Contents</a></h3>
+    <ul>
+<li><a class="reference internal" href="#">BeamLR - Linear Timoshenko 3D beam element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamlr</span></code>)</a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR"><code class="docutils literal notranslate"><span class="pre">BeamLR</span></code></a><ul>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.c1"><code class="docutils literal notranslate"><span class="pre">BeamLR.c1</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.c2"><code class="docutils literal notranslate"><span class="pre">BeamLR.c2</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.eid"><code class="docutils literal notranslate"><span class="pre">BeamLR.eid</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.init_k_KC0"><code class="docutils literal notranslate"><span class="pre">BeamLR.init_k_KC0</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.init_k_KG"><code class="docutils literal notranslate"><span class="pre">BeamLR.init_k_KG</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.init_k_M"><code class="docutils literal notranslate"><span class="pre">BeamLR.init_k_M</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.length"><code class="docutils literal notranslate"><span class="pre">BeamLR.length</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.n1"><code class="docutils literal notranslate"><span class="pre">BeamLR.n1</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.n2"><code class="docutils literal notranslate"><span class="pre">BeamLR.n2</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.probe"><code class="docutils literal notranslate"><span class="pre">BeamLR.probe</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.r11"><code class="docutils literal notranslate"><span class="pre">BeamLR.r11</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.r12"><code class="docutils literal notranslate"><span class="pre">BeamLR.r12</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.r13"><code class="docutils literal notranslate"><span class="pre">BeamLR.r13</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.r21"><code class="docutils literal notranslate"><span class="pre">BeamLR.r21</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.r22"><code class="docutils literal notranslate"><span class="pre">BeamLR.r22</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.r23"><code class="docutils literal notranslate"><span class="pre">BeamLR.r23</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.r31"><code class="docutils literal notranslate"><span class="pre">BeamLR.r31</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.r32"><code class="docutils literal notranslate"><span class="pre">BeamLR.r32</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.r33"><code class="docutils literal notranslate"><span class="pre">BeamLR.r33</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_KC0"><code class="docutils literal notranslate"><span class="pre">BeamLR.update_KC0()</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_KG"><code class="docutils literal notranslate"><span class="pre">BeamLR.update_KG()</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_M"><code class="docutils literal notranslate"><span class="pre">BeamLR.update_M()</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_length"><code class="docutils literal notranslate"><span class="pre">BeamLR.update_length()</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_probe_ue"><code class="docutils literal notranslate"><span class="pre">BeamLR.update_probe_ue()</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_probe_xe"><code class="docutils literal notranslate"><span class="pre">BeamLR.update_probe_xe()</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">BeamLR.update_rotation_matrix()</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLRData"><code class="docutils literal notranslate"><span class="pre">BeamLRData</span></code></a><ul>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLRData.KC0_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">BeamLRData.KC0_SPARSE_SIZE</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLRData.KG_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">BeamLRData.KG_SPARSE_SIZE</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLRData.M_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">BeamLRData.M_SPARSE_SIZE</span></code></a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLRProbe"><code class="docutils literal notranslate"><span class="pre">BeamLRProbe</span></code></a><ul>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLRProbe.ue"><code class="docutils literal notranslate"><span class="pre">BeamLRProbe.ue</span></code></a></li>
+<li><a class="reference internal" href="#pyfe3d.beamlr.BeamLRProbe.xe"><code class="docutils literal notranslate"><span class="pre">BeamLRProbe.xe</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </div>
   <div>
     <h4>Previous topic</h4>
     <p class="topless"><a href="beamc.html"
@@ -430,7 +472,7 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
     </form>
     </div>
 </div>
-<script>$('#searchbox').show(0);</script>
+<script>document.getElementById('searchbox').style.display = "block"</script>
         </div>
       </div>
       <div class="clearer"></div>
@@ -450,13 +492,13 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
         <li class="right" >
           <a href="beamc.html" title="BeamC - Consistent Timoshenko 3D beam element (pyfe3d.beamc)"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.9 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.11 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">BeamLR - Linear Timoshenko 3D beam element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamlr</span></code>)</a></li> 
       </ul>
     </div>
     <div class="footer" role="contentinfo">
         &#169; Copyright 2021-, Saullo G. P. Castro.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 4.5.0.
+      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
     </div>
   </body>
 </html>
