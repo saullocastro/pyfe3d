@@ -24,17 +24,14 @@ jobs:
         python3 -m pip install --upgrade pip
         python3 -m pip install --upgrade setuptools wheel twine
         python3 -m pip install -r requirements.txt
-    - name: Build Windows or MACOS Python wheels
-      if: matrix.runs-on == 'windows-latest' || matrix.runs-on == 'macos-latest'
-      run: |
-        python3 setup.py sdist bdist_wheel
-    - name: Publish Windows or MACOS Python wheels
+    - name: Build and publish Windows or MACOS Python wheels
       if: matrix.runs-on == 'windows-latest' || matrix.runs-on == 'macos-latest'
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
       run: |
-        python3 -m twine upload dist
+        python3 setup.py sdist bdist_wheel
+        python3 -m twine upload dist/*.whl
     - name: Build manylinux Python wheels
       if: matrix.runs-on == 'ubuntu-latest' && matrix.python-version == '3.10'
       uses: RalfG/python-wheels-manylinux-build@v0.4.2-manylinux2014_x86_64
@@ -49,3 +46,4 @@ jobs:
       run: |
         python3 -m pip install twine
         python3 -m twine upload dist/*-manylinux*.whl
+        python3 -m twine upload dist/*.tar.gz

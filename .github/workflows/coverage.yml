@@ -27,7 +27,7 @@ jobs:
         python setup.py build_ext --inplace --define CYTHON_TRACE_NOGIL
     - name: Test with pytest and coverage report
       run: |
-        coverage run -m py.test tests
+        coverage run -m pytest tests
         coverage report
     - name: "Upload coverage to Codecov"
       uses: codecov/codecov-action@v2
