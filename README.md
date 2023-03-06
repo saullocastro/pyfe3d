@@ -13,7 +13,7 @@ Citing this library
 -------------------
 
 
-Saullo G P Castro. (2022). General-purpose finite element solver based on Python/Cython (Version 0.3.9). Zenodo. https://doi.org/10.5281/zenodo.6573490
+Saullo G. P. Castro. (2023). General-purpose finite element solver based on Python/Cython (Version 0.3.15). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
 
 
 Important features of this library
