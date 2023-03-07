@@ -11,7 +11,7 @@ from Cython.Build import cythonize
 
 
 is_released = True
-version = '0.3.15'
+version = '0.3.16'
 
 
 def git_version():
@@ -48,7 +48,10 @@ def get_version_info(version, is_released):
 
 def write_version_py(version, is_released, filename='pyfe3d/version.py'):
     fullversion = get_version_info(version, is_released)
-    with open("./pyfe3d/version.py", "wb") as f:
+    version_file = "./pyfe3d/version.py"
+    if os.path.isfile(version_file):
+        os.remove(version_file)
+    with open(version_file, "wb") as f:
         f.write(b'__version__ = "%s"\n' % fullversion.encode())
     return fullversion
 
