@@ -13,7 +13,7 @@ Citing this library
 -------------------
 
 
-Saullo G. P. Castro. (2023). General-purpose finite element solver based on Python/Cython (Version 0.3.16). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
+Saullo G. P. Castro. (2023). General-purpose finite element solver based on Python/Cython (Version 0.3.20). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
 
 
 Important features of this library
@@ -52,7 +52,7 @@ License
 Distrubuted under the 3-Clause BSD license
 (https://raw.github.com/saullocastro/pyfe3d/master/LICENSE)::
 
-    Copyright (c) 2021-2022, Saullo G. P. Castro (S.G.P.Castro@tudelft.nl)
+    Copyright (c) 2021-2023, Saullo G. P. Castro (S.G.P.Castro@tudelft.nl)
     All rights reserved.
 
     Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
