@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Finite elements for 3D problems in Python/Cython &#8212; pyfe3d 0.3.16 documentation</title>
+    <title>Finite elements for 3D problems in Python/Cython &#8212; pyfe3d 0.3.21 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
@@ -30,7 +30,7 @@
         <li class="right" >
           <a href="quad4r.html" title="Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r)"
              accesskey="N">next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">pyfe3d 0.3.16 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">pyfe3d 0.3.21 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Finite elements for 3D problems in Python/Cython</a></li> 
       </ul>
     </div>  
@@ -331,6 +331,14 @@
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="properties.html#shell-property-module-pyfe3d-shellprop">Shell property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop.GradABDE"><code class="docutils literal notranslate"><span class="pre">GradABDE</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.GradABDE.calc_LP_grad"><code class="docutils literal notranslate"><span class="pre">GradABDE.calc_LP_grad()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.GradABDE.gradAij"><code class="docutils literal notranslate"><span class="pre">GradABDE.gradAij</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.GradABDE.gradBij"><code class="docutils literal notranslate"><span class="pre">GradABDE.gradBij</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.GradABDE.gradDij"><code class="docutils literal notranslate"><span class="pre">GradABDE.gradDij</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.GradABDE.gradEij"><code class="docutils literal notranslate"><span class="pre">GradABDE.gradEij</span></code></a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina"><code class="docutils literal notranslate"><span class="pre">Lamina</span></code></a><ul>
 <li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.cos2t"><code class="docutils literal notranslate"><span class="pre">Lamina.cos2t</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina.cos4t"><code class="docutils literal notranslate"><span class="pre">Lamina.cos4t</span></code></a></li>
@@ -482,7 +490,6 @@
 <li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop.force_balanced_LP"><code class="docutils literal notranslate"><span class="pre">force_balanced_LP()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop.force_orthotropic_LP"><code class="docutils literal notranslate"><span class="pre">force_orthotropic_LP()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop.force_symmetric_LP"><code class="docutils literal notranslate"><span class="pre">force_symmetric_LP()</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop.shellprop_LP_gradients"><code class="docutils literal notranslate"><span class="pre">shellprop_LP_gradients()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop.shellprop_from_LaminationParameters"><code class="docutils literal notranslate"><span class="pre">shellprop_from_LaminationParameters()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="properties.html#pyfe3d.shellprop.shellprop_from_lamination_parameters"><code class="docutils literal notranslate"><span class="pre">shellprop_from_lamination_parameters()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="properties.html#shell-property-utils-module-pyfe3d-shellprop-utils">Shell property utils module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop_utils</span></code>)</a></li>
@@ -601,7 +608,7 @@
         <li class="right" >
           <a href="quad4r.html" title="Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r)"
              >next</a> |</li>
-        <li class="nav-item nav-item-0"><a href="#">pyfe3d 0.3.16 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="#">pyfe3d 0.3.21 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Finite elements for 3D problems in Python/Cython</a></li> 
       </ul>
     </div>

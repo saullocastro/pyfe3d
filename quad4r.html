@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r) &#8212; pyfe3d 0.3.16 documentation</title>
+    <title>Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r) &#8212; pyfe3d 0.3.21 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="index.html" title="Finite elements for 3D problems in Python/Cython"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.16 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.21 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</a></li> 
       </ul>
     </div>  
@@ -108,28 +108,28 @@ matrices.</p>
 <p class="rubric">Methods</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KC0" title="pyfe3d.quad4r.Quad4R.update_KC0"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KC0</span></code></a>(self, ndarray KC0r, ndarray KC0c, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KC0" title="pyfe3d.quad4r.Quad4R.update_KC0"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KC0</span></code></a>(self, long[, long[, double[, ...)</p></td>
 <td><p>Update sparse vectors for linear constitutive stiffness matrix KC0</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KG" title="pyfe3d.quad4r.Quad4R.update_KG"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KG</span></code></a>(self, ndarray KGr, ndarray KGc, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KG" title="pyfe3d.quad4r.Quad4R.update_KG"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KG</span></code></a>(self, long[, long[, double[, ...)</p></td>
 <td><p>Update sparse vectors for geometric stiffness matrix KG</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KG_given_stress" title="pyfe3d.quad4r.Quad4R.update_KG_given_stress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KG_given_stress</span></code></a>(self, double Nxx, ...)</p></td>
 <td><p>Update sparse vectors for geometric stiffness matrix KG</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_M" title="pyfe3d.quad4r.Quad4R.update_M"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_M</span></code></a>(self, ndarray Mr, ndarray Mc, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_M" title="pyfe3d.quad4r.Quad4R.update_M"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_M</span></code></a>(self, long[, long[, double[, ...)</p></td>
 <td><p>Update sparse vectors for mass matrix M</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_area" title="pyfe3d.quad4r.Quad4R.update_area"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_area</span></code></a>(self)</p></td>
 <td><p>Update element area</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_probe_ue" title="pyfe3d.quad4r.Quad4R.update_probe_ue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_probe_ue</span></code></a>(self, ndarray u)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_probe_ue" title="pyfe3d.quad4r.Quad4R.update_probe_ue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_probe_ue</span></code></a>(self, double[)</p></td>
 <td><p>Update the local displacement vector of the probe of the element</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_probe_xe" title="pyfe3d.quad4r.Quad4R.update_probe_xe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_probe_xe</span></code></a>(self, ndarray x)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_probe_xe" title="pyfe3d.quad4r.Quad4R.update_probe_xe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_probe_xe</span></code></a>(self, double[)</p></td>
 <td><p>Update the 3D coordinates of the probe of the element</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_rotation_matrix" title="pyfe3d.quad4r.Quad4R.update_rotation_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_rotation_matrix</span></code></a>(self, ndarray x, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_rotation_matrix" title="pyfe3d.quad4r.Quad4R.update_rotation_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_rotation_matrix</span></code></a>(self, double[, ...)</p></td>
 <td><p>Update the rotation matrix of the element</p></td>
 </tr>
 </tbody>
@@ -149,49 +149,49 @@ matrices.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.c1">
 <span class="sig-name descname"><span class="pre">c1</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.c1" title="Permalink to this definition">¶</a></dt>
-<dd><p>c1: ‘cINT’</p>
+<dd><p>c1: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.c2">
 <span class="sig-name descname"><span class="pre">c2</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.c2" title="Permalink to this definition">¶</a></dt>
-<dd><p>c2: ‘cINT’</p>
+<dd><p>c2: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.c3">
 <span class="sig-name descname"><span class="pre">c3</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.c3" title="Permalink to this definition">¶</a></dt>
-<dd><p>c3: ‘cINT’</p>
+<dd><p>c3: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.c4">
 <span class="sig-name descname"><span class="pre">c4</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.c4" title="Permalink to this definition">¶</a></dt>
-<dd><p>c4: ‘cINT’</p>
+<dd><p>c4: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.eid">
 <span class="sig-name descname"><span class="pre">eid</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.eid" title="Permalink to this definition">¶</a></dt>
-<dd><p>eid: ‘cINT’</p>
+<dd><p>eid: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.init_k_KC0">
 <span class="sig-name descname"><span class="pre">init_k_KC0</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.init_k_KC0" title="Permalink to this definition">¶</a></dt>
-<dd><p>init_k_KC0: ‘cINT’</p>
+<dd><p>init_k_KC0: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.init_k_KG">
 <span class="sig-name descname"><span class="pre">init_k_KG</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.init_k_KG" title="Permalink to this definition">¶</a></dt>
-<dd><p>init_k_KG: ‘cINT’</p>
+<dd><p>init_k_KG: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.init_k_M">
 <span class="sig-name descname"><span class="pre">init_k_M</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.init_k_M" title="Permalink to this definition">¶</a></dt>
-<dd><p>init_k_M: ‘cINT’</p>
+<dd><p>init_k_M: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -221,25 +221,25 @@ matrices.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.n1">
 <span class="sig-name descname"><span class="pre">n1</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.n1" title="Permalink to this definition">¶</a></dt>
-<dd><p>n1: ‘cINT’</p>
+<dd><p>n1: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.n2">
 <span class="sig-name descname"><span class="pre">n2</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.n2" title="Permalink to this definition">¶</a></dt>
-<dd><p>n2: ‘cINT’</p>
+<dd><p>n2: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.n3">
 <span class="sig-name descname"><span class="pre">n3</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.n3" title="Permalink to this definition">¶</a></dt>
-<dd><p>n3: ‘cINT’</p>
+<dd><p>n3: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.n4">
 <span class="sig-name descname"><span class="pre">n4</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.n4" title="Permalink to this definition">¶</a></dt>
-<dd><p>n4: ‘cINT’</p>
+<dd><p>n4: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -304,7 +304,7 @@ matrices.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.update_KC0">
-<span class="sig-name descname"><span class="pre">update_KC0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">KC0r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">KC0c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">KC0v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KC0v_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_KC0" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_KC0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KC0v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KC0v_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_KC0" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update sparse vectors for linear constitutive stiffness matrix KC0</p>
 <p>Reduced integration is used with a single point in the centroid
 (<span class="math notranslate nohighlight">\(\xi=\eta=0\)</span>) and weight <span class="math notranslate nohighlight">\(w_{ij}=4\)</span>, preventing shear locking.
@@ -324,7 +324,7 @@ Freedom,” IOSR J. Eng., 3(8), pp. 10–20.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.update_KG">
-<span class="sig-name descname"><span class="pre">update_KG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">KGr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">KGc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">KGv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KGv_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_KG" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_KG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KGr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KGc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KGv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KGv_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_KG" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update sparse vectors for geometric stiffness matrix KG</p>
 <p>Two-point Gauss-Legendre quadrature is used, which showed more accuracy
 for linear buckling load predictions.</p>
@@ -336,7 +336,7 @@ and <code class="xref py py-func docutils literal notranslate"><span class="pre"
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.update_KG_given_stress">
-<span class="sig-name descname"><span class="pre">update_KG_given_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">Nxx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">Nyy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">Nxy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">KGr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">KGc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">KGv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KGv_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_KG_given_stress" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_KG_given_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">Nxx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">Nyy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">Nxy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KGr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KGc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KGv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KGv_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_KG_given_stress" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update sparse vectors for geometric stiffness matrix KG</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -352,7 +352,7 @@ attribute of the <a class="reference internal" href="#pyfe3d.quad4r.Quad4R" titl
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.update_M">
-<span class="sig-name descname"><span class="pre">update_M</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">Mr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">Mc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">Mv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">mtype=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_M" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_M</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">Mr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">Mc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">Mv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">mtype=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_M" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update sparse vectors for mass matrix M</p>
 <p>Different integration schemes are available by means of the <code class="docutils literal notranslate"><span class="pre">mtype</span></code>
 parameter.</p>
@@ -366,7 +366,7 @@ parameter.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.update_probe_ue">
-<span class="sig-name descname"><span class="pre">update_probe_ue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">u</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_probe_ue" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_probe_ue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">u</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_probe_ue" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the local displacement vector of the probe of the element</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -388,7 +388,7 @@ u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M\)</span>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.update_probe_xe">
-<span class="sig-name descname"><span class="pre">update_probe_xe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_probe_xe" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_probe_xe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_probe_xe" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the 3D coordinates of the probe of the element</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -409,7 +409,7 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.update_rotation_matrix">
-<span class="sig-name descname"><span class="pre">update_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xmati=0.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xmatj=0.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xmatk=0.</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_rotation_matrix" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xmati=0.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xmatj=0.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xmatk=0.</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_rotation_matrix" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the rotation matrix of the element</p>
 <p>Attributes <code class="docutils literal notranslate"><span class="pre">r11,r12,r13,r21,r22,r23,r31,r32,r33</span></code> are updated,
 corresponding to the rotation matrix from local to global coordinates.</p>
@@ -456,19 +456,19 @@ the element <span class="math notranslate nohighlight">\(x\)</span> axis while c
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4RData.KC0_SPARSE_SIZE">
 <span class="sig-name descname"><span class="pre">KC0_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4RData.KC0_SPARSE_SIZE" title="Permalink to this definition">¶</a></dt>
-<dd><p>KC0_SPARSE_SIZE: ‘cINT’</p>
+<dd><p>KC0_SPARSE_SIZE: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4RData.KG_SPARSE_SIZE">
 <span class="sig-name descname"><span class="pre">KG_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4RData.KG_SPARSE_SIZE" title="Permalink to this definition">¶</a></dt>
-<dd><p>KG_SPARSE_SIZE: ‘cINT’</p>
+<dd><p>KG_SPARSE_SIZE: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4RData.M_SPARSE_SIZE">
 <span class="sig-name descname"><span class="pre">M_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4RData.M_SPARSE_SIZE" title="Permalink to this definition">¶</a></dt>
-<dd><p>M_SPARSE_SIZE: ‘cINT’</p>
+<dd><p>M_SPARSE_SIZE: ‘int’</p>
 </dd></dl>
 
 </dd></dl>
@@ -498,13 +498,13 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4RProbe.ue">
 <span class="sig-name descname"><span class="pre">ue</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4RProbe.ue" title="Permalink to this definition">¶</a></dt>
-<dd><p>ue: ‘cDOUBLE[:]’</p>
+<dd><p>ue: ‘double[::1]’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4RProbe.xe">
 <span class="sig-name descname"><span class="pre">xe</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4RProbe.xe" title="Permalink to this definition">¶</a></dt>
-<dd><p>xe: ‘cDOUBLE[:]’</p>
+<dd><p>xe: ‘double[::1]’</p>
 </dd></dl>
 
 </dd></dl>
@@ -620,7 +620,7 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
         <li class="right" >
           <a href="index.html" title="Finite elements for 3D problems in Python/Cython"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.16 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.21 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</a></li> 
       </ul>
     </div>

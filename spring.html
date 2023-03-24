@@ -6,7 +6,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>Spring - 3D spring element with constant stiffnesses (pyfe3d.spring) &#8212; pyfe3d 0.3.16 documentation</title>
+    <title>Spring - 3D spring element with constant stiffnesses (pyfe3d.spring) &#8212; pyfe3d 0.3.21 documentation</title>
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
     <link rel="stylesheet" type="text/css" href="_static/classic.css" />
     
@@ -35,7 +35,7 @@
         <li class="right" >
           <a href="beamlr.html" title="BeamLR - Linear Timoshenko 3D beam element with reduced integration (pyfe3d.beamlr)"
              accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.16 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.21 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Spring - 3D spring element with constant stiffnesses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.spring</span></code>)</a></li> 
       </ul>
     </div>  
@@ -82,10 +82,10 @@ matrices.</p>
 <p class="rubric">Methods</p>
 <table class="autosummary longtable docutils align-default">
 <tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.spring.Spring.update_KC0" title="pyfe3d.spring.Spring.update_KC0"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KC0</span></code></a>(self, ndarray KC0r, ndarray KC0c, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.spring.Spring.update_KC0" title="pyfe3d.spring.Spring.update_KC0"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KC0</span></code></a>(self, long[, long[, double[, ...)</p></td>
 <td><p>Update sparse vectors for linear constitutive stiffness matrix KC0</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.spring.Spring.update_probe_ue" title="pyfe3d.spring.Spring.update_probe_ue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_probe_ue</span></code></a>(self, ndarray u)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.spring.Spring.update_probe_ue" title="pyfe3d.spring.Spring.update_probe_ue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_probe_ue</span></code></a>(self, double[)</p></td>
 <td><p>Update the local displacement vector of the probe of the element</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.spring.Spring.update_rotation_matrix" title="pyfe3d.spring.Spring.update_rotation_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_rotation_matrix</span></code></a>(self, double xi, ...)</p></td>
@@ -96,37 +96,37 @@ matrices.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.c1">
 <span class="sig-name descname"><span class="pre">c1</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.c1" title="Permalink to this definition">¶</a></dt>
-<dd><p>c1: ‘cINT’</p>
+<dd><p>c1: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.c2">
 <span class="sig-name descname"><span class="pre">c2</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.c2" title="Permalink to this definition">¶</a></dt>
-<dd><p>c2: ‘cINT’</p>
+<dd><p>c2: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.eid">
 <span class="sig-name descname"><span class="pre">eid</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.eid" title="Permalink to this definition">¶</a></dt>
-<dd><p>eid: ‘cINT’</p>
+<dd><p>eid: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.init_k_KC0">
 <span class="sig-name descname"><span class="pre">init_k_KC0</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.init_k_KC0" title="Permalink to this definition">¶</a></dt>
-<dd><p>init_k_KC0: ‘cINT’</p>
+<dd><p>init_k_KC0: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.init_k_KG">
 <span class="sig-name descname"><span class="pre">init_k_KG</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.init_k_KG" title="Permalink to this definition">¶</a></dt>
-<dd><p>init_k_KG: ‘cINT’</p>
+<dd><p>init_k_KG: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.init_k_M">
 <span class="sig-name descname"><span class="pre">init_k_M</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.init_k_M" title="Permalink to this definition">¶</a></dt>
-<dd><p>init_k_M: ‘cINT’</p>
+<dd><p>init_k_M: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -168,13 +168,13 @@ matrices.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.n1">
 <span class="sig-name descname"><span class="pre">n1</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.n1" title="Permalink to this definition">¶</a></dt>
-<dd><p>n1: ‘cINT’</p>
+<dd><p>n1: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.n2">
 <span class="sig-name descname"><span class="pre">n2</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.n2" title="Permalink to this definition">¶</a></dt>
-<dd><p>n2: ‘cINT’</p>
+<dd><p>n2: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -239,13 +239,13 @@ matrices.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.update_KC0">
-<span class="sig-name descname"><span class="pre">update_KC0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">KC0r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">KC0c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">KC0v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KC0v_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.spring.Spring.update_KC0" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_KC0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KC0v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KC0v_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.spring.Spring.update_KC0" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update sparse vectors for linear constitutive stiffness matrix KC0</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.update_probe_ue">
-<span class="sig-name descname"><span class="pre">update_probe_ue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ndarray</span> <span class="pre">u</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.spring.Spring.update_probe_ue" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_probe_ue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">u</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.spring.Spring.update_probe_ue" title="Permalink to this definition">¶</a></dt>
 <dd><p>Update the local displacement vector of the probe of the element</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -309,19 +309,19 @@ the element coordinate system.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.SpringData.KC0_SPARSE_SIZE">
 <span class="sig-name descname"><span class="pre">KC0_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.spring.SpringData.KC0_SPARSE_SIZE" title="Permalink to this definition">¶</a></dt>
-<dd><p>KC0_SPARSE_SIZE: ‘cINT’</p>
+<dd><p>KC0_SPARSE_SIZE: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.SpringData.KG_SPARSE_SIZE">
 <span class="sig-name descname"><span class="pre">KG_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.spring.SpringData.KG_SPARSE_SIZE" title="Permalink to this definition">¶</a></dt>
-<dd><p>KG_SPARSE_SIZE: ‘cINT’</p>
+<dd><p>KG_SPARSE_SIZE: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.SpringData.M_SPARSE_SIZE">
 <span class="sig-name descname"><span class="pre">M_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.spring.SpringData.M_SPARSE_SIZE" title="Permalink to this definition">¶</a></dt>
-<dd><p>M_SPARSE_SIZE: ‘cINT’</p>
+<dd><p>M_SPARSE_SIZE: ‘int’</p>
 </dd></dl>
 
 </dd></dl>
@@ -348,13 +348,13 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.SpringProbe.ue">
 <span class="sig-name descname"><span class="pre">ue</span></span><a class="headerlink" href="#pyfe3d.spring.SpringProbe.ue" title="Permalink to this definition">¶</a></dt>
-<dd><p>ue: ‘cDOUBLE[:]’</p>
+<dd><p>ue: ‘double[::1]’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.SpringProbe.xe">
 <span class="sig-name descname"><span class="pre">xe</span></span><a class="headerlink" href="#pyfe3d.spring.SpringProbe.xe" title="Permalink to this definition">¶</a></dt>
-<dd><p>xe: ‘cDOUBLE[:]’</p>
+<dd><p>xe: ‘double[::1]’</p>
 </dd></dl>
 
 </dd></dl>
@@ -461,7 +461,7 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
         <li class="right" >
           <a href="beamlr.html" title="BeamLR - Linear Timoshenko 3D beam element with reduced integration (pyfe3d.beamlr)"
              >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.16 documentation</a> &#187;</li>
+        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.21 documentation</a> &#187;</li>
         <li class="nav-item nav-item-this"><a href="">Spring - 3D spring element with constant stiffnesses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.spring</span></code>)</a></li> 
       </ul>
     </div>
