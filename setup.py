@@ -103,8 +103,8 @@ elif platform.system() == 'Linux':
     compile_args = ['-fopenmp', '-static', '-static-libgcc', '-static-libstdc++']
     link_args = ['-fopenmp', '-static-libgcc', '-static-libstdc++']
 else: # MAC-OS
-    compile_args = ['-Xclang -fopenmp']
-    link_args = ['-lomp']
+    compile_args = []
+    link_args = []
 
 if 'CYTHON_TRACE_NOGIL' in os.environ.keys():
     if os.name == 'nt': # Windows
