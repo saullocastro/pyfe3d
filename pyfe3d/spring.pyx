@@ -13,14 +13,9 @@ Spring - 3D spring element with constant stiffnesses (:mod:`pyfe3d.spring`)
 
 """
 import numpy as np
-cimport numpy as np
 
-ctypedef np.int64_t cINT
-INT = np.int64
-ctypedef np.double_t cDOUBLE
-DOUBLE = np.float64
-cdef cINT DOF = 6
-cdef cINT NUM_NODES = 2
+cdef int DOF = 6
+cdef int NUM_NODES = 2
 
 
 cdef class SpringData:
@@ -39,9 +34,9 @@ cdef class SpringData:
         ``M_SPARSE_SIZE = 0``
 
     """
-    cdef public cINT KC0_SPARSE_SIZE
-    cdef public cINT KG_SPARSE_SIZE
-    cdef public cINT M_SPARSE_SIZE
+    cdef public int KC0_SPARSE_SIZE
+    cdef public int KG_SPARSE_SIZE
+    cdef public int M_SPARSE_SIZE
     def __cinit__(SpringData self):
         self.KC0_SPARSE_SIZE = 72
         self.KG_SPARSE_SIZE = 0
@@ -64,11 +59,11 @@ cdef class SpringProbe:
         {{r_y}_e}_2, {{r_z}_e}_2`.
 
     """
-    cdef public cDOUBLE[:] xe
-    cdef public cDOUBLE[:] ue
+    cdef public double [::1] xe
+    cdef public double [::1] ue
     def __cinit__(SpringProbe self):
-        self.xe = np.zeros(NUM_NODES*DOF//2, dtype=DOUBLE)
-        self.ue = np.zeros(NUM_NODES*DOF, dtype=DOUBLE)
+        self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
+        self.ue = np.zeros(NUM_NODES*DOF, dtype=np.float64)
 
 cdef class Spring:
     r"""
@@ -97,10 +92,10 @@ cdef class Spring:
         matrices.
 
     """
-    cdef public cINT eid
-    cdef public cINT n1, n2
-    cdef public cINT c1, c2
-    cdef public cINT init_k_KC0, init_k_KG, init_k_M
+    cdef public int eid
+    cdef public int n1, n2
+    cdef public int c1, c2
+    cdef public int init_k_KC0, init_k_KG, init_k_M
     cdef public double kxe, kye, kze
     cdef public double krxe, krye, krze
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
@@ -184,7 +179,7 @@ cdef class Spring:
             self.r33 = zk
 
 
-    cpdef void update_probe_ue(Spring self, np.ndarray[cDOUBLE, ndim=1] u):
+    cpdef void update_probe_ue(Spring self, double [::1] u):
         r"""Update the local displacement vector of the probe of the element
 
         .. note:: The ``probe`` attribute object :class:`.SpringProbe` is
@@ -200,7 +195,7 @@ cdef class Spring:
 
         """
         cdef int i, j
-        cdef cINT c[2]
+        cdef int c[2]
         cdef double s1[3]
         cdef double s2[3]
         cdef double s3[3]
@@ -239,11 +234,11 @@ cdef class Spring:
 
 
     cpdef void update_KC0(Spring self,
-            np.ndarray[cINT, ndim=1] KC0r,
-            np.ndarray[cINT, ndim=1] KC0c,
-            np.ndarray[cDOUBLE, ndim=1] KC0v,
-            int update_KC0v_only=0
-            ):
+                          long [::1] KC0r,
+                          long [::1] KC0c,
+                          double [::1] KC0v,
+                          int update_KC0v_only=0,
+                          ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
         Properties
@@ -259,7 +254,7 @@ cdef class Spring:
             lead to `KC0r` and `KC0c` also being updated.
 
         """
-        cdef cINT c1, c2, k
+        cdef int c1, c2, k
         cdef double kxe, kye, kze, krxe, krye, krze
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
 

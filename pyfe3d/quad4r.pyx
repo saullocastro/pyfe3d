@@ -15,16 +15,11 @@ Quad4R - Quadrilateral element with reduced integration (:mod:`pyfe3d.quad4r`)
 from libc.math cimport fabs
 
 import numpy as np
-cimport numpy as np
 
 from .shellprop cimport ShellProp
 
-ctypedef np.int64_t cINT
-INT = np.int64
-ctypedef np.double_t cDOUBLE
-DOUBLE = np.float64
-cdef cINT DOF = 6
-cdef cINT NUM_NODES = 4
+cdef int DOF = 6
+cdef int NUM_NODES = 4
 
 
 cdef class Quad4RData:
@@ -43,9 +38,9 @@ cdef class Quad4RData:
         ``M_SPARSE_SIZE = 480``
 
     """
-    cdef public cINT KC0_SPARSE_SIZE
-    cdef public cINT KG_SPARSE_SIZE
-    cdef public cINT M_SPARSE_SIZE
+    cdef public int KC0_SPARSE_SIZE
+    cdef public int KG_SPARSE_SIZE
+    cdef public int M_SPARSE_SIZE
     def __cinit__(Quad4RData self):
         self.KC0_SPARSE_SIZE = 576
         self.KG_SPARSE_SIZE = 144
@@ -71,11 +66,11 @@ cdef class Quad4RProbe:
         {{r_y}_e}_4, {{r_z}_e}_4`.
 
     """
-    cdef public cDOUBLE[:] xe
-    cdef public cDOUBLE[:] ue
+    cdef public double [::1] xe
+    cdef public double [::1] ue
     def __cinit__(Quad4RProbe self):
-        self.xe = np.zeros(NUM_NODES*DOF//2, dtype=DOUBLE)
-        self.ue = np.zeros(NUM_NODES*DOF, dtype=DOUBLE)
+        self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
+        self.ue = np.zeros(NUM_NODES*DOF, dtype=np.float64)
 
 cdef class Quad4R:
     r"""
@@ -134,10 +129,10 @@ cdef class Quad4R:
         Pointer to the probe.
 
     """
-    cdef public cINT eid
-    cdef public cINT n1, n2, n3, n4
-    cdef public cINT c1, c2, c3, c4
-    cdef public cINT init_k_KC0, init_k_KG, init_k_M
+    cdef public int eid
+    cdef public int n1, n2, n3, n4
+    cdef public int c1, c2, c3, c4
+    cdef public int init_k_KC0, init_k_KG, init_k_M
     cdef public double area
     cdef public double alphat # drilling penalty factor for stiffness matrix, see Eq. 2.20 in F.M. Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013) 10–20. www.iosrjen.org (accessed April 20, 2020).
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
@@ -171,7 +166,7 @@ cdef class Quad4R:
         self.m22 = 1.
 
 
-    cpdef void update_rotation_matrix(Quad4R self, np.ndarray[cDOUBLE, ndim=1] x,
+    cpdef void update_rotation_matrix(Quad4R self, double [::1] x,
             double xmati=0., double xmatj=0., double xmatk=0.):
         r"""Update the rotation matrix of the element
 
@@ -313,7 +308,7 @@ cdef class Quad4R:
                         self.m21 = -self.m12
 
 
-    cpdef void update_probe_ue(Quad4R self, np.ndarray[cDOUBLE, ndim=1] u):
+    cpdef void update_probe_ue(Quad4R self, double [::1] u):
         r"""Update the local displacement vector of the probe of the element
 
         .. note:: The ``probe`` attribute object :class:`.Quad4RProbe` is
@@ -329,7 +324,7 @@ cdef class Quad4R:
 
         """
         cdef int i, j
-        cdef cINT c[4]
+        cdef int c[4]
         cdef double s1[3]
         cdef double s2[3]
         cdef double s3[3]
@@ -368,7 +363,7 @@ cdef class Quad4R:
                     self.probe.ue[j*DOF + 5] += s3[i]*u[c[j] + 3 + i]
 
 
-    cpdef void update_probe_xe(Quad4R self, np.ndarray[cDOUBLE, ndim=1] x):
+    cpdef void update_probe_xe(Quad4R self, double [::1] x):
         r"""Update the 3D coordinates of the probe of the element
 
         .. note:: The ``probe`` attribute object :class:`.Quad4RProbe` is
@@ -383,7 +378,7 @@ cdef class Quad4R:
 
         """
         cdef int i, j
-        cdef cINT c[4]
+        cdef int c[4]
         cdef double s1[3]
         cdef double s2[3]
         cdef double s3[3]
@@ -442,12 +437,12 @@ cdef class Quad4R:
 
 
     cpdef void update_KC0(Quad4R self,
-            np.ndarray[cINT, ndim=1] KC0r,
-            np.ndarray[cINT, ndim=1] KC0c,
-            np.ndarray[cDOUBLE, ndim=1] KC0v,
-            ShellProp prop,
-            int update_KC0v_only=0
-            ):
+                          long [::1] KC0r,
+                          long [::1] KC0c,
+                          double [::1] KC0v,
+                          ShellProp prop,
+                          int update_KC0v_only=0,
+                          ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
         Reduced integration is used with a single point in the centroid
@@ -481,7 +476,7 @@ cdef class Quad4R:
             lead to `KC0r` and `KC0c` also being updated.
 
         """
-        cdef cINT c1, c2, c3, c4, k
+        cdef int c1, c2, c3, c4, k
         cdef double x1, x2, x3, x4, y1, y2, y3, y4, wij, detJ
         # NOTE ABD in the material direction
         cdef double A11mat, A12mat, A16mat, A22mat, A26mat, A66mat
@@ -3552,12 +3547,12 @@ cdef class Quad4R:
 
 
     cpdef void update_KG(Quad4R self,
-            np.ndarray[cINT, ndim=1] KGr,
-            np.ndarray[cINT, ndim=1] KGc,
-            np.ndarray[cDOUBLE, ndim=1] KGv,
-            ShellProp prop,
-            int update_KGv_only=0
-            ):
+                         long [::1] KGr,
+                         long [::1] KGc,
+                         double [::1] KGv,
+                         ShellProp prop,
+                         int update_KGv_only=0
+                         ):
         r"""Update sparse vectors for geometric stiffness matrix KG
 
         Two-point Gauss-Legendre quadrature is used, which showed more accuracy
@@ -3585,7 +3580,7 @@ cdef class Quad4R:
 
         """
         cdef double *ue
-        cdef cINT c1, c2, c3, c4, i, j, k
+        cdef int c1, c2, c3, c4, i, j, k
         cdef double x1, x2, x3, x4
         cdef double y1, y2, y3, y4
         cdef double wij, detJ, xi, eta
@@ -4445,12 +4440,12 @@ cdef class Quad4R:
 
 
     cpdef void update_KG_given_stress(Quad4R self,
-            double Nxx, double Nyy, double Nxy,
-            np.ndarray[cINT, ndim=1] KGr,
-            np.ndarray[cINT, ndim=1] KGc,
-            np.ndarray[cDOUBLE, ndim=1] KGv,
-            int update_KGv_only=0
-            ):
+                                      double Nxx, double Nyy, double Nxy,
+                                      long [::1] KGr,
+                                      long [::1] KGc,
+                                      double [::1] KGv,
+                                      int update_KGv_only=0,
+                                      ):
         r"""Update sparse vectors for geometric stiffness matrix KG
 
         .. note:: A constant stress state is assumed within the element,
@@ -4476,7 +4471,7 @@ cdef class Quad4R:
             lead to `KGr` and `KGc` also being updated.
 
         """
-        cdef cINT c1, c2, c3, c4, i, j, k
+        cdef int c1, c2, c3, c4, i, j, k
         cdef double x1, x2, x3, x4
         cdef double y1, y2, y3, y4
         cdef double wij, detJ, xi, eta
@@ -5269,12 +5264,12 @@ cdef class Quad4R:
 
 
     cpdef void update_M(Quad4R self,
-            np.ndarray[cINT, ndim=1] Mr,
-            np.ndarray[cINT, ndim=1] Mc,
-            np.ndarray[cDOUBLE, ndim=1] Mv,
-            ShellProp prop,
-            int mtype=0,
-            ):
+                        long [::1] Mr,
+                        long [::1] Mc,
+                        double [::1] Mv,
+                        ShellProp prop,
+                        int mtype=0,
+                        ):
         r"""Update sparse vectors for mass matrix M
 
         Different integration schemes are available by means of the ``mtype``
@@ -5294,7 +5289,7 @@ cdef class Quad4R:
             2 for lumped mass matrix using method from Brockman 1987
 
         """
-        cdef cINT c1, c2, c3, c4, i, j, k
+        cdef int c1, c2, c3, c4, i, j, k
         cdef double intrho, intrhoz, intrhoz2, A
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double x1, x2, x3, x4

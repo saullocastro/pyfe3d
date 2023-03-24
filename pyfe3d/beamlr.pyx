@@ -13,16 +13,11 @@ BeamLR - Linear Timoshenko 3D beam element with reduced integration (:mod:`pyfe3
 
 """
 import numpy as np
-cimport numpy as np
 
 from .beamprop cimport BeamProp
 
-ctypedef np.int64_t cINT
-INT = np.int64
-ctypedef np.double_t cDOUBLE
-DOUBLE = np.float64
-cdef cINT DOF = 6
-cdef cINT NUM_NODES = 2
+cdef int DOF = 6
+cdef int NUM_NODES = 2
 
 
 cdef class BeamLRData:
@@ -41,9 +36,9 @@ cdef class BeamLRData:
         ``M_SPARSE_SIZE = 144``
 
     """
-    cdef public cINT KC0_SPARSE_SIZE
-    cdef public cINT KG_SPARSE_SIZE
-    cdef public cINT M_SPARSE_SIZE
+    cdef public int KC0_SPARSE_SIZE
+    cdef public int KG_SPARSE_SIZE
+    cdef public int M_SPARSE_SIZE
     def __cinit__(BeamLRData self):
         self.KC0_SPARSE_SIZE = 144
         self.KG_SPARSE_SIZE = 36
@@ -67,11 +62,11 @@ cdef class BeamLRProbe:
         {{r_y}_e}_2, {{r_z}_e}_2`.
 
     """
-    cdef public cDOUBLE[:] xe
-    cdef public cDOUBLE[:] ue
+    cdef public double [::1] xe
+    cdef public double [::1] ue
     def __cinit__(BeamLRProbe self):
-        self.xe = np.zeros(NUM_NODES*DOF//2, dtype=DOUBLE)
-        self.ue = np.zeros(NUM_NODES*DOF, dtype=DOUBLE)
+        self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
+        self.ue = np.zeros(NUM_NODES*DOF, dtype=np.float64)
 
 
 cdef class BeamLR:
@@ -112,10 +107,10 @@ cdef class BeamLR:
         Pointer to the probe.
 
     """
-    cdef public cINT eid
-    cdef public cINT n1, n2
-    cdef public cINT c1, c2
-    cdef public cINT init_k_KC0, init_k_KG, init_k_M
+    cdef public int eid
+    cdef public int n1, n2
+    cdef public int c1, c2
+    cdef public int init_k_KC0, init_k_KG, init_k_M
     cdef public double length
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public BeamLRProbe probe
@@ -138,7 +133,7 @@ cdef class BeamLR:
 
 
     cpdef void update_rotation_matrix(BeamLR self, double vxyi, double vxyj,
-            double vxyk, np.ndarray[cDOUBLE, ndim=1] x):
+                                      double vxyk, double [::1] x):
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
@@ -207,7 +202,7 @@ cdef class BeamLR:
             self.r33 = zk
 
 
-    cpdef void update_probe_ue(BeamLR self, np.ndarray[cDOUBLE, ndim=1] u):
+    cpdef void update_probe_ue(BeamLR self, double [::1] u):
         r"""Update the local displacement vector of the probe of the element
 
         .. note:: The ``probe`` attribute object :class:`.BeamLRProbe` is
@@ -223,7 +218,7 @@ cdef class BeamLR:
 
         """
         cdef int i, j
-        cdef cINT c[2]
+        cdef int c[2]
         cdef double s1[3]
         cdef double s2[3]
         cdef double s3[3]
@@ -261,7 +256,7 @@ cdef class BeamLR:
                     self.probe.ue[j*DOF + 5] += s3[i]*u[c[j] + 3 + i]
 
 
-    cpdef void update_probe_xe(BeamLR self, np.ndarray[cDOUBLE, ndim=1] x):
+    cpdef void update_probe_xe(BeamLR self, double [::1] x):
         r"""Update the 3D coordinates of the probe of the element
 
         .. note:: The ``probe`` attribute object :class:`.BeamLRProbe` is
@@ -276,7 +271,7 @@ cdef class BeamLR:
 
         """
         cdef int i, j
-        cdef cINT c[2]
+        cdef int c[2]
         cdef double s1[3]
         cdef double s2[3]
         cdef double s3[3]
@@ -327,12 +322,12 @@ cdef class BeamLR:
 
 
     cpdef void update_KC0(BeamLR self,
-            np.ndarray[cINT, ndim=1] KC0r,
-            np.ndarray[cINT, ndim=1] KC0c,
-            np.ndarray[cDOUBLE, ndim=1] KC0v,
-            BeamProp prop,
-            int update_KC0v_only=0
-            ):
+                          long [::1] KC0r,
+                          long [::1] KC0c,
+                          double [::1] KC0v,
+                          BeamProp prop,
+                          int update_KC0v_only=0,
+                          ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
         Properties
@@ -351,7 +346,7 @@ cdef class BeamLR:
             lead to `KC0r` and `KC0c` also being updated.
 
         """
-        cdef cINT c1, c2, k
+        cdef int c1, c2, k
         cdef double L, A, E, G, Ay, Az, Iyy, Izz, Iyz, J
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
 
@@ -1107,12 +1102,12 @@ cdef class BeamLR:
 
 
     cpdef void update_KG(BeamLR self,
-            np.ndarray[cINT, ndim=1] KGr,
-            np.ndarray[cINT, ndim=1] KGc,
-            np.ndarray[cDOUBLE, ndim=1] KGv,
-            BeamProp prop,
-            int update_KGv_only=0
-            ):
+                         long [::1] KGr,
+                         long [::1] KGc,
+                         double [::1] KGv,
+                         BeamProp prop,
+                         int update_KGv_only=0,
+                         ):
         r"""Update sparse vectors for geometric stiffness matrix KG
 
         Properties
@@ -1132,7 +1127,7 @@ cdef class BeamLR:
 
         """
         cdef double *ue
-        cdef cINT c1, c2, k
+        cdef int c1, c2, k
         cdef double L, A, E, N
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
 
@@ -1345,12 +1340,12 @@ cdef class BeamLR:
 
 
     cpdef void update_M(BeamLR self,
-            np.ndarray[cINT, ndim=1] Mr,
-            np.ndarray[cINT, ndim=1] Mc,
-            np.ndarray[cDOUBLE, ndim=1] Mv,
-            BeamProp prop,
-            int mtype=0,
-            ):
+                        long [::1] Mr,
+                        long [::1] Mc,
+                        double [::1] Mv,
+                        BeamProp prop,
+                        int mtype=0,
+                        ):
         r"""Update sparse vectors for mass matrix M
 
         Properties
@@ -1367,7 +1362,7 @@ cdef class BeamLR:
             2 for lumped mass matrix using method from Brockman 1987
 
         """
-        cdef cINT c1, c2, k
+        cdef int c1, c2, k
         cdef double intrho, intrhoy, intrhoz, intrhoy2, intrhoz2, intrhoyz
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double L, A, E

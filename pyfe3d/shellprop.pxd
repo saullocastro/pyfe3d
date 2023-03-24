@@ -1,8 +1,3 @@
-cimport numpy as np
-
-ctypedef np.int64_t cINT
-ctypedef np.double_t cDOUBLE
-
 cdef extern from "math.h":
     double cos(double t) nogil
     double sin(double t) nogil
@@ -26,19 +21,19 @@ cdef class MatLamina:
     cdef public double u1, u2, u3, u4, u5, u6, u7
     cpdef void rebuild(MatLamina)
     cpdef void trace_normalize_plane_stress(MatLamina)
-    cpdef cDOUBLE[:, :] get_constitutive_matrix(MatLamina)
-    cpdef cDOUBLE[:, :] get_invariant_matrix(MatLamina)
+    cpdef double [:, ::1] get_constitutive_matrix(MatLamina)
+    cpdef double [:, ::1] get_invariant_matrix(MatLamina)
 
 cdef class Lamina:
-    cdef public cINT plyid
+    cdef public int plyid
     cdef public double h, thetadeg, cost, cos2t, cos4t, sint, sin2t, sin4t
     cdef public double q11L, q12L, q22L, q16L, q26L, q66L, q44L, q45L, q55L
     cdef public MatLamina matlamina
     cpdef void rebuild(Lamina)
-    cpdef cDOUBLE[:, :] get_transf_matrix_displ_to_laminate(Lamina)
-    cpdef cDOUBLE[:, :] get_constitutive_matrix(Lamina)
-    cpdef cDOUBLE[:, :] get_transf_matrix_stress_to_lamina(Lamina)
-    cpdef cDOUBLE[:, :] get_transf_matrix_stress_to_laminate(Lamina)
+    cpdef double [:, ::1] get_transf_matrix_displ_to_laminate(Lamina)
+    cpdef double [:, ::1] get_constitutive_matrix(Lamina)
+    cpdef double [:, ::1] get_transf_matrix_stress_to_lamina(Lamina)
+    cpdef double [:, ::1] get_transf_matrix_stress_to_laminate(Lamina)
 
 cdef class ShellProp:
     cdef public double A11, A12, A16, A22, A26, A66
@@ -49,12 +44,12 @@ cdef class ShellProp:
     cdef public double scf_k13, scf_k23, h, offset, intrho, intrhoz, intrhoz2
     cdef public list plies
     cdef public list stack
-    cdef cDOUBLE[:, :] get_A(ShellProp)
-    cdef cDOUBLE[:, :] get_B(ShellProp)
-    cdef cDOUBLE[:, :] get_D(ShellProp)
-    cdef cDOUBLE[:, :] get_E(ShellProp)
-    cdef cDOUBLE[:, :] get_ABD(ShellProp)
-    cdef cDOUBLE[:, :] get_ABDE(ShellProp)
+    cdef double [:, ::1] get_A(ShellProp)
+    cdef double [:, ::1] get_B(ShellProp)
+    cdef double [:, ::1] get_D(ShellProp)
+    cdef double [:, ::1] get_E(ShellProp)
+    cdef double [:, ::1] get_ABD(ShellProp)
+    cdef double [:, ::1] get_ABDE(ShellProp)
     cpdef void calc_scf(ShellProp)
     cpdef void calc_equivalent_properties(ShellProp)
     cpdef void calc_constitutive_matrix(ShellProp)
@@ -62,4 +57,11 @@ cdef class ShellProp:
     cpdef void force_orthotropic(ShellProp)
     cpdef void force_symmetric(ShellProp)
     cpdef LaminationParameters calc_lamination_parameters(ShellProp)
+
+cdef class GradABDE:
+    cdef public double [:, ::1] gradAij
+    cdef public double [:, ::1] gradBij
+    cdef public double [:, ::1] gradDij
+    cdef public double [:, ::1] gradEij
+    cpdef void calc_LP_grad(GradABDE, double, MatLamina, LaminationParameters)
 

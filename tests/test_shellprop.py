@@ -6,7 +6,7 @@ import numpy as np
 from pyfe3d.shellprop import (Lamina, shellprop_from_LaminationParameters,
         shellprop_from_lamination_parameters, force_balanced_LP,
         force_orthotropic_LP, force_symmetric_LP, LaminationParameters,
-        shellprop_LP_gradients)
+        GradABDE)
 from pyfe3d.shellprop_utils import (read_laminaprop, laminated_plate,
         isotropic_plate)
 
@@ -289,4 +289,6 @@ def test_laminate_LP_gradients():
     lp.xiD2 = 0.4
     lp.xiD3 = -0.3
     lp.xiD4 = -0.6
-    shellprop_LP_gradients(thickness, matlamina, lp)
+    gradABDE = GradABDE()
+    gradABDE.calc_LP_grad(thickness, matlamina, lp)
+    print(gradABDE.gradAij)

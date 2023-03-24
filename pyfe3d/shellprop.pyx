@@ -16,7 +16,6 @@ Highly based on the `composites <https://saullocastro.github.io/composites/>`_. 
 """
 import numpy as np
 
-INT = np.int64
 DOUBLE = np.float64
 
 cdef class LaminationParameters:
@@ -232,7 +231,7 @@ cdef class MatLamina:
         self.u6 /= tr
         self.u7 /= tr
 
-    cpdef cDOUBLE[:, :] get_constitutive_matrix(MatLamina self):
+    cpdef double [:, ::1] get_constitutive_matrix(MatLamina self):
         r"""Return the constitutive matrix
         """
         return np.array(
@@ -243,7 +242,7 @@ cdef class MatLamina:
              [  0,   0,   0,   0, self.c55,   0],
              [  0,   0,   0,   0,   0, self.c66]], dtype=DOUBLE)
 
-    cpdef cDOUBLE[:, :] get_invariant_matrix(MatLamina self):
+    cpdef double [:, ::1] get_invariant_matrix(MatLamina self):
         r"""Return the invariant matrix
         """
         return np.array(
@@ -341,13 +340,13 @@ cdef class Lamina:
         #     stresses... to take into account eventual thermal expansions or
         #     contractions
 
-    cpdef cDOUBLE[:, :] get_transf_matrix_displ_to_laminate(Lamina self):
+    cpdef double [:, ::1] get_transf_matrix_displ_to_laminate(Lamina self):
         r"""Return displacement transformation matrix from lamina to laminate"""
         return np.array([[ self.cost, self.sint, 0],
                          [-self.sint, self.cost, 0],
                          [   0,     0, 1]], dtype=DOUBLE)
 
-    cpdef cDOUBLE[:, :] get_constitutive_matrix(Lamina self):
+    cpdef double [:, ::1] get_constitutive_matrix(Lamina self):
         r"""Return the constitutive matrix"""
         return np.array([[self.q11L, self.q12L, self.q16L,    0,    0],
                          [self.q12L, self.q22L, self.q26L,    0,    0],
@@ -355,7 +354,7 @@ cdef class Lamina:
                          [   0,    0,    0, self.q44L, self.q45L],
                          [   0,    0,    0, self.q45L, self.q55L]], dtype=DOUBLE)
 
-    cpdef cDOUBLE[:, :] get_transf_matrix_stress_to_lamina(Lamina self):
+    cpdef double [:, ::1] get_transf_matrix_stress_to_lamina(Lamina self):
         r"""Return stress transformation matrix from laminate to lamina"""
         cdef double cos2, sin2, sincos
         cos2 = self.cost**2
@@ -369,7 +368,7 @@ cdef class Lamina:
              [ 0, 0, 0, self.sint,  self.cost, 0],
              [-sincos, sincos, 0, 0, 0, cos2-sin2]], dtype=DOUBLE)
 
-    cpdef cDOUBLE[:, :] get_transf_matrix_stress_to_laminate(Lamina self):
+    cpdef double [:, ::1] get_transf_matrix_stress_to_laminate(Lamina self):
         r"""Return stress transformation matrix from lamina to laminate"""
         cdef double cos2, sin2, sincos
         cos2 = self.cost**2
@@ -430,29 +429,29 @@ cdef class ShellProp:
         self.plies = []
         self.stack = []
 
-    cdef cDOUBLE[:, :] get_A(ShellProp self):
+    cdef double [:, ::1] get_A(ShellProp self):
         return np.array([[self.A11, self.A12, self.A16],
                          [self.A12, self.A22, self.A26],
                          [self.A16, self.A26, self.A66]], dtype=DOUBLE)
-    cdef cDOUBLE[:, :] get_B(ShellProp self):
+    cdef double [:, ::1] get_B(ShellProp self):
         return np.array([[self.B11, self.B12, self.B16],
                          [self.B12, self.B22, self.B26],
                          [self.B16, self.B26, self.B66]], dtype=DOUBLE)
-    cdef cDOUBLE[:, :] get_D(ShellProp self):
+    cdef double [:, ::1] get_D(ShellProp self):
         return np.array([[self.D11, self.D12, self.D16],
                          [self.D12, self.D22, self.D26],
                          [self.D16, self.D26, self.D66]], dtype=DOUBLE)
-    cdef cDOUBLE[:, :] get_E(ShellProp self):
+    cdef double [:, ::1] get_E(ShellProp self):
         return np.array([[self.E44, self.E45],
                          [self.E45, self.E55]], dtype=DOUBLE)
-    cdef cDOUBLE[:, :] get_ABD(ShellProp self):
+    cdef double [:, ::1] get_ABD(ShellProp self):
         return np.array([[self.A11, self.A12, self.A16, self.B11, self.B12, self.B16],
                          [self.A12, self.A22, self.A26, self.B12, self.B22, self.B26],
                          [self.A16, self.A26, self.A66, self.B16, self.B26, self.B66],
                          [self.B11, self.B12, self.B16, self.D11, self.D12, self.D16],
                          [self.B12, self.B22, self.B26, self.D12, self.D22, self.D26],
                          [self.B16, self.B26, self.B66, self.D16, self.D26, self.D66]], dtype=DOUBLE)
-    cdef cDOUBLE[:, :] get_ABDE(ShellProp self):
+    cdef double [:, ::1] get_ABDE(ShellProp self):
         return np.array([[self.A11, self.A12, self.A16, self.B11, self.B12, self.B16, 0, 0],
                          [self.A12, self.A22, self.A26, self.B12, self.B22, self.B26, 0, 0],
                          [self.A16, self.A26, self.A66, self.B16, self.B26, self.B66, 0, 0],
@@ -862,21 +861,13 @@ cpdef ShellProp shellprop_from_lamination_parameters(double thickness, MatLamina
     return shellprop_from_LaminationParameters(thickness, matlamina, lp)
 
 
-def shellprop_LP_gradients(double thickness, MatLamina mat, LaminationParameters lp):
-    r"""Gradients of the shell stiffnesses with respect to the thickness and
-    lamination parameters
+cdef class GradABDE:
+    r"""Container to store the gradients of the ABDE matrices with respect to
+    the lamination parameters
 
-    Parameters
-    ----------
-    thickness : float
-        The total thickness of the laminate
-    mat : :class:`.MatLamina` object
-        Material object
-    lp : :class:`.LaminationParameters` object
-        The container class with all lamination parameters already defined
+    Attributes
+    ==========
 
-    Returns
-    -------
     gradAij, gradBij, gradDij, gradEij : tuple of 2D np.array objects
         The shapes of these gradient matrices are:
 
@@ -931,63 +922,91 @@ def shellprop_LP_gradients(double thickness, MatLamina mat, LaminationParameters
             E55
 
     """
-    cdef double h
-    cdef np.ndarray[ndim=2, dtype=cDOUBLE] gradAij, gradBij, gradDij, gradEij, gradinv
-    gradAij = np.zeros((6, 5), dtype=DOUBLE)
-    gradBij = np.zeros((6, 5), dtype=DOUBLE)
-    gradDij = np.zeros((6, 5), dtype=DOUBLE)
-    gradEij = np.zeros((3, 3), dtype=DOUBLE)
-    gradinv = np.zeros((6, 4), dtype=DOUBLE)
-    h = thickness
+    def __init__(GradABDE self):
+        self.gradAij = np.zeros((6, 5), dtype=DOUBLE)
+        self.gradBij = np.zeros((6, 5), dtype=DOUBLE)
+        self.gradDij = np.zeros((6, 5), dtype=DOUBLE)
+        self.gradEij = np.zeros((3, 3), dtype=DOUBLE)
 
-    gradinv = np.array([[mat.u2, 0, mat.u3, 0],
-                        [0, 0, -mat.u3, 0],
-                        [0, mat.u2/2., 0, mat.u3],
-                        [-mat.u2, 0, mat.u3, 0],
-                        [0, mat.u2/2., 0, -mat.u3],
-                        [0, 0, -mat.u3, 0]])
+    cpdef void calc_LP_grad(GradABDE self, double thickness, MatLamina mat, LaminationParameters lp):
+        r"""Gradients of the shell stiffnesses with respect to the thickness and
+        lamination parameters
 
-    # d(A11 A12 A16 A22 A26 A66) / dh
-    gradAij[0, 0] = (mat.u1 + mat.u2*lp.xiA1 + 0*lp.xiA2 + mat.u3*lp.xiA3 + 0*lp.xiA4)
-    gradAij[1, 0] = (mat.u4 + 0*lp.xiA1 + 0*lp.xiA2 + (-1)*mat.u3*lp.xiA3 + 0*lp.xiA4)
-    gradAij[2, 0] = (0 + 0*lp.xiA1 + mat.u2/2.*lp.xiA2 + 0*lp.xiA3 + mat.u3*lp.xiA4)
-    gradAij[3, 0] = (mat.u1 + (-1)*mat.u2*lp.xiA1 + 0*lp.xiA2 + mat.u3*lp.xiA3 + 0*lp.xiA4)
-    gradAij[4, 0] = (0 + 0*lp.xiA1 + mat.u2/2.*lp.xiA2 + 0*lp.xiA3 + (-1)*mat.u3*lp.xiA4)
-    gradAij[5, 0] = (mat.u5 + 0*lp.xiA1 + 0*lp.xiA2 + (-1)*mat.u3*lp.xiA3 + 0*lp.xiA4)
+        Parameters
+        ----------
+        thickness : float
+            The total thickness of the laminate
+        mat : :class:`.MatLamina` object
+            Material object
+        lp : :class:`.LaminationParameters` object
+            The container class with all lamination parameters already defined
 
-    # d(A11 A12 A16 A22 A26 A66) / d(xiA1, xiA2, xiA3, xiA4)
-    gradAij[:, 1:] = h*gradinv
+        Returns
+        -------
+        None
+            The attributes of the object are updated.
 
-    # d(B11 B12 B16 B22 B26 B66) / dh
-    gradBij[0, 0] = h/2.*(mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
-    gradBij[1, 0] = h/2.*(0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
-    gradBij[2, 0] = h/2.*(0*lp.xiB1 + mat.u2/2.*lp.xiB2 + 0*lp.xiB3 + mat.u3*lp.xiB4)
-    gradBij[3, 0] = h/2.*((-1)*mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
-    gradBij[4, 0] = h/2.*(0*lp.xiB1 + mat.u2/2.*lp.xiB2 + 0*lp.xiB3 + (-1)*mat.u3*lp.xiB4)
-    gradBij[5, 0] = h/2.*(0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
 
-    # d(B11 B12 B16 B22 B26 B66) / d(xiB1, xiB2, xiB3, xiB4)
-    gradBij[:, 1:] = h*h/4.*gradinv
+        """
+        cdef int i, j
+        cdef double h
+        cdef double [:, ::1] gradinv
 
-    # d(D11 D12 D16 D22 D26 D66) / dh
-    gradDij[0, 0] = h*h/4.*(mat.u1 + mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
-    gradDij[1, 0] = h*h/4.*(mat.u4 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
-    gradDij[2, 0] = h*h/4.*(0 + 0*lp.xiD1 + mat.u2/2.*lp.xiD2 + 0*lp.xiD3 + mat.u3*lp.xiD4)
-    gradDij[3, 0] = h*h/4.*(mat.u1 + (-1)*mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
-    gradDij[4, 0] = h*h/4.*(0 + 0*lp.xiD1 + mat.u2/2.*lp.xiD2 + 0*lp.xiD3 + (-1)*mat.u3*lp.xiD4)
-    gradDij[5, 0] = h*h/4.*(mat.u5 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
+        gradinv = np.zeros((6, 4), dtype=DOUBLE)
+        h = thickness
 
-    # d(D11 D12 D16 D22 D26 D66) / d(xiD1, xiD2, xiD3, xiD4)
-    gradDij[:, 1:] = h*h*h/12.*gradinv
+        gradinv = np.array([[mat.u2, 0, mat.u3, 0],
+                            [0, 0, -mat.u3, 0],
+                            [0, mat.u2/2., 0, mat.u3],
+                            [-mat.u2, 0, mat.u3, 0],
+                            [0, mat.u2/2., 0, -mat.u3],
+                            [0, 0, -mat.u3, 0]])
 
-    # d(E11 E12 E16 E22 E26 E66) / dh
-    gradEij[0, 0] = (mat.u6 + mat.u7*lp.xiE1 + 0*lp.xiE2)
-    gradEij[1, 0] = (0 + 0*lp.xiE1 + (-1)*mat.u7*lp.xiE2)
-    gradEij[2, 0] = (mat.u6 + (-1)*mat.u7*lp.xiE1 + 0*lp.xiE2)
+        # d(A11 A12 A16 A22 A26 A66) / dh
+        self.gradAij[0, 0] = (mat.u1 + mat.u2*lp.xiA1 + 0*lp.xiA2 + mat.u3*lp.xiA3 + 0*lp.xiA4)
+        self.gradAij[1, 0] = (mat.u4 + 0*lp.xiA1 + 0*lp.xiA2 + (-1)*mat.u3*lp.xiA3 + 0*lp.xiA4)
+        self.gradAij[2, 0] = (0 + 0*lp.xiA1 + mat.u2/2.*lp.xiA2 + 0*lp.xiA3 + mat.u3*lp.xiA4)
+        self.gradAij[3, 0] = (mat.u1 + (-1)*mat.u2*lp.xiA1 + 0*lp.xiA2 + mat.u3*lp.xiA3 + 0*lp.xiA4)
+        self.gradAij[4, 0] = (0 + 0*lp.xiA1 + mat.u2/2.*lp.xiA2 + 0*lp.xiA3 + (-1)*mat.u3*lp.xiA4)
+        self.gradAij[5, 0] = (mat.u5 + 0*lp.xiA1 + 0*lp.xiA2 + (-1)*mat.u3*lp.xiA3 + 0*lp.xiA4)
 
-    # d(E11 E12 E16 E22 E26 E66) / d(xiE1, xiE2)
-    gradEij[0, 1:] = h*np.array([mat.u7, 0])
-    gradEij[1, 1:] = h*np.array([0, -mat.u7])
-    gradEij[2, 1:] = h*np.array([-mat.u7, 0])
+        # d(A11 A12 A16 A22 A26 A66) / d(xiA1, xiA2, xiA3, xiA4)
+        for i in range(5):
+            for j in range(4):
+                self.gradAij[i, j+1] = h*gradinv[i, j]
 
-    return gradAij, gradBij, gradDij, gradEij
+        # d(B11 B12 B16 B22 B26 B66) / dh
+        self.gradBij[0, 0] = h/2.*(mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
+        self.gradBij[1, 0] = h/2.*(0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
+        self.gradBij[2, 0] = h/2.*(0*lp.xiB1 + mat.u2/2.*lp.xiB2 + 0*lp.xiB3 + mat.u3*lp.xiB4)
+        self.gradBij[3, 0] = h/2.*((-1)*mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
+        self.gradBij[4, 0] = h/2.*(0*lp.xiB1 + mat.u2/2.*lp.xiB2 + 0*lp.xiB3 + (-1)*mat.u3*lp.xiB4)
+        self.gradBij[5, 0] = h/2.*(0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
+
+        # d(B11 B12 B16 B22 B26 B66) / d(xiB1, xiB2, xiB3, xiB4)
+        for i in range(5):
+            for j in range(4):
+                self.gradBij[i, j+1] = h*h/4.*gradinv[i, j]
+
+        # d(D11 D12 D16 D22 D26 D66) / dh
+        self.gradDij[0, 0] = h*h/4.*(mat.u1 + mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
+        self.gradDij[1, 0] = h*h/4.*(mat.u4 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
+        self.gradDij[2, 0] = h*h/4.*(0 + 0*lp.xiD1 + mat.u2/2.*lp.xiD2 + 0*lp.xiD3 + mat.u3*lp.xiD4)
+        self.gradDij[3, 0] = h*h/4.*(mat.u1 + (-1)*mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
+        self.gradDij[4, 0] = h*h/4.*(0 + 0*lp.xiD1 + mat.u2/2.*lp.xiD2 + 0*lp.xiD3 + (-1)*mat.u3*lp.xiD4)
+        self.gradDij[5, 0] = h*h/4.*(mat.u5 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
+
+        # d(D11 D12 D16 D22 D26 D66) / d(xiD1, xiD2, xiD3, xiD4)
+        for i in range(5):
+            for j in range(4):
+                self.gradDij[i, j+1] = h*h*h/12.*gradinv[i, j]
+
+        # d(E11 E12 E16 E22 E26 E66) / dh
+        self.gradEij[0, 0] = (mat.u6 + mat.u7*lp.xiE1 + 0*lp.xiE2)
+        self.gradEij[1, 0] = (0 + 0*lp.xiE1 + (-1)*mat.u7*lp.xiE2)
+        self.gradEij[2, 0] = (mat.u6 + (-1)*mat.u7*lp.xiE1 + 0*lp.xiE2)
+
+        # d(E11 E12 E16 E22 E26 E66) / d(xiE1, xiE2)
+        self.gradEij[0, 1:] = h*np.array([mat.u7, 0])
+        self.gradEij[1, 1:] = h*np.array([0, -mat.u7])
+        self.gradEij[2, 1:] = h*np.array([-mat.u7, 0])

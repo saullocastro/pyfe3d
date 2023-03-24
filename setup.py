@@ -6,7 +6,6 @@ import subprocess
 from setuptools import setup, find_packages
 from distutils.extension import Extension
 
-import numpy as np
 from Cython.Build import cythonize
 
 
@@ -102,8 +101,8 @@ if os.name == 'nt': # Windows
     compile_args = ['/openmp', '/O2']
     link_args = []
 elif os.name == 'posix': # MAC-OS
-    compile_args = []
-    link_args = []
+    compile_args = ['-Xclang -fopenmp']
+    link_args = ['-lomp']
 else: # Linux
     compile_args = ['-fopenmp', '-static', '-static-libgcc', '-static-libstdc++']
     link_args = ['-fopenmp', '-static-libgcc', '-static-libstdc++']
@@ -117,7 +116,6 @@ if 'CYTHON_TRACE_NOGIL' in os.environ.keys():
         link_args = []
 
 include_dirs = [
-            np.get_include(),
             ]
 
 extension_kwargs = dict(

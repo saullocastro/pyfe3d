@@ -19,16 +19,11 @@ Truss - Linear truss 3D element with analytical integration (:mod:`pyfe3d.truss`
 
 """
 import numpy as np
-cimport numpy as np
 
 from .beamprop cimport BeamProp
 
-ctypedef np.int64_t cINT
-INT = np.int64
-ctypedef np.double_t cDOUBLE
-DOUBLE = np.float64
-cdef cINT DOF = 6
-cdef cINT NUM_NODES = 2
+cdef int DOF = 6
+cdef int NUM_NODES = 2
 
 cdef class TrussData:
     r"""
@@ -43,8 +38,8 @@ cdef class TrussData:
         ``M_SPARSE_SIZE = 144``
 
     """
-    cdef public cINT KC0_SPARSE_SIZE
-    cdef public cINT M_SPARSE_SIZE
+    cdef public int KC0_SPARSE_SIZE
+    cdef public int M_SPARSE_SIZE
     def __cinit__(TrussData self):
         self.KC0_SPARSE_SIZE = 72
         self.M_SPARSE_SIZE = 144
@@ -66,11 +61,11 @@ cdef class TrussProbe:
         {{r_y}_e}_2, {{r_z}_e}_2`.
 
     """
-    cdef public cDOUBLE[:] xe
-    cdef public cDOUBLE[:] ue
+    cdef public double [::1] xe
+    cdef public double [::1] ue
     def __cinit__(TrussProbe self):
-        self.xe = np.zeros(NUM_NODES*DOF//2, dtype=DOUBLE)
-        self.ue = np.zeros(NUM_NODES*DOF, dtype=DOUBLE)
+        self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
+        self.ue = np.zeros(NUM_NODES*DOF, dtype=np.float64)
 
 cdef class Truss:
     r"""
@@ -86,10 +81,10 @@ cdef class Truss:
               physical representation.
 
     """
-    cdef public cINT eid
-    cdef public cINT n1, n2
-    cdef public cINT c1, c2
-    cdef public cINT init_k_KC0, init_k_M
+    cdef public int eid
+    cdef public int n1, n2
+    cdef public int c1, c2
+    cdef public int init_k_KC0, init_k_M
     cdef public double length
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public TrussProbe probe
@@ -110,7 +105,7 @@ cdef class Truss:
         self.r31 = self.r32 = self.r33 = 0.
 
 
-    cpdef void update_probe_ue(Truss self, np.ndarray[cDOUBLE, ndim=1] u):
+    cpdef void update_probe_ue(Truss self, double [::1] u):
         r"""Update the local displacement vector of the probe of the element
 
         .. note:: The ``probe`` attribute object :class:`.TrussProbe` is
@@ -126,7 +121,7 @@ cdef class Truss:
 
         """
         cdef int i, j
-        cdef cINT c[2]
+        cdef int c[2]
         cdef double s1[3]
         cdef double s2[3]
         cdef double s3[3]
@@ -164,7 +159,7 @@ cdef class Truss:
                     self.probe.ue[j*DOF + 5] += s3[i]*u[c[j] + 3 + i]
 
 
-    cpdef void update_rotation_matrix(Truss self, np.ndarray[cDOUBLE, ndim=1] x):
+    cpdef void update_rotation_matrix(Truss self, double [::1] x):
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
@@ -236,7 +231,7 @@ cdef class Truss:
             self.r33 = zk
 
 
-    cpdef void update_probe_xe(Truss self, np.ndarray[cDOUBLE, ndim=1] x):
+    cpdef void update_probe_xe(Truss self, double [::1] x):
         r"""Update the 3D coordinates of the probe of the element
 
         .. note:: The ``probe`` attribute object :class:`.TrussProbe` is
@@ -251,7 +246,7 @@ cdef class Truss:
 
         """
         cdef int i, j
-        cdef cINT c[2]
+        cdef int c[2]
         cdef double s1[3]
         cdef double s2[3]
         cdef double s3[3]
@@ -302,12 +297,12 @@ cdef class Truss:
 
 
     cpdef void update_KC0(Truss self,
-            np.ndarray[cINT, ndim=1] KC0r,
-            np.ndarray[cINT, ndim=1] KC0c,
-            np.ndarray[cDOUBLE, ndim=1] KC0v,
-            BeamProp prop,
-            int update_KC0v_only=0
-            ):
+                          long [::1] KC0r,
+                          long [::1] KC0c,
+                          double [::1] KC0v,
+                          BeamProp prop,
+                          int update_KC0v_only=0,
+                          ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
         Properties
@@ -326,7 +321,7 @@ cdef class Truss:
             lead to `KC0r` and `KC0c` also being updated.
 
         """
-        cdef cINT c1, c2, k
+        cdef int c1, c2, k
         cdef double L, A, E, G, Iyy, Izz, J
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
 
@@ -719,12 +714,12 @@ cdef class Truss:
 
 
     cpdef void update_M(Truss self,
-            np.ndarray[cINT, ndim=1] Mr,
-            np.ndarray[cINT, ndim=1] Mc,
-            np.ndarray[cDOUBLE, ndim=1] Mv,
-            BeamProp prop,
-            int mtype=0,
-            ):
+                        long [::1] Mr,
+                        long [::1] Mc,
+                        double [::1] Mv,
+                        BeamProp prop,
+                        int mtype=0,
+                        ):
         r"""Update sparse vectors for mass matrix M
 
         For the :class:`.Truss` element, the inertial terms ``intrho``,
@@ -744,7 +739,7 @@ cdef class Truss:
             1 for lumped mass matrix using method from Brockman 1987
 
         """
-        cdef cINT c1, c2, k
+        cdef int c1, c2, k
         cdef double intrho, intrhoy, intrhoz, intrhoy2, intrhoz2
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double L, A, E
