@@ -1,5 +1,4 @@
-from __future__ import absolute_import
-
+import platform
 import os
 import inspect
 import subprocess
@@ -10,7 +9,7 @@ from Cython.Build import cythonize
 
 
 is_released = True
-version = '0.3.20'
+version = '0.3.21'
 
 
 def git_version():
@@ -97,15 +96,15 @@ License :: OSI Approved :: BSD License
 
 fullversion = write_version_py(version, is_released)
 
-if os.name == 'nt': # Windows
-    compile_args = ['/openmp', '/O2']
+if platform.system() == 'Windows':
+    compile_args = ['/openmp']
     link_args = []
-elif os.name == 'posix': # MAC-OS
-    compile_args = ['-Xclang -fopenmp']
-    link_args = ['-lomp']
-else: # Linux
+elif platform.system() == 'Linux':
     compile_args = ['-fopenmp', '-static', '-static-libgcc', '-static-libstdc++']
     link_args = ['-fopenmp', '-static-libgcc', '-static-libstdc++']
+else: # MAC-OS
+    compile_args = ['-Xclang -fopenmp']
+    link_args = ['-lomp']
 
 if 'CYTHON_TRACE_NOGIL' in os.environ.keys():
     if os.name == 'nt': # Windows
