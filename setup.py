@@ -10,7 +10,7 @@ from Cython.Build import cythonize
 
 
 is_released = True
-version = '0.3.16'
+version = '0.3.20'
 
 
 def git_version():
