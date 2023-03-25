@@ -8,8 +8,8 @@ from distutils.extension import Extension
 from Cython.Build import cythonize
 
 
-is_released = True
-version = '0.3.22'
+is_released = False
+version = '0.3.23'
 
 
 def git_version():
@@ -179,22 +179,38 @@ data_files = [('', [
         'LICENSE',
         ])]
 
+package_data = {
+        'pyfe3d': ['*.pxd', '*.pyx'],
+        '': ['tests/*.*'],
+        }
+keywords = [
+            "finite elements",
+            "structural analysis",
+            "structural optimization",
+            "static analysis",
+            "buckling",
+            "vibration",
+            "structural dynamics",
+            "implicit time integration",
+            "explicit time integration",
+            ]
 s = setup(
     name = "pyfe3d",
     version = fullversion,
     author = "Saullo G. P. Castro",
     author_email = "S.G.P.Castro@tudelft.nl",
-    description = ("Finite elements for 3D problems in Python/Cython"),
-    license = "3-Clause BSD",
-    keywords = "finite elements structural analysis static buckling vibration dynamics",
-    url = "https://github.com/saullocastro/pyfe3d",
-    data_files=data_files,
-    long_description=read('README.md'),
+    description = ("Finite elements for structural analysis and optimization based on Python/Cython"),
+    long_description = read('README.md'),
     long_description_content_type = 'text/markdown',
-    classifiers=[_f for _f in CLASSIFIERS.split('\n') if _f],
-    install_requires=install_requires,
+    license = "3-Clause BSD",
+    keywords = keywords,
+    url = "https://github.com/saullocastro/pyfe3d",
+    package_data = package_data,
+    data_files = data_files,
+    classifiers = [_f for _f in CLASSIFIERS.split('\n') if _f],
+    install_requires = install_requires,
     ext_modules = ext_modules,
-    include_package_data=True,
-    packages=find_packages(),
+    include_package_data = True,
+    packages = find_packages(),
 )
 
