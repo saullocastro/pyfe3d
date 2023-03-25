@@ -24,7 +24,6 @@ jobs:
         python3 -m pip install --upgrade pip
         python3 -m pip install --upgrade setuptools wheel twine
         python3 -m pip install -r requirements.txt
-        python3 -m pip install twine
     - name: Upload source code
       if: matrix.runs-on == 'ubuntu-latest' && matrix.python-version == '3.11'
       env:
