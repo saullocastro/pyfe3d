@@ -8,7 +8,7 @@ from distutils.extension import Extension
 from Cython.Build import cythonize
 
 
-is_released = False
+is_released = True
 version = '0.3.23'
 
 
@@ -199,7 +199,7 @@ s = setup(
     version = fullversion,
     author = "Saullo G. P. Castro",
     author_email = "S.G.P.Castro@tudelft.nl",
-    description = ("Finite elements for structural analysis and optimization based on Python/Cython"),
+    description = ("General-purpose finite element solver for structural analysis and optimization based on Python and Cython"),
     long_description = read('README.md'),
     long_description_content_type = 'text/markdown',
     license = "3-Clause BSD",
