@@ -21,29 +21,23 @@ Citing this library
 Saullo G. P. Castro. (2023). General-purpose finite element solver based on Python and Cython (Version 0.3.23). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
 
 
-Examples
---------
+Usage Examples
+--------------
 .. toctree::
     :maxdepth: 2
 
     ex_linear_static.rst
     ex_linear_buckling.rst
-    ex_natural_freq.rst
+    ex_nat_freq.rst
 
 
-Modules
+Topics
 -------
 
 .. toctree::
     :maxdepth: 2
 
-    quad4r.rst
-    quad4r_utils.rst
-    tria3r.rst
-    beamc.rst
-    beamlr.rst
-    spring.rst
-    truss.rst
+    fe_overview.rst
     properties.rst
     coord.rst
 

@@ -1,3 +1,6 @@
+Property definitions
+--------------------
+
 .. automodule:: pyfe3d.beamprop
     :members:
 
