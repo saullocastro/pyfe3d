@@ -1,6 +1,7 @@
 version.py
 # Build related
 *.so
+.DS_store
 quad4r.cpp
 tria3r.cpp
 beam*.cpp
