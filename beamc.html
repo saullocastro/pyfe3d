@@ -1,56 +1,440 @@
 
+
 <!DOCTYPE html>
 
-<html lang="en">
+
+<html lang="en" >
+
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
 
-    <title>BeamC - Consistent Timoshenko 3D beam element (pyfe3d.beamc) &#8212; pyfe3d 0.3.22 documentation</title>
+    <title>BeamC - Consistent Timoshenko 3D beam element (pyfe3d.beamc) &#8212; pyfe3d 0.3.23 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "light";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
+
     <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
-    <link rel="stylesheet" type="text/css" href="_static/classic.css" />
-    
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d" />
+
     <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
     <script src="_static/doctools.js"></script>
     <script src="_static/sphinx_highlight.js"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
-    
+    <script>DOCUMENTATION_OPTIONS.pagename = 'beamc';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="BeamLR - Linear Timoshenko 3D beam element with reduced integration (pyfe3d.beamlr)" href="beamlr.html" />
-    <link rel="prev" title="Tria3R - Triangular element with reduced integration (pyfe3d.tria3r)" href="tria3r.html" /> 
-  </head><body>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             accesskey="I">index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="beamlr.html" title="BeamLR - Linear Timoshenko 3D beam element with reduced integration (pyfe3d.beamlr)"
-             accesskey="N">next</a> |</li>
-        <li class="right" >
-          <a href="tria3r.html" title="Tria3R - Triangular element with reduced integration (pyfe3d.tria3r)"
-             accesskey="P">previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.22 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">BeamC - Consistent Timoshenko 3D beam element (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamc</span></code>)</a></li> 
-      </ul>
-    </div>  
+    <link rel="prev" title="Tria3R - Triangular element with reduced integration (pyfe3d.tria3r)" href="tria3r.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
 
-    <div class="document">
-      <div class="documentwrapper">
-        <div class="bodywrapper">
-          <div class="body" role="main">
+  
+  
+  <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__primary"
+          id="__primary"/>
+  <label class="overlay overlay-primary" for="__primary"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          name="__secondary"
+          id="__secondary"/>
+  <label class="overlay overlay-secondary" for="__secondary"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+  
+    <nav class="bd-header navbar navbar-expand-lg bd-navbar">
+<div class="bd-header__inner bd-page-width">
+  <label class="sidebar-toggle primary-toggle" for="__primary">
+    <span class="fa-solid fa-bars"></span>
+  </label>
+  
+  <div class="navbar-header-items__start">
+    
+      <div class="navbar-item">
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.3.23 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="ex_linear_static.html">
+                        Static analysis
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="quad4r.html">
+                        Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r)
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="quad4r_utils.html">
+                        Quad4R useful functions (pyfe3d.quad4r_utils)
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="tria3r.html">
+                        Tria3R - Triangular element with reduced integration (pyfe3d.tria3r)
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="#">
+                        BeamC - Consistent Timoshenko 3D beam element (pyfe3d.beamc)
+                      </a>
+                    </li>
+                
+            <div class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    More
+                </button>
+                <div class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="beamlr.html">
+                        BeamLR - Linear Timoshenko 3D beam element with reduced integration (pyfe3d.beamlr)
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="spring.html">
+                        Spring - 3D spring element with constant stiffnesses (pyfe3d.spring)
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="truss.html">
+                        Truss - Linear truss 3D element with analytical integration (pyfe3d.truss)
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="properties.html">
+                        Beam property module (pyfe3d.beamprop)
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="coord.html">
+                        Coordinate systems (pyfe3d.coord)
+                      </a>
+                    </li>
+                
+                </div>
+            </div>
             
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+        </div>
+      
+      
+        <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+<script>
+document.write(`
+  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+  </button>
+`);
+</script>
+    </div>
+  
+
+  
+    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+      <span class="fa-solid fa-outdent"></span>
+    </label>
+  
+</div>
+
+    </nav>
+  
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          <div class="navbar-item"><nav class="navbar-nav">
+  <p class="sidebar-header-items__title"
+     role="heading"
+     aria-level="1"
+     aria-label="Site Navigation">
+    Site Navigation
+  </p>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="ex_linear_static.html">
+                        Static analysis
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="quad4r.html">
+                        Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r)
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="quad4r_utils.html">
+                        Quad4R useful functions (pyfe3d.quad4r_utils)
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="tria3r.html">
+                        Tria3R - Triangular element with reduced integration (pyfe3d.tria3r)
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item current active">
+                      <a class="nav-link nav-internal" href="#">
+                        BeamC - Consistent Timoshenko 3D beam element (pyfe3d.beamc)
+                      </a>
+                    </li>
+                
+            <div class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button" data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                    More
+                </button>
+                <div class="dropdown-menu">
+                    
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="beamlr.html">
+                        BeamLR - Linear Timoshenko 3D beam element with reduced integration (pyfe3d.beamlr)
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="spring.html">
+                        Spring - 3D spring element with constant stiffnesses (pyfe3d.spring)
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="truss.html">
+                        Truss - Linear truss 3D element with analytical integration (pyfe3d.truss)
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="properties.html">
+                        Beam property module (pyfe3d.beamprop)
+                      </a>
+                    </li>
+                
+
+                    <li class="nav-item">
+                      <a class="nav-link nav-internal" href="coord.html">
+                        Coordinate systems (pyfe3d.coord)
+                      </a>
+                    </li>
+                
+                </div>
+            </div>
+            
+  </ul>
+</nav></div>
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+<script>
+document.write(`
+  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
+    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
+    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumbs">
+  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page">BeamC - Consistent Timoshenko 3D beam element (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamc</span></code>)</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article" role="main">
+                  
   <span class="target" id="module-pyfe3d.beamc"></span><section id="beamc-consistent-timoshenko-3d-beam-element-pyfe3d-beamc">
-<h1>BeamC - Consistent Timoshenko 3D beam element (<a class="reference internal" href="#module-pyfe3d.beamc" title="pyfe3d.beamc"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamc</span></code></a>)<a class="headerlink" href="#beamc-consistent-timoshenko-3d-beam-element-pyfe3d-beamc" title="Permalink to this heading">¶</a></h1>
+<h1>BeamC - Consistent Timoshenko 3D beam element (<a class="reference internal" href="#module-pyfe3d.beamc" title="pyfe3d.beamc"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamc</span></code></a>)<a class="headerlink" href="#beamc-consistent-timoshenko-3d-beam-element-pyfe3d-beamc" title="Permalink to this heading">#</a></h1>
 </section>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.beamc.</span></span><span class="sig-name descname"><span class="pre">BeamC</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.beamc.</span></span><span class="sig-name descname"><span class="pre">BeamC</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC" title="Permalink to this definition">#</a></dt>
 <dd><p>Timoshenko 3D beam element with consistent shape functions</p>
 <p>Formulation based on reference:</p>
 <blockquote>
@@ -87,7 +471,7 @@ matrices.</p>
 </dd>
 </dl>
 <p class="rubric">Methods</p>
-<table class="autosummary longtable docutils align-default">
+<table class="autosummary longtable table autosummary">
 <tbody>
 <tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.beamc.BeamC.update_KC0" title="pyfe3d.beamc.BeamC.update_KC0"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KC0</span></code></a>(self, long[, long[, double[, ...)</p></td>
 <td><p>Update sparse vectors for linear constitutive stiffness matrix KC0</p></td>
@@ -114,145 +498,145 @@ matrices.</p>
 </table>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.c1">
-<span class="sig-name descname"><span class="pre">c1</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.c1" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">c1</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.c1" title="Permalink to this definition">#</a></dt>
 <dd><p>c1: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.c2">
-<span class="sig-name descname"><span class="pre">c2</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.c2" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">c2</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.c2" title="Permalink to this definition">#</a></dt>
 <dd><p>c2: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.eid">
-<span class="sig-name descname"><span class="pre">eid</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.eid" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">eid</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.eid" title="Permalink to this definition">#</a></dt>
 <dd><p>eid: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.init_k_KC0">
-<span class="sig-name descname"><span class="pre">init_k_KC0</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.init_k_KC0" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">init_k_KC0</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.init_k_KC0" title="Permalink to this definition">#</a></dt>
 <dd><p>init_k_KC0: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.init_k_KG">
-<span class="sig-name descname"><span class="pre">init_k_KG</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.init_k_KG" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">init_k_KG</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.init_k_KG" title="Permalink to this definition">#</a></dt>
 <dd><p>init_k_KG: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.init_k_M">
-<span class="sig-name descname"><span class="pre">init_k_M</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.init_k_M" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">init_k_M</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.init_k_M" title="Permalink to this definition">#</a></dt>
 <dd><p>init_k_M: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.length">
-<span class="sig-name descname"><span class="pre">length</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.length" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">length</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.length" title="Permalink to this definition">#</a></dt>
 <dd><p>length: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.n1">
-<span class="sig-name descname"><span class="pre">n1</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.n1" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">n1</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.n1" title="Permalink to this definition">#</a></dt>
 <dd><p>n1: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.n2">
-<span class="sig-name descname"><span class="pre">n2</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.n2" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">n2</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.n2" title="Permalink to this definition">#</a></dt>
 <dd><p>n2: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.probe">
-<span class="sig-name descname"><span class="pre">probe</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.probe" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">probe</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.probe" title="Permalink to this definition">#</a></dt>
 <dd><p>probe: pyfe3d.beamc.BeamCProbe</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.r11">
-<span class="sig-name descname"><span class="pre">r11</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.r11" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">r11</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.r11" title="Permalink to this definition">#</a></dt>
 <dd><p>r11: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.r12">
-<span class="sig-name descname"><span class="pre">r12</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.r12" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">r12</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.r12" title="Permalink to this definition">#</a></dt>
 <dd><p>r12: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.r13">
-<span class="sig-name descname"><span class="pre">r13</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.r13" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">r13</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.r13" title="Permalink to this definition">#</a></dt>
 <dd><p>r13: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.r21">
-<span class="sig-name descname"><span class="pre">r21</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.r21" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">r21</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.r21" title="Permalink to this definition">#</a></dt>
 <dd><p>r21: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.r22">
-<span class="sig-name descname"><span class="pre">r22</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.r22" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">r22</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.r22" title="Permalink to this definition">#</a></dt>
 <dd><p>r22: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.r23">
-<span class="sig-name descname"><span class="pre">r23</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.r23" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">r23</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.r23" title="Permalink to this definition">#</a></dt>
 <dd><p>r23: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.r31">
-<span class="sig-name descname"><span class="pre">r31</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.r31" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">r31</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.r31" title="Permalink to this definition">#</a></dt>
 <dd><p>r31: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.r32">
-<span class="sig-name descname"><span class="pre">r32</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.r32" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">r32</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.r32" title="Permalink to this definition">#</a></dt>
 <dd><p>r32: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.r33">
-<span class="sig-name descname"><span class="pre">r33</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.r33" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">r33</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.r33" title="Permalink to this definition">#</a></dt>
 <dd><p>r33: ‘double’</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.update_KC0">
-<span class="sig-name descname"><span class="pre">update_KC0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KC0v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeamProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KC0v_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.update_KC0" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_KC0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KC0v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeamProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KC0v_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.update_KC0" title="Permalink to this definition">#</a></dt>
 <dd><p>Update sparse vectors for linear constitutive stiffness matrix KC0</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.update_KG">
-<span class="sig-name descname"><span class="pre">update_KG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KGr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KGc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KGv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeamProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KGv_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.update_KG" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_KG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KGr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KGc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KGv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeamProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KGv_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.update_KG" title="Permalink to this definition">#</a></dt>
 <dd><p>Update sparse vectors for geometric stiffness matrix KG</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.update_M">
-<span class="sig-name descname"><span class="pre">update_M</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">Mr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">Mc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">Mv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeamProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">mtype=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.update_M" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_M</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">Mr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">Mc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">Mv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeamProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">mtype=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.update_M" title="Permalink to this definition">#</a></dt>
 <dd><p>Update sparse vectors for mass matrix M</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.update_length">
-<span class="sig-name descname"><span class="pre">update_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.update_length" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.update_length" title="Permalink to this definition">#</a></dt>
 <dd><p>Update element length</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.update_probe_ue">
-<span class="sig-name descname"><span class="pre">update_probe_ue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">u</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.update_probe_ue" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_probe_ue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">u</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.update_probe_ue" title="Permalink to this definition">#</a></dt>
 <dd><p>Update the local displacement vector of the probe of the element</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -274,7 +658,7 @@ u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M\)</span>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.update_probe_xe">
-<span class="sig-name descname"><span class="pre">update_probe_xe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.update_probe_xe" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_probe_xe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.update_probe_xe" title="Permalink to this definition">#</a></dt>
 <dd><p>Update the 3D coordinates of the probe of the element</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -295,7 +679,7 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.update_rotation_matrix">
-<span class="sig-name descname"><span class="pre">update_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">vxyi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">vxyj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">vxyk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.update_rotation_matrix" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">update_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">vxyi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">vxyj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">vxyk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.update_rotation_matrix" title="Permalink to this definition">#</a></dt>
 <dd><p>Update the rotation matrix of the element</p>
 <p>Attributes <code class="docutils literal notranslate"><span class="pre">r11,r12,r13,r21,r22,r23,r31,r32,r33</span></code> are updated,
 corresponding to the rotation matrix from local to global coordinates.</p>
@@ -322,7 +706,7 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamCData">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.beamc.</span></span><span class="sig-name descname"><span class="pre">BeamCData</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCData" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.beamc.</span></span><span class="sig-name descname"><span class="pre">BeamCData</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCData" title="Permalink to this definition">#</a></dt>
 <dd><p>Used to allocate memory for the sparse matrices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
@@ -338,19 +722,19 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamCData.KC0_SPARSE_SIZE">
-<span class="sig-name descname"><span class="pre">KC0_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCData.KC0_SPARSE_SIZE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">KC0_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCData.KC0_SPARSE_SIZE" title="Permalink to this definition">#</a></dt>
 <dd><p>KC0_SPARSE_SIZE: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamCData.KG_SPARSE_SIZE">
-<span class="sig-name descname"><span class="pre">KG_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCData.KG_SPARSE_SIZE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">KG_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCData.KG_SPARSE_SIZE" title="Permalink to this definition">#</a></dt>
 <dd><p>KG_SPARSE_SIZE: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamCData.M_SPARSE_SIZE">
-<span class="sig-name descname"><span class="pre">M_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCData.M_SPARSE_SIZE" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">M_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCData.M_SPARSE_SIZE" title="Permalink to this definition">#</a></dt>
 <dd><p>M_SPARSE_SIZE: ‘int’</p>
 </dd></dl>
 
@@ -358,7 +742,7 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamCProbe">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.beamc.</span></span><span class="sig-name descname"><span class="pre">BeamCProbe</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCProbe" title="Permalink to this definition">¶</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.beamc.</span></span><span class="sig-name descname"><span class="pre">BeamCProbe</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCProbe" title="Permalink to this definition">#</a></dt>
 <dd><p>Probe used for local coordinates, local displacements, local stresses etc</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
@@ -377,13 +761,13 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamCProbe.ue">
-<span class="sig-name descname"><span class="pre">ue</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCProbe.ue" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">ue</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCProbe.ue" title="Permalink to this definition">#</a></dt>
 <dd><p>ue: ‘double[::1]’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamCProbe.xe">
-<span class="sig-name descname"><span class="pre">xe</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCProbe.xe" title="Permalink to this definition">¶</a></dt>
+<span class="sig-name descname"><span class="pre">xe</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCProbe.xe" title="Permalink to this definition">#</a></dt>
 <dd><p>xe: ‘double[::1]’</p>
 </dd></dl>
 
@@ -391,112 +775,149 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
 
 
 
-            <div class="clearer"></div>
-          </div>
-        </div>
+                </article>
+              
+              
+              
+                <footer class="bd-footer-article">
+                  <!-- Previous / next buttons -->
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="tria3r.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</p>
       </div>
-      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
-        <div class="sphinxsidebarwrapper">
-  <div>
-    <h3><a href="index.html">Table of Contents</a></h3>
-    <ul>
-<li><a class="reference internal" href="#">BeamC - Consistent Timoshenko 3D beam element (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamc</span></code>)</a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC"><code class="docutils literal notranslate"><span class="pre">BeamC</span></code></a><ul>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.c1"><code class="docutils literal notranslate"><span class="pre">BeamC.c1</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.c2"><code class="docutils literal notranslate"><span class="pre">BeamC.c2</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.eid"><code class="docutils literal notranslate"><span class="pre">BeamC.eid</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.init_k_KC0"><code class="docutils literal notranslate"><span class="pre">BeamC.init_k_KC0</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.init_k_KG"><code class="docutils literal notranslate"><span class="pre">BeamC.init_k_KG</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.init_k_M"><code class="docutils literal notranslate"><span class="pre">BeamC.init_k_M</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.length"><code class="docutils literal notranslate"><span class="pre">BeamC.length</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.n1"><code class="docutils literal notranslate"><span class="pre">BeamC.n1</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.n2"><code class="docutils literal notranslate"><span class="pre">BeamC.n2</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.probe"><code class="docutils literal notranslate"><span class="pre">BeamC.probe</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.r11"><code class="docutils literal notranslate"><span class="pre">BeamC.r11</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.r12"><code class="docutils literal notranslate"><span class="pre">BeamC.r12</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.r13"><code class="docutils literal notranslate"><span class="pre">BeamC.r13</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.r21"><code class="docutils literal notranslate"><span class="pre">BeamC.r21</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.r22"><code class="docutils literal notranslate"><span class="pre">BeamC.r22</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.r23"><code class="docutils literal notranslate"><span class="pre">BeamC.r23</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.r31"><code class="docutils literal notranslate"><span class="pre">BeamC.r31</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.r32"><code class="docutils literal notranslate"><span class="pre">BeamC.r32</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.r33"><code class="docutils literal notranslate"><span class="pre">BeamC.r33</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.update_KC0"><code class="docutils literal notranslate"><span class="pre">BeamC.update_KC0()</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.update_KG"><code class="docutils literal notranslate"><span class="pre">BeamC.update_KG()</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.update_M"><code class="docutils literal notranslate"><span class="pre">BeamC.update_M()</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.update_length"><code class="docutils literal notranslate"><span class="pre">BeamC.update_length()</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.update_probe_ue"><code class="docutils literal notranslate"><span class="pre">BeamC.update_probe_ue()</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.update_probe_xe"><code class="docutils literal notranslate"><span class="pre">BeamC.update_probe_xe()</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamC.update_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">BeamC.update_rotation_matrix()</span></code></a></li>
+    </a>
+    <a class="right-next"
+       href="beamlr.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">BeamLR - Linear Timoshenko 3D beam element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamlr</span></code>)</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+  <div class="sidebar-secondary-item">
+  <div class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">BeamC - Consistent Timoshenko 3D beam element (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamc</span></code>)</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC"><code class="docutils literal notranslate"><span class="pre">BeamC</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.c1"><code class="docutils literal notranslate"><span class="pre">BeamC.c1</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.c2"><code class="docutils literal notranslate"><span class="pre">BeamC.c2</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.eid"><code class="docutils literal notranslate"><span class="pre">BeamC.eid</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.init_k_KC0"><code class="docutils literal notranslate"><span class="pre">BeamC.init_k_KC0</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.init_k_KG"><code class="docutils literal notranslate"><span class="pre">BeamC.init_k_KG</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.init_k_M"><code class="docutils literal notranslate"><span class="pre">BeamC.init_k_M</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.length"><code class="docutils literal notranslate"><span class="pre">BeamC.length</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.n1"><code class="docutils literal notranslate"><span class="pre">BeamC.n1</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.n2"><code class="docutils literal notranslate"><span class="pre">BeamC.n2</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.probe"><code class="docutils literal notranslate"><span class="pre">BeamC.probe</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.r11"><code class="docutils literal notranslate"><span class="pre">BeamC.r11</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.r12"><code class="docutils literal notranslate"><span class="pre">BeamC.r12</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.r13"><code class="docutils literal notranslate"><span class="pre">BeamC.r13</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.r21"><code class="docutils literal notranslate"><span class="pre">BeamC.r21</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.r22"><code class="docutils literal notranslate"><span class="pre">BeamC.r22</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.r23"><code class="docutils literal notranslate"><span class="pre">BeamC.r23</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.r31"><code class="docutils literal notranslate"><span class="pre">BeamC.r31</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.r32"><code class="docutils literal notranslate"><span class="pre">BeamC.r32</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.r33"><code class="docutils literal notranslate"><span class="pre">BeamC.r33</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.update_KC0"><code class="docutils literal notranslate"><span class="pre">BeamC.update_KC0()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.update_KG"><code class="docutils literal notranslate"><span class="pre">BeamC.update_KG()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.update_M"><code class="docutils literal notranslate"><span class="pre">BeamC.update_M()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.update_length"><code class="docutils literal notranslate"><span class="pre">BeamC.update_length()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.update_probe_ue"><code class="docutils literal notranslate"><span class="pre">BeamC.update_probe_ue()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.update_probe_xe"><code class="docutils literal notranslate"><span class="pre">BeamC.update_probe_xe()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamC.update_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">BeamC.update_rotation_matrix()</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamCData"><code class="docutils literal notranslate"><span class="pre">BeamCData</span></code></a><ul>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamCData.KC0_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">BeamCData.KC0_SPARSE_SIZE</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamCData.KG_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">BeamCData.KG_SPARSE_SIZE</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamCData.M_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">BeamCData.M_SPARSE_SIZE</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamCData"><code class="docutils literal notranslate"><span class="pre">BeamCData</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamCData.KC0_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">BeamCData.KC0_SPARSE_SIZE</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamCData.KG_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">BeamCData.KG_SPARSE_SIZE</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamCData.M_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">BeamCData.M_SPARSE_SIZE</span></code></a></li>
 </ul>
 </li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamCProbe"><code class="docutils literal notranslate"><span class="pre">BeamCProbe</span></code></a><ul>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamCProbe.ue"><code class="docutils literal notranslate"><span class="pre">BeamCProbe.ue</span></code></a></li>
-<li><a class="reference internal" href="#pyfe3d.beamc.BeamCProbe.xe"><code class="docutils literal notranslate"><span class="pre">BeamCProbe.xe</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamCProbe"><code class="docutils literal notranslate"><span class="pre">BeamCProbe</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamCProbe.ue"><code class="docutils literal notranslate"><span class="pre">BeamCProbe.ue</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamCProbe.xe"><code class="docutils literal notranslate"><span class="pre">BeamCProbe.xe</span></code></a></li>
 </ul>
 </li>
 </ul>
 
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+  <div class="tocsection sourcelink">
+    <a href="_sources/beamc.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
   </div>
-  <div>
-    <h4>Previous topic</h4>
-    <p class="topless"><a href="tria3r.html"
-                          title="previous chapter">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</a></p>
-  </div>
-  <div>
-    <h4>Next topic</h4>
-    <p class="topless"><a href="beamlr.html"
-                          title="next chapter">BeamLR - Linear Timoshenko 3D beam element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamlr</span></code>)</a></p>
-  </div>
-  <div role="note" aria-label="source link">
-    <h3>This Page</h3>
-    <ul class="this-page-menu">
-      <li><a href="_sources/beamc.rst.txt"
-            rel="nofollow">Show Source</a></li>
-    </ul>
-   </div>
-<div id="searchbox" style="display: none" role="search">
-  <h3 id="searchlabel">Quick search</h3>
-    <div class="searchformwrapper">
-    <form class="search" action="search.html" method="get">
-      <input type="text" name="q" aria-labelledby="searchlabel" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"/>
-      <input type="submit" value="Go" />
-    </form>
-    </div>
 </div>
-<script>document.getElementById('searchbox').style.display = "block"</script>
-        </div>
-      </div>
-      <div class="clearer"></div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            <div class="bd-footer-content__inner"></div>
+          </footer>
+        
+      </main>
     </div>
-    <div class="related" role="navigation" aria-label="related navigation">
-      <h3>Navigation</h3>
-      <ul>
-        <li class="right" style="margin-right: 10px">
-          <a href="genindex.html" title="General Index"
-             >index</a></li>
-        <li class="right" >
-          <a href="py-modindex.html" title="Python Module Index"
-             >modules</a> |</li>
-        <li class="right" >
-          <a href="beamlr.html" title="BeamLR - Linear Timoshenko 3D beam element with reduced integration (pyfe3d.beamlr)"
-             >next</a> |</li>
-        <li class="right" >
-          <a href="tria3r.html" title="Tria3R - Triangular element with reduced integration (pyfe3d.tria3r)"
-             >previous</a> |</li>
-        <li class="nav-item nav-item-0"><a href="index.html">pyfe3d 0.3.22 documentation</a> &#187;</li>
-        <li class="nav-item nav-item-this"><a href="">BeamC - Consistent Timoshenko 3D beam element (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamc</span></code>)</a></li> 
-      </ul>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+  <p class="copyright">
+    
+      © Copyright 2021-, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+  <p class="sphinx-version">
+    Created using <a href="https://sphinx-doc.org/">Sphinx</a> 6.1.3.
+    <br/>
+  </p>
+</div>
+      
     </div>
-    <div class="footer" role="contentinfo">
-        &#169; Copyright 2021-, Saullo G. P. Castro.
-      Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 6.1.3.
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item"><p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.1.
+</p></div>
+      
     </div>
+  
+</div>
+
+  </footer>
   </body>
 </html>
