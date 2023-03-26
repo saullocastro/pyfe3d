@@ -5,7 +5,8 @@ cff-version: 1.2.0
 title: >-
   General-purpose finite element solver based on Python and
   Cython
-message: >-
+type: software
+abstract: >-
   The `pyfe3d` module is a general-purpose finite element
   solver for structural analysis and optimization based on
   Python and Cython. The main principles guiding the
@@ -13,16 +14,18 @@ message: >-
   compatibility. The aimed level of compatibility allows one
   to run this solver in any platform, including the Google
   Colab environment.
-type: software
+message: >-
+  Please, cite this software using:
+  Saullo G. P. Castro. (2023). General-purpose finite element solver based on Python and Cython (Version 0.3.23). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
 authors:
-  - given-names: Saullo
+  - given-names: Saullo G. P.
     family-names: Castro
-    name-particle: SGP
     email: S.G.P.Castro@tudelft.nl
     affiliation: Delft University of Technology
     orcid: 'https://orcid.org/0000-0001-9711-0991'
 identifiers:
-  - type: doi
+  - description: This DOI represents all versions, and will always resolve to the latest one
+    type: doi
     value: 10.5281/zenodo.6573489
 repository-code: 'https://github.com/saullocastro/pyfe3d'
 url: 'https://saullocastro.github.io/pyfe3d/'
