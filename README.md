@@ -22,8 +22,13 @@ in any platform, including the Google Colab environment.
 Citing this library
 -------------------
 
-
 Saullo G. P. Castro. (2023). General-purpose finite element solver based on Python and Cython (Version 0.3.23). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
+
+
+Documentation
+-------------
+
+The documentation is available on: https://saullocastro.github.io/pyfe3d.
 
 
 Important features of this library
@@ -32,8 +37,9 @@ Important features of this library
 - importable and cimportable code
 - 6 degrees-of-freedom per node
 
-Finite elements implemented
-----------------------------
+
+Available finite elements
+-------------------------
 - 'Quad4R' - 4-node plate with linear interpolation, equivalent to Abaqus' S4R
 or Nastran's CQUAD4.
 
@@ -52,10 +58,6 @@ analytical integration.
 - 'Truss' - 2-node truss element with only axial and torsion stiffness. I
 recommend using the BeamLR instead, which is physically more consistent.
 
-Documentation
--------------
-
-The documentation is available on: https://saullocastro.github.io/pyfe3d.
 
 License
 -------
