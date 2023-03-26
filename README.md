@@ -1,5 +1,5 @@
-General-purpose finite element solver based on Python/Cython
-============================================================
+General-purpose finite element solver - pyfe3d
+==============================================
 
 Github Actions status:
 
@@ -9,11 +9,21 @@ Coverage status:
 
 [![Codecov Status](https://codecov.io/gh/saullocastro/pyfe3d/branch/master/graph/badge.svg?token=KVZCRIACL7)](https://codecov.io/gh/saullocastro/pyfe3d)
 
+About pyfe3d
+------------
+
+The ``pyfe3d`` module is a general-purpose finite element solver for structural
+analysis and optimization based on Python and Cython. The main principles
+guiding the development of ``pyfe3d`` are: simplicity, efficiency and
+compatibility. The aimed level of compatibility allows one to run this solver
+in any platform, including the Google Colab environment.
+
+
 Citing this library
 -------------------
 
 
-Saullo G. P. Castro. (2023). General-purpose finite element solver based on Python/Cython (Version 0.3.22). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
+Saullo G. P. Castro. (2023). General-purpose finite element solver based on Python and Cython (Version 0.3.23). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
 
 
 Important features of this library
