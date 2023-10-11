@@ -3,7 +3,7 @@ import os
 import inspect
 import subprocess
 from setuptools import setup, find_packages
-from distutils.extension import Extension
+from setuptools.extension import Extension
 
 from Cython.Build import cythonize
 
@@ -80,6 +80,7 @@ Intended Audience :: Science/Research
 Intended Audience :: Developers
 Intended Audience :: End Users/Desktop
 Topic :: Scientific/Engineering
+Topic :: Scientific/Engineering :: Mathematics
 Topic :: Education
 Topic :: Software Development
 Topic :: Software Development :: Libraries :: Python Modules
@@ -183,17 +184,19 @@ package_data = {
         'pyfe3d': ['*.pxd', '*.pyx'],
         '': ['tests/*.*'],
         }
+
 keywords = [
-            "finite elements",
-            "structural analysis",
-            "structural optimization",
-            "static analysis",
-            "buckling",
-            "vibration",
-            "structural dynamics",
-            "implicit time integration",
-            "explicit time integration",
+            'finite elements',
+            'structural analysis',
+            'structural optimization',
+            'static analysis',
+            'buckling',
+            'vibration',
+            'structural dynamics',
+            'implicit time integration',
+            'explicit time integration',
             ]
+
 s = setup(
     name = "pyfe3d",
     version = fullversion,
