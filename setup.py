@@ -9,7 +9,7 @@ from Cython.Build import cythonize
 
 
 is_released = True
-version = '0.3.24'
+version = '0.4.0'
 
 
 def git_version():
@@ -192,6 +192,7 @@ keywords = [
             'static analysis',
             'buckling',
             'vibration',
+            'panel flutter',
             'structural dynamics',
             'implicit time integration',
             'explicit time integration',
