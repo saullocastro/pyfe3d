@@ -7,7 +7,7 @@ Github Actions status:
 
 Coverage status:
 
-[![Codecov Status](https://codecov.io/gh/saullocastro/pyfe3d/branch/master/graph/badge.svg?token=KVZCRIACL7)](https://codecov.io/gh/saullocastro/pyfe3d)
+[![Codecov Status](https://codecov.io/gh/saullocastro/pyfe3d/branch/main/graph/badge.svg?token=KVZCRIACL7)](https://codecov.io/gh/saullocastro/pyfe3d)
 
 About pyfe3d
 ------------
@@ -62,7 +62,7 @@ recommend using the BeamLR instead, which is physically more consistent.
 License
 -------
 Distrubuted under the 3-Clause BSD license
-(https://raw.github.com/saullocastro/pyfe3d/master/LICENSE)::
+(https://raw.github.com/saullocastro/pyfe3d/main/LICENSE)::
 
     Copyright (c) 2021-2023, Saullo G. P. Castro (S.G.P.Castro@tudelft.nl)
     All rights reserved.
