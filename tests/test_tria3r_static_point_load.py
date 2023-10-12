@@ -2,7 +2,7 @@ import sys
 sys.path.append('..')
 
 import numpy as np
-from scipy.sparse.linalg import cg
+from scipy.sparse.linalg import spsolve
 from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import isotropic_plate
@@ -14,6 +14,7 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
     probe = Tria3RProbe()
     nx = 7*refinement
     ny = 11*refinement
+
     if (nx % 2) == 0:
         nx += 1
     if (ny % 2) == 0:
@@ -110,25 +111,24 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
     # applying boundary conditions
     # simply supported
     bk = np.zeros(N, dtype=bool)
-    check = np.isclose(x, 0.) | np.isclose(x, a) | np.isclose(y, 0) | np.isclose(y, b)
-    bk[2::DOF] = check
-    bk[0::DOF] = check
-    bk[1::DOF] = check
+    edges = np.isclose(x, 0.) | np.isclose(x, a) | np.isclose(y, 0) | np.isclose(y, b)
+    bk[2::DOF][edges] = True
+    bk[0::DOF][edges] = True
+    bk[1::DOF][edges] = True
 
     bu = ~bk
 
     # point load at center node
     f = np.zeros(N)
     fmid = 1.
-    check = np.isclose(x, a/2) & np.isclose(y, b/2)
-    f[2::DOF][check] = fmid
+    middle = np.isclose(x, a/2) & np.isclose(y, b/2)
+    f[2::DOF][middle] = fmid
 
     KC0uu = KC0[bu, :][:, bu]
     fu = f[bu]
     assert fu.sum() == fmid
 
-    uu, info = cg(KC0uu, fu, atol=1e-9)
-    assert info == 0
+    uu = spsolve(KC0uu, fu)
 
     u = np.zeros(N)
     u[bu] = uu
