@@ -13,9 +13,9 @@ jobs:
         python-version: [3.8, 3.9, '3.10', '3.11']
     runs-on: ${{ matrix.runs-on }}
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -45,7 +45,7 @@ jobs:
         python3 -m twine upload dist/*.whl
     - name: Build manylinux Python wheels
       if: matrix.runs-on == 'ubuntu-latest' && matrix.python-version == '3.11'
-      uses: RalfG/python-wheels-manylinux-build@v0.4.2-manylinux2014_x86_64
+      uses: RalfG/python-wheels-manylinux-build@v0.7.1-manylinux2014_x86_64
       with:
         python-versions: 'cp38-cp38 cp39-cp39 cp310-cp310 cp311-cp311'
         build-requirements: 'pip cython numpy scipy setuptools wheel twine'
