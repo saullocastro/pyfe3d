@@ -62,7 +62,7 @@ recommend using the BeamLR instead, which is physically more consistent.
 License
 -------
 Distrubuted under the 3-Clause BSD license
-(https://raw.github.com/saullocastro/pyfe3d/main/LICENSE)::
+(https://raw.github.com/saullocastro/pyfe3d/main/LICENSE):
 
     Copyright (c) 2021-2023, Saullo G. P. Castro (S.G.P.Castro@tudelft.nl)
     All rights reserved.
