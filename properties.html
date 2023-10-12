@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 
 
@@ -7,9 +6,9 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Property definitions &#8212; pyfe3d 0.3.24 documentation</title>
+    <title>Property definitions &#8212; pyfe3d 0.4.0 documentation</title>
   
   
   
@@ -19,25 +18,26 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
-<link href="_static/styles/bootstrap.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
 
   
-  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=ac02cc09edc035673794" rel="stylesheet" />
   <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=ac02cc09edc035673794" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794" />
+  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=ac02cc09edc035673794"></script>
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/documentation_options.js?v=1437fa6d"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'properties';</script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -54,6 +54,15 @@
   
   
   <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
   
   <input type="checkbox"
           class="sidebar-toggle"
@@ -94,7 +103,8 @@
     <span class="fa-solid fa-bars"></span>
   </label>
   
-  <div class="navbar-header-items__start">
+  
+  <div class="col-lg-3 navbar-header-items__start">
     
       <div class="navbar-item">
   
@@ -105,12 +115,11 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.3.24 documentation</p>
+    <p class="title logo__title">pyfe3d 0.4.0 documentation</p>
   
 </a></div>
     
   </div>
-  
   
   <div class="col-lg-9 navbar-header-items">
     
@@ -162,23 +171,25 @@
       
         <div class="navbar-item navbar-persistent--container">
           
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass"></i>
-  </button>
-`);
-</script>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
         </div>
       
       
         <div class="navbar-item">
 <script>
 document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
   </button>
 `);
 </script></div>
@@ -189,18 +200,20 @@ document.write(`
   
   
     <div class="navbar-persistent--mobile">
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass"></i>
-  </button>
-`);
-</script>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
     </div>
   
 
   
-    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
       <span class="fa-solid fa-outdent"></span>
     </label>
   
@@ -268,10 +281,10 @@ document.write(`
           <div class="navbar-item">
 <script>
 document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
   </button>
 `);
 </script></div>
@@ -304,8 +317,8 @@ document.write(`
 
 
 
-<nav aria-label="Breadcrumbs">
-  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
     
     <li class="breadcrumb-item breadcrumb-home">
       <a href="index.html" class="nav-link" aria-label="Home">
@@ -330,13 +343,13 @@ document.write(`
                 <article class="bd-article" role="main">
                   
   <section id="module-pyfe3d.beamprop">
-<span id="property-definitions"></span><h1>Property definitions<a class="headerlink" href="#module-pyfe3d.beamprop" title="Permalink to this heading">#</a></h1>
+<span id="property-definitions"></span><h1>Property definitions<a class="headerlink" href="#module-pyfe3d.beamprop" title="Link to this heading">#</a></h1>
 <section id="beam-property-module-pyfe3d-beamprop">
-<h2>Beam property module (<a class="reference internal" href="#module-pyfe3d.beamprop" title="pyfe3d.beamprop"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code></a>)<a class="headerlink" href="#beam-property-module-pyfe3d-beamprop" title="Permalink to this heading">#</a></h2>
+<h2>Beam property module (<a class="reference internal" href="#module-pyfe3d.beamprop" title="pyfe3d.beamprop"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code></a>)<a class="headerlink" href="#beam-property-module-pyfe3d-beamprop" title="Link to this heading">#</a></h2>
 </section>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.beamprop.</span></span><span class="sig-name descname"><span class="pre">BeamProp</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.beamprop.</span></span><span class="sig-name descname"><span class="pre">BeamProp</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp" title="Link to this definition">#</a></dt>
 <dd><p>General class to represent beam properties.</p>
 <p>About shear correction factors, usually one should only apply the shear
 correction factor to the shear modulus <code class="docutils literal notranslate"><span class="pre">G</span></code>. It is, however, possible to
@@ -397,103 +410,103 @@ density</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.A">
-<span class="sig-name descname"><span class="pre">A</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.A" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">A</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.A" title="Link to this definition">#</a></dt>
 <dd><p>A: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.Ay">
-<span class="sig-name descname"><span class="pre">Ay</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.Ay" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">Ay</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.Ay" title="Link to this definition">#</a></dt>
 <dd><p>Ay: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.Az">
-<span class="sig-name descname"><span class="pre">Az</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.Az" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">Az</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.Az" title="Link to this definition">#</a></dt>
 <dd><p>Az: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.E">
-<span class="sig-name descname"><span class="pre">E</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.E" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">E</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.E" title="Link to this definition">#</a></dt>
 <dd><p>E: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.G">
-<span class="sig-name descname"><span class="pre">G</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.G" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">G</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.G" title="Link to this definition">#</a></dt>
 <dd><p>G: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.Iyy">
-<span class="sig-name descname"><span class="pre">Iyy</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.Iyy" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">Iyy</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.Iyy" title="Link to this definition">#</a></dt>
 <dd><p>Iyy: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.Iyz">
-<span class="sig-name descname"><span class="pre">Iyz</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.Iyz" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">Iyz</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.Iyz" title="Link to this definition">#</a></dt>
 <dd><p>Iyz: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.Izz">
-<span class="sig-name descname"><span class="pre">Izz</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.Izz" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">Izz</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.Izz" title="Link to this definition">#</a></dt>
 <dd><p>Izz: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.J">
-<span class="sig-name descname"><span class="pre">J</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.J" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">J</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.J" title="Link to this definition">#</a></dt>
 <dd><p>J: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.intrho">
-<span class="sig-name descname"><span class="pre">intrho</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.intrho" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">intrho</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.intrho" title="Link to this definition">#</a></dt>
 <dd><p>intrho: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.intrhoy">
-<span class="sig-name descname"><span class="pre">intrhoy</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.intrhoy" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">intrhoy</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.intrhoy" title="Link to this definition">#</a></dt>
 <dd><p>intrhoy: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.intrhoy2">
-<span class="sig-name descname"><span class="pre">intrhoy2</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.intrhoy2" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">intrhoy2</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.intrhoy2" title="Link to this definition">#</a></dt>
 <dd><p>intrhoy2: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.intrhoyz">
-<span class="sig-name descname"><span class="pre">intrhoyz</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.intrhoyz" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">intrhoyz</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.intrhoyz" title="Link to this definition">#</a></dt>
 <dd><p>intrhoyz: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.intrhoz">
-<span class="sig-name descname"><span class="pre">intrhoz</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.intrhoz" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">intrhoz</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.intrhoz" title="Link to this definition">#</a></dt>
 <dd><p>intrhoz: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.intrhoz2">
-<span class="sig-name descname"><span class="pre">intrhoz2</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.intrhoz2" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">intrhoz2</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.intrhoz2" title="Link to this definition">#</a></dt>
 <dd><p>intrhoz2: ‘double’</p>
 </dd></dl>
 
 </dd></dl>
 
-<span class="target" id="module-pyfe3d.shellprop"></span><section id="shell-property-module-pyfe3d-shellprop">
-<h2>Shell property module (<a class="reference internal" href="#module-pyfe3d.shellprop" title="pyfe3d.shellprop"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop</span></code></a>)<a class="headerlink" href="#shell-property-module-pyfe3d-shellprop" title="Permalink to this heading">#</a></h2>
+<section id="shell-property-module-pyfe3d-shellprop">
+<span id="module-pyfe3d.shellprop"></span><h2>Shell property module (<a class="reference internal" href="#module-pyfe3d.shellprop" title="pyfe3d.shellprop"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop</span></code></a>)<a class="headerlink" href="#shell-property-module-pyfe3d-shellprop" title="Link to this heading">#</a></h2>
 <p>Highly based on the <a class="reference external" href="https://saullocastro.github.io/composites/">composites</a>. module.</p>
 </section>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.GradABDE">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">GradABDE</span></span><a class="headerlink" href="#pyfe3d.shellprop.GradABDE" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">GradABDE</span></span><a class="headerlink" href="#pyfe3d.shellprop.GradABDE" title="Link to this definition">#</a></dt>
 <dd><p>Container to store the gradients of the ABDE matrices with respect to
 the lamination parameters</p>
 <dl class="field-list">
@@ -523,7 +536,7 @@ columns correspond to:</p>
 </table>
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.GradABDE.calc_LP_grad">
-<span class="sig-name descname"><span class="pre">calc_LP_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">thickness</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MatLamina</span> <span class="pre">mat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LaminationParameters</span> <span class="pre">lp</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.GradABDE.calc_LP_grad" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">calc_LP_grad</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">thickness</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MatLamina</span> <span class="pre">mat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LaminationParameters</span> <span class="pre">lp</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.GradABDE.calc_LP_grad" title="Link to this definition">#</a></dt>
 <dd><p>Gradients of the shell stiffnesses with respect to the thickness and
 lamination parameters</p>
 <dl class="field-list">
@@ -548,25 +561,25 @@ lamination parameters</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.GradABDE.gradAij">
-<span class="sig-name descname"><span class="pre">gradAij</span></span><a class="headerlink" href="#pyfe3d.shellprop.GradABDE.gradAij" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">gradAij</span></span><a class="headerlink" href="#pyfe3d.shellprop.GradABDE.gradAij" title="Link to this definition">#</a></dt>
 <dd><p>gradAij: ‘double[:, ::1]’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.GradABDE.gradBij">
-<span class="sig-name descname"><span class="pre">gradBij</span></span><a class="headerlink" href="#pyfe3d.shellprop.GradABDE.gradBij" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">gradBij</span></span><a class="headerlink" href="#pyfe3d.shellprop.GradABDE.gradBij" title="Link to this definition">#</a></dt>
 <dd><p>gradBij: ‘double[:, ::1]’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.GradABDE.gradDij">
-<span class="sig-name descname"><span class="pre">gradDij</span></span><a class="headerlink" href="#pyfe3d.shellprop.GradABDE.gradDij" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">gradDij</span></span><a class="headerlink" href="#pyfe3d.shellprop.GradABDE.gradDij" title="Link to this definition">#</a></dt>
 <dd><p>gradDij: ‘double[:, ::1]’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.GradABDE.gradEij">
-<span class="sig-name descname"><span class="pre">gradEij</span></span><a class="headerlink" href="#pyfe3d.shellprop.GradABDE.gradEij" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">gradEij</span></span><a class="headerlink" href="#pyfe3d.shellprop.GradABDE.gradEij" title="Link to this definition">#</a></dt>
 <dd><p>gradEij: ‘double[:, ::1]’</p>
 </dd></dl>
 
@@ -574,7 +587,7 @@ lamination parameters</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">Lamina</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">Lamina</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list">
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
@@ -611,121 +624,121 @@ lamination parameters</p>
 </table>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.cos2t">
-<span class="sig-name descname"><span class="pre">cos2t</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.cos2t" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">cos2t</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.cos2t" title="Link to this definition">#</a></dt>
 <dd><p>cos2t: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.cos4t">
-<span class="sig-name descname"><span class="pre">cos4t</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.cos4t" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">cos4t</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.cos4t" title="Link to this definition">#</a></dt>
 <dd><p>cos4t: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.cost">
-<span class="sig-name descname"><span class="pre">cost</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.cost" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">cost</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.cost" title="Link to this definition">#</a></dt>
 <dd><p>cost: ‘double’</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.get_constitutive_matrix">
-<span class="sig-name descname"><span class="pre">get_constitutive_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double[:,</span> <span class="pre">::1]</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.get_constitutive_matrix" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_constitutive_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double[:,</span> <span class="pre">::1]</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.get_constitutive_matrix" title="Link to this definition">#</a></dt>
 <dd><p>Return the constitutive matrix</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.get_transf_matrix_displ_to_laminate">
-<span class="sig-name descname"><span class="pre">get_transf_matrix_displ_to_laminate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double[:,</span> <span class="pre">::1]</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.get_transf_matrix_displ_to_laminate" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_transf_matrix_displ_to_laminate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double[:,</span> <span class="pre">::1]</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.get_transf_matrix_displ_to_laminate" title="Link to this definition">#</a></dt>
 <dd><p>Return displacement transformation matrix from lamina to laminate</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.get_transf_matrix_stress_to_lamina">
-<span class="sig-name descname"><span class="pre">get_transf_matrix_stress_to_lamina</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double[:,</span> <span class="pre">::1]</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.get_transf_matrix_stress_to_lamina" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_transf_matrix_stress_to_lamina</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double[:,</span> <span class="pre">::1]</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.get_transf_matrix_stress_to_lamina" title="Link to this definition">#</a></dt>
 <dd><p>Return stress transformation matrix from laminate to lamina</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.get_transf_matrix_stress_to_laminate">
-<span class="sig-name descname"><span class="pre">get_transf_matrix_stress_to_laminate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double[:,</span> <span class="pre">::1]</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.get_transf_matrix_stress_to_laminate" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_transf_matrix_stress_to_laminate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double[:,</span> <span class="pre">::1]</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.get_transf_matrix_stress_to_laminate" title="Link to this definition">#</a></dt>
 <dd><p>Return stress transformation matrix from lamina to laminate</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.h">
-<span class="sig-name descname"><span class="pre">h</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.h" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">h</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.h" title="Link to this definition">#</a></dt>
 <dd><p>h: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.matlamina">
-<span class="sig-name descname"><span class="pre">matlamina</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.matlamina" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">matlamina</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.matlamina" title="Link to this definition">#</a></dt>
 <dd><p>matlamina: pyfe3d.shellprop.MatLamina</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.plyid">
-<span class="sig-name descname"><span class="pre">plyid</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.plyid" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">plyid</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.plyid" title="Link to this definition">#</a></dt>
 <dd><p>plyid: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.q11L">
-<span class="sig-name descname"><span class="pre">q11L</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.q11L" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q11L</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.q11L" title="Link to this definition">#</a></dt>
 <dd><p>q11L: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.q12L">
-<span class="sig-name descname"><span class="pre">q12L</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.q12L" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q12L</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.q12L" title="Link to this definition">#</a></dt>
 <dd><p>q12L: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.q16L">
-<span class="sig-name descname"><span class="pre">q16L</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.q16L" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q16L</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.q16L" title="Link to this definition">#</a></dt>
 <dd><p>q16L: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.q22L">
-<span class="sig-name descname"><span class="pre">q22L</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.q22L" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q22L</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.q22L" title="Link to this definition">#</a></dt>
 <dd><p>q22L: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.q26L">
-<span class="sig-name descname"><span class="pre">q26L</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.q26L" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q26L</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.q26L" title="Link to this definition">#</a></dt>
 <dd><p>q26L: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.q44L">
-<span class="sig-name descname"><span class="pre">q44L</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.q44L" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q44L</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.q44L" title="Link to this definition">#</a></dt>
 <dd><p>q44L: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.q45L">
-<span class="sig-name descname"><span class="pre">q45L</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.q45L" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q45L</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.q45L" title="Link to this definition">#</a></dt>
 <dd><p>q45L: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.q55L">
-<span class="sig-name descname"><span class="pre">q55L</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.q55L" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q55L</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.q55L" title="Link to this definition">#</a></dt>
 <dd><p>q55L: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.q66L">
-<span class="sig-name descname"><span class="pre">q66L</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.q66L" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q66L</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.q66L" title="Link to this definition">#</a></dt>
 <dd><p>q66L: ‘double’</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.rebuild">
-<span class="sig-name descname"><span class="pre">rebuild</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.rebuild" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">rebuild</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.rebuild" title="Link to this definition">#</a></dt>
 <dd><p>Update constitutive matrices</p>
 <p>Reference:</p>
 <blockquote>
@@ -736,25 +749,25 @@ Shells - Theory and Analysys. Second Edition. CRC PRESS, 2004.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.sin2t">
-<span class="sig-name descname"><span class="pre">sin2t</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.sin2t" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sin2t</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.sin2t" title="Link to this definition">#</a></dt>
 <dd><p>sin2t: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.sin4t">
-<span class="sig-name descname"><span class="pre">sin4t</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.sin4t" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sin4t</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.sin4t" title="Link to this definition">#</a></dt>
 <dd><p>sin4t: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.sint">
-<span class="sig-name descname"><span class="pre">sint</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.sint" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sint</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.sint" title="Link to this definition">#</a></dt>
 <dd><p>sint: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.Lamina.thetadeg">
-<span class="sig-name descname"><span class="pre">thetadeg</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.thetadeg" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">thetadeg</span></span><a class="headerlink" href="#pyfe3d.shellprop.Lamina.thetadeg" title="Link to this definition">#</a></dt>
 <dd><p>thetadeg: ‘double’</p>
 </dd></dl>
 
@@ -762,7 +775,7 @@ Shells - Theory and Analysys. Second Edition. CRC PRESS, 2004.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.LaminationParameters">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">LaminationParameters</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">LaminationParameters</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters" title="Link to this definition">#</a></dt>
 <dd><p>Lamination parameters</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
@@ -780,97 +793,97 @@ Shells - Theory and Analysys. Second Edition. CRC PRESS, 2004.</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.LaminationParameters.xiA1">
-<span class="sig-name descname"><span class="pre">xiA1</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiA1" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">xiA1</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiA1" title="Link to this definition">#</a></dt>
 <dd><p>xiA1: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.LaminationParameters.xiA2">
-<span class="sig-name descname"><span class="pre">xiA2</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiA2" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">xiA2</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiA2" title="Link to this definition">#</a></dt>
 <dd><p>xiA2: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.LaminationParameters.xiA3">
-<span class="sig-name descname"><span class="pre">xiA3</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiA3" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">xiA3</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiA3" title="Link to this definition">#</a></dt>
 <dd><p>xiA3: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.LaminationParameters.xiA4">
-<span class="sig-name descname"><span class="pre">xiA4</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiA4" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">xiA4</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiA4" title="Link to this definition">#</a></dt>
 <dd><p>xiA4: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.LaminationParameters.xiB1">
-<span class="sig-name descname"><span class="pre">xiB1</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiB1" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">xiB1</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiB1" title="Link to this definition">#</a></dt>
 <dd><p>xiB1: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.LaminationParameters.xiB2">
-<span class="sig-name descname"><span class="pre">xiB2</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiB2" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">xiB2</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiB2" title="Link to this definition">#</a></dt>
 <dd><p>xiB2: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.LaminationParameters.xiB3">
-<span class="sig-name descname"><span class="pre">xiB3</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiB3" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">xiB3</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiB3" title="Link to this definition">#</a></dt>
 <dd><p>xiB3: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.LaminationParameters.xiB4">
-<span class="sig-name descname"><span class="pre">xiB4</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiB4" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">xiB4</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiB4" title="Link to this definition">#</a></dt>
 <dd><p>xiB4: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.LaminationParameters.xiD1">
-<span class="sig-name descname"><span class="pre">xiD1</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiD1" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">xiD1</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiD1" title="Link to this definition">#</a></dt>
 <dd><p>xiD1: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.LaminationParameters.xiD2">
-<span class="sig-name descname"><span class="pre">xiD2</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiD2" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">xiD2</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiD2" title="Link to this definition">#</a></dt>
 <dd><p>xiD2: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.LaminationParameters.xiD3">
-<span class="sig-name descname"><span class="pre">xiD3</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiD3" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">xiD3</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiD3" title="Link to this definition">#</a></dt>
 <dd><p>xiD3: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.LaminationParameters.xiD4">
-<span class="sig-name descname"><span class="pre">xiD4</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiD4" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">xiD4</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiD4" title="Link to this definition">#</a></dt>
 <dd><p>xiD4: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.LaminationParameters.xiE1">
-<span class="sig-name descname"><span class="pre">xiE1</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiE1" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">xiE1</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiE1" title="Link to this definition">#</a></dt>
 <dd><p>xiE1: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.LaminationParameters.xiE2">
-<span class="sig-name descname"><span class="pre">xiE2</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiE2" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">xiE2</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiE2" title="Link to this definition">#</a></dt>
 <dd><p>xiE2: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.LaminationParameters.xiE3">
-<span class="sig-name descname"><span class="pre">xiE3</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiE3" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">xiE3</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiE3" title="Link to this definition">#</a></dt>
 <dd><p>xiE3: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.LaminationParameters.xiE4">
-<span class="sig-name descname"><span class="pre">xiE4</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiE4" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">xiE4</span></span><a class="headerlink" href="#pyfe3d.shellprop.LaminationParameters.xiE4" title="Link to this definition">#</a></dt>
 <dd><p>xiE4: ‘double’</p>
 </dd></dl>
 
@@ -878,7 +891,7 @@ Shells - Theory and Analysys. Second Edition. CRC PRESS, 2004.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">MatLamina</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">MatLamina</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina" title="Link to this definition">#</a></dt>
 <dd><p>Orthotropic material lamina</p>
 <p class="rubric">Notes</p>
 <p>For isotropic materials when the user defines <span class="math notranslate nohighlight">\(\nu\)</span> and <span class="math notranslate nohighlight">\(E\)</span>, <span class="math notranslate nohighlight">\(G\)</span> will be
@@ -976,235 +989,235 @@ on equation: <span class="math notranslate nohighlight">\(E = 2 \times (1+\nu) \
 </table>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.a1">
-<span class="sig-name descname"><span class="pre">a1</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.a1" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">a1</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.a1" title="Link to this definition">#</a></dt>
 <dd><p>a1: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.a2">
-<span class="sig-name descname"><span class="pre">a2</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.a2" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">a2</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.a2" title="Link to this definition">#</a></dt>
 <dd><p>a2: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.a3">
-<span class="sig-name descname"><span class="pre">a3</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.a3" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">a3</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.a3" title="Link to this definition">#</a></dt>
 <dd><p>a3: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.c11">
-<span class="sig-name descname"><span class="pre">c11</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.c11" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">c11</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.c11" title="Link to this definition">#</a></dt>
 <dd><p>c11: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.c12">
-<span class="sig-name descname"><span class="pre">c12</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.c12" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">c12</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.c12" title="Link to this definition">#</a></dt>
 <dd><p>c12: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.c13">
-<span class="sig-name descname"><span class="pre">c13</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.c13" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">c13</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.c13" title="Link to this definition">#</a></dt>
 <dd><p>c13: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.c22">
-<span class="sig-name descname"><span class="pre">c22</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.c22" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">c22</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.c22" title="Link to this definition">#</a></dt>
 <dd><p>c22: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.c23">
-<span class="sig-name descname"><span class="pre">c23</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.c23" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">c23</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.c23" title="Link to this definition">#</a></dt>
 <dd><p>c23: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.c33">
-<span class="sig-name descname"><span class="pre">c33</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.c33" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">c33</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.c33" title="Link to this definition">#</a></dt>
 <dd><p>c33: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.c44">
-<span class="sig-name descname"><span class="pre">c44</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.c44" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">c44</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.c44" title="Link to this definition">#</a></dt>
 <dd><p>c44: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.c55">
-<span class="sig-name descname"><span class="pre">c55</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.c55" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">c55</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.c55" title="Link to this definition">#</a></dt>
 <dd><p>c55: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.c66">
-<span class="sig-name descname"><span class="pre">c66</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.c66" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">c66</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.c66" title="Link to this definition">#</a></dt>
 <dd><p>c66: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.e1">
-<span class="sig-name descname"><span class="pre">e1</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.e1" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">e1</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.e1" title="Link to this definition">#</a></dt>
 <dd><p>e1: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.e2">
-<span class="sig-name descname"><span class="pre">e2</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.e2" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">e2</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.e2" title="Link to this definition">#</a></dt>
 <dd><p>e2: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.e3">
-<span class="sig-name descname"><span class="pre">e3</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.e3" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">e3</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.e3" title="Link to this definition">#</a></dt>
 <dd><p>e3: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.g12">
-<span class="sig-name descname"><span class="pre">g12</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.g12" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">g12</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.g12" title="Link to this definition">#</a></dt>
 <dd><p>g12: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.g13">
-<span class="sig-name descname"><span class="pre">g13</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.g13" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">g13</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.g13" title="Link to this definition">#</a></dt>
 <dd><p>g13: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.g23">
-<span class="sig-name descname"><span class="pre">g23</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.g23" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">g23</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.g23" title="Link to this definition">#</a></dt>
 <dd><p>g23: ‘double’</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.get_constitutive_matrix">
-<span class="sig-name descname"><span class="pre">get_constitutive_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double[:,</span> <span class="pre">::1]</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.get_constitutive_matrix" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_constitutive_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double[:,</span> <span class="pre">::1]</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.get_constitutive_matrix" title="Link to this definition">#</a></dt>
 <dd><p>Return the constitutive matrix</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.get_invariant_matrix">
-<span class="sig-name descname"><span class="pre">get_invariant_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double[:,</span> <span class="pre">::1]</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.get_invariant_matrix" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">get_invariant_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">double[:,</span> <span class="pre">::1]</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.get_invariant_matrix" title="Link to this definition">#</a></dt>
 <dd><p>Return the invariant matrix</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.nu12">
-<span class="sig-name descname"><span class="pre">nu12</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.nu12" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">nu12</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.nu12" title="Link to this definition">#</a></dt>
 <dd><p>nu12: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.nu13">
-<span class="sig-name descname"><span class="pre">nu13</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.nu13" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">nu13</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.nu13" title="Link to this definition">#</a></dt>
 <dd><p>nu13: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.nu21">
-<span class="sig-name descname"><span class="pre">nu21</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.nu21" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">nu21</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.nu21" title="Link to this definition">#</a></dt>
 <dd><p>nu21: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.nu23">
-<span class="sig-name descname"><span class="pre">nu23</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.nu23" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">nu23</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.nu23" title="Link to this definition">#</a></dt>
 <dd><p>nu23: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.nu31">
-<span class="sig-name descname"><span class="pre">nu31</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.nu31" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">nu31</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.nu31" title="Link to this definition">#</a></dt>
 <dd><p>nu31: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.nu32">
-<span class="sig-name descname"><span class="pre">nu32</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.nu32" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">nu32</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.nu32" title="Link to this definition">#</a></dt>
 <dd><p>nu32: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.q11">
-<span class="sig-name descname"><span class="pre">q11</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q11" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q11</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q11" title="Link to this definition">#</a></dt>
 <dd><p>q11: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.q12">
-<span class="sig-name descname"><span class="pre">q12</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q12" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q12</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q12" title="Link to this definition">#</a></dt>
 <dd><p>q12: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.q13">
-<span class="sig-name descname"><span class="pre">q13</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q13" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q13</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q13" title="Link to this definition">#</a></dt>
 <dd><p>q13: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.q21">
-<span class="sig-name descname"><span class="pre">q21</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q21" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q21</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q21" title="Link to this definition">#</a></dt>
 <dd><p>q21: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.q22">
-<span class="sig-name descname"><span class="pre">q22</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q22" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q22</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q22" title="Link to this definition">#</a></dt>
 <dd><p>q22: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.q23">
-<span class="sig-name descname"><span class="pre">q23</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q23" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q23</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q23" title="Link to this definition">#</a></dt>
 <dd><p>q23: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.q31">
-<span class="sig-name descname"><span class="pre">q31</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q31" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q31</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q31" title="Link to this definition">#</a></dt>
 <dd><p>q31: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.q32">
-<span class="sig-name descname"><span class="pre">q32</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q32" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q32</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q32" title="Link to this definition">#</a></dt>
 <dd><p>q32: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.q33">
-<span class="sig-name descname"><span class="pre">q33</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q33" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q33</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q33" title="Link to this definition">#</a></dt>
 <dd><p>q33: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.q44">
-<span class="sig-name descname"><span class="pre">q44</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q44" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q44</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q44" title="Link to this definition">#</a></dt>
 <dd><p>q44: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.q55">
-<span class="sig-name descname"><span class="pre">q55</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q55" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q55</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q55" title="Link to this definition">#</a></dt>
 <dd><p>q55: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.q66">
-<span class="sig-name descname"><span class="pre">q66</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q66" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">q66</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.q66" title="Link to this definition">#</a></dt>
 <dd><p>q66: ‘double’</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.rebuild">
-<span class="sig-name descname"><span class="pre">rebuild</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.rebuild" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">rebuild</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.rebuild" title="Link to this definition">#</a></dt>
 <dd><p>Update constitutive and invariant terms</p>
 <p>Reference:</p>
 <blockquote>
@@ -1215,43 +1228,43 @@ Theory and analysis. Second Edition. CRC Press, 2004.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.rho">
-<span class="sig-name descname"><span class="pre">rho</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.rho" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">rho</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.rho" title="Link to this definition">#</a></dt>
 <dd><p>rho: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.sc1">
-<span class="sig-name descname"><span class="pre">sc1</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.sc1" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sc1</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.sc1" title="Link to this definition">#</a></dt>
 <dd><p>sc1: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.sc2">
-<span class="sig-name descname"><span class="pre">sc2</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.sc2" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">sc2</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.sc2" title="Link to this definition">#</a></dt>
 <dd><p>sc2: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.ss12">
-<span class="sig-name descname"><span class="pre">ss12</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.ss12" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">ss12</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.ss12" title="Link to this definition">#</a></dt>
 <dd><p>ss12: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.st1">
-<span class="sig-name descname"><span class="pre">st1</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.st1" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">st1</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.st1" title="Link to this definition">#</a></dt>
 <dd><p>st1: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.st2">
-<span class="sig-name descname"><span class="pre">st2</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.st2" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">st2</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.st2" title="Link to this definition">#</a></dt>
 <dd><p>st2: ‘double’</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.trace_normalize_plane_stress">
-<span class="sig-name descname"><span class="pre">trace_normalize_plane_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.trace_normalize_plane_stress" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">trace_normalize_plane_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.trace_normalize_plane_stress" title="Link to this definition">#</a></dt>
 <dd><p>Trace-normalize the lamina properties for plane stress</p>
 <p>Modify the original <a class="reference internal" href="#pyfe3d.shellprop.MatLamina" title="pyfe3d.shellprop.MatLamina"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatLamina</span></code></a> object with a
 trace-normalization performed after calculating the trace according to
@@ -1272,49 +1285,49 @@ attributes.</p>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.tref">
-<span class="sig-name descname"><span class="pre">tref</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.tref" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">tref</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.tref" title="Link to this definition">#</a></dt>
 <dd><p>tref: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.u1">
-<span class="sig-name descname"><span class="pre">u1</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.u1" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">u1</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.u1" title="Link to this definition">#</a></dt>
 <dd><p>u1: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.u2">
-<span class="sig-name descname"><span class="pre">u2</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.u2" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">u2</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.u2" title="Link to this definition">#</a></dt>
 <dd><p>u2: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.u3">
-<span class="sig-name descname"><span class="pre">u3</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.u3" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">u3</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.u3" title="Link to this definition">#</a></dt>
 <dd><p>u3: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.u4">
-<span class="sig-name descname"><span class="pre">u4</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.u4" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">u4</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.u4" title="Link to this definition">#</a></dt>
 <dd><p>u4: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.u5">
-<span class="sig-name descname"><span class="pre">u5</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.u5" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">u5</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.u5" title="Link to this definition">#</a></dt>
 <dd><p>u5: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.u6">
-<span class="sig-name descname"><span class="pre">u6</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.u6" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">u6</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.u6" title="Link to this definition">#</a></dt>
 <dd><p>u6: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.MatLamina.u7">
-<span class="sig-name descname"><span class="pre">u7</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.u7" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">u7</span></span><a class="headerlink" href="#pyfe3d.shellprop.MatLamina.u7" title="Link to this definition">#</a></dt>
 <dd><p>u7: ‘double’</p>
 </dd></dl>
 
@@ -1322,7 +1335,7 @@ attributes.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">ShellProp</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">ShellProp</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp" title="Link to this definition">#</a></dt>
 <dd><dl class="field-list simple">
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -1377,133 +1390,133 @@ attributes.</p>
 </table>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.A11">
-<span class="sig-name descname"><span class="pre">A11</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.A11" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">A11</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.A11" title="Link to this definition">#</a></dt>
 <dd><p>A11: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.A12">
-<span class="sig-name descname"><span class="pre">A12</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.A12" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">A12</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.A12" title="Link to this definition">#</a></dt>
 <dd><p>A12: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.A16">
-<span class="sig-name descname"><span class="pre">A16</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.A16" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">A16</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.A16" title="Link to this definition">#</a></dt>
 <dd><p>A16: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.A22">
-<span class="sig-name descname"><span class="pre">A22</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.A22" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">A22</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.A22" title="Link to this definition">#</a></dt>
 <dd><p>A22: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.A26">
-<span class="sig-name descname"><span class="pre">A26</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.A26" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">A26</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.A26" title="Link to this definition">#</a></dt>
 <dd><p>A26: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.A66">
-<span class="sig-name descname"><span class="pre">A66</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.A66" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">A66</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.A66" title="Link to this definition">#</a></dt>
 <dd><p>A66: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.B11">
-<span class="sig-name descname"><span class="pre">B11</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.B11" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">B11</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.B11" title="Link to this definition">#</a></dt>
 <dd><p>B11: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.B12">
-<span class="sig-name descname"><span class="pre">B12</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.B12" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">B12</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.B12" title="Link to this definition">#</a></dt>
 <dd><p>B12: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.B16">
-<span class="sig-name descname"><span class="pre">B16</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.B16" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">B16</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.B16" title="Link to this definition">#</a></dt>
 <dd><p>B16: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.B22">
-<span class="sig-name descname"><span class="pre">B22</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.B22" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">B22</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.B22" title="Link to this definition">#</a></dt>
 <dd><p>B22: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.B26">
-<span class="sig-name descname"><span class="pre">B26</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.B26" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">B26</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.B26" title="Link to this definition">#</a></dt>
 <dd><p>B26: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.B66">
-<span class="sig-name descname"><span class="pre">B66</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.B66" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">B66</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.B66" title="Link to this definition">#</a></dt>
 <dd><p>B66: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.D11">
-<span class="sig-name descname"><span class="pre">D11</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.D11" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">D11</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.D11" title="Link to this definition">#</a></dt>
 <dd><p>D11: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.D12">
-<span class="sig-name descname"><span class="pre">D12</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.D12" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">D12</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.D12" title="Link to this definition">#</a></dt>
 <dd><p>D12: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.D16">
-<span class="sig-name descname"><span class="pre">D16</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.D16" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">D16</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.D16" title="Link to this definition">#</a></dt>
 <dd><p>D16: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.D22">
-<span class="sig-name descname"><span class="pre">D22</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.D22" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">D22</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.D22" title="Link to this definition">#</a></dt>
 <dd><p>D22: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.D26">
-<span class="sig-name descname"><span class="pre">D26</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.D26" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">D26</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.D26" title="Link to this definition">#</a></dt>
 <dd><p>D26: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.D66">
-<span class="sig-name descname"><span class="pre">D66</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.D66" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">D66</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.D66" title="Link to this definition">#</a></dt>
 <dd><p>D66: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.E44">
-<span class="sig-name descname"><span class="pre">E44</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.E44" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">E44</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.E44" title="Link to this definition">#</a></dt>
 <dd><p>E44: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.E45">
-<span class="sig-name descname"><span class="pre">E45</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.E45" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">E45</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.E45" title="Link to this definition">#</a></dt>
 <dd><p>E45: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.E55">
-<span class="sig-name descname"><span class="pre">E55</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.E55" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">E55</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.E55" title="Link to this definition">#</a></dt>
 <dd><p>E55: ‘double’</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.calc_constitutive_matrix">
-<span class="sig-name descname"><span class="pre">calc_constitutive_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.calc_constitutive_matrix" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">calc_constitutive_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.calc_constitutive_matrix" title="Link to this definition">#</a></dt>
 <dd><p>Calculate the laminate constitutive terms</p>
 <p>This is the commonly called <code class="docutils literal notranslate"><span class="pre">ABD</span></code> matrix with <code class="docutils literal notranslate"><span class="pre">shape=(6,</span> <span class="pre">6)</span></code> when
 the classical laminated plate theory is used, or the <code class="docutils literal notranslate"><span class="pre">ABDE</span></code> matrix
@@ -1513,7 +1526,7 @@ transverse shear terms.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.calc_equivalent_properties">
-<span class="sig-name descname"><span class="pre">calc_equivalent_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.calc_equivalent_properties" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">calc_equivalent_properties</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.calc_equivalent_properties" title="Link to this definition">#</a></dt>
 <dd><p>Calculate the equivalent laminate properties</p>
 <p>The following attributes are updated:</p>
 <blockquote>
@@ -1523,7 +1536,7 @@ transverse shear terms.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.calc_lamination_parameters">
-<span class="sig-name descname"><span class="pre">calc_lamination_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#pyfe3d.shellprop.LaminationParameters" title="pyfe3d.shellprop.LaminationParameters"><span class="pre">LaminationParameters</span></a></span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.calc_lamination_parameters" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">calc_lamination_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#pyfe3d.shellprop.LaminationParameters" title="pyfe3d.shellprop.LaminationParameters"><span class="pre">LaminationParameters</span></a></span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.calc_lamination_parameters" title="Link to this definition">#</a></dt>
 <dd><p>Calculate the lamination parameters.</p>
 <p>The following attributes are calculated:</p>
 <blockquote>
@@ -1533,7 +1546,7 @@ transverse shear terms.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.calc_scf">
-<span class="sig-name descname"><span class="pre">calc_scf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.calc_scf" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">calc_scf</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.calc_scf" title="Link to this definition">#</a></dt>
 <dd><p>Update shear correction factors of the <a class="reference internal" href="#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object</p>
 <p>Reference:</p>
 <blockquote>
@@ -1561,19 +1574,19 @@ Int. Journal for Numerical Methods in Engineering, Vol. 33,
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.e1">
-<span class="sig-name descname"><span class="pre">e1</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.e1" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">e1</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.e1" title="Link to this definition">#</a></dt>
 <dd><p>e1: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.e2">
-<span class="sig-name descname"><span class="pre">e2</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.e2" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">e2</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.e2" title="Link to this definition">#</a></dt>
 <dd><p>e2: ‘double’</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.force_balanced">
-<span class="sig-name descname"><span class="pre">force_balanced</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.force_balanced" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">force_balanced</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.force_balanced" title="Link to this definition">#</a></dt>
 <dd><p>Force a balanced laminate</p>
 <p>The attributes <span class="math notranslate nohighlight">\(A_{16}\)</span>, <span class="math notranslate nohighlight">\(A_{26}\)</span>, <span class="math notranslate nohighlight">\(B_{16}\)</span>, <span class="math notranslate nohighlight">\(B_{26}\)</span> are set to zero
 to force a balanced laminate.</p>
@@ -1581,7 +1594,7 @@ to force a balanced laminate.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.force_orthotropic">
-<span class="sig-name descname"><span class="pre">force_orthotropic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.force_orthotropic" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">force_orthotropic</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.force_orthotropic" title="Link to this definition">#</a></dt>
 <dd><p>Force an orthotropic laminate</p>
 <p>The attributes <span class="math notranslate nohighlight">\(A_{16}\)</span>, <span class="math notranslate nohighlight">\(A_{26}\)</span>, <span class="math notranslate nohighlight">\(B_{16}\)</span>, <span class="math notranslate nohighlight">\(B_{26}\)</span>, <span class="math notranslate nohighlight">\(D_{16}\)</span>,
 <span class="math notranslate nohighlight">\(D_{26}\)</span> are set to zero to force an orthotropic laminate.</p>
@@ -1589,80 +1602,80 @@ to force a balanced laminate.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.force_symmetric">
-<span class="sig-name descname"><span class="pre">force_symmetric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.force_symmetric" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">force_symmetric</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.force_symmetric" title="Link to this definition">#</a></dt>
 <dd><p>Force a symmetric laminate</p>
 <p>The <span class="math notranslate nohighlight">\(B_{ij}\)</span> terms of the constitutive matrix are set to zero.</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.g12">
-<span class="sig-name descname"><span class="pre">g12</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.g12" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">g12</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.g12" title="Link to this definition">#</a></dt>
 <dd><p>g12: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.h">
-<span class="sig-name descname"><span class="pre">h</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.h" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">h</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.h" title="Link to this definition">#</a></dt>
 <dd><p>h: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.intrho">
-<span class="sig-name descname"><span class="pre">intrho</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.intrho" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">intrho</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.intrho" title="Link to this definition">#</a></dt>
 <dd><p>intrho: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.intrhoz">
-<span class="sig-name descname"><span class="pre">intrhoz</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.intrhoz" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">intrhoz</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.intrhoz" title="Link to this definition">#</a></dt>
 <dd><p>intrhoz: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.intrhoz2">
-<span class="sig-name descname"><span class="pre">intrhoz2</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.intrhoz2" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">intrhoz2</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.intrhoz2" title="Link to this definition">#</a></dt>
 <dd><p>intrhoz2: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.nu12">
-<span class="sig-name descname"><span class="pre">nu12</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.nu12" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">nu12</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.nu12" title="Link to this definition">#</a></dt>
 <dd><p>nu12: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.nu21">
-<span class="sig-name descname"><span class="pre">nu21</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.nu21" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">nu21</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.nu21" title="Link to this definition">#</a></dt>
 <dd><p>nu21: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.offset">
-<span class="sig-name descname"><span class="pre">offset</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.offset" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">offset</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.offset" title="Link to this definition">#</a></dt>
 <dd><p>offset: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.plies">
-<span class="sig-name descname"><span class="pre">plies</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.plies" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">plies</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.plies" title="Link to this definition">#</a></dt>
 <dd><p>plies: list</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.scf_k13">
-<span class="sig-name descname"><span class="pre">scf_k13</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.scf_k13" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">scf_k13</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.scf_k13" title="Link to this definition">#</a></dt>
 <dd><p>scf_k13: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.scf_k23">
-<span class="sig-name descname"><span class="pre">scf_k23</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.scf_k23" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">scf_k23</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.scf_k23" title="Link to this definition">#</a></dt>
 <dd><p>scf_k23: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.ShellProp.stack">
-<span class="sig-name descname"><span class="pre">stack</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.stack" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">stack</span></span><a class="headerlink" href="#pyfe3d.shellprop.ShellProp.stack" title="Link to this definition">#</a></dt>
 <dd><p>stack: list</p>
 </dd></dl>
 
@@ -1670,7 +1683,7 @@ to force a balanced laminate.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.force_balanced_LP">
-<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">force_balanced_LP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">LaminationParameters</span> <span class="pre">lp</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#pyfe3d.shellprop.LaminationParameters" title="pyfe3d.shellprop.LaminationParameters"><span class="pre">LaminationParameters</span></a></span></span><a class="headerlink" href="#pyfe3d.shellprop.force_balanced_LP" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">force_balanced_LP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">LaminationParameters</span> <span class="pre">lp</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#pyfe3d.shellprop.LaminationParameters" title="pyfe3d.shellprop.LaminationParameters"><span class="pre">LaminationParameters</span></a></span></span><a class="headerlink" href="#pyfe3d.shellprop.force_balanced_LP" title="Link to this definition">#</a></dt>
 <dd><p>Force balanced lamination parameters</p>
 <p>The lamination parameters <span class="math notranslate nohighlight">\(\xi_{A2}\)</span> and <span class="math notranslate nohighlight">\(\xi_{A4}\)</span> are set to null to
 force a balanced laminate.</p>
@@ -1678,7 +1691,7 @@ force a balanced laminate.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.force_orthotropic_LP">
-<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">force_orthotropic_LP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">LaminationParameters</span> <span class="pre">lp</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#pyfe3d.shellprop.LaminationParameters" title="pyfe3d.shellprop.LaminationParameters"><span class="pre">LaminationParameters</span></a></span></span><a class="headerlink" href="#pyfe3d.shellprop.force_orthotropic_LP" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">force_orthotropic_LP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">LaminationParameters</span> <span class="pre">lp</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#pyfe3d.shellprop.LaminationParameters" title="pyfe3d.shellprop.LaminationParameters"><span class="pre">LaminationParameters</span></a></span></span><a class="headerlink" href="#pyfe3d.shellprop.force_orthotropic_LP" title="Link to this definition">#</a></dt>
 <dd><p>Force orthotropic lamination parameters</p>
 <p>The lamination parameters <span class="math notranslate nohighlight">\(\xi_{A2}\)</span>, <span class="math notranslate nohighlight">\(\xi_{A4}\)</span>, <span class="math notranslate nohighlight">\(\xi_{B2}\)</span>, <span class="math notranslate nohighlight">\(\xi_{B4}\)</span>,
 <span class="math notranslate nohighlight">\(\xi_{D2}\)</span> and <span class="math notranslate nohighlight">\(\xi_{D4}\)</span> are set to null to force an orthotropic laminate.
@@ -1689,7 +1702,7 @@ plies.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.force_symmetric_LP">
-<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">force_symmetric_LP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">LaminationParameters</span> <span class="pre">lp</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#pyfe3d.shellprop.LaminationParameters" title="pyfe3d.shellprop.LaminationParameters"><span class="pre">LaminationParameters</span></a></span></span><a class="headerlink" href="#pyfe3d.shellprop.force_symmetric_LP" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">force_symmetric_LP</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">LaminationParameters</span> <span class="pre">lp</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#pyfe3d.shellprop.LaminationParameters" title="pyfe3d.shellprop.LaminationParameters"><span class="pre">LaminationParameters</span></a></span></span><a class="headerlink" href="#pyfe3d.shellprop.force_symmetric_LP" title="Link to this definition">#</a></dt>
 <dd><p>Force symmetric lamination parameters</p>
 <p>The lamination parameters <span class="math notranslate nohighlight">\(\xi_{Bi}\)</span> are set to null to force a symmetric
 laminate.</p>
@@ -1697,7 +1710,7 @@ laminate.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.shellprop_from_LaminationParameters">
-<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">shellprop_from_LaminationParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">thickness</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MatLamina</span> <span class="pre">mat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LaminationParameters</span> <span class="pre">lp</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><span class="pre">ShellProp</span></a></span></span><a class="headerlink" href="#pyfe3d.shellprop.shellprop_from_LaminationParameters" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">shellprop_from_LaminationParameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">thickness</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MatLamina</span> <span class="pre">mat</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">LaminationParameters</span> <span class="pre">lp</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><span class="pre">ShellProp</span></a></span></span><a class="headerlink" href="#pyfe3d.shellprop.shellprop_from_LaminationParameters" title="Link to this definition">#</a></dt>
 <dd><p>Return a <a class="reference internal" href="#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object based in the thickness, material and
 lamination parameters</p>
 <dl class="field-list">
@@ -1722,7 +1735,7 @@ lamination parameters</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyfe3d.shellprop.shellprop_from_lamination_parameters">
-<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">shellprop_from_lamination_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">thickness</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MatLamina</span> <span class="pre">matlamina</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiA1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiA2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiA3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiA4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiB1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiB2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiB3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiB4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiD1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiD2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiD3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiD4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiE1=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiE2=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><span class="pre">ShellProp</span></a></span></span><a class="headerlink" href="#pyfe3d.shellprop.shellprop_from_lamination_parameters" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop.</span></span><span class="sig-name descname"><span class="pre">shellprop_from_lamination_parameters</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">thickness</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">MatLamina</span> <span class="pre">matlamina</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiA1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiA2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiA3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiA4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiB1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiB2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiB3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiB4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiD1</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiD2</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiD3</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiD4</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiE1=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xiE2=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><a class="reference internal" href="#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><span class="pre">ShellProp</span></a></span></span><a class="headerlink" href="#pyfe3d.shellprop.shellprop_from_lamination_parameters" title="Link to this definition">#</a></dt>
 <dd><p>Return a <a class="reference internal" href="#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object based in the thickness, material and
 lamination parameters</p>
 <p>Note that <span class="math notranslate nohighlight">\(\xi_{E1}\)</span> and <span class="math notranslate nohighlight">\(\xi_{E2}\)</span> are optional and usually equal to zero,
@@ -1750,13 +1763,13 @@ deformation theory: <span class="math notranslate nohighlight">\(\xi_{A1} \cdots
 </dl>
 </dd></dl>
 
-<span class="target" id="module-pyfe3d.shellprop_utils"></span><section id="shell-property-utils-module-pyfe3d-shellprop-utils">
-<h2>Shell property utils module (<a class="reference internal" href="#module-pyfe3d.shellprop_utils" title="pyfe3d.shellprop_utils"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop_utils</span></code></a>)<a class="headerlink" href="#shell-property-utils-module-pyfe3d-shellprop-utils" title="Permalink to this heading">#</a></h2>
+<section id="shell-property-utils-module-pyfe3d-shellprop-utils">
+<span id="module-pyfe3d.shellprop_utils"></span><h2>Shell property utils module (<a class="reference internal" href="#module-pyfe3d.shellprop_utils" title="pyfe3d.shellprop_utils"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop_utils</span></code></a>)<a class="headerlink" href="#shell-property-utils-module-pyfe3d-shellprop-utils" title="Link to this heading">#</a></h2>
 <p>Highly based on the <a class="reference external" href="https://saullocastro.github.io/composites/">composites</a>. module.</p>
 </section>
 <dl class="py function">
 <dt class="sig sig-object py" id="pyfe3d.shellprop_utils.isotropic_plate">
-<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop_utils.</span></span><span class="sig-name descname"><span class="pre">isotropic_plate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thickness</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calc_scf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop_utils.isotropic_plate" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop_utils.</span></span><span class="sig-name descname"><span class="pre">isotropic_plate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thickness</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calc_scf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop_utils.isotropic_plate" title="Link to this definition">#</a></dt>
 <dd><p>Read data for an isotropic plate</p>
 <p><a class="reference internal" href="#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object is returned based on the inputs given.</p>
 <dl class="field-list simple">
@@ -1783,7 +1796,7 @@ factors, otherwise the default value of 5/6 is used.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyfe3d.shellprop_utils.laminated_plate">
-<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop_utils.</span></span><span class="sig-name descname"><span class="pre">laminated_plate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stack</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plyt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">laminaprop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plyts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">laminaprops</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calc_scf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop_utils.laminated_plate" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop_utils.</span></span><span class="sig-name descname"><span class="pre">laminated_plate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stack</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plyt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">laminaprop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plyts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">laminaprops</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calc_scf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop_utils.laminated_plate" title="Link to this definition">#</a></dt>
 <dd><p>Read a laminate stacking sequence data.</p>
 <p><a class="reference internal" href="#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object is returned based on the inputs given.</p>
 <dl class="field-list simple">
@@ -1828,7 +1841,7 @@ factors, otherwise the default value of 5/6 is used</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyfe3d.shellprop_utils.read_laminaprop">
-<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop_utils.</span></span><span class="sig-name descname"><span class="pre">read_laminaprop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">laminaprop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop_utils.read_laminaprop" title="Permalink to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop_utils.</span></span><span class="sig-name descname"><span class="pre">read_laminaprop</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">laminaprop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop_utils.read_laminaprop" title="Link to this definition">#</a></dt>
 <dd><p>Returns a <a class="reference internal" href="#pyfe3d.shellprop.MatLamina" title="pyfe3d.shellprop.MatLamina"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatLamina</span></code></a> object based on an input <code class="docutils literal notranslate"><span class="pre">laminaprop</span></code> tuple</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1911,7 +1924,9 @@ supply:</p>
               
               
               
-                <footer class="bd-footer-article">
+              
+              
+                <footer class="prev-next-footer">
                   <!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
@@ -2148,7 +2163,7 @@ supply:</p>
             
           </div>
           <footer class="bd-footer-content">
-            <div class="bd-footer-content__inner"></div>
+            
           </footer>
         
       </main>
@@ -2156,8 +2171,8 @@ supply:</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d"></script>
-<script src="_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d"></script>
+  <script src="_static/scripts/bootstrap.js?digest=ac02cc09edc035673794"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -2175,7 +2190,7 @@ supply:</p>
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://sphinx-doc.org/">Sphinx</a> 6.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
     <br/>
   </p>
 </div>
@@ -2183,10 +2198,11 @@ supply:</p>
     </div>
   
   
+  
     <div class="footer-items__end">
       
         <div class="footer-item"><p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.1.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.14.1.
 </p></div>
       
     </div>

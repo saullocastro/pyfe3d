@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 
 
@@ -7,9 +6,9 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Spring - 3D spring element with constant stiffnesses (pyfe3d.spring) &#8212; pyfe3d 0.3.24 documentation</title>
+    <title>Spring - 3D spring element with constant stiffnesses (pyfe3d.spring) &#8212; pyfe3d 0.4.0 documentation</title>
   
   
   
@@ -19,25 +18,26 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
-<link href="_static/styles/bootstrap.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
 
   
-  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=ac02cc09edc035673794" rel="stylesheet" />
   <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=ac02cc09edc035673794" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794" />
+  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=ac02cc09edc035673794"></script>
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/documentation_options.js?v=1437fa6d"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'spring';</script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -54,6 +54,15 @@
   
   
   <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
   
   <input type="checkbox"
           class="sidebar-toggle"
@@ -94,7 +103,8 @@
     <span class="fa-solid fa-bars"></span>
   </label>
   
-  <div class="navbar-header-items__start">
+  
+  <div class="col-lg-3 navbar-header-items__start">
     
       <div class="navbar-item">
   
@@ -105,12 +115,11 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.3.24 documentation</p>
+    <p class="title logo__title">pyfe3d 0.4.0 documentation</p>
   
 </a></div>
     
   </div>
-  
   
   <div class="col-lg-9 navbar-header-items">
     
@@ -162,23 +171,25 @@
       
         <div class="navbar-item navbar-persistent--container">
           
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass"></i>
-  </button>
-`);
-</script>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
         </div>
       
       
         <div class="navbar-item">
 <script>
 document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
   </button>
 `);
 </script></div>
@@ -189,18 +200,20 @@ document.write(`
   
   
     <div class="navbar-persistent--mobile">
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass"></i>
-  </button>
-`);
-</script>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
     </div>
   
 
   
-    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
       <span class="fa-solid fa-outdent"></span>
     </label>
   
@@ -268,10 +281,10 @@ document.write(`
           <div class="navbar-item">
 <script>
 document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
   </button>
 `);
 </script></div>
@@ -340,8 +353,8 @@ document.write(`
 
 
 
-<nav aria-label="Breadcrumbs">
-  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
     
     <li class="breadcrumb-item breadcrumb-home">
       <a href="index.html" class="nav-link" aria-label="Home">
@@ -351,7 +364,7 @@ document.write(`
     
     <li class="breadcrumb-item"><a href="fe_overview.html" class="nav-link">Available finite elements</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page">Spring - 3D spring element with constant stiffnesses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.spring</span></code>)</li>
+    <li class="breadcrumb-item active" aria-current="page">Spring - 3D...</li>
   </ul>
 </nav>
 </div>
@@ -368,12 +381,12 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <span class="target" id="module-pyfe3d.spring"></span><section id="spring-3d-spring-element-with-constant-stiffnesses-pyfe3d-spring">
-<h1>Spring - 3D spring element with constant stiffnesses (<a class="reference internal" href="#module-pyfe3d.spring" title="pyfe3d.spring"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.spring</span></code></a>)<a class="headerlink" href="#spring-3d-spring-element-with-constant-stiffnesses-pyfe3d-spring" title="Permalink to this heading">#</a></h1>
+  <section id="spring-3d-spring-element-with-constant-stiffnesses-pyfe3d-spring">
+<span id="module-pyfe3d.spring"></span><h1>Spring - 3D spring element with constant stiffnesses (<a class="reference internal" href="#module-pyfe3d.spring" title="pyfe3d.spring"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.spring</span></code></a>)<a class="headerlink" href="#spring-3d-spring-element-with-constant-stiffnesses-pyfe3d-spring" title="Link to this heading">#</a></h1>
 </section>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.spring.</span></span><span class="sig-name descname"><span class="pre">Spring</span></span><a class="headerlink" href="#pyfe3d.spring.Spring" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.spring.</span></span><span class="sig-name descname"><span class="pre">Spring</span></span><a class="headerlink" href="#pyfe3d.spring.Spring" title="Link to this definition">#</a></dt>
 <dd><p>Spring 3D beam element with constant stiffnesses</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -418,157 +431,157 @@ matrices.</p>
 </table>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.c1">
-<span class="sig-name descname"><span class="pre">c1</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.c1" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">c1</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.c1" title="Link to this definition">#</a></dt>
 <dd><p>c1: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.c2">
-<span class="sig-name descname"><span class="pre">c2</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.c2" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">c2</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.c2" title="Link to this definition">#</a></dt>
 <dd><p>c2: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.eid">
-<span class="sig-name descname"><span class="pre">eid</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.eid" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">eid</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.eid" title="Link to this definition">#</a></dt>
 <dd><p>eid: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.init_k_KC0">
-<span class="sig-name descname"><span class="pre">init_k_KC0</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.init_k_KC0" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">init_k_KC0</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.init_k_KC0" title="Link to this definition">#</a></dt>
 <dd><p>init_k_KC0: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.init_k_KG">
-<span class="sig-name descname"><span class="pre">init_k_KG</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.init_k_KG" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">init_k_KG</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.init_k_KG" title="Link to this definition">#</a></dt>
 <dd><p>init_k_KG: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.init_k_M">
-<span class="sig-name descname"><span class="pre">init_k_M</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.init_k_M" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">init_k_M</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.init_k_M" title="Link to this definition">#</a></dt>
 <dd><p>init_k_M: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.krxe">
-<span class="sig-name descname"><span class="pre">krxe</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.krxe" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">krxe</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.krxe" title="Link to this definition">#</a></dt>
 <dd><p>krxe: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.krye">
-<span class="sig-name descname"><span class="pre">krye</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.krye" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">krye</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.krye" title="Link to this definition">#</a></dt>
 <dd><p>krye: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.krze">
-<span class="sig-name descname"><span class="pre">krze</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.krze" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">krze</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.krze" title="Link to this definition">#</a></dt>
 <dd><p>krze: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.kxe">
-<span class="sig-name descname"><span class="pre">kxe</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.kxe" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">kxe</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.kxe" title="Link to this definition">#</a></dt>
 <dd><p>kxe: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.kye">
-<span class="sig-name descname"><span class="pre">kye</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.kye" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">kye</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.kye" title="Link to this definition">#</a></dt>
 <dd><p>kye: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.kze">
-<span class="sig-name descname"><span class="pre">kze</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.kze" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">kze</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.kze" title="Link to this definition">#</a></dt>
 <dd><p>kze: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.n1">
-<span class="sig-name descname"><span class="pre">n1</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.n1" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">n1</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.n1" title="Link to this definition">#</a></dt>
 <dd><p>n1: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.n2">
-<span class="sig-name descname"><span class="pre">n2</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.n2" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">n2</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.n2" title="Link to this definition">#</a></dt>
 <dd><p>n2: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.probe">
-<span class="sig-name descname"><span class="pre">probe</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.probe" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">probe</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.probe" title="Link to this definition">#</a></dt>
 <dd><p>probe: pyfe3d.spring.SpringProbe</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.r11">
-<span class="sig-name descname"><span class="pre">r11</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.r11" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">r11</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.r11" title="Link to this definition">#</a></dt>
 <dd><p>r11: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.r12">
-<span class="sig-name descname"><span class="pre">r12</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.r12" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">r12</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.r12" title="Link to this definition">#</a></dt>
 <dd><p>r12: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.r13">
-<span class="sig-name descname"><span class="pre">r13</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.r13" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">r13</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.r13" title="Link to this definition">#</a></dt>
 <dd><p>r13: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.r21">
-<span class="sig-name descname"><span class="pre">r21</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.r21" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">r21</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.r21" title="Link to this definition">#</a></dt>
 <dd><p>r21: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.r22">
-<span class="sig-name descname"><span class="pre">r22</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.r22" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">r22</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.r22" title="Link to this definition">#</a></dt>
 <dd><p>r22: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.r23">
-<span class="sig-name descname"><span class="pre">r23</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.r23" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">r23</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.r23" title="Link to this definition">#</a></dt>
 <dd><p>r23: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.r31">
-<span class="sig-name descname"><span class="pre">r31</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.r31" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">r31</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.r31" title="Link to this definition">#</a></dt>
 <dd><p>r31: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.r32">
-<span class="sig-name descname"><span class="pre">r32</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.r32" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">r32</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.r32" title="Link to this definition">#</a></dt>
 <dd><p>r32: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.r33">
-<span class="sig-name descname"><span class="pre">r33</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.r33" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">r33</span></span><a class="headerlink" href="#pyfe3d.spring.Spring.r33" title="Link to this definition">#</a></dt>
 <dd><p>r33: ‘double’</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.update_KC0">
-<span class="sig-name descname"><span class="pre">update_KC0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KC0v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KC0v_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.spring.Spring.update_KC0" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_KC0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KC0v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KC0v_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.spring.Spring.update_KC0" title="Link to this definition">#</a></dt>
 <dd><p>Update sparse vectors for linear constitutive stiffness matrix KC0</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.update_probe_ue">
-<span class="sig-name descname"><span class="pre">update_probe_ue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">u</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.spring.Spring.update_probe_ue" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_probe_ue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">u</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.spring.Spring.update_probe_ue" title="Link to this definition">#</a></dt>
 <dd><p>Update the local displacement vector of the probe of the element</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -590,7 +603,7 @@ u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M\)</span>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.spring.Spring.update_rotation_matrix">
-<span class="sig-name descname"><span class="pre">update_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">vxyi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">vxyj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">vxyk</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.spring.Spring.update_rotation_matrix" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">vxyi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">vxyj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">vxyk</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.spring.Spring.update_rotation_matrix" title="Link to this definition">#</a></dt>
 <dd><p>Update the rotation matrix of the element</p>
 <p>Attributes <code class="docutils literal notranslate"><span class="pre">r11,r12,r13,r21,r22,r23,r31,r32,r33</span></code> are updated,
 corresponding to the rotation matrix from local to global coordinates.</p>
@@ -615,7 +628,7 @@ the element coordinate system.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.spring.SpringData">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.spring.</span></span><span class="sig-name descname"><span class="pre">SpringData</span></span><a class="headerlink" href="#pyfe3d.spring.SpringData" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.spring.</span></span><span class="sig-name descname"><span class="pre">SpringData</span></span><a class="headerlink" href="#pyfe3d.spring.SpringData" title="Link to this definition">#</a></dt>
 <dd><p>Used to allocate memory for the sparse matrices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
@@ -631,19 +644,19 @@ the element coordinate system.</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.SpringData.KC0_SPARSE_SIZE">
-<span class="sig-name descname"><span class="pre">KC0_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.spring.SpringData.KC0_SPARSE_SIZE" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">KC0_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.spring.SpringData.KC0_SPARSE_SIZE" title="Link to this definition">#</a></dt>
 <dd><p>KC0_SPARSE_SIZE: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.SpringData.KG_SPARSE_SIZE">
-<span class="sig-name descname"><span class="pre">KG_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.spring.SpringData.KG_SPARSE_SIZE" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">KG_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.spring.SpringData.KG_SPARSE_SIZE" title="Link to this definition">#</a></dt>
 <dd><p>KG_SPARSE_SIZE: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.SpringData.M_SPARSE_SIZE">
-<span class="sig-name descname"><span class="pre">M_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.spring.SpringData.M_SPARSE_SIZE" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">M_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.spring.SpringData.M_SPARSE_SIZE" title="Link to this definition">#</a></dt>
 <dd><p>M_SPARSE_SIZE: ‘int’</p>
 </dd></dl>
 
@@ -651,7 +664,7 @@ the element coordinate system.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.spring.SpringProbe">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.spring.</span></span><span class="sig-name descname"><span class="pre">SpringProbe</span></span><a class="headerlink" href="#pyfe3d.spring.SpringProbe" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.spring.</span></span><span class="sig-name descname"><span class="pre">SpringProbe</span></span><a class="headerlink" href="#pyfe3d.spring.SpringProbe" title="Link to this definition">#</a></dt>
 <dd><p>Probe used for local coordinates, local displacements, local stresses etc</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
@@ -670,13 +683,13 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.SpringProbe.ue">
-<span class="sig-name descname"><span class="pre">ue</span></span><a class="headerlink" href="#pyfe3d.spring.SpringProbe.ue" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">ue</span></span><a class="headerlink" href="#pyfe3d.spring.SpringProbe.ue" title="Link to this definition">#</a></dt>
 <dd><p>ue: ‘double[::1]’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.spring.SpringProbe.xe">
-<span class="sig-name descname"><span class="pre">xe</span></span><a class="headerlink" href="#pyfe3d.spring.SpringProbe.xe" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">xe</span></span><a class="headerlink" href="#pyfe3d.spring.SpringProbe.xe" title="Link to this definition">#</a></dt>
 <dd><p>xe: ‘double[::1]’</p>
 </dd></dl>
 
@@ -688,7 +701,9 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
               
               
               
-                <footer class="bd-footer-article">
+              
+              
+                <footer class="prev-next-footer">
                   <!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
@@ -783,7 +798,7 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
             
           </div>
           <footer class="bd-footer-content">
-            <div class="bd-footer-content__inner"></div>
+            
           </footer>
         
       </main>
@@ -791,8 +806,8 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d"></script>
-<script src="_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d"></script>
+  <script src="_static/scripts/bootstrap.js?digest=ac02cc09edc035673794"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -810,7 +825,7 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://sphinx-doc.org/">Sphinx</a> 6.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
     <br/>
   </p>
 </div>
@@ -818,10 +833,11 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
     </div>
   
   
+  
     <div class="footer-items__end">
       
         <div class="footer-item"><p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.1.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.14.1.
 </p></div>
       
     </div>

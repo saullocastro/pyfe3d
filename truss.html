@@ -1,5 +1,4 @@
 
-
 <!DOCTYPE html>
 
 
@@ -7,9 +6,9 @@
 
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="generator" content="Docutils 0.19: https://docutils.sourceforge.io/" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Truss - Linear truss 3D element with analytical integration (pyfe3d.truss) &#8212; pyfe3d 0.3.24 documentation</title>
+    <title>Truss - Linear truss 3D element with analytical integration (pyfe3d.truss) &#8212; pyfe3d 0.4.0 documentation</title>
   
   
   
@@ -19,25 +18,26 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
-<link href="_static/styles/bootstrap.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
 
   
-  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=12da95d707ffb74b382d" rel="stylesheet" />
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=ac02cc09edc035673794" rel="stylesheet" />
   <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
 
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css" />
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=ac02cc09edc035673794" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794" />
+  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=ac02cc09edc035673794"></script>
 
-    <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-    <script src="_static/doctools.js"></script>
-    <script src="_static/sphinx_highlight.js"></script>
+    <script src="_static/documentation_options.js?v=1437fa6d"></script>
+    <script src="_static/doctools.js?v=888ff710"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'truss';</script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -54,6 +54,15 @@
   
   
   <a class="skip-link" href="#main-content">Skip to main content</a>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>
+    Back to top
+  </button>
+
   
   <input type="checkbox"
           class="sidebar-toggle"
@@ -94,7 +103,8 @@
     <span class="fa-solid fa-bars"></span>
   </label>
   
-  <div class="navbar-header-items__start">
+  
+  <div class="col-lg-3 navbar-header-items__start">
     
       <div class="navbar-item">
   
@@ -105,12 +115,11 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.3.24 documentation</p>
+    <p class="title logo__title">pyfe3d 0.4.0 documentation</p>
   
 </a></div>
     
   </div>
-  
   
   <div class="col-lg-9 navbar-header-items">
     
@@ -162,23 +171,25 @@
       
         <div class="navbar-item navbar-persistent--container">
           
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass"></i>
-  </button>
-`);
-</script>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
         </div>
       
       
         <div class="navbar-item">
 <script>
 document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
   </button>
 `);
 </script></div>
@@ -189,18 +200,20 @@ document.write(`
   
   
     <div class="navbar-persistent--mobile">
-<script>
-document.write(`
-  <button class="btn btn-sm navbar-btn search-button search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <script>
+ document.write(`
+   <button class="btn navbar-btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
     <i class="fa-solid fa-magnifying-glass"></i>
-  </button>
-`);
-</script>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
     </div>
   
 
   
-    <label class="sidebar-toggle secondary-toggle" for="__secondary">
+    <label class="sidebar-toggle secondary-toggle" for="__secondary" tabindex="0">
       <span class="fa-solid fa-outdent"></span>
     </label>
   
@@ -268,10 +281,10 @@ document.write(`
           <div class="navbar-item">
 <script>
 document.write(`
-  <button class="theme-switch-button btn btn-sm btn-outline-primary navbar-btn rounded-circle" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <span class="theme-switch" data-mode="light"><i class="fa-solid fa-sun"></i></span>
-    <span class="theme-switch" data-mode="dark"><i class="fa-solid fa-moon"></i></span>
-    <span class="theme-switch" data-mode="auto"><i class="fa-solid fa-circle-half-stroke"></i></span>
+  <button class="btn btn-sm navbar-btn theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <span class="theme-switch nav-link" data-mode="light"><i class="fa-solid fa-sun fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="dark"><i class="fa-solid fa-moon fa-lg"></i></span>
+    <span class="theme-switch nav-link" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg"></i></span>
   </button>
 `);
 </script></div>
@@ -340,8 +353,8 @@ document.write(`
 
 
 
-<nav aria-label="Breadcrumbs">
-  <ul class="bd-breadcrumbs" role="navigation" aria-label="Breadcrumb">
+<nav aria-label="Breadcrumb">
+  <ul class="bd-breadcrumbs">
     
     <li class="breadcrumb-item breadcrumb-home">
       <a href="index.html" class="nav-link" aria-label="Home">
@@ -351,7 +364,7 @@ document.write(`
     
     <li class="breadcrumb-item"><a href="fe_overview.html" class="nav-link">Available finite elements</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page">Truss - Linear truss 3D element with analytical integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code>)</li>
+    <li class="breadcrumb-item active" aria-current="page">Truss -...</li>
   </ul>
 </nav>
 </div>
@@ -368,8 +381,8 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article" role="main">
                   
-  <span class="target" id="module-pyfe3d.truss"></span><section id="truss-linear-truss-3d-element-with-analytical-integration-pyfe3d-truss">
-<h1>Truss - Linear truss 3D element with analytical integration (<a class="reference internal" href="#module-pyfe3d.truss" title="pyfe3d.truss"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code></a>)<a class="headerlink" href="#truss-linear-truss-3d-element-with-analytical-integration-pyfe3d-truss" title="Permalink to this heading">#</a></h1>
+  <section id="truss-linear-truss-3d-element-with-analytical-integration-pyfe3d-truss">
+<span id="module-pyfe3d.truss"></span><h1>Truss - Linear truss 3D element with analytical integration (<a class="reference internal" href="#module-pyfe3d.truss" title="pyfe3d.truss"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code></a>)<a class="headerlink" href="#truss-linear-truss-3d-element-with-analytical-integration-pyfe3d-truss" title="Link to this heading">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>The <a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a> element is recommended because of the better
@@ -383,7 +396,7 @@ analysis.</p>
 </section>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.truss.</span></span><span class="sig-name descname"><span class="pre">Truss</span></span><a class="headerlink" href="#pyfe3d.truss.Truss" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.truss.</span></span><span class="sig-name descname"><span class="pre">Truss</span></span><a class="headerlink" href="#pyfe3d.truss.Truss" title="Link to this definition">#</a></dt>
 <dd><p>Truss 3D element for axial- and torsion-only behavior</p>
 <p>Nodal connectivity for the truss element:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">______</span>   <span class="o">--&gt;</span> <span class="n">u</span>  <span class="o">-&gt;&gt;-</span> <span class="n">rx</span>
@@ -462,121 +475,121 @@ physical representation.</p>
 </table>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.c1">
-<span class="sig-name descname"><span class="pre">c1</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.c1" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">c1</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.c1" title="Link to this definition">#</a></dt>
 <dd><p>c1: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.c2">
-<span class="sig-name descname"><span class="pre">c2</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.c2" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">c2</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.c2" title="Link to this definition">#</a></dt>
 <dd><p>c2: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.eid">
-<span class="sig-name descname"><span class="pre">eid</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.eid" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">eid</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.eid" title="Link to this definition">#</a></dt>
 <dd><p>eid: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.init_k_KC0">
-<span class="sig-name descname"><span class="pre">init_k_KC0</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.init_k_KC0" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">init_k_KC0</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.init_k_KC0" title="Link to this definition">#</a></dt>
 <dd><p>init_k_KC0: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.init_k_M">
-<span class="sig-name descname"><span class="pre">init_k_M</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.init_k_M" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">init_k_M</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.init_k_M" title="Link to this definition">#</a></dt>
 <dd><p>init_k_M: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.length">
-<span class="sig-name descname"><span class="pre">length</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.length" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">length</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.length" title="Link to this definition">#</a></dt>
 <dd><p>length: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.n1">
-<span class="sig-name descname"><span class="pre">n1</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.n1" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">n1</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.n1" title="Link to this definition">#</a></dt>
 <dd><p>n1: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.n2">
-<span class="sig-name descname"><span class="pre">n2</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.n2" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">n2</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.n2" title="Link to this definition">#</a></dt>
 <dd><p>n2: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.probe">
-<span class="sig-name descname"><span class="pre">probe</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.probe" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">probe</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.probe" title="Link to this definition">#</a></dt>
 <dd><p>probe: pyfe3d.truss.TrussProbe</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.r11">
-<span class="sig-name descname"><span class="pre">r11</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.r11" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">r11</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.r11" title="Link to this definition">#</a></dt>
 <dd><p>r11: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.r12">
-<span class="sig-name descname"><span class="pre">r12</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.r12" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">r12</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.r12" title="Link to this definition">#</a></dt>
 <dd><p>r12: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.r13">
-<span class="sig-name descname"><span class="pre">r13</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.r13" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">r13</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.r13" title="Link to this definition">#</a></dt>
 <dd><p>r13: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.r21">
-<span class="sig-name descname"><span class="pre">r21</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.r21" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">r21</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.r21" title="Link to this definition">#</a></dt>
 <dd><p>r21: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.r22">
-<span class="sig-name descname"><span class="pre">r22</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.r22" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">r22</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.r22" title="Link to this definition">#</a></dt>
 <dd><p>r22: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.r23">
-<span class="sig-name descname"><span class="pre">r23</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.r23" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">r23</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.r23" title="Link to this definition">#</a></dt>
 <dd><p>r23: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.r31">
-<span class="sig-name descname"><span class="pre">r31</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.r31" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">r31</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.r31" title="Link to this definition">#</a></dt>
 <dd><p>r31: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.r32">
-<span class="sig-name descname"><span class="pre">r32</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.r32" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">r32</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.r32" title="Link to this definition">#</a></dt>
 <dd><p>r32: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.r33">
-<span class="sig-name descname"><span class="pre">r33</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.r33" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">r33</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.r33" title="Link to this definition">#</a></dt>
 <dd><p>r33: ‘double’</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.update_KC0">
-<span class="sig-name descname"><span class="pre">update_KC0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KC0v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeamProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KC0v_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_KC0" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_KC0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KC0v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeamProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KC0v_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_KC0" title="Link to this definition">#</a></dt>
 <dd><p>Update sparse vectors for linear constitutive stiffness matrix KC0</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.update_M">
-<span class="sig-name descname"><span class="pre">update_M</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">Mr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">Mc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">Mv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeamProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">mtype=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_M" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_M</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">Mr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">Mc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">Mv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeamProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">mtype=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_M" title="Link to this definition">#</a></dt>
 <dd><p>Update sparse vectors for mass matrix M</p>
 <p>For the <a class="reference internal" href="#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a> element, the inertial terms <code class="docutils literal notranslate"><span class="pre">intrho</span></code>,
 <code class="docutils literal notranslate"><span class="pre">intrhoy</span></code>, <code class="docutils literal notranslate"><span class="pre">intrhoz</span></code>, <code class="docutils literal notranslate"><span class="pre">intrhoy2</span></code> and <code class="docutils literal notranslate"><span class="pre">intrhoz2</span></code> of the beam
@@ -585,13 +598,13 @@ property are important.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.update_length">
-<span class="sig-name descname"><span class="pre">update_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_length" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_length" title="Link to this definition">#</a></dt>
 <dd><p>Update element length</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.update_probe_ue">
-<span class="sig-name descname"><span class="pre">update_probe_ue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">u</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_probe_ue" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_probe_ue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">u</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_probe_ue" title="Link to this definition">#</a></dt>
 <dd><p>Update the local displacement vector of the probe of the element</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -613,7 +626,7 @@ u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M\)</span>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.update_probe_xe">
-<span class="sig-name descname"><span class="pre">update_probe_xe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_probe_xe" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_probe_xe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_probe_xe" title="Link to this definition">#</a></dt>
 <dd><p>Update the 3D coordinates of the probe of the element</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
@@ -634,7 +647,7 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.update_rotation_matrix">
-<span class="sig-name descname"><span class="pre">update_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_rotation_matrix" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_rotation_matrix" title="Link to this definition">#</a></dt>
 <dd><p>Update the rotation matrix of the element</p>
 <p>Attributes <code class="docutils literal notranslate"><span class="pre">r11,r12,r13,r21,r22,r23,r31,r32,r33</span></code> are updated,
 corresponding to the rotation matrix from local to global coordinates.</p>
@@ -658,7 +671,7 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.truss.TrussData">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.truss.</span></span><span class="sig-name descname"><span class="pre">TrussData</span></span><a class="headerlink" href="#pyfe3d.truss.TrussData" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.truss.</span></span><span class="sig-name descname"><span class="pre">TrussData</span></span><a class="headerlink" href="#pyfe3d.truss.TrussData" title="Link to this definition">#</a></dt>
 <dd><p>Used to allocate memory for the sparse matrices.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
@@ -672,13 +685,13 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.TrussData.KC0_SPARSE_SIZE">
-<span class="sig-name descname"><span class="pre">KC0_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.truss.TrussData.KC0_SPARSE_SIZE" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">KC0_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.truss.TrussData.KC0_SPARSE_SIZE" title="Link to this definition">#</a></dt>
 <dd><p>KC0_SPARSE_SIZE: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.TrussData.M_SPARSE_SIZE">
-<span class="sig-name descname"><span class="pre">M_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.truss.TrussData.M_SPARSE_SIZE" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">M_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.truss.TrussData.M_SPARSE_SIZE" title="Link to this definition">#</a></dt>
 <dd><p>M_SPARSE_SIZE: ‘int’</p>
 </dd></dl>
 
@@ -686,7 +699,7 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.truss.TrussProbe">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.truss.</span></span><span class="sig-name descname"><span class="pre">TrussProbe</span></span><a class="headerlink" href="#pyfe3d.truss.TrussProbe" title="Permalink to this definition">#</a></dt>
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.truss.</span></span><span class="sig-name descname"><span class="pre">TrussProbe</span></span><a class="headerlink" href="#pyfe3d.truss.TrussProbe" title="Link to this definition">#</a></dt>
 <dd><p>Probe used for local coordinates, local displacements, local stresses etc</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
@@ -700,13 +713,13 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 </dl>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.TrussProbe.ue">
-<span class="sig-name descname"><span class="pre">ue</span></span><a class="headerlink" href="#pyfe3d.truss.TrussProbe.ue" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">ue</span></span><a class="headerlink" href="#pyfe3d.truss.TrussProbe.ue" title="Link to this definition">#</a></dt>
 <dd><p>ue: ‘double[::1]’</p>
 </dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.TrussProbe.xe">
-<span class="sig-name descname"><span class="pre">xe</span></span><a class="headerlink" href="#pyfe3d.truss.TrussProbe.xe" title="Permalink to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">xe</span></span><a class="headerlink" href="#pyfe3d.truss.TrussProbe.xe" title="Link to this definition">#</a></dt>
 <dd><p>xe: ‘double[::1]’</p>
 </dd></dl>
 
@@ -718,7 +731,9 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
               
               
               
-                <footer class="bd-footer-article">
+              
+              
+                <footer class="prev-next-footer">
                   <!-- Previous / next buttons -->
 <div class="prev-next-area">
     <a class="left-prev"
@@ -809,7 +824,7 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
             
           </div>
           <footer class="bd-footer-content">
-            <div class="bd-footer-content__inner"></div>
+            
           </footer>
         
       </main>
@@ -817,8 +832,8 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/bootstrap.js?digest=12da95d707ffb74b382d"></script>
-<script src="_static/scripts/pydata-sphinx-theme.js?digest=12da95d707ffb74b382d"></script>
+  <script src="_static/scripts/bootstrap.js?digest=ac02cc09edc035673794"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -836,7 +851,7 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
       
         <div class="footer-item">
   <p class="sphinx-version">
-    Created using <a href="https://sphinx-doc.org/">Sphinx</a> 6.1.3.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.2.6.
     <br/>
   </p>
 </div>
@@ -844,10 +859,11 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
     </div>
   
   
+  
     <div class="footer-items__end">
       
         <div class="footer-item"><p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.13.1.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.14.1.
 </p></div>
       
     </div>
