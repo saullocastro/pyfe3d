@@ -1,0 +1,2 @@
+[build-system]
+requires = ["setuptools", "wheel", "numpy", "scipy", "alg3dpy", "cython"]
