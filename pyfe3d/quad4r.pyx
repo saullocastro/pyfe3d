@@ -114,6 +114,20 @@ cdef class Quad4R:
         Element identification number.
     area, : double
         Element area.
+    q_penalty_transverse_shear, : double
+        Factor used to prevent shell elements to become too stiff, affecting
+        stiffness terms E44,E45,E45::
+
+            factor = area/(1 + q_penalty_transverse_shear*area/thickness**2)
+            E44 = factor * E44
+            E45 = factor * E45
+            E55 = factor * E55
+
+        The adopted default is ``q_penalty_transverse_shear = 1/4*10^(-4)``,
+        based on Abaqus analysis user's manual. Reference:
+
+            https://classes.engineering.wustl.edu/2009/spring/mase5513/abaqus/docs/v6.6/books/stm/default.htm?startat=ch03s06ath79.html
+
     alphat, : double
         Element drilling penalty factor for the plate drilling stiffness,
         defined according to Eq. 2.20 in the reference below. The default value
@@ -155,6 +169,7 @@ cdef class Quad4R:
     cdef public int init_k_KC0, init_k_KG, init_k_M
     cdef public int init_k_KA_beta, init_k_KA_gamma, init_k_CA
     cdef public double area
+    cdef public double q_penalty_transverse_shear
     cdef public double alphat # drilling penalty factor for stiffness matrix, see Eq. 2.20 in F.M. Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013) 10–20. www.iosrjen.org (accessed April 20, 2020).
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public double m11, m12, m21, m22
@@ -180,6 +195,7 @@ cdef class Quad4R:
         self.init_k_KA_gamma = 0
         self.init_k_CA = 0
         self.area = 0
+        self.q_penalty_transverse_shear = 0.25e-4
         self.alphat = 1. # based on recommended value of reference F.M. Adam, A.E. Mohamed, A.E. Hassaballa
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.
@@ -466,6 +482,11 @@ cdef class Quad4R:
                           double [::1] KC0v,
                           ShellProp prop,
                           int update_KC0v_only=0,
+                          double hgfactor_u = 1.,
+                          double hgfactor_v = 1.,
+                          double hgfactor_w = 1.,
+                          double hgfactor_rx = 1.,
+                          double hgfactor_ry = 1.,
                           ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
@@ -498,6 +519,10 @@ cdef class Quad4R:
         update_KC0v_only : int
             The default `0` means that only `KC0v` is updated. Any other value will
             lead to `KC0r` and `KC0c` also being updated.
+        hgfactor_u, hgfactor_v, hgfactor_w, hgfactor_rx, hgfactor_ry : double
+            These offer the possibility to change the default hourglass
+            stiffnesses for each degree-of-freedom. The default value of these
+            multipliers is 1. (unity).
 
         """
         cdef int c1, c2, c3, c4, k
@@ -512,6 +537,7 @@ cdef class Quad4R:
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
         cdef double E1eq, E2eq
+        cdef double factor
         cdef double alphat
         cdef double Eu, Ev, Erx, Ery, Ew, h
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
@@ -608,6 +634,12 @@ cdef class Quad4R:
             E44 = prop.E44*prop.scf_k23
             E45 = prop.E45*0.5*(prop.scf_k13 + prop.scf_k23)
             E55 = prop.E55*prop.scf_k13
+
+            # NOTE factor applied to transverse shear stiffnesses
+            factor = self.area/(1 + self.q_penalty_transverse_shear*self.area/h**2)
+            E44 = factor * E44
+            E45 = factor * E45
+            E55 = factor * E55
 
             # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
@@ -2378,11 +2410,11 @@ cdef class Quad4R:
             # TODO find a method of hourglass control that is derived for composites
             #     in the future, use MITC4 elements that do not require
             #     hourglass control
-            Eu = 0.1*E1eq*h/(1.0 + 1.0/self.area)
-            Ev = 0.1*E2eq*h/(1.0 + 1.0/self.area)
-            Erx = 0.1*E2eq*h**3/(1.0 + 1.0/self.area)
-            Ery = 0.1*E1eq*h**3/(1.0 + 1.0/self.area)
-            Ew = 0.5*(Erx + Ery)
+            Eu = hgfactor_u*0.1*E1eq*h/(1.0 + 1.0/self.area)
+            Ev = hgfactor_v*0.1*E2eq*h/(1.0 + 1.0/self.area)
+            Erx = hgfactor_rx*0.1*E2eq*h**3/(1.0 + 1.0/self.area)
+            Ery = hgfactor_ry*0.1*E1eq*h**3/(1.0 + 1.0/self.area)
+            Ew = hgfactor_w*0.5*(Erx + Ery)
 
             # NOTE using only one integration point at xi=0, eta=0 to avoid shear locking
             detJ = 0.125*x1*y2 - 0.125*x1*y4 - 0.125*x2*y1 + 0.125*x2*y3 - 0.125*x3*y2 + 0.125*x3*y4 + 0.125*x4*y1 - 0.125*x4*y3
