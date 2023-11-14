@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r) &#8212; pyfe3d 0.4.0 documentation</title>
+    <title>Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r) &#8212; pyfe3d 0.4.1 documentation</title>
   
   
   
@@ -18,12 +18,12 @@
   </script>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-<link href="_static/styles/bootstrap.css?digest=ac02cc09edc035673794" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=365ca57ee442770a23c6" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=365ca57ee442770a23c6" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=365ca57ee442770a23c6" rel="stylesheet" />
 
   
-  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=ac02cc09edc035673794" rel="stylesheet" />
+  <link href="_static/vendor/fontawesome/6.1.2/css/all.min.css?digest=365ca57ee442770a23c6" rel="stylesheet" />
   <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-solid-900.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-brands-400.woff2" />
 <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.1.2/webfonts/fa-regular-400.woff2" />
@@ -31,11 +31,11 @@
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
   
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=ac02cc09edc035673794" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794" />
-  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=ac02cc09edc035673794"></script>
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=365ca57ee442770a23c6" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=365ca57ee442770a23c6" />
+  <script src="_static/vendor/fontawesome/6.1.2/js/all.min.js?digest=365ca57ee442770a23c6"></script>
 
-    <script src="_static/documentation_options.js?v=1437fa6d"></script>
+    <script src="_static/documentation_options.js?v=c87aa342"></script>
     <script src="_static/doctools.js?v=888ff710"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -115,7 +115,8 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.4.0 documentation</p>
+  
+    <p class="title logo__title">pyfe3d 0.4.1 documentation</p>
   
 </a></div>
     
@@ -408,6 +409,20 @@ below.</p>
 </dd>
 <dt><strong>area,</strong><span class="classifier">double</span></dt><dd><p>Element area.</p>
 </dd>
+<dt><strong>q_penalty_transverse_shear,</strong><span class="classifier">double</span></dt><dd><p>Factor used to prevent shell elements to become too stiff, affecting
+stiffness terms E44,E45,E45:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">factor</span> <span class="o">=</span> <span class="n">area</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">q_penalty_transverse_shear</span><span class="o">*</span><span class="n">area</span><span class="o">/</span><span class="n">thickness</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+<span class="n">E44</span> <span class="o">=</span> <span class="n">factor</span> <span class="o">*</span> <span class="n">E44</span>
+<span class="n">E45</span> <span class="o">=</span> <span class="n">factor</span> <span class="o">*</span> <span class="n">E45</span>
+<span class="n">E55</span> <span class="o">=</span> <span class="n">factor</span> <span class="o">*</span> <span class="n">E55</span>
+</pre></div>
+</div>
+<p>The adopted default is <code class="docutils literal notranslate"><span class="pre">q_penalty_transverse_shear</span> <span class="pre">=</span> <span class="pre">1/4*10^(-4)</span></code>,
+based on Abaqus analysis user’s manual. Reference:</p>
+<blockquote>
+<div><p><a class="reference external" href="https://classes.engineering.wustl.edu/2009/spring/mase5513/abaqus/docs/v6.6/books/stm/default.htm?startat=ch03s06ath79.html">https://classes.engineering.wustl.edu/2009/spring/mase5513/abaqus/docs/v6.6/books/stm/default.htm?startat=ch03s06ath79.html</a></p>
+</div></blockquote>
+</dd>
 <dt><strong>alphat,</strong><span class="classifier">double</span></dt><dd><p>Element drilling penalty factor for the plate drilling stiffness,
 defined according to Eq. 2.20 in the reference below. The default value
 of <code class="docutils literal notranslate"><span class="pre">alphat</span> <span class="pre">=</span> <span class="pre">1.</span></code> comes from the same reference:</p>
@@ -615,6 +630,12 @@ matrices based on the Piston theory.</p>
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.q_penalty_transverse_shear">
+<span class="sig-name descname"><span class="pre">q_penalty_transverse_shear</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.q_penalty_transverse_shear" title="Link to this definition">#</a></dt>
+<dd><p>q_penalty_transverse_shear: ‘double’</p>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.r11">
 <span class="sig-name descname"><span class="pre">r11</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.r11" title="Link to this definition">#</a></dt>
 <dd><p>r11: ‘double’</p>
@@ -688,7 +709,7 @@ matrices based on the Piston theory.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.update_KC0">
-<span class="sig-name descname"><span class="pre">update_KC0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KC0v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KC0v_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_KC0" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_KC0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KC0v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KC0v_only=0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_u=1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_v=1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_w=1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_rx=1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_ry=1.</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_KC0" title="Link to this definition">#</a></dt>
 <dd><p>Update sparse vectors for linear constitutive stiffness matrix KC0</p>
 <p>Reduced integration is used with a single point in the centroid
 (<span class="math notranslate nohighlight">\(\xi=\eta=0\)</span>) and weight <span class="math notranslate nohighlight">\(w_{ij}=4\)</span>, preventing shear locking.
@@ -985,6 +1006,7 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.n3"><code class="docutils literal notranslate"><span class="pre">Quad4R.n3</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.n4"><code class="docutils literal notranslate"><span class="pre">Quad4R.n4</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.probe"><code class="docutils literal notranslate"><span class="pre">Quad4R.probe</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.q_penalty_transverse_shear"><code class="docutils literal notranslate"><span class="pre">Quad4R.q_penalty_transverse_shear</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.r11"><code class="docutils literal notranslate"><span class="pre">Quad4R.r11</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.r12"><code class="docutils literal notranslate"><span class="pre">Quad4R.r12</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.r13"><code class="docutils literal notranslate"><span class="pre">Quad4R.r13</span></code></a></li>
@@ -1046,8 +1068,8 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/bootstrap.js?digest=ac02cc09edc035673794"></script>
-<script src="_static/scripts/pydata-sphinx-theme.js?digest=ac02cc09edc035673794"></script>
+  <script src="_static/scripts/bootstrap.js?digest=365ca57ee442770a23c6"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=365ca57ee442770a23c6"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1077,7 +1099,7 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
     <div class="footer-items__end">
       
         <div class="footer-item"><p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.14.1.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.14.3.
 </p></div>
       
     </div>
