@@ -102,7 +102,7 @@ cdef class BeamC:
         Pointer to the probe.
 
     """
-    cdef public int eid
+    cdef public int eid, pid
     cdef public int n1, n2
     cdef public int c1, c2
     cdef public int init_k_KC0, init_k_KG, init_k_M
@@ -113,6 +113,7 @@ cdef class BeamC:
     def __cinit__(BeamC self, BeamCProbe p):
         self.probe = p
         self.eid = -1
+        self.pid = -1
         self.n1 = -1
         self.n2 = -1
         self.c1 = -1
