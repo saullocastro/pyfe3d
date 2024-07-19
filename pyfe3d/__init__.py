@@ -15,8 +15,8 @@ from .beamlr import BeamLR, BeamLRData, BeamLRProbe
 from .truss import Truss, TrussData, TrussProbe
 from .spring import Spring, SpringData, SpringProbe
 DOF = 6
-INT = int # it is long (np.int64) in C
-DOUBLE = float
+INT = np.int_ # it is long (np.int64) in C
+DOUBLE = np.float64
 
 from .coord import CoordR
 vecxz = asvector([1.,0.,1.])
