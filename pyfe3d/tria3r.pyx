@@ -140,7 +140,7 @@ cdef class Tria3R:
         Pointer to the probe.
 
     """
-    cdef public int eid
+    cdef public int eid, pid
     cdef public int n1, n2, n3
     cdef public int c1, c2, c3
     cdef public int init_k_KC0, init_k_KG, init_k_M
@@ -155,6 +155,7 @@ cdef class Tria3R:
     def __cinit__(Tria3R self, Tria3RProbe p):
         self.probe = p
         self.eid = -1
+        self.pid = -1
         self.n1 = -1
         self.n2 = -1
         self.n3 = -1
