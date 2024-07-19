@@ -179,6 +179,7 @@ cdef class Quad4R:
     def __cinit__(Quad4R self, Quad4RProbe p):
         self.probe = p
         self.eid = -1
+        self.pid = -1
         self.n1 = -1
         self.n2 = -1
         self.n3 = -1
