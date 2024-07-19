@@ -1,9 +1,9 @@
 cdef extern from "math.h":
-    double cos(double t) nogil
-    double sin(double t) nogil
-    double atan(double t) nogil
+    double cos(double t) noexcept nogil
+    double sin(double t) noexcept nogil
+    double atan(double t) noexcept nogil
 
-cdef inline double deg2rad(double thetadeg) nogil: # pragma: no cover
+cdef inline double deg2rad(double thetadeg) noexcept nogil: # pragma: no cover
     return thetadeg*4*atan(1.)/180.
 
 cdef class LaminationParameters:
