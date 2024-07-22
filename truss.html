@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Truss - Linear truss 3D element with analytical integration (pyfe3d.truss) &#8212; pyfe3d 0.4.24 documentation</title>
+    <title>Truss - Linear truss 3D element with analytical integration (pyfe3d.truss) &#8212; pyfe3d 0.4.25 documentation</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=b2057829"></script>
+    <script src="_static/documentation_options.js?v=167dfc30"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -119,7 +119,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.4.24 documentation</p>
+    <p class="title logo__title">pyfe3d 0.4.25 documentation</p>
   
 </a></div>
     
@@ -390,7 +390,7 @@ document.write(`
 <span id="module-pyfe3d.truss"></span><h1>Truss - Linear truss 3D element with analytical integration (<a class="reference internal" href="#module-pyfe3d.truss" title="pyfe3d.truss"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code></a>)<a class="headerlink" href="#truss-linear-truss-3d-element-with-analytical-integration-pyfe3d-truss" title="Link to this heading">#</a></h1>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The <a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a> element is recommended because of the better
+<p>The <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> element is recommended because of the better
 physical representation.</p>
 </div>
 <div class="admonition note">
@@ -410,49 +410,28 @@ analysis.</p>
 </div>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
-<p>The <a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a> is recommended because of the better
+<p>The <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> is recommended because of the better
 physical representation.</p>
 </div>
-<dl class="field-list simple">
+<dl class="field-list">
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><a class="reference internal" href="#pyfe3d.truss.Truss.c1" title="pyfe3d.truss.Truss.c1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">c1</span></code></a></dt><dd><p>c1: ‘int’</p>
+<dd class="field-odd"><dl>
+<dt><strong>eid,</strong><span class="classifier">int</span></dt><dd><p>Element identification number.</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.truss.Truss.c2" title="pyfe3d.truss.Truss.c2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">c2</span></code></a></dt><dd><p>c2: ‘int’</p>
+<dt><strong>pid,</strong><span class="classifier">int</span></dt><dd><p>Property identification number.</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.truss.Truss.eid" title="pyfe3d.truss.Truss.eid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">eid</span></code></a></dt><dd><p>eid: ‘int’</p>
+<dt><strong>length,</strong><span class="classifier">double</span></dt><dd><p>Element length.</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.truss.Truss.init_k_KC0" title="pyfe3d.truss.Truss.init_k_KC0"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_k_KC0</span></code></a></dt><dd><p>init_k_KC0: ‘int’</p>
+<dt><strong>r11, r12, r13, r21, r22, r23, r31, r32, r33</strong><span class="classifier">double</span></dt><dd><p>Rotation matrix to the global coordinate system.</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.truss.Truss.init_k_M" title="pyfe3d.truss.Truss.init_k_M"><code class="xref py py-obj docutils literal notranslate"><span class="pre">init_k_M</span></code></a></dt><dd><p>init_k_M: ‘int’</p>
+<dt><strong>c1, c2</strong><span class="classifier">int</span></dt><dd><p>Position of each node in the global stiffness matrix.</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.truss.Truss.length" title="pyfe3d.truss.Truss.length"><code class="xref py py-obj docutils literal notranslate"><span class="pre">length</span></code></a></dt><dd><p>length: ‘double’</p>
+<dt><strong>n1, n2</strong><span class="classifier">int</span></dt><dd><p>Node identification number.</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.truss.Truss.n1" title="pyfe3d.truss.Truss.n1"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n1</span></code></a></dt><dd><p>n1: ‘int’</p>
+<dt><strong>init_k_KC0, init_k_M</strong><span class="classifier">int</span></dt><dd><p>Position in the arrays storing the sparse data for the structural
+matrices.</p>
 </dd>
-<dt><a class="reference internal" href="#pyfe3d.truss.Truss.n2" title="pyfe3d.truss.Truss.n2"><code class="xref py py-obj docutils literal notranslate"><span class="pre">n2</span></code></a></dt><dd><p>n2: ‘int’</p>
-</dd>
-<dt><a class="reference internal" href="#pyfe3d.truss.Truss.pid" title="pyfe3d.truss.Truss.pid"><code class="xref py py-obj docutils literal notranslate"><span class="pre">pid</span></code></a></dt><dd><p>pid: ‘int’</p>
-</dd>
-<dt><a class="reference internal" href="#pyfe3d.truss.Truss.probe" title="pyfe3d.truss.Truss.probe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">probe</span></code></a></dt><dd><p>probe: pyfe3d.truss.TrussProbe</p>
-</dd>
-<dt><a class="reference internal" href="#pyfe3d.truss.Truss.r11" title="pyfe3d.truss.Truss.r11"><code class="xref py py-obj docutils literal notranslate"><span class="pre">r11</span></code></a></dt><dd><p>r11: ‘double’</p>
-</dd>
-<dt><a class="reference internal" href="#pyfe3d.truss.Truss.r12" title="pyfe3d.truss.Truss.r12"><code class="xref py py-obj docutils literal notranslate"><span class="pre">r12</span></code></a></dt><dd><p>r12: ‘double’</p>
-</dd>
-<dt><a class="reference internal" href="#pyfe3d.truss.Truss.r13" title="pyfe3d.truss.Truss.r13"><code class="xref py py-obj docutils literal notranslate"><span class="pre">r13</span></code></a></dt><dd><p>r13: ‘double’</p>
-</dd>
-<dt><a class="reference internal" href="#pyfe3d.truss.Truss.r21" title="pyfe3d.truss.Truss.r21"><code class="xref py py-obj docutils literal notranslate"><span class="pre">r21</span></code></a></dt><dd><p>r21: ‘double’</p>
-</dd>
-<dt><a class="reference internal" href="#pyfe3d.truss.Truss.r22" title="pyfe3d.truss.Truss.r22"><code class="xref py py-obj docutils literal notranslate"><span class="pre">r22</span></code></a></dt><dd><p>r22: ‘double’</p>
-</dd>
-<dt><a class="reference internal" href="#pyfe3d.truss.Truss.r23" title="pyfe3d.truss.Truss.r23"><code class="xref py py-obj docutils literal notranslate"><span class="pre">r23</span></code></a></dt><dd><p>r23: ‘double’</p>
-</dd>
-<dt><a class="reference internal" href="#pyfe3d.truss.Truss.r31" title="pyfe3d.truss.Truss.r31"><code class="xref py py-obj docutils literal notranslate"><span class="pre">r31</span></code></a></dt><dd><p>r31: ‘double’</p>
-</dd>
-<dt><a class="reference internal" href="#pyfe3d.truss.Truss.r32" title="pyfe3d.truss.Truss.r32"><code class="xref py py-obj docutils literal notranslate"><span class="pre">r32</span></code></a></dt><dd><p>r32: ‘double’</p>
-</dd>
-<dt><a class="reference internal" href="#pyfe3d.truss.Truss.r33" title="pyfe3d.truss.Truss.r33"><code class="xref py py-obj docutils literal notranslate"><span class="pre">r33</span></code></a></dt><dd><p>r33: ‘double’</p>
+<dt><strong>probe,</strong><span class="classifier"><a class="reference internal" href="#pyfe3d.truss.TrussProbe" title="pyfe3d.truss.TrussProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrussProbe</span></code></a> object</span></dt><dd><p>Pointer to the probe.</p>
 </dd>
 </dl>
 </dd>
@@ -664,11 +643,10 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 <span class="sig-name descname"><span class="pre">update_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_rotation_matrix" title="Link to this definition">#</a></dt>
 <dd><p>Update the rotation matrix of the element</p>
 <p>Attributes <code class="docutils literal notranslate"><span class="pre">r11,r12,r13,r21,r22,r23,r31,r32,r33</span></code> are updated,
-corresponding to the rotation matrix from local to global coordinates.</p>
+corresponding to the rotation matrix from global to local coordinates.</p>
 <p>The element coordinate system is determined, identifying the <span class="math notranslate nohighlight">\(ijk\)</span>
 components of each axis: <span class="math notranslate nohighlight">\({x_e}_i, {x_e}_j, {x_e}_k\)</span>; <span class="math notranslate nohighlight">\({y_e}_i,
 {y_e}_j, {y_e}_k\)</span>; <span class="math notranslate nohighlight">\({z_e}_i, {z_e}_j, {z_e}_k\)</span>.</p>
-<p>The rotation matrix terms are calculated after solving 9 equations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">

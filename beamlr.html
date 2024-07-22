@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>BeamLR - Linear Timoshenko 3D beam element with reduced integration (pyfe3d.beamlr) &#8212; pyfe3d 0.4.24 documentation</title>
+    <title>BeamLR - Linear Timoshenko 3D beam element with reduced integration (pyfe3d.beamlr) &#8212; pyfe3d 0.4.25 documentation</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=b2057829"></script>
+    <script src="_static/documentation_options.js?v=167dfc30"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -119,7 +119,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.4.24 documentation</p>
+    <p class="title logo__title">pyfe3d 0.4.25 documentation</p>
   
 </a></div>
     
@@ -413,9 +413,14 @@ Shape Functions,” Adv. Theor. Appl. Mech., 1(3), pp. 95–106.</p>
 <dd class="field-odd"><dl>
 <dt><strong>eid,</strong><span class="classifier">int</span></dt><dd><p>Element identification number.</p>
 </dd>
+<dt><strong>pid,</strong><span class="classifier">int</span></dt><dd><p>Property identification number.</p>
+</dd>
 <dt><strong>length,</strong><span class="classifier">double</span></dt><dd><p>Element length.</p>
 </dd>
-<dt><strong>r11, r12, r13, r21, r22, r23, r31, r32, r33</strong><span class="classifier">double</span></dt><dd><p>Rotation matrix to the global coordinate system.</p>
+<dt><strong>r11, r12, r13, r21, r22, r23, r31, r32, r33</strong><span class="classifier">double</span></dt><dd><p>Rotation matrix from local to global coordinates.</p>
+</dd>
+<dt><strong>vxyi, vxyj, vxyk</strong><span class="classifier">double</span></dt><dd><p>Components of a vector on the <span class="math notranslate nohighlight">\(XY\)</span> plane of the element coordinate
+system, defined using global coordinates.</p>
 </dd>
 <dt><strong>c1, c2</strong><span class="classifier">int</span></dt><dd><p>Position of each node in the global stiffness matrix.</p>
 </dd>
@@ -648,16 +653,17 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 <span class="sig-name descname"><span class="pre">update_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">vxyi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">vxyj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">vxyk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.beamlr.BeamLR.update_rotation_matrix" title="Link to this definition">#</a></dt>
 <dd><p>Update the rotation matrix of the element</p>
 <p>Attributes <code class="docutils literal notranslate"><span class="pre">r11,r12,r13,r21,r22,r23,r31,r32,r33</span></code> are updated,
-corresponding to the rotation matrix from local to global coordinates.</p>
+corresponding to the rotation matrix from global to local coordinates.</p>
+<p>The element attributes <span class="math notranslate nohighlight">\(vxyi\)</span>, <span class="math notranslate nohighlight">\(vxyj\)</span> and <span class="math notranslate nohighlight">\(vxyk\)</span> are also updated when
+this function is called.</p>
 <p>The element coordinate system is determined, identifying the <span class="math notranslate nohighlight">\(ijk\)</span>
 components of each axis: <span class="math notranslate nohighlight">\({x_e}_i, {x_e}_j, {x_e}_k\)</span>; <span class="math notranslate nohighlight">\({y_e}_i,
 {y_e}_j, {y_e}_k\)</span>; <span class="math notranslate nohighlight">\({z_e}_i, {z_e}_j, {z_e}_k\)</span>.</p>
-<p>The rotation matrix terms are calculated after solving 9 equations.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>vxyi, vxyj, vxyk</strong><span class="classifier">double</span></dt><dd><p>Components of a vector on the <span class="math notranslate nohighlight">\(XY\)</span> plane of the element coordinate
-system.</p>
+system, defined using global coordinates.</p>
 </dd>
 <dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Array with global nodal coordinates, for a total of <span class="math notranslate nohighlight">\(M\)</span> nodes in
 the model, this array will be arranged as: <span class="math notranslate nohighlight">\(x_1, y_1, z_1, x_2,
@@ -666,6 +672,24 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 </dl>
 </dd>
 </dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.beamlr.BeamLR.vxyi">
+<span class="sig-name descname"><span class="pre">vxyi</span></span><a class="headerlink" href="#pyfe3d.beamlr.BeamLR.vxyi" title="Link to this definition">#</a></dt>
+<dd><p>vxyi: ‘double’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.beamlr.BeamLR.vxyj">
+<span class="sig-name descname"><span class="pre">vxyj</span></span><a class="headerlink" href="#pyfe3d.beamlr.BeamLR.vxyj" title="Link to this definition">#</a></dt>
+<dd><p>vxyj: ‘double’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.beamlr.BeamLR.vxyk">
+<span class="sig-name descname"><span class="pre">vxyk</span></span><a class="headerlink" href="#pyfe3d.beamlr.BeamLR.vxyk" title="Link to this definition">#</a></dt>
+<dd><p>vxyk: ‘double’</p>
 </dd></dl>
 
 </dd></dl>
@@ -815,6 +839,9 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamlr.BeamLR.update_probe_ue"><code class="docutils literal notranslate"><span class="pre">BeamLR.update_probe_ue()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamlr.BeamLR.update_probe_xe"><code class="docutils literal notranslate"><span class="pre">BeamLR.update_probe_xe()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamlr.BeamLR.update_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">BeamLR.update_rotation_matrix()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamlr.BeamLR.vxyi"><code class="docutils literal notranslate"><span class="pre">BeamLR.vxyi</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamlr.BeamLR.vxyj"><code class="docutils literal notranslate"><span class="pre">BeamLR.vxyj</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamlr.BeamLR.vxyk"><code class="docutils literal notranslate"><span class="pre">BeamLR.vxyk</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamlr.BeamLRData"><code class="docutils literal notranslate"><span class="pre">BeamLRData</span></code></a><ul class="visible nav section-nav flex-column">
