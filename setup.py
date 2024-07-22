@@ -9,7 +9,7 @@ from Cython.Build import cythonize
 
 
 is_released = True
-version = '0.4.25'
+version = '0.4.26'
 
 
 def git_version():
@@ -64,12 +64,6 @@ def read(fname):
 
 
 #_____________________________________________________________________________
-
-install_requires = [
-        "numpy",
-        "scipy",
-        "alg3dpy",
-        ]
 
 #Trove classifiers
 CLASSIFIERS = """\
@@ -213,7 +207,6 @@ s = setup(
     package_data = package_data,
     data_files = data_files,
     classifiers = [_f for _f in CLASSIFIERS.split('\n') if _f],
-    install_requires = install_requires,
     ext_modules = ext_modules,
     include_package_data = True,
     packages = find_packages(),
