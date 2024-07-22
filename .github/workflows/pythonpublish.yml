@@ -20,7 +20,6 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
-      if: matrix.runs-on == 'windows-latest' || (matrix.runs-on == 'ubuntu-latest') || (matrix.runs-on == 'macos-latest')
       run: |
         python3 -m pip install --upgrade pip
         python3 -m pip install --upgrade setuptools wheel twine
@@ -34,11 +33,11 @@ jobs:
         python3 setup.py sdist
         python3 -m twine upload dist/*.tar.gz
     - name: Build Windows or MAC-OS Python wheels
-      if: matrix.runs-on == 'windows-latest' || matrix.runs-on == 'macos-latest'
+      if: matrix.runs-on != 'ubuntu-latest'
       run: |
         python3 setup.py sdist bdist_wheel
     - name: Publish Windows or MAC-OS Python wheels
-      if: matrix.runs-on == 'windows-latest' || matrix.runs-on == 'macos-latest'
+      if: matrix.runs-on != 'ubuntu-latest'
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
