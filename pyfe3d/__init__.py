@@ -15,7 +15,7 @@ from .beamlr import BeamLR, BeamLRData, BeamLRProbe
 from .truss import Truss, TrussData, TrussProbe
 from .spring import Spring, SpringData, SpringProbe
 DOF = 6
-INT = np.int32 # it is long (np.int64) in C
+INT = np.int64 # it is long (np.int64) in C
 DOUBLE = np.float64
 
 from .coord import CoordR
