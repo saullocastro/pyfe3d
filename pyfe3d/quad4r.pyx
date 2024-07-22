@@ -114,20 +114,6 @@ cdef class Quad4R:
         Element identification number.
     area, : double
         Element area.
-    q_penalty_transverse_shear, : double
-        Factor used to prevent shell elements to become too stiff, affecting
-        stiffness terms E44,E45,E45::
-
-            factor = area/(1 + q_penalty_transverse_shear*area/thickness**2)
-            E44 = factor * E44
-            E45 = factor * E45
-            E55 = factor * E55
-
-        The adopted default is ``q_penalty_transverse_shear = 1/4*10^(-4)``,
-        based on Abaqus analysis user's manual. Reference:
-
-            https://classes.engineering.wustl.edu/2009/spring/mase5513/abaqus/docs/v6.6/books/stm/default.htm?startat=ch03s06ath79.html
-
     alphat, : double
         Element drilling penalty factor for the plate drilling stiffness,
         defined according to Eq. 2.20 in the reference below. The default value
@@ -169,7 +155,6 @@ cdef class Quad4R:
     cdef public int init_k_KC0, init_k_KG, init_k_M
     cdef public int init_k_KA_beta, init_k_KA_gamma, init_k_CA
     cdef public double area
-    cdef public double q_penalty_transverse_shear
     cdef public double alphat # drilling penalty factor for stiffness matrix, see Eq. 2.20 in F.M. Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013) 10–20. www.iosrjen.org (accessed April 20, 2020).
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public double m11, m12, m21, m22
@@ -196,7 +181,6 @@ cdef class Quad4R:
         self.init_k_KA_gamma = 0
         self.init_k_CA = 0
         self.area = 0
-        self.q_penalty_transverse_shear = 0.25e-4
         self.alphat = 1. # based on recommended value of reference F.M. Adam, A.E. Mohamed, A.E. Hassaballa
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.
@@ -635,12 +619,6 @@ cdef class Quad4R:
             E44 = prop.E44*prop.scf_k23
             E45 = prop.E45*0.5*(prop.scf_k13 + prop.scf_k23)
             E55 = prop.E55*prop.scf_k13
-
-            # NOTE factor applied to transverse shear stiffnesses
-            factor = self.area/(1 + self.q_penalty_transverse_shear*self.area/h**2)
-            E44 = factor * E44
-            E45 = factor * E45
-            E55 = factor * E55
 
             # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
@@ -2409,8 +2387,9 @@ cdef class Quad4R:
             alphat = self.alphat
 
             # TODO find a method of hourglass control that is derived for composites
-            #     in the future, use MITC4 elements that do not require
-            #     hourglass control
+            #     in the future, the use elements with mixed integration
+            #     schemes, or the implementation of the MITC4 element will no
+            #     longer require hourglass control
             Eu = hgfactor_u*0.1*E1eq*h/(1.0 + 1.0/self.area)
             Ev = hgfactor_v*0.1*E2eq*h/(1.0 + 1.0/self.area)
             Erx = hgfactor_rx*0.1*E2eq*h**3/(1.0 + 1.0/self.area)
@@ -5347,7 +5326,7 @@ cdef class Quad4R:
 
         """
         cdef int c1, c2, c3, c4, i, j, k
-        cdef double intrho, intrhoz, intrhoz2, A
+        cdef double intrho, intrhoz, intrhoz2
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double x1, x2, x3, x4
         cdef double y1, y2, y3, y4
@@ -5360,8 +5339,7 @@ cdef class Quad4R:
             intrhoz = prop.intrhoz
             intrhoz2 = prop.intrhoz2
 
-            A = self.area
-            valH1 = 0.0625*A
+            valH1 = 0.0625*self.area
 
             # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
