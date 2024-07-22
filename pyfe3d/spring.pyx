@@ -83,6 +83,9 @@ cdef class Spring:
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix to the global coordinate system. By default it assumes
         that the element is aligned with the global coordinate system.
+    vxyi, vxyj, vxyk : double
+        Components of a vector on the `XY` plane of the element coordinate
+        system, defined using global coordinates.
     c1, c2 : int
         Position of each node in the global stiffness matrix.
     n1, n2 : int
@@ -98,6 +101,7 @@ cdef class Spring:
     cdef public int init_k_KC0, init_k_KG, init_k_M
     cdef public double kxe, kye, kze
     cdef public double krxe, krye, krze
+    cdef public double vxyi, vxyj, vxyk
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public SpringProbe probe
 
@@ -113,6 +117,7 @@ cdef class Spring:
         self.init_k_M = 0
         self.kxe = self.kye = self.kze = 0
         self.krxe = self.krye = self.krze = 0
+        self.vxyi = self.vxyj = self.vxyk = 0.
         self.r11 = 1
         self.r22 = 1
         self.r33 = 1
@@ -126,13 +131,12 @@ cdef class Spring:
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
-        corresponding to the rotation matrix from local to global coordinates.
+        corresponding to the rotation matrix from global to local coordinates.
 
         The element coordinate system is determined, identifying the `ijk`
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
         {y_e}_j, {y_e}_k`; `{z_e}_i, {z_e}_j, {z_e}_k`.
 
-        The rotation matrix terms are calculated after solving 9 equations.
 
         Parameters
         ----------
@@ -147,6 +151,10 @@ cdef class Spring:
         cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k, x4i, x4j, x4k
 
         with nogil:
+            self.vxyi = vxyi
+            self.vxyj = vxyj
+            self.vxyk = vxyk
+
             tmp = (xi**2 + xj**2 + xk**2)**0.5
             xi /= tmp
             xj /= tmp

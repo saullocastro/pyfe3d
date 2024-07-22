@@ -11,7 +11,7 @@ Truss - Linear truss 3D element with analytical integration (:mod:`pyfe3d.truss`
 
 .. currentmodule:: pyfe3d.truss
 
-.. note:: The :class:`.BeamLR` element is recommended because of the better
+.. note:: The :class:`.BeamC` element is recommended because of the better
           physical representation.
 
 .. note:: The :class:`.Truss` element does not support linear buckling
@@ -24,6 +24,7 @@ from .beamprop cimport BeamProp
 
 cdef int DOF = 6
 cdef int NUM_NODES = 2
+
 
 cdef class TrussData:
     r"""
@@ -77,8 +78,29 @@ cdef class Truss:
         1    2
 
 
-    .. note:: The :class:`.BeamLR` is recommended because of the better
+    .. note:: The :class:`.BeamC` is recommended because of the better
               physical representation.
+
+
+    Attributes
+    ----------
+    eid, : int
+        Element identification number.
+    pid, : int
+        Property identification number.
+    length, : double
+        Element length.
+    r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
+        Rotation matrix to the global coordinate system.
+    c1, c2 : int
+        Position of each node in the global stiffness matrix.
+    n1, n2 : int
+        Node identification number.
+    init_k_KC0, init_k_M : int
+        Position in the arrays storing the sparse data for the structural
+        matrices.
+    probe, : :class:`.TrussProbe` object
+        Pointer to the probe.
 
     """
     cdef public int eid, pid
@@ -164,13 +186,12 @@ cdef class Truss:
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
-        corresponding to the rotation matrix from local to global coordinates.
+        corresponding to the rotation matrix from global to local coordinates.
 
         The element coordinate system is determined, identifying the `ijk`
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
         {y_e}_j, {y_e}_k`; `{z_e}_i, {z_e}_j, {z_e}_k`.
 
-        The rotation matrix terms are calculated after solving 9 equations.
 
         Parameters
         ----------

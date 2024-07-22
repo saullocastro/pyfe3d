@@ -112,6 +112,8 @@ cdef class Quad4R:
     ----------
     eid, : int
         Element identification number.
+    pid, : int
+        Property identification number.
     area, : double
         Element area.
     alphat, : double
@@ -196,13 +198,12 @@ cdef class Quad4R:
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
-        corresponding to the rotation matrix from local to global coordinates.
+        corresponding to the rotation matrix from global to local coordinates.
 
         The element coordinate system is determined, identifying the `ijk`
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
         {y_e}_j, {y_e}_k`; `{z_e}_i, {z_e}_j, {z_e}_k`.
 
-        The rotation matrix terms are calculated after solving 9 equations.
 
         Parameters
         ----------
@@ -223,12 +224,6 @@ cdef class Quad4R:
         cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k, x4i, x4j, x4k
         cdef double v13i, v13j, v13k, v42i, v42j, v42k
         cdef double tmp, xmatnorm, ymati, ymatj, ymatk
-        cdef double xmatglobi, xmatglobj, xmatglobk
-        cdef double ymatglobi, ymatglobj, ymatglobk
-        cdef double zmatglobi, zmatglobj, zmatglobk
-        cdef double xeleglobi, xeleglobj, xeleglobk
-        cdef double yeleglobi, yeleglobj, yeleglobk
-        cdef double zeleglobi, zeleglobj, zeleglobk
         cdef double tol
 
         with nogil:

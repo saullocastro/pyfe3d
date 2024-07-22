@@ -19,6 +19,7 @@ from .beamprop cimport BeamProp
 cdef int DOF = 6
 cdef int NUM_NODES = 2
 
+
 cdef class BeamCData:
     r"""
     Used to allocate memory for the sparse matrices.
@@ -87,10 +88,15 @@ cdef class BeamC:
     ----------
     eid, : int
         Element identification number.
+    pid, : int
+        Property identification number.
     length, : double
         Element length.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix to the global coordinate system.
+    vxyi, vxyj, vxyk : double
+        Components of a vector on the `XY` plane of the element coordinate
+        system, defined using global coordinates.
     c1, c2 : int
         Position of each node in the global stiffness matrix.
     n1, n2 : int
@@ -107,6 +113,7 @@ cdef class BeamC:
     cdef public int c1, c2
     cdef public int init_k_KC0, init_k_KG, init_k_M
     cdef public double length
+    cdef public double vxyi, vxyj, vxyk
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public BeamCProbe probe
 
@@ -123,6 +130,7 @@ cdef class BeamC:
         self.init_k_KG = 0
         self.init_k_M = 0
         self.length = 0
+        self.vxyi = self.vxyj = self.vxyk = 0.
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.
         self.r31 = self.r32 = self.r33 = 0.
@@ -133,13 +141,15 @@ cdef class BeamC:
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
-        corresponding to the rotation matrix from local to global coordinates.
+        corresponding to the rotation matrix from global to local coordinates.
+
+        The element attributes `vxyi`, `vxyj` and `vxyk` are also updated when
+        this function is called.
 
         The element coordinate system is determined, identifying the `ijk`
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
         {y_e}_j, {y_e}_k`; `{z_e}_i, {z_e}_j, {z_e}_k`.
 
-        The rotation matrix terms are calculated after solving 9 equations.
 
         Parameters
         ----------
@@ -156,6 +166,10 @@ cdef class BeamC:
         cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k, x4i, x4j, x4k
 
         with nogil:
+            self.vxyi = vxyi
+            self.vxyj = vxyj
+            self.vxyk = vxyk
+
             x1i = x[self.c1//2 + 0]
             x1j = x[self.c1//2 + 1]
             x1k = x[self.c1//2 + 2]
