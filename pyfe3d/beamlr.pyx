@@ -145,7 +145,7 @@ cdef class BeamLR:
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
-        corresponding to the rotation matrix from global to local coordinates.
+        corresponding to the rotation matrix from local to global coordinates.
 
         The element attributes `vxyi`, `vxyj` and `vxyk` are also updated when
         this function is called.
@@ -237,13 +237,12 @@ cdef class BeamLR:
         cdef double s2[3]
         cdef double s3[3]
 
-        # TODO double check all this part
         with nogil:
             # positions in the global stiffness matrix
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements
+            # global to local transformation of displacements (R.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -295,7 +294,7 @@ cdef class BeamLR:
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements
+            # global to local transformation of displacements (R.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -376,7 +375,7 @@ cdef class BeamLR:
             Iyz = prop.Iyz
             J = prop.J
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -1150,7 +1149,7 @@ cdef class BeamLR:
             A = prop.A
             E = prop.E
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -1392,7 +1391,7 @@ cdef class BeamLR:
             A = prop.A
             E = prop.E
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13

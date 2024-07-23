@@ -81,7 +81,7 @@ cdef class Spring:
     krxe, krye, krze : double
         Rotational stiffnesses in the element coordinate system.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Rotation matrix to the global coordinate system. By default it assumes
+        Rotation matrix from local to global coordinates. By default it assumes
         that the element is aligned with the global coordinate system.
     vxyi, vxyj, vxyk : double
         Components of a vector on the `XY` plane of the element coordinate
@@ -131,7 +131,7 @@ cdef class Spring:
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
-        corresponding to the rotation matrix from global to local coordinates.
+        corresponding to the rotation matrix from local to global coordinates.
 
         The element coordinate system is determined, identifying the `ijk`
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
@@ -214,7 +214,7 @@ cdef class Spring:
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements
+            # global to local transformation of displacements (R.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -274,7 +274,7 @@ cdef class Spring:
             krye = self.krye
             krze = self.krze
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13

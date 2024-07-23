@@ -127,7 +127,7 @@ cdef class Tria3R:
         not be used, but this is controversion, already being controversial to
         what AUTODESK NASTRAN's manual says.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Rotation matrix to the global coordinate system.
+        Rotation matrix from local to global coordinates.
     m11, m12, m21, m22 : double
         Rotation matrix only for the constitutive relations. Used when a
         material direction is used instead of the element local coordinates.
@@ -185,7 +185,7 @@ cdef class Tria3R:
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
-        corresponding to the rotation matrix from global to local coordinates.
+        corresponding to the rotation matrix from local to global coordinates.
 
         The element coordinate system is determined, identifying the `ijk`
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
@@ -339,7 +339,7 @@ cdef class Tria3R:
             c[1] = self.c2
             c[2] = self.c3
 
-            # global to local transformation of displacements
+            # global to local transformation of displacements (R.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -392,7 +392,7 @@ cdef class Tria3R:
             c[1] = self.c2
             c[2] = self.c3
 
-            # global to local transformation of displacements
+            # global to local transformation of displacements (R.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -606,7 +606,7 @@ cdef class Tria3R:
             E45 = 1 / (1 + factor) * E45
             E55 = 1 / (1 + factor) * E55
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -2364,7 +2364,7 @@ cdef class Tria3R:
                 # B62 = m21**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m22**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
                 B66 = m11*m21*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + m12*m22*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21))
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -2858,7 +2858,7 @@ cdef class Tria3R:
             A = self.area
             detJ = 2*A
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -3362,7 +3362,7 @@ cdef class Tria3R:
             y3 = self.probe.xe[7]
             # z3 = self.probe.xe[8]
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13

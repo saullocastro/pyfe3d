@@ -91,7 +91,7 @@ cdef class Truss:
     length, : double
         Element length.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Rotation matrix to the global coordinate system.
+        Rotation matrix from local to global coordinates.
     c1, c2 : int
         Position of each node in the global stiffness matrix.
     n1, n2 : int
@@ -149,13 +149,12 @@ cdef class Truss:
         cdef double s2[3]
         cdef double s3[3]
 
-        # FIXME double check all this part
         with nogil:
             # positions in the global stiffness matrix
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements
+            # global to local transformation of displacements (R.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -186,7 +185,7 @@ cdef class Truss:
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
-        corresponding to the rotation matrix from global to local coordinates.
+        corresponding to the rotation matrix from local to global coordinates.
 
         The element coordinate system is determined, identifying the `ijk`
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
@@ -278,7 +277,7 @@ cdef class Truss:
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements
+            # global to local transformation of displacements (R.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -356,7 +355,7 @@ cdef class Truss:
             Izz = prop.Izz
             J = prop.J
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -776,7 +775,7 @@ cdef class Truss:
             A = prop.A
             E = prop.E
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
