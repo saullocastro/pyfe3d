@@ -9,6 +9,7 @@ from pyfe3d.beamprop import BeamProp
 from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
 
 def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
+    # NOTE these rotation_rad values will keep the problem 2D on the XZ plane
     for rotation_rad in [np.pi/2, 3*np.pi/2]:
         for mtype in mtypes:
             print('mtype', mtype)
@@ -29,12 +30,9 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
             r = 2.438
             thetas = np.linspace(thetabeam, 0, n)
             x = r*np.cos(thetas)
-            print('x', x)
             normal = r*np.sin(thetas)
             y = normal*np.cos(rotation_rad)
-            print('y', y)
             z = normal*np.sin(rotation_rad)
-            print('z', z)
 
             ncoords = np.vstack((x, y, z)).T
             nids = 1 + np.arange(ncoords.shape[0])
@@ -56,7 +54,6 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
             Mc = np.zeros(data.M_SPARSE_SIZE*num_elements, dtype=INT)
             Mv = np.zeros(data.M_SPARSE_SIZE*num_elements, dtype=DOUBLE)
             N = DOF*n
-            print('num_DOF', N)
 
             prop = BeamProp()
             prop.A = A
@@ -84,10 +81,6 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
                 beam.c2 = DOF*pos2
                 vxy = ncoords[pos1]
                 beam.update_rotation_matrix(vxy[0], vxy[1], vxy[2], ncoords_flatten)
-                print(beam.r11, beam.r12, beam.r13)
-                print(beam.r21, beam.r22, beam.r23)
-                print(beam.r31, beam.r32, beam.r33)
-                print()
                 beam.update_probe_xe(ncoords_flatten)
                 beam.update_KC0(KC0r, KC0c, KC0v, prop)
                 beam.update_M(Mr, Mc, Mv, prop, mtype=mtype)
@@ -103,20 +96,20 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
             print('sparse KC0 and M created')
 
             bk = np.zeros(N, dtype=bool)
-            check = np.isclose(x, x.min()) | np.isclose(x, x.max())
-            bk[0::DOF] = check # u
-            bk[2::DOF] = check # w
-            bk[1::DOF] = True
-            bk[3::DOF] = True
-            bk[5::DOF] = True
+            check = ((np.isclose(x, x[0]) & np.isclose(z, z[0]))
+                     | (np.isclose(x, x[-1]) & np.isclose(z, z[-1])))
+            bk[0::DOF] = check # u (axial displacement)
+            bk[2::DOF] = check # w (deflection)
+            bk[1::DOF] = True # out of XZ plane displacement
+            bk[3::DOF] = True # torsion rx
+            bk[5::DOF] = True # out-of-plane deflection
             bu = ~bk
 
             Kuu = KC0[bu, :][:, bu]
             Muu = M[bu, :][:, bu]
 
             num_eigenvalues = 3
-            eigvals, eigvecsu = eigsh(A=Kuu, M=Muu, sigma=-1., which='LM',
-                    k=num_eigenvalues, tol=1e-4)
+            eigvals, eigvecsu = eigsh(A=Kuu, M=Muu, sigma=-1., which='LM', k=num_eigenvalues, tol=1e-5)
             omegan = eigvals**0.5
             omega123_from_paper = [396.98, 931.22, 1797.31]
             omega123_expected_here = [395.50396255, 923.75280464, 1773.32657347]
