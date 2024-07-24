@@ -1,7 +1,3 @@
-numpy
-scipy
-cython
-alg3dpy
 sphinx
 numpydoc
 pydata-sphinx-theme
