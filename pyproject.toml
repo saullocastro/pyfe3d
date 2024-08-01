@@ -5,5 +5,5 @@ dynamic = ["version", "authors", "license", "readme", "description",
 "keywords", "classifiers"]
 
 [build-system]
-requires = ["setuptools", "wheel", "numpy", "scipy", "alg3dpy", "cython"]
+requires = ["setuptools", "wheel", "numpy", "scipy", "cython"]
 
