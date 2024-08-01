@@ -16,9 +16,12 @@ This element has 6 degrees-of-freedom (DOF): `u`, `v`, `w`, `r_x`, `r_y`,
 their gradients can be constan over the element, when the element is
 rectangular.
 
+The in-plane, bending and coupled in-plane and bending stiffness terms are
+integrated with 2 quadrature points.
 
-The in-plane degrees-of-freedom `u`, `v` are integrated with 1 quadrature
-point.
+The transverse shear terms are integrated with 1 quadrature point.
+
+The drilling stiffness is integrated with 1 quadrature point.
 
 The stiffness for the degrees of freeom `w`, `r_x` and `r_y` is based on the
 paper below, where `r_x = \theta_1` and `r_y = \theta_2`:
@@ -29,23 +32,30 @@ paper below, where `r_x = \theta_1` and `r_y = \theta_2`:
 
 
 Hugues et al. propose the following integration scheme:
-- For thick plates, when t/h >= 1
--- two-by-two quadrature for the bending energy terms
--- two-by-two quadrature for the transverse shear terms with gradients
--- one-point quadrature for the transverse shear terms without gradients
 
-- For thin plates, when t/h < 1
+- For thin plates, when `h/\ell < 1`, where `\ell` is the element
+  characteristic length, here calculated as the square root of the element area
+  `\sqrt{\text{area}}`
+
 -- two-by-two quadrature for the bending energy terms
+
 -- one-point quadrature for the transverse shear energy terms
 
-bending stiffness vanishes when thickness -> zero, so a correction is applied:
+- For thick plates, when `h/\ell >= 1`
 
-    maximum allowable aspect ratio for plate: 10^5/8, beyond which the shear
-    stiffness is multiplied by (thickness/h)^2 * (max aspect ratio allowed)^2,
-    where the max aspect ratio allowed for plates is 10^5/8.
+-- two-by-two quadrature for the bending energy terms
+
+-- two-by-two quadrature for the transverse shear terms with gradients
+
+-- one-point quadrature for the transverse shear terms without gradients
 
 
 """
+#TODO bending stiffness vanishes when thickness -> zero, so a correction is applied:
+#     maximum allowable aspect ratio for plate: 10^5/8, beyond which the shear
+#     stiffness is multiplied by (thickness/h)^2 * (max aspect ratio allowed)^2,
+#     where the max aspect ratio allowed for plates is 10^5/8.
+
 from libc.math cimport fabs, fmod
 
 import numpy as np
@@ -565,7 +575,7 @@ cdef class Quad4:
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
         cdef double alphat
-        cdef double h
+        cdef double h, length
         cdef double r[6][6]
         cdef double m11, m12, m21, m22, a11, a22
         cdef double j11, j12, j21, j22, N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
@@ -676,6 +686,7 @@ cdef class Quad4:
                 D66 = m11*m21*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + m12*m22*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21))
 
             h = prop.h
+            length = self.area**0.5
 
             E44 = prop.E44*prop.scf_k23
             E45 = prop.E45*0.5*(prop.scf_k13 + prop.scf_k23)
@@ -838,21 +849,6 @@ cdef class Quad4:
                     BLkxy[16] = N3y
                     BLkxy[22] = N4y
 
-                    BLdrilling[0] = N1y/2.
-                    BLdrilling[6] = N2y/2.
-                    BLdrilling[12] = N3y/2.
-                    BLdrilling[18] = N4y/2.
-
-                    BLdrilling[1] = -N1x/2.
-                    BLdrilling[7] = -N2x/2.
-                    BLdrilling[13] = -N3x/2.
-                    BLdrilling[19] = -N4x/2.
-
-                    BLdrilling[5] = N1
-                    BLdrilling[11] = N2
-                    BLdrilling[17] = N3
-                    BLdrilling[23] = N4
-
                     for i in range(24):
                         exx = BLexx[i]
                         eyy = BLeyy[i]
@@ -860,7 +856,6 @@ cdef class Quad4:
                         kxx = BLkxx[i]
                         kyy = BLkyy[i]
                         kxy = BLkxy[i]
-                        drilling = BLdrilling[i]
                         for j in range(24):
                             ke = 24*i + j
                             # membrane
@@ -883,93 +878,150 @@ cdef class Quad4:
                               + kyy*D12*BLkxx[j] + kyy*D22*BLkyy[j] + kyy*D26*BLkxy[j]
                               + kxy*D16*BLkxx[j] + kxy*D26*BLkyy[j] + kxy*D66*BLkxy[j]
 
-                            # drilling
-                              + drilling*(alphat*A66/h)*BLdrilling[j]
                             )
+
+                    if h/length >= 1.: # thick elements
+                        BLgyz_grad[2] = N1y
+                        BLgyz_grad[8] = N2y
+                        BLgyz_grad[14] = N3y
+                        BLgyz_grad[20] = N4y
+
+                        BLgxz_grad[2] = N1x
+                        BLgxz_grad[8] = N2x
+                        BLgxz_grad[14] = N3x
+                        BLgxz_grad[20] = N4x
+                        for i in range(24):
+                            gyz_grad = BLgyz_grad[i]
+                            gxz_grad = BLgxz_grad[i]
+                            for j in range(24):
+                                ke = 24*i + j
+                                # transverse shear (gradient term)
+                                self.probe.KC0ve[ke] += wij*detJ*(
+                                    gyz_grad*E44*BLgyz_grad[j] + gyz_grad*E45*BLgxz_grad[j]
+                                  + gxz_grad*E45*BLgyz_grad[j] + gxz_grad*E55*BLgxz_grad[j]
+                                )
 
             # NOTE reduced integration with one point at the center
             wij = 4.
             xi = 0.
             eta = 0.
 
-            if True:
-                if True:
+            J11 = -0.5*x1 + 0.5*x2 + 0.5*(eta + 1)*(0.5*x1 - 0.5*x2 + 0.5*x3 - 0.5*x4)
+            J12 = -0.5*y1 + 0.5*y2 + 0.5*(eta + 1)*(0.5*y1 - 0.5*y2 + 0.5*y3 - 0.5*y4)
+            J21 = -0.5*x1 + 0.5*x4 - 0.25*(-x1 + x2)*(xi + 1) + 0.25*(x3 - x4)*(xi + 1)
+            J22 = -0.5*y1 + 0.5*y4 - 0.25*(xi + 1)*(-y1 + y2) + 0.25*(xi + 1)*(y3 - y4)
 
-            #for pti in range(2):
-                #xi = points[pti]
-                #for ptj in range(2):
-                    #eta = points[ptj]
+            detJ = J11*J22 - J12*J21
 
-                    J11 = -0.5*x1 + 0.5*x2 + 0.5*(eta + 1)*(0.5*x1 - 0.5*x2 + 0.5*x3 - 0.5*x4)
-                    J12 = -0.5*y1 + 0.5*y2 + 0.5*(eta + 1)*(0.5*y1 - 0.5*y2 + 0.5*y3 - 0.5*y4)
-                    J21 = -0.5*x1 + 0.5*x4 - 0.25*(-x1 + x2)*(xi + 1) + 0.25*(x3 - x4)*(xi + 1)
-                    J22 = -0.5*y1 + 0.5*y4 - 0.25*(xi + 1)*(-y1 + y2) + 0.25*(xi + 1)*(y3 - y4)
+            j11 = J22/(J11*J22 - J12*J21)
+            j12 = -J12/(J11*J22 - J12*J21)
+            j21 = -J21/(J11*J22 - J12*J21)
+            j22 = J11/(J11*J22 - J12*J21)
 
-                    detJ = J11*J22 - J12*J21
+            N1 = eta*xi/4. - eta/4. - xi/4. + 1/4.
+            N2 = -eta*xi/4. - eta/4. + xi/4. + 1/4.
+            N3 = eta*xi/4. + eta/4. + xi/4. + 1/4.
+            N4 = -eta*xi/4. + eta/4. - xi/4. + 1/4.
 
-                    j11 = J22/(J11*J22 - J12*J21)
-                    j12 = -J12/(J11*J22 - J12*J21)
-                    j21 = -J21/(J11*J22 - J12*J21)
-                    j22 = J11/(J11*J22 - J12*J21)
+            N1x = 0.25*j11*(eta - 1) + 0.25*j12*(xi - 1)
+            N2x = -0.25*eta*j11 + 0.25*j11 - 0.25*j12*xi - 0.25*j12
+            N3x = 0.25*j11*(eta + 1) + 0.25*j12*(xi + 1)
+            N4x = -0.25*eta*j11 - 0.25*j11 - 0.25*j12*xi + 0.25*j12
 
-                    N1 = eta*xi/4. - eta/4. - xi/4. + 1/4.
-                    N2 = -eta*xi/4. - eta/4. + xi/4. + 1/4.
-                    N3 = eta*xi/4. + eta/4. + xi/4. + 1/4.
-                    N4 = -eta*xi/4. + eta/4. - xi/4. + 1/4.
+            N1y = 0.25*j21*(eta - 1) + 0.25*j22*(xi - 1)
+            N2y = -0.25*eta*j21 + 0.25*j21 - 0.25*j22*xi - 0.25*j22
+            N3y = 0.25*j21*(eta + 1) + 0.25*j22*(xi + 1)
+            N4y = -0.25*eta*j21 - 0.25*j21 - 0.25*j22*xi + 0.25*j22
 
-                    N1x = 0.25*j11*(eta - 1) + 0.25*j12*(xi - 1)
-                    N2x = -0.25*eta*j11 + 0.25*j11 - 0.25*j12*xi - 0.25*j12
-                    N3x = 0.25*j11*(eta + 1) + 0.25*j12*(xi + 1)
-                    N4x = -0.25*eta*j11 - 0.25*j11 - 0.25*j12*xi + 0.25*j12
+            BLgyz_rot[3] = -N1
+            BLgyz_rot[9] = -N2
+            BLgyz_rot[15] = -N3
+            BLgyz_rot[21] = -N4
 
-                    N1y = 0.25*j21*(eta - 1) + 0.25*j22*(xi - 1)
-                    N2y = -0.25*eta*j21 + 0.25*j21 - 0.25*j22*xi - 0.25*j22
-                    N3y = 0.25*j21*(eta + 1) + 0.25*j22*(xi + 1)
-                    N4y = -0.25*eta*j21 - 0.25*j21 - 0.25*j22*xi + 0.25*j22
+            BLgyz_grad[2] = N1y
+            BLgyz_grad[8] = N2y
+            BLgyz_grad[14] = N3y
+            BLgyz_grad[20] = N4y
 
-                    BLgyz_rot[3] = -N1
-                    BLgyz_rot[9] = -N2
-                    BLgyz_rot[15] = -N3
-                    BLgyz_rot[21] = -N4
+            BLgxz_rot[4] = N1
+            BLgxz_rot[10] = N2
+            BLgxz_rot[16] = N3
+            BLgxz_rot[22] = N4
 
-                    BLgyz_grad[2] = N1y
-                    BLgyz_grad[8] = N2y
-                    BLgyz_grad[14] = N3y
-                    BLgyz_grad[20] = N4y
+            BLgxz_grad[2] = N1x
+            BLgxz_grad[8] = N2x
+            BLgxz_grad[14] = N3x
+            BLgxz_grad[20] = N4x
 
-                    BLgxz_rot[4] = N1
-                    BLgxz_rot[10] = N2
-                    BLgxz_rot[16] = N3
-                    BLgxz_rot[22] = N4
+            BLdrilling[0] = N1y/2.
+            BLdrilling[6] = N2y/2.
+            BLdrilling[12] = N3y/2.
+            BLdrilling[18] = N4y/2.
 
-                    BLgxz_grad[2] = N1x
-                    BLgxz_grad[8] = N2x
-                    BLgxz_grad[14] = N3x
-                    BLgxz_grad[20] = N4x
+            BLdrilling[1] = -N1x/2.
+            BLdrilling[7] = -N2x/2.
+            BLdrilling[13] = -N3x/2.
+            BLdrilling[19] = -N4x/2.
 
-                    for i in range(24):
-                        gyz_rot = BLgyz_rot[i]
-                        gxz_rot = BLgxz_rot[i]
-                        gyz_grad = BLgyz_grad[i]
-                        gxz_grad = BLgxz_grad[i]
-                        for j in range(24):
-                            ke = 24*i + j
-                            # transverse shear (rotation term)
-                            self.probe.KC0ve[ke] += wij*detJ*(
-                                gyz_rot*E44*BLgyz_rot[j] + gyz_rot*E45*BLgxz_rot[j]
-                              + gxz_rot*E45*BLgyz_rot[j] + gxz_rot*E55*BLgxz_rot[j]
+            BLdrilling[5] = N1
+            BLdrilling[11] = N2
+            BLdrilling[17] = N3
+            BLdrilling[23] = N4
 
-                            # transverse shear (gradient term)
-                              + gyz_grad*E44*BLgyz_grad[j] + gyz_grad*E45*BLgxz_grad[j]
-                              + gxz_grad*E45*BLgyz_grad[j] + gxz_grad*E55*BLgxz_grad[j]
+            if h/length < 1.: # thin elements
+                for i in range(24):
+                    gyz_rot = BLgyz_rot[i]
+                    gxz_rot = BLgxz_rot[i]
+                    gyz_grad = BLgyz_grad[i]
+                    gxz_grad = BLgxz_grad[i]
+                    drilling = BLdrilling[i]
+                    for j in range(24):
+                        ke = 24*i + j
+                        self.probe.KC0ve[ke] += wij*detJ*(
+                        # transverse shear (gradient term)
+                          + gyz_grad*E44*BLgyz_grad[j] + gyz_grad*E45*BLgxz_grad[j]
+                          + gxz_grad*E45*BLgyz_grad[j] + gxz_grad*E55*BLgxz_grad[j]
 
-                            # transverse shear (coupled terms)
-                              + gyz_rot*E44*BLgyz_grad[j] + gyz_rot*E45*BLgxz_grad[j]
-                              + gxz_rot*E45*BLgyz_grad[j] + gxz_rot*E55*BLgxz_grad[j]
+                        # transverse shear (coupled terms)
+                          + gyz_grad*E44*BLgyz_rot[j] + gyz_grad*E45*BLgxz_rot[j]
+                          + gxz_grad*E45*BLgyz_rot[j] + gxz_grad*E55*BLgxz_rot[j]
 
-                              + gyz_grad*E44*BLgyz_rot[j] + gyz_grad*E45*BLgxz_rot[j]
-                              + gxz_grad*E45*BLgyz_rot[j] + gxz_grad*E55*BLgxz_rot[j]
-                            )
+                          + gyz_rot*E44*BLgyz_grad[j] + gyz_rot*E45*BLgxz_grad[j]
+                          + gxz_rot*E45*BLgyz_grad[j] + gxz_rot*E55*BLgxz_grad[j]
+
+                        # transverse shear (rotation term)
+                            gyz_rot*E44*BLgyz_rot[j] + gyz_rot*E45*BLgxz_rot[j]
+                          + gxz_rot*E45*BLgyz_rot[j] + gxz_rot*E55*BLgxz_rot[j]
+
+                        # drilling
+                          + drilling*(alphat*A66/h)*BLdrilling[j]
+
+                        )
+
+            else: # thick elements
+                for i in range(24):
+                    gyz_rot = BLgyz_rot[i]
+                    gxz_rot = BLgxz_rot[i]
+                    gyz_grad = BLgyz_grad[i]
+                    gxz_grad = BLgxz_grad[i]
+                    drilling = BLdrilling[i]
+                    for j in range(24):
+                        ke = 24*i + j
+                        self.probe.KC0ve[ke] += wij*detJ*(
+                        # transverse shear (coupled terms)
+                            gyz_grad*E44*BLgyz_rot[j] + gyz_grad*E45*BLgxz_rot[j]
+                          + gxz_grad*E45*BLgyz_rot[j] + gxz_grad*E55*BLgxz_rot[j]
+
+                          + gyz_rot*E44*BLgyz_grad[j] + gyz_rot*E45*BLgxz_grad[j]
+                          + gxz_rot*E45*BLgyz_grad[j] + gxz_rot*E55*BLgxz_grad[j]
+
+                        # transverse shear (rotation term)
+                          + gyz_rot*E44*BLgyz_rot[j] + gyz_rot*E45*BLgxz_rot[j]
+                          + gxz_rot*E45*BLgyz_rot[j] + gxz_rot*E55*BLgxz_rot[j]
+
+                        # drilling
+                          + drilling*(alphat*A66/h)*BLdrilling[j]
+                        )
 
             # NOTE from element to global coordinates:
             #
