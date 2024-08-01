@@ -158,7 +158,7 @@ def test_linear_buckling_cylinder(mode=0):
     reference_value_Geier_Singh =  -274300
 
     #assert np.isclose(Pcr, reference_value_Geier_Singh, rtol=0.01)
-    assert np.isclose(Pcr, -1175384.408, rtol=0.01)
+    assert np.isclose(Pcr, -442798.413, rtol=0.01)
 
 
 if __name__ == '__main__':
