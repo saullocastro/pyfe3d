@@ -72,7 +72,12 @@ def test_static_plate_quad_point_load(plot=False):
         quad.init_k_KC0 = init_k_KC0
         quad.update_rotation_matrix(ncoords_flatten)
         quad.update_probe_xe(ncoords_flatten)
-        quad.update_KC0(KC0r, KC0c, KC0v, prop)
+        quad.update_KC0(KC0r, KC0c, KC0v, prop,
+                        hgfactor_u=0,
+                        hgfactor_v=0,
+                        hgfactor_w=0,
+                        hgfactor_rx=0,
+                        hgfactor_ry=0)
         quads.append(quad)
         init_k_KC0 += data.KC0_SPARSE_SIZE
 
@@ -110,7 +115,7 @@ def test_static_plate_quad_point_load(plot=False):
     # obtained with bfsplate2d element, nx=ny=29
     wmax_ref = 6.594931610258557e-05
     # obtained with Quad4R nx=7, ny=11
-    wmax_ref = 5.8143934272350526e-05
+    wmax_ref = 6.628175875195195e-05
     print('w.max()', w.max())
     assert np.isclose(wmax_ref, w.max(), rtol=0.02)
     if plot:
