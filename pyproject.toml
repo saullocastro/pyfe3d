@@ -1,2 +1,9 @@
+[project]
+name = "pyfe3d"
+requires-python = ">=3.8"
+dynamic = ["version", "authors", "license", "readme", "description",
+"keywords", "classifiers"]
+
 [build-system]
 requires = ["setuptools", "wheel", "numpy", "scipy", "alg3dpy", "cython"]
+
