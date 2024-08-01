@@ -125,10 +125,36 @@ cdef class Quad4Probe:
     cdef public double [::1] xe
     cdef public double [::1] ue
     cdef public double [::1] KC0ve
+    cdef public double BLexx[24]
+    cdef public double BLeyy[24]
+    cdef public double BLgxy[24]
+    cdef public double BLkxx[24]
+    cdef public double BLkyy[24]
+    cdef public double BLkxy[24]
+    cdef public double BLgyz_rot[24]
+    cdef public double BLgyz_grad[24]
+    cdef public double BLgxz_rot[24]
+    cdef public double BLgxz_grad[24]
+    cdef public double BLdrilling[24]
     def __cinit__(Quad4Probe self):
         self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
         self.ue = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.KC0ve = np.zeros((NUM_NODES*DOF)**2, dtype=np.float64)
+
+        # zeroing double buffers
+        init_double(self.BLexx, 24, 0.)
+        init_double(self.BLeyy, 24, 0.)
+        init_double(self.BLgxy, 24, 0.)
+
+        init_double(self.BLkxx, 24, 0.)
+        init_double(self.BLkyy, 24, 0.)
+        init_double(self.BLkxy, 24, 0.)
+
+        init_double(self.BLdrilling, 24, 0.)
+        init_double(self.BLgyz_rot, 24, 0.)
+        init_double(self.BLgyz_grad, 24, 0.)
+        init_double(self.BLgxz_rot, 24, 0.)
+        init_double(self.BLgxz_grad, 24, 0.)
 
 
 cdef class Quad4:
@@ -173,7 +199,7 @@ cdef class Quad4:
         not be used, but this is controversion, already being controversial to
         what AUTODESK NASTRAN's manual says.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Rotation matrix to the global coordinate system.
+        Rotation matrix from local to global coordinates.
     m11, m12, m21, m22 : double
         Rotation matrix only for the constitutive relations. Used when a
         material direction is used instead of the element local coordinates.
@@ -264,12 +290,6 @@ cdef class Quad4:
         cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k, x4i, x4j, x4k
         cdef double v13i, v13j, v13k, v42i, v42j, v42k
         cdef double tmp, xmatnorm, ymati, ymatj, ymatk
-        cdef double xmatglobi, xmatglobj, xmatglobk
-        cdef double ymatglobi, ymatglobj, ymatglobk
-        cdef double zmatglobi, zmatglobj, zmatglobk
-        cdef double xeleglobi, xeleglobj, xeleglobk
-        cdef double yeleglobi, yeleglobj, yeleglobk
-        cdef double zeleglobi, zeleglobj, zeleglobk
         cdef double tol
 
         with nogil:
@@ -402,7 +422,7 @@ cdef class Quad4:
             c[2] = self.c3
             c[3] = self.c4
 
-            # global to local transformation of displacements
+            # global to local transformation of displacements (R.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -456,7 +476,7 @@ cdef class Quad4:
             c[2] = self.c3
             c[3] = self.c4
 
-            # global to local transformation of displacements
+            # global to local transformation of displacements (R.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -532,7 +552,7 @@ cdef class Quad4:
 
         """
         cdef int i, j, k, ke
-        cdef int node_i, node_m, m, n
+        cdef int node_i, node_j, m, n
         cdef int c[4]
         cdef double x1, x2, x3, x4, y1, y2, y3, y4
         # NOTE ABD in the material direction
@@ -546,25 +566,40 @@ cdef class Quad4:
         cdef double D11, D12, D16, D22, D26, D66
         cdef double alphat
         cdef double h
-        cdef double r[3][3]
+        cdef double r[6][6]
         cdef double m11, m12, m21, m22, a11, a22
         cdef double j11, j12, j21, j22, N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
         cdef double N1, N2, N3, N4
-        cdef double xi, eta, wij, detJ
+        cdef int pti, ptj
+        cdef double xi, eta, wij, J11, J12, J21, J22, detJ
         cdef double points[2]
-        cdef double BLexx[24]
-        cdef double BLeyy[24]
-        cdef double BLgxy[24]
-        cdef double BLkxx[24]
-        cdef double BLkyy[24]
-        cdef double BLkxy[24]
-        cdef double BLgyz_rot[24]
-        cdef double BLgyz_grad[24]
-        cdef double BLgxz_rot[24]
-        cdef double BLgxz_grad[24]
-        cdef double BLdrilling[24]
+        cdef double* BLexx
+        cdef double* BLeyy
+        cdef double* BLgxy
+        cdef double* BLkxx
+        cdef double* BLkyy
+        cdef double* BLkxy
+        cdef double* BLdrilling
+        cdef double* BLgyz_rot
+        cdef double* BLgyz_grad
+        cdef double* BLgxz_rot
+        cdef double* BLgxz_grad
+        cdef double exx, eyy, gxy, kxx, kyy, kxy, drilling
+        cdef double gyz_rot, gxz_rot, gyz_grad, gxz_grad
 
         with nogil:
+            BLexx = &self.probe.BLexx[0]
+            BLeyy = &self.probe.BLeyy[0]
+            BLgxy = &self.probe.BLgxy[0]
+            BLkxx = &self.probe.BLkxx[0]
+            BLkyy = &self.probe.BLkyy[0]
+            BLkxy = &self.probe.BLkxy[0]
+            BLdrilling = &self.probe.BLdrilling[0]
+            BLgyz_rot = &self.probe.BLgyz_rot[0]
+            BLgyz_grad = &self.probe.BLgyz_grad[0]
+            BLgxz_rot = &self.probe.BLgxz_rot[0]
+            BLgxz_grad = &self.probe.BLgxz_grad[0]
+
             A11mat = prop.A11
             A12mat = prop.A12
             A16mat = prop.A16
@@ -660,7 +695,8 @@ cdef class Quad4:
             y4 = self.probe.xe[10]
             # z4 = self.probe.xe[11]
 
-            # Local to global transformation
+            # local to global transformation
+            # translation DOFs
             r[0][0] = self.r11
             r[0][1] = self.r12
             r[0][2] = self.r13
@@ -670,6 +706,37 @@ cdef class Quad4:
             r[2][0] = self.r31
             r[2][1] = self.r32
             r[2][2] = self.r33
+            # rotation DOFs
+            r[0+3][0+3] = self.r11
+            r[0+3][1+3] = self.r12
+            r[0+3][2+3] = self.r13
+            r[1+3][0+3] = self.r21
+            r[1+3][1+3] = self.r22
+            r[1+3][2+3] = self.r23
+            r[2+3][0+3] = self.r31
+            r[2+3][1+3] = self.r32
+            r[2+3][2+3] = self.r33
+            # coupled translation-rotation DOFs
+            r[0][0+3] = 0.
+            r[0][1+3] = 0.
+            r[0][2+3] = 0.
+            r[1][0+3] = 0.
+            r[1][1+3] = 0.
+            r[1][2+3] = 0.
+            r[2][0+3] = 0.
+            r[2][1+3] = 0.
+            r[2][2+3] = 0.
+            # coupled translation-rotation DOFs
+            r[0+3][0] = 0.
+            r[0+3][1] = 0.
+            r[0+3][2] = 0.
+            r[1+3][0] = 0.
+            r[1+3][1] = 0.
+            r[1+3][2] = 0.
+            r[2+3][0] = 0.
+            r[2+3][1] = 0.
+            r[2+3][2] = 0.
+
 
             # positions in the global stiffness matrix
             c[0] = self.c1
@@ -680,30 +747,43 @@ cdef class Quad4:
             alphat = self.alphat
 
             # initializing row and column indices
-            # initializing probe KC0ve parameter
+            #
+            # TODO use r[3][3] instead
             for node_i in range(NUM_NODES):
-                for node_m in range(NUM_NODES):
-                    for i in range(DOF):
-                        for m in range(DOF):
-                            k = self.init_k_KC0 + 24*(node_i*DOF + i) + node_m*DOF + m
-                            KC0r[k] = c[node_i] + i
-                            KC0c[k] = c[node_m] + m
-                            ke = 24*(node_i*DOF + i) + node_m*DOF + m
-                            self.probe.KC0ve[ke] = 0.
+                for m in range(DOF):
+                    for node_j in range(NUM_NODES):
+                        for n in range(DOF):
+                            k = self.init_k_KC0 + 24*(node_i*DOF + m) + node_j*DOF + n
+                            KC0r[k] = c[node_i] + m
+                            KC0c[k] = c[node_j] + n
 
-            # NOTE reduced integration with one point at the center
-            wij = 2.
-            xi = 0.
-            eta = 0.
+            # initializing probe KC0ve parameter
+            for i in range(24):
+                for j in range(24):
+                    ke = 24*i + j
+                    self.probe.KC0ve[ke] = 0.
 
-            if True:
-                if True:
-                    detJ = -0.125*eta*x1*y2 + 0.125*eta*x1*y3 + 0.125*eta*x2*y1 - 0.125*eta*x2*y4 - 0.125*eta*x3*y1 + 0.125*eta*x3*y4 + 0.125*eta*x4*y2 - 0.125*eta*x4*y3 - 0.125*x1*xi*y3 + 0.125*x1*xi*y4 + 0.125*x1*y2 - 0.125*x1*y4 + 0.125*x2*xi*y3 - 0.125*x2*xi*y4 - 0.125*x2*y1 + 0.125*x2*y3 + 0.125*x3*xi*y1 - 0.125*x3*xi*y2 - 0.125*x3*y2 + 0.125*x3*y4 - 0.125*x4*xi*y1 + 0.125*x4*xi*y2 + 0.125*x4*y1 - 0.125*x4*y3
+            # NOTE full integration with two-point Gauss-Legendre quadrature
+            wij = 1.
+            points[0] = -0.5773502691896257645092
+            points[1] = +0.5773502691896257645092
 
-                    j11 = 2.0*(-xi*y1 + xi*y2 - xi*y3 + xi*y4 + y1 + y2 - y3 - y4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
-                    j12 = 2.0*(eta*y1 - eta*y2 + eta*y3 - eta*y4 - y1 + y2 + y3 - y4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
-                    j21 = 2.0*(x1*xi - x1 - x2*xi - x2 + x3*xi + x3 - x4*xi + x4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
-                    j22 = 2.0*(-eta*x1 + eta*x2 - eta*x3 + eta*x4 + x1 - x2 - x3 + x4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
+            for pti in range(2):
+                xi = points[pti]
+                for ptj in range(2):
+                    eta = points[ptj]
+
+                    J11 = -0.5*x1 + 0.5*x2 + 0.5*(eta + 1)*(0.5*x1 - 0.5*x2 + 0.5*x3 - 0.5*x4)
+                    J12 = -0.5*y1 + 0.5*y2 + 0.5*(eta + 1)*(0.5*y1 - 0.5*y2 + 0.5*y3 - 0.5*y4)
+                    J21 = -0.5*x1 + 0.5*x4 - 0.25*(-x1 + x2)*(xi + 1) + 0.25*(x3 - x4)*(xi + 1)
+                    J22 = -0.5*y1 + 0.5*y4 - 0.25*(xi + 1)*(-y1 + y2) + 0.25*(xi + 1)*(y3 - y4)
+
+                    detJ = J11*J22 - J12*J21
+
+                    j11 = J22/(J11*J22 - J12*J21)
+                    j12 = -J12/(J11*J22 - J12*J21)
+                    j21 = -J21/(J11*J22 - J12*J21)
+                    j22 = J11/(J11*J22 - J12*J21)
 
                     N1 = eta*xi/4. - eta/4. - xi/4. + 1/4.
                     N2 = -eta*xi/4. - eta/4. + xi/4. + 1/4.
@@ -719,22 +799,6 @@ cdef class Quad4:
                     N2y = -0.25*eta*j21 + 0.25*j21 - 0.25*j22*xi - 0.25*j22
                     N3y = 0.25*j21*(eta + 1) + 0.25*j22*(xi + 1)
                     N4y = -0.25*eta*j21 - 0.25*j21 - 0.25*j22*xi + 0.25*j22
-
-
-                    init_double(BLexx, 24, 0.)
-                    init_double(BLeyy, 24, 0.)
-                    init_double(BLgxy, 24, 0.)
-
-                    init_double(BLkxx, 24, 0.)
-                    init_double(BLkyy, 24, 0.)
-                    init_double(BLkxy, 24, 0.)
-
-                    init_double(BLgyz_rot, 24, 0.)
-                    init_double(BLgyz_grad, 24, 0.)
-                    init_double(BLgxz_rot, 24, 0.)
-                    init_double(BLgxz_grad, 24, 0.)
-
-                    init_double(BLdrilling, 24, 0.)
 
                     BLexx[0] = N1x
                     BLexx[6] = N2x
@@ -774,26 +838,6 @@ cdef class Quad4:
                     BLkxy[16] = N3y
                     BLkxy[22] = N4y
 
-                    BLgyz_rot[3] = -N1
-                    BLgyz_rot[9] = -N2
-                    BLgyz_rot[15] = -N3
-                    BLgyz_rot[21] = -N4
-
-                    BLgyz_grad[2] = N1y
-                    BLgyz_grad[8] = N2y
-                    BLgyz_grad[14] = N3y
-                    BLgyz_grad[20] = N4y
-
-                    BLgxz_rot[4] = N1
-                    BLgxz_rot[10] = N2
-                    BLgxz_rot[16] = N3
-                    BLgxz_rot[22] = N4
-
-                    BLgxz_grad[2] = N1x
-                    BLgxz_grad[8] = N2x
-                    BLgxz_grad[14] = N3x
-                    BLgxz_grad[20] = N4x
-
                     BLdrilling[0] = N1y/2.
                     BLdrilling[6] = N2y/2.
                     BLdrilling[12] = N3y/2.
@@ -809,67 +853,64 @@ cdef class Quad4:
                     BLdrilling[17] = N3
                     BLdrilling[23] = N4
 
-                    # membrane
-                    ke = 0
                     for i in range(24):
+                        exx = BLexx[i]
+                        eyy = BLeyy[i]
+                        gxy = BLgxy[i]
+                        kxx = BLkxx[i]
+                        kyy = BLkyy[i]
+                        kxy = BLkxy[i]
+                        drilling = BLdrilling[i]
                         for j in range(24):
+                            ke = 24*i + j
+                            # membrane
                             self.probe.KC0ve[ke] += wij*detJ*(
-                                BLexx[i]*A11*BLexx[j] + BLexx[i]*A12*BLeyy[j] + BLexx[i]*A16*BLgxy[j]
-                              + BLeyy[i]*A12*BLexx[j] + BLeyy[i]*A22*BLeyy[j] + BLeyy[i]*A26*BLgxy[j]
-                              + BLgxy[i]*A16*BLexx[j] + BLgxy[i]*A26*BLeyy[j] + BLgxy[i]*A66*BLgxy[j])
-                            ke += 1
+                                exx*A11*BLexx[j] + exx*A12*BLeyy[j] + exx*A16*BLgxy[j]
+                              + eyy*A12*BLexx[j] + eyy*A22*BLeyy[j] + eyy*A26*BLgxy[j]
+                              + gxy*A16*BLexx[j] + gxy*A26*BLeyy[j] + gxy*A66*BLgxy[j]
 
-                    # coupling membrane-bending
-                    ke = 0
-                    for i in range(24):
-                        for j in range(24):
-                            self.probe.KC0ve[ke] += wij*detJ*(
-                                BLexx[i]*B11*BLkxx[j] + BLexx[i]*B12*BLkyy[j] + BLexx[i]*B16*BLkxy[j]
-                              + BLeyy[i]*B12*BLkxx[j] + BLeyy[i]*B22*BLkyy[j] + BLeyy[i]*B26*BLkxy[j]
-                              + BLgxy[i]*B16*BLkxx[j] + BLgxy[i]*B26*BLkyy[j] + BLgxy[i]*B66*BLkxy[j]
+                            # coupled membrane-bending
+                              + exx*B11*BLkxx[j] + exx*B12*BLkyy[j] + exx*B16*BLkxy[j]
+                              + eyy*B12*BLkxx[j] + eyy*B22*BLkyy[j] + eyy*B26*BLkxy[j]
+                              + gxy*B16*BLkxx[j] + gxy*B26*BLkyy[j] + gxy*B66*BLkxy[j]
 
-                              + BLkxx[i]*B11*BLexx[j] + BLkxx[i]*B12*BLeyy[j] + BLkxx[i]*B16*BLgxy[j]
-                              + BLkyy[i]*B12*BLexx[j] + BLkyy[i]*B22*BLeyy[j] + BLkyy[i]*B26*BLgxy[j]
-                              + BLkxy[i]*B16*BLexx[j] + BLkxy[i]*B26*BLeyy[j] + BLkxy[i]*B66*BLgxy[j]
+                              + kxx*B11*BLexx[j] + kxx*B12*BLeyy[j] + kxx*B16*BLgxy[j]
+                              + kyy*B12*BLexx[j] + kyy*B22*BLeyy[j] + kyy*B26*BLgxy[j]
+                              + kxy*B16*BLexx[j] + kxy*B26*BLeyy[j] + kxy*B66*BLgxy[j]
+
+                            # bending
+                              + kxx*D11*BLkxx[j] + kxx*D12*BLkyy[j] + kxx*D16*BLkxy[j]
+                              + kyy*D12*BLkxx[j] + kyy*D22*BLkyy[j] + kyy*D26*BLkxy[j]
+                              + kxy*D16*BLkxx[j] + kxy*D26*BLkyy[j] + kxy*D66*BLkxy[j]
+
+                            # drilling
+                              + drilling*(alphat*A66/h)*BLdrilling[j]
                             )
-                            ke += 1
 
-                    # bending
-                    ke = 0
-                    for i in range(24):
-                        for j in range(24):
-                            self.probe.KC0ve[ke] += wij*detJ*(
-                                BLkxx[i]*D11*BLkxx[j] + BLkxx[i]*D12*BLkyy[j] + BLkxx[i]*D16*BLkxy[j]
-                              + BLkyy[i]*D12*BLkxx[j] + BLkyy[i]*D22*BLkyy[j] + BLkyy[i]*D26*BLkxy[j]
-                              + BLkxy[i]*D16*BLkxx[j] + BLkxy[i]*D26*BLkyy[j] + BLkxy[i]*D66*BLkxy[j]
-                            )
-                            ke += 1
+            # NOTE reduced integration with one point at the center
+            wij = 4.
+            xi = 0.
+            eta = 0.
 
-                    # drilling
-                    ke = 0
-                    for i in range(24):
-                        for j in range(24):
-                            self.probe.KC0ve[ke] += wij*detJ*alphat*A66/h*(
-                                BLdrilling[i]*BLdrilling[j]
-                            )
-                            ke += 1
+            if True:
+                if True:
 
-            # NOTE full integration with two-point Gauss-Legendre quadrature
-            wij = 1.
-            points[0] = -0.5773502691896257645092
-            points[1] = +0.5773502691896257645092
+            #for pti in range(2):
+                #xi = points[pti]
+                #for ptj in range(2):
+                    #eta = points[ptj]
 
-            for i in range(2):
-                xi = points[i]
-                for j in range(2):
-                    eta = points[j]
+                    J11 = -0.5*x1 + 0.5*x2 + 0.5*(eta + 1)*(0.5*x1 - 0.5*x2 + 0.5*x3 - 0.5*x4)
+                    J12 = -0.5*y1 + 0.5*y2 + 0.5*(eta + 1)*(0.5*y1 - 0.5*y2 + 0.5*y3 - 0.5*y4)
+                    J21 = -0.5*x1 + 0.5*x4 - 0.25*(-x1 + x2)*(xi + 1) + 0.25*(x3 - x4)*(xi + 1)
+                    J22 = -0.5*y1 + 0.5*y4 - 0.25*(xi + 1)*(-y1 + y2) + 0.25*(xi + 1)*(y3 - y4)
 
-                    detJ = -0.125*eta*x1*y2 + 0.125*eta*x1*y3 + 0.125*eta*x2*y1 - 0.125*eta*x2*y4 - 0.125*eta*x3*y1 + 0.125*eta*x3*y4 + 0.125*eta*x4*y2 - 0.125*eta*x4*y3 - 0.125*x1*xi*y3 + 0.125*x1*xi*y4 + 0.125*x1*y2 - 0.125*x1*y4 + 0.125*x2*xi*y3 - 0.125*x2*xi*y4 - 0.125*x2*y1 + 0.125*x2*y3 + 0.125*x3*xi*y1 - 0.125*x3*xi*y2 - 0.125*x3*y2 + 0.125*x3*y4 - 0.125*x4*xi*y1 + 0.125*x4*xi*y2 + 0.125*x4*y1 - 0.125*x4*y3
+                    detJ = J11*J22 - J12*J21
 
-                    j11 = 2.0*(-xi*y1 + xi*y2 - xi*y3 + xi*y4 + y1 + y2 - y3 - y4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
-                    j12 = 2.0*(eta*y1 - eta*y2 + eta*y3 - eta*y4 - y1 + y2 + y3 - y4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
-                    j21 = 2.0*(x1*xi - x1 - x2*xi - x2 + x3*xi + x3 - x4*xi + x4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
-                    j22 = 2.0*(-eta*x1 + eta*x2 - eta*x3 + eta*x4 + x1 - x2 - x3 + x4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
+                    j11 = J22/(J11*J22 - J12*J21)
+                    j12 = -J12/(J11*J22 - J12*J21)
+                    j21 = -J21/(J11*J22 - J12*J21)
+                    j22 = J11/(J11*J22 - J12*J21)
 
                     N1 = eta*xi/4. - eta/4. - xi/4. + 1/4.
                     N2 = -eta*xi/4. - eta/4. + xi/4. + 1/4.
@@ -886,12 +927,6 @@ cdef class Quad4:
                     N3y = 0.25*j21*(eta + 1) + 0.25*j22*(xi + 1)
                     N4y = -0.25*eta*j21 - 0.25*j21 - 0.25*j22*xi + 0.25*j22
 
-                    #TODO can be moved outside the integration points loop
-                    init_double(BLgyz_rot, 24, 0.)
-                    init_double(BLgyz_grad, 24, 0.)
-                    init_double(BLgxz_rot, 24, 0.)
-                    init_double(BLgxz_grad, 24, 0.)
-
                     BLgyz_rot[3] = -N1
                     BLgyz_rot[9] = -N2
                     BLgyz_rot[15] = -N3
@@ -912,58 +947,48 @@ cdef class Quad4:
                     BLgxz_grad[14] = N3x
                     BLgxz_grad[20] = N4x
 
-                    # transverse shear (rotation term)
-                    ke = 0
                     for i in range(24):
+                        gyz_rot = BLgyz_rot[i]
+                        gxz_rot = BLgxz_rot[i]
+                        gyz_grad = BLgyz_grad[i]
+                        gxz_grad = BLgxz_grad[i]
                         for j in range(24):
+                            ke = 24*i + j
+                            # transverse shear (rotation term)
                             self.probe.KC0ve[ke] += wij*detJ*(
-                                BLgyz_rot[i]*E44*BLgyz_rot[j] + BLgyz_rot[i]*E45*BLgyz_rot[j]
-                              + BLgxz_rot[i]*E45*BLgyz_rot[j] + BLgxz_rot[i]*E55*BLgxz_rot[j]
-                            )
-                            ke += 1
+                                gyz_rot*E44*BLgyz_rot[j] + gyz_rot*E45*BLgxz_rot[j]
+                              + gxz_rot*E45*BLgyz_rot[j] + gxz_rot*E55*BLgxz_rot[j]
 
-                    # transverse shear (gradient term)
-                    ke = 0
-                    for i in range(24):
-                        for j in range(24):
-                            self.probe.KC0ve[ke] += wij*detJ*(
-                                BLgyz_grad[i]*E44*BLgyz_grad[j] + BLgyz_grad[i]*E45*BLgyz_grad[j]
-                              + BLgxz_grad[i]*E45*BLgyz_grad[j] + BLgxz_grad[i]*E55*BLgxz_grad[j]
-                            )
-                            ke += 1
+                            # transverse shear (gradient term)
+                              + gyz_grad*E44*BLgyz_grad[j] + gyz_grad*E45*BLgxz_grad[j]
+                              + gxz_grad*E45*BLgyz_grad[j] + gxz_grad*E55*BLgxz_grad[j]
 
-                    # transverse shear (coupled terms)
-                    ke = 0
-                    for i in range(24):
-                        for j in range(24):
-                            self.probe.KC0ve[ke] += wij*detJ*(
-                                BLgyz_rot[i]*E44*BLgyz_grad[j] + BLgyz_rot[i]*E45*BLgyz_grad[j]
-                              + BLgxz_rot[i]*E45*BLgyz_grad[j] + BLgxz_rot[i]*E55*BLgxz_grad[j]
-                              + BLgyz_grad[i]*E44*BLgyz_rot[j] + BLgyz_grad[i]*E45*BLgyz_rot[j]
-                              + BLgxz_grad[i]*E45*BLgyz_rot[j] + BLgxz_grad[i]*E55*BLgxz_rot[j]
-                            )
-                            ke += 1
+                            # transverse shear (coupled terms)
+                              + gyz_rot*E44*BLgyz_grad[j] + gyz_rot*E45*BLgxz_grad[j]
+                              + gxz_rot*E45*BLgyz_grad[j] + gxz_rot*E55*BLgxz_grad[j]
 
-            # NOTE from element to global coordinates
-            # r_{ij} x Ke_{im} x r_{mn}
+                              + gyz_grad*E44*BLgyz_rot[j] + gyz_grad*E45*BLgxz_rot[j]
+                              + gxz_grad*E45*BLgyz_rot[j] + gxz_grad*E55*BLgxz_rot[j]
+                            )
+
+            # NOTE from element to global coordinates:
+            #
+            # Kg = R @ Ke @ R.T
+            #
+            # in tensor notation:
+            #
+            # Kg_{mn} = r_{mi} * Ke_{ij} * r_{nj}
+            #
+            # TODO use r[3][3] instead
             for node_i in range(NUM_NODES):
-                for node_m in range(NUM_NODES):
-                    # translation
-                    for j in range(3):
-                        for n in range(3):
-                            k = self.init_k_KC0 + 24*(node_i*DOF + j) + node_m*DOF + n
-                            for i in range(3):
-                                for m in range(3):
-                                    ke = 24*(node_i*DOF + i) + node_m*DOF + m
-                                    KC0v[k] += r[i][j]*self.probe.KC0ve[ke]*r[m][n]
-                    # rotation
-                    for j in range(3):
-                        for n in range(3):
-                            k = self.init_k_KC0 + 24*(node_i*DOF + j + 3) + node_m*DOF + n + 3
-                            for i in range(3):
-                                for m in range(3):
-                                    ke = 24*(node_i*DOF + i + 3) + node_m*DOF + m + 3
-                                    KC0v[k] += r[i][j]*self.probe.KC0ve[ke]*r[m][n]
+                for m in range(DOF):
+                    for node_j in range(NUM_NODES):
+                        for n in range(DOF):
+                            k = self.init_k_KC0 + 24*(node_i*DOF + m) + node_j*DOF + n
+                            for i in range(DOF):
+                                for j in range(DOF):
+                                    ke = 24*(node_i*DOF + i) + node_j*DOF + j
+                                    KC0v[k] += r[m][i]*self.probe.KC0ve[ke]*r[n][j]
 
 
     cpdef void update_KG(Quad4 self,
@@ -1000,7 +1025,7 @@ cdef class Quad4:
         cdef int c1, c2, c3, c4, i, j, k
         cdef double x1, x2, x3, x4
         cdef double y1, y2, y3, y4
-        cdef double xi, eta, wij, detJ
+        cdef double xi, eta, wij, J11, J12, J21, J22, detJ
         cdef double points[2]
         # NOTE ABD in the material direction
         cdef double A11mat, A12mat, A16mat, A22mat, A26mat, A66mat
@@ -1068,7 +1093,7 @@ cdef class Quad4:
                 # B62 = m21**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m22**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
                 B66 = m11*m21*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + m12*m22*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21))
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -1544,12 +1569,17 @@ cdef class Quad4:
                 for j in range(2):
                     eta = points[j]
 
-                    detJ = -0.125*eta*x1*y2 + 0.125*eta*x1*y3 + 0.125*eta*x2*y1 - 0.125*eta*x2*y4 - 0.125*eta*x3*y1 + 0.125*eta*x3*y4 + 0.125*eta*x4*y2 - 0.125*eta*x4*y3 - 0.125*x1*xi*y3 + 0.125*x1*xi*y4 + 0.125*x1*y2 - 0.125*x1*y4 + 0.125*x2*xi*y3 - 0.125*x2*xi*y4 - 0.125*x2*y1 + 0.125*x2*y3 + 0.125*x3*xi*y1 - 0.125*x3*xi*y2 - 0.125*x3*y2 + 0.125*x3*y4 - 0.125*x4*xi*y1 + 0.125*x4*xi*y2 + 0.125*x4*y1 - 0.125*x4*y3
+                    J11 = -0.5*x1 + 0.5*x2 + 0.5*(eta + 1)*(0.5*x1 - 0.5*x2 + 0.5*x3 - 0.5*x4)
+                    J12 = -0.5*y1 + 0.5*y2 + 0.5*(eta + 1)*(0.5*y1 - 0.5*y2 + 0.5*y3 - 0.5*y4)
+                    J21 = -0.5*x1 + 0.5*x4 - 0.25*(-x1 + x2)*(xi + 1) + 0.25*(x3 - x4)*(xi + 1)
+                    J22 = -0.5*y1 + 0.5*y4 - 0.25*(xi + 1)*(-y1 + y2) + 0.25*(xi + 1)*(y3 - y4)
 
-                    j11 = 2.0*(-xi*y1 + xi*y2 - xi*y3 + xi*y4 + y1 + y2 - y3 - y4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
-                    j12 = 2.0*(eta*y1 - eta*y2 + eta*y3 - eta*y4 - y1 + y2 + y3 - y4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
-                    j21 = 2.0*(x1*xi - x1 - x2*xi - x2 + x3*xi + x3 - x4*xi + x4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
-                    j22 = 2.0*(-eta*x1 + eta*x2 - eta*x3 + eta*x4 + x1 - x2 - x3 + x4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
+                    detJ = J11*J22 - J12*J21
+
+                    j11 = J22/(J11*J22 - J12*J21)
+                    j12 = -J12/(J11*J22 - J12*J21)
+                    j21 = -J21/(J11*J22 - J12*J21)
+                    j22 = J11/(J11*J22 - J12*J21)
 
                     N1x = 0.25*j11*(eta - 1) + 0.25*j12*(xi - 1)
                     N2x = -0.25*eta*j11 + 0.25*j11 - 0.25*j12*xi - 0.25*j12
@@ -1886,14 +1916,14 @@ cdef class Quad4:
         cdef int c1, c2, c3, c4, i, j, k
         cdef double x1, x2, x3, x4
         cdef double y1, y2, y3, y4
-        cdef double wij, detJ, xi, eta
+        cdef double xi, eta, wij, J11, J12, J21, J22, detJ
         cdef double points[2]
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double j11, j12, j21, j22
         cdef double N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
 
         with nogil:
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -2367,12 +2397,17 @@ cdef class Quad4:
                 for j in range(2):
                     eta = points[j]
 
-                    detJ = -0.125*eta*x1*y2 + 0.125*eta*x1*y3 + 0.125*eta*x2*y1 - 0.125*eta*x2*y4 - 0.125*eta*x3*y1 + 0.125*eta*x3*y4 + 0.125*eta*x4*y2 - 0.125*eta*x4*y3 - 0.125*x1*xi*y3 + 0.125*x1*xi*y4 + 0.125*x1*y2 - 0.125*x1*y4 + 0.125*x2*xi*y3 - 0.125*x2*xi*y4 - 0.125*x2*y1 + 0.125*x2*y3 + 0.125*x3*xi*y1 - 0.125*x3*xi*y2 - 0.125*x3*y2 + 0.125*x3*y4 - 0.125*x4*xi*y1 + 0.125*x4*xi*y2 + 0.125*x4*y1 - 0.125*x4*y3
+                    J11 = -0.5*x1 + 0.5*x2 + 0.5*(eta + 1)*(0.5*x1 - 0.5*x2 + 0.5*x3 - 0.5*x4)
+                    J12 = -0.5*y1 + 0.5*y2 + 0.5*(eta + 1)*(0.5*y1 - 0.5*y2 + 0.5*y3 - 0.5*y4)
+                    J21 = -0.5*x1 + 0.5*x4 - 0.25*(-x1 + x2)*(xi + 1) + 0.25*(x3 - x4)*(xi + 1)
+                    J22 = -0.5*y1 + 0.5*y4 - 0.25*(xi + 1)*(-y1 + y2) + 0.25*(xi + 1)*(y3 - y4)
 
-                    j11 = 2.0*(-xi*y1 + xi*y2 - xi*y3 + xi*y4 + y1 + y2 - y3 - y4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
-                    j12 = 2.0*(eta*y1 - eta*y2 + eta*y3 - eta*y4 - y1 + y2 + y3 - y4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
-                    j21 = 2.0*(x1*xi - x1 - x2*xi - x2 + x3*xi + x3 - x4*xi + x4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
-                    j22 = 2.0*(-eta*x1 + eta*x2 - eta*x3 + eta*x4 + x1 - x2 - x3 + x4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
+                    detJ = J11*J22 - J12*J21
+
+                    j11 = J22/(J11*J22 - J12*J21)
+                    j12 = -J12/(J11*J22 - J12*J21)
+                    j21 = -J21/(J11*J22 - J12*J21)
+                    j22 = J11/(J11*J22 - J12*J21)
 
                     N1x = 0.25*j11*(eta - 1) + 0.25*j12*(xi - 1)
                     N2x = -0.25*eta*j11 + 0.25*j11 - 0.25*j12*xi - 0.25*j12
@@ -2706,7 +2741,7 @@ cdef class Quad4:
         cdef double x1, x2, x3, x4
         cdef double y1, y2, y3, y4
         cdef double h11, h12, h13, h14, h22, h23, h24, h33, h34, h44, valH1
-        cdef double xi, eta, wij, detJ
+        cdef double xi, eta, wij, J11, J12, J21, J22, detJ
         cdef double N1, N2, N3, N4
         cdef double points[2]
 
@@ -2731,7 +2766,7 @@ cdef class Quad4:
             y4 = self.probe.xe[10]
             # z4 = self.probe.xe[11]
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -4208,11 +4243,19 @@ cdef class Quad4:
                     xi = points[i]
                     for j in range(2):
                         eta = points[j]
-                        detJ = (-2*x1 + 2*x2 + (eta + 1)*(x1 - x2 + x3 - x4))*(-2*y1 + 2*y4 + (xi + 1)*(y1 - y2) + (xi + 1)*(y3 - y4))/16. - (-2*y1 + 2*y2 + (eta + 1)*(y1 - y2 + y3 - y4))*(-2*x1 + 2*x4 + (x1 - x2)*(xi + 1) + (x3 - x4)*(xi + 1))/16.
+
+                        J11 = -0.5*x1 + 0.5*x2 + 0.5*(eta + 1)*(0.5*x1 - 0.5*x2 + 0.5*x3 - 0.5*x4)
+                        J12 = -0.5*y1 + 0.5*y2 + 0.5*(eta + 1)*(0.5*y1 - 0.5*y2 + 0.5*y3 - 0.5*y4)
+                        J21 = -0.5*x1 + 0.5*x4 - 0.25*(-x1 + x2)*(xi + 1) + 0.25*(x3 - x4)*(xi + 1)
+                        J22 = -0.5*y1 + 0.5*y4 - 0.25*(xi + 1)*(-y1 + y2) + 0.25*(xi + 1)*(y3 - y4)
+
+                        detJ = J11*J22 - J12*J21
+
                         N1 = eta*xi/4. - eta/4. - xi/4. + 1/4.
                         N2 = -eta*xi/4. - eta/4. + xi/4. + 1/4.
                         N3 = eta*xi/4. + eta/4. + xi/4. + 1/4.
                         N4 = -eta*xi/4. + eta/4. - xi/4. + 1/4.
+
                         h11 += N1**2*detJ*wij
                         h12 += N1*N2*detJ*wij
                         h13 += N1*N3*detJ*wij
@@ -8472,11 +8515,19 @@ cdef class Quad4:
                     xi = points[i]
                     for j in range(2):
                         eta = points[j]
-                        detJ = (-2*x1 + 2*x2 + (eta + 1)*(x1 - x2 + x3 - x4))*(-2*y1 + 2*y4 + (xi + 1)*(y1 - y2) + (xi + 1)*(y3 - y4))/16. - (-2*y1 + 2*y2 + (eta + 1)*(y1 - y2 + y3 - y4))*(-2*x1 + 2*x4 + (x1 - x2)*(xi + 1) + (x3 - x4)*(xi + 1))/16.
+
+                        J11 = -0.5*x1 + 0.5*x2 + 0.5*(eta + 1)*(0.5*x1 - 0.5*x2 + 0.5*x3 - 0.5*x4)
+                        J12 = -0.5*y1 + 0.5*y2 + 0.5*(eta + 1)*(0.5*y1 - 0.5*y2 + 0.5*y3 - 0.5*y4)
+                        J21 = -0.5*x1 + 0.5*x4 - 0.25*(-x1 + x2)*(xi + 1) + 0.25*(x3 - x4)*(xi + 1)
+                        J22 = -0.5*y1 + 0.5*y4 - 0.25*(xi + 1)*(-y1 + y2) + 0.25*(xi + 1)*(y3 - y4)
+
+                        detJ = J11*J22 - J12*J21
+
                         N1 = eta*xi/4. - eta/4. - xi/4. + 1/4.
                         N2 = -eta*xi/4. - eta/4. + xi/4. + 1/4.
                         N3 = eta*xi/4. + eta/4. + xi/4. + 1/4.
                         N4 = -eta*xi/4. + eta/4. - xi/4. + 1/4.
+
                         h11 += N1**2*detJ*wij
                         h12 += N1*N2*detJ*wij
                         h13 += N1*N3*detJ*wij
@@ -9091,7 +9142,7 @@ cdef class Quad4:
         cdef double N1, N2, N3, N4
         cdef double N1x, N2x, N3x, N4x
         cdef double N1y, N2y, N3y, N4y
-        cdef double xi, eta, wij, detJ
+        cdef double xi, eta, wij, J11, J12, J21, J22, detJ
         cdef double points[2]
 
         with nogil:
@@ -9110,7 +9161,7 @@ cdef class Quad4:
             y4 = self.probe.xe[10]
             # z4 = self.probe.xe[11]
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -9570,12 +9621,17 @@ cdef class Quad4:
                 for j in range(2):
                     eta = points[j]
 
-                    detJ = -0.125*eta*x1*y2 + 0.125*eta*x1*y3 + 0.125*eta*x2*y1 - 0.125*eta*x2*y4 - 0.125*eta*x3*y1 + 0.125*eta*x3*y4 + 0.125*eta*x4*y2 - 0.125*eta*x4*y3 - 0.125*x1*xi*y3 + 0.125*x1*xi*y4 + 0.125*x1*y2 - 0.125*x1*y4 + 0.125*x2*xi*y3 - 0.125*x2*xi*y4 - 0.125*x2*y1 + 0.125*x2*y3 + 0.125*x3*xi*y1 - 0.125*x3*xi*y2 - 0.125*x3*y2 + 0.125*x3*y4 - 0.125*x4*xi*y1 + 0.125*x4*xi*y2 + 0.125*x4*y1 - 0.125*x4*y3
+                    J11 = -0.5*x1 + 0.5*x2 + 0.5*(eta + 1)*(0.5*x1 - 0.5*x2 + 0.5*x3 - 0.5*x4)
+                    J12 = -0.5*y1 + 0.5*y2 + 0.5*(eta + 1)*(0.5*y1 - 0.5*y2 + 0.5*y3 - 0.5*y4)
+                    J21 = -0.5*x1 + 0.5*x4 - 0.25*(-x1 + x2)*(xi + 1) + 0.25*(x3 - x4)*(xi + 1)
+                    J22 = -0.5*y1 + 0.5*y4 - 0.25*(xi + 1)*(-y1 + y2) + 0.25*(xi + 1)*(y3 - y4)
 
-                    j11 = 2.0*(-xi*y1 + xi*y2 - xi*y3 + xi*y4 + y1 + y2 - y3 - y4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
-                    j12 = 2.0*(eta*y1 - eta*y2 + eta*y3 - eta*y4 - y1 + y2 + y3 - y4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
-                    j21 = 2.0*(x1*xi - x1 - x2*xi - x2 + x3*xi + x3 - x4*xi + x4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
-                    j22 = 2.0*(-eta*x1 + eta*x2 - eta*x3 + eta*x4 + x1 - x2 - x3 + x4)/(eta*x1*y2 - eta*x1*y3 - eta*x2*y1 + eta*x2*y4 + eta*x3*y1 - eta*x3*y4 - eta*x4*y2 + eta*x4*y3 + x1*xi*y3 - x1*xi*y4 - x1*y2 + x1*y4 - x2*xi*y3 + x2*xi*y4 + x2*y1 - x2*y3 - x3*xi*y1 + x3*xi*y2 + x3*y2 - x3*y4 + x4*xi*y1 - x4*xi*y2 - x4*y1 + x4*y3)
+                    detJ = J11*J22 - J12*J21
+
+                    j11 = J22/(J11*J22 - J12*J21)
+                    j12 = -J12/(J11*J22 - J12*J21)
+                    j21 = -J21/(J11*J22 - J12*J21)
+                    j22 = J11/(J11*J22 - J12*J21)
 
                     N1 = 0.25*eta*xi - 0.25*eta - 0.25*xi + 0.25
                     N2 = -0.25*eta*xi - 0.25*eta + 0.25*xi + 0.25
@@ -9904,7 +9960,7 @@ cdef class Quad4:
         cdef double x1, x2, x3, x4
         cdef double y1, y2, y3, y4
         cdef double N1, N2, N3, N4
-        cdef double xi, eta, wij, detJ
+        cdef double xi, eta, wij, J11, J12, J21, J22, detJ
         cdef double points[2]
 
         with nogil:
@@ -9923,7 +9979,7 @@ cdef class Quad4:
             y4 = self.probe.xe[10]
             # z4 = self.probe.xe[11]
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -10383,7 +10439,12 @@ cdef class Quad4:
                 for j in range(2):
                     eta = points[j]
 
-                    detJ = -0.125*eta*x1*y2 + 0.125*eta*x1*y3 + 0.125*eta*x2*y1 - 0.125*eta*x2*y4 - 0.125*eta*x3*y1 + 0.125*eta*x3*y4 + 0.125*eta*x4*y2 - 0.125*eta*x4*y3 - 0.125*x1*xi*y3 + 0.125*x1*xi*y4 + 0.125*x1*y2 - 0.125*x1*y4 + 0.125*x2*xi*y3 - 0.125*x2*xi*y4 - 0.125*x2*y1 + 0.125*x2*y3 + 0.125*x3*xi*y1 - 0.125*x3*xi*y2 - 0.125*x3*y2 + 0.125*x3*y4 - 0.125*x4*xi*y1 + 0.125*x4*xi*y2 + 0.125*x4*y1 - 0.125*x4*y3
+                    J11 = -0.5*x1 + 0.5*x2 + 0.5*(eta + 1)*(0.5*x1 - 0.5*x2 + 0.5*x3 - 0.5*x4)
+                    J12 = -0.5*y1 + 0.5*y2 + 0.5*(eta + 1)*(0.5*y1 - 0.5*y2 + 0.5*y3 - 0.5*y4)
+                    J21 = -0.5*x1 + 0.5*x4 - 0.25*(-x1 + x2)*(xi + 1) + 0.25*(x3 - x4)*(xi + 1)
+                    J22 = -0.5*y1 + 0.5*y4 - 0.25*(xi + 1)*(-y1 + y2) + 0.25*(xi + 1)*(y3 - y4)
+
+                    detJ = J11*J22 - J12*J21
 
                     N1 = 0.25*eta*xi - 0.25*eta - 0.25*xi + 0.25
                     N2 = -0.25*eta*xi - 0.25*eta + 0.25*xi + 0.25
@@ -10702,7 +10763,7 @@ cdef class Quad4:
         cdef double x1, x2, x3, x4
         cdef double y1, y2, y3, y4
         cdef double N1, N2, N3, N4
-        cdef double xi, eta, wij, detJ
+        cdef double xi, eta, wij, J11, J12, J21, J22, detJ
         cdef double points[2]
 
         with nogil:
@@ -10721,7 +10782,7 @@ cdef class Quad4:
             y4 = self.probe.xe[10]
             # z4 = self.probe.xe[11]
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -11181,7 +11242,12 @@ cdef class Quad4:
                 for j in range(2):
                     eta = points[j]
 
-                    detJ = -0.125*eta*x1*y2 + 0.125*eta*x1*y3 + 0.125*eta*x2*y1 - 0.125*eta*x2*y4 - 0.125*eta*x3*y1 + 0.125*eta*x3*y4 + 0.125*eta*x4*y2 - 0.125*eta*x4*y3 - 0.125*x1*xi*y3 + 0.125*x1*xi*y4 + 0.125*x1*y2 - 0.125*x1*y4 + 0.125*x2*xi*y3 - 0.125*x2*xi*y4 - 0.125*x2*y1 + 0.125*x2*y3 + 0.125*x3*xi*y1 - 0.125*x3*xi*y2 - 0.125*x3*y2 + 0.125*x3*y4 - 0.125*x4*xi*y1 + 0.125*x4*xi*y2 + 0.125*x4*y1 - 0.125*x4*y3
+                    J11 = -0.5*x1 + 0.5*x2 + 0.5*(eta + 1)*(0.5*x1 - 0.5*x2 + 0.5*x3 - 0.5*x4)
+                    J12 = -0.5*y1 + 0.5*y2 + 0.5*(eta + 1)*(0.5*y1 - 0.5*y2 + 0.5*y3 - 0.5*y4)
+                    J21 = -0.5*x1 + 0.5*x4 - 0.25*(-x1 + x2)*(xi + 1) + 0.25*(x3 - x4)*(xi + 1)
+                    J22 = -0.5*y1 + 0.5*y4 - 0.25*(xi + 1)*(-y1 + y2) + 0.25*(xi + 1)*(y3 - y4)
+
+                    detJ = J11*J22 - J12*J21
 
                     N1 = 0.25*eta*xi - 0.25*eta - 0.25*xi + 0.25
                     N2 = -0.25*eta*xi - 0.25*eta + 0.25*xi + 0.25
@@ -11476,4 +11542,5 @@ cdef class Quad4:
                     CAv[k] += -N4**2*detJ*r23*r33*wij
                     k += 1
                     CAv[k] += -N4**2*detJ*r33**2*wij
+
 
