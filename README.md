@@ -22,7 +22,7 @@ in any platform, including the Google Colab environment.
 Citing this library
 -------------------
 
-Saullo G. P. Castro. (2023). General-purpose finite element solver based on Python and Cython (Version 0.4.1). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
+Saullo G. P. Castro. (2024). General-purpose finite element solver based on Python and Cython (Version 0.4.28). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
 
 
 Documentation
@@ -64,7 +64,7 @@ License
 Distrubuted under the 3-Clause BSD license
 (https://raw.github.com/saullocastro/pyfe3d/main/LICENSE):
 
-    Copyright (c) 2021-2023, Saullo G. P. Castro (S.G.P.Castro@tudelft.nl)
+    Copyright (c) 2021-2024, Saullo G. P. Castro (S.G.P.Castro@tudelft.nl)
     All rights reserved.
 
     Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:

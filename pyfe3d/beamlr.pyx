@@ -92,10 +92,15 @@ cdef class BeamLR:
     ----------
     eid, : int
         Element identification number.
+    pid, : int
+        Property identification number.
     length, : double
         Element length.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Rotation matrix to the global coordinate system.
+        Rotation matrix from local to global coordinates.
+    vxyi, vxyj, vxyk : double
+        Components of a vector on the `XY` plane of the element coordinate
+        system, defined using global coordinates.
     c1, c2 : int
         Position of each node in the global stiffness matrix.
     n1, n2 : int
@@ -107,17 +112,19 @@ cdef class BeamLR:
         Pointer to the probe.
 
     """
-    cdef public int eid
+    cdef public int eid, pid
     cdef public int n1, n2
     cdef public int c1, c2
     cdef public int init_k_KC0, init_k_KG, init_k_M
     cdef public double length
+    cdef public double vxyi, vxyj, vxyk
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public BeamLRProbe probe
 
     def __cinit__(BeamLR self, BeamLRProbe p):
         self.probe = p
         self.eid = -1
+        self.pid = -1
         self.n1 = -1
         self.n2 = -1
         self.c1 = -1
@@ -127,6 +134,7 @@ cdef class BeamLR:
         self.init_k_KG = 0
         self.init_k_M = 0
         self.length = 0
+        self.vxyi = self.vxyj = self.vxyk = 0.
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.
         self.r31 = self.r32 = self.r33 = 0.
@@ -139,17 +147,19 @@ cdef class BeamLR:
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
         corresponding to the rotation matrix from local to global coordinates.
 
+        The element attributes `vxyi`, `vxyj` and `vxyk` are also updated when
+        this function is called.
+
         The element coordinate system is determined, identifying the `ijk`
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
         {y_e}_j, {y_e}_k`; `{z_e}_i, {z_e}_j, {z_e}_k`.
 
-        The rotation matrix terms are calculated after solving 9 equations.
 
         Parameters
         ----------
         vxyi, vxyj, vxyk : double
             Components of a vector on the `XY` plane of the element coordinate
-            system.
+            system, defined using global coordinates.
         x : array-like
             Array with global nodal coordinates, for a total of `M` nodes in
             the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
@@ -160,6 +170,10 @@ cdef class BeamLR:
         cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k, x4i, x4j, x4k
 
         with nogil:
+            self.vxyi = vxyi
+            self.vxyj = vxyj
+            self.vxyk = vxyk
+
             x1i = x[self.c1//2 + 0]
             x1j = x[self.c1//2 + 1]
             x1k = x[self.c1//2 + 2]
@@ -223,13 +237,12 @@ cdef class BeamLR:
         cdef double s2[3]
         cdef double s3[3]
 
-        # TODO double check all this part
         with nogil:
             # positions in the global stiffness matrix
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements
+            # global to local transformation of displacements (R.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -281,7 +294,7 @@ cdef class BeamLR:
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements
+            # global to local transformation of displacements (R.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -362,7 +375,7 @@ cdef class BeamLR:
             Iyz = prop.Iyz
             J = prop.J
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -1136,7 +1149,7 @@ cdef class BeamLR:
             A = prop.A
             E = prop.E
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -1378,7 +1391,7 @@ cdef class BeamLR:
             A = prop.A
             E = prop.E
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13

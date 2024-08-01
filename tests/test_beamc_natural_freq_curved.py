@@ -112,7 +112,7 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
                 k=num_eigenvalues, tol=1e-3)
         omegan = eigvals**0.5
         omega123_from_paper = [396.98, 931.22, 1797.31]
-        omega123_expected_here = [395.50396255, 923.75280464, 1773.32657347]
+        omega123_expected_here = [395.50396255, 923.75280463, 1773.32657347]
         print('Reference omega123_from_paper', omega123_from_paper)
         print('Reference omega123_expected_here', omega123_expected_here)
         print('Numerical omega123', omegan)

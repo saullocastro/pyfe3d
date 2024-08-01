@@ -3,6 +3,8 @@ Finite elements for 3D problems in Python/Cython
 ================================================
 
 """
+import ctypes
+
 import numpy as np
 from alg3dpy.vector import asvector
 from alg3dpy.constants import Z, O
@@ -16,8 +18,15 @@ from .beamlr import BeamLR, BeamLRData, BeamLRProbe
 from .truss import Truss, TrussData, TrussProbe
 from .spring import Spring, SpringData, SpringProbe
 DOF = 6
-INT = int # it is long (np.int64) in C
-DOUBLE = float
+
+if ctypes.sizeof(ctypes.c_long) == 8:
+    # here the C long will correspond to np.int64
+    INT = np.int64
+else:
+    # here the C long will correspond to np.int32
+    INT = np.int32
+
+DOUBLE = np.float64
 
 from .coord import CoordR
 vecxz = asvector([1.,0.,1.])

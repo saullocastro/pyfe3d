@@ -81,8 +81,11 @@ cdef class Spring:
     krxe, krye, krze : double
         Rotational stiffnesses in the element coordinate system.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Rotation matrix to the global coordinate system. By default it assumes
+        Rotation matrix from local to global coordinates. By default it assumes
         that the element is aligned with the global coordinate system.
+    vxyi, vxyj, vxyk : double
+        Components of a vector on the `XY` plane of the element coordinate
+        system, defined using global coordinates.
     c1, c2 : int
         Position of each node in the global stiffness matrix.
     n1, n2 : int
@@ -98,6 +101,7 @@ cdef class Spring:
     cdef public int init_k_KC0, init_k_KG, init_k_M
     cdef public double kxe, kye, kze
     cdef public double krxe, krye, krze
+    cdef public double vxyi, vxyj, vxyk
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public SpringProbe probe
 
@@ -113,6 +117,7 @@ cdef class Spring:
         self.init_k_M = 0
         self.kxe = self.kye = self.kze = 0
         self.krxe = self.krye = self.krze = 0
+        self.vxyi = self.vxyj = self.vxyk = 0.
         self.r11 = 1
         self.r22 = 1
         self.r33 = 1
@@ -132,7 +137,6 @@ cdef class Spring:
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
         {y_e}_j, {y_e}_k`; `{z_e}_i, {z_e}_j, {z_e}_k`.
 
-        The rotation matrix terms are calculated after solving 9 equations.
 
         Parameters
         ----------
@@ -147,6 +151,10 @@ cdef class Spring:
         cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k, x4i, x4j, x4k
 
         with nogil:
+            self.vxyi = vxyi
+            self.vxyj = vxyj
+            self.vxyk = vxyk
+
             tmp = (xi**2 + xj**2 + xk**2)**0.5
             xi /= tmp
             xj /= tmp
@@ -206,7 +214,7 @@ cdef class Spring:
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements
+            # global to local transformation of displacements (R.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -266,7 +274,7 @@ cdef class Spring:
             krye = self.krye
             krze = self.krze
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13

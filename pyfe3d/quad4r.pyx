@@ -112,22 +112,10 @@ cdef class Quad4R:
     ----------
     eid, : int
         Element identification number.
+    pid, : int
+        Property identification number.
     area, : double
         Element area.
-    q_penalty_transverse_shear, : double
-        Factor used to prevent shell elements to become too stiff, affecting
-        stiffness terms E44,E45,E45::
-
-            factor = area/(1 + q_penalty_transverse_shear*area/thickness**2)
-            E44 = factor * E44
-            E45 = factor * E45
-            E55 = factor * E55
-
-        The adopted default is ``q_penalty_transverse_shear = 1/4*10^(-4)``,
-        based on Abaqus analysis user's manual. Reference:
-
-            https://classes.engineering.wustl.edu/2009/spring/mase5513/abaqus/docs/v6.6/books/stm/default.htm?startat=ch03s06ath79.html
-
     alphat, : double
         Element drilling penalty factor for the plate drilling stiffness,
         defined according to Eq. 2.20 in the reference below. The default value
@@ -145,7 +133,7 @@ cdef class Quad4R:
         not be used, but this is controversion, already being controversial to
         what AUTODESK NASTRAN's manual says.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Rotation matrix to the global coordinate system.
+        Rotation matrix from local to global coordinates.
     m11, m12, m21, m22 : double
         Rotation matrix only for the constitutive relations. Used when a
         material direction is used instead of the element local coordinates.
@@ -163,13 +151,12 @@ cdef class Quad4R:
         Pointer to the probe.
 
     """
-    cdef public int eid
+    cdef public int eid, pid
     cdef public int n1, n2, n3, n4
     cdef public int c1, c2, c3, c4
     cdef public int init_k_KC0, init_k_KG, init_k_M
     cdef public int init_k_KA_beta, init_k_KA_gamma, init_k_CA
     cdef public double area
-    cdef public double q_penalty_transverse_shear
     cdef public double alphat # drilling penalty factor for stiffness matrix, see Eq. 2.20 in F.M. Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013) 10–20. www.iosrjen.org (accessed April 20, 2020).
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public double m11, m12, m21, m22
@@ -179,6 +166,7 @@ cdef class Quad4R:
     def __cinit__(Quad4R self, Quad4RProbe p):
         self.probe = p
         self.eid = -1
+        self.pid = -1
         self.n1 = -1
         self.n2 = -1
         self.n3 = -1
@@ -195,7 +183,6 @@ cdef class Quad4R:
         self.init_k_KA_gamma = 0
         self.init_k_CA = 0
         self.area = 0
-        self.q_penalty_transverse_shear = 0.25e-4
         self.alphat = 1. # based on recommended value of reference F.M. Adam, A.E. Mohamed, A.E. Hassaballa
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.
@@ -217,7 +204,6 @@ cdef class Quad4R:
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
         {y_e}_j, {y_e}_k`; `{z_e}_i, {z_e}_j, {z_e}_k`.
 
-        The rotation matrix terms are calculated after solving 9 equations.
 
         Parameters
         ----------
@@ -238,12 +224,6 @@ cdef class Quad4R:
         cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k, x4i, x4j, x4k
         cdef double v13i, v13j, v13k, v42i, v42j, v42k
         cdef double tmp, xmatnorm, ymati, ymatj, ymatk
-        cdef double xmatglobi, xmatglobj, xmatglobk
-        cdef double ymatglobi, ymatglobj, ymatglobk
-        cdef double zmatglobi, zmatglobj, zmatglobk
-        cdef double xeleglobi, xeleglobj, xeleglobk
-        cdef double yeleglobi, yeleglobj, yeleglobk
-        cdef double zeleglobi, zeleglobj, zeleglobk
         cdef double tol
 
         with nogil:
@@ -376,7 +356,7 @@ cdef class Quad4R:
             c[2] = self.c3
             c[3] = self.c4
 
-            # global to local transformation of displacements
+            # global to local transformation of displacements (R.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -430,7 +410,7 @@ cdef class Quad4R:
             c[2] = self.c3
             c[3] = self.c4
 
-            # global to local transformation of displacements
+            # global to local transformation of displacements (R.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -635,12 +615,6 @@ cdef class Quad4R:
             E45 = prop.E45*0.5*(prop.scf_k13 + prop.scf_k23)
             E55 = prop.E55*prop.scf_k13
 
-            # NOTE factor applied to transverse shear stiffnesses
-            factor = self.area/(1 + self.q_penalty_transverse_shear*self.area/h**2)
-            E44 = factor * E44
-            E45 = factor * E45
-            E55 = factor * E55
-
             # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
             y1 = self.probe.xe[1]
@@ -655,7 +629,7 @@ cdef class Quad4R:
             y4 = self.probe.xe[10]
             # z4 = self.probe.xe[11]
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -2408,8 +2382,9 @@ cdef class Quad4R:
             alphat = self.alphat
 
             # TODO find a method of hourglass control that is derived for composites
-            #     in the future, use MITC4 elements that do not require
-            #     hourglass control
+            #     in the future, the use elements with mixed integration
+            #     schemes, or the implementation of the MITC4 element will no
+            #     longer require hourglass control
             Eu = hgfactor_u*0.1*E1eq*h/(1.0 + 1.0/self.area)
             Ev = hgfactor_v*0.1*E2eq*h/(1.0 + 1.0/self.area)
             Erx = hgfactor_rx*0.1*E2eq*h**3/(1.0 + 1.0/self.area)
@@ -3707,7 +3682,7 @@ cdef class Quad4R:
                 # B62 = m21**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m22**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
                 B66 = m11*m21*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + m12*m22*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21))
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -4537,7 +4512,7 @@ cdef class Quad4R:
         cdef double N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
 
         with nogil:
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -5346,7 +5321,7 @@ cdef class Quad4R:
 
         """
         cdef int c1, c2, c3, c4, i, j, k
-        cdef double intrho, intrhoz, intrhoz2, A
+        cdef double intrho, intrhoz, intrhoz2
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double x1, x2, x3, x4
         cdef double y1, y2, y3, y4
@@ -5359,8 +5334,7 @@ cdef class Quad4R:
             intrhoz = prop.intrhoz
             intrhoz2 = prop.intrhoz2
 
-            A = self.area
-            valH1 = 0.0625*A
+            valH1 = 0.0625*self.area
 
             # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
@@ -5376,7 +5350,7 @@ cdef class Quad4R:
             y4 = self.probe.xe[10]
             # z4 = self.probe.xe[11]
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -11755,7 +11729,7 @@ cdef class Quad4R:
             y4 = self.probe.xe[10]
             # z4 = self.probe.xe[11]
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -12568,7 +12542,7 @@ cdef class Quad4R:
             y4 = self.probe.xe[10]
             # z4 = self.probe.xe[11]
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -13366,7 +13340,7 @@ cdef class Quad4R:
             y4 = self.probe.xe[10]
             # z4 = self.probe.xe[11]
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13

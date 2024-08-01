@@ -2,5 +2,3 @@ numpy
 scipy
 cython
 alg3dpy
-pytest
-pytest-cov

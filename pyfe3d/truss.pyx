@@ -11,7 +11,7 @@ Truss - Linear truss 3D element with analytical integration (:mod:`pyfe3d.truss`
 
 .. currentmodule:: pyfe3d.truss
 
-.. note:: The :class:`.BeamLR` element is recommended because of the better
+.. note:: The :class:`.BeamC` element is recommended because of the better
           physical representation.
 
 .. note:: The :class:`.Truss` element does not support linear buckling
@@ -24,6 +24,7 @@ from .beamprop cimport BeamProp
 
 cdef int DOF = 6
 cdef int NUM_NODES = 2
+
 
 cdef class TrussData:
     r"""
@@ -77,11 +78,32 @@ cdef class Truss:
         1    2
 
 
-    .. note:: The :class:`.BeamLR` is recommended because of the better
+    .. note:: The :class:`.BeamC` is recommended because of the better
               physical representation.
 
+
+    Attributes
+    ----------
+    eid, : int
+        Element identification number.
+    pid, : int
+        Property identification number.
+    length, : double
+        Element length.
+    r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
+        Rotation matrix from local to global coordinates.
+    c1, c2 : int
+        Position of each node in the global stiffness matrix.
+    n1, n2 : int
+        Node identification number.
+    init_k_KC0, init_k_M : int
+        Position in the arrays storing the sparse data for the structural
+        matrices.
+    probe, : :class:`.TrussProbe` object
+        Pointer to the probe.
+
     """
-    cdef public int eid
+    cdef public int eid, pid
     cdef public int n1, n2
     cdef public int c1, c2
     cdef public int init_k_KC0, init_k_M
@@ -92,6 +114,7 @@ cdef class Truss:
     def __cinit__(Truss self, TrussProbe p):
         self.probe = p
         self.eid = -1
+        self.pid = -1
         self.n1 = -1
         self.n2 = -1
         self.c1 = -1
@@ -126,13 +149,12 @@ cdef class Truss:
         cdef double s2[3]
         cdef double s3[3]
 
-        # FIXME double check all this part
         with nogil:
             # positions in the global stiffness matrix
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements
+            # global to local transformation of displacements (R.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -169,7 +191,6 @@ cdef class Truss:
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
         {y_e}_j, {y_e}_k`; `{z_e}_i, {z_e}_j, {z_e}_k`.
 
-        The rotation matrix terms are calculated after solving 9 equations.
 
         Parameters
         ----------
@@ -256,7 +277,7 @@ cdef class Truss:
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements
+            # global to local transformation of displacements (R.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -334,7 +355,7 @@ cdef class Truss:
             Izz = prop.Izz
             J = prop.J
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
@@ -754,7 +775,7 @@ cdef class Truss:
             A = prop.A
             E = prop.E
 
-            # Local to global transformation
+            # local to global transformation
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
