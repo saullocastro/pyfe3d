@@ -979,7 +979,7 @@ cdef class Quad4:
                         ke = 24*i + j
                         self.probe.KC0ve[ke] += wij*detJ*(
                         # transverse shear (gradient term)
-                          + gyz_grad*E44*BLgyz_grad[j] + gyz_grad*E45*BLgxz_grad[j]
+                            gyz_grad*E44*BLgyz_grad[j] + gyz_grad*E45*BLgxz_grad[j]
                           + gxz_grad*E45*BLgyz_grad[j] + gxz_grad*E55*BLgxz_grad[j]
 
                         # transverse shear (coupled terms)
@@ -990,7 +990,7 @@ cdef class Quad4:
                           + gxz_rot*E45*BLgyz_grad[j] + gxz_rot*E55*BLgxz_grad[j]
 
                         # transverse shear (rotation term)
-                            gyz_rot*E44*BLgyz_rot[j] + gyz_rot*E45*BLgxz_rot[j]
+                          + gyz_rot*E44*BLgyz_rot[j] + gyz_rot*E45*BLgxz_rot[j]
                           + gxz_rot*E45*BLgyz_rot[j] + gxz_rot*E55*BLgxz_rot[j]
 
                         # drilling
