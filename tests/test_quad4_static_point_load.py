@@ -120,6 +120,8 @@ def test_static_plate_quad_point_load(plot=False):
         plt.contourf(xmesh, ymesh, w, levels=levels)
         plt.colorbar()
         plt.show()
+        #plt.savefig('ex_linear_static_figure.jpg', dpi=200,
+                    #bbox_inches='tight')
 
 
 if __name__ == '__main__':
