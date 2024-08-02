@@ -155,10 +155,6 @@ cdef class Quad4Probe:
         Arrays of size ``NUM_NODES*DOF=24`` containing the transverse shear
         strain interpolation functions evaluated at a given natural coordinate
         point `\xi`, `\eta`.
-    BLdrilling, : array-like
-        Arrays of size ``NUM_NODES*DOF=24`` containing the drilling
-        interpolation function evaluated at a given natural coordinate point
-        `\xi`, `\eta`.
 
     """
     cdef public double [::1] xe
@@ -174,7 +170,6 @@ cdef class Quad4Probe:
     cdef public double [::1] BLgyz_rot
     cdef public double [::1] BLgxz_grad
     cdef public double [::1] BLgxz_rot
-    cdef public double [::1] BLdrilling
 
     def __cinit__(Quad4Probe self):
         self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
@@ -189,7 +184,6 @@ cdef class Quad4Probe:
         self.BLkyy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.BLkxy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
 
-        self.BLdrilling = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.BLgyz_grad = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.BLgyz_rot = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.BLgxz_grad = np.zeros(NUM_NODES*DOF, dtype=np.float64)
@@ -304,21 +298,6 @@ cdef class Quad4Probe:
         self.BLgxz_rot[16] = N3
         self.BLgxz_rot[22] = N4
 
-        self.BLdrilling[0] = N1y/2.
-        self.BLdrilling[6] = N2y/2.
-        self.BLdrilling[12] = N3y/2.
-        self.BLdrilling[18] = N4y/2.
-
-        self.BLdrilling[1] = -N1x/2.
-        self.BLdrilling[7] = -N2x/2.
-        self.BLdrilling[13] = -N3x/2.
-        self.BLdrilling[19] = -N4x/2.
-
-        self.BLdrilling[5] = N1
-        self.BLdrilling[11] = N2
-        self.BLdrilling[17] = N3
-        self.BLdrilling[23] = N4
-
 
 cdef class Quad4:
     r"""
@@ -345,22 +324,14 @@ cdef class Quad4:
         Element identification number.
     area, : double
         Element area.
-    alphat, : double
-        Element drilling penalty factor for the plate drilling stiffness,
-        defined according to Eq. 2.20 in the reference below. The default value
-        of ``alphat = 1.`` comes from the same reference::
-
-            Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell
-            Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013)
-            10–20. www.iosrjen.org (accessed April 20, 2020).
-
-        For those familiar with NASTRAN, ``alphat`` can be calculated based on
-        NASTRAN's ``K6ROT`` parameters as ``alphat = 1.e-6*K6ROT``. The default
-        value according to AUTODESK NASTRAN's quick reference guide is ``K6ROT
-        = 100.`` for static analysis and ``K6ROT=1.e4`` for modal solutions.
-        MSC NASTRAN's quick reference guide states that ``K6ROT > 100.`` should
-        not be used, but this is controversion, already being controversial to
-        what AUTODESK NASTRAN's manual says.
+    K6ROT, : double
+        Element drilling stiffness, added only to the diagonal of the local
+        stiffness matrix. The default value is according to AUTODESK NASTRAN's
+        quick reference guide is ``K6ROT = 100.`` for static analysis.  For
+        modal solutions, this value should be ``K6ROT=1.e4``.  MSC NASTRAN's
+        quick reference guide states that ``K6ROT > 100.`` should not be used,
+        but this is controversial, already being controversial to what AUTODESK
+        NASTRAN's manual says.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix from local to global coordinates.
     m11, m12, m21, m22 : double
@@ -386,7 +357,7 @@ cdef class Quad4:
     cdef public int init_k_KC0, init_k_KG, init_k_M
     cdef public int init_k_KA_beta, init_k_KA_gamma, init_k_CA
     cdef public double area
-    cdef public double alphat # drilling penalty factor for stiffness matrix, see Eq. 2.20 in F.M. Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013) 10–20. www.iosrjen.org (accessed April 20, 2020).
+    cdef public double K6ROT # drilling stiffness
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public double m11, m12, m21, m22
     cdef public Quad4Probe probe
@@ -411,7 +382,7 @@ cdef class Quad4:
         self.init_k_KA_gamma = 0
         self.init_k_CA = 0
         self.area = 0
-        self.alphat = 1. # based on recommended value of reference F.M. Adam, A.E. Mohamed, A.E. Hassaballa
+        self.K6ROT = 100.
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.
         self.r31 = self.r32 = self.r33 = 0.
@@ -732,7 +703,7 @@ cdef class Quad4:
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
-        cdef double alphat
+        cdef double K6ROT
         cdef double h, length
         cdef double r[6][6]
         cdef double m11, m12, m21, m22
@@ -749,12 +720,11 @@ cdef class Quad4:
         cdef double* BLkxx
         cdef double* BLkyy
         cdef double* BLkxy
-        cdef double* BLdrilling
         cdef double* BLgyz_rot
         cdef double* BLgyz_grad
         cdef double* BLgxz_rot
         cdef double* BLgxz_grad
-        cdef double exx, eyy, gxy, kxx, kyy, kxy, drilling
+        cdef double exx, eyy, gxy, kxx, kyy, kxy
         cdef double gyz_rot, gxz_rot, gyz_grad, gxz_grad
 
         with nogil:
@@ -764,7 +734,6 @@ cdef class Quad4:
             BLkxx = &self.probe.BLkxx[0]
             BLkyy = &self.probe.BLkyy[0]
             BLkxy = &self.probe.BLkxy[0]
-            BLdrilling = &self.probe.BLdrilling[0]
             BLgyz_rot = &self.probe.BLgyz_rot[0]
             BLgyz_grad = &self.probe.BLgyz_grad[0]
             BLgxz_rot = &self.probe.BLgxz_rot[0]
@@ -908,7 +877,7 @@ cdef class Quad4:
             r[2+3][1] = 0.
             r[2+3][2] = 0.
 
-            alphat = self.alphat
+            K6ROT = self.K6ROT
 
             if update_KC0v_only == 0:
                 # positions in the global stiffness matrix
@@ -1112,28 +1081,12 @@ cdef class Quad4:
             BLgxz_rot[16] = N3
             BLgxz_rot[22] = N4
 
-            BLdrilling[0] = N1y/2.
-            BLdrilling[6] = N2y/2.
-            BLdrilling[12] = N3y/2.
-            BLdrilling[18] = N4y/2.
-
-            BLdrilling[1] = -N1x/2.
-            BLdrilling[7] = -N2x/2.
-            BLdrilling[13] = -N3x/2.
-            BLdrilling[19] = -N4x/2.
-
-            BLdrilling[5] = N1
-            BLdrilling[11] = N2
-            BLdrilling[17] = N3
-            BLdrilling[23] = N4
-
             if h/length < 1.: # thin elements
                 for i in range(24):
                     gyz_rot = BLgyz_rot[i]
                     gxz_rot = BLgxz_rot[i]
                     gyz_grad = BLgyz_grad[i]
                     gxz_grad = BLgxz_grad[i]
-                    drilling = BLdrilling[i]
                     for j in range(24):
                         ke = 24*i + j
                         self.probe.KC0ve[ke] += wij*detJ*(
@@ -1151,9 +1104,6 @@ cdef class Quad4:
                         # transverse shear (rotation term)
                           + gyz_rot*E44*BLgyz_rot[j] + gyz_rot*E45*BLgxz_rot[j]
                           + gxz_rot*E45*BLgyz_rot[j] + gxz_rot*E55*BLgxz_rot[j]
-
-                        # drilling
-                          + drilling*(alphat*A66/h)*BLdrilling[j]
                         )
 
             else: # thick elements
@@ -1162,7 +1112,6 @@ cdef class Quad4:
                     gxz_rot = BLgxz_rot[i]
                     gyz_grad = BLgyz_grad[i]
                     gxz_grad = BLgxz_grad[i]
-                    drilling = BLdrilling[i]
                     for j in range(24):
                         ke = 24*i + j
                         self.probe.KC0ve[ke] += wij*detJ*(
@@ -1176,10 +1125,13 @@ cdef class Quad4:
                         # transverse shear (rotation term)
                           + gyz_rot*E44*BLgyz_rot[j] + gyz_rot*E45*BLgxz_rot[j]
                           + gxz_rot*E45*BLgyz_rot[j] + gxz_rot*E55*BLgxz_rot[j]
-
-                        # drilling
-                          + drilling*(alphat*A66/h)*BLdrilling[j]
                         )
+
+            # drilling
+            for node_i in range(NUM_NODES):
+                node_j = node_i # NOTE only diagonal terms are affected
+                ke = 24*(node_i*DOF + 5) + node_j*DOF + 5
+                self.probe.KC0ve[ke] += K6ROT
 
             # NOTE from element to global coordinates:
             #
