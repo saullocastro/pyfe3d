@@ -7,7 +7,7 @@ from numpy import isclose
 from scipy.sparse.linalg import eigsh, spsolve
 from scipy.sparse import coo_matrix
 
-from pyfe3d.shellprop_utils import laminated_plate
+from pyfe3d.shellprop_utils import laminated_plate, isotropic_plate
 from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 
 
@@ -16,7 +16,7 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False):
 
         Geier, B., and Singh, G., 1997, “Some Simple Solutions for Buckling Loads of Thin and Moderately Thick Cylindrical Shells and Panels Made of Laminated Composite Material,” Aerosp. Sci. Technol., 1(1), pp. 47–63.
 
-        Cylinder Z11, see Table 3 page 60
+        Cylinder Z12, see Table 3 page 60
 
     """
     data = Quad4Data()
@@ -38,9 +38,10 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False):
     plyt = 0.125e-3
     laminaprop = (E11, E22, nu12, G12, G13, G23)
 
-    # NOTE cylinder Z11, table 3 of reference
-    stack = [+60, -60, 0, 0, +68, -68, +52, -52, +37, -37]
+    # NOTE cylinder Z12, table 3 of reference
+    stack = [+51, -51, +45, -45, +37, -37, +19, -19, 0, 0]
     prop = laminated_plate(stack=stack, plyt=plyt, laminaprop=laminaprop)
+    #prop = isotropic_plate(thickness=0.001, E=70e9, nu=0.33)
 
     nids = 1 + np.arange(nlength*(ntheta+1))
     nids_mesh = nids.reshape(nlength, ntheta+1)
@@ -50,8 +51,8 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False):
     nid_pos = dict(zip(nids, np.arange(len(nids))))
 
     zlin = np.linspace(0, L, nlength)
-    thetatmp = np.linspace(0, 2*np.pi, ntheta+1)
-    thetalin = np.linspace(0, 2*np.pi-(thetatmp[-1] - thetatmp[-2]), ntheta)[::-1]
+    thetatmp = np.linspace(-np.pi, np.pi, ntheta+1)
+    thetalin = np.linspace(-np.pi, np.pi-(thetatmp[-1] - thetatmp[-2]), ntheta)[::-1]
     zmesh, thetamesh = np.meshgrid(zlin, thetalin)
     zmesh = zmesh.T
     thetamesh = thetamesh.T
@@ -138,8 +139,8 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False):
     u[bu] = uu
 
     for quad in quads:
-        quad.update_probe_ue(u) # NOTE update affects the Quad4Probe class attribute ue
         quad.update_probe_xe(ncoords_flatten) # NOTE update affects the Quad4Probe class attribute xe
+        quad.update_probe_ue(u) # NOTE update affects the Quad4Probe class attribute ue
         quad.update_KG(KGr, KGc, KGv, prop)
     KG = coo_matrix((KGv, (KGr, KGc)), shape=(N, N)).tocsc()
     KGuu = KG[bu, :][:, bu]
@@ -159,26 +160,20 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False):
     fext[bk] = fk
     Pcr = (eigvals[0]*fext[2::DOF][checkTopEdge]).sum()
     print('Pcr =', Pcr)
-    reference_value_Geier_Singh =  -274300
+    reference_value_Geier_Singh_Z12 =  -274300
 
     if plot_pyvista:
         import pyvista as pv
 
         contour_colorscale = 'coolwarm'
         background = 'gray'
-        contour_label = 'Total displacement'
-        contour_vec = np.sqrt(eigvecs[0::DOF]**2 +
-                              eigvecs[1::DOF]**2 +
-                              eigvecs[2::DOF]**2)
-        displ_vec = contour_vec*100
-        intensitymode = None
-        if contour_vec is not None:
-            if len(contour_vec) == len(ncoords):
-                intensitymode = 'vertex'
-            elif len(contour_vec) == len(quads):
-                intensitymode = 'cell'
-            else:
-                raise RuntimeError('coutour_vec must be either a nodal or element output')
+        contour_label = 'Radial displacement'
+        contour_vec = np.sqrt(eigvecs[0::DOF, mode]**2 + eigvecs[1::DOF, mode]**2)
+        displ_vec = np.zeros_like(ncoords)
+        displ_vec[:, 0] = eigvecs[0::DOF, mode]*100
+        displ_vec[:, 1] = eigvecs[1::DOF, mode]*100
+        displ_vec[:, 2] = eigvecs[2::DOF, mode]*100
+        intensitymode = 'vertex'
 
         plotter = pv.Plotter(off_screen=False)
         faces_quad = []
@@ -187,11 +182,7 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False):
         faces_quad = np.array(faces_quad)
         quad_plot = pv.PolyData(ncoords, faces_quad)
         if contour_vec is not None:
-            if intensitymode == 'vertex':
-                quad_plot[contour_label] = contour_vec
-            else:
-                quad_plot[contour_label] = contour_vec[:len(quads)]
-
+            quad_plot[contour_label] = contour_vec
             plotter.add_mesh(quad_plot, scalars=contour_label,
                     cmap=contour_colorscale, edge_color='black', show_edges=True,
                     line_width=1.)
@@ -215,8 +206,8 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False):
         plotter.show()
 
 
-    #assert np.isclose(Pcr, reference_value_Geier_Singh, rtol=0.01)
-    assert np.isclose(Pcr, -442823.46987121576, rtol=0.01)
+    #assert np.isclose(Pcr, reference_value_Geier_Singh_Z12, rtol=0.01)
+    assert np.isclose(Pcr, -225968.28006101557, rtol=0.01)
 
 if __name__ == '__main__':
     test_linear_buckling_cylinder(mode=0, plot_pyvista=True)
