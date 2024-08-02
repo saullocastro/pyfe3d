@@ -382,7 +382,7 @@ cdef class Quad4:
         self.init_k_KA_gamma = 0
         self.init_k_CA = 0
         self.area = 0
-        self.K6ROT = 100.
+        self.K6ROT = 10.
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.
         self.r31 = self.r32 = self.r33 = 0.
