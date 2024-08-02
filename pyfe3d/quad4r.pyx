@@ -11,6 +11,16 @@ Quad4R - Quadrilateral element with reduced integration (:mod:`pyfe3d.quad4r`)
 
 .. currentmodule:: pyfe3d.quad4r
 
+The :class:`.Quad4R` has full reduced integration, is very efficient, but
+has an hourglass control to compensate the reduced integration that is not
+robust and creates significant artificial stiffness. Therefore, the recommended
+quadrilateral plane stress elements is the :mod:`pyfe3d.quad4`.
+
+The :class:`.Quad4R` element has 6 degrees-of-freedom (DOF): `u`, `v`, `w`,
+`r_x`, `r_y`, `r_z`. All DOF are interpolated bi-linearly between the nodes,
+such that any of the DOF gradients can be constant over the element when the
+element is rectangular.
+
 """
 from libc.math cimport fabs
 
@@ -64,7 +74,13 @@ cdef class Quad4RData:
 
 cdef class Quad4RProbe:
     r"""
-    Probe used for local coordinates, local displacements, local stresses etc
+    Probe used for local coordinates, local displacements, local stiffness,
+    local stresses etc...
+
+    The idea behind using a probe is to avoid allocating larger memory buffers
+    per finite element. The memory buffers are allocated per probe, and one
+    probe can be shared amongst many finite elements, with the information
+    being updated and retrieved on demand.
 
     Attributes
     ----------
@@ -84,6 +100,7 @@ cdef class Quad4RProbe:
     """
     cdef public double [::1] xe
     cdef public double [::1] ue
+
     def __cinit__(Quad4RProbe self):
         self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
         self.ue = np.zeros(NUM_NODES*DOF, dtype=np.float64)
@@ -485,7 +502,7 @@ cdef class Quad4R:
             Freedom,” IOSR J. Eng., 3(8), pp. 10–20.
 
 
-        Properties
+        Parameters
         ----------
         KC0r : np.array
             Array to store row positions of sparse values
@@ -493,12 +510,13 @@ cdef class Quad4R:
             Array to store column positions of sparse values
         KC0v : np.array
             Array to store sparse values
-        prop : :class:`ShellProp` object
+        prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
         update_KC0v_only : int
-            The default `0` means that only `KC0v` is updated. Any other value will
-            lead to `KC0r` and `KC0c` also being updated.
+            The default ``0`` means that the row and column indices ``KC0r``
+            and ``KC0c`` should also be updated. Any other value will only
+            update the stiffness matrix values ``KC0v``.
         hgfactor_u, hgfactor_v, hgfactor_w, hgfactor_rx, hgfactor_ry : double
             These offer the possibility to change the default hourglass
             stiffnesses for each degree-of-freedom. The default value of these
@@ -3590,11 +3608,11 @@ cdef class Quad4R:
         for linear buckling load predictions.
 
         Before this function is called, the probe :class:`.Quad4RProbe`
-        attribute of the :class:`Quad4R` object must be updated using
+        attribute of the :class:`.Quad4R` object must be updated using
         :func:`.update_probe_ue` with the correct pre-buckling displacements;
         and :func:`.update_probe_xe` with the node coordinates.
 
-        Properties
+        Parameters
         ----------
         KGr : np.array
            Array to store row positions of sparse values
@@ -3602,7 +3620,7 @@ cdef class Quad4R:
            Array to store column positions of sparse values
         KGv : np.array
             Array to store sparse values
-        prop : :class:`ShellProp` object
+        prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
         update_KGv_only : int
@@ -4486,10 +4504,10 @@ cdef class Quad4R:
         for linear buckling load predictions.
 
         Before this function is called, the probe :class:`.Quad4RProbe`
-        attribute of the :class:`Quad4R` object must be updated using
+        attribute of the :class:`.Quad4R` object must be updated using
         :func:`.update_probe_xe` with the node coordinates.
 
-        Properties
+        Parameters
         ----------
         KGr : np.array
            Array to store row positions of sparse values
@@ -5306,7 +5324,7 @@ cdef class Quad4R:
         Different integration schemes are available by means of the ``mtype``
         parameter.
 
-        Properties
+        Parameters
         ----------
         Mr : np.array
             Array to store row positions of sparse values
@@ -11692,7 +11710,7 @@ cdef class Quad4R:
                         ):
         r"""Update sparse vectors for piston-theory aerodynamic matrix `KA_{\beta}`
 
-        Properties
+        Parameters
         ----------
         KA_betar : np.array
             Array to store row positions of sparse values
@@ -12508,7 +12526,7 @@ cdef class Quad4R:
                         ):
         r"""Update sparse vectors for piston-theory aerodynamic matrix `KA_{\gamma}`
 
-        Properties
+        Parameters
         ----------
         KA_gammar : np.array
             Array to store row positions of sparse values
@@ -13306,7 +13324,7 @@ cdef class Quad4R:
                         ):
         r"""Update sparse vectors for piston-theory aerodynamic damping matrix `CA`
 
-        Properties
+        Parameters
         ----------
         CAr : np.array
             Array to store row positions of sparse values

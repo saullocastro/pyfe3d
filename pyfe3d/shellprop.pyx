@@ -390,6 +390,8 @@ cdef class ShellProp:
 
     plies : list
         List of plies
+    stack : list
+        List of angles for each ply
     h : float
         Total thickness of the laminate
     offset : float

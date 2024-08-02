@@ -12,7 +12,9 @@ Quad4 - Quadrilateral element with mixed integration (:mod:`pyfe3d.quad4`)
 .. currentmodule:: pyfe3d.quad4
 
 The :class:`.Quad4` is the recommended quadrilateral plane stress finite
-element. Another option is the :mod:`pyfe3d.quad4r` with full reduced
+element.
+
+Another option is the :mod:`pyfe3d.quad4r` with full reduced
 integration, more efficient, but with an hourglass control to compensate the
 reduced integration that is not robust and creates significant artificial
 stiffness.
@@ -34,7 +36,7 @@ Hughes et al. (1977) proposed the following integration scheme:
 
 - For thin plates, when `h/\ell < 1`, where `\ell` is the element
   characteristic length, here calculated as the square root of the element area
-  `\sqrt{\text{area}}`
+  `\ell = \sqrt{\text{area}}`
 
 -- two-by-two quadrature for the bending energy terms
 
@@ -194,6 +196,11 @@ cdef class Quad4Probe:
         self.BLgxz_rot = np.zeros(NUM_NODES*DOF, dtype=np.float64)
 
     cpdef void update_BL(Quad4Probe self, double xi, double eta):
+        r"""
+        Update all components of the interpolation matrix `\pmb{B_L}` at a
+        given natural coordinate point `\xi`, `\eta`.
+
+        """
         cdef double x1, x2, x3, x4, y1, y2, y3, y4
         cdef double J11, J12, J21, J22
         cdef double j11, j12, j21, j22
@@ -683,6 +690,7 @@ cdef class Quad4:
                           long [::1] KC0c,
                           double [::1] KC0v,
                           ShellProp prop,
+                          int update_KC0v_only=0,
                           ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
@@ -694,7 +702,7 @@ cdef class Quad4:
             Freedom,” IOSR J. Eng., 3(8), pp. 10–20.
 
 
-        Properties
+        Parameters
         ----------
         KC0r : np.array
             Array to store row positions of sparse values
@@ -702,9 +710,13 @@ cdef class Quad4:
             Array to store column positions of sparse values
         KC0v : np.array
             Array to store sparse values
-        prop : :class:`ShellProp` object
+        prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
+        update_KC0v_only : int
+            The default ``0`` means that the row and column indices ``KC0r``
+            and ``KC0c`` should also be updated. Any other value will only
+            update the stiffness matrix values ``KC0v``.
 
         """
         cdef int i, j, k, ke
@@ -896,27 +908,27 @@ cdef class Quad4:
             r[2+3][1] = 0.
             r[2+3][2] = 0.
 
-
-            # positions in the global stiffness matrix
-            c[0] = self.c1
-            c[1] = self.c2
-            c[2] = self.c3
-            c[3] = self.c4
-
             alphat = self.alphat
 
-            # initializing row and column indices
-            #
-            # TODO use r[3][3] instead
-            for node_i in range(NUM_NODES):
-                for m in range(DOF):
-                    for node_j in range(NUM_NODES):
-                        for n in range(DOF):
-                            k = self.init_k_KC0 + 24*(node_i*DOF + m) + node_j*DOF + n
-                            KC0r[k] = c[node_i] + m
-                            KC0c[k] = c[node_j] + n
+            if update_KC0v_only == 0:
+                # positions in the global stiffness matrix
+                c[0] = self.c1
+                c[1] = self.c2
+                c[2] = self.c3
+                c[3] = self.c4
 
-            # initializing probe KC0ve parameter
+                # initializing row and column indices
+                #
+                # TODO use r[3][3] instead
+                for node_i in range(NUM_NODES):
+                    for m in range(DOF):
+                        for node_j in range(NUM_NODES):
+                            for n in range(DOF):
+                                k = self.init_k_KC0 + 24*(node_i*DOF + m) + node_j*DOF + n
+                                KC0r[k] = c[node_i] + m
+                                KC0c[k] = c[node_j] + n
+
+            # zeroing probe KC0ve attribute
             for i in range(24):
                 for j in range(24):
                     ke = 24*i + j
@@ -1201,12 +1213,12 @@ cdef class Quad4:
         for linear buckling load predictions.
 
         Before this function is called, the probe :class:`.Quad4Probe`
-        attribute of the :class:`Quad4` object must be updated using
+        attribute of the :class:`.Quad4` object must be updated using
         :func:`.update_probe_ue` with the correct pre-buckling (fundamental
         state) displacements; and :func:`.update_probe_xe` with the node
         coordinates.
 
-        Properties
+        Parameters
         ----------
         KGr : np.array
            Array to store row positions of sparse values
@@ -1214,7 +1226,7 @@ cdef class Quad4:
            Array to store column positions of sparse values
         KGv : np.array
             Array to store sparse values
-        prop : :class:`ShellProp` object
+        prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
 
@@ -2098,10 +2110,10 @@ cdef class Quad4:
         for linear buckling load predictions.
 
         Before this function is called, the probe :class:`.Quad4Probe`
-        attribute of the :class:`Quad4` object must be updated using
+        attribute of the :class:`.Quad4` object must be updated using
         :func:`.update_probe_xe` with the node coordinates.
 
-        Properties
+        Parameters
         ----------
         KGr : np.array
            Array to store row positions of sparse values
@@ -2919,7 +2931,7 @@ cdef class Quad4:
         Different integration schemes are available by means of the ``mtype``
         parameter.
 
-        Properties
+        Parameters
         ----------
         Mr : np.array
             Array to store row positions of sparse values
@@ -9322,7 +9334,7 @@ cdef class Quad4:
                         ):
         r"""Update sparse vectors for piston-theory aerodynamic matrix `KA_{\beta}`
 
-        Properties
+        Parameters
         ----------
         KA_betar : np.array
             Array to store row positions of sparse values
@@ -10143,7 +10155,7 @@ cdef class Quad4:
                         ):
         r"""Update sparse vectors for piston-theory aerodynamic matrix `KA_{\gamma}`
 
-        Properties
+        Parameters
         ----------
         KA_gammar : np.array
             Array to store row positions of sparse values
@@ -10946,7 +10958,7 @@ cdef class Quad4:
                         ):
         r"""Update sparse vectors for piston-theory aerodynamic damping matrix `CA`
 
-        Properties
+        Parameters
         ----------
         CAr : np.array
             Array to store row positions of sparse values

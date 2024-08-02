@@ -459,7 +459,7 @@ cdef class Tria3R:
             Freedom,” IOSR J. Eng., 3(8), pp. 10–20.
 
 
-        Properties
+        Parameters
         ----------
         KC0r : np.array
             Array to store row positions of sparse values
@@ -467,12 +467,13 @@ cdef class Tria3R:
             Array to store column positions of sparse values
         KC0v : np.array
             Array to store sparse values
-        prop : :class:`ShellProp` object
+        prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
         update_KC0v_only : int
-            The default `0` means that only `KC0v` is updated. Any other value will
-            lead to `KC0r` and `KC0c` also being updated.
+            The default ``0`` means that the row and column indices ``KC0r``
+            and ``KC0c`` should also be updated. Any other value will only
+            update the stiffness matrix values ``KC0v``.
 
         """
         cdef int c1, c2, c3, i, k
@@ -2275,7 +2276,7 @@ cdef class Tria3R:
         :func:`.update_probe_ue` with the correct pre-buckling displacements;
         and :func:`.update_probe_xe` with the node coordinates.
 
-        Properties
+        Parameters
         ----------
         KGr : np.array
            Array to store row positions of sparse values
@@ -2283,7 +2284,7 @@ cdef class Tria3R:
            Array to store column positions of sparse values
         KGv : np.array
             Array to store sparse values
-        prop : :class:`ShellProp` object
+        prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
         update_KGv_only : int
@@ -2831,10 +2832,10 @@ cdef class Tria3R:
         for linear buckling load predictions.
 
         Before this function is called, the probe :class:`.Tria3RProbe`
-        attribute of the :class:`Tria3R` object must be updated using
+        attribute of the :class:`.Tria3R` object must be updated using
         :func:`.update_probe_xe` with the node coordinates.
 
-        Properties
+        Parameters
         ----------
         KGr : np.array
            Array to store row positions of sparse values
@@ -3315,7 +3316,7 @@ cdef class Tria3R:
         Different integration schemes are available by means of the ``mtype``
         parameter.
 
-        Properties
+        Parameters
         ----------
         Mr : np.array
             Array to store row positions of sparse values
