@@ -47,14 +47,6 @@ def test_linear_buckling_plate(plot=False, mode=0):
             y = np.sin(yaw)*np.cos(pitch)*x_local + np.cos(yaw)*y_local + np.sin(yaw)*np.sin(pitch)*z_local
             z = -np.sin(pitch)*x_local + np.cos(pitch)*z_local
 
-            xi = np.cos(yaw)*np.cos(pitch)*1
-            xj = np.sin(yaw)*np.cos(pitch)*1
-            xk = -np.sin(pitch)*1
-
-            yi = - np.sin(yaw)*1
-            yj = np.cos(yaw)*1
-            yk = 0
-
             ncoords = np.vstack((x, y, z)).T
             ncoords_flatten = ncoords.flatten()
 
@@ -148,14 +140,16 @@ def test_linear_buckling_plate(plot=False, mode=0):
             print('Theoretical P_cr_theory', P_cr_theory)
             assert isclose(P_cr_theory, P_cr_calc, rtol=0.03)
 
-            u = np.zeros(N)
-            u[bu] = eigvecsu[:, mode]
 
 
     if plot:
         import matplotlib
         matplotlib.use('TkAgg')
         import matplotlib.pyplot as plt
+
+        u = np.zeros(N)
+        u[bu] = eigvecsu[:, mode]
+
         plt.clf()
         plt.contourf(xmesh, ymesh, u[2::DOF].reshape(nx, ny).T)
         plt.show()
