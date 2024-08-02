@@ -11,7 +11,7 @@ from pyfe3d.shellprop_utils import laminated_plate
 from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 
 
-def test_linear_buckling_cylinder(mode=0):
+def test_linear_buckling_cylinder(mode=0, plot_pyvista=False):
     r"""Test case from reference
 
         Geier, B., and Singh, G., 1997, “Some Simple Solutions for Buckling Loads of Thin and Moderately Thick Cylindrical Shells and Panels Made of Laminated Composite Material,” Aerosp. Sci. Technol., 1(1), pp. 47–63.
@@ -44,6 +44,7 @@ def test_linear_buckling_cylinder(mode=0):
 
     nids = 1 + np.arange(nlength*(ntheta+1))
     nids_mesh = nids.reshape(nlength, ntheta+1)
+    # closing the cylinder by reassigning last row of node-ids
     nids_mesh[:, -1] = nids_mesh[:, 0]
     nids = np.unique(nids_mesh)
     nid_pos = dict(zip(nids, np.arange(len(nids))))
@@ -95,6 +96,7 @@ def test_linear_buckling_cylinder(mode=0):
         quad.c4 = DOF*nid_pos[n4]
         quad.init_k_KC0 = init_k_KC0
         quad.init_k_KG = init_k_KG
+        quad.K6ROT = 1.
         quad.update_rotation_matrix(ncoords_flatten, 0, 0, 1)
         quad.update_probe_xe(ncoords_flatten)
         quad.update_KC0(KC0r, KC0c, KC0v, prop)
@@ -119,7 +121,7 @@ def test_linear_buckling_cylinder(mode=0):
 
     u = np.zeros(N, dtype=DOUBLE)
 
-    compression = -0.00007
+    compression = -0.0001
     checkTopEdge = isclose(z, L)
     u[2::DOF] += checkTopEdge*compression
     uk = u[bk]
@@ -144,8 +146,10 @@ def test_linear_buckling_cylinder(mode=0):
     print('sparse KG created')
 
     num_eig_lb = max(mode+1, 1)
+    eigvecs = np.zeros((N, num_eig_lb))
     eigvals, eigvecsu = eigsh(A=PREC*KGuu, k=num_eig_lb, which='SM',
             M=PREC*KC0uu, tol=1e-9, sigma=1., mode='cayley')
+    eigvecs[bu] = eigvecsu
     eigvals = -1./eigvals
     print('eigvals', eigvals)
 
@@ -157,9 +161,62 @@ def test_linear_buckling_cylinder(mode=0):
     print('Pcr =', Pcr)
     reference_value_Geier_Singh =  -274300
 
-    #assert np.isclose(Pcr, reference_value_Geier_Singh, rtol=0.01)
-    assert np.isclose(Pcr, -442798.413, rtol=0.01)
+    if plot_pyvista:
+        import pyvista as pv
 
+        contour_colorscale = 'coolwarm'
+        background = 'gray'
+        contour_label = 'Total displacement'
+        contour_vec = np.sqrt(eigvecs[0::DOF]**2 +
+                              eigvecs[1::DOF]**2 +
+                              eigvecs[2::DOF]**2)
+        displ_vec = contour_vec*100
+        intensitymode = None
+        if contour_vec is not None:
+            if len(contour_vec) == len(ncoords):
+                intensitymode = 'vertex'
+            elif len(contour_vec) == len(quads):
+                intensitymode = 'cell'
+            else:
+                raise RuntimeError('coutour_vec must be either a nodal or element output')
+
+        plotter = pv.Plotter(off_screen=False)
+        faces_quad = []
+        for q in quads:
+            faces_quad.append([4, nid_pos[q.n1], nid_pos[q.n2], nid_pos[q.n3], nid_pos[q.n4]])
+        faces_quad = np.array(faces_quad)
+        quad_plot = pv.PolyData(ncoords, faces_quad)
+        if contour_vec is not None:
+            if intensitymode == 'vertex':
+                quad_plot[contour_label] = contour_vec
+            else:
+                quad_plot[contour_label] = contour_vec[:len(quads)]
+
+            plotter.add_mesh(quad_plot, scalars=contour_label,
+                    cmap=contour_colorscale, edge_color='black', show_edges=True,
+                    line_width=1.)
+        else:
+            plotter.add_mesh(quad_plot, edge_color='black', show_edges=True,
+                    line_width=1.)
+        if displ_vec is not None:
+            quad_plot = pv.PolyData(ncoords + displ_vec, faces_quad)
+            plotter.add_mesh(quad_plot, edge_color='red', show_edges=True,
+                    line_width=1., opacity=0.5)
+        #NOTE plotting coordinate system
+        xaxis = pv.Arrow(start=(0, 0, 0), direction=(1, 0, 0), scale=R/3)
+        plotter.add_mesh(xaxis, color='blue')
+        yaxis = pv.Arrow(start=(0, 0, 0), direction=(0, 1, 0), scale=R/3)
+        plotter.add_mesh(yaxis, color='yellow')
+        zaxis = pv.Arrow(start=(0, 0, 0), direction=(0, 0, 1), scale=R/3)
+        plotter.add_mesh(zaxis, color='green')
+
+        plotter.set_background(background)
+        plotter.parallel_projection = False
+        plotter.show()
+
+
+    #assert np.isclose(Pcr, reference_value_Geier_Singh, rtol=0.01)
+    assert np.isclose(Pcr, -442823.46987121576, rtol=0.01)
 
 if __name__ == '__main__':
-    test_linear_buckling_cylinder(mode=0)
+    test_linear_buckling_cylinder(mode=0, plot_pyvista=True)
