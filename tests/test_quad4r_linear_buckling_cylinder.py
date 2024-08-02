@@ -97,7 +97,10 @@ def test_linear_buckling_cylinder(mode=0):
         quad.init_k_KG = init_k_KG
         quad.update_rotation_matrix(ncoords_flatten, 0, 0, 1)
         quad.update_probe_xe(ncoords_flatten)
-        quad.update_KC0(KC0r, KC0c, KC0v, prop)
+        factor = 1.
+        quad.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_u=factor,
+                        hgfactor_v=factor, hgfactor_w=factor,
+                        hgfactor_rx=factor, hgfactor_ry=factor)
         quads.append(quad)
         init_k_KC0 += data.KC0_SPARSE_SIZE
         init_k_KG += data.KG_SPARSE_SIZE
