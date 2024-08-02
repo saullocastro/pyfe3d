@@ -11,27 +11,26 @@ Quad4 - Quadrilateral element with mixed integration (:mod:`pyfe3d.quad4`)
 
 .. currentmodule:: pyfe3d.quad4
 
-This element has 6 degrees-of-freedom (DOF): `u`, `v`, `w`, `r_x`, `r_y`,
-`r_z`. All DOF are interpolated bi-linearly between the nodes, such that any of
-their gradients can be constan over the element, when the element is
-rectangular.
+The :class:`.Quad4` is the recommended quadrilateral plane stress finite
+element. Another option is the :mod:`pyfe3d.quad4r` with full reduced
+integration, more efficient, but with an hourglass control to compensate the
+reduced integration that is not robust and creates significant artificial
+stiffness.
 
-The in-plane, bending and coupled in-plane and bending stiffness terms are
-integrated with 2 quadrature points.
+The :class:`.Quad4` element has 6 degrees-of-freedom (DOF): `u`, `v`, `w`,
+`r_x`, `r_y`, `r_z`. All DOF are interpolated bi-linearly between the nodes,
+such that any of the DOF gradients can be constant over the element when the
+element is rectangular.
 
-The transverse shear terms are integrated with 1 quadrature point.
-
-The drilling stiffness is integrated with 1 quadrature point.
-
-The stiffness for the degrees of freeom `w`, `r_x` and `r_y` is based on the
+The stiffness for the degrees of freedom `w`, `r_x` and `r_y` is based on the
 paper below, where `r_x = \theta_1` and `r_y = \theta_2`:
 
-    Hugues T.J.R., Taylor R.L., Kanoknukulchai W. "A simple and efficient
+    Hughes T.J.R., Taylor R.L., Kanoknukulchai W. "A simple and efficient
     finite element for plate bending". International Journal of  Numerical
     Methods in Engineering, Volume 11, 1977.
+    https://doi.org/10.1002/nme.1620111005
 
-
-Hugues et al. propose the following integration scheme:
+Hughes et al. (1977) proposed the following integration scheme:
 
 - For thin plates, when `h/\ell < 1`, where `\ell` is the element
   characteristic length, here calculated as the square root of the element area
@@ -49,14 +48,17 @@ Hugues et al. propose the following integration scheme:
 
 -- one-point quadrature for the transverse shear terms without gradients
 
+The in-plane stiffness terms are integrated with 2 quadrature points, and the
+drilling stiffness is integrated with 1 quadrature point. These are
+not specified in the paper of Hughes et al. (1977).
+
 
 """
 #TODO bending stiffness vanishes when thickness -> zero, so a correction is applied:
 #     maximum allowable aspect ratio for plate: 10^5/8, beyond which the shear
 #     stiffness is multiplied by (thickness/h)^2 * (max aspect ratio allowed)^2,
 #     where the max aspect ratio allowed for plates is 10^5/8.
-
-from libc.math cimport fabs, fmod
+from libc.math cimport fabs
 
 import numpy as np
 
@@ -66,10 +68,10 @@ cdef int DOF = 6
 cdef int NUM_NODES = 4
 
 
-cdef int init_double(double* a, int size, double value) noexcept nogil:
-    cdef int i
-    for i in range(size):
-        a[i] = value
+#cdef int init_double(double* a, int size, double value) noexcept nogil:
+    #cdef int i
+    #for i in range(size):
+        #a[i] = value
 
 
 cdef class Quad4Data:
@@ -114,7 +116,13 @@ cdef class Quad4Data:
 
 cdef class Quad4Probe:
     r"""
-    Probe used for local coordinates, local displacements, local stresses etc
+    Probe used for local coordinates, local displacements, local stiffness,
+    local stresses etc...
+
+    The idea behind using a probe is to avoid allocating larger memory buffers
+    per finite element. The memory buffers are allocated per probe, and one
+    probe can be shared amongst many finite elements, with the information
+    being updated and retrieved on demand.
 
     Attributes
     ----------
@@ -130,41 +138,179 @@ cdef class Quad4Probe:
         {{r_y}_e}_2, {{r_z}_e}_2`, `{u_e}_3, {v_e}_3, {w_e}_3, {{r_x}_e}_3,
         {{r_y}_e}_3, {{r_z}_e}_3`, `{u_e}_4, {v_e}_4, {w_e}_4, {{r_x}_e}_4,
         {{r_y}_e}_4, {{r_z}_e}_4`.
+    KC0ve, : array-like
+        Local stiffness matrix stored as a 1D array of size
+        ``(NUM_NODES*DOF)**2``.
+    BLexx, BLeyy, BLgxy : array-like
+        Arrays of size ``NUM_NODES*DOF=24`` containing the in-plane strain
+        interpolation functions evaluated at a given natural coordinate point
+        `\xi`, `\eta`.
+    BLkxx, BLkyy, BLkxy : array-like
+        Arrays of size ``NUM_NODES*DOF=24`` containing the bending strain
+        interpolation functions evaluated at a given natural coordinate point
+        `\xi`, `\eta`.
+    BLgyz_grad, BLgyz_rot, BLgxz_grad, BLgxz_rot : array-like
+        Arrays of size ``NUM_NODES*DOF=24`` containing the transverse shear
+        strain interpolation functions evaluated at a given natural coordinate
+        point `\xi`, `\eta`.
+    BLdrilling, : array-like
+        Arrays of size ``NUM_NODES*DOF=24`` containing the drilling
+        interpolation function evaluated at a given natural coordinate point
+        `\xi`, `\eta`.
 
     """
     cdef public double [::1] xe
     cdef public double [::1] ue
     cdef public double [::1] KC0ve
-    cdef public double BLexx[24]
-    cdef public double BLeyy[24]
-    cdef public double BLgxy[24]
-    cdef public double BLkxx[24]
-    cdef public double BLkyy[24]
-    cdef public double BLkxy[24]
-    cdef public double BLgyz_rot[24]
-    cdef public double BLgyz_grad[24]
-    cdef public double BLgxz_rot[24]
-    cdef public double BLgxz_grad[24]
-    cdef public double BLdrilling[24]
+    cdef public double [::1] BLexx
+    cdef public double [::1] BLeyy
+    cdef public double [::1] BLgxy
+    cdef public double [::1] BLkxx
+    cdef public double [::1] BLkyy
+    cdef public double [::1] BLkxy
+    cdef public double [::1] BLgyz_grad
+    cdef public double [::1] BLgyz_rot
+    cdef public double [::1] BLgxz_grad
+    cdef public double [::1] BLgxz_rot
+    cdef public double [::1] BLdrilling
+
     def __cinit__(Quad4Probe self):
         self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
         self.ue = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.KC0ve = np.zeros((NUM_NODES*DOF)**2, dtype=np.float64)
 
-        # zeroing double buffers
-        init_double(self.BLexx, 24, 0.)
-        init_double(self.BLeyy, 24, 0.)
-        init_double(self.BLgxy, 24, 0.)
+        self.BLexx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.BLeyy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.BLgxy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
 
-        init_double(self.BLkxx, 24, 0.)
-        init_double(self.BLkyy, 24, 0.)
-        init_double(self.BLkxy, 24, 0.)
+        self.BLkxx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.BLkyy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.BLkxy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
 
-        init_double(self.BLdrilling, 24, 0.)
-        init_double(self.BLgyz_rot, 24, 0.)
-        init_double(self.BLgyz_grad, 24, 0.)
-        init_double(self.BLgxz_rot, 24, 0.)
-        init_double(self.BLgxz_grad, 24, 0.)
+        self.BLdrilling = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.BLgyz_grad = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.BLgyz_rot = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.BLgxz_grad = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.BLgxz_rot = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+
+    cpdef void update_BL(Quad4Probe self, double xi, double eta):
+        cdef double x1, x2, x3, x4, y1, y2, y3, y4
+        cdef double J11, J12, J21, J22
+        cdef double j11, j12, j21, j22
+        cdef double N1, N2, N3, N4
+        cdef double N1x, N2x, N3x, N4x
+        cdef double N1y, N2y, N3y, N4y
+
+        x1 = self.xe[0]
+        y1 = self.xe[1]
+        # z1 = self.xe[2]
+        x2 = self.xe[3]
+        y2 = self.xe[4]
+        # z2 = self.xe[5]
+        x3 = self.xe[6]
+        y3 = self.xe[7]
+        # z3 = self.xe[8]
+        x4 = self.xe[9]
+        y4 = self.xe[10]
+        # z4 = self.xe[11]
+
+        J11 = -0.5*x1 + 0.5*x2 + 0.5*(eta + 1)*(0.5*x1 - 0.5*x2 + 0.5*x3 - 0.5*x4)
+        J12 = -0.5*y1 + 0.5*y2 + 0.5*(eta + 1)*(0.5*y1 - 0.5*y2 + 0.5*y3 - 0.5*y4)
+        J21 = -0.5*x1 + 0.5*x4 - 0.25*(-x1 + x2)*(xi + 1) + 0.25*(x3 - x4)*(xi + 1)
+        J22 = -0.5*y1 + 0.5*y4 - 0.25*(xi + 1)*(-y1 + y2) + 0.25*(xi + 1)*(y3 - y4)
+
+        j11 = J22/(J11*J22 - J12*J21)
+        j12 = -J12/(J11*J22 - J12*J21)
+        j21 = -J21/(J11*J22 - J12*J21)
+        j22 = J11/(J11*J22 - J12*J21)
+
+        N1 = eta*xi/4. - eta/4. - xi/4. + 1/4.
+        N2 = -eta*xi/4. - eta/4. + xi/4. + 1/4.
+        N3 = eta*xi/4. + eta/4. + xi/4. + 1/4.
+        N4 = -eta*xi/4. + eta/4. - xi/4. + 1/4.
+
+        N1x = 0.25*j11*(eta - 1) + 0.25*j12*(xi - 1)
+        N2x = -0.25*eta*j11 + 0.25*j11 - 0.25*j12*xi - 0.25*j12
+        N3x = 0.25*j11*(eta + 1) + 0.25*j12*(xi + 1)
+        N4x = -0.25*eta*j11 - 0.25*j11 - 0.25*j12*xi + 0.25*j12
+
+        N1y = 0.25*j21*(eta - 1) + 0.25*j22*(xi - 1)
+        N2y = -0.25*eta*j21 + 0.25*j21 - 0.25*j22*xi - 0.25*j22
+        N3y = 0.25*j21*(eta + 1) + 0.25*j22*(xi + 1)
+        N4y = -0.25*eta*j21 - 0.25*j21 - 0.25*j22*xi + 0.25*j22
+
+        self.BLexx[0] = N1x
+        self.BLexx[6] = N2x
+        self.BLexx[12] = N3x
+        self.BLexx[18] = N4x
+
+        self.BLeyy[1] = N1y
+        self.BLeyy[7] = N2y
+        self.BLeyy[13] = N3y
+        self.BLeyy[19] = N4y
+
+        self.BLgxy[0] = N1y
+        self.BLgxy[6] = N2y
+        self.BLgxy[12] = N3y
+        self.BLgxy[18] = N4y
+        self.BLgxy[1] = N1x
+        self.BLgxy[7] = N2x
+        self.BLgxy[13] = N3x
+        self.BLgxy[19] = N4x
+
+        self.BLkxx[4] = N1x
+        self.BLkxx[10] = N2x
+        self.BLkxx[16] = N3x
+        self.BLkxx[22] = N4x
+
+        self.BLkyy[3] = -N1y
+        self.BLkyy[9] = -N2y
+        self.BLkyy[15] = -N3y
+        self.BLkyy[21] = -N4y
+
+        self.BLkxy[3] = -N1x
+        self.BLkxy[9] = -N2x
+        self.BLkxy[15] = -N3x
+        self.BLkxy[21] = -N4x
+        self.BLkxy[4] = N1y
+        self.BLkxy[10] = N2y
+        self.BLkxy[16] = N3y
+        self.BLkxy[22] = N4y
+
+        self.BLgyz_grad[2] = N1y
+        self.BLgyz_grad[8] = N2y
+        self.BLgyz_grad[14] = N3y
+        self.BLgyz_grad[20] = N4y
+
+        self.BLgyz_rot[3] = -N1
+        self.BLgyz_rot[9] = -N2
+        self.BLgyz_rot[15] = -N3
+        self.BLgyz_rot[21] = -N4
+
+        self.BLgxz_grad[2] = N1x
+        self.BLgxz_grad[8] = N2x
+        self.BLgxz_grad[14] = N3x
+        self.BLgxz_grad[20] = N4x
+
+        self.BLgxz_rot[4] = N1
+        self.BLgxz_rot[10] = N2
+        self.BLgxz_rot[16] = N3
+        self.BLgxz_rot[22] = N4
+
+        self.BLdrilling[0] = N1y/2.
+        self.BLdrilling[6] = N2y/2.
+        self.BLdrilling[12] = N3y/2.
+        self.BLdrilling[18] = N4y/2.
+
+        self.BLdrilling[1] = -N1x/2.
+        self.BLdrilling[7] = -N2x/2.
+        self.BLdrilling[13] = -N3x/2.
+        self.BLdrilling[19] = -N4x/2.
+
+        self.BLdrilling[5] = N1
+        self.BLdrilling[11] = N2
+        self.BLdrilling[17] = N3
+        self.BLdrilling[23] = N4
 
 
 cdef class Quad4:
@@ -577,12 +723,14 @@ cdef class Quad4:
         cdef double alphat
         cdef double h, length
         cdef double r[6][6]
-        cdef double m11, m12, m21, m22, a11, a22
-        cdef double j11, j12, j21, j22, N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
+        cdef double m11, m12, m21, m22
         cdef double N1, N2, N3, N4
-        cdef int pti, ptj
+        cdef double N1x, N2x, N3x, N4x
+        cdef double N1y, N2y, N3y, N4y
         cdef double xi, eta, wij, J11, J12, J21, J22, detJ
+        cdef double j11, j12, j21, j22
         cdef double points[2]
+        cdef int pti, ptj
         cdef double* BLexx
         cdef double* BLeyy
         cdef double* BLgxy
@@ -858,8 +1006,8 @@ cdef class Quad4:
                         kxy = BLkxy[i]
                         for j in range(24):
                             ke = 24*i + j
-                            # membrane
                             self.probe.KC0ve[ke] += wij*detJ*(
+                            # membrane
                                 exx*A11*BLexx[j] + exx*A12*BLeyy[j] + exx*A16*BLgxy[j]
                               + eyy*A12*BLexx[j] + eyy*A22*BLeyy[j] + eyy*A26*BLgxy[j]
                               + gxy*A16*BLexx[j] + gxy*A26*BLeyy[j] + gxy*A66*BLgxy[j]
@@ -877,7 +1025,6 @@ cdef class Quad4:
                               + kxx*D11*BLkxx[j] + kxx*D12*BLkyy[j] + kxx*D16*BLkxy[j]
                               + kyy*D12*BLkxx[j] + kyy*D22*BLkyy[j] + kyy*D26*BLkxy[j]
                               + kxy*D16*BLkxx[j] + kxy*D26*BLkyy[j] + kxy*D66*BLkxy[j]
-
                             )
 
                     if h/length >= 1.: # thick elements
@@ -895,8 +1042,8 @@ cdef class Quad4:
                             gxz_grad = BLgxz_grad[i]
                             for j in range(24):
                                 ke = 24*i + j
-                                # transverse shear (gradient term)
                                 self.probe.KC0ve[ke] += wij*detJ*(
+                                # transverse shear (gradient term)
                                     gyz_grad*E44*BLgyz_grad[j] + gyz_grad*E45*BLgxz_grad[j]
                                   + gxz_grad*E45*BLgyz_grad[j] + gxz_grad*E55*BLgxz_grad[j]
                                 )
@@ -933,25 +1080,25 @@ cdef class Quad4:
             N3y = 0.25*j21*(eta + 1) + 0.25*j22*(xi + 1)
             N4y = -0.25*eta*j21 - 0.25*j21 - 0.25*j22*xi + 0.25*j22
 
-            BLgyz_rot[3] = -N1
-            BLgyz_rot[9] = -N2
-            BLgyz_rot[15] = -N3
-            BLgyz_rot[21] = -N4
-
             BLgyz_grad[2] = N1y
             BLgyz_grad[8] = N2y
             BLgyz_grad[14] = N3y
             BLgyz_grad[20] = N4y
 
-            BLgxz_rot[4] = N1
-            BLgxz_rot[10] = N2
-            BLgxz_rot[16] = N3
-            BLgxz_rot[22] = N4
+            BLgyz_rot[3] = -N1
+            BLgyz_rot[9] = -N2
+            BLgyz_rot[15] = -N3
+            BLgyz_rot[21] = -N4
 
             BLgxz_grad[2] = N1x
             BLgxz_grad[8] = N2x
             BLgxz_grad[14] = N3x
             BLgxz_grad[20] = N4x
+
+            BLgxz_rot[4] = N1
+            BLgxz_rot[10] = N2
+            BLgxz_rot[16] = N3
+            BLgxz_rot[22] = N4
 
             BLdrilling[0] = N1y/2.
             BLdrilling[6] = N2y/2.
@@ -995,7 +1142,6 @@ cdef class Quad4:
 
                         # drilling
                           + drilling*(alphat*A66/h)*BLdrilling[j]
-
                         )
 
             else: # thick elements
