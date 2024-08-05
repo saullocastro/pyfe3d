@@ -7,7 +7,6 @@ from scipy.sparse import coo_matrix
 
 from pyfe3d.beamprop import BeamProp
 from pyfe3d import BeamLR, BeamLRData, BeamLRProbe, DOF, INT, DOUBLE
-from pyfe3d.coord import CoordR
 
 
 def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):

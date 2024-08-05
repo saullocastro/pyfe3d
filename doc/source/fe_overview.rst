@@ -2,8 +2,9 @@ Available finite elements
 -------------------------
 
 .. toctree::
-    :maxdepth: 2
+    :titlesonly:
 
+    quad4.rst
     quad4r.rst
     quad4r_utils.rst
     tria3r.rst

@@ -143,8 +143,8 @@ cdef class BeamC:
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
         corresponding to the rotation matrix from local to global coordinates.
 
-        The element attributes `vxyi`, `vxyj` and `vxyk` are also updated when
-        this function is called.
+        The element attributes ``vxyi``, ``vxyj`` and ``vxyk`` are also updated
+        when this function is called.
 
         The element coordinate system is determined, identifying the `ijk`
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
@@ -339,7 +339,7 @@ cdef class BeamC:
                           ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
-        Properties
+        Parameters
         ----------
         KC0r : np.array
             Array to store row positions of sparse values
@@ -347,12 +347,13 @@ cdef class BeamC:
             Array to store column positions of sparse values
         KC0v : np.array
             Array to store sparse values
-        prop : :class:`BeamProp` object
+        prop : :class:`.BeamProp` object
             Beam property object from where the stiffness and mass attributes
             are read from.
         update_KC0v_only : int
-            The default `0` means that only `KC0v` is updated. Any other value will
-            lead to `KC0r` and `KC0c` also being updated.
+            The default ``0`` means that the row and column indices ``KC0r``
+            and ``KC0c`` should also be updated. Any other value will only
+            update the stiffness matrix values ``KC0v``.
 
         """
         cdef int c1, c2, k
@@ -1203,7 +1204,7 @@ cdef class BeamC:
                          ):
         r"""Update sparse vectors for geometric stiffness matrix KG
 
-        Properties
+        Parameters
         ----------
         KGr : np.array
            Array to store row positions of sparse values
@@ -1211,7 +1212,7 @@ cdef class BeamC:
            Array to store column positions of sparse values
         KGv : np.array
             Array to store sparse values
-        prop : :class:`BeamProp` object
+        prop : :class:`.BeamProp` object
             Beam property object from where the stiffness and mass attributes
             are read from.
         update_KGv_only : int
@@ -1992,7 +1993,7 @@ cdef class BeamC:
                         ):
         r"""Update sparse vectors for mass matrix M
 
-        Properties
+        Parameters
         ----------
         Mr : np.array
             Array to store row positions of sparse values

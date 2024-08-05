@@ -9,7 +9,7 @@ from Cython.Build import cythonize
 
 
 is_released = True
-version = '0.4.28'
+version = '0.5.0'
 
 
 def git_version():
@@ -154,6 +154,11 @@ extensions = [
     Extension('pyfe3d.tria3r',
         sources=[
             './pyfe3d/tria3r.pyx',
+            ],
+        **extension_kwargs),
+    Extension('pyfe3d.quad4',
+        sources=[
+            './pyfe3d/quad4.pyx',
             ],
         **extension_kwargs),
     Extension('pyfe3d.quad4r',

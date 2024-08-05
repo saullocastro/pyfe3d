@@ -22,7 +22,7 @@ in any platform, including the Google Colab environment.
 Citing this library
 -------------------
 
-Saullo G. P. Castro. (2024). General-purpose finite element solver based on Python and Cython (Version 0.4.28). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
+Saullo G. P. Castro. (2024). General-purpose finite element solver based on Python and Cython (Version 0.5.0). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
 
 
 Documentation
@@ -40,17 +40,20 @@ Important features of this library
 
 Available finite elements
 -------------------------
-- 'Quad4R' - 4-node plate with linear interpolation, equivalent to Abaqus' S4R
-or Nastran's CQUAD4.
+- 'Quad4' - 4-node plate with linear interpolation, equivalent to Nastran's
+  CQUAD4. The recommended quadrilateral plate element.
+
+- 'Quad4R' - 4-node plate with linear interpolation, equivalent to Abaqus' S4R.
+  It has a not very robust hourglass control.
 
 - 'Tria3R' - 3-node plate with linear interpolation, equivalent to Abaqus' S3R
 or Nastran's CTRIA3.
 
-- 'BeamLR' - 2-node Timoshenko beam element with linear interpolation and
-reduced integration.
-
 - 'BeamC' - 2-node Timoshenko beam element with consistent shape functions and
-analytical integration.
+analytical integration. The recommended beam element.
+
+- 'BeamLR' - 2-node Timoshenko beam element with linear interpolation and
+reduced integration. 
 
 - 'Spring' - 2-node spring element with 6 stiffenesses defined in the element
   coordinate system.

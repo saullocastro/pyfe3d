@@ -6,12 +6,12 @@ from scipy.sparse.linalg import cg
 from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import isotropic_plate
-from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
+from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 
 
 def test_static_plate_quad_point_load(plot=False):
-    data = Quad4RData()
-    probe = Quad4RProbe()
+    data = Quad4Data()
+    probe = Quad4Probe()
     nx = 7
     ny = 11
 
@@ -60,7 +60,7 @@ def test_static_plate_quad_point_load(plot=False):
         r3 = ncoords[pos3]
         normal = np.cross(r2 - r1, r3 - r2)[2]
         assert normal > 0
-        quad = Quad4R(probe)
+        quad = Quad4(probe)
         quad.n1 = n1
         quad.n2 = n2
         quad.n3 = n3
@@ -70,12 +70,9 @@ def test_static_plate_quad_point_load(plot=False):
         quad.c3 = DOF*nid_pos[n3]
         quad.c4 = DOF*nid_pos[n4]
         quad.init_k_KC0 = init_k_KC0
-        quad.update_rotation_matrix(ncoords_flatten, 0, 0, 1) # NOTE to create error messages
+        quad.update_rotation_matrix(ncoords_flatten)
         quad.update_probe_xe(ncoords_flatten)
-        factor = 0.1
-        quad.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_u=factor,
-                        hgfactor_v=factor, hgfactor_w=factor,
-                        hgfactor_rx=factor, hgfactor_ry=factor)
+        quad.update_KC0(KC0r, KC0c, KC0v, prop)
         quads.append(quad)
         init_k_KC0 += data.KC0_SPARSE_SIZE
 
@@ -112,19 +109,19 @@ def test_static_plate_quad_point_load(plot=False):
 
     # obtained with bfsplate2d element, nx=ny=29
     wmax_ref = 6.594931610258557e-05
-    # obtained with Quad4R nx=7, ny=11
-    wmax_ref = 6.531745527797951e-05
+    # obtained with Quad4 nx=7, ny=11
+    wmax_ref = 6.496928101916171e-05
     print('w.max()', w.max())
     assert np.isclose(wmax_ref, w.max(), rtol=0.02)
     if plot:
-        import matplotlib
-        matplotlib.use('TkAgg')
         import matplotlib.pyplot as plt
         plt.gca().set_aspect('equal')
-        levels = np.linspace(w.min(), w.max(), 300)
+        levels = np.linspace(w.min(), w.max(), 10)
         plt.contourf(xmesh, ymesh, w, levels=levels)
         plt.colorbar()
         plt.show()
+        #plt.savefig('ex_linear_static_figure.jpg', dpi=200,
+                    #bbox_inches='tight')
 
 
 if __name__ == '__main__':

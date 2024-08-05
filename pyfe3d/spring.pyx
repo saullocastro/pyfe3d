@@ -249,7 +249,7 @@ cdef class Spring:
                           ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
-        Properties
+        Parameters
         ----------
         KC0r : np.array
             Array to store row positions of sparse values
@@ -258,8 +258,9 @@ cdef class Spring:
         KC0v : np.array
             Array to store sparse values
         update_KC0v_only : int
-            The default `0` means that only `KC0v` is updated. Any other value will
-            lead to `KC0r` and `KC0c` also being updated.
+            The default ``0`` means that the row and column indices ``KC0r``
+            and ``KC0c`` should also be updated. Any other value will only
+            update the stiffness matrix values ``KC0v``.
 
         """
         cdef int c1, c2, k

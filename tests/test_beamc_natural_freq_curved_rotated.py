@@ -8,6 +8,7 @@ from scipy.sparse import coo_matrix
 from pyfe3d.beamprop import BeamProp
 from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
 
+
 def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
     # NOTE these rotation_rad values will keep the problem 2D on the XZ plane
     for rotation_rad in [np.pi/2, 3*np.pi/2]:

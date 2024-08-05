@@ -105,7 +105,7 @@ def test_linear_buckling(mode=0, refinement=1):
     # constraining u at x = a/2, y = 0,b
     check = isclose(x, a/2.) & (isclose(y, 0.) | isclose(y, b))
     bk[0::DOF] = check
-    # constraining v at x = 0,a y = b/2
+    # constraining v at x = 0, y = b/2
     check = isclose(y, b/2.) & (isclose(x, 0.) | isclose(x, a))
     bk[1::DOF] = check
     # removing drilling
