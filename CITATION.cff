@@ -16,7 +16,7 @@ abstract: >-
   Colab environment.
 message: >-
   Please, cite this software using:
-  Saullo G. P. Castro. (2023). General-purpose finite element solver based on Python and Cython (Version 0.4.1). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
+  Saullo G. P. Castro. (2024). General-purpose finite element solver based on Python and Cython (Version 0.5.0). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
 authors:
   - given-names: Saullo G. P.
     family-names: Castro
@@ -30,5 +30,5 @@ identifiers:
 repository-code: 'https://github.com/saullocastro/pyfe3d'
 url: 'https://saullocastro.github.io/pyfe3d/'
 license: BSD-3-Clause
-version: 0.4.1
-date-released: '2023-10-11'
+version: 0.5.0
+date-released: '2024-08-07'
