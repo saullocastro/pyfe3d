@@ -1,0 +1,1337 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Quad4 - Quadrilateral element with mixed integration (pyfe3d.quad4) &#8212; pyfe3d 0.5.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=1dd76d02"></script>
+    <script src="_static/doctools.js?v=9a2dae69"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'quad4';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r)" href="quad4r.html" />
+    <link rel="prev" title="Available finite elements" href="fe_overview.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.5.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Static analysis
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="fe_overview.html">
+    Available finite elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="properties.html">
+    Property definitions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="coord.html">
+    <no title>
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Static analysis
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="fe_overview.html">
+    Available finite elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="properties.html">
+    Property definitions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="coord.html">
+    <no title>
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Quad4 - Quadrilateral element with mixed integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4</span></code>)</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="quad4r.html">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="tria3r.html">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="beamc.html">BeamC - Consistent Timoshenko 3D beam element (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamc</span></code>)</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="beamlr.html">BeamLR - Linear Timoshenko 3D beam element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamlr</span></code>)</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="spring.html">Spring - 3D spring element with constant stiffnesses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.spring</span></code>)</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="truss.html">Truss - Linear truss 3D element with analytical integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code>)</a></li>
+
+
+
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="fe_overview.html" class="nav-link">Available finite elements</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">Quad4 -...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="quad4-quadrilateral-element-with-mixed-integration-pyfe3d-quad4">
+<span id="module-pyfe3d.quad4"></span><h1>Quad4 - Quadrilateral element with mixed integration (<a class="reference internal" href="#module-pyfe3d.quad4" title="pyfe3d.quad4"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4</span></code></a>)<a class="headerlink" href="#quad4-quadrilateral-element-with-mixed-integration-pyfe3d-quad4" title="Link to this heading">#</a></h1>
+<p>The <a class="reference internal" href="#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> is the recommended quadrilateral plane stress finite
+element.</p>
+<p>Another option is the <a class="reference internal" href="quad4r.html#module-pyfe3d.quad4r" title="pyfe3d.quad4r"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code></a> with full reduced
+integration, more efficient, but with an hourglass control to compensate the
+reduced integration that is not robust and creates significant artificial
+stiffness.</p>
+<p>The <a class="reference internal" href="#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> element has 6 degrees-of-freedom (DOF): <span class="math notranslate nohighlight">\(u\)</span>, <span class="math notranslate nohighlight">\(v\)</span>, <span class="math notranslate nohighlight">\(w\)</span>,
+<span class="math notranslate nohighlight">\(r_x\)</span>, <span class="math notranslate nohighlight">\(r_y\)</span>, <span class="math notranslate nohighlight">\(r_z\)</span>. All DOF are interpolated bi-linearly between the nodes,
+such that any of the DOF gradients can be constant over the element when the
+element is rectangular.</p>
+<p>The stiffness for the degrees of freedom <span class="math notranslate nohighlight">\(w\)</span>, <span class="math notranslate nohighlight">\(r_x\)</span> and <span class="math notranslate nohighlight">\(r_y\)</span> is based on the
+paper below, where <span class="math notranslate nohighlight">\(r_x = \theta_1\)</span> and <span class="math notranslate nohighlight">\(r_y = \theta_2\)</span>:</p>
+<blockquote>
+<div><p>Hughes T.J.R., Taylor R.L., Kanoknukulchai W. “A simple and efficient
+finite element for plate bending”. International Journal of  Numerical
+Methods in Engineering, Volume 11, 1977.
+<a class="reference external" href="https://doi.org/10.1002/nme.1620111005">https://doi.org/10.1002/nme.1620111005</a></p>
+</div></blockquote>
+<p>Hughes et al. (1977) proposed the following integration scheme:</p>
+<ul class="simple">
+<li><p>For thin plates, when <span class="math notranslate nohighlight">\(h/\ell &lt; 1\)</span>, where <span class="math notranslate nohighlight">\(\ell\)</span> is the element
+characteristic length, here calculated as the square root of the element area
+<span class="math notranslate nohighlight">\(\ell = \sqrt{\text{area}}\)</span></p></li>
+</ul>
+<p>– two-by-two quadrature for the bending energy terms</p>
+<p>– one-point quadrature for the transverse shear energy terms</p>
+<ul class="simple">
+<li><p>For thick plates, when <span class="math notranslate nohighlight">\(h/\ell &gt;= 1\)</span></p></li>
+</ul>
+<p>– two-by-two quadrature for the bending energy terms</p>
+<p>– two-by-two quadrature for the transverse shear terms with gradients</p>
+<p>– one-point quadrature for the transverse shear terms without gradients</p>
+<p>The in-plane stiffness terms are integrated with 2 quadrature points, and the
+drilling stiffness is integrated with 1 quadrature point. These are
+not specified in the paper of Hughes et al. (1977).</p>
+</section>
+<dl class="py class">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.quad4.</span></span><span class="sig-name descname"><span class="pre">Quad4</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4" title="Link to this definition">#</a></dt>
+<dd><p>Nodal connectivity for the plate element similar to Nastran’s CQUAD4:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span> <span class="o">^</span> <span class="n">y</span>
+ <span class="o">|</span>
+<span class="mi">4</span> <span class="n">________</span> <span class="mi">3</span>
+ <span class="o">|</span>       <span class="o">|</span>
+ <span class="o">|</span>       <span class="o">|</span>   <span class="o">--&gt;</span> <span class="n">x</span>
+ <span class="o">|</span>       <span class="o">|</span>
+ <span class="o">|</span><span class="n">_______</span><span class="o">|</span>
+<span class="mi">1</span>         <span class="mi">2</span>
+</pre></div>
+</div>
+<p>The element coordinate system is determined identically what is explained
+in Nastran’s quick reference guide for the CQUAD4 element, as illustrated
+below.</p>
+<img alt="_images/nastran_cquad4.svg" src="_images/nastran_cquad4.svg" />
+<dl class="field-list">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>eid,</strong><span class="classifier">int</span></dt><dd><p>Element identification number.</p>
+</dd>
+<dt><strong>area,</strong><span class="classifier">double</span></dt><dd><p>Element area.</p>
+</dd>
+<dt><strong>K6ROT,</strong><span class="classifier">double</span></dt><dd><p>Element drilling stiffness, added only to the diagonal of the local
+stiffness matrix. The default value is according to AUTODESK NASTRAN’s
+quick reference guide is <code class="docutils literal notranslate"><span class="pre">K6ROT</span> <span class="pre">=</span> <span class="pre">100.</span></code> for static analysis.  For
+modal solutions, this value should be <code class="docutils literal notranslate"><span class="pre">K6ROT=1.e4</span></code>.  MSC NASTRAN’s
+quick reference guide states that <code class="docutils literal notranslate"><span class="pre">K6ROT</span> <span class="pre">&gt;</span> <span class="pre">100.</span></code> should not be used,
+but this is controversial, already being controversial to what AUTODESK
+NASTRAN’s manual says.</p>
+</dd>
+<dt><strong>r11, r12, r13, r21, r22, r23, r31, r32, r33</strong><span class="classifier">double</span></dt><dd><p>Rotation matrix from local to global coordinates.</p>
+</dd>
+<dt><strong>m11, m12, m21, m22</strong><span class="classifier">double</span></dt><dd><p>Rotation matrix only for the constitutive relations. Used when a
+material direction is used instead of the element local coordinates.</p>
+</dd>
+<dt><strong>c1, c2, c3, c4</strong><span class="classifier">int</span></dt><dd><p>Position of each node in the global stiffness matrix.</p>
+</dd>
+<dt><strong>n1, n2, n3, n4</strong><span class="classifier">int</span></dt><dd><p>Node identification number.</p>
+</dd>
+<dt><strong>init_k_KC0, init_k_KG, init_k_M</strong><span class="classifier">int</span></dt><dd><p>Position in the arrays storing the sparse data for the structural
+matrices.</p>
+</dd>
+<dt><strong>init_k_KA_beta, init_k_KA_gamma, init_k_CA</strong><span class="classifier">int</span></dt><dd><p>Position in the arrays storing the sparse data for the aerodynamic
+matrices based on the Piston theory.</p>
+</dd>
+<dt><strong>probe,</strong><span class="classifier"><a class="reference internal" href="#pyfe3d.quad4.Quad4Probe" title="pyfe3d.quad4.Quad4Probe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4Probe</span></code></a> object</span></dt><dd><p>Pointer to the probe.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_CA" title="pyfe3d.quad4.Quad4.update_CA"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_CA</span></code></a>(self, long[, long[, double[)</p></td>
+<td><p>Update sparse vectors for piston-theory aerodynamic damping matrix <span class="math notranslate nohighlight">\(CA\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_KA_beta" title="pyfe3d.quad4.Quad4.update_KA_beta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KA_beta</span></code></a>(self, long[, long[, double[)</p></td>
+<td><p>Update sparse vectors for piston-theory aerodynamic matrix <span class="math notranslate nohighlight">\(KA_{\beta}\)</span></p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_KA_gamma" title="pyfe3d.quad4.Quad4.update_KA_gamma"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KA_gamma</span></code></a>(self, long[, long[, double[)</p></td>
+<td><p>Update sparse vectors for piston-theory aerodynamic matrix <span class="math notranslate nohighlight">\(KA_{\gamma}\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_KC0" title="pyfe3d.quad4.Quad4.update_KC0"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KC0</span></code></a>(self, long[, long[, double[, ...)</p></td>
+<td><p>Update sparse vectors for linear constitutive stiffness matrix KC0</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_KG" title="pyfe3d.quad4.Quad4.update_KG"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KG</span></code></a>(self, long[, long[, double[, ...)</p></td>
+<td><p>Update sparse vectors for geometric stiffness matrix KG</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_KG_given_stress" title="pyfe3d.quad4.Quad4.update_KG_given_stress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KG_given_stress</span></code></a>(self, double Nxx, ...)</p></td>
+<td><p>Update sparse vectors for geometric stiffness matrix KG</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_M" title="pyfe3d.quad4.Quad4.update_M"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_M</span></code></a>(self, long[, long[, double[, ...)</p></td>
+<td><p>Update sparse vectors for mass matrix M</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_area" title="pyfe3d.quad4.Quad4.update_area"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_area</span></code></a>(self)</p></td>
+<td><p>Update element area</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_probe_ue" title="pyfe3d.quad4.Quad4.update_probe_ue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_probe_ue</span></code></a>(self, double[)</p></td>
+<td><p>Update the local displacement vector of the probe of the element</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_probe_xe" title="pyfe3d.quad4.Quad4.update_probe_xe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_probe_xe</span></code></a>(self, double[)</p></td>
+<td><p>Update the 3D coordinates of the probe of the element</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_rotation_matrix" title="pyfe3d.quad4.Quad4.update_rotation_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_rotation_matrix</span></code></a>(self, double[, ...)</p></td>
+<td><p>Update the rotation matrix of the element</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.K6ROT">
+<span class="sig-name descname"><span class="pre">K6ROT</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.K6ROT" title="Link to this definition">#</a></dt>
+<dd><p>K6ROT: ‘double’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.area">
+<span class="sig-name descname"><span class="pre">area</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.area" title="Link to this definition">#</a></dt>
+<dd><p>area: ‘double’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.c1">
+<span class="sig-name descname"><span class="pre">c1</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.c1" title="Link to this definition">#</a></dt>
+<dd><p>c1: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.c2">
+<span class="sig-name descname"><span class="pre">c2</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.c2" title="Link to this definition">#</a></dt>
+<dd><p>c2: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.c3">
+<span class="sig-name descname"><span class="pre">c3</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.c3" title="Link to this definition">#</a></dt>
+<dd><p>c3: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.c4">
+<span class="sig-name descname"><span class="pre">c4</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.c4" title="Link to this definition">#</a></dt>
+<dd><p>c4: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.eid">
+<span class="sig-name descname"><span class="pre">eid</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.eid" title="Link to this definition">#</a></dt>
+<dd><p>eid: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.init_k_CA">
+<span class="sig-name descname"><span class="pre">init_k_CA</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.init_k_CA" title="Link to this definition">#</a></dt>
+<dd><p>init_k_CA: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.init_k_KA_beta">
+<span class="sig-name descname"><span class="pre">init_k_KA_beta</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.init_k_KA_beta" title="Link to this definition">#</a></dt>
+<dd><p>init_k_KA_beta: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.init_k_KA_gamma">
+<span class="sig-name descname"><span class="pre">init_k_KA_gamma</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.init_k_KA_gamma" title="Link to this definition">#</a></dt>
+<dd><p>init_k_KA_gamma: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.init_k_KC0">
+<span class="sig-name descname"><span class="pre">init_k_KC0</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.init_k_KC0" title="Link to this definition">#</a></dt>
+<dd><p>init_k_KC0: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.init_k_KG">
+<span class="sig-name descname"><span class="pre">init_k_KG</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.init_k_KG" title="Link to this definition">#</a></dt>
+<dd><p>init_k_KG: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.init_k_M">
+<span class="sig-name descname"><span class="pre">init_k_M</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.init_k_M" title="Link to this definition">#</a></dt>
+<dd><p>init_k_M: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.m11">
+<span class="sig-name descname"><span class="pre">m11</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.m11" title="Link to this definition">#</a></dt>
+<dd><p>m11: ‘double’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.m12">
+<span class="sig-name descname"><span class="pre">m12</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.m12" title="Link to this definition">#</a></dt>
+<dd><p>m12: ‘double’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.m21">
+<span class="sig-name descname"><span class="pre">m21</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.m21" title="Link to this definition">#</a></dt>
+<dd><p>m21: ‘double’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.m22">
+<span class="sig-name descname"><span class="pre">m22</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.m22" title="Link to this definition">#</a></dt>
+<dd><p>m22: ‘double’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.n1">
+<span class="sig-name descname"><span class="pre">n1</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.n1" title="Link to this definition">#</a></dt>
+<dd><p>n1: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.n2">
+<span class="sig-name descname"><span class="pre">n2</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.n2" title="Link to this definition">#</a></dt>
+<dd><p>n2: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.n3">
+<span class="sig-name descname"><span class="pre">n3</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.n3" title="Link to this definition">#</a></dt>
+<dd><p>n3: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.n4">
+<span class="sig-name descname"><span class="pre">n4</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.n4" title="Link to this definition">#</a></dt>
+<dd><p>n4: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.probe">
+<span class="sig-name descname"><span class="pre">probe</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.probe" title="Link to this definition">#</a></dt>
+<dd><p>probe: pyfe3d.quad4.Quad4Probe</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.r11">
+<span class="sig-name descname"><span class="pre">r11</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.r11" title="Link to this definition">#</a></dt>
+<dd><p>r11: ‘double’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.r12">
+<span class="sig-name descname"><span class="pre">r12</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.r12" title="Link to this definition">#</a></dt>
+<dd><p>r12: ‘double’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.r13">
+<span class="sig-name descname"><span class="pre">r13</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.r13" title="Link to this definition">#</a></dt>
+<dd><p>r13: ‘double’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.r21">
+<span class="sig-name descname"><span class="pre">r21</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.r21" title="Link to this definition">#</a></dt>
+<dd><p>r21: ‘double’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.r22">
+<span class="sig-name descname"><span class="pre">r22</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.r22" title="Link to this definition">#</a></dt>
+<dd><p>r22: ‘double’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.r23">
+<span class="sig-name descname"><span class="pre">r23</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.r23" title="Link to this definition">#</a></dt>
+<dd><p>r23: ‘double’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.r31">
+<span class="sig-name descname"><span class="pre">r31</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.r31" title="Link to this definition">#</a></dt>
+<dd><p>r31: ‘double’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.r32">
+<span class="sig-name descname"><span class="pre">r32</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.r32" title="Link to this definition">#</a></dt>
+<dd><p>r32: ‘double’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.r33">
+<span class="sig-name descname"><span class="pre">r33</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.r33" title="Link to this definition">#</a></dt>
+<dd><p>r33: ‘double’</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.update_CA">
+<span class="sig-name descname"><span class="pre">update_CA</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">CAr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">CAc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">CAv</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.update_CA" title="Link to this definition">#</a></dt>
+<dd><p>Update sparse vectors for piston-theory aerodynamic damping matrix <span class="math notranslate nohighlight">\(CA\)</span></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>CAr</strong><span class="classifier">np.array</span></dt><dd><p>Array to store row positions of sparse values</p>
+</dd>
+<dt><strong>CAc</strong><span class="classifier">np.array</span></dt><dd><p>Array to store column positions of sparse values</p>
+</dd>
+<dt><strong>CAv</strong><span class="classifier">np.array</span></dt><dd><p>Array to store sparse values</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.update_KA_beta">
+<span class="sig-name descname"><span class="pre">update_KA_beta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KA_betar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KA_betac</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KA_betav</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.update_KA_beta" title="Link to this definition">#</a></dt>
+<dd><p>Update sparse vectors for piston-theory aerodynamic matrix <span class="math notranslate nohighlight">\(KA_{\beta}\)</span></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>KA_betar</strong><span class="classifier">np.array</span></dt><dd><p>Array to store row positions of sparse values</p>
+</dd>
+<dt><strong>KA_betac</strong><span class="classifier">np.array</span></dt><dd><p>Array to store column positions of sparse values</p>
+</dd>
+<dt><strong>KA_betav</strong><span class="classifier">np.array</span></dt><dd><p>Array to store sparse values</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.update_KA_gamma">
+<span class="sig-name descname"><span class="pre">update_KA_gamma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KA_gammar</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KA_gammac</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KA_gammav</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.update_KA_gamma" title="Link to this definition">#</a></dt>
+<dd><p>Update sparse vectors for piston-theory aerodynamic matrix <span class="math notranslate nohighlight">\(KA_{\gamma}\)</span></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>KA_gammar</strong><span class="classifier">np.array</span></dt><dd><p>Array to store row positions of sparse values</p>
+</dd>
+<dt><strong>KA_gammac</strong><span class="classifier">np.array</span></dt><dd><p>Array to store column positions of sparse values</p>
+</dd>
+<dt><strong>KA_gammav</strong><span class="classifier">np.array</span></dt><dd><p>Array to store sparse values</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.update_KC0">
+<span class="sig-name descname"><span class="pre">update_KC0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KC0v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KC0v_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.update_KC0" title="Link to this definition">#</a></dt>
+<dd><p>Update sparse vectors for linear constitutive stiffness matrix KC0</p>
+<p>Drilling stiffness is used according to Adam et al. 2013:</p>
+<blockquote>
+<div><p>Adam, F. M., Mohamed, A. E., and Hassaballa, A. E., 2013,
+“Degenerated Four Nodes Shell Element with Drilling Degree of
+Freedom,” IOSR J. Eng., 3(8), pp. 10–20.</p>
+</div></blockquote>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>KC0r</strong><span class="classifier">np.array</span></dt><dd><p>Array to store row positions of sparse values</p>
+</dd>
+<dt><strong>KC0c</strong><span class="classifier">np.array</span></dt><dd><p>Array to store column positions of sparse values</p>
+</dd>
+<dt><strong>KC0v</strong><span class="classifier">np.array</span></dt><dd><p>Array to store sparse values</p>
+</dd>
+<dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object</span></dt><dd><p>Shell property object from where the stiffness and mass attributes
+are read from.</p>
+</dd>
+<dt><strong>update_KC0v_only</strong><span class="classifier">int</span></dt><dd><p>The default <code class="docutils literal notranslate"><span class="pre">0</span></code> means that the row and column indices <code class="docutils literal notranslate"><span class="pre">KC0r</span></code>
+and <code class="docutils literal notranslate"><span class="pre">KC0c</span></code> should also be updated. Any other value will only
+update the stiffness matrix values <code class="docutils literal notranslate"><span class="pre">KC0v</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.update_KG">
+<span class="sig-name descname"><span class="pre">update_KG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KGr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KGc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KGv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.update_KG" title="Link to this definition">#</a></dt>
+<dd><p>Update sparse vectors for geometric stiffness matrix KG</p>
+<p>Two-point Gauss-Legendre quadrature is used, which showed more accuracy
+for linear buckling load predictions.</p>
+<p>Before this function is called, the probe <a class="reference internal" href="#pyfe3d.quad4.Quad4Probe" title="pyfe3d.quad4.Quad4Probe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4Probe</span></code></a>
+attribute of the <a class="reference internal" href="#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> object must be updated using
+<code class="xref py py-func docutils literal notranslate"><span class="pre">update_probe_ue()</span></code> with the correct pre-buckling (fundamental
+state) displacements; and <code class="xref py py-func docutils literal notranslate"><span class="pre">update_probe_xe()</span></code> with the node
+coordinates.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>KGr</strong><span class="classifier">np.array</span></dt><dd><p>Array to store row positions of sparse values</p>
+</dd>
+<dt><strong>KGc</strong><span class="classifier">np.array</span></dt><dd><p>Array to store column positions of sparse values</p>
+</dd>
+<dt><strong>KGv</strong><span class="classifier">np.array</span></dt><dd><p>Array to store sparse values</p>
+</dd>
+<dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object</span></dt><dd><p>Shell property object from where the stiffness and mass attributes
+are read from.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.update_KG_given_stress">
+<span class="sig-name descname"><span class="pre">update_KG_given_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">Nxx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">Nyy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">Nxy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KGr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KGc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KGv</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.update_KG_given_stress" title="Link to this definition">#</a></dt>
+<dd><p>Update sparse vectors for geometric stiffness matrix KG</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>A constant stress state is assumed within the element,
+according to the given values of <span class="math notranslate nohighlight">\(N_{xx}, N_{yy}, N_{xy}\)</span>.</p>
+</div>
+<p>Two-point Gauss-Legendre quadrature is used, which showed more accuracy
+for linear buckling load predictions.</p>
+<p>Before this function is called, the probe <a class="reference internal" href="#pyfe3d.quad4.Quad4Probe" title="pyfe3d.quad4.Quad4Probe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4Probe</span></code></a>
+attribute of the <a class="reference internal" href="#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> object must be updated using
+<code class="xref py py-func docutils literal notranslate"><span class="pre">update_probe_xe()</span></code> with the node coordinates.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>KGr</strong><span class="classifier">np.array</span></dt><dd><p>Array to store row positions of sparse values</p>
+</dd>
+<dt><strong>KGc</strong><span class="classifier">np.array</span></dt><dd><p>Array to store column positions of sparse values</p>
+</dd>
+<dt><strong>KGv</strong><span class="classifier">np.array</span></dt><dd><p>Array to store sparse values</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.update_M">
+<span class="sig-name descname"><span class="pre">update_M</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">Mr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">Mc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">Mv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">mtype=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.update_M" title="Link to this definition">#</a></dt>
+<dd><p>Update sparse vectors for mass matrix M</p>
+<p>Different integration schemes are available by means of the <code class="docutils literal notranslate"><span class="pre">mtype</span></code>
+parameter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>Mr</strong><span class="classifier">np.array</span></dt><dd><p>Array to store row positions of sparse values</p>
+</dd>
+<dt><strong>Mc</strong><span class="classifier">np.array</span></dt><dd><p>Array to store column positions of sparse values</p>
+</dd>
+<dt><strong>Mv</strong><span class="classifier">np.array</span></dt><dd><p>Array to store sparse values</p>
+</dd>
+<dt><strong>mtype</strong><span class="classifier">int, optional</span></dt><dd><p>0 for consistent mass matrix using method from Brockman 1987
+1 for reduced integration mass matrix using method from Brockman 1987
+2 for lumped mass matrix using method from Brockman 1987</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.update_area">
+<span class="sig-name descname"><span class="pre">update_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.update_area" title="Link to this definition">#</a></dt>
+<dd><p>Update element area</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.update_probe_ue">
+<span class="sig-name descname"><span class="pre">update_probe_ue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">u</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.update_probe_ue" title="Link to this definition">#</a></dt>
+<dd><p>Update the local displacement vector of the probe of the element</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">probe</span></code> attribute object <a class="reference internal" href="#pyfe3d.quad4.Quad4Probe" title="pyfe3d.quad4.Quad4Probe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4Probe</span></code></a> is
+updated, not the element object.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>u</strong><span class="classifier">array-like</span></dt><dd><p>Array with global displacements, for a total of <span class="math notranslate nohighlight">\(M\)</span> nodes in
+the model, this array will be arranged as: <span class="math notranslate nohighlight">\(u_1, v_1, w_1, {r_x}_1,
+{r_y}_1, {r_z}_1, u_2, v_2, w_2, {r_x}_2, {r_y}_2, {r_z}_2, ...,
+u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M\)</span>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.update_probe_xe">
+<span class="sig-name descname"><span class="pre">update_probe_xe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.update_probe_xe" title="Link to this definition">#</a></dt>
+<dd><p>Update the 3D coordinates of the probe of the element</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">probe</span></code> attribute object <a class="reference internal" href="#pyfe3d.quad4.Quad4Probe" title="pyfe3d.quad4.Quad4Probe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4Probe</span></code></a> is
+updated, not the element object.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Array with global nodal coordinates, for a total of <span class="math notranslate nohighlight">\(M\)</span> nodes in
+the model, this array will be arranged as: <span class="math notranslate nohighlight">\(x_1, y_1, z_1, x_2,
+y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.update_rotation_matrix">
+<span class="sig-name descname"><span class="pre">update_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">x</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xmati=0.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xmatj=0.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xmatk=0.</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.update_rotation_matrix" title="Link to this definition">#</a></dt>
+<dd><p>Update the rotation matrix of the element</p>
+<p>Attributes <code class="docutils literal notranslate"><span class="pre">r11,r12,r13,r21,r22,r23,r31,r32,r33</span></code> are updated,
+corresponding to the rotation matrix from local to global coordinates.</p>
+<p>The element coordinate system is determined, identifying the <span class="math notranslate nohighlight">\(ijk\)</span>
+components of each axis: <span class="math notranslate nohighlight">\({x_e}_i, {x_e}_j, {x_e}_k\)</span>; <span class="math notranslate nohighlight">\({y_e}_i,
+{y_e}_j, {y_e}_k\)</span>; <span class="math notranslate nohighlight">\({z_e}_i, {z_e}_j, {z_e}_k\)</span>.</p>
+<p>The rotation matrix terms are calculated after solving 9 equations.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Array with global nodal coordinates, for a total of <span class="math notranslate nohighlight">\(M\)</span> nodes in
+the model, this array will be arranged as: <span class="math notranslate nohighlight">\(x_1, y_1, z_1, x_2,
+y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
+</dd>
+<dt><strong>xmati, xmatj, xmatk: array-like</strong></dt><dd><p>Vector in global coordinates representing the material direction.
+This vector is projected onto the plate element, thus becoming the
+material direction. The <span class="math notranslate nohighlight">\(ABD\)</span> matrix defining the constitutive
+behavior of the element is rotated from the material direction to
+the element <span class="math notranslate nohighlight">\(x\)</span> axis while calculating the stiffness matrices.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Data">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.quad4.</span></span><span class="sig-name descname"><span class="pre">Quad4Data</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Data" title="Link to this definition">#</a></dt>
+<dd><p>Used to allocate memory for the sparse matrices.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>KC0_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KC0_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">576</span></code></p>
+</dd>
+<dt><strong>KG_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KG_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">144</span></code></p>
+</dd>
+<dt><strong>M_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">M_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">480</span></code></p>
+</dd>
+<dt><strong>KA_BETA_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KA_BETA_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">144</span></code></p>
+</dd>
+<dt><strong>KA_GAMMA_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KA_GAMMA_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">144</span></code></p>
+</dd>
+<dt><strong>CA_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">CA_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">144</span></code></p>
+</dd>
+</dl>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Data.CA_SPARSE_SIZE">
+<span class="sig-name descname"><span class="pre">CA_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Data.CA_SPARSE_SIZE" title="Link to this definition">#</a></dt>
+<dd><p>CA_SPARSE_SIZE: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Data.KA_BETA_SPARSE_SIZE">
+<span class="sig-name descname"><span class="pre">KA_BETA_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Data.KA_BETA_SPARSE_SIZE" title="Link to this definition">#</a></dt>
+<dd><p>KA_BETA_SPARSE_SIZE: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Data.KA_GAMMA_SPARSE_SIZE">
+<span class="sig-name descname"><span class="pre">KA_GAMMA_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Data.KA_GAMMA_SPARSE_SIZE" title="Link to this definition">#</a></dt>
+<dd><p>KA_GAMMA_SPARSE_SIZE: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Data.KC0_SPARSE_SIZE">
+<span class="sig-name descname"><span class="pre">KC0_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Data.KC0_SPARSE_SIZE" title="Link to this definition">#</a></dt>
+<dd><p>KC0_SPARSE_SIZE: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Data.KG_SPARSE_SIZE">
+<span class="sig-name descname"><span class="pre">KG_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Data.KG_SPARSE_SIZE" title="Link to this definition">#</a></dt>
+<dd><p>KG_SPARSE_SIZE: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Data.M_SPARSE_SIZE">
+<span class="sig-name descname"><span class="pre">M_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Data.M_SPARSE_SIZE" title="Link to this definition">#</a></dt>
+<dd><p>M_SPARSE_SIZE: ‘int’</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Probe">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.quad4.</span></span><span class="sig-name descname"><span class="pre">Quad4Probe</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Probe" title="Link to this definition">#</a></dt>
+<dd><p>Probe used for local coordinates, local displacements, local stiffness,
+local stresses etc…</p>
+<p>The idea behind using a probe is to avoid allocating larger memory buffers
+per finite element. The memory buffers are allocated per probe, and one
+probe can be shared amongst many finite elements, with the information
+being updated and retrieved on demand.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>xe,</strong><span class="classifier">array-like</span></dt><dd><p>Array of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF//2=12</span></code> containing the nodal coordinates
+in the element coordinate system, in the following order <span class="math notranslate nohighlight">\({x_e}_1,
+{y_e}_1, {z_e}_1, `{x_e}_2, {y_e}_2, {z_e}_2\)</span>, <span class="math notranslate nohighlight">\({x_e}_3, {y_e}_3,
+{z_e}_3\)</span>, <span class="math notranslate nohighlight">\({x_e}_4, {y_e}_4, {z_e}_4\)</span>.</p>
+</dd>
+<dt><strong>ue,</strong><span class="classifier">array-like</span></dt><dd><p>Array of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF=24</span></code> containing the element displacements
+in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
+{{r_y}_e}_1, {{r_z}_e}_1\)</span>, <span class="math notranslate nohighlight">\({u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
+{{r_y}_e}_2, {{r_z}_e}_2\)</span>, <span class="math notranslate nohighlight">\({u_e}_3, {v_e}_3, {w_e}_3, {{r_x}_e}_3,
+{{r_y}_e}_3, {{r_z}_e}_3\)</span>, <span class="math notranslate nohighlight">\({u_e}_4, {v_e}_4, {w_e}_4, {{r_x}_e}_4,
+{{r_y}_e}_4, {{r_z}_e}_4\)</span>.</p>
+</dd>
+<dt><strong>KC0ve,</strong><span class="classifier">array-like</span></dt><dd><p>Local stiffness matrix stored as a 1D array of size
+<code class="docutils literal notranslate"><span class="pre">(NUM_NODES*DOF)**2</span></code>.</p>
+</dd>
+<dt><strong>BLexx, BLeyy, BLgxy</strong><span class="classifier">array-like</span></dt><dd><p>Arrays of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF=24</span></code> containing the in-plane strain
+interpolation functions evaluated at a given natural coordinate point
+<span class="math notranslate nohighlight">\(\xi\)</span>, <span class="math notranslate nohighlight">\(\eta\)</span>.</p>
+</dd>
+<dt><strong>BLkxx, BLkyy, BLkxy</strong><span class="classifier">array-like</span></dt><dd><p>Arrays of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF=24</span></code> containing the bending strain
+interpolation functions evaluated at a given natural coordinate point
+<span class="math notranslate nohighlight">\(\xi\)</span>, <span class="math notranslate nohighlight">\(\eta\)</span>.</p>
+</dd>
+<dt><strong>BLgyz_grad, BLgyz_rot, BLgxz_grad, BLgxz_rot</strong><span class="classifier">array-like</span></dt><dd><p>Arrays of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF=24</span></code> containing the transverse shear
+strain interpolation functions evaluated at a given natural coordinate
+point <span class="math notranslate nohighlight">\(\xi\)</span>, <span class="math notranslate nohighlight">\(\eta\)</span>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Methods</p>
+<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
+<tbody>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4Probe.update_BL" title="pyfe3d.quad4.Quad4Probe.update_BL"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_BL</span></code></a>(self, double xi, double eta)</p></td>
+<td><p>Update all components of the interpolation matrix <span class="math notranslate nohighlight">\(\pmb{B_L}\)</span> at a given natural coordinate point <span class="math notranslate nohighlight">\(\xi\)</span>, <span class="math notranslate nohighlight">\(\eta\)</span>.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Probe.BLexx">
+<span class="sig-name descname"><span class="pre">BLexx</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Probe.BLexx" title="Link to this definition">#</a></dt>
+<dd><p>BLexx: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Probe.BLeyy">
+<span class="sig-name descname"><span class="pre">BLeyy</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Probe.BLeyy" title="Link to this definition">#</a></dt>
+<dd><p>BLeyy: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Probe.BLgxy">
+<span class="sig-name descname"><span class="pre">BLgxy</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Probe.BLgxy" title="Link to this definition">#</a></dt>
+<dd><p>BLgxy: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Probe.BLgxz_grad">
+<span class="sig-name descname"><span class="pre">BLgxz_grad</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Probe.BLgxz_grad" title="Link to this definition">#</a></dt>
+<dd><p>BLgxz_grad: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Probe.BLgxz_rot">
+<span class="sig-name descname"><span class="pre">BLgxz_rot</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Probe.BLgxz_rot" title="Link to this definition">#</a></dt>
+<dd><p>BLgxz_rot: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Probe.BLgyz_grad">
+<span class="sig-name descname"><span class="pre">BLgyz_grad</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Probe.BLgyz_grad" title="Link to this definition">#</a></dt>
+<dd><p>BLgyz_grad: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Probe.BLgyz_rot">
+<span class="sig-name descname"><span class="pre">BLgyz_rot</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Probe.BLgyz_rot" title="Link to this definition">#</a></dt>
+<dd><p>BLgyz_rot: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Probe.BLkxx">
+<span class="sig-name descname"><span class="pre">BLkxx</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Probe.BLkxx" title="Link to this definition">#</a></dt>
+<dd><p>BLkxx: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Probe.BLkxy">
+<span class="sig-name descname"><span class="pre">BLkxy</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Probe.BLkxy" title="Link to this definition">#</a></dt>
+<dd><p>BLkxy: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Probe.BLkyy">
+<span class="sig-name descname"><span class="pre">BLkyy</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Probe.BLkyy" title="Link to this definition">#</a></dt>
+<dd><p>BLkyy: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Probe.KC0ve">
+<span class="sig-name descname"><span class="pre">KC0ve</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Probe.KC0ve" title="Link to this definition">#</a></dt>
+<dd><p>KC0ve: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Probe.ue">
+<span class="sig-name descname"><span class="pre">ue</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Probe.ue" title="Link to this definition">#</a></dt>
+<dd><p>ue: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Probe.update_BL">
+<span class="sig-name descname"><span class="pre">update_BL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">xi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">eta</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Probe.update_BL" title="Link to this definition">#</a></dt>
+<dd><p>Update all components of the interpolation matrix <span class="math notranslate nohighlight">\(\pmb{B_L}\)</span> at a
+given natural coordinate point <span class="math notranslate nohighlight">\(\xi\)</span>, <span class="math notranslate nohighlight">\(\eta\)</span>.</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Probe.xe">
+<span class="sig-name descname"><span class="pre">xe</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Probe.xe" title="Link to this definition">#</a></dt>
+<dd><p>xe: ‘double[::1]’</p>
+</dd></dl>
+
+</dd></dl>
+
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="fe_overview.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Available finite elements</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="quad4r.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Quad4 - Quadrilateral element with mixed integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4</span></code>)</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4"><code class="docutils literal notranslate"><span class="pre">Quad4</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.K6ROT"><code class="docutils literal notranslate"><span class="pre">Quad4.K6ROT</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.area"><code class="docutils literal notranslate"><span class="pre">Quad4.area</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.c1"><code class="docutils literal notranslate"><span class="pre">Quad4.c1</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.c2"><code class="docutils literal notranslate"><span class="pre">Quad4.c2</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.c3"><code class="docutils literal notranslate"><span class="pre">Quad4.c3</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.c4"><code class="docutils literal notranslate"><span class="pre">Quad4.c4</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.eid"><code class="docutils literal notranslate"><span class="pre">Quad4.eid</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.init_k_CA"><code class="docutils literal notranslate"><span class="pre">Quad4.init_k_CA</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.init_k_KA_beta"><code class="docutils literal notranslate"><span class="pre">Quad4.init_k_KA_beta</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.init_k_KA_gamma"><code class="docutils literal notranslate"><span class="pre">Quad4.init_k_KA_gamma</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.init_k_KC0"><code class="docutils literal notranslate"><span class="pre">Quad4.init_k_KC0</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.init_k_KG"><code class="docutils literal notranslate"><span class="pre">Quad4.init_k_KG</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.init_k_M"><code class="docutils literal notranslate"><span class="pre">Quad4.init_k_M</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.m11"><code class="docutils literal notranslate"><span class="pre">Quad4.m11</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.m12"><code class="docutils literal notranslate"><span class="pre">Quad4.m12</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.m21"><code class="docutils literal notranslate"><span class="pre">Quad4.m21</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.m22"><code class="docutils literal notranslate"><span class="pre">Quad4.m22</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.n1"><code class="docutils literal notranslate"><span class="pre">Quad4.n1</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.n2"><code class="docutils literal notranslate"><span class="pre">Quad4.n2</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.n3"><code class="docutils literal notranslate"><span class="pre">Quad4.n3</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.n4"><code class="docutils literal notranslate"><span class="pre">Quad4.n4</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.probe"><code class="docutils literal notranslate"><span class="pre">Quad4.probe</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.r11"><code class="docutils literal notranslate"><span class="pre">Quad4.r11</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.r12"><code class="docutils literal notranslate"><span class="pre">Quad4.r12</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.r13"><code class="docutils literal notranslate"><span class="pre">Quad4.r13</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.r21"><code class="docutils literal notranslate"><span class="pre">Quad4.r21</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.r22"><code class="docutils literal notranslate"><span class="pre">Quad4.r22</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.r23"><code class="docutils literal notranslate"><span class="pre">Quad4.r23</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.r31"><code class="docutils literal notranslate"><span class="pre">Quad4.r31</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.r32"><code class="docutils literal notranslate"><span class="pre">Quad4.r32</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.r33"><code class="docutils literal notranslate"><span class="pre">Quad4.r33</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_CA"><code class="docutils literal notranslate"><span class="pre">Quad4.update_CA()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_KA_beta"><code class="docutils literal notranslate"><span class="pre">Quad4.update_KA_beta()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_KA_gamma"><code class="docutils literal notranslate"><span class="pre">Quad4.update_KA_gamma()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_KC0"><code class="docutils literal notranslate"><span class="pre">Quad4.update_KC0()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_KG"><code class="docutils literal notranslate"><span class="pre">Quad4.update_KG()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_KG_given_stress"><code class="docutils literal notranslate"><span class="pre">Quad4.update_KG_given_stress()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_M"><code class="docutils literal notranslate"><span class="pre">Quad4.update_M()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_area"><code class="docutils literal notranslate"><span class="pre">Quad4.update_area()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_probe_ue"><code class="docutils literal notranslate"><span class="pre">Quad4.update_probe_ue()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_probe_xe"><code class="docutils literal notranslate"><span class="pre">Quad4.update_probe_xe()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">Quad4.update_rotation_matrix()</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Data"><code class="docutils literal notranslate"><span class="pre">Quad4Data</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Data.CA_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Quad4Data.CA_SPARSE_SIZE</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Data.KA_BETA_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Quad4Data.KA_BETA_SPARSE_SIZE</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Data.KA_GAMMA_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Quad4Data.KA_GAMMA_SPARSE_SIZE</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Data.KC0_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Quad4Data.KC0_SPARSE_SIZE</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Data.KG_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Quad4Data.KG_SPARSE_SIZE</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Data.M_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Quad4Data.M_SPARSE_SIZE</span></code></a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe"><code class="docutils literal notranslate"><span class="pre">Quad4Probe</span></code></a><ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.BLexx"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.BLexx</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.BLeyy"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.BLeyy</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.BLgxy"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.BLgxy</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.BLgxz_grad"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.BLgxz_grad</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.BLgxz_rot"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.BLgxz_rot</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.BLgyz_grad"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.BLgyz_grad</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.BLgyz_rot"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.BLgyz_rot</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.BLkxx"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.BLkxx</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.BLkxy"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.BLkxy</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.BLkyy"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.BLkyy</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.KC0ve"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.KC0ve</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.ue"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.ue</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.update_BL"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.update_BL()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.xe"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.xe</span></code></a></li>
+</ul>
+</li>
+</ul>
+
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/quad4.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.0.2.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

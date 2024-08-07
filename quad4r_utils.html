@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Quad4R useful functions (pyfe3d.quad4r_utils) &#8212; pyfe3d 0.4.28 documentation</title>
+    <title>&lt;no title&gt; &#8212; pyfe3d 0.5.0 documentation</title>
   
   
   
@@ -35,10 +35,9 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=6de75181"></script>
+    <script src="_static/documentation_options.js?v=1dd76d02"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
-    <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'quad4r_utils';</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -119,7 +118,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.4.28 documentation</p>
+    <p class="title logo__title">pyfe3d 0.5.0 documentation</p>
   
 </a></div>
     
@@ -156,7 +155,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="coord.html">
-    Coordinate systems (pyfe3d.coord)
+    <no title>
   </a>
 </li>
 
@@ -267,7 +266,7 @@ document.write(`
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="coord.html">
-    Coordinate systems (pyfe3d.coord)
+    <no title>
   </a>
 </li>
 
@@ -302,12 +301,14 @@ document.write(`
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+  <div class="bd-toc-item navbar-nav"><ul class="nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="quad4.html">Quad4 - Quadrilateral element with mixed integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4</span></code>)</a></li>
+
+
+
 <li class="toctree-l1"><a class="reference internal" href="quad4r.html">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</a></li>
 
 
-
-<li class="toctree-l1 current active"><a class="current reference internal" href="#">Quad4R useful functions (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r_utils</span></code>)</a></li>
 
 <li class="toctree-l1"><a class="reference internal" href="tria3r.html">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</a></li>
 
@@ -369,7 +370,7 @@ document.write(`
     
     <li class="breadcrumb-item"><a href="fe_overview.html" class="nav-link">Available finite elements</a></li>
     
-    <li class="breadcrumb-item active" aria-current="page">Quad4R...</li>
+    <li class="breadcrumb-item active" aria-current="page">&lt;no title&gt;</li>
   </ul>
 </nav>
 </div>
@@ -386,30 +387,7 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="quad4r-useful-functions-pyfe3d-quad4r-utils">
-<span id="module-pyfe3d.quad4r_utils"></span><h1>Quad4R useful functions (<a class="reference internal" href="#module-pyfe3d.quad4r_utils" title="pyfe3d.quad4r_utils"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r_utils</span></code></a>)<a class="headerlink" href="#quad4r-useful-functions-pyfe3d-quad4r-utils" title="Link to this heading">#</a></h1>
-</section>
-<dl class="py function">
-<dt class="sig sig-object py" id="pyfe3d.quad4r_utils.quad4r_coord">
-<span class="sig-prename descclassname"><span class="pre">pyfe3d.quad4r_utils.</span></span><span class="sig-name descname"><span class="pre">quad4r_coord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">quad</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><span class="pre">Quad4R</span></a></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncoords</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">ndarray</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.quad4r_utils.quad4r_coord" title="Link to this definition">#</a></dt>
-<dd><p>Determine the coordinate system of a <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a> element</p>
-<p>The element coordinate system is determined identically what is explained
-in Nastran’s quick reference guide for the CQUAD4 element, as illustrated
-below.</p>
-<img alt="_images/nastran_cquad4.svg" src="_images/nastran_cquad4.svg" />
-<dl class="field-list">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl>
-<dt><strong>quad</strong><span class="classifier"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a> object</span></dt><dd><p>The quadilateral element.</p>
-</dd>
-<dt><strong>ncoords</strong><span class="classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">np.ndarray</span></code> object</span></dt><dd><p>An array with shape <span class="math notranslate nohighlight">\(N, 3\)</span> for a system with <span class="math notranslate nohighlight">\(N\)</span> nodes.</p>
-</dd>
-</dl>
-</dd>
-</dl>
-</dd></dl>
-
-
+  
 
                 </article>
               
@@ -455,9 +433,7 @@ below.</p>
     <i class="fa-solid fa-list"></i> On this page
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Quad4R useful functions (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r_utils</span></code>)</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r_utils.quad4r_coord"><code class="docutils literal notranslate"><span class="pre">quad4r_coord()</span></code></a></li>
+    <ul class="simple visible nav section-nav flex-column">
 </ul>
 
   </nav></div>
@@ -505,7 +481,7 @@ below.</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.0.2.
     <br/>
   </p>
 </div>

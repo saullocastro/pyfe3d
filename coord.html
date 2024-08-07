@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Coordinate systems (pyfe3d.coord) &#8212; pyfe3d 0.4.28 documentation</title>
+    <title>&lt;no title&gt; &#8212; pyfe3d 0.5.0 documentation</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=6de75181"></script>
+    <script src="_static/documentation_options.js?v=1dd76d02"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'coord';</script>
@@ -117,7 +117,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.4.28 documentation</p>
+    <p class="title logo__title">pyfe3d 0.5.0 documentation</p>
   
 </a></div>
     
@@ -154,7 +154,7 @@
 
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="#">
-    Coordinate systems (pyfe3d.coord)
+    <no title>
   </a>
 </li>
 
@@ -265,7 +265,7 @@ document.write(`
 
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="#">
-    Coordinate systems (pyfe3d.coord)
+    <no title>
   </a>
 </li>
 
@@ -336,7 +336,7 @@ document.write(`
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
-    <li class="breadcrumb-item active" aria-current="page">Coordinate...</li>
+    <li class="breadcrumb-item active" aria-current="page">&lt;no title&gt;</li>
   </ul>
 </nav>
 </div>
@@ -353,288 +353,7 @@ document.write(`
 <div id="searchbox"></div>
                 <article class="bd-article">
                   
-  <section id="coordinate-systems-pyfe3d-coord">
-<span id="module-pyfe3d.coord"></span><h1>Coordinate systems (<a class="reference internal" href="#module-pyfe3d.coord" title="pyfe3d.coord"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.coord</span></code></a>)<a class="headerlink" href="#coordinate-systems-pyfe3d-coord" title="Link to this heading">#</a></h1>
-<p>Useful classes and methods to define coordinate systems (“coordsys”) and
-calculate transformation matrices bewteen coordinate systems.</p>
-</section>
-<dl class="py class">
-<dt class="sig sig-object py" id="pyfe3d.coord.Coord">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.coord.</span></span><span class="sig-name descname"><span class="pre">Coord</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">o</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vecxz</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.coord.Coord" title="Link to this definition">#</a></dt>
-<dd><dl class="simple">
-<dt>Each coordinate system is defined by three points:</dt><dd><p>o:  the origin
-z:  the Z axis
-vecxz: a point laying in the azimuthal origin</p>
-</dd>
-</dl>
-<p>Basically the point are defined using reference GRIDs or POINT coordinates.</p>
-<dl class="field-list">
-<dt class="field-odd">Attributes<span class="colon">:</span></dt>
-<dd class="field-odd"><dl>
-<dt><strong>id</strong><span class="classifier">int</span></dt><dd><p>Coordinate system id</p>
-</dd>
-<dt><strong>o</strong><span class="classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Point</span></code> object</span></dt><dd><p>The origin of the coordsys alg3dpy.Point</p>
-</dd>
-<dt><strong>x</strong><span class="classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vec</span></code> object</span></dt><dd><p>The x vector of the coordsys</p>
-</dd>
-<dt><strong>y</strong><span class="classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vec</span></code> object</span></dt><dd><p>The y vector of the coordsys</p>
-</dd>
-<dt><strong>z</strong><span class="classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vec</span></code> object</span></dt><dd><p>The z vector of the coordsys</p>
-</dd>
-<dt><strong>xy</strong><span class="classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Plane</span></code> object</span></dt><dd><p>The xy plane of the coordsys</p>
-</dd>
-<dt><strong>xz</strong><span class="classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Plane</span></code> object</span></dt><dd><p>The xz plane of the coordsys</p>
-</dd>
-<dt><strong>yz</strong><span class="classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Plane</span></code> object</span></dt><dd><p>The yz plane of the coordsys</p>
-</dd>
-<dt><strong>vecxz</strong><span class="classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">Vec</span></code> object</span></dt><dd><p>A vector laying in the xz plane of the coordsys</p>
-</dd>
-<dt><strong>____________________________________________________________________________</strong></dt><dd></dd>
-<dt><strong>Note: not all attributes are used simultaneously, but the Coord class is</strong></dt><dd><p>already prepared for many ways for defining a coordsys</p>
-</dd>
-<dt><strong>____________________________________________________________________________</strong></dt><dd></dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Methods</p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
-<tbody>
-<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.coord.Coord.cosines_to_global" title="pyfe3d.coord.Coord.cosines_to_global"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cosines_to_global</span></code></a>()</p></td>
-<td><p>Calculate the rotation cosines to the global coordinate system</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.coord.Coord.transform" title="pyfe3d.coord.Coord.transform"><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code></a>(vec, new_csys)</p></td>
-<td><p>The transformation will go as follows:</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.coord.Coord.translate" title="pyfe3d.coord.Coord.translate"><code class="xref py py-obj docutils literal notranslate"><span class="pre">translate</span></code></a>(vec, newcr)</p></td>
-<td><p>Calculate the translation matrix to a new cartesian system (newcr)</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="pst-scrollable-table-container"><table class="table">
-<tbody>
-<tr class="row-odd"><td><p><strong>R2global</strong></p></td>
-<td></td>
-</tr>
-</tbody>
-</table>
-</div>
-<dl class="py method">
-<dt class="sig sig-object py" id="pyfe3d.coord.Coord.cosines_to_global">
-<span class="sig-name descname"><span class="pre">cosines_to_global</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.coord.Coord.cosines_to_global" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the rotation cosines to the global coordinate system</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>This must be improved, Gimbal lock is easily verified with Euler
-angles. To use SciPy’s <a href="#id1"><span class="problematic" id="id2">:method:`.as_quat`</span></a> in the future.</p>
-</div>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pyfe3d.coord.Coord.transform">
-<span class="sig-name descname"><span class="pre">transform</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">new_csys</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.coord.Coord.transform" title="Link to this definition">#</a></dt>
-<dd><dl class="simple">
-<dt>The transformation will go as follows:</dt><dd><ul class="simple">
-<li><p>transform to cartesian in the local coordsys;</p></li>
-<li><p>rotate to the new_csys (which is cartesian);</p></li>
-<li><p>translate to the new_csys.</p></li>
-</ul>
-</dd>
-</dl>
-<p>All systems: cartesian, cylindrical or spherical; have
-the method vec2cr which will automatically transform vec into
-cartesian coordinates in the local coordsys.
-The two other steps will rotate and translate vec to new_csys.
-The last step will transform again from the new_csys cartesian
-coordinates to its cylindrical or spherical coordinates.
-All coordinate systems have the method cr2me to transform from
-local cartesian to local something.</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pyfe3d.coord.Coord.translate">
-<span class="sig-name descname"><span class="pre">translate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vec</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">newcr</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.coord.Coord.translate" title="Link to this definition">#</a></dt>
-<dd><p>Calculate the translation matrix to a new cartesian system (newcr)</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="pyfe3d.coord.CoordC">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.coord.</span></span><span class="sig-name descname"><span class="pre">CoordC</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">o</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vecxz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.coord.CoordC" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Attributes<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>id</strong></dt><dd></dd>
-<dt><strong>o</strong></dt><dd></dd>
-<dt><strong>vecxz</strong></dt><dd></dd>
-<dt><strong>x</strong></dt><dd></dd>
-<dt><strong>xy</strong></dt><dd></dd>
-<dt><strong>xz</strong></dt><dd></dd>
-<dt><strong>y</strong></dt><dd></dd>
-<dt><strong>yz</strong></dt><dd></dd>
-<dt><strong>z</strong></dt><dd></dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Methods</p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
-<tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cosines_to_global</span></code>()</p></td>
-<td><p>Calculate the rotation cosines to the global coordinate system</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.coord.CoordC.cr2me" title="pyfe3d.coord.CoordC.cr2me"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cr2me</span></code></a>(vec)</p></td>
-<td><p>Transformation from cartesian to cylindrical vec must be in cartesian coordinates: [x, y, z]</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code>(vec, new_csys)</p></td>
-<td><p>The transformation will go as follows:</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">translate</span></code>(vec, newcr)</p></td>
-<td><p>Calculate the translation matrix to a new cartesian system (newcr)</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.coord.CoordC.vec2cr" title="pyfe3d.coord.CoordC.vec2cr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">vec2cr</span></code></a>(vec)</p></td>
-<td><p>Transformation from cylindrical to cartesian vec must be in cylindrical cordinates: [r, theta, z]</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="pst-scrollable-table-container"><table class="table">
-<tbody>
-<tr class="row-odd"><td><p><strong>R2global</strong></p></td>
-<td></td>
-</tr>
-</tbody>
-</table>
-</div>
-<dl class="py method">
-<dt class="sig sig-object py" id="pyfe3d.coord.CoordC.cr2me">
-<span class="sig-name descname"><span class="pre">cr2me</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.coord.CoordC.cr2me" title="Link to this definition">#</a></dt>
-<dd><p>Transformation from cartesian to cylindrical
-vec must be in cartesian coordinates: [x, y, z]</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pyfe3d.coord.CoordC.vec2cr">
-<span class="sig-name descname"><span class="pre">vec2cr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.coord.CoordC.vec2cr" title="Link to this definition">#</a></dt>
-<dd><p>Transformation from cylindrical to cartesian
-vec must be in cylindrical cordinates: [r, theta, z]</p>
-</dd></dl>
-
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="pyfe3d.coord.CoordR">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.coord.</span></span><span class="sig-name descname"><span class="pre">CoordR</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">o</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vecxz</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.coord.CoordR" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Attributes<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>id</strong></dt><dd></dd>
-<dt><strong>o</strong></dt><dd></dd>
-<dt><strong>vecxz</strong></dt><dd></dd>
-<dt><strong>x</strong></dt><dd></dd>
-<dt><strong>xy</strong></dt><dd></dd>
-<dt><strong>xz</strong></dt><dd></dd>
-<dt><strong>y</strong></dt><dd></dd>
-<dt><strong>yz</strong></dt><dd></dd>
-<dt><strong>z</strong></dt><dd></dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Methods</p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
-<tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cosines_to_global</span></code>()</p></td>
-<td><p>Calculate the rotation cosines to the global coordinate system</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code>(vec, new_csys)</p></td>
-<td><p>The transformation will go as follows:</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">translate</span></code>(vec, newcr)</p></td>
-<td><p>Calculate the translation matrix to a new cartesian system (newcr)</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="pst-scrollable-table-container"><table class="table">
-<tbody>
-<tr class="row-odd"><td><p><strong>R2global</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-even"><td><p><strong>cr2me</strong></p></td>
-<td></td>
-</tr>
-<tr class="row-odd"><td><p><strong>vec2cr</strong></p></td>
-<td></td>
-</tr>
-</tbody>
-</table>
-</div>
-</dd></dl>
-
-<dl class="py class">
-<dt class="sig sig-object py" id="pyfe3d.coord.CoordS">
-<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">pyfe3d.coord.</span></span><span class="sig-name descname"><span class="pre">CoordS</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">id</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">o</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">z</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">vecxz</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.coord.CoordS" title="Link to this definition">#</a></dt>
-<dd><dl class="field-list simple">
-<dt class="field-odd">Attributes<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>id</strong></dt><dd></dd>
-<dt><strong>o</strong></dt><dd></dd>
-<dt><strong>vecxz</strong></dt><dd></dd>
-<dt><strong>x</strong></dt><dd></dd>
-<dt><strong>xy</strong></dt><dd></dd>
-<dt><strong>xz</strong></dt><dd></dd>
-<dt><strong>y</strong></dt><dd></dd>
-<dt><strong>yz</strong></dt><dd></dd>
-<dt><strong>z</strong></dt><dd></dd>
-</dl>
-</dd>
-</dl>
-<p class="rubric">Methods</p>
-<div class="pst-scrollable-table-container"><table class="autosummary longtable table autosummary">
-<tbody>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">cosines_to_global</span></code>()</p></td>
-<td><p>Calculate the rotation cosines to the global coordinate system</p></td>
-</tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.coord.CoordS.cr2me" title="pyfe3d.coord.CoordS.cr2me"><code class="xref py py-obj docutils literal notranslate"><span class="pre">cr2me</span></code></a>(vec)</p></td>
-<td><p>Transformation from cartesian to spherical vec must be in cartesian coordinates: [x, y, z]</p></td>
-</tr>
-<tr class="row-odd"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">transform</span></code>(vec, new_csys)</p></td>
-<td><p>The transformation will go as follows:</p></td>
-</tr>
-<tr class="row-even"><td><p><code class="xref py py-obj docutils literal notranslate"><span class="pre">translate</span></code>(vec, newcr)</p></td>
-<td><p>Calculate the translation matrix to a new cartesian system (newcr)</p></td>
-</tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.coord.CoordS.vec2cr" title="pyfe3d.coord.CoordS.vec2cr"><code class="xref py py-obj docutils literal notranslate"><span class="pre">vec2cr</span></code></a>(vec)</p></td>
-<td><p>Transformation from spherical to cartesian vec must be in spherical coordinates: [r, theta, phi]</p></td>
-</tr>
-</tbody>
-</table>
-</div>
-<div class="pst-scrollable-table-container"><table class="table">
-<tbody>
-<tr class="row-odd"><td><p><strong>R2global</strong></p></td>
-<td></td>
-</tr>
-</tbody>
-</table>
-</div>
-<dl class="py method">
-<dt class="sig sig-object py" id="pyfe3d.coord.CoordS.cr2me">
-<span class="sig-name descname"><span class="pre">cr2me</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.coord.CoordS.cr2me" title="Link to this definition">#</a></dt>
-<dd><p>Transformation from cartesian to spherical
-vec must be in cartesian coordinates: [x, y, z]</p>
-</dd></dl>
-
-<dl class="py method">
-<dt class="sig sig-object py" id="pyfe3d.coord.CoordS.vec2cr">
-<span class="sig-name descname"><span class="pre">vec2cr</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">vec</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.coord.CoordS.vec2cr" title="Link to this definition">#</a></dt>
-<dd><p>Transformation from spherical to cartesian
-vec must be in spherical coordinates: [r, theta, phi]</p>
-</dd></dl>
-
-</dd></dl>
-
-
+  
 
                 </article>
               
@@ -671,25 +390,7 @@ vec must be in spherical coordinates: [r, theta, phi]</p>
     <i class="fa-solid fa-list"></i> On this page
   </div>
   <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
-    <ul class="visible nav section-nav flex-column">
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Coordinate systems (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.coord</span></code>)</a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.coord.Coord"><code class="docutils literal notranslate"><span class="pre">Coord</span></code></a><ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.coord.Coord.cosines_to_global"><code class="docutils literal notranslate"><span class="pre">Coord.cosines_to_global()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.coord.Coord.transform"><code class="docutils literal notranslate"><span class="pre">Coord.transform()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.coord.Coord.translate"><code class="docutils literal notranslate"><span class="pre">Coord.translate()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.coord.CoordC"><code class="docutils literal notranslate"><span class="pre">CoordC</span></code></a><ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.coord.CoordC.cr2me"><code class="docutils literal notranslate"><span class="pre">CoordC.cr2me()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.coord.CoordC.vec2cr"><code class="docutils literal notranslate"><span class="pre">CoordC.vec2cr()</span></code></a></li>
-</ul>
-</li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.coord.CoordR"><code class="docutils literal notranslate"><span class="pre">CoordR</span></code></a></li>
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.coord.CoordS"><code class="docutils literal notranslate"><span class="pre">CoordS</span></code></a><ul class="visible nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.coord.CoordS.cr2me"><code class="docutils literal notranslate"><span class="pre">CoordS.cr2me()</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.coord.CoordS.vec2cr"><code class="docutils literal notranslate"><span class="pre">CoordS.vec2cr()</span></code></a></li>
-</ul>
-</li>
+    <ul class="simple visible nav section-nav flex-column">
 </ul>
 
   </nav></div>
@@ -737,7 +438,7 @@ vec must be in spherical coordinates: [r, theta, phi]</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.0.2.
     <br/>
   </p>
 </div>

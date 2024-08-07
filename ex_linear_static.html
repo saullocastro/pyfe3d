@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Static analysis &#8212; pyfe3d 0.4.28 documentation</title>
+    <title>Static analysis &#8212; pyfe3d 0.5.0 documentation</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=6de75181"></script>
+    <script src="_static/documentation_options.js?v=1dd76d02"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'ex_linear_static';</script>
@@ -118,7 +118,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.4.28 documentation</p>
+    <p class="title logo__title">pyfe3d 0.5.0 documentation</p>
   
 </a></div>
     
@@ -155,7 +155,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="coord.html">
-    Coordinate systems (pyfe3d.coord)
+    <no title>
   </a>
 </li>
 
@@ -266,7 +266,7 @@ document.write(`
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="coord.html">
-    Coordinate systems (pyfe3d.coord)
+    <no title>
   </a>
 </li>
 
@@ -368,12 +368,12 @@ document.write(`
 <span class="kn">from</span> <span class="nn">scipy.sparse</span> <span class="kn">import</span> <span class="n">coo_matrix</span>
 
 <span class="kn">from</span> <span class="nn">pyfe3d.shellprop_utils</span> <span class="kn">import</span> <span class="n">isotropic_plate</span>
-<span class="kn">from</span> <span class="nn">pyfe3d</span> <span class="kn">import</span> <span class="n">Quad4R</span><span class="p">,</span> <span class="n">Quad4RData</span><span class="p">,</span> <span class="n">Quad4RProbe</span><span class="p">,</span> <span class="n">INT</span><span class="p">,</span> <span class="n">DOUBLE</span><span class="p">,</span> <span class="n">DOF</span>
+<span class="kn">from</span> <span class="nn">pyfe3d</span> <span class="kn">import</span> <span class="n">Quad4</span><span class="p">,</span> <span class="n">Quad4Data</span><span class="p">,</span> <span class="n">Quad4Probe</span><span class="p">,</span> <span class="n">INT</span><span class="p">,</span> <span class="n">DOUBLE</span><span class="p">,</span> <span class="n">DOF</span>
 
 
 <span class="k">def</span> <span class="nf">test_static_plate_quad_point_load</span><span class="p">(</span><span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
-    <span class="n">data</span> <span class="o">=</span> <span class="n">Quad4RData</span><span class="p">()</span>
-    <span class="n">probe</span> <span class="o">=</span> <span class="n">Quad4RProbe</span><span class="p">()</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">Quad4Data</span><span class="p">()</span>
+    <span class="n">probe</span> <span class="o">=</span> <span class="n">Quad4Probe</span><span class="p">()</span>
     <span class="n">nx</span> <span class="o">=</span> <span class="mi">7</span>
     <span class="n">ny</span> <span class="o">=</span> <span class="mi">11</span>
 
@@ -422,7 +422,7 @@ document.write(`
         <span class="n">r3</span> <span class="o">=</span> <span class="n">ncoords</span><span class="p">[</span><span class="n">pos3</span><span class="p">]</span>
         <span class="n">normal</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">cross</span><span class="p">(</span><span class="n">r2</span> <span class="o">-</span> <span class="n">r1</span><span class="p">,</span> <span class="n">r3</span> <span class="o">-</span> <span class="n">r2</span><span class="p">)[</span><span class="mi">2</span><span class="p">]</span>
         <span class="k">assert</span> <span class="n">normal</span> <span class="o">&gt;</span> <span class="mi">0</span>
-        <span class="n">quad</span> <span class="o">=</span> <span class="n">Quad4R</span><span class="p">(</span><span class="n">probe</span><span class="p">)</span>
+        <span class="n">quad</span> <span class="o">=</span> <span class="n">Quad4</span><span class="p">(</span><span class="n">probe</span><span class="p">)</span>
         <span class="n">quad</span><span class="o">.</span><span class="n">n1</span> <span class="o">=</span> <span class="n">n1</span>
         <span class="n">quad</span><span class="o">.</span><span class="n">n2</span> <span class="o">=</span> <span class="n">n2</span>
         <span class="n">quad</span><span class="o">.</span><span class="n">n3</span> <span class="o">=</span> <span class="n">n3</span>
@@ -471,8 +471,8 @@ document.write(`
 
     <span class="c1"># obtained with bfsplate2d element, nx=ny=29</span>
     <span class="n">wmax_ref</span> <span class="o">=</span> <span class="mf">6.594931610258557e-05</span>
-    <span class="c1"># obtained with Quad4R nx=7, ny=11</span>
-    <span class="n">wmax_ref</span> <span class="o">=</span> <span class="mf">5.8143934272350526e-05</span>
+    <span class="c1"># obtained with Quad4 nx=7, ny=11</span>
+    <span class="n">wmax_ref</span> <span class="o">=</span> <span class="mf">6.496928101916171e-05</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;w.max()&#39;</span><span class="p">,</span> <span class="n">w</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
     <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">wmax_ref</span><span class="p">,</span> <span class="n">w</span><span class="o">.</span><span class="n">max</span><span class="p">(),</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.02</span><span class="p">)</span>
     <span class="k">if</span> <span class="n">plot</span><span class="p">:</span>
@@ -482,6 +482,8 @@ document.write(`
         <span class="n">plt</span><span class="o">.</span><span class="n">contourf</span><span class="p">(</span><span class="n">xmesh</span><span class="p">,</span> <span class="n">ymesh</span><span class="p">,</span> <span class="n">w</span><span class="p">,</span> <span class="n">levels</span><span class="o">=</span><span class="n">levels</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span><span class="p">()</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+        <span class="c1">#plt.savefig(&#39;ex_linear_static_figure.jpg&#39;, dpi=200,</span>
+                    <span class="c1">#bbox_inches=&#39;tight&#39;)</span>
 
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
@@ -571,7 +573,7 @@ document.write(`
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.0.2.
     <br/>
   </p>
 </div>

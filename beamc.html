@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>BeamC - Consistent Timoshenko 3D beam element (pyfe3d.beamc) &#8212; pyfe3d 0.4.28 documentation</title>
+    <title>BeamC - Consistent Timoshenko 3D beam element (pyfe3d.beamc) &#8212; pyfe3d 0.5.0 documentation</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=6de75181"></script>
+    <script src="_static/documentation_options.js?v=1dd76d02"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -119,7 +119,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.4.28 documentation</p>
+    <p class="title logo__title">pyfe3d 0.5.0 documentation</p>
   
 </a></div>
     
@@ -156,7 +156,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="coord.html">
-    Coordinate systems (pyfe3d.coord)
+    <no title>
   </a>
 </li>
 
@@ -267,7 +267,7 @@ document.write(`
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="coord.html">
-    Coordinate systems (pyfe3d.coord)
+    <no title>
   </a>
 </li>
 
@@ -303,11 +303,13 @@ document.write(`
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
   <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="quad4.html">Quad4 - Quadrilateral element with mixed integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4</span></code>)</a></li>
+
+
+
 <li class="toctree-l1"><a class="reference internal" href="quad4r.html">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</a></li>
 
 
-
-<li class="toctree-l1"><a class="reference internal" href="quad4r_utils.html">Quad4R useful functions (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r_utils</span></code>)</a></li>
 
 <li class="toctree-l1"><a class="reference internal" href="tria3r.html">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</a></li>
 
@@ -415,7 +417,7 @@ Shape Functions,” Adv. Theor. Appl. Mech., 1(3), pp. 95–106.</p>
 </dd>
 <dt><strong>length,</strong><span class="classifier">double</span></dt><dd><p>Element length.</p>
 </dd>
-<dt><strong>r11, r12, r13, r21, r22, r23, r31, r32, r33</strong><span class="classifier">double</span></dt><dd><p>Rotation matrix to the global coordinate system.</p>
+<dt><strong>r11, r12, r13, r21, r22, r23, r31, r32, r33</strong><span class="classifier">double</span></dt><dd><p>Rotation matrix from local to global coordinates.</p>
 </dd>
 <dt><strong>vxyi, vxyj, vxyk</strong><span class="classifier">double</span></dt><dd><p>Components of a vector on the <span class="math notranslate nohighlight">\(XY\)</span> plane of the element coordinate
 system, defined using global coordinates.</p>
@@ -583,18 +585,71 @@ matrices.</p>
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.update_KC0">
 <span class="sig-name descname"><span class="pre">update_KC0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KC0c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KC0v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeamProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KC0v_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.update_KC0" title="Link to this definition">#</a></dt>
 <dd><p>Update sparse vectors for linear constitutive stiffness matrix KC0</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>KC0r</strong><span class="classifier">np.array</span></dt><dd><p>Array to store row positions of sparse values</p>
+</dd>
+<dt><strong>KC0c</strong><span class="classifier">np.array</span></dt><dd><p>Array to store column positions of sparse values</p>
+</dd>
+<dt><strong>KC0v</strong><span class="classifier">np.array</span></dt><dd><p>Array to store sparse values</p>
+</dd>
+<dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="properties.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a> object</span></dt><dd><p>Beam property object from where the stiffness and mass attributes
+are read from.</p>
+</dd>
+<dt><strong>update_KC0v_only</strong><span class="classifier">int</span></dt><dd><p>The default <code class="docutils literal notranslate"><span class="pre">0</span></code> means that the row and column indices <code class="docutils literal notranslate"><span class="pre">KC0r</span></code>
+and <code class="docutils literal notranslate"><span class="pre">KC0c</span></code> should also be updated. Any other value will only
+update the stiffness matrix values <code class="docutils literal notranslate"><span class="pre">KC0v</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.update_KG">
 <span class="sig-name descname"><span class="pre">update_KG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KGr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">KGc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">KGv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeamProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KGv_only=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.update_KG" title="Link to this definition">#</a></dt>
 <dd><p>Update sparse vectors for geometric stiffness matrix KG</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>KGr</strong><span class="classifier">np.array</span></dt><dd><p>Array to store row positions of sparse values</p>
+</dd>
+<dt><strong>KGc</strong><span class="classifier">np.array</span></dt><dd><p>Array to store column positions of sparse values</p>
+</dd>
+<dt><strong>KGv</strong><span class="classifier">np.array</span></dt><dd><p>Array to store sparse values</p>
+</dd>
+<dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="properties.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a> object</span></dt><dd><p>Beam property object from where the stiffness and mass attributes
+are read from.</p>
+</dd>
+<dt><strong>update_KGv_only</strong><span class="classifier">int</span></dt><dd><p>The default <span class="math notranslate nohighlight">\(0\)</span> means that only <span class="math notranslate nohighlight">\(KGv\)</span> is updated. Any other value will
+lead to <span class="math notranslate nohighlight">\(KGr\)</span> and <span class="math notranslate nohighlight">\(KGc\)</span> also being updated.</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamC.update_M">
 <span class="sig-name descname"><span class="pre">update_M</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">Mr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[::1]</span> <span class="pre">Mc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">Mv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeamProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">mtype=0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.update_M" title="Link to this definition">#</a></dt>
 <dd><p>Update sparse vectors for mass matrix M</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>Mr</strong><span class="classifier">np.array</span></dt><dd><p>Array to store row positions of sparse values</p>
+</dd>
+<dt><strong>Mc</strong><span class="classifier">np.array</span></dt><dd><p>Array to store column positions of sparse values</p>
+</dd>
+<dt><strong>Mv</strong><span class="classifier">np.array</span></dt><dd><p>Array to store sparse values</p>
+</dd>
+<dt><strong>mtype</strong><span class="classifier">int, optional</span></dt><dd><p>0 for consistent mass matrix using method from Brockman 1987
+1 for reduced integration mass matrix using method from Brockman 1987
+2 for lumped mass matrix using method from Brockman 1987</p>
+</dd>
+</dl>
+</dd>
+</dl>
 </dd></dl>
 
 <dl class="py method">
@@ -651,9 +706,9 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 <span class="sig-name descname"><span class="pre">update_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">vxyi</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">vxyj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">vxyk</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[::1]</span> <span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.beamc.BeamC.update_rotation_matrix" title="Link to this definition">#</a></dt>
 <dd><p>Update the rotation matrix of the element</p>
 <p>Attributes <code class="docutils literal notranslate"><span class="pre">r11,r12,r13,r21,r22,r23,r31,r32,r33</span></code> are updated,
-corresponding to the rotation matrix from global to local coordinates.</p>
-<p>The element attributes <span class="math notranslate nohighlight">\(vxyi\)</span>, <span class="math notranslate nohighlight">\(vxyj\)</span> and <span class="math notranslate nohighlight">\(vxyk\)</span> are also updated when
-this function is called.</p>
+corresponding to the rotation matrix from local to global coordinates.</p>
+<p>The element attributes <code class="docutils literal notranslate"><span class="pre">vxyi</span></code>, <code class="docutils literal notranslate"><span class="pre">vxyj</span></code> and <code class="docutils literal notranslate"><span class="pre">vxyk</span></code> are also updated
+when this function is called.</p>
 <p>The element coordinate system is determined, identifying the <span class="math notranslate nohighlight">\(ijk\)</span>
 components of each axis: <span class="math notranslate nohighlight">\({x_e}_i, {x_e}_j, {x_e}_k\)</span>; <span class="math notranslate nohighlight">\({y_e}_i,
 {y_e}_j, {y_e}_k\)</span>; <span class="math notranslate nohighlight">\({z_e}_i, {z_e}_j, {z_e}_k\)</span>.</p>
@@ -900,7 +955,7 @@ in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.0.2.
     <br/>
   </p>
 </div>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>General-purpose finite element solver - pyfe3d &#8212; pyfe3d 0.4.28 documentation</title>
+    <title>General-purpose finite element solver - pyfe3d &#8212; pyfe3d 0.5.0 documentation</title>
   
   
   
@@ -35,7 +35,7 @@
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
   <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
 
-    <script src="_static/documentation_options.js?v=6de75181"></script>
+    <script src="_static/documentation_options.js?v=1dd76d02"></script>
     <script src="_static/doctools.js?v=9a2dae69"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -118,7 +118,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.4.28 documentation</p>
+    <p class="title logo__title">pyfe3d 0.5.0 documentation</p>
   
 </a></div>
     
@@ -155,7 +155,7 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="coord.html">
-    Coordinate systems (pyfe3d.coord)
+    <no title>
   </a>
 </li>
 
@@ -268,7 +268,7 @@ document.write(`
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="coord.html">
-    Coordinate systems (pyfe3d.coord)
+    <no title>
   </a>
 </li>
 
@@ -349,12 +349,14 @@ in any platform, including the Google Colab environment.</p>
 <div class="toctree-wrapper compound">
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="fe_overview.html">Available finite elements</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quad4.html">Quad4 - Quadrilateral element with mixed integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4"><code class="docutils literal notranslate"><span class="pre">Quad4</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4Data"><code class="docutils literal notranslate"><span class="pre">Quad4Data</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4Probe"><code class="docutils literal notranslate"><span class="pre">Quad4Probe</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="quad4r.html">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R"><code class="docutils literal notranslate"><span class="pre">Quad4R</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4RData"><code class="docutils literal notranslate"><span class="pre">Quad4RData</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4RProbe"><code class="docutils literal notranslate"><span class="pre">Quad4RProbe</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="quad4r_utils.html">Quad4R useful functions (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r_utils</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quad4r_utils.html#pyfe3d.quad4r_utils.quad4r_coord"><code class="docutils literal notranslate"><span class="pre">quad4r_coord()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="tria3r.html">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R"><code class="docutils literal notranslate"><span class="pre">Tria3R</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3RData"><code class="docutils literal notranslate"><span class="pre">Tria3RData</span></code></a></li>
@@ -397,30 +399,12 @@ in any platform, including the Google Colab environment.</p>
 <li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop_utils.read_laminaprop"><code class="docutils literal notranslate"><span class="pre">read_laminaprop()</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html">Coordinate systems (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.coord</span></code>)</a></li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html#pyfe3d.coord.Coord"><code class="docutils literal notranslate"><span class="pre">Coord</span></code></a><ul>
-<li class="toctree-l2"><a class="reference internal" href="coord.html#pyfe3d.coord.Coord.cosines_to_global"><code class="docutils literal notranslate"><span class="pre">Coord.cosines_to_global()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="coord.html#pyfe3d.coord.Coord.transform"><code class="docutils literal notranslate"><span class="pre">Coord.transform()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="coord.html#pyfe3d.coord.Coord.translate"><code class="docutils literal notranslate"><span class="pre">Coord.translate()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html#pyfe3d.coord.CoordC"><code class="docutils literal notranslate"><span class="pre">CoordC</span></code></a><ul>
-<li class="toctree-l2"><a class="reference internal" href="coord.html#pyfe3d.coord.CoordC.cr2me"><code class="docutils literal notranslate"><span class="pre">CoordC.cr2me()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="coord.html#pyfe3d.coord.CoordC.vec2cr"><code class="docutils literal notranslate"><span class="pre">CoordC.vec2cr()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html#pyfe3d.coord.CoordR"><code class="docutils literal notranslate"><span class="pre">CoordR</span></code></a></li>
-<li class="toctree-l1"><a class="reference internal" href="coord.html#pyfe3d.coord.CoordS"><code class="docutils literal notranslate"><span class="pre">CoordS</span></code></a><ul>
-<li class="toctree-l2"><a class="reference internal" href="coord.html#pyfe3d.coord.CoordS.cr2me"><code class="docutils literal notranslate"><span class="pre">CoordS.cr2me()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="coord.html#pyfe3d.coord.CoordS.vec2cr"><code class="docutils literal notranslate"><span class="pre">CoordS.vec2cr()</span></code></a></li>
-</ul>
-</li>
 </ul>
 </div>
 </section>
 <section id="license">
 <h2>License<a class="headerlink" href="#license" title="Link to this heading">#</a></h2>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Copyright</span> <span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="mi">2021</span><span class="o">-</span><span class="mi">2023</span><span class="p">,</span> <span class="n">Saullo</span> <span class="n">G</span><span class="o">.</span> <span class="n">P</span><span class="o">.</span> <span class="n">Castro</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">Castro</span><span class="nd">@tudelft</span><span class="o">.</span><span class="n">nl</span><span class="p">)</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">Copyright</span> <span class="p">(</span><span class="n">c</span><span class="p">)</span> <span class="mi">2021</span><span class="o">-</span><span class="mi">2024</span><span class="p">,</span> <span class="n">Saullo</span> <span class="n">G</span><span class="o">.</span> <span class="n">P</span><span class="o">.</span> <span class="n">Castro</span> <span class="p">(</span><span class="n">S</span><span class="o">.</span><span class="n">G</span><span class="o">.</span><span class="n">P</span><span class="o">.</span><span class="n">Castro</span><span class="nd">@tudelft</span><span class="o">.</span><span class="n">nl</span><span class="p">)</span>
 <span class="n">All</span> <span class="n">rights</span> <span class="n">reserved</span><span class="o">.</span>
 
 <span class="n">Redistribution</span> <span class="ow">and</span> <span class="n">use</span> <span class="ow">in</span> <span class="n">source</span> <span class="ow">and</span> <span class="n">binary</span> <span class="n">forms</span><span class="p">,</span> <span class="k">with</span> <span class="ow">or</span> <span class="n">without</span> <span class="n">modification</span><span class="p">,</span> <span class="n">are</span> <span class="n">permitted</span> <span class="n">provided</span> <span class="n">that</span> <span class="n">the</span> <span class="n">following</span> <span class="n">conditions</span> <span class="n">are</span> <span class="n">met</span><span class="p">:</span>
@@ -541,7 +525,7 @@ in any platform, including the Google Colab environment.</p>
         <div class="footer-item">
 
   <p class="sphinx-version">
-    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 7.4.7.
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.0.2.
     <br/>
   </p>
 </div>
