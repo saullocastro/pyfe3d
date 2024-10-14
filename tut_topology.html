@@ -1,0 +1,963 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tutorial: topology optimization using pyfe3d &#8212; pyfe3d 0.5.2 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+
+  
+  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
+<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
+    <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css?v=2aa19091" />
+  
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
+  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+    <script src="_static/documentation_options.js?v=8e576371"></script>
+    <script src="_static/doctools.js?v=9bcbadda"></script>
+    <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tut_topology';</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Static analysis" href="ex_linear_static.html" />
+    <link rel="prev" title="Tutorials" href="tutorials.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  </head>
+  
+  
+  <body data-bs-spy="scroll" data-bs-target=".bd-toc-nav" data-offset="180" data-bs-root-margin="0px 0px -60%" data-default-mode="">
+
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-primary-sidebar-checkbox"/>
+  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
+  
+  <input type="checkbox"
+          class="sidebar-toggle"
+          id="pst-secondary-sidebar-checkbox"/>
+  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
+  
+  <div class="search-button__wrapper">
+    <div class="search-button__overlay"></div>
+    <div class="search-button__search-container">
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         id="search-input"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form></div>
+  </div>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.5.2 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Static analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="fe_overview.html">
+    Available finite elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="properties.html">
+    Property definitions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="coord.html">
+    <no title>
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+ <script>
+ document.write(`
+   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="fa-solid fa-magnifying-glass"></i>
+    <span class="search-button__default-text">Search</span>
+    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+   </button>
+ `);
+ </script>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <div class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Static analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="fe_overview.html">
+    Available finite elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="properties.html">
+    Property definitions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="coord.html">
+    <no title>
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<script>
+document.write(`
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
+    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
+  </button>
+`);
+</script></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item">
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active"><a class="current reference internal" href="#">Tutorial: topology optimization using pyfe3d</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+  </div>
+  
+  <div id="rtd-footer-container"></div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="tutorials.html" class="nav-link">Tutorials</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page">Tutorial:...</li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Tutorial:-topology-optimization-using-pyfe3d">
+<h1>Tutorial: topology optimization using pyfe3d<a class="headerlink" href="#Tutorial:-topology-optimization-using-pyfe3d" title="Link to this heading">#</a></h1>
+<p>Date: 14 of October 2024</p>
+<p>Author: Saullo G. P. Castro</p>
+<p>Cite this tutorial as:</p>
+<p>Castro, SGP (2024). General-purpose finite element solver based on Python and Cython (Version 0.5.0). Zenodo. DOI: <a class="reference external" href="https://doi.org/10.5281/zenodo.6573489">https://doi.org/10.5281/zenodo.6573489</a>.</p>
+<section id="Importing-Python-modules">
+<h2>Importing Python modules<a class="headerlink" href="#Importing-Python-modules" title="Link to this heading">#</a></h2>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import numpy as np
+from numpy import isclose
+from scipy.sparse.linalg import cg
+from scipy.sparse import coo_matrix
+from scipy.optimize import minimize
+
+from pyfe3d.shellprop_utils import isotropic_plate
+from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Creating-mesh">
+<h2>Creating mesh<a class="headerlink" href="#Creating-mesh" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>data = Quad4RData()
+probe = Quad4RProbe()
+nx = 39
+ny = 39
+N = DOF*nx*ny
+
+a = 3.0
+b = 3.0
+
+c = 3
+E0 = 203.e9 # Pa
+nu = 0.33
+
+h = 0.003 # m
+
+xtmp = np.linspace(0, a, nx)
+ytmp = np.linspace(0, b, ny)
+xmesh, ymesh = np.meshgrid(xtmp, ytmp)
+ncoords = np.vstack((xmesh.T.flatten(), ymesh.T.flatten(), np.zeros_like(ymesh.T.flatten()))).T
+
+x = ncoords[:, 0]
+y = ncoords[:, 1]
+z = ncoords[:, 2]
+ncoords_flatten = ncoords.flatten()
+
+nids = 1 + np.arange(ncoords.shape[0])
+nid_pos = dict(zip(nids, np.arange(len(nids))))
+nids_mesh = nids.reshape(nx, ny)
+n1s = nids_mesh[:-1, :-1].flatten()
+n2s = nids_mesh[1:, :-1].flatten()
+n3s = nids_mesh[1:, 1:].flatten()
+n4s = nids_mesh[:-1, 1:].flatten()
+
+num_elements = len(n1s)
+print(&#39;# number of elements&#39;, num_elements)
+
+nodes = list(zip(n1s, n2s, n3s, n4s))
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+# number of elements 1444
+</pre></div></div>
+</div>
+</section>
+<section id="Calculate-the-stiffness-matrix-for-a-vector-of-design-variables-%22rho%22">
+<h2>Calculate the stiffness matrix for a vector of design variables “rho”<a class="headerlink" href="#Calculate-the-stiffness-matrix-for-a-vector-of-design-variables-%22rho%22" title="Link to this heading">#</a></h2>
+<p>The Young moduli of every element is calculated using the power law: <span class="math notranslate nohighlight">\(E=\rho^c E_0\)</span>, where <span class="math notranslate nohighlight">\(E_0\)</span> is the original Young modulus.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def calc_K(rho):
+    E = rho**c*E0
+
+    KC0r = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
+    KC0c = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
+    KC0v = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=DOUBLE)
+
+    quads = []
+    init_k_KC0 = 0
+    i = 0
+    for n1, n2, n3, n4 in zip(n1s, n2s, n3s, n4s):
+        prop = isotropic_plate(thickness=h, E=E[i], nu=nu, calc_scf=True)
+        i += 1
+        pos1 = nid_pos[n1]
+        pos2 = nid_pos[n2]
+        pos3 = nid_pos[n3]
+        pos4 = nid_pos[n4]
+        r1 = ncoords[pos1]
+        r2 = ncoords[pos2]
+        r3 = ncoords[pos3]
+        normal = np.cross(r2 - r1, r3 - r2)[2]
+        assert normal &gt; 0
+        quad = Quad4R(probe)
+        quad.n1 = n1
+        quad.n2 = n2
+        quad.n3 = n3
+        quad.n4 = n4
+        quad.c1 = DOF*nid_pos[n1]
+        quad.c2 = DOF*nid_pos[n2]
+        quad.c3 = DOF*nid_pos[n3]
+        quad.c4 = DOF*nid_pos[n4]
+        quad.init_k_KC0 = init_k_KC0
+        quad.update_rotation_matrix(ncoords_flatten)
+        quad.update_probe_xe(ncoords_flatten)
+        quad.update_KC0(KC0r, KC0c, KC0v, prop)
+        quads.append(quad)
+        init_k_KC0 += data.KC0_SPARSE_SIZE
+
+    KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
+
+    return KC0
+<br/></pre></div>
+</div>
+</div>
+</section>
+<section id="Sensitivity-of-the-stiffness-matrix-with-respect-to-the-vector-%22rho%22">
+<h2>Sensitivity of the stiffness matrix with respect to the vector “rho”<a class="headerlink" href="#Sensitivity-of-the-stiffness-matrix-with-respect-to-the-vector-%22rho%22" title="Link to this heading">#</a></h2>
+<p>The local support of <span class="math notranslate nohighlight">\(\rho_i\)</span> in vector <span class="math notranslate nohighlight">\(\vec{\rho} = \{\rho_1, \rho_2, \dots, \rho_i, \dots, \rho_N\}\)</span> makes it easy to calculate the sensitivity.</p>
+<div class="math notranslate nohighlight">
+\[\frac{\partial E}{\partial \rho}\big\rvert_i = c \rho_i^{c-1} E_0\]</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def dKdrho(rho, i):
+    dEdrho = c*rho[i]**(c-1)*E0
+    prop = isotropic_plate(thickness=h, E=dEdrho, nu=nu, calc_scf=True)
+
+    KC0r = np.zeros(1*data.KC0_SPARSE_SIZE, dtype=INT)
+    KC0c = np.zeros(1*data.KC0_SPARSE_SIZE, dtype=INT)
+    KC0v = np.zeros(1*data.KC0_SPARSE_SIZE, dtype=DOUBLE)
+
+    n1, n2, n3, n4 = nodes[i]
+    pos1 = nid_pos[n1]
+    pos2 = nid_pos[n2]
+    pos3 = nid_pos[n3]
+    pos4 = nid_pos[n4]
+    r1 = ncoords[pos1]
+    r2 = ncoords[pos2]
+    r3 = ncoords[pos3]
+    normal = np.cross(r2 - r1, r3 - r2)[2]
+    assert normal &gt; 0
+    quad = Quad4R(probe)
+    quad.n1 = n1
+    quad.n2 = n2
+    quad.n3 = n3
+    quad.n4 = n4
+    quad.c1 = DOF*nid_pos[n1]
+    quad.c2 = DOF*nid_pos[n2]
+    quad.c3 = DOF*nid_pos[n3]
+    quad.c4 = DOF*nid_pos[n4]
+    quad.init_k_KC0 = 0
+    quad.update_rotation_matrix(ncoords_flatten)
+    quad.update_probe_xe(ncoords_flatten)
+    quad.update_KC0(KC0r, KC0c, KC0v, prop)
+
+    KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
+
+    return KC0
+<br/><br/></pre></div>
+</div>
+</div>
+</section>
+<section id="Applying-boundary-conditions-and-forces">
+<h2>Applying boundary conditions and forces<a class="headerlink" href="#Applying-boundary-conditions-and-forces" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>bk = np.zeros(N, dtype=bool)
+check = isclose(x, 0) &amp; (isclose(y, 0.) | isclose(y, b))
+bk[0::DOF] = check
+bk[1::DOF] = check
+# making it a 2D membrane problem
+bk[2::DOF] = True
+bk[3::DOF] = True
+bk[4::DOF] = True
+
+bu = ~bk
+
+# applying load along u at x=a
+# nodes at vertices get 1/2 of the force
+fext = np.zeros(N)
+ftotal = -1000.
+print(&#39;ftotal&#39;, ftotal)
+# at x=0
+check = isclose(x, a) &amp; isclose(y, 0)
+fext[1::DOF][check] = ftotal
+<br/></pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+ftotal -1000.0
+</pre></div></div>
+</div>
+</section>
+<section id="Performing-topology-optimization">
+<h2>Performing topology optimization<a class="headerlink" href="#Performing-topology-optimization" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>uu = None
+K = None
+
+def jac(rho):
+    &quot;&quot;&quot;Adjoint gradient of the compliance with respect to each density in &#39;rho&#39;
+    &quot;&quot;&quot;
+    global uu, K
+    # K = calc_K(rho=rho)
+    # Kuu = K[bu, :][:, bu]
+    u = np.zeros(N)
+    # PREC = np.max(1/Kuu.diagonal())
+    # uu, info = cg(PREC*Kuu, PREC*fext[bu], atol=1e-3)
+    u[bu] = uu
+    dCdrho = np.zeros(num_elements)
+    for i in range(num_elements):
+        dCdrho[i] = - u.T @ dKdrho(rho, i) @ u
+    return dCdrho
+
+
+def rel_volume(rho):
+    target_rel_volume = 0.4
+    constr = target_rel_volume - np.sum(rho)/num_elements
+    return constr
+
+
+def objective(rho):
+    global uu, K
+    K = calc_K(rho)
+    Kuu = K[bu, :][:, bu]
+    PREC = np.max(1/Kuu.diagonal())
+    uu, info = cg(PREC*Kuu, PREC*fext[bu], atol=1e-3)
+    compl = uu.T @ Kuu @ uu
+    print(&#39;# obj&#39;, compl)
+    return compl
+
+
+constraints = [
+    {&#39;type&#39;: &#39;ineq&#39;, &#39;fun&#39;: rel_volume},
+]
+bounds = [[1.e-6, 1.] for _ in range(num_elements)]
+
+rho = np.ones(num_elements)
+topopt = minimize(objective, rho, jac=jac, method=&#39;SLSQP&#39;,
+               constraints=constraints, bounds=bounds)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+# obj 0.03656858898675277
+# obj 0.5547638094651913
+# obj 0.35106069976731524
+# obj 0.3215979475255099
+# obj 0.26155065221967616
+# obj 0.2447341311076434
+# obj 0.22158155519550016
+# obj 0.2110542607798679
+# obj 0.20017326095359275
+# obj 0.1899385104265735
+# obj 0.18559066078665587
+# obj 0.17579991247268809
+# obj 0.1695368390646748
+# obj 0.16614085821270308
+# obj 0.16067894839400845
+# obj 0.15745805351723577
+# obj 0.1543229529344281
+# obj 0.14997568672655667
+# obj 0.14805508446344015
+# obj 0.1443873346907818
+# obj 0.1420002577011633
+# obj 0.1387533680825178
+# obj 0.13659894670685266
+# obj 0.1336785942032554
+# obj 0.1302100407756137
+# obj 0.12576457530613608
+# obj 0.12055160240888262
+# obj 0.11620300114017221
+# obj 0.11263125359507889
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/saullogiovanip/miniconda3/lib/python3.12/site-packages/scipy/optimize/_slsqp_py.py:434: RuntimeWarning: Values in x were outside bounds during a minimize step, clipping to bounds
+  fx = wrapped_fun(x)
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+# obj 0.11144236537240935
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/saullogiovanip/miniconda3/lib/python3.12/site-packages/scipy/optimize/_slsqp_py.py:438: RuntimeWarning: Values in x were outside bounds during a minimize step, clipping to bounds
+  g = append(wrapped_grad(x), 0.0)
+/Users/saullogiovanip/miniconda3/lib/python3.12/site-packages/scipy/optimize/_slsqp_py.py:498: RuntimeWarning: Values in x were outside bounds during a minimize step, clipping to bounds
+  a_ieq = vstack([con[&#39;jac&#39;](x, *con[&#39;args&#39;])
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+# obj 0.1093976103320863
+# obj 0.10641891141655721
+# obj 0.10528727474306264
+# obj 0.10298874900519467
+# obj 0.1007075298824823
+# obj 0.09893335389752553
+# obj 0.09774328677980391
+# obj 0.09603914335961679
+# obj 0.09477669903683783
+# obj 0.0933967618079123
+# obj 0.09213737826774447
+# obj 0.09103602206543925
+# obj 0.08992870637624946
+# obj 0.08876037150415103
+# obj 0.08761904956984673
+# obj 0.08676634286601623
+# obj 0.08586449260199747
+# obj 0.08463077613202426
+# obj 0.08368662929320665
+# obj 0.08274835885449637
+# obj 0.08183925637394532
+# obj 0.0810026586568174
+# obj 0.07992119435209558
+# obj 0.07887065589514056
+# obj 0.07808017107093869
+# obj 0.07737506257498095
+# obj 0.07671351488737689
+# obj 0.07580524529586612
+# obj 0.07490326203365288
+# obj 0.0741322844147335
+# obj 0.07333014135170007
+# obj 0.07272968991453943
+# obj 0.07221843513446832
+# obj 0.07179850909572436
+# obj 0.07134393524717482
+# obj 0.07054215800944728
+# obj 0.07010145418080924
+# obj 0.0695357918453487
+# obj 0.06910654031075446
+# obj 0.06868069049809973
+# obj 0.06835049872745673
+# obj 0.06796273315002309
+# obj 0.06756604867367567
+# obj 0.06704438597089588
+# obj 0.06655132368916959
+# obj 0.0662428799388423
+# obj 0.06577538774620953
+# obj 0.06537434481286232
+# obj 0.06503839635940929
+# obj 0.06472260842541358
+# obj 0.0643952744313543
+# obj 0.06411250516329453
+# obj 0.06389062591491629
+# obj 0.06371647857097114
+# obj 0.06351433452917071
+# obj 0.06331996038445666
+# obj 0.06305710309293343
+# obj 0.06285521671617096
+# obj 0.06264059770003866
+# obj 0.06240530621406128
+# obj 0.0622018210575791
+# obj 0.061958487925665655
+# obj 0.06170946050663415
+# obj 0.06146190725572331
+# obj 0.06123275687579674
+# obj 0.06100521185653299
+# obj 0.0608189804290589
+# obj 0.06062682961043829
+# obj 0.06047445116501475
+# obj 0.060249869402383985
+</pre></div></div>
+</div>
+</section>
+<section id="Checking-the-result-of-the-topology-optimization">
+<h2>Checking the result of the topology optimization<a class="headerlink" href="#Checking-the-result-of-the-topology-optimization" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import matplotlib
+import matplotlib.pyplot as plt
+import matplotlib.cm as cm
+
+xcg = np.zeros((num_elements, 3))
+i = 0
+for n1, n2, n3, n4 in zip(n1s, n2s, n3s, n4s):
+    pos1 = nid_pos[n1]
+    pos2 = nid_pos[n2]
+    pos3 = nid_pos[n3]
+    pos4 = nid_pos[n4]
+    r1 = ncoords[pos1]
+    r2 = ncoords[pos2]
+    r3 = ncoords[pos3]
+    r4 = ncoords[pos4]
+
+    xcg[i] = (r1 + r2 + r3 + r4)/4
+    i += 1
+
+plt.clf()
+plt.scatter(xcg[:, 0], xcg[:, 1], c=topopt.x, vmin=0, vmax=1)
+plt.colorbar()
+plt.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/tut_topology_14_0.png" src="_images/tut_topology_14_0.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="tutorials.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tutorials</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="ex_linear_static.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Static analysis</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <div class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav class="bd-toc-nav page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="visible nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Importing-Python-modules">Importing Python modules</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Creating-mesh">Creating mesh</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Calculate-the-stiffness-matrix-for-a-vector-of-design-variables-%22rho%22">Calculate the stiffness matrix for a vector of design variables “rho”</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Sensitivity-of-the-stiffness-matrix-with-respect-to-the-vector-%22rho%22">Sensitivity of the stiffness matrix with respect to the vector “rho”</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Applying-boundary-conditions-and-forces">Applying boundary conditions and forces</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Performing-topology-optimization">Performing topology optimization</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Checking-the-result-of-the-topology-optimization">Checking the result of the topology optimization</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/tut_topology.ipynb.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
+<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 8.1.3.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
