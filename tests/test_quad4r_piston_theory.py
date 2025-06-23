@@ -41,11 +41,11 @@ def test_quad4r_piston_theory(plot=False, refinement=1):
 
     inner = np.logical_not(isclose(x, 0) | isclose(x, a) | isclose(y, 0) | isclose(y, b))
     np.random.seed(20)
-    rdm = (-1 + 2*np.random.rand(x[inner].shape[0]))
+    rdm_x = (-1 + 2*np.random.rand(x[inner].shape[0]))
     np.random.seed(20)
-    rdm = (-1 + 2*np.random.rand(y[inner].shape[0]))
-    x[inner] += dx*rdm*0.4
-    y[inner] += dy*rdm*0.4
+    rdm_y = (-1 + 2*np.random.rand(y[inner].shape[0]))
+    x[inner] += dx*rdm_x*0.4
+    y[inner] += dy*rdm_y*0.4
 
     nids = 1 + np.arange(ncoords.shape[0])
     nid_pos = dict(zip(nids, np.arange(len(nids))))
