@@ -17,7 +17,7 @@ def read_laminaprop(laminaprop, rho=0):
     ----------
     laminaprop : list or tuple
         For the most general case of tri-axial stress, use a tuple containing
-        the folliwing entries::
+        the following entries::
 
             laminaprop = (e1, e2, nu12, g12, g13, g23, e3, nu13, nu23)
 
@@ -27,7 +27,7 @@ def read_laminaprop(laminaprop, rho=0):
             g = e/(2*(1+nu))
             laminaprop = (e, e, nu, g, g, g, e, nu, nu)
 
-        For othotropic materials with in-plane stresses the user can only
+        For orthotropic materials with in-plane stresses the user can only
         supply::
 
             laminaprop = (e1, e2, nu12, g12, g13, g23)
@@ -41,13 +41,13 @@ def read_laminaprop(laminaprop, rho=0):
         ======  ==============================
         symbol  value
         ======  ==============================
-        e1      Young Module in direction 1
-        e2      Young Module in direction 2
+        e1      Young Modulus in direction 1
+        e2      Young Modulus in direction 2
         nu12    12 Poisson's ratio
         g12     12 Shear Modulus
         g13     13 Shear Modulus
-        g23     13 Shear Modulus
-        e3      Young Module in direction 3
+        g23     23 Shear Modulus
+        e3      Young Modulus in direction 3
         nu13    13 Poisson's ratio
         nu23    23 Poisson's ratio
         ======  ==============================
@@ -156,10 +156,12 @@ def laminated_plate(stack, plyt=None, laminaprop=None, rho=0., plyts=None,
     if rhos is None:
         rhos = [rho for i in stack]
 
+    if not (len(stack) == len(plyts) == len(laminaprops) == len(rhos)):
+        raise ValueError('stack, plyts, laminaprops and rhos must have the same length')
+
     plies = []
     prop.h = 0.
     for plyt, laminaprop, thetadeg, rho in zip(plyts, laminaprops, stack, rhos):
-        laminaprop = laminaprop
         ply = Lamina()
         ply.thetadeg = float(thetadeg)
         ply.h = plyt
