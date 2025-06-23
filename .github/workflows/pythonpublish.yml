@@ -25,7 +25,7 @@ jobs:
         python3 -m pip install --upgrade setuptools wheel twine
         python3 -m pip install -r requirements.txt
     - name: Upload source code
-      if: matrix.runs-on == 'ubuntu-latest' && matrix.python-version == '3.12'
+      if: matrix.runs-on == 'ubuntu-latest'
       env:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
@@ -50,7 +50,9 @@ jobs:
     - name: Build Linux Python wheels
       if: matrix.runs-on == 'ubuntu-latest'
       env:
-        CIBW_BUILD: cp${{ matrix.python-version.replace('.', '') }}-manylinux*
+        # Explicit CPython versions for Linux wheels
+        CIBW_BUILD: >-
+          cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*
       run: |
         python -m cibuildwheel --output-dir dist
     - name: Publish Linux Python wheels
@@ -59,4 +61,4 @@ jobs:
         TWINE_USERNAME: __token__
         TWINE_PASSWORD: ${{ secrets.PYPI_API_TOKEN }}
       run: |
-        python3 -m twine upload dist/*linux*.whl
+        python3 -m twine upload dist/*.whl
