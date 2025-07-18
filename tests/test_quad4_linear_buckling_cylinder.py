@@ -11,7 +11,7 @@ from pyfe3d.shellprop_utils import laminated_plate, isotropic_plate
 from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 
 
-def test_linear_buckling_cylinder(mode=0, plot_pyvista=False):
+def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     r"""Test case from reference
 
         Geier, B., and Singh, G., 1997, “Some Simple Solutions for Buckling Loads of Thin and Moderately Thick Cylindrical Shells and Panels Made of Laminated Composite Material,” Aerosp. Sci. Technol., 1(1), pp. 47–63.
@@ -26,7 +26,7 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False):
     R = 0.250 # m
     b = 2*np.pi*R # m
 
-    ntheta = 40 # circumferential
+    ntheta = 40*refinement # circumferential
     nlength = 2*int(ntheta*L/b)
 
     E11 = 123.55e9
@@ -210,4 +210,4 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False):
     assert np.isclose(Pcr, -225968.28006101557, rtol=0.01)
 
 if __name__ == '__main__':
-    test_linear_buckling_cylinder(mode=0, plot_pyvista=True)
+    test_linear_buckling_cylinder(mode=0, plot_pyvista=True, refinement=3)
