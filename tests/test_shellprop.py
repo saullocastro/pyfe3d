@@ -292,3 +292,14 @@ def test_laminate_LP_gradients():
     gradABDE = GradABDE()
     gradABDE.calc_LP_grad(thickness, matlamina, lp)
     print(gradABDE.gradAij)
+
+
+def test_laminated_plate_length_error():
+    lamprop = (71e9, 7e9, 0.28, 7e9, 7e9, 7e9)
+    try:
+        laminated_plate(stack=[0, 45], plyts=[0.000125, 0.000125],
+                        laminaprops=[lamprop], rhos=[0., 0.])
+    except ValueError:
+        pass
+    else:
+        assert False, 'ValueError not raised'
