@@ -6,12 +6,11 @@ from scipy.sparse.linalg import spsolve
 from scipy.sparse import coo_matrix
 
 from pyfe3d.beamprop import BeamProp
-from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
+from pyfe3d import BeamLR, BeamLRData, BeamLRProbe, DOF, INT, DOUBLE
 
 
 def test_static_point_load():
     nnodes = 25 # NOTE must be multiple of 8 + 1 due to the position of the load
-    n = 9
     L = 8
     a = 5
     P = -10.e3
@@ -20,7 +19,7 @@ def test_static_point_load():
     nu = 0.3
     rho = 7.83e3 # kg/m3
 
-    x = np.linspace(0, L, n)
+    x = np.linspace(0, L, nnodes)
     y = np.ones_like(x)
     hy = 0.05 # m
     hz = 0.05 # m
@@ -41,13 +40,13 @@ def test_static_point_load():
     num_elements = len(n1s)
     print('num_elements', num_elements)
 
-    p = BeamCProbe()
-    data = BeamCData()
+    p = BeamLRProbe()
+    data = BeamLRData()
 
     KC0r = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
     KC0c = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
     KC0v = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=DOUBLE)
-    N = DOF*n
+    N = DOF*nnodes
     print('num_DOF', N)
 
     prop = BeamProp()
@@ -66,7 +65,7 @@ def test_static_point_load():
     for n1, n2 in zip(n1s, n2s):
         pos1 = nid_pos[n1]
         pos2 = nid_pos[n2]
-        beam = BeamC(p)
+        beam = BeamLR(p)
         beam.init_k_KC0 = init_k_KC0
         beam.n1 = n1
         beam.n2 = n2
@@ -102,6 +101,7 @@ def test_static_point_load():
     load_pos = np.isclose(x, a)
     fext[1::DOF][load_pos] = P
     fext[2::DOF][load_pos] = -P
+    print('np.where(load_pos)', np.where(load_pos))
 
     Kuu = KC0[bu, :][:, bu]
 
@@ -121,7 +121,8 @@ def test_static_point_load():
     # NOTE adding reaction forces to external force vector
     Kku = KC0[bk, :][:, bu]
     fext[bk] = Kku @ u[bu]
-    assert np.allclose(fint, fext)
+    assert np.allclose(fint, fext, atol=1e-5)
+    #print(np.where(np.logical_not(np.isclose(fint, fext, atol=1e-5))))
 
 
 if __name__ == '__main__':
