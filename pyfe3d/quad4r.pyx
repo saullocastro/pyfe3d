@@ -21,6 +21,10 @@ The :class:`.Quad4R` element has 6 degrees-of-freedom (DOF): `u`, `v`, `w`,
 such that any of the DOF gradients can be constant over the element when the
 element is rectangular.
 
+The stiffness terms corresponding to the drilling degree-of-freedom are
+controlled exclusively using the ``K6ROT`` attribute.
+
+
 """
 from libc.math cimport fabs
 
@@ -487,12 +491,6 @@ cdef class Quad4R:
             Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
             https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208
 
-        Drilling stiffness is used according to Adam et al. 2013:
-
-            Adam, F. M., Mohamed, A. E., and Hassaballa, A. E., 2013,
-            “Degenerated Four Nodes Shell Element with Drilling Degree of
-            Freedom,” IOSR J. Eng., 3(8), pp. 10–20.
-
 
         Parameters
         ----------
@@ -511,8 +509,7 @@ cdef class Quad4R:
             update the stiffness matrix values ``KC0v``.
         hgfactor_u, hgfactor_v, hgfactor_w, hgfactor_rx, hgfactor_ry : double
             These offer the possibility to change the default hourglass
-            stiffnesses for each degree-of-freedom. The default value of these
-            multipliers is 0.1.
+            stiffnesses for each degree-of-freedom.
 
         """
         cdef int c1, c2, c3, c4, k

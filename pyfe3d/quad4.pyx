@@ -54,6 +54,9 @@ The in-plane stiffness terms are integrated with 2 quadrature points, and the
 drilling stiffness is integrated with 1 quadrature point. These are
 not specified in the paper of Hughes et al. (1977).
 
+The stiffness terms corresponding to the drilling degree-of-freedom are
+controlled exclusively using the ``K6ROT``.
+
 
 """
 #TODO bending stiffness vanishes when thickness -> zero, so a correction is applied:
@@ -664,13 +667,6 @@ cdef class Quad4:
                           int update_KC0v_only=0,
                           ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
-
-
-        Drilling stiffness is used according to Adam et al. 2013:
-
-            Adam, F. M., Mohamed, A. E., and Hassaballa, A. E., 2013,
-            “Degenerated Four Nodes Shell Element with Drilling Degree of
-            Freedom,” IOSR J. Eng., 3(8), pp. 10–20.
 
 
         Parameters
