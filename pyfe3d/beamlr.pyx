@@ -1189,7 +1189,7 @@ cdef class BeamLR:
             Array that is updated in place with the internal forces. The
             internal forces stored in ``fint`` are calculated in global
             coordinates. Method :meth:`.update_probe_finte` is called to update
-            the parameter ``finte`` of the :class:`.BeamCProbe` with the
+            the parameter ``finte`` of the :class:`.BeamLRProbe` with the
             internal forces in local coordinates.
         prop : :class:`.BeamProp` object
             Beam property object from where the stiffness and mass attributes
