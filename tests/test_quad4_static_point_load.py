@@ -112,15 +112,6 @@ def test_static_plate_quad_point_load(plot=False):
     wmax_ref = 6.496928101916171e-05
     print('w.max()', w.max())
     assert np.isclose(wmax_ref, w.max(), rtol=0.02)
-    if plot:
-        import matplotlib.pyplot as plt
-        plt.gca().set_aspect('equal')
-        levels = np.linspace(w.min(), w.max(), 10)
-        plt.contourf(xmesh, ymesh, w, levels=levels)
-        plt.colorbar()
-        plt.show()
-        #plt.savefig('ex_linear_static_figure.jpg', dpi=200,
-                    #bbox_inches='tight')
 
     fint = np.zeros(N)
     for quad in quads:
@@ -138,6 +129,16 @@ def test_static_plate_quad_point_load(plot=False):
     print(fext[tmp[0]])
     print((KC0@u)[tmp[0]])
     assert np.allclose(fint, fext, atol=atol)
+
+    if plot:
+        import matplotlib.pyplot as plt
+        plt.gca().set_aspect('equal')
+        levels = np.linspace(w.min(), w.max(), 10)
+        plt.contourf(xmesh, ymesh, w, levels=levels)
+        plt.colorbar()
+        plt.show()
+        #plt.savefig('ex_linear_static_figure.jpg', dpi=200,
+                    #bbox_inches='tight')
 
 
 if __name__ == '__main__':

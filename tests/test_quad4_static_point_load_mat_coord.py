@@ -6,7 +6,7 @@ from scipy.sparse.linalg import cg
 from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import laminated_plate
-from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
+from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 
 
 def test_static_plate_quad_point_load(plot=False):
@@ -16,8 +16,8 @@ def test_static_plate_quad_point_load(plot=False):
         matx = (np.cos(np.deg2rad(thetadeg)), np.sin(np.deg2rad(thetadeg)), 0)
         print('matx', matx)
 
-        data = Quad4RData()
-        probe = Quad4RProbe()
+        data = Quad4Data()
+        probe = Quad4Probe()
         nx = 7
         ny = 11
 
@@ -29,8 +29,6 @@ def test_static_plate_quad_point_load(plot=False):
         E2 = 50e9
         nu12 = 0.3
         G12 = 8e9
-
-        hgfactor = 0.1 # NOTE hour-glass factor
 
         xtmp = np.linspace(0, a, nx)
         ytmp = np.linspace(0, b, ny)
@@ -70,7 +68,7 @@ def test_static_plate_quad_point_load(plot=False):
             r3 = ncoords[pos3]
             normal = np.cross(r2 - r1, r3 - r2)[2]
             assert normal > 0
-            quad = Quad4R(probe)
+            quad = Quad4(probe)
             quad.n1 = n1
             quad.n2 = n2
             quad.n3 = n3
@@ -82,9 +80,7 @@ def test_static_plate_quad_point_load(plot=False):
             quad.init_k_KC0 = init_k_KC0
             quad.update_rotation_matrix(ncoords_flatten, matx[0], matx[1], matx[2])
             quad.update_probe_xe(ncoords_flatten)
-            quad.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_u=hgfactor,
-                            hgfactor_v=hgfactor, hgfactor_w=hgfactor,
-                            hgfactor_rx=hgfactor, hgfactor_ry=hgfactor)
+            quad.update_KC0(KC0r, KC0c, KC0v, prop)
             quads.append(quad)
             init_k_KC0 += data.KC0_SPARSE_SIZE
 
@@ -128,9 +124,8 @@ def test_static_plate_quad_point_load(plot=False):
         for quad in quads:
             quad.update_probe_xe(ncoords_flatten)
             quad.update_probe_ue(u)
-            quad.update_fint(fint, prop, hgfactor_u=hgfactor,
-                            hgfactor_v=hgfactor, hgfactor_w=hgfactor,
-                            hgfactor_rx=hgfactor, hgfactor_ry=hgfactor)
+            quad.update_fint(fint, prop)
+
         # NOTE adding reaction forces to external force vector
         Kku = KC0[bk, :][:, bu]
         fext[bk] = Kku @ u[bu]
@@ -145,7 +140,7 @@ def test_static_plate_quad_point_load(plot=False):
     if plot:
         import matplotlib.pyplot as plt
         plt.gca().set_aspect('equal')
-        levels = np.linspace(w.min(), w.max(), 300)
+        levels = np.linspace(w.min(), w.max(), 10)
         plt.contourf(xmesh, ymesh, w, levels=levels)
         plt.colorbar()
         plt.show()
