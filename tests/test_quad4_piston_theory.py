@@ -204,9 +204,8 @@ def test_quad4r_piston_theory(plot=False, refinement=1):
     omegan_vec = np.array(omegan_vec)
 
     if plot:
-        import matplotlib
-        matplotlib.use('TkAgg')
         import matplotlib.pyplot as plt
+
         for i in range(num_eigenvalues):
             plt.plot(Mach, omegan_vec[:, i])
         plt.ylabel('$\omega_n\ [rad/s]$')

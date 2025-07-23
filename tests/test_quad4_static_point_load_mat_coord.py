@@ -139,6 +139,7 @@ def test_static_plate_quad_point_load(plot=False):
 
     if plot:
         import matplotlib.pyplot as plt
+
         plt.gca().set_aspect('equal')
         levels = np.linspace(w.min(), w.max(), 10)
         plt.contourf(xmesh, ymesh, w, levels=levels)

@@ -146,8 +146,6 @@ def test_nat_freq_plate(plot=False, mode=0):
             assert np.isclose(wmn_ref, omegan[0], rtol=1e-5)
 
     if plot:
-        import matplotlib
-        matplotlib.use('TkAgg')
         import matplotlib.pyplot as plt
 
         plt.clf()

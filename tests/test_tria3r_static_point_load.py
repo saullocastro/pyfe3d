@@ -138,16 +138,6 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
     wmax_ref = 8.324614783831663e-05
     print('w.max()', w.max())
 
-    if plot:
-        import matplotlib
-        matplotlib.use('TkAgg')
-        import matplotlib.pyplot as plt
-        plt.gca().set_aspect('equal')
-        levels = np.linspace(w.min(), w.max(), 300)
-        plt.contourf(xmesh, ymesh, w, levels=levels)
-        plt.colorbar()
-        plt.show()
-
     assert np.isclose(wmax_ref, w.max(), rtol=0.02)
 
     fint = np.zeros(N)
@@ -160,6 +150,16 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
     Kku = KC0[bk, :][:, bu]
     fext[bk] = Kku @ u[bu]
     assert np.allclose(fint, fext)
+
+    if plot:
+        import matplotlib
+        matplotlib.use('TkAgg')
+        import matplotlib.pyplot as plt
+        plt.gca().set_aspect('equal')
+        levels = np.linspace(w.min(), w.max(), 300)
+        plt.contourf(xmesh, ymesh, w, levels=levels)
+        plt.colorbar()
+        plt.show()
 
 
 if __name__ == '__main__':

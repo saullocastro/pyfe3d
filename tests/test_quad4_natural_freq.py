@@ -131,9 +131,8 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
         assert np.isclose(wmn, omegan[0], rtol=0.05)
 
     if plot:
-        import matplotlib
-        matplotlib.use('TkAgg')
         import matplotlib.pyplot as plt
+
         plt.clf()
         plt.contourf(xmesh, ymesh, u[2::DOF].reshape(nx, ny).T)
         plt.show()

@@ -145,9 +145,8 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
     print('w extremes', u[2::DOF].min(), u[2::DOF].max())
 
     if False:
-        import matplotlib
-        matplotlib.use('TkAgg')
         import matplotlib.pyplot as plt
+
         plt.gca().set_aspect('equal')
         uplot = u[0::DOF].reshape(nx, ny).T
         levels = np.linspace(uplot.min(), uplot.max(), 300)
@@ -191,9 +190,8 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
     print('Theoretical P_cr_theory', P_cr_theory)
 
     if plot:
-        import matplotlib
-        matplotlib.use('TkAgg')
         import matplotlib.pyplot as plt
+
         plt.clf()
         plt.contourf(xmesh, ymesh, u[2::DOF].reshape(nx, ny).T)
         plt.show()

@@ -156,9 +156,8 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
         print('w extremes', u[2::DOF].min(), u[2::DOF].max())
 
         if False:
-            import matplotlib
-            matplotlib.use('TkAgg')
             import matplotlib.pyplot as plt
+
             plt.gca().set_aspect('equal')
             uplot = u[2::DOF].reshape(nx, ny).T
             levels = np.linspace(uplot.min(), uplot.max(), 300)
@@ -210,9 +209,8 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
         assert isclose(wmn_at_buckling, omegan[0], rtol=0.05)
 
     if plot:
-        import matplotlib
-        matplotlib.use('TkAgg')
         import matplotlib.pyplot as plt
+
         plt.clf()
         plt.contourf(xmesh, ymesh, u[2::DOF].reshape(nx, ny).T)
         plt.show()

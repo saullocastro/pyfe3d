@@ -172,9 +172,8 @@ def test_tria3r_linear_buckling_plate_mat_coord(plot=False, mode=0):
         print('v extremes', u[1::DOF].min(), u[1::DOF].max())
         print('w extremes', u[2::DOF].min(), u[2::DOF].max())
         if False:
-            import matplotlib
-            matplotlib.use('TkAgg')
             import matplotlib.pyplot as plt
+
             plt.gca().set_aspect('equal')
             uplot = u[2::DOF].reshape(nx, ny).T
             levels = np.linspace(uplot.min(), uplot.max(), 300)
@@ -210,9 +209,8 @@ def test_tria3r_linear_buckling_plate_mat_coord(plot=False, mode=0):
             assert np.isclose(P_cr_ref, P_cr_calc, rtol=1e-5)
 
     if plot:
-        import matplotlib
-        matplotlib.use('TkAgg')
         import matplotlib.pyplot as plt
+
         plt.clf()
         plt.contourf(xmesh, ymesh, u[2::DOF].reshape(nx, ny).T)
         plt.show()

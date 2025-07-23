@@ -143,6 +143,7 @@ def test_quad4_probe_in_plane(plot=False):
 
     if plot:
         import matplotlib.pyplot as plt
+
         plt.gca().set_aspect('equal')
         levels = np.linspace(ufield.min(), ufield.max(), 10)
         plt.contourf(xmesh, ymesh, ufield, levels=levels)
