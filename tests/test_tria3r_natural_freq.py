@@ -155,8 +155,6 @@ def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
         assert isclose(wmn, omegan[0], rtol=0.05)
 
     if plot:
-        import matplotlib
-        matplotlib.use('TkAgg')
         import matplotlib.pyplot as plt
 
         plt.clf()

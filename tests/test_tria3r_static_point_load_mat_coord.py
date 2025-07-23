@@ -2,24 +2,29 @@ import sys
 sys.path.append('..')
 
 import numpy as np
-from scipy.sparse.linalg import cg
+from scipy.sparse.linalg import spsolve
 from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import laminated_plate
-from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
+from pyfe3d import Tria3R, Tria3RData, Tria3RProbe, INT, DOUBLE, DOF
 
 
-def test_static_plate_quad_point_load(plot=False):
+def test_tria3r_static_point_load(plot=False, refinement=1):
     # NOTE keep thetadeg = 0 as first, to work as reference wmax_ref
     thetadegs = [0, -90, -60, -30, 30, 60, 90]
     for thetadeg in thetadegs:
         matx = (np.cos(np.deg2rad(thetadeg)), np.sin(np.deg2rad(thetadeg)), 0)
         print('matx', matx)
 
-        data = Quad4RData()
-        probe = Quad4RProbe()
-        nx = 7
-        ny = 11
+        data = Tria3RData()
+        probe = Tria3RProbe()
+        nx = 7*refinement
+        ny = 11*refinement
+
+        if (nx % 2) == 0:
+            nx += 1
+        if (ny % 2) == 0:
+            ny += 1
 
         a = 3
         b = 7
@@ -29,8 +34,6 @@ def test_static_plate_quad_point_load(plot=False):
         E2 = 50e9
         nu12 = 0.3
         G12 = 8e9
-
-        hgfactor = 0.1 # NOTE hour-glass factor
 
         xtmp = np.linspace(0, a, nx)
         ytmp = np.linspace(0, b, ny)
@@ -49,7 +52,8 @@ def test_static_plate_quad_point_load(plot=False):
         n3s = nids_mesh[1:, 1:].flatten()
         n4s = nids_mesh[:-1, 1:].flatten()
 
-        num_elements = len(n1s)
+        num_elements = len(n1s)*2
+        print('num_elements', num_elements)
 
         KC0r = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
         KC0c = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
@@ -58,7 +62,7 @@ def test_static_plate_quad_point_load(plot=False):
 
         prop = laminated_plate(stack=[-thetadeg], laminaprop=(E1, E2, nu12, G12, G12, G12), plyt=h)
 
-        quads = []
+        trias = []
         init_k_KC0 = 0
         for n1, n2, n3, n4 in zip(n1s, n2s, n3s, n4s):
             pos1 = nid_pos[n1]
@@ -68,53 +72,71 @@ def test_static_plate_quad_point_load(plot=False):
             r1 = ncoords[pos1]
             r2 = ncoords[pos2]
             r3 = ncoords[pos3]
-            normal = np.cross(r2 - r1, r3 - r2)[2]
+            r4 = ncoords[pos4]
+
+            # first tria
+            normal = np.cross(r2 - r1, r3 - r1)[2]
             assert normal > 0
-            quad = Quad4R(probe)
-            quad.n1 = n1
-            quad.n2 = n2
-            quad.n3 = n3
-            quad.n4 = n4
-            quad.c1 = DOF*nid_pos[n1]
-            quad.c2 = DOF*nid_pos[n2]
-            quad.c3 = DOF*nid_pos[n3]
-            quad.c4 = DOF*nid_pos[n4]
-            quad.init_k_KC0 = init_k_KC0
-            quad.update_rotation_matrix(ncoords_flatten, matx[0], matx[1], matx[2])
-            quad.update_probe_xe(ncoords_flatten)
-            quad.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_u=hgfactor,
-                            hgfactor_v=hgfactor, hgfactor_w=hgfactor,
-                            hgfactor_rx=hgfactor, hgfactor_ry=hgfactor)
-            quads.append(quad)
+            tria = Tria3R(probe)
+            tria.n1 = n1
+            tria.n2 = n2
+            tria.n3 = n3
+            tria.c1 = DOF*nid_pos[n1]
+            tria.c2 = DOF*nid_pos[n2]
+            tria.c3 = DOF*nid_pos[n3]
+            tria.alpha_shear_locking = 0.7
+            tria.init_k_KC0 = init_k_KC0
+            tria.update_rotation_matrix(ncoords_flatten, matx[0], matx[1], matx[2])
+            tria.update_probe_xe(ncoords_flatten)
+            tria.update_KC0(KC0r, KC0c, KC0v, prop)
+            trias.append(tria)
             init_k_KC0 += data.KC0_SPARSE_SIZE
 
-        KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
+            # second tria
+            normal = np.cross(r3 - r1, r4 - r1)[2]
+            assert normal > 0
+            tria = Tria3R(probe)
+            tria.n1 = n1
+            tria.n2 = n3
+            tria.n3 = n4
+            tria.c1 = DOF*nid_pos[n1]
+            tria.c2 = DOF*nid_pos[n3]
+            tria.c3 = DOF*nid_pos[n4]
+            tria.alpha_shear_locking = 0.7
+            tria.init_k_KC0 = init_k_KC0
+            tria.update_rotation_matrix(ncoords_flatten, matx[0], matx[1], matx[2])
+            tria.update_probe_xe(ncoords_flatten)
+            tria.update_KC0(KC0r, KC0c, KC0v, prop)
+            trias.append(tria)
+            init_k_KC0 += data.KC0_SPARSE_SIZE
 
         print('elements created')
 
-        bk = np.zeros(N, dtype=bool)
-        check = np.isclose(x, 0.) | np.isclose(x, a) | np.isclose(y, 0) | np.isclose(y, b)
-        bk[2::DOF] = check
+        KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
 
-        bk[0::DOF] = True
-        bk[1::DOF] = True
+        print('sparse KC0 created')
+
+        # applying boundary conditions
+        # simply supported
+        bk = np.zeros(N, dtype=bool)
+        edges = np.isclose(x, 0.) | np.isclose(x, a) | np.isclose(y, 0) | np.isclose(y, b)
+        bk[2::DOF][edges] = True
+        bk[0::DOF][edges] = True
+        bk[1::DOF][edges] = True
 
         bu = ~bk
 
         # point load at center node
         fext = np.zeros(N)
         fmid = 1.
-        check = np.isclose(x, a/2) & np.isclose(y, b/2)
-        fext[2::DOF][check] = fmid
+        middle = np.isclose(x, a/2) & np.isclose(y, b/2)
+        fext[2::DOF][middle] = fmid
 
         KC0uu = KC0[bu, :][:, bu]
         assert fext[bu].sum() == fmid
 
-        uu, info = cg(KC0uu, fext[bu], atol=1e-9)
-        assert info == 0
-
         u = np.zeros(N)
-        u[bu] = uu
+        u[bu] = spsolve(KC0uu, fext[bu])
 
         w = u[2::DOF].reshape(nx, ny).T
 
@@ -125,22 +147,15 @@ def test_static_plate_quad_point_load(plot=False):
             assert np.isclose(wmax_ref, w.max(), rtol=1e-5)
 
         fint = np.zeros(N)
-        for quad in quads:
-            quad.update_probe_xe(ncoords_flatten)
-            quad.update_probe_ue(u)
-            quad.update_fint(fint, prop, hgfactor_u=hgfactor,
-                            hgfactor_v=hgfactor, hgfactor_w=hgfactor,
-                            hgfactor_rx=hgfactor, hgfactor_ry=hgfactor)
+        for tria in trias:
+            tria.update_probe_xe(ncoords_flatten)
+            tria.update_probe_ue(u)
+            tria.update_fint(fint, prop)
+
         # NOTE adding reaction forces to external force vector
         Kku = KC0[bk, :][:, bu]
         fext[bk] = Kku @ u[bu]
-        atol = 1e-5
-        tmp = np.where(np.logical_not(np.isclose(fint, fext, atol=atol)))
-        print(tmp)
-        print(fint[tmp[0]])
-        print(fext[tmp[0]])
-        print((KC0@u)[tmp[0]])
-        assert np.allclose(fint, fext, atol=atol)
+        assert np.allclose(fint, fext)
 
     if plot:
         import matplotlib.pyplot as plt
@@ -153,4 +168,4 @@ def test_static_plate_quad_point_load(plot=False):
 
 
 if __name__ == '__main__':
-    test_static_plate_quad_point_load(plot=True)
+    test_tria3r_static_point_load(plot=True, refinement=1)

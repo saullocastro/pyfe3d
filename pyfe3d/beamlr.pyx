@@ -39,6 +39,7 @@ cdef class BeamLRData:
     cdef public int KC0_SPARSE_SIZE
     cdef public int KG_SPARSE_SIZE
     cdef public int M_SPARSE_SIZE
+
     def __cinit__(BeamLRData self):
         self.KC0_SPARSE_SIZE = 144
         self.KG_SPARSE_SIZE = 36
@@ -48,6 +49,16 @@ cdef class BeamLRData:
 cdef class BeamLRProbe:
     r"""
     Probe used for local coordinates, local displacements, local stresses etc
+
+    The idea behind using a probe is to avoid allocating larger memory buffers
+    per finite element. The memory buffers are allocated per probe, and one
+    probe can be shared amongst many finite elements, with the information
+    being updated and retrieved on demand.
+
+    .. note:: The probe can be shared amongst more than one finite element, 
+              depending on how you defined them. Mind that the probe will
+              always safe the values from the last udpate.
+
 
     Attributes
     ----------
@@ -60,13 +71,19 @@ cdef class BeamLRProbe:
         in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
         {{r_y}_e}_1, {{r_z}_e}_1, {u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
         {{r_y}_e}_2, {{r_z}_e}_2`.
+    finte, : array-like
+        Array of size ``NUM_NODES*DOF=12`` containing the element internal
+        forces corresponding to the degrees-of-freedom described by ``ue``.
 
     """
     cdef public double [::1] xe
     cdef public double [::1] ue
+    cdef public double [::1] finte
+
     def __cinit__(BeamLRProbe self):
         self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
         self.ue = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.finte = np.zeros(NUM_NODES*DOF, dtype=np.float64)
 
 
 cdef class BeamLR:
@@ -219,8 +236,8 @@ cdef class BeamLR:
     cpdef void update_probe_ue(BeamLR self, double [::1] u):
         r"""Update the local displacement vector of the probe of the element
 
-        .. note:: The ``probe`` attribute object :class:`.BeamLRProbe` is
-                  updated, not the element object.
+        .. note:: The ``ue`` attribute of object :class:`.BeamLRProbe` is
+                  updated, accessible using ``.probe.ue``.
 
         Parameters
         ----------
@@ -272,8 +289,8 @@ cdef class BeamLR:
     cpdef void update_probe_xe(BeamLR self, double [::1] x):
         r"""Update the 3D coordinates of the probe of the element
 
-        .. note:: The ``probe`` attribute object :class:`.BeamLRProbe` is
-                  updated, not the element object.
+        .. note:: The ``xe`` attribute of object :class:`.BeamLRProbe` is
+                  updated, accessible using ``.probe.xe``.
 
         Parameters
         ----------
@@ -332,6 +349,59 @@ cdef class BeamLR:
             y2 = self.probe.xe[4]
             z2 = self.probe.xe[5]
             self.length = ((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)**2)**0.5
+
+
+    cpdef void update_probe_finte(BeamLR self,
+                           BeamProp prop):
+        r"""Update the internal force vector of the probe
+
+        The attribute ``finte`` is updated with the :class:`.BeamLRProbe` the
+        internal forces in local coordinates. While using this function, mind
+        that the probe can be shared amongst more than one finite element,
+        depending how you defined them, meaning that the probe will always safe
+        the values from the last udpate.
+
+        .. note:: The ``finte`` attribute of object :class:`.BeamLRProbe` is
+                  updated, accessible using ``.probe.finte``.
+
+        Parameters
+        ----------
+        prop : :class:`.BeamProp` object
+            Beam property object from where the stiffness and mass attributes
+            are read from.
+
+        """
+        cdef double *ue
+        cdef double *finte
+        cdef double L, A, E, G, Ay, Az, Iyy, Izz, Iyz, J
+
+        with nogil:
+            L = self.length
+            A = prop.A
+            E = prop.E
+            G = prop.G
+            Ay = prop.Ay
+            Az = prop.Az
+            Iyy = prop.Iyy
+            Izz = prop.Izz
+            Iyz = prop.Iyz
+            J = prop.J
+
+            ue = &self.probe.ue[0]
+            finte = &self.probe.finte[0]
+
+            finte[0] = 1.0*E*(A*ue[0] - A*ue[6] + Ay*ue[11] - Ay*ue[5] - Az*ue[10] + Az*ue[4])/L
+            finte[1] = 0.5*G*(A*L*(ue[11] + ue[5]) + 2*A*ue[1] - 2*A*ue[7] - 2*Az*ue[3] + 2*Az*ue[9])/L
+            finte[2] = -0.5*G*(A*L*(ue[10] + ue[4]) - 2*A*ue[2] + 2*A*ue[8] - 2*Ay*ue[3] + 2*Ay*ue[9])/L
+            finte[3] = -0.5*G*(-2*Ay*ue[2] + 2*Ay*ue[8] + 2*Az*ue[1] - 2*Az*ue[7] - 2*J*ue[3] + 2*J*ue[9] + L*(Ay*ue[10] + Ay*ue[4] + Az*ue[11] + Az*ue[5]))/L
+            finte[4] = (1.0*Az*E*ue[0] - 1.0*Az*E*ue[6] + 1.0*E*Iyz*ue[11] - 1.0*E*Iyz*ue[5] - 0.5*G*L*(A*ue[2] - A*ue[8] + Ay*ue[3] - Ay*ue[9]) + 0.25*ue[10]*(A*G*L**2 - 4*E*Iyy) + 0.25*ue[4]*(A*G*L**2 + 4*E*Iyy))/L
+            finte[5] = (-1.0*Ay*E*ue[0] + 1.0*Ay*E*ue[6] + 1.0*E*Iyz*ue[10] - 1.0*E*Iyz*ue[4] + 0.5*G*L*(A*ue[1] - A*ue[7] - Az*ue[3] + Az*ue[9]) + 0.25*ue[11]*(A*G*L**2 - 4*E*Izz) + 0.25*ue[5]*(A*G*L**2 + 4*E*Izz))/L
+            finte[6] = 1.0*E*(-A*ue[0] + A*ue[6] - Ay*ue[11] + Ay*ue[5] + Az*ue[10] - Az*ue[4])/L
+            finte[7] = -0.5*G*(A*L*(ue[11] + ue[5]) + 2*A*ue[1] - 2*A*ue[7] - 2*Az*ue[3] + 2*Az*ue[9])/L
+            finte[8] = 0.5*G*(A*L*(ue[10] + ue[4]) - 2*A*ue[2] + 2*A*ue[8] - 2*Ay*ue[3] + 2*Ay*ue[9])/L
+            finte[9] = 0.5*G*(-2*Ay*ue[2] + 2*Ay*ue[8] + 2*Az*ue[1] - 2*Az*ue[7] - 2*J*ue[3] + 2*J*ue[9] + L*(Ay*ue[10] + Ay*ue[4] + Az*ue[11] + Az*ue[5]))/L
+            finte[10] = (-1.0*Az*E*ue[0] + 1.0*Az*E*ue[6] - 1.0*E*Iyz*ue[11] + 1.0*E*Iyz*ue[5] - 0.5*G*L*(A*ue[2] - A*ue[8] + Ay*ue[3] - Ay*ue[9]) + 0.25*ue[10]*(A*G*L**2 + 4*E*Iyy) + 0.25*ue[4]*(A*G*L**2 - 4*E*Iyy))/L
+            finte[11] = (1.0*Ay*E*ue[0] - 1.0*Ay*E*ue[6] - 1.0*E*Iyz*ue[10] + 1.0*E*Iyz*ue[4] + 0.5*G*L*(A*ue[1] - A*ue[7] - Az*ue[3] + Az*ue[9]) + 0.25*ue[11]*(A*G*L**2 + 4*E*Izz) + 0.25*ue[5]*(A*G*L**2 - 4*E*Izz))/L
 
 
     cpdef void update_KC0(BeamLR self,
@@ -1113,6 +1183,44 @@ cdef class BeamLR:
             KC0v[k] += r21*(0.5*Ay*G*r32 + 0.5*Az*G*r33 + 1.0*G*J*r31/L) + r22*(0.5*Ay*G*r31 - 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G/4 + E*Iyy/L**2)) + r23*(0.5*Az*G*r31 - 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G/4 + E*Izz/L**2))
             k += 1
             KC0v[k] += r31*(0.5*Ay*G*r32 + 0.5*Az*G*r33 + 1.0*G*J*r31/L) + r32*(0.5*Ay*G*r31 - 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G/4 + E*Iyy/L**2)) + r33*(0.5*Az*G*r31 - 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G/4 + E*Izz/L**2))
+
+
+    cpdef void update_fint(BeamLR self,
+                           double [::1] fint,
+                           BeamProp prop):
+        r"""Update the internal force vector
+
+        Parameters
+        ----------
+        fint : np.array
+            Array that is updated in place with the internal forces. The
+            internal forces stored in ``fint`` are calculated in global
+            coordinates. Method :meth:`.update_probe_finte` is called to update
+            the parameter ``finte`` of the :class:`.BeamLRProbe` with the
+            internal forces in local coordinates.
+        prop : :class:`.BeamProp` object
+            Beam property object from where the stiffness and mass attributes
+            are read from.
+
+        """
+        cdef double *finte
+
+        self.update_probe_finte(prop)
+        with nogil:
+            finte = &self.probe.finte[0]
+
+            fint[0+self.c1] += finte[0]*self.r11 + finte[1]*self.r12 + finte[2]*self.r13
+            fint[1+self.c1] += finte[0]*self.r21 + finte[1]*self.r22 + finte[2]*self.r23
+            fint[2+self.c1] += finte[0]*self.r31 + finte[1]*self.r32 + finte[2]*self.r33
+            fint[3+self.c1] += finte[3]*self.r11 + finte[4]*self.r12 + finte[5]*self.r13
+            fint[4+self.c1] += finte[3]*self.r21 + finte[4]*self.r22 + finte[5]*self.r23
+            fint[5+self.c1] += finte[3]*self.r31 + finte[4]*self.r32 + finte[5]*self.r33
+            fint[0+self.c2] += finte[6]*self.r11 + finte[7]*self.r12 + finte[8]*self.r13
+            fint[1+self.c2] += finte[6]*self.r21 + finte[7]*self.r22 + finte[8]*self.r23
+            fint[2+self.c2] += finte[6]*self.r31 + finte[7]*self.r32 + finte[8]*self.r33
+            fint[3+self.c2] += finte[9]*self.r11 + finte[10]*self.r12 + finte[11]*self.r13
+            fint[4+self.c2] += finte[9]*self.r21 + finte[10]*self.r22 + finte[11]*self.r23
+            fint[5+self.c2] += finte[9]*self.r31 + finte[10]*self.r32 + finte[11]*self.r33
 
 
     cpdef void update_KG(BeamLR self,

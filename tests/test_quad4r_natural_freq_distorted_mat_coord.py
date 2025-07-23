@@ -146,8 +146,6 @@ def test_nat_freq_plate(plot=False, mode=0):
             assert np.isclose(wmn_ref, omegan[0], rtol=1e-5)
 
     if plot:
-        import matplotlib
-        matplotlib.use('TkAgg')
         import matplotlib.pyplot as plt
 
         plt.clf()
@@ -166,8 +164,6 @@ def test_nat_freq_plate(plot=False, mode=0):
             plt.plot([r4[0], r1[0]], [r4[1], r1[1]], 'k-')
         plt.contourf(xmesh, ymesh, u[2::DOF].reshape(nx, ny).T)
         plt.show()
-
-    assert np.isclose(wmn_ref, omegan[0], rtol=0.05)
 
 
 if __name__ == '__main__':

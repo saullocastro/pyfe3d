@@ -41,14 +41,26 @@ cdef class Tria3RData:
     cdef public int KC0_SPARSE_SIZE
     cdef public int KG_SPARSE_SIZE
     cdef public int M_SPARSE_SIZE
+
     def __cinit__(Tria3RData self):
         self.KC0_SPARSE_SIZE = 324
         self.KG_SPARSE_SIZE = 81
         self.M_SPARSE_SIZE = 270
 
+
 cdef class Tria3RProbe:
     r"""
     Probe used for local coordinates, local displacements, local stresses etc
+
+    The idea behind using a probe is to avoid allocating larger memory buffers
+    per finite element. The memory buffers are allocated per probe, and one
+    probe can be shared amongst many finite elements, with the information
+    being updated and retrieved on demand.
+
+    .. note:: The probe can be shared amongst more than one finite element, 
+              depending on how you defined them. Mind that the probe will
+              always safe the values from the last udpate.
+
 
     Attributes
     ----------
@@ -63,13 +75,20 @@ cdef class Tria3RProbe:
         {{r_y}_e}_1, {{r_z}_e}_1`, `{u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
         {{r_y}_e}_2, {{r_z}_e}_2`, `{u_e}_3, {v_e}_3, {w_e}_3, {{r_x}_e}_3,
         {{r_y}_e}_3, {{r_z}_e}_3`.
+    finte, : array-like
+        Array of size ``NUM_NODES*DOF=18`` containing the element internal
+        forces corresponding to the degrees-of-freedom described by ``ue``.
 
     """
     cdef public double [::1] xe
     cdef public double [::1] ue
+    cdef public double [::1] finte
+
     def __cinit__(Tria3RProbe self):
         self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
         self.ue = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.finte = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+
 
 cdef class Tria3R:
     r"""
@@ -110,22 +129,14 @@ cdef class Tria3R:
         buckling analysis of a simply supported plate, such that the result
         approaches the one of the :class:`.Quad4R` element for an equivalent
         mesh (see the test case ``test_tria3r_linear_buckling_plate.py``).
-    alphat, : double
-        Element drilling penalty factor for the plate drilling stiffness,
-        defined according to Eq. 2.20 in the reference below. The default value
-        of ``alphat = 1.`` comes from the same reference::
-
-            Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell
-            Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013)
-            10–20. www.iosrjen.org (accessed April 20, 2020).
-
-        For those familiar with NASTRAN, ``alphat`` can be calculated based on
-        NASTRAN's ``K6ROT`` parameters as ``alphat = 1.e-6*K6ROT``. The default
-        value according to AUTODESK NASTRAN's quick reference guide is ``K6ROT
-        = 100.`` for static analysis and ``K6ROT=1.e4`` for modal solutions.
-        MSC NASTRAN's quick reference guide states that ``K6ROT > 100.`` should
-        not be used, but this is controversion, already being controversial to
-        what AUTODESK NASTRAN's manual says.
+    K6ROT, : double
+        Element drilling stiffness, added only to the diagonal of the local
+        stiffness matrix. The default value is according to AUTODESK NASTRAN's
+        quick reference guide is ``K6ROT = 100.`` for static analysis.  For
+        modal solutions, this value should be ``K6ROT=1.e4``.  MSC NASTRAN's
+        quick reference guide states that ``K6ROT > 100.`` should not be used,
+        but this is controversial, already being controversial to what AUTODESK
+        NASTRAN's manual says.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix from local to global coordinates.
     m11, m12, m21, m22 : double
@@ -147,12 +158,11 @@ cdef class Tria3R:
     cdef public int c1, c2, c3
     cdef public int init_k_KC0, init_k_KG, init_k_M
     cdef public double area
-    cdef public double alphat # drilling penalty factor for stiffness matrix, see Eq. 2.20 in F.M. Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013) 10–20. www.iosrjen.org (accessed April 20, 2020).
+    cdef public double K6ROT # drilling stiffness
     cdef public double alpha_shear_locking
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public double m11, m12, m21, m22
     cdef public Tria3RProbe probe
-
 
     def __cinit__(Tria3R self, Tria3RProbe p):
         self.probe = p
@@ -169,7 +179,7 @@ cdef class Tria3R:
         self.init_k_KG = 0
         self.init_k_M = 0
         self.area = 0
-        self.alphat = 1. # based on recommended value of reference F.M. Adam, A.E. Mohamed, A.E. Hassaballa
+        self.K6ROT = 10.
         self.alpha_shear_locking = 0.7
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.
@@ -315,8 +325,8 @@ cdef class Tria3R:
     cpdef void update_probe_ue(Tria3R self, double [::1] u):
         r"""Update the local displacement vector of the probe of the element
 
-        .. note:: The ``probe`` attribute object :class:`.Tria3RProbe` is
-                  updated, not the element object.
+        .. note:: The ``ue`` attribute of object :class:`.Tria3RProbe` is
+                  updated, accessible using ``.probe.ue``.
 
         Parameters
         ----------
@@ -369,8 +379,8 @@ cdef class Tria3R:
     cpdef void update_probe_xe(Tria3R self, double [::1] x):
         r"""Update the 3D coordinates of the probe of the element
 
-        .. note:: The ``probe`` attribute object :class:`.Tria3RProbe` is
-                  updated, not the element object.
+        .. note:: The ``xe`` attribute of object :class:`.Tria3RProbe` is
+                  updated, accessible using ``.probe.xe``.
 
         Parameters
         ----------
@@ -435,49 +445,29 @@ cdef class Tria3R:
             self.area = fabs((-x1 + x2)*(-y1 + y3)/2. + (x1 - x3)*(-y1 + y2)/2.)
 
 
-    cpdef void update_KC0(Tria3R self,
-                          long [::1] KC0r,
-                          long [::1] KC0c,
-                          double [::1] KC0v,
-                          ShellProp prop,
-                          int update_KC0v_only=0,
-                          ):
-        r"""Update sparse vectors for linear constitutive stiffness matrix KC0
+    cpdef void update_probe_finte(Tria3R self,
+                           ShellProp prop):
+        r"""Update the internal force vector of the probe
 
-        Reduced integration is used with a single point in the centroid
-        (`N1=N2=N3=1/3`) and weight `weight=1`, preventing shear locking.
-        Hourglass control is used according to Brockman 1987:
+        The attribute ``finte`` is updated with the :class:`.Tria3RProbe` the
+        internal forces in local coordinates. While using this function, mind
+        that the probe can be shared amongst more than one finite element,
+        depending how you defined them, meaning that the probe will always safe
+        the values from the last udpate.
 
-            Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
-            Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
-            https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208
-
-        Drilling stiffness is used according to Adam et al. 2013:
-
-            Adam, F. M., Mohamed, A. E., and Hassaballa, A. E., 2013,
-            “Degenerated Four Nodes Shell Element with Drilling Degree of
-            Freedom,” IOSR J. Eng., 3(8), pp. 10–20.
-
+        .. note:: The ``finte`` attribute of object :class:`.Tria3RProbe` is
+                  updated, accessible using ``.probe.finte``.
 
         Parameters
         ----------
-        KC0r : np.array
-            Array to store row positions of sparse values
-        KC0c : np.array
-            Array to store column positions of sparse values
-        KC0v : np.array
-            Array to store sparse values
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
-        update_KC0v_only : int
-            The default ``0`` means that the row and column indices ``KC0r``
-            and ``KC0c`` should also be updated. Any other value will only
-            update the stiffness matrix values ``KC0v``.
 
         """
-        cdef int c1, c2, c3, i, k
-        cdef double x1, x2, x3, y1, y2, y3, wij, detJ, A
+        cdef double *ue
+        cdef double *finte
+        cdef double x1, x2, x3, y1, y2, y3, wij, detJ
         # NOTE ABD in the material direction
         cdef double A11mat, A12mat, A16mat, A22mat, A26mat, A66mat
         cdef double B11mat, B12mat, B16mat, B22mat, B26mat, B66mat
@@ -487,18 +477,33 @@ cdef class Tria3R:
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
-        cdef double alphat
-        cdef double h
-        cdef double points[3]
-        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
+        cdef double K6ROT
         cdef double m11, m12, m21, m22
         cdef double N1x, N2x, N3x, N1y, N2y, N3y
         cdef double N1, N2, N3
         cdef double factor, maxl, l12, l23, l31
 
+        cdef double KC0e0000, KC0e0001, KC0e0003, KC0e0004, KC0e0006, KC0e0007, KC0e0009, KC0e0010, KC0e0012, KC0e0013, KC0e0015, KC0e0016
+        cdef double KC0e0101, KC0e0103, KC0e0104, KC0e0106, KC0e0107, KC0e0109, KC0e0110, KC0e0112, KC0e0113, KC0e0115, KC0e0116
+        cdef double KC0e0202, KC0e0203, KC0e0204, KC0e0208, KC0e0209, KC0e0210, KC0e0214, KC0e0215, KC0e0216
+        cdef double KC0e0303, KC0e0304, KC0e0306, KC0e0307, KC0e0308, KC0e0309, KC0e0310, KC0e0312, KC0e0313, KC0e0314, KC0e0315, KC0e0316
+        cdef double KC0e0404, KC0e0406, KC0e0407, KC0e0408, KC0e0409, KC0e0410, KC0e0412, KC0e0413, KC0e0414, KC0e0415, KC0e0416
+        cdef double KC0e0505
+        cdef double KC0e0606, KC0e0607, KC0e0609, KC0e0610, KC0e0612, KC0e0613, KC0e0615, KC0e0616
+        cdef double KC0e0707, KC0e0709, KC0e0710, KC0e0712, KC0e0713, KC0e0715, KC0e0716
+        cdef double KC0e0808, KC0e0809, KC0e0810, KC0e0814, KC0e0815, KC0e0816
+        cdef double KC0e0909, KC0e0910, KC0e0912, KC0e0913, KC0e0914, KC0e0915, KC0e0916
+        cdef double KC0e1010, KC0e1012, KC0e1013, KC0e1014, KC0e1015, KC0e1016
+        cdef double KC0e1111, KC0e1212, KC0e1213, KC0e1215, KC0e1216
+        cdef double KC0e1313, KC0e1315, KC0e1316
+        cdef double KC0e1414, KC0e1415, KC0e1416
+        cdef double KC0e1515, KC0e1516, KC0e1616, KC0e1717
+
         with nogil:
-            A = self.area
-            detJ = 2*A
+            ue = &self.probe.ue[0]
+            finte = &self.probe.finte[0]
+
+            detJ = 2*self.area
 
             A11mat = prop.A11
             A12mat = prop.A12
@@ -575,7 +580,328 @@ cdef class Tria3R:
                 # D62 = m21**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m22**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
                 D66 = m11*m21*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + m12*m22*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21))
 
-            h = prop.h
+            E44 = prop.E44*prop.scf_k23
+            E45 = prop.E45*0.5*(prop.scf_k13 + prop.scf_k23)
+            E55 = prop.E55*prop.scf_k13
+
+            # NOTE ignoring z in local coordinates
+            x1 = self.probe.xe[0]
+            y1 = self.probe.xe[1]
+            # z1 = self.probe.xe[2]
+            x2 = self.probe.xe[3]
+            y2 = self.probe.xe[4]
+            # z2 = self.probe.xe[5]
+            x3 = self.probe.xe[6]
+            y3 = self.probe.xe[7]
+            # z3 = self.probe.xe[8]
+
+            l12 = ((x1 - x2)**2 + (y1 - y2)**2)**0.5
+            l23 = ((x2 - x3)**2 + (y2 - y3)**2)**0.5
+            l31 = ((x3 - x1)**2 + (y3 - y1)**2)**0.5
+            maxl = l12
+            if l23 > maxl:
+                maxl = l23
+            if l31 > maxl:
+                maxl = l31
+
+            # NOTE strategy to prevent shear locking used in BFG elements imported here...
+            factor = self.alpha_shear_locking*maxl**2/prop.h**2
+            E44 = 1 / (1 + factor) * E44
+            E45 = 1 / (1 + factor) * E45
+            E55 = 1 / (1 + factor) * E55
+
+            K6ROT = self.K6ROT
+
+            N1x = (y2 - y3)/(2*self.area)
+            N2x = (-y1 + y3)/(2*self.area)
+            N3x = (y1 - y2)/(2*self.area)
+            N1y = (-x2 + x3)/(2*self.area)
+            N2y = (x1 - x3)/(2*self.area)
+            N3y = (-x1 + x2)/(2*self.area)
+
+            wij = 0.5
+            N1 = N2 = N3 = 0.333333333333333333333333333333333333333333333
+
+            KC0e0000 = detJ*wij*(N1x*(A11*N1x + A16*N1y) + N1y*(A16*N1x + A66*N1y))
+            KC0e0001 = detJ*wij*(N1x*(A16*N1x + A66*N1y) + N1y*(A12*N1x + A26*N1y))
+            KC0e0003 = -detJ*wij*(N1x*(B16*N1x + B66*N1y) + N1y*(B12*N1x + B26*N1y))
+            KC0e0004 = detJ*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y))
+            KC0e0006 = detJ*wij*(N2x*(A11*N1x + A16*N1y) + N2y*(A16*N1x + A66*N1y))
+            KC0e0007 = detJ*wij*(N2x*(A16*N1x + A66*N1y) + N2y*(A12*N1x + A26*N1y))
+            KC0e0009 = -detJ*wij*(N2x*(B16*N1x + B66*N1y) + N2y*(B12*N1x + B26*N1y))
+            KC0e0010 = detJ*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y))
+            KC0e0012 = detJ*wij*(N3x*(A11*N1x + A16*N1y) + N3y*(A16*N1x + A66*N1y))
+            KC0e0013 = detJ*wij*(N3x*(A16*N1x + A66*N1y) + N3y*(A12*N1x + A26*N1y))
+            KC0e0015 = -detJ*wij*(N3x*(B16*N1x + B66*N1y) + N3y*(B12*N1x + B26*N1y))
+            KC0e0016 = detJ*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y))
+            KC0e0101 = detJ*wij*(N1x*(A26*N1y + A66*N1x) + N1y*(A22*N1y + A26*N1x))
+            KC0e0103 = -detJ*wij*(N1x*(B26*N1y + B66*N1x) + N1y*(B22*N1y + B26*N1x))
+            KC0e0104 = detJ*wij*(N1x*(B12*N1y + B16*N1x) + N1y*(B26*N1y + B66*N1x))
+            KC0e0106 = detJ*wij*(N2x*(A12*N1y + A16*N1x) + N2y*(A26*N1y + A66*N1x))
+            KC0e0107 = detJ*wij*(N2x*(A26*N1y + A66*N1x) + N2y*(A22*N1y + A26*N1x))
+            KC0e0109 = -detJ*wij*(N2x*(B26*N1y + B66*N1x) + N2y*(B22*N1y + B26*N1x))
+            KC0e0110 = detJ*wij*(N2x*(B12*N1y + B16*N1x) + N2y*(B26*N1y + B66*N1x))
+            KC0e0112 = detJ*wij*(N3x*(A12*N1y + A16*N1x) + N3y*(A26*N1y + A66*N1x))
+            KC0e0113 = detJ*wij*(N3x*(A26*N1y + A66*N1x) + N3y*(A22*N1y + A26*N1x))
+            KC0e0115 = -detJ*wij*(N3x*(B26*N1y + B66*N1x) + N3y*(B22*N1y + B26*N1x))
+            KC0e0116 = detJ*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x))
+            KC0e0202 = detJ*wij*(N1x*(E45*N1y + E55*N1x) + N1y*(E44*N1y + E45*N1x))
+            KC0e0203 = -N1*detJ*wij*(E44*N1y + E45*N1x)
+            KC0e0204 = N1*detJ*wij*(E45*N1y + E55*N1x)
+            KC0e0208 = detJ*wij*(N2x*(E45*N1y + E55*N1x) + N2y*(E44*N1y + E45*N1x))
+            KC0e0209 = -N2*detJ*wij*(E44*N1y + E45*N1x)
+            KC0e0210 = N2*detJ*wij*(E45*N1y + E55*N1x)
+            KC0e0214 = detJ*wij*(N3x*(E45*N1y + E55*N1x) + N3y*(E44*N1y + E45*N1x))
+            KC0e0215 = detJ*wij*(E44*N1y + E45*N1x)*(N1 + N2 - 1)
+            KC0e0216 = -detJ*wij*(E45*N1y + E55*N1x)*(N1 + N2 - 1)
+            KC0e0303 = detJ*wij*(D22*N1y**2 + 2*D26*N1x*N1y + D66*N1x**2 + E44*N1**2)
+            KC0e0304 = -detJ*wij*(E45*N1**2 + N1x*(D12*N1y + D16*N1x) + N1y*(D26*N1y + D66*N1x))
+            KC0e0306 = -detJ*wij*(N2x*(B12*N1y + B16*N1x) + N2y*(B26*N1y + B66*N1x))
+            KC0e0307 = -detJ*wij*(N2x*(B26*N1y + B66*N1x) + N2y*(B22*N1y + B26*N1x))
+            KC0e0308 = -N1*detJ*wij*(E44*N2y + E45*N2x)
+            KC0e0309 = detJ*wij*(E44*N1*N2 + N2x*(D26*N1y + D66*N1x) + N2y*(D22*N1y + D26*N1x))
+            KC0e0310 = -detJ*wij*(E45*N1*N2 + N2x*(D12*N1y + D16*N1x) + N2y*(D26*N1y + D66*N1x))
+            KC0e0312 = -detJ*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x))
+            KC0e0313 = -detJ*wij*(N3x*(B26*N1y + B66*N1x) + N3y*(B22*N1y + B26*N1x))
+            KC0e0314 = -N1*detJ*wij*(E44*N3y + E45*N3x)
+            KC0e0315 = detJ*wij*(-E44*N1*(N1 + N2 - 1) + N3x*(D26*N1y + D66*N1x) + N3y*(D22*N1y + D26*N1x))
+            KC0e0316 = -detJ*wij*(-E45*N1*(N1 + N2 - 1) + N3x*(D12*N1y + D16*N1x) + N3y*(D26*N1y + D66*N1x))
+            KC0e0404 = detJ*wij*(E55*N1**2 + N1x*(D11*N1x + D16*N1y) + N1y*(D16*N1x + D66*N1y))
+            KC0e0406 = detJ*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y))
+            KC0e0407 = detJ*wij*(N2x*(B16*N1x + B66*N1y) + N2y*(B12*N1x + B26*N1y))
+            KC0e0408 = N1*detJ*wij*(E45*N2y + E55*N2x)
+            KC0e0409 = -detJ*wij*(E45*N1*N2 + N2x*(D16*N1x + D66*N1y) + N2y*(D12*N1x + D26*N1y))
+            KC0e0410 = detJ*wij*(E55*N1*N2 + N2x*(D11*N1x + D16*N1y) + N2y*(D16*N1x + D66*N1y))
+            KC0e0412 = detJ*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y))
+            KC0e0413 = detJ*wij*(N3x*(B16*N1x + B66*N1y) + N3y*(B12*N1x + B26*N1y))
+            KC0e0414 = N1*detJ*wij*(E45*N3y + E55*N3x)
+            KC0e0415 = -detJ*wij*(-E45*N1*(N1 + N2 - 1) + N3x*(D16*N1x + D66*N1y) + N3y*(D12*N1x + D26*N1y))
+            KC0e0416 = detJ*wij*(-E55*N1*(N1 + N2 - 1) + N3x*(D11*N1x + D16*N1y) + N3y*(D16*N1x + D66*N1y))
+            KC0e0505 = K6ROT
+            KC0e0606 = detJ*wij*(N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y))
+            KC0e0607 = detJ*wij*(N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y))
+            KC0e0609 = -detJ*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))
+            KC0e0610 = detJ*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y))
+            KC0e0612 = detJ*wij*(N3x*(A11*N2x + A16*N2y) + N3y*(A16*N2x + A66*N2y))
+            KC0e0613 = detJ*wij*(N3x*(A16*N2x + A66*N2y) + N3y*(A12*N2x + A26*N2y))
+            KC0e0615 = -detJ*wij*(N3x*(B16*N2x + B66*N2y) + N3y*(B12*N2x + B26*N2y))
+            KC0e0616 = detJ*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y))
+            KC0e0707 = detJ*wij*(N2x*(A26*N2y + A66*N2x) + N2y*(A22*N2y + A26*N2x))
+            KC0e0709 = -detJ*wij*(N2x*(B26*N2y + B66*N2x) + N2y*(B22*N2y + B26*N2x))
+            KC0e0710 = detJ*wij*(N2x*(B12*N2y + B16*N2x) + N2y*(B26*N2y + B66*N2x))
+            KC0e0712 = detJ*wij*(N3x*(A12*N2y + A16*N2x) + N3y*(A26*N2y + A66*N2x))
+            KC0e0713 = detJ*wij*(N3x*(A26*N2y + A66*N2x) + N3y*(A22*N2y + A26*N2x))
+            KC0e0715 = -detJ*wij*(N3x*(B26*N2y + B66*N2x) + N3y*(B22*N2y + B26*N2x))
+            KC0e0716 = detJ*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x))
+            KC0e0808 = detJ*wij*(N2x*(E45*N2y + E55*N2x) + N2y*(E44*N2y + E45*N2x))
+            KC0e0809 = -N2*detJ*wij*(E44*N2y + E45*N2x)
+            KC0e0810 = N2*detJ*wij*(E45*N2y + E55*N2x)
+            KC0e0814 = detJ*wij*(N3x*(E45*N2y + E55*N2x) + N3y*(E44*N2y + E45*N2x))
+            KC0e0815 = detJ*wij*(E44*N2y + E45*N2x)*(N1 + N2 - 1)
+            KC0e0816 = -detJ*wij*(E45*N2y + E55*N2x)*(N1 + N2 - 1)
+            KC0e0909 = detJ*wij*(D22*N2y**2 + 2*D26*N2x*N2y + D66*N2x**2 + E44*N2**2)
+            KC0e0910 = -detJ*wij*(E45*N2**2 + N2x*(D12*N2y + D16*N2x) + N2y*(D26*N2y + D66*N2x))
+            KC0e0912 = -detJ*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x))
+            KC0e0913 = -detJ*wij*(N3x*(B26*N2y + B66*N2x) + N3y*(B22*N2y + B26*N2x))
+            KC0e0914 = -N2*detJ*wij*(E44*N3y + E45*N3x)
+            KC0e0915 = detJ*wij*(-E44*N2*(N1 + N2 - 1) + N3x*(D26*N2y + D66*N2x) + N3y*(D22*N2y + D26*N2x))
+            KC0e0916 = -detJ*wij*(-E45*N2*(N1 + N2 - 1) + N3x*(D12*N2y + D16*N2x) + N3y*(D26*N2y + D66*N2x))
+            KC0e1010 = detJ*wij*(E55*N2**2 + N2x*(D11*N2x + D16*N2y) + N2y*(D16*N2x + D66*N2y))
+            KC0e1012 = detJ*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y))
+            KC0e1013 = detJ*wij*(N3x*(B16*N2x + B66*N2y) + N3y*(B12*N2x + B26*N2y))
+            KC0e1014 = N2*detJ*wij*(E45*N3y + E55*N3x)
+            KC0e1015 = -detJ*wij*(-E45*N2*(N1 + N2 - 1) + N3x*(D16*N2x + D66*N2y) + N3y*(D12*N2x + D26*N2y))
+            KC0e1016 = detJ*wij*(-E55*N2*(N1 + N2 - 1) + N3x*(D11*N2x + D16*N2y) + N3y*(D16*N2x + D66*N2y))
+            KC0e1111 = K6ROT
+            KC0e1212 = detJ*wij*(N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y))
+            KC0e1213 = detJ*wij*(N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y))
+            KC0e1215 = -detJ*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))
+            KC0e1216 = detJ*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y))
+            KC0e1313 = detJ*wij*(N3x*(A26*N3y + A66*N3x) + N3y*(A22*N3y + A26*N3x))
+            KC0e1315 = -detJ*wij*(N3x*(B26*N3y + B66*N3x) + N3y*(B22*N3y + B26*N3x))
+            KC0e1316 = detJ*wij*(N3x*(B12*N3y + B16*N3x) + N3y*(B26*N3y + B66*N3x))
+            KC0e1414 = detJ*wij*(N3x*(E45*N3y + E55*N3x) + N3y*(E44*N3y + E45*N3x))
+            KC0e1415 = detJ*wij*(E44*N3y + E45*N3x)*(N1 + N2 - 1)
+            KC0e1416 = -detJ*wij*(E45*N3y + E55*N3x)*(N1 + N2 - 1)
+            KC0e1515 = detJ*wij*(E44*(N1 + N2 - 1)**2 + N3x*(D26*N3y + D66*N3x) + N3y*(D22*N3y + D26*N3x))
+            KC0e1516 = -detJ*wij*(E45*(N1 + N2 - 1)**2 + N3x*(D12*N3y + D16*N3x) + N3y*(D26*N3y + D66*N3x))
+            KC0e1616 = detJ*wij*(E55*(N1 + N2 - 1)**2 + N3x*(D11*N3x + D16*N3y) + N3y*(D16*N3x + D66*N3y))
+            KC0e1717 = K6ROT
+
+            finte[0] = KC0e0000*ue[0] + KC0e0001*ue[1] + KC0e0003*ue[3] + KC0e0004*ue[4] + KC0e0006*ue[6] + KC0e0007*ue[7] + KC0e0009*ue[9] + KC0e0010*ue[10] + KC0e0012*ue[12] + KC0e0013*ue[13] + KC0e0015*ue[15] + KC0e0016*ue[16]
+            finte[1] = KC0e0001*ue[0] + KC0e0101*ue[1] + KC0e0103*ue[3] + KC0e0104*ue[4] + KC0e0106*ue[6] + KC0e0107*ue[7] + KC0e0109*ue[9] + KC0e0110*ue[10] + KC0e0112*ue[12] + KC0e0113*ue[13] + KC0e0115*ue[15] + KC0e0116*ue[16]
+            finte[2] = KC0e0202*ue[2] + KC0e0203*ue[3] + KC0e0204*ue[4] + KC0e0208*ue[8] + KC0e0209*ue[9] + KC0e0210*ue[10] + KC0e0214*ue[14] + KC0e0215*ue[15] + KC0e0216*ue[16]
+            finte[3] = KC0e0003*ue[0] + KC0e0103*ue[1] + KC0e0203*ue[2] + KC0e0303*ue[3] + KC0e0304*ue[4] + KC0e0306*ue[6] + KC0e0307*ue[7] + KC0e0308*ue[8] + KC0e0309*ue[9] + KC0e0310*ue[10] + KC0e0312*ue[12] + KC0e0313*ue[13] + KC0e0314*ue[14] + KC0e0315*ue[15] + KC0e0316*ue[16]
+            finte[4] = KC0e0004*ue[0] + KC0e0104*ue[1] + KC0e0204*ue[2] + KC0e0304*ue[3] + KC0e0404*ue[4] + KC0e0406*ue[6] + KC0e0407*ue[7] + KC0e0408*ue[8] + KC0e0409*ue[9] + KC0e0410*ue[10] + KC0e0412*ue[12] + KC0e0413*ue[13] + KC0e0414*ue[14] + KC0e0415*ue[15] + KC0e0416*ue[16]
+            finte[5] = KC0e0505*ue[5]
+            finte[6] = KC0e0006*ue[0] + KC0e0106*ue[1] + KC0e0306*ue[3] + KC0e0406*ue[4] + KC0e0606*ue[6] + KC0e0607*ue[7] + KC0e0609*ue[9] + KC0e0610*ue[10] + KC0e0612*ue[12] + KC0e0613*ue[13] + KC0e0615*ue[15] + KC0e0616*ue[16]
+            finte[7] = KC0e0007*ue[0] + KC0e0107*ue[1] + KC0e0307*ue[3] + KC0e0407*ue[4] + KC0e0607*ue[6] + KC0e0707*ue[7] + KC0e0709*ue[9] + KC0e0710*ue[10] + KC0e0712*ue[12] + KC0e0713*ue[13] + KC0e0715*ue[15] + KC0e0716*ue[16]
+            finte[8] = KC0e0208*ue[2] + KC0e0308*ue[3] + KC0e0408*ue[4] + KC0e0808*ue[8] + KC0e0809*ue[9] + KC0e0810*ue[10] + KC0e0814*ue[14] + KC0e0815*ue[15] + KC0e0816*ue[16]
+            finte[9] = KC0e0009*ue[0] + KC0e0109*ue[1] + KC0e0209*ue[2] + KC0e0309*ue[3] + KC0e0409*ue[4] + KC0e0609*ue[6] + KC0e0709*ue[7] + KC0e0809*ue[8] + KC0e0909*ue[9] + KC0e0910*ue[10] + KC0e0912*ue[12] + KC0e0913*ue[13] + KC0e0914*ue[14] + KC0e0915*ue[15] + KC0e0916*ue[16]
+            finte[10] = KC0e0010*ue[0] + KC0e0110*ue[1] + KC0e0210*ue[2] + KC0e0310*ue[3] + KC0e0410*ue[4] + KC0e0610*ue[6] + KC0e0710*ue[7] + KC0e0810*ue[8] + KC0e0910*ue[9] + KC0e1010*ue[10] + KC0e1012*ue[12] + KC0e1013*ue[13] + KC0e1014*ue[14] + KC0e1015*ue[15] + KC0e1016*ue[16]
+            finte[11] = KC0e1111*ue[11]
+            finte[12] = KC0e0012*ue[0] + KC0e0112*ue[1] + KC0e0312*ue[3] + KC0e0412*ue[4] + KC0e0612*ue[6] + KC0e0712*ue[7] + KC0e0912*ue[9] + KC0e1012*ue[10] + KC0e1212*ue[12] + KC0e1213*ue[13] + KC0e1215*ue[15] + KC0e1216*ue[16]
+            finte[13] = KC0e0013*ue[0] + KC0e0113*ue[1] + KC0e0313*ue[3] + KC0e0413*ue[4] + KC0e0613*ue[6] + KC0e0713*ue[7] + KC0e0913*ue[9] + KC0e1013*ue[10] + KC0e1213*ue[12] + KC0e1313*ue[13] + KC0e1315*ue[15] + KC0e1316*ue[16]
+            finte[14] = KC0e0214*ue[2] + KC0e0314*ue[3] + KC0e0414*ue[4] + KC0e0814*ue[8] + KC0e0914*ue[9] + KC0e1014*ue[10] + KC0e1414*ue[14] + KC0e1415*ue[15] + KC0e1416*ue[16]
+            finte[15] = KC0e0015*ue[0] + KC0e0115*ue[1] + KC0e0215*ue[2] + KC0e0315*ue[3] + KC0e0415*ue[4] + KC0e0615*ue[6] + KC0e0715*ue[7] + KC0e0815*ue[8] + KC0e0915*ue[9] + KC0e1015*ue[10] + KC0e1215*ue[12] + KC0e1315*ue[13] + KC0e1415*ue[14] + KC0e1515*ue[15] + KC0e1516*ue[16]
+            finte[16] = KC0e0016*ue[0] + KC0e0116*ue[1] + KC0e0216*ue[2] + KC0e0316*ue[3] + KC0e0416*ue[4] + KC0e0616*ue[6] + KC0e0716*ue[7] + KC0e0816*ue[8] + KC0e0916*ue[9] + KC0e1016*ue[10] + KC0e1216*ue[12] + KC0e1316*ue[13] + KC0e1416*ue[14] + KC0e1516*ue[15] + KC0e1616*ue[16]
+            finte[17] = KC0e1717*ue[17]
+
+
+    cpdef void update_KC0(Tria3R self,
+                          long [::1] KC0r,
+                          long [::1] KC0c,
+                          double [::1] KC0v,
+                          ShellProp prop,
+                          int update_KC0v_only=0,
+                          ):
+        r"""Update sparse vectors for linear constitutive stiffness matrix KC0
+
+        Reduced integration is used with a single point in the centroid
+        (`N1=N2=N3=1/3`) and weight `weight=1`, preventing shear locking.
+
+        Hourglass control is used according to Brockman 1987:
+
+            Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
+            Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
+            https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208
+
+        Drilling stiffness is used according to Adam et al. 2013:
+
+            Adam, F. M., Mohamed, A. E., and Hassaballa, A. E., 2013,
+            “Degenerated Four Nodes Shell Element with Drilling Degree of
+            Freedom,” IOSR J. Eng., 3(8), pp. 10–20.
+
+
+        Parameters
+        ----------
+        KC0r : np.array
+            Array to store row positions of sparse values
+        KC0c : np.array
+            Array to store column positions of sparse values
+        KC0v : np.array
+            Array to store sparse values
+        prop : :class:`.ShellProp` object
+            Shell property object from where the stiffness and mass attributes
+            are read from.
+        update_KC0v_only : int
+            The default ``0`` means that the row and column indices ``KC0r``
+            and ``KC0c`` should also be updated. Any other value will only
+            update the stiffness matrix values ``KC0v``.
+
+        """
+        cdef int c1, c2, c3, i, k
+        cdef double x1, x2, x3, y1, y2, y3, wij, detJ
+        # NOTE ABD in the material direction
+        cdef double A11mat, A12mat, A16mat, A22mat, A26mat, A66mat
+        cdef double B11mat, B12mat, B16mat, B22mat, B26mat, B66mat
+        cdef double D11mat, D12mat, D16mat, D22mat, D26mat, D66mat
+        cdef double E44, E45, E55
+        # NOTE ABD in the element direction
+        cdef double A11, A12, A16, A22, A26, A66
+        cdef double B11, B12, B16, B22, B26, B66
+        cdef double D11, D12, D16, D22, D26, D66
+        cdef double K6ROT
+        cdef double points[3]
+        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
+        cdef double m11, m12, m21, m22
+        cdef double N1x, N2x, N3x, N1y, N2y, N3y
+        cdef double N1, N2, N3
+        cdef double factor, maxl, l12, l23, l31
+
+        cdef double KC0e0000, KC0e0001, KC0e0003, KC0e0004, KC0e0006, KC0e0007, KC0e0009, KC0e0010, KC0e0012, KC0e0013, KC0e0015, KC0e0016
+        cdef double KC0e0101, KC0e0103, KC0e0104, KC0e0106, KC0e0107, KC0e0109, KC0e0110, KC0e0112, KC0e0113, KC0e0115, KC0e0116
+        cdef double KC0e0202, KC0e0203, KC0e0204, KC0e0208, KC0e0209, KC0e0210, KC0e0214, KC0e0215, KC0e0216
+        cdef double KC0e0303, KC0e0304, KC0e0306, KC0e0307, KC0e0308, KC0e0309, KC0e0310, KC0e0312, KC0e0313, KC0e0314, KC0e0315, KC0e0316
+        cdef double KC0e0404, KC0e0406, KC0e0407, KC0e0408, KC0e0409, KC0e0410, KC0e0412, KC0e0413, KC0e0414, KC0e0415, KC0e0416
+        cdef double KC0e0505
+        cdef double KC0e0606, KC0e0607, KC0e0609, KC0e0610, KC0e0612, KC0e0613, KC0e0615, KC0e0616
+        cdef double KC0e0707, KC0e0709, KC0e0710, KC0e0712, KC0e0713, KC0e0715, KC0e0716
+        cdef double KC0e0808, KC0e0809, KC0e0810, KC0e0814, KC0e0815, KC0e0816
+        cdef double KC0e0909, KC0e0910, KC0e0912, KC0e0913, KC0e0914, KC0e0915, KC0e0916
+        cdef double KC0e1010, KC0e1012, KC0e1013, KC0e1014, KC0e1015, KC0e1016
+        cdef double KC0e1111, KC0e1212, KC0e1213, KC0e1215, KC0e1216
+        cdef double KC0e1313, KC0e1315, KC0e1316
+        cdef double KC0e1414, KC0e1415, KC0e1416
+        cdef double KC0e1515, KC0e1516, KC0e1616, KC0e1717
+
+        with nogil:
+            detJ = 2*self.area
+
+            A11mat = prop.A11
+            A12mat = prop.A12
+            A16mat = prop.A16
+            A22mat = prop.A22
+            A26mat = prop.A26
+            A66mat = prop.A66
+            B11mat = prop.B11
+            B12mat = prop.B12
+            B16mat = prop.B16
+            B22mat = prop.B22
+            B26mat = prop.B26
+            B66mat = prop.B66
+            D11mat = prop.D11
+            D12mat = prop.D12
+            D16mat = prop.D16
+            D22mat = prop.D22
+            D26mat = prop.D26
+            D66mat = prop.D66
+
+            # NOTE using self.m12 as a criterion to check if material
+            #     coordinates were defined
+            if self.m12 == 0:
+                A11 = A11mat
+                A12 = A12mat
+                A16 = A16mat
+                A22 = A22mat
+                A26 = A26mat
+                A66 = A66mat
+                B11 = B11mat
+                B12 = B12mat
+                B16 = B16mat
+                B22 = B22mat
+                B26 = B26mat
+                B66 = B66mat
+                D11 = D11mat
+                D12 = D12mat
+                D16 = D16mat
+                D22 = D22mat
+                D26 = D26mat
+                D66 = D66mat
+            else:
+                m11 = self.m11
+                m12 = self.m12
+                m21 = self.m21
+                m22 = self.m22
+                A11 = m11**2*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + 2*m11*m12*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12) + m12**2*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12)
+                A12 = m21**2*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + 2*m21*m22*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12) + m22**2*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12)
+                A16 = m11*m21*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + m12*m22*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12) + (m11*m22 + m12*m21)*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12)
+                # A21 = m11**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m11*m12*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m12**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
+                A22 = m21**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m21*m22*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m22**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
+                A26 = m11*m21*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + m12*m22*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22) + (m11*m22 + m12*m21)*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22)
+                # A61 = m11**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m12**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
+                # A62 = m21**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m22**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
+                A66 = m11*m21*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + m12*m22*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21))
+
+                B11 = m11**2*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + 2*m11*m12*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12) + m12**2*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12)
+                B12 = m21**2*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + 2*m21*m22*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12) + m22**2*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12)
+                B16 = m11*m21*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + m12*m22*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12) + (m11*m22 + m12*m21)*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12)
+                # B21 = m11**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m11*m12*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m12**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
+                B22 = m21**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m21*m22*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m22**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
+                B26 = m11*m21*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + m12*m22*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22) + (m11*m22 + m12*m21)*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22)
+                # B61 = m11**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m12**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
+                # B62 = m21**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m22**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
+                B66 = m11*m21*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + m12*m22*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21))
+
+                D11 = m11**2*(D11mat*m11**2 + D12mat*m12**2 + 2*D16mat*m11*m12) + 2*m11*m12*(D16mat*m11**2 + D26mat*m12**2 + 2*D66mat*m11*m12) + m12**2*(D12mat*m11**2 + D22mat*m12**2 + 2*D26mat*m11*m12)
+                D12 = m21**2*(D11mat*m11**2 + D12mat*m12**2 + 2*D16mat*m11*m12) + 2*m21*m22*(D16mat*m11**2 + D26mat*m12**2 + 2*D66mat*m11*m12) + m22**2*(D12mat*m11**2 + D22mat*m12**2 + 2*D26mat*m11*m12)
+                D16 = m11*m21*(D11mat*m11**2 + D12mat*m12**2 + 2*D16mat*m11*m12) + m12*m22*(D12mat*m11**2 + D22mat*m12**2 + 2*D26mat*m11*m12) + (m11*m22 + m12*m21)*(D16mat*m11**2 + D26mat*m12**2 + 2*D66mat*m11*m12)
+                # D21 = m11**2*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + 2*m11*m12*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22) + m12**2*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22)
+                D22 = m21**2*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + 2*m21*m22*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22) + m22**2*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22)
+                D26 = m11*m21*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + m12*m22*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22) + (m11*m22 + m12*m21)*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22)
+                # D61 = m11**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m12**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
+                # D62 = m21**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m22**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
+                D66 = m11*m21*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + m12*m22*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21))
 
             E44 = prop.E44*prop.scf_k23
             E45 = prop.E45*0.5*(prop.scf_k13 + prop.scf_k23)
@@ -602,7 +928,7 @@ cdef class Tria3R:
                 maxl = l31
 
             # NOTE strategy to prevent shear locking used in BFG elements imported here...
-            factor = self.alpha_shear_locking*maxl**2/h**2
+            factor = self.alpha_shear_locking*maxl**2/prop.h**2
             E44 = 1 / (1 + factor) * E44
             E45 = 1 / (1 + factor) * E45
             E55 = 1 / (1 + factor) * E55
@@ -1597,666 +1923,818 @@ cdef class Tria3R:
                 KC0r[k] = 5+c3
                 KC0c[k] = 5+c3
 
-            alphat = self.alphat
+            K6ROT = self.K6ROT
 
-            N1x = (y2 - y3)/(2*A)
-            N2x = (-y1 + y3)/(2*A)
-            N3x = (y1 - y2)/(2*A)
-            N1y = (-x2 + x3)/(2*A)
-            N2y = (x1 - x3)/(2*A)
-            N3y = (-x1 + x2)/(2*A)
+            N1x = (y2 - y3)/(2*self.area)
+            N2x = (-y1 + y3)/(2*self.area)
+            N3x = (y1 - y2)/(2*self.area)
+            N1y = (-x2 + x3)/(2*self.area)
+            N2y = (x1 - x3)/(2*self.area)
+            N3y = (-x1 + x2)/(2*self.area)
 
             wij = 0.5
             N1 = N2 = N3 = 0.333333333333333333333333333333333333333333333
 
+            KC0e0000 = detJ*wij*(N1x*(A11*N1x + A16*N1y) + N1y*(A16*N1x + A66*N1y))
+            KC0e0001 = detJ*wij*(N1x*(A16*N1x + A66*N1y) + N1y*(A12*N1x + A26*N1y))
+            KC0e0003 = -detJ*wij*(N1x*(B16*N1x + B66*N1y) + N1y*(B12*N1x + B26*N1y))
+            KC0e0004 = detJ*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y))
+            KC0e0006 = detJ*wij*(N2x*(A11*N1x + A16*N1y) + N2y*(A16*N1x + A66*N1y))
+            KC0e0007 = detJ*wij*(N2x*(A16*N1x + A66*N1y) + N2y*(A12*N1x + A26*N1y))
+            KC0e0009 = -detJ*wij*(N2x*(B16*N1x + B66*N1y) + N2y*(B12*N1x + B26*N1y))
+            KC0e0010 = detJ*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y))
+            KC0e0012 = detJ*wij*(N3x*(A11*N1x + A16*N1y) + N3y*(A16*N1x + A66*N1y))
+            KC0e0013 = detJ*wij*(N3x*(A16*N1x + A66*N1y) + N3y*(A12*N1x + A26*N1y))
+            KC0e0015 = -detJ*wij*(N3x*(B16*N1x + B66*N1y) + N3y*(B12*N1x + B26*N1y))
+            KC0e0016 = detJ*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y))
+            KC0e0101 = detJ*wij*(N1x*(A26*N1y + A66*N1x) + N1y*(A22*N1y + A26*N1x))
+            KC0e0103 = -detJ*wij*(N1x*(B26*N1y + B66*N1x) + N1y*(B22*N1y + B26*N1x))
+            KC0e0104 = detJ*wij*(N1x*(B12*N1y + B16*N1x) + N1y*(B26*N1y + B66*N1x))
+            KC0e0106 = detJ*wij*(N2x*(A12*N1y + A16*N1x) + N2y*(A26*N1y + A66*N1x))
+            KC0e0107 = detJ*wij*(N2x*(A26*N1y + A66*N1x) + N2y*(A22*N1y + A26*N1x))
+            KC0e0109 = -detJ*wij*(N2x*(B26*N1y + B66*N1x) + N2y*(B22*N1y + B26*N1x))
+            KC0e0110 = detJ*wij*(N2x*(B12*N1y + B16*N1x) + N2y*(B26*N1y + B66*N1x))
+            KC0e0112 = detJ*wij*(N3x*(A12*N1y + A16*N1x) + N3y*(A26*N1y + A66*N1x))
+            KC0e0113 = detJ*wij*(N3x*(A26*N1y + A66*N1x) + N3y*(A22*N1y + A26*N1x))
+            KC0e0115 = -detJ*wij*(N3x*(B26*N1y + B66*N1x) + N3y*(B22*N1y + B26*N1x))
+            KC0e0116 = detJ*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x))
+            KC0e0202 = detJ*wij*(N1x*(E45*N1y + E55*N1x) + N1y*(E44*N1y + E45*N1x))
+            KC0e0203 = -N1*detJ*wij*(E44*N1y + E45*N1x)
+            KC0e0204 = N1*detJ*wij*(E45*N1y + E55*N1x)
+            KC0e0208 = detJ*wij*(N2x*(E45*N1y + E55*N1x) + N2y*(E44*N1y + E45*N1x))
+            KC0e0209 = -N2*detJ*wij*(E44*N1y + E45*N1x)
+            KC0e0210 = N2*detJ*wij*(E45*N1y + E55*N1x)
+            KC0e0214 = detJ*wij*(N3x*(E45*N1y + E55*N1x) + N3y*(E44*N1y + E45*N1x))
+            KC0e0215 = detJ*wij*(E44*N1y + E45*N1x)*(N1 + N2 - 1)
+            KC0e0216 = -detJ*wij*(E45*N1y + E55*N1x)*(N1 + N2 - 1)
+            KC0e0303 = detJ*wij*(D22*N1y**2 + 2*D26*N1x*N1y + D66*N1x**2 + E44*N1**2)
+            KC0e0304 = -detJ*wij*(E45*N1**2 + N1x*(D12*N1y + D16*N1x) + N1y*(D26*N1y + D66*N1x))
+            KC0e0306 = -detJ*wij*(N2x*(B12*N1y + B16*N1x) + N2y*(B26*N1y + B66*N1x))
+            KC0e0307 = -detJ*wij*(N2x*(B26*N1y + B66*N1x) + N2y*(B22*N1y + B26*N1x))
+            KC0e0308 = -N1*detJ*wij*(E44*N2y + E45*N2x)
+            KC0e0309 = detJ*wij*(E44*N1*N2 + N2x*(D26*N1y + D66*N1x) + N2y*(D22*N1y + D26*N1x))
+            KC0e0310 = -detJ*wij*(E45*N1*N2 + N2x*(D12*N1y + D16*N1x) + N2y*(D26*N1y + D66*N1x))
+            KC0e0312 = -detJ*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x))
+            KC0e0313 = -detJ*wij*(N3x*(B26*N1y + B66*N1x) + N3y*(B22*N1y + B26*N1x))
+            KC0e0314 = -N1*detJ*wij*(E44*N3y + E45*N3x)
+            KC0e0315 = detJ*wij*(-E44*N1*(N1 + N2 - 1) + N3x*(D26*N1y + D66*N1x) + N3y*(D22*N1y + D26*N1x))
+            KC0e0316 = -detJ*wij*(-E45*N1*(N1 + N2 - 1) + N3x*(D12*N1y + D16*N1x) + N3y*(D26*N1y + D66*N1x))
+            KC0e0404 = detJ*wij*(E55*N1**2 + N1x*(D11*N1x + D16*N1y) + N1y*(D16*N1x + D66*N1y))
+            KC0e0406 = detJ*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y))
+            KC0e0407 = detJ*wij*(N2x*(B16*N1x + B66*N1y) + N2y*(B12*N1x + B26*N1y))
+            KC0e0408 = N1*detJ*wij*(E45*N2y + E55*N2x)
+            KC0e0409 = -detJ*wij*(E45*N1*N2 + N2x*(D16*N1x + D66*N1y) + N2y*(D12*N1x + D26*N1y))
+            KC0e0410 = detJ*wij*(E55*N1*N2 + N2x*(D11*N1x + D16*N1y) + N2y*(D16*N1x + D66*N1y))
+            KC0e0412 = detJ*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y))
+            KC0e0413 = detJ*wij*(N3x*(B16*N1x + B66*N1y) + N3y*(B12*N1x + B26*N1y))
+            KC0e0414 = N1*detJ*wij*(E45*N3y + E55*N3x)
+            KC0e0415 = -detJ*wij*(-E45*N1*(N1 + N2 - 1) + N3x*(D16*N1x + D66*N1y) + N3y*(D12*N1x + D26*N1y))
+            KC0e0416 = detJ*wij*(-E55*N1*(N1 + N2 - 1) + N3x*(D11*N1x + D16*N1y) + N3y*(D16*N1x + D66*N1y))
+            KC0e0505 = K6ROT
+            KC0e0606 = detJ*wij*(N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y))
+            KC0e0607 = detJ*wij*(N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y))
+            KC0e0609 = -detJ*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))
+            KC0e0610 = detJ*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y))
+            KC0e0612 = detJ*wij*(N3x*(A11*N2x + A16*N2y) + N3y*(A16*N2x + A66*N2y))
+            KC0e0613 = detJ*wij*(N3x*(A16*N2x + A66*N2y) + N3y*(A12*N2x + A26*N2y))
+            KC0e0615 = -detJ*wij*(N3x*(B16*N2x + B66*N2y) + N3y*(B12*N2x + B26*N2y))
+            KC0e0616 = detJ*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y))
+            KC0e0707 = detJ*wij*(N2x*(A26*N2y + A66*N2x) + N2y*(A22*N2y + A26*N2x))
+            KC0e0709 = -detJ*wij*(N2x*(B26*N2y + B66*N2x) + N2y*(B22*N2y + B26*N2x))
+            KC0e0710 = detJ*wij*(N2x*(B12*N2y + B16*N2x) + N2y*(B26*N2y + B66*N2x))
+            KC0e0712 = detJ*wij*(N3x*(A12*N2y + A16*N2x) + N3y*(A26*N2y + A66*N2x))
+            KC0e0713 = detJ*wij*(N3x*(A26*N2y + A66*N2x) + N3y*(A22*N2y + A26*N2x))
+            KC0e0715 = -detJ*wij*(N3x*(B26*N2y + B66*N2x) + N3y*(B22*N2y + B26*N2x))
+            KC0e0716 = detJ*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x))
+            KC0e0808 = detJ*wij*(N2x*(E45*N2y + E55*N2x) + N2y*(E44*N2y + E45*N2x))
+            KC0e0809 = -N2*detJ*wij*(E44*N2y + E45*N2x)
+            KC0e0810 = N2*detJ*wij*(E45*N2y + E55*N2x)
+            KC0e0814 = detJ*wij*(N3x*(E45*N2y + E55*N2x) + N3y*(E44*N2y + E45*N2x))
+            KC0e0815 = detJ*wij*(E44*N2y + E45*N2x)*(N1 + N2 - 1)
+            KC0e0816 = -detJ*wij*(E45*N2y + E55*N2x)*(N1 + N2 - 1)
+            KC0e0909 = detJ*wij*(D22*N2y**2 + 2*D26*N2x*N2y + D66*N2x**2 + E44*N2**2)
+            KC0e0910 = -detJ*wij*(E45*N2**2 + N2x*(D12*N2y + D16*N2x) + N2y*(D26*N2y + D66*N2x))
+            KC0e0912 = -detJ*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x))
+            KC0e0913 = -detJ*wij*(N3x*(B26*N2y + B66*N2x) + N3y*(B22*N2y + B26*N2x))
+            KC0e0914 = -N2*detJ*wij*(E44*N3y + E45*N3x)
+            KC0e0915 = detJ*wij*(-E44*N2*(N1 + N2 - 1) + N3x*(D26*N2y + D66*N2x) + N3y*(D22*N2y + D26*N2x))
+            KC0e0916 = -detJ*wij*(-E45*N2*(N1 + N2 - 1) + N3x*(D12*N2y + D16*N2x) + N3y*(D26*N2y + D66*N2x))
+            KC0e1010 = detJ*wij*(E55*N2**2 + N2x*(D11*N2x + D16*N2y) + N2y*(D16*N2x + D66*N2y))
+            KC0e1012 = detJ*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y))
+            KC0e1013 = detJ*wij*(N3x*(B16*N2x + B66*N2y) + N3y*(B12*N2x + B26*N2y))
+            KC0e1014 = N2*detJ*wij*(E45*N3y + E55*N3x)
+            KC0e1015 = -detJ*wij*(-E45*N2*(N1 + N2 - 1) + N3x*(D16*N2x + D66*N2y) + N3y*(D12*N2x + D26*N2y))
+            KC0e1016 = detJ*wij*(-E55*N2*(N1 + N2 - 1) + N3x*(D11*N2x + D16*N2y) + N3y*(D16*N2x + D66*N2y))
+            KC0e1111 = K6ROT
+            KC0e1212 = detJ*wij*(N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y))
+            KC0e1213 = detJ*wij*(N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y))
+            KC0e1215 = -detJ*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))
+            KC0e1216 = detJ*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y))
+            KC0e1313 = detJ*wij*(N3x*(A26*N3y + A66*N3x) + N3y*(A22*N3y + A26*N3x))
+            KC0e1315 = -detJ*wij*(N3x*(B26*N3y + B66*N3x) + N3y*(B22*N3y + B26*N3x))
+            KC0e1316 = detJ*wij*(N3x*(B12*N3y + B16*N3x) + N3y*(B26*N3y + B66*N3x))
+            KC0e1414 = detJ*wij*(N3x*(E45*N3y + E55*N3x) + N3y*(E44*N3y + E45*N3x))
+            KC0e1415 = detJ*wij*(E44*N3y + E45*N3x)*(N1 + N2 - 1)
+            KC0e1416 = -detJ*wij*(E45*N3y + E55*N3x)*(N1 + N2 - 1)
+            KC0e1515 = detJ*wij*(E44*(N1 + N2 - 1)**2 + N3x*(D26*N3y + D66*N3x) + N3y*(D22*N3y + D26*N3x))
+            KC0e1516 = -detJ*wij*(E45*(N1 + N2 - 1)**2 + N3x*(D12*N3y + D16*N3x) + N3y*(D26*N3y + D66*N3x))
+            KC0e1616 = detJ*wij*(E55*(N1 + N2 - 1)**2 + N3x*(D11*N3x + D16*N3y) + N3y*(D16*N3x + D66*N3y))
+            KC0e1717 = K6ROT
+
+
             k = self.init_k_KC0
-            KC0v[k] += detJ*r13**2*wij*(N1x*(E45*N1y + E55*N1x) + N1y*(E44*N1y + E45*N1x)) + r11*(detJ*r11*wij*(0.25*A66*N1y**2*alphat/h + N1x*(A11*N1x + A16*N1y) + N1y*(A16*N1x + A66*N1y)) + detJ*r12*wij*(-0.25*A66*N1x*N1y*alphat/h + N1x*(A12*N1y + A16*N1x) + N1y*(A26*N1y + A66*N1x))) + r12*(detJ*r11*wij*(-0.25*A66*N1x*N1y*alphat/h + N1x*(A16*N1x + A66*N1y) + N1y*(A12*N1x + A26*N1y)) + detJ*r12*wij*(0.25*A66*N1x**2*alphat/h + N1x*(A26*N1y + A66*N1x) + N1y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0202*r13**2 + r11*(KC0e0000*r11 + KC0e0001*r12) + r12*(KC0e0001*r11 + KC0e0101*r12)
             k += 1
-            KC0v[k] += detJ*r13*r23*wij*(N1x*(E45*N1y + E55*N1x) + N1y*(E44*N1y + E45*N1x)) + r21*(detJ*r11*wij*(0.25*A66*N1y**2*alphat/h + N1x*(A11*N1x + A16*N1y) + N1y*(A16*N1x + A66*N1y)) + detJ*r12*wij*(-0.25*A66*N1x*N1y*alphat/h + N1x*(A12*N1y + A16*N1x) + N1y*(A26*N1y + A66*N1x))) + r22*(detJ*r11*wij*(-0.25*A66*N1x*N1y*alphat/h + N1x*(A16*N1x + A66*N1y) + N1y*(A12*N1x + A26*N1y)) + detJ*r12*wij*(0.25*A66*N1x**2*alphat/h + N1x*(A26*N1y + A66*N1x) + N1y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0202*r13*r23 + r21*(KC0e0000*r11 + KC0e0001*r12) + r22*(KC0e0001*r11 + KC0e0101*r12)
             k += 1
-            KC0v[k] += detJ*r13*r33*wij*(N1x*(E45*N1y + E55*N1x) + N1y*(E44*N1y + E45*N1x)) + r31*(detJ*r11*wij*(0.25*A66*N1y**2*alphat/h + N1x*(A11*N1x + A16*N1y) + N1y*(A16*N1x + A66*N1y)) + detJ*r12*wij*(-0.25*A66*N1x*N1y*alphat/h + N1x*(A12*N1y + A16*N1x) + N1y*(A26*N1y + A66*N1x))) + r32*(detJ*r11*wij*(-0.25*A66*N1x*N1y*alphat/h + N1x*(A16*N1x + A66*N1y) + N1y*(A12*N1x + A26*N1y)) + detJ*r12*wij*(0.25*A66*N1x**2*alphat/h + N1x*(A26*N1y + A66*N1x) + N1y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0202*r13*r33 + r31*(KC0e0000*r11 + KC0e0001*r12) + r32*(KC0e0001*r11 + KC0e0101*r12)
             k += 1
-            KC0v[k] += r11*(-N1*detJ*r13*wij*(E44*N1y + E45*N1x) + detJ*r11*wij*(-N1x*(B16*N1x + B66*N1y) - N1y*(B12*N1x + B26*N1y)) + detJ*r12*wij*(-N1x*(B26*N1y + B66*N1x) - N1y*(B22*N1y + B26*N1x))) + r12*(N1*detJ*r13*wij*(E45*N1y + E55*N1x) + detJ*r11*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y)) + detJ*r12*wij*(N1x*(B12*N1y + B16*N1x) + N1y*(B26*N1y + B66*N1x))) + r13*(-0.5*A66*N1*N1x*alphat*detJ*r12*wij/h + 0.5*A66*N1*N1y*alphat*detJ*r11*wij/h)
+            KC0v[k] += r11*(KC0e0003*r11 + KC0e0103*r12 + KC0e0203*r13) + r12*(KC0e0004*r11 + KC0e0104*r12 + KC0e0204*r13)
             k += 1
-            KC0v[k] += r21*(-N1*detJ*r13*wij*(E44*N1y + E45*N1x) + detJ*r11*wij*(-N1x*(B16*N1x + B66*N1y) - N1y*(B12*N1x + B26*N1y)) + detJ*r12*wij*(-N1x*(B26*N1y + B66*N1x) - N1y*(B22*N1y + B26*N1x))) + r22*(N1*detJ*r13*wij*(E45*N1y + E55*N1x) + detJ*r11*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y)) + detJ*r12*wij*(N1x*(B12*N1y + B16*N1x) + N1y*(B26*N1y + B66*N1x))) + r23*(-0.5*A66*N1*N1x*alphat*detJ*r12*wij/h + 0.5*A66*N1*N1y*alphat*detJ*r11*wij/h)
+            KC0v[k] += r21*(KC0e0003*r11 + KC0e0103*r12 + KC0e0203*r13) + r22*(KC0e0004*r11 + KC0e0104*r12 + KC0e0204*r13)
             k += 1
-            KC0v[k] += r31*(-N1*detJ*r13*wij*(E44*N1y + E45*N1x) + detJ*r11*wij*(-N1x*(B16*N1x + B66*N1y) - N1y*(B12*N1x + B26*N1y)) + detJ*r12*wij*(-N1x*(B26*N1y + B66*N1x) - N1y*(B22*N1y + B26*N1x))) + r32*(N1*detJ*r13*wij*(E45*N1y + E55*N1x) + detJ*r11*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y)) + detJ*r12*wij*(N1x*(B12*N1y + B16*N1x) + N1y*(B26*N1y + B66*N1x))) + r33*(-0.5*A66*N1*N1x*alphat*detJ*r12*wij/h + 0.5*A66*N1*N1y*alphat*detJ*r11*wij/h)
+            KC0v[k] += r31*(KC0e0003*r11 + KC0e0103*r12 + KC0e0203*r13) + r32*(KC0e0004*r11 + KC0e0104*r12 + KC0e0204*r13)
             k += 1
-            KC0v[k] += detJ*r13**2*wij*(N2x*(E45*N1y + E55*N1x) + N2y*(E44*N1y + E45*N1x)) + r11*(detJ*r11*wij*(0.25*A66*N1y*N2y*alphat/h + N2x*(A11*N1x + A16*N1y) + N2y*(A16*N1x + A66*N1y)) + detJ*r12*wij*(-0.25*A66*N1x*N2y*alphat/h + N2x*(A12*N1y + A16*N1x) + N2y*(A26*N1y + A66*N1x))) + r12*(detJ*r11*wij*(-0.25*A66*N1y*N2x*alphat/h + N2x*(A16*N1x + A66*N1y) + N2y*(A12*N1x + A26*N1y)) + detJ*r12*wij*(0.25*A66*N1x*N2x*alphat/h + N2x*(A26*N1y + A66*N1x) + N2y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0208*r13**2 + r11*(KC0e0006*r11 + KC0e0106*r12) + r12*(KC0e0007*r11 + KC0e0107*r12)
             k += 1
-            KC0v[k] += detJ*r13*r23*wij*(N2x*(E45*N1y + E55*N1x) + N2y*(E44*N1y + E45*N1x)) + r21*(detJ*r11*wij*(0.25*A66*N1y*N2y*alphat/h + N2x*(A11*N1x + A16*N1y) + N2y*(A16*N1x + A66*N1y)) + detJ*r12*wij*(-0.25*A66*N1x*N2y*alphat/h + N2x*(A12*N1y + A16*N1x) + N2y*(A26*N1y + A66*N1x))) + r22*(detJ*r11*wij*(-0.25*A66*N1y*N2x*alphat/h + N2x*(A16*N1x + A66*N1y) + N2y*(A12*N1x + A26*N1y)) + detJ*r12*wij*(0.25*A66*N1x*N2x*alphat/h + N2x*(A26*N1y + A66*N1x) + N2y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0208*r13*r23 + r21*(KC0e0006*r11 + KC0e0106*r12) + r22*(KC0e0007*r11 + KC0e0107*r12)
             k += 1
-            KC0v[k] += detJ*r13*r33*wij*(N2x*(E45*N1y + E55*N1x) + N2y*(E44*N1y + E45*N1x)) + r31*(detJ*r11*wij*(0.25*A66*N1y*N2y*alphat/h + N2x*(A11*N1x + A16*N1y) + N2y*(A16*N1x + A66*N1y)) + detJ*r12*wij*(-0.25*A66*N1x*N2y*alphat/h + N2x*(A12*N1y + A16*N1x) + N2y*(A26*N1y + A66*N1x))) + r32*(detJ*r11*wij*(-0.25*A66*N1y*N2x*alphat/h + N2x*(A16*N1x + A66*N1y) + N2y*(A12*N1x + A26*N1y)) + detJ*r12*wij*(0.25*A66*N1x*N2x*alphat/h + N2x*(A26*N1y + A66*N1x) + N2y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0208*r13*r33 + r31*(KC0e0006*r11 + KC0e0106*r12) + r32*(KC0e0007*r11 + KC0e0107*r12)
             k += 1
-            KC0v[k] += r11*(-N2*detJ*r13*wij*(E44*N1y + E45*N1x) + detJ*r11*wij*(-N2x*(B16*N1x + B66*N1y) - N2y*(B12*N1x + B26*N1y)) + detJ*r12*wij*(-N2x*(B26*N1y + B66*N1x) - N2y*(B22*N1y + B26*N1x))) + r12*(N2*detJ*r13*wij*(E45*N1y + E55*N1x) + detJ*r11*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y)) + detJ*r12*wij*(N2x*(B12*N1y + B16*N1x) + N2y*(B26*N1y + B66*N1x))) + r13*(-0.5*A66*N1x*N2*alphat*detJ*r12*wij/h + 0.5*A66*N1y*N2*alphat*detJ*r11*wij/h)
+            KC0v[k] += r11*(KC0e0009*r11 + KC0e0109*r12 + KC0e0209*r13) + r12*(KC0e0010*r11 + KC0e0110*r12 + KC0e0210*r13)
             k += 1
-            KC0v[k] += r21*(-N2*detJ*r13*wij*(E44*N1y + E45*N1x) + detJ*r11*wij*(-N2x*(B16*N1x + B66*N1y) - N2y*(B12*N1x + B26*N1y)) + detJ*r12*wij*(-N2x*(B26*N1y + B66*N1x) - N2y*(B22*N1y + B26*N1x))) + r22*(N2*detJ*r13*wij*(E45*N1y + E55*N1x) + detJ*r11*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y)) + detJ*r12*wij*(N2x*(B12*N1y + B16*N1x) + N2y*(B26*N1y + B66*N1x))) + r23*(-0.5*A66*N1x*N2*alphat*detJ*r12*wij/h + 0.5*A66*N1y*N2*alphat*detJ*r11*wij/h)
+            KC0v[k] += r21*(KC0e0009*r11 + KC0e0109*r12 + KC0e0209*r13) + r22*(KC0e0010*r11 + KC0e0110*r12 + KC0e0210*r13)
             k += 1
-            KC0v[k] += r31*(-N2*detJ*r13*wij*(E44*N1y + E45*N1x) + detJ*r11*wij*(-N2x*(B16*N1x + B66*N1y) - N2y*(B12*N1x + B26*N1y)) + detJ*r12*wij*(-N2x*(B26*N1y + B66*N1x) - N2y*(B22*N1y + B26*N1x))) + r32*(N2*detJ*r13*wij*(E45*N1y + E55*N1x) + detJ*r11*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y)) + detJ*r12*wij*(N2x*(B12*N1y + B16*N1x) + N2y*(B26*N1y + B66*N1x))) + r33*(-0.5*A66*N1x*N2*alphat*detJ*r12*wij/h + 0.5*A66*N1y*N2*alphat*detJ*r11*wij/h)
+            KC0v[k] += r31*(KC0e0009*r11 + KC0e0109*r12 + KC0e0209*r13) + r32*(KC0e0010*r11 + KC0e0110*r12 + KC0e0210*r13)
             k += 1
-            KC0v[k] += detJ*r13**2*wij*(N3x*(E45*N1y + E55*N1x) + N3y*(E44*N1y + E45*N1x)) + r11*(detJ*r11*wij*(0.25*A66*N1y*N3y*alphat/h + N3x*(A11*N1x + A16*N1y) + N3y*(A16*N1x + A66*N1y)) + detJ*r12*wij*(-0.25*A66*N1x*N3y*alphat/h + N3x*(A12*N1y + A16*N1x) + N3y*(A26*N1y + A66*N1x))) + r12*(detJ*r11*wij*(-0.25*A66*N1y*N3x*alphat/h + N3x*(A16*N1x + A66*N1y) + N3y*(A12*N1x + A26*N1y)) + detJ*r12*wij*(0.25*A66*N1x*N3x*alphat/h + N3x*(A26*N1y + A66*N1x) + N3y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0214*r13**2 + r11*(KC0e0012*r11 + KC0e0112*r12) + r12*(KC0e0013*r11 + KC0e0113*r12)
             k += 1
-            KC0v[k] += detJ*r13*r23*wij*(N3x*(E45*N1y + E55*N1x) + N3y*(E44*N1y + E45*N1x)) + r21*(detJ*r11*wij*(0.25*A66*N1y*N3y*alphat/h + N3x*(A11*N1x + A16*N1y) + N3y*(A16*N1x + A66*N1y)) + detJ*r12*wij*(-0.25*A66*N1x*N3y*alphat/h + N3x*(A12*N1y + A16*N1x) + N3y*(A26*N1y + A66*N1x))) + r22*(detJ*r11*wij*(-0.25*A66*N1y*N3x*alphat/h + N3x*(A16*N1x + A66*N1y) + N3y*(A12*N1x + A26*N1y)) + detJ*r12*wij*(0.25*A66*N1x*N3x*alphat/h + N3x*(A26*N1y + A66*N1x) + N3y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0214*r13*r23 + r21*(KC0e0012*r11 + KC0e0112*r12) + r22*(KC0e0013*r11 + KC0e0113*r12)
             k += 1
-            KC0v[k] += detJ*r13*r33*wij*(N3x*(E45*N1y + E55*N1x) + N3y*(E44*N1y + E45*N1x)) + r31*(detJ*r11*wij*(0.25*A66*N1y*N3y*alphat/h + N3x*(A11*N1x + A16*N1y) + N3y*(A16*N1x + A66*N1y)) + detJ*r12*wij*(-0.25*A66*N1x*N3y*alphat/h + N3x*(A12*N1y + A16*N1x) + N3y*(A26*N1y + A66*N1x))) + r32*(detJ*r11*wij*(-0.25*A66*N1y*N3x*alphat/h + N3x*(A16*N1x + A66*N1y) + N3y*(A12*N1x + A26*N1y)) + detJ*r12*wij*(0.25*A66*N1x*N3x*alphat/h + N3x*(A26*N1y + A66*N1x) + N3y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0214*r13*r33 + r31*(KC0e0012*r11 + KC0e0112*r12) + r32*(KC0e0013*r11 + KC0e0113*r12)
             k += 1
-            KC0v[k] += r11*(detJ*r11*wij*(-N3x*(B16*N1x + B66*N1y) - N3y*(B12*N1x + B26*N1y)) + detJ*r12*wij*(-N3x*(B26*N1y + B66*N1x) - N3y*(B22*N1y + B26*N1x)) + detJ*r13*wij*(E44*N1y + E45*N1x)*(N1 + N2 - 1)) + r12*(detJ*r11*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y)) + detJ*r12*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x)) + detJ*r13*wij*(E45*N1y + E55*N1x)*(-N1 - N2 + 1)) + r13*(-0.5*A66*N1x*alphat*detJ*r12*wij*(-N1 - N2 + 1)/h + 0.5*A66*N1y*alphat*detJ*r11*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r11*(KC0e0015*r11 + KC0e0115*r12 + KC0e0215*r13) + r12*(KC0e0016*r11 + KC0e0116*r12 + KC0e0216*r13)
             k += 1
-            KC0v[k] += r21*(detJ*r11*wij*(-N3x*(B16*N1x + B66*N1y) - N3y*(B12*N1x + B26*N1y)) + detJ*r12*wij*(-N3x*(B26*N1y + B66*N1x) - N3y*(B22*N1y + B26*N1x)) + detJ*r13*wij*(E44*N1y + E45*N1x)*(N1 + N2 - 1)) + r22*(detJ*r11*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y)) + detJ*r12*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x)) + detJ*r13*wij*(E45*N1y + E55*N1x)*(-N1 - N2 + 1)) + r23*(-0.5*A66*N1x*alphat*detJ*r12*wij*(-N1 - N2 + 1)/h + 0.5*A66*N1y*alphat*detJ*r11*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r21*(KC0e0015*r11 + KC0e0115*r12 + KC0e0215*r13) + r22*(KC0e0016*r11 + KC0e0116*r12 + KC0e0216*r13)
             k += 1
-            KC0v[k] += r31*(detJ*r11*wij*(-N3x*(B16*N1x + B66*N1y) - N3y*(B12*N1x + B26*N1y)) + detJ*r12*wij*(-N3x*(B26*N1y + B66*N1x) - N3y*(B22*N1y + B26*N1x)) + detJ*r13*wij*(E44*N1y + E45*N1x)*(N1 + N2 - 1)) + r32*(detJ*r11*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y)) + detJ*r12*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x)) + detJ*r13*wij*(E45*N1y + E55*N1x)*(-N1 - N2 + 1)) + r33*(-0.5*A66*N1x*alphat*detJ*r12*wij*(-N1 - N2 + 1)/h + 0.5*A66*N1y*alphat*detJ*r11*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r31*(KC0e0015*r11 + KC0e0115*r12 + KC0e0215*r13) + r32*(KC0e0016*r11 + KC0e0116*r12 + KC0e0216*r13)
             k += 1
-            KC0v[k] += detJ*r13*r23*wij*(N1x*(E45*N1y + E55*N1x) + N1y*(E44*N1y + E45*N1x)) + r11*(detJ*r21*wij*(0.25*A66*N1y**2*alphat/h + N1x*(A11*N1x + A16*N1y) + N1y*(A16*N1x + A66*N1y)) + detJ*r22*wij*(-0.25*A66*N1x*N1y*alphat/h + N1x*(A12*N1y + A16*N1x) + N1y*(A26*N1y + A66*N1x))) + r12*(detJ*r21*wij*(-0.25*A66*N1x*N1y*alphat/h + N1x*(A16*N1x + A66*N1y) + N1y*(A12*N1x + A26*N1y)) + detJ*r22*wij*(0.25*A66*N1x**2*alphat/h + N1x*(A26*N1y + A66*N1x) + N1y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0202*r13*r23 + r11*(KC0e0000*r21 + KC0e0001*r22) + r12*(KC0e0001*r21 + KC0e0101*r22)
             k += 1
-            KC0v[k] += detJ*r23**2*wij*(N1x*(E45*N1y + E55*N1x) + N1y*(E44*N1y + E45*N1x)) + r21*(detJ*r21*wij*(0.25*A66*N1y**2*alphat/h + N1x*(A11*N1x + A16*N1y) + N1y*(A16*N1x + A66*N1y)) + detJ*r22*wij*(-0.25*A66*N1x*N1y*alphat/h + N1x*(A12*N1y + A16*N1x) + N1y*(A26*N1y + A66*N1x))) + r22*(detJ*r21*wij*(-0.25*A66*N1x*N1y*alphat/h + N1x*(A16*N1x + A66*N1y) + N1y*(A12*N1x + A26*N1y)) + detJ*r22*wij*(0.25*A66*N1x**2*alphat/h + N1x*(A26*N1y + A66*N1x) + N1y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0202*r23**2 + r21*(KC0e0000*r21 + KC0e0001*r22) + r22*(KC0e0001*r21 + KC0e0101*r22)
             k += 1
-            KC0v[k] += detJ*r23*r33*wij*(N1x*(E45*N1y + E55*N1x) + N1y*(E44*N1y + E45*N1x)) + r31*(detJ*r21*wij*(0.25*A66*N1y**2*alphat/h + N1x*(A11*N1x + A16*N1y) + N1y*(A16*N1x + A66*N1y)) + detJ*r22*wij*(-0.25*A66*N1x*N1y*alphat/h + N1x*(A12*N1y + A16*N1x) + N1y*(A26*N1y + A66*N1x))) + r32*(detJ*r21*wij*(-0.25*A66*N1x*N1y*alphat/h + N1x*(A16*N1x + A66*N1y) + N1y*(A12*N1x + A26*N1y)) + detJ*r22*wij*(0.25*A66*N1x**2*alphat/h + N1x*(A26*N1y + A66*N1x) + N1y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0202*r23*r33 + r31*(KC0e0000*r21 + KC0e0001*r22) + r32*(KC0e0001*r21 + KC0e0101*r22)
             k += 1
-            KC0v[k] += r11*(-N1*detJ*r23*wij*(E44*N1y + E45*N1x) + detJ*r21*wij*(-N1x*(B16*N1x + B66*N1y) - N1y*(B12*N1x + B26*N1y)) + detJ*r22*wij*(-N1x*(B26*N1y + B66*N1x) - N1y*(B22*N1y + B26*N1x))) + r12*(N1*detJ*r23*wij*(E45*N1y + E55*N1x) + detJ*r21*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y)) + detJ*r22*wij*(N1x*(B12*N1y + B16*N1x) + N1y*(B26*N1y + B66*N1x))) + r13*(-0.5*A66*N1*N1x*alphat*detJ*r22*wij/h + 0.5*A66*N1*N1y*alphat*detJ*r21*wij/h)
+            KC0v[k] += r11*(KC0e0003*r21 + KC0e0103*r22 + KC0e0203*r23) + r12*(KC0e0004*r21 + KC0e0104*r22 + KC0e0204*r23)
             k += 1
-            KC0v[k] += r21*(-N1*detJ*r23*wij*(E44*N1y + E45*N1x) + detJ*r21*wij*(-N1x*(B16*N1x + B66*N1y) - N1y*(B12*N1x + B26*N1y)) + detJ*r22*wij*(-N1x*(B26*N1y + B66*N1x) - N1y*(B22*N1y + B26*N1x))) + r22*(N1*detJ*r23*wij*(E45*N1y + E55*N1x) + detJ*r21*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y)) + detJ*r22*wij*(N1x*(B12*N1y + B16*N1x) + N1y*(B26*N1y + B66*N1x))) + r23*(-0.5*A66*N1*N1x*alphat*detJ*r22*wij/h + 0.5*A66*N1*N1y*alphat*detJ*r21*wij/h)
+            KC0v[k] += r21*(KC0e0003*r21 + KC0e0103*r22 + KC0e0203*r23) + r22*(KC0e0004*r21 + KC0e0104*r22 + KC0e0204*r23)
             k += 1
-            KC0v[k] += r31*(-N1*detJ*r23*wij*(E44*N1y + E45*N1x) + detJ*r21*wij*(-N1x*(B16*N1x + B66*N1y) - N1y*(B12*N1x + B26*N1y)) + detJ*r22*wij*(-N1x*(B26*N1y + B66*N1x) - N1y*(B22*N1y + B26*N1x))) + r32*(N1*detJ*r23*wij*(E45*N1y + E55*N1x) + detJ*r21*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y)) + detJ*r22*wij*(N1x*(B12*N1y + B16*N1x) + N1y*(B26*N1y + B66*N1x))) + r33*(-0.5*A66*N1*N1x*alphat*detJ*r22*wij/h + 0.5*A66*N1*N1y*alphat*detJ*r21*wij/h)
+            KC0v[k] += r31*(KC0e0003*r21 + KC0e0103*r22 + KC0e0203*r23) + r32*(KC0e0004*r21 + KC0e0104*r22 + KC0e0204*r23)
             k += 1
-            KC0v[k] += detJ*r13*r23*wij*(N2x*(E45*N1y + E55*N1x) + N2y*(E44*N1y + E45*N1x)) + r11*(detJ*r21*wij*(0.25*A66*N1y*N2y*alphat/h + N2x*(A11*N1x + A16*N1y) + N2y*(A16*N1x + A66*N1y)) + detJ*r22*wij*(-0.25*A66*N1x*N2y*alphat/h + N2x*(A12*N1y + A16*N1x) + N2y*(A26*N1y + A66*N1x))) + r12*(detJ*r21*wij*(-0.25*A66*N1y*N2x*alphat/h + N2x*(A16*N1x + A66*N1y) + N2y*(A12*N1x + A26*N1y)) + detJ*r22*wij*(0.25*A66*N1x*N2x*alphat/h + N2x*(A26*N1y + A66*N1x) + N2y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0208*r13*r23 + r11*(KC0e0006*r21 + KC0e0106*r22) + r12*(KC0e0007*r21 + KC0e0107*r22)
             k += 1
-            KC0v[k] += detJ*r23**2*wij*(N2x*(E45*N1y + E55*N1x) + N2y*(E44*N1y + E45*N1x)) + r21*(detJ*r21*wij*(0.25*A66*N1y*N2y*alphat/h + N2x*(A11*N1x + A16*N1y) + N2y*(A16*N1x + A66*N1y)) + detJ*r22*wij*(-0.25*A66*N1x*N2y*alphat/h + N2x*(A12*N1y + A16*N1x) + N2y*(A26*N1y + A66*N1x))) + r22*(detJ*r21*wij*(-0.25*A66*N1y*N2x*alphat/h + N2x*(A16*N1x + A66*N1y) + N2y*(A12*N1x + A26*N1y)) + detJ*r22*wij*(0.25*A66*N1x*N2x*alphat/h + N2x*(A26*N1y + A66*N1x) + N2y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0208*r23**2 + r21*(KC0e0006*r21 + KC0e0106*r22) + r22*(KC0e0007*r21 + KC0e0107*r22)
             k += 1
-            KC0v[k] += detJ*r23*r33*wij*(N2x*(E45*N1y + E55*N1x) + N2y*(E44*N1y + E45*N1x)) + r31*(detJ*r21*wij*(0.25*A66*N1y*N2y*alphat/h + N2x*(A11*N1x + A16*N1y) + N2y*(A16*N1x + A66*N1y)) + detJ*r22*wij*(-0.25*A66*N1x*N2y*alphat/h + N2x*(A12*N1y + A16*N1x) + N2y*(A26*N1y + A66*N1x))) + r32*(detJ*r21*wij*(-0.25*A66*N1y*N2x*alphat/h + N2x*(A16*N1x + A66*N1y) + N2y*(A12*N1x + A26*N1y)) + detJ*r22*wij*(0.25*A66*N1x*N2x*alphat/h + N2x*(A26*N1y + A66*N1x) + N2y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0208*r23*r33 + r31*(KC0e0006*r21 + KC0e0106*r22) + r32*(KC0e0007*r21 + KC0e0107*r22)
             k += 1
-            KC0v[k] += r11*(-N2*detJ*r23*wij*(E44*N1y + E45*N1x) + detJ*r21*wij*(-N2x*(B16*N1x + B66*N1y) - N2y*(B12*N1x + B26*N1y)) + detJ*r22*wij*(-N2x*(B26*N1y + B66*N1x) - N2y*(B22*N1y + B26*N1x))) + r12*(N2*detJ*r23*wij*(E45*N1y + E55*N1x) + detJ*r21*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y)) + detJ*r22*wij*(N2x*(B12*N1y + B16*N1x) + N2y*(B26*N1y + B66*N1x))) + r13*(-0.5*A66*N1x*N2*alphat*detJ*r22*wij/h + 0.5*A66*N1y*N2*alphat*detJ*r21*wij/h)
+            KC0v[k] += r11*(KC0e0009*r21 + KC0e0109*r22 + KC0e0209*r23) + r12*(KC0e0010*r21 + KC0e0110*r22 + KC0e0210*r23)
             k += 1
-            KC0v[k] += r21*(-N2*detJ*r23*wij*(E44*N1y + E45*N1x) + detJ*r21*wij*(-N2x*(B16*N1x + B66*N1y) - N2y*(B12*N1x + B26*N1y)) + detJ*r22*wij*(-N2x*(B26*N1y + B66*N1x) - N2y*(B22*N1y + B26*N1x))) + r22*(N2*detJ*r23*wij*(E45*N1y + E55*N1x) + detJ*r21*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y)) + detJ*r22*wij*(N2x*(B12*N1y + B16*N1x) + N2y*(B26*N1y + B66*N1x))) + r23*(-0.5*A66*N1x*N2*alphat*detJ*r22*wij/h + 0.5*A66*N1y*N2*alphat*detJ*r21*wij/h)
+            KC0v[k] += r21*(KC0e0009*r21 + KC0e0109*r22 + KC0e0209*r23) + r22*(KC0e0010*r21 + KC0e0110*r22 + KC0e0210*r23)
             k += 1
-            KC0v[k] += r31*(-N2*detJ*r23*wij*(E44*N1y + E45*N1x) + detJ*r21*wij*(-N2x*(B16*N1x + B66*N1y) - N2y*(B12*N1x + B26*N1y)) + detJ*r22*wij*(-N2x*(B26*N1y + B66*N1x) - N2y*(B22*N1y + B26*N1x))) + r32*(N2*detJ*r23*wij*(E45*N1y + E55*N1x) + detJ*r21*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y)) + detJ*r22*wij*(N2x*(B12*N1y + B16*N1x) + N2y*(B26*N1y + B66*N1x))) + r33*(-0.5*A66*N1x*N2*alphat*detJ*r22*wij/h + 0.5*A66*N1y*N2*alphat*detJ*r21*wij/h)
+            KC0v[k] += r31*(KC0e0009*r21 + KC0e0109*r22 + KC0e0209*r23) + r32*(KC0e0010*r21 + KC0e0110*r22 + KC0e0210*r23)
             k += 1
-            KC0v[k] += detJ*r13*r23*wij*(N3x*(E45*N1y + E55*N1x) + N3y*(E44*N1y + E45*N1x)) + r11*(detJ*r21*wij*(0.25*A66*N1y*N3y*alphat/h + N3x*(A11*N1x + A16*N1y) + N3y*(A16*N1x + A66*N1y)) + detJ*r22*wij*(-0.25*A66*N1x*N3y*alphat/h + N3x*(A12*N1y + A16*N1x) + N3y*(A26*N1y + A66*N1x))) + r12*(detJ*r21*wij*(-0.25*A66*N1y*N3x*alphat/h + N3x*(A16*N1x + A66*N1y) + N3y*(A12*N1x + A26*N1y)) + detJ*r22*wij*(0.25*A66*N1x*N3x*alphat/h + N3x*(A26*N1y + A66*N1x) + N3y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0214*r13*r23 + r11*(KC0e0012*r21 + KC0e0112*r22) + r12*(KC0e0013*r21 + KC0e0113*r22)
             k += 1
-            KC0v[k] += detJ*r23**2*wij*(N3x*(E45*N1y + E55*N1x) + N3y*(E44*N1y + E45*N1x)) + r21*(detJ*r21*wij*(0.25*A66*N1y*N3y*alphat/h + N3x*(A11*N1x + A16*N1y) + N3y*(A16*N1x + A66*N1y)) + detJ*r22*wij*(-0.25*A66*N1x*N3y*alphat/h + N3x*(A12*N1y + A16*N1x) + N3y*(A26*N1y + A66*N1x))) + r22*(detJ*r21*wij*(-0.25*A66*N1y*N3x*alphat/h + N3x*(A16*N1x + A66*N1y) + N3y*(A12*N1x + A26*N1y)) + detJ*r22*wij*(0.25*A66*N1x*N3x*alphat/h + N3x*(A26*N1y + A66*N1x) + N3y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0214*r23**2 + r21*(KC0e0012*r21 + KC0e0112*r22) + r22*(KC0e0013*r21 + KC0e0113*r22)
             k += 1
-            KC0v[k] += detJ*r23*r33*wij*(N3x*(E45*N1y + E55*N1x) + N3y*(E44*N1y + E45*N1x)) + r31*(detJ*r21*wij*(0.25*A66*N1y*N3y*alphat/h + N3x*(A11*N1x + A16*N1y) + N3y*(A16*N1x + A66*N1y)) + detJ*r22*wij*(-0.25*A66*N1x*N3y*alphat/h + N3x*(A12*N1y + A16*N1x) + N3y*(A26*N1y + A66*N1x))) + r32*(detJ*r21*wij*(-0.25*A66*N1y*N3x*alphat/h + N3x*(A16*N1x + A66*N1y) + N3y*(A12*N1x + A26*N1y)) + detJ*r22*wij*(0.25*A66*N1x*N3x*alphat/h + N3x*(A26*N1y + A66*N1x) + N3y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0214*r23*r33 + r31*(KC0e0012*r21 + KC0e0112*r22) + r32*(KC0e0013*r21 + KC0e0113*r22)
             k += 1
-            KC0v[k] += r11*(detJ*r21*wij*(-N3x*(B16*N1x + B66*N1y) - N3y*(B12*N1x + B26*N1y)) + detJ*r22*wij*(-N3x*(B26*N1y + B66*N1x) - N3y*(B22*N1y + B26*N1x)) + detJ*r23*wij*(E44*N1y + E45*N1x)*(N1 + N2 - 1)) + r12*(detJ*r21*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y)) + detJ*r22*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x)) + detJ*r23*wij*(E45*N1y + E55*N1x)*(-N1 - N2 + 1)) + r13*(-0.5*A66*N1x*alphat*detJ*r22*wij*(-N1 - N2 + 1)/h + 0.5*A66*N1y*alphat*detJ*r21*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r11*(KC0e0015*r21 + KC0e0115*r22 + KC0e0215*r23) + r12*(KC0e0016*r21 + KC0e0116*r22 + KC0e0216*r23)
             k += 1
-            KC0v[k] += r21*(detJ*r21*wij*(-N3x*(B16*N1x + B66*N1y) - N3y*(B12*N1x + B26*N1y)) + detJ*r22*wij*(-N3x*(B26*N1y + B66*N1x) - N3y*(B22*N1y + B26*N1x)) + detJ*r23*wij*(E44*N1y + E45*N1x)*(N1 + N2 - 1)) + r22*(detJ*r21*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y)) + detJ*r22*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x)) + detJ*r23*wij*(E45*N1y + E55*N1x)*(-N1 - N2 + 1)) + r23*(-0.5*A66*N1x*alphat*detJ*r22*wij*(-N1 - N2 + 1)/h + 0.5*A66*N1y*alphat*detJ*r21*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r21*(KC0e0015*r21 + KC0e0115*r22 + KC0e0215*r23) + r22*(KC0e0016*r21 + KC0e0116*r22 + KC0e0216*r23)
             k += 1
-            KC0v[k] += r31*(detJ*r21*wij*(-N3x*(B16*N1x + B66*N1y) - N3y*(B12*N1x + B26*N1y)) + detJ*r22*wij*(-N3x*(B26*N1y + B66*N1x) - N3y*(B22*N1y + B26*N1x)) + detJ*r23*wij*(E44*N1y + E45*N1x)*(N1 + N2 - 1)) + r32*(detJ*r21*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y)) + detJ*r22*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x)) + detJ*r23*wij*(E45*N1y + E55*N1x)*(-N1 - N2 + 1)) + r33*(-0.5*A66*N1x*alphat*detJ*r22*wij*(-N1 - N2 + 1)/h + 0.5*A66*N1y*alphat*detJ*r21*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r31*(KC0e0015*r21 + KC0e0115*r22 + KC0e0215*r23) + r32*(KC0e0016*r21 + KC0e0116*r22 + KC0e0216*r23)
             k += 1
-            KC0v[k] += detJ*r13*r33*wij*(N1x*(E45*N1y + E55*N1x) + N1y*(E44*N1y + E45*N1x)) + r11*(detJ*r31*wij*(0.25*A66*N1y**2*alphat/h + N1x*(A11*N1x + A16*N1y) + N1y*(A16*N1x + A66*N1y)) + detJ*r32*wij*(-0.25*A66*N1x*N1y*alphat/h + N1x*(A12*N1y + A16*N1x) + N1y*(A26*N1y + A66*N1x))) + r12*(detJ*r31*wij*(-0.25*A66*N1x*N1y*alphat/h + N1x*(A16*N1x + A66*N1y) + N1y*(A12*N1x + A26*N1y)) + detJ*r32*wij*(0.25*A66*N1x**2*alphat/h + N1x*(A26*N1y + A66*N1x) + N1y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0202*r13*r33 + r11*(KC0e0000*r31 + KC0e0001*r32) + r12*(KC0e0001*r31 + KC0e0101*r32)
             k += 1
-            KC0v[k] += detJ*r23*r33*wij*(N1x*(E45*N1y + E55*N1x) + N1y*(E44*N1y + E45*N1x)) + r21*(detJ*r31*wij*(0.25*A66*N1y**2*alphat/h + N1x*(A11*N1x + A16*N1y) + N1y*(A16*N1x + A66*N1y)) + detJ*r32*wij*(-0.25*A66*N1x*N1y*alphat/h + N1x*(A12*N1y + A16*N1x) + N1y*(A26*N1y + A66*N1x))) + r22*(detJ*r31*wij*(-0.25*A66*N1x*N1y*alphat/h + N1x*(A16*N1x + A66*N1y) + N1y*(A12*N1x + A26*N1y)) + detJ*r32*wij*(0.25*A66*N1x**2*alphat/h + N1x*(A26*N1y + A66*N1x) + N1y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0202*r23*r33 + r21*(KC0e0000*r31 + KC0e0001*r32) + r22*(KC0e0001*r31 + KC0e0101*r32)
             k += 1
-            KC0v[k] += detJ*r33**2*wij*(N1x*(E45*N1y + E55*N1x) + N1y*(E44*N1y + E45*N1x)) + r31*(detJ*r31*wij*(0.25*A66*N1y**2*alphat/h + N1x*(A11*N1x + A16*N1y) + N1y*(A16*N1x + A66*N1y)) + detJ*r32*wij*(-0.25*A66*N1x*N1y*alphat/h + N1x*(A12*N1y + A16*N1x) + N1y*(A26*N1y + A66*N1x))) + r32*(detJ*r31*wij*(-0.25*A66*N1x*N1y*alphat/h + N1x*(A16*N1x + A66*N1y) + N1y*(A12*N1x + A26*N1y)) + detJ*r32*wij*(0.25*A66*N1x**2*alphat/h + N1x*(A26*N1y + A66*N1x) + N1y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0202*r33**2 + r31*(KC0e0000*r31 + KC0e0001*r32) + r32*(KC0e0001*r31 + KC0e0101*r32)
             k += 1
-            KC0v[k] += r11*(-N1*detJ*r33*wij*(E44*N1y + E45*N1x) + detJ*r31*wij*(-N1x*(B16*N1x + B66*N1y) - N1y*(B12*N1x + B26*N1y)) + detJ*r32*wij*(-N1x*(B26*N1y + B66*N1x) - N1y*(B22*N1y + B26*N1x))) + r12*(N1*detJ*r33*wij*(E45*N1y + E55*N1x) + detJ*r31*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y)) + detJ*r32*wij*(N1x*(B12*N1y + B16*N1x) + N1y*(B26*N1y + B66*N1x))) + r13*(-0.5*A66*N1*N1x*alphat*detJ*r32*wij/h + 0.5*A66*N1*N1y*alphat*detJ*r31*wij/h)
+            KC0v[k] += r11*(KC0e0003*r31 + KC0e0103*r32 + KC0e0203*r33) + r12*(KC0e0004*r31 + KC0e0104*r32 + KC0e0204*r33)
             k += 1
-            KC0v[k] += r21*(-N1*detJ*r33*wij*(E44*N1y + E45*N1x) + detJ*r31*wij*(-N1x*(B16*N1x + B66*N1y) - N1y*(B12*N1x + B26*N1y)) + detJ*r32*wij*(-N1x*(B26*N1y + B66*N1x) - N1y*(B22*N1y + B26*N1x))) + r22*(N1*detJ*r33*wij*(E45*N1y + E55*N1x) + detJ*r31*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y)) + detJ*r32*wij*(N1x*(B12*N1y + B16*N1x) + N1y*(B26*N1y + B66*N1x))) + r23*(-0.5*A66*N1*N1x*alphat*detJ*r32*wij/h + 0.5*A66*N1*N1y*alphat*detJ*r31*wij/h)
+            KC0v[k] += r21*(KC0e0003*r31 + KC0e0103*r32 + KC0e0203*r33) + r22*(KC0e0004*r31 + KC0e0104*r32 + KC0e0204*r33)
             k += 1
-            KC0v[k] += r31*(-N1*detJ*r33*wij*(E44*N1y + E45*N1x) + detJ*r31*wij*(-N1x*(B16*N1x + B66*N1y) - N1y*(B12*N1x + B26*N1y)) + detJ*r32*wij*(-N1x*(B26*N1y + B66*N1x) - N1y*(B22*N1y + B26*N1x))) + r32*(N1*detJ*r33*wij*(E45*N1y + E55*N1x) + detJ*r31*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y)) + detJ*r32*wij*(N1x*(B12*N1y + B16*N1x) + N1y*(B26*N1y + B66*N1x))) + r33*(-0.5*A66*N1*N1x*alphat*detJ*r32*wij/h + 0.5*A66*N1*N1y*alphat*detJ*r31*wij/h)
+            KC0v[k] += r31*(KC0e0003*r31 + KC0e0103*r32 + KC0e0203*r33) + r32*(KC0e0004*r31 + KC0e0104*r32 + KC0e0204*r33)
             k += 1
-            KC0v[k] += detJ*r13*r33*wij*(N2x*(E45*N1y + E55*N1x) + N2y*(E44*N1y + E45*N1x)) + r11*(detJ*r31*wij*(0.25*A66*N1y*N2y*alphat/h + N2x*(A11*N1x + A16*N1y) + N2y*(A16*N1x + A66*N1y)) + detJ*r32*wij*(-0.25*A66*N1x*N2y*alphat/h + N2x*(A12*N1y + A16*N1x) + N2y*(A26*N1y + A66*N1x))) + r12*(detJ*r31*wij*(-0.25*A66*N1y*N2x*alphat/h + N2x*(A16*N1x + A66*N1y) + N2y*(A12*N1x + A26*N1y)) + detJ*r32*wij*(0.25*A66*N1x*N2x*alphat/h + N2x*(A26*N1y + A66*N1x) + N2y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0208*r13*r33 + r11*(KC0e0006*r31 + KC0e0106*r32) + r12*(KC0e0007*r31 + KC0e0107*r32)
             k += 1
-            KC0v[k] += detJ*r23*r33*wij*(N2x*(E45*N1y + E55*N1x) + N2y*(E44*N1y + E45*N1x)) + r21*(detJ*r31*wij*(0.25*A66*N1y*N2y*alphat/h + N2x*(A11*N1x + A16*N1y) + N2y*(A16*N1x + A66*N1y)) + detJ*r32*wij*(-0.25*A66*N1x*N2y*alphat/h + N2x*(A12*N1y + A16*N1x) + N2y*(A26*N1y + A66*N1x))) + r22*(detJ*r31*wij*(-0.25*A66*N1y*N2x*alphat/h + N2x*(A16*N1x + A66*N1y) + N2y*(A12*N1x + A26*N1y)) + detJ*r32*wij*(0.25*A66*N1x*N2x*alphat/h + N2x*(A26*N1y + A66*N1x) + N2y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0208*r23*r33 + r21*(KC0e0006*r31 + KC0e0106*r32) + r22*(KC0e0007*r31 + KC0e0107*r32)
             k += 1
-            KC0v[k] += detJ*r33**2*wij*(N2x*(E45*N1y + E55*N1x) + N2y*(E44*N1y + E45*N1x)) + r31*(detJ*r31*wij*(0.25*A66*N1y*N2y*alphat/h + N2x*(A11*N1x + A16*N1y) + N2y*(A16*N1x + A66*N1y)) + detJ*r32*wij*(-0.25*A66*N1x*N2y*alphat/h + N2x*(A12*N1y + A16*N1x) + N2y*(A26*N1y + A66*N1x))) + r32*(detJ*r31*wij*(-0.25*A66*N1y*N2x*alphat/h + N2x*(A16*N1x + A66*N1y) + N2y*(A12*N1x + A26*N1y)) + detJ*r32*wij*(0.25*A66*N1x*N2x*alphat/h + N2x*(A26*N1y + A66*N1x) + N2y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0208*r33**2 + r31*(KC0e0006*r31 + KC0e0106*r32) + r32*(KC0e0007*r31 + KC0e0107*r32)
             k += 1
-            KC0v[k] += r11*(-N2*detJ*r33*wij*(E44*N1y + E45*N1x) + detJ*r31*wij*(-N2x*(B16*N1x + B66*N1y) - N2y*(B12*N1x + B26*N1y)) + detJ*r32*wij*(-N2x*(B26*N1y + B66*N1x) - N2y*(B22*N1y + B26*N1x))) + r12*(N2*detJ*r33*wij*(E45*N1y + E55*N1x) + detJ*r31*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y)) + detJ*r32*wij*(N2x*(B12*N1y + B16*N1x) + N2y*(B26*N1y + B66*N1x))) + r13*(-0.5*A66*N1x*N2*alphat*detJ*r32*wij/h + 0.5*A66*N1y*N2*alphat*detJ*r31*wij/h)
+            KC0v[k] += r11*(KC0e0009*r31 + KC0e0109*r32 + KC0e0209*r33) + r12*(KC0e0010*r31 + KC0e0110*r32 + KC0e0210*r33)
             k += 1
-            KC0v[k] += r21*(-N2*detJ*r33*wij*(E44*N1y + E45*N1x) + detJ*r31*wij*(-N2x*(B16*N1x + B66*N1y) - N2y*(B12*N1x + B26*N1y)) + detJ*r32*wij*(-N2x*(B26*N1y + B66*N1x) - N2y*(B22*N1y + B26*N1x))) + r22*(N2*detJ*r33*wij*(E45*N1y + E55*N1x) + detJ*r31*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y)) + detJ*r32*wij*(N2x*(B12*N1y + B16*N1x) + N2y*(B26*N1y + B66*N1x))) + r23*(-0.5*A66*N1x*N2*alphat*detJ*r32*wij/h + 0.5*A66*N1y*N2*alphat*detJ*r31*wij/h)
+            KC0v[k] += r21*(KC0e0009*r31 + KC0e0109*r32 + KC0e0209*r33) + r22*(KC0e0010*r31 + KC0e0110*r32 + KC0e0210*r33)
             k += 1
-            KC0v[k] += r31*(-N2*detJ*r33*wij*(E44*N1y + E45*N1x) + detJ*r31*wij*(-N2x*(B16*N1x + B66*N1y) - N2y*(B12*N1x + B26*N1y)) + detJ*r32*wij*(-N2x*(B26*N1y + B66*N1x) - N2y*(B22*N1y + B26*N1x))) + r32*(N2*detJ*r33*wij*(E45*N1y + E55*N1x) + detJ*r31*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y)) + detJ*r32*wij*(N2x*(B12*N1y + B16*N1x) + N2y*(B26*N1y + B66*N1x))) + r33*(-0.5*A66*N1x*N2*alphat*detJ*r32*wij/h + 0.5*A66*N1y*N2*alphat*detJ*r31*wij/h)
+            KC0v[k] += r31*(KC0e0009*r31 + KC0e0109*r32 + KC0e0209*r33) + r32*(KC0e0010*r31 + KC0e0110*r32 + KC0e0210*r33)
             k += 1
-            KC0v[k] += detJ*r13*r33*wij*(N3x*(E45*N1y + E55*N1x) + N3y*(E44*N1y + E45*N1x)) + r11*(detJ*r31*wij*(0.25*A66*N1y*N3y*alphat/h + N3x*(A11*N1x + A16*N1y) + N3y*(A16*N1x + A66*N1y)) + detJ*r32*wij*(-0.25*A66*N1x*N3y*alphat/h + N3x*(A12*N1y + A16*N1x) + N3y*(A26*N1y + A66*N1x))) + r12*(detJ*r31*wij*(-0.25*A66*N1y*N3x*alphat/h + N3x*(A16*N1x + A66*N1y) + N3y*(A12*N1x + A26*N1y)) + detJ*r32*wij*(0.25*A66*N1x*N3x*alphat/h + N3x*(A26*N1y + A66*N1x) + N3y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0214*r13*r33 + r11*(KC0e0012*r31 + KC0e0112*r32) + r12*(KC0e0013*r31 + KC0e0113*r32)
             k += 1
-            KC0v[k] += detJ*r23*r33*wij*(N3x*(E45*N1y + E55*N1x) + N3y*(E44*N1y + E45*N1x)) + r21*(detJ*r31*wij*(0.25*A66*N1y*N3y*alphat/h + N3x*(A11*N1x + A16*N1y) + N3y*(A16*N1x + A66*N1y)) + detJ*r32*wij*(-0.25*A66*N1x*N3y*alphat/h + N3x*(A12*N1y + A16*N1x) + N3y*(A26*N1y + A66*N1x))) + r22*(detJ*r31*wij*(-0.25*A66*N1y*N3x*alphat/h + N3x*(A16*N1x + A66*N1y) + N3y*(A12*N1x + A26*N1y)) + detJ*r32*wij*(0.25*A66*N1x*N3x*alphat/h + N3x*(A26*N1y + A66*N1x) + N3y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0214*r23*r33 + r21*(KC0e0012*r31 + KC0e0112*r32) + r22*(KC0e0013*r31 + KC0e0113*r32)
             k += 1
-            KC0v[k] += detJ*r33**2*wij*(N3x*(E45*N1y + E55*N1x) + N3y*(E44*N1y + E45*N1x)) + r31*(detJ*r31*wij*(0.25*A66*N1y*N3y*alphat/h + N3x*(A11*N1x + A16*N1y) + N3y*(A16*N1x + A66*N1y)) + detJ*r32*wij*(-0.25*A66*N1x*N3y*alphat/h + N3x*(A12*N1y + A16*N1x) + N3y*(A26*N1y + A66*N1x))) + r32*(detJ*r31*wij*(-0.25*A66*N1y*N3x*alphat/h + N3x*(A16*N1x + A66*N1y) + N3y*(A12*N1x + A26*N1y)) + detJ*r32*wij*(0.25*A66*N1x*N3x*alphat/h + N3x*(A26*N1y + A66*N1x) + N3y*(A22*N1y + A26*N1x)))
+            KC0v[k] += KC0e0214*r33**2 + r31*(KC0e0012*r31 + KC0e0112*r32) + r32*(KC0e0013*r31 + KC0e0113*r32)
             k += 1
-            KC0v[k] += r11*(detJ*r31*wij*(-N3x*(B16*N1x + B66*N1y) - N3y*(B12*N1x + B26*N1y)) + detJ*r32*wij*(-N3x*(B26*N1y + B66*N1x) - N3y*(B22*N1y + B26*N1x)) + detJ*r33*wij*(E44*N1y + E45*N1x)*(N1 + N2 - 1)) + r12*(detJ*r31*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y)) + detJ*r32*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x)) + detJ*r33*wij*(E45*N1y + E55*N1x)*(-N1 - N2 + 1)) + r13*(-0.5*A66*N1x*alphat*detJ*r32*wij*(-N1 - N2 + 1)/h + 0.5*A66*N1y*alphat*detJ*r31*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r11*(KC0e0015*r31 + KC0e0115*r32 + KC0e0215*r33) + r12*(KC0e0016*r31 + KC0e0116*r32 + KC0e0216*r33)
             k += 1
-            KC0v[k] += r21*(detJ*r31*wij*(-N3x*(B16*N1x + B66*N1y) - N3y*(B12*N1x + B26*N1y)) + detJ*r32*wij*(-N3x*(B26*N1y + B66*N1x) - N3y*(B22*N1y + B26*N1x)) + detJ*r33*wij*(E44*N1y + E45*N1x)*(N1 + N2 - 1)) + r22*(detJ*r31*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y)) + detJ*r32*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x)) + detJ*r33*wij*(E45*N1y + E55*N1x)*(-N1 - N2 + 1)) + r23*(-0.5*A66*N1x*alphat*detJ*r32*wij*(-N1 - N2 + 1)/h + 0.5*A66*N1y*alphat*detJ*r31*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r21*(KC0e0015*r31 + KC0e0115*r32 + KC0e0215*r33) + r22*(KC0e0016*r31 + KC0e0116*r32 + KC0e0216*r33)
             k += 1
-            KC0v[k] += r31*(detJ*r31*wij*(-N3x*(B16*N1x + B66*N1y) - N3y*(B12*N1x + B26*N1y)) + detJ*r32*wij*(-N3x*(B26*N1y + B66*N1x) - N3y*(B22*N1y + B26*N1x)) + detJ*r33*wij*(E44*N1y + E45*N1x)*(N1 + N2 - 1)) + r32*(detJ*r31*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y)) + detJ*r32*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x)) + detJ*r33*wij*(E45*N1y + E55*N1x)*(-N1 - N2 + 1)) + r33*(-0.5*A66*N1x*alphat*detJ*r32*wij*(-N1 - N2 + 1)/h + 0.5*A66*N1y*alphat*detJ*r31*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r31*(KC0e0015*r31 + KC0e0115*r32 + KC0e0215*r33) + r32*(KC0e0016*r31 + KC0e0116*r32 + KC0e0216*r33)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N1*N1y*alphat*detJ*r13*wij/h + detJ*r11*wij*(N1x*(-B12*N1y - B16*N1x) + N1y*(-B26*N1y - B66*N1x)) + detJ*r12*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y))) + r12*(-0.5*A66*N1*N1x*alphat*detJ*r13*wij/h + detJ*r11*wij*(N1x*(-B26*N1y - B66*N1x) + N1y*(-B22*N1y - B26*N1x)) + detJ*r12*wij*(N1x*(B16*N1x + B66*N1y) + N1y*(B12*N1x + B26*N1y))) + r13*(detJ*r11*wij*(-E44*N1*N1y - E45*N1*N1x) + detJ*r12*wij*(E45*N1*N1y + E55*N1*N1x))
+            KC0v[k] += r11*(KC0e0003*r11 + KC0e0004*r12) + r12*(KC0e0103*r11 + KC0e0104*r12) + r13*(KC0e0203*r11 + KC0e0204*r12)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N1*N1y*alphat*detJ*r13*wij/h + detJ*r11*wij*(N1x*(-B12*N1y - B16*N1x) + N1y*(-B26*N1y - B66*N1x)) + detJ*r12*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y))) + r22*(-0.5*A66*N1*N1x*alphat*detJ*r13*wij/h + detJ*r11*wij*(N1x*(-B26*N1y - B66*N1x) + N1y*(-B22*N1y - B26*N1x)) + detJ*r12*wij*(N1x*(B16*N1x + B66*N1y) + N1y*(B12*N1x + B26*N1y))) + r23*(detJ*r11*wij*(-E44*N1*N1y - E45*N1*N1x) + detJ*r12*wij*(E45*N1*N1y + E55*N1*N1x))
+            KC0v[k] += r21*(KC0e0003*r11 + KC0e0004*r12) + r22*(KC0e0103*r11 + KC0e0104*r12) + r23*(KC0e0203*r11 + KC0e0204*r12)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N1*N1y*alphat*detJ*r13*wij/h + detJ*r11*wij*(N1x*(-B12*N1y - B16*N1x) + N1y*(-B26*N1y - B66*N1x)) + detJ*r12*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y))) + r32*(-0.5*A66*N1*N1x*alphat*detJ*r13*wij/h + detJ*r11*wij*(N1x*(-B26*N1y - B66*N1x) + N1y*(-B22*N1y - B26*N1x)) + detJ*r12*wij*(N1x*(B16*N1x + B66*N1y) + N1y*(B12*N1x + B26*N1y))) + r33*(detJ*r11*wij*(-E44*N1*N1y - E45*N1*N1x) + detJ*r12*wij*(E45*N1*N1y + E55*N1*N1x))
+            KC0v[k] += r31*(KC0e0003*r11 + KC0e0004*r12) + r32*(KC0e0103*r11 + KC0e0104*r12) + r33*(KC0e0203*r11 + KC0e0204*r12)
             k += 1
-            KC0v[k] += A66*N1**2*alphat*detJ*r13**2*wij/h + r11*(detJ*r11*wij*(E44*N1**2 - N1x*(-D26*N1y - D66*N1x) - N1y*(-D22*N1y - D26*N1x)) + detJ*r12*wij*(-E45*N1**2 - N1x*(D16*N1x + D66*N1y) - N1y*(D12*N1x + D26*N1y))) + r12*(detJ*r11*wij*(-E45*N1**2 + N1x*(-D12*N1y - D16*N1x) + N1y*(-D26*N1y - D66*N1x)) + detJ*r12*wij*(E55*N1**2 + N1x*(D11*N1x + D16*N1y) + N1y*(D16*N1x + D66*N1y)))
+            KC0v[k] += KC0e0505*r13**2 + r11*(KC0e0303*r11 + KC0e0304*r12) + r12*(KC0e0304*r11 + KC0e0404*r12)
             k += 1
-            KC0v[k] += A66*N1**2*alphat*detJ*r13*r23*wij/h + r21*(detJ*r11*wij*(E44*N1**2 - N1x*(-D26*N1y - D66*N1x) - N1y*(-D22*N1y - D26*N1x)) + detJ*r12*wij*(-E45*N1**2 - N1x*(D16*N1x + D66*N1y) - N1y*(D12*N1x + D26*N1y))) + r22*(detJ*r11*wij*(-E45*N1**2 + N1x*(-D12*N1y - D16*N1x) + N1y*(-D26*N1y - D66*N1x)) + detJ*r12*wij*(E55*N1**2 + N1x*(D11*N1x + D16*N1y) + N1y*(D16*N1x + D66*N1y)))
+            KC0v[k] += KC0e0505*r13*r23 + r21*(KC0e0303*r11 + KC0e0304*r12) + r22*(KC0e0304*r11 + KC0e0404*r12)
             k += 1
-            KC0v[k] += A66*N1**2*alphat*detJ*r13*r33*wij/h + r31*(detJ*r11*wij*(E44*N1**2 - N1x*(-D26*N1y - D66*N1x) - N1y*(-D22*N1y - D26*N1x)) + detJ*r12*wij*(-E45*N1**2 - N1x*(D16*N1x + D66*N1y) - N1y*(D12*N1x + D26*N1y))) + r32*(detJ*r11*wij*(-E45*N1**2 + N1x*(-D12*N1y - D16*N1x) + N1y*(-D26*N1y - D66*N1x)) + detJ*r12*wij*(E55*N1**2 + N1x*(D11*N1x + D16*N1y) + N1y*(D16*N1x + D66*N1y)))
+            KC0v[k] += KC0e0505*r13*r33 + r31*(KC0e0303*r11 + KC0e0304*r12) + r32*(KC0e0304*r11 + KC0e0404*r12)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N1*N2y*alphat*detJ*r13*wij/h + detJ*r11*wij*(N2x*(-B12*N1y - B16*N1x) + N2y*(-B26*N1y - B66*N1x)) + detJ*r12*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y))) + r12*(-0.5*A66*N1*N2x*alphat*detJ*r13*wij/h + detJ*r11*wij*(N2x*(-B26*N1y - B66*N1x) + N2y*(-B22*N1y - B26*N1x)) + detJ*r12*wij*(N2x*(B16*N1x + B66*N1y) + N2y*(B12*N1x + B26*N1y))) + r13*(detJ*r11*wij*(-E44*N1*N2y - E45*N1*N2x) + detJ*r12*wij*(E45*N1*N2y + E55*N1*N2x))
+            KC0v[k] += r11*(KC0e0306*r11 + KC0e0406*r12) + r12*(KC0e0307*r11 + KC0e0407*r12) + r13*(KC0e0308*r11 + KC0e0408*r12)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N1*N2y*alphat*detJ*r13*wij/h + detJ*r11*wij*(N2x*(-B12*N1y - B16*N1x) + N2y*(-B26*N1y - B66*N1x)) + detJ*r12*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y))) + r22*(-0.5*A66*N1*N2x*alphat*detJ*r13*wij/h + detJ*r11*wij*(N2x*(-B26*N1y - B66*N1x) + N2y*(-B22*N1y - B26*N1x)) + detJ*r12*wij*(N2x*(B16*N1x + B66*N1y) + N2y*(B12*N1x + B26*N1y))) + r23*(detJ*r11*wij*(-E44*N1*N2y - E45*N1*N2x) + detJ*r12*wij*(E45*N1*N2y + E55*N1*N2x))
+            KC0v[k] += r21*(KC0e0306*r11 + KC0e0406*r12) + r22*(KC0e0307*r11 + KC0e0407*r12) + r23*(KC0e0308*r11 + KC0e0408*r12)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N1*N2y*alphat*detJ*r13*wij/h + detJ*r11*wij*(N2x*(-B12*N1y - B16*N1x) + N2y*(-B26*N1y - B66*N1x)) + detJ*r12*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y))) + r32*(-0.5*A66*N1*N2x*alphat*detJ*r13*wij/h + detJ*r11*wij*(N2x*(-B26*N1y - B66*N1x) + N2y*(-B22*N1y - B26*N1x)) + detJ*r12*wij*(N2x*(B16*N1x + B66*N1y) + N2y*(B12*N1x + B26*N1y))) + r33*(detJ*r11*wij*(-E44*N1*N2y - E45*N1*N2x) + detJ*r12*wij*(E45*N1*N2y + E55*N1*N2x))
+            KC0v[k] += r31*(KC0e0306*r11 + KC0e0406*r12) + r32*(KC0e0307*r11 + KC0e0407*r12) + r33*(KC0e0308*r11 + KC0e0408*r12)
             k += 1
-            KC0v[k] += A66*N1*N2*alphat*detJ*r13**2*wij/h + r11*(detJ*r11*wij*(E44*N1*N2 - N2x*(-D26*N1y - D66*N1x) - N2y*(-D22*N1y - D26*N1x)) + detJ*r12*wij*(-E45*N1*N2 - N2x*(D16*N1x + D66*N1y) - N2y*(D12*N1x + D26*N1y))) + r12*(detJ*r11*wij*(-E45*N1*N2 + N2x*(-D12*N1y - D16*N1x) + N2y*(-D26*N1y - D66*N1x)) + detJ*r12*wij*(E55*N1*N2 + N2x*(D11*N1x + D16*N1y) + N2y*(D16*N1x + D66*N1y)))
+            KC0v[k] += r11*(KC0e0309*r11 + KC0e0409*r12) + r12*(KC0e0310*r11 + KC0e0410*r12)
             k += 1
-            KC0v[k] += A66*N1*N2*alphat*detJ*r13*r23*wij/h + r21*(detJ*r11*wij*(E44*N1*N2 - N2x*(-D26*N1y - D66*N1x) - N2y*(-D22*N1y - D26*N1x)) + detJ*r12*wij*(-E45*N1*N2 - N2x*(D16*N1x + D66*N1y) - N2y*(D12*N1x + D26*N1y))) + r22*(detJ*r11*wij*(-E45*N1*N2 + N2x*(-D12*N1y - D16*N1x) + N2y*(-D26*N1y - D66*N1x)) + detJ*r12*wij*(E55*N1*N2 + N2x*(D11*N1x + D16*N1y) + N2y*(D16*N1x + D66*N1y)))
+            KC0v[k] += r21*(KC0e0309*r11 + KC0e0409*r12) + r22*(KC0e0310*r11 + KC0e0410*r12)
             k += 1
-            KC0v[k] += A66*N1*N2*alphat*detJ*r13*r33*wij/h + r31*(detJ*r11*wij*(E44*N1*N2 - N2x*(-D26*N1y - D66*N1x) - N2y*(-D22*N1y - D26*N1x)) + detJ*r12*wij*(-E45*N1*N2 - N2x*(D16*N1x + D66*N1y) - N2y*(D12*N1x + D26*N1y))) + r32*(detJ*r11*wij*(-E45*N1*N2 + N2x*(-D12*N1y - D16*N1x) + N2y*(-D26*N1y - D66*N1x)) + detJ*r12*wij*(E55*N1*N2 + N2x*(D11*N1x + D16*N1y) + N2y*(D16*N1x + D66*N1y)))
+            KC0v[k] += r31*(KC0e0309*r11 + KC0e0409*r12) + r32*(KC0e0310*r11 + KC0e0410*r12)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N1*N3y*alphat*detJ*r13*wij/h + detJ*r11*wij*(N3x*(-B12*N1y - B16*N1x) + N3y*(-B26*N1y - B66*N1x)) + detJ*r12*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y))) + r12*(-0.5*A66*N1*N3x*alphat*detJ*r13*wij/h + detJ*r11*wij*(N3x*(-B26*N1y - B66*N1x) + N3y*(-B22*N1y - B26*N1x)) + detJ*r12*wij*(N3x*(B16*N1x + B66*N1y) + N3y*(B12*N1x + B26*N1y))) + r13*(detJ*r11*wij*(-E44*N1*N3y - E45*N1*N3x) + detJ*r12*wij*(E45*N1*N3y + E55*N1*N3x))
+            KC0v[k] += r11*(KC0e0312*r11 + KC0e0412*r12) + r12*(KC0e0313*r11 + KC0e0413*r12) + r13*(KC0e0314*r11 + KC0e0414*r12)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N1*N3y*alphat*detJ*r13*wij/h + detJ*r11*wij*(N3x*(-B12*N1y - B16*N1x) + N3y*(-B26*N1y - B66*N1x)) + detJ*r12*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y))) + r22*(-0.5*A66*N1*N3x*alphat*detJ*r13*wij/h + detJ*r11*wij*(N3x*(-B26*N1y - B66*N1x) + N3y*(-B22*N1y - B26*N1x)) + detJ*r12*wij*(N3x*(B16*N1x + B66*N1y) + N3y*(B12*N1x + B26*N1y))) + r23*(detJ*r11*wij*(-E44*N1*N3y - E45*N1*N3x) + detJ*r12*wij*(E45*N1*N3y + E55*N1*N3x))
+            KC0v[k] += r21*(KC0e0312*r11 + KC0e0412*r12) + r22*(KC0e0313*r11 + KC0e0413*r12) + r23*(KC0e0314*r11 + KC0e0414*r12)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N1*N3y*alphat*detJ*r13*wij/h + detJ*r11*wij*(N3x*(-B12*N1y - B16*N1x) + N3y*(-B26*N1y - B66*N1x)) + detJ*r12*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y))) + r32*(-0.5*A66*N1*N3x*alphat*detJ*r13*wij/h + detJ*r11*wij*(N3x*(-B26*N1y - B66*N1x) + N3y*(-B22*N1y - B26*N1x)) + detJ*r12*wij*(N3x*(B16*N1x + B66*N1y) + N3y*(B12*N1x + B26*N1y))) + r33*(detJ*r11*wij*(-E44*N1*N3y - E45*N1*N3x) + detJ*r12*wij*(E45*N1*N3y + E55*N1*N3x))
+            KC0v[k] += r31*(KC0e0312*r11 + KC0e0412*r12) + r32*(KC0e0313*r11 + KC0e0413*r12) + r33*(KC0e0314*r11 + KC0e0414*r12)
             k += 1
-            KC0v[k] += A66*N1*alphat*detJ*r13**2*wij*(-N1 - N2 + 1)/h + r11*(detJ*r11*wij*(-E44*N1*(N1 + N2 - 1) - N3x*(-D26*N1y - D66*N1x) - N3y*(-D22*N1y - D26*N1x)) + detJ*r12*wij*(E45*N1*(N1 + N2 - 1) - N3x*(D16*N1x + D66*N1y) - N3y*(D12*N1x + D26*N1y))) + r12*(detJ*r11*wij*(-E45*N1*(-N1 - N2 + 1) + N3x*(-D12*N1y - D16*N1x) + N3y*(-D26*N1y - D66*N1x)) + detJ*r12*wij*(E55*N1*(-N1 - N2 + 1) + N3x*(D11*N1x + D16*N1y) + N3y*(D16*N1x + D66*N1y)))
+            KC0v[k] += r11*(KC0e0315*r11 + KC0e0415*r12) + r12*(KC0e0316*r11 + KC0e0416*r12)
             k += 1
-            KC0v[k] += A66*N1*alphat*detJ*r13*r23*wij*(-N1 - N2 + 1)/h + r21*(detJ*r11*wij*(-E44*N1*(N1 + N2 - 1) - N3x*(-D26*N1y - D66*N1x) - N3y*(-D22*N1y - D26*N1x)) + detJ*r12*wij*(E45*N1*(N1 + N2 - 1) - N3x*(D16*N1x + D66*N1y) - N3y*(D12*N1x + D26*N1y))) + r22*(detJ*r11*wij*(-E45*N1*(-N1 - N2 + 1) + N3x*(-D12*N1y - D16*N1x) + N3y*(-D26*N1y - D66*N1x)) + detJ*r12*wij*(E55*N1*(-N1 - N2 + 1) + N3x*(D11*N1x + D16*N1y) + N3y*(D16*N1x + D66*N1y)))
+            KC0v[k] += r21*(KC0e0315*r11 + KC0e0415*r12) + r22*(KC0e0316*r11 + KC0e0416*r12)
             k += 1
-            KC0v[k] += A66*N1*alphat*detJ*r13*r33*wij*(-N1 - N2 + 1)/h + r31*(detJ*r11*wij*(-E44*N1*(N1 + N2 - 1) - N3x*(-D26*N1y - D66*N1x) - N3y*(-D22*N1y - D26*N1x)) + detJ*r12*wij*(E45*N1*(N1 + N2 - 1) - N3x*(D16*N1x + D66*N1y) - N3y*(D12*N1x + D26*N1y))) + r32*(detJ*r11*wij*(-E45*N1*(-N1 - N2 + 1) + N3x*(-D12*N1y - D16*N1x) + N3y*(-D26*N1y - D66*N1x)) + detJ*r12*wij*(E55*N1*(-N1 - N2 + 1) + N3x*(D11*N1x + D16*N1y) + N3y*(D16*N1x + D66*N1y)))
+            KC0v[k] += r31*(KC0e0315*r11 + KC0e0415*r12) + r32*(KC0e0316*r11 + KC0e0416*r12)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N1*N1y*alphat*detJ*r23*wij/h + detJ*r21*wij*(N1x*(-B12*N1y - B16*N1x) + N1y*(-B26*N1y - B66*N1x)) + detJ*r22*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y))) + r12*(-0.5*A66*N1*N1x*alphat*detJ*r23*wij/h + detJ*r21*wij*(N1x*(-B26*N1y - B66*N1x) + N1y*(-B22*N1y - B26*N1x)) + detJ*r22*wij*(N1x*(B16*N1x + B66*N1y) + N1y*(B12*N1x + B26*N1y))) + r13*(detJ*r21*wij*(-E44*N1*N1y - E45*N1*N1x) + detJ*r22*wij*(E45*N1*N1y + E55*N1*N1x))
+            KC0v[k] += r11*(KC0e0003*r21 + KC0e0004*r22) + r12*(KC0e0103*r21 + KC0e0104*r22) + r13*(KC0e0203*r21 + KC0e0204*r22)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N1*N1y*alphat*detJ*r23*wij/h + detJ*r21*wij*(N1x*(-B12*N1y - B16*N1x) + N1y*(-B26*N1y - B66*N1x)) + detJ*r22*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y))) + r22*(-0.5*A66*N1*N1x*alphat*detJ*r23*wij/h + detJ*r21*wij*(N1x*(-B26*N1y - B66*N1x) + N1y*(-B22*N1y - B26*N1x)) + detJ*r22*wij*(N1x*(B16*N1x + B66*N1y) + N1y*(B12*N1x + B26*N1y))) + r23*(detJ*r21*wij*(-E44*N1*N1y - E45*N1*N1x) + detJ*r22*wij*(E45*N1*N1y + E55*N1*N1x))
+            KC0v[k] += r21*(KC0e0003*r21 + KC0e0004*r22) + r22*(KC0e0103*r21 + KC0e0104*r22) + r23*(KC0e0203*r21 + KC0e0204*r22)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N1*N1y*alphat*detJ*r23*wij/h + detJ*r21*wij*(N1x*(-B12*N1y - B16*N1x) + N1y*(-B26*N1y - B66*N1x)) + detJ*r22*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y))) + r32*(-0.5*A66*N1*N1x*alphat*detJ*r23*wij/h + detJ*r21*wij*(N1x*(-B26*N1y - B66*N1x) + N1y*(-B22*N1y - B26*N1x)) + detJ*r22*wij*(N1x*(B16*N1x + B66*N1y) + N1y*(B12*N1x + B26*N1y))) + r33*(detJ*r21*wij*(-E44*N1*N1y - E45*N1*N1x) + detJ*r22*wij*(E45*N1*N1y + E55*N1*N1x))
+            KC0v[k] += r31*(KC0e0003*r21 + KC0e0004*r22) + r32*(KC0e0103*r21 + KC0e0104*r22) + r33*(KC0e0203*r21 + KC0e0204*r22)
             k += 1
-            KC0v[k] += A66*N1**2*alphat*detJ*r13*r23*wij/h + r11*(detJ*r21*wij*(E44*N1**2 - N1x*(-D26*N1y - D66*N1x) - N1y*(-D22*N1y - D26*N1x)) + detJ*r22*wij*(-E45*N1**2 - N1x*(D16*N1x + D66*N1y) - N1y*(D12*N1x + D26*N1y))) + r12*(detJ*r21*wij*(-E45*N1**2 + N1x*(-D12*N1y - D16*N1x) + N1y*(-D26*N1y - D66*N1x)) + detJ*r22*wij*(E55*N1**2 + N1x*(D11*N1x + D16*N1y) + N1y*(D16*N1x + D66*N1y)))
+            KC0v[k] += KC0e0505*r13*r23 + r11*(KC0e0303*r21 + KC0e0304*r22) + r12*(KC0e0304*r21 + KC0e0404*r22)
             k += 1
-            KC0v[k] += A66*N1**2*alphat*detJ*r23**2*wij/h + r21*(detJ*r21*wij*(E44*N1**2 - N1x*(-D26*N1y - D66*N1x) - N1y*(-D22*N1y - D26*N1x)) + detJ*r22*wij*(-E45*N1**2 - N1x*(D16*N1x + D66*N1y) - N1y*(D12*N1x + D26*N1y))) + r22*(detJ*r21*wij*(-E45*N1**2 + N1x*(-D12*N1y - D16*N1x) + N1y*(-D26*N1y - D66*N1x)) + detJ*r22*wij*(E55*N1**2 + N1x*(D11*N1x + D16*N1y) + N1y*(D16*N1x + D66*N1y)))
+            KC0v[k] += KC0e0505*r23**2 + r21*(KC0e0303*r21 + KC0e0304*r22) + r22*(KC0e0304*r21 + KC0e0404*r22)
             k += 1
-            KC0v[k] += A66*N1**2*alphat*detJ*r23*r33*wij/h + r31*(detJ*r21*wij*(E44*N1**2 - N1x*(-D26*N1y - D66*N1x) - N1y*(-D22*N1y - D26*N1x)) + detJ*r22*wij*(-E45*N1**2 - N1x*(D16*N1x + D66*N1y) - N1y*(D12*N1x + D26*N1y))) + r32*(detJ*r21*wij*(-E45*N1**2 + N1x*(-D12*N1y - D16*N1x) + N1y*(-D26*N1y - D66*N1x)) + detJ*r22*wij*(E55*N1**2 + N1x*(D11*N1x + D16*N1y) + N1y*(D16*N1x + D66*N1y)))
+            KC0v[k] += KC0e0505*r23*r33 + r31*(KC0e0303*r21 + KC0e0304*r22) + r32*(KC0e0304*r21 + KC0e0404*r22)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N1*N2y*alphat*detJ*r23*wij/h + detJ*r21*wij*(N2x*(-B12*N1y - B16*N1x) + N2y*(-B26*N1y - B66*N1x)) + detJ*r22*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y))) + r12*(-0.5*A66*N1*N2x*alphat*detJ*r23*wij/h + detJ*r21*wij*(N2x*(-B26*N1y - B66*N1x) + N2y*(-B22*N1y - B26*N1x)) + detJ*r22*wij*(N2x*(B16*N1x + B66*N1y) + N2y*(B12*N1x + B26*N1y))) + r13*(detJ*r21*wij*(-E44*N1*N2y - E45*N1*N2x) + detJ*r22*wij*(E45*N1*N2y + E55*N1*N2x))
+            KC0v[k] += r11*(KC0e0306*r21 + KC0e0406*r22) + r12*(KC0e0307*r21 + KC0e0407*r22) + r13*(KC0e0308*r21 + KC0e0408*r22)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N1*N2y*alphat*detJ*r23*wij/h + detJ*r21*wij*(N2x*(-B12*N1y - B16*N1x) + N2y*(-B26*N1y - B66*N1x)) + detJ*r22*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y))) + r22*(-0.5*A66*N1*N2x*alphat*detJ*r23*wij/h + detJ*r21*wij*(N2x*(-B26*N1y - B66*N1x) + N2y*(-B22*N1y - B26*N1x)) + detJ*r22*wij*(N2x*(B16*N1x + B66*N1y) + N2y*(B12*N1x + B26*N1y))) + r23*(detJ*r21*wij*(-E44*N1*N2y - E45*N1*N2x) + detJ*r22*wij*(E45*N1*N2y + E55*N1*N2x))
+            KC0v[k] += r21*(KC0e0306*r21 + KC0e0406*r22) + r22*(KC0e0307*r21 + KC0e0407*r22) + r23*(KC0e0308*r21 + KC0e0408*r22)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N1*N2y*alphat*detJ*r23*wij/h + detJ*r21*wij*(N2x*(-B12*N1y - B16*N1x) + N2y*(-B26*N1y - B66*N1x)) + detJ*r22*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y))) + r32*(-0.5*A66*N1*N2x*alphat*detJ*r23*wij/h + detJ*r21*wij*(N2x*(-B26*N1y - B66*N1x) + N2y*(-B22*N1y - B26*N1x)) + detJ*r22*wij*(N2x*(B16*N1x + B66*N1y) + N2y*(B12*N1x + B26*N1y))) + r33*(detJ*r21*wij*(-E44*N1*N2y - E45*N1*N2x) + detJ*r22*wij*(E45*N1*N2y + E55*N1*N2x))
+            KC0v[k] += r31*(KC0e0306*r21 + KC0e0406*r22) + r32*(KC0e0307*r21 + KC0e0407*r22) + r33*(KC0e0308*r21 + KC0e0408*r22)
             k += 1
-            KC0v[k] += A66*N1*N2*alphat*detJ*r13*r23*wij/h + r11*(detJ*r21*wij*(E44*N1*N2 - N2x*(-D26*N1y - D66*N1x) - N2y*(-D22*N1y - D26*N1x)) + detJ*r22*wij*(-E45*N1*N2 - N2x*(D16*N1x + D66*N1y) - N2y*(D12*N1x + D26*N1y))) + r12*(detJ*r21*wij*(-E45*N1*N2 + N2x*(-D12*N1y - D16*N1x) + N2y*(-D26*N1y - D66*N1x)) + detJ*r22*wij*(E55*N1*N2 + N2x*(D11*N1x + D16*N1y) + N2y*(D16*N1x + D66*N1y)))
+            KC0v[k] += r11*(KC0e0309*r21 + KC0e0409*r22) + r12*(KC0e0310*r21 + KC0e0410*r22)
             k += 1
-            KC0v[k] += A66*N1*N2*alphat*detJ*r23**2*wij/h + r21*(detJ*r21*wij*(E44*N1*N2 - N2x*(-D26*N1y - D66*N1x) - N2y*(-D22*N1y - D26*N1x)) + detJ*r22*wij*(-E45*N1*N2 - N2x*(D16*N1x + D66*N1y) - N2y*(D12*N1x + D26*N1y))) + r22*(detJ*r21*wij*(-E45*N1*N2 + N2x*(-D12*N1y - D16*N1x) + N2y*(-D26*N1y - D66*N1x)) + detJ*r22*wij*(E55*N1*N2 + N2x*(D11*N1x + D16*N1y) + N2y*(D16*N1x + D66*N1y)))
+            KC0v[k] += r21*(KC0e0309*r21 + KC0e0409*r22) + r22*(KC0e0310*r21 + KC0e0410*r22)
             k += 1
-            KC0v[k] += A66*N1*N2*alphat*detJ*r23*r33*wij/h + r31*(detJ*r21*wij*(E44*N1*N2 - N2x*(-D26*N1y - D66*N1x) - N2y*(-D22*N1y - D26*N1x)) + detJ*r22*wij*(-E45*N1*N2 - N2x*(D16*N1x + D66*N1y) - N2y*(D12*N1x + D26*N1y))) + r32*(detJ*r21*wij*(-E45*N1*N2 + N2x*(-D12*N1y - D16*N1x) + N2y*(-D26*N1y - D66*N1x)) + detJ*r22*wij*(E55*N1*N2 + N2x*(D11*N1x + D16*N1y) + N2y*(D16*N1x + D66*N1y)))
+            KC0v[k] += r31*(KC0e0309*r21 + KC0e0409*r22) + r32*(KC0e0310*r21 + KC0e0410*r22)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N1*N3y*alphat*detJ*r23*wij/h + detJ*r21*wij*(N3x*(-B12*N1y - B16*N1x) + N3y*(-B26*N1y - B66*N1x)) + detJ*r22*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y))) + r12*(-0.5*A66*N1*N3x*alphat*detJ*r23*wij/h + detJ*r21*wij*(N3x*(-B26*N1y - B66*N1x) + N3y*(-B22*N1y - B26*N1x)) + detJ*r22*wij*(N3x*(B16*N1x + B66*N1y) + N3y*(B12*N1x + B26*N1y))) + r13*(detJ*r21*wij*(-E44*N1*N3y - E45*N1*N3x) + detJ*r22*wij*(E45*N1*N3y + E55*N1*N3x))
+            KC0v[k] += r11*(KC0e0312*r21 + KC0e0412*r22) + r12*(KC0e0313*r21 + KC0e0413*r22) + r13*(KC0e0314*r21 + KC0e0414*r22)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N1*N3y*alphat*detJ*r23*wij/h + detJ*r21*wij*(N3x*(-B12*N1y - B16*N1x) + N3y*(-B26*N1y - B66*N1x)) + detJ*r22*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y))) + r22*(-0.5*A66*N1*N3x*alphat*detJ*r23*wij/h + detJ*r21*wij*(N3x*(-B26*N1y - B66*N1x) + N3y*(-B22*N1y - B26*N1x)) + detJ*r22*wij*(N3x*(B16*N1x + B66*N1y) + N3y*(B12*N1x + B26*N1y))) + r23*(detJ*r21*wij*(-E44*N1*N3y - E45*N1*N3x) + detJ*r22*wij*(E45*N1*N3y + E55*N1*N3x))
+            KC0v[k] += r21*(KC0e0312*r21 + KC0e0412*r22) + r22*(KC0e0313*r21 + KC0e0413*r22) + r23*(KC0e0314*r21 + KC0e0414*r22)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N1*N3y*alphat*detJ*r23*wij/h + detJ*r21*wij*(N3x*(-B12*N1y - B16*N1x) + N3y*(-B26*N1y - B66*N1x)) + detJ*r22*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y))) + r32*(-0.5*A66*N1*N3x*alphat*detJ*r23*wij/h + detJ*r21*wij*(N3x*(-B26*N1y - B66*N1x) + N3y*(-B22*N1y - B26*N1x)) + detJ*r22*wij*(N3x*(B16*N1x + B66*N1y) + N3y*(B12*N1x + B26*N1y))) + r33*(detJ*r21*wij*(-E44*N1*N3y - E45*N1*N3x) + detJ*r22*wij*(E45*N1*N3y + E55*N1*N3x))
+            KC0v[k] += r31*(KC0e0312*r21 + KC0e0412*r22) + r32*(KC0e0313*r21 + KC0e0413*r22) + r33*(KC0e0314*r21 + KC0e0414*r22)
             k += 1
-            KC0v[k] += A66*N1*alphat*detJ*r13*r23*wij*(-N1 - N2 + 1)/h + r11*(detJ*r21*wij*(-E44*N1*(N1 + N2 - 1) - N3x*(-D26*N1y - D66*N1x) - N3y*(-D22*N1y - D26*N1x)) + detJ*r22*wij*(E45*N1*(N1 + N2 - 1) - N3x*(D16*N1x + D66*N1y) - N3y*(D12*N1x + D26*N1y))) + r12*(detJ*r21*wij*(-E45*N1*(-N1 - N2 + 1) + N3x*(-D12*N1y - D16*N1x) + N3y*(-D26*N1y - D66*N1x)) + detJ*r22*wij*(E55*N1*(-N1 - N2 + 1) + N3x*(D11*N1x + D16*N1y) + N3y*(D16*N1x + D66*N1y)))
+            KC0v[k] += r11*(KC0e0315*r21 + KC0e0415*r22) + r12*(KC0e0316*r21 + KC0e0416*r22)
             k += 1
-            KC0v[k] += A66*N1*alphat*detJ*r23**2*wij*(-N1 - N2 + 1)/h + r21*(detJ*r21*wij*(-E44*N1*(N1 + N2 - 1) - N3x*(-D26*N1y - D66*N1x) - N3y*(-D22*N1y - D26*N1x)) + detJ*r22*wij*(E45*N1*(N1 + N2 - 1) - N3x*(D16*N1x + D66*N1y) - N3y*(D12*N1x + D26*N1y))) + r22*(detJ*r21*wij*(-E45*N1*(-N1 - N2 + 1) + N3x*(-D12*N1y - D16*N1x) + N3y*(-D26*N1y - D66*N1x)) + detJ*r22*wij*(E55*N1*(-N1 - N2 + 1) + N3x*(D11*N1x + D16*N1y) + N3y*(D16*N1x + D66*N1y)))
+            KC0v[k] += r21*(KC0e0315*r21 + KC0e0415*r22) + r22*(KC0e0316*r21 + KC0e0416*r22)
             k += 1
-            KC0v[k] += A66*N1*alphat*detJ*r23*r33*wij*(-N1 - N2 + 1)/h + r31*(detJ*r21*wij*(-E44*N1*(N1 + N2 - 1) - N3x*(-D26*N1y - D66*N1x) - N3y*(-D22*N1y - D26*N1x)) + detJ*r22*wij*(E45*N1*(N1 + N2 - 1) - N3x*(D16*N1x + D66*N1y) - N3y*(D12*N1x + D26*N1y))) + r32*(detJ*r21*wij*(-E45*N1*(-N1 - N2 + 1) + N3x*(-D12*N1y - D16*N1x) + N3y*(-D26*N1y - D66*N1x)) + detJ*r22*wij*(E55*N1*(-N1 - N2 + 1) + N3x*(D11*N1x + D16*N1y) + N3y*(D16*N1x + D66*N1y)))
+            KC0v[k] += r31*(KC0e0315*r21 + KC0e0415*r22) + r32*(KC0e0316*r21 + KC0e0416*r22)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N1*N1y*alphat*detJ*r33*wij/h + detJ*r31*wij*(N1x*(-B12*N1y - B16*N1x) + N1y*(-B26*N1y - B66*N1x)) + detJ*r32*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y))) + r12*(-0.5*A66*N1*N1x*alphat*detJ*r33*wij/h + detJ*r31*wij*(N1x*(-B26*N1y - B66*N1x) + N1y*(-B22*N1y - B26*N1x)) + detJ*r32*wij*(N1x*(B16*N1x + B66*N1y) + N1y*(B12*N1x + B26*N1y))) + r13*(detJ*r31*wij*(-E44*N1*N1y - E45*N1*N1x) + detJ*r32*wij*(E45*N1*N1y + E55*N1*N1x))
+            KC0v[k] += r11*(KC0e0003*r31 + KC0e0004*r32) + r12*(KC0e0103*r31 + KC0e0104*r32) + r13*(KC0e0203*r31 + KC0e0204*r32)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N1*N1y*alphat*detJ*r33*wij/h + detJ*r31*wij*(N1x*(-B12*N1y - B16*N1x) + N1y*(-B26*N1y - B66*N1x)) + detJ*r32*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y))) + r22*(-0.5*A66*N1*N1x*alphat*detJ*r33*wij/h + detJ*r31*wij*(N1x*(-B26*N1y - B66*N1x) + N1y*(-B22*N1y - B26*N1x)) + detJ*r32*wij*(N1x*(B16*N1x + B66*N1y) + N1y*(B12*N1x + B26*N1y))) + r23*(detJ*r31*wij*(-E44*N1*N1y - E45*N1*N1x) + detJ*r32*wij*(E45*N1*N1y + E55*N1*N1x))
+            KC0v[k] += r21*(KC0e0003*r31 + KC0e0004*r32) + r22*(KC0e0103*r31 + KC0e0104*r32) + r23*(KC0e0203*r31 + KC0e0204*r32)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N1*N1y*alphat*detJ*r33*wij/h + detJ*r31*wij*(N1x*(-B12*N1y - B16*N1x) + N1y*(-B26*N1y - B66*N1x)) + detJ*r32*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y))) + r32*(-0.5*A66*N1*N1x*alphat*detJ*r33*wij/h + detJ*r31*wij*(N1x*(-B26*N1y - B66*N1x) + N1y*(-B22*N1y - B26*N1x)) + detJ*r32*wij*(N1x*(B16*N1x + B66*N1y) + N1y*(B12*N1x + B26*N1y))) + r33*(detJ*r31*wij*(-E44*N1*N1y - E45*N1*N1x) + detJ*r32*wij*(E45*N1*N1y + E55*N1*N1x))
+            KC0v[k] += r31*(KC0e0003*r31 + KC0e0004*r32) + r32*(KC0e0103*r31 + KC0e0104*r32) + r33*(KC0e0203*r31 + KC0e0204*r32)
             k += 1
-            KC0v[k] += A66*N1**2*alphat*detJ*r13*r33*wij/h + r11*(detJ*r31*wij*(E44*N1**2 - N1x*(-D26*N1y - D66*N1x) - N1y*(-D22*N1y - D26*N1x)) + detJ*r32*wij*(-E45*N1**2 - N1x*(D16*N1x + D66*N1y) - N1y*(D12*N1x + D26*N1y))) + r12*(detJ*r31*wij*(-E45*N1**2 + N1x*(-D12*N1y - D16*N1x) + N1y*(-D26*N1y - D66*N1x)) + detJ*r32*wij*(E55*N1**2 + N1x*(D11*N1x + D16*N1y) + N1y*(D16*N1x + D66*N1y)))
+            KC0v[k] += KC0e0505*r13*r33 + r11*(KC0e0303*r31 + KC0e0304*r32) + r12*(KC0e0304*r31 + KC0e0404*r32)
             k += 1
-            KC0v[k] += A66*N1**2*alphat*detJ*r23*r33*wij/h + r21*(detJ*r31*wij*(E44*N1**2 - N1x*(-D26*N1y - D66*N1x) - N1y*(-D22*N1y - D26*N1x)) + detJ*r32*wij*(-E45*N1**2 - N1x*(D16*N1x + D66*N1y) - N1y*(D12*N1x + D26*N1y))) + r22*(detJ*r31*wij*(-E45*N1**2 + N1x*(-D12*N1y - D16*N1x) + N1y*(-D26*N1y - D66*N1x)) + detJ*r32*wij*(E55*N1**2 + N1x*(D11*N1x + D16*N1y) + N1y*(D16*N1x + D66*N1y)))
+            KC0v[k] += KC0e0505*r23*r33 + r21*(KC0e0303*r31 + KC0e0304*r32) + r22*(KC0e0304*r31 + KC0e0404*r32)
             k += 1
-            KC0v[k] += A66*N1**2*alphat*detJ*r33**2*wij/h + r31*(detJ*r31*wij*(E44*N1**2 - N1x*(-D26*N1y - D66*N1x) - N1y*(-D22*N1y - D26*N1x)) + detJ*r32*wij*(-E45*N1**2 - N1x*(D16*N1x + D66*N1y) - N1y*(D12*N1x + D26*N1y))) + r32*(detJ*r31*wij*(-E45*N1**2 + N1x*(-D12*N1y - D16*N1x) + N1y*(-D26*N1y - D66*N1x)) + detJ*r32*wij*(E55*N1**2 + N1x*(D11*N1x + D16*N1y) + N1y*(D16*N1x + D66*N1y)))
+            KC0v[k] += KC0e0505*r33**2 + r31*(KC0e0303*r31 + KC0e0304*r32) + r32*(KC0e0304*r31 + KC0e0404*r32)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N1*N2y*alphat*detJ*r33*wij/h + detJ*r31*wij*(N2x*(-B12*N1y - B16*N1x) + N2y*(-B26*N1y - B66*N1x)) + detJ*r32*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y))) + r12*(-0.5*A66*N1*N2x*alphat*detJ*r33*wij/h + detJ*r31*wij*(N2x*(-B26*N1y - B66*N1x) + N2y*(-B22*N1y - B26*N1x)) + detJ*r32*wij*(N2x*(B16*N1x + B66*N1y) + N2y*(B12*N1x + B26*N1y))) + r13*(detJ*r31*wij*(-E44*N1*N2y - E45*N1*N2x) + detJ*r32*wij*(E45*N1*N2y + E55*N1*N2x))
+            KC0v[k] += r11*(KC0e0306*r31 + KC0e0406*r32) + r12*(KC0e0307*r31 + KC0e0407*r32) + r13*(KC0e0308*r31 + KC0e0408*r32)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N1*N2y*alphat*detJ*r33*wij/h + detJ*r31*wij*(N2x*(-B12*N1y - B16*N1x) + N2y*(-B26*N1y - B66*N1x)) + detJ*r32*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y))) + r22*(-0.5*A66*N1*N2x*alphat*detJ*r33*wij/h + detJ*r31*wij*(N2x*(-B26*N1y - B66*N1x) + N2y*(-B22*N1y - B26*N1x)) + detJ*r32*wij*(N2x*(B16*N1x + B66*N1y) + N2y*(B12*N1x + B26*N1y))) + r23*(detJ*r31*wij*(-E44*N1*N2y - E45*N1*N2x) + detJ*r32*wij*(E45*N1*N2y + E55*N1*N2x))
+            KC0v[k] += r21*(KC0e0306*r31 + KC0e0406*r32) + r22*(KC0e0307*r31 + KC0e0407*r32) + r23*(KC0e0308*r31 + KC0e0408*r32)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N1*N2y*alphat*detJ*r33*wij/h + detJ*r31*wij*(N2x*(-B12*N1y - B16*N1x) + N2y*(-B26*N1y - B66*N1x)) + detJ*r32*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y))) + r32*(-0.5*A66*N1*N2x*alphat*detJ*r33*wij/h + detJ*r31*wij*(N2x*(-B26*N1y - B66*N1x) + N2y*(-B22*N1y - B26*N1x)) + detJ*r32*wij*(N2x*(B16*N1x + B66*N1y) + N2y*(B12*N1x + B26*N1y))) + r33*(detJ*r31*wij*(-E44*N1*N2y - E45*N1*N2x) + detJ*r32*wij*(E45*N1*N2y + E55*N1*N2x))
+            KC0v[k] += r31*(KC0e0306*r31 + KC0e0406*r32) + r32*(KC0e0307*r31 + KC0e0407*r32) + r33*(KC0e0308*r31 + KC0e0408*r32)
             k += 1
-            KC0v[k] += A66*N1*N2*alphat*detJ*r13*r33*wij/h + r11*(detJ*r31*wij*(E44*N1*N2 - N2x*(-D26*N1y - D66*N1x) - N2y*(-D22*N1y - D26*N1x)) + detJ*r32*wij*(-E45*N1*N2 - N2x*(D16*N1x + D66*N1y) - N2y*(D12*N1x + D26*N1y))) + r12*(detJ*r31*wij*(-E45*N1*N2 + N2x*(-D12*N1y - D16*N1x) + N2y*(-D26*N1y - D66*N1x)) + detJ*r32*wij*(E55*N1*N2 + N2x*(D11*N1x + D16*N1y) + N2y*(D16*N1x + D66*N1y)))
+            KC0v[k] += r11*(KC0e0309*r31 + KC0e0409*r32) + r12*(KC0e0310*r31 + KC0e0410*r32)
             k += 1
-            KC0v[k] += A66*N1*N2*alphat*detJ*r23*r33*wij/h + r21*(detJ*r31*wij*(E44*N1*N2 - N2x*(-D26*N1y - D66*N1x) - N2y*(-D22*N1y - D26*N1x)) + detJ*r32*wij*(-E45*N1*N2 - N2x*(D16*N1x + D66*N1y) - N2y*(D12*N1x + D26*N1y))) + r22*(detJ*r31*wij*(-E45*N1*N2 + N2x*(-D12*N1y - D16*N1x) + N2y*(-D26*N1y - D66*N1x)) + detJ*r32*wij*(E55*N1*N2 + N2x*(D11*N1x + D16*N1y) + N2y*(D16*N1x + D66*N1y)))
+            KC0v[k] += r21*(KC0e0309*r31 + KC0e0409*r32) + r22*(KC0e0310*r31 + KC0e0410*r32)
             k += 1
-            KC0v[k] += A66*N1*N2*alphat*detJ*r33**2*wij/h + r31*(detJ*r31*wij*(E44*N1*N2 - N2x*(-D26*N1y - D66*N1x) - N2y*(-D22*N1y - D26*N1x)) + detJ*r32*wij*(-E45*N1*N2 - N2x*(D16*N1x + D66*N1y) - N2y*(D12*N1x + D26*N1y))) + r32*(detJ*r31*wij*(-E45*N1*N2 + N2x*(-D12*N1y - D16*N1x) + N2y*(-D26*N1y - D66*N1x)) + detJ*r32*wij*(E55*N1*N2 + N2x*(D11*N1x + D16*N1y) + N2y*(D16*N1x + D66*N1y)))
+            KC0v[k] += r31*(KC0e0309*r31 + KC0e0409*r32) + r32*(KC0e0310*r31 + KC0e0410*r32)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N1*N3y*alphat*detJ*r33*wij/h + detJ*r31*wij*(N3x*(-B12*N1y - B16*N1x) + N3y*(-B26*N1y - B66*N1x)) + detJ*r32*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y))) + r12*(-0.5*A66*N1*N3x*alphat*detJ*r33*wij/h + detJ*r31*wij*(N3x*(-B26*N1y - B66*N1x) + N3y*(-B22*N1y - B26*N1x)) + detJ*r32*wij*(N3x*(B16*N1x + B66*N1y) + N3y*(B12*N1x + B26*N1y))) + r13*(detJ*r31*wij*(-E44*N1*N3y - E45*N1*N3x) + detJ*r32*wij*(E45*N1*N3y + E55*N1*N3x))
+            KC0v[k] += r11*(KC0e0312*r31 + KC0e0412*r32) + r12*(KC0e0313*r31 + KC0e0413*r32) + r13*(KC0e0314*r31 + KC0e0414*r32)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N1*N3y*alphat*detJ*r33*wij/h + detJ*r31*wij*(N3x*(-B12*N1y - B16*N1x) + N3y*(-B26*N1y - B66*N1x)) + detJ*r32*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y))) + r22*(-0.5*A66*N1*N3x*alphat*detJ*r33*wij/h + detJ*r31*wij*(N3x*(-B26*N1y - B66*N1x) + N3y*(-B22*N1y - B26*N1x)) + detJ*r32*wij*(N3x*(B16*N1x + B66*N1y) + N3y*(B12*N1x + B26*N1y))) + r23*(detJ*r31*wij*(-E44*N1*N3y - E45*N1*N3x) + detJ*r32*wij*(E45*N1*N3y + E55*N1*N3x))
+            KC0v[k] += r21*(KC0e0312*r31 + KC0e0412*r32) + r22*(KC0e0313*r31 + KC0e0413*r32) + r23*(KC0e0314*r31 + KC0e0414*r32)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N1*N3y*alphat*detJ*r33*wij/h + detJ*r31*wij*(N3x*(-B12*N1y - B16*N1x) + N3y*(-B26*N1y - B66*N1x)) + detJ*r32*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y))) + r32*(-0.5*A66*N1*N3x*alphat*detJ*r33*wij/h + detJ*r31*wij*(N3x*(-B26*N1y - B66*N1x) + N3y*(-B22*N1y - B26*N1x)) + detJ*r32*wij*(N3x*(B16*N1x + B66*N1y) + N3y*(B12*N1x + B26*N1y))) + r33*(detJ*r31*wij*(-E44*N1*N3y - E45*N1*N3x) + detJ*r32*wij*(E45*N1*N3y + E55*N1*N3x))
+            KC0v[k] += r31*(KC0e0312*r31 + KC0e0412*r32) + r32*(KC0e0313*r31 + KC0e0413*r32) + r33*(KC0e0314*r31 + KC0e0414*r32)
             k += 1
-            KC0v[k] += A66*N1*alphat*detJ*r13*r33*wij*(-N1 - N2 + 1)/h + r11*(detJ*r31*wij*(-E44*N1*(N1 + N2 - 1) - N3x*(-D26*N1y - D66*N1x) - N3y*(-D22*N1y - D26*N1x)) + detJ*r32*wij*(E45*N1*(N1 + N2 - 1) - N3x*(D16*N1x + D66*N1y) - N3y*(D12*N1x + D26*N1y))) + r12*(detJ*r31*wij*(-E45*N1*(-N1 - N2 + 1) + N3x*(-D12*N1y - D16*N1x) + N3y*(-D26*N1y - D66*N1x)) + detJ*r32*wij*(E55*N1*(-N1 - N2 + 1) + N3x*(D11*N1x + D16*N1y) + N3y*(D16*N1x + D66*N1y)))
+            KC0v[k] += r11*(KC0e0315*r31 + KC0e0415*r32) + r12*(KC0e0316*r31 + KC0e0416*r32)
             k += 1
-            KC0v[k] += A66*N1*alphat*detJ*r23*r33*wij*(-N1 - N2 + 1)/h + r21*(detJ*r31*wij*(-E44*N1*(N1 + N2 - 1) - N3x*(-D26*N1y - D66*N1x) - N3y*(-D22*N1y - D26*N1x)) + detJ*r32*wij*(E45*N1*(N1 + N2 - 1) - N3x*(D16*N1x + D66*N1y) - N3y*(D12*N1x + D26*N1y))) + r22*(detJ*r31*wij*(-E45*N1*(-N1 - N2 + 1) + N3x*(-D12*N1y - D16*N1x) + N3y*(-D26*N1y - D66*N1x)) + detJ*r32*wij*(E55*N1*(-N1 - N2 + 1) + N3x*(D11*N1x + D16*N1y) + N3y*(D16*N1x + D66*N1y)))
+            KC0v[k] += r21*(KC0e0315*r31 + KC0e0415*r32) + r22*(KC0e0316*r31 + KC0e0416*r32)
             k += 1
-            KC0v[k] += A66*N1*alphat*detJ*r33**2*wij*(-N1 - N2 + 1)/h + r31*(detJ*r31*wij*(-E44*N1*(N1 + N2 - 1) - N3x*(-D26*N1y - D66*N1x) - N3y*(-D22*N1y - D26*N1x)) + detJ*r32*wij*(E45*N1*(N1 + N2 - 1) - N3x*(D16*N1x + D66*N1y) - N3y*(D12*N1x + D26*N1y))) + r32*(detJ*r31*wij*(-E45*N1*(-N1 - N2 + 1) + N3x*(-D12*N1y - D16*N1x) + N3y*(-D26*N1y - D66*N1x)) + detJ*r32*wij*(E55*N1*(-N1 - N2 + 1) + N3x*(D11*N1x + D16*N1y) + N3y*(D16*N1x + D66*N1y)))
+            KC0v[k] += r31*(KC0e0315*r31 + KC0e0415*r32) + r32*(KC0e0316*r31 + KC0e0416*r32)
             k += 1
-            KC0v[k] += detJ*r13**2*wij*(N1x*(E45*N2y + E55*N2x) + N1y*(E44*N2y + E45*N2x)) + r11*(detJ*r11*wij*(0.25*A66*N1y*N2y*alphat/h + N1x*(A11*N2x + A16*N2y) + N1y*(A16*N2x + A66*N2y)) + detJ*r12*wij*(-0.25*A66*N1y*N2x*alphat/h + N1x*(A12*N2y + A16*N2x) + N1y*(A26*N2y + A66*N2x))) + r12*(detJ*r11*wij*(-0.25*A66*N1x*N2y*alphat/h + N1x*(A16*N2x + A66*N2y) + N1y*(A12*N2x + A26*N2y)) + detJ*r12*wij*(0.25*A66*N1x*N2x*alphat/h + N1x*(A26*N2y + A66*N2x) + N1y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0208*r13**2 + r11*(KC0e0006*r11 + KC0e0007*r12) + r12*(KC0e0106*r11 + KC0e0107*r12)
             k += 1
-            KC0v[k] += detJ*r13*r23*wij*(N1x*(E45*N2y + E55*N2x) + N1y*(E44*N2y + E45*N2x)) + r21*(detJ*r11*wij*(0.25*A66*N1y*N2y*alphat/h + N1x*(A11*N2x + A16*N2y) + N1y*(A16*N2x + A66*N2y)) + detJ*r12*wij*(-0.25*A66*N1y*N2x*alphat/h + N1x*(A12*N2y + A16*N2x) + N1y*(A26*N2y + A66*N2x))) + r22*(detJ*r11*wij*(-0.25*A66*N1x*N2y*alphat/h + N1x*(A16*N2x + A66*N2y) + N1y*(A12*N2x + A26*N2y)) + detJ*r12*wij*(0.25*A66*N1x*N2x*alphat/h + N1x*(A26*N2y + A66*N2x) + N1y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0208*r13*r23 + r21*(KC0e0006*r11 + KC0e0007*r12) + r22*(KC0e0106*r11 + KC0e0107*r12)
             k += 1
-            KC0v[k] += detJ*r13*r33*wij*(N1x*(E45*N2y + E55*N2x) + N1y*(E44*N2y + E45*N2x)) + r31*(detJ*r11*wij*(0.25*A66*N1y*N2y*alphat/h + N1x*(A11*N2x + A16*N2y) + N1y*(A16*N2x + A66*N2y)) + detJ*r12*wij*(-0.25*A66*N1y*N2x*alphat/h + N1x*(A12*N2y + A16*N2x) + N1y*(A26*N2y + A66*N2x))) + r32*(detJ*r11*wij*(-0.25*A66*N1x*N2y*alphat/h + N1x*(A16*N2x + A66*N2y) + N1y*(A12*N2x + A26*N2y)) + detJ*r12*wij*(0.25*A66*N1x*N2x*alphat/h + N1x*(A26*N2y + A66*N2x) + N1y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0208*r13*r33 + r31*(KC0e0006*r11 + KC0e0007*r12) + r32*(KC0e0106*r11 + KC0e0107*r12)
             k += 1
-            KC0v[k] += r11*(-N1*detJ*r13*wij*(E44*N2y + E45*N2x) + detJ*r11*wij*(-N1x*(B16*N2x + B66*N2y) - N1y*(B12*N2x + B26*N2y)) + detJ*r12*wij*(-N1x*(B26*N2y + B66*N2x) - N1y*(B22*N2y + B26*N2x))) + r12*(N1*detJ*r13*wij*(E45*N2y + E55*N2x) + detJ*r11*wij*(N1x*(B11*N2x + B16*N2y) + N1y*(B16*N2x + B66*N2y)) + detJ*r12*wij*(N1x*(B12*N2y + B16*N2x) + N1y*(B26*N2y + B66*N2x))) + r13*(-0.5*A66*N1*N2x*alphat*detJ*r12*wij/h + 0.5*A66*N1*N2y*alphat*detJ*r11*wij/h)
+            KC0v[k] += r11*(KC0e0306*r11 + KC0e0307*r12 + KC0e0308*r13) + r12*(KC0e0406*r11 + KC0e0407*r12 + KC0e0408*r13)
             k += 1
-            KC0v[k] += r21*(-N1*detJ*r13*wij*(E44*N2y + E45*N2x) + detJ*r11*wij*(-N1x*(B16*N2x + B66*N2y) - N1y*(B12*N2x + B26*N2y)) + detJ*r12*wij*(-N1x*(B26*N2y + B66*N2x) - N1y*(B22*N2y + B26*N2x))) + r22*(N1*detJ*r13*wij*(E45*N2y + E55*N2x) + detJ*r11*wij*(N1x*(B11*N2x + B16*N2y) + N1y*(B16*N2x + B66*N2y)) + detJ*r12*wij*(N1x*(B12*N2y + B16*N2x) + N1y*(B26*N2y + B66*N2x))) + r23*(-0.5*A66*N1*N2x*alphat*detJ*r12*wij/h + 0.5*A66*N1*N2y*alphat*detJ*r11*wij/h)
+            KC0v[k] += r21*(KC0e0306*r11 + KC0e0307*r12 + KC0e0308*r13) + r22*(KC0e0406*r11 + KC0e0407*r12 + KC0e0408*r13)
             k += 1
-            KC0v[k] += r31*(-N1*detJ*r13*wij*(E44*N2y + E45*N2x) + detJ*r11*wij*(-N1x*(B16*N2x + B66*N2y) - N1y*(B12*N2x + B26*N2y)) + detJ*r12*wij*(-N1x*(B26*N2y + B66*N2x) - N1y*(B22*N2y + B26*N2x))) + r32*(N1*detJ*r13*wij*(E45*N2y + E55*N2x) + detJ*r11*wij*(N1x*(B11*N2x + B16*N2y) + N1y*(B16*N2x + B66*N2y)) + detJ*r12*wij*(N1x*(B12*N2y + B16*N2x) + N1y*(B26*N2y + B66*N2x))) + r33*(-0.5*A66*N1*N2x*alphat*detJ*r12*wij/h + 0.5*A66*N1*N2y*alphat*detJ*r11*wij/h)
+            KC0v[k] += r31*(KC0e0306*r11 + KC0e0307*r12 + KC0e0308*r13) + r32*(KC0e0406*r11 + KC0e0407*r12 + KC0e0408*r13)
             k += 1
-            KC0v[k] += detJ*r13**2*wij*(N2x*(E45*N2y + E55*N2x) + N2y*(E44*N2y + E45*N2x)) + r11*(detJ*r11*wij*(0.25*A66*N2y**2*alphat/h + N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y)) + detJ*r12*wij*(-0.25*A66*N2x*N2y*alphat/h + N2x*(A12*N2y + A16*N2x) + N2y*(A26*N2y + A66*N2x))) + r12*(detJ*r11*wij*(-0.25*A66*N2x*N2y*alphat/h + N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y)) + detJ*r12*wij*(0.25*A66*N2x**2*alphat/h + N2x*(A26*N2y + A66*N2x) + N2y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0808*r13**2 + r11*(KC0e0606*r11 + KC0e0607*r12) + r12*(KC0e0607*r11 + KC0e0707*r12)
             k += 1
-            KC0v[k] += detJ*r13*r23*wij*(N2x*(E45*N2y + E55*N2x) + N2y*(E44*N2y + E45*N2x)) + r21*(detJ*r11*wij*(0.25*A66*N2y**2*alphat/h + N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y)) + detJ*r12*wij*(-0.25*A66*N2x*N2y*alphat/h + N2x*(A12*N2y + A16*N2x) + N2y*(A26*N2y + A66*N2x))) + r22*(detJ*r11*wij*(-0.25*A66*N2x*N2y*alphat/h + N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y)) + detJ*r12*wij*(0.25*A66*N2x**2*alphat/h + N2x*(A26*N2y + A66*N2x) + N2y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0808*r13*r23 + r21*(KC0e0606*r11 + KC0e0607*r12) + r22*(KC0e0607*r11 + KC0e0707*r12)
             k += 1
-            KC0v[k] += detJ*r13*r33*wij*(N2x*(E45*N2y + E55*N2x) + N2y*(E44*N2y + E45*N2x)) + r31*(detJ*r11*wij*(0.25*A66*N2y**2*alphat/h + N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y)) + detJ*r12*wij*(-0.25*A66*N2x*N2y*alphat/h + N2x*(A12*N2y + A16*N2x) + N2y*(A26*N2y + A66*N2x))) + r32*(detJ*r11*wij*(-0.25*A66*N2x*N2y*alphat/h + N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y)) + detJ*r12*wij*(0.25*A66*N2x**2*alphat/h + N2x*(A26*N2y + A66*N2x) + N2y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0808*r13*r33 + r31*(KC0e0606*r11 + KC0e0607*r12) + r32*(KC0e0607*r11 + KC0e0707*r12)
             k += 1
-            KC0v[k] += r11*(-N2*detJ*r13*wij*(E44*N2y + E45*N2x) + detJ*r11*wij*(-N2x*(B16*N2x + B66*N2y) - N2y*(B12*N2x + B26*N2y)) + detJ*r12*wij*(-N2x*(B26*N2y + B66*N2x) - N2y*(B22*N2y + B26*N2x))) + r12*(N2*detJ*r13*wij*(E45*N2y + E55*N2x) + detJ*r11*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y)) + detJ*r12*wij*(N2x*(B12*N2y + B16*N2x) + N2y*(B26*N2y + B66*N2x))) + r13*(-0.5*A66*N2*N2x*alphat*detJ*r12*wij/h + 0.5*A66*N2*N2y*alphat*detJ*r11*wij/h)
+            KC0v[k] += r11*(KC0e0609*r11 + KC0e0709*r12 + KC0e0809*r13) + r12*(KC0e0610*r11 + KC0e0710*r12 + KC0e0810*r13)
             k += 1
-            KC0v[k] += r21*(-N2*detJ*r13*wij*(E44*N2y + E45*N2x) + detJ*r11*wij*(-N2x*(B16*N2x + B66*N2y) - N2y*(B12*N2x + B26*N2y)) + detJ*r12*wij*(-N2x*(B26*N2y + B66*N2x) - N2y*(B22*N2y + B26*N2x))) + r22*(N2*detJ*r13*wij*(E45*N2y + E55*N2x) + detJ*r11*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y)) + detJ*r12*wij*(N2x*(B12*N2y + B16*N2x) + N2y*(B26*N2y + B66*N2x))) + r23*(-0.5*A66*N2*N2x*alphat*detJ*r12*wij/h + 0.5*A66*N2*N2y*alphat*detJ*r11*wij/h)
+            KC0v[k] += r21*(KC0e0609*r11 + KC0e0709*r12 + KC0e0809*r13) + r22*(KC0e0610*r11 + KC0e0710*r12 + KC0e0810*r13)
             k += 1
-            KC0v[k] += r31*(-N2*detJ*r13*wij*(E44*N2y + E45*N2x) + detJ*r11*wij*(-N2x*(B16*N2x + B66*N2y) - N2y*(B12*N2x + B26*N2y)) + detJ*r12*wij*(-N2x*(B26*N2y + B66*N2x) - N2y*(B22*N2y + B26*N2x))) + r32*(N2*detJ*r13*wij*(E45*N2y + E55*N2x) + detJ*r11*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y)) + detJ*r12*wij*(N2x*(B12*N2y + B16*N2x) + N2y*(B26*N2y + B66*N2x))) + r33*(-0.5*A66*N2*N2x*alphat*detJ*r12*wij/h + 0.5*A66*N2*N2y*alphat*detJ*r11*wij/h)
+            KC0v[k] += r31*(KC0e0609*r11 + KC0e0709*r12 + KC0e0809*r13) + r32*(KC0e0610*r11 + KC0e0710*r12 + KC0e0810*r13)
             k += 1
-            KC0v[k] += detJ*r13**2*wij*(N3x*(E45*N2y + E55*N2x) + N3y*(E44*N2y + E45*N2x)) + r11*(detJ*r11*wij*(0.25*A66*N2y*N3y*alphat/h + N3x*(A11*N2x + A16*N2y) + N3y*(A16*N2x + A66*N2y)) + detJ*r12*wij*(-0.25*A66*N2x*N3y*alphat/h + N3x*(A12*N2y + A16*N2x) + N3y*(A26*N2y + A66*N2x))) + r12*(detJ*r11*wij*(-0.25*A66*N2y*N3x*alphat/h + N3x*(A16*N2x + A66*N2y) + N3y*(A12*N2x + A26*N2y)) + detJ*r12*wij*(0.25*A66*N2x*N3x*alphat/h + N3x*(A26*N2y + A66*N2x) + N3y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0814*r13**2 + r11*(KC0e0612*r11 + KC0e0712*r12) + r12*(KC0e0613*r11 + KC0e0713*r12)
             k += 1
-            KC0v[k] += detJ*r13*r23*wij*(N3x*(E45*N2y + E55*N2x) + N3y*(E44*N2y + E45*N2x)) + r21*(detJ*r11*wij*(0.25*A66*N2y*N3y*alphat/h + N3x*(A11*N2x + A16*N2y) + N3y*(A16*N2x + A66*N2y)) + detJ*r12*wij*(-0.25*A66*N2x*N3y*alphat/h + N3x*(A12*N2y + A16*N2x) + N3y*(A26*N2y + A66*N2x))) + r22*(detJ*r11*wij*(-0.25*A66*N2y*N3x*alphat/h + N3x*(A16*N2x + A66*N2y) + N3y*(A12*N2x + A26*N2y)) + detJ*r12*wij*(0.25*A66*N2x*N3x*alphat/h + N3x*(A26*N2y + A66*N2x) + N3y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0814*r13*r23 + r21*(KC0e0612*r11 + KC0e0712*r12) + r22*(KC0e0613*r11 + KC0e0713*r12)
             k += 1
-            KC0v[k] += detJ*r13*r33*wij*(N3x*(E45*N2y + E55*N2x) + N3y*(E44*N2y + E45*N2x)) + r31*(detJ*r11*wij*(0.25*A66*N2y*N3y*alphat/h + N3x*(A11*N2x + A16*N2y) + N3y*(A16*N2x + A66*N2y)) + detJ*r12*wij*(-0.25*A66*N2x*N3y*alphat/h + N3x*(A12*N2y + A16*N2x) + N3y*(A26*N2y + A66*N2x))) + r32*(detJ*r11*wij*(-0.25*A66*N2y*N3x*alphat/h + N3x*(A16*N2x + A66*N2y) + N3y*(A12*N2x + A26*N2y)) + detJ*r12*wij*(0.25*A66*N2x*N3x*alphat/h + N3x*(A26*N2y + A66*N2x) + N3y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0814*r13*r33 + r31*(KC0e0612*r11 + KC0e0712*r12) + r32*(KC0e0613*r11 + KC0e0713*r12)
             k += 1
-            KC0v[k] += r11*(detJ*r11*wij*(-N3x*(B16*N2x + B66*N2y) - N3y*(B12*N2x + B26*N2y)) + detJ*r12*wij*(-N3x*(B26*N2y + B66*N2x) - N3y*(B22*N2y + B26*N2x)) + detJ*r13*wij*(E44*N2y + E45*N2x)*(N1 + N2 - 1)) + r12*(detJ*r11*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y)) + detJ*r12*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x)) + detJ*r13*wij*(E45*N2y + E55*N2x)*(-N1 - N2 + 1)) + r13*(-0.5*A66*N2x*alphat*detJ*r12*wij*(-N1 - N2 + 1)/h + 0.5*A66*N2y*alphat*detJ*r11*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r11*(KC0e0615*r11 + KC0e0715*r12 + KC0e0815*r13) + r12*(KC0e0616*r11 + KC0e0716*r12 + KC0e0816*r13)
             k += 1
-            KC0v[k] += r21*(detJ*r11*wij*(-N3x*(B16*N2x + B66*N2y) - N3y*(B12*N2x + B26*N2y)) + detJ*r12*wij*(-N3x*(B26*N2y + B66*N2x) - N3y*(B22*N2y + B26*N2x)) + detJ*r13*wij*(E44*N2y + E45*N2x)*(N1 + N2 - 1)) + r22*(detJ*r11*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y)) + detJ*r12*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x)) + detJ*r13*wij*(E45*N2y + E55*N2x)*(-N1 - N2 + 1)) + r23*(-0.5*A66*N2x*alphat*detJ*r12*wij*(-N1 - N2 + 1)/h + 0.5*A66*N2y*alphat*detJ*r11*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r21*(KC0e0615*r11 + KC0e0715*r12 + KC0e0815*r13) + r22*(KC0e0616*r11 + KC0e0716*r12 + KC0e0816*r13)
             k += 1
-            KC0v[k] += r31*(detJ*r11*wij*(-N3x*(B16*N2x + B66*N2y) - N3y*(B12*N2x + B26*N2y)) + detJ*r12*wij*(-N3x*(B26*N2y + B66*N2x) - N3y*(B22*N2y + B26*N2x)) + detJ*r13*wij*(E44*N2y + E45*N2x)*(N1 + N2 - 1)) + r32*(detJ*r11*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y)) + detJ*r12*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x)) + detJ*r13*wij*(E45*N2y + E55*N2x)*(-N1 - N2 + 1)) + r33*(-0.5*A66*N2x*alphat*detJ*r12*wij*(-N1 - N2 + 1)/h + 0.5*A66*N2y*alphat*detJ*r11*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r31*(KC0e0615*r11 + KC0e0715*r12 + KC0e0815*r13) + r32*(KC0e0616*r11 + KC0e0716*r12 + KC0e0816*r13)
             k += 1
-            KC0v[k] += detJ*r13*r23*wij*(N1x*(E45*N2y + E55*N2x) + N1y*(E44*N2y + E45*N2x)) + r11*(detJ*r21*wij*(0.25*A66*N1y*N2y*alphat/h + N1x*(A11*N2x + A16*N2y) + N1y*(A16*N2x + A66*N2y)) + detJ*r22*wij*(-0.25*A66*N1y*N2x*alphat/h + N1x*(A12*N2y + A16*N2x) + N1y*(A26*N2y + A66*N2x))) + r12*(detJ*r21*wij*(-0.25*A66*N1x*N2y*alphat/h + N1x*(A16*N2x + A66*N2y) + N1y*(A12*N2x + A26*N2y)) + detJ*r22*wij*(0.25*A66*N1x*N2x*alphat/h + N1x*(A26*N2y + A66*N2x) + N1y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0208*r13*r23 + r11*(KC0e0006*r21 + KC0e0007*r22) + r12*(KC0e0106*r21 + KC0e0107*r22)
             k += 1
-            KC0v[k] += detJ*r23**2*wij*(N1x*(E45*N2y + E55*N2x) + N1y*(E44*N2y + E45*N2x)) + r21*(detJ*r21*wij*(0.25*A66*N1y*N2y*alphat/h + N1x*(A11*N2x + A16*N2y) + N1y*(A16*N2x + A66*N2y)) + detJ*r22*wij*(-0.25*A66*N1y*N2x*alphat/h + N1x*(A12*N2y + A16*N2x) + N1y*(A26*N2y + A66*N2x))) + r22*(detJ*r21*wij*(-0.25*A66*N1x*N2y*alphat/h + N1x*(A16*N2x + A66*N2y) + N1y*(A12*N2x + A26*N2y)) + detJ*r22*wij*(0.25*A66*N1x*N2x*alphat/h + N1x*(A26*N2y + A66*N2x) + N1y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0208*r23**2 + r21*(KC0e0006*r21 + KC0e0007*r22) + r22*(KC0e0106*r21 + KC0e0107*r22)
             k += 1
-            KC0v[k] += detJ*r23*r33*wij*(N1x*(E45*N2y + E55*N2x) + N1y*(E44*N2y + E45*N2x)) + r31*(detJ*r21*wij*(0.25*A66*N1y*N2y*alphat/h + N1x*(A11*N2x + A16*N2y) + N1y*(A16*N2x + A66*N2y)) + detJ*r22*wij*(-0.25*A66*N1y*N2x*alphat/h + N1x*(A12*N2y + A16*N2x) + N1y*(A26*N2y + A66*N2x))) + r32*(detJ*r21*wij*(-0.25*A66*N1x*N2y*alphat/h + N1x*(A16*N2x + A66*N2y) + N1y*(A12*N2x + A26*N2y)) + detJ*r22*wij*(0.25*A66*N1x*N2x*alphat/h + N1x*(A26*N2y + A66*N2x) + N1y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0208*r23*r33 + r31*(KC0e0006*r21 + KC0e0007*r22) + r32*(KC0e0106*r21 + KC0e0107*r22)
             k += 1
-            KC0v[k] += r11*(-N1*detJ*r23*wij*(E44*N2y + E45*N2x) + detJ*r21*wij*(-N1x*(B16*N2x + B66*N2y) - N1y*(B12*N2x + B26*N2y)) + detJ*r22*wij*(-N1x*(B26*N2y + B66*N2x) - N1y*(B22*N2y + B26*N2x))) + r12*(N1*detJ*r23*wij*(E45*N2y + E55*N2x) + detJ*r21*wij*(N1x*(B11*N2x + B16*N2y) + N1y*(B16*N2x + B66*N2y)) + detJ*r22*wij*(N1x*(B12*N2y + B16*N2x) + N1y*(B26*N2y + B66*N2x))) + r13*(-0.5*A66*N1*N2x*alphat*detJ*r22*wij/h + 0.5*A66*N1*N2y*alphat*detJ*r21*wij/h)
+            KC0v[k] += r11*(KC0e0306*r21 + KC0e0307*r22 + KC0e0308*r23) + r12*(KC0e0406*r21 + KC0e0407*r22 + KC0e0408*r23)
             k += 1
-            KC0v[k] += r21*(-N1*detJ*r23*wij*(E44*N2y + E45*N2x) + detJ*r21*wij*(-N1x*(B16*N2x + B66*N2y) - N1y*(B12*N2x + B26*N2y)) + detJ*r22*wij*(-N1x*(B26*N2y + B66*N2x) - N1y*(B22*N2y + B26*N2x))) + r22*(N1*detJ*r23*wij*(E45*N2y + E55*N2x) + detJ*r21*wij*(N1x*(B11*N2x + B16*N2y) + N1y*(B16*N2x + B66*N2y)) + detJ*r22*wij*(N1x*(B12*N2y + B16*N2x) + N1y*(B26*N2y + B66*N2x))) + r23*(-0.5*A66*N1*N2x*alphat*detJ*r22*wij/h + 0.5*A66*N1*N2y*alphat*detJ*r21*wij/h)
+            KC0v[k] += r21*(KC0e0306*r21 + KC0e0307*r22 + KC0e0308*r23) + r22*(KC0e0406*r21 + KC0e0407*r22 + KC0e0408*r23)
             k += 1
-            KC0v[k] += r31*(-N1*detJ*r23*wij*(E44*N2y + E45*N2x) + detJ*r21*wij*(-N1x*(B16*N2x + B66*N2y) - N1y*(B12*N2x + B26*N2y)) + detJ*r22*wij*(-N1x*(B26*N2y + B66*N2x) - N1y*(B22*N2y + B26*N2x))) + r32*(N1*detJ*r23*wij*(E45*N2y + E55*N2x) + detJ*r21*wij*(N1x*(B11*N2x + B16*N2y) + N1y*(B16*N2x + B66*N2y)) + detJ*r22*wij*(N1x*(B12*N2y + B16*N2x) + N1y*(B26*N2y + B66*N2x))) + r33*(-0.5*A66*N1*N2x*alphat*detJ*r22*wij/h + 0.5*A66*N1*N2y*alphat*detJ*r21*wij/h)
+            KC0v[k] += r31*(KC0e0306*r21 + KC0e0307*r22 + KC0e0308*r23) + r32*(KC0e0406*r21 + KC0e0407*r22 + KC0e0408*r23)
             k += 1
-            KC0v[k] += detJ*r13*r23*wij*(N2x*(E45*N2y + E55*N2x) + N2y*(E44*N2y + E45*N2x)) + r11*(detJ*r21*wij*(0.25*A66*N2y**2*alphat/h + N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y)) + detJ*r22*wij*(-0.25*A66*N2x*N2y*alphat/h + N2x*(A12*N2y + A16*N2x) + N2y*(A26*N2y + A66*N2x))) + r12*(detJ*r21*wij*(-0.25*A66*N2x*N2y*alphat/h + N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y)) + detJ*r22*wij*(0.25*A66*N2x**2*alphat/h + N2x*(A26*N2y + A66*N2x) + N2y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0808*r13*r23 + r11*(KC0e0606*r21 + KC0e0607*r22) + r12*(KC0e0607*r21 + KC0e0707*r22)
             k += 1
-            KC0v[k] += detJ*r23**2*wij*(N2x*(E45*N2y + E55*N2x) + N2y*(E44*N2y + E45*N2x)) + r21*(detJ*r21*wij*(0.25*A66*N2y**2*alphat/h + N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y)) + detJ*r22*wij*(-0.25*A66*N2x*N2y*alphat/h + N2x*(A12*N2y + A16*N2x) + N2y*(A26*N2y + A66*N2x))) + r22*(detJ*r21*wij*(-0.25*A66*N2x*N2y*alphat/h + N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y)) + detJ*r22*wij*(0.25*A66*N2x**2*alphat/h + N2x*(A26*N2y + A66*N2x) + N2y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0808*r23**2 + r21*(KC0e0606*r21 + KC0e0607*r22) + r22*(KC0e0607*r21 + KC0e0707*r22)
             k += 1
-            KC0v[k] += detJ*r23*r33*wij*(N2x*(E45*N2y + E55*N2x) + N2y*(E44*N2y + E45*N2x)) + r31*(detJ*r21*wij*(0.25*A66*N2y**2*alphat/h + N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y)) + detJ*r22*wij*(-0.25*A66*N2x*N2y*alphat/h + N2x*(A12*N2y + A16*N2x) + N2y*(A26*N2y + A66*N2x))) + r32*(detJ*r21*wij*(-0.25*A66*N2x*N2y*alphat/h + N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y)) + detJ*r22*wij*(0.25*A66*N2x**2*alphat/h + N2x*(A26*N2y + A66*N2x) + N2y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0808*r23*r33 + r31*(KC0e0606*r21 + KC0e0607*r22) + r32*(KC0e0607*r21 + KC0e0707*r22)
             k += 1
-            KC0v[k] += r11*(-N2*detJ*r23*wij*(E44*N2y + E45*N2x) + detJ*r21*wij*(-N2x*(B16*N2x + B66*N2y) - N2y*(B12*N2x + B26*N2y)) + detJ*r22*wij*(-N2x*(B26*N2y + B66*N2x) - N2y*(B22*N2y + B26*N2x))) + r12*(N2*detJ*r23*wij*(E45*N2y + E55*N2x) + detJ*r21*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y)) + detJ*r22*wij*(N2x*(B12*N2y + B16*N2x) + N2y*(B26*N2y + B66*N2x))) + r13*(-0.5*A66*N2*N2x*alphat*detJ*r22*wij/h + 0.5*A66*N2*N2y*alphat*detJ*r21*wij/h)
+            KC0v[k] += r11*(KC0e0609*r21 + KC0e0709*r22 + KC0e0809*r23) + r12*(KC0e0610*r21 + KC0e0710*r22 + KC0e0810*r23)
             k += 1
-            KC0v[k] += r21*(-N2*detJ*r23*wij*(E44*N2y + E45*N2x) + detJ*r21*wij*(-N2x*(B16*N2x + B66*N2y) - N2y*(B12*N2x + B26*N2y)) + detJ*r22*wij*(-N2x*(B26*N2y + B66*N2x) - N2y*(B22*N2y + B26*N2x))) + r22*(N2*detJ*r23*wij*(E45*N2y + E55*N2x) + detJ*r21*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y)) + detJ*r22*wij*(N2x*(B12*N2y + B16*N2x) + N2y*(B26*N2y + B66*N2x))) + r23*(-0.5*A66*N2*N2x*alphat*detJ*r22*wij/h + 0.5*A66*N2*N2y*alphat*detJ*r21*wij/h)
+            KC0v[k] += r21*(KC0e0609*r21 + KC0e0709*r22 + KC0e0809*r23) + r22*(KC0e0610*r21 + KC0e0710*r22 + KC0e0810*r23)
             k += 1
-            KC0v[k] += r31*(-N2*detJ*r23*wij*(E44*N2y + E45*N2x) + detJ*r21*wij*(-N2x*(B16*N2x + B66*N2y) - N2y*(B12*N2x + B26*N2y)) + detJ*r22*wij*(-N2x*(B26*N2y + B66*N2x) - N2y*(B22*N2y + B26*N2x))) + r32*(N2*detJ*r23*wij*(E45*N2y + E55*N2x) + detJ*r21*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y)) + detJ*r22*wij*(N2x*(B12*N2y + B16*N2x) + N2y*(B26*N2y + B66*N2x))) + r33*(-0.5*A66*N2*N2x*alphat*detJ*r22*wij/h + 0.5*A66*N2*N2y*alphat*detJ*r21*wij/h)
+            KC0v[k] += r31*(KC0e0609*r21 + KC0e0709*r22 + KC0e0809*r23) + r32*(KC0e0610*r21 + KC0e0710*r22 + KC0e0810*r23)
             k += 1
-            KC0v[k] += detJ*r13*r23*wij*(N3x*(E45*N2y + E55*N2x) + N3y*(E44*N2y + E45*N2x)) + r11*(detJ*r21*wij*(0.25*A66*N2y*N3y*alphat/h + N3x*(A11*N2x + A16*N2y) + N3y*(A16*N2x + A66*N2y)) + detJ*r22*wij*(-0.25*A66*N2x*N3y*alphat/h + N3x*(A12*N2y + A16*N2x) + N3y*(A26*N2y + A66*N2x))) + r12*(detJ*r21*wij*(-0.25*A66*N2y*N3x*alphat/h + N3x*(A16*N2x + A66*N2y) + N3y*(A12*N2x + A26*N2y)) + detJ*r22*wij*(0.25*A66*N2x*N3x*alphat/h + N3x*(A26*N2y + A66*N2x) + N3y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0814*r13*r23 + r11*(KC0e0612*r21 + KC0e0712*r22) + r12*(KC0e0613*r21 + KC0e0713*r22)
             k += 1
-            KC0v[k] += detJ*r23**2*wij*(N3x*(E45*N2y + E55*N2x) + N3y*(E44*N2y + E45*N2x)) + r21*(detJ*r21*wij*(0.25*A66*N2y*N3y*alphat/h + N3x*(A11*N2x + A16*N2y) + N3y*(A16*N2x + A66*N2y)) + detJ*r22*wij*(-0.25*A66*N2x*N3y*alphat/h + N3x*(A12*N2y + A16*N2x) + N3y*(A26*N2y + A66*N2x))) + r22*(detJ*r21*wij*(-0.25*A66*N2y*N3x*alphat/h + N3x*(A16*N2x + A66*N2y) + N3y*(A12*N2x + A26*N2y)) + detJ*r22*wij*(0.25*A66*N2x*N3x*alphat/h + N3x*(A26*N2y + A66*N2x) + N3y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0814*r23**2 + r21*(KC0e0612*r21 + KC0e0712*r22) + r22*(KC0e0613*r21 + KC0e0713*r22)
             k += 1
-            KC0v[k] += detJ*r23*r33*wij*(N3x*(E45*N2y + E55*N2x) + N3y*(E44*N2y + E45*N2x)) + r31*(detJ*r21*wij*(0.25*A66*N2y*N3y*alphat/h + N3x*(A11*N2x + A16*N2y) + N3y*(A16*N2x + A66*N2y)) + detJ*r22*wij*(-0.25*A66*N2x*N3y*alphat/h + N3x*(A12*N2y + A16*N2x) + N3y*(A26*N2y + A66*N2x))) + r32*(detJ*r21*wij*(-0.25*A66*N2y*N3x*alphat/h + N3x*(A16*N2x + A66*N2y) + N3y*(A12*N2x + A26*N2y)) + detJ*r22*wij*(0.25*A66*N2x*N3x*alphat/h + N3x*(A26*N2y + A66*N2x) + N3y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0814*r23*r33 + r31*(KC0e0612*r21 + KC0e0712*r22) + r32*(KC0e0613*r21 + KC0e0713*r22)
             k += 1
-            KC0v[k] += r11*(detJ*r21*wij*(-N3x*(B16*N2x + B66*N2y) - N3y*(B12*N2x + B26*N2y)) + detJ*r22*wij*(-N3x*(B26*N2y + B66*N2x) - N3y*(B22*N2y + B26*N2x)) + detJ*r23*wij*(E44*N2y + E45*N2x)*(N1 + N2 - 1)) + r12*(detJ*r21*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y)) + detJ*r22*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x)) + detJ*r23*wij*(E45*N2y + E55*N2x)*(-N1 - N2 + 1)) + r13*(-0.5*A66*N2x*alphat*detJ*r22*wij*(-N1 - N2 + 1)/h + 0.5*A66*N2y*alphat*detJ*r21*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r11*(KC0e0615*r21 + KC0e0715*r22 + KC0e0815*r23) + r12*(KC0e0616*r21 + KC0e0716*r22 + KC0e0816*r23)
             k += 1
-            KC0v[k] += r21*(detJ*r21*wij*(-N3x*(B16*N2x + B66*N2y) - N3y*(B12*N2x + B26*N2y)) + detJ*r22*wij*(-N3x*(B26*N2y + B66*N2x) - N3y*(B22*N2y + B26*N2x)) + detJ*r23*wij*(E44*N2y + E45*N2x)*(N1 + N2 - 1)) + r22*(detJ*r21*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y)) + detJ*r22*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x)) + detJ*r23*wij*(E45*N2y + E55*N2x)*(-N1 - N2 + 1)) + r23*(-0.5*A66*N2x*alphat*detJ*r22*wij*(-N1 - N2 + 1)/h + 0.5*A66*N2y*alphat*detJ*r21*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r21*(KC0e0615*r21 + KC0e0715*r22 + KC0e0815*r23) + r22*(KC0e0616*r21 + KC0e0716*r22 + KC0e0816*r23)
             k += 1
-            KC0v[k] += r31*(detJ*r21*wij*(-N3x*(B16*N2x + B66*N2y) - N3y*(B12*N2x + B26*N2y)) + detJ*r22*wij*(-N3x*(B26*N2y + B66*N2x) - N3y*(B22*N2y + B26*N2x)) + detJ*r23*wij*(E44*N2y + E45*N2x)*(N1 + N2 - 1)) + r32*(detJ*r21*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y)) + detJ*r22*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x)) + detJ*r23*wij*(E45*N2y + E55*N2x)*(-N1 - N2 + 1)) + r33*(-0.5*A66*N2x*alphat*detJ*r22*wij*(-N1 - N2 + 1)/h + 0.5*A66*N2y*alphat*detJ*r21*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r31*(KC0e0615*r21 + KC0e0715*r22 + KC0e0815*r23) + r32*(KC0e0616*r21 + KC0e0716*r22 + KC0e0816*r23)
             k += 1
-            KC0v[k] += detJ*r13*r33*wij*(N1x*(E45*N2y + E55*N2x) + N1y*(E44*N2y + E45*N2x)) + r11*(detJ*r31*wij*(0.25*A66*N1y*N2y*alphat/h + N1x*(A11*N2x + A16*N2y) + N1y*(A16*N2x + A66*N2y)) + detJ*r32*wij*(-0.25*A66*N1y*N2x*alphat/h + N1x*(A12*N2y + A16*N2x) + N1y*(A26*N2y + A66*N2x))) + r12*(detJ*r31*wij*(-0.25*A66*N1x*N2y*alphat/h + N1x*(A16*N2x + A66*N2y) + N1y*(A12*N2x + A26*N2y)) + detJ*r32*wij*(0.25*A66*N1x*N2x*alphat/h + N1x*(A26*N2y + A66*N2x) + N1y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0208*r13*r33 + r11*(KC0e0006*r31 + KC0e0007*r32) + r12*(KC0e0106*r31 + KC0e0107*r32)
             k += 1
-            KC0v[k] += detJ*r23*r33*wij*(N1x*(E45*N2y + E55*N2x) + N1y*(E44*N2y + E45*N2x)) + r21*(detJ*r31*wij*(0.25*A66*N1y*N2y*alphat/h + N1x*(A11*N2x + A16*N2y) + N1y*(A16*N2x + A66*N2y)) + detJ*r32*wij*(-0.25*A66*N1y*N2x*alphat/h + N1x*(A12*N2y + A16*N2x) + N1y*(A26*N2y + A66*N2x))) + r22*(detJ*r31*wij*(-0.25*A66*N1x*N2y*alphat/h + N1x*(A16*N2x + A66*N2y) + N1y*(A12*N2x + A26*N2y)) + detJ*r32*wij*(0.25*A66*N1x*N2x*alphat/h + N1x*(A26*N2y + A66*N2x) + N1y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0208*r23*r33 + r21*(KC0e0006*r31 + KC0e0007*r32) + r22*(KC0e0106*r31 + KC0e0107*r32)
             k += 1
-            KC0v[k] += detJ*r33**2*wij*(N1x*(E45*N2y + E55*N2x) + N1y*(E44*N2y + E45*N2x)) + r31*(detJ*r31*wij*(0.25*A66*N1y*N2y*alphat/h + N1x*(A11*N2x + A16*N2y) + N1y*(A16*N2x + A66*N2y)) + detJ*r32*wij*(-0.25*A66*N1y*N2x*alphat/h + N1x*(A12*N2y + A16*N2x) + N1y*(A26*N2y + A66*N2x))) + r32*(detJ*r31*wij*(-0.25*A66*N1x*N2y*alphat/h + N1x*(A16*N2x + A66*N2y) + N1y*(A12*N2x + A26*N2y)) + detJ*r32*wij*(0.25*A66*N1x*N2x*alphat/h + N1x*(A26*N2y + A66*N2x) + N1y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0208*r33**2 + r31*(KC0e0006*r31 + KC0e0007*r32) + r32*(KC0e0106*r31 + KC0e0107*r32)
             k += 1
-            KC0v[k] += r11*(-N1*detJ*r33*wij*(E44*N2y + E45*N2x) + detJ*r31*wij*(-N1x*(B16*N2x + B66*N2y) - N1y*(B12*N2x + B26*N2y)) + detJ*r32*wij*(-N1x*(B26*N2y + B66*N2x) - N1y*(B22*N2y + B26*N2x))) + r12*(N1*detJ*r33*wij*(E45*N2y + E55*N2x) + detJ*r31*wij*(N1x*(B11*N2x + B16*N2y) + N1y*(B16*N2x + B66*N2y)) + detJ*r32*wij*(N1x*(B12*N2y + B16*N2x) + N1y*(B26*N2y + B66*N2x))) + r13*(-0.5*A66*N1*N2x*alphat*detJ*r32*wij/h + 0.5*A66*N1*N2y*alphat*detJ*r31*wij/h)
+            KC0v[k] += r11*(KC0e0306*r31 + KC0e0307*r32 + KC0e0308*r33) + r12*(KC0e0406*r31 + KC0e0407*r32 + KC0e0408*r33)
             k += 1
-            KC0v[k] += r21*(-N1*detJ*r33*wij*(E44*N2y + E45*N2x) + detJ*r31*wij*(-N1x*(B16*N2x + B66*N2y) - N1y*(B12*N2x + B26*N2y)) + detJ*r32*wij*(-N1x*(B26*N2y + B66*N2x) - N1y*(B22*N2y + B26*N2x))) + r22*(N1*detJ*r33*wij*(E45*N2y + E55*N2x) + detJ*r31*wij*(N1x*(B11*N2x + B16*N2y) + N1y*(B16*N2x + B66*N2y)) + detJ*r32*wij*(N1x*(B12*N2y + B16*N2x) + N1y*(B26*N2y + B66*N2x))) + r23*(-0.5*A66*N1*N2x*alphat*detJ*r32*wij/h + 0.5*A66*N1*N2y*alphat*detJ*r31*wij/h)
+            KC0v[k] += r21*(KC0e0306*r31 + KC0e0307*r32 + KC0e0308*r33) + r22*(KC0e0406*r31 + KC0e0407*r32 + KC0e0408*r33)
             k += 1
-            KC0v[k] += r31*(-N1*detJ*r33*wij*(E44*N2y + E45*N2x) + detJ*r31*wij*(-N1x*(B16*N2x + B66*N2y) - N1y*(B12*N2x + B26*N2y)) + detJ*r32*wij*(-N1x*(B26*N2y + B66*N2x) - N1y*(B22*N2y + B26*N2x))) + r32*(N1*detJ*r33*wij*(E45*N2y + E55*N2x) + detJ*r31*wij*(N1x*(B11*N2x + B16*N2y) + N1y*(B16*N2x + B66*N2y)) + detJ*r32*wij*(N1x*(B12*N2y + B16*N2x) + N1y*(B26*N2y + B66*N2x))) + r33*(-0.5*A66*N1*N2x*alphat*detJ*r32*wij/h + 0.5*A66*N1*N2y*alphat*detJ*r31*wij/h)
+            KC0v[k] += r31*(KC0e0306*r31 + KC0e0307*r32 + KC0e0308*r33) + r32*(KC0e0406*r31 + KC0e0407*r32 + KC0e0408*r33)
             k += 1
-            KC0v[k] += detJ*r13*r33*wij*(N2x*(E45*N2y + E55*N2x) + N2y*(E44*N2y + E45*N2x)) + r11*(detJ*r31*wij*(0.25*A66*N2y**2*alphat/h + N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y)) + detJ*r32*wij*(-0.25*A66*N2x*N2y*alphat/h + N2x*(A12*N2y + A16*N2x) + N2y*(A26*N2y + A66*N2x))) + r12*(detJ*r31*wij*(-0.25*A66*N2x*N2y*alphat/h + N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y)) + detJ*r32*wij*(0.25*A66*N2x**2*alphat/h + N2x*(A26*N2y + A66*N2x) + N2y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0808*r13*r33 + r11*(KC0e0606*r31 + KC0e0607*r32) + r12*(KC0e0607*r31 + KC0e0707*r32)
             k += 1
-            KC0v[k] += detJ*r23*r33*wij*(N2x*(E45*N2y + E55*N2x) + N2y*(E44*N2y + E45*N2x)) + r21*(detJ*r31*wij*(0.25*A66*N2y**2*alphat/h + N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y)) + detJ*r32*wij*(-0.25*A66*N2x*N2y*alphat/h + N2x*(A12*N2y + A16*N2x) + N2y*(A26*N2y + A66*N2x))) + r22*(detJ*r31*wij*(-0.25*A66*N2x*N2y*alphat/h + N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y)) + detJ*r32*wij*(0.25*A66*N2x**2*alphat/h + N2x*(A26*N2y + A66*N2x) + N2y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0808*r23*r33 + r21*(KC0e0606*r31 + KC0e0607*r32) + r22*(KC0e0607*r31 + KC0e0707*r32)
             k += 1
-            KC0v[k] += detJ*r33**2*wij*(N2x*(E45*N2y + E55*N2x) + N2y*(E44*N2y + E45*N2x)) + r31*(detJ*r31*wij*(0.25*A66*N2y**2*alphat/h + N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y)) + detJ*r32*wij*(-0.25*A66*N2x*N2y*alphat/h + N2x*(A12*N2y + A16*N2x) + N2y*(A26*N2y + A66*N2x))) + r32*(detJ*r31*wij*(-0.25*A66*N2x*N2y*alphat/h + N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y)) + detJ*r32*wij*(0.25*A66*N2x**2*alphat/h + N2x*(A26*N2y + A66*N2x) + N2y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0808*r33**2 + r31*(KC0e0606*r31 + KC0e0607*r32) + r32*(KC0e0607*r31 + KC0e0707*r32)
             k += 1
-            KC0v[k] += r11*(-N2*detJ*r33*wij*(E44*N2y + E45*N2x) + detJ*r31*wij*(-N2x*(B16*N2x + B66*N2y) - N2y*(B12*N2x + B26*N2y)) + detJ*r32*wij*(-N2x*(B26*N2y + B66*N2x) - N2y*(B22*N2y + B26*N2x))) + r12*(N2*detJ*r33*wij*(E45*N2y + E55*N2x) + detJ*r31*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y)) + detJ*r32*wij*(N2x*(B12*N2y + B16*N2x) + N2y*(B26*N2y + B66*N2x))) + r13*(-0.5*A66*N2*N2x*alphat*detJ*r32*wij/h + 0.5*A66*N2*N2y*alphat*detJ*r31*wij/h)
+            KC0v[k] += r11*(KC0e0609*r31 + KC0e0709*r32 + KC0e0809*r33) + r12*(KC0e0610*r31 + KC0e0710*r32 + KC0e0810*r33)
             k += 1
-            KC0v[k] += r21*(-N2*detJ*r33*wij*(E44*N2y + E45*N2x) + detJ*r31*wij*(-N2x*(B16*N2x + B66*N2y) - N2y*(B12*N2x + B26*N2y)) + detJ*r32*wij*(-N2x*(B26*N2y + B66*N2x) - N2y*(B22*N2y + B26*N2x))) + r22*(N2*detJ*r33*wij*(E45*N2y + E55*N2x) + detJ*r31*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y)) + detJ*r32*wij*(N2x*(B12*N2y + B16*N2x) + N2y*(B26*N2y + B66*N2x))) + r23*(-0.5*A66*N2*N2x*alphat*detJ*r32*wij/h + 0.5*A66*N2*N2y*alphat*detJ*r31*wij/h)
+            KC0v[k] += r21*(KC0e0609*r31 + KC0e0709*r32 + KC0e0809*r33) + r22*(KC0e0610*r31 + KC0e0710*r32 + KC0e0810*r33)
             k += 1
-            KC0v[k] += r31*(-N2*detJ*r33*wij*(E44*N2y + E45*N2x) + detJ*r31*wij*(-N2x*(B16*N2x + B66*N2y) - N2y*(B12*N2x + B26*N2y)) + detJ*r32*wij*(-N2x*(B26*N2y + B66*N2x) - N2y*(B22*N2y + B26*N2x))) + r32*(N2*detJ*r33*wij*(E45*N2y + E55*N2x) + detJ*r31*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y)) + detJ*r32*wij*(N2x*(B12*N2y + B16*N2x) + N2y*(B26*N2y + B66*N2x))) + r33*(-0.5*A66*N2*N2x*alphat*detJ*r32*wij/h + 0.5*A66*N2*N2y*alphat*detJ*r31*wij/h)
+            KC0v[k] += r31*(KC0e0609*r31 + KC0e0709*r32 + KC0e0809*r33) + r32*(KC0e0610*r31 + KC0e0710*r32 + KC0e0810*r33)
             k += 1
-            KC0v[k] += detJ*r13*r33*wij*(N3x*(E45*N2y + E55*N2x) + N3y*(E44*N2y + E45*N2x)) + r11*(detJ*r31*wij*(0.25*A66*N2y*N3y*alphat/h + N3x*(A11*N2x + A16*N2y) + N3y*(A16*N2x + A66*N2y)) + detJ*r32*wij*(-0.25*A66*N2x*N3y*alphat/h + N3x*(A12*N2y + A16*N2x) + N3y*(A26*N2y + A66*N2x))) + r12*(detJ*r31*wij*(-0.25*A66*N2y*N3x*alphat/h + N3x*(A16*N2x + A66*N2y) + N3y*(A12*N2x + A26*N2y)) + detJ*r32*wij*(0.25*A66*N2x*N3x*alphat/h + N3x*(A26*N2y + A66*N2x) + N3y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0814*r13*r33 + r11*(KC0e0612*r31 + KC0e0712*r32) + r12*(KC0e0613*r31 + KC0e0713*r32)
             k += 1
-            KC0v[k] += detJ*r23*r33*wij*(N3x*(E45*N2y + E55*N2x) + N3y*(E44*N2y + E45*N2x)) + r21*(detJ*r31*wij*(0.25*A66*N2y*N3y*alphat/h + N3x*(A11*N2x + A16*N2y) + N3y*(A16*N2x + A66*N2y)) + detJ*r32*wij*(-0.25*A66*N2x*N3y*alphat/h + N3x*(A12*N2y + A16*N2x) + N3y*(A26*N2y + A66*N2x))) + r22*(detJ*r31*wij*(-0.25*A66*N2y*N3x*alphat/h + N3x*(A16*N2x + A66*N2y) + N3y*(A12*N2x + A26*N2y)) + detJ*r32*wij*(0.25*A66*N2x*N3x*alphat/h + N3x*(A26*N2y + A66*N2x) + N3y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0814*r23*r33 + r21*(KC0e0612*r31 + KC0e0712*r32) + r22*(KC0e0613*r31 + KC0e0713*r32)
             k += 1
-            KC0v[k] += detJ*r33**2*wij*(N3x*(E45*N2y + E55*N2x) + N3y*(E44*N2y + E45*N2x)) + r31*(detJ*r31*wij*(0.25*A66*N2y*N3y*alphat/h + N3x*(A11*N2x + A16*N2y) + N3y*(A16*N2x + A66*N2y)) + detJ*r32*wij*(-0.25*A66*N2x*N3y*alphat/h + N3x*(A12*N2y + A16*N2x) + N3y*(A26*N2y + A66*N2x))) + r32*(detJ*r31*wij*(-0.25*A66*N2y*N3x*alphat/h + N3x*(A16*N2x + A66*N2y) + N3y*(A12*N2x + A26*N2y)) + detJ*r32*wij*(0.25*A66*N2x*N3x*alphat/h + N3x*(A26*N2y + A66*N2x) + N3y*(A22*N2y + A26*N2x)))
+            KC0v[k] += KC0e0814*r33**2 + r31*(KC0e0612*r31 + KC0e0712*r32) + r32*(KC0e0613*r31 + KC0e0713*r32)
             k += 1
-            KC0v[k] += r11*(detJ*r31*wij*(-N3x*(B16*N2x + B66*N2y) - N3y*(B12*N2x + B26*N2y)) + detJ*r32*wij*(-N3x*(B26*N2y + B66*N2x) - N3y*(B22*N2y + B26*N2x)) + detJ*r33*wij*(E44*N2y + E45*N2x)*(N1 + N2 - 1)) + r12*(detJ*r31*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y)) + detJ*r32*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x)) + detJ*r33*wij*(E45*N2y + E55*N2x)*(-N1 - N2 + 1)) + r13*(-0.5*A66*N2x*alphat*detJ*r32*wij*(-N1 - N2 + 1)/h + 0.5*A66*N2y*alphat*detJ*r31*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r11*(KC0e0615*r31 + KC0e0715*r32 + KC0e0815*r33) + r12*(KC0e0616*r31 + KC0e0716*r32 + KC0e0816*r33)
             k += 1
-            KC0v[k] += r21*(detJ*r31*wij*(-N3x*(B16*N2x + B66*N2y) - N3y*(B12*N2x + B26*N2y)) + detJ*r32*wij*(-N3x*(B26*N2y + B66*N2x) - N3y*(B22*N2y + B26*N2x)) + detJ*r33*wij*(E44*N2y + E45*N2x)*(N1 + N2 - 1)) + r22*(detJ*r31*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y)) + detJ*r32*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x)) + detJ*r33*wij*(E45*N2y + E55*N2x)*(-N1 - N2 + 1)) + r23*(-0.5*A66*N2x*alphat*detJ*r32*wij*(-N1 - N2 + 1)/h + 0.5*A66*N2y*alphat*detJ*r31*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r21*(KC0e0615*r31 + KC0e0715*r32 + KC0e0815*r33) + r22*(KC0e0616*r31 + KC0e0716*r32 + KC0e0816*r33)
             k += 1
-            KC0v[k] += r31*(detJ*r31*wij*(-N3x*(B16*N2x + B66*N2y) - N3y*(B12*N2x + B26*N2y)) + detJ*r32*wij*(-N3x*(B26*N2y + B66*N2x) - N3y*(B22*N2y + B26*N2x)) + detJ*r33*wij*(E44*N2y + E45*N2x)*(N1 + N2 - 1)) + r32*(detJ*r31*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y)) + detJ*r32*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x)) + detJ*r33*wij*(E45*N2y + E55*N2x)*(-N1 - N2 + 1)) + r33*(-0.5*A66*N2x*alphat*detJ*r32*wij*(-N1 - N2 + 1)/h + 0.5*A66*N2y*alphat*detJ*r31*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r31*(KC0e0615*r31 + KC0e0715*r32 + KC0e0815*r33) + r32*(KC0e0616*r31 + KC0e0716*r32 + KC0e0816*r33)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N1y*N2*alphat*detJ*r13*wij/h + detJ*r11*wij*(N1x*(-B12*N2y - B16*N2x) + N1y*(-B26*N2y - B66*N2x)) + detJ*r12*wij*(N1x*(B11*N2x + B16*N2y) + N1y*(B16*N2x + B66*N2y))) + r12*(-0.5*A66*N1x*N2*alphat*detJ*r13*wij/h + detJ*r11*wij*(N1x*(-B26*N2y - B66*N2x) + N1y*(-B22*N2y - B26*N2x)) + detJ*r12*wij*(N1x*(B16*N2x + B66*N2y) + N1y*(B12*N2x + B26*N2y))) + r13*(detJ*r11*wij*(-E44*N1y*N2 - E45*N1x*N2) + detJ*r12*wij*(E45*N1y*N2 + E55*N1x*N2))
+            KC0v[k] += r11*(KC0e0009*r11 + KC0e0010*r12) + r12*(KC0e0109*r11 + KC0e0110*r12) + r13*(KC0e0209*r11 + KC0e0210*r12)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N1y*N2*alphat*detJ*r13*wij/h + detJ*r11*wij*(N1x*(-B12*N2y - B16*N2x) + N1y*(-B26*N2y - B66*N2x)) + detJ*r12*wij*(N1x*(B11*N2x + B16*N2y) + N1y*(B16*N2x + B66*N2y))) + r22*(-0.5*A66*N1x*N2*alphat*detJ*r13*wij/h + detJ*r11*wij*(N1x*(-B26*N2y - B66*N2x) + N1y*(-B22*N2y - B26*N2x)) + detJ*r12*wij*(N1x*(B16*N2x + B66*N2y) + N1y*(B12*N2x + B26*N2y))) + r23*(detJ*r11*wij*(-E44*N1y*N2 - E45*N1x*N2) + detJ*r12*wij*(E45*N1y*N2 + E55*N1x*N2))
+            KC0v[k] += r21*(KC0e0009*r11 + KC0e0010*r12) + r22*(KC0e0109*r11 + KC0e0110*r12) + r23*(KC0e0209*r11 + KC0e0210*r12)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N1y*N2*alphat*detJ*r13*wij/h + detJ*r11*wij*(N1x*(-B12*N2y - B16*N2x) + N1y*(-B26*N2y - B66*N2x)) + detJ*r12*wij*(N1x*(B11*N2x + B16*N2y) + N1y*(B16*N2x + B66*N2y))) + r32*(-0.5*A66*N1x*N2*alphat*detJ*r13*wij/h + detJ*r11*wij*(N1x*(-B26*N2y - B66*N2x) + N1y*(-B22*N2y - B26*N2x)) + detJ*r12*wij*(N1x*(B16*N2x + B66*N2y) + N1y*(B12*N2x + B26*N2y))) + r33*(detJ*r11*wij*(-E44*N1y*N2 - E45*N1x*N2) + detJ*r12*wij*(E45*N1y*N2 + E55*N1x*N2))
+            KC0v[k] += r31*(KC0e0009*r11 + KC0e0010*r12) + r32*(KC0e0109*r11 + KC0e0110*r12) + r33*(KC0e0209*r11 + KC0e0210*r12)
             k += 1
-            KC0v[k] += A66*N1*N2*alphat*detJ*r13**2*wij/h + r11*(detJ*r11*wij*(E44*N1*N2 - N1x*(-D26*N2y - D66*N2x) - N1y*(-D22*N2y - D26*N2x)) + detJ*r12*wij*(-E45*N1*N2 - N1x*(D16*N2x + D66*N2y) - N1y*(D12*N2x + D26*N2y))) + r12*(detJ*r11*wij*(-E45*N1*N2 + N1x*(-D12*N2y - D16*N2x) + N1y*(-D26*N2y - D66*N2x)) + detJ*r12*wij*(E55*N1*N2 + N1x*(D11*N2x + D16*N2y) + N1y*(D16*N2x + D66*N2y)))
+            KC0v[k] += r11*(KC0e0309*r11 + KC0e0310*r12) + r12*(KC0e0409*r11 + KC0e0410*r12)
             k += 1
-            KC0v[k] += A66*N1*N2*alphat*detJ*r13*r23*wij/h + r21*(detJ*r11*wij*(E44*N1*N2 - N1x*(-D26*N2y - D66*N2x) - N1y*(-D22*N2y - D26*N2x)) + detJ*r12*wij*(-E45*N1*N2 - N1x*(D16*N2x + D66*N2y) - N1y*(D12*N2x + D26*N2y))) + r22*(detJ*r11*wij*(-E45*N1*N2 + N1x*(-D12*N2y - D16*N2x) + N1y*(-D26*N2y - D66*N2x)) + detJ*r12*wij*(E55*N1*N2 + N1x*(D11*N2x + D16*N2y) + N1y*(D16*N2x + D66*N2y)))
+            KC0v[k] += r21*(KC0e0309*r11 + KC0e0310*r12) + r22*(KC0e0409*r11 + KC0e0410*r12)
             k += 1
-            KC0v[k] += A66*N1*N2*alphat*detJ*r13*r33*wij/h + r31*(detJ*r11*wij*(E44*N1*N2 - N1x*(-D26*N2y - D66*N2x) - N1y*(-D22*N2y - D26*N2x)) + detJ*r12*wij*(-E45*N1*N2 - N1x*(D16*N2x + D66*N2y) - N1y*(D12*N2x + D26*N2y))) + r32*(detJ*r11*wij*(-E45*N1*N2 + N1x*(-D12*N2y - D16*N2x) + N1y*(-D26*N2y - D66*N2x)) + detJ*r12*wij*(E55*N1*N2 + N1x*(D11*N2x + D16*N2y) + N1y*(D16*N2x + D66*N2y)))
+            KC0v[k] += r31*(KC0e0309*r11 + KC0e0310*r12) + r32*(KC0e0409*r11 + KC0e0410*r12)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N2*N2y*alphat*detJ*r13*wij/h + detJ*r11*wij*(N2x*(-B12*N2y - B16*N2x) + N2y*(-B26*N2y - B66*N2x)) + detJ*r12*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y))) + r12*(-0.5*A66*N2*N2x*alphat*detJ*r13*wij/h + detJ*r11*wij*(N2x*(-B26*N2y - B66*N2x) + N2y*(-B22*N2y - B26*N2x)) + detJ*r12*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))) + r13*(detJ*r11*wij*(-E44*N2*N2y - E45*N2*N2x) + detJ*r12*wij*(E45*N2*N2y + E55*N2*N2x))
+            KC0v[k] += r11*(KC0e0609*r11 + KC0e0610*r12) + r12*(KC0e0709*r11 + KC0e0710*r12) + r13*(KC0e0809*r11 + KC0e0810*r12)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N2*N2y*alphat*detJ*r13*wij/h + detJ*r11*wij*(N2x*(-B12*N2y - B16*N2x) + N2y*(-B26*N2y - B66*N2x)) + detJ*r12*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y))) + r22*(-0.5*A66*N2*N2x*alphat*detJ*r13*wij/h + detJ*r11*wij*(N2x*(-B26*N2y - B66*N2x) + N2y*(-B22*N2y - B26*N2x)) + detJ*r12*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))) + r23*(detJ*r11*wij*(-E44*N2*N2y - E45*N2*N2x) + detJ*r12*wij*(E45*N2*N2y + E55*N2*N2x))
+            KC0v[k] += r21*(KC0e0609*r11 + KC0e0610*r12) + r22*(KC0e0709*r11 + KC0e0710*r12) + r23*(KC0e0809*r11 + KC0e0810*r12)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N2*N2y*alphat*detJ*r13*wij/h + detJ*r11*wij*(N2x*(-B12*N2y - B16*N2x) + N2y*(-B26*N2y - B66*N2x)) + detJ*r12*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y))) + r32*(-0.5*A66*N2*N2x*alphat*detJ*r13*wij/h + detJ*r11*wij*(N2x*(-B26*N2y - B66*N2x) + N2y*(-B22*N2y - B26*N2x)) + detJ*r12*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))) + r33*(detJ*r11*wij*(-E44*N2*N2y - E45*N2*N2x) + detJ*r12*wij*(E45*N2*N2y + E55*N2*N2x))
+            KC0v[k] += r31*(KC0e0609*r11 + KC0e0610*r12) + r32*(KC0e0709*r11 + KC0e0710*r12) + r33*(KC0e0809*r11 + KC0e0810*r12)
             k += 1
-            KC0v[k] += A66*N2**2*alphat*detJ*r13**2*wij/h + r11*(detJ*r11*wij*(E44*N2**2 - N2x*(-D26*N2y - D66*N2x) - N2y*(-D22*N2y - D26*N2x)) + detJ*r12*wij*(-E45*N2**2 - N2x*(D16*N2x + D66*N2y) - N2y*(D12*N2x + D26*N2y))) + r12*(detJ*r11*wij*(-E45*N2**2 + N2x*(-D12*N2y - D16*N2x) + N2y*(-D26*N2y - D66*N2x)) + detJ*r12*wij*(E55*N2**2 + N2x*(D11*N2x + D16*N2y) + N2y*(D16*N2x + D66*N2y)))
+            KC0v[k] += KC0e1111*r13**2 + r11*(KC0e0909*r11 + KC0e0910*r12) + r12*(KC0e0910*r11 + KC0e1010*r12)
             k += 1
-            KC0v[k] += A66*N2**2*alphat*detJ*r13*r23*wij/h + r21*(detJ*r11*wij*(E44*N2**2 - N2x*(-D26*N2y - D66*N2x) - N2y*(-D22*N2y - D26*N2x)) + detJ*r12*wij*(-E45*N2**2 - N2x*(D16*N2x + D66*N2y) - N2y*(D12*N2x + D26*N2y))) + r22*(detJ*r11*wij*(-E45*N2**2 + N2x*(-D12*N2y - D16*N2x) + N2y*(-D26*N2y - D66*N2x)) + detJ*r12*wij*(E55*N2**2 + N2x*(D11*N2x + D16*N2y) + N2y*(D16*N2x + D66*N2y)))
+            KC0v[k] += KC0e1111*r13*r23 + r21*(KC0e0909*r11 + KC0e0910*r12) + r22*(KC0e0910*r11 + KC0e1010*r12)
             k += 1
-            KC0v[k] += A66*N2**2*alphat*detJ*r13*r33*wij/h + r31*(detJ*r11*wij*(E44*N2**2 - N2x*(-D26*N2y - D66*N2x) - N2y*(-D22*N2y - D26*N2x)) + detJ*r12*wij*(-E45*N2**2 - N2x*(D16*N2x + D66*N2y) - N2y*(D12*N2x + D26*N2y))) + r32*(detJ*r11*wij*(-E45*N2**2 + N2x*(-D12*N2y - D16*N2x) + N2y*(-D26*N2y - D66*N2x)) + detJ*r12*wij*(E55*N2**2 + N2x*(D11*N2x + D16*N2y) + N2y*(D16*N2x + D66*N2y)))
+            KC0v[k] += KC0e1111*r13*r33 + r31*(KC0e0909*r11 + KC0e0910*r12) + r32*(KC0e0910*r11 + KC0e1010*r12)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N2*N3y*alphat*detJ*r13*wij/h + detJ*r11*wij*(N3x*(-B12*N2y - B16*N2x) + N3y*(-B26*N2y - B66*N2x)) + detJ*r12*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y))) + r12*(-0.5*A66*N2*N3x*alphat*detJ*r13*wij/h + detJ*r11*wij*(N3x*(-B26*N2y - B66*N2x) + N3y*(-B22*N2y - B26*N2x)) + detJ*r12*wij*(N3x*(B16*N2x + B66*N2y) + N3y*(B12*N2x + B26*N2y))) + r13*(detJ*r11*wij*(-E44*N2*N3y - E45*N2*N3x) + detJ*r12*wij*(E45*N2*N3y + E55*N2*N3x))
+            KC0v[k] += r11*(KC0e0912*r11 + KC0e1012*r12) + r12*(KC0e0913*r11 + KC0e1013*r12) + r13*(KC0e0914*r11 + KC0e1014*r12)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N2*N3y*alphat*detJ*r13*wij/h + detJ*r11*wij*(N3x*(-B12*N2y - B16*N2x) + N3y*(-B26*N2y - B66*N2x)) + detJ*r12*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y))) + r22*(-0.5*A66*N2*N3x*alphat*detJ*r13*wij/h + detJ*r11*wij*(N3x*(-B26*N2y - B66*N2x) + N3y*(-B22*N2y - B26*N2x)) + detJ*r12*wij*(N3x*(B16*N2x + B66*N2y) + N3y*(B12*N2x + B26*N2y))) + r23*(detJ*r11*wij*(-E44*N2*N3y - E45*N2*N3x) + detJ*r12*wij*(E45*N2*N3y + E55*N2*N3x))
+            KC0v[k] += r21*(KC0e0912*r11 + KC0e1012*r12) + r22*(KC0e0913*r11 + KC0e1013*r12) + r23*(KC0e0914*r11 + KC0e1014*r12)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N2*N3y*alphat*detJ*r13*wij/h + detJ*r11*wij*(N3x*(-B12*N2y - B16*N2x) + N3y*(-B26*N2y - B66*N2x)) + detJ*r12*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y))) + r32*(-0.5*A66*N2*N3x*alphat*detJ*r13*wij/h + detJ*r11*wij*(N3x*(-B26*N2y - B66*N2x) + N3y*(-B22*N2y - B26*N2x)) + detJ*r12*wij*(N3x*(B16*N2x + B66*N2y) + N3y*(B12*N2x + B26*N2y))) + r33*(detJ*r11*wij*(-E44*N2*N3y - E45*N2*N3x) + detJ*r12*wij*(E45*N2*N3y + E55*N2*N3x))
+            KC0v[k] += r31*(KC0e0912*r11 + KC0e1012*r12) + r32*(KC0e0913*r11 + KC0e1013*r12) + r33*(KC0e0914*r11 + KC0e1014*r12)
             k += 1
-            KC0v[k] += A66*N2*alphat*detJ*r13**2*wij*(-N1 - N2 + 1)/h + r11*(detJ*r11*wij*(-E44*N2*(N1 + N2 - 1) - N3x*(-D26*N2y - D66*N2x) - N3y*(-D22*N2y - D26*N2x)) + detJ*r12*wij*(E45*N2*(N1 + N2 - 1) - N3x*(D16*N2x + D66*N2y) - N3y*(D12*N2x + D26*N2y))) + r12*(detJ*r11*wij*(-E45*N2*(-N1 - N2 + 1) + N3x*(-D12*N2y - D16*N2x) + N3y*(-D26*N2y - D66*N2x)) + detJ*r12*wij*(E55*N2*(-N1 - N2 + 1) + N3x*(D11*N2x + D16*N2y) + N3y*(D16*N2x + D66*N2y)))
+            KC0v[k] += r11*(KC0e0915*r11 + KC0e1015*r12) + r12*(KC0e0916*r11 + KC0e1016*r12)
             k += 1
-            KC0v[k] += A66*N2*alphat*detJ*r13*r23*wij*(-N1 - N2 + 1)/h + r21*(detJ*r11*wij*(-E44*N2*(N1 + N2 - 1) - N3x*(-D26*N2y - D66*N2x) - N3y*(-D22*N2y - D26*N2x)) + detJ*r12*wij*(E45*N2*(N1 + N2 - 1) - N3x*(D16*N2x + D66*N2y) - N3y*(D12*N2x + D26*N2y))) + r22*(detJ*r11*wij*(-E45*N2*(-N1 - N2 + 1) + N3x*(-D12*N2y - D16*N2x) + N3y*(-D26*N2y - D66*N2x)) + detJ*r12*wij*(E55*N2*(-N1 - N2 + 1) + N3x*(D11*N2x + D16*N2y) + N3y*(D16*N2x + D66*N2y)))
+            KC0v[k] += r21*(KC0e0915*r11 + KC0e1015*r12) + r22*(KC0e0916*r11 + KC0e1016*r12)
             k += 1
-            KC0v[k] += A66*N2*alphat*detJ*r13*r33*wij*(-N1 - N2 + 1)/h + r31*(detJ*r11*wij*(-E44*N2*(N1 + N2 - 1) - N3x*(-D26*N2y - D66*N2x) - N3y*(-D22*N2y - D26*N2x)) + detJ*r12*wij*(E45*N2*(N1 + N2 - 1) - N3x*(D16*N2x + D66*N2y) - N3y*(D12*N2x + D26*N2y))) + r32*(detJ*r11*wij*(-E45*N2*(-N1 - N2 + 1) + N3x*(-D12*N2y - D16*N2x) + N3y*(-D26*N2y - D66*N2x)) + detJ*r12*wij*(E55*N2*(-N1 - N2 + 1) + N3x*(D11*N2x + D16*N2y) + N3y*(D16*N2x + D66*N2y)))
+            KC0v[k] += r31*(KC0e0915*r11 + KC0e1015*r12) + r32*(KC0e0916*r11 + KC0e1016*r12)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N1y*N2*alphat*detJ*r23*wij/h + detJ*r21*wij*(N1x*(-B12*N2y - B16*N2x) + N1y*(-B26*N2y - B66*N2x)) + detJ*r22*wij*(N1x*(B11*N2x + B16*N2y) + N1y*(B16*N2x + B66*N2y))) + r12*(-0.5*A66*N1x*N2*alphat*detJ*r23*wij/h + detJ*r21*wij*(N1x*(-B26*N2y - B66*N2x) + N1y*(-B22*N2y - B26*N2x)) + detJ*r22*wij*(N1x*(B16*N2x + B66*N2y) + N1y*(B12*N2x + B26*N2y))) + r13*(detJ*r21*wij*(-E44*N1y*N2 - E45*N1x*N2) + detJ*r22*wij*(E45*N1y*N2 + E55*N1x*N2))
+            KC0v[k] += r11*(KC0e0009*r21 + KC0e0010*r22) + r12*(KC0e0109*r21 + KC0e0110*r22) + r13*(KC0e0209*r21 + KC0e0210*r22)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N1y*N2*alphat*detJ*r23*wij/h + detJ*r21*wij*(N1x*(-B12*N2y - B16*N2x) + N1y*(-B26*N2y - B66*N2x)) + detJ*r22*wij*(N1x*(B11*N2x + B16*N2y) + N1y*(B16*N2x + B66*N2y))) + r22*(-0.5*A66*N1x*N2*alphat*detJ*r23*wij/h + detJ*r21*wij*(N1x*(-B26*N2y - B66*N2x) + N1y*(-B22*N2y - B26*N2x)) + detJ*r22*wij*(N1x*(B16*N2x + B66*N2y) + N1y*(B12*N2x + B26*N2y))) + r23*(detJ*r21*wij*(-E44*N1y*N2 - E45*N1x*N2) + detJ*r22*wij*(E45*N1y*N2 + E55*N1x*N2))
+            KC0v[k] += r21*(KC0e0009*r21 + KC0e0010*r22) + r22*(KC0e0109*r21 + KC0e0110*r22) + r23*(KC0e0209*r21 + KC0e0210*r22)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N1y*N2*alphat*detJ*r23*wij/h + detJ*r21*wij*(N1x*(-B12*N2y - B16*N2x) + N1y*(-B26*N2y - B66*N2x)) + detJ*r22*wij*(N1x*(B11*N2x + B16*N2y) + N1y*(B16*N2x + B66*N2y))) + r32*(-0.5*A66*N1x*N2*alphat*detJ*r23*wij/h + detJ*r21*wij*(N1x*(-B26*N2y - B66*N2x) + N1y*(-B22*N2y - B26*N2x)) + detJ*r22*wij*(N1x*(B16*N2x + B66*N2y) + N1y*(B12*N2x + B26*N2y))) + r33*(detJ*r21*wij*(-E44*N1y*N2 - E45*N1x*N2) + detJ*r22*wij*(E45*N1y*N2 + E55*N1x*N2))
+            KC0v[k] += r31*(KC0e0009*r21 + KC0e0010*r22) + r32*(KC0e0109*r21 + KC0e0110*r22) + r33*(KC0e0209*r21 + KC0e0210*r22)
             k += 1
-            KC0v[k] += A66*N1*N2*alphat*detJ*r13*r23*wij/h + r11*(detJ*r21*wij*(E44*N1*N2 - N1x*(-D26*N2y - D66*N2x) - N1y*(-D22*N2y - D26*N2x)) + detJ*r22*wij*(-E45*N1*N2 - N1x*(D16*N2x + D66*N2y) - N1y*(D12*N2x + D26*N2y))) + r12*(detJ*r21*wij*(-E45*N1*N2 + N1x*(-D12*N2y - D16*N2x) + N1y*(-D26*N2y - D66*N2x)) + detJ*r22*wij*(E55*N1*N2 + N1x*(D11*N2x + D16*N2y) + N1y*(D16*N2x + D66*N2y)))
+            KC0v[k] += r11*(KC0e0309*r21 + KC0e0310*r22) + r12*(KC0e0409*r21 + KC0e0410*r22)
             k += 1
-            KC0v[k] += A66*N1*N2*alphat*detJ*r23**2*wij/h + r21*(detJ*r21*wij*(E44*N1*N2 - N1x*(-D26*N2y - D66*N2x) - N1y*(-D22*N2y - D26*N2x)) + detJ*r22*wij*(-E45*N1*N2 - N1x*(D16*N2x + D66*N2y) - N1y*(D12*N2x + D26*N2y))) + r22*(detJ*r21*wij*(-E45*N1*N2 + N1x*(-D12*N2y - D16*N2x) + N1y*(-D26*N2y - D66*N2x)) + detJ*r22*wij*(E55*N1*N2 + N1x*(D11*N2x + D16*N2y) + N1y*(D16*N2x + D66*N2y)))
+            KC0v[k] += r21*(KC0e0309*r21 + KC0e0310*r22) + r22*(KC0e0409*r21 + KC0e0410*r22)
             k += 1
-            KC0v[k] += A66*N1*N2*alphat*detJ*r23*r33*wij/h + r31*(detJ*r21*wij*(E44*N1*N2 - N1x*(-D26*N2y - D66*N2x) - N1y*(-D22*N2y - D26*N2x)) + detJ*r22*wij*(-E45*N1*N2 - N1x*(D16*N2x + D66*N2y) - N1y*(D12*N2x + D26*N2y))) + r32*(detJ*r21*wij*(-E45*N1*N2 + N1x*(-D12*N2y - D16*N2x) + N1y*(-D26*N2y - D66*N2x)) + detJ*r22*wij*(E55*N1*N2 + N1x*(D11*N2x + D16*N2y) + N1y*(D16*N2x + D66*N2y)))
+            KC0v[k] += r31*(KC0e0309*r21 + KC0e0310*r22) + r32*(KC0e0409*r21 + KC0e0410*r22)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N2*N2y*alphat*detJ*r23*wij/h + detJ*r21*wij*(N2x*(-B12*N2y - B16*N2x) + N2y*(-B26*N2y - B66*N2x)) + detJ*r22*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y))) + r12*(-0.5*A66*N2*N2x*alphat*detJ*r23*wij/h + detJ*r21*wij*(N2x*(-B26*N2y - B66*N2x) + N2y*(-B22*N2y - B26*N2x)) + detJ*r22*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))) + r13*(detJ*r21*wij*(-E44*N2*N2y - E45*N2*N2x) + detJ*r22*wij*(E45*N2*N2y + E55*N2*N2x))
+            KC0v[k] += r11*(KC0e0609*r21 + KC0e0610*r22) + r12*(KC0e0709*r21 + KC0e0710*r22) + r13*(KC0e0809*r21 + KC0e0810*r22)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N2*N2y*alphat*detJ*r23*wij/h + detJ*r21*wij*(N2x*(-B12*N2y - B16*N2x) + N2y*(-B26*N2y - B66*N2x)) + detJ*r22*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y))) + r22*(-0.5*A66*N2*N2x*alphat*detJ*r23*wij/h + detJ*r21*wij*(N2x*(-B26*N2y - B66*N2x) + N2y*(-B22*N2y - B26*N2x)) + detJ*r22*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))) + r23*(detJ*r21*wij*(-E44*N2*N2y - E45*N2*N2x) + detJ*r22*wij*(E45*N2*N2y + E55*N2*N2x))
+            KC0v[k] += r21*(KC0e0609*r21 + KC0e0610*r22) + r22*(KC0e0709*r21 + KC0e0710*r22) + r23*(KC0e0809*r21 + KC0e0810*r22)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N2*N2y*alphat*detJ*r23*wij/h + detJ*r21*wij*(N2x*(-B12*N2y - B16*N2x) + N2y*(-B26*N2y - B66*N2x)) + detJ*r22*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y))) + r32*(-0.5*A66*N2*N2x*alphat*detJ*r23*wij/h + detJ*r21*wij*(N2x*(-B26*N2y - B66*N2x) + N2y*(-B22*N2y - B26*N2x)) + detJ*r22*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))) + r33*(detJ*r21*wij*(-E44*N2*N2y - E45*N2*N2x) + detJ*r22*wij*(E45*N2*N2y + E55*N2*N2x))
+            KC0v[k] += r31*(KC0e0609*r21 + KC0e0610*r22) + r32*(KC0e0709*r21 + KC0e0710*r22) + r33*(KC0e0809*r21 + KC0e0810*r22)
             k += 1
-            KC0v[k] += A66*N2**2*alphat*detJ*r13*r23*wij/h + r11*(detJ*r21*wij*(E44*N2**2 - N2x*(-D26*N2y - D66*N2x) - N2y*(-D22*N2y - D26*N2x)) + detJ*r22*wij*(-E45*N2**2 - N2x*(D16*N2x + D66*N2y) - N2y*(D12*N2x + D26*N2y))) + r12*(detJ*r21*wij*(-E45*N2**2 + N2x*(-D12*N2y - D16*N2x) + N2y*(-D26*N2y - D66*N2x)) + detJ*r22*wij*(E55*N2**2 + N2x*(D11*N2x + D16*N2y) + N2y*(D16*N2x + D66*N2y)))
+            KC0v[k] += KC0e1111*r13*r23 + r11*(KC0e0909*r21 + KC0e0910*r22) + r12*(KC0e0910*r21 + KC0e1010*r22)
             k += 1
-            KC0v[k] += A66*N2**2*alphat*detJ*r23**2*wij/h + r21*(detJ*r21*wij*(E44*N2**2 - N2x*(-D26*N2y - D66*N2x) - N2y*(-D22*N2y - D26*N2x)) + detJ*r22*wij*(-E45*N2**2 - N2x*(D16*N2x + D66*N2y) - N2y*(D12*N2x + D26*N2y))) + r22*(detJ*r21*wij*(-E45*N2**2 + N2x*(-D12*N2y - D16*N2x) + N2y*(-D26*N2y - D66*N2x)) + detJ*r22*wij*(E55*N2**2 + N2x*(D11*N2x + D16*N2y) + N2y*(D16*N2x + D66*N2y)))
+            KC0v[k] += KC0e1111*r23**2 + r21*(KC0e0909*r21 + KC0e0910*r22) + r22*(KC0e0910*r21 + KC0e1010*r22)
             k += 1
-            KC0v[k] += A66*N2**2*alphat*detJ*r23*r33*wij/h + r31*(detJ*r21*wij*(E44*N2**2 - N2x*(-D26*N2y - D66*N2x) - N2y*(-D22*N2y - D26*N2x)) + detJ*r22*wij*(-E45*N2**2 - N2x*(D16*N2x + D66*N2y) - N2y*(D12*N2x + D26*N2y))) + r32*(detJ*r21*wij*(-E45*N2**2 + N2x*(-D12*N2y - D16*N2x) + N2y*(-D26*N2y - D66*N2x)) + detJ*r22*wij*(E55*N2**2 + N2x*(D11*N2x + D16*N2y) + N2y*(D16*N2x + D66*N2y)))
+            KC0v[k] += KC0e1111*r23*r33 + r31*(KC0e0909*r21 + KC0e0910*r22) + r32*(KC0e0910*r21 + KC0e1010*r22)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N2*N3y*alphat*detJ*r23*wij/h + detJ*r21*wij*(N3x*(-B12*N2y - B16*N2x) + N3y*(-B26*N2y - B66*N2x)) + detJ*r22*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y))) + r12*(-0.5*A66*N2*N3x*alphat*detJ*r23*wij/h + detJ*r21*wij*(N3x*(-B26*N2y - B66*N2x) + N3y*(-B22*N2y - B26*N2x)) + detJ*r22*wij*(N3x*(B16*N2x + B66*N2y) + N3y*(B12*N2x + B26*N2y))) + r13*(detJ*r21*wij*(-E44*N2*N3y - E45*N2*N3x) + detJ*r22*wij*(E45*N2*N3y + E55*N2*N3x))
+            KC0v[k] += r11*(KC0e0912*r21 + KC0e1012*r22) + r12*(KC0e0913*r21 + KC0e1013*r22) + r13*(KC0e0914*r21 + KC0e1014*r22)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N2*N3y*alphat*detJ*r23*wij/h + detJ*r21*wij*(N3x*(-B12*N2y - B16*N2x) + N3y*(-B26*N2y - B66*N2x)) + detJ*r22*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y))) + r22*(-0.5*A66*N2*N3x*alphat*detJ*r23*wij/h + detJ*r21*wij*(N3x*(-B26*N2y - B66*N2x) + N3y*(-B22*N2y - B26*N2x)) + detJ*r22*wij*(N3x*(B16*N2x + B66*N2y) + N3y*(B12*N2x + B26*N2y))) + r23*(detJ*r21*wij*(-E44*N2*N3y - E45*N2*N3x) + detJ*r22*wij*(E45*N2*N3y + E55*N2*N3x))
+            KC0v[k] += r21*(KC0e0912*r21 + KC0e1012*r22) + r22*(KC0e0913*r21 + KC0e1013*r22) + r23*(KC0e0914*r21 + KC0e1014*r22)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N2*N3y*alphat*detJ*r23*wij/h + detJ*r21*wij*(N3x*(-B12*N2y - B16*N2x) + N3y*(-B26*N2y - B66*N2x)) + detJ*r22*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y))) + r32*(-0.5*A66*N2*N3x*alphat*detJ*r23*wij/h + detJ*r21*wij*(N3x*(-B26*N2y - B66*N2x) + N3y*(-B22*N2y - B26*N2x)) + detJ*r22*wij*(N3x*(B16*N2x + B66*N2y) + N3y*(B12*N2x + B26*N2y))) + r33*(detJ*r21*wij*(-E44*N2*N3y - E45*N2*N3x) + detJ*r22*wij*(E45*N2*N3y + E55*N2*N3x))
+            KC0v[k] += r31*(KC0e0912*r21 + KC0e1012*r22) + r32*(KC0e0913*r21 + KC0e1013*r22) + r33*(KC0e0914*r21 + KC0e1014*r22)
             k += 1
-            KC0v[k] += A66*N2*alphat*detJ*r13*r23*wij*(-N1 - N2 + 1)/h + r11*(detJ*r21*wij*(-E44*N2*(N1 + N2 - 1) - N3x*(-D26*N2y - D66*N2x) - N3y*(-D22*N2y - D26*N2x)) + detJ*r22*wij*(E45*N2*(N1 + N2 - 1) - N3x*(D16*N2x + D66*N2y) - N3y*(D12*N2x + D26*N2y))) + r12*(detJ*r21*wij*(-E45*N2*(-N1 - N2 + 1) + N3x*(-D12*N2y - D16*N2x) + N3y*(-D26*N2y - D66*N2x)) + detJ*r22*wij*(E55*N2*(-N1 - N2 + 1) + N3x*(D11*N2x + D16*N2y) + N3y*(D16*N2x + D66*N2y)))
+            KC0v[k] += r11*(KC0e0915*r21 + KC0e1015*r22) + r12*(KC0e0916*r21 + KC0e1016*r22)
             k += 1
-            KC0v[k] += A66*N2*alphat*detJ*r23**2*wij*(-N1 - N2 + 1)/h + r21*(detJ*r21*wij*(-E44*N2*(N1 + N2 - 1) - N3x*(-D26*N2y - D66*N2x) - N3y*(-D22*N2y - D26*N2x)) + detJ*r22*wij*(E45*N2*(N1 + N2 - 1) - N3x*(D16*N2x + D66*N2y) - N3y*(D12*N2x + D26*N2y))) + r22*(detJ*r21*wij*(-E45*N2*(-N1 - N2 + 1) + N3x*(-D12*N2y - D16*N2x) + N3y*(-D26*N2y - D66*N2x)) + detJ*r22*wij*(E55*N2*(-N1 - N2 + 1) + N3x*(D11*N2x + D16*N2y) + N3y*(D16*N2x + D66*N2y)))
+            KC0v[k] += r21*(KC0e0915*r21 + KC0e1015*r22) + r22*(KC0e0916*r21 + KC0e1016*r22)
             k += 1
-            KC0v[k] += A66*N2*alphat*detJ*r23*r33*wij*(-N1 - N2 + 1)/h + r31*(detJ*r21*wij*(-E44*N2*(N1 + N2 - 1) - N3x*(-D26*N2y - D66*N2x) - N3y*(-D22*N2y - D26*N2x)) + detJ*r22*wij*(E45*N2*(N1 + N2 - 1) - N3x*(D16*N2x + D66*N2y) - N3y*(D12*N2x + D26*N2y))) + r32*(detJ*r21*wij*(-E45*N2*(-N1 - N2 + 1) + N3x*(-D12*N2y - D16*N2x) + N3y*(-D26*N2y - D66*N2x)) + detJ*r22*wij*(E55*N2*(-N1 - N2 + 1) + N3x*(D11*N2x + D16*N2y) + N3y*(D16*N2x + D66*N2y)))
+            KC0v[k] += r31*(KC0e0915*r21 + KC0e1015*r22) + r32*(KC0e0916*r21 + KC0e1016*r22)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N1y*N2*alphat*detJ*r33*wij/h + detJ*r31*wij*(N1x*(-B12*N2y - B16*N2x) + N1y*(-B26*N2y - B66*N2x)) + detJ*r32*wij*(N1x*(B11*N2x + B16*N2y) + N1y*(B16*N2x + B66*N2y))) + r12*(-0.5*A66*N1x*N2*alphat*detJ*r33*wij/h + detJ*r31*wij*(N1x*(-B26*N2y - B66*N2x) + N1y*(-B22*N2y - B26*N2x)) + detJ*r32*wij*(N1x*(B16*N2x + B66*N2y) + N1y*(B12*N2x + B26*N2y))) + r13*(detJ*r31*wij*(-E44*N1y*N2 - E45*N1x*N2) + detJ*r32*wij*(E45*N1y*N2 + E55*N1x*N2))
+            KC0v[k] += r11*(KC0e0009*r31 + KC0e0010*r32) + r12*(KC0e0109*r31 + KC0e0110*r32) + r13*(KC0e0209*r31 + KC0e0210*r32)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N1y*N2*alphat*detJ*r33*wij/h + detJ*r31*wij*(N1x*(-B12*N2y - B16*N2x) + N1y*(-B26*N2y - B66*N2x)) + detJ*r32*wij*(N1x*(B11*N2x + B16*N2y) + N1y*(B16*N2x + B66*N2y))) + r22*(-0.5*A66*N1x*N2*alphat*detJ*r33*wij/h + detJ*r31*wij*(N1x*(-B26*N2y - B66*N2x) + N1y*(-B22*N2y - B26*N2x)) + detJ*r32*wij*(N1x*(B16*N2x + B66*N2y) + N1y*(B12*N2x + B26*N2y))) + r23*(detJ*r31*wij*(-E44*N1y*N2 - E45*N1x*N2) + detJ*r32*wij*(E45*N1y*N2 + E55*N1x*N2))
+            KC0v[k] += r21*(KC0e0009*r31 + KC0e0010*r32) + r22*(KC0e0109*r31 + KC0e0110*r32) + r23*(KC0e0209*r31 + KC0e0210*r32)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N1y*N2*alphat*detJ*r33*wij/h + detJ*r31*wij*(N1x*(-B12*N2y - B16*N2x) + N1y*(-B26*N2y - B66*N2x)) + detJ*r32*wij*(N1x*(B11*N2x + B16*N2y) + N1y*(B16*N2x + B66*N2y))) + r32*(-0.5*A66*N1x*N2*alphat*detJ*r33*wij/h + detJ*r31*wij*(N1x*(-B26*N2y - B66*N2x) + N1y*(-B22*N2y - B26*N2x)) + detJ*r32*wij*(N1x*(B16*N2x + B66*N2y) + N1y*(B12*N2x + B26*N2y))) + r33*(detJ*r31*wij*(-E44*N1y*N2 - E45*N1x*N2) + detJ*r32*wij*(E45*N1y*N2 + E55*N1x*N2))
+            KC0v[k] += r31*(KC0e0009*r31 + KC0e0010*r32) + r32*(KC0e0109*r31 + KC0e0110*r32) + r33*(KC0e0209*r31 + KC0e0210*r32)
             k += 1
-            KC0v[k] += A66*N1*N2*alphat*detJ*r13*r33*wij/h + r11*(detJ*r31*wij*(E44*N1*N2 - N1x*(-D26*N2y - D66*N2x) - N1y*(-D22*N2y - D26*N2x)) + detJ*r32*wij*(-E45*N1*N2 - N1x*(D16*N2x + D66*N2y) - N1y*(D12*N2x + D26*N2y))) + r12*(detJ*r31*wij*(-E45*N1*N2 + N1x*(-D12*N2y - D16*N2x) + N1y*(-D26*N2y - D66*N2x)) + detJ*r32*wij*(E55*N1*N2 + N1x*(D11*N2x + D16*N2y) + N1y*(D16*N2x + D66*N2y)))
+            KC0v[k] += r11*(KC0e0309*r31 + KC0e0310*r32) + r12*(KC0e0409*r31 + KC0e0410*r32)
             k += 1
-            KC0v[k] += A66*N1*N2*alphat*detJ*r23*r33*wij/h + r21*(detJ*r31*wij*(E44*N1*N2 - N1x*(-D26*N2y - D66*N2x) - N1y*(-D22*N2y - D26*N2x)) + detJ*r32*wij*(-E45*N1*N2 - N1x*(D16*N2x + D66*N2y) - N1y*(D12*N2x + D26*N2y))) + r22*(detJ*r31*wij*(-E45*N1*N2 + N1x*(-D12*N2y - D16*N2x) + N1y*(-D26*N2y - D66*N2x)) + detJ*r32*wij*(E55*N1*N2 + N1x*(D11*N2x + D16*N2y) + N1y*(D16*N2x + D66*N2y)))
+            KC0v[k] += r21*(KC0e0309*r31 + KC0e0310*r32) + r22*(KC0e0409*r31 + KC0e0410*r32)
             k += 1
-            KC0v[k] += A66*N1*N2*alphat*detJ*r33**2*wij/h + r31*(detJ*r31*wij*(E44*N1*N2 - N1x*(-D26*N2y - D66*N2x) - N1y*(-D22*N2y - D26*N2x)) + detJ*r32*wij*(-E45*N1*N2 - N1x*(D16*N2x + D66*N2y) - N1y*(D12*N2x + D26*N2y))) + r32*(detJ*r31*wij*(-E45*N1*N2 + N1x*(-D12*N2y - D16*N2x) + N1y*(-D26*N2y - D66*N2x)) + detJ*r32*wij*(E55*N1*N2 + N1x*(D11*N2x + D16*N2y) + N1y*(D16*N2x + D66*N2y)))
+            KC0v[k] += r31*(KC0e0309*r31 + KC0e0310*r32) + r32*(KC0e0409*r31 + KC0e0410*r32)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N2*N2y*alphat*detJ*r33*wij/h + detJ*r31*wij*(N2x*(-B12*N2y - B16*N2x) + N2y*(-B26*N2y - B66*N2x)) + detJ*r32*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y))) + r12*(-0.5*A66*N2*N2x*alphat*detJ*r33*wij/h + detJ*r31*wij*(N2x*(-B26*N2y - B66*N2x) + N2y*(-B22*N2y - B26*N2x)) + detJ*r32*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))) + r13*(detJ*r31*wij*(-E44*N2*N2y - E45*N2*N2x) + detJ*r32*wij*(E45*N2*N2y + E55*N2*N2x))
+            KC0v[k] += r11*(KC0e0609*r31 + KC0e0610*r32) + r12*(KC0e0709*r31 + KC0e0710*r32) + r13*(KC0e0809*r31 + KC0e0810*r32)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N2*N2y*alphat*detJ*r33*wij/h + detJ*r31*wij*(N2x*(-B12*N2y - B16*N2x) + N2y*(-B26*N2y - B66*N2x)) + detJ*r32*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y))) + r22*(-0.5*A66*N2*N2x*alphat*detJ*r33*wij/h + detJ*r31*wij*(N2x*(-B26*N2y - B66*N2x) + N2y*(-B22*N2y - B26*N2x)) + detJ*r32*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))) + r23*(detJ*r31*wij*(-E44*N2*N2y - E45*N2*N2x) + detJ*r32*wij*(E45*N2*N2y + E55*N2*N2x))
+            KC0v[k] += r21*(KC0e0609*r31 + KC0e0610*r32) + r22*(KC0e0709*r31 + KC0e0710*r32) + r23*(KC0e0809*r31 + KC0e0810*r32)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N2*N2y*alphat*detJ*r33*wij/h + detJ*r31*wij*(N2x*(-B12*N2y - B16*N2x) + N2y*(-B26*N2y - B66*N2x)) + detJ*r32*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y))) + r32*(-0.5*A66*N2*N2x*alphat*detJ*r33*wij/h + detJ*r31*wij*(N2x*(-B26*N2y - B66*N2x) + N2y*(-B22*N2y - B26*N2x)) + detJ*r32*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))) + r33*(detJ*r31*wij*(-E44*N2*N2y - E45*N2*N2x) + detJ*r32*wij*(E45*N2*N2y + E55*N2*N2x))
+            KC0v[k] += r31*(KC0e0609*r31 + KC0e0610*r32) + r32*(KC0e0709*r31 + KC0e0710*r32) + r33*(KC0e0809*r31 + KC0e0810*r32)
             k += 1
-            KC0v[k] += A66*N2**2*alphat*detJ*r13*r33*wij/h + r11*(detJ*r31*wij*(E44*N2**2 - N2x*(-D26*N2y - D66*N2x) - N2y*(-D22*N2y - D26*N2x)) + detJ*r32*wij*(-E45*N2**2 - N2x*(D16*N2x + D66*N2y) - N2y*(D12*N2x + D26*N2y))) + r12*(detJ*r31*wij*(-E45*N2**2 + N2x*(-D12*N2y - D16*N2x) + N2y*(-D26*N2y - D66*N2x)) + detJ*r32*wij*(E55*N2**2 + N2x*(D11*N2x + D16*N2y) + N2y*(D16*N2x + D66*N2y)))
+            KC0v[k] += KC0e1111*r13*r33 + r11*(KC0e0909*r31 + KC0e0910*r32) + r12*(KC0e0910*r31 + KC0e1010*r32)
             k += 1
-            KC0v[k] += A66*N2**2*alphat*detJ*r23*r33*wij/h + r21*(detJ*r31*wij*(E44*N2**2 - N2x*(-D26*N2y - D66*N2x) - N2y*(-D22*N2y - D26*N2x)) + detJ*r32*wij*(-E45*N2**2 - N2x*(D16*N2x + D66*N2y) - N2y*(D12*N2x + D26*N2y))) + r22*(detJ*r31*wij*(-E45*N2**2 + N2x*(-D12*N2y - D16*N2x) + N2y*(-D26*N2y - D66*N2x)) + detJ*r32*wij*(E55*N2**2 + N2x*(D11*N2x + D16*N2y) + N2y*(D16*N2x + D66*N2y)))
+            KC0v[k] += KC0e1111*r23*r33 + r21*(KC0e0909*r31 + KC0e0910*r32) + r22*(KC0e0910*r31 + KC0e1010*r32)
             k += 1
-            KC0v[k] += A66*N2**2*alphat*detJ*r33**2*wij/h + r31*(detJ*r31*wij*(E44*N2**2 - N2x*(-D26*N2y - D66*N2x) - N2y*(-D22*N2y - D26*N2x)) + detJ*r32*wij*(-E45*N2**2 - N2x*(D16*N2x + D66*N2y) - N2y*(D12*N2x + D26*N2y))) + r32*(detJ*r31*wij*(-E45*N2**2 + N2x*(-D12*N2y - D16*N2x) + N2y*(-D26*N2y - D66*N2x)) + detJ*r32*wij*(E55*N2**2 + N2x*(D11*N2x + D16*N2y) + N2y*(D16*N2x + D66*N2y)))
+            KC0v[k] += KC0e1111*r33**2 + r31*(KC0e0909*r31 + KC0e0910*r32) + r32*(KC0e0910*r31 + KC0e1010*r32)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N2*N3y*alphat*detJ*r33*wij/h + detJ*r31*wij*(N3x*(-B12*N2y - B16*N2x) + N3y*(-B26*N2y - B66*N2x)) + detJ*r32*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y))) + r12*(-0.5*A66*N2*N3x*alphat*detJ*r33*wij/h + detJ*r31*wij*(N3x*(-B26*N2y - B66*N2x) + N3y*(-B22*N2y - B26*N2x)) + detJ*r32*wij*(N3x*(B16*N2x + B66*N2y) + N3y*(B12*N2x + B26*N2y))) + r13*(detJ*r31*wij*(-E44*N2*N3y - E45*N2*N3x) + detJ*r32*wij*(E45*N2*N3y + E55*N2*N3x))
+            KC0v[k] += r11*(KC0e0912*r31 + KC0e1012*r32) + r12*(KC0e0913*r31 + KC0e1013*r32) + r13*(KC0e0914*r31 + KC0e1014*r32)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N2*N3y*alphat*detJ*r33*wij/h + detJ*r31*wij*(N3x*(-B12*N2y - B16*N2x) + N3y*(-B26*N2y - B66*N2x)) + detJ*r32*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y))) + r22*(-0.5*A66*N2*N3x*alphat*detJ*r33*wij/h + detJ*r31*wij*(N3x*(-B26*N2y - B66*N2x) + N3y*(-B22*N2y - B26*N2x)) + detJ*r32*wij*(N3x*(B16*N2x + B66*N2y) + N3y*(B12*N2x + B26*N2y))) + r23*(detJ*r31*wij*(-E44*N2*N3y - E45*N2*N3x) + detJ*r32*wij*(E45*N2*N3y + E55*N2*N3x))
+            KC0v[k] += r21*(KC0e0912*r31 + KC0e1012*r32) + r22*(KC0e0913*r31 + KC0e1013*r32) + r23*(KC0e0914*r31 + KC0e1014*r32)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N2*N3y*alphat*detJ*r33*wij/h + detJ*r31*wij*(N3x*(-B12*N2y - B16*N2x) + N3y*(-B26*N2y - B66*N2x)) + detJ*r32*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y))) + r32*(-0.5*A66*N2*N3x*alphat*detJ*r33*wij/h + detJ*r31*wij*(N3x*(-B26*N2y - B66*N2x) + N3y*(-B22*N2y - B26*N2x)) + detJ*r32*wij*(N3x*(B16*N2x + B66*N2y) + N3y*(B12*N2x + B26*N2y))) + r33*(detJ*r31*wij*(-E44*N2*N3y - E45*N2*N3x) + detJ*r32*wij*(E45*N2*N3y + E55*N2*N3x))
+            KC0v[k] += r31*(KC0e0912*r31 + KC0e1012*r32) + r32*(KC0e0913*r31 + KC0e1013*r32) + r33*(KC0e0914*r31 + KC0e1014*r32)
             k += 1
-            KC0v[k] += A66*N2*alphat*detJ*r13*r33*wij*(-N1 - N2 + 1)/h + r11*(detJ*r31*wij*(-E44*N2*(N1 + N2 - 1) - N3x*(-D26*N2y - D66*N2x) - N3y*(-D22*N2y - D26*N2x)) + detJ*r32*wij*(E45*N2*(N1 + N2 - 1) - N3x*(D16*N2x + D66*N2y) - N3y*(D12*N2x + D26*N2y))) + r12*(detJ*r31*wij*(-E45*N2*(-N1 - N2 + 1) + N3x*(-D12*N2y - D16*N2x) + N3y*(-D26*N2y - D66*N2x)) + detJ*r32*wij*(E55*N2*(-N1 - N2 + 1) + N3x*(D11*N2x + D16*N2y) + N3y*(D16*N2x + D66*N2y)))
+            KC0v[k] += r11*(KC0e0915*r31 + KC0e1015*r32) + r12*(KC0e0916*r31 + KC0e1016*r32)
             k += 1
-            KC0v[k] += A66*N2*alphat*detJ*r23*r33*wij*(-N1 - N2 + 1)/h + r21*(detJ*r31*wij*(-E44*N2*(N1 + N2 - 1) - N3x*(-D26*N2y - D66*N2x) - N3y*(-D22*N2y - D26*N2x)) + detJ*r32*wij*(E45*N2*(N1 + N2 - 1) - N3x*(D16*N2x + D66*N2y) - N3y*(D12*N2x + D26*N2y))) + r22*(detJ*r31*wij*(-E45*N2*(-N1 - N2 + 1) + N3x*(-D12*N2y - D16*N2x) + N3y*(-D26*N2y - D66*N2x)) + detJ*r32*wij*(E55*N2*(-N1 - N2 + 1) + N3x*(D11*N2x + D16*N2y) + N3y*(D16*N2x + D66*N2y)))
+            KC0v[k] += r21*(KC0e0915*r31 + KC0e1015*r32) + r22*(KC0e0916*r31 + KC0e1016*r32)
             k += 1
-            KC0v[k] += A66*N2*alphat*detJ*r33**2*wij*(-N1 - N2 + 1)/h + r31*(detJ*r31*wij*(-E44*N2*(N1 + N2 - 1) - N3x*(-D26*N2y - D66*N2x) - N3y*(-D22*N2y - D26*N2x)) + detJ*r32*wij*(E45*N2*(N1 + N2 - 1) - N3x*(D16*N2x + D66*N2y) - N3y*(D12*N2x + D26*N2y))) + r32*(detJ*r31*wij*(-E45*N2*(-N1 - N2 + 1) + N3x*(-D12*N2y - D16*N2x) + N3y*(-D26*N2y - D66*N2x)) + detJ*r32*wij*(E55*N2*(-N1 - N2 + 1) + N3x*(D11*N2x + D16*N2y) + N3y*(D16*N2x + D66*N2y)))
+            KC0v[k] += r31*(KC0e0915*r31 + KC0e1015*r32) + r32*(KC0e0916*r31 + KC0e1016*r32)
             k += 1
-            KC0v[k] += detJ*r13**2*wij*(N1x*(E45*N3y + E55*N3x) + N1y*(E44*N3y + E45*N3x)) + r11*(detJ*r11*wij*(0.25*A66*N1y*N3y*alphat/h + N1x*(A11*N3x + A16*N3y) + N1y*(A16*N3x + A66*N3y)) + detJ*r12*wij*(-0.25*A66*N1y*N3x*alphat/h + N1x*(A12*N3y + A16*N3x) + N1y*(A26*N3y + A66*N3x))) + r12*(detJ*r11*wij*(-0.25*A66*N1x*N3y*alphat/h + N1x*(A16*N3x + A66*N3y) + N1y*(A12*N3x + A26*N3y)) + detJ*r12*wij*(0.25*A66*N1x*N3x*alphat/h + N1x*(A26*N3y + A66*N3x) + N1y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e0214*r13**2 + r11*(KC0e0012*r11 + KC0e0013*r12) + r12*(KC0e0112*r11 + KC0e0113*r12)
             k += 1
-            KC0v[k] += detJ*r13*r23*wij*(N1x*(E45*N3y + E55*N3x) + N1y*(E44*N3y + E45*N3x)) + r21*(detJ*r11*wij*(0.25*A66*N1y*N3y*alphat/h + N1x*(A11*N3x + A16*N3y) + N1y*(A16*N3x + A66*N3y)) + detJ*r12*wij*(-0.25*A66*N1y*N3x*alphat/h + N1x*(A12*N3y + A16*N3x) + N1y*(A26*N3y + A66*N3x))) + r22*(detJ*r11*wij*(-0.25*A66*N1x*N3y*alphat/h + N1x*(A16*N3x + A66*N3y) + N1y*(A12*N3x + A26*N3y)) + detJ*r12*wij*(0.25*A66*N1x*N3x*alphat/h + N1x*(A26*N3y + A66*N3x) + N1y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e0214*r13*r23 + r21*(KC0e0012*r11 + KC0e0013*r12) + r22*(KC0e0112*r11 + KC0e0113*r12)
             k += 1
-            KC0v[k] += detJ*r13*r33*wij*(N1x*(E45*N3y + E55*N3x) + N1y*(E44*N3y + E45*N3x)) + r31*(detJ*r11*wij*(0.25*A66*N1y*N3y*alphat/h + N1x*(A11*N3x + A16*N3y) + N1y*(A16*N3x + A66*N3y)) + detJ*r12*wij*(-0.25*A66*N1y*N3x*alphat/h + N1x*(A12*N3y + A16*N3x) + N1y*(A26*N3y + A66*N3x))) + r32*(detJ*r11*wij*(-0.25*A66*N1x*N3y*alphat/h + N1x*(A16*N3x + A66*N3y) + N1y*(A12*N3x + A26*N3y)) + detJ*r12*wij*(0.25*A66*N1x*N3x*alphat/h + N1x*(A26*N3y + A66*N3x) + N1y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e0214*r13*r33 + r31*(KC0e0012*r11 + KC0e0013*r12) + r32*(KC0e0112*r11 + KC0e0113*r12)
             k += 1
-            KC0v[k] += r11*(-N1*detJ*r13*wij*(E44*N3y + E45*N3x) + detJ*r11*wij*(-N1x*(B16*N3x + B66*N3y) - N1y*(B12*N3x + B26*N3y)) + detJ*r12*wij*(-N1x*(B26*N3y + B66*N3x) - N1y*(B22*N3y + B26*N3x))) + r12*(N1*detJ*r13*wij*(E45*N3y + E55*N3x) + detJ*r11*wij*(N1x*(B11*N3x + B16*N3y) + N1y*(B16*N3x + B66*N3y)) + detJ*r12*wij*(N1x*(B12*N3y + B16*N3x) + N1y*(B26*N3y + B66*N3x))) + r13*(-0.5*A66*N1*N3x*alphat*detJ*r12*wij/h + 0.5*A66*N1*N3y*alphat*detJ*r11*wij/h)
+            KC0v[k] += r11*(KC0e0312*r11 + KC0e0313*r12 + KC0e0314*r13) + r12*(KC0e0412*r11 + KC0e0413*r12 + KC0e0414*r13)
             k += 1
-            KC0v[k] += r21*(-N1*detJ*r13*wij*(E44*N3y + E45*N3x) + detJ*r11*wij*(-N1x*(B16*N3x + B66*N3y) - N1y*(B12*N3x + B26*N3y)) + detJ*r12*wij*(-N1x*(B26*N3y + B66*N3x) - N1y*(B22*N3y + B26*N3x))) + r22*(N1*detJ*r13*wij*(E45*N3y + E55*N3x) + detJ*r11*wij*(N1x*(B11*N3x + B16*N3y) + N1y*(B16*N3x + B66*N3y)) + detJ*r12*wij*(N1x*(B12*N3y + B16*N3x) + N1y*(B26*N3y + B66*N3x))) + r23*(-0.5*A66*N1*N3x*alphat*detJ*r12*wij/h + 0.5*A66*N1*N3y*alphat*detJ*r11*wij/h)
+            KC0v[k] += r21*(KC0e0312*r11 + KC0e0313*r12 + KC0e0314*r13) + r22*(KC0e0412*r11 + KC0e0413*r12 + KC0e0414*r13)
             k += 1
-            KC0v[k] += r31*(-N1*detJ*r13*wij*(E44*N3y + E45*N3x) + detJ*r11*wij*(-N1x*(B16*N3x + B66*N3y) - N1y*(B12*N3x + B26*N3y)) + detJ*r12*wij*(-N1x*(B26*N3y + B66*N3x) - N1y*(B22*N3y + B26*N3x))) + r32*(N1*detJ*r13*wij*(E45*N3y + E55*N3x) + detJ*r11*wij*(N1x*(B11*N3x + B16*N3y) + N1y*(B16*N3x + B66*N3y)) + detJ*r12*wij*(N1x*(B12*N3y + B16*N3x) + N1y*(B26*N3y + B66*N3x))) + r33*(-0.5*A66*N1*N3x*alphat*detJ*r12*wij/h + 0.5*A66*N1*N3y*alphat*detJ*r11*wij/h)
+            KC0v[k] += r31*(KC0e0312*r11 + KC0e0313*r12 + KC0e0314*r13) + r32*(KC0e0412*r11 + KC0e0413*r12 + KC0e0414*r13)
             k += 1
-            KC0v[k] += detJ*r13**2*wij*(N2x*(E45*N3y + E55*N3x) + N2y*(E44*N3y + E45*N3x)) + r11*(detJ*r11*wij*(0.25*A66*N2y*N3y*alphat/h + N2x*(A11*N3x + A16*N3y) + N2y*(A16*N3x + A66*N3y)) + detJ*r12*wij*(-0.25*A66*N2y*N3x*alphat/h + N2x*(A12*N3y + A16*N3x) + N2y*(A26*N3y + A66*N3x))) + r12*(detJ*r11*wij*(-0.25*A66*N2x*N3y*alphat/h + N2x*(A16*N3x + A66*N3y) + N2y*(A12*N3x + A26*N3y)) + detJ*r12*wij*(0.25*A66*N2x*N3x*alphat/h + N2x*(A26*N3y + A66*N3x) + N2y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e0814*r13**2 + r11*(KC0e0612*r11 + KC0e0613*r12) + r12*(KC0e0712*r11 + KC0e0713*r12)
             k += 1
-            KC0v[k] += detJ*r13*r23*wij*(N2x*(E45*N3y + E55*N3x) + N2y*(E44*N3y + E45*N3x)) + r21*(detJ*r11*wij*(0.25*A66*N2y*N3y*alphat/h + N2x*(A11*N3x + A16*N3y) + N2y*(A16*N3x + A66*N3y)) + detJ*r12*wij*(-0.25*A66*N2y*N3x*alphat/h + N2x*(A12*N3y + A16*N3x) + N2y*(A26*N3y + A66*N3x))) + r22*(detJ*r11*wij*(-0.25*A66*N2x*N3y*alphat/h + N2x*(A16*N3x + A66*N3y) + N2y*(A12*N3x + A26*N3y)) + detJ*r12*wij*(0.25*A66*N2x*N3x*alphat/h + N2x*(A26*N3y + A66*N3x) + N2y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e0814*r13*r23 + r21*(KC0e0612*r11 + KC0e0613*r12) + r22*(KC0e0712*r11 + KC0e0713*r12)
             k += 1
-            KC0v[k] += detJ*r13*r33*wij*(N2x*(E45*N3y + E55*N3x) + N2y*(E44*N3y + E45*N3x)) + r31*(detJ*r11*wij*(0.25*A66*N2y*N3y*alphat/h + N2x*(A11*N3x + A16*N3y) + N2y*(A16*N3x + A66*N3y)) + detJ*r12*wij*(-0.25*A66*N2y*N3x*alphat/h + N2x*(A12*N3y + A16*N3x) + N2y*(A26*N3y + A66*N3x))) + r32*(detJ*r11*wij*(-0.25*A66*N2x*N3y*alphat/h + N2x*(A16*N3x + A66*N3y) + N2y*(A12*N3x + A26*N3y)) + detJ*r12*wij*(0.25*A66*N2x*N3x*alphat/h + N2x*(A26*N3y + A66*N3x) + N2y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e0814*r13*r33 + r31*(KC0e0612*r11 + KC0e0613*r12) + r32*(KC0e0712*r11 + KC0e0713*r12)
             k += 1
-            KC0v[k] += r11*(-N2*detJ*r13*wij*(E44*N3y + E45*N3x) + detJ*r11*wij*(-N2x*(B16*N3x + B66*N3y) - N2y*(B12*N3x + B26*N3y)) + detJ*r12*wij*(-N2x*(B26*N3y + B66*N3x) - N2y*(B22*N3y + B26*N3x))) + r12*(N2*detJ*r13*wij*(E45*N3y + E55*N3x) + detJ*r11*wij*(N2x*(B11*N3x + B16*N3y) + N2y*(B16*N3x + B66*N3y)) + detJ*r12*wij*(N2x*(B12*N3y + B16*N3x) + N2y*(B26*N3y + B66*N3x))) + r13*(-0.5*A66*N2*N3x*alphat*detJ*r12*wij/h + 0.5*A66*N2*N3y*alphat*detJ*r11*wij/h)
+            KC0v[k] += r11*(KC0e0912*r11 + KC0e0913*r12 + KC0e0914*r13) + r12*(KC0e1012*r11 + KC0e1013*r12 + KC0e1014*r13)
             k += 1
-            KC0v[k] += r21*(-N2*detJ*r13*wij*(E44*N3y + E45*N3x) + detJ*r11*wij*(-N2x*(B16*N3x + B66*N3y) - N2y*(B12*N3x + B26*N3y)) + detJ*r12*wij*(-N2x*(B26*N3y + B66*N3x) - N2y*(B22*N3y + B26*N3x))) + r22*(N2*detJ*r13*wij*(E45*N3y + E55*N3x) + detJ*r11*wij*(N2x*(B11*N3x + B16*N3y) + N2y*(B16*N3x + B66*N3y)) + detJ*r12*wij*(N2x*(B12*N3y + B16*N3x) + N2y*(B26*N3y + B66*N3x))) + r23*(-0.5*A66*N2*N3x*alphat*detJ*r12*wij/h + 0.5*A66*N2*N3y*alphat*detJ*r11*wij/h)
+            KC0v[k] += r21*(KC0e0912*r11 + KC0e0913*r12 + KC0e0914*r13) + r22*(KC0e1012*r11 + KC0e1013*r12 + KC0e1014*r13)
             k += 1
-            KC0v[k] += r31*(-N2*detJ*r13*wij*(E44*N3y + E45*N3x) + detJ*r11*wij*(-N2x*(B16*N3x + B66*N3y) - N2y*(B12*N3x + B26*N3y)) + detJ*r12*wij*(-N2x*(B26*N3y + B66*N3x) - N2y*(B22*N3y + B26*N3x))) + r32*(N2*detJ*r13*wij*(E45*N3y + E55*N3x) + detJ*r11*wij*(N2x*(B11*N3x + B16*N3y) + N2y*(B16*N3x + B66*N3y)) + detJ*r12*wij*(N2x*(B12*N3y + B16*N3x) + N2y*(B26*N3y + B66*N3x))) + r33*(-0.5*A66*N2*N3x*alphat*detJ*r12*wij/h + 0.5*A66*N2*N3y*alphat*detJ*r11*wij/h)
+            KC0v[k] += r31*(KC0e0912*r11 + KC0e0913*r12 + KC0e0914*r13) + r32*(KC0e1012*r11 + KC0e1013*r12 + KC0e1014*r13)
             k += 1
-            KC0v[k] += detJ*r13**2*wij*(N3x*(E45*N3y + E55*N3x) + N3y*(E44*N3y + E45*N3x)) + r11*(detJ*r11*wij*(0.25*A66*N3y**2*alphat/h + N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y)) + detJ*r12*wij*(-0.25*A66*N3x*N3y*alphat/h + N3x*(A12*N3y + A16*N3x) + N3y*(A26*N3y + A66*N3x))) + r12*(detJ*r11*wij*(-0.25*A66*N3x*N3y*alphat/h + N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y)) + detJ*r12*wij*(0.25*A66*N3x**2*alphat/h + N3x*(A26*N3y + A66*N3x) + N3y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e1414*r13**2 + r11*(KC0e1212*r11 + KC0e1213*r12) + r12*(KC0e1213*r11 + KC0e1313*r12)
             k += 1
-            KC0v[k] += detJ*r13*r23*wij*(N3x*(E45*N3y + E55*N3x) + N3y*(E44*N3y + E45*N3x)) + r21*(detJ*r11*wij*(0.25*A66*N3y**2*alphat/h + N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y)) + detJ*r12*wij*(-0.25*A66*N3x*N3y*alphat/h + N3x*(A12*N3y + A16*N3x) + N3y*(A26*N3y + A66*N3x))) + r22*(detJ*r11*wij*(-0.25*A66*N3x*N3y*alphat/h + N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y)) + detJ*r12*wij*(0.25*A66*N3x**2*alphat/h + N3x*(A26*N3y + A66*N3x) + N3y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e1414*r13*r23 + r21*(KC0e1212*r11 + KC0e1213*r12) + r22*(KC0e1213*r11 + KC0e1313*r12)
             k += 1
-            KC0v[k] += detJ*r13*r33*wij*(N3x*(E45*N3y + E55*N3x) + N3y*(E44*N3y + E45*N3x)) + r31*(detJ*r11*wij*(0.25*A66*N3y**2*alphat/h + N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y)) + detJ*r12*wij*(-0.25*A66*N3x*N3y*alphat/h + N3x*(A12*N3y + A16*N3x) + N3y*(A26*N3y + A66*N3x))) + r32*(detJ*r11*wij*(-0.25*A66*N3x*N3y*alphat/h + N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y)) + detJ*r12*wij*(0.25*A66*N3x**2*alphat/h + N3x*(A26*N3y + A66*N3x) + N3y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e1414*r13*r33 + r31*(KC0e1212*r11 + KC0e1213*r12) + r32*(KC0e1213*r11 + KC0e1313*r12)
             k += 1
-            KC0v[k] += r11*(detJ*r11*wij*(-N3x*(B16*N3x + B66*N3y) - N3y*(B12*N3x + B26*N3y)) + detJ*r12*wij*(-N3x*(B26*N3y + B66*N3x) - N3y*(B22*N3y + B26*N3x)) + detJ*r13*wij*(E44*N3y + E45*N3x)*(N1 + N2 - 1)) + r12*(detJ*r11*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y)) + detJ*r12*wij*(N3x*(B12*N3y + B16*N3x) + N3y*(B26*N3y + B66*N3x)) + detJ*r13*wij*(E45*N3y + E55*N3x)*(-N1 - N2 + 1)) + r13*(-0.5*A66*N3x*alphat*detJ*r12*wij*(-N1 - N2 + 1)/h + 0.5*A66*N3y*alphat*detJ*r11*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r11*(KC0e1215*r11 + KC0e1315*r12 + KC0e1415*r13) + r12*(KC0e1216*r11 + KC0e1316*r12 + KC0e1416*r13)
             k += 1
-            KC0v[k] += r21*(detJ*r11*wij*(-N3x*(B16*N3x + B66*N3y) - N3y*(B12*N3x + B26*N3y)) + detJ*r12*wij*(-N3x*(B26*N3y + B66*N3x) - N3y*(B22*N3y + B26*N3x)) + detJ*r13*wij*(E44*N3y + E45*N3x)*(N1 + N2 - 1)) + r22*(detJ*r11*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y)) + detJ*r12*wij*(N3x*(B12*N3y + B16*N3x) + N3y*(B26*N3y + B66*N3x)) + detJ*r13*wij*(E45*N3y + E55*N3x)*(-N1 - N2 + 1)) + r23*(-0.5*A66*N3x*alphat*detJ*r12*wij*(-N1 - N2 + 1)/h + 0.5*A66*N3y*alphat*detJ*r11*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r21*(KC0e1215*r11 + KC0e1315*r12 + KC0e1415*r13) + r22*(KC0e1216*r11 + KC0e1316*r12 + KC0e1416*r13)
             k += 1
-            KC0v[k] += r31*(detJ*r11*wij*(-N3x*(B16*N3x + B66*N3y) - N3y*(B12*N3x + B26*N3y)) + detJ*r12*wij*(-N3x*(B26*N3y + B66*N3x) - N3y*(B22*N3y + B26*N3x)) + detJ*r13*wij*(E44*N3y + E45*N3x)*(N1 + N2 - 1)) + r32*(detJ*r11*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y)) + detJ*r12*wij*(N3x*(B12*N3y + B16*N3x) + N3y*(B26*N3y + B66*N3x)) + detJ*r13*wij*(E45*N3y + E55*N3x)*(-N1 - N2 + 1)) + r33*(-0.5*A66*N3x*alphat*detJ*r12*wij*(-N1 - N2 + 1)/h + 0.5*A66*N3y*alphat*detJ*r11*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r31*(KC0e1215*r11 + KC0e1315*r12 + KC0e1415*r13) + r32*(KC0e1216*r11 + KC0e1316*r12 + KC0e1416*r13)
             k += 1
-            KC0v[k] += detJ*r13*r23*wij*(N1x*(E45*N3y + E55*N3x) + N1y*(E44*N3y + E45*N3x)) + r11*(detJ*r21*wij*(0.25*A66*N1y*N3y*alphat/h + N1x*(A11*N3x + A16*N3y) + N1y*(A16*N3x + A66*N3y)) + detJ*r22*wij*(-0.25*A66*N1y*N3x*alphat/h + N1x*(A12*N3y + A16*N3x) + N1y*(A26*N3y + A66*N3x))) + r12*(detJ*r21*wij*(-0.25*A66*N1x*N3y*alphat/h + N1x*(A16*N3x + A66*N3y) + N1y*(A12*N3x + A26*N3y)) + detJ*r22*wij*(0.25*A66*N1x*N3x*alphat/h + N1x*(A26*N3y + A66*N3x) + N1y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e0214*r13*r23 + r11*(KC0e0012*r21 + KC0e0013*r22) + r12*(KC0e0112*r21 + KC0e0113*r22)
             k += 1
-            KC0v[k] += detJ*r23**2*wij*(N1x*(E45*N3y + E55*N3x) + N1y*(E44*N3y + E45*N3x)) + r21*(detJ*r21*wij*(0.25*A66*N1y*N3y*alphat/h + N1x*(A11*N3x + A16*N3y) + N1y*(A16*N3x + A66*N3y)) + detJ*r22*wij*(-0.25*A66*N1y*N3x*alphat/h + N1x*(A12*N3y + A16*N3x) + N1y*(A26*N3y + A66*N3x))) + r22*(detJ*r21*wij*(-0.25*A66*N1x*N3y*alphat/h + N1x*(A16*N3x + A66*N3y) + N1y*(A12*N3x + A26*N3y)) + detJ*r22*wij*(0.25*A66*N1x*N3x*alphat/h + N1x*(A26*N3y + A66*N3x) + N1y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e0214*r23**2 + r21*(KC0e0012*r21 + KC0e0013*r22) + r22*(KC0e0112*r21 + KC0e0113*r22)
             k += 1
-            KC0v[k] += detJ*r23*r33*wij*(N1x*(E45*N3y + E55*N3x) + N1y*(E44*N3y + E45*N3x)) + r31*(detJ*r21*wij*(0.25*A66*N1y*N3y*alphat/h + N1x*(A11*N3x + A16*N3y) + N1y*(A16*N3x + A66*N3y)) + detJ*r22*wij*(-0.25*A66*N1y*N3x*alphat/h + N1x*(A12*N3y + A16*N3x) + N1y*(A26*N3y + A66*N3x))) + r32*(detJ*r21*wij*(-0.25*A66*N1x*N3y*alphat/h + N1x*(A16*N3x + A66*N3y) + N1y*(A12*N3x + A26*N3y)) + detJ*r22*wij*(0.25*A66*N1x*N3x*alphat/h + N1x*(A26*N3y + A66*N3x) + N1y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e0214*r23*r33 + r31*(KC0e0012*r21 + KC0e0013*r22) + r32*(KC0e0112*r21 + KC0e0113*r22)
             k += 1
-            KC0v[k] += r11*(-N1*detJ*r23*wij*(E44*N3y + E45*N3x) + detJ*r21*wij*(-N1x*(B16*N3x + B66*N3y) - N1y*(B12*N3x + B26*N3y)) + detJ*r22*wij*(-N1x*(B26*N3y + B66*N3x) - N1y*(B22*N3y + B26*N3x))) + r12*(N1*detJ*r23*wij*(E45*N3y + E55*N3x) + detJ*r21*wij*(N1x*(B11*N3x + B16*N3y) + N1y*(B16*N3x + B66*N3y)) + detJ*r22*wij*(N1x*(B12*N3y + B16*N3x) + N1y*(B26*N3y + B66*N3x))) + r13*(-0.5*A66*N1*N3x*alphat*detJ*r22*wij/h + 0.5*A66*N1*N3y*alphat*detJ*r21*wij/h)
+            KC0v[k] += r11*(KC0e0312*r21 + KC0e0313*r22 + KC0e0314*r23) + r12*(KC0e0412*r21 + KC0e0413*r22 + KC0e0414*r23)
             k += 1
-            KC0v[k] += r21*(-N1*detJ*r23*wij*(E44*N3y + E45*N3x) + detJ*r21*wij*(-N1x*(B16*N3x + B66*N3y) - N1y*(B12*N3x + B26*N3y)) + detJ*r22*wij*(-N1x*(B26*N3y + B66*N3x) - N1y*(B22*N3y + B26*N3x))) + r22*(N1*detJ*r23*wij*(E45*N3y + E55*N3x) + detJ*r21*wij*(N1x*(B11*N3x + B16*N3y) + N1y*(B16*N3x + B66*N3y)) + detJ*r22*wij*(N1x*(B12*N3y + B16*N3x) + N1y*(B26*N3y + B66*N3x))) + r23*(-0.5*A66*N1*N3x*alphat*detJ*r22*wij/h + 0.5*A66*N1*N3y*alphat*detJ*r21*wij/h)
+            KC0v[k] += r21*(KC0e0312*r21 + KC0e0313*r22 + KC0e0314*r23) + r22*(KC0e0412*r21 + KC0e0413*r22 + KC0e0414*r23)
             k += 1
-            KC0v[k] += r31*(-N1*detJ*r23*wij*(E44*N3y + E45*N3x) + detJ*r21*wij*(-N1x*(B16*N3x + B66*N3y) - N1y*(B12*N3x + B26*N3y)) + detJ*r22*wij*(-N1x*(B26*N3y + B66*N3x) - N1y*(B22*N3y + B26*N3x))) + r32*(N1*detJ*r23*wij*(E45*N3y + E55*N3x) + detJ*r21*wij*(N1x*(B11*N3x + B16*N3y) + N1y*(B16*N3x + B66*N3y)) + detJ*r22*wij*(N1x*(B12*N3y + B16*N3x) + N1y*(B26*N3y + B66*N3x))) + r33*(-0.5*A66*N1*N3x*alphat*detJ*r22*wij/h + 0.5*A66*N1*N3y*alphat*detJ*r21*wij/h)
+            KC0v[k] += r31*(KC0e0312*r21 + KC0e0313*r22 + KC0e0314*r23) + r32*(KC0e0412*r21 + KC0e0413*r22 + KC0e0414*r23)
             k += 1
-            KC0v[k] += detJ*r13*r23*wij*(N2x*(E45*N3y + E55*N3x) + N2y*(E44*N3y + E45*N3x)) + r11*(detJ*r21*wij*(0.25*A66*N2y*N3y*alphat/h + N2x*(A11*N3x + A16*N3y) + N2y*(A16*N3x + A66*N3y)) + detJ*r22*wij*(-0.25*A66*N2y*N3x*alphat/h + N2x*(A12*N3y + A16*N3x) + N2y*(A26*N3y + A66*N3x))) + r12*(detJ*r21*wij*(-0.25*A66*N2x*N3y*alphat/h + N2x*(A16*N3x + A66*N3y) + N2y*(A12*N3x + A26*N3y)) + detJ*r22*wij*(0.25*A66*N2x*N3x*alphat/h + N2x*(A26*N3y + A66*N3x) + N2y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e0814*r13*r23 + r11*(KC0e0612*r21 + KC0e0613*r22) + r12*(KC0e0712*r21 + KC0e0713*r22)
             k += 1
-            KC0v[k] += detJ*r23**2*wij*(N2x*(E45*N3y + E55*N3x) + N2y*(E44*N3y + E45*N3x)) + r21*(detJ*r21*wij*(0.25*A66*N2y*N3y*alphat/h + N2x*(A11*N3x + A16*N3y) + N2y*(A16*N3x + A66*N3y)) + detJ*r22*wij*(-0.25*A66*N2y*N3x*alphat/h + N2x*(A12*N3y + A16*N3x) + N2y*(A26*N3y + A66*N3x))) + r22*(detJ*r21*wij*(-0.25*A66*N2x*N3y*alphat/h + N2x*(A16*N3x + A66*N3y) + N2y*(A12*N3x + A26*N3y)) + detJ*r22*wij*(0.25*A66*N2x*N3x*alphat/h + N2x*(A26*N3y + A66*N3x) + N2y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e0814*r23**2 + r21*(KC0e0612*r21 + KC0e0613*r22) + r22*(KC0e0712*r21 + KC0e0713*r22)
             k += 1
-            KC0v[k] += detJ*r23*r33*wij*(N2x*(E45*N3y + E55*N3x) + N2y*(E44*N3y + E45*N3x)) + r31*(detJ*r21*wij*(0.25*A66*N2y*N3y*alphat/h + N2x*(A11*N3x + A16*N3y) + N2y*(A16*N3x + A66*N3y)) + detJ*r22*wij*(-0.25*A66*N2y*N3x*alphat/h + N2x*(A12*N3y + A16*N3x) + N2y*(A26*N3y + A66*N3x))) + r32*(detJ*r21*wij*(-0.25*A66*N2x*N3y*alphat/h + N2x*(A16*N3x + A66*N3y) + N2y*(A12*N3x + A26*N3y)) + detJ*r22*wij*(0.25*A66*N2x*N3x*alphat/h + N2x*(A26*N3y + A66*N3x) + N2y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e0814*r23*r33 + r31*(KC0e0612*r21 + KC0e0613*r22) + r32*(KC0e0712*r21 + KC0e0713*r22)
             k += 1
-            KC0v[k] += r11*(-N2*detJ*r23*wij*(E44*N3y + E45*N3x) + detJ*r21*wij*(-N2x*(B16*N3x + B66*N3y) - N2y*(B12*N3x + B26*N3y)) + detJ*r22*wij*(-N2x*(B26*N3y + B66*N3x) - N2y*(B22*N3y + B26*N3x))) + r12*(N2*detJ*r23*wij*(E45*N3y + E55*N3x) + detJ*r21*wij*(N2x*(B11*N3x + B16*N3y) + N2y*(B16*N3x + B66*N3y)) + detJ*r22*wij*(N2x*(B12*N3y + B16*N3x) + N2y*(B26*N3y + B66*N3x))) + r13*(-0.5*A66*N2*N3x*alphat*detJ*r22*wij/h + 0.5*A66*N2*N3y*alphat*detJ*r21*wij/h)
+            KC0v[k] += r11*(KC0e0912*r21 + KC0e0913*r22 + KC0e0914*r23) + r12*(KC0e1012*r21 + KC0e1013*r22 + KC0e1014*r23)
             k += 1
-            KC0v[k] += r21*(-N2*detJ*r23*wij*(E44*N3y + E45*N3x) + detJ*r21*wij*(-N2x*(B16*N3x + B66*N3y) - N2y*(B12*N3x + B26*N3y)) + detJ*r22*wij*(-N2x*(B26*N3y + B66*N3x) - N2y*(B22*N3y + B26*N3x))) + r22*(N2*detJ*r23*wij*(E45*N3y + E55*N3x) + detJ*r21*wij*(N2x*(B11*N3x + B16*N3y) + N2y*(B16*N3x + B66*N3y)) + detJ*r22*wij*(N2x*(B12*N3y + B16*N3x) + N2y*(B26*N3y + B66*N3x))) + r23*(-0.5*A66*N2*N3x*alphat*detJ*r22*wij/h + 0.5*A66*N2*N3y*alphat*detJ*r21*wij/h)
+            KC0v[k] += r21*(KC0e0912*r21 + KC0e0913*r22 + KC0e0914*r23) + r22*(KC0e1012*r21 + KC0e1013*r22 + KC0e1014*r23)
             k += 1
-            KC0v[k] += r31*(-N2*detJ*r23*wij*(E44*N3y + E45*N3x) + detJ*r21*wij*(-N2x*(B16*N3x + B66*N3y) - N2y*(B12*N3x + B26*N3y)) + detJ*r22*wij*(-N2x*(B26*N3y + B66*N3x) - N2y*(B22*N3y + B26*N3x))) + r32*(N2*detJ*r23*wij*(E45*N3y + E55*N3x) + detJ*r21*wij*(N2x*(B11*N3x + B16*N3y) + N2y*(B16*N3x + B66*N3y)) + detJ*r22*wij*(N2x*(B12*N3y + B16*N3x) + N2y*(B26*N3y + B66*N3x))) + r33*(-0.5*A66*N2*N3x*alphat*detJ*r22*wij/h + 0.5*A66*N2*N3y*alphat*detJ*r21*wij/h)
+            KC0v[k] += r31*(KC0e0912*r21 + KC0e0913*r22 + KC0e0914*r23) + r32*(KC0e1012*r21 + KC0e1013*r22 + KC0e1014*r23)
             k += 1
-            KC0v[k] += detJ*r13*r23*wij*(N3x*(E45*N3y + E55*N3x) + N3y*(E44*N3y + E45*N3x)) + r11*(detJ*r21*wij*(0.25*A66*N3y**2*alphat/h + N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y)) + detJ*r22*wij*(-0.25*A66*N3x*N3y*alphat/h + N3x*(A12*N3y + A16*N3x) + N3y*(A26*N3y + A66*N3x))) + r12*(detJ*r21*wij*(-0.25*A66*N3x*N3y*alphat/h + N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y)) + detJ*r22*wij*(0.25*A66*N3x**2*alphat/h + N3x*(A26*N3y + A66*N3x) + N3y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e1414*r13*r23 + r11*(KC0e1212*r21 + KC0e1213*r22) + r12*(KC0e1213*r21 + KC0e1313*r22)
             k += 1
-            KC0v[k] += detJ*r23**2*wij*(N3x*(E45*N3y + E55*N3x) + N3y*(E44*N3y + E45*N3x)) + r21*(detJ*r21*wij*(0.25*A66*N3y**2*alphat/h + N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y)) + detJ*r22*wij*(-0.25*A66*N3x*N3y*alphat/h + N3x*(A12*N3y + A16*N3x) + N3y*(A26*N3y + A66*N3x))) + r22*(detJ*r21*wij*(-0.25*A66*N3x*N3y*alphat/h + N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y)) + detJ*r22*wij*(0.25*A66*N3x**2*alphat/h + N3x*(A26*N3y + A66*N3x) + N3y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e1414*r23**2 + r21*(KC0e1212*r21 + KC0e1213*r22) + r22*(KC0e1213*r21 + KC0e1313*r22)
             k += 1
-            KC0v[k] += detJ*r23*r33*wij*(N3x*(E45*N3y + E55*N3x) + N3y*(E44*N3y + E45*N3x)) + r31*(detJ*r21*wij*(0.25*A66*N3y**2*alphat/h + N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y)) + detJ*r22*wij*(-0.25*A66*N3x*N3y*alphat/h + N3x*(A12*N3y + A16*N3x) + N3y*(A26*N3y + A66*N3x))) + r32*(detJ*r21*wij*(-0.25*A66*N3x*N3y*alphat/h + N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y)) + detJ*r22*wij*(0.25*A66*N3x**2*alphat/h + N3x*(A26*N3y + A66*N3x) + N3y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e1414*r23*r33 + r31*(KC0e1212*r21 + KC0e1213*r22) + r32*(KC0e1213*r21 + KC0e1313*r22)
             k += 1
-            KC0v[k] += r11*(detJ*r21*wij*(-N3x*(B16*N3x + B66*N3y) - N3y*(B12*N3x + B26*N3y)) + detJ*r22*wij*(-N3x*(B26*N3y + B66*N3x) - N3y*(B22*N3y + B26*N3x)) + detJ*r23*wij*(E44*N3y + E45*N3x)*(N1 + N2 - 1)) + r12*(detJ*r21*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y)) + detJ*r22*wij*(N3x*(B12*N3y + B16*N3x) + N3y*(B26*N3y + B66*N3x)) + detJ*r23*wij*(E45*N3y + E55*N3x)*(-N1 - N2 + 1)) + r13*(-0.5*A66*N3x*alphat*detJ*r22*wij*(-N1 - N2 + 1)/h + 0.5*A66*N3y*alphat*detJ*r21*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r11*(KC0e1215*r21 + KC0e1315*r22 + KC0e1415*r23) + r12*(KC0e1216*r21 + KC0e1316*r22 + KC0e1416*r23)
             k += 1
-            KC0v[k] += r21*(detJ*r21*wij*(-N3x*(B16*N3x + B66*N3y) - N3y*(B12*N3x + B26*N3y)) + detJ*r22*wij*(-N3x*(B26*N3y + B66*N3x) - N3y*(B22*N3y + B26*N3x)) + detJ*r23*wij*(E44*N3y + E45*N3x)*(N1 + N2 - 1)) + r22*(detJ*r21*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y)) + detJ*r22*wij*(N3x*(B12*N3y + B16*N3x) + N3y*(B26*N3y + B66*N3x)) + detJ*r23*wij*(E45*N3y + E55*N3x)*(-N1 - N2 + 1)) + r23*(-0.5*A66*N3x*alphat*detJ*r22*wij*(-N1 - N2 + 1)/h + 0.5*A66*N3y*alphat*detJ*r21*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r21*(KC0e1215*r21 + KC0e1315*r22 + KC0e1415*r23) + r22*(KC0e1216*r21 + KC0e1316*r22 + KC0e1416*r23)
             k += 1
-            KC0v[k] += r31*(detJ*r21*wij*(-N3x*(B16*N3x + B66*N3y) - N3y*(B12*N3x + B26*N3y)) + detJ*r22*wij*(-N3x*(B26*N3y + B66*N3x) - N3y*(B22*N3y + B26*N3x)) + detJ*r23*wij*(E44*N3y + E45*N3x)*(N1 + N2 - 1)) + r32*(detJ*r21*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y)) + detJ*r22*wij*(N3x*(B12*N3y + B16*N3x) + N3y*(B26*N3y + B66*N3x)) + detJ*r23*wij*(E45*N3y + E55*N3x)*(-N1 - N2 + 1)) + r33*(-0.5*A66*N3x*alphat*detJ*r22*wij*(-N1 - N2 + 1)/h + 0.5*A66*N3y*alphat*detJ*r21*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r31*(KC0e1215*r21 + KC0e1315*r22 + KC0e1415*r23) + r32*(KC0e1216*r21 + KC0e1316*r22 + KC0e1416*r23)
             k += 1
-            KC0v[k] += detJ*r13*r33*wij*(N1x*(E45*N3y + E55*N3x) + N1y*(E44*N3y + E45*N3x)) + r11*(detJ*r31*wij*(0.25*A66*N1y*N3y*alphat/h + N1x*(A11*N3x + A16*N3y) + N1y*(A16*N3x + A66*N3y)) + detJ*r32*wij*(-0.25*A66*N1y*N3x*alphat/h + N1x*(A12*N3y + A16*N3x) + N1y*(A26*N3y + A66*N3x))) + r12*(detJ*r31*wij*(-0.25*A66*N1x*N3y*alphat/h + N1x*(A16*N3x + A66*N3y) + N1y*(A12*N3x + A26*N3y)) + detJ*r32*wij*(0.25*A66*N1x*N3x*alphat/h + N1x*(A26*N3y + A66*N3x) + N1y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e0214*r13*r33 + r11*(KC0e0012*r31 + KC0e0013*r32) + r12*(KC0e0112*r31 + KC0e0113*r32)
             k += 1
-            KC0v[k] += detJ*r23*r33*wij*(N1x*(E45*N3y + E55*N3x) + N1y*(E44*N3y + E45*N3x)) + r21*(detJ*r31*wij*(0.25*A66*N1y*N3y*alphat/h + N1x*(A11*N3x + A16*N3y) + N1y*(A16*N3x + A66*N3y)) + detJ*r32*wij*(-0.25*A66*N1y*N3x*alphat/h + N1x*(A12*N3y + A16*N3x) + N1y*(A26*N3y + A66*N3x))) + r22*(detJ*r31*wij*(-0.25*A66*N1x*N3y*alphat/h + N1x*(A16*N3x + A66*N3y) + N1y*(A12*N3x + A26*N3y)) + detJ*r32*wij*(0.25*A66*N1x*N3x*alphat/h + N1x*(A26*N3y + A66*N3x) + N1y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e0214*r23*r33 + r21*(KC0e0012*r31 + KC0e0013*r32) + r22*(KC0e0112*r31 + KC0e0113*r32)
             k += 1
-            KC0v[k] += detJ*r33**2*wij*(N1x*(E45*N3y + E55*N3x) + N1y*(E44*N3y + E45*N3x)) + r31*(detJ*r31*wij*(0.25*A66*N1y*N3y*alphat/h + N1x*(A11*N3x + A16*N3y) + N1y*(A16*N3x + A66*N3y)) + detJ*r32*wij*(-0.25*A66*N1y*N3x*alphat/h + N1x*(A12*N3y + A16*N3x) + N1y*(A26*N3y + A66*N3x))) + r32*(detJ*r31*wij*(-0.25*A66*N1x*N3y*alphat/h + N1x*(A16*N3x + A66*N3y) + N1y*(A12*N3x + A26*N3y)) + detJ*r32*wij*(0.25*A66*N1x*N3x*alphat/h + N1x*(A26*N3y + A66*N3x) + N1y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e0214*r33**2 + r31*(KC0e0012*r31 + KC0e0013*r32) + r32*(KC0e0112*r31 + KC0e0113*r32)
             k += 1
-            KC0v[k] += r11*(-N1*detJ*r33*wij*(E44*N3y + E45*N3x) + detJ*r31*wij*(-N1x*(B16*N3x + B66*N3y) - N1y*(B12*N3x + B26*N3y)) + detJ*r32*wij*(-N1x*(B26*N3y + B66*N3x) - N1y*(B22*N3y + B26*N3x))) + r12*(N1*detJ*r33*wij*(E45*N3y + E55*N3x) + detJ*r31*wij*(N1x*(B11*N3x + B16*N3y) + N1y*(B16*N3x + B66*N3y)) + detJ*r32*wij*(N1x*(B12*N3y + B16*N3x) + N1y*(B26*N3y + B66*N3x))) + r13*(-0.5*A66*N1*N3x*alphat*detJ*r32*wij/h + 0.5*A66*N1*N3y*alphat*detJ*r31*wij/h)
+            KC0v[k] += r11*(KC0e0312*r31 + KC0e0313*r32 + KC0e0314*r33) + r12*(KC0e0412*r31 + KC0e0413*r32 + KC0e0414*r33)
             k += 1
-            KC0v[k] += r21*(-N1*detJ*r33*wij*(E44*N3y + E45*N3x) + detJ*r31*wij*(-N1x*(B16*N3x + B66*N3y) - N1y*(B12*N3x + B26*N3y)) + detJ*r32*wij*(-N1x*(B26*N3y + B66*N3x) - N1y*(B22*N3y + B26*N3x))) + r22*(N1*detJ*r33*wij*(E45*N3y + E55*N3x) + detJ*r31*wij*(N1x*(B11*N3x + B16*N3y) + N1y*(B16*N3x + B66*N3y)) + detJ*r32*wij*(N1x*(B12*N3y + B16*N3x) + N1y*(B26*N3y + B66*N3x))) + r23*(-0.5*A66*N1*N3x*alphat*detJ*r32*wij/h + 0.5*A66*N1*N3y*alphat*detJ*r31*wij/h)
+            KC0v[k] += r21*(KC0e0312*r31 + KC0e0313*r32 + KC0e0314*r33) + r22*(KC0e0412*r31 + KC0e0413*r32 + KC0e0414*r33)
             k += 1
-            KC0v[k] += r31*(-N1*detJ*r33*wij*(E44*N3y + E45*N3x) + detJ*r31*wij*(-N1x*(B16*N3x + B66*N3y) - N1y*(B12*N3x + B26*N3y)) + detJ*r32*wij*(-N1x*(B26*N3y + B66*N3x) - N1y*(B22*N3y + B26*N3x))) + r32*(N1*detJ*r33*wij*(E45*N3y + E55*N3x) + detJ*r31*wij*(N1x*(B11*N3x + B16*N3y) + N1y*(B16*N3x + B66*N3y)) + detJ*r32*wij*(N1x*(B12*N3y + B16*N3x) + N1y*(B26*N3y + B66*N3x))) + r33*(-0.5*A66*N1*N3x*alphat*detJ*r32*wij/h + 0.5*A66*N1*N3y*alphat*detJ*r31*wij/h)
+            KC0v[k] += r31*(KC0e0312*r31 + KC0e0313*r32 + KC0e0314*r33) + r32*(KC0e0412*r31 + KC0e0413*r32 + KC0e0414*r33)
             k += 1
-            KC0v[k] += detJ*r13*r33*wij*(N2x*(E45*N3y + E55*N3x) + N2y*(E44*N3y + E45*N3x)) + r11*(detJ*r31*wij*(0.25*A66*N2y*N3y*alphat/h + N2x*(A11*N3x + A16*N3y) + N2y*(A16*N3x + A66*N3y)) + detJ*r32*wij*(-0.25*A66*N2y*N3x*alphat/h + N2x*(A12*N3y + A16*N3x) + N2y*(A26*N3y + A66*N3x))) + r12*(detJ*r31*wij*(-0.25*A66*N2x*N3y*alphat/h + N2x*(A16*N3x + A66*N3y) + N2y*(A12*N3x + A26*N3y)) + detJ*r32*wij*(0.25*A66*N2x*N3x*alphat/h + N2x*(A26*N3y + A66*N3x) + N2y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e0814*r13*r33 + r11*(KC0e0612*r31 + KC0e0613*r32) + r12*(KC0e0712*r31 + KC0e0713*r32)
             k += 1
-            KC0v[k] += detJ*r23*r33*wij*(N2x*(E45*N3y + E55*N3x) + N2y*(E44*N3y + E45*N3x)) + r21*(detJ*r31*wij*(0.25*A66*N2y*N3y*alphat/h + N2x*(A11*N3x + A16*N3y) + N2y*(A16*N3x + A66*N3y)) + detJ*r32*wij*(-0.25*A66*N2y*N3x*alphat/h + N2x*(A12*N3y + A16*N3x) + N2y*(A26*N3y + A66*N3x))) + r22*(detJ*r31*wij*(-0.25*A66*N2x*N3y*alphat/h + N2x*(A16*N3x + A66*N3y) + N2y*(A12*N3x + A26*N3y)) + detJ*r32*wij*(0.25*A66*N2x*N3x*alphat/h + N2x*(A26*N3y + A66*N3x) + N2y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e0814*r23*r33 + r21*(KC0e0612*r31 + KC0e0613*r32) + r22*(KC0e0712*r31 + KC0e0713*r32)
             k += 1
-            KC0v[k] += detJ*r33**2*wij*(N2x*(E45*N3y + E55*N3x) + N2y*(E44*N3y + E45*N3x)) + r31*(detJ*r31*wij*(0.25*A66*N2y*N3y*alphat/h + N2x*(A11*N3x + A16*N3y) + N2y*(A16*N3x + A66*N3y)) + detJ*r32*wij*(-0.25*A66*N2y*N3x*alphat/h + N2x*(A12*N3y + A16*N3x) + N2y*(A26*N3y + A66*N3x))) + r32*(detJ*r31*wij*(-0.25*A66*N2x*N3y*alphat/h + N2x*(A16*N3x + A66*N3y) + N2y*(A12*N3x + A26*N3y)) + detJ*r32*wij*(0.25*A66*N2x*N3x*alphat/h + N2x*(A26*N3y + A66*N3x) + N2y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e0814*r33**2 + r31*(KC0e0612*r31 + KC0e0613*r32) + r32*(KC0e0712*r31 + KC0e0713*r32)
             k += 1
-            KC0v[k] += r11*(-N2*detJ*r33*wij*(E44*N3y + E45*N3x) + detJ*r31*wij*(-N2x*(B16*N3x + B66*N3y) - N2y*(B12*N3x + B26*N3y)) + detJ*r32*wij*(-N2x*(B26*N3y + B66*N3x) - N2y*(B22*N3y + B26*N3x))) + r12*(N2*detJ*r33*wij*(E45*N3y + E55*N3x) + detJ*r31*wij*(N2x*(B11*N3x + B16*N3y) + N2y*(B16*N3x + B66*N3y)) + detJ*r32*wij*(N2x*(B12*N3y + B16*N3x) + N2y*(B26*N3y + B66*N3x))) + r13*(-0.5*A66*N2*N3x*alphat*detJ*r32*wij/h + 0.5*A66*N2*N3y*alphat*detJ*r31*wij/h)
+            KC0v[k] += r11*(KC0e0912*r31 + KC0e0913*r32 + KC0e0914*r33) + r12*(KC0e1012*r31 + KC0e1013*r32 + KC0e1014*r33)
             k += 1
-            KC0v[k] += r21*(-N2*detJ*r33*wij*(E44*N3y + E45*N3x) + detJ*r31*wij*(-N2x*(B16*N3x + B66*N3y) - N2y*(B12*N3x + B26*N3y)) + detJ*r32*wij*(-N2x*(B26*N3y + B66*N3x) - N2y*(B22*N3y + B26*N3x))) + r22*(N2*detJ*r33*wij*(E45*N3y + E55*N3x) + detJ*r31*wij*(N2x*(B11*N3x + B16*N3y) + N2y*(B16*N3x + B66*N3y)) + detJ*r32*wij*(N2x*(B12*N3y + B16*N3x) + N2y*(B26*N3y + B66*N3x))) + r23*(-0.5*A66*N2*N3x*alphat*detJ*r32*wij/h + 0.5*A66*N2*N3y*alphat*detJ*r31*wij/h)
+            KC0v[k] += r21*(KC0e0912*r31 + KC0e0913*r32 + KC0e0914*r33) + r22*(KC0e1012*r31 + KC0e1013*r32 + KC0e1014*r33)
             k += 1
-            KC0v[k] += r31*(-N2*detJ*r33*wij*(E44*N3y + E45*N3x) + detJ*r31*wij*(-N2x*(B16*N3x + B66*N3y) - N2y*(B12*N3x + B26*N3y)) + detJ*r32*wij*(-N2x*(B26*N3y + B66*N3x) - N2y*(B22*N3y + B26*N3x))) + r32*(N2*detJ*r33*wij*(E45*N3y + E55*N3x) + detJ*r31*wij*(N2x*(B11*N3x + B16*N3y) + N2y*(B16*N3x + B66*N3y)) + detJ*r32*wij*(N2x*(B12*N3y + B16*N3x) + N2y*(B26*N3y + B66*N3x))) + r33*(-0.5*A66*N2*N3x*alphat*detJ*r32*wij/h + 0.5*A66*N2*N3y*alphat*detJ*r31*wij/h)
+            KC0v[k] += r31*(KC0e0912*r31 + KC0e0913*r32 + KC0e0914*r33) + r32*(KC0e1012*r31 + KC0e1013*r32 + KC0e1014*r33)
             k += 1
-            KC0v[k] += detJ*r13*r33*wij*(N3x*(E45*N3y + E55*N3x) + N3y*(E44*N3y + E45*N3x)) + r11*(detJ*r31*wij*(0.25*A66*N3y**2*alphat/h + N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y)) + detJ*r32*wij*(-0.25*A66*N3x*N3y*alphat/h + N3x*(A12*N3y + A16*N3x) + N3y*(A26*N3y + A66*N3x))) + r12*(detJ*r31*wij*(-0.25*A66*N3x*N3y*alphat/h + N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y)) + detJ*r32*wij*(0.25*A66*N3x**2*alphat/h + N3x*(A26*N3y + A66*N3x) + N3y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e1414*r13*r33 + r11*(KC0e1212*r31 + KC0e1213*r32) + r12*(KC0e1213*r31 + KC0e1313*r32)
             k += 1
-            KC0v[k] += detJ*r23*r33*wij*(N3x*(E45*N3y + E55*N3x) + N3y*(E44*N3y + E45*N3x)) + r21*(detJ*r31*wij*(0.25*A66*N3y**2*alphat/h + N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y)) + detJ*r32*wij*(-0.25*A66*N3x*N3y*alphat/h + N3x*(A12*N3y + A16*N3x) + N3y*(A26*N3y + A66*N3x))) + r22*(detJ*r31*wij*(-0.25*A66*N3x*N3y*alphat/h + N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y)) + detJ*r32*wij*(0.25*A66*N3x**2*alphat/h + N3x*(A26*N3y + A66*N3x) + N3y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e1414*r23*r33 + r21*(KC0e1212*r31 + KC0e1213*r32) + r22*(KC0e1213*r31 + KC0e1313*r32)
             k += 1
-            KC0v[k] += detJ*r33**2*wij*(N3x*(E45*N3y + E55*N3x) + N3y*(E44*N3y + E45*N3x)) + r31*(detJ*r31*wij*(0.25*A66*N3y**2*alphat/h + N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y)) + detJ*r32*wij*(-0.25*A66*N3x*N3y*alphat/h + N3x*(A12*N3y + A16*N3x) + N3y*(A26*N3y + A66*N3x))) + r32*(detJ*r31*wij*(-0.25*A66*N3x*N3y*alphat/h + N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y)) + detJ*r32*wij*(0.25*A66*N3x**2*alphat/h + N3x*(A26*N3y + A66*N3x) + N3y*(A22*N3y + A26*N3x)))
+            KC0v[k] += KC0e1414*r33**2 + r31*(KC0e1212*r31 + KC0e1213*r32) + r32*(KC0e1213*r31 + KC0e1313*r32)
             k += 1
-            KC0v[k] += r11*(detJ*r31*wij*(-N3x*(B16*N3x + B66*N3y) - N3y*(B12*N3x + B26*N3y)) + detJ*r32*wij*(-N3x*(B26*N3y + B66*N3x) - N3y*(B22*N3y + B26*N3x)) + detJ*r33*wij*(E44*N3y + E45*N3x)*(N1 + N2 - 1)) + r12*(detJ*r31*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y)) + detJ*r32*wij*(N3x*(B12*N3y + B16*N3x) + N3y*(B26*N3y + B66*N3x)) + detJ*r33*wij*(E45*N3y + E55*N3x)*(-N1 - N2 + 1)) + r13*(-0.5*A66*N3x*alphat*detJ*r32*wij*(-N1 - N2 + 1)/h + 0.5*A66*N3y*alphat*detJ*r31*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r11*(KC0e1215*r31 + KC0e1315*r32 + KC0e1415*r33) + r12*(KC0e1216*r31 + KC0e1316*r32 + KC0e1416*r33)
             k += 1
-            KC0v[k] += r21*(detJ*r31*wij*(-N3x*(B16*N3x + B66*N3y) - N3y*(B12*N3x + B26*N3y)) + detJ*r32*wij*(-N3x*(B26*N3y + B66*N3x) - N3y*(B22*N3y + B26*N3x)) + detJ*r33*wij*(E44*N3y + E45*N3x)*(N1 + N2 - 1)) + r22*(detJ*r31*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y)) + detJ*r32*wij*(N3x*(B12*N3y + B16*N3x) + N3y*(B26*N3y + B66*N3x)) + detJ*r33*wij*(E45*N3y + E55*N3x)*(-N1 - N2 + 1)) + r23*(-0.5*A66*N3x*alphat*detJ*r32*wij*(-N1 - N2 + 1)/h + 0.5*A66*N3y*alphat*detJ*r31*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r21*(KC0e1215*r31 + KC0e1315*r32 + KC0e1415*r33) + r22*(KC0e1216*r31 + KC0e1316*r32 + KC0e1416*r33)
             k += 1
-            KC0v[k] += r31*(detJ*r31*wij*(-N3x*(B16*N3x + B66*N3y) - N3y*(B12*N3x + B26*N3y)) + detJ*r32*wij*(-N3x*(B26*N3y + B66*N3x) - N3y*(B22*N3y + B26*N3x)) + detJ*r33*wij*(E44*N3y + E45*N3x)*(N1 + N2 - 1)) + r32*(detJ*r31*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y)) + detJ*r32*wij*(N3x*(B12*N3y + B16*N3x) + N3y*(B26*N3y + B66*N3x)) + detJ*r33*wij*(E45*N3y + E55*N3x)*(-N1 - N2 + 1)) + r33*(-0.5*A66*N3x*alphat*detJ*r32*wij*(-N1 - N2 + 1)/h + 0.5*A66*N3y*alphat*detJ*r31*wij*(-N1 - N2 + 1)/h)
+            KC0v[k] += r31*(KC0e1215*r31 + KC0e1315*r32 + KC0e1415*r33) + r32*(KC0e1216*r31 + KC0e1316*r32 + KC0e1416*r33)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N1y*alphat*detJ*r13*wij*(-N1 - N2 + 1)/h + detJ*r11*wij*(N1x*(-B12*N3y - B16*N3x) + N1y*(-B26*N3y - B66*N3x)) + detJ*r12*wij*(N1x*(B11*N3x + B16*N3y) + N1y*(B16*N3x + B66*N3y))) + r12*(-0.5*A66*N1x*alphat*detJ*r13*wij*(-N1 - N2 + 1)/h + detJ*r11*wij*(N1x*(-B26*N3y - B66*N3x) + N1y*(-B22*N3y - B26*N3x)) + detJ*r12*wij*(N1x*(B16*N3x + B66*N3y) + N1y*(B12*N3x + B26*N3y))) + r13*(detJ*r11*wij*(E44*N1y*(N1 + N2 - 1) + E45*N1x*(N1 + N2 - 1)) + detJ*r12*wij*(E45*N1y*(-N1 - N2 + 1) + E55*N1x*(-N1 - N2 + 1)))
+            KC0v[k] += r11*(KC0e0015*r11 + KC0e0016*r12) + r12*(KC0e0115*r11 + KC0e0116*r12) + r13*(KC0e0215*r11 + KC0e0216*r12)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N1y*alphat*detJ*r13*wij*(-N1 - N2 + 1)/h + detJ*r11*wij*(N1x*(-B12*N3y - B16*N3x) + N1y*(-B26*N3y - B66*N3x)) + detJ*r12*wij*(N1x*(B11*N3x + B16*N3y) + N1y*(B16*N3x + B66*N3y))) + r22*(-0.5*A66*N1x*alphat*detJ*r13*wij*(-N1 - N2 + 1)/h + detJ*r11*wij*(N1x*(-B26*N3y - B66*N3x) + N1y*(-B22*N3y - B26*N3x)) + detJ*r12*wij*(N1x*(B16*N3x + B66*N3y) + N1y*(B12*N3x + B26*N3y))) + r23*(detJ*r11*wij*(E44*N1y*(N1 + N2 - 1) + E45*N1x*(N1 + N2 - 1)) + detJ*r12*wij*(E45*N1y*(-N1 - N2 + 1) + E55*N1x*(-N1 - N2 + 1)))
+            KC0v[k] += r21*(KC0e0015*r11 + KC0e0016*r12) + r22*(KC0e0115*r11 + KC0e0116*r12) + r23*(KC0e0215*r11 + KC0e0216*r12)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N1y*alphat*detJ*r13*wij*(-N1 - N2 + 1)/h + detJ*r11*wij*(N1x*(-B12*N3y - B16*N3x) + N1y*(-B26*N3y - B66*N3x)) + detJ*r12*wij*(N1x*(B11*N3x + B16*N3y) + N1y*(B16*N3x + B66*N3y))) + r32*(-0.5*A66*N1x*alphat*detJ*r13*wij*(-N1 - N2 + 1)/h + detJ*r11*wij*(N1x*(-B26*N3y - B66*N3x) + N1y*(-B22*N3y - B26*N3x)) + detJ*r12*wij*(N1x*(B16*N3x + B66*N3y) + N1y*(B12*N3x + B26*N3y))) + r33*(detJ*r11*wij*(E44*N1y*(N1 + N2 - 1) + E45*N1x*(N1 + N2 - 1)) + detJ*r12*wij*(E45*N1y*(-N1 - N2 + 1) + E55*N1x*(-N1 - N2 + 1)))
+            KC0v[k] += r31*(KC0e0015*r11 + KC0e0016*r12) + r32*(KC0e0115*r11 + KC0e0116*r12) + r33*(KC0e0215*r11 + KC0e0216*r12)
             k += 1
-            KC0v[k] += A66*N1*alphat*detJ*r13**2*wij*(-N1 - N2 + 1)/h + r11*(detJ*r11*wij*(-E44*N1*(N1 + N2 - 1) - N1x*(-D26*N3y - D66*N3x) - N1y*(-D22*N3y - D26*N3x)) + detJ*r12*wij*(-E45*N1*(-N1 - N2 + 1) - N1x*(D16*N3x + D66*N3y) - N1y*(D12*N3x + D26*N3y))) + r12*(detJ*r11*wij*(E45*N1*(N1 + N2 - 1) + N1x*(-D12*N3y - D16*N3x) + N1y*(-D26*N3y - D66*N3x)) + detJ*r12*wij*(E55*N1*(-N1 - N2 + 1) + N1x*(D11*N3x + D16*N3y) + N1y*(D16*N3x + D66*N3y)))
+            KC0v[k] += r11*(KC0e0315*r11 + KC0e0316*r12) + r12*(KC0e0415*r11 + KC0e0416*r12)
             k += 1
-            KC0v[k] += A66*N1*alphat*detJ*r13*r23*wij*(-N1 - N2 + 1)/h + r21*(detJ*r11*wij*(-E44*N1*(N1 + N2 - 1) - N1x*(-D26*N3y - D66*N3x) - N1y*(-D22*N3y - D26*N3x)) + detJ*r12*wij*(-E45*N1*(-N1 - N2 + 1) - N1x*(D16*N3x + D66*N3y) - N1y*(D12*N3x + D26*N3y))) + r22*(detJ*r11*wij*(E45*N1*(N1 + N2 - 1) + N1x*(-D12*N3y - D16*N3x) + N1y*(-D26*N3y - D66*N3x)) + detJ*r12*wij*(E55*N1*(-N1 - N2 + 1) + N1x*(D11*N3x + D16*N3y) + N1y*(D16*N3x + D66*N3y)))
+            KC0v[k] += r21*(KC0e0315*r11 + KC0e0316*r12) + r22*(KC0e0415*r11 + KC0e0416*r12)
             k += 1
-            KC0v[k] += A66*N1*alphat*detJ*r13*r33*wij*(-N1 - N2 + 1)/h + r31*(detJ*r11*wij*(-E44*N1*(N1 + N2 - 1) - N1x*(-D26*N3y - D66*N3x) - N1y*(-D22*N3y - D26*N3x)) + detJ*r12*wij*(-E45*N1*(-N1 - N2 + 1) - N1x*(D16*N3x + D66*N3y) - N1y*(D12*N3x + D26*N3y))) + r32*(detJ*r11*wij*(E45*N1*(N1 + N2 - 1) + N1x*(-D12*N3y - D16*N3x) + N1y*(-D26*N3y - D66*N3x)) + detJ*r12*wij*(E55*N1*(-N1 - N2 + 1) + N1x*(D11*N3x + D16*N3y) + N1y*(D16*N3x + D66*N3y)))
+            KC0v[k] += r31*(KC0e0315*r11 + KC0e0316*r12) + r32*(KC0e0415*r11 + KC0e0416*r12)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N2y*alphat*detJ*r13*wij*(-N1 - N2 + 1)/h + detJ*r11*wij*(N2x*(-B12*N3y - B16*N3x) + N2y*(-B26*N3y - B66*N3x)) + detJ*r12*wij*(N2x*(B11*N3x + B16*N3y) + N2y*(B16*N3x + B66*N3y))) + r12*(-0.5*A66*N2x*alphat*detJ*r13*wij*(-N1 - N2 + 1)/h + detJ*r11*wij*(N2x*(-B26*N3y - B66*N3x) + N2y*(-B22*N3y - B26*N3x)) + detJ*r12*wij*(N2x*(B16*N3x + B66*N3y) + N2y*(B12*N3x + B26*N3y))) + r13*(detJ*r11*wij*(E44*N2y*(N1 + N2 - 1) + E45*N2x*(N1 + N2 - 1)) + detJ*r12*wij*(E45*N2y*(-N1 - N2 + 1) + E55*N2x*(-N1 - N2 + 1)))
+            KC0v[k] += r11*(KC0e0615*r11 + KC0e0616*r12) + r12*(KC0e0715*r11 + KC0e0716*r12) + r13*(KC0e0815*r11 + KC0e0816*r12)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N2y*alphat*detJ*r13*wij*(-N1 - N2 + 1)/h + detJ*r11*wij*(N2x*(-B12*N3y - B16*N3x) + N2y*(-B26*N3y - B66*N3x)) + detJ*r12*wij*(N2x*(B11*N3x + B16*N3y) + N2y*(B16*N3x + B66*N3y))) + r22*(-0.5*A66*N2x*alphat*detJ*r13*wij*(-N1 - N2 + 1)/h + detJ*r11*wij*(N2x*(-B26*N3y - B66*N3x) + N2y*(-B22*N3y - B26*N3x)) + detJ*r12*wij*(N2x*(B16*N3x + B66*N3y) + N2y*(B12*N3x + B26*N3y))) + r23*(detJ*r11*wij*(E44*N2y*(N1 + N2 - 1) + E45*N2x*(N1 + N2 - 1)) + detJ*r12*wij*(E45*N2y*(-N1 - N2 + 1) + E55*N2x*(-N1 - N2 + 1)))
+            KC0v[k] += r21*(KC0e0615*r11 + KC0e0616*r12) + r22*(KC0e0715*r11 + KC0e0716*r12) + r23*(KC0e0815*r11 + KC0e0816*r12)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N2y*alphat*detJ*r13*wij*(-N1 - N2 + 1)/h + detJ*r11*wij*(N2x*(-B12*N3y - B16*N3x) + N2y*(-B26*N3y - B66*N3x)) + detJ*r12*wij*(N2x*(B11*N3x + B16*N3y) + N2y*(B16*N3x + B66*N3y))) + r32*(-0.5*A66*N2x*alphat*detJ*r13*wij*(-N1 - N2 + 1)/h + detJ*r11*wij*(N2x*(-B26*N3y - B66*N3x) + N2y*(-B22*N3y - B26*N3x)) + detJ*r12*wij*(N2x*(B16*N3x + B66*N3y) + N2y*(B12*N3x + B26*N3y))) + r33*(detJ*r11*wij*(E44*N2y*(N1 + N2 - 1) + E45*N2x*(N1 + N2 - 1)) + detJ*r12*wij*(E45*N2y*(-N1 - N2 + 1) + E55*N2x*(-N1 - N2 + 1)))
+            KC0v[k] += r31*(KC0e0615*r11 + KC0e0616*r12) + r32*(KC0e0715*r11 + KC0e0716*r12) + r33*(KC0e0815*r11 + KC0e0816*r12)
             k += 1
-            KC0v[k] += A66*N2*alphat*detJ*r13**2*wij*(-N1 - N2 + 1)/h + r11*(detJ*r11*wij*(-E44*N2*(N1 + N2 - 1) - N2x*(-D26*N3y - D66*N3x) - N2y*(-D22*N3y - D26*N3x)) + detJ*r12*wij*(-E45*N2*(-N1 - N2 + 1) - N2x*(D16*N3x + D66*N3y) - N2y*(D12*N3x + D26*N3y))) + r12*(detJ*r11*wij*(E45*N2*(N1 + N2 - 1) + N2x*(-D12*N3y - D16*N3x) + N2y*(-D26*N3y - D66*N3x)) + detJ*r12*wij*(E55*N2*(-N1 - N2 + 1) + N2x*(D11*N3x + D16*N3y) + N2y*(D16*N3x + D66*N3y)))
+            KC0v[k] += r11*(KC0e0915*r11 + KC0e0916*r12) + r12*(KC0e1015*r11 + KC0e1016*r12)
             k += 1
-            KC0v[k] += A66*N2*alphat*detJ*r13*r23*wij*(-N1 - N2 + 1)/h + r21*(detJ*r11*wij*(-E44*N2*(N1 + N2 - 1) - N2x*(-D26*N3y - D66*N3x) - N2y*(-D22*N3y - D26*N3x)) + detJ*r12*wij*(-E45*N2*(-N1 - N2 + 1) - N2x*(D16*N3x + D66*N3y) - N2y*(D12*N3x + D26*N3y))) + r22*(detJ*r11*wij*(E45*N2*(N1 + N2 - 1) + N2x*(-D12*N3y - D16*N3x) + N2y*(-D26*N3y - D66*N3x)) + detJ*r12*wij*(E55*N2*(-N1 - N2 + 1) + N2x*(D11*N3x + D16*N3y) + N2y*(D16*N3x + D66*N3y)))
+            KC0v[k] += r21*(KC0e0915*r11 + KC0e0916*r12) + r22*(KC0e1015*r11 + KC0e1016*r12)
             k += 1
-            KC0v[k] += A66*N2*alphat*detJ*r13*r33*wij*(-N1 - N2 + 1)/h + r31*(detJ*r11*wij*(-E44*N2*(N1 + N2 - 1) - N2x*(-D26*N3y - D66*N3x) - N2y*(-D22*N3y - D26*N3x)) + detJ*r12*wij*(-E45*N2*(-N1 - N2 + 1) - N2x*(D16*N3x + D66*N3y) - N2y*(D12*N3x + D26*N3y))) + r32*(detJ*r11*wij*(E45*N2*(N1 + N2 - 1) + N2x*(-D12*N3y - D16*N3x) + N2y*(-D26*N3y - D66*N3x)) + detJ*r12*wij*(E55*N2*(-N1 - N2 + 1) + N2x*(D11*N3x + D16*N3y) + N2y*(D16*N3x + D66*N3y)))
+            KC0v[k] += r31*(KC0e0915*r11 + KC0e0916*r12) + r32*(KC0e1015*r11 + KC0e1016*r12)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N3y*alphat*detJ*r13*wij*(-N1 - N2 + 1)/h + detJ*r11*wij*(N3x*(-B12*N3y - B16*N3x) + N3y*(-B26*N3y - B66*N3x)) + detJ*r12*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y))) + r12*(-0.5*A66*N3x*alphat*detJ*r13*wij*(-N1 - N2 + 1)/h + detJ*r11*wij*(N3x*(-B26*N3y - B66*N3x) + N3y*(-B22*N3y - B26*N3x)) + detJ*r12*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))) + r13*(detJ*r11*wij*(E44*N3y*(N1 + N2 - 1) + E45*N3x*(N1 + N2 - 1)) + detJ*r12*wij*(E45*N3y*(-N1 - N2 + 1) + E55*N3x*(-N1 - N2 + 1)))
+            KC0v[k] += r11*(KC0e1215*r11 + KC0e1216*r12) + r12*(KC0e1315*r11 + KC0e1316*r12) + r13*(KC0e1415*r11 + KC0e1416*r12)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N3y*alphat*detJ*r13*wij*(-N1 - N2 + 1)/h + detJ*r11*wij*(N3x*(-B12*N3y - B16*N3x) + N3y*(-B26*N3y - B66*N3x)) + detJ*r12*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y))) + r22*(-0.5*A66*N3x*alphat*detJ*r13*wij*(-N1 - N2 + 1)/h + detJ*r11*wij*(N3x*(-B26*N3y - B66*N3x) + N3y*(-B22*N3y - B26*N3x)) + detJ*r12*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))) + r23*(detJ*r11*wij*(E44*N3y*(N1 + N2 - 1) + E45*N3x*(N1 + N2 - 1)) + detJ*r12*wij*(E45*N3y*(-N1 - N2 + 1) + E55*N3x*(-N1 - N2 + 1)))
+            KC0v[k] += r21*(KC0e1215*r11 + KC0e1216*r12) + r22*(KC0e1315*r11 + KC0e1316*r12) + r23*(KC0e1415*r11 + KC0e1416*r12)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N3y*alphat*detJ*r13*wij*(-N1 - N2 + 1)/h + detJ*r11*wij*(N3x*(-B12*N3y - B16*N3x) + N3y*(-B26*N3y - B66*N3x)) + detJ*r12*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y))) + r32*(-0.5*A66*N3x*alphat*detJ*r13*wij*(-N1 - N2 + 1)/h + detJ*r11*wij*(N3x*(-B26*N3y - B66*N3x) + N3y*(-B22*N3y - B26*N3x)) + detJ*r12*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))) + r33*(detJ*r11*wij*(E44*N3y*(N1 + N2 - 1) + E45*N3x*(N1 + N2 - 1)) + detJ*r12*wij*(E45*N3y*(-N1 - N2 + 1) + E55*N3x*(-N1 - N2 + 1)))
+            KC0v[k] += r31*(KC0e1215*r11 + KC0e1216*r12) + r32*(KC0e1315*r11 + KC0e1316*r12) + r33*(KC0e1415*r11 + KC0e1416*r12)
             k += 1
-            KC0v[k] += A66*alphat*detJ*r13**2*wij*(-N1 - N2 + 1)**2/h + r11*(detJ*r11*wij*(E44*(N1 + N2 - 1)**2 - N3x*(-D26*N3y - D66*N3x) - N3y*(-D22*N3y - D26*N3x)) + detJ*r12*wij*(E45*(-N1 - N2 + 1)*(N1 + N2 - 1) - N3x*(D16*N3x + D66*N3y) - N3y*(D12*N3x + D26*N3y))) + r12*(detJ*r11*wij*(E45*(-N1 - N2 + 1)*(N1 + N2 - 1) + N3x*(-D12*N3y - D16*N3x) + N3y*(-D26*N3y - D66*N3x)) + detJ*r12*wij*(E55*(-N1 - N2 + 1)**2 + N3x*(D11*N3x + D16*N3y) + N3y*(D16*N3x + D66*N3y)))
+            KC0v[k] += KC0e1717*r13**2 + r11*(KC0e1515*r11 + KC0e1516*r12) + r12*(KC0e1516*r11 + KC0e1616*r12)
             k += 1
-            KC0v[k] += A66*alphat*detJ*r13*r23*wij*(-N1 - N2 + 1)**2/h + r21*(detJ*r11*wij*(E44*(N1 + N2 - 1)**2 - N3x*(-D26*N3y - D66*N3x) - N3y*(-D22*N3y - D26*N3x)) + detJ*r12*wij*(E45*(-N1 - N2 + 1)*(N1 + N2 - 1) - N3x*(D16*N3x + D66*N3y) - N3y*(D12*N3x + D26*N3y))) + r22*(detJ*r11*wij*(E45*(-N1 - N2 + 1)*(N1 + N2 - 1) + N3x*(-D12*N3y - D16*N3x) + N3y*(-D26*N3y - D66*N3x)) + detJ*r12*wij*(E55*(-N1 - N2 + 1)**2 + N3x*(D11*N3x + D16*N3y) + N3y*(D16*N3x + D66*N3y)))
+            KC0v[k] += KC0e1717*r13*r23 + r21*(KC0e1515*r11 + KC0e1516*r12) + r22*(KC0e1516*r11 + KC0e1616*r12)
             k += 1
-            KC0v[k] += A66*alphat*detJ*r13*r33*wij*(-N1 - N2 + 1)**2/h + r31*(detJ*r11*wij*(E44*(N1 + N2 - 1)**2 - N3x*(-D26*N3y - D66*N3x) - N3y*(-D22*N3y - D26*N3x)) + detJ*r12*wij*(E45*(-N1 - N2 + 1)*(N1 + N2 - 1) - N3x*(D16*N3x + D66*N3y) - N3y*(D12*N3x + D26*N3y))) + r32*(detJ*r11*wij*(E45*(-N1 - N2 + 1)*(N1 + N2 - 1) + N3x*(-D12*N3y - D16*N3x) + N3y*(-D26*N3y - D66*N3x)) + detJ*r12*wij*(E55*(-N1 - N2 + 1)**2 + N3x*(D11*N3x + D16*N3y) + N3y*(D16*N3x + D66*N3y)))
+            KC0v[k] += KC0e1717*r13*r33 + r31*(KC0e1515*r11 + KC0e1516*r12) + r32*(KC0e1516*r11 + KC0e1616*r12)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N1y*alphat*detJ*r23*wij*(-N1 - N2 + 1)/h + detJ*r21*wij*(N1x*(-B12*N3y - B16*N3x) + N1y*(-B26*N3y - B66*N3x)) + detJ*r22*wij*(N1x*(B11*N3x + B16*N3y) + N1y*(B16*N3x + B66*N3y))) + r12*(-0.5*A66*N1x*alphat*detJ*r23*wij*(-N1 - N2 + 1)/h + detJ*r21*wij*(N1x*(-B26*N3y - B66*N3x) + N1y*(-B22*N3y - B26*N3x)) + detJ*r22*wij*(N1x*(B16*N3x + B66*N3y) + N1y*(B12*N3x + B26*N3y))) + r13*(detJ*r21*wij*(E44*N1y*(N1 + N2 - 1) + E45*N1x*(N1 + N2 - 1)) + detJ*r22*wij*(E45*N1y*(-N1 - N2 + 1) + E55*N1x*(-N1 - N2 + 1)))
+            KC0v[k] += r11*(KC0e0015*r21 + KC0e0016*r22) + r12*(KC0e0115*r21 + KC0e0116*r22) + r13*(KC0e0215*r21 + KC0e0216*r22)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N1y*alphat*detJ*r23*wij*(-N1 - N2 + 1)/h + detJ*r21*wij*(N1x*(-B12*N3y - B16*N3x) + N1y*(-B26*N3y - B66*N3x)) + detJ*r22*wij*(N1x*(B11*N3x + B16*N3y) + N1y*(B16*N3x + B66*N3y))) + r22*(-0.5*A66*N1x*alphat*detJ*r23*wij*(-N1 - N2 + 1)/h + detJ*r21*wij*(N1x*(-B26*N3y - B66*N3x) + N1y*(-B22*N3y - B26*N3x)) + detJ*r22*wij*(N1x*(B16*N3x + B66*N3y) + N1y*(B12*N3x + B26*N3y))) + r23*(detJ*r21*wij*(E44*N1y*(N1 + N2 - 1) + E45*N1x*(N1 + N2 - 1)) + detJ*r22*wij*(E45*N1y*(-N1 - N2 + 1) + E55*N1x*(-N1 - N2 + 1)))
+            KC0v[k] += r21*(KC0e0015*r21 + KC0e0016*r22) + r22*(KC0e0115*r21 + KC0e0116*r22) + r23*(KC0e0215*r21 + KC0e0216*r22)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N1y*alphat*detJ*r23*wij*(-N1 - N2 + 1)/h + detJ*r21*wij*(N1x*(-B12*N3y - B16*N3x) + N1y*(-B26*N3y - B66*N3x)) + detJ*r22*wij*(N1x*(B11*N3x + B16*N3y) + N1y*(B16*N3x + B66*N3y))) + r32*(-0.5*A66*N1x*alphat*detJ*r23*wij*(-N1 - N2 + 1)/h + detJ*r21*wij*(N1x*(-B26*N3y - B66*N3x) + N1y*(-B22*N3y - B26*N3x)) + detJ*r22*wij*(N1x*(B16*N3x + B66*N3y) + N1y*(B12*N3x + B26*N3y))) + r33*(detJ*r21*wij*(E44*N1y*(N1 + N2 - 1) + E45*N1x*(N1 + N2 - 1)) + detJ*r22*wij*(E45*N1y*(-N1 - N2 + 1) + E55*N1x*(-N1 - N2 + 1)))
+            KC0v[k] += r31*(KC0e0015*r21 + KC0e0016*r22) + r32*(KC0e0115*r21 + KC0e0116*r22) + r33*(KC0e0215*r21 + KC0e0216*r22)
             k += 1
-            KC0v[k] += A66*N1*alphat*detJ*r13*r23*wij*(-N1 - N2 + 1)/h + r11*(detJ*r21*wij*(-E44*N1*(N1 + N2 - 1) - N1x*(-D26*N3y - D66*N3x) - N1y*(-D22*N3y - D26*N3x)) + detJ*r22*wij*(-E45*N1*(-N1 - N2 + 1) - N1x*(D16*N3x + D66*N3y) - N1y*(D12*N3x + D26*N3y))) + r12*(detJ*r21*wij*(E45*N1*(N1 + N2 - 1) + N1x*(-D12*N3y - D16*N3x) + N1y*(-D26*N3y - D66*N3x)) + detJ*r22*wij*(E55*N1*(-N1 - N2 + 1) + N1x*(D11*N3x + D16*N3y) + N1y*(D16*N3x + D66*N3y)))
+            KC0v[k] += r11*(KC0e0315*r21 + KC0e0316*r22) + r12*(KC0e0415*r21 + KC0e0416*r22)
             k += 1
-            KC0v[k] += A66*N1*alphat*detJ*r23**2*wij*(-N1 - N2 + 1)/h + r21*(detJ*r21*wij*(-E44*N1*(N1 + N2 - 1) - N1x*(-D26*N3y - D66*N3x) - N1y*(-D22*N3y - D26*N3x)) + detJ*r22*wij*(-E45*N1*(-N1 - N2 + 1) - N1x*(D16*N3x + D66*N3y) - N1y*(D12*N3x + D26*N3y))) + r22*(detJ*r21*wij*(E45*N1*(N1 + N2 - 1) + N1x*(-D12*N3y - D16*N3x) + N1y*(-D26*N3y - D66*N3x)) + detJ*r22*wij*(E55*N1*(-N1 - N2 + 1) + N1x*(D11*N3x + D16*N3y) + N1y*(D16*N3x + D66*N3y)))
+            KC0v[k] += r21*(KC0e0315*r21 + KC0e0316*r22) + r22*(KC0e0415*r21 + KC0e0416*r22)
             k += 1
-            KC0v[k] += A66*N1*alphat*detJ*r23*r33*wij*(-N1 - N2 + 1)/h + r31*(detJ*r21*wij*(-E44*N1*(N1 + N2 - 1) - N1x*(-D26*N3y - D66*N3x) - N1y*(-D22*N3y - D26*N3x)) + detJ*r22*wij*(-E45*N1*(-N1 - N2 + 1) - N1x*(D16*N3x + D66*N3y) - N1y*(D12*N3x + D26*N3y))) + r32*(detJ*r21*wij*(E45*N1*(N1 + N2 - 1) + N1x*(-D12*N3y - D16*N3x) + N1y*(-D26*N3y - D66*N3x)) + detJ*r22*wij*(E55*N1*(-N1 - N2 + 1) + N1x*(D11*N3x + D16*N3y) + N1y*(D16*N3x + D66*N3y)))
+            KC0v[k] += r31*(KC0e0315*r21 + KC0e0316*r22) + r32*(KC0e0415*r21 + KC0e0416*r22)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N2y*alphat*detJ*r23*wij*(-N1 - N2 + 1)/h + detJ*r21*wij*(N2x*(-B12*N3y - B16*N3x) + N2y*(-B26*N3y - B66*N3x)) + detJ*r22*wij*(N2x*(B11*N3x + B16*N3y) + N2y*(B16*N3x + B66*N3y))) + r12*(-0.5*A66*N2x*alphat*detJ*r23*wij*(-N1 - N2 + 1)/h + detJ*r21*wij*(N2x*(-B26*N3y - B66*N3x) + N2y*(-B22*N3y - B26*N3x)) + detJ*r22*wij*(N2x*(B16*N3x + B66*N3y) + N2y*(B12*N3x + B26*N3y))) + r13*(detJ*r21*wij*(E44*N2y*(N1 + N2 - 1) + E45*N2x*(N1 + N2 - 1)) + detJ*r22*wij*(E45*N2y*(-N1 - N2 + 1) + E55*N2x*(-N1 - N2 + 1)))
+            KC0v[k] += r11*(KC0e0615*r21 + KC0e0616*r22) + r12*(KC0e0715*r21 + KC0e0716*r22) + r13*(KC0e0815*r21 + KC0e0816*r22)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N2y*alphat*detJ*r23*wij*(-N1 - N2 + 1)/h + detJ*r21*wij*(N2x*(-B12*N3y - B16*N3x) + N2y*(-B26*N3y - B66*N3x)) + detJ*r22*wij*(N2x*(B11*N3x + B16*N3y) + N2y*(B16*N3x + B66*N3y))) + r22*(-0.5*A66*N2x*alphat*detJ*r23*wij*(-N1 - N2 + 1)/h + detJ*r21*wij*(N2x*(-B26*N3y - B66*N3x) + N2y*(-B22*N3y - B26*N3x)) + detJ*r22*wij*(N2x*(B16*N3x + B66*N3y) + N2y*(B12*N3x + B26*N3y))) + r23*(detJ*r21*wij*(E44*N2y*(N1 + N2 - 1) + E45*N2x*(N1 + N2 - 1)) + detJ*r22*wij*(E45*N2y*(-N1 - N2 + 1) + E55*N2x*(-N1 - N2 + 1)))
+            KC0v[k] += r21*(KC0e0615*r21 + KC0e0616*r22) + r22*(KC0e0715*r21 + KC0e0716*r22) + r23*(KC0e0815*r21 + KC0e0816*r22)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N2y*alphat*detJ*r23*wij*(-N1 - N2 + 1)/h + detJ*r21*wij*(N2x*(-B12*N3y - B16*N3x) + N2y*(-B26*N3y - B66*N3x)) + detJ*r22*wij*(N2x*(B11*N3x + B16*N3y) + N2y*(B16*N3x + B66*N3y))) + r32*(-0.5*A66*N2x*alphat*detJ*r23*wij*(-N1 - N2 + 1)/h + detJ*r21*wij*(N2x*(-B26*N3y - B66*N3x) + N2y*(-B22*N3y - B26*N3x)) + detJ*r22*wij*(N2x*(B16*N3x + B66*N3y) + N2y*(B12*N3x + B26*N3y))) + r33*(detJ*r21*wij*(E44*N2y*(N1 + N2 - 1) + E45*N2x*(N1 + N2 - 1)) + detJ*r22*wij*(E45*N2y*(-N1 - N2 + 1) + E55*N2x*(-N1 - N2 + 1)))
+            KC0v[k] += r31*(KC0e0615*r21 + KC0e0616*r22) + r32*(KC0e0715*r21 + KC0e0716*r22) + r33*(KC0e0815*r21 + KC0e0816*r22)
             k += 1
-            KC0v[k] += A66*N2*alphat*detJ*r13*r23*wij*(-N1 - N2 + 1)/h + r11*(detJ*r21*wij*(-E44*N2*(N1 + N2 - 1) - N2x*(-D26*N3y - D66*N3x) - N2y*(-D22*N3y - D26*N3x)) + detJ*r22*wij*(-E45*N2*(-N1 - N2 + 1) - N2x*(D16*N3x + D66*N3y) - N2y*(D12*N3x + D26*N3y))) + r12*(detJ*r21*wij*(E45*N2*(N1 + N2 - 1) + N2x*(-D12*N3y - D16*N3x) + N2y*(-D26*N3y - D66*N3x)) + detJ*r22*wij*(E55*N2*(-N1 - N2 + 1) + N2x*(D11*N3x + D16*N3y) + N2y*(D16*N3x + D66*N3y)))
+            KC0v[k] += r11*(KC0e0915*r21 + KC0e0916*r22) + r12*(KC0e1015*r21 + KC0e1016*r22)
             k += 1
-            KC0v[k] += A66*N2*alphat*detJ*r23**2*wij*(-N1 - N2 + 1)/h + r21*(detJ*r21*wij*(-E44*N2*(N1 + N2 - 1) - N2x*(-D26*N3y - D66*N3x) - N2y*(-D22*N3y - D26*N3x)) + detJ*r22*wij*(-E45*N2*(-N1 - N2 + 1) - N2x*(D16*N3x + D66*N3y) - N2y*(D12*N3x + D26*N3y))) + r22*(detJ*r21*wij*(E45*N2*(N1 + N2 - 1) + N2x*(-D12*N3y - D16*N3x) + N2y*(-D26*N3y - D66*N3x)) + detJ*r22*wij*(E55*N2*(-N1 - N2 + 1) + N2x*(D11*N3x + D16*N3y) + N2y*(D16*N3x + D66*N3y)))
+            KC0v[k] += r21*(KC0e0915*r21 + KC0e0916*r22) + r22*(KC0e1015*r21 + KC0e1016*r22)
             k += 1
-            KC0v[k] += A66*N2*alphat*detJ*r23*r33*wij*(-N1 - N2 + 1)/h + r31*(detJ*r21*wij*(-E44*N2*(N1 + N2 - 1) - N2x*(-D26*N3y - D66*N3x) - N2y*(-D22*N3y - D26*N3x)) + detJ*r22*wij*(-E45*N2*(-N1 - N2 + 1) - N2x*(D16*N3x + D66*N3y) - N2y*(D12*N3x + D26*N3y))) + r32*(detJ*r21*wij*(E45*N2*(N1 + N2 - 1) + N2x*(-D12*N3y - D16*N3x) + N2y*(-D26*N3y - D66*N3x)) + detJ*r22*wij*(E55*N2*(-N1 - N2 + 1) + N2x*(D11*N3x + D16*N3y) + N2y*(D16*N3x + D66*N3y)))
+            KC0v[k] += r31*(KC0e0915*r21 + KC0e0916*r22) + r32*(KC0e1015*r21 + KC0e1016*r22)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N3y*alphat*detJ*r23*wij*(-N1 - N2 + 1)/h + detJ*r21*wij*(N3x*(-B12*N3y - B16*N3x) + N3y*(-B26*N3y - B66*N3x)) + detJ*r22*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y))) + r12*(-0.5*A66*N3x*alphat*detJ*r23*wij*(-N1 - N2 + 1)/h + detJ*r21*wij*(N3x*(-B26*N3y - B66*N3x) + N3y*(-B22*N3y - B26*N3x)) + detJ*r22*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))) + r13*(detJ*r21*wij*(E44*N3y*(N1 + N2 - 1) + E45*N3x*(N1 + N2 - 1)) + detJ*r22*wij*(E45*N3y*(-N1 - N2 + 1) + E55*N3x*(-N1 - N2 + 1)))
+            KC0v[k] += r11*(KC0e1215*r21 + KC0e1216*r22) + r12*(KC0e1315*r21 + KC0e1316*r22) + r13*(KC0e1415*r21 + KC0e1416*r22)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N3y*alphat*detJ*r23*wij*(-N1 - N2 + 1)/h + detJ*r21*wij*(N3x*(-B12*N3y - B16*N3x) + N3y*(-B26*N3y - B66*N3x)) + detJ*r22*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y))) + r22*(-0.5*A66*N3x*alphat*detJ*r23*wij*(-N1 - N2 + 1)/h + detJ*r21*wij*(N3x*(-B26*N3y - B66*N3x) + N3y*(-B22*N3y - B26*N3x)) + detJ*r22*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))) + r23*(detJ*r21*wij*(E44*N3y*(N1 + N2 - 1) + E45*N3x*(N1 + N2 - 1)) + detJ*r22*wij*(E45*N3y*(-N1 - N2 + 1) + E55*N3x*(-N1 - N2 + 1)))
+            KC0v[k] += r21*(KC0e1215*r21 + KC0e1216*r22) + r22*(KC0e1315*r21 + KC0e1316*r22) + r23*(KC0e1415*r21 + KC0e1416*r22)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N3y*alphat*detJ*r23*wij*(-N1 - N2 + 1)/h + detJ*r21*wij*(N3x*(-B12*N3y - B16*N3x) + N3y*(-B26*N3y - B66*N3x)) + detJ*r22*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y))) + r32*(-0.5*A66*N3x*alphat*detJ*r23*wij*(-N1 - N2 + 1)/h + detJ*r21*wij*(N3x*(-B26*N3y - B66*N3x) + N3y*(-B22*N3y - B26*N3x)) + detJ*r22*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))) + r33*(detJ*r21*wij*(E44*N3y*(N1 + N2 - 1) + E45*N3x*(N1 + N2 - 1)) + detJ*r22*wij*(E45*N3y*(-N1 - N2 + 1) + E55*N3x*(-N1 - N2 + 1)))
+            KC0v[k] += r31*(KC0e1215*r21 + KC0e1216*r22) + r32*(KC0e1315*r21 + KC0e1316*r22) + r33*(KC0e1415*r21 + KC0e1416*r22)
             k += 1
-            KC0v[k] += A66*alphat*detJ*r13*r23*wij*(-N1 - N2 + 1)**2/h + r11*(detJ*r21*wij*(E44*(N1 + N2 - 1)**2 - N3x*(-D26*N3y - D66*N3x) - N3y*(-D22*N3y - D26*N3x)) + detJ*r22*wij*(E45*(-N1 - N2 + 1)*(N1 + N2 - 1) - N3x*(D16*N3x + D66*N3y) - N3y*(D12*N3x + D26*N3y))) + r12*(detJ*r21*wij*(E45*(-N1 - N2 + 1)*(N1 + N2 - 1) + N3x*(-D12*N3y - D16*N3x) + N3y*(-D26*N3y - D66*N3x)) + detJ*r22*wij*(E55*(-N1 - N2 + 1)**2 + N3x*(D11*N3x + D16*N3y) + N3y*(D16*N3x + D66*N3y)))
+            KC0v[k] += KC0e1717*r13*r23 + r11*(KC0e1515*r21 + KC0e1516*r22) + r12*(KC0e1516*r21 + KC0e1616*r22)
             k += 1
-            KC0v[k] += A66*alphat*detJ*r23**2*wij*(-N1 - N2 + 1)**2/h + r21*(detJ*r21*wij*(E44*(N1 + N2 - 1)**2 - N3x*(-D26*N3y - D66*N3x) - N3y*(-D22*N3y - D26*N3x)) + detJ*r22*wij*(E45*(-N1 - N2 + 1)*(N1 + N2 - 1) - N3x*(D16*N3x + D66*N3y) - N3y*(D12*N3x + D26*N3y))) + r22*(detJ*r21*wij*(E45*(-N1 - N2 + 1)*(N1 + N2 - 1) + N3x*(-D12*N3y - D16*N3x) + N3y*(-D26*N3y - D66*N3x)) + detJ*r22*wij*(E55*(-N1 - N2 + 1)**2 + N3x*(D11*N3x + D16*N3y) + N3y*(D16*N3x + D66*N3y)))
+            KC0v[k] += KC0e1717*r23**2 + r21*(KC0e1515*r21 + KC0e1516*r22) + r22*(KC0e1516*r21 + KC0e1616*r22)
             k += 1
-            KC0v[k] += A66*alphat*detJ*r23*r33*wij*(-N1 - N2 + 1)**2/h + r31*(detJ*r21*wij*(E44*(N1 + N2 - 1)**2 - N3x*(-D26*N3y - D66*N3x) - N3y*(-D22*N3y - D26*N3x)) + detJ*r22*wij*(E45*(-N1 - N2 + 1)*(N1 + N2 - 1) - N3x*(D16*N3x + D66*N3y) - N3y*(D12*N3x + D26*N3y))) + r32*(detJ*r21*wij*(E45*(-N1 - N2 + 1)*(N1 + N2 - 1) + N3x*(-D12*N3y - D16*N3x) + N3y*(-D26*N3y - D66*N3x)) + detJ*r22*wij*(E55*(-N1 - N2 + 1)**2 + N3x*(D11*N3x + D16*N3y) + N3y*(D16*N3x + D66*N3y)))
+            KC0v[k] += KC0e1717*r23*r33 + r31*(KC0e1515*r21 + KC0e1516*r22) + r32*(KC0e1516*r21 + KC0e1616*r22)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N1y*alphat*detJ*r33*wij*(-N1 - N2 + 1)/h + detJ*r31*wij*(N1x*(-B12*N3y - B16*N3x) + N1y*(-B26*N3y - B66*N3x)) + detJ*r32*wij*(N1x*(B11*N3x + B16*N3y) + N1y*(B16*N3x + B66*N3y))) + r12*(-0.5*A66*N1x*alphat*detJ*r33*wij*(-N1 - N2 + 1)/h + detJ*r31*wij*(N1x*(-B26*N3y - B66*N3x) + N1y*(-B22*N3y - B26*N3x)) + detJ*r32*wij*(N1x*(B16*N3x + B66*N3y) + N1y*(B12*N3x + B26*N3y))) + r13*(detJ*r31*wij*(E44*N1y*(N1 + N2 - 1) + E45*N1x*(N1 + N2 - 1)) + detJ*r32*wij*(E45*N1y*(-N1 - N2 + 1) + E55*N1x*(-N1 - N2 + 1)))
+            KC0v[k] += r11*(KC0e0015*r31 + KC0e0016*r32) + r12*(KC0e0115*r31 + KC0e0116*r32) + r13*(KC0e0215*r31 + KC0e0216*r32)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N1y*alphat*detJ*r33*wij*(-N1 - N2 + 1)/h + detJ*r31*wij*(N1x*(-B12*N3y - B16*N3x) + N1y*(-B26*N3y - B66*N3x)) + detJ*r32*wij*(N1x*(B11*N3x + B16*N3y) + N1y*(B16*N3x + B66*N3y))) + r22*(-0.5*A66*N1x*alphat*detJ*r33*wij*(-N1 - N2 + 1)/h + detJ*r31*wij*(N1x*(-B26*N3y - B66*N3x) + N1y*(-B22*N3y - B26*N3x)) + detJ*r32*wij*(N1x*(B16*N3x + B66*N3y) + N1y*(B12*N3x + B26*N3y))) + r23*(detJ*r31*wij*(E44*N1y*(N1 + N2 - 1) + E45*N1x*(N1 + N2 - 1)) + detJ*r32*wij*(E45*N1y*(-N1 - N2 + 1) + E55*N1x*(-N1 - N2 + 1)))
+            KC0v[k] += r21*(KC0e0015*r31 + KC0e0016*r32) + r22*(KC0e0115*r31 + KC0e0116*r32) + r23*(KC0e0215*r31 + KC0e0216*r32)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N1y*alphat*detJ*r33*wij*(-N1 - N2 + 1)/h + detJ*r31*wij*(N1x*(-B12*N3y - B16*N3x) + N1y*(-B26*N3y - B66*N3x)) + detJ*r32*wij*(N1x*(B11*N3x + B16*N3y) + N1y*(B16*N3x + B66*N3y))) + r32*(-0.5*A66*N1x*alphat*detJ*r33*wij*(-N1 - N2 + 1)/h + detJ*r31*wij*(N1x*(-B26*N3y - B66*N3x) + N1y*(-B22*N3y - B26*N3x)) + detJ*r32*wij*(N1x*(B16*N3x + B66*N3y) + N1y*(B12*N3x + B26*N3y))) + r33*(detJ*r31*wij*(E44*N1y*(N1 + N2 - 1) + E45*N1x*(N1 + N2 - 1)) + detJ*r32*wij*(E45*N1y*(-N1 - N2 + 1) + E55*N1x*(-N1 - N2 + 1)))
+            KC0v[k] += r31*(KC0e0015*r31 + KC0e0016*r32) + r32*(KC0e0115*r31 + KC0e0116*r32) + r33*(KC0e0215*r31 + KC0e0216*r32)
             k += 1
-            KC0v[k] += A66*N1*alphat*detJ*r13*r33*wij*(-N1 - N2 + 1)/h + r11*(detJ*r31*wij*(-E44*N1*(N1 + N2 - 1) - N1x*(-D26*N3y - D66*N3x) - N1y*(-D22*N3y - D26*N3x)) + detJ*r32*wij*(-E45*N1*(-N1 - N2 + 1) - N1x*(D16*N3x + D66*N3y) - N1y*(D12*N3x + D26*N3y))) + r12*(detJ*r31*wij*(E45*N1*(N1 + N2 - 1) + N1x*(-D12*N3y - D16*N3x) + N1y*(-D26*N3y - D66*N3x)) + detJ*r32*wij*(E55*N1*(-N1 - N2 + 1) + N1x*(D11*N3x + D16*N3y) + N1y*(D16*N3x + D66*N3y)))
+            KC0v[k] += r11*(KC0e0315*r31 + KC0e0316*r32) + r12*(KC0e0415*r31 + KC0e0416*r32)
             k += 1
-            KC0v[k] += A66*N1*alphat*detJ*r23*r33*wij*(-N1 - N2 + 1)/h + r21*(detJ*r31*wij*(-E44*N1*(N1 + N2 - 1) - N1x*(-D26*N3y - D66*N3x) - N1y*(-D22*N3y - D26*N3x)) + detJ*r32*wij*(-E45*N1*(-N1 - N2 + 1) - N1x*(D16*N3x + D66*N3y) - N1y*(D12*N3x + D26*N3y))) + r22*(detJ*r31*wij*(E45*N1*(N1 + N2 - 1) + N1x*(-D12*N3y - D16*N3x) + N1y*(-D26*N3y - D66*N3x)) + detJ*r32*wij*(E55*N1*(-N1 - N2 + 1) + N1x*(D11*N3x + D16*N3y) + N1y*(D16*N3x + D66*N3y)))
+            KC0v[k] += r21*(KC0e0315*r31 + KC0e0316*r32) + r22*(KC0e0415*r31 + KC0e0416*r32)
             k += 1
-            KC0v[k] += A66*N1*alphat*detJ*r33**2*wij*(-N1 - N2 + 1)/h + r31*(detJ*r31*wij*(-E44*N1*(N1 + N2 - 1) - N1x*(-D26*N3y - D66*N3x) - N1y*(-D22*N3y - D26*N3x)) + detJ*r32*wij*(-E45*N1*(-N1 - N2 + 1) - N1x*(D16*N3x + D66*N3y) - N1y*(D12*N3x + D26*N3y))) + r32*(detJ*r31*wij*(E45*N1*(N1 + N2 - 1) + N1x*(-D12*N3y - D16*N3x) + N1y*(-D26*N3y - D66*N3x)) + detJ*r32*wij*(E55*N1*(-N1 - N2 + 1) + N1x*(D11*N3x + D16*N3y) + N1y*(D16*N3x + D66*N3y)))
+            KC0v[k] += r31*(KC0e0315*r31 + KC0e0316*r32) + r32*(KC0e0415*r31 + KC0e0416*r32)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N2y*alphat*detJ*r33*wij*(-N1 - N2 + 1)/h + detJ*r31*wij*(N2x*(-B12*N3y - B16*N3x) + N2y*(-B26*N3y - B66*N3x)) + detJ*r32*wij*(N2x*(B11*N3x + B16*N3y) + N2y*(B16*N3x + B66*N3y))) + r12*(-0.5*A66*N2x*alphat*detJ*r33*wij*(-N1 - N2 + 1)/h + detJ*r31*wij*(N2x*(-B26*N3y - B66*N3x) + N2y*(-B22*N3y - B26*N3x)) + detJ*r32*wij*(N2x*(B16*N3x + B66*N3y) + N2y*(B12*N3x + B26*N3y))) + r13*(detJ*r31*wij*(E44*N2y*(N1 + N2 - 1) + E45*N2x*(N1 + N2 - 1)) + detJ*r32*wij*(E45*N2y*(-N1 - N2 + 1) + E55*N2x*(-N1 - N2 + 1)))
+            KC0v[k] += r11*(KC0e0615*r31 + KC0e0616*r32) + r12*(KC0e0715*r31 + KC0e0716*r32) + r13*(KC0e0815*r31 + KC0e0816*r32)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N2y*alphat*detJ*r33*wij*(-N1 - N2 + 1)/h + detJ*r31*wij*(N2x*(-B12*N3y - B16*N3x) + N2y*(-B26*N3y - B66*N3x)) + detJ*r32*wij*(N2x*(B11*N3x + B16*N3y) + N2y*(B16*N3x + B66*N3y))) + r22*(-0.5*A66*N2x*alphat*detJ*r33*wij*(-N1 - N2 + 1)/h + detJ*r31*wij*(N2x*(-B26*N3y - B66*N3x) + N2y*(-B22*N3y - B26*N3x)) + detJ*r32*wij*(N2x*(B16*N3x + B66*N3y) + N2y*(B12*N3x + B26*N3y))) + r23*(detJ*r31*wij*(E44*N2y*(N1 + N2 - 1) + E45*N2x*(N1 + N2 - 1)) + detJ*r32*wij*(E45*N2y*(-N1 - N2 + 1) + E55*N2x*(-N1 - N2 + 1)))
+            KC0v[k] += r21*(KC0e0615*r31 + KC0e0616*r32) + r22*(KC0e0715*r31 + KC0e0716*r32) + r23*(KC0e0815*r31 + KC0e0816*r32)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N2y*alphat*detJ*r33*wij*(-N1 - N2 + 1)/h + detJ*r31*wij*(N2x*(-B12*N3y - B16*N3x) + N2y*(-B26*N3y - B66*N3x)) + detJ*r32*wij*(N2x*(B11*N3x + B16*N3y) + N2y*(B16*N3x + B66*N3y))) + r32*(-0.5*A66*N2x*alphat*detJ*r33*wij*(-N1 - N2 + 1)/h + detJ*r31*wij*(N2x*(-B26*N3y - B66*N3x) + N2y*(-B22*N3y - B26*N3x)) + detJ*r32*wij*(N2x*(B16*N3x + B66*N3y) + N2y*(B12*N3x + B26*N3y))) + r33*(detJ*r31*wij*(E44*N2y*(N1 + N2 - 1) + E45*N2x*(N1 + N2 - 1)) + detJ*r32*wij*(E45*N2y*(-N1 - N2 + 1) + E55*N2x*(-N1 - N2 + 1)))
+            KC0v[k] += r31*(KC0e0615*r31 + KC0e0616*r32) + r32*(KC0e0715*r31 + KC0e0716*r32) + r33*(KC0e0815*r31 + KC0e0816*r32)
             k += 1
-            KC0v[k] += A66*N2*alphat*detJ*r13*r33*wij*(-N1 - N2 + 1)/h + r11*(detJ*r31*wij*(-E44*N2*(N1 + N2 - 1) - N2x*(-D26*N3y - D66*N3x) - N2y*(-D22*N3y - D26*N3x)) + detJ*r32*wij*(-E45*N2*(-N1 - N2 + 1) - N2x*(D16*N3x + D66*N3y) - N2y*(D12*N3x + D26*N3y))) + r12*(detJ*r31*wij*(E45*N2*(N1 + N2 - 1) + N2x*(-D12*N3y - D16*N3x) + N2y*(-D26*N3y - D66*N3x)) + detJ*r32*wij*(E55*N2*(-N1 - N2 + 1) + N2x*(D11*N3x + D16*N3y) + N2y*(D16*N3x + D66*N3y)))
+            KC0v[k] += r11*(KC0e0915*r31 + KC0e0916*r32) + r12*(KC0e1015*r31 + KC0e1016*r32)
             k += 1
-            KC0v[k] += A66*N2*alphat*detJ*r23*r33*wij*(-N1 - N2 + 1)/h + r21*(detJ*r31*wij*(-E44*N2*(N1 + N2 - 1) - N2x*(-D26*N3y - D66*N3x) - N2y*(-D22*N3y - D26*N3x)) + detJ*r32*wij*(-E45*N2*(-N1 - N2 + 1) - N2x*(D16*N3x + D66*N3y) - N2y*(D12*N3x + D26*N3y))) + r22*(detJ*r31*wij*(E45*N2*(N1 + N2 - 1) + N2x*(-D12*N3y - D16*N3x) + N2y*(-D26*N3y - D66*N3x)) + detJ*r32*wij*(E55*N2*(-N1 - N2 + 1) + N2x*(D11*N3x + D16*N3y) + N2y*(D16*N3x + D66*N3y)))
+            KC0v[k] += r21*(KC0e0915*r31 + KC0e0916*r32) + r22*(KC0e1015*r31 + KC0e1016*r32)
             k += 1
-            KC0v[k] += A66*N2*alphat*detJ*r33**2*wij*(-N1 - N2 + 1)/h + r31*(detJ*r31*wij*(-E44*N2*(N1 + N2 - 1) - N2x*(-D26*N3y - D66*N3x) - N2y*(-D22*N3y - D26*N3x)) + detJ*r32*wij*(-E45*N2*(-N1 - N2 + 1) - N2x*(D16*N3x + D66*N3y) - N2y*(D12*N3x + D26*N3y))) + r32*(detJ*r31*wij*(E45*N2*(N1 + N2 - 1) + N2x*(-D12*N3y - D16*N3x) + N2y*(-D26*N3y - D66*N3x)) + detJ*r32*wij*(E55*N2*(-N1 - N2 + 1) + N2x*(D11*N3x + D16*N3y) + N2y*(D16*N3x + D66*N3y)))
+            KC0v[k] += r31*(KC0e0915*r31 + KC0e0916*r32) + r32*(KC0e1015*r31 + KC0e1016*r32)
             k += 1
-            KC0v[k] += r11*(0.5*A66*N3y*alphat*detJ*r33*wij*(-N1 - N2 + 1)/h + detJ*r31*wij*(N3x*(-B12*N3y - B16*N3x) + N3y*(-B26*N3y - B66*N3x)) + detJ*r32*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y))) + r12*(-0.5*A66*N3x*alphat*detJ*r33*wij*(-N1 - N2 + 1)/h + detJ*r31*wij*(N3x*(-B26*N3y - B66*N3x) + N3y*(-B22*N3y - B26*N3x)) + detJ*r32*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))) + r13*(detJ*r31*wij*(E44*N3y*(N1 + N2 - 1) + E45*N3x*(N1 + N2 - 1)) + detJ*r32*wij*(E45*N3y*(-N1 - N2 + 1) + E55*N3x*(-N1 - N2 + 1)))
+            KC0v[k] += r11*(KC0e1215*r31 + KC0e1216*r32) + r12*(KC0e1315*r31 + KC0e1316*r32) + r13*(KC0e1415*r31 + KC0e1416*r32)
             k += 1
-            KC0v[k] += r21*(0.5*A66*N3y*alphat*detJ*r33*wij*(-N1 - N2 + 1)/h + detJ*r31*wij*(N3x*(-B12*N3y - B16*N3x) + N3y*(-B26*N3y - B66*N3x)) + detJ*r32*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y))) + r22*(-0.5*A66*N3x*alphat*detJ*r33*wij*(-N1 - N2 + 1)/h + detJ*r31*wij*(N3x*(-B26*N3y - B66*N3x) + N3y*(-B22*N3y - B26*N3x)) + detJ*r32*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))) + r23*(detJ*r31*wij*(E44*N3y*(N1 + N2 - 1) + E45*N3x*(N1 + N2 - 1)) + detJ*r32*wij*(E45*N3y*(-N1 - N2 + 1) + E55*N3x*(-N1 - N2 + 1)))
+            KC0v[k] += r21*(KC0e1215*r31 + KC0e1216*r32) + r22*(KC0e1315*r31 + KC0e1316*r32) + r23*(KC0e1415*r31 + KC0e1416*r32)
             k += 1
-            KC0v[k] += r31*(0.5*A66*N3y*alphat*detJ*r33*wij*(-N1 - N2 + 1)/h + detJ*r31*wij*(N3x*(-B12*N3y - B16*N3x) + N3y*(-B26*N3y - B66*N3x)) + detJ*r32*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y))) + r32*(-0.5*A66*N3x*alphat*detJ*r33*wij*(-N1 - N2 + 1)/h + detJ*r31*wij*(N3x*(-B26*N3y - B66*N3x) + N3y*(-B22*N3y - B26*N3x)) + detJ*r32*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))) + r33*(detJ*r31*wij*(E44*N3y*(N1 + N2 - 1) + E45*N3x*(N1 + N2 - 1)) + detJ*r32*wij*(E45*N3y*(-N1 - N2 + 1) + E55*N3x*(-N1 - N2 + 1)))
+            KC0v[k] += r31*(KC0e1215*r31 + KC0e1216*r32) + r32*(KC0e1315*r31 + KC0e1316*r32) + r33*(KC0e1415*r31 + KC0e1416*r32)
             k += 1
-            KC0v[k] += A66*alphat*detJ*r13*r33*wij*(-N1 - N2 + 1)**2/h + r11*(detJ*r31*wij*(E44*(N1 + N2 - 1)**2 - N3x*(-D26*N3y - D66*N3x) - N3y*(-D22*N3y - D26*N3x)) + detJ*r32*wij*(E45*(-N1 - N2 + 1)*(N1 + N2 - 1) - N3x*(D16*N3x + D66*N3y) - N3y*(D12*N3x + D26*N3y))) + r12*(detJ*r31*wij*(E45*(-N1 - N2 + 1)*(N1 + N2 - 1) + N3x*(-D12*N3y - D16*N3x) + N3y*(-D26*N3y - D66*N3x)) + detJ*r32*wij*(E55*(-N1 - N2 + 1)**2 + N3x*(D11*N3x + D16*N3y) + N3y*(D16*N3x + D66*N3y)))
+            KC0v[k] += KC0e1717*r13*r33 + r11*(KC0e1515*r31 + KC0e1516*r32) + r12*(KC0e1516*r31 + KC0e1616*r32)
             k += 1
-            KC0v[k] += A66*alphat*detJ*r23*r33*wij*(-N1 - N2 + 1)**2/h + r21*(detJ*r31*wij*(E44*(N1 + N2 - 1)**2 - N3x*(-D26*N3y - D66*N3x) - N3y*(-D22*N3y - D26*N3x)) + detJ*r32*wij*(E45*(-N1 - N2 + 1)*(N1 + N2 - 1) - N3x*(D16*N3x + D66*N3y) - N3y*(D12*N3x + D26*N3y))) + r22*(detJ*r31*wij*(E45*(-N1 - N2 + 1)*(N1 + N2 - 1) + N3x*(-D12*N3y - D16*N3x) + N3y*(-D26*N3y - D66*N3x)) + detJ*r32*wij*(E55*(-N1 - N2 + 1)**2 + N3x*(D11*N3x + D16*N3y) + N3y*(D16*N3x + D66*N3y)))
+            KC0v[k] += KC0e1717*r23*r33 + r21*(KC0e1515*r31 + KC0e1516*r32) + r22*(KC0e1516*r31 + KC0e1616*r32)
             k += 1
-            KC0v[k] += A66*alphat*detJ*r33**2*wij*(-N1 - N2 + 1)**2/h + r31*(detJ*r31*wij*(E44*(N1 + N2 - 1)**2 - N3x*(-D26*N3y - D66*N3x) - N3y*(-D22*N3y - D26*N3x)) + detJ*r32*wij*(E45*(-N1 - N2 + 1)*(N1 + N2 - 1) - N3x*(D16*N3x + D66*N3y) - N3y*(D12*N3x + D26*N3y))) + r32*(detJ*r31*wij*(E45*(-N1 - N2 + 1)*(N1 + N2 - 1) + N3x*(-D12*N3y - D16*N3x) + N3y*(-D26*N3y - D66*N3x)) + detJ*r32*wij*(E55*(-N1 - N2 + 1)**2 + N3x*(D11*N3x + D16*N3y) + N3y*(D16*N3x + D66*N3y)))
+            KC0v[k] += KC0e1717*r33**2 + r31*(KC0e1515*r31 + KC0e1516*r32) + r32*(KC0e1516*r31 + KC0e1616*r32)
+
+
+    cpdef void update_fint(Tria3R self,
+                           double [::1] fint,
+                           ShellProp prop):
+        r"""Update the internal force vector
+
+        Parameters
+        ----------
+        fint : np.array
+            Array that is updated in place with the internal forces. The
+            internal forces stored in ``fint`` are calculated in global
+            coordinates. Method :meth:`.update_probe_finte` is called to update
+            the parameter ``finte`` of the :class:`.Tria3RProbe` with the
+            internal forces in local coordinates.
+        prop : :class:`.ShellProp` object
+            Shell property object from where the stiffness and mass attributes
+            are read from.
+
+        """
+        cdef double *finte
+
+        self.update_probe_finte(prop)
+
+        with nogil:
+            finte = &self.probe.finte[0]
+
+            fint[0+self.c1] += finte[0]*self.r11 + finte[1]*self.r12 + finte[2]*self.r13
+            fint[1+self.c1] += finte[0]*self.r21 + finte[1]*self.r22 + finte[2]*self.r23
+            fint[2+self.c1] += finte[0]*self.r31 + finte[1]*self.r32 + finte[2]*self.r33
+            fint[3+self.c1] += finte[3]*self.r11 + finte[4]*self.r12 + finte[5]*self.r13
+            fint[4+self.c1] += finte[3]*self.r21 + finte[4]*self.r22 + finte[5]*self.r23
+            fint[5+self.c1] += finte[3]*self.r31 + finte[4]*self.r32 + finte[5]*self.r33
+            fint[1+self.c2] += finte[6]*self.r21 + finte[7]*self.r22 + finte[8]*self.r23
+            fint[0+self.c2] += finte[6]*self.r11 + finte[7]*self.r12 + finte[8]*self.r13
+            fint[2+self.c2] += finte[6]*self.r31 + finte[7]*self.r32 + finte[8]*self.r33
+            fint[3+self.c2] += finte[10]*self.r12 + finte[11]*self.r13 + finte[9]*self.r11
+            fint[4+self.c2] += finte[10]*self.r22 + finte[11]*self.r23 + finte[9]*self.r21
+            fint[5+self.c2] += finte[10]*self.r32 + finte[11]*self.r33 + finte[9]*self.r31
+            fint[0+self.c3] += finte[12]*self.r11 + finte[13]*self.r12 + finte[14]*self.r13
+            fint[1+self.c3] += finte[12]*self.r21 + finte[13]*self.r22 + finte[14]*self.r23
+            fint[2+self.c3] += finte[12]*self.r31 + finte[13]*self.r32 + finte[14]*self.r33
+            fint[3+self.c3] += finte[15]*self.r11 + finte[16]*self.r12 + finte[17]*self.r13
+            fint[4+self.c3] += finte[15]*self.r21 + finte[16]*self.r22 + finte[17]*self.r23
+            fint[5+self.c3] += finte[15]*self.r31 + finte[16]*self.r32 + finte[17]*self.r33
 
 
     cpdef void update_KG(Tria3R self,
@@ -2296,7 +2774,7 @@ cdef class Tria3R:
         cdef int c1, c2, c3, k
         cdef double x1, x2, x3
         cdef double y1, y2, y3
-        cdef double wij, detJ, A
+        cdef double wij, detJ
         # NOTE ABD in the material direction
         cdef double A11mat, A12mat, A16mat, A22mat, A26mat, A66mat
         cdef double B11mat, B12mat, B16mat, B22mat, B26mat, B66mat
@@ -2309,8 +2787,7 @@ cdef class Tria3R:
         cdef double Nxx, Nyy, Nxy
 
         with nogil:
-            A = self.area
-            detJ = 2*A
+            detJ = 2*self.area
 
             A11mat = prop.A11
             A12mat = prop.A12
@@ -2641,12 +3118,12 @@ cdef class Tria3R:
 
             wij = 0.5
 
-            N1x = (y2 - y3)/(2*A)
-            N2x = (-y1 + y3)/(2*A)
-            N3x = (y1 - y2)/(2*A)
-            N1y = (-x2 + x3)/(2*A)
-            N2y = (x1 - x3)/(2*A)
-            N3y = (-x1 + x2)/(2*A)
+            N1x = (y2 - y3)/(2*self.area)
+            N2x = (-y1 + y3)/(2*self.area)
+            N3x = (y1 - y2)/(2*self.area)
+            N1y = (-x2 + x3)/(2*self.area)
+            N2y = (x1 - x3)/(2*self.area)
+            N3y = (-x1 + x2)/(2*self.area)
 
             Nxx = ue[0]*(A11*N1x + A16*N1y) + ue[10]*(B11*N2x + B16*N2y) + ue[12]*(A11*N3x + A16*N3y) + ue[13]*(A12*N3y + A16*N3x) - ue[15]*(B12*N3y + B16*N3x) + ue[16]*(B11*N3x + B16*N3y) + ue[1]*(A12*N1y + A16*N1x) - ue[3]*(B12*N1y + B16*N1x) + ue[4]*(B11*N1x + B16*N1y) + ue[6]*(A11*N2x + A16*N2y) + ue[7]*(A12*N2y + A16*N2x) - ue[9]*(B12*N2y + B16*N2x)
             Nyy = ue[0]*(A12*N1x + A26*N1y) + ue[10]*(B12*N2x + B26*N2y) + ue[12]*(A12*N3x + A26*N3y) + ue[13]*(A22*N3y + A26*N3x) - ue[15]*(B22*N3y + B26*N3x) + ue[16]*(B12*N3x + B26*N3y) + ue[1]*(A22*N1y + A26*N1x) - ue[3]*(B22*N1y + B26*N1x) + ue[4]*(B12*N1x + B26*N1y) + ue[6]*(A12*N2x + A26*N2y) + ue[7]*(A22*N2y + A26*N2x) - ue[9]*(B22*N2y + B26*N2x)
@@ -2851,13 +3328,12 @@ cdef class Tria3R:
         cdef int c1, c2, c3, k
         cdef double x1, x2, x3
         cdef double y1, y2, y3
-        cdef double wij, detJ, A
+        cdef double wij, detJ
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double N1x, N2x, N3x, N1y, N2y, N3y
 
         with nogil:
-            A = self.area
-            detJ = 2*A
+            detJ = 2*self.area
 
             # local to global transformation
             r11 = self.r11
@@ -3133,12 +3609,12 @@ cdef class Tria3R:
 
             wij = 0.5
 
-            N1x = (y2 - y3)/(2*A)
-            N2x = (-y1 + y3)/(2*A)
-            N3x = (y1 - y2)/(2*A)
-            N1y = (-x2 + x3)/(2*A)
-            N2y = (x1 - x3)/(2*A)
-            N3y = (-x1 + x2)/(2*A)
+            N1x = (y2 - y3)/(2*self.area)
+            N2x = (-y1 + y3)/(2*self.area)
+            N3x = (y1 - y2)/(2*self.area)
+            N1y = (-x2 + x3)/(2*self.area)
+            N2y = (x1 - x3)/(2*self.area)
+            N3y = (-x1 + x2)/(2*self.area)
 
             k = self.init_k_KG
             KGv[k] += r13**2*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
@@ -3331,7 +3807,7 @@ cdef class Tria3R:
 
         """
         cdef int c1, c2, c3, i, k
-        cdef double intrho, intrhoz, intrhoz2, A
+        cdef double intrho, intrhoz, intrhoz2
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double x1, x2, x3
         cdef double y1, y2, y3
@@ -3348,8 +3824,7 @@ cdef class Tria3R:
             intrhoz = prop.intrhoz
             intrhoz2 = prop.intrhoz2
 
-            A = self.area
-            detJ = 2*A
+            detJ = 2*self.area
             valH1 = detJ/18.
 
             # NOTE ignoring z in local coordinates

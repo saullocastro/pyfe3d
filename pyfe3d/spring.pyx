@@ -42,9 +42,20 @@ cdef class SpringData:
         self.KG_SPARSE_SIZE = 0
         self.M_SPARSE_SIZE = 0
 
+
 cdef class SpringProbe:
     r"""
     Probe used for local coordinates, local displacements, local stresses etc
+
+    The idea behind using a probe is to avoid allocating larger memory buffers
+    per finite element. The memory buffers are allocated per probe, and one
+    probe can be shared amongst many finite elements, with the information
+    being updated and retrieved on demand.
+
+    .. note:: The probe can be shared amongst more than one finite element, 
+              depending on how you defined them. Mind that the probe will
+              always safe the values from the last udpate.
+
 
     Attributes
     ----------
@@ -57,13 +68,20 @@ cdef class SpringProbe:
         in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
         {{r_y}_e}_1, {{r_z}_e}_1, {u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
         {{r_y}_e}_2, {{r_z}_e}_2`.
+    finte, : array-like
+        Array of size ``NUM_NODES*DOF=12`` containing the element internal
+        forces corresponding to the degrees-of-freedom described by ``ue``.
 
     """
     cdef public double [::1] xe
     cdef public double [::1] ue
+    cdef public double [::1] finte
+
     def __cinit__(SpringProbe self):
         self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
         self.ue = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.finte = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+
 
 cdef class Spring:
     r"""
@@ -190,8 +208,8 @@ cdef class Spring:
     cpdef void update_probe_ue(Spring self, double [::1] u):
         r"""Update the local displacement vector of the probe of the element
 
-        .. note:: The ``probe`` attribute object :class:`.SpringProbe` is
-                  updated, not the element object.
+        .. note:: The ``ue`` attribute of object :class:`.SpringProbe` is
+                  updated, accessible using ``.probe.ue``.
 
         Parameters
         ----------
@@ -239,6 +257,39 @@ cdef class Spring:
                     self.probe.ue[j*DOF + 3] += s1[i]*u[c[j] + 3 + i]
                     self.probe.ue[j*DOF + 4] += s2[i]*u[c[j] + 3 + i]
                     self.probe.ue[j*DOF + 5] += s3[i]*u[c[j] + 3 + i]
+
+
+    cpdef void update_probe_finte(Spring self):
+        r"""Update the internal force vector of the probe
+
+        The attribute ``finte`` is updated with the :class:`.SpringProbe` the
+        internal forces in local coordinates. While using this function, mind
+        that the probe can be shared amongst more than one finite element,
+        depending how you defined them, meaning that the probe will always safe
+        the values from the last udpate.
+
+        .. note:: The ``finte`` attribute of object :class:`.TrussProbe` is
+                  updated, accessible using ``.probe.finte``.
+
+        """
+        cdef double *ue
+        cdef double *finte
+
+        with nogil:
+            ue = &self.probe.ue[0]
+            finte = &self.probe.finte[0]
+            finte[0] = self.kxe*(ue[0] - ue[6])
+            finte[1] = self.kye*(ue[1] - ue[7])
+            finte[2] = self.kze*(ue[2] - ue[8])
+            finte[3] = self.krxe*(ue[3] - ue[9])
+            finte[4] = self.krye*(-ue[10] + ue[4])
+            finte[5] = self.krze*(-ue[11] + ue[5])
+            finte[6] = self.kxe*(-ue[0] + ue[6])
+            finte[7] = self.kye*(-ue[1] + ue[7])
+            finte[8] = self.kze*(-ue[2] + ue[8])
+            finte[9] = self.krxe*(-ue[3] + ue[9])
+            finte[10] = self.krye*(ue[10] - ue[4])
+            finte[11] = self.krze*(ue[11] - ue[5])
 
 
     cpdef void update_KC0(Spring self,
@@ -653,4 +704,36 @@ cdef class Spring:
             k += 1
             KC0v[k] += krxe*r31**2 + krye*r32**2 + krze*r33**2
 
+
+    cpdef void update_fint(Spring self, double [::1] fint):
+        r"""Update the internal force vector
+
+        Parameters
+        ----------
+        fint : np.array
+            Array that is updated in place with the internal forces. The
+            internal forces stored in ``fint`` are calculated in global
+            coordinates. Method :meth:`.update_probe_finte` is called to update
+            the parameter ``finte`` of the :class:`.TrussProbe` with the
+            internal forces in local coordinates.
+
+        """
+        cdef double *finte
+
+        self.update_probe_finte()
+        with nogil:
+            finte = &self.probe.finte[0]
+
+            fint[0+self.c1] += finte[0]*self.r11 + finte[1]*self.r12 + finte[2]*self.r13
+            fint[1+self.c1] += finte[0]*self.r21 + finte[1]*self.r22 + finte[2]*self.r23
+            fint[2+self.c1] += finte[0]*self.r31 + finte[1]*self.r32 + finte[2]*self.r33
+            fint[3+self.c1] += finte[3]*self.r11 + finte[4]*self.r12 + finte[5]*self.r13
+            fint[4+self.c1] += finte[3]*self.r21 + finte[4]*self.r22 + finte[5]*self.r23
+            fint[5+self.c1] += finte[3]*self.r31 + finte[4]*self.r32 + finte[5]*self.r33
+            fint[0+self.c2] += finte[6]*self.r11 + finte[7]*self.r12 + finte[8]*self.r13
+            fint[1+self.c2] += finte[6]*self.r21 + finte[7]*self.r22 + finte[8]*self.r23
+            fint[2+self.c2] += finte[6]*self.r31 + finte[7]*self.r32 + finte[8]*self.r33
+            fint[3+self.c2] += finte[9]*self.r11 + finte[10]*self.r12 + finte[11]*self.r13
+            fint[4+self.c2] += finte[9]*self.r21 + finte[10]*self.r22 + finte[11]*self.r23
+            fint[5+self.c2] += finte[9]*self.r31 + finte[10]*self.r32 + finte[11]*self.r33
 

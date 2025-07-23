@@ -39,14 +39,26 @@ cdef class BeamCData:
     cdef public int KC0_SPARSE_SIZE
     cdef public int KG_SPARSE_SIZE
     cdef public int M_SPARSE_SIZE
+
     def __cinit__(BeamCData self):
         self.KC0_SPARSE_SIZE = 144
         self.KG_SPARSE_SIZE = 144
         self.M_SPARSE_SIZE = 144
 
+
 cdef class BeamCProbe:
     r"""
     Probe used for local coordinates, local displacements, local stresses etc
+
+    The idea behind using a probe is to avoid allocating larger memory buffers
+    per finite element. The memory buffers are allocated per probe, and one
+    probe can be shared amongst many finite elements, with the information
+    being updated and retrieved on demand.
+
+    .. note:: The probe can be shared amongst more than one finite element, 
+              depending on how you defined them. Mind that the probe will
+              always safe the values from the last udpate.
+
 
     Attributes
     ----------
@@ -59,13 +71,20 @@ cdef class BeamCProbe:
         in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
         {{r_y}_e}_1, {{r_z}_e}_1, {u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
         {{r_y}_e}_2, {{r_z}_e}_2`.
+    finte, : array-like
+        Array of size ``NUM_NODES*DOF=12`` containing the element internal
+        forces corresponding to the degrees-of-freedom described by ``ue``.
 
     """
     cdef public double [::1] xe
     cdef public double [::1] ue
+    cdef public double [::1] finte
+
     def __cinit__(BeamCProbe self):
         self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
         self.ue = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.finte = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+
 
 cdef class BeamC:
     r"""
@@ -215,8 +234,8 @@ cdef class BeamC:
     cpdef void update_probe_ue(BeamC self, double [::1] u):
         r"""Update the local displacement vector of the probe of the element
 
-        .. note:: The ``probe`` attribute object :class:`.BeamCProbe` is
-                  updated, not the element object.
+        .. note:: The ``probe`` attribute of object :class:`.BeamCProbe` is
+                  updated, accessible using ``.probe.ue``.
 
         Parameters
         ----------
@@ -268,8 +287,8 @@ cdef class BeamC:
     cpdef void update_probe_xe(BeamC self, double [::1] x):
         r"""Update the 3D coordinates of the probe of the element
 
-        .. note:: The ``probe`` attribute object :class:`.BeamCProbe` is
-                  updated, not the element object.
+        .. note:: The ``xe`` attribute of object :class:`.BeamCProbe` is
+                  updated, accessible using ``.probe.xe``.
 
         Parameters
         ----------
@@ -328,6 +347,143 @@ cdef class BeamC:
             y2 = self.probe.xe[4]
             z2 = self.probe.xe[5]
             self.length = ((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)**2)**0.5
+
+    
+    cpdef void update_probe_finte(BeamC self,
+                           BeamProp prop):
+        r"""Update the internal force vector of the probe
+
+        The attribute ``finte`` is updated with the :class:`.BeamCProbe` the
+        internal forces in local coordinates. While using this function, mind
+        that the probe can be shared amongst more than one finite element,
+        depending how you defined them, meaning that the probe will always safe
+        the values from the last udpate.
+
+        .. note:: The ``finte`` attribute of object :class:`.BeamCProbe` is
+                  updated, accessible using ``.probe.finte``.
+
+        Parameters
+        ----------
+        prop : :class:`.BeamProp` object
+            Beam property object from where the stiffness and mass attributes
+            are read from.
+
+        """
+        cdef double *ue
+        cdef double *finte
+        cdef double L, A, E, G, Ay, Az, Iyy, Izz, Iyz, J, alphay, alphaz, betay, betaz
+
+        cdef double KC0e0000, KC0e0004, KC0e0005, KC0e0006, KC0e0010, KC0e0011
+        cdef double KC0e0101, KC0e0102, KC0e0103, KC0e0104, KC0e0105, KC0e0107, KC0e0108, KC0e0109, KC0e0110, KC0e0111
+        cdef double KC0e0202, KC0e0203, KC0e0204, KC0e0205, KC0e0207, KC0e0208, KC0e0209, KC0e0210, KC0e0211
+        cdef double KC0e0303, KC0e0304, KC0e0305, KC0e0307, KC0e0308, KC0e0309, KC0e0310, KC0e0311
+        cdef double KC0e0404, KC0e0405, KC0e0406, KC0e0407, KC0e0408, KC0e0409, KC0e0410, KC0e0411
+        cdef double KC0e0505, KC0e0506, KC0e0507, KC0e0508, KC0e0509, KC0e0510, KC0e0511
+        cdef double KC0e0606, KC0e0610, KC0e0611
+        cdef double KC0e0707, KC0e0708, KC0e0709, KC0e0710, KC0e0711
+        cdef double KC0e0808, KC0e0809, KC0e0810, KC0e0811
+        cdef double KC0e0909, KC0e0910, KC0e0911
+        cdef double KC0e1010, KC0e1011, KC0e1111
+
+        with nogil:
+            L = self.length
+            A = prop.A
+            E = prop.E
+            G = prop.G
+            Ay = prop.Ay
+            Az = prop.Az
+            Iyy = prop.Iyy
+            Izz = prop.Izz
+            Iyz = prop.Iyz
+            J = prop.J
+
+            alphay = 12*E*Izz/(G*A*L**2)
+            alphaz = 12*E*Iyy/(G*A*L**2)
+            betay = 1/(1. - alphay)
+            betaz = 1/(1. - alphaz)
+
+            KC0e0000 = A*E/L
+            KC0e0004 = Az*E*betaz*(1 - alphaz)/L
+            KC0e0005 = Ay*E*betay*(alphay - 1)/L
+            KC0e0006 = -A*E/L
+            KC0e0010 = Az*E*betaz*(alphaz - 1)/L
+            KC0e0011 = Ay*E*betay*(1 - alphay)/L
+            KC0e0101 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/L**3
+            KC0e0102 = 12*E*Iyz*betay*betaz/L**3
+            KC0e0103 = Az*G*alphay*betay/L
+            KC0e0104 = -6*E*Iyz*betay*betaz/L**2
+            KC0e0105 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
+            KC0e0107 = betay**2*(-A*G*L**2*alphay**2 - 12*E*Izz)/L**3
+            KC0e0108 = -12*E*Iyz*betay*betaz/L**3
+            KC0e0109 = -Az*G*alphay*betay/L
+            KC0e0110 = -6*E*Iyz*betay*betaz/L**2
+            KC0e0111 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
+            KC0e0202 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/L**3
+            KC0e0203 = -Ay*G*alphaz*betaz/L
+            KC0e0204 = betaz**2*(-A*G*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
+            KC0e0205 = 6*E*Iyz*betay*betaz/L**2
+            KC0e0207 = -12*E*Iyz*betay*betaz/L**3
+            KC0e0208 = betaz**2*(-A*G*L**2*alphaz**2 - 12*E*Iyy)/L**3
+            KC0e0209 = Ay*G*alphaz*betaz/L
+            KC0e0210 = betaz**2*(-A*G*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
+            KC0e0211 = 6*E*Iyz*betay*betaz/L**2
+            KC0e0303 = G*J/L
+            KC0e0304 = Ay*G*alphaz*betaz/2
+            KC0e0305 = Az*G*alphay*betay/2
+            KC0e0307 = -Az*G*alphay*betay/L
+            KC0e0308 = Ay*G*alphaz*betaz/L
+            KC0e0309 = -G*J/L
+            KC0e0310 = Ay*G*alphaz*betaz/2
+            KC0e0311 = Az*G*alphay*betay/2
+            KC0e0404 = betaz**2*(A*G*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
+            KC0e0405 = E*Iyz*betay*betaz*(-alphay*alphaz + alphay + alphaz - 4)/L
+            KC0e0406 = Az*E*betaz*(alphaz - 1)/L
+            KC0e0407 = 6*E*Iyz*betay*betaz/L**2
+            KC0e0408 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
+            KC0e0409 = -Ay*G*alphaz*betaz/2
+            KC0e0410 = betaz**2*(A*G*L**2*alphaz**2/4 - E*Iyy*alphaz**2 + 2*E*Iyy*alphaz + 2*E*Iyy)/L
+            KC0e0411 = E*Iyz*betay*betaz*(alphay*alphaz - alphay - alphaz - 2)/L
+            KC0e0505 = betay**2*(A*G*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
+            KC0e0506 = Ay*E*betay*(1 - alphay)/L
+            KC0e0507 = betay**2*(-A*G*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
+            KC0e0508 = -6*E*Iyz*betay*betaz/L**2
+            KC0e0509 = -Az*G*alphay*betay/2
+            KC0e0510 = E*Iyz*betay*betaz*(alphay*alphaz - alphay - alphaz - 2)/L
+            KC0e0511 = betay**2*(A*G*L**2*alphay**2/4 - E*Izz*alphay**2 + 2*E*Izz*alphay + 2*E*Izz)/L
+            KC0e0606 = A*E/L
+            KC0e0610 = Az*E*betaz*(1 - alphaz)/L
+            KC0e0611 = Ay*E*betay*(alphay - 1)/L
+            KC0e0707 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/L**3
+            KC0e0708 = 12*E*Iyz*betay*betaz/L**3
+            KC0e0709 = Az*G*alphay*betay/L
+            KC0e0710 = 6*E*Iyz*betay*betaz/L**2
+            KC0e0711 = betay**2*(-A*G*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
+            KC0e0808 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/L**3
+            KC0e0809 = -Ay*G*alphaz*betaz/L
+            KC0e0810 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
+            KC0e0811 = -6*E*Iyz*betay*betaz/L**2
+            KC0e0909 = G*J/L
+            KC0e0910 = -Ay*G*alphaz*betaz/2
+            KC0e0911 = -Az*G*alphay*betay/2
+            KC0e1010 = betaz**2*(A*G*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
+            KC0e1011 = E*Iyz*betay*betaz*(-alphay*alphaz + alphay + alphaz - 4)/L
+            KC0e1111 = betay**2*(A*G*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
+
+            ue = &self.probe.ue[0]
+            finte = &self.probe.finte[0]
+
+            finte[0] = KC0e0000*ue[0] + KC0e0004*ue[4] + KC0e0005*ue[5] + KC0e0006*ue[6] + KC0e0010*ue[10] + KC0e0011*ue[11]
+            finte[1] = KC0e0101*ue[1] + KC0e0102*ue[2] + KC0e0103*ue[3] + KC0e0104*ue[4] + KC0e0105*ue[5] + KC0e0107*ue[7] + KC0e0108*ue[8] + KC0e0109*ue[9] + KC0e0110*ue[10] + KC0e0111*ue[11]
+            finte[2] = KC0e0102*ue[1] + KC0e0202*ue[2] + KC0e0203*ue[3] + KC0e0204*ue[4] + KC0e0205*ue[5] + KC0e0207*ue[7] + KC0e0208*ue[8] + KC0e0209*ue[9] + KC0e0210*ue[10] + KC0e0211*ue[11]
+            finte[3] = KC0e0103*ue[1] + KC0e0203*ue[2] + KC0e0303*ue[3] + KC0e0304*ue[4] + KC0e0305*ue[5] + KC0e0307*ue[7] + KC0e0308*ue[8] + KC0e0309*ue[9] + KC0e0310*ue[10] + KC0e0311*ue[11]
+            finte[4] = KC0e0004*ue[0] + KC0e0104*ue[1] + KC0e0204*ue[2] + KC0e0304*ue[3] + KC0e0404*ue[4] + KC0e0405*ue[5] + KC0e0406*ue[6] + KC0e0407*ue[7] + KC0e0408*ue[8] + KC0e0409*ue[9] + KC0e0410*ue[10] + KC0e0411*ue[11]
+            finte[5] = KC0e0005*ue[0] + KC0e0105*ue[1] + KC0e0205*ue[2] + KC0e0305*ue[3] + KC0e0405*ue[4] + KC0e0505*ue[5] + KC0e0506*ue[6] + KC0e0507*ue[7] + KC0e0508*ue[8] + KC0e0509*ue[9] + KC0e0510*ue[10] + KC0e0511*ue[11]
+            finte[6] = KC0e0006*ue[0] + KC0e0406*ue[4] + KC0e0506*ue[5] + KC0e0606*ue[6] + KC0e0610*ue[10] + KC0e0611*ue[11]
+            finte[7] = KC0e0107*ue[1] + KC0e0207*ue[2] + KC0e0307*ue[3] + KC0e0407*ue[4] + KC0e0507*ue[5] + KC0e0707*ue[7] + KC0e0708*ue[8] + KC0e0709*ue[9] + KC0e0710*ue[10] + KC0e0711*ue[11]
+            finte[8] = KC0e0108*ue[1] + KC0e0208*ue[2] + KC0e0308*ue[3] + KC0e0408*ue[4] + KC0e0508*ue[5] + KC0e0708*ue[7] + KC0e0808*ue[8] + KC0e0809*ue[9] + KC0e0810*ue[10] + KC0e0811*ue[11]
+            finte[9] = KC0e0109*ue[1] + KC0e0209*ue[2] + KC0e0309*ue[3] + KC0e0409*ue[4] + KC0e0509*ue[5] + KC0e0709*ue[7] + KC0e0809*ue[8] + KC0e0909*ue[9] + KC0e0910*ue[10] + KC0e0911*ue[11]
+            finte[10] = KC0e0010*ue[0] + KC0e0110*ue[1] + KC0e0210*ue[2] + KC0e0310*ue[3] + KC0e0410*ue[4] + KC0e0510*ue[5] + KC0e0610*ue[6] + KC0e0710*ue[7] + KC0e0810*ue[8] + KC0e0910*ue[9] + KC0e1010*ue[10] + KC0e1011*ue[11]
+            finte[11] = KC0e0011*ue[0] + KC0e0111*ue[1] + KC0e0211*ue[2] + KC0e0311*ue[3] + KC0e0411*ue[4] + KC0e0511*ue[5] + KC0e0611*ue[6] + KC0e0711*ue[7] + KC0e0811*ue[8] + KC0e0911*ue[9] + KC0e1011*ue[10] + KC0e1111*ue[11]
 
 
     cpdef void update_KC0(BeamC self,
@@ -1193,6 +1349,44 @@ cdef class BeamC:
             KC0v[k] += r21*(KC0e0909*r31 + KC0e0910*r32 + KC0e0911*r33) + r22*(KC0e0910*r31 + KC0e1010*r32 + KC0e1011*r33) + r23*(KC0e0911*r31 + KC0e1011*r32 + KC0e1111*r33)
             k += 1
             KC0v[k] += r31*(KC0e0909*r31 + KC0e0910*r32 + KC0e0911*r33) + r32*(KC0e0910*r31 + KC0e1010*r32 + KC0e1011*r33) + r33*(KC0e0911*r31 + KC0e1011*r32 + KC0e1111*r33)
+
+
+    cpdef void update_fint(BeamC self,
+                           double [::1] fint,
+                           BeamProp prop):
+        r"""Update the internal force vector
+
+        Parameters
+        ----------
+        fint : np.array
+            Array that is updated in place with the internal forces. The
+            internal forces stored in ``fint`` are calculated in global
+            coordinates. Method :meth:`.update_probe_finte` is called to update
+            the parameter ``finte`` of the :class:`.BeamCProbe` with the
+            internal forces in local coordinates.
+        prop : :class:`.BeamProp` object
+            Beam property object from where the stiffness and mass attributes
+            are read from.
+
+        """
+        cdef double *finte
+
+        self.update_probe_finte(prop)
+        with nogil:
+            finte = &self.probe.finte[0]
+
+            fint[0+self.c1] += finte[0]*self.r11 + finte[1]*self.r12 + finte[2]*self.r13
+            fint[1+self.c1] += finte[0]*self.r21 + finte[1]*self.r22 + finte[2]*self.r23
+            fint[2+self.c1] += finte[0]*self.r31 + finte[1]*self.r32 + finte[2]*self.r33
+            fint[3+self.c1] += finte[3]*self.r11 + finte[4]*self.r12 + finte[5]*self.r13
+            fint[4+self.c1] += finte[3]*self.r21 + finte[4]*self.r22 + finte[5]*self.r23
+            fint[5+self.c1] += finte[3]*self.r31 + finte[4]*self.r32 + finte[5]*self.r33
+            fint[0+self.c2] += finte[6]*self.r11 + finte[7]*self.r12 + finte[8]*self.r13
+            fint[1+self.c2] += finte[6]*self.r21 + finte[7]*self.r22 + finte[8]*self.r23
+            fint[2+self.c2] += finte[6]*self.r31 + finte[7]*self.r32 + finte[8]*self.r33
+            fint[3+self.c2] += finte[9]*self.r11 + finte[10]*self.r12 + finte[11]*self.r13
+            fint[4+self.c2] += finte[9]*self.r21 + finte[10]*self.r22 + finte[11]*self.r23
+            fint[5+self.c2] += finte[9]*self.r31 + finte[10]*self.r32 + finte[11]*self.r33
 
 
     cpdef void update_KG(BeamC self,

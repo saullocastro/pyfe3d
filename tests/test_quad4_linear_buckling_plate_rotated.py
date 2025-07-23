@@ -143,13 +143,10 @@ def test_linear_buckling_plate(plot=False, mode=0):
 
 
     if plot:
-        import matplotlib
-        matplotlib.use('TkAgg')
         import matplotlib.pyplot as plt
 
         u = np.zeros(N)
         u[bu] = eigvecsu[:, mode]
-
         plt.clf()
         plt.contourf(xmesh, ymesh, u[2::DOF].reshape(nx, ny).T)
         plt.show()

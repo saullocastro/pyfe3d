@@ -41,13 +41,25 @@ cdef class TrussData:
     """
     cdef public int KC0_SPARSE_SIZE
     cdef public int M_SPARSE_SIZE
+
     def __cinit__(TrussData self):
         self.KC0_SPARSE_SIZE = 72
         self.M_SPARSE_SIZE = 144
 
+
 cdef class TrussProbe:
     r"""
     Probe used for local coordinates, local displacements, local stresses etc
+
+    The idea behind using a probe is to avoid allocating larger memory buffers
+    per finite element. The memory buffers are allocated per probe, and one
+    probe can be shared amongst many finite elements, with the information
+    being updated and retrieved on demand.
+
+    .. note:: The probe can be shared amongst more than one finite element, 
+              depending on how you defined them. Mind that the probe will
+              always safe the values from the last udpate.
+
 
     Attributes
     ----------
@@ -60,13 +72,20 @@ cdef class TrussProbe:
         in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
         {{r_y}_e}_1, {{r_z}_e}_1, {u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
         {{r_y}_e}_2, {{r_z}_e}_2`.
+    finte, : array-like
+        Array of size ``NUM_NODES*DOF=12`` containing the element internal
+        forces corresponding to the degrees-of-freedom described by ``ue``.
 
     """
     cdef public double [::1] xe
     cdef public double [::1] ue
+    cdef public double [::1] finte
+
     def __cinit__(TrussProbe self):
         self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
         self.ue = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.finte = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+
 
 cdef class Truss:
     r"""
@@ -131,8 +150,8 @@ cdef class Truss:
     cpdef void update_probe_ue(Truss self, double [::1] u):
         r"""Update the local displacement vector of the probe of the element
 
-        .. note:: The ``probe`` attribute object :class:`.TrussProbe` is
-                  updated, not the element object.
+        .. note:: The ``ue`` attribute of object :class:`.TrussProbe` is
+                  updated, accessible using ``.probe.ue``.
 
         Parameters
         ----------
@@ -255,8 +274,8 @@ cdef class Truss:
     cpdef void update_probe_xe(Truss self, double [::1] x):
         r"""Update the 3D coordinates of the probe of the element
 
-        .. note:: The ``probe`` attribute object :class:`.TrussProbe` is
-                  updated, not the element object.
+        .. note:: The ``xe`` attribute of object :class:`.TrussProbe` is
+                  updated, accessible using ``.probe.xe``.
 
         Parameters
         ----------
@@ -317,6 +336,53 @@ cdef class Truss:
             self.length = ((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)**2)**0.5
 
 
+    cpdef void update_probe_finte(Truss self, BeamProp prop):
+        r"""Update the internal force vector of the probe
+
+        The attribute ``finte`` is updated with the :class:`.TrussProbe` the
+        internal forces in local coordinates. While using this function, mind
+        that the probe can be shared amongst more than one finite element,
+        depending how you defined them, meaning that the probe will always safe
+        the values from the last udpate.
+
+        .. note:: The ``finte`` attribute of object :class:`.TrussProbe` is
+                  updated, accessible using ``.probe.finte``.
+
+        Parameters
+        ----------
+        prop : :class:`.BeamProp` object
+            Beam property object from where the stiffness and mass attributes
+            are read from.
+
+        """
+        cdef double *ue
+        cdef double *finte
+        cdef double L, A, E, G, J
+
+        with nogil:
+            L = self.length
+            A = prop.A
+            E = prop.E
+            G = prop.G
+            J = prop.J
+
+            ue = &self.probe.ue[0]
+            finte = &self.probe.finte[0]
+
+            finte[0] = 1.0*A*E*(ue[0] - ue[6])/L
+            finte[1] = 0.
+            finte[2] = 0.
+            finte[3] = 1.0*G*J*(ue[3] - ue[9])/L
+            finte[4] = 0.
+            finte[5] = 0.
+            finte[6] = 1.0*A*E*(-ue[0] + ue[6])/L
+            finte[7] = 0.
+            finte[8] = 0.
+            finte[9] = 1.0*G*J*(-ue[3] + ue[9])/L
+            finte[10] = 0.
+            finte[11] = 0.
+
+
     cpdef void update_KC0(Truss self,
                           long [::1] KC0r,
                           long [::1] KC0c,
@@ -344,7 +410,7 @@ cdef class Truss:
 
         """
         cdef int c1, c2, k
-        cdef double L, A, E, G, Iyy, Izz, J
+        cdef double L, A, E, G, J
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
 
         with nogil:
@@ -352,8 +418,6 @@ cdef class Truss:
             A = prop.A
             E = prop.E
             G = prop.G
-            Iyy = prop.Iyy
-            Izz = prop.Izz
             J = prop.J
 
             # local to global transformation
@@ -733,6 +797,42 @@ cdef class Truss:
             KC0v[k] += 1.0*G*J*r21*r31/L
             k += 1
             KC0v[k] += 1.0*G*J*r31**2/L
+
+
+    cpdef void update_fint(Truss self, double [::1] fint, BeamProp prop):
+        r"""Update the internal force vector
+
+        Parameters
+        ----------
+        fint : np.array
+            Array that is updated in place with the internal forces. The
+            internal forces stored in ``fint`` are calculated in global
+            coordinates. Method :meth:`.update_probe_finte` is called to update
+            the parameter ``finte`` of the :class:`.TrussProbe` with the
+            internal forces in local coordinates.
+        prop : :class:`.BeamProp` object
+            Beam property object from where the stiffness and mass attributes
+            are read from.
+
+        """
+        cdef double *finte
+
+        self.update_probe_finte(prop)
+        with nogil:
+            finte = &self.probe.finte[0]
+
+            fint[0+self.c1] += finte[0]*self.r11 + finte[1]*self.r12 + finte[2]*self.r13
+            fint[1+self.c1] += finte[0]*self.r21 + finte[1]*self.r22 + finte[2]*self.r23
+            fint[2+self.c1] += finte[0]*self.r31 + finte[1]*self.r32 + finte[2]*self.r33
+            fint[3+self.c1] += finte[3]*self.r11 + finte[4]*self.r12 + finte[5]*self.r13
+            fint[4+self.c1] += finte[3]*self.r21 + finte[4]*self.r22 + finte[5]*self.r23
+            fint[5+self.c1] += finte[3]*self.r31 + finte[4]*self.r32 + finte[5]*self.r33
+            fint[0+self.c2] += finte[6]*self.r11 + finte[7]*self.r12 + finte[8]*self.r13
+            fint[1+self.c2] += finte[6]*self.r21 + finte[7]*self.r22 + finte[8]*self.r23
+            fint[2+self.c2] += finte[6]*self.r31 + finte[7]*self.r32 + finte[8]*self.r33
+            fint[3+self.c2] += finte[9]*self.r11 + finte[10]*self.r12 + finte[11]*self.r13
+            fint[4+self.c2] += finte[9]*self.r21 + finte[10]*self.r22 + finte[11]*self.r23
+            fint[5+self.c2] += finte[9]*self.r31 + finte[10]*self.r32 + finte[11]*self.r33
 
 
     cpdef void update_M(Truss self,

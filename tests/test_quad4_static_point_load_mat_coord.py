@@ -2,34 +2,38 @@ import sys
 sys.path.append('..')
 
 import numpy as np
-from scipy.sparse.linalg import eigsh, eigs
+from scipy.sparse.linalg import cg
 from scipy.sparse import coo_matrix
 
-from pyfe3d.shellprop_utils import isotropic_plate
+from pyfe3d.shellprop_utils import laminated_plate
 from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 
 
-def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
-    data = Quad4Data()
-    probe = Quad4Probe()
-    for mtype in mtypes:
-        nx = refinement*9
-        ny = refinement*11
+def test_static_plate_quad_point_load(plot=False):
+    # NOTE keep thetadeg = 0 as first, to work as reference wmax_ref
+    thetadegs = [0, -90, -60, -30, 30, 60, 90]
+    for thetadeg in thetadegs:
+        matx = (np.cos(np.deg2rad(thetadeg)), np.sin(np.deg2rad(thetadeg)), 0)
+        print('matx', matx)
 
-        a = 0.3
-        b = 0.5
+        data = Quad4Data()
+        probe = Quad4Probe()
+        nx = 7
+        ny = 11
 
-        E = 203.e9 # Pa
-        nu = 0.33
+        a = 3
+        b = 7
+        h = 0.005 # m
 
-        rho = 7.83e3 # kg/m3
-        h = 0.01 # m
+        E1 = 200e9
+        E2 = 50e9
+        nu12 = 0.3
+        G12 = 8e9
 
         xtmp = np.linspace(0, a, nx)
         ytmp = np.linspace(0, b, ny)
         xmesh, ymesh = np.meshgrid(xtmp, ytmp)
         ncoords = np.vstack((xmesh.T.flatten(), ymesh.T.flatten(), np.zeros_like(ymesh.T.flatten()))).T
-
         x = ncoords[:, 0]
         y = ncoords[:, 1]
         z = ncoords[:, 2]
@@ -44,21 +48,16 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
         n4s = nids_mesh[:-1, 1:].flatten()
 
         num_elements = len(n1s)
-        print('num_elements', num_elements)
 
         KC0r = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
         KC0c = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
         KC0v = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=DOUBLE)
-        Mr = np.zeros(data.M_SPARSE_SIZE*num_elements, dtype=INT)
-        Mc = np.zeros(data.M_SPARSE_SIZE*num_elements, dtype=INT)
-        Mv = np.zeros(data.M_SPARSE_SIZE*num_elements, dtype=DOUBLE)
         N = DOF*nx*ny
 
-        prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True, rho=rho)
+        prop = laminated_plate(stack=[-thetadeg], laminaprop=(E1, E2, nu12, G12, G12, G12), plyt=h)
 
         quads = []
         init_k_KC0 = 0
-        init_k_M = 0
         for n1, n2, n3, n4 in zip(n1s, n2s, n3s, n4s):
             pos1 = nid_pos[n1]
             pos2 = nid_pos[n2]
@@ -79,64 +78,74 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
             quad.c3 = DOF*nid_pos[n3]
             quad.c4 = DOF*nid_pos[n4]
             quad.init_k_KC0 = init_k_KC0
-            quad.init_k_M = init_k_M
-            quad.update_rotation_matrix(ncoords_flatten)
+            quad.update_rotation_matrix(ncoords_flatten, matx[0], matx[1], matx[2])
             quad.update_probe_xe(ncoords_flatten)
             quad.update_KC0(KC0r, KC0c, KC0v, prop)
-            quad.update_M(Mr, Mc, Mv, prop, mtype=mtype)
             quads.append(quad)
             init_k_KC0 += data.KC0_SPARSE_SIZE
-            init_k_M += data.M_SPARSE_SIZE
+
+        KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
 
         print('elements created')
 
-        KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
-        M = coo_matrix((Mv, (Mr, Mc)), shape=(N, N)).tocsc()
-
-        print('sparse KC0 and M created')
-
         bk = np.zeros(N, dtype=bool)
         check = np.isclose(x, 0.) | np.isclose(x, a) | np.isclose(y, 0) | np.isclose(y, b)
-        bk[0::DOF] = check
-        bk[1::DOF] = check
         bk[2::DOF] = check
+
+        bk[0::DOF] = True
+        bk[1::DOF] = True
 
         bu = ~bk
 
-        Kuu = KC0[bu, :][:, bu]
-        Muu = M[bu, :][:, bu]
+        # point load at center node
+        fext = np.zeros(N)
+        fmid = 1.
+        check = np.isclose(x, a/2) & np.isclose(y, b/2)
+        fext[2::DOF][check] = fmid
 
-        num_eigenvalues = max(2, mode+1)
-        print('eig solver begin')
-        # solves Ax = lambda M x
-        # we have Ax - lambda M x = 0, with lambda = omegan**2
-        eigvals, eigvecsu = eigsh(A=Kuu, M=Muu, sigma=-1., which='LM',
-                k=num_eigenvalues, tol=1e-3)
-        print('eig solver end')
-        eigvecs = np.zeros((N, eigvecsu.shape[1]), dtype=float)
-        eigvecs[bu, :] = eigvecsu
-        omegan = eigvals**0.5
+        KC0uu = KC0[bu, :][:, bu]
+        assert fext[bu].sum() == fmid
+
+        uu, info = cg(KC0uu, fext[bu], atol=1e-9)
+        assert info == 0
 
         u = np.zeros(N)
-        u[bu] = eigvecsu[:, mode]
+        u[bu] = uu
 
-        # theoretical reference
-        m = 1
-        n = 1
-        D = 2*h**3*E/(3*(1 - nu**2))
-        wmn = (m**2/a**2 + n**2/b**2)*np.sqrt(D*np.pi**4/(2*rho*h))/2
+        w = u[2::DOF].reshape(nx, ny).T
 
-        print('Theoretical omega123', wmn)
-        print('Numerical omega123', omegan[0:10])
-        assert np.isclose(wmn, omegan[0], rtol=0.05)
+        if thetadeg == 0:
+            wmax_ref = w.max()
+        else:
+            print('wmax_ref, w.max()', wmax_ref, w.max())
+            assert np.isclose(wmax_ref, w.max(), rtol=1e-5)
+
+        fint = np.zeros(N)
+        for quad in quads:
+            quad.update_probe_xe(ncoords_flatten)
+            quad.update_probe_ue(u)
+            quad.update_fint(fint, prop)
+
+        # NOTE adding reaction forces to external force vector
+        Kku = KC0[bk, :][:, bu]
+        fext[bk] = Kku @ u[bu]
+        atol = 1e-5
+        tmp = np.where(np.logical_not(np.isclose(fint, fext, atol=atol)))
+        print(tmp)
+        print(fint[tmp[0]])
+        print(fext[tmp[0]])
+        print((KC0@u)[tmp[0]])
+        assert np.allclose(fint, fext, atol=atol)
 
     if plot:
         import matplotlib.pyplot as plt
 
-        plt.clf()
-        plt.contourf(xmesh, ymesh, u[2::DOF].reshape(nx, ny).T)
+        plt.gca().set_aspect('equal')
+        levels = np.linspace(w.min(), w.max(), 10)
+        plt.contourf(xmesh, ymesh, w, levels=levels)
+        plt.colorbar()
         plt.show()
 
 
 if __name__ == '__main__':
-    test_nat_freq_plate(plot=True, mode=29, mtypes=[2], refinement=5)
+    test_static_plate_quad_point_load(plot=True)

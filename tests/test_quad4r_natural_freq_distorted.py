@@ -143,8 +143,6 @@ def test_nat_freq_plate(plot=False, mode=0):
     print('Numerical omega123', omegan[0:10])
 
     if plot:
-        import matplotlib
-        matplotlib.use('TkAgg')
         import matplotlib.pyplot as plt
 
         plt.clf()

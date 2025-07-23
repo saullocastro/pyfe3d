@@ -22,6 +22,8 @@ def test_static_plate_quad_point_load(plot=False):
     E = 200e9
     nu = 0.3
 
+    hgfactor = 0.1 # NOTE hour-glass factor
+
     xtmp = np.linspace(0, a, nx)
     ytmp = np.linspace(0, b, ny)
     xmesh, ymesh = np.meshgrid(xtmp, ytmp)
@@ -72,10 +74,9 @@ def test_static_plate_quad_point_load(plot=False):
         quad.init_k_KC0 = init_k_KC0
         quad.update_rotation_matrix(ncoords_flatten)
         quad.update_probe_xe(ncoords_flatten)
-        factor = 0.1
-        quad.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_u=factor,
-                        hgfactor_v=factor, hgfactor_w=factor,
-                        hgfactor_rx=factor, hgfactor_ry=factor)
+        quad.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_u=hgfactor,
+                        hgfactor_v=hgfactor, hgfactor_w=hgfactor,
+                        hgfactor_rx=hgfactor, hgfactor_ry=hgfactor)
         quads.append(quad)
         init_k_KC0 += data.KC0_SPARSE_SIZE
 
@@ -93,16 +94,15 @@ def test_static_plate_quad_point_load(plot=False):
     bu = ~bk
 
     # point load at center node
-    f = np.zeros(N)
+    fext = np.zeros(N)
     fmid = 1.
     check = np.isclose(x, a/2) & np.isclose(y, b/2)
-    f[2::DOF][check] = fmid
+    fext[2::DOF][check] = fmid
 
     KC0uu = KC0[bu, :][:, bu]
-    fu = f[bu]
-    assert fu.sum() == fmid
+    assert fext[bu].sum() == fmid
 
-    uu, info = cg(KC0uu, fu, atol=1e-9)
+    uu, info = cg(KC0uu, fext[bu], atol=1e-9)
     assert info == 0
 
     u = np.zeros(N)
@@ -118,11 +118,31 @@ def test_static_plate_quad_point_load(plot=False):
     assert np.isclose(wmax_ref, w.max(), rtol=0.02)
     if plot:
         import matplotlib.pyplot as plt
+
         plt.gca().set_aspect('equal')
         levels = np.linspace(w.min(), w.max(), 10)
         plt.contourf(xmesh, ymesh, w, levels=levels)
         plt.colorbar()
         plt.show()
+
+    fint = np.zeros(N)
+    for quad in quads:
+        quad.update_probe_xe(ncoords_flatten)
+        quad.update_probe_ue(u)
+        quad.update_fint(fint, prop, hgfactor_u=hgfactor,
+                        hgfactor_v=hgfactor, hgfactor_w=hgfactor,
+                        hgfactor_rx=hgfactor, hgfactor_ry=hgfactor)
+
+    # NOTE adding reaction forces to external force vector
+    Kku = KC0[bk, :][:, bu]
+    fext[bk] = Kku @ u[bu]
+    atol = 1e-5
+    tmp = np.where(np.logical_not(np.isclose(fint, fext, atol=atol)))
+    print(tmp)
+    print(fint[tmp[0]])
+    print(fext[tmp[0]])
+    print((KC0@u)[tmp[0]])
+    assert np.allclose(fint, fext, atol=atol)
 
 
 if __name__ == '__main__':

@@ -119,19 +119,16 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
     bu = ~bk
 
     # point load at center node
-    f = np.zeros(N)
+    fext = np.zeros(N)
     fmid = 1.
     middle = np.isclose(x, a/2) & np.isclose(y, b/2)
-    f[2::DOF][middle] = fmid
+    fext[2::DOF][middle] = fmid
 
     KC0uu = KC0[bu, :][:, bu]
-    fu = f[bu]
-    assert fu.sum() == fmid
-
-    uu = spsolve(KC0uu, fu)
+    assert fext[bu].sum() == fmid
 
     u = np.zeros(N)
-    u[bu] = uu
+    u[bu] = spsolve(KC0uu, fext[bu])
 
     w = u[2::DOF].reshape(nx, ny).T
 
@@ -140,6 +137,19 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
     # obtained with Tria3R nx=7, ny=11
     wmax_ref = 8.324614783831663e-05
     print('w.max()', w.max())
+
+    assert np.isclose(wmax_ref, w.max(), rtol=0.02)
+
+    fint = np.zeros(N)
+    for tria in trias:
+        tria.update_probe_xe(ncoords_flatten)
+        tria.update_probe_ue(u)
+        tria.update_fint(fint, prop)
+
+    # NOTE adding reaction forces to external force vector
+    Kku = KC0[bk, :][:, bu]
+    fext[bk] = Kku @ u[bu]
+    assert np.allclose(fint, fext)
 
     if plot:
         import matplotlib
@@ -150,8 +160,6 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
         plt.contourf(xmesh, ymesh, w, levels=levels)
         plt.colorbar()
         plt.show()
-
-    assert np.isclose(wmax_ref, w.max(), rtol=0.02)
 
 
 if __name__ == '__main__':

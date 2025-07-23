@@ -97,6 +97,7 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         bk[3::DOF][check] = True
         bk[4::DOF][check] = True
         bk[5::DOF][check] = True
+
         bu = ~bk
 
         Kuu = KC0[bu, :][:, bu]
@@ -104,7 +105,7 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
 
         num_eigenvalues = 6
         eigvals, eigvecsu = eigsh(A=Kuu, M=Muu, sigma=-1., which='LM',
-                k=num_eigenvalues, tol=1e-3)
+                k=num_eigenvalues, tol=1e-4)
         omegan = eigvals**0.5
 
         alpha123 = np.array([1.875, 4.694, 7.885])
