@@ -90,16 +90,15 @@ def test_static_plate_quad_point_load(plot=False):
     bu = ~bk
 
     # point load at center node
-    f = np.zeros(N)
+    fext = np.zeros(N)
     fmid = 1.
     check = np.isclose(x, a/2) & np.isclose(y, b/2)
-    f[2::DOF][check] = fmid
+    fext[2::DOF][check] = fmid
 
     KC0uu = KC0[bu, :][:, bu]
-    fu = f[bu]
-    assert fu.sum() == fmid
+    assert fext[bu].sum() == fmid
 
-    uu, info = cg(KC0uu, fu, atol=1e-9)
+    uu, info = cg(KC0uu, fext[bu], atol=1e-9)
     assert info == 0
 
     u = np.zeros(N)
@@ -122,6 +121,23 @@ def test_static_plate_quad_point_load(plot=False):
         plt.show()
         #plt.savefig('ex_linear_static_figure.jpg', dpi=200,
                     #bbox_inches='tight')
+
+    fint = np.zeros(N)
+    for quad in quads:
+        quad.update_probe_xe(ncoords_flatten)
+        quad.update_probe_ue(u)
+        quad.update_fint(fint, prop)
+
+    # NOTE adding reaction forces to external force vector
+    Kku = KC0[bk, :][:, bu]
+    fext[bk] = Kku @ u[bu]
+    atol = 1e-5
+    tmp = np.where(np.logical_not(np.isclose(fint, fext, atol=atol)))
+    print(tmp)
+    print(fint[tmp[0]])
+    print(fext[tmp[0]])
+    print((KC0@u)[tmp[0]])
+    assert np.allclose(fint, fext, atol=atol)
 
 
 if __name__ == '__main__':
