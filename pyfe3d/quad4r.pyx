@@ -86,6 +86,11 @@ cdef class Quad4RProbe:
     probe can be shared amongst many finite elements, with the information
     being updated and retrieved on demand.
 
+    .. note:: The probe can be shared amongst more than one finite element, 
+              depending on how you defined them. Mind that the probe will
+              always safe the values from the last udpate.
+
+
     Attributes
     ----------
     xe, : array-like
@@ -349,8 +354,8 @@ cdef class Quad4R:
     cpdef void update_probe_ue(Quad4R self, double [::1] u):
         r"""Update the local displacement vector of the probe of the element
 
-        .. note:: The ``probe`` attribute object :class:`.Quad4RProbe` is
-                  updated, not the element object.
+        .. note:: The ``probe`` attribute of object :class:`.Quad4RProbe` is
+                  updated, accessible using ``.probe.ue``.
 
         Parameters
         ----------
@@ -404,8 +409,8 @@ cdef class Quad4R:
     cpdef void update_probe_xe(Quad4R self, double [::1] x):
         r"""Update the 3D coordinates of the probe of the element
 
-        .. note:: The ``probe`` attribute object :class:`.Quad4RProbe` is
-                  updated, not the element object.
+        .. note:: The ``xe`` attribute of object :class:`.Quad4RProbe` is
+                  updated, accessible using ``.probe.xe``.
 
         Parameters
         ----------
@@ -484,14 +489,14 @@ cdef class Quad4R:
                                   ):
         r"""Update the internal force vector of the probe
 
-        The attribute ``finte`` is updated with the :class:`.Quad4RProbe` the
-        internal forces in local coordinates. While using this function, mind
-        that the probe can be shared amongst more than one finite element,
-        depending how you defined them, meaning that the probe will always safe
-        the values from the last udpate.
+        The attribute ``finte`` of the object :class:`.Quad4RProbe` is updated,
+        which corresponds to the internal forces in local coordinates. While
+        using this function, mind that the probe can be shared amongst more
+        than one finite element, depending how you defined them, meaning that
+        the probe will always safe the values from the last udpate.
 
-        .. note:: The ``probe`` attribute object :class:`.Quad4RProbe` is
-                  updated, not the finite element.
+        .. note:: The ``finte`` attribute of object :class:`.Quad4RProbe` is
+                  updated, accessible using ``.probe.finte``.
 
         Parameters
         ----------

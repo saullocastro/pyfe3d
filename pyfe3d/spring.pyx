@@ -46,6 +46,16 @@ cdef class SpringProbe:
     r"""
     Probe used for local coordinates, local displacements, local stresses etc
 
+    The idea behind using a probe is to avoid allocating larger memory buffers
+    per finite element. The memory buffers are allocated per probe, and one
+    probe can be shared amongst many finite elements, with the information
+    being updated and retrieved on demand.
+
+    .. note:: The probe can be shared amongst more than one finite element, 
+              depending on how you defined them. Mind that the probe will
+              always safe the values from the last udpate.
+
+
     Attributes
     ----------
     xe, : array-like
@@ -190,8 +200,8 @@ cdef class Spring:
     cpdef void update_probe_ue(Spring self, double [::1] u):
         r"""Update the local displacement vector of the probe of the element
 
-        .. note:: The ``probe`` attribute object :class:`.SpringProbe` is
-                  updated, not the element object.
+        .. note:: The ``ue`` attribute of object :class:`.SpringProbe` is
+                  updated, accessible using ``.probe.ue``.
 
         Parameters
         ----------

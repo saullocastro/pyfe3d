@@ -50,9 +50,14 @@ cdef class TrussProbe:
     r"""
     Probe used for local coordinates, local displacements, local stresses etc
 
+    The idea behind using a probe is to avoid allocating larger memory buffers
+    per finite element. The memory buffers are allocated per probe, and one
+    probe can be shared amongst many finite elements, with the information
+    being updated and retrieved on demand.
+
     .. note:: The probe can be shared amongst more than one finite element, 
-              depending how you defined them. Mind that the probe will always
-              safe the values from the last udpate.
+              depending on how you defined them. Mind that the probe will
+              always safe the values from the last udpate.
 
 
     Attributes
@@ -143,8 +148,8 @@ cdef class Truss:
     cpdef void update_probe_ue(Truss self, double [::1] u):
         r"""Update the local displacement vector of the probe of the element
 
-        .. note:: The ``probe`` attribute object :class:`.TrussProbe` is
-                  updated, not the element object.
+        .. note:: The ``ue`` attribute of object :class:`.TrussProbe` is
+                  updated, accessible using ``.probe.ue``.
 
         Parameters
         ----------
@@ -267,8 +272,8 @@ cdef class Truss:
     cpdef void update_probe_xe(Truss self, double [::1] x):
         r"""Update the 3D coordinates of the probe of the element
 
-        .. note:: The ``probe`` attribute object :class:`.TrussProbe` is
-                  updated, not the element object.
+        .. note:: The ``xe`` attribute of object :class:`.TrussProbe` is
+                  updated, accessible using ``.probe.xe``.
 
         Parameters
         ----------
@@ -339,8 +344,8 @@ cdef class Truss:
         depending how you defined them, meaning that the probe will always safe
         the values from the last udpate.
 
-        .. note:: The ``probe`` attribute object :class:`.TrussProbe` is
-                  updated, not the finite element.
+        .. note:: The ``finte`` attribute of object :class:`.TrussProbe` is
+                  updated, accessible using ``.probe.finte``.
 
         Parameters
         ----------
