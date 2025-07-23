@@ -1091,9 +1091,10 @@ cdef class Quad4:
         with nogil:
             self._update_probe_KC0ve(prop)
             for i in range(24):
+                self.probe.finte[i] = 0.
                 for j in range(24):
                     ke = 24*i + j
-                    self.probe.finte[i] = self.probe.KC0ve[ke] * self.probe.ue[j]
+                    self.probe.finte[i] += self.probe.KC0ve[ke] * self.probe.ue[j]
         
 
     cpdef void update_KC0(Quad4 self,
