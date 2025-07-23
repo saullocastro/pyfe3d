@@ -50,9 +50,9 @@ cdef class TrussProbe:
     r"""
     Probe used for local coordinates, local displacements, local stresses etc
 
-    .. note:: Mind that the probe can be shared amongst more than one finite
-              element, depending how you defined them, meaning that the probe 
-              will always safe the values from the last udpate.
+    .. note:: The probe can be shared amongst more than one finite element, 
+              depending how you defined them. Mind that the probe will always
+              safe the values from the last udpate.
 
 
     Attributes
