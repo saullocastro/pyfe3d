@@ -373,6 +373,18 @@ cdef class BeamC:
         cdef double *finte
         cdef double L, A, E, G, Ay, Az, Iyy, Izz, Iyz, J, alphay, alphaz, betay, betaz
 
+        cdef double KC0e0000, KC0e0004, KC0e0005, KC0e0006, KC0e0010, KC0e0011
+        cdef double KC0e0101, KC0e0102, KC0e0103, KC0e0104, KC0e0105, KC0e0107, KC0e0108, KC0e0109, KC0e0110, KC0e0111
+        cdef double KC0e0202, KC0e0203, KC0e0204, KC0e0205, KC0e0207, KC0e0208, KC0e0209, KC0e0210, KC0e0211
+        cdef double KC0e0303, KC0e0304, KC0e0305, KC0e0307, KC0e0308, KC0e0309, KC0e0310, KC0e0311
+        cdef double KC0e0404, KC0e0405, KC0e0406, KC0e0407, KC0e0408, KC0e0409, KC0e0410, KC0e0411
+        cdef double KC0e0505, KC0e0506, KC0e0507, KC0e0508, KC0e0509, KC0e0510, KC0e0511
+        cdef double KC0e0606, KC0e0610, KC0e0611
+        cdef double KC0e0707, KC0e0708, KC0e0709, KC0e0710, KC0e0711
+        cdef double KC0e0808, KC0e0809, KC0e0810, KC0e0811
+        cdef double KC0e0909, KC0e0910, KC0e0911
+        cdef double KC0e1010, KC0e1011, KC0e1111
+
         with nogil:
             L = self.length
             A = prop.A
@@ -390,21 +402,88 @@ cdef class BeamC:
             betay = 1/(1. - alphay)
             betaz = 1/(1. - alphaz)
 
+            KC0e0000 = A*E/L
+            KC0e0004 = Az*E*betaz*(1 - alphaz)/L
+            KC0e0005 = Ay*E*betay*(alphay - 1)/L
+            KC0e0006 = -A*E/L
+            KC0e0010 = Az*E*betaz*(alphaz - 1)/L
+            KC0e0011 = Ay*E*betay*(1 - alphay)/L
+            KC0e0101 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/L**3
+            KC0e0102 = 12*E*Iyz*betay*betaz/L**3
+            KC0e0103 = Az*G*alphay*betay/L
+            KC0e0104 = -6*E*Iyz*betay*betaz/L**2
+            KC0e0105 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
+            KC0e0107 = betay**2*(-A*G*L**2*alphay**2 - 12*E*Izz)/L**3
+            KC0e0108 = -12*E*Iyz*betay*betaz/L**3
+            KC0e0109 = -Az*G*alphay*betay/L
+            KC0e0110 = -6*E*Iyz*betay*betaz/L**2
+            KC0e0111 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
+            KC0e0202 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/L**3
+            KC0e0203 = -Ay*G*alphaz*betaz/L
+            KC0e0204 = betaz**2*(-A*G*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
+            KC0e0205 = 6*E*Iyz*betay*betaz/L**2
+            KC0e0207 = -12*E*Iyz*betay*betaz/L**3
+            KC0e0208 = betaz**2*(-A*G*L**2*alphaz**2 - 12*E*Iyy)/L**3
+            KC0e0209 = Ay*G*alphaz*betaz/L
+            KC0e0210 = betaz**2*(-A*G*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
+            KC0e0211 = 6*E*Iyz*betay*betaz/L**2
+            KC0e0303 = G*J/L
+            KC0e0304 = Ay*G*alphaz*betaz/2
+            KC0e0305 = Az*G*alphay*betay/2
+            KC0e0307 = -Az*G*alphay*betay/L
+            KC0e0308 = Ay*G*alphaz*betaz/L
+            KC0e0309 = -G*J/L
+            KC0e0310 = Ay*G*alphaz*betaz/2
+            KC0e0311 = Az*G*alphay*betay/2
+            KC0e0404 = betaz**2*(A*G*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
+            KC0e0405 = E*Iyz*betay*betaz*(-alphay*alphaz + alphay + alphaz - 4)/L
+            KC0e0406 = Az*E*betaz*(alphaz - 1)/L
+            KC0e0407 = 6*E*Iyz*betay*betaz/L**2
+            KC0e0408 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
+            KC0e0409 = -Ay*G*alphaz*betaz/2
+            KC0e0410 = betaz**2*(A*G*L**2*alphaz**2/4 - E*Iyy*alphaz**2 + 2*E*Iyy*alphaz + 2*E*Iyy)/L
+            KC0e0411 = E*Iyz*betay*betaz*(alphay*alphaz - alphay - alphaz - 2)/L
+            KC0e0505 = betay**2*(A*G*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
+            KC0e0506 = Ay*E*betay*(1 - alphay)/L
+            KC0e0507 = betay**2*(-A*G*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
+            KC0e0508 = -6*E*Iyz*betay*betaz/L**2
+            KC0e0509 = -Az*G*alphay*betay/2
+            KC0e0510 = E*Iyz*betay*betaz*(alphay*alphaz - alphay - alphaz - 2)/L
+            KC0e0511 = betay**2*(A*G*L**2*alphay**2/4 - E*Izz*alphay**2 + 2*E*Izz*alphay + 2*E*Izz)/L
+            KC0e0606 = A*E/L
+            KC0e0610 = Az*E*betaz*(1 - alphaz)/L
+            KC0e0611 = Ay*E*betay*(alphay - 1)/L
+            KC0e0707 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/L**3
+            KC0e0708 = 12*E*Iyz*betay*betaz/L**3
+            KC0e0709 = Az*G*alphay*betay/L
+            KC0e0710 = 6*E*Iyz*betay*betaz/L**2
+            KC0e0711 = betay**2*(-A*G*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
+            KC0e0808 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/L**3
+            KC0e0809 = -Ay*G*alphaz*betaz/L
+            KC0e0810 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
+            KC0e0811 = -6*E*Iyz*betay*betaz/L**2
+            KC0e0909 = G*J/L
+            KC0e0910 = -Ay*G*alphaz*betaz/2
+            KC0e0911 = -Az*G*alphay*betay/2
+            KC0e1010 = betaz**2*(A*G*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
+            KC0e1011 = E*Iyz*betay*betaz*(-alphay*alphaz + alphay + alphaz - 4)/L
+            KC0e1111 = betay**2*(A*G*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
+
             ue = &self.probe.ue[0]
             finte = &self.probe.finte[0]
 
-            finte[0] = E*(A*ue[0] - A*ue[6] - Ay*alphay*betay*ue[11] + Ay*alphay*betay*ue[5] + Ay*betay*ue[11] - Ay*betay*ue[5] + Az*alphaz*betaz*ue[10] - Az*alphaz*betaz*ue[4] - Az*betaz*ue[10] + Az*betaz*ue[4])/L
-            finte[1] = betay*(A*G*L**3*alphay**2*betay*ue[11] + A*G*L**3*alphay**2*betay*ue[5] + 2*A*G*L**2*alphay**2*betay*ue[1] - 2*A*G*L**2*alphay**2*betay*ue[7] + 2*Az*G*L**2*alphay*ue[3] - 2*Az*G*L**2*alphay*ue[9] - 12*E*Iyz*L*betaz*ue[10] - 12*E*Iyz*L*betaz*ue[4] + 24*E*Iyz*betaz*ue[2] - 24*E*Iyz*betaz*ue[8] + 12*E*Izz*L*betay*ue[11] + 12*E*Izz*L*betay*ue[5] + 24*E*Izz*betay*ue[1] - 24*E*Izz*betay*ue[7])/(2*L**3)
-            finte[2] = betaz*(-A*G*L**3*alphaz**2*betaz*ue[10] - A*G*L**3*alphaz**2*betaz*ue[4] + 2*A*G*L**2*alphaz**2*betaz*ue[2] - 2*A*G*L**2*alphaz**2*betaz*ue[8] - 2*Ay*G*L**2*alphaz*ue[3] + 2*Ay*G*L**2*alphaz*ue[9] - 12*E*Iyy*L*betaz*ue[10] - 12*E*Iyy*L*betaz*ue[4] + 24*E*Iyy*betaz*ue[2] - 24*E*Iyy*betaz*ue[8] + 12*E*Iyz*L*betay*ue[11] + 12*E*Iyz*L*betay*ue[5] + 24*E*Iyz*betay*ue[1] - 24*E*Iyz*betay*ue[7])/(2*L**3)
-            finte[3] = G*(Ay*L*alphaz*betaz*ue[10] + Ay*L*alphaz*betaz*ue[4] - 2*Ay*alphaz*betaz*ue[2] + 2*Ay*alphaz*betaz*ue[8] + Az*L*alphay*betay*ue[11] + Az*L*alphay*betay*ue[5] + 2*Az*alphay*betay*ue[1] - 2*Az*alphay*betay*ue[7] + 2*J*ue[3] - 2*J*ue[9])/(2*L)
-            finte[4] = betaz*(A*G*L**3*alphaz**2*betaz*ue[10] + A*G*L**3*alphaz**2*betaz*ue[4] - 2*A*G*L**2*alphaz**2*betaz*ue[2] + 2*A*G*L**2*alphaz**2*betaz*ue[8] + 2*Ay*G*L**2*alphaz*ue[3] - 2*Ay*G*L**2*alphaz*ue[9] - 4*Az*E*L*alphaz*ue[0] + 4*Az*E*L*alphaz*ue[6] + 4*Az*E*L*ue[0] - 4*Az*E*L*ue[6] - 4*E*Iyy*L*alphaz**2*betaz*ue[10] + 4*E*Iyy*L*alphaz**2*betaz*ue[4] + 8*E*Iyy*L*alphaz*betaz*ue[10] - 8*E*Iyy*L*alphaz*betaz*ue[4] + 8*E*Iyy*L*betaz*ue[10] + 16*E*Iyy*L*betaz*ue[4] - 24*E*Iyy*betaz*ue[2] + 24*E*Iyy*betaz*ue[8] + 4*E*Iyz*L*alphay*alphaz*betay*ue[11] - 4*E*Iyz*L*alphay*alphaz*betay*ue[5] - 4*E*Iyz*L*alphay*betay*ue[11] + 4*E*Iyz*L*alphay*betay*ue[5] - 4*E*Iyz*L*alphaz*betay*ue[11] + 4*E*Iyz*L*alphaz*betay*ue[5] - 8*E*Iyz*L*betay*ue[11] - 16*E*Iyz*L*betay*ue[5] - 24*E*Iyz*betay*ue[1] + 24*E*Iyz*betay*ue[7])/(4*L**2)
-            finte[5] = betay*(A*G*L**3*alphay**2*betay*ue[11] + A*G*L**3*alphay**2*betay*ue[5] + 2*A*G*L**2*alphay**2*betay*ue[1] - 2*A*G*L**2*alphay**2*betay*ue[7] + 4*Ay*E*L*alphay*ue[0] - 4*Ay*E*L*alphay*ue[6] - 4*Ay*E*L*ue[0] + 4*Ay*E*L*ue[6] + 2*Az*G*L**2*alphay*ue[3] - 2*Az*G*L**2*alphay*ue[9] + 4*E*Iyz*L*alphay*alphaz*betaz*ue[10] - 4*E*Iyz*L*alphay*alphaz*betaz*ue[4] - 4*E*Iyz*L*alphay*betaz*ue[10] + 4*E*Iyz*L*alphay*betaz*ue[4] - 4*E*Iyz*L*alphaz*betaz*ue[10] + 4*E*Iyz*L*alphaz*betaz*ue[4] - 8*E*Iyz*L*betaz*ue[10] - 16*E*Iyz*L*betaz*ue[4] + 24*E*Iyz*betaz*ue[2] - 24*E*Iyz*betaz*ue[8] - 4*E*Izz*L*alphay**2*betay*ue[11] + 4*E*Izz*L*alphay**2*betay*ue[5] + 8*E*Izz*L*alphay*betay*ue[11] - 8*E*Izz*L*alphay*betay*ue[5] + 8*E*Izz*L*betay*ue[11] + 16*E*Izz*L*betay*ue[5] + 24*E*Izz*betay*ue[1] - 24*E*Izz*betay*ue[7])/(4*L**2)
-            finte[6] = E*(-A*ue[0] + A*ue[6] + Ay*alphay*betay*ue[11] - Ay*alphay*betay*ue[5] - Ay*betay*ue[11] + Ay*betay*ue[5] - Az*alphaz*betaz*ue[10] + Az*alphaz*betaz*ue[4] + Az*betaz*ue[10] - Az*betaz*ue[4])/L
-            finte[7] = betay*(-A*G*L**3*alphay**2*betay*ue[11] - A*G*L**3*alphay**2*betay*ue[5] - 2*A*G*L**2*alphay**2*betay*ue[1] + 2*A*G*L**2*alphay**2*betay*ue[7] - 2*Az*G*L**2*alphay*ue[3] + 2*Az*G*L**2*alphay*ue[9] + 12*E*Iyz*L*betaz*ue[10] + 12*E*Iyz*L*betaz*ue[4] - 24*E*Iyz*betaz*ue[2] + 24*E*Iyz*betaz*ue[8] - 12*E*Izz*L*betay*ue[11] - 12*E*Izz*L*betay*ue[5] - 24*E*Izz*betay*ue[1] + 24*E*Izz*betay*ue[7])/(2*L**3)
-            finte[8] = betaz*(A*G*L**3*alphaz**2*betaz*ue[10] + A*G*L**3*alphaz**2*betaz*ue[4] - 2*A*G*L**2*alphaz**2*betaz*ue[2] + 2*A*G*L**2*alphaz**2*betaz*ue[8] + 2*Ay*G*L**2*alphaz*ue[3] - 2*Ay*G*L**2*alphaz*ue[9] + 12*E*Iyy*L*betaz*ue[10] + 12*E*Iyy*L*betaz*ue[4] - 24*E*Iyy*betaz*ue[2] + 24*E*Iyy*betaz*ue[8] - 12*E*Iyz*L*betay*ue[11] - 12*E*Iyz*L*betay*ue[5] - 24*E*Iyz*betay*ue[1] + 24*E*Iyz*betay*ue[7])/(2*L**3)
-            finte[9] = G*(-Ay*L*alphaz*betaz*ue[10] - Ay*L*alphaz*betaz*ue[4] + 2*Ay*alphaz*betaz*ue[2] - 2*Ay*alphaz*betaz*ue[8] - Az*L*alphay*betay*ue[11] - Az*L*alphay*betay*ue[5] - 2*Az*alphay*betay*ue[1] + 2*Az*alphay*betay*ue[7] - 2*J*ue[3] + 2*J*ue[9])/(2*L)
-            finte[10] = betaz*(A*G*L**3*alphaz**2*betaz*ue[10] + A*G*L**3*alphaz**2*betaz*ue[4] - 2*A*G*L**2*alphaz**2*betaz*ue[2] + 2*A*G*L**2*alphaz**2*betaz*ue[8] + 2*Ay*G*L**2*alphaz*ue[3] - 2*Ay*G*L**2*alphaz*ue[9] + 4*Az*E*L*alphaz*ue[0] - 4*Az*E*L*alphaz*ue[6] - 4*Az*E*L*ue[0] + 4*Az*E*L*ue[6] + 4*E*Iyy*L*alphaz**2*betaz*ue[10] - 4*E*Iyy*L*alphaz**2*betaz*ue[4] - 8*E*Iyy*L*alphaz*betaz*ue[10] + 8*E*Iyy*L*alphaz*betaz*ue[4] + 16*E*Iyy*L*betaz*ue[10] + 8*E*Iyy*L*betaz*ue[4] - 24*E*Iyy*betaz*ue[2] + 24*E*Iyy*betaz*ue[8] - 4*E*Iyz*L*alphay*alphaz*betay*ue[11] + 4*E*Iyz*L*alphay*alphaz*betay*ue[5] + 4*E*Iyz*L*alphay*betay*ue[11] - 4*E*Iyz*L*alphay*betay*ue[5] + 4*E*Iyz*L*alphaz*betay*ue[11] - 4*E*Iyz*L*alphaz*betay*ue[5] - 16*E*Iyz*L*betay*ue[11] - 8*E*Iyz*L*betay*ue[5] - 24*E*Iyz*betay*ue[1] + 24*E*Iyz*betay*ue[7])/(4*L**2)
-            finte[11] = betay*(A*G*L**3*alphay**2*betay*ue[11] + A*G*L**3*alphay**2*betay*ue[5] + 2*A*G*L**2*alphay**2*betay*ue[1] - 2*A*G*L**2*alphay**2*betay*ue[7] - 4*Ay*E*L*alphay*ue[0] + 4*Ay*E*L*alphay*ue[6] + 4*Ay*E*L*ue[0] - 4*Ay*E*L*ue[6] + 2*Az*G*L**2*alphay*ue[3] - 2*Az*G*L**2*alphay*ue[9] - 4*E*Iyz*L*alphay*alphaz*betaz*ue[10] + 4*E*Iyz*L*alphay*alphaz*betaz*ue[4] + 4*E*Iyz*L*alphay*betaz*ue[10] - 4*E*Iyz*L*alphay*betaz*ue[4] + 4*E*Iyz*L*alphaz*betaz*ue[10] - 4*E*Iyz*L*alphaz*betaz*ue[4] - 16*E*Iyz*L*betaz*ue[10] - 8*E*Iyz*L*betaz*ue[4] + 24*E*Iyz*betaz*ue[2] - 24*E*Iyz*betaz*ue[8] + 4*E*Izz*L*alphay**2*betay*ue[11] - 4*E*Izz*L*alphay**2*betay*ue[5] - 8*E*Izz*L*alphay*betay*ue[11] + 8*E*Izz*L*alphay*betay*ue[5] + 16*E*Izz*L*betay*ue[11] + 8*E*Izz*L*betay*ue[5] + 24*E*Izz*betay*ue[1] - 24*E*Izz*betay*ue[7])/(4*L**2)
+            finte[0] = KC0e0000*ue[0] + KC0e0004*ue[4] + KC0e0005*ue[5] + KC0e0006*ue[6] + KC0e0010*ue[10] + KC0e0011*ue[11]
+            finte[1] = KC0e0101*ue[1] + KC0e0102*ue[2] + KC0e0103*ue[3] + KC0e0104*ue[4] + KC0e0105*ue[5] + KC0e0107*ue[7] + KC0e0108*ue[8] + KC0e0109*ue[9] + KC0e0110*ue[10] + KC0e0111*ue[11]
+            finte[2] = KC0e0102*ue[1] + KC0e0202*ue[2] + KC0e0203*ue[3] + KC0e0204*ue[4] + KC0e0205*ue[5] + KC0e0207*ue[7] + KC0e0208*ue[8] + KC0e0209*ue[9] + KC0e0210*ue[10] + KC0e0211*ue[11]
+            finte[3] = KC0e0103*ue[1] + KC0e0203*ue[2] + KC0e0303*ue[3] + KC0e0304*ue[4] + KC0e0305*ue[5] + KC0e0307*ue[7] + KC0e0308*ue[8] + KC0e0309*ue[9] + KC0e0310*ue[10] + KC0e0311*ue[11]
+            finte[4] = KC0e0004*ue[0] + KC0e0104*ue[1] + KC0e0204*ue[2] + KC0e0304*ue[3] + KC0e0404*ue[4] + KC0e0405*ue[5] + KC0e0406*ue[6] + KC0e0407*ue[7] + KC0e0408*ue[8] + KC0e0409*ue[9] + KC0e0410*ue[10] + KC0e0411*ue[11]
+            finte[5] = KC0e0005*ue[0] + KC0e0105*ue[1] + KC0e0205*ue[2] + KC0e0305*ue[3] + KC0e0405*ue[4] + KC0e0505*ue[5] + KC0e0506*ue[6] + KC0e0507*ue[7] + KC0e0508*ue[8] + KC0e0509*ue[9] + KC0e0510*ue[10] + KC0e0511*ue[11]
+            finte[6] = KC0e0006*ue[0] + KC0e0406*ue[4] + KC0e0506*ue[5] + KC0e0606*ue[6] + KC0e0610*ue[10] + KC0e0611*ue[11]
+            finte[7] = KC0e0107*ue[1] + KC0e0207*ue[2] + KC0e0307*ue[3] + KC0e0407*ue[4] + KC0e0507*ue[5] + KC0e0707*ue[7] + KC0e0708*ue[8] + KC0e0709*ue[9] + KC0e0710*ue[10] + KC0e0711*ue[11]
+            finte[8] = KC0e0108*ue[1] + KC0e0208*ue[2] + KC0e0308*ue[3] + KC0e0408*ue[4] + KC0e0508*ue[5] + KC0e0708*ue[7] + KC0e0808*ue[8] + KC0e0809*ue[9] + KC0e0810*ue[10] + KC0e0811*ue[11]
+            finte[9] = KC0e0109*ue[1] + KC0e0209*ue[2] + KC0e0309*ue[3] + KC0e0409*ue[4] + KC0e0509*ue[5] + KC0e0709*ue[7] + KC0e0809*ue[8] + KC0e0909*ue[9] + KC0e0910*ue[10] + KC0e0911*ue[11]
+            finte[10] = KC0e0010*ue[0] + KC0e0110*ue[1] + KC0e0210*ue[2] + KC0e0310*ue[3] + KC0e0410*ue[4] + KC0e0510*ue[5] + KC0e0610*ue[6] + KC0e0710*ue[7] + KC0e0810*ue[8] + KC0e0910*ue[9] + KC0e1010*ue[10] + KC0e1011*ue[11]
+            finte[11] = KC0e0011*ue[0] + KC0e0111*ue[1] + KC0e0211*ue[2] + KC0e0311*ue[3] + KC0e0411*ue[4] + KC0e0511*ue[5] + KC0e0611*ue[6] + KC0e0711*ue[7] + KC0e0811*ue[8] + KC0e0911*ue[9] + KC0e1011*ue[10] + KC0e1111*ue[11]
 
 
     cpdef void update_KC0(BeamC self,
