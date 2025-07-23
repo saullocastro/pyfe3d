@@ -129,6 +129,11 @@ cdef class Quad4Probe:
     probe can be shared amongst many finite elements, with the information
     being updated and retrieved on demand.
 
+    .. note:: The probe can be shared amongst more than one finite element, 
+              depending on how you defined them. Mind that the probe will
+              always safe the values from the last udpate.
+
+
     Attributes
     ----------
     xe, : array-like
@@ -143,6 +148,9 @@ cdef class Quad4Probe:
         {{r_y}_e}_2, {{r_z}_e}_2`, `{u_e}_3, {v_e}_3, {w_e}_3, {{r_x}_e}_3,
         {{r_y}_e}_3, {{r_z}_e}_3`, `{u_e}_4, {v_e}_4, {w_e}_4, {{r_x}_e}_4,
         {{r_y}_e}_4, {{r_z}_e}_4`.
+    finte, : array-like
+        Array of size ``NUM_NODES*DOF=24`` containing the element internal
+        forces corresponding to the degrees-of-freedom described by ``ue``.
     KC0ve, : array-like
         Local stiffness matrix stored as a 1D array of size
         ``(NUM_NODES*DOF)**2``.
@@ -162,6 +170,7 @@ cdef class Quad4Probe:
     """
     cdef public double [::1] xe
     cdef public double [::1] ue
+    cdef public double [::1] finte
     cdef public double [::1] KC0ve
     cdef public double [::1] BLexx
     cdef public double [::1] BLeyy
@@ -177,6 +186,7 @@ cdef class Quad4Probe:
     def __cinit__(Quad4Probe self):
         self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
         self.ue = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.finte = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.KC0ve = np.zeros((NUM_NODES*DOF)**2, dtype=np.float64)
 
         self.BLexx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
@@ -534,8 +544,8 @@ cdef class Quad4:
     cpdef void update_probe_ue(Quad4 self, double [::1] u):
         r"""Update the local displacement vector of the probe of the element
 
-        .. note:: The ``probe`` attribute object :class:`.Quad4Probe` is
-                  updated, not the element object.
+        .. note:: The ``ue`` attribute of object :class:`.Quad4Probe` is
+                  updated, accessible using ``.probe.ue``.
 
         Parameters
         ----------
@@ -589,8 +599,8 @@ cdef class Quad4:
     cpdef void update_probe_xe(Quad4 self, double [::1] x):
         r"""Update the 3D coordinates of the probe of the element
 
-        .. note:: The ``probe`` attribute object :class:`.Quad4Probe` is
-                  updated, not the element object.
+        .. note:: The ``xe`` attribute of object :class:`.Quad4Probe` is
+                  updated, accessible using ``.probe.xe``.
 
         Parameters
         ----------
@@ -659,36 +669,28 @@ cdef class Quad4:
             self.area = 1/2.*fabs((x1*y2 + x2*y3 + x3*y4 + x4*y1) - (x2*y1 + x3*y2 + x4*y3 + x1*y4))
 
 
-    cpdef void update_KC0(Quad4 self,
-                          long [::1] KC0r,
-                          long [::1] KC0c,
-                          double [::1] KC0v,
-                          ShellProp prop,
-                          int update_KC0v_only=0,
-                          ):
-        r"""Update sparse vectors for linear constitutive stiffness matrix KC0
+    cdef void _update_probe_KC0ve(Quad4 self, ShellProp prop) noexcept nogil:
+        r"""Update the probe vector for values of the constitutive stiffness matrix KC0
 
+        The attribute ``KC0ve`` of the object :class:`.Quad4Probe` is updated,
+        which corresponds to the values of the constitutive stiffness matrix in
+        local coordinates. While using this function, mind that the probe can
+        be shared amongst more than one finite element, depending how you
+        defined them, meaning that the probe will always safe the values from
+        the last udpate.
+
+        .. note:: The ``KC0ve`` attribute of object :class:`.Quad4Probe` is
+                  updated, accessible using ``.probe.KC0ve``.
 
         Parameters
         ----------
-        KC0r : np.array
-            Array to store row positions of sparse values
-        KC0c : np.array
-            Array to store column positions of sparse values
-        KC0v : np.array
-            Array to store sparse values
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
-        update_KC0v_only : int
-            The default ``0`` means that the row and column indices ``KC0r``
-            and ``KC0c`` should also be updated. Any other value will only
-            update the stiffness matrix values ``KC0v``.
 
         """
         cdef int i, j, k, ke
-        cdef int node_i, node_j, m, n
-        cdef int c[4]
+        cdef int node_i, node_j
         cdef double x1, x2, x3, x4, y1, y2, y3, y4
         # NOTE ABD in the material direction
         cdef double A11mat, A12mat, A16mat, A22mat, A26mat, A66mat
@@ -699,9 +701,7 @@ cdef class Quad4:
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
-        cdef double K6ROT
-        cdef double h, length
-        cdef double r[6][6]
+        cdef double length
         cdef double m11, m12, m21, m22
         cdef double N1, N2, N3, N4
         cdef double N1x, N2x, N3x, N4x
@@ -810,7 +810,6 @@ cdef class Quad4:
                 # D62 = m21**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m22**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
                 D66 = m11*m21*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + m12*m22*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21))
 
-            h = prop.h
             length = self.area**0.5
 
             E44 = prop.E44*prop.scf_k23
@@ -830,68 +829,6 @@ cdef class Quad4:
             x4 = self.probe.xe[9]
             y4 = self.probe.xe[10]
             # z4 = self.probe.xe[11]
-
-            # local to global transformation
-            # translation DOFs
-            r[0][0] = self.r11
-            r[0][1] = self.r12
-            r[0][2] = self.r13
-            r[1][0] = self.r21
-            r[1][1] = self.r22
-            r[1][2] = self.r23
-            r[2][0] = self.r31
-            r[2][1] = self.r32
-            r[2][2] = self.r33
-            # rotation DOFs
-            r[0+3][0+3] = self.r11
-            r[0+3][1+3] = self.r12
-            r[0+3][2+3] = self.r13
-            r[1+3][0+3] = self.r21
-            r[1+3][1+3] = self.r22
-            r[1+3][2+3] = self.r23
-            r[2+3][0+3] = self.r31
-            r[2+3][1+3] = self.r32
-            r[2+3][2+3] = self.r33
-            # coupled translation-rotation DOFs
-            r[0][0+3] = 0.
-            r[0][1+3] = 0.
-            r[0][2+3] = 0.
-            r[1][0+3] = 0.
-            r[1][1+3] = 0.
-            r[1][2+3] = 0.
-            r[2][0+3] = 0.
-            r[2][1+3] = 0.
-            r[2][2+3] = 0.
-            # coupled translation-rotation DOFs
-            r[0+3][0] = 0.
-            r[0+3][1] = 0.
-            r[0+3][2] = 0.
-            r[1+3][0] = 0.
-            r[1+3][1] = 0.
-            r[1+3][2] = 0.
-            r[2+3][0] = 0.
-            r[2+3][1] = 0.
-            r[2+3][2] = 0.
-
-            K6ROT = self.K6ROT
-
-            if update_KC0v_only == 0:
-                # positions in the global stiffness matrix
-                c[0] = self.c1
-                c[1] = self.c2
-                c[2] = self.c3
-                c[3] = self.c4
-
-                # initializing row and column indices
-                #
-                # TODO use r[3][3] instead
-                for node_i in range(NUM_NODES):
-                    for m in range(DOF):
-                        for node_j in range(NUM_NODES):
-                            for n in range(DOF):
-                                k = self.init_k_KC0 + 24*(node_i*DOF + m) + node_j*DOF + n
-                                KC0r[k] = c[node_i] + m
-                                KC0c[k] = c[node_j] + n
 
             # zeroing probe KC0ve attribute
             for i in range(24):
@@ -1004,7 +941,7 @@ cdef class Quad4:
                               + kxy*D16*BLkxx[j] + kxy*D26*BLkyy[j] + kxy*D66*BLkxy[j]
                             )
 
-                    if h/length >= 1.: # thick elements
+                    if prop.h/length >= 1.: # thick elements
                         BLgyz_grad[2] = N1y
                         BLgyz_grad[8] = N2y
                         BLgyz_grad[14] = N3y
@@ -1077,7 +1014,7 @@ cdef class Quad4:
             BLgxz_rot[16] = N3
             BLgxz_rot[22] = N4
 
-            if h/length < 1.: # thin elements
+            if prop.h/length < 1.: # thin elements
                 for i in range(24):
                     gyz_rot = BLgyz_rot[i]
                     gxz_rot = BLgxz_rot[i]
@@ -1127,7 +1064,131 @@ cdef class Quad4:
             for node_i in range(NUM_NODES):
                 node_j = node_i # NOTE only diagonal terms are affected
                 ke = 24*(node_i*DOF + 5) + node_j*DOF + 5
-                self.probe.KC0ve[ke] += K6ROT
+                self.probe.KC0ve[ke] += self.K6ROT
+
+
+    cdef void update_probe_finte(Quad4 self, ShellProp prop):
+        r"""Update the internal force vector of the probe
+
+        The attribute ``finte`` of the object :class:`.Quad4Probe` is updated,
+        which corresponds to the internal forces in local coordinates. While
+        using this function, mind that the probe can be shared amongst more
+        than one finite element, depending how you defined them, meaning that
+        the probe will always safe the values from the last udpate.
+
+        .. note:: The ``finte`` attribute of object :class:`.Quad4Probe` is
+                  updated, accessible using ``.probe.finte``.
+
+        Parameters
+        ----------
+        prop : :class:`.ShellProp` object
+            Shell property object from where the stiffness and mass attributes
+            are read from.
+
+        """
+        cdef int i, j, ke
+
+        with nogil:
+            self._update_probe_KC0ve(prop)
+            for i in range(24):
+                for j in range(24):
+                    ke = 24*i + j
+                    self.probe.finte[i] = self.probe.KC0ve[ke] * self.probe.ue[j]
+        
+
+    cpdef void update_KC0(Quad4 self,
+                          long [::1] KC0r,
+                          long [::1] KC0c,
+                          double [::1] KC0v,
+                          ShellProp prop,
+                          int update_KC0v_only=0,
+                          ):
+        r"""Update sparse vectors for linear constitutive stiffness matrix KC0
+
+
+        Parameters
+        ----------
+        KC0r : np.array
+            Array to store row positions of sparse values
+        KC0c : np.array
+            Array to store column positions of sparse values
+        KC0v : np.array
+            Array to store sparse values
+        prop : :class:`.ShellProp` object
+            Shell property object from where the stiffness and mass attributes
+            are read from.
+        update_KC0v_only : int
+            The default ``0`` means that the row and column indices ``KC0r``
+            and ``KC0c`` should also be updated. Any other value will only
+            update the stiffness matrix values ``KC0v``.
+
+        """
+        cdef int i, j, node_i, node_j, k, ke, m, n
+        cdef int c[4]
+        cdef double r[6][6]
+
+        with nogil:
+            # local to global transformation
+            # translation DOFs
+            r[0][0] = self.r11
+            r[0][1] = self.r12
+            r[0][2] = self.r13
+            r[1][0] = self.r21
+            r[1][1] = self.r22
+            r[1][2] = self.r23
+            r[2][0] = self.r31
+            r[2][1] = self.r32
+            r[2][2] = self.r33
+            # rotation DOFs
+            r[0+3][0+3] = self.r11
+            r[0+3][1+3] = self.r12
+            r[0+3][2+3] = self.r13
+            r[1+3][0+3] = self.r21
+            r[1+3][1+3] = self.r22
+            r[1+3][2+3] = self.r23
+            r[2+3][0+3] = self.r31
+            r[2+3][1+3] = self.r32
+            r[2+3][2+3] = self.r33
+            # coupled translation-rotation DOFs
+            r[0][0+3] = 0.
+            r[0][1+3] = 0.
+            r[0][2+3] = 0.
+            r[1][0+3] = 0.
+            r[1][1+3] = 0.
+            r[1][2+3] = 0.
+            r[2][0+3] = 0.
+            r[2][1+3] = 0.
+            r[2][2+3] = 0.
+            # coupled translation-rotation DOFs
+            r[0+3][0] = 0.
+            r[0+3][1] = 0.
+            r[0+3][2] = 0.
+            r[1+3][0] = 0.
+            r[1+3][1] = 0.
+            r[1+3][2] = 0.
+            r[2+3][0] = 0.
+            r[2+3][1] = 0.
+            r[2+3][2] = 0.
+
+            if update_KC0v_only == 0:
+                # positions in the global stiffness matrix
+                c[0] = self.c1
+                c[1] = self.c2
+                c[2] = self.c3
+                c[3] = self.c4
+
+                # initializing row and column indices
+                #
+                # TODO use r[3][3] instead
+                for node_i in range(NUM_NODES):
+                    for m in range(DOF):
+                        for node_j in range(NUM_NODES):
+                            for n in range(DOF):
+                                k = self.init_k_KC0 + 24*(node_i*DOF + m) + node_j*DOF + n
+                                KC0r[k] = c[node_i] + m
+                                KC0c[k] = c[node_j] + n
+
+            self._update_probe_KC0ve(prop)
 
             # NOTE from element to global coordinates:
             #
@@ -1147,6 +1208,55 @@ cdef class Quad4:
                                 for j in range(DOF):
                                     ke = 24*(node_i*DOF + i) + node_j*DOF + j
                                     KC0v[k] += r[m][i]*self.probe.KC0ve[ke]*r[n][j]
+
+
+    cpdef void update_fint(Quad4 self, double [::1] fint, ShellProp prop):
+        r"""Update the internal force vector
+
+        Parameters
+        ----------
+        fint : np.array
+            Array that is updated in place with the internal forces. The
+            internal forces stored in ``fint`` are calculated in global
+            coordinates. Method :meth:`.update_probe_finte` is called to update
+            the parameter ``finte`` of the :class:`.Quad4Probe` with the
+            internal forces in local coordinates.
+        prop : :class:`.ShellProp` object
+            Shell property object from where the stiffness and mass attributes
+            are read from.
+
+        """
+        cdef double *finte
+
+        self.update_probe_finte(prop)
+
+        with nogil:
+            finte = &self.probe.finte[0]
+
+            fint[0+self.c1] += finte[0]*self.r11 + finte[1]*self.r12 + finte[2]*self.r13
+            fint[1+self.c1] += finte[0]*self.r21 + finte[1]*self.r22 + finte[2]*self.r23
+            fint[2+self.c1] += finte[0]*self.r31 + finte[1]*self.r32 + finte[2]*self.r33
+            fint[3+self.c1] += finte[3]*self.r11 + finte[4]*self.r12 + finte[5]*self.r13
+            fint[4+self.c1] += finte[3]*self.r21 + finte[4]*self.r22 + finte[5]*self.r23
+            fint[5+self.c1] += finte[3]*self.r31 + finte[4]*self.r32 + finte[5]*self.r33
+            fint[0+self.c2] += finte[6]*self.r11 + finte[7]*self.r12 + finte[8]*self.r13
+            fint[1+self.c2] += finte[6]*self.r21 + finte[7]*self.r22 + finte[8]*self.r23
+            fint[2+self.c2] += finte[6]*self.r31 + finte[7]*self.r32 + finte[8]*self.r33
+            fint[3+self.c2] += finte[10]*self.r12 + finte[11]*self.r13 + finte[9]*self.r11
+            fint[4+self.c2] += finte[10]*self.r22 + finte[11]*self.r23 + finte[9]*self.r21
+            fint[5+self.c2] += finte[10]*self.r32 + finte[11]*self.r33 + finte[9]*self.r31
+            fint[0+self.c3] += finte[12]*self.r11 + finte[13]*self.r12 + finte[14]*self.r13
+            fint[1+self.c3] += finte[12]*self.r21 + finte[13]*self.r22 + finte[14]*self.r23
+            fint[2+self.c3] += finte[12]*self.r31 + finte[13]*self.r32 + finte[14]*self.r33
+            fint[3+self.c3] += finte[15]*self.r11 + finte[16]*self.r12 + finte[17]*self.r13
+            fint[4+self.c3] += finte[15]*self.r21 + finte[16]*self.r22 + finte[17]*self.r23
+            fint[5+self.c3] += finte[15]*self.r31 + finte[16]*self.r32 + finte[17]*self.r33
+            fint[0+self.c4] += finte[18]*self.r11 + finte[19]*self.r12 + finte[20]*self.r13
+            fint[1+self.c4] += finte[18]*self.r21 + finte[19]*self.r22 + finte[20]*self.r23
+            fint[2+self.c4] += finte[18]*self.r31 + finte[19]*self.r32 + finte[20]*self.r33
+            fint[3+self.c4] += finte[21]*self.r11 + finte[22]*self.r12 + finte[23]*self.r13
+            fint[4+self.c4] += finte[21]*self.r21 + finte[22]*self.r22 + finte[23]*self.r23
+            fint[5+self.c4] += finte[21]*self.r31 + finte[22]*self.r32 + finte[23]*self.r33
 
 
     cpdef void update_KG(Quad4 self,
