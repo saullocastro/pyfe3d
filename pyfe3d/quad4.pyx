@@ -1067,7 +1067,7 @@ cdef class Quad4:
                 self.probe.KC0ve[ke] += self.K6ROT
 
 
-    cdef void update_probe_finte(Quad4 self, ShellProp prop):
+    cpdef void update_probe_finte(Quad4 self, ShellProp prop):
         r"""Update the internal force vector of the probe
 
         The attribute ``finte`` of the object :class:`.Quad4Probe` is updated,
