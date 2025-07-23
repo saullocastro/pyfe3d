@@ -9,7 +9,7 @@ from Cython.Build import cythonize
 
 
 is_released = True
-version = '0.5.2'
+version = '0.6.0'
 
 
 def git_version():
@@ -68,7 +68,7 @@ def read(fname):
 #Trove classifiers
 CLASSIFIERS = """\
 
-Development Status :: 3 - Alpha
+Development Status :: 4 - Beta
 Intended Audience :: Education
 Intended Audience :: Science/Research
 Intended Audience :: Developers
