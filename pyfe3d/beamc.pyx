@@ -39,6 +39,7 @@ cdef class BeamCData:
     cdef public int KC0_SPARSE_SIZE
     cdef public int KG_SPARSE_SIZE
     cdef public int M_SPARSE_SIZE
+
     def __cinit__(BeamCData self):
         self.KC0_SPARSE_SIZE = 144
         self.KG_SPARSE_SIZE = 144
@@ -78,6 +79,7 @@ cdef class BeamCProbe:
     cdef public double [::1] xe
     cdef public double [::1] ue
     cdef public double [::1] finte
+
     def __cinit__(BeamCProbe self):
         self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
         self.ue = np.zeros(NUM_NODES*DOF, dtype=np.float64)

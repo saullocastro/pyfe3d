@@ -41,6 +41,7 @@ cdef class Tria3RData:
     cdef public int KC0_SPARSE_SIZE
     cdef public int KG_SPARSE_SIZE
     cdef public int M_SPARSE_SIZE
+
     def __cinit__(Tria3RData self):
         self.KC0_SPARSE_SIZE = 324
         self.KG_SPARSE_SIZE = 81
@@ -162,7 +163,6 @@ cdef class Tria3R:
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public double m11, m12, m21, m22
     cdef public Tria3RProbe probe
-
 
     def __cinit__(Tria3R self, Tria3RProbe p):
         self.probe = p

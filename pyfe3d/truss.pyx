@@ -41,6 +41,7 @@ cdef class TrussData:
     """
     cdef public int KC0_SPARSE_SIZE
     cdef public int M_SPARSE_SIZE
+
     def __cinit__(TrussData self):
         self.KC0_SPARSE_SIZE = 72
         self.M_SPARSE_SIZE = 144
@@ -79,6 +80,7 @@ cdef class TrussProbe:
     cdef public double [::1] xe
     cdef public double [::1] ue
     cdef public double [::1] finte
+
     def __cinit__(TrussProbe self):
         self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
         self.ue = np.zeros(NUM_NODES*DOF, dtype=np.float64)
@@ -334,8 +336,7 @@ cdef class Truss:
             self.length = ((x2 - x1)**2 + (y2 - y1)**2 + (z2 - z1)**2)**0.5
 
 
-    cpdef void update_probe_finte(Truss self,
-                           BeamProp prop):
+    cpdef void update_probe_finte(Truss self, BeamProp prop):
         r"""Update the internal force vector of the probe
 
         The attribute ``finte`` is updated with the :class:`.TrussProbe` the
@@ -798,9 +799,7 @@ cdef class Truss:
             KC0v[k] += 1.0*G*J*r31**2/L
 
 
-    cpdef void update_fint(Truss self,
-                           double [::1] fint,
-                           BeamProp prop):
+    cpdef void update_fint(Truss self, double [::1] fint, BeamProp prop):
         r"""Update the internal force vector
 
         Parameters

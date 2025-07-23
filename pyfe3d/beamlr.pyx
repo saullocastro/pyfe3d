@@ -39,6 +39,7 @@ cdef class BeamLRData:
     cdef public int KC0_SPARSE_SIZE
     cdef public int KG_SPARSE_SIZE
     cdef public int M_SPARSE_SIZE
+
     def __cinit__(BeamLRData self):
         self.KC0_SPARSE_SIZE = 144
         self.KG_SPARSE_SIZE = 36
@@ -78,6 +79,7 @@ cdef class BeamLRProbe:
     cdef public double [::1] xe
     cdef public double [::1] ue
     cdef public double [::1] finte
+
     def __cinit__(BeamLRProbe self):
         self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
         self.ue = np.zeros(NUM_NODES*DOF, dtype=np.float64)

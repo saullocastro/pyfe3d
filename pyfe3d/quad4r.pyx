@@ -67,6 +67,7 @@ cdef class Quad4RData:
     cdef public int KA_BETA_SPARSE_SIZE
     cdef public int KA_GAMMA_SPARSE_SIZE
     cdef public int CA_SPARSE_SIZE
+
     def __cinit__(Quad4RData self):
         self.KC0_SPARSE_SIZE = 576
         self.KG_SPARSE_SIZE = 144
@@ -184,7 +185,6 @@ cdef class Quad4R:
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public double m11, m12, m21, m22
     cdef public Quad4RProbe probe
-
 
     def __cinit__(Quad4R self, Quad4RProbe p):
         self.probe = p
