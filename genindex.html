@@ -7,7 +7,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; pyfe3d 0.5.2 documentation</title>
+    <title>Index &#8212; pyfe3d 0.6.0 documentation</title>
   
   
   
@@ -15,26 +15,29 @@
     document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
     document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
   </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="_static/styles/bootstrap.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=8878045cc6db502f8baf" rel="stylesheet" />
 
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
   
-  <link href="_static/vendor/fontawesome/6.5.2/css/all.min.css?digest=dfe6caa3a7d634c4db9b" rel="stylesheet" />
-  <link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-solid-900.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-brands-400.woff2" />
-<link rel="preload" as="font" type="font/woff2" crossorigin href="_static/vendor/fontawesome/6.5.2/webfonts/fa-regular-400.woff2" />
-
-    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=a746c00c" />
-  
+  <!-- So that users can add custom icons -->
+  <script src="_static/scripts/fontawesome.js?digest=8878045cc6db502f8baf"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b" />
-  <script src="_static/vendor/fontawesome/6.5.2/js/all.min.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=8e576371"></script>
+    <script src="_static/documentation_options.js?v=8fa8b3e9"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -43,6 +46,7 @@
     <link rel="search" title="Search" href="search.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
   </head>
   
   
@@ -58,19 +62,8 @@
     <i class="fa-solid fa-arrow-up"></i>Back to top</button>
 
   
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-primary-sidebar-checkbox"/>
-  <label class="overlay overlay-primary" for="pst-primary-sidebar-checkbox"></label>
-  
-  <input type="checkbox"
-          class="sidebar-toggle"
-          id="pst-secondary-sidebar-checkbox"/>
-  <label class="overlay overlay-secondary" for="pst-secondary-sidebar-checkbox"></label>
-  
-  <div class="search-button__wrapper">
-    <div class="search-button__overlay"></div>
-    <div class="search-button__search-container">
+  <dialog id="pst-search-dialog">
+    
 <form class="bd-search d-flex align-items-center"
       action="search.html"
       method="get">
@@ -78,7 +71,6 @@
   <input type="search"
          class="form-control"
          name="q"
-         id="search-input"
          placeholder="Search the docs ..."
          aria-label="Search the docs ..."
          autocomplete="off"
@@ -86,8 +78,8 @@
          autocapitalize="off"
          spellcheck="false"/>
   <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
-</form></div>
-  </div>
+</form>
+  </dialog>
 
   <div class="pst-async-banner-revealer d-none">
   <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
@@ -116,7 +108,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.5.2 documentation</p>
+    <p class="title logo__title">pyfe3d 0.6.0 documentation</p>
   
 </a></div>
     
@@ -164,6 +156,23 @@
   </a>
 </li>
 
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -175,29 +184,21 @@
         <div class="navbar-item navbar-persistent--container">
           
 
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
         </div>
       
       
         <div class="navbar-item">
 
-<script>
-document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-  </button>
-`);
-</script></div>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
       
     </div>
     
@@ -206,15 +207,11 @@ document.write(`
   
     <div class="navbar-persistent--mobile">
 
- <script>
- document.write(`
-   <button class="btn search-button-field search-button__button" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="fa-solid fa-magnifying-glass"></i>
-    <span class="search-button__default-text">Search</span>
-    <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
-   </button>
- `);
- </script>
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
     </div>
   
 
@@ -231,7 +228,8 @@ document.write(`
       
         
       
-      <div class="bd-sidebar-primary bd-sidebar hide-on-wide">
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
         
 
   
@@ -280,6 +278,13 @@ document.write(`
   </a>
 </li>
 
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
   </ul>
 </nav></div>
           
@@ -292,15 +297,11 @@ document.write(`
         
           <div class="navbar-item">
 
-<script>
-document.write(`
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button" title="light/dark" aria-label="light/dark" data-bs-placement="bottom" data-bs-toggle="tooltip">
-    <i class="theme-switch fa-solid fa-sun fa-lg" data-mode="light"></i>
-    <i class="theme-switch fa-solid fa-moon fa-lg" data-mode="dark"></i>
-    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"></i>
-  </button>
-`);
-</script></div>
+<button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button pst-js-only" aria-label="Color mode" data-bs-title="Color mode"  data-bs-placement="bottom" data-bs-toggle="tooltip">
+  <i class="theme-switch fa-solid fa-sun                fa-lg" data-mode="light" title="Light"></i>
+  <i class="theme-switch fa-solid fa-moon               fa-lg" data-mode="dark"  title="Dark"></i>
+  <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg" data-mode="auto"  title="System Settings"></i>
+</button></div>
         
       </div>
     
@@ -308,9 +309,14 @@ document.write(`
   
   
   <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
   </div>
-  
-  <div id="rtd-footer-container"></div>
 
 
       </div>
@@ -384,8 +390,6 @@ document.write(`
       <li><a href="properties.html#pyfe3d.shellprop.ShellProp.A66">A66 (pyfe3d.shellprop.ShellProp attribute)</a>
 </li>
       <li><a href="tria3r.html#pyfe3d.tria3r.Tria3R.alpha_shear_locking">alpha_shear_locking (pyfe3d.tria3r.Tria3R attribute)</a>
-</li>
-      <li><a href="tria3r.html#pyfe3d.tria3r.Tria3R.alphat">alphat (pyfe3d.tria3r.Tria3R attribute)</a>
 </li>
       <li><a href="quad4.html#pyfe3d.quad4.Quad4.area">area (pyfe3d.quad4.Quad4 attribute)</a>
 
@@ -619,14 +623,30 @@ document.write(`
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="beamc.html#pyfe3d.beamc.BeamCProbe.finte">finte (pyfe3d.beamc.BeamCProbe attribute)</a>
+
+      <ul>
+        <li><a href="beamlr.html#pyfe3d.beamlr.BeamLRProbe.finte">(pyfe3d.beamlr.BeamLRProbe attribute)</a>
+</li>
+        <li><a href="quad4.html#pyfe3d.quad4.Quad4Probe.finte">(pyfe3d.quad4.Quad4Probe attribute)</a>
+</li>
+        <li><a href="quad4r.html#pyfe3d.quad4r.Quad4RProbe.finte">(pyfe3d.quad4r.Quad4RProbe attribute)</a>
+</li>
+        <li><a href="spring.html#pyfe3d.spring.SpringProbe.finte">(pyfe3d.spring.SpringProbe attribute)</a>
+</li>
+        <li><a href="tria3r.html#pyfe3d.tria3r.Tria3RProbe.finte">(pyfe3d.tria3r.Tria3RProbe attribute)</a>
+</li>
+        <li><a href="truss.html#pyfe3d.truss.TrussProbe.finte">(pyfe3d.truss.TrussProbe attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="properties.html#pyfe3d.shellprop.ShellProp.force_balanced">force_balanced() (pyfe3d.shellprop.ShellProp method)</a>
 </li>
       <li><a href="properties.html#pyfe3d.shellprop.force_balanced_LP">force_balanced_LP() (in module pyfe3d.shellprop)</a>
 </li>
       <li><a href="properties.html#pyfe3d.shellprop.ShellProp.force_orthotropic">force_orthotropic() (pyfe3d.shellprop.ShellProp method)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="properties.html#pyfe3d.shellprop.force_orthotropic_LP">force_orthotropic_LP() (in module pyfe3d.shellprop)</a>
 </li>
       <li><a href="properties.html#pyfe3d.shellprop.ShellProp.force_symmetric">force_symmetric() (pyfe3d.shellprop.ShellProp method)</a>
@@ -811,6 +831,8 @@ document.write(`
 
       <ul>
         <li><a href="quad4r.html#pyfe3d.quad4r.Quad4R.K6ROT">(pyfe3d.quad4r.Quad4R attribute)</a>
+</li>
+        <li><a href="tria3r.html#pyfe3d.tria3r.Tria3R.K6ROT">(pyfe3d.tria3r.Tria3R attribute)</a>
 </li>
       </ul></li>
       <li><a href="quad4.html#pyfe3d.quad4.Quad4Data.KA_BETA_SPARSE_SIZE">KA_BETA_SPARSE_SIZE (pyfe3d.quad4.Quad4Data attribute)</a>
@@ -1514,6 +1536,22 @@ document.write(`
         <li><a href="quad4r.html#pyfe3d.quad4r.Quad4R.update_CA">(pyfe3d.quad4r.Quad4R method)</a>
 </li>
       </ul></li>
+      <li><a href="beamc.html#pyfe3d.beamc.BeamC.update_fint">update_fint() (pyfe3d.beamc.BeamC method)</a>
+
+      <ul>
+        <li><a href="beamlr.html#pyfe3d.beamlr.BeamLR.update_fint">(pyfe3d.beamlr.BeamLR method)</a>
+</li>
+        <li><a href="quad4.html#pyfe3d.quad4.Quad4.update_fint">(pyfe3d.quad4.Quad4 method)</a>
+</li>
+        <li><a href="quad4r.html#pyfe3d.quad4r.Quad4R.update_fint">(pyfe3d.quad4r.Quad4R method)</a>
+</li>
+        <li><a href="spring.html#pyfe3d.spring.Spring.update_fint">(pyfe3d.spring.Spring method)</a>
+</li>
+        <li><a href="tria3r.html#pyfe3d.tria3r.Tria3R.update_fint">(pyfe3d.tria3r.Tria3R method)</a>
+</li>
+        <li><a href="truss.html#pyfe3d.truss.Truss.update_fint">(pyfe3d.truss.Truss method)</a>
+</li>
+      </ul></li>
       <li><a href="quad4.html#pyfe3d.quad4.Quad4.update_KA_beta">update_KA_beta() (pyfe3d.quad4.Quad4 method)</a>
 
       <ul>
@@ -1584,6 +1622,20 @@ document.write(`
         <li><a href="tria3r.html#pyfe3d.tria3r.Tria3R.update_M">(pyfe3d.tria3r.Tria3R method)</a>
 </li>
         <li><a href="truss.html#pyfe3d.truss.Truss.update_M">(pyfe3d.truss.Truss method)</a>
+</li>
+      </ul></li>
+      <li><a href="beamc.html#pyfe3d.beamc.BeamC.update_probe_finte">update_probe_finte() (pyfe3d.beamc.BeamC method)</a>
+
+      <ul>
+        <li><a href="beamlr.html#pyfe3d.beamlr.BeamLR.update_probe_finte">(pyfe3d.beamlr.BeamLR method)</a>
+</li>
+        <li><a href="quad4r.html#pyfe3d.quad4r.Quad4R.update_probe_finte">(pyfe3d.quad4r.Quad4R method)</a>
+</li>
+        <li><a href="spring.html#pyfe3d.spring.Spring.update_probe_finte">(pyfe3d.spring.Spring method)</a>
+</li>
+        <li><a href="tria3r.html#pyfe3d.tria3r.Tria3R.update_probe_finte">(pyfe3d.tria3r.Tria3R method)</a>
+</li>
+        <li><a href="truss.html#pyfe3d.truss.Truss.update_probe_finte">(pyfe3d.truss.Truss method)</a>
 </li>
       </ul></li>
       <li><a href="beamc.html#pyfe3d.beamc.BeamC.update_probe_ue">update_probe_ue() (pyfe3d.beamc.BeamC method)</a>
@@ -1752,8 +1804,8 @@ document.write(`
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script src="_static/scripts/bootstrap.js?digest=dfe6caa3a7d634c4db9b"></script>
-<script src="_static/scripts/pydata-sphinx-theme.js?digest=dfe6caa3a7d634c4db9b"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1786,7 +1838,8 @@ document.write(`
       
         <div class="footer-item">
 <p class="theme-version">
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.15.4.
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.16.1.
 </p></div>
       
     </div>

@@ -49,6 +49,7 @@ Topics
     fe_overview.rst
     properties.rst
     coord.rst
+    repository_structure.rst
 
 License
 -------
