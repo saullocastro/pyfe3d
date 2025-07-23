@@ -131,5 +131,6 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         print()
         assert np.allclose(np.repeat(omega123, 2), omegan, rtol=0.015)
 
+
 if __name__ == '__main__':
     test_nat_freq_cantilever(refinement=1)
