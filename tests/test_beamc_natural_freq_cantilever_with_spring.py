@@ -124,10 +124,6 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
                 k=num_eigenvalues, tol=1e-4)
         omegan = eigvals**0.5
 
-        eigvec = np.zeros(N)
-        eigvec[bu] = eigvecsu[:, 0]
-        spring.update_probe_ue(eigvec)
-
         alpha123 = np.array([1.875, 4.694, 7.885])
         omega123 = alpha123**2*np.sqrt(E*Izz/(rho*A*L**4))
         print('Theoretical omega123', omega123)
