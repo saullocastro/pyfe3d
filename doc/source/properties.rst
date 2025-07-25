@@ -1,11 +1,9 @@
 Property definitions
 --------------------
 
-.. automodule:: pyfe3d.beamprop
-    :members:
+.. toctree::
+    :titlesonly:
 
-.. automodule:: pyfe3d.shellprop
-    :members:
-
-.. automodule:: pyfe3d.shellprop_utils
-    :members:
+    beamprop.rst
+    shellprop.rst
+    shellprop_utils.rst
