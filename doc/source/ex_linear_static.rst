@@ -1,12 +1,13 @@
-Static analysis
----------------
+Linear static analysis
+----------------------
 
-Here, a point load is applied to a simply supported rectangular plate.
+The figure below shows the normal displacement of a simply supported plate with
+a point load applied to it.
 
-.. image:: ./ex_linear_static_figure.jpg
+.. image:: ./ex_linear_static.jpg
 
-The following code used to generate this figure is extracted from one of
-``pyfe3d`` unit tests:
+The code used to generate this figure is extracted from one of ``pyfe3d`` unit
+tests:
 
 .. literalinclude:: ../../tests/test_quad4_static_point_load.py
     :encoding: latin-1
