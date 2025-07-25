@@ -36,8 +36,9 @@ Usage Examples
     :maxdepth: 2
 
     ex_linear_static.rst
-    ex_linear_buckling.rst
-    ex_nat_freq.rst
+    ex_linear_buckling_plate.rst
+    ex_linear_buckling_cylinder_torsion.rst
+    ex_natural_frequency_cylinder.rst
 
 
 Topics
@@ -48,7 +49,6 @@ Topics
 
     fe_overview.rst
     properties.rst
-    coord.rst
     repository_structure.rst
 
 License
