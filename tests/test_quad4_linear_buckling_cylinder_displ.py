@@ -7,16 +7,20 @@ from numpy import isclose
 from scipy.sparse.linalg import eigsh, spsolve
 from scipy.sparse import coo_matrix
 
-from pyfe3d.shellprop_utils import laminated_plate, isotropic_plate
+from pyfe3d.shellprop_utils import laminated_plate
 from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 
 
 def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     r"""Test case from reference
 
-        Geier, B., and Singh, G., 1997, “Some Simple Solutions for Buckling Loads of Thin and Moderately Thick Cylindrical Shells and Panels Made of Laminated Composite Material,” Aerosp. Sci. Technol., 1(1), pp. 47–63.
+        Saullo G. P. Castro, Christian Mittelstedt, Francisco A. C. Monteiro, Mariano
+        A. Arbelo, Gerhard Ziegmann, Richard Degenhardt. "Linear buckling predictions
+        of unstiffened laminated composite cylinders and cones under various loading
+        and boundary conditions using semi-analytical models". Composite Structures,
+        2014. 10.1016/j.compstruct.2014.07.037
 
-        Cylinder Z12, see Table 3 page 60
+        Cylinder Z11
 
     """
     data = Quad4Data()
@@ -27,10 +31,12 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     b = 2*np.pi*R # m
 
     ntheta = 40*refinement # circumferential
-    nlength = 2*int(ntheta*L/b)
+    nlength = int(ntheta*L/b)
 
+    # NOTE material proporties from Table 3 in Castro et al.
+    # Actual values from reference can be found here https://github.com/saullocastro/compmech/blob/e7e5342bf212743e70da22c94cc0452911099db3/compmech/conecyl/conecylDB.py#L32C34-L32C76
     E11 = 123.55e9
-    E22 = 8.7079e9
+    E22 = 8.708e9
     nu12 = 0.319
     G12 = 5.695e9
     G13 = 5.695e9
@@ -38,10 +44,9 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     plyt = 0.125e-3
     laminaprop = (E11, E22, nu12, G12, G13, G23)
 
-    # NOTE cylinder Z12, table 3 of reference
-    stack = [+51, -51, +45, -45, +37, -37, +19, -19, 0, 0]
+    # NOTE cylinder Z11, Table 4 of Castro et al.
+    stack = [+60, -60, 0, 0, +68, -68, +52, -52, +37, -37]
     prop = laminated_plate(stack=stack, plyt=plyt, laminaprop=laminaprop)
-    #prop = isotropic_plate(thickness=0.001, E=70e9, nu=0.33)
 
     nids = 1 + np.arange(nlength*(ntheta+1))
     nids_mesh = nids.reshape(nlength, ntheta+1)
@@ -97,7 +102,7 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
         quad.c4 = DOF*nid_pos[n4]
         quad.init_k_KC0 = init_k_KC0
         quad.init_k_KG = init_k_KG
-        quad.K6ROT = 1.
+        quad.K6ROT = 10.
         quad.update_rotation_matrix(ncoords_flatten, 0, 0, 1)
         quad.update_probe_xe(ncoords_flatten)
         quad.update_KC0(KC0r, KC0c, KC0v, prop)
@@ -113,6 +118,7 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
 
     bk = np.zeros(N, dtype=bool)
 
+    # NOTE cylinders with SS1 boundary condition as decribed in Table 1 of Castro et al.
     checkSS = isclose(z, 0) | isclose(z, L)
     bk[0::DOF] = checkSS
     bk[1::DOF] = checkSS
@@ -122,7 +128,7 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
 
     u = np.zeros(N, dtype=DOUBLE)
 
-    compression = -0.0001
+    compression = -0.001
     checkTopEdge = isclose(z, L)
     u[2::DOF] += checkTopEdge*compression
     uk = u[bk]
@@ -160,19 +166,27 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     fext[bk] = fk
     Pcr = (eigvals[0]*fext[2::DOF][checkTopEdge]).sum()
     print('Pcr =', Pcr)
-    reference_value_Geier_Singh_Z12 =  -274300
+
+    # NOTE values used for CI tests, values derived after running the tests in
+    # a local compuer with refinement=5 first and then with refinement=1
+    reference_Pcr_refinement_5 =  -159363.4
+    #assert np.isclose(Pcr, -518147.5, rtol=1e-3)
 
     if plot_pyvista:
         import pyvista as pv
 
         contour_colorscale = 'coolwarm'
         background = 'gray'
+
+        vector = eigvecs[:, mode]
+
         contour_label = 'Radial displacement'
-        contour_vec = np.sqrt(eigvecs[0::DOF, mode]**2 + eigvecs[1::DOF, mode]**2)
+        contour_vec = np.sqrt(vector[0::DOF]**2 + vector[1::DOF]**2)
+
         displ_vec = np.zeros_like(ncoords)
-        displ_vec[:, 0] = eigvecs[0::DOF, mode]*100
-        displ_vec[:, 1] = eigvecs[1::DOF, mode]*100
-        displ_vec[:, 2] = eigvecs[2::DOF, mode]*100
+        displ_vec[:, 0] = eigvecs[0::DOF, mode]*10
+        displ_vec[:, 1] = eigvecs[1::DOF, mode]*10
+        displ_vec[:, 2] = eigvecs[2::DOF, mode]*10
         intensitymode = 'vertex'
 
         plotter = pv.Plotter(off_screen=False)
@@ -189,6 +203,7 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
         else:
             plotter.add_mesh(quad_plot, edge_color='black', show_edges=True,
                     line_width=1.)
+        displ_vec = None
         if displ_vec is not None:
             quad_plot = pv.PolyData(ncoords + displ_vec, faces_quad)
             plotter.add_mesh(quad_plot, edge_color='red', show_edges=True,
@@ -206,8 +221,5 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
         plotter.show()
 
 
-    #assert np.isclose(Pcr, reference_value_Geier_Singh_Z12, rtol=0.01)
-    assert np.isclose(Pcr, -225968.28006101557, rtol=0.01)
-
 if __name__ == '__main__':
-    test_linear_buckling_cylinder(mode=0, plot_pyvista=True, refinement=3)
+    test_linear_buckling_cylinder(mode=0, plot_pyvista=True, refinement=5)

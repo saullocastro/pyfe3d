@@ -50,7 +50,7 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     laminaprop = (E11, E22, nu12, G12, G13, G23)
 
     # NOTE very small hourglass energy to make sure this doesn't affect
-    hgfactor = 0.001
+    hgfactor = 1.
 
     # NOTE cylinder Z11, table 3 of reference
     stack = [+60, -60, 0, 0, +68, -68, +52, -52, +37, -37]
@@ -154,7 +154,7 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     num_eig = max(mode+1, 6)
     eigvecs = np.zeros((N, num_eig))
     eigvals, eigvecsu = eigsh(A=KC0uu, M=Muu, sigma=-1., which='LM',
-            k=num_eig, tol=1e-3)
+            k=num_eig, tol=1e-5)
     eigvecs[bu] = eigvecsu
     omegan = eigvals**0.5
 
@@ -234,9 +234,9 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
         plotter.parallel_projection = True
         plotter.show()
 
-    assert np.allclose(omegan, [1889.10368191, 1889.10368191,
-                                2040.63317941, 2040.63317941,
-                                2097.82337089 , 2097.82337089], rtol=1e-5)
+    assert np.allclose(omegan, [1991.56674701, 1991.56674702,
+                                2124.16515535, 2124.16515535,
+                                2215.4643446 , 2215.46434461], rtol=1e-5)
 
 if __name__ == '__main__':
     test_linear_nat_freq_cylinder(mode=0, plot_pyvista=True, refinement=1)

@@ -149,7 +149,7 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     num_eig = max(mode+1, 6)
     eigvecs = np.zeros((N, num_eig))
     eigvals, eigvecsu = eigsh(A=KC0uu, M=Muu, sigma=-1., which='LM',
-            k=num_eig, tol=1e-3)
+            k=num_eig, tol=1e-5)
     eigvecs[bu] = eigvecsu
     omegan = eigvals**0.5
 
@@ -198,32 +198,33 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
         zaxis = pv.Arrow(start=(0, 0, 0), direction=(0, 0, 1), scale=R/3)
         plotter.add_mesh(zaxis, color='green')
 
-        for q in quads:
-            pos1 = nid_pos[q.n1]
-            pos2 = nid_pos[q.n2]
-            pos3 = nid_pos[q.n3]
-            pos4 = nid_pos[q.n4]
-            centroid = (ncoords[pos1] + ncoords[pos2] + ncoords[pos3] + ncoords[pos4])/4
-            ze = np.array([0., 0., 1.])
-            zg = np.array([[q.r11, q.r12, q.r13],
-                           [q.r21, q.r22, q.r23],
-                           [q.r31, q.r32, q.r33]]) @ ze
-            normal = pv.Arrow(start=centroid, direction=zg, scale=R/6)
-            plotter.add_mesh(normal, color='green')
+        if False:
+            for q in quads:
+                pos1 = nid_pos[q.n1]
+                pos2 = nid_pos[q.n2]
+                pos3 = nid_pos[q.n3]
+                pos4 = nid_pos[q.n4]
+                centroid = (ncoords[pos1] + ncoords[pos2] + ncoords[pos3] + ncoords[pos4])/4
+                ze = np.array([0., 0., 1.])
+                zg = np.array([[q.r11, q.r12, q.r13],
+                               [q.r21, q.r22, q.r23],
+                               [q.r31, q.r32, q.r33]]) @ ze
+                normal = pv.Arrow(start=centroid, direction=zg, scale=R/6)
+                plotter.add_mesh(normal, color='green')
 
-            xe = np.array([1., 0., 0.])
-            xg = np.array([[q.r11, q.r12, q.r13],
-                           [q.r21, q.r22, q.r23],
-                           [q.r31, q.r32, q.r33]]) @ xe
-            x_axis = pv.Arrow(start=centroid, direction=xg, scale=R/6)
-            plotter.add_mesh(x_axis, color='blue')
+                xe = np.array([1., 0., 0.])
+                xg = np.array([[q.r11, q.r12, q.r13],
+                               [q.r21, q.r22, q.r23],
+                               [q.r31, q.r32, q.r33]]) @ xe
+                x_axis = pv.Arrow(start=centroid, direction=xg, scale=R/6)
+                plotter.add_mesh(x_axis, color='blue')
 
-            ye = np.array([0., 1., 0.])
-            yg = np.array([[q.r11, q.r12, q.r13],
-                           [q.r21, q.r22, q.r23],
-                           [q.r31, q.r32, q.r33]]) @ ye
-            y_axis = pv.Arrow(start=centroid, direction=yg, scale=R/6)
-            plotter.add_mesh(y_axis, color='yellow')
+                ye = np.array([0., 1., 0.])
+                yg = np.array([[q.r11, q.r12, q.r13],
+                               [q.r21, q.r22, q.r23],
+                               [q.r31, q.r32, q.r33]]) @ ye
+                y_axis = pv.Arrow(start=centroid, direction=yg, scale=R/6)
+                plotter.add_mesh(y_axis, color='yellow')
 
         plotter.set_background(background)
         plotter.parallel_projection = True
@@ -234,4 +235,4 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
                                 2157.8876396, 2157.88763961], rtol=1e-5)
 
 if __name__ == '__main__':
-    test_linear_nat_freq_cylinder(mode=0, plot_pyvista=True, refinement=1)
+    test_linear_nat_freq_cylinder(mode=0, plot_pyvista=True, refinement=2)

@@ -163,17 +163,16 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
     KGuu = KG[bu, :][:, bu]
     print('sparse KG created')
 
-    num_eig_lb = max(mode+1, 1)
+    num_eig_lb = max(mode+1, 4)
+    eigvecs = np.zeros((N, num_eig_lb))
     eigvals, eigvecsu = eigsh(A=PREC*KGuu, k=num_eig_lb, which='SM',
             M=PREC*Kuu, tol=1e-15, sigma=1., mode='cayley')
     eigvals = -1./eigvals
+    eigvecs[bu] = eigvecsu
     load_mult = eigvals[0]
     P_cr_calc = load_mult*ftotal
     print('linear buckling load_mult =', load_mult)
     print('linear buckling P_cr_calc =', P_cr_calc)
-
-    u = np.zeros(N)
-    u[bu] = eigvecsu[:, mode]
 
     # theoretical reference
     kcmin = 1e6
@@ -189,15 +188,29 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
     P_cr_theory = sigma_cr*h*b
     print('Theoretical P_cr_theory', P_cr_theory)
 
+    print('eigvals', eigvals)
+
     if plot:
         import matplotlib.pyplot as plt
 
-        plt.clf()
-        plt.contourf(xmesh, ymesh, u[2::DOF].reshape(nx, ny).T)
+        fig, axs = plt.subplots(2, 2, sharex=True, sharey=True)
+        axs[0, 0].set_aspect('equal')
+        axs[0, 0].contourf(xmesh, ymesh, eigvecs[2::DOF, 0].reshape(nx, ny).T,
+                           levels=10, cmap='coolwarm')
+        axs[0, 1].set_aspect('equal')
+        axs[0, 1].set_aspect('equal')
+        axs[0, 1].contourf(xmesh, ymesh, eigvecs[2::DOF, 1].reshape(nx, ny).T,
+                           levels=10, cmap='coolwarm')
+        axs[1, 0].set_aspect('equal')
+        axs[1, 0].contourf(xmesh, ymesh, eigvecs[2::DOF, 2].reshape(nx, ny).T,
+                           levels=10, cmap='coolwarm')
+        axs[1, 1].set_aspect('equal')
+        axs[1, 1].contourf(xmesh, ymesh, eigvecs[2::DOF, 3].reshape(nx, ny).T,
+                           levels=10, cmap='coolwarm')
         plt.show()
 
     assert isclose(P_cr_theory, P_cr_calc, rtol=0.05)
 
 
 if __name__ == '__main__':
-    test_linear_buckling_plate(plot=True, mode=0, refinement=1)
+    test_linear_buckling_plate(plot=True, mode=0, refinement=3)
