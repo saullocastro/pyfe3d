@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Available finite elements &#8212; pyfe3d 0.6.0 documentation</title>
+    <title>Available finite elements &#8212; pyfe3d 0.6.1 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=8fa8b3e9"></script>
+    <script src="_static/documentation_options.js?v=2bd037f0"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -48,7 +48,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Quad4 - Quadrilateral element with mixed integration (pyfe3d.quad4)" href="quad4.html" />
-    <link rel="prev" title="Static analysis" href="ex_linear_static.html" />
+    <link rel="prev" title="Natural frequency analysis of a cylinder" href="ex_natural_frequency_cylinder.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
@@ -113,7 +113,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.6.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.6.1 documentation</p>
   
 </a></div>
     
@@ -136,28 +136,28 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_linear_static.html">
-    Static analysis
-  </a>
-</li>
-
-
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#">
-    Available finite elements
+    Linear static analysis
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="properties.html">
-    Property definitions
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="coord.html">
-    <no title>
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
   </a>
 </li>
 
@@ -169,6 +169,20 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#">
+    Available finite elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="properties.html">
+    Property definitions
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
     Repository structure
@@ -260,7 +274,28 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_linear_static.html">
-    Static analysis
+    Linear static analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
   </a>
 </li>
 
@@ -275,13 +310,6 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="properties.html">
     Property definitions
-  </a>
-</li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="coord.html">
-    <no title>
   </a>
 </li>
 
@@ -452,12 +480,12 @@
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="ex_linear_static.html"
+       href="ex_natural_frequency_cylinder.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Static analysis</p>
+        <p class="prev-next-title">Natural frequency analysis of a cylinder</p>
       </div>
     </a>
     <a class="right-next"
@@ -514,7 +542,7 @@
 
   <p class="copyright">
     
-      © Copyright 2021-, Saullo G. P. Castro.
+      © Copyright 2021-2025, Saullo G. P. Castro.
       <br/>
     
   </p>

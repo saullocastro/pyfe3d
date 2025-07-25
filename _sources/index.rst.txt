@@ -18,7 +18,7 @@ Citing this library
 -------------------
 
 
-Saullo G. P. Castro. (2023). General-purpose finite element solver based on Python and Cython (Version 0.3.23). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
+Saullo G. P. Castro. (2025). General-purpose finite element solver based on Python and Cython (Version 0.6.1). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
 
 
 Tutorials
@@ -36,19 +36,19 @@ Usage Examples
     :maxdepth: 2
 
     ex_linear_static.rst
-    ex_linear_buckling.rst
-    ex_nat_freq.rst
+    ex_linear_buckling_plate.rst
+    ex_linear_buckling_cylinder_torsion.rst
+    ex_natural_frequency_cylinder.rst
 
 
 Topics
 -------
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
     fe_overview.rst
     properties.rst
-    coord.rst
     repository_structure.rst
 
 License

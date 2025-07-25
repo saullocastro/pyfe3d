@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Quad4 - Quadrilateral element with mixed integration (pyfe3d.quad4) &#8212; pyfe3d 0.6.0 documentation</title>
+    <title>Quad4 - Quadrilateral element with mixed integration (pyfe3d.quad4) &#8212; pyfe3d 0.6.1 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=8fa8b3e9"></script>
+    <script src="_static/documentation_options.js?v=2bd037f0"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -113,7 +113,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.6.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.6.1 documentation</p>
   
 </a></div>
     
@@ -136,28 +136,28 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_linear_static.html">
-    Static analysis
-  </a>
-</li>
-
-
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="fe_overview.html">
-    Available finite elements
+    Linear static analysis
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="properties.html">
-    Property definitions
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="coord.html">
-    <no title>
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
   </a>
 </li>
 
@@ -169,6 +169,20 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="fe_overview.html">
+    Available finite elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="properties.html">
+    Property definitions
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
     Repository structure
@@ -260,7 +274,28 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_linear_static.html">
-    Static analysis
+    Linear static analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
   </a>
 </li>
 
@@ -275,13 +310,6 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="properties.html">
     Property definitions
-  </a>
-</li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="coord.html">
-    <no title>
   </a>
 </li>
 
@@ -531,13 +559,16 @@ matrices based on the Piston theory.</p>
 <tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_fint" title="pyfe3d.quad4.Quad4.update_fint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_fint</span></code></a>(self, double[, ShellProp prop)</p></td>
 <td><p>Update the internal force vector</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_probe_ue" title="pyfe3d.quad4.Quad4.update_probe_ue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_probe_ue</span></code></a>(self, double[)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_probe_finte" title="pyfe3d.quad4.Quad4.update_probe_finte"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_probe_finte</span></code></a>(self, ShellProp prop)</p></td>
+<td><p>Update the internal force vector of the probe</p></td>
+</tr>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_probe_ue" title="pyfe3d.quad4.Quad4.update_probe_ue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_probe_ue</span></code></a>(self, double[)</p></td>
 <td><p>Update the local displacement vector of the probe of the element</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_probe_xe" title="pyfe3d.quad4.Quad4.update_probe_xe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_probe_xe</span></code></a>(self, double[)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_probe_xe" title="pyfe3d.quad4.Quad4.update_probe_xe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_probe_xe</span></code></a>(self, double[)</p></td>
 <td><p>Update the 3D coordinates of the probe of the element</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_rotation_matrix" title="pyfe3d.quad4.Quad4.update_rotation_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_rotation_matrix</span></code></a>(self, double[, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_rotation_matrix" title="pyfe3d.quad4.Quad4.update_rotation_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_rotation_matrix</span></code></a>(self, double[, ...)</p></td>
 <td><p>Update the rotation matrix of the element</p></td>
 </tr>
 </tbody>
@@ -796,7 +827,7 @@ matrices based on the Piston theory.</p>
 </dd>
 <dt><strong>KC0v</strong><span class="classifier">np.array</span></dt><dd><p>Array to store sparse values</p>
 </dd>
-<dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object</span></dt><dd><p>Shell property object from where the stiffness and mass attributes
+<dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object</span></dt><dd><p>Shell property object from where the stiffness and mass attributes
 are read from.</p>
 </dd>
 <dt><strong>update_KC0v_only</strong><span class="classifier">int</span></dt><dd><p>The default <code class="docutils literal notranslate"><span class="pre">0</span></code> means that the row and column indices <code class="docutils literal notranslate"><span class="pre">KC0r</span></code>
@@ -828,7 +859,7 @@ coordinates.</p>
 </dd>
 <dt><strong>KGv</strong><span class="classifier">np.array</span></dt><dd><p>Array to store sparse values</p>
 </dd>
-<dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object</span></dt><dd><p>Shell property object from where the stiffness and mass attributes
+<dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object</span></dt><dd><p>Shell property object from where the stiffness and mass attributes
 are read from.</p>
 </dd>
 </dl>
@@ -903,11 +934,36 @@ parameter.</p>
 <dd class="field-odd"><dl>
 <dt><strong>fint</strong><span class="classifier">np.array</span></dt><dd><p>Array that is updated in place with the internal forces. The
 internal forces stored in <code class="docutils literal notranslate"><span class="pre">fint</span></code> are calculated in global
-coordinates. Method <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.update_probe_finte" title="pyfe3d.beamc.BeamC.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_finte()</span></code></a> is called to update
+coordinates. Method <a class="reference internal" href="#pyfe3d.quad4.Quad4.update_probe_finte" title="pyfe3d.quad4.Quad4.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_finte()</span></code></a> is called to update
 the parameter <code class="docutils literal notranslate"><span class="pre">finte</span></code> of the <a class="reference internal" href="#pyfe3d.quad4.Quad4Probe" title="pyfe3d.quad4.Quad4Probe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4Probe</span></code></a> with the
 internal forces in local coordinates.</p>
 </dd>
-<dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object</span></dt><dd><p>Shell property object from where the stiffness and mass attributes
+<dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object</span></dt><dd><p>Shell property object from where the stiffness and mass attributes
+are read from.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.update_probe_finte">
+<span class="sig-name descname"><span class="pre">update_probe_finte</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.update_probe_finte" title="Link to this definition">#</a></dt>
+<dd><p>Update the internal force vector of the probe</p>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">finte</span></code> of the object <a class="reference internal" href="#pyfe3d.quad4.Quad4Probe" title="pyfe3d.quad4.Quad4Probe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4Probe</span></code></a> is updated,
+which corresponds to the internal forces in local coordinates. While
+using this function, mind that the probe can be shared amongst more
+than one finite element, depending how you defined them, meaning that
+the probe will always safe the values from the last udpate.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">finte</span></code> attribute of object <a class="reference internal" href="#pyfe3d.quad4.Quad4Probe" title="pyfe3d.quad4.Quad4Probe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4Probe</span></code></a> is
+updated, accessible using <code class="docutils literal notranslate"><span class="pre">.probe.finte</span></code>.</p>
+</div>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object</span></dt><dd><p>Shell property object from where the stiffness and mass attributes
 are read from.</p>
 </dd>
 </dl>
@@ -1291,6 +1347,7 @@ given natural coordinate point <span class="math notranslate nohighlight">\(\xi\
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_M"><code class="docutils literal notranslate"><span class="pre">Quad4.update_M()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_area"><code class="docutils literal notranslate"><span class="pre">Quad4.update_area()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_fint"><code class="docutils literal notranslate"><span class="pre">Quad4.update_fint()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_probe_finte"><code class="docutils literal notranslate"><span class="pre">Quad4.update_probe_finte()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_probe_ue"><code class="docutils literal notranslate"><span class="pre">Quad4.update_probe_ue()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_probe_xe"><code class="docutils literal notranslate"><span class="pre">Quad4.update_probe_xe()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">Quad4.update_rotation_matrix()</span></code></a></li>
@@ -1361,7 +1418,7 @@ given natural coordinate point <span class="math notranslate nohighlight">\(\xi\
 
   <p class="copyright">
     
-      © Copyright 2021-, Saullo G. P. Castro.
+      © Copyright 2021-2025, Saullo G. P. Castro.
       <br/>
     
   </p>

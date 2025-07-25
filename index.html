@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>General-purpose finite element solver - pyfe3d &#8212; pyfe3d 0.6.0 documentation</title>
+    <title>General-purpose finite element solver - pyfe3d &#8212; pyfe3d 0.6.1 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=8878045cc6db502f8baf" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=8878045cc6db502f8baf" />
 
-    <script src="_static/documentation_options.js?v=8fa8b3e9"></script>
+    <script src="_static/documentation_options.js?v=2bd037f0"></script>
     <script src="_static/doctools.js?v=9bcbadda"></script>
     <script src="_static/sphinx_highlight.js?v=dc90522c"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -112,7 +112,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.6.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.6.1 documentation</p>
   
 </a></div>
     
@@ -135,28 +135,28 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_linear_static.html">
-    Static analysis
+    Linear static analysis
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="fe_overview.html">
-    Available finite elements
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="properties.html">
-    Property definitions
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="coord.html">
-    <no title>
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
   </a>
 </li>
 
@@ -168,6 +168,20 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="fe_overview.html">
+    Available finite elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="properties.html">
+    Property definitions
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
     Repository structure
@@ -261,7 +275,28 @@
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_linear_static.html">
-    Static analysis
+    Linear static analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
   </a>
 </li>
 
@@ -276,13 +311,6 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="properties.html">
     Property definitions
-  </a>
-</li>
-
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="coord.html">
-    <no title>
   </a>
 </li>
 
@@ -356,7 +384,7 @@ in any platform, including the Google Colab environment.</p>
 </section>
 <section id="citing-this-library">
 <h2>Citing this library<a class="headerlink" href="#citing-this-library" title="Link to this heading">#</a></h2>
-<p>Saullo G. P. Castro. (2023). General-purpose finite element solver based on Python and Cython (Version 0.3.23). Zenodo. DOI: <a class="reference external" href="https://doi.org/10.5281/zenodo.6573489">https://doi.org/10.5281/zenodo.6573489</a>.</p>
+<p>Saullo G. P. Castro. (2025). General-purpose finite element solver based on Python and Cython (Version 0.6.1). Zenodo. DOI: <a class="reference external" href="https://doi.org/10.5281/zenodo.6573489">https://doi.org/10.5281/zenodo.6573489</a>.</p>
 </section>
 <section id="tutorials">
 <h2>Tutorials<a class="headerlink" href="#tutorials" title="Link to this heading">#</a></h2>
@@ -373,7 +401,10 @@ in any platform, including the Google Colab environment.</p>
 <h2>Usage Examples<a class="headerlink" href="#usage-examples" title="Link to this heading">#</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="ex_linear_static.html">Static analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ex_linear_static.html">Linear static analysis</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ex_linear_buckling_plate.html">Linear buckling analysis of a plate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ex_linear_buckling_cylinder_torsion.html">Linear buckling analysis of a cylinder under torsion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ex_natural_frequency_cylinder.html">Natural frequency analysis of a cylinder</a></li>
 </ul>
 </div>
 </section>
@@ -381,63 +412,9 @@ in any platform, including the Google Colab environment.</p>
 <h2>Topics<a class="headerlink" href="#topics" title="Link to this heading">#</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="fe_overview.html">Available finite elements</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="quad4.html">Quad4 - Quadrilateral element with mixed integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4"><code class="docutils literal notranslate"><span class="pre">Quad4</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4Data"><code class="docutils literal notranslate"><span class="pre">Quad4Data</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4Probe"><code class="docutils literal notranslate"><span class="pre">Quad4Probe</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="quad4r.html">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R"><code class="docutils literal notranslate"><span class="pre">Quad4R</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4RData"><code class="docutils literal notranslate"><span class="pre">Quad4RData</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4RProbe"><code class="docutils literal notranslate"><span class="pre">Quad4RProbe</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="tria3r.html">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R"><code class="docutils literal notranslate"><span class="pre">Tria3R</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3RData"><code class="docutils literal notranslate"><span class="pre">Tria3RData</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3RProbe"><code class="docutils literal notranslate"><span class="pre">Tria3RProbe</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamc.html">BeamC - Consistent Timoshenko 3D beam element (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamc</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC"><code class="docutils literal notranslate"><span class="pre">BeamC</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamCData"><code class="docutils literal notranslate"><span class="pre">BeamCData</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamCProbe"><code class="docutils literal notranslate"><span class="pre">BeamCProbe</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamlr.html">BeamLR - Linear Timoshenko 3D beam element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamlr</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR"><code class="docutils literal notranslate"><span class="pre">BeamLR</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLRData"><code class="docutils literal notranslate"><span class="pre">BeamLRData</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLRProbe"><code class="docutils literal notranslate"><span class="pre">BeamLRProbe</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="spring.html">Spring - 3D spring element with constant stiffnesses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.spring</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.Spring"><code class="docutils literal notranslate"><span class="pre">Spring</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.SpringData"><code class="docutils literal notranslate"><span class="pre">SpringData</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="spring.html#pyfe3d.spring.SpringProbe"><code class="docutils literal notranslate"><span class="pre">SpringProbe</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="truss.html">Truss - Linear truss 3D element with analytical integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.Truss"><code class="docutils literal notranslate"><span class="pre">Truss</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.TrussData"><code class="docutils literal notranslate"><span class="pre">TrussData</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="truss.html#pyfe3d.truss.TrussProbe"><code class="docutils literal notranslate"><span class="pre">TrussProbe</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="properties.html">Property definitions</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="properties.html#beam-property-module-pyfe3d-beamprop">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.beamprop.BeamProp"><code class="docutils literal notranslate"><span class="pre">BeamProp</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="properties.html#shell-property-module-pyfe3d-shellprop">Shell property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.GradABDE"><code class="docutils literal notranslate"><span class="pre">GradABDE</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.Lamina"><code class="docutils literal notranslate"><span class="pre">Lamina</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.LaminationParameters"><code class="docutils literal notranslate"><span class="pre">LaminationParameters</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.MatLamina"><code class="docutils literal notranslate"><span class="pre">MatLamina</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.ShellProp"><code class="docutils literal notranslate"><span class="pre">ShellProp</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.force_balanced_LP"><code class="docutils literal notranslate"><span class="pre">force_balanced_LP()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.force_orthotropic_LP"><code class="docutils literal notranslate"><span class="pre">force_orthotropic_LP()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.force_symmetric_LP"><code class="docutils literal notranslate"><span class="pre">force_symmetric_LP()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.shellprop_from_LaminationParameters"><code class="docutils literal notranslate"><span class="pre">shellprop_from_LaminationParameters()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop.shellprop_from_lamination_parameters"><code class="docutils literal notranslate"><span class="pre">shellprop_from_lamination_parameters()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="properties.html#shell-property-utils-module-pyfe3d-shellprop-utils">Shell property utils module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop_utils</span></code>)</a></li>
-<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop_utils.isotropic_plate"><code class="docutils literal notranslate"><span class="pre">isotropic_plate()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop_utils.laminated_plate"><code class="docutils literal notranslate"><span class="pre">laminated_plate()</span></code></a></li>
-<li class="toctree-l2"><a class="reference internal" href="properties.html#pyfe3d.shellprop_utils.read_laminaprop"><code class="docutils literal notranslate"><span class="pre">read_laminaprop()</span></code></a></li>
-</ul>
-</li>
-<li class="toctree-l1"><a class="reference internal" href="repository_structure.html">Repository structure</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="repository_structure.html#overall-layout">Overall layout</a></li>
-<li class="toctree-l2"><a class="reference internal" href="repository_structure.html#key-components">Key components</a></li>
-<li class="toctree-l2"><a class="reference internal" href="repository_structure.html#suggested-next-steps">Suggested next steps</a></li>
-</ul>
-</li>
+<li class="toctree-l1"><a class="reference internal" href="fe_overview.html">Available finite elements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="properties.html">Property definitions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="repository_structure.html">Repository structure</a></li>
 </ul>
 </div>
 </section>
@@ -557,7 +534,7 @@ in any platform, including the Google Colab environment.</p>
 
   <p class="copyright">
     
-      © Copyright 2021-, Saullo G. P. Castro.
+      © Copyright 2021-2025, Saullo G. P. Castro.
       <br/>
     
   </p>
