@@ -17,13 +17,13 @@
 
 # -- Project information -----------------------------------------------------
 
+# The full version, including alpha/beta/rc tags
+from pyfe3d.version import __version__, __year__
+release = __version__
+
 project = 'pyfe3d'
 author = 'Saullo G. P. Castro'
-copyright = '2021-, ' + author
-
-# The full version, including alpha/beta/rc tags
-from pyfe3d.version import __version__
-release = __version__
+copyright = '2021-%s, %s' % (__year__, author)
 
 
 # -- General configuration ---------------------------------------------------

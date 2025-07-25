@@ -9,7 +9,8 @@ from Cython.Build import cythonize
 
 
 is_released = True
-version = '0.6.0'
+version = '0.6.1'
+year = '2025'
 
 
 def git_version():
@@ -51,6 +52,7 @@ def write_version_py(version, is_released, filename='pyfe3d/version.py'):
         os.remove(version_file)
     with open(version_file, "wb") as f:
         f.write(b'__version__ = "%s"\n' % fullversion.encode())
+        f.write(b'__year__ = "%s"\n' % year.encode())
     return fullversion
 
 
