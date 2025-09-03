@@ -51,7 +51,8 @@ jobs:
     - name: Build Linux Python wheels
       if: matrix.runs-on == 'ubuntu-latest' && matrix.python-version == '3.13'
       env:
-        CIBW_BUILD: cp38-* cp39-* cp310-* cp311-* cp312-* cp313-*
+        CIBW_BUILD: cp38-manylinux_x86_64 cp39-manylinux_x86_64 cp310-manylinux_x86_64 cp311-manylinux_x86_64 cp312-manylinux_x86_64 cp313-manylinux_x86_64
+        CIBW_SKIP: "*-manylinux_i686"
       run: |
         python3 -m cibuildwheel --output-dir dist
     - name: Publish Linux Python wheels
