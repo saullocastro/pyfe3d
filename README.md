@@ -62,6 +62,35 @@ reduced integration.
 recommend using the BeamLR instead, which is physically more consistent.
 
 
+Installing pyfe3d
+-----------------
+
+First, you should try to install from the distributed binaries by simply doing:
+
+```
+python -m pip install pyfe3d
+```
+
+If a distribution could not be found, you can try to install from the source
+code using:
+
+```
+python -m pip install .
+```
+
+Another alternative is the following:
+
+```
+python -m pip install -r requirements.txt
+python setup.py install
+```
+
+If none of the above alternatives worked for you, this link shares some
+information on how to set up a C compiler on different operating systems: 
+
+https://cython2.readthedocs.io/en/latest/src/quickstart/install.html
+
+
 License
 -------
 Distrubuted under the 3-Clause BSD license
