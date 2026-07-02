@@ -54,8 +54,20 @@ The in-plane stiffness terms are integrated with 2 quadrature points, and the
 drilling stiffness is integrated with 1 quadrature point. These are
 not specified in the paper of Hughes et al. (1977).
 
-The stiffness terms corresponding to the drilling degree-of-freedom are
-controlled exclusively using the ``K6ROT``.
+The drilling stiffness is calculated following the approach adopted in
+MSC Nastran and Autodesk Nastran:
+
+.. math::
+    K_{drill} = K6ROT \cdot G \cdot V \cdot 10^{-6}
+
+where `G = A_{66}/h` is the in-plane shear modulus (for composites),
+`V = \text{area} \cdot h` is the element volume, `\text{area}` is the element
+area, and `h` is the total laminate thickness. This simplifies to:
+
+.. math::
+    K_{drill} = K6ROT \cdot A_{66} \cdot \text{area} \cdot 10^{-6}
+
+The dimensionless multiplier ``K6ROT`` is the only user-controlled parameter.
 
 
 """
@@ -339,13 +351,14 @@ cdef class Quad4:
     area, : double
         Element area.
     K6ROT, : double
-        Element drilling stiffness, added only to the diagonal of the local
-        stiffness matrix. The default value is according to AUTODESK NASTRAN's
-        quick reference guide is ``K6ROT = 100.`` for static analysis.  For
-        modal solutions, this value should be ``K6ROT=1.e4``.  MSC NASTRAN's
-        quick reference guide states that ``K6ROT > 100.`` should not be used,
-        but this is controversial, already being controversial to what AUTODESK
-        NASTRAN's manual says.
+        Dimensionless multiplier for the drilling stiffness. The drilling
+        stiffness is computed as ``Kdrill = K6ROT * A66 * area * 1e-6``,
+        following the approach of MSC Nastran and Autodesk Nastran, where ``A66`` is
+        the element in-plane shear stiffness and ``area`` is the element area.
+        AUTODESK NASTRAN's quick reference guide recommends ``K6ROT = 100.``
+        for static analysis. For modal solutions, ``K6ROT=1.e4`` is suggested.
+        MSC NASTRAN's quick reference guide states that ``K6ROT > 100.``
+        should not be used, but this is controversial.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix from local to global coordinates.
     m11, m12, m21, m22 : double
@@ -722,6 +735,7 @@ cdef class Quad4:
         cdef double* BLgxz_grad
         cdef double exx, eyy, gxy, kxx, kyy, kxy
         cdef double gyz_rot, gxz_rot, gyz_grad, gxz_grad
+        cdef double KDRILL
 
         with nogil:
             BLexx = &self.probe.BLexx[0]
@@ -1061,10 +1075,11 @@ cdef class Quad4:
                         )
 
             # drilling
+            KDRILL = self.K6ROT * A66 * self.area * 1.e-6
             for node_i in range(NUM_NODES):
                 node_j = node_i # NOTE only diagonal terms are affected
                 ke = 24*(node_i*DOF + 5) + node_j*DOF + 5
-                self.probe.KC0ve[ke] += self.K6ROT
+                self.probe.KC0ve[ke] += KDRILL
 
 
     cpdef void update_probe_finte(Quad4 self, ShellProp prop):

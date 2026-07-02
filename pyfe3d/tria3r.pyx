@@ -11,6 +11,21 @@ Tria3R - Triangular element with reduced integration (:mod:`pyfe3d.tria3r`)
 
 .. currentmodule:: pyfe3d.tria3r
 
+The drilling stiffness is calculated following the approach adopted in
+MSC Nastran and Autodesk Nastran:
+
+.. math::
+    K_{drill} = K6ROT \cdot G \cdot V \cdot 10^{-6}
+
+where `G = A_{66}/h` is the in-plane shear modulus (for composites),
+`V = \text{area} \cdot h` is the element volume, `\text{area}` is the element
+area, and `h` is the total laminate thickness. This simplifies to:
+
+.. math::
+    K_{drill} = K6ROT \cdot A_{66} \cdot \text{area} \cdot 10^{-6}
+
+The dimensionless multiplier ``K6ROT`` is the only user-controlled parameter.
+
 """
 from libc.math cimport fabs
 
@@ -130,13 +145,14 @@ cdef class Tria3R:
         approaches the one of the :class:`.Quad4R` element for an equivalent
         mesh (see the test case ``test_tria3r_linear_buckling_plate.py``).
     K6ROT, : double
-        Element drilling stiffness, added only to the diagonal of the local
-        stiffness matrix. The default value is according to AUTODESK NASTRAN's
-        quick reference guide is ``K6ROT = 100.`` for static analysis.  For
-        modal solutions, this value should be ``K6ROT=1.e4``.  MSC NASTRAN's
-        quick reference guide states that ``K6ROT > 100.`` should not be used,
-        but this is controversial, already being controversial to what AUTODESK
-        NASTRAN's manual says.
+        Dimensionless multiplier for the drilling stiffness. The drilling
+        stiffness is computed as ``Kdrill = K6ROT * A66 * area * 1e-6``,
+        following the approach of MSC Nastran and Autodesk Nastran, where ``A66`` is
+        the element in-plane shear stiffness and ``area`` is the element area.
+        AUTODESK NASTRAN's quick reference guide recommends ``K6ROT = 100.``
+        for static analysis. For modal solutions, ``K6ROT=1.e4`` is suggested.
+        MSC NASTRAN's quick reference guide states that ``K6ROT > 100.``
+        should not be used, but this is controversial.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix from local to global coordinates.
     m11, m12, m21, m22 : double
@@ -477,7 +493,7 @@ cdef class Tria3R:
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
-        cdef double K6ROT
+        cdef double KDRILL
         cdef double m11, m12, m21, m22
         cdef double N1x, N2x, N3x, N1y, N2y, N3y
         cdef double N1, N2, N3
@@ -610,7 +626,7 @@ cdef class Tria3R:
             E45 = 1 / (1 + factor) * E45
             E55 = 1 / (1 + factor) * E55
 
-            K6ROT = self.K6ROT
+            KDRILL = self.K6ROT * A66 * self.area * 1.e-6
 
             N1x = (y2 - y3)/(2*self.area)
             N2x = (-y1 + y3)/(2*self.area)
@@ -677,7 +693,7 @@ cdef class Tria3R:
             KC0e0414 = N1*detJ*wij*(E45*N3y + E55*N3x)
             KC0e0415 = -detJ*wij*(-E45*N1*(N1 + N2 - 1) + N3x*(D16*N1x + D66*N1y) + N3y*(D12*N1x + D26*N1y))
             KC0e0416 = detJ*wij*(-E55*N1*(N1 + N2 - 1) + N3x*(D11*N1x + D16*N1y) + N3y*(D16*N1x + D66*N1y))
-            KC0e0505 = K6ROT
+            KC0e0505 = KDRILL
             KC0e0606 = detJ*wij*(N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y))
             KC0e0607 = detJ*wij*(N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y))
             KC0e0609 = -detJ*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))
@@ -712,7 +728,7 @@ cdef class Tria3R:
             KC0e1014 = N2*detJ*wij*(E45*N3y + E55*N3x)
             KC0e1015 = -detJ*wij*(-E45*N2*(N1 + N2 - 1) + N3x*(D16*N2x + D66*N2y) + N3y*(D12*N2x + D26*N2y))
             KC0e1016 = detJ*wij*(-E55*N2*(N1 + N2 - 1) + N3x*(D11*N2x + D16*N2y) + N3y*(D16*N2x + D66*N2y))
-            KC0e1111 = K6ROT
+            KC0e1111 = KDRILL
             KC0e1212 = detJ*wij*(N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y))
             KC0e1213 = detJ*wij*(N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y))
             KC0e1215 = -detJ*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))
@@ -726,7 +742,7 @@ cdef class Tria3R:
             KC0e1515 = detJ*wij*(E44*(N1 + N2 - 1)**2 + N3x*(D26*N3y + D66*N3x) + N3y*(D22*N3y + D26*N3x))
             KC0e1516 = -detJ*wij*(E45*(N1 + N2 - 1)**2 + N3x*(D12*N3y + D16*N3x) + N3y*(D26*N3y + D66*N3x))
             KC0e1616 = detJ*wij*(E55*(N1 + N2 - 1)**2 + N3x*(D11*N3x + D16*N3y) + N3y*(D16*N3x + D66*N3y))
-            KC0e1717 = K6ROT
+            KC0e1717 = KDRILL
 
             finte[0] = KC0e0000*ue[0] + KC0e0001*ue[1] + KC0e0003*ue[3] + KC0e0004*ue[4] + KC0e0006*ue[6] + KC0e0007*ue[7] + KC0e0009*ue[9] + KC0e0010*ue[10] + KC0e0012*ue[12] + KC0e0013*ue[13] + KC0e0015*ue[15] + KC0e0016*ue[16]
             finte[1] = KC0e0001*ue[0] + KC0e0101*ue[1] + KC0e0103*ue[3] + KC0e0104*ue[4] + KC0e0106*ue[6] + KC0e0107*ue[7] + KC0e0109*ue[9] + KC0e0110*ue[10] + KC0e0112*ue[12] + KC0e0113*ue[13] + KC0e0115*ue[15] + KC0e0116*ue[16]
@@ -801,7 +817,7 @@ cdef class Tria3R:
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
-        cdef double K6ROT
+        cdef double KDRILL
         cdef double points[3]
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double m11, m12, m21, m22
@@ -1923,7 +1939,7 @@ cdef class Tria3R:
                 KC0r[k] = 5+c3
                 KC0c[k] = 5+c3
 
-            K6ROT = self.K6ROT
+            KDRILL = self.K6ROT * A66 * self.area * 1.e-6
 
             N1x = (y2 - y3)/(2*self.area)
             N2x = (-y1 + y3)/(2*self.area)
@@ -1990,7 +2006,7 @@ cdef class Tria3R:
             KC0e0414 = N1*detJ*wij*(E45*N3y + E55*N3x)
             KC0e0415 = -detJ*wij*(-E45*N1*(N1 + N2 - 1) + N3x*(D16*N1x + D66*N1y) + N3y*(D12*N1x + D26*N1y))
             KC0e0416 = detJ*wij*(-E55*N1*(N1 + N2 - 1) + N3x*(D11*N1x + D16*N1y) + N3y*(D16*N1x + D66*N1y))
-            KC0e0505 = K6ROT
+            KC0e0505 = KDRILL
             KC0e0606 = detJ*wij*(N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y))
             KC0e0607 = detJ*wij*(N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y))
             KC0e0609 = -detJ*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))
@@ -2025,7 +2041,7 @@ cdef class Tria3R:
             KC0e1014 = N2*detJ*wij*(E45*N3y + E55*N3x)
             KC0e1015 = -detJ*wij*(-E45*N2*(N1 + N2 - 1) + N3x*(D16*N2x + D66*N2y) + N3y*(D12*N2x + D26*N2y))
             KC0e1016 = detJ*wij*(-E55*N2*(N1 + N2 - 1) + N3x*(D11*N2x + D16*N2y) + N3y*(D16*N2x + D66*N2y))
-            KC0e1111 = K6ROT
+            KC0e1111 = KDRILL
             KC0e1212 = detJ*wij*(N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y))
             KC0e1213 = detJ*wij*(N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y))
             KC0e1215 = -detJ*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))
@@ -2039,7 +2055,7 @@ cdef class Tria3R:
             KC0e1515 = detJ*wij*(E44*(N1 + N2 - 1)**2 + N3x*(D26*N3y + D66*N3x) + N3y*(D22*N3y + D26*N3x))
             KC0e1516 = -detJ*wij*(E45*(N1 + N2 - 1)**2 + N3x*(D12*N3y + D16*N3x) + N3y*(D26*N3y + D66*N3x))
             KC0e1616 = detJ*wij*(E55*(N1 + N2 - 1)**2 + N3x*(D11*N3x + D16*N3y) + N3y*(D16*N3x + D66*N3y))
-            KC0e1717 = K6ROT
+            KC0e1717 = KDRILL
 
 
             k = self.init_k_KC0

@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     - name: Set up Python
-      uses: actions/setup-python@v4
+      uses: actions/setup-python@v5
       with:
         python-version: '3.11'
     - name: Install dependencies
@@ -30,7 +30,7 @@ jobs:
         cd doc
         make html
     - name: Deploying documentation
-      uses: JamesIves/github-pages-deploy-action@v4.4.3
+      uses: JamesIves/github-pages-deploy-action@v4.8.0
       with:
         branch: gh-pages # The branch the action should deploy to.
         folder: ./doc/build/html # The folder the action should deploy.

@@ -41,8 +41,8 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     # NOTE values used for CI tests, values derived after running the tests in
     # a local compuer with refinement=8 first and then with refinement=1
     reference_Tcr_value_Castro_refinement_1 = {
-        'Z11' : -29576.3,
-        'Z33' : -19578.2
+        'Z11' : -29525.1,
+        'Z33' : -19534.8
     }
     for cyl in ['Z11', 'Z33']:
         stack = stacks[cyl]
