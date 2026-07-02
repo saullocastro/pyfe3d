@@ -55,17 +55,17 @@ drilling stiffness is integrated with 1 quadrature point. These are
 not specified in the paper of Hughes et al. (1977).
 
 The drilling stiffness is calculated following the approach adopted in
-Abaqus and MSC Nastran:
+MSC Nastran and Autodesk Nastran:
 
 .. math::
-    K_{drill} = K6ROT \cdot G \cdot V \cdot 10^{-5}
+    K_{drill} = K6ROT \cdot G \cdot V \cdot 10^{-6}
 
 where `G = A_{66}/h` is the in-plane shear modulus (for composites),
 `V = \text{area} \cdot h` is the element volume, `\text{area}` is the element
 area, and `h` is the total laminate thickness. This simplifies to:
 
 .. math::
-    K_{drill} = K6ROT \cdot A_{66} \cdot \text{area} \cdot 10^{-5}
+    K_{drill} = K6ROT \cdot A_{66} \cdot \text{area} \cdot 10^{-6}
 
 The dimensionless multiplier ``K6ROT`` is the only user-controlled parameter.
 
@@ -352,8 +352,8 @@ cdef class Quad4:
         Element area.
     K6ROT, : double
         Dimensionless multiplier for the drilling stiffness. The drilling
-        stiffness is computed as ``Kdrill = K6ROT * A66 * area * 1e-5``,
-        following the approach of Abaqus and MSC Nastran, where ``A66`` is
+        stiffness is computed as ``Kdrill = K6ROT * A66 * area * 1e-6``,
+        following the approach of MSC Nastran and Autodesk Nastran, where ``A66`` is
         the element in-plane shear stiffness and ``area`` is the element area.
         AUTODESK NASTRAN's quick reference guide recommends ``K6ROT = 100.``
         for static analysis. For modal solutions, ``K6ROT=1.e4`` is suggested.
@@ -1077,7 +1077,7 @@ cdef class Quad4:
             for node_i in range(NUM_NODES):
                 node_j = node_i # NOTE only diagonal terms are affected
                 ke = 24*(node_i*DOF + 5) + node_j*DOF + 5
-                self.probe.KC0ve[ke] += self.K6ROT * A66 * self.area * 1.e-5
+                self.probe.KC0ve[ke] += self.K6ROT * A66 * self.area * 1.e-6
 
 
     cpdef void update_probe_finte(Quad4 self, ShellProp prop):

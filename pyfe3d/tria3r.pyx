@@ -12,17 +12,17 @@ Tria3R - Triangular element with reduced integration (:mod:`pyfe3d.tria3r`)
 .. currentmodule:: pyfe3d.tria3r
 
 The drilling stiffness is calculated following the approach adopted in
-Abaqus and MSC Nastran:
+MSC Nastran and Autodesk Nastran:
 
 .. math::
-    K_{drill} = K6ROT \cdot G \cdot V \cdot 10^{-5}
+    K_{drill} = K6ROT \cdot G \cdot V \cdot 10^{-6}
 
 where `G = A_{66}/h` is the in-plane shear modulus (for composites),
 `V = \text{area} \cdot h` is the element volume, `\text{area}` is the element
 area, and `h` is the total laminate thickness. This simplifies to:
 
 .. math::
-    K_{drill} = K6ROT \cdot A_{66} \cdot \text{area} \cdot 10^{-5}
+    K_{drill} = K6ROT \cdot A_{66} \cdot \text{area} \cdot 10^{-6}
 
 The dimensionless multiplier ``K6ROT`` is the only user-controlled parameter.
 
@@ -146,8 +146,8 @@ cdef class Tria3R:
         mesh (see the test case ``test_tria3r_linear_buckling_plate.py``).
     K6ROT, : double
         Dimensionless multiplier for the drilling stiffness. The drilling
-        stiffness is computed as ``Kdrill = K6ROT * A66 * area * 1e-5``,
-        following the approach of Abaqus and MSC Nastran, where ``A66`` is
+        stiffness is computed as ``Kdrill = K6ROT * A66 * area * 1e-6``,
+        following the approach of MSC Nastran and Autodesk Nastran, where ``A66`` is
         the element in-plane shear stiffness and ``area`` is the element area.
         AUTODESK NASTRAN's quick reference guide recommends ``K6ROT = 100.``
         for static analysis. For modal solutions, ``K6ROT=1.e4`` is suggested.
@@ -626,7 +626,7 @@ cdef class Tria3R:
             E45 = 1 / (1 + factor) * E45
             E55 = 1 / (1 + factor) * E55
 
-            K6ROT = self.K6ROT * A66 * self.area * 1.e-5
+            K6ROT = self.K6ROT * A66 * self.area * 1.e-6
 
             N1x = (y2 - y3)/(2*self.area)
             N2x = (-y1 + y3)/(2*self.area)
@@ -1939,7 +1939,7 @@ cdef class Tria3R:
                 KC0r[k] = 5+c3
                 KC0c[k] = 5+c3
 
-            K6ROT = self.K6ROT * A66 * self.area * 1.e-5
+            K6ROT = self.K6ROT * A66 * self.area * 1.e-6
 
             N1x = (y2 - y3)/(2*self.area)
             N2x = (-y1 + y3)/(2*self.area)
