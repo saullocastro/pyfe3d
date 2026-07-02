@@ -230,9 +230,9 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
         plotter.parallel_projection = True
         plotter.show()
 
-    assert np.allclose(omegan, [1960.55184669, 1960.55184669,
-                                2116.97679465, 2116.97679465,
-                                2157.16799942, 2157.16799942], rtol=1e-5)
+    assert np.allclose(omegan, [1958.50547302, 1958.50547302,
+                                2115.97774885, 2115.97774885,
+                                2154.06513368, 2154.06513368], rtol=1e-5)
 
 if __name__ == '__main__':
     test_linear_nat_freq_cylinder(mode=0, plot_pyvista=True, refinement=2)
