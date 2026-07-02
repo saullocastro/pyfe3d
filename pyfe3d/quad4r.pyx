@@ -21,8 +21,20 @@ The :class:`.Quad4R` element has 6 degrees-of-freedom (DOF): `u`, `v`, `w`,
 such that any of the DOF gradients can be constant over the element when the
 element is rectangular.
 
-The stiffness terms corresponding to the drilling degree-of-freedom are
-controlled exclusively using the ``K6ROT`` attribute.
+The drilling stiffness is calculated following the approach adopted in
+Abaqus and MSC Nastran:
+
+.. math::
+    K_{drill} = K6ROT \cdot G \cdot V \cdot 10^{-5}
+
+where `G = A_{66}/h` is the in-plane shear modulus (for composites),
+`V = \text{area} \cdot h` is the element volume, `\text{area}` is the element
+area, and `h` is the total laminate thickness. This simplifies to:
+
+.. math::
+    K_{drill} = K6ROT \cdot A_{66} \cdot \text{area} \cdot 10^{-5}
+
+The dimensionless multiplier ``K6ROT`` is the only user-controlled parameter.
 
 
 """
@@ -149,13 +161,14 @@ cdef class Quad4R:
     area, : double
         Element area.
     K6ROT, : double
-        Element drilling stiffness, added only to the diagonal of the local
-        stiffness matrix. The default value is according to AUTODESK NASTRAN's
-        quick reference guide is ``K6ROT = 100.`` for static analysis.  For
-        modal solutions, this value should be ``K6ROT=1.e4``.  MSC NASTRAN's
-        quick reference guide states that ``K6ROT > 100.`` should not be used,
-        but this is controversial, already being controversial to what AUTODESK
-        NASTRAN's manual says.
+        Dimensionless multiplier for the drilling stiffness. The drilling
+        stiffness is computed as ``Kdrill = K6ROT * A66 * area * 1e-5``,
+        following the approach of Abaqus and MSC Nastran, where ``A66`` is
+        the element in-plane shear stiffness and ``area`` is the element area.
+        AUTODESK NASTRAN's quick reference guide recommends ``K6ROT = 100.``
+        for static analysis. For modal solutions, ``K6ROT=1.e4`` is suggested.
+        MSC NASTRAN's quick reference guide states that ``K6ROT > 100.``
+        should not be used, but this is controversial.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix from local to global coordinates.
     m11, m12, m21, m22 : double
@@ -660,7 +673,7 @@ cdef class Quad4R:
             # NOTE reduced integration to remove shear locking
             wij = 4.
 
-            K6ROT = self.K6ROT
+            K6ROT = self.K6ROT * A66 * self.area * 1.e-5
 
             # TODO find a method of hourglass control that is derived for composites
             #     in the future, the use elements with mixed integration
@@ -2851,7 +2864,7 @@ cdef class Quad4R:
             # NOTE reduced integration to remove shear locking
             wij = 4.
 
-            K6ROT = self.K6ROT
+            K6ROT = self.K6ROT * A66 * self.area * 1.e-5
 
             # TODO find a method of hourglass control that is derived for composites
             #     in the future, the use elements with mixed integration
