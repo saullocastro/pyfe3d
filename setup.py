@@ -9,7 +9,7 @@ from Cython.Build import cythonize
 
 
 is_released = True
-version = '0.6.3'
+version = '0.6.4'
 year = '2026'
 
 
