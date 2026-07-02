@@ -735,6 +735,7 @@ cdef class Quad4:
         cdef double* BLgxz_grad
         cdef double exx, eyy, gxy, kxx, kyy, kxy
         cdef double gyz_rot, gxz_rot, gyz_grad, gxz_grad
+        cdef double KDRILL
 
         with nogil:
             BLexx = &self.probe.BLexx[0]
@@ -1074,10 +1075,11 @@ cdef class Quad4:
                         )
 
             # drilling
+            KDRILL = self.K6ROT * A66 * self.area * 1.e-6
             for node_i in range(NUM_NODES):
                 node_j = node_i # NOTE only diagonal terms are affected
                 ke = 24*(node_i*DOF + 5) + node_j*DOF + 5
-                self.probe.KC0ve[ke] += self.K6ROT * A66 * self.area * 1.e-6
+                self.probe.KC0ve[ke] += KDRILL
 
 
     cpdef void update_probe_finte(Quad4 self, ShellProp prop):

@@ -534,7 +534,7 @@ cdef class Quad4R:
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
         cdef double E1eq, E2eq
-        cdef double K6ROT
+        cdef double KDRILL
         cdef double Eu, Ev, Erx, Ery, Ew
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double m11, m12, m21, m22, a11, a22
@@ -673,7 +673,7 @@ cdef class Quad4R:
             # NOTE reduced integration to remove shear locking
             wij = 4.
 
-            K6ROT = self.K6ROT * A66 * self.area * 1.e-6
+            KDRILL = self.K6ROT * A66 * self.area * 1.e-6
 
             # TODO find a method of hourglass control that is derived for composites
             #     in the future, the use elements with mixed integration
@@ -793,7 +793,7 @@ cdef class Quad4R:
             KC0e0420 = N1*detJ*wij*(E45*N4y + E55*N4x)
             KC0e0421 = -detJ*wij*(E45*N1*N4 + N4x*(D16*N1x + D66*N1y) + N4y*(D12*N1x + D26*N1y))
             KC0e0422 = detJ*wij*(E55*N1*N4 + Ery*gamma1*gamma4 + N4x*(D11*N1x + D16*N1y) + N4y*(D16*N1x + D66*N1y))
-            KC0e0505 = K6ROT
+            KC0e0505 = KDRILL
             KC0e0606 = detJ*wij*(Eu*gamma2**2 + N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y))
             KC0e0607 = detJ*wij*(N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y))
             KC0e0609 = -detJ*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))
@@ -849,7 +849,7 @@ cdef class Quad4R:
             KC0e1020 = N2*detJ*wij*(E45*N4y + E55*N4x)
             KC0e1021 = -detJ*wij*(E45*N2*N4 + N4x*(D16*N2x + D66*N2y) + N4y*(D12*N2x + D26*N2y))
             KC0e1022 = detJ*wij*(E55*N2*N4 + Ery*gamma2*gamma4 + N4x*(D11*N2x + D16*N2y) + N4y*(D16*N2x + D66*N2y))
-            KC0e1111 = K6ROT
+            KC0e1111 = KDRILL
             KC0e1212 = detJ*wij*(Eu*gamma3**2 + N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y))
             KC0e1213 = detJ*wij*(N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y))
             KC0e1215 = -detJ*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))
@@ -884,7 +884,7 @@ cdef class Quad4R:
             KC0e1620 = N3*detJ*wij*(E45*N4y + E55*N4x)
             KC0e1621 = -detJ*wij*(E45*N3*N4 + N4x*(D16*N3x + D66*N3y) + N4y*(D12*N3x + D26*N3y))
             KC0e1622 = detJ*wij*(E55*N3*N4 + Ery*gamma3*gamma4 + N4x*(D11*N3x + D16*N3y) + N4y*(D16*N3x + D66*N3y))
-            KC0e1717 = K6ROT
+            KC0e1717 = KDRILL
             KC0e1818 = detJ*wij*(Eu*gamma4**2 + N4x*(A11*N4x + A16*N4y) + N4y*(A16*N4x + A66*N4y))
             KC0e1819 = detJ*wij*(N4x*(A16*N4x + A66*N4y) + N4y*(A12*N4x + A26*N4y))
             KC0e1821 = -detJ*wij*(N4x*(B16*N4x + B66*N4y) + N4y*(B12*N4x + B26*N4y))
@@ -898,7 +898,7 @@ cdef class Quad4R:
             KC0e2121 = detJ*wij*(E44*N4**2 + Erx*gamma4**2 + N4x*(D26*N4y + D66*N4x) + N4y*(D22*N4y + D26*N4x))
             KC0e2122 = -detJ*wij*(E45*N4**2 + N4x*(D12*N4y + D16*N4x) + N4y*(D26*N4y + D66*N4x))
             KC0e2222 = detJ*wij*(E55*N4**2 + Ery*gamma4**2 + N4x*(D11*N4x + D16*N4y) + N4y*(D16*N4x + D66*N4y))
-            KC0e2323 = K6ROT
+            KC0e2323 = KDRILL
 
             finte[0] = KC0e0000*ue[0] + KC0e0001*ue[1] + KC0e0003*ue[3] + KC0e0004*ue[4] + KC0e0006*ue[6] + KC0e0007*ue[7] + KC0e0009*ue[9] + KC0e0010*ue[10] + KC0e0012*ue[12] + KC0e0013*ue[13] + KC0e0015*ue[15] + KC0e0016*ue[16] + KC0e0018*ue[18] + KC0e0019*ue[19] + KC0e0021*ue[21] + KC0e0022*ue[22]
             finte[1] = KC0e0001*ue[0] + KC0e0101*ue[1] + KC0e0103*ue[3] + KC0e0104*ue[4] + KC0e0106*ue[6] + KC0e0107*ue[7] + KC0e0109*ue[9] + KC0e0110*ue[10] + KC0e0112*ue[12] + KC0e0113*ue[13] + KC0e0115*ue[15] + KC0e0116*ue[16] + KC0e0118*ue[18] + KC0e0119*ue[19] + KC0e0121*ue[21] + KC0e0122*ue[22]
@@ -981,7 +981,7 @@ cdef class Quad4R:
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
         cdef double E1eq, E2eq
-        cdef double K6ROT
+        cdef double KDRILL
         cdef double Eu, Ev, Erx, Ery, Ew
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double m11, m12, m21, m22, a11, a22
@@ -2864,7 +2864,7 @@ cdef class Quad4R:
             # NOTE reduced integration to remove shear locking
             wij = 4.
 
-            K6ROT = self.K6ROT * A66 * self.area * 1.e-6
+            KDRILL = self.K6ROT * A66 * self.area * 1.e-6
 
             # TODO find a method of hourglass control that is derived for composites
             #     in the future, the use elements with mixed integration
@@ -2984,7 +2984,7 @@ cdef class Quad4R:
             KC0e0420 = N1*detJ*wij*(E45*N4y + E55*N4x)
             KC0e0421 = -detJ*wij*(E45*N1*N4 + N4x*(D16*N1x + D66*N1y) + N4y*(D12*N1x + D26*N1y))
             KC0e0422 = detJ*wij*(E55*N1*N4 + Ery*gamma1*gamma4 + N4x*(D11*N1x + D16*N1y) + N4y*(D16*N1x + D66*N1y))
-            KC0e0505 = K6ROT
+            KC0e0505 = KDRILL
             KC0e0606 = detJ*wij*(Eu*gamma2**2 + N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y))
             KC0e0607 = detJ*wij*(N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y))
             KC0e0609 = -detJ*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))
@@ -3040,7 +3040,7 @@ cdef class Quad4R:
             KC0e1020 = N2*detJ*wij*(E45*N4y + E55*N4x)
             KC0e1021 = -detJ*wij*(E45*N2*N4 + N4x*(D16*N2x + D66*N2y) + N4y*(D12*N2x + D26*N2y))
             KC0e1022 = detJ*wij*(E55*N2*N4 + Ery*gamma2*gamma4 + N4x*(D11*N2x + D16*N2y) + N4y*(D16*N2x + D66*N2y))
-            KC0e1111 = K6ROT
+            KC0e1111 = KDRILL
             KC0e1212 = detJ*wij*(Eu*gamma3**2 + N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y))
             KC0e1213 = detJ*wij*(N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y))
             KC0e1215 = -detJ*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))
@@ -3075,7 +3075,7 @@ cdef class Quad4R:
             KC0e1620 = N3*detJ*wij*(E45*N4y + E55*N4x)
             KC0e1621 = -detJ*wij*(E45*N3*N4 + N4x*(D16*N3x + D66*N3y) + N4y*(D12*N3x + D26*N3y))
             KC0e1622 = detJ*wij*(E55*N3*N4 + Ery*gamma3*gamma4 + N4x*(D11*N3x + D16*N3y) + N4y*(D16*N3x + D66*N3y))
-            KC0e1717 = K6ROT
+            KC0e1717 = KDRILL
             KC0e1818 = detJ*wij*(Eu*gamma4**2 + N4x*(A11*N4x + A16*N4y) + N4y*(A16*N4x + A66*N4y))
             KC0e1819 = detJ*wij*(N4x*(A16*N4x + A66*N4y) + N4y*(A12*N4x + A26*N4y))
             KC0e1821 = -detJ*wij*(N4x*(B16*N4x + B66*N4y) + N4y*(B12*N4x + B26*N4y))
@@ -3089,7 +3089,7 @@ cdef class Quad4R:
             KC0e2121 = detJ*wij*(E44*N4**2 + Erx*gamma4**2 + N4x*(D26*N4y + D66*N4x) + N4y*(D22*N4y + D26*N4x))
             KC0e2122 = -detJ*wij*(E45*N4**2 + N4x*(D12*N4y + D16*N4x) + N4y*(D26*N4y + D66*N4x))
             KC0e2222 = detJ*wij*(E55*N4**2 + Ery*gamma4**2 + N4x*(D11*N4x + D16*N4y) + N4y*(D16*N4x + D66*N4y))
-            KC0e2323 = K6ROT
+            KC0e2323 = KDRILL
 
             k = self.init_k_KC0
             KC0v[k] += KC0e0202*r13**2 + r11*(KC0e0000*r11 + KC0e0001*r12) + r12*(KC0e0001*r11 + KC0e0101*r12)
