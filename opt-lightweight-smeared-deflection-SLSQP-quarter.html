@@ -1,0 +1,1074 @@
+
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tutorial: Ply tailoring using SLSPQ for a simply-supported plate normal load &#8212; pyfe3d 0.6.3 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=a95f357e85573c9b56d5" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css?v=2aa19091" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=a95f357e85573c9b56d5"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5" />
+
+    <script src="_static/documentation_options.js?v=b8503983"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'opt-lightweight-smeared-deflection-SLSQP-quarter';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.6.3 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Linear static analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="fe_overview.html">
+    Available finite elements
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="properties.html">
+    Property definitions
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Linear static analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="fe_overview.html">
+    Available finite elements
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="properties.html">
+    Property definitions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Tutorial: Ply tailoring using SLSPQ for a simply-supported plate normal load</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Tutorial:-Ply-tailoring-using-SLSPQ-for-a-simply-supported-plate-normal-load">
+<h1>Tutorial: Ply tailoring using SLSPQ for a simply-supported plate normal load<a class="headerlink" href="#Tutorial:-Ply-tailoring-using-SLSPQ-for-a-simply-supported-plate-normal-load" title="Link to this heading">#</a></h1>
+<p>Date: 4 February 2026</p>
+<p>Author: Saullo G. P. Castro</p>
+<p>Cite this tutorial as:</p>
+<p>Saullo G. P. Castro. (2025). General-purpose finite element solver based on Python and Cython (Version 0.6.2). Zenodo. DOI: <a class="reference external" href="https://doi.org/10.5281/zenodo.6573489">https://doi.org/10.5281/zenodo.6573489</a>.</p>
+<section id="Installing-required-modules">
+<h2>Installing required modules<a class="headerlink" href="#Installing-required-modules" title="Link to this heading">#</a></h2>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>!python -m pip install numpy pyvista pymoo scipy pyfe3d &gt; tmp.txt
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+<span class="ansi-yellow-fg">DEPRECATION: Loading egg at /Users/saullogiovanip/miniconda3/lib/python3.13/site-packages/panels-0.5.0-py3.13-macosx-11.1-arm64.egg is deprecated. pip 25.1 will enforce this behaviour change. A possible replacement is to use pip for package installation. Discussion can be found at https://github.com/pypa/pip/issues/12330</span><span class="ansi-yellow-fg">
+</span><span class="ansi-yellow-fg">DEPRECATION: Loading egg at /Users/saullogiovanip/miniconda3/lib/python3.13/site-packages/tuduam-2026.3-py3.13.egg is deprecated. pip 25.1 will enforce this behaviour change. A possible replacement is to use pip for package installation. Discussion can be found at https://github.com/pypa/pip/issues/12330</span><span class="ansi-yellow-fg">
+</span>
+</pre></div></div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span># %load opt-lightweight-smeared-deflection-slsqp-quarter.py
+import numpy as np
+import pyvista as pv
+from pymoo.core.problem import ElementwiseProblem
+from scipy.optimize import minimize as scipy_minimize
+from scipy.optimize import Bounds
+from scipy.sparse.linalg import spsolve
+from scipy.sparse import coo_matrix
+from pyfe3d.shellprop import ShellProp
+from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
+
+
+def get_Q_matrix(E1, E2, nu12, G12, G13, G23, theta_deg):
+    &quot;&quot;&quot;
+    Calculate the transformed reduced stiffness matrix Q_bar for a given angle.
+    &quot;&quot;&quot;
+    nu21 = nu12 * E2 / E1
+    denom = 1 - nu12 * nu21
+    Q11 = E1 / denom
+    Q22 = E2 / denom
+    Q12 = nu12 * E2 / denom
+    Q66 = G12
+
+    c = np.cos(np.radians(theta_deg))
+    s = np.sin(np.radians(theta_deg))
+
+    c2 = c**2; s2 = s**2; c4 = c**4; s4 = s**4
+
+    Q_bar_11 = Q11*c4 + 2*(Q12 + 2*Q66)*s2*c2 + Q22*s4
+    Q_bar_22 = Q11*s4 + 2*(Q12 + 2*Q66)*s2*c2 + Q22*c4
+    Q_bar_12 = (Q11 + Q22 - 4*Q66)*s2*c2 + Q12*(s4 + c4)
+    Q_bar_66 = (Q11 + Q22 - 2*Q12 - 2*Q66)*s2*c2 + Q66*(s4 + c4)
+
+    Q_bar_44 = G23 * c2 + G13 * s2
+    Q_bar_55 = G13 * c2 + G23 * s2
+    Q_bar_45 = (G13 - G23) * c * s
+
+    Q_bar = np.array([
+        [Q_bar_11, Q_bar_12, 0, 0, 0, 0],
+        [Q_bar_12, Q_bar_22, 0, 0, 0, 0],
+        [0, 0, 0, 0, 0, 0],
+        [0, 0, 0, Q_bar_44, Q_bar_45, 0],
+        [0, 0, 0, Q_bar_45, Q_bar_55, 0],
+        [0, 0, 0, 0, 0, Q_bar_66]
+    ])
+    return Q_bar
+
+
+class SmearedPlateOptimization(ElementwiseProblem):
+    def __init__(self, nx, ny, a, b, load_val, max_deflection, h_min, h_max, mat_data):
+        self.nx = nx
+        self.ny = ny
+        self.n_elems = (self.nx - 1)*(self.ny - 1)
+        self.a = a
+        self.b = b
+        self.load_val = load_val
+        self.max_deflection = max_deflection
+        self.rho = mat_data[&#39;rho&#39;]
+
+        # Pre-calculate Base Q matrices
+        E1, E2 = mat_data[&#39;E1&#39;], mat_data[&#39;E2&#39;]
+        nu12, G12 = mat_data[&#39;nu12&#39;], mat_data[&#39;G12&#39;]
+        G13, G23 = mat_data[&#39;G13&#39;], mat_data[&#39;G23&#39;]
+
+        num_orientations = 3
+
+        self.Q0 = get_Q_matrix(E1, E2, nu12, G12, G13, G23, 0)
+        self.Q90 = get_Q_matrix(E1, E2, nu12, G12, G13, G23, 90)
+        self.Q45p = get_Q_matrix(E1, E2, nu12, G12, G13, G23, 45)
+        self.Q45m = get_Q_matrix(E1, E2, nu12, G12, G13, G23, -45)
+        self.Q45_sum = self.Q45p + self.Q45m
+
+        self.eid_prop = {}
+
+        n_var = num_orientations*self.n_elems
+
+        self._init_fe_model()
+
+        # We keep this for context, though Scipy doesn&#39;t read it directly
+        super().__init__(n_var=n_var, n_obj=1,
+                         n_ieq_constr=1,
+                         xl=h_min,
+                         xu=h_max)
+
+    def _init_fe_model(self):
+        data = Quad4Data()
+        probe = Quad4Probe()
+
+        xtmp = np.linspace(0, self.a/2, self.nx)
+        ytmp = np.linspace(0, self.b/2, self.ny)
+        xmesh, ymesh = np.meshgrid(xtmp, ytmp)
+        ncoords = np.vstack((xmesh.T.flatten(), ymesh.T.flatten(), np.zeros_like(ymesh.T.flatten()))).T
+        self.ncoords = ncoords
+        x = ncoords[:, 0]
+        y = ncoords[:, 1]
+        z = ncoords[:, 2]
+        ncoords_flatten = ncoords.flatten()
+        self.ncoords_flatten = ncoords_flatten
+
+        nids = 1 + np.arange(ncoords.shape[0])
+        nid_pos = dict(zip(nids, np.arange(len(nids))))
+        nids_mesh = nids.reshape(self.nx, self.ny)
+        n1s = nids_mesh[:-1, :-1].flatten()
+        n2s = nids_mesh[1:, :-1].flatten()
+        n3s = nids_mesh[1:, 1:].flatten()
+        n4s = nids_mesh[:-1, 1:].flatten()
+
+        num_elements = len(n1s)
+
+        self.KC0r = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
+        self.KC0c = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
+        self.KC0v = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=DOUBLE)
+        self.N = DOF*self.nx*self.ny
+
+        self.quads = []
+        init_k_KC0 = 0
+        eid = -1
+        for n1, n2, n3, n4 in zip(n1s, n2s, n3s, n4s):
+            #NOTE dummy property
+            prop = ShellProp()
+            prop.scf_k13 = 5/6.
+            prop.scf_k23 = 5/6.
+            eid += 1
+            self.eid_prop[eid] = prop
+
+            pos1 = nid_pos[n1]
+            pos2 = nid_pos[n2]
+            pos3 = nid_pos[n3]
+            pos4 = nid_pos[n4]
+            r1 = ncoords[pos1]
+            r2 = ncoords[pos2]
+            r3 = ncoords[pos3]
+            normal = np.cross(r2 - r1, r3 - r2)[2]
+            assert normal &gt; 0
+            quad = Quad4(probe)
+            quad.eid = eid
+            quad.n1 = n1
+            quad.n2 = n2
+            quad.n3 = n3
+            quad.n4 = n4
+            quad.c1 = DOF*nid_pos[n1]
+            quad.c2 = DOF*nid_pos[n2]
+            quad.c3 = DOF*nid_pos[n3]
+            quad.c4 = DOF*nid_pos[n4]
+            quad.init_k_KC0 = init_k_KC0
+            quad.update_rotation_matrix(ncoords_flatten)
+            quad.update_probe_xe(ncoords_flatten)
+            quad.update_KC0(self.KC0r, self.KC0c, self.KC0v, prop)
+            self.quads.append(quad)
+            init_k_KC0 += data.KC0_SPARSE_SIZE
+
+    def _evaluate(self, var, out, *args, **kwargs):
+        total_volume = 0.0
+
+        #NOTE important line below to zero the sparse matrix container
+        self.KC0v *= 0
+
+        for i, quad in enumerate(self.quads):
+            prop = self.eid_prop[quad.eid]
+            h0 = var[3*i]
+            h45 = var[3*i + 1]
+            h90 = var[3*i + 2]
+
+            h_total = h0 + 2*h45 + h90
+
+            A = (h0 * self.Q0) + (h90 * self.Q90) + (h45 * self.Q45_sum)
+            D = (h_total**2 / 12.0) * A
+
+            # NOTE using the full Voigt notation indices
+            # membrane stiffness
+            prop.A11 = A[0, 0]
+            prop.A12 = A[0, 1]
+            prop.A22 = A[1, 1]
+            prop.A66 = A[5, 5]
+
+            # transverse shear stiffness, the SCF is applied in pyfe3d
+            prop.E44 = A[3, 3]
+            prop.E45 = A[3, 4]
+            prop.E55 = A[4, 4]
+
+            # bending stiffness
+            prop.D11 = D[0, 0]
+            prop.D12 = D[0, 1]
+            prop.D22 = D[1, 1]
+            prop.D66 = D[5, 5]
+
+            prop.h = h_total
+
+            quad.update_probe_xe(self.ncoords_flatten)
+            quad.update_KC0(self.KC0r, self.KC0c, self.KC0v, prop, update_KC0v_only=1)
+
+            total_volume += quad.area * h_total
+
+        KC0 = coo_matrix((self.KC0v, (self.KC0r, self.KC0c)), shape=(self.N, self.N)).tocsc()
+
+        bk = np.zeros(self.N, dtype=bool)
+
+        x = self.ncoords[:, 0]
+        y = self.ncoords[:, 1]
+        z = self.ncoords[:, 2]
+
+        # removing in-plane motion
+        bk[0::DOF] = True #NOTE u displacements
+        bk[1::DOF] = True #NOTE v displacements
+
+        at_edges = np.isclose(x, 0.) | np.isclose(y, 0.)
+        bk[2::DOF][at_edges] = True #NOTE w displacements
+
+        at_sym_along_x = np.isclose(x, self.a/2)
+        bk[5::DOF][at_sym_along_x] = True
+
+        at_sym_along_y = np.isclose(y, self.b/2)
+        bk[4::DOF][at_sym_along_y] = True
+
+        bu = ~bk
+
+        # point load at center node
+        fext = np.zeros(self.N)
+        fmid = self.load_val
+        check = np.isclose(x, self.a/2) &amp; np.isclose(y, self.b/2)
+        fext[2::DOF][check] = fmid
+
+        KC0uu = KC0[bu, :][:, bu]
+
+        # checking load balance
+        assert fext[bu].sum() == fmid
+
+        # solving the static system
+        uu = spsolve(KC0uu, fext[bu])
+
+        u = np.zeros(self.N)
+        u[bu] = uu
+
+        # reading the deflections in the z direction
+        w = u[2::DOF].reshape(self.nx, self.ny).T
+
+        self.result_w = u[2::DOF]
+
+        # reading the maximum absolute deflection
+        w_max = np.max(np.abs(w))
+
+        out[&quot;F&quot;] = 4*total_volume
+        out[&quot;G&quot;] = w_max/self.max_deflection - 1
+
+# --- 3. Wrapper Functions for Scipy ---
+# Scipy expects separate functions for objective and constraints
+def objective_function(x, problem):
+    out = {}
+    problem._evaluate(x, out)
+    return out[&quot;F&quot;]
+
+def constraint_function(x, problem):
+    out = {}
+    problem._evaluate(x, out)
+    # Scipy inequality constraints are &#39;fun(x) &gt;= 0&#39;
+    # Pymoo constraints are &#39;G(x) &lt;= 0&#39; =&gt; &#39;w_max/allow - 1 &lt;= 0&#39;
+    # Equivalent to: &#39;1 - w_max/allow &gt;= 0&#39;
+    # So we return -G
+    return -out[&quot;G&quot;]
+<br/></pre></div>
+</div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>if __name__ == &quot;__main__&quot;:
+    # Material Data (Carbon/Epoxy approx)
+    mat_data = {
+        &#39;E1&#39;: 140e9,
+        &#39;E2&#39;: 10e9,
+        &#39;nu12&#39;: 0.3,
+        &#39;G12&#39;: 5e9,
+        &#39;G13&#39;: 5e9,
+        &#39;G23&#39;: 5e9,
+        &#39;rho&#39;: 1600.0
+    }
+
+    h_min = 0.125e-3
+    h_max = 2.5e-3
+
+    problem = SmearedPlateOptimization(
+        nx=13, ny=7,
+        a=2.0, b=1.0,
+        load_val=80.0,
+        max_deflection=0.001,
+        h_min=h_min,
+        h_max=h_max,
+        mat_data=mat_data
+    )
+
+    # Scipy Setup
+    x0 = np.ones(problem.n_var) * (h_min + h_max) / 2.0
+    bounds = Bounds([h_min]*problem.n_var, [h_max]*problem.n_var)
+
+    # Inequality constraint: fun(x) &gt;= 0
+    # We use a lambda to pass &#39;problem&#39; into the function
+    cons = {&#39;type&#39;: &#39;ineq&#39;, &#39;fun&#39;: lambda x: constraint_function(x, problem)}
+
+    print(&quot;Starting SLSQP Optimization with Scipy...&quot;)
+
+    # Helper to print progress
+    iteration = 0
+    def print_callback(xk):
+        global iteration
+        iteration += 1
+        # Re-eval to get current Mass (optional, slows down slightly but gives info)
+        out = {}; problem._evaluate(xk, out)
+        print(f&quot;Iter {iteration}: Volume = {out[&#39;F&#39;]:.4f} m^3, Constraint G = {out[&#39;G&#39;]:.4e}&quot;)
+
+    res = scipy_minimize(
+        lambda x: objective_function(x, problem),
+        x0,
+        method=&#39;SLSQP&#39;,
+        bounds=bounds,
+        constraints=cons,
+        callback=print_callback,
+        options={&#39;ftol&#39;: 1e-6, &#39;disp&#39;: True, &#39;maxiter&#39;: 200},
+        jac=&quot;2-point&quot;
+    )
+
+    print(&quot;\nOptimization Complete.&quot;)
+    print(f&quot;Success: {res.success}&quot;)
+    print(f&quot;Message: {res.message}&quot;)
+
+    out_final = {}
+    problem._evaluate(res.x, out_final)
+    print(f&quot;Final Mass: {out_final[&#39;F&#39;]:.4f} kg&quot;)
+    print(f&quot;Final Constraint Violation: {out_final[&#39;G&#39;]:.4e}&quot;)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Starting SLSQP Optimization with Scipy...
+Iter 1: Volume = 0.0080 m^3, Constraint G = 6.1859e+00
+Iter 2: Volume = 0.0077 m^3, Constraint G = 4.5228e+00
+Iter 3: Volume = 0.0073 m^3, Constraint G = 4.2768e+00
+Iter 4: Volume = 0.0071 m^3, Constraint G = 5.5381e+00
+Iter 5: Volume = 0.0070 m^3, Constraint G = 7.4929e+00
+Iter 6: Volume = 0.0070 m^3, Constraint G = 6.4033e+00
+Iter 7: Volume = 0.0071 m^3, Constraint G = 6.5783e+00
+Iter 8: Volume = 0.0072 m^3, Constraint G = 7.7092e-01
+Iter 9: Volume = 0.0071 m^3, Constraint G = 4.8109e-01
+Iter 10: Volume = 0.0057 m^3, Constraint G = 3.0794e+00
+Iter 11: Volume = 0.0059 m^3, Constraint G = 2.0017e+00
+Iter 12: Volume = 0.0064 m^3, Constraint G = 3.6107e+00
+Iter 13: Volume = 0.0064 m^3, Constraint G = 4.5622e+00
+Iter 14: Volume = 0.0062 m^3, Constraint G = 1.2662e+00
+Iter 15: Volume = 0.0063 m^3, Constraint G = 9.3601e-01
+Iter 16: Volume = 0.0063 m^3, Constraint G = 3.9440e-01
+Iter 17: Volume = 0.0061 m^3, Constraint G = 3.7923e+00
+Iter 18: Volume = 0.0061 m^3, Constraint G = 3.5121e-01
+Iter 19: Volume = 0.0058 m^3, Constraint G = 9.7269e-01
+Iter 20: Volume = 0.0058 m^3, Constraint G = 5.0256e+00
+Iter 21: Volume = 0.0060 m^3, Constraint G = 1.6289e+00
+Iter 22: Volume = 0.0060 m^3, Constraint G = 2.9622e-01
+Iter 23: Volume = 0.0061 m^3, Constraint G = 2.5019e-01
+Iter 24: Volume = 0.0060 m^3, Constraint G = 9.2076e-01
+Iter 25: Volume = 0.0061 m^3, Constraint G = 2.5075e-01
+Iter 26: Volume = 0.0061 m^3, Constraint G = 1.2440e-01
+Iter 27: Volume = 0.0061 m^3, Constraint G = 1.9195e-01
+Iter 28: Volume = 0.0062 m^3, Constraint G = 6.9717e-02
+Iter 29: Volume = 0.0061 m^3, Constraint G = 1.3439e-01
+Iter 30: Volume = 0.0061 m^3, Constraint G = 1.6420e-02
+Iter 31: Volume = 0.0060 m^3, Constraint G = 5.1987e-02
+Iter 32: Volume = 0.0060 m^3, Constraint G = 1.2779e-01
+Iter 33: Volume = 0.0060 m^3, Constraint G = 6.3469e-02
+Iter 34: Volume = 0.0061 m^3, Constraint G = 3.9015e-02
+Iter 35: Volume = 0.0061 m^3, Constraint G = 8.0123e-03
+Iter 36: Volume = 0.0060 m^3, Constraint G = 1.5622e-02
+Iter 37: Volume = 0.0060 m^3, Constraint G = 2.7552e-02
+Iter 38: Volume = 0.0060 m^3, Constraint G = 6.2302e-03
+Iter 39: Volume = 0.0060 m^3, Constraint G = 9.6621e-03
+Iter 40: Volume = 0.0060 m^3, Constraint G = 7.1673e-03
+Iter 41: Volume = 0.0060 m^3, Constraint G = 2.0303e-03
+Iter 42: Volume = 0.0060 m^3, Constraint G = 1.0088e-03
+Iter 43: Volume = 0.0060 m^3, Constraint G = 4.6938e-03
+Iter 44: Volume = 0.0060 m^3, Constraint G = 1.0336e-03
+Iter 45: Volume = 0.0060 m^3, Constraint G = 2.5959e-03
+Iter 46: Volume = 0.0060 m^3, Constraint G = 1.8150e-03
+Iter 47: Volume = 0.0060 m^3, Constraint G = 3.7344e-03
+Iter 48: Volume = 0.0060 m^3, Constraint G = 1.4458e-03
+Iter 49: Volume = 0.0060 m^3, Constraint G = 6.4185e-04
+Iter 50: Volume = 0.0060 m^3, Constraint G = 1.5126e-04
+Iter 51: Volume = 0.0060 m^3, Constraint G = 2.8264e-05
+Iter 52: Volume = 0.0060 m^3, Constraint G = 7.6651e-06
+Iter 53: Volume = 0.0060 m^3, Constraint G = 5.4604e-06
+Iter 54: Volume = 0.0060 m^3, Constraint G = 3.1354e-06
+Iter 55: Volume = 0.0060 m^3, Constraint G = 3.0855e-06
+Iter 56: Volume = 0.0060 m^3, Constraint G = 4.7731e-06
+Iter 57: Volume = 0.0060 m^3, Constraint G = 2.6181e-05
+Iter 58: Volume = 0.0060 m^3, Constraint G = 4.1612e-06
+Iter 59: Volume = 0.0060 m^3, Constraint G = 7.3472e-04
+Iter 60: Volume = 0.0060 m^3, Constraint G = 1.3429e-05
+Iter 61: Volume = 0.0060 m^3, Constraint G = 3.8622e-05
+Iter 62: Volume = 0.0060 m^3, Constraint G = 2.1581e-06
+Iter 63: Volume = 0.0060 m^3, Constraint G = 4.2020e-06
+Iter 64: Volume = 0.0060 m^3, Constraint G = 2.6459e-07
+Optimization terminated successfully    (Exit mode 0)
+            Current function value: 0.006011618725932827
+            Iterations: 64
+            Function evaluations: 13928
+            Gradient evaluations: 64
+
+Optimization Complete.
+Success: True
+Message: Optimization terminated successfully
+Final Mass: 0.0060 kg
+Final Constraint Violation: 2.6459e-07
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def plot_results(problem, x_best):
+    ncoords = problem.ncoords
+    faces_quad = []
+    for quad in problem.quads:
+        faces_quad.append([4, quad.n1 - 1, quad.n2 - 1, quad.n3 - 1, quad.n4 - 1])
+    faces_quad = np.hstack(faces_quad)
+
+    base_grid = pv.PolyData(ncoords, faces_quad)
+
+    # Re-evaluate to ensure result_w is updated
+    problem._evaluate(x_best, out={})
+
+    h0_vals = x_best[0::3]
+    h45_vals = x_best[1::3]
+    h90_vals = x_best[2::3]
+
+    z_offset = min(problem.a, problem.b) * 0.5
+
+    # --- Layer 0: deflection ---
+    grid_w = base_grid.copy()
+    grid_w.points[:, 2] -= z_offset
+    grid_w.point_data[&quot;Deflection [m]&quot;] = problem.result_w
+    grid_w = grid_w.warp_by_scalar(&quot;Deflection [m]&quot;, factor=100.0)
+
+    # --- Layer 1: 0 degrees ---
+    grid_h0 = base_grid.copy()
+    grid_h0.cell_data[&quot;Thickness [m]&quot;] = h0_vals
+
+    # --- Layer 2: +/- 45 degrees ---
+    grid_h45 = base_grid.copy()
+    grid_h45.points[:, 2] += z_offset
+    grid_h45.cell_data[&quot;Thickness [m]&quot;] = h45_vals
+
+    # --- Layer 3: 90 degrees ---
+    grid_h90 = base_grid.copy()
+    grid_h90.points[:, 2] += 2 * z_offset
+    grid_h90.cell_data[&quot;Thickness [m]&quot;] = h90_vals
+
+    plotter = pv.Plotter()
+    cmap = &quot;viridis&quot;
+
+    plotter.add_mesh(grid_w, scalars=&quot;Deflection [m]&quot;, cmap=cmap, show_edges=True)
+    plotter.add_mesh(grid_h0, scalars=&quot;Thickness [m]&quot;, cmap=cmap, show_edges=True)
+    plotter.add_mesh(grid_h45, scalars=&quot;Thickness [m]&quot;, cmap=cmap, show_edges=True)
+    plotter.add_mesh(grid_h90, scalars=&quot;Thickness [m]&quot;, cmap=cmap, show_edges=True)
+
+    label_x = -problem.a * 0.1
+    label_y = problem.b / 2
+
+    labels = [&quot;deflection&quot;, &quot;h_0&quot;, &quot;h_45&quot;, &quot;h_90&quot;]
+    label_coords = [
+        [label_x, label_y, -z_offset],
+        [label_x, label_y, 0],
+        [label_x, label_y, z_offset],
+        [label_x, label_y, 2 * z_offset]
+    ]
+
+    plotter.add_point_labels(
+        label_coords,
+        labels,
+        font_size=20,
+        point_size=0,
+        text_color=&quot;black&quot;,
+        always_visible=True
+    )
+
+    plotter.add_axes()
+    plotter.show_grid()
+    plotter.view_isometric()
+    plotter.show(title=&quot;Optimized Thickness Distribution per Orientation&quot;)
+
+
+plot_results(problem, res.x)
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+/Users/saullogiovanip/miniconda3/lib/python3.13/site-packages/pyvista/jupyter/notebook.py:56: UserWarning: Failed to use notebook backend:
+
+cannot import name &#39;vtk&#39; from &#39;trame.widgets&#39; (/Users/saullogiovanip/miniconda3/lib/python3.13/site-packages/trame/widgets/__init__.py)
+
+Falling back to a static output.
+  warnings.warn(
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/opt-lightweight-smeared-deflection-SLSQP-quarter_5_1.png" src="_images/opt-lightweight-smeared-deflection-SLSQP-quarter_5_1.png" />
+</div>
+</div>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[ ]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>
+</pre></div>
+</div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Installing-required-modules">Installing required modules</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/opt-lightweight-smeared-deflection-SLSQP-quarter.ipynb.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=a95f357e85573c9b56d5"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=a95f357e85573c9b56d5"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+    <br/>
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.19.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
