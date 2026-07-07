@@ -348,6 +348,8 @@ cdef class Quad4:
     ----------
     eid, : int
         Element identification number.
+    pid, : int
+        Property identification number.
     area, : double
         Element area.
     K6ROT, : double
@@ -378,13 +380,13 @@ cdef class Quad4:
         Pointer to the probe.
 
     """
-    cdef public int eid
+    cdef public int eid, pid
     cdef public int n1, n2, n3, n4
     cdef public int c1, c2, c3, c4
     cdef public int init_k_KC0, init_k_KG, init_k_M
     cdef public int init_k_KA_beta, init_k_KA_gamma, init_k_CA
     cdef public double area
-    cdef public double K6ROT # drilling stiffness
+    cdef public double K6ROT
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public double m11, m12, m21, m22
     cdef public Quad4Probe probe
@@ -392,6 +394,7 @@ cdef class Quad4:
     def __cinit__(Quad4 self, Quad4Probe p):
         self.probe = p
         self.eid = -1
+        self.pid = -1
         self.n1 = -1
         self.n2 = -1
         self.n3 = -1
@@ -408,7 +411,7 @@ cdef class Quad4:
         self.init_k_KA_gamma = 0
         self.init_k_CA = 0
         self.area = 0
-        self.K6ROT = 10.
+        self.K6ROT = 100. # NOTE default value in MSC Nastran
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.
         self.r31 = self.r32 = self.r33 = 0.
