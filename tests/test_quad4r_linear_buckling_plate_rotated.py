@@ -93,11 +93,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
                 quad.init_k_KG = init_k_KG
                 quad.update_rotation_matrix(ncoords_flatten)
                 quad.update_probe_xe(ncoords_flatten)
-                factor = 0.1
-                quad.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_u=factor,
-                                hgfactor_v=factor, hgfactor_w=factor,
-                                hgfactor_rx=factor, hgfactor_ry=factor)
-                quad.update_KG_given_stress(Nxx, 0, 0, KGr, KGc, KGv)
+                quad.update_KC0(KC0r, KC0c, KC0v, prop)
                 quads.append(quad)
                 init_k_KC0 += data.KC0_SPARSE_SIZE
                 init_k_KG += data.KG_SPARSE_SIZE
