@@ -3,7 +3,7 @@ sys.path.append('..')
 
 import numpy as np
 from numpy import isclose
-from scipy.sparse.linalg import eigsh, spsolve, cg
+from scipy.sparse.linalg import eigsh, spsolve
 from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import isotropic_plate
@@ -12,7 +12,7 @@ from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
 
 def test_linear_buckling_plate(plot=False, mode=0):
     #
-    thetas = np.deg2rad(np.linspace(-np.pi, np.pi, 5))
+    thetas = np.linspace(-np.pi, np.pi, 5)
 
     nx = 21
     ny = 7
@@ -123,8 +123,9 @@ def test_linear_buckling_plate(plot=False, mode=0):
 
             num_eig_lb = max(mode+1, 3)
             PREC = np.max(1/KC0uu.diagonal())
+            sigma = 1.
             eigvals, eigvecsu = eigsh(A=PREC*KGuu, k=num_eig_lb, which='SM',
-                    M=PREC*KC0uu, tol=1e-9, sigma=1., mode='cayley')
+                    M=PREC*KC0uu, tol=1e-6, sigma=sigma, mode='cayley')
             eigvals = -1./eigvals
             load_mult = eigvals[0]
             P_cr_calc = load_mult*Nxx*b

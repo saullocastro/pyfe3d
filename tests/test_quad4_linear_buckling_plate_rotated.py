@@ -12,7 +12,7 @@ from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 
 def test_linear_buckling_plate(plot=False, mode=0):
     #
-    thetas = np.deg2rad(np.linspace(-np.pi, np.pi, 5))
+    thetas = np.linspace(-np.pi, np.pi, 5)
 
     nx = 21
     ny = 7
