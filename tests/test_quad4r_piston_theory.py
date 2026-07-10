@@ -208,7 +208,7 @@ def test_quad4r_piston_theory(plot=False, refinement=1):
 
         for i in range(num_eigenvalues):
             plt.plot(Mach, omegan_vec[:, i])
-        plt.ylabel('$\omega_n\ [rad/s]$')
+        plt.ylabel(r'$\omega_n\ [rad/s]$')
         plt.xlabel('Mach')
         plt.show()
 

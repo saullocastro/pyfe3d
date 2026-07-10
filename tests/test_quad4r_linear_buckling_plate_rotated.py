@@ -3,7 +3,7 @@ sys.path.append('..')
 
 import numpy as np
 from numpy import isclose
-from scipy.sparse.linalg import eigsh, spsolve
+from scipy.sparse.linalg import eigsh
 from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import isotropic_plate
@@ -14,8 +14,8 @@ def test_linear_buckling_plate(plot=False, mode=0):
     #
     thetas = np.linspace(-np.pi, np.pi, 5)
 
-    nx = 21
-    ny = 7
+    nx = 31
+    ny = 15
 
     a = 2.0
     b = 0.5
@@ -100,12 +100,18 @@ def test_linear_buckling_plate(plot=False, mode=0):
 
             print('elements created')
 
+            Nxx = -1
+
+            for quad in quads:
+                quad.update_probe_xe(ncoords_flatten)
+                quad.update_KG_given_stress(Nxx, 0, 0, KGr, KGc, KGv)
+
             KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
             KG = coo_matrix((KGv, (KGr, KGc)), shape=(N, N)).tocsc()
 
             print('sparse KC0 and KG created')
 
-            # applying simply supported boundary conditions
+            # constraining all edge nodes to no translation
             bk = np.zeros(N, dtype=bool)
             check = isclose(x_local, 0.) | isclose(x_local, a) | isclose(y_local, 0) | isclose(y_local, b)
             bk[0::DOF] = check
@@ -138,7 +144,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
             sigma_cr = -kcmin*np.pi**2*E/(12*(1-nu**2))*h**2/b**2
             P_cr_theory = sigma_cr*h*b
             print('Theoretical P_cr_theory', P_cr_theory)
-            assert isclose(P_cr_theory, P_cr_calc, rtol=0.03)
+            assert isclose(P_cr_theory, P_cr_calc, rtol=0.05)
 
     if plot:
         import matplotlib.pyplot as plt

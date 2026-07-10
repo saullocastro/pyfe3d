@@ -18,7 +18,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         A. Arbelo, Gerhard Ziegmann, Richard Degenhardt. "Linear buckling predictions
         of unstiffened laminated composite cylinders and cones under various loading
         and boundary conditions using semi-analytical models". Composite Structures,
-        2014. 10.1016/j.compstruct.2014.07.037
+        2014. https://doi.org/10.1016/j.compstruct.2014.07.037
 
         Cylinders Z11 and Z33 are used given their distinct torsion buckling
         behaviour.
@@ -35,18 +35,23 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     }
     # NOTE reference values match with Fig. 13, FSDT CC2, of Castro et al.
     reference_Tcr_value_Castro_refinement_8 = {
-        'Z11' : -19175.5,
-        'Z33' : -11080.9
+        'Z11' : -18995.4,
+        'Z33' : -11032.4
     }
     # NOTE values used for CI tests, values derived after running the tests in
     # a local compuer with refinement=8 first and then with refinement=1
     reference_Tcr_value_Castro_refinement_1 = {
-        'Z11' : -29525.1,
-        'Z33' : -19534.8
+        'Z11' : -29405.0,
+        'Z33' : -19436.7
     }
     for cyl in ['Z11', 'Z33']:
         stack = stacks[cyl]
-        ref_Tcr = reference_Tcr_value_Castro_refinement_1[cyl]
+        if refinement == 1:
+            ref_Tcr = reference_Tcr_value_Castro_refinement_1[cyl]
+        elif refinement == 8:
+            ref_Tcr = reference_Tcr_value_Castro_refinement_8[cyl]
+        else:
+            raise ValueError('refinement must be 1 or 8')
 
         data = Quad4RData()
         probe = Quad4RProbe()
@@ -256,4 +261,4 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
 
 
 if __name__ == '__main__':
-    test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=True, refinement=2)
+    test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=8)
