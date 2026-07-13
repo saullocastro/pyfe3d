@@ -18,7 +18,7 @@ Citing this library
 -------------------
 
 
-Saullo G. P. Castro. (2026). General-purpose finite element solver based on Python and Cython (Version 0.6.4). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
+Saullo G. P. Castro. (2026). General-purpose finite element solver based on Python and Cython (Version 0.7.0). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
 
 
 Tutorials
@@ -41,15 +41,18 @@ Usage Examples
     ex_natural_frequency_cylinder.rst
 
 
-Topics
--------
+Available finite elements
+-------------------------
 
-.. toctree::
-    :maxdepth: 1
+:doc:`fe_overview`
 
-    fe_overview.rst
-    properties.rst
-    repository_structure.rst
+:doc:`properties`
+
+
+Repository structure
+--------------------
+
+:doc:`repository_structure`
 
 
 Installing pyfe3d
