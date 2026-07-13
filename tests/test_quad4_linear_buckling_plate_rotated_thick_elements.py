@@ -4,7 +4,7 @@ sys.path.append('..')
 import numpy as np
 from numpy import isclose
 from scipy.sparse.linalg import eigsh, spsolve, cg
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_matrix, diags as sp_diags
 
 from pyfe3d.shellprop_utils import isotropic_plate
 from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
@@ -90,10 +90,10 @@ def test_linear_buckling_plate(plot=False, mode=0):
                 quad.c2 = DOF*nid_pos[n2]
                 quad.c3 = DOF*nid_pos[n3]
                 quad.c4 = DOF*nid_pos[n4]
-                # NOTE The thick plate (h=0.05 m) has a much worse drilling-to-bending
-                #      stiffness ratio with K6ROT=100 than the thin plate (h=0.002 m),
-                #      making the ARPACK eigensolver numerically sensitive for the
-                #      reflected-mesh orientation (pitch = yaw = pi).
+                # NOTE The thick plate (h=0.05 m) has a worse drilling-to-bending
+                #      stiffness ratio with K6ROT=1e4, causing an ill-conditioned
+                #      KC0uu (condition number ~1e14). A diagonal preconditioner
+                #      is used in the eigensolver to normalise KC0 diagonal to 1.
                 quad.K6ROT = 1e4 
                 quad.init_k_KC0 = init_k_KC0
                 quad.init_k_KG = init_k_KG
@@ -125,13 +125,17 @@ def test_linear_buckling_plate(plot=False, mode=0):
             KGuu = KG[bu, :][:, bu]
 
             num_eig_lb = max(mode+1, 6)
-            PREC = np.max(1/KC0uu.diagonal())
-            eigvals, eigvecsu = eigsh(A=PREC*KGuu, k=num_eig_lb, which='SM',
-                    M=PREC*KC0uu, tol=1e-9, sigma=1., mode='cayley')
+            d = KC0uu.diagonal()
+            d_inv_sqrt = 1.0/np.sqrt(d)
+            D_inv_sqrt = sp_diags(d_inv_sqrt)
+            KC0_scaled = D_inv_sqrt @ KC0uu @ D_inv_sqrt
+            KG_scaled = D_inv_sqrt @ KGuu @ D_inv_sqrt
+            eigvals, eigvecsu = eigsh(A=KG_scaled, k=num_eig_lb, which='SM',
+                    M=KC0_scaled, tol=1e-9, sigma=1., mode='cayley')
             eigvals = -1./eigvals
             eig_order = np.argsort(eigvals)
             eigvals = eigvals[eig_order]
-            eigvecsu = eigvecsu[:, eig_order]
+            eigvecsu = D_inv_sqrt @ eigvecsu[:, eig_order]
             load_mult = eigvals[0]
             P_cr_calc = load_mult*Nxx*b
             print('linear buckling load_mult =', load_mult)
