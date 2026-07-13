@@ -124,11 +124,14 @@ def test_linear_buckling_plate(plot=False, mode=0):
             KC0uu = KC0[bu, :][:, bu]
             KGuu = KG[bu, :][:, bu]
 
-            num_eig_lb = max(mode+1, 3)
+            num_eig_lb = max(mode+1, 6)
             PREC = np.max(1/KC0uu.diagonal())
             eigvals, eigvecsu = eigsh(A=PREC*KGuu, k=num_eig_lb, which='SM',
                     M=PREC*KC0uu, tol=1e-9, sigma=1., mode='cayley')
             eigvals = -1./eigvals
+            eig_order = np.argsort(eigvals)
+            eigvals = eigvals[eig_order]
+            eigvecsu = eigvecsu[:, eig_order]
             load_mult = eigvals[0]
             P_cr_calc = load_mult*Nxx*b
             print('linear buckling load_mult =', load_mult)
