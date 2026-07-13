@@ -90,7 +90,11 @@ def test_linear_buckling_plate(plot=False, mode=0):
                 quad.c2 = DOF*nid_pos[n2]
                 quad.c3 = DOF*nid_pos[n3]
                 quad.c4 = DOF*nid_pos[n4]
-                quad.K6ROT = 100.
+                # NOTE The thick plate (h=0.05 m) has a much worse drilling-to-bending
+                #      stiffness ratio with K6ROT=100 than the thin plate (h=0.002 m),
+                #      making the ARPACK eigensolver numerically sensitive for the
+                #      reflected-mesh orientation (pitch = yaw = pi).
+                quad.K6ROT = 1e4
                 quad.init_k_KC0 = init_k_KC0
                 quad.init_k_KG = init_k_KG
                 quad.update_rotation_matrix(ncoords_flatten)
