@@ -11,23 +11,31 @@ Quad4R - Quadrilateral element with reduced integration (:mod:`pyfe3d.quad4r`)
 
 .. currentmodule:: pyfe3d.quad4r
 
-The :class:`.Quad4R` has full reduced integration, is very efficient, but
-has an hourglass control to compensate the reduced integration that is not
-robust and creates significant artificial stiffness. Therefore, the recommended
-quadrilateral plane stress elements is the :mod:`pyfe3d.quad4`.
-
 The :class:`.Quad4R` element has 6 degrees-of-freedom (DOF): `u`, `v`, `w`,
 `r_x`, `r_y`, `r_z`. All DOF are interpolated bi-linearly between the nodes,
 such that any of the DOF gradients can be constant over the element when the
 element is rectangular.
+
+In the reduced integration scheme used, a single point at the centroid
+(`\xi=\eta=0`) and weight `w_{ij}=4`, preventing shear locking. 
+The hourglass control is used according to Brockman 1987:
+
+    Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
+    Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
+    https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208
+
+All stiffness terms, besides drilling, are integrated using the reduced integration
+scheme for the :class:`.Quad4R` element, making it very efficient concerning 
+the time needed to calculate the internal forces and stiffness matrices, in comparison
+with the :class:`pyfe3d.Quad4` element.
 
 The drilling stiffness is calculated following the approach adopted in
 MSC Nastran and Autodesk Nastran, using a penalty-based method. Because
 the stiffness is only evaluated at the element centroid, this method provides
 a non-physical drilling stiffness with the objective of removing the singularity
 by creating an artificial stiffness between the drilling rotation degree-of-freedom
-of each node with the in-plane rotational strain evaluated at the centroid. The penalty energy
-is defined per element as:
+of each node with the in-plane rotational strain evaluated at the centroid.
+The penalty energy is defined per element as:
 
 .. math::
 
@@ -71,7 +79,9 @@ with:
 Note that `A_{66}` is assumed constant over the element, which here has no difference given that a reduced integration approach is used.
 The approach herein presented is very similar to the one presented in Eq. 2.20 of:
 
-    F.M. Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013) 10–20. www.iosrjen.org (accessed April 20, 2020).
+    Adam, F. M., Mohamed, A. E., and Hassaballa, A. E., 2013,
+    “Degenerated Four Nodes Shell Element with Drilling Degree of
+    Freedom,” IOSR J. Eng., 3(8), pp. 10–20.
 
 """
 from libc.math cimport fabs
@@ -201,7 +211,7 @@ cdef class Quad4R:
         AUTODESK NASTRAN's quick reference guide recommends ``K6ROT = 100.``
         for static analysis. For modal solutions, ``K6ROT=1.e4`` is suggested.
         MSC NASTRAN's quick reference guide states that ``K6ROT > 100.``
-        should not be used, but this is contracdicting AUTODESK NASTRAN.
+        should not be used, but this is contradicting AUTODESK NASTRAN.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix from local to global coordinates.
     m11, m12, m21, m22 : double
@@ -1134,14 +1144,6 @@ cdef class Quad4R:
                           double hgfactor_ry = 1.,
                           ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
-
-        Reduced integration is used with a single point in the centroid
-        (`\xi=\eta=0`) and weight `w_{ij}=4`, preventing shear locking.
-        Hourglass control is used according to Brockman 1987:
-
-            Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
-            Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
-            https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208
 
 
         Parameters
