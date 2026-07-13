@@ -11,20 +11,108 @@ Tria3R - Triangular element with reduced integration (:mod:`pyfe3d.tria3r`)
 
 .. currentmodule:: pyfe3d.tria3r
 
+
+Triangular element with reduced integration, where a single point at
+the centroid (`N1=N2=N3=1/3`) and weight `weight=1` is evaluated,
+preventing shear locking. The drilling stiffness is evaluated with
+full integration.
+
+The transverse shear stiffnesses `E_{44}`, `E_{45}` and `E_{55}` are stabilised
+using the Stenberg's method described in:
+
+    Bischoff, M., & Bletzinger, K.-U. (2004). 
+    Improving stability and accuracy of Reissner–Mindlin plate finite elements via algebraic subgrid scale stabilization.
+    Computer Methods in Applied Mechanics and Engineering, 193(15–16), 1517–1528.
+    https://doi.org/10.1016/j.cma.2003.12.036
+
+modifed as proposed by Castro et al. in:
+
+    Castro, S. G. P., Donadon, M. V., & Guimarães, T. A. M. (2019).
+    ES-PIM applied to buckling of variable angle tow laminates.
+    Composite Structures, 209, 67–78. https://doi.org/10.1016/j.compstruct.2018.10.058
+
+
+where the transverse shear terms are changed as per Eq. (26) in Castro et al., here repeated
+for convenience:
+
+.. math::
+
+    \left[\begin{matrix}\hat{E}_{44}, \hat{E}_{45} \\ \hat{E}_{45}, \hat{E}_{55}\end{matrix}\right] = \frac{\kappa}{1 + factor}\left[\begin{matrix}E_{44}, E_{45} \\ E_{45}, E_{55}\end{matrix}\right]
+
+with `factor` defined as:
+
+    factor = \frac{\alpha \ell^2}{h^2}
+
+where `\alpha` is a positive constant parameters (see the ``alpha_shear_locking`` attribute), 
+`\ell` is the longest edge of the corresponding triangle, and `h` the total thickness of the element.
+
+Shear correction factors are also applied to `E_{44}`, `E_{45}` and `E_{55}`, with the following:
+
+.. math::
+    
+    \tilde{E}_{44} = \hat{E}_{44} \kappa_{23}
+    \tilde{E}_{45} = \hat{E}_{45} (\kappa_{13} + \kappa_{23})/2
+    \tilde{E}_{55} = \hat{E}_{55} \kappa_{13}
+
+Such that `\tilde{E}_{ij}` are the transverse shear terms considering both the stabilisation to prevent
+shear locking, and the shear correction factor. As described in Castro et al., it is known that the
+shear correction factors are no longer a very releavant parameter when the stabilisation scheme
+presented above is used. The shear correction factors are read directly
+from the :class:`pyfe3d.shellprop.ShellProp` object.
+
 The drilling stiffness is calculated following the approach adopted in
-MSC Nastran and Autodesk Nastran:
+MSC Nastran and Autodesk Nastran, using a penalty-based method. Because
+the stiffness is only evaluated at the element centroid, this method provides
+a non-physical drilling stiffness with the objective of removing the singularity
+by creating an artificial stiffness between the drilling rotation degree-of-freedom
+of each node with the in-plane rotational strain evaluated at the centroid.
+The penalty energy is defined per element as:
 
 .. math::
-    K_{drill} = K6ROT \cdot G \cdot V \cdot 10^{-6}
 
-where `G = A_{66}/h` is the in-plane shear modulus (for composites),
-`V = \text{area} \cdot h` is the element volume, `\text{area}` is the element
-area, and `h` is the total laminate thickness. This simplifies to:
+    U_{drill} = \frac{1}{2} K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)^2 dA
+
+where `10^{-6}` is a scaling factor suggested by MSC Nastran's approach (CQUAD4) to make the artificial
+drilling stiffness sufficiently small. AUTODESK NASTRAN's quick reference guide recommends `K6ROT = 100`
+for static analysis. For modal solutions, `K6ROT = 10^4` is suggested. MSC NASTRAN's quick reference guide
+states that `K6ROT > 100` should not be used, thus contradicting AUTODESK NASTRAN. The rotation `r_z` represents
+the drilling degree-of-freedom in element's coordinates, whereas `\theta_z` the in-plane rotation strain, defined as:
 
 .. math::
-    K_{drill} = K6ROT \cdot A_{66} \cdot \text{area} \cdot 10^{-6}
 
-The dimensionless multiplier ``K6ROT`` is the only user-controlled parameter.
+    \theta_z = \frac{1}{2}\left(\frac{\partial v}{\partial x} - \frac{\partial u}{\partial y}\right)
+
+The first variation of U_{drill} then becomes:
+
+.. math::
+
+    \delta U_{drill} = K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)(\delta r_z - \delta \theta_z) dA
+
+which can be expressed in terms of the shape functions and element degrees-of-freedom (`u_e`) as:
+`r_z = S^{r_z} u_e`, `u = S^u u_e` and `v = S_v u_e` as:
+
+.. math::
+
+    \delta U_{drill} = K6ROT \cdot 10^{-6} \cdot u_e^\top \int_A A_{66} (S^{r_z \top} + 1/2 S^{u \top}_{,y} - 1/2 S^{v \top}_{,x})(\delta S^{r_z} + 1/2 \delta S^u_{,y} - 1/2 S^v_{,x}) dA u_e
+
+or simply as:
+
+.. math::
+
+    \delta U_{drill} = K6ROT \cdot 10^{-6} \cdot A_{66} u_e^\top \int_A B_{drill}^\top B_{drill} dA u_e
+
+with:
+
+.. math::
+
+    B_{drill} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}
+
+Note that `A_{66}` is assumed constant over the element, which here has no difference given that a reduced integration approach is used.
+The approach herein presented is very similar to the one presented in Eq. 2.20 of:
+
+    Adam, F. M., Mohamed, A. E., and Hassaballa, A. E., 2013,
+    “Degenerated Four Nodes Shell Element with Drilling Degree of
+    Freedom,” IOSR J. Eng., 3(8), pp. 10–20.
 
 """
 from libc.math cimport fabs
@@ -131,8 +219,8 @@ cdef class Tria3R:
     area, : double
         Element area.
     alpha_shear_locking, : double
-        Factor used to prevent shear locking, adopted from teh BFG element,
-        affecting stiffness terms E44,E45,E45::
+        Factor used to prevent shear locking, adopted from the DFG element,
+        affecting stiffness terms ``E44``, ``E45``, ``E45``::
 
             maxl = max(edge_12, edge_23, edge_31)
             factor = alpha_shear_locking*maxl**2/thickness**2
@@ -145,14 +233,11 @@ cdef class Tria3R:
         approaches the one of the :class:`.Quad4R` element for an equivalent
         mesh (see the test case ``test_tria3r_linear_buckling_plate.py``).
     K6ROT, : double
-        Dimensionless multiplier for the drilling stiffness. The drilling
-        stiffness is computed as ``Kdrill = K6ROT * A66 * area * 1e-6``,
-        following the approach of MSC Nastran and Autodesk Nastran, where ``A66`` is
-        the element in-plane shear stiffness and ``area`` is the element area.
+        Dimensionless multiplier for the drilling stiffness. 
         AUTODESK NASTRAN's quick reference guide recommends ``K6ROT = 100.``
         for static analysis. For modal solutions, ``K6ROT=1.e4`` is suggested.
         MSC NASTRAN's quick reference guide states that ``K6ROT > 100.``
-        should not be used, but this is controversial.
+        should not be used, but this is contradicting AUTODESK NASTRAN.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix from local to global coordinates.
     m11, m12, m21, m22 : double
@@ -626,7 +711,7 @@ cdef class Tria3R:
             if l31 > maxl:
                 maxl = l31
 
-            # NOTE strategy to prevent shear locking used in BFG elements imported here...
+            # NOTE strategy to prevent shear locking used in DFG elements imported here...
             factor = self.alpha_shear_locking*maxl**2/prop.h**2
             E44 = 1 / (1 + factor) * E44
             E45 = 1 / (1 + factor) * E45
@@ -871,21 +956,6 @@ cdef class Tria3R:
                           ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
-        Reduced integration is used with a single point in the centroid
-        (`N1=N2=N3=1/3`) and weight `weight=1`, preventing shear locking.
-
-        Hourglass control is used according to Brockman 1987:
-
-            Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
-            Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
-            https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208
-
-        Drilling stiffness is used according to Adam et al. 2013:
-
-            Adam, F. M., Mohamed, A. E., and Hassaballa, A. E., 2013,
-            “Degenerated Four Nodes Shell Element with Drilling Degree of
-            Freedom,” IOSR J. Eng., 3(8), pp. 10–20.
-
 
         Parameters
         ----------
@@ -1045,7 +1115,7 @@ cdef class Tria3R:
             if l31 > maxl:
                 maxl = l31
 
-            # NOTE strategy to prevent shear locking used in BFG elements imported here...
+            # NOTE strategy to prevent shear locking used in the DFG elements imported here...
             factor = self.alpha_shear_locking*maxl**2/prop.h**2
             E44 = 1 / (1 + factor) * E44
             E45 = 1 / (1 + factor) * E45
