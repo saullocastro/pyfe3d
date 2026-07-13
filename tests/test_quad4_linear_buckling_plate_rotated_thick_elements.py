@@ -125,9 +125,9 @@ def test_linear_buckling_plate(plot=False, mode=0):
             KGuu = KG[bu, :][:, bu]
 
             num_eig_lb = max(mode+1, 6)
-            d = KC0uu.diagonal()
-            d_inv_sqrt = 1.0/np.sqrt(d)
-            D_inv_sqrt = sp_diags(d_inv_sqrt)
+            kc0_diag = KC0uu.diagonal()
+            kc0_diag_inv_sqrt = 1.0/np.sqrt(np.maximum(kc0_diag, 1e-30))
+            D_inv_sqrt = sp_diags(kc0_diag_inv_sqrt)
             KC0_scaled = D_inv_sqrt @ KC0uu @ D_inv_sqrt
             KG_scaled = D_inv_sqrt @ KGuu @ D_inv_sqrt
             eigvals, eigvecsu = eigsh(A=KG_scaled, k=num_eig_lb, which='SM',
