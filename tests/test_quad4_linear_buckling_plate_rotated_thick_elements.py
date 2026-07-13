@@ -94,7 +94,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
                 #      stiffness ratio with K6ROT=100 than the thin plate (h=0.002 m),
                 #      making the ARPACK eigensolver numerically sensitive for the
                 #      reflected-mesh orientation (pitch = yaw = pi).
-                quad.K6ROT = 1e4
+                quad.K6ROT = 1e4 
                 quad.init_k_KC0 = init_k_KC0
                 quad.init_k_KG = init_k_KG
                 quad.update_rotation_matrix(ncoords_flatten)
