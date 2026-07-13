@@ -29,6 +29,17 @@ scheme for the :class:`.Quad4R` element, making it very efficient concerning
 the time needed to calculate the internal forces and stiffness matrices, in comparison
 with the :class:`pyfe3d.Quad4` element.
 
+Shear correction factors are applied to `E_{44}`, `E_{45}` and `E_{55}`, with the following:
+
+.. math::
+    
+    \tilde{E}_{44} = E_{44} \kappa_{23}
+    \tilde{E}_{45} = E_{45} (\kappa_{13} + \kappa_{23})/2
+    \tilde{E}_{55} = E_{55} \kappa_{13}
+
+Such that `\tilde{E}_{ij}` are the transverse shear terms considering the shear correction factor. 
+The shear correction factors are read directly from the :class:`pyfe3d.shellprop.ShellProp` object.
+
 The drilling stiffness is calculated following the approach adopted in
 MSC Nastran and Autodesk Nastran, using a penalty-based method. Because
 the stiffness is only evaluated at the element centroid, this method provides

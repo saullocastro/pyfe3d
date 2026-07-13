@@ -14,10 +14,9 @@ Quad4 - Quadrilateral element with mixed integration (:mod:`pyfe3d.quad4`)
 The :class:`.Quad4` is the recommended quadrilateral plane stress finite
 element.
 
-Another option is the :mod:`pyfe3d.quad4r` with full reduced
-integration, more efficient, but with an hourglass control to compensate the
-reduced integration that is not robust and creates significant artificial
-stiffness.
+Another option is the :class:`pyfe3d.Quad4R` with full reduced
+integration, more efficient, but with an hourglass control that creates
+artificial stiffness to compensate the reduced integration.
 
 The :class:`.Quad4` element has 6 degrees-of-freedom (DOF): `u`, `v`, `w`,
 `r_x`, `r_y`, `r_z`. All DOF are interpolated bi-linearly between the nodes,
@@ -53,6 +52,17 @@ Hughes et al. (1977) proposed the following integration scheme:
 The in-plane stiffness terms are integrated with 2 quadrature points, and the
 drilling stiffness is integrated with 1 quadrature point. These are
 not specified in the paper of Hughes et al. (1977).
+
+Shear correction factors are applied to `E_{44}`, `E_{45}` and `E_{55}`, with the following:
+
+.. math::
+    
+    \tilde{E}_{44} = E_{44} \kappa_{23}
+    \tilde{E}_{45} = E_{45} (\kappa_{13} + \kappa_{23})/2
+    \tilde{E}_{55} = E_{55} \kappa_{13}
+
+Such that `\tilde{E}_{ij}` are the transverse shear terms considering the shear correction factor. 
+The shear correction factors are read directly from the :class:`pyfe3d.shellprop.ShellProp` object.
 
 The drilling stiffness is calculated following the approach adopted in
 MSC Nastran and Autodesk Nastran, using a penalty-based method. Because
