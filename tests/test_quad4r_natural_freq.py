@@ -80,6 +80,7 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
             quad.c4 = DOF*nid_pos[n4]
             quad.init_k_KC0 = init_k_KC0
             quad.init_k_M = init_k_M
+            quad.K6ROT = 100.
             quad.update_rotation_matrix(ncoords_flatten)
             quad.update_probe_xe(ncoords_flatten)
             quad.update_KC0(KC0r, KC0c, KC0v, prop)

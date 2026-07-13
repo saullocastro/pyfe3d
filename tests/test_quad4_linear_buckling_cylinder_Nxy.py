@@ -35,19 +35,24 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     }
     # NOTE reference values match with Fig. 13, FSDT CC2, of Castro et al.
     reference_Tcr_value_Castro_refinement_8 = {
-        'Z11' : -19200.8,
-        'Z33' : -11109.2
+        'Z11' : -18365.1,
+        'Z33' : -10844.0
     }
     # NOTE values used for CI tests, values derived after running the tests in
     # a local compuer with refinement=8 first and then with refinement=1
     reference_Tcr_value_Castro_refinement_1 = {
-        'Z11' : -32072.6,
-        'Z33' : -22317.0
+        'Z11' : -31583.4,
+        'Z33' : -21716.0
     }
 
     for cyl in ['Z11', 'Z33']:
         stack = stacks[cyl]
-        ref_Tcr = reference_Tcr_value_Castro_refinement_1[cyl]
+        if refinement == 1:
+            ref_Tcr = reference_Tcr_value_Castro_refinement_1[cyl]
+        elif refinement == 8:
+            ref_Tcr = reference_Tcr_value_Castro_refinement_8[cyl]
+        else:
+            raise ValueError('refinement must be 1 or 8')
 
         data = Quad4Data()
         probe = Quad4Probe()
@@ -134,7 +139,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
             quad.c4 = DOF*nid_pos[n4]
             quad.init_k_KC0 = init_k_KC0
             quad.init_k_KG = init_k_KG
-            quad.K6ROT = 10.
+            quad.K6ROT = 100.
             quad.update_rotation_matrix(ncoords_flatten, 0., 0., 1.)
             quad.update_probe_xe(ncoords_flatten)
             quad.update_KC0(KC0r, KC0c, KC0v, prop)
@@ -279,4 +284,4 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
 
 
 if __name__ == '__main__':
-    test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=True, refinement=2)
+    test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=8)

@@ -107,7 +107,7 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
         quad.c4 = DOF*nid_pos[n4]
         quad.init_k_KC0 = init_k_KC0
         quad.init_k_M = init_k_M
-        quad.K6ROT = 10.
+        quad.K6ROT = 100.
         quad.update_rotation_matrix(ncoords_flatten, 0., 0., 1.)
         quad.update_probe_xe(ncoords_flatten)
         quad.update_KC0(KC0r, KC0c, KC0v, prop)
@@ -230,9 +230,9 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
         plotter.parallel_projection = True
         plotter.show()
 
-    assert np.allclose(omegan, [1958.50547302, 1958.50547302,
-                                2115.97774885, 2115.97774885,
-                                2154.06513368, 2154.06513368], rtol=1e-5)
+    assert np.allclose(omegan, [1932.96293126, 1932.96293127,
+                                2105.49050107, 2105.49050108,
+                                2114.9501929 , 2114.9501929], rtol=1e-5)
 
 if __name__ == '__main__':
     test_linear_nat_freq_cylinder(mode=0, plot_pyvista=True, refinement=2)

@@ -89,6 +89,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
             quad.c4 = DOF*nid_pos[n4]
             quad.init_k_KC0 = init_k_KC0
             quad.init_k_KG = init_k_KG
+            quad.K6ROT = 100.
             quad.update_rotation_matrix(ncoords_flatten, matx[0], matx[1], matx[2])
             quad.update_probe_xe(ncoords_flatten)
             quad.update_KC0(KC0r, KC0c, KC0v, prop)
@@ -113,8 +114,6 @@ def test_linear_buckling_plate(plot=False, mode=0):
         # constraining v at x = 0, y = b/2
         check = isclose(y, b/2.) & (isclose(x, 0.) | isclose(x, a))
         bk[1::DOF] = check
-        # removing drilling
-        bk[5::DOF] = True
 
         bu = ~bk
 

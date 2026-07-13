@@ -88,7 +88,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
                 quad.c2 = DOF*nid_pos[n2]
                 quad.c3 = DOF*nid_pos[n3]
                 quad.c4 = DOF*nid_pos[n4]
-                quad.K6ROT = 1e4
+                quad.K6ROT = 100.
                 quad.init_k_KC0 = init_k_KC0
                 quad.init_k_KG = init_k_KG
                 quad.update_rotation_matrix(ncoords_flatten)

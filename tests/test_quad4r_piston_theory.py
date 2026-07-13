@@ -108,6 +108,7 @@ def test_quad4r_piston_theory(plot=False, refinement=1):
         quad.init_k_KA_beta = init_k_KA_beta
         quad.init_k_KA_gamma = init_k_KA_gamma
         quad.init_k_CA = init_k_CA
+        quad.K6ROT = 100.
         quad.update_rotation_matrix(ncoords_flatten)
         quad.update_probe_xe(ncoords_flatten)
         quad.update_KC0(KC0r, KC0c, KC0v, prop)
