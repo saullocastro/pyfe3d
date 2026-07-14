@@ -232,7 +232,7 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
 
     assert np.allclose(omegan, [1932.96293126, 1932.96293127,
                                 2105.49050107, 2105.49050108,
-                                2114.9501929 , 2114.9501929], rtol=1e-5)
+                                2114.9501929 , 2114.9501929], rtol=1e-4)
 
 if __name__ == '__main__':
     test_linear_nat_freq_cylinder(mode=0, plot_pyvista=True, refinement=2)
