@@ -4,7 +4,7 @@ sys.path.append('..')
 import numpy as np
 from numpy import isclose
 from scipy.sparse.linalg import eigsh, cg
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_matrix, diags as sp_diags
 
 from pyfe3d.shellprop_utils import isotropic_plate
 from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
@@ -142,13 +142,19 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
         fext[0::DOF][check] = ftotal/(ny - 1)/2
         assert np.isclose(fext.sum(), 0)
 
-        Kuu = KC0[bu, :][:, bu]
+        KC0uu = KC0[bu, :][:, bu]
         Muu = M[bu, :][:, bu]
         fextu = fext[bu]
 
-        PREC = np.max(1/Kuu.diagonal())
-        uu, out = cg(PREC*Kuu, PREC*fextu, atol=1e-30)
+        # NOTE pre-conditioning the linear system to improve convergence of the iterative solver
+        kuu_diag = KC0uu.diagonal()
+        kuu_diag_inv_sqrt = 1.0/np.sqrt(np.maximum(kuu_diag, 1e-30))
+        D_inv_sqrt = sp_diags(kuu_diag_inv_sqrt)
+        KC0uu_scaled = D_inv_sqrt @ KC0uu @ D_inv_sqrt
+        fextu_scaled = D_inv_sqrt @ fextu
+        uu_scaled, out = cg(KC0uu_scaled, fextu_scaled, atol=1e-8)
         assert out == 0, 'cg failed'
+        uu = D_inv_sqrt @ uu_scaled
         u = np.zeros(N)
         u[bu] = uu
 
@@ -175,22 +181,27 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
         KGuu = KG[bu, :][:, bu]
         print('sparse KG created')
 
-        num_eig_lb = max(mode+1, 1)
-        eigvals, eigvecsu = eigsh(A=PREC*KGuu, k=num_eig_lb, which='SM',
-                M=PREC*Kuu, tol=0, sigma=1., mode='cayley')
-        eigvals = -1./eigvals
-        load_mult = eigvals[0]
-        P_cr_calc = load_mult*ftotal
-        print('linear buckling load_mult =', load_mult)
-        print('linear buckling P_cr_calc =', P_cr_calc)
-
         num_eigenvalues = max(2, mode+1)
+
         print('eig solver begin')
         # solves Ax = lambda M x
         # we have Ax - lambda M x = 0, with lambda = omegan**2
-        eigvals, eigvecsu = eigsh(A=Kuu + KGuu, M=Muu, sigma=-1., which='LM',
-                k=num_eigenvalues, tol=1e-3)
+
+        # NOTE pre-conditioning the eigenvalue problem to improve convergence of the eigensolver
+        KTuu = KC0uu + KGuu
+        kt_diag = KTuu.diagonal()
+        kt_diag_inv_sqrt = 1.0/np.sqrt(np.maximum(kt_diag, 1e-30))
+        D_inv_sqrt = sp_diags(kt_diag_inv_sqrt)
+        KTuu_scaled = D_inv_sqrt @ KTuu @ D_inv_sqrt
+        Muu_scaled = D_inv_sqrt @ Muu @ D_inv_sqrt
+        eigvals, eigvecsu_scaled = eigsh(A=KTuu_scaled, M=Muu_scaled,
+                                        sigma=-1., which='LM',
+                                        k=num_eigenvalues, tol=1e-6)
+        # NOTE the eigenvectors are scaled by the preconditioner to recover the original eigenvectors
+        eigvecsu = D_inv_sqrt @ eigvecsu_scaled
+
         print('eig solver end')
+
         eigvecs = np.zeros((N, eigvecsu.shape[1]))
         eigvecs[bu, :] = eigvecsu
         omegan = eigvals**0.5
