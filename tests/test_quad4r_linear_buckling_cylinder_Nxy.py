@@ -4,8 +4,8 @@ sys.path.append('..')
 import time
 import numpy as np
 from numpy import isclose
-from scipy.sparse.linalg import eigsh, spsolve
-from scipy.sparse import coo_matrix
+from scipy.sparse.linalg import eigsh
+from scipy.sparse import coo_matrix, diags as sp_diags
 
 from pyfe3d.shellprop_utils import laminated_plate
 from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
@@ -193,15 +193,24 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         KC0uu = KC0[bu, :][:, bu]
         KGuu = KG[bu, :][:, bu]
 
-        PREC = 1.
-
         print('sparse KG created')
 
         num_eig_lb = max(mode+1, 3)
+        
         eigvecs = np.zeros((N, num_eig_lb))
-        eigvals, eigvecsu = eigsh(A=PREC*KGuu, k=num_eig_lb, which='SM',
-                M=PREC*KC0uu, tol=1e-6, sigma=1., mode='cayley')
-        eigvals = -1./eigvals
+        
+        # NOTE pre-conditioning the eigenvalue problem to improve convergence of the eigensolver
+        kc0_diag = KC0uu.diagonal()
+        kc0_diag_inv_sqrt = 1.0/np.sqrt(np.maximum(kc0_diag, 1e-30))
+        D_inv_sqrt = sp_diags(kc0_diag_inv_sqrt)
+        KC0uu_scaled = D_inv_sqrt @ KC0uu @ D_inv_sqrt
+        KGuu_scaled = D_inv_sqrt @ KGuu @ D_inv_sqrt
+        eigvals_inv, eigvecsu_scaled = eigsh(A=KGuu_scaled, k=num_eig_lb, which='SM',
+                M=KC0uu_scaled, tol=1e-9, sigma=1., mode='cayley')
+        eigvals = -1./eigvals_inv
+        # NOTE the eigenvectors are scaled by the preconditioner to recover the original eigenvectors
+        eigvecsu = D_inv_sqrt @ eigvecsu_scaled
+        
         eigvecs[bu] = eigvecsu
         print('eigvals', eigvals)
 

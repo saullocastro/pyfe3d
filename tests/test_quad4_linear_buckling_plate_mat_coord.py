@@ -3,8 +3,8 @@ sys.path.append('..')
 
 import numpy as np
 from numpy import isclose
-from scipy.sparse.linalg import eigsh, spsolve, cg
-from scipy.sparse import coo_matrix
+from scipy.sparse.linalg import eigsh, cg
+from scipy.sparse import coo_matrix, diags as sp_diags
 
 from pyfe3d.shellprop_utils import laminated_plate
 from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
@@ -137,12 +137,18 @@ def test_linear_buckling_plate(plot=False, mode=0):
         fext[0::DOF][check] = ftotal/(ny - 1)/2
         assert np.isclose(fext.sum(), 0)
 
-        Kuu = KC0[bu, :][:, bu]
+        KC0uu = KC0[bu, :][:, bu]
         fextu = fext[bu]
 
-        PREC = np.max(1/Kuu.diagonal())
-        uu, out = cg(PREC*Kuu, PREC*fextu, atol=1e-8)
+        # NOTE pre-conditioning the linear system to improve convergence of the iterative solver
+        kuu_diag = KC0uu.diagonal()
+        kuu_diag_inv_sqrt = 1.0/np.sqrt(np.maximum(kuu_diag, 1e-30))
+        D_inv_sqrt = sp_diags(kuu_diag_inv_sqrt)
+        KC0uu_scaled = D_inv_sqrt @ KC0uu @ D_inv_sqrt
+        fextu_scaled = D_inv_sqrt @ fextu
+        uu_scaled, out = cg(KC0uu_scaled, fextu_scaled, atol=1e-8)
         assert out == 0, 'cg failed'
+        uu = D_inv_sqrt @ uu_scaled
         u = np.zeros(N)
         u[bu] = uu
 
@@ -168,9 +174,20 @@ def test_linear_buckling_plate(plot=False, mode=0):
         print('sparse KG created')
 
         num_eig_lb = max(mode+1, 1)
-        eigvals, eigvecsu = eigsh(A=PREC*KGuu, k=num_eig_lb, which='SM',
-                M=PREC*Kuu, tol=1e-15, sigma=1., mode='cayley')
-        eigvals = -1./eigvals
+
+        # NOTE pre-conditioning the eigenvalue problem to improve convergence of the eigensolver
+        kc0_diag = KC0uu.diagonal()
+        kc0_diag_inv_sqrt = 1.0/np.sqrt(np.maximum(kc0_diag, 1e-30))
+        D_inv_sqrt = sp_diags(kc0_diag_inv_sqrt)
+        KC0uu_scaled = D_inv_sqrt @ KC0uu @ D_inv_sqrt
+        KGuu_scaled = D_inv_sqrt @ KGuu @ D_inv_sqrt
+        eigvals_inv, eigvecsu_scaled = eigsh(A=KGuu_scaled, k=num_eig_lb, which='SM',
+                M=KC0uu_scaled, tol=1e-9, sigma=1., mode='cayley')
+        eigvals = -1./eigvals_inv
+
+        # NOTE the eigenvectors are scaled by the preconditioner to recover the original eigenvectors
+        eigvecsu = D_inv_sqrt @ eigvecsu_scaled
+
         load_mult = eigvals[0]
         P_cr_calc = load_mult*ftotal
         print('linear buckling load_mult =', load_mult)
