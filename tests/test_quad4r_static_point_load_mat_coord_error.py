@@ -70,6 +70,7 @@ def test_static_plate_quad_point_load(plot=False):
         quad.c3 = DOF*nid_pos[n3]
         quad.c4 = DOF*nid_pos[n4]
         quad.init_k_KC0 = init_k_KC0
+        quad.K6ROT = 100.
         quad.update_rotation_matrix(ncoords_flatten, 0, 0, 1) # NOTE to create error messages
         quad.update_probe_xe(ncoords_flatten)
         factor = 0.1

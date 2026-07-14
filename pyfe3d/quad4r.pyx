@@ -11,31 +11,88 @@ Quad4R - Quadrilateral element with reduced integration (:mod:`pyfe3d.quad4r`)
 
 .. currentmodule:: pyfe3d.quad4r
 
-The :class:`.Quad4R` has full reduced integration, is very efficient, but
-has an hourglass control to compensate the reduced integration that is not
-robust and creates significant artificial stiffness. Therefore, the recommended
-quadrilateral plane stress elements is the :mod:`pyfe3d.quad4`.
-
 The :class:`.Quad4R` element has 6 degrees-of-freedom (DOF): `u`, `v`, `w`,
 `r_x`, `r_y`, `r_z`. All DOF are interpolated bi-linearly between the nodes,
 such that any of the DOF gradients can be constant over the element when the
 element is rectangular.
 
+In the reduced integration scheme used, a single point at the centroid
+(`\xi=\eta=0`) and weight `w_{ij}=4`, preventing shear locking. 
+The hourglass control is used according to Brockman 1987:
+
+    Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
+    Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
+    https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208
+
+All stiffness terms, besides drilling, are integrated using the reduced integration
+scheme for the :class:`.Quad4R` element, making it very efficient concerning 
+the time needed to calculate the internal forces and stiffness matrices, in comparison
+with the :class:`pyfe3d.Quad4` element.
+
+Shear correction factors are applied to `E_{44}`, `E_{45}` and `E_{55}`, with the following:
+
+.. math::
+    
+    \tilde{E}_{44} = E_{44} \kappa_{23}
+    \tilde{E}_{45} = E_{45} (\kappa_{13} + \kappa_{23})/2
+    \tilde{E}_{55} = E_{55} \kappa_{13}
+
+Such that `\tilde{E}_{ij}` are the transverse shear terms considering the shear correction factor. 
+The shear correction factors are read directly from the :class:`pyfe3d.shellprop.ShellProp` object.
+
 The drilling stiffness is calculated following the approach adopted in
-MSC Nastran and Autodesk Nastran:
+MSC Nastran and Autodesk Nastran, using a penalty-based method. Because
+the stiffness is only evaluated at the element centroid, this method provides
+a non-physical drilling stiffness with the objective of removing the singularity
+by creating an artificial stiffness between the drilling rotation degree-of-freedom
+of each node with the in-plane rotational strain evaluated at the centroid.
+The penalty energy is defined per element as:
 
 .. math::
-    K_{drill} = K6ROT \cdot G \cdot V \cdot 10^{-6}
 
-where `G = A_{66}/h` is the in-plane shear modulus (for composites),
-`V = \text{area} \cdot h` is the element volume, `\text{area}` is the element
-area, and `h` is the total laminate thickness. This simplifies to:
+    U_{drill} = \frac{1}{2} K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)^2 dA
+
+where `10^{-6}` is a scaling factor suggested by MSC Nastran's approach (CQUAD4) to make the artificial
+drilling stiffness sufficiently small. AUTODESK NASTRAN's quick reference guide recommends `K6ROT = 100`
+for static analysis. For modal solutions, `K6ROT = 10^4` is suggested. MSC NASTRAN's quick reference guide
+states that `K6ROT > 100` should not be used, thus contradicting AUTODESK NASTRAN. The rotation `r_z` represents
+the drilling degree-of-freedom in element's coordinates, whereas `\theta_z` the in-plane rotation strain, defined as:
 
 .. math::
-    K_{drill} = K6ROT \cdot A_{66} \cdot \text{area} \cdot 10^{-6}
 
-The dimensionless multiplier ``K6ROT`` is the only user-controlled parameter.
+    \theta_z = \frac{1}{2}\left(\frac{\partial v}{\partial x} - \frac{\partial u}{\partial y}\right)
 
+The first variation of U_{drill} then becomes:
+
+.. math::
+
+    \delta U_{drill} = K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)(\delta r_z - \delta \theta_z) dA
+
+which can be expressed in terms of the shape functions and element degrees-of-freedom (`u_e`) as:
+`r_z = S^{r_z} u_e`, `u = S^u u_e` and `v = S_v u_e` as:
+
+.. math::
+
+    \delta U_{drill} = K6ROT \cdot 10^{-6} \cdot u_e^\top \int_A A_{66} (S^{r_z \top} + 1/2 S^{u \top}_{,y} - 1/2 S^{v \top}_{,x})(\delta S^{r_z} + 1/2 \delta S^u_{,y} - 1/2 S^v_{,x}) dA u_e
+
+or simply as:
+
+.. math::
+
+    \delta U_{drill} = K6ROT \cdot 10^{-6} \cdot A_{66} u_e^\top \int_A B_{drill}^\top B_{drill} dA u_e
+
+with:
+
+.. math::
+
+    B_{drill} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}
+
+Note that `A_{66}` is assumed constant over the element, which here has no difference given that a reduced integration approach is used.
+The approach herein presented is very similar to the one presented in Eq. 2.20 of:
+
+    Adam, F. M., Mohamed, A. E., and Hassaballa, A. E., 2013,
+    “Degenerated Four Nodes Shell Element with Drilling Degree of
+    Freedom,” IOSR J. Eng., 3(8), pp. 10–20.
 
 """
 from libc.math cimport fabs
@@ -161,14 +218,11 @@ cdef class Quad4R:
     area, : double
         Element area.
     K6ROT, : double
-        Dimensionless multiplier for the drilling stiffness. The drilling
-        stiffness is computed as ``Kdrill = K6ROT * A66 * area * 1e-6``,
-        following the approach of MSC Nastran and Autodesk Nastran, where ``A66`` is
-        the element in-plane shear stiffness and ``area`` is the element area.
+        Dimensionless multiplier for the drilling stiffness. 
         AUTODESK NASTRAN's quick reference guide recommends ``K6ROT = 100.``
         for static analysis. For modal solutions, ``K6ROT=1.e4`` is suggested.
         MSC NASTRAN's quick reference guide states that ``K6ROT > 100.``
-        should not be used, but this is controversial.
+        should not be used, but this is contradicting AUTODESK NASTRAN.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix from local to global coordinates.
     m11, m12, m21, m22 : double
@@ -194,7 +248,7 @@ cdef class Quad4R:
     cdef public int init_k_KC0, init_k_KG, init_k_M
     cdef public int init_k_KA_beta, init_k_KA_gamma, init_k_CA
     cdef public double area
-    cdef public double K6ROT # drilling stiffness
+    cdef public double K6ROT
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public double m11, m12, m21, m22
     cdef public Quad4RProbe probe
@@ -219,7 +273,7 @@ cdef class Quad4R:
         self.init_k_KA_gamma = 0
         self.init_k_CA = 0
         self.area = 0
-        self.K6ROT = 10.
+        self.K6ROT = 100. # NOTE default value in MSC Nastran
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.
         self.r31 = self.r32 = self.r33 = 0.
@@ -523,7 +577,11 @@ cdef class Quad4R:
         """
         cdef double *ue
         cdef double *finte
-        cdef double x1, x2, x3, x4, y1, y2, y3, y4, wij, detJ
+        cdef double x1, x2, x3, x4
+        cdef double y1, y2, y3, y4
+        cdef int pti, ptj
+        cdef double wij, detJ, xi, eta
+        cdef double points[2]
         # NOTE ABD in the material direction
         cdef double A11mat, A12mat, A16mat, A22mat, A26mat, A66mat
         cdef double B11mat, B12mat, B16mat, B22mat, B26mat, B66mat
@@ -534,36 +592,39 @@ cdef class Quad4R:
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
         cdef double E1eq, E2eq
-        cdef double KDRILL
+        cdef double K6ROT
         cdef double Eu, Ev, Erx, Ery, Ew
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double m11, m12, m21, m22, a11, a22
-        cdef double j11, j12, j21, j22, N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
+        cdef double J11, J12, J21, J22
+        cdef double j11, j12, j21, j22
+        cdef double N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
         cdef double N1, N2, N3, N4
         cdef double N1xy, N2xy, N3xy, N4xy, gamma1, gamma2, gamma3, gamma4
 
-        cdef double KC0e0000, KC0e0001, KC0e0003, KC0e0004, KC0e0006, KC0e0007, KC0e0009, KC0e0010, KC0e0012, KC0e0013, KC0e0015, KC0e0016, KC0e0018, KC0e0019, KC0e0021, KC0e0022
-        cdef double KC0e0101, KC0e0103, KC0e0104, KC0e0106, KC0e0107, KC0e0109, KC0e0110, KC0e0112, KC0e0113, KC0e0115, KC0e0116, KC0e0118, KC0e0119, KC0e0121, KC0e0122
-        cdef double KC0e0202, KC0e0203, KC0e0204, KC0e0208, KC0e0209, KC0e0210, KC0e0214, KC0e0215, KC0e0216, KC0e0220, KC0e0221, KC0e0222
-        cdef double KC0e0303, KC0e0304, KC0e0306, KC0e0307, KC0e0308, KC0e0309, KC0e0310, KC0e0312, KC0e0313, KC0e0314, KC0e0315, KC0e0316, KC0e0318, KC0e0319, KC0e0320, KC0e0321, KC0e0322
+        cdef double KC0e0000, KC0e0001, KC0e0003, KC0e0004, KC0e0005, KC0e0006, KC0e0007, KC0e0009, KC0e0010, KC0e0011, KC0e0012, KC0e0013, KC0e0015, KC0e0016, KC0e0017, KC0e0018, KC0e0019, KC0e0021, KC0e0022, KC0e0023
+        cdef double KC0e0101, KC0e0103, KC0e0104, KC0e0105, KC0e0106, KC0e0107, KC0e0109, KC0e0110, KC0e0111, KC0e0112, KC0e0113, KC0e0115, KC0e0116, KC0e0117, KC0e0118, KC0e0119, KC0e0121, KC0e0122, KC0e0123
+        cdef double KC0e0202, KC0e0203, KC0e0204, KC0e0208, KC0e0209, KC0e0210, KC0e0214, KC0e0215, KC0e0216, KC0e0220, KC0e0221, KC0e0222, KC0e0303
+        cdef double KC0e0304, KC0e0306, KC0e0307, KC0e0308, KC0e0309, KC0e0310, KC0e0312, KC0e0313, KC0e0314, KC0e0315, KC0e0316, KC0e0318, KC0e0319, KC0e0320, KC0e0321, KC0e0322
         cdef double KC0e0404, KC0e0406, KC0e0407, KC0e0408, KC0e0409, KC0e0410, KC0e0412, KC0e0413, KC0e0414, KC0e0415, KC0e0416, KC0e0418, KC0e0419, KC0e0420, KC0e0421, KC0e0422
-        cdef double KC0e0505
-        cdef double KC0e0606, KC0e0607, KC0e0609, KC0e0610, KC0e0612, KC0e0613, KC0e0615, KC0e0616, KC0e0618, KC0e0619, KC0e0621, KC0e0622
-        cdef double KC0e0707, KC0e0709, KC0e0710, KC0e0712, KC0e0713, KC0e0715, KC0e0716, KC0e0718, KC0e0719, KC0e0721, KC0e0722
+        cdef double KC0e0505, KC0e0506, KC0e0507, KC0e0511, KC0e0512, KC0e0513, KC0e0517, KC0e0518, KC0e0519, KC0e0523
+        cdef double KC0e0606, KC0e0607, KC0e0609, KC0e0610, KC0e0611, KC0e0612, KC0e0613, KC0e0615, KC0e0616, KC0e0617, KC0e0618, KC0e0619, KC0e0621, KC0e0622, KC0e0623
+        cdef double KC0e0707, KC0e0709, KC0e0710, KC0e0711, KC0e0712, KC0e0713, KC0e0715, KC0e0716, KC0e0717, KC0e0718, KC0e0719, KC0e0721, KC0e0722, KC0e0723
         cdef double KC0e0808, KC0e0809, KC0e0810, KC0e0814, KC0e0815, KC0e0816, KC0e0820, KC0e0821, KC0e0822
         cdef double KC0e0909, KC0e0910, KC0e0912, KC0e0913, KC0e0914, KC0e0915, KC0e0916, KC0e0918, KC0e0919, KC0e0920, KC0e0921, KC0e0922
         cdef double KC0e1010, KC0e1012, KC0e1013, KC0e1014, KC0e1015, KC0e1016, KC0e1018, KC0e1019, KC0e1020, KC0e1021, KC0e1022
-        cdef double KC0e1111
-        cdef double KC0e1212, KC0e1213, KC0e1215, KC0e1216, KC0e1218, KC0e1219, KC0e1221, KC0e1222
-        cdef double KC0e1313, KC0e1315, KC0e1316, KC0e1318, KC0e1319, KC0e1321, KC0e1322
+        cdef double KC0e1111, KC0e1112, KC0e1113, KC0e1117, KC0e1118, KC0e1119, KC0e1123
+        cdef double KC0e1212, KC0e1213, KC0e1215, KC0e1216, KC0e1217, KC0e1218, KC0e1219, KC0e1221, KC0e1222, KC0e1223
+        cdef double KC0e1313, KC0e1315, KC0e1316, KC0e1317, KC0e1318, KC0e1319, KC0e1321, KC0e1322, KC0e1323
         cdef double KC0e1414, KC0e1415, KC0e1416, KC0e1420, KC0e1421, KC0e1422
         cdef double KC0e1515, KC0e1516, KC0e1518, KC0e1519, KC0e1520, KC0e1521, KC0e1522
         cdef double KC0e1616, KC0e1618, KC0e1619, KC0e1620, KC0e1621, KC0e1622
-        cdef double KC0e1717
-        cdef double KC0e1818, KC0e1819, KC0e1821, KC0e1822
-        cdef double KC0e1919, KC0e1921, KC0e1922
+        cdef double KC0e1717, KC0e1718, KC0e1719, KC0e1723
+        cdef double KC0e1818, KC0e1819, KC0e1821, KC0e1822, KC0e1823
+        cdef double KC0e1919, KC0e1921, KC0e1922, KC0e1923
         cdef double KC0e2020, KC0e2021, KC0e2022
-        cdef double KC0e2121, KC0e2122, KC0e2222
+        cdef double KC0e2121, KC0e2122
+        cdef double KC0e2222
         cdef double KC0e2323
 
         with nogil:
@@ -656,6 +717,8 @@ cdef class Quad4R:
             E45 = prop.E45*0.5*(prop.scf_k13 + prop.scf_k23)
             E55 = prop.E55*prop.scf_k13
 
+            K6ROT = self.K6ROT
+
             # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
             y1 = self.probe.xe[1]
@@ -672,8 +735,6 @@ cdef class Quad4R:
 
             # NOTE reduced integration to remove shear locking
             wij = 4.
-
-            KDRILL = self.K6ROT * A66 * self.area * 1.e-6
 
             # TODO find a method of hourglass control that is derived for composites
             #     in the future, the use elements with mixed integration
@@ -793,7 +854,6 @@ cdef class Quad4R:
             KC0e0420 = N1*detJ*wij*(E45*N4y + E55*N4x)
             KC0e0421 = -detJ*wij*(E45*N1*N4 + N4x*(D16*N1x + D66*N1y) + N4y*(D12*N1x + D26*N1y))
             KC0e0422 = detJ*wij*(E55*N1*N4 + Ery*gamma1*gamma4 + N4x*(D11*N1x + D16*N1y) + N4y*(D16*N1x + D66*N1y))
-            KC0e0505 = KDRILL
             KC0e0606 = detJ*wij*(Eu*gamma2**2 + N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y))
             KC0e0607 = detJ*wij*(N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y))
             KC0e0609 = -detJ*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))
@@ -849,7 +909,6 @@ cdef class Quad4R:
             KC0e1020 = N2*detJ*wij*(E45*N4y + E55*N4x)
             KC0e1021 = -detJ*wij*(E45*N2*N4 + N4x*(D16*N2x + D66*N2y) + N4y*(D12*N2x + D26*N2y))
             KC0e1022 = detJ*wij*(E55*N2*N4 + Ery*gamma2*gamma4 + N4x*(D11*N2x + D16*N2y) + N4y*(D16*N2x + D66*N2y))
-            KC0e1111 = KDRILL
             KC0e1212 = detJ*wij*(Eu*gamma3**2 + N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y))
             KC0e1213 = detJ*wij*(N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y))
             KC0e1215 = -detJ*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))
@@ -884,7 +943,6 @@ cdef class Quad4R:
             KC0e1620 = N3*detJ*wij*(E45*N4y + E55*N4x)
             KC0e1621 = -detJ*wij*(E45*N3*N4 + N4x*(D16*N3x + D66*N3y) + N4y*(D12*N3x + D26*N3y))
             KC0e1622 = detJ*wij*(E55*N3*N4 + Ery*gamma3*gamma4 + N4x*(D11*N3x + D16*N3y) + N4y*(D16*N3x + D66*N3y))
-            KC0e1717 = KDRILL
             KC0e1818 = detJ*wij*(Eu*gamma4**2 + N4x*(A11*N4x + A16*N4y) + N4y*(A16*N4x + A66*N4y))
             KC0e1819 = detJ*wij*(N4x*(A16*N4x + A66*N4y) + N4y*(A12*N4x + A26*N4y))
             KC0e1821 = -detJ*wij*(N4x*(B16*N4x + B66*N4y) + N4y*(B12*N4x + B26*N4y))
@@ -898,32 +956,190 @@ cdef class Quad4R:
             KC0e2121 = detJ*wij*(E44*N4**2 + Erx*gamma4**2 + N4x*(D26*N4y + D66*N4x) + N4y*(D22*N4y + D26*N4x))
             KC0e2122 = -detJ*wij*(E45*N4**2 + N4x*(D12*N4y + D16*N4x) + N4y*(D26*N4y + D66*N4x))
             KC0e2222 = detJ*wij*(E55*N4**2 + Ery*gamma4**2 + N4x*(D11*N4x + D16*N4y) + N4y*(D16*N4x + D66*N4y))
-            KC0e2323 = KDRILL
 
-            finte[0] = KC0e0000*ue[0] + KC0e0001*ue[1] + KC0e0003*ue[3] + KC0e0004*ue[4] + KC0e0006*ue[6] + KC0e0007*ue[7] + KC0e0009*ue[9] + KC0e0010*ue[10] + KC0e0012*ue[12] + KC0e0013*ue[13] + KC0e0015*ue[15] + KC0e0016*ue[16] + KC0e0018*ue[18] + KC0e0019*ue[19] + KC0e0021*ue[21] + KC0e0022*ue[22]
-            finte[1] = KC0e0001*ue[0] + KC0e0101*ue[1] + KC0e0103*ue[3] + KC0e0104*ue[4] + KC0e0106*ue[6] + KC0e0107*ue[7] + KC0e0109*ue[9] + KC0e0110*ue[10] + KC0e0112*ue[12] + KC0e0113*ue[13] + KC0e0115*ue[15] + KC0e0116*ue[16] + KC0e0118*ue[18] + KC0e0119*ue[19] + KC0e0121*ue[21] + KC0e0122*ue[22]
+            # NOTE drilling rotation uses full integration with two-point Gauss-Legendre quadrature
+            wij = 1.
+            points[0] = -0.5773502691896257645092
+            points[1] = +0.5773502691896257645092
+
+            KC0e0005 = 0
+            KC0e0011 = 0
+            KC0e0017 = 0
+            KC0e0023 = 0
+            KC0e0105 = 0
+            KC0e0111 = 0
+            KC0e0117 = 0
+            KC0e0123 = 0
+            KC0e0505 = 0
+            KC0e0506 = 0
+            KC0e0507 = 0
+            KC0e0511 = 0
+            KC0e0512 = 0
+            KC0e0513 = 0
+            KC0e0517 = 0
+            KC0e0518 = 0
+            KC0e0519 = 0
+            KC0e0523 = 0
+            KC0e0611 = 0
+            KC0e0617 = 0
+            KC0e0623 = 0
+            KC0e0711 = 0
+            KC0e0717 = 0
+            KC0e0723 = 0
+            KC0e1111 = 0
+            KC0e1112 = 0
+            KC0e1113 = 0
+            KC0e1117 = 0
+            KC0e1118 = 0
+            KC0e1119 = 0
+            KC0e1123 = 0
+            KC0e1217 = 0
+            KC0e1223 = 0
+            KC0e1317 = 0
+            KC0e1323 = 0
+            KC0e1717 = 0
+            KC0e1718 = 0
+            KC0e1719 = 0
+            KC0e1723 = 0
+            KC0e1823 = 0
+            KC0e1923 = 0
+            KC0e2323 = 0
+
+            for pti in range(2):
+                xi = points[pti]
+                for ptj in range(2):
+                    eta = points[ptj]
+
+                    J11 = -0.5*x1 + 0.5*x2 + 0.5*(eta + 1)*(0.5*x1 - 0.5*x2 + 0.5*x3 - 0.5*x4)
+                    J12 = -0.5*y1 + 0.5*y2 + 0.5*(eta + 1)*(0.5*y1 - 0.5*y2 + 0.5*y3 - 0.5*y4)
+                    J21 = -0.5*x1 + 0.5*x4 - 0.25*(-x1 + x2)*(xi + 1) + 0.25*(x3 - x4)*(xi + 1)
+                    J22 = -0.5*y1 + 0.5*y4 - 0.25*(xi + 1)*(-y1 + y2) + 0.25*(xi + 1)*(y3 - y4)
+
+                    detJ = J11*J22 - J12*J21
+
+                    j11 = J22/(J11*J22 - J12*J21)
+                    j12 = -J12/(J11*J22 - J12*J21)
+                    j21 = -J21/(J11*J22 - J12*J21)
+                    j22 = J11/(J11*J22 - J12*J21)
+
+                    N1 = eta*xi/4. - eta/4. - xi/4. + 1/4.
+                    N2 = -eta*xi/4. - eta/4. + xi/4. + 1/4.
+                    N3 = eta*xi/4. + eta/4. + xi/4. + 1/4.
+                    N4 = -eta*xi/4. + eta/4. - xi/4. + 1/4.
+
+                    N1x = 0.25*j11*(eta - 1) + 0.25*j12*(xi - 1)
+                    N2x = -0.25*eta*j11 + 0.25*j11 - 0.25*j12*xi - 0.25*j12
+                    N3x = 0.25*j11*(eta + 1) + 0.25*j12*(xi + 1)
+                    N4x = -0.25*eta*j11 - 0.25*j11 - 0.25*j12*xi + 0.25*j12
+
+                    N1y = 0.25*j21*(eta - 1) + 0.25*j22*(xi - 1)
+                    N2y = -0.25*eta*j21 + 0.25*j21 - 0.25*j22*xi - 0.25*j22
+                    N3y = 0.25*j21*(eta + 1) + 0.25*j22*(xi + 1)
+                    N4y = -0.25*eta*j21 - 0.25*j21 - 0.25*j22*xi + 0.25*j22
+
+                    KC0e0000 += 2.5e-7*A66*K6ROT*N1y**2*detJ*wij
+                    KC0e0001 += -2.5e-7*A66*K6ROT*N1x*N1y*detJ*wij
+                    KC0e0005 += 5.0e-7*A66*K6ROT*N1*N1y*detJ*wij
+                    KC0e0006 += 2.5e-7*A66*K6ROT*N1y*N2y*detJ*wij
+                    KC0e0007 += -2.5e-7*A66*K6ROT*N1y*N2x*detJ*wij
+                    KC0e0011 += 5.0e-7*A66*K6ROT*N1y*N2*detJ*wij
+                    KC0e0012 += 2.5e-7*A66*K6ROT*N1y*N3y*detJ*wij
+                    KC0e0013 += -2.5e-7*A66*K6ROT*N1y*N3x*detJ*wij
+                    KC0e0017 += 5.0e-7*A66*K6ROT*N1y*N3*detJ*wij
+                    KC0e0018 += 2.5e-7*A66*K6ROT*N1y*N4y*detJ*wij
+                    KC0e0019 += -2.5e-7*A66*K6ROT*N1y*N4x*detJ*wij
+                    KC0e0023 += 5.0e-7*A66*K6ROT*N1y*N4*detJ*wij
+                    KC0e0101 += 2.5e-7*A66*K6ROT*N1x**2*detJ*wij
+                    KC0e0105 += -5.0e-7*A66*K6ROT*N1*N1x*detJ*wij
+                    KC0e0106 += -2.5e-7*A66*K6ROT*N1x*N2y*detJ*wij
+                    KC0e0107 += 2.5e-7*A66*K6ROT*N1x*N2x*detJ*wij
+                    KC0e0111 += -5.0e-7*A66*K6ROT*N1x*N2*detJ*wij
+                    KC0e0112 += -2.5e-7*A66*K6ROT*N1x*N3y*detJ*wij
+                    KC0e0113 += 2.5e-7*A66*K6ROT*N1x*N3x*detJ*wij
+                    KC0e0117 += -5.0e-7*A66*K6ROT*N1x*N3*detJ*wij
+                    KC0e0118 += -2.5e-7*A66*K6ROT*N1x*N4y*detJ*wij
+                    KC0e0119 += 2.5e-7*A66*K6ROT*N1x*N4x*detJ*wij
+                    KC0e0123 += -5.0e-7*A66*K6ROT*N1x*N4*detJ*wij
+                    KC0e0505 += 1.0e-6*A66*K6ROT*N1**2*detJ*wij
+                    KC0e0506 += 5.0e-7*A66*K6ROT*N1*N2y*detJ*wij
+                    KC0e0507 += -5.0e-7*A66*K6ROT*N1*N2x*detJ*wij
+                    KC0e0511 += 1.0e-6*A66*K6ROT*N1*N2*detJ*wij
+                    KC0e0512 += 5.0e-7*A66*K6ROT*N1*N3y*detJ*wij
+                    KC0e0513 += -5.0e-7*A66*K6ROT*N1*N3x*detJ*wij
+                    KC0e0517 += 1.0e-6*A66*K6ROT*N1*N3*detJ*wij
+                    KC0e0518 += 5.0e-7*A66*K6ROT*N1*N4y*detJ*wij
+                    KC0e0519 += -5.0e-7*A66*K6ROT*N1*N4x*detJ*wij
+                    KC0e0523 += 1.0e-6*A66*K6ROT*N1*N4*detJ*wij
+                    KC0e0606 += 2.5e-7*A66*K6ROT*N2y**2*detJ*wij
+                    KC0e0607 += -2.5e-7*A66*K6ROT*N2x*N2y*detJ*wij
+                    KC0e0611 += 5.0e-7*A66*K6ROT*N2*N2y*detJ*wij
+                    KC0e0612 += 2.5e-7*A66*K6ROT*N2y*N3y*detJ*wij
+                    KC0e0613 += -2.5e-7*A66*K6ROT*N2y*N3x*detJ*wij
+                    KC0e0617 += 5.0e-7*A66*K6ROT*N2y*N3*detJ*wij
+                    KC0e0618 += 2.5e-7*A66*K6ROT*N2y*N4y*detJ*wij
+                    KC0e0619 += -2.5e-7*A66*K6ROT*N2y*N4x*detJ*wij
+                    KC0e0623 += 5.0e-7*A66*K6ROT*N2y*N4*detJ*wij
+                    KC0e0707 += 2.5e-7*A66*K6ROT*N2x**2*detJ*wij
+                    KC0e0711 += -5.0e-7*A66*K6ROT*N2*N2x*detJ*wij
+                    KC0e0712 += -2.5e-7*A66*K6ROT*N2x*N3y*detJ*wij
+                    KC0e0713 += 2.5e-7*A66*K6ROT*N2x*N3x*detJ*wij
+                    KC0e0717 += -5.0e-7*A66*K6ROT*N2x*N3*detJ*wij
+                    KC0e0718 += -2.5e-7*A66*K6ROT*N2x*N4y*detJ*wij
+                    KC0e0719 += 2.5e-7*A66*K6ROT*N2x*N4x*detJ*wij
+                    KC0e0723 += -5.0e-7*A66*K6ROT*N2x*N4*detJ*wij
+                    KC0e1111 += 1.0e-6*A66*K6ROT*N2**2*detJ*wij
+                    KC0e1112 += 5.0e-7*A66*K6ROT*N2*N3y*detJ*wij
+                    KC0e1113 += -5.0e-7*A66*K6ROT*N2*N3x*detJ*wij
+                    KC0e1117 += 1.0e-6*A66*K6ROT*N2*N3*detJ*wij
+                    KC0e1118 += 5.0e-7*A66*K6ROT*N2*N4y*detJ*wij
+                    KC0e1119 += -5.0e-7*A66*K6ROT*N2*N4x*detJ*wij
+                    KC0e1123 += 1.0e-6*A66*K6ROT*N2*N4*detJ*wij
+                    KC0e1212 += 2.5e-7*A66*K6ROT*N3y**2*detJ*wij
+                    KC0e1213 += -2.5e-7*A66*K6ROT*N3x*N3y*detJ*wij
+                    KC0e1217 += 5.0e-7*A66*K6ROT*N3*N3y*detJ*wij
+                    KC0e1218 += 2.5e-7*A66*K6ROT*N3y*N4y*detJ*wij
+                    KC0e1219 += -2.5e-7*A66*K6ROT*N3y*N4x*detJ*wij
+                    KC0e1223 += 5.0e-7*A66*K6ROT*N3y*N4*detJ*wij
+                    KC0e1313 += 2.5e-7*A66*K6ROT*N3x**2*detJ*wij
+                    KC0e1317 += -5.0e-7*A66*K6ROT*N3*N3x*detJ*wij
+                    KC0e1318 += -2.5e-7*A66*K6ROT*N3x*N4y*detJ*wij
+                    KC0e1319 += 2.5e-7*A66*K6ROT*N3x*N4x*detJ*wij
+                    KC0e1323 += -5.0e-7*A66*K6ROT*N3x*N4*detJ*wij
+                    KC0e1717 += 1.0e-6*A66*K6ROT*N3**2*detJ*wij
+                    KC0e1718 += 5.0e-7*A66*K6ROT*N3*N4y*detJ*wij
+                    KC0e1719 += -5.0e-7*A66*K6ROT*N3*N4x*detJ*wij
+                    KC0e1723 += 1.0e-6*A66*K6ROT*N3*N4*detJ*wij
+                    KC0e1818 += 2.5e-7*A66*K6ROT*N4y**2*detJ*wij
+                    KC0e1819 += -2.5e-7*A66*K6ROT*N4x*N4y*detJ*wij
+                    KC0e1823 += 5.0e-7*A66*K6ROT*N4*N4y*detJ*wij
+                    KC0e1919 += 2.5e-7*A66*K6ROT*N4x**2*detJ*wij
+                    KC0e1923 += -5.0e-7*A66*K6ROT*N4*N4x*detJ*wij
+                    KC0e2323 += 1.0e-6*A66*K6ROT*N4**2*detJ*wij
+
+            finte[0] = KC0e0000*ue[0] + KC0e0001*ue[1] + KC0e0003*ue[3] + KC0e0004*ue[4] + KC0e0005*ue[5] + KC0e0006*ue[6] + KC0e0007*ue[7] + KC0e0009*ue[9] + KC0e0010*ue[10] + KC0e0011*ue[11] + KC0e0012*ue[12] + KC0e0013*ue[13] + KC0e0015*ue[15] + KC0e0016*ue[16] + KC0e0017*ue[17] + KC0e0018*ue[18] + KC0e0019*ue[19] + KC0e0021*ue[21] + KC0e0022*ue[22] + KC0e0023*ue[23]
+            finte[1] = KC0e0001*ue[0] + KC0e0101*ue[1] + KC0e0103*ue[3] + KC0e0104*ue[4] + KC0e0105*ue[5] + KC0e0106*ue[6] + KC0e0107*ue[7] + KC0e0109*ue[9] + KC0e0110*ue[10] + KC0e0111*ue[11] + KC0e0112*ue[12] + KC0e0113*ue[13] + KC0e0115*ue[15] + KC0e0116*ue[16] + KC0e0117*ue[17] + KC0e0118*ue[18] + KC0e0119*ue[19] + KC0e0121*ue[21] + KC0e0122*ue[22] + KC0e0123*ue[23]
             finte[2] = KC0e0202*ue[2] + KC0e0203*ue[3] + KC0e0204*ue[4] + KC0e0208*ue[8] + KC0e0209*ue[9] + KC0e0210*ue[10] + KC0e0214*ue[14] + KC0e0215*ue[15] + KC0e0216*ue[16] + KC0e0220*ue[20] + KC0e0221*ue[21] + KC0e0222*ue[22]
             finte[3] = KC0e0003*ue[0] + KC0e0103*ue[1] + KC0e0203*ue[2] + KC0e0303*ue[3] + KC0e0304*ue[4] + KC0e0306*ue[6] + KC0e0307*ue[7] + KC0e0308*ue[8] + KC0e0309*ue[9] + KC0e0310*ue[10] + KC0e0312*ue[12] + KC0e0313*ue[13] + KC0e0314*ue[14] + KC0e0315*ue[15] + KC0e0316*ue[16] + KC0e0318*ue[18] + KC0e0319*ue[19] + KC0e0320*ue[20] + KC0e0321*ue[21] + KC0e0322*ue[22]
             finte[4] = KC0e0004*ue[0] + KC0e0104*ue[1] + KC0e0204*ue[2] + KC0e0304*ue[3] + KC0e0404*ue[4] + KC0e0406*ue[6] + KC0e0407*ue[7] + KC0e0408*ue[8] + KC0e0409*ue[9] + KC0e0410*ue[10] + KC0e0412*ue[12] + KC0e0413*ue[13] + KC0e0414*ue[14] + KC0e0415*ue[15] + KC0e0416*ue[16] + KC0e0418*ue[18] + KC0e0419*ue[19] + KC0e0420*ue[20] + KC0e0421*ue[21] + KC0e0422*ue[22]
-            finte[5] = KC0e0505*ue[5]
-            finte[6] = KC0e0006*ue[0] + KC0e0106*ue[1] + KC0e0306*ue[3] + KC0e0406*ue[4] + KC0e0606*ue[6] + KC0e0607*ue[7] + KC0e0609*ue[9] + KC0e0610*ue[10] + KC0e0612*ue[12] + KC0e0613*ue[13] + KC0e0615*ue[15] + KC0e0616*ue[16] + KC0e0618*ue[18] + KC0e0619*ue[19] + KC0e0621*ue[21] + KC0e0622*ue[22]
-            finte[7] = KC0e0007*ue[0] + KC0e0107*ue[1] + KC0e0307*ue[3] + KC0e0407*ue[4] + KC0e0607*ue[6] + KC0e0707*ue[7] + KC0e0709*ue[9] + KC0e0710*ue[10] + KC0e0712*ue[12] + KC0e0713*ue[13] + KC0e0715*ue[15] + KC0e0716*ue[16] + KC0e0718*ue[18] + KC0e0719*ue[19] + KC0e0721*ue[21] + KC0e0722*ue[22]
+            finte[5] = KC0e0005*ue[0] + KC0e0105*ue[1] + KC0e0505*ue[5] + KC0e0506*ue[6] + KC0e0507*ue[7] + KC0e0511*ue[11] + KC0e0512*ue[12] + KC0e0513*ue[13] + KC0e0517*ue[17] + KC0e0518*ue[18] + KC0e0519*ue[19] + KC0e0523*ue[23]
+            finte[6] = KC0e0006*ue[0] + KC0e0106*ue[1] + KC0e0306*ue[3] + KC0e0406*ue[4] + KC0e0506*ue[5] + KC0e0606*ue[6] + KC0e0607*ue[7] + KC0e0609*ue[9] + KC0e0610*ue[10] + KC0e0611*ue[11] + KC0e0612*ue[12] + KC0e0613*ue[13] + KC0e0615*ue[15] + KC0e0616*ue[16] + KC0e0617*ue[17] + KC0e0618*ue[18] + KC0e0619*ue[19] + KC0e0621*ue[21] + KC0e0622*ue[22] + KC0e0623*ue[23]
+            finte[7] = KC0e0007*ue[0] + KC0e0107*ue[1] + KC0e0307*ue[3] + KC0e0407*ue[4] + KC0e0507*ue[5] + KC0e0607*ue[6] + KC0e0707*ue[7] + KC0e0709*ue[9] + KC0e0710*ue[10] + KC0e0711*ue[11] + KC0e0712*ue[12] + KC0e0713*ue[13] + KC0e0715*ue[15] + KC0e0716*ue[16] + KC0e0717*ue[17] + KC0e0718*ue[18] + KC0e0719*ue[19] + KC0e0721*ue[21] + KC0e0722*ue[22] + KC0e0723*ue[23]
             finte[8] = KC0e0208*ue[2] + KC0e0308*ue[3] + KC0e0408*ue[4] + KC0e0808*ue[8] + KC0e0809*ue[9] + KC0e0810*ue[10] + KC0e0814*ue[14] + KC0e0815*ue[15] + KC0e0816*ue[16] + KC0e0820*ue[20] + KC0e0821*ue[21] + KC0e0822*ue[22]
             finte[9] = KC0e0009*ue[0] + KC0e0109*ue[1] + KC0e0209*ue[2] + KC0e0309*ue[3] + KC0e0409*ue[4] + KC0e0609*ue[6] + KC0e0709*ue[7] + KC0e0809*ue[8] + KC0e0909*ue[9] + KC0e0910*ue[10] + KC0e0912*ue[12] + KC0e0913*ue[13] + KC0e0914*ue[14] + KC0e0915*ue[15] + KC0e0916*ue[16] + KC0e0918*ue[18] + KC0e0919*ue[19] + KC0e0920*ue[20] + KC0e0921*ue[21] + KC0e0922*ue[22]
             finte[10] = KC0e0010*ue[0] + KC0e0110*ue[1] + KC0e0210*ue[2] + KC0e0310*ue[3] + KC0e0410*ue[4] + KC0e0610*ue[6] + KC0e0710*ue[7] + KC0e0810*ue[8] + KC0e0910*ue[9] + KC0e1010*ue[10] + KC0e1012*ue[12] + KC0e1013*ue[13] + KC0e1014*ue[14] + KC0e1015*ue[15] + KC0e1016*ue[16] + KC0e1018*ue[18] + KC0e1019*ue[19] + KC0e1020*ue[20] + KC0e1021*ue[21] + KC0e1022*ue[22]
-            finte[11] = KC0e1111*ue[11]
-            finte[12] = KC0e0012*ue[0] + KC0e0112*ue[1] + KC0e0312*ue[3] + KC0e0412*ue[4] + KC0e0612*ue[6] + KC0e0712*ue[7] + KC0e0912*ue[9] + KC0e1012*ue[10] + KC0e1212*ue[12] + KC0e1213*ue[13] + KC0e1215*ue[15] + KC0e1216*ue[16] + KC0e1218*ue[18] + KC0e1219*ue[19] + KC0e1221*ue[21] + KC0e1222*ue[22]
-            finte[13] = KC0e0013*ue[0] + KC0e0113*ue[1] + KC0e0313*ue[3] + KC0e0413*ue[4] + KC0e0613*ue[6] + KC0e0713*ue[7] + KC0e0913*ue[9] + KC0e1013*ue[10] + KC0e1213*ue[12] + KC0e1313*ue[13] + KC0e1315*ue[15] + KC0e1316*ue[16] + KC0e1318*ue[18] + KC0e1319*ue[19] + KC0e1321*ue[21] + KC0e1322*ue[22]
+            finte[11] = KC0e0011*ue[0] + KC0e0111*ue[1] + KC0e0511*ue[5] + KC0e0611*ue[6] + KC0e0711*ue[7] + KC0e1111*ue[11] + KC0e1112*ue[12] + KC0e1113*ue[13] + KC0e1117*ue[17] + KC0e1118*ue[18] + KC0e1119*ue[19] + KC0e1123*ue[23]
+            finte[12] = KC0e0012*ue[0] + KC0e0112*ue[1] + KC0e0312*ue[3] + KC0e0412*ue[4] + KC0e0512*ue[5] + KC0e0612*ue[6] + KC0e0712*ue[7] + KC0e0912*ue[9] + KC0e1012*ue[10] + KC0e1112*ue[11] + KC0e1212*ue[12] + KC0e1213*ue[13] + KC0e1215*ue[15] + KC0e1216*ue[16] + KC0e1217*ue[17] + KC0e1218*ue[18] + KC0e1219*ue[19] + KC0e1221*ue[21] + KC0e1222*ue[22] + KC0e1223*ue[23]
+            finte[13] = KC0e0013*ue[0] + KC0e0113*ue[1] + KC0e0313*ue[3] + KC0e0413*ue[4] + KC0e0513*ue[5] + KC0e0613*ue[6] + KC0e0713*ue[7] + KC0e0913*ue[9] + KC0e1013*ue[10] + KC0e1113*ue[11] + KC0e1213*ue[12] + KC0e1313*ue[13] + KC0e1315*ue[15] + KC0e1316*ue[16] + KC0e1317*ue[17] + KC0e1318*ue[18] + KC0e1319*ue[19] + KC0e1321*ue[21] + KC0e1322*ue[22] + KC0e1323*ue[23]
             finte[14] = KC0e0214*ue[2] + KC0e0314*ue[3] + KC0e0414*ue[4] + KC0e0814*ue[8] + KC0e0914*ue[9] + KC0e1014*ue[10] + KC0e1414*ue[14] + KC0e1415*ue[15] + KC0e1416*ue[16] + KC0e1420*ue[20] + KC0e1421*ue[21] + KC0e1422*ue[22]
             finte[15] = KC0e0015*ue[0] + KC0e0115*ue[1] + KC0e0215*ue[2] + KC0e0315*ue[3] + KC0e0415*ue[4] + KC0e0615*ue[6] + KC0e0715*ue[7] + KC0e0815*ue[8] + KC0e0915*ue[9] + KC0e1015*ue[10] + KC0e1215*ue[12] + KC0e1315*ue[13] + KC0e1415*ue[14] + KC0e1515*ue[15] + KC0e1516*ue[16] + KC0e1518*ue[18] + KC0e1519*ue[19] + KC0e1520*ue[20] + KC0e1521*ue[21] + KC0e1522*ue[22]
             finte[16] = KC0e0016*ue[0] + KC0e0116*ue[1] + KC0e0216*ue[2] + KC0e0316*ue[3] + KC0e0416*ue[4] + KC0e0616*ue[6] + KC0e0716*ue[7] + KC0e0816*ue[8] + KC0e0916*ue[9] + KC0e1016*ue[10] + KC0e1216*ue[12] + KC0e1316*ue[13] + KC0e1416*ue[14] + KC0e1516*ue[15] + KC0e1616*ue[16] + KC0e1618*ue[18] + KC0e1619*ue[19] + KC0e1620*ue[20] + KC0e1621*ue[21] + KC0e1622*ue[22]
-            finte[17] = KC0e1717*ue[17]
-            finte[18] = KC0e0018*ue[0] + KC0e0118*ue[1] + KC0e0318*ue[3] + KC0e0418*ue[4] + KC0e0618*ue[6] + KC0e0718*ue[7] + KC0e0918*ue[9] + KC0e1018*ue[10] + KC0e1218*ue[12] + KC0e1318*ue[13] + KC0e1518*ue[15] + KC0e1618*ue[16] + KC0e1818*ue[18] + KC0e1819*ue[19] + KC0e1821*ue[21] + KC0e1822*ue[22]
-            finte[19] = KC0e0019*ue[0] + KC0e0119*ue[1] + KC0e0319*ue[3] + KC0e0419*ue[4] + KC0e0619*ue[6] + KC0e0719*ue[7] + KC0e0919*ue[9] + KC0e1019*ue[10] + KC0e1219*ue[12] + KC0e1319*ue[13] + KC0e1519*ue[15] + KC0e1619*ue[16] + KC0e1819*ue[18] + KC0e1919*ue[19] + KC0e1921*ue[21] + KC0e1922*ue[22]
+            finte[17] = KC0e0017*ue[0] + KC0e0117*ue[1] + KC0e0517*ue[5] + KC0e0617*ue[6] + KC0e0717*ue[7] + KC0e1117*ue[11] + KC0e1217*ue[12] + KC0e1317*ue[13] + KC0e1717*ue[17] + KC0e1718*ue[18] + KC0e1719*ue[19] + KC0e1723*ue[23]
+            finte[18] = KC0e0018*ue[0] + KC0e0118*ue[1] + KC0e0318*ue[3] + KC0e0418*ue[4] + KC0e0518*ue[5] + KC0e0618*ue[6] + KC0e0718*ue[7] + KC0e0918*ue[9] + KC0e1018*ue[10] + KC0e1118*ue[11] + KC0e1218*ue[12] + KC0e1318*ue[13] + KC0e1518*ue[15] + KC0e1618*ue[16] + KC0e1718*ue[17] + KC0e1818*ue[18] + KC0e1819*ue[19] + KC0e1821*ue[21] + KC0e1822*ue[22] + KC0e1823*ue[23]
+            finte[19] = KC0e0019*ue[0] + KC0e0119*ue[1] + KC0e0319*ue[3] + KC0e0419*ue[4] + KC0e0519*ue[5] + KC0e0619*ue[6] + KC0e0719*ue[7] + KC0e0919*ue[9] + KC0e1019*ue[10] + KC0e1119*ue[11] + KC0e1219*ue[12] + KC0e1319*ue[13] + KC0e1519*ue[15] + KC0e1619*ue[16] + KC0e1719*ue[17] + KC0e1819*ue[18] + KC0e1919*ue[19] + KC0e1921*ue[21] + KC0e1922*ue[22] + KC0e1923*ue[23]
             finte[20] = KC0e0220*ue[2] + KC0e0320*ue[3] + KC0e0420*ue[4] + KC0e0820*ue[8] + KC0e0920*ue[9] + KC0e1020*ue[10] + KC0e1420*ue[14] + KC0e1520*ue[15] + KC0e1620*ue[16] + KC0e2020*ue[20] + KC0e2021*ue[21] + KC0e2022*ue[22]
             finte[21] = KC0e0021*ue[0] + KC0e0121*ue[1] + KC0e0221*ue[2] + KC0e0321*ue[3] + KC0e0421*ue[4] + KC0e0621*ue[6] + KC0e0721*ue[7] + KC0e0821*ue[8] + KC0e0921*ue[9] + KC0e1021*ue[10] + KC0e1221*ue[12] + KC0e1321*ue[13] + KC0e1421*ue[14] + KC0e1521*ue[15] + KC0e1621*ue[16] + KC0e1821*ue[18] + KC0e1921*ue[19] + KC0e2021*ue[20] + KC0e2121*ue[21] + KC0e2122*ue[22]
             finte[22] = KC0e0022*ue[0] + KC0e0122*ue[1] + KC0e0222*ue[2] + KC0e0322*ue[3] + KC0e0422*ue[4] + KC0e0622*ue[6] + KC0e0722*ue[7] + KC0e0822*ue[8] + KC0e0922*ue[9] + KC0e1022*ue[10] + KC0e1222*ue[12] + KC0e1322*ue[13] + KC0e1422*ue[14] + KC0e1522*ue[15] + KC0e1622*ue[16] + KC0e1822*ue[18] + KC0e1922*ue[19] + KC0e2022*ue[20] + KC0e2122*ue[21] + KC0e2222*ue[22]
-            finte[23] = KC0e2323*ue[23]
+            finte[23] = KC0e0023*ue[0] + KC0e0123*ue[1] + KC0e0523*ue[5] + KC0e0623*ue[6] + KC0e0723*ue[7] + KC0e1123*ue[11] + KC0e1223*ue[12] + KC0e1323*ue[13] + KC0e1723*ue[17] + KC0e1823*ue[18] + KC0e1923*ue[19] + KC0e2323*ue[23]
 
 
     cpdef void update_KC0(Quad4R self,
@@ -939,14 +1155,6 @@ cdef class Quad4R:
                           double hgfactor_ry = 1.,
                           ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
-
-        Reduced integration is used with a single point in the centroid
-        (`\xi=\eta=0`) and weight `w_{ij}=4`, preventing shear locking.
-        Hourglass control is used according to Brockman 1987:
-
-            Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
-            Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
-            https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208
 
 
         Parameters
@@ -970,7 +1178,11 @@ cdef class Quad4R:
 
         """
         cdef int c1, c2, c3, c4, k
-        cdef double x1, x2, x3, x4, y1, y2, y3, y4, wij, detJ
+        cdef double x1, x2, x3, x4
+        cdef double y1, y2, y3, y4
+        cdef int pti, ptj
+        cdef double wij, detJ, xi, eta
+        cdef double points[2]
         # NOTE ABD in the material direction
         cdef double A11mat, A12mat, A16mat, A22mat, A26mat, A66mat
         cdef double B11mat, B12mat, B16mat, B22mat, B26mat, B66mat
@@ -981,36 +1193,39 @@ cdef class Quad4R:
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
         cdef double E1eq, E2eq
-        cdef double KDRILL
+        cdef double K6ROT
         cdef double Eu, Ev, Erx, Ery, Ew
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double m11, m12, m21, m22, a11, a22
-        cdef double j11, j12, j21, j22, N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
+        cdef double J11, J12, J21, J22
+        cdef double j11, j12, j21, j22
+        cdef double N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
         cdef double N1, N2, N3, N4
         cdef double N1xy, N2xy, N3xy, N4xy, gamma1, gamma2, gamma3, gamma4
 
-        cdef double KC0e0000, KC0e0001, KC0e0003, KC0e0004, KC0e0006, KC0e0007, KC0e0009, KC0e0010, KC0e0012, KC0e0013, KC0e0015, KC0e0016, KC0e0018, KC0e0019, KC0e0021, KC0e0022
-        cdef double KC0e0101, KC0e0103, KC0e0104, KC0e0106, KC0e0107, KC0e0109, KC0e0110, KC0e0112, KC0e0113, KC0e0115, KC0e0116, KC0e0118, KC0e0119, KC0e0121, KC0e0122
-        cdef double KC0e0202, KC0e0203, KC0e0204, KC0e0208, KC0e0209, KC0e0210, KC0e0214, KC0e0215, KC0e0216, KC0e0220, KC0e0221, KC0e0222
-        cdef double KC0e0303, KC0e0304, KC0e0306, KC0e0307, KC0e0308, KC0e0309, KC0e0310, KC0e0312, KC0e0313, KC0e0314, KC0e0315, KC0e0316, KC0e0318, KC0e0319, KC0e0320, KC0e0321, KC0e0322
+        cdef double KC0e0000, KC0e0001, KC0e0003, KC0e0004, KC0e0005, KC0e0006, KC0e0007, KC0e0009, KC0e0010, KC0e0011, KC0e0012, KC0e0013, KC0e0015, KC0e0016, KC0e0017, KC0e0018, KC0e0019, KC0e0021, KC0e0022, KC0e0023
+        cdef double KC0e0101, KC0e0103, KC0e0104, KC0e0105, KC0e0106, KC0e0107, KC0e0109, KC0e0110, KC0e0111, KC0e0112, KC0e0113, KC0e0115, KC0e0116, KC0e0117, KC0e0118, KC0e0119, KC0e0121, KC0e0122, KC0e0123
+        cdef double KC0e0202, KC0e0203, KC0e0204, KC0e0208, KC0e0209, KC0e0210, KC0e0214, KC0e0215, KC0e0216, KC0e0220, KC0e0221, KC0e0222, KC0e0303
+        cdef double KC0e0304, KC0e0306, KC0e0307, KC0e0308, KC0e0309, KC0e0310, KC0e0312, KC0e0313, KC0e0314, KC0e0315, KC0e0316, KC0e0318, KC0e0319, KC0e0320, KC0e0321, KC0e0322
         cdef double KC0e0404, KC0e0406, KC0e0407, KC0e0408, KC0e0409, KC0e0410, KC0e0412, KC0e0413, KC0e0414, KC0e0415, KC0e0416, KC0e0418, KC0e0419, KC0e0420, KC0e0421, KC0e0422
-        cdef double KC0e0505
-        cdef double KC0e0606, KC0e0607, KC0e0609, KC0e0610, KC0e0612, KC0e0613, KC0e0615, KC0e0616, KC0e0618, KC0e0619, KC0e0621, KC0e0622
-        cdef double KC0e0707, KC0e0709, KC0e0710, KC0e0712, KC0e0713, KC0e0715, KC0e0716, KC0e0718, KC0e0719, KC0e0721, KC0e0722
+        cdef double KC0e0505, KC0e0506, KC0e0507, KC0e0511, KC0e0512, KC0e0513, KC0e0517, KC0e0518, KC0e0519, KC0e0523
+        cdef double KC0e0606, KC0e0607, KC0e0609, KC0e0610, KC0e0611, KC0e0612, KC0e0613, KC0e0615, KC0e0616, KC0e0617, KC0e0618, KC0e0619, KC0e0621, KC0e0622, KC0e0623
+        cdef double KC0e0707, KC0e0709, KC0e0710, KC0e0711, KC0e0712, KC0e0713, KC0e0715, KC0e0716, KC0e0717, KC0e0718, KC0e0719, KC0e0721, KC0e0722, KC0e0723
         cdef double KC0e0808, KC0e0809, KC0e0810, KC0e0814, KC0e0815, KC0e0816, KC0e0820, KC0e0821, KC0e0822
         cdef double KC0e0909, KC0e0910, KC0e0912, KC0e0913, KC0e0914, KC0e0915, KC0e0916, KC0e0918, KC0e0919, KC0e0920, KC0e0921, KC0e0922
         cdef double KC0e1010, KC0e1012, KC0e1013, KC0e1014, KC0e1015, KC0e1016, KC0e1018, KC0e1019, KC0e1020, KC0e1021, KC0e1022
-        cdef double KC0e1111
-        cdef double KC0e1212, KC0e1213, KC0e1215, KC0e1216, KC0e1218, KC0e1219, KC0e1221, KC0e1222
-        cdef double KC0e1313, KC0e1315, KC0e1316, KC0e1318, KC0e1319, KC0e1321, KC0e1322
+        cdef double KC0e1111, KC0e1112, KC0e1113, KC0e1117, KC0e1118, KC0e1119, KC0e1123
+        cdef double KC0e1212, KC0e1213, KC0e1215, KC0e1216, KC0e1217, KC0e1218, KC0e1219, KC0e1221, KC0e1222, KC0e1223
+        cdef double KC0e1313, KC0e1315, KC0e1316, KC0e1317, KC0e1318, KC0e1319, KC0e1321, KC0e1322, KC0e1323
         cdef double KC0e1414, KC0e1415, KC0e1416, KC0e1420, KC0e1421, KC0e1422
         cdef double KC0e1515, KC0e1516, KC0e1518, KC0e1519, KC0e1520, KC0e1521, KC0e1522
         cdef double KC0e1616, KC0e1618, KC0e1619, KC0e1620, KC0e1621, KC0e1622
-        cdef double KC0e1717
-        cdef double KC0e1818, KC0e1819, KC0e1821, KC0e1822
-        cdef double KC0e1919, KC0e1921, KC0e1922
+        cdef double KC0e1717, KC0e1718, KC0e1719, KC0e1723
+        cdef double KC0e1818, KC0e1819, KC0e1821, KC0e1822, KC0e1823
+        cdef double KC0e1919, KC0e1921, KC0e1922, KC0e1923
         cdef double KC0e2020, KC0e2021, KC0e2022
-        cdef double KC0e2121, KC0e2122, KC0e2222
+        cdef double KC0e2121, KC0e2122
+        cdef double KC0e2222
         cdef double KC0e2323
 
         with nogil:
@@ -1100,6 +1315,8 @@ cdef class Quad4R:
             E45 = prop.E45*0.5*(prop.scf_k13 + prop.scf_k23)
             E55 = prop.E55*prop.scf_k13
 
+            K6ROT = self.K6ROT
+            
             # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
             y1 = self.probe.xe[1]
@@ -2864,8 +3081,6 @@ cdef class Quad4R:
             # NOTE reduced integration to remove shear locking
             wij = 4.
 
-            KDRILL = self.K6ROT * A66 * self.area * 1.e-6
-
             # TODO find a method of hourglass control that is derived for composites
             #     in the future, the use elements with mixed integration
             #     schemes, or the implementation of the MITC4 element will no
@@ -2984,7 +3199,6 @@ cdef class Quad4R:
             KC0e0420 = N1*detJ*wij*(E45*N4y + E55*N4x)
             KC0e0421 = -detJ*wij*(E45*N1*N4 + N4x*(D16*N1x + D66*N1y) + N4y*(D12*N1x + D26*N1y))
             KC0e0422 = detJ*wij*(E55*N1*N4 + Ery*gamma1*gamma4 + N4x*(D11*N1x + D16*N1y) + N4y*(D16*N1x + D66*N1y))
-            KC0e0505 = KDRILL
             KC0e0606 = detJ*wij*(Eu*gamma2**2 + N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y))
             KC0e0607 = detJ*wij*(N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y))
             KC0e0609 = -detJ*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))
@@ -3040,7 +3254,6 @@ cdef class Quad4R:
             KC0e1020 = N2*detJ*wij*(E45*N4y + E55*N4x)
             KC0e1021 = -detJ*wij*(E45*N2*N4 + N4x*(D16*N2x + D66*N2y) + N4y*(D12*N2x + D26*N2y))
             KC0e1022 = detJ*wij*(E55*N2*N4 + Ery*gamma2*gamma4 + N4x*(D11*N2x + D16*N2y) + N4y*(D16*N2x + D66*N2y))
-            KC0e1111 = KDRILL
             KC0e1212 = detJ*wij*(Eu*gamma3**2 + N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y))
             KC0e1213 = detJ*wij*(N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y))
             KC0e1215 = -detJ*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))
@@ -3075,7 +3288,6 @@ cdef class Quad4R:
             KC0e1620 = N3*detJ*wij*(E45*N4y + E55*N4x)
             KC0e1621 = -detJ*wij*(E45*N3*N4 + N4x*(D16*N3x + D66*N3y) + N4y*(D12*N3x + D26*N3y))
             KC0e1622 = detJ*wij*(E55*N3*N4 + Ery*gamma3*gamma4 + N4x*(D11*N3x + D16*N3y) + N4y*(D16*N3x + D66*N3y))
-            KC0e1717 = KDRILL
             KC0e1818 = detJ*wij*(Eu*gamma4**2 + N4x*(A11*N4x + A16*N4y) + N4y*(A16*N4x + A66*N4y))
             KC0e1819 = detJ*wij*(N4x*(A16*N4x + A66*N4y) + N4y*(A12*N4x + A26*N4y))
             KC0e1821 = -detJ*wij*(N4x*(B16*N4x + B66*N4y) + N4y*(B12*N4x + B26*N4y))
@@ -3089,7 +3301,167 @@ cdef class Quad4R:
             KC0e2121 = detJ*wij*(E44*N4**2 + Erx*gamma4**2 + N4x*(D26*N4y + D66*N4x) + N4y*(D22*N4y + D26*N4x))
             KC0e2122 = -detJ*wij*(E45*N4**2 + N4x*(D12*N4y + D16*N4x) + N4y*(D26*N4y + D66*N4x))
             KC0e2222 = detJ*wij*(E55*N4**2 + Ery*gamma4**2 + N4x*(D11*N4x + D16*N4y) + N4y*(D16*N4x + D66*N4y))
-            KC0e2323 = KDRILL
+
+            # NOTE drilling rotation uses full integration with two-point Gauss-Legendre quadrature
+            wij = 1.
+            points[0] = -0.5773502691896257645092
+            points[1] = +0.5773502691896257645092
+
+            KC0e0005 = 0
+            KC0e0011 = 0
+            KC0e0017 = 0
+            KC0e0023 = 0
+            KC0e0105 = 0
+            KC0e0111 = 0
+            KC0e0117 = 0
+            KC0e0123 = 0
+            KC0e0505 = 0
+            KC0e0506 = 0
+            KC0e0507 = 0
+            KC0e0511 = 0
+            KC0e0512 = 0
+            KC0e0513 = 0
+            KC0e0517 = 0
+            KC0e0518 = 0
+            KC0e0519 = 0
+            KC0e0523 = 0
+            KC0e0611 = 0
+            KC0e0617 = 0
+            KC0e0623 = 0
+            KC0e0711 = 0
+            KC0e0717 = 0
+            KC0e0723 = 0
+            KC0e1111 = 0
+            KC0e1112 = 0
+            KC0e1113 = 0
+            KC0e1117 = 0
+            KC0e1118 = 0
+            KC0e1119 = 0
+            KC0e1123 = 0
+            KC0e1217 = 0
+            KC0e1223 = 0
+            KC0e1317 = 0
+            KC0e1323 = 0
+            KC0e1717 = 0
+            KC0e1718 = 0
+            KC0e1719 = 0
+            KC0e1723 = 0
+            KC0e1823 = 0
+            KC0e1923 = 0
+            KC0e2323 = 0
+
+            for pti in range(2):
+                xi = points[pti]
+                for ptj in range(2):
+                    eta = points[ptj]
+
+                    J11 = -0.5*x1 + 0.5*x2 + 0.5*(eta + 1)*(0.5*x1 - 0.5*x2 + 0.5*x3 - 0.5*x4)
+                    J12 = -0.5*y1 + 0.5*y2 + 0.5*(eta + 1)*(0.5*y1 - 0.5*y2 + 0.5*y3 - 0.5*y4)
+                    J21 = -0.5*x1 + 0.5*x4 - 0.25*(-x1 + x2)*(xi + 1) + 0.25*(x3 - x4)*(xi + 1)
+                    J22 = -0.5*y1 + 0.5*y4 - 0.25*(xi + 1)*(-y1 + y2) + 0.25*(xi + 1)*(y3 - y4)
+
+                    detJ = J11*J22 - J12*J21
+
+                    j11 = J22/(J11*J22 - J12*J21)
+                    j12 = -J12/(J11*J22 - J12*J21)
+                    j21 = -J21/(J11*J22 - J12*J21)
+                    j22 = J11/(J11*J22 - J12*J21)
+
+                    N1 = eta*xi/4. - eta/4. - xi/4. + 1/4.
+                    N2 = -eta*xi/4. - eta/4. + xi/4. + 1/4.
+                    N3 = eta*xi/4. + eta/4. + xi/4. + 1/4.
+                    N4 = -eta*xi/4. + eta/4. - xi/4. + 1/4.
+
+                    N1x = 0.25*j11*(eta - 1) + 0.25*j12*(xi - 1)
+                    N2x = -0.25*eta*j11 + 0.25*j11 - 0.25*j12*xi - 0.25*j12
+                    N3x = 0.25*j11*(eta + 1) + 0.25*j12*(xi + 1)
+                    N4x = -0.25*eta*j11 - 0.25*j11 - 0.25*j12*xi + 0.25*j12
+
+                    N1y = 0.25*j21*(eta - 1) + 0.25*j22*(xi - 1)
+                    N2y = -0.25*eta*j21 + 0.25*j21 - 0.25*j22*xi - 0.25*j22
+                    N3y = 0.25*j21*(eta + 1) + 0.25*j22*(xi + 1)
+                    N4y = -0.25*eta*j21 - 0.25*j21 - 0.25*j22*xi + 0.25*j22
+
+                    KC0e0000 += 2.5e-7*A66*K6ROT*N1y**2*detJ*wij
+                    KC0e0001 += -2.5e-7*A66*K6ROT*N1x*N1y*detJ*wij
+                    KC0e0005 += 5.0e-7*A66*K6ROT*N1*N1y*detJ*wij
+                    KC0e0006 += 2.5e-7*A66*K6ROT*N1y*N2y*detJ*wij
+                    KC0e0007 += -2.5e-7*A66*K6ROT*N1y*N2x*detJ*wij
+                    KC0e0011 += 5.0e-7*A66*K6ROT*N1y*N2*detJ*wij
+                    KC0e0012 += 2.5e-7*A66*K6ROT*N1y*N3y*detJ*wij
+                    KC0e0013 += -2.5e-7*A66*K6ROT*N1y*N3x*detJ*wij
+                    KC0e0017 += 5.0e-7*A66*K6ROT*N1y*N3*detJ*wij
+                    KC0e0018 += 2.5e-7*A66*K6ROT*N1y*N4y*detJ*wij
+                    KC0e0019 += -2.5e-7*A66*K6ROT*N1y*N4x*detJ*wij
+                    KC0e0023 += 5.0e-7*A66*K6ROT*N1y*N4*detJ*wij
+                    KC0e0101 += 2.5e-7*A66*K6ROT*N1x**2*detJ*wij
+                    KC0e0105 += -5.0e-7*A66*K6ROT*N1*N1x*detJ*wij
+                    KC0e0106 += -2.5e-7*A66*K6ROT*N1x*N2y*detJ*wij
+                    KC0e0107 += 2.5e-7*A66*K6ROT*N1x*N2x*detJ*wij
+                    KC0e0111 += -5.0e-7*A66*K6ROT*N1x*N2*detJ*wij
+                    KC0e0112 += -2.5e-7*A66*K6ROT*N1x*N3y*detJ*wij
+                    KC0e0113 += 2.5e-7*A66*K6ROT*N1x*N3x*detJ*wij
+                    KC0e0117 += -5.0e-7*A66*K6ROT*N1x*N3*detJ*wij
+                    KC0e0118 += -2.5e-7*A66*K6ROT*N1x*N4y*detJ*wij
+                    KC0e0119 += 2.5e-7*A66*K6ROT*N1x*N4x*detJ*wij
+                    KC0e0123 += -5.0e-7*A66*K6ROT*N1x*N4*detJ*wij
+                    KC0e0505 += 1.0e-6*A66*K6ROT*N1**2*detJ*wij
+                    KC0e0506 += 5.0e-7*A66*K6ROT*N1*N2y*detJ*wij
+                    KC0e0507 += -5.0e-7*A66*K6ROT*N1*N2x*detJ*wij
+                    KC0e0511 += 1.0e-6*A66*K6ROT*N1*N2*detJ*wij
+                    KC0e0512 += 5.0e-7*A66*K6ROT*N1*N3y*detJ*wij
+                    KC0e0513 += -5.0e-7*A66*K6ROT*N1*N3x*detJ*wij
+                    KC0e0517 += 1.0e-6*A66*K6ROT*N1*N3*detJ*wij
+                    KC0e0518 += 5.0e-7*A66*K6ROT*N1*N4y*detJ*wij
+                    KC0e0519 += -5.0e-7*A66*K6ROT*N1*N4x*detJ*wij
+                    KC0e0523 += 1.0e-6*A66*K6ROT*N1*N4*detJ*wij
+                    KC0e0606 += 2.5e-7*A66*K6ROT*N2y**2*detJ*wij
+                    KC0e0607 += -2.5e-7*A66*K6ROT*N2x*N2y*detJ*wij
+                    KC0e0611 += 5.0e-7*A66*K6ROT*N2*N2y*detJ*wij
+                    KC0e0612 += 2.5e-7*A66*K6ROT*N2y*N3y*detJ*wij
+                    KC0e0613 += -2.5e-7*A66*K6ROT*N2y*N3x*detJ*wij
+                    KC0e0617 += 5.0e-7*A66*K6ROT*N2y*N3*detJ*wij
+                    KC0e0618 += 2.5e-7*A66*K6ROT*N2y*N4y*detJ*wij
+                    KC0e0619 += -2.5e-7*A66*K6ROT*N2y*N4x*detJ*wij
+                    KC0e0623 += 5.0e-7*A66*K6ROT*N2y*N4*detJ*wij
+                    KC0e0707 += 2.5e-7*A66*K6ROT*N2x**2*detJ*wij
+                    KC0e0711 += -5.0e-7*A66*K6ROT*N2*N2x*detJ*wij
+                    KC0e0712 += -2.5e-7*A66*K6ROT*N2x*N3y*detJ*wij
+                    KC0e0713 += 2.5e-7*A66*K6ROT*N2x*N3x*detJ*wij
+                    KC0e0717 += -5.0e-7*A66*K6ROT*N2x*N3*detJ*wij
+                    KC0e0718 += -2.5e-7*A66*K6ROT*N2x*N4y*detJ*wij
+                    KC0e0719 += 2.5e-7*A66*K6ROT*N2x*N4x*detJ*wij
+                    KC0e0723 += -5.0e-7*A66*K6ROT*N2x*N4*detJ*wij
+                    KC0e1111 += 1.0e-6*A66*K6ROT*N2**2*detJ*wij
+                    KC0e1112 += 5.0e-7*A66*K6ROT*N2*N3y*detJ*wij
+                    KC0e1113 += -5.0e-7*A66*K6ROT*N2*N3x*detJ*wij
+                    KC0e1117 += 1.0e-6*A66*K6ROT*N2*N3*detJ*wij
+                    KC0e1118 += 5.0e-7*A66*K6ROT*N2*N4y*detJ*wij
+                    KC0e1119 += -5.0e-7*A66*K6ROT*N2*N4x*detJ*wij
+                    KC0e1123 += 1.0e-6*A66*K6ROT*N2*N4*detJ*wij
+                    KC0e1212 += 2.5e-7*A66*K6ROT*N3y**2*detJ*wij
+                    KC0e1213 += -2.5e-7*A66*K6ROT*N3x*N3y*detJ*wij
+                    KC0e1217 += 5.0e-7*A66*K6ROT*N3*N3y*detJ*wij
+                    KC0e1218 += 2.5e-7*A66*K6ROT*N3y*N4y*detJ*wij
+                    KC0e1219 += -2.5e-7*A66*K6ROT*N3y*N4x*detJ*wij
+                    KC0e1223 += 5.0e-7*A66*K6ROT*N3y*N4*detJ*wij
+                    KC0e1313 += 2.5e-7*A66*K6ROT*N3x**2*detJ*wij
+                    KC0e1317 += -5.0e-7*A66*K6ROT*N3*N3x*detJ*wij
+                    KC0e1318 += -2.5e-7*A66*K6ROT*N3x*N4y*detJ*wij
+                    KC0e1319 += 2.5e-7*A66*K6ROT*N3x*N4x*detJ*wij
+                    KC0e1323 += -5.0e-7*A66*K6ROT*N3x*N4*detJ*wij
+                    KC0e1717 += 1.0e-6*A66*K6ROT*N3**2*detJ*wij
+                    KC0e1718 += 5.0e-7*A66*K6ROT*N3*N4y*detJ*wij
+                    KC0e1719 += -5.0e-7*A66*K6ROT*N3*N4x*detJ*wij
+                    KC0e1723 += 1.0e-6*A66*K6ROT*N3*N4*detJ*wij
+                    KC0e1818 += 2.5e-7*A66*K6ROT*N4y**2*detJ*wij
+                    KC0e1819 += -2.5e-7*A66*K6ROT*N4x*N4y*detJ*wij
+                    KC0e1823 += 5.0e-7*A66*K6ROT*N4*N4y*detJ*wij
+                    KC0e1919 += 2.5e-7*A66*K6ROT*N4x**2*detJ*wij
+                    KC0e1923 += -5.0e-7*A66*K6ROT*N4*N4x*detJ*wij
+                    KC0e2323 += 1.0e-6*A66*K6ROT*N4**2*detJ*wij
+
+            # NOTE storing the rotated KC0e into the global KC0
 
             k = self.init_k_KC0
             KC0v[k] += KC0e0202*r13**2 + r11*(KC0e0000*r11 + KC0e0001*r12) + r12*(KC0e0001*r11 + KC0e0101*r12)
@@ -3098,11 +3470,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0202*r13*r33 + r31*(KC0e0000*r11 + KC0e0001*r12) + r32*(KC0e0001*r11 + KC0e0101*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0003*r11 + KC0e0103*r12 + KC0e0203*r13) + r12*(KC0e0004*r11 + KC0e0104*r12 + KC0e0204*r13)
+            KC0v[k] += r11*(KC0e0003*r11 + KC0e0103*r12 + KC0e0203*r13) + r12*(KC0e0004*r11 + KC0e0104*r12 + KC0e0204*r13) + r13*(KC0e0005*r11 + KC0e0105*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0003*r11 + KC0e0103*r12 + KC0e0203*r13) + r22*(KC0e0004*r11 + KC0e0104*r12 + KC0e0204*r13)
+            KC0v[k] += r21*(KC0e0003*r11 + KC0e0103*r12 + KC0e0203*r13) + r22*(KC0e0004*r11 + KC0e0104*r12 + KC0e0204*r13) + r23*(KC0e0005*r11 + KC0e0105*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0003*r11 + KC0e0103*r12 + KC0e0203*r13) + r32*(KC0e0004*r11 + KC0e0104*r12 + KC0e0204*r13)
+            KC0v[k] += r31*(KC0e0003*r11 + KC0e0103*r12 + KC0e0203*r13) + r32*(KC0e0004*r11 + KC0e0104*r12 + KC0e0204*r13) + r33*(KC0e0005*r11 + KC0e0105*r12)
             k += 1
             KC0v[k] += KC0e0208*r13**2 + r11*(KC0e0006*r11 + KC0e0106*r12) + r12*(KC0e0007*r11 + KC0e0107*r12)
             k += 1
@@ -3110,11 +3482,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0208*r13*r33 + r31*(KC0e0006*r11 + KC0e0106*r12) + r32*(KC0e0007*r11 + KC0e0107*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0009*r11 + KC0e0109*r12 + KC0e0209*r13) + r12*(KC0e0010*r11 + KC0e0110*r12 + KC0e0210*r13)
+            KC0v[k] += r11*(KC0e0009*r11 + KC0e0109*r12 + KC0e0209*r13) + r12*(KC0e0010*r11 + KC0e0110*r12 + KC0e0210*r13) + r13*(KC0e0011*r11 + KC0e0111*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0009*r11 + KC0e0109*r12 + KC0e0209*r13) + r22*(KC0e0010*r11 + KC0e0110*r12 + KC0e0210*r13)
+            KC0v[k] += r21*(KC0e0009*r11 + KC0e0109*r12 + KC0e0209*r13) + r22*(KC0e0010*r11 + KC0e0110*r12 + KC0e0210*r13) + r23*(KC0e0011*r11 + KC0e0111*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0009*r11 + KC0e0109*r12 + KC0e0209*r13) + r32*(KC0e0010*r11 + KC0e0110*r12 + KC0e0210*r13)
+            KC0v[k] += r31*(KC0e0009*r11 + KC0e0109*r12 + KC0e0209*r13) + r32*(KC0e0010*r11 + KC0e0110*r12 + KC0e0210*r13) + r33*(KC0e0011*r11 + KC0e0111*r12)
             k += 1
             KC0v[k] += KC0e0214*r13**2 + r11*(KC0e0012*r11 + KC0e0112*r12) + r12*(KC0e0013*r11 + KC0e0113*r12)
             k += 1
@@ -3122,11 +3494,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0214*r13*r33 + r31*(KC0e0012*r11 + KC0e0112*r12) + r32*(KC0e0013*r11 + KC0e0113*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0015*r11 + KC0e0115*r12 + KC0e0215*r13) + r12*(KC0e0016*r11 + KC0e0116*r12 + KC0e0216*r13)
+            KC0v[k] += r11*(KC0e0015*r11 + KC0e0115*r12 + KC0e0215*r13) + r12*(KC0e0016*r11 + KC0e0116*r12 + KC0e0216*r13) + r13*(KC0e0017*r11 + KC0e0117*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0015*r11 + KC0e0115*r12 + KC0e0215*r13) + r22*(KC0e0016*r11 + KC0e0116*r12 + KC0e0216*r13)
+            KC0v[k] += r21*(KC0e0015*r11 + KC0e0115*r12 + KC0e0215*r13) + r22*(KC0e0016*r11 + KC0e0116*r12 + KC0e0216*r13) + r23*(KC0e0017*r11 + KC0e0117*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0015*r11 + KC0e0115*r12 + KC0e0215*r13) + r32*(KC0e0016*r11 + KC0e0116*r12 + KC0e0216*r13)
+            KC0v[k] += r31*(KC0e0015*r11 + KC0e0115*r12 + KC0e0215*r13) + r32*(KC0e0016*r11 + KC0e0116*r12 + KC0e0216*r13) + r33*(KC0e0017*r11 + KC0e0117*r12)
             k += 1
             KC0v[k] += KC0e0220*r13**2 + r11*(KC0e0018*r11 + KC0e0118*r12) + r12*(KC0e0019*r11 + KC0e0119*r12)
             k += 1
@@ -3134,11 +3506,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0220*r13*r33 + r31*(KC0e0018*r11 + KC0e0118*r12) + r32*(KC0e0019*r11 + KC0e0119*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0021*r11 + KC0e0121*r12 + KC0e0221*r13) + r12*(KC0e0022*r11 + KC0e0122*r12 + KC0e0222*r13)
+            KC0v[k] += r11*(KC0e0021*r11 + KC0e0121*r12 + KC0e0221*r13) + r12*(KC0e0022*r11 + KC0e0122*r12 + KC0e0222*r13) + r13*(KC0e0023*r11 + KC0e0123*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0021*r11 + KC0e0121*r12 + KC0e0221*r13) + r22*(KC0e0022*r11 + KC0e0122*r12 + KC0e0222*r13)
+            KC0v[k] += r21*(KC0e0021*r11 + KC0e0121*r12 + KC0e0221*r13) + r22*(KC0e0022*r11 + KC0e0122*r12 + KC0e0222*r13) + r23*(KC0e0023*r11 + KC0e0123*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0021*r11 + KC0e0121*r12 + KC0e0221*r13) + r32*(KC0e0022*r11 + KC0e0122*r12 + KC0e0222*r13)
+            KC0v[k] += r31*(KC0e0021*r11 + KC0e0121*r12 + KC0e0221*r13) + r32*(KC0e0022*r11 + KC0e0122*r12 + KC0e0222*r13) + r33*(KC0e0023*r11 + KC0e0123*r12)
             k += 1
             KC0v[k] += KC0e0202*r13*r23 + r11*(KC0e0000*r21 + KC0e0001*r22) + r12*(KC0e0001*r21 + KC0e0101*r22)
             k += 1
@@ -3146,11 +3518,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0202*r23*r33 + r31*(KC0e0000*r21 + KC0e0001*r22) + r32*(KC0e0001*r21 + KC0e0101*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0003*r21 + KC0e0103*r22 + KC0e0203*r23) + r12*(KC0e0004*r21 + KC0e0104*r22 + KC0e0204*r23)
+            KC0v[k] += r11*(KC0e0003*r21 + KC0e0103*r22 + KC0e0203*r23) + r12*(KC0e0004*r21 + KC0e0104*r22 + KC0e0204*r23) + r13*(KC0e0005*r21 + KC0e0105*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0003*r21 + KC0e0103*r22 + KC0e0203*r23) + r22*(KC0e0004*r21 + KC0e0104*r22 + KC0e0204*r23)
+            KC0v[k] += r21*(KC0e0003*r21 + KC0e0103*r22 + KC0e0203*r23) + r22*(KC0e0004*r21 + KC0e0104*r22 + KC0e0204*r23) + r23*(KC0e0005*r21 + KC0e0105*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0003*r21 + KC0e0103*r22 + KC0e0203*r23) + r32*(KC0e0004*r21 + KC0e0104*r22 + KC0e0204*r23)
+            KC0v[k] += r31*(KC0e0003*r21 + KC0e0103*r22 + KC0e0203*r23) + r32*(KC0e0004*r21 + KC0e0104*r22 + KC0e0204*r23) + r33*(KC0e0005*r21 + KC0e0105*r22)
             k += 1
             KC0v[k] += KC0e0208*r13*r23 + r11*(KC0e0006*r21 + KC0e0106*r22) + r12*(KC0e0007*r21 + KC0e0107*r22)
             k += 1
@@ -3158,11 +3530,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0208*r23*r33 + r31*(KC0e0006*r21 + KC0e0106*r22) + r32*(KC0e0007*r21 + KC0e0107*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0009*r21 + KC0e0109*r22 + KC0e0209*r23) + r12*(KC0e0010*r21 + KC0e0110*r22 + KC0e0210*r23)
+            KC0v[k] += r11*(KC0e0009*r21 + KC0e0109*r22 + KC0e0209*r23) + r12*(KC0e0010*r21 + KC0e0110*r22 + KC0e0210*r23) + r13*(KC0e0011*r21 + KC0e0111*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0009*r21 + KC0e0109*r22 + KC0e0209*r23) + r22*(KC0e0010*r21 + KC0e0110*r22 + KC0e0210*r23)
+            KC0v[k] += r21*(KC0e0009*r21 + KC0e0109*r22 + KC0e0209*r23) + r22*(KC0e0010*r21 + KC0e0110*r22 + KC0e0210*r23) + r23*(KC0e0011*r21 + KC0e0111*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0009*r21 + KC0e0109*r22 + KC0e0209*r23) + r32*(KC0e0010*r21 + KC0e0110*r22 + KC0e0210*r23)
+            KC0v[k] += r31*(KC0e0009*r21 + KC0e0109*r22 + KC0e0209*r23) + r32*(KC0e0010*r21 + KC0e0110*r22 + KC0e0210*r23) + r33*(KC0e0011*r21 + KC0e0111*r22)
             k += 1
             KC0v[k] += KC0e0214*r13*r23 + r11*(KC0e0012*r21 + KC0e0112*r22) + r12*(KC0e0013*r21 + KC0e0113*r22)
             k += 1
@@ -3170,11 +3542,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0214*r23*r33 + r31*(KC0e0012*r21 + KC0e0112*r22) + r32*(KC0e0013*r21 + KC0e0113*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0015*r21 + KC0e0115*r22 + KC0e0215*r23) + r12*(KC0e0016*r21 + KC0e0116*r22 + KC0e0216*r23)
+            KC0v[k] += r11*(KC0e0015*r21 + KC0e0115*r22 + KC0e0215*r23) + r12*(KC0e0016*r21 + KC0e0116*r22 + KC0e0216*r23) + r13*(KC0e0017*r21 + KC0e0117*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0015*r21 + KC0e0115*r22 + KC0e0215*r23) + r22*(KC0e0016*r21 + KC0e0116*r22 + KC0e0216*r23)
+            KC0v[k] += r21*(KC0e0015*r21 + KC0e0115*r22 + KC0e0215*r23) + r22*(KC0e0016*r21 + KC0e0116*r22 + KC0e0216*r23) + r23*(KC0e0017*r21 + KC0e0117*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0015*r21 + KC0e0115*r22 + KC0e0215*r23) + r32*(KC0e0016*r21 + KC0e0116*r22 + KC0e0216*r23)
+            KC0v[k] += r31*(KC0e0015*r21 + KC0e0115*r22 + KC0e0215*r23) + r32*(KC0e0016*r21 + KC0e0116*r22 + KC0e0216*r23) + r33*(KC0e0017*r21 + KC0e0117*r22)
             k += 1
             KC0v[k] += KC0e0220*r13*r23 + r11*(KC0e0018*r21 + KC0e0118*r22) + r12*(KC0e0019*r21 + KC0e0119*r22)
             k += 1
@@ -3182,11 +3554,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0220*r23*r33 + r31*(KC0e0018*r21 + KC0e0118*r22) + r32*(KC0e0019*r21 + KC0e0119*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0021*r21 + KC0e0121*r22 + KC0e0221*r23) + r12*(KC0e0022*r21 + KC0e0122*r22 + KC0e0222*r23)
+            KC0v[k] += r11*(KC0e0021*r21 + KC0e0121*r22 + KC0e0221*r23) + r12*(KC0e0022*r21 + KC0e0122*r22 + KC0e0222*r23) + r13*(KC0e0023*r21 + KC0e0123*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0021*r21 + KC0e0121*r22 + KC0e0221*r23) + r22*(KC0e0022*r21 + KC0e0122*r22 + KC0e0222*r23)
+            KC0v[k] += r21*(KC0e0021*r21 + KC0e0121*r22 + KC0e0221*r23) + r22*(KC0e0022*r21 + KC0e0122*r22 + KC0e0222*r23) + r23*(KC0e0023*r21 + KC0e0123*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0021*r21 + KC0e0121*r22 + KC0e0221*r23) + r32*(KC0e0022*r21 + KC0e0122*r22 + KC0e0222*r23)
+            KC0v[k] += r31*(KC0e0021*r21 + KC0e0121*r22 + KC0e0221*r23) + r32*(KC0e0022*r21 + KC0e0122*r22 + KC0e0222*r23) + r33*(KC0e0023*r21 + KC0e0123*r22)
             k += 1
             KC0v[k] += KC0e0202*r13*r33 + r11*(KC0e0000*r31 + KC0e0001*r32) + r12*(KC0e0001*r31 + KC0e0101*r32)
             k += 1
@@ -3194,11 +3566,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0202*r33**2 + r31*(KC0e0000*r31 + KC0e0001*r32) + r32*(KC0e0001*r31 + KC0e0101*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0003*r31 + KC0e0103*r32 + KC0e0203*r33) + r12*(KC0e0004*r31 + KC0e0104*r32 + KC0e0204*r33)
+            KC0v[k] += r11*(KC0e0003*r31 + KC0e0103*r32 + KC0e0203*r33) + r12*(KC0e0004*r31 + KC0e0104*r32 + KC0e0204*r33) + r13*(KC0e0005*r31 + KC0e0105*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0003*r31 + KC0e0103*r32 + KC0e0203*r33) + r22*(KC0e0004*r31 + KC0e0104*r32 + KC0e0204*r33)
+            KC0v[k] += r21*(KC0e0003*r31 + KC0e0103*r32 + KC0e0203*r33) + r22*(KC0e0004*r31 + KC0e0104*r32 + KC0e0204*r33) + r23*(KC0e0005*r31 + KC0e0105*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0003*r31 + KC0e0103*r32 + KC0e0203*r33) + r32*(KC0e0004*r31 + KC0e0104*r32 + KC0e0204*r33)
+            KC0v[k] += r31*(KC0e0003*r31 + KC0e0103*r32 + KC0e0203*r33) + r32*(KC0e0004*r31 + KC0e0104*r32 + KC0e0204*r33) + r33*(KC0e0005*r31 + KC0e0105*r32)
             k += 1
             KC0v[k] += KC0e0208*r13*r33 + r11*(KC0e0006*r31 + KC0e0106*r32) + r12*(KC0e0007*r31 + KC0e0107*r32)
             k += 1
@@ -3206,11 +3578,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0208*r33**2 + r31*(KC0e0006*r31 + KC0e0106*r32) + r32*(KC0e0007*r31 + KC0e0107*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0009*r31 + KC0e0109*r32 + KC0e0209*r33) + r12*(KC0e0010*r31 + KC0e0110*r32 + KC0e0210*r33)
+            KC0v[k] += r11*(KC0e0009*r31 + KC0e0109*r32 + KC0e0209*r33) + r12*(KC0e0010*r31 + KC0e0110*r32 + KC0e0210*r33) + r13*(KC0e0011*r31 + KC0e0111*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0009*r31 + KC0e0109*r32 + KC0e0209*r33) + r22*(KC0e0010*r31 + KC0e0110*r32 + KC0e0210*r33)
+            KC0v[k] += r21*(KC0e0009*r31 + KC0e0109*r32 + KC0e0209*r33) + r22*(KC0e0010*r31 + KC0e0110*r32 + KC0e0210*r33) + r23*(KC0e0011*r31 + KC0e0111*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0009*r31 + KC0e0109*r32 + KC0e0209*r33) + r32*(KC0e0010*r31 + KC0e0110*r32 + KC0e0210*r33)
+            KC0v[k] += r31*(KC0e0009*r31 + KC0e0109*r32 + KC0e0209*r33) + r32*(KC0e0010*r31 + KC0e0110*r32 + KC0e0210*r33) + r33*(KC0e0011*r31 + KC0e0111*r32)
             k += 1
             KC0v[k] += KC0e0214*r13*r33 + r11*(KC0e0012*r31 + KC0e0112*r32) + r12*(KC0e0013*r31 + KC0e0113*r32)
             k += 1
@@ -3218,11 +3590,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0214*r33**2 + r31*(KC0e0012*r31 + KC0e0112*r32) + r32*(KC0e0013*r31 + KC0e0113*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0015*r31 + KC0e0115*r32 + KC0e0215*r33) + r12*(KC0e0016*r31 + KC0e0116*r32 + KC0e0216*r33)
+            KC0v[k] += r11*(KC0e0015*r31 + KC0e0115*r32 + KC0e0215*r33) + r12*(KC0e0016*r31 + KC0e0116*r32 + KC0e0216*r33) + r13*(KC0e0017*r31 + KC0e0117*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0015*r31 + KC0e0115*r32 + KC0e0215*r33) + r22*(KC0e0016*r31 + KC0e0116*r32 + KC0e0216*r33)
+            KC0v[k] += r21*(KC0e0015*r31 + KC0e0115*r32 + KC0e0215*r33) + r22*(KC0e0016*r31 + KC0e0116*r32 + KC0e0216*r33) + r23*(KC0e0017*r31 + KC0e0117*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0015*r31 + KC0e0115*r32 + KC0e0215*r33) + r32*(KC0e0016*r31 + KC0e0116*r32 + KC0e0216*r33)
+            KC0v[k] += r31*(KC0e0015*r31 + KC0e0115*r32 + KC0e0215*r33) + r32*(KC0e0016*r31 + KC0e0116*r32 + KC0e0216*r33) + r33*(KC0e0017*r31 + KC0e0117*r32)
             k += 1
             KC0v[k] += KC0e0220*r13*r33 + r11*(KC0e0018*r31 + KC0e0118*r32) + r12*(KC0e0019*r31 + KC0e0119*r32)
             k += 1
@@ -3230,17 +3602,17 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0220*r33**2 + r31*(KC0e0018*r31 + KC0e0118*r32) + r32*(KC0e0019*r31 + KC0e0119*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0021*r31 + KC0e0121*r32 + KC0e0221*r33) + r12*(KC0e0022*r31 + KC0e0122*r32 + KC0e0222*r33)
+            KC0v[k] += r11*(KC0e0021*r31 + KC0e0121*r32 + KC0e0221*r33) + r12*(KC0e0022*r31 + KC0e0122*r32 + KC0e0222*r33) + r13*(KC0e0023*r31 + KC0e0123*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0021*r31 + KC0e0121*r32 + KC0e0221*r33) + r22*(KC0e0022*r31 + KC0e0122*r32 + KC0e0222*r33)
+            KC0v[k] += r21*(KC0e0021*r31 + KC0e0121*r32 + KC0e0221*r33) + r22*(KC0e0022*r31 + KC0e0122*r32 + KC0e0222*r33) + r23*(KC0e0023*r31 + KC0e0123*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0021*r31 + KC0e0121*r32 + KC0e0221*r33) + r32*(KC0e0022*r31 + KC0e0122*r32 + KC0e0222*r33)
+            KC0v[k] += r31*(KC0e0021*r31 + KC0e0121*r32 + KC0e0221*r33) + r32*(KC0e0022*r31 + KC0e0122*r32 + KC0e0222*r33) + r33*(KC0e0023*r31 + KC0e0123*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0003*r11 + KC0e0004*r12) + r12*(KC0e0103*r11 + KC0e0104*r12) + r13*(KC0e0203*r11 + KC0e0204*r12)
+            KC0v[k] += r11*(KC0e0003*r11 + KC0e0004*r12 + KC0e0005*r13) + r12*(KC0e0103*r11 + KC0e0104*r12 + KC0e0105*r13) + r13*(KC0e0203*r11 + KC0e0204*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0003*r11 + KC0e0004*r12) + r22*(KC0e0103*r11 + KC0e0104*r12) + r23*(KC0e0203*r11 + KC0e0204*r12)
+            KC0v[k] += r21*(KC0e0003*r11 + KC0e0004*r12 + KC0e0005*r13) + r22*(KC0e0103*r11 + KC0e0104*r12 + KC0e0105*r13) + r23*(KC0e0203*r11 + KC0e0204*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0003*r11 + KC0e0004*r12) + r32*(KC0e0103*r11 + KC0e0104*r12) + r33*(KC0e0203*r11 + KC0e0204*r12)
+            KC0v[k] += r31*(KC0e0003*r11 + KC0e0004*r12 + KC0e0005*r13) + r32*(KC0e0103*r11 + KC0e0104*r12 + KC0e0105*r13) + r33*(KC0e0203*r11 + KC0e0204*r12)
             k += 1
             KC0v[k] += KC0e0505*r13**2 + r11*(KC0e0303*r11 + KC0e0304*r12) + r12*(KC0e0304*r11 + KC0e0404*r12)
             k += 1
@@ -3248,47 +3620,47 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0505*r13*r33 + r31*(KC0e0303*r11 + KC0e0304*r12) + r32*(KC0e0304*r11 + KC0e0404*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0306*r11 + KC0e0406*r12) + r12*(KC0e0307*r11 + KC0e0407*r12) + r13*(KC0e0308*r11 + KC0e0408*r12)
+            KC0v[k] += r11*(KC0e0306*r11 + KC0e0406*r12 + KC0e0506*r13) + r12*(KC0e0307*r11 + KC0e0407*r12 + KC0e0507*r13) + r13*(KC0e0308*r11 + KC0e0408*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0306*r11 + KC0e0406*r12) + r22*(KC0e0307*r11 + KC0e0407*r12) + r23*(KC0e0308*r11 + KC0e0408*r12)
+            KC0v[k] += r21*(KC0e0306*r11 + KC0e0406*r12 + KC0e0506*r13) + r22*(KC0e0307*r11 + KC0e0407*r12 + KC0e0507*r13) + r23*(KC0e0308*r11 + KC0e0408*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0306*r11 + KC0e0406*r12) + r32*(KC0e0307*r11 + KC0e0407*r12) + r33*(KC0e0308*r11 + KC0e0408*r12)
+            KC0v[k] += r31*(KC0e0306*r11 + KC0e0406*r12 + KC0e0506*r13) + r32*(KC0e0307*r11 + KC0e0407*r12 + KC0e0507*r13) + r33*(KC0e0308*r11 + KC0e0408*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0309*r11 + KC0e0409*r12) + r12*(KC0e0310*r11 + KC0e0410*r12)
+            KC0v[k] += KC0e0511*r13**2 + r11*(KC0e0309*r11 + KC0e0409*r12) + r12*(KC0e0310*r11 + KC0e0410*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0309*r11 + KC0e0409*r12) + r22*(KC0e0310*r11 + KC0e0410*r12)
+            KC0v[k] += KC0e0511*r13*r23 + r21*(KC0e0309*r11 + KC0e0409*r12) + r22*(KC0e0310*r11 + KC0e0410*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0309*r11 + KC0e0409*r12) + r32*(KC0e0310*r11 + KC0e0410*r12)
+            KC0v[k] += KC0e0511*r13*r33 + r31*(KC0e0309*r11 + KC0e0409*r12) + r32*(KC0e0310*r11 + KC0e0410*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0312*r11 + KC0e0412*r12) + r12*(KC0e0313*r11 + KC0e0413*r12) + r13*(KC0e0314*r11 + KC0e0414*r12)
+            KC0v[k] += r11*(KC0e0312*r11 + KC0e0412*r12 + KC0e0512*r13) + r12*(KC0e0313*r11 + KC0e0413*r12 + KC0e0513*r13) + r13*(KC0e0314*r11 + KC0e0414*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0312*r11 + KC0e0412*r12) + r22*(KC0e0313*r11 + KC0e0413*r12) + r23*(KC0e0314*r11 + KC0e0414*r12)
+            KC0v[k] += r21*(KC0e0312*r11 + KC0e0412*r12 + KC0e0512*r13) + r22*(KC0e0313*r11 + KC0e0413*r12 + KC0e0513*r13) + r23*(KC0e0314*r11 + KC0e0414*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0312*r11 + KC0e0412*r12) + r32*(KC0e0313*r11 + KC0e0413*r12) + r33*(KC0e0314*r11 + KC0e0414*r12)
+            KC0v[k] += r31*(KC0e0312*r11 + KC0e0412*r12 + KC0e0512*r13) + r32*(KC0e0313*r11 + KC0e0413*r12 + KC0e0513*r13) + r33*(KC0e0314*r11 + KC0e0414*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0315*r11 + KC0e0415*r12) + r12*(KC0e0316*r11 + KC0e0416*r12)
+            KC0v[k] += KC0e0517*r13**2 + r11*(KC0e0315*r11 + KC0e0415*r12) + r12*(KC0e0316*r11 + KC0e0416*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0315*r11 + KC0e0415*r12) + r22*(KC0e0316*r11 + KC0e0416*r12)
+            KC0v[k] += KC0e0517*r13*r23 + r21*(KC0e0315*r11 + KC0e0415*r12) + r22*(KC0e0316*r11 + KC0e0416*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0315*r11 + KC0e0415*r12) + r32*(KC0e0316*r11 + KC0e0416*r12)
+            KC0v[k] += KC0e0517*r13*r33 + r31*(KC0e0315*r11 + KC0e0415*r12) + r32*(KC0e0316*r11 + KC0e0416*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0318*r11 + KC0e0418*r12) + r12*(KC0e0319*r11 + KC0e0419*r12) + r13*(KC0e0320*r11 + KC0e0420*r12)
+            KC0v[k] += r11*(KC0e0318*r11 + KC0e0418*r12 + KC0e0518*r13) + r12*(KC0e0319*r11 + KC0e0419*r12 + KC0e0519*r13) + r13*(KC0e0320*r11 + KC0e0420*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0318*r11 + KC0e0418*r12) + r22*(KC0e0319*r11 + KC0e0419*r12) + r23*(KC0e0320*r11 + KC0e0420*r12)
+            KC0v[k] += r21*(KC0e0318*r11 + KC0e0418*r12 + KC0e0518*r13) + r22*(KC0e0319*r11 + KC0e0419*r12 + KC0e0519*r13) + r23*(KC0e0320*r11 + KC0e0420*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0318*r11 + KC0e0418*r12) + r32*(KC0e0319*r11 + KC0e0419*r12) + r33*(KC0e0320*r11 + KC0e0420*r12)
+            KC0v[k] += r31*(KC0e0318*r11 + KC0e0418*r12 + KC0e0518*r13) + r32*(KC0e0319*r11 + KC0e0419*r12 + KC0e0519*r13) + r33*(KC0e0320*r11 + KC0e0420*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0321*r11 + KC0e0421*r12) + r12*(KC0e0322*r11 + KC0e0422*r12)
+            KC0v[k] += KC0e0523*r13**2 + r11*(KC0e0321*r11 + KC0e0421*r12) + r12*(KC0e0322*r11 + KC0e0422*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0321*r11 + KC0e0421*r12) + r22*(KC0e0322*r11 + KC0e0422*r12)
+            KC0v[k] += KC0e0523*r13*r23 + r21*(KC0e0321*r11 + KC0e0421*r12) + r22*(KC0e0322*r11 + KC0e0422*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0321*r11 + KC0e0421*r12) + r32*(KC0e0322*r11 + KC0e0422*r12)
+            KC0v[k] += KC0e0523*r13*r33 + r31*(KC0e0321*r11 + KC0e0421*r12) + r32*(KC0e0322*r11 + KC0e0422*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0003*r21 + KC0e0004*r22) + r12*(KC0e0103*r21 + KC0e0104*r22) + r13*(KC0e0203*r21 + KC0e0204*r22)
+            KC0v[k] += r11*(KC0e0003*r21 + KC0e0004*r22 + KC0e0005*r23) + r12*(KC0e0103*r21 + KC0e0104*r22 + KC0e0105*r23) + r13*(KC0e0203*r21 + KC0e0204*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0003*r21 + KC0e0004*r22) + r22*(KC0e0103*r21 + KC0e0104*r22) + r23*(KC0e0203*r21 + KC0e0204*r22)
+            KC0v[k] += r21*(KC0e0003*r21 + KC0e0004*r22 + KC0e0005*r23) + r22*(KC0e0103*r21 + KC0e0104*r22 + KC0e0105*r23) + r23*(KC0e0203*r21 + KC0e0204*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0003*r21 + KC0e0004*r22) + r32*(KC0e0103*r21 + KC0e0104*r22) + r33*(KC0e0203*r21 + KC0e0204*r22)
+            KC0v[k] += r31*(KC0e0003*r21 + KC0e0004*r22 + KC0e0005*r23) + r32*(KC0e0103*r21 + KC0e0104*r22 + KC0e0105*r23) + r33*(KC0e0203*r21 + KC0e0204*r22)
             k += 1
             KC0v[k] += KC0e0505*r13*r23 + r11*(KC0e0303*r21 + KC0e0304*r22) + r12*(KC0e0304*r21 + KC0e0404*r22)
             k += 1
@@ -3296,47 +3668,47 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0505*r23*r33 + r31*(KC0e0303*r21 + KC0e0304*r22) + r32*(KC0e0304*r21 + KC0e0404*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0306*r21 + KC0e0406*r22) + r12*(KC0e0307*r21 + KC0e0407*r22) + r13*(KC0e0308*r21 + KC0e0408*r22)
+            KC0v[k] += r11*(KC0e0306*r21 + KC0e0406*r22 + KC0e0506*r23) + r12*(KC0e0307*r21 + KC0e0407*r22 + KC0e0507*r23) + r13*(KC0e0308*r21 + KC0e0408*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0306*r21 + KC0e0406*r22) + r22*(KC0e0307*r21 + KC0e0407*r22) + r23*(KC0e0308*r21 + KC0e0408*r22)
+            KC0v[k] += r21*(KC0e0306*r21 + KC0e0406*r22 + KC0e0506*r23) + r22*(KC0e0307*r21 + KC0e0407*r22 + KC0e0507*r23) + r23*(KC0e0308*r21 + KC0e0408*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0306*r21 + KC0e0406*r22) + r32*(KC0e0307*r21 + KC0e0407*r22) + r33*(KC0e0308*r21 + KC0e0408*r22)
+            KC0v[k] += r31*(KC0e0306*r21 + KC0e0406*r22 + KC0e0506*r23) + r32*(KC0e0307*r21 + KC0e0407*r22 + KC0e0507*r23) + r33*(KC0e0308*r21 + KC0e0408*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0309*r21 + KC0e0409*r22) + r12*(KC0e0310*r21 + KC0e0410*r22)
+            KC0v[k] += KC0e0511*r13*r23 + r11*(KC0e0309*r21 + KC0e0409*r22) + r12*(KC0e0310*r21 + KC0e0410*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0309*r21 + KC0e0409*r22) + r22*(KC0e0310*r21 + KC0e0410*r22)
+            KC0v[k] += KC0e0511*r23**2 + r21*(KC0e0309*r21 + KC0e0409*r22) + r22*(KC0e0310*r21 + KC0e0410*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0309*r21 + KC0e0409*r22) + r32*(KC0e0310*r21 + KC0e0410*r22)
+            KC0v[k] += KC0e0511*r23*r33 + r31*(KC0e0309*r21 + KC0e0409*r22) + r32*(KC0e0310*r21 + KC0e0410*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0312*r21 + KC0e0412*r22) + r12*(KC0e0313*r21 + KC0e0413*r22) + r13*(KC0e0314*r21 + KC0e0414*r22)
+            KC0v[k] += r11*(KC0e0312*r21 + KC0e0412*r22 + KC0e0512*r23) + r12*(KC0e0313*r21 + KC0e0413*r22 + KC0e0513*r23) + r13*(KC0e0314*r21 + KC0e0414*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0312*r21 + KC0e0412*r22) + r22*(KC0e0313*r21 + KC0e0413*r22) + r23*(KC0e0314*r21 + KC0e0414*r22)
+            KC0v[k] += r21*(KC0e0312*r21 + KC0e0412*r22 + KC0e0512*r23) + r22*(KC0e0313*r21 + KC0e0413*r22 + KC0e0513*r23) + r23*(KC0e0314*r21 + KC0e0414*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0312*r21 + KC0e0412*r22) + r32*(KC0e0313*r21 + KC0e0413*r22) + r33*(KC0e0314*r21 + KC0e0414*r22)
+            KC0v[k] += r31*(KC0e0312*r21 + KC0e0412*r22 + KC0e0512*r23) + r32*(KC0e0313*r21 + KC0e0413*r22 + KC0e0513*r23) + r33*(KC0e0314*r21 + KC0e0414*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0315*r21 + KC0e0415*r22) + r12*(KC0e0316*r21 + KC0e0416*r22)
+            KC0v[k] += KC0e0517*r13*r23 + r11*(KC0e0315*r21 + KC0e0415*r22) + r12*(KC0e0316*r21 + KC0e0416*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0315*r21 + KC0e0415*r22) + r22*(KC0e0316*r21 + KC0e0416*r22)
+            KC0v[k] += KC0e0517*r23**2 + r21*(KC0e0315*r21 + KC0e0415*r22) + r22*(KC0e0316*r21 + KC0e0416*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0315*r21 + KC0e0415*r22) + r32*(KC0e0316*r21 + KC0e0416*r22)
+            KC0v[k] += KC0e0517*r23*r33 + r31*(KC0e0315*r21 + KC0e0415*r22) + r32*(KC0e0316*r21 + KC0e0416*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0318*r21 + KC0e0418*r22) + r12*(KC0e0319*r21 + KC0e0419*r22) + r13*(KC0e0320*r21 + KC0e0420*r22)
+            KC0v[k] += r11*(KC0e0318*r21 + KC0e0418*r22 + KC0e0518*r23) + r12*(KC0e0319*r21 + KC0e0419*r22 + KC0e0519*r23) + r13*(KC0e0320*r21 + KC0e0420*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0318*r21 + KC0e0418*r22) + r22*(KC0e0319*r21 + KC0e0419*r22) + r23*(KC0e0320*r21 + KC0e0420*r22)
+            KC0v[k] += r21*(KC0e0318*r21 + KC0e0418*r22 + KC0e0518*r23) + r22*(KC0e0319*r21 + KC0e0419*r22 + KC0e0519*r23) + r23*(KC0e0320*r21 + KC0e0420*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0318*r21 + KC0e0418*r22) + r32*(KC0e0319*r21 + KC0e0419*r22) + r33*(KC0e0320*r21 + KC0e0420*r22)
+            KC0v[k] += r31*(KC0e0318*r21 + KC0e0418*r22 + KC0e0518*r23) + r32*(KC0e0319*r21 + KC0e0419*r22 + KC0e0519*r23) + r33*(KC0e0320*r21 + KC0e0420*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0321*r21 + KC0e0421*r22) + r12*(KC0e0322*r21 + KC0e0422*r22)
+            KC0v[k] += KC0e0523*r13*r23 + r11*(KC0e0321*r21 + KC0e0421*r22) + r12*(KC0e0322*r21 + KC0e0422*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0321*r21 + KC0e0421*r22) + r22*(KC0e0322*r21 + KC0e0422*r22)
+            KC0v[k] += KC0e0523*r23**2 + r21*(KC0e0321*r21 + KC0e0421*r22) + r22*(KC0e0322*r21 + KC0e0422*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0321*r21 + KC0e0421*r22) + r32*(KC0e0322*r21 + KC0e0422*r22)
+            KC0v[k] += KC0e0523*r23*r33 + r31*(KC0e0321*r21 + KC0e0421*r22) + r32*(KC0e0322*r21 + KC0e0422*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0003*r31 + KC0e0004*r32) + r12*(KC0e0103*r31 + KC0e0104*r32) + r13*(KC0e0203*r31 + KC0e0204*r32)
+            KC0v[k] += r11*(KC0e0003*r31 + KC0e0004*r32 + KC0e0005*r33) + r12*(KC0e0103*r31 + KC0e0104*r32 + KC0e0105*r33) + r13*(KC0e0203*r31 + KC0e0204*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0003*r31 + KC0e0004*r32) + r22*(KC0e0103*r31 + KC0e0104*r32) + r23*(KC0e0203*r31 + KC0e0204*r32)
+            KC0v[k] += r21*(KC0e0003*r31 + KC0e0004*r32 + KC0e0005*r33) + r22*(KC0e0103*r31 + KC0e0104*r32 + KC0e0105*r33) + r23*(KC0e0203*r31 + KC0e0204*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0003*r31 + KC0e0004*r32) + r32*(KC0e0103*r31 + KC0e0104*r32) + r33*(KC0e0203*r31 + KC0e0204*r32)
+            KC0v[k] += r31*(KC0e0003*r31 + KC0e0004*r32 + KC0e0005*r33) + r32*(KC0e0103*r31 + KC0e0104*r32 + KC0e0105*r33) + r33*(KC0e0203*r31 + KC0e0204*r32)
             k += 1
             KC0v[k] += KC0e0505*r13*r33 + r11*(KC0e0303*r31 + KC0e0304*r32) + r12*(KC0e0304*r31 + KC0e0404*r32)
             k += 1
@@ -3344,41 +3716,41 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0505*r33**2 + r31*(KC0e0303*r31 + KC0e0304*r32) + r32*(KC0e0304*r31 + KC0e0404*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0306*r31 + KC0e0406*r32) + r12*(KC0e0307*r31 + KC0e0407*r32) + r13*(KC0e0308*r31 + KC0e0408*r32)
+            KC0v[k] += r11*(KC0e0306*r31 + KC0e0406*r32 + KC0e0506*r33) + r12*(KC0e0307*r31 + KC0e0407*r32 + KC0e0507*r33) + r13*(KC0e0308*r31 + KC0e0408*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0306*r31 + KC0e0406*r32) + r22*(KC0e0307*r31 + KC0e0407*r32) + r23*(KC0e0308*r31 + KC0e0408*r32)
+            KC0v[k] += r21*(KC0e0306*r31 + KC0e0406*r32 + KC0e0506*r33) + r22*(KC0e0307*r31 + KC0e0407*r32 + KC0e0507*r33) + r23*(KC0e0308*r31 + KC0e0408*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0306*r31 + KC0e0406*r32) + r32*(KC0e0307*r31 + KC0e0407*r32) + r33*(KC0e0308*r31 + KC0e0408*r32)
+            KC0v[k] += r31*(KC0e0306*r31 + KC0e0406*r32 + KC0e0506*r33) + r32*(KC0e0307*r31 + KC0e0407*r32 + KC0e0507*r33) + r33*(KC0e0308*r31 + KC0e0408*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0309*r31 + KC0e0409*r32) + r12*(KC0e0310*r31 + KC0e0410*r32)
+            KC0v[k] += KC0e0511*r13*r33 + r11*(KC0e0309*r31 + KC0e0409*r32) + r12*(KC0e0310*r31 + KC0e0410*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0309*r31 + KC0e0409*r32) + r22*(KC0e0310*r31 + KC0e0410*r32)
+            KC0v[k] += KC0e0511*r23*r33 + r21*(KC0e0309*r31 + KC0e0409*r32) + r22*(KC0e0310*r31 + KC0e0410*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0309*r31 + KC0e0409*r32) + r32*(KC0e0310*r31 + KC0e0410*r32)
+            KC0v[k] += KC0e0511*r33**2 + r31*(KC0e0309*r31 + KC0e0409*r32) + r32*(KC0e0310*r31 + KC0e0410*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0312*r31 + KC0e0412*r32) + r12*(KC0e0313*r31 + KC0e0413*r32) + r13*(KC0e0314*r31 + KC0e0414*r32)
+            KC0v[k] += r11*(KC0e0312*r31 + KC0e0412*r32 + KC0e0512*r33) + r12*(KC0e0313*r31 + KC0e0413*r32 + KC0e0513*r33) + r13*(KC0e0314*r31 + KC0e0414*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0312*r31 + KC0e0412*r32) + r22*(KC0e0313*r31 + KC0e0413*r32) + r23*(KC0e0314*r31 + KC0e0414*r32)
+            KC0v[k] += r21*(KC0e0312*r31 + KC0e0412*r32 + KC0e0512*r33) + r22*(KC0e0313*r31 + KC0e0413*r32 + KC0e0513*r33) + r23*(KC0e0314*r31 + KC0e0414*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0312*r31 + KC0e0412*r32) + r32*(KC0e0313*r31 + KC0e0413*r32) + r33*(KC0e0314*r31 + KC0e0414*r32)
+            KC0v[k] += r31*(KC0e0312*r31 + KC0e0412*r32 + KC0e0512*r33) + r32*(KC0e0313*r31 + KC0e0413*r32 + KC0e0513*r33) + r33*(KC0e0314*r31 + KC0e0414*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0315*r31 + KC0e0415*r32) + r12*(KC0e0316*r31 + KC0e0416*r32)
+            KC0v[k] += KC0e0517*r13*r33 + r11*(KC0e0315*r31 + KC0e0415*r32) + r12*(KC0e0316*r31 + KC0e0416*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0315*r31 + KC0e0415*r32) + r22*(KC0e0316*r31 + KC0e0416*r32)
+            KC0v[k] += KC0e0517*r23*r33 + r21*(KC0e0315*r31 + KC0e0415*r32) + r22*(KC0e0316*r31 + KC0e0416*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0315*r31 + KC0e0415*r32) + r32*(KC0e0316*r31 + KC0e0416*r32)
+            KC0v[k] += KC0e0517*r33**2 + r31*(KC0e0315*r31 + KC0e0415*r32) + r32*(KC0e0316*r31 + KC0e0416*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0318*r31 + KC0e0418*r32) + r12*(KC0e0319*r31 + KC0e0419*r32) + r13*(KC0e0320*r31 + KC0e0420*r32)
+            KC0v[k] += r11*(KC0e0318*r31 + KC0e0418*r32 + KC0e0518*r33) + r12*(KC0e0319*r31 + KC0e0419*r32 + KC0e0519*r33) + r13*(KC0e0320*r31 + KC0e0420*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0318*r31 + KC0e0418*r32) + r22*(KC0e0319*r31 + KC0e0419*r32) + r23*(KC0e0320*r31 + KC0e0420*r32)
+            KC0v[k] += r21*(KC0e0318*r31 + KC0e0418*r32 + KC0e0518*r33) + r22*(KC0e0319*r31 + KC0e0419*r32 + KC0e0519*r33) + r23*(KC0e0320*r31 + KC0e0420*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0318*r31 + KC0e0418*r32) + r32*(KC0e0319*r31 + KC0e0419*r32) + r33*(KC0e0320*r31 + KC0e0420*r32)
+            KC0v[k] += r31*(KC0e0318*r31 + KC0e0418*r32 + KC0e0518*r33) + r32*(KC0e0319*r31 + KC0e0419*r32 + KC0e0519*r33) + r33*(KC0e0320*r31 + KC0e0420*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0321*r31 + KC0e0421*r32) + r12*(KC0e0322*r31 + KC0e0422*r32)
+            KC0v[k] += KC0e0523*r13*r33 + r11*(KC0e0321*r31 + KC0e0421*r32) + r12*(KC0e0322*r31 + KC0e0422*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0321*r31 + KC0e0421*r32) + r22*(KC0e0322*r31 + KC0e0422*r32)
+            KC0v[k] += KC0e0523*r23*r33 + r21*(KC0e0321*r31 + KC0e0421*r32) + r22*(KC0e0322*r31 + KC0e0422*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0321*r31 + KC0e0421*r32) + r32*(KC0e0322*r31 + KC0e0422*r32)
+            KC0v[k] += KC0e0523*r33**2 + r31*(KC0e0321*r31 + KC0e0421*r32) + r32*(KC0e0322*r31 + KC0e0422*r32)
             k += 1
             KC0v[k] += KC0e0208*r13**2 + r11*(KC0e0006*r11 + KC0e0007*r12) + r12*(KC0e0106*r11 + KC0e0107*r12)
             k += 1
@@ -3386,11 +3758,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0208*r13*r33 + r31*(KC0e0006*r11 + KC0e0007*r12) + r32*(KC0e0106*r11 + KC0e0107*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0306*r11 + KC0e0307*r12 + KC0e0308*r13) + r12*(KC0e0406*r11 + KC0e0407*r12 + KC0e0408*r13)
+            KC0v[k] += r11*(KC0e0306*r11 + KC0e0307*r12 + KC0e0308*r13) + r12*(KC0e0406*r11 + KC0e0407*r12 + KC0e0408*r13) + r13*(KC0e0506*r11 + KC0e0507*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0306*r11 + KC0e0307*r12 + KC0e0308*r13) + r22*(KC0e0406*r11 + KC0e0407*r12 + KC0e0408*r13)
+            KC0v[k] += r21*(KC0e0306*r11 + KC0e0307*r12 + KC0e0308*r13) + r22*(KC0e0406*r11 + KC0e0407*r12 + KC0e0408*r13) + r23*(KC0e0506*r11 + KC0e0507*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0306*r11 + KC0e0307*r12 + KC0e0308*r13) + r32*(KC0e0406*r11 + KC0e0407*r12 + KC0e0408*r13)
+            KC0v[k] += r31*(KC0e0306*r11 + KC0e0307*r12 + KC0e0308*r13) + r32*(KC0e0406*r11 + KC0e0407*r12 + KC0e0408*r13) + r33*(KC0e0506*r11 + KC0e0507*r12)
             k += 1
             KC0v[k] += KC0e0808*r13**2 + r11*(KC0e0606*r11 + KC0e0607*r12) + r12*(KC0e0607*r11 + KC0e0707*r12)
             k += 1
@@ -3398,11 +3770,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0808*r13*r33 + r31*(KC0e0606*r11 + KC0e0607*r12) + r32*(KC0e0607*r11 + KC0e0707*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0609*r11 + KC0e0709*r12 + KC0e0809*r13) + r12*(KC0e0610*r11 + KC0e0710*r12 + KC0e0810*r13)
+            KC0v[k] += r11*(KC0e0609*r11 + KC0e0709*r12 + KC0e0809*r13) + r12*(KC0e0610*r11 + KC0e0710*r12 + KC0e0810*r13) + r13*(KC0e0611*r11 + KC0e0711*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0609*r11 + KC0e0709*r12 + KC0e0809*r13) + r22*(KC0e0610*r11 + KC0e0710*r12 + KC0e0810*r13)
+            KC0v[k] += r21*(KC0e0609*r11 + KC0e0709*r12 + KC0e0809*r13) + r22*(KC0e0610*r11 + KC0e0710*r12 + KC0e0810*r13) + r23*(KC0e0611*r11 + KC0e0711*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0609*r11 + KC0e0709*r12 + KC0e0809*r13) + r32*(KC0e0610*r11 + KC0e0710*r12 + KC0e0810*r13)
+            KC0v[k] += r31*(KC0e0609*r11 + KC0e0709*r12 + KC0e0809*r13) + r32*(KC0e0610*r11 + KC0e0710*r12 + KC0e0810*r13) + r33*(KC0e0611*r11 + KC0e0711*r12)
             k += 1
             KC0v[k] += KC0e0814*r13**2 + r11*(KC0e0612*r11 + KC0e0712*r12) + r12*(KC0e0613*r11 + KC0e0713*r12)
             k += 1
@@ -3410,11 +3782,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0814*r13*r33 + r31*(KC0e0612*r11 + KC0e0712*r12) + r32*(KC0e0613*r11 + KC0e0713*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0615*r11 + KC0e0715*r12 + KC0e0815*r13) + r12*(KC0e0616*r11 + KC0e0716*r12 + KC0e0816*r13)
+            KC0v[k] += r11*(KC0e0615*r11 + KC0e0715*r12 + KC0e0815*r13) + r12*(KC0e0616*r11 + KC0e0716*r12 + KC0e0816*r13) + r13*(KC0e0617*r11 + KC0e0717*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0615*r11 + KC0e0715*r12 + KC0e0815*r13) + r22*(KC0e0616*r11 + KC0e0716*r12 + KC0e0816*r13)
+            KC0v[k] += r21*(KC0e0615*r11 + KC0e0715*r12 + KC0e0815*r13) + r22*(KC0e0616*r11 + KC0e0716*r12 + KC0e0816*r13) + r23*(KC0e0617*r11 + KC0e0717*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0615*r11 + KC0e0715*r12 + KC0e0815*r13) + r32*(KC0e0616*r11 + KC0e0716*r12 + KC0e0816*r13)
+            KC0v[k] += r31*(KC0e0615*r11 + KC0e0715*r12 + KC0e0815*r13) + r32*(KC0e0616*r11 + KC0e0716*r12 + KC0e0816*r13) + r33*(KC0e0617*r11 + KC0e0717*r12)
             k += 1
             KC0v[k] += KC0e0820*r13**2 + r11*(KC0e0618*r11 + KC0e0718*r12) + r12*(KC0e0619*r11 + KC0e0719*r12)
             k += 1
@@ -3422,11 +3794,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0820*r13*r33 + r31*(KC0e0618*r11 + KC0e0718*r12) + r32*(KC0e0619*r11 + KC0e0719*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0621*r11 + KC0e0721*r12 + KC0e0821*r13) + r12*(KC0e0622*r11 + KC0e0722*r12 + KC0e0822*r13)
+            KC0v[k] += r11*(KC0e0621*r11 + KC0e0721*r12 + KC0e0821*r13) + r12*(KC0e0622*r11 + KC0e0722*r12 + KC0e0822*r13) + r13*(KC0e0623*r11 + KC0e0723*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0621*r11 + KC0e0721*r12 + KC0e0821*r13) + r22*(KC0e0622*r11 + KC0e0722*r12 + KC0e0822*r13)
+            KC0v[k] += r21*(KC0e0621*r11 + KC0e0721*r12 + KC0e0821*r13) + r22*(KC0e0622*r11 + KC0e0722*r12 + KC0e0822*r13) + r23*(KC0e0623*r11 + KC0e0723*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0621*r11 + KC0e0721*r12 + KC0e0821*r13) + r32*(KC0e0622*r11 + KC0e0722*r12 + KC0e0822*r13)
+            KC0v[k] += r31*(KC0e0621*r11 + KC0e0721*r12 + KC0e0821*r13) + r32*(KC0e0622*r11 + KC0e0722*r12 + KC0e0822*r13) + r33*(KC0e0623*r11 + KC0e0723*r12)
             k += 1
             KC0v[k] += KC0e0208*r13*r23 + r11*(KC0e0006*r21 + KC0e0007*r22) + r12*(KC0e0106*r21 + KC0e0107*r22)
             k += 1
@@ -3434,11 +3806,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0208*r23*r33 + r31*(KC0e0006*r21 + KC0e0007*r22) + r32*(KC0e0106*r21 + KC0e0107*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0306*r21 + KC0e0307*r22 + KC0e0308*r23) + r12*(KC0e0406*r21 + KC0e0407*r22 + KC0e0408*r23)
+            KC0v[k] += r11*(KC0e0306*r21 + KC0e0307*r22 + KC0e0308*r23) + r12*(KC0e0406*r21 + KC0e0407*r22 + KC0e0408*r23) + r13*(KC0e0506*r21 + KC0e0507*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0306*r21 + KC0e0307*r22 + KC0e0308*r23) + r22*(KC0e0406*r21 + KC0e0407*r22 + KC0e0408*r23)
+            KC0v[k] += r21*(KC0e0306*r21 + KC0e0307*r22 + KC0e0308*r23) + r22*(KC0e0406*r21 + KC0e0407*r22 + KC0e0408*r23) + r23*(KC0e0506*r21 + KC0e0507*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0306*r21 + KC0e0307*r22 + KC0e0308*r23) + r32*(KC0e0406*r21 + KC0e0407*r22 + KC0e0408*r23)
+            KC0v[k] += r31*(KC0e0306*r21 + KC0e0307*r22 + KC0e0308*r23) + r32*(KC0e0406*r21 + KC0e0407*r22 + KC0e0408*r23) + r33*(KC0e0506*r21 + KC0e0507*r22)
             k += 1
             KC0v[k] += KC0e0808*r13*r23 + r11*(KC0e0606*r21 + KC0e0607*r22) + r12*(KC0e0607*r21 + KC0e0707*r22)
             k += 1
@@ -3446,11 +3818,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0808*r23*r33 + r31*(KC0e0606*r21 + KC0e0607*r22) + r32*(KC0e0607*r21 + KC0e0707*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0609*r21 + KC0e0709*r22 + KC0e0809*r23) + r12*(KC0e0610*r21 + KC0e0710*r22 + KC0e0810*r23)
+            KC0v[k] += r11*(KC0e0609*r21 + KC0e0709*r22 + KC0e0809*r23) + r12*(KC0e0610*r21 + KC0e0710*r22 + KC0e0810*r23) + r13*(KC0e0611*r21 + KC0e0711*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0609*r21 + KC0e0709*r22 + KC0e0809*r23) + r22*(KC0e0610*r21 + KC0e0710*r22 + KC0e0810*r23)
+            KC0v[k] += r21*(KC0e0609*r21 + KC0e0709*r22 + KC0e0809*r23) + r22*(KC0e0610*r21 + KC0e0710*r22 + KC0e0810*r23) + r23*(KC0e0611*r21 + KC0e0711*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0609*r21 + KC0e0709*r22 + KC0e0809*r23) + r32*(KC0e0610*r21 + KC0e0710*r22 + KC0e0810*r23)
+            KC0v[k] += r31*(KC0e0609*r21 + KC0e0709*r22 + KC0e0809*r23) + r32*(KC0e0610*r21 + KC0e0710*r22 + KC0e0810*r23) + r33*(KC0e0611*r21 + KC0e0711*r22)
             k += 1
             KC0v[k] += KC0e0814*r13*r23 + r11*(KC0e0612*r21 + KC0e0712*r22) + r12*(KC0e0613*r21 + KC0e0713*r22)
             k += 1
@@ -3458,11 +3830,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0814*r23*r33 + r31*(KC0e0612*r21 + KC0e0712*r22) + r32*(KC0e0613*r21 + KC0e0713*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0615*r21 + KC0e0715*r22 + KC0e0815*r23) + r12*(KC0e0616*r21 + KC0e0716*r22 + KC0e0816*r23)
+            KC0v[k] += r11*(KC0e0615*r21 + KC0e0715*r22 + KC0e0815*r23) + r12*(KC0e0616*r21 + KC0e0716*r22 + KC0e0816*r23) + r13*(KC0e0617*r21 + KC0e0717*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0615*r21 + KC0e0715*r22 + KC0e0815*r23) + r22*(KC0e0616*r21 + KC0e0716*r22 + KC0e0816*r23)
+            KC0v[k] += r21*(KC0e0615*r21 + KC0e0715*r22 + KC0e0815*r23) + r22*(KC0e0616*r21 + KC0e0716*r22 + KC0e0816*r23) + r23*(KC0e0617*r21 + KC0e0717*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0615*r21 + KC0e0715*r22 + KC0e0815*r23) + r32*(KC0e0616*r21 + KC0e0716*r22 + KC0e0816*r23)
+            KC0v[k] += r31*(KC0e0615*r21 + KC0e0715*r22 + KC0e0815*r23) + r32*(KC0e0616*r21 + KC0e0716*r22 + KC0e0816*r23) + r33*(KC0e0617*r21 + KC0e0717*r22)
             k += 1
             KC0v[k] += KC0e0820*r13*r23 + r11*(KC0e0618*r21 + KC0e0718*r22) + r12*(KC0e0619*r21 + KC0e0719*r22)
             k += 1
@@ -3470,11 +3842,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0820*r23*r33 + r31*(KC0e0618*r21 + KC0e0718*r22) + r32*(KC0e0619*r21 + KC0e0719*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0621*r21 + KC0e0721*r22 + KC0e0821*r23) + r12*(KC0e0622*r21 + KC0e0722*r22 + KC0e0822*r23)
+            KC0v[k] += r11*(KC0e0621*r21 + KC0e0721*r22 + KC0e0821*r23) + r12*(KC0e0622*r21 + KC0e0722*r22 + KC0e0822*r23) + r13*(KC0e0623*r21 + KC0e0723*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0621*r21 + KC0e0721*r22 + KC0e0821*r23) + r22*(KC0e0622*r21 + KC0e0722*r22 + KC0e0822*r23)
+            KC0v[k] += r21*(KC0e0621*r21 + KC0e0721*r22 + KC0e0821*r23) + r22*(KC0e0622*r21 + KC0e0722*r22 + KC0e0822*r23) + r23*(KC0e0623*r21 + KC0e0723*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0621*r21 + KC0e0721*r22 + KC0e0821*r23) + r32*(KC0e0622*r21 + KC0e0722*r22 + KC0e0822*r23)
+            KC0v[k] += r31*(KC0e0621*r21 + KC0e0721*r22 + KC0e0821*r23) + r32*(KC0e0622*r21 + KC0e0722*r22 + KC0e0822*r23) + r33*(KC0e0623*r21 + KC0e0723*r22)
             k += 1
             KC0v[k] += KC0e0208*r13*r33 + r11*(KC0e0006*r31 + KC0e0007*r32) + r12*(KC0e0106*r31 + KC0e0107*r32)
             k += 1
@@ -3482,11 +3854,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0208*r33**2 + r31*(KC0e0006*r31 + KC0e0007*r32) + r32*(KC0e0106*r31 + KC0e0107*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0306*r31 + KC0e0307*r32 + KC0e0308*r33) + r12*(KC0e0406*r31 + KC0e0407*r32 + KC0e0408*r33)
+            KC0v[k] += r11*(KC0e0306*r31 + KC0e0307*r32 + KC0e0308*r33) + r12*(KC0e0406*r31 + KC0e0407*r32 + KC0e0408*r33) + r13*(KC0e0506*r31 + KC0e0507*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0306*r31 + KC0e0307*r32 + KC0e0308*r33) + r22*(KC0e0406*r31 + KC0e0407*r32 + KC0e0408*r33)
+            KC0v[k] += r21*(KC0e0306*r31 + KC0e0307*r32 + KC0e0308*r33) + r22*(KC0e0406*r31 + KC0e0407*r32 + KC0e0408*r33) + r23*(KC0e0506*r31 + KC0e0507*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0306*r31 + KC0e0307*r32 + KC0e0308*r33) + r32*(KC0e0406*r31 + KC0e0407*r32 + KC0e0408*r33)
+            KC0v[k] += r31*(KC0e0306*r31 + KC0e0307*r32 + KC0e0308*r33) + r32*(KC0e0406*r31 + KC0e0407*r32 + KC0e0408*r33) + r33*(KC0e0506*r31 + KC0e0507*r32)
             k += 1
             KC0v[k] += KC0e0808*r13*r33 + r11*(KC0e0606*r31 + KC0e0607*r32) + r12*(KC0e0607*r31 + KC0e0707*r32)
             k += 1
@@ -3494,11 +3866,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0808*r33**2 + r31*(KC0e0606*r31 + KC0e0607*r32) + r32*(KC0e0607*r31 + KC0e0707*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0609*r31 + KC0e0709*r32 + KC0e0809*r33) + r12*(KC0e0610*r31 + KC0e0710*r32 + KC0e0810*r33)
+            KC0v[k] += r11*(KC0e0609*r31 + KC0e0709*r32 + KC0e0809*r33) + r12*(KC0e0610*r31 + KC0e0710*r32 + KC0e0810*r33) + r13*(KC0e0611*r31 + KC0e0711*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0609*r31 + KC0e0709*r32 + KC0e0809*r33) + r22*(KC0e0610*r31 + KC0e0710*r32 + KC0e0810*r33)
+            KC0v[k] += r21*(KC0e0609*r31 + KC0e0709*r32 + KC0e0809*r33) + r22*(KC0e0610*r31 + KC0e0710*r32 + KC0e0810*r33) + r23*(KC0e0611*r31 + KC0e0711*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0609*r31 + KC0e0709*r32 + KC0e0809*r33) + r32*(KC0e0610*r31 + KC0e0710*r32 + KC0e0810*r33)
+            KC0v[k] += r31*(KC0e0609*r31 + KC0e0709*r32 + KC0e0809*r33) + r32*(KC0e0610*r31 + KC0e0710*r32 + KC0e0810*r33) + r33*(KC0e0611*r31 + KC0e0711*r32)
             k += 1
             KC0v[k] += KC0e0814*r13*r33 + r11*(KC0e0612*r31 + KC0e0712*r32) + r12*(KC0e0613*r31 + KC0e0713*r32)
             k += 1
@@ -3506,11 +3878,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0814*r33**2 + r31*(KC0e0612*r31 + KC0e0712*r32) + r32*(KC0e0613*r31 + KC0e0713*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0615*r31 + KC0e0715*r32 + KC0e0815*r33) + r12*(KC0e0616*r31 + KC0e0716*r32 + KC0e0816*r33)
+            KC0v[k] += r11*(KC0e0615*r31 + KC0e0715*r32 + KC0e0815*r33) + r12*(KC0e0616*r31 + KC0e0716*r32 + KC0e0816*r33) + r13*(KC0e0617*r31 + KC0e0717*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0615*r31 + KC0e0715*r32 + KC0e0815*r33) + r22*(KC0e0616*r31 + KC0e0716*r32 + KC0e0816*r33)
+            KC0v[k] += r21*(KC0e0615*r31 + KC0e0715*r32 + KC0e0815*r33) + r22*(KC0e0616*r31 + KC0e0716*r32 + KC0e0816*r33) + r23*(KC0e0617*r31 + KC0e0717*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0615*r31 + KC0e0715*r32 + KC0e0815*r33) + r32*(KC0e0616*r31 + KC0e0716*r32 + KC0e0816*r33)
+            KC0v[k] += r31*(KC0e0615*r31 + KC0e0715*r32 + KC0e0815*r33) + r32*(KC0e0616*r31 + KC0e0716*r32 + KC0e0816*r33) + r33*(KC0e0617*r31 + KC0e0717*r32)
             k += 1
             KC0v[k] += KC0e0820*r13*r33 + r11*(KC0e0618*r31 + KC0e0718*r32) + r12*(KC0e0619*r31 + KC0e0719*r32)
             k += 1
@@ -3518,29 +3890,29 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0820*r33**2 + r31*(KC0e0618*r31 + KC0e0718*r32) + r32*(KC0e0619*r31 + KC0e0719*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0621*r31 + KC0e0721*r32 + KC0e0821*r33) + r12*(KC0e0622*r31 + KC0e0722*r32 + KC0e0822*r33)
+            KC0v[k] += r11*(KC0e0621*r31 + KC0e0721*r32 + KC0e0821*r33) + r12*(KC0e0622*r31 + KC0e0722*r32 + KC0e0822*r33) + r13*(KC0e0623*r31 + KC0e0723*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0621*r31 + KC0e0721*r32 + KC0e0821*r33) + r22*(KC0e0622*r31 + KC0e0722*r32 + KC0e0822*r33)
+            KC0v[k] += r21*(KC0e0621*r31 + KC0e0721*r32 + KC0e0821*r33) + r22*(KC0e0622*r31 + KC0e0722*r32 + KC0e0822*r33) + r23*(KC0e0623*r31 + KC0e0723*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0621*r31 + KC0e0721*r32 + KC0e0821*r33) + r32*(KC0e0622*r31 + KC0e0722*r32 + KC0e0822*r33)
+            KC0v[k] += r31*(KC0e0621*r31 + KC0e0721*r32 + KC0e0821*r33) + r32*(KC0e0622*r31 + KC0e0722*r32 + KC0e0822*r33) + r33*(KC0e0623*r31 + KC0e0723*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0009*r11 + KC0e0010*r12) + r12*(KC0e0109*r11 + KC0e0110*r12) + r13*(KC0e0209*r11 + KC0e0210*r12)
+            KC0v[k] += r11*(KC0e0009*r11 + KC0e0010*r12 + KC0e0011*r13) + r12*(KC0e0109*r11 + KC0e0110*r12 + KC0e0111*r13) + r13*(KC0e0209*r11 + KC0e0210*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0009*r11 + KC0e0010*r12) + r22*(KC0e0109*r11 + KC0e0110*r12) + r23*(KC0e0209*r11 + KC0e0210*r12)
+            KC0v[k] += r21*(KC0e0009*r11 + KC0e0010*r12 + KC0e0011*r13) + r22*(KC0e0109*r11 + KC0e0110*r12 + KC0e0111*r13) + r23*(KC0e0209*r11 + KC0e0210*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0009*r11 + KC0e0010*r12) + r32*(KC0e0109*r11 + KC0e0110*r12) + r33*(KC0e0209*r11 + KC0e0210*r12)
+            KC0v[k] += r31*(KC0e0009*r11 + KC0e0010*r12 + KC0e0011*r13) + r32*(KC0e0109*r11 + KC0e0110*r12 + KC0e0111*r13) + r33*(KC0e0209*r11 + KC0e0210*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0309*r11 + KC0e0310*r12) + r12*(KC0e0409*r11 + KC0e0410*r12)
+            KC0v[k] += KC0e0511*r13**2 + r11*(KC0e0309*r11 + KC0e0310*r12) + r12*(KC0e0409*r11 + KC0e0410*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0309*r11 + KC0e0310*r12) + r22*(KC0e0409*r11 + KC0e0410*r12)
+            KC0v[k] += KC0e0511*r13*r23 + r21*(KC0e0309*r11 + KC0e0310*r12) + r22*(KC0e0409*r11 + KC0e0410*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0309*r11 + KC0e0310*r12) + r32*(KC0e0409*r11 + KC0e0410*r12)
+            KC0v[k] += KC0e0511*r13*r33 + r31*(KC0e0309*r11 + KC0e0310*r12) + r32*(KC0e0409*r11 + KC0e0410*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0609*r11 + KC0e0610*r12) + r12*(KC0e0709*r11 + KC0e0710*r12) + r13*(KC0e0809*r11 + KC0e0810*r12)
+            KC0v[k] += r11*(KC0e0609*r11 + KC0e0610*r12 + KC0e0611*r13) + r12*(KC0e0709*r11 + KC0e0710*r12 + KC0e0711*r13) + r13*(KC0e0809*r11 + KC0e0810*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0609*r11 + KC0e0610*r12) + r22*(KC0e0709*r11 + KC0e0710*r12) + r23*(KC0e0809*r11 + KC0e0810*r12)
+            KC0v[k] += r21*(KC0e0609*r11 + KC0e0610*r12 + KC0e0611*r13) + r22*(KC0e0709*r11 + KC0e0710*r12 + KC0e0711*r13) + r23*(KC0e0809*r11 + KC0e0810*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0609*r11 + KC0e0610*r12) + r32*(KC0e0709*r11 + KC0e0710*r12) + r33*(KC0e0809*r11 + KC0e0810*r12)
+            KC0v[k] += r31*(KC0e0609*r11 + KC0e0610*r12 + KC0e0611*r13) + r32*(KC0e0709*r11 + KC0e0710*r12 + KC0e0711*r13) + r33*(KC0e0809*r11 + KC0e0810*r12)
             k += 1
             KC0v[k] += KC0e1111*r13**2 + r11*(KC0e0909*r11 + KC0e0910*r12) + r12*(KC0e0910*r11 + KC0e1010*r12)
             k += 1
@@ -3548,47 +3920,47 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e1111*r13*r33 + r31*(KC0e0909*r11 + KC0e0910*r12) + r32*(KC0e0910*r11 + KC0e1010*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0912*r11 + KC0e1012*r12) + r12*(KC0e0913*r11 + KC0e1013*r12) + r13*(KC0e0914*r11 + KC0e1014*r12)
+            KC0v[k] += r11*(KC0e0912*r11 + KC0e1012*r12 + KC0e1112*r13) + r12*(KC0e0913*r11 + KC0e1013*r12 + KC0e1113*r13) + r13*(KC0e0914*r11 + KC0e1014*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0912*r11 + KC0e1012*r12) + r22*(KC0e0913*r11 + KC0e1013*r12) + r23*(KC0e0914*r11 + KC0e1014*r12)
+            KC0v[k] += r21*(KC0e0912*r11 + KC0e1012*r12 + KC0e1112*r13) + r22*(KC0e0913*r11 + KC0e1013*r12 + KC0e1113*r13) + r23*(KC0e0914*r11 + KC0e1014*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0912*r11 + KC0e1012*r12) + r32*(KC0e0913*r11 + KC0e1013*r12) + r33*(KC0e0914*r11 + KC0e1014*r12)
+            KC0v[k] += r31*(KC0e0912*r11 + KC0e1012*r12 + KC0e1112*r13) + r32*(KC0e0913*r11 + KC0e1013*r12 + KC0e1113*r13) + r33*(KC0e0914*r11 + KC0e1014*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0915*r11 + KC0e1015*r12) + r12*(KC0e0916*r11 + KC0e1016*r12)
+            KC0v[k] += KC0e1117*r13**2 + r11*(KC0e0915*r11 + KC0e1015*r12) + r12*(KC0e0916*r11 + KC0e1016*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0915*r11 + KC0e1015*r12) + r22*(KC0e0916*r11 + KC0e1016*r12)
+            KC0v[k] += KC0e1117*r13*r23 + r21*(KC0e0915*r11 + KC0e1015*r12) + r22*(KC0e0916*r11 + KC0e1016*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0915*r11 + KC0e1015*r12) + r32*(KC0e0916*r11 + KC0e1016*r12)
+            KC0v[k] += KC0e1117*r13*r33 + r31*(KC0e0915*r11 + KC0e1015*r12) + r32*(KC0e0916*r11 + KC0e1016*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0918*r11 + KC0e1018*r12) + r12*(KC0e0919*r11 + KC0e1019*r12) + r13*(KC0e0920*r11 + KC0e1020*r12)
+            KC0v[k] += r11*(KC0e0918*r11 + KC0e1018*r12 + KC0e1118*r13) + r12*(KC0e0919*r11 + KC0e1019*r12 + KC0e1119*r13) + r13*(KC0e0920*r11 + KC0e1020*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0918*r11 + KC0e1018*r12) + r22*(KC0e0919*r11 + KC0e1019*r12) + r23*(KC0e0920*r11 + KC0e1020*r12)
+            KC0v[k] += r21*(KC0e0918*r11 + KC0e1018*r12 + KC0e1118*r13) + r22*(KC0e0919*r11 + KC0e1019*r12 + KC0e1119*r13) + r23*(KC0e0920*r11 + KC0e1020*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0918*r11 + KC0e1018*r12) + r32*(KC0e0919*r11 + KC0e1019*r12) + r33*(KC0e0920*r11 + KC0e1020*r12)
+            KC0v[k] += r31*(KC0e0918*r11 + KC0e1018*r12 + KC0e1118*r13) + r32*(KC0e0919*r11 + KC0e1019*r12 + KC0e1119*r13) + r33*(KC0e0920*r11 + KC0e1020*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0921*r11 + KC0e1021*r12) + r12*(KC0e0922*r11 + KC0e1022*r12)
+            KC0v[k] += KC0e1123*r13**2 + r11*(KC0e0921*r11 + KC0e1021*r12) + r12*(KC0e0922*r11 + KC0e1022*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0921*r11 + KC0e1021*r12) + r22*(KC0e0922*r11 + KC0e1022*r12)
+            KC0v[k] += KC0e1123*r13*r23 + r21*(KC0e0921*r11 + KC0e1021*r12) + r22*(KC0e0922*r11 + KC0e1022*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0921*r11 + KC0e1021*r12) + r32*(KC0e0922*r11 + KC0e1022*r12)
+            KC0v[k] += KC0e1123*r13*r33 + r31*(KC0e0921*r11 + KC0e1021*r12) + r32*(KC0e0922*r11 + KC0e1022*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0009*r21 + KC0e0010*r22) + r12*(KC0e0109*r21 + KC0e0110*r22) + r13*(KC0e0209*r21 + KC0e0210*r22)
+            KC0v[k] += r11*(KC0e0009*r21 + KC0e0010*r22 + KC0e0011*r23) + r12*(KC0e0109*r21 + KC0e0110*r22 + KC0e0111*r23) + r13*(KC0e0209*r21 + KC0e0210*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0009*r21 + KC0e0010*r22) + r22*(KC0e0109*r21 + KC0e0110*r22) + r23*(KC0e0209*r21 + KC0e0210*r22)
+            KC0v[k] += r21*(KC0e0009*r21 + KC0e0010*r22 + KC0e0011*r23) + r22*(KC0e0109*r21 + KC0e0110*r22 + KC0e0111*r23) + r23*(KC0e0209*r21 + KC0e0210*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0009*r21 + KC0e0010*r22) + r32*(KC0e0109*r21 + KC0e0110*r22) + r33*(KC0e0209*r21 + KC0e0210*r22)
+            KC0v[k] += r31*(KC0e0009*r21 + KC0e0010*r22 + KC0e0011*r23) + r32*(KC0e0109*r21 + KC0e0110*r22 + KC0e0111*r23) + r33*(KC0e0209*r21 + KC0e0210*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0309*r21 + KC0e0310*r22) + r12*(KC0e0409*r21 + KC0e0410*r22)
+            KC0v[k] += KC0e0511*r13*r23 + r11*(KC0e0309*r21 + KC0e0310*r22) + r12*(KC0e0409*r21 + KC0e0410*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0309*r21 + KC0e0310*r22) + r22*(KC0e0409*r21 + KC0e0410*r22)
+            KC0v[k] += KC0e0511*r23**2 + r21*(KC0e0309*r21 + KC0e0310*r22) + r22*(KC0e0409*r21 + KC0e0410*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0309*r21 + KC0e0310*r22) + r32*(KC0e0409*r21 + KC0e0410*r22)
+            KC0v[k] += KC0e0511*r23*r33 + r31*(KC0e0309*r21 + KC0e0310*r22) + r32*(KC0e0409*r21 + KC0e0410*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0609*r21 + KC0e0610*r22) + r12*(KC0e0709*r21 + KC0e0710*r22) + r13*(KC0e0809*r21 + KC0e0810*r22)
+            KC0v[k] += r11*(KC0e0609*r21 + KC0e0610*r22 + KC0e0611*r23) + r12*(KC0e0709*r21 + KC0e0710*r22 + KC0e0711*r23) + r13*(KC0e0809*r21 + KC0e0810*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0609*r21 + KC0e0610*r22) + r22*(KC0e0709*r21 + KC0e0710*r22) + r23*(KC0e0809*r21 + KC0e0810*r22)
+            KC0v[k] += r21*(KC0e0609*r21 + KC0e0610*r22 + KC0e0611*r23) + r22*(KC0e0709*r21 + KC0e0710*r22 + KC0e0711*r23) + r23*(KC0e0809*r21 + KC0e0810*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0609*r21 + KC0e0610*r22) + r32*(KC0e0709*r21 + KC0e0710*r22) + r33*(KC0e0809*r21 + KC0e0810*r22)
+            KC0v[k] += r31*(KC0e0609*r21 + KC0e0610*r22 + KC0e0611*r23) + r32*(KC0e0709*r21 + KC0e0710*r22 + KC0e0711*r23) + r33*(KC0e0809*r21 + KC0e0810*r22)
             k += 1
             KC0v[k] += KC0e1111*r13*r23 + r11*(KC0e0909*r21 + KC0e0910*r22) + r12*(KC0e0910*r21 + KC0e1010*r22)
             k += 1
@@ -3596,47 +3968,47 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e1111*r23*r33 + r31*(KC0e0909*r21 + KC0e0910*r22) + r32*(KC0e0910*r21 + KC0e1010*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0912*r21 + KC0e1012*r22) + r12*(KC0e0913*r21 + KC0e1013*r22) + r13*(KC0e0914*r21 + KC0e1014*r22)
+            KC0v[k] += r11*(KC0e0912*r21 + KC0e1012*r22 + KC0e1112*r23) + r12*(KC0e0913*r21 + KC0e1013*r22 + KC0e1113*r23) + r13*(KC0e0914*r21 + KC0e1014*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0912*r21 + KC0e1012*r22) + r22*(KC0e0913*r21 + KC0e1013*r22) + r23*(KC0e0914*r21 + KC0e1014*r22)
+            KC0v[k] += r21*(KC0e0912*r21 + KC0e1012*r22 + KC0e1112*r23) + r22*(KC0e0913*r21 + KC0e1013*r22 + KC0e1113*r23) + r23*(KC0e0914*r21 + KC0e1014*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0912*r21 + KC0e1012*r22) + r32*(KC0e0913*r21 + KC0e1013*r22) + r33*(KC0e0914*r21 + KC0e1014*r22)
+            KC0v[k] += r31*(KC0e0912*r21 + KC0e1012*r22 + KC0e1112*r23) + r32*(KC0e0913*r21 + KC0e1013*r22 + KC0e1113*r23) + r33*(KC0e0914*r21 + KC0e1014*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0915*r21 + KC0e1015*r22) + r12*(KC0e0916*r21 + KC0e1016*r22)
+            KC0v[k] += KC0e1117*r13*r23 + r11*(KC0e0915*r21 + KC0e1015*r22) + r12*(KC0e0916*r21 + KC0e1016*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0915*r21 + KC0e1015*r22) + r22*(KC0e0916*r21 + KC0e1016*r22)
+            KC0v[k] += KC0e1117*r23**2 + r21*(KC0e0915*r21 + KC0e1015*r22) + r22*(KC0e0916*r21 + KC0e1016*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0915*r21 + KC0e1015*r22) + r32*(KC0e0916*r21 + KC0e1016*r22)
+            KC0v[k] += KC0e1117*r23*r33 + r31*(KC0e0915*r21 + KC0e1015*r22) + r32*(KC0e0916*r21 + KC0e1016*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0918*r21 + KC0e1018*r22) + r12*(KC0e0919*r21 + KC0e1019*r22) + r13*(KC0e0920*r21 + KC0e1020*r22)
+            KC0v[k] += r11*(KC0e0918*r21 + KC0e1018*r22 + KC0e1118*r23) + r12*(KC0e0919*r21 + KC0e1019*r22 + KC0e1119*r23) + r13*(KC0e0920*r21 + KC0e1020*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0918*r21 + KC0e1018*r22) + r22*(KC0e0919*r21 + KC0e1019*r22) + r23*(KC0e0920*r21 + KC0e1020*r22)
+            KC0v[k] += r21*(KC0e0918*r21 + KC0e1018*r22 + KC0e1118*r23) + r22*(KC0e0919*r21 + KC0e1019*r22 + KC0e1119*r23) + r23*(KC0e0920*r21 + KC0e1020*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0918*r21 + KC0e1018*r22) + r32*(KC0e0919*r21 + KC0e1019*r22) + r33*(KC0e0920*r21 + KC0e1020*r22)
+            KC0v[k] += r31*(KC0e0918*r21 + KC0e1018*r22 + KC0e1118*r23) + r32*(KC0e0919*r21 + KC0e1019*r22 + KC0e1119*r23) + r33*(KC0e0920*r21 + KC0e1020*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0921*r21 + KC0e1021*r22) + r12*(KC0e0922*r21 + KC0e1022*r22)
+            KC0v[k] += KC0e1123*r13*r23 + r11*(KC0e0921*r21 + KC0e1021*r22) + r12*(KC0e0922*r21 + KC0e1022*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0921*r21 + KC0e1021*r22) + r22*(KC0e0922*r21 + KC0e1022*r22)
+            KC0v[k] += KC0e1123*r23**2 + r21*(KC0e0921*r21 + KC0e1021*r22) + r22*(KC0e0922*r21 + KC0e1022*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0921*r21 + KC0e1021*r22) + r32*(KC0e0922*r21 + KC0e1022*r22)
+            KC0v[k] += KC0e1123*r23*r33 + r31*(KC0e0921*r21 + KC0e1021*r22) + r32*(KC0e0922*r21 + KC0e1022*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0009*r31 + KC0e0010*r32) + r12*(KC0e0109*r31 + KC0e0110*r32) + r13*(KC0e0209*r31 + KC0e0210*r32)
+            KC0v[k] += r11*(KC0e0009*r31 + KC0e0010*r32 + KC0e0011*r33) + r12*(KC0e0109*r31 + KC0e0110*r32 + KC0e0111*r33) + r13*(KC0e0209*r31 + KC0e0210*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0009*r31 + KC0e0010*r32) + r22*(KC0e0109*r31 + KC0e0110*r32) + r23*(KC0e0209*r31 + KC0e0210*r32)
+            KC0v[k] += r21*(KC0e0009*r31 + KC0e0010*r32 + KC0e0011*r33) + r22*(KC0e0109*r31 + KC0e0110*r32 + KC0e0111*r33) + r23*(KC0e0209*r31 + KC0e0210*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0009*r31 + KC0e0010*r32) + r32*(KC0e0109*r31 + KC0e0110*r32) + r33*(KC0e0209*r31 + KC0e0210*r32)
+            KC0v[k] += r31*(KC0e0009*r31 + KC0e0010*r32 + KC0e0011*r33) + r32*(KC0e0109*r31 + KC0e0110*r32 + KC0e0111*r33) + r33*(KC0e0209*r31 + KC0e0210*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0309*r31 + KC0e0310*r32) + r12*(KC0e0409*r31 + KC0e0410*r32)
+            KC0v[k] += KC0e0511*r13*r33 + r11*(KC0e0309*r31 + KC0e0310*r32) + r12*(KC0e0409*r31 + KC0e0410*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0309*r31 + KC0e0310*r32) + r22*(KC0e0409*r31 + KC0e0410*r32)
+            KC0v[k] += KC0e0511*r23*r33 + r21*(KC0e0309*r31 + KC0e0310*r32) + r22*(KC0e0409*r31 + KC0e0410*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0309*r31 + KC0e0310*r32) + r32*(KC0e0409*r31 + KC0e0410*r32)
+            KC0v[k] += KC0e0511*r33**2 + r31*(KC0e0309*r31 + KC0e0310*r32) + r32*(KC0e0409*r31 + KC0e0410*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0609*r31 + KC0e0610*r32) + r12*(KC0e0709*r31 + KC0e0710*r32) + r13*(KC0e0809*r31 + KC0e0810*r32)
+            KC0v[k] += r11*(KC0e0609*r31 + KC0e0610*r32 + KC0e0611*r33) + r12*(KC0e0709*r31 + KC0e0710*r32 + KC0e0711*r33) + r13*(KC0e0809*r31 + KC0e0810*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0609*r31 + KC0e0610*r32) + r22*(KC0e0709*r31 + KC0e0710*r32) + r23*(KC0e0809*r31 + KC0e0810*r32)
+            KC0v[k] += r21*(KC0e0609*r31 + KC0e0610*r32 + KC0e0611*r33) + r22*(KC0e0709*r31 + KC0e0710*r32 + KC0e0711*r33) + r23*(KC0e0809*r31 + KC0e0810*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0609*r31 + KC0e0610*r32) + r32*(KC0e0709*r31 + KC0e0710*r32) + r33*(KC0e0809*r31 + KC0e0810*r32)
+            KC0v[k] += r31*(KC0e0609*r31 + KC0e0610*r32 + KC0e0611*r33) + r32*(KC0e0709*r31 + KC0e0710*r32 + KC0e0711*r33) + r33*(KC0e0809*r31 + KC0e0810*r32)
             k += 1
             KC0v[k] += KC0e1111*r13*r33 + r11*(KC0e0909*r31 + KC0e0910*r32) + r12*(KC0e0910*r31 + KC0e1010*r32)
             k += 1
@@ -3644,29 +4016,29 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e1111*r33**2 + r31*(KC0e0909*r31 + KC0e0910*r32) + r32*(KC0e0910*r31 + KC0e1010*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0912*r31 + KC0e1012*r32) + r12*(KC0e0913*r31 + KC0e1013*r32) + r13*(KC0e0914*r31 + KC0e1014*r32)
+            KC0v[k] += r11*(KC0e0912*r31 + KC0e1012*r32 + KC0e1112*r33) + r12*(KC0e0913*r31 + KC0e1013*r32 + KC0e1113*r33) + r13*(KC0e0914*r31 + KC0e1014*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0912*r31 + KC0e1012*r32) + r22*(KC0e0913*r31 + KC0e1013*r32) + r23*(KC0e0914*r31 + KC0e1014*r32)
+            KC0v[k] += r21*(KC0e0912*r31 + KC0e1012*r32 + KC0e1112*r33) + r22*(KC0e0913*r31 + KC0e1013*r32 + KC0e1113*r33) + r23*(KC0e0914*r31 + KC0e1014*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0912*r31 + KC0e1012*r32) + r32*(KC0e0913*r31 + KC0e1013*r32) + r33*(KC0e0914*r31 + KC0e1014*r32)
+            KC0v[k] += r31*(KC0e0912*r31 + KC0e1012*r32 + KC0e1112*r33) + r32*(KC0e0913*r31 + KC0e1013*r32 + KC0e1113*r33) + r33*(KC0e0914*r31 + KC0e1014*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0915*r31 + KC0e1015*r32) + r12*(KC0e0916*r31 + KC0e1016*r32)
+            KC0v[k] += KC0e1117*r13*r33 + r11*(KC0e0915*r31 + KC0e1015*r32) + r12*(KC0e0916*r31 + KC0e1016*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0915*r31 + KC0e1015*r32) + r22*(KC0e0916*r31 + KC0e1016*r32)
+            KC0v[k] += KC0e1117*r23*r33 + r21*(KC0e0915*r31 + KC0e1015*r32) + r22*(KC0e0916*r31 + KC0e1016*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0915*r31 + KC0e1015*r32) + r32*(KC0e0916*r31 + KC0e1016*r32)
+            KC0v[k] += KC0e1117*r33**2 + r31*(KC0e0915*r31 + KC0e1015*r32) + r32*(KC0e0916*r31 + KC0e1016*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0918*r31 + KC0e1018*r32) + r12*(KC0e0919*r31 + KC0e1019*r32) + r13*(KC0e0920*r31 + KC0e1020*r32)
+            KC0v[k] += r11*(KC0e0918*r31 + KC0e1018*r32 + KC0e1118*r33) + r12*(KC0e0919*r31 + KC0e1019*r32 + KC0e1119*r33) + r13*(KC0e0920*r31 + KC0e1020*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0918*r31 + KC0e1018*r32) + r22*(KC0e0919*r31 + KC0e1019*r32) + r23*(KC0e0920*r31 + KC0e1020*r32)
+            KC0v[k] += r21*(KC0e0918*r31 + KC0e1018*r32 + KC0e1118*r33) + r22*(KC0e0919*r31 + KC0e1019*r32 + KC0e1119*r33) + r23*(KC0e0920*r31 + KC0e1020*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0918*r31 + KC0e1018*r32) + r32*(KC0e0919*r31 + KC0e1019*r32) + r33*(KC0e0920*r31 + KC0e1020*r32)
+            KC0v[k] += r31*(KC0e0918*r31 + KC0e1018*r32 + KC0e1118*r33) + r32*(KC0e0919*r31 + KC0e1019*r32 + KC0e1119*r33) + r33*(KC0e0920*r31 + KC0e1020*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0921*r31 + KC0e1021*r32) + r12*(KC0e0922*r31 + KC0e1022*r32)
+            KC0v[k] += KC0e1123*r13*r33 + r11*(KC0e0921*r31 + KC0e1021*r32) + r12*(KC0e0922*r31 + KC0e1022*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0921*r31 + KC0e1021*r32) + r22*(KC0e0922*r31 + KC0e1022*r32)
+            KC0v[k] += KC0e1123*r23*r33 + r21*(KC0e0921*r31 + KC0e1021*r32) + r22*(KC0e0922*r31 + KC0e1022*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0921*r31 + KC0e1021*r32) + r32*(KC0e0922*r31 + KC0e1022*r32)
+            KC0v[k] += KC0e1123*r33**2 + r31*(KC0e0921*r31 + KC0e1021*r32) + r32*(KC0e0922*r31 + KC0e1022*r32)
             k += 1
             KC0v[k] += KC0e0214*r13**2 + r11*(KC0e0012*r11 + KC0e0013*r12) + r12*(KC0e0112*r11 + KC0e0113*r12)
             k += 1
@@ -3674,11 +4046,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0214*r13*r33 + r31*(KC0e0012*r11 + KC0e0013*r12) + r32*(KC0e0112*r11 + KC0e0113*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0312*r11 + KC0e0313*r12 + KC0e0314*r13) + r12*(KC0e0412*r11 + KC0e0413*r12 + KC0e0414*r13)
+            KC0v[k] += r11*(KC0e0312*r11 + KC0e0313*r12 + KC0e0314*r13) + r12*(KC0e0412*r11 + KC0e0413*r12 + KC0e0414*r13) + r13*(KC0e0512*r11 + KC0e0513*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0312*r11 + KC0e0313*r12 + KC0e0314*r13) + r22*(KC0e0412*r11 + KC0e0413*r12 + KC0e0414*r13)
+            KC0v[k] += r21*(KC0e0312*r11 + KC0e0313*r12 + KC0e0314*r13) + r22*(KC0e0412*r11 + KC0e0413*r12 + KC0e0414*r13) + r23*(KC0e0512*r11 + KC0e0513*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0312*r11 + KC0e0313*r12 + KC0e0314*r13) + r32*(KC0e0412*r11 + KC0e0413*r12 + KC0e0414*r13)
+            KC0v[k] += r31*(KC0e0312*r11 + KC0e0313*r12 + KC0e0314*r13) + r32*(KC0e0412*r11 + KC0e0413*r12 + KC0e0414*r13) + r33*(KC0e0512*r11 + KC0e0513*r12)
             k += 1
             KC0v[k] += KC0e0814*r13**2 + r11*(KC0e0612*r11 + KC0e0613*r12) + r12*(KC0e0712*r11 + KC0e0713*r12)
             k += 1
@@ -3686,11 +4058,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0814*r13*r33 + r31*(KC0e0612*r11 + KC0e0613*r12) + r32*(KC0e0712*r11 + KC0e0713*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0912*r11 + KC0e0913*r12 + KC0e0914*r13) + r12*(KC0e1012*r11 + KC0e1013*r12 + KC0e1014*r13)
+            KC0v[k] += r11*(KC0e0912*r11 + KC0e0913*r12 + KC0e0914*r13) + r12*(KC0e1012*r11 + KC0e1013*r12 + KC0e1014*r13) + r13*(KC0e1112*r11 + KC0e1113*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0912*r11 + KC0e0913*r12 + KC0e0914*r13) + r22*(KC0e1012*r11 + KC0e1013*r12 + KC0e1014*r13)
+            KC0v[k] += r21*(KC0e0912*r11 + KC0e0913*r12 + KC0e0914*r13) + r22*(KC0e1012*r11 + KC0e1013*r12 + KC0e1014*r13) + r23*(KC0e1112*r11 + KC0e1113*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0912*r11 + KC0e0913*r12 + KC0e0914*r13) + r32*(KC0e1012*r11 + KC0e1013*r12 + KC0e1014*r13)
+            KC0v[k] += r31*(KC0e0912*r11 + KC0e0913*r12 + KC0e0914*r13) + r32*(KC0e1012*r11 + KC0e1013*r12 + KC0e1014*r13) + r33*(KC0e1112*r11 + KC0e1113*r12)
             k += 1
             KC0v[k] += KC0e1414*r13**2 + r11*(KC0e1212*r11 + KC0e1213*r12) + r12*(KC0e1213*r11 + KC0e1313*r12)
             k += 1
@@ -3698,11 +4070,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e1414*r13*r33 + r31*(KC0e1212*r11 + KC0e1213*r12) + r32*(KC0e1213*r11 + KC0e1313*r12)
             k += 1
-            KC0v[k] += r11*(KC0e1215*r11 + KC0e1315*r12 + KC0e1415*r13) + r12*(KC0e1216*r11 + KC0e1316*r12 + KC0e1416*r13)
+            KC0v[k] += r11*(KC0e1215*r11 + KC0e1315*r12 + KC0e1415*r13) + r12*(KC0e1216*r11 + KC0e1316*r12 + KC0e1416*r13) + r13*(KC0e1217*r11 + KC0e1317*r12)
             k += 1
-            KC0v[k] += r21*(KC0e1215*r11 + KC0e1315*r12 + KC0e1415*r13) + r22*(KC0e1216*r11 + KC0e1316*r12 + KC0e1416*r13)
+            KC0v[k] += r21*(KC0e1215*r11 + KC0e1315*r12 + KC0e1415*r13) + r22*(KC0e1216*r11 + KC0e1316*r12 + KC0e1416*r13) + r23*(KC0e1217*r11 + KC0e1317*r12)
             k += 1
-            KC0v[k] += r31*(KC0e1215*r11 + KC0e1315*r12 + KC0e1415*r13) + r32*(KC0e1216*r11 + KC0e1316*r12 + KC0e1416*r13)
+            KC0v[k] += r31*(KC0e1215*r11 + KC0e1315*r12 + KC0e1415*r13) + r32*(KC0e1216*r11 + KC0e1316*r12 + KC0e1416*r13) + r33*(KC0e1217*r11 + KC0e1317*r12)
             k += 1
             KC0v[k] += KC0e1420*r13**2 + r11*(KC0e1218*r11 + KC0e1318*r12) + r12*(KC0e1219*r11 + KC0e1319*r12)
             k += 1
@@ -3710,11 +4082,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e1420*r13*r33 + r31*(KC0e1218*r11 + KC0e1318*r12) + r32*(KC0e1219*r11 + KC0e1319*r12)
             k += 1
-            KC0v[k] += r11*(KC0e1221*r11 + KC0e1321*r12 + KC0e1421*r13) + r12*(KC0e1222*r11 + KC0e1322*r12 + KC0e1422*r13)
+            KC0v[k] += r11*(KC0e1221*r11 + KC0e1321*r12 + KC0e1421*r13) + r12*(KC0e1222*r11 + KC0e1322*r12 + KC0e1422*r13) + r13*(KC0e1223*r11 + KC0e1323*r12)
             k += 1
-            KC0v[k] += r21*(KC0e1221*r11 + KC0e1321*r12 + KC0e1421*r13) + r22*(KC0e1222*r11 + KC0e1322*r12 + KC0e1422*r13)
+            KC0v[k] += r21*(KC0e1221*r11 + KC0e1321*r12 + KC0e1421*r13) + r22*(KC0e1222*r11 + KC0e1322*r12 + KC0e1422*r13) + r23*(KC0e1223*r11 + KC0e1323*r12)
             k += 1
-            KC0v[k] += r31*(KC0e1221*r11 + KC0e1321*r12 + KC0e1421*r13) + r32*(KC0e1222*r11 + KC0e1322*r12 + KC0e1422*r13)
+            KC0v[k] += r31*(KC0e1221*r11 + KC0e1321*r12 + KC0e1421*r13) + r32*(KC0e1222*r11 + KC0e1322*r12 + KC0e1422*r13) + r33*(KC0e1223*r11 + KC0e1323*r12)
             k += 1
             KC0v[k] += KC0e0214*r13*r23 + r11*(KC0e0012*r21 + KC0e0013*r22) + r12*(KC0e0112*r21 + KC0e0113*r22)
             k += 1
@@ -3722,11 +4094,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0214*r23*r33 + r31*(KC0e0012*r21 + KC0e0013*r22) + r32*(KC0e0112*r21 + KC0e0113*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0312*r21 + KC0e0313*r22 + KC0e0314*r23) + r12*(KC0e0412*r21 + KC0e0413*r22 + KC0e0414*r23)
+            KC0v[k] += r11*(KC0e0312*r21 + KC0e0313*r22 + KC0e0314*r23) + r12*(KC0e0412*r21 + KC0e0413*r22 + KC0e0414*r23) + r13*(KC0e0512*r21 + KC0e0513*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0312*r21 + KC0e0313*r22 + KC0e0314*r23) + r22*(KC0e0412*r21 + KC0e0413*r22 + KC0e0414*r23)
+            KC0v[k] += r21*(KC0e0312*r21 + KC0e0313*r22 + KC0e0314*r23) + r22*(KC0e0412*r21 + KC0e0413*r22 + KC0e0414*r23) + r23*(KC0e0512*r21 + KC0e0513*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0312*r21 + KC0e0313*r22 + KC0e0314*r23) + r32*(KC0e0412*r21 + KC0e0413*r22 + KC0e0414*r23)
+            KC0v[k] += r31*(KC0e0312*r21 + KC0e0313*r22 + KC0e0314*r23) + r32*(KC0e0412*r21 + KC0e0413*r22 + KC0e0414*r23) + r33*(KC0e0512*r21 + KC0e0513*r22)
             k += 1
             KC0v[k] += KC0e0814*r13*r23 + r11*(KC0e0612*r21 + KC0e0613*r22) + r12*(KC0e0712*r21 + KC0e0713*r22)
             k += 1
@@ -3734,11 +4106,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0814*r23*r33 + r31*(KC0e0612*r21 + KC0e0613*r22) + r32*(KC0e0712*r21 + KC0e0713*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0912*r21 + KC0e0913*r22 + KC0e0914*r23) + r12*(KC0e1012*r21 + KC0e1013*r22 + KC0e1014*r23)
+            KC0v[k] += r11*(KC0e0912*r21 + KC0e0913*r22 + KC0e0914*r23) + r12*(KC0e1012*r21 + KC0e1013*r22 + KC0e1014*r23) + r13*(KC0e1112*r21 + KC0e1113*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0912*r21 + KC0e0913*r22 + KC0e0914*r23) + r22*(KC0e1012*r21 + KC0e1013*r22 + KC0e1014*r23)
+            KC0v[k] += r21*(KC0e0912*r21 + KC0e0913*r22 + KC0e0914*r23) + r22*(KC0e1012*r21 + KC0e1013*r22 + KC0e1014*r23) + r23*(KC0e1112*r21 + KC0e1113*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0912*r21 + KC0e0913*r22 + KC0e0914*r23) + r32*(KC0e1012*r21 + KC0e1013*r22 + KC0e1014*r23)
+            KC0v[k] += r31*(KC0e0912*r21 + KC0e0913*r22 + KC0e0914*r23) + r32*(KC0e1012*r21 + KC0e1013*r22 + KC0e1014*r23) + r33*(KC0e1112*r21 + KC0e1113*r22)
             k += 1
             KC0v[k] += KC0e1414*r13*r23 + r11*(KC0e1212*r21 + KC0e1213*r22) + r12*(KC0e1213*r21 + KC0e1313*r22)
             k += 1
@@ -3746,11 +4118,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e1414*r23*r33 + r31*(KC0e1212*r21 + KC0e1213*r22) + r32*(KC0e1213*r21 + KC0e1313*r22)
             k += 1
-            KC0v[k] += r11*(KC0e1215*r21 + KC0e1315*r22 + KC0e1415*r23) + r12*(KC0e1216*r21 + KC0e1316*r22 + KC0e1416*r23)
+            KC0v[k] += r11*(KC0e1215*r21 + KC0e1315*r22 + KC0e1415*r23) + r12*(KC0e1216*r21 + KC0e1316*r22 + KC0e1416*r23) + r13*(KC0e1217*r21 + KC0e1317*r22)
             k += 1
-            KC0v[k] += r21*(KC0e1215*r21 + KC0e1315*r22 + KC0e1415*r23) + r22*(KC0e1216*r21 + KC0e1316*r22 + KC0e1416*r23)
+            KC0v[k] += r21*(KC0e1215*r21 + KC0e1315*r22 + KC0e1415*r23) + r22*(KC0e1216*r21 + KC0e1316*r22 + KC0e1416*r23) + r23*(KC0e1217*r21 + KC0e1317*r22)
             k += 1
-            KC0v[k] += r31*(KC0e1215*r21 + KC0e1315*r22 + KC0e1415*r23) + r32*(KC0e1216*r21 + KC0e1316*r22 + KC0e1416*r23)
+            KC0v[k] += r31*(KC0e1215*r21 + KC0e1315*r22 + KC0e1415*r23) + r32*(KC0e1216*r21 + KC0e1316*r22 + KC0e1416*r23) + r33*(KC0e1217*r21 + KC0e1317*r22)
             k += 1
             KC0v[k] += KC0e1420*r13*r23 + r11*(KC0e1218*r21 + KC0e1318*r22) + r12*(KC0e1219*r21 + KC0e1319*r22)
             k += 1
@@ -3758,11 +4130,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e1420*r23*r33 + r31*(KC0e1218*r21 + KC0e1318*r22) + r32*(KC0e1219*r21 + KC0e1319*r22)
             k += 1
-            KC0v[k] += r11*(KC0e1221*r21 + KC0e1321*r22 + KC0e1421*r23) + r12*(KC0e1222*r21 + KC0e1322*r22 + KC0e1422*r23)
+            KC0v[k] += r11*(KC0e1221*r21 + KC0e1321*r22 + KC0e1421*r23) + r12*(KC0e1222*r21 + KC0e1322*r22 + KC0e1422*r23) + r13*(KC0e1223*r21 + KC0e1323*r22)
             k += 1
-            KC0v[k] += r21*(KC0e1221*r21 + KC0e1321*r22 + KC0e1421*r23) + r22*(KC0e1222*r21 + KC0e1322*r22 + KC0e1422*r23)
+            KC0v[k] += r21*(KC0e1221*r21 + KC0e1321*r22 + KC0e1421*r23) + r22*(KC0e1222*r21 + KC0e1322*r22 + KC0e1422*r23) + r23*(KC0e1223*r21 + KC0e1323*r22)
             k += 1
-            KC0v[k] += r31*(KC0e1221*r21 + KC0e1321*r22 + KC0e1421*r23) + r32*(KC0e1222*r21 + KC0e1322*r22 + KC0e1422*r23)
+            KC0v[k] += r31*(KC0e1221*r21 + KC0e1321*r22 + KC0e1421*r23) + r32*(KC0e1222*r21 + KC0e1322*r22 + KC0e1422*r23) + r33*(KC0e1223*r21 + KC0e1323*r22)
             k += 1
             KC0v[k] += KC0e0214*r13*r33 + r11*(KC0e0012*r31 + KC0e0013*r32) + r12*(KC0e0112*r31 + KC0e0113*r32)
             k += 1
@@ -3770,11 +4142,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0214*r33**2 + r31*(KC0e0012*r31 + KC0e0013*r32) + r32*(KC0e0112*r31 + KC0e0113*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0312*r31 + KC0e0313*r32 + KC0e0314*r33) + r12*(KC0e0412*r31 + KC0e0413*r32 + KC0e0414*r33)
+            KC0v[k] += r11*(KC0e0312*r31 + KC0e0313*r32 + KC0e0314*r33) + r12*(KC0e0412*r31 + KC0e0413*r32 + KC0e0414*r33) + r13*(KC0e0512*r31 + KC0e0513*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0312*r31 + KC0e0313*r32 + KC0e0314*r33) + r22*(KC0e0412*r31 + KC0e0413*r32 + KC0e0414*r33)
+            KC0v[k] += r21*(KC0e0312*r31 + KC0e0313*r32 + KC0e0314*r33) + r22*(KC0e0412*r31 + KC0e0413*r32 + KC0e0414*r33) + r23*(KC0e0512*r31 + KC0e0513*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0312*r31 + KC0e0313*r32 + KC0e0314*r33) + r32*(KC0e0412*r31 + KC0e0413*r32 + KC0e0414*r33)
+            KC0v[k] += r31*(KC0e0312*r31 + KC0e0313*r32 + KC0e0314*r33) + r32*(KC0e0412*r31 + KC0e0413*r32 + KC0e0414*r33) + r33*(KC0e0512*r31 + KC0e0513*r32)
             k += 1
             KC0v[k] += KC0e0814*r13*r33 + r11*(KC0e0612*r31 + KC0e0613*r32) + r12*(KC0e0712*r31 + KC0e0713*r32)
             k += 1
@@ -3782,11 +4154,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0814*r33**2 + r31*(KC0e0612*r31 + KC0e0613*r32) + r32*(KC0e0712*r31 + KC0e0713*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0912*r31 + KC0e0913*r32 + KC0e0914*r33) + r12*(KC0e1012*r31 + KC0e1013*r32 + KC0e1014*r33)
+            KC0v[k] += r11*(KC0e0912*r31 + KC0e0913*r32 + KC0e0914*r33) + r12*(KC0e1012*r31 + KC0e1013*r32 + KC0e1014*r33) + r13*(KC0e1112*r31 + KC0e1113*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0912*r31 + KC0e0913*r32 + KC0e0914*r33) + r22*(KC0e1012*r31 + KC0e1013*r32 + KC0e1014*r33)
+            KC0v[k] += r21*(KC0e0912*r31 + KC0e0913*r32 + KC0e0914*r33) + r22*(KC0e1012*r31 + KC0e1013*r32 + KC0e1014*r33) + r23*(KC0e1112*r31 + KC0e1113*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0912*r31 + KC0e0913*r32 + KC0e0914*r33) + r32*(KC0e1012*r31 + KC0e1013*r32 + KC0e1014*r33)
+            KC0v[k] += r31*(KC0e0912*r31 + KC0e0913*r32 + KC0e0914*r33) + r32*(KC0e1012*r31 + KC0e1013*r32 + KC0e1014*r33) + r33*(KC0e1112*r31 + KC0e1113*r32)
             k += 1
             KC0v[k] += KC0e1414*r13*r33 + r11*(KC0e1212*r31 + KC0e1213*r32) + r12*(KC0e1213*r31 + KC0e1313*r32)
             k += 1
@@ -3794,11 +4166,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e1414*r33**2 + r31*(KC0e1212*r31 + KC0e1213*r32) + r32*(KC0e1213*r31 + KC0e1313*r32)
             k += 1
-            KC0v[k] += r11*(KC0e1215*r31 + KC0e1315*r32 + KC0e1415*r33) + r12*(KC0e1216*r31 + KC0e1316*r32 + KC0e1416*r33)
+            KC0v[k] += r11*(KC0e1215*r31 + KC0e1315*r32 + KC0e1415*r33) + r12*(KC0e1216*r31 + KC0e1316*r32 + KC0e1416*r33) + r13*(KC0e1217*r31 + KC0e1317*r32)
             k += 1
-            KC0v[k] += r21*(KC0e1215*r31 + KC0e1315*r32 + KC0e1415*r33) + r22*(KC0e1216*r31 + KC0e1316*r32 + KC0e1416*r33)
+            KC0v[k] += r21*(KC0e1215*r31 + KC0e1315*r32 + KC0e1415*r33) + r22*(KC0e1216*r31 + KC0e1316*r32 + KC0e1416*r33) + r23*(KC0e1217*r31 + KC0e1317*r32)
             k += 1
-            KC0v[k] += r31*(KC0e1215*r31 + KC0e1315*r32 + KC0e1415*r33) + r32*(KC0e1216*r31 + KC0e1316*r32 + KC0e1416*r33)
+            KC0v[k] += r31*(KC0e1215*r31 + KC0e1315*r32 + KC0e1415*r33) + r32*(KC0e1216*r31 + KC0e1316*r32 + KC0e1416*r33) + r33*(KC0e1217*r31 + KC0e1317*r32)
             k += 1
             KC0v[k] += KC0e1420*r13*r33 + r11*(KC0e1218*r31 + KC0e1318*r32) + r12*(KC0e1219*r31 + KC0e1319*r32)
             k += 1
@@ -3806,41 +4178,41 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e1420*r33**2 + r31*(KC0e1218*r31 + KC0e1318*r32) + r32*(KC0e1219*r31 + KC0e1319*r32)
             k += 1
-            KC0v[k] += r11*(KC0e1221*r31 + KC0e1321*r32 + KC0e1421*r33) + r12*(KC0e1222*r31 + KC0e1322*r32 + KC0e1422*r33)
+            KC0v[k] += r11*(KC0e1221*r31 + KC0e1321*r32 + KC0e1421*r33) + r12*(KC0e1222*r31 + KC0e1322*r32 + KC0e1422*r33) + r13*(KC0e1223*r31 + KC0e1323*r32)
             k += 1
-            KC0v[k] += r21*(KC0e1221*r31 + KC0e1321*r32 + KC0e1421*r33) + r22*(KC0e1222*r31 + KC0e1322*r32 + KC0e1422*r33)
+            KC0v[k] += r21*(KC0e1221*r31 + KC0e1321*r32 + KC0e1421*r33) + r22*(KC0e1222*r31 + KC0e1322*r32 + KC0e1422*r33) + r23*(KC0e1223*r31 + KC0e1323*r32)
             k += 1
-            KC0v[k] += r31*(KC0e1221*r31 + KC0e1321*r32 + KC0e1421*r33) + r32*(KC0e1222*r31 + KC0e1322*r32 + KC0e1422*r33)
+            KC0v[k] += r31*(KC0e1221*r31 + KC0e1321*r32 + KC0e1421*r33) + r32*(KC0e1222*r31 + KC0e1322*r32 + KC0e1422*r33) + r33*(KC0e1223*r31 + KC0e1323*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0015*r11 + KC0e0016*r12) + r12*(KC0e0115*r11 + KC0e0116*r12) + r13*(KC0e0215*r11 + KC0e0216*r12)
+            KC0v[k] += r11*(KC0e0015*r11 + KC0e0016*r12 + KC0e0017*r13) + r12*(KC0e0115*r11 + KC0e0116*r12 + KC0e0117*r13) + r13*(KC0e0215*r11 + KC0e0216*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0015*r11 + KC0e0016*r12) + r22*(KC0e0115*r11 + KC0e0116*r12) + r23*(KC0e0215*r11 + KC0e0216*r12)
+            KC0v[k] += r21*(KC0e0015*r11 + KC0e0016*r12 + KC0e0017*r13) + r22*(KC0e0115*r11 + KC0e0116*r12 + KC0e0117*r13) + r23*(KC0e0215*r11 + KC0e0216*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0015*r11 + KC0e0016*r12) + r32*(KC0e0115*r11 + KC0e0116*r12) + r33*(KC0e0215*r11 + KC0e0216*r12)
+            KC0v[k] += r31*(KC0e0015*r11 + KC0e0016*r12 + KC0e0017*r13) + r32*(KC0e0115*r11 + KC0e0116*r12 + KC0e0117*r13) + r33*(KC0e0215*r11 + KC0e0216*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0315*r11 + KC0e0316*r12) + r12*(KC0e0415*r11 + KC0e0416*r12)
+            KC0v[k] += KC0e0517*r13**2 + r11*(KC0e0315*r11 + KC0e0316*r12) + r12*(KC0e0415*r11 + KC0e0416*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0315*r11 + KC0e0316*r12) + r22*(KC0e0415*r11 + KC0e0416*r12)
+            KC0v[k] += KC0e0517*r13*r23 + r21*(KC0e0315*r11 + KC0e0316*r12) + r22*(KC0e0415*r11 + KC0e0416*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0315*r11 + KC0e0316*r12) + r32*(KC0e0415*r11 + KC0e0416*r12)
+            KC0v[k] += KC0e0517*r13*r33 + r31*(KC0e0315*r11 + KC0e0316*r12) + r32*(KC0e0415*r11 + KC0e0416*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0615*r11 + KC0e0616*r12) + r12*(KC0e0715*r11 + KC0e0716*r12) + r13*(KC0e0815*r11 + KC0e0816*r12)
+            KC0v[k] += r11*(KC0e0615*r11 + KC0e0616*r12 + KC0e0617*r13) + r12*(KC0e0715*r11 + KC0e0716*r12 + KC0e0717*r13) + r13*(KC0e0815*r11 + KC0e0816*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0615*r11 + KC0e0616*r12) + r22*(KC0e0715*r11 + KC0e0716*r12) + r23*(KC0e0815*r11 + KC0e0816*r12)
+            KC0v[k] += r21*(KC0e0615*r11 + KC0e0616*r12 + KC0e0617*r13) + r22*(KC0e0715*r11 + KC0e0716*r12 + KC0e0717*r13) + r23*(KC0e0815*r11 + KC0e0816*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0615*r11 + KC0e0616*r12) + r32*(KC0e0715*r11 + KC0e0716*r12) + r33*(KC0e0815*r11 + KC0e0816*r12)
+            KC0v[k] += r31*(KC0e0615*r11 + KC0e0616*r12 + KC0e0617*r13) + r32*(KC0e0715*r11 + KC0e0716*r12 + KC0e0717*r13) + r33*(KC0e0815*r11 + KC0e0816*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0915*r11 + KC0e0916*r12) + r12*(KC0e1015*r11 + KC0e1016*r12)
+            KC0v[k] += KC0e1117*r13**2 + r11*(KC0e0915*r11 + KC0e0916*r12) + r12*(KC0e1015*r11 + KC0e1016*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0915*r11 + KC0e0916*r12) + r22*(KC0e1015*r11 + KC0e1016*r12)
+            KC0v[k] += KC0e1117*r13*r23 + r21*(KC0e0915*r11 + KC0e0916*r12) + r22*(KC0e1015*r11 + KC0e1016*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0915*r11 + KC0e0916*r12) + r32*(KC0e1015*r11 + KC0e1016*r12)
+            KC0v[k] += KC0e1117*r13*r33 + r31*(KC0e0915*r11 + KC0e0916*r12) + r32*(KC0e1015*r11 + KC0e1016*r12)
             k += 1
-            KC0v[k] += r11*(KC0e1215*r11 + KC0e1216*r12) + r12*(KC0e1315*r11 + KC0e1316*r12) + r13*(KC0e1415*r11 + KC0e1416*r12)
+            KC0v[k] += r11*(KC0e1215*r11 + KC0e1216*r12 + KC0e1217*r13) + r12*(KC0e1315*r11 + KC0e1316*r12 + KC0e1317*r13) + r13*(KC0e1415*r11 + KC0e1416*r12)
             k += 1
-            KC0v[k] += r21*(KC0e1215*r11 + KC0e1216*r12) + r22*(KC0e1315*r11 + KC0e1316*r12) + r23*(KC0e1415*r11 + KC0e1416*r12)
+            KC0v[k] += r21*(KC0e1215*r11 + KC0e1216*r12 + KC0e1217*r13) + r22*(KC0e1315*r11 + KC0e1316*r12 + KC0e1317*r13) + r23*(KC0e1415*r11 + KC0e1416*r12)
             k += 1
-            KC0v[k] += r31*(KC0e1215*r11 + KC0e1216*r12) + r32*(KC0e1315*r11 + KC0e1316*r12) + r33*(KC0e1415*r11 + KC0e1416*r12)
+            KC0v[k] += r31*(KC0e1215*r11 + KC0e1216*r12 + KC0e1217*r13) + r32*(KC0e1315*r11 + KC0e1316*r12 + KC0e1317*r13) + r33*(KC0e1415*r11 + KC0e1416*r12)
             k += 1
             KC0v[k] += KC0e1717*r13**2 + r11*(KC0e1515*r11 + KC0e1516*r12) + r12*(KC0e1516*r11 + KC0e1616*r12)
             k += 1
@@ -3848,47 +4220,47 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e1717*r13*r33 + r31*(KC0e1515*r11 + KC0e1516*r12) + r32*(KC0e1516*r11 + KC0e1616*r12)
             k += 1
-            KC0v[k] += r11*(KC0e1518*r11 + KC0e1618*r12) + r12*(KC0e1519*r11 + KC0e1619*r12) + r13*(KC0e1520*r11 + KC0e1620*r12)
+            KC0v[k] += r11*(KC0e1518*r11 + KC0e1618*r12 + KC0e1718*r13) + r12*(KC0e1519*r11 + KC0e1619*r12 + KC0e1719*r13) + r13*(KC0e1520*r11 + KC0e1620*r12)
             k += 1
-            KC0v[k] += r21*(KC0e1518*r11 + KC0e1618*r12) + r22*(KC0e1519*r11 + KC0e1619*r12) + r23*(KC0e1520*r11 + KC0e1620*r12)
+            KC0v[k] += r21*(KC0e1518*r11 + KC0e1618*r12 + KC0e1718*r13) + r22*(KC0e1519*r11 + KC0e1619*r12 + KC0e1719*r13) + r23*(KC0e1520*r11 + KC0e1620*r12)
             k += 1
-            KC0v[k] += r31*(KC0e1518*r11 + KC0e1618*r12) + r32*(KC0e1519*r11 + KC0e1619*r12) + r33*(KC0e1520*r11 + KC0e1620*r12)
+            KC0v[k] += r31*(KC0e1518*r11 + KC0e1618*r12 + KC0e1718*r13) + r32*(KC0e1519*r11 + KC0e1619*r12 + KC0e1719*r13) + r33*(KC0e1520*r11 + KC0e1620*r12)
             k += 1
-            KC0v[k] += r11*(KC0e1521*r11 + KC0e1621*r12) + r12*(KC0e1522*r11 + KC0e1622*r12)
+            KC0v[k] += KC0e1723*r13**2 + r11*(KC0e1521*r11 + KC0e1621*r12) + r12*(KC0e1522*r11 + KC0e1622*r12)
             k += 1
-            KC0v[k] += r21*(KC0e1521*r11 + KC0e1621*r12) + r22*(KC0e1522*r11 + KC0e1622*r12)
+            KC0v[k] += KC0e1723*r13*r23 + r21*(KC0e1521*r11 + KC0e1621*r12) + r22*(KC0e1522*r11 + KC0e1622*r12)
             k += 1
-            KC0v[k] += r31*(KC0e1521*r11 + KC0e1621*r12) + r32*(KC0e1522*r11 + KC0e1622*r12)
+            KC0v[k] += KC0e1723*r13*r33 + r31*(KC0e1521*r11 + KC0e1621*r12) + r32*(KC0e1522*r11 + KC0e1622*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0015*r21 + KC0e0016*r22) + r12*(KC0e0115*r21 + KC0e0116*r22) + r13*(KC0e0215*r21 + KC0e0216*r22)
+            KC0v[k] += r11*(KC0e0015*r21 + KC0e0016*r22 + KC0e0017*r23) + r12*(KC0e0115*r21 + KC0e0116*r22 + KC0e0117*r23) + r13*(KC0e0215*r21 + KC0e0216*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0015*r21 + KC0e0016*r22) + r22*(KC0e0115*r21 + KC0e0116*r22) + r23*(KC0e0215*r21 + KC0e0216*r22)
+            KC0v[k] += r21*(KC0e0015*r21 + KC0e0016*r22 + KC0e0017*r23) + r22*(KC0e0115*r21 + KC0e0116*r22 + KC0e0117*r23) + r23*(KC0e0215*r21 + KC0e0216*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0015*r21 + KC0e0016*r22) + r32*(KC0e0115*r21 + KC0e0116*r22) + r33*(KC0e0215*r21 + KC0e0216*r22)
+            KC0v[k] += r31*(KC0e0015*r21 + KC0e0016*r22 + KC0e0017*r23) + r32*(KC0e0115*r21 + KC0e0116*r22 + KC0e0117*r23) + r33*(KC0e0215*r21 + KC0e0216*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0315*r21 + KC0e0316*r22) + r12*(KC0e0415*r21 + KC0e0416*r22)
+            KC0v[k] += KC0e0517*r13*r23 + r11*(KC0e0315*r21 + KC0e0316*r22) + r12*(KC0e0415*r21 + KC0e0416*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0315*r21 + KC0e0316*r22) + r22*(KC0e0415*r21 + KC0e0416*r22)
+            KC0v[k] += KC0e0517*r23**2 + r21*(KC0e0315*r21 + KC0e0316*r22) + r22*(KC0e0415*r21 + KC0e0416*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0315*r21 + KC0e0316*r22) + r32*(KC0e0415*r21 + KC0e0416*r22)
+            KC0v[k] += KC0e0517*r23*r33 + r31*(KC0e0315*r21 + KC0e0316*r22) + r32*(KC0e0415*r21 + KC0e0416*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0615*r21 + KC0e0616*r22) + r12*(KC0e0715*r21 + KC0e0716*r22) + r13*(KC0e0815*r21 + KC0e0816*r22)
+            KC0v[k] += r11*(KC0e0615*r21 + KC0e0616*r22 + KC0e0617*r23) + r12*(KC0e0715*r21 + KC0e0716*r22 + KC0e0717*r23) + r13*(KC0e0815*r21 + KC0e0816*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0615*r21 + KC0e0616*r22) + r22*(KC0e0715*r21 + KC0e0716*r22) + r23*(KC0e0815*r21 + KC0e0816*r22)
+            KC0v[k] += r21*(KC0e0615*r21 + KC0e0616*r22 + KC0e0617*r23) + r22*(KC0e0715*r21 + KC0e0716*r22 + KC0e0717*r23) + r23*(KC0e0815*r21 + KC0e0816*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0615*r21 + KC0e0616*r22) + r32*(KC0e0715*r21 + KC0e0716*r22) + r33*(KC0e0815*r21 + KC0e0816*r22)
+            KC0v[k] += r31*(KC0e0615*r21 + KC0e0616*r22 + KC0e0617*r23) + r32*(KC0e0715*r21 + KC0e0716*r22 + KC0e0717*r23) + r33*(KC0e0815*r21 + KC0e0816*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0915*r21 + KC0e0916*r22) + r12*(KC0e1015*r21 + KC0e1016*r22)
+            KC0v[k] += KC0e1117*r13*r23 + r11*(KC0e0915*r21 + KC0e0916*r22) + r12*(KC0e1015*r21 + KC0e1016*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0915*r21 + KC0e0916*r22) + r22*(KC0e1015*r21 + KC0e1016*r22)
+            KC0v[k] += KC0e1117*r23**2 + r21*(KC0e0915*r21 + KC0e0916*r22) + r22*(KC0e1015*r21 + KC0e1016*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0915*r21 + KC0e0916*r22) + r32*(KC0e1015*r21 + KC0e1016*r22)
+            KC0v[k] += KC0e1117*r23*r33 + r31*(KC0e0915*r21 + KC0e0916*r22) + r32*(KC0e1015*r21 + KC0e1016*r22)
             k += 1
-            KC0v[k] += r11*(KC0e1215*r21 + KC0e1216*r22) + r12*(KC0e1315*r21 + KC0e1316*r22) + r13*(KC0e1415*r21 + KC0e1416*r22)
+            KC0v[k] += r11*(KC0e1215*r21 + KC0e1216*r22 + KC0e1217*r23) + r12*(KC0e1315*r21 + KC0e1316*r22 + KC0e1317*r23) + r13*(KC0e1415*r21 + KC0e1416*r22)
             k += 1
-            KC0v[k] += r21*(KC0e1215*r21 + KC0e1216*r22) + r22*(KC0e1315*r21 + KC0e1316*r22) + r23*(KC0e1415*r21 + KC0e1416*r22)
+            KC0v[k] += r21*(KC0e1215*r21 + KC0e1216*r22 + KC0e1217*r23) + r22*(KC0e1315*r21 + KC0e1316*r22 + KC0e1317*r23) + r23*(KC0e1415*r21 + KC0e1416*r22)
             k += 1
-            KC0v[k] += r31*(KC0e1215*r21 + KC0e1216*r22) + r32*(KC0e1315*r21 + KC0e1316*r22) + r33*(KC0e1415*r21 + KC0e1416*r22)
+            KC0v[k] += r31*(KC0e1215*r21 + KC0e1216*r22 + KC0e1217*r23) + r32*(KC0e1315*r21 + KC0e1316*r22 + KC0e1317*r23) + r33*(KC0e1415*r21 + KC0e1416*r22)
             k += 1
             KC0v[k] += KC0e1717*r13*r23 + r11*(KC0e1515*r21 + KC0e1516*r22) + r12*(KC0e1516*r21 + KC0e1616*r22)
             k += 1
@@ -3896,47 +4268,47 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e1717*r23*r33 + r31*(KC0e1515*r21 + KC0e1516*r22) + r32*(KC0e1516*r21 + KC0e1616*r22)
             k += 1
-            KC0v[k] += r11*(KC0e1518*r21 + KC0e1618*r22) + r12*(KC0e1519*r21 + KC0e1619*r22) + r13*(KC0e1520*r21 + KC0e1620*r22)
+            KC0v[k] += r11*(KC0e1518*r21 + KC0e1618*r22 + KC0e1718*r23) + r12*(KC0e1519*r21 + KC0e1619*r22 + KC0e1719*r23) + r13*(KC0e1520*r21 + KC0e1620*r22)
             k += 1
-            KC0v[k] += r21*(KC0e1518*r21 + KC0e1618*r22) + r22*(KC0e1519*r21 + KC0e1619*r22) + r23*(KC0e1520*r21 + KC0e1620*r22)
+            KC0v[k] += r21*(KC0e1518*r21 + KC0e1618*r22 + KC0e1718*r23) + r22*(KC0e1519*r21 + KC0e1619*r22 + KC0e1719*r23) + r23*(KC0e1520*r21 + KC0e1620*r22)
             k += 1
-            KC0v[k] += r31*(KC0e1518*r21 + KC0e1618*r22) + r32*(KC0e1519*r21 + KC0e1619*r22) + r33*(KC0e1520*r21 + KC0e1620*r22)
+            KC0v[k] += r31*(KC0e1518*r21 + KC0e1618*r22 + KC0e1718*r23) + r32*(KC0e1519*r21 + KC0e1619*r22 + KC0e1719*r23) + r33*(KC0e1520*r21 + KC0e1620*r22)
             k += 1
-            KC0v[k] += r11*(KC0e1521*r21 + KC0e1621*r22) + r12*(KC0e1522*r21 + KC0e1622*r22)
+            KC0v[k] += KC0e1723*r13*r23 + r11*(KC0e1521*r21 + KC0e1621*r22) + r12*(KC0e1522*r21 + KC0e1622*r22)
             k += 1
-            KC0v[k] += r21*(KC0e1521*r21 + KC0e1621*r22) + r22*(KC0e1522*r21 + KC0e1622*r22)
+            KC0v[k] += KC0e1723*r23**2 + r21*(KC0e1521*r21 + KC0e1621*r22) + r22*(KC0e1522*r21 + KC0e1622*r22)
             k += 1
-            KC0v[k] += r31*(KC0e1521*r21 + KC0e1621*r22) + r32*(KC0e1522*r21 + KC0e1622*r22)
+            KC0v[k] += KC0e1723*r23*r33 + r31*(KC0e1521*r21 + KC0e1621*r22) + r32*(KC0e1522*r21 + KC0e1622*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0015*r31 + KC0e0016*r32) + r12*(KC0e0115*r31 + KC0e0116*r32) + r13*(KC0e0215*r31 + KC0e0216*r32)
+            KC0v[k] += r11*(KC0e0015*r31 + KC0e0016*r32 + KC0e0017*r33) + r12*(KC0e0115*r31 + KC0e0116*r32 + KC0e0117*r33) + r13*(KC0e0215*r31 + KC0e0216*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0015*r31 + KC0e0016*r32) + r22*(KC0e0115*r31 + KC0e0116*r32) + r23*(KC0e0215*r31 + KC0e0216*r32)
+            KC0v[k] += r21*(KC0e0015*r31 + KC0e0016*r32 + KC0e0017*r33) + r22*(KC0e0115*r31 + KC0e0116*r32 + KC0e0117*r33) + r23*(KC0e0215*r31 + KC0e0216*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0015*r31 + KC0e0016*r32) + r32*(KC0e0115*r31 + KC0e0116*r32) + r33*(KC0e0215*r31 + KC0e0216*r32)
+            KC0v[k] += r31*(KC0e0015*r31 + KC0e0016*r32 + KC0e0017*r33) + r32*(KC0e0115*r31 + KC0e0116*r32 + KC0e0117*r33) + r33*(KC0e0215*r31 + KC0e0216*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0315*r31 + KC0e0316*r32) + r12*(KC0e0415*r31 + KC0e0416*r32)
+            KC0v[k] += KC0e0517*r13*r33 + r11*(KC0e0315*r31 + KC0e0316*r32) + r12*(KC0e0415*r31 + KC0e0416*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0315*r31 + KC0e0316*r32) + r22*(KC0e0415*r31 + KC0e0416*r32)
+            KC0v[k] += KC0e0517*r23*r33 + r21*(KC0e0315*r31 + KC0e0316*r32) + r22*(KC0e0415*r31 + KC0e0416*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0315*r31 + KC0e0316*r32) + r32*(KC0e0415*r31 + KC0e0416*r32)
+            KC0v[k] += KC0e0517*r33**2 + r31*(KC0e0315*r31 + KC0e0316*r32) + r32*(KC0e0415*r31 + KC0e0416*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0615*r31 + KC0e0616*r32) + r12*(KC0e0715*r31 + KC0e0716*r32) + r13*(KC0e0815*r31 + KC0e0816*r32)
+            KC0v[k] += r11*(KC0e0615*r31 + KC0e0616*r32 + KC0e0617*r33) + r12*(KC0e0715*r31 + KC0e0716*r32 + KC0e0717*r33) + r13*(KC0e0815*r31 + KC0e0816*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0615*r31 + KC0e0616*r32) + r22*(KC0e0715*r31 + KC0e0716*r32) + r23*(KC0e0815*r31 + KC0e0816*r32)
+            KC0v[k] += r21*(KC0e0615*r31 + KC0e0616*r32 + KC0e0617*r33) + r22*(KC0e0715*r31 + KC0e0716*r32 + KC0e0717*r33) + r23*(KC0e0815*r31 + KC0e0816*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0615*r31 + KC0e0616*r32) + r32*(KC0e0715*r31 + KC0e0716*r32) + r33*(KC0e0815*r31 + KC0e0816*r32)
+            KC0v[k] += r31*(KC0e0615*r31 + KC0e0616*r32 + KC0e0617*r33) + r32*(KC0e0715*r31 + KC0e0716*r32 + KC0e0717*r33) + r33*(KC0e0815*r31 + KC0e0816*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0915*r31 + KC0e0916*r32) + r12*(KC0e1015*r31 + KC0e1016*r32)
+            KC0v[k] += KC0e1117*r13*r33 + r11*(KC0e0915*r31 + KC0e0916*r32) + r12*(KC0e1015*r31 + KC0e1016*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0915*r31 + KC0e0916*r32) + r22*(KC0e1015*r31 + KC0e1016*r32)
+            KC0v[k] += KC0e1117*r23*r33 + r21*(KC0e0915*r31 + KC0e0916*r32) + r22*(KC0e1015*r31 + KC0e1016*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0915*r31 + KC0e0916*r32) + r32*(KC0e1015*r31 + KC0e1016*r32)
+            KC0v[k] += KC0e1117*r33**2 + r31*(KC0e0915*r31 + KC0e0916*r32) + r32*(KC0e1015*r31 + KC0e1016*r32)
             k += 1
-            KC0v[k] += r11*(KC0e1215*r31 + KC0e1216*r32) + r12*(KC0e1315*r31 + KC0e1316*r32) + r13*(KC0e1415*r31 + KC0e1416*r32)
+            KC0v[k] += r11*(KC0e1215*r31 + KC0e1216*r32 + KC0e1217*r33) + r12*(KC0e1315*r31 + KC0e1316*r32 + KC0e1317*r33) + r13*(KC0e1415*r31 + KC0e1416*r32)
             k += 1
-            KC0v[k] += r21*(KC0e1215*r31 + KC0e1216*r32) + r22*(KC0e1315*r31 + KC0e1316*r32) + r23*(KC0e1415*r31 + KC0e1416*r32)
+            KC0v[k] += r21*(KC0e1215*r31 + KC0e1216*r32 + KC0e1217*r33) + r22*(KC0e1315*r31 + KC0e1316*r32 + KC0e1317*r33) + r23*(KC0e1415*r31 + KC0e1416*r32)
             k += 1
-            KC0v[k] += r31*(KC0e1215*r31 + KC0e1216*r32) + r32*(KC0e1315*r31 + KC0e1316*r32) + r33*(KC0e1415*r31 + KC0e1416*r32)
+            KC0v[k] += r31*(KC0e1215*r31 + KC0e1216*r32 + KC0e1217*r33) + r32*(KC0e1315*r31 + KC0e1316*r32 + KC0e1317*r33) + r33*(KC0e1415*r31 + KC0e1416*r32)
             k += 1
             KC0v[k] += KC0e1717*r13*r33 + r11*(KC0e1515*r31 + KC0e1516*r32) + r12*(KC0e1516*r31 + KC0e1616*r32)
             k += 1
@@ -3944,17 +4316,17 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e1717*r33**2 + r31*(KC0e1515*r31 + KC0e1516*r32) + r32*(KC0e1516*r31 + KC0e1616*r32)
             k += 1
-            KC0v[k] += r11*(KC0e1518*r31 + KC0e1618*r32) + r12*(KC0e1519*r31 + KC0e1619*r32) + r13*(KC0e1520*r31 + KC0e1620*r32)
+            KC0v[k] += r11*(KC0e1518*r31 + KC0e1618*r32 + KC0e1718*r33) + r12*(KC0e1519*r31 + KC0e1619*r32 + KC0e1719*r33) + r13*(KC0e1520*r31 + KC0e1620*r32)
             k += 1
-            KC0v[k] += r21*(KC0e1518*r31 + KC0e1618*r32) + r22*(KC0e1519*r31 + KC0e1619*r32) + r23*(KC0e1520*r31 + KC0e1620*r32)
+            KC0v[k] += r21*(KC0e1518*r31 + KC0e1618*r32 + KC0e1718*r33) + r22*(KC0e1519*r31 + KC0e1619*r32 + KC0e1719*r33) + r23*(KC0e1520*r31 + KC0e1620*r32)
             k += 1
-            KC0v[k] += r31*(KC0e1518*r31 + KC0e1618*r32) + r32*(KC0e1519*r31 + KC0e1619*r32) + r33*(KC0e1520*r31 + KC0e1620*r32)
+            KC0v[k] += r31*(KC0e1518*r31 + KC0e1618*r32 + KC0e1718*r33) + r32*(KC0e1519*r31 + KC0e1619*r32 + KC0e1719*r33) + r33*(KC0e1520*r31 + KC0e1620*r32)
             k += 1
-            KC0v[k] += r11*(KC0e1521*r31 + KC0e1621*r32) + r12*(KC0e1522*r31 + KC0e1622*r32)
+            KC0v[k] += KC0e1723*r13*r33 + r11*(KC0e1521*r31 + KC0e1621*r32) + r12*(KC0e1522*r31 + KC0e1622*r32)
             k += 1
-            KC0v[k] += r21*(KC0e1521*r31 + KC0e1621*r32) + r22*(KC0e1522*r31 + KC0e1622*r32)
+            KC0v[k] += KC0e1723*r23*r33 + r21*(KC0e1521*r31 + KC0e1621*r32) + r22*(KC0e1522*r31 + KC0e1622*r32)
             k += 1
-            KC0v[k] += r31*(KC0e1521*r31 + KC0e1621*r32) + r32*(KC0e1522*r31 + KC0e1622*r32)
+            KC0v[k] += KC0e1723*r33**2 + r31*(KC0e1521*r31 + KC0e1621*r32) + r32*(KC0e1522*r31 + KC0e1622*r32)
             k += 1
             KC0v[k] += KC0e0220*r13**2 + r11*(KC0e0018*r11 + KC0e0019*r12) + r12*(KC0e0118*r11 + KC0e0119*r12)
             k += 1
@@ -3962,11 +4334,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0220*r13*r33 + r31*(KC0e0018*r11 + KC0e0019*r12) + r32*(KC0e0118*r11 + KC0e0119*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0318*r11 + KC0e0319*r12 + KC0e0320*r13) + r12*(KC0e0418*r11 + KC0e0419*r12 + KC0e0420*r13)
+            KC0v[k] += r11*(KC0e0318*r11 + KC0e0319*r12 + KC0e0320*r13) + r12*(KC0e0418*r11 + KC0e0419*r12 + KC0e0420*r13) + r13*(KC0e0518*r11 + KC0e0519*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0318*r11 + KC0e0319*r12 + KC0e0320*r13) + r22*(KC0e0418*r11 + KC0e0419*r12 + KC0e0420*r13)
+            KC0v[k] += r21*(KC0e0318*r11 + KC0e0319*r12 + KC0e0320*r13) + r22*(KC0e0418*r11 + KC0e0419*r12 + KC0e0420*r13) + r23*(KC0e0518*r11 + KC0e0519*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0318*r11 + KC0e0319*r12 + KC0e0320*r13) + r32*(KC0e0418*r11 + KC0e0419*r12 + KC0e0420*r13)
+            KC0v[k] += r31*(KC0e0318*r11 + KC0e0319*r12 + KC0e0320*r13) + r32*(KC0e0418*r11 + KC0e0419*r12 + KC0e0420*r13) + r33*(KC0e0518*r11 + KC0e0519*r12)
             k += 1
             KC0v[k] += KC0e0820*r13**2 + r11*(KC0e0618*r11 + KC0e0619*r12) + r12*(KC0e0718*r11 + KC0e0719*r12)
             k += 1
@@ -3974,11 +4346,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0820*r13*r33 + r31*(KC0e0618*r11 + KC0e0619*r12) + r32*(KC0e0718*r11 + KC0e0719*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0918*r11 + KC0e0919*r12 + KC0e0920*r13) + r12*(KC0e1018*r11 + KC0e1019*r12 + KC0e1020*r13)
+            KC0v[k] += r11*(KC0e0918*r11 + KC0e0919*r12 + KC0e0920*r13) + r12*(KC0e1018*r11 + KC0e1019*r12 + KC0e1020*r13) + r13*(KC0e1118*r11 + KC0e1119*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0918*r11 + KC0e0919*r12 + KC0e0920*r13) + r22*(KC0e1018*r11 + KC0e1019*r12 + KC0e1020*r13)
+            KC0v[k] += r21*(KC0e0918*r11 + KC0e0919*r12 + KC0e0920*r13) + r22*(KC0e1018*r11 + KC0e1019*r12 + KC0e1020*r13) + r23*(KC0e1118*r11 + KC0e1119*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0918*r11 + KC0e0919*r12 + KC0e0920*r13) + r32*(KC0e1018*r11 + KC0e1019*r12 + KC0e1020*r13)
+            KC0v[k] += r31*(KC0e0918*r11 + KC0e0919*r12 + KC0e0920*r13) + r32*(KC0e1018*r11 + KC0e1019*r12 + KC0e1020*r13) + r33*(KC0e1118*r11 + KC0e1119*r12)
             k += 1
             KC0v[k] += KC0e1420*r13**2 + r11*(KC0e1218*r11 + KC0e1219*r12) + r12*(KC0e1318*r11 + KC0e1319*r12)
             k += 1
@@ -3986,11 +4358,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e1420*r13*r33 + r31*(KC0e1218*r11 + KC0e1219*r12) + r32*(KC0e1318*r11 + KC0e1319*r12)
             k += 1
-            KC0v[k] += r11*(KC0e1518*r11 + KC0e1519*r12 + KC0e1520*r13) + r12*(KC0e1618*r11 + KC0e1619*r12 + KC0e1620*r13)
+            KC0v[k] += r11*(KC0e1518*r11 + KC0e1519*r12 + KC0e1520*r13) + r12*(KC0e1618*r11 + KC0e1619*r12 + KC0e1620*r13) + r13*(KC0e1718*r11 + KC0e1719*r12)
             k += 1
-            KC0v[k] += r21*(KC0e1518*r11 + KC0e1519*r12 + KC0e1520*r13) + r22*(KC0e1618*r11 + KC0e1619*r12 + KC0e1620*r13)
+            KC0v[k] += r21*(KC0e1518*r11 + KC0e1519*r12 + KC0e1520*r13) + r22*(KC0e1618*r11 + KC0e1619*r12 + KC0e1620*r13) + r23*(KC0e1718*r11 + KC0e1719*r12)
             k += 1
-            KC0v[k] += r31*(KC0e1518*r11 + KC0e1519*r12 + KC0e1520*r13) + r32*(KC0e1618*r11 + KC0e1619*r12 + KC0e1620*r13)
+            KC0v[k] += r31*(KC0e1518*r11 + KC0e1519*r12 + KC0e1520*r13) + r32*(KC0e1618*r11 + KC0e1619*r12 + KC0e1620*r13) + r33*(KC0e1718*r11 + KC0e1719*r12)
             k += 1
             KC0v[k] += KC0e2020*r13**2 + r11*(KC0e1818*r11 + KC0e1819*r12) + r12*(KC0e1819*r11 + KC0e1919*r12)
             k += 1
@@ -3998,11 +4370,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e2020*r13*r33 + r31*(KC0e1818*r11 + KC0e1819*r12) + r32*(KC0e1819*r11 + KC0e1919*r12)
             k += 1
-            KC0v[k] += r11*(KC0e1821*r11 + KC0e1921*r12 + KC0e2021*r13) + r12*(KC0e1822*r11 + KC0e1922*r12 + KC0e2022*r13)
+            KC0v[k] += r11*(KC0e1821*r11 + KC0e1921*r12 + KC0e2021*r13) + r12*(KC0e1822*r11 + KC0e1922*r12 + KC0e2022*r13) + r13*(KC0e1823*r11 + KC0e1923*r12)
             k += 1
-            KC0v[k] += r21*(KC0e1821*r11 + KC0e1921*r12 + KC0e2021*r13) + r22*(KC0e1822*r11 + KC0e1922*r12 + KC0e2022*r13)
+            KC0v[k] += r21*(KC0e1821*r11 + KC0e1921*r12 + KC0e2021*r13) + r22*(KC0e1822*r11 + KC0e1922*r12 + KC0e2022*r13) + r23*(KC0e1823*r11 + KC0e1923*r12)
             k += 1
-            KC0v[k] += r31*(KC0e1821*r11 + KC0e1921*r12 + KC0e2021*r13) + r32*(KC0e1822*r11 + KC0e1922*r12 + KC0e2022*r13)
+            KC0v[k] += r31*(KC0e1821*r11 + KC0e1921*r12 + KC0e2021*r13) + r32*(KC0e1822*r11 + KC0e1922*r12 + KC0e2022*r13) + r33*(KC0e1823*r11 + KC0e1923*r12)
             k += 1
             KC0v[k] += KC0e0220*r13*r23 + r11*(KC0e0018*r21 + KC0e0019*r22) + r12*(KC0e0118*r21 + KC0e0119*r22)
             k += 1
@@ -4010,11 +4382,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0220*r23*r33 + r31*(KC0e0018*r21 + KC0e0019*r22) + r32*(KC0e0118*r21 + KC0e0119*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0318*r21 + KC0e0319*r22 + KC0e0320*r23) + r12*(KC0e0418*r21 + KC0e0419*r22 + KC0e0420*r23)
+            KC0v[k] += r11*(KC0e0318*r21 + KC0e0319*r22 + KC0e0320*r23) + r12*(KC0e0418*r21 + KC0e0419*r22 + KC0e0420*r23) + r13*(KC0e0518*r21 + KC0e0519*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0318*r21 + KC0e0319*r22 + KC0e0320*r23) + r22*(KC0e0418*r21 + KC0e0419*r22 + KC0e0420*r23)
+            KC0v[k] += r21*(KC0e0318*r21 + KC0e0319*r22 + KC0e0320*r23) + r22*(KC0e0418*r21 + KC0e0419*r22 + KC0e0420*r23) + r23*(KC0e0518*r21 + KC0e0519*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0318*r21 + KC0e0319*r22 + KC0e0320*r23) + r32*(KC0e0418*r21 + KC0e0419*r22 + KC0e0420*r23)
+            KC0v[k] += r31*(KC0e0318*r21 + KC0e0319*r22 + KC0e0320*r23) + r32*(KC0e0418*r21 + KC0e0419*r22 + KC0e0420*r23) + r33*(KC0e0518*r21 + KC0e0519*r22)
             k += 1
             KC0v[k] += KC0e0820*r13*r23 + r11*(KC0e0618*r21 + KC0e0619*r22) + r12*(KC0e0718*r21 + KC0e0719*r22)
             k += 1
@@ -4022,11 +4394,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0820*r23*r33 + r31*(KC0e0618*r21 + KC0e0619*r22) + r32*(KC0e0718*r21 + KC0e0719*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0918*r21 + KC0e0919*r22 + KC0e0920*r23) + r12*(KC0e1018*r21 + KC0e1019*r22 + KC0e1020*r23)
+            KC0v[k] += r11*(KC0e0918*r21 + KC0e0919*r22 + KC0e0920*r23) + r12*(KC0e1018*r21 + KC0e1019*r22 + KC0e1020*r23) + r13*(KC0e1118*r21 + KC0e1119*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0918*r21 + KC0e0919*r22 + KC0e0920*r23) + r22*(KC0e1018*r21 + KC0e1019*r22 + KC0e1020*r23)
+            KC0v[k] += r21*(KC0e0918*r21 + KC0e0919*r22 + KC0e0920*r23) + r22*(KC0e1018*r21 + KC0e1019*r22 + KC0e1020*r23) + r23*(KC0e1118*r21 + KC0e1119*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0918*r21 + KC0e0919*r22 + KC0e0920*r23) + r32*(KC0e1018*r21 + KC0e1019*r22 + KC0e1020*r23)
+            KC0v[k] += r31*(KC0e0918*r21 + KC0e0919*r22 + KC0e0920*r23) + r32*(KC0e1018*r21 + KC0e1019*r22 + KC0e1020*r23) + r33*(KC0e1118*r21 + KC0e1119*r22)
             k += 1
             KC0v[k] += KC0e1420*r13*r23 + r11*(KC0e1218*r21 + KC0e1219*r22) + r12*(KC0e1318*r21 + KC0e1319*r22)
             k += 1
@@ -4034,11 +4406,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e1420*r23*r33 + r31*(KC0e1218*r21 + KC0e1219*r22) + r32*(KC0e1318*r21 + KC0e1319*r22)
             k += 1
-            KC0v[k] += r11*(KC0e1518*r21 + KC0e1519*r22 + KC0e1520*r23) + r12*(KC0e1618*r21 + KC0e1619*r22 + KC0e1620*r23)
+            KC0v[k] += r11*(KC0e1518*r21 + KC0e1519*r22 + KC0e1520*r23) + r12*(KC0e1618*r21 + KC0e1619*r22 + KC0e1620*r23) + r13*(KC0e1718*r21 + KC0e1719*r22)
             k += 1
-            KC0v[k] += r21*(KC0e1518*r21 + KC0e1519*r22 + KC0e1520*r23) + r22*(KC0e1618*r21 + KC0e1619*r22 + KC0e1620*r23)
+            KC0v[k] += r21*(KC0e1518*r21 + KC0e1519*r22 + KC0e1520*r23) + r22*(KC0e1618*r21 + KC0e1619*r22 + KC0e1620*r23) + r23*(KC0e1718*r21 + KC0e1719*r22)
             k += 1
-            KC0v[k] += r31*(KC0e1518*r21 + KC0e1519*r22 + KC0e1520*r23) + r32*(KC0e1618*r21 + KC0e1619*r22 + KC0e1620*r23)
+            KC0v[k] += r31*(KC0e1518*r21 + KC0e1519*r22 + KC0e1520*r23) + r32*(KC0e1618*r21 + KC0e1619*r22 + KC0e1620*r23) + r33*(KC0e1718*r21 + KC0e1719*r22)
             k += 1
             KC0v[k] += KC0e2020*r13*r23 + r11*(KC0e1818*r21 + KC0e1819*r22) + r12*(KC0e1819*r21 + KC0e1919*r22)
             k += 1
@@ -4046,11 +4418,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e2020*r23*r33 + r31*(KC0e1818*r21 + KC0e1819*r22) + r32*(KC0e1819*r21 + KC0e1919*r22)
             k += 1
-            KC0v[k] += r11*(KC0e1821*r21 + KC0e1921*r22 + KC0e2021*r23) + r12*(KC0e1822*r21 + KC0e1922*r22 + KC0e2022*r23)
+            KC0v[k] += r11*(KC0e1821*r21 + KC0e1921*r22 + KC0e2021*r23) + r12*(KC0e1822*r21 + KC0e1922*r22 + KC0e2022*r23) + r13*(KC0e1823*r21 + KC0e1923*r22)
             k += 1
-            KC0v[k] += r21*(KC0e1821*r21 + KC0e1921*r22 + KC0e2021*r23) + r22*(KC0e1822*r21 + KC0e1922*r22 + KC0e2022*r23)
+            KC0v[k] += r21*(KC0e1821*r21 + KC0e1921*r22 + KC0e2021*r23) + r22*(KC0e1822*r21 + KC0e1922*r22 + KC0e2022*r23) + r23*(KC0e1823*r21 + KC0e1923*r22)
             k += 1
-            KC0v[k] += r31*(KC0e1821*r21 + KC0e1921*r22 + KC0e2021*r23) + r32*(KC0e1822*r21 + KC0e1922*r22 + KC0e2022*r23)
+            KC0v[k] += r31*(KC0e1821*r21 + KC0e1921*r22 + KC0e2021*r23) + r32*(KC0e1822*r21 + KC0e1922*r22 + KC0e2022*r23) + r33*(KC0e1823*r21 + KC0e1923*r22)
             k += 1
             KC0v[k] += KC0e0220*r13*r33 + r11*(KC0e0018*r31 + KC0e0019*r32) + r12*(KC0e0118*r31 + KC0e0119*r32)
             k += 1
@@ -4058,11 +4430,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0220*r33**2 + r31*(KC0e0018*r31 + KC0e0019*r32) + r32*(KC0e0118*r31 + KC0e0119*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0318*r31 + KC0e0319*r32 + KC0e0320*r33) + r12*(KC0e0418*r31 + KC0e0419*r32 + KC0e0420*r33)
+            KC0v[k] += r11*(KC0e0318*r31 + KC0e0319*r32 + KC0e0320*r33) + r12*(KC0e0418*r31 + KC0e0419*r32 + KC0e0420*r33) + r13*(KC0e0518*r31 + KC0e0519*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0318*r31 + KC0e0319*r32 + KC0e0320*r33) + r22*(KC0e0418*r31 + KC0e0419*r32 + KC0e0420*r33)
+            KC0v[k] += r21*(KC0e0318*r31 + KC0e0319*r32 + KC0e0320*r33) + r22*(KC0e0418*r31 + KC0e0419*r32 + KC0e0420*r33) + r23*(KC0e0518*r31 + KC0e0519*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0318*r31 + KC0e0319*r32 + KC0e0320*r33) + r32*(KC0e0418*r31 + KC0e0419*r32 + KC0e0420*r33)
+            KC0v[k] += r31*(KC0e0318*r31 + KC0e0319*r32 + KC0e0320*r33) + r32*(KC0e0418*r31 + KC0e0419*r32 + KC0e0420*r33) + r33*(KC0e0518*r31 + KC0e0519*r32)
             k += 1
             KC0v[k] += KC0e0820*r13*r33 + r11*(KC0e0618*r31 + KC0e0619*r32) + r12*(KC0e0718*r31 + KC0e0719*r32)
             k += 1
@@ -4070,11 +4442,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e0820*r33**2 + r31*(KC0e0618*r31 + KC0e0619*r32) + r32*(KC0e0718*r31 + KC0e0719*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0918*r31 + KC0e0919*r32 + KC0e0920*r33) + r12*(KC0e1018*r31 + KC0e1019*r32 + KC0e1020*r33)
+            KC0v[k] += r11*(KC0e0918*r31 + KC0e0919*r32 + KC0e0920*r33) + r12*(KC0e1018*r31 + KC0e1019*r32 + KC0e1020*r33) + r13*(KC0e1118*r31 + KC0e1119*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0918*r31 + KC0e0919*r32 + KC0e0920*r33) + r22*(KC0e1018*r31 + KC0e1019*r32 + KC0e1020*r33)
+            KC0v[k] += r21*(KC0e0918*r31 + KC0e0919*r32 + KC0e0920*r33) + r22*(KC0e1018*r31 + KC0e1019*r32 + KC0e1020*r33) + r23*(KC0e1118*r31 + KC0e1119*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0918*r31 + KC0e0919*r32 + KC0e0920*r33) + r32*(KC0e1018*r31 + KC0e1019*r32 + KC0e1020*r33)
+            KC0v[k] += r31*(KC0e0918*r31 + KC0e0919*r32 + KC0e0920*r33) + r32*(KC0e1018*r31 + KC0e1019*r32 + KC0e1020*r33) + r33*(KC0e1118*r31 + KC0e1119*r32)
             k += 1
             KC0v[k] += KC0e1420*r13*r33 + r11*(KC0e1218*r31 + KC0e1219*r32) + r12*(KC0e1318*r31 + KC0e1319*r32)
             k += 1
@@ -4082,11 +4454,11 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e1420*r33**2 + r31*(KC0e1218*r31 + KC0e1219*r32) + r32*(KC0e1318*r31 + KC0e1319*r32)
             k += 1
-            KC0v[k] += r11*(KC0e1518*r31 + KC0e1519*r32 + KC0e1520*r33) + r12*(KC0e1618*r31 + KC0e1619*r32 + KC0e1620*r33)
+            KC0v[k] += r11*(KC0e1518*r31 + KC0e1519*r32 + KC0e1520*r33) + r12*(KC0e1618*r31 + KC0e1619*r32 + KC0e1620*r33) + r13*(KC0e1718*r31 + KC0e1719*r32)
             k += 1
-            KC0v[k] += r21*(KC0e1518*r31 + KC0e1519*r32 + KC0e1520*r33) + r22*(KC0e1618*r31 + KC0e1619*r32 + KC0e1620*r33)
+            KC0v[k] += r21*(KC0e1518*r31 + KC0e1519*r32 + KC0e1520*r33) + r22*(KC0e1618*r31 + KC0e1619*r32 + KC0e1620*r33) + r23*(KC0e1718*r31 + KC0e1719*r32)
             k += 1
-            KC0v[k] += r31*(KC0e1518*r31 + KC0e1519*r32 + KC0e1520*r33) + r32*(KC0e1618*r31 + KC0e1619*r32 + KC0e1620*r33)
+            KC0v[k] += r31*(KC0e1518*r31 + KC0e1519*r32 + KC0e1520*r33) + r32*(KC0e1618*r31 + KC0e1619*r32 + KC0e1620*r33) + r33*(KC0e1718*r31 + KC0e1719*r32)
             k += 1
             KC0v[k] += KC0e2020*r13*r33 + r11*(KC0e1818*r31 + KC0e1819*r32) + r12*(KC0e1819*r31 + KC0e1919*r32)
             k += 1
@@ -4094,53 +4466,53 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e2020*r33**2 + r31*(KC0e1818*r31 + KC0e1819*r32) + r32*(KC0e1819*r31 + KC0e1919*r32)
             k += 1
-            KC0v[k] += r11*(KC0e1821*r31 + KC0e1921*r32 + KC0e2021*r33) + r12*(KC0e1822*r31 + KC0e1922*r32 + KC0e2022*r33)
+            KC0v[k] += r11*(KC0e1821*r31 + KC0e1921*r32 + KC0e2021*r33) + r12*(KC0e1822*r31 + KC0e1922*r32 + KC0e2022*r33) + r13*(KC0e1823*r31 + KC0e1923*r32)
             k += 1
-            KC0v[k] += r21*(KC0e1821*r31 + KC0e1921*r32 + KC0e2021*r33) + r22*(KC0e1822*r31 + KC0e1922*r32 + KC0e2022*r33)
+            KC0v[k] += r21*(KC0e1821*r31 + KC0e1921*r32 + KC0e2021*r33) + r22*(KC0e1822*r31 + KC0e1922*r32 + KC0e2022*r33) + r23*(KC0e1823*r31 + KC0e1923*r32)
             k += 1
-            KC0v[k] += r31*(KC0e1821*r31 + KC0e1921*r32 + KC0e2021*r33) + r32*(KC0e1822*r31 + KC0e1922*r32 + KC0e2022*r33)
+            KC0v[k] += r31*(KC0e1821*r31 + KC0e1921*r32 + KC0e2021*r33) + r32*(KC0e1822*r31 + KC0e1922*r32 + KC0e2022*r33) + r33*(KC0e1823*r31 + KC0e1923*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0021*r11 + KC0e0022*r12) + r12*(KC0e0121*r11 + KC0e0122*r12) + r13*(KC0e0221*r11 + KC0e0222*r12)
+            KC0v[k] += r11*(KC0e0021*r11 + KC0e0022*r12 + KC0e0023*r13) + r12*(KC0e0121*r11 + KC0e0122*r12 + KC0e0123*r13) + r13*(KC0e0221*r11 + KC0e0222*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0021*r11 + KC0e0022*r12) + r22*(KC0e0121*r11 + KC0e0122*r12) + r23*(KC0e0221*r11 + KC0e0222*r12)
+            KC0v[k] += r21*(KC0e0021*r11 + KC0e0022*r12 + KC0e0023*r13) + r22*(KC0e0121*r11 + KC0e0122*r12 + KC0e0123*r13) + r23*(KC0e0221*r11 + KC0e0222*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0021*r11 + KC0e0022*r12) + r32*(KC0e0121*r11 + KC0e0122*r12) + r33*(KC0e0221*r11 + KC0e0222*r12)
+            KC0v[k] += r31*(KC0e0021*r11 + KC0e0022*r12 + KC0e0023*r13) + r32*(KC0e0121*r11 + KC0e0122*r12 + KC0e0123*r13) + r33*(KC0e0221*r11 + KC0e0222*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0321*r11 + KC0e0322*r12) + r12*(KC0e0421*r11 + KC0e0422*r12)
+            KC0v[k] += KC0e0523*r13**2 + r11*(KC0e0321*r11 + KC0e0322*r12) + r12*(KC0e0421*r11 + KC0e0422*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0321*r11 + KC0e0322*r12) + r22*(KC0e0421*r11 + KC0e0422*r12)
+            KC0v[k] += KC0e0523*r13*r23 + r21*(KC0e0321*r11 + KC0e0322*r12) + r22*(KC0e0421*r11 + KC0e0422*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0321*r11 + KC0e0322*r12) + r32*(KC0e0421*r11 + KC0e0422*r12)
+            KC0v[k] += KC0e0523*r13*r33 + r31*(KC0e0321*r11 + KC0e0322*r12) + r32*(KC0e0421*r11 + KC0e0422*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0621*r11 + KC0e0622*r12) + r12*(KC0e0721*r11 + KC0e0722*r12) + r13*(KC0e0821*r11 + KC0e0822*r12)
+            KC0v[k] += r11*(KC0e0621*r11 + KC0e0622*r12 + KC0e0623*r13) + r12*(KC0e0721*r11 + KC0e0722*r12 + KC0e0723*r13) + r13*(KC0e0821*r11 + KC0e0822*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0621*r11 + KC0e0622*r12) + r22*(KC0e0721*r11 + KC0e0722*r12) + r23*(KC0e0821*r11 + KC0e0822*r12)
+            KC0v[k] += r21*(KC0e0621*r11 + KC0e0622*r12 + KC0e0623*r13) + r22*(KC0e0721*r11 + KC0e0722*r12 + KC0e0723*r13) + r23*(KC0e0821*r11 + KC0e0822*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0621*r11 + KC0e0622*r12) + r32*(KC0e0721*r11 + KC0e0722*r12) + r33*(KC0e0821*r11 + KC0e0822*r12)
+            KC0v[k] += r31*(KC0e0621*r11 + KC0e0622*r12 + KC0e0623*r13) + r32*(KC0e0721*r11 + KC0e0722*r12 + KC0e0723*r13) + r33*(KC0e0821*r11 + KC0e0822*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0921*r11 + KC0e0922*r12) + r12*(KC0e1021*r11 + KC0e1022*r12)
+            KC0v[k] += KC0e1123*r13**2 + r11*(KC0e0921*r11 + KC0e0922*r12) + r12*(KC0e1021*r11 + KC0e1022*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0921*r11 + KC0e0922*r12) + r22*(KC0e1021*r11 + KC0e1022*r12)
+            KC0v[k] += KC0e1123*r13*r23 + r21*(KC0e0921*r11 + KC0e0922*r12) + r22*(KC0e1021*r11 + KC0e1022*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0921*r11 + KC0e0922*r12) + r32*(KC0e1021*r11 + KC0e1022*r12)
+            KC0v[k] += KC0e1123*r13*r33 + r31*(KC0e0921*r11 + KC0e0922*r12) + r32*(KC0e1021*r11 + KC0e1022*r12)
             k += 1
-            KC0v[k] += r11*(KC0e1221*r11 + KC0e1222*r12) + r12*(KC0e1321*r11 + KC0e1322*r12) + r13*(KC0e1421*r11 + KC0e1422*r12)
+            KC0v[k] += r11*(KC0e1221*r11 + KC0e1222*r12 + KC0e1223*r13) + r12*(KC0e1321*r11 + KC0e1322*r12 + KC0e1323*r13) + r13*(KC0e1421*r11 + KC0e1422*r12)
             k += 1
-            KC0v[k] += r21*(KC0e1221*r11 + KC0e1222*r12) + r22*(KC0e1321*r11 + KC0e1322*r12) + r23*(KC0e1421*r11 + KC0e1422*r12)
+            KC0v[k] += r21*(KC0e1221*r11 + KC0e1222*r12 + KC0e1223*r13) + r22*(KC0e1321*r11 + KC0e1322*r12 + KC0e1323*r13) + r23*(KC0e1421*r11 + KC0e1422*r12)
             k += 1
-            KC0v[k] += r31*(KC0e1221*r11 + KC0e1222*r12) + r32*(KC0e1321*r11 + KC0e1322*r12) + r33*(KC0e1421*r11 + KC0e1422*r12)
+            KC0v[k] += r31*(KC0e1221*r11 + KC0e1222*r12 + KC0e1223*r13) + r32*(KC0e1321*r11 + KC0e1322*r12 + KC0e1323*r13) + r33*(KC0e1421*r11 + KC0e1422*r12)
             k += 1
-            KC0v[k] += r11*(KC0e1521*r11 + KC0e1522*r12) + r12*(KC0e1621*r11 + KC0e1622*r12)
+            KC0v[k] += KC0e1723*r13**2 + r11*(KC0e1521*r11 + KC0e1522*r12) + r12*(KC0e1621*r11 + KC0e1622*r12)
             k += 1
-            KC0v[k] += r21*(KC0e1521*r11 + KC0e1522*r12) + r22*(KC0e1621*r11 + KC0e1622*r12)
+            KC0v[k] += KC0e1723*r13*r23 + r21*(KC0e1521*r11 + KC0e1522*r12) + r22*(KC0e1621*r11 + KC0e1622*r12)
             k += 1
-            KC0v[k] += r31*(KC0e1521*r11 + KC0e1522*r12) + r32*(KC0e1621*r11 + KC0e1622*r12)
+            KC0v[k] += KC0e1723*r13*r33 + r31*(KC0e1521*r11 + KC0e1522*r12) + r32*(KC0e1621*r11 + KC0e1622*r12)
             k += 1
-            KC0v[k] += r11*(KC0e1821*r11 + KC0e1822*r12) + r12*(KC0e1921*r11 + KC0e1922*r12) + r13*(KC0e2021*r11 + KC0e2022*r12)
+            KC0v[k] += r11*(KC0e1821*r11 + KC0e1822*r12 + KC0e1823*r13) + r12*(KC0e1921*r11 + KC0e1922*r12 + KC0e1923*r13) + r13*(KC0e2021*r11 + KC0e2022*r12)
             k += 1
-            KC0v[k] += r21*(KC0e1821*r11 + KC0e1822*r12) + r22*(KC0e1921*r11 + KC0e1922*r12) + r23*(KC0e2021*r11 + KC0e2022*r12)
+            KC0v[k] += r21*(KC0e1821*r11 + KC0e1822*r12 + KC0e1823*r13) + r22*(KC0e1921*r11 + KC0e1922*r12 + KC0e1923*r13) + r23*(KC0e2021*r11 + KC0e2022*r12)
             k += 1
-            KC0v[k] += r31*(KC0e1821*r11 + KC0e1822*r12) + r32*(KC0e1921*r11 + KC0e1922*r12) + r33*(KC0e2021*r11 + KC0e2022*r12)
+            KC0v[k] += r31*(KC0e1821*r11 + KC0e1822*r12 + KC0e1823*r13) + r32*(KC0e1921*r11 + KC0e1922*r12 + KC0e1923*r13) + r33*(KC0e2021*r11 + KC0e2022*r12)
             k += 1
             KC0v[k] += KC0e2323*r13**2 + r11*(KC0e2121*r11 + KC0e2122*r12) + r12*(KC0e2122*r11 + KC0e2222*r12)
             k += 1
@@ -4148,47 +4520,47 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e2323*r13*r33 + r31*(KC0e2121*r11 + KC0e2122*r12) + r32*(KC0e2122*r11 + KC0e2222*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0021*r21 + KC0e0022*r22) + r12*(KC0e0121*r21 + KC0e0122*r22) + r13*(KC0e0221*r21 + KC0e0222*r22)
+            KC0v[k] += r11*(KC0e0021*r21 + KC0e0022*r22 + KC0e0023*r23) + r12*(KC0e0121*r21 + KC0e0122*r22 + KC0e0123*r23) + r13*(KC0e0221*r21 + KC0e0222*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0021*r21 + KC0e0022*r22) + r22*(KC0e0121*r21 + KC0e0122*r22) + r23*(KC0e0221*r21 + KC0e0222*r22)
+            KC0v[k] += r21*(KC0e0021*r21 + KC0e0022*r22 + KC0e0023*r23) + r22*(KC0e0121*r21 + KC0e0122*r22 + KC0e0123*r23) + r23*(KC0e0221*r21 + KC0e0222*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0021*r21 + KC0e0022*r22) + r32*(KC0e0121*r21 + KC0e0122*r22) + r33*(KC0e0221*r21 + KC0e0222*r22)
+            KC0v[k] += r31*(KC0e0021*r21 + KC0e0022*r22 + KC0e0023*r23) + r32*(KC0e0121*r21 + KC0e0122*r22 + KC0e0123*r23) + r33*(KC0e0221*r21 + KC0e0222*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0321*r21 + KC0e0322*r22) + r12*(KC0e0421*r21 + KC0e0422*r22)
+            KC0v[k] += KC0e0523*r13*r23 + r11*(KC0e0321*r21 + KC0e0322*r22) + r12*(KC0e0421*r21 + KC0e0422*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0321*r21 + KC0e0322*r22) + r22*(KC0e0421*r21 + KC0e0422*r22)
+            KC0v[k] += KC0e0523*r23**2 + r21*(KC0e0321*r21 + KC0e0322*r22) + r22*(KC0e0421*r21 + KC0e0422*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0321*r21 + KC0e0322*r22) + r32*(KC0e0421*r21 + KC0e0422*r22)
+            KC0v[k] += KC0e0523*r23*r33 + r31*(KC0e0321*r21 + KC0e0322*r22) + r32*(KC0e0421*r21 + KC0e0422*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0621*r21 + KC0e0622*r22) + r12*(KC0e0721*r21 + KC0e0722*r22) + r13*(KC0e0821*r21 + KC0e0822*r22)
+            KC0v[k] += r11*(KC0e0621*r21 + KC0e0622*r22 + KC0e0623*r23) + r12*(KC0e0721*r21 + KC0e0722*r22 + KC0e0723*r23) + r13*(KC0e0821*r21 + KC0e0822*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0621*r21 + KC0e0622*r22) + r22*(KC0e0721*r21 + KC0e0722*r22) + r23*(KC0e0821*r21 + KC0e0822*r22)
+            KC0v[k] += r21*(KC0e0621*r21 + KC0e0622*r22 + KC0e0623*r23) + r22*(KC0e0721*r21 + KC0e0722*r22 + KC0e0723*r23) + r23*(KC0e0821*r21 + KC0e0822*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0621*r21 + KC0e0622*r22) + r32*(KC0e0721*r21 + KC0e0722*r22) + r33*(KC0e0821*r21 + KC0e0822*r22)
+            KC0v[k] += r31*(KC0e0621*r21 + KC0e0622*r22 + KC0e0623*r23) + r32*(KC0e0721*r21 + KC0e0722*r22 + KC0e0723*r23) + r33*(KC0e0821*r21 + KC0e0822*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0921*r21 + KC0e0922*r22) + r12*(KC0e1021*r21 + KC0e1022*r22)
+            KC0v[k] += KC0e1123*r13*r23 + r11*(KC0e0921*r21 + KC0e0922*r22) + r12*(KC0e1021*r21 + KC0e1022*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0921*r21 + KC0e0922*r22) + r22*(KC0e1021*r21 + KC0e1022*r22)
+            KC0v[k] += KC0e1123*r23**2 + r21*(KC0e0921*r21 + KC0e0922*r22) + r22*(KC0e1021*r21 + KC0e1022*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0921*r21 + KC0e0922*r22) + r32*(KC0e1021*r21 + KC0e1022*r22)
+            KC0v[k] += KC0e1123*r23*r33 + r31*(KC0e0921*r21 + KC0e0922*r22) + r32*(KC0e1021*r21 + KC0e1022*r22)
             k += 1
-            KC0v[k] += r11*(KC0e1221*r21 + KC0e1222*r22) + r12*(KC0e1321*r21 + KC0e1322*r22) + r13*(KC0e1421*r21 + KC0e1422*r22)
+            KC0v[k] += r11*(KC0e1221*r21 + KC0e1222*r22 + KC0e1223*r23) + r12*(KC0e1321*r21 + KC0e1322*r22 + KC0e1323*r23) + r13*(KC0e1421*r21 + KC0e1422*r22)
             k += 1
-            KC0v[k] += r21*(KC0e1221*r21 + KC0e1222*r22) + r22*(KC0e1321*r21 + KC0e1322*r22) + r23*(KC0e1421*r21 + KC0e1422*r22)
+            KC0v[k] += r21*(KC0e1221*r21 + KC0e1222*r22 + KC0e1223*r23) + r22*(KC0e1321*r21 + KC0e1322*r22 + KC0e1323*r23) + r23*(KC0e1421*r21 + KC0e1422*r22)
             k += 1
-            KC0v[k] += r31*(KC0e1221*r21 + KC0e1222*r22) + r32*(KC0e1321*r21 + KC0e1322*r22) + r33*(KC0e1421*r21 + KC0e1422*r22)
+            KC0v[k] += r31*(KC0e1221*r21 + KC0e1222*r22 + KC0e1223*r23) + r32*(KC0e1321*r21 + KC0e1322*r22 + KC0e1323*r23) + r33*(KC0e1421*r21 + KC0e1422*r22)
             k += 1
-            KC0v[k] += r11*(KC0e1521*r21 + KC0e1522*r22) + r12*(KC0e1621*r21 + KC0e1622*r22)
+            KC0v[k] += KC0e1723*r13*r23 + r11*(KC0e1521*r21 + KC0e1522*r22) + r12*(KC0e1621*r21 + KC0e1622*r22)
             k += 1
-            KC0v[k] += r21*(KC0e1521*r21 + KC0e1522*r22) + r22*(KC0e1621*r21 + KC0e1622*r22)
+            KC0v[k] += KC0e1723*r23**2 + r21*(KC0e1521*r21 + KC0e1522*r22) + r22*(KC0e1621*r21 + KC0e1622*r22)
             k += 1
-            KC0v[k] += r31*(KC0e1521*r21 + KC0e1522*r22) + r32*(KC0e1621*r21 + KC0e1622*r22)
+            KC0v[k] += KC0e1723*r23*r33 + r31*(KC0e1521*r21 + KC0e1522*r22) + r32*(KC0e1621*r21 + KC0e1622*r22)
             k += 1
-            KC0v[k] += r11*(KC0e1821*r21 + KC0e1822*r22) + r12*(KC0e1921*r21 + KC0e1922*r22) + r13*(KC0e2021*r21 + KC0e2022*r22)
+            KC0v[k] += r11*(KC0e1821*r21 + KC0e1822*r22 + KC0e1823*r23) + r12*(KC0e1921*r21 + KC0e1922*r22 + KC0e1923*r23) + r13*(KC0e2021*r21 + KC0e2022*r22)
             k += 1
-            KC0v[k] += r21*(KC0e1821*r21 + KC0e1822*r22) + r22*(KC0e1921*r21 + KC0e1922*r22) + r23*(KC0e2021*r21 + KC0e2022*r22)
+            KC0v[k] += r21*(KC0e1821*r21 + KC0e1822*r22 + KC0e1823*r23) + r22*(KC0e1921*r21 + KC0e1922*r22 + KC0e1923*r23) + r23*(KC0e2021*r21 + KC0e2022*r22)
             k += 1
-            KC0v[k] += r31*(KC0e1821*r21 + KC0e1822*r22) + r32*(KC0e1921*r21 + KC0e1922*r22) + r33*(KC0e2021*r21 + KC0e2022*r22)
+            KC0v[k] += r31*(KC0e1821*r21 + KC0e1822*r22 + KC0e1823*r23) + r32*(KC0e1921*r21 + KC0e1922*r22 + KC0e1923*r23) + r33*(KC0e2021*r21 + KC0e2022*r22)
             k += 1
             KC0v[k] += KC0e2323*r13*r23 + r11*(KC0e2121*r21 + KC0e2122*r22) + r12*(KC0e2122*r21 + KC0e2222*r22)
             k += 1
@@ -4196,47 +4568,47 @@ cdef class Quad4R:
             k += 1
             KC0v[k] += KC0e2323*r23*r33 + r31*(KC0e2121*r21 + KC0e2122*r22) + r32*(KC0e2122*r21 + KC0e2222*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0021*r31 + KC0e0022*r32) + r12*(KC0e0121*r31 + KC0e0122*r32) + r13*(KC0e0221*r31 + KC0e0222*r32)
+            KC0v[k] += r11*(KC0e0021*r31 + KC0e0022*r32 + KC0e0023*r33) + r12*(KC0e0121*r31 + KC0e0122*r32 + KC0e0123*r33) + r13*(KC0e0221*r31 + KC0e0222*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0021*r31 + KC0e0022*r32) + r22*(KC0e0121*r31 + KC0e0122*r32) + r23*(KC0e0221*r31 + KC0e0222*r32)
+            KC0v[k] += r21*(KC0e0021*r31 + KC0e0022*r32 + KC0e0023*r33) + r22*(KC0e0121*r31 + KC0e0122*r32 + KC0e0123*r33) + r23*(KC0e0221*r31 + KC0e0222*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0021*r31 + KC0e0022*r32) + r32*(KC0e0121*r31 + KC0e0122*r32) + r33*(KC0e0221*r31 + KC0e0222*r32)
+            KC0v[k] += r31*(KC0e0021*r31 + KC0e0022*r32 + KC0e0023*r33) + r32*(KC0e0121*r31 + KC0e0122*r32 + KC0e0123*r33) + r33*(KC0e0221*r31 + KC0e0222*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0321*r31 + KC0e0322*r32) + r12*(KC0e0421*r31 + KC0e0422*r32)
+            KC0v[k] += KC0e0523*r13*r33 + r11*(KC0e0321*r31 + KC0e0322*r32) + r12*(KC0e0421*r31 + KC0e0422*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0321*r31 + KC0e0322*r32) + r22*(KC0e0421*r31 + KC0e0422*r32)
+            KC0v[k] += KC0e0523*r23*r33 + r21*(KC0e0321*r31 + KC0e0322*r32) + r22*(KC0e0421*r31 + KC0e0422*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0321*r31 + KC0e0322*r32) + r32*(KC0e0421*r31 + KC0e0422*r32)
+            KC0v[k] += KC0e0523*r33**2 + r31*(KC0e0321*r31 + KC0e0322*r32) + r32*(KC0e0421*r31 + KC0e0422*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0621*r31 + KC0e0622*r32) + r12*(KC0e0721*r31 + KC0e0722*r32) + r13*(KC0e0821*r31 + KC0e0822*r32)
+            KC0v[k] += r11*(KC0e0621*r31 + KC0e0622*r32 + KC0e0623*r33) + r12*(KC0e0721*r31 + KC0e0722*r32 + KC0e0723*r33) + r13*(KC0e0821*r31 + KC0e0822*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0621*r31 + KC0e0622*r32) + r22*(KC0e0721*r31 + KC0e0722*r32) + r23*(KC0e0821*r31 + KC0e0822*r32)
+            KC0v[k] += r21*(KC0e0621*r31 + KC0e0622*r32 + KC0e0623*r33) + r22*(KC0e0721*r31 + KC0e0722*r32 + KC0e0723*r33) + r23*(KC0e0821*r31 + KC0e0822*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0621*r31 + KC0e0622*r32) + r32*(KC0e0721*r31 + KC0e0722*r32) + r33*(KC0e0821*r31 + KC0e0822*r32)
+            KC0v[k] += r31*(KC0e0621*r31 + KC0e0622*r32 + KC0e0623*r33) + r32*(KC0e0721*r31 + KC0e0722*r32 + KC0e0723*r33) + r33*(KC0e0821*r31 + KC0e0822*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0921*r31 + KC0e0922*r32) + r12*(KC0e1021*r31 + KC0e1022*r32)
+            KC0v[k] += KC0e1123*r13*r33 + r11*(KC0e0921*r31 + KC0e0922*r32) + r12*(KC0e1021*r31 + KC0e1022*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0921*r31 + KC0e0922*r32) + r22*(KC0e1021*r31 + KC0e1022*r32)
+            KC0v[k] += KC0e1123*r23*r33 + r21*(KC0e0921*r31 + KC0e0922*r32) + r22*(KC0e1021*r31 + KC0e1022*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0921*r31 + KC0e0922*r32) + r32*(KC0e1021*r31 + KC0e1022*r32)
+            KC0v[k] += KC0e1123*r33**2 + r31*(KC0e0921*r31 + KC0e0922*r32) + r32*(KC0e1021*r31 + KC0e1022*r32)
             k += 1
-            KC0v[k] += r11*(KC0e1221*r31 + KC0e1222*r32) + r12*(KC0e1321*r31 + KC0e1322*r32) + r13*(KC0e1421*r31 + KC0e1422*r32)
+            KC0v[k] += r11*(KC0e1221*r31 + KC0e1222*r32 + KC0e1223*r33) + r12*(KC0e1321*r31 + KC0e1322*r32 + KC0e1323*r33) + r13*(KC0e1421*r31 + KC0e1422*r32)
             k += 1
-            KC0v[k] += r21*(KC0e1221*r31 + KC0e1222*r32) + r22*(KC0e1321*r31 + KC0e1322*r32) + r23*(KC0e1421*r31 + KC0e1422*r32)
+            KC0v[k] += r21*(KC0e1221*r31 + KC0e1222*r32 + KC0e1223*r33) + r22*(KC0e1321*r31 + KC0e1322*r32 + KC0e1323*r33) + r23*(KC0e1421*r31 + KC0e1422*r32)
             k += 1
-            KC0v[k] += r31*(KC0e1221*r31 + KC0e1222*r32) + r32*(KC0e1321*r31 + KC0e1322*r32) + r33*(KC0e1421*r31 + KC0e1422*r32)
+            KC0v[k] += r31*(KC0e1221*r31 + KC0e1222*r32 + KC0e1223*r33) + r32*(KC0e1321*r31 + KC0e1322*r32 + KC0e1323*r33) + r33*(KC0e1421*r31 + KC0e1422*r32)
             k += 1
-            KC0v[k] += r11*(KC0e1521*r31 + KC0e1522*r32) + r12*(KC0e1621*r31 + KC0e1622*r32)
+            KC0v[k] += KC0e1723*r13*r33 + r11*(KC0e1521*r31 + KC0e1522*r32) + r12*(KC0e1621*r31 + KC0e1622*r32)
             k += 1
-            KC0v[k] += r21*(KC0e1521*r31 + KC0e1522*r32) + r22*(KC0e1621*r31 + KC0e1622*r32)
+            KC0v[k] += KC0e1723*r23*r33 + r21*(KC0e1521*r31 + KC0e1522*r32) + r22*(KC0e1621*r31 + KC0e1622*r32)
             k += 1
-            KC0v[k] += r31*(KC0e1521*r31 + KC0e1522*r32) + r32*(KC0e1621*r31 + KC0e1622*r32)
+            KC0v[k] += KC0e1723*r33**2 + r31*(KC0e1521*r31 + KC0e1522*r32) + r32*(KC0e1621*r31 + KC0e1622*r32)
             k += 1
-            KC0v[k] += r11*(KC0e1821*r31 + KC0e1822*r32) + r12*(KC0e1921*r31 + KC0e1922*r32) + r13*(KC0e2021*r31 + KC0e2022*r32)
+            KC0v[k] += r11*(KC0e1821*r31 + KC0e1822*r32 + KC0e1823*r33) + r12*(KC0e1921*r31 + KC0e1922*r32 + KC0e1923*r33) + r13*(KC0e2021*r31 + KC0e2022*r32)
             k += 1
-            KC0v[k] += r21*(KC0e1821*r31 + KC0e1822*r32) + r22*(KC0e1921*r31 + KC0e1922*r32) + r23*(KC0e2021*r31 + KC0e2022*r32)
+            KC0v[k] += r21*(KC0e1821*r31 + KC0e1822*r32 + KC0e1823*r33) + r22*(KC0e1921*r31 + KC0e1922*r32 + KC0e1923*r33) + r23*(KC0e2021*r31 + KC0e2022*r32)
             k += 1
-            KC0v[k] += r31*(KC0e1821*r31 + KC0e1822*r32) + r32*(KC0e1921*r31 + KC0e1922*r32) + r33*(KC0e2021*r31 + KC0e2022*r32)
+            KC0v[k] += r31*(KC0e1821*r31 + KC0e1822*r32 + KC0e1823*r33) + r32*(KC0e1921*r31 + KC0e1922*r32 + KC0e1923*r33) + r33*(KC0e2021*r31 + KC0e2022*r32)
             k += 1
             KC0v[k] += KC0e2323*r13*r33 + r11*(KC0e2121*r31 + KC0e2122*r32) + r12*(KC0e2122*r31 + KC0e2222*r32)
             k += 1

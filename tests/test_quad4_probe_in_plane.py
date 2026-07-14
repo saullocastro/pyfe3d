@@ -71,6 +71,7 @@ def test_quad4_probe_in_plane(plot=False):
         quad.c3 = DOF*nid_pos[n3]
         quad.c4 = DOF*nid_pos[n4]
         quad.init_k_KC0 = init_k_KC0
+        quad.K6ROT = 100.
         quad.update_rotation_matrix(ncoords_flatten)
         quad.update_probe_xe(ncoords_flatten)
         quad.update_KC0(KC0r, KC0c, KC0v, prop)

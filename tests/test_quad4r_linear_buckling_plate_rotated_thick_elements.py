@@ -19,7 +19,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
 
     a = 2.0
     b = 0.5
-    h = 0.002 # m
+    h = 0.05 # m
 
     E = 203.e9 # Pa
     nu = 0.33
@@ -88,12 +88,26 @@ def test_linear_buckling_plate(plot=False, mode=0):
                 quad.c2 = DOF*nid_pos[n2]
                 quad.c3 = DOF*nid_pos[n3]
                 quad.c4 = DOF*nid_pos[n4]
-                quad.K6ROT = 100.
+                # NOTE The thick plate (h=0.05 m) has a worse drilling-to-bending
+                #      stiffness ratio with K6ROT=1e4, causing an ill-conditioned
+                #      KC0uu (condition number ~1e14). A diagonal preconditioner
+                #      is used in the eigensolver to normalise KC0 diagonal to 1.
+                quad.K6ROT = 1e4
                 quad.init_k_KC0 = init_k_KC0
                 quad.init_k_KG = init_k_KG
                 quad.update_rotation_matrix(ncoords_flatten)
                 quad.update_probe_xe(ncoords_flatten)
-                quad.update_KC0(KC0r, KC0c, KC0v, prop)
+                # NOTE the thick plate requires twice as much hourglass stiffness
+                #      to avoid hourglass modes. Note that "hgfactor" has too be
+                #      as small as possible, and the user needs to check the 
+                #      eigenvectors to ensure that the hourglass modes are not
+                #      present in the first few eigenvectors.
+                quad.update_KC0(KC0r, KC0c, KC0v, prop,
+                                hgfactor_u = 2.,
+                                hgfactor_v = 2.,
+                                hgfactor_w = 2.,
+                                hgfactor_rx = 2.,
+                                hgfactor_ry = 2.)
                 quads.append(quad)
                 init_k_KC0 += data.KC0_SPARSE_SIZE
                 init_k_KG += data.KG_SPARSE_SIZE

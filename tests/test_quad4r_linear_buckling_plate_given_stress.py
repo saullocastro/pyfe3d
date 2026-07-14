@@ -3,8 +3,8 @@ sys.path.append('..')
 
 import numpy as np
 from numpy import isclose
-from scipy.sparse.linalg import eigsh, spsolve, cg
-from scipy.sparse import coo_matrix
+from scipy.sparse.linalg import eigsh, cg
+from scipy.sparse import coo_matrix, diags as sp_diags
 
 from pyfe3d.shellprop_utils import isotropic_plate
 from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
@@ -82,6 +82,7 @@ def test_linear_buckling(mode=0, refinement=1):
         quad.c2 = DOF*nid_pos[n2]
         quad.c3 = DOF*nid_pos[n3]
         quad.c4 = DOF*nid_pos[n4]
+        quad.K6ROT = 100.
         quad.init_k_KC0 = init_k_KC0
         quad.init_k_KG = init_k_KG
         quad.update_rotation_matrix(ncoords_flatten)
@@ -96,24 +97,17 @@ def test_linear_buckling(mode=0, refinement=1):
     KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
 
     print('sparse KC0 created')
-
-    # applying boundary conditions (leading to a constant Nxx)
-    # simply supported in w
+ 
+    # constraining all edge loads to no translation
     bk = np.zeros(N, dtype=bool)
     check = isclose(x, 0.) | isclose(x, a) | isclose(y, 0) | isclose(y, b)
-    bk[2::DOF] = check
-    # constraining u at x = a/2, y = 0,b
-    check = isclose(x, a/2.) & (isclose(y, 0.) | isclose(y, b))
     bk[0::DOF] = check
-    # constraining v at x = 0, y = b/2
-    check = isclose(y, b/2.) & (isclose(x, 0.) | isclose(x, a))
     bk[1::DOF] = check
-    # removing drilling
-    bk[5::DOF] = True
+    bk[2::DOF] = check
 
     bu = ~bk
 
-    Kuu = KC0[bu, :][:, bu]
+    KC0uu = KC0[bu, :][:, bu]
 
     Nxx = -1
 
@@ -124,11 +118,21 @@ def test_linear_buckling(mode=0, refinement=1):
     KGuu = KG[bu, :][:, bu]
     print('sparse KG created')
 
-    num_eig_lb = max(mode+1, 1)
-    PREC = np.max(1/Kuu.diagonal())
-    eigvals, eigvecsu = eigsh(A=PREC*KGuu, k=num_eig_lb, which='SM',
-            M=PREC*Kuu, tol=1e-15, sigma=1., mode='cayley')
-    eigvals = -1./eigvals
+    num_eig_lb = max(mode+1, 3)
+
+    # NOTE pre-conditioning the eigenvalue problem to improve convergence of the eigensolver
+    kc0_diag = KC0uu.diagonal()
+    kc0_diag_inv_sqrt = 1.0/np.sqrt(np.maximum(kc0_diag, 1e-30))
+    D_inv_sqrt = sp_diags(kc0_diag_inv_sqrt)
+    KC0uu_scaled = D_inv_sqrt @ KC0uu @ D_inv_sqrt
+    KGuu_scaled = D_inv_sqrt @ KGuu @ D_inv_sqrt
+    eigvals_inv, eigvecsu_scaled = eigsh(A=KGuu_scaled, k=num_eig_lb, which='SM',
+            M=KC0uu_scaled, tol=1e-9, sigma=1., mode='cayley')
+    eigvals = -1./eigvals_inv
+
+    # NOTE the eigenvectors are scaled by the preconditioner to recover the original eigenvectors
+    eigvecsu = D_inv_sqrt @ eigvecsu_scaled
+
     load_mult = eigvals[0]
     P_cr_calc = load_mult*Nxx*b
     print('linear buckling load_mult =', load_mult)

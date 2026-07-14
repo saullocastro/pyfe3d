@@ -86,6 +86,7 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
             quad.init_k_KC0 = init_k_KC0
             quad.init_k_KG = init_k_KG
             quad.init_k_M = init_k_M
+            quad.K6ROT = 100.
             quad.update_rotation_matrix(ncoords_flatten)
             quad.update_probe_xe(ncoords_flatten)
             factor = 1.

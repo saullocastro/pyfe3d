@@ -191,11 +191,16 @@ def test_laminated_plate_plane_stress():
     assert np.allclose(prop_2.E, prop.E)
 
 
-def test_isotropic_plate():
+def helper_isotropic_plate():
     E = 71e9
     nu = 0.28
     thick = 0.000125
     prop = isotropic_plate(thickness=thick, E=E, nu=nu)
+    return prop
+
+
+def test_isotropic_plate():
+    prop = helper_isotropic_plate()
     A = np.array([[9629991.31944444, 2696397.56944444,       0.   ],
                   [2696397.56944444, 9629991.31944444,       0.   ],
                   [      0.        ,       0.        , 3466796.875]])
@@ -208,10 +213,10 @@ def test_isotropic_plate():
     assert np.allclose(prop.B, 0)
     assert np.allclose(prop.D, D)
     assert np.allclose(prop.E, E)
-    return prop
+
 
 def test_errors():
-    prop = test_isotropic_plate()
+    prop = helper_isotropic_plate()
     prop.offset = 1.
     try:
         prop.force_balanced()
@@ -230,6 +235,7 @@ def test_errors():
         prop.calc_lamination_parameters()
     except ValueError:
         pass
+
 
 def test_trace_normalized():
     r"""

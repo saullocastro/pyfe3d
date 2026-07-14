@@ -14,10 +14,9 @@ Quad4 - Quadrilateral element with mixed integration (:mod:`pyfe3d.quad4`)
 The :class:`.Quad4` is the recommended quadrilateral plane stress finite
 element.
 
-Another option is the :mod:`pyfe3d.quad4r` with full reduced
-integration, more efficient, but with an hourglass control to compensate the
-reduced integration that is not robust and creates significant artificial
-stiffness.
+Another option is the :class:`pyfe3d.Quad4R` with full reduced
+integration, more efficient, but with an hourglass control that creates
+artificial stiffness to compensate the reduced integration.
 
 The :class:`.Quad4` element has 6 degrees-of-freedom (DOF): `u`, `v`, `w`,
 `r_x`, `r_y`, `r_z`. All DOF are interpolated bi-linearly between the nodes,
@@ -54,21 +53,70 @@ The in-plane stiffness terms are integrated with 2 quadrature points, and the
 drilling stiffness is integrated with 1 quadrature point. These are
 not specified in the paper of Hughes et al. (1977).
 
+Shear correction factors are applied to `E_{44}`, `E_{45}` and `E_{55}`, with the following:
+
+.. math::
+    
+    \tilde{E}_{44} = E_{44} \kappa_{23}
+    \tilde{E}_{45} = E_{45} (\kappa_{13} + \kappa_{23})/2
+    \tilde{E}_{55} = E_{55} \kappa_{13}
+
+Such that `\tilde{E}_{ij}` are the transverse shear terms considering the shear correction factor. 
+The shear correction factors are read directly from the :class:`pyfe3d.shellprop.ShellProp` object.
+
 The drilling stiffness is calculated following the approach adopted in
-MSC Nastran and Autodesk Nastran:
+MSC Nastran and Autodesk Nastran, using a penalty-based method. Because
+the stiffness is only evaluated at the element centroid, this method provides
+a non-physical drilling stiffness with the objective of removing the singularity
+by creating an artificial stiffness between the drilling rotation degree-of-freedom
+of each node with the in-plane rotational strain evaluated at the centroid.
+The penalty energy is defined per element as:
 
 .. math::
-    K_{drill} = K6ROT \cdot G \cdot V \cdot 10^{-6}
 
-where `G = A_{66}/h` is the in-plane shear modulus (for composites),
-`V = \text{area} \cdot h` is the element volume, `\text{area}` is the element
-area, and `h` is the total laminate thickness. This simplifies to:
+    U_{drill} = \frac{1}{2} K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)^2 dA
+
+where `10^{-6}` is a scaling factor suggested by MSC Nastran's approach (CQUAD4) to make the artificial
+drilling stiffness sufficiently small. AUTODESK NASTRAN's quick reference guide recommends `K6ROT = 100`
+for static analysis. For modal solutions, `K6ROT = 10^4` is suggested. MSC NASTRAN's quick reference guide
+states that `K6ROT > 100` should not be used, thus contradicting AUTODESK NASTRAN. The rotation `r_z` represents
+the drilling degree-of-freedom in element's coordinates, whereas `\theta_z` the in-plane rotation strain, defined as:
 
 .. math::
-    K_{drill} = K6ROT \cdot A_{66} \cdot \text{area} \cdot 10^{-6}
 
-The dimensionless multiplier ``K6ROT`` is the only user-controlled parameter.
+    \theta_z = \frac{1}{2}\left(\frac{\partial v}{\partial x} - \frac{\partial u}{\partial y}\right)
 
+The first variation of U_{drill} then becomes:
+
+.. math::
+
+    \delta U_{drill} = K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)(\delta r_z - \delta \theta_z) dA
+
+which can be expressed in terms of the shape functions and element degrees-of-freedom (`u_e`) as:
+`r_z = S^{r_z} u_e`, `u = S^u u_e` and `v = S_v u_e` as:
+
+.. math::
+
+    \delta U_{drill} = K6ROT \cdot 10^{-6} \cdot u_e^\top \int_A A_{66} (S^{r_z \top} + 1/2 S^{u \top}_{,y} - 1/2 S^{v \top}_{,x})(\delta S^{r_z} + 1/2 \delta S^u_{,y} - 1/2 S^v_{,x}) dA u_e
+
+or simply as:
+
+.. math::
+
+    \delta U_{drill} = K6ROT \cdot 10^{-6} \cdot A_{66} u_e^\top \int_A B_{drill}^\top B_{drill} dA u_e
+
+with:
+
+.. math::
+
+    B_{drill} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}
+
+Note that `A_{66}` is assumed constant over the element, which here has no difference given that a reduced integration approach is used.
+The approach herein presented is very similar to the one presented in Eq. 2.20 of:
+
+    Adam, F. M., Mohamed, A. E., and Hassaballa, A. E., 2013,
+    “Degenerated Four Nodes Shell Element with Drilling Degree of
+    Freedom,” IOSR J. Eng., 3(8), pp. 10–20.
 
 """
 #TODO bending stiffness vanishes when thickness -> zero, so a correction is applied:
@@ -179,6 +227,10 @@ cdef class Quad4Probe:
         Arrays of size ``NUM_NODES*DOF=24`` containing the transverse shear
         strain interpolation functions evaluated at a given natural coordinate
         point `\xi`, `\eta`.
+    BLdrilling : array-like
+        Arrays of size ``NUM_NODES*DOF=24`` containing the drilling
+        interpolation functions evaluated at a given natural coordinate
+        point `\xi`, `\eta`.
 
     """
     cdef public double [::1] xe
@@ -195,6 +247,7 @@ cdef class Quad4Probe:
     cdef public double [::1] BLgyz_rot
     cdef public double [::1] BLgxz_grad
     cdef public double [::1] BLgxz_rot
+    cdef public double [::1] BLdrilling
 
     def __cinit__(Quad4Probe self):
         self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
@@ -214,6 +267,8 @@ cdef class Quad4Probe:
         self.BLgyz_rot = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.BLgxz_grad = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.BLgxz_rot = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+
+        self.BLdrilling = np.zeros(NUM_NODES*DOF, dtype=np.float64)
 
     cpdef void update_BL(Quad4Probe self, double xi, double eta):
         r"""
@@ -324,6 +379,21 @@ cdef class Quad4Probe:
         self.BLgxz_rot[16] = N3
         self.BLgxz_rot[22] = N4
 
+        self.BLdrilling[0] = N1y/2.
+        self.BLdrilling[6] = N2y/2.
+        self.BLdrilling[12] = N3y/2.
+        self.BLdrilling[18] = N4y/2.
+
+        self.BLdrilling[1] = -N1x/2.
+        self.BLdrilling[7] = -N2x/2.
+        self.BLdrilling[13] = -N3x/2.
+        self.BLdrilling[19] = -N4x/2.
+
+        self.BLdrilling[5] = N1
+        self.BLdrilling[11] = N2
+        self.BLdrilling[17] = N3
+        self.BLdrilling[23] = N4
+
 
 cdef class Quad4:
     r"""
@@ -348,17 +418,16 @@ cdef class Quad4:
     ----------
     eid, : int
         Element identification number.
+    pid, : int
+        Property identification number.
     area, : double
         Element area.
     K6ROT, : double
-        Dimensionless multiplier for the drilling stiffness. The drilling
-        stiffness is computed as ``Kdrill = K6ROT * A66 * area * 1e-6``,
-        following the approach of MSC Nastran and Autodesk Nastran, where ``A66`` is
-        the element in-plane shear stiffness and ``area`` is the element area.
+        Dimensionless multiplier for the drilling stiffness. 
         AUTODESK NASTRAN's quick reference guide recommends ``K6ROT = 100.``
         for static analysis. For modal solutions, ``K6ROT=1.e4`` is suggested.
         MSC NASTRAN's quick reference guide states that ``K6ROT > 100.``
-        should not be used, but this is controversial.
+        should not be used, but this is contradicting AUTODESK NASTRAN.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix from local to global coordinates.
     m11, m12, m21, m22 : double
@@ -378,13 +447,13 @@ cdef class Quad4:
         Pointer to the probe.
 
     """
-    cdef public int eid
+    cdef public int eid, pid
     cdef public int n1, n2, n3, n4
     cdef public int c1, c2, c3, c4
     cdef public int init_k_KC0, init_k_KG, init_k_M
     cdef public int init_k_KA_beta, init_k_KA_gamma, init_k_CA
     cdef public double area
-    cdef public double K6ROT # drilling stiffness
+    cdef public double K6ROT
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public double m11, m12, m21, m22
     cdef public Quad4Probe probe
@@ -392,6 +461,7 @@ cdef class Quad4:
     def __cinit__(Quad4 self, Quad4Probe p):
         self.probe = p
         self.eid = -1
+        self.pid = -1
         self.n1 = -1
         self.n2 = -1
         self.n3 = -1
@@ -408,7 +478,7 @@ cdef class Quad4:
         self.init_k_KA_gamma = 0
         self.init_k_CA = 0
         self.area = 0
-        self.K6ROT = 10.
+        self.K6ROT = 100. # NOTE default value in MSC Nastran
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.
         self.r31 = self.r32 = self.r33 = 0.
@@ -733,9 +803,10 @@ cdef class Quad4:
         cdef double* BLgyz_grad
         cdef double* BLgxz_rot
         cdef double* BLgxz_grad
+        cdef double* BLdrilling
+        cdef double BLdrilling_i
         cdef double exx, eyy, gxy, kxx, kyy, kxy
         cdef double gyz_rot, gxz_rot, gyz_grad, gxz_grad
-        cdef double KDRILL
 
         with nogil:
             BLexx = &self.probe.BLexx[0]
@@ -748,6 +819,9 @@ cdef class Quad4:
             BLgyz_grad = &self.probe.BLgyz_grad[0]
             BLgxz_rot = &self.probe.BLgxz_rot[0]
             BLgxz_grad = &self.probe.BLgxz_grad[0]
+            BLdrilling = &self.probe.BLdrilling[0]
+
+            # NOTE ignoring z in local coordinates
 
             A11mat = prop.A11
             A12mat = prop.A12
@@ -976,6 +1050,28 @@ cdef class Quad4:
                                   + gxz_grad*E45*BLgyz_grad[j] + gxz_grad*E55*BLgxz_grad[j]
                                 )
 
+                    BLdrilling[0] = N1y/2.
+                    BLdrilling[6] = N2y/2.
+                    BLdrilling[12] = N3y/2.
+                    BLdrilling[18] = N4y/2.
+
+                    BLdrilling[1] = -N1x/2.
+                    BLdrilling[7] = -N2x/2.
+                    BLdrilling[13] = -N3x/2.
+                    BLdrilling[19] = -N4x/2.
+
+                    BLdrilling[5] = N1
+                    BLdrilling[11] = N2
+                    BLdrilling[17] = N3
+                    BLdrilling[23] = N4
+                    
+                    # drilling
+                    for i in range(24):
+                        BLdrilling_i = BLdrilling[i]
+                        for j in range(24):
+                            ke = 24*i + j
+                            self.probe.KC0ve[ke] += wij*detJ*BLdrilling_i*BLdrilling[j]
+            
             # NOTE reduced integration with one point at the center
             wij = 4.
             xi = 0.
@@ -1073,13 +1169,6 @@ cdef class Quad4:
                           + gyz_rot*E44*BLgyz_rot[j] + gyz_rot*E45*BLgxz_rot[j]
                           + gxz_rot*E45*BLgyz_rot[j] + gxz_rot*E55*BLgxz_rot[j]
                         )
-
-            # drilling
-            KDRILL = self.K6ROT * A66 * self.area * 1.e-6
-            for node_i in range(NUM_NODES):
-                node_j = node_i # NOTE only diagonal terms are affected
-                ke = 24*(node_i*DOF + 5) + node_j*DOF + 5
-                self.probe.KC0ve[ke] += KDRILL
 
 
     cpdef void update_probe_finte(Quad4 self, ShellProp prop):
@@ -1195,7 +1284,6 @@ cdef class Quad4:
 
                 # initializing row and column indices
                 #
-                # TODO use r[3][3] instead
                 for node_i in range(NUM_NODES):
                     for m in range(DOF):
                         for node_j in range(NUM_NODES):
@@ -1214,7 +1302,6 @@ cdef class Quad4:
             #
             # Kg_{mn} = r_{mi} * Ke_{ij} * r_{nj}
             #
-            # TODO use r[3][3] instead
             for node_i in range(NUM_NODES):
                 for m in range(DOF):
                     for node_j in range(NUM_NODES):

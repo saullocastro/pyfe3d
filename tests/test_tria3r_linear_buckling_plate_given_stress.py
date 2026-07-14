@@ -4,7 +4,7 @@ sys.path.append('..')
 import numpy as np
 from numpy import isclose
 from scipy.sparse.linalg import eigsh
-from scipy.sparse import coo_matrix
+from scipy.sparse import coo_matrix, diags as sp_diags
 
 from pyfe3d.shellprop_utils import isotropic_plate
 from pyfe3d import Tria3R, Tria3RData, Tria3RProbe, INT, DOUBLE, DOF
@@ -133,7 +133,7 @@ def test_tria3r_linear_buckling_plate_given_stress(mode=0, refinement=1):
 
     bu = ~bk
 
-    Kuu = KC0[bu, :][:, bu]
+    KC0uu = KC0[bu, :][:, bu]
 
     Nxx = -1
 
@@ -145,10 +145,20 @@ def test_tria3r_linear_buckling_plate_given_stress(mode=0, refinement=1):
     print('sparse KG created')
 
     num_eig_lb = max(mode+1, 1)
-    PREC = np.max(1/Kuu.diagonal())
-    eigvals, eigvecsu = eigsh(A=PREC*KGuu, k=num_eig_lb, which='SM',
-            M=PREC*Kuu, tol=1e-15, sigma=1., mode='cayley')
-    eigvals = -1./eigvals
+
+    # NOTE pre-conditioning the eigenvalue problem to improve convergence of the eigensolver
+    kc0_diag = KC0uu.diagonal()
+    kc0_diag_inv_sqrt = 1.0/np.sqrt(np.maximum(kc0_diag, 1e-30))
+    D_inv_sqrt = sp_diags(kc0_diag_inv_sqrt)
+    KC0uu_scaled = D_inv_sqrt @ KC0uu @ D_inv_sqrt
+    KGuu_scaled = D_inv_sqrt @ KGuu @ D_inv_sqrt
+    eigvals_inv, eigvecsu_scaled = eigsh(A=KGuu_scaled, k=num_eig_lb, which='SM',
+            M=KC0uu_scaled, tol=1e-9, sigma=1., mode='cayley')
+    eigvals = -1./eigvals_inv
+
+    # NOTE the eigenvectors are scaled by the preconditioner to recover the original eigenvectors
+    eigvecsu = D_inv_sqrt @ eigvecsu_scaled
+    
     load_mult = eigvals[0]
     P_cr_calc = load_mult*Nxx*b
     print('linear buckling load_mult =', load_mult)

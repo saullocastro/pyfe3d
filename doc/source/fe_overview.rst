@@ -1,5 +1,5 @@
 Available finite elements
--------------------------
+=========================
 
 .. toctree::
     :titlesonly:
