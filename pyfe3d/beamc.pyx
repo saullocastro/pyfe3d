@@ -29,6 +29,9 @@ cdef class BeamCData:
     KC0_SPARSE_SIZE, : int
         ``KC0_SPARSE_SIZE = 144``
 
+    KCNL_SPARSE_SIZE, : int
+        ``KCNL_SPARSE_SIZE = 144``
+
     KG_SPARSE_SIZE, : int
         ``KG_SPARSE_SIZE = 144``
 
@@ -37,11 +40,13 @@ cdef class BeamCData:
 
     """
     cdef public int KC0_SPARSE_SIZE
+    cdef public int KCNL_SPARSE_SIZE
     cdef public int KG_SPARSE_SIZE
     cdef public int M_SPARSE_SIZE
 
     def __cinit__(BeamCData self):
         self.KC0_SPARSE_SIZE = 144
+        self.KCNL_SPARSE_SIZE = 144
         self.KG_SPARSE_SIZE = 144
         self.M_SPARSE_SIZE = 144
 
@@ -74,16 +79,39 @@ cdef class BeamCProbe:
     finte, : array-like
         Array of size ``NUM_NODES*DOF=12`` containing the element internal
         forces corresponding to the degrees-of-freedom described by ``ue``.
+    BLexx, BLky, BLkz : array-like
+        Arrays of size ``NUM_NODES*DOF=12`` with the rows of the linear
+        strain-displacement matrix for the axial strain and the two
+        curvatures, at the last evaluated integration point.
+    Gvx, Gwx : array-like
+        Arrays of size ``NUM_NODES*DOF=12`` with the rows giving the slopes
+        `v_{,x}` and `w_{,x}`, at the last evaluated integration point.
+    KCNLve : array-like
+        Array of size ``(NUM_NODES*DOF)**2=144`` with the nonlinear
+        constitutive stiffness matrix KCNL in element coordinates, stored row
+        by row.
 
     """
     cdef public double [::1] xe
     cdef public double [::1] ue
     cdef public double [::1] finte
+    cdef public double [::1] BLexx
+    cdef public double [::1] BLky
+    cdef public double [::1] BLkz
+    cdef public double [::1] Gvx
+    cdef public double [::1] Gwx
+    cdef public double [::1] KCNLve
 
     def __cinit__(BeamCProbe self):
         self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
         self.ue = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.finte = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.BLexx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.BLky = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.BLkz = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.Gvx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.Gwx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.KCNLve = np.zeros((NUM_NODES*DOF)**2, dtype=np.float64)
 
 
 cdef class BeamC:
@@ -120,7 +148,7 @@ cdef class BeamC:
         Position of each node in the global stiffness matrix.
     n1, n2 : int
         Node identification number.
-    init_k_KC0, init_k_KG, init_k_M : int
+    init_k_KC0, init_k_KCNL, init_k_KG, init_k_M : int
         Position in the arrays storing the sparse data for the structural
         matrices.
     probe, : :class:`.BeamCProbe` object
@@ -130,7 +158,7 @@ cdef class BeamC:
     cdef public int eid, pid
     cdef public int n1, n2
     cdef public int c1, c2
-    cdef public int init_k_KC0, init_k_KG, init_k_M
+    cdef public int init_k_KC0, init_k_KCNL, init_k_KG, init_k_M
     cdef public double length
     cdef public double vxyi, vxyj, vxyk
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
@@ -145,7 +173,7 @@ cdef class BeamC:
         self.c1 = -1
         self.c2 = -1
         self.init_k_KC0 = 0
-        # self.init_k_KCNL = 0
+        self.init_k_KCNL = 0
         self.init_k_KG = 0
         self.init_k_M = 0
         self.length = 0
@@ -350,7 +378,8 @@ cdef class BeamC:
 
     
     cpdef void update_probe_finte(BeamC self,
-                           BeamProp prop):
+                           BeamProp prop,
+                           int nonlinear=0):
         r"""Update the internal force vector of the probe
 
         The attribute ``finte`` is updated with the :class:`.BeamCProbe` the
@@ -367,6 +396,11 @@ cdef class BeamC:
         prop : :class:`.BeamProp` object
             Beam property object from where the stiffness and mass attributes
             are read from.
+        nonlinear : int
+            The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
+            value adds the geometrically nonlinear terms of the von Karman strains,
+            for which the exact Jacobian of the internal forces is ``KC0 + KCNL +
+            KG``, see :meth:`.update_KCNL`.
 
         """
         cdef double *ue
@@ -484,6 +518,9 @@ cdef class BeamC:
             finte[9] = KC0e0109*ue[1] + KC0e0209*ue[2] + KC0e0309*ue[3] + KC0e0409*ue[4] + KC0e0509*ue[5] + KC0e0709*ue[7] + KC0e0809*ue[8] + KC0e0909*ue[9] + KC0e0910*ue[10] + KC0e0911*ue[11]
             finte[10] = KC0e0010*ue[0] + KC0e0110*ue[1] + KC0e0210*ue[2] + KC0e0310*ue[3] + KC0e0410*ue[4] + KC0e0510*ue[5] + KC0e0610*ue[6] + KC0e0710*ue[7] + KC0e0810*ue[8] + KC0e0910*ue[9] + KC0e1010*ue[10] + KC0e1011*ue[11]
             finte[11] = KC0e0011*ue[0] + KC0e0111*ue[1] + KC0e0211*ue[2] + KC0e0311*ue[3] + KC0e0411*ue[4] + KC0e0511*ue[5] + KC0e0611*ue[6] + KC0e0711*ue[7] + KC0e0811*ue[8] + KC0e0911*ue[9] + KC0e1011*ue[10] + KC0e1111*ue[11]
+
+            if nonlinear:
+                self._update_probe_finte_nonlinear(prop)
 
 
     cpdef void update_KC0(BeamC self,
@@ -1353,7 +1390,8 @@ cdef class BeamC:
 
     cpdef void update_fint(BeamC self,
                            double [::1] fint,
-                           BeamProp prop):
+                           BeamProp prop,
+                           int nonlinear=0):
         r"""Update the internal force vector
 
         Parameters
@@ -1367,11 +1405,16 @@ cdef class BeamC:
         prop : :class:`.BeamProp` object
             Beam property object from where the stiffness and mass attributes
             are read from.
+        nonlinear : int
+            The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
+            value adds the geometrically nonlinear terms of the von Karman strains,
+            for which the exact Jacobian of the internal forces is ``KC0 + KCNL +
+            KG``, see :meth:`.update_KCNL`.
 
         """
         cdef double *finte
 
-        self.update_probe_finte(prop)
+        self.update_probe_finte(prop, nonlinear)
         with nogil:
             finte = &self.probe.finte[0]
 
@@ -1387,6 +1430,366 @@ cdef class BeamC:
             fint[3+self.c2] += finte[9]*self.r11 + finte[10]*self.r12 + finte[11]*self.r13
             fint[4+self.c2] += finte[9]*self.r21 + finte[10]*self.r22 + finte[11]*self.r23
             fint[5+self.c2] += finte[9]*self.r31 + finte[10]*self.r32 + finte[11]*self.r33
+
+
+    cdef void _update_probe_BL_G(BeamC self, BeamProp prop,
+                                 double xi) noexcept nogil:
+        r"""Update the probe rows of the axial strain, curvatures and slopes
+
+        Evaluated at ``xi = x/L``, in element coordinates, using the consistent
+        shape functions of Luo (2008):
+
+        - ``BLexx``: `u_{,x}`
+        - ``BLky``: `\kappa_y = -{r_z}_{,x}`
+        - ``BLkz``: `\kappa_z = {r_y}_{,x}`
+        - ``Gvx``, ``Gwx``: `v_{,x}` and `w_{,x}`
+
+        """
+        cdef int i
+        cdef double L, alphay, alphaz, betay, betaz
+        cdef double *BLexx
+        cdef double *BLky
+        cdef double *BLkz
+        cdef double *Gvx
+        cdef double *Gwx
+
+        BLexx = &self.probe.BLexx[0]
+        BLky = &self.probe.BLky[0]
+        BLkz = &self.probe.BLkz[0]
+        Gvx = &self.probe.Gvx[0]
+        Gwx = &self.probe.Gwx[0]
+
+        L = self.length
+        alphay = 12*prop.E*prop.Izz/(prop.G*prop.A*L**2)
+        alphaz = 12*prop.E*prop.Iyy/(prop.G*prop.A*L**2)
+        betay = 1/(1. - alphay)
+        betaz = 1/(1. - alphaz)
+
+        for i in range(NUM_NODES*DOF):
+            BLexx[i] = 0.
+            BLky[i] = 0.
+            BLkz[i] = 0.
+            Gvx[i] = 0.
+            Gwx[i] = 0.
+
+        # u,x
+        BLexx[0] = -1/L
+        BLexx[6] = 1/L
+
+        # ky = -rz,x, with rz = Gv1*v1 + Grz1*rz1 + Gv2*v2 + Grz2*rz2
+        BLky[1] = -6*betay*(2*xi - 1)/L**2
+        BLky[5] = -betay*(6*xi + alphay - 4)/L
+        BLky[7] = -6*betay*(-2*xi + 1)/L**2
+        BLky[11] = -betay*(6*xi - alphay - 2)/L
+
+        # kz = ry,x, with ry = Gw1*w1 + Gry1*ry1 + Gw2*w2 + Gry2*ry2
+        BLkz[2] = -6*betaz*(2*xi - 1)/L**2
+        BLkz[4] = betaz*(6*xi + alphaz - 4)/L
+        BLkz[8] = -6*betaz*(-2*xi + 1)/L**2
+        BLkz[10] = betaz*(6*xi - alphaz - 2)/L
+
+        # v,x, with v = Hv1*v1 + Hrz1*rz1 + Hv2*v2 + Hrz2*rz2
+        Gvx[1] = betay*(6*xi**2 - 6*xi + alphay)/L
+        Gvx[5] = betay*(3*xi**2 + (alphay - 4)*xi + 1 - alphay/2)
+        Gvx[7] = betay*(-6*xi**2 + 6*xi - alphay)/L
+        Gvx[11] = betay*(3*xi**2 - (alphay + 2)*xi + alphay/2)
+
+        # w,x, with w = Hw1*w1 + Hry1*ry1 + Hw2*w2 + Hry2*ry2
+        Gwx[2] = betaz*(6*xi**2 - 6*xi + alphaz)/L
+        Gwx[4] = -betaz*(3*xi**2 + (alphaz - 4)*xi + 1 - alphaz/2)
+        Gwx[8] = betaz*(-6*xi**2 + 6*xi - alphaz)/L
+        Gwx[10] = -betaz*(3*xi**2 - (alphaz + 2)*xi + alphaz/2)
+
+
+    cdef void _update_probe_KCNLve(BeamC self, BeamProp prop) noexcept nogil:
+        r"""Update the probe values of the nonlinear constitutive stiffness matrix
+
+        The attribute ``KCNLve`` of the :class:`.BeamCProbe` is updated with
+        KCNL = KC0L + KCL0 + KCLL + KGNL in element coordinates, stored row by
+        row and evaluated at the displacements ``ue`` of the probe. See
+        :meth:`.update_KCNL`.
+
+        """
+        cdef int i, j, pt
+        cdef double L, E, A, Ay, Az, xi, weight, v_x, w_x, NNL
+        cdef double points[5]
+        cdef double weights[5]
+        cdef double EBL[12]
+        cdef double BNL[12]
+        cdef double *ue
+        cdef double *KCNLve
+        cdef double *BLexx
+        cdef double *BLky
+        cdef double *BLkz
+        cdef double *Gvx
+        cdef double *Gwx
+
+        L = self.length
+        E = prop.E
+        A = prop.A
+        Ay = prop.Ay
+        Az = prop.Az
+
+        ue = &self.probe.ue[0]
+        KCNLve = &self.probe.KCNLve[0]
+        BLexx = &self.probe.BLexx[0]
+        BLky = &self.probe.BLky[0]
+        BLkz = &self.probe.BLkz[0]
+        Gvx = &self.probe.Gvx[0]
+        Gwx = &self.probe.Gwx[0]
+
+        for i in range(12*12):
+            KCNLve[i] = 0.
+
+        # NOTE 5-point Gauss-Legendre quadrature, exact for these polynomials
+        points[0] = -0.906179845938663992797626878299
+        weights[0] = 0.236926885056189087514264040720
+        points[1] = -0.538469310105683091036314420700
+        weights[1] = 0.478628670499366468041291514836
+        points[2] = 0.
+        weights[2] = 0.568888888888888888888888888889
+        points[3] = +0.538469310105683091036314420700
+        weights[3] = 0.478628670499366468041291514836
+        points[4] = +0.906179845938663992797626878299
+        weights[4] = 0.236926885056189087514264040720
+
+        for pt in range(5):
+            xi = (1. + points[pt])/2.
+            weight = weights[pt]*L/2.
+            self._update_probe_BL_G(prop, xi)
+
+            v_x = 0.
+            w_x = 0.
+            for i in range(NUM_NODES*DOF):
+                v_x += Gvx[i]*ue[i]
+                w_x += Gwx[i]*ue[i]
+
+            # axial force of the nonlinear axial strain, eNL = (v_x**2 + w_x**2)/2
+            NNL = E*A*(v_x*v_x + w_x*w_x)/2.
+
+            for i in range(NUM_NODES*DOF):
+                # row of D*BL giving the axial force N = E*(A*u,x + Ay*ky + Az*kz)
+                EBL[i] = E*(A*BLexx[i] + Ay*BLky[i] + Az*BLkz[i])
+                # BNL, the variation of the nonlinear axial strain
+                BNL[i] = v_x*Gvx[i] + w_x*Gwx[i]
+
+            for i in range(NUM_NODES*DOF):
+                for j in range(NUM_NODES*DOF):
+                    KCNLve[12*i + j] += weight*(
+                        # KC0L = BL.T*D*BNL
+                          EBL[i]*BNL[j]
+                        # KCL0 = BNL.T*D*BL
+                        + BNL[i]*EBL[j]
+                        # KCLL = BNL.T*D*BNL
+                        + E*A*BNL[i]*BNL[j]
+                        # KGNL = NNL*(Gvx.T*Gvx + Gwx.T*Gwx)
+                        + NNL*(Gvx[i]*Gvx[j] + Gwx[i]*Gwx[j])
+                    )
+
+
+    cdef void _update_probe_finte_nonlinear(BeamC self,
+                                            BeamProp prop) noexcept nogil:
+        r"""Add the geometrically nonlinear terms to the probe internal forces
+
+        The attribute ``finte`` of the :class:`.BeamCProbe` receives the terms
+        of the von Karman axial strain `\epsilon_{NL} = (v_{,x}^2 +
+        w_{,x}^2)/2`, evaluated at the displacements ``ue`` of the probe, such
+        that ``finte`` becomes the gradient of the strain energy whose Hessian is
+        KC0 + KCNL + KG. See :meth:`.update_KCNL`.
+
+        """
+        cdef int i, pt
+        cdef double L, E, A, Ay, Az, xi, weight, v_x, w_x, eNL, N, NNL
+        cdef double points[5]
+        cdef double weights[5]
+        cdef double EBL[12]
+        cdef double *ue
+        cdef double *finte
+        cdef double *BLexx
+        cdef double *BLky
+        cdef double *BLkz
+        cdef double *Gvx
+        cdef double *Gwx
+
+        L = self.length
+        E = prop.E
+        A = prop.A
+        Ay = prop.Ay
+        Az = prop.Az
+
+        ue = &self.probe.ue[0]
+        finte = &self.probe.finte[0]
+        BLexx = &self.probe.BLexx[0]
+        BLky = &self.probe.BLky[0]
+        BLkz = &self.probe.BLkz[0]
+        Gvx = &self.probe.Gvx[0]
+        Gwx = &self.probe.Gwx[0]
+
+        # NOTE 5-point Gauss-Legendre quadrature, exact for these polynomials
+        points[0] = -0.906179845938663992797626878299
+        weights[0] = 0.236926885056189087514264040720
+        points[1] = -0.538469310105683091036314420700
+        weights[1] = 0.478628670499366468041291514836
+        points[2] = 0.
+        weights[2] = 0.568888888888888888888888888889
+        points[3] = +0.538469310105683091036314420700
+        weights[3] = 0.478628670499366468041291514836
+        points[4] = +0.906179845938663992797626878299
+        weights[4] = 0.236926885056189087514264040720
+
+        for pt in range(5):
+            xi = (1. + points[pt])/2.
+            weight = weights[pt]*L/2.
+            self._update_probe_BL_G(prop, xi)
+
+            v_x = 0.
+            w_x = 0.
+            N = 0.
+            for i in range(NUM_NODES*DOF):
+                v_x += Gvx[i]*ue[i]
+                w_x += Gwx[i]*ue[i]
+                # row of D*BL giving the axial force N = E*(A*u,x + Ay*ky + Az*kz)
+                EBL[i] = E*(A*BLexx[i] + Ay*BLky[i] + Az*BLkz[i])
+                N += EBL[i]*ue[i]
+
+            # nonlinear axial strain and its axial force
+            eNL = (v_x*v_x + w_x*w_x)/2.
+            NNL = E*A*eNL
+
+            for i in range(NUM_NODES*DOF):
+                finte[i] += weight*(
+                    # BL.T*D*{eNL, 0, 0, 0, 0, 0}
+                      EBL[i]*eNL
+                    # BNL.T*(N + NNL)
+                    + (v_x*Gvx[i] + w_x*Gwx[i])*(N + NNL)
+                )
+
+
+    cpdef void update_KCNL(BeamC self,
+                           long [::1] KCNLr,
+                           long [::1] KCNLc,
+                           double [::1] KCNLv,
+                           BeamProp prop,
+                           int update_KCNLv_only=0
+                           ):
+        r"""Update sparse vectors for the nonlinear constitutive stiffness matrix KCNL
+
+        Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, built from the von Karman
+        axial strain
+
+        .. math::
+            \epsilon_{xx} = u_{,x} + \frac{1}{2} \left( v_{,x}^2 + w_{,x}^2 \right)
+
+        whose nonlinear part is `\epsilon_{NL} = \frac{1}{2} [B_{NL}] \{u_e\}`, with
+        `[B_{NL}] = v_{,x} [G_v] + w_{,x} [G_w]` its variation. With
+        `[B_L]` the linear strain-displacement matrix, `[D]` the constitutive
+        matrix, whose first column couples the axial strain with `E A`, `E A_y`
+        and `E A_z`, and `N_{NL} = E A \epsilon_{NL}`:
+
+        - KC0L = `[B_L]^T [D] [B_{NL}]`
+        - KCL0 = KC0L`^T`
+        - KCLL = `[B_{NL}]^T [D] [B_{NL}]`
+        - KGNL = `N_{NL} ([G_v]^T [G_v] + [G_w]^T [G_w])`
+
+        The first three groups are the constitutive terms coupling the linear and
+        the nonlinear parts of the axial strain. KGNL is geometric, carrying the
+        axial force of the nonlinear axial strain. It is collected here so that
+        :meth:`.update_KG` stays homogeneous of degree one in the displacements,
+        which is what a linear buckling analysis needs. With it here,
+
+        .. math::
+            K_T = K_{C0} + K_{CNL}(u) + K_G(u)
+
+        is the exact Jacobian of the internal forces of :meth:`.update_fint` with
+        ``nonlinear=1``, and a Newton-Raphson iteration built on them converges
+        quadratically.
+
+        Before this function is called, the probe :class:`.BeamCProbe` attribute
+        of the :class:`.BeamC` object must be updated using
+        :func:`.update_probe_ue` with the current displacements; and
+        :func:`.update_probe_xe` with the node coordinates.
+
+        Parameters
+        ----------
+        KCNLr : np.array
+            Array to store row positions of sparse values
+        KCNLc : np.array
+            Array to store column positions of sparse values
+        KCNLv : np.array
+            Array to store sparse values
+        prop : :class:`.BeamProp` object
+            Beam property object from where the stiffness and mass attributes are
+            read from.
+        update_KCNLv_only : int
+            The default ``0`` means that the row and column indices ``KCNLr`` and
+            ``KCNLc`` should also be updated. Any other value will only update the
+            stiffness matrix values ``KCNLv``.
+
+        """
+        cdef int i, j, node_i, node_j, k, ke, m, n
+        cdef int c[2]
+        cdef double r[6][6]
+
+        with nogil:
+            # local to global transformation
+            # translation DOFs
+            r[0][0] = self.r11
+            r[0][1] = self.r12
+            r[0][2] = self.r13
+            r[1][0] = self.r21
+            r[1][1] = self.r22
+            r[1][2] = self.r23
+            r[2][0] = self.r31
+            r[2][1] = self.r32
+            r[2][2] = self.r33
+            # rotation DOFs
+            r[0+3][0+3] = self.r11
+            r[0+3][1+3] = self.r12
+            r[0+3][2+3] = self.r13
+            r[1+3][0+3] = self.r21
+            r[1+3][1+3] = self.r22
+            r[1+3][2+3] = self.r23
+            r[2+3][0+3] = self.r31
+            r[2+3][1+3] = self.r32
+            r[2+3][2+3] = self.r33
+            # coupled translation-rotation DOFs
+            for i in range(3):
+                for j in range(3):
+                    r[i][j+3] = 0.
+                    r[i+3][j] = 0.
+
+            if update_KCNLv_only == 0:
+                # positions in the global stiffness matrix
+                c[0] = self.c1
+                c[1] = self.c2
+
+                for node_i in range(NUM_NODES):
+                    for m in range(DOF):
+                        for node_j in range(NUM_NODES):
+                            for n in range(DOF):
+                                k = self.init_k_KCNL + 12*(node_i*DOF + m) + node_j*DOF + n
+                                KCNLr[k] = c[node_i] + m
+                                KCNLc[k] = c[node_j] + n
+
+            self._update_probe_KCNLve(prop)
+
+            # NOTE from element to global coordinates:
+            #
+            # Kg = R @ Ke @ R.T
+            #
+            # in tensor notation:
+            #
+            # Kg_{mn} = r_{mi} * Ke_{ij} * r_{nj}
+            #
+            for node_i in range(NUM_NODES):
+                for m in range(DOF):
+                    for node_j in range(NUM_NODES):
+                        for n in range(DOF):
+                            k = self.init_k_KCNL + 12*(node_i*DOF + m) + node_j*DOF + n
+                            for i in range(DOF):
+                                for j in range(DOF):
+                                    ke = 12*(node_i*DOF + i) + node_j*DOF + j
+                                    KCNLv[k] += r[m][i]*self.probe.KCNLve[ke]*r[n][j]
 
 
     cpdef void update_KG(BeamC self,
@@ -1416,7 +1819,7 @@ cdef class BeamC:
         """
         cdef double *ue
         cdef int c1, c2, k
-        cdef double L, A, E, G, Iyy, Izz, Iyz, J, N
+        cdef double L, A, E, G, Ay, Az, Iyy, Izz, Iyz, J, Na, Nb
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double alphay, alphaz, betay, betaz
 
@@ -1424,6 +1827,8 @@ cdef class BeamC:
             L = self.length
             A = prop.A
             E = prop.E
+            Ay = prop.Ay
+            Az = prop.Az
             G = prop.G
             Iyy = prop.Iyy
             Izz = prop.Izz
@@ -1886,296 +2291,297 @@ cdef class BeamC:
                 KGr[k] = 5+c2
                 KGc[k] = 5+c2
 
-            N = A*E*(-ue[0] + ue[6])/L
+            Na = E*(6*Ay*betay*ue[1] - 6*Ay*betay*ue[7] + 6*Az*betaz*ue[2] - 6*Az*betaz*ue[8] + L*(-A*ue[0] + A*ue[6] + Ay*betay*ue[11]*(alphay + 2) - Ay*betay*ue[5]*(alphay - 4) - Az*betaz*ue[10]*(alphaz + 2) + Az*betaz*ue[4]*(alphaz - 4)))/L**2
+            Nb = E*(-6*Ay*betay*ue[1] + 6*Ay*betay*ue[7] - 6*Az*betaz*ue[2] + 6*Az*betaz*ue[8] + L*(-A*ue[0] + A*ue[6] + Ay*betay*ue[11]*(alphay - 4) - Ay*betay*ue[5]*(alphay + 2) - Az*betaz*ue[10]*(alphaz - 4) + Az*betaz*ue[4]*(alphaz + 2)))/L**2
 
             k = self.init_k_KG
-            KGv[k] += r12*(N*betay**2*r12*(5*alphay**2 - 10*alphay + 6)/(5*L) + N*betay*betaz*r13*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L)) + r13*(N*betay*betaz*r12*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L) + N*betaz**2*r13*(5*alphaz**2 - 10*alphaz + 6)/(5*L))
+            KGv[k] += betay**2*r12**2*(Na*alphay**2/2 - Na*alphay + 3*Na/5 + Nb*alphay**2/2 - Nb*alphay + 3*Nb/5)/L + betaz**2*r13**2*(Na*alphaz**2/2 - Na*alphaz + 3*Na/5 + Nb*alphaz**2/2 - Nb*alphaz + 3*Nb/5)/L
             k += 1
-            KGv[k] += r22*(N*betay**2*r12*(5*alphay**2 - 10*alphay + 6)/(5*L) + N*betay*betaz*r13*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L)) + r23*(N*betay*betaz*r12*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L) + N*betaz**2*r13*(5*alphaz**2 - 10*alphaz + 6)/(5*L))
+            KGv[k] += betay**2*r12*r22*(Na*alphay**2/2 - Na*alphay + 3*Na/5 + Nb*alphay**2/2 - Nb*alphay + 3*Nb/5)/L + betaz**2*r13*r23*(Na*alphaz**2/2 - Na*alphaz + 3*Na/5 + Nb*alphaz**2/2 - Nb*alphaz + 3*Nb/5)/L
             k += 1
-            KGv[k] += r32*(N*betay**2*r12*(5*alphay**2 - 10*alphay + 6)/(5*L) + N*betay*betaz*r13*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L)) + r33*(N*betay*betaz*r12*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L) + N*betaz**2*r13*(5*alphaz**2 - 10*alphaz + 6)/(5*L))
+            KGv[k] += betay**2*r12*r32*(Na*alphay**2/2 - Na*alphay + 3*Na/5 + Nb*alphay**2/2 - Nb*alphay + 3*Nb/5)/L + betaz**2*r13*r33*(Na*alphaz**2/2 - Na*alphaz + 3*Na/5 + Nb*alphaz**2/2 - Nb*alphaz + 3*Nb/5)/L
             k += 1
-            KGv[k] += r12*(-N*betay*betaz*r12/10 - N*betaz**2*r13/10) + r13*(N*betay**2*r12/10 + N*betay*betaz*r13/10)
+            KGv[k] += betay**2*r12*r13*(-5*Na*alphay**2 + 8*Na*alphay + 5*Nb*alphay**2 - 8*Nb*alphay + 6*Nb)/60 + betaz**2*r12*r13*(5*Na*alphaz**2 - 8*Na*alphaz - 5*Nb*alphaz**2 + 8*Nb*alphaz - 6*Nb)/60
             k += 1
-            KGv[k] += r22*(-N*betay*betaz*r12/10 - N*betaz**2*r13/10) + r23*(N*betay**2*r12/10 + N*betay*betaz*r13/10)
+            KGv[k] += betay**2*r12*r23*(-5*Na*alphay**2 + 8*Na*alphay + 5*Nb*alphay**2 - 8*Nb*alphay + 6*Nb)/60 + betaz**2*r13*r22*(5*Na*alphaz**2 - 8*Na*alphaz - 5*Nb*alphaz**2 + 8*Nb*alphaz - 6*Nb)/60
             k += 1
-            KGv[k] += r32*(-N*betay*betaz*r12/10 - N*betaz**2*r13/10) + r33*(N*betay**2*r12/10 + N*betay*betaz*r13/10)
+            KGv[k] += betay**2*r12*r33*(-5*Na*alphay**2 + 8*Na*alphay + 5*Nb*alphay**2 - 8*Nb*alphay + 6*Nb)/60 + betaz**2*r13*r32*(5*Na*alphaz**2 - 8*Na*alphaz - 5*Nb*alphaz**2 + 8*Nb*alphaz - 6*Nb)/60
             k += 1
-            KGv[k] += r12*(N*betay**2*r12*(-5*alphay**2 + 10*alphay - 6)/(5*L) + N*betay*betaz*r13*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L)) + r13*(N*betay*betaz*r12*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L) + N*betaz**2*r13*(-5*alphaz**2 + 10*alphaz - 6)/(5*L))
+            KGv[k] += betay**2*r12**2*(-Na*alphay**2/2 + Na*alphay - 3*Na/5 - Nb*alphay**2/2 + Nb*alphay - 3*Nb/5)/L + betaz**2*r13**2*(-Na*alphaz**2/2 + Na*alphaz - 3*Na/5 - Nb*alphaz**2/2 + Nb*alphaz - 3*Nb/5)/L
             k += 1
-            KGv[k] += r22*(N*betay**2*r12*(-5*alphay**2 + 10*alphay - 6)/(5*L) + N*betay*betaz*r13*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L)) + r23*(N*betay*betaz*r12*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L) + N*betaz**2*r13*(-5*alphaz**2 + 10*alphaz - 6)/(5*L))
+            KGv[k] += betay**2*r12*r22*(-Na*alphay**2/2 + Na*alphay - 3*Na/5 - Nb*alphay**2/2 + Nb*alphay - 3*Nb/5)/L + betaz**2*r13*r23*(-Na*alphaz**2/2 + Na*alphaz - 3*Na/5 - Nb*alphaz**2/2 + Nb*alphaz - 3*Nb/5)/L
             k += 1
-            KGv[k] += r32*(N*betay**2*r12*(-5*alphay**2 + 10*alphay - 6)/(5*L) + N*betay*betaz*r13*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L)) + r33*(N*betay*betaz*r12*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L) + N*betaz**2*r13*(-5*alphaz**2 + 10*alphaz - 6)/(5*L))
+            KGv[k] += betay**2*r12*r32*(-Na*alphay**2/2 + Na*alphay - 3*Na/5 - Nb*alphay**2/2 + Nb*alphay - 3*Nb/5)/L + betaz**2*r13*r33*(-Na*alphaz**2/2 + Na*alphaz - 3*Na/5 - Nb*alphaz**2/2 + Nb*alphaz - 3*Nb/5)/L
             k += 1
-            KGv[k] += r12*(-N*betay*betaz*r12/10 - N*betaz**2*r13/10) + r13*(N*betay**2*r12/10 + N*betay*betaz*r13/10)
+            KGv[k] += betay**2*r12*r13*(5*Na*alphay**2 - 8*Na*alphay + 6*Na - 5*Nb*alphay**2 + 8*Nb*alphay)/60 + betaz**2*r12*r13*(-5*Na*alphaz**2 + 8*Na*alphaz - 6*Na + 5*Nb*alphaz**2 - 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r22*(-N*betay*betaz*r12/10 - N*betaz**2*r13/10) + r23*(N*betay**2*r12/10 + N*betay*betaz*r13/10)
+            KGv[k] += betay**2*r12*r23*(5*Na*alphay**2 - 8*Na*alphay + 6*Na - 5*Nb*alphay**2 + 8*Nb*alphay)/60 + betaz**2*r13*r22*(-5*Na*alphaz**2 + 8*Na*alphaz - 6*Na + 5*Nb*alphaz**2 - 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r32*(-N*betay*betaz*r12/10 - N*betaz**2*r13/10) + r33*(N*betay**2*r12/10 + N*betay*betaz*r13/10)
+            KGv[k] += betay**2*r12*r33*(5*Na*alphay**2 - 8*Na*alphay + 6*Na - 5*Nb*alphay**2 + 8*Nb*alphay)/60 + betaz**2*r13*r32*(-5*Na*alphaz**2 + 8*Na*alphaz - 6*Na + 5*Nb*alphaz**2 - 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r12*(N*betay**2*r22*(5*alphay**2 - 10*alphay + 6)/(5*L) + N*betay*betaz*r23*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L)) + r13*(N*betay*betaz*r22*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L) + N*betaz**2*r23*(5*alphaz**2 - 10*alphaz + 6)/(5*L))
+            KGv[k] += betay**2*r12*r22*(Na*alphay**2/2 - Na*alphay + 3*Na/5 + Nb*alphay**2/2 - Nb*alphay + 3*Nb/5)/L + betaz**2*r13*r23*(Na*alphaz**2/2 - Na*alphaz + 3*Na/5 + Nb*alphaz**2/2 - Nb*alphaz + 3*Nb/5)/L
             k += 1
-            KGv[k] += r22*(N*betay**2*r22*(5*alphay**2 - 10*alphay + 6)/(5*L) + N*betay*betaz*r23*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L)) + r23*(N*betay*betaz*r22*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L) + N*betaz**2*r23*(5*alphaz**2 - 10*alphaz + 6)/(5*L))
+            KGv[k] += betay**2*r22**2*(Na*alphay**2/2 - Na*alphay + 3*Na/5 + Nb*alphay**2/2 - Nb*alphay + 3*Nb/5)/L + betaz**2*r23**2*(Na*alphaz**2/2 - Na*alphaz + 3*Na/5 + Nb*alphaz**2/2 - Nb*alphaz + 3*Nb/5)/L
             k += 1
-            KGv[k] += r32*(N*betay**2*r22*(5*alphay**2 - 10*alphay + 6)/(5*L) + N*betay*betaz*r23*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L)) + r33*(N*betay*betaz*r22*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L) + N*betaz**2*r23*(5*alphaz**2 - 10*alphaz + 6)/(5*L))
+            KGv[k] += betay**2*r22*r32*(Na*alphay**2/2 - Na*alphay + 3*Na/5 + Nb*alphay**2/2 - Nb*alphay + 3*Nb/5)/L + betaz**2*r23*r33*(Na*alphaz**2/2 - Na*alphaz + 3*Na/5 + Nb*alphaz**2/2 - Nb*alphaz + 3*Nb/5)/L
             k += 1
-            KGv[k] += r12*(-N*betay*betaz*r22/10 - N*betaz**2*r23/10) + r13*(N*betay**2*r22/10 + N*betay*betaz*r23/10)
+            KGv[k] += betay**2*r13*r22*(-5*Na*alphay**2 + 8*Na*alphay + 5*Nb*alphay**2 - 8*Nb*alphay + 6*Nb)/60 + betaz**2*r12*r23*(5*Na*alphaz**2 - 8*Na*alphaz - 5*Nb*alphaz**2 + 8*Nb*alphaz - 6*Nb)/60
             k += 1
-            KGv[k] += r22*(-N*betay*betaz*r22/10 - N*betaz**2*r23/10) + r23*(N*betay**2*r22/10 + N*betay*betaz*r23/10)
+            KGv[k] += betay**2*r22*r23*(-5*Na*alphay**2 + 8*Na*alphay + 5*Nb*alphay**2 - 8*Nb*alphay + 6*Nb)/60 + betaz**2*r22*r23*(5*Na*alphaz**2 - 8*Na*alphaz - 5*Nb*alphaz**2 + 8*Nb*alphaz - 6*Nb)/60
             k += 1
-            KGv[k] += r32*(-N*betay*betaz*r22/10 - N*betaz**2*r23/10) + r33*(N*betay**2*r22/10 + N*betay*betaz*r23/10)
+            KGv[k] += betay**2*r22*r33*(-5*Na*alphay**2 + 8*Na*alphay + 5*Nb*alphay**2 - 8*Nb*alphay + 6*Nb)/60 + betaz**2*r23*r32*(5*Na*alphaz**2 - 8*Na*alphaz - 5*Nb*alphaz**2 + 8*Nb*alphaz - 6*Nb)/60
             k += 1
-            KGv[k] += r12*(N*betay**2*r22*(-5*alphay**2 + 10*alphay - 6)/(5*L) + N*betay*betaz*r23*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L)) + r13*(N*betay*betaz*r22*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L) + N*betaz**2*r23*(-5*alphaz**2 + 10*alphaz - 6)/(5*L))
+            KGv[k] += betay**2*r12*r22*(-Na*alphay**2/2 + Na*alphay - 3*Na/5 - Nb*alphay**2/2 + Nb*alphay - 3*Nb/5)/L + betaz**2*r13*r23*(-Na*alphaz**2/2 + Na*alphaz - 3*Na/5 - Nb*alphaz**2/2 + Nb*alphaz - 3*Nb/5)/L
             k += 1
-            KGv[k] += r22*(N*betay**2*r22*(-5*alphay**2 + 10*alphay - 6)/(5*L) + N*betay*betaz*r23*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L)) + r23*(N*betay*betaz*r22*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L) + N*betaz**2*r23*(-5*alphaz**2 + 10*alphaz - 6)/(5*L))
+            KGv[k] += betay**2*r22**2*(-Na*alphay**2/2 + Na*alphay - 3*Na/5 - Nb*alphay**2/2 + Nb*alphay - 3*Nb/5)/L + betaz**2*r23**2*(-Na*alphaz**2/2 + Na*alphaz - 3*Na/5 - Nb*alphaz**2/2 + Nb*alphaz - 3*Nb/5)/L
             k += 1
-            KGv[k] += r32*(N*betay**2*r22*(-5*alphay**2 + 10*alphay - 6)/(5*L) + N*betay*betaz*r23*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L)) + r33*(N*betay*betaz*r22*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L) + N*betaz**2*r23*(-5*alphaz**2 + 10*alphaz - 6)/(5*L))
+            KGv[k] += betay**2*r22*r32*(-Na*alphay**2/2 + Na*alphay - 3*Na/5 - Nb*alphay**2/2 + Nb*alphay - 3*Nb/5)/L + betaz**2*r23*r33*(-Na*alphaz**2/2 + Na*alphaz - 3*Na/5 - Nb*alphaz**2/2 + Nb*alphaz - 3*Nb/5)/L
             k += 1
-            KGv[k] += r12*(-N*betay*betaz*r22/10 - N*betaz**2*r23/10) + r13*(N*betay**2*r22/10 + N*betay*betaz*r23/10)
+            KGv[k] += betay**2*r13*r22*(5*Na*alphay**2 - 8*Na*alphay + 6*Na - 5*Nb*alphay**2 + 8*Nb*alphay)/60 + betaz**2*r12*r23*(-5*Na*alphaz**2 + 8*Na*alphaz - 6*Na + 5*Nb*alphaz**2 - 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r22*(-N*betay*betaz*r22/10 - N*betaz**2*r23/10) + r23*(N*betay**2*r22/10 + N*betay*betaz*r23/10)
+            KGv[k] += betay**2*r22*r23*(5*Na*alphay**2 - 8*Na*alphay + 6*Na - 5*Nb*alphay**2 + 8*Nb*alphay)/60 + betaz**2*r22*r23*(-5*Na*alphaz**2 + 8*Na*alphaz - 6*Na + 5*Nb*alphaz**2 - 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r32*(-N*betay*betaz*r22/10 - N*betaz**2*r23/10) + r33*(N*betay**2*r22/10 + N*betay*betaz*r23/10)
+            KGv[k] += betay**2*r22*r33*(5*Na*alphay**2 - 8*Na*alphay + 6*Na - 5*Nb*alphay**2 + 8*Nb*alphay)/60 + betaz**2*r23*r32*(-5*Na*alphaz**2 + 8*Na*alphaz - 6*Na + 5*Nb*alphaz**2 - 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r12*(N*betay**2*r32*(5*alphay**2 - 10*alphay + 6)/(5*L) + N*betay*betaz*r33*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L)) + r13*(N*betay*betaz*r32*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L) + N*betaz**2*r33*(5*alphaz**2 - 10*alphaz + 6)/(5*L))
+            KGv[k] += betay**2*r12*r32*(Na*alphay**2/2 - Na*alphay + 3*Na/5 + Nb*alphay**2/2 - Nb*alphay + 3*Nb/5)/L + betaz**2*r13*r33*(Na*alphaz**2/2 - Na*alphaz + 3*Na/5 + Nb*alphaz**2/2 - Nb*alphaz + 3*Nb/5)/L
             k += 1
-            KGv[k] += r22*(N*betay**2*r32*(5*alphay**2 - 10*alphay + 6)/(5*L) + N*betay*betaz*r33*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L)) + r23*(N*betay*betaz*r32*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L) + N*betaz**2*r33*(5*alphaz**2 - 10*alphaz + 6)/(5*L))
+            KGv[k] += betay**2*r22*r32*(Na*alphay**2/2 - Na*alphay + 3*Na/5 + Nb*alphay**2/2 - Nb*alphay + 3*Nb/5)/L + betaz**2*r23*r33*(Na*alphaz**2/2 - Na*alphaz + 3*Na/5 + Nb*alphaz**2/2 - Nb*alphaz + 3*Nb/5)/L
             k += 1
-            KGv[k] += r32*(N*betay**2*r32*(5*alphay**2 - 10*alphay + 6)/(5*L) + N*betay*betaz*r33*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L)) + r33*(N*betay*betaz*r32*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L) + N*betaz**2*r33*(5*alphaz**2 - 10*alphaz + 6)/(5*L))
+            KGv[k] += betay**2*r32**2*(Na*alphay**2/2 - Na*alphay + 3*Na/5 + Nb*alphay**2/2 - Nb*alphay + 3*Nb/5)/L + betaz**2*r33**2*(Na*alphaz**2/2 - Na*alphaz + 3*Na/5 + Nb*alphaz**2/2 - Nb*alphaz + 3*Nb/5)/L
             k += 1
-            KGv[k] += r12*(-N*betay*betaz*r32/10 - N*betaz**2*r33/10) + r13*(N*betay**2*r32/10 + N*betay*betaz*r33/10)
+            KGv[k] += betay**2*r13*r32*(-5*Na*alphay**2 + 8*Na*alphay + 5*Nb*alphay**2 - 8*Nb*alphay + 6*Nb)/60 + betaz**2*r12*r33*(5*Na*alphaz**2 - 8*Na*alphaz - 5*Nb*alphaz**2 + 8*Nb*alphaz - 6*Nb)/60
             k += 1
-            KGv[k] += r22*(-N*betay*betaz*r32/10 - N*betaz**2*r33/10) + r23*(N*betay**2*r32/10 + N*betay*betaz*r33/10)
+            KGv[k] += betay**2*r23*r32*(-5*Na*alphay**2 + 8*Na*alphay + 5*Nb*alphay**2 - 8*Nb*alphay + 6*Nb)/60 + betaz**2*r22*r33*(5*Na*alphaz**2 - 8*Na*alphaz - 5*Nb*alphaz**2 + 8*Nb*alphaz - 6*Nb)/60
             k += 1
-            KGv[k] += r32*(-N*betay*betaz*r32/10 - N*betaz**2*r33/10) + r33*(N*betay**2*r32/10 + N*betay*betaz*r33/10)
+            KGv[k] += betay**2*r32*r33*(-5*Na*alphay**2 + 8*Na*alphay + 5*Nb*alphay**2 - 8*Nb*alphay + 6*Nb)/60 + betaz**2*r32*r33*(5*Na*alphaz**2 - 8*Na*alphaz - 5*Nb*alphaz**2 + 8*Nb*alphaz - 6*Nb)/60
             k += 1
-            KGv[k] += r12*(N*betay**2*r32*(-5*alphay**2 + 10*alphay - 6)/(5*L) + N*betay*betaz*r33*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L)) + r13*(N*betay*betaz*r32*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L) + N*betaz**2*r33*(-5*alphaz**2 + 10*alphaz - 6)/(5*L))
+            KGv[k] += betay**2*r12*r32*(-Na*alphay**2/2 + Na*alphay - 3*Na/5 - Nb*alphay**2/2 + Nb*alphay - 3*Nb/5)/L + betaz**2*r13*r33*(-Na*alphaz**2/2 + Na*alphaz - 3*Na/5 - Nb*alphaz**2/2 + Nb*alphaz - 3*Nb/5)/L
             k += 1
-            KGv[k] += r22*(N*betay**2*r32*(-5*alphay**2 + 10*alphay - 6)/(5*L) + N*betay*betaz*r33*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L)) + r23*(N*betay*betaz*r32*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L) + N*betaz**2*r33*(-5*alphaz**2 + 10*alphaz - 6)/(5*L))
+            KGv[k] += betay**2*r22*r32*(-Na*alphay**2/2 + Na*alphay - 3*Na/5 - Nb*alphay**2/2 + Nb*alphay - 3*Nb/5)/L + betaz**2*r23*r33*(-Na*alphaz**2/2 + Na*alphaz - 3*Na/5 - Nb*alphaz**2/2 + Nb*alphaz - 3*Nb/5)/L
             k += 1
-            KGv[k] += r32*(N*betay**2*r32*(-5*alphay**2 + 10*alphay - 6)/(5*L) + N*betay*betaz*r33*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L)) + r33*(N*betay*betaz*r32*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L) + N*betaz**2*r33*(-5*alphaz**2 + 10*alphaz - 6)/(5*L))
+            KGv[k] += betay**2*r32**2*(-Na*alphay**2/2 + Na*alphay - 3*Na/5 - Nb*alphay**2/2 + Nb*alphay - 3*Nb/5)/L + betaz**2*r33**2*(-Na*alphaz**2/2 + Na*alphaz - 3*Na/5 - Nb*alphaz**2/2 + Nb*alphaz - 3*Nb/5)/L
             k += 1
-            KGv[k] += r12*(-N*betay*betaz*r32/10 - N*betaz**2*r33/10) + r13*(N*betay**2*r32/10 + N*betay*betaz*r33/10)
+            KGv[k] += betay**2*r13*r32*(5*Na*alphay**2 - 8*Na*alphay + 6*Na - 5*Nb*alphay**2 + 8*Nb*alphay)/60 + betaz**2*r12*r33*(-5*Na*alphaz**2 + 8*Na*alphaz - 6*Na + 5*Nb*alphaz**2 - 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r22*(-N*betay*betaz*r32/10 - N*betaz**2*r33/10) + r23*(N*betay**2*r32/10 + N*betay*betaz*r33/10)
+            KGv[k] += betay**2*r23*r32*(5*Na*alphay**2 - 8*Na*alphay + 6*Na - 5*Nb*alphay**2 + 8*Nb*alphay)/60 + betaz**2*r22*r33*(-5*Na*alphaz**2 + 8*Na*alphaz - 6*Na + 5*Nb*alphaz**2 - 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r32*(-N*betay*betaz*r32/10 - N*betaz**2*r33/10) + r33*(N*betay**2*r32/10 + N*betay*betaz*r33/10)
+            KGv[k] += betay**2*r32*r33*(5*Na*alphay**2 - 8*Na*alphay + 6*Na - 5*Nb*alphay**2 + 8*Nb*alphay)/60 + betaz**2*r32*r33*(-5*Na*alphaz**2 + 8*Na*alphaz - 6*Na + 5*Nb*alphaz**2 - 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r12*(N*betay**2*r13/10 - N*betay*betaz*r12/10) + r13*(N*betay*betaz*r13/10 - N*betaz**2*r12/10)
+            KGv[k] += betay**2*r12*r13*(-5*Na*alphay**2 + 8*Na*alphay + 5*Nb*alphay**2 - 8*Nb*alphay + 6*Nb)/60 + betaz**2*r12*r13*(5*Na*alphaz**2 - 8*Na*alphaz - 5*Nb*alphaz**2 + 8*Nb*alphaz - 6*Nb)/60
             k += 1
-            KGv[k] += r22*(N*betay**2*r13/10 - N*betay*betaz*r12/10) + r23*(N*betay*betaz*r13/10 - N*betaz**2*r12/10)
+            KGv[k] += betay**2*r13*r22*(-5*Na*alphay**2 + 8*Na*alphay + 5*Nb*alphay**2 - 8*Nb*alphay + 6*Nb)/60 + betaz**2*r12*r23*(5*Na*alphaz**2 - 8*Na*alphaz - 5*Nb*alphaz**2 + 8*Nb*alphaz - 6*Nb)/60
             k += 1
-            KGv[k] += r32*(N*betay**2*r13/10 - N*betay*betaz*r12/10) + r33*(N*betay*betaz*r13/10 - N*betaz**2*r12/10)
+            KGv[k] += betay**2*r13*r32*(-5*Na*alphay**2 + 8*Na*alphay + 5*Nb*alphay**2 - 8*Nb*alphay + 6*Nb)/60 + betaz**2*r12*r33*(5*Na*alphaz**2 - 8*Na*alphaz - 5*Nb*alphaz**2 + 8*Nb*alphaz - 6*Nb)/60
             k += 1
-            KGv[k] += r12*(L*N*betay*betaz*r13*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60 + L*N*betaz**2*r12*(5*alphaz**2 - 10*alphaz + 8)/60) + r13*(L*N*betay**2*r13*(5*alphay**2 - 10*alphay + 8)/60 + L*N*betay*betaz*r12*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60)
+            KGv[k] += L*betay**2*r13**2*(5*Na*alphay**2 - 14*Na*alphay + 12*Na + 5*Nb*alphay**2 - 6*Nb*alphay + 4*Nb)/120 + L*betaz**2*r12**2*(5*Na*alphaz**2 - 14*Na*alphaz + 12*Na + 5*Nb*alphaz**2 - 6*Nb*alphaz + 4*Nb)/120
             k += 1
-            KGv[k] += r22*(L*N*betay*betaz*r13*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60 + L*N*betaz**2*r12*(5*alphaz**2 - 10*alphaz + 8)/60) + r23*(L*N*betay**2*r13*(5*alphay**2 - 10*alphay + 8)/60 + L*N*betay*betaz*r12*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60)
+            KGv[k] += L*betay**2*r13*r23*(5*Na*alphay**2 - 14*Na*alphay + 12*Na + 5*Nb*alphay**2 - 6*Nb*alphay + 4*Nb)/120 + L*betaz**2*r12*r22*(5*Na*alphaz**2 - 14*Na*alphaz + 12*Na + 5*Nb*alphaz**2 - 6*Nb*alphaz + 4*Nb)/120
             k += 1
-            KGv[k] += r32*(L*N*betay*betaz*r13*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60 + L*N*betaz**2*r12*(5*alphaz**2 - 10*alphaz + 8)/60) + r33*(L*N*betay**2*r13*(5*alphay**2 - 10*alphay + 8)/60 + L*N*betay*betaz*r12*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60)
+            KGv[k] += L*betay**2*r13*r33*(5*Na*alphay**2 - 14*Na*alphay + 12*Na + 5*Nb*alphay**2 - 6*Nb*alphay + 4*Nb)/120 + L*betaz**2*r12*r32*(5*Na*alphaz**2 - 14*Na*alphaz + 12*Na + 5*Nb*alphaz**2 - 6*Nb*alphaz + 4*Nb)/120
             k += 1
-            KGv[k] += r12*(-N*betay**2*r13/10 + N*betay*betaz*r12/10) + r13*(-N*betay*betaz*r13/10 + N*betaz**2*r12/10)
+            KGv[k] += betay**2*r12*r13*(5*Na*alphay**2 - 8*Na*alphay - 5*Nb*alphay**2 + 8*Nb*alphay - 6*Nb)/60 + betaz**2*r12*r13*(-5*Na*alphaz**2 + 8*Na*alphaz + 5*Nb*alphaz**2 - 8*Nb*alphaz + 6*Nb)/60
             k += 1
-            KGv[k] += r22*(-N*betay**2*r13/10 + N*betay*betaz*r12/10) + r23*(-N*betay*betaz*r13/10 + N*betaz**2*r12/10)
+            KGv[k] += betay**2*r13*r22*(5*Na*alphay**2 - 8*Na*alphay - 5*Nb*alphay**2 + 8*Nb*alphay - 6*Nb)/60 + betaz**2*r12*r23*(-5*Na*alphaz**2 + 8*Na*alphaz + 5*Nb*alphaz**2 - 8*Nb*alphaz + 6*Nb)/60
             k += 1
-            KGv[k] += r32*(-N*betay**2*r13/10 + N*betay*betaz*r12/10) + r33*(-N*betay*betaz*r13/10 + N*betaz**2*r12/10)
+            KGv[k] += betay**2*r13*r32*(5*Na*alphay**2 - 8*Na*alphay - 5*Nb*alphay**2 + 8*Nb*alphay - 6*Nb)/60 + betaz**2*r12*r33*(-5*Na*alphaz**2 + 8*Na*alphaz + 5*Nb*alphaz**2 - 8*Nb*alphaz + 6*Nb)/60
             k += 1
-            KGv[k] += r12*(L*N*betay*betaz*r13*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60 + L*N*betaz**2*r12*(-5*alphaz**2 + 10*alphaz - 2)/60) + r13*(L*N*betay**2*r13*(-5*alphay**2 + 10*alphay - 2)/60 + L*N*betay*betaz*r12*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60)
+            KGv[k] += L*betay**2*r13**2*(-5*Na*alphay**2 + 10*Na*alphay - 2*Na - 5*Nb*alphay**2 + 10*Nb*alphay - 2*Nb)/120 + L*betaz**2*r12**2*(-5*Na*alphaz**2 + 10*Na*alphaz - 2*Na - 5*Nb*alphaz**2 + 10*Nb*alphaz - 2*Nb)/120
             k += 1
-            KGv[k] += r22*(L*N*betay*betaz*r13*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60 + L*N*betaz**2*r12*(-5*alphaz**2 + 10*alphaz - 2)/60) + r23*(L*N*betay**2*r13*(-5*alphay**2 + 10*alphay - 2)/60 + L*N*betay*betaz*r12*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60)
+            KGv[k] += L*betay**2*r13*r23*(-5*Na*alphay**2 + 10*Na*alphay - 2*Na - 5*Nb*alphay**2 + 10*Nb*alphay - 2*Nb)/120 + L*betaz**2*r12*r22*(-5*Na*alphaz**2 + 10*Na*alphaz - 2*Na - 5*Nb*alphaz**2 + 10*Nb*alphaz - 2*Nb)/120
             k += 1
-            KGv[k] += r32*(L*N*betay*betaz*r13*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60 + L*N*betaz**2*r12*(-5*alphaz**2 + 10*alphaz - 2)/60) + r33*(L*N*betay**2*r13*(-5*alphay**2 + 10*alphay - 2)/60 + L*N*betay*betaz*r12*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60)
+            KGv[k] += L*betay**2*r13*r33*(-5*Na*alphay**2 + 10*Na*alphay - 2*Na - 5*Nb*alphay**2 + 10*Nb*alphay - 2*Nb)/120 + L*betaz**2*r12*r32*(-5*Na*alphaz**2 + 10*Na*alphaz - 2*Na - 5*Nb*alphaz**2 + 10*Nb*alphaz - 2*Nb)/120
             k += 1
-            KGv[k] += r12*(N*betay**2*r23/10 - N*betay*betaz*r22/10) + r13*(N*betay*betaz*r23/10 - N*betaz**2*r22/10)
+            KGv[k] += betay**2*r12*r23*(-5*Na*alphay**2 + 8*Na*alphay + 5*Nb*alphay**2 - 8*Nb*alphay + 6*Nb)/60 + betaz**2*r13*r22*(5*Na*alphaz**2 - 8*Na*alphaz - 5*Nb*alphaz**2 + 8*Nb*alphaz - 6*Nb)/60
             k += 1
-            KGv[k] += r22*(N*betay**2*r23/10 - N*betay*betaz*r22/10) + r23*(N*betay*betaz*r23/10 - N*betaz**2*r22/10)
+            KGv[k] += betay**2*r22*r23*(-5*Na*alphay**2 + 8*Na*alphay + 5*Nb*alphay**2 - 8*Nb*alphay + 6*Nb)/60 + betaz**2*r22*r23*(5*Na*alphaz**2 - 8*Na*alphaz - 5*Nb*alphaz**2 + 8*Nb*alphaz - 6*Nb)/60
             k += 1
-            KGv[k] += r32*(N*betay**2*r23/10 - N*betay*betaz*r22/10) + r33*(N*betay*betaz*r23/10 - N*betaz**2*r22/10)
+            KGv[k] += betay**2*r23*r32*(-5*Na*alphay**2 + 8*Na*alphay + 5*Nb*alphay**2 - 8*Nb*alphay + 6*Nb)/60 + betaz**2*r22*r33*(5*Na*alphaz**2 - 8*Na*alphaz - 5*Nb*alphaz**2 + 8*Nb*alphaz - 6*Nb)/60
             k += 1
-            KGv[k] += r12*(L*N*betay*betaz*r23*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60 + L*N*betaz**2*r22*(5*alphaz**2 - 10*alphaz + 8)/60) + r13*(L*N*betay**2*r23*(5*alphay**2 - 10*alphay + 8)/60 + L*N*betay*betaz*r22*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60)
+            KGv[k] += L*betay**2*r13*r23*(5*Na*alphay**2 - 14*Na*alphay + 12*Na + 5*Nb*alphay**2 - 6*Nb*alphay + 4*Nb)/120 + L*betaz**2*r12*r22*(5*Na*alphaz**2 - 14*Na*alphaz + 12*Na + 5*Nb*alphaz**2 - 6*Nb*alphaz + 4*Nb)/120
             k += 1
-            KGv[k] += r22*(L*N*betay*betaz*r23*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60 + L*N*betaz**2*r22*(5*alphaz**2 - 10*alphaz + 8)/60) + r23*(L*N*betay**2*r23*(5*alphay**2 - 10*alphay + 8)/60 + L*N*betay*betaz*r22*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60)
+            KGv[k] += L*betay**2*r23**2*(5*Na*alphay**2 - 14*Na*alphay + 12*Na + 5*Nb*alphay**2 - 6*Nb*alphay + 4*Nb)/120 + L*betaz**2*r22**2*(5*Na*alphaz**2 - 14*Na*alphaz + 12*Na + 5*Nb*alphaz**2 - 6*Nb*alphaz + 4*Nb)/120
             k += 1
-            KGv[k] += r32*(L*N*betay*betaz*r23*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60 + L*N*betaz**2*r22*(5*alphaz**2 - 10*alphaz + 8)/60) + r33*(L*N*betay**2*r23*(5*alphay**2 - 10*alphay + 8)/60 + L*N*betay*betaz*r22*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60)
+            KGv[k] += L*betay**2*r23*r33*(5*Na*alphay**2 - 14*Na*alphay + 12*Na + 5*Nb*alphay**2 - 6*Nb*alphay + 4*Nb)/120 + L*betaz**2*r22*r32*(5*Na*alphaz**2 - 14*Na*alphaz + 12*Na + 5*Nb*alphaz**2 - 6*Nb*alphaz + 4*Nb)/120
             k += 1
-            KGv[k] += r12*(-N*betay**2*r23/10 + N*betay*betaz*r22/10) + r13*(-N*betay*betaz*r23/10 + N*betaz**2*r22/10)
+            KGv[k] += betay**2*r12*r23*(5*Na*alphay**2 - 8*Na*alphay - 5*Nb*alphay**2 + 8*Nb*alphay - 6*Nb)/60 + betaz**2*r13*r22*(-5*Na*alphaz**2 + 8*Na*alphaz + 5*Nb*alphaz**2 - 8*Nb*alphaz + 6*Nb)/60
             k += 1
-            KGv[k] += r22*(-N*betay**2*r23/10 + N*betay*betaz*r22/10) + r23*(-N*betay*betaz*r23/10 + N*betaz**2*r22/10)
+            KGv[k] += betay**2*r22*r23*(5*Na*alphay**2 - 8*Na*alphay - 5*Nb*alphay**2 + 8*Nb*alphay - 6*Nb)/60 + betaz**2*r22*r23*(-5*Na*alphaz**2 + 8*Na*alphaz + 5*Nb*alphaz**2 - 8*Nb*alphaz + 6*Nb)/60
             k += 1
-            KGv[k] += r32*(-N*betay**2*r23/10 + N*betay*betaz*r22/10) + r33*(-N*betay*betaz*r23/10 + N*betaz**2*r22/10)
+            KGv[k] += betay**2*r23*r32*(5*Na*alphay**2 - 8*Na*alphay - 5*Nb*alphay**2 + 8*Nb*alphay - 6*Nb)/60 + betaz**2*r22*r33*(-5*Na*alphaz**2 + 8*Na*alphaz + 5*Nb*alphaz**2 - 8*Nb*alphaz + 6*Nb)/60
             k += 1
-            KGv[k] += r12*(L*N*betay*betaz*r23*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60 + L*N*betaz**2*r22*(-5*alphaz**2 + 10*alphaz - 2)/60) + r13*(L*N*betay**2*r23*(-5*alphay**2 + 10*alphay - 2)/60 + L*N*betay*betaz*r22*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60)
+            KGv[k] += L*betay**2*r13*r23*(-5*Na*alphay**2 + 10*Na*alphay - 2*Na - 5*Nb*alphay**2 + 10*Nb*alphay - 2*Nb)/120 + L*betaz**2*r12*r22*(-5*Na*alphaz**2 + 10*Na*alphaz - 2*Na - 5*Nb*alphaz**2 + 10*Nb*alphaz - 2*Nb)/120
             k += 1
-            KGv[k] += r22*(L*N*betay*betaz*r23*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60 + L*N*betaz**2*r22*(-5*alphaz**2 + 10*alphaz - 2)/60) + r23*(L*N*betay**2*r23*(-5*alphay**2 + 10*alphay - 2)/60 + L*N*betay*betaz*r22*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60)
+            KGv[k] += L*betay**2*r23**2*(-5*Na*alphay**2 + 10*Na*alphay - 2*Na - 5*Nb*alphay**2 + 10*Nb*alphay - 2*Nb)/120 + L*betaz**2*r22**2*(-5*Na*alphaz**2 + 10*Na*alphaz - 2*Na - 5*Nb*alphaz**2 + 10*Nb*alphaz - 2*Nb)/120
             k += 1
-            KGv[k] += r32*(L*N*betay*betaz*r23*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60 + L*N*betaz**2*r22*(-5*alphaz**2 + 10*alphaz - 2)/60) + r33*(L*N*betay**2*r23*(-5*alphay**2 + 10*alphay - 2)/60 + L*N*betay*betaz*r22*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60)
+            KGv[k] += L*betay**2*r23*r33*(-5*Na*alphay**2 + 10*Na*alphay - 2*Na - 5*Nb*alphay**2 + 10*Nb*alphay - 2*Nb)/120 + L*betaz**2*r22*r32*(-5*Na*alphaz**2 + 10*Na*alphaz - 2*Na - 5*Nb*alphaz**2 + 10*Nb*alphaz - 2*Nb)/120
             k += 1
-            KGv[k] += r12*(N*betay**2*r33/10 - N*betay*betaz*r32/10) + r13*(N*betay*betaz*r33/10 - N*betaz**2*r32/10)
+            KGv[k] += betay**2*r12*r33*(-5*Na*alphay**2 + 8*Na*alphay + 5*Nb*alphay**2 - 8*Nb*alphay + 6*Nb)/60 + betaz**2*r13*r32*(5*Na*alphaz**2 - 8*Na*alphaz - 5*Nb*alphaz**2 + 8*Nb*alphaz - 6*Nb)/60
             k += 1
-            KGv[k] += r22*(N*betay**2*r33/10 - N*betay*betaz*r32/10) + r23*(N*betay*betaz*r33/10 - N*betaz**2*r32/10)
+            KGv[k] += betay**2*r22*r33*(-5*Na*alphay**2 + 8*Na*alphay + 5*Nb*alphay**2 - 8*Nb*alphay + 6*Nb)/60 + betaz**2*r23*r32*(5*Na*alphaz**2 - 8*Na*alphaz - 5*Nb*alphaz**2 + 8*Nb*alphaz - 6*Nb)/60
             k += 1
-            KGv[k] += r32*(N*betay**2*r33/10 - N*betay*betaz*r32/10) + r33*(N*betay*betaz*r33/10 - N*betaz**2*r32/10)
+            KGv[k] += betay**2*r32*r33*(-5*Na*alphay**2 + 8*Na*alphay + 5*Nb*alphay**2 - 8*Nb*alphay + 6*Nb)/60 + betaz**2*r32*r33*(5*Na*alphaz**2 - 8*Na*alphaz - 5*Nb*alphaz**2 + 8*Nb*alphaz - 6*Nb)/60
             k += 1
-            KGv[k] += r12*(L*N*betay*betaz*r33*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60 + L*N*betaz**2*r32*(5*alphaz**2 - 10*alphaz + 8)/60) + r13*(L*N*betay**2*r33*(5*alphay**2 - 10*alphay + 8)/60 + L*N*betay*betaz*r32*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60)
+            KGv[k] += L*betay**2*r13*r33*(5*Na*alphay**2 - 14*Na*alphay + 12*Na + 5*Nb*alphay**2 - 6*Nb*alphay + 4*Nb)/120 + L*betaz**2*r12*r32*(5*Na*alphaz**2 - 14*Na*alphaz + 12*Na + 5*Nb*alphaz**2 - 6*Nb*alphaz + 4*Nb)/120
             k += 1
-            KGv[k] += r22*(L*N*betay*betaz*r33*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60 + L*N*betaz**2*r32*(5*alphaz**2 - 10*alphaz + 8)/60) + r23*(L*N*betay**2*r33*(5*alphay**2 - 10*alphay + 8)/60 + L*N*betay*betaz*r32*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60)
+            KGv[k] += L*betay**2*r23*r33*(5*Na*alphay**2 - 14*Na*alphay + 12*Na + 5*Nb*alphay**2 - 6*Nb*alphay + 4*Nb)/120 + L*betaz**2*r22*r32*(5*Na*alphaz**2 - 14*Na*alphaz + 12*Na + 5*Nb*alphaz**2 - 6*Nb*alphaz + 4*Nb)/120
             k += 1
-            KGv[k] += r32*(L*N*betay*betaz*r33*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60 + L*N*betaz**2*r32*(5*alphaz**2 - 10*alphaz + 8)/60) + r33*(L*N*betay**2*r33*(5*alphay**2 - 10*alphay + 8)/60 + L*N*betay*betaz*r32*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60)
+            KGv[k] += L*betay**2*r33**2*(5*Na*alphay**2 - 14*Na*alphay + 12*Na + 5*Nb*alphay**2 - 6*Nb*alphay + 4*Nb)/120 + L*betaz**2*r32**2*(5*Na*alphaz**2 - 14*Na*alphaz + 12*Na + 5*Nb*alphaz**2 - 6*Nb*alphaz + 4*Nb)/120
             k += 1
-            KGv[k] += r12*(-N*betay**2*r33/10 + N*betay*betaz*r32/10) + r13*(-N*betay*betaz*r33/10 + N*betaz**2*r32/10)
+            KGv[k] += betay**2*r12*r33*(5*Na*alphay**2 - 8*Na*alphay - 5*Nb*alphay**2 + 8*Nb*alphay - 6*Nb)/60 + betaz**2*r13*r32*(-5*Na*alphaz**2 + 8*Na*alphaz + 5*Nb*alphaz**2 - 8*Nb*alphaz + 6*Nb)/60
             k += 1
-            KGv[k] += r22*(-N*betay**2*r33/10 + N*betay*betaz*r32/10) + r23*(-N*betay*betaz*r33/10 + N*betaz**2*r32/10)
+            KGv[k] += betay**2*r22*r33*(5*Na*alphay**2 - 8*Na*alphay - 5*Nb*alphay**2 + 8*Nb*alphay - 6*Nb)/60 + betaz**2*r23*r32*(-5*Na*alphaz**2 + 8*Na*alphaz + 5*Nb*alphaz**2 - 8*Nb*alphaz + 6*Nb)/60
             k += 1
-            KGv[k] += r32*(-N*betay**2*r33/10 + N*betay*betaz*r32/10) + r33*(-N*betay*betaz*r33/10 + N*betaz**2*r32/10)
+            KGv[k] += betay**2*r32*r33*(5*Na*alphay**2 - 8*Na*alphay - 5*Nb*alphay**2 + 8*Nb*alphay - 6*Nb)/60 + betaz**2*r32*r33*(-5*Na*alphaz**2 + 8*Na*alphaz + 5*Nb*alphaz**2 - 8*Nb*alphaz + 6*Nb)/60
             k += 1
-            KGv[k] += r12*(L*N*betay*betaz*r33*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60 + L*N*betaz**2*r32*(-5*alphaz**2 + 10*alphaz - 2)/60) + r13*(L*N*betay**2*r33*(-5*alphay**2 + 10*alphay - 2)/60 + L*N*betay*betaz*r32*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60)
+            KGv[k] += L*betay**2*r13*r33*(-5*Na*alphay**2 + 10*Na*alphay - 2*Na - 5*Nb*alphay**2 + 10*Nb*alphay - 2*Nb)/120 + L*betaz**2*r12*r32*(-5*Na*alphaz**2 + 10*Na*alphaz - 2*Na - 5*Nb*alphaz**2 + 10*Nb*alphaz - 2*Nb)/120
             k += 1
-            KGv[k] += r22*(L*N*betay*betaz*r33*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60 + L*N*betaz**2*r32*(-5*alphaz**2 + 10*alphaz - 2)/60) + r23*(L*N*betay**2*r33*(-5*alphay**2 + 10*alphay - 2)/60 + L*N*betay*betaz*r32*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60)
+            KGv[k] += L*betay**2*r23*r33*(-5*Na*alphay**2 + 10*Na*alphay - 2*Na - 5*Nb*alphay**2 + 10*Nb*alphay - 2*Nb)/120 + L*betaz**2*r22*r32*(-5*Na*alphaz**2 + 10*Na*alphaz - 2*Na - 5*Nb*alphaz**2 + 10*Nb*alphaz - 2*Nb)/120
             k += 1
-            KGv[k] += r32*(L*N*betay*betaz*r33*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60 + L*N*betaz**2*r32*(-5*alphaz**2 + 10*alphaz - 2)/60) + r33*(L*N*betay**2*r33*(-5*alphay**2 + 10*alphay - 2)/60 + L*N*betay*betaz*r32*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60)
+            KGv[k] += L*betay**2*r33**2*(-5*Na*alphay**2 + 10*Na*alphay - 2*Na - 5*Nb*alphay**2 + 10*Nb*alphay - 2*Nb)/120 + L*betaz**2*r32**2*(-5*Na*alphaz**2 + 10*Na*alphaz - 2*Na - 5*Nb*alphaz**2 + 10*Nb*alphaz - 2*Nb)/120
             k += 1
-            KGv[k] += r12*(N*betay**2*r12*(-5*alphay**2 + 10*alphay - 6)/(5*L) + N*betay*betaz*r13*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L)) + r13*(N*betay*betaz*r12*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L) + N*betaz**2*r13*(-5*alphaz**2 + 10*alphaz - 6)/(5*L))
+            KGv[k] += betay**2*r12**2*(-Na*alphay**2/2 + Na*alphay - 3*Na/5 - Nb*alphay**2/2 + Nb*alphay - 3*Nb/5)/L + betaz**2*r13**2*(-Na*alphaz**2/2 + Na*alphaz - 3*Na/5 - Nb*alphaz**2/2 + Nb*alphaz - 3*Nb/5)/L
             k += 1
-            KGv[k] += r22*(N*betay**2*r12*(-5*alphay**2 + 10*alphay - 6)/(5*L) + N*betay*betaz*r13*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L)) + r23*(N*betay*betaz*r12*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L) + N*betaz**2*r13*(-5*alphaz**2 + 10*alphaz - 6)/(5*L))
+            KGv[k] += betay**2*r12*r22*(-Na*alphay**2/2 + Na*alphay - 3*Na/5 - Nb*alphay**2/2 + Nb*alphay - 3*Nb/5)/L + betaz**2*r13*r23*(-Na*alphaz**2/2 + Na*alphaz - 3*Na/5 - Nb*alphaz**2/2 + Nb*alphaz - 3*Nb/5)/L
             k += 1
-            KGv[k] += r32*(N*betay**2*r12*(-5*alphay**2 + 10*alphay - 6)/(5*L) + N*betay*betaz*r13*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L)) + r33*(N*betay*betaz*r12*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L) + N*betaz**2*r13*(-5*alphaz**2 + 10*alphaz - 6)/(5*L))
+            KGv[k] += betay**2*r12*r32*(-Na*alphay**2/2 + Na*alphay - 3*Na/5 - Nb*alphay**2/2 + Nb*alphay - 3*Nb/5)/L + betaz**2*r13*r33*(-Na*alphaz**2/2 + Na*alphaz - 3*Na/5 - Nb*alphaz**2/2 + Nb*alphaz - 3*Nb/5)/L
             k += 1
-            KGv[k] += r12*(N*betay*betaz*r12/10 + N*betaz**2*r13/10) + r13*(-N*betay**2*r12/10 - N*betay*betaz*r13/10)
+            KGv[k] += betay**2*r12*r13*(5*Na*alphay**2 - 8*Na*alphay - 5*Nb*alphay**2 + 8*Nb*alphay - 6*Nb)/60 + betaz**2*r12*r13*(-5*Na*alphaz**2 + 8*Na*alphaz + 5*Nb*alphaz**2 - 8*Nb*alphaz + 6*Nb)/60
             k += 1
-            KGv[k] += r22*(N*betay*betaz*r12/10 + N*betaz**2*r13/10) + r23*(-N*betay**2*r12/10 - N*betay*betaz*r13/10)
+            KGv[k] += betay**2*r12*r23*(5*Na*alphay**2 - 8*Na*alphay - 5*Nb*alphay**2 + 8*Nb*alphay - 6*Nb)/60 + betaz**2*r13*r22*(-5*Na*alphaz**2 + 8*Na*alphaz + 5*Nb*alphaz**2 - 8*Nb*alphaz + 6*Nb)/60
             k += 1
-            KGv[k] += r32*(N*betay*betaz*r12/10 + N*betaz**2*r13/10) + r33*(-N*betay**2*r12/10 - N*betay*betaz*r13/10)
+            KGv[k] += betay**2*r12*r33*(5*Na*alphay**2 - 8*Na*alphay - 5*Nb*alphay**2 + 8*Nb*alphay - 6*Nb)/60 + betaz**2*r13*r32*(-5*Na*alphaz**2 + 8*Na*alphaz + 5*Nb*alphaz**2 - 8*Nb*alphaz + 6*Nb)/60
             k += 1
-            KGv[k] += r12*(N*betay**2*r12*(5*alphay**2 - 10*alphay + 6)/(5*L) + N*betay*betaz*r13*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L)) + r13*(N*betay*betaz*r12*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L) + N*betaz**2*r13*(5*alphaz**2 - 10*alphaz + 6)/(5*L))
+            KGv[k] += betay**2*r12**2*(Na*alphay**2/2 - Na*alphay + 3*Na/5 + Nb*alphay**2/2 - Nb*alphay + 3*Nb/5)/L + betaz**2*r13**2*(Na*alphaz**2/2 - Na*alphaz + 3*Na/5 + Nb*alphaz**2/2 - Nb*alphaz + 3*Nb/5)/L
             k += 1
-            KGv[k] += r22*(N*betay**2*r12*(5*alphay**2 - 10*alphay + 6)/(5*L) + N*betay*betaz*r13*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L)) + r23*(N*betay*betaz*r12*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L) + N*betaz**2*r13*(5*alphaz**2 - 10*alphaz + 6)/(5*L))
+            KGv[k] += betay**2*r12*r22*(Na*alphay**2/2 - Na*alphay + 3*Na/5 + Nb*alphay**2/2 - Nb*alphay + 3*Nb/5)/L + betaz**2*r13*r23*(Na*alphaz**2/2 - Na*alphaz + 3*Na/5 + Nb*alphaz**2/2 - Nb*alphaz + 3*Nb/5)/L
             k += 1
-            KGv[k] += r32*(N*betay**2*r12*(5*alphay**2 - 10*alphay + 6)/(5*L) + N*betay*betaz*r13*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L)) + r33*(N*betay*betaz*r12*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L) + N*betaz**2*r13*(5*alphaz**2 - 10*alphaz + 6)/(5*L))
+            KGv[k] += betay**2*r12*r32*(Na*alphay**2/2 - Na*alphay + 3*Na/5 + Nb*alphay**2/2 - Nb*alphay + 3*Nb/5)/L + betaz**2*r13*r33*(Na*alphaz**2/2 - Na*alphaz + 3*Na/5 + Nb*alphaz**2/2 - Nb*alphaz + 3*Nb/5)/L
             k += 1
-            KGv[k] += r12*(N*betay*betaz*r12/10 + N*betaz**2*r13/10) + r13*(-N*betay**2*r12/10 - N*betay*betaz*r13/10)
+            KGv[k] += betay**2*r12*r13*(-5*Na*alphay**2 + 8*Na*alphay - 6*Na + 5*Nb*alphay**2 - 8*Nb*alphay)/60 + betaz**2*r12*r13*(5*Na*alphaz**2 - 8*Na*alphaz + 6*Na - 5*Nb*alphaz**2 + 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r22*(N*betay*betaz*r12/10 + N*betaz**2*r13/10) + r23*(-N*betay**2*r12/10 - N*betay*betaz*r13/10)
+            KGv[k] += betay**2*r12*r23*(-5*Na*alphay**2 + 8*Na*alphay - 6*Na + 5*Nb*alphay**2 - 8*Nb*alphay)/60 + betaz**2*r13*r22*(5*Na*alphaz**2 - 8*Na*alphaz + 6*Na - 5*Nb*alphaz**2 + 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r32*(N*betay*betaz*r12/10 + N*betaz**2*r13/10) + r33*(-N*betay**2*r12/10 - N*betay*betaz*r13/10)
+            KGv[k] += betay**2*r12*r33*(-5*Na*alphay**2 + 8*Na*alphay - 6*Na + 5*Nb*alphay**2 - 8*Nb*alphay)/60 + betaz**2*r13*r32*(5*Na*alphaz**2 - 8*Na*alphaz + 6*Na - 5*Nb*alphaz**2 + 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r12*(N*betay**2*r22*(-5*alphay**2 + 10*alphay - 6)/(5*L) + N*betay*betaz*r23*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L)) + r13*(N*betay*betaz*r22*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L) + N*betaz**2*r23*(-5*alphaz**2 + 10*alphaz - 6)/(5*L))
+            KGv[k] += betay**2*r12*r22*(-Na*alphay**2/2 + Na*alphay - 3*Na/5 - Nb*alphay**2/2 + Nb*alphay - 3*Nb/5)/L + betaz**2*r13*r23*(-Na*alphaz**2/2 + Na*alphaz - 3*Na/5 - Nb*alphaz**2/2 + Nb*alphaz - 3*Nb/5)/L
             k += 1
-            KGv[k] += r22*(N*betay**2*r22*(-5*alphay**2 + 10*alphay - 6)/(5*L) + N*betay*betaz*r23*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L)) + r23*(N*betay*betaz*r22*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L) + N*betaz**2*r23*(-5*alphaz**2 + 10*alphaz - 6)/(5*L))
+            KGv[k] += betay**2*r22**2*(-Na*alphay**2/2 + Na*alphay - 3*Na/5 - Nb*alphay**2/2 + Nb*alphay - 3*Nb/5)/L + betaz**2*r23**2*(-Na*alphaz**2/2 + Na*alphaz - 3*Na/5 - Nb*alphaz**2/2 + Nb*alphaz - 3*Nb/5)/L
             k += 1
-            KGv[k] += r32*(N*betay**2*r22*(-5*alphay**2 + 10*alphay - 6)/(5*L) + N*betay*betaz*r23*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L)) + r33*(N*betay*betaz*r22*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L) + N*betaz**2*r23*(-5*alphaz**2 + 10*alphaz - 6)/(5*L))
+            KGv[k] += betay**2*r22*r32*(-Na*alphay**2/2 + Na*alphay - 3*Na/5 - Nb*alphay**2/2 + Nb*alphay - 3*Nb/5)/L + betaz**2*r23*r33*(-Na*alphaz**2/2 + Na*alphaz - 3*Na/5 - Nb*alphaz**2/2 + Nb*alphaz - 3*Nb/5)/L
             k += 1
-            KGv[k] += r12*(N*betay*betaz*r22/10 + N*betaz**2*r23/10) + r13*(-N*betay**2*r22/10 - N*betay*betaz*r23/10)
+            KGv[k] += betay**2*r13*r22*(5*Na*alphay**2 - 8*Na*alphay - 5*Nb*alphay**2 + 8*Nb*alphay - 6*Nb)/60 + betaz**2*r12*r23*(-5*Na*alphaz**2 + 8*Na*alphaz + 5*Nb*alphaz**2 - 8*Nb*alphaz + 6*Nb)/60
             k += 1
-            KGv[k] += r22*(N*betay*betaz*r22/10 + N*betaz**2*r23/10) + r23*(-N*betay**2*r22/10 - N*betay*betaz*r23/10)
+            KGv[k] += betay**2*r22*r23*(5*Na*alphay**2 - 8*Na*alphay - 5*Nb*alphay**2 + 8*Nb*alphay - 6*Nb)/60 + betaz**2*r22*r23*(-5*Na*alphaz**2 + 8*Na*alphaz + 5*Nb*alphaz**2 - 8*Nb*alphaz + 6*Nb)/60
             k += 1
-            KGv[k] += r32*(N*betay*betaz*r22/10 + N*betaz**2*r23/10) + r33*(-N*betay**2*r22/10 - N*betay*betaz*r23/10)
+            KGv[k] += betay**2*r22*r33*(5*Na*alphay**2 - 8*Na*alphay - 5*Nb*alphay**2 + 8*Nb*alphay - 6*Nb)/60 + betaz**2*r23*r32*(-5*Na*alphaz**2 + 8*Na*alphaz + 5*Nb*alphaz**2 - 8*Nb*alphaz + 6*Nb)/60
             k += 1
-            KGv[k] += r12*(N*betay**2*r22*(5*alphay**2 - 10*alphay + 6)/(5*L) + N*betay*betaz*r23*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L)) + r13*(N*betay*betaz*r22*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L) + N*betaz**2*r23*(5*alphaz**2 - 10*alphaz + 6)/(5*L))
+            KGv[k] += betay**2*r12*r22*(Na*alphay**2/2 - Na*alphay + 3*Na/5 + Nb*alphay**2/2 - Nb*alphay + 3*Nb/5)/L + betaz**2*r13*r23*(Na*alphaz**2/2 - Na*alphaz + 3*Na/5 + Nb*alphaz**2/2 - Nb*alphaz + 3*Nb/5)/L
             k += 1
-            KGv[k] += r22*(N*betay**2*r22*(5*alphay**2 - 10*alphay + 6)/(5*L) + N*betay*betaz*r23*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L)) + r23*(N*betay*betaz*r22*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L) + N*betaz**2*r23*(5*alphaz**2 - 10*alphaz + 6)/(5*L))
+            KGv[k] += betay**2*r22**2*(Na*alphay**2/2 - Na*alphay + 3*Na/5 + Nb*alphay**2/2 - Nb*alphay + 3*Nb/5)/L + betaz**2*r23**2*(Na*alphaz**2/2 - Na*alphaz + 3*Na/5 + Nb*alphaz**2/2 - Nb*alphaz + 3*Nb/5)/L
             k += 1
-            KGv[k] += r32*(N*betay**2*r22*(5*alphay**2 - 10*alphay + 6)/(5*L) + N*betay*betaz*r23*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L)) + r33*(N*betay*betaz*r22*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L) + N*betaz**2*r23*(5*alphaz**2 - 10*alphaz + 6)/(5*L))
+            KGv[k] += betay**2*r22*r32*(Na*alphay**2/2 - Na*alphay + 3*Na/5 + Nb*alphay**2/2 - Nb*alphay + 3*Nb/5)/L + betaz**2*r23*r33*(Na*alphaz**2/2 - Na*alphaz + 3*Na/5 + Nb*alphaz**2/2 - Nb*alphaz + 3*Nb/5)/L
             k += 1
-            KGv[k] += r12*(N*betay*betaz*r22/10 + N*betaz**2*r23/10) + r13*(-N*betay**2*r22/10 - N*betay*betaz*r23/10)
+            KGv[k] += betay**2*r13*r22*(-5*Na*alphay**2 + 8*Na*alphay - 6*Na + 5*Nb*alphay**2 - 8*Nb*alphay)/60 + betaz**2*r12*r23*(5*Na*alphaz**2 - 8*Na*alphaz + 6*Na - 5*Nb*alphaz**2 + 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r22*(N*betay*betaz*r22/10 + N*betaz**2*r23/10) + r23*(-N*betay**2*r22/10 - N*betay*betaz*r23/10)
+            KGv[k] += betay**2*r22*r23*(-5*Na*alphay**2 + 8*Na*alphay - 6*Na + 5*Nb*alphay**2 - 8*Nb*alphay)/60 + betaz**2*r22*r23*(5*Na*alphaz**2 - 8*Na*alphaz + 6*Na - 5*Nb*alphaz**2 + 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r32*(N*betay*betaz*r22/10 + N*betaz**2*r23/10) + r33*(-N*betay**2*r22/10 - N*betay*betaz*r23/10)
+            KGv[k] += betay**2*r22*r33*(-5*Na*alphay**2 + 8*Na*alphay - 6*Na + 5*Nb*alphay**2 - 8*Nb*alphay)/60 + betaz**2*r23*r32*(5*Na*alphaz**2 - 8*Na*alphaz + 6*Na - 5*Nb*alphaz**2 + 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r12*(N*betay**2*r32*(-5*alphay**2 + 10*alphay - 6)/(5*L) + N*betay*betaz*r33*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L)) + r13*(N*betay*betaz*r32*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L) + N*betaz**2*r33*(-5*alphaz**2 + 10*alphaz - 6)/(5*L))
+            KGv[k] += betay**2*r12*r32*(-Na*alphay**2/2 + Na*alphay - 3*Na/5 - Nb*alphay**2/2 + Nb*alphay - 3*Nb/5)/L + betaz**2*r13*r33*(-Na*alphaz**2/2 + Na*alphaz - 3*Na/5 - Nb*alphaz**2/2 + Nb*alphaz - 3*Nb/5)/L
             k += 1
-            KGv[k] += r22*(N*betay**2*r32*(-5*alphay**2 + 10*alphay - 6)/(5*L) + N*betay*betaz*r33*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L)) + r23*(N*betay*betaz*r32*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L) + N*betaz**2*r33*(-5*alphaz**2 + 10*alphaz - 6)/(5*L))
+            KGv[k] += betay**2*r22*r32*(-Na*alphay**2/2 + Na*alphay - 3*Na/5 - Nb*alphay**2/2 + Nb*alphay - 3*Nb/5)/L + betaz**2*r23*r33*(-Na*alphaz**2/2 + Na*alphaz - 3*Na/5 - Nb*alphaz**2/2 + Nb*alphaz - 3*Nb/5)/L
             k += 1
-            KGv[k] += r32*(N*betay**2*r32*(-5*alphay**2 + 10*alphay - 6)/(5*L) + N*betay*betaz*r33*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L)) + r33*(N*betay*betaz*r32*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 6)/(5*L) + N*betaz**2*r33*(-5*alphaz**2 + 10*alphaz - 6)/(5*L))
+            KGv[k] += betay**2*r32**2*(-Na*alphay**2/2 + Na*alphay - 3*Na/5 - Nb*alphay**2/2 + Nb*alphay - 3*Nb/5)/L + betaz**2*r33**2*(-Na*alphaz**2/2 + Na*alphaz - 3*Na/5 - Nb*alphaz**2/2 + Nb*alphaz - 3*Nb/5)/L
             k += 1
-            KGv[k] += r12*(N*betay*betaz*r32/10 + N*betaz**2*r33/10) + r13*(-N*betay**2*r32/10 - N*betay*betaz*r33/10)
+            KGv[k] += betay**2*r13*r32*(5*Na*alphay**2 - 8*Na*alphay - 5*Nb*alphay**2 + 8*Nb*alphay - 6*Nb)/60 + betaz**2*r12*r33*(-5*Na*alphaz**2 + 8*Na*alphaz + 5*Nb*alphaz**2 - 8*Nb*alphaz + 6*Nb)/60
             k += 1
-            KGv[k] += r22*(N*betay*betaz*r32/10 + N*betaz**2*r33/10) + r23*(-N*betay**2*r32/10 - N*betay*betaz*r33/10)
+            KGv[k] += betay**2*r23*r32*(5*Na*alphay**2 - 8*Na*alphay - 5*Nb*alphay**2 + 8*Nb*alphay - 6*Nb)/60 + betaz**2*r22*r33*(-5*Na*alphaz**2 + 8*Na*alphaz + 5*Nb*alphaz**2 - 8*Nb*alphaz + 6*Nb)/60
             k += 1
-            KGv[k] += r32*(N*betay*betaz*r32/10 + N*betaz**2*r33/10) + r33*(-N*betay**2*r32/10 - N*betay*betaz*r33/10)
+            KGv[k] += betay**2*r32*r33*(5*Na*alphay**2 - 8*Na*alphay - 5*Nb*alphay**2 + 8*Nb*alphay - 6*Nb)/60 + betaz**2*r32*r33*(-5*Na*alphaz**2 + 8*Na*alphaz + 5*Nb*alphaz**2 - 8*Nb*alphaz + 6*Nb)/60
             k += 1
-            KGv[k] += r12*(N*betay**2*r32*(5*alphay**2 - 10*alphay + 6)/(5*L) + N*betay*betaz*r33*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L)) + r13*(N*betay*betaz*r32*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L) + N*betaz**2*r33*(5*alphaz**2 - 10*alphaz + 6)/(5*L))
+            KGv[k] += betay**2*r12*r32*(Na*alphay**2/2 - Na*alphay + 3*Na/5 + Nb*alphay**2/2 - Nb*alphay + 3*Nb/5)/L + betaz**2*r13*r33*(Na*alphaz**2/2 - Na*alphaz + 3*Na/5 + Nb*alphaz**2/2 - Nb*alphaz + 3*Nb/5)/L
             k += 1
-            KGv[k] += r22*(N*betay**2*r32*(5*alphay**2 - 10*alphay + 6)/(5*L) + N*betay*betaz*r33*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L)) + r23*(N*betay*betaz*r32*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L) + N*betaz**2*r33*(5*alphaz**2 - 10*alphaz + 6)/(5*L))
+            KGv[k] += betay**2*r22*r32*(Na*alphay**2/2 - Na*alphay + 3*Na/5 + Nb*alphay**2/2 - Nb*alphay + 3*Nb/5)/L + betaz**2*r23*r33*(Na*alphaz**2/2 - Na*alphaz + 3*Na/5 + Nb*alphaz**2/2 - Nb*alphaz + 3*Nb/5)/L
             k += 1
-            KGv[k] += r32*(N*betay**2*r32*(5*alphay**2 - 10*alphay + 6)/(5*L) + N*betay*betaz*r33*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L)) + r33*(N*betay*betaz*r32*(5*alphay*alphaz - 5*alphay - 5*alphaz + 6)/(5*L) + N*betaz**2*r33*(5*alphaz**2 - 10*alphaz + 6)/(5*L))
+            KGv[k] += betay**2*r32**2*(Na*alphay**2/2 - Na*alphay + 3*Na/5 + Nb*alphay**2/2 - Nb*alphay + 3*Nb/5)/L + betaz**2*r33**2*(Na*alphaz**2/2 - Na*alphaz + 3*Na/5 + Nb*alphaz**2/2 - Nb*alphaz + 3*Nb/5)/L
             k += 1
-            KGv[k] += r12*(N*betay*betaz*r32/10 + N*betaz**2*r33/10) + r13*(-N*betay**2*r32/10 - N*betay*betaz*r33/10)
+            KGv[k] += betay**2*r13*r32*(-5*Na*alphay**2 + 8*Na*alphay - 6*Na + 5*Nb*alphay**2 - 8*Nb*alphay)/60 + betaz**2*r12*r33*(5*Na*alphaz**2 - 8*Na*alphaz + 6*Na - 5*Nb*alphaz**2 + 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r22*(N*betay*betaz*r32/10 + N*betaz**2*r33/10) + r23*(-N*betay**2*r32/10 - N*betay*betaz*r33/10)
+            KGv[k] += betay**2*r23*r32*(-5*Na*alphay**2 + 8*Na*alphay - 6*Na + 5*Nb*alphay**2 - 8*Nb*alphay)/60 + betaz**2*r22*r33*(5*Na*alphaz**2 - 8*Na*alphaz + 6*Na - 5*Nb*alphaz**2 + 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r32*(N*betay*betaz*r32/10 + N*betaz**2*r33/10) + r33*(-N*betay**2*r32/10 - N*betay*betaz*r33/10)
+            KGv[k] += betay**2*r32*r33*(-5*Na*alphay**2 + 8*Na*alphay - 6*Na + 5*Nb*alphay**2 - 8*Nb*alphay)/60 + betaz**2*r32*r33*(5*Na*alphaz**2 - 8*Na*alphaz + 6*Na - 5*Nb*alphaz**2 + 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r12*(N*betay**2*r13/10 - N*betay*betaz*r12/10) + r13*(N*betay*betaz*r13/10 - N*betaz**2*r12/10)
+            KGv[k] += betay**2*r12*r13*(5*Na*alphay**2 - 8*Na*alphay + 6*Na - 5*Nb*alphay**2 + 8*Nb*alphay)/60 + betaz**2*r12*r13*(-5*Na*alphaz**2 + 8*Na*alphaz - 6*Na + 5*Nb*alphaz**2 - 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r22*(N*betay**2*r13/10 - N*betay*betaz*r12/10) + r23*(N*betay*betaz*r13/10 - N*betaz**2*r12/10)
+            KGv[k] += betay**2*r13*r22*(5*Na*alphay**2 - 8*Na*alphay + 6*Na - 5*Nb*alphay**2 + 8*Nb*alphay)/60 + betaz**2*r12*r23*(-5*Na*alphaz**2 + 8*Na*alphaz - 6*Na + 5*Nb*alphaz**2 - 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r32*(N*betay**2*r13/10 - N*betay*betaz*r12/10) + r33*(N*betay*betaz*r13/10 - N*betaz**2*r12/10)
+            KGv[k] += betay**2*r13*r32*(5*Na*alphay**2 - 8*Na*alphay + 6*Na - 5*Nb*alphay**2 + 8*Nb*alphay)/60 + betaz**2*r12*r33*(-5*Na*alphaz**2 + 8*Na*alphaz - 6*Na + 5*Nb*alphaz**2 - 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r12*(L*N*betay*betaz*r13*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60 + L*N*betaz**2*r12*(-5*alphaz**2 + 10*alphaz - 2)/60) + r13*(L*N*betay**2*r13*(-5*alphay**2 + 10*alphay - 2)/60 + L*N*betay*betaz*r12*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60)
+            KGv[k] += L*betay**2*r13**2*(-5*Na*alphay**2 + 10*Na*alphay - 2*Na - 5*Nb*alphay**2 + 10*Nb*alphay - 2*Nb)/120 + L*betaz**2*r12**2*(-5*Na*alphaz**2 + 10*Na*alphaz - 2*Na - 5*Nb*alphaz**2 + 10*Nb*alphaz - 2*Nb)/120
             k += 1
-            KGv[k] += r22*(L*N*betay*betaz*r13*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60 + L*N*betaz**2*r12*(-5*alphaz**2 + 10*alphaz - 2)/60) + r23*(L*N*betay**2*r13*(-5*alphay**2 + 10*alphay - 2)/60 + L*N*betay*betaz*r12*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60)
+            KGv[k] += L*betay**2*r13*r23*(-5*Na*alphay**2 + 10*Na*alphay - 2*Na - 5*Nb*alphay**2 + 10*Nb*alphay - 2*Nb)/120 + L*betaz**2*r12*r22*(-5*Na*alphaz**2 + 10*Na*alphaz - 2*Na - 5*Nb*alphaz**2 + 10*Nb*alphaz - 2*Nb)/120
             k += 1
-            KGv[k] += r32*(L*N*betay*betaz*r13*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60 + L*N*betaz**2*r12*(-5*alphaz**2 + 10*alphaz - 2)/60) + r33*(L*N*betay**2*r13*(-5*alphay**2 + 10*alphay - 2)/60 + L*N*betay*betaz*r12*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60)
+            KGv[k] += L*betay**2*r13*r33*(-5*Na*alphay**2 + 10*Na*alphay - 2*Na - 5*Nb*alphay**2 + 10*Nb*alphay - 2*Nb)/120 + L*betaz**2*r12*r32*(-5*Na*alphaz**2 + 10*Na*alphaz - 2*Na - 5*Nb*alphaz**2 + 10*Nb*alphaz - 2*Nb)/120
             k += 1
-            KGv[k] += r12*(-N*betay**2*r13/10 + N*betay*betaz*r12/10) + r13*(-N*betay*betaz*r13/10 + N*betaz**2*r12/10)
+            KGv[k] += betay**2*r12*r13*(-5*Na*alphay**2 + 8*Na*alphay - 6*Na + 5*Nb*alphay**2 - 8*Nb*alphay)/60 + betaz**2*r12*r13*(5*Na*alphaz**2 - 8*Na*alphaz + 6*Na - 5*Nb*alphaz**2 + 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r22*(-N*betay**2*r13/10 + N*betay*betaz*r12/10) + r23*(-N*betay*betaz*r13/10 + N*betaz**2*r12/10)
+            KGv[k] += betay**2*r13*r22*(-5*Na*alphay**2 + 8*Na*alphay - 6*Na + 5*Nb*alphay**2 - 8*Nb*alphay)/60 + betaz**2*r12*r23*(5*Na*alphaz**2 - 8*Na*alphaz + 6*Na - 5*Nb*alphaz**2 + 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r32*(-N*betay**2*r13/10 + N*betay*betaz*r12/10) + r33*(-N*betay*betaz*r13/10 + N*betaz**2*r12/10)
+            KGv[k] += betay**2*r13*r32*(-5*Na*alphay**2 + 8*Na*alphay - 6*Na + 5*Nb*alphay**2 - 8*Nb*alphay)/60 + betaz**2*r12*r33*(5*Na*alphaz**2 - 8*Na*alphaz + 6*Na - 5*Nb*alphaz**2 + 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r12*(L*N*betay*betaz*r13*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60 + L*N*betaz**2*r12*(5*alphaz**2 - 10*alphaz + 8)/60) + r13*(L*N*betay**2*r13*(5*alphay**2 - 10*alphay + 8)/60 + L*N*betay*betaz*r12*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60)
+            KGv[k] += L*betay**2*r13**2*(5*Na*alphay**2 - 6*Na*alphay + 4*Na + 5*Nb*alphay**2 - 14*Nb*alphay + 12*Nb)/120 + L*betaz**2*r12**2*(5*Na*alphaz**2 - 6*Na*alphaz + 4*Na + 5*Nb*alphaz**2 - 14*Nb*alphaz + 12*Nb)/120
             k += 1
-            KGv[k] += r22*(L*N*betay*betaz*r13*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60 + L*N*betaz**2*r12*(5*alphaz**2 - 10*alphaz + 8)/60) + r23*(L*N*betay**2*r13*(5*alphay**2 - 10*alphay + 8)/60 + L*N*betay*betaz*r12*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60)
+            KGv[k] += L*betay**2*r13*r23*(5*Na*alphay**2 - 6*Na*alphay + 4*Na + 5*Nb*alphay**2 - 14*Nb*alphay + 12*Nb)/120 + L*betaz**2*r12*r22*(5*Na*alphaz**2 - 6*Na*alphaz + 4*Na + 5*Nb*alphaz**2 - 14*Nb*alphaz + 12*Nb)/120
             k += 1
-            KGv[k] += r32*(L*N*betay*betaz*r13*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60 + L*N*betaz**2*r12*(5*alphaz**2 - 10*alphaz + 8)/60) + r33*(L*N*betay**2*r13*(5*alphay**2 - 10*alphay + 8)/60 + L*N*betay*betaz*r12*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60)
+            KGv[k] += L*betay**2*r13*r33*(5*Na*alphay**2 - 6*Na*alphay + 4*Na + 5*Nb*alphay**2 - 14*Nb*alphay + 12*Nb)/120 + L*betaz**2*r12*r32*(5*Na*alphaz**2 - 6*Na*alphaz + 4*Na + 5*Nb*alphaz**2 - 14*Nb*alphaz + 12*Nb)/120
             k += 1
-            KGv[k] += r12*(N*betay**2*r23/10 - N*betay*betaz*r22/10) + r13*(N*betay*betaz*r23/10 - N*betaz**2*r22/10)
+            KGv[k] += betay**2*r12*r23*(5*Na*alphay**2 - 8*Na*alphay + 6*Na - 5*Nb*alphay**2 + 8*Nb*alphay)/60 + betaz**2*r13*r22*(-5*Na*alphaz**2 + 8*Na*alphaz - 6*Na + 5*Nb*alphaz**2 - 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r22*(N*betay**2*r23/10 - N*betay*betaz*r22/10) + r23*(N*betay*betaz*r23/10 - N*betaz**2*r22/10)
+            KGv[k] += betay**2*r22*r23*(5*Na*alphay**2 - 8*Na*alphay + 6*Na - 5*Nb*alphay**2 + 8*Nb*alphay)/60 + betaz**2*r22*r23*(-5*Na*alphaz**2 + 8*Na*alphaz - 6*Na + 5*Nb*alphaz**2 - 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r32*(N*betay**2*r23/10 - N*betay*betaz*r22/10) + r33*(N*betay*betaz*r23/10 - N*betaz**2*r22/10)
+            KGv[k] += betay**2*r23*r32*(5*Na*alphay**2 - 8*Na*alphay + 6*Na - 5*Nb*alphay**2 + 8*Nb*alphay)/60 + betaz**2*r22*r33*(-5*Na*alphaz**2 + 8*Na*alphaz - 6*Na + 5*Nb*alphaz**2 - 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r12*(L*N*betay*betaz*r23*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60 + L*N*betaz**2*r22*(-5*alphaz**2 + 10*alphaz - 2)/60) + r13*(L*N*betay**2*r23*(-5*alphay**2 + 10*alphay - 2)/60 + L*N*betay*betaz*r22*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60)
+            KGv[k] += L*betay**2*r13*r23*(-5*Na*alphay**2 + 10*Na*alphay - 2*Na - 5*Nb*alphay**2 + 10*Nb*alphay - 2*Nb)/120 + L*betaz**2*r12*r22*(-5*Na*alphaz**2 + 10*Na*alphaz - 2*Na - 5*Nb*alphaz**2 + 10*Nb*alphaz - 2*Nb)/120
             k += 1
-            KGv[k] += r22*(L*N*betay*betaz*r23*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60 + L*N*betaz**2*r22*(-5*alphaz**2 + 10*alphaz - 2)/60) + r23*(L*N*betay**2*r23*(-5*alphay**2 + 10*alphay - 2)/60 + L*N*betay*betaz*r22*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60)
+            KGv[k] += L*betay**2*r23**2*(-5*Na*alphay**2 + 10*Na*alphay - 2*Na - 5*Nb*alphay**2 + 10*Nb*alphay - 2*Nb)/120 + L*betaz**2*r22**2*(-5*Na*alphaz**2 + 10*Na*alphaz - 2*Na - 5*Nb*alphaz**2 + 10*Nb*alphaz - 2*Nb)/120
             k += 1
-            KGv[k] += r32*(L*N*betay*betaz*r23*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60 + L*N*betaz**2*r22*(-5*alphaz**2 + 10*alphaz - 2)/60) + r33*(L*N*betay**2*r23*(-5*alphay**2 + 10*alphay - 2)/60 + L*N*betay*betaz*r22*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60)
+            KGv[k] += L*betay**2*r23*r33*(-5*Na*alphay**2 + 10*Na*alphay - 2*Na - 5*Nb*alphay**2 + 10*Nb*alphay - 2*Nb)/120 + L*betaz**2*r22*r32*(-5*Na*alphaz**2 + 10*Na*alphaz - 2*Na - 5*Nb*alphaz**2 + 10*Nb*alphaz - 2*Nb)/120
             k += 1
-            KGv[k] += r12*(-N*betay**2*r23/10 + N*betay*betaz*r22/10) + r13*(-N*betay*betaz*r23/10 + N*betaz**2*r22/10)
+            KGv[k] += betay**2*r12*r23*(-5*Na*alphay**2 + 8*Na*alphay - 6*Na + 5*Nb*alphay**2 - 8*Nb*alphay)/60 + betaz**2*r13*r22*(5*Na*alphaz**2 - 8*Na*alphaz + 6*Na - 5*Nb*alphaz**2 + 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r22*(-N*betay**2*r23/10 + N*betay*betaz*r22/10) + r23*(-N*betay*betaz*r23/10 + N*betaz**2*r22/10)
+            KGv[k] += betay**2*r22*r23*(-5*Na*alphay**2 + 8*Na*alphay - 6*Na + 5*Nb*alphay**2 - 8*Nb*alphay)/60 + betaz**2*r22*r23*(5*Na*alphaz**2 - 8*Na*alphaz + 6*Na - 5*Nb*alphaz**2 + 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r32*(-N*betay**2*r23/10 + N*betay*betaz*r22/10) + r33*(-N*betay*betaz*r23/10 + N*betaz**2*r22/10)
+            KGv[k] += betay**2*r23*r32*(-5*Na*alphay**2 + 8*Na*alphay - 6*Na + 5*Nb*alphay**2 - 8*Nb*alphay)/60 + betaz**2*r22*r33*(5*Na*alphaz**2 - 8*Na*alphaz + 6*Na - 5*Nb*alphaz**2 + 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r12*(L*N*betay*betaz*r23*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60 + L*N*betaz**2*r22*(5*alphaz**2 - 10*alphaz + 8)/60) + r13*(L*N*betay**2*r23*(5*alphay**2 - 10*alphay + 8)/60 + L*N*betay*betaz*r22*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60)
+            KGv[k] += L*betay**2*r13*r23*(5*Na*alphay**2 - 6*Na*alphay + 4*Na + 5*Nb*alphay**2 - 14*Nb*alphay + 12*Nb)/120 + L*betaz**2*r12*r22*(5*Na*alphaz**2 - 6*Na*alphaz + 4*Na + 5*Nb*alphaz**2 - 14*Nb*alphaz + 12*Nb)/120
             k += 1
-            KGv[k] += r22*(L*N*betay*betaz*r23*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60 + L*N*betaz**2*r22*(5*alphaz**2 - 10*alphaz + 8)/60) + r23*(L*N*betay**2*r23*(5*alphay**2 - 10*alphay + 8)/60 + L*N*betay*betaz*r22*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60)
+            KGv[k] += L*betay**2*r23**2*(5*Na*alphay**2 - 6*Na*alphay + 4*Na + 5*Nb*alphay**2 - 14*Nb*alphay + 12*Nb)/120 + L*betaz**2*r22**2*(5*Na*alphaz**2 - 6*Na*alphaz + 4*Na + 5*Nb*alphaz**2 - 14*Nb*alphaz + 12*Nb)/120
             k += 1
-            KGv[k] += r32*(L*N*betay*betaz*r23*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60 + L*N*betaz**2*r22*(5*alphaz**2 - 10*alphaz + 8)/60) + r33*(L*N*betay**2*r23*(5*alphay**2 - 10*alphay + 8)/60 + L*N*betay*betaz*r22*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60)
+            KGv[k] += L*betay**2*r23*r33*(5*Na*alphay**2 - 6*Na*alphay + 4*Na + 5*Nb*alphay**2 - 14*Nb*alphay + 12*Nb)/120 + L*betaz**2*r22*r32*(5*Na*alphaz**2 - 6*Na*alphaz + 4*Na + 5*Nb*alphaz**2 - 14*Nb*alphaz + 12*Nb)/120
             k += 1
-            KGv[k] += r12*(N*betay**2*r33/10 - N*betay*betaz*r32/10) + r13*(N*betay*betaz*r33/10 - N*betaz**2*r32/10)
+            KGv[k] += betay**2*r12*r33*(5*Na*alphay**2 - 8*Na*alphay + 6*Na - 5*Nb*alphay**2 + 8*Nb*alphay)/60 + betaz**2*r13*r32*(-5*Na*alphaz**2 + 8*Na*alphaz - 6*Na + 5*Nb*alphaz**2 - 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r22*(N*betay**2*r33/10 - N*betay*betaz*r32/10) + r23*(N*betay*betaz*r33/10 - N*betaz**2*r32/10)
+            KGv[k] += betay**2*r22*r33*(5*Na*alphay**2 - 8*Na*alphay + 6*Na - 5*Nb*alphay**2 + 8*Nb*alphay)/60 + betaz**2*r23*r32*(-5*Na*alphaz**2 + 8*Na*alphaz - 6*Na + 5*Nb*alphaz**2 - 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r32*(N*betay**2*r33/10 - N*betay*betaz*r32/10) + r33*(N*betay*betaz*r33/10 - N*betaz**2*r32/10)
+            KGv[k] += betay**2*r32*r33*(5*Na*alphay**2 - 8*Na*alphay + 6*Na - 5*Nb*alphay**2 + 8*Nb*alphay)/60 + betaz**2*r32*r33*(-5*Na*alphaz**2 + 8*Na*alphaz - 6*Na + 5*Nb*alphaz**2 - 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r12*(L*N*betay*betaz*r33*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60 + L*N*betaz**2*r32*(-5*alphaz**2 + 10*alphaz - 2)/60) + r13*(L*N*betay**2*r33*(-5*alphay**2 + 10*alphay - 2)/60 + L*N*betay*betaz*r32*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60)
+            KGv[k] += L*betay**2*r13*r33*(-5*Na*alphay**2 + 10*Na*alphay - 2*Na - 5*Nb*alphay**2 + 10*Nb*alphay - 2*Nb)/120 + L*betaz**2*r12*r32*(-5*Na*alphaz**2 + 10*Na*alphaz - 2*Na - 5*Nb*alphaz**2 + 10*Nb*alphaz - 2*Nb)/120
             k += 1
-            KGv[k] += r22*(L*N*betay*betaz*r33*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60 + L*N*betaz**2*r32*(-5*alphaz**2 + 10*alphaz - 2)/60) + r23*(L*N*betay**2*r33*(-5*alphay**2 + 10*alphay - 2)/60 + L*N*betay*betaz*r32*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60)
+            KGv[k] += L*betay**2*r23*r33*(-5*Na*alphay**2 + 10*Na*alphay - 2*Na - 5*Nb*alphay**2 + 10*Nb*alphay - 2*Nb)/120 + L*betaz**2*r22*r32*(-5*Na*alphaz**2 + 10*Na*alphaz - 2*Na - 5*Nb*alphaz**2 + 10*Nb*alphaz - 2*Nb)/120
             k += 1
-            KGv[k] += r32*(L*N*betay*betaz*r33*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60 + L*N*betaz**2*r32*(-5*alphaz**2 + 10*alphaz - 2)/60) + r33*(L*N*betay**2*r33*(-5*alphay**2 + 10*alphay - 2)/60 + L*N*betay*betaz*r32*(5*alphay*alphaz - 5*alphay - 5*alphaz + 2)/60)
+            KGv[k] += L*betay**2*r33**2*(-5*Na*alphay**2 + 10*Na*alphay - 2*Na - 5*Nb*alphay**2 + 10*Nb*alphay - 2*Nb)/120 + L*betaz**2*r32**2*(-5*Na*alphaz**2 + 10*Na*alphaz - 2*Na - 5*Nb*alphaz**2 + 10*Nb*alphaz - 2*Nb)/120
             k += 1
-            KGv[k] += r12*(-N*betay**2*r33/10 + N*betay*betaz*r32/10) + r13*(-N*betay*betaz*r33/10 + N*betaz**2*r32/10)
+            KGv[k] += betay**2*r12*r33*(-5*Na*alphay**2 + 8*Na*alphay - 6*Na + 5*Nb*alphay**2 - 8*Nb*alphay)/60 + betaz**2*r13*r32*(5*Na*alphaz**2 - 8*Na*alphaz + 6*Na - 5*Nb*alphaz**2 + 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r22*(-N*betay**2*r33/10 + N*betay*betaz*r32/10) + r23*(-N*betay*betaz*r33/10 + N*betaz**2*r32/10)
+            KGv[k] += betay**2*r22*r33*(-5*Na*alphay**2 + 8*Na*alphay - 6*Na + 5*Nb*alphay**2 - 8*Nb*alphay)/60 + betaz**2*r23*r32*(5*Na*alphaz**2 - 8*Na*alphaz + 6*Na - 5*Nb*alphaz**2 + 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r32*(-N*betay**2*r33/10 + N*betay*betaz*r32/10) + r33*(-N*betay*betaz*r33/10 + N*betaz**2*r32/10)
+            KGv[k] += betay**2*r32*r33*(-5*Na*alphay**2 + 8*Na*alphay - 6*Na + 5*Nb*alphay**2 - 8*Nb*alphay)/60 + betaz**2*r32*r33*(5*Na*alphaz**2 - 8*Na*alphaz + 6*Na - 5*Nb*alphaz**2 + 8*Nb*alphaz)/60
             k += 1
-            KGv[k] += r12*(L*N*betay*betaz*r33*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60 + L*N*betaz**2*r32*(5*alphaz**2 - 10*alphaz + 8)/60) + r13*(L*N*betay**2*r33*(5*alphay**2 - 10*alphay + 8)/60 + L*N*betay*betaz*r32*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60)
+            KGv[k] += L*betay**2*r13*r33*(5*Na*alphay**2 - 6*Na*alphay + 4*Na + 5*Nb*alphay**2 - 14*Nb*alphay + 12*Nb)/120 + L*betaz**2*r12*r32*(5*Na*alphaz**2 - 6*Na*alphaz + 4*Na + 5*Nb*alphaz**2 - 14*Nb*alphaz + 12*Nb)/120
             k += 1
-            KGv[k] += r22*(L*N*betay*betaz*r33*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60 + L*N*betaz**2*r32*(5*alphaz**2 - 10*alphaz + 8)/60) + r23*(L*N*betay**2*r33*(5*alphay**2 - 10*alphay + 8)/60 + L*N*betay*betaz*r32*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60)
+            KGv[k] += L*betay**2*r23*r33*(5*Na*alphay**2 - 6*Na*alphay + 4*Na + 5*Nb*alphay**2 - 14*Nb*alphay + 12*Nb)/120 + L*betaz**2*r22*r32*(5*Na*alphaz**2 - 6*Na*alphaz + 4*Na + 5*Nb*alphaz**2 - 14*Nb*alphaz + 12*Nb)/120
             k += 1
-            KGv[k] += r32*(L*N*betay*betaz*r33*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60 + L*N*betaz**2*r32*(5*alphaz**2 - 10*alphaz + 8)/60) + r33*(L*N*betay**2*r33*(5*alphay**2 - 10*alphay + 8)/60 + L*N*betay*betaz*r32*(-5*alphay*alphaz + 5*alphay + 5*alphaz - 8)/60)
+            KGv[k] += L*betay**2*r33**2*(5*Na*alphay**2 - 6*Na*alphay + 4*Na + 5*Nb*alphay**2 - 14*Nb*alphay + 12*Nb)/120 + L*betaz**2*r32**2*(5*Na*alphaz**2 - 6*Na*alphaz + 4*Na + 5*Nb*alphaz**2 - 14*Nb*alphaz + 12*Nb)/120
 
 
     cpdef void update_M(BeamC self,
