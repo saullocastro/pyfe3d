@@ -138,7 +138,13 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
 
         alpha123 = np.array([1.875, 4.694, 7.885])
         omega123 = alpha123**2*np.sqrt(E*Izz/(rho*A*L**4))
-        omega123_expected = [0.29974857, 28.71131935, 164.37754793]
+        # NOTE the square cross section buckles in both bending planes at the
+        #      same load, so at 0.9999 of the buckling load the first mode of
+        #      each plane is nearly zero. The value 28.71 formerly expected for
+        #      the second frequency is the unloaded one, and came from a
+        #      geometric stiffness matrix that coupled the two planes and
+        #      halved the buckling load
+        omega123_expected = [0.29950285, 0.29950346, 164.37754525]
         print('Theoretical omega123', omega123)
         print('Expected omega123 with pre-stress', omega123_expected)
         print('Numerical omega123', omegan)
