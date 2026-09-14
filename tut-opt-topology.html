@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Tutorial: topology optimisation using pyfe3d &#8212; pyfe3d 0.7.0 documentation</title>
+    <title>Tutorial: topology optimisation using pyfe3d &#8212; pyfe3d 0.8.0 documentation</title>
   
   
   
@@ -27,19 +27,19 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="_static/documentation_options.js?v=fe7df9b0"></script>
+    <script src="_static/documentation_options.js?v=486e5634"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.7.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.8.0 documentation</p>
   
 </a></div>
     
@@ -453,7 +453,7 @@ n3s = nids_mesh[1:, 1:].flatten()
 n4s = nids_mesh[:-1, 1:].flatten()
 
 num_elements = len(n1s)
-print(&#39;# number of elements&#39;, num_elements)
+print('# number of elements', num_elements)
 
 nodes = list(zip(n1s, n2s, n3s, n4s))
 <br/></pre></div>
@@ -589,7 +589,7 @@ bu = ~bk
 # nodes at vertices get 1/2 of the force
 fext = np.zeros(N)
 ftotal = -1000.
-print(&#39;ftotal&#39;, ftotal)
+print('ftotal', ftotal)
 # at x=0
 check = isclose(x, a) &amp; isclose(y, 0)
 fext[1::DOF][check] = ftotal
@@ -615,8 +615,8 @@ ftotal -1000.0
 K = None
 
 def jac(rho):
-    &quot;&quot;&quot;Adjoint gradient of the compliance with respect to each density in &#39;rho&#39;
-    &quot;&quot;&quot;
+    """Adjoint gradient of the compliance with respect to each density in 'rho'
+    """
     global uu, K
     # K = calc_K(rho=rho)
     # Kuu = K[bu, :][:, bu]
@@ -643,17 +643,17 @@ def objective(rho):
     PREC = np.max(1/Kuu.diagonal())
     uu, info = cg(PREC*Kuu, PREC*fext[bu], atol=1e-3)
     compl = uu.T @ Kuu @ uu
-    print(&#39;# obj&#39;, compl)
+    print('# obj', compl)
     return compl
 
 
 constraints = [
-    {&#39;type&#39;: &#39;ineq&#39;, &#39;fun&#39;: rel_volume},
+    {'type': 'ineq', 'fun': rel_volume},
 ]
 bounds = [[1.e-6, 1.] for _ in range(num_elements)]
 
 rho = np.ones(num_elements)
-topopt = minimize(objective, rho, jac=jac, method=&#39;SLSQP&#39;,
+topopt = minimize(objective, rho, jac=jac, method='SLSQP',
                constraints=constraints, bounds=bounds)
 </pre></div>
 </div>
@@ -929,8 +929,8 @@ plt.show()
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -964,7 +964,7 @@ plt.show()
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Tutorial: Ply tailoring using SLSPQ for a simply-supported plate under normal load &#8212; pyfe3d 0.7.0 documentation</title>
+    <title>Tutorial: Ply tailoring using SLSPQ for a simply-supported plate under normal load &#8212; pyfe3d 0.8.0 documentation</title>
   
   
   
@@ -27,19 +27,19 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
     <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="_static/documentation_options.js?v=fe7df9b0"></script>
+    <script src="_static/documentation_options.js?v=486e5634"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.7.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.8.0 documentation</p>
   
 </a></div>
     
@@ -432,9 +432,9 @@ from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 
 
 def get_Q_matrix(E1, E2, nu12, G12, G13, G23, theta_deg):
-    &quot;&quot;&quot;
+    """
     Calculate the transformed reduced stiffness matrix Q_bar for a given angle.
-    &quot;&quot;&quot;
+    """
     nu21 = nu12 * E2 / E1
     denom = 1 - nu12 * nu21
     Q11 = E1 / denom
@@ -476,12 +476,12 @@ class SmearedPlateOptimization(ElementwiseProblem):
         self.b = b
         self.load_val = load_val
         self.max_deflection = max_deflection
-        self.rho = mat_data[&#39;rho&#39;]
+        self.rho = mat_data['rho']
 
         # Pre-calculate Base Q matrices
-        E1, E2 = mat_data[&#39;E1&#39;], mat_data[&#39;E2&#39;]
-        nu12, G12 = mat_data[&#39;nu12&#39;], mat_data[&#39;G12&#39;]
-        G13, G23 = mat_data[&#39;G13&#39;], mat_data[&#39;G23&#39;]
+        E1, E2 = mat_data['E1'], mat_data['E2']
+        nu12, G12 = mat_data['nu12'], mat_data['G12']
+        G13, G23 = mat_data['G13'], mat_data['G23']
 
         num_orientations = 3
 
@@ -497,7 +497,7 @@ class SmearedPlateOptimization(ElementwiseProblem):
 
         self._init_fe_model()
 
-        # We keep this for context, though Scipy doesn&#39;t read it directly
+        # We keep this for context, though Scipy doesn't read it directly
         super().__init__(n_var=n_var, n_obj=1,
                          n_ieq_constr=1,
                          xl=h_min,
@@ -660,24 +660,24 @@ class SmearedPlateOptimization(ElementwiseProblem):
         # reading the maximum absolute deflection
         w_max = np.max(np.abs(w))
 
-        out[&quot;F&quot;] = 4*total_volume
-        out[&quot;G&quot;] = w_max/self.max_deflection - 1
+        out["F"] = 4*total_volume
+        out["G"] = w_max/self.max_deflection - 1
 
 # --- 3. Wrapper Functions for Scipy ---
 # Scipy expects separate functions for objective and constraints
 def objective_function(x, problem):
     out = {}
     problem._evaluate(x, out)
-    return out[&quot;F&quot;]
+    return out["F"]
 
 def constraint_function(x, problem):
     out = {}
     problem._evaluate(x, out)
-    # Scipy inequality constraints are &#39;fun(x) &gt;= 0&#39;
-    # Pymoo constraints are &#39;G(x) &lt;= 0&#39; =&gt; &#39;w_max/allow - 1 &lt;= 0&#39;
-    # Equivalent to: &#39;1 - w_max/allow &gt;= 0&#39;
+    # Scipy inequality constraints are 'fun(x) &gt;= 0'
+    # Pymoo constraints are 'G(x) &lt;= 0' =&gt; 'w_max/allow - 1 &lt;= 0'
+    # Equivalent to: '1 - w_max/allow &gt;= 0'
     # So we return -G
-    return -out[&quot;G&quot;]
+    return -out["G"]
 <br/></pre></div>
 </div>
 </div>
@@ -685,16 +685,16 @@ def constraint_function(x, problem):
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>if __name__ == &quot;__main__&quot;:
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>if __name__ == "__main__":
     # Material Data (Carbon/Epoxy approx)
     mat_data = {
-        &#39;E1&#39;: 140e9,
-        &#39;E2&#39;: 10e9,
-        &#39;nu12&#39;: 0.3,
-        &#39;G12&#39;: 5e9,
-        &#39;G13&#39;: 5e9,
-        &#39;G23&#39;: 5e9,
-        &#39;rho&#39;: 1600.0
+        'E1': 140e9,
+        'E2': 10e9,
+        'nu12': 0.3,
+        'G12': 5e9,
+        'G13': 5e9,
+        'G23': 5e9,
+        'rho': 1600.0
     }
 
     h_min = 0.125e-3
@@ -715,10 +715,10 @@ def constraint_function(x, problem):
     bounds = Bounds([h_min]*problem.n_var, [h_max]*problem.n_var)
 
     # Inequality constraint: fun(x) &gt;= 0
-    # We use a lambda to pass &#39;problem&#39; into the function
-    cons = {&#39;type&#39;: &#39;ineq&#39;, &#39;fun&#39;: lambda x: constraint_function(x, problem)}
+    # We use a lambda to pass 'problem' into the function
+    cons = {'type': 'ineq', 'fun': lambda x: constraint_function(x, problem)}
 
-    print(&quot;Starting SLSQP Optimization with Scipy...&quot;)
+    print("Starting SLSQP Optimization with Scipy...")
 
     # Helper to print progress
     iteration = 0
@@ -727,27 +727,27 @@ def constraint_function(x, problem):
         iteration += 1
         # Re-eval to get current Mass (optional, slows down slightly but gives info)
         out = {}; problem._evaluate(xk, out)
-        print(f&quot;Iter {iteration}: Volume = {out[&#39;F&#39;]:.4f} m^3, Constraint G = {out[&#39;G&#39;]:.4e}&quot;)
+        print(f"Iter {iteration}: Volume = {out['F']:.4f} m^3, Constraint G = {out['G']:.4e}")
 
     res = scipy_minimize(
         lambda x: objective_function(x, problem),
         x0,
-        method=&#39;SLSQP&#39;,
+        method='SLSQP',
         bounds=bounds,
         constraints=cons,
         callback=print_callback,
-        options={&#39;ftol&#39;: 1e-6, &#39;disp&#39;: True, &#39;maxiter&#39;: 200},
-        jac=&quot;2-point&quot;
+        options={'ftol': 1e-6, 'disp': True, 'maxiter': 200},
+        jac="2-point"
     )
 
-    print(&quot;\nOptimization Complete.&quot;)
-    print(f&quot;Success: {res.success}&quot;)
-    print(f&quot;Message: {res.message}&quot;)
+    print("\nOptimization Complete.")
+    print(f"Success: {res.success}")
+    print(f"Message: {res.message}")
 
     out_final = {}
     problem._evaluate(res.x, out_final)
-    print(f&quot;Final Mass: {out_final[&#39;F&#39;]:.4f} kg&quot;)
-    print(f&quot;Final Constraint Violation: {out_final[&#39;G&#39;]:.4e}&quot;)
+    print(f"Final Mass: {out_final['F']:.4f} kg")
+    print(f"Final Constraint Violation: {out_final['G']:.4e}")
 </pre></div>
 </div>
 </div>
@@ -859,35 +859,35 @@ Final Constraint Violation: 2.6459e-07
     # --- Layer 0: deflection ---
     grid_w = base_grid.copy()
     grid_w.points[:, 2] -= z_offset
-    grid_w.point_data[&quot;Deflection [m]&quot;] = problem.result_w
-    grid_w = grid_w.warp_by_scalar(&quot;Deflection [m]&quot;, factor=100.0)
+    grid_w.point_data["Deflection [m]"] = problem.result_w
+    grid_w = grid_w.warp_by_scalar("Deflection [m]", factor=100.0)
 
     # --- Layer 1: 0 degrees ---
     grid_h0 = base_grid.copy()
-    grid_h0.cell_data[&quot;Thickness [m]&quot;] = h0_vals
+    grid_h0.cell_data["Thickness [m]"] = h0_vals
 
     # --- Layer 2: +/- 45 degrees ---
     grid_h45 = base_grid.copy()
     grid_h45.points[:, 2] += z_offset
-    grid_h45.cell_data[&quot;Thickness [m]&quot;] = h45_vals
+    grid_h45.cell_data["Thickness [m]"] = h45_vals
 
     # --- Layer 3: 90 degrees ---
     grid_h90 = base_grid.copy()
     grid_h90.points[:, 2] += 2 * z_offset
-    grid_h90.cell_data[&quot;Thickness [m]&quot;] = h90_vals
+    grid_h90.cell_data["Thickness [m]"] = h90_vals
 
     plotter = pv.Plotter()
-    cmap = &quot;viridis&quot;
+    cmap = "viridis"
 
-    plotter.add_mesh(grid_w, scalars=&quot;Deflection [m]&quot;, cmap=cmap, show_edges=True)
-    plotter.add_mesh(grid_h0, scalars=&quot;Thickness [m]&quot;, cmap=cmap, show_edges=True)
-    plotter.add_mesh(grid_h45, scalars=&quot;Thickness [m]&quot;, cmap=cmap, show_edges=True)
-    plotter.add_mesh(grid_h90, scalars=&quot;Thickness [m]&quot;, cmap=cmap, show_edges=True)
+    plotter.add_mesh(grid_w, scalars="Deflection [m]", cmap=cmap, show_edges=True)
+    plotter.add_mesh(grid_h0, scalars="Thickness [m]", cmap=cmap, show_edges=True)
+    plotter.add_mesh(grid_h45, scalars="Thickness [m]", cmap=cmap, show_edges=True)
+    plotter.add_mesh(grid_h90, scalars="Thickness [m]", cmap=cmap, show_edges=True)
 
     label_x = -problem.a * 0.1
     label_y = problem.b / 2
 
-    labels = [&quot;deflection&quot;, &quot;h_0&quot;, &quot;h_45&quot;, &quot;h_90&quot;]
+    labels = ["deflection", "h_0", "h_45", "h_90"]
     label_coords = [
         [label_x, label_y, -z_offset],
         [label_x, label_y, 0],
@@ -900,14 +900,14 @@ Final Constraint Violation: 2.6459e-07
         labels,
         font_size=20,
         point_size=0,
-        text_color=&quot;black&quot;,
+        text_color="black",
         always_visible=True
     )
 
     plotter.add_axes()
     plotter.show_grid()
     plotter.view_isometric()
-    plotter.show(title=&quot;Optimized Thickness Distribution per Orientation&quot;)
+    plotter.show(title="Optimized Thickness Distribution per Orientation")
 
 
 plot_results(problem, res.x)
@@ -1018,8 +1018,8 @@ Falling back to a static output.
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1053,7 +1053,7 @@ Falling back to a static output.
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

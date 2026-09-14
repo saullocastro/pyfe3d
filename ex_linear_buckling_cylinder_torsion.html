@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Linear buckling analysis of a cylinder under torsion &#8212; pyfe3d 0.7.0 documentation</title>
+    <title>Linear buckling analysis of a cylinder under torsion &#8212; pyfe3d 0.8.0 documentation</title>
   
   
   
@@ -27,18 +27,18 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="_static/documentation_options.js?v=fe7df9b0"></script>
+    <script src="_static/documentation_options.js?v=486e5634"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -118,7 +118,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.7.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.8.0 documentation</p>
   
 </a></div>
     
@@ -388,7 +388,7 @@ running the script directly.</p>
 <p>The code used to generate this figure is extracted from one of <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code> unit
 tests:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;..&#39;</span><span class="p">)</span>
+<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">'..'</span><span class="p">)</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">time</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
@@ -401,47 +401,47 @@ tests:</p>
 
 
 <span class="k">def</span><span class="w"> </span><span class="nf">test_linear_buckling_cylinder_Nxy</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">plot_pyvista</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">refinement</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">&quot;&quot;&quot;Test case from reference</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Test case from reference</span>
 
 <span class="sd">        Saullo G. P. Castro, Christian Mittelstedt, Francisco A. C. Monteiro, Mariano</span>
-<span class="sd">        A. Arbelo, Gerhard Ziegmann, Richard Degenhardt. &quot;Linear buckling predictions</span>
+<span class="sd">        A. Arbelo, Gerhard Ziegmann, Richard Degenhardt. "Linear buckling predictions</span>
 <span class="sd">        of unstiffened laminated composite cylinders and cones under various loading</span>
-<span class="sd">        and boundary conditions using semi-analytical models&quot;. Composite Structures,</span>
+<span class="sd">        and boundary conditions using semi-analytical models". Composite Structures,</span>
 <span class="sd">        2014. 10.1016/j.compstruct.2014.07.037</span>
 
 <span class="sd">        Cylinders Z11 and Z33 are used given their distinct torsion buckling</span>
 <span class="sd">        behaviour.</span>
 
-<span class="sd">    &quot;&quot;&quot;</span>
-    <span class="c1"># NOTE in Fig. 1 of Castro&#39;s paper that in their coordinate system a</span>
+<span class="sd">    """</span>
+    <span class="c1"># NOTE in Fig. 1 of Castro's paper that in their coordinate system a</span>
     <span class="c1"># positive angle should be represented also a positive angle here</span>
     <span class="c1"># NOTE stacking sequences from Table 4 in Castro et al.</span>
     <span class="n">stacks</span> <span class="o">=</span> <span class="p">{</span>
         <span class="c1"># NOTE actual values from reference can be found here https://github.com/saullocastro/compmech/blob/e7e5342bf212743e70da22c94cc0452911099db3/compmech/conecyl/conecylDB.py#L334</span>
-        <span class="s1">&#39;Z11&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="o">+</span><span class="mi">60</span><span class="p">,</span> <span class="o">-</span><span class="mi">60</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">+</span><span class="mi">68</span><span class="p">,</span> <span class="o">-</span><span class="mi">68</span><span class="p">,</span> <span class="o">+</span><span class="mi">52</span><span class="p">,</span> <span class="o">-</span><span class="mi">52</span><span class="p">,</span> <span class="o">+</span><span class="mi">37</span><span class="p">,</span> <span class="o">-</span><span class="mi">37</span><span class="p">],</span>
+        <span class="s1">'Z11'</span> <span class="p">:</span> <span class="p">[</span><span class="o">+</span><span class="mi">60</span><span class="p">,</span> <span class="o">-</span><span class="mi">60</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">+</span><span class="mi">68</span><span class="p">,</span> <span class="o">-</span><span class="mi">68</span><span class="p">,</span> <span class="o">+</span><span class="mi">52</span><span class="p">,</span> <span class="o">-</span><span class="mi">52</span><span class="p">,</span> <span class="o">+</span><span class="mi">37</span><span class="p">,</span> <span class="o">-</span><span class="mi">37</span><span class="p">],</span>
         <span class="c1"># NOTE actual values from reference can be found here https://github.com/saullocastro/compmech/blob/e7e5342bf212743e70da22c94cc0452911099db3/compmech/conecyl/conecylDB.py#L145</span>
-        <span class="s1">&#39;Z33&#39;</span> <span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="o">-</span><span class="mi">19</span><span class="p">,</span> <span class="mi">37</span><span class="p">,</span> <span class="o">-</span><span class="mi">37</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="o">-</span><span class="mi">45</span><span class="p">,</span> <span class="mi">51</span><span class="p">,</span> <span class="o">-</span><span class="mi">51</span><span class="p">],</span>
+        <span class="s1">'Z33'</span> <span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">19</span><span class="p">,</span> <span class="o">-</span><span class="mi">19</span><span class="p">,</span> <span class="mi">37</span><span class="p">,</span> <span class="o">-</span><span class="mi">37</span><span class="p">,</span> <span class="mi">45</span><span class="p">,</span> <span class="o">-</span><span class="mi">45</span><span class="p">,</span> <span class="mi">51</span><span class="p">,</span> <span class="o">-</span><span class="mi">51</span><span class="p">],</span>
     <span class="p">}</span>
     <span class="c1"># NOTE reference values match with Fig. 13, FSDT CC2, of Castro et al.</span>
     <span class="n">reference_Tcr_value_Castro_refinement_8</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;Z11&#39;</span> <span class="p">:</span> <span class="o">-</span><span class="mf">18365.1</span><span class="p">,</span>
-        <span class="s1">&#39;Z33&#39;</span> <span class="p">:</span> <span class="o">-</span><span class="mf">10844.0</span>
+        <span class="s1">'Z11'</span> <span class="p">:</span> <span class="o">-</span><span class="mf">18365.1</span><span class="p">,</span>
+        <span class="s1">'Z33'</span> <span class="p">:</span> <span class="o">-</span><span class="mf">10844.0</span>
     <span class="p">}</span>
     <span class="c1"># NOTE values used for CI tests, values derived after running the tests in</span>
     <span class="c1"># a local compuer with refinement=8 first and then with refinement=1</span>
     <span class="n">reference_Tcr_value_Castro_refinement_1</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;Z11&#39;</span> <span class="p">:</span> <span class="o">-</span><span class="mf">31583.4</span><span class="p">,</span>
-        <span class="s1">&#39;Z33&#39;</span> <span class="p">:</span> <span class="o">-</span><span class="mf">21716.0</span>
+        <span class="s1">'Z11'</span> <span class="p">:</span> <span class="o">-</span><span class="mf">31583.4</span><span class="p">,</span>
+        <span class="s1">'Z33'</span> <span class="p">:</span> <span class="o">-</span><span class="mf">21716.0</span>
     <span class="p">}</span>
 
-    <span class="k">for</span> <span class="n">cyl</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">&#39;Z11&#39;</span><span class="p">,</span> <span class="s1">&#39;Z33&#39;</span><span class="p">]:</span>
+    <span class="k">for</span> <span class="n">cyl</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'Z11'</span><span class="p">,</span> <span class="s1">'Z33'</span><span class="p">]:</span>
         <span class="n">stack</span> <span class="o">=</span> <span class="n">stacks</span><span class="p">[</span><span class="n">cyl</span><span class="p">]</span>
         <span class="k">if</span> <span class="n">refinement</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
             <span class="n">ref_Tcr</span> <span class="o">=</span> <span class="n">reference_Tcr_value_Castro_refinement_1</span><span class="p">[</span><span class="n">cyl</span><span class="p">]</span>
         <span class="k">elif</span> <span class="n">refinement</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
             <span class="n">ref_Tcr</span> <span class="o">=</span> <span class="n">reference_Tcr_value_Castro_refinement_8</span><span class="p">[</span><span class="n">cyl</span><span class="p">]</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;refinement must be 1 or 8&#39;</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">'refinement must be 1 or 8'</span><span class="p">)</span>
 
         <span class="n">data</span> <span class="o">=</span> <span class="n">Quad4Data</span><span class="p">()</span>
         <span class="n">probe</span> <span class="o">=</span> <span class="n">Quad4Probe</span><span class="p">()</span>
@@ -454,8 +454,8 @@ tests:</p>
         <span class="n">nlength</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ntheta</span><span class="o">*</span><span class="n">L</span><span class="o">/</span><span class="n">b</span><span class="p">)</span>
         <span class="k">if</span> <span class="n">nlength</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
             <span class="n">nlength</span> <span class="o">+=</span> <span class="mi">1</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;ntheta&#39;</span><span class="p">,</span> <span class="n">ntheta</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;nlength&#39;</span><span class="p">,</span> <span class="n">nlength</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">'ntheta'</span><span class="p">,</span> <span class="n">ntheta</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">'nlength'</span><span class="p">,</span> <span class="n">nlength</span><span class="p">)</span>
 
         <span class="c1"># NOTE material proporties from Table 3 in Castro et al.</span>
         <span class="c1"># Actual values from reference can be found here https://github.com/saullocastro/compmech/blob/e7e5342bf212743e70da22c94cc0452911099db3/compmech/conecyl/conecylDB.py#L32C34-L32C76</span>
@@ -502,7 +502,7 @@ tests:</p>
         <span class="n">n4s</span> <span class="o">=</span> <span class="n">nids_mesh</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
 
         <span class="n">num_elements</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">n1s</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;num_elements&#39;</span><span class="p">,</span> <span class="n">num_elements</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">'num_elements'</span><span class="p">,</span> <span class="n">num_elements</span><span class="p">)</span>
 
         <span class="n">KC0r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">KC0_SPARSE_SIZE</span><span class="o">*</span><span class="n">num_elements</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">INT</span><span class="p">)</span>
         <span class="n">KC0c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">KC0_SPARSE_SIZE</span><span class="o">*</span><span class="n">num_elements</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">INT</span><span class="p">)</span>
@@ -536,11 +536,11 @@ tests:</p>
             <span class="n">init_k_KC0</span> <span class="o">+=</span> <span class="n">data</span><span class="o">.</span><span class="n">KC0_SPARSE_SIZE</span>
             <span class="n">init_k_KG</span> <span class="o">+=</span> <span class="n">data</span><span class="o">.</span><span class="n">KG_SPARSE_SIZE</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;elements created&#39;</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">t0</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">'elements created'</span><span class="p">,</span> <span class="n">time</span><span class="o">.</span><span class="n">time</span><span class="p">()</span><span class="o">-</span><span class="n">t0</span><span class="p">)</span>
 
         <span class="n">KC0</span> <span class="o">=</span> <span class="n">coo_matrix</span><span class="p">((</span><span class="n">KC0v</span><span class="p">,</span> <span class="p">(</span><span class="n">KC0r</span><span class="p">,</span> <span class="n">KC0c</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span><span class="o">.</span><span class="n">tocsc</span><span class="p">()</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;sparse KC0 created&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">'sparse KC0 created'</span><span class="p">)</span>
 
         <span class="n">bk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
 
@@ -568,7 +568,7 @@ tests:</p>
         <span class="c1"># influences the results for torsion buckling.</span>
         <span class="c1">#</span>
         <span class="n">Nxy</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1000</span><span class="o">/</span><span class="n">b</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Nxy&#39;</span><span class="p">,</span> <span class="n">Nxy</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">'Nxy'</span><span class="p">,</span> <span class="n">Nxy</span><span class="p">)</span>
 
         <span class="k">for</span> <span class="n">quad</span> <span class="ow">in</span> <span class="n">quads</span><span class="p">:</span>
             <span class="n">quad</span><span class="o">.</span><span class="n">update_probe_xe</span><span class="p">(</span><span class="n">ncoords_flatten</span><span class="p">)</span> <span class="c1"># NOTE update affects the Quad4Probe class attribute xe</span>
@@ -578,7 +578,7 @@ tests:</p>
         <span class="n">KC0uu</span> <span class="o">=</span> <span class="n">KC0</span><span class="p">[</span><span class="n">bu</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">bu</span><span class="p">]</span>
         <span class="n">KGuu</span> <span class="o">=</span> <span class="n">KG</span><span class="p">[</span><span class="n">bu</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">bu</span><span class="p">]</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;sparse KG created&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">'sparse KG created'</span><span class="p">)</span>
 
         <span class="n">num_eig_lb</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">mode</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
 
@@ -590,36 +590,36 @@ tests:</p>
         <span class="n">D_inv_sqrt</span> <span class="o">=</span> <span class="n">sp_diags</span><span class="p">(</span><span class="n">kc0_diag_inv_sqrt</span><span class="p">)</span>
         <span class="n">KC0uu_scaled</span> <span class="o">=</span> <span class="n">D_inv_sqrt</span> <span class="o">@</span> <span class="n">KC0uu</span> <span class="o">@</span> <span class="n">D_inv_sqrt</span>
         <span class="n">KGuu_scaled</span> <span class="o">=</span> <span class="n">D_inv_sqrt</span> <span class="o">@</span> <span class="n">KGuu</span> <span class="o">@</span> <span class="n">D_inv_sqrt</span>
-        <span class="n">eigvals_inv</span><span class="p">,</span> <span class="n">eigvecsu_scaled</span> <span class="o">=</span> <span class="n">eigsh</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="n">KGuu_scaled</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">num_eig_lb</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">&#39;SM&#39;</span><span class="p">,</span>
-                <span class="n">M</span><span class="o">=</span><span class="n">KC0uu_scaled</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;cayley&#39;</span><span class="p">)</span>
+        <span class="n">eigvals_inv</span><span class="p">,</span> <span class="n">eigvecsu_scaled</span> <span class="o">=</span> <span class="n">eigsh</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="n">KGuu_scaled</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="n">num_eig_lb</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">'SM'</span><span class="p">,</span>
+                <span class="n">M</span><span class="o">=</span><span class="n">KC0uu_scaled</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">'cayley'</span><span class="p">)</span>
         <span class="n">eigvals</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.</span><span class="o">/</span><span class="n">eigvals_inv</span>
 
         <span class="c1"># NOTE the eigenvectors are scaled by the preconditioner to recover the original eigenvectors</span>
         <span class="n">eigvecsu</span> <span class="o">=</span> <span class="n">D_inv_sqrt</span> <span class="o">@</span> <span class="n">eigvecsu_scaled</span>
 
         <span class="n">eigvecs</span><span class="p">[</span><span class="n">bu</span><span class="p">]</span> <span class="o">=</span> <span class="n">eigvecsu</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;eigvals&#39;</span><span class="p">,</span> <span class="n">eigvals</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">'eigvals'</span><span class="p">,</span> <span class="n">eigvals</span><span class="p">)</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;linear buckling analysis OK&#39;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">'linear buckling analysis OK'</span><span class="p">)</span>
         <span class="n">Tcr</span> <span class="o">=</span> <span class="n">eigvals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">Nxy</span><span class="o">*</span><span class="n">b</span><span class="o">*</span><span class="n">R</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;Tcr =&#39;</span><span class="p">,</span> <span class="n">Tcr</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s1">'Tcr ='</span><span class="p">,</span> <span class="n">Tcr</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">plot_pyvista</span><span class="p">:</span>
             <span class="kn">import</span><span class="w"> </span><span class="nn">pyvista</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pv</span>
 
-            <span class="n">contour_colorscale</span> <span class="o">=</span> <span class="s1">&#39;coolwarm&#39;</span>
-            <span class="n">background</span> <span class="o">=</span> <span class="s1">&#39;gray&#39;</span>
+            <span class="n">contour_colorscale</span> <span class="o">=</span> <span class="s1">'coolwarm'</span>
+            <span class="n">background</span> <span class="o">=</span> <span class="s1">'gray'</span>
 
             <span class="n">vector</span> <span class="o">=</span> <span class="n">eigvecs</span><span class="p">[:,</span> <span class="n">mode</span><span class="p">]</span>
 
-            <span class="n">contour_label</span> <span class="o">=</span> <span class="s1">&#39;Radial displacement&#39;</span>
+            <span class="n">contour_label</span> <span class="o">=</span> <span class="s1">'Radial displacement'</span>
             <span class="n">contour_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">vector</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="n">DOF</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">vector</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="n">DOF</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
 
             <span class="n">displ_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">ncoords</span><span class="p">)</span>
             <span class="n">displ_vec</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">vector</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="n">DOF</span><span class="p">]</span><span class="o">*</span><span class="mi">10</span>
             <span class="n">displ_vec</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">vector</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="n">DOF</span><span class="p">]</span><span class="o">*</span><span class="mi">10</span>
             <span class="n">displ_vec</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">vector</span><span class="p">[</span><span class="mi">2</span><span class="p">::</span><span class="n">DOF</span><span class="p">]</span><span class="o">*</span><span class="mi">10</span>
-            <span class="n">intensitymode</span> <span class="o">=</span> <span class="s1">&#39;vertex&#39;</span>
+            <span class="n">intensitymode</span> <span class="o">=</span> <span class="s1">'vertex'</span>
 
             <span class="n">plotter</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">Plotter</span><span class="p">(</span><span class="n">off_screen</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
             <span class="n">faces_quad</span> <span class="o">=</span> <span class="p">[]</span>
@@ -630,23 +630,23 @@ tests:</p>
             <span class="k">if</span> <span class="n">contour_vec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">quad_plot</span><span class="p">[</span><span class="n">contour_label</span><span class="p">]</span> <span class="o">=</span> <span class="n">contour_vec</span>
                 <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">quad_plot</span><span class="p">,</span> <span class="n">scalars</span><span class="o">=</span><span class="n">contour_label</span><span class="p">,</span>
-                        <span class="n">cmap</span><span class="o">=</span><span class="n">contour_colorscale</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">show_edges</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                        <span class="n">cmap</span><span class="o">=</span><span class="n">contour_colorscale</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="s1">'black'</span><span class="p">,</span> <span class="n">show_edges</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                         <span class="n">line_width</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
-                <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">quad_plot</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="s1">&#39;black&#39;</span><span class="p">,</span> <span class="n">show_edges</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">quad_plot</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="s1">'black'</span><span class="p">,</span> <span class="n">show_edges</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                         <span class="n">line_width</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
             <span class="n">displ_vec</span> <span class="o">=</span> <span class="kc">None</span>
             <span class="k">if</span> <span class="n">displ_vec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
                 <span class="n">quad_plot</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">PolyData</span><span class="p">(</span><span class="n">ncoords</span> <span class="o">+</span> <span class="n">displ_vec</span><span class="p">,</span> <span class="n">faces_quad</span><span class="p">)</span>
-                <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">quad_plot</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="s1">&#39;red&#39;</span><span class="p">,</span> <span class="n">show_edges</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">quad_plot</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="s1">'red'</span><span class="p">,</span> <span class="n">show_edges</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                         <span class="n">line_width</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
             <span class="c1">#NOTE plotting coordinate system</span>
             <span class="n">xaxis</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">Arrow</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">direction</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="n">R</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
-            <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">xaxis</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+            <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">xaxis</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'blue'</span><span class="p">)</span>
             <span class="n">yaxis</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">Arrow</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">direction</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="n">R</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
-            <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">yaxis</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;yellow&#39;</span><span class="p">)</span>
+            <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">yaxis</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'yellow'</span><span class="p">)</span>
             <span class="n">zaxis</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">Arrow</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">direction</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="n">R</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
-            <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">zaxis</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">)</span>
+            <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">zaxis</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'green'</span><span class="p">)</span>
 
             <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">quads</span><span class="p">:</span>
                 <span class="n">pos1</span> <span class="o">=</span> <span class="n">nid_pos</span><span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">n1</span><span class="p">]</span>
@@ -659,21 +659,21 @@ tests:</p>
                                <span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">r21</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r22</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r23</span><span class="p">],</span>
                                <span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">r31</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r32</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r33</span><span class="p">]])</span> <span class="o">@</span> <span class="n">ze</span>
                 <span class="n">normal</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">Arrow</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">centroid</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="n">zg</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">R</span><span class="o">/</span><span class="mi">20</span><span class="p">)</span>
-                <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">normal</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;green&#39;</span><span class="p">)</span>
+                <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">normal</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'green'</span><span class="p">)</span>
 
                 <span class="n">xe</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">])</span>
                 <span class="n">xg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">q</span><span class="o">.</span><span class="n">r11</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r12</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r13</span><span class="p">],</span>
                                <span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">r21</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r22</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r23</span><span class="p">],</span>
                                <span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">r31</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r32</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r33</span><span class="p">]])</span> <span class="o">@</span> <span class="n">xe</span>
                 <span class="n">x_axis</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">Arrow</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">centroid</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="n">xg</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">R</span><span class="o">/</span><span class="mi">20</span><span class="p">)</span>
-                <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;blue&#39;</span><span class="p">)</span>
+                <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'blue'</span><span class="p">)</span>
 
                 <span class="n">ye</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">])</span>
                 <span class="n">yg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">q</span><span class="o">.</span><span class="n">r11</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r12</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r13</span><span class="p">],</span>
                                <span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">r21</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r22</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r23</span><span class="p">],</span>
                                <span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">r31</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r32</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r33</span><span class="p">]])</span> <span class="o">@</span> <span class="n">ye</span>
                 <span class="n">y_axis</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">Arrow</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">centroid</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="n">yg</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">R</span><span class="o">/</span><span class="mi">20</span><span class="p">)</span>
-                <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">y_axis</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">&#39;yellow&#39;</span><span class="p">)</span>
+                <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">y_axis</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'yellow'</span><span class="p">)</span>
 
             <span class="n">plotter</span><span class="o">.</span><span class="n">set_background</span><span class="p">(</span><span class="n">background</span><span class="p">)</span>
             <span class="n">plotter</span><span class="o">.</span><span class="n">parallel_projection</span> <span class="o">=</span> <span class="kc">True</span>
@@ -682,7 +682,7 @@ tests:</p>
         <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">Tcr</span><span class="p">,</span> <span class="n">ref_Tcr</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
 
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;__main__&#39;</span><span class="p">:</span>
+<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">'__main__'</span><span class="p">:</span>
     <span class="n">test_linear_buckling_cylinder_Nxy</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">plot_pyvista</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">refinement</span><span class="o">=</span><span class="mi">8</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -749,8 +749,8 @@ tests:</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -784,7 +784,7 @@ tests:</p>
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>

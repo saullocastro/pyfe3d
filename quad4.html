@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Quad4 - Quadrilateral element with mixed integration (pyfe3d.quad4) &#8212; pyfe3d 0.7.0 documentation</title>
+    <title>Quad4 - Quadrilateral element with mixed integration (pyfe3d.quad4) &#8212; pyfe3d 0.8.0 documentation</title>
   
   
   
@@ -27,18 +27,18 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=90905a2f556bf617f1a9" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="_static/documentation_options.js?v=fe7df9b0"></script>
+    <script src="_static/documentation_options.js?v=486e5634"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -118,7 +118,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.7.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.8.0 documentation</p>
   
 </a></div>
     
@@ -500,7 +500,7 @@ material direction is used instead of the element local coordinates.</p>
 </dd>
 <dt><strong>n1, n2, n3, n4</strong><span class="classifier">int</span></dt><dd><p>Node identification number.</p>
 </dd>
-<dt><strong>init_k_KC0, init_k_KG, init_k_M</strong><span class="classifier">int</span></dt><dd><p>Position in the arrays storing the sparse data for the structural
+<dt><strong>init_k_KC0, init_k_KCNL, init_k_KG, init_k_M</strong><span class="classifier">int</span></dt><dd><p>Position in the arrays storing the sparse data for the structural
 matrices.</p>
 </dd>
 <dt><strong>init_k_KA_beta, init_k_KA_gamma, init_k_CA</strong><span class="classifier">int</span></dt><dd><p>Position in the arrays storing the sparse data for the aerodynamic
@@ -526,31 +526,34 @@ matrices based on the Piston theory.</p>
 <tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_KC0" title="pyfe3d.quad4.Quad4.update_KC0"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KC0</span></code></a>(self, long[, long[, double[, ...)</p></td>
 <td><p>Update sparse vectors for linear constitutive stiffness matrix KC0</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_KG" title="pyfe3d.quad4.Quad4.update_KG"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KG</span></code></a>(self, long[, long[, double[, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_KCNL" title="pyfe3d.quad4.Quad4.update_KCNL"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KCNL</span></code></a>(self, long[, long[, double[, ...)</p></td>
+<td><p>Update sparse vectors for the nonlinear constitutive stiffness matrix KCNL</p></td>
+</tr>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_KG" title="pyfe3d.quad4.Quad4.update_KG"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KG</span></code></a>(self, long[, long[, double[, ...)</p></td>
 <td><p>Update sparse vectors for geometric stiffness matrix KG</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_KG_given_stress" title="pyfe3d.quad4.Quad4.update_KG_given_stress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KG_given_stress</span></code></a>(self, double Nxx, ...)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_KG_given_stress" title="pyfe3d.quad4.Quad4.update_KG_given_stress"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KG_given_stress</span></code></a>(self, double Nxx, ...)</p></td>
 <td><p>Update sparse vectors for geometric stiffness matrix KG</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_M" title="pyfe3d.quad4.Quad4.update_M"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_M</span></code></a>(self, long[, long[, double[, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_M" title="pyfe3d.quad4.Quad4.update_M"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_M</span></code></a>(self, long[, long[, double[, ...)</p></td>
 <td><p>Update sparse vectors for mass matrix M</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_area" title="pyfe3d.quad4.Quad4.update_area"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_area</span></code></a>(self)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_area" title="pyfe3d.quad4.Quad4.update_area"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_area</span></code></a>(self)</p></td>
 <td><p>Update element area</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_fint" title="pyfe3d.quad4.Quad4.update_fint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_fint</span></code></a>(self, double[, ShellProp prop)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_fint" title="pyfe3d.quad4.Quad4.update_fint"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_fint</span></code></a>(self, double[, ShellProp prop, ...)</p></td>
 <td><p>Update the internal force vector</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_probe_finte" title="pyfe3d.quad4.Quad4.update_probe_finte"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_probe_finte</span></code></a>(self, ShellProp prop)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_probe_finte" title="pyfe3d.quad4.Quad4.update_probe_finte"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_probe_finte</span></code></a>(self, ShellProp prop, ...)</p></td>
 <td><p>Update the internal force vector of the probe</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_probe_ue" title="pyfe3d.quad4.Quad4.update_probe_ue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_probe_ue</span></code></a>(self, double[)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_probe_ue" title="pyfe3d.quad4.Quad4.update_probe_ue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_probe_ue</span></code></a>(self, double[)</p></td>
 <td><p>Update the local displacement vector of the probe of the element</p></td>
 </tr>
-<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_probe_xe" title="pyfe3d.quad4.Quad4.update_probe_xe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_probe_xe</span></code></a>(self, double[)</p></td>
+<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_probe_xe" title="pyfe3d.quad4.Quad4.update_probe_xe"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_probe_xe</span></code></a>(self, double[)</p></td>
 <td><p>Update the 3D coordinates of the probe of the element</p></td>
 </tr>
-<tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_rotation_matrix" title="pyfe3d.quad4.Quad4.update_rotation_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_rotation_matrix</span></code></a>(self, double[, ...)</p></td>
+<tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.quad4.Quad4.update_rotation_matrix" title="pyfe3d.quad4.Quad4.update_rotation_matrix"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_rotation_matrix</span></code></a>(self, double[, ...)</p></td>
 <td><p>Update the rotation matrix of the element</p></td>
 </tr>
 </tbody>
@@ -620,6 +623,12 @@ matrices based on the Piston theory.</p>
 <dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.init_k_KC0">
 <span class="sig-name descname"><span class="pre">init_k_KC0</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.init_k_KC0" title="Link to this definition">#</a></dt>
 <dd><p>init_k_KC0: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.init_k_KCNL">
+<span class="sig-name descname"><span class="pre">init_k_KCNL</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.init_k_KCNL" title="Link to this definition">#</a></dt>
+<dd><p>init_k_KCNL: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -828,6 +837,61 @@ update the stiffness matrix values <code class="docutils literal notranslate"><s
 </dd></dl>
 
 <dl class="py method">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.update_KCNL">
+<span class="sig-name descname"><span class="pre">update_KCNL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KCNLr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KCNLc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KCNLv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KCNLv_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.update_KCNL" title="Link to this definition">#</a></dt>
+<dd><p>Update sparse vectors for the nonlinear constitutive stiffness matrix KCNL</p>
+<p>Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, built from the von Karman
+membrane strains</p>
+<div class="math notranslate nohighlight">
+\[\epsilon_{xx} = u_{,x} + \frac{1}{2} w_{,x}^2, \quad
+\epsilon_{yy} = v_{,y} + \frac{1}{2} w_{,y}^2, \quad
+\gamma_{xy} = u_{,y} + v_{,x} + w_{,x} w_{,y}\]</div>
+<p>whose nonlinear part is <span class="math notranslate nohighlight">\(\{\epsilon_{NL}\} = \frac{1}{2} [B_{mL}]
+\{u_e\}\)</span>, with <span class="math notranslate nohighlight">\([B_{mL}]\)</span> its variation. With <span class="math notranslate nohighlight">\([B_m]\)</span> and <span class="math notranslate nohighlight">\([B_b]\)</span> the
+linear membrane and bending strain-displacement matrices, <span class="math notranslate nohighlight">\([G]\)</span> the
+gradient of <span class="math notranslate nohighlight">\(w\)</span>, and <span class="math notranslate nohighlight">\([A]\)</span>, <span class="math notranslate nohighlight">\([B]\)</span> the laminate matrices:</p>
+<ul class="simple">
+<li><p>KC0L = <span class="math notranslate nohighlight">\([B_m]^T [A] [B_{mL}] + [B_b]^T [B] [B_{mL}]\)</span></p></li>
+<li><p>KCL0 = KC0L`^T`</p></li>
+<li><p>KCLL = <span class="math notranslate nohighlight">\([B_{mL}]^T [A] [B_{mL}]\)</span></p></li>
+<li><p>KGNL = <span class="math notranslate nohighlight">\([G]^T [N_{NL}] [G]\)</span>, with <span class="math notranslate nohighlight">\(\{N_{NL}\} = [A] \{\epsilon_{NL}\}\)</span></p></li>
+</ul>
+<p>The first three groups are the constitutive terms coupling the linear and
+the nonlinear parts of the membrane strain. KGNL is geometric, carrying the
+stress of the nonlinear membrane strain. It is collected here so that
+<a class="reference internal" href="#pyfe3d.quad4.Quad4.update_KG" title="pyfe3d.quad4.Quad4.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG()</span></code></a> stays homogeneous of degree one in the displacements,
+which is what a linear buckling analysis needs. With it here,</p>
+<div class="math notranslate nohighlight">
+\[K_T = K_{C0} + K_{CNL}(u) + K_G(u)\]</div>
+<p>is the exact Jacobian of the internal forces of <a class="reference internal" href="#pyfe3d.quad4.Quad4.update_fint" title="pyfe3d.quad4.Quad4.update_fint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_fint()</span></code></a> with
+<code class="docutils literal notranslate"><span class="pre">nonlinear=1</span></code>, and a Newton-Raphson iteration built on them converges
+quadratically. The quadrature of <a class="reference internal" href="#pyfe3d.quad4.Quad4.update_KG" title="pyfe3d.quad4.Quad4.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG()</span></code></a> is used.</p>
+<p>Before this function is called, the probe <a class="reference internal" href="#pyfe3d.quad4.Quad4Probe" title="pyfe3d.quad4.Quad4Probe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4Probe</span></code></a> attribute
+of the <a class="reference internal" href="#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> object must be updated using
+<code class="xref py py-func docutils literal notranslate"><span class="pre">update_probe_ue()</span></code> with the current displacements; and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">update_probe_xe()</span></code> with the node coordinates.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>KCNLr</strong><span class="classifier">np.array</span></dt><dd><p>Array to store row positions of sparse values</p>
+</dd>
+<dt><strong>KCNLc</strong><span class="classifier">np.array</span></dt><dd><p>Array to store column positions of sparse values</p>
+</dd>
+<dt><strong>KCNLv</strong><span class="classifier">np.array</span></dt><dd><p>Array to store sparse values</p>
+</dd>
+<dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object</span></dt><dd><p>Shell property object from where the stiffness and mass attributes are
+read from.</p>
+</dd>
+<dt><strong>update_KCNLv_only</strong><span class="classifier">int</span></dt><dd><p>The default <code class="docutils literal notranslate"><span class="pre">0</span></code> means that the row and column indices <code class="docutils literal notranslate"><span class="pre">KCNLr</span></code> and
+<code class="docutils literal notranslate"><span class="pre">KCNLc</span></code> should also be updated. Any other value will only update the
+stiffness matrix values <code class="docutils literal notranslate"><span class="pre">KCNLv</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.update_KG">
 <span class="sig-name descname"><span class="pre">update_KG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KGr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KGc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KGv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.update_KG" title="Link to this definition">#</a></dt>
 <dd><p>Update sparse vectors for geometric stiffness matrix KG</p>
@@ -915,7 +979,7 @@ parameter.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.update_fint">
-<span class="sig-name descname"><span class="pre">update_fint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">fint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.update_fint" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_fint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">fint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">nonlinear</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.update_fint" title="Link to this definition">#</a></dt>
 <dd><p>Update the internal force vector</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -929,6 +993,11 @@ internal forces in local coordinates.</p>
 <dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object</span></dt><dd><p>Shell property object from where the stiffness and mass attributes
 are read from.</p>
 </dd>
+<dt><strong>nonlinear</strong><span class="classifier">int</span></dt><dd><p>The default <code class="docutils literal notranslate"><span class="pre">0</span></code> gives the linear internal forces, <code class="docutils literal notranslate"><span class="pre">KC0*u</span></code>. Any other
+value adds the geometrically nonlinear terms of the von Karman strains,
+for which the exact Jacobian of the internal forces is <code class="docutils literal notranslate"><span class="pre">KC0</span> <span class="pre">+</span> <span class="pre">KCNL</span> <span class="pre">+</span>
+<span class="pre">KG</span></code>, see <a class="reference internal" href="#pyfe3d.quad4.Quad4.update_KCNL" title="pyfe3d.quad4.Quad4.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>.</p>
+</dd>
 </dl>
 </dd>
 </dl>
@@ -936,7 +1005,7 @@ are read from.</p>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.quad4.Quad4.update_probe_finte">
-<span class="sig-name descname"><span class="pre">update_probe_finte</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.update_probe_finte" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_probe_finte</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">nonlinear</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4.update_probe_finte" title="Link to this definition">#</a></dt>
 <dd><p>Update the internal force vector of the probe</p>
 <p>The attribute <code class="docutils literal notranslate"><span class="pre">finte</span></code> of the object <a class="reference internal" href="#pyfe3d.quad4.Quad4Probe" title="pyfe3d.quad4.Quad4Probe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4Probe</span></code></a> is updated,
 which corresponds to the internal forces in local coordinates. While
@@ -953,6 +1022,11 @@ updated, accessible using <code class="docutils literal notranslate"><span class
 <dd class="field-odd"><dl>
 <dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object</span></dt><dd><p>Shell property object from where the stiffness and mass attributes
 are read from.</p>
+</dd>
+<dt><strong>nonlinear</strong><span class="classifier">int</span></dt><dd><p>The default <code class="docutils literal notranslate"><span class="pre">0</span></code> gives the linear internal forces, <code class="docutils literal notranslate"><span class="pre">KC0*u</span></code>. Any other
+value adds the geometrically nonlinear terms of the von Karman strains,
+for which the exact Jacobian of the internal forces is <code class="docutils literal notranslate"><span class="pre">KC0</span> <span class="pre">+</span> <span class="pre">KCNL</span> <span class="pre">+</span>
+<span class="pre">KG</span></code>, see <a class="reference internal" href="#pyfe3d.quad4.Quad4.update_KCNL" title="pyfe3d.quad4.Quad4.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>.</p>
 </dd>
 </dl>
 </dd>
@@ -1041,6 +1115,8 @@ the element <span class="math notranslate nohighlight">\(x\)</span> axis while c
 <dd class="field-odd"><dl class="simple">
 <dt><strong>KC0_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KC0_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">576</span></code></p>
 </dd>
+<dt><strong>KCNL_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KCNL_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">576</span></code></p>
+</dd>
 <dt><strong>KG_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KG_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">144</span></code></p>
 </dd>
 <dt><strong>M_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">M_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">480</span></code></p>
@@ -1076,6 +1152,12 @@ the element <span class="math notranslate nohighlight">\(x\)</span> axis while c
 <dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Data.KC0_SPARSE_SIZE">
 <span class="sig-name descname"><span class="pre">KC0_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Data.KC0_SPARSE_SIZE" title="Link to this definition">#</a></dt>
 <dd><p>KC0_SPARSE_SIZE: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Data.KCNL_SPARSE_SIZE">
+<span class="sig-name descname"><span class="pre">KCNL_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Data.KCNL_SPARSE_SIZE" title="Link to this definition">#</a></dt>
+<dd><p>KCNL_SPARSE_SIZE: ‘int’</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1141,6 +1223,11 @@ strain interpolation functions evaluated at a given natural coordinate
 point <span class="math notranslate nohighlight">\(\xi\)</span>, <span class="math notranslate nohighlight">\(\eta\)</span>.</p>
 </dd>
 <dt><a class="reference internal" href="#pyfe3d.quad4.Quad4Probe.BLdrilling" title="pyfe3d.quad4.Quad4Probe.BLdrilling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BLdrilling</span></code></a><span class="classifier">array-like</span></dt><dd><p>BLdrilling: ‘double[::1]’</p>
+</dd>
+<dt><strong>Gwx, Gwy</strong><span class="classifier">array-like</span></dt><dd><p>Arrays of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF=24</span></code> with the rows giving <span class="math notranslate nohighlight">\(w_{,x}\)</span> and
+<span class="math notranslate nohighlight">\(w_{,y}\)</span>, at the last evaluated integration point.</p>
+</dd>
+<dt><a class="reference internal" href="#pyfe3d.quad4.Quad4Probe.KCNLve" title="pyfe3d.quad4.Quad4Probe.KCNLve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">KCNLve</span></code></a><span class="classifier">array-like</span></dt><dd><p>KCNLve: ‘double[::1]’</p>
 </dd>
 </dl>
 </dd>
@@ -1221,9 +1308,27 @@ point <span class="math notranslate nohighlight">\(\xi\)</span>, <span class="ma
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Probe.Gwx">
+<span class="sig-name descname"><span class="pre">Gwx</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Probe.Gwx" title="Link to this definition">#</a></dt>
+<dd><p>Gwx: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Probe.Gwy">
+<span class="sig-name descname"><span class="pre">Gwy</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Probe.Gwy" title="Link to this definition">#</a></dt>
+<dd><p>Gwy: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Probe.KC0ve">
 <span class="sig-name descname"><span class="pre">KC0ve</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Probe.KC0ve" title="Link to this definition">#</a></dt>
 <dd><p>KC0ve: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4.Quad4Probe.KCNLve">
+<span class="sig-name descname"><span class="pre">KCNLve</span></span><a class="headerlink" href="#pyfe3d.quad4.Quad4Probe.KCNLve" title="Link to this definition">#</a></dt>
+<dd><p>KCNLve: ‘double[::1]’</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1296,6 +1401,7 @@ given natural coordinate point <span class="math notranslate nohighlight">\(\xi\
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.init_k_KA_beta"><code class="docutils literal notranslate"><span class="pre">Quad4.init_k_KA_beta</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.init_k_KA_gamma"><code class="docutils literal notranslate"><span class="pre">Quad4.init_k_KA_gamma</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.init_k_KC0"><code class="docutils literal notranslate"><span class="pre">Quad4.init_k_KC0</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.init_k_KCNL"><code class="docutils literal notranslate"><span class="pre">Quad4.init_k_KCNL</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.init_k_KG"><code class="docutils literal notranslate"><span class="pre">Quad4.init_k_KG</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.init_k_M"><code class="docutils literal notranslate"><span class="pre">Quad4.init_k_M</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.m11"><code class="docutils literal notranslate"><span class="pre">Quad4.m11</span></code></a></li>
@@ -1321,6 +1427,7 @@ given natural coordinate point <span class="math notranslate nohighlight">\(\xi\
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_KA_beta"><code class="docutils literal notranslate"><span class="pre">Quad4.update_KA_beta()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_KA_gamma"><code class="docutils literal notranslate"><span class="pre">Quad4.update_KA_gamma()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_KC0"><code class="docutils literal notranslate"><span class="pre">Quad4.update_KC0()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_KCNL"><code class="docutils literal notranslate"><span class="pre">Quad4.update_KCNL()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_KG"><code class="docutils literal notranslate"><span class="pre">Quad4.update_KG()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_KG_given_stress"><code class="docutils literal notranslate"><span class="pre">Quad4.update_KG_given_stress()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4.update_M"><code class="docutils literal notranslate"><span class="pre">Quad4.update_M()</span></code></a></li>
@@ -1337,6 +1444,7 @@ given natural coordinate point <span class="math notranslate nohighlight">\(\xi\
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Data.KA_BETA_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Quad4Data.KA_BETA_SPARSE_SIZE</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Data.KA_GAMMA_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Quad4Data.KA_GAMMA_SPARSE_SIZE</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Data.KC0_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Quad4Data.KC0_SPARSE_SIZE</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Data.KCNL_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Quad4Data.KCNL_SPARSE_SIZE</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Data.KG_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Quad4Data.KG_SPARSE_SIZE</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Data.M_SPARSE_SIZE"><code class="docutils literal notranslate"><span class="pre">Quad4Data.M_SPARSE_SIZE</span></code></a></li>
 </ul>
@@ -1353,7 +1461,10 @@ given natural coordinate point <span class="math notranslate nohighlight">\(\xi\
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.BLkxx"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.BLkxx</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.BLkxy"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.BLkxy</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.BLkyy"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.BLkyy</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.Gwx"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.Gwx</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.Gwy"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.Gwy</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.KC0ve"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.KC0ve</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.KCNLve"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.KCNLve</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.finte"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.finte</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.ue"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.ue</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4.Quad4Probe.update_BL"><code class="docutils literal notranslate"><span class="pre">Quad4Probe.update_BL()</span></code></a></li>
@@ -1386,8 +1497,8 @@ given natural coordinate point <span class="math notranslate nohighlight">\(\xi\
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=90905a2f556bf617f1a9"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=90905a2f556bf617f1a9"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1421,7 +1532,7 @@ given natural coordinate point <span class="math notranslate nohighlight">\(\xi\
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.20.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
 </p></div>
       
     </div>
