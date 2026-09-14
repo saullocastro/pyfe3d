@@ -62,6 +62,23 @@ reduced integration.
 recommend using the BeamLR instead, which is physically more consistent.
 
 
+Development history
+-------------------
+
+| Main versions | Changes |
+| - | - |
+| 0.8.0 | KCNL matrix for all elements, with more accurate nonlinear analyses; fixed KC0 and KG for beams; fixed KC0 for Tria3R. |
+| 0.7.0 | Drilling stiffness re-coupled with in-plane rotation using K6ROT; fixed drilling stiffness integration; restored missing `pid` attribute. |
+| 0.6.4 | Internal force vectors (finte) for all elements; fixed drilling stiffness (K6ROT) scaling; added Python 3.14 and removed Python 3.8 support; Linux wheels limited to 64-bit;  Exposed update_probe_finte to Python; new documentation examples. |
+| 0.5.2 | New Quad4 element; K6ROT drilling stiffness; probe.update_BL; removed alg3dpy dependency; topology optimization tutorial  |
+| 0.4.28 | Piston theory aerodynamics for Quad4R; fixed array casting on some systems; Quad4R less sensitive to small element sizes; new `pid` attribute for elements; exposed element orientation vectors; Python 3.12 support; fixed build for Linux and macOS wheels. |
+| 0.3.24 | New Tria3R element; fixed BeamC formulation; fixed beam torsion stiffness; fixed lamination parameters and added their gradients; fixed lumped mass for Tria3R; removed dependency on the NumPy C API; OpenMP build fixes; improved Zenodo metadata and documentation layout; Python 3.10 support. |
+| 0.2.8 | Material coordinate systems for plate elements; Fixed Truss mass matrix; more aggressive Cython directives; license changed to 3-clause BSD; license info in README, author metadata updates. |
+| 0.1.16 | New Spring element; Rotation matrices using direct `rij` terms instead of Euler angles; renamed `update_xe` to `update_probe_xe`; `probe` made a public attribute; KG with a given stress state; renamed `update_ue` to `update_probe_ue` |
+| 0.1.3 | First release: Quad4R, BeamC, BeamLR and Truss elements; shell properties; linear buckling |
+
+
+
 Installing pyfe3d
 -----------------
 
