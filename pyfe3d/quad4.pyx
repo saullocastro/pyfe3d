@@ -148,6 +148,9 @@ cdef class Quad4Data:
     KC0_SPARSE_SIZE, : int
         ``KC0_SPARSE_SIZE = 576``
 
+    KCNL_SPARSE_SIZE, : int
+        ``KCNL_SPARSE_SIZE = 576``
+
     KG_SPARSE_SIZE, : int
         ``KG_SPARSE_SIZE = 144``
 
@@ -165,6 +168,7 @@ cdef class Quad4Data:
 
     """
     cdef public int KC0_SPARSE_SIZE
+    cdef public int KCNL_SPARSE_SIZE
     cdef public int KG_SPARSE_SIZE
     cdef public int M_SPARSE_SIZE
     cdef public int KA_BETA_SPARSE_SIZE
@@ -173,6 +177,7 @@ cdef class Quad4Data:
 
     def __cinit__(Quad4Data self):
         self.KC0_SPARSE_SIZE = 576
+        self.KCNL_SPARSE_SIZE = 576
         self.KG_SPARSE_SIZE = 144
         self.M_SPARSE_SIZE = 480
         self.KA_BETA_SPARSE_SIZE = 144
@@ -231,6 +236,13 @@ cdef class Quad4Probe:
         Arrays of size ``NUM_NODES*DOF=24`` containing the drilling
         interpolation functions evaluated at a given natural coordinate
         point `\xi`, `\eta`.
+    Gwx, Gwy : array-like
+        Arrays of size ``NUM_NODES*DOF=24`` with the rows giving `w_{,x}` and
+        `w_{,y}`, at the last evaluated integration point.
+    KCNLve : array-like
+        Array of size ``(NUM_NODES*DOF)**2=576`` with the nonlinear
+        constitutive stiffness matrix KCNL in element coordinates, stored row
+        by row.
 
     """
     cdef public double [::1] xe
@@ -248,6 +260,9 @@ cdef class Quad4Probe:
     cdef public double [::1] BLgxz_grad
     cdef public double [::1] BLgxz_rot
     cdef public double [::1] BLdrilling
+    cdef public double [::1] Gwx
+    cdef public double [::1] Gwy
+    cdef public double [::1] KCNLve
 
     def __cinit__(Quad4Probe self):
         self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
@@ -269,6 +284,9 @@ cdef class Quad4Probe:
         self.BLgxz_rot = np.zeros(NUM_NODES*DOF, dtype=np.float64)
 
         self.BLdrilling = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.Gwx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.Gwy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.KCNLve = np.zeros((NUM_NODES*DOF)**2, dtype=np.float64)
 
     cpdef void update_BL(Quad4Probe self, double xi, double eta):
         r"""
@@ -437,7 +455,7 @@ cdef class Quad4:
         Position of each node in the global stiffness matrix.
     n1, n2, n3, n4 : int
         Node identification number.
-    init_k_KC0, init_k_KG, init_k_M : int
+    init_k_KC0, init_k_KCNL, init_k_KG, init_k_M : int
         Position in the arrays storing the sparse data for the structural
         matrices.
     init_k_KA_beta, init_k_KA_gamma, init_k_CA : int
@@ -450,7 +468,7 @@ cdef class Quad4:
     cdef public int eid, pid
     cdef public int n1, n2, n3, n4
     cdef public int c1, c2, c3, c4
-    cdef public int init_k_KC0, init_k_KG, init_k_M
+    cdef public int init_k_KC0, init_k_KCNL, init_k_KG, init_k_M
     cdef public int init_k_KA_beta, init_k_KA_gamma, init_k_CA
     cdef public double area
     cdef public double K6ROT
@@ -471,7 +489,7 @@ cdef class Quad4:
         self.c3 = -1
         self.c4 = -1
         self.init_k_KC0 = 0
-        # self.init_k_KCNL = 0
+        self.init_k_KCNL = 0
         self.init_k_KG = 0
         self.init_k_M = 0
         self.init_k_KA_beta = 0
@@ -1171,7 +1189,7 @@ cdef class Quad4:
                         )
 
 
-    cpdef void update_probe_finte(Quad4 self, ShellProp prop):
+    cpdef void update_probe_finte(Quad4 self, ShellProp prop, int nonlinear=0):
         r"""Update the internal force vector of the probe
 
         The attribute ``finte`` of the object :class:`.Quad4Probe` is updated,
@@ -1188,6 +1206,11 @@ cdef class Quad4:
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
+        nonlinear : int
+            The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
+            value adds the geometrically nonlinear terms of the von Karman strains,
+            for which the exact Jacobian of the internal forces is ``KC0 + KCNL +
+            KG``, see :meth:`.update_KCNL`.
 
         """
         cdef int i, j, ke
@@ -1199,6 +1222,9 @@ cdef class Quad4:
                 for j in range(24):
                     ke = 24*i + j
                     self.probe.finte[i] += self.probe.KC0ve[ke] * self.probe.ue[j]
+
+            if nonlinear:
+                self._update_probe_finte_nonlinear(prop)
         
 
     cpdef void update_KC0(Quad4 self,
@@ -1313,7 +1339,7 @@ cdef class Quad4:
                                     KC0v[k] += r[m][i]*self.probe.KC0ve[ke]*r[n][j]
 
 
-    cpdef void update_fint(Quad4 self, double [::1] fint, ShellProp prop):
+    cpdef void update_fint(Quad4 self, double [::1] fint, ShellProp prop, int nonlinear=0):
         r"""Update the internal force vector
 
         Parameters
@@ -1327,11 +1353,16 @@ cdef class Quad4:
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
+        nonlinear : int
+            The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
+            value adds the geometrically nonlinear terms of the von Karman strains,
+            for which the exact Jacobian of the internal forces is ``KC0 + KCNL +
+            KG``, see :meth:`.update_KCNL`.
 
         """
         cdef double *finte
 
-        self.update_probe_finte(prop)
+        self.update_probe_finte(prop, nonlinear)
 
         with nogil:
             finte = &self.probe.finte[0]
@@ -1360,6 +1391,547 @@ cdef class Quad4:
             fint[3+self.c4] += finte[21]*self.r11 + finte[22]*self.r12 + finte[23]*self.r13
             fint[4+self.c4] += finte[21]*self.r21 + finte[22]*self.r22 + finte[23]*self.r23
             fint[5+self.c4] += finte[21]*self.r31 + finte[22]*self.r32 + finte[23]*self.r33
+
+
+    cdef void _update_AB_element(Quad4 self, ShellProp prop, double *A,
+                                 double *B) noexcept nogil:
+        r"""Laminate matrices A and B in the element coordinate system
+
+        The 3x3 matrices are stored row by row in ``A`` and ``B``, relating the
+        membrane strains and curvatures to the membrane stress resultants,
+        `\{N_{xx}, N_{yy}, N_{xy}\}^T = [A] \{\epsilon\} + [B] \{\kappa\}`.
+
+        They are transformed from the material direction with `[A] = [T]^T
+        [A_{mat}] [T]`, where the columns of `[T]` are the engineering strains in
+        the material direction produced by unit strains in the element direction.
+        `[T]` is the identity when no material direction was defined.
+
+        """
+        cdef int i, j, p, q
+        cdef double m11, m12, m21, m22
+        cdef double T[9]
+        cdef double Amat[9]
+        cdef double Bmat[9]
+
+        # NOTE using self.m12 as a criterion to check if material coordinates
+        #     were defined, as in the other methods
+        if self.m12 == 0:
+            m11 = 1.
+            m12 = 0.
+            m21 = 0.
+            m22 = 1.
+        else:
+            m11 = self.m11
+            m12 = self.m12
+            m21 = self.m21
+            m22 = self.m22
+
+        T[0] = m11*m11
+        T[3] = m12*m12
+        T[6] = 2*m11*m12
+        T[1] = m21*m21
+        T[4] = m22*m22
+        T[7] = 2*m21*m22
+        T[2] = m11*m21
+        T[5] = m12*m22
+        T[8] = m11*m22 + m12*m21
+
+        Amat[0] = prop.A11
+        Amat[1] = prop.A12
+        Amat[2] = prop.A16
+        Amat[3] = prop.A12
+        Amat[4] = prop.A22
+        Amat[5] = prop.A26
+        Amat[6] = prop.A16
+        Amat[7] = prop.A26
+        Amat[8] = prop.A66
+
+        Bmat[0] = prop.B11
+        Bmat[1] = prop.B12
+        Bmat[2] = prop.B16
+        Bmat[3] = prop.B12
+        Bmat[4] = prop.B22
+        Bmat[5] = prop.B26
+        Bmat[6] = prop.B16
+        Bmat[7] = prop.B26
+        Bmat[8] = prop.B66
+
+        for i in range(3):
+            for j in range(3):
+                A[3*i + j] = 0.
+                B[3*i + j] = 0.
+                for p in range(3):
+                    for q in range(3):
+                        A[3*i + j] += T[3*p + i]*Amat[3*p + q]*T[3*q + j]
+                        B[3*i + j] += T[3*p + i]*Bmat[3*p + q]*T[3*q + j]
+
+
+    cdef double _update_probe_BL_G(Quad4 self, double xi,
+                                   double eta) noexcept nogil:
+        r"""Update the probe rows of the linear strains and of the gradient of `w`
+
+        Evaluated at the natural coordinates ``xi, eta``, in element coordinates:
+
+        - ``BLexx, BLeyy, BLgxy``: membrane strains `\epsilon_{xx}, \epsilon_{yy},
+          \gamma_{xy}`
+        - ``BLkxx, BLkyy, BLkxy``: curvatures `\kappa_{xx}, \kappa_{yy},
+          \kappa_{xy}`
+        - ``Gwx, Gwy``: `w_{,x}` and `w_{,y}`
+
+        Returns
+        -------
+        detJ : double
+            Determinant of the Jacobian matrix at ``xi, eta``.
+
+        """
+        cdef int i
+        cdef double x1, x2, x3, x4, y1, y2, y3, y4
+        cdef double J11, J12, J21, J22, detJ
+        cdef double j11, j12, j21, j22
+        cdef double N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
+        cdef double *BLexx
+        cdef double *BLeyy
+        cdef double *BLgxy
+        cdef double *BLkxx
+        cdef double *BLkyy
+        cdef double *BLkxy
+        cdef double *Gwx
+        cdef double *Gwy
+
+        BLexx = &self.probe.BLexx[0]
+        BLeyy = &self.probe.BLeyy[0]
+        BLgxy = &self.probe.BLgxy[0]
+        BLkxx = &self.probe.BLkxx[0]
+        BLkyy = &self.probe.BLkyy[0]
+        BLkxy = &self.probe.BLkxy[0]
+        Gwx = &self.probe.Gwx[0]
+        Gwy = &self.probe.Gwy[0]
+
+        # NOTE ignoring z in local coordinates
+        x1 = self.probe.xe[0]
+        y1 = self.probe.xe[1]
+        x2 = self.probe.xe[3]
+        y2 = self.probe.xe[4]
+        x3 = self.probe.xe[6]
+        y3 = self.probe.xe[7]
+        x4 = self.probe.xe[9]
+        y4 = self.probe.xe[10]
+
+        J11 = -0.5*x1 + 0.5*x2 + 0.5*(eta + 1)*(0.5*x1 - 0.5*x2 + 0.5*x3 - 0.5*x4)
+        J12 = -0.5*y1 + 0.5*y2 + 0.5*(eta + 1)*(0.5*y1 - 0.5*y2 + 0.5*y3 - 0.5*y4)
+        J21 = -0.5*x1 + 0.5*x4 - 0.25*(-x1 + x2)*(xi + 1) + 0.25*(x3 - x4)*(xi + 1)
+        J22 = -0.5*y1 + 0.5*y4 - 0.25*(xi + 1)*(-y1 + y2) + 0.25*(xi + 1)*(y3 - y4)
+
+        detJ = J11*J22 - J12*J21
+
+        j11 = J22/detJ
+        j12 = -J12/detJ
+        j21 = -J21/detJ
+        j22 = J11/detJ
+
+        N1x = 0.25*j11*(eta - 1) + 0.25*j12*(xi - 1)
+        N2x = -0.25*eta*j11 + 0.25*j11 - 0.25*j12*xi - 0.25*j12
+        N3x = 0.25*j11*(eta + 1) + 0.25*j12*(xi + 1)
+        N4x = -0.25*eta*j11 - 0.25*j11 - 0.25*j12*xi + 0.25*j12
+
+        N1y = 0.25*j21*(eta - 1) + 0.25*j22*(xi - 1)
+        N2y = -0.25*eta*j21 + 0.25*j21 - 0.25*j22*xi - 0.25*j22
+        N3y = 0.25*j21*(eta + 1) + 0.25*j22*(xi + 1)
+        N4y = -0.25*eta*j21 - 0.25*j21 - 0.25*j22*xi + 0.25*j22
+
+        for i in range(24):
+            BLexx[i] = 0.
+            BLeyy[i] = 0.
+            BLgxy[i] = 0.
+            BLkxx[i] = 0.
+            BLkyy[i] = 0.
+            BLkxy[i] = 0.
+            Gwx[i] = 0.
+            Gwy[i] = 0.
+
+        # exx = u,x
+        BLexx[0] = N1x
+        BLexx[6] = N2x
+        BLexx[12] = N3x
+        BLexx[18] = N4x
+
+        # eyy = v,y
+        BLeyy[1] = N1y
+        BLeyy[7] = N2y
+        BLeyy[13] = N3y
+        BLeyy[19] = N4y
+
+        # gxy = u,y + v,x
+        BLgxy[0] = N1y
+        BLgxy[6] = N2y
+        BLgxy[12] = N3y
+        BLgxy[18] = N4y
+        BLgxy[1] = N1x
+        BLgxy[7] = N2x
+        BLgxy[13] = N3x
+        BLgxy[19] = N4x
+
+        # kxx = ry,x
+        BLkxx[4] = N1x
+        BLkxx[10] = N2x
+        BLkxx[16] = N3x
+        BLkxx[22] = N4x
+
+        # kyy = -rx,y
+        BLkyy[3] = -N1y
+        BLkyy[9] = -N2y
+        BLkyy[15] = -N3y
+        BLkyy[21] = -N4y
+
+        # kxy = ry,y - rx,x
+        BLkxy[3] = -N1x
+        BLkxy[9] = -N2x
+        BLkxy[15] = -N3x
+        BLkxy[21] = -N4x
+        BLkxy[4] = N1y
+        BLkxy[10] = N2y
+        BLkxy[16] = N3y
+        BLkxy[22] = N4y
+
+        # w,x
+        Gwx[2] = N1x
+        Gwx[8] = N2x
+        Gwx[14] = N3x
+        Gwx[20] = N4x
+
+        # w,y
+        Gwy[2] = N1y
+        Gwy[8] = N2y
+        Gwy[14] = N3y
+        Gwy[20] = N4y
+
+        return detJ
+
+
+    cdef void _update_probe_KCNLve(Quad4 self, ShellProp prop) noexcept nogil:
+        r"""Update the probe values of the nonlinear constitutive stiffness matrix
+
+        The attribute ``KCNLve`` of the :class:`.Quad4Probe` is updated with
+        KCNL = KC0L + KCL0 + KCLL + KGNL in element coordinates, stored row by
+        row and evaluated at the displacements ``ue`` of the probe. See
+        :meth:`.update_KCNL`.
+
+        """
+        cdef int i, j, a
+        cdef int pti, ptj
+        cdef double xi, eta
+        cdef double points[2]
+        cdef double wij, detJ, w_x, w_y
+        cdef double A[9]
+        cdef double B[9]
+        cdef double NNL[3]
+        # NOTE products stored row by row, with 3 rows and NUM_NODES*DOF columns
+        cdef double ABL[72]
+        cdef double BmL[72]
+        cdef double ABmL[72]
+        cdef double *ue
+        cdef double *KCNLve
+        cdef double *BLexx
+        cdef double *BLeyy
+        cdef double *BLgxy
+        cdef double *BLkxx
+        cdef double *BLkyy
+        cdef double *BLkxy
+        cdef double *Gwx
+        cdef double *Gwy
+
+        ue = &self.probe.ue[0]
+        KCNLve = &self.probe.KCNLve[0]
+        BLexx = &self.probe.BLexx[0]
+        BLeyy = &self.probe.BLeyy[0]
+        BLgxy = &self.probe.BLgxy[0]
+        BLkxx = &self.probe.BLkxx[0]
+        BLkyy = &self.probe.BLkyy[0]
+        BLkxy = &self.probe.BLkxy[0]
+        Gwx = &self.probe.Gwx[0]
+        Gwy = &self.probe.Gwy[0]
+
+        self._update_AB_element(prop, A, B)
+
+        for i in range(24*24):
+            KCNLve[i] = 0.
+
+        # NOTE same two-point Gauss-Legendre quadrature as in update_KG
+        wij = 1.
+        points[0] = -0.5773502691896257645092
+        points[1] = +0.5773502691896257645092
+
+        for pti in range(2):
+            xi = points[pti]
+            for ptj in range(2):
+                eta = points[ptj]
+                detJ = self._update_probe_BL_G(xi, eta)
+
+                w_x = 0.
+                w_y = 0.
+                for i in range(24):
+                    w_x += Gwx[i]*ue[i]
+                    w_y += Gwy[i]*ue[i]
+
+                # stress resultants of the nonlinear membrane strain,
+                # epsNL = {w_x**2/2, w_y**2/2, w_x*w_y}
+                for a in range(3):
+                    NNL[a] = A[3*a]*w_x*w_x/2. + A[3*a + 1]*w_y*w_y/2. + A[3*a + 2]*w_x*w_y
+
+                # BmL, the variation of the nonlinear membrane strain, and the products
+                # A*Bm + B*Bb and A*BmL, all stored row by row with 3 rows
+                for i in range(24):
+                    BmL[i] = w_x*Gwx[i]
+                    BmL[24 + i] = w_y*Gwy[i]
+                    BmL[48 + i] = w_x*Gwy[i] + w_y*Gwx[i]
+                    for a in range(3):
+                        ABL[24*a + i] = (A[3*a]*BLexx[i] + A[3*a + 1]*BLeyy[i] + A[3*a + 2]*BLgxy[i]
+                                       + B[3*a]*BLkxx[i] + B[3*a + 1]*BLkyy[i] + B[3*a + 2]*BLkxy[i])
+                        ABmL[24*a + i] = A[3*a]*BmL[i] + A[3*a + 1]*BmL[24 + i] + A[3*a + 2]*BmL[48 + i]
+
+                for i in range(24):
+                    for j in range(24):
+                        KCNLve[24*i + j] += wij*detJ*(
+                            # KC0L = (Bm.T*A + Bb.T*B)*BmL
+                              ABL[i]*BmL[j] + ABL[24 + i]*BmL[24 + j] + ABL[48 + i]*BmL[48 + j]
+                            # KCL0 = BmL.T*(A*Bm + B*Bb)
+                            + BmL[i]*ABL[j] + BmL[24 + i]*ABL[24 + j] + BmL[48 + i]*ABL[48 + j]
+                            # KCLL = BmL.T*A*BmL
+                            + BmL[i]*ABmL[j] + BmL[24 + i]*ABmL[24 + j] + BmL[48 + i]*ABmL[48 + j]
+                            # KGNL = G.T*[NNL]*G
+                            + Gwx[i]*(NNL[0]*Gwx[j] + NNL[2]*Gwy[j])
+                            + Gwy[i]*(NNL[2]*Gwx[j] + NNL[1]*Gwy[j])
+                        )
+
+
+    cdef void _update_probe_finte_nonlinear(Quad4 self,
+                                            ShellProp prop) noexcept nogil:
+        r"""Add the geometrically nonlinear terms to the probe internal forces
+
+        The attribute ``finte`` of the :class:`.Quad4Probe` receives the terms
+        of the von Karman membrane strain `\{\epsilon_{NL}\} = \{w_{,x}^2/2,
+        w_{,y}^2/2, w_{,x} w_{,y}\}^T`, evaluated at the displacements ``ue`` of
+        the probe, such that ``finte`` becomes the gradient of the strain energy
+        whose Hessian is KC0 + KCNL + KG. See :meth:`.update_KCNL`.
+
+        """
+        cdef int i, a
+        cdef int pti, ptj
+        cdef double xi, eta
+        cdef double points[2]
+        cdef double wij, detJ, w_x, w_y
+        cdef double exx, eyy, gxy, kxx, kyy, kxy
+        cdef double A[9]
+        cdef double B[9]
+        cdef double N[3]
+        cdef double NNL[3]
+        cdef double MNL[3]
+        cdef double epsNL[3]
+        cdef double *ue
+        cdef double *finte
+        cdef double *BLexx
+        cdef double *BLeyy
+        cdef double *BLgxy
+        cdef double *BLkxx
+        cdef double *BLkyy
+        cdef double *BLkxy
+        cdef double *Gwx
+        cdef double *Gwy
+
+        ue = &self.probe.ue[0]
+        finte = &self.probe.finte[0]
+        BLexx = &self.probe.BLexx[0]
+        BLeyy = &self.probe.BLeyy[0]
+        BLgxy = &self.probe.BLgxy[0]
+        BLkxx = &self.probe.BLkxx[0]
+        BLkyy = &self.probe.BLkyy[0]
+        BLkxy = &self.probe.BLkxy[0]
+        Gwx = &self.probe.Gwx[0]
+        Gwy = &self.probe.Gwy[0]
+
+        self._update_AB_element(prop, A, B)
+
+        # NOTE same two-point Gauss-Legendre quadrature as in update_KG
+        wij = 1.
+        points[0] = -0.5773502691896257645092
+        points[1] = +0.5773502691896257645092
+
+        for pti in range(2):
+            xi = points[pti]
+            for ptj in range(2):
+                eta = points[ptj]
+                detJ = self._update_probe_BL_G(xi, eta)
+
+                exx = 0.
+                eyy = 0.
+                gxy = 0.
+                kxx = 0.
+                kyy = 0.
+                kxy = 0.
+                w_x = 0.
+                w_y = 0.
+                for i in range(24):
+                    exx += BLexx[i]*ue[i]
+                    eyy += BLeyy[i]*ue[i]
+                    gxy += BLgxy[i]*ue[i]
+                    kxx += BLkxx[i]*ue[i]
+                    kyy += BLkyy[i]*ue[i]
+                    kxy += BLkxy[i]*ue[i]
+                    w_x += Gwx[i]*ue[i]
+                    w_y += Gwy[i]*ue[i]
+
+                epsNL[0] = w_x*w_x/2.
+                epsNL[1] = w_y*w_y/2.
+                epsNL[2] = w_x*w_y
+
+                for a in range(3):
+                    # stress resultants of the linear strains, as in update_KG
+                    N[a] = (A[3*a]*exx + A[3*a + 1]*eyy + A[3*a + 2]*gxy
+                          + B[3*a]*kxx + B[3*a + 1]*kyy + B[3*a + 2]*kxy)
+                    # stress resultants of the nonlinear membrane strain
+                    NNL[a] = A[3*a]*epsNL[0] + A[3*a + 1]*epsNL[1] + A[3*a + 2]*epsNL[2]
+                    MNL[a] = B[3*a]*epsNL[0] + B[3*a + 1]*epsNL[1] + B[3*a + 2]*epsNL[2]
+
+                for i in range(24):
+                    finte[i] += wij*detJ*(
+                        # Bm.T*NNL + Bb.T*MNL
+                          BLexx[i]*NNL[0] + BLeyy[i]*NNL[1] + BLgxy[i]*NNL[2]
+                        + BLkxx[i]*MNL[0] + BLkyy[i]*MNL[1] + BLkxy[i]*MNL[2]
+                        # BmL.T*(N + NNL)
+                        + w_x*Gwx[i]*(N[0] + NNL[0])
+                        + w_y*Gwy[i]*(N[1] + NNL[1])
+                        + (w_x*Gwy[i] + w_y*Gwx[i])*(N[2] + NNL[2])
+                    )
+
+
+    cpdef void update_KCNL(Quad4 self,
+                           long [::1] KCNLr,
+                           long [::1] KCNLc,
+                           double [::1] KCNLv,
+                           ShellProp prop,
+                           int update_KCNLv_only=0
+                           ):
+        r"""Update sparse vectors for the nonlinear constitutive stiffness matrix KCNL
+
+        Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, built from the von Karman
+        membrane strains
+
+        .. math::
+            \epsilon_{xx} = u_{,x} + \frac{1}{2} w_{,x}^2, \quad
+            \epsilon_{yy} = v_{,y} + \frac{1}{2} w_{,y}^2, \quad
+            \gamma_{xy} = u_{,y} + v_{,x} + w_{,x} w_{,y}
+
+        whose nonlinear part is `\{\epsilon_{NL}\} = \frac{1}{2} [B_{mL}]
+        \{u_e\}`, with `[B_{mL}]` its variation. With `[B_m]` and `[B_b]` the
+        linear membrane and bending strain-displacement matrices, `[G]` the
+        gradient of `w`, and `[A]`, `[B]` the laminate matrices:
+
+        - KC0L = `[B_m]^T [A] [B_{mL}] + [B_b]^T [B] [B_{mL}]`
+        - KCL0 = KC0L`^T`
+        - KCLL = `[B_{mL}]^T [A] [B_{mL}]`
+        - KGNL = `[G]^T [N_{NL}] [G]`, with `\{N_{NL}\} = [A] \{\epsilon_{NL}\}`
+
+        The first three groups are the constitutive terms coupling the linear and
+        the nonlinear parts of the membrane strain. KGNL is geometric, carrying the
+        stress of the nonlinear membrane strain. It is collected here so that
+        :meth:`.update_KG` stays homogeneous of degree one in the displacements,
+        which is what a linear buckling analysis needs. With it here,
+
+        .. math::
+            K_T = K_{C0} + K_{CNL}(u) + K_G(u)
+
+        is the exact Jacobian of the internal forces of :meth:`.update_fint` with
+        ``nonlinear=1``, and a Newton-Raphson iteration built on them converges
+        quadratically. The quadrature of :meth:`.update_KG` is used.
+
+        Before this function is called, the probe :class:`.Quad4Probe` attribute
+        of the :class:`.Quad4` object must be updated using
+        :func:`.update_probe_ue` with the current displacements; and
+        :func:`.update_probe_xe` with the node coordinates.
+
+        Parameters
+        ----------
+        KCNLr : np.array
+            Array to store row positions of sparse values
+        KCNLc : np.array
+            Array to store column positions of sparse values
+        KCNLv : np.array
+            Array to store sparse values
+        prop : :class:`.ShellProp` object
+            Shell property object from where the stiffness and mass attributes are
+            read from.
+        update_KCNLv_only : int
+            The default ``0`` means that the row and column indices ``KCNLr`` and
+            ``KCNLc`` should also be updated. Any other value will only update the
+            stiffness matrix values ``KCNLv``.
+
+        """
+        cdef int i, j, node_i, node_j, k, ke, m, n
+        cdef int c[4]
+        cdef double r[6][6]
+
+        with nogil:
+            # local to global transformation
+            # translation DOFs
+            r[0][0] = self.r11
+            r[0][1] = self.r12
+            r[0][2] = self.r13
+            r[1][0] = self.r21
+            r[1][1] = self.r22
+            r[1][2] = self.r23
+            r[2][0] = self.r31
+            r[2][1] = self.r32
+            r[2][2] = self.r33
+            # rotation DOFs
+            r[0+3][0+3] = self.r11
+            r[0+3][1+3] = self.r12
+            r[0+3][2+3] = self.r13
+            r[1+3][0+3] = self.r21
+            r[1+3][1+3] = self.r22
+            r[1+3][2+3] = self.r23
+            r[2+3][0+3] = self.r31
+            r[2+3][1+3] = self.r32
+            r[2+3][2+3] = self.r33
+            # coupled translation-rotation DOFs
+            for i in range(3):
+                for j in range(3):
+                    r[i][j+3] = 0.
+                    r[i+3][j] = 0.
+
+            if update_KCNLv_only == 0:
+                # positions in the global stiffness matrix
+                c[0] = self.c1
+                c[1] = self.c2
+                c[2] = self.c3
+                c[3] = self.c4
+
+                for node_i in range(NUM_NODES):
+                    for m in range(DOF):
+                        for node_j in range(NUM_NODES):
+                            for n in range(DOF):
+                                k = self.init_k_KCNL + 24*(node_i*DOF + m) + node_j*DOF + n
+                                KCNLr[k] = c[node_i] + m
+                                KCNLc[k] = c[node_j] + n
+
+            self._update_probe_KCNLve(prop)
+
+            # NOTE from element to global coordinates:
+            #
+            # Kg = R @ Ke @ R.T
+            #
+            # in tensor notation:
+            #
+            # Kg_{mn} = r_{mi} * Ke_{ij} * r_{nj}
+            #
+            for node_i in range(NUM_NODES):
+                for m in range(DOF):
+                    for node_j in range(NUM_NODES):
+                        for n in range(DOF):
+                            k = self.init_k_KCNL + 24*(node_i*DOF + m) + node_j*DOF + n
+                            for i in range(DOF):
+                                for j in range(DOF):
+                                    ke = 24*(node_i*DOF + i) + node_j*DOF + j
+                                    KCNLv[k] += r[m][i]*self.probe.KCNLve[ke]*r[n][j]
 
 
     cpdef void update_KG(Quad4 self,

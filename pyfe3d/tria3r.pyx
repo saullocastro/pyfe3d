@@ -134,6 +134,9 @@ cdef class Tria3RData:
     KC0_SPARSE_SIZE, : int
         ``KC0_SPARSE_SIZE = 324``
 
+    KCNL_SPARSE_SIZE, : int
+        ``KCNL_SPARSE_SIZE = 324``
+
     KG_SPARSE_SIZE, : int
         ``KG_SPARSE_SIZE = 81``
 
@@ -142,11 +145,13 @@ cdef class Tria3RData:
 
     """
     cdef public int KC0_SPARSE_SIZE
+    cdef public int KCNL_SPARSE_SIZE
     cdef public int KG_SPARSE_SIZE
     cdef public int M_SPARSE_SIZE
 
     def __cinit__(Tria3RData self):
         self.KC0_SPARSE_SIZE = 324
+        self.KCNL_SPARSE_SIZE = 324
         self.KG_SPARSE_SIZE = 81
         self.M_SPARSE_SIZE = 270
 
@@ -181,16 +186,45 @@ cdef class Tria3RProbe:
     finte, : array-like
         Array of size ``NUM_NODES*DOF=18`` containing the element internal
         forces corresponding to the degrees-of-freedom described by ``ue``.
+    BLexx, BLeyy, BLgxy, BLkxx, BLkyy, BLkxy : array-like
+        Arrays of size ``NUM_NODES*DOF=18`` with the rows of the linear
+        strain-displacement matrix for the membrane strains and curvatures,
+        at the last evaluated integration point.
+    Gwx, Gwy : array-like
+        Arrays of size ``NUM_NODES*DOF=18`` with the rows giving `w_{,x}` and
+        `w_{,y}`, at the last evaluated integration point.
+    KCNLve : array-like
+        Array of size ``(NUM_NODES*DOF)**2=324`` with the nonlinear
+        constitutive stiffness matrix KCNL in element coordinates, stored row
+        by row.
 
     """
     cdef public double [::1] xe
     cdef public double [::1] ue
     cdef public double [::1] finte
+    cdef public double [::1] BLexx
+    cdef public double [::1] BLeyy
+    cdef public double [::1] BLgxy
+    cdef public double [::1] BLkxx
+    cdef public double [::1] BLkyy
+    cdef public double [::1] BLkxy
+    cdef public double [::1] Gwx
+    cdef public double [::1] Gwy
+    cdef public double [::1] KCNLve
 
     def __cinit__(Tria3RProbe self):
         self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
         self.ue = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.finte = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.BLexx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.BLeyy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.BLgxy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.BLkxx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.BLkyy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.BLkxy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.Gwx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.Gwy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.KCNLve = np.zeros((NUM_NODES*DOF)**2, dtype=np.float64)
 
 
 cdef class Tria3R:
@@ -247,7 +281,7 @@ cdef class Tria3R:
         Position of each node in the global stiffness matrix.
     n1, n2, n3: int
         Node identification number.
-    init_k_KC0, init_k_KG, init_k_M : int
+    init_k_KC0, init_k_KCNL, init_k_KG, init_k_M : int
         Position in the arrays storing the sparse data for the structural
         matrices.
     probe, : :class:`.Tria3RProbe` object
@@ -257,7 +291,7 @@ cdef class Tria3R:
     cdef public int eid, pid
     cdef public int n1, n2, n3
     cdef public int c1, c2, c3
-    cdef public int init_k_KC0, init_k_KG, init_k_M
+    cdef public int init_k_KC0, init_k_KCNL, init_k_KG, init_k_M
     cdef public double area
     cdef public double K6ROT
     cdef public double alpha_shear_locking
@@ -276,7 +310,7 @@ cdef class Tria3R:
         self.c2 = -1
         self.c3 = -1
         self.init_k_KC0 = 0
-        # self.init_k_KCNL = 0
+        self.init_k_KCNL = 0
         self.init_k_KG = 0
         self.init_k_M = 0
         self.area = 0
@@ -547,7 +581,8 @@ cdef class Tria3R:
 
 
     cpdef void update_probe_finte(Tria3R self,
-                           ShellProp prop):
+                           ShellProp prop,
+                           int nonlinear=0):
         r"""Update the internal force vector of the probe
 
         The attribute ``finte`` is updated with the :class:`.Tria3RProbe` the
@@ -564,6 +599,11 @@ cdef class Tria3R:
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
+        nonlinear : int
+            The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
+            value adds the geometrically nonlinear terms of the von Karman strains,
+            for which the exact Jacobian of the internal forces is ``KC0 + KCNL +
+            KG``, see :meth:`.update_KCNL`.
 
         """
         cdef double *ue
@@ -945,6 +985,9 @@ cdef class Tria3R:
             finte[15] = KC0e0015*ue[0] + KC0e0115*ue[1] + KC0e0215*ue[2] + KC0e0315*ue[3] + KC0e0415*ue[4] + KC0e0615*ue[6] + KC0e0715*ue[7] + KC0e0815*ue[8] + KC0e0915*ue[9] + KC0e1015*ue[10] + KC0e1215*ue[12] + KC0e1315*ue[13] + KC0e1415*ue[14] + KC0e1515*ue[15] + KC0e1516*ue[16]
             finte[16] = KC0e0016*ue[0] + KC0e0116*ue[1] + KC0e0216*ue[2] + KC0e0316*ue[3] + KC0e0416*ue[4] + KC0e0616*ue[6] + KC0e0716*ue[7] + KC0e0816*ue[8] + KC0e0916*ue[9] + KC0e1016*ue[10] + KC0e1216*ue[12] + KC0e1316*ue[13] + KC0e1416*ue[14] + KC0e1516*ue[15] + KC0e1616*ue[16]
             finte[17] = KC0e0017*ue[0] + KC0e0117*ue[1] + KC0e0517*ue[5] + KC0e0617*ue[6] + KC0e0717*ue[7] + KC0e1117*ue[11] + KC0e1217*ue[12] + KC0e1317*ue[13] + KC0e1717*ue[17]
+
+            if nonlinear:
+                self._update_probe_finte_nonlinear(prop)
 
 
     cpdef void update_KC0(Tria3R self,
@@ -2329,11 +2372,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0202*r13*r33 + r31*(KC0e0000*r11 + KC0e0001*r12) + r32*(KC0e0001*r11 + KC0e0101*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0003*r11 + KC0e0103*r12 + KC0e0203*r13) + r12*(KC0e0004*r11 + KC0e0104*r12 + KC0e0204*r13)
+            KC0v[k] += r11*(KC0e0003*r11 + KC0e0103*r12 + KC0e0203*r13) + r12*(KC0e0004*r11 + KC0e0104*r12 + KC0e0204*r13) + r13*(KC0e0005*r11 + KC0e0105*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0003*r11 + KC0e0103*r12 + KC0e0203*r13) + r22*(KC0e0004*r11 + KC0e0104*r12 + KC0e0204*r13)
+            KC0v[k] += r21*(KC0e0003*r11 + KC0e0103*r12 + KC0e0203*r13) + r22*(KC0e0004*r11 + KC0e0104*r12 + KC0e0204*r13) + r23*(KC0e0005*r11 + KC0e0105*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0003*r11 + KC0e0103*r12 + KC0e0203*r13) + r32*(KC0e0004*r11 + KC0e0104*r12 + KC0e0204*r13)
+            KC0v[k] += r31*(KC0e0003*r11 + KC0e0103*r12 + KC0e0203*r13) + r32*(KC0e0004*r11 + KC0e0104*r12 + KC0e0204*r13) + r33*(KC0e0005*r11 + KC0e0105*r12)
             k += 1
             KC0v[k] += KC0e0208*r13**2 + r11*(KC0e0006*r11 + KC0e0106*r12) + r12*(KC0e0007*r11 + KC0e0107*r12)
             k += 1
@@ -2341,11 +2384,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0208*r13*r33 + r31*(KC0e0006*r11 + KC0e0106*r12) + r32*(KC0e0007*r11 + KC0e0107*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0009*r11 + KC0e0109*r12 + KC0e0209*r13) + r12*(KC0e0010*r11 + KC0e0110*r12 + KC0e0210*r13)
+            KC0v[k] += r11*(KC0e0009*r11 + KC0e0109*r12 + KC0e0209*r13) + r12*(KC0e0010*r11 + KC0e0110*r12 + KC0e0210*r13) + r13*(KC0e0011*r11 + KC0e0111*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0009*r11 + KC0e0109*r12 + KC0e0209*r13) + r22*(KC0e0010*r11 + KC0e0110*r12 + KC0e0210*r13)
+            KC0v[k] += r21*(KC0e0009*r11 + KC0e0109*r12 + KC0e0209*r13) + r22*(KC0e0010*r11 + KC0e0110*r12 + KC0e0210*r13) + r23*(KC0e0011*r11 + KC0e0111*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0009*r11 + KC0e0109*r12 + KC0e0209*r13) + r32*(KC0e0010*r11 + KC0e0110*r12 + KC0e0210*r13)
+            KC0v[k] += r31*(KC0e0009*r11 + KC0e0109*r12 + KC0e0209*r13) + r32*(KC0e0010*r11 + KC0e0110*r12 + KC0e0210*r13) + r33*(KC0e0011*r11 + KC0e0111*r12)
             k += 1
             KC0v[k] += KC0e0214*r13**2 + r11*(KC0e0012*r11 + KC0e0112*r12) + r12*(KC0e0013*r11 + KC0e0113*r12)
             k += 1
@@ -2353,11 +2396,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0214*r13*r33 + r31*(KC0e0012*r11 + KC0e0112*r12) + r32*(KC0e0013*r11 + KC0e0113*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0015*r11 + KC0e0115*r12 + KC0e0215*r13) + r12*(KC0e0016*r11 + KC0e0116*r12 + KC0e0216*r13)
+            KC0v[k] += r11*(KC0e0015*r11 + KC0e0115*r12 + KC0e0215*r13) + r12*(KC0e0016*r11 + KC0e0116*r12 + KC0e0216*r13) + r13*(KC0e0017*r11 + KC0e0117*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0015*r11 + KC0e0115*r12 + KC0e0215*r13) + r22*(KC0e0016*r11 + KC0e0116*r12 + KC0e0216*r13)
+            KC0v[k] += r21*(KC0e0015*r11 + KC0e0115*r12 + KC0e0215*r13) + r22*(KC0e0016*r11 + KC0e0116*r12 + KC0e0216*r13) + r23*(KC0e0017*r11 + KC0e0117*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0015*r11 + KC0e0115*r12 + KC0e0215*r13) + r32*(KC0e0016*r11 + KC0e0116*r12 + KC0e0216*r13)
+            KC0v[k] += r31*(KC0e0015*r11 + KC0e0115*r12 + KC0e0215*r13) + r32*(KC0e0016*r11 + KC0e0116*r12 + KC0e0216*r13) + r33*(KC0e0017*r11 + KC0e0117*r12)
             k += 1
             KC0v[k] += KC0e0202*r13*r23 + r11*(KC0e0000*r21 + KC0e0001*r22) + r12*(KC0e0001*r21 + KC0e0101*r22)
             k += 1
@@ -2365,11 +2408,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0202*r23*r33 + r31*(KC0e0000*r21 + KC0e0001*r22) + r32*(KC0e0001*r21 + KC0e0101*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0003*r21 + KC0e0103*r22 + KC0e0203*r23) + r12*(KC0e0004*r21 + KC0e0104*r22 + KC0e0204*r23)
+            KC0v[k] += r11*(KC0e0003*r21 + KC0e0103*r22 + KC0e0203*r23) + r12*(KC0e0004*r21 + KC0e0104*r22 + KC0e0204*r23) + r13*(KC0e0005*r21 + KC0e0105*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0003*r21 + KC0e0103*r22 + KC0e0203*r23) + r22*(KC0e0004*r21 + KC0e0104*r22 + KC0e0204*r23)
+            KC0v[k] += r21*(KC0e0003*r21 + KC0e0103*r22 + KC0e0203*r23) + r22*(KC0e0004*r21 + KC0e0104*r22 + KC0e0204*r23) + r23*(KC0e0005*r21 + KC0e0105*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0003*r21 + KC0e0103*r22 + KC0e0203*r23) + r32*(KC0e0004*r21 + KC0e0104*r22 + KC0e0204*r23)
+            KC0v[k] += r31*(KC0e0003*r21 + KC0e0103*r22 + KC0e0203*r23) + r32*(KC0e0004*r21 + KC0e0104*r22 + KC0e0204*r23) + r33*(KC0e0005*r21 + KC0e0105*r22)
             k += 1
             KC0v[k] += KC0e0208*r13*r23 + r11*(KC0e0006*r21 + KC0e0106*r22) + r12*(KC0e0007*r21 + KC0e0107*r22)
             k += 1
@@ -2377,11 +2420,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0208*r23*r33 + r31*(KC0e0006*r21 + KC0e0106*r22) + r32*(KC0e0007*r21 + KC0e0107*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0009*r21 + KC0e0109*r22 + KC0e0209*r23) + r12*(KC0e0010*r21 + KC0e0110*r22 + KC0e0210*r23)
+            KC0v[k] += r11*(KC0e0009*r21 + KC0e0109*r22 + KC0e0209*r23) + r12*(KC0e0010*r21 + KC0e0110*r22 + KC0e0210*r23) + r13*(KC0e0011*r21 + KC0e0111*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0009*r21 + KC0e0109*r22 + KC0e0209*r23) + r22*(KC0e0010*r21 + KC0e0110*r22 + KC0e0210*r23)
+            KC0v[k] += r21*(KC0e0009*r21 + KC0e0109*r22 + KC0e0209*r23) + r22*(KC0e0010*r21 + KC0e0110*r22 + KC0e0210*r23) + r23*(KC0e0011*r21 + KC0e0111*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0009*r21 + KC0e0109*r22 + KC0e0209*r23) + r32*(KC0e0010*r21 + KC0e0110*r22 + KC0e0210*r23)
+            KC0v[k] += r31*(KC0e0009*r21 + KC0e0109*r22 + KC0e0209*r23) + r32*(KC0e0010*r21 + KC0e0110*r22 + KC0e0210*r23) + r33*(KC0e0011*r21 + KC0e0111*r22)
             k += 1
             KC0v[k] += KC0e0214*r13*r23 + r11*(KC0e0012*r21 + KC0e0112*r22) + r12*(KC0e0013*r21 + KC0e0113*r22)
             k += 1
@@ -2389,11 +2432,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0214*r23*r33 + r31*(KC0e0012*r21 + KC0e0112*r22) + r32*(KC0e0013*r21 + KC0e0113*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0015*r21 + KC0e0115*r22 + KC0e0215*r23) + r12*(KC0e0016*r21 + KC0e0116*r22 + KC0e0216*r23)
+            KC0v[k] += r11*(KC0e0015*r21 + KC0e0115*r22 + KC0e0215*r23) + r12*(KC0e0016*r21 + KC0e0116*r22 + KC0e0216*r23) + r13*(KC0e0017*r21 + KC0e0117*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0015*r21 + KC0e0115*r22 + KC0e0215*r23) + r22*(KC0e0016*r21 + KC0e0116*r22 + KC0e0216*r23)
+            KC0v[k] += r21*(KC0e0015*r21 + KC0e0115*r22 + KC0e0215*r23) + r22*(KC0e0016*r21 + KC0e0116*r22 + KC0e0216*r23) + r23*(KC0e0017*r21 + KC0e0117*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0015*r21 + KC0e0115*r22 + KC0e0215*r23) + r32*(KC0e0016*r21 + KC0e0116*r22 + KC0e0216*r23)
+            KC0v[k] += r31*(KC0e0015*r21 + KC0e0115*r22 + KC0e0215*r23) + r32*(KC0e0016*r21 + KC0e0116*r22 + KC0e0216*r23) + r33*(KC0e0017*r21 + KC0e0117*r22)
             k += 1
             KC0v[k] += KC0e0202*r13*r33 + r11*(KC0e0000*r31 + KC0e0001*r32) + r12*(KC0e0001*r31 + KC0e0101*r32)
             k += 1
@@ -2401,11 +2444,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0202*r33**2 + r31*(KC0e0000*r31 + KC0e0001*r32) + r32*(KC0e0001*r31 + KC0e0101*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0003*r31 + KC0e0103*r32 + KC0e0203*r33) + r12*(KC0e0004*r31 + KC0e0104*r32 + KC0e0204*r33)
+            KC0v[k] += r11*(KC0e0003*r31 + KC0e0103*r32 + KC0e0203*r33) + r12*(KC0e0004*r31 + KC0e0104*r32 + KC0e0204*r33) + r13*(KC0e0005*r31 + KC0e0105*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0003*r31 + KC0e0103*r32 + KC0e0203*r33) + r22*(KC0e0004*r31 + KC0e0104*r32 + KC0e0204*r33)
+            KC0v[k] += r21*(KC0e0003*r31 + KC0e0103*r32 + KC0e0203*r33) + r22*(KC0e0004*r31 + KC0e0104*r32 + KC0e0204*r33) + r23*(KC0e0005*r31 + KC0e0105*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0003*r31 + KC0e0103*r32 + KC0e0203*r33) + r32*(KC0e0004*r31 + KC0e0104*r32 + KC0e0204*r33)
+            KC0v[k] += r31*(KC0e0003*r31 + KC0e0103*r32 + KC0e0203*r33) + r32*(KC0e0004*r31 + KC0e0104*r32 + KC0e0204*r33) + r33*(KC0e0005*r31 + KC0e0105*r32)
             k += 1
             KC0v[k] += KC0e0208*r13*r33 + r11*(KC0e0006*r31 + KC0e0106*r32) + r12*(KC0e0007*r31 + KC0e0107*r32)
             k += 1
@@ -2413,11 +2456,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0208*r33**2 + r31*(KC0e0006*r31 + KC0e0106*r32) + r32*(KC0e0007*r31 + KC0e0107*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0009*r31 + KC0e0109*r32 + KC0e0209*r33) + r12*(KC0e0010*r31 + KC0e0110*r32 + KC0e0210*r33)
+            KC0v[k] += r11*(KC0e0009*r31 + KC0e0109*r32 + KC0e0209*r33) + r12*(KC0e0010*r31 + KC0e0110*r32 + KC0e0210*r33) + r13*(KC0e0011*r31 + KC0e0111*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0009*r31 + KC0e0109*r32 + KC0e0209*r33) + r22*(KC0e0010*r31 + KC0e0110*r32 + KC0e0210*r33)
+            KC0v[k] += r21*(KC0e0009*r31 + KC0e0109*r32 + KC0e0209*r33) + r22*(KC0e0010*r31 + KC0e0110*r32 + KC0e0210*r33) + r23*(KC0e0011*r31 + KC0e0111*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0009*r31 + KC0e0109*r32 + KC0e0209*r33) + r32*(KC0e0010*r31 + KC0e0110*r32 + KC0e0210*r33)
+            KC0v[k] += r31*(KC0e0009*r31 + KC0e0109*r32 + KC0e0209*r33) + r32*(KC0e0010*r31 + KC0e0110*r32 + KC0e0210*r33) + r33*(KC0e0011*r31 + KC0e0111*r32)
             k += 1
             KC0v[k] += KC0e0214*r13*r33 + r11*(KC0e0012*r31 + KC0e0112*r32) + r12*(KC0e0013*r31 + KC0e0113*r32)
             k += 1
@@ -2425,17 +2468,17 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0214*r33**2 + r31*(KC0e0012*r31 + KC0e0112*r32) + r32*(KC0e0013*r31 + KC0e0113*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0015*r31 + KC0e0115*r32 + KC0e0215*r33) + r12*(KC0e0016*r31 + KC0e0116*r32 + KC0e0216*r33)
+            KC0v[k] += r11*(KC0e0015*r31 + KC0e0115*r32 + KC0e0215*r33) + r12*(KC0e0016*r31 + KC0e0116*r32 + KC0e0216*r33) + r13*(KC0e0017*r31 + KC0e0117*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0015*r31 + KC0e0115*r32 + KC0e0215*r33) + r22*(KC0e0016*r31 + KC0e0116*r32 + KC0e0216*r33)
+            KC0v[k] += r21*(KC0e0015*r31 + KC0e0115*r32 + KC0e0215*r33) + r22*(KC0e0016*r31 + KC0e0116*r32 + KC0e0216*r33) + r23*(KC0e0017*r31 + KC0e0117*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0015*r31 + KC0e0115*r32 + KC0e0215*r33) + r32*(KC0e0016*r31 + KC0e0116*r32 + KC0e0216*r33)
+            KC0v[k] += r31*(KC0e0015*r31 + KC0e0115*r32 + KC0e0215*r33) + r32*(KC0e0016*r31 + KC0e0116*r32 + KC0e0216*r33) + r33*(KC0e0017*r31 + KC0e0117*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0003*r11 + KC0e0004*r12) + r12*(KC0e0103*r11 + KC0e0104*r12) + r13*(KC0e0203*r11 + KC0e0204*r12)
+            KC0v[k] += r11*(KC0e0003*r11 + KC0e0004*r12 + KC0e0005*r13) + r12*(KC0e0103*r11 + KC0e0104*r12 + KC0e0105*r13) + r13*(KC0e0203*r11 + KC0e0204*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0003*r11 + KC0e0004*r12) + r22*(KC0e0103*r11 + KC0e0104*r12) + r23*(KC0e0203*r11 + KC0e0204*r12)
+            KC0v[k] += r21*(KC0e0003*r11 + KC0e0004*r12 + KC0e0005*r13) + r22*(KC0e0103*r11 + KC0e0104*r12 + KC0e0105*r13) + r23*(KC0e0203*r11 + KC0e0204*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0003*r11 + KC0e0004*r12) + r32*(KC0e0103*r11 + KC0e0104*r12) + r33*(KC0e0203*r11 + KC0e0204*r12)
+            KC0v[k] += r31*(KC0e0003*r11 + KC0e0004*r12 + KC0e0005*r13) + r32*(KC0e0103*r11 + KC0e0104*r12 + KC0e0105*r13) + r33*(KC0e0203*r11 + KC0e0204*r12)
             k += 1
             KC0v[k] += KC0e0505*r13**2 + r11*(KC0e0303*r11 + KC0e0304*r12) + r12*(KC0e0304*r11 + KC0e0404*r12)
             k += 1
@@ -2443,35 +2486,35 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0505*r13*r33 + r31*(KC0e0303*r11 + KC0e0304*r12) + r32*(KC0e0304*r11 + KC0e0404*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0306*r11 + KC0e0406*r12) + r12*(KC0e0307*r11 + KC0e0407*r12) + r13*(KC0e0308*r11 + KC0e0408*r12)
+            KC0v[k] += r11*(KC0e0306*r11 + KC0e0406*r12 + KC0e0506*r13) + r12*(KC0e0307*r11 + KC0e0407*r12 + KC0e0507*r13) + r13*(KC0e0308*r11 + KC0e0408*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0306*r11 + KC0e0406*r12) + r22*(KC0e0307*r11 + KC0e0407*r12) + r23*(KC0e0308*r11 + KC0e0408*r12)
+            KC0v[k] += r21*(KC0e0306*r11 + KC0e0406*r12 + KC0e0506*r13) + r22*(KC0e0307*r11 + KC0e0407*r12 + KC0e0507*r13) + r23*(KC0e0308*r11 + KC0e0408*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0306*r11 + KC0e0406*r12) + r32*(KC0e0307*r11 + KC0e0407*r12) + r33*(KC0e0308*r11 + KC0e0408*r12)
+            KC0v[k] += r31*(KC0e0306*r11 + KC0e0406*r12 + KC0e0506*r13) + r32*(KC0e0307*r11 + KC0e0407*r12 + KC0e0507*r13) + r33*(KC0e0308*r11 + KC0e0408*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0309*r11 + KC0e0409*r12) + r12*(KC0e0310*r11 + KC0e0410*r12)
+            KC0v[k] += KC0e0511*r13**2 + r11*(KC0e0309*r11 + KC0e0409*r12) + r12*(KC0e0310*r11 + KC0e0410*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0309*r11 + KC0e0409*r12) + r22*(KC0e0310*r11 + KC0e0410*r12)
+            KC0v[k] += KC0e0511*r13*r23 + r21*(KC0e0309*r11 + KC0e0409*r12) + r22*(KC0e0310*r11 + KC0e0410*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0309*r11 + KC0e0409*r12) + r32*(KC0e0310*r11 + KC0e0410*r12)
+            KC0v[k] += KC0e0511*r13*r33 + r31*(KC0e0309*r11 + KC0e0409*r12) + r32*(KC0e0310*r11 + KC0e0410*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0312*r11 + KC0e0412*r12) + r12*(KC0e0313*r11 + KC0e0413*r12) + r13*(KC0e0314*r11 + KC0e0414*r12)
+            KC0v[k] += r11*(KC0e0312*r11 + KC0e0412*r12 + KC0e0512*r13) + r12*(KC0e0313*r11 + KC0e0413*r12 + KC0e0513*r13) + r13*(KC0e0314*r11 + KC0e0414*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0312*r11 + KC0e0412*r12) + r22*(KC0e0313*r11 + KC0e0413*r12) + r23*(KC0e0314*r11 + KC0e0414*r12)
+            KC0v[k] += r21*(KC0e0312*r11 + KC0e0412*r12 + KC0e0512*r13) + r22*(KC0e0313*r11 + KC0e0413*r12 + KC0e0513*r13) + r23*(KC0e0314*r11 + KC0e0414*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0312*r11 + KC0e0412*r12) + r32*(KC0e0313*r11 + KC0e0413*r12) + r33*(KC0e0314*r11 + KC0e0414*r12)
+            KC0v[k] += r31*(KC0e0312*r11 + KC0e0412*r12 + KC0e0512*r13) + r32*(KC0e0313*r11 + KC0e0413*r12 + KC0e0513*r13) + r33*(KC0e0314*r11 + KC0e0414*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0315*r11 + KC0e0415*r12) + r12*(KC0e0316*r11 + KC0e0416*r12)
+            KC0v[k] += KC0e0517*r13**2 + r11*(KC0e0315*r11 + KC0e0415*r12) + r12*(KC0e0316*r11 + KC0e0416*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0315*r11 + KC0e0415*r12) + r22*(KC0e0316*r11 + KC0e0416*r12)
+            KC0v[k] += KC0e0517*r13*r23 + r21*(KC0e0315*r11 + KC0e0415*r12) + r22*(KC0e0316*r11 + KC0e0416*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0315*r11 + KC0e0415*r12) + r32*(KC0e0316*r11 + KC0e0416*r12)
+            KC0v[k] += KC0e0517*r13*r33 + r31*(KC0e0315*r11 + KC0e0415*r12) + r32*(KC0e0316*r11 + KC0e0416*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0003*r21 + KC0e0004*r22) + r12*(KC0e0103*r21 + KC0e0104*r22) + r13*(KC0e0203*r21 + KC0e0204*r22)
+            KC0v[k] += r11*(KC0e0003*r21 + KC0e0004*r22 + KC0e0005*r23) + r12*(KC0e0103*r21 + KC0e0104*r22 + KC0e0105*r23) + r13*(KC0e0203*r21 + KC0e0204*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0003*r21 + KC0e0004*r22) + r22*(KC0e0103*r21 + KC0e0104*r22) + r23*(KC0e0203*r21 + KC0e0204*r22)
+            KC0v[k] += r21*(KC0e0003*r21 + KC0e0004*r22 + KC0e0005*r23) + r22*(KC0e0103*r21 + KC0e0104*r22 + KC0e0105*r23) + r23*(KC0e0203*r21 + KC0e0204*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0003*r21 + KC0e0004*r22) + r32*(KC0e0103*r21 + KC0e0104*r22) + r33*(KC0e0203*r21 + KC0e0204*r22)
+            KC0v[k] += r31*(KC0e0003*r21 + KC0e0004*r22 + KC0e0005*r23) + r32*(KC0e0103*r21 + KC0e0104*r22 + KC0e0105*r23) + r33*(KC0e0203*r21 + KC0e0204*r22)
             k += 1
             KC0v[k] += KC0e0505*r13*r23 + r11*(KC0e0303*r21 + KC0e0304*r22) + r12*(KC0e0304*r21 + KC0e0404*r22)
             k += 1
@@ -2479,35 +2522,35 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0505*r23*r33 + r31*(KC0e0303*r21 + KC0e0304*r22) + r32*(KC0e0304*r21 + KC0e0404*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0306*r21 + KC0e0406*r22) + r12*(KC0e0307*r21 + KC0e0407*r22) + r13*(KC0e0308*r21 + KC0e0408*r22)
+            KC0v[k] += r11*(KC0e0306*r21 + KC0e0406*r22 + KC0e0506*r23) + r12*(KC0e0307*r21 + KC0e0407*r22 + KC0e0507*r23) + r13*(KC0e0308*r21 + KC0e0408*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0306*r21 + KC0e0406*r22) + r22*(KC0e0307*r21 + KC0e0407*r22) + r23*(KC0e0308*r21 + KC0e0408*r22)
+            KC0v[k] += r21*(KC0e0306*r21 + KC0e0406*r22 + KC0e0506*r23) + r22*(KC0e0307*r21 + KC0e0407*r22 + KC0e0507*r23) + r23*(KC0e0308*r21 + KC0e0408*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0306*r21 + KC0e0406*r22) + r32*(KC0e0307*r21 + KC0e0407*r22) + r33*(KC0e0308*r21 + KC0e0408*r22)
+            KC0v[k] += r31*(KC0e0306*r21 + KC0e0406*r22 + KC0e0506*r23) + r32*(KC0e0307*r21 + KC0e0407*r22 + KC0e0507*r23) + r33*(KC0e0308*r21 + KC0e0408*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0309*r21 + KC0e0409*r22) + r12*(KC0e0310*r21 + KC0e0410*r22)
+            KC0v[k] += KC0e0511*r13*r23 + r11*(KC0e0309*r21 + KC0e0409*r22) + r12*(KC0e0310*r21 + KC0e0410*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0309*r21 + KC0e0409*r22) + r22*(KC0e0310*r21 + KC0e0410*r22)
+            KC0v[k] += KC0e0511*r23**2 + r21*(KC0e0309*r21 + KC0e0409*r22) + r22*(KC0e0310*r21 + KC0e0410*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0309*r21 + KC0e0409*r22) + r32*(KC0e0310*r21 + KC0e0410*r22)
+            KC0v[k] += KC0e0511*r23*r33 + r31*(KC0e0309*r21 + KC0e0409*r22) + r32*(KC0e0310*r21 + KC0e0410*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0312*r21 + KC0e0412*r22) + r12*(KC0e0313*r21 + KC0e0413*r22) + r13*(KC0e0314*r21 + KC0e0414*r22)
+            KC0v[k] += r11*(KC0e0312*r21 + KC0e0412*r22 + KC0e0512*r23) + r12*(KC0e0313*r21 + KC0e0413*r22 + KC0e0513*r23) + r13*(KC0e0314*r21 + KC0e0414*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0312*r21 + KC0e0412*r22) + r22*(KC0e0313*r21 + KC0e0413*r22) + r23*(KC0e0314*r21 + KC0e0414*r22)
+            KC0v[k] += r21*(KC0e0312*r21 + KC0e0412*r22 + KC0e0512*r23) + r22*(KC0e0313*r21 + KC0e0413*r22 + KC0e0513*r23) + r23*(KC0e0314*r21 + KC0e0414*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0312*r21 + KC0e0412*r22) + r32*(KC0e0313*r21 + KC0e0413*r22) + r33*(KC0e0314*r21 + KC0e0414*r22)
+            KC0v[k] += r31*(KC0e0312*r21 + KC0e0412*r22 + KC0e0512*r23) + r32*(KC0e0313*r21 + KC0e0413*r22 + KC0e0513*r23) + r33*(KC0e0314*r21 + KC0e0414*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0315*r21 + KC0e0415*r22) + r12*(KC0e0316*r21 + KC0e0416*r22)
+            KC0v[k] += KC0e0517*r13*r23 + r11*(KC0e0315*r21 + KC0e0415*r22) + r12*(KC0e0316*r21 + KC0e0416*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0315*r21 + KC0e0415*r22) + r22*(KC0e0316*r21 + KC0e0416*r22)
+            KC0v[k] += KC0e0517*r23**2 + r21*(KC0e0315*r21 + KC0e0415*r22) + r22*(KC0e0316*r21 + KC0e0416*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0315*r21 + KC0e0415*r22) + r32*(KC0e0316*r21 + KC0e0416*r22)
+            KC0v[k] += KC0e0517*r23*r33 + r31*(KC0e0315*r21 + KC0e0415*r22) + r32*(KC0e0316*r21 + KC0e0416*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0003*r31 + KC0e0004*r32) + r12*(KC0e0103*r31 + KC0e0104*r32) + r13*(KC0e0203*r31 + KC0e0204*r32)
+            KC0v[k] += r11*(KC0e0003*r31 + KC0e0004*r32 + KC0e0005*r33) + r12*(KC0e0103*r31 + KC0e0104*r32 + KC0e0105*r33) + r13*(KC0e0203*r31 + KC0e0204*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0003*r31 + KC0e0004*r32) + r22*(KC0e0103*r31 + KC0e0104*r32) + r23*(KC0e0203*r31 + KC0e0204*r32)
+            KC0v[k] += r21*(KC0e0003*r31 + KC0e0004*r32 + KC0e0005*r33) + r22*(KC0e0103*r31 + KC0e0104*r32 + KC0e0105*r33) + r23*(KC0e0203*r31 + KC0e0204*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0003*r31 + KC0e0004*r32) + r32*(KC0e0103*r31 + KC0e0104*r32) + r33*(KC0e0203*r31 + KC0e0204*r32)
+            KC0v[k] += r31*(KC0e0003*r31 + KC0e0004*r32 + KC0e0005*r33) + r32*(KC0e0103*r31 + KC0e0104*r32 + KC0e0105*r33) + r33*(KC0e0203*r31 + KC0e0204*r32)
             k += 1
             KC0v[k] += KC0e0505*r13*r33 + r11*(KC0e0303*r31 + KC0e0304*r32) + r12*(KC0e0304*r31 + KC0e0404*r32)
             k += 1
@@ -2515,29 +2558,29 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0505*r33**2 + r31*(KC0e0303*r31 + KC0e0304*r32) + r32*(KC0e0304*r31 + KC0e0404*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0306*r31 + KC0e0406*r32) + r12*(KC0e0307*r31 + KC0e0407*r32) + r13*(KC0e0308*r31 + KC0e0408*r32)
+            KC0v[k] += r11*(KC0e0306*r31 + KC0e0406*r32 + KC0e0506*r33) + r12*(KC0e0307*r31 + KC0e0407*r32 + KC0e0507*r33) + r13*(KC0e0308*r31 + KC0e0408*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0306*r31 + KC0e0406*r32) + r22*(KC0e0307*r31 + KC0e0407*r32) + r23*(KC0e0308*r31 + KC0e0408*r32)
+            KC0v[k] += r21*(KC0e0306*r31 + KC0e0406*r32 + KC0e0506*r33) + r22*(KC0e0307*r31 + KC0e0407*r32 + KC0e0507*r33) + r23*(KC0e0308*r31 + KC0e0408*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0306*r31 + KC0e0406*r32) + r32*(KC0e0307*r31 + KC0e0407*r32) + r33*(KC0e0308*r31 + KC0e0408*r32)
+            KC0v[k] += r31*(KC0e0306*r31 + KC0e0406*r32 + KC0e0506*r33) + r32*(KC0e0307*r31 + KC0e0407*r32 + KC0e0507*r33) + r33*(KC0e0308*r31 + KC0e0408*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0309*r31 + KC0e0409*r32) + r12*(KC0e0310*r31 + KC0e0410*r32)
+            KC0v[k] += KC0e0511*r13*r33 + r11*(KC0e0309*r31 + KC0e0409*r32) + r12*(KC0e0310*r31 + KC0e0410*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0309*r31 + KC0e0409*r32) + r22*(KC0e0310*r31 + KC0e0410*r32)
+            KC0v[k] += KC0e0511*r23*r33 + r21*(KC0e0309*r31 + KC0e0409*r32) + r22*(KC0e0310*r31 + KC0e0410*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0309*r31 + KC0e0409*r32) + r32*(KC0e0310*r31 + KC0e0410*r32)
+            KC0v[k] += KC0e0511*r33**2 + r31*(KC0e0309*r31 + KC0e0409*r32) + r32*(KC0e0310*r31 + KC0e0410*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0312*r31 + KC0e0412*r32) + r12*(KC0e0313*r31 + KC0e0413*r32) + r13*(KC0e0314*r31 + KC0e0414*r32)
+            KC0v[k] += r11*(KC0e0312*r31 + KC0e0412*r32 + KC0e0512*r33) + r12*(KC0e0313*r31 + KC0e0413*r32 + KC0e0513*r33) + r13*(KC0e0314*r31 + KC0e0414*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0312*r31 + KC0e0412*r32) + r22*(KC0e0313*r31 + KC0e0413*r32) + r23*(KC0e0314*r31 + KC0e0414*r32)
+            KC0v[k] += r21*(KC0e0312*r31 + KC0e0412*r32 + KC0e0512*r33) + r22*(KC0e0313*r31 + KC0e0413*r32 + KC0e0513*r33) + r23*(KC0e0314*r31 + KC0e0414*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0312*r31 + KC0e0412*r32) + r32*(KC0e0313*r31 + KC0e0413*r32) + r33*(KC0e0314*r31 + KC0e0414*r32)
+            KC0v[k] += r31*(KC0e0312*r31 + KC0e0412*r32 + KC0e0512*r33) + r32*(KC0e0313*r31 + KC0e0413*r32 + KC0e0513*r33) + r33*(KC0e0314*r31 + KC0e0414*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0315*r31 + KC0e0415*r32) + r12*(KC0e0316*r31 + KC0e0416*r32)
+            KC0v[k] += KC0e0517*r13*r33 + r11*(KC0e0315*r31 + KC0e0415*r32) + r12*(KC0e0316*r31 + KC0e0416*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0315*r31 + KC0e0415*r32) + r22*(KC0e0316*r31 + KC0e0416*r32)
+            KC0v[k] += KC0e0517*r23*r33 + r21*(KC0e0315*r31 + KC0e0415*r32) + r22*(KC0e0316*r31 + KC0e0416*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0315*r31 + KC0e0415*r32) + r32*(KC0e0316*r31 + KC0e0416*r32)
+            KC0v[k] += KC0e0517*r33**2 + r31*(KC0e0315*r31 + KC0e0415*r32) + r32*(KC0e0316*r31 + KC0e0416*r32)
             k += 1
             KC0v[k] += KC0e0208*r13**2 + r11*(KC0e0006*r11 + KC0e0007*r12) + r12*(KC0e0106*r11 + KC0e0107*r12)
             k += 1
@@ -2545,11 +2588,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0208*r13*r33 + r31*(KC0e0006*r11 + KC0e0007*r12) + r32*(KC0e0106*r11 + KC0e0107*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0306*r11 + KC0e0307*r12 + KC0e0308*r13) + r12*(KC0e0406*r11 + KC0e0407*r12 + KC0e0408*r13)
+            KC0v[k] += r11*(KC0e0306*r11 + KC0e0307*r12 + KC0e0308*r13) + r12*(KC0e0406*r11 + KC0e0407*r12 + KC0e0408*r13) + r13*(KC0e0506*r11 + KC0e0507*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0306*r11 + KC0e0307*r12 + KC0e0308*r13) + r22*(KC0e0406*r11 + KC0e0407*r12 + KC0e0408*r13)
+            KC0v[k] += r21*(KC0e0306*r11 + KC0e0307*r12 + KC0e0308*r13) + r22*(KC0e0406*r11 + KC0e0407*r12 + KC0e0408*r13) + r23*(KC0e0506*r11 + KC0e0507*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0306*r11 + KC0e0307*r12 + KC0e0308*r13) + r32*(KC0e0406*r11 + KC0e0407*r12 + KC0e0408*r13)
+            KC0v[k] += r31*(KC0e0306*r11 + KC0e0307*r12 + KC0e0308*r13) + r32*(KC0e0406*r11 + KC0e0407*r12 + KC0e0408*r13) + r33*(KC0e0506*r11 + KC0e0507*r12)
             k += 1
             KC0v[k] += KC0e0808*r13**2 + r11*(KC0e0606*r11 + KC0e0607*r12) + r12*(KC0e0607*r11 + KC0e0707*r12)
             k += 1
@@ -2557,11 +2600,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0808*r13*r33 + r31*(KC0e0606*r11 + KC0e0607*r12) + r32*(KC0e0607*r11 + KC0e0707*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0609*r11 + KC0e0709*r12 + KC0e0809*r13) + r12*(KC0e0610*r11 + KC0e0710*r12 + KC0e0810*r13)
+            KC0v[k] += r11*(KC0e0609*r11 + KC0e0709*r12 + KC0e0809*r13) + r12*(KC0e0610*r11 + KC0e0710*r12 + KC0e0810*r13) + r13*(KC0e0611*r11 + KC0e0711*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0609*r11 + KC0e0709*r12 + KC0e0809*r13) + r22*(KC0e0610*r11 + KC0e0710*r12 + KC0e0810*r13)
+            KC0v[k] += r21*(KC0e0609*r11 + KC0e0709*r12 + KC0e0809*r13) + r22*(KC0e0610*r11 + KC0e0710*r12 + KC0e0810*r13) + r23*(KC0e0611*r11 + KC0e0711*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0609*r11 + KC0e0709*r12 + KC0e0809*r13) + r32*(KC0e0610*r11 + KC0e0710*r12 + KC0e0810*r13)
+            KC0v[k] += r31*(KC0e0609*r11 + KC0e0709*r12 + KC0e0809*r13) + r32*(KC0e0610*r11 + KC0e0710*r12 + KC0e0810*r13) + r33*(KC0e0611*r11 + KC0e0711*r12)
             k += 1
             KC0v[k] += KC0e0814*r13**2 + r11*(KC0e0612*r11 + KC0e0712*r12) + r12*(KC0e0613*r11 + KC0e0713*r12)
             k += 1
@@ -2569,11 +2612,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0814*r13*r33 + r31*(KC0e0612*r11 + KC0e0712*r12) + r32*(KC0e0613*r11 + KC0e0713*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0615*r11 + KC0e0715*r12 + KC0e0815*r13) + r12*(KC0e0616*r11 + KC0e0716*r12 + KC0e0816*r13)
+            KC0v[k] += r11*(KC0e0615*r11 + KC0e0715*r12 + KC0e0815*r13) + r12*(KC0e0616*r11 + KC0e0716*r12 + KC0e0816*r13) + r13*(KC0e0617*r11 + KC0e0717*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0615*r11 + KC0e0715*r12 + KC0e0815*r13) + r22*(KC0e0616*r11 + KC0e0716*r12 + KC0e0816*r13)
+            KC0v[k] += r21*(KC0e0615*r11 + KC0e0715*r12 + KC0e0815*r13) + r22*(KC0e0616*r11 + KC0e0716*r12 + KC0e0816*r13) + r23*(KC0e0617*r11 + KC0e0717*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0615*r11 + KC0e0715*r12 + KC0e0815*r13) + r32*(KC0e0616*r11 + KC0e0716*r12 + KC0e0816*r13)
+            KC0v[k] += r31*(KC0e0615*r11 + KC0e0715*r12 + KC0e0815*r13) + r32*(KC0e0616*r11 + KC0e0716*r12 + KC0e0816*r13) + r33*(KC0e0617*r11 + KC0e0717*r12)
             k += 1
             KC0v[k] += KC0e0208*r13*r23 + r11*(KC0e0006*r21 + KC0e0007*r22) + r12*(KC0e0106*r21 + KC0e0107*r22)
             k += 1
@@ -2581,11 +2624,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0208*r23*r33 + r31*(KC0e0006*r21 + KC0e0007*r22) + r32*(KC0e0106*r21 + KC0e0107*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0306*r21 + KC0e0307*r22 + KC0e0308*r23) + r12*(KC0e0406*r21 + KC0e0407*r22 + KC0e0408*r23)
+            KC0v[k] += r11*(KC0e0306*r21 + KC0e0307*r22 + KC0e0308*r23) + r12*(KC0e0406*r21 + KC0e0407*r22 + KC0e0408*r23) + r13*(KC0e0506*r21 + KC0e0507*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0306*r21 + KC0e0307*r22 + KC0e0308*r23) + r22*(KC0e0406*r21 + KC0e0407*r22 + KC0e0408*r23)
+            KC0v[k] += r21*(KC0e0306*r21 + KC0e0307*r22 + KC0e0308*r23) + r22*(KC0e0406*r21 + KC0e0407*r22 + KC0e0408*r23) + r23*(KC0e0506*r21 + KC0e0507*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0306*r21 + KC0e0307*r22 + KC0e0308*r23) + r32*(KC0e0406*r21 + KC0e0407*r22 + KC0e0408*r23)
+            KC0v[k] += r31*(KC0e0306*r21 + KC0e0307*r22 + KC0e0308*r23) + r32*(KC0e0406*r21 + KC0e0407*r22 + KC0e0408*r23) + r33*(KC0e0506*r21 + KC0e0507*r22)
             k += 1
             KC0v[k] += KC0e0808*r13*r23 + r11*(KC0e0606*r21 + KC0e0607*r22) + r12*(KC0e0607*r21 + KC0e0707*r22)
             k += 1
@@ -2593,11 +2636,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0808*r23*r33 + r31*(KC0e0606*r21 + KC0e0607*r22) + r32*(KC0e0607*r21 + KC0e0707*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0609*r21 + KC0e0709*r22 + KC0e0809*r23) + r12*(KC0e0610*r21 + KC0e0710*r22 + KC0e0810*r23)
+            KC0v[k] += r11*(KC0e0609*r21 + KC0e0709*r22 + KC0e0809*r23) + r12*(KC0e0610*r21 + KC0e0710*r22 + KC0e0810*r23) + r13*(KC0e0611*r21 + KC0e0711*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0609*r21 + KC0e0709*r22 + KC0e0809*r23) + r22*(KC0e0610*r21 + KC0e0710*r22 + KC0e0810*r23)
+            KC0v[k] += r21*(KC0e0609*r21 + KC0e0709*r22 + KC0e0809*r23) + r22*(KC0e0610*r21 + KC0e0710*r22 + KC0e0810*r23) + r23*(KC0e0611*r21 + KC0e0711*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0609*r21 + KC0e0709*r22 + KC0e0809*r23) + r32*(KC0e0610*r21 + KC0e0710*r22 + KC0e0810*r23)
+            KC0v[k] += r31*(KC0e0609*r21 + KC0e0709*r22 + KC0e0809*r23) + r32*(KC0e0610*r21 + KC0e0710*r22 + KC0e0810*r23) + r33*(KC0e0611*r21 + KC0e0711*r22)
             k += 1
             KC0v[k] += KC0e0814*r13*r23 + r11*(KC0e0612*r21 + KC0e0712*r22) + r12*(KC0e0613*r21 + KC0e0713*r22)
             k += 1
@@ -2605,11 +2648,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0814*r23*r33 + r31*(KC0e0612*r21 + KC0e0712*r22) + r32*(KC0e0613*r21 + KC0e0713*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0615*r21 + KC0e0715*r22 + KC0e0815*r23) + r12*(KC0e0616*r21 + KC0e0716*r22 + KC0e0816*r23)
+            KC0v[k] += r11*(KC0e0615*r21 + KC0e0715*r22 + KC0e0815*r23) + r12*(KC0e0616*r21 + KC0e0716*r22 + KC0e0816*r23) + r13*(KC0e0617*r21 + KC0e0717*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0615*r21 + KC0e0715*r22 + KC0e0815*r23) + r22*(KC0e0616*r21 + KC0e0716*r22 + KC0e0816*r23)
+            KC0v[k] += r21*(KC0e0615*r21 + KC0e0715*r22 + KC0e0815*r23) + r22*(KC0e0616*r21 + KC0e0716*r22 + KC0e0816*r23) + r23*(KC0e0617*r21 + KC0e0717*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0615*r21 + KC0e0715*r22 + KC0e0815*r23) + r32*(KC0e0616*r21 + KC0e0716*r22 + KC0e0816*r23)
+            KC0v[k] += r31*(KC0e0615*r21 + KC0e0715*r22 + KC0e0815*r23) + r32*(KC0e0616*r21 + KC0e0716*r22 + KC0e0816*r23) + r33*(KC0e0617*r21 + KC0e0717*r22)
             k += 1
             KC0v[k] += KC0e0208*r13*r33 + r11*(KC0e0006*r31 + KC0e0007*r32) + r12*(KC0e0106*r31 + KC0e0107*r32)
             k += 1
@@ -2617,11 +2660,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0208*r33**2 + r31*(KC0e0006*r31 + KC0e0007*r32) + r32*(KC0e0106*r31 + KC0e0107*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0306*r31 + KC0e0307*r32 + KC0e0308*r33) + r12*(KC0e0406*r31 + KC0e0407*r32 + KC0e0408*r33)
+            KC0v[k] += r11*(KC0e0306*r31 + KC0e0307*r32 + KC0e0308*r33) + r12*(KC0e0406*r31 + KC0e0407*r32 + KC0e0408*r33) + r13*(KC0e0506*r31 + KC0e0507*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0306*r31 + KC0e0307*r32 + KC0e0308*r33) + r22*(KC0e0406*r31 + KC0e0407*r32 + KC0e0408*r33)
+            KC0v[k] += r21*(KC0e0306*r31 + KC0e0307*r32 + KC0e0308*r33) + r22*(KC0e0406*r31 + KC0e0407*r32 + KC0e0408*r33) + r23*(KC0e0506*r31 + KC0e0507*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0306*r31 + KC0e0307*r32 + KC0e0308*r33) + r32*(KC0e0406*r31 + KC0e0407*r32 + KC0e0408*r33)
+            KC0v[k] += r31*(KC0e0306*r31 + KC0e0307*r32 + KC0e0308*r33) + r32*(KC0e0406*r31 + KC0e0407*r32 + KC0e0408*r33) + r33*(KC0e0506*r31 + KC0e0507*r32)
             k += 1
             KC0v[k] += KC0e0808*r13*r33 + r11*(KC0e0606*r31 + KC0e0607*r32) + r12*(KC0e0607*r31 + KC0e0707*r32)
             k += 1
@@ -2629,11 +2672,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0808*r33**2 + r31*(KC0e0606*r31 + KC0e0607*r32) + r32*(KC0e0607*r31 + KC0e0707*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0609*r31 + KC0e0709*r32 + KC0e0809*r33) + r12*(KC0e0610*r31 + KC0e0710*r32 + KC0e0810*r33)
+            KC0v[k] += r11*(KC0e0609*r31 + KC0e0709*r32 + KC0e0809*r33) + r12*(KC0e0610*r31 + KC0e0710*r32 + KC0e0810*r33) + r13*(KC0e0611*r31 + KC0e0711*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0609*r31 + KC0e0709*r32 + KC0e0809*r33) + r22*(KC0e0610*r31 + KC0e0710*r32 + KC0e0810*r33)
+            KC0v[k] += r21*(KC0e0609*r31 + KC0e0709*r32 + KC0e0809*r33) + r22*(KC0e0610*r31 + KC0e0710*r32 + KC0e0810*r33) + r23*(KC0e0611*r31 + KC0e0711*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0609*r31 + KC0e0709*r32 + KC0e0809*r33) + r32*(KC0e0610*r31 + KC0e0710*r32 + KC0e0810*r33)
+            KC0v[k] += r31*(KC0e0609*r31 + KC0e0709*r32 + KC0e0809*r33) + r32*(KC0e0610*r31 + KC0e0710*r32 + KC0e0810*r33) + r33*(KC0e0611*r31 + KC0e0711*r32)
             k += 1
             KC0v[k] += KC0e0814*r13*r33 + r11*(KC0e0612*r31 + KC0e0712*r32) + r12*(KC0e0613*r31 + KC0e0713*r32)
             k += 1
@@ -2641,29 +2684,29 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0814*r33**2 + r31*(KC0e0612*r31 + KC0e0712*r32) + r32*(KC0e0613*r31 + KC0e0713*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0615*r31 + KC0e0715*r32 + KC0e0815*r33) + r12*(KC0e0616*r31 + KC0e0716*r32 + KC0e0816*r33)
+            KC0v[k] += r11*(KC0e0615*r31 + KC0e0715*r32 + KC0e0815*r33) + r12*(KC0e0616*r31 + KC0e0716*r32 + KC0e0816*r33) + r13*(KC0e0617*r31 + KC0e0717*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0615*r31 + KC0e0715*r32 + KC0e0815*r33) + r22*(KC0e0616*r31 + KC0e0716*r32 + KC0e0816*r33)
+            KC0v[k] += r21*(KC0e0615*r31 + KC0e0715*r32 + KC0e0815*r33) + r22*(KC0e0616*r31 + KC0e0716*r32 + KC0e0816*r33) + r23*(KC0e0617*r31 + KC0e0717*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0615*r31 + KC0e0715*r32 + KC0e0815*r33) + r32*(KC0e0616*r31 + KC0e0716*r32 + KC0e0816*r33)
+            KC0v[k] += r31*(KC0e0615*r31 + KC0e0715*r32 + KC0e0815*r33) + r32*(KC0e0616*r31 + KC0e0716*r32 + KC0e0816*r33) + r33*(KC0e0617*r31 + KC0e0717*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0009*r11 + KC0e0010*r12) + r12*(KC0e0109*r11 + KC0e0110*r12) + r13*(KC0e0209*r11 + KC0e0210*r12)
+            KC0v[k] += r11*(KC0e0009*r11 + KC0e0010*r12 + KC0e0011*r13) + r12*(KC0e0109*r11 + KC0e0110*r12 + KC0e0111*r13) + r13*(KC0e0209*r11 + KC0e0210*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0009*r11 + KC0e0010*r12) + r22*(KC0e0109*r11 + KC0e0110*r12) + r23*(KC0e0209*r11 + KC0e0210*r12)
+            KC0v[k] += r21*(KC0e0009*r11 + KC0e0010*r12 + KC0e0011*r13) + r22*(KC0e0109*r11 + KC0e0110*r12 + KC0e0111*r13) + r23*(KC0e0209*r11 + KC0e0210*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0009*r11 + KC0e0010*r12) + r32*(KC0e0109*r11 + KC0e0110*r12) + r33*(KC0e0209*r11 + KC0e0210*r12)
+            KC0v[k] += r31*(KC0e0009*r11 + KC0e0010*r12 + KC0e0011*r13) + r32*(KC0e0109*r11 + KC0e0110*r12 + KC0e0111*r13) + r33*(KC0e0209*r11 + KC0e0210*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0309*r11 + KC0e0310*r12) + r12*(KC0e0409*r11 + KC0e0410*r12)
+            KC0v[k] += KC0e0511*r13**2 + r11*(KC0e0309*r11 + KC0e0310*r12) + r12*(KC0e0409*r11 + KC0e0410*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0309*r11 + KC0e0310*r12) + r22*(KC0e0409*r11 + KC0e0410*r12)
+            KC0v[k] += KC0e0511*r13*r23 + r21*(KC0e0309*r11 + KC0e0310*r12) + r22*(KC0e0409*r11 + KC0e0410*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0309*r11 + KC0e0310*r12) + r32*(KC0e0409*r11 + KC0e0410*r12)
+            KC0v[k] += KC0e0511*r13*r33 + r31*(KC0e0309*r11 + KC0e0310*r12) + r32*(KC0e0409*r11 + KC0e0410*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0609*r11 + KC0e0610*r12) + r12*(KC0e0709*r11 + KC0e0710*r12) + r13*(KC0e0809*r11 + KC0e0810*r12)
+            KC0v[k] += r11*(KC0e0609*r11 + KC0e0610*r12 + KC0e0611*r13) + r12*(KC0e0709*r11 + KC0e0710*r12 + KC0e0711*r13) + r13*(KC0e0809*r11 + KC0e0810*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0609*r11 + KC0e0610*r12) + r22*(KC0e0709*r11 + KC0e0710*r12) + r23*(KC0e0809*r11 + KC0e0810*r12)
+            KC0v[k] += r21*(KC0e0609*r11 + KC0e0610*r12 + KC0e0611*r13) + r22*(KC0e0709*r11 + KC0e0710*r12 + KC0e0711*r13) + r23*(KC0e0809*r11 + KC0e0810*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0609*r11 + KC0e0610*r12) + r32*(KC0e0709*r11 + KC0e0710*r12) + r33*(KC0e0809*r11 + KC0e0810*r12)
+            KC0v[k] += r31*(KC0e0609*r11 + KC0e0610*r12 + KC0e0611*r13) + r32*(KC0e0709*r11 + KC0e0710*r12 + KC0e0711*r13) + r33*(KC0e0809*r11 + KC0e0810*r12)
             k += 1
             KC0v[k] += KC0e1111*r13**2 + r11*(KC0e0909*r11 + KC0e0910*r12) + r12*(KC0e0910*r11 + KC0e1010*r12)
             k += 1
@@ -2671,35 +2714,35 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e1111*r13*r33 + r31*(KC0e0909*r11 + KC0e0910*r12) + r32*(KC0e0910*r11 + KC0e1010*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0912*r11 + KC0e1012*r12) + r12*(KC0e0913*r11 + KC0e1013*r12) + r13*(KC0e0914*r11 + KC0e1014*r12)
+            KC0v[k] += r11*(KC0e0912*r11 + KC0e1012*r12 + KC0e1112*r13) + r12*(KC0e0913*r11 + KC0e1013*r12 + KC0e1113*r13) + r13*(KC0e0914*r11 + KC0e1014*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0912*r11 + KC0e1012*r12) + r22*(KC0e0913*r11 + KC0e1013*r12) + r23*(KC0e0914*r11 + KC0e1014*r12)
+            KC0v[k] += r21*(KC0e0912*r11 + KC0e1012*r12 + KC0e1112*r13) + r22*(KC0e0913*r11 + KC0e1013*r12 + KC0e1113*r13) + r23*(KC0e0914*r11 + KC0e1014*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0912*r11 + KC0e1012*r12) + r32*(KC0e0913*r11 + KC0e1013*r12) + r33*(KC0e0914*r11 + KC0e1014*r12)
+            KC0v[k] += r31*(KC0e0912*r11 + KC0e1012*r12 + KC0e1112*r13) + r32*(KC0e0913*r11 + KC0e1013*r12 + KC0e1113*r13) + r33*(KC0e0914*r11 + KC0e1014*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0915*r11 + KC0e1015*r12) + r12*(KC0e0916*r11 + KC0e1016*r12)
+            KC0v[k] += KC0e1117*r13**2 + r11*(KC0e0915*r11 + KC0e1015*r12) + r12*(KC0e0916*r11 + KC0e1016*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0915*r11 + KC0e1015*r12) + r22*(KC0e0916*r11 + KC0e1016*r12)
+            KC0v[k] += KC0e1117*r13*r23 + r21*(KC0e0915*r11 + KC0e1015*r12) + r22*(KC0e0916*r11 + KC0e1016*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0915*r11 + KC0e1015*r12) + r32*(KC0e0916*r11 + KC0e1016*r12)
+            KC0v[k] += KC0e1117*r13*r33 + r31*(KC0e0915*r11 + KC0e1015*r12) + r32*(KC0e0916*r11 + KC0e1016*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0009*r21 + KC0e0010*r22) + r12*(KC0e0109*r21 + KC0e0110*r22) + r13*(KC0e0209*r21 + KC0e0210*r22)
+            KC0v[k] += r11*(KC0e0009*r21 + KC0e0010*r22 + KC0e0011*r23) + r12*(KC0e0109*r21 + KC0e0110*r22 + KC0e0111*r23) + r13*(KC0e0209*r21 + KC0e0210*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0009*r21 + KC0e0010*r22) + r22*(KC0e0109*r21 + KC0e0110*r22) + r23*(KC0e0209*r21 + KC0e0210*r22)
+            KC0v[k] += r21*(KC0e0009*r21 + KC0e0010*r22 + KC0e0011*r23) + r22*(KC0e0109*r21 + KC0e0110*r22 + KC0e0111*r23) + r23*(KC0e0209*r21 + KC0e0210*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0009*r21 + KC0e0010*r22) + r32*(KC0e0109*r21 + KC0e0110*r22) + r33*(KC0e0209*r21 + KC0e0210*r22)
+            KC0v[k] += r31*(KC0e0009*r21 + KC0e0010*r22 + KC0e0011*r23) + r32*(KC0e0109*r21 + KC0e0110*r22 + KC0e0111*r23) + r33*(KC0e0209*r21 + KC0e0210*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0309*r21 + KC0e0310*r22) + r12*(KC0e0409*r21 + KC0e0410*r22)
+            KC0v[k] += KC0e0511*r13*r23 + r11*(KC0e0309*r21 + KC0e0310*r22) + r12*(KC0e0409*r21 + KC0e0410*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0309*r21 + KC0e0310*r22) + r22*(KC0e0409*r21 + KC0e0410*r22)
+            KC0v[k] += KC0e0511*r23**2 + r21*(KC0e0309*r21 + KC0e0310*r22) + r22*(KC0e0409*r21 + KC0e0410*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0309*r21 + KC0e0310*r22) + r32*(KC0e0409*r21 + KC0e0410*r22)
+            KC0v[k] += KC0e0511*r23*r33 + r31*(KC0e0309*r21 + KC0e0310*r22) + r32*(KC0e0409*r21 + KC0e0410*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0609*r21 + KC0e0610*r22) + r12*(KC0e0709*r21 + KC0e0710*r22) + r13*(KC0e0809*r21 + KC0e0810*r22)
+            KC0v[k] += r11*(KC0e0609*r21 + KC0e0610*r22 + KC0e0611*r23) + r12*(KC0e0709*r21 + KC0e0710*r22 + KC0e0711*r23) + r13*(KC0e0809*r21 + KC0e0810*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0609*r21 + KC0e0610*r22) + r22*(KC0e0709*r21 + KC0e0710*r22) + r23*(KC0e0809*r21 + KC0e0810*r22)
+            KC0v[k] += r21*(KC0e0609*r21 + KC0e0610*r22 + KC0e0611*r23) + r22*(KC0e0709*r21 + KC0e0710*r22 + KC0e0711*r23) + r23*(KC0e0809*r21 + KC0e0810*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0609*r21 + KC0e0610*r22) + r32*(KC0e0709*r21 + KC0e0710*r22) + r33*(KC0e0809*r21 + KC0e0810*r22)
+            KC0v[k] += r31*(KC0e0609*r21 + KC0e0610*r22 + KC0e0611*r23) + r32*(KC0e0709*r21 + KC0e0710*r22 + KC0e0711*r23) + r33*(KC0e0809*r21 + KC0e0810*r22)
             k += 1
             KC0v[k] += KC0e1111*r13*r23 + r11*(KC0e0909*r21 + KC0e0910*r22) + r12*(KC0e0910*r21 + KC0e1010*r22)
             k += 1
@@ -2707,35 +2750,35 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e1111*r23*r33 + r31*(KC0e0909*r21 + KC0e0910*r22) + r32*(KC0e0910*r21 + KC0e1010*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0912*r21 + KC0e1012*r22) + r12*(KC0e0913*r21 + KC0e1013*r22) + r13*(KC0e0914*r21 + KC0e1014*r22)
+            KC0v[k] += r11*(KC0e0912*r21 + KC0e1012*r22 + KC0e1112*r23) + r12*(KC0e0913*r21 + KC0e1013*r22 + KC0e1113*r23) + r13*(KC0e0914*r21 + KC0e1014*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0912*r21 + KC0e1012*r22) + r22*(KC0e0913*r21 + KC0e1013*r22) + r23*(KC0e0914*r21 + KC0e1014*r22)
+            KC0v[k] += r21*(KC0e0912*r21 + KC0e1012*r22 + KC0e1112*r23) + r22*(KC0e0913*r21 + KC0e1013*r22 + KC0e1113*r23) + r23*(KC0e0914*r21 + KC0e1014*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0912*r21 + KC0e1012*r22) + r32*(KC0e0913*r21 + KC0e1013*r22) + r33*(KC0e0914*r21 + KC0e1014*r22)
+            KC0v[k] += r31*(KC0e0912*r21 + KC0e1012*r22 + KC0e1112*r23) + r32*(KC0e0913*r21 + KC0e1013*r22 + KC0e1113*r23) + r33*(KC0e0914*r21 + KC0e1014*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0915*r21 + KC0e1015*r22) + r12*(KC0e0916*r21 + KC0e1016*r22)
+            KC0v[k] += KC0e1117*r13*r23 + r11*(KC0e0915*r21 + KC0e1015*r22) + r12*(KC0e0916*r21 + KC0e1016*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0915*r21 + KC0e1015*r22) + r22*(KC0e0916*r21 + KC0e1016*r22)
+            KC0v[k] += KC0e1117*r23**2 + r21*(KC0e0915*r21 + KC0e1015*r22) + r22*(KC0e0916*r21 + KC0e1016*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0915*r21 + KC0e1015*r22) + r32*(KC0e0916*r21 + KC0e1016*r22)
+            KC0v[k] += KC0e1117*r23*r33 + r31*(KC0e0915*r21 + KC0e1015*r22) + r32*(KC0e0916*r21 + KC0e1016*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0009*r31 + KC0e0010*r32) + r12*(KC0e0109*r31 + KC0e0110*r32) + r13*(KC0e0209*r31 + KC0e0210*r32)
+            KC0v[k] += r11*(KC0e0009*r31 + KC0e0010*r32 + KC0e0011*r33) + r12*(KC0e0109*r31 + KC0e0110*r32 + KC0e0111*r33) + r13*(KC0e0209*r31 + KC0e0210*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0009*r31 + KC0e0010*r32) + r22*(KC0e0109*r31 + KC0e0110*r32) + r23*(KC0e0209*r31 + KC0e0210*r32)
+            KC0v[k] += r21*(KC0e0009*r31 + KC0e0010*r32 + KC0e0011*r33) + r22*(KC0e0109*r31 + KC0e0110*r32 + KC0e0111*r33) + r23*(KC0e0209*r31 + KC0e0210*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0009*r31 + KC0e0010*r32) + r32*(KC0e0109*r31 + KC0e0110*r32) + r33*(KC0e0209*r31 + KC0e0210*r32)
+            KC0v[k] += r31*(KC0e0009*r31 + KC0e0010*r32 + KC0e0011*r33) + r32*(KC0e0109*r31 + KC0e0110*r32 + KC0e0111*r33) + r33*(KC0e0209*r31 + KC0e0210*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0309*r31 + KC0e0310*r32) + r12*(KC0e0409*r31 + KC0e0410*r32)
+            KC0v[k] += KC0e0511*r13*r33 + r11*(KC0e0309*r31 + KC0e0310*r32) + r12*(KC0e0409*r31 + KC0e0410*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0309*r31 + KC0e0310*r32) + r22*(KC0e0409*r31 + KC0e0410*r32)
+            KC0v[k] += KC0e0511*r23*r33 + r21*(KC0e0309*r31 + KC0e0310*r32) + r22*(KC0e0409*r31 + KC0e0410*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0309*r31 + KC0e0310*r32) + r32*(KC0e0409*r31 + KC0e0410*r32)
+            KC0v[k] += KC0e0511*r33**2 + r31*(KC0e0309*r31 + KC0e0310*r32) + r32*(KC0e0409*r31 + KC0e0410*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0609*r31 + KC0e0610*r32) + r12*(KC0e0709*r31 + KC0e0710*r32) + r13*(KC0e0809*r31 + KC0e0810*r32)
+            KC0v[k] += r11*(KC0e0609*r31 + KC0e0610*r32 + KC0e0611*r33) + r12*(KC0e0709*r31 + KC0e0710*r32 + KC0e0711*r33) + r13*(KC0e0809*r31 + KC0e0810*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0609*r31 + KC0e0610*r32) + r22*(KC0e0709*r31 + KC0e0710*r32) + r23*(KC0e0809*r31 + KC0e0810*r32)
+            KC0v[k] += r21*(KC0e0609*r31 + KC0e0610*r32 + KC0e0611*r33) + r22*(KC0e0709*r31 + KC0e0710*r32 + KC0e0711*r33) + r23*(KC0e0809*r31 + KC0e0810*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0609*r31 + KC0e0610*r32) + r32*(KC0e0709*r31 + KC0e0710*r32) + r33*(KC0e0809*r31 + KC0e0810*r32)
+            KC0v[k] += r31*(KC0e0609*r31 + KC0e0610*r32 + KC0e0611*r33) + r32*(KC0e0709*r31 + KC0e0710*r32 + KC0e0711*r33) + r33*(KC0e0809*r31 + KC0e0810*r32)
             k += 1
             KC0v[k] += KC0e1111*r13*r33 + r11*(KC0e0909*r31 + KC0e0910*r32) + r12*(KC0e0910*r31 + KC0e1010*r32)
             k += 1
@@ -2743,17 +2786,17 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e1111*r33**2 + r31*(KC0e0909*r31 + KC0e0910*r32) + r32*(KC0e0910*r31 + KC0e1010*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0912*r31 + KC0e1012*r32) + r12*(KC0e0913*r31 + KC0e1013*r32) + r13*(KC0e0914*r31 + KC0e1014*r32)
+            KC0v[k] += r11*(KC0e0912*r31 + KC0e1012*r32 + KC0e1112*r33) + r12*(KC0e0913*r31 + KC0e1013*r32 + KC0e1113*r33) + r13*(KC0e0914*r31 + KC0e1014*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0912*r31 + KC0e1012*r32) + r22*(KC0e0913*r31 + KC0e1013*r32) + r23*(KC0e0914*r31 + KC0e1014*r32)
+            KC0v[k] += r21*(KC0e0912*r31 + KC0e1012*r32 + KC0e1112*r33) + r22*(KC0e0913*r31 + KC0e1013*r32 + KC0e1113*r33) + r23*(KC0e0914*r31 + KC0e1014*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0912*r31 + KC0e1012*r32) + r32*(KC0e0913*r31 + KC0e1013*r32) + r33*(KC0e0914*r31 + KC0e1014*r32)
+            KC0v[k] += r31*(KC0e0912*r31 + KC0e1012*r32 + KC0e1112*r33) + r32*(KC0e0913*r31 + KC0e1013*r32 + KC0e1113*r33) + r33*(KC0e0914*r31 + KC0e1014*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0915*r31 + KC0e1015*r32) + r12*(KC0e0916*r31 + KC0e1016*r32)
+            KC0v[k] += KC0e1117*r13*r33 + r11*(KC0e0915*r31 + KC0e1015*r32) + r12*(KC0e0916*r31 + KC0e1016*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0915*r31 + KC0e1015*r32) + r22*(KC0e0916*r31 + KC0e1016*r32)
+            KC0v[k] += KC0e1117*r23*r33 + r21*(KC0e0915*r31 + KC0e1015*r32) + r22*(KC0e0916*r31 + KC0e1016*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0915*r31 + KC0e1015*r32) + r32*(KC0e0916*r31 + KC0e1016*r32)
+            KC0v[k] += KC0e1117*r33**2 + r31*(KC0e0915*r31 + KC0e1015*r32) + r32*(KC0e0916*r31 + KC0e1016*r32)
             k += 1
             KC0v[k] += KC0e0214*r13**2 + r11*(KC0e0012*r11 + KC0e0013*r12) + r12*(KC0e0112*r11 + KC0e0113*r12)
             k += 1
@@ -2761,11 +2804,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0214*r13*r33 + r31*(KC0e0012*r11 + KC0e0013*r12) + r32*(KC0e0112*r11 + KC0e0113*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0312*r11 + KC0e0313*r12 + KC0e0314*r13) + r12*(KC0e0412*r11 + KC0e0413*r12 + KC0e0414*r13)
+            KC0v[k] += r11*(KC0e0312*r11 + KC0e0313*r12 + KC0e0314*r13) + r12*(KC0e0412*r11 + KC0e0413*r12 + KC0e0414*r13) + r13*(KC0e0512*r11 + KC0e0513*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0312*r11 + KC0e0313*r12 + KC0e0314*r13) + r22*(KC0e0412*r11 + KC0e0413*r12 + KC0e0414*r13)
+            KC0v[k] += r21*(KC0e0312*r11 + KC0e0313*r12 + KC0e0314*r13) + r22*(KC0e0412*r11 + KC0e0413*r12 + KC0e0414*r13) + r23*(KC0e0512*r11 + KC0e0513*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0312*r11 + KC0e0313*r12 + KC0e0314*r13) + r32*(KC0e0412*r11 + KC0e0413*r12 + KC0e0414*r13)
+            KC0v[k] += r31*(KC0e0312*r11 + KC0e0313*r12 + KC0e0314*r13) + r32*(KC0e0412*r11 + KC0e0413*r12 + KC0e0414*r13) + r33*(KC0e0512*r11 + KC0e0513*r12)
             k += 1
             KC0v[k] += KC0e0814*r13**2 + r11*(KC0e0612*r11 + KC0e0613*r12) + r12*(KC0e0712*r11 + KC0e0713*r12)
             k += 1
@@ -2773,11 +2816,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0814*r13*r33 + r31*(KC0e0612*r11 + KC0e0613*r12) + r32*(KC0e0712*r11 + KC0e0713*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0912*r11 + KC0e0913*r12 + KC0e0914*r13) + r12*(KC0e1012*r11 + KC0e1013*r12 + KC0e1014*r13)
+            KC0v[k] += r11*(KC0e0912*r11 + KC0e0913*r12 + KC0e0914*r13) + r12*(KC0e1012*r11 + KC0e1013*r12 + KC0e1014*r13) + r13*(KC0e1112*r11 + KC0e1113*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0912*r11 + KC0e0913*r12 + KC0e0914*r13) + r22*(KC0e1012*r11 + KC0e1013*r12 + KC0e1014*r13)
+            KC0v[k] += r21*(KC0e0912*r11 + KC0e0913*r12 + KC0e0914*r13) + r22*(KC0e1012*r11 + KC0e1013*r12 + KC0e1014*r13) + r23*(KC0e1112*r11 + KC0e1113*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0912*r11 + KC0e0913*r12 + KC0e0914*r13) + r32*(KC0e1012*r11 + KC0e1013*r12 + KC0e1014*r13)
+            KC0v[k] += r31*(KC0e0912*r11 + KC0e0913*r12 + KC0e0914*r13) + r32*(KC0e1012*r11 + KC0e1013*r12 + KC0e1014*r13) + r33*(KC0e1112*r11 + KC0e1113*r12)
             k += 1
             KC0v[k] += KC0e1414*r13**2 + r11*(KC0e1212*r11 + KC0e1213*r12) + r12*(KC0e1213*r11 + KC0e1313*r12)
             k += 1
@@ -2785,11 +2828,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e1414*r13*r33 + r31*(KC0e1212*r11 + KC0e1213*r12) + r32*(KC0e1213*r11 + KC0e1313*r12)
             k += 1
-            KC0v[k] += r11*(KC0e1215*r11 + KC0e1315*r12 + KC0e1415*r13) + r12*(KC0e1216*r11 + KC0e1316*r12 + KC0e1416*r13)
+            KC0v[k] += r11*(KC0e1215*r11 + KC0e1315*r12 + KC0e1415*r13) + r12*(KC0e1216*r11 + KC0e1316*r12 + KC0e1416*r13) + r13*(KC0e1217*r11 + KC0e1317*r12)
             k += 1
-            KC0v[k] += r21*(KC0e1215*r11 + KC0e1315*r12 + KC0e1415*r13) + r22*(KC0e1216*r11 + KC0e1316*r12 + KC0e1416*r13)
+            KC0v[k] += r21*(KC0e1215*r11 + KC0e1315*r12 + KC0e1415*r13) + r22*(KC0e1216*r11 + KC0e1316*r12 + KC0e1416*r13) + r23*(KC0e1217*r11 + KC0e1317*r12)
             k += 1
-            KC0v[k] += r31*(KC0e1215*r11 + KC0e1315*r12 + KC0e1415*r13) + r32*(KC0e1216*r11 + KC0e1316*r12 + KC0e1416*r13)
+            KC0v[k] += r31*(KC0e1215*r11 + KC0e1315*r12 + KC0e1415*r13) + r32*(KC0e1216*r11 + KC0e1316*r12 + KC0e1416*r13) + r33*(KC0e1217*r11 + KC0e1317*r12)
             k += 1
             KC0v[k] += KC0e0214*r13*r23 + r11*(KC0e0012*r21 + KC0e0013*r22) + r12*(KC0e0112*r21 + KC0e0113*r22)
             k += 1
@@ -2797,11 +2840,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0214*r23*r33 + r31*(KC0e0012*r21 + KC0e0013*r22) + r32*(KC0e0112*r21 + KC0e0113*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0312*r21 + KC0e0313*r22 + KC0e0314*r23) + r12*(KC0e0412*r21 + KC0e0413*r22 + KC0e0414*r23)
+            KC0v[k] += r11*(KC0e0312*r21 + KC0e0313*r22 + KC0e0314*r23) + r12*(KC0e0412*r21 + KC0e0413*r22 + KC0e0414*r23) + r13*(KC0e0512*r21 + KC0e0513*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0312*r21 + KC0e0313*r22 + KC0e0314*r23) + r22*(KC0e0412*r21 + KC0e0413*r22 + KC0e0414*r23)
+            KC0v[k] += r21*(KC0e0312*r21 + KC0e0313*r22 + KC0e0314*r23) + r22*(KC0e0412*r21 + KC0e0413*r22 + KC0e0414*r23) + r23*(KC0e0512*r21 + KC0e0513*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0312*r21 + KC0e0313*r22 + KC0e0314*r23) + r32*(KC0e0412*r21 + KC0e0413*r22 + KC0e0414*r23)
+            KC0v[k] += r31*(KC0e0312*r21 + KC0e0313*r22 + KC0e0314*r23) + r32*(KC0e0412*r21 + KC0e0413*r22 + KC0e0414*r23) + r33*(KC0e0512*r21 + KC0e0513*r22)
             k += 1
             KC0v[k] += KC0e0814*r13*r23 + r11*(KC0e0612*r21 + KC0e0613*r22) + r12*(KC0e0712*r21 + KC0e0713*r22)
             k += 1
@@ -2809,11 +2852,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0814*r23*r33 + r31*(KC0e0612*r21 + KC0e0613*r22) + r32*(KC0e0712*r21 + KC0e0713*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0912*r21 + KC0e0913*r22 + KC0e0914*r23) + r12*(KC0e1012*r21 + KC0e1013*r22 + KC0e1014*r23)
+            KC0v[k] += r11*(KC0e0912*r21 + KC0e0913*r22 + KC0e0914*r23) + r12*(KC0e1012*r21 + KC0e1013*r22 + KC0e1014*r23) + r13*(KC0e1112*r21 + KC0e1113*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0912*r21 + KC0e0913*r22 + KC0e0914*r23) + r22*(KC0e1012*r21 + KC0e1013*r22 + KC0e1014*r23)
+            KC0v[k] += r21*(KC0e0912*r21 + KC0e0913*r22 + KC0e0914*r23) + r22*(KC0e1012*r21 + KC0e1013*r22 + KC0e1014*r23) + r23*(KC0e1112*r21 + KC0e1113*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0912*r21 + KC0e0913*r22 + KC0e0914*r23) + r32*(KC0e1012*r21 + KC0e1013*r22 + KC0e1014*r23)
+            KC0v[k] += r31*(KC0e0912*r21 + KC0e0913*r22 + KC0e0914*r23) + r32*(KC0e1012*r21 + KC0e1013*r22 + KC0e1014*r23) + r33*(KC0e1112*r21 + KC0e1113*r22)
             k += 1
             KC0v[k] += KC0e1414*r13*r23 + r11*(KC0e1212*r21 + KC0e1213*r22) + r12*(KC0e1213*r21 + KC0e1313*r22)
             k += 1
@@ -2821,11 +2864,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e1414*r23*r33 + r31*(KC0e1212*r21 + KC0e1213*r22) + r32*(KC0e1213*r21 + KC0e1313*r22)
             k += 1
-            KC0v[k] += r11*(KC0e1215*r21 + KC0e1315*r22 + KC0e1415*r23) + r12*(KC0e1216*r21 + KC0e1316*r22 + KC0e1416*r23)
+            KC0v[k] += r11*(KC0e1215*r21 + KC0e1315*r22 + KC0e1415*r23) + r12*(KC0e1216*r21 + KC0e1316*r22 + KC0e1416*r23) + r13*(KC0e1217*r21 + KC0e1317*r22)
             k += 1
-            KC0v[k] += r21*(KC0e1215*r21 + KC0e1315*r22 + KC0e1415*r23) + r22*(KC0e1216*r21 + KC0e1316*r22 + KC0e1416*r23)
+            KC0v[k] += r21*(KC0e1215*r21 + KC0e1315*r22 + KC0e1415*r23) + r22*(KC0e1216*r21 + KC0e1316*r22 + KC0e1416*r23) + r23*(KC0e1217*r21 + KC0e1317*r22)
             k += 1
-            KC0v[k] += r31*(KC0e1215*r21 + KC0e1315*r22 + KC0e1415*r23) + r32*(KC0e1216*r21 + KC0e1316*r22 + KC0e1416*r23)
+            KC0v[k] += r31*(KC0e1215*r21 + KC0e1315*r22 + KC0e1415*r23) + r32*(KC0e1216*r21 + KC0e1316*r22 + KC0e1416*r23) + r33*(KC0e1217*r21 + KC0e1317*r22)
             k += 1
             KC0v[k] += KC0e0214*r13*r33 + r11*(KC0e0012*r31 + KC0e0013*r32) + r12*(KC0e0112*r31 + KC0e0113*r32)
             k += 1
@@ -2833,11 +2876,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0214*r33**2 + r31*(KC0e0012*r31 + KC0e0013*r32) + r32*(KC0e0112*r31 + KC0e0113*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0312*r31 + KC0e0313*r32 + KC0e0314*r33) + r12*(KC0e0412*r31 + KC0e0413*r32 + KC0e0414*r33)
+            KC0v[k] += r11*(KC0e0312*r31 + KC0e0313*r32 + KC0e0314*r33) + r12*(KC0e0412*r31 + KC0e0413*r32 + KC0e0414*r33) + r13*(KC0e0512*r31 + KC0e0513*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0312*r31 + KC0e0313*r32 + KC0e0314*r33) + r22*(KC0e0412*r31 + KC0e0413*r32 + KC0e0414*r33)
+            KC0v[k] += r21*(KC0e0312*r31 + KC0e0313*r32 + KC0e0314*r33) + r22*(KC0e0412*r31 + KC0e0413*r32 + KC0e0414*r33) + r23*(KC0e0512*r31 + KC0e0513*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0312*r31 + KC0e0313*r32 + KC0e0314*r33) + r32*(KC0e0412*r31 + KC0e0413*r32 + KC0e0414*r33)
+            KC0v[k] += r31*(KC0e0312*r31 + KC0e0313*r32 + KC0e0314*r33) + r32*(KC0e0412*r31 + KC0e0413*r32 + KC0e0414*r33) + r33*(KC0e0512*r31 + KC0e0513*r32)
             k += 1
             KC0v[k] += KC0e0814*r13*r33 + r11*(KC0e0612*r31 + KC0e0613*r32) + r12*(KC0e0712*r31 + KC0e0713*r32)
             k += 1
@@ -2845,11 +2888,11 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e0814*r33**2 + r31*(KC0e0612*r31 + KC0e0613*r32) + r32*(KC0e0712*r31 + KC0e0713*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0912*r31 + KC0e0913*r32 + KC0e0914*r33) + r12*(KC0e1012*r31 + KC0e1013*r32 + KC0e1014*r33)
+            KC0v[k] += r11*(KC0e0912*r31 + KC0e0913*r32 + KC0e0914*r33) + r12*(KC0e1012*r31 + KC0e1013*r32 + KC0e1014*r33) + r13*(KC0e1112*r31 + KC0e1113*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0912*r31 + KC0e0913*r32 + KC0e0914*r33) + r22*(KC0e1012*r31 + KC0e1013*r32 + KC0e1014*r33)
+            KC0v[k] += r21*(KC0e0912*r31 + KC0e0913*r32 + KC0e0914*r33) + r22*(KC0e1012*r31 + KC0e1013*r32 + KC0e1014*r33) + r23*(KC0e1112*r31 + KC0e1113*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0912*r31 + KC0e0913*r32 + KC0e0914*r33) + r32*(KC0e1012*r31 + KC0e1013*r32 + KC0e1014*r33)
+            KC0v[k] += r31*(KC0e0912*r31 + KC0e0913*r32 + KC0e0914*r33) + r32*(KC0e1012*r31 + KC0e1013*r32 + KC0e1014*r33) + r33*(KC0e1112*r31 + KC0e1113*r32)
             k += 1
             KC0v[k] += KC0e1414*r13*r33 + r11*(KC0e1212*r31 + KC0e1213*r32) + r12*(KC0e1213*r31 + KC0e1313*r32)
             k += 1
@@ -2857,41 +2900,41 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e1414*r33**2 + r31*(KC0e1212*r31 + KC0e1213*r32) + r32*(KC0e1213*r31 + KC0e1313*r32)
             k += 1
-            KC0v[k] += r11*(KC0e1215*r31 + KC0e1315*r32 + KC0e1415*r33) + r12*(KC0e1216*r31 + KC0e1316*r32 + KC0e1416*r33)
+            KC0v[k] += r11*(KC0e1215*r31 + KC0e1315*r32 + KC0e1415*r33) + r12*(KC0e1216*r31 + KC0e1316*r32 + KC0e1416*r33) + r13*(KC0e1217*r31 + KC0e1317*r32)
             k += 1
-            KC0v[k] += r21*(KC0e1215*r31 + KC0e1315*r32 + KC0e1415*r33) + r22*(KC0e1216*r31 + KC0e1316*r32 + KC0e1416*r33)
+            KC0v[k] += r21*(KC0e1215*r31 + KC0e1315*r32 + KC0e1415*r33) + r22*(KC0e1216*r31 + KC0e1316*r32 + KC0e1416*r33) + r23*(KC0e1217*r31 + KC0e1317*r32)
             k += 1
-            KC0v[k] += r31*(KC0e1215*r31 + KC0e1315*r32 + KC0e1415*r33) + r32*(KC0e1216*r31 + KC0e1316*r32 + KC0e1416*r33)
+            KC0v[k] += r31*(KC0e1215*r31 + KC0e1315*r32 + KC0e1415*r33) + r32*(KC0e1216*r31 + KC0e1316*r32 + KC0e1416*r33) + r33*(KC0e1217*r31 + KC0e1317*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0015*r11 + KC0e0016*r12) + r12*(KC0e0115*r11 + KC0e0116*r12) + r13*(KC0e0215*r11 + KC0e0216*r12)
+            KC0v[k] += r11*(KC0e0015*r11 + KC0e0016*r12 + KC0e0017*r13) + r12*(KC0e0115*r11 + KC0e0116*r12 + KC0e0117*r13) + r13*(KC0e0215*r11 + KC0e0216*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0015*r11 + KC0e0016*r12) + r22*(KC0e0115*r11 + KC0e0116*r12) + r23*(KC0e0215*r11 + KC0e0216*r12)
+            KC0v[k] += r21*(KC0e0015*r11 + KC0e0016*r12 + KC0e0017*r13) + r22*(KC0e0115*r11 + KC0e0116*r12 + KC0e0117*r13) + r23*(KC0e0215*r11 + KC0e0216*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0015*r11 + KC0e0016*r12) + r32*(KC0e0115*r11 + KC0e0116*r12) + r33*(KC0e0215*r11 + KC0e0216*r12)
+            KC0v[k] += r31*(KC0e0015*r11 + KC0e0016*r12 + KC0e0017*r13) + r32*(KC0e0115*r11 + KC0e0116*r12 + KC0e0117*r13) + r33*(KC0e0215*r11 + KC0e0216*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0315*r11 + KC0e0316*r12) + r12*(KC0e0415*r11 + KC0e0416*r12)
+            KC0v[k] += KC0e0517*r13**2 + r11*(KC0e0315*r11 + KC0e0316*r12) + r12*(KC0e0415*r11 + KC0e0416*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0315*r11 + KC0e0316*r12) + r22*(KC0e0415*r11 + KC0e0416*r12)
+            KC0v[k] += KC0e0517*r13*r23 + r21*(KC0e0315*r11 + KC0e0316*r12) + r22*(KC0e0415*r11 + KC0e0416*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0315*r11 + KC0e0316*r12) + r32*(KC0e0415*r11 + KC0e0416*r12)
+            KC0v[k] += KC0e0517*r13*r33 + r31*(KC0e0315*r11 + KC0e0316*r12) + r32*(KC0e0415*r11 + KC0e0416*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0615*r11 + KC0e0616*r12) + r12*(KC0e0715*r11 + KC0e0716*r12) + r13*(KC0e0815*r11 + KC0e0816*r12)
+            KC0v[k] += r11*(KC0e0615*r11 + KC0e0616*r12 + KC0e0617*r13) + r12*(KC0e0715*r11 + KC0e0716*r12 + KC0e0717*r13) + r13*(KC0e0815*r11 + KC0e0816*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0615*r11 + KC0e0616*r12) + r22*(KC0e0715*r11 + KC0e0716*r12) + r23*(KC0e0815*r11 + KC0e0816*r12)
+            KC0v[k] += r21*(KC0e0615*r11 + KC0e0616*r12 + KC0e0617*r13) + r22*(KC0e0715*r11 + KC0e0716*r12 + KC0e0717*r13) + r23*(KC0e0815*r11 + KC0e0816*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0615*r11 + KC0e0616*r12) + r32*(KC0e0715*r11 + KC0e0716*r12) + r33*(KC0e0815*r11 + KC0e0816*r12)
+            KC0v[k] += r31*(KC0e0615*r11 + KC0e0616*r12 + KC0e0617*r13) + r32*(KC0e0715*r11 + KC0e0716*r12 + KC0e0717*r13) + r33*(KC0e0815*r11 + KC0e0816*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0915*r11 + KC0e0916*r12) + r12*(KC0e1015*r11 + KC0e1016*r12)
+            KC0v[k] += KC0e1117*r13**2 + r11*(KC0e0915*r11 + KC0e0916*r12) + r12*(KC0e1015*r11 + KC0e1016*r12)
             k += 1
-            KC0v[k] += r21*(KC0e0915*r11 + KC0e0916*r12) + r22*(KC0e1015*r11 + KC0e1016*r12)
+            KC0v[k] += KC0e1117*r13*r23 + r21*(KC0e0915*r11 + KC0e0916*r12) + r22*(KC0e1015*r11 + KC0e1016*r12)
             k += 1
-            KC0v[k] += r31*(KC0e0915*r11 + KC0e0916*r12) + r32*(KC0e1015*r11 + KC0e1016*r12)
+            KC0v[k] += KC0e1117*r13*r33 + r31*(KC0e0915*r11 + KC0e0916*r12) + r32*(KC0e1015*r11 + KC0e1016*r12)
             k += 1
-            KC0v[k] += r11*(KC0e1215*r11 + KC0e1216*r12) + r12*(KC0e1315*r11 + KC0e1316*r12) + r13*(KC0e1415*r11 + KC0e1416*r12)
+            KC0v[k] += r11*(KC0e1215*r11 + KC0e1216*r12 + KC0e1217*r13) + r12*(KC0e1315*r11 + KC0e1316*r12 + KC0e1317*r13) + r13*(KC0e1415*r11 + KC0e1416*r12)
             k += 1
-            KC0v[k] += r21*(KC0e1215*r11 + KC0e1216*r12) + r22*(KC0e1315*r11 + KC0e1316*r12) + r23*(KC0e1415*r11 + KC0e1416*r12)
+            KC0v[k] += r21*(KC0e1215*r11 + KC0e1216*r12 + KC0e1217*r13) + r22*(KC0e1315*r11 + KC0e1316*r12 + KC0e1317*r13) + r23*(KC0e1415*r11 + KC0e1416*r12)
             k += 1
-            KC0v[k] += r31*(KC0e1215*r11 + KC0e1216*r12) + r32*(KC0e1315*r11 + KC0e1316*r12) + r33*(KC0e1415*r11 + KC0e1416*r12)
+            KC0v[k] += r31*(KC0e1215*r11 + KC0e1216*r12 + KC0e1217*r13) + r32*(KC0e1315*r11 + KC0e1316*r12 + KC0e1317*r13) + r33*(KC0e1415*r11 + KC0e1416*r12)
             k += 1
             KC0v[k] += KC0e1717*r13**2 + r11*(KC0e1515*r11 + KC0e1516*r12) + r12*(KC0e1516*r11 + KC0e1616*r12)
             k += 1
@@ -2899,35 +2942,35 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e1717*r13*r33 + r31*(KC0e1515*r11 + KC0e1516*r12) + r32*(KC0e1516*r11 + KC0e1616*r12)
             k += 1
-            KC0v[k] += r11*(KC0e0015*r21 + KC0e0016*r22) + r12*(KC0e0115*r21 + KC0e0116*r22) + r13*(KC0e0215*r21 + KC0e0216*r22)
+            KC0v[k] += r11*(KC0e0015*r21 + KC0e0016*r22 + KC0e0017*r23) + r12*(KC0e0115*r21 + KC0e0116*r22 + KC0e0117*r23) + r13*(KC0e0215*r21 + KC0e0216*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0015*r21 + KC0e0016*r22) + r22*(KC0e0115*r21 + KC0e0116*r22) + r23*(KC0e0215*r21 + KC0e0216*r22)
+            KC0v[k] += r21*(KC0e0015*r21 + KC0e0016*r22 + KC0e0017*r23) + r22*(KC0e0115*r21 + KC0e0116*r22 + KC0e0117*r23) + r23*(KC0e0215*r21 + KC0e0216*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0015*r21 + KC0e0016*r22) + r32*(KC0e0115*r21 + KC0e0116*r22) + r33*(KC0e0215*r21 + KC0e0216*r22)
+            KC0v[k] += r31*(KC0e0015*r21 + KC0e0016*r22 + KC0e0017*r23) + r32*(KC0e0115*r21 + KC0e0116*r22 + KC0e0117*r23) + r33*(KC0e0215*r21 + KC0e0216*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0315*r21 + KC0e0316*r22) + r12*(KC0e0415*r21 + KC0e0416*r22)
+            KC0v[k] += KC0e0517*r13*r23 + r11*(KC0e0315*r21 + KC0e0316*r22) + r12*(KC0e0415*r21 + KC0e0416*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0315*r21 + KC0e0316*r22) + r22*(KC0e0415*r21 + KC0e0416*r22)
+            KC0v[k] += KC0e0517*r23**2 + r21*(KC0e0315*r21 + KC0e0316*r22) + r22*(KC0e0415*r21 + KC0e0416*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0315*r21 + KC0e0316*r22) + r32*(KC0e0415*r21 + KC0e0416*r22)
+            KC0v[k] += KC0e0517*r23*r33 + r31*(KC0e0315*r21 + KC0e0316*r22) + r32*(KC0e0415*r21 + KC0e0416*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0615*r21 + KC0e0616*r22) + r12*(KC0e0715*r21 + KC0e0716*r22) + r13*(KC0e0815*r21 + KC0e0816*r22)
+            KC0v[k] += r11*(KC0e0615*r21 + KC0e0616*r22 + KC0e0617*r23) + r12*(KC0e0715*r21 + KC0e0716*r22 + KC0e0717*r23) + r13*(KC0e0815*r21 + KC0e0816*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0615*r21 + KC0e0616*r22) + r22*(KC0e0715*r21 + KC0e0716*r22) + r23*(KC0e0815*r21 + KC0e0816*r22)
+            KC0v[k] += r21*(KC0e0615*r21 + KC0e0616*r22 + KC0e0617*r23) + r22*(KC0e0715*r21 + KC0e0716*r22 + KC0e0717*r23) + r23*(KC0e0815*r21 + KC0e0816*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0615*r21 + KC0e0616*r22) + r32*(KC0e0715*r21 + KC0e0716*r22) + r33*(KC0e0815*r21 + KC0e0816*r22)
+            KC0v[k] += r31*(KC0e0615*r21 + KC0e0616*r22 + KC0e0617*r23) + r32*(KC0e0715*r21 + KC0e0716*r22 + KC0e0717*r23) + r33*(KC0e0815*r21 + KC0e0816*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0915*r21 + KC0e0916*r22) + r12*(KC0e1015*r21 + KC0e1016*r22)
+            KC0v[k] += KC0e1117*r13*r23 + r11*(KC0e0915*r21 + KC0e0916*r22) + r12*(KC0e1015*r21 + KC0e1016*r22)
             k += 1
-            KC0v[k] += r21*(KC0e0915*r21 + KC0e0916*r22) + r22*(KC0e1015*r21 + KC0e1016*r22)
+            KC0v[k] += KC0e1117*r23**2 + r21*(KC0e0915*r21 + KC0e0916*r22) + r22*(KC0e1015*r21 + KC0e1016*r22)
             k += 1
-            KC0v[k] += r31*(KC0e0915*r21 + KC0e0916*r22) + r32*(KC0e1015*r21 + KC0e1016*r22)
+            KC0v[k] += KC0e1117*r23*r33 + r31*(KC0e0915*r21 + KC0e0916*r22) + r32*(KC0e1015*r21 + KC0e1016*r22)
             k += 1
-            KC0v[k] += r11*(KC0e1215*r21 + KC0e1216*r22) + r12*(KC0e1315*r21 + KC0e1316*r22) + r13*(KC0e1415*r21 + KC0e1416*r22)
+            KC0v[k] += r11*(KC0e1215*r21 + KC0e1216*r22 + KC0e1217*r23) + r12*(KC0e1315*r21 + KC0e1316*r22 + KC0e1317*r23) + r13*(KC0e1415*r21 + KC0e1416*r22)
             k += 1
-            KC0v[k] += r21*(KC0e1215*r21 + KC0e1216*r22) + r22*(KC0e1315*r21 + KC0e1316*r22) + r23*(KC0e1415*r21 + KC0e1416*r22)
+            KC0v[k] += r21*(KC0e1215*r21 + KC0e1216*r22 + KC0e1217*r23) + r22*(KC0e1315*r21 + KC0e1316*r22 + KC0e1317*r23) + r23*(KC0e1415*r21 + KC0e1416*r22)
             k += 1
-            KC0v[k] += r31*(KC0e1215*r21 + KC0e1216*r22) + r32*(KC0e1315*r21 + KC0e1316*r22) + r33*(KC0e1415*r21 + KC0e1416*r22)
+            KC0v[k] += r31*(KC0e1215*r21 + KC0e1216*r22 + KC0e1217*r23) + r32*(KC0e1315*r21 + KC0e1316*r22 + KC0e1317*r23) + r33*(KC0e1415*r21 + KC0e1416*r22)
             k += 1
             KC0v[k] += KC0e1717*r13*r23 + r11*(KC0e1515*r21 + KC0e1516*r22) + r12*(KC0e1516*r21 + KC0e1616*r22)
             k += 1
@@ -2935,35 +2978,35 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e1717*r23*r33 + r31*(KC0e1515*r21 + KC0e1516*r22) + r32*(KC0e1516*r21 + KC0e1616*r22)
             k += 1
-            KC0v[k] += r11*(KC0e0015*r31 + KC0e0016*r32) + r12*(KC0e0115*r31 + KC0e0116*r32) + r13*(KC0e0215*r31 + KC0e0216*r32)
+            KC0v[k] += r11*(KC0e0015*r31 + KC0e0016*r32 + KC0e0017*r33) + r12*(KC0e0115*r31 + KC0e0116*r32 + KC0e0117*r33) + r13*(KC0e0215*r31 + KC0e0216*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0015*r31 + KC0e0016*r32) + r22*(KC0e0115*r31 + KC0e0116*r32) + r23*(KC0e0215*r31 + KC0e0216*r32)
+            KC0v[k] += r21*(KC0e0015*r31 + KC0e0016*r32 + KC0e0017*r33) + r22*(KC0e0115*r31 + KC0e0116*r32 + KC0e0117*r33) + r23*(KC0e0215*r31 + KC0e0216*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0015*r31 + KC0e0016*r32) + r32*(KC0e0115*r31 + KC0e0116*r32) + r33*(KC0e0215*r31 + KC0e0216*r32)
+            KC0v[k] += r31*(KC0e0015*r31 + KC0e0016*r32 + KC0e0017*r33) + r32*(KC0e0115*r31 + KC0e0116*r32 + KC0e0117*r33) + r33*(KC0e0215*r31 + KC0e0216*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0315*r31 + KC0e0316*r32) + r12*(KC0e0415*r31 + KC0e0416*r32)
+            KC0v[k] += KC0e0517*r13*r33 + r11*(KC0e0315*r31 + KC0e0316*r32) + r12*(KC0e0415*r31 + KC0e0416*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0315*r31 + KC0e0316*r32) + r22*(KC0e0415*r31 + KC0e0416*r32)
+            KC0v[k] += KC0e0517*r23*r33 + r21*(KC0e0315*r31 + KC0e0316*r32) + r22*(KC0e0415*r31 + KC0e0416*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0315*r31 + KC0e0316*r32) + r32*(KC0e0415*r31 + KC0e0416*r32)
+            KC0v[k] += KC0e0517*r33**2 + r31*(KC0e0315*r31 + KC0e0316*r32) + r32*(KC0e0415*r31 + KC0e0416*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0615*r31 + KC0e0616*r32) + r12*(KC0e0715*r31 + KC0e0716*r32) + r13*(KC0e0815*r31 + KC0e0816*r32)
+            KC0v[k] += r11*(KC0e0615*r31 + KC0e0616*r32 + KC0e0617*r33) + r12*(KC0e0715*r31 + KC0e0716*r32 + KC0e0717*r33) + r13*(KC0e0815*r31 + KC0e0816*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0615*r31 + KC0e0616*r32) + r22*(KC0e0715*r31 + KC0e0716*r32) + r23*(KC0e0815*r31 + KC0e0816*r32)
+            KC0v[k] += r21*(KC0e0615*r31 + KC0e0616*r32 + KC0e0617*r33) + r22*(KC0e0715*r31 + KC0e0716*r32 + KC0e0717*r33) + r23*(KC0e0815*r31 + KC0e0816*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0615*r31 + KC0e0616*r32) + r32*(KC0e0715*r31 + KC0e0716*r32) + r33*(KC0e0815*r31 + KC0e0816*r32)
+            KC0v[k] += r31*(KC0e0615*r31 + KC0e0616*r32 + KC0e0617*r33) + r32*(KC0e0715*r31 + KC0e0716*r32 + KC0e0717*r33) + r33*(KC0e0815*r31 + KC0e0816*r32)
             k += 1
-            KC0v[k] += r11*(KC0e0915*r31 + KC0e0916*r32) + r12*(KC0e1015*r31 + KC0e1016*r32)
+            KC0v[k] += KC0e1117*r13*r33 + r11*(KC0e0915*r31 + KC0e0916*r32) + r12*(KC0e1015*r31 + KC0e1016*r32)
             k += 1
-            KC0v[k] += r21*(KC0e0915*r31 + KC0e0916*r32) + r22*(KC0e1015*r31 + KC0e1016*r32)
+            KC0v[k] += KC0e1117*r23*r33 + r21*(KC0e0915*r31 + KC0e0916*r32) + r22*(KC0e1015*r31 + KC0e1016*r32)
             k += 1
-            KC0v[k] += r31*(KC0e0915*r31 + KC0e0916*r32) + r32*(KC0e1015*r31 + KC0e1016*r32)
+            KC0v[k] += KC0e1117*r33**2 + r31*(KC0e0915*r31 + KC0e0916*r32) + r32*(KC0e1015*r31 + KC0e1016*r32)
             k += 1
-            KC0v[k] += r11*(KC0e1215*r31 + KC0e1216*r32) + r12*(KC0e1315*r31 + KC0e1316*r32) + r13*(KC0e1415*r31 + KC0e1416*r32)
+            KC0v[k] += r11*(KC0e1215*r31 + KC0e1216*r32 + KC0e1217*r33) + r12*(KC0e1315*r31 + KC0e1316*r32 + KC0e1317*r33) + r13*(KC0e1415*r31 + KC0e1416*r32)
             k += 1
-            KC0v[k] += r21*(KC0e1215*r31 + KC0e1216*r32) + r22*(KC0e1315*r31 + KC0e1316*r32) + r23*(KC0e1415*r31 + KC0e1416*r32)
+            KC0v[k] += r21*(KC0e1215*r31 + KC0e1216*r32 + KC0e1217*r33) + r22*(KC0e1315*r31 + KC0e1316*r32 + KC0e1317*r33) + r23*(KC0e1415*r31 + KC0e1416*r32)
             k += 1
-            KC0v[k] += r31*(KC0e1215*r31 + KC0e1216*r32) + r32*(KC0e1315*r31 + KC0e1316*r32) + r33*(KC0e1415*r31 + KC0e1416*r32)
+            KC0v[k] += r31*(KC0e1215*r31 + KC0e1216*r32 + KC0e1217*r33) + r32*(KC0e1315*r31 + KC0e1316*r32 + KC0e1317*r33) + r33*(KC0e1415*r31 + KC0e1416*r32)
             k += 1
             KC0v[k] += KC0e1717*r13*r33 + r11*(KC0e1515*r31 + KC0e1516*r32) + r12*(KC0e1516*r31 + KC0e1616*r32)
             k += 1
@@ -2974,7 +3017,8 @@ cdef class Tria3R:
 
     cpdef void update_fint(Tria3R self,
                            double [::1] fint,
-                           ShellProp prop):
+                           ShellProp prop,
+                           int nonlinear=0):
         r"""Update the internal force vector
 
         Parameters
@@ -2988,11 +3032,16 @@ cdef class Tria3R:
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
+        nonlinear : int
+            The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
+            value adds the geometrically nonlinear terms of the von Karman strains,
+            for which the exact Jacobian of the internal forces is ``KC0 + KCNL +
+            KG``, see :meth:`.update_KCNL`.
 
         """
         cdef double *finte
 
-        self.update_probe_finte(prop)
+        self.update_probe_finte(prop, nonlinear)
 
         with nogil:
             finte = &self.probe.finte[0]
@@ -3015,6 +3064,500 @@ cdef class Tria3R:
             fint[3+self.c3] += finte[15]*self.r11 + finte[16]*self.r12 + finte[17]*self.r13
             fint[4+self.c3] += finte[15]*self.r21 + finte[16]*self.r22 + finte[17]*self.r23
             fint[5+self.c3] += finte[15]*self.r31 + finte[16]*self.r32 + finte[17]*self.r33
+
+
+    cdef void _update_AB_element(Tria3R self, ShellProp prop, double *A,
+                                 double *B) noexcept nogil:
+        r"""Laminate matrices A and B in the element coordinate system
+
+        The 3x3 matrices are stored row by row in ``A`` and ``B``, relating the
+        membrane strains and curvatures to the membrane stress resultants,
+        `\{N_{xx}, N_{yy}, N_{xy}\}^T = [A] \{\epsilon\} + [B] \{\kappa\}`.
+
+        They are transformed from the material direction with `[A] = [T]^T
+        [A_{mat}] [T]`, where the columns of `[T]` are the engineering strains in
+        the material direction produced by unit strains in the element direction.
+        `[T]` is the identity when no material direction was defined.
+
+        """
+        cdef int i, j, p, q
+        cdef double m11, m12, m21, m22
+        cdef double T[9]
+        cdef double Amat[9]
+        cdef double Bmat[9]
+
+        # NOTE using self.m12 as a criterion to check if material coordinates
+        #     were defined, as in the other methods
+        if self.m12 == 0:
+            m11 = 1.
+            m12 = 0.
+            m21 = 0.
+            m22 = 1.
+        else:
+            m11 = self.m11
+            m12 = self.m12
+            m21 = self.m21
+            m22 = self.m22
+
+        T[0] = m11*m11
+        T[3] = m12*m12
+        T[6] = 2*m11*m12
+        T[1] = m21*m21
+        T[4] = m22*m22
+        T[7] = 2*m21*m22
+        T[2] = m11*m21
+        T[5] = m12*m22
+        T[8] = m11*m22 + m12*m21
+
+        Amat[0] = prop.A11
+        Amat[1] = prop.A12
+        Amat[2] = prop.A16
+        Amat[3] = prop.A12
+        Amat[4] = prop.A22
+        Amat[5] = prop.A26
+        Amat[6] = prop.A16
+        Amat[7] = prop.A26
+        Amat[8] = prop.A66
+
+        Bmat[0] = prop.B11
+        Bmat[1] = prop.B12
+        Bmat[2] = prop.B16
+        Bmat[3] = prop.B12
+        Bmat[4] = prop.B22
+        Bmat[5] = prop.B26
+        Bmat[6] = prop.B16
+        Bmat[7] = prop.B26
+        Bmat[8] = prop.B66
+
+        for i in range(3):
+            for j in range(3):
+                A[3*i + j] = 0.
+                B[3*i + j] = 0.
+                for p in range(3):
+                    for q in range(3):
+                        A[3*i + j] += T[3*p + i]*Amat[3*p + q]*T[3*q + j]
+                        B[3*i + j] += T[3*p + i]*Bmat[3*p + q]*T[3*q + j]
+
+
+    cdef double _update_probe_BL_G(Tria3R self) noexcept nogil:
+        r"""Update the probe rows of the linear strains and of the gradient of `w`
+
+        The rows are constant within the element and are given in element coordinates:
+
+        - ``BLexx, BLeyy, BLgxy``: membrane strains `\epsilon_{xx}, \epsilon_{yy},
+          \gamma_{xy}`
+        - ``BLkxx, BLkyy, BLkxy``: curvatures `\kappa_{xx}, \kappa_{yy},
+          \kappa_{xy}`
+        - ``Gwx, Gwy``: `w_{,x}` and `w_{,y}`
+
+        Returns
+        -------
+        detJ : double
+            Determinant of the Jacobian matrix, ``2*area``.
+
+        """
+        cdef int i
+        cdef double x1, x2, x3, y1, y2, y3
+        cdef double N1x, N2x, N3x, N1y, N2y, N3y
+        cdef double *BLexx
+        cdef double *BLeyy
+        cdef double *BLgxy
+        cdef double *BLkxx
+        cdef double *BLkyy
+        cdef double *BLkxy
+        cdef double *Gwx
+        cdef double *Gwy
+
+        BLexx = &self.probe.BLexx[0]
+        BLeyy = &self.probe.BLeyy[0]
+        BLgxy = &self.probe.BLgxy[0]
+        BLkxx = &self.probe.BLkxx[0]
+        BLkyy = &self.probe.BLkyy[0]
+        BLkxy = &self.probe.BLkxy[0]
+        Gwx = &self.probe.Gwx[0]
+        Gwy = &self.probe.Gwy[0]
+
+        # NOTE ignoring z in local coordinates
+        x1 = self.probe.xe[0]
+        y1 = self.probe.xe[1]
+        x2 = self.probe.xe[3]
+        y2 = self.probe.xe[4]
+        x3 = self.probe.xe[6]
+        y3 = self.probe.xe[7]
+
+        N1x = (y2 - y3)/(2*self.area)
+        N2x = (-y1 + y3)/(2*self.area)
+        N3x = (y1 - y2)/(2*self.area)
+        N1y = (-x2 + x3)/(2*self.area)
+        N2y = (x1 - x3)/(2*self.area)
+        N3y = (-x1 + x2)/(2*self.area)
+
+        for i in range(18):
+            BLexx[i] = 0.
+            BLeyy[i] = 0.
+            BLgxy[i] = 0.
+            BLkxx[i] = 0.
+            BLkyy[i] = 0.
+            BLkxy[i] = 0.
+            Gwx[i] = 0.
+            Gwy[i] = 0.
+
+        # exx = u,x
+        BLexx[0] = N1x
+        BLexx[6] = N2x
+        BLexx[12] = N3x
+
+        # eyy = v,y
+        BLeyy[1] = N1y
+        BLeyy[7] = N2y
+        BLeyy[13] = N3y
+
+        # gxy = u,y + v,x
+        BLgxy[0] = N1y
+        BLgxy[6] = N2y
+        BLgxy[12] = N3y
+        BLgxy[1] = N1x
+        BLgxy[7] = N2x
+        BLgxy[13] = N3x
+
+        # kxx = ry,x
+        BLkxx[4] = N1x
+        BLkxx[10] = N2x
+        BLkxx[16] = N3x
+
+        # kyy = -rx,y
+        BLkyy[3] = -N1y
+        BLkyy[9] = -N2y
+        BLkyy[15] = -N3y
+
+        # kxy = ry,y - rx,x
+        BLkxy[3] = -N1x
+        BLkxy[9] = -N2x
+        BLkxy[15] = -N3x
+        BLkxy[4] = N1y
+        BLkxy[10] = N2y
+        BLkxy[16] = N3y
+
+        # w,x
+        Gwx[2] = N1x
+        Gwx[8] = N2x
+        Gwx[14] = N3x
+
+        # w,y
+        Gwy[2] = N1y
+        Gwy[8] = N2y
+        Gwy[14] = N3y
+
+        return 2*self.area
+
+
+    cdef void _update_probe_KCNLve(Tria3R self, ShellProp prop) noexcept nogil:
+        r"""Update the probe values of the nonlinear constitutive stiffness matrix
+
+        The attribute ``KCNLve`` of the :class:`.Tria3RProbe` is updated with
+        KCNL = KC0L + KCL0 + KCLL + KGNL in element coordinates, stored row by
+        row and evaluated at the displacements ``ue`` of the probe. See
+        :meth:`.update_KCNL`.
+
+        """
+        cdef int i, j, a
+
+        cdef double wij, detJ, w_x, w_y
+        cdef double A[9]
+        cdef double B[9]
+        cdef double NNL[3]
+        # NOTE products stored row by row, with 3 rows and NUM_NODES*DOF columns
+        cdef double ABL[54]
+        cdef double BmL[54]
+        cdef double ABmL[54]
+        cdef double *ue
+        cdef double *KCNLve
+        cdef double *BLexx
+        cdef double *BLeyy
+        cdef double *BLgxy
+        cdef double *BLkxx
+        cdef double *BLkyy
+        cdef double *BLkxy
+        cdef double *Gwx
+        cdef double *Gwy
+
+        ue = &self.probe.ue[0]
+        KCNLve = &self.probe.KCNLve[0]
+        BLexx = &self.probe.BLexx[0]
+        BLeyy = &self.probe.BLeyy[0]
+        BLgxy = &self.probe.BLgxy[0]
+        BLkxx = &self.probe.BLkxx[0]
+        BLkyy = &self.probe.BLkyy[0]
+        BLkxy = &self.probe.BLkxy[0]
+        Gwx = &self.probe.Gwx[0]
+        Gwy = &self.probe.Gwy[0]
+
+        self._update_AB_element(prop, A, B)
+
+        for i in range(18*18):
+            KCNLve[i] = 0.
+
+        # NOTE the strains are constant within the element, one integration point as
+        #     in update_KG
+        wij = 0.5
+        detJ = self._update_probe_BL_G()
+
+        w_x = 0.
+        w_y = 0.
+        for i in range(18):
+            w_x += Gwx[i]*ue[i]
+            w_y += Gwy[i]*ue[i]
+
+        # stress resultants of the nonlinear membrane strain,
+        # epsNL = {w_x**2/2, w_y**2/2, w_x*w_y}
+        for a in range(3):
+            NNL[a] = A[3*a]*w_x*w_x/2. + A[3*a + 1]*w_y*w_y/2. + A[3*a + 2]*w_x*w_y
+
+        # BmL, the variation of the nonlinear membrane strain, and the products
+        # A*Bm + B*Bb and A*BmL, all stored row by row with 3 rows
+        for i in range(18):
+            BmL[i] = w_x*Gwx[i]
+            BmL[18 + i] = w_y*Gwy[i]
+            BmL[36 + i] = w_x*Gwy[i] + w_y*Gwx[i]
+            for a in range(3):
+                ABL[18*a + i] = (A[3*a]*BLexx[i] + A[3*a + 1]*BLeyy[i] + A[3*a + 2]*BLgxy[i]
+                               + B[3*a]*BLkxx[i] + B[3*a + 1]*BLkyy[i] + B[3*a + 2]*BLkxy[i])
+                ABmL[18*a + i] = A[3*a]*BmL[i] + A[3*a + 1]*BmL[18 + i] + A[3*a + 2]*BmL[36 + i]
+
+        for i in range(18):
+            for j in range(18):
+                KCNLve[18*i + j] += wij*detJ*(
+                    # KC0L = (Bm.T*A + Bb.T*B)*BmL
+                      ABL[i]*BmL[j] + ABL[18 + i]*BmL[18 + j] + ABL[36 + i]*BmL[36 + j]
+                    # KCL0 = BmL.T*(A*Bm + B*Bb)
+                    + BmL[i]*ABL[j] + BmL[18 + i]*ABL[18 + j] + BmL[36 + i]*ABL[36 + j]
+                    # KCLL = BmL.T*A*BmL
+                    + BmL[i]*ABmL[j] + BmL[18 + i]*ABmL[18 + j] + BmL[36 + i]*ABmL[36 + j]
+                    # KGNL = G.T*[NNL]*G
+                    + Gwx[i]*(NNL[0]*Gwx[j] + NNL[2]*Gwy[j])
+                    + Gwy[i]*(NNL[2]*Gwx[j] + NNL[1]*Gwy[j])
+                )
+
+
+    cdef void _update_probe_finte_nonlinear(Tria3R self,
+                                            ShellProp prop) noexcept nogil:
+        r"""Add the geometrically nonlinear terms to the probe internal forces
+
+        The attribute ``finte`` of the :class:`.Tria3RProbe` receives the terms
+        of the von Karman membrane strain `\{\epsilon_{NL}\} = \{w_{,x}^2/2,
+        w_{,y}^2/2, w_{,x} w_{,y}\}^T`, evaluated at the displacements ``ue`` of
+        the probe, such that ``finte`` becomes the gradient of the strain energy
+        whose Hessian is KC0 + KCNL + KG. See :meth:`.update_KCNL`.
+
+        """
+        cdef int i, a
+
+        cdef double wij, detJ, w_x, w_y
+        cdef double exx, eyy, gxy, kxx, kyy, kxy
+        cdef double A[9]
+        cdef double B[9]
+        cdef double N[3]
+        cdef double NNL[3]
+        cdef double MNL[3]
+        cdef double epsNL[3]
+        cdef double *ue
+        cdef double *finte
+        cdef double *BLexx
+        cdef double *BLeyy
+        cdef double *BLgxy
+        cdef double *BLkxx
+        cdef double *BLkyy
+        cdef double *BLkxy
+        cdef double *Gwx
+        cdef double *Gwy
+
+        ue = &self.probe.ue[0]
+        finte = &self.probe.finte[0]
+        BLexx = &self.probe.BLexx[0]
+        BLeyy = &self.probe.BLeyy[0]
+        BLgxy = &self.probe.BLgxy[0]
+        BLkxx = &self.probe.BLkxx[0]
+        BLkyy = &self.probe.BLkyy[0]
+        BLkxy = &self.probe.BLkxy[0]
+        Gwx = &self.probe.Gwx[0]
+        Gwy = &self.probe.Gwy[0]
+
+        self._update_AB_element(prop, A, B)
+
+        # NOTE the strains are constant within the element, one integration point as
+        #     in update_KG
+        wij = 0.5
+        detJ = self._update_probe_BL_G()
+
+        exx = 0.
+        eyy = 0.
+        gxy = 0.
+        kxx = 0.
+        kyy = 0.
+        kxy = 0.
+        w_x = 0.
+        w_y = 0.
+        for i in range(18):
+            exx += BLexx[i]*ue[i]
+            eyy += BLeyy[i]*ue[i]
+            gxy += BLgxy[i]*ue[i]
+            kxx += BLkxx[i]*ue[i]
+            kyy += BLkyy[i]*ue[i]
+            kxy += BLkxy[i]*ue[i]
+            w_x += Gwx[i]*ue[i]
+            w_y += Gwy[i]*ue[i]
+
+        epsNL[0] = w_x*w_x/2.
+        epsNL[1] = w_y*w_y/2.
+        epsNL[2] = w_x*w_y
+
+        for a in range(3):
+            # stress resultants of the linear strains, as in update_KG
+            N[a] = (A[3*a]*exx + A[3*a + 1]*eyy + A[3*a + 2]*gxy
+                  + B[3*a]*kxx + B[3*a + 1]*kyy + B[3*a + 2]*kxy)
+            # stress resultants of the nonlinear membrane strain
+            NNL[a] = A[3*a]*epsNL[0] + A[3*a + 1]*epsNL[1] + A[3*a + 2]*epsNL[2]
+            MNL[a] = B[3*a]*epsNL[0] + B[3*a + 1]*epsNL[1] + B[3*a + 2]*epsNL[2]
+
+        for i in range(18):
+            finte[i] += wij*detJ*(
+                # Bm.T*NNL + Bb.T*MNL
+                  BLexx[i]*NNL[0] + BLeyy[i]*NNL[1] + BLgxy[i]*NNL[2]
+                + BLkxx[i]*MNL[0] + BLkyy[i]*MNL[1] + BLkxy[i]*MNL[2]
+                # BmL.T*(N + NNL)
+                + w_x*Gwx[i]*(N[0] + NNL[0])
+                + w_y*Gwy[i]*(N[1] + NNL[1])
+                + (w_x*Gwy[i] + w_y*Gwx[i])*(N[2] + NNL[2])
+            )
+
+
+    cpdef void update_KCNL(Tria3R self,
+                           long [::1] KCNLr,
+                           long [::1] KCNLc,
+                           double [::1] KCNLv,
+                           ShellProp prop,
+                           int update_KCNLv_only=0
+                           ):
+        r"""Update sparse vectors for the nonlinear constitutive stiffness matrix KCNL
+
+        Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, built from the von Karman
+        membrane strains
+
+        .. math::
+            \epsilon_{xx} = u_{,x} + \frac{1}{2} w_{,x}^2, \quad
+            \epsilon_{yy} = v_{,y} + \frac{1}{2} w_{,y}^2, \quad
+            \gamma_{xy} = u_{,y} + v_{,x} + w_{,x} w_{,y}
+
+        whose nonlinear part is `\{\epsilon_{NL}\} = \frac{1}{2} [B_{mL}]
+        \{u_e\}`, with `[B_{mL}]` its variation. With `[B_m]` and `[B_b]` the
+        linear membrane and bending strain-displacement matrices, `[G]` the
+        gradient of `w`, and `[A]`, `[B]` the laminate matrices:
+
+        - KC0L = `[B_m]^T [A] [B_{mL}] + [B_b]^T [B] [B_{mL}]`
+        - KCL0 = KC0L`^T`
+        - KCLL = `[B_{mL}]^T [A] [B_{mL}]`
+        - KGNL = `[G]^T [N_{NL}] [G]`, with `\{N_{NL}\} = [A] \{\epsilon_{NL}\}`
+
+        The first three groups are the constitutive terms coupling the linear and
+        the nonlinear parts of the membrane strain. KGNL is geometric, carrying the
+        stress of the nonlinear membrane strain. It is collected here so that
+        :meth:`.update_KG` stays homogeneous of degree one in the displacements,
+        which is what a linear buckling analysis needs. With it here,
+
+        .. math::
+            K_T = K_{C0} + K_{CNL}(u) + K_G(u)
+
+        is the exact Jacobian of the internal forces of :meth:`.update_fint` with
+        ``nonlinear=1``, and a Newton-Raphson iteration built on them converges
+        quadratically. The quadrature of :meth:`.update_KG` is used.
+
+        Before this function is called, the probe :class:`.Tria3RProbe` attribute
+        of the :class:`.Tria3R` object must be updated using
+        :func:`.update_probe_ue` with the current displacements; and
+        :func:`.update_probe_xe` with the node coordinates.
+
+        Parameters
+        ----------
+        KCNLr : np.array
+            Array to store row positions of sparse values
+        KCNLc : np.array
+            Array to store column positions of sparse values
+        KCNLv : np.array
+            Array to store sparse values
+        prop : :class:`.ShellProp` object
+            Shell property object from where the stiffness and mass attributes are
+            read from.
+        update_KCNLv_only : int
+            The default ``0`` means that the row and column indices ``KCNLr`` and
+            ``KCNLc`` should also be updated. Any other value will only update the
+            stiffness matrix values ``KCNLv``.
+
+        """
+        cdef int i, j, node_i, node_j, k, ke, m, n
+        cdef int c[3]
+        cdef double r[6][6]
+
+        with nogil:
+            # local to global transformation
+            # translation DOFs
+            r[0][0] = self.r11
+            r[0][1] = self.r12
+            r[0][2] = self.r13
+            r[1][0] = self.r21
+            r[1][1] = self.r22
+            r[1][2] = self.r23
+            r[2][0] = self.r31
+            r[2][1] = self.r32
+            r[2][2] = self.r33
+            # rotation DOFs
+            r[0+3][0+3] = self.r11
+            r[0+3][1+3] = self.r12
+            r[0+3][2+3] = self.r13
+            r[1+3][0+3] = self.r21
+            r[1+3][1+3] = self.r22
+            r[1+3][2+3] = self.r23
+            r[2+3][0+3] = self.r31
+            r[2+3][1+3] = self.r32
+            r[2+3][2+3] = self.r33
+            # coupled translation-rotation DOFs
+            for i in range(3):
+                for j in range(3):
+                    r[i][j+3] = 0.
+                    r[i+3][j] = 0.
+
+            if update_KCNLv_only == 0:
+                # positions in the global stiffness matrix
+                c[0] = self.c1
+                c[1] = self.c2
+                c[2] = self.c3
+
+                for node_i in range(NUM_NODES):
+                    for m in range(DOF):
+                        for node_j in range(NUM_NODES):
+                            for n in range(DOF):
+                                k = self.init_k_KCNL + 18*(node_i*DOF + m) + node_j*DOF + n
+                                KCNLr[k] = c[node_i] + m
+                                KCNLc[k] = c[node_j] + n
+
+            self._update_probe_KCNLve(prop)
+
+            # NOTE from element to global coordinates:
+            #
+            # Kg = R @ Ke @ R.T
+            #
+            # in tensor notation:
+            #
+            # Kg_{mn} = r_{mi} * Ke_{ij} * r_{nj}
+            #
+            for node_i in range(NUM_NODES):
+                for m in range(DOF):
+                    for node_j in range(NUM_NODES):
+                        for n in range(DOF):
+                            k = self.init_k_KCNL + 18*(node_i*DOF + m) + node_j*DOF + n
+                            for i in range(DOF):
+                                for j in range(DOF):
+                                    ke = 18*(node_i*DOF + i) + node_j*DOF + j
+                                    KCNLv[k] += r[m][i]*self.probe.KCNLve[ke]*r[n][j]
 
 
     cpdef void update_KG(Tria3R self,
