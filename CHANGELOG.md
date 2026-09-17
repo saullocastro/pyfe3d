@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.9.0 (unreleased)
+## 0.9.0 (2026-09-17)
 
 ### Breaking: transverse shear stiffness now includes the shear correction
 
