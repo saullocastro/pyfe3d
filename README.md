@@ -69,6 +69,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the details of each version.
 
 | Main versions | Changes |
 | - | - |
+| 0.9.0 | Shear correction factors as per Rohwer and Vlachoutsis. |
 | 0.8.0 | KCNL matrix for all elements, with more accurate nonlinear analyses; fixed KC0 and KG for beams; fixed KC0 for Tria3R. |
 | 0.7.0 | Drilling stiffness re-coupled with in-plane rotation using K6ROT; fixed drilling stiffness integration; restored missing `pid` attribute. |
 | 0.6.4 | Internal force vectors (finte) for all elements; fixed drilling stiffness (K6ROT) scaling; added Python 3.14 and removed Python 3.8 support; Linux wheels limited to 64-bit;  Exposed update_probe_finte to Python; new documentation examples. |
