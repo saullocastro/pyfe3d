@@ -608,10 +608,10 @@ cdef class Tria3R:
         cdef int i
         cdef double x1, x2, x3, y1, y2, y3
         cdef double wij, detJ
-        # NOTE ABD in the material direction
-        cdef double A11mat, A12mat, A16mat, A22mat, A26mat, A66mat
-        cdef double B11mat, B12mat, B16mat, B22mat, B26mat, B66mat
-        cdef double D11mat, D12mat, D16mat, D22mat, D26mat, D66mat
+        cdef double Ae[9]
+        cdef double Be[9]
+        cdef double De[9]
+        cdef double Atse[4]
         cdef double A44, A45, A55
         # NOTE ABD in the element direction
         cdef double A11, A12, A16, A22, A26, A66
@@ -649,84 +649,32 @@ cdef class Tria3R:
 
             detJ = 2*self.area
 
-            A11mat = prop.A11
-            A12mat = prop.A12
-            A16mat = prop.A16
-            A22mat = prop.A22
-            A26mat = prop.A26
-            A66mat = prop.A66
-            B11mat = prop.B11
-            B12mat = prop.B12
-            B16mat = prop.B16
-            B22mat = prop.B22
-            B26mat = prop.B26
-            B66mat = prop.B66
-            D11mat = prop.D11
-            D12mat = prop.D12
-            D16mat = prop.D16
-            D22mat = prop.D22
-            D26mat = prop.D26
-            D66mat = prop.D66
+            # NOTE constitutive matrices in the element coordinate system,
+            #      the same function is used by all element methods
+            prop.get_constitutive_element(self.m11, self.m12, self.m21, self.m22, Ae, Be, De, Atse)
+            A11 = Ae[0]
+            A12 = Ae[1]
+            A16 = Ae[2]
+            A22 = Ae[4]
+            A26 = Ae[5]
+            A66 = Ae[8]
+            B11 = Be[0]
+            B12 = Be[1]
+            B16 = Be[2]
+            B22 = Be[4]
+            B26 = Be[5]
+            B66 = Be[8]
+            D11 = De[0]
+            D12 = De[1]
+            D16 = De[2]
+            D22 = De[4]
+            D26 = De[5]
+            D66 = De[8]
+            # NOTE transverse shear stiffness with the shear correction already applied
+            A44 = Atse[0]
+            A45 = Atse[1]
+            A55 = Atse[3]
 
-            # NOTE using self.m12 as a criterion to check if material
-            #     coordinates were defined
-            if self.m12 == 0:
-                A11 = A11mat
-                A12 = A12mat
-                A16 = A16mat
-                A22 = A22mat
-                A26 = A26mat
-                A66 = A66mat
-                B11 = B11mat
-                B12 = B12mat
-                B16 = B16mat
-                B22 = B22mat
-                B26 = B26mat
-                B66 = B66mat
-                D11 = D11mat
-                D12 = D12mat
-                D16 = D16mat
-                D22 = D22mat
-                D26 = D26mat
-                D66 = D66mat
-            else:
-                m11 = self.m11
-                m12 = self.m12
-                m21 = self.m21
-                m22 = self.m22
-                A11 = m11**2*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + 2*m11*m12*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12) + m12**2*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12)
-                A12 = m21**2*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + 2*m21*m22*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12) + m22**2*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12)
-                A16 = m11*m21*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + m12*m22*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12) + (m11*m22 + m12*m21)*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12)
-                # A21 = m11**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m11*m12*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m12**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
-                A22 = m21**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m21*m22*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m22**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
-                A26 = m11*m21*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + m12*m22*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22) + (m11*m22 + m12*m21)*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22)
-                # A61 = m11**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m12**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
-                # A62 = m21**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m22**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
-                A66 = m11*m21*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + m12*m22*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21))
-
-                B11 = m11**2*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + 2*m11*m12*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12) + m12**2*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12)
-                B12 = m21**2*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + 2*m21*m22*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12) + m22**2*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12)
-                B16 = m11*m21*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + m12*m22*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12) + (m11*m22 + m12*m21)*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12)
-                # B21 = m11**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m11*m12*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m12**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
-                B22 = m21**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m21*m22*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m22**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
-                B26 = m11*m21*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + m12*m22*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22) + (m11*m22 + m12*m21)*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22)
-                # B61 = m11**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m12**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
-                # B62 = m21**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m22**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
-                B66 = m11*m21*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + m12*m22*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21))
-
-                D11 = m11**2*(D11mat*m11**2 + D12mat*m12**2 + 2*D16mat*m11*m12) + 2*m11*m12*(D16mat*m11**2 + D26mat*m12**2 + 2*D66mat*m11*m12) + m12**2*(D12mat*m11**2 + D22mat*m12**2 + 2*D26mat*m11*m12)
-                D12 = m21**2*(D11mat*m11**2 + D12mat*m12**2 + 2*D16mat*m11*m12) + 2*m21*m22*(D16mat*m11**2 + D26mat*m12**2 + 2*D66mat*m11*m12) + m22**2*(D12mat*m11**2 + D22mat*m12**2 + 2*D26mat*m11*m12)
-                D16 = m11*m21*(D11mat*m11**2 + D12mat*m12**2 + 2*D16mat*m11*m12) + m12*m22*(D12mat*m11**2 + D22mat*m12**2 + 2*D26mat*m11*m12) + (m11*m22 + m12*m21)*(D16mat*m11**2 + D26mat*m12**2 + 2*D66mat*m11*m12)
-                # D21 = m11**2*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + 2*m11*m12*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22) + m12**2*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22)
-                D22 = m21**2*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + 2*m21*m22*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22) + m22**2*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22)
-                D26 = m11*m21*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + m12*m22*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22) + (m11*m22 + m12*m21)*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22)
-                # D61 = m11**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m12**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
-                # D62 = m21**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m22**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
-                D66 = m11*m21*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + m12*m22*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21))
-
-            # NOTE transverse shear stiffness in the element coordinate system, with
-            #      the shear correction already applied
-            prop.get_Ats_element(self.m11, self.m12, self.m21, self.m22, &A44, &A45, &A55)
 
             # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
@@ -1017,10 +965,10 @@ cdef class Tria3R:
         cdef int c1, c2, c3, i, k
         cdef double x1, x2, x3, y1, y2, y3
         cdef double wij, detJ
-        # NOTE ABD in the material direction
-        cdef double A11mat, A12mat, A16mat, A22mat, A26mat, A66mat
-        cdef double B11mat, B12mat, B16mat, B22mat, B26mat, B66mat
-        cdef double D11mat, D12mat, D16mat, D22mat, D26mat, D66mat
+        cdef double Ae[9]
+        cdef double Be[9]
+        cdef double De[9]
+        cdef double Atse[4]
         cdef double A44, A45, A55
         # NOTE ABD in the element direction
         cdef double A11, A12, A16, A22, A26, A66
@@ -1056,84 +1004,32 @@ cdef class Tria3R:
         with nogil:
             detJ = 2*self.area
 
-            A11mat = prop.A11
-            A12mat = prop.A12
-            A16mat = prop.A16
-            A22mat = prop.A22
-            A26mat = prop.A26
-            A66mat = prop.A66
-            B11mat = prop.B11
-            B12mat = prop.B12
-            B16mat = prop.B16
-            B22mat = prop.B22
-            B26mat = prop.B26
-            B66mat = prop.B66
-            D11mat = prop.D11
-            D12mat = prop.D12
-            D16mat = prop.D16
-            D22mat = prop.D22
-            D26mat = prop.D26
-            D66mat = prop.D66
+            # NOTE constitutive matrices in the element coordinate system,
+            #      the same function is used by all element methods
+            prop.get_constitutive_element(self.m11, self.m12, self.m21, self.m22, Ae, Be, De, Atse)
+            A11 = Ae[0]
+            A12 = Ae[1]
+            A16 = Ae[2]
+            A22 = Ae[4]
+            A26 = Ae[5]
+            A66 = Ae[8]
+            B11 = Be[0]
+            B12 = Be[1]
+            B16 = Be[2]
+            B22 = Be[4]
+            B26 = Be[5]
+            B66 = Be[8]
+            D11 = De[0]
+            D12 = De[1]
+            D16 = De[2]
+            D22 = De[4]
+            D26 = De[5]
+            D66 = De[8]
+            # NOTE transverse shear stiffness with the shear correction already applied
+            A44 = Atse[0]
+            A45 = Atse[1]
+            A55 = Atse[3]
 
-            # NOTE using self.m12 as a criterion to check if material
-            #     coordinates were defined
-            if self.m12 == 0:
-                A11 = A11mat
-                A12 = A12mat
-                A16 = A16mat
-                A22 = A22mat
-                A26 = A26mat
-                A66 = A66mat
-                B11 = B11mat
-                B12 = B12mat
-                B16 = B16mat
-                B22 = B22mat
-                B26 = B26mat
-                B66 = B66mat
-                D11 = D11mat
-                D12 = D12mat
-                D16 = D16mat
-                D22 = D22mat
-                D26 = D26mat
-                D66 = D66mat
-            else:
-                m11 = self.m11
-                m12 = self.m12
-                m21 = self.m21
-                m22 = self.m22
-                A11 = m11**2*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + 2*m11*m12*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12) + m12**2*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12)
-                A12 = m21**2*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + 2*m21*m22*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12) + m22**2*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12)
-                A16 = m11*m21*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + m12*m22*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12) + (m11*m22 + m12*m21)*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12)
-                # A21 = m11**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m11*m12*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m12**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
-                A22 = m21**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m21*m22*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m22**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
-                A26 = m11*m21*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + m12*m22*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22) + (m11*m22 + m12*m21)*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22)
-                # A61 = m11**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m12**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
-                # A62 = m21**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m22**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
-                A66 = m11*m21*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + m12*m22*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21))
-
-                B11 = m11**2*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + 2*m11*m12*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12) + m12**2*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12)
-                B12 = m21**2*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + 2*m21*m22*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12) + m22**2*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12)
-                B16 = m11*m21*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + m12*m22*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12) + (m11*m22 + m12*m21)*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12)
-                # B21 = m11**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m11*m12*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m12**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
-                B22 = m21**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m21*m22*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m22**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
-                B26 = m11*m21*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + m12*m22*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22) + (m11*m22 + m12*m21)*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22)
-                # B61 = m11**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m12**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
-                # B62 = m21**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m22**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
-                B66 = m11*m21*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + m12*m22*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21))
-
-                D11 = m11**2*(D11mat*m11**2 + D12mat*m12**2 + 2*D16mat*m11*m12) + 2*m11*m12*(D16mat*m11**2 + D26mat*m12**2 + 2*D66mat*m11*m12) + m12**2*(D12mat*m11**2 + D22mat*m12**2 + 2*D26mat*m11*m12)
-                D12 = m21**2*(D11mat*m11**2 + D12mat*m12**2 + 2*D16mat*m11*m12) + 2*m21*m22*(D16mat*m11**2 + D26mat*m12**2 + 2*D66mat*m11*m12) + m22**2*(D12mat*m11**2 + D22mat*m12**2 + 2*D26mat*m11*m12)
-                D16 = m11*m21*(D11mat*m11**2 + D12mat*m12**2 + 2*D16mat*m11*m12) + m12*m22*(D12mat*m11**2 + D22mat*m12**2 + 2*D26mat*m11*m12) + (m11*m22 + m12*m21)*(D16mat*m11**2 + D26mat*m12**2 + 2*D66mat*m11*m12)
-                # D21 = m11**2*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + 2*m11*m12*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22) + m12**2*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22)
-                D22 = m21**2*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + 2*m21*m22*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22) + m22**2*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22)
-                D26 = m11*m21*(D11mat*m21**2 + D12mat*m22**2 + 2*D16mat*m21*m22) + m12*m22*(D12mat*m21**2 + D22mat*m22**2 + 2*D26mat*m21*m22) + (m11*m22 + m12*m21)*(D16mat*m21**2 + D26mat*m22**2 + 2*D66mat*m21*m22)
-                # D61 = m11**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m12**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
-                # D62 = m21**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m22**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
-                D66 = m11*m21*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + m12*m22*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21))
-
-            # NOTE transverse shear stiffness in the element coordinate system, with
-            #      the shear correction already applied
-            prop.get_Ats_element(self.m11, self.m12, self.m21, self.m22, &A44, &A45, &A55)
 
             # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
@@ -3063,79 +2959,6 @@ cdef class Tria3R:
             fint[5+self.c3] += finte[15]*self.r31 + finte[16]*self.r32 + finte[17]*self.r33
 
 
-    cdef void _update_AB_element(Tria3R self, ShellProp prop, double *A,
-                                 double *B) noexcept nogil:
-        r"""Laminate matrices A and B in the element coordinate system
-
-        The 3x3 matrices are stored row by row in ``A`` and ``B``, relating the
-        membrane strains and curvatures to the membrane stress resultants,
-        `\{N_{xx}, N_{yy}, N_{xy}\}^T = [A] \{\epsilon\} + [B] \{\kappa\}`.
-
-        They are transformed from the material direction with `[A] = [T]^T
-        [A_{mat}] [T]`, where the columns of `[T]` are the engineering strains in
-        the material direction produced by unit strains in the element direction.
-        `[T]` is the identity when no material direction was defined.
-
-        """
-        cdef int i, j, p, q
-        cdef double m11, m12, m21, m22
-        cdef double T[9]
-        cdef double Amat[9]
-        cdef double Bmat[9]
-
-        # NOTE using self.m12 as a criterion to check if material coordinates
-        #     were defined, as in the other methods
-        if self.m12 == 0:
-            m11 = 1.
-            m12 = 0.
-            m21 = 0.
-            m22 = 1.
-        else:
-            m11 = self.m11
-            m12 = self.m12
-            m21 = self.m21
-            m22 = self.m22
-
-        T[0] = m11*m11
-        T[3] = m12*m12
-        T[6] = 2*m11*m12
-        T[1] = m21*m21
-        T[4] = m22*m22
-        T[7] = 2*m21*m22
-        T[2] = m11*m21
-        T[5] = m12*m22
-        T[8] = m11*m22 + m12*m21
-
-        Amat[0] = prop.A11
-        Amat[1] = prop.A12
-        Amat[2] = prop.A16
-        Amat[3] = prop.A12
-        Amat[4] = prop.A22
-        Amat[5] = prop.A26
-        Amat[6] = prop.A16
-        Amat[7] = prop.A26
-        Amat[8] = prop.A66
-
-        Bmat[0] = prop.B11
-        Bmat[1] = prop.B12
-        Bmat[2] = prop.B16
-        Bmat[3] = prop.B12
-        Bmat[4] = prop.B22
-        Bmat[5] = prop.B26
-        Bmat[6] = prop.B16
-        Bmat[7] = prop.B26
-        Bmat[8] = prop.B66
-
-        for i in range(3):
-            for j in range(3):
-                A[3*i + j] = 0.
-                B[3*i + j] = 0.
-                for p in range(3):
-                    for q in range(3):
-                        A[3*i + j] += T[3*p + i]*Amat[3*p + q]*T[3*q + j]
-                        B[3*i + j] += T[3*p + i]*Bmat[3*p + q]*T[3*q + j]
-
-
     cdef double _update_probe_BL_G(Tria3R self) noexcept nogil:
         r"""Update the probe rows of the linear strains and of the gradient of `w`
 
@@ -3289,7 +3112,7 @@ cdef class Tria3R:
         Gwx = &self.probe.Gwx[0]
         Gwy = &self.probe.Gwy[0]
 
-        self._update_AB_element(prop, A, B)
+        prop.get_constitutive_element(self.m11, self.m12, self.m21, self.m22, A, B, NULL, NULL)
 
         for i in range(18*18):
             KCNLve[i] = 0.
@@ -3379,7 +3202,7 @@ cdef class Tria3R:
         Gwx = &self.probe.Gwx[0]
         Gwy = &self.probe.Gwy[0]
 
-        self._update_AB_element(prop, A, B)
+        prop.get_constitutive_element(self.m11, self.m12, self.m21, self.m22, A, B, NULL, NULL)
 
         # NOTE the strains are constant within the element, one integration point as
         #     in update_KG
@@ -3595,9 +3418,8 @@ cdef class Tria3R:
         cdef double x1, x2, x3
         cdef double y1, y2, y3
         cdef double wij, detJ
-        # NOTE ABD in the material direction
-        cdef double A11mat, A12mat, A16mat, A22mat, A26mat, A66mat
-        cdef double B11mat, B12mat, B16mat, B22mat, B26mat, B66mat
+        cdef double Ae[9]
+        cdef double Be[9]
         # NOTE ABD in the element direction
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
@@ -3609,58 +3431,21 @@ cdef class Tria3R:
         with nogil:
             detJ = 2*self.area
 
-            A11mat = prop.A11
-            A12mat = prop.A12
-            A16mat = prop.A16
-            A22mat = prop.A22
-            A26mat = prop.A26
-            A66mat = prop.A66
-            B11mat = prop.B11
-            B12mat = prop.B12
-            B16mat = prop.B16
-            B22mat = prop.B22
-            B26mat = prop.B26
-            B66mat = prop.B66
-
-            # NOTE using self.m12 as a criterion to check if material
-            #     coordinates were defined
-            if self.m12 == 0:
-                A11 = A11mat
-                A12 = A12mat
-                A16 = A16mat
-                A22 = A22mat
-                A26 = A26mat
-                A66 = A66mat
-                B11 = B11mat
-                B12 = B12mat
-                B16 = B16mat
-                B22 = B22mat
-                B26 = B26mat
-                B66 = B66mat
-            else:
-                m11 = self.m11
-                m12 = self.m12
-                m21 = self.m21
-                m22 = self.m22
-                A11 = m11**2*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + 2*m11*m12*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12) + m12**2*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12)
-                A12 = m21**2*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + 2*m21*m22*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12) + m22**2*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12)
-                A16 = m11*m21*(A11mat*m11**2 + A12mat*m12**2 + 2*A16mat*m11*m12) + m12*m22*(A12mat*m11**2 + A22mat*m12**2 + 2*A26mat*m11*m12) + (m11*m22 + m12*m21)*(A16mat*m11**2 + A26mat*m12**2 + 2*A66mat*m11*m12)
-                # A21 = m11**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m11*m12*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m12**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
-                A22 = m21**2*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + 2*m21*m22*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22) + m22**2*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22)
-                A26 = m11*m21*(A11mat*m21**2 + A12mat*m22**2 + 2*A16mat*m21*m22) + m12*m22*(A12mat*m21**2 + A22mat*m22**2 + 2*A26mat*m21*m22) + (m11*m22 + m12*m21)*(A16mat*m21**2 + A26mat*m22**2 + 2*A66mat*m21*m22)
-                # A61 = m11**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m12**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
-                # A62 = m21**2*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21)) + m22**2*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21))
-                A66 = m11*m21*(A11mat*m11*m21 + A12mat*m12*m22 + A16mat*(m11*m22 + m12*m21)) + m12*m22*(A12mat*m11*m21 + A22mat*m12*m22 + A26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(A16mat*m11*m21 + A26mat*m12*m22 + A66mat*(m11*m22 + m12*m21))
-
-                B11 = m11**2*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + 2*m11*m12*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12) + m12**2*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12)
-                B12 = m21**2*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + 2*m21*m22*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12) + m22**2*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12)
-                B16 = m11*m21*(B11mat*m11**2 + B12mat*m12**2 + 2*B16mat*m11*m12) + m12*m22*(B12mat*m11**2 + B22mat*m12**2 + 2*B26mat*m11*m12) + (m11*m22 + m12*m21)*(B16mat*m11**2 + B26mat*m12**2 + 2*B66mat*m11*m12)
-                # B21 = m11**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m11*m12*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m12**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
-                B22 = m21**2*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + 2*m21*m22*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22) + m22**2*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22)
-                B26 = m11*m21*(B11mat*m21**2 + B12mat*m22**2 + 2*B16mat*m21*m22) + m12*m22*(B12mat*m21**2 + B22mat*m22**2 + 2*B26mat*m21*m22) + (m11*m22 + m12*m21)*(B16mat*m21**2 + B26mat*m22**2 + 2*B66mat*m21*m22)
-                # B61 = m11**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m11*m12*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m12**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
-                # B62 = m21**2*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21)) + m22**2*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21))
-                B66 = m11*m21*(B11mat*m11*m21 + B12mat*m12*m22 + B16mat*(m11*m22 + m12*m21)) + m12*m22*(B12mat*m11*m21 + B22mat*m12*m22 + B26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(B16mat*m11*m21 + B26mat*m12*m22 + B66mat*(m11*m22 + m12*m21))
+            # NOTE constitutive matrices in the element coordinate system,
+            #      the same function is used by all element methods
+            prop.get_constitutive_element(self.m11, self.m12, self.m21, self.m22, Ae, Be, NULL, NULL)
+            A11 = Ae[0]
+            A12 = Ae[1]
+            A16 = Ae[2]
+            A22 = Ae[4]
+            A26 = Ae[5]
+            A66 = Ae[8]
+            B11 = Be[0]
+            B12 = Be[1]
+            B16 = Be[2]
+            B22 = Be[4]
+            B26 = Be[5]
+            B66 = Be[8]
 
             # local to global transformation
             r11 = self.r11
