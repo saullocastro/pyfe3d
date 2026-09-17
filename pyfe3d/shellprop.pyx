@@ -621,8 +621,11 @@ cdef int _rohwer(int N, double *plydata, double offset, double m11,
 
         if S != NULL:
             det = q[6]*q[8] - q[7]*q[7]
-            if q[6] <= 0 or q[8] <= 0 or det <= 1e-12*q[6]*q[8]:
-                return 1
+            # NOTE same frame-invariant criterion as the ply-wise check in
+            #      calc_transverse_shear_stiffness, which rejects these plies
+            if (q[6] <= 0 or q[8] <= 0
+                    or det <= 0.25e-12*(q[6] + q[8])*(q[6] + q[8])):
+                return 1 # pragma: no cover
             i44 = q[8]/det
             i45 = -q[7]/det
             i55 = q[6]/det
@@ -1181,8 +1184,10 @@ cdef class ShellProp:
             self.Abar45 += ply.q45L*ply.h
             self.Abar55 += ply.q55L*ply.h
             det = ply.q44L*ply.q55L - ply.q45L*ply.q45L
+            # NOTE relative to the trace, such that the check does not
+            #      depend on the frame
             if (ply.q44L <= 0 or ply.q55L <= 0
-                    or det <= 1e-12*ply.q44L*ply.q55L):
+                    or det <= 0.25e-12*(ply.q44L + ply.q55L)**2):
                 if singular_ply < 0:
                     singular_ply = k
             else:
@@ -1224,7 +1229,7 @@ cdef class ShellProp:
                                  'stiffness cannot be computed')
             detS = S[0]*S[2] - S[1]*S[1]
             if status != 0 or not detS > 0:
-                raise ValueError('Singular transverse shear compliance, the '
+                raise ValueError('Singular transverse shear compliance, the ' # pragma: no cover
                                  'transverse shear stiffness cannot be '
                                  'computed')
             self.A44 = S[2]/detS
@@ -1250,7 +1255,7 @@ cdef class ShellProp:
                 status = _rohwer(N, &self._ts_plydata[0, 0], self._ts_offset,
                                  c, -s, s, c, NULL, NULL, S)
                 if status != 0:
-                    raise ValueError('Singular transverse shear compliance in '
+                    raise ValueError('Singular transverse shear compliance in ' # pragma: no cover
                                      'a rotated frame')
                 for i in range(3):
                     self._ts_fourier[11*i] += S[i]/M
@@ -1277,7 +1282,7 @@ cdef class ShellProp:
                     den += Dk*(zb - za)
                     d += Gk*ply.h
                 if not den > 0:
-                    raise ValueError('Vlachoutsis shear correction factors '
+                    raise ValueError('Vlachoutsis shear correction factors ' # pragma: no cover
                                      'require positive in-plane stiffnesses')
                 zn = num/den
                 R = 0; I = 0; gza = 0
@@ -1373,7 +1378,7 @@ cdef class ShellProp:
             status = _rohwer(N, &self._ts_plydata[0, 0], self._ts_offset,
                              1., 0., 0., 1., &zi[0], &fc[0, 0, 0, 0], NULL)
             if status != 0:
-                raise ValueError('The ABD matrix of the laminate is singular '
+                raise ValueError('The ABD matrix of the laminate is singular ' # pragma: no cover
                                  'or ill-conditioned, the transverse shear '
                                  'distribution cannot be computed')
             self._ts_z = zi

@@ -4,7 +4,7 @@ sys.path.append('..')
 import numpy as np
 import pytest
 
-from pyfe3d.shellprop import shellprop_from_lamination_parameters
+from pyfe3d.shellprop import ShellProp, shellprop_from_lamination_parameters
 from pyfe3d.shellprop_utils import (read_laminaprop, laminated_plate,
         isotropic_plate)
 from pyfe3d import (Quad4, Quad4Data, Quad4Probe, Quad4R, Quad4RData,
@@ -209,6 +209,57 @@ def test_errors():
     prop = laminated_plate(stack=CROSS_PLY, plyt=PLYT, laminaprop=no_g13,
                            shear_correction=None)
     assert np.all(np.isnan(prop.Abarbar_ts))
+
+
+@pytest.mark.parametrize('stack', [[-60, 90], [-30, -60]])
+def test_rohwer_independent_of_offset(stack):
+    # NOTE with these offsets the elimination of the ABD matrix requires row
+    #      pivoting, the transverse shear stiffness and distribution do not
+    #      depend on the reference surface
+    ref = laminated_plate(stack=stack, plyt=PLYT, laminaprop=CFRP)
+    prop = laminated_plate(stack=stack, plyt=PLYT, laminaprop=CFRP,
+                           offset=0.5)
+    assert np.allclose(prop.Ats, ref.Ats, rtol=1e-10)
+    for theta in [0., 30., 75.]:
+        assert np.allclose(prop.calc_Ats_element(theta),
+                           ref.calc_Ats_element(theta), rtol=1e-10)
+    for zbar in np.linspace(-ref.h/2, ref.h/2, 7):
+        assert np.allclose(prop.calc_transverse_shear_stress(zbar + 0.5, 1., -2.),
+                           ref.calc_transverse_shear_stress(zbar, 1., -2.),
+                           rtol=1e-10, atol=1e-12)
+
+
+def test_errors_no_plies():
+    prop = ShellProp()
+    prop.calc_transverse_shear_stiffness()
+    assert prop.A44 == 0 and prop.A45 == 0 and prop.A55 == 0
+    with pytest.raises(ValueError, match='0 plies'):
+        prop.calc_transverse_shear_stress(0., 1., 1.)
+
+
+@pytest.mark.parametrize('thetadeg', [0., 45.])
+def test_errors_singular_ABD(thetadeg):
+    # NOTE with g12 = 0 the ABD matrix has a zero diagonal term for a 0-degree
+    #      ply, and a positive diagonal but it is still singular for 45 degrees
+    no_g12 = (138., 9.3, 0.3, 0., 4.6, 2.3)
+    with pytest.raises(ValueError, match='ABD matrix'):
+        laminated_plate(stack=[thetadeg], plyt=PLYT, laminaprop=no_g12)
+
+
+@pytest.mark.parametrize('thetadeg', [0., 45.])
+def test_errors_nearly_singular_Cs(thetadeg):
+    # NOTE the check of C_s does not depend on the ply angle, such that it is
+    #      not singular in the laminate frame and singular in an element frame
+    near_singular = (138., 9.3, 0.3, 4.6, 2.3e-13, 2.3)
+    with pytest.raises(ValueError, match='singular transverse shear'):
+        laminated_plate(stack=[thetadeg], plyt=PLYT, laminaprop=near_singular)
+
+
+def test_laminated_plate_missing_input():
+    with pytest.raises(ValueError, match='plyt or plyts'):
+        laminated_plate(stack=CROSS_PLY, laminaprop=CFRP)
+    with pytest.raises(ValueError, match='laminaprop or laminaprops'):
+        laminated_plate(stack=CROSS_PLY, plyt=PLYT)
 
 
 def test_pickle_and_deepcopy():
