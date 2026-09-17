@@ -65,6 +65,8 @@ recommend using the BeamLR instead, which is physically more consistent.
 Development history
 -------------------
 
+See [CHANGELOG.md](CHANGELOG.md) for the details of each version.
+
 | Main versions | Changes |
 | - | - |
 | 0.8.0 | KCNL matrix for all elements, with more accurate nonlinear analyses; fixed KC0 and KG for beams; fixed KC0 for Tria3R. |

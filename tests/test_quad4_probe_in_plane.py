@@ -47,7 +47,7 @@ def test_quad4_probe_in_plane(plot=False):
     KC0v = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=DOUBLE)
     N = DOF*nx*ny
 
-    prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True)
+    prop = isotropic_plate(thickness=h, E=E, nu=nu)
 
     quads = []
     init_k_KC0 = 0

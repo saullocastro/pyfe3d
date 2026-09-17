@@ -94,7 +94,7 @@ def read_laminaprop(laminaprop, rho=0):
 
 
 def laminated_plate(stack, plyt=None, laminaprop=None, rho=0., plyts=None,
-        laminaprops=None, rhos=None, offset=0., calc_scf=True):
+        laminaprops=None, rhos=None, offset=0., shear_correction='rohwer'):
     r"""Read a laminate stacking sequence data.
 
     :class:`.ShellProp` object is returned based on the inputs given.
@@ -119,9 +119,12 @@ def laminated_plate(stack, plyt=None, laminaprop=None, rho=0., plyts=None,
     offset : float, optional
         Offset along the normal axis about the mid-surface, which influences
         the laminate properties.
-    calc_scf : bool, optional
-        If True, use :func:`.ShellProp.calc_scf` to compute shear correction
-        factors, otherwise the default value of 5/6 is used
+    shear_correction : str or None, optional
+        Method used to compute the transverse shear stiffnesses ``A44``,
+        ``A45``, ``A55``, which are returned with the correction already
+        applied: ``'rohwer'`` (default, equilibrium approach), ``'vlachoutsis'``,
+        ``'constant'`` (5/6) or ``None`` (no correction). See
+        :meth:`.ShellProp.calc_transverse_shear_stiffness`.
 
     Notes
     -----
@@ -140,6 +143,7 @@ def laminated_plate(stack, plyt=None, laminaprop=None, rho=0., plyts=None,
     prop = ShellProp()
     prop.offset = offset
     prop.stack = list(stack)
+    prop.shear_correction = shear_correction
 
     if plyts is None:
         if plyt is None:
@@ -173,13 +177,12 @@ def laminated_plate(stack, plyt=None, laminaprop=None, rho=0., plyts=None,
 
     prop.calc_constitutive_matrix()
     prop.calc_equivalent_properties()
-    if calc_scf:
-        prop.calc_scf()
 
     return prop
 
 
-def isotropic_plate(thickness, E, nu, offset=0., calc_scf=True, rho=0.):
+def isotropic_plate(thickness, E, nu, offset=0., rho=0.,
+        shear_correction='rohwer'):
     """Read data for an isotropic plate
 
     :class:`.ShellProp` object is returned based on the inputs given.
@@ -197,10 +200,10 @@ def isotropic_plate(thickness, E, nu, offset=0., calc_scf=True, rho=0.):
     offset : float, optional
         Offset along the normal axis about the mid-surface, which influences
         the extension-bending coupling (B matrix).
-    calc_scf : bool, optional
-        If True, use :func:`.ShellProp.calc_scf` to compute shear correction
-        factors, otherwise the default value of 5/6 is used.
+    shear_correction : str or None, optional
+        See :func:`.laminated_plate`. For an isotropic plate, ``'rohwer'``,
+        ``'vlachoutsis'`` and ``'constant'`` give ``A44 = A55 = 5/6 G h``.
 
     """
     return laminated_plate(plyt=thickness, stack=[0], laminaprop=(E, nu),
-            rho=rho, offset=offset, calc_scf=calc_scf)
+            rho=rho, offset=offset, shear_correction=shear_correction)
