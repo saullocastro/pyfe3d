@@ -23,7 +23,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
 
     E = 203.e9 # Pa
     nu = 0.33
-    prop = isotropic_plate(E=E, nu=nu, thickness=h, calc_scf=True)
+    prop = isotropic_plate(E=E, nu=nu, thickness=h)
 
     Nxx = -1.
 

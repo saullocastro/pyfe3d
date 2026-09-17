@@ -6,7 +6,7 @@ import numpy as np
 from pyfe3d.shellprop import (Lamina, shellprop_from_LaminationParameters,
         shellprop_from_lamination_parameters, force_balanced_LP,
         force_orthotropic_LP, force_symmetric_LP, LaminationParameters,
-        GradABDE)
+        GradABD)
 from pyfe3d.shellprop_utils import (read_laminaprop, laminated_plate,
         isotropic_plate)
 
@@ -49,19 +49,16 @@ def test_lampar_tri_axial():
     D = np.array([[8.76640130e+09, 4.31777974e+09, 0.00000000e+00],
                   [4.31777974e+09, 8.76640130e+09, 0.00000000e+00],
                   [0.00000000e+00, 0.00000000e+00, 2.22431078e+09]])
-    E = np.array([[2.66917293e+10,  0.00000000e+00],
+    Abar_ts = np.array([[2.66917293e+10,  0.00000000e+00],
                   [0.00000000e+00,  2.66917293e+10]])
     assert np.allclose(prop.A, A)
     prop.force_symmetric()
     assert np.allclose(prop.B, B)
     assert np.allclose(prop.D, D)
-    assert np.allclose(prop.E, E)
+    assert np.allclose(prop.Abar_ts, Abar_ts)
     ABD = prop.ABD
     assert np.allclose(ABD[:3, :3], A)
     assert np.allclose(ABD[3:, 3:], D)
-    ABDE = prop.ABDE
-    assert np.allclose(ABDE[:3, :3], A)
-    assert np.allclose(ABDE[3:6, 3:6], D)
 
 
 def test_lampar_plane_stress():
@@ -96,19 +93,16 @@ def test_lampar_plane_stress():
     D = np.array([[6.63973366e+09, 2.19111211e+09, 9.53674316e-08],
                   [2.19111211e+09, 6.63973366e+09, -9.53674316e-08],
                   [9.53674316e-08, -9.53674316e-08, 2.22431078e+09]])
-    E = np.array([[2.66917293e+10, 0.00000000e+00],
+    Abar_ts = np.array([[2.66917293e+10, 0.00000000e+00],
                   [0.00000000e+00, 2.66917293e+10]])
     assert np.allclose(prop.A, A)
     prop.force_symmetric()
     assert np.allclose(prop.B, B)
     assert np.allclose(prop.D, D)
-    assert np.allclose(prop.E, E)
+    assert np.allclose(prop.Abar_ts, Abar_ts)
     ABD = prop.ABD
     assert np.allclose(ABD[:3, :3], A)
     assert np.allclose(ABD[3:, 3:], D)
-    ABDE = prop.ABDE
-    assert np.allclose(ABDE[:3, :3], A)
-    assert np.allclose(ABDE[3:6, 3:6], D)
 
 
 def test_laminated_plate_tri_axial():
@@ -125,12 +119,12 @@ def test_laminated_plate_tri_axial():
     D = np.array([[ 0.1708233 , 0.01057886, 0.00262445],
                   [ 0.01057886, 0.1708233 , 0.00262445],
                   [ 0.00262445, 0.00262445, 0.0326602 ]])
-    E = np.array([[ 2625000.,       0.],
+    Abar_ts = np.array([[ 2625000.,       0.],
                   [       0., 2625000.]])
     assert np.allclose(prop.A, A)
     assert np.allclose(prop.B, B)
     assert np.allclose(prop.D, D)
-    assert np.allclose(prop.E, E)
+    assert np.allclose(prop.Abar_ts, Abar_ts)
 
 
 def test_laminated_plate_plane_stress():
@@ -147,13 +141,12 @@ def test_laminated_plate_plane_stress():
     D = np.array([[ 0.1708233 , 0.01057886, 0.00262445],
                   [ 0.01057886, 0.1708233 , 0.00262445],
                   [ 0.00262445, 0.00262445, 0.0326602 ]])
-    E = np.array([[ 2625000.,       0.],
+    Abar_ts = np.array([[ 2625000.,       0.],
                   [       0., 2625000.]])
     assert np.allclose(prop.A, A)
     assert np.allclose(prop.B, B)
     assert np.allclose(prop.D, D)
-    assert np.allclose(prop.E, E)
-    prop.calc_scf()
+    assert np.allclose(prop.Abar_ts, Abar_ts)
     prop.calc_equivalent_properties()
     lp = prop.calc_lamination_parameters()
     matlamina = prop.plies[0].matlamina
@@ -162,7 +155,7 @@ def test_laminated_plate_plane_stress():
     assert np.allclose(prop_2.A, prop.A)
     assert np.allclose(prop_2.B, prop.B)
     assert np.allclose(prop_2.D, prop.D)
-    assert np.allclose(prop_2.E, prop.E)
+    assert np.allclose(prop_2.Abar_ts, prop.Abar_ts)
 
     prop.force_balanced()
     force_balanced_LP(lp)
@@ -170,7 +163,7 @@ def test_laminated_plate_plane_stress():
     assert np.allclose(prop_2.A, prop.A)
     assert np.allclose(prop_2.B, prop.B)
     assert np.allclose(prop_2.D, prop.D)
-    assert np.allclose(prop_2.E, prop.E)
+    assert np.allclose(prop_2.Abar_ts, prop.Abar_ts)
 
     prop.force_orthotropic()
     force_orthotropic_LP(lp)
@@ -178,7 +171,7 @@ def test_laminated_plate_plane_stress():
     assert np.allclose(prop_2.A, prop.A)
     assert np.allclose(prop_2.B, prop.B)
     assert np.allclose(prop_2.D, prop.D)
-    assert np.allclose(prop_2.E, prop.E)
+    assert np.allclose(prop_2.Abar_ts, prop.Abar_ts)
 
     prop = laminated_plate(stack, plyt, lamprop)
     lp = prop.calc_lamination_parameters()
@@ -188,7 +181,7 @@ def test_laminated_plate_plane_stress():
     assert np.allclose(prop_2.A, prop.A)
     assert np.allclose(prop_2.B, prop.B)
     assert np.allclose(prop_2.D, prop.D)
-    assert np.allclose(prop_2.E, prop.E)
+    assert np.allclose(prop_2.Abar_ts, prop.Abar_ts)
 
 
 def helper_isotropic_plate():
@@ -207,12 +200,13 @@ def test_isotropic_plate():
     D = np.array([[0.01253905, 0.00351093, 0.        ],
                   [0.00351093, 0.01253905, 0.        ],
                   [0.        , 0.        , 0.00451406]])
-    E = np.array([[3466796.875,       0.   ],
+    Abar_ts = np.array([[3466796.875,       0.   ],
                   [      0.   , 3466796.875]])
     assert np.allclose(prop.A, A)
     assert np.allclose(prop.B, 0)
     assert np.allclose(prop.D, D)
-    assert np.allclose(prop.E, E)
+    assert np.allclose(prop.Abar_ts, Abar_ts)
+    assert np.allclose(prop.Ats, 5/6*Abar_ts)
 
 
 def test_errors():
@@ -295,9 +289,10 @@ def test_laminate_LP_gradients():
     lp.xiD2 = 0.4
     lp.xiD3 = -0.3
     lp.xiD4 = -0.6
-    gradABDE = GradABDE()
-    gradABDE.calc_LP_grad(thickness, matlamina, lp)
-    print(gradABDE.gradAij)
+    gradABD = GradABD()
+    gradABD.calc_LP_grad(thickness, matlamina, lp)
+    print(gradABD.gradAij)
+    print(np.asarray(gradABD.gradAtsij))
 
 
 def test_laminated_plate_length_error():

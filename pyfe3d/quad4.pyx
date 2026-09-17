@@ -53,16 +53,15 @@ The in-plane stiffness terms are integrated with 2 quadrature points, and the
 drilling stiffness is integrated with 1 quadrature point. These are
 not specified in the paper of Hughes et al. (1977).
 
-Shear correction factors are applied to `E_{44}`, `E_{45}` and `E_{55}`, with the following:
-
-.. math::
-    
-    \tilde{E}_{44} = E_{44} \kappa_{23}
-    \tilde{E}_{45} = E_{45} (\kappa_{13} + \kappa_{23})/2
-    \tilde{E}_{55} = E_{55} \kappa_{13}
-
-Such that `\tilde{E}_{ij}` are the transverse shear terms considering the shear correction factor. 
-The shear correction factors are read directly from the :class:`pyfe3d.shellprop.ShellProp` object.
+The transverse shear stiffnesses `A_{44}`, `A_{45}` and `A_{55}` are read
+from the :class:`pyfe3d.shellprop.ShellProp` object with the shear correction
+already applied, see :meth:`pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness`,
+and no shear correction factor is applied by the element. When a material
+direction is defined, they are brought to the element coordinate system with
+:meth:`pyfe3d.shellprop.ShellProp.calc_Ats_element`, which re-evaluates the
+equilibrium-based stiffness of Rohwer (1988) with the plies rotated to the
+element coordinate system, such that the assumed cylindrical bending states
+are posed along the element axes.
 
 The drilling stiffness is calculated following the approach adopted in
 MSC Nastran and Autodesk Nastran, using a penalty-based method. Because
@@ -797,7 +796,7 @@ cdef class Quad4:
         cdef double A11mat, A12mat, A16mat, A22mat, A26mat, A66mat
         cdef double B11mat, B12mat, B16mat, B22mat, B26mat, B66mat
         cdef double D11mat, D12mat, D16mat, D22mat, D26mat, D66mat
-        cdef double E44, E45, E55
+        cdef double A44, A45, A55
         # NOTE ABD in the element direction
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
@@ -918,9 +917,9 @@ cdef class Quad4:
 
             length = self.area**0.5
 
-            E44 = prop.E44*prop.scf_k23
-            E45 = prop.E45*0.5*(prop.scf_k13 + prop.scf_k23)
-            E55 = prop.E55*prop.scf_k13
+            # NOTE transverse shear stiffness in the element coordinate system, with
+            #      the shear correction already applied
+            prop.get_Ats_element(self.m11, self.m12, self.m21, self.m22, &A44, &A45, &A55)
 
             # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
@@ -1064,8 +1063,8 @@ cdef class Quad4:
                                 ke = 24*i + j
                                 self.probe.KC0ve[ke] += wij*detJ*(
                                 # transverse shear (gradient term)
-                                    gyz_grad*E44*BLgyz_grad[j] + gyz_grad*E45*BLgxz_grad[j]
-                                  + gxz_grad*E45*BLgyz_grad[j] + gxz_grad*E55*BLgxz_grad[j]
+                                    gyz_grad*A44*BLgyz_grad[j] + gyz_grad*A45*BLgxz_grad[j]
+                                  + gxz_grad*A45*BLgyz_grad[j] + gxz_grad*A55*BLgxz_grad[j]
                                 )
 
                     BLdrilling[0] = N1y/2.
@@ -1152,19 +1151,19 @@ cdef class Quad4:
                         ke = 24*i + j
                         self.probe.KC0ve[ke] += wij*detJ*(
                         # transverse shear (gradient term)
-                            gyz_grad*E44*BLgyz_grad[j] + gyz_grad*E45*BLgxz_grad[j]
-                          + gxz_grad*E45*BLgyz_grad[j] + gxz_grad*E55*BLgxz_grad[j]
+                            gyz_grad*A44*BLgyz_grad[j] + gyz_grad*A45*BLgxz_grad[j]
+                          + gxz_grad*A45*BLgyz_grad[j] + gxz_grad*A55*BLgxz_grad[j]
 
                         # transverse shear (coupled terms)
-                          + gyz_grad*E44*BLgyz_rot[j] + gyz_grad*E45*BLgxz_rot[j]
-                          + gxz_grad*E45*BLgyz_rot[j] + gxz_grad*E55*BLgxz_rot[j]
+                          + gyz_grad*A44*BLgyz_rot[j] + gyz_grad*A45*BLgxz_rot[j]
+                          + gxz_grad*A45*BLgyz_rot[j] + gxz_grad*A55*BLgxz_rot[j]
 
-                          + gyz_rot*E44*BLgyz_grad[j] + gyz_rot*E45*BLgxz_grad[j]
-                          + gxz_rot*E45*BLgyz_grad[j] + gxz_rot*E55*BLgxz_grad[j]
+                          + gyz_rot*A44*BLgyz_grad[j] + gyz_rot*A45*BLgxz_grad[j]
+                          + gxz_rot*A45*BLgyz_grad[j] + gxz_rot*A55*BLgxz_grad[j]
 
                         # transverse shear (rotation term)
-                          + gyz_rot*E44*BLgyz_rot[j] + gyz_rot*E45*BLgxz_rot[j]
-                          + gxz_rot*E45*BLgyz_rot[j] + gxz_rot*E55*BLgxz_rot[j]
+                          + gyz_rot*A44*BLgyz_rot[j] + gyz_rot*A45*BLgxz_rot[j]
+                          + gxz_rot*A45*BLgyz_rot[j] + gxz_rot*A55*BLgxz_rot[j]
                         )
 
             else: # thick elements
@@ -1177,15 +1176,15 @@ cdef class Quad4:
                         ke = 24*i + j
                         self.probe.KC0ve[ke] += wij*detJ*(
                         # transverse shear (coupled terms)
-                            gyz_grad*E44*BLgyz_rot[j] + gyz_grad*E45*BLgxz_rot[j]
-                          + gxz_grad*E45*BLgyz_rot[j] + gxz_grad*E55*BLgxz_rot[j]
+                            gyz_grad*A44*BLgyz_rot[j] + gyz_grad*A45*BLgxz_rot[j]
+                          + gxz_grad*A45*BLgyz_rot[j] + gxz_grad*A55*BLgxz_rot[j]
 
-                          + gyz_rot*E44*BLgyz_grad[j] + gyz_rot*E45*BLgxz_grad[j]
-                          + gxz_rot*E45*BLgyz_grad[j] + gxz_rot*E55*BLgxz_grad[j]
+                          + gyz_rot*A44*BLgyz_grad[j] + gyz_rot*A45*BLgxz_grad[j]
+                          + gxz_rot*A45*BLgyz_grad[j] + gxz_rot*A55*BLgxz_grad[j]
 
                         # transverse shear (rotation term)
-                          + gyz_rot*E44*BLgyz_rot[j] + gyz_rot*E45*BLgxz_rot[j]
-                          + gxz_rot*E45*BLgyz_rot[j] + gxz_rot*E55*BLgxz_rot[j]
+                          + gyz_rot*A44*BLgyz_rot[j] + gyz_rot*A45*BLgxz_rot[j]
+                          + gxz_rot*A45*BLgyz_rot[j] + gxz_rot*A55*BLgxz_rot[j]
                         )
 
 

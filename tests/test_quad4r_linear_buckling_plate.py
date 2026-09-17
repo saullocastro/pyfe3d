@@ -58,7 +58,7 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
     KGv = np.zeros(data.KG_SPARSE_SIZE*num_elements, dtype=DOUBLE)
     N = DOF*nx*ny
 
-    prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True, rho=rho)
+    prop = isotropic_plate(thickness=h, E=E, nu=nu, rho=rho)
 
     quads = []
     init_k_KC0 = 0

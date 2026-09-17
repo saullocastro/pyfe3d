@@ -10,7 +10,7 @@ cdef class LaminationParameters:
     cdef public double xiA1, xiA2, xiA3, xiA4
     cdef public double xiB1, xiB2, xiB3, xiB4
     cdef public double xiD1, xiD2, xiD3, xiD4
-    cdef public double xiE1, xiE2, xiE3, xiE4
+    cdef public double xiAts1, xiAts2
 
 cdef class MatLamina:
     cdef public double e1, e2, e3, g12, g13, g23, nu12, nu21, nu13, nu31, nu23, nu32
@@ -39,29 +39,47 @@ cdef class ShellProp:
     cdef public double A11, A12, A16, A22, A26, A66
     cdef public double B11, B12, B16, B22, B26, B66
     cdef public double D11, D12, D16, D22, D26, D66
-    cdef public double E44, E45, E55
+    cdef public double A44, A45, A55
+    cdef public double Abar44, Abar45, Abar55
+    cdef public double Abarbar44, Abarbar45, Abarbar55
     cdef public double e1, e2, g12, nu12, nu21
     cdef public double scf_k13, scf_k23, h, offset, intrho, intrhoz, intrhoz2
     cdef public list plies
     cdef public list stack
+    cdef public object shear_correction
+    # NOTE ply data used to evaluate the transverse shear stiffness in the
+    #      element frame (Rohwer, 1988), one row per ply:
+    #      h, q11L, q12L, q16L, q22L, q26L, q66L, q44L, q45L, q55L
+    cdef bint _ts_element_frame
+    cdef int _ts_nplies
+    cdef double _ts_offset
+    cdef double [:, ::1] _ts_plydata
+    # NOTE through-thickness transverse shear distribution (Rohwer, 1988)
+    cdef bint _ts_ready
+    cdef double [::1] _ts_z
+    cdef double [:, :, :, ::1] _ts_fcoef
     cdef double [:, ::1] get_A(ShellProp)
     cdef double [:, ::1] get_B(ShellProp)
     cdef double [:, ::1] get_D(ShellProp)
-    cdef double [:, ::1] get_E(ShellProp)
+    cdef double [:, ::1] get_Ats(ShellProp)
+    cdef double [:, ::1] get_Abar_ts(ShellProp)
+    cdef double [:, ::1] get_Abarbar_ts(ShellProp)
     cdef double [:, ::1] get_ABD(ShellProp)
-    cdef double [:, ::1] get_ABDE(ShellProp)
-    cpdef void calc_scf(ShellProp)
+    cdef void get_Ats_element(ShellProp, double, double, double, double,
+            double *, double *, double *) noexcept nogil
+    cdef void _store_ply_data(ShellProp) except *
+    cpdef void calc_transverse_shear_stiffness(ShellProp) except *
+    cpdef tuple calc_transverse_shear_stress(ShellProp, double, double, double)
     cpdef void calc_equivalent_properties(ShellProp)
-    cpdef void calc_constitutive_matrix(ShellProp)
+    cpdef void calc_constitutive_matrix(ShellProp) except *
     cpdef void force_balanced(ShellProp)
     cpdef void force_orthotropic(ShellProp)
     cpdef void force_symmetric(ShellProp)
     cpdef LaminationParameters calc_lamination_parameters(ShellProp)
 
-cdef class GradABDE:
+cdef class GradABD:
     cdef public double [:, ::1] gradAij
     cdef public double [:, ::1] gradBij
     cdef public double [:, ::1] gradDij
-    cdef public double [:, ::1] gradEij
-    cpdef void calc_LP_grad(GradABDE, double, MatLamina, LaminationParameters)
-
+    cdef public double [:, ::1] gradAtsij
+    cpdef void calc_LP_grad(GradABD, double, MatLamina, LaminationParameters)
