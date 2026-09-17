@@ -76,7 +76,7 @@ def test_quad4r_piston_theory(plot=False, refinement=1):
 
     N = DOF*nx*ny
 
-    prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True, rho=rho)
+    prop = isotropic_plate(thickness=h, E=E, nu=nu, rho=rho)
 
     quads = []
     init_k_KC0 = 0

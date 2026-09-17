@@ -54,7 +54,7 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
         Mv = np.zeros(data.M_SPARSE_SIZE*num_elements, dtype=DOUBLE)
         N = DOF*nx*ny
 
-        prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True, rho=rho)
+        prop = isotropic_plate(thickness=h, E=E, nu=nu, rho=rho)
 
         quads = []
         init_k_KC0 = 0

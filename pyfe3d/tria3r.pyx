@@ -17,7 +17,7 @@ the centroid (`N1=N2=N3=1/3`) and weight `weight=1` is evaluated,
 preventing shear locking. The drilling stiffness is evaluated with
 full integration.
 
-The transverse shear stiffnesses `E_{44}`, `E_{45}` and `E_{55}` are stabilised
+The transverse shear stiffnesses `A_{44}`, `A_{45}` and `A_{55}` are stabilised
 using the Stenberg's method described in:
 
     Bischoff, M., & Bletzinger, K.-U. (2004). 
@@ -37,7 +37,7 @@ for convenience:
 
 .. math::
 
-    \left[\begin{matrix}\hat{E}_{44}, \hat{E}_{45} \\ \hat{E}_{45}, \hat{E}_{55}\end{matrix}\right] = \frac{\kappa}{1 + factor}\left[\begin{matrix}E_{44}, E_{45} \\ E_{45}, E_{55}\end{matrix}\right]
+    \left[\begin{matrix}\hat{A}_{44}, \hat{A}_{45} \\ \hat{A}_{45}, \hat{A}_{55}\end{matrix}\right] = \frac{1}{1 + factor}\left[\begin{matrix}A_{44}, A_{45} \\ A_{45}, A_{55}\end{matrix}\right]
 
 with `factor` defined as:
 
@@ -46,19 +46,14 @@ with `factor` defined as:
 where `\alpha` is a positive constant parameters (see the ``alpha_shear_locking`` attribute), 
 `\ell` is the longest edge of the corresponding triangle, and `h` the total thickness of the element.
 
-Shear correction factors are also applied to `E_{44}`, `E_{45}` and `E_{55}`, with the following:
-
-.. math::
-    
-    \tilde{E}_{44} = \hat{E}_{44} \kappa_{23}
-    \tilde{E}_{45} = \hat{E}_{45} (\kappa_{13} + \kappa_{23})/2
-    \tilde{E}_{55} = \hat{E}_{55} \kappa_{13}
-
-Such that `\tilde{E}_{ij}` are the transverse shear terms considering both the stabilisation to prevent
-shear locking, and the shear correction factor. As described in Castro et al., it is known that the
-shear correction factors are no longer a very releavant parameter when the stabilisation scheme
-presented above is used. The shear correction factors are read directly
-from the :class:`pyfe3d.shellprop.ShellProp` object.
+The transverse shear stiffnesses `A_{44}`, `A_{45}` and `A_{55}` are read
+from the :class:`pyfe3d.shellprop.ShellProp` object with the shear correction
+already applied, see :meth:`pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness`,
+and brought to the element coordinate system with
+:meth:`pyfe3d.shellprop.ShellProp.calc_Ats_element`, before the stabilisation
+above is applied. As described in Castro et al., the shear correction is no
+longer a very relevant parameter when the stabilisation scheme presented above
+is used.
 
 The drilling stiffness is calculated following the approach adopted in
 MSC Nastran and Autodesk Nastran, using a penalty-based method. Because
@@ -254,13 +249,15 @@ cdef class Tria3R:
         Element area.
     alpha_shear_locking, : double
         Factor used to prevent shear locking, adopted from the DFG element,
-        affecting stiffness terms ``E44``, ``E45``, ``E45``::
+        affecting the transverse shear stiffness terms ``A44``, ``A45``,
+        ``A55``, already in the element coordinate system and with the shear
+        correction applied (see :meth:`.ShellProp.calc_Ats_element`)::
 
             maxl = max(edge_12, edge_23, edge_31)
             factor = alpha_shear_locking*maxl**2/thickness**2
-            E44 = 1 / (1 + factor) * E44
-            # E45 = 1 / (1 + factor) * E45
-            E55 = 1 / (1 + factor) * E55
+            A44 = 1 / (1 + factor) * A44
+            A45 = 1 / (1 + factor) * A45
+            A55 = 1 / (1 + factor) * A55
 
         The adopted default is ``alpha_shear_locking = 0.7``, based on a linear
         buckling analysis of a simply supported plate, such that the result
@@ -615,7 +612,7 @@ cdef class Tria3R:
         cdef double A11mat, A12mat, A16mat, A22mat, A26mat, A66mat
         cdef double B11mat, B12mat, B16mat, B22mat, B26mat, B66mat
         cdef double D11mat, D12mat, D16mat, D22mat, D26mat, D66mat
-        cdef double E44, E45, E55
+        cdef double A44, A45, A55
         # NOTE ABD in the element direction
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
@@ -727,9 +724,9 @@ cdef class Tria3R:
                 # D62 = m21**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m22**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
                 D66 = m11*m21*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + m12*m22*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21))
 
-            E44 = prop.E44*prop.scf_k23
-            E45 = prop.E45*0.5*(prop.scf_k13 + prop.scf_k23)
-            E55 = prop.E55*prop.scf_k13
+            # NOTE transverse shear stiffness in the element coordinate system, with
+            #      the shear correction already applied
+            prop.get_Ats_element(self.m11, self.m12, self.m21, self.m22, &A44, &A45, &A55)
 
             # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
@@ -753,9 +750,9 @@ cdef class Tria3R:
 
             # NOTE strategy to prevent shear locking used in DFG elements imported here...
             factor = self.alpha_shear_locking*maxl**2/prop.h**2
-            E44 = 1 / (1 + factor) * E44
-            E45 = 1 / (1 + factor) * E45
-            E55 = 1 / (1 + factor) * E55
+            A44 = 1 / (1 + factor) * A44
+            A45 = 1 / (1 + factor) * A45
+            A55 = 1 / (1 + factor) * A55
 
             K6ROT = self.K6ROT
 
@@ -792,38 +789,38 @@ cdef class Tria3R:
             KC0e0113 = detJ*wij*(N3x*(A26*N1y + A66*N1x) + N3y*(A22*N1y + A26*N1x))
             KC0e0115 = -detJ*wij*(N3x*(B26*N1y + B66*N1x) + N3y*(B22*N1y + B26*N1x))
             KC0e0116 = detJ*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x))
-            KC0e0202 = detJ*wij*(N1x*(E45*N1y + E55*N1x) + N1y*(E44*N1y + E45*N1x))
-            KC0e0203 = -N1*detJ*wij*(E44*N1y + E45*N1x)
-            KC0e0204 = N1*detJ*wij*(E45*N1y + E55*N1x)
-            KC0e0208 = detJ*wij*(N2x*(E45*N1y + E55*N1x) + N2y*(E44*N1y + E45*N1x))
-            KC0e0209 = -N2*detJ*wij*(E44*N1y + E45*N1x)
-            KC0e0210 = N2*detJ*wij*(E45*N1y + E55*N1x)
-            KC0e0214 = detJ*wij*(N3x*(E45*N1y + E55*N1x) + N3y*(E44*N1y + E45*N1x))
-            KC0e0215 = detJ*wij*(E44*N1y + E45*N1x)*(N1 + N2 - 1)
-            KC0e0216 = -detJ*wij*(E45*N1y + E55*N1x)*(N1 + N2 - 1)
-            KC0e0303 = detJ*wij*(D22*N1y**2 + 2*D26*N1x*N1y + D66*N1x**2 + E44*N1**2)
-            KC0e0304 = -detJ*wij*(E45*N1**2 + N1x*(D12*N1y + D16*N1x) + N1y*(D26*N1y + D66*N1x))
+            KC0e0202 = detJ*wij*(N1x*(A45*N1y + A55*N1x) + N1y*(A44*N1y + A45*N1x))
+            KC0e0203 = -N1*detJ*wij*(A44*N1y + A45*N1x)
+            KC0e0204 = N1*detJ*wij*(A45*N1y + A55*N1x)
+            KC0e0208 = detJ*wij*(N2x*(A45*N1y + A55*N1x) + N2y*(A44*N1y + A45*N1x))
+            KC0e0209 = -N2*detJ*wij*(A44*N1y + A45*N1x)
+            KC0e0210 = N2*detJ*wij*(A45*N1y + A55*N1x)
+            KC0e0214 = detJ*wij*(N3x*(A45*N1y + A55*N1x) + N3y*(A44*N1y + A45*N1x))
+            KC0e0215 = detJ*wij*(A44*N1y + A45*N1x)*(N1 + N2 - 1)
+            KC0e0216 = -detJ*wij*(A45*N1y + A55*N1x)*(N1 + N2 - 1)
+            KC0e0303 = detJ*wij*(D22*N1y**2 + 2*D26*N1x*N1y + D66*N1x**2 + A44*N1**2)
+            KC0e0304 = -detJ*wij*(A45*N1**2 + N1x*(D12*N1y + D16*N1x) + N1y*(D26*N1y + D66*N1x))
             KC0e0306 = -detJ*wij*(N2x*(B12*N1y + B16*N1x) + N2y*(B26*N1y + B66*N1x))
             KC0e0307 = -detJ*wij*(N2x*(B26*N1y + B66*N1x) + N2y*(B22*N1y + B26*N1x))
-            KC0e0308 = -N1*detJ*wij*(E44*N2y + E45*N2x)
-            KC0e0309 = detJ*wij*(E44*N1*N2 + N2x*(D26*N1y + D66*N1x) + N2y*(D22*N1y + D26*N1x))
-            KC0e0310 = -detJ*wij*(E45*N1*N2 + N2x*(D12*N1y + D16*N1x) + N2y*(D26*N1y + D66*N1x))
+            KC0e0308 = -N1*detJ*wij*(A44*N2y + A45*N2x)
+            KC0e0309 = detJ*wij*(A44*N1*N2 + N2x*(D26*N1y + D66*N1x) + N2y*(D22*N1y + D26*N1x))
+            KC0e0310 = -detJ*wij*(A45*N1*N2 + N2x*(D12*N1y + D16*N1x) + N2y*(D26*N1y + D66*N1x))
             KC0e0312 = -detJ*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x))
             KC0e0313 = -detJ*wij*(N3x*(B26*N1y + B66*N1x) + N3y*(B22*N1y + B26*N1x))
-            KC0e0314 = -N1*detJ*wij*(E44*N3y + E45*N3x)
-            KC0e0315 = detJ*wij*(-E44*N1*(N1 + N2 - 1) + N3x*(D26*N1y + D66*N1x) + N3y*(D22*N1y + D26*N1x))
-            KC0e0316 = -detJ*wij*(-E45*N1*(N1 + N2 - 1) + N3x*(D12*N1y + D16*N1x) + N3y*(D26*N1y + D66*N1x))
-            KC0e0404 = detJ*wij*(E55*N1**2 + N1x*(D11*N1x + D16*N1y) + N1y*(D16*N1x + D66*N1y))
+            KC0e0314 = -N1*detJ*wij*(A44*N3y + A45*N3x)
+            KC0e0315 = detJ*wij*(-A44*N1*(N1 + N2 - 1) + N3x*(D26*N1y + D66*N1x) + N3y*(D22*N1y + D26*N1x))
+            KC0e0316 = -detJ*wij*(-A45*N1*(N1 + N2 - 1) + N3x*(D12*N1y + D16*N1x) + N3y*(D26*N1y + D66*N1x))
+            KC0e0404 = detJ*wij*(A55*N1**2 + N1x*(D11*N1x + D16*N1y) + N1y*(D16*N1x + D66*N1y))
             KC0e0406 = detJ*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y))
             KC0e0407 = detJ*wij*(N2x*(B16*N1x + B66*N1y) + N2y*(B12*N1x + B26*N1y))
-            KC0e0408 = N1*detJ*wij*(E45*N2y + E55*N2x)
-            KC0e0409 = -detJ*wij*(E45*N1*N2 + N2x*(D16*N1x + D66*N1y) + N2y*(D12*N1x + D26*N1y))
-            KC0e0410 = detJ*wij*(E55*N1*N2 + N2x*(D11*N1x + D16*N1y) + N2y*(D16*N1x + D66*N1y))
+            KC0e0408 = N1*detJ*wij*(A45*N2y + A55*N2x)
+            KC0e0409 = -detJ*wij*(A45*N1*N2 + N2x*(D16*N1x + D66*N1y) + N2y*(D12*N1x + D26*N1y))
+            KC0e0410 = detJ*wij*(A55*N1*N2 + N2x*(D11*N1x + D16*N1y) + N2y*(D16*N1x + D66*N1y))
             KC0e0412 = detJ*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y))
             KC0e0413 = detJ*wij*(N3x*(B16*N1x + B66*N1y) + N3y*(B12*N1x + B26*N1y))
-            KC0e0414 = N1*detJ*wij*(E45*N3y + E55*N3x)
-            KC0e0415 = -detJ*wij*(-E45*N1*(N1 + N2 - 1) + N3x*(D16*N1x + D66*N1y) + N3y*(D12*N1x + D26*N1y))
-            KC0e0416 = detJ*wij*(-E55*N1*(N1 + N2 - 1) + N3x*(D11*N1x + D16*N1y) + N3y*(D16*N1x + D66*N1y))
+            KC0e0414 = N1*detJ*wij*(A45*N3y + A55*N3x)
+            KC0e0415 = -detJ*wij*(-A45*N1*(N1 + N2 - 1) + N3x*(D16*N1x + D66*N1y) + N3y*(D12*N1x + D26*N1y))
+            KC0e0416 = detJ*wij*(-A55*N1*(N1 + N2 - 1) + N3x*(D11*N1x + D16*N1y) + N3y*(D16*N1x + D66*N1y))
             KC0e0606 = detJ*wij*(N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y))
             KC0e0607 = detJ*wij*(N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y))
             KC0e0609 = -detJ*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))
@@ -839,25 +836,25 @@ cdef class Tria3R:
             KC0e0713 = detJ*wij*(N3x*(A26*N2y + A66*N2x) + N3y*(A22*N2y + A26*N2x))
             KC0e0715 = -detJ*wij*(N3x*(B26*N2y + B66*N2x) + N3y*(B22*N2y + B26*N2x))
             KC0e0716 = detJ*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x))
-            KC0e0808 = detJ*wij*(N2x*(E45*N2y + E55*N2x) + N2y*(E44*N2y + E45*N2x))
-            KC0e0809 = -N2*detJ*wij*(E44*N2y + E45*N2x)
-            KC0e0810 = N2*detJ*wij*(E45*N2y + E55*N2x)
-            KC0e0814 = detJ*wij*(N3x*(E45*N2y + E55*N2x) + N3y*(E44*N2y + E45*N2x))
-            KC0e0815 = detJ*wij*(E44*N2y + E45*N2x)*(N1 + N2 - 1)
-            KC0e0816 = -detJ*wij*(E45*N2y + E55*N2x)*(N1 + N2 - 1)
-            KC0e0909 = detJ*wij*(D22*N2y**2 + 2*D26*N2x*N2y + D66*N2x**2 + E44*N2**2)
-            KC0e0910 = -detJ*wij*(E45*N2**2 + N2x*(D12*N2y + D16*N2x) + N2y*(D26*N2y + D66*N2x))
+            KC0e0808 = detJ*wij*(N2x*(A45*N2y + A55*N2x) + N2y*(A44*N2y + A45*N2x))
+            KC0e0809 = -N2*detJ*wij*(A44*N2y + A45*N2x)
+            KC0e0810 = N2*detJ*wij*(A45*N2y + A55*N2x)
+            KC0e0814 = detJ*wij*(N3x*(A45*N2y + A55*N2x) + N3y*(A44*N2y + A45*N2x))
+            KC0e0815 = detJ*wij*(A44*N2y + A45*N2x)*(N1 + N2 - 1)
+            KC0e0816 = -detJ*wij*(A45*N2y + A55*N2x)*(N1 + N2 - 1)
+            KC0e0909 = detJ*wij*(D22*N2y**2 + 2*D26*N2x*N2y + D66*N2x**2 + A44*N2**2)
+            KC0e0910 = -detJ*wij*(A45*N2**2 + N2x*(D12*N2y + D16*N2x) + N2y*(D26*N2y + D66*N2x))
             KC0e0912 = -detJ*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x))
             KC0e0913 = -detJ*wij*(N3x*(B26*N2y + B66*N2x) + N3y*(B22*N2y + B26*N2x))
-            KC0e0914 = -N2*detJ*wij*(E44*N3y + E45*N3x)
-            KC0e0915 = detJ*wij*(-E44*N2*(N1 + N2 - 1) + N3x*(D26*N2y + D66*N2x) + N3y*(D22*N2y + D26*N2x))
-            KC0e0916 = -detJ*wij*(-E45*N2*(N1 + N2 - 1) + N3x*(D12*N2y + D16*N2x) + N3y*(D26*N2y + D66*N2x))
-            KC0e1010 = detJ*wij*(E55*N2**2 + N2x*(D11*N2x + D16*N2y) + N2y*(D16*N2x + D66*N2y))
+            KC0e0914 = -N2*detJ*wij*(A44*N3y + A45*N3x)
+            KC0e0915 = detJ*wij*(-A44*N2*(N1 + N2 - 1) + N3x*(D26*N2y + D66*N2x) + N3y*(D22*N2y + D26*N2x))
+            KC0e0916 = -detJ*wij*(-A45*N2*(N1 + N2 - 1) + N3x*(D12*N2y + D16*N2x) + N3y*(D26*N2y + D66*N2x))
+            KC0e1010 = detJ*wij*(A55*N2**2 + N2x*(D11*N2x + D16*N2y) + N2y*(D16*N2x + D66*N2y))
             KC0e1012 = detJ*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y))
             KC0e1013 = detJ*wij*(N3x*(B16*N2x + B66*N2y) + N3y*(B12*N2x + B26*N2y))
-            KC0e1014 = N2*detJ*wij*(E45*N3y + E55*N3x)
-            KC0e1015 = -detJ*wij*(-E45*N2*(N1 + N2 - 1) + N3x*(D16*N2x + D66*N2y) + N3y*(D12*N2x + D26*N2y))
-            KC0e1016 = detJ*wij*(-E55*N2*(N1 + N2 - 1) + N3x*(D11*N2x + D16*N2y) + N3y*(D16*N2x + D66*N2y))
+            KC0e1014 = N2*detJ*wij*(A45*N3y + A55*N3x)
+            KC0e1015 = -detJ*wij*(-A45*N2*(N1 + N2 - 1) + N3x*(D16*N2x + D66*N2y) + N3y*(D12*N2x + D26*N2y))
+            KC0e1016 = detJ*wij*(-A55*N2*(N1 + N2 - 1) + N3x*(D11*N2x + D16*N2y) + N3y*(D16*N2x + D66*N2y))
             KC0e1212 = detJ*wij*(N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y))
             KC0e1213 = detJ*wij*(N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y))
             KC0e1215 = -detJ*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))
@@ -865,12 +862,12 @@ cdef class Tria3R:
             KC0e1313 = detJ*wij*(N3x*(A26*N3y + A66*N3x) + N3y*(A22*N3y + A26*N3x))
             KC0e1315 = -detJ*wij*(N3x*(B26*N3y + B66*N3x) + N3y*(B22*N3y + B26*N3x))
             KC0e1316 = detJ*wij*(N3x*(B12*N3y + B16*N3x) + N3y*(B26*N3y + B66*N3x))
-            KC0e1414 = detJ*wij*(N3x*(E45*N3y + E55*N3x) + N3y*(E44*N3y + E45*N3x))
-            KC0e1415 = detJ*wij*(E44*N3y + E45*N3x)*(N1 + N2 - 1)
-            KC0e1416 = -detJ*wij*(E45*N3y + E55*N3x)*(N1 + N2 - 1)
-            KC0e1515 = detJ*wij*(E44*(N1 + N2 - 1)**2 + N3x*(D26*N3y + D66*N3x) + N3y*(D22*N3y + D26*N3x))
-            KC0e1516 = -detJ*wij*(E45*(N1 + N2 - 1)**2 + N3x*(D12*N3y + D16*N3x) + N3y*(D26*N3y + D66*N3x))
-            KC0e1616 = detJ*wij*(E55*(N1 + N2 - 1)**2 + N3x*(D11*N3x + D16*N3y) + N3y*(D16*N3x + D66*N3y))
+            KC0e1414 = detJ*wij*(N3x*(A45*N3y + A55*N3x) + N3y*(A44*N3y + A45*N3x))
+            KC0e1415 = detJ*wij*(A44*N3y + A45*N3x)*(N1 + N2 - 1)
+            KC0e1416 = -detJ*wij*(A45*N3y + A55*N3x)*(N1 + N2 - 1)
+            KC0e1515 = detJ*wij*(A44*(N1 + N2 - 1)**2 + N3x*(D26*N3y + D66*N3x) + N3y*(D22*N3y + D26*N3x))
+            KC0e1516 = -detJ*wij*(A45*(N1 + N2 - 1)**2 + N3x*(D12*N3y + D16*N3x) + N3y*(D26*N3y + D66*N3x))
+            KC0e1616 = detJ*wij*(A55*(N1 + N2 - 1)**2 + N3x*(D11*N3x + D16*N3y) + N3y*(D16*N3x + D66*N3y))
 
             # NOTE KC0e drilling terms with FULL integration
 
@@ -1024,7 +1021,7 @@ cdef class Tria3R:
         cdef double A11mat, A12mat, A16mat, A22mat, A26mat, A66mat
         cdef double B11mat, B12mat, B16mat, B22mat, B26mat, B66mat
         cdef double D11mat, D12mat, D16mat, D22mat, D26mat, D66mat
-        cdef double E44, E45, E55
+        cdef double A44, A45, A55
         # NOTE ABD in the element direction
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
@@ -1134,9 +1131,9 @@ cdef class Tria3R:
                 # D62 = m21**2*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + 2*m21*m22*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21)) + m22**2*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21))
                 D66 = m11*m21*(D11mat*m11*m21 + D12mat*m12*m22 + D16mat*(m11*m22 + m12*m21)) + m12*m22*(D12mat*m11*m21 + D22mat*m12*m22 + D26mat*(m11*m22 + m12*m21)) + (m11*m22 + m12*m21)*(D16mat*m11*m21 + D26mat*m12*m22 + D66mat*(m11*m22 + m12*m21))
 
-            E44 = prop.E44*prop.scf_k23
-            E45 = prop.E45*0.5*(prop.scf_k13 + prop.scf_k23)
-            E55 = prop.E55*prop.scf_k13
+            # NOTE transverse shear stiffness in the element coordinate system, with
+            #      the shear correction already applied
+            prop.get_Ats_element(self.m11, self.m12, self.m21, self.m22, &A44, &A45, &A55)
 
             # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
@@ -1160,9 +1157,9 @@ cdef class Tria3R:
 
             # NOTE strategy to prevent shear locking used in the DFG elements imported here...
             factor = self.alpha_shear_locking*maxl**2/prop.h**2
-            E44 = 1 / (1 + factor) * E44
-            E45 = 1 / (1 + factor) * E45
-            E55 = 1 / (1 + factor) * E55
+            A44 = 1 / (1 + factor) * A44
+            A45 = 1 / (1 + factor) * A45
+            A55 = 1 / (1 + factor) * A55
 
             K6ROT = self.K6ROT
 
@@ -2190,38 +2187,38 @@ cdef class Tria3R:
             KC0e0113 = detJ*wij*(N3x*(A26*N1y + A66*N1x) + N3y*(A22*N1y + A26*N1x))
             KC0e0115 = -detJ*wij*(N3x*(B26*N1y + B66*N1x) + N3y*(B22*N1y + B26*N1x))
             KC0e0116 = detJ*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x))
-            KC0e0202 = detJ*wij*(N1x*(E45*N1y + E55*N1x) + N1y*(E44*N1y + E45*N1x))
-            KC0e0203 = -N1*detJ*wij*(E44*N1y + E45*N1x)
-            KC0e0204 = N1*detJ*wij*(E45*N1y + E55*N1x)
-            KC0e0208 = detJ*wij*(N2x*(E45*N1y + E55*N1x) + N2y*(E44*N1y + E45*N1x))
-            KC0e0209 = -N2*detJ*wij*(E44*N1y + E45*N1x)
-            KC0e0210 = N2*detJ*wij*(E45*N1y + E55*N1x)
-            KC0e0214 = detJ*wij*(N3x*(E45*N1y + E55*N1x) + N3y*(E44*N1y + E45*N1x))
-            KC0e0215 = detJ*wij*(E44*N1y + E45*N1x)*(N1 + N2 - 1)
-            KC0e0216 = -detJ*wij*(E45*N1y + E55*N1x)*(N1 + N2 - 1)
-            KC0e0303 = detJ*wij*(D22*N1y**2 + 2*D26*N1x*N1y + D66*N1x**2 + E44*N1**2)
-            KC0e0304 = -detJ*wij*(E45*N1**2 + N1x*(D12*N1y + D16*N1x) + N1y*(D26*N1y + D66*N1x))
+            KC0e0202 = detJ*wij*(N1x*(A45*N1y + A55*N1x) + N1y*(A44*N1y + A45*N1x))
+            KC0e0203 = -N1*detJ*wij*(A44*N1y + A45*N1x)
+            KC0e0204 = N1*detJ*wij*(A45*N1y + A55*N1x)
+            KC0e0208 = detJ*wij*(N2x*(A45*N1y + A55*N1x) + N2y*(A44*N1y + A45*N1x))
+            KC0e0209 = -N2*detJ*wij*(A44*N1y + A45*N1x)
+            KC0e0210 = N2*detJ*wij*(A45*N1y + A55*N1x)
+            KC0e0214 = detJ*wij*(N3x*(A45*N1y + A55*N1x) + N3y*(A44*N1y + A45*N1x))
+            KC0e0215 = detJ*wij*(A44*N1y + A45*N1x)*(N1 + N2 - 1)
+            KC0e0216 = -detJ*wij*(A45*N1y + A55*N1x)*(N1 + N2 - 1)
+            KC0e0303 = detJ*wij*(D22*N1y**2 + 2*D26*N1x*N1y + D66*N1x**2 + A44*N1**2)
+            KC0e0304 = -detJ*wij*(A45*N1**2 + N1x*(D12*N1y + D16*N1x) + N1y*(D26*N1y + D66*N1x))
             KC0e0306 = -detJ*wij*(N2x*(B12*N1y + B16*N1x) + N2y*(B26*N1y + B66*N1x))
             KC0e0307 = -detJ*wij*(N2x*(B26*N1y + B66*N1x) + N2y*(B22*N1y + B26*N1x))
-            KC0e0308 = -N1*detJ*wij*(E44*N2y + E45*N2x)
-            KC0e0309 = detJ*wij*(E44*N1*N2 + N2x*(D26*N1y + D66*N1x) + N2y*(D22*N1y + D26*N1x))
-            KC0e0310 = -detJ*wij*(E45*N1*N2 + N2x*(D12*N1y + D16*N1x) + N2y*(D26*N1y + D66*N1x))
+            KC0e0308 = -N1*detJ*wij*(A44*N2y + A45*N2x)
+            KC0e0309 = detJ*wij*(A44*N1*N2 + N2x*(D26*N1y + D66*N1x) + N2y*(D22*N1y + D26*N1x))
+            KC0e0310 = -detJ*wij*(A45*N1*N2 + N2x*(D12*N1y + D16*N1x) + N2y*(D26*N1y + D66*N1x))
             KC0e0312 = -detJ*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x))
             KC0e0313 = -detJ*wij*(N3x*(B26*N1y + B66*N1x) + N3y*(B22*N1y + B26*N1x))
-            KC0e0314 = -N1*detJ*wij*(E44*N3y + E45*N3x)
-            KC0e0315 = detJ*wij*(-E44*N1*(N1 + N2 - 1) + N3x*(D26*N1y + D66*N1x) + N3y*(D22*N1y + D26*N1x))
-            KC0e0316 = -detJ*wij*(-E45*N1*(N1 + N2 - 1) + N3x*(D12*N1y + D16*N1x) + N3y*(D26*N1y + D66*N1x))
-            KC0e0404 = detJ*wij*(E55*N1**2 + N1x*(D11*N1x + D16*N1y) + N1y*(D16*N1x + D66*N1y))
+            KC0e0314 = -N1*detJ*wij*(A44*N3y + A45*N3x)
+            KC0e0315 = detJ*wij*(-A44*N1*(N1 + N2 - 1) + N3x*(D26*N1y + D66*N1x) + N3y*(D22*N1y + D26*N1x))
+            KC0e0316 = -detJ*wij*(-A45*N1*(N1 + N2 - 1) + N3x*(D12*N1y + D16*N1x) + N3y*(D26*N1y + D66*N1x))
+            KC0e0404 = detJ*wij*(A55*N1**2 + N1x*(D11*N1x + D16*N1y) + N1y*(D16*N1x + D66*N1y))
             KC0e0406 = detJ*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y))
             KC0e0407 = detJ*wij*(N2x*(B16*N1x + B66*N1y) + N2y*(B12*N1x + B26*N1y))
-            KC0e0408 = N1*detJ*wij*(E45*N2y + E55*N2x)
-            KC0e0409 = -detJ*wij*(E45*N1*N2 + N2x*(D16*N1x + D66*N1y) + N2y*(D12*N1x + D26*N1y))
-            KC0e0410 = detJ*wij*(E55*N1*N2 + N2x*(D11*N1x + D16*N1y) + N2y*(D16*N1x + D66*N1y))
+            KC0e0408 = N1*detJ*wij*(A45*N2y + A55*N2x)
+            KC0e0409 = -detJ*wij*(A45*N1*N2 + N2x*(D16*N1x + D66*N1y) + N2y*(D12*N1x + D26*N1y))
+            KC0e0410 = detJ*wij*(A55*N1*N2 + N2x*(D11*N1x + D16*N1y) + N2y*(D16*N1x + D66*N1y))
             KC0e0412 = detJ*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y))
             KC0e0413 = detJ*wij*(N3x*(B16*N1x + B66*N1y) + N3y*(B12*N1x + B26*N1y))
-            KC0e0414 = N1*detJ*wij*(E45*N3y + E55*N3x)
-            KC0e0415 = -detJ*wij*(-E45*N1*(N1 + N2 - 1) + N3x*(D16*N1x + D66*N1y) + N3y*(D12*N1x + D26*N1y))
-            KC0e0416 = detJ*wij*(-E55*N1*(N1 + N2 - 1) + N3x*(D11*N1x + D16*N1y) + N3y*(D16*N1x + D66*N1y))
+            KC0e0414 = N1*detJ*wij*(A45*N3y + A55*N3x)
+            KC0e0415 = -detJ*wij*(-A45*N1*(N1 + N2 - 1) + N3x*(D16*N1x + D66*N1y) + N3y*(D12*N1x + D26*N1y))
+            KC0e0416 = detJ*wij*(-A55*N1*(N1 + N2 - 1) + N3x*(D11*N1x + D16*N1y) + N3y*(D16*N1x + D66*N1y))
             KC0e0606 = detJ*wij*(N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y))
             KC0e0607 = detJ*wij*(N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y))
             KC0e0609 = -detJ*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))
@@ -2237,25 +2234,25 @@ cdef class Tria3R:
             KC0e0713 = detJ*wij*(N3x*(A26*N2y + A66*N2x) + N3y*(A22*N2y + A26*N2x))
             KC0e0715 = -detJ*wij*(N3x*(B26*N2y + B66*N2x) + N3y*(B22*N2y + B26*N2x))
             KC0e0716 = detJ*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x))
-            KC0e0808 = detJ*wij*(N2x*(E45*N2y + E55*N2x) + N2y*(E44*N2y + E45*N2x))
-            KC0e0809 = -N2*detJ*wij*(E44*N2y + E45*N2x)
-            KC0e0810 = N2*detJ*wij*(E45*N2y + E55*N2x)
-            KC0e0814 = detJ*wij*(N3x*(E45*N2y + E55*N2x) + N3y*(E44*N2y + E45*N2x))
-            KC0e0815 = detJ*wij*(E44*N2y + E45*N2x)*(N1 + N2 - 1)
-            KC0e0816 = -detJ*wij*(E45*N2y + E55*N2x)*(N1 + N2 - 1)
-            KC0e0909 = detJ*wij*(D22*N2y**2 + 2*D26*N2x*N2y + D66*N2x**2 + E44*N2**2)
-            KC0e0910 = -detJ*wij*(E45*N2**2 + N2x*(D12*N2y + D16*N2x) + N2y*(D26*N2y + D66*N2x))
+            KC0e0808 = detJ*wij*(N2x*(A45*N2y + A55*N2x) + N2y*(A44*N2y + A45*N2x))
+            KC0e0809 = -N2*detJ*wij*(A44*N2y + A45*N2x)
+            KC0e0810 = N2*detJ*wij*(A45*N2y + A55*N2x)
+            KC0e0814 = detJ*wij*(N3x*(A45*N2y + A55*N2x) + N3y*(A44*N2y + A45*N2x))
+            KC0e0815 = detJ*wij*(A44*N2y + A45*N2x)*(N1 + N2 - 1)
+            KC0e0816 = -detJ*wij*(A45*N2y + A55*N2x)*(N1 + N2 - 1)
+            KC0e0909 = detJ*wij*(D22*N2y**2 + 2*D26*N2x*N2y + D66*N2x**2 + A44*N2**2)
+            KC0e0910 = -detJ*wij*(A45*N2**2 + N2x*(D12*N2y + D16*N2x) + N2y*(D26*N2y + D66*N2x))
             KC0e0912 = -detJ*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x))
             KC0e0913 = -detJ*wij*(N3x*(B26*N2y + B66*N2x) + N3y*(B22*N2y + B26*N2x))
-            KC0e0914 = -N2*detJ*wij*(E44*N3y + E45*N3x)
-            KC0e0915 = detJ*wij*(-E44*N2*(N1 + N2 - 1) + N3x*(D26*N2y + D66*N2x) + N3y*(D22*N2y + D26*N2x))
-            KC0e0916 = -detJ*wij*(-E45*N2*(N1 + N2 - 1) + N3x*(D12*N2y + D16*N2x) + N3y*(D26*N2y + D66*N2x))
-            KC0e1010 = detJ*wij*(E55*N2**2 + N2x*(D11*N2x + D16*N2y) + N2y*(D16*N2x + D66*N2y))
+            KC0e0914 = -N2*detJ*wij*(A44*N3y + A45*N3x)
+            KC0e0915 = detJ*wij*(-A44*N2*(N1 + N2 - 1) + N3x*(D26*N2y + D66*N2x) + N3y*(D22*N2y + D26*N2x))
+            KC0e0916 = -detJ*wij*(-A45*N2*(N1 + N2 - 1) + N3x*(D12*N2y + D16*N2x) + N3y*(D26*N2y + D66*N2x))
+            KC0e1010 = detJ*wij*(A55*N2**2 + N2x*(D11*N2x + D16*N2y) + N2y*(D16*N2x + D66*N2y))
             KC0e1012 = detJ*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y))
             KC0e1013 = detJ*wij*(N3x*(B16*N2x + B66*N2y) + N3y*(B12*N2x + B26*N2y))
-            KC0e1014 = N2*detJ*wij*(E45*N3y + E55*N3x)
-            KC0e1015 = -detJ*wij*(-E45*N2*(N1 + N2 - 1) + N3x*(D16*N2x + D66*N2y) + N3y*(D12*N2x + D26*N2y))
-            KC0e1016 = detJ*wij*(-E55*N2*(N1 + N2 - 1) + N3x*(D11*N2x + D16*N2y) + N3y*(D16*N2x + D66*N2y))
+            KC0e1014 = N2*detJ*wij*(A45*N3y + A55*N3x)
+            KC0e1015 = -detJ*wij*(-A45*N2*(N1 + N2 - 1) + N3x*(D16*N2x + D66*N2y) + N3y*(D12*N2x + D26*N2y))
+            KC0e1016 = detJ*wij*(-A55*N2*(N1 + N2 - 1) + N3x*(D11*N2x + D16*N2y) + N3y*(D16*N2x + D66*N2y))
             KC0e1212 = detJ*wij*(N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y))
             KC0e1213 = detJ*wij*(N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y))
             KC0e1215 = -detJ*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))
@@ -2263,12 +2260,12 @@ cdef class Tria3R:
             KC0e1313 = detJ*wij*(N3x*(A26*N3y + A66*N3x) + N3y*(A22*N3y + A26*N3x))
             KC0e1315 = -detJ*wij*(N3x*(B26*N3y + B66*N3x) + N3y*(B22*N3y + B26*N3x))
             KC0e1316 = detJ*wij*(N3x*(B12*N3y + B16*N3x) + N3y*(B26*N3y + B66*N3x))
-            KC0e1414 = detJ*wij*(N3x*(E45*N3y + E55*N3x) + N3y*(E44*N3y + E45*N3x))
-            KC0e1415 = detJ*wij*(E44*N3y + E45*N3x)*(N1 + N2 - 1)
-            KC0e1416 = -detJ*wij*(E45*N3y + E55*N3x)*(N1 + N2 - 1)
-            KC0e1515 = detJ*wij*(E44*(N1 + N2 - 1)**2 + N3x*(D26*N3y + D66*N3x) + N3y*(D22*N3y + D26*N3x))
-            KC0e1516 = -detJ*wij*(E45*(N1 + N2 - 1)**2 + N3x*(D12*N3y + D16*N3x) + N3y*(D26*N3y + D66*N3x))
-            KC0e1616 = detJ*wij*(E55*(N1 + N2 - 1)**2 + N3x*(D11*N3x + D16*N3y) + N3y*(D16*N3x + D66*N3y))
+            KC0e1414 = detJ*wij*(N3x*(A45*N3y + A55*N3x) + N3y*(A44*N3y + A45*N3x))
+            KC0e1415 = detJ*wij*(A44*N3y + A45*N3x)*(N1 + N2 - 1)
+            KC0e1416 = -detJ*wij*(A45*N3y + A55*N3x)*(N1 + N2 - 1)
+            KC0e1515 = detJ*wij*(A44*(N1 + N2 - 1)**2 + N3x*(D26*N3y + D66*N3x) + N3y*(D22*N3y + D26*N3x))
+            KC0e1516 = -detJ*wij*(A45*(N1 + N2 - 1)**2 + N3x*(D12*N3y + D16*N3x) + N3y*(D26*N3y + D66*N3x))
+            KC0e1616 = detJ*wij*(A55*(N1 + N2 - 1)**2 + N3x*(D11*N3x + D16*N3y) + N3y*(D16*N3x + D66*N3y))
 
             # NOTE KC0e drilling terms with FULL integration
 

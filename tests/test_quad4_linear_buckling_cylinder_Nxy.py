@@ -79,11 +79,9 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         plyt = 0.125e-3
         laminaprop = (E11, E22, nu12, G12, G13, G23)
 
-        prop = laminated_plate(stack=stack, plyt=plyt, laminaprop=laminaprop,
-                               calc_scf=True)
         # NOTE forcing 5/6 according to Castro et al., beginning of Section 6
-        prop.scf_k13 = 5/6
-        prop.scf_k23 = 5/6
+        prop = laminated_plate(stack=stack, plyt=plyt, laminaprop=laminaprop,
+                               shear_correction='constant')
 
 
         nids = 1 + np.arange(nlength*(ntheta+1))

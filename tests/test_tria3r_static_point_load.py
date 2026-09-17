@@ -52,7 +52,7 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
     KC0v = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=DOUBLE)
     N = DOF*nx*ny
 
-    prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True)
+    prop = isotropic_plate(thickness=h, E=E, nu=nu)
 
     trias = []
     init_k_KC0 = 0

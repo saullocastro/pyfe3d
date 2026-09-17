@@ -55,7 +55,7 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     # NOTE cylinder Z11, table 3 of reference
     stack = [+60, -60, 0, 0, +68, -68, +52, -52, +37, -37]
     prop = laminated_plate(stack=stack, plyt=plyt, laminaprop=laminaprop,
-                           calc_scf=True, rho=rho)
+                           rho=rho)
 
     nids = 1 + np.arange(nlength*(ntheta+1))
     nids_mesh = nids.reshape(nlength, ntheta+1)
@@ -246,9 +246,12 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
         plotter.parallel_projection = True
         plotter.show()
 
-    assert np.allclose(omegan, [1981.74742051, 1981.74742052,
-                                2117.83235188, 2117.83235189,
-                                2203.40385634, 2203.40385635], rtol=1e-4)
+    # NOTE reference values updated after adopting the equilibrium-based
+    #      transverse shear stiffness of Rohwer (1988), evaluated in the element
+    #      frame, which changed them by about 1.2e-4
+    assert np.allclose(omegan, [1981.51374432, 1981.51374432,
+                                2117.61717749, 2117.61717749,
+                                2203.24236915, 2203.24236915], rtol=1e-4)
 
 if __name__ == '__main__':
     test_linear_nat_freq_cylinder(mode=0, plot_pyvista=True, refinement=1)

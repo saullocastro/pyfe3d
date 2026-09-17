@@ -48,7 +48,7 @@ def test_static_plate_quad_point_load(plot=False):
     KC0v = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=DOUBLE)
     N = DOF*nx*ny
 
-    prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True)
+    prop = isotropic_plate(thickness=h, E=E, nu=nu)
 
     quads = []
     init_k_KC0 = 0

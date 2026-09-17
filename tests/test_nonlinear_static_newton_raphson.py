@@ -98,7 +98,7 @@ def plate(name, nx=11, ny=11):
     nu = 0.3
     D = E*h**3/(12*(1 - nu**2))
     q = 3*h*D/(0.00406*a**4)
-    prop = isotropic_plate(thickness=h, E=E, nu=nu, calc_scf=True)
+    prop = isotropic_plate(thickness=h, E=E, nu=nu)
 
     xtmp = np.linspace(0, a, nx)
     ytmp = np.linspace(0, b, ny)
