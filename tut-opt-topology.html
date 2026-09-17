@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Tutorial: topology optimisation using pyfe3d &#8212; pyfe3d 0.8.0 documentation</title>
+    <title>Tutorial: topology optimisation using pyfe3d &#8212; pyfe3d 0.9.0 documentation</title>
   
   
   
@@ -39,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="_static/documentation_options.js?v=486e5634"></script>
+    <script src="_static/documentation_options.js?v=39bb1c6d"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.8.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.9.0 documentation</p>
   
 </a></div>
     
@@ -486,7 +486,7 @@ nodes = list(zip(n1s, n2s, n3s, n4s))
     init_k_KC0 = 0
     i = 0
     for n1, n2, n3, n4 in zip(n1s, n2s, n3s, n4s):
-        prop = isotropic_plate(thickness=h, E=E[i], nu=nu, calc_scf=True)
+        prop = isotropic_plate(thickness=h, E=E[i], nu=nu)
         i += 1
         pos1 = nid_pos[n1]
         pos2 = nid_pos[n2]
@@ -531,7 +531,7 @@ nodes = list(zip(n1s, n2s, n3s, n4s))
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def dKdrho(rho, i):
     dEdrho = c*rho[i]**(c-1)*E0
-    prop = isotropic_plate(thickness=h, E=dEdrho, nu=nu, calc_scf=True)
+    prop = isotropic_plate(thickness=h, E=dEdrho, nu=nu)
 
     KC0r = np.zeros(1*data.KC0_SPARSE_SIZE, dtype=INT)
     KC0c = np.zeros(1*data.KC0_SPARSE_SIZE, dtype=INT)

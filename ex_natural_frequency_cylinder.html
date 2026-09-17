@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Natural frequency analysis of a cylinder &#8212; pyfe3d 0.8.0 documentation</title>
+    <title>Natural frequency analysis of a cylinder &#8212; pyfe3d 0.9.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="_static/documentation_options.js?v=486e5634"></script>
+    <script src="_static/documentation_options.js?v=39bb1c6d"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -117,7 +117,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.8.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.9.0 documentation</p>
   
 </a></div>
     
@@ -439,7 +439,7 @@ tests:</p>
     <span class="c1"># NOTE cylinder Z11, table 3 of reference</span>
     <span class="n">stack</span> <span class="o">=</span> <span class="p">[</span><span class="o">+</span><span class="mi">60</span><span class="p">,</span> <span class="o">-</span><span class="mi">60</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">+</span><span class="mi">68</span><span class="p">,</span> <span class="o">-</span><span class="mi">68</span><span class="p">,</span> <span class="o">+</span><span class="mi">52</span><span class="p">,</span> <span class="o">-</span><span class="mi">52</span><span class="p">,</span> <span class="o">+</span><span class="mi">37</span><span class="p">,</span> <span class="o">-</span><span class="mi">37</span><span class="p">]</span>
     <span class="n">prop</span> <span class="o">=</span> <span class="n">laminated_plate</span><span class="p">(</span><span class="n">stack</span><span class="o">=</span><span class="n">stack</span><span class="p">,</span> <span class="n">plyt</span><span class="o">=</span><span class="n">plyt</span><span class="p">,</span> <span class="n">laminaprop</span><span class="o">=</span><span class="n">laminaprop</span><span class="p">,</span>
-                           <span class="n">calc_scf</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="n">rho</span><span class="p">)</span>
+                           <span class="n">rho</span><span class="o">=</span><span class="n">rho</span><span class="p">)</span>
 
     <span class="n">nids</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nlength</span><span class="o">*</span><span class="p">(</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
     <span class="n">nids_mesh</span> <span class="o">=</span> <span class="n">nids</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nlength</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
@@ -630,9 +630,12 @@ tests:</p>
         <span class="n">plotter</span><span class="o">.</span><span class="n">parallel_projection</span> <span class="o">=</span> <span class="kc">True</span>
         <span class="n">plotter</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">omegan</span><span class="p">,</span> <span class="p">[</span><span class="mf">1932.96293126</span><span class="p">,</span> <span class="mf">1932.96293127</span><span class="p">,</span>
-                                <span class="mf">2105.49050107</span><span class="p">,</span> <span class="mf">2105.49050108</span><span class="p">,</span>
-                                <span class="mf">2114.9501929</span> <span class="p">,</span> <span class="mf">2114.9501929</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
+    <span class="c1"># NOTE reference values updated after adopting the equilibrium-based</span>
+    <span class="c1">#      transverse shear stiffness of Rohwer (1988), evaluated in the element</span>
+    <span class="c1">#      frame, which changed them by about 1e-4</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">omegan</span><span class="p">,</span> <span class="p">[</span><span class="mf">1932.78812629</span><span class="p">,</span> <span class="mf">1932.78812629</span><span class="p">,</span>
+                                <span class="mf">2105.30191503</span><span class="p">,</span> <span class="mf">2105.30191503</span><span class="p">,</span>
+                                <span class="mf">2114.86866765</span><span class="p">,</span> <span class="mf">2114.86866765</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
 
 <span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">'__main__'</span><span class="p">:</span>
     <span class="n">test_linear_nat_freq_cylinder</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">plot_pyvista</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">refinement</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>

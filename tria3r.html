@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Tria3R - Triangular element with reduced integration (pyfe3d.tria3r) &#8212; pyfe3d 0.8.0 documentation</title>
+    <title>Tria3R - Triangular element with reduced integration (pyfe3d.tria3r) &#8212; pyfe3d 0.9.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="_static/documentation_options.js?v=486e5634"></script>
+    <script src="_static/documentation_options.js?v=39bb1c6d"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -118,7 +118,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.8.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.9.0 documentation</p>
   
 </a></div>
     
@@ -384,7 +384,7 @@
 the centroid (<span class="math notranslate nohighlight">\(N1=N2=N3=1/3\)</span>) and weight <span class="math notranslate nohighlight">\(weight=1\)</span> is evaluated,
 preventing shear locking. The drilling stiffness is evaluated with
 full integration.</p>
-<p>The transverse shear stiffnesses <span class="math notranslate nohighlight">\(E_{44}\)</span>, <span class="math notranslate nohighlight">\(E_{45}\)</span> and <span class="math notranslate nohighlight">\(E_{55}\)</span> are stabilised
+<p>The transverse shear stiffnesses <span class="math notranslate nohighlight">\(A_{44}\)</span>, <span class="math notranslate nohighlight">\(A_{45}\)</span> and <span class="math notranslate nohighlight">\(A_{55}\)</span> are stabilised
 using the Stenberg’s method described in:</p>
 <blockquote>
 <div><p>Bischoff, M., &amp; Bletzinger, K.-U. (2004). 
@@ -401,23 +401,21 @@ Composite Structures, 209, 67–78. <a class="reference external" href="https://
 <p>where the transverse shear terms are changed as per Eq. (26) in Castro et al., here repeated
 for convenience:</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}\left[\begin{matrix}\hat{E}_{44}, \hat{E}_{45} \\ \hat{E}_{45}, \hat{E}_{55}\end{matrix}\right] = \frac{\kappa}{1 + factor}\left[\begin{matrix}E_{44}, E_{45} \\ E_{45}, E_{55}\end{matrix}\right]\end{split}\]</div>
+\[\begin{split}\left[\begin{matrix}\hat{A}_{44}, \hat{A}_{45} \\ \hat{A}_{45}, \hat{A}_{55}\end{matrix}\right] = \frac{1}{1 + factor}\left[\begin{matrix}A_{44}, A_{45} \\ A_{45}, A_{55}\end{matrix}\right]\end{split}\]</div>
 <p>with <span class="math notranslate nohighlight">\(factor\)</span> defined as:</p>
 <blockquote>
 <div><p>factor = frac{alpha ell^2}{h^2}</p>
 </div></blockquote>
 <p>where <span class="math notranslate nohighlight">\(\alpha\)</span> is a positive constant parameters (see the <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span></code> attribute), 
 <span class="math notranslate nohighlight">\(\ell\)</span> is the longest edge of the corresponding triangle, and <span class="math notranslate nohighlight">\(h\)</span> the total thickness of the element.</p>
-<p>Shear correction factors are also applied to <span class="math notranslate nohighlight">\(E_{44}\)</span>, <span class="math notranslate nohighlight">\(E_{45}\)</span> and <span class="math notranslate nohighlight">\(E_{55}\)</span>, with the following:</p>
-<div class="math notranslate nohighlight">
-\[\tilde{E}_{44} = \hat{E}_{44} \kappa_{23}
-\tilde{E}_{45} = \hat{E}_{45} (\kappa_{13} + \kappa_{23})/2
-\tilde{E}_{55} = \hat{E}_{55} \kappa_{13}\]</div>
-<p>Such that <span class="math notranslate nohighlight">\(\tilde{E}_{ij}\)</span> are the transverse shear terms considering both the stabilisation to prevent
-shear locking, and the shear correction factor. As described in Castro et al., it is known that the
-shear correction factors are no longer a very releavant parameter when the stabilisation scheme
-presented above is used. The shear correction factors are read directly
-from the <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp</span></code></a> object.</p>
+<p>The transverse shear stiffnesses <span class="math notranslate nohighlight">\(A_{44}\)</span>, <span class="math notranslate nohighlight">\(A_{45}\)</span> and <span class="math notranslate nohighlight">\(A_{55}\)</span> are read
+from the <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp</span></code></a> object with the shear correction
+already applied, see <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness" title="pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness()</span></code></a>,
+and brought to the element coordinate system with
+<a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp.calc_Ats_element" title="pyfe3d.shellprop.ShellProp.calc_Ats_element"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp.calc_Ats_element()</span></code></a>, before the stabilisation
+above is applied. As described in Castro et al., the shear correction is no
+longer a very relevant parameter when the stabilisation scheme presented above
+is used.</p>
 <p>The drilling stiffness is calculated following the approach adopted in
 MSC Nastran and Autodesk Nastran, using a penalty-based method. Because
 the stiffness is only evaluated at the element centroid, this method provides
@@ -481,12 +479,14 @@ below.</p>
 <dt><strong>area,</strong><span class="classifier">double</span></dt><dd><p>Element area.</p>
 </dd>
 <dt><strong>alpha_shear_locking,</strong><span class="classifier">double</span></dt><dd><p>Factor used to prevent shear locking, adopted from the DFG element,
-affecting stiffness terms <code class="docutils literal notranslate"><span class="pre">E44</span></code>, <code class="docutils literal notranslate"><span class="pre">E45</span></code>, <code class="docutils literal notranslate"><span class="pre">E45</span></code>:</p>
+affecting the transverse shear stiffness terms <code class="docutils literal notranslate"><span class="pre">A44</span></code>, <code class="docutils literal notranslate"><span class="pre">A45</span></code>,
+<code class="docutils literal notranslate"><span class="pre">A55</span></code>, already in the element coordinate system and with the shear
+correction applied (see <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp.calc_Ats_element" title="pyfe3d.shellprop.ShellProp.calc_Ats_element"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ShellProp.calc_Ats_element()</span></code></a>):</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">maxl</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">edge_12</span><span class="p">,</span> <span class="n">edge_23</span><span class="p">,</span> <span class="n">edge_31</span><span class="p">)</span>
 <span class="n">factor</span> <span class="o">=</span> <span class="n">alpha_shear_locking</span><span class="o">*</span><span class="n">maxl</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">thickness</span><span class="o">**</span><span class="mi">2</span>
-<span class="n">E44</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">factor</span><span class="p">)</span> <span class="o">*</span> <span class="n">E44</span>
-<span class="c1"># E45 = 1 / (1 + factor) * E45</span>
-<span class="n">E55</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">factor</span><span class="p">)</span> <span class="o">*</span> <span class="n">E55</span>
+<span class="n">A44</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">factor</span><span class="p">)</span> <span class="o">*</span> <span class="n">A44</span>
+<span class="n">A45</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">factor</span><span class="p">)</span> <span class="o">*</span> <span class="n">A45</span>
+<span class="n">A55</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">factor</span><span class="p">)</span> <span class="o">*</span> <span class="n">A55</span>
 </pre></div>
 </div>
 <p>The adopted default is <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span> <span class="pre">=</span> <span class="pre">0.7</span></code>, based on a linear

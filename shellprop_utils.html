@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Shell property utils module (pyfe3d.shellprop_utils) &#8212; pyfe3d 0.8.0 documentation</title>
+    <title>Shell property utils module (pyfe3d.shellprop_utils) &#8212; pyfe3d 0.9.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="_static/documentation_options.js?v=486e5634"></script>
+    <script src="_static/documentation_options.js?v=39bb1c6d"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -116,7 +116,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.8.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.9.0 documentation</p>
   
 </a></div>
     
@@ -382,7 +382,7 @@
 </section>
 <dl class="py function">
 <dt class="sig sig-object py" id="pyfe3d.shellprop_utils.isotropic_plate">
-<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop_utils.</span></span><span class="sig-name descname"><span class="pre">isotropic_plate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thickness</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calc_scf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop_utils.isotropic_plate" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop_utils.</span></span><span class="sig-name descname"><span class="pre">isotropic_plate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">thickness</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">E</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">nu</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shear_correction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rohwer'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop_utils.isotropic_plate" title="Link to this definition">#</a></dt>
 <dd><p>Read data for an isotropic plate</p>
 <p><a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object is returned based on the inputs given.</p>
 <dl class="field-list simple">
@@ -399,8 +399,8 @@
 <dt><strong>offset</strong><span class="classifier">float, optional</span></dt><dd><p>Offset along the normal axis about the mid-surface, which influences
 the extension-bending coupling (B matrix).</p>
 </dd>
-<dt><strong>calc_scf</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, use <code class="xref py py-func docutils literal notranslate"><span class="pre">ShellProp.calc_scf()</span></code> to compute shear correction
-factors, otherwise the default value of 5/6 is used.</p>
+<dt><strong>shear_correction</strong><span class="classifier">str or None, optional</span></dt><dd><p>See <a class="reference internal" href="#pyfe3d.shellprop_utils.laminated_plate" title="pyfe3d.shellprop_utils.laminated_plate"><code class="xref py py-func docutils literal notranslate"><span class="pre">laminated_plate()</span></code></a>. For an isotropic plate, <code class="docutils literal notranslate"><span class="pre">'rohwer'</span></code>,
+<code class="docutils literal notranslate"><span class="pre">'vlachoutsis'</span></code> and <code class="docutils literal notranslate"><span class="pre">'constant'</span></code> give <code class="docutils literal notranslate"><span class="pre">A44</span> <span class="pre">=</span> <span class="pre">A55</span> <span class="pre">=</span> <span class="pre">5/6</span> <span class="pre">G</span> <span class="pre">h</span></code>.</p>
 </dd>
 </dl>
 </dd>
@@ -409,7 +409,7 @@ factors, otherwise the default value of 5/6 is used.</p>
 
 <dl class="py function">
 <dt class="sig sig-object py" id="pyfe3d.shellprop_utils.laminated_plate">
-<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop_utils.</span></span><span class="sig-name descname"><span class="pre">laminated_plate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stack</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plyt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">laminaprop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plyts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">laminaprops</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">calc_scf</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop_utils.laminated_plate" title="Link to this definition">#</a></dt>
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.shellprop_utils.</span></span><span class="sig-name descname"><span class="pre">laminated_plate</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">stack</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plyt</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">laminaprop</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rho</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">plyts</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">laminaprops</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rhos</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">offset</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">shear_correction</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'rohwer'</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.shellprop_utils.laminated_plate" title="Link to this definition">#</a></dt>
 <dd><p>Read a laminate stacking sequence data.</p>
 <p><a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object is returned based on the inputs given.</p>
 <dl class="field-list simple">
@@ -433,8 +433,11 @@ can be supplied.</p>
 <dt><strong>offset</strong><span class="classifier">float, optional</span></dt><dd><p>Offset along the normal axis about the mid-surface, which influences
 the laminate properties.</p>
 </dd>
-<dt><strong>calc_scf</strong><span class="classifier">bool, optional</span></dt><dd><p>If True, use <code class="xref py py-func docutils literal notranslate"><span class="pre">ShellProp.calc_scf()</span></code> to compute shear correction
-factors, otherwise the default value of 5/6 is used</p>
+<dt><strong>shear_correction</strong><span class="classifier">str or None, optional</span></dt><dd><p>Method used to compute the transverse shear stiffnesses <code class="docutils literal notranslate"><span class="pre">A44</span></code>,
+<code class="docutils literal notranslate"><span class="pre">A45</span></code>, <code class="docutils literal notranslate"><span class="pre">A55</span></code>, which are returned with the correction already
+applied: <code class="docutils literal notranslate"><span class="pre">'rohwer'</span></code> (default, equilibrium approach), <code class="docutils literal notranslate"><span class="pre">'vlachoutsis'</span></code>,
+<code class="docutils literal notranslate"><span class="pre">'constant'</span></code> (5/6) or <code class="docutils literal notranslate"><span class="pre">None</span></code> (no correction). See
+<a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness" title="pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ShellProp.calc_transverse_shear_stiffness()</span></code></a>.</p>
 </dd>
 </dl>
 </dd>

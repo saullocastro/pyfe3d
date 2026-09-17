@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Linear buckling analysis of a cylinder under torsion &#8212; pyfe3d 0.8.0 documentation</title>
+    <title>Linear buckling analysis of a cylinder under torsion &#8212; pyfe3d 0.9.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="_static/documentation_options.js?v=486e5634"></script>
+    <script src="_static/documentation_options.js?v=39bb1c6d"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -118,7 +118,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.8.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.9.0 documentation</p>
   
 </a></div>
     
@@ -468,11 +468,9 @@ tests:</p>
         <span class="n">plyt</span> <span class="o">=</span> <span class="mf">0.125e-3</span>
         <span class="n">laminaprop</span> <span class="o">=</span> <span class="p">(</span><span class="n">E11</span><span class="p">,</span> <span class="n">E22</span><span class="p">,</span> <span class="n">nu12</span><span class="p">,</span> <span class="n">G12</span><span class="p">,</span> <span class="n">G13</span><span class="p">,</span> <span class="n">G23</span><span class="p">)</span>
 
-        <span class="n">prop</span> <span class="o">=</span> <span class="n">laminated_plate</span><span class="p">(</span><span class="n">stack</span><span class="o">=</span><span class="n">stack</span><span class="p">,</span> <span class="n">plyt</span><span class="o">=</span><span class="n">plyt</span><span class="p">,</span> <span class="n">laminaprop</span><span class="o">=</span><span class="n">laminaprop</span><span class="p">,</span>
-                               <span class="n">calc_scf</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
         <span class="c1"># NOTE forcing 5/6 according to Castro et al., beginning of Section 6</span>
-        <span class="n">prop</span><span class="o">.</span><span class="n">scf_k13</span> <span class="o">=</span> <span class="mi">5</span><span class="o">/</span><span class="mi">6</span>
-        <span class="n">prop</span><span class="o">.</span><span class="n">scf_k23</span> <span class="o">=</span> <span class="mi">5</span><span class="o">/</span><span class="mi">6</span>
+        <span class="n">prop</span> <span class="o">=</span> <span class="n">laminated_plate</span><span class="p">(</span><span class="n">stack</span><span class="o">=</span><span class="n">stack</span><span class="p">,</span> <span class="n">plyt</span><span class="o">=</span><span class="n">plyt</span><span class="p">,</span> <span class="n">laminaprop</span><span class="o">=</span><span class="n">laminaprop</span><span class="p">,</span>
+                               <span class="n">shear_correction</span><span class="o">=</span><span class="s1">'constant'</span><span class="p">)</span>
 
 
         <span class="n">nids</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nlength</span><span class="o">*</span><span class="p">(</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>

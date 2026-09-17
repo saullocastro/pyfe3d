@@ -8,7 +8,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Quad4 - Quadrilateral element with mixed integration (pyfe3d.quad4) &#8212; pyfe3d 0.8.0 documentation</title>
+    <title>Quad4 - Quadrilateral element with mixed integration (pyfe3d.quad4) &#8212; pyfe3d 0.9.0 documentation</title>
   
   
   
@@ -38,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
 
-    <script src="_static/documentation_options.js?v=486e5634"></script>
+    <script src="_static/documentation_options.js?v=39bb1c6d"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -118,7 +118,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.8.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.9.0 documentation</p>
   
 </a></div>
     
@@ -414,13 +414,15 @@ characteristic length, here calculated as the square root of the element area
 <p>The in-plane stiffness terms are integrated with 2 quadrature points, and the
 drilling stiffness is integrated with 1 quadrature point. These are
 not specified in the paper of Hughes et al. (1977).</p>
-<p>Shear correction factors are applied to <span class="math notranslate nohighlight">\(E_{44}\)</span>, <span class="math notranslate nohighlight">\(E_{45}\)</span> and <span class="math notranslate nohighlight">\(E_{55}\)</span>, with the following:</p>
-<div class="math notranslate nohighlight">
-\[\tilde{E}_{44} = E_{44} \kappa_{23}
-\tilde{E}_{45} = E_{45} (\kappa_{13} + \kappa_{23})/2
-\tilde{E}_{55} = E_{55} \kappa_{13}\]</div>
-<p>Such that <span class="math notranslate nohighlight">\(\tilde{E}_{ij}\)</span> are the transverse shear terms considering the shear correction factor. 
-The shear correction factors are read directly from the <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp</span></code></a> object.</p>
+<p>The transverse shear stiffnesses <span class="math notranslate nohighlight">\(A_{44}\)</span>, <span class="math notranslate nohighlight">\(A_{45}\)</span> and <span class="math notranslate nohighlight">\(A_{55}\)</span> are read
+from the <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp</span></code></a> object with the shear correction
+already applied, see <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness" title="pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness()</span></code></a>,
+and no shear correction factor is applied by the element. When a material
+direction is defined, they are brought to the element coordinate system with
+<a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp.calc_Ats_element" title="pyfe3d.shellprop.ShellProp.calc_Ats_element"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp.calc_Ats_element()</span></code></a>, which re-evaluates the
+equilibrium-based stiffness of Rohwer (1988) with the plies rotated to the
+element coordinate system, such that the assumed cylindrical bending states
+are posed along the element axes.</p>
 <p>The drilling stiffness is calculated following the approach adopted in
 MSC Nastran and Autodesk Nastran, using a penalty-based method. Because
 the stiffness is only evaluated at the element centroid, this method provides
