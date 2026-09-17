@@ -47,13 +47,15 @@ cdef class ShellProp:
     cdef public list plies
     cdef public list stack
     cdef public object shear_correction
-    # NOTE ply data used to evaluate the transverse shear stiffness in the
-    #      element frame (Rohwer, 1988), one row per ply:
+    # NOTE ply data, one row per ply:
     #      h, q11L, q12L, q16L, q22L, q26L, q66L, q44L, q45L, q55L
-    cdef bint _ts_element_frame
     cdef int _ts_nplies
     cdef double _ts_offset
     cdef double [:, ::1] _ts_plydata
+    # NOTE Fourier coefficients of the transverse shear compliance in the
+    #      element frame (Rohwer, 1988), see get_constitutive_element
+    cdef bint _ts_element_frame
+    cdef double _ts_fourier[33]
     # NOTE through-thickness transverse shear distribution (Rohwer, 1988)
     cdef bint _ts_ready
     cdef double [::1] _ts_z
@@ -65,8 +67,8 @@ cdef class ShellProp:
     cdef double [:, ::1] get_Abar_ts(ShellProp)
     cdef double [:, ::1] get_Abarbar_ts(ShellProp)
     cdef double [:, ::1] get_ABD(ShellProp)
-    cdef void get_Ats_element(ShellProp, double, double, double, double,
-            double *, double *, double *) noexcept nogil
+    cdef void get_constitutive_element(ShellProp, double, double, double,
+            double, double *, double *, double *, double *) noexcept nogil
     cdef void _store_ply_data(ShellProp) except *
     cpdef void calc_transverse_shear_stiffness(ShellProp) except *
     cpdef tuple calc_transverse_shear_stress(ShellProp, double, double, double)

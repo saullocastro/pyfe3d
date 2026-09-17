@@ -388,6 +388,19 @@ cdef class Lamina:
 cdef int PLYDATA_SIZE = 10
 
 
+cdef inline void _congruence3(double *T, double *M, double *out) noexcept nogil:
+    r"""Symmetric 3x3 congruence `out = T M T^T`, all stored row by row"""
+    cdef int i, j, k
+    cdef double TM[9]
+    for i in range(3):
+        for j in range(3):
+            TM[3*i+j] = T[3*i]*M[j] + T[3*i+1]*M[3+j] + T[3*i+2]*M[6+j]
+    for i in range(3):
+        for j in range(i, 3):
+            out[3*i+j] = TM[3*i]*T[3*j] + TM[3*i+1]*T[3*j+1] + TM[3*i+2]*T[3*j+2]
+            out[3*j+i] = out[3*i+j]
+
+
 cdef void _rotate_ply(double *pd, double m11, double m12, double m21,
         double m22, double *q) noexcept nogil:
     r"""Ply stiffnesses rotated from the material to the element frame
@@ -734,8 +747,7 @@ cdef class ShellProp:
         state['_ts_element_frame'] = self._ts_element_frame
         state['_ts_nplies'] = self._ts_nplies
         state['_ts_offset'] = self._ts_offset
-        if self._ts_element_frame:
-            state['_ts_plydata'] = np.array(self._ts_plydata, dtype=DOUBLE)
+        state['_ts_fourier'] = [self._ts_fourier[i] for i in range(33)]
         return (ShellProp, (), state)
 
     def __setstate__(ShellProp self, state):
@@ -745,9 +757,8 @@ cdef class ShellProp:
         self._ts_element_frame = state['_ts_element_frame']
         self._ts_nplies = state['_ts_nplies']
         self._ts_offset = state['_ts_offset']
-        if self._ts_element_frame:
-            self._ts_plydata = np.ascontiguousarray(state['_ts_plydata'],
-                                                    dtype=DOUBLE)
+        for i, value in enumerate(state['_ts_fourier']):
+            self._ts_fourier[i] = value
 
     cdef double [:, ::1] get_A(ShellProp self):
         return np.array([[self.A11, self.A12, self.A16],
@@ -809,40 +820,144 @@ cdef class ShellProp:
         return np.asarray(self.get_ABD())
 
 
-    cdef void get_Ats_element(ShellProp self, double m11, double m12, double
-            m21, double m22, double *A44, double *A45, double *A55) noexcept nogil:
-        r"""Transverse shear stiffness in the element coordinate system
+    cdef void get_constitutive_element(ShellProp self, double m11, double m12,
+            double m21, double m22, double *A, double *B, double *D,
+            double *Ats) noexcept nogil:
+        r"""Constitutive matrices in the element coordinate system
 
-        Used by the shell elements, with `m_{11}`, `m_{12}`, `m_{21}`,
-        `m_{22}` being the in-plane rotation from the material to the element
-        coordinate system. See :meth:`.calc_Ats_element` for details.
+        This is the single function used by all shell elements to obtain the
+        constitutive matrices, with `m_{11}`, `m_{12}`, `m_{21}`, `m_{22}`
+        being the in-plane rotation from the material to the element
+        coordinate system. When `m_{12} = 0` the matrices are used as stored.
+
+        The 3x3 matrices ``A``, ``B`` and ``D`` are stored row by row and
+        rotated with `[A]_e = [T_\sigma] [A] [T_\sigma]^T`. The 2x2 matrix
+        ``Ats = [[A44, A45], [A45, A55]]`` is stored row by row, see
+        :meth:`.calc_Ats_element` for its rotation. Any of the pointers can be
+        ``NULL``, in which case the corresponding matrix is skipped.
 
         """
-        cdef int status
+        cdef int i, n
+        cdef double T[9]
+        cdef double Amat[9]
+        cdef double Bmat[9]
+        cdef double Dmat[9]
         cdef double S[3]
-        cdef double detS, t44, t45, t55
+        cdef double c2, s2, cn, cn_1, sn, sn_1, tmp, detS, t44, t45, t55
+
+        Amat[0] = self.A11; Amat[1] = self.A12; Amat[2] = self.A16
+        Amat[3] = self.A12; Amat[4] = self.A22; Amat[5] = self.A26
+        Amat[6] = self.A16; Amat[7] = self.A26; Amat[8] = self.A66
+        Bmat[0] = self.B11; Bmat[1] = self.B12; Bmat[2] = self.B16
+        Bmat[3] = self.B12; Bmat[4] = self.B22; Bmat[5] = self.B26
+        Bmat[6] = self.B16; Bmat[7] = self.B26; Bmat[8] = self.B66
+        Dmat[0] = self.D11; Dmat[1] = self.D12; Dmat[2] = self.D16
+        Dmat[3] = self.D12; Dmat[4] = self.D22; Dmat[5] = self.D26
+        Dmat[6] = self.D16; Dmat[7] = self.D26; Dmat[8] = self.D66
+
+        # NOTE using m12 as a criterion to check if material coordinates were
+        #      defined
         if m12 == 0:
-            A44[0] = self.A44
-            A45[0] = self.A45
-            A55[0] = self.A55
+            for i in range(9):
+                if A != NULL:
+                    A[i] = Amat[i]
+                if B != NULL:
+                    B[i] = Bmat[i]
+                if D != NULL:
+                    D[i] = Dmat[i]
+            if Ats != NULL:
+                Ats[0] = self.A44
+                Ats[1] = self.A45
+                Ats[2] = self.A45
+                Ats[3] = self.A55
             return
+
+        T[0] = m11*m11; T[1] = m12*m12; T[2] = 2*m11*m12
+        T[3] = m21*m21; T[4] = m22*m22; T[5] = 2*m21*m22
+        T[6] = m11*m21; T[7] = m12*m22; T[8] = m11*m22 + m12*m21
+        if A != NULL:
+            _congruence3(T, Amat, A)
+        if B != NULL:
+            _congruence3(T, Bmat, B)
+        if D != NULL:
+            _congruence3(T, Dmat, D)
+
+        if Ats == NULL:
+            return
+
         if self._ts_element_frame:
-            status = _rohwer(self._ts_nplies, &self._ts_plydata[0, 0],
-                             self._ts_offset, m11, m12, m21, m22, NULL, NULL,
-                             S)
+            # NOTE the compliance S = inv(Ats) in the element frame is a
+            #      trigonometric polynomial with harmonics of 2*theta up to the
+            #      5th, which is evaluated exactly from its Fourier coefficients,
+            #      with cos(2*theta) = m11**2 - m21**2 and
+            #      sin(2*theta) = 2*m11*m21
+            c2 = m11*m11 - m21*m21
+            s2 = 2*m11*m21
+            for i in range(3):
+                S[i] = self._ts_fourier[11*i]
+            cn_1 = 1.
+            sn_1 = 0.
+            cn = c2
+            sn = s2
+            for n in range(1, 6):
+                for i in range(3):
+                    S[i] += self._ts_fourier[11*i + 2*n - 1]*cn + self._ts_fourier[11*i + 2*n]*sn
+                tmp = cn
+                cn = 2*c2*cn - cn_1
+                cn_1 = tmp
+                tmp = sn
+                sn = 2*c2*sn - sn_1
+                sn_1 = tmp
             detS = S[0]*S[2] - S[1]*S[1]
-            if status == 0 and detS > 0:
-                A44[0] = S[2]/detS
-                A45[0] = -S[1]/detS
-                A55[0] = S[0]/detS
-                return
+            Ats[0] = S[2]/detS
+            Ats[1] = -S[1]/detS
+            Ats[2] = Ats[1]
+            Ats[3] = S[0]/detS
+            return
+
         # NOTE tensor rotation A_e = T_s A T_s^T, T_s = [[m22, m21], [m12, m11]]
         t44 = self.A44
         t45 = self.A45
         t55 = self.A55
-        A44[0] = m22*m22*t44 + 2*m22*m21*t45 + m21*m21*t55
-        A45[0] = m22*m12*t44 + (m22*m11 + m21*m12)*t45 + m21*m11*t55
-        A55[0] = m12*m12*t44 + 2*m12*m11*t45 + m11*m11*t55
+        Ats[0] = m22*m22*t44 + 2*m22*m21*t45 + m21*m21*t55
+        Ats[1] = m22*m12*t44 + (m22*m11 + m21*m12)*t45 + m21*m11*t55
+        Ats[2] = Ats[1]
+        Ats[3] = m12*m12*t44 + 2*m12*m11*t45 + m11*m11*t55
+
+
+    def calc_constitutive_element(ShellProp self, double thetadeg):
+        r"""Constitutive matrices in an element coordinate system
+
+        The element coordinate system is such that the material direction
+        makes an angle `\theta` with the element `x` axis, measured towards
+        the element `y` axis, as used by the shell elements, with `m_{11} =
+        \cos\theta`, `m_{12} = -\sin\theta`, `m_{21} = \sin\theta` and `m_{22}
+        = \cos\theta`.
+
+        Parameters
+        ----------
+        thetadeg : float
+            Angle `\theta` in degrees.
+
+        Returns
+        -------
+        A, B, D, Ats : tuple of np.ndarray
+            The 3x3 matrices ``A``, ``B``, ``D`` and the 2x2 matrix ``Ats`` in
+            the element coordinate system. See :meth:`.calc_Ats_element`.
+
+        """
+        cdef double thetarad, c, s
+        cdef double [:, ::1] A, B, D, Ats
+        A = np.zeros((3, 3), dtype=DOUBLE)
+        B = np.zeros((3, 3), dtype=DOUBLE)
+        D = np.zeros((3, 3), dtype=DOUBLE)
+        Ats = np.zeros((2, 2), dtype=DOUBLE)
+        thetarad = deg2rad(thetadeg)
+        c = cos(thetarad)
+        s = sin(thetarad)
+        self.get_constitutive_element(c, -s, s, c, &A[0, 0], &B[0, 0],
+                                      &D[0, 0], &Ats[0, 0])
+        return np.asarray(A), np.asarray(B), np.asarray(D), np.asarray(Ats)
 
 
     def calc_Ats_element(ShellProp self, double thetadeg):
@@ -858,10 +973,28 @@ cdef class ShellProp:
         of Rohwer (1988) is not invariant to a rotation of the reference
         frame, because the two cylindrical bending states are tied to the
         `x` and `y` axes. Therefore, when ``shear_correction='rohwer'`` and
-        the plies are available, the plies are rotated to the element frame,
-        i.e. all ply angles are shifted by `\theta`, and the stiffness is
-        re-evaluated in that frame, such that the assumed static state and the
-        element kinematics refer to the same pair of directions.
+        the plies are available, the stiffness corresponds to the plies rotated
+        to the element frame, i.e. all ply angles shifted by `\theta`, such
+        that the assumed static state and the element kinematics refer to the
+        same pair of directions.
+
+        Re-evaluating the method of Rohwer for each element has a cost
+        proportional to the number of plies. Instead, the compliance `S =
+        A_{ts}^{-1}` in the element frame is represented exactly by its
+        Fourier series:
+
+        .. math::
+
+            S(\theta) = S_0 + \sum_{n=1}^{5} \left( S_{cn} \cos 2n\theta +
+            S_{sn} \sin 2n\theta \right)
+
+        because the equilibrium distribution `f^{(k)}(z)` is a polynomial of
+        degree 4 in `\cos\theta`, `\sin\theta` and `(C_s^{(k)})^{-1}` of degree
+        2, such that `S` is a trigonometric polynomial of degree 10 with a
+        period of 180 degrees. The coefficients are calculated once per
+        laminate by :meth:`.calc_transverse_shear_stiffness`, from 16
+        evaluations in rotated frames, and the cost per element becomes
+        independent of the number of plies.
 
         In all other cases, i.e. ``shear_correction`` ``'constant'``,
         ``'vlachoutsis'`` or ``None``, or when no plies exist, e.g. for a
@@ -880,7 +1013,8 @@ cdef class ShellProp:
                   :meth:`.calc_constitutive_matrix` are only used for
                   elements with `m_{12} = 0` when the plies are available
                   and ``shear_correction='rohwer'``, because the stiffness
-                  is otherwise re-evaluated from the plies.
+                  is otherwise obtained from the Fourier coefficients
+                  calculated from the plies.
 
         Parameters
         ----------
@@ -894,12 +1028,13 @@ cdef class ShellProp:
             system.
 
         """
-        cdef double A44, A45, A55, thetarad, c, s
+        cdef double thetarad, c, s
+        cdef double Ats[4]
         thetarad = deg2rad(thetadeg)
         c = cos(thetarad)
         s = sin(thetarad)
-        self.get_Ats_element(c, -s, s, c, &A44, &A45, &A55)
-        return np.array([[A44, A45], [A45, A55]], dtype=DOUBLE)
+        self.get_constitutive_element(c, -s, s, c, NULL, NULL, NULL, Ats)
+        return np.array([[Ats[0], Ats[1]], [Ats[2], Ats[3]]], dtype=DOUBLE)
 
 
     cdef void _store_ply_data(ShellProp self) except *:
@@ -960,7 +1095,7 @@ cdef class ShellProp:
           laminates, and the result does not depend on ``offset``. The result
           is not invariant to a rotation of the reference frame, because the
           two cylindrical bending states are tied to the `x` and `y` axes.
-          For this reason, the shell elements re-evaluate it in the element
+          For this reason, the shell elements use it evaluated in the element
           coordinate system, see :meth:`.calc_Ats_element`.
 
         - ``'vlachoutsis'``: the scalar factors `k_{13}`, `k_{23}` of
@@ -1001,8 +1136,8 @@ cdef class ShellProp:
             or if the ABD matrix of the laminate is singular (``'rohwer'``).
 
         """
-        cdef int k, ig, N, alpha, singular_ply, status
-        cdef double h, det, za, zb, zm, dz, zg
+        cdef int i, k, n, M, ig, N, alpha, singular_ply, status
+        cdef double h, det, za, zb, zm, dz, zg, theta, c, s
         cdef double S[3]
         cdef double Sbb44, Sbb45, Sbb55, detS
         cdef double Dk, Gk, num, den, zn, R, d, I, gz, gza, kappa
@@ -1098,6 +1233,30 @@ cdef class ShellProp:
             self._ts_z = z
             self._ts_fcoef = fcoef
             self._ts_ready = True
+
+            # NOTE Fourier coefficients of the compliance S(theta) = inv(Ats)
+            #      in the element frame. Since f^(k) is a polynomial of degree
+            #      4 in cos(theta), sin(theta), and inv(Cs) of degree 2, S is a
+            #      polynomial of degree 10 with period 180 degrees, i.e. a
+            #      trigonometric polynomial with harmonics of 2*theta up to the
+            #      5th. With M = 16 samples its Fourier coefficients are exact
+            M = 16
+            for i in range(33):
+                self._ts_fourier[i] = 0.
+            for k in range(M):
+                theta = k*np.pi/M
+                c = cos(theta)
+                s = sin(theta)
+                status = _rohwer(N, &self._ts_plydata[0, 0], self._ts_offset,
+                                 c, -s, s, c, NULL, NULL, S)
+                if status != 0:
+                    raise ValueError('Singular transverse shear compliance in '
+                                     'a rotated frame')
+                for i in range(3):
+                    self._ts_fourier[11*i] += S[i]/M
+                    for n in range(1, 6):
+                        self._ts_fourier[11*i + 2*n - 1] += 2./M*S[i]*cos(2*n*theta)
+                        self._ts_fourier[11*i + 2*n] += 2./M*S[i]*sin(2*n*theta)
             self._ts_element_frame = True
 
         elif mode == 'vlachoutsis':

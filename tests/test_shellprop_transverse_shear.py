@@ -99,6 +99,25 @@ def test_element_frame_equals_shifted_plies(stack, offset):
         assert np.allclose(prop.calc_Ats_element(theta + 180.), Ats_e)
 
 
+def test_constitutive_element_equals_shifted_plies():
+    # NOTE A, B, D and Ats obtained with the single function used by all
+    #      elements, compared against the laminate with shifted plies, at
+    #      arbitrary angles to verify the Fourier evaluation of Ats
+    rng = np.random.default_rng(1)
+    for stack, offset in [(QUASI_ISO, 0.), (UNSYM, 0.3), ([0, 90], 0.)]:
+        prop = laminated_plate(stack=stack, plyt=PLYT, laminaprop=CFRP,
+                               offset=offset)
+        for theta in np.concatenate(([0., 90., 180.], rng.uniform(-180, 180, 20))):
+            ref = laminated_plate(stack=[t + theta for t in stack], plyt=PLYT,
+                                  laminaprop=CFRP, offset=offset)
+            A, B, D, Ats = prop.calc_constitutive_element(theta)
+            scale = np.abs(ref.ABD).max()
+            assert np.allclose(A, ref.A, rtol=1e-12, atol=1e-12*scale)
+            assert np.allclose(B, ref.B, rtol=1e-12, atol=1e-12*scale)
+            assert np.allclose(D, ref.D, rtol=1e-12, atol=1e-12*scale)
+            assert np.allclose(Ats, ref.Ats, rtol=1e-11, atol=1e-12)
+
+
 def test_quasi_isotropic_frame_dependence():
     # NOTE the tensor rotation of the stored result cannot reproduce the
     #      element-frame evaluation for this laminate
