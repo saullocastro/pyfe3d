@@ -159,6 +159,11 @@ extensions = [
             './pyfe3d/tria3r.pyx',
             ],
         **extension_kwargs),
+    Extension('pyfe3d.tria3dsg',
+        sources=[
+            './pyfe3d/tria3dsg.pyx',
+            ],
+        **extension_kwargs),
     Extension('pyfe3d.quad4',
         sources=[
             './pyfe3d/quad4.pyx',
