@@ -3,11 +3,11 @@ sys.path.append('..')
 
 import numpy as np
 from numpy import isclose
-from scipy.sparse.linalg import eigsh
-from scipy.sparse import coo_matrix, diags as sp_diags
+from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import laminated_plate
 from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
+from pyfe3d.solver import natural_frequency
 
 
 def test_nat_freq_plate(plot=False, mode=0):
@@ -132,23 +132,15 @@ def test_nat_freq_plate(plot=False, mode=0):
         # solves Ax = lambda M x
         # we have Ax - lambda M x = 0, with lambda = omegan**2
 
-        # NOTE pre-conditioning the eigenvalue problem to improve convergence of the eigensolver
-        kc0_diag = KC0uu.diagonal()
-        kc0_diag_inv_sqrt = 1.0/np.sqrt(np.maximum(kc0_diag, 1e-30))
-        D_inv_sqrt = sp_diags(kc0_diag_inv_sqrt)
-        KC0uu_scaled = D_inv_sqrt @ KC0uu @ D_inv_sqrt
-        Muu_scaled = D_inv_sqrt @ Muu @ D_inv_sqrt
-        eigvals, eigvecsu_scaled = eigsh(A=KC0uu_scaled, M=Muu_scaled,
-                                        sigma=-1., which='LM',
-                                        k=num_eigenvalues, tol=1e-6)
-        # NOTE the eigenvectors are scaled by the preconditioner to recover the original eigenvectors
-        eigvecsu = D_inv_sqrt @ eigvecsu_scaled
+        # NOTE pyfe3d.solver.natural_frequency equilibrates the diagonal
+        #      before calling the eigensolver and returns the circular
+        #      frequencies already sorted
+        omegan, eigvecsu = natural_frequency(KC0uu, Muu, num_eigvalues=num_eigenvalues, tol=1e-6)
 
         print('eig solver end')
 
         eigvecs = np.zeros((N, eigvecsu.shape[1]), dtype=float)
         eigvecs[bu, :] = eigvecsu
-        omegan = eigvals**0.5
 
         u = np.zeros(N)
         u[bu] = eigvecsu[:, mode]
@@ -184,3 +176,4 @@ def test_nat_freq_plate(plot=False, mode=0):
 
 if __name__ == '__main__':
     test_nat_freq_plate(plot=True, mode=0)
+

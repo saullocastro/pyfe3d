@@ -2,11 +2,11 @@ import sys
 sys.path.append('..')
 
 import numpy as np
-from scipy.sparse.linalg import eigsh
 from scipy.sparse import coo_matrix
 
 from pyfe3d.beamprop import BeamProp
 from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
+from pyfe3d.solver import natural_frequency
 
 
 def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
@@ -110,8 +110,10 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
             Muu = M[bu, :][:, bu]
 
             num_eigenvalues = 3
-            eigvals, eigvecsu = eigsh(A=Kuu, M=Muu, sigma=-1., which='LM', k=num_eigenvalues, tol=1e-5)
-            omegan = eigvals**0.5
+            # NOTE pyfe3d.solver.natural_frequency equilibrates the diagonal
+            #      before calling the eigensolver and returns the circular
+            #      frequencies already sorted
+            omegan, eigvecsu = natural_frequency(Kuu, Muu, num_eigvalues=num_eigenvalues, tol=1e-5)
             omega123_from_paper = [396.98, 931.22, 1797.31]
             omega123_expected_here = [395.50396255, 923.75280464, 1773.32657347]
             print('Reference omega123_from_paper', omega123_from_paper)
@@ -122,3 +124,4 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
 
 if __name__ == '__main__':
     test_nat_freq_curved_beam(refinement=1)
+

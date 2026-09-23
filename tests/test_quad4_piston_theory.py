@@ -3,11 +3,12 @@ sys.path.append('..')
 
 import numpy as np
 from numpy import isclose
-from scipy.sparse.linalg import eigsh, eigs
+from scipy.sparse.linalg import eigs
 from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import isotropic_plate
 from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
+from pyfe3d.solver import natural_frequency
 
 
 def test_quad4r_piston_theory(plot=False, refinement=1):
@@ -151,12 +152,13 @@ def test_quad4r_piston_theory(plot=False, refinement=1):
     print('eig solver begins')
     # solves Ax = lambda M x
     # we have Ax - lambda M x = 0, with lambda = omegan**2
-    eigvals, eigvecsu = eigsh(A=Kuu, M=Muu, sigma=-1., which='LM',
-            k=num_eigenvalues, tol=1e-3)
+    # NOTE pyfe3d.solver.natural_frequency equilibrates the diagonal
+    #      before calling the eigensolver and returns the circular
+    #      frequencies already sorted
+    omegan, eigvecsu = natural_frequency(Kuu, Muu, num_eigvalues=num_eigenvalues, tol=1e-3)
     print('eig solver end')
     eigvecs = np.zeros((N, eigvecsu.shape[1]), dtype=float)
     eigvecs[bu, :] = eigvecsu
-    omegan = eigvals**0.5
 
     # panel flutter analysis
     def MAC(mode1, mode2):
@@ -216,3 +218,4 @@ def test_quad4r_piston_theory(plot=False, refinement=1):
 
 if __name__ == '__main__':
     test_quad4r_piston_theory(plot=True, refinement=1)
+

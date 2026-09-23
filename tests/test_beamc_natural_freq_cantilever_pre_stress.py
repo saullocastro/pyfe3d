@@ -7,6 +7,7 @@ from scipy.sparse import coo_matrix
 
 from pyfe3d.beamprop import BeamProp
 from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
+from pyfe3d.solver import natural_frequency
 
 def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
     for mtype in range(2):
@@ -132,9 +133,10 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         print('linear buckling Pcr=', load_mult*load)
 
         num_eigenvalues = 3
-        eigvals, eigvecsu = eigsh(A=Kuu + 0.9999*load_mult[0]*KGuu, M=Muu, sigma=-1., which='LM',
-                k=num_eigenvalues, tol=1e-4)
-        omegan = eigvals**0.5
+        # NOTE pyfe3d.solver.natural_frequency equilibrates the diagonal
+        #      before calling the eigensolver and returns the circular
+        #      frequencies already sorted
+        omegan, eigvecsu = natural_frequency(Kuu + 0.9999*load_mult[0]*KGuu, Muu, num_eigvalues=num_eigenvalues, tol=1e-4)
 
         alpha123 = np.array([1.875, 4.694, 7.885])
         omega123 = alpha123**2*np.sqrt(E*Izz/(rho*A*L**4))
@@ -153,3 +155,4 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
 
 if __name__ == '__main__':
     test_nat_freq_cantilever(refinement=1)
+

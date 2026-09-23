@@ -25,7 +25,8 @@ from scipy.sparse import coo_matrix
 from pyfe3d.beamprop import BeamProp
 from pyfe3d.shellprop_utils import laminated_plate
 from pyfe3d import (Quad4, Quad4Data, Quad4Probe, Quad4R, Quad4RData,
-                    Quad4RProbe, Tria3R, Tria3RData, Tria3RProbe, BeamC,
+                    Quad4RProbe, Tria3R, Tria3RData, Tria3RProbe,
+                    Tria3DSG, Tria3DSGData, Tria3DSGProbe, BeamC,
                     BeamCData, BeamCProbe, BeamLR, BeamLRData, BeamLRProbe,
                     DOF, INT, DOUBLE)
 
@@ -33,6 +34,7 @@ SHELLS = {
     'Quad4': (Quad4, Quad4Probe, Quad4Data, 4),
     'Quad4R': (Quad4R, Quad4RProbe, Quad4RData, 4),
     'Tria3R': (Tria3R, Tria3RProbe, Tria3RData, 3),
+    'Tria3DSG': (Tria3DSG, Tria3DSGProbe, Tria3DSGData, 3),
 }
 BEAMS = {
     'BeamC': (BeamC, BeamCProbe, BeamCData),
