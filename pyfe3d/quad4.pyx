@@ -49,9 +49,12 @@ Hughes et al. (1977) proposed the following integration scheme:
 
 -- one-point quadrature for the transverse shear terms without gradients
 
-The in-plane stiffness terms are integrated with 2 quadrature points, and the
-drilling stiffness is integrated with 1 quadrature point. These are
-not specified in the paper of Hughes et al. (1977).
+The membrane stiffness terms, which are not specified in the paper of Hughes
+et al. (1977), are integrated with a three-by-three quadrature when the
+default drilling model is active and with a two-by-two quadrature otherwise,
+for the reason explained under the drilling stiffness below. The bending term
+always uses two-by-two, so that the drilling model does not change the
+bending response of the element.
 
 The transverse shear stiffnesses `A_{44}`, `A_{45}` and `A_{55}` are read
 from the :class:`pyfe3d.shellprop.ShellProp` object with the shear correction
@@ -63,13 +66,118 @@ equilibrium-based stiffness of Rohwer (1988) with the plies rotated to the
 element coordinate system, such that the assumed cylindrical bending states
 are posed along the element axes.
 
-The drilling stiffness is calculated following the approach adopted in
-MSC Nastran and Autodesk Nastran, using a penalty-based method. Because
-the stiffness is only evaluated at the element centroid, this method provides
-a non-physical drilling stiffness with the objective of removing the singularity
-by creating an artificial stiffness between the drilling rotation degree-of-freedom
-of each node with the in-plane rotational strain evaluated at the centroid.
-The penalty energy is defined per element as:
+Drilling stiffness
+------------------
+
+The FSDT kinematics contains no strain measure associated with `r_z`, so the
+rows and columns of the drilling degree-of-freedom would be empty and a mesh
+of coplanar elements would give a singular global stiffness matrix. Two
+models are available, selected with the ``drilling_model`` attribute.
+
+**Physics-based, the default** (``drilling_model = 0``). The in-plane
+displacement field is enriched so that the drilling rotations produce
+membrane strain energy, following Allman, and the independently interpolated
+`r_z` is tied to the rotation of the membrane field by the regularised
+functional of Hughes and Brezzi. The combination for the quadrilateral is the
+one of Ibrahimbegovic, Taylor and Wilson:
+
+    Allman, D. J., 1984, "A compatible triangular element including vertex
+    rotations for plane elasticity analysis," Computers & Structures,
+    19(1-2), pp. 1-8. https://doi.org/10.1016/0045-7949(84)90197-4
+
+    Hughes, T. J. R., and Brezzi, F., 1989, "On drilling degrees of
+    freedom," Computer Methods in Applied Mechanics and Engineering, 72(1),
+    pp. 105-121. https://doi.org/10.1016/0045-7825(89)90124-2
+
+    Ibrahimbegovic, A., Taylor, R. L., and Wilson, E. L., 1990, "A robust
+    quadrilateral membrane finite element with drilling degrees of freedom,"
+    International Journal for Numerical Methods in Engineering, 30(3), pp.
+    445-457. https://doi.org/10.1002/nme.1620300305
+
+Each edge `k`, joining nodes `i` and `j` and of length `\ell_k`, carries a
+quadratic normal displacement whose end slopes are identified with the vertex
+drilling rotations, giving the amplitude
+
+.. math::
+
+    a_k = \frac{\ell_k}{8}\left({r_z}_i - {r_z}_j\right)
+
+so that the enrichment is not a new degree-of-freedom but the difference of
+the two drilling rotations already present at the ends of the edge. The
+in-plane field becomes
+
+.. math::
+
+    \left\{\begin{matrix} u \\ v \end{matrix}\right\}
+    = \sum_i S_i \left\{\begin{matrix} u_i \\ v_i \end{matrix}\right\}
+    + \sum_k N_k \frac{\ell_k}{8}\left({r_z}_i - {r_z}_j\right) \pmb{n}_k
+
+with `\pmb{n}_k` the unit normal of edge `k` and `N_k` the hierarchical
+bubble of that edge, equal to unity at its mid-point and zero at every
+corner, which for the quadrilateral are the mid-side functions of the
+eight-node serendipity element. In row form the enrichment populates the
+drilling columns of the membrane operator, giving `\pmb{\tilde B}_m`, whereas
+the curvature and transverse shear operators are untouched, because the edge
+modes act only on the in-plane translations. The drilling residual becomes
+
+.. math::
+
+    \pmb{\tilde B}_{r_z} = \pmb{S}^{r_z}
+    + \frac{1}{2}\pmb{\tilde S}^u_{,y} - \frac{1}{2}\pmb{\tilde S}^v_{,x}
+
+and the contribution to the element stiffness matrix is
+
+.. math::
+
+    \pmb{K}_{r_z} = \gamma_{r_z} \iint_{\xi\eta}
+    \pmb{\tilde B}_{r_z}^\top \pmb{\tilde B}_{r_z} \det \pmb{J} d\xi d\eta
+    \qquad \text{with} \qquad \gamma_{r_z} = A_{66}
+
+The value `\gamma_{r_z} = A_{66}` is a modulus and not a user parameter.
+Hughes and Brezzi identify the shear modulus `G` as the natural
+regularisation parameter of the isotropic problem, and the thickness
+integration turns `G` into `hG = A_{66}`, which generalises to the `A_{66}`
+of the laminate extensional stiffness matrix. The ``gamma_rz`` attribute
+allows a different value to be used, which is only of interest for the
+sensitivity study that the literature recommends.
+
+Allman's enrichment on its own is rank-deficient by one, because the state
+`u_i = v_i = 0` with `{r_z}_i = \omega_0` makes every amplitude `a_k` vanish
+and therefore produces no membrane strain, although it is not a rigid-body
+motion. The term above gives that state the energy
+`\frac{1}{2}\gamma_{r_z} A_e \omega_0^2`, with `A_e` the element area, and
+restores the rank, which is why the two ingredients are used together.
+
+Two quadrature choices matter and both follow Ibrahimbegovic et al. (1990).
+The membrane term is integrated with three points per direction: the edge
+modes make `\pmb{\tilde B}_m` vary linearly, and with two points the
+alternating pattern of the drilling rotations produces no membrane strain at
+any of the four points, leaving a zero-energy mode that no value of
+`\gamma_{r_z}` can remove. The constraint term `\pmb{K}_{r_z}` is integrated
+with a single point at the centroid, which is what makes the element
+insensitive to `\gamma_{r_z}`: a fully integrated constraint over-constrains
+`r_z = \theta_z` and locks the membrane response as `\gamma_{r_z}` grows,
+whereas with one point the response reaches an asymptote. One point also
+gives the constraint rank one per element, exactly what is needed to remove
+the uniform drilling mode.
+
+Unlike the penalty below, the added term is consistent rather than
+artificial. Stationarity with respect to `r_z` gives `\gamma_{r_z}(r_z -
+\theta_z) = 0` pointwise, so the exact solution satisfies `r_z = \theta_z`
+and the term contributes no energy, for any positive `\gamma_{r_z}`. The
+nodal moments about the shell normal recovered in the internal force vector
+are therefore physical, and in-plane moments can be transmitted between
+shells and beams through the shared drilling degree-of-freedom. Note also
+that when `\pmb{B} \neq \pmb{0}`, for an offset reference surface or an
+unsymmetric laminate, the enriched membrane operator couples `r_z` to the
+curvatures, which is physically correct.
+
+**Fictitious penalty** (``drilling_model = 1``), the default before version
+0.10.0, following the approach adopted in MSC Nastran and Autodesk Nastran
+through their ``K6ROT`` parameter. It provides a small artificial stiffness
+whose only purpose is to remove the singularity, so the forces associated
+with it are spurious and any moment recovered about the shell normal is
+meaningless. The penalty energy is defined per element as:
 
 .. math::
 
@@ -110,12 +218,28 @@ with:
 
     B_{drill} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}
 
-Note that `A_{66}` is assumed constant over the element, which here has no difference given that a reduced integration approach is used.
-The approach herein presented is very similar to the one presented in Eq. 2.20 of:
+which is the same operator as `\pmb{\tilde B}_{r_z}` above, evaluated on the
+unenriched field. Being built from that operator and not from an addition on
+the diagonal terms is what keeps the penalty from stiffening a rigid
+rotation of the element about its normal, so both models represent all
+rigid-body motions and all constant-strain states exactly. `A_{66}` is
+assumed constant over the element. This term is integrated with the
+two-by-two quadrature. The approach herein presented is very similar to the
+one presented in Eq. 2.20 of:
 
     Adam, F. M., Mohamed, A. E., and Hassaballa, A. E., 2013,
-    “Degenerated Four Nodes Shell Element with Drilling Degree of
-    Freedom,” IOSR J. Eng., 3(8), pp. 10–20.
+    \u201cDegenerated Four Nodes Shell Element with Drilling Degree of
+    Freedom,\u201d IOSR J. Eng., 3(8), pp. 10\u201320.
+
+**Choosing between them.** The physics-based model is the default because it
+is the one that is correct when the drilling moment is part of the load path,
+when shells are connected to beams or stiffeners that must transmit in-plane
+moments, or when the mesh is too coarse for the unenriched membrane response
+to be trusted. It is markedly more accurate in in-plane bending: on Cook's
+skew membrane with a two-by-two mesh it gives 20.8 against the reference
+23.9, where the penalty gives 11.8. The penalty remains available for
+reproducing results obtained before 0.10.0, and it is cheaper, since it
+leaves the membrane term on the two-by-two quadrature.
 
 """
 #TODO bending stiffness vanishes when thickness -> zero, so a correction is applied:
@@ -136,6 +260,130 @@ cdef int NUM_NODES = 4
     #cdef int i
     #for i in range(size):
         #a[i] = value
+
+
+cdef void allman_enrichment(double *xe, double xi, double eta,
+                            double j11, double j12, double j21,
+                            double j22, double *d) noexcept nogil:
+    r"""Cartesian derivatives of the Allman drilling enrichment
+
+    Fills the buffer ``d`` with the contribution of the hierarchical
+    quadratic edge modes of Allman (1984) to the Cartesian derivatives of
+    the enriched in-plane displacement rows `\pmb{\tilde S}^u` and
+    `\pmb{\tilde S}^v` of
+
+    .. math::
+        \pmb{\tilde S}^u = \pmb{S}^u + \frac{1}{8} \sum_k N_k (y_i - y_j)
+                           (\pmb{e}_i - \pmb{e}_j)
+        \
+        \pmb{\tilde S}^v = \pmb{S}^v + \frac{1}{8} \sum_k N_k (x_j - x_i)
+                           (\pmb{e}_i - \pmb{e}_j)
+
+    evaluated at the `r_z` column of each node, where `\pmb{e}_i` selects
+    `{r_z}_i`, edge `k` joins nodes `i` and `j`, and `N_k` is the
+    hierarchical bubble of that edge, equal to unity at its mid-point and
+    zero at every corner. For the quadrilateral these are the mid-side
+    functions of the eight-node serendipity element:
+
+    .. math::
+        N_k = \frac{1}{2}(1 - \xi^2)(1 + \eta_k \eta)
+        \quad \text{for the edges at } \eta = \eta_k = \pm 1
+        \
+        N_k = \frac{1}{2}(1 + \xi_k \xi)(1 - \eta^2)
+        \quad \text{for the edges at } \xi = \xi_k = \pm 1
+
+    with the edges numbered 1-2, 2-3, 3-4 and 4-1, consistently with the
+    nodal connectivity of :class:`.Quad4`.
+
+    Parameters
+    ----------
+    xi, eta : double
+        Natural coordinates of the evaluation point.
+    j11, j12, j21, j22 : double
+        Terms of the inverse Jacobian, used to bring the derivatives of
+        the bubbles from the natural to the Cartesian coordinates.
+    d : double pointer
+        Buffer of 16 positions that is filled in place, in the order
+        `\tilde S^u_{,x}`, `\tilde S^u_{,y}`, `\tilde S^v_{,x}`,
+        `\tilde S^v_{,y}`, each one for the four nodes, i.e. ``d[0:4]``
+        holds `\tilde S^u_{,x}` at the `r_z` column of nodes 1 to 4.
+
+    """
+    cdef double x1, x2, x3, x4, y1, y2, y3, y4
+    cdef double Nb1xi, Nb2xi, Nb3xi, Nb4xi
+    cdef double Nb1eta, Nb2eta, Nb3eta, Nb4eta
+    cdef double Nb1x, Nb2x, Nb3x, Nb4x
+    cdef double Nb1y, Nb2y, Nb3y, Nb4y
+    cdef double cu1, cu2, cu3, cu4
+    cdef double cv1, cv2, cv3, cv4
+
+    # NOTE ignoring z in local coordinates
+    x1 = xe[0]
+    y1 = xe[1]
+    x2 = xe[3]
+    y2 = xe[4]
+    x3 = xe[6]
+    y3 = xe[7]
+    x4 = xe[9]
+    y4 = xe[10]
+
+    # NOTE (l_k/8)*n_k = (1/8)*{y_i - y_j, x_j - x_i}, with n_k the unit
+    #      normal of edge k and l_k its length, such that the amplitude
+    #      a_k = (l_k/8)*({r_z}_i - {r_z}_j) of the edge mode multiplies
+    #      the difference of the two vertex drilling rotations
+    cu1 = 0.125*(y1 - y2)
+    cu2 = 0.125*(y2 - y3)
+    cu3 = 0.125*(y3 - y4)
+    cu4 = 0.125*(y4 - y1)
+    cv1 = 0.125*(x2 - x1)
+    cv2 = 0.125*(x3 - x2)
+    cv3 = 0.125*(x4 - x3)
+    cv4 = 0.125*(x1 - x4)
+
+    # NOTE derivatives of the bubbles with respect to the natural
+    #      coordinates. Edge 1 lies at eta = -1, edge 2 at xi = +1,
+    #      edge 3 at eta = +1 and edge 4 at xi = -1
+    Nb1xi = -xi*(1. - eta)
+    Nb1eta = -0.5*(1. - xi*xi)
+    Nb2xi = 0.5*(1. - eta*eta)
+    Nb2eta = -eta*(1. + xi)
+    Nb3xi = -xi*(1. + eta)
+    Nb3eta = 0.5*(1. - xi*xi)
+    Nb4xi = -0.5*(1. - eta*eta)
+    Nb4eta = -eta*(1. - xi)
+
+    Nb1x = j11*Nb1xi + j12*Nb1eta
+    Nb2x = j11*Nb2xi + j12*Nb2eta
+    Nb3x = j11*Nb3xi + j12*Nb3eta
+    Nb4x = j11*Nb4xi + j12*Nb4eta
+
+    Nb1y = j21*Nb1xi + j22*Nb1eta
+    Nb2y = j21*Nb2xi + j22*Nb2eta
+    Nb3y = j21*Nb3xi + j22*Nb3eta
+    Nb4y = j21*Nb4xi + j22*Nb4eta
+
+    # NOTE each node is the first vertex of one edge and the second vertex
+    #      of the previous one, hence the two contributions with opposite
+    #      signs
+    d[0] = cu1*Nb1x - cu4*Nb4x
+    d[1] = cu2*Nb2x - cu1*Nb1x
+    d[2] = cu3*Nb3x - cu2*Nb2x
+    d[3] = cu4*Nb4x - cu3*Nb3x
+
+    d[4] = cu1*Nb1y - cu4*Nb4y
+    d[5] = cu2*Nb2y - cu1*Nb1y
+    d[6] = cu3*Nb3y - cu2*Nb2y
+    d[7] = cu4*Nb4y - cu3*Nb3y
+
+    d[8] = cv1*Nb1x - cv4*Nb4x
+    d[9] = cv2*Nb2x - cv1*Nb1x
+    d[10] = cv3*Nb3x - cv2*Nb2x
+    d[11] = cv4*Nb4x - cv3*Nb3x
+
+    d[12] = cv1*Nb1y - cv4*Nb4y
+    d[13] = cv2*Nb2y - cv1*Nb1y
+    d[14] = cv3*Nb3y - cv2*Nb2y
+    d[15] = cv4*Nb4y - cv3*Nb3y
 
 
 cdef class Quad4Data:
@@ -287,18 +535,33 @@ cdef class Quad4Probe:
         self.Gwy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.KCNLve = np.zeros((NUM_NODES*DOF)**2, dtype=np.float64)
 
-    cpdef void update_BL(Quad4Probe self, double xi, double eta):
+    cpdef void update_BL(Quad4Probe self, double xi, double eta,
+                         int drilling_model=0):
         r"""
         Update all components of the interpolation matrix `\pmb{B_L}` at a
         given natural coordinate point `\xi`, `\eta`.
 
+        Parameters
+        ----------
+        xi, eta : double
+            Natural coordinates of the evaluation point.
+        drilling_model : int
+            Must match the ``drilling_model`` attribute of the finite element
+            that the probe is being used with, such that the recovered strains
+            correspond to the displacement field that produced the stiffness
+            matrix. The default ``0`` includes the Allman drilling enrichment
+            in the membrane rows and in ``BLdrilling``; any other value gives
+            the unenriched rows used by the ``K6ROT`` penalty model.
+
         """
+        cdef int i
         cdef double x1, x2, x3, x4, y1, y2, y3, y4
         cdef double J11, J12, J21, J22
         cdef double j11, j12, j21, j22
         cdef double N1, N2, N3, N4
         cdef double N1x, N2x, N3x, N4x
         cdef double N1y, N2y, N3y, N4y
+        cdef double denr[16]
 
         x1 = self.xe[0]
         y1 = self.xe[1]
@@ -411,6 +674,20 @@ cdef class Quad4Probe:
         self.BLdrilling[17] = N3
         self.BLdrilling[23] = N4
 
+        # NOTE Allman drilling enrichment of the in-plane rows, see
+        #      allman_enrichment() and the module documentation
+        for i in range(NUM_NODES):
+            self.BLexx[DOF*i + 5] = 0.
+            self.BLeyy[DOF*i + 5] = 0.
+            self.BLgxy[DOF*i + 5] = 0.
+        if drilling_model == 0:
+            allman_enrichment(&self.xe[0], xi, eta, j11, j12, j21, j22, denr)
+            for i in range(NUM_NODES):
+                self.BLexx[DOF*i + 5] = denr[i]
+                self.BLeyy[DOF*i + 5] = denr[12 + i]
+                self.BLgxy[DOF*i + 5] = denr[4 + i] + denr[8 + i]
+                self.BLdrilling[DOF*i + 5] += 0.5*denr[4 + i] - 0.5*denr[8 + i]
+
 
 cdef class Quad4:
     r"""
@@ -439,12 +716,45 @@ cdef class Quad4:
         Property identification number.
     area, : double
         Element area.
+    drilling_model, : int
+        Selects how the drilling degree-of-freedom `r_z` is given stiffness,
+        see the module documentation. The default ``0`` is the physics-based
+        stiffness, combining the in-plane enrichment of Allman (1984) with
+        the regularisation of Hughes and Brezzi (1989), in the form given for
+        the quadrilateral by Ibrahimbegovic et al. (1990). With it the
+        drilling rotation is a kinematic variable that carries strain energy,
+        the recovered nodal moments about the shell normal are physical, and
+        no user parameter is involved. Any other value selects the
+        fictitious penalty of MSC Nastran and Autodesk Nastran, which was the
+        default up to version 0.9.0 and is controlled by ``K6ROT``. Setting
+        ``elem.drilling_model = 1`` before calling :meth:`.update_KC0` is the
+        way to reproduce results obtained before 0.10.0.
+
+        .. note:: The attribute must be set before the element matrices are
+                  updated, and the same value must be passed to
+                  :meth:`.Quad4Probe.update_BL` when strains are recovered
+                  from the probe.
+
     K6ROT, : double
-        Dimensionless multiplier for the drilling stiffness. 
+        Dimensionless multiplier for the fictitious drilling stiffness, only
+        read when ``drilling_model`` is not ``0``. It has no effect under the
+        default physics-based model, which takes its regularisation parameter
+        from the laminate stiffness instead, see ``gamma_rz``.
         AUTODESK NASTRAN's quick reference guide recommends ``K6ROT = 100.``
         for static analysis. For modal solutions, ``K6ROT=1.e4`` is suggested.
         MSC NASTRAN's quick reference guide states that ``K6ROT > 100.``
         should not be used, but this is contradicting AUTODESK NASTRAN.
+    gamma_rz, : double
+        Regularisation parameter `\gamma_{r_z}` of the physics-based drilling
+        stiffness, only read when ``drilling_model`` is ``0``. The default is
+        a negative value, which means that `A_{66}` of the laminate
+        extensional stiffness matrix is used, the value identified by Hughes
+        and Brezzi (1989). This is a modulus and not a parameter that needs
+        tuning: the element response has a broad plateau of insensitivity
+        around it, and the attribute is exposed for the sensitivity study
+        that the literature recommends rather than for normal use. Very large
+        values over-constrain `r_z = \theta_z`, and a zero value leaves the
+        Allman enrichment rank-deficient by one.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix from local to global coordinates.
     m11, m12, m21, m22 : double
@@ -470,7 +780,9 @@ cdef class Quad4:
     cdef public int init_k_KC0, init_k_KCNL, init_k_KG, init_k_M
     cdef public int init_k_KA_beta, init_k_KA_gamma, init_k_CA
     cdef public double area
+    cdef public int drilling_model
     cdef public double K6ROT
+    cdef public double gamma_rz
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public double m11, m12, m21, m22
     cdef public Quad4Probe probe
@@ -495,7 +807,9 @@ cdef class Quad4:
         self.init_k_KA_gamma = 0
         self.init_k_CA = 0
         self.area = 0
+        self.drilling_model = 0 # NOTE Allman + Hughes-Brezzi, the default
         self.K6ROT = 100. # NOTE default value in MSC Nastran
+        self.gamma_rz = -1. # NOTE negative means "use A66"
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.
         self.r31 = self.r32 = self.r33 = 0.
@@ -809,7 +1123,20 @@ cdef class Quad4:
         cdef double xi, eta, wij, J11, J12, J21, J22, detJ
         cdef double j11, j12, j21, j22
         cdef double points[2]
+        cdef double qpoints[3]
+        cdef double qweights[3]
+        cdef int nq
         cdef int pti, ptj
+        # NOTE MITC4 assumed transverse shear: the covariant tying-point
+        #      rows, each with six non-zeros, and the interpolated operator
+        cdef double qrA[24]
+        cdef double qrB[24]
+        cdef double qsC[24]
+        cdef double qsD[24]
+        cdef double BLgxz_a[24]
+        cdef double BLgyz_a[24]
+        cdef double qr, qs, fA, fB, fC, fD
+        cdef int itie
         cdef double* BLexx
         cdef double* BLeyy
         cdef double* BLgxy
@@ -822,6 +1149,9 @@ cdef class Quad4:
         cdef double* BLgxz_grad
         cdef double* BLdrilling
         cdef double BLdrilling_i
+        cdef double gamma_drill
+        cdef int enriched
+        cdef double denr[16]
         cdef double exx, eyy, gxy, kxx, kyy, kxy
         cdef double gyz_rot, gxz_rot, gyz_grad, gxz_grad
 
@@ -866,6 +1196,21 @@ cdef class Quad4:
             A45 = Atse[1]
             A55 = Atse[3]
 
+            # NOTE regularisation modulus of the drilling stiffness, see the
+            #      module documentation. The fictitious penalty of MSC Nastran
+            #      and Autodesk Nastran is recovered with K6ROT*1e-6*A66
+            enriched = 1 if self.drilling_model == 0 else 0
+            if enriched:
+                # NOTE Hughes-Brezzi regularisation parameter, a modulus and
+                #      not a user parameter. Attribute gamma_rz allows the
+                #      sensitivity study recommended in the literature
+                if self.gamma_rz >= 0.:
+                    gamma_drill = self.gamma_rz
+                else:
+                    gamma_drill = A66
+            else:
+                gamma_drill = self.K6ROT*1.e-6*A66
+
             length = self.area**0.5
 
 
@@ -889,15 +1234,38 @@ cdef class Quad4:
                     ke = 24*i + j
                     self.probe.KC0ve[ke] = 0.
 
-            # NOTE full integration with two-point Gauss-Legendre quadrature
-            wij = 1.
             points[0] = -0.5773502691896257645092
             points[1] = +0.5773502691896257645092
 
-            for pti in range(2):
-                xi = points[pti]
-                for ptj in range(2):
-                    eta = points[ptj]
+            # NOTE quadrature of the membrane, bending and coupling terms.
+            #      Two-point Gauss-Legendre is enough for the unenriched
+            #      field, but the Allman edge modes make the membrane
+            #      operator vary linearly, and with two points the
+            #      alternating pattern of the drilling rotations produces no
+            #      membrane strain at any of the four points, leaving a
+            #      zero-energy mode that the drilling term cannot remove. The
+            #      three-point rule, which is the one used by Ibrahimbegovic
+            #      et al. (1990), restores the rank of the element
+            if enriched:
+                nq = 3
+                qpoints[0] = -0.7745966692414834042779
+                qpoints[1] = 0.
+                qpoints[2] = +0.7745966692414834042779
+                qweights[0] = 0.5555555555555555555556
+                qweights[1] = 0.8888888888888888888889
+                qweights[2] = 0.5555555555555555555556
+            else:
+                nq = 2
+                qpoints[0] = points[0]
+                qpoints[1] = points[1]
+                qweights[0] = 1.
+                qweights[1] = 1.
+
+            for pti in range(nq):
+                xi = qpoints[pti]
+                for ptj in range(nq):
+                    eta = qpoints[ptj]
+                    wij = qweights[pti]*qweights[ptj]
 
                     J11 = -0.5*x1 + 0.5*x2 + 0.5*(eta + 1)*(0.5*x1 - 0.5*x2 + 0.5*x3 - 0.5*x4)
                     J12 = -0.5*y1 + 0.5*y2 + 0.5*(eta + 1)*(0.5*y1 - 0.5*y2 + 0.5*y3 - 0.5*y4)
@@ -945,6 +1313,22 @@ cdef class Quad4:
                     BLgxy[13] = N3x
                     BLgxy[19] = N4x
 
+                    # NOTE Allman enrichment, populating the drilling columns
+                    #      of the membrane operator. The columns are always
+                    #      assigned because the probe is shared amongst finite
+                    #      elements that may use a different drilling model
+                    if enriched:
+                        allman_enrichment(&self.probe.xe[0], xi, eta, j11, j12, j21, j22, denr)
+                        for i in range(NUM_NODES):
+                            BLexx[DOF*i + 5] = denr[i]
+                            BLeyy[DOF*i + 5] = denr[12 + i]
+                            BLgxy[DOF*i + 5] = denr[4 + i] + denr[8 + i]
+                    else:
+                        for i in range(NUM_NODES):
+                            BLexx[DOF*i + 5] = 0.
+                            BLeyy[DOF*i + 5] = 0.
+                            BLgxy[DOF*i + 5] = 0.
+
                     BLkxx[4] = N1x
                     BLkxx[10] = N2x
                     BLkxx[16] = N3x
@@ -988,13 +1372,104 @@ cdef class Quad4:
                               + kyy*B12*BLexx[j] + kyy*B22*BLeyy[j] + kyy*B26*BLgxy[j]
                               + kxy*B16*BLexx[j] + kxy*B26*BLeyy[j] + kxy*B66*BLgxy[j]
 
-                            # bending
-                              + kxx*D11*BLkxx[j] + kxx*D12*BLkyy[j] + kxx*D16*BLkxy[j]
+                            )
+
+            # NOTE two-point quadrature of the bending term. The Allman
+            #      enrichment acts only on the in-plane translations, leaving
+            #      the curvature rows untouched, so this term keeps the rule
+            #      it has always used and the bending response of the element
+            #      is identical for the two drilling models
+            wij = 1.
+            for pti in range(2):
+                xi = points[pti]
+                for ptj in range(2):
+                    eta = points[ptj]
+
+                    J11 = -0.5*x1 + 0.5*x2 + 0.5*(eta + 1)*(0.5*x1 - 0.5*x2 + 0.5*x3 - 0.5*x4)
+                    J12 = -0.5*y1 + 0.5*y2 + 0.5*(eta + 1)*(0.5*y1 - 0.5*y2 + 0.5*y3 - 0.5*y4)
+                    J21 = -0.5*x1 + 0.5*x4 - 0.25*(-x1 + x2)*(xi + 1) + 0.25*(x3 - x4)*(xi + 1)
+                    J22 = -0.5*y1 + 0.5*y4 - 0.25*(xi + 1)*(-y1 + y2) + 0.25*(xi + 1)*(y3 - y4)
+
+                    detJ = J11*J22 - J12*J21
+
+                    j11 = J22/(J11*J22 - J12*J21)
+                    j12 = -J12/(J11*J22 - J12*J21)
+                    j21 = -J21/(J11*J22 - J12*J21)
+                    j22 = J11/(J11*J22 - J12*J21)
+
+                    N1x = 0.25*j11*(eta - 1) + 0.25*j12*(xi - 1)
+                    N2x = -0.25*eta*j11 + 0.25*j11 - 0.25*j12*xi - 0.25*j12
+                    N3x = 0.25*j11*(eta + 1) + 0.25*j12*(xi + 1)
+                    N4x = -0.25*eta*j11 - 0.25*j11 - 0.25*j12*xi + 0.25*j12
+
+                    N1y = 0.25*j21*(eta - 1) + 0.25*j22*(xi - 1)
+                    N2y = -0.25*eta*j21 + 0.25*j21 - 0.25*j22*xi - 0.25*j22
+                    N3y = 0.25*j21*(eta + 1) + 0.25*j22*(xi + 1)
+                    N4y = -0.25*eta*j21 - 0.25*j21 - 0.25*j22*xi + 0.25*j22
+
+                    BLkxx[4] = N1x
+                    BLkxx[10] = N2x
+                    BLkxx[16] = N3x
+                    BLkxx[22] = N4x
+
+                    BLkyy[3] = -N1y
+                    BLkyy[9] = -N2y
+                    BLkyy[15] = -N3y
+                    BLkyy[21] = -N4y
+
+                    BLkxy[3] = -N1x
+                    BLkxy[9] = -N2x
+                    BLkxy[15] = -N3x
+                    BLkxy[21] = -N4x
+                    BLkxy[4] = N1y
+                    BLkxy[10] = N2y
+                    BLkxy[16] = N3y
+                    BLkxy[22] = N4y
+
+                    for i in range(24):
+                        kxx = BLkxx[i]
+                        kyy = BLkyy[i]
+                        kxy = BLkxy[i]
+                        for j in range(24):
+                            ke = 24*i + j
+                            self.probe.KC0ve[ke] += wij*detJ*(
+                                kxx*D11*BLkxx[j] + kxx*D12*BLkyy[j] + kxx*D16*BLkxy[j]
                               + kyy*D12*BLkxx[j] + kyy*D22*BLkyy[j] + kyy*D26*BLkxy[j]
                               + kxy*D16*BLkxx[j] + kxy*D26*BLkyy[j] + kxy*D66*BLkxy[j]
                             )
 
-                    if prop.h/length >= 1.: # thick elements
+            # NOTE two-point quadrature of the transverse shear gradient
+            #      term of the thick elements, kept independent of the rule
+            #      used above for the membrane
+            if prop.h/length >= 1.: # thick elements
+                wij = 1.
+                for pti in range(2):
+                    xi = points[pti]
+                    for ptj in range(2):
+                        eta = points[ptj]
+
+                        J11 = -0.5*x1 + 0.5*x2 + 0.5*(eta + 1)*(0.5*x1 - 0.5*x2 + 0.5*x3 - 0.5*x4)
+                        J12 = -0.5*y1 + 0.5*y2 + 0.5*(eta + 1)*(0.5*y1 - 0.5*y2 + 0.5*y3 - 0.5*y4)
+                        J21 = -0.5*x1 + 0.5*x4 - 0.25*(-x1 + x2)*(xi + 1) + 0.25*(x3 - x4)*(xi + 1)
+                        J22 = -0.5*y1 + 0.5*y4 - 0.25*(xi + 1)*(-y1 + y2) + 0.25*(xi + 1)*(y3 - y4)
+
+                        detJ = J11*J22 - J12*J21
+
+                        j11 = J22/(J11*J22 - J12*J21)
+                        j12 = -J12/(J11*J22 - J12*J21)
+                        j21 = -J21/(J11*J22 - J12*J21)
+                        j22 = J11/(J11*J22 - J12*J21)
+
+                        N1x = 0.25*j11*(eta - 1) + 0.25*j12*(xi - 1)
+                        N2x = -0.25*eta*j11 + 0.25*j11 - 0.25*j12*xi - 0.25*j12
+                        N3x = 0.25*j11*(eta + 1) + 0.25*j12*(xi + 1)
+                        N4x = -0.25*eta*j11 - 0.25*j11 - 0.25*j12*xi + 0.25*j12
+
+                        N1y = 0.25*j21*(eta - 1) + 0.25*j22*(xi - 1)
+                        N2y = -0.25*eta*j21 + 0.25*j21 - 0.25*j22*xi - 0.25*j22
+                        N3y = 0.25*j21*(eta + 1) + 0.25*j22*(xi + 1)
+                        N4y = -0.25*eta*j21 - 0.25*j21 - 0.25*j22*xi + 0.25*j22
+
                         BLgyz_grad[2] = N1y
                         BLgyz_grad[8] = N2y
                         BLgyz_grad[14] = N3y
@@ -1015,27 +1490,65 @@ cdef class Quad4:
                                   + gxz_grad*A45*BLgyz_grad[j] + gxz_grad*A55*BLgxz_grad[j]
                                 )
 
-                    BLdrilling[0] = N1y/2.
-                    BLdrilling[6] = N2y/2.
-                    BLdrilling[12] = N3y/2.
-                    BLdrilling[18] = N4y/2.
+            # NOTE the fictitious penalty of the K6ROT model is integrated
+            #      with the same two-point rule used before 0.10.0, whereas
+            #      the physics-based constraint term is integrated with a
+            #      single point in the block further below, following
+            #      Ibrahimbegovic et al. (1990). See the module documentation
+            if not enriched:
+                wij = 1.
+                for pti in range(2):
+                    xi = points[pti]
+                    for ptj in range(2):
+                        eta = points[ptj]
 
-                    BLdrilling[1] = -N1x/2.
-                    BLdrilling[7] = -N2x/2.
-                    BLdrilling[13] = -N3x/2.
-                    BLdrilling[19] = -N4x/2.
+                        J11 = -0.5*x1 + 0.5*x2 + 0.5*(eta + 1)*(0.5*x1 - 0.5*x2 + 0.5*x3 - 0.5*x4)
+                        J12 = -0.5*y1 + 0.5*y2 + 0.5*(eta + 1)*(0.5*y1 - 0.5*y2 + 0.5*y3 - 0.5*y4)
+                        J21 = -0.5*x1 + 0.5*x4 - 0.25*(-x1 + x2)*(xi + 1) + 0.25*(x3 - x4)*(xi + 1)
+                        J22 = -0.5*y1 + 0.5*y4 - 0.25*(xi + 1)*(-y1 + y2) + 0.25*(xi + 1)*(y3 - y4)
 
-                    BLdrilling[5] = N1
-                    BLdrilling[11] = N2
-                    BLdrilling[17] = N3
-                    BLdrilling[23] = N4
-                    
-                    # drilling
-                    for i in range(24):
-                        BLdrilling_i = BLdrilling[i]
-                        for j in range(24):
-                            ke = 24*i + j
-                            self.probe.KC0ve[ke] += wij*detJ*BLdrilling_i*BLdrilling[j]
+                        detJ = J11*J22 - J12*J21
+
+                        j11 = J22/(J11*J22 - J12*J21)
+                        j12 = -J12/(J11*J22 - J12*J21)
+                        j21 = -J21/(J11*J22 - J12*J21)
+                        j22 = J11/(J11*J22 - J12*J21)
+
+                        N1x = 0.25*j11*(eta - 1) + 0.25*j12*(xi - 1)
+                        N2x = -0.25*eta*j11 + 0.25*j11 - 0.25*j12*xi - 0.25*j12
+                        N3x = 0.25*j11*(eta + 1) + 0.25*j12*(xi + 1)
+                        N4x = -0.25*eta*j11 - 0.25*j11 - 0.25*j12*xi + 0.25*j12
+
+                        N1y = 0.25*j21*(eta - 1) + 0.25*j22*(xi - 1)
+                        N2y = -0.25*eta*j21 + 0.25*j21 - 0.25*j22*xi - 0.25*j22
+                        N3y = 0.25*j21*(eta + 1) + 0.25*j22*(xi + 1)
+                        N4y = -0.25*eta*j21 - 0.25*j21 - 0.25*j22*xi + 0.25*j22
+
+                        N1 = eta*xi/4. - eta/4. - xi/4. + 1/4.
+                        N2 = -eta*xi/4. - eta/4. + xi/4. + 1/4.
+                        N3 = eta*xi/4. + eta/4. + xi/4. + 1/4.
+                        N4 = -eta*xi/4. + eta/4. - xi/4. + 1/4.
+
+                        BLdrilling[0] = N1y/2.
+                        BLdrilling[6] = N2y/2.
+                        BLdrilling[12] = N3y/2.
+                        BLdrilling[18] = N4y/2.
+
+                        BLdrilling[1] = -N1x/2.
+                        BLdrilling[7] = -N2x/2.
+                        BLdrilling[13] = -N3x/2.
+                        BLdrilling[19] = -N4x/2.
+
+                        BLdrilling[5] = N1
+                        BLdrilling[11] = N2
+                        BLdrilling[17] = N3
+                        BLdrilling[23] = N4
+
+                        for i in range(24):
+                            BLdrilling_i = gamma_drill*BLdrilling[i]
+                            for j in range(24):
+                                ke = 24*i + j
+                                self.probe.KC0ve[ke] += wij*detJ*BLdrilling_i*BLdrilling[j]
             
             # NOTE reduced integration with one point at the center
             wij = 4.
@@ -1088,6 +1601,42 @@ cdef class Quad4:
             BLgxz_rot[10] = N2
             BLgxz_rot[16] = N3
             BLgxz_rot[22] = N4
+
+            # NOTE the Hughes-Brezzi constraint term is integrated with this
+            #      single point at the centroid, following Ibrahimbegovic et
+            #      al. (1990), who integrate their penalty matrix with one
+            #      point while the enriched membrane is fully integrated. The
+            #      rule is what makes the element insensitive to gamma_rz: a
+            #      fully integrated constraint over-constrains r_z = theta_z
+            #      and locks the membrane response as gamma_rz grows, whereas
+            #      with one point the response reaches an asymptote. A single
+            #      point gives the constraint term rank one per element, which
+            #      is exactly what is needed to remove the uniform drilling
+            #      mode of the Allman enrichment
+            if enriched:
+                allman_enrichment(&self.probe.xe[0], xi, eta, j11, j12, j21,
+                                  j22, denr)
+
+                BLdrilling[0] = N1y/2.
+                BLdrilling[6] = N2y/2.
+                BLdrilling[12] = N3y/2.
+                BLdrilling[18] = N4y/2.
+
+                BLdrilling[1] = -N1x/2.
+                BLdrilling[7] = -N2x/2.
+                BLdrilling[13] = -N3x/2.
+                BLdrilling[19] = -N4x/2.
+
+                BLdrilling[5] = N1 + 0.5*denr[4] - 0.5*denr[8]
+                BLdrilling[11] = N2 + 0.5*denr[5] - 0.5*denr[9]
+                BLdrilling[17] = N3 + 0.5*denr[6] - 0.5*denr[10]
+                BLdrilling[23] = N4 + 0.5*denr[7] - 0.5*denr[11]
+
+                for i in range(24):
+                    BLdrilling_i = gamma_drill*BLdrilling[i]
+                    for j in range(24):
+                        ke = 24*i + j
+                        self.probe.KC0ve[ke] += wij*detJ*BLdrilling_i*BLdrilling[j]
 
             if prop.h/length < 1.: # thin elements
                 for i in range(24):
@@ -1363,6 +1912,7 @@ cdef class Quad4:
         cdef double J11, J12, J21, J22, detJ
         cdef double j11, j12, j21, j22
         cdef double N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
+        cdef double denr[16]
         cdef double *BLexx
         cdef double *BLeyy
         cdef double *BLgxy
@@ -1478,6 +2028,17 @@ cdef class Quad4:
         Gwy[8] = N2y
         Gwy[14] = N3y
         Gwy[20] = N4y
+
+        # NOTE Allman enrichment of the membrane rows, keeping the nonlinear
+        #      tangent of update_KCNL consistent with the enriched KC0. The
+        #      curvature rows and the gradient of w are not enriched, because
+        #      the edge modes act only on the in-plane translations
+        if self.drilling_model == 0:
+            allman_enrichment(&self.probe.xe[0], xi, eta, j11, j12, j21, j22, denr)
+            for i in range(NUM_NODES):
+                BLexx[DOF*i + 5] = denr[i]
+                BLeyy[DOF*i + 5] = denr[12 + i]
+                BLgxy[DOF*i + 5] = denr[4 + i] + denr[8 + i]
 
         return detJ
 
@@ -1843,6 +2404,8 @@ cdef class Quad4:
         cdef double x1, x2, x3, x4
         cdef double y1, y2, y3, y4
         cdef double xi, eta, wij, J11, J12, J21, J22, detJ
+        cdef double denr[16]
+        cdef double dexx, deyy, dgxy
         cdef double points[2]
         cdef double Ae[9]
         cdef double Be[9]
@@ -2373,6 +2936,26 @@ cdef class Quad4:
                     Nxx = ue[0]*(A11*N1x + A16*N1y) + ue[10]*(B11*N2x + B16*N2y) + ue[12]*(A11*N3x + A16*N3y) + ue[13]*(A12*N3y + A16*N3x) - ue[15]*(B12*N3y + B16*N3x) + ue[16]*(B11*N3x + B16*N3y) + ue[18]*(A11*N4x + A16*N4y) + ue[19]*(A12*N4y + A16*N4x) + ue[1]*(A12*N1y + A16*N1x) - ue[21]*(B12*N4y + B16*N4x) + ue[22]*(B11*N4x + B16*N4y) - ue[3]*(B12*N1y + B16*N1x) + ue[4]*(B11*N1x + B16*N1y) + ue[6]*(A11*N2x + A16*N2y) + ue[7]*(A12*N2y + A16*N2x) - ue[9]*(B12*N2y + B16*N2x)
                     Nyy = ue[0]*(A12*N1x + A26*N1y) + ue[10]*(B12*N2x + B26*N2y) + ue[12]*(A12*N3x + A26*N3y) + ue[13]*(A22*N3y + A26*N3x) - ue[15]*(B22*N3y + B26*N3x) + ue[16]*(B12*N3x + B26*N3y) + ue[18]*(A12*N4x + A26*N4y) + ue[19]*(A22*N4y + A26*N4x) + ue[1]*(A22*N1y + A26*N1x) - ue[21]*(B22*N4y + B26*N4x) + ue[22]*(B12*N4x + B26*N4y) - ue[3]*(B22*N1y + B26*N1x) + ue[4]*(B12*N1x + B26*N1y) + ue[6]*(A12*N2x + A26*N2y) + ue[7]*(A22*N2y + A26*N2x) - ue[9]*(B22*N2y + B26*N2x)
                     Nxy = ue[0]*(A16*N1x + A66*N1y) + ue[10]*(B16*N2x + B66*N2y) + ue[12]*(A16*N3x + A66*N3y) + ue[13]*(A26*N3y + A66*N3x) - ue[15]*(B26*N3y + B66*N3x) + ue[16]*(B16*N3x + B66*N3y) + ue[18]*(A16*N4x + A66*N4y) + ue[19]*(A26*N4y + A66*N4x) + ue[1]*(A26*N1y + A66*N1x) - ue[21]*(B26*N4y + B66*N4x) + ue[22]*(B16*N4x + B66*N4y) - ue[3]*(B26*N1y + B66*N1x) + ue[4]*(B16*N1x + B66*N1y) + ue[6]*(A16*N2x + A66*N2y) + ue[7]*(A26*N2y + A66*N2x) - ue[9]*(B26*N2y + B66*N2x)
+                    # NOTE the Allman enrichment populates the drilling
+                    #      columns of the membrane operator, so the membrane
+                    #      stress resultants above, generated for the
+                    #      unenriched field, need the contribution of the
+                    #      edge modes. Without it KG would not be part of the
+                    #      exact Jacobian of the internal forces, see
+                    #      update_KCNL
+                    if self.drilling_model == 0:
+                        allman_enrichment(&self.probe.xe[0], xi, eta, j11,
+                                          j12, j21, j22, denr)
+                        dexx = 0.
+                        deyy = 0.
+                        dgxy = 0.
+                        for i in range(NUM_NODES):
+                            dexx += denr[i]*ue[DOF*i + 5]
+                            deyy += denr[12 + i]*ue[DOF*i + 5]
+                            dgxy += (denr[4 + i] + denr[8 + i])*ue[DOF*i + 5]
+                        Nxx += A11*dexx + A12*deyy + A16*dgxy
+                        Nyy += A12*dexx + A22*deyy + A26*dgxy
+                        Nxy += A16*dexx + A26*deyy + A66*dgxy
 
                     k = self.init_k_KG
                     KGv[k] += r13**2*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
