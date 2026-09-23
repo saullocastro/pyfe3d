@@ -5,6 +5,7 @@ version.py
 quad4.cpp
 quad4r.cpp
 tria3r.cpp
+tria3dsg.cpp
 beam*.cpp
 spring*.cpp
 truss*.cpp
