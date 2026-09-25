@@ -49,6 +49,12 @@ Available finite elements
 :doc:`properties`
 
 
+Solvers and preconditioners
+---------------------------
+
+:doc:`solver`
+
+
 Repository structure
 --------------------
 

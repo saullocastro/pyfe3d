@@ -4,11 +4,11 @@ sys.path.append('..')
 import time
 import numpy as np
 from numpy import isclose
-from scipy.sparse.linalg import eigsh
-from scipy.sparse import coo_matrix, diags as sp_diags
+from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import laminated_plate
 from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
+from pyfe3d.solver import linear_buckling
 
 
 def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
@@ -33,16 +33,86 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         # NOTE actual values from reference can be found here https://github.com/saullocastro/compmech/blob/e7e5342bf212743e70da22c94cc0452911099db3/compmech/conecyl/conecylDB.py#L145
         'Z33' : [0, 0, 19, -19, 37, -37, 45, -45, 51, -51],
     }
-    # NOTE reference values match with Fig. 13, FSDT CC2, of Castro et al.
+    # NOTE the paper is the source of the geometry, the material, the
+    #      stacking sequences and the boundary conditions. It does not
+    #      tabulate the torsional buckling load: the closest published value
+    #      is the intercept of the curves of Fig. 13 (FSDT-BC2, CC2) with the
+    #      axis of zero axial load, which is pure torsion. Read off that
+    #      figure, those intercepts are about
+    #
+    #          Z11   -15.4 kNm  and  +16.6 kNm
+    #          Z33    -9.3 kNm  and   +9.0 kNm
+    #
+    #      the two signs differing because the laminates are unsymmetric.
+    #      Note that ``Tcr`` below is ``eigval*Nxy*b*R``, which by the sign
+    #      convention stated further down is minus the torque T of the paper,
+    #      so the magnitudes here are to be compared with the positive
+    #      intercepts, +16.6 and +9.0 kNm.
+    #
+    #      The converged values below are therefore about 16 per cent (Z11)
+    #      and 23 per cent (Z33) above the semi-analytical prediction. They
+    #      are kept as a regression lock of this element and not as a claim
+    #      of agreement with the paper, and the gap is not explained by the
+    #      drilling formulation: it is the same for every drilling model and
+    #      for both quadrilateral elements, which agree with each other to
+    #      about one per cent at this mesh.
+    #
+    #      The refinement=8 values are mesh converged. For Z11 the critical
+    #      mode is a long wave pattern and the sequence over ntheta is
+    #
+    #          ntheta    40      80     160     320
+    #          Tcr   -33163  -22193  -19791  -19214  Nm
+    #          waves      8       9      10      10
+    #          el/wave  5.0     8.9    16.0    30.4
+    #
+    #      so the mode is well resolved and the load is settling near
+    #      -19.1 kNm, the last step being 2.9 per cent. Torsional buckling is
+    #      favourable in this respect: its critical wavelength spans about a
+    #      tenth of the circumference. The axial compression of the same
+    #      cylinder is not comparable in this way, its critical half
+    #      wavelength being of the order of sqrt(R*t) = 17.7 mm, some 89
+    #      circumferential waves, so a comparison with Table 6 of the paper
+    #      needs a far finer mesh than the ones used here, see
+    #      test_quad4_linear_buckling_cylinder_displ.py
+    # NOTE values updated in 0.10.0. The previous ones were Z11 -18995.4 and
+    #      Z33 -11032.4, obtained before the transverse hourglass stiffness
+    #      Ew stopped being built from the rotational ones Erx and Ery, which
+    #      made it pick up hgfactor_rx and hgfactor_ry as well and therefore
+    #      quadratic in the factors. This test sets one hgfactor of 0.001 for
+    #      all five components, so Ew was a further thousand times smaller
+    #      than intended, and correcting it moves Z11 by 0.7 and Z33 by 0.3
+    #      per cent. Both values move towards the ones of the enriched
+    #      Quad4, -19214.0 and -11110.4, the gap between the two elements
+    #      closing from 1.14 to 0.41 per cent for Z11 and from 0.70 to 0.43
+    #      per cent for Z33. The refinement=1 values below, which are the
+    #      ones exercised in CI, are unchanged by the correction
     reference_Tcr_value_Castro_refinement_8 = {
-        'Z11' : -18995.4,
-        'Z33' : -11032.4
+        'Z11' : -19197.8,
+        'Z33' : -11093.7
     }
+    # NOTE values updated in 0.10.0 when the physics-based drilling
+    #      coefficient gamma_rz = A66 of Hughes and Brezzi (1989) became the
+    #      default of this element. With the fictitious penalty they are
+    #      Z11 -19134.6 and Z33 -11062.9, and before the correction of the
+    #      transverse hourglass stiffness described below they were
+    #      Z11 -18995.4 and Z33 -11032.4. At this converged mesh the useful
+    #      check is the agreement with the other quadrilateral: the enriched
+    #      Quad4 gives -19214.0 and -11110.4, so the two elements now differ
+    #      by 0.08 and 0.15 per cent, against 0.41 and 0.43 per cent with the
+    #      penalty and 1.14 and 0.70 per cent before either change
     # NOTE values used for CI tests, values derived after running the tests in
     # a local compuer with refinement=8 first and then with refinement=1
+    # NOTE values updated in 0.10.0 together with the refinement=8 ones
+    #      above, when the physics-based drilling coefficient gamma_rz = A66
+    #      of Hughes and Brezzi (1989) became the default of this element.
+    #      The previous values were Z11 -29527.2 and Z33 -19543.4, recovered
+    #      by setting quad.drilling_model = 1 before update_KC0. This mesh is
+    #      far too coarse for the buckling load, roughly 1.7 times the
+    #      converged one, so these are a regression lock and not a measure of
+    #      accuracy
     reference_Tcr_value_Castro_refinement_1 = {
-        'Z11' : -29527.2,
-        'Z33' : -19543.4
+        'Z11' : -32092.3,
+        'Z33' : -21882.3
     }
     for cyl in ['Z11', 'Z33']:
         stack = stacks[cyl]
@@ -197,17 +267,10 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         
         eigvecs = np.zeros((N, num_eig_lb))
         
-        # NOTE pre-conditioning the eigenvalue problem to improve convergence of the eigensolver
-        kc0_diag = KC0uu.diagonal()
-        kc0_diag_inv_sqrt = 1.0/np.sqrt(np.maximum(kc0_diag, 1e-30))
-        D_inv_sqrt = sp_diags(kc0_diag_inv_sqrt)
-        KC0uu_scaled = D_inv_sqrt @ KC0uu @ D_inv_sqrt
-        KGuu_scaled = D_inv_sqrt @ KGuu @ D_inv_sqrt
-        eigvals_inv, eigvecsu_scaled = eigsh(A=KGuu_scaled, k=num_eig_lb, which='SM',
-                M=KC0uu_scaled, tol=1e-9, sigma=1., mode='cayley')
-        eigvals = -1./eigvals_inv
-        # NOTE the eigenvectors are scaled by the preconditioner to recover the original eigenvectors
-        eigvecsu = D_inv_sqrt @ eigvecsu_scaled
+        # NOTE pyfe3d.solver.linear_buckling equilibrates the diagonal,
+        #      estimates the Cayley shift and verifies that no lower load
+        #      multiplier was missed, which a hardcoded shift does not
+        eigvals, eigvecsu = linear_buckling(KC0uu, KGuu, num_eigvalues=num_eig_lb, tol=1e-9)
         
         eigvecs[bu] = eigvecsu
         print('eigvals', eigvals)
@@ -269,3 +332,4 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
 
 if __name__ == '__main__':
     test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=8)
+

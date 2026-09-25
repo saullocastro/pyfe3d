@@ -3,6 +3,7 @@
 #cython: cdivision=True
 #cython: nonecheck=False
 #cython: overflowcheck=False
+#cython: initializedcheck=False
 #cython: embedsignature=True
 #cython: infer_types=False
 r"""
@@ -18,11 +19,110 @@ element is rectangular.
 
 In the reduced integration scheme used, a single point at the centroid
 (`\xi=\eta=0`) and weight `w_{ij}=4`, preventing shear locking. 
-The hourglass control is used according to Brockman 1987:
+The hourglass control is used according to Brockman 1987, with the
+orthogonalised hourglass operator of his Eq. (14), which he quotes from
+Belytschko and Tsay 1983:
 
     Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
     Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
     https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208
+
+    Belytschko, T., and Tsay, C. S., 1983, "A stabilization procedure for
+    the quadrilateral plate element with one-point quadrature,"
+    International Journal for Numerical Methods in Engineering, 19(3),
+    pp. 405-419. https://doi.org/10.1002/nme.1620190308
+
+Dimensional homogeneity of the hourglass stiffnesses
+----------------------------------------------------
+
+The generalized stiffnesses of Brockman's Eqs. (16a) and (16b),
+
+.. math::
+
+    E^{(h)}_u = E^{(h)}_v = \frac{0.10 E t}{1 + 1/A}
+    \qquad
+    E^{(h)}_w = E^{(h)}_{\theta_x} = E^{(h)}_{\theta_y}
+              = \frac{0.10 E t^3}{1 + 1/A}
+
+are not dimensionally homogeneous, `1/A` being an inverse area, so the
+artificial stiffness depends on the unit of length the model is written in.
+The hourglass term enters the element matrix as
+
+.. math::
+
+    K_{ij} = A E^{(h)} \gamma_i \gamma_j
+
+with `\gamma = \partial^2 N/\partial x \partial y` evaluated at the
+centroid, of dimension `1/L^2`. The hourglass amplitude of a translation is
+`\gamma^T u`, of dimension `1/L`, and of a rotation is `\gamma^T \theta`, of
+dimension `1/L^2`. Requiring `K_{ij}` to be a force per unit displacement
+for the translations and a moment per unit rotation for the rotations gives
+
+.. math::
+
+    [E^{(h)}] = F L \quad \text{for } u, v, w
+    \qquad
+    [E^{(h)}] = F L^3 \quad \text{for } \theta_x, \theta_y
+
+Since `1/(1 + 1/A) \rightarrow A` for `A \ll 1` and `\rightarrow 1` for
+`A \gg 1`, Brockman's factor supplies the area that Eq. (16a) is missing
+only in a unit of length that makes the element areas small, and stops
+supplying it in a unit that makes them large. The switch happens at
+`A = 1` in whatever unit is used. He introduces the factor knowingly, as
+"motivated by locking problems observed in elements with extremely small
+dimensions", and reports good behaviour "over a range of six orders of
+magnitude in the planform dimension".
+
+This element replaces the factor by the area itself wherever doing so costs
+nothing, which is four of the five coefficients:
+
+.. math::
+
+    E^{(h)}_u = 0.10 E_{1eq} t A
+    \qquad
+    E^{(h)}_v = 0.10 E_{2eq} t A
+
+.. math::
+
+    E^{(h)}_{\theta_x} = 0.10 E_{2eq} t^3 A
+    \qquad
+    E^{(h)}_{\theta_y} = 0.10 E_{1eq} t^3 A
+
+Each of these scales under a change of length unit exactly as the physical
+stiffness it stabilises, `Et` for the in-plane translations and `Et^3` for
+the rotations, so the ratio of artificial to physical stiffness is the same
+number in every unit. In the small-area limit they coincide with
+Eqs. (16a) and (16b), so no benchmark of this element moves: the change is
+a reinterpretation of Brockman's factor as the area it tends to, not a
+different magnitude of stabilisation. Cook's in-plane bending problem,
+whose response legitimately contains hourglass components, is reproduced to
+twelve significant figures over nine orders of magnitude of length unit,
+where before it drifted at the metre and collapsed at the kilometre.
+
+The transverse coefficient `E^{(h)}_w` keeps Brockman's factor, and this is
+a deliberate limitation rather than an oversight. The hourglass operator
+cannot distinguish the spurious pattern `w = xy` with
+`\theta_x = \theta_y = 0` from a legitimate twist curvature, since both
+give `\gamma^T w = \partial^2 w/\partial x \partial y`. The stabilisation
+therefore also stiffens real twist, by the ratio
+`3 E^{(h)}_w/(E t^3)`, and the amount that is acceptable is a property of
+the problem rather than of the element. Measured on this element's own
+benchmarks, the thin plates want a coefficient near `2 \times 10^{-4}` of
+`E t^3`, above which their buckling loads stiffen past their tolerances,
+while the one-element-wide torsion strip of MacNeal and Harder (1985), for
+which the twist *is* the hourglass pattern, wants near `2 \times 10^{-2}`,
+below which it becomes several times too flexible. Those are two orders of
+magnitude apart and no single dimensionless constant serves both.
+Brockman's factor does serve both, because it grows with the element area,
+which in SI units happens to correlate with which of the two regimes a
+given problem is in.
+
+So the residual unit dependence of this element's hourglass control is
+confined to `E^{(h)}_w`, it is documented, and it is measured in
+``test_quad4r_hourglass_control.py``. Removing it properly needs an
+operator that separates the spurious transverse pattern from genuine twist,
+which is what an assumed-strain formulation such as MITC4 provides, rather
+than a better choice of coefficient.
 
 All stiffness terms, besides drilling, are integrated using the reduced integration
 scheme for the :class:`.Quad4R` element, making it very efficient concerning 
@@ -39,13 +139,86 @@ equilibrium-based stiffness of Rohwer (1988) with the plies rotated to the
 element coordinate system, such that the assumed cylindrical bending states
 are posed along the element axes.
 
-The drilling stiffness is calculated following the approach adopted in
-MSC Nastran and Autodesk Nastran, using a penalty-based method. Because
-the stiffness is only evaluated at the element centroid, this method provides
-a non-physical drilling stiffness with the objective of removing the singularity
-by creating an artificial stiffness between the drilling rotation degree-of-freedom
-of each node with the in-plane rotational strain evaluated at the centroid.
-The penalty energy is defined per element as:
+Two drilling models are available, selected with the ``drilling_model``
+attribute, whose default is ``0``:
+
+    Hughes, T. J. R., and Brezzi, F., 1989, "On drilling degrees of
+    freedom," Computer Methods in Applied Mechanics and Engineering, 72(1),
+    pp. 105-121. https://doi.org/10.1016/0045-7825(89)90124-2
+
+    Allman, D. J., 1984, "A compatible triangular element including vertex
+    rotations for plane elasticity analysis," Computers & Structures,
+    19(1-2), pp. 1-8. https://doi.org/10.1016/0045-7949(84)90197-4
+
+Both use the same operator, the regularised one of Hughes and
+Brezzi (1989) that ties the drilling rotation `r_z` to the in-plane rotation
+`\theta_z = (v_{,x} - u_{,y})/2`, integrated with two points per direction,
+and they differ only in the coefficient `\gamma_{r_z}` that multiplies it:
+
+* ``drilling_model = 0``, the default, uses the physics-based value
+  `\gamma_{r_z} = A_{66}` identified by Hughes and Brezzi, which is a
+  modulus of the laminate and not an adjustable parameter;
+* ``drilling_model = 1`` uses the fictitious value `\gamma_{r_z} = K6ROT
+  \cdot 10^{-6} A_{66}` of MSC Nastran and Autodesk Nastran, derived below.
+
+Unlike :class:`pyfe3d.Quad4` and :class:`pyfe3d.Tria3R`, this element does
+**not** use the hierarchical edge-mode enrichment of the in-plane
+displacement field of Allman (1984) that accompanies the Hughes-Brezzi term
+in those two elements. The enrichment exists to remove the excessive
+in-plane bending stiffness of the bilinear displacement field, and the
+single-point integration of this element already removes it: on Cook's
+membrane problem, with a reference tip displacement of 23.96,
+
+.. table::
+
+    ===========  ==========  ==========  ==========  ==========
+    mesh         Quad4R      Quad4       Quad4       Quad4R
+                 (no         penalty     enriched    enriched
+                 enrichment)                         at 3x3
+    ===========  ==========  ==========  ==========  ==========
+    2 by 2       30.14       11.85       20.75       20.74
+    4 by 4       24.66       18.30       22.83       22.81
+    8 by 8       24.08       22.08       23.54       23.52
+    16 by 16     23.97       23.43       23.81       23.79
+    ===========  ==========  ==========  ==========  ==========
+
+so the enrichment recovers for :class:`pyfe3d.Quad4` what the reduced
+integration already gives here, and adding it to this element makes it less
+accurate and more computationally expensive.
+
+Integrating the enrichment consistently with the single point of the element
+was also evaluated and rejected. The enriched membrane operator sampled at
+one point supplies at most three independent rows over the twelve in-plane
+degrees-of-freedom, and a rectangle then keeps one spurious in-plane
+zero-energy mode, namely
+
+.. math::
+    u \propto x \quad , \quad v \propto -y \quad , \quad
+    r_z \propto \pmb{h} = [1, -1, 1, -1]^\top
+
+in which the uniform membrane strain of the `u` and `v` fields is exactly
+cancelled at the centroid by the enrichment strain of the hourglass pattern
+of `r_z`. That mode escapes every term of the element: the one-point
+membrane term because its centroidal strain vanishes, the hourglass control
+of Brockman because `u` and `v` are linear fields and carry no hourglass
+content, and the Hughes-Brezzi term because `r_z - \theta_z` vanishes not
+only at the integration points but identically over the element, so no
+quadrature of that term can reach it. Removing it would require a further
+artificial stabilisation of the drilling rotation, of the kind this element
+already uses for its other degrees-of-freedom, for a change of the Cook
+results above of less than half a per cent.
+
+Use :class:`pyfe3d.Quad4` to use Allman's enrichment.
+
+
+The ``drilling_model = 1`` branch follows the approach adopted in MSC
+Nastran and Autodesk Nastran, using a penalty-based method. It provides a
+non-physical drilling stiffness with the objective of removing the
+singularity, by creating an artificial stiffness between the drilling
+rotation degree-of-freedom of each node and the in-plane rotational strain.
+The operator and its quadrature, two points per direction, are the same as
+for ``drilling_model = 0``, only the coefficient differing. The penalty
+energy is defined per element as:
 
 .. math::
 
@@ -102,6 +275,7 @@ from .shellprop cimport ShellProp
 
 cdef int DOF = 6
 cdef int NUM_NODES = 4
+
 
 
 cdef class Quad4RData:
@@ -250,12 +424,34 @@ cdef class Quad4R:
         Property identification number.
     area, : double
         Element area.
+    drilling_model, : int
+        Selects the coefficient of the drilling stiffness, see the module
+        documentation. The default is ``0``, the physics-based
+        `\gamma_{r_z} = A_{66}` of Hughes and Brezzi (1989); with anything
+        else the fictitious penalty of MSC Nastran and Autodesk Nastran
+        controlled by ``K6ROT`` is used instead. Both apply the same
+        operator with the same quadrature, so switching between them changes
+        only the magnitude of the drilling stiffness, by four orders of
+        magnitude for the recommended ``K6ROT = 100.``.
+
+        Note that this element does not implement the in-plane enrichment of
+        Allman (1984) that :class:`pyfe3d.Quad4` and :class:`pyfe3d.Tria3R`
+        apply together with the Hughes-Brezzi term, because its reduced
+        integration already achieves what the enrichment achieves there, see
+        the module documentation.
     K6ROT, : double
-        Dimensionless multiplier for the drilling stiffness. 
+        Dimensionless multiplier for the fictitious drilling stiffness, read
+        only when ``drilling_model`` is not ``0``.
         AUTODESK NASTRAN's quick reference guide recommends ``K6ROT = 100.``
         for static analysis. For modal solutions, ``K6ROT=1.e4`` is suggested.
         MSC NASTRAN's quick reference guide states that ``K6ROT > 100.``
         should not be used, but this is contradicting AUTODESK NASTRAN.
+    gamma_rz, : double
+        Coefficient `\gamma_{r_z}` of the Hughes-Brezzi drilling stiffness,
+        read only when ``drilling_model`` is ``0``. The default is a negative
+        value, which means that `A_{66}` of the laminate extensional
+        stiffness matrix is used, the value identified by Hughes and Brezzi
+        (1989).
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix from local to global coordinates.
     m11, m12, m21, m22 : double
@@ -281,7 +477,9 @@ cdef class Quad4R:
     cdef public int init_k_KC0, init_k_KCNL, init_k_KG, init_k_M
     cdef public int init_k_KA_beta, init_k_KA_gamma, init_k_CA
     cdef public double area
+    cdef public int drilling_model
     cdef public double K6ROT
+    cdef public double gamma_rz
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public double m11, m12, m21, m22
     cdef public Quad4RProbe probe
@@ -306,7 +504,14 @@ cdef class Quad4R:
         self.init_k_KA_gamma = 0
         self.init_k_CA = 0
         self.area = 0
+        # NOTE the physics-based coefficient of Hughes and Brezzi (1989),
+        #      gamma_rz = A66, is the default, as in Quad4 and Tria3R, so
+        #      that K6ROT is not read unless it is asked for. The operator
+        #      and its quadrature are the same for both models, only the
+        #      coefficient differing, see the module documentation
+        self.drilling_model = 0
         self.K6ROT = 100. # NOTE default value in MSC Nastran
+        self.gamma_rz = -1. # NOTE negative means "use A66"
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.
         self.r31 = self.r32 = self.r33 = 0.
@@ -640,6 +845,7 @@ cdef class Quad4R:
         cdef double N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
         cdef double N1, N2, N3, N4
         cdef double N1xy, N2xy, N3xy, N4xy, gamma1, gamma2, gamma3, gamma4
+        cdef double hgx, hgy
 
         cdef double KC0e0000, KC0e0001, KC0e0003, KC0e0004, KC0e0005, KC0e0006, KC0e0007, KC0e0009, KC0e0010, KC0e0011, KC0e0012, KC0e0013, KC0e0015, KC0e0016, KC0e0017, KC0e0018, KC0e0019, KC0e0021, KC0e0022, KC0e0023
         cdef double KC0e0101, KC0e0103, KC0e0104, KC0e0105, KC0e0106, KC0e0107, KC0e0109, KC0e0110, KC0e0111, KC0e0112, KC0e0113, KC0e0115, KC0e0116, KC0e0117, KC0e0118, KC0e0119, KC0e0121, KC0e0122, KC0e0123
@@ -704,7 +910,20 @@ cdef class Quad4R:
             E2eq = 1./(prop.h*a22)
 
 
-            K6ROT = self.K6ROT
+            # NOTE both drilling models use the same operator, the one of
+            #      Hughes and Brezzi (1989) integrated with two points per
+            #      direction below, and differ only in the coefficient that
+            #      multiplies it. The generated block carries the factor
+            #      K6ROT*1e-6*A66, so the physics-based value gamma_rz =
+            #      A66 is obtained with K6ROT = 1e6, and no generated
+            #      expression needs to change. See the module documentation
+            if self.drilling_model == 0:
+                if self.gamma_rz >= 0. and A66 != 0.:
+                    K6ROT = 1.e6*self.gamma_rz/A66
+                else:
+                    K6ROT = 1.e6
+            else:
+                K6ROT = self.K6ROT
 
             # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
@@ -727,11 +946,43 @@ cdef class Quad4R:
             #     in the future, the use elements with mixed integration
             #     schemes, or the implementation of the MITC4 element will no
             #     longer require hourglass control
-            Eu = hgfactor_u*0.1*E1eq*prop.h/(1.0 + 1.0/self.area)
-            Ev = hgfactor_v*0.1*E2eq*prop.h/(1.0 + 1.0/self.area)
-            Erx = hgfactor_rx*0.1*E2eq*prop.h**3/(1.0 + 1.0/self.area)
-            Ery = hgfactor_ry*0.1*E1eq*prop.h**3/(1.0 + 1.0/self.area)
-            Ew = hgfactor_w*0.5*(Erx + Ery)
+            # NOTE Brockman's 1/(1 + 1/A) of Eq. (16) is replaced by the
+            #      dimensionally homogeneous area factor, see the section
+            #      "Dimensional homogeneity of the hourglass stiffnesses"
+            #      of the module documentation. In short, the term enters
+            #      as K_ij = A*E^(h)*gamma_i*gamma_j with gamma of
+            #      dimension 1/L**2, so E^(h) must be F*L for the
+            #      translations u, v and w and F*L**3 for the rotations
+            #      rx and ry. Brockman's factor tends to A only in the
+            #      limit A << 1, so it supplies the missing area in some
+            #      units and not in others
+            Eu = hgfactor_u*0.1*E1eq*prop.h*self.area
+            Ev = hgfactor_v*0.1*E2eq*prop.h*self.area
+            Erx = hgfactor_rx*0.1*E2eq*prop.h**3*self.area
+            Ery = hgfactor_ry*0.1*E1eq*prop.h**3*self.area
+            # NOTE w alone keeps Brockman's 1/(1 + 1/A), so this is the
+            #      one coefficient of the scheme that remains unit
+            #      dependent, and that is deliberate. The operator cannot
+            #      separate the spurious pattern w = x*y from a legitimate
+            #      twist curvature, both giving gamma'w = d2w/dxdy, so the
+            #      amount of stabilisation wanted is a property of the
+            #      problem and not of the element, and no dimensionless
+            #      constant reproduces it: the thin plates want about
+            #      2e-4 of E*h**3 and the one-element-wide torsion strip of
+            #      MacNeal and Harder wants about 2e-2, two orders of
+            #      magnitude apart. Brockman's factor happens to supply
+            #      both, because it grows with the element area, which in
+            #      SI units correlates with what each of those problems
+            #      needs. See the module documentation, and
+            #      test_quad4r_hourglass_control.py for the measurements.
+            #      The mean of the two equivalent moduli generalises
+            #      Eq. (16b) to laminates and reduces to it for an
+            #      isotropic plate. It is built from the moduli and not
+            #      from Erx and Ery, which already carry hgfactor_rx and
+            #      hgfactor_ry, so that hgfactor_w scales this term and
+            #      nothing else
+            Ew = (hgfactor_w*0.05*(E1eq + E2eq)*prop.h**3
+                  /(1.0 + 1.0/self.area))
 
             # NOTE using only one integration point at xi=0, eta=0 to avoid shear locking
             detJ = 0.125*x1*y2 - 0.125*x1*y4 - 0.125*x2*y1 + 0.125*x2*y3 - 0.125*x3*y2 + 0.125*x3*y4 + 0.125*x4*y1 - 0.125*x4*y3
@@ -760,10 +1011,30 @@ cdef class Quad4R:
             N3xy = 0.25*j11*j22 + 0.25*j12*j21
             N4xy = -0.25*j11*j22 - 0.25*j12*j21
 
-            gamma1 = N1xy
-            gamma2 = N2xy
-            gamma3 = N3xy
-            gamma4 = N4xy
+            # NOTE hourglass operator of Eq. (14) of Brockman 1987, quoted
+            #      there from Belytschko and Tsay 1983,
+            #
+            #          gamma = h - (h.x)*b1 - (h.y)*b2
+            #
+            #      with h = [1, -1, 1, -1], b1 and b2 the centroidal
+            #      derivatives N,x and N,y, scaled by the normalisation of
+            #      Brockman's own Eq. (15), gamma = d2N/dxdy at the centroid,
+            #      so that the generalized stiffnesses of his Eq. (16) keep
+            #      their calibration. The two correction terms are, in his
+            #      words, "important for irregular elements, if the hourglass
+            #      strains are to vanish in the presence of rigid-body motion
+            #      and uniform strain". They vanish identically whenever the
+            #      element is a parallelogram, h.x and h.y being zero there,
+            #      so this leaves every regular mesh bit-identical, and they
+            #      do not change the hourglass energy of the h patterns on
+            #      any shape either, because the centroidal sum h.b1 = h.b2
+            #      is zero. See tests/test_quad4r_hourglass_control.py
+            hgx = x1 - x2 + x3 - x4
+            hgy = y1 - y2 + y3 - y4
+            gamma1 = N1xy*(1. - hgx*N1x - hgy*N1y)
+            gamma2 = N2xy*(1. + hgx*N2x + hgy*N2y)
+            gamma3 = N3xy*(1. - hgx*N3x - hgy*N3y)
+            gamma4 = N4xy*(1. + hgx*N4x + hgy*N4y)
 
             KC0e0000 = detJ*wij*(Eu*gamma1**2 + N1x*(A11*N1x + A16*N1y) + N1y*(A16*N1x + A66*N1y))
             KC0e0001 = detJ*wij*(N1x*(A16*N1x + A66*N1y) + N1y*(A12*N1x + A26*N1y))
@@ -1192,6 +1463,7 @@ cdef class Quad4R:
         cdef double N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
         cdef double N1, N2, N3, N4
         cdef double N1xy, N2xy, N3xy, N4xy, gamma1, gamma2, gamma3, gamma4
+        cdef double hgx, hgy
 
         cdef double KC0e0000, KC0e0001, KC0e0003, KC0e0004, KC0e0005, KC0e0006, KC0e0007, KC0e0009, KC0e0010, KC0e0011, KC0e0012, KC0e0013, KC0e0015, KC0e0016, KC0e0017, KC0e0018, KC0e0019, KC0e0021, KC0e0022, KC0e0023
         cdef double KC0e0101, KC0e0103, KC0e0104, KC0e0105, KC0e0106, KC0e0107, KC0e0109, KC0e0110, KC0e0111, KC0e0112, KC0e0113, KC0e0115, KC0e0116, KC0e0117, KC0e0118, KC0e0119, KC0e0121, KC0e0122, KC0e0123
@@ -1253,7 +1525,20 @@ cdef class Quad4R:
             E2eq = 1./(prop.h*a22)
 
 
-            K6ROT = self.K6ROT
+            # NOTE both drilling models use the same operator, the one of
+            #      Hughes and Brezzi (1989) integrated with two points per
+            #      direction below, and differ only in the coefficient that
+            #      multiplies it. The generated block carries the factor
+            #      K6ROT*1e-6*A66, so the physics-based value gamma_rz =
+            #      A66 is obtained with K6ROT = 1e6, and no generated
+            #      expression needs to change. See the module documentation
+            if self.drilling_model == 0:
+                if self.gamma_rz >= 0. and A66 != 0.:
+                    K6ROT = 1.e6*self.gamma_rz/A66
+                else:
+                    K6ROT = 1.e6
+            else:
+                K6ROT = self.K6ROT
             
             # NOTE ignoring z in local coordinates
             x1 = self.probe.xe[0]
@@ -3023,11 +3308,43 @@ cdef class Quad4R:
             #     in the future, the use elements with mixed integration
             #     schemes, or the implementation of the MITC4 element will no
             #     longer require hourglass control
-            Eu = hgfactor_u*0.1*E1eq*prop.h/(1.0 + 1.0/self.area)
-            Ev = hgfactor_v*0.1*E2eq*prop.h/(1.0 + 1.0/self.area)
-            Erx = hgfactor_rx*0.1*E2eq*prop.h**3/(1.0 + 1.0/self.area)
-            Ery = hgfactor_ry*0.1*E1eq*prop.h**3/(1.0 + 1.0/self.area)
-            Ew = hgfactor_w*0.5*(Erx + Ery)
+            # NOTE Brockman's 1/(1 + 1/A) of Eq. (16) is replaced by the
+            #      dimensionally homogeneous area factor, see the section
+            #      "Dimensional homogeneity of the hourglass stiffnesses"
+            #      of the module documentation. In short, the term enters
+            #      as K_ij = A*E^(h)*gamma_i*gamma_j with gamma of
+            #      dimension 1/L**2, so E^(h) must be F*L for the
+            #      translations u, v and w and F*L**3 for the rotations
+            #      rx and ry. Brockman's factor tends to A only in the
+            #      limit A << 1, so it supplies the missing area in some
+            #      units and not in others
+            Eu = hgfactor_u*0.1*E1eq*prop.h*self.area
+            Ev = hgfactor_v*0.1*E2eq*prop.h*self.area
+            Erx = hgfactor_rx*0.1*E2eq*prop.h**3*self.area
+            Ery = hgfactor_ry*0.1*E1eq*prop.h**3*self.area
+            # NOTE w alone keeps Brockman's 1/(1 + 1/A), so this is the
+            #      one coefficient of the scheme that remains unit
+            #      dependent, and that is deliberate. The operator cannot
+            #      separate the spurious pattern w = x*y from a legitimate
+            #      twist curvature, both giving gamma'w = d2w/dxdy, so the
+            #      amount of stabilisation wanted is a property of the
+            #      problem and not of the element, and no dimensionless
+            #      constant reproduces it: the thin plates want about
+            #      2e-4 of E*h**3 and the one-element-wide torsion strip of
+            #      MacNeal and Harder wants about 2e-2, two orders of
+            #      magnitude apart. Brockman's factor happens to supply
+            #      both, because it grows with the element area, which in
+            #      SI units correlates with what each of those problems
+            #      needs. See the module documentation, and
+            #      test_quad4r_hourglass_control.py for the measurements.
+            #      The mean of the two equivalent moduli generalises
+            #      Eq. (16b) to laminates and reduces to it for an
+            #      isotropic plate. It is built from the moduli and not
+            #      from Erx and Ery, which already carry hgfactor_rx and
+            #      hgfactor_ry, so that hgfactor_w scales this term and
+            #      nothing else
+            Ew = (hgfactor_w*0.05*(E1eq + E2eq)*prop.h**3
+                  /(1.0 + 1.0/self.area))
 
             # NOTE using only one integration point at xi=0, eta=0 to avoid shear locking
             detJ = 0.125*x1*y2 - 0.125*x1*y4 - 0.125*x2*y1 + 0.125*x2*y3 - 0.125*x3*y2 + 0.125*x3*y4 + 0.125*x4*y1 - 0.125*x4*y3
@@ -3056,10 +3373,30 @@ cdef class Quad4R:
             N3xy = 0.25*j11*j22 + 0.25*j12*j21
             N4xy = -0.25*j11*j22 - 0.25*j12*j21
 
-            gamma1 = N1xy
-            gamma2 = N2xy
-            gamma3 = N3xy
-            gamma4 = N4xy
+            # NOTE hourglass operator of Eq. (14) of Brockman 1987, quoted
+            #      there from Belytschko and Tsay 1983,
+            #
+            #          gamma = h - (h.x)*b1 - (h.y)*b2
+            #
+            #      with h = [1, -1, 1, -1], b1 and b2 the centroidal
+            #      derivatives N,x and N,y, scaled by the normalisation of
+            #      Brockman's own Eq. (15), gamma = d2N/dxdy at the centroid,
+            #      so that the generalized stiffnesses of his Eq. (16) keep
+            #      their calibration. The two correction terms are, in his
+            #      words, "important for irregular elements, if the hourglass
+            #      strains are to vanish in the presence of rigid-body motion
+            #      and uniform strain". They vanish identically whenever the
+            #      element is a parallelogram, h.x and h.y being zero there,
+            #      so this leaves every regular mesh bit-identical, and they
+            #      do not change the hourglass energy of the h patterns on
+            #      any shape either, because the centroidal sum h.b1 = h.b2
+            #      is zero. See tests/test_quad4r_hourglass_control.py
+            hgx = x1 - x2 + x3 - x4
+            hgy = y1 - y2 + y3 - y4
+            gamma1 = N1xy*(1. - hgx*N1x - hgy*N1y)
+            gamma2 = N2xy*(1. + hgx*N2x + hgy*N2y)
+            gamma3 = N3xy*(1. - hgx*N3x - hgy*N3y)
+            gamma4 = N4xy*(1. + hgx*N4x + hgy*N4y)
 
             KC0e0000 = detJ*wij*(Eu*gamma1**2 + N1x*(A11*N1x + A16*N1y) + N1y*(A16*N1x + A66*N1y))
             KC0e0001 = detJ*wij*(N1x*(A16*N1x + A66*N1y) + N1y*(A12*N1x + A26*N1y))

@@ -2,11 +2,11 @@ import sys
 sys.path.append('..')
 
 import numpy as np
-from scipy.sparse.linalg import eigsh
 from scipy.sparse import coo_matrix
 
 from pyfe3d.beamprop import BeamProp
 from pyfe3d import Truss, TrussData, TrussProbe, DOF, INT, DOUBLE
+from pyfe3d.solver import natural_frequency
 
 def test_truss_natural_freq(refinement=1, mtypes=range(2)):
     for mtype in mtypes:
@@ -103,9 +103,10 @@ def test_truss_natural_freq(refinement=1, mtypes=range(2)):
         Muu = M[bu, :][:, bu]
 
         num_eigenvalues = 5
-        eigvals, eigvecsu = eigsh(A=Kuu, M=Muu, sigma=-1., which='LM',
-                k=num_eigenvalues, tol=1e-3)
-        omegan = eigvals**0.5
+        # NOTE pyfe3d.solver.natural_frequency equilibrates the diagonal
+        #      before calling the eigensolver and returns the circular
+        #      frequencies already sorted
+        omegan, eigvecsu = natural_frequency(Kuu, Muu, num_eigvalues=num_eigenvalues, tol=1e-3)
 
         omegan_theoretical = [(2*k-1)*np.pi/L/2*(E/rho)**0.5 for k in range(1,
             num_eigenvalues+1)]
@@ -116,3 +117,4 @@ def test_truss_natural_freq(refinement=1, mtypes=range(2)):
 
 if __name__ == '__main__':
     test_truss_natural_freq(refinement=1)
+

@@ -6,7 +6,7 @@ converges quadratically. Two classical problems where the membrane action
 stiffens the structure are verified:
 
 - simply supported square plate with immovable edges under uniform pressure,
-  with the Quad4, Quad4R and Tria3R elements
+  with the Quad4, Quad4R, Tria3R and Tria3DSG elements
 - beam clamped at both ends under a central transverse load, arbitrarily
   oriented in space, with the BeamC and BeamLR elements
 """
@@ -21,14 +21,16 @@ from scipy.sparse.linalg import spsolve
 from pyfe3d.beamprop import BeamProp
 from pyfe3d.shellprop_utils import isotropic_plate
 from pyfe3d import (Quad4, Quad4Data, Quad4Probe, Quad4R, Quad4RData,
-                    Quad4RProbe, Tria3R, Tria3RData, Tria3RProbe, BeamC,
+                    Quad4RProbe, Tria3R, Tria3RData, Tria3RProbe,
+                    Tria3DSG, Tria3DSGData, Tria3DSGProbe, BeamC,
                     BeamCData, BeamCProbe, BeamLR, BeamLRData, BeamLRProbe,
                     DOF, INT, DOUBLE)
 
 SHELLS = {
-    'Quad4': (Quad4, Quad4Probe, Quad4Data),
-    'Quad4R': (Quad4R, Quad4RProbe, Quad4RData),
-    'Tria3R': (Tria3R, Tria3RProbe, Tria3RData),
+    'Quad4': (Quad4, Quad4Probe, Quad4Data, 4),
+    'Quad4R': (Quad4R, Quad4RProbe, Quad4RData, 4),
+    'Tria3R': (Tria3R, Tria3RProbe, Tria3RData, 3),
+    'Tria3DSG': (Tria3DSG, Tria3DSGProbe, Tria3DSGData, 3),
 }
 BEAMS = {
     'BeamC': (BeamC, BeamCProbe, BeamCData, 20),
@@ -91,7 +93,7 @@ def plate(name, nx=11, ny=11):
 
     The pressure gives a linear deflection of about three times the thickness.
     """
-    cls, probecls, datacls = SHELLS[name]
+    cls, probecls, datacls, num_nodes = SHELLS[name]
     a = b = 1.
     h = 0.01
     E = 70.e9
@@ -111,7 +113,7 @@ def plate(name, nx=11, ny=11):
     n2s = nids[1:, :-1].flatten()
     n3s = nids[1:, 1:].flatten()
     n4s = nids[:-1, 1:].flatten()
-    if name == 'Tria3R':
+    if num_nodes == 3:
         connectivity = ([(n1, n2, n3) for n1, n2, n3 in zip(n1s, n2s, n3s)]
                         + [(n1, n3, n4) for n1, n3, n4 in zip(n1s, n3s, n4s)])
     else:
@@ -256,6 +258,48 @@ def test_elements_agree():
         beams[name] = deflection(solve(*model)[1])
     values = np.array(list(beams.values()))
     assert values.max()/values.min() < 1.05, beams
+
+
+def test_triangles_under_refinement():
+    """Which triangle converges to the quadrilateral answer, nonlinearly
+
+    The nonlinear plate is refined and the two triangles are compared with
+    Quad4R. Tria3DSG closes the gap, Tria3R settles about two and a half per
+    cent away from the quadrilateral and stops improving, which is the same
+    signature its transverse shear stabilisation leaves on the linear
+    problem in ``tests/test_tria3dsg.py`` and on the buckling problem in
+    ``tests/test_quad4_linear_buckling_cylinder_displ.py``.
+
+    The quadrilateral is the yardstick and not an analytical value, because
+    the von Karman solution of a plate with immovable edges has none in
+    closed form. What the test asserts is therefore relative: one triangle
+    approaches the quadrilateral and the other does not.
+    """
+    meshes = (11, 21, 31)
+    gaps = {'Tria3DSG': [], 'Tria3R': []}
+    for nx in meshes:
+        *model, deflection = plate('Quad4R', nx, nx)
+        reference = deflection(solve(*model)[1])
+        for name in gaps:
+            *model, deflection = plate(name, nx, nx)
+            value = deflection(solve(*model)[1])
+            gaps[name].append(abs(value - reference)/reference)
+            print('nx = %-4d %-9s w/h %.6f  Quad4R %.6f  gap %.4f%%'
+                  % (nx, name, value, reference, 100*gaps[name][-1]))
+
+    dsg = gaps['Tria3DSG']
+    t3r = gaps['Tria3R']
+    # NOTE the discrete shear gap triangle closes the gap monotonically, by
+    #      more than a factor of five over these three meshes, and ends
+    #      within half a per cent
+    for k in range(len(dsg) - 1):
+        assert dsg[k + 1] < dsg[k], dsg
+    assert dsg[0]/dsg[-1] > 5., dsg
+    assert dsg[-1] < 0.005, dsg
+    # NOTE whereas Tria3R stalls: its last two meshes agree with each other
+    #      much better than either agrees with the quadrilateral
+    assert t3r[-1] > 0.02, t3r
+    assert abs(t3r[-1] - t3r[-2]) < 0.1*t3r[-1], t3r
 
 
 if __name__ == '__main__':

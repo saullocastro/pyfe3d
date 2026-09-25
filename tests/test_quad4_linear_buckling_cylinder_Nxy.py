@@ -4,11 +4,12 @@ sys.path.append('..')
 import time
 import numpy as np
 from numpy import isclose
-from scipy.sparse.linalg import eigsh, spsolve
-from scipy.sparse import coo_matrix, diags as sp_diags
+from scipy.sparse.linalg import spsolve
+from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import laminated_plate
 from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
+from pyfe3d.solver import linear_buckling
 
 
 def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
@@ -33,16 +34,74 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         # NOTE actual values from reference can be found here https://github.com/saullocastro/compmech/blob/e7e5342bf212743e70da22c94cc0452911099db3/compmech/conecyl/conecylDB.py#L145
         'Z33' : [0, 0, 19, -19, 37, -37, 45, -45, 51, -51],
     }
-    # NOTE reference values match with Fig. 13, FSDT CC2, of Castro et al.
+    # NOTE the paper is the source of the geometry, the material, the
+    #      stacking sequences and the boundary conditions. It does not
+    #      tabulate the torsional buckling load: the closest published value
+    #      is the intercept of the curves of Fig. 13 (FSDT-BC2, CC2) with the
+    #      axis of zero axial load, which is pure torsion. Read off that
+    #      figure, those intercepts are about
+    #
+    #          Z11   -15.4 kNm  and  +16.6 kNm
+    #          Z33    -9.3 kNm  and   +9.0 kNm
+    #
+    #      the two signs differing because the laminates are unsymmetric.
+    #      Note that ``Tcr`` below is ``eigval*Nxy*b*R``, which by the sign
+    #      convention stated further down is minus the torque T of the paper,
+    #      so the magnitudes here are to be compared with the positive
+    #      intercepts, +16.6 and +9.0 kNm.
+    #
+    #      The converged values below are therefore about 16 per cent (Z11)
+    #      and 23 per cent (Z33) above the semi-analytical prediction. They
+    #      are kept as a regression lock of this element and not as a claim
+    #      of agreement with the paper, and the gap is not explained by the
+    #      drilling formulation: it is the same for every drilling model and
+    #      for both quadrilateral elements, which agree with each other to
+    #      about one per cent at this mesh.
+    #
+    #      The refinement=8 values are mesh converged. For Z11 the critical
+    #      mode is a long wave pattern and the sequence over ntheta is
+    #
+    #          ntheta    40      80     160     320
+    #          Tcr   -33163  -22193  -19791  -19214  Nm
+    #          waves      8       9      10      10
+    #          el/wave  5.0     8.9    16.0    30.4
+    #
+    #      so the mode is well resolved and the load is settling near
+    #      -19.1 kNm, the last step being 2.9 per cent. Torsional buckling is
+    #      favourable in this respect: its critical wavelength spans about a
+    #      tenth of the circumference. The axial compression of the same
+    #      cylinder is not comparable in this way, its critical half
+    #      wavelength being of the order of sqrt(R*t) = 17.7 mm, some 89
+    #      circumferential waves, so a comparison with Table 6 of the paper
+    #      needs a far finer mesh than the ones used here, see
+    #      test_quad4_linear_buckling_cylinder_displ.py
+    # NOTE values updated in 0.10.0, when the physics-based drilling
+    #      stiffness of Allman, Hughes and Brezzi became the default. The
+    #      previous values were Z11 -18365.1 and Z33 -10844.0, obtained with
+    #      a Quad4 whose drilling penalty coefficient K6ROT*1e-6*A66 had been
+    #      lost, leaving an effective coefficient of 1. Restoring that
+    #      coefficient alone gives Z11 -19159.9 and Z33 -11091.2, and the new
+    #      default gives the values below, only 0.3% and 0.2% away from them.
+    #      At this converged mesh the three-way agreement is the useful
+    #      check: the restored penalty, the physics-based default and the
+    #      Quad4R values -18995.4 and -11032.4 all lie within about 1%,
+    #      whereas the lost coefficient put Quad4 3.3% away from Quad4R
     reference_Tcr_value_Castro_refinement_8 = {
-        'Z11' : -18365.1,
-        'Z33' : -10844.0
+        'Z11' : -19214.0,
+        'Z33' : -11110.4
     }
     # NOTE values used for CI tests, values derived after running the tests in
     # a local compuer with refinement=8 first and then with refinement=1
+    # NOTE values updated in 0.10.0 together with the refinement=8 ones above.
+    #      The previous values were Z11 -31583.4 and Z33 -21716.0, and the
+    #      restored penalty alone gives Z11 -32074.5 and Z33 -22330.7. This
+    #      mesh is far too coarse for the buckling load, roughly 70% above
+    #      the converged one, so the coarse-mesh values are a regression lock
+    #      and not a measure of accuracy. Running this case with
+    #      quad.drilling_model = 1 recovers the penalty values
     reference_Tcr_value_Castro_refinement_1 = {
-        'Z11' : -31583.4,
-        'Z33' : -21716.0
+        'Z11' : -33162.7,
+        'Z33' : -23028.4
     }
 
     for cyl in ['Z11', 'Z33']:
@@ -193,18 +252,10 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
 
         eigvecs = np.zeros((N, num_eig_lb))
 
-        # NOTE pre-conditioning the eigenvalue problem to improve convergence of the eigensolver
-        kc0_diag = KC0uu.diagonal()
-        kc0_diag_inv_sqrt = 1.0/np.sqrt(np.maximum(kc0_diag, 1e-30))
-        D_inv_sqrt = sp_diags(kc0_diag_inv_sqrt)
-        KC0uu_scaled = D_inv_sqrt @ KC0uu @ D_inv_sqrt
-        KGuu_scaled = D_inv_sqrt @ KGuu @ D_inv_sqrt
-        eigvals_inv, eigvecsu_scaled = eigsh(A=KGuu_scaled, k=num_eig_lb, which='SM',
-                M=KC0uu_scaled, tol=1e-9, sigma=1., mode='cayley')
-        eigvals = -1./eigvals_inv
-
-        # NOTE the eigenvectors are scaled by the preconditioner to recover the original eigenvectors
-        eigvecsu = D_inv_sqrt @ eigvecsu_scaled
+        # NOTE pyfe3d.solver.linear_buckling equilibrates the diagonal,
+        #      estimates the Cayley shift and verifies that no lower load
+        #      multiplier was missed, which a hardcoded shift does not
+        eigvals, eigvecsu = linear_buckling(KC0uu, KGuu, num_eigvalues=num_eig_lb, tol=1e-9)
 
         eigvecs[bu] = eigvecsu
         print('eigvals', eigvals)
@@ -293,3 +344,4 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
 
 if __name__ == '__main__':
     test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=8)
+

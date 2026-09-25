@@ -4,11 +4,11 @@ sys.path.append('..')
 import time
 import numpy as np
 from numpy import isclose
-from scipy.sparse.linalg import eigsh
-from scipy.sparse import coo_matrix, diags as sp_diags
+from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import laminated_plate
 from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
+from pyfe3d.solver import natural_frequency
 
 
 def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
@@ -52,7 +52,14 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     # NOTE very small hourglass energy to make sure this doesn't affect
     hgfactor = 1.
 
-    # NOTE cylinder Z11, table 3 of reference
+    # NOTE cylinder Z11, Table 4 of Castro et al., Table 3 being the one
+    #      with the material properties
+    # NOTE the reference is the source of the geometry, the material and the
+    #      stacking sequence only. It is a linear buckling paper: it contains
+    #      no natural frequencies, and no density either, so the value of rho
+    #      above does not come from it. The frequencies asserted at the end
+    #      of this test are recorded pyfe3d output and are a regression lock,
+    #      not a comparison with the literature
     stack = [+60, -60, 0, 0, +68, -68, +52, -52, +37, -37]
     prop = laminated_plate(stack=stack, plyt=plyt, laminaprop=laminaprop,
                            rho=rho)
@@ -155,20 +162,12 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
 
     eigvecs = np.zeros((N, num_eig))
 
-    # NOTE pre-conditioning the eigenvalue problem to improve convergence of the eigensolver
-    kc0_diag = KC0uu.diagonal()
-    kc0_diag_inv_sqrt = 1.0/np.sqrt(np.maximum(kc0_diag, 1e-30))
-    D_inv_sqrt = sp_diags(kc0_diag_inv_sqrt)
-    KC0uu_scaled = D_inv_sqrt @ KC0uu @ D_inv_sqrt
-    Muu_scaled = D_inv_sqrt @ Muu @ D_inv_sqrt
-    eigvals, eigvecsu_scaled = eigsh(A=KC0uu_scaled, M=Muu_scaled,
-                                     sigma=-1., which='LM',
-                                     k=num_eig, tol=1e-6)
-    # NOTE the eigenvectors are scaled by the preconditioner to recover the original eigenvectors
-    eigvecsu = D_inv_sqrt @ eigvecsu_scaled
+    # NOTE pyfe3d.solver.natural_frequency equilibrates the diagonal
+    #      before calling the eigensolver and returns the circular
+    #      frequencies already sorted
+    omegan, eigvecsu = natural_frequency(KC0uu, Muu, num_eigvalues=num_eig, tol=1e-6)
     
     eigvecs[bu] = eigvecsu
-    omegan = eigvals**0.5
 
     print('natural frequency analysis OK')
 
@@ -249,9 +248,32 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     # NOTE reference values updated after adopting the equilibrium-based
     #      transverse shear stiffness of Rohwer (1988), evaluated in the element
     #      frame, which changed them by about 1.2e-4
-    assert np.allclose(omegan, [1981.51374432, 1981.51374432,
-                                2117.61717749, 2117.61717749,
-                                2203.24236915, 2203.24236915], rtol=1e-4)
+    # NOTE values updated again in 0.10.0, when the physics-based drilling
+    #      coefficient gamma_rz = A66 of Hughes and Brezzi (1989) became the
+    #      default of this element, in place of the fictitious K6ROT*1e-6*A66.
+    #      The previous values were
+    #
+    #          1981.51374432, 2117.61717749, 2203.24236915
+    #
+    #      each of them doubled, and they are recovered by setting
+    #      quad.drilling_model = 1 before update_KC0. The shift is about 12
+    #      per cent and it is a change of the drilling stiffness by four
+    #      orders of magnitude, which only a non-coplanar model such as this
+    #      cylinder can feel: on a flat mesh the drilling row is decoupled
+    #      from every other degree-of-freedom.
+    #
+    #      These are recorded pyfe3d output and not a comparison with the
+    #      literature, see the note on the reference at the top of this file,
+    #      so the shift cannot be classified as an improvement or otherwise
+    #      against an external value. What can be said is that the new
+    #      coefficient is a modulus of the laminate rather than an adjustable
+    #      parameter, and that the same change brings the torsional buckling
+    #      load of tests/test_quad4r_linear_buckling_cylinder_Nxy.py to
+    #      within 0.1 per cent of the one of the enriched Quad4
+    assert np.allclose(omegan, [2229.65277474, 2229.65277474,
+                                2377.24306359, 2377.24306359,
+                                2432.59469823, 2432.59469823], rtol=1e-4)
 
 if __name__ == '__main__':
     test_linear_nat_freq_cylinder(mode=0, plot_pyvista=True, refinement=1)
+

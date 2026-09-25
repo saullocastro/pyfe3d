@@ -23,9 +23,10 @@ import pytest
 from scipy.sparse import coo_matrix
 
 from pyfe3d.beamprop import BeamProp
-from pyfe3d.shellprop_utils import laminated_plate
+from pyfe3d.shellprop_utils import isotropic_plate, laminated_plate
 from pyfe3d import (Quad4, Quad4Data, Quad4Probe, Quad4R, Quad4RData,
-                    Quad4RProbe, Tria3R, Tria3RData, Tria3RProbe, BeamC,
+                    Quad4RProbe, Tria3R, Tria3RData, Tria3RProbe,
+                    Tria3DSG, Tria3DSGData, Tria3DSGProbe, BeamC,
                     BeamCData, BeamCProbe, BeamLR, BeamLRData, BeamLRProbe,
                     DOF, INT, DOUBLE)
 
@@ -33,12 +34,20 @@ SHELLS = {
     'Quad4': (Quad4, Quad4Probe, Quad4Data, 4),
     'Quad4R': (Quad4R, Quad4RProbe, Quad4RData, 4),
     'Tria3R': (Tria3R, Tria3RProbe, Tria3RData, 3),
+    'Tria3DSG': (Tria3DSG, Tria3DSGProbe, Tria3DSGData, 3),
 }
 BEAMS = {
     'BeamC': (BeamC, BeamCProbe, BeamCData),
     'BeamLR': (BeamLR, BeamLRProbe, BeamLRData),
 }
 ELEMENTS = sorted(SHELLS) + sorted(BEAMS)
+# NOTE the drilling stiffness is computed in update_KC0 and again in
+#      update_probe_finte, the pair that drifted apart in Tria3R, so the
+#      shells are also checked with the two non-default settings: an explicit
+#      gamma_rz under the physics-based model and the K6ROT penalty
+DRILLING = ['default', 'gamma_rz', 'K6ROT']
+CASES = ([(name, drilling) for name in sorted(SHELLS) for drilling in DRILLING]
+         + [(name, 'default') for name in sorted(BEAMS)])
 
 
 def rotation_matrix(seed):
@@ -57,7 +66,19 @@ def assemble(size, n, update):
     return coo_matrix((v, (r, c)), shape=(n, n)).toarray()
 
 
-def make_element(name):
+def set_drilling(elem, prop, drilling):
+    """Select one of the drilling settings of ``DRILLING``"""
+    if drilling == 'gamma_rz':
+        elem.drilling_model = 0
+        elem.gamma_rz = 0.37*prop.A66
+    elif drilling == 'K6ROT':
+        elem.drilling_model = 1
+        elem.K6ROT = 1.e4
+    else:
+        assert drilling == 'default'
+
+
+def make_element(name, drilling='default'):
     """One distorted element, arbitrarily oriented in space"""
     Q = rotation_matrix(3)
     origin = np.array([0.3, -0.2, 0.5])
@@ -80,7 +101,9 @@ def make_element(name):
         # material direction different from the element direction
         xmat = Q @ np.array([1., 0.6, 0.])
         elem.update_rotation_matrix(x, xmat[0], xmat[1], xmat[2])
+        set_drilling(elem, prop, drilling)
     else:
+        assert drilling == 'default'
         cls, probecls, datacls = BEAMS[name]
         num_nodes = 2
         b, h = 0.05, 0.03
@@ -109,8 +132,8 @@ def make_element(name):
     return elem, datacls(), prop, x, DOF*num_nodes
 
 
-def make_callables(name):
-    elem, data, prop, x, n = make_element(name)
+def make_callables(name, drilling='default'):
+    elem, data, prop, x, n = make_element(name, drilling)
 
     def fint(u, nonlinear=1):
         f = np.zeros(n, dtype=DOUBLE)
@@ -178,10 +201,10 @@ def test_tangent_is_derivative_of_fint(name, seed):
         'order' % (name, spread))
 
 
-@pytest.mark.parametrize('name', ELEMENTS)
-def test_tangent_matches_finite_difference_jacobian(name):
+@pytest.mark.parametrize('name, drilling', CASES)
+def test_tangent_matches_finite_difference_jacobian(name, drilling):
     """Every entry of KT, against a central difference of fint"""
-    fint, KC0, KCNL, KG, n = make_callables(name)
+    fint, KC0, KCNL, KG, n = make_callables(name, drilling)
     rng = np.random.default_rng(7)
     u = SCALE*rng.standard_normal(n)
 
@@ -194,7 +217,8 @@ def test_tangent_matches_finite_difference_jacobian(name):
 
     KT = KC0 + KCNL(u) + KG(u)
     err = np.linalg.norm(KT - J)/np.linalg.norm(J)
-    assert err < 1.e-6, '%s: KT differs from d(fint)/du by %.3e' % (name, err)
+    assert err < 1.e-6, '%s %s: KT differs from d(fint)/du by %.3e' % (
+        name, drilling, err)
 
 
 @pytest.mark.parametrize('name', ELEMENTS)
@@ -207,18 +231,53 @@ def test_tangent_is_symmetric(name):
     assert np.linalg.norm(KT - KT.T)/np.linalg.norm(KT) < 1.e-12
 
 
-@pytest.mark.parametrize('name', ELEMENTS)
-def test_linear_fint_is_KC0_times_u(name):
+@pytest.mark.parametrize('name, drilling', CASES)
+def test_linear_fint_is_KC0_times_u(name, drilling):
     """Without the nonlinear terms, fint is exactly KC0 @ u
 
     This is the default, and it failed for Tria3R when update_KC0 did not use
     all the drilling terms that update_probe_finte used.
     """
-    fint, KC0, KCNL, KG, n = make_callables(name)
+    fint, KC0, KCNL, KG, n = make_callables(name, drilling)
     rng = np.random.default_rng(5)
     u = SCALE*rng.standard_normal(n)
     KC0u = KC0 @ u
     assert np.linalg.norm(fint(u, nonlinear=0) - KC0u)/np.linalg.norm(KC0u) < 1.e-12
+
+
+@pytest.mark.parametrize('name', sorted(SHELLS))
+def test_explicit_gamma_rz(name):
+    """``gamma_rz = A66`` is the default spelled out, any other value is read
+
+    A negative ``gamma_rz``, the default, means A66, so setting it to A66
+    must reproduce KC0 and fint exactly, while a different value must change
+    both, which is what shows that the attribute is not a no-op.
+
+    The plate is isotropic because the default is A66 in the element frame,
+    and only then does it coincide with the ``A66`` of the property.
+    """
+    prop = isotropic_plate(thickness=0.004, E=70e9, nu=0.33)
+    results = {}
+    for label, factor in (('default', None), ('A66', 1.), ('other', 0.37)):
+        elem, data, _, x, n = make_element(name)
+        if factor is not None:
+            elem.gamma_rz = factor*prop.A66
+        KC0 = assemble(data.KC0_SPARSE_SIZE, n,
+                       lambda r, c, v: elem.update_KC0(r, c, v, prop))
+        # NOTE the same displacements for the three settings
+        u = SCALE*np.random.default_rng(17).standard_normal(n)
+        f = np.zeros(n, dtype=DOUBLE)
+        elem.update_probe_ue(u)
+        elem.update_fint(f, prop, nonlinear=1)
+        results[label] = KC0, f
+    for i, what in enumerate(('KC0', 'fint')):
+        ref = results['default'][i]
+        same = np.abs(results['A66'][i] - ref).max()/np.abs(ref).max()
+        diff = np.abs(results['other'][i] - ref).max()/np.abs(ref).max()
+        print('%-8s %-4s gamma_rz=A66 %.3e  gamma_rz=0.37*A66 %.3e'
+              % (name, what, same, diff))
+        assert same < 1.e-14, (name, what, same)
+        assert diff > 1.e-8, (name, what, diff)
 
 
 @pytest.mark.parametrize('name', ELEMENTS)

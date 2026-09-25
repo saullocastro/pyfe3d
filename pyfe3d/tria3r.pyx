@@ -3,6 +3,7 @@
 #cython: cdivision=True
 #cython: nonecheck=False
 #cython: overflowcheck=False
+#cython: initializedcheck=False
 #cython: embedsignature=True
 #cython: infer_types=False
 r"""
@@ -18,26 +19,33 @@ preventing shear locking. The drilling stiffness is evaluated with
 full integration.
 
 The transverse shear stiffnesses `A_{44}`, `A_{45}` and `A_{55}` are stabilised
-using the Stenberg's method described in:
+using the method of Lyly, Stenberg and Vihinen, often called Stenberg's
+method:
 
-    Bischoff, M., & Bletzinger, K.-U. (2004). 
-    Improving stability and accuracy of Reissner–Mindlin plate finite elements via algebraic subgrid scale stabilization.
-    Computer Methods in Applied Mechanics and Engineering, 193(15–16), 1517–1528.
+    Lyly, M., Stenberg, R., & Vihinen, T. (1993). A stable bilinear element
+    for the Reissner-Mindlin plate model. Computer Methods in Applied
+    Mechanics and Engineering, 110(3-4), 343-357.
+    https://doi.org/10.1016/0045-7825(93)90214-I
+
+    Bischoff, M., & Bletzinger, K.-U. (2004). Improving stability and
+    accuracy of Reissner-Mindlin plate finite elements via algebraic subgrid
+    scale stabilization. Computer Methods in Applied Mechanics and
+    Engineering, 193(15-16), 1517-1528.
     https://doi.org/10.1016/j.cma.2003.12.036
 
-modifed as proposed by Castro et al. in:
+in the form adopted by Castro et al.:
 
-    Castro, S. G. P., Donadon, M. V., & Guimarães, T. A. M. (2019).
+    Castro, S. G. P., Donadon, M. V., & Guimaraes, T. A. M. (2019).
     ES-PIM applied to buckling of variable angle tow laminates.
-    Composite Structures, 209, 67–78. https://doi.org/10.1016/j.compstruct.2018.10.058
-
+    Composite Structures, 209, 67-78.
+    https://doi.org/10.1016/j.compstruct.2018.10.058
 
 where the transverse shear terms are changed as per Eq. (26) in Castro et al., here repeated
 for convenience:
 
 .. math::
 
-    \left[\begin{matrix}\hat{A}_{44}, \hat{A}_{45} \\ \hat{A}_{45}, \hat{A}_{55}\end{matrix}\right] = \frac{1}{1 + factor}\left[\begin{matrix}A_{44}, A_{45} \\ A_{45}, A_{55}\end{matrix}\right]
+    \left[\begin{matrix}\hat{A}_{44}, \hat{A}_{45} \ \hat{A}_{45}, \hat{A}_{55}\end{matrix}\right] = \frac{1}{1 + factor}\left[\begin{matrix}A_{44}, A_{45} \ A_{45}, A_{55}\end{matrix}\right]
 
 with `factor` defined as:
 
@@ -45,6 +53,85 @@ with `factor` defined as:
 
 where `\alpha` is a positive constant parameters (see the ``alpha_shear_locking`` attribute), 
 `\ell` is the longest edge of the corresponding triangle, and `h` the total thickness of the element.
+
+Note that `factor \rightarrow 0` as the element size shrinks, so the true
+stiffness is recovered under mesh refinement and the scheme is consistent.
+The rate matters though: `\ell < 0.12 h` is needed for the stabilised
+stiffness to be within 1 per cent of the true one, which for a thin shell is
+not a mesh anyone would build. What makes the scheme legitimate all the same
+is that in a load-driven problem the error it introduces is
+`factor \times f_s`, with `f_s` the shear fraction of the response, and for a
+plate or beam of span `L` discretised with `n` elements
+
+.. math::
+
+    factor \times f_s \sim \frac{\alpha \ell^2}{h^2} c \frac{h^2}{L^2}
+                       = \frac{\alpha c}{n^2}
+
+so the thickness cancels and the error behaves as an ordinary
+`O(1/n^2)` discretisation error. This is measured in
+``tests/test_transverse_shear_stiffness.py``.
+
+.. warning:: The default `\alpha = 0.7` is roughly seven times the value
+    used in all three references above, which is near `0.1`: Eq. (24) of
+    Bischoff and Bletzinger gives `\alpha = 0.17 (\ell_g/\ell_n)/(2(1-\nu))`,
+    i.e. `0.12` for a square element with `\nu = 0.3`, and Castro et al.
+    investigate `0.05` to `0.15` and recommend `0.07` to `0.09`, reporting
+    that above `0.09` the linear buckling behaviour becomes overly soft and
+    converges from below.
+
+    The difference is not a retune but a consequence of where the factor is
+    applied. In all three references it sits on top of a discrete shear gap
+    (DSG) formulation, which is already free of shear locking, so there the
+    factor is a mild stabilisation that improves coarse-mesh accuracy. This
+    element has no DSG: the transverse shear is taken from a single point at
+    the centroid, which still locks, and the factor is therefore doing the
+    unlocking. Reducing `\alpha` to the literature value makes this element
+    stiffen sharply. On the plate of ``test_tria3r_natural_freq.py``, with
+    the consistent mass matrix, the error in the first natural frequency
+    goes
+
+    .. math::
+
+        +0.6\% \ (\alpha = 0.7) \quad
+        +30.6\% \ (\alpha = 0.1) \quad
+        +77.3\% \ (\alpha = 0.01) \quad
+        +96.1\% \ (\alpha = 0)
+
+    so with the stabilisation removed the element is nearly twice as stiff
+    as it should be, which is the locking itself. For scale,
+    :class:`pyfe3d.tria3dsg.Tria3DSG` on the identical mesh, with no
+    parameter of any kind, gives `+2.8\%`.
+
+    The price of the large `\alpha` is paid on the transverse shear itself.
+    A field with `w` varying and all rotations zero has identically zero
+    curvature, so it is resisted by transverse shear alone, and the
+    stabilisation divides that resistance by `1 + factor`. Measured on an
+    8 by 8 patch, this element's stiffness in that subspace is 0.33, 0.019
+    and 0.0012 of the Quad4 and Quad4R value at `\ell/h` of 1.25, 6.25 and
+    25. A Donnell geometric stiffness matrix works on `\partial w/\partial x`,
+    which is exactly that subspace, so thin-shell buckling is where the
+    scheme shows its cost, as measured for a cylinder in
+    ``tests/test_quad4_linear_buckling_cylinder_displ.py``. The failure
+    there is not a uniformly wrong load but a change of critical mode: with
+    `factor` at 1852 the element admits a mode at two elements per
+    wavelength, the mesh Nyquist limit, carrying 36.6 per cent of its
+    energy in transverse shear, and that mesh artefact undercuts the
+    physical one. At the literature `\alpha = 0.1` the physical mode is
+    critical again and this element agrees with the quadrilateral and with
+    :class:`.Tria3DSG` to 3 per cent on it, while that same `\alpha = 0.1`
+    makes the plate above 30.6 per cent too stiff. No single value serves
+    both problem classes.
+
+    The proper fix is to give the element a locking-free transverse shear
+    field, the DSG of Bletzinger, Bischoff and Ramm (2000) being the
+    triangular counterpart of the MITC4 treatment used for quadrilaterals,
+    after which no `\alpha` is needed at all. That element now exists as
+    :mod:`pyfe3d.tria3dsg`, and it is the triangle to reach for by default;
+    this one is kept for continuity with results obtained before it, and
+    for the comparison itself. Where it is used, ``alpha_shear_locking`` is
+    a parameter to be verified per problem class and not a constant of the
+    element.
 
 The transverse shear stiffnesses `A_{44}`, `A_{45}` and `A_{55}` are read
 from the :class:`pyfe3d.shellprop.ShellProp` object with the shear correction
@@ -55,59 +142,117 @@ above is applied. As described in Castro et al., the shear correction is no
 longer a very relevant parameter when the stabilisation scheme presented above
 is used.
 
-The drilling stiffness is calculated following the approach adopted in
-MSC Nastran and Autodesk Nastran, using a penalty-based method. Because
-the stiffness is only evaluated at the element centroid, this method provides
-a non-physical drilling stiffness with the objective of removing the singularity
-by creating an artificial stiffness between the drilling rotation degree-of-freedom
-of each node with the in-plane rotational strain evaluated at the centroid.
-The penalty energy is defined per element as:
+Drilling stiffness
+------------------
+
+The FSDT kinematics contains no strain measure associated with `r_z`, so the
+rows and columns of the drilling degree-of-freedom would be empty and a mesh
+of coplanar elements would give a singular global stiffness matrix. Two
+models are available, selected with the ``drilling_model`` attribute, and the
+formulation of each is the one documented for :mod:`pyfe3d.quad4`, to which
+the reader is referred for the derivation.
+
+**Physics-based, the default** (``drilling_model = 0``). The in-plane
+displacement field is enriched with the hierarchical quadratic edge modes of
+Allman, so that the drilling rotations produce membrane strain energy, and
+the independently interpolated `r_z` is tied to the rotation of the membrane
+field by the regularised functional of Hughes and Brezzi:
+
+    Allman, D. J., 1984, "A compatible triangular element including vertex
+    rotations for plane elasticity analysis," Computers & Structures,
+    19(1-2), pp. 1-8. https://doi.org/10.1016/0045-7949(84)90197-4
+
+    Hughes, T. J. R., and Brezzi, F., 1989, "On drilling degrees of
+    freedom," Computer Methods in Applied Mechanics and Engineering, 72(1),
+    pp. 105-121. https://doi.org/10.1016/0045-7825(89)90124-2
+
+The amplitude of the mode of the edge `k` joining nodes `i` and `j` is `a_k =
+\frac{\ell_k}{8}\left({r_z}_i - {r_z}_j\right)`, so the enrichment is the
+difference of the two drilling rotations already present at the ends of the
+edge and introduces no new degree-of-freedom. For the triangle the
+hierarchical bubble of that edge is
+
+.. math::
+
+    N_k = 4 S_i S_j
+
+with `S_i` the area coordinates, equal to unity at the mid-point of the edge
+and zero at every vertex. The enrichment populates the drilling columns of
+the membrane operator, giving `\pmb{\tilde B}_m`, and the drilling residual
+becomes `\pmb{\tilde B}_{r_z} = \pmb{S}^{r_z} + \frac{1}{2}\pmb{\tilde
+S}^u_{,y} - \frac{1}{2}\pmb{\tilde S}^v_{,x}`, whose contribution to the
+element stiffness matrix is `\gamma_{r_z} \int_A \pmb{\tilde B}_{r_z}^\top
+\pmb{\tilde B}_{r_z} dA` with `\gamma_{r_z} = A_{66}`, a modulus and not a
+user parameter. The curvature and transverse shear operators are untouched,
+the edge modes acting only on the in-plane translations, so the bending and
+the transverse shear response of the element are identical for the two
+drilling models.
+
+Two quadrature choices matter. Because the derivatives of the bubbles are
+linear in the area coordinates, the drilling columns of `\pmb{\tilde B}_m`
+vary linearly, and the terms quadratic in them are integrated with the
+three-point rule of Cowper, the same one the element already used for its
+drilling terms. A single point at the centroid would leave those terms
+unsampled and would give the element five zero eigenvalues over its nine
+in-plane degrees-of-freedom instead of three. The Hughes-Brezzi term itself
+is integrated with a single point at the centroid, following Ibrahimbegovic
+et al. (1990), which is what makes the element insensitive to `\gamma_{r_z}`.
+
+Unlike the penalty below, the added term is consistent rather than
+artificial: stationarity with respect to `r_z` gives `r_z = \theta_z`
+pointwise, so it contributes no energy at the exact solution for any positive
+`\gamma_{r_z}`, and the nodal moments about the shell normal recovered in the
+internal force vector are physical. Note that the transverse shear
+stabilisation documented above scales the transverse shear stiffness only
+and does not interact with the drilling term, which draws its scale from
+`A_{66}` of the extensional stiffness matrix.
+
+**Fictitious penalty** (``drilling_model = 1``), the default before version
+0.10.0, following the approach adopted in MSC Nastran and Autodesk Nastran
+through their ``K6ROT`` parameter. It provides a small artificial stiffness
+whose only purpose is to remove the singularity, so the forces associated
+with it are spurious and any moment recovered about the shell normal is
+meaningless. The penalty energy is defined per element as:
 
 .. math::
 
     U_{drill} = \frac{1}{2} K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)^2 dA
 
-where `10^{-6}` is a scaling factor suggested by MSC Nastran's approach (CQUAD4) to make the artificial
-drilling stiffness sufficiently small. AUTODESK NASTRAN's quick reference guide recommends `K6ROT = 100`
-for static analysis. For modal solutions, `K6ROT = 10^4` is suggested. MSC NASTRAN's quick reference guide
-states that `K6ROT > 100` should not be used, thus contradicting AUTODESK NASTRAN. The rotation `r_z` represents
-the drilling degree-of-freedom in element's coordinates, whereas `\theta_z` the in-plane rotation strain, defined as:
-
-.. math::
-
-    \theta_z = \frac{1}{2}\left(\frac{\partial v}{\partial x} - \frac{\partial u}{\partial y}\right)
-
-The first variation of U_{drill} then becomes:
-
-.. math::
-
-    \delta U_{drill} = K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)(\delta r_z - \delta \theta_z) dA
-
-which can be expressed in terms of the shape functions and element degrees-of-freedom (`u_e`) as:
-`r_z = S^{r_z} u_e`, `u = S^u u_e` and `v = S_v u_e` as:
-
-.. math::
-
-    \delta U_{drill} = K6ROT \cdot 10^{-6} \cdot u_e^\top \int_A A_{66} (S^{r_z \top} + 1/2 S^{u \top}_{,y} - 1/2 S^{v \top}_{,x})(\delta S^{r_z} + 1/2 \delta S^u_{,y} - 1/2 S^v_{,x}) dA u_e
-
-or simply as:
-
-.. math::
-
-    \delta U_{drill} = K6ROT \cdot 10^{-6} \cdot A_{66} u_e^\top \int_A B_{drill}^\top B_{drill} dA u_e
-
-with:
+where `10^{-6}` is a scaling factor suggested by MSC Nastran's approach
+(CQUAD4) to make the artificial drilling stiffness sufficiently small.
+AUTODESK NASTRAN's quick reference guide recommends `K6ROT = 100` for static
+analysis. For modal solutions, `K6ROT = 10^4` is suggested. MSC NASTRAN's
+quick reference guide states that `K6ROT > 100` should not be used, thus
+contradicting AUTODESK NASTRAN. The rotation `r_z` represents the drilling
+degree-of-freedom in element's coordinates, whereas `\theta_z` the in-plane
+rotation strain, defined as `\theta_z = \frac{1}{2}\left(v_{,x} -
+u_{,y}\right)`, such that the penalty is built from the operator
 
 .. math::
 
     B_{drill} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}
 
-Note that `A_{66}` is assumed constant over the element, which here has no difference given that a reduced integration approach is used.
-The approach herein presented is very similar to the one presented in Eq. 2.20 of:
+which is the same operator as `\pmb{\tilde B}_{r_z}` above, evaluated on the
+unenriched field. Being built from that operator and not from an addition on
+the diagonal terms is what keeps the penalty from stiffening a rigid rotation
+of the element about its normal, so both models represent all rigid-body
+motions and all constant-strain states exactly. `A_{66}` is assumed constant
+over the element. The approach herein presented is very similar to the one
+presented in Eq. 2.20 of:
 
     Adam, F. M., Mohamed, A. E., and Hassaballa, A. E., 2013,
-    “Degenerated Four Nodes Shell Element with Drilling Degree of
-    Freedom,” IOSR J. Eng., 3(8), pp. 10–20.
+    \u201cDegenerated Four Nodes Shell Element with Drilling Degree of
+    Freedom,\u201d IOSR J. Eng., 3(8), pp. 10\u201320.
+
+**Choosing between them.** The physics-based model is the default because it
+is the one that is correct when the drilling moment is part of the load path,
+when shells are connected to beams or stiffeners that must transmit in-plane
+moments, or when the mesh is too coarse for the unenriched membrane response
+to be trusted. It is markedly more accurate in in-plane bending: on Cook's
+skew membrane with a four by four mesh of split quadrilaterals it gives 20.7
+against the reference 23.9, where the penalty gives 11.3. The penalty remains
+available for reproducing results obtained before 0.10.0.
+
 
 """
 from libc.math cimport fabs
@@ -118,6 +263,223 @@ from .shellprop cimport ShellProp
 
 cdef int DOF = 6
 cdef int NUM_NODES = 3
+
+
+cdef void allman_enrichment(double *Nx, double *Ny, double *xe,
+                            double S1, double S2, double S3,
+                            double *d) noexcept nogil:
+    r"""Cartesian derivatives of the Allman drilling enrichment, triangle
+
+    Fills ``d`` with the contribution of the hierarchical quadratic edge
+    modes of Allman (1984) to the Cartesian derivatives of the enriched
+    in-plane displacement rows, evaluated at the drilling column of each
+    node, exactly as :func:`pyfe3d.quad4.allman_enrichment` does for the
+    quadrilateral. For the triangle the hierarchical bubble of the edge
+    joining nodes `i` and `j` is `N_k = 4 S_i S_j`, with `S_i` the area
+    coordinates, so that
+
+    .. math::
+        N_{k,x} = 4 \left( S_{i,x} S_j + S_i S_{j,x} \right)
+
+    and `S_{i,x}` is the constant ``Nx[i]``. The edges are numbered 1-2, 2-3
+    and 3-1, consistently with the nodal connectivity of :class:`.Tria3R`.
+
+    Parameters
+    ----------
+    Nx, Ny : double pointer
+        The three constant Cartesian derivatives of the area coordinates.
+    xe : double pointer
+        Nodal coordinates in the element coordinate system.
+    S1, S2, S3 : double
+        Area coordinates of the evaluation point.
+    d : double pointer
+        Buffer of 12 positions, filled in place with `\tilde S^u_{,x}`,
+        `\tilde S^u_{,y}`, `\tilde S^v_{,x}` and `\tilde S^v_{,y}`, each one
+        for the three nodes, so ``d[0:3]`` holds `\tilde S^u_{,x}` at the
+        drilling column of nodes 1 to 3.
+
+    """
+    cdef int k
+    cdef double S[3]
+    cdef double cu[3]
+    cdef double cv[3]
+    cdef double Nbx[3]
+    cdef double Nby[3]
+    cdef int ei[3]
+    cdef int ej[3]
+
+    S[0] = S1
+    S[1] = S2
+    S[2] = S3
+
+    # edges 1-2, 2-3, 3-1
+    ei[0] = 0
+    ej[0] = 1
+    ei[1] = 1
+    ej[1] = 2
+    ei[2] = 2
+    ej[2] = 0
+
+    for k in range(3):
+        # NOTE (l_k/8)*n_k = (1/8)*{y_i - y_j, x_j - x_i}
+        cu[k] = 0.125*(xe[3*ei[k] + 1] - xe[3*ej[k] + 1])
+        cv[k] = 0.125*(xe[3*ej[k] + 0] - xe[3*ei[k] + 0])
+        Nbx[k] = 4.*(Nx[ei[k]]*S[ej[k]] + S[ei[k]]*Nx[ej[k]])
+        Nby[k] = 4.*(Ny[ei[k]]*S[ej[k]] + S[ei[k]]*Ny[ej[k]])
+
+    # NOTE node m is the first vertex of edge m and the second vertex of the
+    #      previous edge, hence the two contributions with opposite signs
+    d[0] = cu[0]*Nbx[0] - cu[2]*Nbx[2]
+    d[1] = cu[1]*Nbx[1] - cu[0]*Nbx[0]
+    d[2] = cu[2]*Nbx[2] - cu[1]*Nbx[1]
+
+    d[3] = cu[0]*Nby[0] - cu[2]*Nby[2]
+    d[4] = cu[1]*Nby[1] - cu[0]*Nby[0]
+    d[5] = cu[2]*Nby[2] - cu[1]*Nby[1]
+
+    d[6] = cv[0]*Nbx[0] - cv[2]*Nbx[2]
+    d[7] = cv[1]*Nbx[1] - cv[0]*Nbx[0]
+    d[8] = cv[2]*Nbx[2] - cv[1]*Nbx[1]
+
+    d[9] = cv[0]*Nby[0] - cv[2]*Nby[2]
+    d[10] = cv[1]*Nby[1] - cv[0]*Nby[0]
+    d[11] = cv[2]*Nby[2] - cv[1]*Nby[1]
+
+
+cdef void allman_delta_Ke(double *Nx, double *Ny, double *xe, double area,
+                          double *Ae, double *Be, double gamma,
+                          double *Ke) noexcept nogil:
+    r"""The drilling enrichment contribution to the element stiffness matrix
+
+    Fills the 18 by 18 buffer ``Ke``, stored row by row, with everything that
+    the Allman enrichment and the Hughes-Brezzi term add to the element
+    matrix of :class:`.Tria3R` in element coordinates, and with nothing else.
+
+    Writing the enriched membrane operator as `\pmb{\tilde B}_m = \pmb{B}_m +
+    \pmb{\Delta}_m`, where `\pmb{\Delta}_m` is non-zero only in the drilling
+    columns, the membrane and coupling contributions expand as
+
+    .. math::
+        \pmb{\tilde B}_m^\top \pmb{A} \pmb{\tilde B}_m
+        + \pmb{\tilde B}_m^\top \pmb{B} \pmb{B}_b
+        + \pmb{B}_b^\top \pmb{B} \pmb{\tilde B}_m
+        = (\text{unenriched}) + \pmb{B}_m^\top \pmb{A} \pmb{\Delta}_m
+        + \pmb{\Delta}_m^\top \pmb{A} \pmb{B}_m
+        + \pmb{\Delta}_m^\top \pmb{A} \pmb{\Delta}_m
+        + \pmb{\Delta}_m^\top \pmb{B} \pmb{B}_b
+        + \pmb{B}_b^\top \pmb{B} \pmb{\Delta}_m
+
+    and only the five terms in `\pmb{\Delta}_m` are assembled here, so the
+    block of the translations and of the bending rotations is left exactly as
+    the unenriched element computed it. Those terms are integrated with the
+    three-point rule, which is needed because `\pmb{\Delta}_m` varies
+    linearly over the element, so that the term quadratic in it would
+    otherwise be unsampled and would leave a zero-energy mode. The
+    Hughes-Brezzi term is integrated with a single point at the centroid, as
+    in :mod:`pyfe3d.quad4`.
+
+    """
+    cdef int i, j, a, b, n
+    cdef double S1, S2, S3, wij
+    cdef double d[12]
+    cdef double Bm[54]
+    cdef double Bb[54]
+    cdef double Dm[54]
+    cdef double bdrill[18]
+    cdef double ABm[54]
+    cdef double ADm[54]
+    cdef double BBb[54]
+    cdef double BDm[54]
+    cdef double points[3]
+
+    for i in range(18*18):
+        Ke[i] = 0.
+
+    # NOTE the unenriched membrane and bending rows, which are constant
+    for i in range(54):
+        Bm[i] = 0.
+        Bb[i] = 0.
+    for i in range(3):
+        Bm[0*18 + 6*i + 0] = Nx[i]          # exx = u,x
+        Bm[1*18 + 6*i + 1] = Ny[i]          # eyy = v,y
+        Bm[2*18 + 6*i + 0] = Ny[i]          # gxy = u,y + v,x
+        Bm[2*18 + 6*i + 1] = Nx[i]
+        Bb[0*18 + 6*i + 4] = Nx[i]          # kxx = ry,x
+        Bb[1*18 + 6*i + 3] = -Ny[i]         # kyy = -rx,y
+        Bb[2*18 + 6*i + 3] = -Nx[i]         # kxy = ry,y - rx,x
+        Bb[2*18 + 6*i + 4] = Ny[i]
+
+    # NOTE three-point rule of Cowper, the same one already used for the
+    #      drilling terms of the unenriched element
+    points[0] = 0.66666666666666666666666666666666666666666667
+    points[1] = 0.16666666666666666666666666666666666666666667
+    points[2] = 0.16666666666666666666666666666666666666666667
+    wij = area/3.
+
+    for n in range(3):
+        if n == 0:
+            S1 = points[0]
+            S2 = points[1]
+            S3 = points[2]
+        elif n == 1:
+            S1 = points[1]
+            S2 = points[0]
+            S3 = points[2]
+        else:
+            S1 = points[1]
+            S2 = points[2]
+            S3 = points[0]
+
+        allman_enrichment(Nx, Ny, xe, S1, S2, S3, d)
+
+        for i in range(54):
+            Dm[i] = 0.
+        for i in range(3):
+            Dm[0*18 + 6*i + 5] = d[i]               # exx gains S~u,x
+            Dm[1*18 + 6*i + 5] = d[9 + i]           # eyy gains S~v,y
+            Dm[2*18 + 6*i + 5] = d[3 + i] + d[6 + i]  # gxy gains both
+
+        # products with the constitutive matrices, stored row by row
+        for a in range(3):
+            for j in range(18):
+                ABm[18*a + j] = (Ae[3*a + 0]*Bm[0*18 + j]
+                               + Ae[3*a + 1]*Bm[1*18 + j]
+                               + Ae[3*a + 2]*Bm[2*18 + j])
+                ADm[18*a + j] = (Ae[3*a + 0]*Dm[0*18 + j]
+                               + Ae[3*a + 1]*Dm[1*18 + j]
+                               + Ae[3*a + 2]*Dm[2*18 + j])
+                BBb[18*a + j] = (Be[3*a + 0]*Bb[0*18 + j]
+                               + Be[3*a + 1]*Bb[1*18 + j]
+                               + Be[3*a + 2]*Bb[2*18 + j])
+                BDm[18*a + j] = (Be[3*a + 0]*Dm[0*18 + j]
+                               + Be[3*a + 1]*Dm[1*18 + j]
+                               + Be[3*a + 2]*Dm[2*18 + j])
+
+        for i in range(18):
+            for j in range(18):
+                for a in range(3):
+                    Ke[18*i + j] += wij*(
+                        # Bm.T*A*Dm + Dm.T*A*Bm + Dm.T*A*Dm
+                          Bm[18*a + i]*ADm[18*a + j]
+                        + Dm[18*a + i]*ABm[18*a + j]
+                        + Dm[18*a + i]*ADm[18*a + j]
+                        # Dm.T*B*Bb + Bb.T*B*Dm
+                        + Dm[18*a + i]*BBb[18*a + j]
+                        + Bb[18*a + i]*BDm[18*a + j]
+                    )
+
+    # NOTE Hughes-Brezzi term, one point at the centroid
+    allman_enrichment(Nx, Ny, xe, 1./3., 1./3., 1./3., d)
+    for i in range(3):
+        bdrill[6*i + 0] = Ny[i]/2.
+        bdrill[6*i + 1] = -Nx[i]/2.
+        bdrill[6*i + 2] = 0.
+        bdrill[6*i + 3] = 0.
+        bdrill[6*i + 4] = 0.
+        bdrill[6*i + 5] = 1./3. + 0.5*d[3 + i] - 0.5*d[6 + i]
+    for i in range(18):
+        for j in range(18):
+            Ke[18*i + j] += area*gamma*bdrill[i]*bdrill[j]
 
 
 cdef class Tria3RData:
@@ -263,12 +625,79 @@ cdef class Tria3R:
         buckling analysis of a simply supported plate, such that the result
         approaches the one of the :class:`.Quad4R` element for an equivalent
         mesh (see the test case ``test_tria3r_linear_buckling_plate.py``).
+
+        .. warning:: `\alpha = 0.7` is about seven times the value used
+            in the references this scheme comes from, and it is the
+            dominant error term on problems where transverse shear carries
+            load. The reason, and the measurements, are in the section "The
+            transverse shear stiffnesses" of the module documentation.
+
+            No single value serves every problem class, so this is a
+            parameter to be verified per problem and not a constant of the
+            element. Two measurements bracket it, and they pull in opposite
+            directions:
+
+            - on the plate of ``tests/test_tria3r_natural_freq.py`` with
+              the consistent mass matrix, `\alpha = 0.7` gives a first
+              natural frequency 0.6 per cent above the analytical value
+              while the literature `\alpha = 0.1` gives one 30.6 per cent
+              above it, so here the default is much the better of the two.
+              With the stabilisation off the error is 96.1 per cent, which
+              is how much of this element's accuracy rests on `\alpha`;
+
+            - on the cylinder of
+              ``tests/test_quad4_linear_buckling_cylinder_displ.py`` at
+              ``ntheta = 60``, where `factor` reaches 1852, the ordering
+              reverses. At `\alpha = 0.7` the critical eigenvalue belongs
+              to a mode at two elements per wavelength, the mesh Nyquist
+              limit, carrying 36.6 per cent of its energy in transverse
+              shear: a numerical mechanism rather than a physical mode. At
+              `\alpha = 0.1` the physical eight-wave mode is critical
+              instead, and there this element agrees with the
+              quadrilateral and with the discrete shear gap triangle to
+              3 per cent, 2.520 against 2.453 and 2.534 times the reference
+              load, all three overpredicting at so coarse a mesh.
+
+            So on a thin shell in buckling the default is not merely
+            inaccurate, it can change which mode is critical, and a
+            plausible-looking eigenvalue can belong to a mesh artefact.
+            Where the answer matters, either sweep `\alpha` and confirm
+            that the critical mode is physical and resolved by several
+            elements per wavelength, or use :class:`.Tria3DSG`, whose
+            discrete shear gap transverse shear field is locking-free and
+            takes no such parameter.
+
+    drilling_model, : int
+        Selects how the drilling degree-of-freedom `r_z` is given stiffness,
+        see the module documentation. The default ``0`` is the physics-based
+        stiffness of Allman (1984) and Hughes and Brezzi (1989), for which
+        the drilling rotation is a kinematic variable that carries strain
+        energy, the recovered nodal moments about the shell normal are
+        physical, and no user parameter is involved. Any other value selects
+        the fictitious penalty of MSC Nastran and Autodesk Nastran, which was
+        the default up to version 0.9.0 and is controlled by ``K6ROT``.
+        Setting ``elem.drilling_model = 1`` before calling :meth:`.update_KC0`
+        is the way to reproduce results obtained before 0.10.0.
     K6ROT, : double
-        Dimensionless multiplier for the drilling stiffness. 
+        Dimensionless multiplier for the fictitious drilling stiffness, only
+        read when ``drilling_model`` is not ``0``. It has no effect under the
+        default physics-based model, which takes its regularisation parameter
+        from the laminate stiffness instead, see ``gamma_rz``.
         AUTODESK NASTRAN's quick reference guide recommends ``K6ROT = 100.``
         for static analysis. For modal solutions, ``K6ROT=1.e4`` is suggested.
         MSC NASTRAN's quick reference guide states that ``K6ROT > 100.``
         should not be used, but this is contradicting AUTODESK NASTRAN.
+    gamma_rz, : double
+        Regularisation parameter `\gamma_{r_z}` of the physics-based drilling
+        stiffness, only read when ``drilling_model`` is ``0``. The default is
+        a negative value, which means that `A_{66}` of the laminate
+        extensional stiffness matrix is used, the value identified by Hughes
+        and Brezzi (1989). This is a modulus and not a parameter that needs
+        tuning: the element response has a broad plateau of insensitivity
+        around it, and the attribute is exposed for the sensitivity study
+        that the literature recommends rather than for normal use. Very large
+        values over-constrain `r_z = \theta_z`, and a zero value leaves the
+        Allman enrichment rank-deficient by one.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix from local to global coordinates.
     m11, m12, m21, m22 : double
@@ -292,6 +721,8 @@ cdef class Tria3R:
     cdef public double area
     cdef public double K6ROT
     cdef public double alpha_shear_locking
+    cdef public int drilling_model
+    cdef public double gamma_rz
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public double m11, m12, m21, m22
     cdef public Tria3RProbe probe
@@ -313,6 +744,8 @@ cdef class Tria3R:
         self.area = 0
         self.K6ROT = 100. # NOTE default value in MSC Nastran
         self.alpha_shear_locking = 0.7
+        self.drilling_model = 0 # NOTE Allman + Hughes-Brezzi, the default
+        self.gamma_rz = -1. # NOTE negative means "use A66"
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.
         self.r31 = self.r32 = self.r33 = 0.
@@ -623,6 +1056,12 @@ cdef class Tria3R:
         cdef double N1x, N2x, N3x, N1y, N2y, N3y
         cdef double N1, N2, N3
         cdef double factor, maxl, l12, l23, l31
+        cdef int bi, bj, qa, qb, qi, qj
+        cdef double tmp, gamma_drill
+        cdef double Nxv[3]
+        cdef double Nyv[3]
+        cdef double rmat[9]
+        cdef double Kedelta[324]
 
         cdef double KC0e0000, KC0e0001, KC0e0003, KC0e0004, KC0e0005, KC0e0006, KC0e0007, KC0e0009, KC0e0010, KC0e0011, KC0e0012, KC0e0013, KC0e0015, KC0e0016, KC0e0017
         cdef double KC0e0101, KC0e0103, KC0e0104, KC0e0105, KC0e0106, KC0e0107, KC0e0109, KC0e0110, KC0e0111, KC0e0112, KC0e0113, KC0e0115, KC0e0116, KC0e0117
@@ -702,7 +1141,15 @@ cdef class Tria3R:
             A45 = 1 / (1 + factor) * A45
             A55 = 1 / (1 + factor) * A55
 
-            K6ROT = self.K6ROT
+            # NOTE the fictitious penalty is switched off when the
+            #      physics-based drilling stiffness is active, so that the
+            #      generated block contributes no drilling term at all and
+            #      the enrichment supplies everything, see the module
+            #      documentation
+            if self.drilling_model == 0:
+                K6ROT = 0.
+            else:
+                K6ROT = self.K6ROT
 
             N1x = (y2 - y3)/(2*self.area)
             N2x = (-y1 + y3)/(2*self.area)
@@ -931,6 +1378,28 @@ cdef class Tria3R:
             finte[16] = KC0e0016*ue[0] + KC0e0116*ue[1] + KC0e0216*ue[2] + KC0e0316*ue[3] + KC0e0416*ue[4] + KC0e0616*ue[6] + KC0e0716*ue[7] + KC0e0816*ue[8] + KC0e0916*ue[9] + KC0e1016*ue[10] + KC0e1216*ue[12] + KC0e1316*ue[13] + KC0e1416*ue[14] + KC0e1516*ue[15] + KC0e1616*ue[16]
             finte[17] = KC0e0017*ue[0] + KC0e0117*ue[1] + KC0e0517*ue[5] + KC0e0617*ue[6] + KC0e0717*ue[7] + KC0e1117*ue[11] + KC0e1217*ue[12] + KC0e1317*ue[13] + KC0e1717*ue[17]
 
+            # NOTE the physics-based drilling stiffness, in element
+            #      coordinates as the rest of finte. Adding the same delta
+            #      that update_KC0 assembles keeps finte exactly equal to
+            #      the product of the element matrix with the element
+            #      displacements
+            if self.drilling_model == 0:
+                if self.gamma_rz >= 0.:
+                    gamma_drill = self.gamma_rz
+                else:
+                    gamma_drill = A66
+                Nxv[0] = N1x
+                Nxv[1] = N2x
+                Nxv[2] = N3x
+                Nyv[0] = N1y
+                Nyv[1] = N2y
+                Nyv[2] = N3y
+                allman_delta_Ke(Nxv, Nyv, &self.probe.xe[0], self.area,
+                                Ae, Be, gamma_drill, Kedelta)
+                for qi in range(18):
+                    for qj in range(18):
+                        finte[qi] += Kedelta[18*qi + qj]*ue[qj]
+
             if nonlinear:
                 self._update_probe_finte_nonlinear(prop)
 
@@ -981,6 +1450,12 @@ cdef class Tria3R:
         cdef double N1x, N2x, N3x, N1y, N2y, N3y
         cdef double N1, N2, N3
         cdef double factor, maxl, l12, l23, l31
+        cdef int bi, bj, qa, qb, qi, qj
+        cdef double tmp, gamma_drill
+        cdef double Nxv[3]
+        cdef double Nyv[3]
+        cdef double rmat[9]
+        cdef double Kedelta[324]
 
         cdef double KC0e0000, KC0e0001, KC0e0003, KC0e0004, KC0e0005, KC0e0006, KC0e0007, KC0e0009, KC0e0010, KC0e0011, KC0e0012, KC0e0013, KC0e0015, KC0e0016, KC0e0017
         cdef double KC0e0101, KC0e0103, KC0e0104, KC0e0105, KC0e0106, KC0e0107, KC0e0109, KC0e0110, KC0e0111, KC0e0112, KC0e0113, KC0e0115, KC0e0116, KC0e0117
@@ -1057,7 +1532,15 @@ cdef class Tria3R:
             A45 = 1 / (1 + factor) * A45
             A55 = 1 / (1 + factor) * A55
 
-            K6ROT = self.K6ROT
+            # NOTE the fictitious penalty is switched off when the
+            #      physics-based drilling stiffness is active, so that the
+            #      generated block contributes no drilling term at all and
+            #      the enrichment supplies everything, see the module
+            #      documentation
+            if self.drilling_model == 0:
+                K6ROT = 0.
+            else:
+                K6ROT = self.K6ROT
 
             # local to global transformation
             r11 = self.r11
@@ -2907,6 +3390,53 @@ cdef class Tria3R:
             k += 1
             KC0v[k] += KC0e1717*r33**2 + r31*(KC0e1515*r31 + KC0e1516*r32) + r32*(KC0e1516*r31 + KC0e1616*r32)
 
+            # NOTE contribution of the physics-based drilling stiffness,
+            #      added here rather than through the KC0e terms above
+            #      because the enrichment couples the drilling rotation to
+            #      the curvatures whenever the extension-bending matrix B is
+            #      not zero, and the generated block has no variable for
+            #      those. The sparse pattern is the full 18 by 18 element
+            #      matrix stored row by row, so the entry of the element
+            #      degrees-of-freedom i and j sits at init_k_KC0 + 18*i + j
+            if self.drilling_model == 0:
+                if self.gamma_rz >= 0.:
+                    gamma_drill = self.gamma_rz
+                else:
+                    gamma_drill = A66
+                Nxv[0] = N1x
+                Nxv[1] = N2x
+                Nxv[2] = N3x
+                Nyv[0] = N1y
+                Nyv[1] = N2y
+                Nyv[2] = N3y
+                allman_delta_Ke(Nxv, Nyv, &self.probe.xe[0], self.area,
+                                Ae, Be, gamma_drill, Kedelta)
+                rmat[0] = r11
+                rmat[1] = r12
+                rmat[2] = r13
+                rmat[3] = r21
+                rmat[4] = r22
+                rmat[5] = r23
+                rmat[6] = r31
+                rmat[7] = r32
+                rmat[8] = r33
+                # NOTE from element to global coordinates, Kg_{mn} = r_{mi}
+                #      Ke_{ij} r_{nj}, with the rotation block diagonal over
+                #      the six groups of three components of the 18
+                #      degrees-of-freedom
+                for bi in range(6):
+                    for bj in range(6):
+                        for qi in range(3):
+                            for qj in range(3):
+                                tmp = 0.
+                                for qa in range(3):
+                                    for qb in range(3):
+                                        tmp += (rmat[3*qi + qa]
+                                                *Kedelta[18*(3*bi + qa) + 3*bj + qb]
+                                                *rmat[3*qj + qb])
+                                KC0v[self.init_k_KC0 + 18*(3*bi + qi)
+                                     + 3*bj + qj] += tmp
+
 
     cpdef void update_fint(Tria3R self,
                            double [::1] fint,
@@ -2979,6 +3509,9 @@ cdef class Tria3R:
         cdef int i
         cdef double x1, x2, x3, y1, y2, y3
         cdef double N1x, N2x, N3x, N1y, N2y, N3y
+        cdef double Nxv[3]
+        cdef double Nyv[3]
+        cdef double d[12]
         cdef double *BLexx
         cdef double *BLeyy
         cdef double *BLgxy
@@ -3067,6 +3600,28 @@ cdef class Tria3R:
         Gwy[2] = N1y
         Gwy[8] = N2y
         Gwy[14] = N3y
+
+        # NOTE Allman enrichment of the membrane rows, which keeps the
+        #      nonlinear tangent of update_KCNL and the nonlinear internal
+        #      forces consistent with the enriched KC0. The drilling columns
+        #      are linear over the element, so evaluating them at the
+        #      centroid integrates them exactly with the single point that
+        #      those methods use. The curvature rows and the gradient of w
+        #      are not enriched, the edge modes acting only on the in-plane
+        #      translations
+        if self.drilling_model == 0:
+            Nxv[0] = N1x
+            Nxv[1] = N2x
+            Nxv[2] = N3x
+            Nyv[0] = N1y
+            Nyv[1] = N2y
+            Nyv[2] = N3y
+            allman_enrichment(Nxv, Nyv, &self.probe.xe[0], 1./3., 1./3.,
+                              1./3., d)
+            for i in range(3):
+                BLexx[6*i + 5] = d[i]
+                BLeyy[6*i + 5] = d[9 + i]
+                BLgxy[6*i + 5] = d[3 + i] + d[6 + i]
 
         return 2*self.area
 
@@ -3427,6 +3982,11 @@ cdef class Tria3R:
         cdef double m11, m12, m21, m22
         cdef double N1x, N2x, N3x, N1y, N2y, N3y
         cdef double Nxx, Nyy, Nxy
+        cdef double Nxv[3]
+        cdef double Nyv[3]
+        cdef double denr[12]
+        cdef double dexx, deyy, dgxy
+        cdef int qi
 
         with nogil:
             detJ = 2*self.area
@@ -3733,6 +4293,32 @@ cdef class Tria3R:
             Nxx = ue[0]*(A11*N1x + A16*N1y) + ue[10]*(B11*N2x + B16*N2y) + ue[12]*(A11*N3x + A16*N3y) + ue[13]*(A12*N3y + A16*N3x) - ue[15]*(B12*N3y + B16*N3x) + ue[16]*(B11*N3x + B16*N3y) + ue[1]*(A12*N1y + A16*N1x) - ue[3]*(B12*N1y + B16*N1x) + ue[4]*(B11*N1x + B16*N1y) + ue[6]*(A11*N2x + A16*N2y) + ue[7]*(A12*N2y + A16*N2x) - ue[9]*(B12*N2y + B16*N2x)
             Nyy = ue[0]*(A12*N1x + A26*N1y) + ue[10]*(B12*N2x + B26*N2y) + ue[12]*(A12*N3x + A26*N3y) + ue[13]*(A22*N3y + A26*N3x) - ue[15]*(B22*N3y + B26*N3x) + ue[16]*(B12*N3x + B26*N3y) + ue[1]*(A22*N1y + A26*N1x) - ue[3]*(B22*N1y + B26*N1x) + ue[4]*(B12*N1x + B26*N1y) + ue[6]*(A12*N2x + A26*N2y) + ue[7]*(A22*N2y + A26*N2x) - ue[9]*(B22*N2y + B26*N2x)
             Nxy = ue[0]*(A16*N1x + A66*N1y) + ue[10]*(B16*N2x + B66*N2y) + ue[12]*(A16*N3x + A66*N3y) + ue[13]*(A26*N3y + A66*N3x) - ue[15]*(B26*N3y + B66*N3x) + ue[16]*(B16*N3x + B66*N3y) + ue[1]*(A26*N1y + A66*N1x) - ue[3]*(B26*N1y + B66*N1x) + ue[4]*(B16*N1x + B66*N1y) + ue[6]*(A16*N2x + A66*N2y) + ue[7]*(A26*N2y + A66*N2x) - ue[9]*(B26*N2y + B66*N2x)
+
+            # NOTE the Allman enrichment populates the drilling columns of
+            #      the membrane operator, so the membrane stress resultants
+            #      above, generated for the unenriched field, need the
+            #      contribution of the edge modes. Without it KG would not
+            #      be part of the exact Jacobian of the internal forces, see
+            #      update_KCNL
+            if self.drilling_model == 0:
+                Nxv[0] = N1x
+                Nxv[1] = N2x
+                Nxv[2] = N3x
+                Nyv[0] = N1y
+                Nyv[1] = N2y
+                Nyv[2] = N3y
+                allman_enrichment(Nxv, Nyv, &self.probe.xe[0], 1./3., 1./3.,
+                                  1./3., denr)
+                dexx = 0.
+                deyy = 0.
+                dgxy = 0.
+                for qi in range(3):
+                    dexx += denr[qi]*ue[6*qi + 5]
+                    deyy += denr[9 + qi]*ue[6*qi + 5]
+                    dgxy += (denr[3 + qi] + denr[6 + qi])*ue[6*qi + 5]
+                Nxx += A11*dexx + A12*deyy + A16*dgxy
+                Nyy += A12*dexx + A22*deyy + A26*dgxy
+                Nxy += A16*dexx + A26*deyy + A66*dgxy
 
             k = self.init_k_KG
             KGv[k] += r13**2*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
