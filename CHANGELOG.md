@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.10.0 (2026-09-23)
+## 0.10.0 (2026-09-25)
 
 ### New element: `Tria3DSG`, a triangle without a locking parameter
 
@@ -176,6 +176,50 @@ The tests that previously inlined the preconditioning and the `eigsh` call now
 use this module, which is the bulk of the diff in the test suite. Covered by
 `tests/test_solver.py`.
 
+### Performance: Cython directives and compiler flags
+
+- Every module is compiled with `initializedcheck=False`. Cython no longer
+  checks, at each memoryview access inside the element methods, that the
+  memoryview has been assigned. Reading an unassigned memoryview attribute
+  from Python still raises `AttributeError`, because the property getters
+  keep their own check. An unassigned memoryview reached inside an element
+  method would now crash instead of raising, which the probes rule out by
+  allocating their arrays in `__cinit__`.
+- `setup.py` passed `linetrace=True` to every build. Without `CYTHON_TRACE`
+  the line tracing itself stays compiled out, but the directive also
+  generates profiling hooks that are active by default and run at every call
+  of a Python-visible method. The directive is now set only for a coverage
+  build, that is when `CYTHON_TRACE_NOGIL` is in the environment.
+- Compiler flags: `-O3` and `-fno-math-errno` for GCC and Clang, and an
+  explicit `/O2` for MSVC, which setuptools already combines with `/GL`. The
+  OpenMP flags are removed, since no module uses `prange`. Flags that change
+  floating-point results, such as `/fp:fast` or `-ffast-math`, and flags that
+  tie a wheel to the CPU that built it, such as `-march=native`, are
+  deliberately not used.
+
+Measured on an AMD x86-64 laptop CPU (family 25, model 117), Windows 11,
+Python 3.13, NumPy 2.4, Cython 3.2, MSVC, with the process pinned to one core
+at high priority, minimum of 3 interleaved runs of 5 repetitions each. The
+GCC and Clang flags were not measured. Cost per element of the element methods
+called from Python (`benchmarks/bench_build_flags.py`), in microseconds, for a
+flat 40x40 mesh (1600 quadrilaterals or 3200 triangles) and an 8-ply CFRP
+laminate, including the Python overhead of the element loop. `fint` is
+`update_fint(..., nonlinear=1)`, and each cell gives the cost before and after
+this change, with the relative difference:
+
+| Element | KC0 | M | KG | fint | KCNL |
+| - | - | - | - | - | - |
+| Quad4 | 96.09 / 73.76 (-23%) | 5.08 / 1.81 (-64%) | 1.87 / 1.70 (-9%) | 57.35 / 54.84 (-4%) | 47.41 / 27.34 (-42%) |
+| Quad4R | 3.09 / 2.98 (-4%) | 5.08 / 1.81 (-64%) | 1.93 / 1.73 (-10%) | 2.53 / 2.38 (-6%) | 47.77 / 26.31 (-45%) |
+| Tria3R | 5.31 / 5.12 (-4%) | 1.46 / 1.42 (-2%) | 1.32 / 1.26 (-5%) | 4.09 / 3.99 (-2%) | 24.47 / 12.97 (-47%) |
+| Tria3DSG | 24.13 / 13.02 (-46%) | 10.07 / 10.06 (-0%) | 1.59 / 1.50 (-6%) | 2.65 / 2.37 (-10%) | 25.11 / 13.07 (-48%) |
+
+The gain is largest where a method loops over memoryviews: `update_KCNL` of
+every element, and `update_KC0` of `Tria3DSG` and `Quad4`. The consistent mass
+matrix of `Quad4` and `Quad4R` is almost three times faster. Methods whose
+cost is dominated by generated straight-line expressions change by 2 to 10%.
+Results are unchanged: the whole test suite passes with the new build.
+
 ### Documentation
 
 - `pyfe3d.tria3r`: the `alpha_shear_locking` documentation now states that no
@@ -223,7 +267,23 @@ New files, all citing their source:
   selectively underintegrated element, recorded as a documented property.
 - `tests/test_quad4r_hourglass_control.py`: verification of the hourglass
   control of `Quad4R`.
-- `tests/test_solver.py`: the new solver module.
+- `tests/test_solver.py`: the new solver module, including the fallback
+  paths of the shift estimate and of the positive definiteness test.
+
+Extended:
+
+- `tests/test_tangent_consistency.py`: `fint == KC0 @ u` and the finite
+  difference Jacobian are also checked for an explicit `gamma_rz` and for the
+  `K6ROT` penalty on all four shells, since the drilling stiffness is computed
+  in both `update_KC0` and `update_probe_finte`. `gamma_rz = A66` must
+  reproduce the default exactly and any other value must change the result.
+- `tests/test_tria3dsg.py`: a clockwise node ordering gives the same element,
+  and the lumped mass matrix puts a third of the mass on each node.
+
+Line coverage is 99.99%. The only lines not covered are the platform
+dependent choice of `INT` and three negative-area branches of `Tria3DSG`,
+which the element frame makes unreachable and which are marked
+`# pragma: no cover`.
 
 ### Packaging
 
@@ -236,6 +296,14 @@ New files, all citing their source:
 - `Quad4`, `Quad4R` and `Tria3R` have new C attributes (`drilling_model`,
   `gamma_rz`), so packages that `cimport pyfe3d` must be recompiled against
   this version.
+- Coverage build (`CYTHON_TRACE_NOGIL` in the environment, or
+  `--define CYTHON_TRACE_NOGIL` on the command line): legacy tracing is
+  requested with `CYTHON_USE_SYS_MONITORING=0`, since from Python 3.12 Cython
+  traces through `sys.monitoring`, which the `Cython.Coverage` plugin does not
+  follow, and the report then silently lists no `.pyx` file. `/Od` replaces
+  `/O0`, which MSVC ignores. Switching between a coverage build and a normal
+  one now regenerates the C++ files, which cythonize would otherwise reuse
+  from the other mode.
 
 ## 0.9.0 (2026-09-17)
 
