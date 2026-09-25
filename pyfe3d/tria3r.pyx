@@ -3,6 +3,7 @@
 #cython: cdivision=True
 #cython: nonecheck=False
 #cython: overflowcheck=False
+#cython: initializedcheck=False
 #cython: embedsignature=True
 #cython: infer_types=False
 r"""

@@ -3,6 +3,7 @@
 #cython: cdivision=True
 #cython: nonecheck=False
 #cython: overflowcheck=False
+#cython: initializedcheck=False
 #cython: embedsignature=True
 #cython: infer_types=False
 r"""
@@ -686,7 +687,7 @@ cdef class Tria3DSG:
             y3 = self.probe.xe[7]
             self.area = 0.5*((x2 - x1)*(y3 - y1) - (x3 - x1)*(y2 - y1))
             if self.area < 0.:
-                self.area = -self.area
+                self.area = -self.area # pragma: no cover
 
     cdef double _update_probe_BL_G(Tria3DSG self) noexcept nogil:
         r"""Update every strain operator of the probe, in element coordinates
@@ -754,7 +755,7 @@ cdef class Tria3DSG:
         detJ = x1*(y2 - y3) + x2*(y3 - y1) + x3*(y1 - y2)
         area = 0.5*detJ
         if area < 0.:
-            area = -area
+            area = -area # pragma: no cover
         self.area = area
 
         N1x = (y2 - y3)/detJ
@@ -1729,7 +1730,7 @@ cdef class Tria3DSG:
                      + self.probe.xe[3]*(self.probe.xe[7] - self.probe.xe[1])
                      + self.probe.xe[6]*(self.probe.xe[1] - self.probe.xe[4]))
             if A < 0.:
-                A = -A
+                A = -A # pragma: no cover
             self.area = A
 
             for i in range(324):
