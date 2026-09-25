@@ -319,6 +319,82 @@ def test_node_numbering_invariance():
         assert worst < 1e-13, (label, worst)
 
 
+def test_clockwise_node_ordering():
+    r"""A clockwise triangle is the same element seen from the other side
+
+    The cyclic relabellings above keep the orientation. Swapping two nodes
+    reverses it, which flips the element normal, and with it the element
+    frame, so the triangle is counterclockwise again in element coordinates
+    but every in-plane and rotational degree-of-freedom is now mirrored. For
+    an isotropic plate nothing physical depends on the side the element is
+    seen from, so the global matrices, the nonlinear internal forces and both
+    mass matrices must be the ones of the counterclockwise ordering, after
+    the degrees-of-freedom are permuted. The lumped mass matrix must also put
+    a third of the element mass and of the rotary inertia on each node.
+
+    """
+    rho = 7830.
+    prop = isotropic_plate(thickness=0.01, E=E_ISO, nu=NU_ISO, rho=rho)
+    area = 0.5*abs(np.linalg.det(np.column_stack((IRREGULAR[:, :2],
+                                                  np.ones(3)))))
+    rng = np.random.default_rng(13)
+    u_ref = 0.01*rng.standard_normal(DOF*NUM_NODES_TRI)
+    n = DOF*NUM_NODES_TRI
+
+    def matrices(order):
+        el, _, data, _ = single_element(Tria3DSG, Tria3DSGData, Tria3DSGProbe,
+                                        IRREGULAR[order], 0.01, prop=prop)
+        el.init_k_M = 0
+        el.update_area()
+        assert np.isclose(el.area, area, rtol=1e-14), (order, el.area, area)
+        idx = np.concatenate([np.arange(DOF) + DOF*p for p in order])
+        u = u_ref[idx]
+        out = {}
+        out['KC0'] = element_matrix(el, data, prop, u, 'KC0')
+        out['KG'] = element_matrix(el, data, prop, u, 'KG')
+        out['KCNL'] = element_matrix(el, data, prop, u, 'KCNL')
+        fint = np.zeros(n)
+        el.update_fint(fint, prop, nonlinear=1)
+        out['fint'] = fint
+        for mtype in (0, 2):
+            r = np.zeros(data.M_SPARSE_SIZE, dtype=INT)
+            c = np.zeros(data.M_SPARSE_SIZE, dtype=INT)
+            v = np.zeros(data.M_SPARSE_SIZE, dtype=DOUBLE)
+            el.update_M(r, c, v, prop, mtype=mtype)
+            assert np.isclose(el.area, area, rtol=1e-14)
+            out['M%d' % mtype] = coo_matrix((v, (r, c)),
+                                            shape=(n, n)).toarray()
+        # NOTE back to the numbering of the counterclockwise ordering, where
+        #      node order[k] of the reference sits at local index k
+        inv = np.argsort(idx)
+        for key, value in out.items():
+            out[key] = value[inv] if value.ndim == 1 else value[np.ix_(inv,
+                                                                       inv)]
+        return out
+
+    ccw = matrices([0, 1, 2])
+    for order in ([0, 2, 1], [2, 1, 0]):
+        cw = matrices(order)
+        for key in ccw:
+            err = np.abs(cw[key] - ccw[key]).max()/np.abs(ccw[key]).max()
+            print('%-5s order %s relative difference %.3e' % (key, order, err))
+            assert err < 1e-12, (key, order, err)
+
+    mass = prop.intrho*area
+    M2 = ccw['M2']
+    # NOTE diagonal up to the round-off of the rotation to global coordinates
+    assert np.abs(M2 - np.diag(np.diag(M2))).max() < 1e-14*np.abs(M2).max()
+    for dof in range(3):
+        assert np.allclose(np.diag(M2)[dof::DOF], mass/3, rtol=1e-14)
+    for dof in range(3, 5):
+        assert np.allclose(np.diag(M2)[dof::DOF], prop.intrhoz2*area/3,
+                           rtol=1e-14)
+    # NOTE same total mass for the consistent matrix
+    for dof in range(3):
+        assert np.isclose(ccw['M0'][dof::DOF, dof::DOF].sum(), mass,
+                          rtol=1e-14)
+
+
 def plate_point_load(cls, Data, Probe, n, h, triangles=True):
     r"""Central deflection of a simply supported square plate, point load
 
@@ -1170,6 +1246,7 @@ if __name__ == '__main__':
     test_kirchhoff_states_produce_no_parasitic_shear()
     test_membrane_constant_strain_patch_test()
     test_node_numbering_invariance()
+    test_clockwise_node_ordering()
     test_converges_where_tria3r_converges_to_the_wrong_answer()
     test_nonlinear_internal_forces_of_an_imposed_slope()
     test_transverse_shear_stays_out_of_the_nonlinear_terms()

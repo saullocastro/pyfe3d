@@ -23,7 +23,7 @@ sys.path.append('..')
 import numpy as np
 from scipy.sparse import coo_matrix, diags, csr_matrix
 from scipy.sparse.linalg import eigsh
-from scipy.linalg import eigh
+from scipy.linalg import eigh, hilbert
 
 from pyfe3d.shellprop_utils import isotropic_plate
 from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
@@ -141,6 +141,20 @@ def test_estimate_cayley_sigma_fallback():
     assert estimate_cayley_sigma((-diags(np.ones(n))).tocsc(), KG) == 1.
 
 
+def test_estimate_cayley_sigma_degenerate_inputs():
+    r"""The other two exits of the power iteration: a null `[K_G]` makes the
+    ratio of norms vanish, and a factorization too inaccurate to trust is
+    detected by the residual of the first solve"""
+    n = 10
+    K = diags(np.arange(1., n + 1.)).tocsc()
+    assert estimate_cayley_sigma(K, csr_matrix((n, n))) == 1.
+    # NOTE the Hilbert matrix is positive definite but its condition number
+    #      of about 1e18 leaves the solution without a single correct digit
+    Kh = csr_matrix(hilbert(14))
+    KG = -diags(np.ones(14)).tocsr()
+    assert estimate_cayley_sigma(Kh, KG) == 1.
+
+
 def test_estimate_cayley_sigma_exceeds_the_critical_eigenvalue():
     r"""The shift must be larger than `|\mu|` of the critical eigenvalues,
     which is the whole point of estimating it"""
@@ -175,6 +189,11 @@ def test_check_eigenpairs_detects_a_missing_multiplier():
     error = check_eigenpairs(K, KG, np.array([1.]), eye[:, 2:3])
     print('error =', error)
     assert error is not None and 'residual' in error
+    # NOTE nothing to verify when every multiplier is infinite, as for the
+    #      eigenvalues mu = 0 of the degrees-of-freedom where KG vanishes
+    error = check_eigenpairs(K, KG, np.array([np.inf, -np.inf]), eye[:, :2])
+    print('error =', error)
+    assert error is not None and 'no finite' in error
 
 
 def test_is_positive_definite():
@@ -184,6 +203,10 @@ def test_is_positive_definite():
         diags(np.concatenate(([-1.], np.ones(n-1)))).tocsc())
     assert not is_positive_definite(
         diags(np.concatenate(([0.], np.ones(n-1)))).tocsc())
+    # NOTE nonsingular and indefinite, with a zero pivot that can only be
+    #      eliminated by a row interchange
+    assert not is_positive_definite(csr_matrix(np.array([[0., 1.],
+                                                         [1., 0.]])))
 
 
 def test_linear_buckling_plate():
@@ -239,6 +262,12 @@ def test_natural_frequency_plate():
     assert np.isclose(wmn, omegan[0], rtol=0.05)
     assert np.all(np.diff(omegan) >= -1e-9)
 
+    # NOTE same frequencies without the scaling
+    omegan_raw, _ = natural_frequency(KC0uu, Muu, num_eigvalues=4,
+                                      precondition=False)
+    print('preconditioned', omegan[:3], 'raw', omegan_raw[:3])
+    assert np.allclose(omegan, omegan_raw, rtol=1e-6)
+
 
 def test_linear_buckling_raises_when_the_spectrum_is_incomplete():
     r"""``check=True`` must turn a silently wrong answer into an error
@@ -265,6 +294,7 @@ def test_linear_buckling_raises_when_the_spectrum_is_incomplete():
 if __name__ == '__main__':
     test_diagonal_preconditioner()
     test_estimate_cayley_sigma_fallback()
+    test_estimate_cayley_sigma_degenerate_inputs()
     test_estimate_cayley_sigma_exceeds_the_critical_eigenvalue()
     test_check_eigenpairs_detects_a_missing_multiplier()
     test_is_positive_definite()
