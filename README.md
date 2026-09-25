@@ -77,7 +77,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the details of each version.
 
 | Main versions | Changes |
 | - | - |
-| 0.10.0 | New Tria3DSG element with discrete shear gap transverse shear, the recommended triangle; physics-based drilling stiffness (Allman, Hughes-Brezzi) as the default, with the K6ROT penalty kept through `drilling_model`; fixed lost K6ROT coefficient; new `pyfe3d.solver` module for linear buckling and natural frequencies. |
+| 0.10.0 | New Tria3DSG element with discrete shear gap transverse shear, the recommended triangle; physics-based drilling stiffness (Allman, Hughes-Brezzi) as the default, with the K6ROT penalty kept through `drilling_model`; fixed lost K6ROT coefficient; new `pyfe3d.solver` module for linear buckling and natural frequencies; speedup with Cython and compiler flags. |
 | 0.9.0 | Shear correction factors as per Rohwer and Vlachoutsis. |
 | 0.8.0 | KCNL matrix for all elements, with more accurate nonlinear analyses; fixed KC0 and KG for beams; fixed KC0 for Tria3R. |
 | 0.7.0 | Drilling stiffness re-coupled with in-plane rotation using K6ROT; fixed drilling stiffness integration; restored missing `pid` attribute. |
