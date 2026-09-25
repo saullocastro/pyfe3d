@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 
 
@@ -8,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r) &#8212; pyfe3d 0.9.0 documentation</title>
+    <title>Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r) &#8212; pyfe3d 0.10.0 documentation</title>
   
   
   
@@ -27,18 +26,18 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=cb8930eaaf36d9849b67" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=cb8930eaaf36d9849b67"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
 
-    <script src="_static/documentation_options.js?v=39bb1c6d"></script>
+    <script src="_static/documentation_options.js?v=82662543"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -98,7 +97,7 @@
   
     <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
 <div class="bd-header__inner bd-page-width">
-  <button class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
     <span class="fa-solid fa-bars"></span>
   </button>
   
@@ -118,7 +117,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.9.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.10.0 documentation</p>
   
 </a></div>
     
@@ -177,7 +176,7 @@
         <div class="navbar-item navbar-persistent--container">
           
 
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
  <i class="fa-solid fa-magnifying-glass"></i>
  <span class="search-button__default-text">Search</span>
  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
@@ -188,15 +187,15 @@
         <div class="navbar-item">
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
     <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
     <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
     <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
   </ul>
 </div></div>
       
@@ -207,7 +206,7 @@
   
     <div class="navbar-persistent--mobile">
 
-<button class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
  <i class="fa-solid fa-magnifying-glass"></i>
  <span class="search-button__default-text">Search</span>
  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
@@ -216,7 +215,7 @@
   
 
   
-    <button class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
       <span class="fa-solid fa-outdent"></span>
     </button>
   
@@ -293,15 +292,15 @@
           <div class="navbar-item">
 
 <div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
-  <button class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
     <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
     <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
     <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
   </button>
   <ul class="dropdown-menu dropdown-menu-end">
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
-    <li><button class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
   </ul>
 </div></div>
         
@@ -310,7 +309,7 @@
   </div>
   
     <div class="sidebar-primary-items__start sidebar-primary__section">
-        <div class="sidebar-primary-item pst-sidebar-collapse"><button id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
   <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
     <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
   </svg>
@@ -386,12 +385,91 @@ such that any of the DOF gradients can be constant over the element when the
 element is rectangular.</p>
 <p>In the reduced integration scheme used, a single point at the centroid
 (<span class="math notranslate nohighlight">\(\xi=\eta=0\)</span>) and weight <span class="math notranslate nohighlight">\(w_{ij}=4\)</span>, preventing shear locking. 
-The hourglass control is used according to Brockman 1987:</p>
+The hourglass control is used according to Brockman 1987, with the
+orthogonalised hourglass operator of his Eq. (14), which he quotes from
+Belytschko and Tsay 1983:</p>
 <blockquote>
 <div><p>Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
 Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
 <a class="reference external" href="https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208">https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208</a></p>
+<p>Belytschko, T., and Tsay, C. S., 1983, “A stabilization procedure for
+the quadrilateral plate element with one-point quadrature,”
+International Journal for Numerical Methods in Engineering, 19(3),
+pp. 405-419. <a class="reference external" href="https://doi.org/10.1002/nme.1620190308">https://doi.org/10.1002/nme.1620190308</a></p>
 </div></blockquote>
+<section id="dimensional-homogeneity-of-the-hourglass-stiffnesses">
+<h2>Dimensional homogeneity of the hourglass stiffnesses<a class="headerlink" href="#dimensional-homogeneity-of-the-hourglass-stiffnesses" title="Link to this heading">#</a></h2>
+<p>The generalized stiffnesses of Brockman’s Eqs. (16a) and (16b),</p>
+<div class="math notranslate nohighlight">
+\[E^{(h)}_u = E^{(h)}_v = \frac{0.10 E t}{1 + 1/A}
+\qquad
+E^{(h)}_w = E^{(h)}_{\theta_x} = E^{(h)}_{\theta_y}
+          = \frac{0.10 E t^3}{1 + 1/A}\]</div>
+<p>are not dimensionally homogeneous, <span class="math notranslate nohighlight">\(1/A\)</span> being an inverse area, so the
+artificial stiffness depends on the unit of length the model is written in.
+The hourglass term enters the element matrix as</p>
+<div class="math notranslate nohighlight">
+\[K_{ij} = A E^{(h)} \gamma_i \gamma_j\]</div>
+<p>with <span class="math notranslate nohighlight">\(\gamma = \partial^2 N/\partial x \partial y\)</span> evaluated at the
+centroid, of dimension <span class="math notranslate nohighlight">\(1/L^2\)</span>. The hourglass amplitude of a translation is
+<span class="math notranslate nohighlight">\(\gamma^T u\)</span>, of dimension <span class="math notranslate nohighlight">\(1/L\)</span>, and of a rotation is <span class="math notranslate nohighlight">\(\gamma^T \theta\)</span>, of
+dimension <span class="math notranslate nohighlight">\(1/L^2\)</span>. Requiring <span class="math notranslate nohighlight">\(K_{ij}\)</span> to be a force per unit displacement
+for the translations and a moment per unit rotation for the rotations gives</p>
+<div class="math notranslate nohighlight">
+\[[E^{(h)}] = F L \quad \text{for } u, v, w
+\qquad
+[E^{(h)}] = F L^3 \quad \text{for } \theta_x, \theta_y\]</div>
+<p>Since <span class="math notranslate nohighlight">\(1/(1 + 1/A) \rightarrow A\)</span> for <span class="math notranslate nohighlight">\(A \ll 1\)</span> and <span class="math notranslate nohighlight">\(\rightarrow 1\)</span> for
+<span class="math notranslate nohighlight">\(A \gg 1\)</span>, Brockman’s factor supplies the area that Eq. (16a) is missing
+only in a unit of length that makes the element areas small, and stops
+supplying it in a unit that makes them large. The switch happens at
+<span class="math notranslate nohighlight">\(A = 1\)</span> in whatever unit is used. He introduces the factor knowingly, as
+“motivated by locking problems observed in elements with extremely small
+dimensions”, and reports good behaviour “over a range of six orders of
+magnitude in the planform dimension”.</p>
+<p>This element replaces the factor by the area itself wherever doing so costs
+nothing, which is four of the five coefficients:</p>
+<div class="math notranslate nohighlight">
+\[E^{(h)}_u = 0.10 E_{1eq} t A
+\qquad
+E^{(h)}_v = 0.10 E_{2eq} t A\]</div>
+<div class="math notranslate nohighlight">
+\[E^{(h)}_{\theta_x} = 0.10 E_{2eq} t^3 A
+\qquad
+E^{(h)}_{\theta_y} = 0.10 E_{1eq} t^3 A\]</div>
+<p>Each of these scales under a change of length unit exactly as the physical
+stiffness it stabilises, <span class="math notranslate nohighlight">\(Et\)</span> for the in-plane translations and <span class="math notranslate nohighlight">\(Et^3\)</span> for
+the rotations, so the ratio of artificial to physical stiffness is the same
+number in every unit. In the small-area limit they coincide with
+Eqs. (16a) and (16b), so no benchmark of this element moves: the change is
+a reinterpretation of Brockman’s factor as the area it tends to, not a
+different magnitude of stabilisation. Cook’s in-plane bending problem,
+whose response legitimately contains hourglass components, is reproduced to
+twelve significant figures over nine orders of magnitude of length unit,
+where before it drifted at the metre and collapsed at the kilometre.</p>
+<p>The transverse coefficient <span class="math notranslate nohighlight">\(E^{(h)}_w\)</span> keeps Brockman’s factor, and this is
+a deliberate limitation rather than an oversight. The hourglass operator
+cannot distinguish the spurious pattern <span class="math notranslate nohighlight">\(w = xy\)</span> with
+<span class="math notranslate nohighlight">\(\theta_x = \theta_y = 0\)</span> from a legitimate twist curvature, since both
+give <span class="math notranslate nohighlight">\(\gamma^T w = \partial^2 w/\partial x \partial y\)</span>. The stabilisation
+therefore also stiffens real twist, by the ratio
+<span class="math notranslate nohighlight">\(3 E^{(h)}_w/(E t^3)\)</span>, and the amount that is acceptable is a property of
+the problem rather than of the element. Measured on this element’s own
+benchmarks, the thin plates want a coefficient near <span class="math notranslate nohighlight">\(2 \times 10^{-4}\)</span> of
+<span class="math notranslate nohighlight">\(E t^3\)</span>, above which their buckling loads stiffen past their tolerances,
+while the one-element-wide torsion strip of MacNeal and Harder (1985), for
+which the twist <em>is</em> the hourglass pattern, wants near <span class="math notranslate nohighlight">\(2 \times 10^{-2}\)</span>,
+below which it becomes several times too flexible. Those are two orders of
+magnitude apart and no single dimensionless constant serves both.
+Brockman’s factor does serve both, because it grows with the element area,
+which in SI units happens to correlate with which of the two regimes a
+given problem is in.</p>
+<p>So the residual unit dependence of this element’s hourglass control is
+confined to <span class="math notranslate nohighlight">\(E^{(h)}_w\)</span>, it is documented, and it is measured in
+<code class="docutils literal notranslate"><span class="pre">test_quad4r_hourglass_control.py</span></code>. Removing it properly needs an
+operator that separates the spurious transverse pattern from genuine twist,
+which is what an assumed-strain formulation such as MITC4 provides, rather
+than a better choice of coefficient.</p>
 <p>All stiffness terms, besides drilling, are integrated using the reduced integration
 scheme for the <a class="reference internal" href="#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a> element, making it very efficient concerning 
 the time needed to calculate the internal forces and stiffness matrices, in comparison
@@ -405,13 +483,65 @@ direction is defined, they are brought to the element coordinate system with
 equilibrium-based stiffness of Rohwer (1988) with the plies rotated to the
 element coordinate system, such that the assumed cylindrical bending states
 are posed along the element axes.</p>
-<p>The drilling stiffness is calculated following the approach adopted in
-MSC Nastran and Autodesk Nastran, using a penalty-based method. Because
-the stiffness is only evaluated at the element centroid, this method provides
-a non-physical drilling stiffness with the objective of removing the singularity
-by creating an artificial stiffness between the drilling rotation degree-of-freedom
-of each node with the in-plane rotational strain evaluated at the centroid.
-The penalty energy is defined per element as:</p>
+<p>Two drilling models are available, selected with the <code class="docutils literal notranslate"><span class="pre">drilling_model</span></code>
+attribute, whose default is <code class="docutils literal notranslate"><span class="pre">0</span></code>:</p>
+<blockquote>
+<div><p>Hughes, T. J. R., and Brezzi, F., 1989, “On drilling degrees of
+freedom,” Computer Methods in Applied Mechanics and Engineering, 72(1),
+pp. 105-121. <a class="reference external" href="https://doi.org/10.1016/0045-7825(89)90124-2">https://doi.org/10.1016/0045-7825(89)90124-2</a></p>
+<p>Allman, D. J., 1984, “A compatible triangular element including vertex
+rotations for plane elasticity analysis,” Computers &amp; Structures,
+19(1-2), pp. 1-8. <a class="reference external" href="https://doi.org/10.1016/0045-7949(84)90197-4">https://doi.org/10.1016/0045-7949(84)90197-4</a></p>
+</div></blockquote>
+<p>Both use the same operator, the regularised one of Hughes and
+Brezzi (1989) that ties the drilling rotation <span class="math notranslate nohighlight">\(r_z\)</span> to the in-plane rotation
+<span class="math notranslate nohighlight">\(\theta_z = (v_{,x} - u_{,y})/2\)</span>, integrated with two points per direction,
+and they differ only in the coefficient <span class="math notranslate nohighlight">\(\gamma_{r_z}\)</span> that multiplies it:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">drilling_model</span> <span class="pre">=</span> <span class="pre">0</span></code>, the default, uses the physics-based value
+<span class="math notranslate nohighlight">\(\gamma_{r_z} = A_{66}\)</span> identified by Hughes and Brezzi, which is a
+modulus of the laminate and not an adjustable parameter;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">drilling_model</span> <span class="pre">=</span> <span class="pre">1</span></code> uses the fictitious value <span class="math notranslate nohighlight">\(\gamma_{r_z} = K6ROT
+\cdot 10^{-6} A_{66}\)</span> of MSC Nastran and Autodesk Nastran, derived below.</p></li>
+</ul>
+<p>Unlike <code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.Quad4</span></code> and <code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.Tria3R</span></code>, this element does
+<strong>not</strong> use the hierarchical edge-mode enrichment of the in-plane
+displacement field of Allman (1984) that accompanies the Hughes-Brezzi term
+in those two elements. The enrichment exists to remove the excessive
+in-plane bending stiffness of the bilinear displacement field, and the
+single-point integration of this element already removes it: on Cook’s
+membrane problem, with a reference tip displacement of 23.96,</p>
+<p>so the enrichment recovers for <code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.Quad4</span></code> what the reduced
+integration already gives here, and adding it to this element makes it less
+accurate and more computationally expensive.</p>
+<p>Integrating the enrichment consistently with the single point of the element
+was also evaluated and rejected. The enriched membrane operator sampled at
+one point supplies at most three independent rows over the twelve in-plane
+degrees-of-freedom, and a rectangle then keeps one spurious in-plane
+zero-energy mode, namely</p>
+<div class="math notranslate nohighlight">
+\[u \propto x \quad , \quad v \propto -y \quad , \quad
+r_z \propto \pmb{h} = [1, -1, 1, -1]^\top\]</div>
+<p>in which the uniform membrane strain of the <span class="math notranslate nohighlight">\(u\)</span> and <span class="math notranslate nohighlight">\(v\)</span> fields is exactly
+cancelled at the centroid by the enrichment strain of the hourglass pattern
+of <span class="math notranslate nohighlight">\(r_z\)</span>. That mode escapes every term of the element: the one-point
+membrane term because its centroidal strain vanishes, the hourglass control
+of Brockman because <span class="math notranslate nohighlight">\(u\)</span> and <span class="math notranslate nohighlight">\(v\)</span> are linear fields and carry no hourglass
+content, and the Hughes-Brezzi term because <span class="math notranslate nohighlight">\(r_z - \theta_z\)</span> vanishes not
+only at the integration points but identically over the element, so no
+quadrature of that term can reach it. Removing it would require a further
+artificial stabilisation of the drilling rotation, of the kind this element
+already uses for its other degrees-of-freedom, for a change of the Cook
+results above of less than half a per cent.</p>
+<p>Use <code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.Quad4</span></code> to use Allman’s enrichment.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">drilling_model</span> <span class="pre">=</span> <span class="pre">1</span></code> branch follows the approach adopted in MSC
+Nastran and Autodesk Nastran, using a penalty-based method. It provides a
+non-physical drilling stiffness with the objective of removing the
+singularity, by creating an artificial stiffness between the drilling
+rotation degree-of-freedom of each node and the in-plane rotational strain.
+The operator and its quadrature, two points per direction, are the same as
+for <code class="docutils literal notranslate"><span class="pre">drilling_model</span> <span class="pre">=</span> <span class="pre">0</span></code>, only the coefficient differing. The penalty
+energy is defined per element as:</p>
 <div class="math notranslate nohighlight">
 \[U_{drill} = \frac{1}{2} K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)^2 dA\]</div>
 <p>where <span class="math notranslate nohighlight">\(10^{-6}\)</span> is a scaling factor suggested by MSC Nastran’s approach (CQUAD4) to make the artificial
@@ -442,6 +572,7 @@ The approach herein presented is very similar to the one presented in Eq. 2.20 o
 Freedom,” IOSR J. Eng., 3(8), pp. 10–20.</p>
 </div></blockquote>
 </section>
+</section>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyfe3d.quad4r.</span></span><span class="sig-name descname"><span class="pre">Quad4R</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R" title="Link to this definition">#</a></dt>
@@ -469,11 +600,32 @@ below.</p>
 </dd>
 <dt><strong>area,</strong><span class="classifier">double</span></dt><dd><p>Element area.</p>
 </dd>
-<dt><strong>K6ROT,</strong><span class="classifier">double</span></dt><dd><p>Dimensionless multiplier for the drilling stiffness. 
+<dt><strong>drilling_model,</strong><span class="classifier">int</span></dt><dd><p>Selects the coefficient of the drilling stiffness, see the module
+documentation. The default is <code class="docutils literal notranslate"><span class="pre">0</span></code>, the physics-based
+<span class="math notranslate nohighlight">\(\gamma_{r_z} = A_{66}\)</span> of Hughes and Brezzi (1989); with anything
+else the fictitious penalty of MSC Nastran and Autodesk Nastran
+controlled by <code class="docutils literal notranslate"><span class="pre">K6ROT</span></code> is used instead. Both apply the same
+operator with the same quadrature, so switching between them changes
+only the magnitude of the drilling stiffness, by four orders of
+magnitude for the recommended <code class="docutils literal notranslate"><span class="pre">K6ROT</span> <span class="pre">=</span> <span class="pre">100.</span></code>.</p>
+<p>Note that this element does not implement the in-plane enrichment of
+Allman (1984) that <code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.Quad4</span></code> and <code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.Tria3R</span></code>
+apply together with the Hughes-Brezzi term, because its reduced
+integration already achieves what the enrichment achieves there, see
+the module documentation.</p>
+</dd>
+<dt><strong>K6ROT,</strong><span class="classifier">double</span></dt><dd><p>Dimensionless multiplier for the fictitious drilling stiffness, read
+only when <code class="docutils literal notranslate"><span class="pre">drilling_model</span></code> is not <code class="docutils literal notranslate"><span class="pre">0</span></code>.
 AUTODESK NASTRAN’s quick reference guide recommends <code class="docutils literal notranslate"><span class="pre">K6ROT</span> <span class="pre">=</span> <span class="pre">100.</span></code>
 for static analysis. For modal solutions, <code class="docutils literal notranslate"><span class="pre">K6ROT=1.e4</span></code> is suggested.
 MSC NASTRAN’s quick reference guide states that <code class="docutils literal notranslate"><span class="pre">K6ROT</span> <span class="pre">&gt;</span> <span class="pre">100.</span></code>
 should not be used, but this is contradicting AUTODESK NASTRAN.</p>
+</dd>
+<dt><strong>gamma_rz,</strong><span class="classifier">double</span></dt><dd><p>Coefficient <span class="math notranslate nohighlight">\(\gamma_{r_z}\)</span> of the Hughes-Brezzi drilling stiffness,
+read only when <code class="docutils literal notranslate"><span class="pre">drilling_model</span></code> is <code class="docutils literal notranslate"><span class="pre">0</span></code>. The default is a negative
+value, which means that <span class="math notranslate nohighlight">\(A_{66}\)</span> of the laminate extensional
+stiffness matrix is used, the value identified by Hughes and Brezzi
+(1989).</p>
 </dd>
 <dt><strong>r11, r12, r13, r21, r22, r23, r31, r32, r33</strong><span class="classifier">double</span></dt><dd><p>Rotation matrix from local to global coordinates.</p>
 </dd>
@@ -580,9 +732,21 @@ matrices based on the Piston theory.</p>
 </dd></dl>
 
 <dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.drilling_model">
+<span class="sig-name descname"><span class="pre">drilling_model</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.drilling_model" title="Link to this definition">#</a></dt>
+<dd><p>drilling_model: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.eid">
 <span class="sig-name descname"><span class="pre">eid</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.eid" title="Link to this definition">#</a></dt>
 <dd><p>eid: ‘int’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.gamma_rz">
+<span class="sig-name descname"><span class="pre">gamma_rz</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.gamma_rz" title="Link to this definition">#</a></dt>
+<dd><p>gamma_rz: ‘double’</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1320,7 +1484,10 @@ at the last evaluated integration point.</p>
   </div>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#dimensional-homogeneity-of-the-hourglass-stiffnesses">Dimensional homogeneity of the hourglass stiffnesses</a></li>
+</ul>
+</li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R"><code class="docutils literal notranslate"><span class="pre">Quad4R</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.K6ROT"><code class="docutils literal notranslate"><span class="pre">Quad4R.K6ROT</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.area"><code class="docutils literal notranslate"><span class="pre">Quad4R.area</span></code></a></li>
@@ -1328,7 +1495,9 @@ at the last evaluated integration point.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.c2"><code class="docutils literal notranslate"><span class="pre">Quad4R.c2</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.c3"><code class="docutils literal notranslate"><span class="pre">Quad4R.c3</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.c4"><code class="docutils literal notranslate"><span class="pre">Quad4R.c4</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.drilling_model"><code class="docutils literal notranslate"><span class="pre">Quad4R.drilling_model</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.eid"><code class="docutils literal notranslate"><span class="pre">Quad4R.eid</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.gamma_rz"><code class="docutils literal notranslate"><span class="pre">Quad4R.gamma_rz</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.init_k_CA"><code class="docutils literal notranslate"><span class="pre">Quad4R.init_k_CA</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.init_k_KA_beta"><code class="docutils literal notranslate"><span class="pre">Quad4R.init_k_KA_beta</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.init_k_KA_gamma"><code class="docutils literal notranslate"><span class="pre">Quad4R.init_k_KA_gamma</span></code></a></li>
@@ -1422,8 +1591,8 @@ at the last evaluated integration point.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=cb8930eaaf36d9849b67"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=cb8930eaaf36d9849b67"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1444,7 +1613,6 @@ at the last evaluated integration point.</p>
 
   <p class="sphinx-version">
     Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
-    <br/>
   </p>
 </div>
       
@@ -1457,7 +1625,7 @@ at the last evaluated integration point.</p>
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.21.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
 </p></div>
       
     </div>

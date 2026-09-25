@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Solvers and preconditioners (pyfe3d.solver) &#8212; pyfe3d 0.10.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+
+    <script src="_static/documentation_options.js?v=82662543"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'solver';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.10.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Linear static analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+        
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar hide-on-wide">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Linear static analysis
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Solvers and preconditioners (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="solvers-and-preconditioners-pyfe3d-solver">
+<span id="module-pyfe3d.solver"></span><h1>Solvers and preconditioners (<a class="reference internal" href="#module-pyfe3d.solver" title="pyfe3d.solver"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code></a>)<a class="headerlink" href="#solvers-and-preconditioners-pyfe3d-solver" title="Link to this heading">#</a></h1>
+<p>Helpers for the eigenvalue problems that the element matrices of this package
+are usually assembled for, namely linear buckling</p>
+<div class="math notranslate nohighlight">
+\[([K_{C_0}] + \lambda [K_G])\{u\} = \{0\}\]</div>
+<p>and natural frequency</p>
+<div class="math notranslate nohighlight">
+\[([K_{C_0}] - \omega_n^2 [M])\{u\} = \{0\}\]</div>
+<p>The reason this module exists is that neither problem is safe to hand to
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> without preparation, and the two traps are
+easy to fall into and silent when they bite:</p>
+<ol class="arabic simple">
+<li><p><strong>The matrices are badly scaled.</strong> A shell element mixes translations and
+rotations, so the diagonal of <span class="math notranslate nohighlight">\([K_{C_0}]\)</span> spans many orders of magnitude,
+and the drilling stiffness makes that worse: with the fictitious penalty
+of <code class="docutils literal notranslate"><span class="pre">K6ROT</span></code> the drilling entries are some six orders of magnitude below
+the membrane ones, and a condition number of <span class="math notranslate nohighlight">\(10^{14}\)</span> is easy to reach.
+<a class="reference internal" href="#pyfe3d.solver.diagonal_preconditioner" title="pyfe3d.solver.diagonal_preconditioner"><code class="xref py py-func docutils literal notranslate"><span class="pre">diagonal_preconditioner()</span></code></a> equilibrates the diagonal, which does not
+change the eigenvalues at all and usually decides whether the iterative
+solver converges.</p></li>
+<li><p><strong>The shift of the Cayley mode has to be chosen, not guessed.</strong> With
+<code class="docutils literal notranslate"><span class="pre">eigsh(A=KG,</span> <span class="pre">M=K,</span> <span class="pre">sigma=sigma,</span> <span class="pre">mode='cayley',</span> <span class="pre">which='SM')</span></code> the returned
+eigenvalues are the ones with the smallest
+<span class="math notranslate nohighlight">\(|(\mu + \sigma)/(\mu - \sigma)|\)</span>, which are the most negative <span class="math notranslate nohighlight">\(\mu\)</span>, and
+therefore the lowest positive load multipliers <span class="math notranslate nohighlight">\(\lambda = -1/\mu\)</span>, <strong>only
+while</strong> <span class="math notranslate nohighlight">\(\sigma\)</span> is larger than <span class="math notranslate nohighlight">\(|\mu|\)</span> of those critical eigenvalues.
+Otherwise the eigenvalues closest to <span class="math notranslate nohighlight">\(-\sigma\)</span> come back instead, with no
+warning. <a class="reference internal" href="#pyfe3d.solver.estimate_cayley_sigma" title="pyfe3d.solver.estimate_cayley_sigma"><code class="xref py py-func docutils literal notranslate"><span class="pre">estimate_cayley_sigma()</span></code></a> estimates a safe shift from the
+matrices themselves.</p></li>
+</ol>
+<p>On top of that, <a class="reference internal" href="#pyfe3d.solver.check_eigenpairs" title="pyfe3d.solver.check_eigenpairs"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_eigenpairs()</span></code></a> verifies the result: it checks the
+residual of every eigenpair and, when <span class="math notranslate nohighlight">\([K_{C_0}]\)</span> is positive definite, that
+no load multiplier was missed below the lowest one found, by testing whether
+<span class="math notranslate nohighlight">\([K_{C_0}] + s [K_G]\)</span> is still positive definite just below it. That second
+check is the only cheap way to know that the lowest mode really is the lowest,
+and it is what distinguishes a converged answer from a plausible-looking one.</p>
+<p><a class="reference internal" href="#pyfe3d.solver.linear_buckling" title="pyfe3d.solver.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> and <a class="reference internal" href="#pyfe3d.solver.natural_frequency" title="pyfe3d.solver.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> put the three together
+and are what most users should call.</p>
+<p>The mathematics of the shift estimate and of the verification follow the
+implementation of <code class="docutils literal notranslate"><span class="pre">structsolve.linear_buckling.lb</span></code> by the same author,</p>
+<blockquote>
+<div><p><a class="github reference external" href="https://github.com/saullocastro/structsolve">saullocastro/structsolve</a></p>
+</div></blockquote>
+<p>which should be preferred when its additional solvers, such as the static
+condensation of the degrees-of-freedom where <span class="math notranslate nohighlight">\([K_G]\)</span> vanishes, are wanted.
+The versions here are self-contained so that this package keeps depending
+only on NumPy and SciPy.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>ARPACK, used by <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code>, has been
+reported to return wrong eigenpairs at random, without raising, when
+linked against Intel MKL 2024.2.0 to 2025.0.0, which includes some
+Anaconda builds of SciPy. The <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> routine of those versions
+returns wrong eigenvectors for matrices larger than 32 by 32. MKL
+2025.0.1 or newer is not affected. The verification of
+<a class="reference internal" href="#pyfe3d.solver.check_eigenpairs" title="pyfe3d.solver.check_eigenpairs"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_eigenpairs()</span></code></a> catches such a failure, which is another reason
+to keep it on.</p>
+</div>
+</section>
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.check_eigenpairs">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.</span></span><span class="sig-name descname"><span class="pre">check_eigenpairs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">K</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">KG</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eigvals</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">eigvecs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rtol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">min_rel_gap</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.0001</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.check_eigenpairs" title="Link to this definition">#</a></dt>
+<dd><p>Verify the eigenpairs of <span class="math notranslate nohighlight">\(([K_{C_0}] + \lambda [K_G])\{u\} = \{0\}\)</span></p>
+<p>Two checks are made:</p>
+<ul class="simple">
+<li><p>the relative residual
+<span class="math notranslate nohighlight">\(||K u + \lambda K_G u||/(||K u|| + |\lambda| ||K_G u||)\)</span> of every
+eigenpair with a finite <span class="math notranslate nohighlight">\(\lambda\)</span> must not exceed <code class="docutils literal notranslate"><span class="pre">rtol</span></code>;</p></li>
+<li><p>no load multiplier is missing below the lowest positive <span class="math notranslate nohighlight">\(\lambda_1\)</span>
+returned: when <span class="math notranslate nohighlight">\([K_{C_0}]\)</span> is positive definite,
+<span class="math notranslate nohighlight">\([K_{C_0}] + s [K_G]\)</span> with <span class="math notranslate nohighlight">\(s = \lambda_1 (1 - min\_rel\_gap)\)</span> must also
+be positive definite.</p></li>
+</ul>
+<p>The second check is the one that catches a solver that converged to an
+interior part of the spectrum, which is silent otherwise.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>K, KG</strong><span class="classifier">sparse_matrix</span></dt><dd><p>Constitutive and geometric stiffness matrices.</p>
+</dd>
+<dt><strong>eigvals</strong><span class="classifier">array_like</span></dt><dd><p>Load multipliers <span class="math notranslate nohighlight">\(\lambda\)</span>.</p>
+</dd>
+<dt><strong>eigvecs</strong><span class="classifier">array_like</span></dt><dd><p>Eigenvectors, one per column.</p>
+</dd>
+<dt><strong>rtol</strong><span class="classifier">float, optional</span></dt><dd><p>Largest acceptable relative residual.</p>
+</dd>
+<dt><strong>min_rel_gap</strong><span class="classifier">float, optional</span></dt><dd><p>Relative margin below <span class="math notranslate nohighlight">\(\lambda_1\)</span> at which the completeness of the
+spectrum is tested.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>error</strong><span class="classifier">str or None</span></dt><dd><p>Description of the check that failed, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when all passed.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.diagonal_preconditioner">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.</span></span><span class="sig-name descname"><span class="pre">diagonal_preconditioner</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">K</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">floor</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1e-30</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.diagonal_preconditioner" title="Link to this definition">#</a></dt>
+<dd><p>Jacobi preconditioner of a stiffness matrix</p>
+<p>Returns the diagonal matrix <span class="math notranslate nohighlight">\([D]\)</span> with</p>
+<div class="math notranslate nohighlight">
+\[D_{ii} = \frac{1}{\sqrt{max({K_{C_0}}_{ii}, floor)}}\]</div>
+<p>such that <span class="math notranslate nohighlight">\([D][K_{C_0}][D]\)</span> has a unit diagonal. For a generalized
+eigenvalue problem both matrices are transformed, <span class="math notranslate nohighlight">\([D][A][D]\)</span> and
+<span class="math notranslate nohighlight">\([D][B][D]\)</span>, which leaves the eigenvalues unchanged and maps the
+eigenvectors to <span class="math notranslate nohighlight">\([D]^{-1}\{u\}\)</span>, so the eigenvectors of the original
+problem are recovered with <code class="docutils literal notranslate"><span class="pre">u</span> <span class="pre">=</span> <span class="pre">D</span> <span class="pre">&#64;</span> <span class="pre">u_scaled</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>K</strong><span class="classifier">sparse_matrix</span></dt><dd><p>Matrix whose diagonal sets the scaling, normally the constitutive
+stiffness matrix with the boundary conditions already applied.</p>
+</dd>
+<dt><strong>floor</strong><span class="classifier">float, optional</span></dt><dd><p>Lower bound for the diagonal entries, which guards against the null
+diagonal of an unconstrained degree-of-freedom.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>D</strong><span class="classifier">sparse_matrix</span></dt><dd><p>Diagonal preconditioner.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<div class="doctest highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">D</span> <span class="o">=</span> <span class="n">diagonal_preconditioner</span><span class="p">(</span><span class="n">Kuu</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eigvals</span><span class="p">,</span> <span class="n">eigvecs</span> <span class="o">=</span> <span class="n">eigsh</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="n">D</span><span class="nd">@KGuu@D</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="n">D</span><span class="nd">@Kuu@D</span><span class="p">)</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">eigvecs</span> <span class="o">=</span> <span class="n">D</span> <span class="o">@</span> <span class="n">eigvecs</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.estimate_cayley_sigma">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.</span></span><span class="sig-name descname"><span class="pre">estimate_cayley_sigma</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">K</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">KG</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">safety</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">10.0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">max_iter</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">50</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">rel_tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.estimate_cayley_sigma" title="Link to this definition">#</a></dt>
+<dd><p>Safe shift for the Cayley mode of <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code></p>
+<p>The shift has to exceed <span class="math notranslate nohighlight">\(|\mu|\)</span> of the critical eigenvalues of
+<span class="math notranslate nohighlight">\([K_G]\{u\} = \mu [K_{C_0}]\{u\}\)</span>, see the module documentation. The
+largest <span class="math notranslate nohighlight">\(|\mu|\)</span> is estimated with power iterations on
+<span class="math notranslate nohighlight">\([K_{C_0}]^{-1}[K_G]\)</span>, whose ratio of norms in the <span class="math notranslate nohighlight">\([K_{C_0}]\)</span>-norm grows
+towards it, and the result is multiplied by <code class="docutils literal notranslate"><span class="pre">safety</span></code>.</p>
+<p>The fallback value <code class="docutils literal notranslate"><span class="pre">1.</span></code> is returned when <span class="math notranslate nohighlight">\([K_{C_0}]\)</span> is singular or not
+positive definite, or when the linear solution is inaccurate, since in
+those cases the power iteration says nothing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>K, KG</strong><span class="classifier">sparse_matrix</span></dt><dd><p>Constitutive and geometric stiffness matrices, with the boundary
+conditions already applied.</p>
+</dd>
+<dt><strong>safety</strong><span class="classifier">float, optional</span></dt><dd><p>Multiplier applied to the estimated largest <span class="math notranslate nohighlight">\(|\mu|\)</span>.</p>
+</dd>
+<dt><strong>max_iter</strong><span class="classifier">int, optional</span></dt><dd><p>Maximum number of power iterations.</p>
+</dd>
+<dt><strong>rel_tol</strong><span class="classifier">float, optional</span></dt><dd><p>Relative increment below which the power iteration is stopped.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>sigma</strong><span class="classifier">float</span></dt><dd><p>Shift to be passed to <code class="docutils literal notranslate"><span class="pre">eigsh(...,</span> <span class="pre">sigma=sigma,</span> <span class="pre">mode='cayley')</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.is_positive_definite">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.</span></span><span class="sig-name descname"><span class="pre">is_positive_definite</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.is_positive_definite" title="Link to this definition">#</a></dt>
+<dd><p>Tells whether the symmetric sparse matrix <code class="docutils literal notranslate"><span class="pre">A</span></code> is positive definite</p>
+<p><code class="docutils literal notranslate"><span class="pre">A</span></code> is factorized with a symmetric permutation and without row
+interchanges. The Gaussian elimination of a positive definite matrix
+never meets a zero or a negative pivot, and by Sylvester’s law of inertia
+a negative pivot means a negative eigenvalue.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.linear_buckling">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.</span></span><span class="sig-name descname"><span class="pre">linear_buckling</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">K</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">KG</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_eigvalues</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precondition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">check_rtol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0.001</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.linear_buckling" title="Link to this definition">#</a></dt>
+<dd><p>Linear buckling analysis with a verified spectrum</p>
+<p>Solves <span class="math notranslate nohighlight">\(([K_{C_0}] + \lambda [K_G])\{u\} = \{0\}\)</span> with
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> in Cayley mode, using the shift of
+<a class="reference internal" href="#pyfe3d.solver.estimate_cayley_sigma" title="pyfe3d.solver.estimate_cayley_sigma"><code class="xref py py-func docutils literal notranslate"><span class="pre">estimate_cayley_sigma()</span></code></a>, the preconditioner of
+<a class="reference internal" href="#pyfe3d.solver.diagonal_preconditioner" title="pyfe3d.solver.diagonal_preconditioner"><code class="xref py py-func docutils literal notranslate"><span class="pre">diagonal_preconditioner()</span></code></a> and the verification of
+<a class="reference internal" href="#pyfe3d.solver.check_eigenpairs" title="pyfe3d.solver.check_eigenpairs"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_eigenpairs()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>K, KG</strong><span class="classifier">sparse_matrix</span></dt><dd><p>Constitutive and geometric stiffness matrices, with the boundary
+conditions already applied, i.e. only the free degrees-of-freedom.</p>
+</dd>
+<dt><strong>num_eigvalues</strong><span class="classifier">int, optional</span></dt><dd><p>Number of load multipliers to compute.</p>
+</dd>
+<dt><strong>tol</strong><span class="classifier">float, optional</span></dt><dd><p>Tolerance passed to <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code>, <code class="docutils literal notranslate"><span class="pre">0</span></code> meaning
+machine precision.</p>
+</dd>
+<dt><strong>sigma</strong><span class="classifier">float or None, optional</span></dt><dd><p>Shift of the Cayley mode. With <code class="docutils literal notranslate"><span class="pre">None</span></code> it is estimated from the
+matrices, which is the recommended use.</p>
+</dd>
+<dt><strong>precondition</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to equilibrate the diagonal before solving. This does not
+change the eigenvalues.</p>
+</dd>
+<dt><strong>check</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to verify the eigenpairs and raise on failure.</p>
+</dd>
+<dt><strong>check_rtol</strong><span class="classifier">float, optional</span></dt><dd><p>Largest acceptable relative residual of the eigenpairs.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>eigvals</strong><span class="classifier">np.ndarray</span></dt><dd><p>Load multipliers <span class="math notranslate nohighlight">\(\lambda\)</span>, the positive ones first in increasing
+order, followed by the negative ones.</p>
+</dd>
+<dt><strong>eigvecs</strong><span class="classifier">np.ndarray</span></dt><dd><p>Eigenvectors, one per column, in the same order.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>RuntimeError</dt><dd><p>When <code class="docutils literal notranslate"><span class="pre">check=True</span></code> and the verification fails, which usually means
+that the mesh, and not the solver, needs attention: a spectrum with
+many nearly coincident eigenvalues, as in the buckling of a
+cylindrical shell, is the typical case.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.natural_frequency">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.</span></span><span class="sig-name descname"><span class="pre">natural_frequency</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">K</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">M</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">num_eigvalues</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">6</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">precondition</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">True</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.natural_frequency" title="Link to this definition">#</a></dt>
+<dd><p>Natural frequencies of <span class="math notranslate nohighlight">\(([K_{C_0}] - \omega_n^2 [M])\{u\} = \{0\}\)</span></p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>K, M</strong><span class="classifier">sparse_matrix</span></dt><dd><p>Constitutive stiffness and mass matrices, with the boundary
+conditions already applied.</p>
+</dd>
+<dt><strong>num_eigvalues</strong><span class="classifier">int, optional</span></dt><dd><p>Number of frequencies to compute.</p>
+</dd>
+<dt><strong>tol</strong><span class="classifier">float, optional</span></dt><dd><p>Tolerance passed to <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code>.</p>
+</dd>
+<dt><strong>precondition</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to equilibrate the diagonal of <span class="math notranslate nohighlight">\([K_{C_0}]\)</span> before solving.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>omegan</strong><span class="classifier">np.ndarray</span></dt><dd><p>Circular frequencies in rad/s, in increasing order.</p>
+</dd>
+<dt><strong>eigvecs</strong><span class="classifier">np.ndarray</span></dt><dd><p>Eigenvectors, one per column.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>A mass matrix without rotary inertia, and one without inertia associated
+with the drilling rotation, is singular, so the eigenvalues associated
+with those degrees-of-freedom are infinite. The shift-invert mode used
+here looks for the eigenvalues closest to zero and is not troubled by
+them, but a lumped mass matrix will place the massless degrees-of-freedom
+wherever the factorization puts them, so prefer a consistent mass matrix
+when the lowest frequencies matter.</p>
+</dd></dl>
+
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Solvers and preconditioners (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.check_eigenpairs"><code class="docutils literal notranslate"><span class="pre">check_eigenpairs()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.diagonal_preconditioner"><code class="docutils literal notranslate"><span class="pre">diagonal_preconditioner()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.estimate_cayley_sigma"><code class="docutils literal notranslate"><span class="pre">estimate_cayley_sigma()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.is_positive_definite"><code class="docutils literal notranslate"><span class="pre">is_positive_definite()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.linear_buckling"><code class="docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.natural_frequency"><code class="docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a></li>
+</ul>
+
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/solver.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
