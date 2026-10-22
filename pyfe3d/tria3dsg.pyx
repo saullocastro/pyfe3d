@@ -12,6 +12,14 @@ Tria3DSG - Triangular element with discrete shear gap (:mod:`pyfe3d.tria3dsg`)
 
 .. currentmodule:: pyfe3d.tria3dsg
 
+The module has three classes: :class:`.Tria3DSGData`, with the sizes of the
+sparse arrays that one element fills; :class:`.Tria3DSGProbe`, with the
+buffers in element coordinates that one or more elements share; and
+:class:`.Tria3DSG`, the element. The ``update_*`` methods of
+:class:`.Tria3DSG` write the element contributions in sparse row, column and
+value arrays, from the positions given by its ``init_k_*`` attributes, or add
+them to a global internal force vector.
+
 Three-node triangular shell element with 6 degrees-of-freedom per node, `u`,
 `v`, `w`, `r_x`, `r_y`, `r_z`, first-order shear deformation theory, and a
 transverse shear field obtained with the discrete shear gap (DSG) method:
@@ -193,6 +201,12 @@ cdef int NUM_NODES = 3
 cdef class Tria3DSGData:
     r"""Sizes needed to allocate the sparse matrices
 
+    Each attribute is the number of entries that one :class:`.Tria3DSG`
+    writes in the row, column and value arrays of the corresponding sparse
+    matrix, starting at the position given by the matching ``init_k_*``
+    attribute of the element. For ``n`` elements the arrays need ``n`` times
+    these sizes. The constructor takes no parameters.
+
     Attributes
     ----------
     KC0_SPARSE_SIZE, : int
@@ -228,40 +242,57 @@ cdef class Tria3DSGProbe:
     shared amongst many elements, the contents being updated and read on
     demand. Mind that the probe always holds the values of the last update.
 
+    The constructor takes no parameters and allocates every array filled with
+    zeros.
+
     Attributes
     ----------
     xe, : array-like
         Element-frame nodal coordinates, ``x1, y1, z1, x2, ..., z3``.
+        Dimension of length. Updated by :meth:`.Tria3DSG.update_probe_xe`.
     ue, : array-like
         Element-frame nodal displacements, 18 values, in the order `u_1,
         v_1, w_1, {r_x}_1, {r_y}_1, {r_z}_1, u_2, \ldots, {r_z}_3`.
+        Translations with dimension of length, rotations dimensionless.
+        Updated by :meth:`.Tria3DSG.update_probe_ue`.
     finte, : array-like
         Element-frame internal forces corresponding to ``ue``, 18 values,
         updated by :meth:`.Tria3DSG.update_probe_finte`.
+        Forces, and moments (force times length) for the rotations.
     KC0ve, : array-like
         The 18 by 18 element-frame constitutive stiffness matrix stored row
         by row, 324 values.
+        Updated by :meth:`.Tria3DSG.update_KC0` and
+        :meth:`.Tria3DSG.update_probe_finte`.
     KCNLve, : array-like
         The 18 by 18 element-frame nonlinear constitutive stiffness matrix
         stored row by row, see :meth:`.Tria3DSG.update_KCNL`.
     BLexx, BLeyy, BLgxy : array-like
         Rows of 18 values giving the membrane strains `\epsilon_{xx},
         \epsilon_{yy}, \gamma_{xy}`.
+        Their product with ``ue`` gives the membrane strains, dimensionless.
     BLkxx, BLkyy, BLkxy : array-like
         Rows of 18 values giving the curvatures `\kappa_{xx}, \kappa_{yy},
         \kappa_{xy}`.
+        Their product with ``ue`` gives the curvatures, with dimension of one
+        over length.
     BLgxz, BLgyz : array-like
         Rows of 18 values giving the transverse shear strains `\gamma_{xz},
         \gamma_{yz}` of the discrete shear gap, symmetrised over the three
         starting nodes.
+        Their product with ``ue`` gives the strains, dimensionless.
     BLdrilling : array-like
         Row of 18 values giving `r_z - \theta_z` of Hughes and Brezzi. Its
         `r_z` entries are the centroid values `N_i = 1/3`; the stiffness
         matrix uses the exact three-point rule instead, see
         :meth:`.Tria3DSG.update_KC0`.
+        Its product with ``ue`` is dimensionless.
     Gwx, Gwy : array-like
         Rows of 18 values giving `w_{,x}` and `w_{,y}`, used by the
         geometrically nonlinear terms.
+        Their products with ``ue`` are dimensionless. The rows above are
+        written by the methods of :class:`.Tria3DSG` that compute stiffness
+        matrices or internal forces.
 
     .. note:: Every one of these operators is constant over the triangle,
         because all three shape functions are linear, so each is formed
@@ -308,6 +339,19 @@ cdef class Tria3DSGProbe:
 cdef class Tria3DSG:
     r"""Three-node triangular shell element with a discrete shear gap
 
+    The constructor stores the probe and sets the identification numbers and
+    the positions ``c1, c2, c3`` to ``-1``, the ``init_k_*`` positions to
+    ``0``, and the rotation matrices ``r11, ..., r33`` and ``m11, m12, m21,
+    m22`` to the identity. Before computing any element matrix, the caller
+    sets ``c1, c2, c3`` and the ``init_k_*`` positions, and calls
+    :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe`.
+
+    Parameters
+    ----------
+    p : :class:`.Tria3DSGProbe`
+        Probe used by the element, stored in ``probe``. One probe can be
+        shared by many elements.
+
     Attributes
     ----------
     eid, : int
@@ -316,11 +360,16 @@ cdef class Tria3DSG:
         Property identification number.
     area, : double
         Element area.
+        Dimension of length squared. Updated by :meth:`.update_area` and by
+        the methods that compute stiffness matrices, internal forces or the
+        mass matrix.
     n1, n2, n3 : int
         Node identification numbers.
     c1, c2, c3 : int
         Position of each node's first degree-of-freedom in the global
         displacement vector.
+        The coordinates of a node are read at the positions ``c1//2``,
+        ``c2//2`` and ``c3//2`` of the coordinate array.
     init_k_KC0, init_k_KCNL, init_k_KG, init_k_M : int
         Position of this element's first entry in the sparse vectors.
     drilling_model, : int
@@ -331,9 +380,11 @@ cdef class Tria3DSG:
         the regularisation coefficient, which is what makes the sensitivity
         study recommended in the literature possible. Negative means use
         `A_{66}`.
+        Dimension of force per unit length, as ``A66``.
     K6ROT, : double
         Coefficient of the fictitious penalty, used when
         ``drilling_model != 0``.
+        Dimensionless.
     alpha_shear_locking, : double
         Optional algebraic stabilisation of the transverse shear stiffness,
         `\hat{A}_{ts} = A_{ts}/(1 + \alpha \ell^2/h^2)` with `\ell` the
@@ -405,6 +456,7 @@ cdef class Tria3DSG:
         FSDT exists to describe. Set it deliberately, per problem class, as
         for :class:`pyfe3d.tria3r.Tria3R`, and never as a constant of the
         element.
+        Dimensionless.
     m11, m12, m21, m22 : double
         In-plane rotation from the material to the element coordinate
         system, set by :meth:`.update_rotation_matrix`.
@@ -462,14 +514,24 @@ cdef class Tria3DSG:
         axis is the triangle normal, which is the same construction used by
         :class:`pyfe3d.tria3r.Tria3R`.
 
+        The attributes ``r11, ..., r33`` are updated. ``m11, m12, m21, m22``
+        are first reset to the identity and, when the material direction is
+        not the zero vector and not parallel to the element normal, set to the
+        rotation from the material direction projected onto the element to
+        the element ``x`` axis.
+
         Parameters
         ----------
         x : array-like
             Global nodal coordinates, ``x_1, y_1, z_1, ..., x_M, y_M, z_M``.
+            1-D array of size ``3*M``, dimension of length. The coordinates
+            of each node are read from the positions ``c1//2``, ``c2//2``
+            and ``c3//2``.
         xmati, xmatj, xmatk : double, optional
             Material direction in global coordinates, projected onto the
             element. Leaving it at zero means the material and element
             directions coincide.
+            Only the direction of the vector is used. Default ``0.``.
 
         """
         cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk
@@ -597,10 +659,19 @@ cdef class Tria3DSG:
     cpdef void update_probe_xe(Tria3DSG self, double [::1] x):
         r"""Update the element-frame nodal coordinates in the probe
 
+        The coordinates of the three nodes, read from ``x`` at the positions
+        ``c1//2``, ``c2//2`` and ``c3//2``, are rotated to the element
+        coordinate system with the transpose of the rotation matrix and
+        written to ``probe.xe``. :meth:`.update_rotation_matrix` must have
+        been called before. The ``area`` attribute is not updated here, see
+        :meth:`.update_area`.
+
         Parameters
         ----------
         x : array-like
             Global nodal coordinates.
+            1-D array of size ``3*M``, for ``M`` nodes, arranged as ``x_1,
+            y_1, z_1, ..., x_M, y_M, z_M``, dimension of length.
 
         """
         cdef int i, j
@@ -637,10 +708,19 @@ cdef class Tria3DSG:
     cpdef void update_probe_ue(Tria3DSG self, double [::1] u):
         r"""Update the element-frame nodal displacements in the probe
 
+        The displacements and rotations of the three nodes, read from ``u`` at
+        the positions ``c1``, ``c2`` and ``c3``, are rotated to the element
+        coordinate system with the transpose of the rotation matrix and
+        written to ``probe.ue``. :meth:`.update_rotation_matrix` must have
+        been called before.
+
         Parameters
         ----------
         u : array-like
             Global displacement vector.
+            1-D array of size ``DOF*M``, for ``M`` nodes, with the six
+            degrees-of-freedom of each node in sequence; translations with
+            dimension of length and rotations dimensionless.
 
         """
         cdef int i, j, k
@@ -676,7 +756,15 @@ cdef class Tria3DSG:
                         self.probe.ue[j*DOF + k*3 + 2] += s3[i]*u[c[j] + k*3 + i]
 
     cpdef void update_area(Tria3DSG self):
-        r"""Update the element area from the probe coordinates"""
+        r"""Update the element area from the probe coordinates
+
+        The ``area`` attribute is updated with the area of the triangle given
+        by the element coordinates ``probe.xe``, ignoring the ``z``
+        coordinates. The methods that compute stiffness matrices, internal
+        forces or the mass matrix compute the area themselves and also store
+        it in ``area``, so they do not depend on this method.
+
+        """
         cdef double x1, x2, x3, y1, y2, y3
         with nogil:
             x1 = self.probe.xe[0]
@@ -1070,12 +1158,25 @@ cdef class Tria3DSG:
         Before this method is called, :meth:`.update_probe_xe` must have
         been used to set the element-frame coordinates of the probe.
 
+        The values in global coordinates are added to ``KC0v`` at the
+        positions ``init_k_KC0`` to ``init_k_KC0 + KC0_SPARSE_SIZE - 1``. With
+        ``update_KC0v_only=0`` the global row and column indices are written
+        to ``KC0r`` and ``KC0c`` at the same positions. The rotation matrix of
+        :meth:`.update_rotation_matrix` is used. The ``area`` attribute and
+        the strain rows of the probe are updated as well.
+
         Parameters
         ----------
         KC0r, KC0c : array-like
             Row and column positions of the sparse values.
+            1-D arrays of integers (``INT``) of size at least ``init_k_KC0 +
+            KC0_SPARSE_SIZE``.
         KC0v : array-like
             Sparse values.
+            1-D array of ``DOUBLE``, same size as ``KC0r``. The values are
+            added to the existing ones, with dimension of force per unit
+            length between translations, of force between a translation and a
+            rotation, and of force times length between rotations.
         prop : :class:`pyfe3d.shellprop.ShellProp`
             Shell property.
         update_KC0v_only : int, optional
@@ -1233,6 +1334,10 @@ cdef class Tria3DSG:
         Before this method is called, :meth:`.update_probe_xe` and
         :meth:`.update_probe_ue` must have been used.
 
+        The attribute ``KC0ve`` of the probe is updated first, as in
+        :meth:`.update_KC0`, the linear internal forces being ``KC0ve``
+        times ``ue``.
+
         Parameters
         ----------
         prop : :class:`pyfe3d.shellprop.ShellProp`
@@ -1261,6 +1366,13 @@ cdef class Tria3DSG:
                            int nonlinear=0):
         r"""Update the internal force vector
 
+        The element internal forces, computed in element coordinates with
+        :meth:`.update_probe_finte`, are rotated to global coordinates and
+        added to ``fint`` at the positions of the nodes, ``c1``, ``c2`` and
+        ``c3``. Before this method is called, :meth:`.update_rotation_matrix`,
+        :meth:`.update_probe_xe` and :meth:`.update_probe_ue` must have been
+        used.
+
         Parameters
         ----------
         fint : array-like
@@ -1268,6 +1380,8 @@ cdef class Tria3DSG:
             coordinates. :meth:`.update_probe_finte` is called to obtain the
             element-frame internal forces, available afterwards as
             ``.probe.finte``.
+            1-D array of size ``DOF*M``, with forces for the translations and
+            moments (force times length) for the rotations.
         prop : :class:`pyfe3d.shellprop.ShellProp`
             Shell property.
         nonlinear : int, optional
@@ -1453,12 +1567,25 @@ cdef class Tria3DSG:
         been used with the node coordinates and :meth:`.update_probe_ue`
         with the current displacements.
 
+        The element matrix is computed in element coordinates into the probe
+        attribute ``KCNLve``, rotated to global coordinates, and its values
+        are added to ``KCNLv`` at the positions ``init_k_KCNL`` to
+        ``init_k_KCNL + KCNL_SPARSE_SIZE - 1``. With ``update_KCNLv_only=0``
+        the global row and column indices are written to ``KCNLr`` and
+        ``KCNLc`` at the same positions.
+
         Parameters
         ----------
         KCNLr, KCNLc : array-like
             Row and column positions of the sparse values.
+            1-D arrays of integers (``INT``) of size at least ``init_k_KCNL +
+            KCNL_SPARSE_SIZE``.
         KCNLv : array-like
             Sparse values.
+            1-D array of ``DOUBLE``, same size as ``KCNLr``. The values are
+            added to the existing ones, with dimension of force per unit
+            length between translations, of force between a translation and a
+            rotation, and of force times length between rotations.
         prop : :class:`pyfe3d.shellprop.ShellProp`
             Shell property.
         update_KCNLv_only : int, optional
@@ -1561,14 +1688,28 @@ cdef class Tria3DSG:
             :meth:`.update_KG` is free of this, recovering the stress from
             the element's own strains in its own frame.
 
+        The values are added to ``KGv`` at the positions ``init_k_KG`` to
+        ``init_k_KG + KG_SPARSE_SIZE - 1``. With ``update_KGv_only=0`` the
+        global row and column indices are written to ``KGr`` and ``KGc`` at
+        the same positions. Before this method is called,
+        :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe` must
+        have been used. The ``area`` attribute and the strain rows of the
+        probe are updated as well.
+
         Parameters
         ----------
         Nxx, Nyy, Nxy : double
             Membrane stress resultants in the element coordinate system.
+            Force per unit length.
         KGr, KGc : array-like
             Row and column positions of the sparse values.
+            1-D arrays of integers (``INT``) of size at least ``init_k_KG +
+            KG_SPARSE_SIZE``.
         KGv : array-like
             Sparse values.
+            1-D array of ``DOUBLE``, same size as ``KGr``. The values are
+            added to the existing ones, with dimension of force per unit
+            length.
         update_KGv_only : int, optional
             ``0``, the default, also fills ``KGr`` and ``KGc``.
 
@@ -1641,12 +1782,24 @@ cdef class Tria3DSG:
         analysis needs. The stress of the von Karman terms of the membrane
         strain is carried by :meth:`.update_KCNL` instead.
 
+        The values are added to ``KGv`` at the positions ``init_k_KG`` to
+        ``init_k_KG + KG_SPARSE_SIZE - 1``. With ``update_KGv_only=0`` the
+        global row and column indices are written to ``KGr`` and ``KGc`` at
+        the same positions. Before this method is called,
+        :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe` must
+        also have been used.
+
         Parameters
         ----------
         KGr, KGc : array-like
             Row and column positions of the sparse values.
+            1-D arrays of integers (``INT``) of size at least ``init_k_KG +
+            KG_SPARSE_SIZE``.
         KGv : array-like
             Sparse values.
+            1-D array of ``DOUBLE``, same size as ``KGr``. The values are
+            added to the existing ones, with dimension of force per unit
+            length.
         prop : :class:`pyfe3d.shellprop.ShellProp`
             Shell property.
         update_KGv_only : int, optional
@@ -1700,19 +1853,37 @@ cdef class Tria3DSG:
                         ):
         r"""Update the sparse vectors of the mass matrix
 
+        The element matrix is computed from ``intrho`` and ``intrhoz2`` of
+        ``prop`` and from the area of the element coordinates ``probe.xe``,
+        which is also stored in ``area``; ``intrhoz2`` enters only the
+        rotations ``r_x`` and ``r_y``, and ``intrhoz`` is not used. The matrix
+        is rotated to global coordinates and its values are added to ``Mv`` at
+        the positions ``init_k_M`` to ``init_k_M + M_SPARSE_SIZE - 1``; the
+        global row and column indices are always written to ``Mr`` and ``Mc``
+        at the same positions. Before this method is called,
+        :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe` must have
+        been used.
+
         Parameters
         ----------
         Mr, Mc : array-like
             Row and column positions of the sparse values.
+            1-D arrays of integers (``INT``) of size at least ``init_k_M +
+            M_SPARSE_SIZE``.
         Mv : array-like
             Sparse values.
+            1-D array of ``DOUBLE``, same size as ``Mr``. The values are added
+            to the existing ones, with dimension of mass between translations
+            and of mass times length squared between rotations.
         prop : :class:`pyfe3d.shellprop.ShellProp`
             Shell property.
+            ``intrho`` and ``intrhoz2`` are read from it.
         mtype : int, optional
             ``0`` for the consistent mass matrix, for which
             `\int N_i N_j dA` is `A/6` when `i = j` and `A/12` otherwise,
             and ``2`` for the lumped one, which puts `A/3` on each node. Any
             other value is treated as ``0``.
+            Default ``0``.
 
         """
         cdef int i, j, m, n, k, ke, node_i, node_j

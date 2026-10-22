@@ -12,6 +12,14 @@ Quad4 - Quadrilateral element with mixed integration (:mod:`pyfe3d.quad4`)
 
 .. currentmodule:: pyfe3d.quad4
 
+The module has three classes: :class:`.Quad4Data`, with the sizes of the
+sparse arrays that one element fills; :class:`.Quad4Probe`, with the buffers
+in element coordinates that one or more elements share; and :class:`.Quad4`,
+the element. The ``update_*`` methods of :class:`.Quad4` write the element
+contributions in sparse row, column and value arrays, from the positions
+given by its ``init_k_*`` attributes, or add them to a global internal force
+vector.
+
 The :class:`.Quad4` is the recommended quadrilateral plane stress finite
 element.
 
@@ -391,6 +399,12 @@ cdef class Quad4Data:
     r"""
     Used to allocate memory for the sparse matrices.
 
+    Each attribute is the number of entries that one :class:`.Quad4` writes in
+    the row, column and value arrays of the corresponding sparse matrix,
+    starting at the position given by the matching ``init_k_*`` attribute of
+    the element. For ``n`` elements the arrays need ``n`` times these sizes.
+    The constructor takes no parameters.
+
     Attributes
     ----------
     KC0_SPARSE_SIZE, : int
@@ -448,6 +462,9 @@ cdef class Quad4Probe:
               always safe the values from the last udpate.
 
 
+    The constructor takes no parameters and allocates every array filled with
+    zeros.
+
     Attributes
     ----------
     xe, : array-like
@@ -455,6 +472,7 @@ cdef class Quad4Probe:
         in the element coordinate system, in the following order `{x_e}_1,
         {y_e}_1, {z_e}_1, `{x_e}_2, {y_e}_2, {z_e}_2`, `{x_e}_3, {y_e}_3,
         {z_e}_3`, `{x_e}_4, {y_e}_4, {z_e}_4`.
+        Dimension of length. Updated by :meth:`.Quad4.update_probe_xe`.
     ue, : array-like
         Array of size ``NUM_NODES*DOF=24`` containing the element displacements
         in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
@@ -462,35 +480,53 @@ cdef class Quad4Probe:
         {{r_y}_e}_2, {{r_z}_e}_2`, `{u_e}_3, {v_e}_3, {w_e}_3, {{r_x}_e}_3,
         {{r_y}_e}_3, {{r_z}_e}_3`, `{u_e}_4, {v_e}_4, {w_e}_4, {{r_x}_e}_4,
         {{r_y}_e}_4, {{r_z}_e}_4`.
+        Translations with dimension of length, rotations dimensionless.
+        Updated by :meth:`.Quad4.update_probe_ue`.
     finte, : array-like
         Array of size ``NUM_NODES*DOF=24`` containing the element internal
         forces corresponding to the degrees-of-freedom described by ``ue``.
+        Forces, and moments (force times length) for the rotations. Updated
+        by :meth:`.Quad4.update_probe_finte`.
     KC0ve, : array-like
         Local stiffness matrix stored as a 1D array of size
         ``(NUM_NODES*DOF)**2``.
+        Stored row by row. Updated by :meth:`.Quad4.update_KC0` and
+        :meth:`.Quad4.update_probe_finte`.
     BLexx, BLeyy, BLgxy : array-like
         Arrays of size ``NUM_NODES*DOF=24`` containing the in-plane strain
         interpolation functions evaluated at a given natural coordinate point
         `\xi`, `\eta`.
+        Their product with ``ue`` gives the membrane strains, dimensionless.
     BLkxx, BLkyy, BLkxy : array-like
         Arrays of size ``NUM_NODES*DOF=24`` containing the bending strain
         interpolation functions evaluated at a given natural coordinate point
         `\xi`, `\eta`.
+        Their product with ``ue`` gives the curvatures, with dimension of one
+        over length.
     BLgyz_grad, BLgyz_rot, BLgxz_grad, BLgxz_rot : array-like
         Arrays of size ``NUM_NODES*DOF=24`` containing the transverse shear
         strain interpolation functions evaluated at a given natural coordinate
         point `\xi`, `\eta`.
+        The sum of the products of a ``_grad`` row and of the ``_rot`` row of
+        the same strain with ``ue`` gives that transverse shear strain,
+        dimensionless.
     BLdrilling : array-like
         Arrays of size ``NUM_NODES*DOF=24`` containing the drilling
         interpolation functions evaluated at a given natural coordinate
         point `\xi`, `\eta`.
+        Its product with ``ue`` is dimensionless. The rows above are set by
+        :meth:`.update_BL` and are also overwritten, at their integration
+        points, by the methods of :class:`.Quad4` that compute the
+        constitutive stiffness matrices and the internal forces.
     Gwx, Gwy : array-like
         Arrays of size ``NUM_NODES*DOF=24`` with the rows giving `w_{,x}` and
         `w_{,y}`, at the last evaluated integration point.
+        Their products with ``ue`` are dimensionless.
     KCNLve : array-like
         Array of size ``(NUM_NODES*DOF)**2=576`` with the nonlinear
         constitutive stiffness matrix KCNL in element coordinates, stored row
         by row.
+        Updated by :meth:`.Quad4.update_KCNL`.
 
     """
     cdef public double [::1] xe
@@ -542,11 +578,20 @@ cdef class Quad4Probe:
         Update all components of the interpolation matrix `\pmb{B_L}` at a
         given natural coordinate point `\xi`, `\eta`.
 
+        The rows ``BLexx``, ``BLeyy``, ``BLgxy``, ``BLkxx``, ``BLkyy``,
+        ``BLkxy``, ``BLgyz_grad``, ``BLgyz_rot``, ``BLgxz_grad``,
+        ``BLgxz_rot`` and ``BLdrilling`` of the probe are computed from its
+        element coordinates ``xe``, which must have been updated with
+        :meth:`.Quad4.update_probe_xe`. Only the entries that depend on
+        ``xi``, ``eta`` and ``xe`` are written, the other entries keep their
+        values. ``Gwx``, ``Gwy`` and the other attributes are not changed.
+
         Parameters
         ----------
         xi, eta : double
             Natural coordinates of the evaluation point.
-        drilling_model : int
+            Dimensionless, from ``-1`` to ``1`` over the element.
+        drilling_model : int, optional
             Must match the ``drilling_model`` attribute of the finite element
             that the probe is being used with, such that the recovered strains
             correspond to the displacement field that produced the stiffness
@@ -692,6 +737,8 @@ cdef class Quad4Probe:
 
 cdef class Quad4:
     r"""
+    Four-node quadrilateral shell element with mixed integration
+
     Nodal connectivity for the plate element similar to Nastran's CQUAD4::
 
          ^ y
@@ -709,6 +756,19 @@ cdef class Quad4:
 
     .. image:: ../figures/nastran_cquad4.svg
 
+    The constructor stores the probe and sets the identification numbers and
+    the positions ``c1, c2, c3, c4`` to ``-1``, the ``init_k_*`` positions to
+    ``0``, the rotation matrix ``r11, ..., r33`` to zero and ``m11, m12, m21,
+    m22`` to the identity. Before computing any element matrix, the caller
+    sets ``c1, c2, c3, c4`` and the ``init_k_*`` positions, and calls
+    :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe`.
+
+    Parameters
+    ----------
+    p : :class:`.Quad4Probe`
+        Probe used by the element, stored in ``probe``. One probe can be
+        shared by many elements.
+
     Attributes
     ----------
     eid, : int
@@ -717,6 +777,7 @@ cdef class Quad4:
         Property identification number.
     area, : double
         Element area.
+        Dimension of length squared. Updated by :meth:`.update_area`.
     drilling_model, : int
         Selects how the drilling degree-of-freedom `r_z` is given stiffness,
         see the module documentation. The default ``0`` is the physics-based
@@ -756,6 +817,7 @@ cdef class Quad4:
         that the literature recommends rather than for normal use. Very large
         values over-constrain `r_z = \theta_z`, and a zero value leaves the
         Allman enrichment rank-deficient by one.
+        Dimension of force per unit length, as ``A66``.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix from local to global coordinates.
     m11, m12, m21, m22 : double
@@ -763,6 +825,8 @@ cdef class Quad4:
         material direction is used instead of the element local coordinates.
     c1, c2, c3, c4 : int
         Position of each node in the global stiffness matrix.
+        The coordinates of a node are read at the positions ``c1//2``,
+        ``c2//2``, ``c3//2`` and ``c4//2`` of the coordinate array.
     n1, n2, n3, n4 : int
         Node identification number.
     init_k_KC0, init_k_KCNL, init_k_KG, init_k_M : int
@@ -833,19 +897,32 @@ cdef class Quad4:
 
         The rotation matrix terms are calculated after solving 9 equations.
 
+        The element ``z`` axis is along the cross product of the vectors from
+        node 4 to node 2 and from node 1 to node 3, and the element ``x`` axis
+        along the sum of these two vectors. When a material direction is
+        given, ``m11, m12, m21, m22`` are updated with the rotation from the
+        material direction projected onto the element to the element ``x``
+        axis. When it is the zero vector, the default, or parallel to the
+        element normal, ``m11, m12, m21, m22`` are not changed.
+
         Parameters
         ----------
         x : array-like
             Array with global nodal coordinates, for a total of `M` nodes in
             the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
             y_2, z_2, ..., x_M, y_M, z_M`.
+            1-D array of size ``3*M``, dimension of length. The coordinates
+            of each node are read from the positions ``c1//2``, ``c2//2``,
+            ``c3//2`` and ``c4//2``.
 
-        xmati, xmatj, xmatk: array-like
+        xmati, xmatj, xmatk : double, optional
             Vector in global coordinates representing the material direction.
             This vector is projected onto the plate element, thus becoming the
             material direction. The `ABD` matrix defining the constitutive
             behavior of the element is rotated from the material direction to
             the element `x` axis while calculating the stiffness matrices.
+            Only the direction of the vector is used. Default ``0.``, the
+            zero vector, which leaves ``m11, m12, m21, m22`` unchanged.
 
         """
         cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk
@@ -959,6 +1036,12 @@ cdef class Quad4:
     cpdef void update_probe_ue(Quad4 self, double [::1] u):
         r"""Update the local displacement vector of the probe of the element
 
+        The displacements and rotations of the four nodes, read from ``u`` at
+        the positions ``c1``, ``c2``, ``c3`` and ``c4``, are rotated to the
+        element coordinate system with the transpose of the rotation matrix
+        and written to ``probe.ue``. :meth:`.update_rotation_matrix` must have
+        been called before.
+
         .. note:: The ``ue`` attribute of object :class:`.Quad4Probe` is
                   updated, accessible using ``.probe.ue``.
 
@@ -969,6 +1052,8 @@ cdef class Quad4:
             the model, this array will be arranged as: `u_1, v_1, w_1, {r_x}_1,
             {r_y}_1, {r_z}_1, u_2, v_2, w_2, {r_x}_2, {r_y}_2, {r_z}_2, ...,
             u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M`.
+            1-D array of size ``DOF*M``, translations with dimension of
+            length and rotations dimensionless.
 
         """
         cdef int i, j
@@ -1014,6 +1099,13 @@ cdef class Quad4:
     cpdef void update_probe_xe(Quad4 self, double [::1] x):
         r"""Update the 3D coordinates of the probe of the element
 
+        The coordinates of the four nodes, read from ``x`` at the positions
+        ``c1//2``, ``c2//2``, ``c3//2`` and ``c4//2``, are rotated to the
+        element coordinate system with the transpose of the rotation matrix
+        and written to ``probe.xe``. :meth:`.update_area` is then called,
+        updating ``area``. :meth:`.update_rotation_matrix` must have been
+        called before.
+
         .. note:: The ``xe`` attribute of object :class:`.Quad4Probe` is
                   updated, accessible using ``.probe.xe``.
 
@@ -1023,6 +1115,7 @@ cdef class Quad4:
             Array with global nodal coordinates, for a total of `M` nodes in
             the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
             y_2, z_2, ..., x_M, y_M, z_M`.
+            1-D array of size ``3*M``, dimension of length.
 
         """
         cdef int i, j
@@ -1064,6 +1157,10 @@ cdef class Quad4:
 
     cpdef void update_area(Quad4 self):
         r"""Update element area
+
+        The ``area`` attribute is updated with the area of the quadrilateral
+        given by the element coordinates ``probe.xe``, ignoring the ``z``
+        coordinates. Called by :meth:`.update_probe_xe`.
 
         """
         cdef double x1, x2, x3, x4, y1, y2, y3, y4
@@ -1695,6 +1792,12 @@ cdef class Quad4:
         than one finite element, depending how you defined them, meaning that
         the probe will always safe the values from the last udpate.
 
+        The linear internal forces are ``KC0ve`` times ``ue``, the attribute
+        ``KC0ve`` of the probe being updated first, as in
+        :meth:`.update_KC0`. Before this method is called,
+        :meth:`.update_probe_xe` and :meth:`.update_probe_ue` must have been
+        used.
+
         .. note:: The ``finte`` attribute of object :class:`.Quad4Probe` is
                   updated, accessible using ``.probe.finte``.
 
@@ -1703,7 +1806,7 @@ cdef class Quad4:
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
-        nonlinear : int
+        nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
             value adds the geometrically nonlinear terms of the von Karman strains,
             for which the exact Jacobian of the internal forces is ``KC0 + KCNL +
@@ -1733,19 +1836,37 @@ cdef class Quad4:
                           ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
+        The element matrix is computed in element coordinates into the probe
+        attribute ``KC0ve``, from the coordinates ``probe.xe``, the ``area``
+        and the constitutive matrices of ``prop`` rotated with ``m11, m12,
+        m21, m22``. It is rotated to global coordinates and its values are
+        added to ``KC0v`` at the positions ``init_k_KC0`` to ``init_k_KC0 +
+        KC0_SPARSE_SIZE - 1``. With ``update_KC0v_only=0`` the global row and
+        column indices are written to ``KC0r`` and ``KC0c`` at the same
+        positions. Before this method is called,
+        :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe` must have
+        been used.
+
 
         Parameters
         ----------
         KC0r : np.array
             Array to store row positions of sparse values
+            1-D array of integers (``INT``) of size at least ``init_k_KC0 +
+            KC0_SPARSE_SIZE``.
         KC0c : np.array
             Array to store column positions of sparse values
+            Same type and size as ``KC0r``.
         KC0v : np.array
             Array to store sparse values
+            1-D array of ``DOUBLE``, same size as ``KC0r``. The values are
+            added to the existing ones. Dimension of force per unit length
+            between translations, of force between a translation and a
+            rotation, and of force times length between rotations.
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
-        update_KC0v_only : int
+        update_KC0v_only : int, optional
             The default ``0`` means that the row and column indices ``KC0r``
             and ``KC0c`` should also be updated. Any other value will only
             update the stiffness matrix values ``KC0v``.
@@ -1839,6 +1960,13 @@ cdef class Quad4:
     cpdef void update_fint(Quad4 self, double [::1] fint, ShellProp prop, int nonlinear=0):
         r"""Update the internal force vector
 
+        The element internal forces, computed in element coordinates with
+        :meth:`.update_probe_finte`, are rotated to global coordinates and
+        added to ``fint`` at the positions of the nodes, ``c1``, ``c2``,
+        ``c3`` and ``c4``. Before this method is called,
+        :meth:`.update_probe_xe` and :meth:`.update_probe_ue` must have been
+        used.
+
         Parameters
         ----------
         fint : np.array
@@ -1847,10 +1975,12 @@ cdef class Quad4:
             coordinates. Method :meth:`.update_probe_finte` is called to update
             the parameter ``finte`` of the :class:`.Quad4Probe` with the
             internal forces in local coordinates.
+            1-D array of size ``DOF*M``, with forces for the translations and
+            moments (force times length) for the rotations.
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
-        nonlinear : int
+        nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
             value adds the geometrically nonlinear terms of the von Karman strains,
             for which the exact Jacobian of the internal forces is ``KC0 + KCNL +
@@ -2285,18 +2415,31 @@ cdef class Quad4:
         :func:`.update_probe_ue` with the current displacements; and
         :func:`.update_probe_xe` with the node coordinates.
 
+        The element matrix is computed in element coordinates into the probe
+        attribute ``KCNLve``, rotated to global coordinates, and its values
+        are added to ``KCNLv`` at the positions ``init_k_KCNL`` to
+        ``init_k_KCNL + KCNL_SPARSE_SIZE - 1``. With ``update_KCNLv_only=0``
+        the global row and column indices are written to ``KCNLr`` and
+        ``KCNLc`` at the same positions.
+
         Parameters
         ----------
         KCNLr : np.array
             Array to store row positions of sparse values
+            1-D array of integers (``INT``) of size at least ``init_k_KCNL +
+            KCNL_SPARSE_SIZE``.
         KCNLc : np.array
             Array to store column positions of sparse values
+            Same type and size as ``KCNLr``.
         KCNLv : np.array
             Array to store sparse values
+            1-D array of ``DOUBLE``, same size as ``KCNLr``. The values are
+            added to the existing ones, with the dimensions given for
+            ``KC0v`` in :meth:`.update_KC0`.
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes are
             read from.
-        update_KCNLv_only : int
+        update_KCNLv_only : int, optional
             The default ``0`` means that the row and column indices ``KCNLr`` and
             ``KCNLc`` should also be updated. Any other value will only update the
             stiffness matrix values ``KCNLv``.
@@ -2387,14 +2530,31 @@ cdef class Quad4:
         state) displacements; and :func:`.update_probe_xe` with the node
         coordinates.
 
+        At each integration point the membrane stress resultants are obtained
+        from the linear membrane strains and curvatures of the probe
+        displacements ``ue``, including for ``drilling_model=0`` the
+        contribution of the drilling rotations, and from the extensional and
+        extension-bending coupling matrices of ``prop`` rotated with ``m11,
+        m12, m21, m22``. Only the translational degrees-of-freedom appear.
+        The values are added to ``KGv`` at the positions ``init_k_KG`` to
+        ``init_k_KG + KG_SPARSE_SIZE - 1``, and the global row and column
+        indices are always written to ``KGr`` and ``KGc`` at the same
+        positions.
+
         Parameters
         ----------
         KGr : np.array
            Array to store row positions of sparse values
+           1-D array of integers (``INT``) of size at least ``init_k_KG +
+           KG_SPARSE_SIZE``.
         KGc : np.array
            Array to store column positions of sparse values
+           Same type and size as ``KGr``.
         KGv : np.array
             Array to store sparse values
+            1-D array of ``DOUBLE``, same size as ``KGr``. The values are
+            added to the existing ones, with dimension of force per unit
+            length.
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
@@ -3266,14 +3426,29 @@ cdef class Quad4:
         attribute of the :class:`.Quad4` object must be updated using
         :func:`.update_probe_xe` with the node coordinates.
 
+        Only the translational degrees-of-freedom appear. The values are added
+        to ``KGv`` at the positions ``init_k_KG`` to ``init_k_KG +
+        KG_SPARSE_SIZE - 1``, and the global row and column indices are always
+        written to ``KGr`` and ``KGc`` at the same positions.
+        :meth:`.update_rotation_matrix` must also have been called before.
+
         Parameters
         ----------
+        Nxx, Nyy, Nxy : double
+            Membrane stress resultants in the element coordinate system,
+            force per unit length.
         KGr : np.array
            Array to store row positions of sparse values
+           1-D array of integers (``INT``) of size at least ``init_k_KG +
+           KG_SPARSE_SIZE``.
         KGc : np.array
            Array to store column positions of sparse values
+           Same type and size as ``KGr``.
         KGv : np.array
             Array to store sparse values
+            1-D array of ``DOUBLE``, same size as ``KGr``. The values are
+            added to the existing ones, with dimension of force per unit
+            length.
 
         """
         cdef int c1, c2, c3, c4, i, j, k
@@ -4084,18 +4259,40 @@ cdef class Quad4:
         Different integration schemes are available by means of the ``mtype``
         parameter.
 
+        The element matrix is computed from ``intrho``, ``intrhoz`` and
+        ``intrhoz2`` of ``prop``, the coordinates ``probe.xe`` and the
+        ``area``, rotated to global coordinates, and its values are added to
+        ``Mv`` at the positions starting at ``init_k_M``; the global row and
+        column indices are always written to ``Mr`` and ``Mc`` at the same
+        positions. ``mtype=0`` and ``mtype=1`` write ``M_SPARSE_SIZE``
+        entries, ``mtype=2`` writes the first 288 of them, and any other value
+        of ``mtype`` writes nothing. Before this method is called,
+        :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe` must have
+        been used.
+
         Parameters
         ----------
         Mr : np.array
             Array to store row positions of sparse values
+            1-D array of integers (``INT``) of size at least ``init_k_M +
+            M_SPARSE_SIZE``.
         Mc : np.array
             Array to store column positions of sparse values
+            Same type and size as ``Mr``.
         Mv : np.array
             Array to store sparse values
+            1-D array of ``DOUBLE``, same size as ``Mr``. The values are added
+            to the existing ones. Dimension of mass between translations, of
+            mass times length between a translation and a rotation, and of
+            mass times length squared between rotations.
+        prop : :class:`.ShellProp` object
+            Shell property object, from which ``intrho``, ``intrhoz`` and
+            ``intrhoz2`` are read.
         mtype : int, optional
             0 for consistent mass matrix using method from Brockman 1987
             1 for reduced integration mass matrix using method from Brockman 1987
             2 for lumped mass matrix using method from Brockman 1987
+            Default ``0``.
 
         """
         cdef int c1, c2, c3, c4, i, j, k
@@ -10487,14 +10684,35 @@ cdef class Quad4:
                         ):
         r"""Update sparse vectors for piston-theory aerodynamic matrix `KA_{\beta}`
 
+        The matrix is integrated over the element with 2 by 2 Gauss-Legendre
+        quadrature, from the coordinates ``probe.xe`` and the rotation matrix,
+        and its values are added to ``KA_betav`` at the positions
+        ``init_k_KA_beta`` to ``init_k_KA_beta + KA_BETA_SPARSE_SIZE - 1``; the
+        global row and column indices are always written to ``KA_betar`` and
+        ``KA_betac`` at the same positions. Only the translational
+        degrees-of-freedom appear, through their components along the element
+        normal. No aerodynamic coefficient enters the values, which depend
+        only on the geometry, so the caller multiplies the assembled matrix by
+        it. Before this method is called, :meth:`.update_rotation_matrix` and
+        :meth:`.update_probe_xe` must have been used.
+
+        TODO(author): direction of the derivative in the values, which
+        combine the derivatives of the shape functions along the element
+        ``x`` and ``y`` axes with ``r11`` and ``r21``.
+
         Parameters
         ----------
         KA_betar : np.array
             Array to store row positions of sparse values
+            1-D array of integers (``INT``) of size at least
+            ``init_k_KA_beta + KA_BETA_SPARSE_SIZE``.
         KA_betac : np.array
             Array to store column positions of sparse values
+            Same type and size as ``KA_betar``.
         KA_betav : np.array
             Array to store sparse values
+            1-D array of ``DOUBLE``, same size as ``KA_betar``. The values are
+            added to the existing ones, with dimension of length.
 
         """
         cdef int c1, c2, c3, c4, i, j, k
@@ -11308,14 +11526,32 @@ cdef class Quad4:
                         ):
         r"""Update sparse vectors for piston-theory aerodynamic matrix `KA_{\gamma}`
 
+        The matrix is integrated over the element with 2 by 2 Gauss-Legendre
+        quadrature, from the coordinates ``probe.xe`` and the rotation matrix,
+        and its values are added to ``KA_gammav`` at the positions
+        ``init_k_KA_gamma`` to ``init_k_KA_gamma + KA_GAMMA_SPARSE_SIZE - 1``;
+        the global row and column indices are always written to
+        ``KA_gammar`` and ``KA_gammac`` at the same positions. Only the
+        translational degrees-of-freedom appear, through their components
+        along the element normal. No aerodynamic coefficient enters the
+        values, which depend only on the geometry, so the caller multiplies
+        the assembled matrix by it. Before this method is called,
+        :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe` must have
+        been used.
+
         Parameters
         ----------
         KA_gammar : np.array
             Array to store row positions of sparse values
+            1-D array of integers (``INT``) of size at least
+            ``init_k_KA_gamma + KA_GAMMA_SPARSE_SIZE``.
         KA_gammac : np.array
             Array to store column positions of sparse values
+            Same type and size as ``KA_gammar``.
         KA_gammav : np.array
             Array to store sparse values
+            1-D array of ``DOUBLE``, same size as ``KA_gammar``. The values
+            are added to the existing ones, with dimension of length squared.
 
         """
         cdef int c1, c2, c3, c4, i, j, k
@@ -12111,14 +12347,31 @@ cdef class Quad4:
                         ):
         r"""Update sparse vectors for piston-theory aerodynamic damping matrix `CA`
 
+        The matrix is integrated over the element with 2 by 2 Gauss-Legendre
+        quadrature, from the coordinates ``probe.xe`` and the rotation matrix,
+        and its values are added to ``CAv`` at the positions ``init_k_CA`` to
+        ``init_k_CA + CA_SPARSE_SIZE - 1``; the global row and column indices
+        are always written to ``CAr`` and ``CAc`` at the same positions. Only
+        the translational degrees-of-freedom appear, through their components
+        along the element normal. No aerodynamic coefficient enters the
+        values, which depend only on the geometry, so the caller multiplies
+        the assembled matrix by it. Before this method is called,
+        :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe` must have
+        been used.
+
         Parameters
         ----------
         CAr : np.array
             Array to store row positions of sparse values
+            1-D array of integers (``INT``) of size at least ``init_k_CA +
+            CA_SPARSE_SIZE``.
         CAc : np.array
             Array to store column positions of sparse values
+            Same type and size as ``CAr``.
         CAv : np.array
             Array to store sparse values
+            1-D array of ``DOUBLE``, same size as ``CAr``. The values are added
+            to the existing ones, with dimension of length squared.
 
         """
         cdef int c1, c2, c3, c4, i, j, k
