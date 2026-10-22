@@ -192,7 +192,7 @@ cdef class MatLamina:
             q_{21} = e_2 (\nu_{12} + \nu_{13}\nu_{32})/\Delta, \quad
             q_{22} = e_2 (1 - \nu_{13}\nu_{31})/\Delta, \quad
             q_{23} = e_2 (\nu_{32} + \nu_{12}\nu_{31})/\Delta \\
-            q_{31} = e_3 (\nu_{13} + \nu_{12}\nu_{32})/\Delta, \quad
+            q_{31} = e_3 (\nu_{13} + \nu_{12}\nu_{23})/\Delta, \quad
             q_{32} = e_3 (\nu_{23} + \nu_{13}\nu_{21})/\Delta, \quad
             q_{33} = e_3 (1 - \nu_{12}\nu_{21})/\Delta \\
             q_{44} = g_{23}, \quad q_{55} = g_{13}, \quad q_{66} = g_{12}
@@ -220,9 +220,9 @@ cdef class MatLamina:
             c_{33} = e_3 (1 - \nu_{12}\nu_{21})/(\delta e_1 e_2) \\
             c_{44} = g_{23}, \quad c_{55} = g_{13}, \quad c_{66} = g_{12}
 
-        With the reciprocity, `\delta e_1 e_2 = \Delta`, and the `c_{ij}` are
-        the entries of the inverse of the compliance matrix of the
-        orthotropic material, with `S_{11} = 1/e_1`, `S_{12} =
+        With the reciprocity, `\delta e_1 e_2 = \Delta` and `c_{ij} =
+        q_{ij}`; both are the entries of the inverse of the compliance matrix
+        of the orthotropic material, with `S_{11} = 1/e_1`, `S_{12} =
         -\nu_{12}/e_1`, `S_{13} = -\nu_{13}/e_1`, `S_{22} = 1/e_2`, `S_{23} =
         -\nu_{23}/e_2`, `S_{33} = 1/e_3`, `S_{44} = 1/g_{23}`, `S_{55} =
         1/g_{13}` and `S_{66} = 1/g_{12}`.
@@ -299,7 +299,7 @@ cdef class MatLamina:
         self.q21 = self.e2*(self.nu12 + self.nu13 * self.nu32) / den
         self.q22 = self.e2*(1         - self.nu13 * self.nu31) / den
         self.q23 = self.e2*(self.nu32 + self.nu12 * self.nu31) / den
-        self.q31 = self.e3*(self.nu13 + self.nu12 * self.nu32) / den
+        self.q31 = self.e3*(self.nu13 + self.nu12 * self.nu23) / den
         self.q32 = self.e3*(self.nu23 + self.nu13 * self.nu21) / den
         self.q33 = self.e3*(1         - self.nu12 * self.nu21) / den
         self.q66 = self.g12

@@ -42,5 +42,18 @@ def test_c_against_inverse_compliance():
         assert np.isclose(getattr(mat, name), C[i, j], rtol=1e-12), name
 
 
+def test_q_against_inverse_compliance():
+    mat, C = get_mat_and_C()
+    for i in range(3):
+        for j in range(3):
+            name = 'q%d%d' % (i + 1, j + 1)
+            print(name, getattr(mat, name), C[i, j])
+            assert np.isclose(getattr(mat, name), C[i, j], rtol=1e-12), name
+    for name in ['q44', 'q55', 'q66']:
+        i = int(name[1]) - 1
+        assert np.isclose(getattr(mat, name), C[i, i], rtol=1e-12), name
+
+
 if __name__ == '__main__':
     test_c_against_inverse_compliance()
+    test_q_against_inverse_compliance()
