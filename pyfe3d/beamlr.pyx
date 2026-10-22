@@ -213,6 +213,14 @@ cdef class BeamLR:
     curvature is constant in each element, more elements are needed than
     with :class:`.BeamC` for the same accuracy in bending.
 
+    The element does not use the shear parameters `\alpha_y`, `\alpha_z` of
+    :class:`.BeamC`, and is therefore an independent check of their sign:
+    in ``tests/test_timoshenko_beam_literature.py`` refined meshes of
+    :class:`.BeamLR` converge to the same cantilever tip deflection `P
+    L^3/(3 E I_{zz}) + P L/(G A)`, Eq. (1.2) of [2]_, as one element of
+    :class:`.BeamC`, and to the same exact frequencies of a deep cantilever,
+    Table 3.6 of [3]_.
+
     The matrices and the internal forces are computed in element
     coordinates and transformed to global coordinates with the rotation
     matrix of the element, as described in the notes of :class:`.BeamC`.
@@ -222,6 +230,11 @@ cdef class BeamLR:
     .. [1] Luo, Y., 2008, “An Efficient 3D Timoshenko Beam Element with
        Consistent Shape Functions,” Adv. Theor. Appl. Mech., 1(3),
        pp. 95–106.
+    .. [2] Bathe, K. J., 2014, Finite Element Procedures, 2nd ed., K. J.
+       Bathe, Watertown, MA, Section 1.2.
+    .. [3] Petyt, M., 2010, Introduction to Finite Element Vibration
+       Analysis, 2nd ed., Cambridge University Press, Section 3.9.
+       https://doi.org/10.1017/CBO9780511761195
 
     """
     cdef public int eid, pid

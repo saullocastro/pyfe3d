@@ -268,18 +268,29 @@ cdef class BeamC:
 
     The parameters `\alpha_y` and `\alpha_z` are negative. With `\phi_y =
     12 E I_{zz}/(G A L^2)`, `\beta_y = 1/(1 + \phi_y)` and the functions
-    above are the interdependent interpolation of the Timoshenko beam [2]_,
-    the general solution of the homogeneous equilibrium equations
-    `(G A \gamma_{xy})_{,x} = 0` and `G A \gamma_{xy} = E I_{zz}
-    {\kappa_y}_{,x}` of the strain energy above, which these functions
-    satisfy for any nodal values only with this sign. The same solution is
-    Eq. (17) of [1]_, whereas Eq. (21) of [1]_ gives `\alpha_y` and
-    `\alpha_z` with the positive sign, inconsistent with its Eqs. (17) and
-    (20). Hence the element is exact for a prismatic
-    beam loaded at the nodes, e.g. one element gives the tip deflection `P
-    L^3/(3 E I_{zz}) + P L/(G A)` of a cantilever under a transverse tip
-    force `P`, and `\beta_y`, `\beta_z` are finite for any length. The mass
-    and geometric stiffness matrices use the same shape functions.
+    above are the general solution of the homogeneous equilibrium equations
+    of the strain energy above, `(G A \gamma_{xy})_{,x} = 0` and `G A
+    \gamma_{xy} = E I_{zz} {\kappa_y}_{,x}` (and likewise for `w`, `r_y`),
+    which these functions satisfy for any nodal values only with this sign.
+    The same solution is Eq. (17) of [1]_ and Eq. (3.236) of [2]_, whose
+    denominator `1 + 3\beta`, with `\beta = E I/(\kappa A G a^2)` and `a =
+    L/2`, is `1 + \phi_y`; Eq. (21) of [1]_ gives `\alpha_y` and `\alpha_z`
+    with the positive sign, inconsistent with its Eqs. (17) and (20). Hence
+    the element is exact for a prismatic beam loaded at the nodes, and
+    `\beta_y`, `\beta_z` are finite for any length. The mass and geometric
+    stiffness matrices use the same shape functions.
+
+    The sign is verified against the literature in
+    ``tests/test_timoshenko_beam_literature.py``: one element reproduces
+    the cantilever tip deflection `P L^3/(3 E I_{zz}) + P L/(G A)` of Eq.
+    (1.2) of [3]_ (``0.053 cm``) and, for a cantilever as long as deep, the
+    same formula, where the shear deflection is larger than the bending
+    one; one element reproduces the frequency coefficients ``3.322`` and
+    ``26.569`` of Example 3.10 of [2]_, which has the same shape functions
+    and consistent mass matrix with rotary inertia, three elements the
+    errors of Table 3.6 of [2]_, and refined meshes its exact frequencies.
+    With the positive sign these tests fail, e.g. by -44 % for the deep
+    cantilever and with ``3.952`` instead of ``3.322``.
 
     The matrices and the internal forces are computed in element
     coordinates and transformed to global coordinates with the rotation
@@ -293,9 +304,11 @@ cdef class BeamC:
     .. [1] Luo, Y., 2008, “An Efficient 3D Timoshenko Beam Element with
        Consistent Shape Functions,” Adv. Theor. Appl. Mech., 1(3),
        pp. 95–106.
-    .. [2] Friedman, Z., and Kosmatka, J. B., 1993, “An Improved Two-Node
-       Timoshenko Beam Finite Element,” Comput. Struct., 47(3),
-       pp. 473–481.
+    .. [2] Petyt, M., 2010, Introduction to Finite Element Vibration
+       Analysis, 2nd ed., Cambridge University Press, Section 3.9.
+       https://doi.org/10.1017/CBO9780511761195
+    .. [3] Bathe, K. J., 2014, Finite Element Procedures, 2nd ed., K. J.
+       Bathe, Watertown, MA, Section 1.2.
 
     """
     cdef public int eid, pid
