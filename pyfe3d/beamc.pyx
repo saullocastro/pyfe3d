@@ -237,8 +237,8 @@ cdef class BeamC:
     `v` and quadratic for `r_z`, which depend on the parameters
 
     .. math::
-        \alpha_y = \frac{12 E I_{zz}}{G A L^2}, \qquad
-        \alpha_z = \frac{12 E I_{yy}}{G A L^2}, \qquad
+        \alpha_y = -\frac{12 E I_{zz}}{G A L^2}, \qquad
+        \alpha_z = -\frac{12 E I_{yy}}{G A L^2}, \qquad
         \beta_y = \frac{1}{1 - \alpha_y}, \qquad
         \beta_z = \frac{1}{1 - \alpha_z}
 
@@ -266,19 +266,20 @@ cdef class BeamC:
     infinite ``G``, where the interpolation of `v` becomes the cubic
     Hermite interpolation of the Euler-Bernoulli beam.
 
-    TODO(author): with these functions, the homogeneous equilibrium
-    `G A \gamma_{xy} = E I_{zz} {\kappa_y}_{,x}` of the strain energy above
-    holds for `\alpha_y = -12 E I_{zz}/(G A L^2)`, not for the positive
-    value computed in the code, i.e. the code corresponds to `\beta_y =
-    1/(1 + \phi)` of the usual Timoshenko consistent interpolation with
-    `\phi = -12 E I_{zz}/(G A L^2)`. A numerical check with one element
-    (``E=1``, ``G=1/2.6``, square section of side ``0.3``, ``L=1``) gives a
-    cantilever tip deflection under a transverse tip force of ``429.07``
-    against ``493.83`` of Euler-Bernoulli and ``522.72`` of Timoshenko
-    (exact with the sign of `\alpha_y` reversed); refining the mesh
-    converges to the Timoshenko value. Also, `\beta_y` is infinite when
-    `\alpha_y = 1`, i.e. when `L^2 = 12 E I_{zz}/(G A)`. Confirm the sign
-    convention of `\alpha_y`, `\alpha_z` against [1]_.
+    The parameters `\alpha_y` and `\alpha_z` are negative. With `\phi_y =
+    12 E I_{zz}/(G A L^2)`, `\beta_y = 1/(1 + \phi_y)` and the functions
+    above are the interdependent interpolation of the Timoshenko beam [2]_,
+    the general solution of the homogeneous equilibrium equations
+    `(G A \gamma_{xy})_{,x} = 0` and `G A \gamma_{xy} = E I_{zz}
+    {\kappa_y}_{,x}` of the strain energy above, which these functions
+    satisfy for any nodal values only with this sign. The same solution is
+    Eq. (17) of [1]_, whereas Eq. (21) of [1]_ gives `\alpha_y` and
+    `\alpha_z` with the positive sign, inconsistent with its Eqs. (17) and
+    (20). Hence the element is exact for a prismatic
+    beam loaded at the nodes, e.g. one element gives the tip deflection `P
+    L^3/(3 E I_{zz}) + P L/(G A)` of a cantilever under a transverse tip
+    force `P`, and `\beta_y`, `\beta_z` are finite for any length. The mass
+    and geometric stiffness matrices use the same shape functions.
 
     The matrices and the internal forces are computed in element
     coordinates and transformed to global coordinates with the rotation
@@ -292,6 +293,9 @@ cdef class BeamC:
     .. [1] Luo, Y., 2008, “An Efficient 3D Timoshenko Beam Element with
        Consistent Shape Functions,” Adv. Theor. Appl. Mech., 1(3),
        pp. 95–106.
+    .. [2] Friedman, Z., and Kosmatka, J. B., 1993, “An Improved Two-Node
+       Timoshenko Beam Finite Element,” Comput. Struct., 47(3),
+       pp. 473–481.
 
     """
     cdef public int eid, pid
@@ -613,8 +617,8 @@ cdef class BeamC:
             Iyz = prop.Iyz
             J = prop.J
 
-            alphay = 12*E*Izz/(G*A*L**2)
-            alphaz = 12*E*Iyy/(G*A*L**2)
+            alphay = -12*E*Izz/(G*A*L**2)
+            alphaz = -12*E*Iyy/(G*A*L**2)
             betay = 1/(1. - alphay)
             betaz = 1/(1. - alphaz)
 
@@ -781,8 +785,8 @@ cdef class BeamC:
             Iyz = prop.Iyz
             J = prop.J
 
-            alphay = 12*E*Izz/(G*A*L**2)
-            alphaz = 12*E*Iyy/(G*A*L**2)
+            alphay = -12*E*Izz/(G*A*L**2)
+            alphaz = -12*E*Iyy/(G*A*L**2)
             betay = 1/(1. - alphay)
             betaz = 1/(1. - alphaz)
 
@@ -1693,8 +1697,8 @@ cdef class BeamC:
         Gwx = &self.probe.Gwx[0]
 
         L = self.length
-        alphay = 12*prop.E*prop.Izz/(prop.G*prop.A*L**2)
-        alphaz = 12*prop.E*prop.Iyy/(prop.G*prop.A*L**2)
+        alphay = -12*prop.E*prop.Izz/(prop.G*prop.A*L**2)
+        alphaz = -12*prop.E*prop.Iyy/(prop.G*prop.A*L**2)
         betay = 1/(1. - alphay)
         betaz = 1/(1. - alphaz)
 
@@ -2176,8 +2180,8 @@ cdef class BeamC:
             Iyz = prop.Iyz
             J = prop.J
 
-            alphay = 12*E*Izz/(G*A*L**2)
-            alphaz = 12*E*Iyy/(G*A*L**2)
+            alphay = -12*E*Izz/(G*A*L**2)
+            alphaz = -12*E*Iyy/(G*A*L**2)
             betay = 1/(1. - alphay)
             betaz = 1/(1. - alphaz)
 
@@ -3030,8 +3034,8 @@ cdef class BeamC:
             Iyz = prop.Iyz
             J = prop.J
 
-            alphay = 12*E*Izz/(G*A*L**2)
-            alphaz = 12*E*Iyy/(G*A*L**2)
+            alphay = -12*E*Izz/(G*A*L**2)
+            alphaz = -12*E*Iyy/(G*A*L**2)
             betay = 1/(1. - alphay)
             betaz = 1/(1. - alphaz)
 

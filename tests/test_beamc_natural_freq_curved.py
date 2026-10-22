@@ -113,7 +113,11 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
         #      frequencies already sorted
         omegan, eigvecsu = natural_frequency(Kuu, Muu, num_eigvalues=num_eigenvalues, tol=1e-3)
         omega123_from_paper = [396.98, 931.22, 1797.31]
-        omega123_expected_here = [395.50396255, 923.75280463, 1773.32657347]
+        # NOTE values of 50 elements with the shear parameter of the consistent
+        #      shape functions corrected to alpha = -12*E*I/(G*A*L**2); they agree
+        #      to 0.05 % with 200 BeamC elements (394.431, 918.543, 1756.301)
+        #      and with 200 BeamLR elements (394.472, 918.751, 1757.086)
+        omega123_expected_here = [394.54891673, 919.02124464, 1757.02096637]
         print('Reference omega123_from_paper', omega123_from_paper)
         print('Reference omega123_expected_here', omega123_expected_here)
         print('Numerical omega123', omegan)
