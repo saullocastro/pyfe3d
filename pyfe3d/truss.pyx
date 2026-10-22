@@ -998,29 +998,26 @@ cdef class Truss:
 
         Notes
         -----
-        The mass matrices come from the kinetic energy, with the three
-        translations and the twist rotation `r_x` interpolated linearly:
+        The mass matrices come from the kinetic energy of the rigid cross
+        section, whose point `(y, z)` has the displacements `u_x = u`, `u_y
+        = v - z r_x` and `u_z = w + y r_x`, with the three translations and
+        the twist rotation `r_x` interpolated linearly:
 
         .. math::
             T = \frac{1}{2} \int_0^L \Big[ m (\dot{u}^2 + \dot{v}^2 + \dot{w}^2)
-                - 2 m_y \dot{v} \dot{r}_x - 2 m_z \dot{w} \dot{r}_x
+                - 2 m_z \dot{v} \dot{r}_x + 2 m_y \dot{w} \dot{r}_x
                 + (m_{yy} + m_{zz}) \dot{r}_x^2 \Big] dx
 
         with `m` = ``intrho``, `m_y` = ``intrhoy``, `m_z` = ``intrhoz``,
-        `m_{yy}` = ``intrhoy2`` and `m_{zz}` = ``intrhoz2``. The rotations
-        `r_y` and `r_z` have no inertia. ``mtype=0`` gives the consistent mass
-        matrix, the Hessian of `T` with respect to the nodal velocities,
-        integrated exactly along the element. ``mtype=1`` gives the lumped
-        mass matrix, diagonal in element coordinates: at each node `L m/2`
-        for the three translations and `L (m_{yy} + m_{zz})/2` for `r_x`,
-        without the coupling terms of `m_y` and `m_z`.
-
-        TODO(author): the coupling terms of the consistent mass matrix, `-m_y`
-        between `v` and `r_x` and `-m_z` between `w` and `r_x`, differ from
-        those of :meth:`.BeamLR.update_M`, `-m_z` between `v` and `r_x` and
-        `+m_y` between `w` and `r_x`, which follow from the displacements
-        `u_y = v - z r_x` and `u_z = w + y r_x` of a point `(y, z)` of the
-        cross section; confirm which one is intended.
+        `m_{yy}` = ``intrhoy2`` and `m_{zz}` = ``intrhoz2``. The coupling
+        terms, `-m_z` between `v` and `r_x` and `+m_y` between `w` and `r_x`,
+        are those of :meth:`.BeamLR.update_M` and :meth:`.BeamC.update_M`.
+        The rotations `r_y` and `r_z` have no inertia. ``mtype=0`` gives the
+        consistent mass matrix, the Hessian of `T` with respect to the nodal
+        velocities, integrated exactly along the element. ``mtype=1`` gives
+        the lumped mass matrix, diagonal in element coordinates: at each node
+        `L m/2` for the three translations and `L (m_{yy} + m_{zz})/2` for
+        `r_x`, without the coupling terms of `m_y` and `m_z`.
 
         Both matrices use the method from Brockman 1987 [1]_.
 
