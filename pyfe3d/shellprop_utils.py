@@ -6,12 +6,25 @@ Highly based on the `composites <https://saullocastro.github.io/composites/>`_. 
 
 .. currentmodule:: pyfe3d.shellprop_utils
 
+Functions that create a :class:`.ShellProp` from the stacking sequence and
+the ply data (:func:`.laminated_plate`) or for an isotropic plate
+(:func:`.isotropic_plate`), and a :class:`.MatLamina` from a tuple of
+material properties (:func:`.read_laminaprop`).
+
 """
 from .shellprop import Lamina, MatLamina, ShellProp
 
 
 def read_laminaprop(laminaprop, rho=0):
     r"""Returns a :class:`.MatLamina` object based on an input ``laminaprop`` tuple
+
+    The entries of ``laminaprop`` and ``rho`` are stored in a new
+    :class:`.MatLamina` object, the Poisson's ratios ``nu21``, ``nu31`` and
+    ``nu32`` are computed from ``nu12``, ``nu13``, ``nu23`` and the Young
+    moduli, and :meth:`.MatLamina.rebuild` is called. With 2 entries, ``g12 =
+    g13 = g23 = e/(2*(1+nu))``; with 2 or 6 entries, ``e3``, ``nu13`` and
+    ``nu23`` are zero. Another number of entries fails an ``assert``
+    statement.
 
     Parameters
     ----------
@@ -52,9 +65,12 @@ def read_laminaprop(laminaprop, rho=0):
         nu23    23 Poisson's ratio
         ======  ==============================
 
+        The Young and shear moduli have the dimension of force per unit area,
+        the Poisson's ratios are dimensionless.
+
 
     rho : float, optional
-        Material density
+        Material density, mass per unit volume. Default ``0``.
 
 
     Returns
@@ -99,26 +115,47 @@ def laminated_plate(stack, plyt=None, laminaprop=None, rho=0., plyts=None,
 
     :class:`.ShellProp` object is returned based on the inputs given.
 
+    One :class:`.Lamina` is created for each entry of ``stack``, with its
+    thickness, its :class:`.MatLamina` given by :func:`.read_laminaprop` with
+    its ``laminaprop`` and density, and :meth:`.Lamina.rebuild` called. Then
+    :meth:`.ShellProp.calc_constitutive_matrix` and
+    :meth:`.ShellProp.calc_equivalent_properties` are called.
+
     Parameters
     ----------
     stack : list
-        Angles of the stacking sequence in degrees.
+        Angles of the stacking sequence in degrees, from the bottom to the top
+        ply.
     plyt : float, optional
         When all plies have the same thickness, ``plyt`` can be supplied.
+        ``plyt`` or ``plyts`` must be supplied. Length. Default ``None``.
     laminaprop : tuple, optional
         When all plies have the same material properties, ``laminaprop``
-        can be supplied.
+        can be supplied. ``laminaprop`` or ``laminaprops`` must be supplied.
+        For orthotropic plies, the ``laminaprop`` should be::
+
+            laminaprop = (E11, E22, nu12, G12, G13, G23)
+
+        For isotropic plies, the ``laminaprop`` should be::
+
+            laminaprop = (E, nu)
+
+        See :func:`.read_laminaprop`. Default ``None``.
     rho : float, optional
-        Uniform material density to be used for all plies.
+        Uniform material density to be used for all plies, mass per unit
+        volume. Default ``0.``.
     plyts : list, optional
-        A list of floats with the thickness of each ply.
+        A list of floats with the thickness of each ply. When given,
+        ``plyt`` is ignored. Length. Default ``None``.
     laminaprops : list, optional
-        A list of tuples with a laminaprop for each ply.
+        A list of tuples with a laminaprop for each ply. When given,
+        ``laminaprop`` is ignored. Default ``None``.
     rhos : list, optional
-        A list of floats with the material density of each ply.
+        A list of floats with the material density of each ply. When given,
+        ``rho`` is ignored. Mass per unit volume. Default ``None``.
     offset : float, optional
         Offset along the normal axis about the mid-surface, which influences
-        the laminate properties.
+        the laminate properties. Length. Default ``0.``.
     shear_correction : str or None, optional
         Method used to compute the transverse shear stiffnesses ``A44``,
         ``A45``, ``A55``, which are returned with the correction already
@@ -126,18 +163,19 @@ def laminated_plate(stack, plyt=None, laminaprop=None, rho=0., plyts=None,
         ``'constant'`` (5/6) or ``None`` (no correction). See
         :meth:`.ShellProp.calc_transverse_shear_stiffness`.
 
-    Notes
-    -----
-    ``plyt`` or ``plyts`` must be supplied
-    ``laminaprop`` or ``laminaprops`` must be supplied
+    Returns
+    -------
+    prop : :class:`.ShellProp`
+        The laminate, with its stiffnesses and equivalent properties
+        computed.
 
-    For orthotropic plies, the ``laminaprop`` should be::
-
-        laminaprop = (E11, E22, nu12, G12, G13, G23)
-
-    For isotropic plies, the ``laminaprop`` should be::
-
-        laminaprop = (E, nu)
+    Raises
+    ------
+    ValueError
+        If neither ``plyt`` nor ``plyts`` is supplied, or if neither
+        ``laminaprop`` nor ``laminaprops`` is supplied. Also if ``stack``,
+        ``plyts``, ``laminaprops`` and ``rhos`` do not have the same
+        length.
 
     """
     prop = ShellProp()
@@ -187,22 +225,35 @@ def isotropic_plate(thickness, E, nu, offset=0., rho=0.,
 
     :class:`.ShellProp` object is returned based on the inputs given.
 
+    Calls :func:`.laminated_plate` with a single ply of angle ``0``,
+    thickness ``thickness`` and ``laminaprop=(E, nu)``.
+
     Parameters
     ----------
     thickness : float
-        Plate thickness.
+        Plate thickness, length.
     E : float
-        Young modulus.
-    nu : float, optional
-        Poisson's ratio.
+        Young modulus, force per unit area.
+    nu : float
+        Poisson's ratio, dimensionless.
     rho : float, optional
-        Material density
+        Material density, mass per unit volume. Default ``0.``.
     offset : float, optional
         Offset along the normal axis about the mid-surface, which influences
-        the extension-bending coupling (B matrix).
+        the extension-bending coupling (B matrix). Length. Default ``0.``.
     shear_correction : str or None, optional
         See :func:`.laminated_plate`. For an isotropic plate, ``'rohwer'``,
         ``'vlachoutsis'`` and ``'constant'`` give ``A44 = A55 = 5/6 G h``.
+        Default ``'rohwer'``.
+
+    Returns
+    -------
+    prop : :class:`.ShellProp`
+        The plate, with its stiffnesses and equivalent properties computed.
+
+    See Also
+    --------
+    laminated_plate
 
     """
     return laminated_plate(plyt=thickness, stack=[0], laminaprop=(E, nu),
