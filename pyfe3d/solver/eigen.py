@@ -1,8 +1,8 @@
 r"""
-Solvers and preconditioners (:mod:`pyfe3d.solver`)
-==================================================
+Eigenvalue analyses (:mod:`pyfe3d.solver.eigen`)
+================================================
 
-.. currentmodule:: pyfe3d.solver
+.. currentmodule:: pyfe3d.solver.eigen
 
 Helpers for the eigenvalue problems that the element matrices of this package
 are usually assembled for, namely linear buckling, with the constitutive and
@@ -142,7 +142,7 @@ def diagonal_preconditioner(K, floor=1.e-30):
     `[A]\{u\} = w [B]\{u\}` with `\{u\} = [D]\{y\}`, `[D]` being
     non-singular. The equilibration removes the spread of the diagonal
     entries, which usually reduces the condition number, see the notes of
-    :mod:`pyfe3d.solver`.
+    :mod:`pyfe3d.solver.eigen`.
 
     Examples
     --------
@@ -461,8 +461,8 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
     as `[K_G]\{u\} = \mu [K_{C_0}]\{u\}` with `\lambda = -1/\mu`, whose lowest
     positive load multipliers are the most negative `\mu`, returned by the
     Cayley mode while the shift is large enough, see the notes of
-    :mod:`pyfe3d.solver`. With ``precondition=True`` the problem solved is
-    the one of `[D][K_{C_0}][D]` and `[D][K_G][D]`, with the same
+    :mod:`pyfe3d.solver.eigen`. With ``precondition=True`` the problem
+    solved is the one of `[D][K_{C_0}][D]` and `[D][K_G][D]`, with the same
     eigenvalues, see :func:`diagonal_preconditioner`.
 
     A failure of the verification usually means that the mesh, and not the

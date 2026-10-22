@@ -1,2 +1,6 @@
 .. automodule:: pyfe3d.solver
-    :members:
+
+.. toctree::
+    :maxdepth: 1
+
+    solver_eigen.rst
