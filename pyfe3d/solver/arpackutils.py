@@ -399,7 +399,8 @@ def _rayleigh_ritz(A, M, V):
 
     The Ritz values are the optimal approximations of the eigenvalues that
     can be obtained from the subspace spanned by the columns of `[V]`
-    ([1]_, Section 11.4, Eq. (11.5) and Theorem 11.4.1, p. 236): the `j`-th
+    ([1]_, Chapter 11, "Approximations from a Subspace", Section 11.4,
+    "Optimality", Eq. (11.5) and Theorem 11.4.1, p. 236): the `j`-th
     Ritz value is the minimum over the `j`-dimensional subspaces of the span
     of the maximum of the Rayleigh quotient, so it can only improve when the
     span grows, and the span contains the eigenvectors of every pass. The
