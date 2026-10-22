@@ -14027,22 +14027,55 @@ cdef class Quad4R:
         .. math::
 
             KA_{\beta} = -\int_A \{N\}^T \left( r_{11} \{N_{,x}\}
-                + r_{21} \{N_{,y}\} \right) dA
+                + r_{12} \{N_{,y}\} \right) dA
 
         acting on the nodal values of `w_n`, where `\{N\}` holds the bilinear
         shape functions and `\{N_{,x}\}`, `\{N_{,y}\}` their derivatives along
-        the element axes. With the piston-theory coefficient `\beta` given by
-        the caller, `\beta KA_{\beta}` is the aerodynamic stiffness of the
-        pressure term proportional to the slope of `w_n` along the flow, see
-        :meth:`.update_KA_gamma` and :meth:`.update_CA` for the other terms.
+        the element axes. The element coordinates are `x = r_{11} X + r_{21}
+        Y + r_{31} Z` and `y = r_{12} X + r_{22} Y + r_{32} Z`, such that
+        `r_{11} \{N_{,x}\} + r_{12} \{N_{,y}\}` is the derivative along the
+        global `X` axis, the direction of the flow, projected on the plane of
+        the element.
 
-        TODO(author): direction of the derivative in the values, which
-        combine the derivatives of the shape functions along the element
-        ``x`` and ``y`` axes with ``r11`` and ``r21``.
+        .. rubric:: Piston theory
 
-        TODO(author): confirm the pressure law of piston theory, its signs
-        and the direction of the flow that these matrices assume, and cite
-        its source.
+        The matrices of :meth:`.update_KA_beta`, :meth:`.update_KA_gamma`
+        and :meth:`.update_CA` are the matrices of the aerodynamic load
+        along the element normal of a supersonic flow along the global `X`
+        axis, flowing towards the positive `X`. The linear piston theory, with
+        Krumhaar's correction for a cylinder [1]_, gives the pressure on the
+        side of the flow `p = \beta w_{,X} + \mu \dot{w} - \gamma w`, with
+        `w` the displacement towards the flow, and hence the
+        load per unit area along the normal
+
+        .. math::
+
+            q = -\beta \, w_{n,X} + \gamma \, w_n - \mu \, \dot{w}_n
+
+        whichever side of the element the flow is on, because `q` and `w_n`
+        change sign together. The load vector is then `\{f_A\} = \beta
+        [KA_{\beta}] \{u\} + \gamma [KA_{\gamma}] \{u\} + \mu [CA]
+        \{\dot{u}\}` and the equations of motion are
+
+        .. math::
+
+            [M] \{\ddot{u}\} - \mu [CA] \{\dot{u}\} + \left([K] - \beta
+            [KA_{\beta}] - \gamma [KA_{\gamma}]\right) \{u\} = \{0\}
+
+        The coefficients are given by the caller; with the density
+        `\rho_{\infty}`, speed `U` and Mach number `M` of the flow, `\beta =
+        \rho_{\infty} U^2/\sqrt{M^2 - 1}`, `\mu = \beta (M^2 - 2)/(U (M^2 -
+        1))`, and `\gamma = \beta/(2 R \sqrt{M^2 - 1})` for the flow over the
+        outer, convex, side of a cylinder of radius `R`, an outward
+        displacement lowering the pressure, or `\gamma = 0` for a flat
+        panel. The positive `\mu` damps the motion, and the positive
+        `\gamma` reduces the stiffness.
+
+        References
+        ----------
+        .. [1] Krumhaar, H., "The accuracy of linear piston theory when
+           applied to cylindrical shells", AIAA Journal, 1(6), 1448-1449,
+           1963.
 
         """
         cdef int c1, c2, c3, c4, i, j, k
@@ -14555,293 +14588,293 @@ cdef class Quad4R:
                     N4y = -0.25*eta*j21 - 0.25*j21 - 0.25*j22*xi + 0.25*j22
 
                     k = self.init_k_KA_beta
-                    KA_betav[k] += -N1*detJ*r13**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N1*detJ*r13**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N1*detJ*r13**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N1*detJ*r13**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N1*detJ*r13**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N1*detJ*r23**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N1*detJ*r23**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N1*detJ*r23**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N1*detJ*r23**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r33**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N1*detJ*r33**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r33**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N1*detJ*r33**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r33**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N1*detJ*r33**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r33**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N1*detJ*r33**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N2*detJ*r13**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N2*detJ*r13**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N2*detJ*r13**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N2*detJ*r13**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N2*detJ*r23**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N2*detJ*r23**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N2*detJ*r23**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N2*detJ*r23**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r33**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N2*detJ*r33**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r33**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N2*detJ*r33**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r33**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N2*detJ*r33**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r33**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N2*detJ*r33**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N3*detJ*r13**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N3*detJ*r13**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N3*detJ*r13**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N3*detJ*r13**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N3*detJ*r23**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N3*detJ*r23**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N3*detJ*r23**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N3*detJ*r23**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r33**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N3*detJ*r33**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r33**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N3*detJ*r33**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r33**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N3*detJ*r33**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r33**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N3*detJ*r33**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N4*detJ*r13**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N4*detJ*r13**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N4*detJ*r13**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N4*detJ*r13**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N4*detJ*r23**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N4*detJ*r23**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N4*detJ*r23**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N4*detJ*r23**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r33**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N4*detJ*r33**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r33**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N4*detJ*r33**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r33**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N4*detJ*r33**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r33**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N4*detJ*r33**2*wij*(N4x*r11 + N4y*r12)
 
 
     cpdef void update_KA_gamma(Quad4R self,
@@ -14888,11 +14921,11 @@ cdef class Quad4R:
             KA_{\gamma} = \int_A \{N\}^T \{N\} dA
 
         acting on the nodal values of `w_n`. With the piston-theory
-        coefficient `\gamma` given by the caller, `\gamma KA_{\gamma}` is the
-        aerodynamic stiffness of the pressure term proportional to `w_n`.
-
-        TODO(author): confirm the pressure law of piston theory and its signs,
-        see :meth:`.update_KA_beta`.
+        coefficient `\gamma` given by the caller, `\gamma [KA_{\gamma}]
+        \{u\}` is the load of the term `\gamma w_n` of the pressure law, which
+        enters the stiffness of the equations of motion as `-\gamma
+        [KA_{\gamma}]`, see the piston theory in the notes of
+        :meth:`.update_KA_beta`.
 
         """
         cdef int c1, c2, c3, c4, i, j, k
@@ -15719,11 +15752,11 @@ cdef class Quad4R:
             CA = -\int_A \{N\}^T \{N\} dA
 
         acting on the nodal values of the velocity `\dot w_n`. With the
-        piston-theory damping coefficient given by the caller, it is the
-        aerodynamic damping of the pressure term proportional to `\dot w_n`.
-
-        TODO(author): confirm the pressure law of piston theory and its signs,
-        see :meth:`.update_KA_beta`.
+        piston-theory damping coefficient `\mu` given by the caller, `\mu
+        [CA] \{\dot{u}\}` is the load of the term `-\mu \dot{w}_n` of the
+        pressure law, which enters the damping of the equations of motion as
+        `-\mu [CA]`, positive definite, see the piston theory in the notes of
+        :meth:`.update_KA_beta`.
 
         """
         cdef int c1, c2, c3, c4, i, j, k

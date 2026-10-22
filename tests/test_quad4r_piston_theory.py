@@ -179,7 +179,9 @@ def test_quad4r_piston_theory(plot=False, refinement=1):
     for i, beta in enumerate(betas):
         print('analysis i', i)
         # solving generalized eigenvalue problem
-        Keffective = Kuu + beta*KA_betauu + gammas[i]*KA_gammauu
+        # NOTE KA_beta and KA_gamma are the matrices of the aerodynamic load,
+        #      which enter the stiffness with the minus sign
+        Keffective = Kuu - beta*KA_betauu - gammas[i]*KA_gammauu
         eigvals, eigvecsu = eigs(A=Keffective, M=Muu,
                 k=num_eigenvalues, which='LM', sigma=-1., tol=1e-6, v0=eigvecsu[:, 0])
         # NOTE with v0=eigvecsu[:, 0]) avoids fluctuations in adjacent
