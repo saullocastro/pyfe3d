@@ -162,6 +162,25 @@ cdef class Truss:
     probe, : :class:`.TrussProbe` object
         Pointer to the probe.
 
+    Notes
+    -----
+    The strain energy of the element is
+
+    .. math::
+        U = \frac{1}{2} \int_0^L \left( E A u_{,x}^2 + G J {r_x}_{,x}^2
+            \right) dx
+
+    with the axial displacement `u` and the twist rotation `r_x`
+    interpolated linearly between the nodes, in the element coordinate
+    system, and `L` = ``length``. The transverse translations `v`, `w` and
+    the rotations `r_y`, `r_z` have no stiffness and must be supported by
+    other elements or by boundary conditions; the element has no geometric
+    stiffness matrix. The matrices and the internal forces are computed in
+    element coordinates and transformed to global coordinates with the
+    rotation matrix of the element, `[K] = [R][K_e][R]^T`, where `[R]` is
+    block diagonal with four copies of the rotation matrix ``r11, ...,
+    r33``.
+
     """
     cdef public int eid, pid
     cdef public int n1, n2
@@ -494,6 +513,13 @@ cdef class Truss:
             The default ``0`` means that the row and column indices ``KC0r``
             and ``KC0c`` should also be updated. Any other value will only
             update the stiffness matrix values ``KC0v``.
+
+        Notes
+        -----
+        In element coordinates, ``KC0`` is the Hessian of the strain energy
+        given in the notes of :class:`.Truss`, with the entries `\pm E A/L`
+        between the axial translations and `\pm G J/L` between the twist
+        rotations of the two nodes.
 
         """
         cdef int c1, c2, k
@@ -967,9 +993,45 @@ cdef class Truss:
         prop : :class:`.BeamProp` object
             Beam property object from where the inertial attributes are read.
         mtype : int, optional
-            0 for consistent mass matrix using method from Brockman 1987
-            1 for lumped mass matrix using method from Brockman 1987
-            Default ``0``.
+            0 for consistent mass matrix, 1 for lumped mass matrix. Default
+            ``0``.
+
+        Notes
+        -----
+        The mass matrices come from the kinetic energy, with the three
+        translations and the twist rotation `r_x` interpolated linearly:
+
+        .. math::
+            T = \frac{1}{2} \int_0^L \Big[ m (\dot{u}^2 + \dot{v}^2 + \dot{w}^2)
+                - 2 m_y \dot{v} \dot{r}_x - 2 m_z \dot{w} \dot{r}_x
+                + (m_{yy} + m_{zz}) \dot{r}_x^2 \Big] dx
+
+        with `m` = ``intrho``, `m_y` = ``intrhoy``, `m_z` = ``intrhoz``,
+        `m_{yy}` = ``intrhoy2`` and `m_{zz}` = ``intrhoz2``. The rotations
+        `r_y` and `r_z` have no inertia. ``mtype=0`` gives the consistent mass
+        matrix, the Hessian of `T` with respect to the nodal velocities,
+        integrated exactly along the element. ``mtype=1`` gives the lumped
+        mass matrix, diagonal in element coordinates: at each node `L m/2`
+        for the three translations and `L (m_{yy} + m_{zz})/2` for `r_x`,
+        without the coupling terms of `m_y` and `m_z`.
+
+        TODO(author): the coupling terms of the consistent mass matrix, `-m_y`
+        between `v` and `r_x` and `-m_z` between `w` and `r_x`, differ from
+        those of :meth:`.BeamLR.update_M`, `-m_z` between `v` and `r_x` and
+        `+m_y` between `w` and `r_x`, which follow from the displacements
+        `u_y = v - z r_x` and `u_z = w + y r_x` of a point `(y, z)` of the
+        cross section; confirm which one is intended.
+
+        Both matrices use the method from Brockman 1987 [1]_.
+
+        TODO(author): Brockman (1987) [1]_ treats the bilinear Mindlin plate
+        element; confirm which part of the method is used for this element.
+
+        References
+        ----------
+        .. [1] Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
+           Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
+           https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208
 
         """
         cdef int c1, c2, k

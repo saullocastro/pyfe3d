@@ -154,6 +154,29 @@ cdef class Spring:
     probe : :class:`.SpringProbe` object
         Pointer to the probe.
 
+    Notes
+    -----
+    The strain energy of the element is
+
+    .. math::
+        U = \frac{1}{2} \sum_{i=1}^{6} k_i \left( {u_e}_{i+6} - {u_e}_{i}
+            \right)^2
+
+    where `k_1, ..., k_6` are ``kxe``, ``kye``, ``kze``, ``krxe``, ``krye``
+    and ``krze``, and ``ue`` are the displacements in the element coordinate
+    system, in the order of :class:`.SpringProbe`. Each stiffness connects
+    only the same degree-of-freedom of the two nodes, without coupling
+    between translations and rotations, such that the internal forces are
+    ``finte = [K_e] ue`` with
+
+    .. math::
+        [K_e] = \begin{bmatrix} [k] & -[k] \\ -[k] & [k] \end{bmatrix},
+        \qquad [k] = \mathrm{diag}(k_1, ..., k_6)
+
+    transformed to global coordinates with the rotation matrix of the
+    element, `[K] = [R][K_e][R]^T`, where `[R]` is block diagonal with four
+    copies of the rotation matrix ``r11, ..., r33``.
+
     """
     cdef public int eid
     cdef public int n1, n2

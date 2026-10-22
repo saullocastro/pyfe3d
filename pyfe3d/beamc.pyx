@@ -138,11 +138,6 @@ cdef class BeamC:
     r"""
     Timoshenko 3D beam element with consistent shape functions
 
-    Formulation based on reference:
-
-        Luo, Y., 2008, “An Efficient 3D Timoshenko Beam Element with Consistent
-        Shape Functions,” Adv. Theor. Appl. Mech., 1(3), pp. 95–106.
-
     Nodal connectivity for the beam element::
 
         ^ y axis
@@ -197,6 +192,106 @@ cdef class BeamC:
         :class:`.BeamCData` for their number.
     probe, : :class:`.BeamCProbe` object
         Pointer to the probe.
+
+    Notes
+    -----
+    Formulation based on reference [1]_.
+
+    The cross section is rigid. In the element coordinate system, whose `x`
+    axis is the beam axis, the displacements of the point `(y, z)` of the
+    cross section are
+
+    .. math::
+        u_x = u - y r_z + z r_y, \qquad u_y = v - z r_x, \qquad
+        u_z = w + y r_x
+
+    where `u, v, w, r_x, r_y, r_z` are the translations and rotations of the
+    beam axis, interpolated from the 12 element displacements ``ue``. The
+    axial strain, with the curvatures `\kappa_y` and `\kappa_z`, and the
+    transverse shear strains of the beam axis are
+
+    .. math::
+        \epsilon_{xx} = u_{,x} + y \kappa_y + z \kappa_z, \qquad
+        \kappa_y = -{r_z}_{,x}, \qquad \kappa_z = {r_y}_{,x}, \qquad
+        \gamma_{xy} = v_{,x} - r_z, \qquad \gamma_{xz} = w_{,x} + r_y
+
+    and, with the cross-section integrals of :class:`.BeamProp`, the linear
+    strain energy is
+
+    .. math::
+        U = \frac{1}{2} \int_0^L \Big[
+            E \left( A u_{,x}^2 + I_{zz} \kappa_y^2 + I_{yy} \kappa_z^2
+            + 2 A_y u_{,x} \kappa_y + 2 A_z u_{,x} \kappa_z
+            + 2 I_{yz} \kappa_y \kappa_z \right) \\
+            + G \left( A (\gamma_{xy}^2 + \gamma_{xz}^2)
+            - 2 A_z \gamma_{xy} {r_x}_{,x} + 2 A_y \gamma_{xz} {r_x}_{,x}
+            + J {r_x}_{,x}^2 \right) \Big] dx
+
+    where `L` is ``length``. The torsion is of Saint-Venant type, without
+    warping, with ``J`` in place of the polar moment of the cross section,
+    and no shear correction factor is applied, see :class:`.BeamProp`. The
+    axial force is `N = E (A u_{,x} + A_y \kappa_y + A_z \kappa_z)`.
+
+    `u` and `r_x` are interpolated linearly between the nodes. `v` and `r_z`
+    are interpolated with the consistent shape functions of [1]_, cubic for
+    `v` and quadratic for `r_z`, which depend on the parameters
+
+    .. math::
+        \alpha_y = \frac{12 E I_{zz}}{G A L^2}, \qquad
+        \alpha_z = \frac{12 E I_{yy}}{G A L^2}, \qquad
+        \beta_y = \frac{1}{1 - \alpha_y}, \qquad
+        \beta_z = \frac{1}{1 - \alpha_z}
+
+    named ``alphay``, ``alphaz``, ``betay`` and ``betaz`` in the code. With
+    `\xi = x/L` and the nodal values `v_1, {r_z}_1, v_2, {r_z}_2`:
+
+    .. math::
+        v = \left[1 + \beta_y (2\xi^3 - 3\xi^2 + \alpha_y \xi)\right] v_1
+            + L \beta_y \left(\xi^3 + \frac{\alpha_y - 4}{2} \xi^2
+            + \left(1 - \frac{\alpha_y}{2}\right) \xi \right) {r_z}_1 \\
+            + \beta_y (-2\xi^3 + 3\xi^2 - \alpha_y \xi) v_2
+            + L \beta_y \left(\xi^3 - \frac{\alpha_y + 2}{2} \xi^2
+            + \frac{\alpha_y}{2} \xi \right) {r_z}_2
+
+    .. math::
+        r_z = \frac{6 \beta_y}{L} (\xi^2 - \xi) (v_1 - v_2)
+            + \left[1 + \beta_y (3\xi^2 + (\alpha_y - 4) \xi)\right] {r_z}_1
+            + \beta_y (3\xi^2 - (\alpha_y + 2) \xi) {r_z}_2
+
+    `w` and `r_y` use the same functions, with `v` replaced by `w`, `r_z` by
+    `-r_y`, `\alpha_y` by `\alpha_z` and `\beta_y` by `\beta_z`. The
+    transverse shear strains are then constant along the element, e.g.
+    `\gamma_{xy} = \alpha_y \beta_y \left((v_1 - v_2)/L + ({r_z}_1 +
+    {r_z}_2)/2\right)`, and they vanish with `\alpha_y = 0`, i.e. with an
+    infinite ``G``, where the interpolation of `v` becomes the cubic
+    Hermite interpolation of the Euler-Bernoulli beam.
+
+    TODO(author): with these functions, the homogeneous equilibrium
+    `G A \gamma_{xy} = E I_{zz} {\kappa_y}_{,x}` of the strain energy above
+    holds for `\alpha_y = -12 E I_{zz}/(G A L^2)`, not for the positive
+    value computed in the code, i.e. the code corresponds to `\beta_y =
+    1/(1 + \phi)` of the usual Timoshenko consistent interpolation with
+    `\phi = -12 E I_{zz}/(G A L^2)`. A numerical check with one element
+    (``E=1``, ``G=1/2.6``, square section of side ``0.3``, ``L=1``) gives a
+    cantilever tip deflection under a transverse tip force of ``429.07``
+    against ``493.83`` of Euler-Bernoulli and ``522.72`` of Timoshenko
+    (exact with the sign of `\alpha_y` reversed); refining the mesh
+    converges to the Timoshenko value. Also, `\beta_y` is infinite when
+    `\alpha_y = 1`, i.e. when `L^2 = 12 E I_{zz}/(G A)`. Confirm the sign
+    convention of `\alpha_y`, `\alpha_z` against [1]_.
+
+    The matrices and the internal forces are computed in element
+    coordinates and transformed to global coordinates with the rotation
+    matrix of the element, e.g. `[K] = [R][K_e][R]^T`, where `[R]` is block
+    diagonal with four copies of the rotation matrix ``r11, ..., r33``, one
+    for the translations and one for the rotations of each node. The
+    element coordinate system is not updated with the displacements.
+
+    References
+    ----------
+    .. [1] Luo, Y., 2008, “An Efficient 3D Timoshenko Beam Element with
+       Consistent Shape Functions,” Adv. Theor. Appl. Mech., 1(3),
+       pp. 95–106.
 
     """
     cdef public int eid, pid
@@ -475,9 +570,19 @@ cdef class BeamC:
             are read from.
         nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
-            value adds the geometrically nonlinear terms of the von Karman strains,
-            for which the exact Jacobian of the internal forces is ``KC0 + KCNL +
-            KG``, see :meth:`.update_KCNL`.
+            value adds the geometrically nonlinear terms, for which the tangent
+            stiffness matrix of the internal forces is ``KC0 + KCNL + KG``, see
+            :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        The linear internal forces are `[K_{C0_e}] \{u_e\}`, with the matrix
+        `[K_{C0_e}]` of :meth:`.update_KC0` in element coordinates. With
+        ``nonlinear`` different from ``0``, the terms of the von Karman strains
+        are added, see :meth:`._update_probe_finte_nonlinear`, such that
+        ``finte`` is the gradient of the strain energy with the von Karman
+        axial strain, for which the exact Jacobian of the internal forces is
+        ``KC0 + KCNL + KG``, see :meth:`.update_KCNL`.
 
         """
         cdef double *ue
@@ -638,6 +743,14 @@ cdef class BeamC:
             The default ``0`` means that the row and column indices ``KC0r``
             and ``KC0c`` should also be updated. Any other value will only
             update the stiffness matrix values ``KC0v``.
+
+        Notes
+        -----
+        ``KC0`` is the Hessian, with respect to the element displacements
+        ``ue``, of the linear strain energy given in the notes of
+        :class:`.BeamC`, integrated analytically along the element with the
+        consistent shape functions, and transformed to global coordinates as
+        described there.
 
         """
         cdef int c1, c2, k
@@ -1505,9 +1618,15 @@ cdef class BeamC:
             are read from.
         nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
-            value adds the geometrically nonlinear terms of the von Karman strains,
-            for which the exact Jacobian of the internal forces is ``KC0 + KCNL +
-            KG``, see :meth:`.update_KCNL`.
+            value adds the geometrically nonlinear terms, for which the tangent
+            stiffness matrix of the internal forces is ``KC0 + KCNL + KG``, see
+            :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        The nonlinear terms are those of the von Karman strains, for which the
+        exact Jacobian of the internal forces is ``KC0 + KCNL + KG``, see
+        :meth:`.update_probe_finte` and :meth:`.update_KCNL`.
 
         """
         cdef double *finte
@@ -1534,13 +1653,29 @@ cdef class BeamC:
                                  double xi) noexcept nogil:
         r"""Update the probe rows of the axial strain, curvatures and slopes
 
-        Evaluated at ``xi = x/L``, in element coordinates, using the consistent
-        shape functions of Luo (2008):
+        The arrays ``BLexx``, ``BLky``, ``BLkz``, ``Gvx`` and ``Gwx`` of the
+        :class:`.BeamCProbe` are overwritten with the rows that, multiplied by
+        the element displacements ``ue``, give in element coordinates the axial
+        strain of the beam axis, the two curvatures and the two slopes of the
+        axis, evaluated at ``xi = x/L``, from ``0`` at node 1 to ``1`` at node
+        2. They depend on ``length`` and on the attributes ``E``, ``G``,
+        ``A``, ``Iyy`` and ``Izz`` of ``prop``.
+
+        Notes
+        -----
+        The rows are obtained with the consistent shape functions of Luo
+        (2008) [1]_, given in the notes of :class:`.BeamC`:
 
         - ``BLexx``: `u_{,x}`
         - ``BLky``: `\kappa_y = -{r_z}_{,x}`
         - ``BLkz``: `\kappa_z = {r_y}_{,x}`
         - ``Gvx``, ``Gwx``: `v_{,x}` and `w_{,x}`
+
+        References
+        ----------
+        .. [1] Luo, Y., 2008, “An Efficient 3D Timoshenko Beam Element with
+           Consistent Shape Functions,” Adv. Theor. Appl. Mech., 1(3),
+           pp. 95–106.
 
         """
         cdef int i
@@ -1602,10 +1737,30 @@ cdef class BeamC:
     cdef void _update_probe_KCNLve(BeamC self, BeamProp prop) noexcept nogil:
         r"""Update the probe values of the nonlinear constitutive stiffness matrix
 
-        The attribute ``KCNLve`` of the :class:`.BeamCProbe` is updated with
-        KCNL = KC0L + KCL0 + KCLL + KGNL in element coordinates, stored row by
-        row and evaluated at the displacements ``ue`` of the probe. See
+        The attribute ``KCNLve`` of the :class:`.BeamCProbe` is overwritten
+        with the nonlinear constitutive stiffness matrix KCNL in element
+        coordinates, stored row by row and evaluated at the displacements
+        ``ue`` of the probe, from ``length`` and the attributes ``E``, ``A``,
+        ``Ay`` and ``Az`` of ``prop`` (and those read by
+        :meth:`._update_probe_BL_G`). The arrays ``BLexx``, ``BLky``,
+        ``BLkz``, ``Gvx`` and ``Gwx`` of the probe are overwritten too. See
         :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        KCNL = KC0L + KCL0 + KCLL + KGNL, see :meth:`.update_KCNL`, is
+        integrated along the element with the 5-point Gauss-Legendre
+        quadrature, exact for these polynomials of degree up to 8 in ``xi``.
+        At each point, with the rows of :meth:`._update_probe_BL_G`, the
+        slopes `v_{,x}` and `w_{,x}` at ``ue``, ``EBL = E*(A*BLexx + Ay*BLky +
+        Az*BLkz)``, the row of the axial force, ``BNL = v_x*Gvx + w_x*Gwx``,
+        the variation of the nonlinear axial strain, and the axial force of
+        the nonlinear axial strain ``NNL = E*A*(v_x**2 + w_x**2)/2``, the
+        entry `(i, j)` receives, times the weight of the point and `L/2`:
+
+        .. math::
+            EBL_i BNL_j + BNL_i EBL_j + E A \, BNL_i BNL_j
+            + NNL \left( Gvx_i Gvx_j + Gwx_i Gwx_j \right)
 
         """
         cdef int i, j, pt
@@ -1689,11 +1844,32 @@ cdef class BeamC:
                                             BeamProp prop) noexcept nogil:
         r"""Add the geometrically nonlinear terms to the probe internal forces
 
-        The attribute ``finte`` of the :class:`.BeamCProbe` receives the terms
-        of the von Karman axial strain `\epsilon_{NL} = (v_{,x}^2 +
-        w_{,x}^2)/2`, evaluated at the displacements ``ue`` of the probe, such
-        that ``finte`` becomes the gradient of the strain energy whose Hessian is
-        KC0 + KCNL + KG. See :meth:`.update_KCNL`.
+        The nonlinear terms, evaluated at the displacements ``ue`` of the
+        probe, from ``length`` and the attributes ``E``, ``A``, ``Ay`` and
+        ``Az`` of ``prop`` (and those read by :meth:`._update_probe_BL_G`),
+        are added to the attribute ``finte`` of the :class:`.BeamCProbe`, which
+        must already contain the linear internal forces, see
+        :meth:`.update_probe_finte`. The arrays ``BLexx``, ``BLky``,
+        ``BLkz``, ``Gvx`` and ``Gwx`` of the probe are overwritten. See
+        :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        The added terms are those of the von Karman axial strain
+        `\epsilon_{NL} = (v_{,x}^2 + w_{,x}^2)/2`, such that ``finte`` becomes
+        the gradient of the strain energy whose Hessian is KC0 + KCNL + KG.
+        With the quantities defined in :meth:`._update_probe_KCNLve` and the
+        linear axial force ``N = EBL*ue``, each point of the 5-point
+        Gauss-Legendre quadrature adds, times its weight and `L/2`:
+
+        .. math::
+            EBL_i \, \epsilon_{NL} + BNL_i \left( N + NNL \right)
+
+        i.e. `[B_L]^T [D] \{\epsilon_{NL}, 0, 0, 0, 0, 0\}^T + [B_{NL}]^T (N +
+        N_{NL})`, the variation of the axial strain energy `\frac{1}{2} \int_0^L
+        \int_A E (\epsilon_L + \epsilon_{NL})^2 dA dx` minus its linear part,
+        where `\epsilon_L` is the linear axial strain of the notes of
+        :class:`.BeamC` and `\epsilon_{NL}` is uniform over the cross section.
 
         """
         cdef int i, pt
@@ -1772,35 +1948,11 @@ cdef class BeamC:
                            ):
         r"""Update sparse vectors for the nonlinear constitutive stiffness matrix KCNL
 
-        Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, built from the von Karman
-        axial strain
-
-        .. math::
-            \epsilon_{xx} = u_{,x} + \frac{1}{2} \left( v_{,x}^2 + w_{,x}^2 \right)
-
-        whose nonlinear part is `\epsilon_{NL} = \frac{1}{2} [B_{NL}] \{u_e\}`, with
-        `[B_{NL}] = v_{,x} [G_v] + w_{,x} [G_w]` its variation. With
-        `[B_L]` the linear strain-displacement matrix, `[D]` the constitutive
-        matrix, whose first column couples the axial strain with `E A`, `E A_y`
-        and `E A_z`, and `N_{NL} = E A \epsilon_{NL}`:
-
-        - KC0L = `[B_L]^T [D] [B_{NL}]`
-        - KCL0 = KC0L`^T`
-        - KCLL = `[B_{NL}]^T [D] [B_{NL}]`
-        - KGNL = `N_{NL} ([G_v]^T [G_v] + [G_w]^T [G_w])`
-
-        The first three groups are the constitutive terms coupling the linear and
-        the nonlinear parts of the axial strain. KGNL is geometric, carrying the
-        axial force of the nonlinear axial strain. It is collected here so that
-        :meth:`.update_KG` stays homogeneous of degree one in the displacements,
-        which is what a linear buckling analysis needs. With it here,
-
-        .. math::
-            K_T = K_{C0} + K_{CNL}(u) + K_G(u)
-
-        is the exact Jacobian of the internal forces of :meth:`.update_fint` with
-        ``nonlinear=1``, and a Newton-Raphson iteration built on them converges
-        quadratically.
+        The matrix, evaluated at the displacements ``probe.ue``, is computed
+        from ``length``, the rotation matrix and the attributes of ``prop``
+        read by :meth:`._update_probe_KCNLve`. The tangent stiffness matrix
+        of the internal forces of :meth:`.update_fint` with ``nonlinear=1`` is
+        ``KC0 + KCNL + KG``, see :meth:`.update_KC0` and :meth:`.update_KG`.
 
         Before this function is called, the probe :class:`.BeamCProbe` attribute
         of the :class:`.BeamC` object must be updated using
@@ -1833,6 +1985,46 @@ cdef class BeamC:
             The default ``0`` means that the row and column indices ``KCNLr`` and
             ``KCNLc`` should also be updated. Any other value will only update the
             stiffness matrix values ``KCNLv``.
+
+        Notes
+        -----
+        Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, built from the von Karman
+        axial strain
+
+        .. math::
+            \epsilon_{xx} = u_{,x} + \frac{1}{2} \left( v_{,x}^2 + w_{,x}^2 \right)
+
+        whose nonlinear part is `\epsilon_{NL} = \frac{1}{2} [B_{NL}] \{u_e\}`, with
+        `[B_{NL}] = v_{,x} [G_v] + w_{,x} [G_w]` its variation. With
+        `[B_L]` the linear strain-displacement matrix, `[D]` the constitutive
+        matrix, whose first column couples the axial strain with `E A`, `E A_y`
+        and `E A_z`, and `N_{NL} = E A \epsilon_{NL}`:
+
+        - KC0L = `[B_L]^T [D] [B_{NL}]`
+        - KCL0 = KC0L`^T`
+        - KCLL = `[B_{NL}]^T [D] [B_{NL}]`
+        - KGNL = `N_{NL} ([G_v]^T [G_v] + [G_w]^T [G_w])`
+
+        The first three groups are the constitutive terms coupling the linear and
+        the nonlinear parts of the axial strain. KGNL is geometric, carrying the
+        axial force of the nonlinear axial strain. It is collected here so that
+        :meth:`.update_KG` stays homogeneous of degree one in the displacements,
+        which is what a linear buckling analysis needs. With it here,
+
+        .. math::
+            K_T = K_{C0} + K_{CNL}(u) + K_G(u)
+
+        is the exact Jacobian of the internal forces of :meth:`.update_fint` with
+        ``nonlinear=1``, and a Newton-Raphson iteration built on them converges
+        quadratically.
+
+        The integration is made by :meth:`._update_probe_KCNLve` with the
+        5-point Gauss-Legendre quadrature, exact for the consistent shape
+        functions. The von Karman axial strain is valid for small strains and
+        moderate rotations: the nonlinear axial strain `\epsilon_{NL}` is
+        uniform over the cross section, the curvatures and the transverse
+        shear strains are linear in the displacements, and the element
+        coordinate system is not updated with the displacements.
 
         """
         cdef int i, j, node_i, node_j, k, ke, m, n
@@ -1940,6 +2132,30 @@ cdef class BeamC:
             The default ``0`` means that the row and column indices ``KGr``
             and ``KGc`` are also updated. Any other value will only update the
             stiffness matrix values ``KGv``.
+
+        Notes
+        -----
+        The geometric stiffness matrix is
+
+        .. math::
+            [K_G] = \int_0^L N \left( [G_v]^T [G_v] + [G_w]^T [G_w] \right) dx
+
+        the Hessian of `\frac{1}{2} \int_0^L N (v_{,x}^2 + w_{,x}^2) dx` at a
+        constant axial force `N`, where `[G_v]` and `[G_w]` are the rows
+        ``Gvx`` and ``Gwx`` of :meth:`._update_probe_BL_G`, giving the slopes
+        `v_{,x}` and `w_{,x}` with the consistent shape functions, and `N = E
+        (A u_{,x} + A_y \kappa_y + A_z \kappa_z)` is the axial force of the
+        linear strains at ``probe.ue``, see the notes of :class:`.BeamC`.
+        `N` varies linearly along the element, from ``Na`` at node 1 to
+        ``Nb`` at node 2 in the code, and the integral is computed
+        analytically.
+
+        `[K_G]` is homogeneous of degree one in ``probe.ue``. With ``probe.ue``
+        from the linear static solution of a reference load, the critical
+        load multipliers `\lambda` of the linear buckling analysis solve
+        `([K_{C0}] + \lambda [K_G]) \{u\} = \{0\}`, see
+        :func:`pyfe3d.solver.linear_buckling`. The geometric term of the
+        nonlinear axial strain is in :meth:`.update_KCNL`.
 
         """
         cdef double *ue
@@ -2745,9 +2961,51 @@ cdef class BeamC:
         prop : :class:`.BeamProp` object
             Beam property object from where the inertial attributes are read.
         mtype : int, optional
-            0 for consistent mass matrix using method from Brockman 1987
-            1 for lumped mass matrix using method from Brockman 1987
-            Default ``0``.
+            0 for consistent mass matrix, 1 for lumped mass matrix. Default
+            ``0``.
+
+        Notes
+        -----
+        The mass matrices come from the kinetic energy of the displacement
+        field of the notes of :class:`.BeamC`, integrated over the cross
+        section with the inertial attributes of :class:`.BeamProp`:
+
+        .. math::
+            T = \frac{1}{2} \int_0^L \Big[ m (\dot{u}^2 + \dot{v}^2 + \dot{w}^2)
+                + m_{yy} \dot{r}_z^2 + m_{zz} \dot{r}_y^2
+                - 2 m_{yz} \dot{r}_y \dot{r}_z
+                - 2 m_y \dot{u} \dot{r}_z + 2 m_z \dot{u} \dot{r}_y
+                - 2 m_z \dot{v} \dot{r}_x + 2 m_y \dot{w} \dot{r}_x
+                + (m_{yy} + m_{zz}) \dot{r}_x^2 \Big] dx
+
+        with `m` = ``intrho``, `m_y` = ``intrhoy``, `m_z` = ``intrhoz``,
+        `m_{yy}` = ``intrhoy2``, `m_{zz}` = ``intrhoz2`` and `m_{yz}` =
+        ``intrhoyz``.
+
+        ``mtype=0`` gives the consistent mass matrix, the Hessian of `T` with
+        respect to the nodal velocities, interpolated with the consistent
+        shape functions of :class:`.BeamC`, which depend on ``alphay`` and
+        ``alphaz`` and hence on ``E``, ``G``, ``A``, ``Iyy`` and ``Izz``. The
+        integral along the element is computed analytically (exactly), and
+        the rotary inertia is included.
+
+        ``mtype=1`` gives the lumped mass matrix, diagonal in element
+        coordinates: at each node, `L m/2` for the three translations, `L
+        (m_{yy} + m_{zz})/2` for `r_x`, `L m_{zz}/2` for `r_y` and `L
+        m_{yy}/2` for `r_z`. It corresponds to the two-point Gauss-Lobatto
+        quadrature of `T`, whose points are the nodes, without the coupling
+        terms of `m_y`, `m_z` and `m_{yz}`, which are not included.
+
+        Both matrices use the method from Brockman 1987 [1]_.
+
+        TODO(author): Brockman (1987) [1]_ treats the bilinear Mindlin plate
+        element; confirm which part of the method is used for this element.
+
+        References
+        ----------
+        .. [1] Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
+           Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
+           https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208
 
         """
         cdef int c1, c2, k
