@@ -97,15 +97,18 @@ def diagonal_preconditioner(K, floor=1.e-30):
     ----------
     K : sparse_matrix
         Matrix whose diagonal sets the scaling, normally the constitutive
-        stiffness matrix with the boundary conditions already applied.
+        stiffness matrix with the boundary conditions already applied. Shape
+        ``(n, n)``.
     floor : float, optional
         Lower bound for the diagonal entries, which guards against the null
-        diagonal of an unconstrained degree-of-freedom.
+        diagonal of an unconstrained degree-of-freedom. Same dimension as the
+        diagonal entries of ``K``. Default ``1.e-30``.
 
     Returns
     -------
     D : sparse_matrix
-        Diagonal preconditioner.
+        Diagonal preconditioner, created with :func:`scipy.sparse.diags`,
+        shape ``(n, n)``.
 
     Examples
     --------
@@ -131,22 +134,32 @@ def estimate_cayley_sigma(K, KG, safety=10., max_iter=50, rel_tol=1.e-3):
     positive definite, or when the linear solution is inaccurate, since in
     those cases the power iteration says nothing.
 
+    ``K`` is factorized with :func:`scipy.sparse.linalg.splu` and the power
+    iteration starts from a vector drawn from
+    :class:`numpy.random.RandomState` with the seed ``42``, such that the
+    result is reproducible. The fallback value ``1.`` is also returned when
+    the ratio of norms is not finite or zero, and when any exception is
+    raised during the estimate.
+
     Parameters
     ----------
     K, KG : sparse_matrix
         Constitutive and geometric stiffness matrices, with the boundary
-        conditions already applied.
+        conditions already applied. Shape ``(n, n)``.
     safety : float, optional
-        Multiplier applied to the estimated largest `|\mu|`.
+        Multiplier applied to the estimated largest `|\mu|`. Dimensionless.
+        Default ``10.``.
     max_iter : int, optional
-        Maximum number of power iterations.
+        Maximum number of power iterations. Default ``50``.
     rel_tol : float, optional
         Relative increment below which the power iteration is stopped.
+        Dimensionless. Default ``1.e-3``.
 
     Returns
     -------
     sigma : float
-        Shift to be passed to ``eigsh(..., sigma=sigma, mode='cayley')``.
+        Shift to be passed to ``eigsh(..., sigma=sigma, mode='cayley')``, of
+        the dimension of the eigenvalues `\mu`.
 
     """
     try:
@@ -189,6 +202,27 @@ def is_positive_definite(A):
     never meets a zero or a negative pivot, and by Sylvester's law of inertia
     a negative pivot means a negative eigenvalue.
 
+    The factorization uses :func:`scipy.sparse.linalg.splu` with the
+    ordering ``'MMD_AT_PLUS_A'``, ``diag_pivot_thresh=0.`` and the symmetric
+    mode. The result is ``False`` when the factorization fails because ``A``
+    is exactly singular, when a row interchange was nevertheless made, or
+    when a diagonal entry of the factor ``U`` is not positive. The symmetry
+    of ``A`` is not checked.
+
+    Parameters
+    ----------
+    A : sparse_matrix
+        Symmetric matrix, shape ``(n, n)``.
+
+    Returns
+    -------
+    positive_definite : bool
+        ``True`` when all the pivots are positive.
+
+    See Also
+    --------
+    check_eigenpairs
+
     """
     try:
         with warnings.catch_warnings():
@@ -220,24 +254,35 @@ def check_eigenpairs(K, KG, eigvals, eigvecs, rtol=1.e-3, min_rel_gap=1.e-4):
     The second check is the one that catches a solver that converged to an
     interior part of the spectrum, which is silent otherwise.
 
+    The eigenpairs with a non-finite `\lambda` are skipped. When no
+    `\lambda` is finite, the check fails at once. The second check is
+    skipped when no `\lambda` is positive or when `[K_{C_0}]` is not
+    positive definite, see :func:`is_positive_definite`. Nothing is raised
+    or printed; the result tells which check failed.
+
     Parameters
     ----------
     K, KG : sparse_matrix
-        Constitutive and geometric stiffness matrices.
+        Constitutive and geometric stiffness matrices. Shape ``(n, n)``.
     eigvals : array_like
-        Load multipliers `\lambda`.
+        Load multipliers `\lambda`, dimensionless. 1-D array of size ``k``.
     eigvecs : array_like
-        Eigenvectors, one per column.
+        Eigenvectors, one per column. Shape ``(n, k)``.
     rtol : float, optional
-        Largest acceptable relative residual.
+        Largest acceptable relative residual, dimensionless. Default
+        ``1.e-3``.
     min_rel_gap : float, optional
         Relative margin below `\lambda_1` at which the completeness of the
-        spectrum is tested.
+        spectrum is tested, dimensionless. Default ``1.e-4``.
 
     Returns
     -------
     error : str or None
         Description of the check that failed, or ``None`` when all passed.
+
+    See Also
+    --------
+    linear_buckling
 
     """
     eigvals = np.asarray(eigvals, dtype=float)
@@ -276,34 +321,46 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
     :func:`diagonal_preconditioner` and the verification of
     :func:`check_eigenpairs`.
 
+    ``K`` and ``KG`` are converted to CSR matrices. The number of computed
+    load multipliers is ``k = min(num_eigvalues, n - 2)``. The eigenvalues
+    `\mu` returned by :func:`scipy.sparse.linalg.eigsh` are converted into
+    `\lambda = -1/\mu`, a zero `\mu` giving an infinite `\lambda`. With
+    ``precondition=True`` the eigenvectors are transformed back to the
+    original degrees-of-freedom, and the verification always uses the
+    original ``K`` and ``KG``.
+
     Parameters
     ----------
     K, KG : sparse_matrix
         Constitutive and geometric stiffness matrices, with the boundary
         conditions already applied, i.e. only the free degrees-of-freedom.
+        Shape ``(n, n)``.
     num_eigvalues : int, optional
-        Number of load multipliers to compute.
+        Number of load multipliers to compute. Default ``6``.
     tol : float, optional
         Tolerance passed to :func:`scipy.sparse.linalg.eigsh`, ``0`` meaning
-        machine precision.
+        machine precision. Default ``0``.
     sigma : float or None, optional
         Shift of the Cayley mode. With ``None`` it is estimated from the
-        matrices, which is the recommended use.
+        matrices, which is the recommended use. Default ``None``.
     precondition : bool, optional
         Whether to equilibrate the diagonal before solving. This does not
-        change the eigenvalues.
+        change the eigenvalues. Default ``True``.
     check : bool, optional
-        Whether to verify the eigenpairs and raise on failure.
+        Whether to verify the eigenpairs and raise on failure. Default
+        ``True``.
     check_rtol : float, optional
-        Largest acceptable relative residual of the eigenpairs.
+        Largest acceptable relative residual of the eigenpairs,
+        dimensionless. Default ``1.e-3``.
 
     Returns
     -------
     eigvals : np.ndarray
         Load multipliers `\lambda`, the positive ones first in increasing
-        order, followed by the negative ones.
+        order, followed by the negative ones. Dimensionless, 1-D array of
+        size ``k``.
     eigvecs : np.ndarray
-        Eigenvectors, one per column, in the same order.
+        Eigenvectors, one per column, in the same order. Shape ``(n, k)``.
 
     Raises
     ------
@@ -346,24 +403,37 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
 def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True):
     r"""Natural frequencies of `([K_{C_0}] - \omega_n^2 [M])\{u\} = \{0\}`
 
+    ``K`` and ``M`` are converted to CSR matrices, optionally preconditioned
+    with :func:`diagonal_preconditioner`, and the eigenvalues
+    `\omega_n^2` are computed with :func:`scipy.sparse.linalg.eigsh` in
+    shift-invert mode with ``sigma=-1.`` and ``which='LM'``. The number of
+    computed frequencies is ``k = min(num_eigvalues, n - 2)``. The
+    eigenpairs are sorted by increasing eigenvalue, the eigenvectors are
+    transformed back to the original degrees-of-freedom when
+    ``precondition=True``, and negative eigenvalues give a zero frequency.
+    Unlike :func:`linear_buckling`, the eigenpairs are not verified.
+
     Parameters
     ----------
     K, M : sparse_matrix
         Constitutive stiffness and mass matrices, with the boundary
-        conditions already applied.
+        conditions already applied. Shape ``(n, n)``.
     num_eigvalues : int, optional
-        Number of frequencies to compute.
+        Number of frequencies to compute. Default ``6``.
     tol : float, optional
-        Tolerance passed to :func:`scipy.sparse.linalg.eigsh`.
+        Tolerance passed to :func:`scipy.sparse.linalg.eigsh`, ``0`` meaning
+        machine precision. Default ``0``.
     precondition : bool, optional
         Whether to equilibrate the diagonal of `[K_{C_0}]` before solving.
+        Default ``True``.
 
     Returns
     -------
     omegan : np.ndarray
-        Circular frequencies in rad/s, in increasing order.
+        Circular frequencies in rad/s, in increasing order. 1-D array of size
+        ``k``.
     eigvecs : np.ndarray
-        Eigenvectors, one per column.
+        Eigenvectors, one per column. Shape ``(n, k)``.
 
     Notes
     -----

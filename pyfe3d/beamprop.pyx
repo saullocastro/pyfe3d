@@ -12,6 +12,9 @@ Beam property module (:mod:`pyfe3d.beamprop`)
 
 .. currentmodule:: pyfe3d.beamprop
 
+Defines :class:`.BeamProp`, the cross-section and material properties read
+by the elements :class:`.BeamC`, :class:`.BeamLR` and :class:`.Truss`.
+
 """
 cdef class BeamProp:
     r"""
@@ -27,41 +30,53 @@ cdef class BeamProp:
     geometric correction factors are applied internally during the calculation
     of the structural matrices.
 
+    The constructor takes no argument and sets all attributes to ``0``. The
+    attributes are read, each time it is called, by the ``update_*`` methods
+    of :class:`.BeamC`, :class:`.BeamLR` and :class:`.Truss` that receive
+    the property.
+
 
     Attributes
     ----------
     A, : float
-        Area of the cross section
+        Area of the cross section, dimension length squared.
     E, : float
-        Young modulus
+        Young modulus, force per unit area.
     G, : float
-        Shear modulus
+        Shear modulus, force per unit area.
     Iyy, : float
-        Second moment of area about the y axis `\int_y \int_z z^2 dy dz`
+        Second moment of area about the y axis `\int_y \int_z z^2 dy dz`,
+        dimension length to the fourth.
     Izz, : float
-        Second moment of area about the z axis `\int_y \int_z y^2 dy dz`
+        Second moment of area about the z axis `\int_y \int_z y^2 dy dz`,
+        dimension length to the fourth.
     Iyz, : float
-        Product moment of area `\int_y \int_z y z dy dz`
+        Product moment of area `\int_y \int_z y z dy dz`, dimension length to
+        the fourth.
     J, : float
         Torsion stiffness or torsion constant, see
-        https://en.wikipedia.org/wiki/Torsion_constant.
+        https://en.wikipedia.org/wiki/Torsion_constant. The elements multiply
+        it by ``G``, such that it has the dimension length to the fourth.
     Ay, : float
-        Integral `\int_y \int_z y dy dz`
+        Integral `\int_y \int_z y dy dz`, dimension length cubed.
     Az, : float
-        Integral `\int_y \int_z z dy dz`
+        Integral `\int_y \int_z z dy dz`, dimension length cubed.
     intrho, : float
         Integral `\int_{y_e} \int_{z_e} \rho(y, z) dy dz`, where `\rho` Is the
-        density
+        density, dimension mass per unit length.
     intrhoy, : float
-        Integral `\int_y \int_z y \rho(y, z) dy dz`
+        Integral `\int_y \int_z y \rho(y, z) dy dz`, dimension mass.
     intrhoz, : float
-        Integral `\int_y \int_z z \rho(y, z) dy dz`
+        Integral `\int_y \int_z z \rho(y, z) dy dz`, dimension mass.
     intrhoy2, : float
-        Integral `\int_y \int_z y^2 \rho(y, z) dy dz`
+        Integral `\int_y \int_z y^2 \rho(y, z) dy dz`, dimension mass times
+        length.
     intrhoz2, : float
-        Integral `\int_y \int_z z^2 \rho(y, z) dy dz`
+        Integral `\int_y \int_z z^2 \rho(y, z) dy dz`, dimension mass times
+        length.
     intrhoyz, : float
-        Integral `\int_y \int_z y z \rho(y, z) dy dz`
+        Integral `\int_y \int_z y z \rho(y, z) dy dz`, dimension mass times
+        length.
 
     Notes
     -----

@@ -12,6 +12,12 @@ BeamLR - Linear Timoshenko 3D beam element with reduced integration (:mod:`pyfe3
 
 .. currentmodule:: pyfe3d.beamlr
 
+Defines the two-node beam element :class:`.BeamLR`, with six
+degrees-of-freedom per node, its probe :class:`.BeamLRProbe` and
+:class:`.BeamLRData`, which gives the number of sparse entries per element
+of each structural matrix. The cross-section and material properties are
+given by a :class:`.BeamProp` object.
+
 """
 import numpy as np
 
@@ -25,19 +31,26 @@ cdef class BeamLRData:
     r"""
     Used to allocate memory for the sparse matrices.
 
+    Each attribute is the number of entries that one :class:`.BeamLR`
+    element writes in the arrays of rows, columns and values of a sparse
+    matrix, at the consecutive positions that start at its ``init_k_KC0``,
+    ``init_k_KCNL``, ``init_k_KG`` or ``init_k_M``. The constructor takes no
+    argument and sets the values below.
+
     Attributes
     ----------
     KC0_SPARSE_SIZE, : int
-        ``KC0_SPARSE_SIZE = 144``
+        ``KC0_SPARSE_SIZE = 144``, written by :meth:`.BeamLR.update_KC0`.
 
     KCNL_SPARSE_SIZE, : int
-        ``KCNL_SPARSE_SIZE = 144``
+        ``KCNL_SPARSE_SIZE = 144``, written by :meth:`.BeamLR.update_KCNL`.
 
     KG_SPARSE_SIZE, : int
-        ``KG_SPARSE_SIZE = 36``
+        ``KG_SPARSE_SIZE = 36``, written by :meth:`.BeamLR.update_KG`.
 
     M_SPARSE_SIZE, : int
-        ``M_SPARSE_SIZE = 144``
+        ``M_SPARSE_SIZE = 144``, written by :meth:`.BeamLR.update_M` with
+        ``mtype=0``; with ``mtype=1`` only the first ``36`` are written.
 
     """
     cdef public int KC0_SPARSE_SIZE
@@ -65,21 +78,27 @@ cdef class BeamLRProbe:
               depending on how you defined them. Mind that the probe will
               always safe the values from the last udpate.
 
+    The constructor takes no argument and allocates the arrays below, filled
+    with zeros.
+
 
     Attributes
     ----------
     xe, : array-like
         Array of size ``NUM_NODES*DOF//2=6`` containing the nodal coordinates
         in the element coordinate system, in the following order `{x_e}_1,
-        {y_e}_1, {z_e}_1, {x_e}_2, {y_e}_2, {z_e}_2`.
+        {y_e}_1, {z_e}_1, {x_e}_2, {y_e}_2, {z_e}_2`. Dimension length.
+        Updated by :meth:`.BeamLR.update_probe_xe`.
     ue, : array-like
         Array of size ``NUM_NODES*DOF=12`` containing the element displacements
         in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
         {{r_y}_e}_1, {{r_z}_e}_1, {u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
-        {{r_y}_e}_2, {{r_z}_e}_2`.
+        {{r_y}_e}_2, {{r_z}_e}_2`. Translations of dimension length and
+        rotations. Updated by :meth:`.BeamLR.update_probe_ue`.
     finte, : array-like
         Array of size ``NUM_NODES*DOF=12`` containing the element internal
-        forces corresponding to the degrees-of-freedom described by ``ue``.
+        forces corresponding to the degrees-of-freedom described by ``ue``,
+        forces and moments. Updated by :meth:`.BeamLR.update_probe_finte`.
     BLexx, BLky, BLkz : array-like
         Arrays of size ``NUM_NODES*DOF=12`` with the rows of the linear
         strain-displacement matrix for the axial strain and the two
@@ -134,6 +153,24 @@ cdef class BeamLR:
         ______   --> x axis
         1    2
 
+    The constructor stores ``p`` in ``probe``, sets ``eid``, ``pid``,
+    ``n1``, ``n2``, ``c1`` and ``c2`` to ``-1``, and sets the ``init_k_*``
+    positions, ``length``, ``vxyi``, ``vxyj``, ``vxyk`` and the rotation
+    matrix to ``0``. The methods use the attributes updated by the others:
+    :meth:`.update_rotation_matrix` reads ``c1`` and ``c2``;
+    :meth:`.update_probe_xe` reads the rotation matrix and updates
+    ``length``; the ``update_K*``, :meth:`.update_M` and
+    :meth:`.update_probe_finte` methods read ``length`` and the rotation
+    matrix; :meth:`.update_KG`, :meth:`.update_KCNL` and
+    :meth:`.update_probe_finte` also read ``probe.ue``, updated by
+    :meth:`.update_probe_ue`.
+
+    Parameters
+    ----------
+    p : :class:`.BeamLRProbe` object
+        Probe of the element, stored in ``probe``. It can be shared with
+        other elements.
+
     Attributes
     ----------
     eid, : int
@@ -141,19 +178,25 @@ cdef class BeamLR:
     pid, : int
         Property identification number.
     length, : double
-        Element length.
+        Element length, dimension length. Updated by
+        :meth:`.update_length`.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Rotation matrix from local to global coordinates.
+        Rotation matrix from local to global coordinates. Dimensionless.
     vxyi, vxyj, vxyk : double
         Components of a vector on the `XY` plane of the element coordinate
-        system, defined using global coordinates.
+        system, defined using global coordinates. Only the direction of the
+        vector is used.
     c1, c2 : int
-        Position of each node in the global stiffness matrix.
+        Position of each node in the global stiffness matrix, i.e. of the
+        first of its ``6`` degrees-of-freedom. The coordinates of the node
+        are read from the position ``c1//2`` or ``c2//2`` of the array of
+        nodal coordinates.
     n1, n2 : int
         Node identification number.
     init_k_KC0, init_k_KCNL, init_k_KG, init_k_M : int
         Position in the arrays storing the sparse data for the structural
-        matrices.
+        matrices, where the entries of this element start, see
+        :class:`.BeamLRData` for their number.
     probe : :class:`.BeamLRProbe` object
         Pointer to the probe.
 
@@ -200,16 +243,26 @@ cdef class BeamLR:
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
         {y_e}_j, {y_e}_k`; `{z_e}_i, {z_e}_j, {z_e}_k`.
 
+        The element `x` axis goes from node 1 to node 2, whose coordinates are
+        read from ``x`` at the positions ``c1//2`` and ``c2//2``. The `z` axis
+        is normal to the `x` axis and to the vector ``(vxyi, vxyj, vxyk)``, the
+        `y` axis completes the right-handed system, and the three axes are
+        normalized.
+
 
         Parameters
         ----------
         vxyi, vxyj, vxyk : double
             Components of a vector on the `XY` plane of the element coordinate
             system, defined using global coordinates.
+            Only the direction of the vector is used. A vector parallel to the
+            element axis gives a null `z` axis and a rotation matrix with
+            ``nan`` entries.
         x : array-like
             Array with global nodal coordinates, for a total of `M` nodes in
             the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
-            y_2, z_2, ..., x_M, y_M, z_M`.
+            y_2, z_2, ..., x_M, y_M, z_M`. Dimension length, 1-D array of size
+            ``3*M``.
 
         """
         cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk, tmp
@@ -268,13 +321,20 @@ cdef class BeamLR:
         .. note:: The ``ue`` attribute of object :class:`.BeamLRProbe` is
                   updated, accessible using ``.probe.ue``.
 
+        The translations and rotations of the two nodes, read from ``u`` at
+        the positions ``c1`` to ``c1 + 5`` and ``c2`` to ``c2 + 5``, are
+        transformed to the element coordinate system with the transpose of the
+        rotation matrix, which must be updated before, see
+        :meth:`.update_rotation_matrix`.
+
         Parameters
         ----------
         u : array-like
             Array with global displacements, for a total of `M` nodes in
             the model, this array will be arranged as: `u_1, v_1, w_1, {r_x}_1,
             {r_y}_1, {r_z}_1, u_2, v_2, w_2, {r_x}_2, {r_y}_2, {r_z}_2, ...,
-            u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M`.
+            u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M`. Translations of
+            dimension length and rotations, 1-D array of size ``6*M``.
 
         """
         cdef int i, j
@@ -321,12 +381,19 @@ cdef class BeamLR:
         .. note:: The ``xe`` attribute of object :class:`.BeamLRProbe` is
                   updated, accessible using ``.probe.xe``.
 
+        The coordinates of the two nodes, read from ``x`` at the positions
+        ``c1//2`` and ``c2//2``, are transformed to the element coordinate
+        system with the transpose of the rotation matrix, which must be updated
+        before, see :meth:`.update_rotation_matrix`. Then
+        :meth:`.update_length` is called, updating ``length``.
+
         Parameters
         ----------
         x : array-like
             Array with global nodal coordinates, for a total of `M` nodes in
             the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
-            y_2, z_2, ..., x_M, y_M, z_M`.
+            y_2, z_2, ..., x_M, y_M, z_M`. Dimension length, 1-D array of size
+            ``3*M``.
 
         """
         cdef int i, j
@@ -367,6 +434,10 @@ cdef class BeamLR:
     cpdef void update_length(BeamLR self):
         r"""Update element length
 
+        The distance between the two nodes, computed from the coordinates
+        ``probe.xe`` in the element coordinate system, is stored in the
+        attribute ``length``. Called by :meth:`.update_probe_xe`.
+
         """
         cdef double x1, x2, y1, y2, z1, z2
         with nogil:
@@ -394,12 +465,17 @@ cdef class BeamLR:
         .. note:: The ``finte`` attribute of object :class:`.BeamLRProbe` is
                   updated, accessible using ``.probe.finte``.
 
+        The 12 values of ``finte`` are overwritten. They are computed from
+        ``length`` and from the displacements ``probe.ue``, which must be
+        updated before, see :meth:`.update_probe_xe` and
+        :meth:`.update_probe_ue`.
+
         Parameters
         ----------
         prop : :class:`.BeamProp` object
             Beam property object from where the stiffness and mass attributes
             are read from.
-        nonlinear : int
+        nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
             value adds the geometrically nonlinear terms of the von Karman strains,
             for which the exact Jacobian of the internal forces is ``KC0 + KCNL +
@@ -451,18 +527,32 @@ cdef class BeamLR:
                           ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
+        The 144 entries of the matrix of the element, in global coordinates,
+        are written at the positions ``init_k_KC0`` to ``init_k_KC0 + 143``:
+        the row and column indices, built from ``c1`` and ``c2``, are stored
+        in ``KC0r`` and ``KC0c``, and the values are added to those already
+        in ``KC0v``. The matrix is computed from ``length``, the rotation
+        matrix and the attributes ``A``, ``E``, ``G``, ``Ay``, ``Az``,
+        ``Iyy``, ``Izz``, ``Iyz`` and ``J`` of ``prop``. ``length`` and the
+        rotation matrix must be updated before, see
+        :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe`.
+
         Parameters
         ----------
         KC0r : np.array
-            Array to store row positions of sparse values
+            Array to store row positions of sparse values. 1-D array of
+            integers of the C type ``long``, of size at least
+            ``init_k_KC0 + 144``.
         KC0c : np.array
-            Array to store column positions of sparse values
+            Array to store column positions of sparse values. Same type and
+            size as ``KC0r``.
         KC0v : np.array
-            Array to store sparse values
+            Array to store sparse values. 1-D array of floats of size at least
+            ``init_k_KC0 + 144``.
         prop : :class:`.BeamProp` object
             Beam property object from where the stiffness and mass attributes
             are read from.
-        update_KC0v_only : int
+        update_KC0v_only : int, optional
             The default ``0`` means that the row and column indices ``KC0r``
             and ``KC0c`` should also be updated. Any other value will only
             update the stiffness matrix values ``KC0v``.
@@ -1229,6 +1319,12 @@ cdef class BeamLR:
                            int nonlinear=0):
         r"""Update the internal force vector
 
+        Calls ``update_probe_finte(prop, nonlinear)``, transforms the forces
+        and moments of ``probe.finte`` to global coordinates with the rotation
+        matrix and adds them to ``fint`` at the positions ``c1`` to
+        ``c1 + 5`` and ``c2`` to ``c2 + 5``. The displacements ``probe.ue``
+        must be updated before, see :meth:`.update_probe_ue`.
+
         Parameters
         ----------
         fint : np.array
@@ -1236,11 +1332,12 @@ cdef class BeamLR:
             internal forces stored in ``fint`` are calculated in global
             coordinates. Method :meth:`.update_probe_finte` is called to update
             the parameter ``finte`` of the :class:`.BeamLRProbe` with the
-            internal forces in local coordinates.
+            internal forces in local coordinates. 1-D array of size ``6*M``,
+            for `M` nodes in the model.
         prop : :class:`.BeamProp` object
             Beam property object from where the stiffness and mass attributes
             are read from.
-        nonlinear : int
+        nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
             value adds the geometrically nonlinear terms of the von Karman strains,
             for which the exact Jacobian of the internal forces is ``KC0 + KCNL +
@@ -1525,18 +1622,29 @@ cdef class BeamLR:
         :func:`.update_probe_ue` with the current displacements; and
         :func:`.update_probe_xe` with the node coordinates.
 
+        The 144 entries of the matrix of the element, in global coordinates,
+        are written at the positions ``init_k_KCNL`` to
+        ``init_k_KCNL + 143``: the row and column indices, built from ``c1``
+        and ``c2``, are stored in ``KCNLr`` and ``KCNLc``, and the values are
+        added to those already in ``KCNLv``. The matrix in element coordinates
+        is also stored in ``probe.KCNLve``, overwriting it.
+
         Parameters
         ----------
         KCNLr : np.array
-            Array to store row positions of sparse values
+            Array to store row positions of sparse values. 1-D array of
+            integers of the C type ``long``, of size at least
+            ``init_k_KCNL + 144``.
         KCNLc : np.array
-            Array to store column positions of sparse values
+            Array to store column positions of sparse values. Same type and
+            size as ``KCNLr``.
         KCNLv : np.array
-            Array to store sparse values
+            Array to store sparse values. 1-D array of floats of size at least
+            ``init_k_KCNL + 144``.
         prop : :class:`.BeamProp` object
             Beam property object from where the stiffness and mass attributes are
             read from.
-        update_KCNLv_only : int
+        update_KCNLv_only : int, optional
             The default ``0`` means that the row and column indices ``KCNLr`` and
             ``KCNLc`` should also be updated. Any other value will only update the
             stiffness matrix values ``KCNLv``.
@@ -1617,20 +1725,35 @@ cdef class BeamLR:
                          ):
         r"""Update sparse vectors for geometric stiffness matrix KG
 
+        The 36 entries of the matrix of the element, in global coordinates,
+        are written at the positions ``init_k_KG`` to ``init_k_KG + 35``:
+        the row and column indices, built from ``c1`` and ``c2``, are stored
+        in ``KGr`` and ``KGc``, and the values are added to those already in
+        ``KGv``. The matrix depends on the axial force computed from the
+        displacements ``probe.ue``, from ``length`` and from the attributes
+        ``A``, ``E``, ``Ay`` and ``Az`` of ``prop``. ``probe.ue``,
+        ``length`` and the rotation matrix must be updated before, see
+        :meth:`.update_probe_ue` and :meth:`.update_probe_xe`.
+
         Parameters
         ----------
         KGr : np.array
-           Array to store row positions of sparse values
+           Array to store row positions of sparse values. 1-D array of
+           integers of the C type ``long``, of size at least
+           ``init_k_KG + 36``.
         KGc : np.array
-           Array to store column positions of sparse values
+           Array to store column positions of sparse values. Same type and
+           size as ``KGr``.
         KGv : np.array
-            Array to store sparse values
+            Array to store sparse values. 1-D array of floats of size at least
+            ``init_k_KG + 36``.
         prop : :class:`.BeamProp` object
             Beam property object from where the stiffness and mass attributes
             are read from.
-        update_KGv_only : int
-            The default `0` means that only `KGv` is updated. Any other value will
-            lead to `KGr` and `KGc` also being updated.
+        update_KGv_only : int, optional
+            The default ``0`` means that the row and column indices ``KGr``
+            and ``KGc`` are also updated. Any other value will only update the
+            stiffness matrix values ``KGv``.
 
         """
         cdef double *ue
@@ -1857,18 +1980,36 @@ cdef class BeamLR:
                         ):
         r"""Update sparse vectors for mass matrix M
 
+        The entries of the matrix of the element, in global coordinates, are
+        written from the position ``init_k_M``: 144 entries with
+        ``mtype=0`` and 36 entries with ``mtype=1``. The row and column
+        indices, built from ``c1`` and ``c2``, are stored in ``Mr`` and
+        ``Mc``, and the values are added to those already in ``Mv``. With any
+        other value of ``mtype`` nothing is written. The matrix is computed
+        from ``length``, the rotation matrix and the attributes
+        ``intrho``, ``intrhoy``, ``intrhoz``, ``intrhoy2``, ``intrhoz2`` and
+        ``intrhoyz`` of ``prop``. ``length`` and the rotation matrix must be
+        updated before, see :meth:`.update_rotation_matrix` and
+        :meth:`.update_probe_xe`.
+
         Parameters
         ----------
         Mr : np.array
-            Array to store row positions of sparse values
+            Array to store row positions of sparse values. 1-D array of
+            integers of the C type ``long``, of size at least
+            ``init_k_M + 144`` (``init_k_M + 36`` with ``mtype=1``).
         Mc : np.array
-            Array to store column positions of sparse values
+            Array to store column positions of sparse values. Same type and
+            size as ``Mr``.
         Mv : np.array
-            Array to store sparse values
+            Array to store sparse values. 1-D array of floats, of the same
+            size as ``Mr``.
+        prop : :class:`.BeamProp` object
+            Beam property object from where the inertial attributes are read.
         mtype : int, optional
             0 for consistent mass matrix using method from Brockman 1987
-            1 for reduced integration mass matrix using method from Brockman 1987
-            2 for lumped mass matrix using method from Brockman 1987
+            1 for lumped mass matrix using method from Brockman 1987
+            Default ``0``.
 
         """
         cdef int c1, c2, k
