@@ -7,8 +7,9 @@
 #cython: embedsignature=True
 #cython: infer_types=False
 r"""
+===============================================
 Shell property module (:mod:`pyfe3d.shellprop`)
-==============================================================
+===============================================
 
 Highly based on the `composites <https://saullocastro.github.io/composites/>`_. module.
 

@@ -7,6 +7,7 @@
 #cython: embedsignature=True
 #cython: infer_types=False
 r"""
+===================================================================
 BeamC - Consistent Timoshenko 3D beam element (:mod:`pyfe3d.beamc`)
 ===================================================================
 

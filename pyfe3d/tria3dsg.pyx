@@ -7,6 +7,7 @@
 #cython: embedsignature=True
 #cython: infer_types=False
 r"""
+==============================================================================
 Tria3DSG - Triangular element with discrete shear gap (:mod:`pyfe3d.tria3dsg`)
 ==============================================================================
 

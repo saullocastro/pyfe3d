@@ -7,6 +7,7 @@
 #cython: embedsignature=True
 #cython: infer_types=False
 r"""
+==============================================================================
 Quad4R - Quadrilateral element with reduced integration (:mod:`pyfe3d.quad4r`)
 ==============================================================================
 

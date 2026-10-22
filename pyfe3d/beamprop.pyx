@@ -7,6 +7,7 @@
 #cython: embedsignature=True
 #cython: infer_types=False
 """
+=============================================
 Beam property module (:mod:`pyfe3d.beamprop`)
 =============================================
 

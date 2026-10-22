@@ -7,6 +7,7 @@
 #cython: embedsignature=True
 #cython: infer_types=False
 r"""
+===========================================================================
 Tria3R - Triangular element with reduced integration (:mod:`pyfe3d.tria3r`)
 ===========================================================================
 

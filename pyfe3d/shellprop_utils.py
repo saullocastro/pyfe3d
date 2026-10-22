@@ -1,6 +1,7 @@
 """
+===========================================================
 Shell property utils module (:mod:`pyfe3d.shellprop_utils`)
-==============================================================
+===========================================================
 
 Highly based on the `composites <https://saullocastro.github.io/composites/>`_. module.
 

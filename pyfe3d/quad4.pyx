@@ -7,8 +7,9 @@
 #cython: embedsignature=True
 #cython: infer_types=False
 r"""
+==========================================================================
 Quad4 - Quadrilateral element with mixed integration (:mod:`pyfe3d.quad4`)
-==============================================================================
+==========================================================================
 
 .. currentmodule:: pyfe3d.quad4
 

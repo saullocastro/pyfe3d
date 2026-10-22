@@ -7,8 +7,9 @@
 #cython: embedsignature=True
 #cython: infer_types=False
 r"""
+===========================================================================
 Spring - 3D spring element with constant stiffnesses (:mod:`pyfe3d.spring`)
-=========================================================================
+===========================================================================
 
 .. currentmodule:: pyfe3d.spring
 
