@@ -49,8 +49,8 @@ Available finite elements
 :doc:`properties`
 
 
-Solvers and preconditioners
----------------------------
+Solvers
+-------
 
 :doc:`solver`
 

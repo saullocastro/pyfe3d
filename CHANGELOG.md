@@ -1,5 +1,36 @@
 # Changelog
 
+## Unreleased
+
+### Non-linear static solvers in `pyfe3d.solver`
+
+`pyfe3d.solver` becomes a package; every import of the previous module keeps
+working. The features of structsolve are implemented in it, without
+depending on structsolve:
+
+- `pyfe3d.solver.static`: `solve()`, removing the null rows and columns of
+  the matrix, and `linear_static()`;
+- `pyfe3d.solver.analysis.Analysis`: linear and non-linear static analyses
+  of a model given by the callables `calc_fext`, `calc_fint`, `calc_kC` and
+  `calc_kG`, with the Newton-Raphson method, full or modified, with an
+  optional line search, and the arc-length methods of Riks and of
+  Crisfield; configuration-dependent loads with unsymmetric tangent
+  stiffness matrices and load-factor-dependent load vectors, see
+  `pyfe3d.solver.callbacks`; with `bu` and `uk`, the callables work with
+  all the degrees-of-freedom, as assembled by the elements, and prescribed
+  displacements are imposed exactly, see `FreeDofs`;
+- `pyfe3d.solver.convergence`: Crisfield's convergence criterion, the
+  default of the non-linear solvers, the residual scaled with the diagonal
+  of the linear stiffness matrix over the free degrees-of-freedom; the
+  relative criterion remains available with `convergence='relative'`;
+- `linear_buckling()` and `natural_frequency()`: unsymmetric matrices, the
+  negative load multipliers closest to zero after the positive ones, the
+  verification of every eigenpair with the sparse solvers first and a dense
+  solver as a last resort (`DenseFallbackWarning`), new keyword arguments
+  after the existing ones, whose defaults are unchanged. `check_eigenpairs()`
+  now also detects load multipliers missing below the highest one returned.
+  `diagonal_preconditioner()` uses the modulus of the diagonal entries.
+
 ## 0.10.0 (2026-09-25)
 
 ### New element: `Tria3DSG`, a triangle without a locking parameter
