@@ -72,6 +72,13 @@ depending on structsolve:
   coupling terms of the consistent mass matrix; the code was right, new
   `tests/test_truss_consistent_mass.py`.
 - Reddy's book is cited as Reddy (2003), https://doi.org/10.1201/b12409.
+- User guide pages: overview and workflow, conventions, choice of the
+  element, shell and beam properties, non-linear static analyses, linear
+  buckling and natural frequencies, installation and changelog. The usage
+  examples include the test functions, with the new
+  `tests/test_beamc_frame.py` (L-shaped frame against the unit-load
+  method) and `test_offset_isotropic_plate`. The module docstrings have
+  overlined titles, and Sphinx builds without warnings.
 
 ## 0.10.0 (2026-09-25)
 
