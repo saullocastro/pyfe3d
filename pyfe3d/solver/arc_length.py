@@ -192,8 +192,10 @@ def _solver_arc_length(an, pb, method, silent=False):
     step that was repeated, and the limit is in fact
     ``max(an.maxInc, initial arc length)``. When a step fails, the arc length
     is multiplied by ``INC_CUT_FACTOR`` and the step is repeated from the
-    same tangent predictor direction (TODO(author): attribution of the rule
-    ``sqrt(DESIRED_NUM_ITER/num_iter)``, to [2]_ or to [3]_).
+    same tangent predictor direction. The square root of the ratio is the
+    rule recommended by Ramm [3]_ (p. 76), who found that the ratio itself,
+    as used by Crisfield [2]_ (Eq. 15), makes the number of iterations
+    oscillate from step to step.
 
     When the load factor 1.0 is exceeded within a converged step, from
     `\lambda < 1` to `\lambda + \Delta\lambda > 1`, the step is replaced by
