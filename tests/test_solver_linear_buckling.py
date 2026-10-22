@@ -227,12 +227,10 @@ def test_sparse_mixed_spectrum_coupled(ratio):
                                 -1)).tocsc()
     K = (T.T @ diags(k) @ T).tocsr()
     KG = (T.T @ diags(-k/lambdas) @ T).tocsr()
-    # NOTE num_eigvalues=10 keeps ARPACK's ncv below 32, see the note on
-    #      Intel MKL of pyfe3d.solver.eigen
-    eigvals, eigvecs = linear_buckling(K, KG, num_eigvalues=10,
+    eigvals, eigvecs = linear_buckling(K, KG, num_eigvalues=25,
                                        max_dense_size=0)
     np.testing.assert_allclose(eigvals[:4], [1.0, 1.0, 1.1, 1.2], rtol=1e-8)
-    np.testing.assert_allclose(eigvals, np.sort(lambdas[lambdas > 0])[:10],
+    np.testing.assert_allclose(eigvals, np.sort(lambdas[lambdas > 0])[:25],
                                rtol=1e-8)
     assert np.all(relative_residuals(K, KG, eigvals, eigvecs) < 1e-6)
 

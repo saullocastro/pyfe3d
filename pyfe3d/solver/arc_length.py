@@ -231,14 +231,15 @@ def _solver_arc_length(an, pb, method, silent=False):
     ----------
     .. [1] Riks, E., An incremental approach to the solution of snapping and
        buckling problems, International Journal of Solids and Structures,
-       15(7), 529-551, 1979. TODO(author): confirm this source.
+       15(7), 529-551, 1979.
+       https://doi.org/10.1016/0020-7683(79)90081-7
     .. [2] Crisfield, M. A., A fast incremental/iterative solution procedure
        that handles "snap-through", Computers & Structures, 13(1-3), 55-62,
        1981. https://doi.org/10.1016/0045-7949(81)90108-5
     .. [3] Ramm, E., Strategies for tracing the nonlinear response near
        limit points, in: Wunderlich, W., Stein, E., Bathe, K. J. (eds.),
        Nonlinear Finite Element Analysis in Structural Mechanics, Springer,
-       63-89, 1981. TODO(author): confirm this source.
+       63-89, 1981. https://doi.org/10.1007/978-3-642-81589-8_5
     .. [4] Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
        Structures, Volume 1: Essentials, John Wiley & Sons, Chichester,
        1991.

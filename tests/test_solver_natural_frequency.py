@@ -103,13 +103,13 @@ def freq_problem(symmetric, n=300, seed=0):
     return csc_matrix(K), csc_matrix(M)
 
 
-@pytest.mark.parametrize('symmetric, num_eigvalues', [
-    (True, 5), (True, 12), (False, 5), (False, 25), (False, 40)])
+@pytest.mark.parametrize('num_eigvalues', [5, 25, 40])
+@pytest.mark.parametrize('symmetric', [True, False])
 def test_lowest_frequencies(symmetric, num_eigvalues):
     r"""The sparse solver, without dense fallback, returns the lowest
-    frequencies of the full dense solution. NOTE more than 15 eigenpairs of
-    symmetric matrices exceed ``ncv = 32`` of ARPACK, see the note on Intel
-    MKL of :mod:`pyfe3d.solver.eigen`"""
+    frequencies of the full dense solution, also for many modes, which
+    :func:`pyfe3d.solver.arpackutils.capped_eigsh` computes in several
+    passes when ``ncv`` is capped"""
     K, M = freq_problem(symmetric)
     omegan, eigvecs = natural_frequency(K, M, num_eigvalues=num_eigvalues,
                                         max_dense_size=0)
@@ -270,18 +270,18 @@ def spy(monkeypatch, names):
 @pytest.mark.parametrize('symmetric', [True, False])
 def test_sparse_solver_runs_first(monkeypatch, symmetric, max_dense_size):
     K, M = freq_problem(symmetric, n=120)
-    calls = spy(monkeypatch, ['eigsh', 'eigs', '_dense_freq'])
+    calls = spy(monkeypatch, ['capped_eigsh', 'eigs', '_dense_freq'])
     with warnings.catch_warnings():
         warnings.simplefilter('error', DenseFallbackWarning)
         natural_frequency(K, M, symmetric=symmetric,
                           max_dense_size=max_dense_size)
-    assert calls == ['eigsh' if symmetric else 'eigs']
+    assert calls == ['capped_eigsh' if symmetric else 'eigs']
 
 
 @pytest.mark.parametrize('symmetric', [True, False])
 def test_explicit_dense(monkeypatch, symmetric):
     K, M = freq_problem(symmetric, n=120)
-    calls = spy(monkeypatch, ['eigsh', 'eigs', '_dense_freq'])
+    calls = spy(monkeypatch, ['capped_eigsh', 'eigs', '_dense_freq'])
     natural_frequency(K, M, symmetric=symmetric, sparse_solver=False)
     assert calls == ['_dense_freq']
 
@@ -293,7 +293,7 @@ def test_dense_fallback(monkeypatch, symmetric):
     without it"""
     K, M = freq_problem(symmetric, n=120)
     ref, _ = natural_frequency(K, M, symmetric=symmetric, num_eigvalues=10)
-    name = 'eigsh' if symmetric else 'eigs'
+    name = 'capped_eigsh' if symmetric else 'eigs'
 
     def wrong(A, k, *args, **kwargs):
         rng = np.random.RandomState(0)
@@ -313,14 +313,14 @@ def test_dense_fallback(monkeypatch, symmetric):
 def test_missing_mode_detected(monkeypatch):
     r"""The inertia of ``K - s M`` detects a missing lowest mode"""
     K, M = freq_problem(True, n=120)
-    sparse = eigen.eigsh
+    sparse = eigen.capped_eigsh
 
     def missing_lowest(A, k, *args, **kwargs):
-        w2, eigvecs = sparse(A, k + 1, *args, **kwargs)
+        w2, eigvecs = sparse(A=A, k=k + 1, *args, **kwargs)
         order = np.argsort(w2)
         return w2[order[1:]], eigvecs[:, order[1:]]
 
-    monkeypatch.setattr(eigen, 'eigsh', missing_lowest)
+    monkeypatch.setattr(eigen, 'capped_eigsh', missing_lowest)
     with pytest.raises(RuntimeError, match='eigenvalues omega'):
         natural_frequency(K, M, symmetric=True, num_eigvalues=10,
                           max_dense_size=0)

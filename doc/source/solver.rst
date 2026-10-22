@@ -10,5 +10,6 @@
     solver_arc_length.rst
     solver_callbacks.rst
     solver_eigen.rst
+    solver_arpackutils.rst
     solver_sparseutils.rst
     solver_logger.rst

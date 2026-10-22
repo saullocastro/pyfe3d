@@ -30,9 +30,11 @@ a last resort, with a :class:`DenseFallbackWarning`.
 .. note:: ARPACK, used by :func:`scipy.sparse.linalg.eigsh`, has been
     reported to return wrong eigenpairs at random, without raising, when
     linked against Intel MKL 2024.2.0 to 2025.0.0, which includes some
-    Anaconda builds of SciPy. MKL 2025.0.1 or newer is not affected. The
-    verification of :func:`check_eigenpairs` catches such a failure, which
-    is another reason to keep it on.
+    Anaconda builds of SciPy, whenever its parameter ``ncv`` exceeds 32.
+    MKL 2025.0.1 or newer is not affected. The faulty versions are detected
+    and ``ncv`` is then capped at 32, see :mod:`pyfe3d.solver.arpackutils`.
+    The verification of :func:`check_eigenpairs` catches such a failure,
+    which is another reason to keep it on.
 
 Notes
 -----
@@ -95,13 +97,12 @@ with `-[K_G]` when fewer than ``num_eigvalues`` positive load multipliers
 exist, see :func:`_eigsh_both_signs`.
 
 The shift estimate, the verification, the dense fallback, the solvers of
-unsymmetric matrices and the order of the load multipliers follow the
-implementation of ``structsolve.lb`` and ``structsolve.freq`` by the same
-author [1]_, ported here such that this package keeps depending only on
-NumPy and SciPy. The ``dsteqr`` routine of the Intel MKL versions in the note
-above returns wrong eigenvectors for matrices larger than 32 by 32; the cap
-of the ARPACK parameter ``ncv`` of structsolve is not ported, the
-verification and the dense fallback being the safeguard here.
+unsymmetric matrices, the order of the load multipliers and the cap of
+``ncv`` follow the implementation of ``structsolve.lb`` and
+``structsolve.freq`` by the same author [1]_, ported here such that this
+package keeps depending only on NumPy and SciPy. The ``dsteqr`` routine of
+the Intel MKL versions in the note above returns wrong eigenvectors for
+matrices larger than 32 by 32.
 
 References
 ----------
@@ -118,6 +119,7 @@ from scipy.sparse.linalg import eigsh, eigs, splu, LinearOperator
 from scipy.linalg import eigh, eig, LinAlgError
 
 from .sparseutils import remove_null_cols, is_symmetric
+from .arpackutils import capped_eigsh
 
 __all__ = ['DenseFallbackWarning', 'diagonal_preconditioner',
            'estimate_cayley_sigma', 'is_positive_definite',
@@ -705,24 +707,32 @@ def _eigsh_cayley(K, KG, k, tol, sigma):
     mu, eigvecs : np.ndarray
         The ``k`` eigenvalues `\mu` of `[K_G]\{u\} = \mu [K]\{u\}` selected
         by the Cayley mode and their eigenvectors, sorted by
-        :func:`_sort_eigenpairs`. The starting vector of
-        :func:`_start_vector` makes them reproducible.
+        :func:`_sort_eigenpairs`. :func:`.capped_eigsh` keeps ARPACK's
+        ``ncv`` within the cap of the faulty Intel MKL versions, see
+        :mod:`pyfe3d.solver.arpackutils`, and its fixed starting vector
+        makes the results reproducible.
 
     Notes
     -----
     In the Cayley mode, ARPACK computes the eigenvalues `(\mu + \sigma)/(\mu
     - \sigma)` of the operator `([K_G] - \sigma [K])^{-1}([K_G] + \sigma
-    [K])`, and ``which='SM'`` selects those of smallest modulus (TODO(author):
-    reference, Lehoucq, Sorensen and Yang, ARPACK Users' Guide, SIAM, 1998,
-    as given by structsolve, not verified). When `\sigma` is larger than
+    [K])`, and ``which='SM'`` selects those of smallest modulus [1]_. When
+    `\sigma` is larger than
     `|\mu|` of all the eigenvalues, `(\mu + \sigma)/(\mu - \sigma)` increases
     in modulus with `\mu` in `(-\sigma, \sigma)`, such that the most negative
     `\mu`, i.e. the lowest positive load multipliers, are selected first,
     then the null and the positive `\mu`.
 
+    References
+    ----------
+    .. [1] Lehoucq, R. B., Sorensen, D. C. and Yang, C., ARPACK Users'
+       Guide: Solution of Large-Scale Eigenvalue Problems with Implicitly
+       Restarted Arnoldi Methods, SIAM, Philadelphia, 1998.
+       https://doi.org/10.1137/1.9780898719628
+
     """
-    mu, eigvecs = eigsh(A=KG, k=k, which='SM', M=K, tol=tol, sigma=sigma,
-                        mode='cayley', v0=_start_vector(K.shape[0]))
+    mu, eigvecs = capped_eigsh(A=KG, k=k, M=K, sigma=sigma, which='SM',
+                               mode='cayley', tol=tol)
     return _sort_eigenpairs(mu, eigvecs)
 
 
@@ -1971,9 +1981,9 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
         k = min(num_eigvalues, n - 2)
         if symmetric:
             name = 'eigsh() in shift-invert mode'
-            solver = lambda: unscale(eigsh(A=Ks, k=k, M=Ms, sigma=sigma,
-                                           which='LM', tol=tol,
-                                           v0=_start_vector(n)))
+            solver = lambda: unscale(capped_eigsh(A=Ks, k=k, M=Ms,
+                                                  sigma=sigma, which='LM',
+                                                  tol=tol))
         else:
             name = 'eigs() in shift-invert mode'
             solver = lambda: unscale(eigs(A=Ks, k=k, M=Ms, sigma=sigma,

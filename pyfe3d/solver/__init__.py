@@ -26,6 +26,8 @@ assemble, all available from the ``pyfe3d.solver`` namespace:
   :func:`is_positive_definite` and :func:`check_eigenpairs`, for
   symmetric and unsymmetric matrices, with the sparse solvers first and a
   dense solver as a last resort, :class:`DenseFallbackWarning`;
+- the cap of ARPACK's ``ncv`` against the faulty ``dsteqr`` of some Intel
+  MKL versions, :mod:`pyfe3d.solver.arpackutils`;
 - sparse matrix utilities, :mod:`pyfe3d.solver.sparseutils`:
   :func:`remove_null_cols` and :func:`is_symmetric`.
 

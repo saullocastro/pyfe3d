@@ -229,9 +229,7 @@ def _NR_iterations(an, pb, c, dc, total, fext, w, kT0=None, silent=False,
     `\phi'(0)` and `\phi(\eta)`, with `A = (\phi(\eta) - \phi(0) +
     2\phi(0)\eta)/\eta^2`, or by `\eta/2` when `A` is not positive,
     safeguarded in `[0.1 \eta, 0.5 \eta]`, a safeguarded backtracking
-    (TODO(author): reference of the line search, Dennis and Schnabel,
-    Numerical Methods for Unconstrained Optimization and Nonlinear
-    Equations, 1983, as given by structsolve, not verified). After
+    [2]_. After
     ``an.max_iter_line_search`` reductions the last `\eta` is accepted. The
     internal force vector of the accepted point is reused in the residual of
     the next iteration.
@@ -241,6 +239,10 @@ def _NR_iterations(an, pb, c, dc, total, fext, w, kT0=None, silent=False,
     .. [1] Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
        Structures, Volume 1: Essentials, John Wiley & Sons, Chichester,
        1991.
+    .. [2] Dennis, J. E. and Schnabel, R. B., Numerical Methods for
+       Unconstrained Optimization and Nonlinear Equations, SIAM,
+       Philadelphia, 1996 (reprint of the Prentice-Hall edition of 1983).
+       https://doi.org/10.1137/1.9781611971200
 
     """
     modified_NR = an.modified_NR
