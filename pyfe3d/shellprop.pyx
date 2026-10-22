@@ -2710,10 +2710,10 @@ cdef class GradABD:
         lamination parameters of ``lp``; column 0 contains the derivatives
         with respect to the thickness. The entries ``[0, 2]``, ``[1, 1]`` and
         ``[2, 2]`` of ``gradAtsij``, which do not depend on the lamination
-        parameters, are not updated. TODO(author): the loops over the rows of
-        the columns 1 to 4 of ``gradAij``, ``gradBij`` and ``gradDij`` run
-        over ``range(5)``, such that row 5 (``A66``, ``B66``, ``D66``) of these
-        columns is not updated.
+        parameters, are not updated. All six rows of ``gradAij``, ``gradBij``
+        and ``gradDij`` are updated, including row 5 (``A66``, ``B66``,
+        ``D66``), whose derivatives with respect to `\xi_{A3}`, `\xi_{B3}`
+        and `\xi_{D3}` are `-h u_3`, `-h^2/4 \, u_3` and `-h^3/12 \, u_3`.
 
         Parameters
         ----------
@@ -2768,7 +2768,7 @@ cdef class GradABD:
         self.gradAij[5, 0] = (mat.u5 + 0*lp.xiA1 + 0*lp.xiA2 + (-1)*mat.u3*lp.xiA3 + 0*lp.xiA4)
 
         # d(A11 A12 A16 A22 A26 A66) / d(xiA1, xiA2, xiA3, xiA4)
-        for i in range(5):
+        for i in range(6):
             for j in range(4):
                 self.gradAij[i, j+1] = h*gradinv[i, j]
 
@@ -2781,7 +2781,7 @@ cdef class GradABD:
         self.gradBij[5, 0] = h/2.*(0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
 
         # d(B11 B12 B16 B22 B26 B66) / d(xiB1, xiB2, xiB3, xiB4)
-        for i in range(5):
+        for i in range(6):
             for j in range(4):
                 self.gradBij[i, j+1] = h*h/4.*gradinv[i, j]
 
@@ -2794,7 +2794,7 @@ cdef class GradABD:
         self.gradDij[5, 0] = h*h/4.*(mat.u5 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
 
         # d(D11 D12 D16 D22 D26 D66) / d(xiD1, xiD2, xiD3, xiD4)
-        for i in range(5):
+        for i in range(6):
             for j in range(4):
                 self.gradDij[i, j+1] = h*h*h/12.*gradinv[i, j]
 
