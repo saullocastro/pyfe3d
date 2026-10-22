@@ -22,20 +22,33 @@ them to a global internal force vector.
 
 Three-node triangular shell element with 6 degrees-of-freedom per node, `u`,
 `v`, `w`, `r_x`, `r_y`, `r_z`, first-order shear deformation theory, and a
-transverse shear field obtained with the discrete shear gap (DSG) method:
+transverse shear field obtained with the discrete shear gap (DSG) method.
 
-    Bletzinger, K.-U., Bischoff, M., and Ramm, E., 2000, "A unified approach
-    for shear-locking-free triangular and rectangular shell finite
-    elements", Computers & Structures, 75(3), pp. 321-334.
-    https://doi.org/10.1016/S0045-7949(99)00140-6
+The membrane, bending and transverse shear operators of the element are
+formed once per element, without a quadrature loop. The transverse shear
+stiffnesses of the :class:`pyfe3d.shellprop.ShellProp` are used as given,
+unless the ``alpha_shear_locking`` attribute of :class:`.Tria3DSG`, ``0.`` by
+default, is set. The drilling rotation `r_z` is tied to the in-plane rotation
+of the membrane field with a coefficient selected by the ``drilling_model``
+attribute: by default the in-plane shear stiffness ``A66`` of the laminate,
+otherwise a small fictitious penalty scaled by ``K6ROT``. The in-plane
+displacement field has no drilling enrichment; for problems dominated by
+in-plane bending, :class:`pyfe3d.tria3r.Tria3R` and :class:`pyfe3d.quad4.Quad4`
+carry one. Geometrically nonlinear analyses with the von Karman membrane
+strains are supported by :meth:`.Tria3DSG.update_fint` with ``nonlinear=1``,
+:meth:`.Tria3DSG.update_KCNL` and :meth:`.Tria3DSG.update_KG`.
 
-Why this element exists
------------------------
+Notes
+-----
+The transverse shear field is obtained with the discrete shear gap (DSG)
+method of Bletzinger, Bischoff and Ramm (2000) [1]_.
+
+.. rubric:: Why this element exists
 
 :class:`pyfe3d.tria3r.Tria3R` takes its transverse shear from a single point
 at the centroid, which still locks, and cures the locking by dividing the
 transverse shear stiffnesses by `1 + \alpha \ell^2/h^2` with
-`\alpha = 0.7`, following Lyly, Stenberg and Vihinen (1993). That works for
+`\alpha = 0.7`, following Lyly, Stenberg and Vihinen (1993) [2]_. That works for
 plate bending, where the error it introduces is `O(1/n^2)` in the number of
 elements per span, but it leaves the element unable to reproduce a state of
 constant transverse shear: measured on an 8 by 8 patch, its stiffness
@@ -50,8 +63,8 @@ The DSG removes the locking in the operator instead of in the constitutive
 matrix, so no stabilisation parameter is needed and the transverse shear
 stiffness is used as the laminate gives it.
 
-The algebraic stabilisation of Bischoff and Bletzinger (2004) and Castro et
-al. (2019) is nevertheless available through the ``alpha_shear_locking``
+The algebraic stabilisation of Bischoff and Bletzinger (2004) [3]_ and Castro et
+al. (2019) [4]_ is nevertheless available through the ``alpha_shear_locking``
 attribute, which is ``0.`` by default and then has no effect whatsoever. It
 is there because in those papers the factor is applied on top of a discrete
 shear gap field exactly like this one, so setting it reproduces the element
@@ -67,11 +80,21 @@ is why that element defaults to `\alpha = 0.7`.
 The default here is zero because the factor is unbounded in `\ell/h`, so any
 non-zero `\alpha` removes nearly all of the transverse shear stiffness on a
 practical shell mesh and with it the three properties listed above. The
-``alpha_shear_locking`` attribute documentation carries the measurements and
-the recommended value.
+Notes of :class:`.Tria3DSG` carry the measurements and the recommended value
+of ``alpha_shear_locking``.
 
-The discrete shear gap
-----------------------
+The transverse shear stiffnesses `A_{44}`, `A_{45}` and `A_{55}` are read
+from the :class:`pyfe3d.shellprop.ShellProp` object with the shear correction
+already applied, see
+:meth:`pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness`, and
+brought to the element coordinate system with
+:meth:`pyfe3d.shellprop.ShellProp.calc_Ats_element`, which, with
+``shear_correction='rohwer'`` and the plies available, re-evaluates the
+equilibrium-based stiffness of Rohwer (1988) [7]_ with the plies rotated to
+the element coordinate system. No shear correction factor is applied by the
+element.
+
+.. rubric:: The discrete shear gap
 
 With `\pmb{\phi} = (-r_y, r_x)` the transverse shear strains of this
 element's convention are
@@ -129,34 +152,32 @@ operator, so the mean inherits them, which the tests confirm. What it buys is
 invariance, measured at `6 \times 10^{-16}` in
 ``tests/test_tria3dsg.py::test_node_numbering_invariance``.
 
-Membrane, bending and drilling
-------------------------------
+.. rubric:: Membrane, bending and drilling
 
 The in-plane and curvature fields are the constant-strain ones of the linear
 triangle, so no locking arises there and one point integrates them exactly.
 The drilling rotation `r_z` is given stiffness with the regularisation of
-Hughes and Brezzi (1989), tying `r_z` to the in-plane rotation
+Hughes and Brezzi (1989) [5]_, tying `r_z` to the in-plane rotation
 `\theta_z = (v_{,x} - u_{,y})/2`, exactly as in :class:`pyfe3d.quad4.Quad4`
-and :class:`pyfe3d.tria3r.Tria3R`:
-
-    Hughes, T. J. R., and Brezzi, F., 1989, "On drilling degrees of
-    freedom," Computer Methods in Applied Mechanics and Engineering, 72(1),
-    pp. 105-121. https://doi.org/10.1016/0045-7825(89)90124-2
+and :class:`pyfe3d.tria3r.Tria3R`.
 
 ``drilling_model = 0``, the default, uses the physics-based coefficient
 `\gamma_{r_z} = A_{66}`, a modulus of the laminate and not an adjustable
 parameter. Any other value uses the fictitious penalty
-`\gamma_{r_z} = K6ROT \cdot 10^{-6} A_{66}`.
+`\gamma_{r_z} = K6ROT \cdot 10^{-6} A_{66}`. With either coefficient the
+term `\gamma_{r_z} \int_A (r_z - \theta_z)^2 dA` is integrated with the
+three-point rule, see :meth:`.Tria3DSG._update_probe_KC0ve`, whereas the
+physics-based model of :class:`pyfe3d.tria3r.Tria3R`, which adds the Allman
+enrichment, integrates it with a single point at the centroid.
 
 .. note:: This element does **not** carry the hierarchical edge-mode
-    enrichment of Allman (1984) that :class:`pyfe3d.tria3r.Tria3R` and
+    enrichment of Allman (1984) [6]_ that :class:`pyfe3d.tria3r.Tria3R` and
     :class:`pyfe3d.quad4.Quad4` apply to the in-plane displacement field, so
     its membrane response in in-plane bending is the stiff one of the
     constant-strain triangle. The element is aimed at the transverse shear
     behaviour; for in-plane dominated problems prefer the enriched elements.
 
-Geometrically nonlinear analysis
---------------------------------
+.. rubric:: Geometrically nonlinear analysis
 
 The element carries the von Karman membrane strains,
 
@@ -189,6 +210,33 @@ with no quadrature loop and no quadrature to keep consistent between the
 matrix and the residual. The drilling term is the only one that needs more
 than one point, and it is linear.
 
+References
+----------
+.. [1] Bletzinger, K.-U., Bischoff, M., and Ramm, E., A unified approach for
+   shear-locking-free triangular and rectangular shell finite elements,
+   Computers & Structures, 75(3), 321-334, 2000.
+   https://doi.org/10.1016/S0045-7949(99)00140-6
+.. [2] Lyly, M., Stenberg, R., and Vihinen, T., A stable bilinear element for
+   the Reissner-Mindlin plate model, Computer Methods in Applied Mechanics
+   and Engineering, 110(3-4), 343-357, 1993.
+   https://doi.org/10.1016/0045-7825(93)90214-I
+.. [3] Bischoff, M., and Bletzinger, K.-U., Improving stability and accuracy
+   of Reissner-Mindlin plate finite elements via algebraic subgrid scale
+   stabilization, Computer Methods in Applied Mechanics and Engineering,
+   193(15-16), 1517-1528, 2004. https://doi.org/10.1016/j.cma.2003.12.036
+.. [4] Castro, S. G. P., Donadon, M. V., and Guimaraes, T. A. M., ES-PIM
+   applied to buckling of variable angle tow laminates, Composite
+   Structures, 209, 67-78, 2019.
+   https://doi.org/10.1016/j.compstruct.2018.10.058
+.. [5] Hughes, T. J. R., and Brezzi, F., On drilling degrees of freedom,
+   Computer Methods in Applied Mechanics and Engineering, 72(1), 105-121,
+   1989. https://doi.org/10.1016/0045-7825(89)90124-2
+.. [6] Allman, D. J., A compatible triangular element including vertex
+   rotations for plane elasticity analysis, Computers & Structures,
+   19(1-2), 1-8, 1984. https://doi.org/10.1016/0045-7949(84)90197-4
+.. [7] Rohwer, K., Improved transverse shear stiffness for layered finite
+   elements, DFVLR-FB 88-32, 1988.
+
 """
 import numpy as np
 
@@ -213,13 +261,20 @@ cdef class Tria3DSGData:
         ``KC0_SPARSE_SIZE = 324``, the full 18 by 18 element matrix stored
         row by row.
     KCNL_SPARSE_SIZE, : int
-        ``KCNL_SPARSE_SIZE = 324``, also the full element matrix, since the
-        nonlinear constitutive terms couple every degree-of-freedom.
+        ``KCNL_SPARSE_SIZE = 324``, also the full element matrix stored row
+        by row.
     KG_SPARSE_SIZE, : int
-        ``KG_SPARSE_SIZE = 81``, the 9 by 9 translational block, the Donnell
-        geometric stiffness involving only the gradients of `w`.
+        ``KG_SPARSE_SIZE = 81``, the 9 by 9 block of the translational
+        degrees-of-freedom.
     M_SPARSE_SIZE, : int
         ``M_SPARSE_SIZE = 324``
+
+    Notes
+    -----
+    The nonlinear constitutive terms couple every degree-of-freedom, hence
+    the full element matrix for KCNL. The geometric stiffness is the Donnell
+    one, involving only the gradients of `w`, hence the translational block
+    for KG, see :meth:`.Tria3DSG.update_KG_given_stress`.
 
     """
     cdef public int KC0_SPARSE_SIZE
@@ -282,10 +337,10 @@ cdef class Tria3DSGProbe:
         starting nodes.
         Their product with ``ue`` gives the strains, dimensionless.
     BLdrilling : array-like
-        Row of 18 values giving `r_z - \theta_z` of Hughes and Brezzi. Its
-        `r_z` entries are the centroid values `N_i = 1/3`; the stiffness
-        matrix uses the exact three-point rule instead, see
-        :meth:`.Tria3DSG.update_KC0`.
+        Row of 18 values giving the drilling residual `r_z - \theta_z`, with
+        `\theta_z = (v_{,x} - u_{,y})/2`. Its `r_z` entries are the
+        centroid values `1/3`; the stiffness matrix uses three points
+        instead, see :meth:`.Tria3DSG.update_KC0`.
         Its product with ``ue`` is dimensionless.
     Gwx, Gwy : array-like
         Rows of 18 values giving `w_{,x}` and `w_{,y}`, used by the
@@ -294,10 +349,23 @@ cdef class Tria3DSGProbe:
         written by the methods of :class:`.Tria3DSG` that compute stiffness
         matrices or internal forces.
 
-    .. note:: Every one of these operators is constant over the triangle,
-        because all three shape functions are linear, so each is formed
-        once per element and no quadrature loop appears anywhere in this
-        module except for the drilling term.
+    Notes
+    -----
+    Every one of these operators is constant over the triangle, because all
+    three shape functions are linear, so each is formed once per element and
+    no quadrature loop appears anywhere in this module except for the
+    drilling term. ``BLdrilling`` is the residual of the regularisation of
+    Hughes and Brezzi [1]_, whose `r_z` part varies over the element; its
+    stiffness is integrated exactly with the three-point rule, see
+    :meth:`.Tria3DSG._update_probe_KC0ve`. ``BLgxz`` and ``BLgyz`` are the
+    discrete shear gap operators averaged over the three starting nodes, see
+    :meth:`.Tria3DSG._update_probe_BL_G`.
+
+    References
+    ----------
+    .. [1] Hughes, T. J. R., and Brezzi, F., On drilling degrees of freedom,
+       Computer Methods in Applied Mechanics and Engineering, 72(1), 105-121,
+       1989. https://doi.org/10.1016/0045-7825(89)90124-2
 
     """
     cdef public double [::1] xe
@@ -373,89 +441,26 @@ cdef class Tria3DSG:
     init_k_KC0, init_k_KCNL, init_k_KG, init_k_M : int
         Position of this element's first entry in the sparse vectors.
     drilling_model, : int
-        ``0``, the default, uses `\gamma_{r_z} = A_{66}` of Hughes and
-        Brezzi. Any other value uses `K6ROT \cdot 10^{-6} A_{66}`.
+        ``0``, the default, uses the in-plane shear stiffness ``A66`` of the
+        laminate, or ``gamma_rz``, as the coefficient of the drilling term.
+        Any other value uses the fictitious penalty ``K6ROT*1e-6*A66``.
     gamma_rz, : double
-        When non-negative and ``drilling_model = 0``, overrides `A_{66}` as
-        the regularisation coefficient, which is what makes the sensitivity
-        study recommended in the literature possible. Negative means use
-        `A_{66}`.
+        When non-negative and ``drilling_model = 0``, overrides ``A66`` as
+        the coefficient of the drilling term. Negative, the default ``-1.``,
+        means use ``A66``.
         Dimension of force per unit length, as ``A66``.
     K6ROT, : double
         Coefficient of the fictitious penalty, used when
-        ``drilling_model != 0``.
+        ``drilling_model != 0``. Default ``1.``.
         Dimensionless.
     alpha_shear_locking, : double
-        Optional algebraic stabilisation of the transverse shear stiffness,
-        `\hat{A}_{ts} = A_{ts}/(1 + \alpha \ell^2/h^2)` with `\ell` the
-        longest edge and `h` the total thickness, applied after the rotation
-        into the element coordinate system and after the shear correction.
-        The default ``0.`` disables it entirely and is the element as
-        described above: the discrete shear gap is already locking-free, so
-        nothing has to be rescaled.
-
-        A non-zero value reproduces the element of Bischoff and Bletzinger
-        (2004) and Castro et al. (2019) as those papers actually define it,
-        that is the stabilisation applied on top of a discrete shear gap
-        field, which is not how :class:`pyfe3d.tria3r.Tria3R` uses the same
-        symbol. There the factor is applied to a centroid-sampled shear
-        field and has to do the unlocking itself, which is why its default
-        is 0.7, seven times the literature value, and why it is load
-        bearing there and merely helpful here.
-
-        **Recommended value.** ``0.07``, the lower bound of the range
-        recommended by Castro et al. (2019), on a thin plate discretised
-        coarsely, and only there. Measured with this element, with the
-        remaining columns from ``tests/test_tria3dsg.py`` and the study
-        described in the module documentation:
-
-        ::
-
-            alpha                     0      0.07     0.10     0.15
-            ---------------------------------------------------------
-            omega_11,  5 x 7     +12.06%   +7.93%   +6.73%   +4.86%
-            omega_11,  9 x 11     +2.75%   +1.69%   +1.27%   +0.60%
-            omega_11, 33 x 41     -0.61%   -0.72%   -0.76%   -0.84%
-            Nxx_cr,   l/h = 30    +1.71%   +0.11%   -0.33%   -1.02%
-            w_max,    a/h = 5     +9.81%  +10.14%  +10.30%  +10.51%
-
-        the first three rows being the first natural frequency of a
-        thin plate under refinement, the fourth the buckling load of a
-        thin plate and the last the deflection of a plate thick enough
-        for transverse shear to carry 19 per cent of it, every entry a
-        relative error against the analytical value.
-
-        The buckling row crosses from the stiff to the soft side between
-        `0.07` and `0.1`, which is the behaviour Castro et al. report above
-        `\alpha = 0.09`, reproduced here on a discrete shear gap field
-        rather than on the ES-PIM of that paper.
-
-        **Why the default is nevertheless zero.** The factor
-        `\alpha \ell^2/h^2` is unbounded in `\ell/h`, so a non-zero
-        `\alpha` removes essentially all of the transverse shear stiffness
-        on any practical shell mesh, and with it three properties this
-        element was built to have. Measured at the default `\alpha = 0`
-        against `\alpha = 0.07`:
-
-        * the constant transverse shear state of
-          ``test_constant_transverse_shear_state_is_exact``, exact to
-          `10^{-12}` at every element size, drops to `1/(1 + factor)` of
-          the correct energy, which is `0.067` at `\ell/h = 10` and
-          `7 \times 10^{-8}` at `\ell/h = 10^4`;
-        * the sensitivity of `[K_{C_0}]` to `A_{ts}` falls by about three
-          hundred on the geometry of
-          ``test_transverse_shear_stays_out_of_the_nonlinear_terms``, that
-          is the element uses a fraction of a per cent of the transverse
-          shear stiffness the laminate gives it;
-        * the last row of the table above: where transverse shear is real
-          physics rather than a penalty, `\alpha` can only add error, and
-          it does so monotonically.
-
-        So the gain is confined to coarse meshes of thin plates, where the
-        element is already accurate, and it is paid for in the regime the
-        FSDT exists to describe. Set it deliberately, per problem class, as
-        for :class:`pyfe3d.tria3r.Tria3R`, and never as a constant of the
-        element.
+        Optional reduction of the transverse shear stiffnesses ``A44``,
+        ``A45`` and ``A55`` of the element, by a factor that grows with the
+        square of the ratio of the longest edge to the total thickness,
+        applied after the rotation into the element coordinate system and
+        after the shear correction. The default ``0.`` disables it entirely.
+        Set it deliberately, per problem class, and never as a constant of
+        the element.
         Dimensionless.
     m11, m12, m21, m22 : double
         In-plane rotation from the material to the element coordinate
@@ -464,6 +469,99 @@ cdef class Tria3DSG:
         Rotation matrix from the element to the global coordinate system.
     probe, : :class:`.Tria3DSGProbe`
         Shared probe object.
+
+    Notes
+    -----
+    ``drilling_model = 0`` uses `\gamma_{r_z} = A_{66}` of Hughes and
+    Brezzi [1]_, and any other value `K6ROT \cdot 10^{-6} A_{66}`, see the
+    module documentation. Overriding `A_{66}` with ``gamma_rz`` is what makes
+    the sensitivity study recommended in the literature possible.
+
+    ``alpha_shear_locking`` is the optional algebraic stabilisation of the
+    transverse shear stiffness,
+    `\hat{A}_{ts} = A_{ts}/(1 + \alpha \ell^2/h^2)` with `\ell` the longest
+    edge and `h` the total thickness. The default ``0.`` is the element as
+    described in the module documentation: the discrete shear gap is
+    already locking-free, so nothing has to be rescaled.
+
+    A non-zero value reproduces the element of Bischoff and Bletzinger
+    (2004) [2]_ and Castro et al. (2019) [3]_ as those papers actually
+    define it,
+    that is the stabilisation applied on top of a discrete shear gap
+    field, which is not how :class:`pyfe3d.tria3r.Tria3R` uses the same
+    symbol. There the factor is applied to a centroid-sampled shear
+    field and has to do the unlocking itself, which is why its default
+    is 0.7, seven times the literature value, and why it is load
+    bearing there and merely helpful here.
+
+    **Recommended value.** ``0.07``, the lower bound of the range
+    recommended by Castro et al. (2019), on a thin plate discretised
+    coarsely, and only there. Measured with this element, with the
+    remaining columns from ``tests/test_tria3dsg.py`` and the study
+    described in the module documentation:
+
+    ::
+
+        alpha                     0      0.07     0.10     0.15
+        ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+        omega_11,  5 x 7     +12.06%   +7.93%   +6.73%   +4.86%
+        omega_11,  9 x 11     +2.75%   +1.69%   +1.27%   +0.60%
+        omega_11, 33 x 41     -0.61%   -0.72%   -0.76%   -0.84%
+        Nxx_cr,   l/h = 30    +1.71%   +0.11%   -0.33%   -1.02%
+        w_max,    a/h = 5     +9.81%  +10.14%  +10.30%  +10.51%
+
+    the first three rows being the first natural frequency of a
+    thin plate under refinement, the fourth the buckling load of a
+    thin plate and the last the deflection of a plate thick enough
+    for transverse shear to carry 19 per cent of it, every entry a
+    relative error against the analytical value.
+
+    The buckling row crosses from the stiff to the soft side between
+    `0.07` and `0.1`, which is the behaviour Castro et al. report above
+    `\alpha = 0.09`, reproduced here on a discrete shear gap field
+    rather than on the ES-PIM of that paper.
+
+    **Why the default is nevertheless zero.** The factor
+    `\alpha \ell^2/h^2` is unbounded in `\ell/h`, so a non-zero
+    `\alpha` removes essentially all of the transverse shear stiffness
+    on any practical shell mesh, and with it three properties this
+    element was built to have. Measured at the default `\alpha = 0`
+    against `\alpha = 0.07`:
+
+    * the constant transverse shear state of
+      ``test_constant_transverse_shear_state_is_exact``, exact to
+      `10^{-12}` at every element size, drops to `1/(1 + factor)` of
+      the correct energy, which is `0.067` at `\ell/h = 10` and
+      `7 \times 10^{-8}` at `\ell/h = 10^4`;
+    * the sensitivity of `[K_{C_0}]` to `A_{ts}` falls by about three
+      hundred on the geometry of
+      ``test_transverse_shear_stays_out_of_the_nonlinear_terms``, that
+      is the element uses a fraction of a per cent of the transverse
+      shear stiffness the laminate gives it;
+    * the last row of the table above: where transverse shear is real
+      physics rather than a penalty, `\alpha` can only add error, and
+      it does so monotonically.
+
+    So the gain is confined to coarse meshes of thin plates, where the
+    element is already accurate, and it is paid for in the regime the
+    FSDT exists to describe. Set it deliberately, per problem class, as
+    for :class:`pyfe3d.tria3r.Tria3R`, and never as a constant of the
+    element.
+
+    References
+    ----------
+    .. [1] Hughes, T. J. R., and Brezzi, F., On drilling degrees of freedom,
+       Computer Methods in Applied Mechanics and Engineering, 72(1), 105-121,
+       1989. https://doi.org/10.1016/0045-7825(89)90124-2
+    .. [2] Bischoff, M., and Bletzinger, K.-U., Improving stability and
+       accuracy of Reissner-Mindlin plate finite elements via algebraic
+       subgrid scale stabilization, Computer Methods in Applied Mechanics and
+       Engineering, 193(15-16), 1517-1528, 2004.
+       https://doi.org/10.1016/j.cma.2003.12.036
+    .. [3] Castro, S. G. P., Donadon, M. V., and Guimaraes, T. A. M., ES-PIM
+       applied to buckling of variable angle tow laminates, Composite
+       Structures, 209, 67-78, 2019.
+       https://doi.org/10.1016/j.compstruct.2018.10.058
 
     """
     cdef public int eid, pid
@@ -783,16 +881,74 @@ cdef class Tria3DSG:
         Fills ``BLexx, BLeyy, BLgxy`` with the membrane strains,
         ``BLkxx, BLkyy, BLkxy`` with the curvatures, ``BLgxz, BLgyz`` with
         the discrete shear gap transverse shear strains, ``BLdrilling`` with
-        `r_z - \theta_z`, and ``Gwx, Gwy`` with `w_{,x}` and `w_{,y}`.
-
-        All three shape functions of this element are linear, so every one of
-        these operators is constant over the triangle and this is called once
-        per element, with no quadrature loop.
+        `r_z - \theta_z`, and ``Gwx, Gwy`` with `w_{,x}` and `w_{,y}`. It is
+        called once per element, with no quadrature loop. The derivatives
+        use the signed area of the probe coordinates, so the operators are
+        correct for either node ordering, and the area returned is its
+        absolute value.
 
         Returns
         -------
         area : double
             The element area, which is also stored in ``self.area``.
+
+        Notes
+        -----
+        All three shape functions of this element are linear, so every one of
+        these operators is constant over the triangle. With
+        `\det J = x_1(y_2 - y_3) + x_2(y_3 - y_1) + x_3(y_1 - y_2)`, twice the
+        signed area, the derivatives of the shape functions are
+        `N_{1,x} = (y_2 - y_3)/\det J`, `N_{1,y} = (x_3 - x_2)/\det J` and
+        their cyclic permutations, and the rows are
+
+        .. math::
+
+            \epsilon_{xx} = u_{,x}, \quad
+            \epsilon_{yy} = v_{,y}, \quad
+            \gamma_{xy} = u_{,y} + v_{,x}, \quad
+            \kappa_{xx} = {r_y}_{,x}, \quad
+            \kappa_{yy} = -{r_x}_{,y}, \quad
+            \kappa_{xy} = -{r_x}_{,x} + {r_y}_{,y}
+
+        the same convention as :class:`pyfe3d.quad4.Quad4` and
+        :class:`pyfe3d.tria3r.Tria3R`.
+
+        The transverse shear rows are the discrete shear gap of [1]_, see the
+        module documentation, averaged over the three choices of starting
+        node `p`. With `q` either of the other two nodes, `\Delta x = x_q -
+        x_p` and `\Delta y = y_q - y_p`, the gap is
+
+        .. math::
+
+            \Delta w_q = (w_q - w_p) + \frac{1}{2}({r_y}_p + {r_y}_q) \Delta x
+                         - \frac{1}{2}({r_x}_p + {r_x}_q) \Delta y
+
+        with `\Delta w_p = 0`, and the rows are
+
+        .. math::
+
+            \{\gamma_{xz}, \gamma_{yz}\} = \frac{1}{3} \sum_{p=1}^{3}
+            \sum_{q \neq p} \Delta w_q \{N_{q,x}, N_{q,y}\}
+
+        Each of the three operators is separately exact for the rigid-body
+        modes, for a state of constant transverse shear and for every
+        Kirchhoff curvature state, and those properties are linear in the
+        operator, so the mean inherits them, while it removes the dependence
+        on the node numbering of a single operator.
+
+        ``BLdrilling`` is the residual `r_z - \theta_z` of the drilling
+        regularisation, with `\theta_z = (v_{,x} - u_{,y})/2`. Only its `r_z`
+        part varies over the element; the entries written here are its
+        centroid values, `N_i = 1/3`, and
+        :meth:`._update_probe_KC0ve` overwrites them at the points of the
+        three-point rule while it integrates the drilling stiffness.
+
+        References
+        ----------
+        .. [1] Bletzinger, K.-U., Bischoff, M., and Ramm, E., A unified
+           approach for shear-locking-free triangular and rectangular shell
+           finite elements, Computers & Structures, 75(3), 321-334, 2000.
+           https://doi.org/10.1016/S0045-7949(99)00140-6
 
         """
         cdef int i, ip, iq, kk
@@ -987,10 +1143,43 @@ cdef class Tria3DSG:
         r"""Update the probe values of the constitutive stiffness matrix
 
         The attribute ``KC0ve`` of the :class:`.Tria3DSGProbe` is updated
-        with the 18 by 18 element-frame matrix, stored row by row. Every
-        constitutive operator is constant over the triangle, so each
+        with the 18 by 18 element-frame matrix, stored row by row, from the
+        operators of :meth:`._update_probe_BL_G` and the constitutive
+        matrices of ``prop`` in the element coordinate system, including the
+        options ``alpha_shear_locking``, ``drilling_model``, ``gamma_rz`` and
+        ``K6ROT`` of the element.
+
+        Notes
+        -----
+        Every constitutive operator is constant over the triangle, so each
         contribution is ``area*B.T @ C @ B`` with no quadrature loop, the
-        drilling term being the one exception.
+        drilling term being the one exception. The generalized constitutive
+        matrix `C` relates `\{\epsilon_{xx}, \epsilon_{yy}, \gamma_{xy},
+        \kappa_{xx}, \kappa_{yy}, \kappa_{xy}, \gamma_{yz}, \gamma_{xz}\}` to
+        the stress resultants,
+
+        .. math::
+
+            C = \begin{bmatrix} A & B & 0 \\ B & D & 0 \\ 0 & 0 & A_{ts}
+            \end{bmatrix}, \qquad
+            A_{ts} = \begin{bmatrix} A_{44} & A_{45} \\ A_{45} & A_{55}
+            \end{bmatrix}
+
+        with `A_{ts}` divided by `1 + \alpha \ell^2/h^2` when
+        ``alpha_shear_locking`` `= \alpha \neq 0`, `\ell` being the longest
+        edge and `h` the total thickness ``prop.h``.
+
+        The drilling term `\gamma_{r_z} \int_A B_{drill}^T B_{drill} dA`,
+        with `B_{drill}` the row ``BLdrilling`` and `\gamma_{r_z}` given by
+        ``gamma_rz``, `A_{66}` or `K6ROT \cdot 10^{-6} A_{66}` as described
+        for the attributes of :class:`.Tria3DSG`, must be integrated with
+        three points and not one: a single point supplies a single
+        constraint, which leaves two of the three `r_z` degrees-of-freedom
+        unconstrained and two spurious modes that survive assembly, an
+        assembled patch then having 8 zero eigenvalues instead of 6. The
+        integrand is quadratic in the shape functions, so the three-point
+        interior rule, with the barycentric coordinates `(2/3, 1/6, 1/6)` and
+        their permutations, each with the weight ``area/3``, is exact.
 
         """
         cdef int i, j, m, n, ip
@@ -1182,6 +1371,14 @@ cdef class Tria3DSG:
         update_KC0v_only : int, optional
             ``0``, the default, also fills ``KC0r`` and ``KC0c``.
 
+        Notes
+        -----
+        The formulation of the element matrix is given in
+        :meth:`._update_probe_KC0ve`. With `[R]` the rotation matrix from the
+        element to the global coordinate system, the same for the
+        translations and for the rotations of each node, the global values
+        are `K_{g,mn} = r_{mi} K_{e,ij} r_{nj}`.
+
         """
         cdef int i, j, m, n, k, ke, node_i, node_j
         cdef int c[3]
@@ -1234,11 +1431,28 @@ cdef class Tria3DSG:
         r"""Add the geometrically nonlinear terms to the probe internal forces
 
         The attribute ``finte`` of the :class:`.Tria3DSGProbe` receives the
-        terms of the von Karman membrane strain `\{\epsilon_{NL}\} =
-        \{w_{,x}^2/2, w_{,y}^2/2, w_{,x} w_{,y}\}^T`, evaluated at the
-        displacements ``ue`` of the probe, such that ``finte`` becomes the
-        gradient of the strain energy whose Hessian is KC0 + KCNL + KG. See
-        :meth:`.update_KCNL`.
+        terms of the von Karman membrane strains, evaluated at the
+        displacements ``ue`` of the probe and added to the linear internal
+        forces already in ``finte``. See :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        With the von Karman membrane strain `\{\epsilon_{NL}\} =
+        \{w_{,x}^2/2, w_{,y}^2/2, w_{,x} w_{,y}\}^T`, the linear stress
+        resultants `\{N\} = [A]\{\epsilon\} + [B]\{\kappa\}`, and
+        `\{N_{NL}\} = [A]\{\epsilon_{NL}\}`, `\{M_{NL}\} =
+        [B]\{\epsilon_{NL}\}`, the terms added are
+
+        .. math::
+
+            A_e \left( [B_m]^T \{N_{NL}\} + [B_b]^T \{M_{NL}\}
+            + [B_{mL}]^T (\{N\} + \{N_{NL}\}) \right)
+
+        with `A_e` the element area and `[B_{mL}]` the variation of
+        `\{\epsilon_{NL}\}`, see :meth:`.update_KCNL`, such that ``finte``
+        becomes the gradient of the strain energy whose Hessian is KC0 +
+        KCNL + KG. Every operator is constant over the triangle and so is the
+        integrand, so the area is the whole of the quadrature.
 
         """
         cdef int i, a
@@ -1345,8 +1559,13 @@ cdef class Tria3DSG:
         nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``.
             Any other value adds the geometrically nonlinear terms of the
-            von Karman strains, for which the exact Jacobian of the internal
-            forces is ``KC0 + KCNL + KG``, see :meth:`.update_KCNL`.
+            von Karman strains, see :meth:`._update_probe_finte_nonlinear`
+            and :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        With ``nonlinear=1`` the exact Jacobian of the internal forces is
+        ``KC0 + KCNL + KG``, see :meth:`.update_KCNL`.
 
         """
         cdef int i, j
@@ -1387,8 +1606,12 @@ cdef class Tria3DSG:
         nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``.
             Any other value adds the geometrically nonlinear terms of the
-            von Karman strains, for which the exact Jacobian of the internal
-            forces is ``KC0 + KCNL + KG``, see :meth:`.update_KCNL`.
+            von Karman strains, see :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        With ``nonlinear=1`` the exact Jacobian of the internal forces is
+        ``KC0 + KCNL + KG``, see :meth:`.update_KCNL`.
 
         """
         cdef int node_i, m, i
@@ -1423,9 +1646,15 @@ cdef class Tria3DSG:
         r"""Update the probe values of the nonlinear constitutive stiffness matrix
 
         The attribute ``KCNLve`` of the :class:`.Tria3DSGProbe` is updated
-        with KCNL = KC0L + KCL0 + KCLL + KGNL in element coordinates, stored
-        row by row and evaluated at the displacements ``ue`` of the probe.
-        See :meth:`.update_KCNL`.
+        with the nonlinear constitutive stiffness matrix in element
+        coordinates, stored row by row and evaluated at the displacements
+        ``ue`` of the probe. See :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        KCNL = KC0L + KCL0 + KCLL + KGNL, with the terms given in
+        :meth:`.update_KCNL`. Every operator is constant over the triangle
+        and so is the integrand, so the area is the whole of the quadrature.
 
         """
         cdef int i, j, a
@@ -1521,6 +1750,43 @@ cdef class Tria3DSG:
                            ):
         r"""Update the sparse vectors of the nonlinear constitutive stiffness matrix
 
+        The nonlinear constitutive stiffness matrix KCNL is the part of the
+        tangent stiffness matrix, besides :meth:`.update_KC0` and
+        :meth:`.update_KG`, that depends on the displacements through the von
+        Karman membrane strains, evaluated at the displacements ``ue`` of the
+        probe. The sum of the three is the tangent stiffness matrix of the
+        internal forces of :meth:`.update_fint` with ``nonlinear=1``.
+
+        Before this method is called, :meth:`.update_probe_xe` must have
+        been used with the node coordinates and :meth:`.update_probe_ue`
+        with the current displacements.
+
+        The element matrix is computed in element coordinates into the probe
+        attribute ``KCNLve``, rotated to global coordinates, and its values
+        are added to ``KCNLv`` at the positions ``init_k_KCNL`` to
+        ``init_k_KCNL + KCNL_SPARSE_SIZE - 1``. With ``update_KCNLv_only=0``
+        the global row and column indices are written to ``KCNLr`` and
+        ``KCNLc`` at the same positions.
+
+        Parameters
+        ----------
+        KCNLr, KCNLc : array-like
+            Row and column positions of the sparse values.
+            1-D arrays of integers (``INT``) of size at least ``init_k_KCNL +
+            KCNL_SPARSE_SIZE``.
+        KCNLv : array-like
+            Sparse values.
+            1-D array of ``DOUBLE``, same size as ``KCNLr``. The values are
+            added to the existing ones, with dimension of force per unit
+            length between translations, of force between a translation and a
+            rotation, and of force times length between rotations.
+        prop : :class:`pyfe3d.shellprop.ShellProp`
+            Shell property.
+        update_KCNLv_only : int, optional
+            ``0``, the default, also fills ``KCNLr`` and ``KCNLc``.
+
+        Notes
+        -----
         Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, built from the von
         Karman membrane strains
 
@@ -1563,33 +1829,9 @@ cdef class Tria3DSG:
             :class:`pyfe3d.quad4.Quad4`, whose enriched membrane rows have
             to be carried into its nonlinear tangent.
 
-        Before this method is called, :meth:`.update_probe_xe` must have
-        been used with the node coordinates and :meth:`.update_probe_ue`
-        with the current displacements.
-
-        The element matrix is computed in element coordinates into the probe
-        attribute ``KCNLve``, rotated to global coordinates, and its values
-        are added to ``KCNLv`` at the positions ``init_k_KCNL`` to
-        ``init_k_KCNL + KCNL_SPARSE_SIZE - 1``. With ``update_KCNLv_only=0``
-        the global row and column indices are written to ``KCNLr`` and
-        ``KCNLc`` at the same positions.
-
-        Parameters
-        ----------
-        KCNLr, KCNLc : array-like
-            Row and column positions of the sparse values.
-            1-D arrays of integers (``INT``) of size at least ``init_k_KCNL +
-            KCNL_SPARSE_SIZE``.
-        KCNLv : array-like
-            Sparse values.
-            1-D array of ``DOUBLE``, same size as ``KCNLr``. The values are
-            added to the existing ones, with dimension of force per unit
-            length between translations, of force between a translation and a
-            rotation, and of force times length between rotations.
-        prop : :class:`pyfe3d.shellprop.ShellProp`
-            Shell property.
-        update_KCNLv_only : int, optional
-            ``0``, the default, also fills ``KCNLr`` and ``KCNLc``.
+        Every operator is constant over the triangle, so each term is
+        integrated exactly by a multiplication by the element area, see
+        :meth:`._update_probe_KCNLve`.
 
         """
         cdef int i, j, m, n, k, ke, node_i, node_j
@@ -1648,11 +1890,10 @@ cdef class Tria3DSG:
         r"""Update the sparse vectors of the geometric stiffness matrix
 
         A constant membrane stress state `N_{xx}, N_{yy}, N_{xy}` is assumed
-        within the element. The operator is the Donnell one, involving only
-        the gradients of the element-frame `w`, which are taken from the
-        ``Gwx, Gwy`` rows of the probe and turned into global translations
-        with the third row of the rotation matrix, so only the translational
-        degrees-of-freedom appear.
+        within the element. The operator involves only the gradients of the
+        element-frame `w`, which are taken from the ``Gwx, Gwy`` rows of the
+        probe and turned into global translations with the third row of the
+        rotation matrix, so only the translational degrees-of-freedom appear.
 
         .. warning:: The stress resultants are in the **element** coordinate
             system, and for a triangle that is easy to get wrong. The
@@ -1662,28 +1903,10 @@ cdef class Tria3DSG:
             it along the diagonal, some 45 degrees away. Handing the same
             `(N_{xx}, 0, 0)` to both then loads half the elements along the
             diagonal, and the answer comes to depend on how the mesh
-            generator happened to order the nodes of each triangle.
-
-            A uniaxial state `N` along a global direction `\{d\}` has to be
-            rotated. With `[R]` the element-to-global rotation of this
-            object, `\{a\} = [R]^T \{d\}` is that direction in element
-            coordinates and the state `N \{a\} \{a\}^T` has components
-
-            .. math::
-                N^e_{xx} = N a_x^2, \quad
-                N^e_{yy} = N a_y^2, \quad
-                N^e_{xy} = N a_x a_y
-
-            which reduces to `(N, 0, 0)` when the element `x` axis is along
-            `\{d\}`, so a quadrilateral mesh aligned with the load needs
-            nothing. Measured on the cylinder of
-            ``tests/test_quad4_linear_buckling_cylinder_displ.py``, whose
-            cells are nearly square so the diagonal sits at 44.3 degrees,
-            the three cyclic numberings of one triangle give buckling loads
-            spanning a factor of fifteen without this rotation and agree to
-            2e-3 with it. This is checked by
-            ``test_buckling_load_does_not_depend_on_triangle_node_numbering``
-            in ``tests/test_tria3dsg.py``.
+            generator happened to order the nodes of each triangle. A
+            uniaxial state along a global direction has to be rotated to
+            the element coordinate system with the rotation matrix ``r11,
+            ..., r33`` of this object.
 
             :meth:`.update_KG` is free of this, recovering the stress from
             the element's own strains in its own frame.
@@ -1712,6 +1935,44 @@ cdef class Tria3DSG:
             length.
         update_KGv_only : int, optional
             ``0``, the default, also fills ``KGr`` and ``KGc``.
+
+        Notes
+        -----
+        The operator is the Donnell one. With `N_{i,x}` and `N_{i,y}` the
+        constant derivatives of the shape functions, `A_e` the element area
+        and `\{r_z\} = \{r_{13}, r_{23}, r_{33}\}` the element normal in
+        global coordinates, the entry of the global translation `m` of node
+        `i` and `n` of node `j` is
+
+        .. math::
+
+            K_{G} = A_e {r_z}_m {r_z}_n
+            \begin{bmatrix} N_{i,x} & N_{i,y} \end{bmatrix}
+            \begin{bmatrix} N_{xx} & N_{xy} \\ N_{xy} & N_{yy} \end{bmatrix}
+            \begin{bmatrix} N_{j,x} \\ N_{j,y} \end{bmatrix}
+
+        the integrand being constant over the triangle.
+
+        A uniaxial state `N` along a global direction `\{d\}` has to be
+        rotated. With `[R]` the element-to-global rotation of this
+        object, `\{a\} = [R]^T \{d\}` is that direction in element
+        coordinates and the state `N \{a\} \{a\}^T` has components
+
+        .. math::
+            N^e_{xx} = N a_x^2, \quad
+            N^e_{yy} = N a_y^2, \quad
+            N^e_{xy} = N a_x a_y
+
+        which reduces to `(N, 0, 0)` when the element `x` axis is along
+        `\{d\}`, so a quadrilateral mesh aligned with the load needs
+        nothing. Measured on the cylinder of
+        ``tests/test_quad4_linear_buckling_cylinder_displ.py``, whose
+        cells are nearly square so the diagonal sits at 44.3 degrees,
+        the three cyclic numberings of one triangle give buckling loads
+        spanning a factor of fifteen without this rotation and agree to
+        2e-3 with it. This is checked by
+        ``test_buckling_load_does_not_depend_on_triangle_node_numbering``
+        in ``tests/test_tria3dsg.py``.
 
         """
         cdef int m, n, k, node_i, node_j
@@ -1773,14 +2034,9 @@ cdef class Tria3DSG:
         displacements, which :meth:`.update_probe_ue` must have updated,
         using the same strain operators and the same membrane constitutive
         relation that :meth:`.update_fint` uses, and then handed to
-        :meth:`.update_KG_given_stress`. Both the strains and the curvatures
-        are constant over the triangle, so the resulting stress state is
-        constant too, which is what that method assumes.
-
-        Only the linear strains contribute, which leaves this matrix
-        homogeneous of degree one in the displacements, as a linear buckling
-        analysis needs. The stress of the von Karman terms of the membrane
-        strain is carried by :meth:`.update_KCNL` instead.
+        :meth:`.update_KG_given_stress`. Only the linear strains contribute;
+        the stress of the von Karman terms of the membrane strain is carried
+        by :meth:`.update_KCNL` instead.
 
         The values are added to ``KGv`` at the positions ``init_k_KG`` to
         ``init_k_KG + KG_SPARSE_SIZE - 1``. With ``update_KGv_only=0`` the
@@ -1804,6 +2060,25 @@ cdef class Tria3DSG:
             Shell property.
         update_KGv_only : int, optional
             ``0``, the default, also fills ``KGr`` and ``KGc``.
+
+        Notes
+        -----
+        The stress resultants are
+
+        .. math::
+
+            \{N_{xx}, N_{yy}, N_{xy}\}^T = [A]\{\epsilon_{xx}, \epsilon_{yy},
+            \gamma_{xy}\}^T + [B]\{\kappa_{xx}, \kappa_{yy}, \kappa_{xy}\}^T
+
+        with the linear strains of :meth:`._update_probe_BL_G` and `[A]`,
+        `[B]` in the element coordinate system. Both the strains and the
+        curvatures are constant over the triangle, so the resulting stress
+        state is constant too, which is what
+        :meth:`.update_KG_given_stress` assumes.
+
+        Only the linear strains contribute, which leaves this matrix
+        homogeneous of degree one in the displacements, as a linear buckling
+        analysis needs.
 
         """
         cdef int i
@@ -1879,11 +2154,24 @@ cdef class Tria3DSG:
             Shell property.
             ``intrho`` and ``intrhoz2`` are read from it.
         mtype : int, optional
-            ``0`` for the consistent mass matrix, for which
-            `\int N_i N_j dA` is `A/6` when `i = j` and `A/12` otherwise,
-            and ``2`` for the lumped one, which puts `A/3` on each node. Any
+            ``0`` for the consistent mass matrix and ``2`` for the lumped
+            one, which puts a third of the element area on each node. Any
             other value is treated as ``0``.
             Default ``0``.
+
+        Notes
+        -----
+        With `h_{ij}` the integral of the products of the linear shape
+        functions over the element, the element matrix has `I_{\rho}
+        h_{ij}`, with `I_{\rho}` given by ``intrho``, between the
+        translations `u`, `v`, `w` of nodes `i` and `j`, and `I_{\rho z^2}
+        h_{ij}`, with `I_{\rho z^2}` given by ``intrhoz2``, between the
+        rotations `r_x` and between the rotations `r_y`. The drilling
+        rotation `r_z` has no inertia, and the translations and the
+        rotations are not coupled. For the consistent mass matrix,
+        `h_{ij} = \int N_i N_j dA` is `A/6` when `i = j` and `A/12`
+        otherwise; the lumped mass matrix uses `h_{ii} = A/3` and
+        `h_{ij} = 0` for `i \neq j`.
 
         """
         cdef int i, j, m, n, k, ke, node_i, node_j
