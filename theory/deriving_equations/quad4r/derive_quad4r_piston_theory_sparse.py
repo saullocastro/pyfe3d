@@ -10,7 +10,7 @@ cpu_count = 6
 DOF = 6
 
 detJ = var('detJ')
-var('wij, r11, r21')
+var('wij, r11, r12')
 
 # u v w  rx  ry  rz  (rows are node 1, node2, node3, node4)
 N1, N2, N3, N4 = var('N1, N2, N3, N4')
@@ -35,7 +35,8 @@ Nwy = Matrix([[0, 0, N1y, 0, 0, 0,
                0, 0, N3y, 0, 0, 0,
                0, 0, N4y, 0, 0, 0]])
 
-NwX = Nwx * r11 + Nwy * r21 # NOTE assuming airflow parallel to global X
+NwX = Nwx * r11 + Nwy * r12 # NOTE assuming airflow parallel to global X;
+# dx/dX = r11 and dy/dX = r12, since Rlocal2global has the element axes as columns
 
 KAe_beta = -wij*detJ*(Nw.T*NwX)
 KAe_gamma = wij*detJ*(Nw.T*Nw)

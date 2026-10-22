@@ -31,8 +31,9 @@ var('L, E, Iyy, Izz, Iyz, J, G, A, Ay, Az', real=True, positive=True)
 Iy = Izz
 Iz = Iyy
 # TODO replace G by G12 and G13, but how to do for the D matrix?
-# alphay = 12*E*Iy/(G*A*L**2)
-# alphaz = 12*E*Iz/(G*A*L**2)
+# alphay = -12*E*Iy/(G*A*L**2), negative: see the Notes of pyfe3d.beamc.BeamC
+#     (Luo 2008 Eq. (17); Eq. (21) prints the sign wrongly)
+# alphaz = -12*E*Iz/(G*A*L**2)
 # betay = 1/(1 - alphay)
 # betaz = 1/(1 - alphaz)
 var('alphay, alphaz, betay, betaz', real=True)
