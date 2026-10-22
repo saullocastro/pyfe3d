@@ -179,9 +179,9 @@ def _solver_arc_length(an, pb, method, silent=False):
     The convergence criterion is the one of the Newton-Raphson solver, see
     :func:`.check_convergence`, at the current load factor `\lambda +
     \Delta\lambda`, the arc-length method changing only how the load factor
-    is updated and not the residual. The relative criterion also considers
-    the external force vector of the increment, `\Delta\lambda
-    \{F_{ext}\}`; Crisfield's criterion does not.
+    is updated and not the residual. Both criteria also consider the
+    external force vector of the increment, `\Delta\lambda
+    \{F_{ext}\}`, as a reference.
 
     .. rubric:: Adaptation of the arc length
 

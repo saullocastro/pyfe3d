@@ -114,24 +114,20 @@ def test_arc_length_snap_through(method):
                                rtol=1e-6)
 
 
-@pytest.mark.parametrize('convergence, maxInc', [('relative', 1.),
-                                                   ('crisfield', 0.5)])
+@pytest.mark.parametrize('convergence, relTOL', [('relative', 1.e-6),
+                                                  ('crisfield', 1.e-9)])
 @pytest.mark.parametrize('method', METHODS)
-def test_arc_length_snap_back(method, convergence, maxInc):
+def test_arc_length_snap_back(method, convergence, relTOL):
     """A soft spring in series with the truss causes snap-back
 
     The displacement of the loaded point decreases along part of the path.
-
-    NOTE with Crisfield's criterion and the default ``maxInc=1.``, the
-    method of Crisfield grows the arc length up to a step that reverses the
-    direction of the path after the snap-back, at the apex deflection 1.44,
-    and the path is traced back and forth before reaching the load factor
-    1.0; ``maxInc=0.5`` traces it in one direction with both criteria.
+    The relative criterion with its default tolerance of structsolve,
+    ``relTOL=1e-6``, and Crisfield's criterion with its default, ``1e-9``.
 
     """
     p = von_mises_truss(frac=1.5, ks=0.5)
     p.analysis(NL_method=method, initialInc=0.05, convergence=convergence,
-               maxInc=maxInc)
+               relTOL=relTOL)
     p.an.static(NLgeom=True, silent=True)
     check_equilibrium(p)
     inc = np.asarray(p.an.increments)

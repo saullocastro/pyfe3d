@@ -1830,7 +1830,7 @@ def _dense_freq(K, M, k, sigma, symmetric):
 
 
 def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
-                      symmetric=None, check=True, check_rtol=1.e-3,
+                      symmetric=None, check=True, check_rtol=1.e-6,
                       sparse_solver=True, max_dense_size=2000):
     r"""Natural frequencies from the stiffness and mass matrices
 
@@ -1883,7 +1883,7 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
         fallback. Default ``True``.
     check_rtol : float, optional
         Largest acceptable relative residual of the eigenpairs,
-        dimensionless. Default ``1.e-3``.
+        dimensionless. Default ``1.e-6``.
     sparse_solver : bool, optional
         With ``False``, the full problem is solved with a dense solver,
         returning all the frequencies, without verification. Default

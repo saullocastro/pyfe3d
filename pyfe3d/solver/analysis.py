@@ -406,7 +406,10 @@ class Analysis(object):
                             residual force vector smaller than ``relTOL``
                             times the largest norm between the external
                             and internal force vectors. Not used if
-                            ``None``. Default is ``1.e-6``
+                            ``None``. Default is ``1.e-9``, the tight
+                            tolerance of Crisfield's criterion with a
+                            consistent tangent; structsolve's default
+                            with the relative criterion is ``1.e-6``
     ``absTOL``              the convergence is also achieved when the
                             maximum absolute residual force is smaller
                             than this value, which depends on the units of
@@ -570,7 +573,7 @@ class Analysis(object):
         # NOTE convergence criteria
         self.convergence = 'crisfield'
         self.absTOL = None
-        self.relTOL = 1.e-6
+        self.relTOL = 1.e-9
         self.maxNumIter = 30
         self.too_slow_TOL = 0.005
 

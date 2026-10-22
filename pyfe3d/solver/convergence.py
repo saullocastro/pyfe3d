@@ -10,8 +10,11 @@ force vector is small, measured by one of two criteria selected with
 
 - ``'crisfield'``, the default: Crisfield's criterion, the residual scaled
   with the diagonal of the linear stiffness matrix and compared with the
-  largest scaled norm of the external and of the internal force vectors,
-  over the free degrees-of-freedom only, see :func:`crisfield_zeta`;
+  largest scaled norm of the reference force vectors, the external and the
+  internal ones and, when they apply, the external force vector of the
+  increment of the arc-length solvers and the load factor times
+  `\partial R/\partial \lambda`, over the free degrees-of-freedom only, see
+  :func:`crisfield_zeta`;
 - ``'relative'``: the Euclidean norm of the residual compared with the
   largest Euclidean norm of the force vectors, ``Analysis.relTOL``, or the
   largest absolute residual force, ``Analysis.absTOL``.
@@ -34,11 +37,13 @@ corresponding diagonal entry of a reference stiffness matrix, an idea of
     D_j = {K_{C_0}}_{jj}, \qquad
     \|v\|_D = \sqrt{\sum_{j=1}^{n} \frac{v_j^2}{|D_j|}}
 
-with `n` the number of free degrees-of-freedom. Each term `v_j^2/|D_j|`
+with `n` the number of free degrees-of-freedom. `D_j` is a stiffness, of
+the units of the generalized force of the degree-of-freedom `j` divided by
+those of its generalized displacement, such that each term `v_j^2/|D_j|`
 has the units of energy, whether the degree-of-freedom is a translation or
-a rotation, which makes `\|v\|_D` independent of the units of each
-degree-of-freedom. The absolute value guards against negative diagonal
-entries.
+a rotation: `\|v\|_D` is the square root of an energy-like quantity,
+independent of the units of each degree-of-freedom. The absolute value
+guards against negative diagonal entries.
 
 .. rubric:: Crisfield's criterion
 
@@ -46,15 +51,28 @@ The iteration `i` has converged when
 
 .. math::
 
-    \zeta_i = \frac{\|R_i\|_D}{\max(\|F_{ext}\|_D, \|F_{int}(u_i)\|_D)}
-    \le \epsilon
+    \zeta_i = \frac{\|R_i\|_D}{\max\left(\|\lambda F_{ext}\|_D,
+    \|F_{int}(u_i)\|_D, \|\Delta\lambda F_{ext}\|_D,
+    \|\lambda \, \partial R/\partial \lambda\|_D\right)} \le \epsilon
 
-with `\epsilon` = ``Analysis.relTOL``. The maximum of the two references
-does not degenerate: under self-equilibrated loads `\|F_{ext}\|_D` may be
-negligible whereas `\|F_{int}\|_D` reflects the internal force carried by
-the structure, and at the beginning of a load-controlled analysis the
-internal forces are small and the external load is the reference. The
-norms are evaluated over the free degrees-of-freedom only, since the
+with `\epsilon` = ``Analysis.relTOL``, `\lambda` the current load factor
+and `\{F_{ext}\}` the reference external force vector. The third reference
+only applies to the arc-length solvers, `\Delta\lambda` being the
+increment of the load factor of the current step, and the fourth one only
+to load vectors that depend on the load factor, e.g. prescribed
+displacements imposed exactly, see :mod:`.callbacks`. These are the
+references of the relative criterion of structsolve, measured here with
+the scaled norm. The maximum does not degenerate: under self-equilibrated
+loads `\|\lambda F_{ext}\|_D` may be negligible whereas `\|F_{int}\|_D`
+reflects the internal force carried by the structure; at the beginning of
+a load-controlled analysis the internal forces are small and the external
+load is the reference; when the arc-length solvers pass through a load
+factor close to zero, `\Delta\lambda F_{ext}` is the reference; and under
+prescribed displacements alone the external and the free part of the
+internal force vectors both vanish at equilibrium, whereas `\lambda \,
+\partial R/\partial \lambda`, the out-of-balance force that the prescribed
+displacements produce with the free degrees-of-freedom held fixed, does
+not. The norms are evaluated over the free degrees-of-freedom only, since the
 components of the residual at the constrained ones are the support
 reactions, not an imbalance. `[D]` is computed once from the linear
 stiffness matrix ``calc_kC()``, assembled once for the whole analysis, and
@@ -71,13 +89,9 @@ iterations consistently larger than three or four for moderate increments
 indicates a tangent stiffness matrix inconsistent with the internal force
 vector, which is why `\zeta_i` is printed at every iteration.
 
-The criterion applies unchanged to the arc-length methods [3]_, which only
-change how the load factor is updated, not the residual. With a load vector
-that depends on the load factor, e.g. prescribed displacements imposed
-exactly, see :mod:`.callbacks`, the external and the reduced internal force
-vectors both vanish at equilibrium under the prescribed displacements
-alone, and `\|\lambda \, \partial R/\partial \lambda\|_D` is an additional
-reference of the maximum.
+The criterion applies to the arc-length methods [3]_, which only change
+how the load factor is updated, not the residual, with the additional
+reference `\Delta\lambda F_{ext}`.
 
 .. rubric:: The relative criterion
 
@@ -180,7 +194,7 @@ def scaled_norm(v, w):
     return float(np.sqrt(np.sum(w*np.abs(v)**2)))
 
 
-def crisfield_zeta(R, fext, fint, w, q=None):
+def crisfield_zeta(R, fext, fint, w, q=None, fext_inc=None):
     r"""Relative force imbalance `\zeta` of Crisfield's criterion
 
     Parameters
@@ -199,25 +213,32 @@ def crisfield_zeta(R, fext, fint, w, q=None):
         Additional reference, the load factor times `\partial R/\partial
         \lambda` when the load vector depends on the load factor, see
         :mod:`.callbacks`. Default ``None``.
+    fext_inc : np.ndarray or None, optional
+        Additional reference, the external force vector of the increment of
+        the arc-length solvers, `\Delta\lambda \{F_{ext}\}`. Default
+        ``None``.
 
     Returns
     -------
     zeta : float
-        `\|R\|_D/\max(\|F_{ext}\|_D, \|F_{int}\|_D)`, dimensionless, ``0.``
-        when the residual and all the references are null.
+        `\|R\|_D` over the largest scaled norm of the references,
+        dimensionless, ``0.`` when the residual and all the references are
+        null.
 
     Notes
     -----
-    The criterion is `\zeta \le \epsilon`, see the module documentation.
-    With ``q``, the reference is `\max(\|F_{ext}\|_D, \|F_{int}\|_D,
-    \|q\|_D)`. When the reference is null and the residual is not,
-    `\zeta` is infinite.
+    The criterion is `\zeta \le \epsilon`, see the module documentation:
+    the reference is `\max(\|F_{ext}\|_D, \|F_{int}\|_D)`, with also
+    `\|q\|_D` and `\|\Delta\lambda F_{ext}\|_D` when given. When the
+    reference is null and the residual is not, `\zeta` is infinite.
 
     """
     Rn = scaled_norm(R, w)
     ref = max(scaled_norm(fext, w), scaled_norm(fint, w))
     if q is not None:
         ref = max(ref, scaled_norm(q, w))
+    if fext_inc is not None:
+        ref = max(ref, scaled_norm(fext_inc, w))
     if ref > 0:
         return Rn/ref
     return 0. if Rn == 0 else np.inf
@@ -251,9 +272,8 @@ def check_convergence(an, R, fint, fext_total, fext_ref=None, q_ref=None,
     fext_total : np.ndarray
         External force vector at the current load factor, 1-D array.
     fext_ref : np.ndarray or None, optional
-        Additional reference of the relative criterion, the external force
-        vector of the current increment of the arc-length solvers. It is not
-        used by Crisfield's criterion. Default ``None``.
+        Additional reference of both criteria, the external force vector of
+        the current increment of the arc-length solvers. Default ``None``.
     q_ref : np.ndarray or None, optional
         Additional reference of both criteria, the load factor times
         `\partial R/\partial \lambda` when ``calc_fext`` accepts ``lbd``, see
@@ -299,7 +319,8 @@ def check_convergence(an, R, fint, fext_total, fext_ref=None, q_ref=None,
             raise ValueError('the weights of the Crisfield criterion are '
                              'missing')
         Rnorm = scaled_norm(R, w)
-        zeta = crisfield_zeta(R, fext_total, fint, w, q=q_ref)
+        zeta = crisfield_zeta(R, fext_total, fint, w, q=q_ref,
+                              fext_inc=fext_ref)
     else:
         Rnorm = float(np.linalg.norm(R))
         ref = max(np.linalg.norm(fext_total), np.linalg.norm(fint))
