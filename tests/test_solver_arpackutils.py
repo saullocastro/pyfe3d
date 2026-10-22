@@ -4,14 +4,15 @@ r"""Tests for :mod:`pyfe3d.solver.arpackutils`: ``ncv <= 32`` against the
 Ported from the tests of structsolve, with the Quad4 plate of
 ``test_solver.py`` instead of the saved matrices of structsolve.
 """
+import inspect
 import sys
 sys.path.append('..')
 
 import numpy as np
 import pytest
-from scipy.linalg import eigh
-from scipy.sparse import csc_matrix, diags
-from scipy.sparse.linalg import ArpackError, eigsh
+from scipy.linalg import block_diag, eigh
+from scipy.sparse import csc_matrix, csr_matrix, diags
+from scipy.sparse.linalg import ArpackError, eigs, eigsh
 
 from pyfe3d.solver import arpackutils
 from pyfe3d.solver import linear_buckling, natural_frequency
@@ -252,3 +253,48 @@ def test_linear_buckling_and_natural_frequency_many_modes():
     omegan, _ = natural_frequency(KC0uu, Muu, num_eigvalues=25,
                                   max_dense_size=0)
     np.testing.assert_allclose(omegan**2, w2_ref, rtol=1e-6)
+
+
+def test_start_kwargs():
+    r"""v0 is start_vector(n) and, with SciPy 1.17 or newer, rng a
+    Generator with the seed 42, a new one at each call"""
+    kwargs = arpackutils.start_kwargs(10)
+    np.testing.assert_array_equal(kwargs['v0'], arpackutils.start_vector(10))
+    if arpackutils._arpack_takes_rng():
+        assert set(kwargs) == {'v0', 'rng'}
+        other = arpackutils.start_kwargs(10)['rng']
+        assert other is not kwargs['rng']
+        np.testing.assert_array_equal(kwargs['rng'].uniform(size=5),
+                                      np.random.default_rng(42).uniform(size=5))
+    else:
+        assert set(kwargs) == {'v0'}
+
+
+@pytest.mark.skipif('rng' not in inspect.signature(eigs).parameters,
+                    reason='ARPACK of SciPy < 1.17 draws the restart vectors '
+                           'with its own seed')
+def test_eigs_restart_reproducible():
+    r"""Regression test: with a nilpotent operator ARPACK finds an invariant
+    subspace after two Arnoldi vectors and, since SciPy 1.17, draws the new
+    starting vectors from rng, by default from the entropy of the operating
+    system, such that the same v0 gave different eigenvalues at each call,
+    e.g. a spurious real load multiplier of about 1e16 or none, and
+    linear_buckling() on Ziegler's double pendulum raised or not at
+    random"""
+    from pyfe3d.solver.eigen import _eigs_shifted, _splu
+
+    k, l = 3., 0.5
+    K = csc_matrix(block_diag(np.array([[2*k, -k], [-k, k]]),
+                              np.diag(np.arange(1., 9.))))
+    KG = csr_matrix(block_diag(np.array([[-l, l], [0., 0.]]),
+                               np.zeros((8, 8))))
+    lu = _splu(K)
+    v0 = arpackutils.start_vector(10)
+    OPv0 = lu.solve(KG @ v0)
+    assert np.linalg.norm(OPv0) > 0 and np.all(lu.solve(KG @ OPv0) == 0)
+    mu, eigvecs, radius = _eigs_shifted(K, KG, 0., 6, 0, lu)
+    for trial in range(10):
+        mu_i, eigvecs_i, radius_i = _eigs_shifted(K, KG, 0., 6, 0, lu)
+        np.testing.assert_array_equal(mu_i, mu)
+        np.testing.assert_array_equal(eigvecs_i, eigvecs)
+        assert radius_i == radius

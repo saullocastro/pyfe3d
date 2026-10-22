@@ -56,6 +56,17 @@ depending on structsolve:
   against central finite differences.
 - The curved beam frequency tests clamped an extra node with fine meshes;
   the end nodes are now selected by index.
+- `linear_buckling()`, `natural_frequency()` and
+  `pyfe3d.solver.arpackutils.capped_eigsh`: the calls of ARPACK are
+  reproducible with SciPy 1.17 or newer. When the Krylov subspace is
+  invariant, e.g. with a nilpotent `K^-1 KG`, ARPACK draws new starting
+  vectors from the argument `rng` of `eigs` and `eigsh`, by default from
+  the entropy of the operating system: with the same `v0` the results
+  differed between calls, e.g. `linear_buckling()` on Ziegler's double
+  pendulum raised a `RuntimeError` or returned a spurious load multiplier
+  of about `1e16` at random. New `pyfe3d.solver.arpackutils.start_kwargs(n)`,
+  the arguments `v0` and, when supported, `rng` with the seed `42`, used by
+  every call of ARPACK.
 
 ### Derivation scripts
 

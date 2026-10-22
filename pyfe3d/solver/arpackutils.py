@@ -327,7 +327,9 @@ def start_vector(n):
     random one, such that the results are reproducible
 
     The vector is drawn from :class:`numpy.random.RandomState` with the seed
-    ``42``, so that the same ``n`` always gives the same vector.
+    ``42``, so that the same ``n`` always gives the same vector. The
+    calls of ARPACK use :func:`start_kwargs`, which also fixes the vectors
+    drawn when ARPACK restarts.
 
     Parameters
     ----------
@@ -341,6 +343,56 @@ def start_vector(n):
 
     """
     return np.random.RandomState(42).uniform(-1., 1., n)
+
+
+@functools.lru_cache(maxsize=None)
+def _arpack_takes_rng():
+    """Tell whether :func:`scipy.sparse.linalg.eigs` and
+    :func:`scipy.sparse.linalg.eigsh` accept the argument ``rng``, i.e.
+    SciPy 1.17 or newer"""
+    import inspect
+    from scipy.sparse.linalg import eigs
+    try:
+        return 'rng' in inspect.signature(eigs).parameters
+    except (TypeError, ValueError):
+        return False
+
+
+def start_kwargs(n):
+    """Arguments of :func:`scipy.sparse.linalg.eigs` and
+    :func:`scipy.sparse.linalg.eigsh` such that the results are
+    reproducible
+
+    ``v0`` is :func:`start_vector` and, with SciPy 1.17 or newer, ``rng``
+    is a :class:`numpy.random.Generator` with the seed ``42``, from which
+    ARPACK draws a new starting vector whenever the Krylov subspace is
+    invariant, e.g. when the operator is nilpotent.
+
+    Parameters
+    ----------
+    n : int
+        Size of the problem.
+
+    Returns
+    -------
+    kwargs : dict
+        ``{'v0': start_vector(n)}``, with the key ``'rng'`` when supported.
+
+    Notes
+    -----
+    Since SciPy 1.17, ARPACK asks the caller for a random vector when the
+    Arnoldi or Lanczos process breaks down, i.e. finds an invariant
+    subspace, and SciPy draws it from ``rng``. With ``rng=None`` it comes
+    from the entropy of the operating system: with the same ``v0`` the
+    results then differ from one call to the next. Older versions of SciPy
+    draw it inside ARPACK, with a seed kept from one call to the next in
+    the same process, which ``rng`` cannot fix.
+
+    """
+    kwargs = {'v0': start_vector(n)}
+    if _arpack_takes_rng():
+        kwargs['rng'] = np.random.default_rng(42)
+    return kwargs
 
 
 def _deflation_shift(w, far_shift):
@@ -440,7 +492,7 @@ def capped_eigsh(A, k, M, sigma, which, mode='normal', tol=0):
     :func:`_deflation_shift`, with the eigenvectors of the previous passes
     deflated from the operator, and each of them returns the next
     eigenvalues by increasing `w`. Each pass factorizes ``A - sigma_d*M``
-    with SuperLU, and every call starts from :func:`start_vector`. The
+    with SuperLU, and every call starts from :func:`start_kwargs`. The
     eigenvectors of all the passes are finally combined with a
     Rayleigh-Ritz projection, see :func:`_rayleigh_ritz`, such that they are
     ``M``-orthonormal also across the passes.
@@ -475,7 +527,7 @@ def capped_eigsh(A, k, M, sigma, which, mode='normal', tol=0):
 
     See Also
     --------
-    arpack_max_ncv, arpack_ncv, start_vector
+    arpack_max_ncv, arpack_ncv, start_kwargs, start_vector
 
     Notes
     -----
@@ -518,14 +570,14 @@ def capped_eigsh(A, k, M, sigma, which, mode='normal', tol=0):
     if k <= max_k or min(n, max(2*k + 1, 20)) <= max_ncv:
         result = _scipy_eigsh(A=A, k=k, M=M, sigma=sigma, which=which,
                               mode=mode, tol=tol, ncv=arpack_ncv(k, n),
-                              v0=start_vector(n))
+                              **start_kwargs(n))
         release_memory()
         return result
     num_passes = -(-k//max_k)
     k_pass = -(-k//num_passes)
     ncv = min(n, max_ncv)
     w, V = _scipy_eigsh(A=A, k=k_pass, M=M, sigma=sigma, which=which,
-                        mode=mode, tol=tol, ncv=ncv, v0=start_vector(n))
+                        mode=mode, tol=tol, ncv=ncv, **start_kwargs(n))
     release_memory()
     far_shift = -sigma if mode == 'cayley' else sigma
     dtype = np.result_type(A.dtype, M.dtype)
@@ -546,7 +598,7 @@ def capped_eigsh(A, k, M, sigma, which, mode='normal', tol=0):
         wi, Vi = _scipy_eigsh(A=A, k=min(k_pass, k - w.shape[0]), M=M,
                               sigma=sigma_d, which='LM', mode='normal',
                               tol=tol, ncv=ncv, OPinv=OPinv,
-                              v0=start_vector(n))
+                              **start_kwargs(n))
         w = np.concatenate((w, wi))
         V = np.hstack((V, Vi))
         release_memory()

@@ -120,7 +120,7 @@ from scipy.sparse.linalg import eigsh, eigs, splu, LinearOperator
 from scipy.linalg import eigh, eig, LinAlgError
 
 from .sparseutils import remove_null_cols, is_symmetric
-from .arpackutils import capped_eigsh
+from .arpackutils import capped_eigsh, start_kwargs
 
 __all__ = ['DenseFallbackWarning', 'diagonal_preconditioner',
            'estimate_cayley_sigma', 'is_positive_definite',
@@ -1184,13 +1184,6 @@ def _det_sign(lu):
             * _permutation_parity(lu.perm_c))
 
 
-def _start_vector(n):
-    r"""Fixed starting vector of ARPACK, uniform in ``[-1, 1]`` as ARPACK's
-    random one, drawn with the seed ``42``, such that the results are
-    reproducible"""
-    return np.random.RandomState(42).uniform(-1., 1., n)
-
-
 def _eigs_shifted(K, KG, s, k, tol, lu):
     r"""The ``k`` load multipliers nearest the shift ``s``, for real
     unsymmetric matrices
@@ -1233,7 +1226,7 @@ def _eigs_shifted(K, KG, s, k, tol, lu):
     n = K.shape[0]
     OP = LinearOperator((n, n), matvec=lambda x: _lu_solve(lu, KG @ x),
                         dtype=np.result_type(K.dtype, KG.dtype))
-    nu, eigvecs = eigs(OP, k=k, which='LM', tol=tol, v0=_start_vector(n))
+    nu, eigvecs = eigs(OP, k=k, which='LM', tol=tol, **start_kwargs(n))
     null = np.abs(nu) <= 1.e-12*np.abs(nu).max()
     if np.any(null):
         radius = np.inf
@@ -1989,7 +1982,7 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
             name = 'eigs() in shift-invert mode'
             solver = lambda: unscale(eigs(A=Ks, k=k, M=Ms, sigma=sigma,
                                           which='LM', tol=tol,
-                                          v0=_start_vector(n)))
+                                          **start_kwargs(n)))
         dense = ('eigh()' if symmetric else 'eig()',
                  lambda: unscale(_dense_freq(Ks, Ms, k, sigma, symmetric)))
 
