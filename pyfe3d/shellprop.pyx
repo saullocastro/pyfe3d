@@ -51,6 +51,12 @@ cdef class LaminationParameters:
         Lamination parameters `\xi_{Ats,i}` (transverse shear),
         dimensionless
 
+    Notes
+    -----
+    The lamination parameters are defined in
+    :meth:`.ShellProp.calc_lamination_parameters`, and the stiffnesses that
+    they give in :func:`.shellprop_from_LaminationParameters`.
+
     """
     def __init__(LaminationParameters self):
         self.xiA1=0; self.xiA2=0; self.xiA3=0; self.xiA4=0
@@ -153,6 +159,10 @@ cdef class MatLamina:
     priority if the user defines `\nu` and `G`, `E` will be recaculated based
     on equation: `E = 2 \times (1+\nu) \times G`.
 
+    TODO(author): :class:`.MatLamina` recomputes neither `G` nor `E`; only
+    :func:`.read_laminaprop` computes ``g12 = g13 = g23 = e/(2*(1+nu))``, for
+    ``laminaprop = (e, nu)``.
+
     """
     def __init__(MatLamina self):
         pass
@@ -160,10 +170,96 @@ cdef class MatLamina:
     cpdef void rebuild(MatLamina self):
         r"""Update constitutive and invariant terms
 
-        Reference:
+        Computes, from the moduli ``e1``, ``e2``, ``e3``, ``g12``, ``g13``,
+        ``g23`` and the Poisson's ratios ``nu12``, ``nu21``, ``nu13``,
+        ``nu31``, ``nu23``, ``nu32``, the stiffness constants ``c11`` to
+        ``c66``, the constitutive constants ``q11`` to ``q66`` and the
+        invariants ``u1`` to ``u7``, with the dimension of force per unit
+        area. ``e1`` and ``e2`` must be non-zero.
 
-            Reddy, J. N., Mechanics of laminated composite plates and shells.
-            Theory and analysis. Second Edition. CRC Press, 2004.
+        Notes
+        -----
+        With `\Delta = 1 - \nu_{12}\nu_{21} - \nu_{13}\nu_{31} -
+        \nu_{23}\nu_{32} - \nu_{12}\nu_{23}\nu_{31} -
+        \nu_{13}\nu_{21}\nu_{32}`, the constitutive constants are the
+        stiffnesses of the orthotropic material in its principal axes [2]_:
+
+        .. math::
+
+            q_{11} = e_1 (1 - \nu_{23}\nu_{32})/\Delta, \quad
+            q_{12} = e_1 (\nu_{21} + \nu_{23}\nu_{31})/\Delta, \quad
+            q_{13} = e_1 (\nu_{31} + \nu_{21}\nu_{32})/\Delta \\
+            q_{21} = e_2 (\nu_{12} + \nu_{13}\nu_{32})/\Delta, \quad
+            q_{22} = e_2 (1 - \nu_{13}\nu_{31})/\Delta, \quad
+            q_{23} = e_2 (\nu_{32} + \nu_{12}\nu_{31})/\Delta \\
+            q_{31} = e_3 (\nu_{13} + \nu_{12}\nu_{32})/\Delta, \quad
+            q_{32} = e_3 (\nu_{23} + \nu_{13}\nu_{21})/\Delta, \quad
+            q_{33} = e_3 (1 - \nu_{12}\nu_{21})/\Delta \\
+            q_{44} = g_{23}, \quad q_{55} = g_{13}, \quad q_{66} = g_{12}
+
+        which are symmetric, `q_{ij} = q_{ji}`, when the Poisson's ratios
+        satisfy the reciprocity `\nu_{ij}/e_i = \nu_{ji}/e_j`, see
+        :func:`.read_laminaprop`. With `e_3 = 0`, as given by
+        :func:`.read_laminaprop` for 2 or 6 entries, `\nu_{31} = \nu_{32} =
+        0` and `q_{11}`, `q_{12}`, `q_{22}` are the plane-stress reduced
+        stiffnesses `e_1/(1 - \nu_{12}\nu_{21})`, `e_1 \nu_{21}/(1 -
+        \nu_{12}\nu_{21})` and `e_2/(1 - \nu_{12}\nu_{21})` used by
+        :meth:`.Lamina.rebuild`.
+
+        The stiffness constants are computed with `\delta = (1 -
+        \nu_{12}\nu_{21} - \nu_{23}\nu_{32} - \nu_{31}\nu_{13} -
+        2\nu_{21}\nu_{32}\nu_{13})/(e_1 e_2)` [1]_:
+
+        .. math::
+
+            c_{11} = (1 - \nu_{23}\nu_{23})/(\delta e_2), \quad
+            c_{12} = (\nu_{21} + \nu_{31}\nu_{23})/(\delta e_2), \quad
+            c_{13} = (\nu_{31} + \nu_{21}\nu_{32})/(\delta e_2) \\
+            c_{22} = (1 - \nu_{13}\nu_{31})/(\delta e_1), \quad
+            c_{23} = (\nu_{32} + \nu_{12}\nu_{31})/(\delta e_1), \quad
+            c_{33} = e_3 (1 - \nu_{12}\nu_{21})/(\delta e_1 e_2) \\
+            c_{44} = g_{23}, \quad c_{55} = g_{13}, \quad c_{66} = g_{12}
+
+        With the reciprocity, `\delta e_1 e_2 = \Delta` and `c_{ij} =
+        q_{ij}`, except for `c_{11}`.
+
+        TODO(author): `c_{11}` uses `\nu_{23}\nu_{23}` where `q_{11}` uses
+        `\nu_{23}\nu_{32}`; they differ unless `\nu_{23} = 0` or `e_2 =
+        e_3`.
+
+        The invariants `u_1` to `u_5` are those of Jones [3]_, and `u_6`,
+        `u_7` the transverse shear invariants of the ABAQUS manual [4]_:
+
+        .. math::
+
+            u_1 = (3 q_{11} + 3 q_{22} + 2 q_{12} + 4 q_{66})/8, \quad
+            u_2 = (q_{11} - q_{22})/2 \\
+            u_3 = (q_{11} + q_{22} - 2 q_{12} - 4 q_{66})/8, \quad
+            u_4 = (q_{11} + q_{22} + 6 q_{12} - 4 q_{66})/8 \\
+            u_5 = (u_1 - u_4)/2, \quad
+            u_6 = (q_{44} + q_{55})/2, \quad
+            u_7 = (q_{44} - q_{55})/2
+
+        They give the stiffnesses of a ply at any angle, see
+        :meth:`get_invariant_matrix`.
+
+        TODO(author): with `e_3 \ne 0` the invariants are computed from the
+        three-dimensional `q_{11}`, `q_{12}`, `q_{22}`, not from the
+        plane-stress reduced stiffnesses used by :meth:`.Lamina.rebuild`; is
+        this intended?
+
+        References
+        ----------
+        .. [1] Reddy, J. N., Mechanics of Laminated Composite Plates and
+           Shells: Theory and Analysis, Second Edition, CRC Press, 2004.
+        .. [2] Gürdal, Z., Haftka, R. T. and Hajela, P., Design and
+           Optimization of Laminated Composite Materials, Wiley-Interscience,
+           1999.
+        .. [3] Jones, R. M., Mechanics of Composite Materials, Second
+           Edition, Taylor & Francis, Philadelphia, 1999.
+        .. [4] ABAQUS Example Problems Manual, Vol. 1, Example 1.2.2,
+           Laminated composite shell: buckling of a cylindrical panel with a
+           circular hole.
 
         """
         cdef double e1, e2, e3, nu12, nu21, nu13, nu31, nu23, nu32, delta, den
@@ -231,20 +327,30 @@ cdef class MatLamina:
         r"""Trace-normalize the lamina properties for plane stress
 
         Modify the original :class:`.MatLamina` object with a
-        trace-normalization performed after calculating the trace according to
-        Eq. 1 of reference:
+        trace-normalization: the constitutive constants ``q11``, ``q12``,
+        ``q22``, ``q44``, ``q55``, ``q66`` and the invariants ``u1`` to
+        ``u7`` are divided by the trace ``tr = q11 + q22 + 2*q66``, such that
+        they become dimensionless trace-normalized values. These can be
+        accessed using the same attributes. The other attributes are not
+        modified.
 
-            Melo, J. D. D., Bi, J., and Tsai, S. W., 2017, “A Novel
-            Invariant-Based Design Approach to Carbon Fiber Reinforced
-            Laminates,” Compos. Struct., 159, pp. 44–52.
+        Notes
+        -----
+        The trace is calculated according to Eq. 1 of Melo et al. [1]_, `tr
+        = Q_{11} + Q_{22} + 2Q_{66}`.  The universal in-plane stress
+        stiffness components `Q_{11},Q_{12},Q_{22},Q_{44},Q_{55},Q_{66}` are
+        divided by `tr`, and the invariants `U_1,U_2,U_3,U_4,U_5,U_6,U_7` are
+        calculated with the normalized stiffnesses, such they also become
+        trace-normalized invariants; since the invariants are linear in the
+        stiffnesses, they are divided by `tr` as well. The trace does not
+        depend on the ply angle, since `q_{11L} + q_{22L} + 2 q_{66L} = 2(u_1
+        + u_5)`, see :meth:`get_invariant_matrix`.
 
-        The trace calculated as `tr = Q_{11} + Q_{22} + 2Q_{66}`.  The
-        universal in-plane stress stiffness components
-        `Q_{11},Q_{12},Q_{22},Q_{44},Q_{55},Q_{66}` are divided by `tr`, and
-        the invariants `U_1,U_2,U_3,U_4,U_5,U_6,U_7` are calculated with the
-        normalized stiffnesses, such they also become trace-normalized
-        invariants. These can be accessed using the ``u1,u2,u3,u4,u5,u6,u7``
-        attributes.
+        References
+        ----------
+        .. [1] Melo, J. D. D., Bi, J., and Tsai, S. W., A Novel
+           Invariant-Based Design Approach to Carbon Fiber Reinforced
+           Laminates, Composite Structures, 159, 44-52, 2017.
 
         """
         cdef double tr
@@ -299,6 +405,29 @@ cdef class MatLamina:
         U : double[:, ::1]
             Memoryview of shape ``(9, 5)``, force per unit area.
 
+        Notes
+        -----
+        The stiffnesses of a ply at the angle `\theta` in the laminate axes,
+        see :meth:`.Lamina.rebuild`, are linear in `\cos 2\theta`, `\sin
+        2\theta`, `\cos 4\theta` and `\sin 4\theta`, with the invariants of
+        :meth:`rebuild` as coefficients [1]_:
+
+        .. math::
+
+            \{q_{11L}, q_{22L}, q_{12L}, q_{66L}, q_{16L}, q_{26L}, q_{44L},
+            q_{45L}, q_{55L}\}^T = U \{1, \cos 2\theta, \sin 2\theta, \cos
+            4\theta, \sin 4\theta\}^T
+
+        which holds when ``u1`` to ``u5`` are computed from the plane-stress
+        reduced stiffnesses, i.e. with ``e3 = 0``. Integrated through the
+        thickness, the trigonometric terms give the lamination parameters,
+        see :func:`.shellprop_from_LaminationParameters`.
+
+        References
+        ----------
+        .. [1] Jones, R. M., Mechanics of Composite Materials, Second
+           Edition, Taylor & Francis, Philadelphia, 1999.
+
         """
         return np.array(
             [[self.u1,  self.u2,    0,  self.u3,   0],            # q11
@@ -352,10 +481,48 @@ cdef class Lamina:
     cpdef void rebuild(Lamina self):
         r"""Update constitutive matrices
 
-        Reference:
+        Computes ``cost``, ``sint``, ``cos2t``, ``sin2t``, ``cos4t`` and
+        ``sin4t`` from ``thetadeg``, and the ply stiffnesses ``q11L`` to
+        ``q55L`` in the laminate axes from the plane-stress stiffnesses of
+        ``matlamina`` in the material axes, which are computed from its
+        ``e1``, ``e2``, ``nu12``, ``nu21``, ``g12``, ``g13`` and ``g23``.
 
-            Reddy, J. N., Mechanics of Laminated Composite Plates and
-            Shells - Theory and Analysys. Second Edition. CRC PRESS, 2004.
+        Notes
+        -----
+        The plane-stress reduced stiffnesses in the material axes are
+
+        .. math::
+
+            Q_{11} = \frac{e_1}{1 - \nu_{12}\nu_{21}}, \quad
+            Q_{12} = \frac{\nu_{12} e_2}{1 - \nu_{12}\nu_{21}}, \quad
+            Q_{22} = \frac{e_2}{1 - \nu_{12}\nu_{21}}, \quad
+            Q_{66} = g_{12}, \quad Q_{44} = g_{23}, \quad Q_{55} = g_{13}
+
+        such that ``e3``, ``nu13`` and ``nu23`` are not used, and thermal
+        expansion is not considered. With `c = \cos\theta` and `s =
+        \sin\theta`, `\theta` being the ply angle, the stiffnesses in the
+        laminate axes are [1]_:
+
+        .. math::
+
+            q_{11L} = Q_{11} c^4 + 2 (Q_{12} + 2 Q_{66}) s^2 c^2 + Q_{22} s^4 \\
+            q_{12L} = (Q_{11} + Q_{22} - 4 Q_{66}) s^2 c^2 + Q_{12} (s^4 + c^4) \\
+            q_{22L} = Q_{11} s^4 + 2 (Q_{12} + 2 Q_{66}) s^2 c^2 + Q_{22} c^4 \\
+            q_{16L} = (Q_{11} - Q_{12} - 2 Q_{66}) s c^3 + (Q_{12} - Q_{22} +
+            2 Q_{66}) s^3 c \\
+            q_{26L} = (Q_{11} - Q_{12} - 2 Q_{66}) s^3 c + (Q_{12} - Q_{22} +
+            2 Q_{66}) s c^3 \\
+            q_{66L} = (Q_{11} + Q_{22} - 2 Q_{12} - 2 Q_{66}) s^2 c^2 + Q_{66}
+            (s^4 + c^4) \\
+            q_{44L} = Q_{44} c^2 + Q_{55} s^2, \quad
+            q_{45L} = (Q_{55} - Q_{44}) s c, \quad
+            q_{55L} = Q_{55} c^2 + Q_{44} s^2
+
+        References
+        ----------
+        .. [1] Reddy, J. N., Mechanics of Laminated Composite Plates and
+           Shells: Theory and Analysis, Second Edition, CRC Press, 2004.
+
         """
         cdef double thetarad, e1, e2, nu12, nu21, g12, g13, g23
         cdef double q11, q12, q22, q44, q55, q16, q26, q66
@@ -425,6 +592,18 @@ cdef class Lamina:
         T : double[:, ::1]
             Memoryview of shape ``(3, 3)``, dimensionless.
 
+        Notes
+        -----
+        With the ply angle `\theta` measured from the laminate `x` axis to
+        the material direction 1, as in the stiffnesses of :meth:`rebuild`,
+        the material direction 1 is `\{\cos\theta, \sin\theta, 0\}` in the
+        laminate axes, such that `\{u_1, u_2, u_3\}^T = T \{u_x, u_y,
+        u_z\}^T`.
+
+        TODO(author): this maps the laminate components to the lamina
+        components, while the name and the summary say from lamina to
+        laminate.
+
         """
         return np.array([[ self.cost, self.sint, 0],
                          [-self.sint, self.cost, 0],
@@ -466,6 +645,23 @@ cdef class Lamina:
         --------
         get_transf_matrix_stress_to_laminate
 
+        Notes
+        -----
+        With the stress components ordered as `\{\sigma_{xx}, \sigma_{yy},
+        \sigma_{zz}, \tau_{yz}, \tau_{xz}, \tau_{xy}\}`, the order of
+        :meth:`.MatLamina.get_constitutive_matrix`, the matrix is the
+        transformation of the stresses from the laminate axes to the material
+        axes for a rotation by the ply angle `\theta` about `z`, e.g.
+        `\sigma_{11} = \cos^2\theta \sigma_{xx} + \sin^2\theta \sigma_{yy} +
+        \sin 2\theta \tau_{xy}` [1]_. Its inverse,
+        :meth:`get_transf_matrix_stress_to_laminate`, is the same matrix for
+        `-\theta`.
+
+        References
+        ----------
+        .. [1] Reddy, J. N., Mechanics of Laminated Composite Plates and
+           Shells: Theory and Analysis, Second Edition, CRC Press, 2004.
+
         """
         cdef double cos2, sin2, sincos
         cos2 = self.cost**2
@@ -496,6 +692,13 @@ cdef class Lamina:
         See Also
         --------
         get_transf_matrix_stress_to_lamina
+
+        Notes
+        -----
+        It is the inverse of :meth:`get_transf_matrix_stress_to_lamina`, i.e.
+        the transformation of the stresses from the material axes to the
+        laminate axes, obtained by replacing the ply angle `\theta` by
+        `-\theta`.
 
         """
         cdef double cos2, sin2, sincos
@@ -533,9 +736,29 @@ cdef void _rotate_ply(double *pd, double m11, double m12, double m21,
 
     ``pd`` contains ``h, q11L, q12L, q16L, q22L, q26L, q66L, q44L, q45L, q55L``
     in the material frame. The output ``q`` contains ``q11, q12, q16, q22,
-    q26, q66, q44, q45, q55`` in the element frame, with `C^e = T_\sigma C
-    T_\sigma^T` and `C_s^e = T_s C_s T_s^T`, `T_s = [[m_{22}, m_{21}],
-    [m_{12}, m_{11}]]`.
+    q26, q66, q44, q45, q55`` in the element frame, rotated with `m_{11}`,
+    `m_{12}`, `m_{21}`, `m_{22}`, the in-plane rotation from the material to
+    the element frame. With `m_{12} = 0` the stiffnesses are copied
+    unchanged.
+
+    Notes
+    -----
+    With `\{v\}_e = [[m_{11}, m_{12}], [m_{21}, m_{22}]] \{v\}_m` for the
+    in-plane vectors, the plane-stress stiffness `C = [[q_{11L}, q_{12L},
+    q_{16L}], [q_{12L}, q_{22L}, q_{26L}], [q_{16L}, q_{26L}, q_{66L}]]` and
+    the transverse shear stiffness `C_s = [[q_{44L}, q_{45L}], [q_{45L},
+    q_{55L}]]` are rotated as `C^e = T_\sigma C T_\sigma^T` and `C_s^e = T_s
+    C_s T_s^T`, with the transformations of `\{\sigma_{xx}, \sigma_{yy},
+    \tau_{xy}\}` and of `\{\tau_{yz}, \tau_{xz}\}`:
+
+    .. math::
+
+        T_\sigma = \begin{bmatrix} m_{11}^2 & m_{12}^2 & 2 m_{11} m_{12} \\
+        m_{21}^2 & m_{22}^2 & 2 m_{21} m_{22} \\
+        m_{11} m_{21} & m_{12} m_{22} & m_{11} m_{22} + m_{12} m_{21}
+        \end{bmatrix}, \qquad
+        T_s = \begin{bmatrix} m_{22} & m_{21} \\ m_{12} & m_{11}
+        \end{bmatrix}
 
     """
     cdef int i, j, k, l
@@ -570,11 +793,14 @@ cdef void _rotate_ply(double *pd, double m11, double m12, double m21,
 cdef int _rohwer(int N, double *plydata, double offset, double m11,
         double m12, double m21, double m22, double *z, double *fcoef,
         double *S) noexcept nogil:
-    r"""Equilibrium transverse shear distribution and compliance (Rohwer, 1988)
+    r"""Equilibrium transverse shear distribution and compliance of ``'rohwer'``
 
     The plies are rotated from the material to the element frame using
-    `m_{11}`, `m_{12}`, `m_{21}`, `m_{22}`, such that the two cylindrical
-    bending states are posed along the element axes.
+    `m_{11}`, `m_{12}`, `m_{21}`, `m_{22}`, see :func:`_rotate_ply`, and the
+    distribution and the compliance are computed in the element frame, with
+    `z` measured from the reference surface. The ABD matrix of the rotated
+    plies is inverted by Gauss-Jordan elimination with partial pivoting,
+    after a symmetric diagonal scaling.
 
     Parameters
     ----------
@@ -601,6 +827,56 @@ cdef int _rohwer(int N, double *plydata, double offset, double m11,
     status : int
         ``0`` if successful, ``1`` for a singular ply `C_s^{(k)}`, ``2`` for a
         singular ABD matrix.
+
+    Notes
+    -----
+    The plies are rotated to the element frame such that the two cylindrical
+    bending states are posed along the element axes. The diagonal scaling
+    makes the singularity check of the pivots, ``1e-12``, independent of the
+    units.
+
+    The equilibrium approach of Rohwer (1988) [1]_ assumes two cylindrical
+    bending states with constant membrane forces: one in which the resultants
+    depend on `x` only, with `M_{xx,x} = Q_x` and `M_{xy,x} = Q_y`, and one
+    in which they depend on `y` only, with `M_{yy,y} = Q_y` and `M_{xy,y} =
+    Q_x`. `\tau_{xz}` is obtained from the first state and `\tau_{yz}` from
+    the second one, integrating the equilibrium equations `\tau_{xz,z} =
+    -\sigma_{xx,x}` and `\tau_{yz,z} = -\sigma_{yy,y}` from the bottom face
+    `z_1`, where the tractions vanish. With `H^* = [[A, B], [B, D]]^{-1}`,
+    the in-plane strains of a state are `(H^*_{1:3} + z H^*_{4:6}) \{N,
+    M\}`, where `H^*_{1:3}` and `H^*_{4:6}` are the first and the last three
+    rows of `H^*` and `\{N, M\} = \{N_{xx}, N_{yy}, N_{xy}, M_{xx}, M_{yy},
+    M_{xy}\}`. With `c_1^{(k)} = \{q_{11}, q_{12}, q_{16}\}` and `c_2^{(k)} =
+    \{q_{12}, q_{22}, q_{26}\}` the rows of ply `k` that give `\sigma_{xx}`
+    and `\sigma_{yy}`, and `\Pi(z) = z H^*_{1:3} + z^2/2 H^*_{4:6}`:
+
+    .. math::
+
+        \tau_{xz}(z) = \left( a_1^{(k)} - c_1^{(k)} \Pi(z) \right) L_x
+        \begin{Bmatrix} Q_y \\ Q_x \end{Bmatrix}, \qquad
+        \tau_{yz}(z) = \left( a_2^{(k)} - c_2^{(k)} \Pi(z) \right) L_y
+        \begin{Bmatrix} Q_y \\ Q_x \end{Bmatrix} \\
+        a_\alpha^{(k)} = \sum_{i=1}^{k} \left( c_\alpha^{(i)} -
+        c_\alpha^{(i-1)} \right) \Pi(z_i), \qquad c_\alpha^{(0)} = 0
+
+    for `z_k \le z \le z_{k+1}`, where `L_x` places `Q_y` and `Q_x` at the
+    components `M_{xy}` and `M_{xx}` of `\{N, M\}_{,x}`, and `L_y` places
+    them at `M_{yy}` and `M_{xy}` of `\{N, M\}_{,y}`. The sum
+    `a_\alpha^{(k)}` makes the stresses continuous at the interfaces. Within
+    each ply `f^{(k)}` is quadratic in `z`, and it vanishes at the top face,
+    since `\int c_1 (H^*_{1:3} + z H^*_{4:6}) dz` through the thickness is the
+    row of the identity of `N_{xx}`, analogously for `c_2` and `N_{yy}`,
+    which `L_x` and `L_y` do not select.
+
+    The compliance is `S = \sum_k \int_{z_k}^{z_{k+1}} f^{(k)T}
+    (C_s^{(k)})^{-1} f^{(k)} dz`, computed with three Gauss-Legendre points
+    per ply, exact for the integrand of degree 4 in `z`, see
+    :meth:`.ShellProp.calc_transverse_shear_stiffness`.
+
+    References
+    ----------
+    .. [1] Rohwer, K., 1988, Improved transverse shear stiffness for layered
+       finite elements, DFVLR-FB 88-32.
 
     """
     cdef int i, j, k, p, ig
@@ -880,6 +1156,37 @@ cdef class ShellProp:
         equivalent single layer finite element mass matrices, mass per unit
         area times length squared
 
+    Notes
+    -----
+    In the notation of Reddy [1]_, the stiffnesses relate the stress
+    resultants to the generalized strains of the reference surface,
+    `\varepsilon^{(0)} = \{\varepsilon_{xx}^{(0)}, \varepsilon_{yy}^{(0)},
+    \gamma_{xy}^{(0)}\}` and `\varepsilon^{(1)} = \{\varepsilon_{xx}^{(1)},
+    \varepsilon_{yy}^{(1)}, \gamma_{xy}^{(1)}\}`, the in-plane strains being
+    `\varepsilon^{(0)} + z \varepsilon^{(1)}`. In the first-order shear
+    deformation theory (FSDT) of the shell elements:
+
+    .. math::
+
+        \begin{Bmatrix} N \\ M \end{Bmatrix} =
+        \begin{bmatrix} A & B \\ B & D \end{bmatrix}
+        \begin{Bmatrix} \varepsilon^{(0)} \\ \varepsilon^{(1)}
+        \end{Bmatrix}, \qquad
+        \begin{Bmatrix} Q_y \\ Q_x \end{Bmatrix} = A_{ts}
+        \begin{Bmatrix} \gamma_{yz} \\ \gamma_{xz} \end{Bmatrix}
+
+    with `N = \{N_{xx}, N_{yy}, N_{xy}\}` and `M = \{M_{xx}, M_{yy},
+    M_{xy}\}`, where the constant transverse shear strains through the
+    thickness require the shear correction contained in ``A44``, ``A45``,
+    ``A55``. The stiffnesses are computed by :meth:`calc_constitutive_matrix`.
+    With ``offset`` different than zero, the reference surface is not the
+    mid-surface, and ``B`` is not zero even for an isotropic plate.
+
+    References
+    ----------
+    .. [1] Reddy, J. N., Mechanics of Laminated Composite Plates and Shells:
+       Theory and Analysis, Second Edition, CRC Press, 2004.
+
     """
     def __init__(ShellProp self):
         self.h = 0.
@@ -1065,10 +1372,23 @@ cdef class ShellProp:
         coordinate system. When `m_{12} = 0` the matrices are used as stored.
 
         The 3x3 matrices ``A``, ``B`` and ``D`` are stored row by row and
-        rotated with `[A]_e = [T_\sigma] [A] [T_\sigma]^T`. The 2x2 matrix
-        ``Ats = [[A44, A45], [A45, A55]]`` is stored row by row, see
+        rotated as plane-stress stiffnesses. The 2x2 matrix ``Ats = [[A44,
+        A45], [A45, A55]]`` is stored row by row, see
         :meth:`.calc_Ats_element` for its rotation. Any of the pointers can be
         ``NULL``, in which case the corresponding matrix is skipped.
+
+        Notes
+        -----
+        ``A``, ``B`` and ``D`` are rotated with `[A]_e = [T_\sigma] [A]
+        [T_\sigma]^T`, with `T_\sigma` of :func:`_rotate_ply`. Without the
+        Fourier coefficients of :meth:`.calc_Ats_element`, ``Ats`` is rotated
+        with `T_s A_{ts} T_s^T`, `T_s = [[m_{22}, m_{21}], [m_{12},
+        m_{11}]]`. With them, the compliance `S = A_{ts}^{-1}` is evaluated
+        from its Fourier series, with `\cos 2\theta = m_{11}^2 - m_{21}^2`,
+        `\sin 2\theta = 2 m_{11} m_{21}` and the higher harmonics obtained by
+        the recurrences `\cos 2(n+1)\theta = 2 \cos 2\theta \cos 2n\theta -
+        \cos 2(n-1)\theta`, `\sin 2(n+1)\theta = 2 \cos 2\theta \sin
+        2n\theta - \sin 2(n-1)\theta`, and then inverted.
 
         """
         cdef int i, n
@@ -1203,8 +1523,41 @@ cdef class ShellProp:
         elements, where `m_{11} = \cos\theta`, `m_{12} = -\sin\theta`, `m_{21}
         = \sin\theta` and `m_{22} = \cos\theta`.
 
+        When ``shear_correction='rohwer'`` and the plies are available, the
+        stiffness corresponds to the plies rotated to the element frame, i.e.
+        all ply angles shifted by `\theta`, and it is evaluated from Fourier
+        coefficients of its inverse calculated once per laminate by
+        :meth:`.calc_transverse_shear_stiffness`, such that the cost per
+        element does not depend on the number of plies.
+
+        In all other cases, i.e. ``shear_correction`` ``'constant'``,
+        ``'vlachoutsis'`` or ``None``, or when no plies exist, e.g. for a
+        property created from lamination parameters or with ``A44``, ``A45``,
+        ``A55`` given directly, ``A44``, ``A45``, ``A55`` are rotated as the
+        components of a second-order tensor.
+
+        .. note:: Changes to ``A44``, ``A45``, ``A55`` made after
+                  :meth:`.calc_constitutive_matrix` are only used for
+                  elements with `m_{12} = 0` when the plies are available
+                  and ``shear_correction='rohwer'``, because the stiffness
+                  is otherwise obtained from the Fourier coefficients
+                  calculated from the plies.
+
+        Parameters
+        ----------
+        thetadeg : float
+            Angle `\theta` in degrees.
+
+        Returns
+        -------
+        Ats : np.ndarray
+            Matrix ``[[A44, A45], [A45, A55]]`` in the element coordinate
+            system.
+
+        Notes
+        -----
         The transverse shear stiffness obtained with the equilibrium approach
-        of Rohwer (1988) is not invariant to a rotation of the reference
+        of Rohwer (1988) [1]_ is not invariant to a rotation of the reference
         frame, because the two cylindrical bending states are tied to the
         `x` and `y` axes. Therefore, when ``shear_correction='rohwer'`` and
         the plies are available, the stiffness corresponds to the plies rotated
@@ -1228,12 +1581,12 @@ cdef class ShellProp:
         period of 180 degrees. The coefficients are calculated once per
         laminate by :meth:`.calc_transverse_shear_stiffness`, from 16
         evaluations in rotated frames, and the cost per element becomes
-        independent of the number of plies.
+        independent of the number of plies. With `M = 16` equally spaced
+        samples `\theta_j = j \pi/M`, the discrete Fourier coefficients of the
+        harmonics `2n\theta`, `n \le 5`, are exact, since the aliased
+        harmonics would be `M - n \ge 11`.
 
-        In all other cases, i.e. ``shear_correction`` ``'constant'``,
-        ``'vlachoutsis'`` or ``None``, or when no plies exist, e.g. for a
-        property created from lamination parameters or with ``A44``, ``A45``,
-        ``A55`` given directly, the stiffness is rotated as a second-order
+        In all other cases the stiffness is rotated as a second-order
         tensor:
 
         .. math::
@@ -1243,23 +1596,10 @@ cdef class ShellProp:
 
         which is exact for the constant-strain stiffness.
 
-        .. note:: Changes to ``A44``, ``A45``, ``A55`` made after
-                  :meth:`.calc_constitutive_matrix` are only used for
-                  elements with `m_{12} = 0` when the plies are available
-                  and ``shear_correction='rohwer'``, because the stiffness
-                  is otherwise obtained from the Fourier coefficients
-                  calculated from the plies.
-
-        Parameters
+        References
         ----------
-        thetadeg : float
-            Angle `\theta` in degrees.
-
-        Returns
-        -------
-        Ats : np.ndarray
-            Matrix ``[[A44, A45], [A45, A55]]`` in the element coordinate
-            system.
+        .. [1] Rohwer, K., 1988, Improved transverse shear stiffness for
+           layered finite elements, DFVLR-FB 88-32.
 
         """
         cdef double thetarad, c, s
@@ -1311,34 +1651,16 @@ cdef class ShellProp:
 
         The method is selected by the attribute ``shear_correction``:
 
-        - ``'rohwer'`` (default): equilibrium approach of Rohwer (1988). The
-          transverse shear stresses are obtained from the equilibrium of two
-          cylindrical bending states, with zero tractions at the bottom and
-          top faces and continuity at every interface, `\{\tau_{yz},
-          \tau_{xz}\}^T = f^{(k)}(z) \{Q_y, Q_x\}^T`. The 2x2 stiffness is
-          obtained from the complementary energy:
+        - ``'rohwer'`` (default): equilibrium approach, giving the full 2x2
+          matrix. The shell elements use it evaluated in the element
+          coordinate system, see :meth:`.calc_Ats_element`, whose
+          coefficients are also computed here, together with the
+          through-thickness distribution used by
+          :meth:`.calc_transverse_shear_stress`.
 
-          .. math::
-
-              A_{ts} = \left[ \sum_k \int_{z_k}^{z_{k+1}} f^{(k)T}
-              \left(C_s^{(k)}\right)^{-1} f^{(k)} dz \right]^{-1}
-
-          The integrand is a polynomial of degree 4 in `z` within each ply,
-          such that the 3-point Gauss-Legendre rule used per ply is exact.
-          The method is valid for arbitrary anisotropic and unsymmetric
-          laminates, and the result does not depend on ``offset``. The result
-          is not invariant to a rotation of the reference frame, because the
-          two cylindrical bending states are tied to the `x` and `y` axes.
-          For this reason, the shell elements use it evaluated in the element
-          coordinate system, see :meth:`.calc_Ats_element`.
-
-        - ``'vlachoutsis'``: the scalar factors `k_{13}`, `k_{23}` of
-          Vlachoutsis (1992) are applied to the constant-strain stiffness,
-          ``A55 = k13*Abar55``, ``A44 = k23*Abar44``, and the ad-hoc ``A45 =
-          (k13 + k23)/2*Abar45``, which cannot represent the coupling of
-          angle-ply laminates with ``Abar45 = 0``. The factors use `C_{11}`
-          and `C_{22}` of each ply and the direction-wise neutral surfaces,
-          being exact only for specially orthotropic plies.
+        - ``'vlachoutsis'``: the scalar factors ``k13``, ``k23`` are applied
+          to the constant-strain stiffness, ``A55 = k13*Abar55``, ``A44 =
+          k23*Abar44``, and ``A45 = (k13 + k23)/2*Abar45``.
 
         - ``'constant'``: `k = 5/6`, i.e. ``A44 = 5/6*Abar44``, ``A45 =
           5/6*Abar45``, ``A55 = 5/6*Abar55``.
@@ -1356,15 +1678,6 @@ cdef class ShellProp:
         ``Abar55``, ``Abarbar44``, ``Abarbar45`` and ``Abarbar55`` are set to
         zero and nothing else is updated.
 
-        References:
-
-            Rohwer, K. "Improved transverse shear stiffness for layered
-            finite elements", DFVLR-FB 88-32, 1988.
-
-            Vlachoutsis, S. "Shear correction factors for plates and shells",
-            Int. Journal for Numerical Methods in Engineering, Vol. 33,
-            1537-1552, 1992.
-
         Raises
         ------
         ValueError
@@ -1377,6 +1690,75 @@ cdef class ShellProp:
             coordinate system, or if the sum of ``q11L`` (direction 1) or
             ``q22L`` (direction 2) times the ply thicknesses is not positive
             (``'vlachoutsis'``).
+
+        Notes
+        -----
+        The constant-strain stiffness `\bar{A}_{ts} = \sum_k C_s^{(k)} h_k`
+        corresponds to transverse shear strains constant through the
+        thickness, and the constant-stress stiffness `\bar{\bar{A}}_{ts} = h^2
+        [\sum_k (C_s^{(k)})^{-1} h_k]^{-1}` to the constant stresses
+        `\{\tau_{yz}, \tau_{xz}\} = \{Q_y, Q_x\}/h`, with the same
+        complementary energy.
+
+        - ``'rohwer'``: equilibrium approach of Rohwer (1988) [1]_. The
+          transverse shear stresses are obtained from the equilibrium of two
+          cylindrical bending states, with zero tractions at the bottom and
+          top faces and continuity at every interface, `\{\tau_{yz},
+          \tau_{xz}\}^T = f^{(k)}(z) \{Q_y, Q_x\}^T`, see :func:`._rohwer`.
+          The 2x2 stiffness is obtained from the complementary energy:
+
+          .. math::
+
+              A_{ts} = \left[ \sum_k \int_{z_k}^{z_{k+1}} f^{(k)T}
+              \left(C_s^{(k)}\right)^{-1} f^{(k)} dz \right]^{-1}
+
+          The integrand is a polynomial of degree 4 in `z` within each ply,
+          such that the 3-point Gauss-Legendre rule used per ply is exact.
+          The method is valid for arbitrary anisotropic and unsymmetric
+          laminates, and the result does not depend on ``offset``. The result
+          is not invariant to a rotation of the reference frame, because the
+          two cylindrical bending states are tied to the `x` and `y` axes.
+          For this reason, the shell elements use it evaluated in the element
+          coordinate system, see :meth:`.calc_Ats_element`, from the Fourier
+          coefficients of the compliance computed here with 16 rotations of
+          the plies.
+
+        - ``'vlachoutsis'``: the scalar factors `k_{13}`, `k_{23}` of
+          Vlachoutsis (1992) [2]_ are applied to the constant-strain
+          stiffness, ``A55 = k13*Abar55``, ``A44 = k23*Abar44``, and the
+          ad-hoc ``A45 = (k13 + k23)/2*Abar45``, which cannot represent the
+          coupling of angle-ply laminates with ``Abar45 = 0``. The factors use
+          `C_{11}` and `C_{22}` of each ply and the direction-wise neutral
+          surfaces, being exact only for specially orthotropic plies. For the
+          direction 1, with `C_{11} = q_{11L}` and `C_{55} = q_{55L}` of each
+          ply:
+
+          .. math::
+
+              z_n = \frac{\int C_{11} z dz}{\int C_{11} dz}, \quad
+              R = \int C_{11} (z - z_n)^2 dz, \quad
+              g(z) = -\int_{z_1}^{z} C_{11} (\bar{z} - z_n) d\bar{z}, \quad
+              k_{13} = \frac{R^2}{\bar{A}_{55} \int g^2/C_{55} dz}
+
+          i.e. the energy of the transverse shear stress `\tau_{xz} = Q_x
+          g(z)/R` of the one-dimensional equilibrium `\tau_{xz,z} =
+          -\sigma_{xx,x}` is equated with that of the FSDT, `Q_x^2/(k_{13}
+          \bar{A}_{55})`. Analogously for `k_{23}` with `C_{22} = q_{22L}`,
+          `C_{44} = q_{44L}` and `\bar{A}_{44}`. The integrals of `g` are
+          evaluated with three Gauss-Legendre points per ply, which is exact,
+          `g^2` being a polynomial of degree 4 within each ply.
+
+        - ``'constant'``: `k = 5/6`, the factor that ``'rohwer'`` and
+          ``'vlachoutsis'`` give for a homogeneous plate.
+
+        References
+        ----------
+        .. [1] Rohwer, K., 1988, Improved transverse shear stiffness for
+           layered finite elements, DFVLR-FB 88-32.
+        .. [2] Vlachoutsis, S., 1992, Shear correction factors for plates and
+           shells, International Journal for Numerical Methods in
+           Engineering, 33(7), pp. 1537-1552.
+           https://doi.org/10.1002/nme.1620330712
 
         """
         cdef int i, k, n, M, ig, N, alpha, singular_ply, status
@@ -1558,21 +1940,13 @@ cdef class ShellProp:
             double Qy, double Qx):
         r"""Transverse shear stresses at a given height
 
-        Evaluates the equilibrium distribution of Rohwer (1988), in the
-        material coordinate system:
-
-        .. math::
-
-            \begin{Bmatrix} \tau_{yz} \\ \tau_{xz} \end{Bmatrix} =
-            f^{(k)}(z) \begin{Bmatrix} Q_y \\ Q_x \end{Bmatrix}
-
-        where `f^{(k)}(z)` is quadratic within each ply, vanishes at the bottom
-        and top faces and is continuous at the ply interfaces. This is the
-        consistent way to recover `\tau_{xz}` and `\tau_{yz}`, e.g. for
-        failure criteria, since `C_s \gamma` is constant within each ply and
-        non-zero at the free surfaces. For a homogeneous plate it gives the
-        parabola `\tau_{xz} = 3 Q_x/(2h) (1 - 4 \bar{z}^2/h^2)`, with `\bar{z}`
-        measured from the mid-surface.
+        Evaluates, for the transverse shear forces ``Qy`` and ``Qx``, the
+        through-thickness distribution of the transverse shear stresses of the
+        equilibrium approach used by ``shear_correction='rohwer'``, see
+        :meth:`.calc_transverse_shear_stiffness`, in the material coordinate
+        system, which is quadratic within each ply, vanishes at the bottom and
+        top faces and is continuous at the ply interfaces, e.g. for failure
+        criteria.
 
         The distribution only depends on the in-plane stiffnesses of the plies
         and is the same for every ``shear_correction``. It is computed by
@@ -1601,6 +1975,29 @@ cdef class ShellProp:
         ValueError
             If ``z`` is outside the laminate, if the laminate has no plies, or
             if the ABD matrix of the laminate is singular.
+
+        Notes
+        -----
+        Evaluates the equilibrium distribution of Rohwer (1988) [1]_, in the
+        material coordinate system, see :func:`._rohwer`:
+
+        .. math::
+
+            \begin{Bmatrix} \tau_{yz} \\ \tau_{xz} \end{Bmatrix} =
+            f^{(k)}(z) \begin{Bmatrix} Q_y \\ Q_x \end{Bmatrix}
+
+        where `f^{(k)}(z)` is quadratic within each ply, vanishes at the bottom
+        and top faces and is continuous at the ply interfaces. This is the
+        consistent way to recover `\tau_{xz}` and `\tau_{yz}`, e.g. for
+        failure criteria, since `C_s \gamma` is constant within each ply and
+        non-zero at the free surfaces. For a homogeneous plate it gives the
+        parabola `\tau_{xz} = 3 Q_x/(2h) (1 - 4 \bar{z}^2/h^2)`, with `\bar{z}`
+        measured from the mid-surface.
+
+        References
+        ----------
+        .. [1] Rohwer, K., 1988, Improved transverse shear stiffness for
+           layered finite elements, DFVLR-FB 88-32.
 
         """
         cdef int k, lo, hi, mid, N, status
@@ -1657,6 +2054,21 @@ cdef class ShellProp:
         They are computed from the inverse of the 6x6 ``ABD`` matrix and from
         ``h``.
 
+        Notes
+        -----
+        With `a = [[A, B], [B, D]]^{-1}`, whose upper-left 3x3 block is the
+        membrane compliance of the laminate with zero moments and free
+        curvatures:
+
+        .. math::
+
+            e_1 = \frac{1}{h a_{11}}, \quad e_2 = \frac{1}{h a_{22}}, \quad
+            g_{12} = \frac{1}{h a_{66}}, \quad
+            \nu_{12} = -\frac{a_{12}}{a_{11}}, \quad
+            \nu_{21} = -\frac{a_{12}}{a_{22}}
+
+        where the index 6 is the third row and column of `a`.
+
         """
         AI = np.linalg.inv(self.get_ABD())
         a11, a12, a22, a33 = AI[0,0], AI[0,1], AI[1,1], AI[2,2]
@@ -1681,6 +2093,27 @@ cdef class ShellProp:
         ``A11`` to ``D66`` are computed from ``plies`` and ``offset``, with the
         ply stiffnesses of the last call to :meth:`.Lamina.rebuild` and the
         density ``rho`` of the material of each ply.
+
+        Notes
+        -----
+        With the plies running from `z_1 = -h/2 + offset` to `z_{N+1} = +h/2
+        + offset`, the stiffnesses in the notation of Reddy [1]_ and the mass
+        integrals are, integrated exactly ply by ply:
+
+        .. math::
+
+            (A_{ij}, B_{ij}, D_{ij}) = \sum_k \int_{z_k}^{z_{k+1}}
+            q_{ijL}^{(k)} (1, z, z^2) dz, \quad ij = 11, 12, 16, 22, 26, 66 \\
+            (intrho, intrhoz, intrhoz2) = \sum_k \int_{z_k}^{z_{k+1}}
+            \rho^{(k)} (1, z, z^2) dz
+
+        and ``A44``, ``A45``, ``A55`` follow from
+        :meth:`.calc_transverse_shear_stiffness`.
+
+        References
+        ----------
+        .. [1] Reddy, J. N., Mechanics of Laminated Composite Plates and
+           Shells: Theory and Analysis, Second Edition, CRC Press, 2004.
 
         """
         cdef double h0, hk_1, hk
@@ -1737,6 +2170,13 @@ cdef class ShellProp:
         RuntimeError
             If ``offset`` is not zero.
 
+        Notes
+        -----
+        `q_{16L}` and `q_{26L}` are odd functions of the ply angle, see
+        :meth:`.Lamina.rebuild`, such that `A_{16} = A_{26} = 0` in a
+        balanced laminate, i.e. with a ply at `-\theta` for every ply at
+        `+\theta`, of the same material and thickness.
+
         """
         if self.offset != 0.:
             raise RuntimeError('Laminates with offset cannot be forced balanced!')
@@ -1755,6 +2195,12 @@ cdef class ShellProp:
         ------
         RuntimeError
             If ``offset`` is not zero.
+
+        Notes
+        -----
+        These terms vanish in a laminate whose plies are all at 0 or 90
+        degrees, for which `q_{16L} = q_{26L} = 0`, see
+        :meth:`.Lamina.rebuild`.
 
         """
         if self.offset != 0.:
@@ -1775,6 +2221,12 @@ cdef class ShellProp:
         ------
         RuntimeError
             If ``offset`` is not zero.
+
+        Notes
+        -----
+        In a laminate symmetric about its mid-surface the integrand `q_{ijL}
+        z` of `B_{ij}` is an odd function of `z`, see
+        :meth:`.calc_constitutive_matrix`, such that `B_{ij} = 0`.
 
         """
         if self.offset != 0.:
@@ -1809,6 +2261,32 @@ cdef class ShellProp:
         ------
         ValueError
             If there are no plies.
+
+        Notes
+        -----
+        With `\bar{z} = z/h`, `z` measured from the reference surface, and
+        `\theta(\bar{z})` the ply angle:
+
+        .. math::
+
+            \{\xi_{A1}, \xi_{A2}, \xi_{A3}, \xi_{A4}\} = \int \{\cos 2\theta,
+            \sin 2\theta, \cos 4\theta, \sin 4\theta\} d\bar{z} \\
+            \{\xi_{B1}, \xi_{B2}, \xi_{B3}, \xi_{B4}\} = 4 \int \{\cos
+            2\theta, \sin 2\theta, \cos 4\theta, \sin 4\theta\} \bar{z}
+            d\bar{z} \\
+            \{\xi_{D1}, \xi_{D2}, \xi_{D3}, \xi_{D4}\} = 12 \int \{\cos
+            2\theta, \sin 2\theta, \cos 4\theta, \sin 4\theta\} \bar{z}^2
+            d\bar{z} \\
+            \{\xi_{Ats,1}, \xi_{Ats,2}\} = \int \{\cos 2\theta, \sin
+            2\theta\} d\bar{z}
+
+        integrated exactly ply by ply, such that ``xiAts1 = xiA1`` and
+        ``xiAts2 = xiA2``. With these definitions, the stiffnesses of the
+        laminate are linear in the lamination parameters, see
+        :func:`.shellprop_from_LaminationParameters`.
+
+        TODO(author): source of these definitions, e.g. Gürdal, Haftka and
+        Hajela (1999), cited in the comments of :meth:`.MatLamina.rebuild`?
 
         """
         cdef double h0, hk, hk_1, h, zbar1, zbar2, Afac, Bfac, Dfac, Atsfac
@@ -1878,6 +2356,14 @@ cpdef LaminationParameters force_balanced_LP(LaminationParameters lp):
     --------
     force_symmetric_LP, force_orthotropic_LP
 
+    Notes
+    -----
+    In a balanced laminate, with a ply at `-\theta` for every ply at
+    `+\theta` of the same thickness, the integrals of `\sin 2\theta` and
+    `\sin 4\theta` through the thickness vanish, see
+    :meth:`.ShellProp.calc_lamination_parameters`, and so do `A_{16}` and
+    `A_{26}`.
+
     """
     lp.xiA2 = 0
     lp.xiA4 = 0
@@ -1906,6 +2392,13 @@ cpdef LaminationParameters force_symmetric_LP(LaminationParameters lp):
     --------
     force_balanced_LP, force_orthotropic_LP
 
+    Notes
+    -----
+    In a laminate symmetric about its mid-surface, the integrands of
+    `\xi_{Bi}`, linear in `\bar{z}`, are odd functions of `\bar{z}`, see
+    :meth:`.ShellProp.calc_lamination_parameters`, such that `\xi_{Bi} = 0`
+    and the coupling stiffnesses `B_{ij}` vanish.
+
     """
     lp.xiB1 = 0
     lp.xiB2 = 0
@@ -1919,9 +2412,6 @@ cpdef LaminationParameters force_orthotropic_LP(LaminationParameters lp):
 
     The lamination parameters `\xi_{A2}`, `\xi_{A4}`, `\xi_{B2}`, `\xi_{B4}`,
     `\xi_{D2}` and `\xi_{D4}` are set to null to force an orthotropic laminate.
-    The `\xi_{D2}` and `\xi_{D4}` are related to the bend-twist coupling and
-    become often very small for balanced laminates with a large amount of
-    plies.
 
     The object ``lp`` is modified in place and returned.
 
@@ -1938,6 +2428,14 @@ cpdef LaminationParameters force_orthotropic_LP(LaminationParameters lp):
     See Also
     --------
     force_balanced_LP, force_symmetric_LP
+
+    Notes
+    -----
+    The lamination parameters of the sine terms give the stiffnesses
+    `A_{16}`, `A_{26}`, `B_{16}`, `B_{26}`, `D_{16}` and `D_{26}`, see
+    :func:`.shellprop_from_LaminationParameters`. The `\xi_{D2}` and
+    `\xi_{D4}` are related to the bend-twist coupling and become often very
+    small for balanced laminates with a large amount of plies.
 
     """
     lp.xiA2 = 0
@@ -1962,6 +2460,12 @@ cpdef ShellProp shellprop_from_LaminationParameters(double thickness, MatLamina
     is zero, and the mass integrals ``intrho``, ``intrhoz``, ``intrhoz2`` and
     the equivalent properties ``e1``, ``e2``, ``g12``, ``nu12``, ``nu21`` are
     not computed, remaining zero.
+    The transverse shear stiffnesses ``A44``, ``A45``, ``A55`` are equal to
+    the constant-strain ``Abar44``, ``Abar45``, ``Abar55``,
+    ``shear_correction`` is ``None``, ``scf_k13 = scf_k23 = 1`` and the
+    constant-stress ``Abarbar44``, ``Abarbar45``, ``Abarbar55`` are ``nan``.
+    If a shear correction is desired, ``A44``, ``A45``, ``A55`` can be
+    modified directly, and the elements will rotate them as a tensor.
 
     Parameters
     ----------
@@ -1979,14 +2483,39 @@ cpdef ShellProp shellprop_from_LaminationParameters(double thickness, MatLamina
 
     Notes
     -----
-    Since the through-thickness distribution of the plies is not known from
-    the lamination parameters, no shear correction can be computed. The
-    transverse shear stiffnesses ``A44``, ``A45``, ``A55`` are therefore
-    equal to the constant-strain ``Abar44``, ``Abar45``, ``Abar55``,
-    ``shear_correction`` is ``None``, ``scf_k13 = scf_k23 = 1`` and the
-    constant-stress ``Abarbar44``, ``Abarbar45``, ``Abarbar55`` are ``nan``.
-    If a shear correction is desired, ``A44``, ``A45``, ``A55`` can be
-    modified directly, and the elements will rotate them as a tensor.
+    The stiffnesses of a ply are linear in the trigonometric functions of
+    its angle, with the invariants of ``mat`` as coefficients, see
+    :meth:`.MatLamina.get_invariant_matrix`, and the lamination parameters
+    are their thickness integrals, see
+    :meth:`.ShellProp.calc_lamination_parameters`. For a laminate of a
+    single material, with `h` = ``thickness``, `\int dz = h \int d\bar{z}`,
+    `\int z dz = h^2/4 \cdot 4\int \bar{z} d\bar{z}` and `\int z^2 dz =
+    h^3/12 \cdot 12 \int \bar{z}^2 d\bar{z}` give:
+
+    .. math::
+
+        A_{11} = h (u_1 + u_2 \xi_{A1} + u_3 \xi_{A3}), \quad
+        A_{12} = h (u_4 - u_3 \xi_{A3}), \quad
+        A_{22} = h (u_1 - u_2 \xi_{A1} + u_3 \xi_{A3}) \\
+        A_{16} = h (u_2/2 \, \xi_{A2} + u_3 \xi_{A4}), \quad
+        A_{26} = h (u_2/2 \, \xi_{A2} - u_3 \xi_{A4}), \quad
+        A_{66} = h (u_5 - u_3 \xi_{A3}) \\
+        B_{11} = \frac{h^2}{4} (u_2 \xi_{B1} + u_3 \xi_{B3}), \quad
+        B_{12} = -\frac{h^2}{4} u_3 \xi_{B3}, \quad
+        B_{22} = \frac{h^2}{4} (-u_2 \xi_{B1} + u_3 \xi_{B3}) \\
+        B_{16} = \frac{h^2}{4} (u_2/2 \, \xi_{B2} + u_3 \xi_{B4}), \quad
+        B_{26} = \frac{h^2}{4} (u_2/2 \, \xi_{B2} - u_3 \xi_{B4}), \quad
+        B_{66} = -\frac{h^2}{4} u_3 \xi_{B3} \\
+        \bar{A}_{44} = h (u_6 + u_7 \xi_{Ats,1}), \quad
+        \bar{A}_{45} = -h u_7 \xi_{Ats,2}, \quad
+        \bar{A}_{55} = h (u_6 - u_7 \xi_{Ats,1})
+
+    and `D_{ij}` as `A_{ij}`, with the factor `h^3/12` instead of `h` and
+    `\xi_{Di}` instead of `\xi_{Ai}`. Since the through-thickness
+    distribution of the plies is not known from the lamination parameters,
+    no shear correction can be computed, hence the uncorrected transverse
+    shear stiffnesses. Without plies, the elements rotate them as a tensor,
+    see :meth:`.ShellProp.calc_Ats_element`.
 
     """
     lam = ShellProp()
@@ -2039,10 +2568,6 @@ cpdef ShellProp shellprop_from_lamination_parameters(double thickness, MatLamina
     r"""Return a :class:`.ShellProp` object based in the thickness, material and
     lamination parameters
 
-    Note that `\xi_{Ats,1}` and `\xi_{Ats,2}` are optional and usually equal
-    to zero, becoming important only when the transverse shear modulus is
-    different in the two directions, i.e.  when `G_{13} \ne G{23}`.
-
     The 14 lamination parameters according to the first-order shear
     deformation theory are `\xi_{A1} \cdots \xi_{A4}`, `\xi_{B1} \cdots
     \xi_{B4}`, `\xi_{D1} \cdots \xi_{D4}`, `\xi_{Ats,1}` and
@@ -2073,6 +2598,14 @@ cpdef ShellProp shellprop_from_lamination_parameters(double thickness, MatLamina
         Shell property with the ABD and Ats matrices already calculated. See
         :func:`.shellprop_from_LaminationParameters` for the transverse shear
         stiffnesses.
+
+    Notes
+    -----
+    Note that `\xi_{Ats,1}` and `\xi_{Ats,2}` are optional and usually equal
+    to zero, becoming important only when the transverse shear modulus is
+    different in the two directions, i.e.  when `G_{13} \ne G{23}`, since
+    they multiply the invariant `u_7 = (q_{44} - q_{55})/2 = (g_{23} -
+    g_{13})/2`, see :func:`.shellprop_from_LaminationParameters`.
 
     """
     lp = LaminationParameters()
@@ -2196,6 +2729,20 @@ cdef class GradABD:
         None
             The attributes of the object are updated.
 
+        Notes
+        -----
+        The stiffnesses of :func:`.shellprop_from_LaminationParameters` are
+        `A = h \, U \{1, \xi_A\}`, `B = h^2/4 \, U \{0, \xi_B\}`, `D = h^3/12
+        \, U \{1, \xi_D\}` and `\bar{A}_{ts} = h \, U_{ts} \{1,
+        \xi_{Ats}\}`, with `U` the rows of the in-plane terms of
+        :meth:`.MatLamina.get_invariant_matrix` and `U_{ts}` those of the
+        transverse shear terms. At constant lamination parameters,
+        `\partial A/\partial h = U \{1, \xi_A\}`, `\partial B/\partial h = h/2
+        \, U \{0, \xi_B\}`, `\partial D/\partial h = h^2/4 \, U \{1, \xi_D\}`
+        and `\partial \bar{A}_{ts}/\partial h = U_{ts} \{1, \xi_{Ats}\}`, and
+        at constant thickness the derivatives with respect to the lamination
+        parameters are the columns of `U` multiplied by `h`, `h^2/4` and
+        `h^3/12`, respectively, and those of `U_{ts}` by `h`.
 
         """
         cdef int i, j

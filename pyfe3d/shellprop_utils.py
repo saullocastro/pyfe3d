@@ -78,6 +78,27 @@ def read_laminaprop(laminaprop, rho=0):
     matlam : MatLamina
         A :class:`.MatLamina` object.
 
+    Notes
+    -----
+    The Poisson's ratios not given follow from the reciprocity relations of
+    an orthotropic material, `\nu_{ij}/E_i = \nu_{ji}/E_j`, which make its
+    compliance matrix symmetric [1]_:
+
+    .. math::
+
+        \nu_{21} = \nu_{12} \frac{E_2}{E_1}, \quad
+        \nu_{31} = \nu_{13} \frac{E_3}{E_1}, \quad
+        \nu_{32} = \nu_{23} \frac{E_3}{E_2}
+
+    and for an isotropic material `G = E/(2(1 + \nu))`. With 2 or 6 entries,
+    ``e3 = 0`` makes the constitutive constants of :meth:`.MatLamina.rebuild`
+    the plane-stress reduced stiffnesses.
+
+    References
+    ----------
+    .. [1] Reddy, J. N., Mechanics of Laminated Composite Plates and Shells:
+       Theory and Analysis, Second Edition, CRC Press, 2004.
+
     """
     matlam = MatLamina()
 
