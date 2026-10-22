@@ -212,7 +212,7 @@ cdef class MatLamina:
 
         .. math::
 
-            c_{11} = (1 - \nu_{23}\nu_{23})/(\delta e_2), \quad
+            c_{11} = (1 - \nu_{23}\nu_{32})/(\delta e_2), \quad
             c_{12} = (\nu_{21} + \nu_{31}\nu_{23})/(\delta e_2), \quad
             c_{13} = (\nu_{31} + \nu_{21}\nu_{32})/(\delta e_2) \\
             c_{22} = (1 - \nu_{13}\nu_{31})/(\delta e_1), \quad
@@ -220,12 +220,12 @@ cdef class MatLamina:
             c_{33} = e_3 (1 - \nu_{12}\nu_{21})/(\delta e_1 e_2) \\
             c_{44} = g_{23}, \quad c_{55} = g_{13}, \quad c_{66} = g_{12}
 
-        With the reciprocity, `\delta e_1 e_2 = \Delta` and `c_{ij} =
-        q_{ij}`, except for `c_{11}`.
-
-        TODO(author): `c_{11}` uses `\nu_{23}\nu_{23}` where `q_{11}` uses
-        `\nu_{23}\nu_{32}`; they differ unless `\nu_{23} = 0` or `e_2 =
-        e_3`.
+        With the reciprocity, `\delta e_1 e_2 = \Delta`, and the `c_{ij}` are
+        the entries of the inverse of the compliance matrix of the
+        orthotropic material, with `S_{11} = 1/e_1`, `S_{12} =
+        -\nu_{12}/e_1`, `S_{13} = -\nu_{13}/e_1`, `S_{22} = 1/e_2`, `S_{23} =
+        -\nu_{23}/e_2`, `S_{33} = 1/e_3`, `S_{44} = 1/g_{23}`, `S_{55} =
+        1/g_{13}` and `S_{66} = 1/g_{12}`.
 
         The invariants `u_1` to `u_5` are those of Jones [3]_, and `u_6`,
         `u_7` the transverse shear invariants of the ABAQUS manual [4]_:
@@ -273,7 +273,7 @@ cdef class MatLamina:
         nu23 = self.nu23
         nu32 = self.nu32
         delta = (1-nu12*nu21-nu23*nu32-nu31*nu13-2*nu21*nu32*nu13)/(e1*e2)
-        self.c11 = (1    - nu23*nu23)/(delta*e2)
+        self.c11 = (1    - nu23*nu32)/(delta*e2)
         self.c12 = (nu21 + nu31*nu23)/(delta*e2)
         self.c13 = (nu31 + nu21*nu32)/(delta*e2)
         self.c22 = (1    - nu13*nu31)/(delta*e1)
