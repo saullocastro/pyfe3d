@@ -209,6 +209,27 @@ def test_isotropic_plate():
     assert np.allclose(prop.Ats, 5/6*Abar_ts)
 
 
+def test_offset_isotropic_plate():
+    r"""With the offset `e`, the plate occupies `-h/2 + e \le z \le h/2 + e`
+    and the thickness integrals give `B = e A`, `D = D_0 + e^2 A`,
+    ``intrhoz`` `= \rho h e` and ``intrhoz2`` `= \rho (h^3/12 + h e^2)`; the
+    transverse shear stiffness does not change"""
+    E = 71e9
+    nu = 0.28
+    rho = 2700.
+    h = 0.002
+    e = 0.6*h
+    prop0 = isotropic_plate(thickness=h, E=E, nu=nu, rho=rho)
+    prop = isotropic_plate(thickness=h, E=E, nu=nu, rho=rho, offset=e)
+    assert np.allclose(prop.A, prop0.A)
+    assert np.allclose(prop.B, e*prop0.A, rtol=1e-12)
+    assert np.allclose(prop.D, prop0.D + e**2*prop0.A, rtol=1e-12)
+    assert np.allclose(prop.Ats, prop0.Ats, rtol=1e-12)
+    assert np.isclose(prop.intrho, rho*h)
+    assert np.isclose(prop.intrhoz, rho*h*e)
+    assert np.isclose(prop.intrhoz2, rho*(h**3/12 + h*e**2))
+
+
 def test_errors():
     prop = helper_isotropic_plate()
     prop.offset = 1.

@@ -1,9 +1,11 @@
-Property definitions
---------------------
+Properties
+==========
+
+The shell and beam properties, see :doc:`shell_properties`.
 
 .. toctree::
     :titlesonly:
 
-    beamprop.rst
     shellprop.rst
     shellprop_utils.rst
+    beamprop.rst
