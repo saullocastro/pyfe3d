@@ -397,8 +397,14 @@ def _rayleigh_ritz(A, M, V):
     `[W]^T[A][W]` are symmetrized, `\frac{1}{2}([B] + [B]^T)`, before the
     Cholesky factorization and the eigenvalue solution.
 
-    TODO(author): cite a source for the accuracy of the Ritz values, e.g.
-    [1]_?
+    The Ritz values are the optimal approximations of the eigenvalues that
+    can be obtained from the subspace spanned by the columns of `[V]`
+    ([1]_, Section 11.4, Eq. (11.5) and Theorem 11.4.1, p. 236): the `j`-th
+    Ritz value is the minimum over the `j`-dimensional subspaces of the span
+    of the maximum of the Rayleigh quotient, so it can only improve when the
+    span grows, and the span contains the eigenvectors of every pass. The
+    theorem is stated for the standard problem; it holds for the pencil in
+    the `[M]` inner product, through the Cholesky factor of `[V]^T[M][V]`.
 
     References
     ----------
