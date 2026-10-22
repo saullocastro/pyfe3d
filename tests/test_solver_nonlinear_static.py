@@ -208,7 +208,9 @@ def test_crisfield_criterion_units_invariance(kind, name):
         inc, calls, zetas, w = results['crisfield', s]
         assert calls == calls0
         np.testing.assert_allclose(inc, inc0, rtol=1.e-12)
-        np.testing.assert_allclose(zetas, zetas0, rtol=1.e-5, atol=1.e-13)
+        #NOTE the zetas below the tolerance relTOL = 1e-8 are round-off,
+        #     e.g. 4e-13 differing by 1.8e-13 on macOS with Python 3.9
+        np.testing.assert_allclose(zetas, zetas0, rtol=1.e-5, atol=1.e-11)
         assert np.isclose(w, w0, rtol=1.e-7)
     # NOTE the Euclidean norm of the residual mixes forces and moments: with
     #      the rotations in micro-units the moments dominate it, and the
