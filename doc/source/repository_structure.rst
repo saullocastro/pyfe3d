@@ -14,7 +14,7 @@ Overall layout
     ├── README.md
     ├── CITATION.cff
     ├── LICENSE
-    ├── pyfe3d/                 # library code (Cython)
+    ├── pyfe3d/                 # library code (Cython), solvers (Python)
     ├── doc/                    # Sphinx documentation
     ├── tests/                  # test cases and usage examples
     ├── setup.py                # build script (generates version.py)
@@ -28,10 +28,12 @@ Key components
 * **Library modules (Cython)** – element and property classes live in ``pyfe3d``
   as ``.pyx`` files that are compiled with Cython.  ``setup.py`` collects these
   extensions and generates ``pyfe3d/version.py`` during the build.
+* **Solvers (Python)** – the package ``pyfe3d/solver`` with the linear,
+  non-linear and eigenvalue solvers.
 * **Tests as examples** – scripts in ``tests/`` demonstrate how to build models
   and call the solver.  They act as both regression tests and usage examples.
 * **Documentation** – reStructuredText files under ``doc/`` are built with
-  Sphinx.  A topology optimisation tutorial is provided as a Jupyter notebook.
+  Sphinx.  The tutorials are Jupyter notebooks in ``doc/source``.
 * **Requirements** – ``requirements.txt`` lists runtime dependencies while other
   files specify packages for CI and documentation builds.
 
