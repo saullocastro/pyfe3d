@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.10.5 (unreleased)
 
 ### Non-linear static solvers in `pyfe3d.solver`
 
@@ -30,6 +30,48 @@ depending on structsolve:
   after the existing ones, whose defaults are unchanged. `check_eigenpairs()`
   now also detects load multipliers missing below the highest one returned.
   `diagonal_preconditioner()` uses the modulus of the diagonal entries.
+
+### Bug fixes
+
+- `BeamC`: the shear parameters `alphay` and `alphaz` are
+  `-12*E*I/(G*A*L**2)`, the sign with which the consistent shape functions
+  of Luo (2008) satisfy the Timoshenko equilibrium, instead of the positive
+  sign of Eq. (21) of that paper, in `update_probe_finte`, `update_KC0`,
+  `update_fint`, `update_KG` and `update_M`. One element of a cantilever gave
+  a tip deflection of 429.07, stiffer than Euler-Bernoulli (493.83), instead
+  of the exact Timoshenko value 522.716. New tests
+  `tests/test_beamc_timoshenko_shape_functions.py` and
+  `tests/test_timoshenko_beam_literature.py`, with benchmarks of Bathe
+  (2014) and Petyt (2010).
+- `Quad4` and `Quad4R`, `update_KA_beta`: the slope along the flow is
+  `N,x*r11 + N,y*r12`, instead of `N,x*r11 + N,y*r21`, which was wrong for
+  elements whose `x` axis is not along `X`. New
+  `tests/test_piston_theory_flow_direction.py`.
+- `MatLamina`: `c11` used `nu23*nu23` instead of `nu23*nu32` (4.26% too high
+  for `E2 != E3`) and `q31` used `nu12*nu32` instead of `nu12*nu23` (4.65%
+  too high). New `tests/test_matlamina_stiffness.py`, against the inverse of
+  the compliance matrix.
+- `GradABD.calc_LP_grad` left the derivatives of `A66`, `B66` and `D66` with
+  respect to the lamination parameters at zero. New `tests/test_gradabd.py`,
+  against central finite differences.
+- The curved beam frequency tests clamped an extra node with fine meshes;
+  the end nodes are now selected by index.
+
+### Derivation scripts
+
+- The SymPy scripts that generate the element code are moved from the
+  repository pyfe3d-dev (commit 9b9971c) to `theory/`, with the derivations
+  of the piston-theory slope and of the sign of the `BeamC` shear parameters
+  corrected as above.
+
+### Documentation
+
+- Functional docstrings of the public API, and Notes and References with
+  the theory of the beams, truss, spring, shell elements, `shellprop` and
+  the solver. The docstring of `Truss.update_M` had the wrong signs of the
+  coupling terms of the consistent mass matrix; the code was right, new
+  `tests/test_truss_consistent_mass.py`.
+- Reddy's book is cited as Reddy (2003), https://doi.org/10.1201/b12409.
 
 ## 0.10.0 (2026-09-25)
 
