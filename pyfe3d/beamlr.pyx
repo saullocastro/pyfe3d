@@ -1687,8 +1687,8 @@ cdef class BeamLR:
 
         Before this function is called, the probe :class:`.BeamLRProbe` attribute
         of the :class:`.BeamLR` object must be updated using
-        :func:`.update_probe_ue` with the current displacements; and
-        :func:`.update_probe_xe` with the node coordinates.
+        :meth:`.update_probe_ue` with the current displacements; and
+        :meth:`.update_probe_xe` with the node coordinates.
 
         The 144 entries of the matrix of the element, in global coordinates,
         are written at the positions ``init_k_KCNL`` to
@@ -1884,7 +1884,7 @@ cdef class BeamLR:
         from the linear static solution of a reference load, the critical
         load multipliers `\lambda` of the linear buckling analysis solve
         `([K_{C0}] + \lambda [K_G]) \{u\} = \{0\}`, see
-        :func:`pyfe3d.solver.linear_buckling`. The geometric term of the
+        :func:`.linear_buckling`. The geometric term of the
         nonlinear axial strain is in :meth:`.update_KCNL`.
 
         """

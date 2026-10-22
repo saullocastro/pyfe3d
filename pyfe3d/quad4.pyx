@@ -24,7 +24,7 @@ vector.
 The :class:`.Quad4` is the recommended quadrilateral plane stress finite
 element.
 
-Another option is the :class:`pyfe3d.Quad4R` with full reduced
+Another option is the :class:`.Quad4R` with full reduced
 integration, more efficient, but with an hourglass control that creates
 artificial stiffness to compensate the reduced integration.
 
@@ -2637,8 +2637,8 @@ cdef class Quad4:
 
         Before this function is called, the probe :class:`.Quad4Probe` attribute
         of the :class:`.Quad4` object must be updated using
-        :func:`.update_probe_ue` with the current displacements; and
-        :func:`.update_probe_xe` with the node coordinates.
+        :meth:`.update_probe_ue` with the current displacements; and
+        :meth:`.update_probe_xe` with the node coordinates.
 
         The element matrix is computed in element coordinates into the probe
         attribute ``KCNLve``, rotated to global coordinates, and its values
@@ -2791,8 +2791,8 @@ cdef class Quad4:
 
         Before this function is called, the probe :class:`.Quad4Probe`
         attribute of the :class:`.Quad4` object must be updated using
-        :func:`.update_probe_ue` with the correct pre-buckling (fundamental
-        state) displacements; and :func:`.update_probe_xe` with the node
+        :meth:`.update_probe_ue` with the correct pre-buckling (fundamental
+        state) displacements; and :meth:`.update_probe_xe` with the node
         coordinates.
 
         At each integration point the membrane stress resultants are obtained
@@ -3712,7 +3712,7 @@ cdef class Quad4:
 
         Before this function is called, the probe :class:`.Quad4Probe`
         attribute of the :class:`.Quad4` object must be updated using
-        :func:`.update_probe_xe` with the node coordinates.
+        :meth:`.update_probe_xe` with the node coordinates.
 
         Only the translational degrees-of-freedom appear. The values are added
         to ``KGv`` at the positions ``init_k_KG`` to ``init_k_KG +

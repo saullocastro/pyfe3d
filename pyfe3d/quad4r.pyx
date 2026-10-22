@@ -28,7 +28,7 @@ All stiffness terms, besides drilling, are integrated using the reduced
 integration scheme for the :class:`.Quad4R` element, with a single point at
 the centroid, making it very efficient concerning the time needed to
 calculate the internal forces and stiffness matrices, in comparison with the
-:class:`pyfe3d.Quad4` element. An hourglass control adds an artificial
+:class:`.Quad4` element. An hourglass control adds an artificial
 stiffness to `u`, `v`, `w`, `r_x` and `r_y`, whose magnitude can be scaled
 with the ``hgfactor_*`` parameters of :meth:`.Quad4R.update_KC0`,
 :meth:`.Quad4R.update_probe_finte` and :meth:`.Quad4R.update_fint`.
@@ -38,9 +38,9 @@ field by a term integrated with two points per direction, whose coefficient
 is selected with the ``drilling_model`` attribute of :class:`.Quad4R`: the
 default ``0`` is physics-based, any other value gives the fictitious penalty
 of MSC Nastran and Autodesk Nastran controlled by the ``K6ROT`` attribute.
-Unlike :class:`pyfe3d.Quad4` and :class:`pyfe3d.Tria3R`, this element does
+Unlike :class:`.Quad4` and :class:`.Tria3R`, this element does
 **not** enrich the in-plane displacement field with the drilling rotations.
-Use :class:`pyfe3d.Quad4` to use Allman's enrichment.
+Use :class:`.Quad4` to use Allman's enrichment.
 
 The transverse shear stiffnesses `A_{44}`, `A_{45}` and `A_{55}` are read
 from the :class:`pyfe3d.shellprop.ShellProp` object with the shear correction
@@ -215,7 +215,7 @@ and they differ only in the coefficient `\gamma_{r_z}` that multiplies it:
 * ``drilling_model = 1`` uses the fictitious value `\gamma_{r_z} = K6ROT
   \cdot 10^{-6} A_{66}` of MSC Nastran and Autodesk Nastran, derived below.
 
-Unlike :class:`pyfe3d.Quad4` and :class:`pyfe3d.Tria3R`, this element does
+Unlike :class:`.Quad4` and :class:`.Tria3R`, this element does
 **not** use the hierarchical edge-mode enrichment of the in-plane
 displacement field of Allman (1984) that accompanies the Hughes-Brezzi term
 in those two elements. The enrichment exists to remove the excessive
@@ -225,18 +225,18 @@ membrane problem, with a reference tip displacement of 23.96,
 
 .. table::
 
-    ===========  ==========  ==========  ==========  ==========
-    mesh         Quad4R      Quad4       Quad4       Quad4R
-                 (no         penalty     enriched    enriched
-                 enrichment)                         at 3x3
-    ===========  ==========  ==========  ==========  ==========
-    2 by 2       30.14       11.85       20.75       20.74
-    4 by 4       24.66       18.30       22.83       22.81
-    8 by 8       24.08       22.08       23.54       23.52
-    16 by 16     23.97       23.43       23.81       23.79
-    ===========  ==========  ==========  ==========  ==========
+    ============  ============  ============  ============  ============
+    mesh          Quad4R        Quad4         Quad4         Quad4R
+                  (no           penalty       enriched      enriched
+                  enrichment)                               at 3x3
+    ============  ============  ============  ============  ============
+    2 by 2        30.14         11.85         20.75         20.74
+    4 by 4        24.66         18.30         22.83         22.81
+    8 by 8        24.08         22.08         23.54         23.52
+    16 by 16      23.97         23.43         23.81         23.79
+    ============  ============  ============  ============  ============
 
-so the enrichment recovers for :class:`pyfe3d.Quad4` what the reduced
+so the enrichment recovers for :class:`.Quad4` what the reduced
 integration already gives here, and adding it to this element makes it less
 accurate and more computationally expensive.
 
@@ -538,7 +538,7 @@ cdef class Quad4R:
         stiffness.
 
         Note that this element does not implement the in-plane drilling
-        enrichment that :class:`pyfe3d.Quad4` and :class:`pyfe3d.Tria3R`
+        enrichment that :class:`.Quad4` and :class:`.Tria3R`
         apply, see the module documentation.
     K6ROT, : double
         Dimensionless multiplier for the fictitious drilling stiffness, read
@@ -582,7 +582,7 @@ cdef class Quad4R:
     described in the Notes of :mod:`pyfe3d.quad4r`.
 
     This element does not implement the in-plane enrichment of Allman (1984)
-    [2]_ that :class:`pyfe3d.Quad4` and :class:`pyfe3d.Tria3R` apply together
+    [2]_ that :class:`.Quad4` and :class:`.Tria3R` apply together
     with the Hughes-Brezzi term, because its reduced integration already
     achieves what the enrichment achieves there.
 
@@ -5658,8 +5658,8 @@ cdef class Quad4R:
 
         Before this function is called, the probe :class:`.Quad4RProbe` attribute
         of the :class:`.Quad4R` object must be updated using
-        :func:`.update_probe_ue` with the current displacements; and
-        :func:`.update_probe_xe` with the node coordinates.
+        :meth:`.update_probe_ue` with the current displacements; and
+        :meth:`.update_probe_xe` with the node coordinates.
 
         The element matrix is computed in element coordinates into the probe
         attribute ``KCNLve``, rotated to global coordinates, and its values
@@ -5813,8 +5813,8 @@ cdef class Quad4R:
 
         Before this function is called, the probe :class:`.Quad4RProbe`
         attribute of the :class:`.Quad4R` object must be updated using
-        :func:`.update_probe_ue` with the correct pre-buckling displacements;
-        and :func:`.update_probe_xe` with the node coordinates.
+        :meth:`.update_probe_ue` with the correct pre-buckling displacements;
+        and :meth:`.update_probe_xe` with the node coordinates.
 
         At each integration point the membrane stress resultants are obtained
         from the linear membrane strains and curvatures of the probe
@@ -6707,7 +6707,7 @@ cdef class Quad4R:
 
         Before this function is called, the probe :class:`.Quad4RProbe`
         attribute of the :class:`.Quad4R` object must be updated using
-        :func:`.update_probe_xe` with the node coordinates.
+        :meth:`.update_probe_xe` with the node coordinates.
 
         Only the translational degrees-of-freedom appear. The values are added
         to ``KGv`` at the positions ``init_k_KG`` to ``init_k_KG +

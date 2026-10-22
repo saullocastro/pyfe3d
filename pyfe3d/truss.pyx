@@ -507,7 +507,7 @@ cdef class Truss:
         KC0v : np.array
             Array to store sparse values. 1-D array of floats of size at least
             ``init_k_KC0 + 72``.
-        prop : :class:`BeamProp` object
+        prop : :class:`.BeamProp` object
             Beam property object from where the stiffness and mass attributes
             are read from.
         update_KC0v_only : int, optional

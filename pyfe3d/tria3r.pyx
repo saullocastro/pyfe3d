@@ -4178,8 +4178,8 @@ cdef class Tria3R:
 
         Before this function is called, the probe :class:`.Tria3RProbe` attribute
         of the :class:`.Tria3R` object must be updated using
-        :func:`.update_probe_ue` with the current displacements; and
-        :func:`.update_probe_xe` with the node coordinates.
+        :meth:`.update_probe_ue` with the current displacements; and
+        :meth:`.update_probe_xe` with the node coordinates.
 
         The element matrix is computed in element coordinates into the probe
         attribute ``KCNLve``, rotated to global coordinates, and its values
@@ -4324,8 +4324,8 @@ cdef class Tria3R:
 
         Before this function is called, the probe :class:`.Tria3RProbe`
         attribute of the :class:`Tria3R` object must be updated using
-        :func:`.update_probe_ue` with the correct pre-buckling displacements;
-        and :func:`.update_probe_xe` with the node coordinates.
+        :meth:`.update_probe_ue` with the correct pre-buckling displacements;
+        and :meth:`.update_probe_xe` with the node coordinates.
 
         The membrane stress resultants are obtained from the linear membrane
         strains and curvatures of the probe displacements ``ue``, including
@@ -4912,7 +4912,7 @@ cdef class Tria3R:
 
         Before this function is called, the probe :class:`.Tria3RProbe`
         attribute of the :class:`.Tria3R` object must be updated using
-        :func:`.update_probe_xe` with the node coordinates.
+        :meth:`.update_probe_xe` with the node coordinates.
 
         Only the translational degrees-of-freedom appear. The values are added
         to ``KGv`` at the positions ``init_k_KG`` to ``init_k_KG +

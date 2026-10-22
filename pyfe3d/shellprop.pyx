@@ -2652,8 +2652,7 @@ cdef class GradABD:
         other columns the dimension of the stiffness. The rows and
         columns correspond to::
 
-            gradAij
-            -------
+            gradAij:
 
                 h xiA1 xiA2 xiA3 xiA4
             A11
@@ -2663,8 +2662,7 @@ cdef class GradABD:
             A26
             A66
 
-            gradBij
-            -------
+            gradBij:
 
                 h xiB1 xiB2 xiB3 xiB4
             B11
@@ -2674,8 +2672,7 @@ cdef class GradABD:
             B26
             B66
 
-            gradDij
-            -------
+            gradDij:
 
                 h xiD1 xiD2 xiD3 xiD4
             D11
@@ -2685,8 +2682,7 @@ cdef class GradABD:
             D26
             D66
 
-            gradAtsij
-            ---------
+            gradAtsij:
 
                 h xiAts1 xiAts2
             Abar44
