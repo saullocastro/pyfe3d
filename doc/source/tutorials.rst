@@ -9,3 +9,4 @@ Tutorials
     tut-opt-lightweight-smeared-deflection-SLSQP
     tut-opt-topology
     tut-bench-macneal-harder
+    tut-bench-shell-obstacle-course
