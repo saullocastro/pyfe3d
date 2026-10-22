@@ -98,7 +98,8 @@ def read_laminaprop(laminaprop, rho=0):
     References
     ----------
     .. [1] Reddy, J. N., Mechanics of Laminated Composite Plates and Shells:
-       Theory and Analysis, Second Edition, CRC Press, 2004.
+       Theory and Analysis, Second Edition, CRC Press, 2003.
+       https://doi.org/10.1201/b12409
 
     """
     matlam = MatLamina()
