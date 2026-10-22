@@ -8,3 +8,4 @@ Tutorials
     tut-opt-lightweight-smeared-deflection-GA
     tut-opt-lightweight-smeared-deflection-SLSQP
     tut-opt-topology
+    tut-bench-macneal-harder
