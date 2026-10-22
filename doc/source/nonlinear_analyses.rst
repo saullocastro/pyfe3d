@@ -1,0 +1,179 @@
+Non-linear static analyses
+==========================
+
+The geometrically non-linear static analyses are run with
+:class:`.Analysis`, which receives four callables of the model and finds
+the configurations `\{u\}` in equilibrium with the external load scaled by
+the load factor `\lambda`:
+
+.. math::
+
+    \{R(u, \lambda)\} = \lambda \{F_{ext}\} - \{F_{int}(u)\} = \{0\}
+
+The elements give the terms of the residual and of its Jacobian, the
+solvers of :mod:`pyfe3d.solver` the increments and the iterations.
+
+
+From the elements to the callables
+----------------------------------
+
+.. list-table::
+    :header-rows: 1
+
+    * - Callable
+      - Returns
+      - With the elements
+    * - ``calc_fext(inc=1., silent=True)``
+      - `\{F_{ext}\}`, scaled by ``inc``
+      - the nodal loads of the model
+    * - ``calc_fint(c, silent=True)``
+      - `\{F_{int}(c)\}`
+      - ``update_fint(fint, prop, nonlinear=1)`` of every element, after
+        ``update_probe_xe(x)`` and ``update_probe_ue(c)``
+    * - ``calc_kC(c=None, NLgeom=False, silent=True)``
+      - `[K_{C0}]`, or `[K_{C0}] + [K_{CNL}(c)]` with ``NLgeom=True``
+      - ``update_KC0`` once, ``update_KCNL`` at ``c``
+    * - ``calc_kG(c=None, NLgeom=False, silent=True)``
+      - `[K_G(c)]`
+      - ``update_KG`` at ``c``
+
+``calc_kC() + calc_kG()`` is then the exact Jacobian of ``calc_fint``,
+`[K_T] = -\partial R/\partial u`, and the full Newton-Raphson method
+converges quadratically. The class ``Model`` of
+``tests/test_solver_nonlinear_static.py``, see :doc:`ex_nonlinear_static`,
+wraps a list of elements of one type into these four callables.
+``calc_kC()``, the linear stiffness matrix, also gives the scaling of the
+convergence criterion.
+
+
+Boundary conditions and prescribed displacements
+------------------------------------------------
+
+With ``Analysis(..., bu=bu)``, the callables receive and return the
+vectors and matrices of all the ``N`` dofs, as assembled by the elements,
+and :class:`.FreeDofs` restricts them to the free dofs ``bu``. The solution
+vectors ``an.cs`` have size ``N``, with zeros at the constrained dofs.
+
+With ``uk``, the constrained dofs have the prescribed displacements
+`\lambda \{u_k\}`, imposed exactly, proportional to the load factor:
+``uk[~bu]`` are the values at `\lambda = 1`, and a load-free analysis,
+``calc_fext`` returning zeros, is displacement controlled. The reaction at
+a prescribed dof is ``calc_fint(u)`` at that dof minus the load applied
+there, see ``test_prescribed_displacement_and_reaction`` in
+:doc:`ex_nonlinear_static`.
+
+Without ``bu``, the constrained dofs must have null rows and columns in the
+matrices, which the solvers remove, and null values in the vectors.
+
+
+Solvers
+-------
+
+``an.NL_method`` selects the solver, and :meth:`.Analysis.static` with
+``NLgeom=True`` runs it, returning the converged load factors
+``an.increments`` and solutions ``an.cs``:
+
+- ``'NR'``, the default: load control with the Newton-Raphson method,
+  :func:`.newton_raphson._solver_NR`, full or modified
+  (``an.modified_NR``), with an optional line search
+  (``an.line_search``). The first increment is ``an.initialInc``; a step
+  that fails is repeated with half the increment, and the increment grows
+  after a step that converged without being cut, up to ``an.maxInc``.
+  Beyond a limit point of the load it may converge to another branch of
+  the equilibrium path.
+- ``'arc_length_riks'`` and ``'arc_length_crisfield'``: the arc-length
+  methods of Riks (1979) and of Crisfield (1981),
+  :func:`.arc_length._solver_arc_length`, in which the load factor is an
+  unknown of each step, such that limit points, snap-through and
+  snap-back are traced. The first arc length corresponds to the load
+  factor increment ``an.initialInc`` along the initial tangent.
+
+Both stop at the load factor 1.0, or earlier when the increment falls
+below ``an.minInc`` or, for the arc-length methods, when the cumulative
+arc length reaches ``an.maxArcLength``. A run that did not finish is
+detected with::
+
+    increments, cs = an.static(NLgeom=True)
+    if not increments or increments[-1] != 1.:
+        ...  # stopped at increments[-1], see the log messages
+
+The linear static analysis, ``an.static(NLgeom=False)``, solves
+`[K_{C0}]\{u\} = \{F_{ext}\}` with :func:`.solve` and returns a single
+increment.
+
+
+Convergence criterion
+---------------------
+
+The iterations of each increment stop when the residual is small according
+to ``an.convergence``, see :mod:`.convergence`:
+
+- ``'crisfield'``, the default: the residual scaled with the diagonal of
+  the linear stiffness matrix of the free dofs, `D_j = |{K_{C0}}_{jj}|`,
+
+  .. math::
+
+      \zeta = \frac{\|R\|_D}{\max(\|\lambda F_{ext}\|_D, \|F_{int}\|_D,
+      \ldots)} \le \text{relTOL}, \qquad
+      \|v\|_D = \sqrt{\sum_j v_j^2/D_j}
+
+  with ``an.relTOL = 1e-9`` by default, see :func:`.crisfield_zeta` for
+  the references in the denominator. It does not depend on the units of
+  each dof, e.g. on whether the rotations are in radians or in
+  milliradians, and it ignores the support reactions;
+- ``'relative'``: the Euclidean norm of the residual over the largest
+  Euclidean norm of the references, which adds the squares of forces and
+  of moments.
+
+``an.absTOL`` also accepts the iterations whose largest absolute residual
+is smaller, in the units of force of the model. With a consistent tangent
+stiffness matrix and full Newton-Raphson, `\zeta` falls quadratically, as
+verified in :doc:`ex_nonlinear_static`; a slow decrease of `\zeta` reveals
+an inconsistent tangent stiffness matrix, e.g. a missing ``calc_kG``, which
+changes the iterations but not the converged solution.
+
+
+Configuration-dependent loads
+-----------------------------
+
+A load that depends on the configuration, e.g. a follower pressure or the
+aerodynamic load of the piston theory, is given through optional keyword
+arguments, passed only to the callables that declare them, see
+:mod:`.callbacks`:
+
+- ``calc_fint(c, inc=...)`` receives the load factor and includes the
+  configuration-dependent part of the load, `-\lambda \{F(c)\}`, and
+  ``calc_kC(c, NLgeom=True, inc=...)`` its derivative, the load stiffness
+  matrix `-\lambda \, \partial F/\partial c`, which is unsymmetric in
+  general; the solvers use LU factorizations;
+- ``calc_fext(inc=1., c=...)`` returns the load vector of the
+  configuration ``c`` for a unit load factor, `\partial R/\partial
+  \lambda`, used by the arc-length methods.
+
+The aerodynamic load of the piston theory, `\lambda \beta
+[K_{A\beta}]\{u\}`, with ``update_KA_beta`` of :class:`.Quad4R` or
+:class:`.Quad4`, is such a load, see ``test_piston_theory_load_unsymmetric_tangent``
+in :doc:`ex_nonlinear_static`. The keyword argument ``lbd`` of
+``calc_fext`` gives a load vector that depends on the load factor, which is
+how :class:`.FreeDofs` imposes the prescribed displacements.
+
+
+Log messages
+------------
+
+The solvers print their progress, the increments and the `\zeta` of each
+iteration, with :mod:`pyfe3d.solver.logger`, unless ``silent=True`` is
+passed to :meth:`.Analysis.static`. The callables must accept ``silent``.
+
+
+References
+----------
+
+- Riks, E., An incremental approach to the solution of snapping and
+  buckling problems, International Journal of Solids and Structures,
+  15(7), 529-551, 1979. https://doi.org/10.1016/0020-7683(79)90081-7
+- Crisfield, M. A., A fast incremental/iterative solution procedure that
+  handles "snap-through", Computers & Structures, 13(1-3), 55-62, 1981.
+  https://doi.org/10.1016/0045-7949(81)90108-5
+- Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
+  Structures, Volume 1: Essentials, John Wiley & Sons, Chichester, 1991.
