@@ -1,9 +1,8 @@
 r"""Tests for :mod:`pyfe3d.solver.static` and :mod:`pyfe3d.solver.sparseutils`
 
 :func:`pyfe3d.solver.solve` removes the null rows and columns of the matrix
-and :func:`pyfe3d.solver.linear_static` is based on it. Ported from the
-tests of structsolve, with a Ritz plate whose deflection is compared with
-the Navier solution.
+and :func:`pyfe3d.solver.linear_static` is based on it, tested with a Ritz
+plate whose deflection is compared with the Navier solution.
 """
 import sys
 sys.path.append('..')

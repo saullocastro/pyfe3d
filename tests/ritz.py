@@ -2,8 +2,7 @@
 
 The Legendre-based approximation functions of Castro and Donadon (2017) and
 the bending and transverse shear stiffnesses of an isotropic plate, used by
-the Ritz models of the tests of the solvers, ported from the tests of
-structsolve. They depend only on NumPy.
+the Ritz models of the tests of the solvers. They depend only on NumPy.
 
 Reference: Saullo G. P. Castro, Maurício V. Donadon. "Assembly of
 Semi-Analytical models to Address Linear Buckling and Vibration of Stiffened

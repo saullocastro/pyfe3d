@@ -13,8 +13,7 @@ passed to :class:`pyfe3d.solver.Analysis` as described in
 ``calc_kC(c, NLgeom, inc)`` contains ``-inc Q``, and ``calc_fext(inc, c)`` is
 the load of the configuration ``c``. A geometrically linear structure under
 a load affine in the configuration is solved by the load correction
-iterations of the linear static analysis. Ported from the tests of
-structsolve.
+iterations of the linear static analysis.
 """
 import numpy as np
 import pytest

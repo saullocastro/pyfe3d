@@ -1099,12 +1099,15 @@ def _eig_complex(a, b=None, left=False):
     :func:`scipy.linalg.eig`, through the complex LAPACK drivers
 
     The matrices are converted to complex, such that ``zgeev`` or ``zggev``
-    is used instead of ``dgeev`` or ``dggev``: with Intel MKL 2025.0.0, as
-    reported by structsolve, the real drivers crash the Python process when
-    computing the eigenvectors of some matrices, which cannot be caught. The
-    complex drivers are not affected, at about twice the cost. In the
-    browser, ``sys.platform == 'emscripten'`` (Pyodide), the real drivers
-    are used.
+    is used instead of ``dgeev`` or ``dggev``: with Intel MKL 2025.0.0 the
+    real drivers crash the Python process when computing the eigenvectors
+    of some matrices, which cannot be caught, e.g. with SciPy 1.17.1
+    :func:`scipy.linalg.eig` corrupts the heap and the process exits with
+    the code ``0xc0000374`` for the real 48 x 48 matrices of
+    ``test_eig_complex_mkl_crash_regression`` in
+    ``tests/test_solver_linear_buckling.py``. The complex drivers are not
+    affected, at the cost of the complex arithmetic. In the browser,
+    ``sys.platform == 'emscripten'`` (Pyodide), the real drivers are used.
 
     Parameters
     ----------
@@ -1950,11 +1953,15 @@ def _dense_freq(K, M, k, sigma, symmetric):
     With ``symmetric=True``, `[M]\{u\} = (1/\omega_n^2) [K]\{u\}` is solved
     with :func:`scipy.linalg.eigh`, which gives the lowest frequencies with
     smaller residuals than `[K]\{u\} = \omega_n^2 [M]\{u\}` for stiff models,
-    as observed in structsolve, but requires a positive definite `[K]`;
-    otherwise `[K]\{u\} = \omega_n^2 [M]\{u\}` is solved. The eigenvectors
-    are normalized with respect to `[M]`. With ``symmetric=False``,
-    :func:`scipy.linalg.eig` is used through :func:`_eig_complex`, and the
-    finite `\omega_n^2` nearest ``sigma`` are returned.
+    e.g. relative residuals of at most 1.6e-10 against 1.4e-8 for the 10
+    lowest frequencies of the Quad4 plate of
+    ``test_dense_symmetric_lowest_frequencies`` in
+    ``tests/test_solver_natural_frequency.py``, and accepts a singular
+    `[M]`, but requires a positive definite `[K]`; otherwise `[K]\{u\} =
+    \omega_n^2 [M]\{u\}` is solved. The eigenvectors are normalized with
+    respect to `[M]`. With ``symmetric=False``, :func:`scipy.linalg.eig` is
+    used through :func:`_eig_complex`, and the finite `\omega_n^2` nearest
+    ``sigma`` are returned.
 
     """
     Kd = csr_matrix(K).toarray()

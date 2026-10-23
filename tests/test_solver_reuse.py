@@ -9,8 +9,6 @@ r"""Reuse of evaluations and factorizations by the solvers
 - The linear static analysis with a configuration-dependent load factorizes
   ``K0`` once.
 
-Ported from the tests of structsolve.
-
 """
 import numpy as np
 import pytest

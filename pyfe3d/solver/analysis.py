@@ -409,8 +409,8 @@ class Analysis(object):
                             and internal force vectors. Not used if
                             ``None``. Default is ``1.e-9``, the tight
                             tolerance of Crisfield's criterion with a
-                            consistent tangent; structsolve's default
-                            with the relative criterion is ``1.e-6``
+                            consistent tangent, see :mod:`.convergence`;
+                            the same default applies with ``'relative'``
     ``absTOL``              the convergence is also achieved when the
                             maximum absolute residual force is smaller
                             than this value, which depends on the units of

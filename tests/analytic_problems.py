@@ -1,8 +1,7 @@
 r"""Analytic problems with an exact tangent stiffness matrix
 
 The problems wrap the callables required by :class:`pyfe3d.solver.Analysis`,
-where ``kT = kC + kG`` is the exact Jacobian of ``fint``. Ported from the
-tests of structsolve, https://github.com/saullocastro/structsolve.
+where ``kT = kC + kG`` is the exact Jacobian of ``fint``.
 
 """
 import numpy as np

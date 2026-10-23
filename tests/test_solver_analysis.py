@@ -1,7 +1,6 @@
 r"""Tests for :class:`pyfe3d.solver.Analysis`: linear static analysis,
 Newton-Raphson on a linear system, invalid parameters and the convergence
-criteria, ported from the tests of structsolve and completed for
-Crisfield's criterion
+criteria, relative and Crisfield's
 """
 import sys
 sys.path.append('..')

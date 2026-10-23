@@ -68,8 +68,10 @@ lumped mass matrix of each element.
 With an unsymmetric `[K]`, e.g. with the aerodynamic stiffness matrix of
 the piston theory or the load stiffness of a follower load, the
 frequencies may become complex; ``omegan`` is then the principal square
-root of the complex eigenvalues, see :func:`.natural_frequency`, which
-gives the kinetic (flutter) criterion of stability.
+root of the complex eigenvalues. Two frequencies that coalesce and become
+complex indicate the loss of stability by flutter, which
+:func:`.linear_buckling` does not detect: this is the dynamic method of
+Bolotin (1963), see :func:`.natural_frequency`.
 
 
 Verification and dense fallback

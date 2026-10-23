@@ -1,9 +1,8 @@
 r"""Tests for :func:`pyfe3d.solver.natural_frequency`: verification, dense
 fallback, rigid-body modes and unsymmetric matrices
 
-Ported from the tests of structsolve, whose ``freq`` returns `\lambda^2 =
--\omega_n^2` whereas :func:`pyfe3d.solver.natural_frequency` returns
-`\omega_n`, and completed with the Quad4 plate of ``test_solver.py``.
+With analytic matrices and the Quad4 plate of ``test_solver.py``;
+:func:`pyfe3d.solver.natural_frequency` returns `\omega_n`.
 
 Ziegler's double pendulum: two rigid bars of length ``l``, rotational springs
 ``k`` at the base and at the middle hinge, masses ``2m`` at the middle hinge
@@ -18,8 +17,11 @@ degrees-of-freedom:
 
 The stiffness matrix is unsymmetric and never singular, ``det K = k**2``,
 and the system loses stability by flutter at ``P_f = (7/2 - sqrt(2)) k/l``,
-where two natural frequencies coalesce (Ziegler, 1952, as cited by
-structsolve).
+the smallest root of the discriminant of ``det(K - omega**2 M) = 0`` in
+``omega**2``, where two natural frequencies coalesce.
+
+Reference: H. Ziegler. "Die Stabilitätskriterien der Elastomechanik".
+Ingenieur-Archiv, 20(1), 49-56, 1952. https://doi.org/10.1007/BF00536796
 """
 import sys
 sys.path.append('..')
@@ -328,3 +330,22 @@ def test_missing_mode_detected(monkeypatch):
         omegan, _ = natural_frequency(K, M, symmetric=True, num_eigvalues=10)
     w_ref = eigh(K.toarray(), M.toarray(), eigvals_only=True)[:10]
     np.testing.assert_allclose(omegan**2, w_ref, rtol=1e-10)
+
+
+def test_dense_symmetric_lowest_frequencies():
+    r"""The dense solver of symmetric matrices solves `[M]\{u\} =
+    (1/\omega_n^2) [K]\{u\}`: for the Quad4 plate of ``test_solver.py``
+    (726 dofs) with a lumped, positive definite mass matrix, the 10 lowest
+    frequencies have relative residuals of about 1.6e-10, against about
+    1.4e-8 for :func:`scipy.linalg.eigh` on `[K]\{u\} = \omega_n^2
+    [M]\{u\}` (SciPy 1.17.1, Intel MKL 2025.0.0); the frequencies agree"""
+    K, _, _ = plate_matrices(Nxx=-1., with_mass=True)
+    rng = np.random.RandomState(3)
+    M = diags(1. + rng.rand(K.shape[0])).tocsr()
+    omegan, eigvecs = natural_frequency(K, M, sparse_solver=False,
+                                        symmetric=True)
+    assert omegan.shape == (K.shape[0],)
+    w2, eigvecs = omegan[:10]**2, eigvecs[:, :10]
+    assert np.all(residuals(K, M, np.sqrt(w2), eigvecs) < 1e-9)
+    w2_ref = eigh(K.toarray(), M.toarray(), eigvals_only=True)[:10]
+    np.testing.assert_allclose(w2, w2_ref, rtol=1e-8)

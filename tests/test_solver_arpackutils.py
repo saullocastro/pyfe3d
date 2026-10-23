@@ -1,8 +1,7 @@
 r"""Tests for :mod:`pyfe3d.solver.arpackutils`: ``ncv <= 32`` against the
 ``dsteqr`` bug of Intel MKL 2024.2.0 to 2025.0.0
 
-Ported from the tests of structsolve, with the Quad4 plate of
-``test_solver.py`` instead of the saved matrices of structsolve.
+With the Quad4 plate of ``test_solver.py``.
 """
 import inspect
 import sys

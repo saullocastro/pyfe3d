@@ -64,10 +64,10 @@ and `\{F_{ext}\}` the reference external force vector. The third reference
 only applies to the arc-length solvers, `\Delta\lambda` being the
 increment of the load factor of the current step, and the fourth one only
 to load vectors that depend on the load factor, e.g. prescribed
-displacements imposed exactly, see :mod:`.callbacks`. These are the
-references of the relative criterion of structsolve, measured here with
-the scaled norm. The maximum does not degenerate: under self-equilibrated
-loads `\|\lambda F_{ext}\|_D` may be negligible whereas `\|F_{int}\|_D`
+displacements imposed exactly, see :mod:`.callbacks`. These are also the
+references of the relative criterion, see :func:`check_convergence`,
+measured here with the scaled norm. The maximum does not degenerate:
+under self-equilibrated loads `\|\lambda F_{ext}\|_D` may be negligible whereas `\|F_{int}\|_D`
 reflects the internal force carried by the structure; at the beginning of
 a load-controlled analysis the internal forces are small and the external
 load is the reference; when the arc-length solvers pass through a load

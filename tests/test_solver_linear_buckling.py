@@ -1,13 +1,15 @@
 r"""Tests for :func:`pyfe3d.solver.linear_buckling`: order of the load
 multipliers, verification, dense fallback and unsymmetric matrices
 
-Ported from the tests of structsolve, with analytic matrices instead of its
-saved matrices, and completed with the Quad4 plate of ``test_solver.py``
-under a compressive and a tensile reference load.
+With analytic matrices and the Quad4 plate of ``test_solver.py`` under a
+compressive and a tensile reference load.
 """
+import os
+import subprocess
 import sys
 sys.path.append('..')
 
+import textwrap
 import warnings
 
 import numpy as np
@@ -828,3 +830,42 @@ def test_norm_estimate():
         O_v = splu(K0).solve(KF @ v)
         assert np.linalg.norm(O_v)/np.linalg.norm(v) < 0.2
     assert eigen._norm_estimate(splu(K0), csr_matrix(KF.shape), v) == 0.
+
+
+def test_eig_complex_mkl_crash_regression():
+    r"""Regression test: with SciPy 1.17.1 linked against Intel MKL
+    2025.0.0, :func:`scipy.linalg.eig` on these real 48 x 48 matrices,
+    i.e. the LAPACK driver ``dggev``, corrupts the heap and the process
+    exits with the code ``0xc0000374``, whereas the complex driver
+    ``zggev`` of :func:`pyfe3d.solver.eigen._eig_complex` returns. The
+    dense solvers of :func:`linear_buckling` for unsymmetric matrices use
+    the latter. Run in a subprocess, which a crash does not take down with
+    the test session"""
+    code = textwrap.dedent("""
+        import numpy as np
+        from scipy.sparse import csr_matrix
+        from pyfe3d.solver import linear_buckling
+        rng = np.random.RandomState(4)
+        KG = rng.randn(48, 48)
+        K = rng.randn(48, 48) + 48*np.eye(48)
+        eigvals, eigvecs = linear_buckling(csr_matrix(K), csr_matrix(KG),
+                                           symmetric=False,
+                                           sparse_solver=False)
+        Ku = K @ eigvecs
+        KGu = KG @ eigvecs
+        res = (np.linalg.norm(Ku + KGu*eigvals, axis=0)
+               / (np.linalg.norm(Ku, axis=0)
+                  + np.abs(eigvals)*np.linalg.norm(KGu, axis=0)))
+        assert eigvecs.shape == (48, 48), eigvecs.shape
+        assert np.all(res < 1e-8), res
+        print('ok')
+        """)
+    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    env = dict(os.environ)
+    env['PYTHONPATH'] = os.pathsep.join(
+        [root] + [p for p in [env.get('PYTHONPATH')] if p])
+    result = subprocess.run([sys.executable, '-c', code], env=env,
+                            capture_output=True, text=True, timeout=300)
+    assert result.returncode == 0, (hex(result.returncode & 0xffffffff),
+                                    result.stderr[-2000:])
+    assert result.stdout.strip().endswith('ok')

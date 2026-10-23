@@ -25,7 +25,6 @@ configuration and on the load factor, passed to :class:`pyfe3d.solver.Analysis`
 with ``calc_fext(inc=1., c=c_r, lbd=lbd)``, see :mod:`pyfe3d.solver.callbacks`.
 Under the prescribed displacement alone, `F = 0`, the reference vector
 ``calc_fext(inc=1.)`` is null.
-Ported from the tests of structsolve.
 
 """
 import numpy as np

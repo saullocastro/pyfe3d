@@ -3,7 +3,6 @@
 All problems have an exact tangent stiffness matrix ``kT = kC + kG`` that is
 the Jacobian of ``fint``, such that full Newton-Raphson must converge
 quadratically near the solution.
-Ported from the tests of structsolve.
 
 """
 import numpy as np

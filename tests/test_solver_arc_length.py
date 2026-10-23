@@ -3,7 +3,6 @@
 Both arc-length methods trace the equilibrium path until the load factor
 reaches exactly 1.0, the cumulative arc length reaches ``maxArcLength`` or the
 arc-length increment becomes smaller than ``minInc``.
-Ported from the tests of structsolve.
 
 """
 import numpy as np
@@ -121,8 +120,8 @@ def test_arc_length_snap_back(method, convergence, relTOL):
     """A soft spring in series with the truss causes snap-back
 
     The displacement of the loaded point decreases along part of the path.
-    The relative criterion with its default tolerance of structsolve,
-    ``relTOL=1e-6``, and Crisfield's criterion with its default, ``1e-9``.
+    The relative criterion with ``relTOL=1e-6``, and Crisfield's criterion
+    with its default, ``1e-9``.
 
     """
     p = von_mises_truss(frac=1.5, ks=0.5)
