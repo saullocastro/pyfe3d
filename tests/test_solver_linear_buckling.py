@@ -677,23 +677,68 @@ def test_symmetric_path_unchanged():
 def test_ziegler_no_divergence():
     r"""Ziegler's double pendulum, see ``test_solver_natural_frequency.py``,
     with decoupled degrees-of-freedom such that the sparse shift search
-    runs: ``K(P) = K0 + P KF`` is never singular, and no positive real load
-    multiplier is found, or only spurious ones far above the flutter load;
-    without the dense fallback a RuntimeError"""
+    runs: ``K(P) = K0 + P KF`` is never singular, and neither the shift
+    search nor the dense fallback finds a finite load multiplier, the
+    defective null pair of the condensed problem, split into about +-1e-9 by
+    the round-off, being null"""
     k, l = 3., 0.5
-    P_flutter = (3.5 - np.sqrt(2))*k/l
     K0 = block_diag(np.array([[2*k, -k], [-k, k]]), np.diag(np.arange(1., 9.)))
     KF = block_diag(np.array([[-l, l], [0., 0.]]), np.zeros((8, 8)))
     with pytest.raises(RuntimeError, match='Attempted: eigs'):
         linear_buckling(csr_matrix(K0), csr_matrix(KF), max_dense_size=0)
-    try:
+    with pytest.raises(RuntimeError, match='eig.. with condensed '
+                       'degrees-of-freedom: no finite load multiplier'):
         with warnings.catch_warnings():
             warnings.simplefilter('ignore')
-            eigvals = linear_buckling(csr_matrix(K0), csr_matrix(KF))[0]
-    except RuntimeError:
-        return
-    finite = np.isfinite(eigvals)
-    assert np.all(np.abs(eigvals[finite]) > 1e6*P_flutter)
+            linear_buckling(csr_matrix(K0), csr_matrix(KF))
+    eigvals = linear_buckling(csr_matrix(K0), csr_matrix(KF),
+                              sparse_solver=False)[0]
+    assert np.all(eigvals == -np.inf)
+
+
+def test_null_mu_pencil():
+    r"""Regression test: the round-off splits a null eigenvalue of a Jordan
+    block of size m into m eigenvalues of modulus about eps^(1/m) ||a||,
+    e.g. +-9.4e-10 for Ziegler's double pendulum (2.6e-17 and 0 with
+    another LAPACK), which the relative test of _null_mu kept, giving
+    spurious load multipliers of +-8.05e8 (64e6 times the flutter load)
+    from the dense solvers of linear_buckling(), with their scaled
+    matrices; their first-order perturbation bound is of the order of their
+    modulus, that of genuine eigenvalues much smaller"""
+    def flags(a, b):
+        mu, vl, vr = eigen._eig_complex(a, b, left=True)
+        return mu, eigen._null_mu_pencil(a, b, mu, vl, vr)
+
+    k, l = 3., 0.5
+    mu, null = flags(np.array([[-l, l], [0., 0.]]),
+                     np.array([[2*k, -k], [-k, k]]))
+    assert np.all(np.abs(mu) < 1e-8) and np.all(null)
+    # Jordan blocks of size m, B^-1 A = T J T^-1
+    rng = np.random.default_rng(1)
+    for m in (2, 3, 4):
+        J = np.eye(m, k=1)
+        T = rng.standard_normal((m, m)) + m*np.eye(m)
+        B = rng.standard_normal((m, m))
+        B = B @ B.T + m*np.eye(m)
+        mu, null = flags(B @ T @ J @ np.linalg.inv(T), B)
+        assert np.all(np.abs(mu) < 1e-3) and np.all(null)
+    # genuine eigenvalues down to 1e-10 times the largest are kept, also
+    # beside a Jordan block in a non-normal pencil, down to 1e-6 times the
+    # largest, above the disc of about 2e-8 of the split null pair, inside
+    # which a genuine eigenvalue is not determined
+    mu, null = flags(np.diag([1., -1e-6, 1e-10]), np.eye(3))
+    assert not np.any(null)
+    n = 200
+    D = np.diag(np.concatenate([[0., 0.], np.logspace(0, -6, n - 2)
+                                * rng.choice([-1, 1], n - 2)]))
+    D[0, 1] = 1.
+    T = rng.standard_normal((n, n))/np.sqrt(n) + np.eye(n)
+    B = rng.standard_normal((n, n))/np.sqrt(n)
+    B = B @ B.T + np.eye(n)
+    mu, null = flags(B @ T @ D @ np.linalg.inv(T), B)
+    assert np.sum(null) == 2 and np.all(np.abs(mu[null]) < 1e-6)
+    np.testing.assert_allclose(np.sort(np.abs(mu[~null])),
+                               np.sort(np.abs(np.diag(D)[2:])), rtol=1e-4)
 
 
 def ziegler_decoupled(extra=8):

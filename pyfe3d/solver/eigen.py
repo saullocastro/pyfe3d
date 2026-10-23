@@ -132,6 +132,11 @@ __all__ = ['DenseFallbackWarning', 'diagonal_preconditioner',
 #: degrees-of-freedom where `[K_G]` is null; also the fraction of the scale
 #: of the null `\nu` of :func:`_eigs_shifted`
 NULL_MU_RTOL = 1.e-12
+#: An eigenvalue `\mu` of the dense solvers is also null when `|\mu|` is
+#: not larger than this factor times its first-order perturbation bound
+#: for a backward error of the machine precision, see
+#: :func:`_null_mu_pencil`
+NULL_MU_PERTURBATION_FACTOR = 10.
 #: The load multipliers of each sign are counted with the inertia of
 #: `[K] + s [K_G]` below the modulus `|s|`, this factor divided by the
 #: largest `|\mu|`, i.e. this factor times the lowest modulus that a load
@@ -645,6 +650,76 @@ def _null_mu(mu, scale=None):
     return finite & (absmu <= NULL_MU_RTOL*scale)
 
 
+def _null_mu_pencil(a, b, mu, vl, vr):
+    r"""Tell which eigenvalues `\mu` of `[a]\{v\} = \mu [b]\{v\}` are null up
+    to the round-off of a dense solver
+
+    Parameters
+    ----------
+    a : np.ndarray
+        Dense matrix, shape ``(n, n)``.
+    b : np.ndarray or None
+        Dense matrix, shape ``(n, n)``, or ``None`` for the identity.
+    mu : np.ndarray
+        Eigenvalues, shape ``(m,)``.
+    vl, vr : np.ndarray
+        Left and right eigenvectors, ``vl[:, i]`` and ``vr[:, i]`` those of
+        ``mu[i]``, shape ``(n, m)``; ``vl = vr`` for symmetric matrices.
+
+    Returns
+    -------
+    null : np.ndarray
+        Boolean array, shape ``(m,)``, ``True`` where `\mu` is null for
+        :func:`_null_mu` or where `|\mu| \le c\,\epsilon\,\|[a]\|_F\,\kappa`,
+        with `c` = ``NULL_MU_PERTURBATION_FACTOR``, `\epsilon` the machine
+        precision and `\kappa = \|\{y\}\| \|\{x\}\| / |\{y\}^H [b] \{x\}|`
+        the condition number of `\mu`, `\{y\}` and `\{x\}` its left and
+        right eigenvectors.
+
+    Notes
+    -----
+    A backward stable solver, e.g. the QZ algorithm of LAPACK ``zggev``,
+    returns the exact eigenvalues of `[a] + [\delta a]`, `[b] + [\delta b]`
+    with `\|[\delta a]\| \approx \gamma \epsilon \|[a]\|`, `\gamma` of order
+    one. Multiplying `([a] + [\delta a] - (\mu + \delta\mu)([b] + [\delta
+    b]))(\{x\} + \{\delta x\}) = 0` by `\{y\}^H`, with `\{y\}^H ([a] - \mu
+    [b]) = 0`, gives to first order `\delta\mu = \{y\}^H ([\delta a] - \mu
+    [\delta b]) \{x\} / (\{y\}^H [b] \{x\})`: a null eigenvalue moves by up
+    to `\gamma \epsilon \|[a]\| \kappa`.
+
+    A null eigenvalue of a Jordan block of size `m`, e.g. `m = 2` for the
+    nilpotent `[K]^{-1}[K_G]` of Ziegler's double pendulum, is split by a
+    perturbation of size `\eta` into `m` eigenvalues with `\mu^m \propto
+    \eta`, i.e. `|\mu| \approx (\gamma \epsilon)^{1/m} \|[a]\|`, and
+    `d\mu/d\eta = \mu/(m \eta)`: their condition number gives `\epsilon
+    \|[a]\| \kappa \approx |\mu|/(m \gamma)`, i.e. `|\mu|` is about `m
+    \gamma` times the bound whatever `m`. Measured with ``zggev``: 0.14 for
+    Ziegler's double pendulum, `|\mu| = 9.4 \cdot 10^{-10}`, and 0.005 to
+    2.5 for Jordan blocks of size 2 to 4 in pencils of size 2 to 600,
+    where the genuine eigenvalues down to `10^{-8} \max |\mu|` were at
+    least 73 times their bound, except those within the modulus of the
+    split null eigenvalues, which the round-off does not determine and
+    which are null as well. A well-conditioned genuine eigenvalue is null
+    only when `|\mu| \le 2.2 \cdot 10^{-15} \|[a]\|`, below the
+    :func:`_null_mu` threshold when `\|[a]\|` is of the order of `\max
+    |\mu|`. For symmetric matrices no Jordan block exists, and `\{x\}^T [b]
+    \{x\} = 1` of :func:`scipy.linalg.eigh` gives `\kappa = \|\{x\}\|^2`.
+
+    """
+    mu = np.asarray(mu)
+    null = _null_mu(mu)
+    vl = np.asarray(vl)
+    vr = np.asarray(vr)
+    bvr = vr if b is None else np.asarray(b) @ vr
+    den = np.abs(np.einsum('ij,ij->j', vl.conj(), bvr))
+    num = np.linalg.norm(vl, axis=0)*np.linalg.norm(vr, axis=0)
+    with np.errstate(divide='ignore', invalid='ignore'):
+        kappa = np.where(den > 0, num/den, np.inf)
+    bound = (NULL_MU_PERTURBATION_FACTOR*np.finfo(float).eps
+             * np.linalg.norm(np.asarray(a))*kappa)
+    return null | (np.isfinite(mu) & (np.abs(mu) <= bound))
+
+
 def _lb_order(mu, scale=None):
     r"""Order of the load multipliers `\lambda = -1/\mu` returned by
     :func:`linear_buckling`
@@ -993,12 +1068,16 @@ def _eigh_condensed(K, KG, k):
         \{u_a\} = -[K_{aa}]^{-1}[K_{ab}]\{u_b\}
 
     solved with :func:`scipy.linalg.eigh`, which requires a positive
-    definite Schur complement.
+    definite Schur complement. The null `\mu` of :func:`_null_mu_pencil`
+    are set to 0.
 
     """
     active = np.asarray(abs(csr_matrix(KG)).sum(axis=1)).ravel() > 0
     S, KGbb, back = _condense(K, KG, active)
-    mu, ub = eigh(a=0.5*(KGbb + KGbb.T), b=0.5*(S + S.T))
+    KGbb = 0.5*(KGbb + KGbb.T)
+    S = 0.5*(S + S.T)
+    mu, ub = eigh(a=KGbb, b=S)
+    mu[_null_mu_pencil(KGbb, S, mu, ub, ub)] = 0.
     mu, ub = _sort_eigenpairs(mu, ub)
     k = min(k, ub.shape[1])
     return mu[:k], back(ub[:, :k])
@@ -1018,7 +1097,7 @@ def _lu_solve(lu, b):
     return lu.solve(np.ascontiguousarray(b))
 
 
-def _eig_complex(a, b=None):
+def _eig_complex(a, b=None, left=False):
     r"""All the eigenpairs of `[a]\{v\} = w [b]\{v\}` with
     :func:`scipy.linalg.eig`, through the complex LAPACK drivers
 
@@ -1037,19 +1116,21 @@ def _eig_complex(a, b=None):
     b : array_like or None, optional
         Square matrix, shape ``(n, n)``, or ``None`` for the identity.
         Default ``None``.
+    left : bool, optional
+        Also return the left eigenvectors. Default ``False``.
 
     Returns
     -------
     w, v : np.ndarray
-        Eigenvalues and eigenvectors of :func:`scipy.linalg.eig`.
+        Eigenvalues and eigenvectors of :func:`scipy.linalg.eig`, or ``w,
+        vl, v`` with the left eigenvectors ``vl`` when ``left=True``.
 
     """
-    if sys.platform == 'emscripten':
-        return eig(a=a, b=b)
-    a = np.asarray(a, dtype=complex)
-    if b is not None:
-        b = np.asarray(b, dtype=complex)
-    return eig(a=a, b=b)
+    if sys.platform != 'emscripten':
+        a = np.asarray(a, dtype=complex)
+        if b is not None:
+            b = np.asarray(b, dtype=complex)
+    return eig(a=a, b=b, left=left, right=True)
 
 
 def _real_if_close(w, eigvecs, rtol=1.e-8):
@@ -1139,14 +1220,16 @@ def _eig_condensed(K, KG, k):
     -------
     mu, eigvecs : np.ndarray
         The ``k`` eigenpairs of :func:`_general_eigenpairs`, real when they
-        are all real.
+        are all real; the null `\mu` of :func:`_null_mu_pencil`, e.g. the
+        round-off splitting of a defective null eigenvalue, are set to 0.
 
     """
     KG = csr_matrix(KG)
     active = ((np.asarray(abs(KG).sum(axis=1)).ravel() > 0)
               | (np.asarray(abs(KG).sum(axis=0)).ravel() > 0))
     S, KGbb, back = _condense(K, KG, active)
-    mu, ub = _eig_complex(a=KGbb, b=S)
+    mu, vl, ub = _eig_complex(a=KGbb, b=S, left=True)
+    mu[_null_mu_pencil(KGbb, S, mu, vl, ub)] = 0.
     mu, ub = _general_eigenpairs(mu, ub, k)
     return mu, back(ub)
 
@@ -1627,7 +1710,10 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
         :func:`_lb_order`. Fewer than ``num_eigvalues`` are returned by the
         symmetric sparse solvers when fewer finite load multipliers exist,
         the infinite ones, e.g. of the null rows of ``KG``, being discarded.
-        Complex only when complex load multipliers are returned.
+        The dense solvers return as ``-inf``, last, the load multipliers of
+        the eigenvalues null up to the round-off, see
+        :func:`_null_mu_pencil`. Complex only when complex load multipliers
+        are returned.
     eigvecs : np.ndarray
         Eigenvectors, one per column, in the same order, with the size of
         the original matrices. Shape ``(n, k)``.
@@ -1689,11 +1775,14 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
         return mu, eigvecs
 
     if not sparse_solver:
+        a, b = KGs.toarray(), Ks.toarray()
         if symmetric:
-            mu, eigvecs = eigh(a=KGs.toarray(), b=Ks.toarray())
+            mu, eigvecs = eigh(a=a, b=b)
+            mu[_null_mu_pencil(a, b, mu, eigvecs, eigvecs)] = 0.
             mu, eigvecs = _sort_eigenpairs(mu, eigvecs)
         else:
-            mu, eigvecs = _eig_complex(a=KGs.toarray(), b=Ks.toarray())
+            mu, vl, eigvecs = _eig_complex(a=a, b=b, left=True)
+            mu[_null_mu_pencil(a, b, mu, vl, eigvecs)] = 0.
             mu, eigvecs = _general_eigenpairs(mu, eigvecs)
         mu, eigvecs = unscale((mu, eigvecs))
     elif symmetric:
@@ -1765,6 +1854,7 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
 
     with np.errstate(divide='ignore', invalid='ignore'):
         eigvals = -1./mu
+    eigvals[mu == 0] = -np.inf
     full = np.zeros((size, eigvecs.shape[1]), dtype=eigvecs.dtype)
     full[used, :] = eigvecs
     return eigvals, full
