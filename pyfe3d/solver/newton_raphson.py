@@ -206,10 +206,10 @@ def _NR_iterations(an, pb, c, dc, total, fext, w, kT0=None, silent=False,
 
     With full Newton-Raphson, `[K_T]` is computed and factorized at every
     iteration at `c + \Delta c`, and the convergence is quadratic when it is
-    the exact Jacobian `-\partial R/\partial c` [1]_. With
-    ``an.modified_NR = True``, `[K_T]` is computed at the first iteration,
-    or given as ``kT0``, and then every ``an.compute_every_n`` iterations,
-    its LU factorization being reused in the other iterations.
+    the exact Jacobian `-\partial R/\partial c` ([1]_, Section 1.2.2,
+    p. 9). With ``an.modified_NR = True``, `[K_T]` is computed at the first
+    iteration, or given as ``kT0``, and then every ``an.compute_every_n``
+    iterations, its LU factorization being reused in the other iterations.
 
     `\eta = 1` without line search. With ``an.line_search = True``, with
     `\phi(\eta) = \|R(c + \Delta c + \eta \, \delta c)\|^2` in the norm of
@@ -228,21 +228,43 @@ def _NR_iterations(an, pb, c, dc, total, fext, w, kT0=None, silent=False,
     The full step `\eta = 1` is tried first. Otherwise `\eta` is replaced by
     the minimizer `\phi(0)/A` of the quadratic interpolation of `\phi(0)`,
     `\phi'(0)` and `\phi(\eta)`, with `A = (\phi(\eta) - \phi(0) +
-    2\phi(0)\eta)/\eta^2`, or by `\eta/2` when `A` is not positive,
-    safeguarded in `[0.1 \eta, 0.5 \eta]`, a safeguarded backtracking
-    [2]_. After
+    2\phi(0)\eta)/\eta^2`, or by `\eta/2` when `A` is not finite or not
+    positive, safeguarded in `[0.1 \eta, 0.5 \eta]`. After
     ``an.max_iter_line_search`` reductions the last `\eta` is accepted. The
     internal force vector of the accepted point is reused in the residual of
     the next iteration.
+
+    The line search is adapted from the backtracking line search of [2]_
+    (Section 6.3.2, Algorithm 6.3.5, pp. 126-129, and Algorithm A6.3.1,
+    pp. 325-327), applied to nonlinear equations with the merit function
+    `f = \frac{1}{2}\|D_F F\|^2` ([2]_, Section 6.5, Eq. (6.5.3), p. 147,
+    and Algorithm NEFN, p. 303), whose directional derivative along the
+    Newton step is `-F^T F = -2f` (p. 148, with `D_F` the identity). With
+    `F = R` and `\phi = 2f`, `D_F` being the identity with the Euclidean
+    norm or `\mathrm{diag}(\sqrt{w_j})` with Crisfield's criterion, the test
+    above is their condition (6.3.3) (p. 118) with their `\alpha = 10^{-4}`
+    (p. 126), and the first reduction is their quadratic backtrack,
+    Eq. (6.3.17) (p. 127). It differs from Algorithm A6.3.1 in that: the
+    quadratic interpolation through the last trial `\eta` is used at every
+    reduction, whereas [2]_ uses, from the second backtrack on, the cubic
+    interpolation of `f(0)`, `f'(0)` and the last two trial values,
+    Eq. (6.3.18) (p. 128); the bound `0.5 \eta` is also imposed at the
+    first reduction, where [2]_ imposes only the lower bound `0.1`, the
+    quadratic backtrack being then smaller than `1/(2(1 - \alpha))`
+    (p. 127; Algorithm A6.3.1, steps 10.3c.1E.4 and 10.3c.4); and [2]_ has
+    no maximum number of reductions, but limits the length of the step to
+    ``maxstep`` and stops when the step length becomes smaller than a
+    minimum, returning the current point.
 
     References
     ----------
     .. [1] Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
        Structures, Volume 1: Essentials, John Wiley & Sons, Chichester,
        1991.
-    .. [2] Dennis, J. E. and Schnabel, R. B., Numerical Methods for
+    .. [2] Dennis, J. E., Jr. and Schnabel, R. B., Numerical Methods for
        Unconstrained Optimization and Nonlinear Equations, SIAM,
-       Philadelphia, 1996 (reprint of the Prentice-Hall edition of 1983).
+       Philadelphia, 1996 (first published by Prentice-Hall, Englewood
+       Cliffs, NJ, 1983), pages of the SIAM edition.
        https://doi.org/10.1137/1.9781611971200
 
     """
@@ -399,8 +421,9 @@ def _solver_NR(an, pb, silent=False, initialInc=None):
     factorization is reused in the other iterations, at the cost of a
     linear convergence rate; at the first step with ``an.kT_initial_state =
     False``, `[K_{C_0}]` is used instead of the tangent at the first
-    iteration. The full and modified Newton-Raphson methods are described in
-    [1]_.
+    iteration. The full and modified Newton-Raphson methods, combined with
+    incremental predictors, are described in [1]_ (Sections 1.2.2 and
+    1.2.3, pp. 8-13), with the quadratic and the linear convergence rates.
 
     The step that would end within ``max(an.minInc, 1e-12)`` of the load
     factor 1.0, or beyond it, is replaced by the step to exactly 1.0.

@@ -75,14 +75,15 @@ Solvers
 
 - ``'NR'``, the default: load control with the Newton-Raphson method,
   :func:`.newton_raphson._solver_NR`, full or modified
-  (``an.modified_NR``), with an optional line search
-  (``an.line_search``). The first increment is ``an.initialInc``; a step
+  (``an.modified_NR``), see Crisfield (1991), Sections 1.2.2 and 1.2.3,
+  with an optional line search (``an.line_search``). The first increment
+  is ``an.initialInc``; a step
   that fails is repeated with half the increment, and the increment grows
   after a step that converged without being cut, up to ``an.maxInc``.
   Beyond a limit point of the load it may converge to another branch of
   the equilibrium path.
 - ``'arc_length_riks'`` and ``'arc_length_crisfield'``: the arc-length
-  methods of Riks (1979) and of Crisfield (1981),
+  methods following Riks (1979) and Crisfield (1981),
   :func:`.arc_length._solver_arc_length`, in which the load factor is an
   unknown of each step, such that limit points, snap-through and
   snap-back are traced. The first arc length corresponds to the load

@@ -99,16 +99,9 @@ exist, see :func:`_eigsh_both_signs`.
 
 The shift estimate, the verification, the dense fallback, the solvers of
 unsymmetric matrices, the order of the load multipliers and the cap of
-``ncv`` follow the implementation of ``structsolve.lb`` and
-``structsolve.freq`` by the same author [1]_, ported here such that this
-package keeps depending only on NumPy and SciPy. The ``dsteqr`` routine of
-the Intel MKL versions in the note above returns wrong eigenvectors for
-matrices larger than 32 by 32.
-
-References
-----------
-.. [1] Castro, S. G. P., structsolve,
-   https://github.com/saullocastro/structsolve
+``ncv`` depend only on NumPy and SciPy. The ``dsteqr`` routine of the Intel
+MKL versions in the note above returns wrong eigenvectors for matrices
+larger than 32 by 32, see :mod:`pyfe3d.solver.arpackutils`.
 
 """
 import sys
@@ -572,15 +565,18 @@ def check_eigenpairs(K, KG, eigvals, eigvecs, rtol=1.e-3, min_rel_gap=1.e-4,
     eigenvalues of `[K_{C_0}] + s [K_G]`, equal to its number of negative
     pivots by Sylvester's law of inertia, is the number of load multipliers
     in `(0, s)`. This is the Sturm sequence check of the eigenvalue solvers
-    of structural analysis [1]_. When only one positive load multiplier was
-    returned, none is expected in `(0, s)` and the weaker check is done.
-    The gap ``min_rel_gap`` keeps `s` away from `\lambda_n`, where
-    `[K_{C_0}] + s [K_G]` is singular.
+    of structural analysis ([1]_, Section 10.2.2, p. 849, and Section 11.6,
+    p. 954), where the number of negative elements of `[D]` in the
+    factorization `[L][D][L]^T` of `[K] - \mu [M]` is the number of
+    eigenvalues of the pencil `([K], [M])` smaller than `\mu`. When only one
+    positive load multiplier was returned, none is expected in `(0, s)` and
+    the weaker check is done. The gap ``min_rel_gap`` keeps `s` away from
+    `\lambda_n`, where `[K_{C_0}] + s [K_G]` is singular.
 
     References
     ----------
-    .. [1] Bathe, K.-J., Finite Element Procedures, Prentice Hall, Englewood
-       Cliffs, New Jersey, 1996.
+    .. [1] Bathe, K. J., Finite Element Procedures, 2nd ed., K. J. Bathe,
+       Watertown, MA, 2014.
 
     """
     eigvals = np.asarray(eigvals)
@@ -793,10 +789,11 @@ def _eigsh_cayley(K, KG, k, tol, sigma):
     -----
     In the Cayley mode, ARPACK computes the eigenvalues `(\mu + \sigma)/(\mu
     - \sigma)` of the operator `([K_G] - \sigma [K])^{-1}([K_G] + \sigma
-    [K])`, and ``which='SM'`` selects those of smallest modulus [1]_. When
-    `\sigma` is larger than
-    `|\mu|` of all the eigenvalues, `(\mu + \sigma)/(\mu - \sigma)` increases
-    in modulus with `\mu` in `(-\sigma, \sigma)`, such that the most negative
+    [K])` ([1]_, Appendix A, Section A.1, "Cayley Transformation Mode", with
+    `[A] = [K_G]` and `[M] = [K]`), and ``which='SM'`` selects those of
+    smallest modulus. When `\sigma` is larger than `|\mu|` of all the
+    eigenvalues, `(\mu + \sigma)/(\mu - \sigma)` increases in modulus with
+    `\mu` in `(-\sigma, \sigma)`, such that the most negative
     `\mu`, i.e. the lowest positive load multipliers, are selected first,
     then the null and the positive `\mu`.
 
@@ -2094,7 +2091,12 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
     not detect: with ``K`` the tangent stiffness matrix at a load level,
     including the load stiffness, the eigenvalues `\omega_n^2` are real and
     positive below the flutter load and become complex conjugate pairs above
-    it, when two natural frequencies coalesce (the kinetic criterion) [1]_.
+    it, when two natural frequencies coalesce, a double root of the
+    frequency equation. This is the dynamic method of [1]_ (Introduction,
+    Section 6, pp. 12-15, and Section 7, pp. 15-17), where `\omega_n` is
+    the frequency `\Omega` of the characteristic exponent `s = i\Omega`. A
+    real negative `\omega_n^2`, i.e. a real positive `s`, indicates
+    divergence ([1]_, p. 17).
 
     References
     ----------

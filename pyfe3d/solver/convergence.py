@@ -88,10 +88,11 @@ comes from the same evaluation, at no additional cost.
 With a consistent tangent stiffness matrix the Newton-Raphson iterations
 converge quadratically, `\zeta_{i+1} \sim \zeta_i^2`, and a tight
 tolerance such as `\epsilon = 10^{-9}` is reached in a few iterations; with
-the modified Newton-Raphson method the convergence is linear. A number of
-iterations consistently larger than three or four for moderate increments
-indicates a tangent stiffness matrix inconsistent with the internal force
-vector, which is why `\zeta_i` is printed at every iteration.
+the modified Newton-Raphson method the convergence is linear ([1]_,
+Sections 1.2.2 and 1.2.3, pp. 8-13). A number of iterations consistently
+larger than three or four for moderate increments indicates a tangent
+stiffness matrix inconsistent with the internal force vector, which is why
+`\zeta_i` is printed at every iteration.
 
 The criterion applies to the arc-length methods [3]_, which only change
 how the load factor is updated, not the residual, with the additional

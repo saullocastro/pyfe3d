@@ -498,8 +498,9 @@ class Analysis(object):
     and the tangent stiffness matrix `[K_T] = [K_C] + [K_G]`, given by the
     callables ``calc_kC`` and ``calc_kG``, should be the exact derivative of
     `\{F_{int}\}` with respect to `\{c\}`, such that the Newton-Raphson
-    iterations converge quadratically. The convergence is checked by
-    default with Crisfield's criterion [1]_, see :mod:`.convergence`.
+    iterations converge quadratically ([1]_, Section 1.2.2, p. 9). The
+    convergence is checked by default with Crisfield's criterion, see
+    :mod:`.convergence`.
 
     The line-search tries the full step first and only reduces it when it
     fails a sufficient-decrease test on the residual norm, see
