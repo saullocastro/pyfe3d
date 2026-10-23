@@ -112,7 +112,7 @@ Another alternative is the following:
 
 ```
 python -m pip install -r requirements.txt
-python setup.py install
+python -m pip install --no-build-isolation .
 ```
 
 If none of the above alternatives worked for you, this link shares some

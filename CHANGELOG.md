@@ -6,6 +6,10 @@
 
 - Python 3.9 is no longer supported, it reached its end of life in October 2025: Python 3.10 or newer is required, and the tests and wheels cover Python 3.10 to 3.14.
 
+### Packaging
+
+- Packaging: the metadata, with the version, in `pyproject.toml` (PEP 621), built with `setuptools>=77` and Cython; `setup.py` keeps only the Cython extensions with the compiler flags and writes `pyfe3d/version.py` from `pyproject.toml`. NumPy and SciPy, imported by pyfe3d, are now declared as run-time dependencies and are no longer build requirements; the license is given as the SPDX expression `BSD-3-Clause` instead of a classifier, wheel is no longer a build requirement, and README.md, AUTHORS and LICENSE are no longer installed in the root of the Python environment (`data_files`).
+
 ### Non-linear static solvers in `pyfe3d.solver`
 
 `pyfe3d.solver` becomes a package; every import of the previous module keeps

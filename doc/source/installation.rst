@@ -15,7 +15,7 @@ compiling the Cython modules::
 
 The run-time dependencies are NumPy and SciPy; Cython and a C++ compiler
 are needed to build from the source code, see ``requirements.txt`` and
-``pyproject.toml``. When no compiler is found, this page gives some
+``pyproject.toml``, which also holds the package metadata and the version. When no compiler is found, this page gives some
 information on how to set up one on different operating systems:
 https://cython2.readthedocs.io/en/latest/src/quickstart/install.html
 
@@ -28,7 +28,8 @@ For development, the extensions are compiled next to their sources with::
     python -m pip install -r requirements.txt
     python setup.py build_ext --inplace
 
-which also writes ``pyfe3d/version.py``. Each element and property is one
+which also writes ``pyfe3d/version.py`` with the version of
+``pyproject.toml``. Each element and property is one
 extension module, ``pyfe3d/*.pyx``, compiled as C++ with the optimization
 flags of ``setup.py``, ``/O2`` with MSVC and ``-O3 -fno-math-errno`` with
 GCC and Clang, without flags that change the floating-point results.

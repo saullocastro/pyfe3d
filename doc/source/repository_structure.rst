@@ -17,7 +17,8 @@ Overall layout
     ├── pyfe3d/                 # library code (Cython), solvers (Python)
     ├── doc/                    # Sphinx documentation
     ├── tests/                  # test cases and usage examples
-    ├── setup.py                # build script (generates version.py)
+    ├── pyproject.toml          # package metadata, version, build requirements
+    ├── setup.py                # Cython extensions (generates version.py)
     ├── requirements*.txt
 
 Key components
