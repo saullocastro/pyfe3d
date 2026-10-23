@@ -187,6 +187,20 @@ operator that separates the spurious transverse pattern from genuine twist,
 which is what an assumed-strain formulation such as MITC4 provides, rather
 than a better choice of coefficient.
 
+The hinged cylindrical roof of Sze et al. (2004) [8]_ shows this dependence
+on the problem. Its elements have areas of 16 to 1008 in the unit of length
+of the model, the default `E^{(h)}_w` is then `0.94` to `1.0` times
+`0.1 E t^3`, and the linear deflection under the central point load is
+6 to 7 % smaller than with :class:`.Tria3DSG`, which has no hourglass
+control, and, with the transverse shear stiffness multiplied by 100, than
+with a shallow-shell Kirchhoff solution. Smaller values of ``hgfactor_w``
+approach both, see the section
+:ref:`/tut-nonlinear-benchmarks.ipynb#sensitivity-to-the-transverse-hourglass-stiffness-of-quad4r`
+of the tutorial on geometrically non-linear benchmarks.
+These measurements show the sensitivity of one problem and do not recommend
+another value: the default follows the references above, and a different
+default would need further studies.
+
 The coefficients and the operator, as computed, are given in the Notes of
 :meth:`.Quad4R.update_KC0`.
 
@@ -336,6 +350,10 @@ References
 .. [7] MacNeal, R. H., and Harder, R. L., A proposed standard set of problems
    to test finite element accuracy, Finite Elements in Analysis and Design,
    1(1), 3-20, 1985. https://doi.org/10.1016/0168-874X(85)90003-4
+.. [8] Sze, K. Y., Liu, X. H., and Lo, S. H., Popular benchmark problems
+   for geometric nonlinear analysis of shells, Finite Elements in Analysis
+   and Design, 40(11), 1551-1569, 2004.
+   https://doi.org/10.1016/j.finel.2003.11.001
 
 """
 from libc.math cimport fabs

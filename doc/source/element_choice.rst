@@ -33,7 +33,11 @@ geometrically non-linear analyses.
         internal forces and the stiffness matrices, with an hourglass
         control that adds an artificial stiffness, scaled by the
         ``hgfactor_*`` arguments of :meth:`.Quad4R.update_KC0`; no drilling
-        enrichment, see :mod:`.quad4r`.
+        enrichment, see :mod:`.quad4r`. The transverse hourglass stiffness
+        also stiffens the twist, by an amount that depends on the problem,
+        e.g. 6 to 7 % on the linear deflection of the hinged roof of the
+        :ref:`non-linear tutorial
+        </tut-nonlinear-benchmarks.ipynb#sensitivity-to-the-transverse-hourglass-stiffness-of-quad4r>`.
     * - :class:`.Tria3DSG`
       - 3
       - The recommended triangle. Discrete shear gap transverse shear field,

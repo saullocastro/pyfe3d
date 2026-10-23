@@ -106,6 +106,21 @@ depending on structsolve:
   `tests/test_beamc_frame.py` (L-shaped frame against the unit-load
   method) and `test_offset_isotropic_plate`. The module docstrings have
   overlined titles, and Sphinx builds without warnings.
+- Sensitivity of the hinged cylindrical roof of Sze, Liu and Lo (2004) to
+  the transverse hourglass stiffness of `Quad4R`, in a new section of the
+  tutorial `tut-nonlinear-benchmarks.ipynb` and in the new
+  `test_hinged_roof_hourglass_sensitivity` of
+  `tests/test_nonlinear_benchmarks_sze2004.py`: `hgfactor_w` from `1` (the
+  default) to `0.0002`, against `Tria3DSG`, which has no hourglass control,
+  and against a shallow-shell Kirchhoff Ritz solution, the new
+  `ritz_roof_WC` of the same test module. With the default, the linear
+  deflection at the centre is 6 to 7 % smaller than with `Tria3DSG` and,
+  with the transverse shear stiffness multiplied by 100, than the Ritz
+  solution. The comparison with Tables 9a and 9d of the paper keeps the
+  default. The hourglass stiffness is problem-dependent and the default,
+  which follows the references documented in `pyfe3d.quad4r`, is unchanged:
+  new default values need further studies. Noted in the Notes of
+  `pyfe3d.quad4r` and on the page on the choice of the element.
 
 ## 0.10.0 (2026-09-25)
 
