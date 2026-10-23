@@ -349,3 +349,31 @@ def test_dense_symmetric_lowest_frequencies():
     assert np.all(residuals(K, M, np.sqrt(w2), eigvecs) < 1e-9)
     w2_ref = eigh(K.toarray(), M.toarray(), eigvals_only=True)[:10]
     np.testing.assert_allclose(w2, w2_ref, rtol=1e-8)
+
+
+
+def test_check_freq_without_eigenpairs():
+    K = diags([1., 2., 3.]).tocsr()
+    M = diags([1., 1., 1.]).tocsr()
+    assert (eigen._check_freq(K, M, np.zeros(0), np.zeros((3, 0)), 1e-8,
+                              True) == 'no eigenpair was found')
+    assert (eigen._check_freq(K, M, np.array([np.inf]),
+                              np.array([[1.], [0.], [0.]]), 1e-8, True)
+            == 'no finite eigenvalue was found')
+    assert eigen._check_freq(K, M, np.array([1.]),
+                             np.array([[1.], [0.], [0.]]), 1e-8, True) is None
+
+
+def test_dense_freq_indefinite_K():
+    r"""With an indefinite ``K`` the symmetric dense solver solves
+    `[K]\{u\} = \omega^2 [M]\{u\}` directly, the lowest ``k`` eigenvalues
+    first, a negative one included"""
+    K = diags([3., -1., 2.]).tocsr()
+    M = diags([1., 1., 2.]).tocsr()
+    w2, eigvecs = eigen._dense_freq(K, M, 2, 0., True)
+    np.testing.assert_allclose(w2, [-1., 1.])
+    np.testing.assert_allclose(np.abs(eigvecs), [[0., 0.], [1., 0.],
+                                                 [0., 1/np.sqrt(2)]],
+                               atol=1e-14)
+    w2, eigvecs = eigen._dense_freq(K, M, None, 0., True)
+    np.testing.assert_allclose(w2, [-1., 1., 3.])

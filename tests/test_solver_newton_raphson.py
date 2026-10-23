@@ -233,3 +233,111 @@ def test_nr_jumps_over_limit_point():
     wq = np.array([c[0] for c in q.an.cs])
     assert np.diff(wq).max() < 0.5
     np.testing.assert_allclose(p.an.cs[-1], q.an.cs[-1], rtol=1e-5)
+
+
+
+def inconsistent_tangent(factor=0.1):
+    """The hardening springs with the exact tangent stiffness matrix
+    multiplied by ``factor``: the Newton direction is ``1/factor`` times too
+    long, the linear stiffness matrix is unchanged"""
+    h = hardening_springs()
+    return Problem(h.fext, h.fint, h.kC,
+                   lambda c: factor*(h.kC + h.kG(c)) - h.kC), h
+
+
+def test_nr_line_search_shortens_a_too_long_direction(capsys):
+    r"""With a direction 10 times too long, `\phi(1) = 81 \phi(0)` for a
+    nearly linear residual, and the minimum of the quadratic interpolation
+    is cut to its safeguard, `\eta = 0.1`, which recovers the Newton step:
+    the run converges to the reference solution, logging the step length"""
+    p, h = inconsistent_tangent()
+    p.analysis(initialInc=1., line_search=True)
+    p.an.static(NLgeom=True, silent=False)
+    out = capsys.readouterr().out
+    check_increments_and_equilibrium(p, rtol=1e-8)
+    np.testing.assert_allclose(p.an.cs[-1], h.solve_reference(), rtol=1e-8)
+    assert 'Line-search: eta = 0.10000' in out
+    assert 'maximum number of iterations' not in out
+
+
+def test_nr_line_search_without_iterations(capsys):
+    """With ``max_iter_line_search = 0`` the full step of the too long
+    direction is kept, with a warning: the residual diverges, every step is
+    cut down to ``minInc`` and no increment is accepted"""
+    p, h = inconsistent_tangent()
+    p.analysis(initialInc=1., line_search=True, max_iter_line_search=0,
+               minInc=0.1)
+    p.an.static(NLgeom=True, silent=False)
+    out = capsys.readouterr().out
+    assert p.an.increments == []
+    assert ('WARNING: Line-search: maximum number of iterations achieved'
+            in out)
+    assert 'Line-search: eta' not in out
+
+
+def test_nr_non_finite_residual_cuts_the_step(capsys):
+    """A residual that is not finite, here an internal force vector that is
+    not defined beyond 0.42, stops the iterations of the step, which is
+    repeated with a smaller increment"""
+    def fint(c):
+        return np.where(c > 0.42, np.nan, c + c**3)
+
+    p = Problem(np.array([0.45]), fint, np.array([[1.]]),
+                lambda c: np.diag(3*c**2))
+    p.analysis(initialInc=1.)
+    p.an.static(NLgeom=True, silent=False)
+    out = capsys.readouterr().out
+    assert 'WARNING: Diverged - residual is not finite' in out
+    check_increments_and_equilibrium(p, rtol=1e-9)
+    # NOTE the first attempt, at the load factor 1, is cut
+    assert p.an.increments[0] == 0.5
+    c = p.an.cs[-1][0]
+    np.testing.assert_allclose(c + c**3, 0.45, rtol=1e-9)
+
+
+def test_nr_modified_kT_initial_state_false():
+    """``kT_initial_state = False``: the first iteration of the first step
+    of the modified Newton-Raphson method uses the linear stiffness matrix,
+    instead of the tangent stiffness matrix at the predictor, and the run
+    converges to the same solution"""
+    def run(kT_initial_state):
+        p = hardening_springs()
+        events = []
+        calc_fint, calc_kG = p.calc_fint, p.calc_kG
+        p.calc_fint = lambda c, silent=True: (events.append('fint'),
+                                             calc_fint(c, silent))[1]
+        p.calc_kG = lambda c=None, NLgeom=False, silent=True: (
+            events.append('kG'), calc_kG(c, NLgeom, silent))[1]
+        p.analysis(initialInc=0.2, modified_NR=True,
+                   kT_initial_state=kT_initial_state)
+        p.an.static(NLgeom=True, silent=True)
+        check_increments_and_equilibrium(p)
+        np.testing.assert_allclose(p.an.cs[-1], p.solve_reference(),
+                                   rtol=1e-7)
+        return events
+
+    assert run(True)[:2] == ['fint', 'kG']
+    assert run(False)[:2] == ['fint', 'fint']
+
+
+def test_norm_without_weights():
+    """The Euclidean norm when the weights of Crisfield's criterion are not
+    given, the scaled norm otherwise"""
+    from pyfe3d.solver.newton_raphson import _norm
+
+    v = np.array([3., -4.])
+    assert _norm(v, None) == 5.
+    assert _norm(v, np.array([1., 0.25])) == np.sqrt(9. + 4.)
+
+
+def test_logger_prints_unless_silent(capsys):
+    """The messages are printed after ``level`` tabs, the warnings with the
+    prefix ``WARNING:``, and returned; nothing is printed when silent"""
+    from pyfe3d.solver.logger import msg, warn
+
+    assert msg('text', level=2) == 'text'
+    assert warn('careful', level=1) == 'WARNING: careful'
+    assert capsys.readouterr().out == '\t\ttext\n\tWARNING: careful\n'
+    msg('text', level=2, silent=True)
+    warn('careful', silent=True)
+    assert capsys.readouterr().out == ''

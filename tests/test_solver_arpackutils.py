@@ -297,3 +297,136 @@ def test_eigs_restart_reproducible():
         np.testing.assert_array_equal(mu_i, mu)
         np.testing.assert_array_equal(eigvecs_i, eigvecs)
         assert radius_i == radius
+
+
+
+def test_lapack_name_from_get_info():
+    """Builds with ``numpy.distutils`` whose configuration has no MKL
+    attribute but a ``get_info``, which may raise"""
+    from types import SimpleNamespace as NS
+
+    def old_show_config():
+        print('old style')
+
+    def get_info_mkl(key):
+        return {'libraries': ['mkl_rt']} if key == 'blas_mkl_info' else {}
+
+    def get_info_raises(key):
+        raise KeyError(key)
+
+    name = arpackutils._lapack_name_from_config
+    assert name(NS(show_config=old_show_config,
+                   __config__=NS(get_info=get_info_mkl))) == 'mkl'
+    assert name(NS(show_config=old_show_config,
+                   __config__=NS(get_info=get_info_raises))) is None
+
+
+def test_lapack_is_mkl_unknown(monkeypatch):
+    """``None`` when neither SciPy nor NumPy names its LAPACK library, and
+    whether the name contains ``mkl`` otherwise, SciPy first"""
+    arpackutils.lapack_is_mkl.cache_clear()
+    try:
+        monkeypatch.setattr(arpackutils, '_lapack_name_from_config',
+                            lambda module: None)
+        assert arpackutils.lapack_is_mkl() is None
+        arpackutils.lapack_is_mkl.cache_clear()
+        names = {'scipy': None, 'numpy': 'mkl-sdl'}
+        monkeypatch.setattr(arpackutils, '_lapack_name_from_config',
+                            lambda module: names[module.__name__])
+        assert arpackutils.lapack_is_mkl() is True
+        arpackutils.lapack_is_mkl.cache_clear()
+        names['scipy'] = 'scipy-openblas'
+        assert arpackutils.lapack_is_mkl() is False
+    finally:
+        arpackutils.lapack_is_mkl.cache_clear()
+
+
+def test_mkl_version_sources(monkeypatch):
+    """The version is read from ``mkl-service`` first, then from the MKL
+    entry of ``threadpoolctl``, ``None`` without both"""
+    from types import SimpleNamespace as NS
+
+    mkl = NS(get_version=lambda: {'MajorVersion': 2024, 'MinorVersion': 2,
+                                  'UpdateVersion': 1})
+    pools = [{'internal_api': 'openblas', 'version': '0.3.27'},
+             {'internal_api': 'mkl', 'version': '2025.0.1'}]
+    threadpoolctl = NS(threadpool_info=lambda: pools)
+    arpackutils.mkl_version.cache_clear()
+    try:
+        monkeypatch.setitem(sys.modules, 'mkl', mkl)
+        monkeypatch.setitem(sys.modules, 'threadpoolctl', threadpoolctl)
+        assert arpackutils.mkl_version() == (2024, 2, 1)
+        arpackutils.mkl_version.cache_clear()
+        # NOTE a None entry of sys.modules makes the import raise
+        monkeypatch.setitem(sys.modules, 'mkl', None)
+        assert arpackutils.mkl_version() == (2025, 0, 1)
+        arpackutils.mkl_version.cache_clear()
+        pools.pop()
+        assert arpackutils.mkl_version() is None
+        arpackutils.mkl_version.cache_clear()
+        monkeypatch.setitem(sys.modules, 'threadpoolctl', None)
+        assert arpackutils.mkl_version() is None
+    finally:
+        arpackutils.mkl_version.cache_clear()
+
+
+def test_dsteqr_probe_branches(monkeypatch):
+    """The probe of ``dsteqr``: ``None`` without ``dstev``, faulty when
+    ``dstev`` raises, returns an error code or wrong eigenvectors, and not
+    faulty with the eigenpairs of a correct LAPACK"""
+    import scipy.linalg.lapack as lapack
+    from scipy.linalg import eigh_tridiagonal
+
+    def correct(d, e, compute_v=1):
+        w, z = eigh_tridiagonal(d, e)
+        return w, z, 0
+
+    def raises(d, e, compute_v=1):
+        raise ValueError('illegal value')
+
+    def error_code(d, e, compute_v=1):
+        w, z = eigh_tridiagonal(d, e)
+        return w, z, 1
+
+    def wrong(d, e, compute_v=1):
+        w, z = eigh_tridiagonal(d, e)
+        return w, z[:, ::-1], 0
+
+    arpackutils.dsteqr_is_faulty.cache_clear()
+    try:
+        for dstev, faulty in [(correct, False), (raises, True),
+                              (error_code, True), (wrong, True)]:
+            monkeypatch.setattr(lapack, 'dstev', dstev)
+            assert arpackutils.dsteqr_is_faulty() is faulty
+            arpackutils.dsteqr_is_faulty.cache_clear()
+        monkeypatch.delattr(lapack, 'dstev')
+        assert arpackutils.dsteqr_is_faulty() is None
+    finally:
+        arpackutils.dsteqr_is_faulty.cache_clear()
+
+
+def test_arpack_takes_rng_without_signature(monkeypatch):
+    """``False`` when the signature of ``eigs`` cannot be inspected, and
+    then ``start_kwargs`` gives the starting vector only"""
+    def no_signature(obj):
+        raise ValueError('no signature found')
+
+    arpackutils._arpack_takes_rng.cache_clear()
+    try:
+        monkeypatch.setattr(inspect, 'signature', no_signature)
+        assert arpackutils._arpack_takes_rng() is False
+        kwargs = arpackutils.start_kwargs(7)
+        assert list(kwargs) == ['v0']
+        np.testing.assert_array_equal(kwargs['v0'],
+                                      arpackutils.start_vector(7))
+    finally:
+        arpackutils._arpack_takes_rng.cache_clear()
+
+
+def test_deflation_shift():
+    """The middle of the largest gap between the last five eigenvalues, and
+    ``far_shift`` when they are all equal"""
+    w = np.array([5., 1., 2., 3., 7., 4.])
+    assert arpackutils._deflation_shift(w, 100.) == 6.
+    assert arpackutils._deflation_shift(np.full(6, 2.), 100.) == 100.
+    assert arpackutils._deflation_shift(np.array([3.]), 100.) == 100.

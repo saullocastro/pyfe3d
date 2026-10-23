@@ -874,3 +874,120 @@ def test_eig_complex_mkl_crash_regression(tmp_path):
     assert result.returncode == 0, (hex(result.returncode & 0xffffffff),
                                     result.stderr[-2000:])
     assert result.stdout.strip().endswith('ok')
+
+
+
+def test_check_eigenpairs_inertia_skipped_or_failing():
+    r"""``K = diag(1, 2)``, ``KG = -I``: load multipliers 1 and 2. The
+    inertia check, which tells that the multiplier 1 is missing, is skipped
+    when no positive multiplier is given or when ``K`` is not positive
+    definite, and it tells when a multiplier is given twice"""
+    K = diags([1., 2.]).tocsr()
+    KG = -identity(2, format='csr')
+    e0 = np.array([[1.], [0.]])
+    e1 = np.array([[0.], [1.]])
+    assert (check_eigenpairs(K, KG, [2.], e1)
+            == 'at least one load multiplier lower than 2 is missing')
+    assert check_eigenpairs(K, KG, [2.], e1, K_positive_definite=False) \
+        is None
+    # NOTE the reversed load, negative multipliers only
+    assert check_eigenpairs(K, -KG, [-1.], e0) is None
+    assert (check_eigenpairs(K, KG, [1., 1., 2.], np.hstack((e0, e0, e1)))
+            == '2 load multipliers lower than 1.9998 were found, but only 1 '
+            'exist')
+
+
+def test_negative_pivots_not_finite():
+    """The inertia is unknown when a pivot is not finite"""
+    assert eigen._negative_pivots(csr_matrix(np.diag([1., -2.]))) == 1
+    assert eigen._negative_pivots(csr_matrix(np.diag([np.inf, 1.]))) is None
+    assert eigen._negative_pivots(csr_matrix(np.diag([np.nan, 1.]))) is None
+
+
+def test_count_multipliers():
+    r"""Load multipliers 1 and 0.5 below `10^6/|\mu|_{max}`, the count being
+    unknown without ``mu_max`` or with ``K`` not positive definite"""
+    K = identity(10, format='csr')
+    KG = diags([-1., -2.] + [0.]*8).tocsr()
+    pd = eigen.is_positive_definite
+    assert eigen._count_multipliers(K, KG, 2., pd) == 2
+    assert eigen._count_multipliers(K, -KG, 2., pd) == 0
+    assert eigen._count_multipliers(K, KG, None, pd) is None
+    assert eigen._count_multipliers(K, KG, 2., lambda K: False) is None
+
+
+def test_eigsh_both_signs_without_multipliers():
+    """A null ``KG`` has no finite load multiplier of either sign"""
+    K = identity(10, format='csc')
+    KG = csr_matrix((10, 10))
+    with pytest.raises(RuntimeError, match='no finite load multiplier'):
+        eigen._eigsh_both_signs(K, KG, 3, 0, 1., 1.,
+                                eigen.is_positive_definite)
+
+
+def test_check_both_signs():
+    r"""``K = diag(1, 2)``, ``KG = I``: `\mu` = 1 and 0.5, the negative load
+    multipliers -1 and -2, verified with the reversed load"""
+    K = diags([1., 2.]).tocsr()
+    KG = identity(2, format='csr')
+    e0 = np.array([[1.], [0.]])
+    e1 = np.array([[0.], [1.]])
+    assert eigen._check_both_signs(K, KG, [1.], e0, 1e-8) is None
+    error = eigen._check_both_signs(K, KG, [1.], e1, 1e-8)
+    assert error.startswith('reversed load: relative residual')
+    assert (eigen._check_both_signs(K, KG, [0., np.inf], np.hstack((e0, e1)),
+                                    1e-8)
+            == 'no finite load multiplier was found')
+
+
+def test_condense_null_KG():
+    K = identity(3, format='csr')
+    with pytest.raises(ValueError, match='KG is a null matrix'):
+        eigen._condense(K, csr_matrix((3, 3)), np.zeros(3, dtype=bool))
+
+
+def shift_search_matrices():
+    r"""``K = I``: load multipliers `\lambda = -1/d_i` of ``KG = diag(d)``,
+    eight negative ones close to zero and the positive ones 1/1.2 and 1"""
+    d = [10., 11., 12., 13., 14., 15., 16., 17., -1., -1.2]
+    return identity(10, format='csc'), diags(d).tocsr()
+
+
+def test_eigs_shift_search_errors(monkeypatch):
+    """The errors of the search of shifts of the unsymmetric solver: too few
+    degrees-of-freedom, singular ``K``, no positive load multiplier, too
+    many shifts and a singular shifted matrix"""
+    search = eigen._eigs_shift_search
+    with pytest.raises(ValueError, match='at least 3 degrees-of-freedom'):
+        search(identity(2), identity(2), 1, 0, 1e-6)
+    K = csr_matrix(np.array([[1., 1., 0.], [1., 1., 0.], [0., 0., 1.]]))
+    with pytest.raises(RuntimeError, match='K is singular'):
+        search(K, identity(3), 1, 0, 1e-6)
+    with pytest.raises(RuntimeError, match='no positive real load '
+                       'multiplier exists, all the finite ones were found'):
+        search(identity(10, format='csc'),
+               diags([1., 2.] + [0.]*8).tocsr(), 6, 0, 1e-6)
+
+    K, KG = shift_search_matrices()
+    mu, eigvecs = search(K, KG, 6, 0, 1e-6)
+    assert np.isclose(-1./mu[0], 1./1.2)
+    monkeypatch.setattr(eigen, 'SHIFT_SEARCH_MAX_STEPS', 1)
+    with pytest.raises(RuntimeError, match='after 1 shifts'):
+        search(K, KG, 6, 0, 1e-6)
+    monkeypatch.undo()
+
+    # NOTE every factorization after the one of K fails
+    splu_calls = []
+    splu = eigen._splu
+
+    def singular_after_K(A):
+        splu_calls.append(1)
+        if len(splu_calls) > 1:
+            raise RuntimeError('Factor is exactly singular')
+        return splu(A)
+
+    monkeypatch.setattr(eigen, '_splu', singular_after_K)
+    with pytest.raises(RuntimeError, match=r'K \+ s KG is singular'):
+        search(K, KG, 6, 0, 1e-6)
+    # NOTE K, then the shift and its two perturbations
+    assert len(splu_calls) == 4

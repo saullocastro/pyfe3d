@@ -110,3 +110,125 @@ def test_check_convergence_criteria():
     an.convergence = 'crisfield'
     with pytest.raises(ValueError, match='weights'):
         check_convergence(an, R, fint, fext)
+
+
+
+def test_free_dofs_invalid_bu_and_uk():
+    from pyfe3d.solver import FreeDofs
+
+    def f(*args, **kwargs):
+        return None
+
+    for bu in [np.array([1, 0, 1]), np.ones((2, 2), dtype=bool)]:
+        with pytest.raises(ValueError, match='bu must be a 1-D boolean'):
+            FreeDofs(f, f, f, f, bu=bu)
+    with pytest.raises(ValueError, match='uk must have the size of bu'):
+        FreeDofs(f, f, f, f, bu=np.array([True, False]), uk=np.zeros(3))
+
+
+def springs_chain(k1=100., k2=300.):
+    """Stiffness matrix of 2 springs in series, DOFs 0-1 and 1-2"""
+    return np.array([[k1, -k1, 0.], [-k1, k1 + k2, -k2], [0., -k2, k2]])
+
+
+def test_linear_static_prescribed_displacement():
+    """Linear static analysis with ``bu`` and ``uk``: the prescribed
+    displacement of the last DOF stretches the springs, the first DOF being
+    fixed"""
+    K = springs_chain()
+    an = Analysis(calc_fext=lambda inc=1., silent=True: np.zeros(3),
+                  calc_kC=lambda c=None, NLgeom=False, silent=True:
+                  csr_matrix(K),
+                  bu=np.array([False, True, False]),
+                  uk=np.array([0., 0., 0.3]))
+    increments, cs = an.static(NLgeom=False, silent=True)
+    assert increments == [1.]
+    np.testing.assert_allclose(cs[0], [0., 300.*0.3/400., 0.3], rtol=1e-12)
+
+
+def test_free_dofs_configuration_and_load_factor_dependent_load():
+    """A follower load declaring ``c`` and ``lbd``, through ``bu``: the
+    callables of the full model receive the full configuration, and the
+    solution is the one of the reduced model"""
+    K = springs_chain()
+    P = 20.
+    seen = []
+
+    def fext_full(inc=1., silent=True, c=None, lbd=None):
+        seen.append(None if c is None else c.size)
+        u2 = 0. if c is None else c[2]
+        return inc*np.array([0., 0., P*(1. + 2.*u2)])
+
+    def fext_reduced(inc=1., silent=True, c=None, lbd=None):
+        u2 = 0. if c is None else c[1]
+        return inc*np.array([0., P*(1. + 2.*u2)])
+
+    def model(fext, Km, **kwargs):
+        an = Analysis(calc_fext=fext,
+                      calc_fint=lambda c, silent=True: Km @ c,
+                      calc_kC=lambda c=None, NLgeom=False, silent=True:
+                      csr_matrix(Km),
+                      calc_kG=lambda c=None, NLgeom=False, silent=True:
+                      csr_matrix(Km.shape), **kwargs)
+        an.initialInc = 0.5
+        an.relTOL = 1e-12
+        an.static(NLgeom=True, silent=True)
+        return an
+
+    full = model(fext_full, K, bu=np.array([False, True, True]))
+    reduced = model(fext_reduced, K[1:, 1:])
+    assert full.increments == reduced.increments == [0.5, 1.]
+    for c, cr in zip(full.cs, reduced.cs):
+        assert c[0] == 0.
+        np.testing.assert_allclose(c[1:], cr, rtol=1e-12)
+    # NOTE the residual uses the reference load, calc_fext(c=c, lbd=lbd)
+    #      being dR/dlbd, see pyfe3d.solver.callbacks
+    np.testing.assert_allclose(K[1:, :] @ full.cs[-1], [0., P],
+                               rtol=1e-10, atol=1e-10)
+    assert 3 in seen
+
+
+def test_linear_static_follower_not_finite(capsys):
+    """Load correction iterations of the linear static analysis: a load that
+    is not finite in the deformed configuration stops them with a warning,
+    returning the solution of the reference load"""
+    K = springs_chain()[1:, 1:]
+    F0 = np.array([0., 10.])
+
+    def calc_fext(inc=1., silent=True, c=None):
+        return inc*(F0 if c is None else np.full(2, np.nan))
+
+    an = Analysis(calc_fext=calc_fext,
+                  calc_kC=lambda c=None, NLgeom=False, silent=True:
+                  csr_matrix(K))
+    increments, cs = an.static(NLgeom=False, silent=False)
+    out = capsys.readouterr().out
+    np.testing.assert_allclose(cs[0], np.linalg.solve(K, F0), rtol=1e-12)
+    assert 'WARNING: The load correction iterations did not converge' in out
+
+
+def test_linear_static_follower_factorization_failure(monkeypatch, capsys):
+    """A failed factorization of the linear stiffness matrix stops the load
+    correction iterations with a warning, returning the last iterate. The
+    factorization is the one of the matrix that has just solved the linear
+    problem, therefore the failure is forced here"""
+    from pyfe3d.solver import analysis
+
+    def fails(k0):
+        raise RuntimeError('Factor is exactly singular')
+
+    monkeypatch.setattr(analysis, '_factorize', fails)
+    K = springs_chain()[1:, 1:]
+    F0 = np.array([0., 10.])
+
+    def calc_fext(inc=1., silent=True, c=None):
+        u2 = 0. if c is None else c[1]
+        return inc*F0*(1. + u2)
+
+    an = Analysis(calc_fext=calc_fext,
+                  calc_kC=lambda c=None, NLgeom=False, silent=True:
+                  csr_matrix(K))
+    increments, cs = an.static(NLgeom=False, silent=False)
+    out = capsys.readouterr().out
+    np.testing.assert_allclose(cs[0], np.linalg.solve(K, F0), rtol=1e-12)
+    assert 'WARNING: The load correction iterations did not converge' in out

@@ -8,6 +8,8 @@ arc-length increment becomes smaller than ``minInc``.
 import numpy as np
 import pytest
 
+from pyfe3d.solver import arc_length
+
 from analytic_problems import (hardening_springs, von_mises_truss,
                                linear_problem, convergence_orders, Problem)
 
@@ -194,3 +196,160 @@ def test_units_independence(method):
         assert calls == calls0
         np.testing.assert_allclose(inc, inc0, rtol=1e-6, atol=1e-9)
         np.testing.assert_allclose(cs, cs0, rtol=1e-6, atol=1e-9)
+
+
+
+def test_arc_length_invalid_method():
+    p = linear_problem()
+    an = p.analysis()
+    with pytest.raises(ValueError, match='Invalid arc-length method: newton'):
+        arc_length._solver_arc_length(an, an, 'newton', silent=True)
+
+
+@pytest.mark.parametrize('method', METHODS)
+def test_arc_length_lands_exactly_on_load_factor_one(method):
+    """A converged step whose load factor is exactly 1.0 ends the analysis
+    without the correction to the load factor 1.0"""
+    p = linear_problem()
+    p.analysis(NL_method=method, initialInc=1.)
+    p.an.static(NLgeom=True, silent=True)
+    assert p.an.increments == [1.]
+    np.testing.assert_allclose(p.kC @ p.an.cs[0], p.fext, rtol=1e-12)
+    assert p.calls_per_step() == [1]
+
+
+@pytest.mark.parametrize('method', METHODS)
+def test_arc_length_maximum_number_of_steps(method, monkeypatch, capsys):
+    monkeypatch.setattr(arc_length, 'MAX_NUM_STEPS', 3)
+    p = linear_problem()
+    p.analysis(NL_method=method, initialInc=0.1)
+    p.an.static(NLgeom=True, silent=False)
+    out = capsys.readouterr().out
+    assert len(p.an.increments) == 3
+    assert p.an.increments[-1] < 1.
+    check_equilibrium(p, rtol=1e-10)
+    assert 'WARNING: Maximum number of steps of 3 achieved' in out
+
+
+@pytest.mark.parametrize('method', METHODS)
+def test_arc_length_modified_NR_kT_initial_state_false(method):
+    """``kT_initial_state = False``: the predictor of the first step uses the
+    linear stiffness matrix, without evaluating the tangent stiffness matrix
+    at the initial state"""
+    def run(kT_initial_state):
+        p = von_mises_truss(frac=1.5)
+        events = []
+        calc_fint, calc_kG = p.calc_fint, p.calc_kG
+        p.calc_fint = lambda c, silent=True: (events.append('fint'),
+                                             calc_fint(c, silent))[1]
+        p.calc_kG = lambda c=None, NLgeom=False, silent=True: (
+            events.append('kG'), calc_kG(c, NLgeom, silent))[1]
+        p.analysis(NL_method=method, initialInc=0.05, modified_NR=True,
+                   kT_initial_state=kT_initial_state)
+        p.an.static(NLgeom=True, silent=True)
+        check_equilibrium(p)
+        assert p.an.increments[-1] == 1.0
+        assert p.an.cs[-1][0] > 2.
+        return events
+
+    assert run(True)[0] == 'kG'
+    assert run(False)[0] == 'fint'
+
+
+def singular_tangent(at_origin):
+    """2 DOFs whose tangent stiffness matrix ``[[1, 1], [1, 1]]`` is
+    singular, at the origin too or only away from it, with a regular linear
+    stiffness matrix"""
+    kC = np.array([[2., 1.], [1., 2.]])
+
+    def kG(c):
+        if at_origin or (c is not None and np.any(c != 0)):
+            return -np.eye(2)
+        return np.zeros((2, 2))
+
+    return Problem(np.array([1., 0.]), lambda c: kC @ c + 0.1*c**3, kC, kG)
+
+
+@pytest.mark.parametrize('method', METHODS)
+def test_arc_length_singular_tangent_at_converged_state(method, capsys):
+    """The analysis stops when the tangent stiffness matrix of the last
+    converged state is singular: at once from the initial state, after the
+    first step when the linear stiffness matrix is used for it"""
+    p = singular_tangent(at_origin=True)
+    p.analysis(NL_method=method, initialInc=0.1)
+    p.an.static(NLgeom=True, silent=False)
+    out = capsys.readouterr().out
+    assert p.an.increments == []
+    assert ('WARNING: Singular tangent stiffness matrix at the last '
+            'converged state! Analysis stopped') in out
+
+    p = singular_tangent(at_origin=True)
+    p.analysis(NL_method=method, initialInc=0.1, modified_NR=True,
+               kT_initial_state=False)
+    p.an.static(NLgeom=True, silent=False)
+    out = capsys.readouterr().out
+    assert len(p.an.increments) == 1
+    check_equilibrium(p, rtol=1e-9)
+    assert 'at the last converged state! Analysis stopped' in out
+
+
+@pytest.mark.parametrize('method', METHODS)
+def test_arc_length_singular_tangent_in_the_iterations(method, capsys):
+    """A singular tangent stiffness matrix at an iterate stops the
+    iterations of the step, which is repeated with a shorter arc length
+    until it is smaller than ``minInc``"""
+    p = singular_tangent(at_origin=False)
+    p.analysis(NL_method=method, initialInc=0.1, minInc=1e-3)
+    p.an.static(NLgeom=True, silent=False)
+    out = capsys.readouterr().out
+    assert p.an.increments == []
+    assert '\t\tWARNING: Singular tangent stiffness matrix\n' in out
+    assert 'WARNING: Minimum arc-length increment of 0.00100 achieved' in out
+
+
+def sharp_peak(cp=0.05*(1 - 1e-12)):
+    """1 DOF with a unit stiffness up to the peak load ``cp`` at the
+    displacement ``cp``, and the stiffness -1 beyond it"""
+    def fint(c):
+        return np.where(c < cp, c, 2*cp - c)
+
+    def kG(c):
+        return np.array([[0. if c is None or c[0] < cp else -2.]])
+
+    return Problem(np.array([1.]), fint, np.array([[1.]]), kG)
+
+
+def test_arc_length_riks_at_a_sharp_peak(capsys):
+    r"""Riks' linearized constraint has no solution when the tangent
+    `\{\Delta c_q\}` of the iterate is orthogonal to the increment, here
+    when the stiffness changes sign from 1 to -1: the step is repeated with a
+    shorter arc length. The predictor of the next step is orthogonal to the
+    last increment, and the sign of the predictor is then positive, along
+    `\{\Delta c_q\} = \{-1\}`; the analysis stops at the peak when the arc
+    length becomes smaller than ``minInc``"""
+    p = sharp_peak()
+    p.analysis(NL_method='arc_length_riks', initialInc=0.1, minInc=1e-3)
+    p.an.static(NLgeom=True, silent=False)
+    out = capsys.readouterr().out
+    np.testing.assert_allclose(p.an.increments, [0.05], rtol=1e-10)
+    np.testing.assert_allclose(p.an.cs[0], [0.05], rtol=1e-10)
+    check_equilibrium(p, rtol=1e-10)
+    assert ('WARNING: Diverged - arc-length constraint cannot be satisfied'
+            in out)
+    assert 'WARNING: Minimum arc-length increment of 0.00100 achieved' in out
+    second_step = [c[0] for step, c in p.fint_calls if step == 1]
+    assert second_step and second_step[0] < p.an.cs[0][0]
+
+
+def test_arc_length_crisfield_complex_roots(capsys):
+    """Without real roots of Crisfield's quadratic constraint, here with the
+    modified Newton-Raphson method, the linearized constraint is used and
+    the analysis still reaches the load factor 1.0"""
+    p = hardening_springs()
+    p.analysis(NL_method='arc_length_crisfield', initialInc=0.3,
+               modified_NR=True)
+    p.an.static(NLgeom=True, silent=False)
+    out = capsys.readouterr().out
+    assert 'Complex roots, using the linearized constraint' in out
+    check_equilibrium(p)
+    assert p.an.increments[-1] == 1.0
