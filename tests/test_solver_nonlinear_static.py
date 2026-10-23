@@ -43,10 +43,14 @@ class Model(object):
     force vector of ``update_fint(..., nonlinear=1)``, whose exact Jacobian
     is ``KC0 + KCNL + KG``. ``S`` scales the degrees-of-freedom, the
     callables then working with ``c = S u``, the forces ``S^{-1} f`` and the
-    matrices ``S^{-1} K S^{-1}``.
+    matrices ``S^{-1} K S^{-1}``. ``elem_kwargs``, e.g. the
+    ``hgfactor_*`` of Quad4R, are passed to ``update_KC0`` and
+    ``update_fint`` of every element.
     """
-    def __init__(self, elements, data, prop, x, N, fext, S=None):
+    def __init__(self, elements, data, prop, x, N, fext, S=None,
+                 elem_kwargs=None):
         self.elements = elements
+        self.elem_kwargs = {} if elem_kwargs is None else dict(elem_kwargs)
         self.prop = prop
         self.x = x
         self.N = N
@@ -63,7 +67,8 @@ class Model(object):
         self.KGc = np.zeros(data.KG_SPARSE_SIZE*num_elements, dtype=INT)
         for elem in elements:
             elem.update_probe_xe(x)
-            elem.update_KC0(self.KC0r, self.KC0c, KC0v, prop)
+            elem.update_KC0(self.KC0r, self.KC0c, KC0v, prop,
+                            **self.elem_kwargs)
         self.KC0 = self.sparse(self.KC0r, self.KC0c, KC0v)
         self.fint_calls = []
 
@@ -80,7 +85,8 @@ class Model(object):
             # NOTE the probe is shared amongst the elements
             elem.update_probe_xe(self.x)
             elem.update_probe_ue(u)
-            elem.update_fint(fint, self.prop, nonlinear=1)
+            elem.update_fint(fint, self.prop, nonlinear=1,
+                             **self.elem_kwargs)
         return fint
 
     def KCNL(self, u):

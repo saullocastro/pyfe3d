@@ -25,18 +25,33 @@ axial strain ``u_x + w_x**2/2 = 0`` gives ``U = -(M/(E*I))**2*L**3/6``: it
 agrees with the exact solution only while the tip rotation ``M*L/(E*I)`` is
 small and never rolls up into a circle. In the second problem the rotations
 stay small and the snap-through is traced with the arc-length method.
+
+The roof is modelled with Quad4R and its default hourglass control, of
+Brockman (1987), see :mod:`pyfe3d.quad4r`. The transverse hourglass
+stiffness, ``0.10*E*h**3/(1 + 1/A)``, is ``0.94*0.1*E*h**3`` to
+``0.1*E*h**3`` for the element areas ``A`` of the 64x64 to 8x8 meshes of the
+quarter, 16 to 1008 in the unit of length of the model, and it also stiffens
+the twist curvature, by about ``3*0.1 = 30 %``. The sensitivity of the roof
+to this stiffness, scaled with the ``hgfactor_w`` of Quad4R, is measured by
+:func:`test_hinged_roof_hourglass_sensitivity`, against Tria3DSG, which has
+no hourglass control, and against the shallow-shell Kirchhoff solution of
+:func:`ritz_roof_WC`. The hourglass stiffness that suits a problem depends on
+the problem; the default is kept.
 """
 import sys
 sys.path.append('..')
 
 import numpy as np
 import pytest
+from scipy.sparse.linalg import spsolve
 
 from pyfe3d.beamprop import BeamProp
 from pyfe3d.shellprop_utils import isotropic_plate
 from pyfe3d import (BeamC, BeamCData, BeamCProbe, BeamLR, BeamLRData,
-                    BeamLRProbe, Quad4R, Quad4RData, Quad4RProbe, DOF)
+                    BeamLRProbe, Quad4R, Quad4RData, Quad4RProbe, Tria3DSG,
+                    Tria3DSGData, Tria3DSGProbe, DOF)
 
+from ritz import vecf, vecfxi, vecfxixi
 from test_solver_nonlinear_static import Model
 
 # NOTE Fig. 3a of Sze et al. (2004)
@@ -264,35 +279,54 @@ def test_cantilever_end_moment_beams_membrane_locking(name):
     assert errors[2] < 0.015
 
 
-def hinged_roof(n=16, h=12.7):
+def hinged_roof(n=16, h=12.7, element='Quad4R', hgfactor_w=1.,
+                shear_factor=1.):
     r"""Quarter of the hinged cylindrical roof of Fig. 9a of Sze et al.
-    (2004) meshed with ``n x n`` Quad4R elements
+    (2004) meshed with ``n x n`` Quad4R elements, or ``2 x n x n`` Tria3DSG
+    elements
 
     The axis of the cylinder is along X, the quarter covers ``0 <= X <= L``
     and ``0 <= theta <= 0.1``, the point C at ``X = 0, theta = 0``. The
     reference load is ``P_max`` on the whole roof, a quarter of it on the
-    quarter.
+    quarter. ``hgfactor_w`` multiplies the transverse hourglass stiffness of
+    Quad4R, ``1.`` being the default of Quad4R; ``shear_factor`` multiplies
+    the transverse shear stiffnesses ``A44``, ``A45`` and ``A55``, e.g.
+    ``100.`` to approach the Kirchhoff solution of :func:`ritz_roof_WC`.
 
     Returns the :class:`Model`, the mask of the free degrees-of-freedom and
     the index of the degree-of-freedom of the deflection ``W`` at C.
     """
     R, L, theta = ROOF['R'], ROOF['L'], ROOF['theta']
     prop = isotropic_plate(thickness=h, E=ROOF['E'], nu=ROOF['nu'])
+    prop.A44 *= shear_factor
+    prop.A45 *= shear_factor
+    prop.A55 *= shear_factor
     Xs, thetas = np.meshgrid(np.linspace(0, L, n + 1),
                              np.linspace(0, theta, n + 1), indexing='ij')
     Xs = Xs.flatten()
     thetas = thetas.flatten()
     x = np.vstack((Xs, R*np.sin(thetas), R*np.cos(thetas))).T.flatten()
     nids = np.arange((n + 1)**2).reshape(n + 1, n + 1)
-    data = Quad4RData()
-    probe = Quad4RProbe()
+    quads = zip(nids[:-1, :-1].flatten(), nids[1:, :-1].flatten(),
+                nids[1:, 1:].flatten(), nids[:-1, 1:].flatten())
+    if element == 'Quad4R':
+        cls, data, probe = Quad4R, Quad4RData(), Quad4RProbe()
+        conn = list(quads)
+        elem_kwargs = dict(hgfactor_w=hgfactor_w)
+    elif element == 'Tria3DSG':
+        cls, data, probe = Tria3DSG, Tria3DSGData(), Tria3DSGProbe()
+        conn = []
+        for n1, n2, n3, n4 in quads:
+            conn += [(n1, n2, n3), (n1, n3, n4)]
+        elem_kwargs = None
+    else:
+        raise ValueError(element)
     elements = []
-    for k, (n1, n2, n3, n4) in enumerate(zip(
-            nids[:-1, :-1].flatten(), nids[1:, :-1].flatten(),
-            nids[1:, 1:].flatten(), nids[:-1, 1:].flatten())):
-        elem = Quad4R(probe)
-        elem.n1, elem.n2, elem.n3, elem.n4 = n1, n2, n3, n4
-        elem.c1, elem.c2, elem.c3, elem.c4 = DOF*n1, DOF*n2, DOF*n3, DOF*n4
+    for k, nodes in enumerate(conn):
+        elem = cls(probe)
+        for i, nid in enumerate(nodes):
+            setattr(elem, 'n%d' % (i + 1), nid)
+            setattr(elem, 'c%d' % (i + 1), DOF*nid)
         elem.init_k_KC0 = k*data.KC0_SPARSE_SIZE
         elem.init_k_KCNL = k*data.KCNL_SPARSE_SIZE
         elem.init_k_KG = k*data.KG_SPARSE_SIZE
@@ -314,20 +348,100 @@ def hinged_roof(n=16, h=12.7):
     dofC = DOF*nids[0, 0] + 2
     fext = np.zeros(N)
     fext[dofC] = -ROOF['Pmax']/4
-    model = Model(elements, data, prop, x, N, fext)
+    model = Model(elements, data, prop, x, N, fext, elem_kwargs=elem_kwargs)
     return model, bu, dofC
+
+
+def linear_roof_WC(n=16, h=12.7, element='Quad4R', hgfactor_w=1.,
+                   shear_factor=1.):
+    r"""Linear deflection ``-W_C`` of :func:`hinged_roof` under ``P_max``"""
+    model, bu, dofC = hinged_roof(n, h, element, hgfactor_w, shear_factor)
+    u = np.zeros(model.N)
+    u[bu] = spsolve(model.KC0[bu, :][:, bu].tocsc(), model.fext[bu])
+    return -u[dofC]
+
+
+def ritz_roof_WC(m=20, h=12.7):
+    r"""Linear deflection ``-W_C`` under ``P_max`` of the quarter of the roof
+    of :func:`hinged_roof` with the shallow-shell (Donnell-Marguerre)
+    Kirchhoff theory and a Ritz method
+
+    The quarter is the rectangle ``0 <= x <= L``, ``0 <= y <= b`` of the
+    developed surface, ``b = R*theta``, with the membrane strains ``u_x``,
+    ``v_y + w/R`` and ``u_y + v_x``, the curvatures ``-w_xx``, ``-w_yy`` and
+    ``-2*w_xy``, and ``w`` positive outwards. Each of ``u``, ``v`` and ``w``
+    is approximated with the products of ``m`` functions of
+    :func:`ritz.vecf` in ``x`` and in ``y``, without those that violate the
+    boundary conditions: symmetry at ``x = 0`` (``u = w_x = 0``) and at ``y =
+    0`` (``v = w_y = 0``), hinged edge at ``y = b`` (``u = v = w = 0``), free
+    edge at ``x = L``. The integrals are evaluated with a Gauss-Legendre
+    quadrature of 200 points in each direction, exact for the polynomial
+    integrands. The solution has no transverse shear deformation and is
+    independent of the finite elements of pyfe3d.
+    """
+    R, L, E, nu = ROOF['R'], ROOF['L'], ROOF['E'], ROOF['nu']
+    b = R*ROOF['theta']
+    xi, weights = np.polynomial.legendre.leggauss(200)
+
+    def basis(flags, a):
+        F = [vecf(m, xi, *flags).T, vecfxi(m, xi, *flags).T*(2/a),
+             vecfxixi(m, xi, *flags).T*(2/a)**2]
+        # NOTE the functions removed by the flags are identically zero
+        keep = np.abs(F[0]).sum(axis=0) + np.abs(F[1]).sum(axis=0) > 1e-14
+        return [Fi[:, keep] for Fi in F], weights*a/2, keep
+
+    # NOTE flags of vecf: translation and rotation at xi = -1 (x = 0 or
+    #      y = 0) and at xi = +1 (x = L or y = b), 1 free and 0 restrained
+    flags = {'u': ((0, 1, 1, 1), (1, 1, 0, 1)),
+             'v': ((1, 1, 1, 1), (0, 1, 0, 1)),
+             'w': ((1, 0, 1, 1), (1, 0, 0, 1))}
+    B = {field: basis(fx, L) + basis(fy, b)
+         for field, (fx, fy) in flags.items()}
+    A = E*h/(1 - nu**2)*np.array([[1, nu, 0], [nu, 1, 0],
+                                  [0, 0, (1 - nu)/2]])
+    D = A*h**2/12
+    # NOTE each strain component as a sum of (field, order of the derivative
+    #      in x, order of the derivative in y, coefficient)
+    membrane = [[('u', 1, 0, 1.)], [('v', 0, 1, 1.), ('w', 0, 0, 1/R)],
+                [('u', 0, 1, 1.), ('v', 1, 0, 1.)]]
+    bending = [[('w', 2, 0, -1.)], [('w', 0, 2, -1.)], [('w', 1, 1, -2.)]]
+    fields = ['u', 'v', 'w']
+    size = {f: B[f][0][0].shape[1]*B[f][3][0].shape[1] for f in fields}
+    offset = dict(zip(fields, np.cumsum([0] + [size[f] for f in fields])))
+    K = np.zeros((sum(size.values()), sum(size.values())))
+    for ops, C in ((membrane, A), (bending, D)):
+        for s in range(3):
+            for t in range(3):
+                if C[s, t] == 0:
+                    continue
+                for fa, pa, qa, ca in ops[s]:
+                    for fb, pb, qb, cb in ops[t]:
+                        Fxa, wx, _, Fya, wy, _ = B[fa]
+                        Fxb, _, _, Fyb, _, _ = B[fb]
+                        Ix = (Fxa[pa]*wx[:, None]).T @ Fxb[pb]
+                        Iy = (Fya[qa]*wy[:, None]).T @ Fyb[qb]
+                        K[offset[fa]:offset[fa] + size[fa],
+                          offset[fb]:offset[fb] + size[fb]] += (
+                              C[s, t]*ca*cb*np.kron(Ix, Iy))
+    fx, fy = flags['w']
+    phiC = np.kron(vecf(m, -1., *fx)[B['w'][2]],
+                   vecf(m, -1., *fy)[B['w'][5]])
+    f = np.zeros(K.shape[0])
+    f[offset['w']:] = -ROOF['Pmax']/4*phiC
+    c = np.linalg.solve(K, f)
+    return -phiC @ c[offset['w']:]
 
 
 def run_hinged_roof(n=16, h=12.7, load_factor=1.2, initialInc=0.05,
                     maxInc=0.05, NL_method='arc_length_crisfield',
-                    **kwargs):
+                    element='Quad4R', hgfactor_w=1., **kwargs):
     r"""Non-linear analysis of :func:`hinged_roof` up to ``load_factor``
     times ``P_max``, by default with Crisfield's arc-length method
 
     Returns ``P/P_max`` and ``-W_C`` of the unloaded state and of the
     converged increments.
     """
-    model, bu, dofC = hinged_roof(n, h)
+    model, bu, dofC = hinged_roof(n, h, element, hgfactor_w)
     model.fext *= load_factor
     an = model.analysis(bu, NL_method=NL_method, initialInc=initialInc,
                         maxInc=maxInc, **kwargs)
@@ -362,7 +476,8 @@ def test_hinged_roof_thick():
 
     The limit loads agree within 1.5 %, the load at a given deflection
     within 0.07 P_max along the path; pyfe3d is stiffer at the start of the
-    path, about 9 % at the first point of Table 9a.
+    path, about 9 % at the first point of Table 9a, see
+    :func:`test_hinged_roof_hourglass_sensitivity`.
     """
     P, W = run_hinged_roof(n=8)
     P_calc = compare_with_table_9a(P, W)
@@ -402,3 +517,40 @@ def test_hinged_roof_thin_snap_back():
           % (Pmax, Pmin, Pmax_ref, Pmin_ref))
     assert abs(Pmax - Pmax_ref) < 0.01*Pmax_ref
     assert -0.02 < Pmin - Pmin_ref < -0.01
+
+
+def test_hinged_roof_hourglass_sensitivity():
+    r"""Linear deflection ``-W_C`` of the 12.7 thick roof under ``P_max``
+    against the transverse hourglass stiffness of Quad4R, ``hgfactor_w``
+    times the default, with 32x32 meshes
+
+    The deflection grows monotonically as ``hgfactor_w`` decreases from 1 to
+    0.002, and with the default the Quad4R mesh is more than 5 % stiffer
+    than the Tria3DSG mesh, which has no hourglass control. With the
+    transverse shear stiffnesses multiplied by 100, close to the Kirchhoff
+    theory, Tria3DSG agrees within 0.5 % with the shallow-shell Kirchhoff
+    solution of :func:`ritz_roof_WC`, converged within 0.02 %, Quad4R with
+    the default is more than 5 % stiffer and approaches it as
+    ``hgfactor_w`` decreases. The values of ``hgfactor_w`` measure the
+    sensitivity of this problem; they are not recommendations.
+    """
+    W_ritz = [ritz_roof_WC(m) for m in (15, 20)]
+    hgs = [1., 0.1, 0.01, 0.002]
+    W_tria = linear_roof_WC(32, element='Tria3DSG')
+    W_quad = [linear_roof_WC(32, hgfactor_w=hg) for hg in hgs]
+    W_tria_K = linear_roof_WC(32, element='Tria3DSG', shear_factor=100.)
+    W_quad_K = [linear_roof_WC(32, hgfactor_w=hg, shear_factor=100.)
+                for hg in hgs]
+    print('-W_C, Ritz Kirchhoff: %.4f (m = 15), %.4f (m = 20)' % tuple(W_ritz))
+    print('-W_C, 32x32 Tria3DSG: %.4f; transverse shear x100: %.4f'
+          % (W_tria, W_tria_K))
+    for hg, W, W_K in zip(hgs, W_quad, W_quad_K):
+        print('-W_C, 32x32 Quad4R, hgfactor_w = %g: %.4f; transverse shear '
+              'x100: %.4f' % (hg, W, W_K))
+    assert abs(W_ritz[0]/W_ritz[1] - 1) < 2e-4
+    assert np.all(np.diff(W_quad) > 0)
+    assert np.all(np.diff(W_quad_K) > 0)
+    assert W_tria/W_quad[0] - 1 > 0.05
+    assert abs(W_tria_K/W_ritz[1] - 1) < 0.005
+    assert 1 - W_quad_K[0]/W_ritz[1] > 0.05
+    assert abs(W_quad_K[-1]/W_ritz[1] - 1) < 0.005
