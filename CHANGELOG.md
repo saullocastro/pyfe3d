@@ -2,6 +2,10 @@
 
 ## 0.11.0 (unreleased)
 
+### Python versions
+
+- Python 3.9 is no longer supported, it reached its end of life in October 2025: Python 3.10 or newer is required, and the tests and wheels cover Python 3.10 to 3.14.
+
 ### Non-linear static solvers in `pyfe3d.solver`
 
 `pyfe3d.solver` becomes a package; every import of the previous module keeps
