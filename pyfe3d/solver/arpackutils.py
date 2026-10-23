@@ -10,8 +10,7 @@ returns wrong eigenpairs, without any error, or raises ``ArpackError -8``,
 whenever its number of Lanczos vectors is ``ncv > 32``, e.g. with SciPy's
 default ``ncv = 2 k + 1`` for ``k >= 16`` eigenpairs. MKL 2025.0.1 or newer
 is not affected, neither is :func:`scipy.sparse.linalg.eigs`. The detection
-and the cap are those of structsolve [1]_, ported such that this package
-keeps depending only on NumPy and SciPy.
+and the cap depend only on NumPy and SciPy.
 
 :func:`capped_eigsh` keeps ``ncv <= 32`` when :func:`arpack_max_ncv` says so,
 computing more than 15 eigenpairs in several calls with a deflation of the
@@ -37,11 +36,6 @@ Intel MKL 2024.2.0 to 2025.0.0 returns wrong eigenvectors for matrices
 larger than 32 x 32, hence the wrong eigenpairs whenever ``ncv > 32``. The
 non-symmetric drivers of :func:`scipy.sparse.linalg.eigs` do not call
 ``dsteqr``.
-
-References
-----------
-.. [1] Castro, S. G. P., structsolve,
-   https://github.com/saullocastro/structsolve
 
 """
 import contextlib
