@@ -694,3 +694,92 @@ def test_ziegler_no_divergence():
         return
     finite = np.isfinite(eigvals)
     assert np.all(np.abs(eigvals[finite]) > 1e6*P_flutter)
+
+
+def ziegler_decoupled(extra=8):
+    r"""``K0`` and ``KF`` of Ziegler's double pendulum with ``extra``
+    decoupled degrees-of-freedom: ``K0^-1 KF`` has rank 1 and is nilpotent,
+    of norm 1/3"""
+    from scipy.sparse import block_diag as sparse_block_diag
+
+    k, l = 3., 0.5
+    K0 = sparse_block_diag([csr_matrix([[2*k, -k], [-k, k]]),
+                            diags(np.arange(1., extra + 1))], format='csc')
+    KF = sparse_block_diag([csr_matrix([[-l, l], [0., 0.]]),
+                            csr_matrix((extra, extra))], format='csr')
+    return K0, KF
+
+
+def test_eigs_shifted_roundoff_nu_are_null(monkeypatch):
+    r"""Regression test: when all the nu returned by eigs are round-off, here
+    those of SciPy 1.17.1 for Ziegler's double pendulum at s = 0, they are
+    all null, instead of null relative to the largest one only, which left
+    four spurious load multipliers of about +-1e33 that linear_buckling()
+    returned unless the parity check rejected them; eigs is replaced, such
+    that the test does not depend on the restarts of ARPACK"""
+    K0, KF = ziegler_decoupled()
+    nu = np.array([1.10e-33, -5.93e-34, 2.95e-34, -1.44e-34, 2.57e-49,
+                   -8.55e-50, 6.0e-51, -2.3e-51])
+
+    def eigs_roundoff(OP, k, **kwargs):
+        return nu[:k].astype(complex), np.eye(OP.shape[0], k, dtype=complex)
+
+    monkeypatch.setattr(eigen, 'eigs', eigs_roundoff)
+    for s in (0., 1e3):
+        lu = eigen._splu(K0 + s*KF)
+        mu, eigvecs, radius = eigen._eigs_shifted(K0, KF, s, 6, 0, lu)
+        assert mu.size == 0 and eigvecs.shape == (10, 0)
+        assert radius == np.inf
+    with pytest.raises(RuntimeError,
+                       match='shift 0: no finite load multiplier'):
+        linear_buckling(K0, KF, max_dense_size=0)
+
+
+@pytest.mark.parametrize('seed', range(8))
+def test_eigs_shift_search_ziegler_any_start(monkeypatch, seed):
+    r"""Ziegler's double pendulum, K0^-1 KF nilpotent: whatever the starting
+    vector and, with SciPy 1.17 or newer, the restart vectors of ARPACK,
+    which give round-off nu of 0, about 1e-33 or 1e-17 with SciPy 1.17.1,
+    the shift search finds no finite load multiplier"""
+    from pyfe3d.solver import arpackutils
+
+    def start_kwargs(n):
+        kwargs = {'v0': np.random.RandomState(seed).uniform(-1., 1., n)}
+        if arpackutils._arpack_takes_rng():
+            kwargs['rng'] = np.random.default_rng(seed)
+        return kwargs
+
+    monkeypatch.setattr(eigen, 'start_kwargs', start_kwargs)
+    K0, KF = ziegler_decoupled()
+    for s in (0., 1e3, 1e8):
+        lu = eigen._splu(K0 + s*KF)
+        mu, eigvecs, radius = eigen._eigs_shifted(K0, KF, s, 8, 0, lu)
+        assert mu.size == 0 and radius == np.inf
+    with pytest.raises(RuntimeError, match='no finite load multiplier'):
+        eigen._eigs_shift_search(K0, KF, 6, 0, 1e-3)
+
+
+def test_norm_estimate():
+    r"""_norm_estimate is between ||O v||/||v|| and ||O||_2, O = A^-1 KG,
+    and exact for the rank-one O of Ziegler's double pendulum, whatever the
+    number of degrees-of-freedom where KG is null"""
+    from pyfe3d.solver.arpackutils import start_vector
+
+    rng = np.random.default_rng(0)
+    for trial in range(10):
+        A = rng.standard_normal((15, 15)) + 15*np.eye(15)
+        KG = rng.standard_normal((15, 15))
+        KG[:, rng.permutation(15)[:10]] = 0.
+        O = np.linalg.solve(A, KG)
+        v = rng.uniform(-1., 1., 15)
+        est = eigen._norm_estimate(splu(csc_matrix(A)), csr_matrix(KG), v)
+        lower = np.linalg.norm(O @ v)/np.linalg.norm(v)
+        assert lower*(1 - 1e-12) <= est <= np.linalg.norm(O, 2)*(1 + 1e-12)
+    for extra in (8, 1000, 100000):
+        K0, KF = ziegler_decoupled(extra)
+        v = start_vector(extra + 2)
+        est = eigen._norm_estimate(splu(K0), KF, v)
+        np.testing.assert_allclose(est, 1/3, rtol=1e-12)
+        O_v = splu(K0).solve(KF @ v)
+        assert np.linalg.norm(O_v)/np.linalg.norm(v) < 0.2
+    assert eigen._norm_estimate(splu(K0), csr_matrix(KF.shape), v) == 0.

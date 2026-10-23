@@ -129,7 +129,8 @@ __all__ = ['DenseFallbackWarning', 'diagonal_preconditioner',
 #: An eigenvalue `\mu` of `[K_G]\{u\} = \mu [K]\{u\}` with `|\mu|` not
 #: larger than this fraction of the largest `|\mu|` is null, i.e. its load
 #: multiplier is infinite up to the round-off, e.g. at the
-#: degrees-of-freedom where `[K_G]` is null
+#: degrees-of-freedom where `[K_G]` is null; also the fraction of the scale
+#: of the null `\nu` of :func:`_eigs_shifted`
 NULL_MU_RTOL = 1.e-12
 #: The load multipliers of each sign are counted with the inertia of
 #: `[K] + s [K_G]` below the modulus `|s|`, this factor divided by the
@@ -1184,6 +1185,46 @@ def _det_sign(lu):
             * _permutation_parity(lu.perm_c))
 
 
+def _norm_estimate(lu, KG, v):
+    r"""Estimate from below of `\|[A]^{-1} [K_G]\|_2`, with `[A]` the matrix
+    factorized in ``lu``
+
+    Parameters
+    ----------
+    lu : SuperLU
+        Factorization of `[A]`.
+    KG : sparse_matrix
+        Matrix `[K_G]`, shape ``(n, n)``.
+    v : np.ndarray
+        Starting vector, shape ``(n,)``.
+
+    Returns
+    -------
+    norm : float
+        `\|[O]^H [O] \{v\}\|/\|[O] \{v\}\|`, with `[O] = [A]^{-1} [K_G]`, or
+        ``0.`` when `[O] \{v\} = 0`.
+
+    Notes
+    -----
+    One step of the power iteration of `[O]^H [O]`, whose largest
+    eigenvalue is `\|[O]\|_2^2`, with two solutions with ``lu``. The
+    estimate is not larger than `\|[O]\|_2` and, by the Cauchy-Schwarz
+    inequality `\|[O]\{v\}\|^2 = \{v\}^H [O]^H [O] \{v\} \le \|\{v\}\|
+    \|[O]^H [O] \{v\}\|`, not smaller than `\|[O]\{v\}\|/\|\{v\}\|`. The
+    vector `[O]\{v\}` is in the range of `[O]`, i.e. of `[A]^{-1} [K_G]`,
+    such that the estimate does not decrease with the number of
+    degrees-of-freedom where `[K_G]` is null, as `\|[O]\{v\}\|/\|\{v\}\|`
+    does.
+
+    """
+    y = _lu_solve(lu, KG @ v)
+    norm_y = np.linalg.norm(y)
+    if norm_y == 0:
+        return 0.
+    z = KG.conj().T @ lu.solve(np.ascontiguousarray(y), trans='H')
+    return float(np.linalg.norm(z)/norm_y)
+
+
 def _eigs_shifted(K, KG, s, k, tol, lu):
     r"""The ``k`` load multipliers nearest the shift ``s``, for real
     unsymmetric matrices
@@ -1205,29 +1246,51 @@ def _eigs_shifted(K, KG, s, k, tol, lu):
     -------
     mu, eigvecs : np.ndarray
         The eigenpairs, with `\mu = -1/\lambda`, sorted by
-        :func:`_general_eigenpairs`.
+        :func:`_general_eigenpairs`, empty when all the eigenvalues found
+        are null. The eigenvalues `\nu = -1/(\lambda - s)` with `|\nu| \le`
+        ``NULL_MU_RTOL`` times the largest of `\max |\nu|` and the estimate
+        of :func:`_norm_estimate` of the norm of `([K] + s [K_G])^{-1}
+        [K_G]` from the starting vector of ARPACK are null, i.e. infinite
+        load multipliers, and are not returned.
     radius : float
         `\max |\lambda - s|` of the returned load multipliers: all the load
         multipliers in the disc `|\lambda - s| <` ``radius`` are returned.
-        ``inf`` when a null `\nu` was returned, i.e. all the finite load
-        multipliers were found.
+        ``inf`` when a null `\nu` was found, i.e. all the finite load
+        multipliers were found, none when all the `\nu` are null.
 
     Notes
     -----
     With `\lambda = s + \delta`, `([K] + s[K_G] + \delta [K_G])\{u\} = 0`
-    gives the standard problem `([K] + s [K_G])^{-1} [K_G] \{u\} = \nu
-    \{u\}`, `\nu = -1/(\lambda - s)`, whose ``k`` eigenvalues of largest
-    `|\nu|` are found with :func:`scipy.sparse.linalg.eigs`. The eigenvalues
-    `|\nu| \le 10^{-12} \max |\nu|` are taken as null, i.e. infinite load
-    multipliers, e.g. of the null rows of `[K_G]`, and are not returned.
-    Then `\mu = \nu/(1 - s \nu)`.
+    gives the standard problem `[O] \{u\} = \nu \{u\}`, `[O] = ([K] + s
+    [K_G])^{-1} [K_G]`, `\nu = -1/(\lambda - s)`, whose ``k`` eigenvalues
+    of largest `|\nu|` are found with :func:`scipy.sparse.linalg.eigs`.
+    Then `\mu = \nu/(1 - s \nu)`. The eigenvalues `|\nu| \le \epsilon_0
+    \max(\max |\nu|, \|[O]\|)`, with `\epsilon_0` = ``NULL_MU_RTOL``, are
+    taken as null, e.g. those of the null rows of `[K_G]`.
+
+    The null `\nu` are found as round-off: each product with `[O]` is
+    computed with an error of the order of the machine precision times
+    `\|[O]\|`, and a null `\nu` comes out with a modulus up to this order,
+    or larger for a defective null eigenvalue. When `[O]` has non-null
+    eigenvalues, `\max |\nu|` is a scale of the round-off; when it has
+    none, e.g. when `[K]^{-1}[K_G]` is nilpotent as with the follower load
+    of Ziegler's double pendulum, all the `\nu` are round-off, e.g. about
+    `10^{-33}` or `10^{-17}` instead of 0 depending on the restarts of
+    ARPACK, and `\max |\nu|` is not a scale: the largest `\nu` would not be
+    null and their spurious load multipliers, about `10^{33}` or
+    `10^{17}`, would be returned. The norm `\|[O]\|` is a scale that does
+    not depend on the eigenvalues. The estimate is not larger than `\max
+    |\nu|` for a normal `[O]`, whose largest `|\nu|` is its norm, and both
+    scales then give the same null `\nu`.
 
     """
     n = K.shape[0]
     OP = LinearOperator((n, n), matvec=lambda x: _lu_solve(lu, KG @ x),
                         dtype=np.result_type(K.dtype, KG.dtype))
-    nu, eigvecs = eigs(OP, k=k, which='LM', tol=tol, **start_kwargs(n))
-    null = np.abs(nu) <= 1.e-12*np.abs(nu).max()
+    kwargs = start_kwargs(n)
+    nu, eigvecs = eigs(OP, k=k, which='LM', tol=tol, **kwargs)
+    scale = max(float(np.abs(nu).max()), _norm_estimate(lu, KG, kwargs['v0']))
+    null = np.abs(nu) <= NULL_MU_RTOL*scale
     if np.any(null):
         radius = np.inf
         nu = nu[~null]

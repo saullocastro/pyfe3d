@@ -67,6 +67,22 @@ depending on structsolve:
   of about `1e16` at random. New `pyfe3d.solver.arpackutils.start_kwargs(n)`,
   the arguments `v0` and, when supported, `rng` with the seed `42`, used by
   every call of ARPACK.
+- `linear_buckling()` with unsymmetric matrices, sparse shift search: the
+  eigenvalues `nu` of `(K + s KG)^-1 KG` found by `eigs` at each shift are
+  null when `|nu| <= NULL_MU_RTOL max(max|nu|, ||(K + s KG)^-1 KG||)`, the
+  norm estimated with one step of the power iteration from the starting
+  vector of ARPACK, instead of `|nu| <= 1e-12 max|nu|`. When `K^-1 KG` has
+  no non-null eigenvalue, e.g. nilpotent as with the follower load of
+  Ziegler's double pendulum, all the `nu` are round-off and `max|nu|` is
+  not a scale: spurious load multipliers were found, and
+  `linear_buckling(max_dense_size=0)` raised the expected `RuntimeError`
+  only when the parity check rejected them, depending on the platform and,
+  with SciPy < 1.17, whose ARPACK keeps its restart seed from one call to
+  the next, on the calls made before in the same process (SciPy 1.15.3: a
+  load multiplier of `3e16` to `3e18` returned in 43 of 200 successive
+  calls). They are now all null, and the shift search raises "no finite
+  load multiplier was found". New `pyfe3d.solver.eigen._norm_estimate`.
+  The same rule as structsolve.
 
 ### Derivation scripts
 
