@@ -433,6 +433,86 @@ def test_make_orthotropic_LP_transverse_shear():
     assert np.allclose(prop_2.Abar_ts, prop.Abar_ts)
 
 
+def test_make_balanced_zeroes_only_vanishing_terms():
+    # in a balanced laminate only the integrals of z^0 of the odd q16L, q26L
+    # and q45L vanish, for any position of the +theta and -theta plies
+    laminaprop = (142.5e9, 8.7e9, 0.28, 5.1e9, 5.1e9, 3.0e9)
+    plyt = 0.125e-3
+    names = (['%s%s' % (m, ij) for m in 'ABD'
+              for ij in ('11', '12', '16', '22', '26', '66')]
+             + ['A44', 'A45', 'A55', 'Abar44', 'Abar45', 'Abar55',
+                'Abarbar44', 'Abarbar45', 'Abarbar55', 'h', 'intrho',
+                'intrhoz2'])
+    modes = ('rohwer', 'vlachoutsis', 'whitney', 'birman_bert',
+             'thickness_shear', 'constant', None)
+    stacks = ([30, -30, 0], [45, 0, -45, 90], [45, -45],
+              [30, -30, 0, 0, -30, 30])
+    for stack in stacks:
+        symmetric = stack == stack[::-1]
+        for mode in modes + (('chow',) if symmetric else ()):
+            zeroed = ['A16', 'A26', 'Abar45', 'Abarbar45']
+            if mode != 'rohwer':
+                zeroed.append('A45')
+            # the integrated values are round-off, also with an offset
+            for offset in (0.37e-3, 0.):
+                prop = laminated_plate(stack, plyt=plyt,
+                        laminaprop=laminaprop, rho=1600., offset=offset,
+                        shear_correction=mode)
+                for name in zeroed:
+                    ref = prop.A11 if name[1] in '12' else prop.Abar44
+                    assert abs(getattr(prop, name)) < 1e-14*abs(ref)
+            before = {name: getattr(prop, name) for name in names}
+            prop.make_balanced()
+            for name in names:
+                if name in zeroed:
+                    assert getattr(prop, name) == 0
+                else:
+                    assert getattr(prop, name) == before[name]
+    # antisymmetric [+45/-45]: B16 and B26 do not vanish and are kept
+    prop = laminated_plate([45, -45], plyt=plyt, laminaprop=laminaprop)
+    z = -prop.h/2 + plyt*np.arange(3)
+    prop.make_balanced()
+    for attr, name in (('B16', 'q16L'), ('B26', 'q26L')):
+        ref = sum(getattr(ply, name)*(z[k+1]**2 - z[k]**2)/2
+                  for k, ply in enumerate(prop.plies))
+        assert abs(ref) > 1e-3*prop.A11*prop.h
+        assert np.isclose(getattr(prop, attr), ref, rtol=1e-12, atol=0)
+    # 'rohwer': A45 does not vanish for [+30/-30/0]s, even with g13 = g23,
+    # and the stiffness in the element coordinate system is not modified
+    prop = laminated_plate([30, -30, 0, 0, -30, 30], plyt=plyt,
+                           laminaprop=(142.5e9, 8.7e9, 0.28, 5.1e9, 5.1e9,
+                                       5.1e9))
+    A45 = prop.A45
+    Ats30 = np.array(prop.calc_Ats_element(30.))
+    assert prop.Abar45 == 0
+    assert abs(A45) > 0.1*prop.Abar44
+    prop.make_balanced()
+    assert prop.A45 == A45
+    assert np.array_equal(np.array(prop.calc_Ats_element(30.)), Ats30)
+
+
+def test_make_balanced_LP():
+    # antisymmetric [+45/-45]: xiA2, xiA4 and xiAts2 vanish, xiB2 does not
+    laminaprop = (142.5e9, 8.7e9, 0.28, 5.1e9, 5.1e9, 3.0e9)
+    prop = laminated_plate([45, -45], plyt=0.125e-3, laminaprop=laminaprop)
+    matlamina = prop.plies[0].matlamina
+    lp = prop.calc_lamination_parameters()
+    for name in ('xiA2', 'xiA4', 'xiAts2'):
+        assert abs(getattr(lp, name)) < 1e-14
+    xiB2 = lp.xiB2
+    assert abs(xiB2) > 0.1
+    make_balanced_LP(lp)
+    for name in ('xiA2', 'xiA4', 'xiAts2'):
+        assert getattr(lp, name) == 0
+    assert lp.xiB2 == xiB2
+    prop.make_balanced()
+    prop_2 = shellprop_from_LaminationParameters(prop.h, matlamina, lp)
+    assert np.allclose(prop_2.A, prop.A)
+    assert np.allclose(prop_2.B, prop.B)
+    assert np.allclose(prop_2.D, prop.D)
+    assert np.allclose(prop_2.Abar_ts, prop.Abar_ts)
+
+
 def test_make_smeared():
     prop = laminated_plate([0, 45, 90], plyt=0.000125,
                            laminaprop=(71e9, 7e9, 0.28, 7e9, 7e9, 7e9))

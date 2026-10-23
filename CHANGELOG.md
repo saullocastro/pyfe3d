@@ -98,6 +98,17 @@ New:
 - `GradABD.calc_LP_grad` left the derivatives of `A66`, `B66` and `D66` with
   respect to the lamination parameters at zero. New `tests/test_gradabd.py`,
   against central finite differences.
+- `ShellProp.make_balanced()` set to zero `B16` and `B26`, which do not
+  vanish in a balanced laminate in general, e.g. in an antisymmetric
+  `[+45/-45]` laminate, and left `Abar45`, `Abarbar45` and `A45`, which
+  vanish in every balanced laminate. It now sets to zero only the terms that
+  vanish for any position of the `+theta` and `-theta` plies, the integrals
+  of `z^0` of `q16L`, `q26L` and `q45L`: `A16`, `A26`, `Abar45`,
+  `Abarbar45` (unless `nan`), and `A45` except with
+  `shear_correction='rohwer'`, whose `A45` does not vanish in general, e.g.
+  for a `[+30/-30/0]s` laminate. `B16`, `B26`, `D16` and `D26` keep the
+  values of `calc_constitutive_matrix()`. `make_balanced_LP()` also sets
+  `xiAts2` to zero, as `Abar45`. New tests in `tests/test_shellprop.py`.
 - The curved beam frequency tests clamped an extra node with fine meshes;
   the end nodes are now selected by index.
 - `linear_buckling()`, `natural_frequency()` and

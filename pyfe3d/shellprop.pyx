@@ -2717,8 +2717,13 @@ cdef class ShellProp:
     cpdef void make_balanced(ShellProp self):
         r"""Make a balanced laminate
 
-        The attributes `A_{16}`, `A_{26}`, `B_{16}`, `B_{26}` are set to zero
-        to make a balanced laminate.
+        The attributes ``A16``, ``A26``, ``Abar45`` and ``Abarbar45``, and
+        ``A45`` unless ``shear_correction='rohwer'``, are set to zero to make
+        a balanced laminate. ``Abarbar45`` is kept when it is ``nan``, i.e.
+        when a ply has a singular `C_s^{(k)}`. The other attributes are not
+        modified, among them ``B16``, ``B26``, ``D16`` and ``D26``, which do
+        not vanish in a balanced laminate in general, e.g. ``B16`` and
+        ``B26`` of an antisymmetric `[+45/-45]` laminate.
 
         Raises
         ------
@@ -2727,18 +2732,51 @@ cdef class ShellProp:
 
         Notes
         -----
-        `q_{16L}` and `q_{26L}` are odd functions of the ply angle, see
-        :meth:`.Lamina.rebuild`, such that `A_{16} = A_{26} = 0` in a
-        balanced laminate, i.e. with a ply at `-\theta` for every ply at
-        `+\theta`, of the same material and thickness.
+        In a balanced laminate, for every ply at `+\theta` there is a ply at
+        `-\theta` of the same material and thickness, anywhere in the stack.
+        `q_{16L}`, `q_{26L}` and `q_{45L}` are odd functions of the ply angle
+        and the other `q_{ijL}` are even, see :meth:`.Lamina.rebuild`. The
+        contributions of such a pair of plies, of thickness `t` and with
+        bottom faces at `z_a` and `z_b`, to the integral of `q_{16L} z^n`
+        add up to
+
+        .. math::
+
+            q_{16L}(\theta) \int_{z_a}^{z_a + t} z^n dz + q_{16L}(-\theta)
+            \int_{z_b}^{z_b + t} z^n dz = q_{16L}(\theta) \left(
+            \int_{z_a}^{z_a + t} z^n dz - \int_{z_b}^{z_b + t} z^n dz
+            \right)
+
+        which vanishes for any `z_a`, `z_b` only for `n = 0`, see
+        :meth:`.calc_constitutive_matrix`. Therefore, `A_{16}`, `A_{26}` and
+        `\bar{A}_{45} = \sum_k q_{45L}^{(k)} h_k` vanish in every balanced
+        laminate, whereas the integrals with `n \ge 1`, `B_{16}`, `B_{26}`,
+        `D_{16}` and `D_{26}`, are proportional to `z_a - z_b` and depend on
+        the positions of the plies. The determinant of `C_s^{(k)}` being
+        even in `\theta`, the off-diagonal term of `(C_s^{(k)})^{-1}` is odd,
+        its thickness integral vanishes and so does `\bar{\bar{A}}_{45}`.
+        ``A45`` is proportional to ``Abar45`` for every ``shear_correction``
+        other than ``'rohwer'``, see :meth:`.calc_transverse_shear_stiffness`,
+        and vanishes with it. With ``'rohwer'``, ``A45`` follows from the
+        through-thickness distribution of the transverse shear stresses,
+        which depends on the positions of the plies and on the whole ABD
+        matrix, and does not vanish in general, e.g. for a `[+30/-30/0]_s`
+        laminate, even with ``g13 = g23``, i.e. `q_{45L} = 0` in every ply;
+        it is not modified, nor are the coefficients used in the element
+        coordinate system, see :meth:`.calc_Ats_element`.
 
         """
         if self.offset != 0.:
             raise RuntimeError('Laminates with offset cannot be made balanced!')
         self.A16 = 0.
         self.A26 = 0.
-        self.B16 = 0.
-        self.B26 = 0.
+
+        # transverse shear
+        self.Abar45 = 0.
+        if not np.isnan(self.Abarbar45):
+            self.Abarbar45 = 0.
+        if self.shear_correction != 'rohwer':
+            self.A45 = 0.
 
 
     cpdef void make_orthotropic(ShellProp self):
@@ -2968,8 +3006,10 @@ cdef class ShellProp:
 cpdef LaminationParameters make_balanced_LP(LaminationParameters lp):
     r"""Make balanced lamination parameters
 
-    The lamination parameters `\xi_{A2}` and `\xi_{A4}` are set to null to
-    make a balanced laminate.
+    The lamination parameters `\xi_{A2}`, `\xi_{A4}` and `\xi_{A_{ts}2}` are
+    set to null to make a balanced laminate. The other lamination parameters
+    are not modified, among them `\xi_{B2}`, `\xi_{B4}`, `\xi_{D2}` and
+    `\xi_{D4}`, which do not vanish in a balanced laminate in general.
 
     The object ``lp`` is modified in place and returned.
 
@@ -2990,14 +3030,19 @@ cpdef LaminationParameters make_balanced_LP(LaminationParameters lp):
     Notes
     -----
     In a balanced laminate, with a ply at `-\theta` for every ply at
-    `+\theta` of the same thickness, the integrals of `\sin 2\theta` and
-    `\sin 4\theta` through the thickness vanish, see
-    :meth:`.ShellProp.calc_lamination_parameters`, and so do `A_{16}` and
-    `A_{26}`.
+    `+\theta` of the same material and thickness, anywhere in the stack, the
+    thickness integrals of the odd functions `\sin 2\theta` and `\sin
+    4\theta` vanish, see :meth:`.ShellProp.calc_lamination_parameters`, and
+    so do `A_{16}`, `A_{26}` and `\bar{A}_{45}`, see
+    :meth:`.ShellProp.make_balanced`. The integrals weighted by `\bar{z}` and
+    `\bar{z}^2`, `\xi_{B2}`, `\xi_{B4}`, `\xi_{D2}` and `\xi_{D4}`, depend on
+    the positions of the plies, e.g. `\xi_{B2} \ne 0` for an antisymmetric
+    `[+45/-45]` laminate.
 
     """
     lp.xiA2 = 0
     lp.xiA4 = 0
+    lp.xiAts2 = 0
     return lp
 
 
