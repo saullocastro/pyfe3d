@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.10.5 (unreleased)
+## 0.11.0 (unreleased)
 
 ### Non-linear static solvers in `pyfe3d.solver`
 

@@ -22,7 +22,7 @@ in any platform, including the Google Colab environment.
 Citing this library
 -------------------
 
-Saullo G. P. Castro. (2026). General-purpose finite element solver based on Python and Cython (Version 0.10.5). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
+Saullo G. P. Castro. (2026). General-purpose finite element solver based on Python and Cython (Version 0.11.0). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
 
 
 Documentation
@@ -77,7 +77,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the details of each version.
 
 | Main versions | Changes |
 | - | - |
-| 0.10.5 | Non-linear static solvers in `pyfe3d.solver` (Newton-Raphson, arc-length methods of Riks and Crisfield, Crisfield's convergence criterion as the default), without depending on structsolve; fixed sign of the shear parameters of BeamC; fixed piston-theory slope of Quad4 and Quad4R; fixed `MatLamina` `c11` and `q31` and the 66 row of `GradABD.calc_LP_grad`; `pyfe3d.shellprop` mirrors `composites.Laminate` (breaking: `force_*` renamed `make_*`, `get_transf_matrix_displ_to_lamina`; new shear corrections, `make_smeared`, a posteriori transverse shear); derivation scripts in `theory/`. |
+| 0.11.0 | Non-linear static solvers in `pyfe3d.solver` (Newton-Raphson, arc-length methods of Riks and Crisfield, Crisfield's convergence criterion as the default), without depending on structsolve; fixed sign of the shear parameters of BeamC; fixed piston-theory slope of Quad4 and Quad4R; fixed `MatLamina` `c11` and `q31` and the 66 row of `GradABD.calc_LP_grad`; `pyfe3d.shellprop` mirrors `composites.Laminate` (breaking: `force_*` renamed `make_*`, `get_transf_matrix_displ_to_lamina`; new shear corrections, `make_smeared`, a posteriori transverse shear); derivation scripts in `theory/`. |
 | 0.10.0 | New Tria3DSG element with discrete shear gap transverse shear, the recommended triangle; physics-based drilling stiffness (Allman, Hughes-Brezzi) as the default, with the K6ROT penalty kept through `drilling_model`; fixed lost K6ROT coefficient; new `pyfe3d.solver` module for linear buckling and natural frequencies; speedup with Cython and compiler flags. |
 | 0.9.0 | Shear correction factors as per Rohwer and Vlachoutsis. |
 | 0.8.0 | KCNL matrix for all elements, with more accurate nonlinear analyses; fixed KC0 and KG for beams; fixed KC0 for Tria3R. |
