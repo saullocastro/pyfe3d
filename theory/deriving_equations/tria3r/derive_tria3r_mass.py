@@ -35,19 +35,15 @@ print(A)
 points = [0]*3
 
 
-#NOTE 3-point Gauss-Legendre quadrature for KG
-#GAUSSIAN QUADRATURE FORMULAS FOR TRIANGLES
-#G. R. COWPER
-#https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620070316
+#NOTE three-point rule of degree of precision 2, first row of Table I in
+#     Cowper, G. R., Gaussian quadrature formulas for triangles, IJNME
+#     7(3), 405-408, 1973, doi:10.1002/nme.1620070316
 weight = 0.333333333333333333333333333333333333333333333
 points[0] = 0.66666666666666666666666666666666666666666667
 points[1] = 0.16666666666666666666666666666666666666666667
 points[2] = 0.16666666666666666666666666666666666666666667
 
-#NOTE 3-point Gauss-Legendre quadrature for KG
-#GAUSSIAN QUADRATURE FORMULAS FOR TRIANGLES
-#G. R. COWPER
-#https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620070316
+#NOTE one-point rule at the centroid
 weight = 1.
 points[0] = 0.333333333333333333333333333333333333333333333
 points[1] = 0.333333333333333333333333333333333333333333333

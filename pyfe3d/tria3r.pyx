@@ -198,8 +198,9 @@ drilling models.
 Two quadrature choices matter. Because the derivatives of the bubbles are
 linear in the area coordinates, the drilling columns of `\pmb{\tilde B}_m`
 vary linearly, and the terms quadratic in them are integrated with the
-three-point rule of Cowper [10]_, the same one the element already used for
-its drilling terms. A single point at the centroid would leave those terms
+three-point rule of degree of precision 2, first row of Table I in Cowper
+[10]_, the same one the element already used for its drilling terms. A
+single point at the centroid would leave those terms
 unsampled and would give the element five zero eigenvalues over its nine
 in-plane degrees-of-freedom instead of three. The Hughes-Brezzi term itself
 is integrated with a single point at the centroid, following Ibrahimbegovic
@@ -518,8 +519,9 @@ cdef void allman_delta_Ke(double *Nx, double *Ny, double *xe, double area,
         Bb[2*18 + 6*i + 3] = -Nx[i]         # kxy = ry,y - rx,x
         Bb[2*18 + 6*i + 4] = Ny[i]
 
-    # NOTE three-point rule of Cowper, the same one already used for the
-    #      drilling terms of the unenriched element
+    # NOTE three-point rule of degree of precision 2, first row of Table I
+    #      in Cowper (1973), the same one already used for the drilling
+    #      terms of the unenriched element
     points[0] = 0.66666666666666666666666666666666666666666667
     points[1] = 0.16666666666666666666666666666666666666666667
     points[2] = 0.16666666666666666666666666666666666666666667
@@ -1525,10 +1527,11 @@ cdef class Tria3R:
             KC0e1317 = 0
             KC0e1717 = 0
 
-            # NOTE 3-point Gauss-Legendre quadrature for KG
-            # GAUSSIAN QUADRATURE FORMULAS FOR TRIANGLES
-            # G. R. COWPER
-            # https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620070316
+            # NOTE three-point rule of degree of precision 2, first row of Table I
+            #      in Cowper, G. R., Gaussian quadrature formulas for triangles,
+            #      IJNME 7(3), 405-408, 1973, doi:10.1002/nme.1620070316: area
+            #      coordinates (2/3, 1/6, 1/6) and their permutations, weight 1/6
+            #      times detJ = 2*area, i.e. area/3
             wij = 0.5*0.333333333333333333333333333333333333333333333
             points[0] = 0.66666666666666666666666666666666666666666667
             points[1] = 0.16666666666666666666666666666666666666666667
@@ -1696,9 +1699,10 @@ cdef class Tria3R:
             K6ROT \cdot 10^{-6} A_{66} \int_A B_{drill}^\top B_{drill} dA,
             \qquad B_{drill} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}
 
-        is integrated with the three-point rule of Cowper [1]_, with the area
-        coordinates `(2/3, 1/6, 1/6)` and their permutations, each with the
-        weight ``area/3``. With ``drilling_model = 0`` this penalty is
+        is integrated with the three-point rule of degree of precision 2,
+        first row of Table I in Cowper [1]_, with the area coordinates
+        `(2/3, 1/6, 1/6)` and their permutations, each with the weight
+        ``area/3``. With ``drilling_model = 0`` this penalty is
         switched off, ``K6ROT`` being replaced by zero, and the physics-based
         drilling stiffness of :func:`.allman_delta_Ke` is added instead,
         rotated to global coordinates with `K_{g,mn} = r_{mi} K_{e,ij}
@@ -2955,10 +2959,11 @@ cdef class Tria3R:
             KC0e1317 = 0
             KC0e1717 = 0
 
-            # NOTE 3-point Gauss-Legendre quadrature for KG
-            # GAUSSIAN QUADRATURE FORMULAS FOR TRIANGLES
-            # G. R. COWPER
-            # https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620070316
+            # NOTE three-point rule of degree of precision 2, first row of Table I
+            #      in Cowper, G. R., Gaussian quadrature formulas for triangles,
+            #      IJNME 7(3), 405-408, 1973, doi:10.1002/nme.1620070316: area
+            #      coordinates (2/3, 1/6, 1/6) and their permutations, weight 1/6
+            #      times detJ = 2*area, i.e. area/3
             wij = 0.5*0.333333333333333333333333333333333333333333333
             points[0] = 0.66666666666666666666666666666666666666666667
             points[1] = 0.16666666666666666666666666666666666666666667
@@ -5470,10 +5475,11 @@ cdef class Tria3R:
         ``intrhoz`` and ``intrhoz2``. The drilling rotation `r_z` has no
         inertia. The schemes differ in how `h_{ij}` is integrated:
 
-        - ``mtype=0``: the three-point rule of Cowper [2]_, with the area
-          coordinates `(2/3, 1/6, 1/6)` and their permutations, each with the
-          weight `A_e/3`, which is exact, `h_{ii} = A_e/6` and `h_{ij} =
-          A_e/12`
+        - ``mtype=0``: the three-point rule of degree of precision 2, first
+          row of Table I in Cowper [2]_, with the area coordinates `(2/3,
+          1/6, 1/6)` and their permutations, each with the weight `A_e/3`,
+          which is exact for the quadratic `N_i N_j`, `h_{ii} = A_e/6` and
+          `h_{ij} = A_e/12`
         - ``mtype=1``: a single point at the centroid, `h_{ij} = A_e/9`
         - ``mtype=2``: the three vertices, each with the weight `A_e/3`,
           `h_{ii} = A_e/3` and `h_{ij} = 0`
@@ -5542,7 +5548,7 @@ cdef class Tria3R:
             c2 = self.c2
             c3 = self.c3
 
-            if mtype == 0: # M_cons consistent mass matrix, using two-point Gauss-Legendre quadrature
+            if mtype == 0: # M_cons consistent mass matrix, three-point rule of Cowper (1973), see below
                 k = self.init_k_M
                 Mr[k] = 0+c1
                 Mc[k] = 0+c1
@@ -6354,10 +6360,11 @@ cdef class Tria3R:
                 Mr[k] = 5+c3
                 Mc[k] = 5+c3
 
-                # NOTE 3-point Gauss-Legendre quadrature for KG
-                # GAUSSIAN QUADRATURE FORMULAS FOR TRIANGLES
-                # G. R. COWPER
-                # https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620070316
+                # NOTE three-point rule of degree of precision 2, first row of Table I
+                #      in Cowper, G. R., Gaussian quadrature formulas for triangles,
+                #      IJNME 7(3), 405-408, 1973, doi:10.1002/nme.1620070316: area
+                #      coordinates (2/3, 1/6, 1/6) and their permutations, weight 1/6
+                #      times detJ = 2*area, i.e. area/3
                 wij = 0.5*0.333333333333333333333333333333333333333333333
                 points[0] = 0.66666666666666666666666666666666666666666667
                 points[1] = 0.16666666666666666666666666666666666666666667
