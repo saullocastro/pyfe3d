@@ -90,11 +90,9 @@ rectangular.
 .. rubric:: Integration scheme
 
 The stiffness for the degrees of freedom `w`, `r_x` and `r_y` is based on the
-paper of Hughes et al. [1]_, where `r_x = \theta_1` and `r_y = \theta_2`.
-
-TODO(author): ``tests/test_quad4_spurious_shear_mode.py`` states instead
-`\theta_1 = -r_y` and `\theta_2 = r_x` against the convention of pyfe3d,
-which of the two is right?
+paper of Hughes et al. [1]_, whose rotations `\theta_1` and `\theta_2`
+enter the transverse shear strains as `w_{,x} - \theta_1` and `w_{,y} -
+\theta_2`, their Eq. (7), such that `\theta_1 = -r_y` and `\theta_2 = r_x`.
 
 Hughes et al. (1977) proposed the following integration scheme:
 

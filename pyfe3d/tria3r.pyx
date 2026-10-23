@@ -292,9 +292,8 @@ References
 .. [9] Rohwer, K., Improved transverse shear stiffness for layered finite
    elements, DFVLR-FB 88-32, 1988.
 .. [10] Cowper, G. R., Gaussian quadrature formulas for triangles,
-   International Journal for Numerical Methods in Engineering, 1973.
-   https://doi.org/10.1002/nme.1620070316
-   TODO(author): confirm this source
+   International Journal for Numerical Methods in Engineering, 7(3),
+   405-408, 1973. https://doi.org/10.1002/nme.1620070316
 
 """
 from libc.math cimport fabs
@@ -809,7 +808,8 @@ cdef class Tria3R:
     Notes
     -----
     The factor used to prevent shear locking, ``alpha_shear_locking``, is
-    adopted from the DFG element, in the form of Bischoff and Bletzinger [1]_
+    adopted from the stabilised discrete shear gap (DSG) elements, in the
+    form of Bischoff and Bletzinger [1]_
     and Castro et al. [2]_, see the module documentation, and scales the
     transverse shear stiffnesses as::
 
@@ -818,9 +818,6 @@ cdef class Tria3R:
         A44 = 1 / (1 + factor) * A44
         A45 = 1 / (1 + factor) * A45
         A55 = 1 / (1 + factor) * A55
-
-    TODO(author): "DFG element" here and "DFG elements" in the comments of
-    the code: is DSG, the discrete shear gap, meant?
 
     .. warning:: `\alpha = 0.7` is about seven times the value used
         in the references this scheme comes from, and it is the
@@ -1372,7 +1369,7 @@ cdef class Tria3R:
             if l31 > maxl:
                 maxl = l31
 
-            # NOTE strategy to prevent shear locking used in DFG elements imported here...
+            # NOTE strategy to prevent shear locking used in the stabilised DSG elements imported here...
             factor = self.alpha_shear_locking*maxl**2/prop.h**2
             A44 = 1 / (1 + factor) * A44
             A45 = 1 / (1 + factor) * A45
@@ -1712,9 +1709,8 @@ cdef class Tria3R:
         References
         ----------
         .. [1] Cowper, G. R., Gaussian quadrature formulas for triangles,
-           International Journal for Numerical Methods in Engineering, 1973.
-           https://doi.org/10.1002/nme.1620070316
-           TODO(author): confirm this source
+           International Journal for Numerical Methods in Engineering,
+           7(3), 405-408, 1973. https://doi.org/10.1002/nme.1620070316
 
         """
         cdef int c1, c2, c3, i, k
@@ -1812,7 +1808,7 @@ cdef class Tria3R:
             if l31 > maxl:
                 maxl = l31
 
-            # NOTE strategy to prevent shear locking used in the DFG elements imported here...
+            # NOTE strategy to prevent shear locking used in the stabilised DSG elements imported here...
             factor = self.alpha_shear_locking*maxl**2/prop.h**2
             A44 = 1 / (1 + factor) * A44
             A45 = 1 / (1 + factor) * A45
@@ -5494,9 +5490,8 @@ cdef class Tria3R:
            Engineering, 24(12), 2343-2356, 1987.
            https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208
         .. [2] Cowper, G. R., Gaussian quadrature formulas for triangles,
-           International Journal for Numerical Methods in Engineering, 1973.
-           https://doi.org/10.1002/nme.1620070316
-           TODO(author): confirm this source
+           International Journal for Numerical Methods in Engineering,
+           7(3), 405-408, 1973. https://doi.org/10.1002/nme.1620070316
 
         """
         cdef int c1, c2, c3, i, k

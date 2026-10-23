@@ -3014,16 +3014,27 @@ cdef class BeamC:
         quadrature of `T`, whose points are the nodes, without the coupling
         terms of `m_y`, `m_z` and `m_{yz}`, which are not included.
 
-        Both matrices use the method from Brockman 1987 [1]_.
-
-        TODO(author): Brockman (1987) [1]_ treats the bilinear Mindlin plate
-        element; confirm which part of the method is used for this element.
+        The lumped mass matrix follows the lumped mass matrix by Lobatto
+        integration of Brockman (1987) [1]_, p. 2348, adapted to the beam:
+        the two-point Gauss-Lobatto quadrature of `T`, whose points are the
+        nodes, gives a diagonal matrix only without the first moments of the
+        density, which are therefore dropped. The consistent mass matrix is
+        the classical one, see Petyt (2010) [2]_: Sec. 3.3, Eq. (3.59), for
+        the axial terms, Sec. 3.4, Eq. (3.102), with `m_{yy} + m_{zz}` in
+        place of `\rho I_x`, for the torsional terms, and Sec. 3.9, Eqs.
+        (3.234) and (3.237), for the bending terms with the shape functions
+        of static equilibrium and the rotary inertia, which
+        :class:`.BeamC` reproduces in each plane of bending when `m_y`, `m_z`
+        and `m_{yz}` are zero.
 
         References
         ----------
         .. [1] Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
            Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
            https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208
+        .. [2] Petyt, M., 2010, Introduction to Finite Element Vibration
+           Analysis, 2nd ed., Cambridge University Press, Cambridge.
+           https://doi.org/10.1017/CBO9780511761195
 
         """
         cdef int c1, c2, k

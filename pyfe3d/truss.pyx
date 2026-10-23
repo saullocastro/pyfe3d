@@ -1020,16 +1020,24 @@ cdef class Truss:
         `L m/2` for the three translations and `L (m_{yy} + m_{zz})/2` for
         `r_x`, without the coupling terms of `m_y` and `m_z`.
 
-        Both matrices use the method from Brockman 1987 [1]_.
-
-        TODO(author): Brockman (1987) [1]_ treats the bilinear Mindlin plate
-        element; confirm which part of the method is used for this element.
+        The lumped mass matrix follows the lumped mass matrix by Lobatto
+        integration of Brockman (1987) [1]_, p. 2348, adapted to the beam:
+        the two-point Gauss-Lobatto quadrature of `T`, whose points are the
+        nodes, gives a diagonal matrix only without the first moments of the
+        density, which are therefore dropped. The consistent mass matrix is
+        the integral of Petyt (2010) [2]_, Sec. 3.3, Eqs. (3.58) and (3.59),
+        for each linearly interpolated field, e.g. `L m/6` times `[2, 1; 1,
+        2]` for each translation, and Sec. 3.4, Eq. (3.102), with `m_{yy} +
+        m_{zz}` in place of `\rho I_x`, for the twist `r_x`.
 
         References
         ----------
         .. [1] Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
            Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
            https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208
+        .. [2] Petyt, M., 2010, Introduction to Finite Element Vibration
+           Analysis, 2nd ed., Cambridge University Press, Cambridge.
+           https://doi.org/10.1017/CBO9780511761195
 
         """
         cdef int c1, c2, k
