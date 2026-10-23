@@ -49,8 +49,9 @@ def _weights(an, kC0):
 
 
 def _norm(v, w):
-    r"""Norm of the convergence criterion: `\|v\|_D` with the weights ``w``
-    of Crisfield's criterion, the Euclidean norm when ``w`` is ``None``"""
+    r"""Norm of the convergence criterion: `\|v\|_{\boldsymbol{d}}` with the
+    weights ``w`` of Crisfield's criterion, the Euclidean norm when ``w`` is
+    ``None``"""
     if w is None:
         return float(np.linalg.norm(v))
     return scaled_norm(v, w)
@@ -213,9 +214,9 @@ def _NR_iterations(an, pb, c, dc, total, fext, w, kT0=None, silent=False,
 
     `\eta = 1` without line search. With ``an.line_search = True``, with
     `\phi(\eta) = \|R(c + \Delta c + \eta \, \delta c)\|^2` in the norm of
-    the convergence criterion, the scaled norm `\|\cdot\|_D` of Crisfield's
-    criterion or the Euclidean norm, the step `\eta` is accepted when it
-    satisfies the sufficient-decrease (Armijo) test
+    the convergence criterion, the scaled norm `\|\cdot\|_{\boldsymbol{d}}`
+    of Crisfield's criterion or the Euclidean norm, the step `\eta` is
+    accepted when it satisfies the sufficient-decrease (Armijo) test
 
     .. math::
 
@@ -392,8 +393,8 @@ def _solver_NR(an, pb, silent=False, initialInc=None):
     Each increment starts from a predictor that extrapolates the previous
     converged increment of the solution, scaled by the ratio between the new
     and the previous load increments. The first increment uses the linear
-    solution as predictor: `\Delta\lambda [K_{C_0}]^{-1}\{F_{ext}\}`, with
-    `[K_{C_0}]` the linear stiffness matrix ``calc_kC()``, which also gives
+    solution as predictor: `\Delta\lambda [K_{C0}]^{-1}\{F_{ext}\}`, with
+    `[K_{C0}]` the linear stiffness matrix ``calc_kC()``, which also gives
     the scaling of Crisfield's criterion, computed once for the whole
     analysis, see :mod:`.convergence`.
 
@@ -404,7 +405,7 @@ def _solver_NR(an, pb, silent=False, initialInc=None):
     When ``calc_fext`` accepts the keyword argument ``lbd``, e.g. for
     prescribed displacements imposed exactly, the load vector `\{q\} =
     \partial R/\partial \lambda` at `c = 0`, `\lambda = 0` gives the
-    predictor of the first increment, its linear solution `[K_{C_0}]^{-1}
+    predictor of the first increment, its linear solution `[K_{C0}]^{-1}
     \{q\}`, instead of the linear solution of the reference vector, which is
     null under a prescribed displacement alone, and `\lambda \{q\}` is an
     additional reference of the convergence criterion. `\{q\}` is evaluated
@@ -420,7 +421,7 @@ def _solver_NR(an, pb, silent=False, initialInc=None):
     each step and every ``an.compute_every_n`` iterations, and its LU
     factorization is reused in the other iterations, at the cost of a
     linear convergence rate; at the first step with ``an.kT_initial_state =
-    False``, `[K_{C_0}]` is used instead of the tangent at the first
+    False``, `[K_{C0}]` is used instead of the tangent at the first
     iteration. The full and modified Newton-Raphson methods, combined with
     incremental predictors, are described in [1]_ (Sections 1.2.2 and
     1.2.3, pp. 8-13), with the quadratic and the linear convergence rates.

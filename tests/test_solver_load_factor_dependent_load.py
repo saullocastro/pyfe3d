@@ -231,7 +231,7 @@ def test_displacement_control_without_lbd_does_not_converge():
 
 def test_newton_raphson_first_predictor_is_linear_solution():
     r"""With linear springs the predictor of the first increment,
-    `[K_0]^{-1} \partial R/\partial \lambda`, is the solution: each
+    `[K_{C0}]^{-1} \partial R/\partial \lambda`, is the solution: each
     increment converges at its first evaluation of the residual"""
     pb = SpringsProblem(a=(0., 0., 0.), d1=0.5)
     an = pb.analysis(initialInc=0.3, relTOL=1e-12)

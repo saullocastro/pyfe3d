@@ -355,7 +355,7 @@ def test_piston_theory_load_unsymmetric_tangent():
     [K_{A_\beta}]`, unsymmetric, enters ``calc_kC``. Newton-Raphson
     converges quadratically, the residual of the full model vanishes, and
     the linear static analysis with ``calc_fext(c=...)`` gives the solution
-    of `([K_{C_0}] - \beta [K_{A_\beta}])\{u\} = \{F\}`"""
+    of `([K_{C0}] - \beta [K_{A_\beta}])\{u\} = \{F\}`"""
     model, bu, BKA, deflection = piston_theory_plate()
     from pyfe3d.solver import is_symmetric
     assert not is_symmetric((model.KC0 - BKA)[bu, :][:, bu])

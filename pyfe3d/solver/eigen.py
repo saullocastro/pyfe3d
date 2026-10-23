@@ -42,19 +42,19 @@ Notes
 The eigenvalue problems are linear buckling
 
 .. math::
-    ([K_{C_0}] + \lambda [K_G])\{u\} = \{0\}
+    ([K_{C0}] + \lambda [K_G])\{u\} = \{0\}
 
 and natural frequency
 
 .. math::
-    ([K_{C_0}] - \omega_n^2 [M])\{u\} = \{0\}
+    ([K_{C0}] - \omega_n^2 [M])\{u\} = \{0\}
 
 The reason this module exists is that neither problem is safe to hand to
 :func:`scipy.sparse.linalg.eigsh` without preparation, and the two traps are
 easy to fall into and silent when they bite:
 
 1. **The matrices are badly scaled.** A shell element mixes translations and
-   rotations, so the diagonal of `[K_{C_0}]` spans many orders of magnitude,
+   rotations, so the diagonal of `[K_{C0}]` spans many orders of magnitude,
    and the drilling stiffness makes that worse: with the fictitious penalty
    of ``K6ROT`` the drilling entries are some six orders of magnitude below
    the membrane ones, and a condition number of `10^{14}` is easy to reach.
@@ -73,7 +73,7 @@ easy to fall into and silent when they bite:
    matrices themselves.
 
 The inertia check of :func:`check_eigenpairs`, the number of negative pivots
-of `[K_{C_0}] + s [K_G]` just below the highest load multiplier found, is the
+of `[K_{C0}] + s [K_G]` just below the highest load multiplier found, is the
 only cheap way to know that no mode was skipped, and it is what distinguishes
 a converged answer from a plausible-looking one.
 
@@ -198,9 +198,9 @@ def diagonal_preconditioner(K, floor=1.e-30):
     The diagonal matrix `[D]` has the entries
 
     .. math::
-        D_{ii} = \frac{1}{\sqrt{max(|{K_{C_0}}_{ii}|, floor)}}
+        D_{ii} = \frac{1}{\sqrt{max(|K_{{C0}_{ii}}|, floor)}}
 
-    such that `[D][K_{C_0}][D]` has a unit diagonal, up to the sign of the
+    such that `[D][K_{C0}][D]` has a unit diagonal, up to the sign of the
     negative entries, which appear e.g. in a stiffness matrix with the load
     stiffness of a follower load beyond the critical load. For a generalized
     eigenvalue problem both matrices are transformed, `[D][A][D]` and
@@ -320,24 +320,24 @@ def estimate_cayley_sigma(K, KG, safety=10., max_iter=50, rel_tol=1.e-3):
     Notes
     -----
     The shift has to exceed `|\mu|` of the critical eigenvalues of
-    `[K_G]\{u\} = \mu [K_{C_0}]\{u\}`, see the module documentation. The
+    `[K_G]\{u\} = \mu [K_{C0}]\{u\}`, see the module documentation. The
     largest `|\mu|` is estimated with power iterations on
-    `[K_{C_0}]^{-1}[K_G]`, whose ratio of norms in the `[K_{C_0}]`-norm grows
+    `[K_{C0}]^{-1}[K_G]`, whose ratio of norms in the `[K_{C0}]`-norm grows
     towards it, and the result is multiplied by ``safety``.
 
-    At each iteration `\{x\}` is normalized such that `\{x\}^T [K_{C_0}]
-    \{x\} = 1`, `\{y\} = [K_{C_0}]^{-1} [K_G] \{x\}` is computed and the
-    ratio of norms is `\sqrt{|\{y\}^T [K_{C_0}] \{y\}|}`; `\{y\}` becomes
+    At each iteration `\{x\}` is normalized such that `\{x\}^T [K_{C0}]
+    \{x\} = 1`, `\{y\} = [K_{C0}]^{-1} [K_G] \{x\}` is computed and the
+    ratio of norms is `\sqrt{|\{y\}^T [K_{C0}] \{y\}|}`; `\{y\}` becomes
     the next `\{x\}`. The estimate is the largest ratio found, and the
     iterations stop when a ratio exceeds the previous estimate by at most
     ``rel_tol`` times the ratio, or after ``max_iter`` iterations. For a
-    symmetric positive definite `[K_{C_0}]` and a symmetric `[K_G]`,
-    `[K_{C_0}]^{-1}[K_G]` is self-adjoint in the inner product of
-    `[K_{C_0}]`, such that the ratio tends to its spectral radius
+    symmetric positive definite `[K_{C0}]` and a symmetric `[K_G]`,
+    `[K_{C0}]^{-1}[K_G]` is self-adjoint in the inner product of
+    `[K_{C0}]`, such that the ratio tends to its spectral radius
     `\max |\mu|`. At the first iteration the relative residual of the linear
     solution must not exceed ``1e-6``.
 
-    The fallback value ``1.`` is returned when `[K_{C_0}]` is singular or not
+    The fallback value ``1.`` is returned when `[K_{C0}]` is singular or not
     positive definite, or when the linear solution is inaccurate, since in
     those cases the power iteration says nothing.
 
@@ -553,16 +553,16 @@ def check_eigenpairs(K, KG, eigvals, eigvecs, rtol=1.e-3, min_rel_gap=1.e-4,
 
     Notes
     -----
-    The eigenpairs are those of `([K_{C_0}] + \lambda [K_G])\{u\} = \{0\}`.
+    The eigenpairs are those of `([K_{C0}] + \lambda [K_G])\{u\} = \{0\}`.
     The inertia check is the one that catches a solver that converged to an
     interior part of the spectrum, which is silent otherwise. For symmetric
-    `[K_{C_0}]` and `[K_G]` with a positive definite `[K_{C_0}]`,
-    `[K_{C_0}] + s [K_G]` is congruent to `[I] + s
-    [K_{C_0}]^{-1/2}[K_G][K_{C_0}]^{-1/2}`, whose eigenvalues are `1 + s
+    `[K_{C0}]` and `[K_G]` with a positive definite `[K_{C0}]`,
+    `[K_{C0}] + s [K_G]` is congruent to `[I] + s
+    [K_{C0}]^{-1/2}[K_G][K_{C0}]^{-1/2}`, whose eigenvalues are `1 + s
     \mu_i = 1 - s/\lambda_i`, with `\mu_i = -1/\lambda_i` the eigenvalues of
-    `[K_G]\{u\} = \mu [K_{C_0}]\{u\}`. For `s > 0`, `1 - s/\lambda_i < 0`
+    `[K_G]\{u\} = \mu [K_{C0}]\{u\}`. For `s > 0`, `1 - s/\lambda_i < 0`
     exactly when `0 < \lambda_i < s`, hence the number of negative
-    eigenvalues of `[K_{C_0}] + s [K_G]`, equal to its number of negative
+    eigenvalues of `[K_{C0}] + s [K_G]`, equal to its number of negative
     pivots by Sylvester's law of inertia, is the number of load multipliers
     in `(0, s)`. This is the Sturm sequence check of the eigenvalue solvers
     of structural analysis ([1]_, Section 10.2.2, p. 849, and Section 11.6,
@@ -571,7 +571,7 @@ def check_eigenpairs(K, KG, eigvals, eigvecs, rtol=1.e-3, min_rel_gap=1.e-4,
     eigenvalues of the pencil `([K], [M])` smaller than `\mu`. When only one
     positive load multiplier was returned, none is expected in `(0, s)` and
     the weaker check is done. The gap ``min_rel_gap`` keeps `s` away from
-    `\lambda_n`, where `[K_{C_0}] + s [K_G]` is singular.
+    `\lambda_n`, where `[K_{C0}] + s [K_G]` is singular.
 
     References
     ----------
@@ -1735,12 +1735,12 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
 
     Notes
     -----
-    The problem solved is `([K_{C_0}] + \lambda [K_G])\{u\} = \{0\}`, written
-    as `[K_G]\{u\} = \mu [K_{C_0}]\{u\}` with `\lambda = -1/\mu`, whose lowest
+    The problem solved is `([K_{C0}] + \lambda [K_G])\{u\} = \{0\}`, written
+    as `[K_G]\{u\} = \mu [K_{C0}]\{u\}` with `\lambda = -1/\mu`, whose lowest
     positive load multipliers are the most negative `\mu`, returned by the
     Cayley mode while the shift is large enough, see the notes of
     :mod:`pyfe3d.solver.eigen`. With ``precondition=True`` the problem
-    solved is the one of `[D][K_{C_0}][D]` and `[D][K_G][D]`, with the same
+    solved is the one of `[D][K_{C0}][D]` and `[D][K_G][D]`, with the same
     eigenvalues, see :func:`diagonal_preconditioner`; the verification
     always uses the original matrices.
 
@@ -2077,12 +2077,12 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
 
     Notes
     -----
-    The problem solved is `([K_{C_0}] - \omega_n^2 [M])\{u\} = \{0\}`, and
+    The problem solved is `([K_{C0}] - \omega_n^2 [M])\{u\} = \{0\}`, and
     the frequencies of symmetric matrices are `\omega_n = \sqrt{\max(
     \omega_n^2, 0)}`. In the shift-invert mode, the sparse solvers find the
     eigenvalues closest to the shift ``sigma=-1.``, i.e. the lowest ones
-    when `[K_{C_0}]` is positive semi-definite and `[M]` positive definite,
-    factorizing `[K_{C_0}] + [M]`, which is not singular when `[K_{C_0}]` is
+    when `[K_{C0}]` is positive semi-definite and `[M]` positive definite,
+    factorizing `[K_{C0}] + [M]`, which is not singular when `[K_{C0}]` is
     singular only because of unconstrained rigid-body modes that have mass.
 
     A mass matrix without rotary inertia, and one without inertia associated

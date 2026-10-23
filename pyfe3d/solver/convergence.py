@@ -38,16 +38,17 @@ testing:
 
 .. math::
 
-    D_j = {K_{C_0}}_{jj}, \qquad
-    \|v\|_D = \sqrt{\sum_{j=1}^{n} \frac{v_j^2}{|D_j|}}
+    d_j = K_{{C0}_{jj}}, \qquad
+    \|v\|_{\boldsymbol{d}} = \sqrt{\sum_{j=1}^{n} \frac{v_j^2}{|d_j|}}
 
-with `n` the number of free degrees-of-freedom. `D_j` is a stiffness, of
+with `n` the number of free degrees-of-freedom and `d_j` the entries of
+the diagonal scaling vector `\boldsymbol{d}`. `d_j` is a stiffness, of
 the units of the generalized force of the degree-of-freedom `j` divided by
-those of its generalized displacement, such that each term `v_j^2/|D_j|`
+those of its generalized displacement, such that each term `v_j^2/|d_j|`
 has the units of energy, whether the degree-of-freedom is a translation or
-a rotation: `\|v\|_D` is the square root of an energy-like quantity,
-independent of the units of each degree-of-freedom. The absolute value
-guards against negative diagonal entries.
+a rotation: `\|v\|_{\boldsymbol{d}}` is the square root of an energy-like
+quantity, independent of the units of each degree-of-freedom. The absolute
+value guards against negative diagonal entries.
 
 .. rubric:: Crisfield's criterion
 
@@ -55,9 +56,11 @@ The iteration `i` has converged when
 
 .. math::
 
-    \zeta_i = \frac{\|R_i\|_D}{\max\left(\|\lambda F_{ext}\|_D,
-    \|F_{int}(u_i)\|_D, \|\Delta\lambda F_{ext}\|_D,
-    \|\lambda \, \partial R/\partial \lambda\|_D\right)} \le \epsilon
+    \zeta_i = \frac{\|R_i\|_{\boldsymbol{d}}}{\max\left(
+    \|\lambda F_{ext}\|_{\boldsymbol{d}}, \|F_{int}(u_i)\|_{\boldsymbol{d}},
+    \|\Delta\lambda F_{ext}\|_{\boldsymbol{d}},
+    \|\lambda \, \partial R/\partial \lambda\|_{\boldsymbol{d}}\right)}
+    \le \epsilon
 
 with `\epsilon` = ``Analysis.relTOL``, `\lambda` the current load factor
 and `\{F_{ext}\}` the reference external force vector. The third reference
@@ -67,8 +70,9 @@ to load vectors that depend on the load factor, e.g. prescribed
 displacements imposed exactly, see :mod:`.callbacks`. These are also the
 references of the relative criterion, see :func:`check_convergence`,
 measured here with the scaled norm. The maximum does not degenerate:
-under self-equilibrated loads `\|\lambda F_{ext}\|_D` may be negligible whereas `\|F_{int}\|_D`
-reflects the internal force carried by the structure; at the beginning of
+under self-equilibrated loads `\|\lambda F_{ext}\|_{\boldsymbol{d}}` may be
+negligible whereas `\|F_{int}\|_{\boldsymbol{d}}` reflects the internal
+force carried by the structure; at the beginning of
 a load-controlled analysis the internal forces are small and the external
 load is the reference; when the arc-length solvers pass through a load
 factor close to zero, `\Delta\lambda F_{ext}` is the reference; and under
@@ -78,12 +82,12 @@ internal force vectors both vanish at equilibrium, whereas `\lambda \,
 displacements produce with the free degrees-of-freedom held fixed, does
 not. The norms are evaluated over the free degrees-of-freedom only, since the
 components of the residual at the constrained ones are the support
-reactions, not an imbalance. `[D]` is computed once from the linear
-stiffness matrix ``calc_kC()``, assembled once for the whole analysis, and
-kept constant during the iterations, such that `\zeta_i` measures the
-progress of the iterations and not the evolution of the tangent stiffness
-matrix. The internal force vector of the numerator and of the denominator
-comes from the same evaluation, at no additional cost.
+reactions, not an imbalance. `\boldsymbol{d}` is computed once from the
+linear stiffness matrix ``calc_kC()``, assembled once for the whole
+analysis, and kept constant during the iterations, such that `\zeta_i`
+measures the progress of the iterations and not the evolution of the
+tangent stiffness matrix. The internal force vector of the numerator and of
+the denominator comes from the same evaluation, at no additional cost.
 
 With a consistent tangent stiffness matrix the Newton-Raphson iterations
 converge quadratically, `\zeta_{i+1} \sim \zeta_i^2`, and a tight
@@ -126,7 +130,7 @@ CRITERIA = ('crisfield', 'relative')
 
 
 def crisfield_weights(K0):
-    r"""Weights `1/|D_j|` of the scaled norm of Crisfield's criterion
+    r"""Weights `1/|d_j|` of the scaled norm of Crisfield's criterion
 
     The weight of each free degree-of-freedom is the inverse of the modulus
     of the diagonal entry of ``K0``. The free degrees-of-freedom are those
@@ -157,9 +161,9 @@ def crisfield_weights(K0):
 
     Notes
     -----
-    `w_j = 1/|{K_{C_0}}_{jj}|` at the free degrees-of-freedom, see the
+    `w_j = 1/|K_{{C0}_{jj}}|` at the free degrees-of-freedom, see the
     module documentation, and `w_j = 0` at the degrees-of-freedom whose row
-    and column of `[K_{C_0}]` are both null, i.e. constrained by zeroing
+    and column of `[K_{C0}]` are both null, i.e. constrained by zeroing
     them.
 
     """
@@ -179,7 +183,7 @@ def crisfield_weights(K0):
 
 
 def scaled_norm(v, w):
-    r"""Scaled norm `\|v\|_D` of a force-like vector
+    r"""Scaled norm `\|v\|_{\boldsymbol{d}}` of a force-like vector
 
     Parameters
     ----------
@@ -226,15 +230,16 @@ def crisfield_zeta(R, fext, fint, w, q=None, fext_inc=None):
     Returns
     -------
     zeta : float
-        `\|R\|_D` over the largest scaled norm of the references,
-        dimensionless, ``0.`` when the residual and all the references are
-        null.
+        `\|R\|_{\boldsymbol{d}}` over the largest scaled norm of the
+        references, dimensionless, ``0.`` when the residual and all the
+        references are null.
 
     Notes
     -----
     The criterion is `\zeta \le \epsilon`, see the module documentation:
-    the reference is `\max(\|F_{ext}\|_D, \|F_{int}\|_D)`, with also
-    `\|q\|_D` and `\|\Delta\lambda F_{ext}\|_D` when given. When the
+    the reference is `\max(\|F_{ext}\|_{\boldsymbol{d}},
+    \|F_{int}\|_{\boldsymbol{d}})`, with also `\|q\|_{\boldsymbol{d}}` and
+    `\|\Delta\lambda F_{ext}\|_{\boldsymbol{d}}` when given. When the
     reference is null and the residual is not, `\zeta` is infinite.
 
     """
@@ -292,9 +297,9 @@ def check_convergence(an, R, fint, fext_total, fext_ref=None, q_ref=None,
     converged : bool
         Whether the criterion is satisfied.
     Rnorm : float
-        Norm of the residual used by the criterion, `\|R\|_D` with
-        ``'crisfield'``, the Euclidean norm with ``'relative'``, used by the
-        divergence checks of the solvers.
+        Norm of the residual used by the criterion,
+        `\|R\|_{\boldsymbol{d}}` with ``'crisfield'``, the Euclidean norm
+        with ``'relative'``, used by the divergence checks of the solvers.
     zeta : float
         Relative residual, `\zeta` with ``'crisfield'``, ``norm(R)`` over
         the largest Euclidean norm of the references with ``'relative'``.

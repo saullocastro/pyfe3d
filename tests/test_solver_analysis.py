@@ -68,8 +68,8 @@ def test_invalid_parameters():
 
 def test_crisfield_weights_and_zeta():
     r"""`w_j = 1/|K_{jj}|` at the free degrees-of-freedom, zero at the null
-    rows and columns; `\zeta = \|R\|_D/\max(\|F_{ext}\|_D,
-    \|F_{int}\|_D)`"""
+    rows and columns; `\zeta = \|R\|_{\boldsymbol{d}}/
+    \max(\|F_{ext}\|_{\boldsymbol{d}}, \|F_{int}\|_{\boldsymbol{d}})`"""
     K = csr_matrix(np.array([[4., -1., 0.], [-1., -2., 0.], [0., 0., 0.]]))
     w = crisfield_weights(K)
     np.testing.assert_allclose(w, [0.25, 0.5, 0.])

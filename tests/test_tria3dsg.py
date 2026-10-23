@@ -910,7 +910,7 @@ def triangulated_plate_buckling(cls, Data, Probe, n, h, second='diagonal',
       triangle whose element `x` axis runs along a mesh edge instead.
 
     The two describe the same triangle, and for an element whose matrices do
-    not depend on the node numbering they give the identical `K_{C_0}`. What
+    not depend on the node numbering they give the identical `K_{C0}`. What
     differs is the element coordinate system, and therefore what
     ``update_KG_given_stress`` has to be given.
 
@@ -1014,7 +1014,7 @@ def test_buckling_load_does_not_depend_on_triangle_node_numbering():
 
     The consequence is a result that depends on how the mesh generator
     happened to number the nodes of each triangle, which is not acceptable:
-    a cyclic relabelling of the second triangle leaves `K_{C_0}` untouched,
+    a cyclic relabelling of the second triangle leaves `K_{C0}` untouched,
     as :func:`test_node_numbering_invariance` shows, and must therefore
     leave the buckling load untouched too.
 

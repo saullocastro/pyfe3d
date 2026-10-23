@@ -144,8 +144,8 @@ def linear_static(K, fext):
     The system solved is `[K]\{u\} = \{F_{ext}\}`, the first Newton-Raphson
     iteration of the non-linear problem from `\{u\} = \{0\}`, where the
     tangent stiffness matrix is the linear constitutive stiffness matrix
-    `[K_{C_0}]`. For a follower load affine in the displacements, `\{F(u)\}
-    = \{F_0\} - [K_L]\{u\}`, the linear solution is that of `([K_{C_0}] +
+    `[K_{C0}]`. For a follower load affine in the displacements, `\{F(u)\}
+    = \{F_0\} - [K_L]\{u\}`, the linear solution is that of `([K_{C0}] +
     [K_L])\{u\} = \{F_0\}`.
 
     """

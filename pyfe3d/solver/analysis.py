@@ -305,7 +305,7 @@ class FreeDofs(object):
         Returns
         -------
         f : np.ndarray
-            `\{F_{ext}\}_f - [K_{C_0}]_{fk}\{\bar{u}_k\}`, with `[K_{C_0}]`
+            `\{F_{ext}\}_f - [K_{C0}]_{fk}\{\bar{u}_k\}`, with `[K_{C0}]`
             the linear stiffness matrix of the full model.
 
         """
@@ -647,27 +647,27 @@ class Analysis(object):
 
         Notes
         -----
-        The linear analysis solves `[K_{C_0}]\{c\} = \{F_{ext}\}`; with
-        ``bu`` and ``uk``, `[K_{C_0}]_{ff}\{c\} = \{F_{ext}\}_f -
-        [K_{C_0}]_{fk}\{\bar{u}_k\}`. When the load depends on the
+        The linear analysis solves `[K_{C0}]\{c\} = \{F_{ext}\}`; with
+        ``bu`` and ``uk``, `[K_{C0}]_{ff}\{c\} = \{F_{ext}\}_f -
+        [K_{C0}]_{fk}\{\bar{u}_k\}`. When the load depends on the
         configuration, the structure is still geometrically linear but the
-        load is evaluated in the current configuration, `[K_{C_0}]\{c\} =
+        load is evaluated in the current configuration, `[K_{C0}]\{c\} =
         \{F_{ext}(c)\}`, which is solved by the load correction iterations
 
         .. math::
 
-            \{c_{k+1}\} = \{c_k\} + [K_{C_0}]^{-1}(\{F_{ext}(c_k)\}
-                          - [K_{C_0}]\{c_k\})
+            \{c_{k+1}\} = \{c_k\} + [K_{C0}]^{-1}(\{F_{ext}(c_k)\}
+                          - [K_{C0}]\{c_k\})
 
-        starting from `\{c_0\} = [K_{C_0}]^{-1}\{F_{ext}\}`, the solution of
+        starting from `\{c_0\} = [K_{C0}]^{-1}\{F_{ext}\}`, the solution of
         the reference load ``calc_fext()``, with `\{F_{ext}(c_k)\}` given by
         ``calc_fext(inc=1., c=c_k)``. This is a fixed-point iteration
         without the load stiffness in the iteration matrix. For a follower
         load whose force vector is affine in `c`, `\{F(c)\} = \{F_0\} -
-        [K_L]\{c\}`, this is the solution of `([K_{C_0}] + [K_L])\{c\} =
-        \{F_0\}`, the error being multiplied by `-[K_{C_0}]^{-1}[K_L]` at
+        [K_L]\{c\}`, this is the solution of `([K_{C0}] + [K_L])\{c\} =
+        \{F_0\}`, the error being multiplied by `-[K_{C0}]^{-1}[K_L]` at
         each iteration, whose spectral radius is `1/\min|\lambda|` over the
-        load multipliers `\lambda` of `([K_{C_0}] + \lambda [K_L])\{u\} =
+        load multipliers `\lambda` of `([K_{C0}] + \lambda [K_L])\{u\} =
         \{0\}`, including the negative and complex ones; beyond the load of
         the smallest `|\lambda|` the iterations diverge.
 
@@ -738,7 +738,7 @@ class Analysis(object):
         The iterations and their convergence are described in
         :meth:`static`; the convergence criterion is the one of the
         non-linear solvers, see :func:`.check_convergence`, with the
-        internal force vector `[K_{C_0}]\{c_k\}`.
+        internal force vector `[K_{C0}]\{c_k\}`.
 
         """
         msg('Configuration-dependent load: load correction iterations',

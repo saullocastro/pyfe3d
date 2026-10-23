@@ -193,7 +193,7 @@ with the same split of the tangent stiffness as
 
 .. math::
 
-    [K_T] = [K_{C_0}] + [K_{CNL}(u)] + [K_G(u)]
+    [K_T] = [K_{C0}] + [K_{CNL}(u)] + [K_G(u)]
 
 which is the exact Jacobian of the internal forces of
 :meth:`.Tria3DSG.update_fint` called with ``nonlinear=1``. `[K_G]` is left
@@ -203,7 +203,7 @@ being collected in `[K_{CNL}]` instead. See :meth:`.Tria3DSG.update_KCNL`.
 
 Two things are simpler here than in the quadrilateral. First, the transverse
 shear strains of first-order shear deformation theory have no von Karman
-terms, so the discrete shear gap operator appears in `[K_{C_0}]` alone and
+terms, so the discrete shear gap operator appears in `[K_{C0}]` alone and
 the nonlinear methods never touch it. Second, every operator of this element
 is constant over the triangle, so `[K_{CNL}]`, its internal forces and
 `[K_G]` are all integrated exactly by a single multiplication by the area,
@@ -534,7 +534,7 @@ cdef class Tria3DSG:
       `10^{-12}` at every element size, drops to `1/(1 + factor)` of
       the correct energy, which is `0.067` at `\ell/h = 10` and
       `7 \times 10^{-8}` at `\ell/h = 10^4`;
-    * the sensitivity of `[K_{C_0}]` to `A_{ts}` falls by about three
+    * the sensitivity of `[K_{C0}]` to `A_{ts}` falls by about three
       hundred on the geometry of
       ``test_transverse_shear_stays_out_of_the_nonlinear_terms``, that
       is the element uses a fraction of a per cent of the transverse

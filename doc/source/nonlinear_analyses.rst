@@ -110,13 +110,15 @@ The iterations of each increment stop when the residual is small according
 to ``an.convergence``, see :mod:`.convergence`:
 
 - ``'crisfield'``, the default: the residual scaled with the diagonal of
-  the linear stiffness matrix of the free dofs, `D_j = |{K_{C0}}_{jj}|`,
+  the linear stiffness matrix of the free dofs, `d_j = K_{{C0}_{jj}}`, the
+  entries of the diagonal scaling vector `\boldsymbol{d}`,
 
   .. math::
 
-      \zeta = \frac{\|R\|_D}{\max(\|\lambda F_{ext}\|_D, \|F_{int}\|_D,
+      \zeta = \frac{\|R\|_{\boldsymbol{d}}}{\max(
+      \|\lambda F_{ext}\|_{\boldsymbol{d}}, \|F_{int}\|_{\boldsymbol{d}},
       \ldots)} \le \text{relTOL}, \qquad
-      \|v\|_D = \sqrt{\sum_j v_j^2/D_j}
+      \|v\|_{\boldsymbol{d}} = \sqrt{\sum_j v_j^2/|d_j|}
 
   with ``an.relTOL = 1e-9`` by default, see :func:`.crisfield_zeta` for
   the references in the denominator. It does not depend on the units of
