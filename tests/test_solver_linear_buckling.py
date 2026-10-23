@@ -832,7 +832,7 @@ def test_norm_estimate():
     assert eigen._norm_estimate(splu(K0), csr_matrix(KF.shape), v) == 0.
 
 
-def test_eig_complex_mkl_crash_regression():
+def test_eig_complex_mkl_crash_regression(tmp_path):
     r"""Regression test: with SciPy 1.17.1 linked against Intel MKL
     2025.0.0, :func:`scipy.linalg.eig` on these real 48 x 48 matrices,
     i.e. the LAPACK driver ``dggev``, corrupts the heap and the process
@@ -860,12 +860,17 @@ def test_eig_complex_mkl_crash_regression():
         assert np.all(res < 1e-8), res
         print('ok')
         """)
-    root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    # NOTE the subprocess imports the pyfe3d of this test session, compiled,
+    #      and runs outside the repository, whose source tree would shadow
+    #      an installed pyfe3d
+    import pyfe3d
+    root = os.path.dirname(os.path.dirname(os.path.abspath(pyfe3d.__file__)))
     env = dict(os.environ)
     env['PYTHONPATH'] = os.pathsep.join(
         [root] + [p for p in [env.get('PYTHONPATH')] if p])
     result = subprocess.run([sys.executable, '-c', code], env=env,
-                            capture_output=True, text=True, timeout=300)
+                            cwd=str(tmp_path), capture_output=True,
+                            text=True, timeout=300)
     assert result.returncode == 0, (hex(result.returncode & 0xffffffff),
                                     result.stderr[-2000:])
     assert result.stdout.strip().endswith('ok')
