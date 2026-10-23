@@ -2784,8 +2784,10 @@ cdef class ShellProp:
 
         The attributes ``A16``, ``A26``, ``B16``, ``B26``, ``D16``, ``D26``
         and the transverse shear couplings ``A45``, ``Abar45``,
-        ``Abarbar45`` are set to zero to make an orthotropic laminate. The
-        other attributes are not modified.
+        ``Abarbar45`` are set to zero to make an orthotropic laminate.
+        ``Abarbar45`` is kept when it is ``nan``, i.e. when a ply has a
+        singular `C_s^{(k)}`, as in :meth:`.make_balanced`. The other
+        attributes are not modified.
 
         Raises
         ------
@@ -2823,7 +2825,8 @@ cdef class ShellProp:
         # transverse shear
         self.A45 = 0.
         self.Abar45 = 0.
-        self.Abarbar45 = 0.
+        if not np.isnan(self.Abarbar45):
+            self.Abarbar45 = 0.
 
 
     cpdef void make_symmetric(ShellProp self):

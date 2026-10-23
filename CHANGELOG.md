@@ -60,9 +60,11 @@ functions `shellprop_from_LaminationParameters` and
 
 Changed behaviour:
 
-- `make_orthotropic()` also sets `A45`, `Abar45` and `Abarbar45` to zero,
-  and `make_orthotropic_LP()` also sets `xiAts2` to zero, the terms that
-  vanish when all plies are at 0 or 90 degrees;
+- `make_orthotropic()` also sets `A45`, `Abar45` and `Abarbar45` (unless
+  `nan`, i.e. when a ply has a singular transverse shear stiffness matrix,
+  as `make_balanced()`) to zero, and `make_orthotropic_LP()` also sets
+  `xiAts2` to zero, the terms that vanish when all plies are at 0 or 90
+  degrees;
 - a new `ShellProp()` has `scf_k13 = scf_k23 = 5/6` until
   `calc_constitutive_matrix()` is called, instead of 1;
 - the transverse shear stiffnesses and the through-thickness distribution of

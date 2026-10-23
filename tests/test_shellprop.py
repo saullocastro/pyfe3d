@@ -537,3 +537,22 @@ def test_gradabd_pickle():
     # created without __init__, as by copyreg.__newobj__ when unpickling
     grad3 = GradABD.__new__(GradABD)
     np.testing.assert_array_equal(grad3.gradDij, np.zeros((6, 5)))
+
+
+def test_make_orthotropic_make_balanced_keep_nan_Abarbar45():
+    # a ply with G13 = 0 has a singular C_s: the constant-stress Abarbar44,
+    # Abarbar45, Abarbar55 are nan, and both methods keep Abarbar45 nan
+    laminaprops = [(142.5e9, 8.7e9, 0.28, 5.1e9, 0., 3.0e9)]*4
+    for stack, method in (([0, 90, 0, 90], 'make_orthotropic'),
+                          ([30, -30, -30, 30], 'make_balanced')):
+        prop = laminated_plate(stack, plyt=0.125e-3, laminaprops=laminaprops,
+                               shear_correction=None)
+        assert np.isnan(prop.Abarbar44)
+        assert np.isnan(prop.Abarbar45)
+        assert np.isnan(prop.Abarbar55)
+        getattr(prop, method)()
+        assert np.isnan(prop.Abarbar44)
+        assert np.isnan(prop.Abarbar45)
+        assert np.isnan(prop.Abarbar55)
+        assert prop.Abar45 == 0
+        assert prop.A45 == 0
