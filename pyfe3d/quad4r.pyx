@@ -194,9 +194,7 @@ of the model, the default `E^{(h)}_w` is then `0.94` to `1.0` times
 6 to 7 % smaller than with :class:`.Tria3DSG`, which has no hourglass
 control, and, with the transverse shear stiffness multiplied by 100, than
 with a shallow-shell Kirchhoff solution. Smaller values of ``hgfactor_w``
-approach both, see the section
-:ref:`/tut-nonlinear-benchmarks.ipynb#sensitivity-to-the-transverse-hourglass-stiffness-of-quad4r`
-of the tutorial on geometrically non-linear benchmarks.
+approach both.
 These measurements show the sensitivity of one problem and do not recommend
 another value: the default follows the references above, and a different
 default would need further studies.
