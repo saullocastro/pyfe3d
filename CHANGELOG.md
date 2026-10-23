@@ -31,6 +31,50 @@ depending on structsolve:
   now also detects load multipliers missing below the highest one returned.
   `diagonal_preconditioner()` uses the modulus of the diagonal entries.
 
+### Breaking: `pyfe3d.shellprop` mirrors `composites.Laminate`
+
+`ShellProp`, `Lamina`, `MatLamina`, the lamination-parameter functions and
+`GradABD` now have the names and the behaviour of `composites.Laminate`,
+`Lamina`, `MatLamina` and of the functions of `composites.core`, implemented
+in pyfe3d, which does not depend on composites. The class `ShellProp`, the
+functions `shellprop_from_LaminationParameters` and
+`shellprop_from_lamination_parameters`, and the element-frame methods
+`get_constitutive_element`, `calc_constitutive_element` and
+`calc_Ats_element` keep their names. Renamed or removed, without aliases:
+
+- `ShellProp.force_balanced()`, `force_orthotropic()`, `force_symmetric()`
+  are `make_balanced()`, `make_orthotropic()`, `make_symmetric()`;
+- `force_balanced_LP()`, `force_orthotropic_LP()`, `force_symmetric_LP()`
+  are `make_balanced_LP()`, `make_orthotropic_LP()`, `make_symmetric_LP()`;
+- `Lamina.get_transf_matrix_displ_to_laminate()` is
+  `Lamina.get_transf_matrix_displ_to_lamina()`, the matrix mapping the
+  displacements from the laminate axes to the material axes of the ply, as
+  before; the old name said the opposite;
+- the private `_rohwer()` has no `offset` argument and the private attribute
+  `ShellProp._ts_offset` is removed from `shellprop.pxd` and from the pickled
+  state.
+
+Changed behaviour:
+
+- `make_orthotropic()` also sets `A45`, `Abar45` and `Abarbar45` to zero,
+  and `make_orthotropic_LP()` also sets `xiAts2` to zero, the terms that
+  vanish when all plies are at 0 or 90 degrees;
+- a new `ShellProp()` has `scf_k13 = scf_k23 = 5/6` until
+  `calc_constitutive_matrix()` is called, instead of 1;
+- the transverse shear stiffnesses and the through-thickness distribution of
+  `calc_transverse_shear_stress()` are computed with `z` measured from the
+  mid-surface, giving the same values to round-off and avoiding the
+  round-off growing with `offset` for large offsets.
+
+New:
+
+- `shear_correction` accepts `'whitney'`, `'chow'`, `'birman_bert'` and
+  `'thickness_shear'`, besides `'rohwer'`, `'vlachoutsis'`, `'constant'` and
+  `None`;
+- `ShellProp.make_smeared()`, `calc_equilibrium_transverse_shear()` and
+  `calc_aposteriori_energy()`;
+- `GradABD` can be pickled.
+
 ### Bug fixes
 
 - `BeamC`: the shear parameters `alphay` and `alphaz` are

@@ -75,16 +75,50 @@ selected with ``shear_correction``, see
   :meth:`.ShellProp.calc_Ats_element` when the material direction differs
   from the element `x` axis;
 - ``'vlachoutsis'``: the two factors of Vlachoutsis (1992),
-  `doi:10.1002/nme.1620330712 <https://doi.org/10.1002/nme.1620330712>`_;
+  `doi:10.1002/nme.1620330712 <https://doi.org/10.1002/nme.1620330712>`_,
+  identical to ``'whitney'`` (Whitney, 1973) and, for laminates symmetric
+  about the mid-surface, to ``'chow'`` (Chow, 1971);
+- ``'birman_bert'``: the average shear strain factors of Birman and Bert
+  (2002);
+- ``'thickness_shear'``: the factors that match the first thickness-shear
+  frequency of the laminate, which require the ply densities;
 - ``'constant'``: `k = 5/6`;
 - ``None``: no correction, `[A_{ts}] = \sum_k [C_s^{(k)}] h_k`.
 
-For an isotropic plate the first three give `5/6 \, G h`. The uncorrected
+For an isotropic plate ``'rohwer'``, ``'vlachoutsis'``, ``'whitney'``,
+``'chow'`` and ``'constant'`` give `5/6 \, G h`, ``'birman_bert'`` gives
+`G h` and ``'thickness_shear'`` gives `\pi^2/12 \, G h`. Except for
+``'rohwer'``, the elements rotate `[A_{ts}]` to the element axes as a
+tensor. None of the corrections depends on ``offset``. The uncorrected
 stiffnesses ``Abar44``, ``Abar45``, ``Abar55`` and the constant-stress ones
 ``Abarbar44``, ``Abarbar45``, ``Abarbar55`` are kept for comparison, and
 ``scf_k13``, ``scf_k23`` are the resulting ratios, informative only. A
 :class:`.ShellProp` created from lamination parameters has no plies and no
 correction; ``A44``, ``A45``, ``A55`` can then be set directly.
+
+The transverse shear stresses through the thickness are recovered with
+:meth:`.ShellProp.calc_transverse_shear_stress`, from the shear forces and
+the distribution of Rohwer (1988), or with
+:meth:`.ShellProp.calc_equilibrium_transverse_shear`, from the derivatives of
+the generalized strains of a solution, whose strain energy is given by
+:meth:`.ShellProp.calc_aposteriori_energy`.
+
+
+Idealized laminates
+-------------------
+
+After :meth:`.ShellProp.calc_constitutive_matrix`, the methods
+:meth:`.ShellProp.make_balanced`, :meth:`.ShellProp.make_orthotropic`,
+:meth:`.ShellProp.make_symmetric` and :meth:`.ShellProp.make_smeared` set to
+zero the stiffnesses that vanish for a balanced, orthotropic or symmetric
+laminate, or replace `[D]` by `h^2 [A]/12`, which requires ``offset = 0``.
+:func:`.make_balanced_LP`, :func:`.make_orthotropic_LP` and
+:func:`.make_symmetric_LP` do the same with the lamination parameters, such
+that :func:`.shellprop_from_LaminationParameters` gives the same
+stiffnesses:
+
+.. literalinclude:: ../../tests/test_shellprop.py
+    :pyobject: test_make_orthotropic_LP_transverse_shear
 
 
 Beam properties

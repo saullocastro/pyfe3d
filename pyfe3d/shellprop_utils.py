@@ -182,7 +182,10 @@ def laminated_plate(stack, plyt=None, laminaprop=None, rho=0., plyts=None,
     shear_correction : str or None, optional
         Method used to compute the transverse shear stiffnesses ``A44``,
         ``A45``, ``A55``, which are returned with the correction already
-        applied: ``'rohwer'`` (default, equilibrium approach), ``'vlachoutsis'``,
+        applied: ``'rohwer'`` (default, equilibrium approach),
+        ``'vlachoutsis'``, ``'whitney'`` (same as ``'vlachoutsis'``),
+        ``'chow'`` (symmetric laminates), ``'birman_bert'`` (average shear
+        strain), ``'thickness_shear'`` (dynamic, requires ``rho``),
         ``'constant'`` (5/6) or ``None`` (no correction). See
         :meth:`.ShellProp.calc_transverse_shear_stiffness`.
 
@@ -265,9 +268,11 @@ def isotropic_plate(thickness, E, nu, offset=0., rho=0.,
         Offset along the normal axis about the mid-surface, which influences
         the extension-bending coupling (B matrix). Length. Default ``0.``.
     shear_correction : str or None, optional
-        See :func:`.laminated_plate`. For an isotropic plate, ``'rohwer'``,
-        ``'vlachoutsis'`` and ``'constant'`` give ``A44 = A55 = 5/6 G h``.
-        Default ``'rohwer'``.
+        See :func:`.laminated_plate`. For an isotropic plate ``'rohwer'``,
+        ``'vlachoutsis'``, ``'whitney'``, ``'chow'`` and ``'constant'`` give
+        ``A44 = A55 = 5/6 G h``, ``'birman_bert'`` gives ``G h`` and
+        ``'thickness_shear'`` gives ``pi^2/12 G h``, the latter requiring
+        ``rho > 0``. Default ``'rohwer'``.
 
     Returns
     -------
