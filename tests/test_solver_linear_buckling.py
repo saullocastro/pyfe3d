@@ -336,6 +336,78 @@ def test_check_eigenpairs_wrong_and_missing():
                                          eigvecs[:, keep])
 
 
+def penalty_chains(n=20, kp=1e8):
+    r"""Two chains of ``n`` unit springs, each fixed at its outer end,
+    connected by a penalty spring ``kp``, which sets `\|K\|_F`, and ``KG =
+    -I``: the load multipliers are the eigenvalues of ``K``"""
+    K = 2*np.eye(2*n) - np.eye(2*n, k=1) - np.eye(2*n, k=-1)
+    K[n - 1, n] = K[n, n - 1] = -kp
+    K[n - 1, n - 1] = K[n, n] = 1 + kp
+    return csc_matrix(K), csc_matrix(-np.eye(2*n))
+
+
+def test_check_eigenpairs_penalty():
+    r"""Regression test: with a penalty spring setting `\|K\|_F`, load
+    multipliers 2 % too low, relative residuals of 1 %, are rejected. A
+    floor of the denominator of 1e-8 times the matrix-norm scale `(\|K\|_F
+    + |\lambda| \|K_G\|_F) \|u\|`, about 170 times `\|K u\| + |\lambda|
+    \|K_G u\|` here, accepted them"""
+    K, KG = penalty_chains()
+    lam, u = np.linalg.eigh(K.toarray())
+    lam, u = lam[:4], u[:, :4]
+    assert check_eigenpairs(K, KG, lam, u, 1e-3) is None
+    res = eigen._relative_residuals(K, KG, 0.98*lam, u)
+    np.testing.assert_allclose(res, 0.02/1.98, rtol=1e-3)
+    error = check_eigenpairs(K, KG, 0.98*lam, u, 1e-3)
+    assert 'relative residual' in error
+
+
+@pytest.mark.parametrize('precondition', [True, False])
+def test_penalty_connections(precondition):
+    r"""Regression test: blade-stiffened plate with penalty connections,
+    whose matrices are saved in ``tests/data``, the stiff penalty springs
+    setting `\|K\|_F = 5.1 \cdot 10^{12}`. The lowest load multiplier is that
+    certified by the inertia of `[K] + s [K_G]`. With
+    ``precondition=False``, ``eigsh()`` returns eigenpairs with relative
+    residuals of 1 to 2 % and a lowest load multiplier 0.08 % too low,
+    which a floor of the denominator of the relative residual, 1e-8 times
+    the matrix-norm scale `(\|K\|_F + |\lambda| \|K_G\|_F) \|u\|`,
+    accepted; they fail the verification, and the dense fallback is used.
+    With ``precondition=True``, the default, the relative residuals of
+    ``eigsh()`` are below 2.2e-4 (SciPy 1.17.1, Intel MKL 2025.0.0)
+
+    The matrices were assembled with ``panels`` for Figure 7 (Section 3.2.2)
+    of Stamatelos and Labeas (2023): a square plate, ``a = b = 0.5`` m, of
+    11 ``[0_3/90_3]s`` skin strips, ply thickness 0.134 mm, with 10
+    ``[0/90]s`` blades of height 2 mm, every domain a ``plate_clpt_donnell``
+    with 12 x 6 (skin) and 12 x 4 (blades) terms, connected by penalty
+    springs 100 times those of ``calc_kt_kr``, under a uniform compression
+    of 1 N/m.
+
+    Reference: Stamatelos, D.G. and Labeas, G.N., Buckling analysis of
+    laminated stiffened plates with material anisotropy using the
+    Rayleigh-Ritz approach, Computation, 11(6), 110, 2023,
+    https://doi.org/10.3390/computation11060110.
+
+    """
+    from scipy.sparse import load_npz
+
+    data = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
+    K = load_npz(os.path.join(data, 'blade_stiffened_penalty_K.npz')).tocsr()
+    KG = load_npz(os.path.join(data,
+                               'blade_stiffened_penalty_KG.npz')).tocsr()
+    lambda_1 = 2583.916728
+    # NOTE one load multiplier between lambda_1 (1 -/+ 1e-6)
+    assert eigen._negative_pivots(K + lambda_1*(1 - 1e-6)*KG) == 0
+    assert eigen._negative_pivots(K + lambda_1*(1 + 1e-6)*KG) == 1
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', DenseFallbackWarning)
+        eigvals, eigvecs = linear_buckling(K, KG, num_eigvalues=4,
+                                           precondition=precondition)
+    np.testing.assert_allclose(eigvals[0], lambda_1, rtol=1e-6)
+    assert np.all(relative_residuals(K, KG, eigvals, eigvecs) < 1e-3)
+
+
 def test_raises_when_verification_fails(monkeypatch):
     r"""A RuntimeError instead of wrong eigenpairs, listing every attempted
     solver; the condensed dense solution is the last resort, with a

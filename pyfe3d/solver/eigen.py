@@ -135,9 +135,12 @@ NULL_MU_PERTURBATION_FACTOR = 10.
 #: largest `|\mu|`, i.e. this factor times the lowest modulus that a load
 #: multiplier may have
 INERTIA_COUNT_FACTOR = 1.e6
-#: Floor of the scale of the relative residuals of the eigenpairs, as a
-#: fraction of the matrix-norm scale, see :func:`_relative_residuals`
-RESIDUAL_FLOOR = 1.e-8
+#: An eigenpair of :func:`natural_frequency` is a rigid-body mode, null up
+#: to the round-off, when `\|[K]\{u\}\| + |\omega_n^2| \, \|[M]\{u\}\|` is
+#: not larger than this fraction of the matrix-norm scale `(\|[K]\|_F +
+#: |\omega_n^2| \, \|[M]\|_F)\|\{u\}\|`, 100 times the machine precision,
+#: see :func:`_relative_residuals`
+RIGID_BODY_RTOL = 100*np.finfo(float).eps
 #: Minimum number of eigenvalues per step of the shift search of
 #: unsymmetric problems: few eigenvalues give small discs and many steps
 SHIFT_SEARCH_MIN_EIGVALUES = 6
@@ -436,7 +439,7 @@ def _frobenius(A):
     return float(np.sqrt(np.sum(np.abs(data)**2)))
 
 
-def _relative_residuals(A, B, lam, u):
+def _relative_residuals(A, B, lam, u, rigid_rtol=None):
     r"""Relative residuals of the eigenpairs of `([A] + \lambda [B])\{u\} =
     \{0\}`
 
@@ -448,6 +451,15 @@ def _relative_residuals(A, B, lam, u):
         Finite eigenvalues, real or complex, 1-D array of size ``k``.
     u : array_like
         Eigenvectors, shape ``(n, k)``.
+    rigid_rtol : float or None, optional
+        ``None`` gives the relative residual ``norm(A @ u + lam*(B @
+        u))/(norm(A @ u) + abs(lam)*norm(B @ u))`` of every eigenpair.
+        Otherwise the eigenpairs with ``norm(A @ u) + abs(lam)*norm(B @ u)
+        <= rigid_rtol*(norm_F(A) + abs(lam)*norm_F(B))*norm(u)``, null up to
+        the round-off, e.g. the rigid-body modes of :func:`natural_frequency`
+        with ``rigid_rtol=RIGID_BODY_RTOL``, give ``norm(A @ u + lam*(B @
+        u))/((norm_F(A) + abs(lam)*norm_F(B))*norm(u))``, ``norm_F`` being
+        the Frobenius norm. Default ``None``.
 
     Returns
     -------
@@ -457,23 +469,54 @@ def _relative_residuals(A, B, lam, u):
 
     Notes
     -----
-    The relative residual is
+    The relative residual
 
     .. math::
 
-        \frac{\|[A]\{u\} + \lambda [B]\{u\}\|}{\max\left(\|[A]\{u\}\|
-        + |\lambda| \, \|[B]\{u\}\|, \;
-        \epsilon_f (\|[A]\|_F + |\lambda| \, \|[B]\|_F) \|\{u\}\|\right)}
+        \frac{\|[A]\{u\} + \lambda [B]\{u\}\|}{\|[A]\{u\}\|
+        + |\lambda| \, \|[B]\{u\}\|}
 
-    with `\epsilon_f` = ``RESIDUAL_FLOOR``. The first scale of the
-    denominator compares the residual with the terms of the eigenvalue
-    problem for the eigenvector itself. For an eigenvector in the null space
-    of `[A]` with a null eigenvalue, e.g. a rigid-body mode of
-    :func:`natural_frequency`, both the residual and this scale are
-    round-off errors, and their ratio is meaningless, of the order of 1. The
-    second scale, a fraction ``RESIDUAL_FLOOR`` of the matrix-norm scale of
-    the backward error, is then the reference; it does not change the check
-    of the other eigenpairs, whose first scale is larger.
+    compares the residual with the terms of the eigenvalue problem for the
+    eigenvector itself. For an eigenvector in the null space of `[A]` with a
+    null eigenvalue, e.g. a rigid-body mode of :func:`natural_frequency`,
+    both the residual and the denominator are round-off errors, and their
+    ratio is meaningless, of the order of 1. With ``rigid_rtol`` `=
+    \epsilon_r`, an eigenpair with
+
+    .. math::
+
+        \|[A]\{u\}\| + |\lambda| \, \|[B]\{u\}\| \le \epsilon_r
+        (\|[A]\|_F + |\lambda| \, \|[B]\|_F) \|\{u\}\|
+
+    is null up to the round-off: its residual is relative to the
+    matrix-norm scale, i.e. it is the normwise backward error
+    `\|\{r\}\|/((\|[A]\|_F + |\lambda| \, \|[B]\|_F) \|\{u\}\|)`, with
+    `\{r\}` the residual vector, not larger than `\epsilon_r`. Every other
+    eigenpair keeps the relative residual, such that the check of a genuine
+    eigenpair is never loosened.
+
+    A backward error at the round-off does not tell that a genuine
+    eigenpair is accurate when `\|[A]\|_F` is set by stiff springs, e.g. the
+    penalty connections of multi-domain models: the eigenpairs that satisfy
+    the connections give `\|[A]\{u\}\|` many orders of magnitude smaller
+    than `\|[A]\|_F \|\{u\}\|`. For the lowest load multipliers of a
+    blade-stiffened panel with penalty connections, `\|[K]\|_F = 5.1 \cdot
+    10^{12}`, :func:`linear_buckling` with ``precondition=False`` and
+    ``check=False`` returns eigenpairs with relative residuals of 1 to 2 %
+    and a lowest load multiplier 0.08 % too low, whose backward errors are
+    `6.5 \cdot 10^{-14}` to `2.7 \cdot 10^{-13}` and whose `(\|[K]\{u\}\| +
+    |\lambda| \, \|[K_G]\{u\}\|)/((\|[K]\|_F + |\lambda| \, \|[K_G]\|_F)
+    \|\{u\}\|)` are `6.5 \cdot 10^{-12}` to `1.6 \cdot 10^{-11}`. A floor
+    `\epsilon_f (\|[A]\|_F + |\lambda| \, \|[B]\|_F)\|\{u\}\|` of the
+    denominator with `\epsilon_f = 10^{-8}` would accept them. The
+    rigid-body modes of :func:`natural_frequency` give `(\|[K]\{u\}\| +
+    |\omega_n^2| \, \|[M]\{u\}\|)/((\|[K]\|_F + |\omega_n^2| \, \|[M]\|_F)
+    \|\{u\}\|)` below the machine precision, with the sparse and the dense
+    solvers, for the chains of springs of the tests, also when a penalty
+    spring `10^6` or `10^8` times stiffer than the others connects two
+    chains, hence ``RIGID_BODY_RTOL``.
+    :func:`check_eigenpairs` uses the relative residual only: a finite load
+    multiplier is never null.
 
     """
     Au = A @ u
@@ -481,9 +524,10 @@ def _relative_residuals(A, B, lam, u):
     lam = np.asarray(lam)
     num = np.linalg.norm(Au + Bu*lam, axis=0)
     den = np.linalg.norm(Au, axis=0) + np.abs(lam)*np.linalg.norm(Bu, axis=0)
-    floor = RESIDUAL_FLOOR*(_frobenius(A) + np.abs(lam)*_frobenius(B)
-                            )*np.linalg.norm(u, axis=0)
-    den = np.maximum(den, floor)
+    if rigid_rtol is not None:
+        scale = (_frobenius(A) + np.abs(lam)*_frobenius(B)
+                 )*np.linalg.norm(u, axis=0)
+        den = np.where(den <= rigid_rtol*scale, scale, den)
     residual = np.full(lam.shape, np.inf)
     np.divide(num, den, out=residual, where=den > 0)
     return residual
@@ -499,8 +543,8 @@ def check_eigenpairs(K, KG, eigvals, eigvecs, rtol=1.e-3, min_rel_gap=1.e-4,
 
     - the relative residual of every eigenpair with a finite load multiplier
       ``lam`` and eigenvector ``u``, ``norm(K @ u + lam*(KG @ u))/(norm(K @
-      u) + abs(lam)*norm(KG @ u))``, with the floor of the denominator of
-      :func:`_relative_residuals`, must not exceed ``rtol``;
+      u) + abs(lam)*norm(KG @ u))``, see :func:`_relative_residuals`, must
+      not exceed ``rtol``;
     - with ``check_inertia=True`` and when ``K`` is positive definite, no
       positive load multiplier is missing below the highest positive one
       returned, ``lam_n``: the number of negative pivots of ``K + s*KG``,
@@ -1887,9 +1931,11 @@ def _check_freq(K, M, omega2, eigvecs, rtol, symmetric, min_rel_gap=1.e-4):
     Notes
     -----
     - The relative residual `\|K u - \omega_n^2 M u\|/(\|K u\| +
-      |\omega_n^2| \|M u\|)` of every finite eigenpair, with the floor of
-      the denominator of :func:`_relative_residuals`, meaningful for the
-      rigid-body modes, must not be larger than ``rtol``.
+      |\omega_n^2| \|M u\|)` of every finite eigenpair must not be larger
+      than ``rtol``. For a rigid-body mode, whose `\|K u\| + |\omega_n^2|
+      \|M u\|` is not larger than ``RIGID_BODY_RTOL`` times the
+      matrix-norm scale `(\|K\|_F + |\omega_n^2| \|M\|_F) \|u\|`, the
+      residual is relative to this scale, see :func:`_relative_residuals`.
     - With ``symmetric=True``, no eigenvalue is missing below the highest
       one returned, `\omega^2_k`: the number of negative pivots of `[K] - s
       [M]`, with `s = \omega^2_k - min\_rel\_gap |\omega^2_k|`, must be the
@@ -1909,7 +1955,7 @@ def _check_freq(K, M, omega2, eigvecs, rtol, symmetric, min_rel_gap=1.e-4):
     finite = np.isfinite(omega2)
     u = eigvecs[:, finite]
     w2 = omega2[finite]
-    res = _relative_residuals(K, M, -w2, u)
+    res = _relative_residuals(K, M, -w2, u, rigid_rtol=RIGID_BODY_RTOL)
     if not np.all(res <= rtol):
         i = int(np.argmax(np.nan_to_num(res, nan=np.inf)))
         return ('relative residual %.2e > %.1e for the eigenvalue '

@@ -150,8 +150,8 @@ def test_sorted_with_the_eigenvectors(sparse_solver, symmetric):
 def test_rigid_body_modes(symmetric):
     r"""A free-free chain of springs has a rigid-body mode, `\omega_n^2 = 0`
     up to the round-off, which passes the residual check of the sparse
-    solvers without the dense fallback, the matrix-norm floor of the
-    relative residual being meaningful when `\omega_n^2` vanishes"""
+    solvers without the dense fallback, its residual being relative to the
+    matrix-norm scale `(\|K\|_F + |\omega_n^2| \|M\|_F) \|u\|`"""
     n = 30
     K = 100.*(2*np.eye(n) - np.eye(n, k=1) - np.eye(n, k=-1))
     K[0, 0] = K[-1, -1] = 100.
@@ -164,8 +164,76 @@ def test_rigid_body_modes(symmetric):
                                             max_dense_size=0)
     assert omegan[0]**2 <= 1e-10*w2_ref[1]
     np.testing.assert_allclose(omegan[1:]**2, w2_ref[1:5], rtol=1e-8)
-    res = eigen._relative_residuals(K, M, -omegan**2, eigvecs)
+    res = eigen._relative_residuals(K, M, -omegan**2, eigvecs,
+                                    rigid_rtol=eigen.RIGID_BODY_RTOL)
     assert np.all(res <= 1e-6)
+
+
+def penalty_chains(n=20, kp=1e8, free=False):
+    """Two chains of ``n`` unit springs, each fixed at its outer end unless
+    ``free=True``, connected by a penalty spring ``kp``, which sets
+    ``||K||_F``, and a unit mass matrix"""
+    K = 2*np.eye(2*n) - np.eye(2*n, k=1) - np.eye(2*n, k=-1)
+    K[n - 1, n] = K[n, n - 1] = -kp
+    K[n - 1, n - 1] = K[n, n] = 1 + kp
+    if free:
+        K[0, 0] = K[-1, -1] = 1.
+    return csc_matrix(K), csc_matrix(np.eye(2*n))
+
+
+def test_check_freq_penalty():
+    r"""Regression test: with a penalty spring setting `\|K\|_F`, an
+    eigenvalue `\omega_n^2` 0.01 % too low, relative residual 5e-5, is
+    rejected with ``rtol=1e-6``. A floor of the denominator of 1e-8 times
+    the matrix-norm scale `(\|K\|_F + |\omega_n^2| \|M\|_F) \|u\|`, about
+    170 times `\|K u\| + |\omega_n^2| \|M u\|` here, accepted it"""
+    K, M = penalty_chains()
+    w2, u = np.linalg.eigh(K.toarray())
+    w2, u = w2[:1], u[:, :1]
+    assert eigen._check_freq(K, M, w2, u, 1e-6, True) is None
+    w2_low = w2*(1 - 1e-4)
+    # the residual of the eigenpair of eigh(), up to 2e-3 of 5e-5 with
+    # Apple's LAPACK, adds to the one of the perturbation
+    np.testing.assert_allclose(
+        eigen._relative_residuals(K, M, -w2_low, u,
+                                  rigid_rtol=eigen.RIGID_BODY_RTOL),
+        1e-4/(2 - 1e-4), rtol=1e-2)
+    error = eigen._check_freq(K, M, w2_low, u, 1e-6, True)
+    assert 'relative residual' in error
+
+
+@pytest.mark.parametrize('symmetric', [True, False])
+def test_rigid_body_mode_penalty(symmetric):
+    r"""Two free-free chains of springs connected by a penalty spring: the
+    rigid-body mode, whose `\|K u\| + |\omega_n^2| \|M u\|` is at the
+    round-off of the matrix-norm scale, passes the residual check without
+    the dense fallback, while the other eigenpairs keep the relative
+    residual"""
+    K, M = penalty_chains(kp=1e6, free=True)
+    w2_ref = np.linalg.eigvalsh(K.toarray())
+    with warnings.catch_warnings():
+        warnings.simplefilter('error', DenseFallbackWarning)
+        omegan, u = natural_frequency(K, M, num_eigvalues=5,
+                                      symmetric=symmetric, max_dense_size=0)
+    w2 = omegan**2
+    # null up to the round-off of ||K||_F
+    assert abs(w2[0]) <= eigen.RIGID_BODY_RTOL*eigen._frobenius(K)
+    np.testing.assert_allclose(w2[1:], w2_ref[1:5], rtol=1e-8)
+    Ku = K @ u
+    Mu = M @ u
+    scale = ((eigen._frobenius(K) + np.abs(w2)*eigen._frobenius(M))
+             *np.linalg.norm(u, axis=0))
+    d = np.linalg.norm(Ku, axis=0) + np.abs(w2)*np.linalg.norm(Mu, axis=0)
+    rigid = d <= eigen.RIGID_BODY_RTOL*scale
+    assert rigid.tolist() == [True, False, False, False, False]
+    res = eigen._relative_residuals(K, M, -w2, u,
+                                    rigid_rtol=eigen.RIGID_BODY_RTOL)
+    assert np.all(res <= 1e-6)
+    plain = np.linalg.norm(Ku - Mu*w2, axis=0)/d
+    np.testing.assert_allclose(res[1:], plain[1:], rtol=1e-12)
+    np.testing.assert_allclose(res[1:],
+                               eigen._relative_residuals(K, M, -w2, u)[1:],
+                               rtol=1e-12)
 
 
 def test_quad4_plate_prestress():

@@ -38,6 +38,25 @@ depending on structsolve:
   after the existing ones, whose defaults are unchanged. `check_eigenpairs()`
   now also detects load multipliers missing below the highest one returned.
   `diagonal_preconditioner()` uses the modulus of the diagonal entries.
+- `linear_buckling()`, `check_eigenpairs()` and `natural_frequency()`
+  verify the relative residual `||K u + lambda B u||/(||K u|| + |lambda|
+  ||B u||)` of each eigenpair, with `B = KG`, or `B = M` and `lambda =
+  -omega_n^2`, without any floor of its denominator. Only the residual of a rigid-body mode of
+  `natural_frequency()`, whose `||K u|| + |omega_n^2| ||M u||` is not larger
+  than `pyfe3d.solver.eigen.RIGID_BODY_RTOL = 100 eps` times the
+  matrix-norm scale `(||K||_F + |omega_n^2| ||M||_F) ||u||`, is relative to
+  this scale, i.e. the backward error, see
+  `pyfe3d.solver.eigen._relative_residuals(rigid_rtol)`: the relative
+  residual of the rigid-body modes, `omega_n^2 = 0` and `K u = 0` up to the
+  round-off, is about 1. The floor of `1e-8` times the matrix-norm scale
+  for every eigenpair, in the development version of 0.11.0, loosened the
+  check about 1000 times for models with stiff penalty springs, whose
+  `||K||_F` is many orders of magnitude larger than `||K u||`: e.g. for a
+  blade-stiffened plate with penalty connections, `linear_buckling(...,
+  precondition=False)` accepted eigenpairs of `eigsh` with relative
+  residuals of 1 to 2 % and a lowest load multiplier 0.08 % too low; they
+  are now rejected and computed with the dense fallback. New test data
+  `tests/data/blade_stiffened_penalty_K.npz` and `_KG.npz`.
 
 ### Breaking: `pyfe3d.shellprop` mirrors `composites.Laminate`
 
