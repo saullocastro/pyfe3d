@@ -87,6 +87,52 @@ depending on structsolve:
   are now rejected and computed with the dense fallback. New test data
   `tests/data/blade_stiffened_penalty_K.npz` and `_KG.npz`.
 
+### Damped frequencies: `complex_frequency()`
+
+- New `pyfe3d.solver.complex_frequency(K, C, M, ...)`: the complex
+  eigenvalues `lambda` of the damped free vibrations, `(lambda**2 M +
+  lambda C + K) u = 0`, with the damped circular frequency
+  `abs(lambda.imag)` and the damping ratio `-lambda.real/abs(lambda)`;
+  one eigenvalue per complex conjugate pair, `lambda.imag >= 0`, the
+  `num_eigvalues` nearest the shift, sorted by increasing imaginary part.
+  `K`, `C` and `M` are real, symmetric or not, e.g. with the matrices of
+  the piston theory or gyroscopic terms. The first companion linearization
+  of size `2n` (Tisseur and Meerbergen, SIAM Review, 2001) is solved with
+  `eigs` in shift-invert mode, which factorizes only `sigma**2 M + sigma C
+  + K`; the default shift `sigma = 1` rad/s is the counterpart of the shift
+  `omega_n**2 = -1` of `natural_frequency()`, and a real or complex shift
+  can be given. Same conventions and solver policy as
+  `natural_frequency()`: no null row or column of `K`, the relative
+  residual of every eigenpair verified against `check_rtol`, and the dense
+  fallback, `scipy.linalg.eig` on the linearization, of size `2n` at most
+  `max_dense_size`, with a `DenseFallbackWarning`. Whether an eigenvalue
+  nearer the shift was missed is not verified, no inertia count existing
+  for complex eigenvalues. With `C = 0`, `lambda = 1j*omega_n` of
+  `natural_frequency()`, which is unchanged. New
+  `tests/test_solver_complex_frequency.py`.
+- `tests/test_quad4_piston_theory.py` and
+  `tests/test_quad4r_piston_theory.py` include the aerodynamic damping `C
+  = -mu*CA` and now assert their results: for the flat plate `C` is
+  `a = mu/(rho h)` times the mass matrix of `w`, such that the damped
+  eigenvalues follow from the undamped ones, `lambda = -a/2 +- sqrt(a**2/4
+  - omega**2)`, verified at every Mach number; every mode grows below Mach
+  `sqrt(2)`, where `mu < 0`, and the flutter onset moves from the
+  coalescence of the frequencies, Mach 2.804 (`Quad4`) and 2.890
+  (`Quad4R`), to Mach 2.824 and 2.910 with the damping.
+- `pyfe3d.solver` no longer uses `warnings.catch_warnings()`, whose exit
+  resets the registry of the warnings already shown, of every module: a
+  warning of the caller, shown once per location with the `'default'`
+  action, was shown again after each call of `linear_buckling()`,
+  `natural_frequency()`, `complex_frequency()`, `check_eigenpairs()`,
+  `is_positive_definite()`, `estimate_cayley_sigma()`, `solve()`,
+  `linear_static()` or of a non-linear `Analysis`. The blocks around the
+  LU factorizations suppressed no warning, `scipy.sparse.linalg.splu`
+  warning only for a matrix not in the CSC format, and `solve()` now
+  factorizes with `splu`, an exactly singular matrix raising the same
+  `LinAlgError` instead of the `MatrixRankWarning` of `spsolve` turned
+  into an error; its keyword arguments are passed to `splu`. New
+  `tests/test_solver_warnings_shown_once.py`.
+
 ### Breaking: `pyfe3d.shellprop` mirrors `composites.Laminate`
 
 `ShellProp`, `Lamina`, `MatLamina`, the lamination-parameter functions and
@@ -300,8 +346,9 @@ New:
   laminates with equivalent moduli of `[A]`, `[B]` and `[D]` not entering.
   The ply stiffnesses are those of plane stress, and thermal expansion is
   not modelled (`MatLamina.a1`, `a2`, `a3` and `tref` are not used).
-  `natural_frequency()` solves the undamped problem: the damping matrix
-  `CA` of the piston theory is not used.
+  `natural_frequency()` solves the undamped problem; the damped one, e.g.
+  with the damping matrix `CA` of the piston theory, is solved by the new
+  `complex_frequency()`.
 - `Spring` verified in an arbitrary orientation against `[R][K_e][R]^T`,
   with symmetry, rigid-body translation and equal rotations without
   energy, and the internal forces, new tests in `tests/test_spring.py`;
