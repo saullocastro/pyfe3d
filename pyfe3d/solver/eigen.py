@@ -256,9 +256,7 @@ def _estimate_mu_max(K, KG, max_iter=50, rel_tol=1.e-3):
 
     """
     try:
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            lu = splu(csc_matrix(K))
+        lu = splu(csc_matrix(K))
         x = np.random.RandomState(42).randn(K.shape[0])
         Kx = K @ x
         mu_max = 0.
@@ -381,10 +379,8 @@ def _negative_pivots(A):
 
     """
     try:
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            lu = splu(csc_matrix(A), permc_spec='MMD_AT_PLUS_A',
-                      diag_pivot_thresh=0., options=dict(SymmetricMode=True))
+        lu = splu(csc_matrix(A), permc_spec='MMD_AT_PLUS_A',
+                  diag_pivot_thresh=0., options=dict(SymmetricMode=True))
     except RuntimeError:
         # NOTE exactly singular
         return None
@@ -1062,9 +1058,7 @@ def _condense(K, KG, active):
     if a.size:
         Kab = csc_matrix(K[a, :][:, b])
         Kba = K[b, :][:, a]
-        with warnings.catch_warnings():
-            warnings.simplefilter('ignore')
-            lu = splu(csc_matrix(K[a, :][:, a]))
+        lu = splu(csc_matrix(K[a, :][:, a]))
         # NOTE blocks of right-hand sides with at most ~1e7 entries
         chunk = max(1, int(1e7)//a.size)
         for j0 in range(0, b.size, chunk):
@@ -1288,10 +1282,11 @@ def _splu(A):
 
     :func:`scipy.sparse.linalg.splu` warns only when it converts its input
     to the CSC format, :class:`scipy.sparse.SparseEfficiencyWarning`, which
-    the conversion here avoids. No :func:`warnings.catch_warnings` block is
-    used: its exit resets the registry of the warnings already shown, of
-    every module, and the warnings of the caller shown once per location
-    would be shown again after each call.
+    the conversion here avoids. As everywhere in :mod:`pyfe3d.solver`, no
+    :func:`warnings.catch_warnings` block is used: its exit resets the
+    registry of the warnings already shown, of every module, and the
+    warnings of the caller shown once per location would be shown again
+    after each call.
 
     """
     return splu(csc_matrix(A))

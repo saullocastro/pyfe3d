@@ -45,7 +45,6 @@ import io
 import os
 import re
 import sys
-import warnings
 
 import numpy as np
 from scipy.linalg import cholesky, eigh, solve_triangular
@@ -580,9 +579,7 @@ def capped_eigsh(A, k, M, sigma, which, mode='normal', tol=0):
         order = np.argsort(w, kind='stable')
         w, V = w[order], V[:, order]
         sigma_d = _deflation_shift(w, far_shift)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore")
-            lu = splu(csc_matrix(A - sigma_d*M))
+        lu = splu(csc_matrix(A - sigma_d*M))
         MV = M @ V
 
         def matvec(x, V=V, MV=MV, lu=lu):

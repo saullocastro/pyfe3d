@@ -211,3 +211,19 @@ def test_is_symmetric():
 
 if __name__ == '__main__':
     test_static_deflection_plate_clpt()
+
+
+def test_solve_complex_and_options():
+    r"""A complex right-hand side with a real or a complex matrix, and the
+    keyword arguments passed to :func:`scipy.sparse.linalg.splu`"""
+    A = np.array([[4., 1., 0.], [2., 3., 1.], [0., 1., 5.]])
+    b = np.array([1. + 2j, -1j, 3.])
+    np.testing.assert_allclose(solve(csr_matrix(A), b),
+                               np.linalg.solve(A, b), rtol=1e-12)
+    Ac = A + 1j*np.eye(3)
+    np.testing.assert_allclose(solve(csr_matrix(Ac), b),
+                               np.linalg.solve(Ac, b), rtol=1e-12)
+    np.testing.assert_allclose(solve(csr_matrix(Ac), b.real),
+                               np.linalg.solve(Ac, b.real), rtol=1e-12)
+    np.testing.assert_allclose(solve(A, b.real, permc_spec='NATURAL'),
+                               np.linalg.solve(A, b.real), rtol=1e-12)

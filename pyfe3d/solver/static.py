@@ -12,12 +12,10 @@ static analyses of a model given by callables are done with
 :class:`.Analysis`.
 
 """
-import warnings
-
 import numpy as np
 from numpy.linalg import LinAlgError
 from scipy.sparse import csc_matrix
-from scipy.sparse.linalg import spsolve, splu, MatrixRankWarning
+from scipy.sparse.linalg import splu
 
 from .sparseutils import check_null_rows_cols
 
@@ -25,22 +23,23 @@ from .sparseutils import check_null_rows_cols
 def solve(A, b, **kwargs):
     r"""Solve a linear system, raising an error for a singular matrix
 
-    Wrapper of :func:`scipy.sparse.linalg.spsolve`. ``A`` must have only
-    the free degrees-of-freedom, e.g. ``KC0uu = KC0[bu, :][:, bu]``: a null
-    row or column, see :func:`.check_null_rows_cols`, and an exactly
-    singular matrix raise an error instead of giving a solution with NaN
-    values.
+    The system is solved with the LU factorization of
+    :func:`scipy.sparse.linalg.splu`. ``A`` must have only the free
+    degrees-of-freedom, e.g. ``KC0uu = KC0[bu, :][:, bu]``: a null row or
+    column, see :func:`.check_null_rows_cols`, and an exactly singular
+    matrix raise an error instead of giving a solution with NaN values, as
+    :func:`scipy.sparse.linalg.spsolve` does.
 
     Parameters
     ----------
     A : sparse_matrix or np.ndarray
         Square matrix, shape ``(n, n)``. It may be unsymmetric, e.g. with the
-        load stiffness of a follower load, since
-        :func:`scipy.sparse.linalg.spsolve` uses an LU factorization.
+        load stiffness of a follower load, since the factorization is an LU
+        factorization.
     b : np.ndarray
-        Right-hand side, 1-D array of size ``n``.
+        Right-hand side, real or complex, 1-D array of size ``n``.
     kwargs : keyword arguments, optional
-        Passed to :func:`scipy.sparse.linalg.spsolve`.
+        Passed to :func:`scipy.sparse.linalg.splu`, e.g. ``permc_spec``.
 
     Returns
     -------
@@ -52,8 +51,8 @@ def solve(A, b, **kwargs):
     numpy.linalg.LinAlgError
         When ``A`` has a null row or column, with the indices of these
         degrees-of-freedom, see :func:`.check_null_rows_cols`, or when it is
-        exactly singular, i.e. when :func:`scipy.sparse.linalg.spsolve`
-        warns with :class:`scipy.sparse.linalg.MatrixRankWarning`.
+        exactly singular, i.e. when :func:`scipy.sparse.linalg.splu` raises
+        a ``RuntimeError``.
 
     See Also
     --------
@@ -69,15 +68,28 @@ def solve(A, b, **kwargs):
     rows and columns left by the boundary conditions of its semi-analytical
     models, see :func:`.check_null_rows_cols`.
 
+    An exactly singular matrix is detected by the factorization, which
+    raises, instead of the :class:`scipy.sparse.linalg.MatrixRankWarning` and
+    the NaN values of :func:`scipy.sparse.linalg.spsolve`. Turning that
+    warning into an error needs a :func:`warnings.catch_warnings` block,
+    whose exit resets the registry of the warnings already shown, of every
+    module, such that the warnings of the caller shown once per location
+    would be shown again after each call.
+
     """
     A = csc_matrix(A)
     check_null_rows_cols(A, 'A')
-    with warnings.catch_warnings():
-        warnings.simplefilter('error', MatrixRankWarning)
-        try:
-            return spsolve(A, np.asarray(b), **kwargs)
-        except MatrixRankWarning as e:
-            raise LinAlgError('A is exactly singular: %s' % e) from e
+    try:
+        lu = splu(A, **kwargs)
+    except RuntimeError as e:
+        raise LinAlgError('A is exactly singular: %s' % e) from e
+    b = np.asarray(b)
+    if np.iscomplexobj(b) and not np.iscomplexobj(A.data):
+        return (lu.solve(np.ascontiguousarray(b.real, dtype=float))
+                + 1j*lu.solve(np.ascontiguousarray(b.imag, dtype=float)))
+    return lu.solve(np.ascontiguousarray(b, dtype=np.result_type(A.dtype,
+                                                                  b.dtype,
+                                                                  float)))
 
 
 def _factorize(kT):
