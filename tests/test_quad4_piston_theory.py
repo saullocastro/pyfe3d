@@ -11,7 +11,7 @@ from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 from pyfe3d.solver import natural_frequency, complex_frequency
 
 
-def test_quad4r_piston_theory(plot=False, refinement=1):
+def test_quad4_piston_theory(plot=False, refinement=1):
     r"""Panel flutter of a simply supported flat plate in a supersonic flow
     along `X`, with the piston theory, see ``update_KA_beta`` of
     :class:`.Quad4`, and the aerodynamic damping
@@ -322,5 +322,5 @@ def test_quad4r_piston_theory(plot=False, refinement=1):
 
 
 if __name__ == '__main__':
-    test_quad4r_piston_theory(plot=True, refinement=1)
+    test_quad4_piston_theory(plot=True, refinement=1)
 
