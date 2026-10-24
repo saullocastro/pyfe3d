@@ -179,6 +179,53 @@ New:
   `calc_aposteriori_energy()`;
 - `GradABD` can be pickled.
 
+### Behaviour change: hourglass control of `Quad4R` for laminates
+
+- The hourglass stiffnesses of `w`, `r_x` and `r_y` of `Quad4R`, Brockman's
+  (1987) `0.1 E t^3` times the area factors, now use for `E` the equivalent
+  bending moduli `E1b = 12/(h^3 d11)` and `E2b = 12/(h^3 d22)`, with `[d] =
+  (D - B A^-1 B)^-1` the lower-right block of `[[A, B], [B, D]]^-1` in the
+  element coordinate system, `E2b` for `r_x`, `E1b` for `r_y` and their mean
+  for `w`. Before, they used the membrane moduli `E1eq = 1/(h a11)` and
+  `E2eq = 1/(h a22)`, `[a] = [A]^-1`, which remain those of `u` and `v`.
+  `E1b` is the modulus of the homogeneous plate that bends as the laminate
+  under `M_xx` alone, as `E1eq` is the one that stretches as the laminate
+  under `N_xx` alone; both are `E` for an isotropic plate, with or without
+  `offset`, and do not depend on the reference surface. `12 D11/h^3` would
+  give `E/(1 - nu^2)`, and `[D]^-1` would depend on `offset`. Isotropic
+  results are unchanged to round-off: the element matrices and internal
+  forces differ by at most `6e-19` relative to their largest entry. For a
+  laminate, the artificial stiffness of the rotations becomes the same
+  fraction of its bending stiffness as for an isotropic plate. It decreases
+  where `E_b < E_eq`, e.g. `E1b = E2b = 0.36 E1eq` for an unsymmetric
+  `[0/90]`, through `[B]`, and increases where `E_b > E_eq`, e.g. `E1b =
+  1.7 E1eq` for a symmetric `[0/90]s` (`E2b = 0.31 E2eq`) and `2.7 E1eq`
+  for a sandwich. Centre deflection of simply supported plates under
+  uniform pressure, 8 by 8 elements, over the FSDT Navier solution, before
+  and after: unsymmetric `[0/90]` 0.682 and 0.847, symmetric `[0/90]s`
+  0.855 and 0.852, sandwich 0.943 and 0.861, isotropic 0.921 and 0.921.
+  The previous stiffnesses are recovered with `hgfactor_w = (E1eq +
+  E2eq)/(E1b + E2b)`, `hgfactor_rx = E2eq/E2b` and `hgfactor_ry =
+  E1eq/E1b`. Documented in the Notes of `pyfe3d.quad4r` and of
+  `Quad4R.update_KC0` and on the page on the choice of the element.
+- New tests in `tests/test_quad4r_hourglass_control.py`: the five
+  hourglass stiffnesses of six plates, among them an isotropic plate with
+  an offset, an unsymmetric angle-ply with an offset and a sandwich, with
+  the material direction along the element axis and at 30 degrees from it;
+  the ratios of the bending to the membrane moduli; the zero eigenvalues of
+  one element, 12 without and 7 with the hourglass control, for these
+  plates on a rectangle and on a distorted element; the simply supported
+  plates above against the Navier solution.
+- `tests/test_quad4r_natural_freq_cylinder.py`, unsymmetric laminate: the
+  recorded frequencies are 0.4, 0.7 and 0.2 % lower, and differ from those
+  of the same mesh of `Quad4` by 2.0, 2.5 and 1.3 % instead of 2.4, 3.2 and
+  1.5 %.
+- `theory/deriving_equations/quad4r/derive_quad4r_KC0_sparse.py` and
+  `derive_quad4r_fint.py`: the hourglass coefficients with `E1b` and `E2b`;
+  `derive_quad4r_fint.py` also with the area factors of the code, where it
+  still had Brockman's `1/(1 + 1/A)` for all five coefficients and `Ew =
+  (Erx + Ery)/2`.
+
 ### Bug fixes
 
 - `BeamC`: the shear parameters `alphay` and `alphaz` are
@@ -343,7 +390,7 @@ New:
   plate is unchanged up to an element side of `1.25e5` times the thickness,
   new `tests/test_quad4_thin_limit.py`. The hourglass control of `Quad4R`
   is derived by Brockman (1987) for isotropic plates and applied to
-  laminates with equivalent moduli of `[A]`, `[B]` and `[D]` not entering.
+  laminates with equivalent moduli, see the behaviour change above.
   The ply stiffnesses are those of plane stress, and thermal expansion is
   not modelled (`MatLamina.a1`, `a2`, `a3` and `tref` are not used).
   `natural_frequency()` solves the undamped problem; the damped one, e.g.
