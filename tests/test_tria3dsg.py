@@ -1086,7 +1086,9 @@ def test_optional_stabilisation_is_off_by_default_and_mild_when_on():
         https://doi.org/10.1016/j.cma.2003.12.036
 
     In both papers the factor `1/(1 + \alpha \ell^2/h^2)` is applied on top
-    of a discrete shear gap field, which is already free of locking, and the
+    of a field whose operator already contains the cure of the locking, a
+    discrete shear gap field in Castro et al. and an assumed-strain or
+    discrete shear gap field in Bischoff and Bletzinger, and the
     recommended `\alpha` is near 0.1. Tria3R applies the same factor to a
     centroid-sampled shear field, where it has to do the unlocking itself,
     which is why its default is 0.7. This test pins both halves of that

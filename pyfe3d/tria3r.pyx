@@ -53,10 +53,12 @@ the terms of the Allman enrichment, the Hughes-Brezzi term being integrated
 with a single point at the centroid, see the drilling stiffness below.
 
 The transverse shear stiffnesses `A_{44}`, `A_{45}` and `A_{55}` are stabilised
-using the method of Lyly, Stenberg and Vihinen [1]_, often called Stenberg's
-method, and of Bischoff and Bletzinger [2]_, in the form adopted by Castro et
-al. [3]_, where the transverse shear terms are changed as per Eq. (26) in
-Castro et al., here repeated for convenience:
+with the scalar factor that Lyly, Stenberg and Vihinen [1]_ proposed for the
+MITC4 quadrilateral, with the longest edge of the element as its size
+(their Eq. (3.12)), called Stenberg's method by Bischoff and Bletzinger [2]_
+(Sec. 3.1), in the form adopted by Castro et al. [3]_, with the longest edge
+of the triangle as the element size, where the transverse shear terms are
+changed as per Eq. (26) in Castro et al., here repeated for convenience:
 
 .. math::
 
@@ -88,17 +90,29 @@ so the thickness cancels and the error behaves as an ordinary
 ``tests/test_transverse_shear_stiffness.py``.
 
 .. warning:: The default `\alpha = 0.7` is roughly seven times the value
-    used in all three references above, which is near `0.1`: Eq. (24) of
-    Bischoff and Bletzinger gives `\alpha = 0.17 (\ell_g/\ell_n)/(2(1-\nu))`,
-    i.e. `0.12` for a square element with `\nu = 0.3`, and Castro et al.
+    of Stenberg's method in the references above, which is near `0.1`:
+    Lyly et al. chose `0.1`, the value Bischoff and Bletzinger quote from
+    them, and Castro et al.
     investigate `0.05` to `0.15` and recommend `0.07` to `0.09`, reporting
     that above `0.09` the linear buckling behaviour becomes overly soft and
-    converges from below.
+    converges from below. Bischoff and Bletzinger show, however, that
+    matching the deflection of a Timoshenko beam element gives `\alpha =
+    \kappa/(2(1+\nu))`, i.e. `0.32` for `\kappa = 5/6` and `\nu = 0.3`
+    (their Eq. (22)), about half the default, a value that works well when
+    bending is dominant in one direction but that they find too flexible
+    as soon as bending in two directions and twist are present (their
+    Sec. 4.2). Their own algebraic subgrid scale stabilisation uses one
+    parameter per direction of the element, `\alpha_\xi = 0.17
+    (\ell_\eta/\ell_\xi)/(2(1+\nu))` and likewise `\alpha_\eta` (their
+    Eqs. (23) and (24)), i.e. `0.065` for a square element with
+    `\nu = 0.3`.
 
     The difference is not a retune but a consequence of where the factor is
-    applied. In all three references it sits on top of a discrete shear gap
-    (DSG) formulation, which is already free of shear locking, so there the
-    factor is a mild stabilisation that improves coarse-mesh accuracy. This
+    applied. In all three references it sits on top of an assumed-strain or
+    discrete shear gap (DSG) field, the MITC4 field for Lyly et al. and a
+    DSG field for Castro et al., whose operator already contains the cure
+    of the shear locking, so there the factor is a mild stabilisation that
+    improves stability and coarse-mesh accuracy. This
     element has no DSG: the transverse shear is taken from a single point at
     the centroid, which still locks, and the factor is therefore doing the
     unlocking. Reducing `\alpha` to the literature value makes this element
@@ -155,9 +169,10 @@ and brought to the element coordinate system with
 :meth:`pyfe3d.shellprop.ShellProp.calc_Ats_element`, before the stabilisation
 above is applied. With ``shear_correction='rohwer'`` and the plies available,
 that method re-evaluates the equilibrium-based stiffness of Rohwer (1988) [9]_
-with the plies rotated to the element coordinate system. As described in
-Castro et al., the shear correction is no longer a very relevant parameter
-when the stabilisation scheme presented above is used.
+with the plies rotated to the element coordinate system. As concluded by
+Lyly et al. (Sec. 5) and recalled by Castro et al., the shear correction is
+no longer a very relevant parameter when the stabilisation scheme presented
+above is used.
 
 .. rubric:: Drilling stiffness
 
@@ -811,10 +826,11 @@ cdef class Tria3R:
     Notes
     -----
     The factor used to prevent shear locking, ``alpha_shear_locking``, is
-    adopted from the stabilised discrete shear gap (DSG) elements, in the
-    form of Bischoff and Bletzinger [1]_
-    and Castro et al. [2]_, see the module documentation, and scales the
-    transverse shear stiffnesses as::
+    adopted from the stabilised assumed-strain and discrete shear gap (DSG)
+    elements: it is the factor of Lyly, Stenberg and Vihinen, called
+    Stenberg's method by Bischoff and Bletzinger [1]_ (Sec. 3.1), in the
+    form of Castro et al. [2]_ (Eq. (26)), see the module documentation,
+    and scales the transverse shear stiffnesses as::
 
         maxl = max(edge_12, edge_23, edge_31)
         factor = alpha_shear_locking*maxl**2/thickness**2

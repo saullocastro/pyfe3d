@@ -64,12 +64,15 @@ The DSG removes the locking in the operator instead of in the constitutive
 matrix, so no stabilisation parameter is needed and the transverse shear
 stiffness is used as the laminate gives it.
 
-The algebraic stabilisation of Bischoff and Bletzinger (2004) [3]_ and Castro et
-al. (2019) [4]_ is nevertheless available through the ``alpha_shear_locking``
-attribute, which is ``0.`` by default and then has no effect whatsoever. It
-is there because in those papers the factor is applied on top of a discrete
-shear gap field exactly like this one, so setting it reproduces the element
-they describe, and because on a coarse mesh of a thin plate it does improve
+The algebraic stabilisation of Lyly, Stenberg and Vihinen (1993) [2]_, called
+Stenberg's method by Bischoff and Bletzinger (2004) [3]_ (Sec. 3.1), is
+nevertheless available through the ``alpha_shear_locking`` attribute, in the
+form of Castro et al. (2019) [4]_ (Eq. (26)), which is ``0.`` by default and
+then has no effect whatsoever. It is there because Castro et al. apply the
+factor on top of a discrete shear gap field, as this one, and Lyly et al. on
+top of the assumed-strain field of the MITC4 quadrilateral, so setting it
+reproduces the stabilisation they describe, and because on a coarse mesh of a
+thin plate it does improve
 the answer: `\alpha = 0.07`, the lower bound of the range recommended by
 Castro et al., takes the first natural frequency of a `5 \times 7` mesh from
 `12.06` to `7.93` per cent above the analytical value and the buckling load
@@ -107,9 +110,11 @@ element's convention are
     \gamma_{yz} = \frac{\partial w}{\partial y} - r_x
 
 that is `\pmb{\gamma} = \nabla w - \pmb{\phi}`. The shear gap `\Delta w` is
-the function whose gradient is the shear strain, and its nodal values are
-obtained by integrating along the straight edges from node 1, with
-`\pmb{\phi}` interpolated linearly,
+the part of the increase of the deflection between two points that is due to
+shear rather than to bending ([1]_, Sec. 2, Eq. (3)). On the three-node
+triangle its nodal values are obtained by integrating the shear strains along
+the straight edges that join node 1 to the other two nodes ([1]_, Sec. 4.1.1),
+with `\pmb{\phi}` interpolated linearly,
 
 .. math::
 
@@ -142,7 +147,9 @@ numerically in ``tests/test_tria3dsg.py``:
   constant over the element, so it is formed once per element.
 
 The gap is integrated away from one node, which makes the plain operator
-depend on which node that is: measured on an irregular triangle, the element
+depend on which node that is, a dependence inherent to the method whose
+influence on the solution diminishes with mesh refinement ([1]_,
+Sec. 4.1.1): measured on an irregular triangle, the element
 matrix moves by 14 and 17 per cent under the two cyclic relabellings, against
 `3 \times 10^{-16}` for :class:`pyfe3d.tria3r.Tria3R`, whose shear comes from
 a symmetric centroid evaluation. A mesh generator orders the nodes of a
@@ -485,13 +492,13 @@ cdef class Tria3DSG:
     described in the module documentation: the discrete shear gap is
     already locking-free, so nothing has to be rescaled.
 
-    A non-zero value reproduces the element of Bischoff and Bletzinger
-    (2004) [2]_ and Castro et al. (2019) [3]_ as those papers actually
-    define it,
-    that is the stabilisation applied on top of a discrete shear gap
-    field, which is not how :class:`pyfe3d.tria3r.Tria3R` uses the same
-    symbol. There the factor is applied to a centroid-sampled shear
-    field and has to do the unlocking itself, which is why its default
+    A non-zero value applies the factor of Stenberg's method, as Bischoff
+    and Bletzinger (2004) [2]_ (Sec. 3.1) call the stabilisation of Lyly,
+    Stenberg and Vihinen, on top of a discrete shear gap field, as Castro
+    et al. (2019) [3]_ (Eq. (26)) do, which is not how
+    :class:`pyfe3d.tria3r.Tria3R` uses the same symbol. There the factor
+    is applied to a centroid-sampled shear field and has to do the
+    unlocking itself, which is why its default
     is 0.7, seven times the literature value, and why it is load
     bearing there and merely helpful here.
 
@@ -532,8 +539,11 @@ cdef class Tria3DSG:
     * the constant transverse shear state of
       ``test_constant_transverse_shear_state_is_exact``, exact to
       `10^{-12}` at every element size, drops to `1/(1 + factor)` of
-      the correct energy, which is `0.067` at `\ell/h = 10` and
-      `7 \times 10^{-8}` at `\ell/h = 10^4`;
+      the correct energy, which is `0.067` at `L/h = 10` and
+      `7 \times 10^{-8}` at `L/h = 10^4` for the right triangles of leg
+      `L` of that test, whose longest edge is `\ell = \sqrt{2} L`, i.e.
+      `0.125` at `\ell/h = 10` and `1.4 \times 10^{-7}` at
+      `\ell/h = 10^4`;
     * the sensitivity of `[K_{C0}]` to `A_{ts}` falls by about three
       hundred on the geometry of
       ``test_transverse_shear_stays_out_of_the_nonlinear_terms``, that
