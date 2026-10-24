@@ -112,7 +112,7 @@ from scipy.sparse import csc_matrix, csr_matrix, diags
 from scipy.sparse.linalg import eigsh, eigs, splu, LinearOperator
 from scipy.linalg import eigh, eig, LinAlgError
 
-from .sparseutils import remove_null_cols, is_symmetric
+from .sparseutils import check_null_rows_cols, is_symmetric
 from .arpackutils import capped_eigsh, start_kwargs
 
 __all__ = ['DenseFallbackWarning', 'diagonal_preconditioner',
@@ -1661,11 +1661,10 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
 
     Computes the load multipliers and the buckling modes of the linear
     buckling problem of ``K`` and ``KG``, the lowest positive load
-    multipliers being sought. The null rows and columns of ``K`` are removed
-    from both matrices before solving, see :func:`.remove_null_cols`, and
-    the eigenvectors are returned with the size of the original matrices.
-    ``K`` and ``KG`` are symmetric when ``symmetric=None`` finds them so,
-    see :func:`.is_symmetric`.
+    multipliers being sought. ``K`` must have no null row or column, see
+    :func:`.check_null_rows_cols`, whereas ``KG`` may have null rows and
+    columns. ``K`` and ``KG`` are symmetric when ``symmetric=None`` finds
+    them so, see :func:`.is_symmetric`.
 
     **Symmetric matrices.** The sparse solvers are
     :func:`scipy.sparse.linalg.eigsh` in Cayley mode, using the shift of
@@ -1699,12 +1698,12 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
     Parameters
     ----------
     K, KG : sparse_matrix
-        Constitutive and geometric stiffness matrices, with the boundary
-        conditions already applied, i.e. only the free degrees-of-freedom,
-        or with the null rows and columns of the constrained ones. ``K``
-        should include the constant terms that apply, e.g. the geometric
-        stiffness matrix of a preload, and ``KG`` is the matrix multiplied
-        by the load multiplier. Shape ``(n, n)``.
+        Constitutive and geometric stiffness matrices of the free
+        degrees-of-freedom, i.e. with the constrained ones partitioned out,
+        e.g. ``KC0uu = KC0[bu, :][:, bu]``. ``K`` should include the
+        constant terms that apply, e.g. the geometric stiffness matrix of a
+        preload, and ``KG`` is the matrix multiplied by the load multiplier.
+        Shape ``(n, n)``.
     num_eigvalues : int, optional
         Number of load multipliers to compute, at most ``n - 2`` with the
         sparse solvers. Default ``6``.
@@ -1759,11 +1758,13 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
         :func:`_null_mu_pencil`. Complex only when complex load multipliers
         are returned.
     eigvecs : np.ndarray
-        Eigenvectors, one per column, in the same order, with the size of
-        the original matrices. Shape ``(n, k)``.
+        Eigenvectors, one per column, in the same order. Shape ``(n, k)``.
 
     Raises
     ------
+    numpy.linalg.LinAlgError
+        When ``K`` has a null row or column, with the indices of these
+        degrees-of-freedom, see :func:`.check_null_rows_cols`.
     RuntimeError
         When ``check=True`` and no eigenvalue solver passed the
         verification, with the list of the attempted solvers and their
@@ -1788,6 +1789,16 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
     eigenvalues, see :func:`diagonal_preconditioner`; the verification
     always uses the original matrices.
 
+    A null row or column of `[K_{C0}]` is a degree-of-freedom without
+    stiffness, a modelling error: with the same null row or column of
+    `[K_G]`, `\det([K_{C0}] + \lambda [K_G]) = 0` for every `\lambda`, a
+    singular pencil whose computed eigenvalues are arbitrary, and otherwise
+    `\lambda = 0` is a spurious load multiplier. It is therefore reported
+    instead of being removed, unlike in structsolve, see
+    :func:`.check_null_rows_cols`. A null row of `[K_G]`, at a
+    degree-of-freedom that the load does not destabilize, only gives an
+    infinite load multiplier.
+
     A failure of the verification usually means that the mesh, and not the
     solver, needs attention: a spectrum with many nearly coincident
     eigenvalues, as in the buckling of a cylindrical shell, is the typical
@@ -1799,8 +1810,8 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
     and real, no divergence load was found.
 
     """
-    size = K.shape[0]
-    K, KG, used = remove_null_cols(K, KG)
+    check_null_rows_cols(K, 'K')
+    K, KG = csr_matrix(K), csr_matrix(KG)
     n = K.shape[0]
     if symmetric is None:
         symmetric = is_symmetric(K) and is_symmetric(KG)
@@ -1899,9 +1910,7 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
     with np.errstate(divide='ignore', invalid='ignore'):
         eigvals = -1./mu
     eigvals[mu == 0] = -np.inf
-    full = np.zeros((size, eigvecs.shape[1]), dtype=eigvecs.dtype)
-    full[used, :] = eigvecs
-    return eigvals, full
+    return eigvals, eigvecs
 
 
 def _check_freq(K, M, omega2, eigvecs, rtol, symmetric, min_rel_gap=1.e-4):
@@ -2041,8 +2050,9 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
                       sparse_solver=True, max_dense_size=2000):
     r"""Natural frequencies from the stiffness and mass matrices
 
-    The null rows and columns of ``K`` are removed from both matrices, see
-    :func:`.remove_null_cols`, the matrices are optionally preconditioned
+    ``K`` must have no null row or column, see :func:`.check_null_rows_cols`,
+    whereas ``M`` may have null rows and columns, e.g. a lumped mass matrix
+    without rotary inertia. The matrices are optionally preconditioned
     with :func:`diagonal_preconditioner`, and the eigenvalues, the squares
     of the circular frequencies, are computed in shift-invert mode with
     ``sigma=-1.`` and ``which='LM'``, with :func:`scipy.sparse.linalg.eigsh`
@@ -2062,16 +2072,16 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
 
     The eigenpairs are sorted together by increasing frequency, the
     eigenvectors are transformed back to the original degrees-of-freedom,
-    with the size of the original matrices, and negative eigenvalues of
-    symmetric matrices give a zero frequency.
+    and negative eigenvalues of symmetric matrices give a zero frequency.
 
     Parameters
     ----------
     K, M : sparse_matrix
-        Constitutive stiffness and mass matrices, with the boundary
-        conditions already applied. ``K`` should include the constant terms
-        that apply, e.g. the geometric stiffness matrix of a preload. Shape
-        ``(n, n)``.
+        Constitutive stiffness and mass matrices of the free
+        degrees-of-freedom, i.e. with the constrained ones partitioned out,
+        e.g. ``KC0uu = KC0[bu, :][:, bu]``. ``K`` should include the
+        constant terms that apply, e.g. the geometric stiffness matrix of a
+        preload. Shape ``(n, n)``.
     num_eigvalues : int, optional
         Number of frequencies to compute. Default ``6``.
     tol : float, optional
@@ -2112,6 +2122,9 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
 
     Raises
     ------
+    numpy.linalg.LinAlgError
+        When ``K`` has a null row or column, with the indices of these
+        degrees-of-freedom, see :func:`.check_null_rows_cols`.
     RuntimeError
         When ``check=True`` and no eigenvalue solver passed the
         verification.
@@ -2130,6 +2143,14 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
     when `[K_{C0}]` is positive semi-definite and `[M]` positive definite,
     factorizing `[K_{C0}] + [M]`, which is not singular when `[K_{C0}]` is
     singular only because of unconstrained rigid-body modes that have mass.
+
+    A null row or column of `[K_{C0}]` is a degree-of-freedom without
+    stiffness, a modelling error: with the same null row or column of
+    `[M]`, `\det([K_{C0}] - \omega_n^2 [M]) = 0` for every `\omega_n^2`,
+    a singular pencil whose computed eigenvalues are arbitrary, and
+    otherwise `\omega_n^2 = 0` is a spurious frequency. It is therefore
+    reported instead of being removed, unlike in structsolve, see
+    :func:`.check_null_rows_cols`.
 
     A mass matrix without rotary inertia, and one without inertia associated
     with the drilling rotation, is singular, so the eigenvalues associated
@@ -2157,8 +2178,8 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
        Stability, Pergamon Press, Oxford, 1963.
 
     """
-    size = K.shape[0]
-    K, M, used = remove_null_cols(K, M)
+    check_null_rows_cols(K, 'K')
+    K, M = csr_matrix(K), csr_matrix(M)
     n = K.shape[0]
     if symmetric is None:
         symmetric = is_symmetric(K) and is_symmetric(M)
@@ -2217,7 +2238,4 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
             omegan = np.sqrt(np.maximum(w2, 0.))
         else:
             omegan = np.sqrt(w2)
-    eigvecs = eigvecs[:, order]
-    full = np.zeros((size, eigvecs.shape[1]), dtype=eigvecs.dtype)
-    full[used, :] = eigvecs
-    return omegan, full
+    return omegan, eigvecs[:, order]

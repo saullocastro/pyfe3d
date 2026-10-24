@@ -62,8 +62,11 @@ a prescribed dof is ``calc_fint(u)`` at that dof minus the load applied
 there, see ``test_prescribed_displacement_and_reaction`` in
 :doc:`ex_nonlinear_static`.
 
-Without ``bu``, the constrained dofs must have null rows and columns in the
-matrices, which the solvers remove, and null values in the vectors.
+Without ``bu``, the callables return the vectors and matrices of the free
+dofs only. The solvers do not remove null rows and columns: a null row or
+column of the linear stiffness matrix, a dof without stiffness, raises a
+:class:`numpy.linalg.LinAlgError` naming the dofs, see
+:func:`.check_null_rows_cols`.
 
 
 Solvers

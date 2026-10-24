@@ -163,7 +163,12 @@ steps:
    ``bu = ~bk`` for the free ones. The matrices are partitioned,
    ``KC0uu = KC0[bu, :][:, bu]``, and the solution is expanded,
    ``u[bu] = uu``. With :class:`.Analysis`, ``bu`` is passed instead and the
-   partition is done by the solver, see :doc:`nonlinear_analyses`.
+   partition is done by the solver, see :doc:`nonlinear_analyses`. The
+   solvers of :mod:`pyfe3d.solver` do not remove null rows and columns: a
+   dof left without stiffness, e.g. an unattached node, an unstiffened
+   drilling rotation or a missing boundary condition, raises a
+   :class:`numpy.linalg.LinAlgError` naming the dofs, see
+   :func:`.check_null_rows_cols`.
 6. Solution: the linear static system `[K_{C0}]_{uu}\{u\}_u = \{f\}_u`, with
    :func:`.solve` or :func:`scipy.sparse.linalg.spsolve`; the eigenvalue
    problems with :func:`.linear_buckling` and :func:`.natural_frequency`,

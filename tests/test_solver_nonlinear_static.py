@@ -25,6 +25,7 @@ sys.path.append('..')
 
 import numpy as np
 import pytest
+from numpy.linalg import LinAlgError
 from scipy.sparse import coo_matrix, csr_matrix
 
 from pyfe3d import DOF, INT, DOUBLE
@@ -232,7 +233,8 @@ def test_crisfield_criterion_free_dofs_only():
     reaction: included in the norms it keeps `\zeta` of the order of one,
     over the free degrees-of-freedom it is below the tolerance. The same
     model with the constrained rows and columns zeroed instead of ``bu``
-    converges with the same iterations"""
+    raises an error naming the constrained degrees-of-freedom, whose null
+    rows and columns are not removed by the solvers"""
     elements, data, prop, x, N, bu, fext, deflection = plate('Quad4R')
     model = Model(elements, data, prop, x, N, fext)
     an = model.analysis(bu, initialInc=1., relTOL=1.e-9)
@@ -252,27 +254,27 @@ def test_crisfield_criterion_free_dofs_only():
     assert zeta_free <= 1.e-9
     assert zeta_all > 0.1
 
-    # NOTE constrained degrees-of-freedom as null rows and columns
+    # NOTE constrained degrees-of-freedom as null rows and columns, with the
+    #      weights of Crisfield's criterion and with the linear solution of
+    #      the predictor of the relative criterion
     keep = bu.astype(float)
     P = csr_matrix(coo_matrix((keep, (np.arange(N), np.arange(N))),
                               shape=(N, N)))
-    calls = []
-
-    def calc_fint(c, silent=True):
-        calls.append(c.copy())
-        return keep*model.internal_forces(c)
-
-    an_null = Analysis(lambda inc=1., silent=True: inc*keep*fext, calc_fint,
-                       lambda c=None, NLgeom=False, silent=True:
-                       P @ model.calc_kC(c, NLgeom) @ P,
-                       lambda c=None, NLgeom=False, silent=True:
-                       P @ model.calc_kG(c, NLgeom) @ P)
-    an_null.initialInc = 1.
-    an_null.relTOL = 1.e-9
-    increments_null, cs_null = an_null.static(NLgeom=True, silent=True)
-    assert len(calls) == len(model.fint_calls)
-    np.testing.assert_allclose(cs_null[-1], u, rtol=1.e-9,
-                               atol=1.e-12*np.abs(u).max())
+    constrained = np.flatnonzero(~bu)
+    listed = ', '.join(str(i) for i in constrained[:10])
+    for convergence in ['crisfield', 'relative']:
+        an_null = Analysis(lambda inc=1., silent=True: inc*keep*fext,
+                           lambda c, silent=True:
+                           keep*model.internal_forces(c),
+                           lambda c=None, NLgeom=False, silent=True:
+                           P @ model.calc_kC(c, NLgeom) @ P,
+                           lambda c=None, NLgeom=False, silent=True:
+                           P @ model.calc_kG(c, NLgeom) @ P)
+        an_null.convergence = convergence
+        with pytest.raises(LinAlgError, match=r'null row or column at %d '
+                           r'degree\(s\)-of-freedom, of indices %s, \.\.\.\.'
+                           % (constrained.size, listed)):
+            an_null.static(NLgeom=True, silent=True)
 
 
 def point_loaded_plate():

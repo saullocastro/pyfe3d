@@ -14,6 +14,7 @@ import warnings
 
 import numpy as np
 import pytest
+from numpy.linalg import LinAlgError
 from scipy.linalg import eig, block_diag
 from scipy.sparse import (csc_matrix, csr_matrix, diags, identity, bmat, tril,
                           random as sprandom)
@@ -187,24 +188,29 @@ def test_quad4_plate_reference_load():
                   < 1e-6)
 
 
-def test_null_KG_rows_and_null_cols():
-    r"""Condensed solution with null rows of ``KG`` and null rows of ``K``,
-    with eigenvectors of the size of the original matrices"""
+def test_null_KG_rows_and_null_K_rows():
+    r"""Condensed solution with null rows of ``KG``; null rows and columns of
+    ``K`` raise an error naming their degrees-of-freedom, with the sparse
+    and the dense solvers"""
     n = 60
     A = sprandom(n, n, density=0.1, random_state=2)
     K = (A @ A.T + identity(n)).tocsr()
     B = sprandom(n//3, n//3, density=0.3, random_state=3)
     KG = bmat([[-(B @ B.T + 0.1*identity(n//3)), None],
                [None, csc_matrix((n - n//3, n - n//3))]]).tocsr()
+    eig_sparse, eigvecs = linear_buckling(K, KG, num_eigvalues=10)
+    eig_dense, _ = linear_buckling(K, KG, sparse_solver=False)
+    np.testing.assert_allclose(eig_sparse, eig_dense[:10], rtol=1e-8)
+    assert eigvecs.shape == (n, 10)
+    assert np.all(relative_residuals(K, KG, eig_sparse, eigvecs) < 1e-8)
     Z = csc_matrix((2, 2))
     K2 = bmat([[K, None], [None, Z]]).tocsr()
     KG2 = bmat([[KG, None], [None, Z]]).tocsr()
-    eig_sparse, eigvecs = linear_buckling(K2, KG2, num_eigvalues=10)
-    eig_dense, _ = linear_buckling(K2, KG2, sparse_solver=False)
-    np.testing.assert_allclose(eig_sparse, eig_dense[:10], rtol=1e-8)
-    assert eigvecs.shape == (n + 2, 10)
-    assert np.all(eigvecs[n:, :] == 0)
-    assert np.all(relative_residuals(K2, KG2, eig_sparse, eigvecs) < 1e-8)
+    for kwargs in [{}, {'sparse_solver': False}, {'symmetric': False}]:
+        with pytest.raises(LinAlgError, match=r'K is singular: null row or '
+                           r'column at 2 degree\(s\)-of-freedom, of indices '
+                           r'%d, %d\.' % (n, n + 1)):
+            linear_buckling(K2, KG2, num_eigvalues=10, **kwargs)
     # NOTE the dense fallback alone
     mu, v = eigen._eigh_condensed(K, KG, 10)
     np.testing.assert_allclose(-1/mu, eig_dense[:10], rtol=1e-8)
@@ -306,7 +312,13 @@ def test_plate_buckling_fsdt_ritz():
             K += np.outer(detJ*weight*Qy, g0yz)
             K += np.outer(detJ*weight*Qx, g0xz)
             KG += np.outer(detJ*weight*Nxxhat*Swx, Swx)
-    eigvals, eigvecs = linear_buckling(csc_matrix(K), csc_matrix(KG),
+    # NOTE the Ritz model applies the boundary conditions by zeroing
+    #      approximation functions, whose null rows and columns are
+    #      partitioned out before calling the solver
+    bu = np.any(K != 0, axis=0)
+    assert np.count_nonzero(bu) < N
+    eigvals, eigvecs = linear_buckling(csc_matrix(K[bu, :][:, bu]),
+                                       csc_matrix(KG[bu, :][:, bu]),
                                        num_eigvalues=4)
     D = E*h**3/(12*(1 - nu**2))
     Ncr_analytical = 4*np.pi**2*D/b**2

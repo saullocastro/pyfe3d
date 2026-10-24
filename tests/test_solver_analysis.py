@@ -7,6 +7,7 @@ sys.path.append('..')
 
 import numpy as np
 import pytest
+from numpy.linalg import LinAlgError
 from scipy.sparse import csc_matrix, csr_matrix
 
 from pyfe3d.solver import Analysis, crisfield_weights, crisfield_zeta
@@ -41,6 +42,33 @@ def test_analysis_newton_raphson_linear_system():
     np.testing.assert_allclose(cs[-1], 2.0*np.ones(n), rtol=1e-12)
 
 
+@pytest.mark.parametrize('convergence', ['crisfield', 'relative'])
+@pytest.mark.parametrize('NLgeom, NL_method, modified_NR', [
+    (False, 'NR', False),
+    (True, 'NR', False),
+    (True, 'NR', True),
+    (True, 'arc_length_riks', False),
+    (True, 'arc_length_crisfield', True)])
+def test_null_row_raises(NLgeom, NL_method, modified_NR, convergence):
+    r"""A null row and column of the linear stiffness matrix, a
+    degree-of-freedom without stiffness, raises an error naming it in the
+    linear and in every non-linear analysis, instead of being removed"""
+    n = 4
+    K = np.diag([2., 3., 0., 4.])
+    an = Analysis(calc_fext=lambda inc=1., silent=True: inc*np.ones(n),
+                  calc_kC=lambda c=None, NLgeom=False, silent=True:
+                  csr_matrix(K),
+                  calc_kG=lambda c=None, NLgeom=False, silent=True:
+                  csr_matrix((n, n)),
+                  calc_fint=lambda c=None, silent=True: K @ c)
+    an.NL_method = NL_method
+    an.modified_NR = modified_NR
+    an.convergence = convergence
+    with pytest.raises(LinAlgError, match=r'null row or column at 1 '
+                       r'degree\(s\)-of-freedom, of indices 2\.'):
+        an.static(NLgeom=NLgeom, silent=True)
+
+
 def test_invalid_parameters():
     n = 3
     K = csc_matrix(np.eye(n))
@@ -67,22 +95,27 @@ def test_invalid_parameters():
 
 
 def test_crisfield_weights_and_zeta():
-    r"""`w_j = 1/|K_{jj}|` at the free degrees-of-freedom, zero at the null
-    rows and columns; `\zeta = \|R\|_{\boldsymbol{d}}/
-    \max(\|F_{ext}\|_{\boldsymbol{d}}, \|F_{int}\|_{\boldsymbol{d}})`"""
-    K = csr_matrix(np.array([[4., -1., 0.], [-1., -2., 0.], [0., 0., 0.]]))
+    r"""`w_j = 1/|K_{jj}|`; `\zeta = \|R\|_{\boldsymbol{d}}/
+    \max(\|F_{ext}\|_{\boldsymbol{d}}, \|F_{int}\|_{\boldsymbol{d}})`; a
+    null row and column raises the error of the solvers, a null diagonal
+    entry in a row that is not null a ValueError"""
+    K = csr_matrix(np.array([[4., -1.], [-1., -2.]]))
     w = crisfield_weights(K)
-    np.testing.assert_allclose(w, [0.25, 0.5, 0.])
-    fext = np.array([2., 0., 7.])
-    fint = np.array([1., 1., 0.])
+    np.testing.assert_allclose(w, [0.25, 0.5])
+    fext = np.array([2., 0.])
+    fint = np.array([1., 1.])
     R = fext - fint
     zeta = crisfield_zeta(R, fext, fint, w)
     ref = max(np.sqrt(4*0.25), np.sqrt(0.25 + 0.5))
     np.testing.assert_allclose(zeta, np.sqrt(0.25 + 0.5)/ref)
     # NOTE an additional reference, e.g. lbd*dR/dlbd
-    assert crisfield_zeta(R, fext, fint, w, q=np.array([10., 0., 0.])) < zeta
-    assert crisfield_zeta(np.zeros(3), np.zeros(3), np.zeros(3), w) == 0.
-    assert crisfield_zeta(R, np.zeros(3), np.zeros(3), w) == np.inf
+    assert crisfield_zeta(R, fext, fint, w, q=np.array([10., 0.])) < zeta
+    assert crisfield_zeta(np.zeros(2), np.zeros(2), np.zeros(2), w) == 0.
+    assert crisfield_zeta(R, np.zeros(2), np.zeros(2), w) == np.inf
+    with pytest.raises(LinAlgError, match=r'K0 is singular: null row or '
+                       r'column at 1 degree\(s\)-of-freedom, of indices 2\.'):
+        crisfield_weights(csr_matrix(np.array([[4., -1., 0.], [-1., -2., 0.],
+                                               [0., 0., 0.]])))
     with pytest.raises(ValueError, match='null diagonal'):
         crisfield_weights(csr_matrix(np.array([[0., 1.], [1., 2.]])))
 
@@ -215,7 +248,7 @@ def test_linear_static_follower_factorization_failure(monkeypatch, capsys):
     from pyfe3d.solver import analysis
 
     def fails(k0):
-        raise RuntimeError('Factor is exactly singular')
+        raise LinAlgError('kT is exactly singular')
 
     monkeypatch.setattr(analysis, '_factorize', fails)
     K = springs_chain()[1:, 1:]

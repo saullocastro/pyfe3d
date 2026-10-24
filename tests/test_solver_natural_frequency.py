@@ -30,6 +30,7 @@ import warnings
 
 import numpy as np
 import pytest
+from numpy.linalg import LinAlgError
 from scipy.linalg import block_diag, eigh, eig
 from scipy.sparse import csc_matrix, csr_matrix, diags, random as sprandom
 
@@ -78,21 +79,33 @@ def test_simple():
 
 
 def test_null_dofs():
-    r"""The null rows and columns are removed and the eigenvectors have the
-    size of the original matrices"""
-    n = 8
-    K = np.zeros((n, n))
-    M = np.zeros((n, n))
-    active = [1, 2, 3, 4, 5]
-    for i in active:
-        K[i, i] = float(i)*100
-        M[i, i] = 1.0
-    omegan, eigvecs = natural_frequency(csc_matrix(K), csc_matrix(M),
-                                        num_eigvalues=3)
-    np.testing.assert_allclose(omegan, np.sqrt([100., 200., 300.]),
-                               rtol=1e-10)
-    assert eigvecs.shape == (n, 3)
-    assert np.all(eigvecs[[0, 6, 7], :] == 0)
+    r"""Null rows and columns of ``K`` raise an error naming their
+    degrees-of-freedom; those of ``M``, e.g. a lumped mass matrix without
+    rotary inertia, give infinite frequencies, which are not returned"""
+    n = 30
+    null = [0, 6, 7]
+    k_vals = np.arange(1, n + 1, dtype=float)*100
+    m_vals = np.ones(n)
+    m_vals[null] = 0.
+    K = np.diag(k_vals)
+    K[null, null] = 0.
+    for kwargs in [{}, {'sparse_solver': False}, {'symmetric': False}]:
+        with pytest.raises(LinAlgError, match=r'K is singular: null row or '
+                           r'column at 3 degree\(s\)-of-freedom, of indices '
+                           r'0, 6, 7\.'):
+            natural_frequency(csc_matrix(K), diags(m_vals), num_eigvalues=3,
+                              **kwargs)
+    # NOTE stiffness at the massless degrees-of-freedom
+    for sparse_solver in [True, False]:
+        omegan, eigvecs = natural_frequency(csc_matrix(np.diag(k_vals)),
+                                            diags(m_vals), num_eigvalues=3,
+                                            sparse_solver=sparse_solver,
+                                            max_dense_size=0)
+        np.testing.assert_allclose(omegan[:3], np.sqrt([200., 300., 400.]),
+                                   rtol=1e-10)
+        assert eigvecs.shape[0] == n
+        assert np.allclose(eigvecs[null, :3], 0.,
+                           atol=1e-12*np.abs(eigvecs).max())
 
 
 def freq_problem(symmetric, n=300, seed=0):

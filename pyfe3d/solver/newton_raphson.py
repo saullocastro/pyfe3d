@@ -12,6 +12,7 @@ they are shared with the arc-length solvers of :mod:`.arc_length`.
 
 """
 import numpy as np
+from numpy.linalg import LinAlgError
 
 from .logger import msg, warn
 from .static import solve, _factorize
@@ -311,7 +312,7 @@ def _NR_iterations(an, pb, c, dc, total, fext, w, kT0=None, silent=False,
                     # NOTE dR/dlbd at the iterate of the tangent stiffness
                     #      matrix
                     q = callbacks.calc_load_vector(pb, c + dc, fext, total)
-        except RuntimeError:
+        except LinAlgError:
             warn('Singular tangent stiffness matrix', level=2, silent=silent)
             return False, dc, q
 

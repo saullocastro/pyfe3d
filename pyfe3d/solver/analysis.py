@@ -18,6 +18,7 @@ imposes the prescribed displacements ``uk``.
 
 """
 import numpy as np
+from numpy.linalg import LinAlgError
 from scipy.sparse import csr_matrix
 
 from .logger import msg, warn
@@ -466,9 +467,10 @@ class Analysis(object):
         matrices of all the ``N`` degrees-of-freedom, e.g. assembled with the
         elements of this package, and the solvers work with the free ones
         only, see :class:`FreeDofs`. With ``None``, the callables work with
-        the vectors and matrices of the solver, whose null rows and columns
-        of the stiffness matrices, if any, are the constrained
-        degrees-of-freedom. Default ``None``.
+        the vectors and matrices of the solver, i.e. of the free
+        degrees-of-freedom only, the constrained ones being partitioned out:
+        a null row or column of the stiffness matrices raises an error, see
+        :func:`.check_null_rows_cols`. Default ``None``.
     uk : array_like or None, optional
         Prescribed displacements for a unit load factor, 1-D array of size
         ``N``, used with ``bu``: the displacements of the constrained
@@ -644,6 +646,13 @@ class Analysis(object):
             When ``NLgeom=True`` and the ``NL_method`` attribute is not
             ``'NR'``, ``'arc_length_riks'`` or ``'arc_length_crisfield'``,
             or when ``uk`` is given without ``bu``.
+        numpy.linalg.LinAlgError
+            When the linear stiffness matrix of the solver ``calc_kC()``,
+            with ``bu`` that of the free degrees-of-freedom, has a null row
+            or column, see :func:`.check_null_rows_cols`, or when it is
+            exactly singular. A singular tangent stiffness matrix during the
+            non-linear iterations does not raise, it stops the iterations,
+            see the documentation of each solver.
 
         Notes
         -----
@@ -764,7 +773,7 @@ class Analysis(object):
             if solve_k0 is None:
                 try:
                     solve_k0 = _factorize(k0)
-                except RuntimeError:
+                except LinAlgError:
                     break
             c = c + solve_k0(R)
         warn('The load correction iterations did not converge, the load may '

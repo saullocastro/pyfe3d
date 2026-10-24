@@ -5,61 +5,80 @@ Utilities for sparse matrices (:mod:`pyfe3d.solver.sparseutils`)
 
 .. currentmodule:: pyfe3d.solver.sparseutils
 
-Removal of the null rows and columns of the system matrices, used by the
-solvers before factorizing them, and a cheap test of symmetry, used to
-select the eigenvalue solvers of symmetric or unsymmetric matrices.
+The check that a matrix given to the solvers has no null row or column,
+i.e. no degree-of-freedom without stiffness, done by the solvers before
+factorizing it, and a cheap test of symmetry, used to select the eigenvalue
+solvers of symmetric or unsymmetric matrices.
 
 """
 import numpy as np
+from numpy.linalg import LinAlgError
 from scipy.sparse import csr_matrix
 
+#: Largest number of degrees-of-freedom listed by the error of
+#: :func:`check_null_rows_cols`
+NUM_LISTED_DOFS = 10
 
-def remove_null_cols(*args):
-    r"""Remove the null rows and columns of square sparse matrices
 
-    A degree-of-freedom is removed when both its row and its column of the
-    first matrix are null, and the same rows and columns are removed from
-    all the matrices. An unsymmetric matrix, e.g. with the load stiffness of
-    a follower load, thus never loses an equation whose row is not null. For
-    a matrix that is not square, the null columns are removed.
+def check_null_rows_cols(A, name='A'):
+    r"""Raise an error when a square matrix has a null row or column
+
+    Called by the solvers of :mod:`pyfe3d.solver` before factorizing the
+    matrix, since a null row or column makes it singular.
 
     Parameters
     ----------
-    args : sparse_matrix or np.ndarray
-        One or more matrices of the same shape ``(n, n)``. The first one
-        tells which rows and columns are removed from all of them.
+    A : sparse_matrix or np.ndarray
+        Square matrix, shape ``(n, n)``.
+    name : str, optional
+        Name of the matrix in the error message. Default ``'A'``.
 
-    Returns
-    -------
-    out : list
-        The reduced matrices, converted to :class:`scipy.sparse.csr_matrix`
-        and in the order of ``args``, followed by the 1-D integer array
-        ``used`` of the indices of the rows and columns that were kept, in
-        increasing order.
+    Raises
+    ------
+    numpy.linalg.LinAlgError
+        When a row or a column of ``A`` is null. The message gives the
+        number of these degrees-of-freedom, the first
+        :data:`NUM_LISTED_DOFS` of their indices in ``A``, and how to correct
+        the model.
 
     Notes
     -----
-    With `u` the set of the degrees-of-freedom whose row or column of the
-    first matrix `[A]` has a non-zero entry, the reduced matrices are
-    `[A_{uu}]`. A null row and column are what the boundary conditions leave
-    in a matrix assembled with the constrained degrees-of-freedom zeroed, so
-    that removing them is the partition of the free degrees-of-freedom. A
-    row that is not null with a null column, or the opposite, is kept, and
-    the reduced matrix is then singular, as the full one.
+    A row or column is null when none of its stored entries is non-zero,
+    explicitly stored zeros being ignored; the cost is of the order of the
+    number of stored entries of `[A]`.
+
+    In a finite element model, a null row or column of the matrix given to
+    the solvers is a degree-of-freedom without stiffness, e.g. an unattached
+    node, an unstiffened drilling rotation or a missing boundary condition,
+    i.e. a modelling error, which is reported instead of being hidden. The
+    known displacements are partitioned out before calling the solvers,
+    e.g. ``KC0uu = KC0[bu, :][:, bu]`` with the boolean mask ``bu`` of the
+    free degrees-of-freedom, or with ``Analysis(..., bu=bu)``, see
+    :class:`.FreeDofs`. This deliberately differs from structsolve, whose
+    semi-analytical Ritz models apply the boundary conditions by zeroing
+    approximation functions, which leaves null rows and columns that its
+    solvers remove.
 
     """
-    first = csr_matrix(args[0])
-    rows, cols = first.nonzero()
-    if first.shape[0] == first.shape[1]:
-        used = np.unique(np.concatenate((rows, cols)))
-    else:
-        used = np.unique(cols)
-    out = []
-    for i, arg in enumerate(args):
-        m = first if i == 0 else csr_matrix(arg)
-        out.append(m[used, :][:, used])
-    out.append(used)
-    return out
+    A = csr_matrix(A)
+    n = A.shape[0]
+    rows, cols = A.nonzero()
+    null = ((np.bincount(rows, minlength=n) == 0)
+            | (np.bincount(cols, minlength=n) == 0))
+    dofs = np.flatnonzero(null)
+    if dofs.size == 0:
+        return
+    listed = ', '.join(str(i) for i in dofs[:NUM_LISTED_DOFS])
+    if dofs.size > NUM_LISTED_DOFS:
+        listed += ', ...'
+    raise LinAlgError('%s is singular: null row or column at %d '
+        'degree(s)-of-freedom, of indices %s. A degree-of-freedom without '
+        'stiffness, e.g. an unattached node, an unstiffened drilling '
+        'rotation or a missing boundary condition, is a modelling error. '
+        'Partition out the constrained degrees-of-freedom, e.g. '
+        'KC0uu = KC0[bu, :][:, bu] with the boolean mask bu of the free '
+        'ones, or Analysis(..., bu=bu), or add the missing stiffness or '
+        'boundary conditions' % (name, dofs.size, listed))
 
 
 def is_symmetric(A, rtol=1.e-10):

@@ -12,6 +12,7 @@ module-level constants control the arc-length scaling and adaptation.
 
 """
 import numpy as np
+from numpy.linalg import LinAlgError
 
 from .logger import msg, warn
 from .static import solve, _factorize
@@ -319,7 +320,7 @@ def _solver_arc_length(an, pb, method, silent=False):
                 kT = callbacks.calc_kT(pb, c, lbd)
             try:
                 solve_kT_conv = _factorize(kT)
-            except RuntimeError:
+            except LinAlgError:
                 warn('Singular tangent stiffness matrix at the last converged '
                      'state! Analysis stopped', level=1, silent=silent)
                 break
@@ -381,7 +382,7 @@ def _solver_arc_length(an, pb, method, silent=False):
                 try:
                     solve_kT = _factorize(callbacks.calc_kT(pb, c + dc,
                                                             lbd + dlbd))
-                except RuntimeError:
+                except LinAlgError:
                     warn('Singular tangent stiffness matrix', level=2,
                          silent=silent)
                     break

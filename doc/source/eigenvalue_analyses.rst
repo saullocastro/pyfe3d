@@ -77,8 +77,11 @@ Bolotin (1963), see :func:`.natural_frequency`.
 Verification and dense fallback
 -------------------------------
 
-Both functions remove the null rows and columns of the first matrix, see
-:func:`.remove_null_cols`, equilibrate the diagonal of the matrices with
+Both functions check that `[K]` has no null row or column, a dof without
+stiffness, which raises a :class:`numpy.linalg.LinAlgError` naming the
+dofs, see :func:`.check_null_rows_cols`, whereas `[K_G]` and `[M]` may
+have null rows, e.g. a lumped mass matrix without rotary inertia. They
+equilibrate the diagonal of the matrices with
 :func:`.diagonal_preconditioner`, which does not change the eigenvalues,
 and select the solvers of symmetric or unsymmetric matrices with
 :func:`.is_symmetric`. Then:

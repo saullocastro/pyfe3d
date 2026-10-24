@@ -125,6 +125,8 @@ References
 import numpy as np
 from scipy.sparse import csr_matrix
 
+from .sparseutils import check_null_rows_cols
+
 #: Names of the convergence criteria accepted by ``Analysis.convergence``
 CRITERIA = ('crisfield', 'relative')
 
@@ -132,16 +134,15 @@ CRITERIA = ('crisfield', 'relative')
 def crisfield_weights(K0):
     r"""Weights `1/|d_j|` of the scaled norm of Crisfield's criterion
 
-    The weight of each free degree-of-freedom is the inverse of the modulus
-    of the diagonal entry of ``K0``. The free degrees-of-freedom are those
-    whose row or column of ``K0`` is not null, as the ones kept by the
-    solvers, see :func:`.remove_null_cols`; the others get a null weight,
-    i.e. they do not enter the norms.
+    The weight of each degree-of-freedom is the inverse of the modulus of
+    the diagonal entry of ``K0``. ``K0`` must have no null row or column, as
+    the matrices given to the solvers, see :func:`.check_null_rows_cols`.
 
     Parameters
     ----------
     K0 : sparse_matrix or np.ndarray
-        Linear stiffness matrix, shape ``(n, n)``, normally ``calc_kC()``.
+        Linear stiffness matrix of the free degrees-of-freedom, shape ``(n,
+        n)``, normally ``calc_kC()``.
 
     Returns
     -------
@@ -151,9 +152,12 @@ def crisfield_weights(K0):
 
     Raises
     ------
+    numpy.linalg.LinAlgError
+        When ``K0`` has a null row or column, see
+        :func:`.check_null_rows_cols`.
     ValueError
-        When the diagonal entry of a free degree-of-freedom is null, which
-        leaves its scaling undefined.
+        When a diagonal entry is null in a row or column that is not null,
+        which leaves the scaling of its degree-of-freedom undefined.
 
     See Also
     --------
@@ -161,25 +165,22 @@ def crisfield_weights(K0):
 
     Notes
     -----
-    `w_j = 1/|K_{{C0}_{jj}}|` at the free degrees-of-freedom, see the
-    module documentation, and `w_j = 0` at the degrees-of-freedom whose row
-    and column of `[K_{C0}]` are both null, i.e. constrained by zeroing
-    them.
+    `w_j = 1/|K_{{C0}_{jj}}|`, see the module documentation. The
+    constrained degrees-of-freedom are partitioned out before calling the
+    solvers, so that every degree-of-freedom of ``K0`` is free and enters
+    the norms. A null diagonal entry in a row that is not null, e.g. of a
+    Lagrange multiplier, gives no scale to its degree-of-freedom, in which
+    case the relative criterion is the alternative,
+    ``convergence='relative'``.
 
     """
     K0 = csr_matrix(K0)
-    rows, cols = K0.nonzero()
-    free = np.zeros(K0.shape[0], dtype=bool)
-    free[rows] = True
-    free[cols] = True
+    check_null_rows_cols(K0, 'K0')
     d = np.abs(np.asarray(K0.diagonal(), dtype=float))
-    if np.any(free & (d == 0)):
+    if np.any(d == 0):
         raise ValueError('Crisfield criterion: null diagonal entry of the '
-                         'linear stiffness matrix at a free '
-                         'degree-of-freedom, use convergence="relative"')
-    w = np.zeros(K0.shape[0])
-    w[free] = 1./d[free]
-    return w
+                         'linear stiffness matrix, use convergence="relative"')
+    return 1./d
 
 
 def scaled_norm(v, w):

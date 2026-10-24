@@ -16,8 +16,7 @@
 working. The features of structsolve are implemented in it, without
 depending on structsolve:
 
-- `pyfe3d.solver.static`: `solve()`, removing the null rows and columns of
-  the matrix, and `linear_static()`;
+- `pyfe3d.solver.static`: `solve()` and `linear_static()`;
 - `pyfe3d.solver.analysis.Analysis`: linear and non-linear static analyses
   of a model given by the callables `calc_fext`, `calc_fint`, `calc_kC` and
   `calc_kG`, with the Newton-Raphson method, full or modified, with an
@@ -31,6 +30,24 @@ depending on structsolve:
   default of the non-linear solvers, the residual scaled with the diagonal
   of the linear stiffness matrix over the free degrees-of-freedom; the
   relative criterion remains available with `convergence='relative'`;
+- singular matrices raise `numpy.linalg.LinAlgError`: the solvers do not
+  remove null rows and columns. A null row or column of the matrix given
+  to `solve()`, to the factorization of the non-linear solvers, to
+  `crisfield_weights()`, or of `K` in `linear_buckling()` and
+  `natural_frequency()`, is a degree-of-freedom without stiffness (an
+  unattached node, an unstiffened drilling rotation, a missing boundary
+  condition), i.e. a modelling error, and the message gives the number of
+  these degrees-of-freedom, their first indices and how to correct the
+  model, see the new `pyfe3d.solver.check_null_rows_cols()`; `KG` and `M`
+  may have null rows and columns, e.g. a lumped mass matrix without rotary
+  inertia. An exactly singular matrix also raises in `solve()`, instead of
+  the `MatrixRankWarning` and NaN values of
+  `scipy.sparse.linalg.spsolve()`. The constrained degrees-of-freedom are
+  partitioned out by the user, `KC0uu = KC0[bu, :][:, bu]`, or with
+  `Analysis(..., bu=bu)`. This deliberately differs from structsolve, whose
+  semi-analytical Ritz models apply the boundary conditions by zeroing
+  approximation functions and whose solvers remove the null rows and
+  columns that this leaves;
 - `linear_buckling()` and `natural_frequency()`: unsymmetric matrices, the
   negative load multipliers closest to zero after the positive ones, the
   verification of every eigenpair with the sparse solvers first and a dense

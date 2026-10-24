@@ -1,19 +1,24 @@
 r"""Tests for :mod:`pyfe3d.solver.static` and :mod:`pyfe3d.solver.sparseutils`
 
-:func:`pyfe3d.solver.solve` removes the null rows and columns of the matrix
-and :func:`pyfe3d.solver.linear_static` is based on it, tested with a Ritz
-plate whose deflection is compared with the Navier solution.
+:func:`pyfe3d.solver.solve` raises an error for a singular matrix, naming
+the degrees-of-freedom of its null rows and columns, see
+:func:`pyfe3d.solver.check_null_rows_cols`, and
+:func:`pyfe3d.solver.linear_static` is based on it, tested with a Ritz plate
+whose deflection is compared with the Navier solution.
 """
 import sys
 sys.path.append('..')
 
 import numpy as np
 import pytest
+from numpy.linalg import LinAlgError
 from scipy.sparse import csc_matrix, csr_matrix, coo_matrix
 from scipy.sparse import random as sprandom
 from scipy.special import roots_legendre
 
-from pyfe3d.solver import solve, linear_static, remove_null_cols, is_symmetric
+from pyfe3d.solver import (solve, linear_static, check_null_rows_cols,
+                           is_symmetric)
+from pyfe3d.solver.static import _factorize
 
 from ritz import isotropic_plate, vecf, vecfxi, vecfxixi
 
@@ -26,8 +31,8 @@ def test_solve_diagonal_system():
 
 
 def test_solve_with_null_columns():
-    r"""The constrained degrees-of-freedom, null rows and columns, are
-    removed and their solution is zero"""
+    r"""Constrained degrees-of-freedom left as null rows and columns raise
+    an error naming them; partitioned out, the system is solved"""
     n = 6
     K_dense = np.zeros((n, n))
     active = np.array([1, 2, 3, 4])
@@ -35,11 +40,13 @@ def test_solve_with_null_columns():
         K_dense[i, i] = float(i + 1)
     f = np.zeros(n)
     f[active] = 1.0
-    u = solve(csc_matrix(K_dense), f)
-    assert u[0] == 0.0
-    assert u[5] == 0.0
-    for i in active:
-        np.testing.assert_allclose(u[i], 1.0/(i + 1))
+    with pytest.raises(LinAlgError, match=r'A is singular: null row or '
+                       r'column at 2 degree\(s\)-of-freedom, of indices 0, 5\.'):
+        solve(csc_matrix(K_dense), f)
+    bu = np.zeros(n, dtype=bool)
+    bu[active] = True
+    u = solve(csc_matrix(K_dense)[bu, :][:, bu], f[bu])
+    np.testing.assert_allclose(u, 1.0/(active + 1))
 
 
 def test_solve_symmetric_system():
@@ -49,22 +56,43 @@ def test_solve_symmetric_system():
                                np.linalg.solve(A, f), rtol=1e-10)
 
 
-def test_solve_unsymmetric_with_null_row_and_column():
-    r"""Null rows and columns are removed only together, an equation whose
-    row is not null is kept"""
+def test_solve_unsymmetric_with_null_row_or_column():
+    r"""A null row alone or a null column alone raises the error, as an
+    exactly singular matrix without null rows or columns, instead of
+    returning NaN"""
     A = np.array([[4., 1., 0., 0.],
                   [2., 3., 0., 0.],
                   [0., 0., 0., 0.],
                   [0., 0., 0., 5.]])
     b = np.array([1., 2., 0., 10.])
-    x = solve(csr_matrix(A), b)
-    assert np.allclose(x, [0.1, 0.6, 0., 2.])
-    # NOTE a row that is not null with a null column: singular, not dropped
+    # NOTE a null row with a column that is not null, and the opposite
     B = A.copy()
-    B[2, 0] = 1.
-    with pytest.warns(Warning):
-        x = solve(csr_matrix(B), b)
-    assert not np.all(np.isfinite(x)) or not np.allclose(B @ x, b)
+    B[0, 2] = 1.
+    with pytest.raises(LinAlgError, match=r'at 1 degree.*of indices 2\.'):
+        solve(csr_matrix(B), b)
+    with pytest.raises(LinAlgError, match=r'at 1 degree.*of indices 2\.'):
+        solve(csr_matrix(B.T), b)
+    # NOTE exactly singular without null rows or columns
+    C = np.array([[1., 2.], [2., 4.]])
+    with pytest.raises(LinAlgError, match='A is exactly singular'):
+        solve(csr_matrix(C), np.ones(2))
+    keep = [0, 1, 3]
+    x = solve(csr_matrix(A[keep, :][:, keep]), b[keep])
+    assert np.allclose(x, [0.1, 0.6, 2.])
+
+
+def test_factorize():
+    r"""The factorization reused by the non-linear solvers raises the same
+    error as :func:`solve` for a null row or column and for an exactly
+    singular matrix"""
+    A = np.array([[4., 1., 0.], [2., 3., 0.], [0., 0., 0.]])
+    with pytest.raises(LinAlgError, match=r'kT is singular: null row or '
+                       r'column at 1 degree\(s\)-of-freedom, of indices 2\.'):
+        _factorize(csr_matrix(A))
+    with pytest.raises(LinAlgError, match='kT is exactly singular'):
+        _factorize(csr_matrix(np.array([[1., 2.], [2., 4.]])))
+    solve_kT = _factorize(csr_matrix(A[:2, :2]))
+    np.testing.assert_allclose(solve_kT(np.array([1., 2.])), [0.1, 0.6])
 
 
 def test_linear_static():
@@ -127,8 +155,13 @@ def test_static_deflection_plate_clpt():
     P_eta = vecf(m2, 0., etat1, etar1, etat2, etar2)
     Sw = (P_xi[:, None]*P_eta[None, :]).ravel()
     Pforce = 1.0
-    u = solve(csc_matrix(K), Pforce*Sw)
-    w_center = Sw @ u
+    # NOTE the Ritz model applies the boundary conditions by zeroing
+    #      approximation functions, whose null rows and columns are
+    #      partitioned out before calling the solver
+    bu = np.any(K != 0, axis=0)
+    assert np.count_nonzero(bu) < N
+    u = solve(csc_matrix(K[bu, :][:, bu]), Pforce*Sw[bu])
+    w_center = Sw[bu] @ u
     D = E*h**3/(12*(1 - nu**2))
     w_navier = 0.0
     for m in range(1, 80, 2):
@@ -139,30 +172,32 @@ def test_static_deflection_plate_clpt():
     np.testing.assert_allclose(w_center, w_navier, rtol=0.02)
 
 
-def test_remove_null_cols():
+def test_check_null_rows_cols():
+    r"""The error names the number of degrees-of-freedom of the null rows
+    and columns and the first ten of their indices, explicitly stored zeros
+    counting as null"""
+    check_null_rows_cols(csr_matrix(np.eye(4)))
+    check_null_rows_cols(np.eye(4))
     A = np.zeros((5, 5))
     A[1, 1] = 1.0
     A[3, 3] = 2.0
     A[1, 3] = 0.5
     A[3, 1] = 0.5
-    K_reduced, used = remove_null_cols(csr_matrix(A))
-    assert K_reduced.shape == (2, 2)
-    np.testing.assert_array_equal(used, [1, 3])
-    # NOTE several matrices with the null rows and columns of the first
-    n = 6
-    A = np.zeros((n, n))
-    B = np.zeros((n, n))
-    active = [0, 2, 4]
-    for i in active:
-        A[i, i] = float(i + 1)
-        B[i, i] = float(i + 1)*10
-    A_red, B_red, used = remove_null_cols(csr_matrix(A), csr_matrix(B))
-    assert A_red.shape == B_red.shape == (3, 3)
-    np.testing.assert_array_equal(used, active)
-    np.testing.assert_allclose(B_red.diagonal(), [10., 30., 50.])
-    # NOTE nothing removed
-    K_red, used = remove_null_cols(csr_matrix(np.eye(4)))
-    assert K_red.shape == (4, 4) and len(used) == 4
+    with pytest.raises(LinAlgError, match=r'^KC0 is singular: null row or '
+                       r'column at 3 degree\(s\)-of-freedom, of indices 0, 2, '
+                       r'4\. .*Partition out the constrained'):
+        check_null_rows_cols(csr_matrix(A), 'KC0')
+    # NOTE explicitly stored zeros
+    E = coo_matrix((np.array([1., 0., 2.]), (np.array([0, 1, 2]),
+                    np.array([0, 1, 2]))), shape=(3, 3)).tocsr()
+    assert E.nnz == 3
+    with pytest.raises(LinAlgError, match=r'of indices 1\.'):
+        check_null_rows_cols(E)
+    # NOTE only the first ten indices are listed
+    D = np.diag(np.r_[np.zeros(12), np.ones(3)])
+    with pytest.raises(LinAlgError, match=r'at 12 degree\(s\)-of-freedom, '
+                       r'of indices 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, \.\.\.\.'):
+        check_null_rows_cols(csr_matrix(D))
 
 
 def test_is_symmetric():
