@@ -2956,9 +2956,8 @@ cdef class BeamC:
         written from the position ``init_k_M``: 144 entries with
         ``mtype=0`` and 36 entries with ``mtype=1``. The row and column
         indices, built from ``c1`` and ``c2``, are stored in ``Mr`` and
-        ``Mc``, and the values are added to those already in ``Mv``. With any
-        other value of ``mtype`` nothing is written. The matrix is computed
-        from ``length``, the rotation matrix and the attributes
+        ``Mc``, and the values are added to those already in ``Mv``. The
+        matrix is computed from ``length``, the rotation matrix and the attributes
         ``intrho``, ``intrhoy``, ``intrhoz``, ``intrhoy2``, ``intrhoz2`` and
         ``intrhoyz``, and ``A``, ``E``, ``G``, ``Iyy`` and ``Izz`` of
         ``prop``. ``length`` and the rotation matrix must be updated before, see :meth:`.update_rotation_matrix` and
@@ -2981,6 +2980,11 @@ cdef class BeamC:
         mtype : int, optional
             0 for consistent mass matrix, 1 for lumped mass matrix. Default
             ``0``.
+
+        Raises
+        ------
+        ValueError
+            If ``mtype`` is not 0 or 1.
 
         Notes
         -----
@@ -3042,6 +3046,11 @@ cdef class BeamC:
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double L, A, E, G, Iyy, Izz, Iyz, J
         cdef double alphay, alphaz, betay, betaz
+
+        # NOTE checked once per call, before the code without the GIL
+        if mtype != 0 and mtype != 1:
+            raise ValueError('mtype=%d is not supported by BeamC.update_M, '
+                             'use 0 (consistent) or 1 (lumped)' % mtype)
 
         with nogil:
             L = self.length
