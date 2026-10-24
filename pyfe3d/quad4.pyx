@@ -96,21 +96,26 @@ enter the transverse shear strains as `w_{,x} - \theta_1` and `w_{,y} -
 
 Hughes et al. (1977) proposed the following integration scheme:
 
-- For thin plates, when `h/\ell < 1`, where `\ell` is the element
-  characteristic length, here calculated as the square root of the element area
-  `\ell = \sqrt{\text{area}}`
+- For thin and moderately thick plates, when `h/\ell < 1`, where `\ell` is
+  the element characteristic length, here calculated as the square root of
+  the element area `\ell = \sqrt{\text{area}}`
 
 -- two-by-two quadrature for the bending energy terms
 
 -- one-point quadrature for the transverse shear energy terms
 
-- For thick plates, when `h/\ell >= 1`
+- For very thick plates, when `h/\ell >= 1`, the "modified one-point
+  shear" element of the paper (pp. 1541-1542)
 
 -- two-by-two quadrature for the bending energy terms
 
--- two-by-two quadrature for the transverse shear terms with gradients
+-- two-by-two quadrature for the transverse shear terms that are products
+of the gradients of `w`, the `(\partial w/\partial x)^2` and
+`(\partial w/\partial y)^2` contributions of the paper and, for a
+laminate, the `\partial w/\partial x \, \partial w/\partial y` term of
+`A_{45}`
 
--- one-point quadrature for the transverse shear terms without gradients
+-- one-point quadrature for the remaining transverse shear terms
 
 The membrane stiffness terms, which are not specified in the paper of Hughes
 et al. (1977), are integrated with a three-by-three quadrature when the
@@ -220,7 +225,12 @@ Allman's enrichment on its own is rank-deficient by one, because the state
 and therefore produces no membrane strain, although it is not a rigid-body
 motion. The term above gives that state the energy
 `\frac{1}{2}\gamma_{r_z} A_e \omega_0^2`, with `A_e` the element area, and
-restores the rank, which is why the two ingredients are used together.
+restores the rank at the element level. Prescribing the translations does
+not remove this mode, but in an assembled mesh it is a single global mode,
+which Allman notes, for his triangle, is very easily suppressed by
+prescribing any one of the drilling rotations of the model, and often by the
+displacement boundary conditions themselves ([2]_, Sec. 5); the term above
+removes it without such a constraint.
 
 Two quadrature choices matter and both follow Ibrahimbegovic et al. (1990).
 The membrane term is integrated with three points per direction: the edge
