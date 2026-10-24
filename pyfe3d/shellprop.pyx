@@ -117,7 +117,8 @@ cdef class MatLamina:
     a3 : float
         thermal expansion coeffiecient in direction 3, per unit temperature
     tref : float
-        reference temperature
+        reference temperature. ``a1``, ``a2``, ``a3`` and ``tref`` are
+        stored and not used: thermal expansion is not modelled
     st1,st2 : float
         allowable tensile stresses for directions 1 and 2, force per unit
         area
@@ -572,8 +573,7 @@ cdef class Lamina:
         g13  = self.matlamina.g13
         g23  = self.matlamina.g23
 
-        # plane stress
-        #TODO plane strain
+        # NOTE plane stress, see the Notes; plane strain is not implemented
         q11  = e1/(1-nu12*nu21)
         q12  = nu12*e2/(1-nu12*nu21)
         q22  = e2/(1-nu12*nu21)
@@ -592,10 +592,6 @@ cdef class Lamina:
         self.q44L = q44*cos2 + q55*sin2
         self.q45L = (q55 - q44)*sincos
         self.q55L = q55*cos2 + q44*sin2
-
-        #TODO add the thermal coeficient terms when calculating the
-        #     stresses... to take into account eventual thermal expansions or
-        #     contractions
 
     cpdef double [:, ::1] get_transf_matrix_displ_to_lamina(Lamina self):
         r"""Return displacement transformation matrix from laminate to lamina

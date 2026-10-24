@@ -32,6 +32,11 @@ stiffnesses times `1`, `z` and `z^2`, and `[A_{ts}]` = ``[[A44, A45],
   gradients are given by :class:`.GradABD`, e.g. for the optimisation of
   the stiffness distribution, see the tutorials.
 
+The ply stiffnesses are those of plane stress, see :meth:`.Lamina.rebuild`.
+Plane strain and thermal expansion are not modelled: the thermal expansion
+coefficients and the reference temperature of :class:`.MatLamina` are not
+used.
+
 The ply angles are measured from the material direction of each element,
 the vector ``xmati, xmatj, xmatk`` of ``update_rotation_matrix`` projected
 onto the element, or from the element `x` axis when it is not given, see
