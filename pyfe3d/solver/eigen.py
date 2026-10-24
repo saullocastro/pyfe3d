@@ -26,7 +26,9 @@ are what most users should call. They also solve unsymmetric problems, e.g.
 with the load stiffness of a follower load or with the aerodynamic matrix of
 piston theory, and they follow the same solver policy: the sparse solvers
 run first, their eigenpairs are verified, and a dense solver is used only as
-a last resort, with a :class:`DenseFallbackWarning`.
+a last resort, with a :class:`DenseFallbackWarning`. :func:`complex_frequency`
+follows the same policy for the free vibrations of damped systems, with the
+stiffness, damping and mass matrices, a quadratic eigenvalue problem.
 
 .. note:: ARPACK, used by :func:`scipy.sparse.linalg.eigsh`, has been
     reported to return wrong eigenpairs at random, without raising, when
@@ -114,10 +116,12 @@ from scipy.linalg import eigh, eig, LinAlgError
 
 from .sparseutils import check_null_rows_cols, is_symmetric
 from .arpackutils import capped_eigsh, start_kwargs
+from .logger import msg
 
 __all__ = ['DenseFallbackWarning', 'diagonal_preconditioner',
            'estimate_cayley_sigma', 'is_positive_definite',
-           'check_eigenpairs', 'linear_buckling', 'natural_frequency']
+           'check_eigenpairs', 'linear_buckling', 'natural_frequency',
+           'complex_frequency']
 
 #: An eigenvalue `\mu` of `[K_G]\{u\} = \mu [K]\{u\}` with `|\mu|` not
 #: larger than this fraction of the largest `|\mu|` is null, i.e. its load
@@ -155,9 +159,9 @@ PARITY_REL_GAP = 1.e-4
 
 
 class DenseFallbackWarning(RuntimeWarning):
-    r"""Issued by :func:`linear_buckling` and :func:`natural_frequency` when
-    the sparse eigenvalue solvers failed and a dense solver was used as a
-    last resort
+    r"""Issued by :func:`linear_buckling`, :func:`natural_frequency` and
+    :func:`complex_frequency` when the sparse eigenvalue solvers failed and
+    a dense solver was used as a last resort
 
     A subclass of :class:`RuntimeWarning`, issued with :func:`warnings.warn`,
     whose message gives the reasons of the failures of the sparse solvers.
@@ -2239,3 +2243,625 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
         else:
             omegan = np.sqrt(w2)
     return omegan, eigvecs[:, order]
+
+
+def _quadratic_residuals(K, C, M, lam, u, rigid_rtol=None):
+    r"""Relative residuals of the eigenpairs of `(\lambda^2 [M] + \lambda [C]
+    + [K])\{u\} = \{0\}`
+
+    Parameters
+    ----------
+    K, C, M : sparse_matrix or np.ndarray
+        Stiffness, damping and mass matrices, shape ``(n, n)``.
+    lam : array_like
+        Finite eigenvalues, real or complex, 1-D array of size ``k``.
+    u : array_like
+        Eigenvectors, shape ``(n, k)``.
+    rigid_rtol : float or None, optional
+        ``None`` gives the relative residual ``norm(lam**2*(M @ u) + lam*(C
+        @ u) + K @ u)/(abs(lam)**2*norm(M @ u) + abs(lam)*norm(C @ u) +
+        norm(K @ u))`` of every eigenpair. Otherwise the eigenpairs whose
+        denominator is not larger than ``rigid_rtol*(abs(lam)**2*norm_F(M) +
+        abs(lam)*norm_F(C) + norm_F(K))*norm(u)``, null up to the round-off,
+        e.g. the rigid-body modes, give the residual relative to this
+        matrix-norm scale, ``norm_F`` being the Frobenius norm. Default
+        ``None``.
+
+    Returns
+    -------
+    residual : np.ndarray
+        One relative residual per eigenpair, dimensionless, ``inf`` when the
+        denominator is null.
+
+    Notes
+    -----
+    The relative residual
+
+    .. math::
+
+        \frac{\|(\lambda^2 [M] + \lambda [C] + [K])\{u\}\|}{|\lambda|^2
+        \|[M]\{u\}\| + |\lambda| \, \|[C]\{u\}\| + \|[K]\{u\}\|}
+
+    is the quadratic counterpart of the one of :func:`_relative_residuals`,
+    with the same treatment of the eigenpairs null up to the round-off: with
+    ``rigid_rtol``, their residual is the normwise backward error of the
+    quadratic eigenvalue problem in the Frobenius norm, `\|\{r\}\|/
+    ((|\lambda|^2 \|[M]\|_F + |\lambda| \, \|[C]\|_F + \|[K]\|_F)
+    \|\{u\}\|)`, see [1]_ (Section 4.2, Eq. (4.7), pp. 264-265).
+
+    References
+    ----------
+    .. [1] Tisseur, F. and Meerbergen, K., The quadratic eigenvalue
+       problem, SIAM Review, 43(2), 235-286, 2001.
+       https://doi.org/10.1137/S0036144500381988
+
+    """
+    Ku = K @ u
+    Cu = C @ u
+    Mu = M @ u
+    lam = np.asarray(lam)
+    num = np.linalg.norm(Ku + Cu*lam + Mu*lam**2, axis=0)
+    den = (np.linalg.norm(Ku, axis=0) + np.abs(lam)*np.linalg.norm(Cu, axis=0)
+           + np.abs(lam)**2*np.linalg.norm(Mu, axis=0))
+    if rigid_rtol is not None:
+        scale = (_frobenius(K) + np.abs(lam)*_frobenius(C)
+                 + np.abs(lam)**2*_frobenius(M))*np.linalg.norm(u, axis=0)
+        den = np.where(den <= rigid_rtol*scale, scale, den)
+    residual = np.full(lam.shape, np.inf)
+    np.divide(num, den, out=residual, where=den > 0)
+    return residual
+
+
+def _companion_vectors(K, C, M, lam, Z):
+    r"""Eigenvectors of the quadratic eigenvalue problem from those of its
+    first companion linearization
+
+    Parameters
+    ----------
+    K, C, M : sparse_matrix
+        Stiffness, damping and mass matrices, shape ``(n, n)``.
+    lam : np.ndarray
+        Finite eigenvalues, 1-D array of size ``k``.
+    Z : np.ndarray
+        Eigenvectors `\{z\} = \{\{u\}^T, \lambda \{u\}^T\}^T` of the
+        linearization, shape ``(2n, k)``.
+
+    Returns
+    -------
+    U : np.ndarray
+        Complex eigenvectors, shape ``(n, k)``, of unit Euclidean norm, with
+        the component of largest modulus real and positive.
+
+    Notes
+    -----
+    In finite precision the first and the last `n` components of `\{z\}`
+    are not equivalent approximations of `\{u\}`; the one with the smaller
+    relative residual, see :func:`_quadratic_residuals`, is kept, as in
+    Algorithm 5.1 of [1]_ (Section 5.1, p. 267). E.g. the last `n`
+    components vanish with `\lambda`.
+
+    References
+    ----------
+    .. [1] Tisseur, F. and Meerbergen, K., The quadratic eigenvalue
+       problem, SIAM Review, 43(2), 235-286, 2001.
+       https://doi.org/10.1137/S0036144500381988
+
+    """
+    n = K.shape[0]
+    Z = np.asarray(Z, dtype=complex)
+    U1, U2 = Z[:n, :], Z[n:, :]
+    r1 = _quadratic_residuals(K, C, M, lam, U1)
+    r2 = _quadratic_residuals(K, C, M, lam, U2)
+    U = np.where(r2 < r1, U2, U1)
+    return _normalize_vectors(U)
+
+
+def _normalize_vectors(U):
+    r"""Columns of ``U`` scaled to a unit Euclidean norm, with the component
+    of largest modulus real and positive"""
+    U = np.asarray(U, dtype=complex)
+    norm = np.linalg.norm(U, axis=0)
+    U = U/np.where(norm > 0, norm, 1.)
+    pivot = U[np.argmax(np.abs(U), axis=0), np.arange(U.shape[1])]
+    phase = np.ones_like(pivot)
+    nonnull = pivot != 0
+    phase[nonnull] = np.abs(pivot[nonnull])/pivot[nonnull]
+    return U*phase
+
+
+def _qep_modes(lam, U, k, sigma):
+    r"""One eigenpair per complex conjugate pair, the ``k`` nearest the
+    shift, sorted by increasing damped circular frequency
+
+    Parameters
+    ----------
+    lam : array_like
+        Eigenvalues of a quadratic eigenvalue problem with real matrices,
+        1-D array of size ``m``; the eigenvalues that are not finite are
+        discarded.
+    U : array_like
+        Eigenvectors, shape ``(n, m)``.
+    k : int or None
+        Number of eigenpairs returned, all with ``None``.
+    sigma : complex
+        Shift: the eigenpairs kept are those nearest it.
+
+    Returns
+    -------
+    lam, U : np.ndarray
+        Complex arrays: the eigenvalues with `Im(\lambda) \ge 0`, sorted by
+        increasing `Im(\lambda)`, then by increasing `|\lambda|`, and their
+        eigenvectors.
+
+    Notes
+    -----
+    The eigenvalues of real matrices are real or come in complex conjugate
+    pairs `(\lambda, \bar{\lambda})`, with the eigenvectors `\{u\}` and
+    `\{\bar{u}\}` ([1]_, Table 1.1, p. 237). The eigenvalues whose imaginary
+    part is not larger than ``1e-8`` times their modulus are made real with
+    :func:`_real_if_close`. Each eigenvalue with `Im(\lambda) < 0` is then
+    paired with the nearest unpaired one with `Im(\lambda) > 0` within
+    ``1e-6`` times its modulus, which represents the pair, or else replaced
+    by its conjugate, with the conjugate eigenvector, its partner not having
+    been computed, e.g. with a complex shift, or when the solver kept one
+    eigenvalue of the last pair. The ``k`` eigenvalues nearest the shift,
+    `\min(|\lambda - \sigma|, |\bar{\lambda} - \sigma|)`, are kept.
+
+    References
+    ----------
+    .. [1] Tisseur, F. and Meerbergen, K., The quadratic eigenvalue
+       problem, SIAM Review, 43(2), 235-286, 2001.
+       https://doi.org/10.1137/S0036144500381988
+
+    """
+    lam = np.asarray(lam)
+    finite = np.isfinite(lam)
+    lam, U = _real_if_close(lam[finite], np.asarray(U)[:, finite])
+    upper = list(np.flatnonzero(lam.imag > 0))
+    keep = np.ones(lam.size, dtype=bool)
+    for i in np.flatnonzero(lam.imag < 0):
+        target = np.conj(lam[i])
+        if upper:
+            dist = np.abs(lam[upper] - target)
+            j = int(np.argmin(dist))
+            if dist[j] <= 1.e-6*abs(target):
+                upper.pop(j)
+                keep[i] = False
+                continue
+        lam[i] = target
+        U[:, i] = np.conj(U[:, i])
+    lam, U = lam[keep], U[:, keep]
+    dist = np.minimum(np.abs(lam - sigma), np.abs(np.conj(lam) - sigma))
+    order = np.argsort(dist, kind='stable')
+    if k is not None:
+        order = order[:k]
+    lam, U = lam[order], U[:, order]
+    order = np.lexsort((np.abs(lam), lam.imag))
+    return lam[order], U[:, order]
+
+
+def _companion(K, C, M):
+    r"""Dense first companion linearization ``(A, B)`` of `(\lambda^2 [M] +
+    \lambda [C] + [K])\{u\} = \{0\}`, see :func:`complex_frequency`"""
+    n = K.shape[0]
+    I = np.eye(n)
+    Z = np.zeros((n, n))
+    A = np.block([[Z, I],
+                  [-csr_matrix(K).toarray(), -csr_matrix(C).toarray()]])
+    B = np.block([[I, Z], [Z, csr_matrix(M).toarray()]])
+    return A, B
+
+
+def _dense_qep(K, C, M, k, sigma):
+    r"""Dense eigenpairs of the quadratic eigenvalue problem
+
+    Parameters
+    ----------
+    K, C, M : sparse_matrix
+        Stiffness, damping and mass matrices, shape ``(n, n)``.
+    k : int or None
+        Number of eigenpairs returned, all with ``None``.
+    sigma : complex
+        Shift; the ``k`` eigenpairs nearest it are returned.
+
+    Returns
+    -------
+    lam, U : np.ndarray
+        Eigenvalues and eigenvectors, see :func:`_qep_modes`.
+
+    Notes
+    -----
+    All the eigenpairs of the first companion linearization, see
+    :func:`_companion`, are computed with :func:`scipy.linalg.eig`
+    through :func:`_eig_complex`; the infinite eigenvalues of a singular
+    `[M]` are discarded.
+
+    """
+    A, B = _companion(K, C, M)
+    w, Z = _eig_complex(a=A, b=B)
+    finite = np.isfinite(w)
+    w, Z = w[finite], Z[:, finite]
+    U = _companion_vectors(K, C, M, w, Z)
+    return _qep_modes(w, U, k, sigma)
+
+
+def _eigs_qep(K, C, M, k, tol, sigma):
+    r"""Eigenpairs of the quadratic eigenvalue problem nearest the shift,
+    with :func:`scipy.sparse.linalg.eigs` in shift-invert mode
+
+    Parameters
+    ----------
+    K, C, M : sparse_matrix
+        Real stiffness, damping and mass matrices, shape ``(n, n)``.
+    k : int
+        Number of eigenvalues of the linearization computed by ARPACK, at
+        most ``2*n - 2``.
+    tol : float
+        Tolerance of :func:`scipy.sparse.linalg.eigs`.
+    sigma : complex
+        Shift, not an eigenvalue.
+
+    Returns
+    -------
+    lam, U : np.ndarray
+        The finite eigenvalues found and their eigenvectors, see
+        :func:`_companion_vectors`, to be passed to :func:`_qep_modes`.
+
+    Raises
+    ------
+    RuntimeError
+        When `\lambda^2 [M] + \lambda [C] + [K]` is exactly singular at
+        `\lambda = \sigma`.
+
+    Notes
+    -----
+    With the first companion linearization `[A] - \lambda [B]`, see
+    :func:`complex_frequency`, the operator of the shift-invert mode is
+    `[S] = ([A] - \sigma [B])^{-1} [B]`, whose eigenvalues are `\nu =
+    1/(\lambda - \sigma)`, and those of largest modulus are found. For
+    `\{y\} = [S]\{z\}`, with the halves `\{z_1\}`, `\{z_2\}` and `\{y_1\}`,
+    `\{y_2\}`:
+
+    .. math::
+
+        \{y_1\} = -[Q(\sigma)]^{-1} \left( [M]\{z_2\} + ([C] + \sigma [M])
+        \{z_1\} \right), \qquad \{y_2\} = \{z_1\} + \sigma \{y_1\}
+
+    with `[Q(\sigma)] = \sigma^2 [M] + \sigma [C] + [K]`, such that only the
+    `n \times n` matrix `[Q(\sigma)]` is factorized, not the `2n \times 2n`
+    matrix `[A] - \sigma [B]` ([1]_, Section 6.1, Eq. (6.3), p. 273). A
+    complex shift gives a complex operator. The `\nu` with `|\nu| \le`
+    ``NULL_MU_RTOL`` `\max |\nu|`, infinite eigenvalues of a singular
+    `[M]`, are discarded.
+
+    References
+    ----------
+    .. [1] Tisseur, F. and Meerbergen, K., The quadratic eigenvalue
+       problem, SIAM Review, 43(2), 235-286, 2001.
+       https://doi.org/10.1137/S0036144500381988
+
+    """
+    n = K.shape[0]
+    Q = csc_matrix(sigma**2*M + sigma*C + K)
+    try:
+        lu = _splu(Q)
+    except RuntimeError:
+        raise RuntimeError('lambda**2*M + lambda*C + K is singular at the '
+                           'shift sigma=%r' % sigma)
+    CsM = csr_matrix(C + sigma*M)
+    dtype = np.result_type(Q.dtype, float)
+
+    def matvec(z):
+        z = np.ravel(z)
+        z1, z2 = z[:n], z[n:]
+        rhs = np.asarray(M @ z2 + CsM @ z1)
+        if np.iscomplexobj(Q.data):
+            y1 = -lu.solve(np.ascontiguousarray(rhs, dtype=complex))
+        else:
+            y1 = -_lu_solve(lu, rhs)
+        return np.concatenate((y1, z1 + sigma*y1))
+
+    OP = LinearOperator((2*n, 2*n), matvec=matvec, dtype=dtype)
+    kwargs = start_kwargs(2*n)
+    kwargs['v0'] = np.asarray(kwargs['v0'], dtype=dtype)
+    nu, Z = eigs(OP, k=k, which='LM', tol=tol, **kwargs)
+    nonnull = np.abs(nu) > NULL_MU_RTOL*np.abs(nu).max()
+    nu, Z = nu[nonnull], Z[:, nonnull]
+    lam = sigma + 1./nu
+    return lam, _companion_vectors(K, C, M, lam, Z)
+
+
+def _check_qep(K, C, M, lam, U, rtol):
+    r"""Verify the eigenpairs of the quadratic eigenvalue problem
+
+    Parameters
+    ----------
+    K, C, M : sparse_matrix
+        Stiffness, damping and mass matrices, shape ``(n, n)``.
+    lam : array_like
+        Finite eigenvalues, 1-D array of size ``k``.
+    U : array_like
+        Eigenvectors, shape ``(n, k)``.
+    rtol : float
+        Largest acceptable relative residual, dimensionless.
+
+    Returns
+    -------
+    error : str or None
+        Description of the check that failed, ``None`` when all passed.
+
+    Notes
+    -----
+    The relative residual of every eigenpair, see
+    :func:`_quadratic_residuals` with ``rigid_rtol=RIGID_BODY_RTOL``, must
+    not be larger than ``rtol``. Whether an eigenvalue nearer the shift was
+    missed is not verified, see :func:`complex_frequency`.
+
+    """
+    lam = np.asarray(lam)
+    if not lam.size:
+        return 'no eigenpair was found'
+    res = _quadratic_residuals(K, C, M, lam, np.asarray(U),
+                               rigid_rtol=RIGID_BODY_RTOL)
+    if not np.all(res <= rtol):
+        i = int(np.argmax(np.nan_to_num(res, nan=np.inf)))
+        return ('relative residual %.2e > %.1e for the eigenvalue lambda=%r'
+                % (res[i], rtol, lam[i]))
+    return None
+
+
+def complex_frequency(K, C, M, num_eigvalues=6, tol=0, sigma=None,
+                      precondition=True, check=True, check_rtol=1.e-6,
+                      sparse_solver=True, max_dense_size=2000, silent=True):
+    r"""Complex eigenvalues of a damped system from the stiffness, damping
+    and mass matrices
+
+    Solves the quadratic eigenvalue problem of the free vibrations of a
+    damped system, ``(lam**2*M + lam*C + K) @ u = 0``, whose eigenvalues
+    ``lam`` give the damped circular frequencies ``omegad = abs(lam.imag)``
+    and the damping ratios ``zeta = -lam.real/abs(lam)``. ``K``, ``C`` and
+    ``M`` must be real and may be unsymmetric, e.g. ``K`` with the
+    aerodynamic matrices of the piston theory and ``C`` with its damping
+    matrix, or ``C`` with gyroscopic terms. ``K`` must have no null row or
+    column, see :func:`.check_null_rows_cols`, whereas ``C`` and ``M`` may
+    have null rows and columns. The matrices are optionally preconditioned
+    with :func:`diagonal_preconditioner`.
+
+    The problem is linearized into a generalized eigenvalue problem of size
+    ``2*n``, the first companion form, solved with
+    :func:`scipy.sparse.linalg.eigs` in shift-invert mode, which finds the
+    eigenvalues nearest the shift ``sigma`` and factorizes the ``n`` by
+    ``n`` matrix ``sigma**2*M + sigma*C + K``, see :func:`_eigs_qep`. The
+    eigenvalues of real matrices are real or come in complex conjugate
+    pairs, and one eigenvalue per pair, the one with a positive imaginary
+    part, is returned, with its eigenvector. The ``num_eigvalues``
+    eigenvalues nearest the shift are returned, sorted by increasing
+    imaginary part, then by increasing modulus, see :func:`_qep_modes`;
+    the real ones, e.g. of overdamped modes, come first.
+
+    The relative residual of each eigenpair must not be larger than
+    ``check_rtol``, see :func:`_check_qep`. When the verification fails or
+    the sparse solver raises an error, the dense solver of
+    :func:`_dense_qep`, :func:`scipy.linalg.eig` on the linearization, is
+    used as a last resort, with a :class:`DenseFallbackWarning`, see the
+    solver policy of :mod:`pyfe3d.solver.eigen`. Whether an eigenvalue
+    nearer the shift than the returned ones was missed is not verified.
+
+    With ``C`` null, the eigenvalues are ``1j*omegan``, with the natural
+    frequencies ``omegan`` of :func:`natural_frequency`.
+
+    Parameters
+    ----------
+    K, C, M : sparse_matrix
+        Stiffness, damping and mass matrices of the free
+        degrees-of-freedom, i.e. with the constrained ones partitioned out,
+        e.g. ``KC0uu = KC0[bu, :][:, bu]``. ``K`` should include the
+        constant terms that apply, e.g. the geometric stiffness matrix of a
+        preload. Real, shape ``(n, n)``.
+    num_eigvalues : int, optional
+        Number of eigenvalues to compute, one per complex conjugate pair.
+        Default ``6``.
+    tol : float, optional
+        Tolerance passed to :func:`scipy.sparse.linalg.eigs`, ``0`` meaning
+        machine precision. Default ``0``.
+    sigma : float, complex or None, optional
+        Shift, in rad/s, near which the eigenvalues are sought; it must not
+        be an eigenvalue. ``None`` uses ``1.``, which gives the eigenvalues
+        of lowest modulus, see the Notes. Default ``None``.
+    precondition : bool, optional
+        Whether to equilibrate the diagonal of ``K`` before solving, the
+        same transformation being applied to ``C`` and ``M``. Default
+        ``True``.
+    check : bool, optional
+        Whether to verify the eigenpairs of the sparse solver. With
+        ``False`` they are returned without verification and without dense
+        fallback. Default ``True``.
+    check_rtol : float, optional
+        Largest acceptable relative residual of the eigenpairs,
+        dimensionless. Default ``1.e-6``.
+    sparse_solver : bool, optional
+        With ``False``, the full problem is solved with the dense solver,
+        returning all the finite eigenvalues, one per complex conjugate
+        pair, without verification. Default ``True``.
+    max_dense_size : int, optional
+        Maximum size of the dense problem solved as a last resort, i.e. of
+        the linearization, ``2*n``; ``0`` disables the dense fallback.
+        Default ``2000``.
+    silent : bool, optional
+        With ``False``, the solver used and the eigenvalues, damped circular
+        frequencies and damping ratios are printed, see
+        :mod:`pyfe3d.solver.logger`. Default ``True``.
+
+    Returns
+    -------
+    eigvals : np.ndarray
+        Complex eigenvalues ``lam``, in rad/s, with ``lam.imag >= 0``.
+        1-D array of size ``k``, at most ``num_eigvalues``.
+    eigvecs : np.ndarray
+        Complex eigenvectors, one per column, in the same order, of unit
+        Euclidean norm with the component of largest modulus real and
+        positive. Shape ``(n, k)``.
+
+    Raises
+    ------
+    numpy.linalg.LinAlgError
+        When ``K`` has a null row or column, with the indices of these
+        degrees-of-freedom, see :func:`.check_null_rows_cols`.
+    ValueError
+        When ``K``, ``C`` or ``M`` is complex.
+    RuntimeError
+        When ``check=True`` and no eigenvalue solver passed the
+        verification.
+
+    Warns
+    -----
+    DenseFallbackWarning
+        When the sparse solver failed and the dense solver was used.
+
+    Notes
+    -----
+    The problem solved is
+
+    .. math::
+
+        (\lambda^2 [M] + \lambda [C] + [K])\{u\} = \{0\}
+
+    the free vibrations `\{q\} = \{u\} e^{\lambda t}` of `[M]\{\ddot{q}\} +
+    [C]\{\dot{q}\} + [K]\{q\} = \{0\}`. With `\lambda = -\zeta \omega_n \pm
+    i \omega_d`, `\omega_d = |Im(\lambda)|` is the damped circular frequency
+    and `\zeta = -Re(\lambda)/|\lambda|` the damping ratio: a single
+    degree-of-freedom, `m \lambda^2 + c \lambda + k = 0`, has the roots
+    `\lambda = -\zeta \omega_n \pm i \omega_n \sqrt{1 - \zeta^2}` for
+    `\zeta < 1`, with `\omega_n = \sqrt{k/m} = |\lambda|` and `\zeta =
+    c/(2 \sqrt{k m})`. A real `\lambda`, e.g. of an overdamped mode, gives
+    `\omega_d = 0`, and a positive `Re(\lambda)` a growing motion, i.e. an
+    unstable system, by flutter when `\lambda` is complex. `\zeta` is not
+    defined for `\lambda = 0`. With `[C] = [0]`, `\lambda^2 = -\omega_n^2`
+    of :func:`natural_frequency`.
+
+    .. rubric:: Linearization
+
+    With `\{z\} = \{\{u\}^T, \lambda \{u\}^T\}^T`, the problem is the
+    generalized eigenvalue problem of size `2n`
+
+    .. math::
+
+        \begin{bmatrix} [0] & [I] \\ -[K] & -[C] \end{bmatrix} \{z\} =
+        \lambda \begin{bmatrix} [I] & [0] \\ [0] & [M] \end{bmatrix} \{z\}
+
+    the first companion form `[A] - \lambda [B]` of [1]_ (Section 3.4, Eq.
+    (3.6) with `[N] = [I]`, p. 253): the first row is `\lambda \{u\} =
+    \lambda \{u\}`, and the second gives the quadratic problem. It is valid
+    for any `[C]`, symmetric or not, singular or not, and it requires
+    neither a non-singular `[K]` nor a non-singular `[M]`: a singular
+    `[M]`, e.g. a lumped mass matrix without rotary inertia, only gives
+    infinite eigenvalues, `[B]` being singular, which are discarded. Its
+    shift-invert operator needs the factorization of the `n \times n`
+    matrix `[Q(\sigma)] = \sigma^2 [M] + \sigma [C] + [K]` only, see
+    :func:`_eigs_qep`; MSC/Nastran uses this linearization with a
+    shift-invert Lanczos algorithm ([1]_, Section 7.1, p. 278). The
+    symmetric linearizations of symmetric `[K]`, `[C]` and `[M]` give
+    pencils that are indefinite, unless the system is overdamped ([1]_,
+    Section 3.8.2, p. 258), for which the symmetric solver of ARPACK cannot
+    be used, and they exclude the unsymmetric matrices of the piston
+    theory. The eigenvectors `\{u\}`
+    are taken from the first or the last `n` rows of `\{z\}`, see
+    :func:`_companion_vectors`.
+
+    .. rubric:: Shift
+
+    The default shift `\sigma = 1` rad/s is the counterpart of the shift
+    `\omega_n^2 = -1` of :func:`natural_frequency`, `\lambda^2 =
+    -\omega_n^2 = 1`: with `[C] = [0]` the factorized matrix is the same,
+    `[K] + [M]`, and `|\lambda - 1|^2 = 1 + \omega_n^2` for `\lambda = \pm
+    i \omega_n`, such that the lowest natural frequencies are found first.
+    With `\lambda = \omega_n(-\zeta \pm i \sqrt{1 - \zeta^2})`, `|\lambda -
+    1|^2 = 1 + 2 \zeta \omega_n + \omega_n^2`, which increases with
+    `\omega_n` for `\omega_n > -\zeta`. When `[M]` is non-singular,
+    `\det [Q(\sigma)] = \det [M] \prod_i (\sigma - \lambda_i)` over the
+    `2n` eigenvalues, such that `[Q(1)]` is singular only when `\lambda =
+    1` is an eigenvalue, i.e. never for the rigid-body modes, `\lambda =
+    0`, nor for a stable system, `Re(\lambda) \le 0`. A complex shift gives
+    a complex operator, and the conjugate of each eigenvalue found with
+    `Im(\lambda) < 0` is returned ([1]_, Section 6.1, p. 273).
+
+    .. rubric:: Verification
+
+    The relative residual `\|(\lambda^2 [M] + \lambda [C] + [K])\{u\}\| /
+    (|\lambda|^2 \|[M]\{u\}\| + |\lambda| \, \|[C]\{u\}\| + \|[K]\{u\}\|)`
+    of each eigenpair is checked, the rigid-body modes being relative to the
+    matrix-norm scale, see :func:`_quadratic_residuals`. Unlike
+    :func:`natural_frequency`, no inertia check tells that no eigenvalue
+    nearer the shift was missed: by Sylvester's law of inertia, the
+    negative pivots of `[K] - s [M]` count the real eigenvalues below `s`
+    of a symmetric pencil with a positive definite `[M]`, whereas the
+    eigenvalues of a damped system are complex, and the symmetric
+    linearizations are definite only for overdamped systems, whose
+    eigenvalues are real ([1]_, Sections 3.8.2 and 3.9, p. 258). No count
+    of the eigenvalues of a quadratic eigenvalue problem inside a region of
+    the complex plane is implemented, and that ARPACK found the eigenvalues
+    of largest `|1/(\lambda - \sigma)|` is therefore not verified; the
+    dense solution, ``sparse_solver=False``, is the reference. With `[C] =
+    [0]` and symmetric matrices, :func:`natural_frequency` verifies it with
+    the inertia check.
+
+    A rigid-body mode, `[K]\{u\} = \{0\}`, gives `\lambda = 0`, a double
+    eigenvalue when `[C]\{u\} = \{0\}`, which the solvers return as two
+    eigenvalues null up to the round-off.
+
+    References
+    ----------
+    .. [1] Tisseur, F. and Meerbergen, K., The quadratic eigenvalue
+       problem, SIAM Review, 43(2), 235-286, 2001.
+       https://doi.org/10.1137/S0036144500381988
+
+    """
+    check_null_rows_cols(K, 'K')
+    K, C, M = csr_matrix(K), csr_matrix(C), csr_matrix(M)
+    if any(np.iscomplexobj(A.data) for A in (K, C, M)):
+        raise ValueError('K, C and M must be real')
+    n = K.shape[0]
+    if sigma is None:
+        sigma = 1.
+    if precondition:
+        D = diagonal_preconditioner(K)
+        Ks = csr_matrix(D @ K @ D)
+        Cs = csr_matrix(D @ C @ D)
+        Ms = csr_matrix(D @ M @ D)
+    else:
+        D = None
+        Ks, Cs, Ms = K, C, M
+
+    def unscale(result):
+        lam, U = result
+        if D is not None:
+            U = _normalize_vectors(D @ U)
+        return lam, U
+
+    if not sparse_solver:
+        name = 'eig() of the linearization'
+        lam, U = unscale(_dense_qep(Ks, Cs, Ms, None, sigma))
+    else:
+        k = num_eigvalues
+
+        def solver():
+            lam, U = _eigs_qep(Ks, Cs, Ms, min(2*k, 2*n - 2), tol, sigma)
+            return unscale(_qep_modes(lam, U, k, sigma))
+
+        dense = ('eig() of the linearization',
+                 lambda: unscale(_dense_qep(Ks, Cs, Ms, k, sigma)))
+
+        def verify(lam, U):
+            return _check_qep(K, C, M, lam, U, check_rtol)
+
+        (lam, U), name = _sparse_first('Complex frequency analysis',
+                [('eigs() in shift-invert mode', solver)],
+                verify if check else None, dense, 2*n, max_dense_size,
+                hint=' Try sparse_solver=False or a larger max_dense_size.')
+    msg('Complex frequency analysis with %s, %d eigenvalue(s):'
+        % (name, lam.size), silent=silent)
+    for li in lam:
+        zeta = -li.real/abs(li) if li != 0 else np.nan
+        msg('lambda = %s, omegad = %g rad/s, zeta = %g'
+            % (li, abs(li.imag), zeta), level=1, silent=silent)
+    return lam, U

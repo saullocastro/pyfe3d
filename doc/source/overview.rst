@@ -172,7 +172,8 @@ steps:
    :func:`.check_null_rows_cols`.
 6. Solution: the linear static system `[K_{C0}]_{uu}\{u\}_u = \{f\}_u`, with
    :func:`.solve` or :func:`scipy.sparse.linalg.spsolve`; the eigenvalue
-   problems with :func:`.linear_buckling` and :func:`.natural_frequency`,
+   problems with :func:`.linear_buckling`, :func:`.natural_frequency` and
+   :func:`.complex_frequency`,
    see :doc:`eigenvalue_analyses`; the non-linear analyses with
    :class:`.Analysis`.
 7. Post-processing: ``update_probe_ue(u)`` brings the displacements of an

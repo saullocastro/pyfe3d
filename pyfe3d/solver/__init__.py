@@ -20,8 +20,9 @@ assemble, all available from the ``pyfe3d.solver`` namespace:
 - Crisfield's convergence criterion, the default of the non-linear
   solvers, :mod:`pyfe3d.solver.convergence`: :func:`.crisfield_weights` and
   :func:`.crisfield_zeta`;
-- eigenvalue analyses, :mod:`pyfe3d.solver.eigen`: :func:`.linear_buckling`
-  and :func:`.natural_frequency`, with the helpers
+- eigenvalue analyses, :mod:`pyfe3d.solver.eigen`: :func:`.linear_buckling`,
+  :func:`.natural_frequency` and, for damped systems,
+  :func:`.complex_frequency`, with the helpers
   :func:`.diagonal_preconditioner`, :func:`.estimate_cayley_sigma`,
   :func:`.is_positive_definite` and :func:`.check_eigenpairs`, for
   symmetric and unsymmetric matrices, with the sparse solvers first and a
@@ -43,7 +44,8 @@ The log messages of the non-linear static analyses are printed by
 """
 from .eigen import (DenseFallbackWarning, diagonal_preconditioner,
                     estimate_cayley_sigma, is_positive_definite,
-                    check_eigenpairs, linear_buckling, natural_frequency)
+                    check_eigenpairs, linear_buckling, natural_frequency,
+                    complex_frequency)
 from .static import solve, linear_static
 from .analysis import Analysis, FreeDofs
 from .convergence import crisfield_weights, crisfield_zeta
@@ -51,6 +53,6 @@ from .sparseutils import check_null_rows_cols, is_symmetric
 
 __all__ = ['DenseFallbackWarning', 'diagonal_preconditioner', 'estimate_cayley_sigma',
            'is_positive_definite', 'check_eigenpairs', 'linear_buckling',
-           'natural_frequency', 'solve', 'linear_static', 'Analysis',
+           'natural_frequency', 'complex_frequency', 'solve', 'linear_static', 'Analysis',
            'FreeDofs', 'crisfield_weights', 'crisfield_zeta',
            'check_null_rows_cols', 'is_symmetric']

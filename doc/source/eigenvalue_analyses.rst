@@ -3,10 +3,10 @@ Linear buckling and natural frequencies
 
 The eigenvalue analyses use the matrices of the free dofs, e.g.
 ``KC0uu = KC0[bu, :][:, bu]``, and are solved with
-:func:`.linear_buckling` and :func:`.natural_frequency` of
-:mod:`pyfe3d.solver.eigen`, which return the eigenvectors with the size of
-the matrices received, to be expanded by the user, ``u[bu] =
-eigvecs[:, i]``.
+:func:`.linear_buckling`, :func:`.natural_frequency` and
+:func:`.complex_frequency` of :mod:`pyfe3d.solver.eigen`, which return the
+eigenvectors with the size of the matrices received, to be expanded by the
+user, ``u[bu] = eigvecs[:, i]``.
 
 
 Linear buckling
@@ -73,24 +73,51 @@ complex indicate the loss of stability by flutter, which
 :func:`.linear_buckling` does not detect: this is the dynamic method of
 Bolotin (1963), see :func:`.natural_frequency`.
 
-:func:`.natural_frequency` solves the undamped problem only. The damping
-matrix of the piston theory, ``-mu*CA``, see ``update_CA`` of
-:class:`.Quad4` and :class:`.Quad4R`, would give the quadratic eigenvalue
-problem `(\lambda^2 [M] + \lambda [C] + [K])\{u\} = \{0\}`, which pyfe3d
-does not solve.
+:func:`.natural_frequency` solves the undamped problem.
+
+
+Damped frequencies
+------------------
+
+With a damping matrix `[C]`, the free vibrations `\{u\} e^{\lambda t}`
+give the quadratic eigenvalue problem
+
+.. math::
+
+    (\lambda^2 [M] + \lambda [C] + [K])\{u\} = \{0\}
+
+solved by ``eigvals, eigvecs = complex_frequency(Kuu, Cuu, Muu,
+num_eigvalues=...)``, which returns the complex eigenvalues `\lambda`,
+one per complex conjugate pair, with `Im(\lambda) \ge 0`, and the complex
+eigenvectors. The damped circular frequency is `\omega_d = |Im(\lambda)|`,
+``abs(eigvals.imag)``, the damping ratio `\zeta = -Re(\lambda)/|\lambda|`,
+``-eigvals.real/abs(eigvals)``, and a positive `Re(\lambda)` is a growing
+motion. With `[C] = [0]`, `\lambda = i \omega_n`, with the `\omega_n` of
+:func:`.natural_frequency`.
+
+The damping matrix is assembled by the user, e.g. Rayleigh damping
+`[C] = \alpha [M] + \beta [K]`, or the aerodynamic damping of the piston
+theory, ``Cuu = -mu*CAuu`` with ``update_CA`` of :class:`.Quad4` and
+:class:`.Quad4R`, with the aerodynamic stiffness in ``Kuu = KC0uu -
+beta*KA_betauu - gamma*KA_gammauu``, see ``update_KA_beta``. A flutter
+analysis then follows the largest `Re(\lambda)` over the flow speed: the
+aerodynamic damping moves the flutter onset beyond the coalescence of the
+frequencies of :func:`.natural_frequency`, see
+``tests/test_quad4_piston_theory.py``.
 
 
 Verification and dense fallback
 -------------------------------
 
-Both functions check that `[K]` has no null row or column, a dof without
-stiffness, which raises a :class:`numpy.linalg.LinAlgError` naming the
-dofs, see :func:`.check_null_rows_cols`, whereas `[K_G]` and `[M]` may
-have null rows, e.g. a lumped mass matrix without rotary inertia. They
-equilibrate the diagonal of the matrices with
+The three functions check that `[K]` has no null row or column, a dof
+without stiffness, which raises a :class:`numpy.linalg.LinAlgError` naming
+the dofs, see :func:`.check_null_rows_cols`, whereas `[K_G]`, `[C]` and
+`[M]` may have null rows, e.g. a lumped mass matrix without rotary
+inertia. They equilibrate the diagonal of the matrices with
 :func:`.diagonal_preconditioner`, which does not change the eigenvalues,
-and select the solvers of symmetric or unsymmetric matrices with
-:func:`.is_symmetric`. Then:
+and :func:`.linear_buckling` and :func:`.natural_frequency` select the
+solvers of symmetric or unsymmetric matrices with :func:`.is_symmetric`.
+Then:
 
 - the sparse solvers of SciPy run first, in shift-invert or Cayley mode,
   with a shift estimated from the matrices for the linear buckling,
@@ -99,6 +126,8 @@ and select the solvers of symmetric or unsymmetric matrices with
   for symmetric matrices, the absence of an eigenvalue missed below the
   highest one returned, from the count of the negative pivots of a shifted
   matrix, see :func:`.check_eigenpairs` and :func:`.is_positive_definite`;
+  for the complex eigenvalues of :func:`.complex_frequency` no such count
+  is implemented, and only the residuals are verified;
 - when the sparse solvers fail, a dense solver of SciPy is used as a last
   resort, when the dense problem has at most ``max_dense_size`` dofs, with a
   :class:`.DenseFallbackWarning` giving the reasons; otherwise a
@@ -134,6 +163,12 @@ lowest one vanishes at the critical load multiplier:
 
 .. literalinclude:: ../../tests/test_solver_natural_frequency.py
     :pyobject: test_quad4_plate_prestress
+
+The damped eigenvalues of a chain of masses with Rayleigh damping, against
+the analytical modal values:
+
+.. literalinclude:: ../../tests/test_solver_complex_frequency.py
+    :pyobject: test_rayleigh_damping_chain
 
 Complete models are in :doc:`ex_linear_buckling_plate`,
 :doc:`ex_linear_buckling_cylinder_torsion`, :doc:`ex_natural_frequency_plate`

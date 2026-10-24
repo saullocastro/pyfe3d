@@ -29,7 +29,9 @@ With the solvers of :mod:`pyfe3d.solver` you can run:
   :func:`.linear_buckling`
 
 * Natural frequency analyses, `([K_{C0}] - \omega_n^2 [M])\{u\} = \{0\}`,
-  with :func:`.natural_frequency`
+  with :func:`.natural_frequency`, and complex frequencies of damped
+  systems, `(\lambda^2 [M] + \lambda [C] + [K])\{u\} = \{0\}`, with
+  :func:`.complex_frequency`
 
 * Geometrically non-linear static analyses with :class:`.Analysis`, using
   the Newton-Raphson method or the arc-length methods of Riks and of
