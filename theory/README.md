@@ -3,7 +3,13 @@
 SymPy scripts that generate the expanded element code of pyfe3d. Each script
 under `deriving_equations/<element>/` prints the sparsity pattern and the value
 lines of one element matrix, which are then pasted into the corresponding
-`.pyx`.
+`.pyx`, except `tria3r/derive_tria3r_mass.py` and
+`quad4r/derive_quad4r_mass.py`, which generate no code. These two check the integrals through the thickness, `intrho`,
+`intrhoz` and `intrhoz2`, and the matrix `h_ij` of the integrals of the
+products of the shape functions, exactly and with the quadrature rules of
+`update_M`. The `derive_*_M_sparse.py` scripts of the shells print the mass
+matrices with the symbols `h11`, `h12`, ... and `valH1`, whose values come
+from the quadrature written by hand in `update_M` before the generated lines.
 
 These scripts were kept in the separate repository `pyfe3d-dev` until its
 commit 9b9971c, from which they were copied here unchanged; the later changes
@@ -20,10 +26,14 @@ over the `Quad4Probe` rows (`_update_probe_KC0ve`, `_update_probe_BL_G`,
 generated block left for a generator to be the source of truth of. The
 scripts had drifted out of step with the `.pyx` and were removed in 0.10.0
 rather than kept as a misleading reference. `update_KG`,
-`update_KG_given_stress`, `update_M` and the Piston theory methods of
-`Quad4` are still expanded code, produced by those scripts before their
-removal; recover them from the history of the former `pyfe3d-dev`
-repository if they ever need regenerating.
+`update_KG_given_stress` and the Piston theory methods of `Quad4` are still
+expanded code, produced by those scripts before their removal; recover them
+from the history of the former `pyfe3d-dev` repository if they ever need
+regenerating. The generated lines of `Quad4.update_M` are those of
+`quad4r/derive_quad4r_M_sparse.py`, as in `Quad4R.update_M`.
+
+`tria3dsg` is not covered: its methods are explicit loops in
+`pyfe3d/tria3dsg.pyx`.
 
 ## References
 

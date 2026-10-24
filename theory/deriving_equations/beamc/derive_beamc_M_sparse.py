@@ -109,7 +109,7 @@ Me_cons = simplify(Me_cons)
 print('finished simplifying Me_cos', flush=True)
 
 # Lumped mass matrix using Lobatto integration, where integration points are placed at the nodes
-# Brockman 1987 as reference, and A. Ralston, A First Course in Nurnericul Analysis, McGraw-Hill. Ncw York, 196
+# Brockman 1987 as reference, and A. Ralston, A First Course in Numerical Analysis, McGraw-Hill, New York, 1965
 # Forcing intrhoz=intrhoy=intrhoxy=0 to end up with a diagonal matrix
 # NOTE two-point Gauss-Lobatto quadrature
 wi = 1
