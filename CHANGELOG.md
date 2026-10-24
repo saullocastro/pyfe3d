@@ -201,6 +201,47 @@ New:
   `pyfe3d.solver.eigen._null_mu_pencil`, `NULL_MU_PERTURBATION_FACTOR`;
   argument `left` of `_eig_complex`. The same rule as structsolve.
 
+### Mass matrices
+
+- Lumped mass matrices of the shells, `mtype=2` of `update_M` of `Quad4`,
+  `Quad4R`, `Tria3R` and `Tria3DSG`: the coupling between the translations
+  and the rotations through `intrhoz`, the first moment of the density about
+  the reference surface, is kept in the block of each node. The lumped
+  matrix is the nodal quadrature of the kinetic energy, the Lobatto
+  integration at the nodes of Brockman (1987), which gives the complete
+  inertia of the section at each node; it is diagonal only when `intrhoz`
+  is zero. With an offset, the centre of mass of each element was on the
+  reference surface instead of at the offset; the mass and the first moment
+  of the mass are now exact (in the plane, for the triangles and the
+  parallelograms). Without offset the matrices are unchanged. `mtype=2`
+  writes 90 entries for `Tria3R` (162 before) and 120 for `Quad4` and
+  `Quad4R` (288 before), generated with
+  `theory/deriving_equations/tria3r/derive_tria3r_M_sparse.py` and
+  `theory/deriving_equations/quad4r/derive_quad4r_M_sparse.py`.
+- `Tria3DSG.update_M` uses `intrhoz`, coupling `u` with `r_y` and `v` with
+  `r_x`, for the consistent and the lumped matrix, consistently with
+  `intrhoz2`, which already included the offset.
+- `update_M` of every element raises a `ValueError` for an unsupported
+  `mtype`, checked before the code without the GIL: `0`, `1` or `2` for
+  `Quad4`, `Quad4R` and `Tria3R`; `0` or `2` for `Tria3DSG`, which treated
+  any other value as `0`; `0` or `1` for `BeamC`, `BeamLR` and `Truss`. Other
+  values wrote nothing before, e.g. `mtype=2` gave massless beams. The
+  values per element are listed on the page on the choice of the element.
+- New `tests/test_element_mass.py`: total mass, the matrices of the Notes and
+  the rigid-body inertia of every element and every `mtype`, with an offset
+  and with the first moments of the beam sections; unsupported `mtype`.
+- New tutorial `tut-shell-lumped-mass.ipynb`: derivation of the lumped
+  matrices with the offset and verification with the rigid-body inertia of
+  one element and of a mesh.
+- `Tria3R`: unused variables removed from `update_M`; comments and Notes
+  corrected (the weight of the one-point rule, the vertex rule of the lumped
+  matrix). The check scripts `derive_tria3r_mass.py` and
+  `derive_quad4r_mass.py` are rewritten: the weights of the rules in the
+  reference triangle sum to its area 1/2 (they gave twice the integrals),
+  every rule and geometry is evaluated, and `intrhoz` is derived;
+  `derive_tria3r_M_sparse.py` prints `valH1 = A/9` instead of `2*A/9`;
+  `theory/README.md` lists the scripts that generate no code.
+
 ### Derivation scripts
 
 - The SymPy scripts that generate the element code are moved from the
