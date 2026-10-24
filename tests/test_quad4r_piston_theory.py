@@ -173,7 +173,9 @@ def test_quad4r_piston_theory(plot=False, refinement=1):
     radius = 1.
     gammas = betas/(2*radius*np.sqrt(Mach**2 - 1))
     mus = betas/(Mach*v_sound)*((Mach**2 - 2)/(Mach**2 - 1))
-    mus*=0 # TODO quadractic eigenvalue problem to solve including damping
+    # NOTE the aerodynamic damping mus*CAuu is not included: with it the
+    #      eigenvalue problem becomes quadratic, which is not solved here
+    #      nor by pyfe3d.solver.natural_frequency
 
     omegan_vec = []
     for i, beta in enumerate(betas):

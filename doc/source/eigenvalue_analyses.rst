@@ -73,6 +73,12 @@ complex indicate the loss of stability by flutter, which
 :func:`.linear_buckling` does not detect: this is the dynamic method of
 Bolotin (1963), see :func:`.natural_frequency`.
 
+:func:`.natural_frequency` solves the undamped problem only. The damping
+matrix of the piston theory, ``-mu*CA``, see ``update_CA`` of
+:class:`.Quad4` and :class:`.Quad4R`, would give the quadratic eigenvalue
+problem `(\lambda^2 [M] + \lambda [C] + [K])\{u\} = \{0\}`, which pyfe3d
+does not solve.
+
 
 Verification and dense fallback
 -------------------------------
