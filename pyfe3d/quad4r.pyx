@@ -95,14 +95,31 @@ In the reduced integration scheme used, a single point at the centroid
 The hourglass control is used according to Brockman 1987 [1]_, with the
 orthogonalised hourglass operator of his Eq. (14), which he quotes from
 Belytschko and Tsay 1983 [2]_. Brockman considers only isotropic plates,
-and his generalized stiffnesses contain the Young's modulus `E`. For a
-laminate, `E` is replaced by the equivalent moduli `E_{1eq}` and `E_{2eq}`
-of the extensional stiffness `[A]` in the element coordinate system, see
-:meth:`.Quad4R.update_KC0`: the coupling matrix `[B]` is neglected, and the
-bending stiffness `[D]` does not enter the stiffnesses of the rotations,
-which are `E_{1eq}` or `E_{2eq}` times `t^3`. This generalisation is not
-derived for laminates; :class:`.Quad4`, with its mixed quadrature, needs no
-hourglass control.
+and his generalized stiffnesses contain the Young's modulus `E`, times `t`
+for the in-plane translations `u`, `v` and times `t^3` for `w` and the
+rotations. For a laminate, `E` is replaced by equivalent moduli in the
+element coordinate system, see :meth:`.Quad4R.update_KC0`: the membrane
+moduli `E_{1eq}` and `E_{2eq}` of the extensional compliance `[A]^{-1}` for
+`u` and `v`, and the bending moduli `E_{1b}` and `E_{2b}` of the bending
+compliance, the lower-right block of `[[A, B], [B, D]]^{-1}`, for `w`,
+`r_x` and `r_y`. Each is the modulus of the homogeneous plate that has the
+compliance of the laminate in that direction, so both pairs reduce to `E`
+for an isotropic plate, and they differ for a laminate whose bending
+stiffness is not `t^2/12` times its extensional stiffness, e.g. a cross-ply
+or a sandwich. Brockman calibrated the coefficients of his Eq. (16) on
+isotropic plates, and this generalisation does not recalibrate them for
+laminates; :class:`.Quad4`, with its mixed quadrature, needs no hourglass
+control. With the bending moduli, the artificial stiffness of the rotations
+is the same fraction of the bending stiffness of the plate for every
+laminate as for an isotropic plate. On simply supported plates under
+uniform pressure, with 8 by 8 elements, the centre deflection of an
+unsymmetric `[0/90]` cross-ply, whose `[B]` gives `E_{1b} = 0.36
+E_{1eq}`, is 15 % smaller than the Navier solution of the FSDT, against
+32 % with the membrane moduli for the rotations, used before 0.11.0, which
+over-stabilised it; that of a sandwich with thin faces, `E_{1b} = 2.7
+E_{1eq}`, is 14 % smaller, against 6 %, the membrane moduli having
+under-stabilised it; see ``test_laminated_plates_against_navier`` in
+``test_quad4r_hourglass_control.py``.
 
 .. rubric:: Dimensional homogeneity of the hourglass stiffnesses
 
@@ -155,9 +172,9 @@ nothing, which is four of the five coefficients:
 
 .. math::
 
-    E^{(h)}_{\theta_x} = 0.10 E_{2eq} t^3 A
+    E^{(h)}_{\theta_x} = 0.10 E_{2b} t^3 A
     \qquad
-    E^{(h)}_{\theta_y} = 0.10 E_{1eq} t^3 A
+    E^{(h)}_{\theta_y} = 0.10 E_{1b} t^3 A
 
 Each of these scales under a change of length unit exactly as the physical
 stiffness it stabilises, `Et` for the in-plane translations and `Et^3` for
@@ -370,6 +387,55 @@ from .shellprop cimport ShellProp
 
 cdef int DOF = 6
 cdef int NUM_NODES = 4
+
+
+cdef inline void _hourglass_bending_moduli(double h, double *Ae, double *Be,
+        double *De, double *E1b, double *E2b) noexcept nogil:
+    r"""Equivalent bending moduli of the hourglass control
+
+    ``E1b = 12/(h**3 d11)`` and ``E2b = 12/(h**3 d22)``, with `[d] = (D -
+    B A^{-1} B)^{-1}` the lower-right block of `[[A, B], [B, D]]^{-1}`, from
+    the row-major 3x3 matrices ``Ae``, ``Be`` and ``De`` in the element
+    coordinate system. See the Notes of :meth:`.Quad4R.update_KC0`.
+
+    """
+    cdef int i, j, k
+    cdef double detA, detDs
+    cdef double Ai[9]
+    cdef double BAi[9]
+    cdef double Ds[9]
+    # NOTE inverse of the extensional stiffness by cofactors
+    detA = (Ae[0]*(Ae[4]*Ae[8] - Ae[5]*Ae[7])
+            - Ae[1]*(Ae[3]*Ae[8] - Ae[5]*Ae[6])
+            + Ae[2]*(Ae[3]*Ae[7] - Ae[4]*Ae[6]))
+    Ai[0] = (Ae[4]*Ae[8] - Ae[5]*Ae[7])/detA
+    Ai[1] = (Ae[2]*Ae[7] - Ae[1]*Ae[8])/detA
+    Ai[2] = (Ae[1]*Ae[5] - Ae[2]*Ae[4])/detA
+    Ai[3] = (Ae[5]*Ae[6] - Ae[3]*Ae[8])/detA
+    Ai[4] = (Ae[0]*Ae[8] - Ae[2]*Ae[6])/detA
+    Ai[5] = (Ae[2]*Ae[3] - Ae[0]*Ae[5])/detA
+    Ai[6] = (Ae[3]*Ae[7] - Ae[4]*Ae[6])/detA
+    Ai[7] = (Ae[1]*Ae[6] - Ae[0]*Ae[7])/detA
+    Ai[8] = (Ae[0]*Ae[4] - Ae[1]*Ae[3])/detA
+    # NOTE bending stiffness with zero membrane forces, D - B A^-1 B, which
+    #      is D itself when B is zero and does not depend on the reference
+    #      surface set by ShellProp.offset
+    for i in range(3):
+        for j in range(3):
+            BAi[3*i + j] = 0.
+            for k in range(3):
+                BAi[3*i + j] += Be[3*i + k]*Ai[3*k + j]
+    for i in range(3):
+        for j in range(3):
+            Ds[3*i + j] = De[3*i + j]
+            for k in range(3):
+                Ds[3*i + j] -= BAi[3*i + k]*Be[3*k + j]
+    detDs = (Ds[0]*(Ds[4]*Ds[8] - Ds[5]*Ds[7])
+             - Ds[1]*(Ds[3]*Ds[8] - Ds[5]*Ds[6])
+             + Ds[2]*(Ds[3]*Ds[7] - Ds[4]*Ds[6]))
+    # NOTE 1/d11 and 1/d22 from the cofactors of D - B A^-1 B
+    E1b[0] = 12.*detDs/(h**3*(Ds[4]*Ds[8] - Ds[5]*Ds[7]))
+    E2b[0] = 12.*detDs/(h**3*(Ds[0]*Ds[8] - Ds[2]*Ds[6]))
 
 
 
@@ -1046,7 +1112,7 @@ cdef class Quad4R:
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
-        cdef double E1eq, E2eq
+        cdef double E1eq, E2eq, E1b, E2b
         cdef double K6ROT
         cdef double Eu, Ev, Erx, Ery, Ew
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
@@ -1121,6 +1187,10 @@ cdef class Quad4R:
             a22 = (-A11*A66 + A16**2)/(-A11*A22*A66 + A11*A26**2 + A12**2*A66 - 2*A12*A16*A26 + A16**2*A22)
             E1eq = 1./(prop.h*a11)
             E2eq = 1./(prop.h*a22)
+            # NOTE equivalent bending moduli of the hourglass control of w,
+            #      rx and ry, from the bending compliance of the laminate in
+            #      the element coordinate system, see the Notes of update_KC0
+            _hourglass_bending_moduli(prop.h, Ae, Be, De, &E1b, &E2b)
 
 
             # NOTE both drilling models use the same operator, the one of
@@ -1156,8 +1226,9 @@ cdef class Quad4R:
             wij = 4.
 
             # NOTE Brockman's hourglass control is derived for isotropic
-            #      plates, and applied to laminates with E1eq and E2eq, see
-            #      the module documentation
+            #      plates, and applied to laminates with the membrane moduli
+            #      E1eq and E2eq for u and v, and with the bending moduli
+            #      E1b and E2b for w, rx and ry, see the module documentation
             # NOTE Brockman's 1/(1 + 1/A) of Eq. (16) is replaced by the
             #      dimensionally homogeneous area factor, see the section
             #      "Dimensional homogeneity of the hourglass stiffnesses"
@@ -1170,8 +1241,8 @@ cdef class Quad4R:
             #      units and not in others
             Eu = hgfactor_u*0.1*E1eq*prop.h*self.area
             Ev = hgfactor_v*0.1*E2eq*prop.h*self.area
-            Erx = hgfactor_rx*0.1*E2eq*prop.h**3*self.area
-            Ery = hgfactor_ry*0.1*E1eq*prop.h**3*self.area
+            Erx = hgfactor_rx*0.1*E2b*prop.h**3*self.area
+            Ery = hgfactor_ry*0.1*E1b*prop.h**3*self.area
             # NOTE w alone keeps Brockman's 1/(1 + 1/A), so this is the
             #      one coefficient of the scheme that remains unit
             #      dependent, and that is deliberate. The operator cannot
@@ -1187,13 +1258,13 @@ cdef class Quad4R:
             #      SI units correlates with what each of those problems
             #      needs. See the module documentation, and
             #      test_quad4r_hourglass_control.py for the measurements.
-            #      The mean of the two equivalent moduli generalises
+            #      The mean of the two bending moduli generalises
             #      Eq. (16b) to laminates and reduces to it for an
             #      isotropic plate. It is built from the moduli and not
             #      from Erx and Ery, which already carry hgfactor_rx and
             #      hgfactor_ry, so that hgfactor_w scales this term and
             #      nothing else
-            Ew = (hgfactor_w*0.05*(E1eq + E2eq)*prop.h**3
+            Ew = (hgfactor_w*0.05*(E1b + E2b)*prop.h**3
                   /(1.0 + 1.0/self.area))
 
             # NOTE using only one integration point at xi=0, eta=0 to avoid shear locking
@@ -1704,21 +1775,44 @@ cdef class Quad4R:
 
         .. math::
 
-            E^{(h)}_{r_x} = 0.1 \, f_{r_x} E_{2eq} t^3 A, \qquad
-            E^{(h)}_{r_y} = 0.1 \, f_{r_y} E_{1eq} t^3 A
+            E^{(h)}_{r_x} = 0.1 \, f_{r_x} E_{2b} t^3 A, \qquad
+            E^{(h)}_{r_y} = 0.1 \, f_{r_y} E_{1b} t^3 A
 
         .. math::
 
-            E^{(h)}_w = \frac{0.05 \, f_w (E_{1eq} + E_{2eq}) t^3}{1 + 1/A}
+            E^{(h)}_w = \frac{0.05 \, f_w (E_{1b} + E_{2b}) t^3}{1 + 1/A}
 
         where `f_u, f_v, f_w, f_{r_x}, f_{r_y}` are the ``hgfactor_*``
-        parameters, and `E_{1eq} = 1/(t a_{11})`, `E_{2eq} = 1/(t a_{22})`
-        are equivalent moduli, with `[a] = [A]^{-1}` the inverse of the
-        extensional stiffness matrix, the coupling matrix `[B]` being
-        neglected. The mean of the two equivalent moduli in `E^{(h)}_w`
-        generalises Eq. (16b) of Brockman to laminates and reduces to it for
-        an isotropic plate. The reasons for the area factors are given in the
-        Notes of :mod:`pyfe3d.quad4r`.
+        parameters. The reasons for the area factors are given in the Notes
+        of :mod:`pyfe3d.quad4r`. The equivalent moduli, all in the element
+        coordinate system, are
+
+        .. math::
+
+            E_{1eq} = \frac{1}{t a_{11}}, \quad
+            E_{2eq} = \frac{1}{t a_{22}}, \quad
+            E_{1b} = \frac{12}{t^3 d_{11}}, \quad
+            E_{2b} = \frac{12}{t^3 d_{22}}
+
+        with `[a] = [A]^{-1}`, the coupling matrix `[B]` being neglected,
+        and `[d] = ([D] - [B][A]^{-1}[B])^{-1}` the lower-right block of
+        `[[A, B], [B, D]]^{-1}`. A homogeneous plate of modulus `E` has
+        `a_{11} = 1/(E t)` and `d_{11} = 12/(E t^3)`, so `E_{1eq}` is the
+        modulus of the homogeneous plate that stretches as the laminate under
+        `N_{xx}` alone with the curvatures restrained, and `E_{1b}` that of
+        the homogeneous plate that bends as the laminate under `M_{xx}`
+        alone with the membrane forces zero; analogously in `y`. Both pairs
+        reduce to `E` for an isotropic plate, as in Eq. (16) of Brockman,
+        whereas `12 D_{11}/t^3` would give `E/(1 - \nu^2)`. `[D] -
+        [B][A]^{-1}[B]` and `[A]` do not change when the reference surface
+        is moved with ``prop.offset``, while `[D]` does, so neither pair
+        depends on the offset. `r_x` enters the curvature `\kappa_{yy} =
+        -r_{x,y}` and `r_y` the curvature `\kappa_{xx} = r_{y,x}`, hence
+        `E_{2b}` in `E^{(h)}_{r_x}` and `E_{1b}` in `E^{(h)}_{r_y}`. The
+        hourglass pattern of `w`, `w = xy` on a rectangle, is a twist, and
+        the mean of the two bending moduli in `E^{(h)}_w` generalises
+        Eq. (16b) of Brockman to laminates and reduces to it for an
+        isotropic plate.
 
         The drilling term, `\gamma_{r_z} [B_{drill}]^T [B_{drill}]` with
         `B_{drill} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}`, is integrated
@@ -1754,7 +1848,7 @@ cdef class Quad4R:
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
-        cdef double E1eq, E2eq
+        cdef double E1eq, E2eq, E1b, E2b
         cdef double K6ROT
         cdef double Eu, Ev, Erx, Ery, Ew
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
@@ -1826,6 +1920,10 @@ cdef class Quad4R:
             a22 = (-A11*A66 + A16**2)/(-A11*A22*A66 + A11*A26**2 + A12**2*A66 - 2*A12*A16*A26 + A16**2*A22)
             E1eq = 1./(prop.h*a11)
             E2eq = 1./(prop.h*a22)
+            # NOTE equivalent bending moduli of the hourglass control of w,
+            #      rx and ry, from the bending compliance of the laminate in
+            #      the element coordinate system, see the Notes of update_KC0
+            _hourglass_bending_moduli(prop.h, Ae, Be, De, &E1b, &E2b)
 
 
             # NOTE both drilling models use the same operator, the one of
@@ -3608,8 +3706,9 @@ cdef class Quad4R:
             wij = 4.
 
             # NOTE Brockman's hourglass control is derived for isotropic
-            #      plates, and applied to laminates with E1eq and E2eq, see
-            #      the module documentation
+            #      plates, and applied to laminates with the membrane moduli
+            #      E1eq and E2eq for u and v, and with the bending moduli
+            #      E1b and E2b for w, rx and ry, see the module documentation
             # NOTE Brockman's 1/(1 + 1/A) of Eq. (16) is replaced by the
             #      dimensionally homogeneous area factor, see the section
             #      "Dimensional homogeneity of the hourglass stiffnesses"
@@ -3622,8 +3721,8 @@ cdef class Quad4R:
             #      units and not in others
             Eu = hgfactor_u*0.1*E1eq*prop.h*self.area
             Ev = hgfactor_v*0.1*E2eq*prop.h*self.area
-            Erx = hgfactor_rx*0.1*E2eq*prop.h**3*self.area
-            Ery = hgfactor_ry*0.1*E1eq*prop.h**3*self.area
+            Erx = hgfactor_rx*0.1*E2b*prop.h**3*self.area
+            Ery = hgfactor_ry*0.1*E1b*prop.h**3*self.area
             # NOTE w alone keeps Brockman's 1/(1 + 1/A), so this is the
             #      one coefficient of the scheme that remains unit
             #      dependent, and that is deliberate. The operator cannot
@@ -3639,13 +3738,13 @@ cdef class Quad4R:
             #      SI units correlates with what each of those problems
             #      needs. See the module documentation, and
             #      test_quad4r_hourglass_control.py for the measurements.
-            #      The mean of the two equivalent moduli generalises
+            #      The mean of the two bending moduli generalises
             #      Eq. (16b) to laminates and reduces to it for an
             #      isotropic plate. It is built from the moduli and not
             #      from Erx and Ery, which already carry hgfactor_rx and
             #      hgfactor_ry, so that hgfactor_w scales this term and
             #      nothing else
-            Ew = (hgfactor_w*0.05*(E1eq + E2eq)*prop.h**3
+            Ew = (hgfactor_w*0.05*(E1b + E2b)*prop.h**3
                   /(1.0 + 1.0/self.area))
 
             # NOTE using only one integration point at xi=0, eta=0 to avoid shear locking

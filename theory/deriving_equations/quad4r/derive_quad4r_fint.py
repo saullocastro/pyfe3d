@@ -267,20 +267,33 @@ BL = Matrix([BLexx, BLeyy, BLgxy, BLkxx, BLkyy, BLkxy, BLgyz, BLgxz])
 # https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208
 # Eqs. 16a and 16b
 # adapted to composites replacing
-#     E*h by E1eq*h, with E1eq = 1/(A^(-1)[0,0]) in u direction
-#     E*h by E2eq*h, with E2eq = 1/(A^(-1)[1,1]) in v direction
-#     E*h**3 by E1eq*h**3 in u direction
-#     E*h**3 by E2eq*h**3 in v direction
-var('E1eq, E2eq')
+#     E*h by E1eq*h, with E1eq = 1/(h*A^(-1)[0,0]) in u direction
+#     E*h by E2eq*h, with E2eq = 1/(h*A^(-1)[1,1]) in v direction
+#     E*h**3 by E1b*h**3 in ry direction, E1b = 12/(h**3*d[0,0])
+#     E*h**3 by E2b*h**3 in rx direction, E2b = 12/(h**3*d[1,1])
+#     E*h**3 by (E1b + E2b)/2*h**3 in w direction
+# with [d] = (D - B A^(-1) B)^(-1) the lower-right block of [[A, B], [B, D]]^(-1),
+# all in the element coordinate system. E1eq is the modulus of the
+# homogeneous plate with the laminate's membrane compliance a11 = eps_xx/N_xx
+# (other membrane forces zero, B neglected), and E1b is the modulus of the
+# homogeneous plate with the laminate's bending compliance
+# d11 = kappa_xx/M_xx (other moments and all membrane forces zero), since a
+# homogeneous plate has a11 = 1/(E*h) and d11 = 12/(E*h**3). Both reduce to
+# E for an isotropic plate, and d does not depend on the reference surface.
+# The moduli are computed by _hourglass_bending_moduli() in quad4r.pyx
+#
+# and with Brockman's 1/(1 + 1/A) replaced by the area A for u, v, rx and ry,
+# as in derive_quad4r_KC0_sparse.py, where the reasons are given
+var('E1eq, E2eq, E1b, E2b')
 print('gamma1 = N1xy')
 print('gamma2 = N2xy')
 print('gamma3 = N3xy')
 print('gamma4 = N4xy')
-Eu = 0.10*E1eq*h/(1. + 1./A)
-Ev = 0.10*E2eq*h/(1. + 1./A)
-Erx = 0.10*E2eq*h**3/(1.+ 1./A)
-Ery = 0.10*E1eq*h**3/(1.+ 1./A)
-Ew = (Erx + Ery)/2.
+Eu = 0.10*E1eq*h*A
+Ev = 0.10*E2eq*h*A
+Erx = 0.10*E2b*h**3*A
+Ery = 0.10*E1b*h**3*A
+Ew = 0.10*(E1b + E2b)/2.*h**3/(1. + 1./A)
 Erz = 0
 print('Eu =', Eu)
 print('Ev =', Ev)
