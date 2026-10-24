@@ -1075,3 +1075,31 @@ def test_eigs_shift_search_errors(monkeypatch):
         search(K, KG, 6, 0, 1e-6)
     # NOTE K, then the shift and its two perturbations
     assert len(splu_calls) == 4
+
+
+def test_splu_warnings_shown_once():
+    r"""A warning of the caller, shown once per location with the
+    ``'default'`` action, is not repeated after :func:`eigen._splu`, also
+    when it raises for an exactly singular matrix, nor after the shift
+    search of :func:`linear_buckling` for unsymmetric matrices, which
+    factorizes with it: no :func:`warnings.catch_warnings` block resets the
+    registry of the warnings already shown. Load multipliers 1 to 20 of an
+    upper triangular `[K]^{-1}[K_G]`"""
+    n = 20
+    K = diags(np.arange(1., n + 1)).tocsr()
+    KG = csr_matrix(-np.eye(n) + 0.05*np.triu(np.ones((n, n)), k=1))
+
+    def emit():
+        warnings.warn('caller warning', UserWarning)
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter('default')
+        for _ in range(3):
+            emit()
+            eigen._splu(K)
+            with pytest.raises(RuntimeError, match='exactly singular'):
+                eigen._splu(csr_matrix((n, n)) + diags([1.] + [0.]*(n - 1)))
+            eigvals, _ = linear_buckling(K, KG, num_eigvalues=3,
+                                         symmetric=False)
+            np.testing.assert_allclose(eigvals, [1., 2., 3.], rtol=1e-10)
+    assert [str(w.message) for w in caught] == ['caller warning']

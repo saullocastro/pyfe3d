@@ -1284,10 +1284,17 @@ def _eig_condensed(K, KG, k):
 
 def _splu(A):
     r"""SuperLU factorization of ``A`` with partial pivoting, raising a
-    ``RuntimeError`` when ``A`` is exactly singular"""
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
-        return splu(csc_matrix(A))
+    ``RuntimeError`` when ``A`` is exactly singular
+
+    :func:`scipy.sparse.linalg.splu` warns only when it converts its input
+    to the CSC format, :class:`scipy.sparse.SparseEfficiencyWarning`, which
+    the conversion here avoids. No :func:`warnings.catch_warnings` block is
+    used: its exit resets the registry of the warnings already shown, of
+    every module, and the warnings of the caller shown once per location
+    would be shown again after each call.
+
+    """
+    return splu(csc_matrix(A))
 
 
 def _permutation_parity(p):
@@ -2544,11 +2551,7 @@ def _eigs_qep(K, C, M, k, tol, sigma):
     n = K.shape[0]
     Q = csc_matrix(sigma**2*M + sigma*C + K)
     try:
-        # NOTE splu() of a CSC matrix issues no warning, and without
-        #      warnings.catch_warnings(), whose exit resets the registry of
-        #      the warnings already shown, of every module, the warnings of
-        #      the caller are not repeated at each call
-        lu = splu(Q)
+        lu = _splu(Q)
     except RuntimeError:
         raise RuntimeError('lambda**2*M + lambda*C + K is singular at the '
                            'shift sigma=%r' % sigma)
