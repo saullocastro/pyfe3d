@@ -7,10 +7,17 @@
 #cython: embedsignature=True
 #cython: infer_types=False
 r"""
+===================================================================
 BeamC - Consistent Timoshenko 3D beam element (:mod:`pyfe3d.beamc`)
 ===================================================================
 
 .. currentmodule:: pyfe3d.beamc
+
+Defines the two-node beam element :class:`.BeamC`, with six
+degrees-of-freedom per node, its probe :class:`.BeamCProbe` and
+:class:`.BeamCData`, which gives the number of sparse entries per element of
+each structural matrix. The cross-section and material properties are given
+by a :class:`.BeamProp` object.
 
 """
 import numpy as np
@@ -25,19 +32,26 @@ cdef class BeamCData:
     r"""
     Used to allocate memory for the sparse matrices.
 
+    Each attribute is the number of entries that one :class:`.BeamC`
+    element writes in the arrays of rows, columns and values of a sparse
+    matrix, at the consecutive positions that start at its ``init_k_KC0``,
+    ``init_k_KCNL``, ``init_k_KG`` or ``init_k_M``. The constructor takes no
+    argument and sets the values below.
+
     Attributes
     ----------
     KC0_SPARSE_SIZE, : int
-        ``KC0_SPARSE_SIZE = 144``
+        ``KC0_SPARSE_SIZE = 144``, written by :meth:`.BeamC.update_KC0`.
 
     KCNL_SPARSE_SIZE, : int
-        ``KCNL_SPARSE_SIZE = 144``
+        ``KCNL_SPARSE_SIZE = 144``, written by :meth:`.BeamC.update_KCNL`.
 
     KG_SPARSE_SIZE, : int
-        ``KG_SPARSE_SIZE = 144``
+        ``KG_SPARSE_SIZE = 144``, written by :meth:`.BeamC.update_KG`.
 
     M_SPARSE_SIZE, : int
-        ``M_SPARSE_SIZE = 144``
+        ``M_SPARSE_SIZE = 144``, written by :meth:`.BeamC.update_M` with
+        ``mtype=0``; with ``mtype=1`` only the first ``36`` are written.
 
     """
     cdef public int KC0_SPARSE_SIZE
@@ -65,21 +79,27 @@ cdef class BeamCProbe:
               depending on how you defined them. Mind that the probe will
               always safe the values from the last udpate.
 
+    The constructor takes no argument and allocates the arrays below, filled
+    with zeros.
+
 
     Attributes
     ----------
     xe, : array-like
         Array of size ``NUM_NODES*DOF//2=6`` containing the nodal coordinates
         in the element coordinate system, in the following order `{x_e}_1,
-        {y_e}_1, {z_e}_1, {x_e}_2, {y_e}_2, {z_e}_2`.
+        {y_e}_1, {z_e}_1, {x_e}_2, {y_e}_2, {z_e}_2`. Dimension length.
+        Updated by :meth:`.BeamC.update_probe_xe`.
     ue, : array-like
         Array of size ``NUM_NODES*DOF=12`` containing the element displacements
         in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
         {{r_y}_e}_1, {{r_z}_e}_1, {u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
-        {{r_y}_e}_2, {{r_z}_e}_2`.
+        {{r_y}_e}_2, {{r_z}_e}_2`. Translations of dimension length and
+        rotations. Updated by :meth:`.BeamC.update_probe_ue`.
     finte, : array-like
         Array of size ``NUM_NODES*DOF=12`` containing the element internal
-        forces corresponding to the degrees-of-freedom described by ``ue``.
+        forces corresponding to the degrees-of-freedom described by ``ue``,
+        forces and moments. Updated by :meth:`.BeamC.update_probe_finte`.
     BLexx, BLky, BLkz : array-like
         Arrays of size ``NUM_NODES*DOF=12`` with the rows of the linear
         strain-displacement matrix for the axial strain and the two
@@ -119,11 +139,6 @@ cdef class BeamC:
     r"""
     Timoshenko 3D beam element with consistent shape functions
 
-    Formulation based on reference:
-
-        Luo, Y., 2008, “An Efficient 3D Timoshenko Beam Element with Consistent
-        Shape Functions,” Adv. Theor. Appl. Mech., 1(3), pp. 95–106.
-
     Nodal connectivity for the beam element::
 
         ^ y axis
@@ -132,6 +147,24 @@ cdef class BeamC:
         ______   --> x axis
         1    2
 
+    The constructor stores ``p`` in ``probe``, sets ``eid``, ``pid``,
+    ``n1``, ``n2``, ``c1`` and ``c2`` to ``-1``, and sets the ``init_k_*``
+    positions, ``length``, ``vxyi``, ``vxyj``, ``vxyk`` and the rotation
+    matrix to ``0``. The methods use the attributes updated by the others:
+    :meth:`.update_rotation_matrix` reads ``c1`` and ``c2``;
+    :meth:`.update_probe_xe` reads the rotation matrix and updates
+    ``length``; the ``update_K*``, :meth:`.update_M` and
+    :meth:`.update_probe_finte` methods read ``length`` and the rotation
+    matrix; :meth:`.update_KG`, :meth:`.update_KCNL` and
+    :meth:`.update_probe_finte` also read ``probe.ue``, updated by
+    :meth:`.update_probe_ue`.
+
+    Parameters
+    ----------
+    p : :class:`.BeamCProbe` object
+        Probe of the element, stored in ``probe``. It can be shared with
+        other elements.
+
     Attributes
     ----------
     eid, : int
@@ -139,21 +172,158 @@ cdef class BeamC:
     pid, : int
         Property identification number.
     length, : double
-        Element length.
+        Element length, dimension length. Updated by
+        :meth:`.update_length`.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Rotation matrix from local to global coordinates.
+        Rotation matrix from local to global coordinates. Dimensionless.
     vxyi, vxyj, vxyk : double
         Components of a vector on the `XY` plane of the element coordinate
-        system, defined using global coordinates.
+        system, defined using global coordinates. Only the direction of the
+        vector is used.
     c1, c2 : int
-        Position of each node in the global stiffness matrix.
+        Position of each node in the global stiffness matrix, i.e. of the
+        first of its ``6`` degrees-of-freedom. The coordinates of the node
+        are read from the position ``c1//2`` or ``c2//2`` of the array of
+        nodal coordinates.
     n1, n2 : int
         Node identification number.
     init_k_KC0, init_k_KCNL, init_k_KG, init_k_M : int
         Position in the arrays storing the sparse data for the structural
-        matrices.
+        matrices, where the entries of this element start, see
+        :class:`.BeamCData` for their number.
     probe, : :class:`.BeamCProbe` object
         Pointer to the probe.
+
+    Notes
+    -----
+    Formulation based on reference [1]_.
+
+    The cross section is rigid. In the element coordinate system, whose `x`
+    axis is the beam axis, the displacements of the point `(y, z)` of the
+    cross section are
+
+    .. math::
+        u_x = u - y r_z + z r_y, \qquad u_y = v - z r_x, \qquad
+        u_z = w + y r_x
+
+    where `u, v, w, r_x, r_y, r_z` are the translations and rotations of the
+    beam axis, interpolated from the 12 element displacements ``ue``. The
+    axial strain, with the curvatures `\kappa_y` and `\kappa_z`, and the
+    transverse shear strains of the beam axis are
+
+    .. math::
+        \epsilon_{xx} = u_{,x} + y \kappa_y + z \kappa_z, \qquad
+        \kappa_y = -{r_z}_{,x}, \qquad \kappa_z = {r_y}_{,x}, \qquad
+        \gamma_{xy} = v_{,x} - r_z, \qquad \gamma_{xz} = w_{,x} + r_y
+
+    and, with the cross-section integrals of :class:`.BeamProp`, the linear
+    strain energy is
+
+    .. math::
+        U = \frac{1}{2} \int_0^L \Big[
+            E \left( A u_{,x}^2 + I_{zz} \kappa_y^2 + I_{yy} \kappa_z^2
+            + 2 A_y u_{,x} \kappa_y + 2 A_z u_{,x} \kappa_z
+            + 2 I_{yz} \kappa_y \kappa_z \right) \\
+            + G_{12} \left( A \gamma_{xy}^2 - 2 A_z \gamma_{xy} {r_x}_{,x}
+            \right)
+            + G_{13} \left( A \gamma_{xz}^2 + 2 A_y \gamma_{xz} {r_x}_{,x}
+            \right)
+            + G J {r_x}_{,x}^2 \Big] dx
+
+    where `L` is ``length``, `G_{12}` = ``G12`` and `G_{13}` = ``G13`` are
+    the transverse shear moduli of the planes `xy` and `xz`, and `G J` =
+    ``GJ`` is the torsional stiffness, see :class:`.BeamProp`. The torsion
+    is of Saint-Venant type, without warping, with ``GJ`` in place of the
+    torsional stiffness `G_{12} I_{yy} + G_{13} I_{zz}` of the rigid cross
+    section, and no shear correction factor is applied. The axial force is
+    `N = E (A u_{,x} + A_y \kappa_y + A_z \kappa_z)`.
+
+    `u` and `r_x` are interpolated linearly between the nodes. `v` and `r_z`
+    are interpolated with the consistent shape functions of [1]_, cubic for
+    `v` and quadratic for `r_z`, which depend on the parameters
+
+    .. math::
+        \alpha_y = -\frac{12 E I_{zz}}{G_{12} A L^2}, \qquad
+        \alpha_z = -\frac{12 E I_{yy}}{G_{13} A L^2}, \qquad
+        \beta_y = \frac{1}{1 - \alpha_y}, \qquad
+        \beta_z = \frac{1}{1 - \alpha_z}
+
+    named ``alphay``, ``alphaz``, ``betay`` and ``betaz`` in the code. With
+    `\xi = x/L` and the nodal values `v_1, {r_z}_1, v_2, {r_z}_2`:
+
+    .. math::
+        v = \left[1 + \beta_y (2\xi^3 - 3\xi^2 + \alpha_y \xi)\right] v_1
+            + L \beta_y \left(\xi^3 + \frac{\alpha_y - 4}{2} \xi^2
+            + \left(1 - \frac{\alpha_y}{2}\right) \xi \right) {r_z}_1 \\
+            + \beta_y (-2\xi^3 + 3\xi^2 - \alpha_y \xi) v_2
+            + L \beta_y \left(\xi^3 - \frac{\alpha_y + 2}{2} \xi^2
+            + \frac{\alpha_y}{2} \xi \right) {r_z}_2
+
+    .. math::
+        r_z = \frac{6 \beta_y}{L} (\xi^2 - \xi) (v_1 - v_2)
+            + \left[1 + \beta_y (3\xi^2 + (\alpha_y - 4) \xi)\right] {r_z}_1
+            + \beta_y (3\xi^2 - (\alpha_y + 2) \xi) {r_z}_2
+
+    `w` and `r_y` use the same functions, with `v` replaced by `w`, `r_z` by
+    `-r_y`, `\alpha_y` by `\alpha_z` and `\beta_y` by `\beta_z`. The
+    transverse shear strains are then constant along the element, e.g.
+    `\gamma_{xy} = \alpha_y \beta_y \left((v_1 - v_2)/L + ({r_z}_1 +
+    {r_z}_2)/2\right)`, and they vanish with `\alpha_y = 0`, i.e. with an
+    infinite ``G12``, where the interpolation of `v` becomes the cubic
+    Hermite interpolation of the Euler-Bernoulli beam.
+
+    The parameters `\alpha_y` and `\alpha_z` are negative. With `\phi_y =
+    12 E I_{zz}/(G_{12} A L^2)`, `\beta_y = 1/(1 + \phi_y)` and the
+    functions above are the general solution of the homogeneous equilibrium
+    equations of the strain energy above, `(G_{12} A \gamma_{xy})_{,x} = 0`
+    and `G_{12} A \gamma_{xy} = E I_{zz} {\kappa_y}_{,x}` (and likewise for
+    `w`, `r_y`, with `G_{13}` and `I_{yy}`), which these functions satisfy
+    for any nodal values only with this sign. The same solution is Eq. (17)
+    of [1]_ and Eq. (3.236) of [2]_, whose denominator `1 + 3\beta`, with
+    `\beta = E I/(\kappa A G a^2)`, where `\kappa G` is `G_{12}`, and `a =
+    L/2`, is `1 + \phi_y`; Eq. (21) of [1]_ gives `\alpha_y` and `\alpha_z`
+    with the positive sign, inconsistent with its Eqs. (17) and (20), and
+    its Eq. (20) prints the functions of `w` and `r_y` with the signs of
+    those of `v` and `r_z`, which, with `\alpha_z = 0`, give
+    `r_y = w_{,x}` instead of the `r_y = -w_{,x}` of the kinematics above.
+    Hence
+    the element is exact for a prismatic beam loaded at the nodes, and
+    `\beta_y`, `\beta_z` are finite for any length. The mass and geometric
+    stiffness matrices use the same shape functions.
+
+    The sign is verified against the literature in
+    ``tests/test_timoshenko_beam_literature.py``: one element reproduces
+    the cantilever tip deflection `P L^3/(3 E I_{zz}) + P L/(G A)` of Eq.
+    (1.2) of [3]_ (``0.053 cm``) and, for a cantilever as long as deep, the
+    same formula, where the shear deflection is larger than the bending
+    one; one element reproduces the frequency coefficients ``3.322`` and
+    ``26.569`` of Example 3.10 of [2]_, which has the same shape functions
+    and consistent mass matrix with rotary inertia, three elements the
+    errors of Table 3.6 of [2]_, and refined meshes its exact frequencies.
+    With the positive sign these tests fail, e.g. by -44 % for the deep
+    cantilever and with ``3.952`` instead of ``3.322``. In
+    ``tests/test_beam_shear_moduli.py``, with different ``G12`` and
+    ``G13``, the same tip deflection and frequencies are obtained in each
+    plane with its own modulus, `G = G_{12}` with `I_{zz}` for `v` and `G =
+    G_{13}` with `I_{yy}` for `w`.
+
+    The matrices and the internal forces are computed in element
+    coordinates and transformed to global coordinates with the rotation
+    matrix of the element, e.g. `[K] = [R][K_e][R]^T`, where `[R]` is block
+    diagonal with four copies of the rotation matrix ``r11, ..., r33``, one
+    for the translations and one for the rotations of each node. The
+    element coordinate system is not updated with the displacements.
+
+    References
+    ----------
+    .. [1] Luo, Y., 2008, “An Efficient 3D Timoshenko Beam Element with
+       Consistent Shape Functions,” Adv. Theor. Appl. Mech., 1(3),
+       pp. 95–106.
+    .. [2] Petyt, M., 2010, Introduction to Finite Element Vibration
+       Analysis, 2nd ed., Cambridge University Press, Section 3.9.
+       https://doi.org/10.1017/CBO9780511761195
+    .. [3] Bathe, K. J., 1996, Finite Element Procedures, Prentice Hall,
+       Englewood Cliffs, NJ, Section 1.2, p. 5.
 
     """
     cdef public int eid, pid
@@ -198,16 +368,26 @@ cdef class BeamC:
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
         {y_e}_j, {y_e}_k`; `{z_e}_i, {z_e}_j, {z_e}_k`.
 
+        The element `x` axis goes from node 1 to node 2, whose coordinates are
+        read from ``x`` at the positions ``c1//2`` and ``c2//2``. The `z` axis
+        is normal to the `x` axis and to the vector ``(vxyi, vxyj, vxyk)``, the
+        `y` axis completes the right-handed system, and the three axes are
+        normalized.
+
 
         Parameters
         ----------
         vxyi, vxyj, vxyk : double
             Components of a vector on the `XY` plane of the element coordinate
             system.
+            Only the direction of the vector is used. A vector parallel to the
+            element axis gives a null `z` axis and a rotation matrix with
+            ``nan`` entries.
         x : array-like
             Array with global nodal coordinates, for a total of `M` nodes in
             the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
-            y_2, z_2, ..., x_M, y_M, z_M`.
+            y_2, z_2, ..., x_M, y_M, z_M`. Dimension length, 1-D array of size
+            ``3*M``.
 
         """
         cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk, tmp
@@ -263,8 +443,14 @@ cdef class BeamC:
     cpdef void update_probe_ue(BeamC self, double [::1] u):
         r"""Update the local displacement vector of the probe of the element
 
-        .. note:: The ``probe`` attribute of object :class:`.BeamCProbe` is
+        .. note:: The ``ue`` attribute of object :class:`.BeamCProbe` is
                   updated, accessible using ``.probe.ue``.
+
+        The translations and rotations of the two nodes, read from ``u`` at
+        the positions ``c1`` to ``c1 + 5`` and ``c2`` to ``c2 + 5``, are
+        transformed to the element coordinate system with the transpose of the
+        rotation matrix, which must be updated before, see
+        :meth:`.update_rotation_matrix`.
 
         Parameters
         ----------
@@ -272,7 +458,8 @@ cdef class BeamC:
             Array with global displacements, for a total of `M` nodes in
             the model, this array will be arranged as: `u_1, v_1, w_1, {r_x}_1,
             {r_y}_1, {r_z}_1, u_2, v_2, w_2, {r_x}_2, {r_y}_2, {r_z}_2, ...,
-            u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M`.
+            u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M`. Translations of
+            dimension length and rotations, 1-D array of size ``6*M``.
 
         """
         cdef int i, j
@@ -319,12 +506,19 @@ cdef class BeamC:
         .. note:: The ``xe`` attribute of object :class:`.BeamCProbe` is
                   updated, accessible using ``.probe.xe``.
 
+        The coordinates of the two nodes, read from ``x`` at the positions
+        ``c1//2`` and ``c2//2``, are transformed to the element coordinate
+        system with the transpose of the rotation matrix, which must be updated
+        before, see :meth:`.update_rotation_matrix`. Then
+        :meth:`.update_length` is called, updating ``length``.
+
         Parameters
         ----------
         x : array-like
             Array with global nodal coordinates, for a total of `M` nodes in
             the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
-            y_2, z_2, ..., x_M, y_M, z_M`.
+            y_2, z_2, ..., x_M, y_M, z_M`. Dimension length, 1-D array of size
+            ``3*M``.
 
         """
         cdef int i, j
@@ -365,6 +559,10 @@ cdef class BeamC:
     cpdef void update_length(BeamC self):
         r"""Update element length
 
+        The distance between the two nodes, computed from the coordinates
+        ``probe.xe`` in the element coordinate system, is stored in the
+        attribute ``length``. Called by :meth:`.update_probe_xe`.
+
         """
         cdef double x1, x2, y1, y2, z1, z2
         with nogil:
@@ -392,21 +590,36 @@ cdef class BeamC:
         .. note:: The ``finte`` attribute of object :class:`.BeamCProbe` is
                   updated, accessible using ``.probe.finte``.
 
+        The 12 values of ``finte`` are overwritten. They are computed from
+        ``length`` and from the displacements ``probe.ue``, which must be
+        updated before, see :meth:`.update_probe_xe` and
+        :meth:`.update_probe_ue`.
+
         Parameters
         ----------
         prop : :class:`.BeamProp` object
             Beam property object from where the stiffness and mass attributes
             are read from.
-        nonlinear : int
+        nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
-            value adds the geometrically nonlinear terms of the von Karman strains,
-            for which the exact Jacobian of the internal forces is ``KC0 + KCNL +
-            KG``, see :meth:`.update_KCNL`.
+            value adds the geometrically nonlinear terms, for which the tangent
+            stiffness matrix of the internal forces is ``KC0 + KCNL + KG``, see
+            :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        The linear internal forces are `[K_{C0_e}] \{u_e\}`, with the matrix
+        `[K_{C0_e}]` of :meth:`.update_KC0` in element coordinates. With
+        ``nonlinear`` different from ``0``, the terms of the von Karman strains
+        are added, see :meth:`._update_probe_finte_nonlinear`, such that
+        ``finte`` is the gradient of the strain energy with the von Karman
+        axial strain, for which the exact Jacobian of the internal forces is
+        ``KC0 + KCNL + KG``, see :meth:`.update_KCNL`.
 
         """
         cdef double *ue
         cdef double *finte
-        cdef double L, A, E, G, Ay, Az, Iyy, Izz, Iyz, J, alphay, alphaz, betay, betaz
+        cdef double L, A, E, G12, G13, GJ, Ay, Az, Iyy, Izz, Iyz, alphay, alphaz, betay, betaz
 
         cdef double KC0e0000, KC0e0004, KC0e0005, KC0e0006, KC0e0010, KC0e0011
         cdef double KC0e0101, KC0e0102, KC0e0103, KC0e0104, KC0e0105, KC0e0107, KC0e0108, KC0e0109, KC0e0110, KC0e0111
@@ -424,16 +637,17 @@ cdef class BeamC:
             L = self.length
             A = prop.A
             E = prop.E
-            G = prop.G
+            G12 = prop.get_G12()
+            G13 = prop.get_G13()
+            GJ = prop.get_GJ()
             Ay = prop.Ay
             Az = prop.Az
             Iyy = prop.Iyy
             Izz = prop.Izz
             Iyz = prop.Iyz
-            J = prop.J
 
-            alphay = 12*E*Izz/(G*A*L**2)
-            alphaz = 12*E*Iyy/(G*A*L**2)
+            alphay = -12*E*Izz/(G12*A*L**2)
+            alphaz = -12*E*Iyy/(G13*A*L**2)
             betay = 1/(1. - alphay)
             betaz = 1/(1. - alphaz)
 
@@ -443,66 +657,66 @@ cdef class BeamC:
             KC0e0006 = -A*E/L
             KC0e0010 = Az*E*betaz*(alphaz - 1)/L
             KC0e0011 = Ay*E*betay*(1 - alphay)/L
-            KC0e0101 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/L**3
+            KC0e0101 = betay**2*(A*G12*L**2*alphay**2 + 12*E*Izz)/L**3
             KC0e0102 = 12*E*Iyz*betay*betaz/L**3
-            KC0e0103 = Az*G*alphay*betay/L
+            KC0e0103 = Az*G12*alphay*betay/L
             KC0e0104 = -6*E*Iyz*betay*betaz/L**2
-            KC0e0105 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
-            KC0e0107 = betay**2*(-A*G*L**2*alphay**2 - 12*E*Izz)/L**3
+            KC0e0105 = betay**2*(A*G12*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
+            KC0e0107 = betay**2*(-A*G12*L**2*alphay**2 - 12*E*Izz)/L**3
             KC0e0108 = -12*E*Iyz*betay*betaz/L**3
-            KC0e0109 = -Az*G*alphay*betay/L
+            KC0e0109 = -Az*G12*alphay*betay/L
             KC0e0110 = -6*E*Iyz*betay*betaz/L**2
-            KC0e0111 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
-            KC0e0202 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/L**3
-            KC0e0203 = -Ay*G*alphaz*betaz/L
-            KC0e0204 = betaz**2*(-A*G*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
+            KC0e0111 = betay**2*(A*G12*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
+            KC0e0202 = betaz**2*(A*G13*L**2*alphaz**2 + 12*E*Iyy)/L**3
+            KC0e0203 = -Ay*G13*alphaz*betaz/L
+            KC0e0204 = betaz**2*(-A*G13*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
             KC0e0205 = 6*E*Iyz*betay*betaz/L**2
             KC0e0207 = -12*E*Iyz*betay*betaz/L**3
-            KC0e0208 = betaz**2*(-A*G*L**2*alphaz**2 - 12*E*Iyy)/L**3
-            KC0e0209 = Ay*G*alphaz*betaz/L
-            KC0e0210 = betaz**2*(-A*G*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
+            KC0e0208 = betaz**2*(-A*G13*L**2*alphaz**2 - 12*E*Iyy)/L**3
+            KC0e0209 = Ay*G13*alphaz*betaz/L
+            KC0e0210 = betaz**2*(-A*G13*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
             KC0e0211 = 6*E*Iyz*betay*betaz/L**2
-            KC0e0303 = G*J/L
-            KC0e0304 = Ay*G*alphaz*betaz/2
-            KC0e0305 = Az*G*alphay*betay/2
-            KC0e0307 = -Az*G*alphay*betay/L
-            KC0e0308 = Ay*G*alphaz*betaz/L
-            KC0e0309 = -G*J/L
-            KC0e0310 = Ay*G*alphaz*betaz/2
-            KC0e0311 = Az*G*alphay*betay/2
-            KC0e0404 = betaz**2*(A*G*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
+            KC0e0303 = GJ/L
+            KC0e0304 = Ay*G13*alphaz*betaz/2
+            KC0e0305 = Az*G12*alphay*betay/2
+            KC0e0307 = -Az*G12*alphay*betay/L
+            KC0e0308 = Ay*G13*alphaz*betaz/L
+            KC0e0309 = -GJ/L
+            KC0e0310 = Ay*G13*alphaz*betaz/2
+            KC0e0311 = Az*G12*alphay*betay/2
+            KC0e0404 = betaz**2*(A*G13*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
             KC0e0405 = E*Iyz*betay*betaz*(-alphay*alphaz + alphay + alphaz - 4)/L
             KC0e0406 = Az*E*betaz*(alphaz - 1)/L
             KC0e0407 = 6*E*Iyz*betay*betaz/L**2
-            KC0e0408 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
-            KC0e0409 = -Ay*G*alphaz*betaz/2
-            KC0e0410 = betaz**2*(A*G*L**2*alphaz**2/4 - E*Iyy*alphaz**2 + 2*E*Iyy*alphaz + 2*E*Iyy)/L
+            KC0e0408 = betaz**2*(A*G13*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
+            KC0e0409 = -Ay*G13*alphaz*betaz/2
+            KC0e0410 = betaz**2*(A*G13*L**2*alphaz**2/4 - E*Iyy*alphaz**2 + 2*E*Iyy*alphaz + 2*E*Iyy)/L
             KC0e0411 = E*Iyz*betay*betaz*(alphay*alphaz - alphay - alphaz - 2)/L
-            KC0e0505 = betay**2*(A*G*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
+            KC0e0505 = betay**2*(A*G12*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
             KC0e0506 = Ay*E*betay*(1 - alphay)/L
-            KC0e0507 = betay**2*(-A*G*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
+            KC0e0507 = betay**2*(-A*G12*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
             KC0e0508 = -6*E*Iyz*betay*betaz/L**2
-            KC0e0509 = -Az*G*alphay*betay/2
+            KC0e0509 = -Az*G12*alphay*betay/2
             KC0e0510 = E*Iyz*betay*betaz*(alphay*alphaz - alphay - alphaz - 2)/L
-            KC0e0511 = betay**2*(A*G*L**2*alphay**2/4 - E*Izz*alphay**2 + 2*E*Izz*alphay + 2*E*Izz)/L
+            KC0e0511 = betay**2*(A*G12*L**2*alphay**2/4 - E*Izz*alphay**2 + 2*E*Izz*alphay + 2*E*Izz)/L
             KC0e0606 = A*E/L
             KC0e0610 = Az*E*betaz*(1 - alphaz)/L
             KC0e0611 = Ay*E*betay*(alphay - 1)/L
-            KC0e0707 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/L**3
+            KC0e0707 = betay**2*(A*G12*L**2*alphay**2 + 12*E*Izz)/L**3
             KC0e0708 = 12*E*Iyz*betay*betaz/L**3
-            KC0e0709 = Az*G*alphay*betay/L
+            KC0e0709 = Az*G12*alphay*betay/L
             KC0e0710 = 6*E*Iyz*betay*betaz/L**2
-            KC0e0711 = betay**2*(-A*G*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
-            KC0e0808 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/L**3
-            KC0e0809 = -Ay*G*alphaz*betaz/L
-            KC0e0810 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
+            KC0e0711 = betay**2*(-A*G12*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
+            KC0e0808 = betaz**2*(A*G13*L**2*alphaz**2 + 12*E*Iyy)/L**3
+            KC0e0809 = -Ay*G13*alphaz*betaz/L
+            KC0e0810 = betaz**2*(A*G13*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
             KC0e0811 = -6*E*Iyz*betay*betaz/L**2
-            KC0e0909 = G*J/L
-            KC0e0910 = -Ay*G*alphaz*betaz/2
-            KC0e0911 = -Az*G*alphay*betay/2
-            KC0e1010 = betaz**2*(A*G*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
+            KC0e0909 = GJ/L
+            KC0e0910 = -Ay*G13*alphaz*betaz/2
+            KC0e0911 = -Az*G12*alphay*betay/2
+            KC0e1010 = betaz**2*(A*G13*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
             KC0e1011 = E*Iyz*betay*betaz*(-alphay*alphaz + alphay + alphaz - 4)/L
-            KC0e1111 = betay**2*(A*G*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
+            KC0e1111 = betay**2*(A*G12*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
 
             ue = &self.probe.ue[0]
             finte = &self.probe.finte[0]
@@ -533,25 +747,48 @@ cdef class BeamC:
                           ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
+        The 144 entries of the matrix of the element, in global coordinates,
+        are written at the positions ``init_k_KC0`` to ``init_k_KC0 + 143``:
+        the row and column indices, built from ``c1`` and ``c2``, are stored
+        in ``KC0r`` and ``KC0c``, and the values are added to those already
+        in ``KC0v``. The matrix is computed from ``length``, the rotation
+        matrix and the attributes ``A``, ``E``, ``G12``, ``G13``, ``GJ``,
+        ``Ay``, ``Az``, ``Iyy``, ``Izz`` and ``Iyz`` of ``prop``. ``length``
+        and the
+        rotation matrix must be updated before, see
+        :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe`.
+
         Parameters
         ----------
         KC0r : np.array
-            Array to store row positions of sparse values
+            Array to store row positions of sparse values. 1-D array of
+            integers of the C type ``long``, of size at least
+            ``init_k_KC0 + 144``.
         KC0c : np.array
-            Array to store column positions of sparse values
+            Array to store column positions of sparse values. Same type and
+            size as ``KC0r``.
         KC0v : np.array
-            Array to store sparse values
+            Array to store sparse values. 1-D array of floats of size at least
+            ``init_k_KC0 + 144``.
         prop : :class:`.BeamProp` object
             Beam property object from where the stiffness and mass attributes
             are read from.
-        update_KC0v_only : int
+        update_KC0v_only : int, optional
             The default ``0`` means that the row and column indices ``KC0r``
             and ``KC0c`` should also be updated. Any other value will only
             update the stiffness matrix values ``KC0v``.
 
+        Notes
+        -----
+        ``KC0`` is the Hessian, with respect to the element displacements
+        ``ue``, of the linear strain energy given in the notes of
+        :class:`.BeamC`, integrated analytically along the element with the
+        consistent shape functions, and transformed to global coordinates as
+        described there.
+
         """
         cdef int c1, c2, k
-        cdef double L, A, E, G, Ay, Az, Iyy, Izz, Iyz, J
+        cdef double L, A, E, G12, G13, GJ, Ay, Az, Iyy, Izz, Iyz
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double alphay, alphaz, betay, betaz
         cdef double KC0e0000, KC0e0004, KC0e0005, KC0e0006, KC0e0010, KC0e0011
@@ -570,16 +807,17 @@ cdef class BeamC:
             L = self.length
             A = prop.A
             E = prop.E
-            G = prop.G
+            G12 = prop.get_G12()
+            G13 = prop.get_G13()
+            GJ = prop.get_GJ()
             Ay = prop.Ay
             Az = prop.Az
             Iyy = prop.Iyy
             Izz = prop.Izz
             Iyz = prop.Iyz
-            J = prop.J
 
-            alphay = 12*E*Izz/(G*A*L**2)
-            alphaz = 12*E*Iyy/(G*A*L**2)
+            alphay = -12*E*Izz/(G12*A*L**2)
+            alphaz = -12*E*Iyy/(G13*A*L**2)
             betay = 1/(1. - alphay)
             betaz = 1/(1. - alphaz)
 
@@ -600,66 +838,66 @@ cdef class BeamC:
             KC0e0006 = -A*E/L
             KC0e0010 = Az*E*betaz*(alphaz - 1)/L
             KC0e0011 = Ay*E*betay*(1 - alphay)/L
-            KC0e0101 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/L**3
+            KC0e0101 = betay**2*(A*G12*L**2*alphay**2 + 12*E*Izz)/L**3
             KC0e0102 = 12*E*Iyz*betay*betaz/L**3
-            KC0e0103 = Az*G*alphay*betay/L
+            KC0e0103 = Az*G12*alphay*betay/L
             KC0e0104 = -6*E*Iyz*betay*betaz/L**2
-            KC0e0105 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
-            KC0e0107 = betay**2*(-A*G*L**2*alphay**2 - 12*E*Izz)/L**3
+            KC0e0105 = betay**2*(A*G12*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
+            KC0e0107 = betay**2*(-A*G12*L**2*alphay**2 - 12*E*Izz)/L**3
             KC0e0108 = -12*E*Iyz*betay*betaz/L**3
-            KC0e0109 = -Az*G*alphay*betay/L
+            KC0e0109 = -Az*G12*alphay*betay/L
             KC0e0110 = -6*E*Iyz*betay*betaz/L**2
-            KC0e0111 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
-            KC0e0202 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/L**3
-            KC0e0203 = -Ay*G*alphaz*betaz/L
-            KC0e0204 = betaz**2*(-A*G*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
+            KC0e0111 = betay**2*(A*G12*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
+            KC0e0202 = betaz**2*(A*G13*L**2*alphaz**2 + 12*E*Iyy)/L**3
+            KC0e0203 = -Ay*G13*alphaz*betaz/L
+            KC0e0204 = betaz**2*(-A*G13*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
             KC0e0205 = 6*E*Iyz*betay*betaz/L**2
             KC0e0207 = -12*E*Iyz*betay*betaz/L**3
-            KC0e0208 = betaz**2*(-A*G*L**2*alphaz**2 - 12*E*Iyy)/L**3
-            KC0e0209 = Ay*G*alphaz*betaz/L
-            KC0e0210 = betaz**2*(-A*G*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
+            KC0e0208 = betaz**2*(-A*G13*L**2*alphaz**2 - 12*E*Iyy)/L**3
+            KC0e0209 = Ay*G13*alphaz*betaz/L
+            KC0e0210 = betaz**2*(-A*G13*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
             KC0e0211 = 6*E*Iyz*betay*betaz/L**2
-            KC0e0303 = G*J/L
-            KC0e0304 = Ay*G*alphaz*betaz/2
-            KC0e0305 = Az*G*alphay*betay/2
-            KC0e0307 = -Az*G*alphay*betay/L
-            KC0e0308 = Ay*G*alphaz*betaz/L
-            KC0e0309 = -G*J/L
-            KC0e0310 = Ay*G*alphaz*betaz/2
-            KC0e0311 = Az*G*alphay*betay/2
-            KC0e0404 = betaz**2*(A*G*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
+            KC0e0303 = GJ/L
+            KC0e0304 = Ay*G13*alphaz*betaz/2
+            KC0e0305 = Az*G12*alphay*betay/2
+            KC0e0307 = -Az*G12*alphay*betay/L
+            KC0e0308 = Ay*G13*alphaz*betaz/L
+            KC0e0309 = -GJ/L
+            KC0e0310 = Ay*G13*alphaz*betaz/2
+            KC0e0311 = Az*G12*alphay*betay/2
+            KC0e0404 = betaz**2*(A*G13*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
             KC0e0405 = E*Iyz*betay*betaz*(-alphay*alphaz + alphay + alphaz - 4)/L
             KC0e0406 = Az*E*betaz*(alphaz - 1)/L
             KC0e0407 = 6*E*Iyz*betay*betaz/L**2
-            KC0e0408 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
-            KC0e0409 = -Ay*G*alphaz*betaz/2
-            KC0e0410 = betaz**2*(A*G*L**2*alphaz**2/4 - E*Iyy*alphaz**2 + 2*E*Iyy*alphaz + 2*E*Iyy)/L
+            KC0e0408 = betaz**2*(A*G13*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
+            KC0e0409 = -Ay*G13*alphaz*betaz/2
+            KC0e0410 = betaz**2*(A*G13*L**2*alphaz**2/4 - E*Iyy*alphaz**2 + 2*E*Iyy*alphaz + 2*E*Iyy)/L
             KC0e0411 = E*Iyz*betay*betaz*(alphay*alphaz - alphay - alphaz - 2)/L
-            KC0e0505 = betay**2*(A*G*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
+            KC0e0505 = betay**2*(A*G12*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
             KC0e0506 = Ay*E*betay*(1 - alphay)/L
-            KC0e0507 = betay**2*(-A*G*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
+            KC0e0507 = betay**2*(-A*G12*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
             KC0e0508 = -6*E*Iyz*betay*betaz/L**2
-            KC0e0509 = -Az*G*alphay*betay/2
+            KC0e0509 = -Az*G12*alphay*betay/2
             KC0e0510 = E*Iyz*betay*betaz*(alphay*alphaz - alphay - alphaz - 2)/L
-            KC0e0511 = betay**2*(A*G*L**2*alphay**2/4 - E*Izz*alphay**2 + 2*E*Izz*alphay + 2*E*Izz)/L
+            KC0e0511 = betay**2*(A*G12*L**2*alphay**2/4 - E*Izz*alphay**2 + 2*E*Izz*alphay + 2*E*Izz)/L
             KC0e0606 = A*E/L
             KC0e0610 = Az*E*betaz*(1 - alphaz)/L
             KC0e0611 = Ay*E*betay*(alphay - 1)/L
-            KC0e0707 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/L**3
+            KC0e0707 = betay**2*(A*G12*L**2*alphay**2 + 12*E*Izz)/L**3
             KC0e0708 = 12*E*Iyz*betay*betaz/L**3
-            KC0e0709 = Az*G*alphay*betay/L
+            KC0e0709 = Az*G12*alphay*betay/L
             KC0e0710 = 6*E*Iyz*betay*betaz/L**2
-            KC0e0711 = betay**2*(-A*G*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
-            KC0e0808 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/L**3
-            KC0e0809 = -Ay*G*alphaz*betaz/L
-            KC0e0810 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
+            KC0e0711 = betay**2*(-A*G12*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
+            KC0e0808 = betaz**2*(A*G13*L**2*alphaz**2 + 12*E*Iyy)/L**3
+            KC0e0809 = -Ay*G13*alphaz*betaz/L
+            KC0e0810 = betaz**2*(A*G13*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
             KC0e0811 = -6*E*Iyz*betay*betaz/L**2
-            KC0e0909 = G*J/L
-            KC0e0910 = -Ay*G*alphaz*betaz/2
-            KC0e0911 = -Az*G*alphay*betay/2
-            KC0e1010 = betaz**2*(A*G*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
+            KC0e0909 = GJ/L
+            KC0e0910 = -Ay*G13*alphaz*betaz/2
+            KC0e0911 = -Az*G12*alphay*betay/2
+            KC0e1010 = betaz**2*(A*G13*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
             KC0e1011 = E*Iyz*betay*betaz*(-alphay*alphaz + alphay + alphaz - 4)/L
-            KC0e1111 = betay**2*(A*G*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
+            KC0e1111 = betay**2*(A*G12*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
 
             if update_KC0v_only == 0:
                 # positions in the global stiffness matrix
@@ -1395,6 +1633,12 @@ cdef class BeamC:
                            int nonlinear=0):
         r"""Update the internal force vector
 
+        Calls ``update_probe_finte(prop, nonlinear)``, transforms the forces
+        and moments of ``probe.finte`` to global coordinates with the rotation
+        matrix and adds them to ``fint`` at the positions ``c1`` to
+        ``c1 + 5`` and ``c2`` to ``c2 + 5``. The displacements ``probe.ue``
+        must be updated before, see :meth:`.update_probe_ue`.
+
         Parameters
         ----------
         fint : np.array
@@ -1402,15 +1646,22 @@ cdef class BeamC:
             internal forces stored in ``fint`` are calculated in global
             coordinates. Method :meth:`.update_probe_finte` is called to update
             the parameter ``finte`` of the :class:`.BeamCProbe` with the
-            internal forces in local coordinates.
+            internal forces in local coordinates. 1-D array of size ``6*M``,
+            for `M` nodes in the model.
         prop : :class:`.BeamProp` object
             Beam property object from where the stiffness and mass attributes
             are read from.
-        nonlinear : int
+        nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
-            value adds the geometrically nonlinear terms of the von Karman strains,
-            for which the exact Jacobian of the internal forces is ``KC0 + KCNL +
-            KG``, see :meth:`.update_KCNL`.
+            value adds the geometrically nonlinear terms, for which the tangent
+            stiffness matrix of the internal forces is ``KC0 + KCNL + KG``, see
+            :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        The nonlinear terms are those of the von Karman strains, for which the
+        exact Jacobian of the internal forces is ``KC0 + KCNL + KG``, see
+        :meth:`.update_probe_finte` and :meth:`.update_KCNL`.
 
         """
         cdef double *finte
@@ -1437,13 +1688,29 @@ cdef class BeamC:
                                  double xi) noexcept nogil:
         r"""Update the probe rows of the axial strain, curvatures and slopes
 
-        Evaluated at ``xi = x/L``, in element coordinates, using the consistent
-        shape functions of Luo (2008):
+        The arrays ``BLexx``, ``BLky``, ``BLkz``, ``Gvx`` and ``Gwx`` of the
+        :class:`.BeamCProbe` are overwritten with the rows that, multiplied by
+        the element displacements ``ue``, give in element coordinates the axial
+        strain of the beam axis, the two curvatures and the two slopes of the
+        axis, evaluated at ``xi = x/L``, from ``0`` at node 1 to ``1`` at node
+        2. They depend on ``length`` and on the attributes ``E``, ``G12``,
+        ``G13``, ``A``, ``Iyy`` and ``Izz`` of ``prop``.
+
+        Notes
+        -----
+        The rows are obtained with the consistent shape functions of Luo
+        (2008) [1]_, given in the notes of :class:`.BeamC`:
 
         - ``BLexx``: `u_{,x}`
         - ``BLky``: `\kappa_y = -{r_z}_{,x}`
         - ``BLkz``: `\kappa_z = {r_y}_{,x}`
         - ``Gvx``, ``Gwx``: `v_{,x}` and `w_{,x}`
+
+        References
+        ----------
+        .. [1] Luo, Y., 2008, “An Efficient 3D Timoshenko Beam Element with
+           Consistent Shape Functions,” Adv. Theor. Appl. Mech., 1(3),
+           pp. 95–106.
 
         """
         cdef int i
@@ -1461,8 +1728,8 @@ cdef class BeamC:
         Gwx = &self.probe.Gwx[0]
 
         L = self.length
-        alphay = 12*prop.E*prop.Izz/(prop.G*prop.A*L**2)
-        alphaz = 12*prop.E*prop.Iyy/(prop.G*prop.A*L**2)
+        alphay = -12*prop.E*prop.Izz/(prop.get_G12()*prop.A*L**2)
+        alphaz = -12*prop.E*prop.Iyy/(prop.get_G13()*prop.A*L**2)
         betay = 1/(1. - alphay)
         betaz = 1/(1. - alphaz)
 
@@ -1505,10 +1772,30 @@ cdef class BeamC:
     cdef void _update_probe_KCNLve(BeamC self, BeamProp prop) noexcept nogil:
         r"""Update the probe values of the nonlinear constitutive stiffness matrix
 
-        The attribute ``KCNLve`` of the :class:`.BeamCProbe` is updated with
-        KCNL = KC0L + KCL0 + KCLL + KGNL in element coordinates, stored row by
-        row and evaluated at the displacements ``ue`` of the probe. See
+        The attribute ``KCNLve`` of the :class:`.BeamCProbe` is overwritten
+        with the nonlinear constitutive stiffness matrix KCNL in element
+        coordinates, stored row by row and evaluated at the displacements
+        ``ue`` of the probe, from ``length`` and the attributes ``E``, ``A``,
+        ``Ay`` and ``Az`` of ``prop`` (and those read by
+        :meth:`._update_probe_BL_G`). The arrays ``BLexx``, ``BLky``,
+        ``BLkz``, ``Gvx`` and ``Gwx`` of the probe are overwritten too. See
         :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        KCNL = KC0L + KCL0 + KCLL + KGNL, see :meth:`.update_KCNL`, is
+        integrated along the element with the 5-point Gauss-Legendre
+        quadrature, exact for these polynomials of degree up to 8 in ``xi``.
+        At each point, with the rows of :meth:`._update_probe_BL_G`, the
+        slopes `v_{,x}` and `w_{,x}` at ``ue``, ``EBL = E*(A*BLexx + Ay*BLky +
+        Az*BLkz)``, the row of the axial force, ``BNL = v_x*Gvx + w_x*Gwx``,
+        the variation of the nonlinear axial strain, and the axial force of
+        the nonlinear axial strain ``NNL = E*A*(v_x**2 + w_x**2)/2``, the
+        entry `(i, j)` receives, times the weight of the point and `L/2`:
+
+        .. math::
+            EBL_i BNL_j + BNL_i EBL_j + E A \, BNL_i BNL_j
+            + NNL \left( Gvx_i Gvx_j + Gwx_i Gwx_j \right)
 
         """
         cdef int i, j, pt
@@ -1592,11 +1879,32 @@ cdef class BeamC:
                                             BeamProp prop) noexcept nogil:
         r"""Add the geometrically nonlinear terms to the probe internal forces
 
-        The attribute ``finte`` of the :class:`.BeamCProbe` receives the terms
-        of the von Karman axial strain `\epsilon_{NL} = (v_{,x}^2 +
-        w_{,x}^2)/2`, evaluated at the displacements ``ue`` of the probe, such
-        that ``finte`` becomes the gradient of the strain energy whose Hessian is
-        KC0 + KCNL + KG. See :meth:`.update_KCNL`.
+        The nonlinear terms, evaluated at the displacements ``ue`` of the
+        probe, from ``length`` and the attributes ``E``, ``A``, ``Ay`` and
+        ``Az`` of ``prop`` (and those read by :meth:`._update_probe_BL_G`),
+        are added to the attribute ``finte`` of the :class:`.BeamCProbe`, which
+        must already contain the linear internal forces, see
+        :meth:`.update_probe_finte`. The arrays ``BLexx``, ``BLky``,
+        ``BLkz``, ``Gvx`` and ``Gwx`` of the probe are overwritten. See
+        :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        The added terms are those of the von Karman axial strain
+        `\epsilon_{NL} = (v_{,x}^2 + w_{,x}^2)/2`, such that ``finte`` becomes
+        the gradient of the strain energy whose Hessian is KC0 + KCNL + KG.
+        With the quantities defined in :meth:`._update_probe_KCNLve` and the
+        linear axial force ``N = EBL*ue``, each point of the 5-point
+        Gauss-Legendre quadrature adds, times its weight and `L/2`:
+
+        .. math::
+            EBL_i \, \epsilon_{NL} + BNL_i \left( N + NNL \right)
+
+        i.e. `[B_L]^T [D] \{\epsilon_{NL}, 0, 0, 0, 0, 0\}^T + [B_{NL}]^T (N +
+        N_{NL})`, the variation of the axial strain energy `\frac{1}{2} \int_0^L
+        \int_A E (\epsilon_L + \epsilon_{NL})^2 dA dx` minus its linear part,
+        where `\epsilon_L` is the linear axial strain of the notes of
+        :class:`.BeamC` and `\epsilon_{NL}` is uniform over the cross section.
 
         """
         cdef int i, pt
@@ -1675,6 +1983,46 @@ cdef class BeamC:
                            ):
         r"""Update sparse vectors for the nonlinear constitutive stiffness matrix KCNL
 
+        The matrix, evaluated at the displacements ``probe.ue``, is computed
+        from ``length``, the rotation matrix and the attributes of ``prop``
+        read by :meth:`._update_probe_KCNLve`. The tangent stiffness matrix
+        of the internal forces of :meth:`.update_fint` with ``nonlinear=1`` is
+        ``KC0 + KCNL + KG``, see :meth:`.update_KC0` and :meth:`.update_KG`.
+
+        Before this function is called, the probe :class:`.BeamCProbe` attribute
+        of the :class:`.BeamC` object must be updated using
+        :meth:`.update_probe_ue` with the current displacements; and
+        :meth:`.update_probe_xe` with the node coordinates.
+
+        The 144 entries of the matrix of the element, in global coordinates,
+        are written at the positions ``init_k_KCNL`` to
+        ``init_k_KCNL + 143``: the row and column indices, built from ``c1``
+        and ``c2``, are stored in ``KCNLr`` and ``KCNLc``, and the values are
+        added to those already in ``KCNLv``. The matrix in element coordinates
+        is also stored in ``probe.KCNLve``, overwriting it.
+
+        Parameters
+        ----------
+        KCNLr : np.array
+            Array to store row positions of sparse values. 1-D array of
+            integers of the C type ``long``, of size at least
+            ``init_k_KCNL + 144``.
+        KCNLc : np.array
+            Array to store column positions of sparse values. Same type and
+            size as ``KCNLr``.
+        KCNLv : np.array
+            Array to store sparse values. 1-D array of floats of size at least
+            ``init_k_KCNL + 144``.
+        prop : :class:`.BeamProp` object
+            Beam property object from where the stiffness and mass attributes are
+            read from.
+        update_KCNLv_only : int, optional
+            The default ``0`` means that the row and column indices ``KCNLr`` and
+            ``KCNLc`` should also be updated. Any other value will only update the
+            stiffness matrix values ``KCNLv``.
+
+        Notes
+        -----
         Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, built from the von Karman
         axial strain
 
@@ -1705,26 +2053,13 @@ cdef class BeamC:
         ``nonlinear=1``, and a Newton-Raphson iteration built on them converges
         quadratically.
 
-        Before this function is called, the probe :class:`.BeamCProbe` attribute
-        of the :class:`.BeamC` object must be updated using
-        :func:`.update_probe_ue` with the current displacements; and
-        :func:`.update_probe_xe` with the node coordinates.
-
-        Parameters
-        ----------
-        KCNLr : np.array
-            Array to store row positions of sparse values
-        KCNLc : np.array
-            Array to store column positions of sparse values
-        KCNLv : np.array
-            Array to store sparse values
-        prop : :class:`.BeamProp` object
-            Beam property object from where the stiffness and mass attributes are
-            read from.
-        update_KCNLv_only : int
-            The default ``0`` means that the row and column indices ``KCNLr`` and
-            ``KCNLc`` should also be updated. Any other value will only update the
-            stiffness matrix values ``KCNLv``.
+        The integration is made by :meth:`._update_probe_KCNLve` with the
+        5-point Gauss-Legendre quadrature, exact for the consistent shape
+        functions. The von Karman axial strain is valid for small strains and
+        moderate rotations: the nonlinear axial strain `\epsilon_{NL}` is
+        uniform over the cross section, the curvatures and the transverse
+        shear strains are linear in the displacements, and the element
+        coordinate system is not updated with the displacements.
 
         """
         cdef int i, j, node_i, node_j, k, ke, m, n
@@ -1802,25 +2137,65 @@ cdef class BeamC:
                          ):
         r"""Update sparse vectors for geometric stiffness matrix KG
 
+        The 144 entries of the matrix of the element, in global coordinates,
+        are written at the positions ``init_k_KG`` to ``init_k_KG + 143``:
+        the row and column indices, built from ``c1`` and ``c2``, are stored
+        in ``KGr`` and ``KGc``, and the values are added to those already in
+        ``KGv``. The matrix depends on the axial force computed from the
+        displacements ``probe.ue``, from ``length`` and from the attributes
+        ``A``, ``E``, ``G12``, ``G13``, ``Ay``, ``Az``, ``Iyy`` and ``Izz``
+        of ``prop``. ``probe.ue``, ``length`` and the rotation matrix must be
+        updated before, see :meth:`.update_probe_ue` and
+        :meth:`.update_probe_xe`.
+
         Parameters
         ----------
         KGr : np.array
-           Array to store row positions of sparse values
+           Array to store row positions of sparse values. 1-D array of
+           integers of the C type ``long``, of size at least
+           ``init_k_KG + 144``.
         KGc : np.array
-           Array to store column positions of sparse values
+           Array to store column positions of sparse values. Same type and
+           size as ``KGr``.
         KGv : np.array
-            Array to store sparse values
+            Array to store sparse values. 1-D array of floats of size at least
+            ``init_k_KG + 144``.
         prop : :class:`.BeamProp` object
             Beam property object from where the stiffness and mass attributes
             are read from.
-        update_KGv_only : int
-            The default `0` means that only `KGv` is updated. Any other value will
-            lead to `KGr` and `KGc` also being updated.
+        update_KGv_only : int, optional
+            The default ``0`` means that the row and column indices ``KGr``
+            and ``KGc`` are also updated. Any other value will only update the
+            stiffness matrix values ``KGv``.
+
+        Notes
+        -----
+        The geometric stiffness matrix is
+
+        .. math::
+            [K_G] = \int_0^L N \left( [G_v]^T [G_v] + [G_w]^T [G_w] \right) dx
+
+        the Hessian of `\frac{1}{2} \int_0^L N (v_{,x}^2 + w_{,x}^2) dx` at a
+        constant axial force `N`, where `[G_v]` and `[G_w]` are the rows
+        ``Gvx`` and ``Gwx`` of :meth:`._update_probe_BL_G`, giving the slopes
+        `v_{,x}` and `w_{,x}` with the consistent shape functions, and `N = E
+        (A u_{,x} + A_y \kappa_y + A_z \kappa_z)` is the axial force of the
+        linear strains at ``probe.ue``, see the notes of :class:`.BeamC`.
+        `N` varies linearly along the element, from ``Na`` at node 1 to
+        ``Nb`` at node 2 in the code, and the integral is computed
+        analytically.
+
+        `[K_G]` is homogeneous of degree one in ``probe.ue``. With ``probe.ue``
+        from the linear static solution of a reference load, the critical
+        load multipliers `\lambda` of the linear buckling analysis solve
+        `([K_{C0}] + \lambda [K_G]) \{u\} = \{0\}`, see
+        :func:`.linear_buckling`. The geometric term of the
+        nonlinear axial strain is in :meth:`.update_KCNL`.
 
         """
         cdef double *ue
         cdef int c1, c2, k
-        cdef double L, A, E, G, Ay, Az, Iyy, Izz, Iyz, J, Na, Nb
+        cdef double L, A, E, G12, G13, Ay, Az, Iyy, Izz, Iyz, Na, Nb
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double alphay, alphaz, betay, betaz
 
@@ -1830,14 +2205,14 @@ cdef class BeamC:
             E = prop.E
             Ay = prop.Ay
             Az = prop.Az
-            G = prop.G
+            G12 = prop.get_G12()
+            G13 = prop.get_G13()
             Iyy = prop.Iyy
             Izz = prop.Izz
             Iyz = prop.Iyz
-            J = prop.J
 
-            alphay = 12*E*Izz/(G*A*L**2)
-            alphaz = 12*E*Iyy/(G*A*L**2)
+            alphay = -12*E*Izz/(G12*A*L**2)
+            alphaz = -12*E*Iyy/(G13*A*L**2)
             betay = 1/(1. - alphay)
             betaz = 1/(1. - alphaz)
 
@@ -2594,25 +2969,106 @@ cdef class BeamC:
                         ):
         r"""Update sparse vectors for mass matrix M
 
+        The entries of the matrix of the element, in global coordinates, are
+        written from the position ``init_k_M``: 144 entries with
+        ``mtype=0`` and 36 entries with ``mtype=1``. The row and column
+        indices, built from ``c1`` and ``c2``, are stored in ``Mr`` and
+        ``Mc``, and the values are added to those already in ``Mv``. The
+        matrix is computed from ``length``, the rotation matrix and the attributes
+        ``intrho``, ``intrhoy``, ``intrhoz``, ``intrhoy2``, ``intrhoz2`` and
+        ``intrhoyz``, and ``A``, ``E``, ``G12``, ``G13``, ``Iyy`` and
+        ``Izz`` of ``prop``. ``length`` and the rotation matrix must be updated before, see :meth:`.update_rotation_matrix` and
+        :meth:`.update_probe_xe`.
+
         Parameters
         ----------
         Mr : np.array
-            Array to store row positions of sparse values
+            Array to store row positions of sparse values. 1-D array of
+            integers of the C type ``long``, of size at least
+            ``init_k_M + 144`` (``init_k_M + 36`` with ``mtype=1``).
         Mc : np.array
-            Array to store column positions of sparse values
+            Array to store column positions of sparse values. Same type and
+            size as ``Mr``.
         Mv : np.array
-            Array to store sparse values
+            Array to store sparse values. 1-D array of floats, of the same
+            size as ``Mr``.
+        prop : :class:`.BeamProp` object
+            Beam property object from where the inertial attributes are read.
         mtype : int, optional
-            0 for consistent mass matrix using method from Brockman 1987
-            1 for reduced integration mass matrix using method from Brockman 1987
-            2 for lumped mass matrix using method from Brockman 1987
+            0 for consistent mass matrix, 1 for lumped mass matrix. Default
+            ``0``.
+
+        Raises
+        ------
+        ValueError
+            If ``mtype`` is not 0 or 1.
+
+        Notes
+        -----
+        The mass matrices come from the kinetic energy of the displacement
+        field of the notes of :class:`.BeamC`, integrated over the cross
+        section with the inertial attributes of :class:`.BeamProp`:
+
+        .. math::
+            T = \frac{1}{2} \int_0^L \Big[ m (\dot{u}^2 + \dot{v}^2 + \dot{w}^2)
+                + m_{yy} \dot{r}_z^2 + m_{zz} \dot{r}_y^2
+                - 2 m_{yz} \dot{r}_y \dot{r}_z
+                - 2 m_y \dot{u} \dot{r}_z + 2 m_z \dot{u} \dot{r}_y
+                - 2 m_z \dot{v} \dot{r}_x + 2 m_y \dot{w} \dot{r}_x
+                + (m_{yy} + m_{zz}) \dot{r}_x^2 \Big] dx
+
+        with `m` = ``intrho``, `m_y` = ``intrhoy``, `m_z` = ``intrhoz``,
+        `m_{yy}` = ``intrhoy2``, `m_{zz}` = ``intrhoz2`` and `m_{yz}` =
+        ``intrhoyz``.
+
+        ``mtype=0`` gives the consistent mass matrix, the Hessian of `T` with
+        respect to the nodal velocities, interpolated with the consistent
+        shape functions of :class:`.BeamC`, which depend on ``alphay`` and
+        ``alphaz`` and hence on ``E``, ``G12``, ``G13``, ``A``, ``Iyy`` and
+        ``Izz``. The
+        integral along the element is computed analytically (exactly), and
+        the rotary inertia is included.
+
+        ``mtype=1`` gives the lumped mass matrix, diagonal in element
+        coordinates: at each node, `L m/2` for the three translations, `L
+        (m_{yy} + m_{zz})/2` for `r_x`, `L m_{zz}/2` for `r_y` and `L
+        m_{yy}/2` for `r_z`. It corresponds to the two-point Gauss-Lobatto
+        quadrature of `T`, whose points are the nodes, without the coupling
+        terms of `m_y`, `m_z` and `m_{yz}`, which are not included.
+
+        The lumped mass matrix follows the lumped mass matrix by Lobatto
+        integration of Brockman (1987) [1]_, p. 2348, adapted to the beam:
+        the two-point Gauss-Lobatto quadrature of `T`, whose points are the
+        nodes, gives a diagonal matrix only without the first moments of the
+        density, which are therefore dropped. The consistent mass matrix is
+        the classical one, see Petyt (2010) [2]_: Sec. 3.3, Eq. (3.59), for
+        the axial terms, Sec. 3.4, Eq. (3.102), with `m_{yy} + m_{zz}` in
+        place of `\rho I_x`, for the torsional terms, and Sec. 3.9, Eqs.
+        (3.234) and (3.237), for the bending terms with the shape functions
+        of static equilibrium and the rotary inertia, which
+        :class:`.BeamC` reproduces in each plane of bending when `m_y`, `m_z`
+        and `m_{yz}` are zero.
+
+        References
+        ----------
+        .. [1] Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
+           Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
+           https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208
+        .. [2] Petyt, M., 2010, Introduction to Finite Element Vibration
+           Analysis, 2nd ed., Cambridge University Press, Cambridge.
+           https://doi.org/10.1017/CBO9780511761195
 
         """
         cdef int c1, c2, k
         cdef double intrho, intrhoy, intrhoz, intrhoy2, intrhoz2, intrhoyz
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
-        cdef double L, A, E, G, Iyy, Izz, Iyz, J
+        cdef double L, A, E, G12, G13, Iyy, Izz, Iyz
         cdef double alphay, alphaz, betay, betaz
+
+        # NOTE checked once per call, before the code without the GIL
+        if mtype != 0 and mtype != 1:
+            raise ValueError('mtype=%d is not supported by BeamC.update_M, '
+                             'use 0 (consistent) or 1 (lumped)' % mtype)
 
         with nogil:
             L = self.length
@@ -2624,14 +3080,14 @@ cdef class BeamC:
             intrhoyz = prop.intrhoyz
             A = prop.A
             E = prop.E
-            G = prop.G
+            G12 = prop.get_G12()
+            G13 = prop.get_G13()
             Iyy = prop.Iyy
             Izz = prop.Izz
             Iyz = prop.Iyz
-            J = prop.J
 
-            alphay = 12*E*Izz/(G*A*L**2)
-            alphaz = 12*E*Iyy/(G*A*L**2)
+            alphay = -12*E*Izz/(G12*A*L**2)
+            alphaz = -12*E*Iyy/(G13*A*L**2)
             betay = 1/(1. - alphay)
             betaz = 1/(1. - alphaz)
 

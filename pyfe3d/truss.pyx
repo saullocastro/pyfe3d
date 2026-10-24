@@ -7,6 +7,7 @@
 #cython: embedsignature=True
 #cython: infer_types=False
 """
+=================================================================================
 Truss - Linear truss 3D element with analytical integration (:mod:`pyfe3d.truss`)
 =================================================================================
 
@@ -17,6 +18,12 @@ Truss - Linear truss 3D element with analytical integration (:mod:`pyfe3d.truss`
 
 .. note:: The :class:`.Truss` element does not support linear buckling
           analysis.
+
+Defines the two-node element :class:`.Truss`, with six degrees-of-freedom
+per node, its probe :class:`.TrussProbe` and :class:`.TrussData`, which
+gives the number of sparse entries per element of each structural matrix.
+The cross-section and material properties are given by a
+:class:`.BeamProp` object.
 
 """
 import numpy as np
@@ -31,13 +38,20 @@ cdef class TrussData:
     r"""
     Used to allocate memory for the sparse matrices.
 
+    Each attribute is the number of entries that one :class:`.Truss`
+    element writes in the arrays of rows, columns and values of a sparse
+    matrix, at the consecutive positions that start at its ``init_k_KC0`` or
+    ``init_k_M``. The constructor takes no argument and sets the values
+    below.
+
     Attributes
     ----------
     KC0_SPARSE_SIZE : int
-        ``KC0_SPARSE_SIZE = 72``
+        ``KC0_SPARSE_SIZE = 72``, written by :meth:`.Truss.update_KC0`.
 
     M_SPARSE_SIZE : int
-        ``M_SPARSE_SIZE = 144``
+        ``M_SPARSE_SIZE = 144``, written by :meth:`.Truss.update_M` with
+        ``mtype=0``; with ``mtype=1`` only the first ``36`` are written.
 
     """
     cdef public int KC0_SPARSE_SIZE
@@ -61,21 +75,27 @@ cdef class TrussProbe:
               depending on how you defined them. Mind that the probe will
               always safe the values from the last udpate.
 
+    The constructor takes no argument and allocates the arrays below, filled
+    with zeros.
+
 
     Attributes
     ----------
     xe : array-like
         Array of size ``NUM_NODES*DOF//2=6`` containing the nodal coordinates
         in the element coordinate system, in the following order `{x_e}_1,
-        {y_e}_1, {z_e}_1, {x_e}_2, {y_e}_2, {z_e}_2`.
+        {y_e}_1, {z_e}_1, {x_e}_2, {y_e}_2, {z_e}_2`. Dimension length.
+        Updated by :meth:`.Truss.update_probe_xe`.
     ue : array-like
         Array of size ``NUM_NODES*DOF=12`` containing the element displacements
         in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
         {{r_y}_e}_1, {{r_z}_e}_1, {u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
-        {{r_y}_e}_2, {{r_z}_e}_2`.
+        {{r_y}_e}_2, {{r_z}_e}_2`. Translations of dimension length and
+        rotations. Updated by :meth:`.Truss.update_probe_ue`.
     finte, : array-like
         Array of size ``NUM_NODES*DOF=12`` containing the element internal
-        forces corresponding to the degrees-of-freedom described by ``ue``.
+        forces corresponding to the degrees-of-freedom described by ``ue``,
+        forces and moments. Updated by :meth:`.Truss.update_probe_finte`.
 
     """
     cdef public double [::1] xe
@@ -101,6 +121,22 @@ cdef class Truss:
     .. note:: The :class:`.BeamC` is recommended because of the better
               physical representation.
 
+    The constructor stores ``p`` in ``probe``, sets ``eid``, ``pid``,
+    ``n1``, ``n2``, ``c1`` and ``c2`` to ``-1``, and sets the ``init_k_*``
+    positions, ``length`` and the rotation matrix to ``0``. The methods use
+    the attributes updated by the others: :meth:`.update_rotation_matrix`
+    reads ``c1`` and ``c2``; :meth:`.update_probe_xe` reads the rotation
+    matrix and updates ``length``; :meth:`.update_KC0`, :meth:`.update_M`
+    and :meth:`.update_probe_finte` read ``length`` and the rotation matrix;
+    :meth:`.update_probe_finte` also reads ``probe.ue``, updated by
+    :meth:`.update_probe_ue`.
+
+    Parameters
+    ----------
+    p : :class:`.TrussProbe` object
+        Probe of the element, stored in ``probe``. It can be shared with
+        other elements.
+
 
     Attributes
     ----------
@@ -109,18 +145,43 @@ cdef class Truss:
     pid, : int
         Property identification number.
     length, : double
-        Element length.
+        Element length, dimension length. Updated by
+        :meth:`.update_length`.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Rotation matrix from local to global coordinates.
+        Rotation matrix from local to global coordinates. Dimensionless.
     c1, c2 : int
-        Position of each node in the global stiffness matrix.
+        Position of each node in the global stiffness matrix, i.e. of the
+        first of its ``6`` degrees-of-freedom. The coordinates of the node
+        are read from the position ``c1//2`` or ``c2//2`` of the array of
+        nodal coordinates.
     n1, n2 : int
         Node identification number.
     init_k_KC0, init_k_M : int
         Position in the arrays storing the sparse data for the structural
-        matrices.
+        matrices, where the entries of this element start, see
+        :class:`.TrussData` for their number.
     probe, : :class:`.TrussProbe` object
         Pointer to the probe.
+
+    Notes
+    -----
+    The strain energy of the element is
+
+    .. math::
+        U = \frac{1}{2} \int_0^L \left( E A u_{,x}^2 + G J {r_x}_{,x}^2
+            \right) dx
+
+    where `G J` is the torsional stiffness ``GJ`` of :class:`.BeamProp`,
+    with the axial displacement `u` and the twist rotation `r_x`
+    interpolated linearly between the nodes, in the element coordinate
+    system, and `L` = ``length``. The transverse translations `v`, `w` and
+    the rotations `r_y`, `r_z` have no stiffness and must be supported by
+    other elements or by boundary conditions; the element has no geometric
+    stiffness matrix. The matrices and the internal forces are computed in
+    element coordinates and transformed to global coordinates with the
+    rotation matrix of the element, `[K] = [R][K_e][R]^T`, where `[R]` is
+    block diagonal with four copies of the rotation matrix ``r11, ...,
+    r33``.
 
     """
     cdef public int eid, pid
@@ -154,13 +215,20 @@ cdef class Truss:
         .. note:: The ``ue`` attribute of object :class:`.TrussProbe` is
                   updated, accessible using ``.probe.ue``.
 
+        The translations and rotations of the two nodes, read from ``u`` at
+        the positions ``c1`` to ``c1 + 5`` and ``c2`` to ``c2 + 5``, are
+        transformed to the element coordinate system with the transpose of the
+        rotation matrix, which must be updated before, see
+        :meth:`.update_rotation_matrix`.
+
         Parameters
         ----------
         u : array-like
             Array with global displacements, for a total of `M` nodes in
             the model, this array will be arranged as: `u_1, v_1, w_1, {r_x}_1,
             {r_y}_1, {r_z}_1, u_2, v_2, w_2, {r_x}_2, {r_y}_2, {r_z}_2, ...,
-            u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M`.
+            u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M`. Translations of
+            dimension length and rotations, 1-D array of size ``6*M``.
 
         """
         cdef int i, j
@@ -211,13 +279,21 @@ cdef class Truss:
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
         {y_e}_j, {y_e}_k`; `{z_e}_i, {z_e}_j, {z_e}_k`.
 
+        The element `x` axis goes from node 1 to node 2, whose coordinates are
+        read from ``x`` at the positions ``c1//2`` and ``c2//2``. The `z` axis
+        is normal to the `x` axis and to the vector obtained by a cyclic
+        permutation of the components of the `x` axis, ``(xj, xk, xi)``, the
+        `y` axis completes the right-handed system, and the three axes are
+        normalized.
+
 
         Parameters
         ----------
         x : array-like
             Array with global nodal coordinates, for a total of `M` nodes in
             the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
-            y_2, z_2, ..., x_M, y_M, z_M`.
+            y_2, z_2, ..., x_M, y_M, z_M`. Dimension length, 1-D array of size
+            ``3*M``.
 
         """
         cdef double vxyi, vxyj, vxyk
@@ -278,12 +354,19 @@ cdef class Truss:
         .. note:: The ``xe`` attribute of object :class:`.TrussProbe` is
                   updated, accessible using ``.probe.xe``.
 
+        The coordinates of the two nodes, read from ``x`` at the positions
+        ``c1//2`` and ``c2//2``, are transformed to the element coordinate
+        system with the transpose of the rotation matrix, which must be updated
+        before, see :meth:`.update_rotation_matrix`. Then
+        :meth:`.update_length` is called, updating ``length``.
+
         Parameters
         ----------
         x : array-like
             Array with global nodal coordinates, for a total of `M` nodes in
             the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
-            y_2, z_2, ..., x_M, y_M, z_M`.
+            y_2, z_2, ..., x_M, y_M, z_M`. Dimension length, 1-D array of size
+            ``3*M``.
 
         """
         cdef int i, j
@@ -324,6 +407,10 @@ cdef class Truss:
     cpdef void update_length(Truss self):
         r"""Update element length
 
+        The distance between the two nodes, computed from the coordinates
+        ``probe.xe`` in the element coordinate system, is stored in the
+        attribute ``length``. Called by :meth:`.update_probe_xe`.
+
         """
         cdef double x1, x2, y1, y2, z1, z2
         with nogil:
@@ -349,6 +436,13 @@ cdef class Truss:
         .. note:: The ``finte`` attribute of object :class:`.TrussProbe` is
                   updated, accessible using ``.probe.finte``.
 
+        The 12 values of ``finte`` are overwritten. They are computed from
+        ``length``, from the attributes ``A``, ``E`` and ``GJ`` of
+        ``prop`` and from the displacements ``probe.ue``, which must be
+        updated before, see :meth:`.update_probe_xe` and
+        :meth:`.update_probe_ue`. Only the axial forces and the torsion
+        moments are not zero.
+
         Parameters
         ----------
         prop : :class:`.BeamProp` object
@@ -358,14 +452,13 @@ cdef class Truss:
         """
         cdef double *ue
         cdef double *finte
-        cdef double L, A, E, G, J
+        cdef double L, A, E, GJ
 
         with nogil:
             L = self.length
             A = prop.A
             E = prop.E
-            G = prop.G
-            J = prop.J
+            GJ = prop.get_GJ()
 
             ue = &self.probe.ue[0]
             finte = &self.probe.finte[0]
@@ -373,13 +466,13 @@ cdef class Truss:
             finte[0] = 1.0*A*E*(ue[0] - ue[6])/L
             finte[1] = 0.
             finte[2] = 0.
-            finte[3] = 1.0*G*J*(ue[3] - ue[9])/L
+            finte[3] = 1.0*GJ*(ue[3] - ue[9])/L
             finte[4] = 0.
             finte[5] = 0.
             finte[6] = 1.0*A*E*(-ue[0] + ue[6])/L
             finte[7] = 0.
             finte[8] = 0.
-            finte[9] = 1.0*G*J*(-ue[3] + ue[9])/L
+            finte[9] = 1.0*GJ*(-ue[3] + ue[9])/L
             finte[10] = 0.
             finte[11] = 0.
 
@@ -393,33 +486,52 @@ cdef class Truss:
                           ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
+        The 72 entries of the matrix of the element, in global coordinates,
+        are written at the positions ``init_k_KC0`` to ``init_k_KC0 + 71``:
+        the row and column indices, built from ``c1`` and ``c2``, are stored
+        in ``KC0r`` and ``KC0c``, and the values are added to those already
+        in ``KC0v``. The matrix is computed from ``length``, the rotation
+        matrix and the attributes ``A``, ``E`` and ``GJ`` of ``prop``.
+        ``length`` and the rotation matrix must be updated before,
+        see :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe`.
+
         Parameters
         ----------
         KC0r : np.array
-            Array to store row positions of sparse values
+            Array to store row positions of sparse values. 1-D array of
+            integers of the C type ``long``, of size at least
+            ``init_k_KC0 + 72``.
         KC0c : np.array
-            Array to store column positions of sparse values
+            Array to store column positions of sparse values. Same type and
+            size as ``KC0r``.
         KC0v : np.array
-            Array to store sparse values
-        prop : :class:`BeamProp` object
+            Array to store sparse values. 1-D array of floats of size at least
+            ``init_k_KC0 + 72``.
+        prop : :class:`.BeamProp` object
             Beam property object from where the stiffness and mass attributes
             are read from.
-        update_KC0v_only : int
+        update_KC0v_only : int, optional
             The default ``0`` means that the row and column indices ``KC0r``
             and ``KC0c`` should also be updated. Any other value will only
             update the stiffness matrix values ``KC0v``.
 
+        Notes
+        -----
+        In element coordinates, ``KC0`` is the Hessian of the strain energy
+        given in the notes of :class:`.Truss`, with the entries `\pm E A/L`
+        between the axial translations and `\pm G J/L` between the twist
+        rotations of the two nodes.
+
         """
         cdef int c1, c2, k
-        cdef double L, A, E, G, J
+        cdef double L, A, E, GJ
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
 
         with nogil:
             L = self.length
             A = prop.A
             E = prop.E
-            G = prop.G
-            J = prop.J
+            GJ = prop.get_GJ()
 
             # local to global transformation
             r11 = self.r11
@@ -691,41 +803,41 @@ cdef class Truss:
             k += 1
             KC0v[k] += -1.0*A*E*r31**2/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11**2/L
+            KC0v[k] += 1.0*GJ*r11**2/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11*r21/L
+            KC0v[k] += 1.0*GJ*r11*r21/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11*r31/L
+            KC0v[k] += 1.0*GJ*r11*r31/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11**2/L
+            KC0v[k] += -1.0*GJ*r11**2/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11*r21/L
+            KC0v[k] += -1.0*GJ*r11*r21/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11*r31/L
+            KC0v[k] += -1.0*GJ*r11*r31/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11*r21/L
+            KC0v[k] += 1.0*GJ*r11*r21/L
             k += 1
-            KC0v[k] += 1.0*G*J*r21**2/L
+            KC0v[k] += 1.0*GJ*r21**2/L
             k += 1
-            KC0v[k] += 1.0*G*J*r21*r31/L
+            KC0v[k] += 1.0*GJ*r21*r31/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11*r21/L
+            KC0v[k] += -1.0*GJ*r11*r21/L
             k += 1
-            KC0v[k] += -1.0*G*J*r21**2/L
+            KC0v[k] += -1.0*GJ*r21**2/L
             k += 1
-            KC0v[k] += -1.0*G*J*r21*r31/L
+            KC0v[k] += -1.0*GJ*r21*r31/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11*r31/L
+            KC0v[k] += 1.0*GJ*r11*r31/L
             k += 1
-            KC0v[k] += 1.0*G*J*r21*r31/L
+            KC0v[k] += 1.0*GJ*r21*r31/L
             k += 1
-            KC0v[k] += 1.0*G*J*r31**2/L
+            KC0v[k] += 1.0*GJ*r31**2/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11*r31/L
+            KC0v[k] += -1.0*GJ*r11*r31/L
             k += 1
-            KC0v[k] += -1.0*G*J*r21*r31/L
+            KC0v[k] += -1.0*GJ*r21*r31/L
             k += 1
-            KC0v[k] += -1.0*G*J*r31**2/L
+            KC0v[k] += -1.0*GJ*r31**2/L
             k += 1
             KC0v[k] += -1.0*A*E*r11**2/L
             k += 1
@@ -763,45 +875,51 @@ cdef class Truss:
             k += 1
             KC0v[k] += 1.0*A*E*r31**2/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11**2/L
+            KC0v[k] += -1.0*GJ*r11**2/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11*r21/L
+            KC0v[k] += -1.0*GJ*r11*r21/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11*r31/L
+            KC0v[k] += -1.0*GJ*r11*r31/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11**2/L
+            KC0v[k] += 1.0*GJ*r11**2/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11*r21/L
+            KC0v[k] += 1.0*GJ*r11*r21/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11*r31/L
+            KC0v[k] += 1.0*GJ*r11*r31/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11*r21/L
+            KC0v[k] += -1.0*GJ*r11*r21/L
             k += 1
-            KC0v[k] += -1.0*G*J*r21**2/L
+            KC0v[k] += -1.0*GJ*r21**2/L
             k += 1
-            KC0v[k] += -1.0*G*J*r21*r31/L
+            KC0v[k] += -1.0*GJ*r21*r31/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11*r21/L
+            KC0v[k] += 1.0*GJ*r11*r21/L
             k += 1
-            KC0v[k] += 1.0*G*J*r21**2/L
+            KC0v[k] += 1.0*GJ*r21**2/L
             k += 1
-            KC0v[k] += 1.0*G*J*r21*r31/L
+            KC0v[k] += 1.0*GJ*r21*r31/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11*r31/L
+            KC0v[k] += -1.0*GJ*r11*r31/L
             k += 1
-            KC0v[k] += -1.0*G*J*r21*r31/L
+            KC0v[k] += -1.0*GJ*r21*r31/L
             k += 1
-            KC0v[k] += -1.0*G*J*r31**2/L
+            KC0v[k] += -1.0*GJ*r31**2/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11*r31/L
+            KC0v[k] += 1.0*GJ*r11*r31/L
             k += 1
-            KC0v[k] += 1.0*G*J*r21*r31/L
+            KC0v[k] += 1.0*GJ*r21*r31/L
             k += 1
-            KC0v[k] += 1.0*G*J*r31**2/L
+            KC0v[k] += 1.0*GJ*r31**2/L
 
 
     cpdef void update_fint(Truss self, double [::1] fint, BeamProp prop):
         r"""Update the internal force vector
+
+        Calls ``update_probe_finte(prop)``, transforms the forces and moments
+        of ``probe.finte`` to global coordinates with the rotation matrix and
+        adds them to ``fint`` at the positions ``c1`` to ``c1 + 5`` and ``c2``
+        to ``c2 + 5``. The displacements ``probe.ue`` must be updated before,
+        see :meth:`.update_probe_ue`.
 
         Parameters
         ----------
@@ -810,7 +928,8 @@ cdef class Truss:
             internal forces stored in ``fint`` are calculated in global
             coordinates. Method :meth:`.update_probe_finte` is called to update
             the parameter ``finte`` of the :class:`.TrussProbe` with the
-            internal forces in local coordinates.
+            internal forces in local coordinates. 1-D array of size ``6*M``,
+            for `M` nodes in the model.
         prop : :class:`.BeamProp` object
             Beam property object from where the stiffness and mass attributes
             are read from.
@@ -849,23 +968,90 @@ cdef class Truss:
         ``intrhoy``, ``intrhoz``, ``intrhoy2`` and ``intrhoz2`` of the beam
         property are important.
 
+        The entries of the matrix of the element, in global coordinates, are
+        written from the position ``init_k_M``: 144 entries with
+        ``mtype=0`` and 36 entries with ``mtype=1``. The row and column
+        indices, built from ``c1`` and ``c2``, are stored in ``Mr`` and
+        ``Mc``, and the values are added to those already in ``Mv``. The
+        matrix is computed from ``length``, the rotation matrix and the inertial terms above.
+        ``length`` and the rotation matrix must be updated before, see
+        :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe`.
+
         Parameters
         ----------
         Mr : np.array
-            Array to store row positions of sparse values
+            Array to store row positions of sparse values. 1-D array of
+            integers of the C type ``long``, of size at least
+            ``init_k_M + 144`` (``init_k_M + 36`` with ``mtype=1``).
         Mc : np.array
-            Array to store column positions of sparse values
+            Array to store column positions of sparse values. Same type and
+            size as ``Mr``.
         Mv : np.array
-            Array to store sparse values
+            Array to store sparse values. 1-D array of floats, of the same
+            size as ``Mr``.
+        prop : :class:`.BeamProp` object
+            Beam property object from where the inertial attributes are read.
         mtype : int, optional
-            0 for consistent mass matrix using method from Brockman 1987
-            1 for lumped mass matrix using method from Brockman 1987
+            0 for consistent mass matrix, 1 for lumped mass matrix. Default
+            ``0``.
+
+        Raises
+        ------
+        ValueError
+            If ``mtype`` is not 0 or 1.
+
+        Notes
+        -----
+        The mass matrices come from the kinetic energy of the rigid cross
+        section, whose point `(y, z)` has the displacements `u_x = u`, `u_y
+        = v - z r_x` and `u_z = w + y r_x`, with the three translations and
+        the twist rotation `r_x` interpolated linearly:
+
+        .. math::
+            T = \frac{1}{2} \int_0^L \Big[ m (\dot{u}^2 + \dot{v}^2 + \dot{w}^2)
+                - 2 m_z \dot{v} \dot{r}_x + 2 m_y \dot{w} \dot{r}_x
+                + (m_{yy} + m_{zz}) \dot{r}_x^2 \Big] dx
+
+        with `m` = ``intrho``, `m_y` = ``intrhoy``, `m_z` = ``intrhoz``,
+        `m_{yy}` = ``intrhoy2`` and `m_{zz}` = ``intrhoz2``. The coupling
+        terms, `-m_z` between `v` and `r_x` and `+m_y` between `w` and `r_x`,
+        are those of :meth:`.BeamLR.update_M` and :meth:`.BeamC.update_M`.
+        The rotations `r_y` and `r_z` have no inertia. ``mtype=0`` gives the
+        consistent mass matrix, the Hessian of `T` with respect to the nodal
+        velocities, integrated exactly along the element. ``mtype=1`` gives
+        the lumped mass matrix, diagonal in element coordinates: at each node
+        `L m/2` for the three translations and `L (m_{yy} + m_{zz})/2` for
+        `r_x`, without the coupling terms of `m_y` and `m_z`.
+
+        The lumped mass matrix follows the lumped mass matrix by Lobatto
+        integration of Brockman (1987) [1]_, p. 2348, adapted to the beam:
+        the two-point Gauss-Lobatto quadrature of `T`, whose points are the
+        nodes, gives a diagonal matrix only without the first moments of the
+        density, which are therefore dropped. The consistent mass matrix is
+        the integral of Petyt (2010) [2]_, Sec. 3.3, Eqs. (3.58) and (3.59),
+        for each linearly interpolated field, e.g. `L m/6` times `[2, 1; 1,
+        2]` for each translation, and Sec. 3.4, Eq. (3.102), with `m_{yy} +
+        m_{zz}` in place of `\rho I_x`, for the twist `r_x`.
+
+        References
+        ----------
+        .. [1] Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
+           Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
+           https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208
+        .. [2] Petyt, M., 2010, Introduction to Finite Element Vibration
+           Analysis, 2nd ed., Cambridge University Press, Cambridge.
+           https://doi.org/10.1017/CBO9780511761195
 
         """
         cdef int c1, c2, k
         cdef double intrho, intrhoy, intrhoz, intrhoy2, intrhoz2
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double L, A, E
+
+        # NOTE checked once per call, before the code without the GIL
+        if mtype != 0 and mtype != 1:
+            raise ValueError('mtype=%d is not supported by Truss.update_M, '
+                             'use 0 (consistent) or 1 (lumped)' % mtype)
 
         with nogil:
             L = self.length

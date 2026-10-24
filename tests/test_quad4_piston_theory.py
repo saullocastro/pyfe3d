@@ -8,10 +8,35 @@ from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import isotropic_plate
 from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
-from pyfe3d.solver import natural_frequency
+from pyfe3d.solver import natural_frequency, complex_frequency
 
 
-def test_quad4r_piston_theory(plot=False, refinement=1):
+def test_quad4_piston_theory(plot=False, refinement=1):
+    r"""Panel flutter of a simply supported flat plate in a supersonic flow
+    along `X`, with the piston theory, see ``update_KA_beta`` of
+    :class:`.Quad4`, and the aerodynamic damping
+
+    The equations of motion are `[M]\{\ddot{u}\} + [C]\{\dot{u}\} +
+    [K]\{u\} = \{0\}`, with `[K] = [K_{C0}] - \beta [KA_{\beta}] - \gamma
+    [KA_{\gamma}]` and the damping matrix `[C] = -\mu [CA]`. For this plate
+    in the `XY` plane, `[CA]` acts on `w` only and `-\rho h [CA]` is the
+    block of `w` of the mass matrix, such that `[C] = a [M]` on `w`, `a =
+    \mu/(\rho h)`, which is asserted. Neglecting the rotary inertia, the
+    damped eigenvalues follow from the undamped ones, `\omega^2` of `([K] -
+    \omega^2 [M])\{u\} = \{0\}`: `\lambda^2 + a \lambda + \omega^2 = 0`,
+    i.e. `\lambda = -a/2 \pm \sqrt{a^2/4 - \omega^2}`, against which
+    :func:`.complex_frequency` is verified at each Mach number. Hence:
+
+    - below the coalescence of the two lowest frequencies, `\omega^2` real,
+      every mode decays with `Re(\lambda) = -a/2`;
+    - `\mu = \beta (M^2 - 2)/(U (M^2 - 1))` is negative for `M < \sqrt{2}`,
+      and every mode then grows, `Re(\lambda) = -a/2 > 0`;
+    - the coalescence, where `\omega^2` becomes complex, is the flutter
+      onset of the undamped analysis; with the damping, the onset is at a
+      higher Mach number, where a pair `\omega^2` satisfies `|Im(\omega^2)|
+      = a \sqrt{Re(\omega^2)}`, i.e. `\lambda = i \sqrt{Re(\omega^2)}`,
+      found by bisection.
+    """
     data = Quad4Data()
     probe = Quad4Probe()
     nx = refinement*21
@@ -173,13 +198,43 @@ def test_quad4r_piston_theory(plot=False, refinement=1):
     radius = 1.
     gammas = betas/(2*radius*np.sqrt(Mach**2 - 1))
     mus = betas/(Mach*v_sound)*((Mach**2 - 2)/(Mach**2 - 1))
-    mus*=0 # TODO quadractic eigenvalue problem to solve including damping
+    # NOTE the aerodynamic damping matrix C = -mu*CA: for this flat plate
+    #      in the XY plane, CA acts on w only and -rho*h*CA is the block of
+    #      w of the mass matrix, such that C = (mu/(rho*h))*M on w
+    wu = np.zeros(N, dtype=bool)
+    wu[2::DOF] = True
+    wu = wu[bu]
+    Mww = Muu[wu, :][:, wu].toarray()
+    assert np.allclose(-rho*h*CAuu[wu, :][:, wu].toarray(), Mww, rtol=0,
+                       atol=1e-12*np.abs(Mww).max())
+    assert abs(CAuu[~wu, :]).sum() == 0
+
+    def matrices(Mach_):
+        """K and C at the Mach number Mach_, and a = mu/(rho*h)"""
+        v = Mach_*v_sound
+        beta = rho_air*v**2/np.sqrt(Mach_**2 - 1)
+        gamma = beta/(2*radius*np.sqrt(Mach_**2 - 1))
+        mu = beta/(Mach_*v_sound)*((Mach_**2 - 2)/(Mach_**2 - 1))
+        return (Kuu - beta*KA_betauu - gamma*KA_gammauu, -mu*CAuu,
+                mu/(rho*h))
+
+    def undamped(Keff):
+        return eigs(A=Keff, M=Muu, k=num_eigenvalues, which='LM', sigma=-1.,
+                    tol=1e-10)[0]
+
+    def coalesced(w2):
+        return np.any(np.abs(w2.imag) > 1e-6*np.abs(w2))
+
+    max_real = []
+    complex_w2 = []
 
     omegan_vec = []
     for i, beta in enumerate(betas):
         print('analysis i', i)
         # solving generalized eigenvalue problem
-        Keffective = Kuu + beta*KA_betauu + gammas[i]*KA_gammauu
+        # NOTE KA_beta and KA_gamma are the matrices of the aerodynamic load,
+        #      which enter the stiffness with the minus sign
+        Keffective = Kuu - beta*KA_betauu - gammas[i]*KA_gammauu
         eigvals, eigvecsu = eigs(A=Keffective, M=Muu,
                 k=num_eigenvalues, which='LM', sigma=-1., tol=1e-6, v0=eigvecsu[:, 0])
         # NOTE with v0=eigvecsu[:, 0]) avoids fluctuations in adjacent
@@ -199,12 +254,62 @@ def test_quad4r_piston_theory(plot=False, refinement=1):
             else:
                 corresp.append(j)
         omegan_vec.append(eigvals[corresp]**0.5)
+
+        # damped analysis against lambda = -a/2 +- sqrt(a**2/4 - omega**2)
+        lam, _ = complex_frequency(Keffective, -mus[i]*CAuu, Muu,
+                                   num_eigvalues=num_eigenvalues + 1)
+        a = mus[i]/(rho*h)
+        s = np.sqrt(a**2/4 - eigvals + 0j)
+        lam_ref = np.where((-a/2 + s).imag >= 0, -a/2 + s, -a/2 - s)
+        for lr in lam_ref:
+            assert np.min(np.abs(lam - lr)) <= 1e-4*abs(lr)
+        if mus[i] < 0:
+            assert np.all(lam.real > 0)
+        elif not coalesced(eigvals):
+            assert np.allclose(lam.real, -a/2, rtol=1e-3)
+        max_real.append(lam.real.max())
+        complex_w2.append(coalesced(eigvals))
         print(np.round(MACmatrix, 2))
 
         eigvecs_ref = eigvecs[:, corresp].copy()
 
 
     omegan_vec = np.array(omegan_vec)
+
+    # flutter onset without and with the aerodynamic damping
+    stable = (mus > 0) & (np.array(max_real) < 0)
+    i_c = np.flatnonzero(complex_w2)[0]
+    i_f = np.flatnonzero((mus > 0) & ~stable)[0]
+    assert mus[i_c - 1] > 0 and stable[i_c - 1] and i_f >= i_c
+    lo, hi = Mach[i_c - 1], Mach[i_c]
+    for _ in range(25):
+        mid = 0.5*(lo + hi)
+        if coalesced(undamped(matrices(mid)[0])):
+            hi = mid
+        else:
+            lo = mid
+    Mach_c = hi
+    lo, hi = lo, Mach[i_f]
+    for _ in range(25):
+        mid = 0.5*(lo + hi)
+        K_, C_, _ = matrices(mid)
+        lam = complex_frequency(K_, C_, Muu, num_eigvalues=2)[0]
+        if lam.real.max() > 0:
+            hi = mid
+        else:
+            lo = mid
+    Mach_f = hi
+    print('flutter onset: Mach %.5f without damping, %.5f with damping'
+          % (Mach_c, Mach_f))
+    assert Mach_f > Mach_c + 1e-3
+    K_, C_, a = matrices(Mach_f)
+    w2 = undamped(K_)
+    w2 = w2[np.argmax(np.abs(w2.imag))]
+    assert np.isclose(abs(w2.imag), a*np.sqrt(w2.real), rtol=1e-3)
+    lam = complex_frequency(K_, C_, Muu, num_eigvalues=2)[0]
+    lam = lam[np.argmax(lam.real)]
+    assert abs(lam.real) <= 1e-3*abs(lam)
+    assert np.isclose(lam.imag, np.sqrt(w2.real), rtol=1e-3)
 
     if plot:
         import matplotlib.pyplot as plt
@@ -217,5 +322,5 @@ def test_quad4r_piston_theory(plot=False, refinement=1):
 
 
 if __name__ == '__main__':
-    test_quad4r_piston_theory(plot=True, refinement=1)
+    test_quad4_piston_theory(plot=True, refinement=1)
 

@@ -42,11 +42,13 @@ the quantities being verified are
                 = \frac{0.10 E t^3}{1 + 1/A}
 
   which :class:`pyfe3d.Quad4R` generalises to laminates by replacing `E` with
-  the equivalent moduli `E_1^{eq} = 1/(h a_{11})` and `E_2^{eq} = 1/(h
-  a_{22})` obtained from the inverse of the extensional stiffness matrix, and
-  by taking `E^{(h)}_w` as the mean of `E^{(h)}_{\theta_x}` and
-  `E^{(h)}_{\theta_y}`, both of which reduce to Eq. (16) for an isotropic
-  plate;
+  the equivalent membrane moduli `E_1^{eq} = 1/(h a_{11})` and `E_2^{eq} =
+  1/(h a_{22})`, from the inverse `[a]` of the extensional stiffness matrix,
+  for `u` and `v`, and with the equivalent bending moduli `E_1^{b} = 12/(h^3
+  d_{11})` and `E_2^{b} = 12/(h^3 d_{22})`, from the lower-right block `[d]`
+  of the inverse of the ABD matrix, for `\theta_x`, `\theta_y` and, with
+  their mean, `w`, all of which reduce to Eq. (16) for an isotropic plate,
+  see :func:`test_laminate_hourglass_stiffnesses_use_membrane_and_bending_moduli`;
 
 * the classification of the element modes of Brockman's p. 2347, six proper
   rigid-body motions, eight uniform-strain states captured by the one-point
@@ -132,7 +134,7 @@ import numpy as np
 from scipy.sparse import coo_matrix
 from scipy.sparse.linalg import spsolve
 
-from pyfe3d.shellprop_utils import isotropic_plate
+from pyfe3d.shellprop_utils import isotropic_plate, laminated_plate
 from pyfe3d import (Quad4, Quad4Data, Quad4Probe, Quad4R, Quad4RData,
                     Quad4RProbe, INT, DOUBLE, DOF)
 
@@ -155,13 +157,14 @@ TRAPEZOID = np.array([[0., 0., 0.], [3., 0., 0.], [2., 1.5, 0.],
 HG_NAMES = {0: 'u = h', 1: 'v = h', 2: 'w = h', 3: 'rx = h', 4: 'ry = h'}
 
 
-def make_element(ncoords, K6ROT=0.):
+def make_element(ncoords, K6ROT=0., xmat=(0., 0., 1.)):
     r"""A single Quad4R with its rotation matrix and probe already updated
 
     The fictitious drilling penalty is switched off by default, because its
     operator reads the in-plane translations and would otherwise add energy
     to the in-plane hourglass patterns, which would mask the term being
-    verified.
+    verified. ``xmat`` is the material direction of
+    :meth:`pyfe3d.Quad4R.update_rotation_matrix`.
 
     """
     probe = Quad4RProbe()
@@ -174,7 +177,7 @@ def make_element(ncoords, K6ROT=0.):
     el.init_k_M = 0
     el.drilling_model = 1
     el.K6ROT = K6ROT
-    el.update_rotation_matrix(ncoords_flatten, 0., 0., 1.)
+    el.update_rotation_matrix(ncoords_flatten, *xmat)
     el.update_probe_xe(ncoords_flatten)
     el.update_area()
     return el, probe
@@ -357,13 +360,12 @@ def test_hourglass_operator_equals_second_derivative_of_N():
 def test_generalized_stiffnesses_are_dimensionally_homogeneous():
     r"""The generalized stiffnesses actually implemented, one at a time
 
-    pyfe3d departs from Brockman's Eq. (16) in two ways, both set out in the
+    pyfe3d departs from Brockman's Eq. (16) as set out in the
     section "Dimensional homogeneity of the hourglass stiffnesses" of the
     :mod:`pyfe3d.quad4r` documentation: his `1/(1 + 1/A)` is replaced by the
     area itself, which is what the dimensions of `K_{ij} = A E^{(h)}
-    \gamma_i \gamma_j` require, and `w` is moved from the `E t^3` group of
-    Eq. (16b) into the `E t A` group, because the mode the one-point rule
-    misses in `w` is resisted by transverse shear rather than by bending.
+    \gamma_i \gamma_j` require, except for `w`, which keeps his factor, see
+    :func:`test_transverse_coefficient_has_no_unit_invariant_constant`.
 
     The energy of each hourglass pattern is linear in the corresponding
     ``hgfactor``, which is what makes the stiffnesses separable, and the
@@ -864,9 +866,8 @@ def test_homogeneous_stiffnesses_agree_with_brockman_for_small_areas():
     reinterpretation of his factor rather than a different magnitude of
     stabilisation.
 
-    The `w` term is excluded: it is moved from the `E t^3` group to the
-    `E t A` group on physical grounds, so it does not converge to Eq. (16b)
-    and is not expected to.
+    The `w` term is excluded: it keeps Brockman's factor and is Eq. (16b)
+    itself, see :func:`homogeneous_stiffnesses`.
 
     """
     for area, tol in [(1.e-1, 2.e-1), (1.e-2, 2.e-2), (1.e-4, 2.e-4)]:
@@ -989,6 +990,297 @@ def test_transverse_coefficient_has_no_unit_invariant_constant():
     assert reduced/ref > 4.*brockman/ref
 
 
+# NOTE input properties of a carbon-epoxy ply and of a sandwich core, used
+#      only to build laminates whose bending and membrane moduli differ
+LAMINAPROP = (142.5e9, 8.7e9, 0.28, 5.1e9, 5.1e9, 2.9e9)
+CORE = (100.e6, 100.e6, 0.3, 40.e6, 40.e6, 40.e6)
+
+
+def laminates():
+    r"""Plates whose equivalent membrane and bending moduli differ
+
+    The isotropic plate with an offset reference surface is included because
+    its `[D]` is not `E t^3/(12(1 - \nu^2))` there, while its bending
+    moduli must still be `E`.
+
+    """
+    t = 1.e-3
+    tf = 0.125e-3
+    return {
+        'isotropic, offset': isotropic_plate(thickness=T_BROCKMAN,
+            E=E_BROCKMAN, nu=NU_BROCKMAN, offset=0.4*T_BROCKMAN),
+        '[0/90]s': laminated_plate([0, 90, 90, 0], plyt=t/4,
+                                   laminaprop=LAMINAPROP),
+        '[45/-45]s': laminated_plate([45, -45, -45, 45], plyt=t/4,
+                                     laminaprop=LAMINAPROP),
+        '[0/90]': laminated_plate([0, 90], plyt=t/2, laminaprop=LAMINAPROP),
+        '[45/-45], offset': laminated_plate([45, -45], plyt=t/2,
+            laminaprop=LAMINAPROP, offset=0.3*t),
+        'sandwich': laminated_plate([0, 45, -45, 90, 0, 90, -45, 45, 0],
+            plyts=[tf]*4 + [10.e-3] + [tf]*4,
+            laminaprops=[LAMINAPROP]*4 + [CORE] + [LAMINAPROP]*4),
+    }
+
+
+def equivalent_moduli(prop, thetadeg):
+    r"""`E_{1eq}`, `E_{2eq}`, `E_{1b}`, `E_{2b}` in the element coordinate
+    system, see the Notes of :meth:`pyfe3d.Quad4R.update_KC0`
+
+    """
+    A, B, D, _ = prop.calc_constitutive_element(thetadeg)
+    h = prop.h
+    a = np.linalg.inv(A)
+    d = np.linalg.inv(np.block([[A, B], [B, D]]))[3:, 3:]
+    return (1./(h*a[0, 0]), 1./(h*a[1, 1]), 12./(h**3*d[0, 0]),
+            12./(h**3*d[1, 1]))
+
+
+def test_laminate_hourglass_stiffnesses_use_membrane_and_bending_moduli():
+    r"""`u`, `v` with the membrane moduli, `w`, `r_x`, `r_y` with the bending
+    moduli, in the element coordinate system
+
+    The generalized stiffness of each hourglass pattern is recovered from
+    its energy, `E^{(h)} = 2 U/(\tilde\gamma^2 A)`, see
+    :func:`test_hourglass_operator_matches_brockman_eq15`, and compared with
+    the expressions of the Notes of :meth:`pyfe3d.Quad4R.update_KC0`, for
+    the material direction along the element `x` axis and at 30 degrees
+    from it. The isotropic plate with an offset reference surface gives
+    Brockman's Eq. (16) with `E`, as without offset.
+
+    """
+    for name, prop in laminates().items():
+        for xmat in [(0., 0., 1.), (np.cos(np.pi/6), np.sin(np.pi/6), 0.)]:
+            el, probe = make_element(RECTANGLE, xmat=xmat)
+            thetadeg = np.rad2deg(np.arctan2(el.m21, el.m11))
+            E1eq, E2eq, E1b, E2b = equivalent_moduli(prop, thetadeg)
+            t, area = prop.h, el.area
+            ref = {0: 0.1*E1eq*t*area, 1: 0.1*E2eq*t*area,
+                   2: 0.05*(E1b + E2b)*t**3/(1. + 1./area),
+                   3: 0.1*E2b*t**3*area, 4: 0.1*E1b*t**3*area}
+            if name.startswith('isotropic'):
+                assert np.allclose([E1eq, E2eq, E1b, E2b], E_BROCKMAN,
+                                   rtol=1e-12)
+            KC0 = element_KC0(el, prop)
+            gt = gamma_tilde(el, probe)
+            for dof in range(5):
+                ue = hourglass_mode(el, dof)
+                Eh = ue.dot(KC0.dot(ue))/(gt**2*area)
+                print('%-17s theta=%4.1f %-7s %.6e %.6e' % (name, thetadeg,
+                      HG_NAMES[dof], Eh, ref[dof]))
+                assert np.isclose(Eh, ref[dof], rtol=1e-10), (name, thetadeg,
+                                                               HG_NAMES[dof])
+
+
+def test_bending_moduli_differ_from_membrane_moduli_for_laminates():
+    r"""The laminates of :func:`laminates` exercise the bending moduli
+
+    `E_{1b}/E_{1eq}` and `E_{2b}/E_{2eq}` are 1 for the isotropic plate,
+    with or without offset, and differ from 1 for the laminates: about 1.7
+    and 0.34 for the symmetric cross-ply, 0.41 for the unsymmetric
+    cross-ply, through the coupling `[B]`, and above 2.5 for the sandwich,
+    whose bending stiffness comes from the faces.
+
+    """
+    ratios = {}
+    for name, prop in laminates().items():
+        E1eq, E2eq, E1b, E2b = equivalent_moduli(prop, 0.)
+        ratios[name] = (E1b/E1eq, E2b/E2eq)
+        print('%-17s E1b/E1eq %.4f E2b/E2eq %.4f' % (name, *ratios[name]))
+    assert np.allclose(ratios['isotropic, offset'], 1., rtol=1e-12)
+    assert ratios['[0/90]s'][0] > 1.5 and ratios['[0/90]s'][1] < 0.4
+    assert ratios['[0/90]'][0] < 0.5 and ratios['[0/90]'][1] < 0.5
+    assert min(ratios['sandwich']) > 2.5
+
+
+def test_laminate_zero_energy_modes():
+    r"""Brockman's p. 2347 mode count holds for the laminates
+
+    As in :func:`test_stabilisation_restores_the_rank_of_a_rectangular_element`,
+    for each plate of :func:`laminates` on a rectangle and on a distorted
+    element: without stabilisation the element matrix has 12 zero
+    eigenvalues, the six rigid-body motions, the five hourglass patterns and
+    the twisting mode; with it, 7, the twisting mode being left, as in
+    Brockman's element. The membrane and bending stiffnesses of these thin
+    laminates differ by many orders of magnitude, so the matrix is scaled
+    symmetrically by its diagonal before the eigenvalues are counted, which
+    does not change the number of zero eigenvalues, and the smallest
+    non-zero eigenvalue is then well separated from the zero ones.
+
+    """
+    for name, prop in laminates().items():
+        for shape, ncoords in [('rectangle', RECTANGLE),
+                               ('distorted', DISTORTED)]:
+            el, probe = make_element(ncoords, K6ROT=100.)
+            counts = {}
+            for label, hgfactor in [('off', 0.), ('on', 1.)]:
+                K = element_KC0(el, prop, hgfactor=hgfactor)
+                scale = 1./np.sqrt(np.diag(K))
+                w = np.linalg.eigvalsh(scale[:, None]*K*scale[None, :])
+                tol = 1e-11*abs(w).max()
+                counts[label] = int((w < tol).sum())
+                print(name, shape, label, counts[label],
+                      w[counts[label]]/abs(w).max())
+                assert w[counts[label]] > 1e3*tol, (name, shape, label)
+            assert counts == {'off': 12, 'on': 7}, (name, shape, counts)
+
+
+def navier_ss1_center_deflection(prop, a, nterms=199):
+    r"""Centre deflection of a simply supported square plate under a unit
+    uniform pressure, FSDT Navier solution with SS-1 conditions
+
+    For a laminate with `A_{16} = A_{26} = B_{16} = B_{26} = D_{16} = D_{26}
+    = A_{45} = 0`, e.g. a cross-ply, symmetric or not, the fields
+
+    .. math::
+        u = U c_x s_y, \quad v = V s_x c_y, \quad w = W s_x s_y, \quad
+        r_y = X c_x s_y, \quad -r_x = Y s_x c_y
+
+    with `s_x = \sin(\alpha x)`, `c_x = \cos(\alpha x)`, `\alpha = m
+    \pi/a`, and analogously in `y` with `\beta = n \pi/a`, satisfy `v = w =
+    r_x = 0` on `x = 0, a` and `u = w = r_y = 0` on `y = 0, a`. Each strain
+    of the Notes of :mod:`pyfe3d.quad4r` is then a single product of sines
+    and cosines, so the strain energy of a term `(m, n)` is `a^2/8` times a
+    quadratic form `Q` of `(U, V, W, X, Y)` with constant coefficients, and
+    the stationarity of `a^2/8 \, Q - q_{mn} W a^2/4` gives one 5 by 5 linear
+    system per term, with `q_{mn} = 16/(\pi^2 m n)` for odd `m` and `n`.
+    The transverse shear stiffnesses are those of ``prop``, so the
+    comparison isolates the discretisation.
+
+    """
+    ABD = prop.ABD
+    for i, j in [(0, 2), (1, 2), (0, 5), (1, 5), (3, 5), (4, 5)]:
+        assert abs(ABD[i, j]) < 1e-12*abs(ABD).max()
+    assert abs(prop.A45) < 1e-12*max(prop.A44, prop.A55)
+    A11, A12, A22, A66 = ABD[0, 0], ABD[0, 1], ABD[1, 1], ABD[2, 2]
+    B11, B12, B22, B66 = ABD[0, 3], ABD[0, 4], ABD[1, 4], ABD[2, 5]
+    D11, D12, D22, D66 = ABD[3, 3], ABD[3, 4], ABD[4, 4], ABD[5, 5]
+    A44, A55 = prop.A44, prop.A55
+    m, n = np.meshgrid(np.arange(1, nterms + 1, 2), np.arange(1, nterms + 1, 2))
+    al, be = m.ravel()*np.pi/a, n.ravel()*np.pi/a
+    # NOTE the Hessian of Q/2 with respect to (U, V, W, X, Y)
+    K = np.zeros((al.size, 5, 5))
+    K[:, 0, 0] = A11*al**2 + A66*be**2
+    K[:, 0, 1] = (A12 + A66)*al*be
+    K[:, 0, 3] = B11*al**2 + B66*be**2
+    K[:, 0, 4] = (B12 + B66)*al*be
+    K[:, 1, 1] = A22*be**2 + A66*al**2
+    K[:, 1, 3] = (B12 + B66)*al*be
+    K[:, 1, 4] = B22*be**2 + B66*al**2
+    K[:, 2, 2] = A55*al**2 + A44*be**2
+    K[:, 2, 3] = A55*al
+    K[:, 2, 4] = A44*be
+    K[:, 3, 3] = D11*al**2 + D66*be**2 + A55
+    K[:, 3, 4] = (D12 + D66)*al*be
+    K[:, 4, 4] = D22*be**2 + D66*al**2 + A44
+    K = K + np.triu(K, 1).transpose(0, 2, 1)
+    f = np.zeros((al.size, 5, 1))
+    f[:, 2, 0] = 16./(np.pi**2*m.ravel()*n.ravel())
+    W = np.linalg.solve(K, f)[:, 2, 0]
+    return np.sum(W*np.sin(m.ravel()*np.pi/2)*np.sin(n.ravel()*np.pi/2))
+
+
+def ss1_plate_center_deflection(prop, a, n, hgfactors):
+    r"""Quad4R counterpart of :func:`navier_ss1_center_deflection`, on an
+    ``n`` by ``n`` mesh, with the consistent nodal loads of the bilinear
+    element
+
+    """
+    data = Quad4RData()
+    probe = Quad4RProbe()
+    xs = np.linspace(0., a, n + 1)
+    X, Y = np.meshgrid(xs, xs, indexing='ij')
+    x, y = X.flatten(), Y.flatten()
+    ncoords_flatten = np.vstack((x, y, 0*x)).T.flatten()
+    nid = np.arange(len(x)).reshape(n + 1, n + 1)
+    els = list(zip(nid[:-1, :-1].flatten(), nid[1:, :-1].flatten(),
+                   nid[1:, 1:].flatten(), nid[:-1, 1:].flatten()))
+    N = DOF*len(x)
+    KC0r = np.zeros(data.KC0_SPARSE_SIZE*len(els), dtype=INT)
+    KC0c = np.zeros(data.KC0_SPARSE_SIZE*len(els), dtype=INT)
+    KC0v = np.zeros(data.KC0_SPARSE_SIZE*len(els), dtype=DOUBLE)
+    for i, e in enumerate(els):
+        el = Quad4R(probe)
+        el.n1, el.n2, el.n3, el.n4 = e
+        el.c1, el.c2, el.c3, el.c4 = [DOF*k for k in e]
+        el.init_k_KC0 = i*data.KC0_SPARSE_SIZE
+        el.update_rotation_matrix(ncoords_flatten)
+        el.update_probe_xe(ncoords_flatten)
+        el.update_area()
+        el.update_KC0(KC0r, KC0c, KC0v, prop, 0, *hgfactors)
+    KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
+    bk = np.zeros(N, dtype=bool)
+    xedge = np.isclose(x, 0.) | np.isclose(x, a)
+    yedge = np.isclose(y, 0.) | np.isclose(y, a)
+    bk[0::DOF] |= yedge
+    bk[1::DOF] |= xedge
+    bk[2::DOF] |= xedge | yedge
+    bk[3::DOF] |= xedge
+    bk[4::DOF] |= yedge
+    bu = ~bk
+    weights = np.ones(n + 1)
+    weights[0] = weights[-1] = 0.5
+    f = np.zeros(N)
+    f[2::DOF] = (np.outer(weights, weights)*(a/n)**2).flatten()
+    u = np.zeros(N)
+    u[bu] = spsolve(KC0[bu, :][:, bu], f[bu])
+    return u[2::DOF].reshape(n + 1, n + 1)[n//2, n//2]
+
+
+def test_laminated_plates_against_navier():
+    r"""Accuracy of the bending moduli against the FSDT Navier solution
+
+    Simply supported square plates under uniform pressure, 8 by 8 Quad4R,
+    against :func:`navier_ss1_center_deflection`. The hourglass stiffnesses
+    with the membrane moduli used before 0.11.0 for `w`, `r_x` and `r_y`
+    are reproduced with ``hgfactor_w``, ``hgfactor_rx`` and ``hgfactor_ry``
+    equal to `(E_{1eq} + E_{2eq})/(E_{1b} + E_{2b})`, `E_{2eq}/E_{2b}` and
+    `E_{1eq}/E_{1b}`. The ply has `E_1/E_2 = 25`, `G_{12} = G_{13} = 0.5
+    E_2`, `G_{23} = 0.2 E_2`, `\nu_{12} = 0.25`, and the sandwich has two
+    `[0/90]` faces of 0.5 mm on a 10 mm core of 100 MPa and 40 MPa.
+
+    The one-point rule makes Quad4R stiffer than the reference on coarse
+    meshes, mostly through the hourglass stiffness of the rotations, so its
+    deflection is smaller. With the bending moduli the artificial stiffness
+    of the rotations is the same fraction of the bending stiffness of the
+    plate for every laminate, as Brockman calibrated it for isotropic
+    plates. The deflection then improves where the membrane moduli
+    over-stabilised, e.g. the unsymmetric cross-ply, whose `[B]` makes
+    `E_{1b} = 0.36 E_{1eq}`, and worsens where they under-stabilised, e.g.
+    the sandwich, with `E_{1b} = 2.7 E_{1eq}`, which is then as accurate as
+    a symmetric cross-ply.
+
+    """
+    E2 = 1.e9
+    laminaprop = (25*E2, E2, 0.25, 0.5*E2, 0.5*E2, 0.2*E2)
+    core = (100.e6, 100.e6, 0.3, 40.e6, 40.e6, 40.e6)
+    tf = 0.25e-3
+    plates = {
+        'isotropic': (isotropic_plate(thickness=0.01, E=70.e9, nu=0.3), 1.),
+        '[0/90]s': (laminated_plate([0, 90, 90, 0], plyt=0.01/4,
+                                    laminaprop=laminaprop), 1.),
+        '[0/90]': (laminated_plate([0, 90], plyt=0.01/2,
+                                   laminaprop=laminaprop), 1.),
+        'sandwich': (laminated_plate([0, 90, 0, 90, 0],
+            plyts=[tf, tf, 10.e-3, tf, tf],
+            laminaprops=[laminaprop, laminaprop, core, laminaprop,
+                         laminaprop]), 0.5),
+    }
+    # NOTE w/wref with the membrane moduli and with the bending moduli
+    expected = {'isotropic': (0.9210, 0.9210), '[0/90]s': (0.8547, 0.8521),
+                '[0/90]': (0.6822, 0.8465), 'sandwich': (0.9431, 0.8612)}
+    for name, (prop, a) in plates.items():
+        E1eq, E2eq, E1b, E2b = equivalent_moduli(prop, 0.)
+        membrane = (1., 1., (E1eq + E2eq)/(E1b + E2b), E2eq/E2b, E1eq/E1b)
+        wref = navier_ss1_center_deflection(prop, a)
+        old = ss1_plate_center_deflection(prop, a, 8, membrane)/wref
+        new = ss1_plate_center_deflection(prop, a, 8, (1.,)*5)/wref
+        print('%-10s a/h = %5.1f  E1b/E1eq %.3f  E2b/E2eq %.3f  w/wref: '
+              'membrane moduli %.4f, bending moduli %.4f'
+              % (name, a/prop.h, E1b/E1eq, E2b/E2eq, old, new))
+        assert np.allclose((old, new), expected[name], atol=5e-4), name
+
+
+
 def test_mass_formulations_match_brockman():
     r"""Equations (21), (22) and (31) and the lumped mass of p. 2349
 
@@ -1002,9 +1294,10 @@ def test_mass_formulations_match_brockman():
 
     used by ``mtype = 0``. The reduced mass of his Eq. (31) replaces it with
     `\pmb{H} = (A/16) \pmb{s} \pmb{s}^\top`, every entry equal, used by
-    ``mtype = 1``. The lumped mass of p. 2349, by Gauss-Lobatto integration
-    at the nodes, is diagonal with `R_1 A/4` and `R_3 A/4` per node, used by
-    ``mtype = 2``.
+    ``mtype = 1``. The lumped mass of pp. 2348-2349, by Gauss-Lobatto
+    integration at the nodes, used by ``mtype = 2``, is diagonal provided
+    `R_2 = 0`, as here without offset, with `R_1 A/4` and `R_3 A/4` per
+    node.
 
     All three conserve the total mass on any shape. The per-node closed
     forms hold where the constant-Jacobian assumption holds.
@@ -1061,4 +1354,8 @@ if __name__ == '__main__':
     test_hourglass_stiffness_is_independent_of_the_length_unit()
     test_homogeneous_stiffnesses_agree_with_brockman_for_small_areas()
     test_transverse_coefficient_has_no_unit_invariant_constant()
+    test_laminate_hourglass_stiffnesses_use_membrane_and_bending_moduli()
+    test_bending_moduli_differ_from_membrane_moduli_for_laminates()
+    test_laminate_zero_energy_modes()
+    test_laminated_plates_against_navier()
     test_mass_formulations_match_brockman()

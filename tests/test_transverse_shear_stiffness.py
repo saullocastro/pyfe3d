@@ -168,8 +168,9 @@ def test_tria3r_scales_the_shear_stiffness_with_the_element_size():
     Its ``alpha_shear_locking`` stabilisation divides `A_{44}`, `A_{45}` and
     `A_{55}` by `1 + \alpha \ell^2/h^2` with `\ell` the longest edge, so the
     energy of a constant transverse shear state comes out too small by
-    exactly that factor. The stabilisation is the Stenberg-type scheme of
-    Bischoff and Bletzinger (2004) as modified by Castro et al. (2019), and
+    exactly that factor. The stabilisation is the factor of Lyly, Stenberg
+    and Vihinen (1993), called Stenberg's method by Bischoff and Bletzinger
+    (2004), in the form of Castro et al. (2019), and
     in the thin limit the transverse shear energy is asymptotically
     negligible, which is what justifies it there. It is not negligible when
     transverse shear carries load, which is measured for a cylinder in
@@ -223,7 +224,7 @@ def test_rohwer_differs_from_the_constant_factor_on_a_real_laminate():
 
 
 def patch_stiffness(cls, Data, Probe, n, L, h, triangles=False):
-    r"""Assembled `K_{C_0}` of an `n` by `n` patch of side `L`"""
+    r"""Assembled `K_{C0}` of an `n` by `n` patch of side `L`"""
     prop = isotropic_plate(thickness=h, E=E_ISO, nu=NU_ISO)
     xs = np.linspace(0., L, n + 1)
     X, Y = np.meshgrid(xs, xs, indexing='ij')
@@ -432,8 +433,9 @@ def test_small_alpha_makes_tria3r_lock():
     r"""``alpha_shear_locking`` is doing the unlocking, not fine tuning
 
     In Lyly et al. (1993), Bischoff and Bletzinger (2004) and Castro et al.
-    (2019) the factor is applied on top of a discrete shear gap formulation,
-    which is already free of shear locking, and `\alpha` is near `0.1`. This
+    (2019) the factor is applied on top of an assumed-strain or discrete
+    shear gap field, whose operator already contains the cure of the shear
+    locking, and `\alpha` is near `0.1`. This
     element has no such formulation, its transverse shear coming from a
     single point at the centroid, so reducing `\alpha` towards the
     literature value makes it lock. Measured here on the constrained strip,

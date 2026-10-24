@@ -1,15 +1,25 @@
 Linear buckling analysis of a plate
------------------------------------
+===================================
 
-Here wee see the first 4 buckling modes of a simply supported plate, generated
-using ``refinement=3`` in the script.
+A simply supported plate under uniaxial compression, with :class:`.Quad4R`
+elements. The first four buckling modes, computed with ``refinement=3``:
 
 .. image:: ./ex_linear_buckling_plate.jpg
 
-The linear buckling eigenvalue analysis is performed from the fundamental state
-calculated after a static analysis.  The code used to generate this figure is
-extracted from one of ``pyfe3d`` unit tests:
+The geometric stiffness matrix comes from the linear static solution of
+the reference load, through ``update_probe_ue`` and ``update_KG``, and the
+eigenvalue problem is solved with :func:`.linear_buckling`, see
+:doc:`eigenvalue_analyses`. The critical load is compared with the
+classical buckling coefficient of the simply supported plate:
 
 .. literalinclude:: ../../tests/test_quad4r_linear_buckling_plate.py
-    :encoding: latin-1
+    :pyobject: test_linear_buckling_plate
 
+The same plate with :class:`.Quad4` elements and a constant membrane
+stress state given directly with ``update_KG_given_stress``:
+
+.. literalinclude:: ../../tests/test_solver.py
+    :pyobject: plate_matrices
+
+.. literalinclude:: ../../tests/test_solver.py
+    :pyobject: test_linear_buckling_plate

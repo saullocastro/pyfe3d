@@ -7,33 +7,121 @@
 #cython: embedsignature=True
 #cython: infer_types=False
 r"""
+==============================================================================
 Quad4R - Quadrilateral element with reduced integration (:mod:`pyfe3d.quad4r`)
 ==============================================================================
 
 .. currentmodule:: pyfe3d.quad4r
 
+The module has three classes: :class:`.Quad4RData`, with the sizes of the
+sparse arrays that one element fills; :class:`.Quad4RProbe`, with the
+buffers in element coordinates that one or more elements share; and
+:class:`.Quad4R`, the element. The ``update_*`` methods of :class:`.Quad4R`
+write the element contributions in sparse row, column and value arrays, from
+the positions given by its ``init_k_*`` attributes, or add them to a global
+internal force vector.
+
 The :class:`.Quad4R` element has 6 degrees-of-freedom (DOF): `u`, `v`, `w`,
-`r_x`, `r_y`, `r_z`. All DOF are interpolated bi-linearly between the nodes,
-such that any of the DOF gradients can be constant over the element when the
-element is rectangular.
+`r_x`, `r_y`, `r_z`. All DOF are interpolated bi-linearly between the nodes.
+
+All stiffness terms, besides drilling, are integrated using the reduced
+integration scheme for the :class:`.Quad4R` element, with a single point at
+the centroid, making it very efficient concerning the time needed to
+calculate the internal forces and stiffness matrices, in comparison with the
+:class:`.Quad4` element. An hourglass control adds an artificial
+stiffness to `u`, `v`, `w`, `r_x` and `r_y`, whose magnitude can be scaled
+with the ``hgfactor_*`` parameters of :meth:`.Quad4R.update_KC0`,
+:meth:`.Quad4R.update_probe_finte` and :meth:`.Quad4R.update_fint`.
+
+The drilling rotation `r_z` is tied to the in-plane rotation of the membrane
+field by a term integrated with two points per direction, whose coefficient
+is selected with the ``drilling_model`` attribute of :class:`.Quad4R`: the
+default ``0`` is physics-based, any other value gives the fictitious penalty
+of MSC Nastran and Autodesk Nastran controlled by the ``K6ROT`` attribute.
+Unlike :class:`.Quad4` and :class:`.Tria3R`, this element does
+**not** enrich the in-plane displacement field with the drilling rotations.
+Use :class:`.Quad4` to use Allman's enrichment.
+
+The transverse shear stiffnesses `A_{44}`, `A_{45}` and `A_{55}` are read
+from the :class:`pyfe3d.shellprop.ShellProp` object with the shear correction
+already applied, see :meth:`pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness`,
+and no shear correction factor is applied by the element. When a material
+direction is defined, they are brought to the element coordinate system with
+:meth:`pyfe3d.shellprop.ShellProp.calc_Ats_element`.
+
+Notes
+-----
+The element follows the first-order shear deformation theory (FSDT). The
+displacements at a distance `z` from the reference surface are `u + z r_y`,
+`v - z r_x` and `w`, which gives, in the element coordinate system, the
+membrane strains, the curvatures and the transverse shear strains
+
+.. math::
+
+    \epsilon_{xx} = u_{,x}, \quad \epsilon_{yy} = v_{,y}, \quad
+    \gamma_{xy} = u_{,y} + v_{,x}
+
+.. math::
+
+    \kappa_{xx} = {r_y}_{,x}, \quad \kappa_{yy} = -{r_x}_{,y}, \quad
+    \kappa_{xy} = {r_y}_{,y} - {r_x}_{,x}
+
+.. math::
+
+    \gamma_{xz} = w_{,x} + r_y, \quad \gamma_{yz} = w_{,y} - r_x
+
+and the strain energy
+
+.. math::
+
+    U = \frac{1}{2} \int_A \left( \{\epsilon\}^T [A] \{\epsilon\}
+        + 2 \{\epsilon\}^T [B] \{\kappa\}
+        + \{\kappa\}^T [D] \{\kappa\}
+        + \{\gamma\}^T [A_s] \{\gamma\} \right) dA + U_{drill} + U_{hg}
+
+with `\{\epsilon\} = \{\epsilon_{xx}, \epsilon_{yy}, \gamma_{xy}\}^T`,
+`\{\kappa\} = \{\kappa_{xx}, \kappa_{yy}, \kappa_{xy}\}^T`,
+`\{\gamma\} = \{\gamma_{yz}, \gamma_{xz}\}^T`, `[A]`, `[B]` and `[D]` the
+laminate stiffness matrices and `[A_s]` the matrix of `A_{44}`, `A_{45}` and
+`A_{55}`, all in the element coordinate system, `U_{drill}` the drilling
+term and `U_{hg}` the hourglass term described below. All DOF are
+interpolated bi-linearly between the nodes, such that any of the DOF
+gradients can be constant over the element when the element is rectangular.
+
+.. rubric:: Integration scheme and hourglass control
 
 In the reduced integration scheme used, a single point at the centroid
-(`\xi=\eta=0`) and weight `w_{ij}=4`, preventing shear locking. 
-The hourglass control is used according to Brockman 1987, with the
+(`\xi=\eta=0`) and weight `w_{ij}=4`, preventing shear locking.
+The hourglass control is used according to Brockman 1987 [1]_, with the
 orthogonalised hourglass operator of his Eq. (14), which he quotes from
-Belytschko and Tsay 1983:
+Belytschko and Tsay 1983 [2]_. Brockman considers only isotropic plates,
+and his generalized stiffnesses contain the Young's modulus `E`, times `t`
+for the in-plane translations `u`, `v` and times `t^3` for `w` and the
+rotations. For a laminate, `E` is replaced by equivalent moduli in the
+element coordinate system, see :meth:`.Quad4R.update_KC0`: the membrane
+moduli `E_{1eq}` and `E_{2eq}` of the extensional compliance `[A]^{-1}` for
+`u` and `v`, and the bending moduli `E_{1b}` and `E_{2b}` of the bending
+compliance, the lower-right block of `[[A, B], [B, D]]^{-1}`, for `w`,
+`r_x` and `r_y`. Each is the modulus of the homogeneous plate that has the
+compliance of the laminate in that direction, so both pairs reduce to `E`
+for an isotropic plate, and they differ for a laminate whose bending
+stiffness is not `t^2/12` times its extensional stiffness, e.g. a cross-ply
+or a sandwich. Brockman calibrated the coefficients of his Eq. (16) on
+isotropic plates, and this generalisation does not recalibrate them for
+laminates; :class:`.Quad4`, with its mixed quadrature, needs no hourglass
+control. With the bending moduli, the artificial stiffness of the rotations
+is the same fraction of the bending stiffness of the plate for every
+laminate as for an isotropic plate. On simply supported plates under
+uniform pressure, with 8 by 8 elements, the centre deflection of an
+unsymmetric `[0/90]` cross-ply, whose `[B]` gives `E_{1b} = 0.36
+E_{1eq}`, is 15 % smaller than the Navier solution of the FSDT, against
+32 % with the membrane moduli for the rotations, used before 0.11.0, which
+over-stabilised it; that of a sandwich with thin faces, `E_{1b} = 2.7
+E_{1eq}`, is 14 % smaller, against 6 %, the membrane moduli having
+under-stabilised it; see ``test_laminated_plates_against_navier`` in
+``test_quad4r_hourglass_control.py``.
 
-    Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
-    Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
-    https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208
-
-    Belytschko, T., and Tsay, C. S., 1983, "A stabilization procedure for
-    the quadrilateral plate element with one-point quadrature,"
-    International Journal for Numerical Methods in Engineering, 19(3),
-    pp. 405-419. https://doi.org/10.1002/nme.1620190308
-
-Dimensional homogeneity of the hourglass stiffnesses
-----------------------------------------------------
+.. rubric:: Dimensional homogeneity of the hourglass stiffnesses
 
 The generalized stiffnesses of Brockman's Eqs. (16a) and (16b),
 
@@ -84,9 +172,9 @@ nothing, which is four of the five coefficients:
 
 .. math::
 
-    E^{(h)}_{\theta_x} = 0.10 E_{2eq} t^3 A
+    E^{(h)}_{\theta_x} = 0.10 E_{2b} t^3 A
     \qquad
-    E^{(h)}_{\theta_y} = 0.10 E_{1eq} t^3 A
+    E^{(h)}_{\theta_y} = 0.10 E_{1b} t^3 A
 
 Each of these scales under a change of length unit exactly as the physical
 stiffness it stabilises, `Et` for the in-plane translations and `Et^3` for
@@ -109,13 +197,13 @@ therefore also stiffens real twist, by the ratio
 the problem rather than of the element. Measured on this element's own
 benchmarks, the thin plates want a coefficient near `2 \times 10^{-4}` of
 `E t^3`, above which their buckling loads stiffen past their tolerances,
-while the one-element-wide torsion strip of MacNeal and Harder (1985), for
-which the twist *is* the hourglass pattern, wants near `2 \times 10^{-2}`,
-below which it becomes several times too flexible. Those are two orders of
-magnitude apart and no single dimensionless constant serves both.
-Brockman's factor does serve both, because it grows with the element area,
-which in SI units happens to correlate with which of the two regimes a
-given problem is in.
+while the one-element-wide torsion strip of MacNeal and Harder (1985) [7]_,
+for which the twist *is* the hourglass pattern, wants near
+`2 \times 10^{-2}`, below which it becomes several times too flexible.
+Those are two orders of magnitude apart and no single dimensionless
+constant serves both. Brockman's factor does serve both, because it grows
+with the element area, which in SI units happens to correlate with which of
+the two regimes a given problem is in.
 
 So the residual unit dependence of this element's hourglass control is
 confined to `E^{(h)}_w`, it is documented, and it is measured in
@@ -124,31 +212,34 @@ operator that separates the spurious transverse pattern from genuine twist,
 which is what an assumed-strain formulation such as MITC4 provides, rather
 than a better choice of coefficient.
 
-All stiffness terms, besides drilling, are integrated using the reduced integration
-scheme for the :class:`.Quad4R` element, making it very efficient concerning 
-the time needed to calculate the internal forces and stiffness matrices, in comparison
-with the :class:`pyfe3d.Quad4` element.
+The hinged cylindrical roof of Sze et al. (2004) [8]_ shows this dependence
+on the problem. Its elements have areas of 16 to 1008 in the unit of length
+of the model, the default `E^{(h)}_w` is then `0.94` to `1.0` times
+`0.1 E t^3`, and the linear deflection under the central point load is
+6 to 7 % smaller than with :class:`.Tria3DSG`, which has no hourglass
+control, and, with the transverse shear stiffness multiplied by 100, than
+with a shallow-shell Kirchhoff solution. Smaller values of ``hgfactor_w``
+approach both.
+These measurements show the sensitivity of one problem and do not recommend
+another value: the default follows the references above, and a different
+default would need further studies.
 
-The transverse shear stiffnesses `A_{44}`, `A_{45}` and `A_{55}` are read
-from the :class:`pyfe3d.shellprop.ShellProp` object with the shear correction
-already applied, see :meth:`pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness`,
-and no shear correction factor is applied by the element. When a material
-direction is defined, they are brought to the element coordinate system with
-:meth:`pyfe3d.shellprop.ShellProp.calc_Ats_element`, which re-evaluates the
-equilibrium-based stiffness of Rohwer (1988) with the plies rotated to the
-element coordinate system, such that the assumed cylindrical bending states
-are posed along the element axes.
+The coefficients and the operator, as computed, are given in the Notes of
+:meth:`.Quad4R.update_KC0`.
+
+.. rubric:: Transverse shear stiffness
+
+When a material direction is defined,
+:meth:`pyfe3d.shellprop.ShellProp.calc_Ats_element` re-evaluates the
+equilibrium-based stiffness of Rohwer (1988) [6]_ with the plies rotated to
+the element coordinate system, such that the assumed cylindrical bending
+states are posed along the element axes.
+
+.. rubric:: Drilling stiffness
 
 Two drilling models are available, selected with the ``drilling_model``
-attribute, whose default is ``0``:
-
-    Hughes, T. J. R., and Brezzi, F., 1989, "On drilling degrees of
-    freedom," Computer Methods in Applied Mechanics and Engineering, 72(1),
-    pp. 105-121. https://doi.org/10.1016/0045-7825(89)90124-2
-
-    Allman, D. J., 1984, "A compatible triangular element including vertex
-    rotations for plane elasticity analysis," Computers & Structures,
-    19(1-2), pp. 1-8. https://doi.org/10.1016/0045-7949(84)90197-4
+attribute, whose default is ``0``, see Hughes and Brezzi [3]_ and
+Allman [4]_.
 
 Both use the same operator, the regularised one of Hughes and
 Brezzi (1989) that ties the drilling rotation `r_z` to the in-plane rotation
@@ -161,7 +252,7 @@ and they differ only in the coefficient `\gamma_{r_z}` that multiplies it:
 * ``drilling_model = 1`` uses the fictitious value `\gamma_{r_z} = K6ROT
   \cdot 10^{-6} A_{66}` of MSC Nastran and Autodesk Nastran, derived below.
 
-Unlike :class:`pyfe3d.Quad4` and :class:`pyfe3d.Tria3R`, this element does
+Unlike :class:`.Quad4` and :class:`.Tria3R`, this element does
 **not** use the hierarchical edge-mode enrichment of the in-plane
 displacement field of Allman (1984) that accompanies the Hughes-Brezzi term
 in those two elements. The enrichment exists to remove the excessive
@@ -171,18 +262,18 @@ membrane problem, with a reference tip displacement of 23.96,
 
 .. table::
 
-    ===========  ==========  ==========  ==========  ==========
-    mesh         Quad4R      Quad4       Quad4       Quad4R
-                 (no         penalty     enriched    enriched
-                 enrichment)                         at 3x3
-    ===========  ==========  ==========  ==========  ==========
-    2 by 2       30.14       11.85       20.75       20.74
-    4 by 4       24.66       18.30       22.83       22.81
-    8 by 8       24.08       22.08       23.54       23.52
-    16 by 16     23.97       23.43       23.81       23.79
-    ===========  ==========  ==========  ==========  ==========
+    ============  ============  ============  ============  ============
+    mesh          Quad4R        Quad4         Quad4         Quad4R
+                  (no           penalty       enriched      enriched
+                  enrichment)                               at 3x3
+    ============  ============  ============  ============  ============
+    2 by 2        30.14         11.85         20.75         20.74
+    4 by 4        24.66         18.30         22.83         22.81
+    8 by 8        24.08         22.08         23.54         23.52
+    16 by 16      23.97         23.43         23.81         23.79
+    ============  ============  ============  ============  ============
 
-so the enrichment recovers for :class:`pyfe3d.Quad4` what the reduced
+so the enrichment recovers for :class:`.Quad4` what the reduced
 integration already gives here, and adding it to this element makes it less
 accurate and more computationally expensive.
 
@@ -207,9 +298,6 @@ quadrature of that term can reach it. Removing it would require a further
 artificial stabilisation of the drilling rotation, of the kind this element
 already uses for its other degrees-of-freedom, for a change of the Cook
 results above of less than half a per cent.
-
-Use :class:`pyfe3d.Quad4` to use Allman's enrichment.
-
 
 The ``drilling_model = 1`` branch follows the approach adopted in MSC
 Nastran and Autodesk Nastran, using a penalty-based method. It provides a
@@ -260,11 +348,35 @@ with:
     B_{drill} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}
 
 Note that `A_{66}` is assumed constant over the element, which here has no difference given that a reduced integration approach is used.
-The approach herein presented is very similar to the one presented in Eq. 2.20 of:
+The approach herein presented is very similar to the one presented in Eq. 2.20 of Adam et al. [5]_.
 
-    Adam, F. M., Mohamed, A. E., and Hassaballa, A. E., 2013,
-    “Degenerated Four Nodes Shell Element with Drilling Degree of
-    Freedom,” IOSR J. Eng., 3(8), pp. 10–20.
+References
+----------
+.. [1] Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
+   International Journal for Numerical Methods in Engineering, 24(12),
+   2343-2356, 1987. https://doi.org/10.1002/nme.1620241208
+.. [2] Belytschko, T., and Tsay, C. S., A stabilization procedure for the
+   quadrilateral plate element with one-point quadrature, International
+   Journal for Numerical Methods in Engineering, 19(3), 405-419, 1983.
+   https://doi.org/10.1002/nme.1620190308
+.. [3] Hughes, T. J. R., and Brezzi, F., On drilling degrees of freedom,
+   Computer Methods in Applied Mechanics and Engineering, 72(1), 105-121,
+   1989. https://doi.org/10.1016/0045-7825(89)90124-2
+.. [4] Allman, D. J., A compatible triangular element including vertex
+   rotations for plane elasticity analysis, Computers & Structures,
+   19(1-2), 1-8, 1984. https://doi.org/10.1016/0045-7949(84)90197-4
+.. [5] Adam, F. M., Mohamed, A. E., and Hassaballa, A. E., Degenerated Four
+   Nodes Shell Element with Drilling Degree of Freedom, IOSR Journal of
+   Engineering, 3(8), 10-20, 2013.
+.. [6] Rohwer, K., Improved transverse shear stiffness for layered finite
+   elements, DFVLR-FB 88-32, 1988.
+.. [7] MacNeal, R. H., and Harder, R. L., A proposed standard set of problems
+   to test finite element accuracy, Finite Elements in Analysis and Design,
+   1(1), 3-20, 1985. https://doi.org/10.1016/0168-874X(85)90003-4
+.. [8] Sze, K. Y., Liu, X. H., and Lo, S. H., Popular benchmark problems
+   for geometric nonlinear analysis of shells, Finite Elements in Analysis
+   and Design, 40(11), 1551-1569, 2004.
+   https://doi.org/10.1016/j.finel.2003.11.001
 
 """
 from libc.math cimport fabs
@@ -277,10 +389,65 @@ cdef int DOF = 6
 cdef int NUM_NODES = 4
 
 
+cdef inline void _hourglass_bending_moduli(double h, double *Ae, double *Be,
+        double *De, double *E1b, double *E2b) noexcept nogil:
+    r"""Equivalent bending moduli of the hourglass control
+
+    ``E1b = 12/(h**3 d11)`` and ``E2b = 12/(h**3 d22)``, with `[d] = (D -
+    B A^{-1} B)^{-1}` the lower-right block of `[[A, B], [B, D]]^{-1}`, from
+    the row-major 3x3 matrices ``Ae``, ``Be`` and ``De`` in the element
+    coordinate system. See the Notes of :meth:`.Quad4R.update_KC0`.
+
+    """
+    cdef int i, j, k
+    cdef double detA, detDs
+    cdef double Ai[9]
+    cdef double BAi[9]
+    cdef double Ds[9]
+    # NOTE inverse of the extensional stiffness by cofactors
+    detA = (Ae[0]*(Ae[4]*Ae[8] - Ae[5]*Ae[7])
+            - Ae[1]*(Ae[3]*Ae[8] - Ae[5]*Ae[6])
+            + Ae[2]*(Ae[3]*Ae[7] - Ae[4]*Ae[6]))
+    Ai[0] = (Ae[4]*Ae[8] - Ae[5]*Ae[7])/detA
+    Ai[1] = (Ae[2]*Ae[7] - Ae[1]*Ae[8])/detA
+    Ai[2] = (Ae[1]*Ae[5] - Ae[2]*Ae[4])/detA
+    Ai[3] = (Ae[5]*Ae[6] - Ae[3]*Ae[8])/detA
+    Ai[4] = (Ae[0]*Ae[8] - Ae[2]*Ae[6])/detA
+    Ai[5] = (Ae[2]*Ae[3] - Ae[0]*Ae[5])/detA
+    Ai[6] = (Ae[3]*Ae[7] - Ae[4]*Ae[6])/detA
+    Ai[7] = (Ae[1]*Ae[6] - Ae[0]*Ae[7])/detA
+    Ai[8] = (Ae[0]*Ae[4] - Ae[1]*Ae[3])/detA
+    # NOTE bending stiffness with zero membrane forces, D - B A^-1 B, which
+    #      is D itself when B is zero and does not depend on the reference
+    #      surface set by ShellProp.offset
+    for i in range(3):
+        for j in range(3):
+            BAi[3*i + j] = 0.
+            for k in range(3):
+                BAi[3*i + j] += Be[3*i + k]*Ai[3*k + j]
+    for i in range(3):
+        for j in range(3):
+            Ds[3*i + j] = De[3*i + j]
+            for k in range(3):
+                Ds[3*i + j] -= BAi[3*i + k]*Be[3*k + j]
+    detDs = (Ds[0]*(Ds[4]*Ds[8] - Ds[5]*Ds[7])
+             - Ds[1]*(Ds[3]*Ds[8] - Ds[5]*Ds[6])
+             + Ds[2]*(Ds[3]*Ds[7] - Ds[4]*Ds[6]))
+    # NOTE 1/d11 and 1/d22 from the cofactors of D - B A^-1 B
+    E1b[0] = 12.*detDs/(h**3*(Ds[4]*Ds[8] - Ds[5]*Ds[7]))
+    E2b[0] = 12.*detDs/(h**3*(Ds[0]*Ds[8] - Ds[2]*Ds[6]))
+
+
 
 cdef class Quad4RData:
     r"""
     Used to allocate memory for the sparse matrices.
+
+    Each attribute is the number of entries that one :class:`.Quad4R` writes
+    in the row, column and value arrays of the corresponding sparse matrix,
+    starting at the position given by the matching ``init_k_*`` attribute of
+    the element. For ``n`` elements the arrays need ``n`` times these sizes.
+    The constructor takes no parameters.
 
     Attributes
     ----------
@@ -339,6 +506,9 @@ cdef class Quad4RProbe:
               always safe the values from the last udpate.
 
 
+    The constructor takes no parameters and allocates every array filled with
+    zeros.
+
     Attributes
     ----------
     xe, : array-like
@@ -346,6 +516,7 @@ cdef class Quad4RProbe:
         in the element coordinate system, in the following order `{x_e}_1,
         {y_e}_1, {z_e}_1, `{x_e}_2, {y_e}_2, {z_e}_2`, `{x_e}_3, {y_e}_3,
         {z_e}_3`, `{x_e}_4, {y_e}_4, {z_e}_4`.
+        Dimension of length. Updated by :meth:`.Quad4R.update_probe_xe`.
     ue, : array-like
         Array of size ``NUM_NODES*DOF=24`` containing the element displacements
         in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
@@ -353,20 +524,28 @@ cdef class Quad4RProbe:
         {{r_y}_e}_2, {{r_z}_e}_2`, `{u_e}_3, {v_e}_3, {w_e}_3, {{r_x}_e}_3,
         {{r_y}_e}_3, {{r_z}_e}_3`, `{u_e}_4, {v_e}_4, {w_e}_4, {{r_x}_e}_4,
         {{r_y}_e}_4, {{r_z}_e}_4`.
+        Translations with dimension of length, rotations dimensionless.
+        Updated by :meth:`.Quad4R.update_probe_ue`.
     finte, : array-like
         Array of size ``NUM_NODES*DOF=24`` containing the element internal
         forces corresponding to the degrees-of-freedom described by ``ue``.
+        Forces, and moments (force times length) for the rotations. Updated
+        by :meth:`.Quad4R.update_probe_finte`.
     BLexx, BLeyy, BLgxy, BLkxx, BLkyy, BLkxy : array-like
         Arrays of size ``NUM_NODES*DOF=24`` with the rows of the linear
         strain-displacement matrix for the membrane strains and curvatures,
         at the last evaluated integration point.
+        Their products with ``ue`` give the membrane strains, dimensionless,
+        and the curvatures, with dimension of one over length.
     Gwx, Gwy : array-like
         Arrays of size ``NUM_NODES*DOF=24`` with the rows giving `w_{,x}` and
         `w_{,y}`, at the last evaluated integration point.
+        Their products with ``ue`` are dimensionless.
     KCNLve : array-like
         Array of size ``(NUM_NODES*DOF)**2=576`` with the nonlinear
         constitutive stiffness matrix KCNL in element coordinates, stored row
         by row.
+        Updated by :meth:`.Quad4R.update_KCNL`.
 
     """
     cdef public double [::1] xe
@@ -399,6 +578,8 @@ cdef class Quad4RProbe:
 
 cdef class Quad4R:
     r"""
+    Four-node quadrilateral shell element with reduced integration
+
     Nodal connectivity for the plate element similar to Nastran's CQUAD4::
 
          ^ y
@@ -416,6 +597,19 @@ cdef class Quad4R:
 
     .. image:: ../figures/nastran_cquad4.svg
 
+    The constructor stores the probe and sets the identification numbers and
+    the positions ``c1, c2, c3, c4`` to ``-1``, the ``init_k_*`` positions to
+    ``0``, the rotation matrix ``r11, ..., r33`` to zero and ``m11, m12, m21,
+    m22`` to the identity. Before computing any element matrix, the caller
+    sets ``c1, c2, c3, c4`` and the ``init_k_*`` positions, and calls
+    :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe`.
+
+    Parameters
+    ----------
+    p : :class:`.Quad4RProbe`
+        Probe used by the element, stored in ``probe``. One probe can be
+        shared by many elements.
+
     Attributes
     ----------
     eid, : int
@@ -424,34 +618,28 @@ cdef class Quad4R:
         Property identification number.
     area, : double
         Element area.
+        Dimension of length squared. Updated by :meth:`.update_area`.
     drilling_model, : int
         Selects the coefficient of the drilling stiffness, see the module
-        documentation. The default is ``0``, the physics-based
-        `\gamma_{r_z} = A_{66}` of Hughes and Brezzi (1989); with anything
-        else the fictitious penalty of MSC Nastran and Autodesk Nastran
-        controlled by ``K6ROT`` is used instead. Both apply the same
-        operator with the same quadrature, so switching between them changes
-        only the magnitude of the drilling stiffness, by four orders of
-        magnitude for the recommended ``K6ROT = 100.``.
+        documentation. The default is ``0``, the physics-based coefficient
+        set by ``gamma_rz``; with anything else the fictitious penalty of MSC
+        Nastran and Autodesk Nastran controlled by ``K6ROT`` is used instead.
+        Switching between them changes only the magnitude of the drilling
+        stiffness.
 
-        Note that this element does not implement the in-plane enrichment of
-        Allman (1984) that :class:`pyfe3d.Quad4` and :class:`pyfe3d.Tria3R`
-        apply together with the Hughes-Brezzi term, because its reduced
-        integration already achieves what the enrichment achieves there, see
-        the module documentation.
+        Note that this element does not implement the in-plane drilling
+        enrichment that :class:`.Quad4` and :class:`.Tria3R`
+        apply, see the module documentation.
     K6ROT, : double
         Dimensionless multiplier for the fictitious drilling stiffness, read
-        only when ``drilling_model`` is not ``0``.
-        AUTODESK NASTRAN's quick reference guide recommends ``K6ROT = 100.``
-        for static analysis. For modal solutions, ``K6ROT=1.e4`` is suggested.
-        MSC NASTRAN's quick reference guide states that ``K6ROT > 100.``
-        should not be used, but this is contradicting AUTODESK NASTRAN.
+        only when ``drilling_model`` is not ``0``. Default ``100.``.
     gamma_rz, : double
         Coefficient `\gamma_{r_z}` of the Hughes-Brezzi drilling stiffness,
         read only when ``drilling_model`` is ``0``. The default is a negative
         value, which means that `A_{66}` of the laminate extensional
-        stiffness matrix is used, the value identified by Hughes and Brezzi
-        (1989).
+        stiffness matrix is used.
+        A non-negative value is ignored when ``A66`` is zero. Dimension of
+        force per unit length, as ``A66``.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Rotation matrix from local to global coordinates.
     m11, m12, m21, m22 : double
@@ -459,6 +647,8 @@ cdef class Quad4R:
         material direction is used instead of the element local coordinates.
     c1, c2, c3, c4 : int
         Position of each node in the global stiffness matrix.
+        The coordinates of a node are read at the positions ``c1//2``,
+        ``c2//2``, ``c3//2`` and ``c4//2`` of the coordinate array.
     n1, n2, n3, n4 : int
         Node identification number.
     init_k_KC0, init_k_KCNL, init_k_KG, init_k_M : int
@@ -469,6 +659,40 @@ cdef class Quad4R:
         matrices based on the Piston theory.
     probe, : :class:`.Quad4RProbe` object
         Pointer to the probe.
+
+    Notes
+    -----
+    The physics-based coefficient of ``drilling_model = 0`` is
+    `\gamma_{r_z} = A_{66}` of Hughes and Brezzi (1989) [1]_, and the
+    fictitious penalty of the other values of ``drilling_model`` corresponds
+    to `\gamma_{r_z} = K6ROT \cdot 10^{-6} A_{66}`. Both apply the same
+    operator with the same quadrature, so switching between them changes
+    only the magnitude of the drilling stiffness, by four orders of
+    magnitude for the recommended ``K6ROT = 100.``. Both models are
+    described in the Notes of :mod:`pyfe3d.quad4r`.
+
+    This element does not implement the in-plane enrichment of Allman (1984)
+    [2]_ that :class:`.Quad4` and :class:`.Tria3R` apply together
+    with the Hughes-Brezzi term, because its reduced integration already
+    achieves what the enrichment achieves there.
+
+    For ``K6ROT``, AUTODESK NASTRAN's quick reference guide recommends
+    ``K6ROT = 100.`` for static analysis. For modal solutions,
+    ``K6ROT=1.e4`` is suggested. MSC NASTRAN's quick reference guide states
+    that ``K6ROT > 100.`` should not be used, but this is contradicting
+    AUTODESK NASTRAN.
+
+    The default ``gamma_rz``, `A_{66}`, is the value identified by Hughes
+    and Brezzi (1989) [1]_.
+
+    References
+    ----------
+    .. [1] Hughes, T. J. R., and Brezzi, F., On drilling degrees of freedom,
+       Computer Methods in Applied Mechanics and Engineering, 72(1), 105-121,
+       1989. https://doi.org/10.1016/0045-7825(89)90124-2
+    .. [2] Allman, D. J., A compatible triangular element including vertex
+       rotations for plane elasticity analysis, Computers & Structures,
+       19(1-2), 1-8, 1984. https://doi.org/10.1016/0045-7949(84)90197-4
 
     """
     cdef public int eid, pid
@@ -532,6 +756,14 @@ cdef class Quad4R:
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
         {y_e}_j, {y_e}_k`; `{z_e}_i, {z_e}_j, {z_e}_k`.
 
+        The element ``z`` axis is along the cross product of the vectors from
+        node 4 to node 2 and from node 1 to node 3, and the element ``x`` axis
+        along the sum of these two vectors. When a material direction is
+        given, ``m11, m12, m21, m22`` are updated with the rotation from the
+        material direction projected onto the element to the element ``x``
+        axis. When it is the zero vector, the default, or parallel to the
+        element normal, ``m11, m12, m21, m22`` are not changed.
+
 
         Parameters
         ----------
@@ -539,13 +771,18 @@ cdef class Quad4R:
             Array with global nodal coordinates, for a total of `M` nodes in
             the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
             y_2, z_2, ..., x_M, y_M, z_M`.
+            1-D array of size ``3*M``, dimension of length. The coordinates
+            of each node are read from the positions ``c1//2``, ``c2//2``,
+            ``c3//2`` and ``c4//2``.
 
-        xmati, xmatj, xmatk: array-like
+        xmati, xmatj, xmatk : double, optional
             Vector in global coordinates representing the material direction.
             This vector is projected onto the plate element, thus becoming the
             material direction. The `ABD` matrix defining the constitutive
             behavior of the element is rotated from the material direction to
             the element `x` axis while calculating the stiffness matrices.
+            Only the direction of the vector is used. Default ``0.``, the
+            zero vector, which leaves ``m11, m12, m21, m22`` unchanged.
 
         """
         cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk
@@ -659,6 +896,12 @@ cdef class Quad4R:
     cpdef void update_probe_ue(Quad4R self, double [::1] u):
         r"""Update the local displacement vector of the probe of the element
 
+        The displacements and rotations of the four nodes, read from ``u`` at
+        the positions ``c1``, ``c2``, ``c3`` and ``c4``, are rotated to the
+        element coordinate system with the transpose of the rotation matrix
+        and written to ``probe.ue``. :meth:`.update_rotation_matrix` must have
+        been called before.
+
         .. note:: The ``probe`` attribute of object :class:`.Quad4RProbe` is
                   updated, accessible using ``.probe.ue``.
 
@@ -669,6 +912,8 @@ cdef class Quad4R:
             the model, this array will be arranged as: `u_1, v_1, w_1, {r_x}_1,
             {r_y}_1, {r_z}_1, u_2, v_2, w_2, {r_x}_2, {r_y}_2, {r_z}_2, ...,
             u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M`.
+            1-D array of size ``DOF*M``, translations with dimension of
+            length and rotations dimensionless.
 
         """
         cdef int i, j
@@ -714,6 +959,13 @@ cdef class Quad4R:
     cpdef void update_probe_xe(Quad4R self, double [::1] x):
         r"""Update the 3D coordinates of the probe of the element
 
+        The coordinates of the four nodes, read from ``x`` at the positions
+        ``c1//2``, ``c2//2``, ``c3//2`` and ``c4//2``, are rotated to the
+        element coordinate system with the transpose of the rotation matrix
+        and written to ``probe.xe``. :meth:`.update_area` is then called,
+        updating ``area``. :meth:`.update_rotation_matrix` must have been
+        called before.
+
         .. note:: The ``xe`` attribute of object :class:`.Quad4RProbe` is
                   updated, accessible using ``.probe.xe``.
 
@@ -723,6 +975,7 @@ cdef class Quad4R:
             Array with global nodal coordinates, for a total of `M` nodes in
             the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
             y_2, z_2, ..., x_M, y_M, z_M`.
+            1-D array of size ``3*M``, dimension of length.
 
         """
         cdef int i, j
@@ -765,6 +1018,10 @@ cdef class Quad4R:
     cpdef void update_area(Quad4R self):
         r"""Update element area
 
+        The ``area`` attribute is updated with the area of the quadrilateral
+        given by the element coordinates ``probe.xe``, ignoring the ``z``
+        coordinates. Called by :meth:`.update_probe_xe`.
+
         """
         cdef double x1, x2, x3, x4, y1, y2, y3, y4
         with nogil:
@@ -801,6 +1058,12 @@ cdef class Quad4R:
         than one finite element, depending how you defined them, meaning that
         the probe will always safe the values from the last udpate.
 
+        The internal forces are computed from the probe coordinates ``xe``
+        and displacements ``ue``, the ``area`` and the constitutive matrices
+        of ``prop`` rotated with ``m11, m12, m21, m22``. Before this method is
+        called, :meth:`.update_probe_xe` and :meth:`.update_probe_ue` must
+        have been used.
+
         .. note:: The ``finte`` attribute of object :class:`.Quad4RProbe` is
                   updated, accessible using ``.probe.finte``.
 
@@ -812,11 +1075,25 @@ cdef class Quad4R:
         hgfactor_u, hgfactor_v, hgfactor_w, hgfactor_rx, hgfactor_ry : double
             These offer the possibility to change the default hourglass
             stiffnesses for each degree-of-freedom.
-        nonlinear : int
+            Dimensionless multipliers of the hourglass stiffnesses of ``u``,
+            ``v``, ``w``, ``r_x`` and ``r_y``. Default ``1.``.
+        nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
             value adds the geometrically nonlinear terms of the von Karman strains,
-            for which the exact Jacobian of the internal forces is ``KC0 + KCNL +
-            KG``, see :meth:`.update_KCNL`.
+            whose tangent stiffness matrix is ``KC0 + KCNL + KG``, see
+            :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        The internal forces are the gradient of the strain energy of the Notes
+        of :mod:`pyfe3d.quad4r` with respect to the element displacements,
+        ``finte = KC0e @ ue`` in the linear case, with the element matrix
+        ``KC0e`` of :meth:`.update_KC0`, including its hourglass and drilling
+        terms. With ``nonlinear`` the terms of
+        :meth:`._update_probe_finte_nonlinear` are added, and ``KC0 + KCNL +
+        KG`` is the exact Jacobian of the internal forces, see
+        :meth:`.update_KCNL`, when KC0 is computed with the same
+        ``hgfactor_*``.
 
         """
         cdef double *ue
@@ -835,7 +1112,7 @@ cdef class Quad4R:
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
-        cdef double E1eq, E2eq
+        cdef double E1eq, E2eq, E1b, E2b
         cdef double K6ROT
         cdef double Eu, Ev, Erx, Ery, Ew
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
@@ -902,12 +1179,18 @@ cdef class Quad4R:
             A45 = Atse[1]
             A55 = Atse[3]
 
-            # TODO, recalculating E1eq and E2eq based on rotated A matrix
-            # NOTE not considering effect of B matrix
+            # NOTE equivalent moduli of the hourglass control, from the
+            #      compliance [a] = [A]^-1 of the extensional stiffness in
+            #      the element coordinate system, [B] neglected, see the
+            #      Notes of update_KC0
             a11 = (-A22*A66 + A26**2)/(-A11*A22*A66 + A11*A26**2 + A12**2*A66 - 2*A12*A16*A26 + A16**2*A22)
             a22 = (-A11*A66 + A16**2)/(-A11*A22*A66 + A11*A26**2 + A12**2*A66 - 2*A12*A16*A26 + A16**2*A22)
             E1eq = 1./(prop.h*a11)
             E2eq = 1./(prop.h*a22)
+            # NOTE equivalent bending moduli of the hourglass control of w,
+            #      rx and ry, from the bending compliance of the laminate in
+            #      the element coordinate system, see the Notes of update_KC0
+            _hourglass_bending_moduli(prop.h, Ae, Be, De, &E1b, &E2b)
 
 
             # NOTE both drilling models use the same operator, the one of
@@ -942,10 +1225,10 @@ cdef class Quad4R:
             # NOTE reduced integration to remove shear locking
             wij = 4.
 
-            # TODO find a method of hourglass control that is derived for composites
-            #     in the future, the use elements with mixed integration
-            #     schemes, or the implementation of the MITC4 element will no
-            #     longer require hourglass control
+            # NOTE Brockman's hourglass control is derived for isotropic
+            #      plates, and applied to laminates with the membrane moduli
+            #      E1eq and E2eq for u and v, and with the bending moduli
+            #      E1b and E2b for w, rx and ry, see the module documentation
             # NOTE Brockman's 1/(1 + 1/A) of Eq. (16) is replaced by the
             #      dimensionally homogeneous area factor, see the section
             #      "Dimensional homogeneity of the hourglass stiffnesses"
@@ -958,8 +1241,8 @@ cdef class Quad4R:
             #      units and not in others
             Eu = hgfactor_u*0.1*E1eq*prop.h*self.area
             Ev = hgfactor_v*0.1*E2eq*prop.h*self.area
-            Erx = hgfactor_rx*0.1*E2eq*prop.h**3*self.area
-            Ery = hgfactor_ry*0.1*E1eq*prop.h**3*self.area
+            Erx = hgfactor_rx*0.1*E2b*prop.h**3*self.area
+            Ery = hgfactor_ry*0.1*E1b*prop.h**3*self.area
             # NOTE w alone keeps Brockman's 1/(1 + 1/A), so this is the
             #      one coefficient of the scheme that remains unit
             #      dependent, and that is deliberate. The operator cannot
@@ -975,13 +1258,13 @@ cdef class Quad4R:
             #      SI units correlates with what each of those problems
             #      needs. See the module documentation, and
             #      test_quad4r_hourglass_control.py for the measurements.
-            #      The mean of the two equivalent moduli generalises
+            #      The mean of the two bending moduli generalises
             #      Eq. (16b) to laminates and reduces to it for an
             #      isotropic plate. It is built from the moduli and not
             #      from Erx and Ery, which already carry hgfactor_rx and
             #      hgfactor_ry, so that hgfactor_w scales this term and
             #      nothing else
-            Ew = (hgfactor_w*0.05*(E1eq + E2eq)*prop.h**3
+            Ew = (hgfactor_w*0.05*(E1b + E2b)*prop.h**3
                   /(1.0 + 1.0/self.area))
 
             # NOTE using only one integration point at xi=0, eta=0 to avoid shear locking
@@ -1417,25 +1700,137 @@ cdef class Quad4R:
                           ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
+        The element matrix is computed from the coordinates ``probe.xe``, the
+        ``area`` and the constitutive matrices of ``prop`` rotated with
+        ``m11, m12, m21, m22``, with the hourglass stiffnesses scaled by the
+        ``hgfactor_*`` parameters. Its values, in global coordinates, are
+        added to ``KC0v`` at the positions ``init_k_KC0`` to ``init_k_KC0 +
+        KC0_SPARSE_SIZE - 1``. With ``update_KC0v_only=0`` the global row and
+        column indices are written to ``KC0r`` and ``KC0c`` at the same
+        positions. Before this method is called,
+        :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe` must have
+        been used.
+
 
         Parameters
         ----------
         KC0r : np.array
             Array to store row positions of sparse values
+            1-D array of integers (``INT``) of size at least ``init_k_KC0 +
+            KC0_SPARSE_SIZE``.
         KC0c : np.array
             Array to store column positions of sparse values
+            Same type and size as ``KC0r``.
         KC0v : np.array
             Array to store sparse values
+            1-D array of ``DOUBLE``, same size as ``KC0r``. The values are
+            added to the existing ones. Dimension of force per unit length
+            between translations, of force between a translation and a
+            rotation, and of force times length between rotations.
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
-        update_KC0v_only : int
+        update_KC0v_only : int, optional
             The default ``0`` means that the row and column indices ``KC0r``
             and ``KC0c`` should also be updated. Any other value will only
             update the stiffness matrix values ``KC0v``.
         hgfactor_u, hgfactor_v, hgfactor_w, hgfactor_rx, hgfactor_ry : double
             These offer the possibility to change the default hourglass
             stiffnesses for each degree-of-freedom.
+            Dimensionless multipliers of the hourglass stiffnesses of ``u``,
+            ``v``, ``w``, ``r_x`` and ``r_y``. Default ``1.``.
+
+        Notes
+        -----
+        The element matrix in element coordinates is the Hessian of the strain
+        energy of the Notes of :mod:`pyfe3d.quad4r`. The membrane, coupling,
+        bending and transverse shear terms, `[B]^T [C] [B]` with the
+        constitutive matrices `[C]` of
+        :meth:`pyfe3d.shellprop.ShellProp.get_constitutive_element` rotated
+        with ``m11, m12, m21, m22``, are evaluated at the centroid,
+        `\xi = \eta = 0`, with weight `w_{ij} = 4`, `4 \det J` being the
+        element area `A`. The hourglass term adds, for each of `u`, `v`, `w`,
+        `r_x` and `r_y`,
+
+        .. math::
+
+            K_{ij} = A E^{(h)} \gamma_i \gamma_j, \qquad
+            \gamma_i = N_{1,xy} \left( h_i - hgx \, N_{i,x} - hgy \, N_{i,y}
+            \right)
+
+        with `\pmb{h} = [1, -1, 1, -1]`, ``hgx = x1 - x2 + x3 - x4``, ``hgy =
+        y1 - y2 + y3 - y4`` and the derivatives `N_{i,x}`, `N_{i,y}` and
+        `N_{1,xy}` of the bilinear shape functions at the centroid. This is
+        the orthogonalised operator of Eq. (14) of Brockman 1987 [1]_,
+        normalised as in his Eq. (15), `\gamma = \partial^2 N/\partial x
+        \partial y` at the centroid, so that the generalized stiffnesses of
+        his Eq. (16) keep their calibration. The correction terms of ``hgx``
+        and ``hgy`` vanish for a parallelogram. With the thickness `t` of
+        ``prop.h``, the generalized stiffnesses are
+
+        .. math::
+
+            E^{(h)}_u = 0.1 \, f_u E_{1eq} t A, \qquad
+            E^{(h)}_v = 0.1 \, f_v E_{2eq} t A
+
+        .. math::
+
+            E^{(h)}_{r_x} = 0.1 \, f_{r_x} E_{2b} t^3 A, \qquad
+            E^{(h)}_{r_y} = 0.1 \, f_{r_y} E_{1b} t^3 A
+
+        .. math::
+
+            E^{(h)}_w = \frac{0.05 \, f_w (E_{1b} + E_{2b}) t^3}{1 + 1/A}
+
+        where `f_u, f_v, f_w, f_{r_x}, f_{r_y}` are the ``hgfactor_*``
+        parameters. The reasons for the area factors are given in the Notes
+        of :mod:`pyfe3d.quad4r`. The equivalent moduli, all in the element
+        coordinate system, are
+
+        .. math::
+
+            E_{1eq} = \frac{1}{t a_{11}}, \quad
+            E_{2eq} = \frac{1}{t a_{22}}, \quad
+            E_{1b} = \frac{12}{t^3 d_{11}}, \quad
+            E_{2b} = \frac{12}{t^3 d_{22}}
+
+        with `[a] = [A]^{-1}`, the coupling matrix `[B]` being neglected,
+        and `[d] = ([D] - [B][A]^{-1}[B])^{-1}` the lower-right block of
+        `[[A, B], [B, D]]^{-1}`. A homogeneous plate of modulus `E` has
+        `a_{11} = 1/(E t)` and `d_{11} = 12/(E t^3)`, so `E_{1eq}` is the
+        modulus of the homogeneous plate that stretches as the laminate under
+        `N_{xx}` alone with the curvatures restrained, and `E_{1b}` that of
+        the homogeneous plate that bends as the laminate under `M_{xx}`
+        alone with the membrane forces zero; analogously in `y`. Both pairs
+        reduce to `E` for an isotropic plate, as in Eq. (16) of Brockman,
+        whereas `12 D_{11}/t^3` would give `E/(1 - \nu^2)`. `[D] -
+        [B][A]^{-1}[B]` and `[A]` do not change when the reference surface
+        is moved with ``prop.offset``, while `[D]` does, so neither pair
+        depends on the offset. `r_x` enters the curvature `\kappa_{yy} =
+        -r_{x,y}` and `r_y` the curvature `\kappa_{xx} = r_{y,x}`, hence
+        `E_{2b}` in `E^{(h)}_{r_x}` and `E_{1b}` in `E^{(h)}_{r_y}`. The
+        hourglass pattern of `w`, `w = xy` on a rectangle, is a twist, and
+        the mean of the two bending moduli in `E^{(h)}_w` generalises
+        Eq. (16b) of Brockman to laminates and reduces to it for an
+        isotropic plate.
+
+        The drilling term, `\gamma_{r_z} [B_{drill}]^T [B_{drill}]` with
+        `B_{drill} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}`, is integrated
+        with a two-point Gauss-Legendre quadrature in each direction. For
+        ``drilling_model = 0``, `\gamma_{r_z}` is ``gamma_rz`` when it is not
+        negative and `A_{66}` is not zero, and `A_{66}` otherwise; for the
+        other values, `\gamma_{r_z} = K6ROT \cdot 10^{-6} A_{66}`.
+
+        The element matrix is rotated to global coordinates with
+        `K_g = R K_e R^T`, where `R` is block diagonal, with the rotation
+        matrix ``r11, ..., r33`` applied to the translations and to the
+        rotations of each node.
+
+        References
+        ----------
+        .. [1] Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
+           International Journal for Numerical Methods in Engineering, 24(12),
+           2343-2356, 1987. https://doi.org/10.1002/nme.1620241208
 
         """
         cdef int c1, c2, c3, c4, k
@@ -1453,7 +1848,7 @@ cdef class Quad4R:
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
-        cdef double E1eq, E2eq
+        cdef double E1eq, E2eq, E1b, E2b
         cdef double K6ROT
         cdef double Eu, Ev, Erx, Ery, Ew
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
@@ -1517,12 +1912,18 @@ cdef class Quad4R:
             A45 = Atse[1]
             A55 = Atse[3]
 
-            # TODO, recalculating E1eq and E2eq based on rotated A matrix
-            # NOTE not considering effect of B matrix
+            # NOTE equivalent moduli of the hourglass control, from the
+            #      compliance [a] = [A]^-1 of the extensional stiffness in
+            #      the element coordinate system, [B] neglected, see the
+            #      Notes of update_KC0
             a11 = (-A22*A66 + A26**2)/(-A11*A22*A66 + A11*A26**2 + A12**2*A66 - 2*A12*A16*A26 + A16**2*A22)
             a22 = (-A11*A66 + A16**2)/(-A11*A22*A66 + A11*A26**2 + A12**2*A66 - 2*A12*A16*A26 + A16**2*A22)
             E1eq = 1./(prop.h*a11)
             E2eq = 1./(prop.h*a22)
+            # NOTE equivalent bending moduli of the hourglass control of w,
+            #      rx and ry, from the bending compliance of the laminate in
+            #      the element coordinate system, see the Notes of update_KC0
+            _hourglass_bending_moduli(prop.h, Ae, Be, De, &E1b, &E2b)
 
 
             # NOTE both drilling models use the same operator, the one of
@@ -3304,10 +3705,10 @@ cdef class Quad4R:
             # NOTE reduced integration to remove shear locking
             wij = 4.
 
-            # TODO find a method of hourglass control that is derived for composites
-            #     in the future, the use elements with mixed integration
-            #     schemes, or the implementation of the MITC4 element will no
-            #     longer require hourglass control
+            # NOTE Brockman's hourglass control is derived for isotropic
+            #      plates, and applied to laminates with the membrane moduli
+            #      E1eq and E2eq for u and v, and with the bending moduli
+            #      E1b and E2b for w, rx and ry, see the module documentation
             # NOTE Brockman's 1/(1 + 1/A) of Eq. (16) is replaced by the
             #      dimensionally homogeneous area factor, see the section
             #      "Dimensional homogeneity of the hourglass stiffnesses"
@@ -3320,8 +3721,8 @@ cdef class Quad4R:
             #      units and not in others
             Eu = hgfactor_u*0.1*E1eq*prop.h*self.area
             Ev = hgfactor_v*0.1*E2eq*prop.h*self.area
-            Erx = hgfactor_rx*0.1*E2eq*prop.h**3*self.area
-            Ery = hgfactor_ry*0.1*E1eq*prop.h**3*self.area
+            Erx = hgfactor_rx*0.1*E2b*prop.h**3*self.area
+            Ery = hgfactor_ry*0.1*E1b*prop.h**3*self.area
             # NOTE w alone keeps Brockman's 1/(1 + 1/A), so this is the
             #      one coefficient of the scheme that remains unit
             #      dependent, and that is deliberate. The operator cannot
@@ -3337,13 +3738,13 @@ cdef class Quad4R:
             #      SI units correlates with what each of those problems
             #      needs. See the module documentation, and
             #      test_quad4r_hourglass_control.py for the measurements.
-            #      The mean of the two equivalent moduli generalises
+            #      The mean of the two bending moduli generalises
             #      Eq. (16b) to laminates and reduces to it for an
             #      isotropic plate. It is built from the moduli and not
             #      from Erx and Ery, which already carry hgfactor_rx and
             #      hgfactor_ry, so that hgfactor_w scales this term and
             #      nothing else
-            Ew = (hgfactor_w*0.05*(E1eq + E2eq)*prop.h**3
+            Ew = (hgfactor_w*0.05*(E1b + E2b)*prop.h**3
                   /(1.0 + 1.0/self.area))
 
             # NOTE using only one integration point at xi=0, eta=0 to avoid shear locking
@@ -4904,6 +5305,13 @@ cdef class Quad4R:
                            ):
         r"""Update the internal force vector
 
+        The element internal forces, computed in element coordinates with
+        :meth:`.update_probe_finte`, are rotated to global coordinates and
+        added to ``fint`` at the positions of the nodes, ``c1``, ``c2``,
+        ``c3`` and ``c4``. Before this method is called,
+        :meth:`.update_probe_xe` and :meth:`.update_probe_ue` must have been
+        used.
+
         Parameters
         ----------
         fint : np.array
@@ -4912,17 +5320,29 @@ cdef class Quad4R:
             coordinates. Method :meth:`.update_probe_finte` is called to update
             the parameter ``finte`` of the :class:`.Quad4RProbe` with the
             internal forces in local coordinates.
+            1-D array of size ``DOF*M``, with forces for the translations and
+            moments (force times length) for the rotations.
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
         hgfactor_u, hgfactor_v, hgfactor_w, hgfactor_rx, hgfactor_ry : double
             These offer the possibility to change the default hourglass
             stiffnesses for each degree-of-freedom.
-        nonlinear : int
+            Dimensionless multipliers of the hourglass stiffnesses of ``u``,
+            ``v``, ``w``, ``r_x`` and ``r_y``. Default ``1.``.
+        nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
             value adds the geometrically nonlinear terms of the von Karman strains,
-            for which the exact Jacobian of the internal forces is ``KC0 + KCNL +
-            KG``, see :meth:`.update_KCNL`.
+            whose tangent stiffness matrix is ``KC0 + KCNL + KG``, see
+            :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        The internal forces of each node, forces and moments, are rotated
+        from the element to the global coordinates with the rotation matrix
+        ``r11, ..., r33``. With ``nonlinear``, ``KC0 + KCNL + KG`` is the
+        exact Jacobian of the assembled internal forces, see
+        :meth:`.update_probe_finte` and :meth:`.update_KCNL`.
 
         """
         cdef double *finte
@@ -4975,6 +5395,18 @@ cdef class Quad4R:
         -------
         detJ : double
             Determinant of the Jacobian matrix at ``xi, eta``.
+
+        Notes
+        -----
+        With the bilinear shape functions `N_i` and their Cartesian
+        derivatives `N_{i,x}`, `N_{i,y}`, the products of the rows with
+        ``ue`` are the strains of the Notes of :mod:`pyfe3d.quad4r`:
+        ``BLexx``, ``BLeyy`` and ``BLgxy`` give `\epsilon_{xx} = u_{,x}`,
+        `\epsilon_{yy} = v_{,y}` and `\gamma_{xy} = u_{,y} + v_{,x}`;
+        ``BLkxx``, ``BLkyy`` and ``BLkxy`` give `\kappa_{xx} = {r_y}_{,x}`,
+        `\kappa_{yy} = -{r_x}_{,y}` and `\kappa_{xy} = {r_y}_{,y} -
+        {r_x}_{,x}`; and ``Gwx``, ``Gwy`` hold `N_{i,x}`, `N_{i,y}` at the `w`
+        columns.
 
         """
         cdef int i
@@ -5105,9 +5537,29 @@ cdef class Quad4R:
         r"""Update the probe values of the nonlinear constitutive stiffness matrix
 
         The attribute ``KCNLve`` of the :class:`.Quad4RProbe` is updated with
-        KCNL = KC0L + KCL0 + KCLL + KGNL in element coordinates, stored row by
-        row and evaluated at the displacements ``ue`` of the probe. See
-        :meth:`.update_KCNL`.
+        KCNL in element coordinates, stored row by row and evaluated at the
+        displacements ``ue`` of the probe, with a two-point Gauss-Legendre
+        quadrature in each direction. See :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        KCNL = KC0L + KCL0 + KCLL + KGNL, see the Notes of
+        :meth:`.update_KCNL`. At each integration point, with the rows of
+        :meth:`._update_probe_BL_G`, the slopes `w_{,x}` and `w_{,y}` are
+        ``Gwx @ ue`` and ``Gwy @ ue``, the rows of `[B_{mL}]` are
+        `w_{,x}` ``Gwx``, `w_{,y}` ``Gwy`` and `w_{,x}` ``Gwy`` `+ w_{,y}`
+        ``Gwx``, and `\{N_{NL}\} = [A] \{w_{,x}^2/2, w_{,y}^2/2, w_{,x}
+        w_{,y}\}^T`, such that
+
+        .. math::
+
+            K_{CNL} = \sum w_{ij} \det J \left( ([A][B_m] + [B][B_b])^T [B_{mL}]
+                + [B_{mL}]^T ([A][B_m] + [B][B_b])
+                + [B_{mL}]^T [A] [B_{mL}] + [G]^T [N_{NL}] [G] \right)
+
+        with `[G]` the rows ``Gwx`` and ``Gwy`` and `[N_{NL}]` the 2 by 2
+        matrix of `N_{NL,xx}`, `N_{NL,yy}` and `N_{NL,xy}`. `[A]` and `[B]`
+        are rotated with ``m11, m12, m21, m22``.
 
         """
         cdef int i, j, a
@@ -5202,10 +5654,26 @@ cdef class Quad4R:
         r"""Add the geometrically nonlinear terms to the probe internal forces
 
         The attribute ``finte`` of the :class:`.Quad4RProbe` receives the terms
-        of the von Karman membrane strain `\{\epsilon_{NL}\} = \{w_{,x}^2/2,
-        w_{,y}^2/2, w_{,x} w_{,y}\}^T`, evaluated at the displacements ``ue`` of
-        the probe, such that ``finte`` becomes the gradient of the strain energy
-        whose Hessian is KC0 + KCNL + KG. See :meth:`.update_KCNL`.
+        of the nonlinear part of the von Karman membrane strains, evaluated at
+        the displacements ``ue`` of the probe with a two-point Gauss-Legendre
+        quadrature in each direction. See :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        With the nonlinear membrane strain `\{\epsilon_{NL}\} =
+        \{w_{,x}^2/2, w_{,y}^2/2, w_{,x} w_{,y}\}^T`, ``finte`` becomes the
+        gradient of the strain energy whose Hessian is KC0 + KCNL + KG. At
+        each integration point, with the rows of :meth:`._update_probe_BL_G`
+        and `[B_{mL}]` of :meth:`._update_probe_KCNLve`, the stress
+        resultants of the linear strains `\{N\} = [A]\{\epsilon\} +
+        [B]\{\kappa\}`, as in :meth:`.update_KG`, and those of the nonlinear
+        strain `\{N_{NL}\} = [A]\{\epsilon_{NL}\}` and `\{M_{NL}\} =
+        [B]\{\epsilon_{NL}\}`, the added terms are
+
+        .. math::
+
+            \sum w_{ij} \det J \left( [B_m]^T \{N_{NL}\} + [B_b]^T \{M_{NL}\}
+                + [B_{mL}]^T (\{N\} + \{N_{NL}\}) \right)
 
         """
         cdef int i, a
@@ -5306,6 +5774,49 @@ cdef class Quad4R:
                            ):
         r"""Update sparse vectors for the nonlinear constitutive stiffness matrix KCNL
 
+        KCNL collects the terms of the tangent stiffness matrix of the
+        geometrically nonlinear analysis with the von Karman membrane strains
+        that are not in KC0 and in KG, evaluated at the displacements of the
+        probe with the quadrature of :meth:`.update_KG`. The tangent stiffness
+        matrix of the internal forces of :meth:`.update_fint` with
+        ``nonlinear=1`` is ``KC0 + KCNL + KG``.
+
+        Before this function is called, the probe :class:`.Quad4RProbe` attribute
+        of the :class:`.Quad4R` object must be updated using
+        :meth:`.update_probe_ue` with the current displacements; and
+        :meth:`.update_probe_xe` with the node coordinates.
+
+        The element matrix is computed in element coordinates into the probe
+        attribute ``KCNLve``, rotated to global coordinates, and its values
+        are added to ``KCNLv`` at the positions ``init_k_KCNL`` to
+        ``init_k_KCNL + KCNL_SPARSE_SIZE - 1``. With ``update_KCNLv_only=0``
+        the global row and column indices are written to ``KCNLr`` and
+        ``KCNLc`` at the same positions.
+
+        Parameters
+        ----------
+        KCNLr : np.array
+            Array to store row positions of sparse values
+            1-D array of integers (``INT``) of size at least ``init_k_KCNL +
+            KCNL_SPARSE_SIZE``.
+        KCNLc : np.array
+            Array to store column positions of sparse values
+            Same type and size as ``KCNLr``.
+        KCNLv : np.array
+            Array to store sparse values
+            1-D array of ``DOUBLE``, same size as ``KCNLr``. The values are
+            added to the existing ones, with the dimensions given for
+            ``KC0v`` in :meth:`.update_KC0`.
+        prop : :class:`.ShellProp` object
+            Shell property object from where the stiffness and mass attributes are
+            read from.
+        update_KCNLv_only : int, optional
+            The default ``0`` means that the row and column indices ``KCNLr`` and
+            ``KCNLc`` should also be updated. Any other value will only update the
+            stiffness matrix values ``KCNLv``.
+
+        Notes
+        -----
         Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, built from the von Karman
         membrane strains
 
@@ -5337,26 +5848,13 @@ cdef class Quad4R:
         ``nonlinear=1``, and a Newton-Raphson iteration built on them converges
         quadratically. The quadrature of :meth:`.update_KG` is used.
 
-        Before this function is called, the probe :class:`.Quad4RProbe` attribute
-        of the :class:`.Quad4R` object must be updated using
-        :func:`.update_probe_ue` with the current displacements; and
-        :func:`.update_probe_xe` with the node coordinates.
-
-        Parameters
-        ----------
-        KCNLr : np.array
-            Array to store row positions of sparse values
-        KCNLc : np.array
-            Array to store column positions of sparse values
-        KCNLv : np.array
-            Array to store sparse values
-        prop : :class:`.ShellProp` object
-            Shell property object from where the stiffness and mass attributes are
-            read from.
-        update_KCNLv_only : int
-            The default ``0`` means that the row and column indices ``KCNLr`` and
-            ``KCNLc`` should also be updated. Any other value will only update the
-            stiffness matrix values ``KCNLv``.
+        The linear part of the internal forces, ``KC0*u``, keeps the
+        quadratures of KC0, whereas the nonlinear terms of
+        :meth:`._update_probe_finte_nonlinear`, KCNL and KG use the
+        two-by-two quadrature; each part of the strain energy is
+        differentiated with its own quadrature, so the Jacobian remains exact.
+        The element matrix is computed by :meth:`._update_probe_KCNLve` and
+        rotated to global coordinates as in :meth:`.update_KC0`.
 
         """
         cdef int i, j, node_i, node_j, k, ke, m, n
@@ -5436,28 +5934,64 @@ cdef class Quad4R:
                          ):
         r"""Update sparse vectors for geometric stiffness matrix KG
 
-        Two-point Gauss-Legendre quadrature is used, which showed more accuracy
-        for linear buckling load predictions.
+        Two-point Gauss-Legendre quadrature is used.
 
         Before this function is called, the probe :class:`.Quad4RProbe`
         attribute of the :class:`.Quad4R` object must be updated using
-        :func:`.update_probe_ue` with the correct pre-buckling displacements;
-        and :func:`.update_probe_xe` with the node coordinates.
+        :meth:`.update_probe_ue` with the correct pre-buckling displacements;
+        and :meth:`.update_probe_xe` with the node coordinates.
+
+        At each integration point the membrane stress resultants are obtained
+        from the linear membrane strains and curvatures of the probe
+        displacements ``ue`` and from the extensional and extension-bending
+        coupling matrices of ``prop`` rotated with ``m11, m12, m21, m22``.
+        Only the translational degrees-of-freedom appear. The values are
+        added to ``KGv`` at the positions ``init_k_KG`` to ``init_k_KG +
+        KG_SPARSE_SIZE - 1``. With ``update_KGv_only=0`` the global row and
+        column indices are written to ``KGr`` and ``KGc`` at the same
+        positions.
 
         Parameters
         ----------
         KGr : np.array
            Array to store row positions of sparse values
+           1-D array of integers (``INT``) of size at least ``init_k_KG +
+           KG_SPARSE_SIZE``.
         KGc : np.array
            Array to store column positions of sparse values
+           Same type and size as ``KGr``.
         KGv : np.array
             Array to store sparse values
+            1-D array of ``DOUBLE``, same size as ``KGr``. The values are
+            added to the existing ones, with dimension of force per unit
+            length.
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
-        update_KGv_only : int
-            The default `0` means that only `KGv` is updated. Any other value will
-            lead to `KGr` and `KGc` also being updated.
+        update_KGv_only : int, optional
+            The default ``0`` means that the row and column indices ``KGr``
+            and ``KGc`` are also updated. Any other value will only update the
+            values ``KGv``.
+
+        Notes
+        -----
+        The two-point quadrature showed more accuracy for linear buckling load
+        predictions. The matrix is
+
+        .. math::
+
+            K_G = \sum w_{ij} \det J \, [G]^T
+            \begin{bmatrix} N_{xx} & N_{xy} \\ N_{xy} & N_{yy} \end{bmatrix}
+            [G]
+
+        with `[G]` the rows of `w_{,x}` and `w_{,y}` of
+        :meth:`._update_probe_BL_G`, `w` being the displacement along the
+        element normal, i.e. the combination of the global translations with
+        ``r13, r23, r33``, and `\{N_{xx}, N_{yy}, N_{xy}\}^T = [A]\{\epsilon\}
+        + [B]\{\kappa\}` the stress resultants of the linear strains of the
+        Notes of :mod:`pyfe3d.quad4r`. KG is linear in the displacements
+        ``ue``, such that ``KC0 + lambda*KG`` gives the linear buckling problem
+        for the load multiplier ``lambda`` of the pre-buckling state.
 
         """
         cdef double *ue
@@ -6294,24 +6828,47 @@ cdef class Quad4R:
         .. note:: A constant stress state is assumed within the element,
                   according to the given values of `N_{xx}, N_{yy}, N_{xy}`.
 
-        Two-point Gauss-Legendre quadrature is used, which showed more accuracy
-        for linear buckling load predictions.
+        Two-point Gauss-Legendre quadrature is used.
 
         Before this function is called, the probe :class:`.Quad4RProbe`
         attribute of the :class:`.Quad4R` object must be updated using
-        :func:`.update_probe_xe` with the node coordinates.
+        :meth:`.update_probe_xe` with the node coordinates.
+
+        Only the translational degrees-of-freedom appear. The values are added
+        to ``KGv`` at the positions ``init_k_KG`` to ``init_k_KG +
+        KG_SPARSE_SIZE - 1``. With ``update_KGv_only=0`` the global row and
+        column indices are written to ``KGr`` and ``KGc`` at the same
+        positions. :meth:`.update_rotation_matrix` must also have been called
+        before.
 
         Parameters
         ----------
+        Nxx, Nyy, Nxy : double
+            Membrane stress resultants in the element coordinate system,
+            force per unit length.
         KGr : np.array
            Array to store row positions of sparse values
+           1-D array of integers (``INT``) of size at least ``init_k_KG +
+           KG_SPARSE_SIZE``.
         KGc : np.array
            Array to store column positions of sparse values
+           Same type and size as ``KGr``.
         KGv : np.array
             Array to store sparse values
-        update_KGv_only : int
-            The default `0` means that only `KGv` is updated. Any other value will
-            lead to `KGr` and `KGc` also being updated.
+            1-D array of ``DOUBLE``, same size as ``KGr``. The values are
+            added to the existing ones, with dimension of force per unit
+            length.
+        update_KGv_only : int, optional
+            The default ``0`` means that the row and column indices ``KGr``
+            and ``KGc`` are also updated. Any other value will only update the
+            values ``KGv``.
+
+        Notes
+        -----
+        The matrix is the one of :meth:`.update_KG`, with the given constant
+        stress resultants ``Nxx, Nyy, Nxy`` instead of the ones computed from
+        the displacements of the probe. The two-point quadrature showed more
+        accuracy for linear buckling load predictions.
 
         """
         cdef int c1, c2, c3, c4, i, j, k
@@ -7118,18 +7675,115 @@ cdef class Quad4R:
         Different integration schemes are available by means of the ``mtype``
         parameter.
 
+        The element matrix is computed from ``intrho``, ``intrhoz`` and
+        ``intrhoz2`` of ``prop``, the coordinates ``probe.xe`` and the
+        ``area``, rotated to global coordinates, and its values are added to
+        ``Mv`` at the positions starting at ``init_k_M``; the global row and
+        column indices are always written to ``Mr`` and ``Mc`` at the same
+        positions. ``mtype=0`` and ``mtype=1`` write ``M_SPARSE_SIZE``
+        entries and ``mtype=2`` writes the first 120 of them. Before this
+        method is called, :meth:`.update_rotation_matrix` and
+        :meth:`.update_probe_xe` must have been used.
+
         Parameters
         ----------
         Mr : np.array
             Array to store row positions of sparse values
+            1-D array of integers (``INT``) of size at least ``init_k_M +
+            M_SPARSE_SIZE``.
         Mc : np.array
             Array to store column positions of sparse values
+            Same type and size as ``Mr``.
         Mv : np.array
             Array to store sparse values
+            1-D array of ``DOUBLE``, same size as ``Mr``. The values are added
+            to the existing ones. Dimension of mass between translations, of
+            mass times length between a translation and a rotation, and of
+            mass times length squared between rotations.
+        prop : :class:`.ShellProp` object
+            Shell property object, from which ``intrho``, ``intrhoz`` and
+            ``intrhoz2`` are read.
         mtype : int, optional
-            0 for consistent mass matrix using method from Brockman 1987
-            1 for reduced integration mass matrix using method from Brockman 1987
-            2 for lumped mass matrix using method from Brockman 1987
+            0 for consistent mass matrix
+            1 for reduced integration mass matrix
+            2 for lumped mass matrix
+            Default ``0``.
+
+        Raises
+        ------
+        ValueError
+            If ``mtype`` is not 0, 1 or 2.
+
+        Notes
+        -----
+        The three mass matrices follow from the kinetic energy of Brockman
+        1987 [1]_, Eq. (20), and have the form of its Eq. (21). With the
+        displacements `u + z r_y`, `v - z r_x` and `w` of the Notes of
+        :mod:`pyfe3d.quad4r`, the kinetic energy integrated through the
+        thickness,
+
+        .. math::
+
+            T = \frac{1}{2} \int_A \left[ intrho (\dot{u}^2 + \dot{v}^2 +
+            \dot{w}^2) + 2\, intrhoz (\dot{u} \dot{r}_y - \dot{v} \dot{r}_x)
+            + intrhoz2 (\dot{r}_x^2 + \dot{r}_y^2) \right] dA
+
+        where ``intrho``, ``intrhoz`` and ``intrhoz2`` include the offset,
+        gives, for the nodes `i` and `j`, in element coordinates,
+
+        .. math::
+
+            M_{ij} = h_{ij} \begin{bmatrix}
+                intrho & 0 & 0 & 0 & intrhoz & 0 \\
+                0 & intrho & 0 & -intrhoz & 0 & 0 \\
+                0 & 0 & intrho & 0 & 0 & 0 \\
+                0 & -intrhoz & 0 & intrhoz2 & 0 & 0 \\
+                intrhoz & 0 & 0 & 0 & intrhoz2 & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0
+            \end{bmatrix}, \qquad h_{ij} = \int_A N_i N_j dA
+
+        for the DOF `u, v, w, r_x, r_y, r_z`, the drilling rotation carrying
+        no inertia. The matrix is rotated to global coordinates as in
+        :meth:`.update_KC0`. The integrals `h_{ij}` are computed with:
+
+        - ``mtype=0``: two-point Gauss-Legendre quadrature in each direction;
+        - ``mtype=1``: a single point at the centroid, where every `N_i =
+          1/4`, giving `h_{ij} = A/16` for all `i, j`;
+        - ``mtype=2``: two-point Gauss-Lobatto quadrature in each direction,
+          whose points are the nodes, the lumped mass matrix of Brockman
+          [1]_, giving `h_{ii}` equal to the Jacobian determinant at node `i`
+          and `h_{ij} = 0` for `i \neq j`.
+
+        For ``mtype=0`` the quadrature is exact. With ``mtype=1`` the
+        element mass is placed at the average of the node positions, which
+        is the centroid of the area only for a parallelogram.
+
+        .. rubric:: Lumped mass matrix
+
+        The Gauss-Lobatto rule of ``mtype=2`` is a nodal quadrature. Applied
+        to the whole integrand of `T`, in which `N_i` is 1 at node `i` and 0
+        at the other nodes, it couples no different nodes and gives for node
+        `i` the block `M_{ii}` above with `h_{ii}`, the coupling through
+        ``intrhoz`` included: the matrix is block-diagonal per node and, as
+        Brockman [1]_ writes, diagonal only when ``intrhoz`` is zero. The
+        weights `h_{ii}` sum to the area `A`, so the lumped matrix has the
+        exact mass and the exact first moment of the mass through the
+        thickness, ``intrhoz`` `A`, which places the centre of mass at the
+        offset from the reference surface. In the plane of the element the
+        first moment is exact when `h_{ii} = \int_A N_i dA`, which holds for
+        a parallelogram, where `h_{ii} = A/4`, and not for a general
+        quadrilateral, whose Jacobian determinant varies. Of the rotary
+        inertia, the term ``intrhoz2`` `A` about the axes in the plane of
+        the element is exact, while the part from the distribution of
+        ``intrho`` over the area, about any axis, is concentrated at the
+        nodes: 3 times the exact value about the centroid of a
+        parallelogram, an error that decreases with the size of the elements.
+
+        References
+        ----------
+        .. [1] Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
+           International Journal for Numerical Methods in Engineering, 24(12),
+           2343-2356, 1987. https://doi.org/10.1002/nme.1620241208
 
         """
         cdef int c1, c2, c3, c4, i, j, k
@@ -7140,6 +7794,12 @@ cdef class Quad4R:
         cdef double h11, h12, h13, h14, h22, h23, h24, h33, h34, h44, valH1
         cdef double xi, eta, wij, detJ, N1, N2, N3, N4
         cdef double points[2]
+
+        # NOTE checked once per call, before the code without the GIL
+        if mtype != 0 and mtype != 1 and mtype != 2:
+            raise ValueError('mtype=%d is not supported by Quad4R.update_M, '
+                             'use 0 (consistent), 1 (reduced integration) or '
+                             '2 (lumped)' % mtype)
 
         with nogil:
             intrho = prop.intrho
@@ -12019,7 +12679,7 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
 
-            elif mtype == 2: # M_lump lumped mass matrix using two-point Gauss-Lobatto quadrature
+            elif mtype == 2: # M_lump lumped mass matrix, two-point Gauss-Lobatto quadrature, see the Notes
                 k = self.init_k_M
                 Mr[k] = 0+c1
                 Mc[k] = 0+c1
@@ -12031,31 +12691,10 @@ cdef class Quad4R:
                 Mc[k] = 2+c1
                 k += 1
                 Mr[k] = 0+c1
-                Mc[k] = 0+c2
+                Mc[k] = 4+c1
                 k += 1
                 Mr[k] = 0+c1
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 0+c1
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 0+c1
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 0+c1
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 0+c1
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 0+c1
-                Mc[k] = 0+c4
-                k += 1
-                Mr[k] = 0+c1
-                Mc[k] = 1+c4
-                k += 1
-                Mr[k] = 0+c1
-                Mc[k] = 2+c4
+                Mc[k] = 5+c1
                 k += 1
                 Mr[k] = 1+c1
                 Mc[k] = 0+c1
@@ -12067,31 +12706,10 @@ cdef class Quad4R:
                 Mc[k] = 2+c1
                 k += 1
                 Mr[k] = 1+c1
-                Mc[k] = 0+c2
+                Mc[k] = 3+c1
                 k += 1
                 Mr[k] = 1+c1
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 1+c1
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 1+c1
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 1+c1
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 1+c1
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 1+c1
-                Mc[k] = 0+c4
-                k += 1
-                Mr[k] = 1+c1
-                Mc[k] = 1+c4
-                k += 1
-                Mr[k] = 1+c1
-                Mc[k] = 2+c4
+                Mc[k] = 5+c1
                 k += 1
                 Mr[k] = 2+c1
                 Mc[k] = 0+c1
@@ -12103,31 +12721,16 @@ cdef class Quad4R:
                 Mc[k] = 2+c1
                 k += 1
                 Mr[k] = 2+c1
-                Mc[k] = 0+c2
+                Mc[k] = 3+c1
                 k += 1
                 Mr[k] = 2+c1
-                Mc[k] = 1+c2
+                Mc[k] = 4+c1
                 k += 1
-                Mr[k] = 2+c1
-                Mc[k] = 2+c2
+                Mr[k] = 3+c1
+                Mc[k] = 1+c1
                 k += 1
-                Mr[k] = 2+c1
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 2+c1
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 2+c1
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 2+c1
-                Mc[k] = 0+c4
-                k += 1
-                Mr[k] = 2+c1
-                Mc[k] = 1+c4
-                k += 1
-                Mr[k] = 2+c1
-                Mc[k] = 2+c4
+                Mr[k] = 3+c1
+                Mc[k] = 2+c1
                 k += 1
                 Mr[k] = 3+c1
                 Mc[k] = 3+c1
@@ -12138,671 +12741,266 @@ cdef class Quad4R:
                 Mr[k] = 3+c1
                 Mc[k] = 5+c1
                 k += 1
-                Mr[k] = 3+c1
-                Mc[k] = 3+c2
+                Mr[k] = 4+c1
+                Mc[k] = 0+c1
                 k += 1
-                Mr[k] = 3+c1
+                Mr[k] = 4+c1
+                Mc[k] = 2+c1
+                k += 1
+                Mr[k] = 4+c1
+                Mc[k] = 3+c1
+                k += 1
+                Mr[k] = 4+c1
+                Mc[k] = 4+c1
+                k += 1
+                Mr[k] = 4+c1
+                Mc[k] = 5+c1
+                k += 1
+                Mr[k] = 5+c1
+                Mc[k] = 0+c1
+                k += 1
+                Mr[k] = 5+c1
+                Mc[k] = 1+c1
+                k += 1
+                Mr[k] = 5+c1
+                Mc[k] = 3+c1
+                k += 1
+                Mr[k] = 5+c1
+                Mc[k] = 4+c1
+                k += 1
+                Mr[k] = 5+c1
+                Mc[k] = 5+c1
+                k += 1
+                Mr[k] = 0+c2
+                Mc[k] = 0+c2
+                k += 1
+                Mr[k] = 0+c2
+                Mc[k] = 1+c2
+                k += 1
+                Mr[k] = 0+c2
+                Mc[k] = 2+c2
+                k += 1
+                Mr[k] = 0+c2
                 Mc[k] = 4+c2
                 k += 1
-                Mr[k] = 3+c1
+                Mr[k] = 0+c2
                 Mc[k] = 5+c2
                 k += 1
-                Mr[k] = 3+c1
-                Mc[k] = 3+c3
+                Mr[k] = 1+c2
+                Mc[k] = 0+c2
                 k += 1
-                Mr[k] = 3+c1
+                Mr[k] = 1+c2
+                Mc[k] = 1+c2
+                k += 1
+                Mr[k] = 1+c2
+                Mc[k] = 2+c2
+                k += 1
+                Mr[k] = 1+c2
+                Mc[k] = 3+c2
+                k += 1
+                Mr[k] = 1+c2
+                Mc[k] = 5+c2
+                k += 1
+                Mr[k] = 2+c2
+                Mc[k] = 0+c2
+                k += 1
+                Mr[k] = 2+c2
+                Mc[k] = 1+c2
+                k += 1
+                Mr[k] = 2+c2
+                Mc[k] = 2+c2
+                k += 1
+                Mr[k] = 2+c2
+                Mc[k] = 3+c2
+                k += 1
+                Mr[k] = 2+c2
+                Mc[k] = 4+c2
+                k += 1
+                Mr[k] = 3+c2
+                Mc[k] = 1+c2
+                k += 1
+                Mr[k] = 3+c2
+                Mc[k] = 2+c2
+                k += 1
+                Mr[k] = 3+c2
+                Mc[k] = 3+c2
+                k += 1
+                Mr[k] = 3+c2
+                Mc[k] = 4+c2
+                k += 1
+                Mr[k] = 3+c2
+                Mc[k] = 5+c2
+                k += 1
+                Mr[k] = 4+c2
+                Mc[k] = 0+c2
+                k += 1
+                Mr[k] = 4+c2
+                Mc[k] = 2+c2
+                k += 1
+                Mr[k] = 4+c2
+                Mc[k] = 3+c2
+                k += 1
+                Mr[k] = 4+c2
+                Mc[k] = 4+c2
+                k += 1
+                Mr[k] = 4+c2
+                Mc[k] = 5+c2
+                k += 1
+                Mr[k] = 5+c2
+                Mc[k] = 0+c2
+                k += 1
+                Mr[k] = 5+c2
+                Mc[k] = 1+c2
+                k += 1
+                Mr[k] = 5+c2
+                Mc[k] = 3+c2
+                k += 1
+                Mr[k] = 5+c2
+                Mc[k] = 4+c2
+                k += 1
+                Mr[k] = 5+c2
+                Mc[k] = 5+c2
+                k += 1
+                Mr[k] = 0+c3
+                Mc[k] = 0+c3
+                k += 1
+                Mr[k] = 0+c3
+                Mc[k] = 1+c3
+                k += 1
+                Mr[k] = 0+c3
+                Mc[k] = 2+c3
+                k += 1
+                Mr[k] = 0+c3
                 Mc[k] = 4+c3
                 k += 1
-                Mr[k] = 3+c1
+                Mr[k] = 0+c3
                 Mc[k] = 5+c3
                 k += 1
-                Mr[k] = 3+c1
-                Mc[k] = 3+c4
+                Mr[k] = 1+c3
+                Mc[k] = 0+c3
                 k += 1
-                Mr[k] = 3+c1
+                Mr[k] = 1+c3
+                Mc[k] = 1+c3
+                k += 1
+                Mr[k] = 1+c3
+                Mc[k] = 2+c3
+                k += 1
+                Mr[k] = 1+c3
+                Mc[k] = 3+c3
+                k += 1
+                Mr[k] = 1+c3
+                Mc[k] = 5+c3
+                k += 1
+                Mr[k] = 2+c3
+                Mc[k] = 0+c3
+                k += 1
+                Mr[k] = 2+c3
+                Mc[k] = 1+c3
+                k += 1
+                Mr[k] = 2+c3
+                Mc[k] = 2+c3
+                k += 1
+                Mr[k] = 2+c3
+                Mc[k] = 3+c3
+                k += 1
+                Mr[k] = 2+c3
+                Mc[k] = 4+c3
+                k += 1
+                Mr[k] = 3+c3
+                Mc[k] = 1+c3
+                k += 1
+                Mr[k] = 3+c3
+                Mc[k] = 2+c3
+                k += 1
+                Mr[k] = 3+c3
+                Mc[k] = 3+c3
+                k += 1
+                Mr[k] = 3+c3
+                Mc[k] = 4+c3
+                k += 1
+                Mr[k] = 3+c3
+                Mc[k] = 5+c3
+                k += 1
+                Mr[k] = 4+c3
+                Mc[k] = 0+c3
+                k += 1
+                Mr[k] = 4+c3
+                Mc[k] = 2+c3
+                k += 1
+                Mr[k] = 4+c3
+                Mc[k] = 3+c3
+                k += 1
+                Mr[k] = 4+c3
+                Mc[k] = 4+c3
+                k += 1
+                Mr[k] = 4+c3
+                Mc[k] = 5+c3
+                k += 1
+                Mr[k] = 5+c3
+                Mc[k] = 0+c3
+                k += 1
+                Mr[k] = 5+c3
+                Mc[k] = 1+c3
+                k += 1
+                Mr[k] = 5+c3
+                Mc[k] = 3+c3
+                k += 1
+                Mr[k] = 5+c3
+                Mc[k] = 4+c3
+                k += 1
+                Mr[k] = 5+c3
+                Mc[k] = 5+c3
+                k += 1
+                Mr[k] = 0+c4
+                Mc[k] = 0+c4
+                k += 1
+                Mr[k] = 0+c4
+                Mc[k] = 1+c4
+                k += 1
+                Mr[k] = 0+c4
+                Mc[k] = 2+c4
+                k += 1
+                Mr[k] = 0+c4
                 Mc[k] = 4+c4
                 k += 1
-                Mr[k] = 3+c1
+                Mr[k] = 0+c4
                 Mc[k] = 5+c4
                 k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 3+c1
+                Mr[k] = 1+c4
+                Mc[k] = 0+c4
                 k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 4+c1
+                Mr[k] = 1+c4
+                Mc[k] = 1+c4
                 k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 5+c1
+                Mr[k] = 1+c4
+                Mc[k] = 2+c4
                 k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 3+c3
-                k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 4+c3
-                k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 5+c3
-                k += 1
-                Mr[k] = 4+c1
+                Mr[k] = 1+c4
                 Mc[k] = 3+c4
                 k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 4+c4
-                k += 1
-                Mr[k] = 4+c1
+                Mr[k] = 1+c4
                 Mc[k] = 5+c4
                 k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 3+c1
+                Mr[k] = 2+c4
+                Mc[k] = 0+c4
                 k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 4+c1
+                Mr[k] = 2+c4
+                Mc[k] = 1+c4
                 k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 5+c1
+                Mr[k] = 2+c4
+                Mc[k] = 2+c4
                 k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 3+c3
-                k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 4+c3
-                k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 5+c3
-                k += 1
-                Mr[k] = 5+c1
+                Mr[k] = 2+c4
                 Mc[k] = 3+c4
                 k += 1
-                Mr[k] = 5+c1
+                Mr[k] = 2+c4
                 Mc[k] = 4+c4
                 k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 5+c4
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 0+c4
-                k += 1
-                Mr[k] = 0+c2
+                Mr[k] = 3+c4
                 Mc[k] = 1+c4
                 k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 2+c4
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 0+c4
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 1+c4
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 2+c4
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 0+c4
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 1+c4
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 2+c4
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 3+c1
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 3+c3
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 4+c3
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 5+c3
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 3+c4
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 4+c4
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 5+c4
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 3+c1
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 3+c3
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 4+c3
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 5+c3
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 3+c4
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 4+c4
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 5+c4
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 3+c1
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 3+c3
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 4+c3
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 5+c3
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 3+c4
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 4+c4
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 5+c4
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 0+c4
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 1+c4
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 2+c4
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 0+c4
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 1+c4
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 2+c4
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 0+c4
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 1+c4
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 2+c4
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 3+c1
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 3+c3
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 4+c3
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 5+c3
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 3+c4
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 4+c4
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 5+c4
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 3+c1
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 3+c3
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 4+c3
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 5+c3
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 3+c4
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 4+c4
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 5+c4
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 3+c1
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 3+c3
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 4+c3
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 5+c3
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 3+c4
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 4+c4
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 5+c4
-                k += 1
-                Mr[k] = 0+c4
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 0+c4
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 0+c4
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 0+c4
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 0+c4
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 0+c4
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 0+c4
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 0+c4
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 0+c4
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 0+c4
-                Mc[k] = 0+c4
-                k += 1
-                Mr[k] = 0+c4
-                Mc[k] = 1+c4
-                k += 1
-                Mr[k] = 0+c4
-                Mc[k] = 2+c4
-                k += 1
-                Mr[k] = 1+c4
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 1+c4
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 1+c4
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 1+c4
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 1+c4
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 1+c4
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 1+c4
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 1+c4
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 1+c4
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 1+c4
-                Mc[k] = 0+c4
-                k += 1
-                Mr[k] = 1+c4
-                Mc[k] = 1+c4
-                k += 1
-                Mr[k] = 1+c4
-                Mc[k] = 2+c4
-                k += 1
-                Mr[k] = 2+c4
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 2+c4
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 2+c4
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 2+c4
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 2+c4
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 2+c4
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 2+c4
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 2+c4
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 2+c4
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 2+c4
-                Mc[k] = 0+c4
-                k += 1
-                Mr[k] = 2+c4
-                Mc[k] = 1+c4
-                k += 1
-                Mr[k] = 2+c4
-                Mc[k] = 2+c4
-                k += 1
                 Mr[k] = 3+c4
-                Mc[k] = 3+c1
-                k += 1
-                Mr[k] = 3+c4
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 3+c4
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 3+c4
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 3+c4
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 3+c4
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 3+c4
-                Mc[k] = 3+c3
-                k += 1
-                Mr[k] = 3+c4
-                Mc[k] = 4+c3
-                k += 1
-                Mr[k] = 3+c4
-                Mc[k] = 5+c3
+                Mc[k] = 2+c4
                 k += 1
                 Mr[k] = 3+c4
                 Mc[k] = 3+c4
@@ -12814,31 +13012,10 @@ cdef class Quad4R:
                 Mc[k] = 5+c4
                 k += 1
                 Mr[k] = 4+c4
-                Mc[k] = 3+c1
+                Mc[k] = 0+c4
                 k += 1
                 Mr[k] = 4+c4
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 4+c4
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 4+c4
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 4+c4
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 4+c4
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 4+c4
-                Mc[k] = 3+c3
-                k += 1
-                Mr[k] = 4+c4
-                Mc[k] = 4+c3
-                k += 1
-                Mr[k] = 4+c4
-                Mc[k] = 5+c3
+                Mc[k] = 2+c4
                 k += 1
                 Mr[k] = 4+c4
                 Mc[k] = 3+c4
@@ -12850,31 +13027,10 @@ cdef class Quad4R:
                 Mc[k] = 5+c4
                 k += 1
                 Mr[k] = 5+c4
-                Mc[k] = 3+c1
+                Mc[k] = 0+c4
                 k += 1
                 Mr[k] = 5+c4
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 5+c4
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 5+c4
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 5+c4
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 5+c4
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 5+c4
-                Mc[k] = 3+c3
-                k += 1
-                Mr[k] = 5+c4
-                Mc[k] = 4+c3
-                k += 1
-                Mr[k] = 5+c4
-                Mc[k] = 5+c3
+                Mc[k] = 1+c4
                 k += 1
                 Mr[k] = 5+c4
                 Mc[k] = 3+c4
@@ -12886,18 +13042,14 @@ cdef class Quad4R:
                 Mc[k] = 5+c4
 
                 wij = 1.
-                # NOTE two-point Gauss-Lobatto quadrature
+                # NOTE two-point Gauss-Lobatto quadrature in each direction,
+                #      whose points are the nodes, where N_i is 1 at node i and
+                #      0 at the other nodes, such that h_ij = 0 for i != j
                 points[0] = -1.
                 points[1] = +1.
                 h11 = 0.
-                h12 = 0.
-                h13 = 0.
-                h14 = 0.
                 h22 = 0.
-                h23 = 0.
-                h24 = 0.
                 h33 = 0.
-                h34 = 0.
                 h44 = 0.
                 for i in range(2):
                     xi = points[i]
@@ -12909,14 +13061,8 @@ cdef class Quad4R:
                         N3 = eta*xi/4. + eta/4. + xi/4. + 1/4.
                         N4 = -eta*xi/4. + eta/4. - xi/4. + 1/4.
                         h11 += N1**2*detJ*wij
-                        h12 += N1*N2*detJ*wij
-                        h13 += N1*N3*detJ*wij
-                        h14 += N1*N4*detJ*wij
                         h22 += N2**2*detJ*wij
-                        h23 += N2*N3*detJ*wij
-                        h24 += N2*N4*detJ*wij
                         h33 += N3**2*detJ*wij
-                        h34 += N3*N4*detJ*wij
                         h44 += N4**2*detJ*wij
 
                 k = self.init_k_M
@@ -12926,23 +13072,9 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h11*intrho*r11*r31 + h11*intrho*r12*r32 + h11*intrho*r13*r33
                 k += 1
-                Mv[k] += h12*intrho*r11**2 + h12*intrho*r12**2 + h12*intrho*r13**2
+                Mv[k] += h11*intrhoz*r11*r22 - h11*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h12*intrho*r11*r21 + h12*intrho*r12*r22 + h12*intrho*r13*r23
-                k += 1
-                Mv[k] += h12*intrho*r11*r31 + h12*intrho*r12*r32 + h12*intrho*r13*r33
-                k += 1
-                Mv[k] += h13*intrho*r11**2 + h13*intrho*r12**2 + h13*intrho*r13**2
-                k += 1
-                Mv[k] += h13*intrho*r11*r21 + h13*intrho*r12*r22 + h13*intrho*r13*r23
-                k += 1
-                Mv[k] += h13*intrho*r11*r31 + h13*intrho*r12*r32 + h13*intrho*r13*r33
-                k += 1
-                Mv[k] += h14*intrho*r11**2 + h14*intrho*r12**2 + h14*intrho*r13**2
-                k += 1
-                Mv[k] += h14*intrho*r11*r21 + h14*intrho*r12*r22 + h14*intrho*r13*r23
-                k += 1
-                Mv[k] += h14*intrho*r11*r31 + h14*intrho*r12*r32 + h14*intrho*r13*r33
+                Mv[k] += h11*intrhoz*r11*r32 - h11*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h11*intrho*r11*r21 + h11*intrho*r12*r22 + h11*intrho*r13*r23
                 k += 1
@@ -12950,23 +13082,9 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h11*intrho*r21*r31 + h11*intrho*r22*r32 + h11*intrho*r23*r33
                 k += 1
-                Mv[k] += h12*intrho*r11*r21 + h12*intrho*r12*r22 + h12*intrho*r13*r23
+                Mv[k] += -h11*intrhoz*r11*r22 + h11*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h12*intrho*r21**2 + h12*intrho*r22**2 + h12*intrho*r23**2
-                k += 1
-                Mv[k] += h12*intrho*r21*r31 + h12*intrho*r22*r32 + h12*intrho*r23*r33
-                k += 1
-                Mv[k] += h13*intrho*r11*r21 + h13*intrho*r12*r22 + h13*intrho*r13*r23
-                k += 1
-                Mv[k] += h13*intrho*r21**2 + h13*intrho*r22**2 + h13*intrho*r23**2
-                k += 1
-                Mv[k] += h13*intrho*r21*r31 + h13*intrho*r22*r32 + h13*intrho*r23*r33
-                k += 1
-                Mv[k] += h14*intrho*r11*r21 + h14*intrho*r12*r22 + h14*intrho*r13*r23
-                k += 1
-                Mv[k] += h14*intrho*r21**2 + h14*intrho*r22**2 + h14*intrho*r23**2
-                k += 1
-                Mv[k] += h14*intrho*r21*r31 + h14*intrho*r22*r32 + h14*intrho*r23*r33
+                Mv[k] += h11*intrhoz*r21*r32 - h11*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h11*intrho*r11*r31 + h11*intrho*r12*r32 + h11*intrho*r13*r33
                 k += 1
@@ -12974,23 +13092,13 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h11*intrho*r31**2 + h11*intrho*r32**2 + h11*intrho*r33**2
                 k += 1
-                Mv[k] += h12*intrho*r11*r31 + h12*intrho*r12*r32 + h12*intrho*r13*r33
+                Mv[k] += -h11*intrhoz*r11*r32 + h11*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h12*intrho*r21*r31 + h12*intrho*r22*r32 + h12*intrho*r23*r33
+                Mv[k] += -h11*intrhoz*r21*r32 + h11*intrhoz*r22*r31
                 k += 1
-                Mv[k] += h12*intrho*r31**2 + h12*intrho*r32**2 + h12*intrho*r33**2
+                Mv[k] += -h11*intrhoz*r11*r22 + h11*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h13*intrho*r11*r31 + h13*intrho*r12*r32 + h13*intrho*r13*r33
-                k += 1
-                Mv[k] += h13*intrho*r21*r31 + h13*intrho*r22*r32 + h13*intrho*r23*r33
-                k += 1
-                Mv[k] += h13*intrho*r31**2 + h13*intrho*r32**2 + h13*intrho*r33**2
-                k += 1
-                Mv[k] += h14*intrho*r11*r31 + h14*intrho*r12*r32 + h14*intrho*r13*r33
-                k += 1
-                Mv[k] += h14*intrho*r21*r31 + h14*intrho*r22*r32 + h14*intrho*r23*r33
-                k += 1
-                Mv[k] += h14*intrho*r31**2 + h14*intrho*r32**2 + h14*intrho*r33**2
+                Mv[k] += -h11*intrhoz*r11*r32 + h11*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h11*intrhoz2*r11**2 + h11*intrhoz2*r12**2
                 k += 1
@@ -12998,23 +13106,9 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h11*intrhoz2*r11*r31 + h11*intrhoz2*r12*r32
                 k += 1
-                Mv[k] += h12*intrhoz2*r11**2 + h12*intrhoz2*r12**2
+                Mv[k] += h11*intrhoz*r11*r22 - h11*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h12*intrhoz2*r11*r21 + h12*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h12*intrhoz2*r11*r31 + h12*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h13*intrhoz2*r11**2 + h13*intrhoz2*r12**2
-                k += 1
-                Mv[k] += h13*intrhoz2*r11*r21 + h13*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h13*intrhoz2*r11*r31 + h13*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h14*intrhoz2*r11**2 + h14*intrhoz2*r12**2
-                k += 1
-                Mv[k] += h14*intrhoz2*r11*r21 + h14*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h14*intrhoz2*r11*r31 + h14*intrhoz2*r12*r32
+                Mv[k] += -h11*intrhoz*r21*r32 + h11*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h11*intrhoz2*r11*r21 + h11*intrhoz2*r12*r22
                 k += 1
@@ -13022,23 +13116,9 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h11*intrhoz2*r21*r31 + h11*intrhoz2*r22*r32
                 k += 1
-                Mv[k] += h12*intrhoz2*r11*r21 + h12*intrhoz2*r12*r22
+                Mv[k] += h11*intrhoz*r11*r32 - h11*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h12*intrhoz2*r21**2 + h12*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h12*intrhoz2*r21*r31 + h12*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h13*intrhoz2*r11*r21 + h13*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h13*intrhoz2*r21**2 + h13*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h13*intrhoz2*r21*r31 + h13*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h14*intrhoz2*r11*r21 + h14*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h14*intrhoz2*r21**2 + h14*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h14*intrhoz2*r21*r31 + h14*intrhoz2*r22*r32
+                Mv[k] += h11*intrhoz*r21*r32 - h11*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h11*intrhoz2*r11*r31 + h11*intrhoz2*r12*r32
                 k += 1
@@ -13046,53 +13126,15 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h11*intrhoz2*r31**2 + h11*intrhoz2*r32**2
                 k += 1
-                Mv[k] += h12*intrhoz2*r11*r31 + h12*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h12*intrhoz2*r21*r31 + h12*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h12*intrhoz2*r31**2 + h12*intrhoz2*r32**2
-                k += 1
-                Mv[k] += h13*intrhoz2*r11*r31 + h13*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h13*intrhoz2*r21*r31 + h13*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h13*intrhoz2*r31**2 + h13*intrhoz2*r32**2
-                k += 1
-                Mv[k] += h14*intrhoz2*r11*r31 + h14*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h14*intrhoz2*r21*r31 + h14*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h14*intrhoz2*r31**2 + h14*intrhoz2*r32**2
-                k += 1
-                Mv[k] += h12*intrho*r11**2 + h12*intrho*r12**2 + h12*intrho*r13**2
-                k += 1
-                Mv[k] += h12*intrho*r11*r21 + h12*intrho*r12*r22 + h12*intrho*r13*r23
-                k += 1
-                Mv[k] += h12*intrho*r11*r31 + h12*intrho*r12*r32 + h12*intrho*r13*r33
-                k += 1
                 Mv[k] += h22*intrho*r11**2 + h22*intrho*r12**2 + h22*intrho*r13**2
                 k += 1
                 Mv[k] += h22*intrho*r11*r21 + h22*intrho*r12*r22 + h22*intrho*r13*r23
                 k += 1
                 Mv[k] += h22*intrho*r11*r31 + h22*intrho*r12*r32 + h22*intrho*r13*r33
                 k += 1
-                Mv[k] += h23*intrho*r11**2 + h23*intrho*r12**2 + h23*intrho*r13**2
+                Mv[k] += h22*intrhoz*r11*r22 - h22*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h23*intrho*r11*r21 + h23*intrho*r12*r22 + h23*intrho*r13*r23
-                k += 1
-                Mv[k] += h23*intrho*r11*r31 + h23*intrho*r12*r32 + h23*intrho*r13*r33
-                k += 1
-                Mv[k] += h24*intrho*r11**2 + h24*intrho*r12**2 + h24*intrho*r13**2
-                k += 1
-                Mv[k] += h24*intrho*r11*r21 + h24*intrho*r12*r22 + h24*intrho*r13*r23
-                k += 1
-                Mv[k] += h24*intrho*r11*r31 + h24*intrho*r12*r32 + h24*intrho*r13*r33
-                k += 1
-                Mv[k] += h12*intrho*r11*r21 + h12*intrho*r12*r22 + h12*intrho*r13*r23
-                k += 1
-                Mv[k] += h12*intrho*r21**2 + h12*intrho*r22**2 + h12*intrho*r23**2
-                k += 1
-                Mv[k] += h12*intrho*r21*r31 + h12*intrho*r22*r32 + h12*intrho*r23*r33
+                Mv[k] += h22*intrhoz*r11*r32 - h22*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h22*intrho*r11*r21 + h22*intrho*r12*r22 + h22*intrho*r13*r23
                 k += 1
@@ -13100,23 +13142,9 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h22*intrho*r21*r31 + h22*intrho*r22*r32 + h22*intrho*r23*r33
                 k += 1
-                Mv[k] += h23*intrho*r11*r21 + h23*intrho*r12*r22 + h23*intrho*r13*r23
+                Mv[k] += -h22*intrhoz*r11*r22 + h22*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h23*intrho*r21**2 + h23*intrho*r22**2 + h23*intrho*r23**2
-                k += 1
-                Mv[k] += h23*intrho*r21*r31 + h23*intrho*r22*r32 + h23*intrho*r23*r33
-                k += 1
-                Mv[k] += h24*intrho*r11*r21 + h24*intrho*r12*r22 + h24*intrho*r13*r23
-                k += 1
-                Mv[k] += h24*intrho*r21**2 + h24*intrho*r22**2 + h24*intrho*r23**2
-                k += 1
-                Mv[k] += h24*intrho*r21*r31 + h24*intrho*r22*r32 + h24*intrho*r23*r33
-                k += 1
-                Mv[k] += h12*intrho*r11*r31 + h12*intrho*r12*r32 + h12*intrho*r13*r33
-                k += 1
-                Mv[k] += h12*intrho*r21*r31 + h12*intrho*r22*r32 + h12*intrho*r23*r33
-                k += 1
-                Mv[k] += h12*intrho*r31**2 + h12*intrho*r32**2 + h12*intrho*r33**2
+                Mv[k] += h22*intrhoz*r21*r32 - h22*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h22*intrho*r11*r31 + h22*intrho*r12*r32 + h22*intrho*r13*r33
                 k += 1
@@ -13124,23 +13152,13 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h22*intrho*r31**2 + h22*intrho*r32**2 + h22*intrho*r33**2
                 k += 1
-                Mv[k] += h23*intrho*r11*r31 + h23*intrho*r12*r32 + h23*intrho*r13*r33
+                Mv[k] += -h22*intrhoz*r11*r32 + h22*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h23*intrho*r21*r31 + h23*intrho*r22*r32 + h23*intrho*r23*r33
+                Mv[k] += -h22*intrhoz*r21*r32 + h22*intrhoz*r22*r31
                 k += 1
-                Mv[k] += h23*intrho*r31**2 + h23*intrho*r32**2 + h23*intrho*r33**2
+                Mv[k] += -h22*intrhoz*r11*r22 + h22*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h24*intrho*r11*r31 + h24*intrho*r12*r32 + h24*intrho*r13*r33
-                k += 1
-                Mv[k] += h24*intrho*r21*r31 + h24*intrho*r22*r32 + h24*intrho*r23*r33
-                k += 1
-                Mv[k] += h24*intrho*r31**2 + h24*intrho*r32**2 + h24*intrho*r33**2
-                k += 1
-                Mv[k] += h12*intrhoz2*r11**2 + h12*intrhoz2*r12**2
-                k += 1
-                Mv[k] += h12*intrhoz2*r11*r21 + h12*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h12*intrhoz2*r11*r31 + h12*intrhoz2*r12*r32
+                Mv[k] += -h22*intrhoz*r11*r32 + h22*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h22*intrhoz2*r11**2 + h22*intrhoz2*r12**2
                 k += 1
@@ -13148,23 +13166,9 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h22*intrhoz2*r11*r31 + h22*intrhoz2*r12*r32
                 k += 1
-                Mv[k] += h23*intrhoz2*r11**2 + h23*intrhoz2*r12**2
+                Mv[k] += h22*intrhoz*r11*r22 - h22*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h23*intrhoz2*r11*r21 + h23*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h23*intrhoz2*r11*r31 + h23*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h24*intrhoz2*r11**2 + h24*intrhoz2*r12**2
-                k += 1
-                Mv[k] += h24*intrhoz2*r11*r21 + h24*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h24*intrhoz2*r11*r31 + h24*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h12*intrhoz2*r11*r21 + h12*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h12*intrhoz2*r21**2 + h12*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h12*intrhoz2*r21*r31 + h12*intrhoz2*r22*r32
+                Mv[k] += -h22*intrhoz*r21*r32 + h22*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h22*intrhoz2*r11*r21 + h22*intrhoz2*r12*r22
                 k += 1
@@ -13172,23 +13176,9 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h22*intrhoz2*r21*r31 + h22*intrhoz2*r22*r32
                 k += 1
-                Mv[k] += h23*intrhoz2*r11*r21 + h23*intrhoz2*r12*r22
+                Mv[k] += h22*intrhoz*r11*r32 - h22*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h23*intrhoz2*r21**2 + h23*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h23*intrhoz2*r21*r31 + h23*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h24*intrhoz2*r11*r21 + h24*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h24*intrhoz2*r21**2 + h24*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h24*intrhoz2*r21*r31 + h24*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h12*intrhoz2*r11*r31 + h12*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h12*intrhoz2*r21*r31 + h12*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h12*intrhoz2*r31**2 + h12*intrhoz2*r32**2
+                Mv[k] += h22*intrhoz*r21*r32 - h22*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h22*intrhoz2*r11*r31 + h22*intrhoz2*r12*r32
                 k += 1
@@ -13196,53 +13186,15 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h22*intrhoz2*r31**2 + h22*intrhoz2*r32**2
                 k += 1
-                Mv[k] += h23*intrhoz2*r11*r31 + h23*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h23*intrhoz2*r21*r31 + h23*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h23*intrhoz2*r31**2 + h23*intrhoz2*r32**2
-                k += 1
-                Mv[k] += h24*intrhoz2*r11*r31 + h24*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h24*intrhoz2*r21*r31 + h24*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h24*intrhoz2*r31**2 + h24*intrhoz2*r32**2
-                k += 1
-                Mv[k] += h13*intrho*r11**2 + h13*intrho*r12**2 + h13*intrho*r13**2
-                k += 1
-                Mv[k] += h13*intrho*r11*r21 + h13*intrho*r12*r22 + h13*intrho*r13*r23
-                k += 1
-                Mv[k] += h13*intrho*r11*r31 + h13*intrho*r12*r32 + h13*intrho*r13*r33
-                k += 1
-                Mv[k] += h23*intrho*r11**2 + h23*intrho*r12**2 + h23*intrho*r13**2
-                k += 1
-                Mv[k] += h23*intrho*r11*r21 + h23*intrho*r12*r22 + h23*intrho*r13*r23
-                k += 1
-                Mv[k] += h23*intrho*r11*r31 + h23*intrho*r12*r32 + h23*intrho*r13*r33
-                k += 1
                 Mv[k] += h33*intrho*r11**2 + h33*intrho*r12**2 + h33*intrho*r13**2
                 k += 1
                 Mv[k] += h33*intrho*r11*r21 + h33*intrho*r12*r22 + h33*intrho*r13*r23
                 k += 1
                 Mv[k] += h33*intrho*r11*r31 + h33*intrho*r12*r32 + h33*intrho*r13*r33
                 k += 1
-                Mv[k] += h34*intrho*r11**2 + h34*intrho*r12**2 + h34*intrho*r13**2
+                Mv[k] += h33*intrhoz*r11*r22 - h33*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h34*intrho*r11*r21 + h34*intrho*r12*r22 + h34*intrho*r13*r23
-                k += 1
-                Mv[k] += h34*intrho*r11*r31 + h34*intrho*r12*r32 + h34*intrho*r13*r33
-                k += 1
-                Mv[k] += h13*intrho*r11*r21 + h13*intrho*r12*r22 + h13*intrho*r13*r23
-                k += 1
-                Mv[k] += h13*intrho*r21**2 + h13*intrho*r22**2 + h13*intrho*r23**2
-                k += 1
-                Mv[k] += h13*intrho*r21*r31 + h13*intrho*r22*r32 + h13*intrho*r23*r33
-                k += 1
-                Mv[k] += h23*intrho*r11*r21 + h23*intrho*r12*r22 + h23*intrho*r13*r23
-                k += 1
-                Mv[k] += h23*intrho*r21**2 + h23*intrho*r22**2 + h23*intrho*r23**2
-                k += 1
-                Mv[k] += h23*intrho*r21*r31 + h23*intrho*r22*r32 + h23*intrho*r23*r33
+                Mv[k] += h33*intrhoz*r11*r32 - h33*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h33*intrho*r11*r21 + h33*intrho*r12*r22 + h33*intrho*r13*r23
                 k += 1
@@ -13250,23 +13202,9 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h33*intrho*r21*r31 + h33*intrho*r22*r32 + h33*intrho*r23*r33
                 k += 1
-                Mv[k] += h34*intrho*r11*r21 + h34*intrho*r12*r22 + h34*intrho*r13*r23
+                Mv[k] += -h33*intrhoz*r11*r22 + h33*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h34*intrho*r21**2 + h34*intrho*r22**2 + h34*intrho*r23**2
-                k += 1
-                Mv[k] += h34*intrho*r21*r31 + h34*intrho*r22*r32 + h34*intrho*r23*r33
-                k += 1
-                Mv[k] += h13*intrho*r11*r31 + h13*intrho*r12*r32 + h13*intrho*r13*r33
-                k += 1
-                Mv[k] += h13*intrho*r21*r31 + h13*intrho*r22*r32 + h13*intrho*r23*r33
-                k += 1
-                Mv[k] += h13*intrho*r31**2 + h13*intrho*r32**2 + h13*intrho*r33**2
-                k += 1
-                Mv[k] += h23*intrho*r11*r31 + h23*intrho*r12*r32 + h23*intrho*r13*r33
-                k += 1
-                Mv[k] += h23*intrho*r21*r31 + h23*intrho*r22*r32 + h23*intrho*r23*r33
-                k += 1
-                Mv[k] += h23*intrho*r31**2 + h23*intrho*r32**2 + h23*intrho*r33**2
+                Mv[k] += h33*intrhoz*r21*r32 - h33*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h33*intrho*r11*r31 + h33*intrho*r12*r32 + h33*intrho*r13*r33
                 k += 1
@@ -13274,23 +13212,13 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h33*intrho*r31**2 + h33*intrho*r32**2 + h33*intrho*r33**2
                 k += 1
-                Mv[k] += h34*intrho*r11*r31 + h34*intrho*r12*r32 + h34*intrho*r13*r33
+                Mv[k] += -h33*intrhoz*r11*r32 + h33*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h34*intrho*r21*r31 + h34*intrho*r22*r32 + h34*intrho*r23*r33
+                Mv[k] += -h33*intrhoz*r21*r32 + h33*intrhoz*r22*r31
                 k += 1
-                Mv[k] += h34*intrho*r31**2 + h34*intrho*r32**2 + h34*intrho*r33**2
+                Mv[k] += -h33*intrhoz*r11*r22 + h33*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h13*intrhoz2*r11**2 + h13*intrhoz2*r12**2
-                k += 1
-                Mv[k] += h13*intrhoz2*r11*r21 + h13*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h13*intrhoz2*r11*r31 + h13*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h23*intrhoz2*r11**2 + h23*intrhoz2*r12**2
-                k += 1
-                Mv[k] += h23*intrhoz2*r11*r21 + h23*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h23*intrhoz2*r11*r31 + h23*intrhoz2*r12*r32
+                Mv[k] += -h33*intrhoz*r11*r32 + h33*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h33*intrhoz2*r11**2 + h33*intrhoz2*r12**2
                 k += 1
@@ -13298,23 +13226,9 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h33*intrhoz2*r11*r31 + h33*intrhoz2*r12*r32
                 k += 1
-                Mv[k] += h34*intrhoz2*r11**2 + h34*intrhoz2*r12**2
+                Mv[k] += h33*intrhoz*r11*r22 - h33*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h34*intrhoz2*r11*r21 + h34*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h34*intrhoz2*r11*r31 + h34*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h13*intrhoz2*r11*r21 + h13*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h13*intrhoz2*r21**2 + h13*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h13*intrhoz2*r21*r31 + h13*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h23*intrhoz2*r11*r21 + h23*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h23*intrhoz2*r21**2 + h23*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h23*intrhoz2*r21*r31 + h23*intrhoz2*r22*r32
+                Mv[k] += -h33*intrhoz*r21*r32 + h33*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h33*intrhoz2*r11*r21 + h33*intrhoz2*r12*r22
                 k += 1
@@ -13322,23 +13236,9 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h33*intrhoz2*r21*r31 + h33*intrhoz2*r22*r32
                 k += 1
-                Mv[k] += h34*intrhoz2*r11*r21 + h34*intrhoz2*r12*r22
+                Mv[k] += h33*intrhoz*r11*r32 - h33*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h34*intrhoz2*r21**2 + h34*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h34*intrhoz2*r21*r31 + h34*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h13*intrhoz2*r11*r31 + h13*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h13*intrhoz2*r21*r31 + h13*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h13*intrhoz2*r31**2 + h13*intrhoz2*r32**2
-                k += 1
-                Mv[k] += h23*intrhoz2*r11*r31 + h23*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h23*intrhoz2*r21*r31 + h23*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h23*intrhoz2*r31**2 + h23*intrhoz2*r32**2
+                Mv[k] += h33*intrhoz*r21*r32 - h33*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h33*intrhoz2*r11*r31 + h33*intrhoz2*r12*r32
                 k += 1
@@ -13346,53 +13246,15 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h33*intrhoz2*r31**2 + h33*intrhoz2*r32**2
                 k += 1
-                Mv[k] += h34*intrhoz2*r11*r31 + h34*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h34*intrhoz2*r21*r31 + h34*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h34*intrhoz2*r31**2 + h34*intrhoz2*r32**2
-                k += 1
-                Mv[k] += h14*intrho*r11**2 + h14*intrho*r12**2 + h14*intrho*r13**2
-                k += 1
-                Mv[k] += h14*intrho*r11*r21 + h14*intrho*r12*r22 + h14*intrho*r13*r23
-                k += 1
-                Mv[k] += h14*intrho*r11*r31 + h14*intrho*r12*r32 + h14*intrho*r13*r33
-                k += 1
-                Mv[k] += h24*intrho*r11**2 + h24*intrho*r12**2 + h24*intrho*r13**2
-                k += 1
-                Mv[k] += h24*intrho*r11*r21 + h24*intrho*r12*r22 + h24*intrho*r13*r23
-                k += 1
-                Mv[k] += h24*intrho*r11*r31 + h24*intrho*r12*r32 + h24*intrho*r13*r33
-                k += 1
-                Mv[k] += h34*intrho*r11**2 + h34*intrho*r12**2 + h34*intrho*r13**2
-                k += 1
-                Mv[k] += h34*intrho*r11*r21 + h34*intrho*r12*r22 + h34*intrho*r13*r23
-                k += 1
-                Mv[k] += h34*intrho*r11*r31 + h34*intrho*r12*r32 + h34*intrho*r13*r33
-                k += 1
                 Mv[k] += h44*intrho*r11**2 + h44*intrho*r12**2 + h44*intrho*r13**2
                 k += 1
                 Mv[k] += h44*intrho*r11*r21 + h44*intrho*r12*r22 + h44*intrho*r13*r23
                 k += 1
                 Mv[k] += h44*intrho*r11*r31 + h44*intrho*r12*r32 + h44*intrho*r13*r33
                 k += 1
-                Mv[k] += h14*intrho*r11*r21 + h14*intrho*r12*r22 + h14*intrho*r13*r23
+                Mv[k] += h44*intrhoz*r11*r22 - h44*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h14*intrho*r21**2 + h14*intrho*r22**2 + h14*intrho*r23**2
-                k += 1
-                Mv[k] += h14*intrho*r21*r31 + h14*intrho*r22*r32 + h14*intrho*r23*r33
-                k += 1
-                Mv[k] += h24*intrho*r11*r21 + h24*intrho*r12*r22 + h24*intrho*r13*r23
-                k += 1
-                Mv[k] += h24*intrho*r21**2 + h24*intrho*r22**2 + h24*intrho*r23**2
-                k += 1
-                Mv[k] += h24*intrho*r21*r31 + h24*intrho*r22*r32 + h24*intrho*r23*r33
-                k += 1
-                Mv[k] += h34*intrho*r11*r21 + h34*intrho*r12*r22 + h34*intrho*r13*r23
-                k += 1
-                Mv[k] += h34*intrho*r21**2 + h34*intrho*r22**2 + h34*intrho*r23**2
-                k += 1
-                Mv[k] += h34*intrho*r21*r31 + h34*intrho*r22*r32 + h34*intrho*r23*r33
+                Mv[k] += h44*intrhoz*r11*r32 - h44*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h44*intrho*r11*r21 + h44*intrho*r12*r22 + h44*intrho*r13*r23
                 k += 1
@@ -13400,23 +13262,9 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h44*intrho*r21*r31 + h44*intrho*r22*r32 + h44*intrho*r23*r33
                 k += 1
-                Mv[k] += h14*intrho*r11*r31 + h14*intrho*r12*r32 + h14*intrho*r13*r33
+                Mv[k] += -h44*intrhoz*r11*r22 + h44*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h14*intrho*r21*r31 + h14*intrho*r22*r32 + h14*intrho*r23*r33
-                k += 1
-                Mv[k] += h14*intrho*r31**2 + h14*intrho*r32**2 + h14*intrho*r33**2
-                k += 1
-                Mv[k] += h24*intrho*r11*r31 + h24*intrho*r12*r32 + h24*intrho*r13*r33
-                k += 1
-                Mv[k] += h24*intrho*r21*r31 + h24*intrho*r22*r32 + h24*intrho*r23*r33
-                k += 1
-                Mv[k] += h24*intrho*r31**2 + h24*intrho*r32**2 + h24*intrho*r33**2
-                k += 1
-                Mv[k] += h34*intrho*r11*r31 + h34*intrho*r12*r32 + h34*intrho*r13*r33
-                k += 1
-                Mv[k] += h34*intrho*r21*r31 + h34*intrho*r22*r32 + h34*intrho*r23*r33
-                k += 1
-                Mv[k] += h34*intrho*r31**2 + h34*intrho*r32**2 + h34*intrho*r33**2
+                Mv[k] += h44*intrhoz*r21*r32 - h44*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h44*intrho*r11*r31 + h44*intrho*r12*r32 + h44*intrho*r13*r33
                 k += 1
@@ -13424,23 +13272,13 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h44*intrho*r31**2 + h44*intrho*r32**2 + h44*intrho*r33**2
                 k += 1
-                Mv[k] += h14*intrhoz2*r11**2 + h14*intrhoz2*r12**2
+                Mv[k] += -h44*intrhoz*r11*r32 + h44*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h14*intrhoz2*r11*r21 + h14*intrhoz2*r12*r22
+                Mv[k] += -h44*intrhoz*r21*r32 + h44*intrhoz*r22*r31
                 k += 1
-                Mv[k] += h14*intrhoz2*r11*r31 + h14*intrhoz2*r12*r32
+                Mv[k] += -h44*intrhoz*r11*r22 + h44*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h24*intrhoz2*r11**2 + h24*intrhoz2*r12**2
-                k += 1
-                Mv[k] += h24*intrhoz2*r11*r21 + h24*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h24*intrhoz2*r11*r31 + h24*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h34*intrhoz2*r11**2 + h34*intrhoz2*r12**2
-                k += 1
-                Mv[k] += h34*intrhoz2*r11*r21 + h34*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h34*intrhoz2*r11*r31 + h34*intrhoz2*r12*r32
+                Mv[k] += -h44*intrhoz*r11*r32 + h44*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h44*intrhoz2*r11**2 + h44*intrhoz2*r12**2
                 k += 1
@@ -13448,23 +13286,9 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h44*intrhoz2*r11*r31 + h44*intrhoz2*r12*r32
                 k += 1
-                Mv[k] += h14*intrhoz2*r11*r21 + h14*intrhoz2*r12*r22
+                Mv[k] += h44*intrhoz*r11*r22 - h44*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h14*intrhoz2*r21**2 + h14*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h14*intrhoz2*r21*r31 + h14*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h24*intrhoz2*r11*r21 + h24*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h24*intrhoz2*r21**2 + h24*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h24*intrhoz2*r21*r31 + h24*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h34*intrhoz2*r11*r21 + h34*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h34*intrhoz2*r21**2 + h34*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h34*intrhoz2*r21*r31 + h34*intrhoz2*r22*r32
+                Mv[k] += -h44*intrhoz*r21*r32 + h44*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h44*intrhoz2*r11*r21 + h44*intrhoz2*r12*r22
                 k += 1
@@ -13472,23 +13296,9 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h44*intrhoz2*r21*r31 + h44*intrhoz2*r22*r32
                 k += 1
-                Mv[k] += h14*intrhoz2*r11*r31 + h14*intrhoz2*r12*r32
+                Mv[k] += h44*intrhoz*r11*r32 - h44*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h14*intrhoz2*r21*r31 + h14*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h14*intrhoz2*r31**2 + h14*intrhoz2*r32**2
-                k += 1
-                Mv[k] += h24*intrhoz2*r11*r31 + h24*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h24*intrhoz2*r21*r31 + h24*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h24*intrhoz2*r31**2 + h24*intrhoz2*r32**2
-                k += 1
-                Mv[k] += h34*intrhoz2*r11*r31 + h34*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h34*intrhoz2*r21*r31 + h34*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h34*intrhoz2*r31**2 + h34*intrhoz2*r32**2
+                Mv[k] += h44*intrhoz*r21*r32 - h44*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h44*intrhoz2*r11*r31 + h44*intrhoz2*r12*r32
                 k += 1
@@ -13504,14 +13314,90 @@ cdef class Quad4R:
                         ):
         r"""Update sparse vectors for piston-theory aerodynamic matrix `KA_{\beta}`
 
+        The matrix is integrated over the element with 2 by 2 Gauss-Legendre
+        quadrature, from the coordinates ``probe.xe`` and the rotation matrix,
+        and its values are added to ``KA_betav`` at the positions
+        ``init_k_KA_beta`` to ``init_k_KA_beta + KA_BETA_SPARSE_SIZE - 1``; the
+        global row and column indices are always written to ``KA_betar`` and
+        ``KA_betac`` at the same positions. Only the translational
+        degrees-of-freedom appear, through their components along the element
+        normal. No aerodynamic coefficient enters the values, which depend
+        only on the geometry, so the caller multiplies the assembled matrix by
+        it. Before this method is called, :meth:`.update_rotation_matrix` and
+        :meth:`.update_probe_xe` must have been used.
+
         Parameters
         ----------
         KA_betar : np.array
             Array to store row positions of sparse values
+            1-D array of integers (``INT``) of size at least
+            ``init_k_KA_beta + KA_BETA_SPARSE_SIZE``.
         KA_betac : np.array
             Array to store column positions of sparse values
+            Same type and size as ``KA_betar``.
         KA_betav : np.array
             Array to store sparse values
+            1-D array of ``DOUBLE``, same size as ``KA_betar``. The values are
+            added to the existing ones, with dimension of length.
+
+        Notes
+        -----
+        With `w_n = r_{13} u + r_{23} v + r_{33} w` the displacement along
+        the element normal, written with the global translations, the
+        computed matrix is
+
+        .. math::
+
+            KA_{\beta} = -\int_A \{N\}^T \left( r_{11} \{N_{,x}\}
+                + r_{12} \{N_{,y}\} \right) dA
+
+        acting on the nodal values of `w_n`, where `\{N\}` holds the bilinear
+        shape functions and `\{N_{,x}\}`, `\{N_{,y}\}` their derivatives along
+        the element axes. The element coordinates are `x = r_{11} X + r_{21}
+        Y + r_{31} Z` and `y = r_{12} X + r_{22} Y + r_{32} Z`, such that
+        `r_{11} \{N_{,x}\} + r_{12} \{N_{,y}\}` is the derivative along the
+        global `X` axis, the direction of the flow, projected on the plane of
+        the element.
+
+        .. rubric:: Piston theory
+
+        The matrices of :meth:`.update_KA_beta`, :meth:`.update_KA_gamma`
+        and :meth:`.update_CA` are the matrices of the aerodynamic load
+        along the element normal of a supersonic flow along the global `X`
+        axis, flowing towards the positive `X`. The linear piston theory, with
+        Krumhaar's correction for a cylinder [1]_, gives the pressure on the
+        side of the flow `p = \beta w_{,X} + \mu \dot{w} - \gamma w`, with
+        `w` the displacement towards the flow, and hence the
+        load per unit area along the normal
+
+        .. math::
+
+            q = -\beta \, w_{n,X} + \gamma \, w_n - \mu \, \dot{w}_n
+
+        whichever side of the element the flow is on, because `q` and `w_n`
+        change sign together. The load vector is then `\{f_A\} = \beta
+        [KA_{\beta}] \{u\} + \gamma [KA_{\gamma}] \{u\} + \mu [CA]
+        \{\dot{u}\}` and the equations of motion are
+
+        .. math::
+
+            [M] \{\ddot{u}\} - \mu [CA] \{\dot{u}\} + \left([K] - \beta
+            [KA_{\beta}] - \gamma [KA_{\gamma}]\right) \{u\} = \{0\}
+
+        The coefficients are given by the caller; with the density
+        `\rho_{\infty}`, speed `U` and Mach number `M` of the flow, `\beta =
+        \rho_{\infty} U^2/\sqrt{M^2 - 1}`, `\mu = \beta (M^2 - 2)/(U (M^2 -
+        1))`, and `\gamma = \beta/(2 R \sqrt{M^2 - 1})` for the flow over the
+        outer, convex, side of a cylinder of radius `R`, an outward
+        displacement lowering the pressure, or `\gamma = 0` for a flat
+        panel. The positive `\mu` damps the motion, and the positive
+        `\gamma` reduces the stiffness.
+
+        References
+        ----------
+        .. [1] Krumhaar, H., "The accuracy of linear piston theory when
+           applied to cylindrical shells", AIAA Journal, 1(6), 1448-1449,
+           1963.
 
         """
         cdef int c1, c2, c3, c4, i, j, k
@@ -14024,293 +13910,293 @@ cdef class Quad4R:
                     N4y = -0.25*eta*j21 - 0.25*j21 - 0.25*j22*xi + 0.25*j22
 
                     k = self.init_k_KA_beta
-                    KA_betav[k] += -N1*detJ*r13**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N1*detJ*r13**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N1*detJ*r13**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N1*detJ*r13**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N1*detJ*r13**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N1*detJ*r23**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N1*detJ*r23**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N1*detJ*r23**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r23*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N1*detJ*r23**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r33**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N1*detJ*r33**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r33**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N1*detJ*r33**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r33**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N1*detJ*r33**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N1*detJ*r13*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N1*detJ*r23*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N1*detJ*r33**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N1*detJ*r33**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N2*detJ*r13**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N2*detJ*r13**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N2*detJ*r13**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N2*detJ*r13**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N2*detJ*r23**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N2*detJ*r23**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N2*detJ*r23**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r23*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N2*detJ*r23**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r33**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N2*detJ*r33**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r33**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N2*detJ*r33**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r33**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N2*detJ*r33**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N2*detJ*r13*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N2*detJ*r23*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N2*detJ*r33**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N2*detJ*r33**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N3*detJ*r13**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N3*detJ*r13**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N3*detJ*r13**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N3*detJ*r13**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N3*detJ*r23**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N3*detJ*r23**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N3*detJ*r23**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r23*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N3*detJ*r23**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r33**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N3*detJ*r33**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r33**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N3*detJ*r33**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r33**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N3*detJ*r33**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N3*detJ*r13*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N3*detJ*r23*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N3*detJ*r33**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N3*detJ*r33**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N4*detJ*r13**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N4*detJ*r13**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N4*detJ*r13**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N4*detJ*r13**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N4*detJ*r23**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N4*detJ*r23**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N4*detJ*r23**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r23*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N4*detJ*r23**2*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r33**2*wij*(N1x*r11 + N1y*r21)
+                    KA_betav[k] += -N4*detJ*r33**2*wij*(N1x*r11 + N1y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r33**2*wij*(N2x*r11 + N2y*r21)
+                    KA_betav[k] += -N4*detJ*r33**2*wij*(N2x*r11 + N2y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r33**2*wij*(N3x*r11 + N3y*r21)
+                    KA_betav[k] += -N4*detJ*r33**2*wij*(N3x*r11 + N3y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N4*detJ*r13*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N4*detJ*r23*r33*wij*(N4x*r11 + N4y*r12)
                     k += 1
-                    KA_betav[k] += -N4*detJ*r33**2*wij*(N4x*r11 + N4y*r21)
+                    KA_betav[k] += -N4*detJ*r33**2*wij*(N4x*r11 + N4y*r12)
 
 
     cpdef void update_KA_gamma(Quad4R self,
@@ -14320,14 +14206,48 @@ cdef class Quad4R:
                         ):
         r"""Update sparse vectors for piston-theory aerodynamic matrix `KA_{\gamma}`
 
+        The matrix is integrated over the element with 2 by 2 Gauss-Legendre
+        quadrature, from the coordinates ``probe.xe`` and the rotation matrix,
+        and its values are added to ``KA_gammav`` at the positions
+        ``init_k_KA_gamma`` to ``init_k_KA_gamma + KA_GAMMA_SPARSE_SIZE - 1``;
+        the global row and column indices are always written to
+        ``KA_gammar`` and ``KA_gammac`` at the same positions. Only the
+        translational degrees-of-freedom appear, through their components
+        along the element normal. No aerodynamic coefficient enters the
+        values, which depend only on the geometry, so the caller multiplies
+        the assembled matrix by it. Before this method is called,
+        :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe` must have
+        been used.
+
         Parameters
         ----------
         KA_gammar : np.array
             Array to store row positions of sparse values
+            1-D array of integers (``INT``) of size at least
+            ``init_k_KA_gamma + KA_GAMMA_SPARSE_SIZE``.
         KA_gammac : np.array
             Array to store column positions of sparse values
+            Same type and size as ``KA_gammar``.
         KA_gammav : np.array
             Array to store sparse values
+            1-D array of ``DOUBLE``, same size as ``KA_gammar``. The values
+            are added to the existing ones, with dimension of length squared.
+
+        Notes
+        -----
+        With `w_n` the displacement along the element normal, as in
+        :meth:`.update_KA_beta`, the computed matrix is
+
+        .. math::
+
+            KA_{\gamma} = \int_A \{N\}^T \{N\} dA
+
+        acting on the nodal values of `w_n`. With the piston-theory
+        coefficient `\gamma` given by the caller, `\gamma [KA_{\gamma}]
+        \{u\}` is the load of the term `\gamma w_n` of the pressure law, which
+        enters the stiffness of the equations of motion as `-\gamma
+        [KA_{\gamma}]`, see the piston theory in the notes of
+        :meth:`.update_KA_beta`.
 
         """
         cdef int c1, c2, c3, c4, i, j, k
@@ -15118,14 +15038,47 @@ cdef class Quad4R:
                         ):
         r"""Update sparse vectors for piston-theory aerodynamic damping matrix `CA`
 
+        The matrix is integrated over the element with 2 by 2 Gauss-Legendre
+        quadrature, from the coordinates ``probe.xe`` and the rotation matrix,
+        and its values are added to ``CAv`` at the positions ``init_k_CA`` to
+        ``init_k_CA + CA_SPARSE_SIZE - 1``; the global row and column indices
+        are always written to ``CAr`` and ``CAc`` at the same positions. Only
+        the translational degrees-of-freedom appear, through their components
+        along the element normal. No aerodynamic coefficient enters the
+        values, which depend only on the geometry, so the caller multiplies
+        the assembled matrix by it. Before this method is called,
+        :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe` must have
+        been used.
+
         Parameters
         ----------
         CAr : np.array
             Array to store row positions of sparse values
+            1-D array of integers (``INT``) of size at least ``init_k_CA +
+            CA_SPARSE_SIZE``.
         CAc : np.array
             Array to store column positions of sparse values
+            Same type and size as ``CAr``.
         CAv : np.array
             Array to store sparse values
+            1-D array of ``DOUBLE``, same size as ``CAr``. The values are added
+            to the existing ones, with dimension of length squared.
+
+        Notes
+        -----
+        With `w_n` the displacement along the element normal, as in
+        :meth:`.update_KA_beta`, the computed matrix is
+
+        .. math::
+
+            CA = -\int_A \{N\}^T \{N\} dA
+
+        acting on the nodal values of the velocity `\dot w_n`. With the
+        piston-theory damping coefficient `\mu` given by the caller, `\mu
+        [CA] \{\dot{u}\}` is the load of the term `-\mu \dot{w}_n` of the
+        pressure law, which enters the damping of the equations of motion as
+        `-\mu [CA]`, positive definite, see the piston theory in the notes of
+        :meth:`.update_KA_beta`.
 
         """
         cdef int c1, c2, c3, c4, i, j, k

@@ -103,7 +103,11 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
 
             # boundary conditions
             bk = np.zeros(N, dtype=bool)
-            check = np.isclose(x, x.min()) | np.isclose(x, x.max())
+            # NOTE the end nodes are the first and the last of the arc; selecting
+            #      them with np.isclose(x, x.max()) also caught the neighbour of
+            #      the end at theta = 0 with fine meshes, where x varies as theta**2
+            check = np.zeros(n, dtype=bool)
+            check[[0, -1]] = True
             bk[0::DOF] = check
             bk[2::DOF] = check
             bk[1::DOF] = True

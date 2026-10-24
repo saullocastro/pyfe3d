@@ -96,7 +96,11 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
         print('sparse KC0 and M created')
 
         bk = np.zeros(N, dtype=bool)
-        check = np.isclose(x, x.min()) | np.isclose(x, x.max())
+        # NOTE the end nodes are the first and the last of the arc; selecting
+        #      them with np.isclose(x, x.max()) also caught the neighbour of
+        #      the end at theta = 0 with fine meshes, where x varies as theta**2
+        check = np.zeros(n, dtype=bool)
+        check[[0, -1]] = True
         bk[0::DOF] = check
         bk[1::DOF] = check
         bk[2::DOF] = True
@@ -113,7 +117,11 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
         #      frequencies already sorted
         omegan, eigvecsu = natural_frequency(Kuu, Muu, num_eigvalues=num_eigenvalues, tol=1e-3)
         omega123_from_paper = [396.98, 931.22, 1797.31]
-        omega123_expected_here = [395.50396255, 923.75280463, 1773.32657347]
+        # NOTE values of 50 elements with the shear parameter of the consistent
+        #      shape functions corrected to alpha = -12*E*I/(G*A*L**2); they agree
+        #      to 0.05 % with 200 BeamC elements (394.431, 918.543, 1756.301)
+        #      and with 200 BeamLR elements (394.472, 918.751, 1757.086)
+        omega123_expected_here = [394.54891673, 919.02124464, 1757.02096637]
         print('Reference omega123_from_paper', omega123_from_paper)
         print('Reference omega123_expected_here', omega123_expected_here)
         print('Numerical omega123', omegan)

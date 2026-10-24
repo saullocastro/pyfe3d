@@ -1,5 +1,477 @@
 # Changelog
 
+## 0.11.0 (2026-10-24)
+
+### Python versions
+
+- Python 3.9 is no longer supported, it reached its end of life in October 2025: Python 3.10 or newer is required, and the tests and wheels cover Python 3.10 to 3.14.
+
+### Packaging
+
+- Packaging: the metadata, with the version, in `pyproject.toml` (PEP 621), built with `setuptools>=77` and Cython; `setup.py` keeps only the Cython extensions with the compiler flags and writes `pyfe3d/version.py` from `pyproject.toml`. NumPy and SciPy, imported by pyfe3d, are now declared as run-time dependencies and are no longer build requirements; the license is given as the SPDX expression `BSD-3-Clause` instead of a classifier, wheel is no longer a build requirement, and README.md, AUTHORS and LICENSE are no longer installed in the root of the Python environment (`data_files`).
+
+### Non-linear static solvers in `pyfe3d.solver`
+
+`pyfe3d.solver` becomes a package; every import of the previous module keeps
+working. The features of structsolve are implemented in it, without
+depending on structsolve:
+
+- `pyfe3d.solver.static`: `solve()` and `linear_static()`;
+- `pyfe3d.solver.analysis.Analysis`: linear and non-linear static analyses
+  of a model given by the callables `calc_fext`, `calc_fint`, `calc_kC` and
+  `calc_kG`, with the Newton-Raphson method, full or modified, with an
+  optional line search, and the arc-length methods of Riks and of
+  Crisfield; configuration-dependent loads with unsymmetric tangent
+  stiffness matrices and load-factor-dependent load vectors, see
+  `pyfe3d.solver.callbacks`; with `bu` and `uk`, the callables work with
+  all the degrees-of-freedom, as assembled by the elements, and prescribed
+  displacements are imposed exactly, see `FreeDofs`;
+- `pyfe3d.solver.arc_length`, both methods: a converged step whose
+  increment points against the tangent predictor, i.e. a negative or null
+  inner product of the arc-length constraint, is rejected and repeated with
+  a shorter arc length, as in structsolve. The previous converged point is
+  at the distance of the arc length from the last one, and the iterations
+  could converge to it and then trace the path backwards ("doubling
+  back"): in the development version of 0.11.0, the von Mises truss of the
+  tests at 10 times its limit load with `initialInc=0.2` was traced
+  backwards from the second step, which returned to the origin with Riks'
+  method, and ended at load factors of about -15 instead of 1.0, with both
+  methods and both convergence criteria. New test
+  `test_arc_length_no_doubling_back`;
+- `pyfe3d.solver.convergence`: Crisfield's convergence criterion, the
+  default of the non-linear solvers, the residual scaled with the diagonal
+  of the linear stiffness matrix over the free degrees-of-freedom; the
+  relative criterion remains available with `convergence='relative'`;
+- singular matrices raise `numpy.linalg.LinAlgError`: the solvers do not
+  remove null rows and columns. A null row or column of the matrix given
+  to `solve()`, to the factorization of the non-linear solvers, to
+  `crisfield_weights()`, or of `K` in `linear_buckling()` and
+  `natural_frequency()`, is a degree-of-freedom without stiffness (an
+  unattached node, an unstiffened drilling rotation, a missing boundary
+  condition), i.e. a modelling error, and the message gives the number of
+  these degrees-of-freedom, their first indices and how to correct the
+  model, see the new `pyfe3d.solver.check_null_rows_cols()`; `KG` and `M`
+  may have null rows and columns, e.g. a lumped mass matrix without rotary
+  inertia. An exactly singular matrix also raises in `solve()`, instead of
+  the `MatrixRankWarning` and NaN values of
+  `scipy.sparse.linalg.spsolve()`. The constrained degrees-of-freedom are
+  partitioned out by the user, `KC0uu = KC0[bu, :][:, bu]`, or with
+  `Analysis(..., bu=bu)`. This deliberately differs from structsolve, whose
+  semi-analytical Ritz models apply the boundary conditions by zeroing
+  approximation functions and whose solvers remove the null rows and
+  columns that this leaves;
+- `linear_buckling()` and `natural_frequency()`: unsymmetric matrices, the
+  negative load multipliers closest to zero after the positive ones, the
+  verification of every eigenpair with the sparse solvers first and a dense
+  solver as a last resort (`DenseFallbackWarning`), new keyword arguments
+  after the existing ones, whose defaults are unchanged. `check_eigenpairs()`
+  now also detects load multipliers missing below the highest one returned.
+  `diagonal_preconditioner()` uses the modulus of the diagonal entries.
+- `linear_buckling()`, `check_eigenpairs()` and `natural_frequency()`
+  verify the relative residual `||K u + lambda B u||/(||K u|| + |lambda|
+  ||B u||)` of each eigenpair, with `B = KG`, or `B = M` and `lambda =
+  -omega_n^2`, without any floor of its denominator. Only the residual of a rigid-body mode of
+  `natural_frequency()`, whose `||K u|| + |omega_n^2| ||M u||` is not larger
+  than `pyfe3d.solver.eigen.RIGID_BODY_RTOL = 100 eps` times the
+  matrix-norm scale `(||K||_F + |omega_n^2| ||M||_F) ||u||`, is relative to
+  this scale, i.e. the backward error, see
+  `pyfe3d.solver.eigen._relative_residuals(rigid_rtol)`: the relative
+  residual of the rigid-body modes, `omega_n^2 = 0` and `K u = 0` up to the
+  round-off, is about 1. The floor of `1e-8` times the matrix-norm scale
+  for every eigenpair, in the development version of 0.11.0, loosened the
+  check about 1000 times for models with stiff penalty springs, whose
+  `||K||_F` is many orders of magnitude larger than `||K u||`: e.g. for a
+  blade-stiffened plate with penalty connections, `linear_buckling(...,
+  precondition=False)` accepted eigenpairs of `eigsh` with relative
+  residuals of 1 to 2 % and a lowest load multiplier 0.08 % too low; they
+  are now rejected and computed with the dense fallback. New test data
+  `tests/data/blade_stiffened_penalty_K.npz` and `_KG.npz`.
+
+### Damped frequencies: `complex_frequency()`
+
+- New `pyfe3d.solver.complex_frequency(K, C, M, ...)`: the complex
+  eigenvalues `lambda` of the damped free vibrations, `(lambda**2 M +
+  lambda C + K) u = 0`, with the damped circular frequency
+  `abs(lambda.imag)` and the damping ratio `-lambda.real/abs(lambda)`;
+  one eigenvalue per complex conjugate pair, `lambda.imag >= 0`, the
+  `num_eigvalues` nearest the shift, sorted by increasing imaginary part.
+  `K`, `C` and `M` are real, symmetric or not, e.g. with the matrices of
+  the piston theory or gyroscopic terms. The first companion linearization
+  of size `2n` (Tisseur and Meerbergen, SIAM Review, 2001) is solved with
+  `eigs` in shift-invert mode, which factorizes only `sigma**2 M + sigma C
+  + K`; the default shift `sigma = 1` rad/s is the counterpart of the shift
+  `omega_n**2 = -1` of `natural_frequency()`, and a real or complex shift
+  can be given. Same conventions and solver policy as
+  `natural_frequency()`: no null row or column of `K`, the relative
+  residual of every eigenpair verified against `check_rtol`, and the dense
+  fallback, `scipy.linalg.eig` on the linearization, of size `2n` at most
+  `max_dense_size`, with a `DenseFallbackWarning`. Whether an eigenvalue
+  nearer the shift was missed is not verified, no inertia count existing
+  for complex eigenvalues. With `C = 0`, `lambda = 1j*omega_n` of
+  `natural_frequency()`, which is unchanged. New
+  `tests/test_solver_complex_frequency.py`.
+- `tests/test_quad4_piston_theory.py` and
+  `tests/test_quad4r_piston_theory.py` include the aerodynamic damping `C
+  = -mu*CA` and now assert their results: for the flat plate `C` is
+  `a = mu/(rho h)` times the mass matrix of `w`, such that the damped
+  eigenvalues follow from the undamped ones, `lambda = -a/2 +- sqrt(a**2/4
+  - omega**2)`, verified at every Mach number; every mode grows below Mach
+  `sqrt(2)`, where `mu < 0`, and the flutter onset moves from the
+  coalescence of the frequencies, Mach 2.804 (`Quad4`) and 2.890
+  (`Quad4R`), to Mach 2.824 and 2.910 with the damping.
+- `pyfe3d.solver` no longer uses `warnings.catch_warnings()`, whose exit
+  resets the registry of the warnings already shown, of every module: a
+  warning of the caller, shown once per location with the `'default'`
+  action, was shown again after each call of `linear_buckling()`,
+  `natural_frequency()`, `complex_frequency()`, `check_eigenpairs()`,
+  `is_positive_definite()`, `estimate_cayley_sigma()`, `solve()`,
+  `linear_static()` or of a non-linear `Analysis`. The blocks around the
+  LU factorizations suppressed no warning, `scipy.sparse.linalg.splu`
+  warning only for a matrix not in the CSC format, and `solve()` now
+  factorizes with `splu`, an exactly singular matrix raising the same
+  `LinAlgError` instead of the `MatrixRankWarning` of `spsolve` turned
+  into an error; its keyword arguments are passed to `splu`. New
+  `tests/test_solver_warnings_shown_once.py`.
+
+### Breaking: `pyfe3d.shellprop` mirrors `composites.Laminate`
+
+`ShellProp`, `Lamina`, `MatLamina`, the lamination-parameter functions and
+`GradABD` now have the names and the behaviour of `composites.Laminate`,
+`Lamina`, `MatLamina` and of the functions of `composites.core`, implemented
+in pyfe3d, which does not depend on composites. The class `ShellProp`, the
+functions `shellprop_from_LaminationParameters` and
+`shellprop_from_lamination_parameters`, and the element-frame methods
+`get_constitutive_element`, `calc_constitutive_element` and
+`calc_Ats_element` keep their names. Renamed or removed, without aliases:
+
+- `ShellProp.force_balanced()`, `force_orthotropic()`, `force_symmetric()`
+  are `make_balanced()`, `make_orthotropic()`, `make_symmetric()`;
+- `force_balanced_LP()`, `force_orthotropic_LP()`, `force_symmetric_LP()`
+  are `make_balanced_LP()`, `make_orthotropic_LP()`, `make_symmetric_LP()`;
+- `Lamina.get_transf_matrix_displ_to_laminate()` is
+  `Lamina.get_transf_matrix_displ_to_lamina()`, the matrix mapping the
+  displacements from the laminate axes to the material axes of the ply, as
+  before; the old name said the opposite;
+- the private `_rohwer()` has no `offset` argument and the private attribute
+  `ShellProp._ts_offset` is removed from `shellprop.pxd` and from the pickled
+  state.
+
+Changed behaviour:
+
+- `make_orthotropic()` also sets `A45`, `Abar45` and `Abarbar45` (unless
+  `nan`, i.e. when a ply has a singular transverse shear stiffness matrix,
+  as `make_balanced()`) to zero, and `make_orthotropic_LP()` also sets
+  `xiAts2` to zero, the terms that vanish when all plies are at 0 or 90
+  degrees;
+- a new `ShellProp()` has `scf_k13 = scf_k23 = 5/6` until
+  `calc_constitutive_matrix()` is called, instead of 1;
+- the transverse shear stiffnesses and the through-thickness distribution of
+  `calc_transverse_shear_stress()` are computed with `z` measured from the
+  mid-surface, giving the same values to round-off and avoiding the
+  round-off growing with `offset` for large offsets.
+
+New:
+
+- `shear_correction` accepts `'whitney'`, `'chow'`, `'birman_bert'` and
+  `'thickness_shear'`, besides `'rohwer'`, `'vlachoutsis'`, `'constant'` and
+  `None`;
+- `ShellProp.make_smeared()`, `calc_equilibrium_transverse_shear()` and
+  `calc_aposteriori_energy()`;
+- `GradABD` can be pickled.
+
+### Behaviour change: hourglass control of `Quad4R` for laminates
+
+- The hourglass stiffnesses of `w`, `r_x` and `r_y` of `Quad4R`, Brockman's
+  (1987) `0.1 E t^3` times the area factors, now use for `E` the equivalent
+  bending moduli `E1b = 12/(h^3 d11)` and `E2b = 12/(h^3 d22)`, with `[d] =
+  (D - B A^-1 B)^-1` the lower-right block of `[[A, B], [B, D]]^-1` in the
+  element coordinate system, `E2b` for `r_x`, `E1b` for `r_y` and their mean
+  for `w`. Before, they used the membrane moduli `E1eq = 1/(h a11)` and
+  `E2eq = 1/(h a22)`, `[a] = [A]^-1`, which remain those of `u` and `v`.
+  `E1b` is the modulus of the homogeneous plate that bends as the laminate
+  under `M_xx` alone, as `E1eq` is the one that stretches as the laminate
+  under `N_xx` alone; both are `E` for an isotropic plate, with or without
+  `offset`, and do not depend on the reference surface. `12 D11/h^3` would
+  give `E/(1 - nu^2)`, and `[D]^-1` would depend on `offset`. Isotropic
+  results are unchanged to round-off: the element matrices and internal
+  forces differ by at most `6e-19` relative to their largest entry. For a
+  laminate, the artificial stiffness of the rotations becomes the same
+  fraction of its bending stiffness as for an isotropic plate. It decreases
+  where `E_b < E_eq`, e.g. `E1b = E2b = 0.36 E1eq` for an unsymmetric
+  `[0/90]`, through `[B]`, and increases where `E_b > E_eq`, e.g. `E1b =
+  1.7 E1eq` for a symmetric `[0/90]s` (`E2b = 0.31 E2eq`) and `2.7 E1eq`
+  for a sandwich. Centre deflection of simply supported plates under
+  uniform pressure, 8 by 8 elements, over the FSDT Navier solution, before
+  and after: unsymmetric `[0/90]` 0.682 and 0.847, symmetric `[0/90]s`
+  0.855 and 0.852, sandwich 0.943 and 0.861, isotropic 0.921 and 0.921.
+  The previous stiffnesses are recovered with `hgfactor_w = (E1eq +
+  E2eq)/(E1b + E2b)`, `hgfactor_rx = E2eq/E2b` and `hgfactor_ry =
+  E1eq/E1b`. Documented in the Notes of `pyfe3d.quad4r` and of
+  `Quad4R.update_KC0` and on the page on the choice of the element.
+- New tests in `tests/test_quad4r_hourglass_control.py`: the five
+  hourglass stiffnesses of six plates, among them an isotropic plate with
+  an offset, an unsymmetric angle-ply with an offset and a sandwich, with
+  the material direction along the element axis and at 30 degrees from it;
+  the ratios of the bending to the membrane moduli; the zero eigenvalues of
+  one element, 12 without and 7 with the hourglass control, for these
+  plates on a rectangle and on a distorted element; the simply supported
+  plates above against the Navier solution.
+- `tests/test_quad4r_natural_freq_cylinder.py`, unsymmetric laminate: the
+  recorded frequencies are 0.4, 0.7 and 0.2 % lower, and differ from those
+  of the same mesh of `Quad4` by 2.0, 2.5 and 1.3 % instead of 2.4, 3.2 and
+  1.5 %.
+- `theory/deriving_equations/quad4r/derive_quad4r_KC0_sparse.py` and
+  `derive_quad4r_fint.py`: the hourglass coefficients with `E1b` and `E2b`;
+  `derive_quad4r_fint.py` also with the area factors of the code, where it
+  still had Brockman's `1/(1 + 1/A)` for all five coefficients and `Ew =
+  (Erx + Ery)/2`.
+
+### `BeamProp`: a transverse shear modulus per plane and the torsional stiffness
+
+- New attributes of `BeamProp`: `G12` and `G13`, the transverse shear
+  moduli of the element planes `xy` (bending with `v`, `Izz`) and `xz`
+  (bending with `w`, `Iyy`), and `GJ`, the torsional stiffness. Until they
+  are set they follow `G`: `G12 = G13 = G` and `GJ = G*J`, with the values
+  of `G` and `J` at the time they are read; `del prop.G12` (or `G13`, `GJ`)
+  makes the attribute follow `G` again. A property given with `G` and `J`
+  only keeps its meaning, and the shear correction factors of the two
+  planes can now be applied to `G12` and `G13` without scaling the
+  torsional stiffness.
+- `BeamC` and `BeamLR` use `G12*A` and `G13*A` for the transverse shear of
+  each plane, and in the coupling of the shear strains with the twist
+  through `Az` and `Ay`; `BeamC` uses them in `alphay =
+  -12*E*Izz/(G12*A*L**2)` and `alphaz = -12*E*Iyy/(G13*A*L**2)`, i.e. in
+  `KC0`, `KG`, `M` and the internal forces. `BeamC`, `BeamLR` and `Truss`
+  use `GJ` in place of `G*J`. With the rigid cross section the shear block
+  of the sectional matrix is `[[G12 A, 0, -G12 Az], [0, G13 A, G13 Ay],
+  [-G12 Az, G13 Ay, G12 Iyy + G13 Izz]]`, in which `GJ`, given by the user,
+  replaces the last entry.
+- With `G12 = G13 = G` and `GJ = G*J`, set or not, the matrices `KC0`,
+  `KCNL`, `KG` and `M` of `BeamC`, `BeamLR` and `Truss`, and the internal
+  forces of `BeamC` and `Truss`, are bit-identical to those of the previous
+  version (Windows build); the internal forces of `BeamLR` agree to
+  round-off (`1e-16` relative), because their regenerated lines group the
+  terms differently, see "Derivation scripts". New test
+  `tests/test_beam_shear_moduli.py`, with the reference arrays of the
+  previous version in `tests/data/beam_single_G_reference.npz`, the
+  cantilever deflection of Bathe (1996), Eq. (1.2), and the frequencies of
+  Petyt (2010), Example 3.10 and Table 3.6, in each plane with its own
+  modulus, and the twist `T L/GJ` independent of `G12` and `G13`.
+
+### Bug fixes
+
+- `BeamC`: the shear parameters `alphay` and `alphaz` are
+  `-12*E*I/(G*A*L**2)`, the sign with which the consistent shape functions
+  of Luo (2008) satisfy the Timoshenko equilibrium, instead of the positive
+  sign of Eq. (21) of that paper, in `update_probe_finte`, `update_KC0`,
+  `update_fint`, `update_KG` and `update_M`. One element of a cantilever gave
+  a tip deflection of 429.07, stiffer than Euler-Bernoulli (493.83), instead
+  of the exact Timoshenko value 522.716. New tests
+  `tests/test_beamc_timoshenko_shape_functions.py` and
+  `tests/test_timoshenko_beam_literature.py`, with benchmarks of Bathe
+  (1996) and Petyt (2010).
+- `Quad4` and `Quad4R`, `update_KA_beta`: the slope along the flow is
+  `N,x*r11 + N,y*r12`, instead of `N,x*r11 + N,y*r21`, which was wrong for
+  elements whose `x` axis is not along `X`. New
+  `tests/test_piston_theory_flow_direction.py`.
+- `MatLamina`: `c11` used `nu23*nu23` instead of `nu23*nu32` (4.26% too high
+  for `E2 != E3`) and `q31` used `nu12*nu32` instead of `nu12*nu23` (4.65%
+  too high). New `tests/test_matlamina_stiffness.py`, against the inverse of
+  the compliance matrix.
+- `GradABD.calc_LP_grad` left the derivatives of `A66`, `B66` and `D66` with
+  respect to the lamination parameters at zero. New `tests/test_gradabd.py`,
+  against central finite differences.
+- `ShellProp.make_balanced()` set to zero `B16` and `B26`, which do not
+  vanish in a balanced laminate in general, e.g. in an antisymmetric
+  `[+45/-45]` laminate, and left `Abar45`, `Abarbar45` and `A45`, which
+  vanish in every balanced laminate. It now sets to zero only the terms that
+  vanish for any position of the `+theta` and `-theta` plies, the integrals
+  of `z^0` of `q16L`, `q26L` and `q45L`: `A16`, `A26`, `Abar45`,
+  `Abarbar45` (unless `nan`), and `A45` except with
+  `shear_correction='rohwer'`, whose `A45` does not vanish in general, e.g.
+  for a `[+30/-30/0]s` laminate. `B16`, `B26`, `D16` and `D26` keep the
+  values of `calc_constitutive_matrix()`. `make_balanced_LP()` also sets
+  `xiAts2` to zero, as `Abar45`. New tests in `tests/test_shellprop.py`.
+- The curved beam frequency tests clamped an extra node with fine meshes;
+  the end nodes are now selected by index.
+- `linear_buckling()`, `natural_frequency()` and
+  `pyfe3d.solver.arpackutils.capped_eigsh`: the calls of ARPACK are
+  reproducible with SciPy 1.17 or newer. When the Krylov subspace is
+  invariant, e.g. with a nilpotent `K^-1 KG`, ARPACK draws new starting
+  vectors from the argument `rng` of `eigs` and `eigsh`, by default from
+  the entropy of the operating system: with the same `v0` the results
+  differed between calls, e.g. `linear_buckling()` on Ziegler's double
+  pendulum raised a `RuntimeError` or returned a spurious load multiplier
+  of about `1e16` at random. New `pyfe3d.solver.arpackutils.start_kwargs(n)`,
+  the arguments `v0` and, when supported, `rng` with the seed `42`, used by
+  every call of ARPACK.
+- `linear_buckling()` with unsymmetric matrices, sparse shift search: the
+  eigenvalues `nu` of `(K + s KG)^-1 KG` found by `eigs` at each shift are
+  null when `|nu| <= NULL_MU_RTOL max(max|nu|, ||(K + s KG)^-1 KG||)`, the
+  norm estimated with one step of the power iteration from the starting
+  vector of ARPACK, instead of `|nu| <= 1e-12 max|nu|`. When `K^-1 KG` has
+  no non-null eigenvalue, e.g. nilpotent as with the follower load of
+  Ziegler's double pendulum, all the `nu` are round-off and `max|nu|` is
+  not a scale: spurious load multipliers were found, and
+  `linear_buckling(max_dense_size=0)` raised the expected `RuntimeError`
+  only when the parity check rejected them, depending on the platform and,
+  with SciPy < 1.17, whose ARPACK keeps its restart seed from one call to
+  the next, on the calls made before in the same process (SciPy 1.15.3: a
+  load multiplier of `3e16` to `3e18` returned in 43 of 200 successive
+  calls). They are now all null, and the shift search raises "no finite
+  load multiplier was found". New `pyfe3d.solver.eigen._norm_estimate`.
+  The same rule as structsolve.
+- `linear_buckling()`, dense solvers (`sparse_solver=False` and the dense
+  fallback, symmetric and unsymmetric): an eigenvalue `mu` of
+  `KG u = mu K u` is also null when `|mu| <= 10 eps ||KG||_F kappa`,
+  `kappa` its condition number from the left and right eigenvectors, i.e.
+  when the round-off does not determine it, instead of only when
+  `|mu| <= 1e-12 max|mu|`. The round-off splits a defective null
+  eigenvalue, a Jordan block of size `m`, into `m` eigenvalues of modulus
+  about `eps^(1/m)`, e.g. `+-9.4e-10` for Ziegler's double pendulum, where
+  `K^-1 KG` is nilpotent: `linear_buckling()` returned the spurious load
+  multipliers `+-8.05e8`, about `6.4e7` times the flutter load, instead of
+  none. The null `mu` are set to 0 and their load multipliers are `-inf`,
+  also in complex arrays; the dense fallback then finds no finite load
+  multiplier and fails the verification. Well-conditioned eigenvalues are
+  null only below `2.2e-15 ||KG||_F`. New
+  `pyfe3d.solver.eigen._null_mu_pencil`, `NULL_MU_PERTURBATION_FACTOR`;
+  argument `left` of `_eig_complex`. The same rule as structsolve.
+
+### Mass matrices
+
+- Lumped mass matrices of the shells, `mtype=2` of `update_M` of `Quad4`,
+  `Quad4R`, `Tria3R` and `Tria3DSG`: the coupling between the translations
+  and the rotations through `intrhoz`, the first moment of the density about
+  the reference surface, is kept in the block of each node. The lumped
+  matrix is the nodal quadrature of the kinetic energy, the Lobatto
+  integration at the nodes of Brockman (1987), which gives the complete
+  inertia of the section at each node; it is diagonal only when `intrhoz`
+  is zero. With an offset, the centre of mass of each element was on the
+  reference surface instead of at the offset; the mass and the first moment
+  of the mass are now exact (in the plane, for the triangles and the
+  parallelograms). Without offset the matrices are unchanged. `mtype=2`
+  writes 90 entries for `Tria3R` (162 before) and 120 for `Quad4` and
+  `Quad4R` (288 before), generated with
+  `theory/deriving_equations/tria3r/derive_tria3r_M_sparse.py` and
+  `theory/deriving_equations/quad4r/derive_quad4r_M_sparse.py`.
+- `Tria3DSG.update_M` uses `intrhoz`, coupling `u` with `r_y` and `v` with
+  `r_x`, for the consistent and the lumped matrix, consistently with
+  `intrhoz2`, which already included the offset.
+- `update_M` of every element raises a `ValueError` for an unsupported
+  `mtype`, checked before the code without the GIL: `0`, `1` or `2` for
+  `Quad4`, `Quad4R` and `Tria3R`; `0` or `2` for `Tria3DSG`, which treated
+  any other value as `0`; `0` or `1` for `BeamC`, `BeamLR` and `Truss`. Other
+  values wrote nothing before, e.g. `mtype=2` gave massless beams. The
+  values per element are listed on the page on the choice of the element.
+- New `tests/test_element_mass.py`: total mass, the matrices of the Notes and
+  the rigid-body inertia of every element and every `mtype`, with an offset
+  and with the first moments of the beam sections; unsupported `mtype`.
+- New tutorial `tut-shell-lumped-mass.ipynb`: derivation of the lumped
+  matrices with the offset and verification with the rigid-body inertia of
+  one element and of a mesh.
+- `Tria3R`: unused variables removed from `update_M`; comments and Notes
+  corrected (the weight of the one-point rule, the vertex rule of the lumped
+  matrix). The check scripts `derive_tria3r_mass.py` and
+  `derive_quad4r_mass.py` are rewritten: the weights of the rules in the
+  reference triangle sum to its area 1/2 (they gave twice the integrals),
+  every rule and geometry is evaluated, and `intrhoz` is derived;
+  `derive_tria3r_M_sparse.py` prints `valH1 = A/9` instead of `2*A/9`;
+  `theory/README.md` lists the scripts that generate no code.
+
+### Derivation scripts
+
+- The SymPy scripts that generate the element code are moved from the
+  repository pyfe3d-dev (commit 9b9971c) to `theory/`, with the derivations
+  of the piston-theory slope and of the sign of the `BeamC` shear parameters
+  corrected as above.
+- The scripts of `beamc`, `beamLR` and `truss` use `G12`, `G13` and `GJ`;
+  `derive_beamc_KC0_sparse.py` and `derive_beamLR_KC0_sparse.py` check the
+  shear block of the sectional matrix against the integral over the rigid
+  cross section. The lines of `update_KC0` and `update_probe_finte` of
+  `BeamC`, `BeamLR` and `Truss` are regenerated from them.
+  `derive_beamLR_fint.py` did not evaluate the shear terms at the centre of
+  the element, `xi = 0`, as `derive_beamLR_KC0_sparse.py` and the code do,
+  and printed a null global vector (wrong symbol names); fixed, and the
+  internal forces of `BeamLR` are now its output.
+
+### Documentation
+
+- Functional docstrings of the public API, and Notes and References with
+  the theory of the beams, truss, spring, shell elements, `shellprop` and
+  the solver. The docstring of `Truss.update_M` had the wrong signs of the
+  coupling terms of the consistent mass matrix; the code was right, new
+  `tests/test_truss_consistent_mass.py`.
+- Reddy's book is cited as Reddy (2003), https://doi.org/10.1201/b12409.
+- `pyfe3d.solver.convergence`: the origin of the scaled norm is cited as
+  the sources state it: Crisfield (1981, p. 58) attributes the scaling to
+  Peano and Riccioni and uses it in his arc-length procedure, and Crisfield
+  (1991, Sec. 9.5.4, Eq. 9.48) presents it as an alternative to the
+  Euclidean norm of the residual, not as a recommendation.
+- The tip deflection of a cantilever with shear deformation, Eq. (1.2) of
+  Bathe, is cited in the edition in which it was checked, Bathe (1996),
+  Sec. 1.2, p. 5, Fig. 1.2(b), instead of the 2nd edition of 2014.
+- Sources stated as they are, as in the book that documents the elements:
+  the transverse shear stabilisation of `Tria3R` and `Tria3DSG` is the
+  factor that Lyly, Stenberg and Vihinen proposed for the MITC4, called
+  Stenberg's method by Bischoff and Bletzinger, in the form of Castro et
+  al., applied in these references on top of assumed-strain or discrete
+  shear gap fields; Eq. (24) of Bischoff and Bletzinger gives
+  `0.17/(2(1+nu))`, i.e. `0.065` for a square element, not `0.12`, and
+  their Eq. (22) `kappa/(2(1+nu)) = 0.32`; the `0.067` and `7e-8` of
+  `Tria3DSG` hold for the leg of the right triangles of its test, `0.125`
+  and `1.4e-7` for the longest edge; the shear gap is the part of the
+  deflection due to shear, Eq. (3) of Bletzinger, Bischoff and Ramm. In
+  `Quad4`, the thick-plate rule of Hughes et al. (1977) integrates with
+  two-by-two only the products of the gradients of `w`, and the rank
+  deficiency of Allman's enrichment alone is a single global mode that one
+  prescribed drilling rotation suppresses (Allman, 1984, Sec. 5). In
+  `BeamC`, Eq. (20) of Luo (2008) prints the functions of `w` and `r_y`
+  with the signs of those of `v` and `r_z`. In `pyfe3d.solver.convergence`,
+  the dependence of the Euclidean norm on the units is no longer attributed
+  to Crisfield (1991).
+- The load stiffness matrix of a follower load is written `[K_F]` instead
+  of `[K_L]`, as in the book.
+- User guide pages: overview and workflow, conventions, choice of the
+  element, shell and beam properties, non-linear static analyses, linear
+  buckling and natural frequencies, installation and changelog. The usage
+  examples include the test functions, with the new
+  `tests/test_beamc_frame.py` (L-shaped frame against the unit-load
+  method) and `test_offset_isotropic_plate`. The module docstrings have
+  overlined titles, and Sphinx builds without warnings.
+- Sensitivity of the hinged cylindrical roof of Sze, Liu and Lo (2004) to
+  the transverse hourglass stiffness of `Quad4R`, in a new section of the
+  tutorial `tut-nonlinear-benchmarks.ipynb` and in the new
+  `test_hinged_roof_hourglass_sensitivity` of
+  `tests/test_nonlinear_benchmarks_sze2004.py`: `hgfactor_w` from `1` (the
+  default) to `0.0002`, against `Tria3DSG`, which has no hourglass control,
+  and against a shallow-shell Kirchhoff Ritz solution, the new
+  `ritz_roof_WC` of the same test module. With the default, the linear
+  deflection at the centre is 6 to 7 % smaller than with `Tria3DSG` and,
+  with the transverse shear stiffness multiplied by 100, than the Ritz
+  solution. The comparison with Tables 9a and 9d of the paper keeps the
+  default. The hourglass stiffness is problem-dependent and the default,
+  which follows the references documented in `pyfe3d.quad4r`, is unchanged:
+  new default values need further studies. Noted in the Notes of
+  `pyfe3d.quad4r` and on the page on the choice of the element.
+- Documented limitations, replacing developer notes: `Quad4` does not apply
+  the correction of Hughes et al. (1977) for extremely thin elements, which
+  a comment said was applied; in double precision the deflection of a thin
+  plate is unchanged up to an element side of `1.25e5` times the thickness,
+  new `tests/test_quad4_thin_limit.py`. The hourglass control of `Quad4R`
+  is derived by Brockman (1987) for isotropic plates and applied to
+  laminates with equivalent moduli, see the behaviour change above.
+  The ply stiffnesses are those of plane stress, and thermal expansion is
+  not modelled (`MatLamina.a1`, `a2`, `a3` and `tref` are not used).
+  `natural_frequency()` solves the undamped problem; the damped one, e.g.
+  with the damping matrix `CA` of the piston theory, is solved by the new
+  `complex_frequency()`.
+- `Spring` verified in an arbitrary orientation against `[R][K_e][R]^T`,
+  with symmetry, rigid-body translation and equal rotations without
+  energy, and the internal forces, new tests in `tests/test_spring.py`;
+  its Notes state that a rigid rotation of two nodes at different
+  positions loads `kye` and `kze`, the nodal coordinates not being used.
+
 ## 0.10.0 (2026-09-25)
 
 ### New element: `Tria3DSG`, a triangle without a locking parameter
