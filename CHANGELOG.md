@@ -411,6 +411,27 @@ New:
 - The tip deflection of a cantilever with shear deformation, Eq. (1.2) of
   Bathe, is cited in the edition in which it was checked, Bathe (1996),
   Sec. 1.2, p. 5, Fig. 1.2(b), instead of the 2nd edition of 2014.
+- Sources stated as they are, as in the book that documents the elements:
+  the transverse shear stabilisation of `Tria3R` and `Tria3DSG` is the
+  factor that Lyly, Stenberg and Vihinen proposed for the MITC4, called
+  Stenberg's method by Bischoff and Bletzinger, in the form of Castro et
+  al., applied in these references on top of assumed-strain or discrete
+  shear gap fields; Eq. (24) of Bischoff and Bletzinger gives
+  `0.17/(2(1+nu))`, i.e. `0.065` for a square element, not `0.12`, and
+  their Eq. (22) `kappa/(2(1+nu)) = 0.32`; the `0.067` and `7e-8` of
+  `Tria3DSG` hold for the leg of the right triangles of its test, `0.125`
+  and `1.4e-7` for the longest edge; the shear gap is the part of the
+  deflection due to shear, Eq. (3) of Bletzinger, Bischoff and Ramm. In
+  `Quad4`, the thick-plate rule of Hughes et al. (1977) integrates with
+  two-by-two only the products of the gradients of `w`, and the rank
+  deficiency of Allman's enrichment alone is a single global mode that one
+  prescribed drilling rotation suppresses (Allman, 1984, Sec. 5). In
+  `BeamC`, Eq. (20) of Luo (2008) prints the functions of `w` and `r_y`
+  with the signs of those of `v` and `r_z`. In `pyfe3d.solver.convergence`,
+  the dependence of the Euclidean norm on the units is no longer attributed
+  to Crisfield (1991).
+- The load stiffness matrix of a follower load is written `[K_F]` instead
+  of `[K_L]`, as in the book.
 - User guide pages: overview and workflow, conventions, choice of the
   element, shell and beam properties, non-linear static analyses, linear
   buckling and natural frequencies, installation and changelog. The usage
