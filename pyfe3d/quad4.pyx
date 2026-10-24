@@ -132,6 +132,19 @@ one that survives assembly. It is suppressed by any support that constrains
 whose twist is the hourglass pattern, is much too flexible, e.g. the twist
 case of the straight cantilever of MacNeal and Harder [7]_.
 
+Hughes et al. [1]_ note that the transverse shear stiffness is of the order
+of `(\ell/h)^2` times the bending stiffness, such that, with a finite word
+length, the bending stiffness is lost for very thin elements, and propose to
+multiply the transverse shear stiffness by `(h/\ell)^2` times the square of a
+maximum allowed aspect ratio `\ell/h`, `10^5/8` for their plate element in
+the single precision of their computer, when this ratio is exceeded. This
+correction is not applied. In double precision, the central deflection of a
+simply supported square plate under a central point load, with eight by
+eight elements, changes by less than `10^{-5}` from `\ell/h = 1.25 \times
+10^3` to `\ell/h = 1.25 \times 10^5`, see ``tests/test_quad4_thin_limit.py``,
+by `3 \times 10^{-4}` at `\ell/h = 1.25 \times 10^6`, and by `-32` % at
+`\ell/h = 1.25 \times 10^7`, where the round-off dominates.
+
 .. rubric:: Transverse shear stiffness
 
 When a material direction is defined,
@@ -324,10 +337,6 @@ References
    1(1), 3-20, 1985. https://doi.org/10.1016/0168-874X(85)90003-4
 
 """
-#TODO bending stiffness vanishes when thickness -> zero, so a correction is applied:
-#     maximum allowable aspect ratio for plate: 10^5/8, beyond which the shear
-#     stiffness is multiplied by (thickness/h)^2 * (max aspect ratio allowed)^2,
-#     where the max aspect ratio allowed for plates is 10^5/8.
 from libc.math cimport fabs
 
 import numpy as np
