@@ -26,6 +26,18 @@ depending on structsolve:
   `pyfe3d.solver.callbacks`; with `bu` and `uk`, the callables work with
   all the degrees-of-freedom, as assembled by the elements, and prescribed
   displacements are imposed exactly, see `FreeDofs`;
+- `pyfe3d.solver.arc_length`, both methods: a converged step whose
+  increment points against the tangent predictor, i.e. a negative or null
+  inner product of the arc-length constraint, is rejected and repeated with
+  a shorter arc length, as in structsolve. The previous converged point is
+  at the distance of the arc length from the last one, and the iterations
+  could converge to it and then trace the path backwards ("doubling
+  back"): in the development version of 0.11.0, the von Mises truss of the
+  tests at 10 times its limit load with `initialInc=0.2` was traced
+  backwards from the second step, which returned to the origin with Riks'
+  method, and ended at load factors of about -15 instead of 1.0, with both
+  methods and both convergence criteria. New test
+  `test_arc_length_no_doubling_back`;
 - `pyfe3d.solver.convergence`: Crisfield's convergence criterion, the
   default of the non-linear solvers, the residual scaled with the diagonal
   of the linear stiffness matrix over the free degrees-of-freedom; the

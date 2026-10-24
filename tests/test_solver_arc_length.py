@@ -140,6 +140,33 @@ def test_arc_length_snap_back(method, convergence, relTOL):
     assert cs[-1, 0] > 2.
 
 
+@pytest.mark.parametrize('convergence, relTOL', [('relative', 1.e-6),
+                                                  ('crisfield', 1.e-9)])
+@pytest.mark.parametrize('method', METHODS)
+def test_arc_length_no_doubling_back(method, convergence, relTOL):
+    """Long steps through the limit point at 10 times the limit load
+
+    The previous converged point is at the distance of the arc length from
+    the last one, and the iterations of the second step may converge to it,
+    which would trace the path backwards, the load factor decreasing below
+    zero without ever reaching 1.0. Such a step points against the tangent
+    predictor, and it is repeated with a shorter arc length.
+
+    """
+    p = von_mises_truss(frac=10., ks=1.)
+    p.analysis(NL_method=method, initialInc=0.2, convergence=convergence,
+               relTOL=relTOL)
+    p.an.static(NLgeom=True, silent=True)
+    check_equilibrium(p)
+    inc = np.asarray(p.an.increments)
+    cs = np.asarray(p.an.cs)
+    assert inc[-1] == 1.0
+    assert np.all(np.diff(np.r_[0., cs[:, 0]]) > 0)
+    np.testing.assert_allclose(cs[-1],
+                               p.solve_reference(c0=cs[-1], tol=1e-12),
+                               rtol=1e-6)
+
+
 @pytest.mark.parametrize('method', METHODS)
 def test_arc_length_step_cutting(method):
     p = von_mises_truss(frac=1.5)

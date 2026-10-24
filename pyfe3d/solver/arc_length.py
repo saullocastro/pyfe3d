@@ -187,11 +187,23 @@ def _solver_arc_length(an, pb, method, silent=False):
       angle, since both have the length `\Delta s`.
 
     The step fails when `\delta\lambda` cannot be computed or is not
-    finite. With full Newton-Raphson, `[K_T]` is updated at every iteration
-    at the current iterate `(c + \Delta c, \lambda + \Delta\lambda)`; with
-    ``an.modified_NR = True`` the factorization at the last converged state
-    is used for the first ``an.compute_every_n`` iterations and the tangent
-    is then updated every ``an.compute_every_n`` iterations; at the first
+    finite, and when the converged increment points against the tangent
+    predictor `(\Delta c_{pred}, \Delta\lambda_{pred})` of the step,
+    `\langle (\Delta c, \Delta\lambda), (\Delta c_{pred},
+    \Delta\lambda_{pred}) \rangle \le 0`. The previous converged point is
+    also at the distance `\Delta s` from the last one, and with long steps
+    or near a limit point the iterations may converge to it and then trace
+    the path backwards, the "doubling back" that [2]_ (p. 56) avoids with
+    the choice of the root. The accepted points are thus on the side of the
+    tangent predictor of the hyperplane normal to it, in the inner product
+    above, through the last converged point, as the points of the plane of
+    Riks [1]_, normal to the tangent at the distance `\Delta s` from the
+    last converged point. With full Newton-Raphson, `[K_T]` is updated at
+    every iteration at the current iterate `(c + \Delta c, \lambda +
+    \Delta\lambda)`; with ``an.modified_NR = True`` the factorization at
+    the last converged state is used for the first ``an.compute_every_n``
+    iterations and the tangent is then updated every
+    ``an.compute_every_n`` iterations; at the first
     step with ``an.kT_initial_state = False`` the linear constitutive
     stiffness matrix replaces the tangent of the initial state.
 
@@ -344,6 +356,9 @@ def _solver_arc_length(an, pb, method, silent=False):
                 sign = 1.
         dlbd = sign*arc_length/norm_q
         dc = dlbd*dc_q_conv
+        # NOTE tangent predictor, the forward direction of the step
+        dc_pred = dc
+        dlbd_pred = dlbd
 
         msg('Step %d, lbd %1.5f, arc-length increment %1.5f'
             % (step_num, lbd, arc_length), level=1, silent=silent)
@@ -428,6 +443,13 @@ def _solver_arc_length(an, pb, method, silent=False):
                 break
             dc = dc + dc_R + varlbd*dc_q
             dlbd = dlbd + varlbd
+
+        if converged and inner(dc, dlbd, dc_pred, dlbd_pred) <= 0:
+            # NOTE the increment points backwards, e.g. to the previous
+            #      converged point, which is also at the distance arc_length
+            warn('Diverged - the step returned along the path already traced',
+                 level=2, silent=silent)
+            converged = False
 
         finished = False
         if converged and lbd + dlbd > 1. and lbd < 1.:
