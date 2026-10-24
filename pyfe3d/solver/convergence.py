@@ -30,11 +30,12 @@ Euclidean norm `\|R\|` adds the squares of forces and of moments: the
 quantity has no physical meaning and its value depends on the system of
 units, the moments being scaled by a change of the length unit while the
 forces are not [1]_. Each component is therefore scaled with the
-corresponding diagonal entry of a reference stiffness matrix, an idea of
-[2]_ that [3]_ (Eqs. 27 and 28) used in the convergence test of his
-arc-length procedure, with the diagonal of the tangent stiffness matrix at
-the beginning of the increment, and that [1]_ recommends for convergence
-testing:
+corresponding diagonal entry of a reference stiffness matrix, a scaling
+that [3]_ (p. 58) attributes to [2]_ and that he used (his Eqs. 27 and 28)
+in the convergence test of his arc-length procedure, with the diagonal of
+the tangent stiffness matrix at the beginning of the increment. [1]_ (Sec.
+9.5.4, Eq. 9.48) presents the same scaling as an alternative to the
+Euclidean norm of the residual:
 
 .. math::
 

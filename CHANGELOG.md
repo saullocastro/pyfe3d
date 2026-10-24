@@ -403,6 +403,11 @@ New:
   coupling terms of the consistent mass matrix; the code was right, new
   `tests/test_truss_consistent_mass.py`.
 - Reddy's book is cited as Reddy (2003), https://doi.org/10.1201/b12409.
+- `pyfe3d.solver.convergence`: the origin of the scaled norm is cited as
+  the sources state it: Crisfield (1981, p. 58) attributes the scaling to
+  Peano and Riccioni and uses it in his arc-length procedure, and Crisfield
+  (1991, Sec. 9.5.4, Eq. 9.48) presents it as an alternative to the
+  Euclidean norm of the residual, not as a recommendation.
 - User guide pages: overview and workflow, conventions, choice of the
   element, shell and beam properties, non-linear static analyses, linear
   buckling and natural frequencies, installation and changelog. The usage
