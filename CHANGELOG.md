@@ -291,6 +291,22 @@ New:
   which follows the references documented in `pyfe3d.quad4r`, is unchanged:
   new default values need further studies. Noted in the Notes of
   `pyfe3d.quad4r` and on the page on the choice of the element.
+- Documented limitations, replacing developer notes: `Quad4` does not apply
+  the correction of Hughes et al. (1977) for extremely thin elements, which
+  a comment said was applied; in double precision the deflection of a thin
+  plate is unchanged up to an element side of `1.25e5` times the thickness,
+  new `tests/test_quad4_thin_limit.py`. The hourglass control of `Quad4R`
+  is derived by Brockman (1987) for isotropic plates and applied to
+  laminates with equivalent moduli of `[A]`, `[B]` and `[D]` not entering.
+  The ply stiffnesses are those of plane stress, and thermal expansion is
+  not modelled (`MatLamina.a1`, `a2`, `a3` and `tref` are not used).
+  `natural_frequency()` solves the undamped problem: the damping matrix
+  `CA` of the piston theory is not used.
+- `Spring` verified in an arbitrary orientation against `[R][K_e][R]^T`,
+  with symmetry, rigid-body translation and equal rotations without
+  energy, and the internal forces, new tests in `tests/test_spring.py`;
+  its Notes state that a rigid rotation of two nodes at different
+  positions loads `kye` and `kze`, the nodal coordinates not being used.
 
 ## 0.10.0 (2026-09-25)
 
