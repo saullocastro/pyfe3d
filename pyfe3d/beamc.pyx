@@ -282,7 +282,11 @@ cdef class BeamC:
     of [1]_ and Eq. (3.236) of [2]_, whose denominator `1 + 3\beta`, with
     `\beta = E I/(\kappa A G a^2)`, where `\kappa G` is `G_{12}`, and `a =
     L/2`, is `1 + \phi_y`; Eq. (21) of [1]_ gives `\alpha_y` and `\alpha_z`
-    with the positive sign, inconsistent with its Eqs. (17) and (20). Hence
+    with the positive sign, inconsistent with its Eqs. (17) and (20), and
+    its Eq. (20) prints the functions of `w` and `r_y` with the signs of
+    those of `v` and `r_z`, which, with `\alpha_z = 0`, give
+    `r_y = w_{,x}` instead of the `r_y = -w_{,x}` of the kinematics above.
+    Hence
     the element is exact for a prismatic beam loaded at the nodes, and
     `\beta_y`, `\beta_z` are finite for any length. The mass and geometric
     stiffness matrices use the same shape functions.
