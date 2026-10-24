@@ -201,7 +201,9 @@ cdef class BeamLR:
     just 1 point at the beam center.
 
     The displacements of the cross section, the strains and the linear
-    strain energy are those given in the notes of :class:`.BeamC`. The six
+    strain energy are those given in the notes of :class:`.BeamC`, with the
+    transverse shear moduli ``G12`` and ``G13`` of the planes `xy` and `xz`
+    and the torsional stiffness ``GJ`` of :class:`.BeamProp`. The six
     displacements `u, v, w, r_x, r_y, r_z` of the beam axis are interpolated
     linearly between the two nodes, such that the axial strain `u_{,x}`, the
     curvatures `\kappa_y = -{r_z}_{,x}`, `\kappa_z = {r_y}_{,x}` and the
@@ -220,7 +222,8 @@ cdef class BeamLR:
     :class:`.BeamLR` converge to the same cantilever tip deflection `P
     L^3/(3 E I_{zz}) + P L/(G A)`, Eq. (1.2) of [2]_, as one element of
     :class:`.BeamC`, and to the same exact frequencies of a deep cantilever,
-    Table 3.6 of [3]_.
+    Table 3.6 of [3]_; in ``tests/test_beam_shear_moduli.py`` they do so in
+    each plane with its own modulus when ``G12`` and ``G13`` differ.
 
     The matrices and the internal forces are computed in element
     coordinates and transformed to global coordinates with the rotation
@@ -531,35 +534,36 @@ cdef class BeamLR:
         """
         cdef double *ue
         cdef double *finte
-        cdef double L, A, E, G, Ay, Az, Iyy, Izz, Iyz, J
+        cdef double L, A, E, G12, G13, GJ, Ay, Az, Iyy, Izz, Iyz
 
         with nogil:
             L = self.length
             A = prop.A
             E = prop.E
-            G = prop.G
+            G12 = prop.get_G12()
+            G13 = prop.get_G13()
+            GJ = prop.get_GJ()
             Ay = prop.Ay
             Az = prop.Az
             Iyy = prop.Iyy
             Izz = prop.Izz
             Iyz = prop.Iyz
-            J = prop.J
 
             ue = &self.probe.ue[0]
             finte = &self.probe.finte[0]
 
             finte[0] = 1.0*E*(A*ue[0] - A*ue[6] + Ay*ue[11] - Ay*ue[5] - Az*ue[10] + Az*ue[4])/L
-            finte[1] = 0.5*G*(A*L*(ue[11] + ue[5]) + 2*A*ue[1] - 2*A*ue[7] - 2*Az*ue[3] + 2*Az*ue[9])/L
-            finte[2] = -0.5*G*(A*L*(ue[10] + ue[4]) - 2*A*ue[2] + 2*A*ue[8] - 2*Ay*ue[3] + 2*Ay*ue[9])/L
-            finte[3] = -0.5*G*(-2*Ay*ue[2] + 2*Ay*ue[8] + 2*Az*ue[1] - 2*Az*ue[7] - 2*J*ue[3] + 2*J*ue[9] + L*(Ay*ue[10] + Ay*ue[4] + Az*ue[11] + Az*ue[5]))/L
-            finte[4] = (1.0*Az*E*ue[0] - 1.0*Az*E*ue[6] + 1.0*E*Iyz*ue[11] - 1.0*E*Iyz*ue[5] - 0.5*G*L*(A*ue[2] - A*ue[8] + Ay*ue[3] - Ay*ue[9]) + 0.25*ue[10]*(A*G*L**2 - 4*E*Iyy) + 0.25*ue[4]*(A*G*L**2 + 4*E*Iyy))/L
-            finte[5] = (-1.0*Ay*E*ue[0] + 1.0*Ay*E*ue[6] + 1.0*E*Iyz*ue[10] - 1.0*E*Iyz*ue[4] + 0.5*G*L*(A*ue[1] - A*ue[7] - Az*ue[3] + Az*ue[9]) + 0.25*ue[11]*(A*G*L**2 - 4*E*Izz) + 0.25*ue[5]*(A*G*L**2 + 4*E*Izz))/L
+            finte[1] = 0.5*G12*(A*L*(ue[11] + ue[5]) + 2*A*ue[1] - 2*A*ue[7] - 2*Az*ue[3] + 2*Az*ue[9])/L
+            finte[2] = -0.5*G13*(A*L*(ue[10] + ue[4]) - 2*A*ue[2] + 2*A*ue[8] - 2*Ay*ue[3] + 2*Ay*ue[9])/L
+            finte[3] = (1.0*Ay*G13*ue[2] - 1.0*Ay*G13*ue[8] - 1.0*Az*G12*ue[1] + 1.0*Az*G12*ue[7] + 1.0*GJ*ue[3] - 1.0*GJ*ue[9] - 0.5*L*(Ay*G13*ue[10] + Ay*G13*ue[4] + Az*G12*ue[11] + Az*G12*ue[5]))/L
+            finte[4] = (0.25*A*G13*L**2*(ue[10] + ue[4]) + 1.0*E*(Az*ue[0] - Az*ue[6] - Iyy*ue[10] + Iyy*ue[4] + Iyz*ue[11] - Iyz*ue[5]) - 0.5*G13*L*(A*ue[2] - A*ue[8] + Ay*ue[3] - Ay*ue[9]))/L
+            finte[5] = (0.25*A*G12*L**2*(ue[11] + ue[5]) - 1.0*E*(Ay*ue[0] - Ay*ue[6] - Iyz*ue[10] + Iyz*ue[4] + Izz*ue[11] - Izz*ue[5]) + 0.5*G12*L*(A*ue[1] - A*ue[7] - Az*ue[3] + Az*ue[9]))/L
             finte[6] = 1.0*E*(-A*ue[0] + A*ue[6] - Ay*ue[11] + Ay*ue[5] + Az*ue[10] - Az*ue[4])/L
-            finte[7] = -0.5*G*(A*L*(ue[11] + ue[5]) + 2*A*ue[1] - 2*A*ue[7] - 2*Az*ue[3] + 2*Az*ue[9])/L
-            finte[8] = 0.5*G*(A*L*(ue[10] + ue[4]) - 2*A*ue[2] + 2*A*ue[8] - 2*Ay*ue[3] + 2*Ay*ue[9])/L
-            finte[9] = 0.5*G*(-2*Ay*ue[2] + 2*Ay*ue[8] + 2*Az*ue[1] - 2*Az*ue[7] - 2*J*ue[3] + 2*J*ue[9] + L*(Ay*ue[10] + Ay*ue[4] + Az*ue[11] + Az*ue[5]))/L
-            finte[10] = (-1.0*Az*E*ue[0] + 1.0*Az*E*ue[6] - 1.0*E*Iyz*ue[11] + 1.0*E*Iyz*ue[5] - 0.5*G*L*(A*ue[2] - A*ue[8] + Ay*ue[3] - Ay*ue[9]) + 0.25*ue[10]*(A*G*L**2 + 4*E*Iyy) + 0.25*ue[4]*(A*G*L**2 - 4*E*Iyy))/L
-            finte[11] = (1.0*Ay*E*ue[0] - 1.0*Ay*E*ue[6] - 1.0*E*Iyz*ue[10] + 1.0*E*Iyz*ue[4] + 0.5*G*L*(A*ue[1] - A*ue[7] - Az*ue[3] + Az*ue[9]) + 0.25*ue[11]*(A*G*L**2 + 4*E*Izz) + 0.25*ue[5]*(A*G*L**2 - 4*E*Izz))/L
+            finte[7] = -0.5*G12*(A*L*(ue[11] + ue[5]) + 2*A*ue[1] - 2*A*ue[7] - 2*Az*ue[3] + 2*Az*ue[9])/L
+            finte[8] = 0.5*G13*(A*L*(ue[10] + ue[4]) - 2*A*ue[2] + 2*A*ue[8] - 2*Ay*ue[3] + 2*Ay*ue[9])/L
+            finte[9] = (-1.0*Ay*G13*ue[2] + 1.0*Ay*G13*ue[8] + 1.0*Az*G12*ue[1] - 1.0*Az*G12*ue[7] - 1.0*GJ*ue[3] + 1.0*GJ*ue[9] + 0.5*L*(Ay*G13*ue[10] + Ay*G13*ue[4] + Az*G12*ue[11] + Az*G12*ue[5]))/L
+            finte[10] = (0.25*A*G13*L**2*(ue[10] + ue[4]) - 1.0*E*(Az*ue[0] - Az*ue[6] - Iyy*ue[10] + Iyy*ue[4] + Iyz*ue[11] - Iyz*ue[5]) - 0.5*G13*L*(A*ue[2] - A*ue[8] + Ay*ue[3] - Ay*ue[9]))/L
+            finte[11] = (0.25*A*G12*L**2*(ue[11] + ue[5]) + 1.0*E*(Ay*ue[0] - Ay*ue[6] - Iyz*ue[10] + Iyz*ue[4] + Izz*ue[11] - Izz*ue[5]) + 0.5*G12*L*(A*ue[1] - A*ue[7] - Az*ue[3] + Az*ue[9]))/L
 
             if nonlinear:
                 self._update_probe_finte_nonlinear(prop)
@@ -579,8 +583,9 @@ cdef class BeamLR:
         the row and column indices, built from ``c1`` and ``c2``, are stored
         in ``KC0r`` and ``KC0c``, and the values are added to those already
         in ``KC0v``. The matrix is computed from ``length``, the rotation
-        matrix and the attributes ``A``, ``E``, ``G``, ``Ay``, ``Az``,
-        ``Iyy``, ``Izz``, ``Iyz`` and ``J`` of ``prop``. ``length`` and the
+        matrix and the attributes ``A``, ``E``, ``G12``, ``G13``, ``GJ``,
+        ``Ay``, ``Az``, ``Iyy``, ``Izz`` and ``Iyz`` of ``prop``. ``length``
+        and the
         rotation matrix must be updated before, see
         :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe`.
 
@@ -614,20 +619,21 @@ cdef class BeamLR:
 
         """
         cdef int c1, c2, k
-        cdef double L, A, E, G, Ay, Az, Iyy, Izz, Iyz, J
+        cdef double L, A, E, G12, G13, GJ, Ay, Az, Iyy, Izz, Iyz
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
 
         with nogil:
             L = self.length
             A = prop.A
             E = prop.E
-            G = prop.G
+            G12 = prop.get_G12()
+            G13 = prop.get_G13()
+            GJ = prop.get_GJ()
             Ay = prop.Ay
             Az = prop.Az
             Iyy = prop.Iyy
             Izz = prop.Izz
             Iyz = prop.Iyz
-            J = prop.J
 
             # local to global transformation
             r11 = self.r11
@@ -1079,293 +1085,293 @@ cdef class BeamLR:
                 KC0c[k] = 5+c2
 
             k = self.init_k_KC0
-            KC0v[k] += 1.0*A*E*r11**2/L + 1.0*A*G*r12**2/L + 1.0*A*G*r13**2/L
+            KC0v[k] += 1.0*A*E*r11**2/L + 1.0*A*G12*r12**2/L + 1.0*A*G13*r13**2/L
             k += 1
-            KC0v[k] += 1.0*A*E*r11*r21/L + 1.0*A*G*r12*r22/L + 1.0*A*G*r13*r23/L
+            KC0v[k] += 1.0*A*E*r11*r21/L + 1.0*A*G12*r12*r22/L + 1.0*A*G13*r13*r23/L
             k += 1
-            KC0v[k] += 1.0*A*E*r11*r31/L + 1.0*A*G*r12*r32/L + 1.0*A*G*r13*r33/L
+            KC0v[k] += 1.0*A*E*r11*r31/L + 1.0*A*G12*r12*r32/L + 1.0*A*G13*r13*r33/L
             k += 1
-            KC0v[k] += r11*(1.0*Ay*G*r13/L - 1.0*Az*G*r12/L) + r12*(-0.5*A*G*r13 + 1.0*Az*E*r11/L) + r13*(0.5*A*G*r12 - 1.0*Ay*E*r11/L)
+            KC0v[k] += r11*(1.0*Ay*G13*r13/L - 1.0*Az*G12*r12/L) + r12*(-0.5*A*G13*r13 + 1.0*Az*E*r11/L) + r13*(0.5*A*G12*r12 - 1.0*Ay*E*r11/L)
             k += 1
-            KC0v[k] += r21*(1.0*Ay*G*r13/L - 1.0*Az*G*r12/L) + r22*(-0.5*A*G*r13 + 1.0*Az*E*r11/L) + r23*(0.5*A*G*r12 - 1.0*Ay*E*r11/L)
+            KC0v[k] += r21*(1.0*Ay*G13*r13/L - 1.0*Az*G12*r12/L) + r22*(-0.5*A*G13*r13 + 1.0*Az*E*r11/L) + r23*(0.5*A*G12*r12 - 1.0*Ay*E*r11/L)
             k += 1
-            KC0v[k] += r31*(1.0*Ay*G*r13/L - 1.0*Az*G*r12/L) + r32*(-0.5*A*G*r13 + 1.0*Az*E*r11/L) + r33*(0.5*A*G*r12 - 1.0*Ay*E*r11/L)
+            KC0v[k] += r31*(1.0*Ay*G13*r13/L - 1.0*Az*G12*r12/L) + r32*(-0.5*A*G13*r13 + 1.0*Az*E*r11/L) + r33*(0.5*A*G12*r12 - 1.0*Ay*E*r11/L)
             k += 1
-            KC0v[k] += -1.0*A*E*r11**2/L - 1.0*A*G*r12**2/L - 1.0*A*G*r13**2/L
+            KC0v[k] += -1.0*A*E*r11**2/L - 1.0*A*G12*r12**2/L - 1.0*A*G13*r13**2/L
             k += 1
-            KC0v[k] += -1.0*A*E*r11*r21/L - 1.0*A*G*r12*r22/L - 1.0*A*G*r13*r23/L
+            KC0v[k] += -1.0*A*E*r11*r21/L - 1.0*A*G12*r12*r22/L - 1.0*A*G13*r13*r23/L
             k += 1
-            KC0v[k] += -1.0*A*E*r11*r31/L - 1.0*A*G*r12*r32/L - 1.0*A*G*r13*r33/L
+            KC0v[k] += -1.0*A*E*r11*r31/L - 1.0*A*G12*r12*r32/L - 1.0*A*G13*r13*r33/L
             k += 1
-            KC0v[k] += r11*(-1.0*Ay*G*r13/L + 1.0*Az*G*r12/L) + r12*(-0.5*A*G*r13 - 1.0*Az*E*r11/L) + r13*(0.5*A*G*r12 + 1.0*Ay*E*r11/L)
+            KC0v[k] += r11*(-1.0*Ay*G13*r13/L + 1.0*Az*G12*r12/L) + r12*(-0.5*A*G13*r13 - 1.0*Az*E*r11/L) + r13*(0.5*A*G12*r12 + 1.0*Ay*E*r11/L)
             k += 1
-            KC0v[k] += r21*(-1.0*Ay*G*r13/L + 1.0*Az*G*r12/L) + r22*(-0.5*A*G*r13 - 1.0*Az*E*r11/L) + r23*(0.5*A*G*r12 + 1.0*Ay*E*r11/L)
+            KC0v[k] += r21*(-1.0*Ay*G13*r13/L + 1.0*Az*G12*r12/L) + r22*(-0.5*A*G13*r13 - 1.0*Az*E*r11/L) + r23*(0.5*A*G12*r12 + 1.0*Ay*E*r11/L)
             k += 1
-            KC0v[k] += r31*(-1.0*Ay*G*r13/L + 1.0*Az*G*r12/L) + r32*(-0.5*A*G*r13 - 1.0*Az*E*r11/L) + r33*(0.5*A*G*r12 + 1.0*Ay*E*r11/L)
+            KC0v[k] += r31*(-1.0*Ay*G13*r13/L + 1.0*Az*G12*r12/L) + r32*(-0.5*A*G13*r13 - 1.0*Az*E*r11/L) + r33*(0.5*A*G12*r12 + 1.0*Ay*E*r11/L)
             k += 1
-            KC0v[k] += 1.0*A*E*r11*r21/L + 1.0*A*G*r12*r22/L + 1.0*A*G*r13*r23/L
+            KC0v[k] += 1.0*A*E*r11*r21/L + 1.0*A*G12*r12*r22/L + 1.0*A*G13*r13*r23/L
             k += 1
-            KC0v[k] += 1.0*A*E*r21**2/L + 1.0*A*G*r22**2/L + 1.0*A*G*r23**2/L
+            KC0v[k] += 1.0*A*E*r21**2/L + 1.0*A*G12*r22**2/L + 1.0*A*G13*r23**2/L
             k += 1
-            KC0v[k] += 1.0*A*E*r21*r31/L + 1.0*A*G*r22*r32/L + 1.0*A*G*r23*r33/L
+            KC0v[k] += 1.0*A*E*r21*r31/L + 1.0*A*G12*r22*r32/L + 1.0*A*G13*r23*r33/L
             k += 1
-            KC0v[k] += r11*(1.0*Ay*G*r23/L - 1.0*Az*G*r22/L) + r12*(-0.5*A*G*r23 + 1.0*Az*E*r21/L) + r13*(0.5*A*G*r22 - 1.0*Ay*E*r21/L)
+            KC0v[k] += r11*(1.0*Ay*G13*r23/L - 1.0*Az*G12*r22/L) + r12*(-0.5*A*G13*r23 + 1.0*Az*E*r21/L) + r13*(0.5*A*G12*r22 - 1.0*Ay*E*r21/L)
             k += 1
-            KC0v[k] += r21*(1.0*Ay*G*r23/L - 1.0*Az*G*r22/L) + r22*(-0.5*A*G*r23 + 1.0*Az*E*r21/L) + r23*(0.5*A*G*r22 - 1.0*Ay*E*r21/L)
+            KC0v[k] += r21*(1.0*Ay*G13*r23/L - 1.0*Az*G12*r22/L) + r22*(-0.5*A*G13*r23 + 1.0*Az*E*r21/L) + r23*(0.5*A*G12*r22 - 1.0*Ay*E*r21/L)
             k += 1
-            KC0v[k] += r31*(1.0*Ay*G*r23/L - 1.0*Az*G*r22/L) + r32*(-0.5*A*G*r23 + 1.0*Az*E*r21/L) + r33*(0.5*A*G*r22 - 1.0*Ay*E*r21/L)
+            KC0v[k] += r31*(1.0*Ay*G13*r23/L - 1.0*Az*G12*r22/L) + r32*(-0.5*A*G13*r23 + 1.0*Az*E*r21/L) + r33*(0.5*A*G12*r22 - 1.0*Ay*E*r21/L)
             k += 1
-            KC0v[k] += -1.0*A*E*r11*r21/L - 1.0*A*G*r12*r22/L - 1.0*A*G*r13*r23/L
+            KC0v[k] += -1.0*A*E*r11*r21/L - 1.0*A*G12*r12*r22/L - 1.0*A*G13*r13*r23/L
             k += 1
-            KC0v[k] += -1.0*A*E*r21**2/L - 1.0*A*G*r22**2/L - 1.0*A*G*r23**2/L
+            KC0v[k] += -1.0*A*E*r21**2/L - 1.0*A*G12*r22**2/L - 1.0*A*G13*r23**2/L
             k += 1
-            KC0v[k] += -1.0*A*E*r21*r31/L - 1.0*A*G*r22*r32/L - 1.0*A*G*r23*r33/L
+            KC0v[k] += -1.0*A*E*r21*r31/L - 1.0*A*G12*r22*r32/L - 1.0*A*G13*r23*r33/L
             k += 1
-            KC0v[k] += r11*(-1.0*Ay*G*r23/L + 1.0*Az*G*r22/L) + r12*(-0.5*A*G*r23 - 1.0*Az*E*r21/L) + r13*(0.5*A*G*r22 + 1.0*Ay*E*r21/L)
+            KC0v[k] += r11*(-1.0*Ay*G13*r23/L + 1.0*Az*G12*r22/L) + r12*(-0.5*A*G13*r23 - 1.0*Az*E*r21/L) + r13*(0.5*A*G12*r22 + 1.0*Ay*E*r21/L)
             k += 1
-            KC0v[k] += r21*(-1.0*Ay*G*r23/L + 1.0*Az*G*r22/L) + r22*(-0.5*A*G*r23 - 1.0*Az*E*r21/L) + r23*(0.5*A*G*r22 + 1.0*Ay*E*r21/L)
+            KC0v[k] += r21*(-1.0*Ay*G13*r23/L + 1.0*Az*G12*r22/L) + r22*(-0.5*A*G13*r23 - 1.0*Az*E*r21/L) + r23*(0.5*A*G12*r22 + 1.0*Ay*E*r21/L)
             k += 1
-            KC0v[k] += r31*(-1.0*Ay*G*r23/L + 1.0*Az*G*r22/L) + r32*(-0.5*A*G*r23 - 1.0*Az*E*r21/L) + r33*(0.5*A*G*r22 + 1.0*Ay*E*r21/L)
+            KC0v[k] += r31*(-1.0*Ay*G13*r23/L + 1.0*Az*G12*r22/L) + r32*(-0.5*A*G13*r23 - 1.0*Az*E*r21/L) + r33*(0.5*A*G12*r22 + 1.0*Ay*E*r21/L)
             k += 1
-            KC0v[k] += 1.0*A*E*r11*r31/L + 1.0*A*G*r12*r32/L + 1.0*A*G*r13*r33/L
+            KC0v[k] += 1.0*A*E*r11*r31/L + 1.0*A*G12*r12*r32/L + 1.0*A*G13*r13*r33/L
             k += 1
-            KC0v[k] += 1.0*A*E*r21*r31/L + 1.0*A*G*r22*r32/L + 1.0*A*G*r23*r33/L
+            KC0v[k] += 1.0*A*E*r21*r31/L + 1.0*A*G12*r22*r32/L + 1.0*A*G13*r23*r33/L
             k += 1
-            KC0v[k] += 1.0*A*E*r31**2/L + 1.0*A*G*r32**2/L + 1.0*A*G*r33**2/L
+            KC0v[k] += 1.0*A*E*r31**2/L + 1.0*A*G12*r32**2/L + 1.0*A*G13*r33**2/L
             k += 1
-            KC0v[k] += r11*(1.0*Ay*G*r33/L - 1.0*Az*G*r32/L) + r12*(-0.5*A*G*r33 + 1.0*Az*E*r31/L) + r13*(0.5*A*G*r32 - 1.0*Ay*E*r31/L)
+            KC0v[k] += r11*(1.0*Ay*G13*r33/L - 1.0*Az*G12*r32/L) + r12*(-0.5*A*G13*r33 + 1.0*Az*E*r31/L) + r13*(0.5*A*G12*r32 - 1.0*Ay*E*r31/L)
             k += 1
-            KC0v[k] += r21*(1.0*Ay*G*r33/L - 1.0*Az*G*r32/L) + r22*(-0.5*A*G*r33 + 1.0*Az*E*r31/L) + r23*(0.5*A*G*r32 - 1.0*Ay*E*r31/L)
+            KC0v[k] += r21*(1.0*Ay*G13*r33/L - 1.0*Az*G12*r32/L) + r22*(-0.5*A*G13*r33 + 1.0*Az*E*r31/L) + r23*(0.5*A*G12*r32 - 1.0*Ay*E*r31/L)
             k += 1
-            KC0v[k] += r31*(1.0*Ay*G*r33/L - 1.0*Az*G*r32/L) + r32*(-0.5*A*G*r33 + 1.0*Az*E*r31/L) + r33*(0.5*A*G*r32 - 1.0*Ay*E*r31/L)
+            KC0v[k] += r31*(1.0*Ay*G13*r33/L - 1.0*Az*G12*r32/L) + r32*(-0.5*A*G13*r33 + 1.0*Az*E*r31/L) + r33*(0.5*A*G12*r32 - 1.0*Ay*E*r31/L)
             k += 1
-            KC0v[k] += -1.0*A*E*r11*r31/L - 1.0*A*G*r12*r32/L - 1.0*A*G*r13*r33/L
+            KC0v[k] += -1.0*A*E*r11*r31/L - 1.0*A*G12*r12*r32/L - 1.0*A*G13*r13*r33/L
             k += 1
-            KC0v[k] += -1.0*A*E*r21*r31/L - 1.0*A*G*r22*r32/L - 1.0*A*G*r23*r33/L
+            KC0v[k] += -1.0*A*E*r21*r31/L - 1.0*A*G12*r22*r32/L - 1.0*A*G13*r23*r33/L
             k += 1
-            KC0v[k] += -1.0*A*E*r31**2/L - 1.0*A*G*r32**2/L - 1.0*A*G*r33**2/L
+            KC0v[k] += -1.0*A*E*r31**2/L - 1.0*A*G12*r32**2/L - 1.0*A*G13*r33**2/L
             k += 1
-            KC0v[k] += r11*(-1.0*Ay*G*r33/L + 1.0*Az*G*r32/L) + r12*(-0.5*A*G*r33 - 1.0*Az*E*r31/L) + r13*(0.5*A*G*r32 + 1.0*Ay*E*r31/L)
+            KC0v[k] += r11*(-1.0*Ay*G13*r33/L + 1.0*Az*G12*r32/L) + r12*(-0.5*A*G13*r33 - 1.0*Az*E*r31/L) + r13*(0.5*A*G12*r32 + 1.0*Ay*E*r31/L)
             k += 1
-            KC0v[k] += r21*(-1.0*Ay*G*r33/L + 1.0*Az*G*r32/L) + r22*(-0.5*A*G*r33 - 1.0*Az*E*r31/L) + r23*(0.5*A*G*r32 + 1.0*Ay*E*r31/L)
+            KC0v[k] += r21*(-1.0*Ay*G13*r33/L + 1.0*Az*G12*r32/L) + r22*(-0.5*A*G13*r33 - 1.0*Az*E*r31/L) + r23*(0.5*A*G12*r32 + 1.0*Ay*E*r31/L)
             k += 1
-            KC0v[k] += r31*(-1.0*Ay*G*r33/L + 1.0*Az*G*r32/L) + r32*(-0.5*A*G*r33 - 1.0*Az*E*r31/L) + r33*(0.5*A*G*r32 + 1.0*Ay*E*r31/L)
+            KC0v[k] += r31*(-1.0*Ay*G13*r33/L + 1.0*Az*G12*r32/L) + r32*(-0.5*A*G13*r33 - 1.0*Az*E*r31/L) + r33*(0.5*A*G12*r32 + 1.0*Ay*E*r31/L)
             k += 1
-            KC0v[k] += r11*(-1.0*Ay*E*r13/L + 1.0*Az*E*r12/L) + r12*(0.5*A*G*r13 - 1.0*Az*G*r11/L) + r13*(-0.5*A*G*r12 + 1.0*Ay*G*r11/L)
+            KC0v[k] += r11*(-1.0*Ay*E*r13/L + 1.0*Az*E*r12/L) + r12*(0.5*A*G12*r13 - 1.0*Az*G12*r11/L) + r13*(-0.5*A*G13*r12 + 1.0*Ay*G13*r11/L)
             k += 1
-            KC0v[k] += r21*(-1.0*Ay*E*r13/L + 1.0*Az*E*r12/L) + r22*(0.5*A*G*r13 - 1.0*Az*G*r11/L) + r23*(-0.5*A*G*r12 + 1.0*Ay*G*r11/L)
+            KC0v[k] += r21*(-1.0*Ay*E*r13/L + 1.0*Az*E*r12/L) + r22*(0.5*A*G12*r13 - 1.0*Az*G12*r11/L) + r23*(-0.5*A*G13*r12 + 1.0*Ay*G13*r11/L)
             k += 1
-            KC0v[k] += r31*(-1.0*Ay*E*r13/L + 1.0*Az*E*r12/L) + r32*(0.5*A*G*r13 - 1.0*Az*G*r11/L) + r33*(-0.5*A*G*r12 + 1.0*Ay*G*r11/L)
+            KC0v[k] += r31*(-1.0*Ay*E*r13/L + 1.0*Az*E*r12/L) + r32*(0.5*A*G12*r13 - 1.0*Az*G12*r11/L) + r33*(-0.5*A*G13*r12 + 1.0*Ay*G13*r11/L)
             k += 1
-            KC0v[k] += r11*(-0.5*Ay*G*r12 - 0.5*Az*G*r13 + 1.0*G*J*r11/L) + r12*(-0.5*Ay*G*r11 - 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G/4 + E*Iyy/L**2)) + r13*(-0.5*Az*G*r11 - 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G/4 + E*Izz/L**2))
+            KC0v[k] += r11*(-0.5*Ay*G13*r12 - 0.5*Az*G12*r13 + 1.0*GJ*r11/L) + r12*(-0.5*Ay*G13*r11 - 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G13/4 + E*Iyy/L**2)) + r13*(-0.5*Az*G12*r11 - 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G12/4 + E*Izz/L**2))
             k += 1
-            KC0v[k] += r21*(-0.5*Ay*G*r12 - 0.5*Az*G*r13 + 1.0*G*J*r11/L) + r22*(-0.5*Ay*G*r11 - 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G/4 + E*Iyy/L**2)) + r23*(-0.5*Az*G*r11 - 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G/4 + E*Izz/L**2))
+            KC0v[k] += r21*(-0.5*Ay*G13*r12 - 0.5*Az*G12*r13 + 1.0*GJ*r11/L) + r22*(-0.5*Ay*G13*r11 - 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G13/4 + E*Iyy/L**2)) + r23*(-0.5*Az*G12*r11 - 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G12/4 + E*Izz/L**2))
             k += 1
-            KC0v[k] += r31*(-0.5*Ay*G*r12 - 0.5*Az*G*r13 + 1.0*G*J*r11/L) + r32*(-0.5*Ay*G*r11 - 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G/4 + E*Iyy/L**2)) + r33*(-0.5*Az*G*r11 - 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G/4 + E*Izz/L**2))
+            KC0v[k] += r31*(-0.5*Ay*G13*r12 - 0.5*Az*G12*r13 + 1.0*GJ*r11/L) + r32*(-0.5*Ay*G13*r11 - 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G13/4 + E*Iyy/L**2)) + r33*(-0.5*Az*G12*r11 - 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G12/4 + E*Izz/L**2))
             k += 1
-            KC0v[k] += r11*(1.0*Ay*E*r13/L - 1.0*Az*E*r12/L) + r12*(-0.5*A*G*r13 + 1.0*Az*G*r11/L) + r13*(0.5*A*G*r12 - 1.0*Ay*G*r11/L)
+            KC0v[k] += r11*(1.0*Ay*E*r13/L - 1.0*Az*E*r12/L) + r12*(-0.5*A*G12*r13 + 1.0*Az*G12*r11/L) + r13*(0.5*A*G13*r12 - 1.0*Ay*G13*r11/L)
             k += 1
-            KC0v[k] += r21*(1.0*Ay*E*r13/L - 1.0*Az*E*r12/L) + r22*(-0.5*A*G*r13 + 1.0*Az*G*r11/L) + r23*(0.5*A*G*r12 - 1.0*Ay*G*r11/L)
+            KC0v[k] += r21*(1.0*Ay*E*r13/L - 1.0*Az*E*r12/L) + r22*(-0.5*A*G12*r13 + 1.0*Az*G12*r11/L) + r23*(0.5*A*G13*r12 - 1.0*Ay*G13*r11/L)
             k += 1
-            KC0v[k] += r31*(1.0*Ay*E*r13/L - 1.0*Az*E*r12/L) + r32*(-0.5*A*G*r13 + 1.0*Az*G*r11/L) + r33*(0.5*A*G*r12 - 1.0*Ay*G*r11/L)
+            KC0v[k] += r31*(1.0*Ay*E*r13/L - 1.0*Az*E*r12/L) + r32*(-0.5*A*G12*r13 + 1.0*Az*G12*r11/L) + r33*(0.5*A*G13*r12 - 1.0*Ay*G13*r11/L)
             k += 1
-            KC0v[k] += r11*(0.5*Ay*G*r12 + 0.5*Az*G*r13 - 1.0*G*J*r11/L) + r12*(-0.5*Ay*G*r11 + 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G/4 - E*Iyy/L**2)) + r13*(-0.5*Az*G*r11 + 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G/4 - E*Izz/L**2))
+            KC0v[k] += r11*(0.5*Ay*G13*r12 + 0.5*Az*G12*r13 - 1.0*GJ*r11/L) + r12*(-0.5*Ay*G13*r11 + 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G13/4 - E*Iyy/L**2)) + r13*(-0.5*Az*G12*r11 + 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G12/4 - E*Izz/L**2))
             k += 1
-            KC0v[k] += r21*(0.5*Ay*G*r12 + 0.5*Az*G*r13 - 1.0*G*J*r11/L) + r22*(-0.5*Ay*G*r11 + 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G/4 - E*Iyy/L**2)) + r23*(-0.5*Az*G*r11 + 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G/4 - E*Izz/L**2))
+            KC0v[k] += r21*(0.5*Ay*G13*r12 + 0.5*Az*G12*r13 - 1.0*GJ*r11/L) + r22*(-0.5*Ay*G13*r11 + 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G13/4 - E*Iyy/L**2)) + r23*(-0.5*Az*G12*r11 + 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G12/4 - E*Izz/L**2))
             k += 1
-            KC0v[k] += r31*(0.5*Ay*G*r12 + 0.5*Az*G*r13 - 1.0*G*J*r11/L) + r32*(-0.5*Ay*G*r11 + 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G/4 - E*Iyy/L**2)) + r33*(-0.5*Az*G*r11 + 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G/4 - E*Izz/L**2))
+            KC0v[k] += r31*(0.5*Ay*G13*r12 + 0.5*Az*G12*r13 - 1.0*GJ*r11/L) + r32*(-0.5*Ay*G13*r11 + 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G13/4 - E*Iyy/L**2)) + r33*(-0.5*Az*G12*r11 + 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G12/4 - E*Izz/L**2))
             k += 1
-            KC0v[k] += r11*(-1.0*Ay*E*r23/L + 1.0*Az*E*r22/L) + r12*(0.5*A*G*r23 - 1.0*Az*G*r21/L) + r13*(-0.5*A*G*r22 + 1.0*Ay*G*r21/L)
+            KC0v[k] += r11*(-1.0*Ay*E*r23/L + 1.0*Az*E*r22/L) + r12*(0.5*A*G12*r23 - 1.0*Az*G12*r21/L) + r13*(-0.5*A*G13*r22 + 1.0*Ay*G13*r21/L)
             k += 1
-            KC0v[k] += r21*(-1.0*Ay*E*r23/L + 1.0*Az*E*r22/L) + r22*(0.5*A*G*r23 - 1.0*Az*G*r21/L) + r23*(-0.5*A*G*r22 + 1.0*Ay*G*r21/L)
+            KC0v[k] += r21*(-1.0*Ay*E*r23/L + 1.0*Az*E*r22/L) + r22*(0.5*A*G12*r23 - 1.0*Az*G12*r21/L) + r23*(-0.5*A*G13*r22 + 1.0*Ay*G13*r21/L)
             k += 1
-            KC0v[k] += r31*(-1.0*Ay*E*r23/L + 1.0*Az*E*r22/L) + r32*(0.5*A*G*r23 - 1.0*Az*G*r21/L) + r33*(-0.5*A*G*r22 + 1.0*Ay*G*r21/L)
+            KC0v[k] += r31*(-1.0*Ay*E*r23/L + 1.0*Az*E*r22/L) + r32*(0.5*A*G12*r23 - 1.0*Az*G12*r21/L) + r33*(-0.5*A*G13*r22 + 1.0*Ay*G13*r21/L)
             k += 1
-            KC0v[k] += r11*(-0.5*Ay*G*r22 - 0.5*Az*G*r23 + 1.0*G*J*r21/L) + r12*(-0.5*Ay*G*r21 - 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G/4 + E*Iyy/L**2)) + r13*(-0.5*Az*G*r21 - 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G/4 + E*Izz/L**2))
+            KC0v[k] += r11*(-0.5*Ay*G13*r22 - 0.5*Az*G12*r23 + 1.0*GJ*r21/L) + r12*(-0.5*Ay*G13*r21 - 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G13/4 + E*Iyy/L**2)) + r13*(-0.5*Az*G12*r21 - 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G12/4 + E*Izz/L**2))
             k += 1
-            KC0v[k] += r21*(-0.5*Ay*G*r22 - 0.5*Az*G*r23 + 1.0*G*J*r21/L) + r22*(-0.5*Ay*G*r21 - 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G/4 + E*Iyy/L**2)) + r23*(-0.5*Az*G*r21 - 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G/4 + E*Izz/L**2))
+            KC0v[k] += r21*(-0.5*Ay*G13*r22 - 0.5*Az*G12*r23 + 1.0*GJ*r21/L) + r22*(-0.5*Ay*G13*r21 - 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G13/4 + E*Iyy/L**2)) + r23*(-0.5*Az*G12*r21 - 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G12/4 + E*Izz/L**2))
             k += 1
-            KC0v[k] += r31*(-0.5*Ay*G*r22 - 0.5*Az*G*r23 + 1.0*G*J*r21/L) + r32*(-0.5*Ay*G*r21 - 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G/4 + E*Iyy/L**2)) + r33*(-0.5*Az*G*r21 - 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G/4 + E*Izz/L**2))
+            KC0v[k] += r31*(-0.5*Ay*G13*r22 - 0.5*Az*G12*r23 + 1.0*GJ*r21/L) + r32*(-0.5*Ay*G13*r21 - 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G13/4 + E*Iyy/L**2)) + r33*(-0.5*Az*G12*r21 - 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G12/4 + E*Izz/L**2))
             k += 1
-            KC0v[k] += r11*(1.0*Ay*E*r23/L - 1.0*Az*E*r22/L) + r12*(-0.5*A*G*r23 + 1.0*Az*G*r21/L) + r13*(0.5*A*G*r22 - 1.0*Ay*G*r21/L)
+            KC0v[k] += r11*(1.0*Ay*E*r23/L - 1.0*Az*E*r22/L) + r12*(-0.5*A*G12*r23 + 1.0*Az*G12*r21/L) + r13*(0.5*A*G13*r22 - 1.0*Ay*G13*r21/L)
             k += 1
-            KC0v[k] += r21*(1.0*Ay*E*r23/L - 1.0*Az*E*r22/L) + r22*(-0.5*A*G*r23 + 1.0*Az*G*r21/L) + r23*(0.5*A*G*r22 - 1.0*Ay*G*r21/L)
+            KC0v[k] += r21*(1.0*Ay*E*r23/L - 1.0*Az*E*r22/L) + r22*(-0.5*A*G12*r23 + 1.0*Az*G12*r21/L) + r23*(0.5*A*G13*r22 - 1.0*Ay*G13*r21/L)
             k += 1
-            KC0v[k] += r31*(1.0*Ay*E*r23/L - 1.0*Az*E*r22/L) + r32*(-0.5*A*G*r23 + 1.0*Az*G*r21/L) + r33*(0.5*A*G*r22 - 1.0*Ay*G*r21/L)
+            KC0v[k] += r31*(1.0*Ay*E*r23/L - 1.0*Az*E*r22/L) + r32*(-0.5*A*G12*r23 + 1.0*Az*G12*r21/L) + r33*(0.5*A*G13*r22 - 1.0*Ay*G13*r21/L)
             k += 1
-            KC0v[k] += r11*(0.5*Ay*G*r22 + 0.5*Az*G*r23 - 1.0*G*J*r21/L) + r12*(-0.5*Ay*G*r21 + 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G/4 - E*Iyy/L**2)) + r13*(-0.5*Az*G*r21 + 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G/4 - E*Izz/L**2))
+            KC0v[k] += r11*(0.5*Ay*G13*r22 + 0.5*Az*G12*r23 - 1.0*GJ*r21/L) + r12*(-0.5*Ay*G13*r21 + 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G13/4 - E*Iyy/L**2)) + r13*(-0.5*Az*G12*r21 + 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G12/4 - E*Izz/L**2))
             k += 1
-            KC0v[k] += r21*(0.5*Ay*G*r22 + 0.5*Az*G*r23 - 1.0*G*J*r21/L) + r22*(-0.5*Ay*G*r21 + 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G/4 - E*Iyy/L**2)) + r23*(-0.5*Az*G*r21 + 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G/4 - E*Izz/L**2))
+            KC0v[k] += r21*(0.5*Ay*G13*r22 + 0.5*Az*G12*r23 - 1.0*GJ*r21/L) + r22*(-0.5*Ay*G13*r21 + 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G13/4 - E*Iyy/L**2)) + r23*(-0.5*Az*G12*r21 + 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G12/4 - E*Izz/L**2))
             k += 1
-            KC0v[k] += r31*(0.5*Ay*G*r22 + 0.5*Az*G*r23 - 1.0*G*J*r21/L) + r32*(-0.5*Ay*G*r21 + 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G/4 - E*Iyy/L**2)) + r33*(-0.5*Az*G*r21 + 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G/4 - E*Izz/L**2))
+            KC0v[k] += r31*(0.5*Ay*G13*r22 + 0.5*Az*G12*r23 - 1.0*GJ*r21/L) + r32*(-0.5*Ay*G13*r21 + 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G13/4 - E*Iyy/L**2)) + r33*(-0.5*Az*G12*r21 + 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G12/4 - E*Izz/L**2))
             k += 1
-            KC0v[k] += r11*(-1.0*Ay*E*r33/L + 1.0*Az*E*r32/L) + r12*(0.5*A*G*r33 - 1.0*Az*G*r31/L) + r13*(-0.5*A*G*r32 + 1.0*Ay*G*r31/L)
+            KC0v[k] += r11*(-1.0*Ay*E*r33/L + 1.0*Az*E*r32/L) + r12*(0.5*A*G12*r33 - 1.0*Az*G12*r31/L) + r13*(-0.5*A*G13*r32 + 1.0*Ay*G13*r31/L)
             k += 1
-            KC0v[k] += r21*(-1.0*Ay*E*r33/L + 1.0*Az*E*r32/L) + r22*(0.5*A*G*r33 - 1.0*Az*G*r31/L) + r23*(-0.5*A*G*r32 + 1.0*Ay*G*r31/L)
+            KC0v[k] += r21*(-1.0*Ay*E*r33/L + 1.0*Az*E*r32/L) + r22*(0.5*A*G12*r33 - 1.0*Az*G12*r31/L) + r23*(-0.5*A*G13*r32 + 1.0*Ay*G13*r31/L)
             k += 1
-            KC0v[k] += r31*(-1.0*Ay*E*r33/L + 1.0*Az*E*r32/L) + r32*(0.5*A*G*r33 - 1.0*Az*G*r31/L) + r33*(-0.5*A*G*r32 + 1.0*Ay*G*r31/L)
+            KC0v[k] += r31*(-1.0*Ay*E*r33/L + 1.0*Az*E*r32/L) + r32*(0.5*A*G12*r33 - 1.0*Az*G12*r31/L) + r33*(-0.5*A*G13*r32 + 1.0*Ay*G13*r31/L)
             k += 1
-            KC0v[k] += r11*(-0.5*Ay*G*r32 - 0.5*Az*G*r33 + 1.0*G*J*r31/L) + r12*(-0.5*Ay*G*r31 - 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G/4 + E*Iyy/L**2)) + r13*(-0.5*Az*G*r31 - 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G/4 + E*Izz/L**2))
+            KC0v[k] += r11*(-0.5*Ay*G13*r32 - 0.5*Az*G12*r33 + 1.0*GJ*r31/L) + r12*(-0.5*Ay*G13*r31 - 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G13/4 + E*Iyy/L**2)) + r13*(-0.5*Az*G12*r31 - 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G12/4 + E*Izz/L**2))
             k += 1
-            KC0v[k] += r21*(-0.5*Ay*G*r32 - 0.5*Az*G*r33 + 1.0*G*J*r31/L) + r22*(-0.5*Ay*G*r31 - 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G/4 + E*Iyy/L**2)) + r23*(-0.5*Az*G*r31 - 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G/4 + E*Izz/L**2))
+            KC0v[k] += r21*(-0.5*Ay*G13*r32 - 0.5*Az*G12*r33 + 1.0*GJ*r31/L) + r22*(-0.5*Ay*G13*r31 - 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G13/4 + E*Iyy/L**2)) + r23*(-0.5*Az*G12*r31 - 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G12/4 + E*Izz/L**2))
             k += 1
-            KC0v[k] += r31*(-0.5*Ay*G*r32 - 0.5*Az*G*r33 + 1.0*G*J*r31/L) + r32*(-0.5*Ay*G*r31 - 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G/4 + E*Iyy/L**2)) + r33*(-0.5*Az*G*r31 - 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G/4 + E*Izz/L**2))
+            KC0v[k] += r31*(-0.5*Ay*G13*r32 - 0.5*Az*G12*r33 + 1.0*GJ*r31/L) + r32*(-0.5*Ay*G13*r31 - 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G13/4 + E*Iyy/L**2)) + r33*(-0.5*Az*G12*r31 - 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G12/4 + E*Izz/L**2))
             k += 1
-            KC0v[k] += r11*(1.0*Ay*E*r33/L - 1.0*Az*E*r32/L) + r12*(-0.5*A*G*r33 + 1.0*Az*G*r31/L) + r13*(0.5*A*G*r32 - 1.0*Ay*G*r31/L)
+            KC0v[k] += r11*(1.0*Ay*E*r33/L - 1.0*Az*E*r32/L) + r12*(-0.5*A*G12*r33 + 1.0*Az*G12*r31/L) + r13*(0.5*A*G13*r32 - 1.0*Ay*G13*r31/L)
             k += 1
-            KC0v[k] += r21*(1.0*Ay*E*r33/L - 1.0*Az*E*r32/L) + r22*(-0.5*A*G*r33 + 1.0*Az*G*r31/L) + r23*(0.5*A*G*r32 - 1.0*Ay*G*r31/L)
+            KC0v[k] += r21*(1.0*Ay*E*r33/L - 1.0*Az*E*r32/L) + r22*(-0.5*A*G12*r33 + 1.0*Az*G12*r31/L) + r23*(0.5*A*G13*r32 - 1.0*Ay*G13*r31/L)
             k += 1
-            KC0v[k] += r31*(1.0*Ay*E*r33/L - 1.0*Az*E*r32/L) + r32*(-0.5*A*G*r33 + 1.0*Az*G*r31/L) + r33*(0.5*A*G*r32 - 1.0*Ay*G*r31/L)
+            KC0v[k] += r31*(1.0*Ay*E*r33/L - 1.0*Az*E*r32/L) + r32*(-0.5*A*G12*r33 + 1.0*Az*G12*r31/L) + r33*(0.5*A*G13*r32 - 1.0*Ay*G13*r31/L)
             k += 1
-            KC0v[k] += r11*(0.5*Ay*G*r32 + 0.5*Az*G*r33 - 1.0*G*J*r31/L) + r12*(-0.5*Ay*G*r31 + 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G/4 - E*Iyy/L**2)) + r13*(-0.5*Az*G*r31 + 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G/4 - E*Izz/L**2))
+            KC0v[k] += r11*(0.5*Ay*G13*r32 + 0.5*Az*G12*r33 - 1.0*GJ*r31/L) + r12*(-0.5*Ay*G13*r31 + 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G13/4 - E*Iyy/L**2)) + r13*(-0.5*Az*G12*r31 + 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G12/4 - E*Izz/L**2))
             k += 1
-            KC0v[k] += r21*(0.5*Ay*G*r32 + 0.5*Az*G*r33 - 1.0*G*J*r31/L) + r22*(-0.5*Ay*G*r31 + 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G/4 - E*Iyy/L**2)) + r23*(-0.5*Az*G*r31 + 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G/4 - E*Izz/L**2))
+            KC0v[k] += r21*(0.5*Ay*G13*r32 + 0.5*Az*G12*r33 - 1.0*GJ*r31/L) + r22*(-0.5*Ay*G13*r31 + 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G13/4 - E*Iyy/L**2)) + r23*(-0.5*Az*G12*r31 + 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G12/4 - E*Izz/L**2))
             k += 1
-            KC0v[k] += r31*(0.5*Ay*G*r32 + 0.5*Az*G*r33 - 1.0*G*J*r31/L) + r32*(-0.5*Ay*G*r31 + 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G/4 - E*Iyy/L**2)) + r33*(-0.5*Az*G*r31 + 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G/4 - E*Izz/L**2))
+            KC0v[k] += r31*(0.5*Ay*G13*r32 + 0.5*Az*G12*r33 - 1.0*GJ*r31/L) + r32*(-0.5*Ay*G13*r31 + 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G13/4 - E*Iyy/L**2)) + r33*(-0.5*Az*G12*r31 + 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G12/4 - E*Izz/L**2))
             k += 1
-            KC0v[k] += -1.0*A*E*r11**2/L - 1.0*A*G*r12**2/L - 1.0*A*G*r13**2/L
+            KC0v[k] += -1.0*A*E*r11**2/L - 1.0*A*G12*r12**2/L - 1.0*A*G13*r13**2/L
             k += 1
-            KC0v[k] += -1.0*A*E*r11*r21/L - 1.0*A*G*r12*r22/L - 1.0*A*G*r13*r23/L
+            KC0v[k] += -1.0*A*E*r11*r21/L - 1.0*A*G12*r12*r22/L - 1.0*A*G13*r13*r23/L
             k += 1
-            KC0v[k] += -1.0*A*E*r11*r31/L - 1.0*A*G*r12*r32/L - 1.0*A*G*r13*r33/L
+            KC0v[k] += -1.0*A*E*r11*r31/L - 1.0*A*G12*r12*r32/L - 1.0*A*G13*r13*r33/L
             k += 1
-            KC0v[k] += r11*(-1.0*Ay*G*r13/L + 1.0*Az*G*r12/L) + r12*(0.5*A*G*r13 - 1.0*Az*E*r11/L) + r13*(-0.5*A*G*r12 + 1.0*Ay*E*r11/L)
+            KC0v[k] += r11*(-1.0*Ay*G13*r13/L + 1.0*Az*G12*r12/L) + r12*(0.5*A*G13*r13 - 1.0*Az*E*r11/L) + r13*(-0.5*A*G12*r12 + 1.0*Ay*E*r11/L)
             k += 1
-            KC0v[k] += r21*(-1.0*Ay*G*r13/L + 1.0*Az*G*r12/L) + r22*(0.5*A*G*r13 - 1.0*Az*E*r11/L) + r23*(-0.5*A*G*r12 + 1.0*Ay*E*r11/L)
+            KC0v[k] += r21*(-1.0*Ay*G13*r13/L + 1.0*Az*G12*r12/L) + r22*(0.5*A*G13*r13 - 1.0*Az*E*r11/L) + r23*(-0.5*A*G12*r12 + 1.0*Ay*E*r11/L)
             k += 1
-            KC0v[k] += r31*(-1.0*Ay*G*r13/L + 1.0*Az*G*r12/L) + r32*(0.5*A*G*r13 - 1.0*Az*E*r11/L) + r33*(-0.5*A*G*r12 + 1.0*Ay*E*r11/L)
+            KC0v[k] += r31*(-1.0*Ay*G13*r13/L + 1.0*Az*G12*r12/L) + r32*(0.5*A*G13*r13 - 1.0*Az*E*r11/L) + r33*(-0.5*A*G12*r12 + 1.0*Ay*E*r11/L)
             k += 1
-            KC0v[k] += 1.0*A*E*r11**2/L + 1.0*A*G*r12**2/L + 1.0*A*G*r13**2/L
+            KC0v[k] += 1.0*A*E*r11**2/L + 1.0*A*G12*r12**2/L + 1.0*A*G13*r13**2/L
             k += 1
-            KC0v[k] += 1.0*A*E*r11*r21/L + 1.0*A*G*r12*r22/L + 1.0*A*G*r13*r23/L
+            KC0v[k] += 1.0*A*E*r11*r21/L + 1.0*A*G12*r12*r22/L + 1.0*A*G13*r13*r23/L
             k += 1
-            KC0v[k] += 1.0*A*E*r11*r31/L + 1.0*A*G*r12*r32/L + 1.0*A*G*r13*r33/L
+            KC0v[k] += 1.0*A*E*r11*r31/L + 1.0*A*G12*r12*r32/L + 1.0*A*G13*r13*r33/L
             k += 1
-            KC0v[k] += r11*(1.0*Ay*G*r13/L - 1.0*Az*G*r12/L) + r12*(0.5*A*G*r13 + 1.0*Az*E*r11/L) + r13*(-0.5*A*G*r12 - 1.0*Ay*E*r11/L)
+            KC0v[k] += r11*(1.0*Ay*G13*r13/L - 1.0*Az*G12*r12/L) + r12*(0.5*A*G13*r13 + 1.0*Az*E*r11/L) + r13*(-0.5*A*G12*r12 - 1.0*Ay*E*r11/L)
             k += 1
-            KC0v[k] += r21*(1.0*Ay*G*r13/L - 1.0*Az*G*r12/L) + r22*(0.5*A*G*r13 + 1.0*Az*E*r11/L) + r23*(-0.5*A*G*r12 - 1.0*Ay*E*r11/L)
+            KC0v[k] += r21*(1.0*Ay*G13*r13/L - 1.0*Az*G12*r12/L) + r22*(0.5*A*G13*r13 + 1.0*Az*E*r11/L) + r23*(-0.5*A*G12*r12 - 1.0*Ay*E*r11/L)
             k += 1
-            KC0v[k] += r31*(1.0*Ay*G*r13/L - 1.0*Az*G*r12/L) + r32*(0.5*A*G*r13 + 1.0*Az*E*r11/L) + r33*(-0.5*A*G*r12 - 1.0*Ay*E*r11/L)
+            KC0v[k] += r31*(1.0*Ay*G13*r13/L - 1.0*Az*G12*r12/L) + r32*(0.5*A*G13*r13 + 1.0*Az*E*r11/L) + r33*(-0.5*A*G12*r12 - 1.0*Ay*E*r11/L)
             k += 1
-            KC0v[k] += -1.0*A*E*r11*r21/L - 1.0*A*G*r12*r22/L - 1.0*A*G*r13*r23/L
+            KC0v[k] += -1.0*A*E*r11*r21/L - 1.0*A*G12*r12*r22/L - 1.0*A*G13*r13*r23/L
             k += 1
-            KC0v[k] += -1.0*A*E*r21**2/L - 1.0*A*G*r22**2/L - 1.0*A*G*r23**2/L
+            KC0v[k] += -1.0*A*E*r21**2/L - 1.0*A*G12*r22**2/L - 1.0*A*G13*r23**2/L
             k += 1
-            KC0v[k] += -1.0*A*E*r21*r31/L - 1.0*A*G*r22*r32/L - 1.0*A*G*r23*r33/L
+            KC0v[k] += -1.0*A*E*r21*r31/L - 1.0*A*G12*r22*r32/L - 1.0*A*G13*r23*r33/L
             k += 1
-            KC0v[k] += r11*(-1.0*Ay*G*r23/L + 1.0*Az*G*r22/L) + r12*(0.5*A*G*r23 - 1.0*Az*E*r21/L) + r13*(-0.5*A*G*r22 + 1.0*Ay*E*r21/L)
+            KC0v[k] += r11*(-1.0*Ay*G13*r23/L + 1.0*Az*G12*r22/L) + r12*(0.5*A*G13*r23 - 1.0*Az*E*r21/L) + r13*(-0.5*A*G12*r22 + 1.0*Ay*E*r21/L)
             k += 1
-            KC0v[k] += r21*(-1.0*Ay*G*r23/L + 1.0*Az*G*r22/L) + r22*(0.5*A*G*r23 - 1.0*Az*E*r21/L) + r23*(-0.5*A*G*r22 + 1.0*Ay*E*r21/L)
+            KC0v[k] += r21*(-1.0*Ay*G13*r23/L + 1.0*Az*G12*r22/L) + r22*(0.5*A*G13*r23 - 1.0*Az*E*r21/L) + r23*(-0.5*A*G12*r22 + 1.0*Ay*E*r21/L)
             k += 1
-            KC0v[k] += r31*(-1.0*Ay*G*r23/L + 1.0*Az*G*r22/L) + r32*(0.5*A*G*r23 - 1.0*Az*E*r21/L) + r33*(-0.5*A*G*r22 + 1.0*Ay*E*r21/L)
+            KC0v[k] += r31*(-1.0*Ay*G13*r23/L + 1.0*Az*G12*r22/L) + r32*(0.5*A*G13*r23 - 1.0*Az*E*r21/L) + r33*(-0.5*A*G12*r22 + 1.0*Ay*E*r21/L)
             k += 1
-            KC0v[k] += 1.0*A*E*r11*r21/L + 1.0*A*G*r12*r22/L + 1.0*A*G*r13*r23/L
+            KC0v[k] += 1.0*A*E*r11*r21/L + 1.0*A*G12*r12*r22/L + 1.0*A*G13*r13*r23/L
             k += 1
-            KC0v[k] += 1.0*A*E*r21**2/L + 1.0*A*G*r22**2/L + 1.0*A*G*r23**2/L
+            KC0v[k] += 1.0*A*E*r21**2/L + 1.0*A*G12*r22**2/L + 1.0*A*G13*r23**2/L
             k += 1
-            KC0v[k] += 1.0*A*E*r21*r31/L + 1.0*A*G*r22*r32/L + 1.0*A*G*r23*r33/L
+            KC0v[k] += 1.0*A*E*r21*r31/L + 1.0*A*G12*r22*r32/L + 1.0*A*G13*r23*r33/L
             k += 1
-            KC0v[k] += r11*(1.0*Ay*G*r23/L - 1.0*Az*G*r22/L) + r12*(0.5*A*G*r23 + 1.0*Az*E*r21/L) + r13*(-0.5*A*G*r22 - 1.0*Ay*E*r21/L)
+            KC0v[k] += r11*(1.0*Ay*G13*r23/L - 1.0*Az*G12*r22/L) + r12*(0.5*A*G13*r23 + 1.0*Az*E*r21/L) + r13*(-0.5*A*G12*r22 - 1.0*Ay*E*r21/L)
             k += 1
-            KC0v[k] += r21*(1.0*Ay*G*r23/L - 1.0*Az*G*r22/L) + r22*(0.5*A*G*r23 + 1.0*Az*E*r21/L) + r23*(-0.5*A*G*r22 - 1.0*Ay*E*r21/L)
+            KC0v[k] += r21*(1.0*Ay*G13*r23/L - 1.0*Az*G12*r22/L) + r22*(0.5*A*G13*r23 + 1.0*Az*E*r21/L) + r23*(-0.5*A*G12*r22 - 1.0*Ay*E*r21/L)
             k += 1
-            KC0v[k] += r31*(1.0*Ay*G*r23/L - 1.0*Az*G*r22/L) + r32*(0.5*A*G*r23 + 1.0*Az*E*r21/L) + r33*(-0.5*A*G*r22 - 1.0*Ay*E*r21/L)
+            KC0v[k] += r31*(1.0*Ay*G13*r23/L - 1.0*Az*G12*r22/L) + r32*(0.5*A*G13*r23 + 1.0*Az*E*r21/L) + r33*(-0.5*A*G12*r22 - 1.0*Ay*E*r21/L)
             k += 1
-            KC0v[k] += -1.0*A*E*r11*r31/L - 1.0*A*G*r12*r32/L - 1.0*A*G*r13*r33/L
+            KC0v[k] += -1.0*A*E*r11*r31/L - 1.0*A*G12*r12*r32/L - 1.0*A*G13*r13*r33/L
             k += 1
-            KC0v[k] += -1.0*A*E*r21*r31/L - 1.0*A*G*r22*r32/L - 1.0*A*G*r23*r33/L
+            KC0v[k] += -1.0*A*E*r21*r31/L - 1.0*A*G12*r22*r32/L - 1.0*A*G13*r23*r33/L
             k += 1
-            KC0v[k] += -1.0*A*E*r31**2/L - 1.0*A*G*r32**2/L - 1.0*A*G*r33**2/L
+            KC0v[k] += -1.0*A*E*r31**2/L - 1.0*A*G12*r32**2/L - 1.0*A*G13*r33**2/L
             k += 1
-            KC0v[k] += r11*(-1.0*Ay*G*r33/L + 1.0*Az*G*r32/L) + r12*(0.5*A*G*r33 - 1.0*Az*E*r31/L) + r13*(-0.5*A*G*r32 + 1.0*Ay*E*r31/L)
+            KC0v[k] += r11*(-1.0*Ay*G13*r33/L + 1.0*Az*G12*r32/L) + r12*(0.5*A*G13*r33 - 1.0*Az*E*r31/L) + r13*(-0.5*A*G12*r32 + 1.0*Ay*E*r31/L)
             k += 1
-            KC0v[k] += r21*(-1.0*Ay*G*r33/L + 1.0*Az*G*r32/L) + r22*(0.5*A*G*r33 - 1.0*Az*E*r31/L) + r23*(-0.5*A*G*r32 + 1.0*Ay*E*r31/L)
+            KC0v[k] += r21*(-1.0*Ay*G13*r33/L + 1.0*Az*G12*r32/L) + r22*(0.5*A*G13*r33 - 1.0*Az*E*r31/L) + r23*(-0.5*A*G12*r32 + 1.0*Ay*E*r31/L)
             k += 1
-            KC0v[k] += r31*(-1.0*Ay*G*r33/L + 1.0*Az*G*r32/L) + r32*(0.5*A*G*r33 - 1.0*Az*E*r31/L) + r33*(-0.5*A*G*r32 + 1.0*Ay*E*r31/L)
+            KC0v[k] += r31*(-1.0*Ay*G13*r33/L + 1.0*Az*G12*r32/L) + r32*(0.5*A*G13*r33 - 1.0*Az*E*r31/L) + r33*(-0.5*A*G12*r32 + 1.0*Ay*E*r31/L)
             k += 1
-            KC0v[k] += 1.0*A*E*r11*r31/L + 1.0*A*G*r12*r32/L + 1.0*A*G*r13*r33/L
+            KC0v[k] += 1.0*A*E*r11*r31/L + 1.0*A*G12*r12*r32/L + 1.0*A*G13*r13*r33/L
             k += 1
-            KC0v[k] += 1.0*A*E*r21*r31/L + 1.0*A*G*r22*r32/L + 1.0*A*G*r23*r33/L
+            KC0v[k] += 1.0*A*E*r21*r31/L + 1.0*A*G12*r22*r32/L + 1.0*A*G13*r23*r33/L
             k += 1
-            KC0v[k] += 1.0*A*E*r31**2/L + 1.0*A*G*r32**2/L + 1.0*A*G*r33**2/L
+            KC0v[k] += 1.0*A*E*r31**2/L + 1.0*A*G12*r32**2/L + 1.0*A*G13*r33**2/L
             k += 1
-            KC0v[k] += r11*(1.0*Ay*G*r33/L - 1.0*Az*G*r32/L) + r12*(0.5*A*G*r33 + 1.0*Az*E*r31/L) + r13*(-0.5*A*G*r32 - 1.0*Ay*E*r31/L)
+            KC0v[k] += r11*(1.0*Ay*G13*r33/L - 1.0*Az*G12*r32/L) + r12*(0.5*A*G13*r33 + 1.0*Az*E*r31/L) + r13*(-0.5*A*G12*r32 - 1.0*Ay*E*r31/L)
             k += 1
-            KC0v[k] += r21*(1.0*Ay*G*r33/L - 1.0*Az*G*r32/L) + r22*(0.5*A*G*r33 + 1.0*Az*E*r31/L) + r23*(-0.5*A*G*r32 - 1.0*Ay*E*r31/L)
+            KC0v[k] += r21*(1.0*Ay*G13*r33/L - 1.0*Az*G12*r32/L) + r22*(0.5*A*G13*r33 + 1.0*Az*E*r31/L) + r23*(-0.5*A*G12*r32 - 1.0*Ay*E*r31/L)
             k += 1
-            KC0v[k] += r31*(1.0*Ay*G*r33/L - 1.0*Az*G*r32/L) + r32*(0.5*A*G*r33 + 1.0*Az*E*r31/L) + r33*(-0.5*A*G*r32 - 1.0*Ay*E*r31/L)
+            KC0v[k] += r31*(1.0*Ay*G13*r33/L - 1.0*Az*G12*r32/L) + r32*(0.5*A*G13*r33 + 1.0*Az*E*r31/L) + r33*(-0.5*A*G12*r32 - 1.0*Ay*E*r31/L)
             k += 1
-            KC0v[k] += r11*(1.0*Ay*E*r13/L - 1.0*Az*E*r12/L) + r12*(0.5*A*G*r13 + 1.0*Az*G*r11/L) + r13*(-0.5*A*G*r12 - 1.0*Ay*G*r11/L)
+            KC0v[k] += r11*(1.0*Ay*E*r13/L - 1.0*Az*E*r12/L) + r12*(0.5*A*G12*r13 + 1.0*Az*G12*r11/L) + r13*(-0.5*A*G13*r12 - 1.0*Ay*G13*r11/L)
             k += 1
-            KC0v[k] += r21*(1.0*Ay*E*r13/L - 1.0*Az*E*r12/L) + r22*(0.5*A*G*r13 + 1.0*Az*G*r11/L) + r23*(-0.5*A*G*r12 - 1.0*Ay*G*r11/L)
+            KC0v[k] += r21*(1.0*Ay*E*r13/L - 1.0*Az*E*r12/L) + r22*(0.5*A*G12*r13 + 1.0*Az*G12*r11/L) + r23*(-0.5*A*G13*r12 - 1.0*Ay*G13*r11/L)
             k += 1
-            KC0v[k] += r31*(1.0*Ay*E*r13/L - 1.0*Az*E*r12/L) + r32*(0.5*A*G*r13 + 1.0*Az*G*r11/L) + r33*(-0.5*A*G*r12 - 1.0*Ay*G*r11/L)
+            KC0v[k] += r31*(1.0*Ay*E*r13/L - 1.0*Az*E*r12/L) + r32*(0.5*A*G12*r13 + 1.0*Az*G12*r11/L) + r33*(-0.5*A*G13*r12 - 1.0*Ay*G13*r11/L)
             k += 1
-            KC0v[k] += r11*(-0.5*Ay*G*r12 - 0.5*Az*G*r13 - 1.0*G*J*r11/L) + r12*(0.5*Ay*G*r11 + 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G/4 - E*Iyy/L**2)) + r13*(0.5*Az*G*r11 + 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G/4 - E*Izz/L**2))
+            KC0v[k] += r11*(-0.5*Ay*G13*r12 - 0.5*Az*G12*r13 - 1.0*GJ*r11/L) + r12*(0.5*Ay*G13*r11 + 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G13/4 - E*Iyy/L**2)) + r13*(0.5*Az*G12*r11 + 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G12/4 - E*Izz/L**2))
             k += 1
-            KC0v[k] += r21*(-0.5*Ay*G*r12 - 0.5*Az*G*r13 - 1.0*G*J*r11/L) + r22*(0.5*Ay*G*r11 + 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G/4 - E*Iyy/L**2)) + r23*(0.5*Az*G*r11 + 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G/4 - E*Izz/L**2))
+            KC0v[k] += r21*(-0.5*Ay*G13*r12 - 0.5*Az*G12*r13 - 1.0*GJ*r11/L) + r22*(0.5*Ay*G13*r11 + 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G13/4 - E*Iyy/L**2)) + r23*(0.5*Az*G12*r11 + 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G12/4 - E*Izz/L**2))
             k += 1
-            KC0v[k] += r31*(-0.5*Ay*G*r12 - 0.5*Az*G*r13 - 1.0*G*J*r11/L) + r32*(0.5*Ay*G*r11 + 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G/4 - E*Iyy/L**2)) + r33*(0.5*Az*G*r11 + 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G/4 - E*Izz/L**2))
+            KC0v[k] += r31*(-0.5*Ay*G13*r12 - 0.5*Az*G12*r13 - 1.0*GJ*r11/L) + r32*(0.5*Ay*G13*r11 + 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G13/4 - E*Iyy/L**2)) + r33*(0.5*Az*G12*r11 + 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G12/4 - E*Izz/L**2))
             k += 1
-            KC0v[k] += r11*(-1.0*Ay*E*r13/L + 1.0*Az*E*r12/L) + r12*(-0.5*A*G*r13 - 1.0*Az*G*r11/L) + r13*(0.5*A*G*r12 + 1.0*Ay*G*r11/L)
+            KC0v[k] += r11*(-1.0*Ay*E*r13/L + 1.0*Az*E*r12/L) + r12*(-0.5*A*G12*r13 - 1.0*Az*G12*r11/L) + r13*(0.5*A*G13*r12 + 1.0*Ay*G13*r11/L)
             k += 1
-            KC0v[k] += r21*(-1.0*Ay*E*r13/L + 1.0*Az*E*r12/L) + r22*(-0.5*A*G*r13 - 1.0*Az*G*r11/L) + r23*(0.5*A*G*r12 + 1.0*Ay*G*r11/L)
+            KC0v[k] += r21*(-1.0*Ay*E*r13/L + 1.0*Az*E*r12/L) + r22*(-0.5*A*G12*r13 - 1.0*Az*G12*r11/L) + r23*(0.5*A*G13*r12 + 1.0*Ay*G13*r11/L)
             k += 1
-            KC0v[k] += r31*(-1.0*Ay*E*r13/L + 1.0*Az*E*r12/L) + r32*(-0.5*A*G*r13 - 1.0*Az*G*r11/L) + r33*(0.5*A*G*r12 + 1.0*Ay*G*r11/L)
+            KC0v[k] += r31*(-1.0*Ay*E*r13/L + 1.0*Az*E*r12/L) + r32*(-0.5*A*G12*r13 - 1.0*Az*G12*r11/L) + r33*(0.5*A*G13*r12 + 1.0*Ay*G13*r11/L)
             k += 1
-            KC0v[k] += r11*(0.5*Ay*G*r12 + 0.5*Az*G*r13 + 1.0*G*J*r11/L) + r12*(0.5*Ay*G*r11 - 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G/4 + E*Iyy/L**2)) + r13*(0.5*Az*G*r11 - 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G/4 + E*Izz/L**2))
+            KC0v[k] += r11*(0.5*Ay*G13*r12 + 0.5*Az*G12*r13 + 1.0*GJ*r11/L) + r12*(0.5*Ay*G13*r11 - 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G13/4 + E*Iyy/L**2)) + r13*(0.5*Az*G12*r11 - 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G12/4 + E*Izz/L**2))
             k += 1
-            KC0v[k] += r21*(0.5*Ay*G*r12 + 0.5*Az*G*r13 + 1.0*G*J*r11/L) + r22*(0.5*Ay*G*r11 - 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G/4 + E*Iyy/L**2)) + r23*(0.5*Az*G*r11 - 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G/4 + E*Izz/L**2))
+            KC0v[k] += r21*(0.5*Ay*G13*r12 + 0.5*Az*G12*r13 + 1.0*GJ*r11/L) + r22*(0.5*Ay*G13*r11 - 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G13/4 + E*Iyy/L**2)) + r23*(0.5*Az*G12*r11 - 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G12/4 + E*Izz/L**2))
             k += 1
-            KC0v[k] += r31*(0.5*Ay*G*r12 + 0.5*Az*G*r13 + 1.0*G*J*r11/L) + r32*(0.5*Ay*G*r11 - 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G/4 + E*Iyy/L**2)) + r33*(0.5*Az*G*r11 - 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G/4 + E*Izz/L**2))
+            KC0v[k] += r31*(0.5*Ay*G13*r12 + 0.5*Az*G12*r13 + 1.0*GJ*r11/L) + r32*(0.5*Ay*G13*r11 - 1.0*E*Iyz*r13/L + 1.0*L*r12*(A*G13/4 + E*Iyy/L**2)) + r33*(0.5*Az*G12*r11 - 1.0*E*Iyz*r12/L + 1.0*L*r13*(A*G12/4 + E*Izz/L**2))
             k += 1
-            KC0v[k] += r11*(1.0*Ay*E*r23/L - 1.0*Az*E*r22/L) + r12*(0.5*A*G*r23 + 1.0*Az*G*r21/L) + r13*(-0.5*A*G*r22 - 1.0*Ay*G*r21/L)
+            KC0v[k] += r11*(1.0*Ay*E*r23/L - 1.0*Az*E*r22/L) + r12*(0.5*A*G12*r23 + 1.0*Az*G12*r21/L) + r13*(-0.5*A*G13*r22 - 1.0*Ay*G13*r21/L)
             k += 1
-            KC0v[k] += r21*(1.0*Ay*E*r23/L - 1.0*Az*E*r22/L) + r22*(0.5*A*G*r23 + 1.0*Az*G*r21/L) + r23*(-0.5*A*G*r22 - 1.0*Ay*G*r21/L)
+            KC0v[k] += r21*(1.0*Ay*E*r23/L - 1.0*Az*E*r22/L) + r22*(0.5*A*G12*r23 + 1.0*Az*G12*r21/L) + r23*(-0.5*A*G13*r22 - 1.0*Ay*G13*r21/L)
             k += 1
-            KC0v[k] += r31*(1.0*Ay*E*r23/L - 1.0*Az*E*r22/L) + r32*(0.5*A*G*r23 + 1.0*Az*G*r21/L) + r33*(-0.5*A*G*r22 - 1.0*Ay*G*r21/L)
+            KC0v[k] += r31*(1.0*Ay*E*r23/L - 1.0*Az*E*r22/L) + r32*(0.5*A*G12*r23 + 1.0*Az*G12*r21/L) + r33*(-0.5*A*G13*r22 - 1.0*Ay*G13*r21/L)
             k += 1
-            KC0v[k] += r11*(-0.5*Ay*G*r22 - 0.5*Az*G*r23 - 1.0*G*J*r21/L) + r12*(0.5*Ay*G*r21 + 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G/4 - E*Iyy/L**2)) + r13*(0.5*Az*G*r21 + 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G/4 - E*Izz/L**2))
+            KC0v[k] += r11*(-0.5*Ay*G13*r22 - 0.5*Az*G12*r23 - 1.0*GJ*r21/L) + r12*(0.5*Ay*G13*r21 + 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G13/4 - E*Iyy/L**2)) + r13*(0.5*Az*G12*r21 + 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G12/4 - E*Izz/L**2))
             k += 1
-            KC0v[k] += r21*(-0.5*Ay*G*r22 - 0.5*Az*G*r23 - 1.0*G*J*r21/L) + r22*(0.5*Ay*G*r21 + 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G/4 - E*Iyy/L**2)) + r23*(0.5*Az*G*r21 + 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G/4 - E*Izz/L**2))
+            KC0v[k] += r21*(-0.5*Ay*G13*r22 - 0.5*Az*G12*r23 - 1.0*GJ*r21/L) + r22*(0.5*Ay*G13*r21 + 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G13/4 - E*Iyy/L**2)) + r23*(0.5*Az*G12*r21 + 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G12/4 - E*Izz/L**2))
             k += 1
-            KC0v[k] += r31*(-0.5*Ay*G*r22 - 0.5*Az*G*r23 - 1.0*G*J*r21/L) + r32*(0.5*Ay*G*r21 + 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G/4 - E*Iyy/L**2)) + r33*(0.5*Az*G*r21 + 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G/4 - E*Izz/L**2))
+            KC0v[k] += r31*(-0.5*Ay*G13*r22 - 0.5*Az*G12*r23 - 1.0*GJ*r21/L) + r32*(0.5*Ay*G13*r21 + 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G13/4 - E*Iyy/L**2)) + r33*(0.5*Az*G12*r21 + 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G12/4 - E*Izz/L**2))
             k += 1
-            KC0v[k] += r11*(-1.0*Ay*E*r23/L + 1.0*Az*E*r22/L) + r12*(-0.5*A*G*r23 - 1.0*Az*G*r21/L) + r13*(0.5*A*G*r22 + 1.0*Ay*G*r21/L)
+            KC0v[k] += r11*(-1.0*Ay*E*r23/L + 1.0*Az*E*r22/L) + r12*(-0.5*A*G12*r23 - 1.0*Az*G12*r21/L) + r13*(0.5*A*G13*r22 + 1.0*Ay*G13*r21/L)
             k += 1
-            KC0v[k] += r21*(-1.0*Ay*E*r23/L + 1.0*Az*E*r22/L) + r22*(-0.5*A*G*r23 - 1.0*Az*G*r21/L) + r23*(0.5*A*G*r22 + 1.0*Ay*G*r21/L)
+            KC0v[k] += r21*(-1.0*Ay*E*r23/L + 1.0*Az*E*r22/L) + r22*(-0.5*A*G12*r23 - 1.0*Az*G12*r21/L) + r23*(0.5*A*G13*r22 + 1.0*Ay*G13*r21/L)
             k += 1
-            KC0v[k] += r31*(-1.0*Ay*E*r23/L + 1.0*Az*E*r22/L) + r32*(-0.5*A*G*r23 - 1.0*Az*G*r21/L) + r33*(0.5*A*G*r22 + 1.0*Ay*G*r21/L)
+            KC0v[k] += r31*(-1.0*Ay*E*r23/L + 1.0*Az*E*r22/L) + r32*(-0.5*A*G12*r23 - 1.0*Az*G12*r21/L) + r33*(0.5*A*G13*r22 + 1.0*Ay*G13*r21/L)
             k += 1
-            KC0v[k] += r11*(0.5*Ay*G*r22 + 0.5*Az*G*r23 + 1.0*G*J*r21/L) + r12*(0.5*Ay*G*r21 - 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G/4 + E*Iyy/L**2)) + r13*(0.5*Az*G*r21 - 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G/4 + E*Izz/L**2))
+            KC0v[k] += r11*(0.5*Ay*G13*r22 + 0.5*Az*G12*r23 + 1.0*GJ*r21/L) + r12*(0.5*Ay*G13*r21 - 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G13/4 + E*Iyy/L**2)) + r13*(0.5*Az*G12*r21 - 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G12/4 + E*Izz/L**2))
             k += 1
-            KC0v[k] += r21*(0.5*Ay*G*r22 + 0.5*Az*G*r23 + 1.0*G*J*r21/L) + r22*(0.5*Ay*G*r21 - 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G/4 + E*Iyy/L**2)) + r23*(0.5*Az*G*r21 - 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G/4 + E*Izz/L**2))
+            KC0v[k] += r21*(0.5*Ay*G13*r22 + 0.5*Az*G12*r23 + 1.0*GJ*r21/L) + r22*(0.5*Ay*G13*r21 - 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G13/4 + E*Iyy/L**2)) + r23*(0.5*Az*G12*r21 - 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G12/4 + E*Izz/L**2))
             k += 1
-            KC0v[k] += r31*(0.5*Ay*G*r22 + 0.5*Az*G*r23 + 1.0*G*J*r21/L) + r32*(0.5*Ay*G*r21 - 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G/4 + E*Iyy/L**2)) + r33*(0.5*Az*G*r21 - 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G/4 + E*Izz/L**2))
+            KC0v[k] += r31*(0.5*Ay*G13*r22 + 0.5*Az*G12*r23 + 1.0*GJ*r21/L) + r32*(0.5*Ay*G13*r21 - 1.0*E*Iyz*r23/L + 1.0*L*r22*(A*G13/4 + E*Iyy/L**2)) + r33*(0.5*Az*G12*r21 - 1.0*E*Iyz*r22/L + 1.0*L*r23*(A*G12/4 + E*Izz/L**2))
             k += 1
-            KC0v[k] += r11*(1.0*Ay*E*r33/L - 1.0*Az*E*r32/L) + r12*(0.5*A*G*r33 + 1.0*Az*G*r31/L) + r13*(-0.5*A*G*r32 - 1.0*Ay*G*r31/L)
+            KC0v[k] += r11*(1.0*Ay*E*r33/L - 1.0*Az*E*r32/L) + r12*(0.5*A*G12*r33 + 1.0*Az*G12*r31/L) + r13*(-0.5*A*G13*r32 - 1.0*Ay*G13*r31/L)
             k += 1
-            KC0v[k] += r21*(1.0*Ay*E*r33/L - 1.0*Az*E*r32/L) + r22*(0.5*A*G*r33 + 1.0*Az*G*r31/L) + r23*(-0.5*A*G*r32 - 1.0*Ay*G*r31/L)
+            KC0v[k] += r21*(1.0*Ay*E*r33/L - 1.0*Az*E*r32/L) + r22*(0.5*A*G12*r33 + 1.0*Az*G12*r31/L) + r23*(-0.5*A*G13*r32 - 1.0*Ay*G13*r31/L)
             k += 1
-            KC0v[k] += r31*(1.0*Ay*E*r33/L - 1.0*Az*E*r32/L) + r32*(0.5*A*G*r33 + 1.0*Az*G*r31/L) + r33*(-0.5*A*G*r32 - 1.0*Ay*G*r31/L)
+            KC0v[k] += r31*(1.0*Ay*E*r33/L - 1.0*Az*E*r32/L) + r32*(0.5*A*G12*r33 + 1.0*Az*G12*r31/L) + r33*(-0.5*A*G13*r32 - 1.0*Ay*G13*r31/L)
             k += 1
-            KC0v[k] += r11*(-0.5*Ay*G*r32 - 0.5*Az*G*r33 - 1.0*G*J*r31/L) + r12*(0.5*Ay*G*r31 + 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G/4 - E*Iyy/L**2)) + r13*(0.5*Az*G*r31 + 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G/4 - E*Izz/L**2))
+            KC0v[k] += r11*(-0.5*Ay*G13*r32 - 0.5*Az*G12*r33 - 1.0*GJ*r31/L) + r12*(0.5*Ay*G13*r31 + 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G13/4 - E*Iyy/L**2)) + r13*(0.5*Az*G12*r31 + 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G12/4 - E*Izz/L**2))
             k += 1
-            KC0v[k] += r21*(-0.5*Ay*G*r32 - 0.5*Az*G*r33 - 1.0*G*J*r31/L) + r22*(0.5*Ay*G*r31 + 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G/4 - E*Iyy/L**2)) + r23*(0.5*Az*G*r31 + 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G/4 - E*Izz/L**2))
+            KC0v[k] += r21*(-0.5*Ay*G13*r32 - 0.5*Az*G12*r33 - 1.0*GJ*r31/L) + r22*(0.5*Ay*G13*r31 + 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G13/4 - E*Iyy/L**2)) + r23*(0.5*Az*G12*r31 + 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G12/4 - E*Izz/L**2))
             k += 1
-            KC0v[k] += r31*(-0.5*Ay*G*r32 - 0.5*Az*G*r33 - 1.0*G*J*r31/L) + r32*(0.5*Ay*G*r31 + 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G/4 - E*Iyy/L**2)) + r33*(0.5*Az*G*r31 + 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G/4 - E*Izz/L**2))
+            KC0v[k] += r31*(-0.5*Ay*G13*r32 - 0.5*Az*G12*r33 - 1.0*GJ*r31/L) + r32*(0.5*Ay*G13*r31 + 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G13/4 - E*Iyy/L**2)) + r33*(0.5*Az*G12*r31 + 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G12/4 - E*Izz/L**2))
             k += 1
-            KC0v[k] += r11*(-1.0*Ay*E*r33/L + 1.0*Az*E*r32/L) + r12*(-0.5*A*G*r33 - 1.0*Az*G*r31/L) + r13*(0.5*A*G*r32 + 1.0*Ay*G*r31/L)
+            KC0v[k] += r11*(-1.0*Ay*E*r33/L + 1.0*Az*E*r32/L) + r12*(-0.5*A*G12*r33 - 1.0*Az*G12*r31/L) + r13*(0.5*A*G13*r32 + 1.0*Ay*G13*r31/L)
             k += 1
-            KC0v[k] += r21*(-1.0*Ay*E*r33/L + 1.0*Az*E*r32/L) + r22*(-0.5*A*G*r33 - 1.0*Az*G*r31/L) + r23*(0.5*A*G*r32 + 1.0*Ay*G*r31/L)
+            KC0v[k] += r21*(-1.0*Ay*E*r33/L + 1.0*Az*E*r32/L) + r22*(-0.5*A*G12*r33 - 1.0*Az*G12*r31/L) + r23*(0.5*A*G13*r32 + 1.0*Ay*G13*r31/L)
             k += 1
-            KC0v[k] += r31*(-1.0*Ay*E*r33/L + 1.0*Az*E*r32/L) + r32*(-0.5*A*G*r33 - 1.0*Az*G*r31/L) + r33*(0.5*A*G*r32 + 1.0*Ay*G*r31/L)
+            KC0v[k] += r31*(-1.0*Ay*E*r33/L + 1.0*Az*E*r32/L) + r32*(-0.5*A*G12*r33 - 1.0*Az*G12*r31/L) + r33*(0.5*A*G13*r32 + 1.0*Ay*G13*r31/L)
             k += 1
-            KC0v[k] += r11*(0.5*Ay*G*r32 + 0.5*Az*G*r33 + 1.0*G*J*r31/L) + r12*(0.5*Ay*G*r31 - 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G/4 + E*Iyy/L**2)) + r13*(0.5*Az*G*r31 - 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G/4 + E*Izz/L**2))
+            KC0v[k] += r11*(0.5*Ay*G13*r32 + 0.5*Az*G12*r33 + 1.0*GJ*r31/L) + r12*(0.5*Ay*G13*r31 - 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G13/4 + E*Iyy/L**2)) + r13*(0.5*Az*G12*r31 - 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G12/4 + E*Izz/L**2))
             k += 1
-            KC0v[k] += r21*(0.5*Ay*G*r32 + 0.5*Az*G*r33 + 1.0*G*J*r31/L) + r22*(0.5*Ay*G*r31 - 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G/4 + E*Iyy/L**2)) + r23*(0.5*Az*G*r31 - 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G/4 + E*Izz/L**2))
+            KC0v[k] += r21*(0.5*Ay*G13*r32 + 0.5*Az*G12*r33 + 1.0*GJ*r31/L) + r22*(0.5*Ay*G13*r31 - 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G13/4 + E*Iyy/L**2)) + r23*(0.5*Az*G12*r31 - 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G12/4 + E*Izz/L**2))
             k += 1
-            KC0v[k] += r31*(0.5*Ay*G*r32 + 0.5*Az*G*r33 + 1.0*G*J*r31/L) + r32*(0.5*Ay*G*r31 - 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G/4 + E*Iyy/L**2)) + r33*(0.5*Az*G*r31 - 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G/4 + E*Izz/L**2))
+            KC0v[k] += r31*(0.5*Ay*G13*r32 + 0.5*Az*G12*r33 + 1.0*GJ*r31/L) + r32*(0.5*Ay*G13*r31 - 1.0*E*Iyz*r33/L + 1.0*L*r32*(A*G13/4 + E*Iyy/L**2)) + r33*(0.5*Az*G12*r31 - 1.0*E*Iyz*r32/L + 1.0*L*r33*(A*G12/4 + E*Izz/L**2))
 
 
     cpdef void update_fint(BeamLR self,

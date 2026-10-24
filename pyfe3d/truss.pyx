@@ -171,6 +171,7 @@ cdef class Truss:
         U = \frac{1}{2} \int_0^L \left( E A u_{,x}^2 + G J {r_x}_{,x}^2
             \right) dx
 
+    where `G J` is the torsional stiffness ``GJ`` of :class:`.BeamProp`,
     with the axial displacement `u` and the twist rotation `r_x`
     interpolated linearly between the nodes, in the element coordinate
     system, and `L` = ``length``. The transverse translations `v`, `w` and
@@ -436,7 +437,7 @@ cdef class Truss:
                   updated, accessible using ``.probe.finte``.
 
         The 12 values of ``finte`` are overwritten. They are computed from
-        ``length``, from the attributes ``A``, ``E``, ``G`` and ``J`` of
+        ``length``, from the attributes ``A``, ``E`` and ``GJ`` of
         ``prop`` and from the displacements ``probe.ue``, which must be
         updated before, see :meth:`.update_probe_xe` and
         :meth:`.update_probe_ue`. Only the axial forces and the torsion
@@ -451,14 +452,13 @@ cdef class Truss:
         """
         cdef double *ue
         cdef double *finte
-        cdef double L, A, E, G, J
+        cdef double L, A, E, GJ
 
         with nogil:
             L = self.length
             A = prop.A
             E = prop.E
-            G = prop.G
-            J = prop.J
+            GJ = prop.get_GJ()
 
             ue = &self.probe.ue[0]
             finte = &self.probe.finte[0]
@@ -466,13 +466,13 @@ cdef class Truss:
             finte[0] = 1.0*A*E*(ue[0] - ue[6])/L
             finte[1] = 0.
             finte[2] = 0.
-            finte[3] = 1.0*G*J*(ue[3] - ue[9])/L
+            finte[3] = 1.0*GJ*(ue[3] - ue[9])/L
             finte[4] = 0.
             finte[5] = 0.
             finte[6] = 1.0*A*E*(-ue[0] + ue[6])/L
             finte[7] = 0.
             finte[8] = 0.
-            finte[9] = 1.0*G*J*(-ue[3] + ue[9])/L
+            finte[9] = 1.0*GJ*(-ue[3] + ue[9])/L
             finte[10] = 0.
             finte[11] = 0.
 
@@ -491,8 +491,8 @@ cdef class Truss:
         the row and column indices, built from ``c1`` and ``c2``, are stored
         in ``KC0r`` and ``KC0c``, and the values are added to those already
         in ``KC0v``. The matrix is computed from ``length``, the rotation
-        matrix and the attributes ``A``, ``E``, ``G`` and ``J`` of
-        ``prop``. ``length`` and the rotation matrix must be updated before,
+        matrix and the attributes ``A``, ``E`` and ``GJ`` of ``prop``.
+        ``length`` and the rotation matrix must be updated before,
         see :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe`.
 
         Parameters
@@ -524,15 +524,14 @@ cdef class Truss:
 
         """
         cdef int c1, c2, k
-        cdef double L, A, E, G, J
+        cdef double L, A, E, GJ
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
 
         with nogil:
             L = self.length
             A = prop.A
             E = prop.E
-            G = prop.G
-            J = prop.J
+            GJ = prop.get_GJ()
 
             # local to global transformation
             r11 = self.r11
@@ -804,41 +803,41 @@ cdef class Truss:
             k += 1
             KC0v[k] += -1.0*A*E*r31**2/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11**2/L
+            KC0v[k] += 1.0*GJ*r11**2/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11*r21/L
+            KC0v[k] += 1.0*GJ*r11*r21/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11*r31/L
+            KC0v[k] += 1.0*GJ*r11*r31/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11**2/L
+            KC0v[k] += -1.0*GJ*r11**2/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11*r21/L
+            KC0v[k] += -1.0*GJ*r11*r21/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11*r31/L
+            KC0v[k] += -1.0*GJ*r11*r31/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11*r21/L
+            KC0v[k] += 1.0*GJ*r11*r21/L
             k += 1
-            KC0v[k] += 1.0*G*J*r21**2/L
+            KC0v[k] += 1.0*GJ*r21**2/L
             k += 1
-            KC0v[k] += 1.0*G*J*r21*r31/L
+            KC0v[k] += 1.0*GJ*r21*r31/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11*r21/L
+            KC0v[k] += -1.0*GJ*r11*r21/L
             k += 1
-            KC0v[k] += -1.0*G*J*r21**2/L
+            KC0v[k] += -1.0*GJ*r21**2/L
             k += 1
-            KC0v[k] += -1.0*G*J*r21*r31/L
+            KC0v[k] += -1.0*GJ*r21*r31/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11*r31/L
+            KC0v[k] += 1.0*GJ*r11*r31/L
             k += 1
-            KC0v[k] += 1.0*G*J*r21*r31/L
+            KC0v[k] += 1.0*GJ*r21*r31/L
             k += 1
-            KC0v[k] += 1.0*G*J*r31**2/L
+            KC0v[k] += 1.0*GJ*r31**2/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11*r31/L
+            KC0v[k] += -1.0*GJ*r11*r31/L
             k += 1
-            KC0v[k] += -1.0*G*J*r21*r31/L
+            KC0v[k] += -1.0*GJ*r21*r31/L
             k += 1
-            KC0v[k] += -1.0*G*J*r31**2/L
+            KC0v[k] += -1.0*GJ*r31**2/L
             k += 1
             KC0v[k] += -1.0*A*E*r11**2/L
             k += 1
@@ -876,41 +875,41 @@ cdef class Truss:
             k += 1
             KC0v[k] += 1.0*A*E*r31**2/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11**2/L
+            KC0v[k] += -1.0*GJ*r11**2/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11*r21/L
+            KC0v[k] += -1.0*GJ*r11*r21/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11*r31/L
+            KC0v[k] += -1.0*GJ*r11*r31/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11**2/L
+            KC0v[k] += 1.0*GJ*r11**2/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11*r21/L
+            KC0v[k] += 1.0*GJ*r11*r21/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11*r31/L
+            KC0v[k] += 1.0*GJ*r11*r31/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11*r21/L
+            KC0v[k] += -1.0*GJ*r11*r21/L
             k += 1
-            KC0v[k] += -1.0*G*J*r21**2/L
+            KC0v[k] += -1.0*GJ*r21**2/L
             k += 1
-            KC0v[k] += -1.0*G*J*r21*r31/L
+            KC0v[k] += -1.0*GJ*r21*r31/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11*r21/L
+            KC0v[k] += 1.0*GJ*r11*r21/L
             k += 1
-            KC0v[k] += 1.0*G*J*r21**2/L
+            KC0v[k] += 1.0*GJ*r21**2/L
             k += 1
-            KC0v[k] += 1.0*G*J*r21*r31/L
+            KC0v[k] += 1.0*GJ*r21*r31/L
             k += 1
-            KC0v[k] += -1.0*G*J*r11*r31/L
+            KC0v[k] += -1.0*GJ*r11*r31/L
             k += 1
-            KC0v[k] += -1.0*G*J*r21*r31/L
+            KC0v[k] += -1.0*GJ*r21*r31/L
             k += 1
-            KC0v[k] += -1.0*G*J*r31**2/L
+            KC0v[k] += -1.0*GJ*r31**2/L
             k += 1
-            KC0v[k] += 1.0*G*J*r11*r31/L
+            KC0v[k] += 1.0*GJ*r11*r31/L
             k += 1
-            KC0v[k] += 1.0*G*J*r21*r31/L
+            KC0v[k] += 1.0*GJ*r21*r31/L
             k += 1
-            KC0v[k] += 1.0*G*J*r31**2/L
+            KC0v[k] += 1.0*GJ*r31**2/L
 
 
     cpdef void update_fint(Truss self, double [::1] fint, BeamProp prop):

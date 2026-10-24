@@ -224,22 +224,27 @@ cdef class BeamC:
             E \left( A u_{,x}^2 + I_{zz} \kappa_y^2 + I_{yy} \kappa_z^2
             + 2 A_y u_{,x} \kappa_y + 2 A_z u_{,x} \kappa_z
             + 2 I_{yz} \kappa_y \kappa_z \right) \\
-            + G \left( A (\gamma_{xy}^2 + \gamma_{xz}^2)
-            - 2 A_z \gamma_{xy} {r_x}_{,x} + 2 A_y \gamma_{xz} {r_x}_{,x}
-            + J {r_x}_{,x}^2 \right) \Big] dx
+            + G_{12} \left( A \gamma_{xy}^2 - 2 A_z \gamma_{xy} {r_x}_{,x}
+            \right)
+            + G_{13} \left( A \gamma_{xz}^2 + 2 A_y \gamma_{xz} {r_x}_{,x}
+            \right)
+            + G J {r_x}_{,x}^2 \Big] dx
 
-    where `L` is ``length``. The torsion is of Saint-Venant type, without
-    warping, with ``J`` in place of the polar moment of the cross section,
-    and no shear correction factor is applied, see :class:`.BeamProp`. The
-    axial force is `N = E (A u_{,x} + A_y \kappa_y + A_z \kappa_z)`.
+    where `L` is ``length``, `G_{12}` = ``G12`` and `G_{13}` = ``G13`` are
+    the transverse shear moduli of the planes `xy` and `xz`, and `G J` =
+    ``GJ`` is the torsional stiffness, see :class:`.BeamProp`. The torsion
+    is of Saint-Venant type, without warping, with ``GJ`` in place of the
+    torsional stiffness `G_{12} I_{yy} + G_{13} I_{zz}` of the rigid cross
+    section, and no shear correction factor is applied. The axial force is
+    `N = E (A u_{,x} + A_y \kappa_y + A_z \kappa_z)`.
 
     `u` and `r_x` are interpolated linearly between the nodes. `v` and `r_z`
     are interpolated with the consistent shape functions of [1]_, cubic for
     `v` and quadratic for `r_z`, which depend on the parameters
 
     .. math::
-        \alpha_y = -\frac{12 E I_{zz}}{G A L^2}, \qquad
-        \alpha_z = -\frac{12 E I_{yy}}{G A L^2}, \qquad
+        \alpha_y = -\frac{12 E I_{zz}}{G_{12} A L^2}, \qquad
+        \alpha_z = -\frac{12 E I_{yy}}{G_{13} A L^2}, \qquad
         \beta_y = \frac{1}{1 - \alpha_y}, \qquad
         \beta_z = \frac{1}{1 - \alpha_z}
 
@@ -264,17 +269,18 @@ cdef class BeamC:
     transverse shear strains are then constant along the element, e.g.
     `\gamma_{xy} = \alpha_y \beta_y \left((v_1 - v_2)/L + ({r_z}_1 +
     {r_z}_2)/2\right)`, and they vanish with `\alpha_y = 0`, i.e. with an
-    infinite ``G``, where the interpolation of `v` becomes the cubic
+    infinite ``G12``, where the interpolation of `v` becomes the cubic
     Hermite interpolation of the Euler-Bernoulli beam.
 
     The parameters `\alpha_y` and `\alpha_z` are negative. With `\phi_y =
-    12 E I_{zz}/(G A L^2)`, `\beta_y = 1/(1 + \phi_y)` and the functions
-    above are the general solution of the homogeneous equilibrium equations
-    of the strain energy above, `(G A \gamma_{xy})_{,x} = 0` and `G A
-    \gamma_{xy} = E I_{zz} {\kappa_y}_{,x}` (and likewise for `w`, `r_y`),
-    which these functions satisfy for any nodal values only with this sign.
-    The same solution is Eq. (17) of [1]_ and Eq. (3.236) of [2]_, whose
-    denominator `1 + 3\beta`, with `\beta = E I/(\kappa A G a^2)` and `a =
+    12 E I_{zz}/(G_{12} A L^2)`, `\beta_y = 1/(1 + \phi_y)` and the
+    functions above are the general solution of the homogeneous equilibrium
+    equations of the strain energy above, `(G_{12} A \gamma_{xy})_{,x} = 0`
+    and `G_{12} A \gamma_{xy} = E I_{zz} {\kappa_y}_{,x}` (and likewise for
+    `w`, `r_y`, with `G_{13}` and `I_{yy}`), which these functions satisfy
+    for any nodal values only with this sign. The same solution is Eq. (17)
+    of [1]_ and Eq. (3.236) of [2]_, whose denominator `1 + 3\beta`, with
+    `\beta = E I/(\kappa A G a^2)`, where `\kappa G` is `G_{12}`, and `a =
     L/2`, is `1 + \phi_y`; Eq. (21) of [1]_ gives `\alpha_y` and `\alpha_z`
     with the positive sign, inconsistent with its Eqs. (17) and (20). Hence
     the element is exact for a prismatic beam loaded at the nodes, and
@@ -291,7 +297,11 @@ cdef class BeamC:
     and consistent mass matrix with rotary inertia, three elements the
     errors of Table 3.6 of [2]_, and refined meshes its exact frequencies.
     With the positive sign these tests fail, e.g. by -44 % for the deep
-    cantilever and with ``3.952`` instead of ``3.322``.
+    cantilever and with ``3.952`` instead of ``3.322``. In
+    ``tests/test_beam_shear_moduli.py``, with different ``G12`` and
+    ``G13``, the same tip deflection and frequencies are obtained in each
+    plane with its own modulus, `G = G_{12}` with `I_{zz}` for `v` and `G =
+    G_{13}` with `I_{yy}` for `w`.
 
     The matrices and the internal forces are computed in element
     coordinates and transformed to global coordinates with the rotation
@@ -605,7 +615,7 @@ cdef class BeamC:
         """
         cdef double *ue
         cdef double *finte
-        cdef double L, A, E, G, Ay, Az, Iyy, Izz, Iyz, J, alphay, alphaz, betay, betaz
+        cdef double L, A, E, G12, G13, GJ, Ay, Az, Iyy, Izz, Iyz, alphay, alphaz, betay, betaz
 
         cdef double KC0e0000, KC0e0004, KC0e0005, KC0e0006, KC0e0010, KC0e0011
         cdef double KC0e0101, KC0e0102, KC0e0103, KC0e0104, KC0e0105, KC0e0107, KC0e0108, KC0e0109, KC0e0110, KC0e0111
@@ -623,16 +633,17 @@ cdef class BeamC:
             L = self.length
             A = prop.A
             E = prop.E
-            G = prop.G
+            G12 = prop.get_G12()
+            G13 = prop.get_G13()
+            GJ = prop.get_GJ()
             Ay = prop.Ay
             Az = prop.Az
             Iyy = prop.Iyy
             Izz = prop.Izz
             Iyz = prop.Iyz
-            J = prop.J
 
-            alphay = -12*E*Izz/(G*A*L**2)
-            alphaz = -12*E*Iyy/(G*A*L**2)
+            alphay = -12*E*Izz/(G12*A*L**2)
+            alphaz = -12*E*Iyy/(G13*A*L**2)
             betay = 1/(1. - alphay)
             betaz = 1/(1. - alphaz)
 
@@ -642,66 +653,66 @@ cdef class BeamC:
             KC0e0006 = -A*E/L
             KC0e0010 = Az*E*betaz*(alphaz - 1)/L
             KC0e0011 = Ay*E*betay*(1 - alphay)/L
-            KC0e0101 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/L**3
+            KC0e0101 = betay**2*(A*G12*L**2*alphay**2 + 12*E*Izz)/L**3
             KC0e0102 = 12*E*Iyz*betay*betaz/L**3
-            KC0e0103 = Az*G*alphay*betay/L
+            KC0e0103 = Az*G12*alphay*betay/L
             KC0e0104 = -6*E*Iyz*betay*betaz/L**2
-            KC0e0105 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
-            KC0e0107 = betay**2*(-A*G*L**2*alphay**2 - 12*E*Izz)/L**3
+            KC0e0105 = betay**2*(A*G12*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
+            KC0e0107 = betay**2*(-A*G12*L**2*alphay**2 - 12*E*Izz)/L**3
             KC0e0108 = -12*E*Iyz*betay*betaz/L**3
-            KC0e0109 = -Az*G*alphay*betay/L
+            KC0e0109 = -Az*G12*alphay*betay/L
             KC0e0110 = -6*E*Iyz*betay*betaz/L**2
-            KC0e0111 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
-            KC0e0202 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/L**3
-            KC0e0203 = -Ay*G*alphaz*betaz/L
-            KC0e0204 = betaz**2*(-A*G*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
+            KC0e0111 = betay**2*(A*G12*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
+            KC0e0202 = betaz**2*(A*G13*L**2*alphaz**2 + 12*E*Iyy)/L**3
+            KC0e0203 = -Ay*G13*alphaz*betaz/L
+            KC0e0204 = betaz**2*(-A*G13*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
             KC0e0205 = 6*E*Iyz*betay*betaz/L**2
             KC0e0207 = -12*E*Iyz*betay*betaz/L**3
-            KC0e0208 = betaz**2*(-A*G*L**2*alphaz**2 - 12*E*Iyy)/L**3
-            KC0e0209 = Ay*G*alphaz*betaz/L
-            KC0e0210 = betaz**2*(-A*G*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
+            KC0e0208 = betaz**2*(-A*G13*L**2*alphaz**2 - 12*E*Iyy)/L**3
+            KC0e0209 = Ay*G13*alphaz*betaz/L
+            KC0e0210 = betaz**2*(-A*G13*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
             KC0e0211 = 6*E*Iyz*betay*betaz/L**2
-            KC0e0303 = G*J/L
-            KC0e0304 = Ay*G*alphaz*betaz/2
-            KC0e0305 = Az*G*alphay*betay/2
-            KC0e0307 = -Az*G*alphay*betay/L
-            KC0e0308 = Ay*G*alphaz*betaz/L
-            KC0e0309 = -G*J/L
-            KC0e0310 = Ay*G*alphaz*betaz/2
-            KC0e0311 = Az*G*alphay*betay/2
-            KC0e0404 = betaz**2*(A*G*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
+            KC0e0303 = GJ/L
+            KC0e0304 = Ay*G13*alphaz*betaz/2
+            KC0e0305 = Az*G12*alphay*betay/2
+            KC0e0307 = -Az*G12*alphay*betay/L
+            KC0e0308 = Ay*G13*alphaz*betaz/L
+            KC0e0309 = -GJ/L
+            KC0e0310 = Ay*G13*alphaz*betaz/2
+            KC0e0311 = Az*G12*alphay*betay/2
+            KC0e0404 = betaz**2*(A*G13*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
             KC0e0405 = E*Iyz*betay*betaz*(-alphay*alphaz + alphay + alphaz - 4)/L
             KC0e0406 = Az*E*betaz*(alphaz - 1)/L
             KC0e0407 = 6*E*Iyz*betay*betaz/L**2
-            KC0e0408 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
-            KC0e0409 = -Ay*G*alphaz*betaz/2
-            KC0e0410 = betaz**2*(A*G*L**2*alphaz**2/4 - E*Iyy*alphaz**2 + 2*E*Iyy*alphaz + 2*E*Iyy)/L
+            KC0e0408 = betaz**2*(A*G13*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
+            KC0e0409 = -Ay*G13*alphaz*betaz/2
+            KC0e0410 = betaz**2*(A*G13*L**2*alphaz**2/4 - E*Iyy*alphaz**2 + 2*E*Iyy*alphaz + 2*E*Iyy)/L
             KC0e0411 = E*Iyz*betay*betaz*(alphay*alphaz - alphay - alphaz - 2)/L
-            KC0e0505 = betay**2*(A*G*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
+            KC0e0505 = betay**2*(A*G12*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
             KC0e0506 = Ay*E*betay*(1 - alphay)/L
-            KC0e0507 = betay**2*(-A*G*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
+            KC0e0507 = betay**2*(-A*G12*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
             KC0e0508 = -6*E*Iyz*betay*betaz/L**2
-            KC0e0509 = -Az*G*alphay*betay/2
+            KC0e0509 = -Az*G12*alphay*betay/2
             KC0e0510 = E*Iyz*betay*betaz*(alphay*alphaz - alphay - alphaz - 2)/L
-            KC0e0511 = betay**2*(A*G*L**2*alphay**2/4 - E*Izz*alphay**2 + 2*E*Izz*alphay + 2*E*Izz)/L
+            KC0e0511 = betay**2*(A*G12*L**2*alphay**2/4 - E*Izz*alphay**2 + 2*E*Izz*alphay + 2*E*Izz)/L
             KC0e0606 = A*E/L
             KC0e0610 = Az*E*betaz*(1 - alphaz)/L
             KC0e0611 = Ay*E*betay*(alphay - 1)/L
-            KC0e0707 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/L**3
+            KC0e0707 = betay**2*(A*G12*L**2*alphay**2 + 12*E*Izz)/L**3
             KC0e0708 = 12*E*Iyz*betay*betaz/L**3
-            KC0e0709 = Az*G*alphay*betay/L
+            KC0e0709 = Az*G12*alphay*betay/L
             KC0e0710 = 6*E*Iyz*betay*betaz/L**2
-            KC0e0711 = betay**2*(-A*G*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
-            KC0e0808 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/L**3
-            KC0e0809 = -Ay*G*alphaz*betaz/L
-            KC0e0810 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
+            KC0e0711 = betay**2*(-A*G12*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
+            KC0e0808 = betaz**2*(A*G13*L**2*alphaz**2 + 12*E*Iyy)/L**3
+            KC0e0809 = -Ay*G13*alphaz*betaz/L
+            KC0e0810 = betaz**2*(A*G13*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
             KC0e0811 = -6*E*Iyz*betay*betaz/L**2
-            KC0e0909 = G*J/L
-            KC0e0910 = -Ay*G*alphaz*betaz/2
-            KC0e0911 = -Az*G*alphay*betay/2
-            KC0e1010 = betaz**2*(A*G*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
+            KC0e0909 = GJ/L
+            KC0e0910 = -Ay*G13*alphaz*betaz/2
+            KC0e0911 = -Az*G12*alphay*betay/2
+            KC0e1010 = betaz**2*(A*G13*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
             KC0e1011 = E*Iyz*betay*betaz*(-alphay*alphaz + alphay + alphaz - 4)/L
-            KC0e1111 = betay**2*(A*G*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
+            KC0e1111 = betay**2*(A*G12*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
 
             ue = &self.probe.ue[0]
             finte = &self.probe.finte[0]
@@ -737,8 +748,9 @@ cdef class BeamC:
         the row and column indices, built from ``c1`` and ``c2``, are stored
         in ``KC0r`` and ``KC0c``, and the values are added to those already
         in ``KC0v``. The matrix is computed from ``length``, the rotation
-        matrix and the attributes ``A``, ``E``, ``G``, ``Ay``, ``Az``,
-        ``Iyy``, ``Izz``, ``Iyz`` and ``J`` of ``prop``. ``length`` and the
+        matrix and the attributes ``A``, ``E``, ``G12``, ``G13``, ``GJ``,
+        ``Ay``, ``Az``, ``Iyy``, ``Izz`` and ``Iyz`` of ``prop``. ``length``
+        and the
         rotation matrix must be updated before, see
         :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe`.
 
@@ -772,7 +784,7 @@ cdef class BeamC:
 
         """
         cdef int c1, c2, k
-        cdef double L, A, E, G, Ay, Az, Iyy, Izz, Iyz, J
+        cdef double L, A, E, G12, G13, GJ, Ay, Az, Iyy, Izz, Iyz
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double alphay, alphaz, betay, betaz
         cdef double KC0e0000, KC0e0004, KC0e0005, KC0e0006, KC0e0010, KC0e0011
@@ -791,16 +803,17 @@ cdef class BeamC:
             L = self.length
             A = prop.A
             E = prop.E
-            G = prop.G
+            G12 = prop.get_G12()
+            G13 = prop.get_G13()
+            GJ = prop.get_GJ()
             Ay = prop.Ay
             Az = prop.Az
             Iyy = prop.Iyy
             Izz = prop.Izz
             Iyz = prop.Iyz
-            J = prop.J
 
-            alphay = -12*E*Izz/(G*A*L**2)
-            alphaz = -12*E*Iyy/(G*A*L**2)
+            alphay = -12*E*Izz/(G12*A*L**2)
+            alphaz = -12*E*Iyy/(G13*A*L**2)
             betay = 1/(1. - alphay)
             betaz = 1/(1. - alphaz)
 
@@ -821,66 +834,66 @@ cdef class BeamC:
             KC0e0006 = -A*E/L
             KC0e0010 = Az*E*betaz*(alphaz - 1)/L
             KC0e0011 = Ay*E*betay*(1 - alphay)/L
-            KC0e0101 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/L**3
+            KC0e0101 = betay**2*(A*G12*L**2*alphay**2 + 12*E*Izz)/L**3
             KC0e0102 = 12*E*Iyz*betay*betaz/L**3
-            KC0e0103 = Az*G*alphay*betay/L
+            KC0e0103 = Az*G12*alphay*betay/L
             KC0e0104 = -6*E*Iyz*betay*betaz/L**2
-            KC0e0105 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
-            KC0e0107 = betay**2*(-A*G*L**2*alphay**2 - 12*E*Izz)/L**3
+            KC0e0105 = betay**2*(A*G12*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
+            KC0e0107 = betay**2*(-A*G12*L**2*alphay**2 - 12*E*Izz)/L**3
             KC0e0108 = -12*E*Iyz*betay*betaz/L**3
-            KC0e0109 = -Az*G*alphay*betay/L
+            KC0e0109 = -Az*G12*alphay*betay/L
             KC0e0110 = -6*E*Iyz*betay*betaz/L**2
-            KC0e0111 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
-            KC0e0202 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/L**3
-            KC0e0203 = -Ay*G*alphaz*betaz/L
-            KC0e0204 = betaz**2*(-A*G*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
+            KC0e0111 = betay**2*(A*G12*L**2*alphay**2 + 12*E*Izz)/(2*L**2)
+            KC0e0202 = betaz**2*(A*G13*L**2*alphaz**2 + 12*E*Iyy)/L**3
+            KC0e0203 = -Ay*G13*alphaz*betaz/L
+            KC0e0204 = betaz**2*(-A*G13*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
             KC0e0205 = 6*E*Iyz*betay*betaz/L**2
             KC0e0207 = -12*E*Iyz*betay*betaz/L**3
-            KC0e0208 = betaz**2*(-A*G*L**2*alphaz**2 - 12*E*Iyy)/L**3
-            KC0e0209 = Ay*G*alphaz*betaz/L
-            KC0e0210 = betaz**2*(-A*G*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
+            KC0e0208 = betaz**2*(-A*G13*L**2*alphaz**2 - 12*E*Iyy)/L**3
+            KC0e0209 = Ay*G13*alphaz*betaz/L
+            KC0e0210 = betaz**2*(-A*G13*L**2*alphaz**2 - 12*E*Iyy)/(2*L**2)
             KC0e0211 = 6*E*Iyz*betay*betaz/L**2
-            KC0e0303 = G*J/L
-            KC0e0304 = Ay*G*alphaz*betaz/2
-            KC0e0305 = Az*G*alphay*betay/2
-            KC0e0307 = -Az*G*alphay*betay/L
-            KC0e0308 = Ay*G*alphaz*betaz/L
-            KC0e0309 = -G*J/L
-            KC0e0310 = Ay*G*alphaz*betaz/2
-            KC0e0311 = Az*G*alphay*betay/2
-            KC0e0404 = betaz**2*(A*G*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
+            KC0e0303 = GJ/L
+            KC0e0304 = Ay*G13*alphaz*betaz/2
+            KC0e0305 = Az*G12*alphay*betay/2
+            KC0e0307 = -Az*G12*alphay*betay/L
+            KC0e0308 = Ay*G13*alphaz*betaz/L
+            KC0e0309 = -GJ/L
+            KC0e0310 = Ay*G13*alphaz*betaz/2
+            KC0e0311 = Az*G12*alphay*betay/2
+            KC0e0404 = betaz**2*(A*G13*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
             KC0e0405 = E*Iyz*betay*betaz*(-alphay*alphaz + alphay + alphaz - 4)/L
             KC0e0406 = Az*E*betaz*(alphaz - 1)/L
             KC0e0407 = 6*E*Iyz*betay*betaz/L**2
-            KC0e0408 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
-            KC0e0409 = -Ay*G*alphaz*betaz/2
-            KC0e0410 = betaz**2*(A*G*L**2*alphaz**2/4 - E*Iyy*alphaz**2 + 2*E*Iyy*alphaz + 2*E*Iyy)/L
+            KC0e0408 = betaz**2*(A*G13*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
+            KC0e0409 = -Ay*G13*alphaz*betaz/2
+            KC0e0410 = betaz**2*(A*G13*L**2*alphaz**2/4 - E*Iyy*alphaz**2 + 2*E*Iyy*alphaz + 2*E*Iyy)/L
             KC0e0411 = E*Iyz*betay*betaz*(alphay*alphaz - alphay - alphaz - 2)/L
-            KC0e0505 = betay**2*(A*G*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
+            KC0e0505 = betay**2*(A*G12*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
             KC0e0506 = Ay*E*betay*(1 - alphay)/L
-            KC0e0507 = betay**2*(-A*G*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
+            KC0e0507 = betay**2*(-A*G12*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
             KC0e0508 = -6*E*Iyz*betay*betaz/L**2
-            KC0e0509 = -Az*G*alphay*betay/2
+            KC0e0509 = -Az*G12*alphay*betay/2
             KC0e0510 = E*Iyz*betay*betaz*(alphay*alphaz - alphay - alphaz - 2)/L
-            KC0e0511 = betay**2*(A*G*L**2*alphay**2/4 - E*Izz*alphay**2 + 2*E*Izz*alphay + 2*E*Izz)/L
+            KC0e0511 = betay**2*(A*G12*L**2*alphay**2/4 - E*Izz*alphay**2 + 2*E*Izz*alphay + 2*E*Izz)/L
             KC0e0606 = A*E/L
             KC0e0610 = Az*E*betaz*(1 - alphaz)/L
             KC0e0611 = Ay*E*betay*(alphay - 1)/L
-            KC0e0707 = betay**2*(A*G*L**2*alphay**2 + 12*E*Izz)/L**3
+            KC0e0707 = betay**2*(A*G12*L**2*alphay**2 + 12*E*Izz)/L**3
             KC0e0708 = 12*E*Iyz*betay*betaz/L**3
-            KC0e0709 = Az*G*alphay*betay/L
+            KC0e0709 = Az*G12*alphay*betay/L
             KC0e0710 = 6*E*Iyz*betay*betaz/L**2
-            KC0e0711 = betay**2*(-A*G*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
-            KC0e0808 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/L**3
-            KC0e0809 = -Ay*G*alphaz*betaz/L
-            KC0e0810 = betaz**2*(A*G*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
+            KC0e0711 = betay**2*(-A*G12*L**2*alphay**2 - 12*E*Izz)/(2*L**2)
+            KC0e0808 = betaz**2*(A*G13*L**2*alphaz**2 + 12*E*Iyy)/L**3
+            KC0e0809 = -Ay*G13*alphaz*betaz/L
+            KC0e0810 = betaz**2*(A*G13*L**2*alphaz**2 + 12*E*Iyy)/(2*L**2)
             KC0e0811 = -6*E*Iyz*betay*betaz/L**2
-            KC0e0909 = G*J/L
-            KC0e0910 = -Ay*G*alphaz*betaz/2
-            KC0e0911 = -Az*G*alphay*betay/2
-            KC0e1010 = betaz**2*(A*G*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
+            KC0e0909 = GJ/L
+            KC0e0910 = -Ay*G13*alphaz*betaz/2
+            KC0e0911 = -Az*G12*alphay*betay/2
+            KC0e1010 = betaz**2*(A*G13*L**2*alphaz**2/4 + E*Iyy*alphaz**2 - 2*E*Iyy*alphaz + 4*E*Iyy)/L
             KC0e1011 = E*Iyz*betay*betaz*(-alphay*alphaz + alphay + alphaz - 4)/L
-            KC0e1111 = betay**2*(A*G*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
+            KC0e1111 = betay**2*(A*G12*L**2*alphay**2/4 + E*Izz*alphay**2 - 2*E*Izz*alphay + 4*E*Izz)/L
 
             if update_KC0v_only == 0:
                 # positions in the global stiffness matrix
@@ -1676,8 +1689,8 @@ cdef class BeamC:
         the element displacements ``ue``, give in element coordinates the axial
         strain of the beam axis, the two curvatures and the two slopes of the
         axis, evaluated at ``xi = x/L``, from ``0`` at node 1 to ``1`` at node
-        2. They depend on ``length`` and on the attributes ``E``, ``G``,
-        ``A``, ``Iyy`` and ``Izz`` of ``prop``.
+        2. They depend on ``length`` and on the attributes ``E``, ``G12``,
+        ``G13``, ``A``, ``Iyy`` and ``Izz`` of ``prop``.
 
         Notes
         -----
@@ -1711,8 +1724,8 @@ cdef class BeamC:
         Gwx = &self.probe.Gwx[0]
 
         L = self.length
-        alphay = -12*prop.E*prop.Izz/(prop.G*prop.A*L**2)
-        alphaz = -12*prop.E*prop.Iyy/(prop.G*prop.A*L**2)
+        alphay = -12*prop.E*prop.Izz/(prop.get_G12()*prop.A*L**2)
+        alphaz = -12*prop.E*prop.Iyy/(prop.get_G13()*prop.A*L**2)
         betay = 1/(1. - alphay)
         betaz = 1/(1. - alphaz)
 
@@ -2126,8 +2139,8 @@ cdef class BeamC:
         in ``KGr`` and ``KGc``, and the values are added to those already in
         ``KGv``. The matrix depends on the axial force computed from the
         displacements ``probe.ue``, from ``length`` and from the attributes
-        ``A``, ``E``, ``G``, ``Ay``, ``Az``, ``Iyy`` and ``Izz`` of
-        ``prop``. ``probe.ue``, ``length`` and the rotation matrix must be
+        ``A``, ``E``, ``G12``, ``G13``, ``Ay``, ``Az``, ``Iyy`` and ``Izz``
+        of ``prop``. ``probe.ue``, ``length`` and the rotation matrix must be
         updated before, see :meth:`.update_probe_ue` and
         :meth:`.update_probe_xe`.
 
@@ -2178,7 +2191,7 @@ cdef class BeamC:
         """
         cdef double *ue
         cdef int c1, c2, k
-        cdef double L, A, E, G, Ay, Az, Iyy, Izz, Iyz, J, Na, Nb
+        cdef double L, A, E, G12, G13, Ay, Az, Iyy, Izz, Iyz, Na, Nb
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double alphay, alphaz, betay, betaz
 
@@ -2188,14 +2201,14 @@ cdef class BeamC:
             E = prop.E
             Ay = prop.Ay
             Az = prop.Az
-            G = prop.G
+            G12 = prop.get_G12()
+            G13 = prop.get_G13()
             Iyy = prop.Iyy
             Izz = prop.Izz
             Iyz = prop.Iyz
-            J = prop.J
 
-            alphay = -12*E*Izz/(G*A*L**2)
-            alphaz = -12*E*Iyy/(G*A*L**2)
+            alphay = -12*E*Izz/(G12*A*L**2)
+            alphaz = -12*E*Iyy/(G13*A*L**2)
             betay = 1/(1. - alphay)
             betaz = 1/(1. - alphaz)
 
@@ -2959,8 +2972,8 @@ cdef class BeamC:
         ``Mc``, and the values are added to those already in ``Mv``. The
         matrix is computed from ``length``, the rotation matrix and the attributes
         ``intrho``, ``intrhoy``, ``intrhoz``, ``intrhoy2``, ``intrhoz2`` and
-        ``intrhoyz``, and ``A``, ``E``, ``G``, ``Iyy`` and ``Izz`` of
-        ``prop``. ``length`` and the rotation matrix must be updated before, see :meth:`.update_rotation_matrix` and
+        ``intrhoyz``, and ``A``, ``E``, ``G12``, ``G13``, ``Iyy`` and
+        ``Izz`` of ``prop``. ``length`` and the rotation matrix must be updated before, see :meth:`.update_rotation_matrix` and
         :meth:`.update_probe_xe`.
 
         Parameters
@@ -3007,7 +3020,8 @@ cdef class BeamC:
         ``mtype=0`` gives the consistent mass matrix, the Hessian of `T` with
         respect to the nodal velocities, interpolated with the consistent
         shape functions of :class:`.BeamC`, which depend on ``alphay`` and
-        ``alphaz`` and hence on ``E``, ``G``, ``A``, ``Iyy`` and ``Izz``. The
+        ``alphaz`` and hence on ``E``, ``G12``, ``G13``, ``A``, ``Iyy`` and
+        ``Izz``. The
         integral along the element is computed analytically (exactly), and
         the rotary inertia is included.
 
@@ -3044,7 +3058,7 @@ cdef class BeamC:
         cdef int c1, c2, k
         cdef double intrho, intrhoy, intrhoz, intrhoy2, intrhoz2, intrhoyz
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
-        cdef double L, A, E, G, Iyy, Izz, Iyz, J
+        cdef double L, A, E, G12, G13, Iyy, Izz, Iyz
         cdef double alphay, alphaz, betay, betaz
 
         # NOTE checked once per call, before the code without the GIL
@@ -3062,14 +3076,14 @@ cdef class BeamC:
             intrhoyz = prop.intrhoyz
             A = prop.A
             E = prop.E
-            G = prop.G
+            G12 = prop.get_G12()
+            G13 = prop.get_G13()
             Iyy = prop.Iyy
             Izz = prop.Izz
             Iyz = prop.Iyz
-            J = prop.J
 
-            alphay = -12*E*Izz/(G*A*L**2)
-            alphaz = -12*E*Iyy/(G*A*L**2)
+            alphay = -12*E*Izz/(G12*A*L**2)
+            alphaz = -12*E*Iyy/(G13*A*L**2)
             betay = 1/(1. - alphay)
             betaz = 1/(1. - alphaz)
 

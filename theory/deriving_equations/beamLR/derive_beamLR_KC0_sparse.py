@@ -23,7 +23,7 @@ DOF = 6
 num_nodes = 2
 
 var('xi', real=True)
-sympy.var('L, E, Iyy, Izz, Iyz, G, A, Ay, Az, J', real=True)
+sympy.var('L, E, Iyy, Izz, Iyz, G12, G13, GJ, A, Ay, Az', real=True)
 
 # definitions of Eqs. 20 and 21 of Luo, Y., 2008
 # NOTE in Luo 2008 Iy represents the area moment of inertia in the plane of y
@@ -72,13 +72,32 @@ Nrz = Matrix([[0, 0, 0, 0, 0, N1,
 # p = D rho
 # p = [N My Mz Qy Qz Mx]
 # p = [e ky kz gammay gammaz kx]
+# NOTE two transverse shear moduli, as the attributes of
+#      pyfe3d.beamprop.BeamProp: G12 for gammay of the plane xy (v, rz) and
+#      G13 for gammaz of the plane xz (w, ry), and the torsional stiffness
+#      GJ given directly; the shear block of D is checked below
 D = Matrix([
     [ E*A, E*Ay, E*Az, 0, 0, 0],
     [E*Ay, E*Iy,  E*Iyz, 0, 0, 0],
     [E*Az,  E*Iyz, E*Iz, 0, 0, 0],
-    [   0,    0,    0,   G*A, 0, -G*Az],
-    [   0,    0,    0,  0,  G*A, G*Ay],
-    [   0,    0,    0, -G*Az, G*Ay, G*J]])
+    [   0,     0,     0,   G12*A,      0, -G12*Az],
+    [   0,     0,     0,       0,  G13*A,  G13*Ay],
+    [   0,     0,     0, -G12*Az, G13*Ay,      GJ]])
+
+# NOTE check of the shear block of D. With the rigid cross section the
+#      shear strains at the point (y, z) are exy = gammay - kx*z and
+#      exz = gammaz + kx*y, and the section integral of
+#      (G12*exy**2 + G13*exz**2)/2 gives the shear block of D with
+#      G12*Iyy + G13*Izz, the torsional stiffness of the rigid section
+#      without warping, in place of GJ, which is given by the user instead
+var('y, z, gammay, gammaz, kx', real=True)
+Ushear = sympy.Poly(sympy.expand((G12*(gammay - kx*z)**2
+                                  + G13*(gammaz + kx*y)**2)/2), y, z)
+section = {(0, 0): A, (1, 0): Ay, (0, 1): Az, (2, 0): Izz, (0, 2): Iyy,
+           (1, 1): Iyz}
+Ushear = sum(coeff*section[monom] for monom, coeff in Ushear.terms())
+Dshear = sympy.hessian(Ushear, (gammay, gammaz, kx))
+assert sympy.expand(Dshear - D[3:, 3:].subs(GJ, G12*Iyy + G13*Izz)) == sympy.zeros(3, 3)
 #From Eq. 8 in Luo, Y. 2008
 #epsilon = u,x
 #kappay = -theta,x = -rz,x

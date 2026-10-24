@@ -20,7 +20,7 @@ DOF = 6
 num_nodes = 2
 
 var('xi', real=True)
-sympy.var('hy, hz, dy, dz, L, E, Iyy, Izz, Iyz, J, G, A, Ay, Az', real=True, positive=True)
+sympy.var('hy, hz, dy, dz, L, E, Iyy, Izz, Iyz, G12, G13, GJ, A, Ay, Az', real=True, positive=True)
 
 # definitions of Eqs. 20 and 21 of Luo, Y., 2008
 #NOTE in Luo 2008 Iy represents the area moment of inertia in the plane of y
@@ -69,13 +69,18 @@ Nrz = Matrix([[0, 0, 0, 0, 0, N1,
 # p = D rho
 # p = [N My Mz Qy Qz Mx]
 # p = [e ky kz gammay gammaz kx]
+# NOTE two transverse shear moduli, as the attributes of
+#      pyfe3d.beamprop.BeamProp: G12 for gammay of the plane xy (v, rz) and
+#      G13 for gammaz of the plane xz (w, ry), and the torsional stiffness
+#      GJ given directly; the shear block of D is checked in
+#      derive_beamLR_KC0_sparse.py
 D = Matrix([
     [ E*A, E*Ay, E*Az, 0, 0, 0],
     [E*Ay, E*Iy,  E*Iyz, 0, 0, 0],
     [E*Az,  E*Iyz, E*Iz, 0, 0, 0],
-    [   0,    0,    0,   G*A, 0, -G*Az],
-    [   0,    0,    0,  0,  G*A, G*Ay],
-    [   0,    0,    0, -G*Az, G*Ay, G*J]])
+    [   0,     0,     0,   G12*A,      0, -G12*Az],
+    [   0,     0,     0,       0,  G13*A,  G13*Ay],
+    [   0,     0,     0, -G12*Az, G13*Ay,      GJ]])
 #From Eq. 8 in Luo, Y. 2008
 #epsilon = u,x
 #kappay = -theta,x = -rz,x

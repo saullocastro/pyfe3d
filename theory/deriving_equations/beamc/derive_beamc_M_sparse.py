@@ -20,7 +20,7 @@ DOF = 6
 num_nodes = 2
 
 var('x, xi, eta', real=True)
-var('L, E, Iyy, Izz, Iyz, J, G, A, Ay, Az', real=True, positive=True)
+var('L, E, Iyy, Izz, Iyz, G12, G13, GJ, A, Ay, Az', real=True, positive=True)
 
 # definitions of Eqs. 20 and 21 of Luo, Y., 2008
 # xi = x/L
@@ -30,14 +30,14 @@ var('L, E, Iyy, Izz, Iyz, J, G, A, Ay, Az', real=True, positive=True)
 #     or rotating about the y axis. Here we say that Iyy = Iz
 Iy = Izz
 Iz = Iyy
-# NOTE a single shear modulus G, as in pyfe3d.beamc.BeamC; with the
-#      rigid cross section, two moduli Gxy and Gxz would give G*A = Gxy*A
-#      in alphay, G*A = Gxz*A in alphaz and the shear block of the D
-#      matrix [[Gxy*A, 0, -Gxy*Az], [0, Gxz*A, Gxz*Ay],
-#      [-Gxy*Az, Gxz*Ay, Gxy*Iyy + Gxz*Izz]], not implemented
-# alphay = -12*E*Iy/(G*A*L**2), negative: see the Notes of pyfe3d.beamc.BeamC
+# NOTE two transverse shear moduli, as the attributes of
+#      pyfe3d.beamprop.BeamProp: G12 for the shear strain exy of the plane
+#      xy (v, rz) and G13 for exz of the plane xz (w, ry), and the torsional
+#      stiffness GJ given directly; see the shear block of D, checked in
+#      derive_beamc_KC0_sparse.py
+# alphay = -12*E*Iy/(G12*A*L**2), negative: see the Notes of pyfe3d.beamc.BeamC
 #     (Luo 2008 Eq. (17); Eq. (21) prints the sign wrongly)
-# alphaz = -12*E*Iz/(G*A*L**2)
+# alphaz = -12*E*Iz/(G13*A*L**2)
 # betay = 1/(1 - alphay)
 # betaz = 1/(1 - alphaz)
 var('alphay, alphaz, betay, betaz', real=True)

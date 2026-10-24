@@ -25,7 +25,7 @@ DOF = 6
 num_nodes = 2
 
 var('xi', real=True)
-sympy.var('hy, hz, dy, dz, L, E, Iyy, Izz, J, G, A', real=True, positive=True)
+sympy.var('hy, hz, dy, dz, L, E, Iyy, Izz, GJ, A', real=True, positive=True)
 Iy = Izz
 Iz = Iyy
 
@@ -53,9 +53,10 @@ Nwx =  Matrix([[0, 0, N1x, 0, 0, 0,
 
 #From Eqs. 12 in Luo, Y. 2008
 #NOTE assuming Ay=Az=0 to have Nmembrane constant
+# NOTE GJ is the torsional stiffness of pyfe3d.beamprop.BeamProp
 D = Matrix([
     [ E*A,  0],
-    [   0, G*J]])
+    [   0, GJ]])
 #From Eq. 8 in Luo, Y. 2008, keeping only terms pertaining the truss element
 #epsilon = u,x
 #kappax = phi,x

@@ -38,7 +38,7 @@ NUM_NODES = 2
 NUM_GAUSS_POINTS = 5
 
 var('x', real=True)
-var('L, E, Iyy, Izz, Iyz, G, A, Ay, Az, J', real=True)
+var('L, E, Iyy, Izz, Iyz, G12, G13, GJ, A, Ay, Az', real=True)
 
 # definitions of Eqs. 20 and 21 of Luo, Y., 2008
 xi = x/L
@@ -90,9 +90,9 @@ D = Matrix([
     [ E*A,  E*Ay,  E*Az, 0, 0, 0],
     [E*Ay,  E*Iy, E*Iyz, 0, 0, 0],
     [E*Az, E*Iyz,  E*Iz, 0, 0, 0],
-    [   0,     0,     0,   G*A,    0, -G*Az],
-    [   0,     0,     0,     0,  G*A,  G*Ay],
-    [   0,     0,     0, -G*Az, G*Ay,  G*J]])
+    [   0,     0,     0,   G12*A,      0, -G12*Az],
+    [   0,     0,     0,       0,  G13*A,  G13*Ay],
+    [   0,     0,     0, -G12*Az, G13*Ay,      GJ]])
 
 # From Eq. 8 in Luo, Y. 2008
 # {exx, ky, kz, gammay, gammaz, kx}

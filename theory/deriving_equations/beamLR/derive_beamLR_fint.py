@@ -20,7 +20,7 @@ DOF = 6
 num_nodes = 2
 
 var('xi', real=True)
-var('L, E, Iyy, Izz, Iyz, G, A, Ay, Az, J', real=True)
+var('L, E, Iyy, Izz, Iyz, G12, G13, GJ, A, Ay, Az', real=True)
 
 # definitions of Eqs. 20 and 21 of Luo, Y., 2008
 # NOTE in Luo 2008 Iy represents the area moment of inertia in the plane of y
@@ -69,13 +69,18 @@ Nrz = Matrix([[0, 0, 0, 0, 0, N1,
 # p = D rho
 # p = [N My Mz Qy Qz Mx]
 # p = [e ky kz gammay gammaz kx]
+# NOTE two transverse shear moduli, as the attributes of
+#      pyfe3d.beamprop.BeamProp: G12 for gammay of the plane xy (v, rz) and
+#      G13 for gammaz of the plane xz (w, ry), and the torsional stiffness
+#      GJ given directly; the shear block of D is checked in
+#      derive_beamLR_KC0_sparse.py
 D = Matrix([
     [ E*A, E*Ay, E*Az, 0, 0, 0],
     [E*Ay, E*Iy,  E*Iyz, 0, 0, 0],
     [E*Az,  E*Iyz, E*Iz, 0, 0, 0],
-    [   0,    0,    0,   G*A, 0, -G*Az],
-    [   0,    0,    0,  0,  G*A, G*Ay],
-    [   0,    0,    0, -G*Az, G*Ay, G*J]])
+    [   0,     0,     0,   G12*A,      0, -G12*Az],
+    [   0,     0,     0,       0,  G13*A,  G13*Ay],
+    [   0,     0,     0, -G12*Az, G13*Ay,      GJ]])
 #From Eq. 8 in Luo, Y. 2008
 #epsilon = u,x
 #kappay = -theta,x = -rz,x
@@ -96,8 +101,10 @@ BL = Matrix([
 ue = Matrix([symbols(r'ue[%d]' % i) for i in range(0, BL.shape[1])])
 
 finte = BL.T*D*BL*ue
-# finte = integrate(finte, (x, 0, L))
-# NOTE numerical integration with one point at the centre and weight = 2
+# NOTE numerical integration with one point at the centre, xi = 0, and
+#      weight = 2, as in derive_beamLR_KC0_sparse.py
+finte = finte.expand()
+finte = finte.subs({xi: 0})
 wi = 2
 finte = wi*L/2.*simplify(finte)
 
@@ -121,7 +128,7 @@ for ind, val in np.ndenumerate(finte):
 
 rows = []
 for i in range(num_nodes*DOF):
-    name = 'finte%02d' % (i)
+    name = 'finte[%d]' % (i)
     if name in nonzero:
         rows.append(var(name))
     else:

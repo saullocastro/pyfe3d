@@ -20,7 +20,7 @@ DOF = 6
 NUM_NODES = 2
 
 var('x', real=True)
-var('L, E, Iyy, Izz, Iyz, G, A, Ay, Az, J', real=True)
+var('L, E, Iyy, Izz, Iyz, G12, G13, GJ, A, Ay, Az', real=True)
 
 # definitions of Eqs. 20 and 21 of Luo, Y., 2008
 xi = x/L
@@ -30,14 +30,14 @@ xi = x/L
 #     or rotating about the y axis. Here we say that Iyy = Iz
 Iy = Izz
 Iz = Iyy
-# NOTE a single shear modulus G, as in pyfe3d.beamc.BeamC; with the
-#      rigid cross section, two moduli Gxy and Gxz would give G*A = Gxy*A
-#      in alphay, G*A = Gxz*A in alphaz and the shear block of the D
-#      matrix [[Gxy*A, 0, -Gxy*Az], [0, Gxz*A, Gxz*Ay],
-#      [-Gxy*Az, Gxz*Ay, Gxy*Iyy + Gxz*Izz]], not implemented
-# alphay = -12*E*Iy/(G*A*L**2), negative: see the Notes of pyfe3d.beamc.BeamC
+# NOTE two transverse shear moduli, as the attributes of
+#      pyfe3d.beamprop.BeamProp: G12 for the shear strain exy of the plane
+#      xy (v, rz) and G13 for exz of the plane xz (w, ry), and the torsional
+#      stiffness GJ given directly; see the shear block of D, checked
+#      below
+# alphay = -12*E*Iy/(G12*A*L**2), negative: see the Notes of pyfe3d.beamc.BeamC
 #     (Luo 2008 Eq. (17); Eq. (21) prints the sign wrongly)
-# alphaz = -12*E*Iz/(G*A*L**2)
+# alphaz = -12*E*Iz/(G13*A*L**2)
 # betay = 1/(1 - alphay)
 # betaz = 1/(1 - alphaz)
 var('alphay, alphaz, betay, betaz', real=True)
@@ -84,8 +84,10 @@ Nrz = Matrix([[0, Gv1, 0, 0, 0, Grz1,
 # exx = u,x + (-rz,x)*y + (ry,x)*z
 # exy = (v,x - rz) - rx,x*z
 # exz = (w,x + ry) + rx,x*y
-# NOTE integrated over the cross section, G*(exy**2 + exz**2)/2 gives
-#      the shear block of D below, with Iyy + Izz in place of J
+# NOTE integrated over the cross section, (G12*exy**2 + G13*exz**2)/2
+#      gives the shear block of D below, with G12*Iyy + G13*Izz, the
+#      torsional stiffness of the rigid section without warping, in place
+#      of GJ, see the check after D below
 # BL = Matrix([
     # Nu.diff(x) + (-Nrz.diff(x))*y + Nry.diff(x)*z,
     #(Nv.diff(x) - Nrz) - Nrx.diff(x)*z,
@@ -100,9 +102,24 @@ D = Matrix([
     [ E*A,  E*Ay,  E*Az, 0, 0, 0],
     [E*Ay,  E*Iy, E*Iyz, 0, 0, 0],
     [E*Az, E*Iyz,  E*Iz, 0, 0, 0],
-    [   0,     0,     0,   G*A,    0, -G*Az],
-    [   0,     0,     0,     0,  G*A,  G*Ay],
-    [   0,     0,     0, -G*Az, G*Ay,  G*J]])
+    [   0,     0,     0,   G12*A,      0, -G12*Az],
+    [   0,     0,     0,       0,  G13*A,  G13*Ay],
+    [   0,     0,     0, -G12*Az, G13*Ay,      GJ]])
+
+# NOTE check of the shear block of D. With the rigid cross section the
+#      shear strains at the point (y, z) are exy = gammay - kx*z and
+#      exz = gammaz + kx*y, and the section integral of
+#      (G12*exy**2 + G13*exz**2)/2 gives the shear block of D with
+#      G12*Iyy + G13*Izz, the torsional stiffness of the rigid section
+#      without warping, in place of GJ, which is given by the user instead
+var('y, z, gammay, gammaz, kx', real=True)
+Ushear = sympy.Poly(sympy.expand((G12*(gammay - kx*z)**2
+                                  + G13*(gammaz + kx*y)**2)/2), y, z)
+section = {(0, 0): A, (1, 0): Ay, (0, 1): Az, (2, 0): Izz, (0, 2): Iyy,
+           (1, 1): Iyz}
+Ushear = sum(coeff*section[monom] for monom, coeff in Ushear.terms())
+Dshear = sympy.hessian(Ushear, (gammay, gammaz, kx))
+assert sympy.expand(Dshear - D[3:, 3:].subs(GJ, G12*Iyy + G13*Izz)) == sympy.zeros(3, 3)
 # From Eq. 8 in Luo, Y. 2008
 # epsilon = u,x
 # kappay = -theta,x = -rz,x

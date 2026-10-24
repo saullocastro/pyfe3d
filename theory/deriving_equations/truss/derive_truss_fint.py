@@ -20,7 +20,7 @@ DOF = 6
 num_nodes = 2
 
 var('xi', real=True)
-sympy.var('L, E, J, G, A', real=True, positive=True)
+sympy.var('L, E, GJ, A', real=True, positive=True)
 
 N1 = (1-xi)/2
 N2 = (1+xi)/2
@@ -37,9 +37,10 @@ Nrx =  Matrix([[0, 0, 0, N1, 0, 0,
 # u v w  rx  ry  rz  (rows are node 1, node2, node3, node4)
 
 #From Eqs. 12 in Luo, Y. 2008
+# NOTE GJ is the torsional stiffness of pyfe3d.beamprop.BeamProp
 D = Matrix([
     [ E*A,  0],
-    [   0, G*J]])
+    [   0, GJ]])
 #From Eq. 8 in Luo, Y. 2008, keeping only terms pertaining the truss element
 #epsilon = u,x
 #kappax = phi,x
