@@ -94,7 +94,15 @@ In the reduced integration scheme used, a single point at the centroid
 (`\xi=\eta=0`) and weight `w_{ij}=4`, preventing shear locking.
 The hourglass control is used according to Brockman 1987 [1]_, with the
 orthogonalised hourglass operator of his Eq. (14), which he quotes from
-Belytschko and Tsay 1983 [2]_.
+Belytschko and Tsay 1983 [2]_. Brockman considers only isotropic plates,
+and his generalized stiffnesses contain the Young's modulus `E`. For a
+laminate, `E` is replaced by the equivalent moduli `E_{1eq}` and `E_{2eq}`
+of the extensional stiffness `[A]` in the element coordinate system, see
+:meth:`.Quad4R.update_KC0`: the coupling matrix `[B]` is neglected, and the
+bending stiffness `[D]` does not enter the stiffnesses of the rotations,
+which are `E_{1eq}` or `E_{2eq}` times `t^3`. This generalisation is not
+derived for laminates; :class:`.Quad4`, with its mixed quadrature, needs no
+hourglass control.
 
 .. rubric:: Dimensional homogeneity of the hourglass stiffnesses
 
@@ -1105,8 +1113,10 @@ cdef class Quad4R:
             A45 = Atse[1]
             A55 = Atse[3]
 
-            # TODO, recalculating E1eq and E2eq based on rotated A matrix
-            # NOTE not considering effect of B matrix
+            # NOTE equivalent moduli of the hourglass control, from the
+            #      compliance [a] = [A]^-1 of the extensional stiffness in
+            #      the element coordinate system, [B] neglected, see the
+            #      Notes of update_KC0
             a11 = (-A22*A66 + A26**2)/(-A11*A22*A66 + A11*A26**2 + A12**2*A66 - 2*A12*A16*A26 + A16**2*A22)
             a22 = (-A11*A66 + A16**2)/(-A11*A22*A66 + A11*A26**2 + A12**2*A66 - 2*A12*A16*A26 + A16**2*A22)
             E1eq = 1./(prop.h*a11)
@@ -1145,10 +1155,9 @@ cdef class Quad4R:
             # NOTE reduced integration to remove shear locking
             wij = 4.
 
-            # TODO find a method of hourglass control that is derived for composites
-            #     in the future, the use elements with mixed integration
-            #     schemes, or the implementation of the MITC4 element will no
-            #     longer require hourglass control
+            # NOTE Brockman's hourglass control is derived for isotropic
+            #      plates, and applied to laminates with E1eq and E2eq, see
+            #      the module documentation
             # NOTE Brockman's 1/(1 + 1/A) of Eq. (16) is replaced by the
             #      dimensionally homogeneous area factor, see the section
             #      "Dimensional homogeneity of the hourglass stiffnesses"
@@ -1809,8 +1818,10 @@ cdef class Quad4R:
             A45 = Atse[1]
             A55 = Atse[3]
 
-            # TODO, recalculating E1eq and E2eq based on rotated A matrix
-            # NOTE not considering effect of B matrix
+            # NOTE equivalent moduli of the hourglass control, from the
+            #      compliance [a] = [A]^-1 of the extensional stiffness in
+            #      the element coordinate system, [B] neglected, see the
+            #      Notes of update_KC0
             a11 = (-A22*A66 + A26**2)/(-A11*A22*A66 + A11*A26**2 + A12**2*A66 - 2*A12*A16*A26 + A16**2*A22)
             a22 = (-A11*A66 + A16**2)/(-A11*A22*A66 + A11*A26**2 + A12**2*A66 - 2*A12*A16*A26 + A16**2*A22)
             E1eq = 1./(prop.h*a11)
@@ -3596,10 +3607,9 @@ cdef class Quad4R:
             # NOTE reduced integration to remove shear locking
             wij = 4.
 
-            # TODO find a method of hourglass control that is derived for composites
-            #     in the future, the use elements with mixed integration
-            #     schemes, or the implementation of the MITC4 element will no
-            #     longer require hourglass control
+            # NOTE Brockman's hourglass control is derived for isotropic
+            #      plates, and applied to laminates with E1eq and E2eq, see
+            #      the module documentation
             # NOTE Brockman's 1/(1 + 1/A) of Eq. (16) is replaced by the
             #      dimensionally homogeneous area factor, see the section
             #      "Dimensional homogeneity of the hourglass stiffnesses"

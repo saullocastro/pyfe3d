@@ -36,7 +36,8 @@ geometrically non-linear analyses.
         enrichment, see :mod:`.quad4r`. The transverse hourglass stiffness
         also stiffens the twist, by an amount that depends on the problem,
         e.g. 6 to 7 % on the linear deflection of the hinged roof of Sze et
-        al. (2004).
+        al. (2004). The hourglass control is derived for isotropic plates
+        and applied to laminates with equivalent moduli of `[A]`.
     * - :class:`.Tria3DSG`
       - 3
       - The recommended triangle. Discrete shear gap transverse shear field,
