@@ -178,6 +178,15 @@ cdef class Spring:
     element, `[K] = [R][K_e][R]^T`, where `[R]` is block diagonal with four
     copies of the rotation matrix ``r11, ..., r33``.
 
+    A rigid translation and equal rotations of the two nodes give no
+    internal forces. Since the nodal coordinates are not used, a rigid
+    rotation `\{\theta\}` of two nodes at different positions `\{p_1\}`
+    and `\{p_2\}` gives the relative translation `\{\theta\} \times
+    (\{p_2\} - \{p_1\})`, normal to the line of the nodes, which loads
+    the translational stiffnesses in that direction: with the element `x`
+    axis along the line of the nodes, ``kye`` and ``kze``. These
+    properties are verified in ``tests/test_spring.py``.
+
     """
     cdef public int eid
     cdef public int n1, n2
@@ -308,7 +317,7 @@ cdef class Spring:
         cdef double s2[3]
         cdef double s3[3]
 
-        # TODO double check all this part
+        # NOTE verified against [R]^T u in tests/test_spring.py
         with nogil:
             # positions in the global stiffness matrix
             c[0] = self.c1
