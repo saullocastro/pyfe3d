@@ -234,8 +234,8 @@ cdef class BeamLR:
     .. [1] Luo, Y., 2008, “An Efficient 3D Timoshenko Beam Element with
        Consistent Shape Functions,” Adv. Theor. Appl. Mech., 1(3),
        pp. 95–106.
-    .. [2] Bathe, K. J., 2014, Finite Element Procedures, 2nd ed., K. J.
-       Bathe, Watertown, MA, Section 1.2.
+    .. [2] Bathe, K. J., 1996, Finite Element Procedures, Prentice Hall,
+       Englewood Cliffs, NJ, Section 1.2, p. 5.
     .. [3] Petyt, M., 2010, Introduction to Finite Element Vibration
        Analysis, 2nd ed., Cambridge University Press, Section 3.9.
        https://doi.org/10.1017/CBO9780511761195

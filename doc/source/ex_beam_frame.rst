@@ -18,7 +18,7 @@ reactions:
     :pyobject: test_l_frame_tip_displacements
 
 The tip deflection of a cantilever with shear deformation, Eq. (1.2) of
-Bathe (2014), *Finite Element Procedures*, 2nd ed., exact with one
+Bathe (1996), *Finite Element Procedures*, p. 5, exact with one
 :class:`.BeamC` element, whereas :class:`.BeamLR` converges with mesh
 refinement:
 

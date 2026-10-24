@@ -254,7 +254,7 @@ New:
   terms differently, see "Derivation scripts". New test
   `tests/test_beam_shear_moduli.py`, with the reference arrays of the
   previous version in `tests/data/beam_single_G_reference.npz`, the
-  cantilever deflection of Bathe (2014), Eq. (1.2), and the frequencies of
+  cantilever deflection of Bathe (1996), Eq. (1.2), and the frequencies of
   Petyt (2010), Example 3.10 and Table 3.6, in each plane with its own
   modulus, and the twist `T L/GJ` independent of `G12` and `G13`.
 
@@ -269,7 +269,7 @@ New:
   of the exact Timoshenko value 522.716. New tests
   `tests/test_beamc_timoshenko_shape_functions.py` and
   `tests/test_timoshenko_beam_literature.py`, with benchmarks of Bathe
-  (2014) and Petyt (2010).
+  (1996) and Petyt (2010).
 - `Quad4` and `Quad4R`, `update_KA_beta`: the slope along the flow is
   `N,x*r11 + N,y*r12`, instead of `N,x*r11 + N,y*r21`, which was wrong for
   elements whose `x` axis is not along `X`. New
