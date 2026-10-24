@@ -404,3 +404,21 @@ def test_check_qep():
     assert eigen._check_qep(K, C, M, np.array([1j]), U, 1e-8) is None
     assert 'relative residual' in eigen._check_qep(K, C, M,
                                                    np.array([1.01j]), U, 1e-8)
+
+
+def test_warnings_shown_once():
+    r"""A warning of the caller, shown once per location with the
+    ``'default'`` action, is not repeated after each call: the solver does
+    not reset the registry of the warnings already shown, as the exit of
+    :func:`warnings.catch_warnings` does"""
+    K, C, M = nonproportional(n=20)
+
+    def emit():
+        warnings.warn('caller warning', UserWarning)
+
+    with warnings.catch_warnings(record=True) as caught:
+        warnings.simplefilter('default')
+        for _ in range(3):
+            emit()
+            complex_frequency(K, C, M, num_eigvalues=2)
+    assert [str(w.message) for w in caught] == ['caller warning']

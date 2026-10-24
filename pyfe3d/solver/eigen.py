@@ -2544,7 +2544,11 @@ def _eigs_qep(K, C, M, k, tol, sigma):
     n = K.shape[0]
     Q = csc_matrix(sigma**2*M + sigma*C + K)
     try:
-        lu = _splu(Q)
+        # NOTE splu() of a CSC matrix issues no warning, and without
+        #      warnings.catch_warnings(), whose exit resets the registry of
+        #      the warnings already shown, of every module, the warnings of
+        #      the caller are not repeated at each call
+        lu = splu(Q)
     except RuntimeError:
         raise RuntimeError('lambda**2*M + lambda*C + K is singular at the '
                            'shift sigma=%r' % sigma)
