@@ -2129,16 +2129,17 @@ cdef class Tria3DSG:
                         ):
         r"""Update the sparse vectors of the mass matrix
 
-        The element matrix is computed from ``intrho`` and ``intrhoz2`` of
-        ``prop`` and from the area of the element coordinates ``probe.xe``,
-        which is also stored in ``area``; ``intrhoz2`` enters only the
-        rotations ``r_x`` and ``r_y``, and ``intrhoz`` is not used. The matrix
-        is rotated to global coordinates and its values are added to ``Mv`` at
-        the positions ``init_k_M`` to ``init_k_M + M_SPARSE_SIZE - 1``; the
-        global row and column indices are always written to ``Mr`` and ``Mc``
-        at the same positions. Before this method is called,
-        :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe` must have
-        been used.
+        The element matrix is computed from ``intrho``, ``intrhoz`` and
+        ``intrhoz2`` of ``prop`` and from the area of the element coordinates
+        ``probe.xe``, which is also stored in ``area``; ``intrhoz`` couples
+        the translations ``u`` and ``v`` with the rotations ``r_y`` and
+        ``r_x``, and ``intrhoz2`` enters only the rotations ``r_x`` and
+        ``r_y``. The matrix is rotated to global coordinates and its values
+        are added to ``Mv`` at the positions ``init_k_M`` to ``init_k_M +
+        M_SPARSE_SIZE - 1``; the global row and column indices are always
+        written to ``Mr`` and ``Mc`` at the same positions. Before this method
+        is called, :meth:`.update_rotation_matrix` and
+        :meth:`.update_probe_xe` must have been used.
 
         Parameters
         ----------
@@ -2149,40 +2150,77 @@ cdef class Tria3DSG:
         Mv : array-like
             Sparse values.
             1-D array of ``DOUBLE``, same size as ``Mr``. The values are added
-            to the existing ones, with dimension of mass between translations
-            and of mass times length squared between rotations.
+            to the existing ones, with dimension of mass between translations,
+            of mass times length between a translation and a rotation, and of
+            mass times length squared between rotations.
         prop : :class:`pyfe3d.shellprop.ShellProp`
             Shell property.
-            ``intrho`` and ``intrhoz2`` are read from it.
+            ``intrho``, ``intrhoz`` and ``intrhoz2`` are read from it.
         mtype : int, optional
             ``0`` for the consistent mass matrix and ``2`` for the lumped
-            one, which puts a third of the element area on each node. Any
-            other value is treated as ``0``.
+            one, which puts a third of the element area on each node.
             Default ``0``.
+
+        Raises
+        ------
+        ValueError
+            If ``mtype`` is not 0 or 2.
 
         Notes
         -----
-        With `h_{ij}` the integral of the products of the linear shape
-        functions over the element, the element matrix has `I_{\rho}
-        h_{ij}`, with `I_{\rho}` given by ``intrho``, between the
-        translations `u`, `v`, `w` of nodes `i` and `j`, and `I_{\rho z^2}
-        h_{ij}`, with `I_{\rho z^2}` given by ``intrhoz2``, between the
-        rotations `r_x` and between the rotations `r_y`. The drilling
-        rotation `r_z` has no inertia, and the translations and the
-        rotations are not coupled. For the consistent mass matrix,
-        `h_{ij} = \int N_i N_j dA` is `A/6` when `i = j` and `A/12`
-        otherwise; the lumped mass matrix uses `h_{ii} = A/3` and
-        `h_{ij} = 0` for `i \neq j`.
+        With the displacements `u + z r_y`, `v - z r_x` and `w` through the
+        thickness, consistent with the curvatures of
+        :meth:`._update_probe_BL_G`, the kinetic energy integrated through the
+        thickness is that of Eq. (20) of Brockman [1]_,
+
+        .. math::
+
+            T = \frac{1}{2} \int_A \left[ I_\rho (\dot{u}^2 + \dot{v}^2 +
+            \dot{w}^2) + 2 I_{\rho z} (\dot{u} \dot{r}_y - \dot{v} \dot{r}_x)
+            + I_{\rho z^2} (\dot{r}_x^2 + \dot{r}_y^2) \right] dA
+
+        with `I_\rho`, `I_{\rho z}` and `I_{\rho z^2}` given by ``intrho``,
+        ``intrhoz`` and ``intrhoz2``, which include the offset. With `h_{ij}`
+        the integral of the products of the linear shape functions over the
+        element, the element matrix has `I_{\rho} h_{ij}` between the
+        translations `u`, `v`, `w` of nodes `i` and `j`, `I_{\rho z^2} h_{ij}`
+        between the rotations `r_x` and between the rotations `r_y`, `+I_{\rho
+        z} h_{ij}` between `u` and `r_y`, and `-I_{\rho z} h_{ij}` between `v`
+        and `r_x`. The drilling rotation `r_z` has no inertia. For the
+        consistent mass matrix, `h_{ij} = \int N_i N_j dA` is `A/6` when `i =
+        j` and `A/12` otherwise. The lumped mass matrix integrates `T` with
+        the vertex rule, the nodal quadrature with the weight `A/3` at each
+        node, where `N_i` is 1 at node `i` and 0 at the other nodes, giving
+        `h_{ii} = A/3` and `h_{ij} = 0` for `i \neq j`. The coupling through
+        `I_{\rho z}` stays in the block of each node, such that the lumped
+        matrix is block-diagonal per node, diagonal only when `I_{\rho z} =
+        0`, and has the exact mass and the exact first moment of the mass,
+        with the centre of mass at the offset from the reference surface.
+        The rotary inertia from the distribution of `I_\rho` over the area is
+        concentrated at the nodes, 4 times the exact value about the
+        centroid of the element; the term `I_{\rho z^2} A` is exact.
+
+        References
+        ----------
+        .. [1] Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
+           International Journal for Numerical Methods in Engineering, 24(12),
+           2343-2356, 1987. https://doi.org/10.1002/nme.1620241208
 
         """
         cdef int i, j, m, n, k, ke, node_i, node_j
         cdef int c[3]
         cdef double r[6][6]
         cdef double Me[324]
-        cdef double intrho, intrhoz2, f, A
+        cdef double intrho, intrhoz, intrhoz2, f, A
+
+        # NOTE checked once per call, before the code without the GIL
+        if mtype != 0 and mtype != 2:
+            raise ValueError('mtype=%d is not supported by Tria3DSG.update_M, '
+                             'use 0 (consistent) or 2 (lumped)' % mtype)
 
         with nogil:
             intrho = prop.intrho
+            intrhoz = prop.intrhoz
             intrhoz2 = prop.intrhoz2
             # NOTE as in update_KC0, the area comes from the probe so that
             #      this method does not depend on update_area()
@@ -2208,6 +2246,12 @@ cdef class Tria3DSG:
                     for i in range(3, 5):
                         ke = (18*(node_i*DOF + i) + node_j*DOF + i)
                         Me[ke] += intrhoz2*f
+                    # NOTE +intrhoz between u and r_y, -intrhoz between v and
+                    #      r_x, from u + z*r_y and v - z*r_x
+                    Me[18*(node_i*DOF + 0) + node_j*DOF + 4] += intrhoz*f
+                    Me[18*(node_i*DOF + 4) + node_j*DOF + 0] += intrhoz*f
+                    Me[18*(node_i*DOF + 1) + node_j*DOF + 3] -= intrhoz*f
+                    Me[18*(node_i*DOF + 3) + node_j*DOF + 1] -= intrhoz*f
 
             r[0][0] = self.r11; r[0][1] = self.r12; r[0][2] = self.r13
             r[1][0] = self.r21; r[1][1] = self.r22; r[1][2] = self.r23
