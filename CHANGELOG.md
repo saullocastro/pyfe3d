@@ -226,6 +226,38 @@ New:
   still had Brockman's `1/(1 + 1/A)` for all five coefficients and `Ew =
   (Erx + Ery)/2`.
 
+### `BeamProp`: a transverse shear modulus per plane and the torsional stiffness
+
+- New attributes of `BeamProp`: `G12` and `G13`, the transverse shear
+  moduli of the element planes `xy` (bending with `v`, `Izz`) and `xz`
+  (bending with `w`, `Iyy`), and `GJ`, the torsional stiffness. Until they
+  are set they follow `G`: `G12 = G13 = G` and `GJ = G*J`, with the values
+  of `G` and `J` at the time they are read; `del prop.G12` (or `G13`, `GJ`)
+  makes the attribute follow `G` again. A property given with `G` and `J`
+  only keeps its meaning, and the shear correction factors of the two
+  planes can now be applied to `G12` and `G13` without scaling the
+  torsional stiffness.
+- `BeamC` and `BeamLR` use `G12*A` and `G13*A` for the transverse shear of
+  each plane, and in the coupling of the shear strains with the twist
+  through `Az` and `Ay`; `BeamC` uses them in `alphay =
+  -12*E*Izz/(G12*A*L**2)` and `alphaz = -12*E*Iyy/(G13*A*L**2)`, i.e. in
+  `KC0`, `KG`, `M` and the internal forces. `BeamC`, `BeamLR` and `Truss`
+  use `GJ` in place of `G*J`. With the rigid cross section the shear block
+  of the sectional matrix is `[[G12 A, 0, -G12 Az], [0, G13 A, G13 Ay],
+  [-G12 Az, G13 Ay, G12 Iyy + G13 Izz]]`, in which `GJ`, given by the user,
+  replaces the last entry.
+- With `G12 = G13 = G` and `GJ = G*J`, set or not, the matrices `KC0`,
+  `KCNL`, `KG` and `M` of `BeamC`, `BeamLR` and `Truss`, and the internal
+  forces of `BeamC` and `Truss`, are bit-identical to those of the previous
+  version (Windows build); the internal forces of `BeamLR` agree to
+  round-off (`1e-16` relative), because their regenerated lines group the
+  terms differently, see "Derivation scripts". New test
+  `tests/test_beam_shear_moduli.py`, with the reference arrays of the
+  previous version in `tests/data/beam_single_G_reference.npz`, the
+  cantilever deflection of Bathe (2014), Eq. (1.2), and the frequencies of
+  Petyt (2010), Example 3.10 and Table 3.6, in each plane with its own
+  modulus, and the twist `T L/GJ` independent of `G12` and `G13`.
+
 ### Bug fixes
 
 - `BeamC`: the shear parameters `alphay` and `alphaz` are
@@ -353,6 +385,15 @@ New:
   repository pyfe3d-dev (commit 9b9971c) to `theory/`, with the derivations
   of the piston-theory slope and of the sign of the `BeamC` shear parameters
   corrected as above.
+- The scripts of `beamc`, `beamLR` and `truss` use `G12`, `G13` and `GJ`;
+  `derive_beamc_KC0_sparse.py` and `derive_beamLR_KC0_sparse.py` check the
+  shear block of the sectional matrix against the integral over the rigid
+  cross section. The lines of `update_KC0` and `update_probe_finte` of
+  `BeamC`, `BeamLR` and `Truss` are regenerated from them.
+  `derive_beamLR_fint.py` did not evaluate the shear terms at the centre of
+  the element, `xi = 0`, as `derive_beamLR_KC0_sparse.py` and the code do,
+  and printed a null global vector (wrong symbol names); fixed, and the
+  internal forces of `BeamLR` are now its output.
 
 ### Documentation
 
