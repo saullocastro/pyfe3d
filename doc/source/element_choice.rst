@@ -168,6 +168,64 @@ Methods of each element
       -
       -
 
-The arguments of each method, e.g. the ``mtype`` of the consistent or
-lumped mass matrices, are documented in the API pages of the elements,
-:doc:`fe_overview`.
+The arguments of each method are documented in the API pages of the
+elements, :doc:`fe_overview`.
+
+
+Mass matrices
+-------------
+
+The argument ``mtype`` of ``update_M`` selects how the kinetic energy of
+the element is integrated, with values that depend on the element:
+
+.. list-table::
+    :header-rows: 1
+
+    * - ``mtype``
+      - Quad4, Quad4R, Tria3R
+      - Tria3DSG
+      - BeamC, BeamLR, Truss
+    * - ``0``
+      - consistent
+      - consistent
+      - consistent
+    * - ``1``
+      - reduced integration, one point
+      -
+      - lumped
+    * - ``2``
+      - lumped
+      - lumped
+      -
+
+Any other value raises a ``ValueError``. Each matrix is the integral over
+the element of the inertia of the section between the interpolated
+velocities: for the shells, `I_\rho`, `I_{\rho z}` and `I_{\rho z^2}`, the
+``intrho``, ``intrhoz`` and ``intrhoz2`` of the :class:`.ShellProp`, which
+include the offset, see :doc:`shell_properties`; for the beams, the
+integrals of the :class:`.BeamProp`. The consistent matrices integrate it
+exactly. The lumped matrices integrate it with the points at the nodes,
+where each shape function is 1 at its own node and 0 at the others, such
+that, for the shells, node `i` carries the weight `w_i` times
+
+.. math::
+
+    \begin{bmatrix}
+        I_\rho & 0 & 0 & 0 & I_{\rho z} & 0 \\
+        0 & I_\rho & 0 & -I_{\rho z} & 0 & 0 \\
+        0 & 0 & I_\rho & 0 & 0 & 0 \\
+        0 & -I_{\rho z} & 0 & I_{\rho z^2} & 0 & 0 \\
+        I_{\rho z} & 0 & 0 & 0 & I_{\rho z^2} & 0 \\
+        0 & 0 & 0 & 0 & 0 & 0
+    \end{bmatrix}
+
+in element coordinates, for `u, v, w, r_x, r_y, r_z`, with `w_i = A/3` for
+the triangles and the Jacobian determinant at the node for the
+quadrilaterals, and no coupling between nodes. A lumped shell matrix is
+diagonal only without offset, when `I_{\rho z} = 0`; with an offset, the
+coupling keeps the centre of mass of the element at the offset. The mass,
+first moment and rotary inertia given by each scheme are discussed in the
+Notes of ``update_M``, e.g. :meth:`.Tria3R.update_M` and
+:meth:`.Quad4R.update_M`. The lumped beam matrices are diagonal, without
+the first moments ``intrhoy``, ``intrhoz`` and the product ``intrhoyz`` of
+the section, see :meth:`.BeamC.update_M`.

@@ -62,8 +62,8 @@ in rad/s with consistent units, in increasing order. `[K]` is
 `[K_{C0}]`, plus the geometric stiffness matrix of a prestress when it
 applies, e.g. ``KC0uu + KGuu``, see
 ``tests/test_quad4r_natural_freq_pre_stress.py``. The mass matrix is
-assembled with ``update_M``, whose ``mtype`` selects the consistent or the
-lumped mass matrix of each element.
+assembled with ``update_M``, whose ``mtype`` selects the mass matrix of
+each element, see :doc:`element_choice`.
 
 With an unsymmetric `[K]`, e.g. with the aerodynamic stiffness matrix of
 the piston theory or the load stiffness of a follower load, the
