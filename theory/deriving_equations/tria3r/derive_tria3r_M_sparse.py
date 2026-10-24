@@ -64,10 +64,12 @@ Me = wij*detJ*(intrho*Nu.T*Nu + intrho*Nv.T*Nv + intrho*Nw.T*Nw
     - intrhoz*Nv.T*Nrx - intrhoz*Nrx.T*Nv
     + intrhoz2*Nrx.T*Nrx + intrhoz2*Nry.T*Nry + intrho*Nrz.T*Nrz)
 
-# Mass matrix by a mix of reduced integration and projection method by Brockman 1987 Eq. 21
-# as suggested by Brockman 1987, only the out-of-plane and rotations rx and ry
-# are projected
-# whereas u, v and here rz will be calculated using single-point quadrature
+# NOTE no mass matrix by the projection method of Brockman 1987 is
+#      generated for the triangle. The projection replaces the velocity
+#      field by its linear part, and the field of the linear triangle is
+#      already linear: the projected H, built with cxx, cyy, cxy, b1 and
+#      b2 below, equals the exact H of Me_cons, to round-off for random
+#      triangles. These terms are printed for reference only
 
 # Brockman 1987, Eq. 8a
 x = Matrix([[x1, x2, x3]]).T
@@ -119,11 +121,11 @@ print()
 cxx, cyy, cxy = var('cxx, cyy, cxy')
 
 # Brockman 1987, Eq. 6a and 6b
-#TODO trying this adaptation from quadilateral elements
-#     Nx and Ny are evaluated at xi=eta=0
+# NOTE for the linear triangle N1x, ..., N3y are constant over the
+#      element, so b1 and b2 need no evaluation point
 b1 = Matrix([[N1x, N2x, N3x]]).T
 b2 = Matrix([[N1y, N2y, N3y]]).T
-print('b1, b2 at center point xi=eta=0')
+print('b1, b2 constant over the element')
 
 # Brockman 1987, Eq. 31, H matrix with 1-point reduced integration, adapted to
 # the triangle: the centroid, N1 = N2 = N3 = 1/3, with the weight 1/2 times

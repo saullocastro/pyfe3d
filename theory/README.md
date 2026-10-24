@@ -10,6 +10,10 @@ products of the shape functions, exactly and with the quadrature rules of
 `update_M`. The `derive_*_M_sparse.py` scripts of the shells print the mass
 matrices with the symbols `h11`, `h12`, ... and `valH1`, whose values come
 from the quadrature written by hand in `update_M` before the generated lines.
+`quad4r/derive_quad4r_KC0_sensitivy.py`, a draft of the derivatives of the
+stiffness and mass matrices with respect to the nodal coordinates, generates
+no code either: no method of pyfe3d computes these sensitivities, and the
+matrices it prints are never filled.
 
 These scripts were kept in the separate repository `pyfe3d-dev` until its
 commit 9b9971c, from which they were copied here unchanged; the later changes

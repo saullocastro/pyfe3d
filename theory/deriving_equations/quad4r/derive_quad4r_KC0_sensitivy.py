@@ -1083,7 +1083,17 @@ Me_y4[:, :] = wij*(
         + detJ*(intrho*Nu_y4.T*Nu + intrho*Nv_y4.T*Nv + intrho*Nw_y4.T*Nw + intrhoz2*Nrx_y4.T*Nrx + intrhoz2*Nry_y4.T*Nry)
         + detJ*(intrho*Nu.T*Nu_y4 + intrho*Nv.T*Nv_y4 + intrho*Nw.T*Nw_y4 + intrhoz2*Nrx.T*Nrx_y4 + intrhoz2*Nry.T*Nry_y4)
         )
-#TODO check this 1/wij factor
+# NOTE Izz1, ..., Izz4 are exact integrals over the quarter of the element
+#      at each node, whereas Me_x1, ... above are the integrand at one
+#      quadrature point times its weight wij. Accumulated over the
+#      quadrature points, as the factor wij implies, the derivative of Izz
+#      must be divided by the number of points, 4/wij for a rule whose
+#      equal weights sum to 4, i.e. multiplied by wij/4 and not divided by
+#      wij; the two agree only for wij = 2. Neither is used: this script
+#      generates no code of pyfe3d, K = Ke and M = Me printed below are
+#      never filled, its drilling stiffness, the penalty 2*alphat*A12/h, is
+#      not the one of Quad4R.update_KC0, and Quad4R.update_M has no inertia
+#      for r_z
 Me_x1[5, 5] =   Izz1_x1/wij
 Me_y1[5, 5] =   Izz1_y1/wij
 Me_x1[11, 11] = Izz2_x1/wij

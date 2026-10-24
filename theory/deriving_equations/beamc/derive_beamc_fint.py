@@ -30,7 +30,11 @@ xi = x/L
 #     or rotating about the y axis. Here we say that Iyy = Iz
 Iy = Izz
 Iz = Iyy
-# TODO replace G by G12 and G13, but how to do for the D matrix?
+# NOTE a single shear modulus G, as in pyfe3d.beamc.BeamC; with the
+#      rigid cross section, two moduli Gxy and Gxz would give G*A = Gxy*A
+#      in alphay, G*A = Gxz*A in alphaz and the shear block of the D
+#      matrix [[Gxy*A, 0, -Gxy*Az], [0, Gxz*A, Gxz*Ay],
+#      [-Gxy*Az, Gxz*Ay, Gxy*Iyy + Gxz*Izz]], not implemented
 # alphay = -12*E*Iy/(G*A*L**2), negative: see the Notes of pyfe3d.beamc.BeamC
 #     (Luo 2008 Eq. (17); Eq. (21) prints the sign wrongly)
 # alphaz = -12*E*Iz/(G*A*L**2)
@@ -78,12 +82,14 @@ Nrz = Matrix([[0, Gv1, 0, 0, 0, Grz1,
 
 # From Eqs. 8 and 9 in Luo, Y. 2008
 # exx = u,x + (-rz,x)*y + (ry,x)*z
-# exy = (v.diff(x) - rz*y) - (rx)*z # TODO
-# exz = (w.diff(x) + ry*z) + (rx)*y # TODO
+# exy = (v,x - rz) - rx,x*z
+# exz = (w,x + ry) + rx,x*y
+# NOTE integrated over the cross section, G*(exy**2 + exz**2)/2 gives
+#      the shear block of D below, with Iyy + Izz in place of J
 # BL = Matrix([
     # Nu.diff(x) + (-Nrz.diff(x))*y + Nry.diff(x)*z,
-    #(Nv.diff(x) - Nrz) - Nrx*z,
-    #(Nw.diff(x) + Nry) + Nrx*y,
+    #(Nv.diff(x) - Nrz) - Nrx.diff(x)*z,
+    #(Nw.diff(x) + Nry) + Nrx.diff(x)*y,
     #])
 # dy = dz = 0
 # BL = integrate(BL, (y, -hy/2+dy, +hy/2+dy))
