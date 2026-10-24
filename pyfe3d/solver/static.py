@@ -153,9 +153,9 @@ def linear_static(K, fext):
         Stiffness matrix of the free degrees-of-freedom, shape ``(n, n)``.
         It should include the constant terms that apply, e.g. a constant
         geometric stiffness matrix of a preload or an aerodynamic matrix. It
-        may be unsymmetric, e.g. ``KC0 + KL`` for a follower load affine in
+        may be unsymmetric, e.g. ``KC0 + KF`` for a follower load affine in
         the displacements on a geometrically linear structure, whose load
-        stiffness is ``KL = -dfext/du``.
+        stiffness is ``KF = -dfext/du``.
     fext : np.ndarray
         External force vector, 1-D array of size ``n``.
 
@@ -177,8 +177,8 @@ def linear_static(K, fext):
     iteration of the non-linear problem from `\{u\} = \{0\}`, where the
     tangent stiffness matrix is the linear constitutive stiffness matrix
     `[K_{C0}]`. For a follower load affine in the displacements, `\{F(u)\}
-    = \{F_0\} - [K_L]\{u\}`, the linear solution is that of `([K_{C0}] +
-    [K_L])\{u\} = \{F_0\}`.
+    = \{F_0\} - [K_F]\{u\}`, the linear solution is that of `([K_{C0}] +
+    [K_F])\{u\} = \{F_0\}`.
 
     """
     return [1.], [solve(K, fext)]

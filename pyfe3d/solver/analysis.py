@@ -673,10 +673,10 @@ class Analysis(object):
         ``calc_fext(inc=1., c=c_k)``. This is a fixed-point iteration
         without the load stiffness in the iteration matrix. For a follower
         load whose force vector is affine in `c`, `\{F(c)\} = \{F_0\} -
-        [K_L]\{c\}`, this is the solution of `([K_{C0}] + [K_L])\{c\} =
-        \{F_0\}`, the error being multiplied by `-[K_{C0}]^{-1}[K_L]` at
+        [K_F]\{c\}`, this is the solution of `([K_{C0}] + [K_F])\{c\} =
+        \{F_0\}`, the error being multiplied by `-[K_{C0}]^{-1}[K_F]` at
         each iteration, whose spectral radius is `1/\min|\lambda|` over the
-        load multipliers `\lambda` of `([K_{C0}] + \lambda [K_L])\{u\} =
+        load multipliers `\lambda` of `([K_{C0}] + \lambda [K_F])\{u\} =
         \{0\}`, including the negative and complex ones; beyond the load of
         the smallest `|\lambda|` the iterations diverge.
 

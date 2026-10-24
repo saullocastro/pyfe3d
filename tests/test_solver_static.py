@@ -104,8 +104,8 @@ def test_linear_static():
 
 
 def test_linear_static_unsymmetric():
-    r"""``linear_static(K0 + KL, F0)``, the linear static solution of a
-    follower load affine in ``u``, ``F(u) = F0 - KL u``"""
+    r"""``linear_static(K0 + KF, F0)``, the linear static solution of a
+    follower load affine in ``u``, ``F(u) = F0 - KF u``"""
     K = np.array([[4.5, -1.], [-2., 3.]])
     F0 = np.array([0., 1.])
     increments, cs = linear_static(csr_matrix(K), F0)
