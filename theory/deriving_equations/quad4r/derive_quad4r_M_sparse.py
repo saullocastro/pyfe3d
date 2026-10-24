@@ -344,18 +344,28 @@ tmp = tmp[order]
 tmp = tmp[:, order]
 Me_red = Matrix(tmp)
 
-# Lumped mass matrix using Lobatto integration, where integration points are placed at nodes
-# Brockman 1987 as reference, and A. Ralston, A First Course in Nurnericul Analysis, McGraw-Hill. Ncw York, 196
-# Forcing intrhoz=0 to end up with a diagonal matrix
-#NOTE Using H = A/4. only works for regular meshes
+# Lumped mass matrix using Lobatto integration, where integration points are
+# placed at the nodes, Brockman 1987, p. 2348-2349, and A. Ralston, A First
+# Course in Numerical Analysis, McGraw-Hill, New York, 1965. The rule is
+# applied to the whole integrand of Brockman 1987 Eq. 20, H included, and,
+# since N_i = 1 at node i and N_j = 0 at the other nodes, h_ij = 0 for i != j,
+# with h_ii = detJ at node i times the weight 1 x 1: the matrix is
+# block-diagonal per node, and the coupling through intrhoz is kept in each
+# nodal block. As Brockman 1987 writes, the matrix is diagonal only if
+# intrhoz = 0
+#NOTE h_ii = A/4 only for a parallelogram, whose detJ is constant
+Hlump = Matrix([[h11,   0,   0,   0],
+                [  0, h22,   0,   0],
+                [  0,   0, h33,   0],
+                [  0,   0,   0, h44]])
 # Me_lump is originally in the order u1,u2,u3,u4,v1,v2,v3,v4, ... , rz1,rz2,rz3,rz4
 Me_lump = Matrix([
-    [ intrho*H,          Z,        Z,          Z, 0*intrhoz*H,        Z],
-    [        Z,   intrho*H,        Z, -0*intrhoz*H,          Z,        Z],
-    [        Z,          Z, intrho*H,          Z,          Z,        Z],
-    [        Z, -0*intrhoz*H,        Z, intrhoz2*H,          Z,        Z],
-    [0*intrhoz*H,          Z,        Z,          Z, intrhoz2*H,        Z],
-    [        Z,          Z,        Z,          Z,          Z, alpha*intrho*H]])
+    [ intrho*Hlump,              Z,            Z,              Z,  intrhoz*Hlump,        Z],
+    [            Z,   intrho*Hlump,            Z, -intrhoz*Hlump,              Z,        Z],
+    [            Z,              Z, intrho*Hlump,              Z,              Z,        Z],
+    [            Z, -intrhoz*Hlump,            Z, intrhoz2*Hlump,              Z,        Z],
+    [intrhoz*Hlump,              Z,            Z,              Z, intrhoz2*Hlump,        Z],
+    [            Z,              Z,            Z,              Z,              Z, alpha*intrho*Hlump]])
 # Making Me_lump in the order u1,v1,w1,rx1,ry1,rz1, ..., u4,v4,w4,rx4,ry4,rz4
 tmp = np.array(Me_lump, dtype=object)
 tmp = tmp[order]

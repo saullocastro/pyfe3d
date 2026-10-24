@@ -45,8 +45,9 @@ membrane strains are supported by :meth:`.Tria3R.update_fint` with
 Notes
 -----
 Triangular element with reduced integration, where a single point at
-the centroid (`N1=N2=N3=1/3`) and weight `weight=1` is evaluated,
-preventing shear locking. The drilling stiffness is evaluated with
+the centroid (`N1=N2=N3=1/3`) is evaluated with the weight `1/2` times the
+Jacobian determinant `2 A_e`, i.e. the area `A_e`, preventing shear
+locking. The drilling stiffness is evaluated with
 full integration. Under the default ``drilling_model = 0`` this applies to
 the terms of the Allman enrichment, the Hughes-Brezzi term being integrated
 with a single point at the centroid, see the drilling stiffness below.
@@ -5434,10 +5435,9 @@ cdef class Tria3R:
         ``Mv`` at the positions starting at ``init_k_M``; the global row and
         column indices are always written to ``Mr`` and ``Mc`` at the same
         positions. ``mtype=0`` and ``mtype=1`` write ``M_SPARSE_SIZE``
-        entries, ``mtype=2`` writes the first 162 of them, and any other value
-        of ``mtype`` writes nothing. Before this method is called,
-        :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe` must have
-        been used.
+        entries and ``mtype=2`` writes the first 90 of them. Before this
+        method is called, :meth:`.update_rotation_matrix` and
+        :meth:`.update_probe_xe` must have been used.
 
         Parameters
         ----------
@@ -5463,17 +5463,32 @@ cdef class Tria3R:
             2 for lumped mass matrix
             Default ``0``.
 
+        Raises
+        ------
+        ValueError
+            If ``mtype`` is not 0, 1 or 2.
+
         Notes
         -----
-        The three mass matrices use the method from Brockman 1987 [1]_. With
-        `h_{ij}` the integral of the product of the shape functions `N_i
-        N_j` over the element, the element matrix has `I_\rho h_{ij}`
-        between the translations of nodes `i` and `j`, `I_{\rho z^2} h_{ij}`
-        between the rotations `r_x` and between the rotations `r_y`, and
-        `I_{\rho z} h_{ij}` coupling the translations to the rotations, with
-        `I_\rho`, `I_{\rho z}` and `I_{\rho z^2}` given by ``intrho``,
-        ``intrhoz`` and ``intrhoz2``. The drilling rotation `r_z` has no
-        inertia. The schemes differ in how `h_{ij}` is integrated:
+        The element matrices follow from the kinetic energy of Brockman [1]_,
+        Eq. (20), with the displacements `u + z r_y`, `v - z r_x` and `w`
+        through the thickness,
+
+        .. math::
+
+            T = \frac{1}{2} \int_A \left[ I_\rho (\dot{u}^2 + \dot{v}^2 +
+            \dot{w}^2) + 2 I_{\rho z} (\dot{u} \dot{r}_y - \dot{v} \dot{r}_x)
+            + I_{\rho z^2} (\dot{r}_x^2 + \dot{r}_y^2) \right] dA
+
+        with `I_\rho`, `I_{\rho z}` and `I_{\rho z^2}` given by ``intrho``,
+        ``intrhoz`` and ``intrhoz2``, which include the offset. With `h_{ij}`
+        the integral of the product of the shape functions `N_i N_j` over
+        the element, the element matrix has, as in Eq. (21) of [1]_, `I_\rho
+        h_{ij}` between the translations of nodes `i` and `j`, `I_{\rho z^2}
+        h_{ij}` between the rotations `r_x` and between the rotations `r_y`,
+        and `I_{\rho z} h_{ij}` coupling the translations to the rotations.
+        The drilling rotation `r_z` has no inertia. The schemes differ in how
+        `h_{ij}` is integrated:
 
         - ``mtype=0``: the three-point rule of degree of precision 2, first
           row of Table I in Cowper [2]_, with the area coordinates `(2/3,
@@ -5481,13 +5496,46 @@ cdef class Tria3R:
           which is exact for the quadratic `N_i N_j`, `h_{ii} = A_e/6` and
           `h_{ij} = A_e/12`
         - ``mtype=1``: a single point at the centroid, `h_{ij} = A_e/9`
-        - ``mtype=2``: the three vertices, each with the weight `A_e/3`,
-          `h_{ii} = A_e/3` and `h_{ij} = 0`
+        - ``mtype=2``: the vertex rule, the three nodes, each with the weight
+          `A_e/3`, `h_{ii} = A_e/3` and `h_{ij} = 0`
 
         with `A_e` the element area. In element coordinates the coupling
         terms are `+I_{\rho z} h_{ij}` between `u` and `r_y` and `-I_{\rho z}
         h_{ij}` between `v` and `r_x`, consistently with the curvatures of
         :meth:`._update_probe_BL_G`.
+
+        .. rubric:: Lumped mass matrix
+
+        The vertex rule is a nodal quadrature. Applied to the whole integrand
+        of `T`, in which `N_i` is 1 at node `i` and 0 at the other nodes, it
+        gives no coupling between different nodes and, for node `i`, the
+        block
+
+        .. math::
+
+            \frac{A_e}{3} \begin{bmatrix}
+                I_\rho & 0 & 0 & 0 & I_{\rho z} & 0 \\
+                0 & I_\rho & 0 & -I_{\rho z} & 0 & 0 \\
+                0 & 0 & I_\rho & 0 & 0 & 0 \\
+                0 & -I_{\rho z} & 0 & I_{\rho z^2} & 0 & 0 \\
+                I_{\rho z} & 0 & 0 & 0 & I_{\rho z^2} & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0
+            \end{bmatrix}
+
+        for the DOF `u, v, w, r_x, r_y, r_z`. The coupling through `I_{\rho
+        z}` stays in the nodal block: the matrix is block-diagonal per node,
+        and diagonal only when `I_{\rho z} = 0`, as Brockman [1]_ notes for the
+        Lobatto integration at the nodes of the quadrilateral. Since the
+        weights sum to `A_e` and `\sum_i (A_e/3) \pmb{x}_i = \int_A \pmb{x}
+        dA`, with `\pmb{x}_i` the position of node `i`, the lumped matrix has
+        the exact mass and the exact first moment of the mass, including the
+        term `I_{\rho z} A_e` that places the centre of mass at the offset
+        from the reference surface. Of the rotary inertia, the term `I_{\rho
+        z^2} A_e` about the axes in the plane of the element is exact, while
+        the part from the distribution of `I_\rho` over the area, about any
+        axis, is concentrated at the nodes: 4 times the exact value about the
+        centroid of the element, an error that decreases with the size of
+        the elements.
 
         References
         ----------
@@ -5503,15 +5551,15 @@ cdef class Tria3R:
         cdef int c1, c2, c3, i, k
         cdef double intrho, intrhoz, intrhoz2
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
-        cdef double x1, x2, x3
-        cdef double y1, y2, y3
-        cdef double j11, j12, j21, j22
-        cdef double N1x, N2x, N3x
-        cdef double N1y, N2y, N3y
-        cdef double cxx, cyy, cxy
         cdef double h11, h12, h13, h22, h23, h33, valH1
         cdef double wij, detJ, N1, N2, N3
         cdef double points[3]
+
+        # NOTE checked once per call, before the code without the GIL
+        if mtype != 0 and mtype != 1 and mtype != 2:
+            raise ValueError('mtype=%d is not supported by Tria3R.update_M, '
+                             'use 0 (consistent), 1 (reduced integration) or '
+                             '2 (lumped)' % mtype)
 
         with nogil:
             intrho = prop.intrho
@@ -5520,17 +5568,6 @@ cdef class Tria3R:
 
             detJ = 2*self.area
             valH1 = detJ/18.
-
-            # NOTE ignoring z in local coordinates
-            x1 = self.probe.xe[0]
-            y1 = self.probe.xe[1]
-            # z1 = self.probe.xe[2]
-            x2 = self.probe.xe[3]
-            y2 = self.probe.xe[4]
-            # z2 = self.probe.xe[5]
-            x3 = self.probe.xe[6]
-            y3 = self.probe.xe[7]
-            # z3 = self.probe.xe[8]
 
             # local to global transformation
             r11 = self.r11
@@ -8291,7 +8328,7 @@ cdef class Tria3R:
                 Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
 
 
-            elif mtype == 2: # M_lump lumped mass matrix using two-point Gauss-Lobatto quadrature
+            elif mtype == 2: # M_lump lumped mass matrix, vertex rule, see the Notes
                 k = self.init_k_M
                 Mr[k] = 0+c1
                 Mc[k] = 0+c1
@@ -8303,22 +8340,10 @@ cdef class Tria3R:
                 Mc[k] = 2+c1
                 k += 1
                 Mr[k] = 0+c1
-                Mc[k] = 0+c2
+                Mc[k] = 4+c1
                 k += 1
                 Mr[k] = 0+c1
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 0+c1
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 0+c1
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 0+c1
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 0+c1
-                Mc[k] = 2+c3
+                Mc[k] = 5+c1
                 k += 1
                 Mr[k] = 1+c1
                 Mc[k] = 0+c1
@@ -8330,22 +8355,10 @@ cdef class Tria3R:
                 Mc[k] = 2+c1
                 k += 1
                 Mr[k] = 1+c1
-                Mc[k] = 0+c2
+                Mc[k] = 3+c1
                 k += 1
                 Mr[k] = 1+c1
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 1+c1
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 1+c1
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 1+c1
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 1+c1
-                Mc[k] = 2+c3
+                Mc[k] = 5+c1
                 k += 1
                 Mr[k] = 2+c1
                 Mc[k] = 0+c1
@@ -8357,22 +8370,16 @@ cdef class Tria3R:
                 Mc[k] = 2+c1
                 k += 1
                 Mr[k] = 2+c1
-                Mc[k] = 0+c2
+                Mc[k] = 3+c1
                 k += 1
                 Mr[k] = 2+c1
-                Mc[k] = 1+c2
+                Mc[k] = 4+c1
                 k += 1
-                Mr[k] = 2+c1
-                Mc[k] = 2+c2
+                Mr[k] = 3+c1
+                Mc[k] = 1+c1
                 k += 1
-                Mr[k] = 2+c1
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 2+c1
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 2+c1
-                Mc[k] = 2+c3
+                Mr[k] = 3+c1
+                Mc[k] = 2+c1
                 k += 1
                 Mr[k] = 3+c1
                 Mc[k] = 3+c1
@@ -8383,338 +8390,176 @@ cdef class Tria3R:
                 Mr[k] = 3+c1
                 Mc[k] = 5+c1
                 k += 1
-                Mr[k] = 3+c1
-                Mc[k] = 3+c2
+                Mr[k] = 4+c1
+                Mc[k] = 0+c1
                 k += 1
-                Mr[k] = 3+c1
+                Mr[k] = 4+c1
+                Mc[k] = 2+c1
+                k += 1
+                Mr[k] = 4+c1
+                Mc[k] = 3+c1
+                k += 1
+                Mr[k] = 4+c1
+                Mc[k] = 4+c1
+                k += 1
+                Mr[k] = 4+c1
+                Mc[k] = 5+c1
+                k += 1
+                Mr[k] = 5+c1
+                Mc[k] = 0+c1
+                k += 1
+                Mr[k] = 5+c1
+                Mc[k] = 1+c1
+                k += 1
+                Mr[k] = 5+c1
+                Mc[k] = 3+c1
+                k += 1
+                Mr[k] = 5+c1
+                Mc[k] = 4+c1
+                k += 1
+                Mr[k] = 5+c1
+                Mc[k] = 5+c1
+                k += 1
+                Mr[k] = 0+c2
+                Mc[k] = 0+c2
+                k += 1
+                Mr[k] = 0+c2
+                Mc[k] = 1+c2
+                k += 1
+                Mr[k] = 0+c2
+                Mc[k] = 2+c2
+                k += 1
+                Mr[k] = 0+c2
                 Mc[k] = 4+c2
                 k += 1
-                Mr[k] = 3+c1
+                Mr[k] = 0+c2
                 Mc[k] = 5+c2
                 k += 1
-                Mr[k] = 3+c1
-                Mc[k] = 3+c3
+                Mr[k] = 1+c2
+                Mc[k] = 0+c2
                 k += 1
-                Mr[k] = 3+c1
+                Mr[k] = 1+c2
+                Mc[k] = 1+c2
+                k += 1
+                Mr[k] = 1+c2
+                Mc[k] = 2+c2
+                k += 1
+                Mr[k] = 1+c2
+                Mc[k] = 3+c2
+                k += 1
+                Mr[k] = 1+c2
+                Mc[k] = 5+c2
+                k += 1
+                Mr[k] = 2+c2
+                Mc[k] = 0+c2
+                k += 1
+                Mr[k] = 2+c2
+                Mc[k] = 1+c2
+                k += 1
+                Mr[k] = 2+c2
+                Mc[k] = 2+c2
+                k += 1
+                Mr[k] = 2+c2
+                Mc[k] = 3+c2
+                k += 1
+                Mr[k] = 2+c2
+                Mc[k] = 4+c2
+                k += 1
+                Mr[k] = 3+c2
+                Mc[k] = 1+c2
+                k += 1
+                Mr[k] = 3+c2
+                Mc[k] = 2+c2
+                k += 1
+                Mr[k] = 3+c2
+                Mc[k] = 3+c2
+                k += 1
+                Mr[k] = 3+c2
+                Mc[k] = 4+c2
+                k += 1
+                Mr[k] = 3+c2
+                Mc[k] = 5+c2
+                k += 1
+                Mr[k] = 4+c2
+                Mc[k] = 0+c2
+                k += 1
+                Mr[k] = 4+c2
+                Mc[k] = 2+c2
+                k += 1
+                Mr[k] = 4+c2
+                Mc[k] = 3+c2
+                k += 1
+                Mr[k] = 4+c2
+                Mc[k] = 4+c2
+                k += 1
+                Mr[k] = 4+c2
+                Mc[k] = 5+c2
+                k += 1
+                Mr[k] = 5+c2
+                Mc[k] = 0+c2
+                k += 1
+                Mr[k] = 5+c2
+                Mc[k] = 1+c2
+                k += 1
+                Mr[k] = 5+c2
+                Mc[k] = 3+c2
+                k += 1
+                Mr[k] = 5+c2
+                Mc[k] = 4+c2
+                k += 1
+                Mr[k] = 5+c2
+                Mc[k] = 5+c2
+                k += 1
+                Mr[k] = 0+c3
+                Mc[k] = 0+c3
+                k += 1
+                Mr[k] = 0+c3
+                Mc[k] = 1+c3
+                k += 1
+                Mr[k] = 0+c3
+                Mc[k] = 2+c3
+                k += 1
+                Mr[k] = 0+c3
                 Mc[k] = 4+c3
                 k += 1
-                Mr[k] = 3+c1
+                Mr[k] = 0+c3
                 Mc[k] = 5+c3
                 k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 3+c1
+                Mr[k] = 1+c3
+                Mc[k] = 0+c3
                 k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 4+c1
+                Mr[k] = 1+c3
+                Mc[k] = 1+c3
                 k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 5+c1
+                Mr[k] = 1+c3
+                Mc[k] = 2+c3
                 k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 4+c1
+                Mr[k] = 1+c3
                 Mc[k] = 3+c3
                 k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 4+c3
-                k += 1
-                Mr[k] = 4+c1
+                Mr[k] = 1+c3
                 Mc[k] = 5+c3
                 k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 3+c1
+                Mr[k] = 2+c3
+                Mc[k] = 0+c3
                 k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 4+c1
+                Mr[k] = 2+c3
+                Mc[k] = 1+c3
                 k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 5+c1
+                Mr[k] = 2+c3
+                Mc[k] = 2+c3
                 k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 5+c1
+                Mr[k] = 2+c3
                 Mc[k] = 3+c3
                 k += 1
-                Mr[k] = 5+c1
+                Mr[k] = 2+c3
                 Mc[k] = 4+c3
                 k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 5+c3
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 0+c2
+                Mr[k] = 3+c3
                 Mc[k] = 1+c3
                 k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 3+c1
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 3+c3
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 4+c3
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 5+c3
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 3+c1
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 3+c3
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 4+c3
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 5+c3
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 3+c1
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 3+c3
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 4+c3
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 5+c3
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 2+c3
-                k += 1
                 Mr[k] = 3+c3
-                Mc[k] = 3+c1
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 5+c2
+                Mc[k] = 2+c3
                 k += 1
                 Mr[k] = 3+c3
                 Mc[k] = 3+c3
@@ -8726,22 +8571,10 @@ cdef class Tria3R:
                 Mc[k] = 5+c3
                 k += 1
                 Mr[k] = 4+c3
-                Mc[k] = 3+c1
+                Mc[k] = 0+c3
                 k += 1
                 Mr[k] = 4+c3
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 5+c2
+                Mc[k] = 2+c3
                 k += 1
                 Mr[k] = 4+c3
                 Mc[k] = 3+c3
@@ -8753,22 +8586,10 @@ cdef class Tria3R:
                 Mc[k] = 5+c3
                 k += 1
                 Mr[k] = 5+c3
-                Mc[k] = 3+c1
+                Mc[k] = 0+c3
                 k += 1
                 Mr[k] = 5+c3
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 5+c2
+                Mc[k] = 1+c3
                 k += 1
                 Mr[k] = 5+c3
                 Mc[k] = 3+c3
@@ -8779,16 +8600,15 @@ cdef class Tria3R:
                 Mr[k] = 5+c3
                 Mc[k] = 5+c3
 
+                # NOTE vertex rule, area coordinates (1, 0, 0) and their permutations,
+                #      weight 1/6 times detJ = 2*area, i.e. area/3; N_i is 1 at node i
+                #      and 0 at the other nodes, such that h12 = h13 = h23 = 0
                 wij = 0.5*0.3333333333333333333333333333333333333
-                # NOTE three-point Gauss-Lobatto quadrature
                 points[0] = 1.
                 points[1] = 0.
                 points[2] = 0.
                 h11 = 0.
-                h12 = 0.
-                h13 = 0.
                 h22 = 0.
-                h23 = 0.
                 h33 = 0.
                 for i in range(3):
                     if i == 0:
@@ -8803,12 +8623,9 @@ cdef class Tria3R:
                         N1 = points[2]
                         N2 = points[0]
                         N3 = points[1]
-                        
+
                     h11 += N1**2*detJ*wij
-                    h12 += N1*N2*detJ*wij
-                    h13 += N1*N3*detJ*wij
                     h22 += N2**2*detJ*wij
-                    h23 += N2*N3*detJ*wij
                     h33 += N3**2*detJ*wij
 
                 k = self.init_k_M
@@ -8818,17 +8635,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h11*intrho*r11*r31 + h11*intrho*r12*r32 + h11*intrho*r13*r33
                 k += 1
-                Mv[k] += h12*intrho*r11**2 + h12*intrho*r12**2 + h12*intrho*r13**2
+                Mv[k] += h11*intrhoz*r11*r22 - h11*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h12*intrho*r11*r21 + h12*intrho*r12*r22 + h12*intrho*r13*r23
-                k += 1
-                Mv[k] += h12*intrho*r11*r31 + h12*intrho*r12*r32 + h12*intrho*r13*r33
-                k += 1
-                Mv[k] += h13*intrho*r11**2 + h13*intrho*r12**2 + h13*intrho*r13**2
-                k += 1
-                Mv[k] += h13*intrho*r11*r21 + h13*intrho*r12*r22 + h13*intrho*r13*r23
-                k += 1
-                Mv[k] += h13*intrho*r11*r31 + h13*intrho*r12*r32 + h13*intrho*r13*r33
+                Mv[k] += h11*intrhoz*r11*r32 - h11*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h11*intrho*r11*r21 + h11*intrho*r12*r22 + h11*intrho*r13*r23
                 k += 1
@@ -8836,17 +8645,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h11*intrho*r21*r31 + h11*intrho*r22*r32 + h11*intrho*r23*r33
                 k += 1
-                Mv[k] += h12*intrho*r11*r21 + h12*intrho*r12*r22 + h12*intrho*r13*r23
+                Mv[k] += -h11*intrhoz*r11*r22 + h11*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h12*intrho*r21**2 + h12*intrho*r22**2 + h12*intrho*r23**2
-                k += 1
-                Mv[k] += h12*intrho*r21*r31 + h12*intrho*r22*r32 + h12*intrho*r23*r33
-                k += 1
-                Mv[k] += h13*intrho*r11*r21 + h13*intrho*r12*r22 + h13*intrho*r13*r23
-                k += 1
-                Mv[k] += h13*intrho*r21**2 + h13*intrho*r22**2 + h13*intrho*r23**2
-                k += 1
-                Mv[k] += h13*intrho*r21*r31 + h13*intrho*r22*r32 + h13*intrho*r23*r33
+                Mv[k] += h11*intrhoz*r21*r32 - h11*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h11*intrho*r11*r31 + h11*intrho*r12*r32 + h11*intrho*r13*r33
                 k += 1
@@ -8854,17 +8655,13 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h11*intrho*r31**2 + h11*intrho*r32**2 + h11*intrho*r33**2
                 k += 1
-                Mv[k] += h12*intrho*r11*r31 + h12*intrho*r12*r32 + h12*intrho*r13*r33
+                Mv[k] += -h11*intrhoz*r11*r32 + h11*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h12*intrho*r21*r31 + h12*intrho*r22*r32 + h12*intrho*r23*r33
+                Mv[k] += -h11*intrhoz*r21*r32 + h11*intrhoz*r22*r31
                 k += 1
-                Mv[k] += h12*intrho*r31**2 + h12*intrho*r32**2 + h12*intrho*r33**2
+                Mv[k] += -h11*intrhoz*r11*r22 + h11*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h13*intrho*r11*r31 + h13*intrho*r12*r32 + h13*intrho*r13*r33
-                k += 1
-                Mv[k] += h13*intrho*r21*r31 + h13*intrho*r22*r32 + h13*intrho*r23*r33
-                k += 1
-                Mv[k] += h13*intrho*r31**2 + h13*intrho*r32**2 + h13*intrho*r33**2
+                Mv[k] += -h11*intrhoz*r11*r32 + h11*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h11*intrhoz2*r11**2 + h11*intrhoz2*r12**2
                 k += 1
@@ -8872,17 +8669,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h11*intrhoz2*r11*r31 + h11*intrhoz2*r12*r32
                 k += 1
-                Mv[k] += h12*intrhoz2*r11**2 + h12*intrhoz2*r12**2
+                Mv[k] += h11*intrhoz*r11*r22 - h11*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h12*intrhoz2*r11*r21 + h12*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h12*intrhoz2*r11*r31 + h12*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h13*intrhoz2*r11**2 + h13*intrhoz2*r12**2
-                k += 1
-                Mv[k] += h13*intrhoz2*r11*r21 + h13*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h13*intrhoz2*r11*r31 + h13*intrhoz2*r12*r32
+                Mv[k] += -h11*intrhoz*r21*r32 + h11*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h11*intrhoz2*r11*r21 + h11*intrhoz2*r12*r22
                 k += 1
@@ -8890,17 +8679,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h11*intrhoz2*r21*r31 + h11*intrhoz2*r22*r32
                 k += 1
-                Mv[k] += h12*intrhoz2*r11*r21 + h12*intrhoz2*r12*r22
+                Mv[k] += h11*intrhoz*r11*r32 - h11*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h12*intrhoz2*r21**2 + h12*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h12*intrhoz2*r21*r31 + h12*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h13*intrhoz2*r11*r21 + h13*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h13*intrhoz2*r21**2 + h13*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h13*intrhoz2*r21*r31 + h13*intrhoz2*r22*r32
+                Mv[k] += h11*intrhoz*r21*r32 - h11*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h11*intrhoz2*r11*r31 + h11*intrhoz2*r12*r32
                 k += 1
@@ -8908,41 +8689,15 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h11*intrhoz2*r31**2 + h11*intrhoz2*r32**2
                 k += 1
-                Mv[k] += h12*intrhoz2*r11*r31 + h12*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h12*intrhoz2*r21*r31 + h12*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h12*intrhoz2*r31**2 + h12*intrhoz2*r32**2
-                k += 1
-                Mv[k] += h13*intrhoz2*r11*r31 + h13*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h13*intrhoz2*r21*r31 + h13*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h13*intrhoz2*r31**2 + h13*intrhoz2*r32**2
-                k += 1
-                Mv[k] += h12*intrho*r11**2 + h12*intrho*r12**2 + h12*intrho*r13**2
-                k += 1
-                Mv[k] += h12*intrho*r11*r21 + h12*intrho*r12*r22 + h12*intrho*r13*r23
-                k += 1
-                Mv[k] += h12*intrho*r11*r31 + h12*intrho*r12*r32 + h12*intrho*r13*r33
-                k += 1
                 Mv[k] += h22*intrho*r11**2 + h22*intrho*r12**2 + h22*intrho*r13**2
                 k += 1
                 Mv[k] += h22*intrho*r11*r21 + h22*intrho*r12*r22 + h22*intrho*r13*r23
                 k += 1
                 Mv[k] += h22*intrho*r11*r31 + h22*intrho*r12*r32 + h22*intrho*r13*r33
                 k += 1
-                Mv[k] += h23*intrho*r11**2 + h23*intrho*r12**2 + h23*intrho*r13**2
+                Mv[k] += h22*intrhoz*r11*r22 - h22*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h23*intrho*r11*r21 + h23*intrho*r12*r22 + h23*intrho*r13*r23
-                k += 1
-                Mv[k] += h23*intrho*r11*r31 + h23*intrho*r12*r32 + h23*intrho*r13*r33
-                k += 1
-                Mv[k] += h12*intrho*r11*r21 + h12*intrho*r12*r22 + h12*intrho*r13*r23
-                k += 1
-                Mv[k] += h12*intrho*r21**2 + h12*intrho*r22**2 + h12*intrho*r23**2
-                k += 1
-                Mv[k] += h12*intrho*r21*r31 + h12*intrho*r22*r32 + h12*intrho*r23*r33
+                Mv[k] += h22*intrhoz*r11*r32 - h22*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h22*intrho*r11*r21 + h22*intrho*r12*r22 + h22*intrho*r13*r23
                 k += 1
@@ -8950,17 +8705,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h22*intrho*r21*r31 + h22*intrho*r22*r32 + h22*intrho*r23*r33
                 k += 1
-                Mv[k] += h23*intrho*r11*r21 + h23*intrho*r12*r22 + h23*intrho*r13*r23
+                Mv[k] += -h22*intrhoz*r11*r22 + h22*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h23*intrho*r21**2 + h23*intrho*r22**2 + h23*intrho*r23**2
-                k += 1
-                Mv[k] += h23*intrho*r21*r31 + h23*intrho*r22*r32 + h23*intrho*r23*r33
-                k += 1
-                Mv[k] += h12*intrho*r11*r31 + h12*intrho*r12*r32 + h12*intrho*r13*r33
-                k += 1
-                Mv[k] += h12*intrho*r21*r31 + h12*intrho*r22*r32 + h12*intrho*r23*r33
-                k += 1
-                Mv[k] += h12*intrho*r31**2 + h12*intrho*r32**2 + h12*intrho*r33**2
+                Mv[k] += h22*intrhoz*r21*r32 - h22*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h22*intrho*r11*r31 + h22*intrho*r12*r32 + h22*intrho*r13*r33
                 k += 1
@@ -8968,17 +8715,13 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h22*intrho*r31**2 + h22*intrho*r32**2 + h22*intrho*r33**2
                 k += 1
-                Mv[k] += h23*intrho*r11*r31 + h23*intrho*r12*r32 + h23*intrho*r13*r33
+                Mv[k] += -h22*intrhoz*r11*r32 + h22*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h23*intrho*r21*r31 + h23*intrho*r22*r32 + h23*intrho*r23*r33
+                Mv[k] += -h22*intrhoz*r21*r32 + h22*intrhoz*r22*r31
                 k += 1
-                Mv[k] += h23*intrho*r31**2 + h23*intrho*r32**2 + h23*intrho*r33**2
+                Mv[k] += -h22*intrhoz*r11*r22 + h22*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h12*intrhoz2*r11**2 + h12*intrhoz2*r12**2
-                k += 1
-                Mv[k] += h12*intrhoz2*r11*r21 + h12*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h12*intrhoz2*r11*r31 + h12*intrhoz2*r12*r32
+                Mv[k] += -h22*intrhoz*r11*r32 + h22*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h22*intrhoz2*r11**2 + h22*intrhoz2*r12**2
                 k += 1
@@ -8986,17 +8729,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h22*intrhoz2*r11*r31 + h22*intrhoz2*r12*r32
                 k += 1
-                Mv[k] += h23*intrhoz2*r11**2 + h23*intrhoz2*r12**2
+                Mv[k] += h22*intrhoz*r11*r22 - h22*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h23*intrhoz2*r11*r21 + h23*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h23*intrhoz2*r11*r31 + h23*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h12*intrhoz2*r11*r21 + h12*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h12*intrhoz2*r21**2 + h12*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h12*intrhoz2*r21*r31 + h12*intrhoz2*r22*r32
+                Mv[k] += -h22*intrhoz*r21*r32 + h22*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h22*intrhoz2*r11*r21 + h22*intrhoz2*r12*r22
                 k += 1
@@ -9004,17 +8739,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h22*intrhoz2*r21*r31 + h22*intrhoz2*r22*r32
                 k += 1
-                Mv[k] += h23*intrhoz2*r11*r21 + h23*intrhoz2*r12*r22
+                Mv[k] += h22*intrhoz*r11*r32 - h22*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h23*intrhoz2*r21**2 + h23*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h23*intrhoz2*r21*r31 + h23*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h12*intrhoz2*r11*r31 + h12*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h12*intrhoz2*r21*r31 + h12*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h12*intrhoz2*r31**2 + h12*intrhoz2*r32**2
+                Mv[k] += h22*intrhoz*r21*r32 - h22*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h22*intrhoz2*r11*r31 + h22*intrhoz2*r12*r32
                 k += 1
@@ -9022,41 +8749,15 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h22*intrhoz2*r31**2 + h22*intrhoz2*r32**2
                 k += 1
-                Mv[k] += h23*intrhoz2*r11*r31 + h23*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h23*intrhoz2*r21*r31 + h23*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h23*intrhoz2*r31**2 + h23*intrhoz2*r32**2
-                k += 1
-                Mv[k] += h13*intrho*r11**2 + h13*intrho*r12**2 + h13*intrho*r13**2
-                k += 1
-                Mv[k] += h13*intrho*r11*r21 + h13*intrho*r12*r22 + h13*intrho*r13*r23
-                k += 1
-                Mv[k] += h13*intrho*r11*r31 + h13*intrho*r12*r32 + h13*intrho*r13*r33
-                k += 1
-                Mv[k] += h23*intrho*r11**2 + h23*intrho*r12**2 + h23*intrho*r13**2
-                k += 1
-                Mv[k] += h23*intrho*r11*r21 + h23*intrho*r12*r22 + h23*intrho*r13*r23
-                k += 1
-                Mv[k] += h23*intrho*r11*r31 + h23*intrho*r12*r32 + h23*intrho*r13*r33
-                k += 1
                 Mv[k] += h33*intrho*r11**2 + h33*intrho*r12**2 + h33*intrho*r13**2
                 k += 1
                 Mv[k] += h33*intrho*r11*r21 + h33*intrho*r12*r22 + h33*intrho*r13*r23
                 k += 1
                 Mv[k] += h33*intrho*r11*r31 + h33*intrho*r12*r32 + h33*intrho*r13*r33
                 k += 1
-                Mv[k] += h13*intrho*r11*r21 + h13*intrho*r12*r22 + h13*intrho*r13*r23
+                Mv[k] += h33*intrhoz*r11*r22 - h33*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h13*intrho*r21**2 + h13*intrho*r22**2 + h13*intrho*r23**2
-                k += 1
-                Mv[k] += h13*intrho*r21*r31 + h13*intrho*r22*r32 + h13*intrho*r23*r33
-                k += 1
-                Mv[k] += h23*intrho*r11*r21 + h23*intrho*r12*r22 + h23*intrho*r13*r23
-                k += 1
-                Mv[k] += h23*intrho*r21**2 + h23*intrho*r22**2 + h23*intrho*r23**2
-                k += 1
-                Mv[k] += h23*intrho*r21*r31 + h23*intrho*r22*r32 + h23*intrho*r23*r33
+                Mv[k] += h33*intrhoz*r11*r32 - h33*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h33*intrho*r11*r21 + h33*intrho*r12*r22 + h33*intrho*r13*r23
                 k += 1
@@ -9064,17 +8765,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h33*intrho*r21*r31 + h33*intrho*r22*r32 + h33*intrho*r23*r33
                 k += 1
-                Mv[k] += h13*intrho*r11*r31 + h13*intrho*r12*r32 + h13*intrho*r13*r33
+                Mv[k] += -h33*intrhoz*r11*r22 + h33*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h13*intrho*r21*r31 + h13*intrho*r22*r32 + h13*intrho*r23*r33
-                k += 1
-                Mv[k] += h13*intrho*r31**2 + h13*intrho*r32**2 + h13*intrho*r33**2
-                k += 1
-                Mv[k] += h23*intrho*r11*r31 + h23*intrho*r12*r32 + h23*intrho*r13*r33
-                k += 1
-                Mv[k] += h23*intrho*r21*r31 + h23*intrho*r22*r32 + h23*intrho*r23*r33
-                k += 1
-                Mv[k] += h23*intrho*r31**2 + h23*intrho*r32**2 + h23*intrho*r33**2
+                Mv[k] += h33*intrhoz*r21*r32 - h33*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h33*intrho*r11*r31 + h33*intrho*r12*r32 + h33*intrho*r13*r33
                 k += 1
@@ -9082,17 +8775,13 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h33*intrho*r31**2 + h33*intrho*r32**2 + h33*intrho*r33**2
                 k += 1
-                Mv[k] += h13*intrhoz2*r11**2 + h13*intrhoz2*r12**2
+                Mv[k] += -h33*intrhoz*r11*r32 + h33*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h13*intrhoz2*r11*r21 + h13*intrhoz2*r12*r22
+                Mv[k] += -h33*intrhoz*r21*r32 + h33*intrhoz*r22*r31
                 k += 1
-                Mv[k] += h13*intrhoz2*r11*r31 + h13*intrhoz2*r12*r32
+                Mv[k] += -h33*intrhoz*r11*r22 + h33*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h23*intrhoz2*r11**2 + h23*intrhoz2*r12**2
-                k += 1
-                Mv[k] += h23*intrhoz2*r11*r21 + h23*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h23*intrhoz2*r11*r31 + h23*intrhoz2*r12*r32
+                Mv[k] += -h33*intrhoz*r11*r32 + h33*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h33*intrhoz2*r11**2 + h33*intrhoz2*r12**2
                 k += 1
@@ -9100,17 +8789,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h33*intrhoz2*r11*r31 + h33*intrhoz2*r12*r32
                 k += 1
-                Mv[k] += h13*intrhoz2*r11*r21 + h13*intrhoz2*r12*r22
+                Mv[k] += h33*intrhoz*r11*r22 - h33*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h13*intrhoz2*r21**2 + h13*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h13*intrhoz2*r21*r31 + h13*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h23*intrhoz2*r11*r21 + h23*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h23*intrhoz2*r21**2 + h23*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h23*intrhoz2*r21*r31 + h23*intrhoz2*r22*r32
+                Mv[k] += -h33*intrhoz*r21*r32 + h33*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h33*intrhoz2*r11*r21 + h33*intrhoz2*r12*r22
                 k += 1
@@ -9118,17 +8799,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h33*intrhoz2*r21*r31 + h33*intrhoz2*r22*r32
                 k += 1
-                Mv[k] += h13*intrhoz2*r11*r31 + h13*intrhoz2*r12*r32
+                Mv[k] += h33*intrhoz*r11*r32 - h33*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h13*intrhoz2*r21*r31 + h13*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h13*intrhoz2*r31**2 + h13*intrhoz2*r32**2
-                k += 1
-                Mv[k] += h23*intrhoz2*r11*r31 + h23*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h23*intrhoz2*r21*r31 + h23*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h23*intrhoz2*r31**2 + h23*intrhoz2*r32**2
+                Mv[k] += h33*intrhoz*r21*r32 - h33*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h33*intrhoz2*r11*r31 + h33*intrhoz2*r12*r32
                 k += 1
