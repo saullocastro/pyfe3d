@@ -113,7 +113,10 @@ The cross section of the beams and of the truss is given by a
 :class:`.BeamProp`, whose integrals are taken in the element coordinate
 system, see :doc:`shell_properties`. Its orientation is defined by the
 vector ``vxyi, vxyj, vxyk`` of ``update_rotation_matrix``, see
-:doc:`conventions`.
+:doc:`conventions`. The beams have a transverse shear modulus for each
+plane of bending, ``G12`` for the element `xy` plane and ``G13`` for the
+`xz` plane, and the beams and the truss take the torsional stiffness
+``GJ``; the three follow ``G`` unless they are set.
 
 
 Methods of each element

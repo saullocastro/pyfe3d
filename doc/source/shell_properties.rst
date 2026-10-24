@@ -135,11 +135,20 @@ Beam properties
 torsion constant ``J``, ``Ay`` and ``Az``, which are null when the beam
 axis passes through the centroid, the moduli ``E`` and ``G``, and the mass
 integrals ``intrho``, ``intrhoy``, ``intrhoz``, ``intrhoy2``, ``intrhoz2``
-and ``intrhoyz``. No correction is applied by the elements: the shear
-correction factor, e.g. `5/6` for a rectangular section, is applied by the
-user to ``G``, as in the examples. Bending in the element `xy` plane, i.e.
-the displacement `v`, is governed by ``Izz`` and bending in the `xz` plane
-by ``Iyy``.
+and ``intrhoyz``. Bending in the element `xy` plane, i.e. the displacement
+`v`, is governed by ``Izz`` and by the transverse shear modulus ``G12``,
+bending in the `xz` plane by ``Iyy`` and ``G13``, and the torsion by the
+torsional stiffness ``GJ``. These three attributes follow ``G`` until they
+are set, ``G12 = G13 = G`` and ``GJ = G*J``, such that a property given
+with ``G`` and ``J`` only keeps its meaning:
+
+.. literalinclude:: ../../tests/test_beam_shear_moduli.py
+    :pyobject: test_defaults_follow_G
+
+No correction is applied by the elements: the shear correction factors of
+the two planes, e.g. `5/6` for a rectangular section, are applied by the
+user to ``G12`` and ``G13``. Applied to ``G``, as in some of the examples,
+they also scale ``GJ``, unless ``GJ`` is set.
 
 
 Examples
