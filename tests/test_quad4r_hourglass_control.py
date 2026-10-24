@@ -1002,9 +1002,10 @@ def test_mass_formulations_match_brockman():
 
     used by ``mtype = 0``. The reduced mass of his Eq. (31) replaces it with
     `\pmb{H} = (A/16) \pmb{s} \pmb{s}^\top`, every entry equal, used by
-    ``mtype = 1``. The lumped mass of p. 2349, by Gauss-Lobatto integration
-    at the nodes, is diagonal with `R_1 A/4` and `R_3 A/4` per node, used by
-    ``mtype = 2``.
+    ``mtype = 1``. The lumped mass of pp. 2348-2349, by Gauss-Lobatto
+    integration at the nodes, used by ``mtype = 2``, is diagonal provided
+    `R_2 = 0`, as here without offset, with `R_1 A/4` and `R_3 A/4` per
+    node.
 
     All three conserve the total mass on any shape. The per-node closed
     forms hold where the constant-Jacobian assumption holds.
