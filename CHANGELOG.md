@@ -408,6 +408,9 @@ New:
   Peano and Riccioni and uses it in his arc-length procedure, and Crisfield
   (1991, Sec. 9.5.4, Eq. 9.48) presents it as an alternative to the
   Euclidean norm of the residual, not as a recommendation.
+- The tip deflection of a cantilever with shear deformation, Eq. (1.2) of
+  Bathe, is cited in the edition in which it was checked, Bathe (1996),
+  Sec. 1.2, p. 5, Fig. 1.2(b), instead of the 2nd edition of 2014.
 - User guide pages: overview and workflow, conventions, choice of the
   element, shell and beam properties, non-linear static analyses, linear
   buckling and natural frequencies, installation and changelog. The usage
