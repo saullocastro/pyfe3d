@@ -136,8 +136,9 @@ cdef class Spring:
         Rotational stiffnesses in the element coordinate system, moment per
         unit rotation.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Rotation matrix from local to global coordinates. By default it assumes
-        that the element is aligned with the global coordinate system.
+        Entries `T_{ij}` of the transformation matrix `[T]` from element to
+        global coordinates, whose columns are the element axes. By default it
+        assumes that the element is aligned with the global coordinate system.
         Dimensionless.
     vxyi, vxyj, vxyk : double
         Components of a vector on the `XY` plane of the element coordinate
@@ -174,10 +175,10 @@ cdef class Spring:
         [K_e] = \begin{bmatrix} [k] & -[k] \\ -[k] & [k] \end{bmatrix},
         \qquad [k] = \mathrm{diag}(k_1, ..., k_6)
 
-    transformed to global coordinates with the rotation matrix of the
-    element, `[K] = [T]^T [K_e] [T]`, where `[T]` is block diagonal with
-    four copies of the direction cosine matrix `[r]`, the transpose of the
-    rotation matrix ``r11, ..., r33``.
+    transformed to global coordinates with the transformation matrix of the
+    element, `[K] = [T] [K_e] [T]^T`, where `[T]` is block diagonal with
+    four copies of the `3 \times 3` matrix of the entries `T_{ij}` stored in
+    ``r11, ..., r33``, whose columns are the element axes.
 
     A rigid translation and equal rotations of the two nodes give no
     internal forces. Since the nodal coordinates are not used, a rigid
@@ -224,8 +225,9 @@ cdef class Spring:
             double vxyi, double vxyj, double vxyk):
         r"""Update the rotation matrix of the element
 
-        Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
-        corresponding to the rotation matrix from local to global coordinates.
+        Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated, with
+        the entries `T_{ij}` of the transformation matrix `[T]` from element to
+        global coordinates, whose columns are the element axes.
 
         The element coordinate system is determined, identifying the `ijk`
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
@@ -297,8 +299,8 @@ cdef class Spring:
 
         The translations and rotations of the two nodes, read from ``u`` at
         the positions ``c1`` to ``c1 + 5`` and ``c2`` to ``c2 + 5``, are
-        transformed to the element coordinate system with the transpose of the
-        rotation matrix, which must be updated before, see
+        transformed to the element coordinate system with the transpose `[T]^T`
+        of the transformation matrix, which must be updated before, see
         :meth:`.update_rotation_matrix`.
 
         Parameters
@@ -317,13 +319,13 @@ cdef class Spring:
         cdef double s2[3]
         cdef double s3[3]
 
-        # NOTE verified against [T] u in tests/test_spring.py
+        # NOTE verified against [T]^T u in tests/test_spring.py
         with nogil:
             # positions in the global stiffness matrix
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements (T)
+            # global to local transformation of displacements (T.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31

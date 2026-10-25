@@ -175,7 +175,8 @@ cdef class BeamLR:
         Element length, dimension length. Updated by
         :meth:`.update_length`.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Rotation matrix from local to global coordinates. Dimensionless.
+        Entries `T_{ij}` of the transformation matrix `[T]` from element to
+        global coordinates, whose columns are the element axes. Dimensionless.
     vxyi, vxyj, vxyk : double
         Components of a vector on the `XY` plane of the element coordinate
         system, defined using global coordinates. Only the direction of the
@@ -273,8 +274,9 @@ cdef class BeamLR:
                                       double vxyk, double [::1] x):
         r"""Update the rotation matrix of the element
 
-        Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
-        corresponding to the rotation matrix from local to global coordinates.
+        Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated, with
+        the entries `T_{ij}` of the transformation matrix `[T]` from element to
+        global coordinates, whose columns are the element axes.
 
         The element attributes ``vxyi``, ``vxyj`` and ``vxyk`` are also updated
         when this function is called.
@@ -363,8 +365,8 @@ cdef class BeamLR:
 
         The translations and rotations of the two nodes, read from ``u`` at
         the positions ``c1`` to ``c1 + 5`` and ``c2`` to ``c2 + 5``, are
-        transformed to the element coordinate system with the transpose of the
-        rotation matrix, which must be updated before, see
+        transformed to the element coordinate system with the transpose `[T]^T`
+        of the transformation matrix, which must be updated before, see
         :meth:`.update_rotation_matrix`.
 
         Parameters
@@ -388,7 +390,7 @@ cdef class BeamLR:
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements (T)
+            # global to local transformation of displacements (T.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -423,8 +425,8 @@ cdef class BeamLR:
 
         The coordinates of the two nodes, read from ``x`` at the positions
         ``c1//2`` and ``c2//2``, are transformed to the element coordinate
-        system with the transpose of the rotation matrix, which must be updated
-        before, see :meth:`.update_rotation_matrix`. Then
+        system with the transpose `[T]^T` of the transformation matrix, which
+        must be updated before, see :meth:`.update_rotation_matrix`. Then
         :meth:`.update_length` is called, updating ``length``.
 
         Parameters
@@ -447,7 +449,7 @@ cdef class BeamLR:
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of coordinates (r)
+            # global to local transformation of coordinates (T.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -1813,7 +1815,7 @@ cdef class BeamLR:
 
             # NOTE from element to global coordinates:
             #
-            # Kg = T.T @ Ke @ T
+            # Kg = T @ Ke @ T.T
             #
             # in tensor notation:
             #

@@ -936,7 +936,8 @@ cdef class Quad4:
         extensional stiffness matrix is used.
         Dimension of force per unit length, as ``A66``.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Rotation matrix from local to global coordinates.
+        Entries `T_{ij}` of the transformation matrix `[T]` from element to
+        global coordinates, whose columns are the element axes.
     m11, m12, m21, m22 : double
         Rotation matrix only for the constitutive relations. Used when a
         material direction is used instead of the element local coordinates.
@@ -1045,8 +1046,9 @@ cdef class Quad4:
             double xmati=0., double xmatj=0., double xmatk=0.):
         r"""Update the rotation matrix of the element
 
-        Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
-        corresponding to the rotation matrix from local to global coordinates.
+        Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated, with
+        the entries `T_{ij}` of the transformation matrix `[T]` from element to
+        global coordinates, whose columns are the element axes.
 
         The element coordinate system is determined, identifying the `ijk`
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
@@ -1195,9 +1197,9 @@ cdef class Quad4:
 
         The displacements and rotations of the four nodes, read from ``u`` at
         the positions ``c1``, ``c2``, ``c3`` and ``c4``, are rotated to the
-        element coordinate system with the transpose of the rotation matrix
-        and written to ``probe.ue``. :meth:`.update_rotation_matrix` must have
-        been called before.
+        element coordinate system with the transpose `[T]^T` of the
+        transformation matrix and written to ``probe.ue``.
+        :meth:`.update_rotation_matrix` must have been called before.
 
         .. note:: The ``ue`` attribute of object :class:`.Quad4Probe` is
                   updated, accessible using ``.probe.ue``.
@@ -1226,7 +1228,7 @@ cdef class Quad4:
             c[2] = self.c3
             c[3] = self.c4
 
-            # global to local transformation of displacements (T)
+            # global to local transformation of displacements (T.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -1258,10 +1260,10 @@ cdef class Quad4:
 
         The coordinates of the four nodes, read from ``x`` at the positions
         ``c1//2``, ``c2//2``, ``c3//2`` and ``c4//2``, are rotated to the
-        element coordinate system with the transpose of the rotation matrix
-        and written to ``probe.xe``. :meth:`.update_area` is then called,
-        updating ``area``. :meth:`.update_rotation_matrix` must have been
-        called before.
+        element coordinate system with the transpose `[T]^T` of the
+        transformation matrix and written to ``probe.xe``. :meth:`.update_area`
+        is then called, updating ``area``. :meth:`.update_rotation_matrix` must
+        have been called before.
 
         .. note:: The ``xe`` attribute of object :class:`.Quad4Probe` is
                   updated, accessible using ``.probe.xe``.
@@ -1288,7 +1290,7 @@ cdef class Quad4:
             c[2] = self.c3
             c[3] = self.c4
 
-            # global to local transformation of coordinates (r)
+            # global to local transformation of coordinates (T.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -2060,10 +2062,10 @@ cdef class Quad4:
         The element matrix in element coordinates, ``KC0ve``, is computed by
         :meth:`._update_probe_KC0ve`, whose Notes give its terms and
         quadratures. It is rotated to global coordinates with
-        `K_g = T^T K_e T`, where `T` is block diagonal, with the direction
-        cosine matrix `r`, the transpose of the rotation matrix ``r11, ...,
-        r33``, applied to the translations and to the rotations of each
-        node.
+        `[K_g] = [T] [K_e] [T]^T`, where `[T]` is block diagonal, with the
+        `3 \times 3` matrix of the entries `T_{ij}` stored in ``r11, ...,
+        r33``, whose columns are the element axes, applied to the
+        translations and to the rotations of each node.
 
         """
         cdef int i, j, node_i, node_j, k, ke, m, n
@@ -2134,7 +2136,7 @@ cdef class Quad4:
 
             # NOTE from element to global coordinates:
             #
-            # Kg = T.T @ Ke @ T
+            # Kg = T @ Ke @ T.T
             #
             # in tensor notation:
             #
@@ -2763,7 +2765,7 @@ cdef class Quad4:
 
             # NOTE from element to global coordinates:
             #
-            # Kg = T.T @ Ke @ T
+            # Kg = T @ Ke @ T.T
             #
             # in tensor notation:
             #
@@ -10226,20 +10228,20 @@ cdef class Quad4:
 
         Notes
         -----
-        With `w_n = r_{13} u + r_{23} v + r_{33} w` the displacement along
+        With `w_n = T_{13} u + T_{23} v + T_{33} w` the displacement along
         the element normal, written with the global translations, the
         computed matrix is
 
         .. math::
 
-            KA_{\beta} = -\int_A \{N\}^T \left( r_{11} \{N_{,x}\}
-                + r_{12} \{N_{,y}\} \right) dA
+            KA_{\beta} = -\int_A \{N\}^T \left( T_{11} \{N_{,x}\}
+                + T_{12} \{N_{,y}\} \right) dA
 
         acting on the nodal values of `w_n`, where `\{N\}` holds the bilinear
         shape functions and `\{N_{,x}\}`, `\{N_{,y}\}` their derivatives along
-        the element axes. The element coordinates are `x = r_{11} X + r_{21}
-        Y + r_{31} Z` and `y = r_{12} X + r_{22} Y + r_{32} Z`, such that
-        `r_{11} \{N_{,x}\} + r_{12} \{N_{,y}\}` is the derivative along the
+        the element axes. The element coordinates are `x = T_{11} X + T_{21}
+        Y + T_{31} Z` and `y = T_{12} X + T_{22} Y + T_{32} Z`, such that
+        `T_{11} \{N_{,x}\} + T_{12} \{N_{,y}\}` is the derivative along the
         global `X` axis, the direction of the flow, projected on the plane of
         the element.
 

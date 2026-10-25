@@ -62,12 +62,13 @@ assembly
 
 .. math::
 
-    [K] = \sum_e [L_e]^T [T_e]^T [K_e] [T_e] [L_e]
+    [K] = \sum_e [L_e]^T [T_e] [K_e] [T_e]^T [L_e]
 
 with `[K_e]` the element matrix in element coordinates, `[T_e]` the
-transformation matrix of the element, block diagonal with the direction
-cosine matrix `[r]` of the element, one block per node and per translations
-or rotations, see :doc:`conventions`, and `[L_e]` the Boolean matrix that
+transformation matrix of the element, block diagonal with the `3 \times 3`
+matrix `[T]` of the element, whose entries are ``r11, ..., r33``, one block
+per node and per translations or rotations, see :doc:`conventions`, and
+`[L_e]` the Boolean matrix that
 extracts the dofs of the element, given by ``c1, c2, ...``. The internal
 force vector is assembled in place, by ``update_fint``, into a dense vector
 of size ``N``.

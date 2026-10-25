@@ -493,11 +493,15 @@ select the other matrix.
   keeps the unsymmetric `[K_F]` and factorizes the tangent stiffness matrix
   with LU.
 - The transformation matrix of an element is written `[T]` instead of
-  `[R]`, which is the residual, as in the book: `[T]` is block diagonal
-  with the direction cosine matrix `[r]`, whose rows are the element axes,
-  `{u_e} = [T]{u}` and `[K] = [T]^T [K_e] [T]`; the rotation matrix
-  `r11, ..., r33` of the elements is `[r]^T`. The bubbles of the Allman
-  enrichment are written `\hat{S}_k` instead of `N_k`.
+  `[R]`, which is the residual, as in the book: its entries `T_{ij}` are
+  stored in the attributes `r11, ..., r33` of the elements, whose names
+  are unchanged, and its columns are the element axes in global
+  components, such that `{u} = [T]{u_e}`, `{u_e} = [T]^T{u}` and, with
+  `[T]` block diagonal per node and per translations or rotations,
+  `[K] = [T][K_e][T]^T`, in the conventions and overview pages, the Notes
+  and attributes of the elements, the code comments and the tests. The
+  bubbles of the Allman enrichment are written `\hat{S}_k` instead of
+  `N_k`.
 - User guide pages: overview and workflow, conventions, choice of the
   element, shell and beam properties, non-linear static analyses, linear
   buckling and natural frequencies, installation and changelog. The usage
@@ -532,7 +536,7 @@ select the other matrix.
   `natural_frequency()` solves the undamped problem; the damped one, e.g.
   with the damping matrix `CA` of the piston theory, is solved by the new
   `complex_frequency()`.
-- `Spring` verified in an arbitrary orientation against `[T]^T[K_e][T]`,
+- `Spring` verified in an arbitrary orientation against `[T][K_e][T]^T`,
   with symmetry, rigid-body translation and equal rotations without
   energy, and the internal forces, new tests in `tests/test_spring.py`;
   its Notes state that a rigid rotation of two nodes at different

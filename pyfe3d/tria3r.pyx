@@ -807,7 +807,8 @@ cdef class Tria3R:
         rather than for normal use.
         Dimension of force per unit length, as ``A66``.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Rotation matrix from local to global coordinates.
+        Entries `T_{ij}` of the transformation matrix `[T]` from element to
+        global coordinates, whose columns are the element axes.
     m11, m12, m21, m22 : double
         Rotation matrix only for the constitutive relations. Used when a
         material direction is used instead of the element local coordinates.
@@ -962,8 +963,9 @@ cdef class Tria3R:
             double xmati=0., double xmatj=0., double xmatk=0.):
         r"""Update the rotation matrix of the element
 
-        Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
-        corresponding to the rotation matrix from local to global coordinates.
+        Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated, with
+        the entries `T_{ij}` of the transformation matrix `[T]` from element to
+        global coordinates, whose columns are the element axes.
 
         The element coordinate system is determined, identifying the `ijk`
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
@@ -1108,9 +1110,9 @@ cdef class Tria3R:
 
         The displacements and rotations of the three nodes, read from ``u`` at
         the positions ``c1``, ``c2`` and ``c3``, are rotated to the element
-        coordinate system with the transpose of the rotation matrix and
-        written to ``probe.ue``. :meth:`.update_rotation_matrix` must have
-        been called before.
+        coordinate system with the transpose `[T]^T` of the transformation
+        matrix and written to ``probe.ue``. :meth:`.update_rotation_matrix`
+        must have been called before.
 
         .. note:: The ``ue`` attribute of object :class:`.Tria3RProbe` is
                   updated, accessible using ``.probe.ue``.
@@ -1138,7 +1140,7 @@ cdef class Tria3R:
             c[1] = self.c2
             c[2] = self.c3
 
-            # global to local transformation of displacements (T)
+            # global to local transformation of displacements (T.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -1170,10 +1172,10 @@ cdef class Tria3R:
 
         The coordinates of the three nodes, read from ``x`` at the positions
         ``c1//2``, ``c2//2`` and ``c3//2``, are rotated to the element
-        coordinate system with the transpose of the rotation matrix and
-        written to ``probe.xe``. :meth:`.update_area` is then called,
-        updating ``area``. :meth:`.update_rotation_matrix` must have been
-        called before.
+        coordinate system with the transpose `[T]^T` of the transformation
+        matrix and written to ``probe.xe``. :meth:`.update_area` is then
+        called, updating ``area``. :meth:`.update_rotation_matrix` must have
+        been called before.
 
         .. note:: The ``xe`` attribute of object :class:`.Tria3RProbe` is
                   updated, accessible using ``.probe.xe``.
@@ -1199,7 +1201,7 @@ cdef class Tria3R:
             c[1] = self.c2
             c[2] = self.c3
 
-            # global to local transformation of coordinates (r)
+            # global to local transformation of coordinates (T.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -1717,8 +1719,8 @@ cdef class Tria3R:
         ``area/3``. With ``drilling_model = 0`` this penalty is
         switched off, ``K6ROT`` being replaced by zero, and the physics-based
         drilling stiffness of :func:`.allman_delta_Ke` is added instead,
-        rotated to global coordinates with `K_{g,mn} = r_{mi} K_{e,ij}
-        r_{nj}`. It is added separately because the enrichment couples the
+        rotated to global coordinates with `K_{g,mn} = T_{mi} K_{e,ij}
+        T_{nj}`. It is added separately because the enrichment couples the
         drilling rotation to the curvatures whenever the extension-bending
         matrix `B` is not zero.
 
@@ -4303,7 +4305,7 @@ cdef class Tria3R:
 
             # NOTE from element to global coordinates:
             #
-            # Kg = T.T @ Ke @ T
+            # Kg = T @ Ke @ T.T
             #
             # in tensor notation:
             #
@@ -4957,8 +4959,8 @@ cdef class Tria3R:
 
         with `A_e` the element area and `[G]` the rows ``Gwx``, ``Gwy`` of
         :meth:`._update_probe_BL_G`, the element-frame `w` being obtained
-        from the global translations with the element normal `\{r_{13},
-        r_{23}, r_{33}\}`. The integrand is constant over the triangle, so the
+        from the global translations with the element normal `\{T_{13},
+        T_{23}, T_{33}\}`. The integrand is constant over the triangle, so the
         single evaluation is exact.
 
         """

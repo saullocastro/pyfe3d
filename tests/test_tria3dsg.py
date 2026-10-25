@@ -916,8 +916,9 @@ def triangulated_plate_buckling(cls, Data, Probe, n, h, second='diagonal',
 
     ``rotate_prestress`` selects how the uniaxial state `N_{xx}` along the
     global `x` axis is handed over. The correct way is a tensor rotation:
-    with `[r]` the direction cosine matrix of the element and
-    `\{a\} = [r] \{1, 0, 0\}` the loading direction in element
+    with `[T]` the transformation matrix of the element, whose columns are
+    the element axes, and `\{a\} = [T]^T \{1, 0, 0\}` the loading direction
+    in element
     coordinates, the state `N_{xx} \{a\} \{a\}^T` has components
 
     .. math::

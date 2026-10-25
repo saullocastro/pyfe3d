@@ -314,8 +314,9 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     #      diagonal instead of along the cylinder axis.
     #
     #      The uniform axial prestress of Eq. (13) is a tensor in the
-    #      surface. With [r] the direction cosine matrix of the element and
-    #      {a} = [r] {0, 0, 1} the cylinder axis in element coordinates,
+    #      surface. With [T] the transformation matrix of the element,
+    #      whose columns are the element axes, and {a} = [T].T {0, 0, 1}
+    #      the cylinder axis in element coordinates,
     #      the state N {a}{a}.T has components
     #
     #          Nxx_e = N*a_x**2,  Nyy_e = N*a_y**2,  Nxy_e = N*a_x*a_y
