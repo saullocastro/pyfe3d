@@ -807,8 +807,8 @@ cdef class Tria3R:
         rather than for normal use.
         Dimension of force per unit length, as ``A66``.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Entries `T_{ij}` of the transformation matrix `[T]` from element to
-        global coordinates, whose columns are the element axes.
+        Entries `T_{ij}` of the transformation matrix `[T_{3\times 3}]` from
+        element to global coordinates, whose columns are the element axes.
     m11, m12, m21, m22 : double
         Rotation matrix only for the constitutive relations. Used when a
         material direction is used instead of the element local coordinates.
@@ -964,8 +964,8 @@ cdef class Tria3R:
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated, with
-        the entries `T_{ij}` of the transformation matrix `[T]` from element to
-        global coordinates, whose columns are the element axes.
+        the entries `T_{ij}` of the transformation matrix `[T_{3\times 3}]`
+        from element to global coordinates, whose columns are the element axes.
 
         The element coordinate system is determined, identifying the `ijk`
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
@@ -1110,9 +1110,9 @@ cdef class Tria3R:
 
         The displacements and rotations of the three nodes, read from ``u`` at
         the positions ``c1``, ``c2`` and ``c3``, are rotated to the element
-        coordinate system with the transpose `[T]^T` of the transformation
-        matrix and written to ``probe.ue``. :meth:`.update_rotation_matrix`
-        must have been called before.
+        coordinate system with the transpose `[T_{3\times 3}]^T` of the
+        transformation matrix and written to ``probe.ue``.
+        :meth:`.update_rotation_matrix` must have been called before.
 
         .. note:: The ``ue`` attribute of object :class:`.Tria3RProbe` is
                   updated, accessible using ``.probe.ue``.
@@ -1172,10 +1172,10 @@ cdef class Tria3R:
 
         The coordinates of the three nodes, read from ``x`` at the positions
         ``c1//2``, ``c2//2`` and ``c3//2``, are rotated to the element
-        coordinate system with the transpose `[T]^T` of the transformation
-        matrix and written to ``probe.xe``. :meth:`.update_area` is then
-        called, updating ``area``. :meth:`.update_rotation_matrix` must have
-        been called before.
+        coordinate system with the transpose `[T_{3\times 3}]^T` of the
+        transformation matrix and written to ``probe.xe``. :meth:`.update_area`
+        is then called, updating ``area``. :meth:`.update_rotation_matrix` must
+        have been called before.
 
         .. note:: The ``xe`` attribute of object :class:`.Tria3RProbe` is
                   updated, accessible using ``.probe.xe``.

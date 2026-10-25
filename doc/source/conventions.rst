@@ -30,13 +30,13 @@ Coordinate systems
 
 The element matrices are computed in an element coordinate system `x`,
 `y`, `z` and rotated to the global one by the ``update_*`` methods, with the
-transformation matrix `[T]` of each element, whose entries `T_{ij}` are
-stored in the attributes ``r11, ..., r33`` (`T_{12}` in ``r12`` etc.). Its
-columns are the global components of the element axes:
+`3 \times 3` transformation matrix `[T_{3\times 3}]` of each element, whose
+entries `T_{ij}` are stored in the attributes ``r11, ..., r33`` (`T_{12}` in
+``r12`` etc.). Its columns are the global components of the element axes:
 
 .. math::
 
-    [T] = \begin{bmatrix}
+    [T_{3\times 3}] = \begin{bmatrix}
         T_{11} & T_{12} & T_{13} \\
         T_{21} & T_{22} & T_{23} \\
         T_{31} & T_{32} & T_{33}
@@ -47,15 +47,23 @@ columns are the global components of the element axes:
         x_Z & y_Z & z_Z
     \end{bmatrix}, \qquad
     \begin{Bmatrix} u \\ v \\ w \end{Bmatrix}_{global}
-    = [T] \begin{Bmatrix} u \\ v \\ w \end{Bmatrix}_{element}
+    = [T_{3\times 3}] \begin{Bmatrix} u \\ v \\ w \end{Bmatrix}_{element}
 
 such that the translations and the rotations of every node are brought to
-the global system with `[T]`, and to the element system with `[T]^T`.
-With one block `[T]` for the translations and one for the rotations of each
-node, the transformation matrix of the element, also written `[T]`, is block
-diagonal, the element dofs are `\{u_e\} = [T]^T\{u\}`, and an element matrix
-in global coordinates is `[T][K_e][T]^T`. The element axes are defined by
-``update_rotation_matrix``:
+the global system with `[T_{3\times 3}]`, and to the element system with
+`[T_{3\times 3}]^T`. The transformation matrix `[T]` of the element is block
+diagonal, with one block `[T_{3\times 3}]` for the translations and one for
+the rotations of each node, e.g. `12 \times 12` for the two-node elements,
+such that
+
+.. math::
+
+    \{u\} = [T]\{u_e\}, \qquad \{u_e\} = [T]^T\{u\}, \qquad
+    [K] = [T][K_e][T]^T, \qquad \{F\} = [T]\{F_e\}
+
+with `\{u\}`, `[K]` and `\{F\}` the element dofs, matrices and forces in
+global coordinates, and `\{u_e\}`, `[K_e]` and `\{F_e\}` in element
+coordinates. The element axes are defined by ``update_rotation_matrix``:
 
 .. list-table::
     :header-rows: 1

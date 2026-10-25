@@ -641,8 +641,8 @@ cdef class Quad4R:
         A non-negative value is ignored when ``A66`` is zero. Dimension of
         force per unit length, as ``A66``.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Entries `T_{ij}` of the transformation matrix `[T]` from element to
-        global coordinates, whose columns are the element axes.
+        Entries `T_{ij}` of the transformation matrix `[T_{3\times 3}]` from
+        element to global coordinates, whose columns are the element axes.
     m11, m12, m21, m22 : double
         Rotation matrix only for the constitutive relations. Used when a
         material direction is used instead of the element local coordinates.
@@ -751,8 +751,8 @@ cdef class Quad4R:
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated, with
-        the entries `T_{ij}` of the transformation matrix `[T]` from element to
-        global coordinates, whose columns are the element axes.
+        the entries `T_{ij}` of the transformation matrix `[T_{3\times 3}]`
+        from element to global coordinates, whose columns are the element axes.
 
         The element coordinate system is determined, identifying the `ijk`
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
@@ -900,7 +900,7 @@ cdef class Quad4R:
 
         The displacements and rotations of the four nodes, read from ``u`` at
         the positions ``c1``, ``c2``, ``c3`` and ``c4``, are rotated to the
-        element coordinate system with the transpose `[T]^T` of the
+        element coordinate system with the transpose `[T_{3\times 3}]^T` of the
         transformation matrix and written to ``probe.ue``.
         :meth:`.update_rotation_matrix` must have been called before.
 
@@ -963,7 +963,7 @@ cdef class Quad4R:
 
         The coordinates of the four nodes, read from ``x`` at the positions
         ``c1//2``, ``c2//2``, ``c3//2`` and ``c4//2``, are rotated to the
-        element coordinate system with the transpose `[T]^T` of the
+        element coordinate system with the transpose `[T_{3\times 3}]^T` of the
         transformation matrix and written to ``probe.xe``. :meth:`.update_area`
         is then called, updating ``area``. :meth:`.update_rotation_matrix` must
         have been called before.
@@ -1822,11 +1822,11 @@ cdef class Quad4R:
         negative and `A_{66}` is not zero, and `A_{66}` otherwise; for the
         other values, `\gamma_{r_z} = K6ROT \cdot 10^{-6} A_{66}`.
 
-        The element matrix is rotated to global coordinates with
-        `[K_g] = [T] [K_e] [T]^T`, where `[T]` is block diagonal, with the
-        `3 \times 3` matrix of the entries `T_{ij}` stored in ``r11, ...,
-        r33``, whose columns are the element axes, applied to the
-        translations and to the rotations of each node.
+        The element matrix is rotated to global coordinates with `[K_g] = [T]
+        [K_e] [T]^T`, where `[T]` is block diagonal, with the matrix
+        `[T_{3\times 3}]` of the entries `T_{ij}` stored in ``r11, ..., r33``,
+        whose columns are the element axes, applied to the translations and to
+        the rotations of each node.
 
         References
         ----------

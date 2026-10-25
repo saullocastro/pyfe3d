@@ -499,12 +499,13 @@ select the other matrix.
   keeps the unsymmetric `[K_F]` and factorizes the tangent stiffness matrix
   with LU.
 - The transformation matrix of an element is written `[T]` instead of
-  `[R]`, which is the residual, as in the book: its entries `T_{ij}` are
-  stored in the attributes `r11, ..., r33` of the elements, whose names
-  are unchanged, and its columns are the element axes in global
-  components, such that `{u} = [T]{u_e}`, `{u_e} = [T]^T{u}` and, with
-  `[T]` block diagonal per node and per translations or rotations,
-  `[K] = [T][K_e][T]^T`, in the conventions and overview pages, the Notes
+  `[R]`, which is the residual, as in the book: `[T]` is block diagonal
+  with one `3x3` block `[T_{3x3}]` per node and per translations or
+  rotations, whose entries `T_{ij}` are stored in the attributes
+  `r11, ..., r33` of the elements, with the same indices and unchanged
+  names, and whose columns are the element axes in global components,
+  such that `{u} = [T]{u_e}`, `{u_e} = [T]^T{u}`, `[K] = [T][K_e][T]^T`
+  and `{F} = [T]{F_e}`, in the conventions and overview pages, the Notes
   and attributes of the elements, the code comments and the tests. The
   bubbles of the Allman enrichment are written `\hat{S}_k` instead of
   `N_k`.

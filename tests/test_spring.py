@@ -119,13 +119,13 @@ def test_spring():
 def test_spring_arbitrary_orientation():
     r"""Spring in an arbitrary orientation against the analytical matrix
 
-    The global matrix must be `[T] [K_e] [T]^T`, with `[K_e]` of the Notes
-    of :class:`.Spring` and `[T]` block diagonal with four copies of the
-    `3 \times 3` matrix of the entries `T_{ij}` stored in ``r11, ...,
-    r33``, whose columns are the element axes (``R`` and ``Rb`` below); the
-    displacements of the probe must be `[T]^T u`, the internal forces
-    `[K] u`, and the matrix symmetric, without energy for a rigid
-    translation and for equal rotations of the two nodes.
+    The global matrix must be `[T] [K_e] [T]^T`, with `[K_e]` of the Notes of
+    :class:`.Spring` and `[T]` block diagonal with four copies of the matrix
+    `[T_{3\times 3}]` of the entries `T_{ij}` stored in ``r11, ..., r33``,
+    whose columns are the element axes (``R`` and ``Rb`` below); the
+    displacements of the probe must be `[T]^T u`, the internal forces `[K] u`,
+    and the matrix symmetric, without energy for a rigid translation and for
+    equal rotations of the two nodes.
 
     """
     springdata = SpringData()

@@ -474,8 +474,8 @@ cdef class Tria3DSG:
         In-plane rotation from the material to the element coordinate
         system, set by :meth:`.update_rotation_matrix`.
     r11, r12, ..., r33 : double
-        Entries `T_{ij}` of the transformation matrix `[T]` from element to
-        global coordinates, whose columns are the element axes.
+        Entries `T_{ij}` of the transformation matrix `[T_{3\times 3}]` from
+        element to global coordinates, whose columns are the element axes.
     probe, : :class:`.Tria3DSGProbe`
         Shared probe object.
 
@@ -771,10 +771,10 @@ cdef class Tria3DSG:
 
         The coordinates of the three nodes, read from ``x`` at the positions
         ``c1//2``, ``c2//2`` and ``c3//2``, are rotated to the element
-        coordinate system with the transpose `[T]^T` of the transformation
-        matrix and written to ``probe.xe``. :meth:`.update_rotation_matrix`
-        must have been called before. The ``area`` attribute is not updated
-        here, see :meth:`.update_area`.
+        coordinate system with the transpose `[T_{3\times 3}]^T` of the
+        transformation matrix and written to ``probe.xe``.
+        :meth:`.update_rotation_matrix` must have been called before. The
+        ``area`` attribute is not updated here, see :meth:`.update_area`.
 
         Parameters
         ----------
@@ -820,9 +820,9 @@ cdef class Tria3DSG:
 
         The displacements and rotations of the three nodes, read from ``u`` at
         the positions ``c1``, ``c2`` and ``c3``, are rotated to the element
-        coordinate system with the transpose `[T]^T` of the transformation
-        matrix and written to ``probe.ue``. :meth:`.update_rotation_matrix`
-        must have been called before.
+        coordinate system with the transpose `[T_{3\times 3}]^T` of the
+        transformation matrix and written to ``probe.ue``.
+        :meth:`.update_rotation_matrix` must have been called before.
 
         Parameters
         ----------
@@ -1386,12 +1386,12 @@ cdef class Tria3DSG:
         Notes
         -----
         The formulation of the element matrix is given in
-        :meth:`._update_probe_KC0ve`. With `[T]` the transformation matrix
-        of the element, block diagonal with the `3 \times 3` matrix of the
+        :meth:`._update_probe_KC0ve`. With `[T]` the transformation matrix of
+        the element, block diagonal with the matrix `[T_{3\times 3}]` of the
         entries `T_{ij}` stored in ``r11, ..., r33``, whose columns are the
-        element axes, for the translations and for the rotations of each
-        node, the global values are `[K_g] = [T] [K_e] [T]^T`, i.e.
-        `K_{g,mn} = T_{mi} K_{e,ij} T_{nj}`.
+        element axes, for the translations and for the rotations of each node,
+        the global values are `[K_g] = [T] [K_e] [T]^T`, i.e. `K_{g,mn} =
+        T_{mi} K_{e,ij} T_{nj}`.
 
         """
         cdef int i, j, m, n, k, ke, node_i, node_j
@@ -1953,11 +1953,10 @@ cdef class Tria3DSG:
         Notes
         -----
         The operator is the Donnell one. With `N_{i,x}` and `N_{i,y}` the
-        constant derivatives of the shape functions, `A_e` the element area
-        and `\{T_{13}, T_{23}, T_{33}\}` the element normal in global
-        coordinates, the third column of the transformation matrix `[T]`,
-        the entry of the global translation `m` of node `i` and `n` of node
-        `j` is
+        constant derivatives of the shape functions, `A_e` the element area and
+        `\{T_{13}, T_{23}, T_{33}\}` the element normal in global coordinates,
+        the third column of `[T_{3\times 3}]`, the entry of the global
+        translation `m` of node `i` and `n` of node `j` is
 
         .. math::
 
@@ -1969,9 +1968,10 @@ cdef class Tria3DSG:
         the integrand being constant over the triangle.
 
         A uniaxial state `N` along a global direction `\{d\}` has to be
-        rotated. With `[T]` the transformation matrix of this object, whose
-        columns are the element axes, `\{a\} = [T]^T \{d\}` is that direction
-        in element coordinates and the state `N \{a\} \{a\}^T` has components
+        rotated. With `[T_{3\times 3}]` the transformation matrix of this
+        object, whose columns are the element axes, `\{a\} = [T_{3\times 3}]^T
+        \{d\}` is that direction in element coordinates and the state `N \{a\}
+        \{a\}^T` has components
 
         .. math::
             N^e_{xx} = N a_x^2, \quad

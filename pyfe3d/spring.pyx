@@ -136,10 +136,10 @@ cdef class Spring:
         Rotational stiffnesses in the element coordinate system, moment per
         unit rotation.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Entries `T_{ij}` of the transformation matrix `[T]` from element to
-        global coordinates, whose columns are the element axes. By default it
-        assumes that the element is aligned with the global coordinate system.
-        Dimensionless.
+        Entries `T_{ij}` of the transformation matrix `[T_{3\times 3}]` from
+        element to global coordinates, whose columns are the element axes. By
+        default it assumes that the element is aligned with the global
+        coordinate system. Dimensionless.
     vxyi, vxyj, vxyk : double
         Components of a vector on the `XY` plane of the element coordinate
         system, defined using global coordinates. Only the direction of the
@@ -176,8 +176,8 @@ cdef class Spring:
         \qquad [k] = \mathrm{diag}(k_1, ..., k_6)
 
     transformed to global coordinates with the transformation matrix of the
-    element, `[K] = [T] [K_e] [T]^T`, where `[T]` is block diagonal with
-    four copies of the `3 \times 3` matrix of the entries `T_{ij}` stored in
+    element, `[K] = [T] [K_e] [T]^T`, where `[T]` is block diagonal with four
+    copies of the matrix `[T_{3\times 3}]` of the entries `T_{ij}` stored in
     ``r11, ..., r33``, whose columns are the element axes.
 
     A rigid translation and equal rotations of the two nodes give no
@@ -226,8 +226,8 @@ cdef class Spring:
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated, with
-        the entries `T_{ij}` of the transformation matrix `[T]` from element to
-        global coordinates, whose columns are the element axes.
+        the entries `T_{ij}` of the transformation matrix `[T_{3\times 3}]`
+        from element to global coordinates, whose columns are the element axes.
 
         The element coordinate system is determined, identifying the `ijk`
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
@@ -297,11 +297,11 @@ cdef class Spring:
         .. note:: The ``ue`` attribute of object :class:`.SpringProbe` is
                   updated, accessible using ``.probe.ue``.
 
-        The translations and rotations of the two nodes, read from ``u`` at
-        the positions ``c1`` to ``c1 + 5`` and ``c2`` to ``c2 + 5``, are
-        transformed to the element coordinate system with the transpose `[T]^T`
-        of the transformation matrix, which must be updated before, see
-        :meth:`.update_rotation_matrix`.
+        The translations and rotations of the two nodes, read from ``u`` at the
+        positions ``c1`` to ``c1 + 5`` and ``c2`` to ``c2 + 5``, are
+        transformed to the element coordinate system with the transpose
+        `[T_{3\times 3}]^T` of the transformation matrix, which must be updated
+        before, see :meth:`.update_rotation_matrix`.
 
         Parameters
         ----------
