@@ -17,9 +17,9 @@ Until they are set they follow ``G``: ``G12 = G13 = G`` and ``GJ = G*J``.
    tolerance of round-off.
 2. One element of BeamC gives the exact tip deflection of a cantilever with
    shear deformation, ``P*L**3/(3*E*I) + P*L/(G*A)``, Eq. (1.2) of Bathe,
-   K. J., Finite Element Procedures, 1996, Section 1.2, p. 5, in each
-   plane with its own modulus: ``Izz`` and ``G12`` for the deflection `v`,
-   ``Iyy`` and ``G13`` for `w`. BeamLR converges to the same values.
+   K. J., Finite Element Procedures, 2nd ed., 2014, Section 1.2, p. 5, in
+   each plane with its own modulus: ``Izz`` and ``G12`` for the deflection
+   `v`, ``Iyy`` and ``G13`` for `w`. BeamLR converges to the same values.
 3. The frequency coefficients of the cantilever of Example 3.10 and Table
    3.6 of Petyt, M., Introduction to Finite Element Vibration Analysis, 2nd
    ed., Cambridge University Press, 2010,
@@ -258,7 +258,7 @@ def cantilever_tip(name, prop, L, num_elements, dof):
 def test_cantilever_two_shear_moduli(name, num_elements, rtol, G12, G13):
     L = 1.
     prop = section_prop(G12, G13)
-    # NOTE Eq. (1.2) of Bathe (1996) in each plane, with its own modulus
+    # NOTE Eq. (1.2) of Bathe (2014) in each plane, with its own modulus
     v_ref = L**3/(3*prop.E*prop.Izz) + L/(G12*prop.A)
     w_ref = L**3/(3*prop.E*prop.Iyy) + L/(G13*prop.A)
     v = cantilever_tip(name, prop, L, num_elements, 1)

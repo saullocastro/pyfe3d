@@ -275,7 +275,7 @@ New:
   terms differently, see "Derivation scripts". New test
   `tests/test_beam_shear_moduli.py`, with the reference arrays of the
   previous version in `tests/data/beam_single_G_reference.npz`, the
-  cantilever deflection of Bathe (1996), Eq. (1.2), and the frequencies of
+  cantilever deflection of Bathe (2014), Eq. (1.2), and the frequencies of
   Petyt (2010), Example 3.10 and Table 3.6, in each plane with its own
   modulus, and the twist `T L/GJ` independent of `G12` and `G13`.
 
@@ -290,7 +290,7 @@ New:
   of the exact Timoshenko value 522.716. New tests
   `tests/test_beamc_timoshenko_shape_functions.py` and
   `tests/test_timoshenko_beam_literature.py`, with benchmarks of Bathe
-  (1996) and Petyt (2010).
+  (2014) and Petyt (2010).
 - `Quad4` and `Quad4R`, `update_KA_beta`: the slope along the flow is
   `N,x*r11 + N,y*r12`, instead of `N,x*r11 + N,y*r21`, which was wrong for
   elements whose `x` axis is not along `X`. New
@@ -463,9 +463,12 @@ select the other matrix.
   Peano and Riccioni and uses it in his arc-length procedure, and Crisfield
   (1991, Sec. 9.5.4, Eq. 9.48) presents it as an alternative to the
   Euclidean norm of the residual, not as a recommendation.
-- The tip deflection of a cantilever with shear deformation, Eq. (1.2) of
-  Bathe, is cited in the edition in which it was checked, Bathe (1996),
-  Sec. 1.2, p. 5, Fig. 1.2(b), instead of the 2nd edition of 2014.
+- Bathe, *Finite Element Procedures*, is cited in its 2nd edition (2014,
+  K. J. Bathe, Watertown, MA, ISBN 978-0-9790049-5-7), with the locations
+  checked in it: the tip deflection of a cantilever with shear
+  deformation, Sec. 1.2, p. 5, Eq. (1.2), Fig. 1.2(b), and the Sturm
+  sequence check of `check_eigenpairs`, Sec. 10.2.2, p. 849, Sec. 11.4.3,
+  p. 943, and Sec. 11.6, p. 954.
 - Sources stated as they are, as in the book that documents the elements:
   the transverse shear stabilisation of `Tria3R` and `Tria3DSG` is the
   factor that Lyly, Stenberg and Vihinen proposed for the MITC4, called

@@ -325,8 +325,9 @@ cdef class BeamC:
     .. [2] Petyt, M., 2010, Introduction to Finite Element Vibration
        Analysis, 2nd ed., Cambridge University Press, Section 3.9.
        https://doi.org/10.1017/CBO9780511761195
-    .. [3] Bathe, K. J., 1996, Finite Element Procedures, Prentice Hall,
-       Englewood Cliffs, NJ, Section 1.2, p. 5.
+    .. [3] Bathe, K. J., 2014, Finite Element Procedures, 2nd ed., K. J.
+       Bathe, Watertown, MA, ISBN 978-0-9790049-5-7, Section 1.2, p. 5,
+       Eq. (1.2), Fig. 1.2(b).
 
     """
     cdef public int eid, pid

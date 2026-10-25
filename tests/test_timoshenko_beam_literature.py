@@ -1,7 +1,8 @@
 r"""Timoshenko beam benchmarks from the literature, for BeamC and BeamLR
 
-1. Bathe, K. J., Finite Element Procedures, Prentice Hall, Englewood Cliffs,
-   NJ, 1996 (ISBN 0-13-301458-4), Section 1.2, p. 5, Eq. (1.2) and Fig. 1.2:
+1. Bathe, K. J., Finite Element Procedures, 2nd ed., K. J. Bathe, Watertown,
+   MA, 2014 (ISBN 978-0-9790049-5-7), Section 1.2, p. 5, Eq. (1.2) and
+   Fig. 1.2(b):
    tip deflection of a cantilever with shear deformation,
    ``delta = W*L**3/(3*E*I) + W*L/(5/6*A*G) = 0.053 cm`` for ``L = 28 cm``,
    ``h = 6 cm``, ``t = 0.4 cm``, ``E = 2e7 N/cm2``, ``nu = 0.3``,
@@ -104,7 +105,7 @@ def bathe_prop():
     prop = BeamProp()
     prop.A = h*t
     prop.E = E
-    # NOTE shear correction factor 5/6 of Eq. (1.2) of Bathe (1996)
+    # NOTE shear correction factor 5/6 of Eq. (1.2) of Bathe (2014)
     prop.G = 5/6*E/(2*(1 + nu))
     prop.Izz = prop.Iyy = t*h**3/12
     prop.J = prop.Izz + prop.Iyy
@@ -118,11 +119,11 @@ def bathe_prop():
     ('BeamLR', 100, 1e-4),
     ])
 def test_bathe_cantilever_shear_deflection(name, num_elements, rtol):
-    L = 28. # cm, L + r_N in Fig. 1.2(b) of Bathe (1996)
+    L = 28. # cm, L + r_N in Fig. 1.2(b) of Bathe (2014)
     W = 1000. # N
     prop = bathe_prop()
     delta = W*cantilever_tip(name, prop, L, num_elements)
-    # Eq. (1.2) of Bathe (1996)
+    # Eq. (1.2) of Bathe (2014)
     delta_ref = W*L**3/(3*prop.E*prop.Izz) + W*L/(prop.A*prop.G)
     print(name, num_elements, delta, delta_ref)
     assert np.allclose(delta, delta_ref, rtol=rtol)

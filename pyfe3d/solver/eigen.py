@@ -723,10 +723,11 @@ def check_eigenpairs(K, KG, eigvals, eigvecs, rtol=1.e-3, min_rel_gap=1.e-4,
     eigenvalues of `[K_{C0}] + s [K_G]`, equal to its number of negative
     pivots by Sylvester's law of inertia, is the number of load multipliers
     in `(0, s)`. This is the Sturm sequence check of the eigenvalue solvers
-    of structural analysis ([1]_, Section 10.2.2, p. 849, and Section 11.6,
-    p. 954), where the number of negative elements of `[D]` in the
-    factorization `[L][D][L]^T` of `[K] - \mu [M]` is the number of
-    eigenvalues of the pencil `([K], [M])` smaller than `\mu`. When only one
+    of structural analysis ([1]_, Section 10.2.2, p. 849, Section 11.4.3,
+    p. 943, and Section 11.6, p. 954), where the number of negative
+    elements of `[D]` in the factorization `[L][D][L]^T` of `[K] - \mu
+    [M]` is the number of eigenvalues of the pencil `([K], [M])` smaller
+    than `\mu`. When only one
     positive load multiplier was returned, none is expected in `(0, s)` and
     the weaker check is done. The gap ``min_rel_gap`` keeps `s` away from
     `\lambda_n`, where `[K_{C0}] + s [K_G]` is singular.
@@ -734,7 +735,7 @@ def check_eigenpairs(K, KG, eigvals, eigvecs, rtol=1.e-3, min_rel_gap=1.e-4,
     References
     ----------
     .. [1] Bathe, K. J., Finite Element Procedures, 2nd ed., K. J. Bathe,
-       Watertown, MA, 2014.
+       Watertown, MA, 2014, ISBN 978-0-9790049-5-7.
 
     """
     eigvals = np.asarray(eigvals)
