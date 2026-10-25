@@ -150,8 +150,8 @@ arguments, passed only to the callables that declare them, see
 - ``calc_fint(c, inc=...)`` receives the load factor and includes the
   configuration-dependent part of the load, `-\lambda \{F(c)\}`, and
   ``calc_kC(c, NLgeom=True, inc=...)`` its derivative, the load stiffness
-  matrix `-\lambda \, \partial F/\partial c`, which is unsymmetric in
-  general; the solvers use LU factorizations;
+  matrix `\lambda [K_F] = -\lambda \, \partial F/\partial c`, which is
+  unsymmetric in general, see below; the solvers use LU factorizations;
 - ``calc_fext(inc=1., c=...)`` returns the load vector of the
   configuration ``c`` for a unit load factor, `\partial R/\partial
   \lambda`, used by the arc-length methods.
@@ -162,6 +162,29 @@ The aerodynamic load of the piston theory, `\lambda \beta
 in :doc:`ex_nonlinear_static`. The keyword argument ``lbd`` of
 ``calc_fext`` gives a load vector that depends on the load factor, which is
 how :class:`.FreeDofs` imposes the prescribed displacements.
+
+`[K_F]` is symmetric, and the load conservative, only in particular cases.
+For a pressure normal to the deformed surface, Hibbitt (1979, p. 938)
+splits the load stiffness of a uniform pressure into a symmetric surface
+integral and an antisymmetric integral along the boundary of the loaded
+surface, which vanishes where the displacements are prescribed: a uniform
+pressure on a fully enclosed volume, or on a surface whose boundaries have
+prescribed displacements, gives a symmetric `[K_F]`, whereas free edges,
+where the pressure changes, and a non-uniform pressure give unsymmetric
+terms (p. 939). In Table 2 of Schweizerhof and Ramm (1984), the domain
+terms are symmetric for a uniform pressure, and for a non-uniform one only
+when the pressure field is fixed in space, and the boundary terms vanish
+under one of the conditions of their Sec. 3.2.1, Eqs. (32)-(35): the
+pressure is zero on the whole boundary; at least two displacement
+components are prescribed at the edge; the edge is restrained normal to a
+continuous surface, e.g. the undeformed surface, `w = 0` for a plate on
+the `XY` plane; or the boundary terms add up to zero. pyfe3d does not
+symmetrise `[K_F]`: the tangent stiffness matrix, with the matrix returned
+by ``calc_kC``, is factorized with :func:`scipy.sparse.linalg.splu`, as in
+:func:`.solve`, such that a consistent unsymmetric `[K_F]` keeps the
+quadratic convergence of the Newton-Raphson method, as verified by
+``test_newton_raphson_quadratic_with_follower_load`` of
+``tests/test_solver_follower_loads.py``.
 
 
 Log messages
@@ -183,3 +206,9 @@ References
   https://doi.org/10.1016/0045-7949(81)90108-5
 - Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
   Structures, Volume 1: Essentials, John Wiley & Sons, Chichester, 1991.
+- Hibbitt, H. D., Some follower forces and load stiffness, International
+  Journal for Numerical Methods in Engineering, 14(6), 937-941, 1979.
+  https://doi.org/10.1002/nme.1620140613
+- Schweizerhof, K. and Ramm, E., Displacement dependent pressure loads in
+  nonlinear finite element analyses, Computers & Structures, 18(6),
+  1099-1114, 1984. https://doi.org/10.1016/0045-7949(84)90154-8

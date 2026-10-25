@@ -466,6 +466,11 @@ select the other matrix.
   to Crisfield (1991).
 - The load stiffness matrix of a follower load is written `[K_F]` instead
   of `[K_L]`, as in the book.
+- The page on the non-linear static analyses gives the cases in which
+  `[K_F]` is symmetric, as Hibbitt (1979, pp. 938-939) and Schweizerhof and
+  Ramm (1984, Table 2, Sec. 3.2.1, Eqs. 32-35) state them, and that pyfe3d
+  keeps the unsymmetric `[K_F]` and factorizes the tangent stiffness matrix
+  with LU.
 - User guide pages: overview and workflow, conventions, choice of the
   element, shell and beam properties, non-linear static analyses, linear
   buckling and natural frequencies, installation and changelog. The usage
