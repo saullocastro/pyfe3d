@@ -542,7 +542,7 @@ cdef class Lamina:
 
         """
         cdef double thetarad, e1, e2, nu12, nu21, g12, g13, g23
-        cdef double q11, q12, q22, q44, q55, q16, q26, q66
+        cdef double q11, q12, q22, q44, q55, q66
         cdef double cos2, cos3, cos4, sin2, sin3, sin4, sincos
         thetarad = deg2rad(self.thetadeg)
         self.cost = cos(thetarad)
@@ -579,8 +579,6 @@ cdef class Lamina:
         q22  = e2/(1-nu12*nu21)
         q44  = g23
         q55  = g13
-        q16 = 0
-        q26 = 0
         q66  = g12
 
         self.q11L = q11*cos4 + 2*(q12 + 2*q66)*sin2*cos2 + q22*sin4
@@ -736,7 +734,7 @@ cdef int PLYDATA_SIZE = 10
 
 cdef inline void _congruence3(double *T, double *M, double *out) noexcept nogil:
     r"""Symmetric 3x3 congruence `out = T M T^T`, all stored row by row"""
-    cdef int i, j, k
+    cdef int i, j
     cdef double TM[9]
     for i in range(3):
         for j in range(3):
@@ -1195,16 +1193,15 @@ def _thickness_shear_frequency(Gs, rhos, hs, double omega_ref):
             u = un
         return tau
 
-    cdef double wa, wb, fa, fb, wm, fm
+    cdef double wa, wb, fb, wm, fm
     wa = 1e-4*omega_ref
-    fa = tau_top(wa)
     wb = wa
-    fb = fa
+    fb = tau_top(wa)
     while fb < 0:
         if wb > 1e2*omega_ref:
             raise RuntimeError('No thickness-shear frequency found below '
                                '100 times the reference frequency')
-        wa, fa = wb, fb
+        wa = wb
         wb = 1.01*wa
         fb = tau_top(wb)
     for _ in range(200):
@@ -1213,9 +1210,9 @@ def _thickness_shear_frequency(Gs, rhos, hs, double omega_ref):
             break
         fm = tau_top(wm)
         if fm < 0:
-            wa, fa = wm, fm
+            wa = wm
         else:
-            wb, fb = wm, fm
+            wb = wm
     return (wa + wb)/2.
 
 
@@ -2559,7 +2556,7 @@ cdef class ShellProp:
            cylinders, Journal of Engineering Mechanics, 115, pp. 1225-1244.
 
         """
-        z, tyz, txz = self.calc_equilibrium_transverse_shear(grad_x, grad_y)
+        _, tyz, txz = self.calc_equilibrium_transverse_shear(grad_x, grad_y)
         zi = self._ply_interfaces()
         N = len(self.plies)
         w = np.array([5./9., 8./9., 5./9.])
@@ -3440,7 +3437,6 @@ cdef class GradABD:
         cdef double h
         cdef double [:, ::1] gradinv
 
-        gradinv = np.zeros((6, 4), dtype=DOUBLE)
         h = thickness
 
         gradinv = np.array([[mat.u2, 0, mat.u3, 0],

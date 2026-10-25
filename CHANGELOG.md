@@ -419,6 +419,16 @@ select the other matrix.
   and printed a null global vector (wrong symbol names); fixed, and the
   internal forces of `BeamLR` are now its output.
 
+### Clean-up
+
+- Unused local variables, found with the Cython directives `warn.unused`
+  and `warn.unused_result`, are removed from the elements and `shellprop`:
+  declarations never used, e.g. the tying-point arrays of an assumed
+  transverse shear of `Quad4` with their comment, which `Quad4` does not
+  implement, copies of rotation-matrix terms and properties never read, and
+  dead assignments. The matrices, internal forces and probe arrays of every
+  element are bit-identical before and after.
+
 ### Documentation
 
 - Functional docstrings of the public API, and Notes and References with
