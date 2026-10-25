@@ -2996,7 +2996,8 @@ cdef class BeamC:
             Beam property object from where the inertial attributes are read.
         mtype : int, optional
             0 for consistent mass matrix, 1 for lumped mass matrix. Default
-            ``0``.
+            ``0``. The element has no reduced-integration mass matrix,
+            ``2``.
 
         Raises
         ------
@@ -3068,7 +3069,9 @@ cdef class BeamC:
         # NOTE checked once per call, before the code without the GIL
         if mtype != 0 and mtype != 1:
             raise ValueError('mtype=%d is not supported by BeamC.update_M, '
-                             'use 0 (consistent) or 1 (lumped)' % mtype)
+                             'use 0 (consistent) or 1 (lumped); BeamC has '
+                             'no reduced-integration mass matrix (2)'
+                             % mtype)
 
         with nogil:
             L = self.length

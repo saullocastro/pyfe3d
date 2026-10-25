@@ -356,7 +356,7 @@ def test_clockwise_node_ordering():
         fint = np.zeros(n)
         el.update_fint(fint, prop, nonlinear=1)
         out['fint'] = fint
-        for mtype in (0, 2):
+        for mtype in (0, 1):
             r = np.zeros(data.M_SPARSE_SIZE, dtype=INT)
             c = np.zeros(data.M_SPARSE_SIZE, dtype=INT)
             v = np.zeros(data.M_SPARSE_SIZE, dtype=DOUBLE)
@@ -381,13 +381,13 @@ def test_clockwise_node_ordering():
             assert err < 1e-12, (key, order, err)
 
     mass = prop.intrho*area
-    M2 = ccw['M2']
+    M1 = ccw['M1']
     # NOTE diagonal up to the round-off of the rotation to global coordinates
-    assert np.abs(M2 - np.diag(np.diag(M2))).max() < 1e-14*np.abs(M2).max()
+    assert np.abs(M1 - np.diag(np.diag(M1))).max() < 1e-14*np.abs(M1).max()
     for dof in range(3):
-        assert np.allclose(np.diag(M2)[dof::DOF], mass/3, rtol=1e-14)
+        assert np.allclose(np.diag(M1)[dof::DOF], mass/3, rtol=1e-14)
     for dof in range(3, 5):
-        assert np.allclose(np.diag(M2)[dof::DOF], prop.intrhoz2*area/3,
+        assert np.allclose(np.diag(M1)[dof::DOF], prop.intrhoz2*area/3,
                            rtol=1e-14)
     # NOTE same total mass for the consistent matrix
     for dof in range(3):

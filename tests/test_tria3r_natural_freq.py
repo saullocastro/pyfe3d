@@ -164,5 +164,5 @@ def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
 
 
 if __name__ == '__main__':
-    test_tria3r_nat_freq(plot=True, mode=0, mtypes=[2], refinement=5)
+    test_tria3r_nat_freq(plot=True, mode=0, mtypes=[1], refinement=5)
 

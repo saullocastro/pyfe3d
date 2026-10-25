@@ -13,7 +13,7 @@ from pyfe3d.solver import natural_frequency
 def test_tria3r_nat_freq_distorted(plot=False, mode=0):
     data = Tria3RData()
     probe = Tria3RProbe()
-    mtype = 1
+    mtype = 2
     if True:
         nx = 9
         ny = 11

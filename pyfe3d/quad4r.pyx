@@ -7680,8 +7680,8 @@ cdef class Quad4R:
         ``area``, rotated to global coordinates, and its values are added to
         ``Mv`` at the positions starting at ``init_k_M``; the global row and
         column indices are always written to ``Mr`` and ``Mc`` at the same
-        positions. ``mtype=0`` and ``mtype=1`` write ``M_SPARSE_SIZE``
-        entries and ``mtype=2`` writes the first 120 of them. Before this
+        positions. ``mtype=0`` and ``mtype=2`` write ``M_SPARSE_SIZE``
+        entries and ``mtype=1`` writes the first 120 of them. Before this
         method is called, :meth:`.update_rotation_matrix` and
         :meth:`.update_probe_xe` must have been used.
 
@@ -7705,8 +7705,8 @@ cdef class Quad4R:
             ``intrhoz2`` are read.
         mtype : int, optional
             0 for consistent mass matrix
-            1 for reduced integration mass matrix
-            2 for lumped mass matrix
+            1 for lumped mass matrix
+            2 for reduced integration mass matrix
             Default ``0``.
 
         Raises
@@ -7747,20 +7747,20 @@ cdef class Quad4R:
         :meth:`.update_KC0`. The integrals `h_{ij}` are computed with:
 
         - ``mtype=0``: two-point Gauss-Legendre quadrature in each direction;
-        - ``mtype=1``: a single point at the centroid, where every `N_i =
-          1/4`, giving `h_{ij} = A/16` for all `i, j`;
-        - ``mtype=2``: two-point Gauss-Lobatto quadrature in each direction,
+        - ``mtype=1``: two-point Gauss-Lobatto quadrature in each direction,
           whose points are the nodes, the lumped mass matrix of Brockman
           [1]_, giving `h_{ii}` equal to the Jacobian determinant at node `i`
-          and `h_{ij} = 0` for `i \neq j`.
+          and `h_{ij} = 0` for `i \neq j`;
+        - ``mtype=2``: a single point at the centroid, where every `N_i =
+          1/4`, giving `h_{ij} = A/16` for all `i, j`.
 
-        For ``mtype=0`` the quadrature is exact. With ``mtype=1`` the
+        For ``mtype=0`` the quadrature is exact. With ``mtype=2`` the
         element mass is placed at the average of the node positions, which
         is the centroid of the area only for a parallelogram.
 
         .. rubric:: Lumped mass matrix
 
-        The Gauss-Lobatto rule of ``mtype=2`` is a nodal quadrature. Applied
+        The Gauss-Lobatto rule of ``mtype=1`` is a nodal quadrature. Applied
         to the whole integrand of `T`, in which `N_i` is 1 at node `i` and 0
         at the other nodes, it couples no different nodes and gives for node
         `i` the block `M_{ii}` above with `h_{ii}`, the coupling through
@@ -7798,8 +7798,8 @@ cdef class Quad4R:
         # NOTE checked once per call, before the code without the GIL
         if mtype != 0 and mtype != 1 and mtype != 2:
             raise ValueError('mtype=%d is not supported by Quad4R.update_M, '
-                             'use 0 (consistent), 1 (reduced integration) or '
-                             '2 (lumped)' % mtype)
+                             'use 0 (consistent), 1 (lumped) or 2 (reduced '
+                             'integration)' % mtype)
 
         with nogil:
             intrho = prop.intrho
@@ -10276,7 +10276,7 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += h44*intrhoz2*r31**2 + h44*intrhoz2*r32**2
 
-            elif mtype == 1: # M_red mass matrix purely by reduced integration
+            elif mtype == 2: # M_red mass matrix purely by reduced integration
                 k = self.init_k_M
                 Mr[k] = 0+c1
                 Mc[k] = 0+c1
@@ -12679,7 +12679,7 @@ cdef class Quad4R:
                 k += 1
                 Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
 
-            elif mtype == 2: # M_lump lumped mass matrix, two-point Gauss-Lobatto quadrature, see the Notes
+            elif mtype == 1: # M_lump lumped mass matrix, two-point Gauss-Lobatto quadrature, see the Notes
                 k = self.init_k_M
                 Mr[k] = 0+c1
                 Mc[k] = 0+c1

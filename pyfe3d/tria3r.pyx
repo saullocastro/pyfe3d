@@ -5450,8 +5450,8 @@ cdef class Tria3R:
         ``area``, rotated to global coordinates, and its values are added to
         ``Mv`` at the positions starting at ``init_k_M``; the global row and
         column indices are always written to ``Mr`` and ``Mc`` at the same
-        positions. ``mtype=0`` and ``mtype=1`` write ``M_SPARSE_SIZE``
-        entries and ``mtype=2`` writes the first 90 of them. Before this
+        positions. ``mtype=0`` and ``mtype=2`` write ``M_SPARSE_SIZE``
+        entries and ``mtype=1`` writes the first 90 of them. Before this
         method is called, :meth:`.update_rotation_matrix` and
         :meth:`.update_probe_xe` must have been used.
 
@@ -5475,8 +5475,8 @@ cdef class Tria3R:
             ``intrhoz2`` are read.
         mtype : int, optional
             0 for consistent mass matrix
-            1 for reduced integration mass matrix
-            2 for lumped mass matrix
+            1 for lumped mass matrix
+            2 for reduced integration mass matrix
             Default ``0``.
 
         Raises
@@ -5511,9 +5511,9 @@ cdef class Tria3R:
           1/6, 1/6)` and their permutations, each with the weight `A_e/3`,
           which is exact for the quadratic `N_i N_j`, `h_{ii} = A_e/6` and
           `h_{ij} = A_e/12`
-        - ``mtype=1``: a single point at the centroid, `h_{ij} = A_e/9`
-        - ``mtype=2``: the vertex rule, the three nodes, each with the weight
+        - ``mtype=1``: the vertex rule, the three nodes, each with the weight
           `A_e/3`, `h_{ii} = A_e/3` and `h_{ij} = 0`
+        - ``mtype=2``: a single point at the centroid, `h_{ij} = A_e/9`
 
         with `A_e` the element area. In element coordinates the coupling
         terms are `+I_{\rho z} h_{ij}` between `u` and `r_y` and `-I_{\rho z}
@@ -5574,8 +5574,8 @@ cdef class Tria3R:
         # NOTE checked once per call, before the code without the GIL
         if mtype != 0 and mtype != 1 and mtype != 2:
             raise ValueError('mtype=%d is not supported by Tria3R.update_M, '
-                             'use 0 (consistent), 1 (reduced integration) or '
-                             '2 (lumped)' % mtype)
+                             'use 0 (consistent), 1 (lumped) or 2 (reduced '
+                             'integration)' % mtype)
 
         with nogil:
             intrho = prop.intrho
@@ -6990,7 +6990,7 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h33*intrhoz2*r31**2 + h33*intrhoz2*r32**2
 
-            elif mtype == 1: # M_red mass matrix purely by reduced integration
+            elif mtype == 2: # M_red mass matrix purely by reduced integration
                 k = self.init_k_M
                 Mr[k] = 0+c1
                 Mc[k] = 0+c1
@@ -8344,7 +8344,7 @@ cdef class Tria3R:
                 Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
 
 
-            elif mtype == 2: # M_lump lumped mass matrix, vertex rule, see the Notes
+            elif mtype == 1: # M_lump lumped mass matrix, vertex rule, see the Notes
                 k = self.init_k_M
                 Mr[k] = 0+c1
                 Mc[k] = 0+c1

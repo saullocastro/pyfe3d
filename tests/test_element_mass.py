@@ -53,7 +53,7 @@ from pyfe3d import (Tria3R, Tria3RData, Tria3RProbe, Tria3DSG, Tria3DSGData,
 
 SHELLS = {
     'Tria3R': (Tria3R, Tria3RData, Tria3RProbe, (0, 1, 2)),
-    'Tria3DSG': (Tria3DSG, Tria3DSGData, Tria3DSGProbe, (0, 2)),
+    'Tria3DSG': (Tria3DSG, Tria3DSGData, Tria3DSGProbe, (0, 1)),
     'Quad4R': (Quad4R, Quad4RData, Quad4RProbe, (0, 1, 2)),
     'Quad4': (Quad4, Quad4Data, Quad4Probe, (0, 1, 2)),
 }
@@ -185,8 +185,8 @@ def area_rule(xy, scheme):
     r"""Points, as values of the shape functions, and weights over the area
 
     ``scheme`` is ``'exact'``, a rule exact for the integrands of degree 2
-    of the shell, ``'centroid'``, the one-point rule of ``mtype=1``, or
-    ``'nodes'``, the nodal quadrature of ``mtype=2``.
+    of the shell, ``'nodes'``, the nodal quadrature of ``mtype=1``, or
+    ``'centroid'``, the one-point rule of ``mtype=2``.
     """
     nnodes = xy.shape[0]
     A = area(xy)
@@ -212,7 +212,7 @@ def area_rule(xy, scheme):
             zip(np.eye(4), [(-1, -1), (1, -1), (1, 1), (-1, 1)])]
 
 
-SCHEME = {0: 'exact', 1: 'centroid', 2: 'nodes'}
+SCHEME = {0: 'exact', 1: 'nodes', 2: 'centroid'}
 
 
 def shell_rigid_inertia(Xg, n, prop, rule):
@@ -269,7 +269,7 @@ def test_shell_mass(name, gname, mtype):
     H = sum(w*np.outer(N, N) for N, w in rule)
     Ml = Rb.T @ M @ Rb
     assert relerr(Ml, shell_local_matrix(H, prop)) < 1e-13
-    if mtype == 2:
+    if mtype == 1:
         # block-diagonal per node, the coupling of intrhoz kept
         assert np.allclose(H, np.diag(np.diag(H)))
         for i in range(nnodes):
@@ -327,7 +327,7 @@ def test_lumped_rotary_inertia_about_the_normal(name, gname, ratio):
         Jc = mass_moments(Mrb)[2]
         return n @ Jc @ n
 
-    M = dense_M(e, data, prop, 2, nnodes)
+    M = dense_M(e, data, prop, 1, nnodes)
     lumped = J_normal(Phi.T @ M @ Phi)
     exact = J_normal(Mrb_exact)
     print(name, gname, 'lumped/exact inertia about the normal', lumped/exact)
@@ -424,38 +424,100 @@ def test_beam_mass(name, mtype, first_moments):
         assert relerr(Mrb, Mrb_lumped) < 1e-13
 
 
-def unsupported():
-    for name, (_, _, _, mtypes) in SHELLS.items():
-        for mtype in (-1, 1, 3):
-            if mtype not in mtypes:
-                yield name, mtype
-    for name in BEAMS:
-        for mtype in (-1, 2):
-            yield name, mtype
+# NOTE one numbering for every element, 2 only where the element has a
+#      reduced-integration mass matrix
+MTYPES = {name: mtypes for name, (_, _, _, mtypes) in SHELLS.items()}
+MTYPES.update({name: (0, 1) for name in BEAMS})
+LABELS = {0: 'consistent', 1: 'lumped', 2: 'reduced integration'}
 
 
-@pytest.mark.parametrize('name, mtype', list(unsupported()))
-def test_unsupported_mtype_raises(name, mtype):
+def mass_element(name):
+    r"""One element of each type in a generic orientation, with its data,
+    property, number of nodes, area or length, and, for the shells, the
+    coordinates in the plane of the element"""
     if name in SHELLS:
         xy = TRIANGLES['right'] if name.startswith('Tria') else QUADS['rectangle']
         e, data, Xg = shell_element(name, xy)
         prop = isotropic_plate(thickness=0.05, E=70e9, nu=0.3, rho=2700.)
+        return e, data, prop, xy.shape[0], area(xy), xy
+    Elem, Data, Probe = BEAMS[name]
+    e = Elem(Probe())
+    e.n1, e.n2 = 1, 2
+    e.c1, e.c2 = 0, DOF
+    e.init_k_M = 0
+    x = np.array([0.1, -0.2, 0.3, 1.3, 0.7, -0.4])
+    if name == 'Truss':
+        e.update_rotation_matrix(x)
     else:
-        Elem, Data, Probe = BEAMS[name]
-        e, data = Elem(Probe()), Data()
-        e.c1, e.c2 = 0, DOF
-        x = np.array([0., 0., 0., 1., 0., 0.])
-        if name == 'Truss':
-            e.update_rotation_matrix(x)
+        e.update_rotation_matrix(0.3, 1.0, 0.5, x)
+    e.update_probe_xe(x)
+    return e, Data(), beam_prop(False), 2, e.length, None
+
+
+def numbering_cases():
+    for name, mtypes in MTYPES.items():
+        for mtype in mtypes:
+            yield name, mtype
+
+
+@pytest.mark.parametrize('name, mtype', list(numbering_cases()))
+def test_mtype_numbering(name, mtype):
+    r"""``mtype`` 0 consistent, 1 lumped and 2 reduced integration
+
+    The integrals `h_{ij}` between the translations `u` of the nodes `i`
+    and `j`, in element coordinates, identify the matrix: with ``mtype=0``
+    the exact integrals of `N_i N_j`; with ``mtype=1`` no coupling between
+    different nodes, a weight at each node; with ``mtype=2``, the one-point
+    rule at the centre, every `h_{ij}` equal. All give the exact mass.
+    """
+    e, data, prop, nnodes, size, xy = mass_element(name)
+    M = dense_M(e, data, prop, mtype, nnodes)
+    Rb = rotation_blocks(e, nnodes)[1]
+    Ml = Rb.T @ M @ Rb
+    H =Ml[0::DOF, 0::DOF]/prop.intrho
+    assert np.isclose(H.sum(), size, rtol=1e-13)
+    if mtype == 0:
+        if xy is None:
+            H_exact = size/6*np.array([[2., 1.], [1., 2.]])
         else:
-            e.update_rotation_matrix(0., 1., 0., x)
-        e.update_probe_xe(x)
-        prop = beam_prop(False)
+            H_exact = sum(w*np.outer(N, N) for N, w in area_rule(xy, 'exact'))
+        assert relerr(H, H_exact) < 1e-13
+    elif mtype == 1:
+        for i in range(nnodes):
+            for j in range(nnodes):
+                if i != j:
+                    block = Ml[DOF*i:DOF*(i + 1), DOF*j:DOF*(j + 1)]
+                    assert np.abs(block).max() < 1e-14*np.abs(Ml).max()
+        # NOTE the right triangle, the rectangle and the beams: equal weights
+        assert np.allclose(np.diag(H), size/nnodes, rtol=1e-13)
+    else:
+        assert np.allclose(H, size/nnodes**2, rtol=1e-13)
+
+
+def unsupported():
+    for name, mtypes in MTYPES.items():
+        for mtype in (-1, 2, 3):
+            if mtype not in mtypes:
+                yield name, mtype
+
+
+@pytest.mark.parametrize('name, mtype', list(unsupported()))
+def test_unsupported_mtype_raises(name, mtype):
+    e, data, prop, nnodes, _, _ = mass_element(name)
     Mr = np.zeros(data.M_SPARSE_SIZE, dtype=INT)
     Mc = np.zeros(data.M_SPARSE_SIZE, dtype=INT)
     Mv = np.zeros(data.M_SPARSE_SIZE, dtype=DOUBLE)
-    with pytest.raises(ValueError, match='mtype=%d is not supported' % mtype):
+    with pytest.raises(ValueError) as excinfo:
         e.update_M(Mr, Mc, Mv, prop, mtype=mtype)
+    # NOTE the message names the element, the value and the valid options
+    msg = str(excinfo.value)
+    print(msg)
+    assert msg.startswith('mtype=%d is not supported by %s.update_M, use '
+                          % (mtype, name))
+    for value, label in LABELS.items():
+        assert ('%d (%s)' % (value, label) in msg) == (value in MTYPES[name])
+    if 2 not in MTYPES[name]:
+        assert ('%s has no reduced-integration mass matrix (2)' % name) in msg
     # nothing written
     assert not Mr.any() and not Mc.any() and not Mv.any()
 
@@ -467,5 +529,7 @@ if __name__ == '__main__':
         for mtype in (0, 1):
             for first_moments in (False, True):
                 test_beam_mass(name, mtype, first_moments)
+    for case in numbering_cases():
+        test_mtype_numbering(*case)
     for case in unsupported():
         test_unsupported_mtype_raises(*case)

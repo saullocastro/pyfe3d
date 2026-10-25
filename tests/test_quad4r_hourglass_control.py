@@ -1294,8 +1294,8 @@ def test_mass_formulations_match_brockman():
 
     used by ``mtype = 0``. The reduced mass of his Eq. (31) replaces it with
     `\pmb{H} = (A/16) \pmb{s} \pmb{s}^\top`, every entry equal, used by
-    ``mtype = 1``. The lumped mass of pp. 2348-2349, by Gauss-Lobatto
-    integration at the nodes, used by ``mtype = 2``, is diagonal provided
+    ``mtype = 2``. The lumped mass of pp. 2348-2349, by Gauss-Lobatto
+    integration at the nodes, used by ``mtype = 1``, is diagonal provided
     `R_2 = 0`, as here without offset, with `R_1 A/4` and `R_3 A/4` per
     node.
 
@@ -1330,7 +1330,7 @@ def test_mass_formulations_match_brockman():
                 assert np.isclose(M[0, 0], 4.*A*R1/36., rtol=1e-12), gname
                 assert np.isclose(M[0, 6], 2.*A*R1/36., rtol=1e-12), gname
                 assert np.isclose(M[0, 12], A*R1/36., rtol=1e-12), gname
-            elif mtype == 1:
+            elif mtype == 2:
                 assert np.isclose(M[0, 0], A*R1/16., rtol=1e-12), gname
                 assert np.isclose(M[0, 6], A*R1/16., rtol=1e-12), gname
                 assert np.isclose(M[0, 12], A*R1/16., rtol=1e-12), gname

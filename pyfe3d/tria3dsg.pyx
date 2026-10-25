@@ -2167,14 +2167,15 @@ cdef class Tria3DSG:
             Shell property.
             ``intrho``, ``intrhoz`` and ``intrhoz2`` are read from it.
         mtype : int, optional
-            ``0`` for the consistent mass matrix and ``2`` for the lumped
+            ``0`` for the consistent mass matrix and ``1`` for the lumped
             one, which puts a third of the element area on each node.
-            Default ``0``.
+            Default ``0``. The element has no reduced-integration mass
+            matrix, ``2``.
 
         Raises
         ------
         ValueError
-            If ``mtype`` is not 0 or 2.
+            If ``mtype`` is not 0 or 1.
 
         Notes
         -----
@@ -2224,9 +2225,10 @@ cdef class Tria3DSG:
         cdef double intrho, intrhoz, intrhoz2, f, A
 
         # NOTE checked once per call, before the code without the GIL
-        if mtype != 0 and mtype != 2:
+        if mtype != 0 and mtype != 1:
             raise ValueError('mtype=%d is not supported by Tria3DSG.update_M, '
-                             'use 0 (consistent) or 2 (lumped)' % mtype)
+                             'use 0 (consistent) or 1 (lumped); Tria3DSG has '
+                             'no reduced-integration mass matrix (2)' % mtype)
 
         with nogil:
             intrho = prop.intrho
@@ -2246,7 +2248,7 @@ cdef class Tria3DSG:
 
             for node_i in range(NUM_NODES):
                 for node_j in range(NUM_NODES):
-                    if mtype == 2:
+                    if mtype == 1:
                         f = A/3. if node_i == node_j else 0.
                     else:
                         f = A/6. if node_i == node_j else A/12.
