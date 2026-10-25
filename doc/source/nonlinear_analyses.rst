@@ -165,7 +165,7 @@ arguments, passed only to the callables that declare them, see
 - ``calc_fint(c, inc=...)`` receives the load factor and includes the
   configuration-dependent part of the load, `-\lambda \boldsymbol{F}(\boldsymbol{c})`, and
   ``calc_kC(c, NLgeom=True, inc=...)`` its derivative, the load stiffness
-  matrix `\lambda \boldsymbol{K}_F = -\lambda \, \partial \boldsymbol{F}/\partial \boldsymbol{c}`, which is
+  matrix `\boldsymbol{K}_F = \lambda \boldsymbol{K}_{F_{ref}}`, with `\boldsymbol{K}_{F_{ref}} = -\partial \boldsymbol{F}/\partial \boldsymbol{c}`, which is
   unsymmetric in general, see below; the solvers use LU factorizations;
 - ``calc_fext(inc=1., c=...)`` returns the load vector of the
   configuration ``c`` for a unit load factor, `-\partial \boldsymbol{R}/\partial
