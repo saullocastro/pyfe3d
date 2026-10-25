@@ -89,7 +89,7 @@ def _solver_arc_length(an, pb, method, silent=False):
 
     .. math::
 
-        \frac{\{\Delta c\}^T\{\Delta c\}}{\{u_{ref}\}^T\{u_{ref}\}}
+        \frac{\{\Delta c\}^\top\{\Delta c\}}{\{u_{ref}\}^\top\{u_{ref}\}}
         + \psi^2 \Delta\lambda^2 = \Delta s^2
 
     where `\{\Delta c\}` and `\Delta\lambda` are the increments of the current
@@ -100,14 +100,14 @@ def _solver_arc_length(an, pb, method, silent=False):
     \psi^2} \Delta\lambda`. It is the spherical arc-length constraint of
     [4]_ (Section 9.3.2, Eq. (9.19), p. 271), where the displacement term is
     not scaled and the load term is `\psi^2 \Delta\lambda^2
-    \{F_{ext}\}^T\{F_{ext}\}`. `\psi` is the constant ``PSI``, and
-    `\{u_{ref}\}^T\{u_{ref}\}` is replaced by 1 when it is null. With the
+    \{F_{ext}\}^\top\{F_{ext}\}`. `\psi` is the constant ``PSI``, and
+    `\{u_{ref}\}^\top\{u_{ref}\}` is replaced by 1 when it is null. With the
     inner product
 
     .. math::
 
         \langle (a, \alpha), (b, \beta) \rangle =
-        \frac{\{a\}^T\{b\}}{\{u_{ref}\}^T\{u_{ref}\}} + \psi^2 \alpha \beta
+        \frac{\{a\}^\top\{b\}}{\{u_{ref}\}^\top\{u_{ref}\}} + \psi^2 \alpha \beta
 
     the constraint reads `g = \frac{1}{2}(\langle (\Delta c, \Delta\lambda),
     (\Delta c, \Delta\lambda) \rangle - \Delta s^2) = 0`.

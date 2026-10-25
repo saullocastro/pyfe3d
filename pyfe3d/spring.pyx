@@ -176,7 +176,7 @@ cdef class Spring:
         \qquad [k] = \mathrm{diag}(k_1, ..., k_6)
 
     transformed to global coordinates with the transformation matrix of the
-    element, `[K] = [T] [K_e] [T]^T`, where `[T]` is block diagonal with four
+    element, `[K] = [T] [K_e] [T]^\top`, where `[T]` is block diagonal with four
     copies of the matrix `[T_{3\times 3}]` of the entries `T_{ij}` stored in
     ``r11, ..., r33``, whose columns are the element axes.
 
@@ -300,7 +300,7 @@ cdef class Spring:
         The translations and rotations of the two nodes, read from ``u`` at the
         positions ``c1`` to ``c1 + 5`` and ``c2`` to ``c2 + 5``, are
         transformed to the element coordinate system with the transpose
-        `[T_{3\times 3}]^T` of the transformation matrix, which must be updated
+        `[T_{3\times 3}]^\top` of the transformation matrix, which must be updated
         before, see :meth:`.update_rotation_matrix`.
 
         Parameters

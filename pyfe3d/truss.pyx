@@ -181,7 +181,7 @@ cdef class Truss:
     boundary conditions; the element has no geometric stiffness matrix. The
     matrices and the internal forces are computed in element coordinates and
     transformed to global coordinates with the transformation matrix of the
-    element, `[K] = [T] [K_e] [T]^T`, where `[T]` is block diagonal with four
+    element, `[K] = [T] [K_e] [T]^\top`, where `[T]` is block diagonal with four
     copies of the matrix `[T_{3\times 3}]` of the entries `T_{ij}` stored in
     ``r11, ..., r33``, whose columns are the element axes.
 
@@ -220,7 +220,7 @@ cdef class Truss:
         The translations and rotations of the two nodes, read from ``u`` at the
         positions ``c1`` to ``c1 + 5`` and ``c2`` to ``c2 + 5``, are
         transformed to the element coordinate system with the transpose
-        `[T_{3\times 3}]^T` of the transformation matrix, which must be updated
+        `[T_{3\times 3}]^\top` of the transformation matrix, which must be updated
         before, see :meth:`.update_rotation_matrix`.
 
         Parameters
@@ -359,7 +359,7 @@ cdef class Truss:
 
         The coordinates of the two nodes, read from ``x`` at the positions
         ``c1//2`` and ``c2//2``, are transformed to the element coordinate
-        system with the transpose `[T_{3\times 3}]^T` of the transformation
+        system with the transpose `[T_{3\times 3}]^\top` of the transformation
         matrix, which must be updated before, see
         :meth:`.update_rotation_matrix`. Then :meth:`.update_length` is called,
         updating ``length``.

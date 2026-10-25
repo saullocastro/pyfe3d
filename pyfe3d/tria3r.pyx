@@ -201,18 +201,18 @@ hierarchical bubble of that edge is
 
 with `S_i` the area coordinates, equal to unity at the mid-point of the edge
 and zero at every vertex. The enrichment populates the drilling columns of
-the membrane operator, giving `\pmb{\tilde B}_m`, and the drilling residual
-becomes `\pmb{\tilde B}_{r_z} = \pmb{S}^{r_z} + \frac{1}{2}\pmb{\tilde
-S}^u_{,y} - \frac{1}{2}\pmb{\tilde S}^v_{,x}`, whose contribution to the
-element stiffness matrix is `\gamma_{r_z} \int_A \pmb{\tilde B}_{r_z}^\top
-\pmb{\tilde B}_{r_z} dA` with `\gamma_{r_z} = A_{66}`, a modulus and not a
+the membrane operator, giving `\tilde{\boldsymbol{B}}_m`, and the drilling residual
+becomes `\tilde{\boldsymbol{B}}_{r_z} = \boldsymbol{S}^{r_z} + \frac{1}{2}\boldsymbol{\tilde
+S}^u_{,y} - \frac{1}{2}\tilde{\boldsymbol{S}}^v_{,x}`, whose contribution to the
+element stiffness matrix is `\gamma_{r_z} \int_A \tilde{\boldsymbol{B}}_{r_z}^\top
+\tilde{\boldsymbol{B}}_{r_z} dA` with `\gamma_{r_z} = A_{66}`, a modulus and not a
 user parameter. The curvature and transverse shear operators are untouched,
 the edge modes acting only on the in-plane translations, so the bending and
 the transverse shear response of the element are identical for the two
 drilling models.
 
 Two quadrature choices matter. Because the derivatives of the bubbles are
-linear in the area coordinates, the drilling columns of `\pmb{\tilde B}_m`
+linear in the area coordinates, the drilling columns of `\tilde{\boldsymbol{B}}_m`
 vary linearly, and the terms quadratic in them are integrated with the
 three-point rule of degree of precision 2, first row of Table I in Cowper
 [10]_, the same one the element already used for its drilling terms. A
@@ -241,7 +241,7 @@ meaningless. The penalty energy is defined per element as:
 
 .. math::
 
-    U_{drill} = \frac{1}{2} K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)^2 dA
+    U_{r_z} = \frac{1}{2} K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)^2 dA
 
 where `10^{-6}` is a scaling factor suggested by MSC Nastran's approach
 (CQUAD4) to make the artificial drilling stiffness sufficiently small.
@@ -255,9 +255,9 @@ u_{,y}\right)`, such that the penalty is built from the operator
 
 .. math::
 
-    B_{drill} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}
+    B_{r_z} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}
 
-which is the same operator as `\pmb{\tilde B}_{r_z}` above, evaluated on the
+which is the same operator as `\tilde{\boldsymbol{B}}_{r_z}` above, evaluated on the
 unenriched field. Being built from that operator and not from an addition on
 the diagonal terms is what keeps the penalty from stiffening a rigid rotation
 of the element about its normal, so both models represent all rigid-body
@@ -358,13 +358,13 @@ cdef void allman_enrichment(double *Nx, double *Ny, double *xe,
     in-plane displacement rows are
 
     .. math::
-        \pmb{\tilde S}^u = \pmb{S}^u + \frac{1}{8} \sum_k \hat{S}_k (y_i - y_j)
-                           (\pmb{e}_i - \pmb{e}_j)
+        \tilde{\boldsymbol{S}}^u = \boldsymbol{S}^u + \frac{1}{8} \sum_k \hat{S}_k (y_i - y_j)
+                           (\boldsymbol{e}_i - \boldsymbol{e}_j)
         \
-        \pmb{\tilde S}^v = \pmb{S}^v + \frac{1}{8} \sum_k \hat{S}_k (x_j - x_i)
-                           (\pmb{e}_i - \pmb{e}_j)
+        \tilde{\boldsymbol{S}}^v = \boldsymbol{S}^v + \frac{1}{8} \sum_k \hat{S}_k (x_j - x_i)
+                           (\boldsymbol{e}_i - \boldsymbol{e}_j)
 
-    where `\pmb{e}_i` selects `{r_z}_i`, as for
+    where `\boldsymbol{e}_i` selects `{r_z}_i`, as for
     :func:`pyfe3d.quad4.allman_enrichment`. For the triangle the
     hierarchical bubble of the edge joining nodes `i` and `j` is `\hat{S}_k
     = 4 S_i S_j`, with `S_i` the area coordinates, so that
@@ -454,45 +454,45 @@ cdef void allman_delta_Ke(double *Nx, double *Ny, double *xe, double area,
     The enrichment is the one of Allman [1]_ and the drilling term the one
     of Hughes and Brezzi [2]_, see the module documentation.
 
-    Writing the enriched membrane operator as `\pmb{\tilde B}_m = \pmb{B}_m +
-    \pmb{\Delta}_m`, where `\pmb{\Delta}_m` is non-zero only in the drilling
+    Writing the enriched membrane operator as `\tilde{\boldsymbol{B}}_m = \boldsymbol{B}_m +
+    \boldsymbol{\Delta}_m`, where `\boldsymbol{\Delta}_m` is non-zero only in the drilling
     columns, the membrane and coupling contributions expand as
 
     .. math::
-        \pmb{\tilde B}_m^\top \pmb{A} \pmb{\tilde B}_m
-        + \pmb{\tilde B}_m^\top \pmb{B} \pmb{B}_b
-        + \pmb{B}_b^\top \pmb{B} \pmb{\tilde B}_m
-        = (\text{unenriched}) + \pmb{B}_m^\top \pmb{A} \pmb{\Delta}_m
-        + \pmb{\Delta}_m^\top \pmb{A} \pmb{B}_m
-        + \pmb{\Delta}_m^\top \pmb{A} \pmb{\Delta}_m
-        + \pmb{\Delta}_m^\top \pmb{B} \pmb{B}_b
-        + \pmb{B}_b^\top \pmb{B} \pmb{\Delta}_m
+        \tilde{\boldsymbol{B}}_m^\top \boldsymbol{A} \tilde{\boldsymbol{B}}_m
+        + \tilde{\boldsymbol{B}}_m^\top \boldsymbol{B} \boldsymbol{B}_b
+        + \boldsymbol{B}_b^\top \boldsymbol{B} \tilde{\boldsymbol{B}}_m
+        = (\text{unenriched}) + \boldsymbol{B}_m^\top \boldsymbol{A} \boldsymbol{\Delta}_m
+        + \boldsymbol{\Delta}_m^\top \boldsymbol{A} \boldsymbol{B}_m
+        + \boldsymbol{\Delta}_m^\top \boldsymbol{A} \boldsymbol{\Delta}_m
+        + \boldsymbol{\Delta}_m^\top \boldsymbol{B} \boldsymbol{B}_b
+        + \boldsymbol{B}_b^\top \boldsymbol{B} \boldsymbol{\Delta}_m
 
-    and only the five terms in `\pmb{\Delta}_m` are assembled here, so the
+    and only the five terms in `\boldsymbol{\Delta}_m` are assembled here, so the
     block of the translations and of the bending rotations is left exactly as
     the unenriched element computed it. Those terms are integrated with the
-    three-point rule, which is needed because `\pmb{\Delta}_m` varies
+    three-point rule, which is needed because `\boldsymbol{\Delta}_m` varies
     linearly over the element, so that the term quadratic in it would
     otherwise be unsampled and would leave a zero-energy mode. The
     Hughes-Brezzi term is integrated with a single point at the centroid, as
     in :mod:`pyfe3d.quad4`.
 
     The three-point rule has the area coordinates `(2/3, 1/6, 1/6)` and their
-    permutations, each with the weight ``area/3``, with `\pmb{\Delta}_m`
+    permutations, each with the weight ``area/3``, with `\boldsymbol{\Delta}_m`
     given by :func:`.allman_enrichment` at each point,
 
     .. math::
-        \pmb{\Delta}_m = \begin{bmatrix} \tilde S^u_{,x} \ \tilde S^v_{,y}
+        \boldsymbol{\Delta}_m = \begin{bmatrix} \tilde S^u_{,x} \ \tilde S^v_{,y}
         \ \tilde S^u_{,y} + \tilde S^v_{,x} \end{bmatrix}
 
     in the drilling columns. The Hughes-Brezzi term is
 
     .. math::
-        \gamma A_e \pmb{\tilde B}_{r_z}^\top \pmb{\tilde B}_{r_z}, \qquad
-        \pmb{\tilde B}_{r_z} = \pmb{S}^{r_z} + \frac{1}{2}\pmb{\tilde
-        S}^u_{,y} - \frac{1}{2}\pmb{\tilde S}^v_{,x}
+        \gamma A_e \tilde{\boldsymbol{B}}_{r_z}^\top \tilde{\boldsymbol{B}}_{r_z}, \qquad
+        \tilde{\boldsymbol{B}}_{r_z} = \boldsymbol{S}^{r_z} + \frac{1}{2}\boldsymbol{\tilde
+        S}^u_{,y} - \frac{1}{2}\tilde{\boldsymbol{S}}^v_{,x}
 
-    evaluated at the centroid, where `\pmb{S}^{r_z} = 1/3` at each node,
+    evaluated at the centroid, where `\boldsymbol{S}^{r_z} = 1/3` at each node,
     with `A_e` given by ``area``.
 
     References
@@ -1110,7 +1110,7 @@ cdef class Tria3R:
 
         The displacements and rotations of the three nodes, read from ``u`` at
         the positions ``c1``, ``c2`` and ``c3``, are rotated to the element
-        coordinate system with the transpose `[T_{3\times 3}]^T` of the
+        coordinate system with the transpose `[T_{3\times 3}]^\top` of the
         transformation matrix and written to ``probe.ue``.
         :meth:`.update_rotation_matrix` must have been called before.
 
@@ -1172,7 +1172,7 @@ cdef class Tria3R:
 
         The coordinates of the three nodes, read from ``x`` at the positions
         ``c1//2``, ``c2//2`` and ``c3//2``, are rotated to the element
-        coordinate system with the transpose `[T_{3\times 3}]^T` of the
+        coordinate system with the transpose `[T_{3\times 3}]^\top` of the
         transformation matrix and written to ``probe.xe``. :meth:`.update_area`
         is then called, updating ``area``. :meth:`.update_rotation_matrix` must
         have been called before.
@@ -1710,8 +1710,8 @@ cdef class Tria3R:
         module documentation. The fictitious drilling penalty,
 
         .. math::
-            K6ROT \cdot 10^{-6} A_{66} \int_A B_{drill}^\top B_{drill} dA,
-            \qquad B_{drill} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}
+            K6ROT \cdot 10^{-6} A_{66} \int_A B_{r_z}^\top B_{r_z} dA,
+            \qquad B_{r_z} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}
 
         is integrated with the three-point rule of degree of precision 2,
         first row of Table I in Cowper [1]_, with the area coordinates
@@ -3834,7 +3834,7 @@ cdef class Tria3R:
             \kappa_{xy} = {r_y}_{,y} - {r_x}_{,x}
 
         with the constant derivatives of the linear shape functions,
-        `N_{1,x} = (y_2 - y_3)/(2 A_e)`, `N_{1,y} = (x_3 - x_2)/(2 A_e)` and
+        `S_{1,x} = (y_2 - y_3)/(2 A_e)`, `S_{1,y} = (x_3 - x_2)/(2 A_e)` and
         their cyclic permutations, `A_e` being ``area``. The Allman
         enrichment keeps the nonlinear tangent of :meth:`.update_KCNL` and
         the nonlinear internal forces consistent with the enriched KC0. The
@@ -4070,17 +4070,17 @@ cdef class Tria3R:
         Notes
         -----
         With the von Karman membrane strain `\{\epsilon_{NL}\} = \{w_{,x}^2/2,
-        w_{,y}^2/2, w_{,x} w_{,y}\}^T`, the linear stress resultants `\{N\} =
+        w_{,y}^2/2, w_{,x} w_{,y}\}^\top`, the linear stress resultants `\{N\} =
         [A]\{\epsilon\} + [B]\{\kappa\}`, and `\{N_{NL}\} =
         [A]\{\epsilon_{NL}\}`, `\{M_{NL}\} = [B]\{\epsilon_{NL}\}`, the terms
         added are
 
         .. math::
 
-            A_e \left( [B_m]^T \{N_{NL}\} + [B_b]^T \{M_{NL}\}
-            + [B_{mL}]^T (\{N\} + \{N_{NL}\}) \right)
+            A_e \left( [B_m]^\top \{N_{NL}\} + [B_b]^\top \{M_{NL}\}
+            + [B_{NL}]^\top (\{N\} + \{N_{NL}\}) \right)
 
-        with `A_e` the element area and `[B_{mL}]` the variation of
+        with `A_e` the element area and `[B_{NL}]` the variation of
         `\{\epsilon_{NL}\}`, see :meth:`.update_KCNL`, such that ``finte``
         becomes the gradient of the strain energy whose Hessian is
         KC0 + KCNL + KG. The rows are those of :meth:`._update_probe_BL_G`, integrated
@@ -4231,15 +4231,15 @@ cdef class Tria3R:
             \epsilon_{yy} = v_{,y} + \frac{1}{2} w_{,y}^2, \quad
             \gamma_{xy} = u_{,y} + v_{,x} + w_{,x} w_{,y}
 
-        whose nonlinear part is `\{\epsilon_{NL}\} = \frac{1}{2} [B_{mL}]
-        \{u_e\}`, with `[B_{mL}]` its variation. With `[B_m]` and `[B_b]` the
+        whose nonlinear part is `\{\epsilon_{NL}\} = \frac{1}{2} [B_{NL}]
+        \{u_e\}`, with `[B_{NL}]` its variation. With `[B_m]` and `[B_b]` the
         linear membrane and bending strain-displacement matrices, `[G]` the
         gradient of `w`, and `[A]`, `[B]` the laminate matrices:
 
-        - KC0L = `[B_m]^T [A] [B_{mL}] + [B_b]^T [B] [B_{mL}]`
-        - KCL0 = KC0L`^T`
-        - KCLL = `[B_{mL}]^T [A] [B_{mL}]`
-        - KGNL = `[G]^T [N_{NL}] [G]`, with `\{N_{NL}\} = [A] \{\epsilon_{NL}\}`
+        - KC0L = `[B_m]^\top [A] [B_{NL}] + [B_b]^\top [B] [B_{NL}]`
+        - KCL0 = KC0L`^\top`
+        - KCLL = `[B_{NL}]^\top [A] [B_{NL}]`
+        - KGNL = `[G]^\top [N_{NL}] [G]`, with `\{N_{NL}\} = [A] \{\epsilon_{NL}\}`
 
         The first three groups are the constitutive terms coupling the linear and
         the nonlinear parts of the membrane strain. KGNL is geometric, carrying the
@@ -4376,8 +4376,8 @@ cdef class Tria3R:
 
         .. math::
 
-            \{N_{xx}, N_{yy}, N_{xy}\}^T = [A]\{\epsilon_{xx}, \epsilon_{yy},
-            \gamma_{xy}\}^T + [B]\{\kappa_{xx}, \kappa_{yy}, \kappa_{xy}\}^T
+            \{N_{xx}, N_{yy}, N_{xy}\}^\top = [A]\{\epsilon_{xx}, \epsilon_{yy},
+            \gamma_{xy}\}^\top + [B]\{\kappa_{xx}, \kappa_{yy}, \kappa_{xy}\}^\top
 
         with the linear strains of the probe displacements, which for
         ``drilling_model = 0`` include the contribution of the Allman
@@ -4954,7 +4954,7 @@ cdef class Tria3R:
 
         .. math::
 
-            K_G = A_e [G]^T \begin{bmatrix} N_{xx} & N_{xy} \ N_{xy} &
+            K_G = A_e [G]^\top \begin{bmatrix} N_{xx} & N_{xy} \\ N_{xy} &
             N_{yy} \end{bmatrix} [G]
 
         with `A_e` the element area and `[G]` the rows ``Gwx``, ``Gwy`` of
@@ -5478,7 +5478,7 @@ cdef class Tria3R:
 
         with `I_\rho`, `I_{\rho z}` and `I_{\rho z^2}` given by ``intrho``,
         ``intrhoz`` and ``intrhoz2``, which include the offset. With `h_{ij}`
-        the integral of the product of the shape functions `N_i N_j` over
+        the integral of the product of the shape functions `S_i S_j` over
         the element, the element matrix has, as in Eq. (21) of [1]_, `I_\rho
         h_{ij}` between the translations of nodes `i` and `j`, `I_{\rho z^2}
         h_{ij}` between the rotations `r_x` and between the rotations `r_y`,
@@ -5489,7 +5489,7 @@ cdef class Tria3R:
         - ``mtype=0``: the three-point rule of degree of precision 2, first
           row of Table I in Cowper [2]_, with the area coordinates `(2/3,
           1/6, 1/6)` and their permutations, each with the weight `A_e/3`,
-          which is exact for the quadratic `N_i N_j`, `h_{ii} = A_e/6` and
+          which is exact for the quadratic `S_i S_j`, `h_{ii} = A_e/6` and
           `h_{ij} = A_e/12`
         - ``mtype=1``: the vertex rule, the three nodes, each with the weight
           `A_e/3`, `h_{ii} = A_e/3` and `h_{ij} = 0`
@@ -5503,7 +5503,7 @@ cdef class Tria3R:
         .. rubric:: Lumped mass matrix
 
         The vertex rule is a nodal quadrature. Applied to the whole integrand
-        of `T`, in which `N_i` is 1 at node `i` and 0 at the other nodes, it
+        of `T`, in which `S_i` is 1 at node `i` and 0 at the other nodes, it
         gives no coupling between different nodes and, for node `i`, the
         block
 
@@ -5522,8 +5522,8 @@ cdef class Tria3R:
         z}` stays in the nodal block: the matrix is block-diagonal per node,
         and diagonal only when `I_{\rho z} = 0`, as Brockman [1]_ notes for the
         Lobatto integration at the nodes of the quadrilateral. Since the
-        weights sum to `A_e` and `\sum_i (A_e/3) \pmb{x}_i = \int_A \pmb{x}
-        dA`, with `\pmb{x}_i` the position of node `i`, the lumped matrix has
+        weights sum to `A_e` and `\sum_i (A_e/3) \boldsymbol{x}_i = \int_A \boldsymbol{x}
+        dA`, with `\boldsymbol{x}_i` the position of node `i`, the lumped matrix has
         the exact mass and the exact first moment of the mass, including the
         term `I_{\rho z} A_e` that places the centre of mass at the offset
         from the reference surface. Of the rotary inertia, the term `I_{\rho
@@ -8597,7 +8597,7 @@ cdef class Tria3R:
                 Mc[k] = 5+c3
 
                 # NOTE vertex rule, area coordinates (1, 0, 0) and their permutations,
-                #      weight 1/6 times detJ = 2*area, i.e. area/3; N_i is 1 at node i
+                #      weight 1/6 times detJ = 2*area, i.e. area/3; S_i is 1 at node i
                 #      and 0 at the other nodes, such that h12 = h13 = h23 = 0
                 wij = 0.5*0.3333333333333333333333333333333333333
                 points[0] = 1.

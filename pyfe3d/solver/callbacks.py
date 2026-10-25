@@ -72,10 +72,10 @@ reduced residual
 
 .. math::
 
-    \{R_r(c_r, \lambda)\} = [Z]^T \left( \lambda \{F_{ext}\} -
+    \{R_r(c_r, \lambda)\} = [Z]^\top \left( \lambda \{F_{ext}\} -
     \{F_{int}([Z] c_r + \{c_{p0}\} + \lambda \{c_{p1}\})\} \right)
 
-which has `\partial R_r/\partial \lambda = [Z]^T(\{F_{ext}\} - [K_T]
+which has `\partial R_r/\partial \lambda = [Z]^\top(\{F_{ext}\} - [K_T]
 \{c_{p1}\})`, with `[K_T]` evaluated at the current configuration and
 load factor, the vector that ``calc_fext(inc=1., c=c, lbd=lbd)`` must
 return. Under a prescribed displacement alone the reference vector and the
@@ -266,7 +266,7 @@ def calc_load_vector(pb, c, fext, lbd=None):
     -----
     `\{q\} = \partial R/\partial \lambda` is the external load vector only
     for loads that do not depend on the configuration; with prescribed
-    displacements imposed exactly it also contains `-[Z]^T [K_T]
+    displacements imposed exactly it also contains `-[Z]^\top [K_T]
     \{c_{p1}\}`, see the module documentation, i.e. the out-of-balance force
     produced by a unit increment of the load factor at the current
     configuration with the free degrees-of-freedom held fixed. The reaction

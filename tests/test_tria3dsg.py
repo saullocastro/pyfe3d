@@ -208,12 +208,12 @@ def test_kirchhoff_states_produce_no_parasitic_shear():
     r"""The locking-free property, and the reason no parameter is needed
 
     For each of the three constant-curvature states, with the rotations set
-    to the Kirchhoff values `\pmb{\phi} = \nabla w`, the exact transverse
+    to the Kirchhoff values `\boldsymbol{\phi} = \nabla w`, the exact transverse
     shear strain is zero. A displacement-based three-node triangle cannot
     represent the quadratic `w` in its interior and so develops parasitic
     shear, which is what locks it. The DSG operator uses only the nodal
     values and gives exactly zero, so the element energy equals the bending
-    energy `\pmb{\kappa}^T [D] \pmb{\kappa} A/2` to machine precision.
+    energy `\boldsymbol{\kappa}^\top [D] \boldsymbol{\kappa} A/2` to machine precision.
 
     Tria3R is 8 to 23 per cent above that on the same triangle, which is the
     parasitic shear its stabilisation is there to suppress.
@@ -522,7 +522,7 @@ def element_matrix(el, data, prop, u, which):
 
 
 def shape_function_gradients(ncoords):
-    r"""``area``, `\partial N_i/\partial x` and `\partial N_i/\partial y`"""
+    r"""``area``, `\partial S_i/\partial x` and `\partial S_i/\partial y`"""
     x = ncoords[:, 0]
     y = ncoords[:, 1]
     detJ = (x[0]*(y[1] - y[2]) + x[1]*(y[2] - y[0])
@@ -840,9 +840,9 @@ def test_unsymmetric_laminate_couples_membrane_and_bending_exactly():
     strain energy is
 
     .. math::
-        U = \frac{A}{2} \left( \{\epsilon\}^T [A] \{\epsilon\}
-            + 2 \{\epsilon\}^T [B] \{\kappa\}
-            + \{\kappa\}^T [D] \{\kappa\} \right)
+        U = \frac{A}{2} \left( \{\epsilon\}^\top [A] \{\epsilon\}
+            + 2 \{\epsilon\}^\top [B] \{\kappa\}
+            + \{\kappa\}^\top [D] \{\kappa\} \right)
 
     and the cross term is the only place `[B]` appears, so this is the one
     state that tests it. With the material direction along the element `x`
@@ -917,9 +917,9 @@ def triangulated_plate_buckling(cls, Data, Probe, n, h, second='diagonal',
     ``rotate_prestress`` selects how the uniaxial state `N_{xx}` along the
     global `x` axis is handed over. The correct way is a tensor rotation:
     with `[T_{3\times 3}]` the transformation matrix of the element, whose
-    columns are the element axes, and `\{a\} = [T_{3\times 3}]^T \{1, 0, 0\}`
+    columns are the element axes, and `\{a\} = [T_{3\times 3}]^\top \{1, 0, 0\}`
     the loading direction in element coordinates, the state `N_{xx} \{a\}
-    \{a\}^T` has components
+    \{a\}^\top` has components
 
     .. math::
         N^e_{xx} = N_{xx} a_x^2, \quad

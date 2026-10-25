@@ -62,7 +62,7 @@ assembly
 
 .. math::
 
-    [K] = \sum_e [L_e]^T [T_e] [K_e] [T_e]^T [L_e]
+    [K] = \sum_e [L_e]^\top [T_e] [K_e] [T_e]^\top [L_e]
 
 with `[K_e]` the element matrix in element coordinates, `[T_e]` the
 transformation matrix of the element, block diagonal with the matrix

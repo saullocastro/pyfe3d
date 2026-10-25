@@ -265,7 +265,7 @@ def patch_stiffness(cls, Data, Probe, n, L, h, triangles=False):
 
 
 def shear_only_subspace(cls, Data, Probe, n, L, h, triangles=False):
-    r"""Smallest `u^T K u/u^T u` with only the interior `w` free
+    r"""Smallest `u^\top K u/u^\top u` with only the interior `w` free
 
     With every rotation and in-plane degree-of-freedom held at zero the
     curvature `\kappa = \nabla \theta` vanishes identically, so this

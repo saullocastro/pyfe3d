@@ -100,7 +100,7 @@ element.
 
 .. rubric:: The discrete shear gap
 
-With `\pmb{\phi} = (-r_y, r_x)` the transverse shear strains of this
+With `\boldsymbol{\phi} = (-r_y, r_x)` the transverse shear strains of this
 element's convention are
 
 .. math::
@@ -109,37 +109,37 @@ element's convention are
     \qquad
     \gamma_{yz} = \frac{\partial w}{\partial y} - r_x
 
-that is `\pmb{\gamma} = \nabla w - \pmb{\phi}`. The shear gap `\Delta w` is
+that is `\boldsymbol{\gamma} = \nabla w - \boldsymbol{\phi}`. The shear gap `\Delta w` is
 the part of the increase of the deflection between two points that is due to
 shear rather than to bending ([1]_, Sec. 2, Eq. (3)). On the three-node
 triangle its nodal values are obtained by integrating the shear strains along
 the straight edges that join node 1 to the other two nodes ([1]_, Sec. 4.1.1),
-with `\pmb{\phi}` interpolated linearly,
+with `\boldsymbol{\phi}` interpolated linearly,
 
 .. math::
 
     \Delta w_1 = 0
     \qquad
     \Delta w_i = (w_i - w_1)
-      - \frac{1}{2}(\pmb{\phi}_1 + \pmb{\phi}_i) \cdot
-        (\pmb{r}_i - \pmb{r}_1)
+      - \frac{1}{2}(\boldsymbol{\phi}_1 + \boldsymbol{\phi}_i) \cdot
+        (\boldsymbol{r}_i - \boldsymbol{r}_1)
 
 The assumed shear strain is then the gradient of the interpolated gap,
 
 .. math::
 
-    \pmb{\gamma} = \nabla \left( \sum_i N_i \Delta w_i \right)
-                 = \sum_i \Delta w_i \nabla N_i
+    \boldsymbol{\gamma} = \nabla \left( \sum_i S_i \Delta w_i \right)
+                 = \sum_i \Delta w_i \nabla S_i
 
 which is constant over the element because the shape functions are linear.
 Four properties follow, all of them verified symbolically and then
 numerically in ``tests/test_tria3dsg.py``:
 
-* the three rigid-body modes that involve `w` give `\pmb{\gamma} = 0`
+* the three rigid-body modes that involve `w` give `\boldsymbol{\gamma} = 0`
   exactly;
 * a state of constant transverse shear is reproduced exactly, which is what
   Tria3R cannot do;
-* a state of constant curvature gives `\pmb{\gamma} = 0` exactly, so the
+* a state of constant curvature gives `\boldsymbol{\gamma} = 0` exactly, so the
   element develops no parasitic shear in pure bending. **This is the
   locking-free property**, and it is the reason no stabilisation parameter
   appears anywhere in this element;
@@ -771,7 +771,7 @@ cdef class Tria3DSG:
 
         The coordinates of the three nodes, read from ``x`` at the positions
         ``c1//2``, ``c2//2`` and ``c3//2``, are rotated to the element
-        coordinate system with the transpose `[T_{3\times 3}]^T` of the
+        coordinate system with the transpose `[T_{3\times 3}]^\top` of the
         transformation matrix and written to ``probe.xe``.
         :meth:`.update_rotation_matrix` must have been called before. The
         ``area`` attribute is not updated here, see :meth:`.update_area`.
@@ -820,7 +820,7 @@ cdef class Tria3DSG:
 
         The displacements and rotations of the three nodes, read from ``u`` at
         the positions ``c1``, ``c2`` and ``c3``, are rotated to the element
-        coordinate system with the transpose `[T_{3\times 3}]^T` of the
+        coordinate system with the transpose `[T_{3\times 3}]^\top` of the
         transformation matrix and written to ``probe.ue``.
         :meth:`.update_rotation_matrix` must have been called before.
 
@@ -910,7 +910,7 @@ cdef class Tria3DSG:
         these operators is constant over the triangle. With
         `\det J = x_1(y_2 - y_3) + x_2(y_3 - y_1) + x_3(y_1 - y_2)`, twice the
         signed area, the derivatives of the shape functions are
-        `N_{1,x} = (y_2 - y_3)/\det J`, `N_{1,y} = (x_3 - x_2)/\det J` and
+        `S_{1,x} = (y_2 - y_3)/\det J`, `S_{1,y} = (x_3 - x_2)/\det J` and
         their cyclic permutations, and the rows are
 
         .. math::
@@ -951,7 +951,7 @@ cdef class Tria3DSG:
         ``BLdrilling`` is the residual `r_z - \theta_z` of the drilling
         regularisation, with `\theta_z = (v_{,x} - u_{,y})/2`. Only its `r_z`
         part varies over the element; the entries written here are its
-        centroid values, `N_i = 1/3`, and
+        centroid values, `S_i = 1/3`, and
         :meth:`._update_probe_KC0ve` overwrites them at the points of the
         three-point rule while it integrates the drilling stiffness.
 
@@ -1136,7 +1136,7 @@ cdef class Tria3DSG:
         # NOTE drilling constraint of Hughes and Brezzi, r_z - theta_z with
         #      theta_z = (v_,x - u_,y)/2. Only the r_z part varies over the
         #      element; the entries written here are its centroid values,
-        #      N_i = 1/3, which is what a caller reading the operator back
+        #      S_i = 1/3, which is what a caller reading the operator back
         #      expects. _update_probe_KC0ve() overwrites them with the
         #      three-point rule, which is what the stiffness matrix needs
         BLdrilling[0] = N1y/2.
@@ -1181,8 +1181,8 @@ cdef class Tria3DSG:
         ``alpha_shear_locking`` `= \alpha \neq 0`, `\ell` being the longest
         edge and `h` the total thickness ``prop.h``.
 
-        The drilling term `\gamma_{r_z} \int_A B_{drill}^T B_{drill} dA`,
-        with `B_{drill}` the row ``BLdrilling`` and `\gamma_{r_z}` given by
+        The drilling term `\gamma_{r_z} \int_A B_{r_z}^\top B_{r_z} dA`,
+        with `B_{r_z}` the row ``BLdrilling`` and `\gamma_{r_z}` given by
         ``gamma_rz``, `A_{66}` or `K6ROT \cdot 10^{-6} A_{66}` as described
         for the attributes of :class:`.Tria3DSG`, must be integrated with
         three points and not one: a single point supplies a single
@@ -1390,7 +1390,7 @@ cdef class Tria3DSG:
         the element, block diagonal with the matrix `[T_{3\times 3}]` of the
         entries `T_{ij}` stored in ``r11, ..., r33``, whose columns are the
         element axes, for the translations and for the rotations of each node,
-        the global values are `[K_g] = [T] [K_e] [T]^T`, i.e. `K_{g,mn} =
+        the global values are `[K_g] = [T] [K_e] [T]^\top`, i.e. `K_{g,mn} =
         T_{mi} K_{e,ij} T_{nj}`.
 
         """
@@ -1452,17 +1452,17 @@ cdef class Tria3DSG:
         Notes
         -----
         With the von Karman membrane strain `\{\epsilon_{NL}\} =
-        \{w_{,x}^2/2, w_{,y}^2/2, w_{,x} w_{,y}\}^T`, the linear stress
+        \{w_{,x}^2/2, w_{,y}^2/2, w_{,x} w_{,y}\}^\top`, the linear stress
         resultants `\{N\} = [A]\{\epsilon\} + [B]\{\kappa\}`, and
         `\{N_{NL}\} = [A]\{\epsilon_{NL}\}`, `\{M_{NL}\} =
         [B]\{\epsilon_{NL}\}`, the terms added are
 
         .. math::
 
-            A_e \left( [B_m]^T \{N_{NL}\} + [B_b]^T \{M_{NL}\}
-            + [B_{mL}]^T (\{N\} + \{N_{NL}\}) \right)
+            A_e \left( [B_m]^\top \{N_{NL}\} + [B_b]^\top \{M_{NL}\}
+            + [B_{NL}]^\top (\{N\} + \{N_{NL}\}) \right)
 
-        with `A_e` the element area and `[B_{mL}]` the variation of
+        with `A_e` the element area and `[B_{NL}]` the variation of
         `\{\epsilon_{NL}\}`, see :meth:`.update_KCNL`, such that ``finte``
         becomes the gradient of the strain energy whose Hessian is KC0 +
         KCNL + KG. Every operator is constant over the triangle and so is the
@@ -1809,15 +1809,15 @@ cdef class Tria3DSG:
             \epsilon_{yy} = v_{,y} + \frac{1}{2} w_{,y}^2, \quad
             \gamma_{xy} = u_{,y} + v_{,x} + w_{,x} w_{,y}
 
-        whose nonlinear part is `\{\epsilon_{NL}\} = \frac{1}{2} [B_{mL}]
-        \{u_e\}`, with `[B_{mL}]` its variation. With `[B_m]` and `[B_b]`
+        whose nonlinear part is `\{\epsilon_{NL}\} = \frac{1}{2} [B_{NL}]
+        \{u_e\}`, with `[B_{NL}]` its variation. With `[B_m]` and `[B_b]`
         the linear membrane and bending strain-displacement matrices, `[G]`
         the gradient of `w`, and `[A]`, `[B]` the laminate matrices:
 
-        - KC0L = `[B_m]^T [A] [B_{mL}] + [B_b]^T [B] [B_{mL}]`
-        - KCL0 = KC0L`^T`
-        - KCLL = `[B_{mL}]^T [A] [B_{mL}]`
-        - KGNL = `[G]^T [N_{NL}] [G]`, with `\{N_{NL}\} = [A]
+        - KC0L = `[B_m]^\top [A] [B_{NL}] + [B_b]^\top [B] [B_{NL}]`
+        - KCL0 = KC0L`^\top`
+        - KCLL = `[B_{NL}]^\top [A] [B_{NL}]`
+        - KGNL = `[G]^\top [N_{NL}] [G]`, with `\{N_{NL}\} = [A]
           \{\epsilon_{NL}\}`
 
         The first three groups are the constitutive terms coupling the
@@ -1952,7 +1952,7 @@ cdef class Tria3DSG:
 
         Notes
         -----
-        The operator is the Donnell one. With `N_{i,x}` and `N_{i,y}` the
+        The operator is the Donnell one. With `S_{i,x}` and `S_{i,y}` the
         constant derivatives of the shape functions, `A_e` the element area and
         `\{T_{13}, T_{23}, T_{33}\}` the element normal in global coordinates,
         the third column of `[T_{3\times 3}]`, the entry of the global
@@ -1961,17 +1961,17 @@ cdef class Tria3DSG:
         .. math::
 
             K_{G} = A_e T_{m3} T_{n3}
-            \begin{bmatrix} N_{i,x} & N_{i,y} \end{bmatrix}
+            \begin{bmatrix} S_{i,x} & S_{i,y} \end{bmatrix}
             \begin{bmatrix} N_{xx} & N_{xy} \\ N_{xy} & N_{yy} \end{bmatrix}
-            \begin{bmatrix} N_{j,x} \\ N_{j,y} \end{bmatrix}
+            \begin{bmatrix} S_{j,x} \\ S_{j,y} \end{bmatrix}
 
         the integrand being constant over the triangle.
 
         A uniaxial state `N` along a global direction `\{d\}` has to be
         rotated. With `[T_{3\times 3}]` the transformation matrix of this
-        object, whose columns are the element axes, `\{a\} = [T_{3\times 3}]^T
+        object, whose columns are the element axes, `\{a\} = [T_{3\times 3}]^\top
         \{d\}` is that direction in element coordinates and the state `N \{a\}
-        \{a\}^T` has components
+        \{a\}^\top` has components
 
         .. math::
             N^e_{xx} = N a_x^2, \quad
@@ -2082,8 +2082,8 @@ cdef class Tria3DSG:
 
         .. math::
 
-            \{N_{xx}, N_{yy}, N_{xy}\}^T = [A]\{\epsilon_{xx}, \epsilon_{yy},
-            \gamma_{xy}\}^T + [B]\{\kappa_{xx}, \kappa_{yy}, \kappa_{xy}\}^T
+            \{N_{xx}, N_{yy}, N_{xy}\}^\top = [A]\{\epsilon_{xx}, \epsilon_{yy},
+            \gamma_{xy}\}^\top + [B]\{\kappa_{xx}, \kappa_{yy}, \kappa_{xy}\}^\top
 
         with the linear strains of :meth:`._update_probe_BL_G` and `[A]`,
         `[B]` in the element coordinate system. Both the strains and the
@@ -2202,10 +2202,10 @@ cdef class Tria3DSG:
         between the rotations `r_x` and between the rotations `r_y`, `+I_{\rho
         z} h_{ij}` between `u` and `r_y`, and `-I_{\rho z} h_{ij}` between `v`
         and `r_x`. The drilling rotation `r_z` has no inertia. For the
-        consistent mass matrix, `h_{ij} = \int N_i N_j dA` is `A/6` when `i =
+        consistent mass matrix, `h_{ij} = \int S_i S_j dA` is `A/6` when `i =
         j` and `A/12` otherwise. The lumped mass matrix integrates `T` with
         the vertex rule, the nodal quadrature with the weight `A/3` at each
-        node, where `N_i` is 1 at node `i` and 0 at the other nodes, giving
+        node, where `S_i` is 1 at node `i` and 0 at the other nodes, giving
         `h_{ii} = A/3` and `h_{ij} = 0` for `i \neq j`. The coupling through
         `I_{\rho z}` stays in the block of each node, such that the lumped
         matrix is block-diagonal per node, diagonal only when `I_{\rho z} =

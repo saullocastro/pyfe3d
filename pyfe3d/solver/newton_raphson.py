@@ -241,7 +241,7 @@ def _NR_iterations(an, pb, c, dc, total, fext, w, kT0=None, silent=False,
     pp. 325-327), applied to nonlinear equations with the merit function
     `f = \frac{1}{2}\|D_F F\|^2` ([2]_, Section 6.5, Eq. (6.5.3), p. 147,
     and Algorithm NEFN, p. 303), whose directional derivative along the
-    Newton step is `-F^T F = -2f` (p. 148, with `D_F` the identity). With
+    Newton step is `-F^\top F = -2f` (p. 148, with `D_F` the identity). With
     `F = R` and `\phi = 2f`, `D_F` being the identity with the Euclidean
     norm or `\mathrm{diag}(\sqrt{w_j})` with Crisfield's criterion, the test
     above is their condition (6.3.3) (p. 118) with their `\alpha = 10^{-4}`

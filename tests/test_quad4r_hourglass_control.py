@@ -16,8 +16,8 @@ whose Eq. (14) is quoted from, and is attributed here to,
     https://doi.org/10.1002/nme.1620190308
 
 The tests below check the implementation against that reference term by term.
-Writing `\pmb{h} = [1, -1, 1, -1]^\top` for the hourglass pattern of the
-bilinear element, `\pmb{s} = [1, 1, 1, 1]^\top`, and `A` for the element area,
+Writing `\boldsymbol{h} = [1, -1, 1, -1]^\top` for the hourglass pattern of the
+bilinear element, `\boldsymbol{s} = [1, 1, 1, 1]^\top`, and `A` for the element area,
 the quantities being verified are
 
 * the hourglass operator of Brockman's Eq. (15),
@@ -25,9 +25,9 @@ the quantities being verified are
   .. math::
       \tilde\gamma = 2 \frac{x_{31} y_{31} + x_{24} y_{42}}{A^2}
       \quad , \quad
-      \pmb{\gamma} = \left. \frac{\partial^2 \pmb{N}}
+      \boldsymbol{\gamma} = \left. \frac{\partial^2 \boldsymbol{N}}
                                  {\partial x \partial y}\right|_{\xi=\eta=0}
-      = \frac{\tilde\gamma}{4} \pmb{h}
+      = \frac{\tilde\gamma}{4} \boldsymbol{h}
 
   where `x_{ij} = x_i - x_j`. The two expressions of Eq. (15) are the same
   operator, which :func:`test_hourglass_operator_matches_brockman_eq15`
@@ -57,8 +57,8 @@ the quantities being verified are
   h`, which the stabilisation suppresses, and the twisting mode
 
   .. math::
-      w = \frac{1}{4}(\pmb{s}^\top \pmb{y}) x
-        + \frac{1}{4}(\pmb{s}^\top \pmb{x}) y
+      w = \frac{1}{4}(\boldsymbol{s}^\top \boldsymbol{y}) x
+        + \frac{1}{4}(\boldsymbol{s}^\top \boldsymbol{x}) y
       \quad , \quad
       \theta_x = x \quad , \quad \theta_y = y
 
@@ -83,11 +83,11 @@ calibration of Eq. (16):
 1. Brockman quotes the operator of Belytschko and Tsay as his Eq. (14),
 
    .. math::
-       \pmb{\gamma} = \pmb{h} - (\pmb{h}^\top \pmb{x}) \pmb{b}_1
-                              - (\pmb{h}^\top \pmb{y}) \pmb{b}_2
+       \boldsymbol{\gamma} = \boldsymbol{h} - (\boldsymbol{h}^\top \boldsymbol{x}) \boldsymbol{b}_1
+                              - (\boldsymbol{h}^\top \boldsymbol{y}) \boldsymbol{b}_2
 
-   with `\pmb{b}_1` and `\pmb{b}_2` the centroidal derivatives `N_{i,x}` and
-   `N_{i,y}`, the orthogonalisation being due to Flanagan and Belytschko
+   with `\boldsymbol{b}_1` and `\boldsymbol{b}_2` the centroidal derivatives `S_{i,x}` and
+   `S_{i,y}`, the orthogonalisation being due to Flanagan and Belytschko
    (1981), and observes that "the last two terms of equation (14) are
    important for irregular elements, if the hourglass strains are to vanish
    in the presence of rigid-body motion and uniform strain". He then adopts
@@ -102,10 +102,10 @@ calibration of Eq. (16):
    Since 0.10.0 :class:`pyfe3d.Quad4R` therefore applies the two correction
    terms of Eq. (14), scaled by the normalisation of Eq. (15) so that the
    generalized stiffnesses of Eq. (16) keep their calibration. The
-   correction changes nothing on a parallelogram, where `\pmb{h}^\top
-   \pmb{x}` and `\pmb{h}^\top \pmb{y}` are zero, and changes nothing about
+   correction changes nothing on a parallelogram, where `\boldsymbol{h}^\top
+   \boldsymbol{x}` and `\boldsymbol{h}^\top \boldsymbol{y}` are zero, and changes nothing about
    the energy of the five hourglass patterns on any shape, because the
-   centroidal sums `\pmb{h}^\top \pmb{b}_1` and `\pmb{h}^\top \pmb{b}_2`
+   centroidal sums `\boldsymbol{h}^\top \boldsymbol{b}_1` and `\boldsymbol{h}^\top \boldsymbol{b}_2`
    vanish identically. What it does change is that the hourglass strains are
    now orthogonal to the rigid-body motions and to the uniform strain states
    on any shape, see
@@ -231,14 +231,14 @@ def gamma_tilde(el, probe):
 
 def gamma_vector(el, probe):
     r"""The hourglass operator that Eq. (15) defines, `\gamma = \tilde\gamma
-    \pmb{h}/4`, equal to the centroidal `\partial^2 N/\partial x \partial y`
+    \boldsymbol{h}/4`, equal to the centroidal `\partial^2 N/\partial x \partial y`
 
     """
     return gamma_tilde(el, probe)/4.*H
 
 
 def centroid_derivatives(probe):
-    r"""`\pmb{b}_1` and `\pmb{b}_2` of Brockman's Eq. (14), the centroidal
+    r"""`\boldsymbol{b}_1` and `\boldsymbol{b}_2` of Brockman's Eq. (14), the centroidal
     Cartesian derivatives of the bilinear shape functions
 
     """
@@ -299,10 +299,10 @@ def test_hourglass_operator_matches_brockman_eq15():
     energy comes from the stabilisation,
 
     .. math::
-        U = \frac{1}{2} E^{(h)} (\pmb{\gamma}^\top \pmb{h})^2 A
+        U = \frac{1}{2} E^{(h)} (\boldsymbol{\gamma}^\top \boldsymbol{h})^2 A
           = \frac{1}{2} E^{(h)} \tilde\gamma^2 A
 
-    since `\pmb{\gamma}^\top \pmb{h} = \tilde\gamma \pmb{h}^\top \pmb{h}/4 =
+    since `\boldsymbol{\gamma}^\top \boldsymbol{h} = \tilde\gamma \boldsymbol{h}^\top \boldsymbol{h}/4 =
     \tilde\gamma`. The identity is checked on four shapes, including two
     irregular ones, and holds to machine precision on all of them, which
     verifies the operator of Eq. (15) and the stiffnesses of Eq. (16)
@@ -334,7 +334,7 @@ def test_hourglass_operator_equals_second_derivative_of_N():
     ``Quad4R`` builds the operator as the centroidal `\partial^2 N/\partial x
     \partial y`, which the element code evaluates as ``0.25*(j11*j22 +
     j12*j21)`` times the alternating pattern. Eq. (15) also gives it in
-    closed form as `\tilde\gamma \pmb{h}/4`. The two agree on any shape.
+    closed form as `\tilde\gamma \boldsymbol{h}/4`. The two agree on any shape.
 
     """
     for name, ncoords in [('rectangle', RECTANGLE),
@@ -448,8 +448,8 @@ def test_twisting_mode_is_not_stabilised_and_needs_two_elements():
     Brockman's Eq. (13) is
 
     .. math::
-        w = \frac{1}{4}(\pmb{s}^\top \pmb{y}) x
-          + \frac{1}{4}(\pmb{s}^\top \pmb{x}) y
+        w = \frac{1}{4}(\boldsymbol{s}^\top \boldsymbol{y}) x
+          + \frac{1}{4}(\boldsymbol{s}^\top \boldsymbol{x}) y
         \quad , \quad \theta_x = x \quad , \quad \theta_y = y
 
     which is not an hourglass pattern, so the stabilisation does not reach
@@ -458,14 +458,14 @@ def test_twisting_mode_is_not_stabilised_and_needs_two_elements():
     mesh of two or more elements, as shown by Hughes", which is checked here
     by counting the zero eigenvalues of a two-element mesh.
 
-    Brockman measures the transverse shear as `\pmb{\nabla} w -
-    \pmb{\theta}`, whereas :class:`pyfe3d.Quad4R` uses `\gamma_{xz} = w_{,x}
+    Brockman measures the transverse shear as `\boldsymbol{\nabla} w -
+    \boldsymbol{\theta}`, whereas :class:`pyfe3d.Quad4R` uses `\gamma_{xz} = w_{,x}
     + r_y` and `\gamma_{yz} = w_{,y} - r_x`, so `r_x = \theta_x`, `r_y =
     -\theta_y` and the sign of the first term of `w` changes,
 
     .. math::
-        w = -\frac{1}{4}(\pmb{s}^\top \pmb{y}) x
-          + \frac{1}{4}(\pmb{s}^\top \pmb{x}) y
+        w = -\frac{1}{4}(\boldsymbol{s}^\top \boldsymbol{y}) x
+          + \frac{1}{4}(\boldsymbol{s}^\top \boldsymbol{x}) y
         \quad , \quad r_x = x \quad , \quad r_y = y
 
     With the element centroid as the origin both terms of `w` vanish and the
@@ -535,8 +535,8 @@ def test_hourglass_strains_orthogonal_to_linear_fields():
 
     The scheme relies on the hourglass strains vanishing for the rigid-body
     motions and the uniform-strain states, which requires
-    `\pmb{\gamma}^\top \pmb{s} = \pmb{\gamma}^\top \pmb{x} =
-    \pmb{\gamma}^\top \pmb{y} = 0`. For the operator of Eq. (15) the first
+    `\boldsymbol{\gamma}^\top \boldsymbol{s} = \boldsymbol{\gamma}^\top \boldsymbol{x} =
+    \boldsymbol{\gamma}^\top \boldsymbol{y} = 0`. For the operator of Eq. (15) the first
     always holds and the other two hold only while the element is a
     parallelogram. The operator used by the element, Eq. (15) corrected by
     the two terms of Eq. (14), satisfies all three on any shape, which is
@@ -952,7 +952,7 @@ def test_transverse_coefficient_has_no_unit_invariant_constant():
 
     The hourglass operator cannot distinguish the spurious pattern `w = xy`
     with `\theta_x = \theta_y = 0` from a legitimate twist curvature, both
-    giving `\gamma^T w = \partial^2 w/\partial x \partial y`, so the
+    giving `\gamma^\top w = \partial^2 w/\partial x \partial y`, so the
     stabilisation also stiffens real twist and the acceptable amount is a
     property of the problem rather than of the element. This test measures
     the two ends of that range on this element's own benchmarks and shows
@@ -1288,12 +1288,12 @@ def test_mass_formulations_match_brockman():
     assumption under which Brockman evaluates his Eq. (22),
 
     .. math::
-        \pmb{H} = \frac{A}{36}
+        \boldsymbol{H} = \frac{A}{36}
         \begin{bmatrix} 4 & 2 & 1 & 2 \\ 2 & 4 & 2 & 1 \\
                         1 & 2 & 4 & 2 \\ 2 & 1 & 2 & 4 \end{bmatrix}
 
     used by ``mtype = 0``. The reduced mass of his Eq. (31) replaces it with
-    `\pmb{H} = (A/16) \pmb{s} \pmb{s}^\top`, every entry equal, used by
+    `\boldsymbol{H} = (A/16) \boldsymbol{s} \boldsymbol{s}^\top`, every entry equal, used by
     ``mtype = 2``. The lumped mass of pp. 2348-2349, by Gauss-Lobatto
     integration at the nodes, used by ``mtype = 1``, is diagonal provided
     `R_2 = 0`, as here without offset, with `R_1 A/4` and `R_3 A/4` per

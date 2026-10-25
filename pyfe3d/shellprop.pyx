@@ -431,8 +431,8 @@ cdef class MatLamina:
         .. math::
 
             \{q_{11L}, q_{22L}, q_{12L}, q_{66L}, q_{16L}, q_{26L}, q_{44L},
-            q_{45L}, q_{55L}\}^T = U \{1, \cos 2\theta, \sin 2\theta, \cos
-            4\theta, \sin 4\theta\}^T
+            q_{45L}, q_{55L}\}^\top = U \{1, \cos 2\theta, \sin 2\theta, \cos
+            4\theta, \sin 4\theta\}^\top
 
         which holds when ``u1`` to ``u5`` are computed from the plane-stress
         reduced stiffnesses, i.e. with ``e3 = 0``. Integrated through the
@@ -609,8 +609,8 @@ cdef class Lamina:
         With the ply angle `\theta` measured from the laminate `x` axis to
         the material direction 1, as in the stiffnesses of :meth:`rebuild`,
         the material direction 1 is `\{\cos\theta, \sin\theta, 0\}` in the
-        laminate axes, such that `\{u_1, u_2, u_3\}^T = T \{u_x, u_y,
-        u_z\}^T`. The matrix is orthogonal, and its transpose maps the
+        laminate axes, such that `\{u_1, u_2, u_3\}^\top = T \{u_x, u_y,
+        u_z\}^\top`. The matrix is orthogonal, and its transpose maps the
         material components back to the laminate axes.
 
         """
@@ -643,8 +643,8 @@ cdef class Lamina:
 
         Builds the matrix from the terms ``cost``, ``sint`` and ``sin2t``
         computed by :meth:`rebuild`, such that `\{\sigma_{11}, \sigma_{22},
-        \sigma_{33}, \tau_{23}, \tau_{13}, \tau_{12}\}^T = T \{\sigma_{xx},
-        \sigma_{yy}, \sigma_{zz}, \tau_{yz}, \tau_{xz}, \tau_{xy}\}^T`, with
+        \sigma_{33}, \tau_{23}, \tau_{13}, \tau_{12}\}^\top = T \{\sigma_{xx},
+        \sigma_{yy}, \sigma_{zz}, \tau_{yz}, \tau_{xz}, \tau_{xy}\}^\top`, with
         the material axes 1, 2, 3 and the laminate axes `x`, `y`, `z`.
 
         Returns
@@ -695,8 +695,8 @@ cdef class Lamina:
         in ``sint`` and ``sin2t`` with respect to
         :meth:`get_transf_matrix_stress_to_lamina`, such that
         `\{\sigma_{xx}, \sigma_{yy}, \sigma_{zz}, \tau_{yz}, \tau_{xz},
-        \tau_{xy}\}^T = T \{\sigma_{11}, \sigma_{22}, \sigma_{33}, \tau_{23},
-        \tau_{13}, \tau_{12}\}^T`, with the material axes 1, 2, 3 and the
+        \tau_{xy}\}^\top = T \{\sigma_{11}, \sigma_{22}, \sigma_{33}, \tau_{23},
+        \tau_{13}, \tau_{12}\}^\top`, with the material axes 1, 2, 3 and the
         laminate axes `x`, `y`, `z`.
 
         Returns
@@ -733,7 +733,7 @@ cdef int PLYDATA_SIZE = 10
 
 
 cdef inline void _congruence3(double *T, double *M, double *out) noexcept nogil:
-    r"""Symmetric 3x3 congruence `out = T M T^T`, all stored row by row"""
+    r"""Symmetric 3x3 congruence `out = T M T^\top`, all stored row by row"""
     cdef int i, j
     cdef double TM[9]
     for i in range(3):
@@ -762,8 +762,8 @@ cdef void _rotate_ply(double *pd, double m11, double m12, double m21,
     in-plane vectors, the plane-stress stiffness `C = [[q_{11L}, q_{12L},
     q_{16L}], [q_{12L}, q_{22L}, q_{26L}], [q_{16L}, q_{26L}, q_{66L}]]` and
     the transverse shear stiffness `C_s = [[q_{44L}, q_{45L}], [q_{45L},
-    q_{55L}]]` are rotated as `C^e = T_\sigma C T_\sigma^T` and `C_s^e = T_s
-    C_s T_s^T`, with the transformations of `\{\sigma_{xx}, \sigma_{yy},
+    q_{55L}]]` are rotated as `C^e = T_\sigma C T_\sigma^\top` and `C_s^e = T_s
+    C_s T_s^\top`, with the transformations of `\{\sigma_{xx}, \sigma_{yy},
     \tau_{xy}\}` and of `\{\tau_{yz}, \tau_{xz}\}`:
 
     .. math::
@@ -1487,7 +1487,7 @@ cdef class ShellProp:
         r"""Transverse shear stiffness matrix ``[[A44, A45], [A45, A55]]``
 
         Index 4 corresponds to `yz` and index 5 to `xz`, such that `\{Q_y,
-        Q_x\}^T = A_{ts} \{\gamma_{yz}, \gamma_{xz}\}^T`. The shear correction
+        Q_x\}^\top = A_{ts} \{\gamma_{yz}, \gamma_{xz}\}^\top`. The shear correction
         is already applied, see :meth:`.calc_transverse_shear_stiffness`.
         A new array is returned at each access, such that changing it does not
         change the attributes.
@@ -1566,9 +1566,9 @@ cdef class ShellProp:
         Notes
         -----
         ``A``, ``B`` and ``D`` are rotated with `[A]_e = [T_\sigma] [A]
-        [T_\sigma]^T`, with `T_\sigma` of :func:`_rotate_ply`. Without the
+        [T_\sigma]^\top`, with `T_\sigma` of :func:`_rotate_ply`. Without the
         Fourier coefficients of :meth:`.calc_Ats_element`, ``Ats`` is rotated
-        with `T_s A_{ts} T_s^T`, `T_s = [[m_{22}, m_{21}], [m_{12},
+        with `T_s A_{ts} T_s^\top`, `T_s = [[m_{22}, m_{21}], [m_{12},
         m_{11}]]`. With them, the compliance `S = A_{ts}^{-1}` is evaluated
         from its Fourier series, with `\cos 2\theta = m_{11}^2 - m_{21}^2`,
         `\sin 2\theta = 2 m_{11} m_{21}` and the higher harmonics obtained by
@@ -1777,7 +1777,7 @@ cdef class ShellProp:
 
         .. math::
 
-            A_{ts}^e = T_s A_{ts} T_s^T \qquad T_s = \begin{bmatrix}
+            A_{ts}^e = T_s A_{ts} T_s^\top \qquad T_s = \begin{bmatrix}
             \cos\theta & \sin\theta \\ -\sin\theta & \cos\theta \end{bmatrix}
 
         which is exact for the constant-strain stiffness.
@@ -1827,7 +1827,7 @@ cdef class ShellProp:
         theory (FSDT) **with the shear correction already applied**, and no
         shear correction factor is applied to them by the elements.
 
-        Conventions: `\{\tau_{yz}, \tau_{xz}\}^T`, `\{Q_y, Q_x\}^T`,
+        Conventions: `\{\tau_{yz}, \tau_{xz}\}^\top`, `\{Q_y, Q_x\}^\top`,
         `A_{ts} = [[A_{44}, A_{45}], [A_{45}, A_{55}]]`, index 4 corresponds
         to `yz` and index 5 to `xz`. The coordinate `z` is measured from the
         reference surface, with the plies running from `z_1 = -h/2 +
@@ -1910,7 +1910,7 @@ cdef class ShellProp:
           transverse shear stresses are obtained from the equilibrium of two
           cylindrical bending states, with zero tractions at the bottom and
           top faces and continuity at every interface, `\{\tau_{yz},
-          \tau_{xz}\}^T = f^{(k)}(z) \{Q_y, Q_x\}^T`, see :func:`._rohwer`.
+          \tau_{xz}\}^\top = f^{(k)}(z) \{Q_y, Q_x\}^\top`, see :func:`._rohwer`.
           The 2x2 stiffness is obtained from the complementary energy:
 
           .. math::

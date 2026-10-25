@@ -518,6 +518,19 @@ select the other matrix.
   `tests/test_solver_load_factor_dependent_load.py`. No public name
   changes: the matrix is not an argument, attribute or function of the
   API.
+- Notation of the documentation as in the book, without code changes: the
+  scalar shape functions are `S_i` instead of `N_i` (`N` stays for the
+  stress resultants); the drilling operator and energy of the penalty
+  model are `B_{r_z}` and `U_{r_z}` instead of `B_{drill}` and
+  `U_{drill}`, and the drilling stiffness of the physics-based model
+  `K_{C_e}^{r_z}`; the sectional constitutive matrix of the beams is
+  `[C_{sec}]` instead of `[D]`; the variation of the nonlinear membrane
+  strains of the shells is `[B_{NL}]` instead of `[B_{mL}]`, as for the
+  beams; bold symbols use `\boldsymbol`, with the accents outside, e.g.
+  `\tilde{\boldsymbol{S}}`, instead of `\pmb`, and the transpose is
+  `^\top` instead of `^T`, in the docstrings, the user guide and the
+  tutorials. A matrix in the docstring of `Tria3R.update_KG_given_stress`
+  had a single backslash as row separator.
 - User guide pages: overview and workflow, conventions, choice of the
   element, shell and beam properties, non-linear static analyses, linear
   buckling and natural frequencies, installation and changelog. The usage

@@ -15,9 +15,9 @@ such that the reduced problem has two degrees of freedom and the residual
 
 .. math::
 
-    \{R_r(c_r, \lambda)\} = [Z]^T \left(\lambda \{F_{ext}\} -
+    \{R_r(c_r, \lambda)\} = [Z]^\top \left(\lambda \{F_{ext}\} -
     \{F_{int}(c)\}\right), \qquad
-    \frac{\partial R_r}{\partial \lambda} = [Z]^T \left(\{F_{ext}\} -
+    \frac{\partial R_r}{\partial \lambda} = [Z]^\top \left(\{F_{ext}\} -
     [K_T(c)] \{c_{p1}\}\right)
 
 whose derivative with respect to the load factor depends on the
@@ -79,7 +79,7 @@ class SpringsProblem(object):
         return Z.T @ (self.Fext - self.kT_full(c) @ self.cp1)
 
     def reaction(self, c_r, lbd):
-        r"""Force of the support on node 3, `c_{p1}^T r / d_1`, with `r =
+        r"""Force of the support on node 3, `c_{p1}^\top r / d_1`, with `r =
         F_{int}(c) - \lambda F_{ext}`"""
         c = self.full(c_r, lbd)
         r = self.fint_full(c) - lbd*self.Fext

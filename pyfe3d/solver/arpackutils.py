@@ -433,14 +433,14 @@ def _rayleigh_ritz(A, M, V):
     The eigenvectors of different passes of :func:`capped_eigsh` are only
     `[M]`-orthogonal to the accuracy of ARPACK, e.g. `10^{-6}` between
     close eigenvalues of different passes. `[V]` is `[M]`-orthonormalized
-    with the Cholesky factor `[L]` of `[V]^T[M][V]`, and the projected
-    problem `[W]^T[A][W]\{y\} = w\{y\}`, with `[W] = [V][L]^{-T}`, is
+    with the Cholesky factor `[L]` of `[V]^\top[M][V]`, and the projected
+    problem `[W]^\top[A][W]\{y\} = w\{y\}`, with `[W] = [V][L]^{-\top}`, is
     solved with the LAPACK driver ``dsyevr`` (``driver='evr'``), which does
     not use the ``dsteqr`` of Intel MKL broken above 32 x 32 matrices, see
     :func:`dsteqr_is_faulty`. The returned eigenvectors `[W]\{y\}` are
     `[M]`-orthonormal to the rounding errors, and the Ritz values are at
-    least as accurate as the eigenvalues of the passes. `[V]^T[M][V]` and
-    `[W]^T[A][W]` are symmetrized, `\frac{1}{2}([B] + [B]^T)`, before the
+    least as accurate as the eigenvalues of the passes. `[V]^\top[M][V]` and
+    `[W]^\top[A][W]` are symmetrized, `\frac{1}{2}([B] + [B]^\top)`, before the
     Cholesky factorization and the eigenvalue solution.
 
     The Ritz values are the optimal approximations of the eigenvalues that
@@ -451,7 +451,7 @@ def _rayleigh_ritz(A, M, V):
     of the maximum of the Rayleigh quotient, so it can only improve when the
     span grows, and the span contains the eigenvectors of every pass. The
     theorem is stated for the standard problem; it holds for the pencil in
-    the `[M]` inner product, through the Cholesky factor of `[V]^T[M][V]`.
+    the `[M]` inner product, through the Cholesky factor of `[V]^\top[M][V]`.
 
     References
     ----------
@@ -539,7 +539,7 @@ def capped_eigsh(A, k, M, sigma, which, mode='normal', tol=0):
 
     .. math::
 
-        \{y\} = ([I] - [V][V]^T[M])([A] - \sigma_d [M])^{-1}\{x\}
+        \{y\} = ([I] - [V][V]^\top[M])([A] - \sigma_d [M])^{-1}\{x\}
 
     such that the eigenvalues of `[V]`, already found, become null and are
     not found again. Each pass therefore returns the eigenvalues nearest
@@ -547,7 +547,7 @@ def capped_eigsh(A, k, M, sigma, which, mode='normal', tol=0):
     `w`. A shift close to them, instead of ``sigma``, separates them better.
     ARPACK applies the operator to `[M]\{x\}`; for an eigenvector `\{v_i\}` of `[V]`,
     `([A] - \sigma_d [M])^{-1}[M]\{v_i\} = \{v_i\}/(w_i - \sigma_d)` and,
-    `[V]` being `[M]`-orthonormal, `([I] - [V][V]^T[M])\{v_i\} = \{0\}`.
+    `[V]` being `[M]`-orthonormal, `([I] - [V][V]^\top[M])\{v_i\} = \{0\}`.
 
     References
     ----------

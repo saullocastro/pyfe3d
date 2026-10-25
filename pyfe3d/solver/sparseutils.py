@@ -103,7 +103,7 @@ def is_symmetric(A, rtol=1.e-10):
 
     Notes
     -----
-    The test is `\|[A] - [A]^T\|_F \le rtol \|[A]\|_F`. The relative
+    The test is `\|[A] - [A]^\top\|_F \le rtol \|[A]\|_F`. The relative
     tolerance absorbs the round-off of matrices that are symmetric in exact
     arithmetic but assembled from terms evaluated in a different order on
     each side of the diagonal, whereas a genuinely unsymmetric term, such as

@@ -368,7 +368,7 @@ cdef class BeamLR:
         The translations and rotations of the two nodes, read from ``u`` at the
         positions ``c1`` to ``c1 + 5`` and ``c2`` to ``c2 + 5``, are
         transformed to the element coordinate system with the transpose
-        `[T_{3\times 3}]^T` of the transformation matrix, which must be updated
+        `[T_{3\times 3}]^\top` of the transformation matrix, which must be updated
         before, see :meth:`.update_rotation_matrix`.
 
         Parameters
@@ -427,7 +427,7 @@ cdef class BeamLR:
 
         The coordinates of the two nodes, read from ``x`` at the positions
         ``c1//2`` and ``c2//2``, are transformed to the element coordinate
-        system with the transpose `[T_{3\times 3}]^T` of the transformation
+        system with the transpose `[T_{3\times 3}]^\top` of the transformation
         matrix, which must be updated before, see
         :meth:`.update_rotation_matrix`. Then :meth:`.update_length` is called,
         updating ``length``.
@@ -1738,14 +1738,14 @@ cdef class BeamLR:
 
         whose nonlinear part is `\epsilon_{NL} = \frac{1}{2} [B_{NL}] \{u_e\}`, with
         `[B_{NL}] = v_{,x} [G_v] + w_{,x} [G_w]` its variation, where the slopes are taken from the rotations as `v_{,x} = r_z` and `w_{,x} = -r_y`. With
-        `[B_L]` the linear strain-displacement matrix, `[D]` the constitutive
-        matrix, whose first column couples the axial strain with `E A`, `E A_y`
+        `[B_L]` the linear strain-displacement matrix, `[C_{sec}]` the sectional
+        constitutive matrix, whose first column couples the axial strain with `E A`, `E A_y`
         and `E A_z`, and `N_{NL} = E A \epsilon_{NL}`:
 
-        - KC0L = `[B_L]^T [D] [B_{NL}]`
-        - KCL0 = KC0L`^T`
-        - KCLL = `[B_{NL}]^T [D] [B_{NL}]`
-        - KGNL = `N_{NL} ([G_v]^T [G_v] + [G_w]^T [G_w])`
+        - KC0L = `[B_L]^\top [C_{sec}] [B_{NL}]`
+        - KCL0 = KC0L`^\top`
+        - KCLL = `[B_{NL}]^\top [C_{sec}] [B_{NL}]`
+        - KGNL = `N_{NL} ([G_v]^\top [G_v] + [G_w]^\top [G_w])`
 
         The first three groups are the constitutive terms coupling the linear and
         the nonlinear parts of the axial strain. KGNL is geometric, carrying the
@@ -1880,7 +1880,7 @@ cdef class BeamLR:
         The geometric stiffness matrix is
 
         .. math::
-            [K_G] = \int_0^L N \left( [G_v]^T [G_v] + [G_w]^T [G_w] \right) dx
+            [K_G] = \int_0^L N \left( [G_v]^\top [G_v] + [G_w]^\top [G_w] \right) dx
 
         the Hessian of `\frac{1}{2} \int_0^L N (v_{,x}^2 + w_{,x}^2) dx` at a
         constant axial force `N`, where the slopes are taken from the

@@ -336,9 +336,9 @@ def estimate_cayley_sigma(K, KG, safety=10., max_iter=50, rel_tol=1.e-3):
     `[K_{C0}]^{-1}[K_G]`, whose ratio of norms in the `[K_{C0}]`-norm grows
     towards it, and the result is multiplied by ``safety``.
 
-    At each iteration `\{x\}` is normalized such that `\{x\}^T [K_{C0}]
+    At each iteration `\{x\}` is normalized such that `\{x\}^\top [K_{C0}]
     \{x\} = 1`, `\{y\} = [K_{C0}]^{-1} [K_G] \{x\}` is computed and the
-    ratio of norms is `\sqrt{|\{y\}^T [K_{C0}] \{y\}|}`; `\{y\}` becomes
+    ratio of norms is `\sqrt{|\{y\}^\top [K_{C0}] \{y\}|}`; `\{y\}` becomes
     the next `\{x\}`. The estimate is the largest ratio found, and the
     iterations stop when a ratio exceeds the previous estimate by at most
     ``rel_tol`` times the ratio, or after ``max_iter`` iterations. For a
@@ -379,8 +379,8 @@ def _negative_pivots(A):
     ``A`` is factorized with :func:`scipy.sparse.linalg.splu`, with the
     ordering ``'MMD_AT_PLUS_A'``, ``diag_pivot_thresh=0.`` and the symmetric
     mode, i.e. with a symmetric permutation and without row interchanges,
-    `[P][A][P]^T = [L][D][L]^T` with the pivots `[D]` on the diagonal of
-    `[U] = [D][L]^T`. By Sylvester's law of inertia, the number of negative
+    `[P][A][P]^\top = [L][D][L]^\top` with the pivots `[D]` on the diagonal of
+    `[U] = [D][L]^\top`. By Sylvester's law of inertia, the number of negative
     pivots is the number of negative eigenvalues of `[A]`.
 
     """
@@ -431,7 +431,7 @@ def is_positive_definite(A):
     The Gaussian elimination of a positive definite matrix never meets a zero
     or a negative pivot, and by Sylvester's law of inertia a negative pivot
     means a negative eigenvalue: without row interchanges, the factorization
-    of the symmetric matrix is `[L][D_U][L]^T`, with the pivots on the
+    of the symmetric matrix is `[L][D_U][L]^\top`, with the pivots on the
     diagonal `[D_U]` of `[U]`, and `[A]` has as many negative eigenvalues as
     `[D_U]` has negative entries, see :func:`_negative_pivots`.
 
@@ -725,7 +725,7 @@ def check_eigenpairs(K, KG, eigvals, eigvecs, rtol=1.e-3, min_rel_gap=1.e-4,
     in `(0, s)`. This is the Sturm sequence check of the eigenvalue solvers
     of structural analysis ([1]_, Section 10.2.2, p. 849, Section 11.4.3,
     p. 943, and Section 11.6, p. 954), where the number of negative
-    elements of `[D]` in the factorization `[L][D][L]^T` of `[K] - \mu
+    elements of `[D]` in the factorization `[L][D][L]^\top` of `[K] - \mu
     [M]` is the number of eigenvalues of the pencil `([K], [M])` smaller
     than `\mu`. When only one
     positive load multiplier was returned, none is expected in `(0, s)` and
@@ -857,7 +857,7 @@ def _null_mu_pencil(a, b, mu, vl, vr):
     which are null as well. A well-conditioned genuine eigenvalue is null
     only when `|\mu| \le 2.2 \cdot 10^{-15} \|[a]\|`, below the
     :func:`_null_mu` threshold when `\|[a]\|` is of the order of `\max
-    |\mu|`. For symmetric matrices no Jordan block exists, and `\{x\}^T [b]
+    |\mu|`. For symmetric matrices no Jordan block exists, and `\{x\}^\top [b]
     \{x\} = 1` of :func:`scipy.linalg.eigh` gives `\kappa = \|\{x\}\|^2`.
 
     """
@@ -2517,7 +2517,7 @@ def _companion_vectors(K, C, M, lam, Z):
     lam : np.ndarray
         Finite eigenvalues, 1-D array of size ``k``.
     Z : np.ndarray
-        Eigenvectors `\{z\} = \{\{u\}^T, \lambda \{u\}^T\}^T` of the
+        Eigenvectors `\{z\} = \{\{u\}^\top, \lambda \{u\}^\top\}^\top` of the
         linearization, shape ``(2n, k)``.
 
     Returns
@@ -2947,7 +2947,7 @@ def complex_frequency(K, C, M, num_eigvalues=6, tol=0, sigma=None,
 
     .. rubric:: Linearization
 
-    With `\{z\} = \{\{u\}^T, \lambda \{u\}^T\}^T`, the problem is the
+    With `\{z\} = \{\{u\}^\top, \lambda \{u\}^\top\}^\top`, the problem is the
     generalized eigenvalue problem of size `2n`
 
     .. math::

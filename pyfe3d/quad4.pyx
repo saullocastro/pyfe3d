@@ -72,16 +72,16 @@ and the strain energy
 
 .. math::
 
-    U = \frac{1}{2} \int_A \left( \{\epsilon\}^T [A] \{\epsilon\}
-        + 2 \{\epsilon\}^T [B] \{\kappa\}
-        + \{\kappa\}^T [D] \{\kappa\}
-        + \{\gamma\}^T [A_s] \{\gamma\} \right) dA + U_{drill}
+    U = \frac{1}{2} \int_A \left( \{\epsilon\}^\top [A] \{\epsilon\}
+        + 2 \{\epsilon\}^\top [B] \{\kappa\}
+        + \{\kappa\}^\top [D] \{\kappa\}
+        + \{\gamma\}^\top [A_s] \{\gamma\} \right) dA + U_{r_z}
 
-with `\{\epsilon\} = \{\epsilon_{xx}, \epsilon_{yy}, \gamma_{xy}\}^T`,
-`\{\kappa\} = \{\kappa_{xx}, \kappa_{yy}, \kappa_{xy}\}^T`,
-`\{\gamma\} = \{\gamma_{yz}, \gamma_{xz}\}^T`, `[A]`, `[B]` and `[D]` the
+with `\{\epsilon\} = \{\epsilon_{xx}, \epsilon_{yy}, \gamma_{xy}\}^\top`,
+`\{\kappa\} = \{\kappa_{xx}, \kappa_{yy}, \kappa_{xy}\}^\top`,
+`\{\gamma\} = \{\gamma_{yz}, \gamma_{xz}\}^\top`, `[A]`, `[B]` and `[D]` the
 laminate stiffness matrices and `[A_s]` the matrix of `A_{44}`, `A_{45}` and
-`A_{55}`, all in the element coordinate system, and `U_{drill}` the drilling
+`A_{55}`, all in the element coordinate system, and `U_{r_z}` the drilling
 term described below. These are the rows of :meth:`.Quad4Probe.update_BL`.
 All DOF are interpolated bi-linearly between the nodes, such that any of the
 DOF gradients can be constant over the element when the element is
@@ -188,28 +188,28 @@ in-plane field becomes
 
     \left\{\begin{matrix} u \\ v \end{matrix}\right\}
     = \sum_i S_i \left\{\begin{matrix} u_i \\ v_i \end{matrix}\right\}
-    + \sum_k \hat{S}_k \frac{\ell_k}{8}\left({r_z}_i - {r_z}_j\right) \pmb{n}_k
+    + \sum_k \hat{S}_k \frac{\ell_k}{8}\left({r_z}_i - {r_z}_j\right) \boldsymbol{n}_k
 
-with `\pmb{n}_k` the unit normal of edge `k` and `\hat{S}_k` the
+with `\boldsymbol{n}_k` the unit normal of edge `k` and `\hat{S}_k` the
 hierarchical bubble of that edge, equal to unity at its mid-point and zero
 at every corner, which for the quadrilateral are the mid-side functions of
 the eight-node serendipity element, see :func:`allman_enrichment`. In row form
 the enrichment populates the drilling columns of the membrane operator,
-giving `\pmb{\tilde B}_m`, whereas the curvature and transverse shear
+giving `\tilde{\boldsymbol{B}}_m`, whereas the curvature and transverse shear
 operators are untouched, because the edge modes act only on the in-plane
 translations. The drilling residual becomes
 
 .. math::
 
-    \pmb{\tilde B}_{r_z} = \pmb{S}^{r_z}
-    + \frac{1}{2}\pmb{\tilde S}^u_{,y} - \frac{1}{2}\pmb{\tilde S}^v_{,x}
+    \tilde{\boldsymbol{B}}_{r_z} = \boldsymbol{S}^{r_z}
+    + \frac{1}{2}\tilde{\boldsymbol{S}}^u_{,y} - \frac{1}{2}\tilde{\boldsymbol{S}}^v_{,x}
 
 and the contribution to the element stiffness matrix is
 
 .. math::
 
-    \pmb{K}_{r_z} = \gamma_{r_z} \iint_{\xi\eta}
-    \pmb{\tilde B}_{r_z}^\top \pmb{\tilde B}_{r_z} \det \pmb{J} d\xi d\eta
+    \boldsymbol{K}_{C_e}^{r_z} = \gamma_{r_z} \iint_{\xi\eta}
+    \tilde{\boldsymbol{B}}_{r_z}^\top \tilde{\boldsymbol{B}}_{r_z} \det \boldsymbol{J} d\xi d\eta
     \qquad \text{with} \qquad \gamma_{r_z} = A_{66}
 
 The value `\gamma_{r_z} = A_{66}` is a modulus and not a user parameter.
@@ -234,10 +234,10 @@ removes it without such a constraint.
 
 Two quadrature choices matter and both follow Ibrahimbegovic et al. (1990).
 The membrane term is integrated with three points per direction: the edge
-modes make `\pmb{\tilde B}_m` vary linearly, and with two points the
+modes make `\tilde{\boldsymbol{B}}_m` vary linearly, and with two points the
 alternating pattern of the drilling rotations produces no membrane strain at
 any of the four points, leaving a zero-energy mode that no value of
-`\gamma_{r_z}` can remove. The constraint term `\pmb{K}_{r_z}` is integrated
+`\gamma_{r_z}` can remove. The constraint term `\boldsymbol{K}_{C_e}^{r_z}` is integrated
 with a single point at the centroid, which is what makes the element
 insensitive to `\gamma_{r_z}`: a fully integrated constraint over-constrains
 `r_z = \theta_z` and locks the membrane response as `\gamma_{r_z}` grows,
@@ -252,7 +252,7 @@ and the term contributes no energy, for any positive `\gamma_{r_z}`. The
 nodal moments about the shell normal recovered in the internal force vector
 are therefore physical, and in-plane moments can be transmitted between
 shells and beams through the shared drilling degree-of-freedom. Note also
-that when `\pmb{B} \neq \pmb{0}`, for an offset reference surface or an
+that when `\boldsymbol{B} \neq \boldsymbol{0}`, for an offset reference surface or an
 unsymmetric laminate, the enriched membrane operator couples `r_z` to the
 curvatures, which is physically correct.
 
@@ -265,7 +265,7 @@ meaningless. The penalty energy is defined per element as:
 
 .. math::
 
-    U_{drill} = \frac{1}{2} K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)^2 dA
+    U_{r_z} = \frac{1}{2} K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)^2 dA
 
 where `10^{-6}` is a scaling factor suggested by MSC Nastran's approach (CQUAD4) to make the artificial
 drilling stiffness sufficiently small. AUTODESK NASTRAN's quick reference guide recommends `K6ROT = 100`
@@ -277,32 +277,32 @@ the drilling degree-of-freedom in element's coordinates, whereas `\theta_z` the 
 
     \theta_z = \frac{1}{2}\left(\frac{\partial v}{\partial x} - \frac{\partial u}{\partial y}\right)
 
-The first variation of U_{drill} then becomes:
+The first variation of `U_{r_z}` then becomes:
 
 .. math::
 
-    \delta U_{drill} = K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)(\delta r_z - \delta \theta_z) dA
+    \delta U_{r_z} = K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)(\delta r_z - \delta \theta_z) dA
 
 which can be expressed in terms of the shape functions and element degrees-of-freedom (`u_e`) as:
 `r_z = S^{r_z} u_e`, `u = S^u u_e` and `v = S_v u_e` as:
 
 .. math::
 
-    \delta U_{drill} = K6ROT \cdot 10^{-6} \cdot u_e^\top \int_A A_{66} (S^{r_z \top} + 1/2 S^{u \top}_{,y} - 1/2 S^{v \top}_{,x})(\delta S^{r_z} + 1/2 \delta S^u_{,y} - 1/2 S^v_{,x}) dA u_e
+    \delta U_{r_z} = K6ROT \cdot 10^{-6} \cdot u_e^\top \int_A A_{66} (S^{r_z \top} + 1/2 S^{u \top}_{,y} - 1/2 S^{v \top}_{,x})(\delta S^{r_z} + 1/2 \delta S^u_{,y} - 1/2 S^v_{,x}) dA u_e
 
 or simply as:
 
 .. math::
 
-    \delta U_{drill} = K6ROT \cdot 10^{-6} \cdot A_{66} u_e^\top \int_A B_{drill}^\top B_{drill} dA u_e
+    \delta U_{r_z} = K6ROT \cdot 10^{-6} \cdot A_{66} u_e^\top \int_A B_{r_z}^\top B_{r_z} dA u_e
 
 with:
 
 .. math::
 
-    B_{drill} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}
+    B_{r_z} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}
 
-which is the same operator as `\pmb{\tilde B}_{r_z}` above, evaluated on the
+which is the same operator as `\tilde{\boldsymbol{B}}_{r_z}` above, evaluated on the
 unenriched field. Being built from that operator and not from an addition on
 the diagonal terms is what keeps the penalty from stiffening a rigid
 rotation of the element about its normal, so both models represent all
@@ -371,7 +371,7 @@ cdef void allman_enrichment(double *xe, double xi, double eta,
     Fills the buffer ``d`` with the contribution of the hierarchical
     quadratic edge modes of the drilling enrichment to the Cartesian
     derivatives of the enriched in-plane displacement rows
-    `\pmb{\tilde S}^u` and `\pmb{\tilde S}^v`, evaluated at the `r_z` column
+    `\tilde{\boldsymbol{S}}^u` and `\tilde{\boldsymbol{S}}^v`, evaluated at the `r_z` column
     of each node, with the edges numbered 1-2, 2-3, 3-4 and 4-1, consistently
     with the nodal connectivity of :class:`.Quad4`.
 
@@ -394,13 +394,13 @@ cdef void allman_enrichment(double *xe, double xi, double eta,
     :mod:`pyfe3d.quad4`, which enter the enriched rows
 
     .. math::
-        \pmb{\tilde S}^u = \pmb{S}^u + \frac{1}{8} \sum_k \hat{S}_k (y_i - y_j)
-                           (\pmb{e}_i - \pmb{e}_j)
+        \tilde{\boldsymbol{S}}^u = \boldsymbol{S}^u + \frac{1}{8} \sum_k \hat{S}_k (y_i - y_j)
+                           (\boldsymbol{e}_i - \boldsymbol{e}_j)
         \
-        \pmb{\tilde S}^v = \pmb{S}^v + \frac{1}{8} \sum_k \hat{S}_k (x_j - x_i)
-                           (\pmb{e}_i - \pmb{e}_j)
+        \tilde{\boldsymbol{S}}^v = \boldsymbol{S}^v + \frac{1}{8} \sum_k \hat{S}_k (x_j - x_i)
+                           (\boldsymbol{e}_i - \boldsymbol{e}_j)
 
-    where `\pmb{e}_i` selects `{r_z}_i`, edge `k` joins nodes `i` and `j`,
+    where `\boldsymbol{e}_i` selects `{r_z}_i`, edge `k` joins nodes `i` and `j`,
     and `\hat{S}_k` is the hierarchical bubble of that edge, equal to unity
     at its mid-point and zero at every corner. For the quadrilateral these
     are the mid-side functions of the eight-node serendipity element:
@@ -413,7 +413,7 @@ cdef void allman_enrichment(double *xe, double xi, double eta,
         \quad \text{for the edges at } \xi = \xi_k = \pm 1
 
     The factors `(y_i - y_j)/8` and `(x_j - x_i)/8` are the components of
-    `\frac{\ell_k}{8} \pmb{n}_k`, with `\pmb{n}_k` the unit normal of edge
+    `\frac{\ell_k}{8} \boldsymbol{n}_k`, with `\boldsymbol{n}_k` the unit normal of edge
     `k` and `\ell_k` its length, such that the amplitude of the edge mode is
     `a_k = \frac{\ell_k}{8}({r_z}_i - {r_z}_j)`. Each node is the first
     vertex of one edge and the second vertex of the previous one, hence the
@@ -683,7 +683,7 @@ cdef class Quad4Probe:
     cpdef void update_BL(Quad4Probe self, double xi, double eta,
                          int drilling_model=0):
         r"""
-        Update all components of the interpolation matrix `\pmb{B_L}` at a
+        Update all components of the interpolation matrix `\boldsymbol{B}_L` at a
         given natural coordinate point `\xi`, `\eta`.
 
         The rows ``BLexx``, ``BLeyy``, ``BLgxy``, ``BLkxx``, ``BLkyy``,
@@ -709,8 +709,8 @@ cdef class Quad4Probe:
 
         Notes
         -----
-        With the bilinear shape functions `N_i` and their Cartesian
-        derivatives `N_{i,x}`, `N_{i,y}`, the products of the rows with
+        With the bilinear shape functions `S_i` and their Cartesian
+        derivatives `S_{i,x}`, `S_{i,y}`, the products of the rows with
         ``ue`` are the strains of the Notes of :mod:`pyfe3d.quad4`:
         ``BLexx``, ``BLeyy`` and ``BLgxy`` give `\epsilon_{xx} = u_{,x}`,
         `\epsilon_{yy} = v_{,y}` and `\gamma_{xy} = u_{,y} + v_{,x}`;
@@ -720,14 +720,14 @@ cdef class Quad4Probe:
         `\gamma_{xz} = w_{,x} + r_y`, and ``BLgyz_grad`` and ``BLgyz_rot``
         those of `\gamma_{yz} = w_{,y} - r_x`; ``BLdrilling`` gives
         `r_z - \theta_z = r_z + \frac{1}{2}u_{,y} - \frac{1}{2}v_{,x}`, the
-        operator `B_{drill}` of the penalty model.
+        operator `B_{r_z}` of the penalty model.
 
         With ``drilling_model=0`` the `r_z` columns of ``BLexx``, ``BLeyy``
         and ``BLgxy`` receive the derivatives of the edge modes of
         :func:`allman_enrichment`, `\tilde S^u_{,x}`, `\tilde S^v_{,y}` and
         `\tilde S^u_{,y} + \tilde S^v_{,x}`, and the `r_z` columns of
         ``BLdrilling`` receive `\frac{1}{2}\tilde S^u_{,y} - \frac{1}{2}\tilde
-        S^v_{,x}`, giving the operator `\pmb{\tilde B}_{r_z}` of the
+        S^v_{,x}`, giving the operator `\tilde{\boldsymbol{B}}_{r_z}` of the
         physics-based model.
 
         """
@@ -1197,7 +1197,7 @@ cdef class Quad4:
 
         The displacements and rotations of the four nodes, read from ``u`` at
         the positions ``c1``, ``c2``, ``c3`` and ``c4``, are rotated to the
-        element coordinate system with the transpose `[T_{3\times 3}]^T` of the
+        element coordinate system with the transpose `[T_{3\times 3}]^\top` of the
         transformation matrix and written to ``probe.ue``.
         :meth:`.update_rotation_matrix` must have been called before.
 
@@ -1260,7 +1260,7 @@ cdef class Quad4:
 
         The coordinates of the four nodes, read from ``x`` at the positions
         ``c1//2``, ``c2//2``, ``c3//2`` and ``c4//2``, are rotated to the
-        element coordinate system with the transpose `[T_{3\times 3}]^T` of the
+        element coordinate system with the transpose `[T_{3\times 3}]^\top` of the
         transformation matrix and written to ``probe.xe``. :meth:`.update_area`
         is then called, updating ``area``. :meth:`.update_rotation_matrix` must
         have been called before.
@@ -1362,32 +1362,32 @@ cdef class Quad4:
         Notes
         -----
         The matrix is the Hessian of the strain energy of the Notes of
-        :mod:`pyfe3d.quad4`, ``KC0ve`` `= \sum w_{ij} \det J \, [B]^T [C]
+        :mod:`pyfe3d.quad4`, ``KC0ve`` `= \sum w_{ij} \det J \, [B]^\top [C]
         [B]`, with the rows `[B]` of :meth:`.Quad4Probe.update_BL` and the
         constitutive matrices `[C]` of
         :meth:`pyfe3d.shellprop.ShellProp.get_constitutive_element`, rotated
         with ``m11, m12, m21, m22``. The terms and their quadratures are:
 
-        - membrane, `[B_m]^T [A] [B_m]`, and membrane-bending coupling,
-          `[B_m]^T [B] [B_b] + [B_b]^T [B] [B_m]`, with the membrane rows
+        - membrane, `[B_m]^\top [A] [B_m]`, and membrane-bending coupling,
+          `[B_m]^\top [B] [B_b] + [B_b]^\top [B] [B_m]`, with the membrane rows
           `[B_m]` of ``BLexx``, ``BLeyy``, ``BLgxy`` and the curvature rows
           `[B_b]` of ``BLkxx``, ``BLkyy``, ``BLkxy``: three-by-three
           Gauss-Legendre quadrature with the enriched membrane rows when
           ``drilling_model`` is ``0``, two-by-two with the unenriched rows
           otherwise;
-        - bending, `[B_b]^T [D] [B_b]`: two-by-two;
-        - transverse shear, `\{\gamma\}^T [A_s] \{\gamma\}`, each strain
+        - bending, `[B_b]^\top [D] [B_b]`: two-by-two;
+        - transverse shear, `\{\gamma\}^\top [A_s] \{\gamma\}`, each strain
           being the sum of a gradient part, ``BLgyz_grad`` or
           ``BLgxz_grad``, and of a rotation part, ``BLgyz_rot`` or
           ``BLgxz_rot``: with `\ell = \sqrt{\text{area}}` and the thickness
           ``prop.h``, all the terms at the centroid, `\xi = \eta = 0` with
           weight 4, when `h/\ell < 1`; the gradient-gradient terms with
           two-by-two and the other terms at the centroid otherwise;
-        - drilling, `\gamma_{r_z} [B_{drill}]^T [B_{drill}]` with the row
+        - drilling, `\gamma_{r_z} [B_{r_z}]^\top [B_{r_z}]` with the row
           ``BLdrilling``: for ``drilling_model = 0``, the enriched
-          `\pmb{\tilde B}_{r_z}` at the centroid, with `\gamma_{r_z}` equal to
+          `\tilde{\boldsymbol{B}}_{r_z}` at the centroid, with `\gamma_{r_z}` equal to
           ``gamma_rz`` when it is not negative and to `A_{66}` otherwise; for
-          the other values, the unenriched `B_{drill}` with two-by-two and
+          the other values, the unenriched `B_{r_z}` with two-by-two and
           `\gamma_{r_z} = K6ROT \cdot 10^{-6} A_{66}`.
 
         The reasons for each quadrature are given in the Notes of
@@ -2062,7 +2062,7 @@ cdef class Quad4:
         The element matrix in element coordinates, ``KC0ve``, is computed by
         :meth:`._update_probe_KC0ve`, whose Notes give its terms and
         quadratures. It is rotated to global coordinates with `[K_g] = [T]
-        [K_e] [T]^T`, where `[T]` is block diagonal, with the matrix
+        [K_e] [T]^\top`, where `[T]` is block diagonal, with the matrix
         `[T_{3\times 3}]` of the entries `T_{ij}` stored in ``r11, ..., r33``,
         whose columns are the element axes, applied to the translations and to
         the rotations of each node.
@@ -2245,7 +2245,7 @@ cdef class Quad4:
         -----
         The rows are the ones of :meth:`.Quad4Probe.update_BL` for the strains
         of the Notes of :mod:`pyfe3d.quad4`, and ``Gwx``, ``Gwy`` hold the
-        Cartesian derivatives `N_{i,x}`, `N_{i,y}` of the bilinear shape
+        Cartesian derivatives `S_{i,x}`, `S_{i,y}` of the bilinear shape
         functions at the `w` columns. For ``drilling_model = 0`` the `r_z`
         columns of the membrane rows carry the edge modes of
         :func:`allman_enrichment`, which keeps the nonlinear tangent of
@@ -2403,16 +2403,16 @@ cdef class Quad4:
         KCNL = KC0L + KCL0 + KCLL + KGNL, see the Notes of
         :meth:`.update_KCNL`. At each integration point, with the rows of
         :meth:`._update_probe_BL_G`, the slopes `w_{,x}` and `w_{,y}` are
-        ``Gwx @ ue`` and ``Gwy @ ue``, the rows of `[B_{mL}]` are
+        ``Gwx @ ue`` and ``Gwy @ ue``, the rows of `[B_{NL}]` are
         `w_{,x}` ``Gwx``, `w_{,y}` ``Gwy`` and `w_{,x}` ``Gwy`` `+ w_{,y}`
         ``Gwx``, and `\{N_{NL}\} = [A] \{w_{,x}^2/2, w_{,y}^2/2, w_{,x}
-        w_{,y}\}^T`, such that
+        w_{,y}\}^\top`, such that
 
         .. math::
 
-            K_{CNL} = \sum w_{ij} \det J \left( ([A][B_m] + [B][B_b])^T [B_{mL}]
-                + [B_{mL}]^T ([A][B_m] + [B][B_b])
-                + [B_{mL}]^T [A] [B_{mL}] + [G]^T [N_{NL}] [G] \right)
+            K_{CNL} = \sum w_{ij} \det J \left( ([A][B_m] + [B][B_b])^\top [B_{NL}]
+                + [B_{NL}]^\top ([A][B_m] + [B][B_b])
+                + [B_{NL}]^\top [A] [B_{NL}] + [G]^\top [N_{NL}] [G] \right)
 
         with `[G]` the rows ``Gwx`` and ``Gwy`` and `[N_{NL}]` the 2 by 2
         matrix of `N_{NL,xx}`, `N_{NL,yy}` and `N_{NL,xy}`. `[A]` and `[B]`
@@ -2518,10 +2518,10 @@ cdef class Quad4:
         Notes
         -----
         With the nonlinear membrane strain `\{\epsilon_{NL}\} =
-        \{w_{,x}^2/2, w_{,y}^2/2, w_{,x} w_{,y}\}^T`, ``finte`` becomes the
+        \{w_{,x}^2/2, w_{,y}^2/2, w_{,x} w_{,y}\}^\top`, ``finte`` becomes the
         gradient of the strain energy whose Hessian is KC0 + KCNL + KG. At
         each integration point, with the rows of :meth:`._update_probe_BL_G`
-        and `[B_{mL}]` of :meth:`._update_probe_KCNLve`, the stress
+        and `[B_{NL}]` of :meth:`._update_probe_KCNLve`, the stress
         resultants of the linear strains `\{N\} = [A]\{\epsilon\} +
         [B]\{\kappa\}`, as in :meth:`.update_KG`, and those of the nonlinear
         strain `\{N_{NL}\} = [A]\{\epsilon_{NL}\}` and `\{M_{NL}\} =
@@ -2529,8 +2529,8 @@ cdef class Quad4:
 
         .. math::
 
-            \sum w_{ij} \det J \left( [B_m]^T \{N_{NL}\} + [B_b]^T \{M_{NL}\}
-                + [B_{mL}]^T (\{N\} + \{N_{NL}\}) \right)
+            \sum w_{ij} \det J \left( [B_m]^\top \{N_{NL}\} + [B_b]^\top \{M_{NL}\}
+                + [B_{NL}]^\top (\{N\} + \{N_{NL}\}) \right)
 
         """
         cdef int i, a
@@ -2682,15 +2682,15 @@ cdef class Quad4:
             \epsilon_{yy} = v_{,y} + \frac{1}{2} w_{,y}^2, \quad
             \gamma_{xy} = u_{,y} + v_{,x} + w_{,x} w_{,y}
 
-        whose nonlinear part is `\{\epsilon_{NL}\} = \frac{1}{2} [B_{mL}]
-        \{u_e\}`, with `[B_{mL}]` its variation. With `[B_m]` and `[B_b]` the
+        whose nonlinear part is `\{\epsilon_{NL}\} = \frac{1}{2} [B_{NL}]
+        \{u_e\}`, with `[B_{NL}]` its variation. With `[B_m]` and `[B_b]` the
         linear membrane and bending strain-displacement matrices, `[G]` the
         gradient of `w`, and `[A]`, `[B]` the laminate matrices:
 
-        - KC0L = `[B_m]^T [A] [B_{mL}] + [B_b]^T [B] [B_{mL}]`
-        - KCL0 = KC0L`^T`
-        - KCLL = `[B_{mL}]^T [A] [B_{mL}]`
-        - KGNL = `[G]^T [N_{NL}] [G]`, with `\{N_{NL}\} = [A] \{\epsilon_{NL}\}`
+        - KC0L = `[B_m]^\top [A] [B_{NL}] + [B_b]^\top [B] [B_{NL}]`
+        - KCL0 = KC0L`^\top`
+        - KCLL = `[B_{NL}]^\top [A] [B_{NL}]`
+        - KGNL = `[G]^\top [N_{NL}] [G]`, with `\{N_{NL}\} = [A] \{\epsilon_{NL}\}`
 
         The first three groups are the constitutive terms coupling the linear and
         the nonlinear parts of the membrane strain. KGNL is geometric, carrying the
@@ -2834,14 +2834,14 @@ cdef class Quad4:
 
         .. math::
 
-            K_G = \sum w_{ij} \det J \, [G]^T
+            K_G = \sum w_{ij} \det J \, [G]^\top
             \begin{bmatrix} N_{xx} & N_{xy} \\ N_{xy} & N_{yy} \end{bmatrix}
             [G]
 
         with `[G]` the rows of `w_{,x}` and `w_{,y}` of
         :meth:`._update_probe_BL_G`, `w` being the displacement along the
         element normal, i.e. the combination of the global translations with
-        ``r13, r23, r33``, and `\{N_{xx}, N_{yy}, N_{xy}\}^T = [A]\{\epsilon\}
+        ``r13, r23, r33``, and `\{N_{xx}, N_{yy}, N_{xy}\}^\top = [A]\{\epsilon\}
         + [B]\{\kappa\}` the stress resultants of the linear strains of the
         Notes of :mod:`pyfe3d.quad4`. For ``drilling_model=0`` the membrane
         strains include those of the drilling enrichment of
@@ -4609,7 +4609,7 @@ cdef class Quad4:
                 0 & -intrhoz & 0 & intrhoz2 & 0 & 0 \\
                 intrhoz & 0 & 0 & 0 & intrhoz2 & 0 \\
                 0 & 0 & 0 & 0 & 0 & 0
-            \end{bmatrix}, \qquad h_{ij} = \int_A N_i N_j dA
+            \end{bmatrix}, \qquad h_{ij} = \int_A S_i S_j dA
 
         for the DOF `u, v, w, r_x, r_y, r_z`, the drilling rotation carrying
         no inertia. The matrix is rotated to global coordinates as in
@@ -4620,7 +4620,7 @@ cdef class Quad4:
           whose points are the nodes, the lumped mass matrix of Brockman
           [1]_, giving `h_{ii}` equal to the Jacobian determinant at node `i`
           and `h_{ij} = 0` for `i \neq j`;
-        - ``mtype=2``: a single point at the centroid, where every `N_i =
+        - ``mtype=2``: a single point at the centroid, where every `S_i =
           1/4`, giving `h_{ij} = A/16` for all `i, j`.
 
         For ``mtype=0`` the quadrature is exact. With ``mtype=2`` the
@@ -4630,7 +4630,7 @@ cdef class Quad4:
         .. rubric:: Lumped mass matrix
 
         The Gauss-Lobatto rule of ``mtype=1`` is a nodal quadrature. Applied
-        to the whole integrand of `T`, in which `N_i` is 1 at node `i` and 0
+        to the whole integrand of `T`, in which `S_i` is 1 at node `i` and 0
         at the other nodes, it couples no different nodes and gives for node
         `i` the block `M_{ii}` above with `h_{ii}`, the coupling through
         ``intrhoz`` included: the matrix is block-diagonal per node and, as
@@ -4639,7 +4639,7 @@ cdef class Quad4:
         exact mass and the exact first moment of the mass through the
         thickness, ``intrhoz`` `A`, which places the centre of mass at the
         offset from the reference surface. In the plane of the element the
-        first moment is exact when `h_{ii} = \int_A N_i dA`, which holds for
+        first moment is exact when `h_{ii} = \int_A S_i dA`, which holds for
         a parallelogram, where `h_{ii} = A/4`, and not for a general
         quadrilateral, whose Jacobian determinant varies. Of the rotary
         inertia, the term ``intrhoz2`` `A` about the axes in the plane of
@@ -9921,7 +9921,7 @@ cdef class Quad4:
 
                 wij = 1.
                 # NOTE two-point Gauss-Lobatto quadrature in each direction,
-                #      whose points are the nodes, where N_i is 1 at node i and
+                #      whose points are the nodes, where S_i is 1 at node i and
                 #      0 at the other nodes, such that h_ij = 0 for i != j
                 points[0] = -1.
                 points[1] = +1.
@@ -10234,14 +10234,14 @@ cdef class Quad4:
 
         .. math::
 
-            KA_{\beta} = -\int_A \{N\}^T \left( T_{11} \{N_{,x}\}
-                + T_{12} \{N_{,y}\} \right) dA
+            KA_{\beta} = -\int_A \{S\}^\top \left( T_{11} \{S_{,x}\}
+                + T_{12} \{S_{,y}\} \right) dA
 
-        acting on the nodal values of `w_n`, where `\{N\}` holds the bilinear
-        shape functions and `\{N_{,x}\}`, `\{N_{,y}\}` their derivatives along
+        acting on the nodal values of `w_n`, where `\{S\}` holds the bilinear
+        shape functions and `\{S_{,x}\}`, `\{S_{,y}\}` their derivatives along
         the element axes. The element coordinates are `x = T_{11} X + T_{21}
         Y + T_{31} Z` and `y = T_{12} X + T_{22} Y + T_{32} Z`, such that
-        `T_{11} \{N_{,x}\} + T_{12} \{N_{,y}\}` is the derivative along the
+        `T_{11} \{S_{,x}\} + T_{12} \{S_{,y}\}` is the derivative along the
         global `X` axis, the direction of the flow, projected on the plane of
         the element.
 
@@ -11127,7 +11127,7 @@ cdef class Quad4:
 
         .. math::
 
-            KA_{\gamma} = \int_A \{N\}^T \{N\} dA
+            KA_{\gamma} = \int_A \{S\}^\top \{S\} dA
 
         acting on the nodal values of `w_n`. With the piston-theory
         coefficient `\gamma` given by the caller, `\gamma [KA_{\gamma}]
@@ -11957,7 +11957,7 @@ cdef class Quad4:
 
         .. math::
 
-            CA = -\int_A \{N\}^T \{N\} dA
+            CA = -\int_A \{S\}^\top \{S\} dA
 
         acting on the nodal values of the velocity `\dot w_n`. With the
         piston-theory damping coefficient `\mu` given by the caller, `\mu

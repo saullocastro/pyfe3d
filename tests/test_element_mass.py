@@ -4,31 +4,31 @@ Every element with ``update_M`` is placed in a generic orientation in space
 and its mass matrix `[M]`, in global coordinates, is projected on the six
 rigid-body motions, the three translations and the three rotations about the
 global origin, whose nodal values are the columns of `[\Phi]`. The 6 x 6
-matrix `[\Phi]^T [M] [\Phi]` contains the mass `m`, the first moment of the
-mass `\pmb{S}` and the inertia tensor of the element,
+matrix `[\Phi]^\top [M] [\Phi]` contains the mass `m`, the first moment of the
+mass `\boldsymbol{S}` and the inertia tensor of the element,
 
 .. math::
 
-    [\Phi]^T [M] [\Phi] = \begin{bmatrix}
-        m \pmb{I} & -\tilde{\pmb{S}} \\
-        \tilde{\pmb{S}} & \mathrm{tr}(\pmb{S}_2) \pmb{I} - \pmb{S}_2
+    [\Phi]^\top [M] [\Phi] = \begin{bmatrix}
+        m \boldsymbol{I} & -\tilde{\boldsymbol{S}} \\
+        \tilde{\boldsymbol{S}} & \mathrm{tr}(\boldsymbol{S}_2) \boldsymbol{I} - \boldsymbol{S}_2
     \end{bmatrix}
 
-with `\tilde{\pmb{S}}` the skew-symmetric matrix of `\pmb{S}` and `\pmb{S}_2
-= \int \rho \pmb{p} \pmb{p}^T dV`. For the shells, `\pmb{p} = \pmb{x} + z
-\pmb{n}` and the integrals through the thickness are ``intrho``, ``intrhoz``
+with `\tilde{\boldsymbol{S}}` the skew-symmetric matrix of `\boldsymbol{S}` and `\boldsymbol{S}_2
+= \int \rho \boldsymbol{p} \boldsymbol{p}^\top dV`. For the shells, `\boldsymbol{p} = \boldsymbol{x} + z
+\boldsymbol{n}` and the integrals through the thickness are ``intrho``, ``intrhoz``
 and ``intrhoz2`` of the property, with an offset, such that ``intrhoz`` is
 not zero. Each scheme of ``update_M`` integrates the kinetic energy with a
-rule of points `\pmb{x}_q` and weights `w_q` over the area, for which
+rule of points `\boldsymbol{x}_q` and weights `w_q` over the area, for which
 
 .. math::
 
     m = I_\rho \sum_q w_q, \quad
-    \pmb{S} = I_\rho \sum_q w_q \pmb{x}_q + I_{\rho z} \pmb{n} \sum_q w_q,
+    \boldsymbol{S} = I_\rho \sum_q w_q \boldsymbol{x}_q + I_{\rho z} \boldsymbol{n} \sum_q w_q,
 
-    \pmb{S}_2 = I_\rho \sum_q w_q \pmb{x}_q \pmb{x}_q^T
-        + I_{\rho z} \sum_q w_q (\pmb{x}_q \pmb{n}^T + \pmb{n} \pmb{x}_q^T)
-        + I_{\rho z^2} \pmb{n} \pmb{n}^T \sum_q w_q
+    \boldsymbol{S}_2 = I_\rho \sum_q w_q \boldsymbol{x}_q \boldsymbol{x}_q^\top
+        + I_{\rho z} \sum_q w_q (\boldsymbol{x}_q \boldsymbol{n}^\top + \boldsymbol{n} \boldsymbol{x}_q^\top)
+        + I_{\rho z^2} \boldsymbol{n} \boldsymbol{n}^\top \sum_q w_q
 
 and the exact values of the shell are those of a rule exact for the
 quadratic integrands. The lumped mass matrices are the nodal quadrature, with
@@ -105,7 +105,7 @@ def rigid_modes(X):
 
 def rigid_inertia(m, S, S2):
     r"""6 x 6 rigid-body mass matrix from the mass, the first moment and
-    the second moments `\int \rho \pmb{p} \pmb{p}^T dV`"""
+    the second moments `\int \rho \boldsymbol{p} \boldsymbol{p}^\top dV`"""
     Mrb = np.zeros((6, 6))
     Mrb[:3, :3] = m*np.eye(3)
     Mrb[:3, 3:] = -skew(S)

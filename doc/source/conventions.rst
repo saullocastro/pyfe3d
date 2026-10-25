@@ -51,15 +51,15 @@ entries `T_{ij}` are stored in the attributes ``r11, ..., r33`` (`T_{12}` in
 
 such that the translations and the rotations of every node are brought to
 the global system with `[T_{3\times 3}]`, and to the element system with
-`[T_{3\times 3}]^T`. The transformation matrix `[T]` of the element is block
+`[T_{3\times 3}]^\top`. The transformation matrix `[T]` of the element is block
 diagonal, with one block `[T_{3\times 3}]` for the translations and one for
 the rotations of each node, e.g. `12 \times 12` for the two-node elements,
 such that
 
 .. math::
 
-    \{u\} = [T]\{u_e\}, \qquad \{u_e\} = [T]^T\{u\}, \qquad
-    [K] = [T][K_e][T]^T, \qquad \{F\} = [T]\{F_e\}
+    \{u\} = [T]\{u_e\}, \qquad \{u_e\} = [T]^\top\{u\}, \qquad
+    [K] = [T][K_e][T]^\top, \qquad \{F\} = [T]\{F_e\}
 
 with `\{u\}`, `[K]` and `\{F\}` the element dofs, matrices and forces in
 global coordinates, and `\{u_e\}`, `[K_e]` and `\{F_e\}` in element
