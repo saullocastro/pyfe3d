@@ -1544,7 +1544,7 @@ cdef class Tria3DSG:
                 # Bm.T*NNL + Bb.T*MNL
                   BLexx[i]*NNL[0] + BLeyy[i]*NNL[1] + BLgxy[i]*NNL[2]
                 + BLkxx[i]*MNL[0] + BLkyy[i]*MNL[1] + BLkxy[i]*MNL[2]
-                # BmL.T*(N + NNL)
+                # BNL.T*(N + NNL)
                 + w_x*Gwx[i]*(N[0] + NNL[0])
                 + w_y*Gwy[i]*(N[1] + NNL[1])
                 + (w_x*Gwy[i] + w_y*Gwx[i])*(N[2] + NNL[2])
@@ -1678,8 +1678,8 @@ cdef class Tria3DSG:
         cdef double NNL[3]
         # NOTE products stored row by row, with 3 rows and 18 columns
         cdef double ABL[54]
-        cdef double BmL[54]
-        cdef double ABmL[54]
+        cdef double BNL[54]
+        cdef double ABNL[54]
         cdef double *ue
         cdef double *KCNLve
         cdef double *BLexx
@@ -1722,34 +1722,34 @@ cdef class Tria3DSG:
             NNL[a] = (Ae[3*a]*w_x*w_x/2. + Ae[3*a + 1]*w_y*w_y/2.
                       + Ae[3*a + 2]*w_x*w_y)
 
-        # BmL, the variation of the nonlinear membrane strain, and the
-        # products A*Bm + B*Bb and A*BmL, all stored row by row with 3 rows
+        # BNL, the variation of the nonlinear membrane strain, and the
+        # products A*Bm + B*Bb and A*BNL, all stored row by row with 3 rows
         for i in range(18):
-            BmL[i] = w_x*Gwx[i]
-            BmL[18 + i] = w_y*Gwy[i]
-            BmL[36 + i] = w_x*Gwy[i] + w_y*Gwx[i]
+            BNL[i] = w_x*Gwx[i]
+            BNL[18 + i] = w_y*Gwy[i]
+            BNL[36 + i] = w_x*Gwy[i] + w_y*Gwx[i]
             for a in range(3):
                 ABL[18*a + i] = (Ae[3*a]*BLexx[i] + Ae[3*a + 1]*BLeyy[i]
                                  + Ae[3*a + 2]*BLgxy[i]
                                  + Be[3*a]*BLkxx[i] + Be[3*a + 1]*BLkyy[i]
                                  + Be[3*a + 2]*BLkxy[i])
-                ABmL[18*a + i] = (Ae[3*a]*BmL[i] + Ae[3*a + 1]*BmL[18 + i]
-                                  + Ae[3*a + 2]*BmL[36 + i])
+                ABNL[18*a + i] = (Ae[3*a]*BNL[i] + Ae[3*a + 1]*BNL[18 + i]
+                                  + Ae[3*a + 2]*BNL[36 + i])
 
         # NOTE every operator is constant over the triangle and so is the
         #      integrand, so the area is the whole of the quadrature
         for i in range(18):
             for j in range(18):
                 KCNLve[18*i + j] += area*(
-                    # KC0L = (Bm.T*A + Bb.T*B)*BmL
-                      ABL[i]*BmL[j] + ABL[18 + i]*BmL[18 + j]
-                    + ABL[36 + i]*BmL[36 + j]
-                    # KCL0 = BmL.T*(A*Bm + B*Bb)
-                    + BmL[i]*ABL[j] + BmL[18 + i]*ABL[18 + j]
-                    + BmL[36 + i]*ABL[36 + j]
-                    # KCLL = BmL.T*A*BmL
-                    + BmL[i]*ABmL[j] + BmL[18 + i]*ABmL[18 + j]
-                    + BmL[36 + i]*ABmL[36 + j]
+                    # KC0L = (Bm.T*A + Bb.T*B)*BNL
+                      ABL[i]*BNL[j] + ABL[18 + i]*BNL[18 + j]
+                    + ABL[36 + i]*BNL[36 + j]
+                    # KCL0 = BNL.T*(A*Bm + B*Bb)
+                    + BNL[i]*ABL[j] + BNL[18 + i]*ABL[18 + j]
+                    + BNL[36 + i]*ABL[36 + j]
+                    # KCLL = BNL.T*A*BNL
+                    + BNL[i]*ABNL[j] + BNL[18 + i]*ABNL[18 + j]
+                    + BNL[36 + i]*ABNL[36 + j]
                     # KGNL = G.T*[NNL]*G
                     + Gwx[i]*(NNL[0]*Gwx[j] + NNL[2]*Gwy[j])
                     + Gwy[i]*(NNL[2]*Gwx[j] + NNL[1]*Gwy[j])

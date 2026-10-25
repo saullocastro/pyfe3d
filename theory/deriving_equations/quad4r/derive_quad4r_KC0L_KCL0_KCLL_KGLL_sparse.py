@@ -9,12 +9,12 @@ KCNL = KC0L + KCL0 + KCLL + KGLL, built from the von Karman membrane strains
 
 whose nonlinear part is epsNL = {w,x**2/2, w,y**2/2, w,x*w,y}:
 
-- KC0L = Bm.T*A*BmL + Bb.T*B*BmL
-- KCL0 = BmL.T*A*Bm + BmL.T*B*Bb = KC0L.T
-- KCLL = BmL.T*A*BmL
+- KC0L = Bm.T*A*BNL + Bb.T*B*BNL
+- KCL0 = BNL.T*A*Bm + BNL.T*B*Bb = KC0L.T
+- KCLL = BNL.T*A*BNL
 - KGLL = G.T*[NNL]*G, with {NNL} = A*epsNL
 
-where BmL = d(epsNL)/d(ue), such that epsNL = BmL*ue/2 and not BmL*ue, and
+where BNL = d(epsNL)/d(ue), such that epsNL = BNL*ue/2 and not BNL*ue, and
 G = {w,x, w,y} is the gradient of w.
 
 KGLL is the geometric stiffness carried by the stress of the nonlinear membrane
@@ -116,18 +116,18 @@ w_y = (Gwy*ue)[0]
 
 # nonlinear part of the membrane strains and its variation
 epsNL = Matrix([w_x**2/2, w_y**2/2, w_x*w_y])
-BmL = epsNL.jacobian(ue)
-assert expand(BmL - Matrix([w_x*Gwx, w_y*Gwy, w_x*Gwy + w_y*Gwx])) == sympy.zeros(3, NUM_NODES*DOF)
-# NOTE epsNL is quadratic in ue, such that BmL*ue counts it twice
-assert expand(BmL*ue/2 - epsNL) == sympy.zeros(3, 1)
+BNL = epsNL.jacobian(ue)
+assert expand(BNL - Matrix([w_x*Gwx, w_y*Gwy, w_x*Gwy + w_y*Gwx])) == sympy.zeros(3, NUM_NODES*DOF)
+# NOTE epsNL is quadratic in ue, such that BNL*ue counts it twice
+assert expand(BNL*ue/2 - epsNL) == sympy.zeros(3, 1)
 NNL = A*epsNL
 NNLmatrix = Matrix([[NNL[0], NNL[2]],
                     [NNL[2], NNL[1]]])
 
 # KCNL in element coordinates at one integration point
-KC0Le = Bm.T*A*BmL + Bb.T*B*BmL
-KCL0e = BmL.T*A*Bm + BmL.T*B*Bb
-KCLLe = BmL.T*A*BmL
+KC0Le = Bm.T*A*BNL + Bb.T*B*BNL
+KCL0e = BNL.T*A*Bm + BNL.T*B*Bb
+KCLLe = BNL.T*A*BNL
 KGLLe = G.T*NNLmatrix*G
 KCNLe = wij*detJ*(KC0Le + KCL0e + KCLLe + KGLLe)
 
@@ -162,12 +162,12 @@ for i, val in enumerate(A*Matrix([w_x**2/2, w_y**2/2, w_x*w_y])):
 print()
 
 sNNL = Matrix(symbols('NNL[0], NNL[1], NNL[2]'))
-sBmL = Matrix([w_x*Gwx, w_y*Gwy, w_x*Gwy + w_y*Gwx])
+sBNL = Matrix([w_x*Gwx, w_y*Gwy, w_x*Gwy + w_y*Gwx])
 sNNLmatrix = Matrix([[sNNL[0], sNNL[2]],
                      [sNNL[2], sNNL[1]]])
-sKCNLe = wij*detJ*(Bm.T*A*sBmL + Bb.T*B*sBmL
-                   + sBmL.T*A*Bm + sBmL.T*B*Bb
-                   + sBmL.T*A*sBmL
+sKCNLe = wij*detJ*(Bm.T*A*sBNL + Bb.T*B*sBNL
+                   + sBNL.T*A*Bm + sBNL.T*B*Bb
+                   + sBNL.T*A*sBNL
                    + G.T*sNNLmatrix*G)
 for ind, val in np.ndenumerate(sKCNLe):
     if val == 0:

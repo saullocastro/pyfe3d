@@ -488,6 +488,13 @@ select the other matrix.
   implement, copies of rotation-matrix terms and properties never read, and
   dead assignments. The matrices, internal forces and probe arrays of every
   element are bit-identical before and after.
+- The local arrays of the variation of the nonlinear membrane strains of
+  `Quad4`, `Quad4R`, `Tria3R` and `Tria3DSG`, and the symbols of the
+  derivation scripts `derive_quad4r_KC0L_KCL0_KCLL_KGLL_sparse.py` and
+  `derive_tria3r_KC0L_KCL0_KCLL_KGLL_sparse.py`, are named as in the book
+  and as in the beams: `BmL`, `ABmL` and `sBmL` become `BNL`, `ABNL` and
+  `sBNL`. No public name changes. The matrices, internal forces and probe
+  arrays of every element are bit-identical before and after.
 - `pyfe3d.solver.eigen` no longer imports `scipy.sparse.linalg.eigsh`,
   which it did not use (the solvers call `capped_eigsh` of
   `pyfe3d.solver.arpackutils`).

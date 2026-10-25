@@ -5574,8 +5574,8 @@ cdef class Quad4R:
         cdef double NNL[3]
         # NOTE products stored row by row, with 3 rows and NUM_NODES*DOF columns
         cdef double ABL[72]
-        cdef double BmL[72]
-        cdef double ABmL[72]
+        cdef double BNL[72]
+        cdef double ABNL[72]
         cdef double *ue
         cdef double *KCNLve
         cdef double *BLexx
@@ -5625,26 +5625,26 @@ cdef class Quad4R:
                 for a in range(3):
                     NNL[a] = A[3*a]*w_x*w_x/2. + A[3*a + 1]*w_y*w_y/2. + A[3*a + 2]*w_x*w_y
 
-                # BmL, the variation of the nonlinear membrane strain, and the products
-                # A*Bm + B*Bb and A*BmL, all stored row by row with 3 rows
+                # BNL, the variation of the nonlinear membrane strain, and the products
+                # A*Bm + B*Bb and A*BNL, all stored row by row with 3 rows
                 for i in range(24):
-                    BmL[i] = w_x*Gwx[i]
-                    BmL[24 + i] = w_y*Gwy[i]
-                    BmL[48 + i] = w_x*Gwy[i] + w_y*Gwx[i]
+                    BNL[i] = w_x*Gwx[i]
+                    BNL[24 + i] = w_y*Gwy[i]
+                    BNL[48 + i] = w_x*Gwy[i] + w_y*Gwx[i]
                     for a in range(3):
                         ABL[24*a + i] = (A[3*a]*BLexx[i] + A[3*a + 1]*BLeyy[i] + A[3*a + 2]*BLgxy[i]
                                        + B[3*a]*BLkxx[i] + B[3*a + 1]*BLkyy[i] + B[3*a + 2]*BLkxy[i])
-                        ABmL[24*a + i] = A[3*a]*BmL[i] + A[3*a + 1]*BmL[24 + i] + A[3*a + 2]*BmL[48 + i]
+                        ABNL[24*a + i] = A[3*a]*BNL[i] + A[3*a + 1]*BNL[24 + i] + A[3*a + 2]*BNL[48 + i]
 
                 for i in range(24):
                     for j in range(24):
                         KCNLve[24*i + j] += wij*detJ*(
-                            # KC0L = (Bm.T*A + Bb.T*B)*BmL
-                              ABL[i]*BmL[j] + ABL[24 + i]*BmL[24 + j] + ABL[48 + i]*BmL[48 + j]
-                            # KCL0 = BmL.T*(A*Bm + B*Bb)
-                            + BmL[i]*ABL[j] + BmL[24 + i]*ABL[24 + j] + BmL[48 + i]*ABL[48 + j]
-                            # KCLL = BmL.T*A*BmL
-                            + BmL[i]*ABmL[j] + BmL[24 + i]*ABmL[24 + j] + BmL[48 + i]*ABmL[48 + j]
+                            # KC0L = (Bm.T*A + Bb.T*B)*BNL
+                              ABL[i]*BNL[j] + ABL[24 + i]*BNL[24 + j] + ABL[48 + i]*BNL[48 + j]
+                            # KCL0 = BNL.T*(A*Bm + B*Bb)
+                            + BNL[i]*ABL[j] + BNL[24 + i]*ABL[24 + j] + BNL[48 + i]*ABL[48 + j]
+                            # KCLL = BNL.T*A*BNL
+                            + BNL[i]*ABNL[j] + BNL[24 + i]*ABNL[24 + j] + BNL[48 + i]*ABNL[48 + j]
                             # KGNL = G.T*[NNL]*G
                             + Gwx[i]*(NNL[0]*Gwx[j] + NNL[2]*Gwy[j])
                             + Gwy[i]*(NNL[2]*Gwx[j] + NNL[1]*Gwy[j])
@@ -5760,7 +5760,7 @@ cdef class Quad4R:
                         # Bm.T*NNL + Bb.T*MNL
                           BLexx[i]*NNL[0] + BLeyy[i]*NNL[1] + BLgxy[i]*NNL[2]
                         + BLkxx[i]*MNL[0] + BLkyy[i]*MNL[1] + BLkxy[i]*MNL[2]
-                        # BmL.T*(N + NNL)
+                        # BNL.T*(N + NNL)
                         + w_x*Gwx[i]*(N[0] + NNL[0])
                         + w_y*Gwy[i]*(N[1] + NNL[1])
                         + (w_x*Gwy[i] + w_y*Gwx[i])*(N[2] + NNL[2])
