@@ -26,16 +26,16 @@ var('rho, xi, eta, A')
 ONE = sympy.Integer(1)
 
 detJ = 2*A # it can be easily shown
-N1, N2, N3 = var('N1, N2, N3')
+S1, S2, S3 = var('S1, S2, S3')
 S1_x, S2_x, S3_x = var('S1_x, S2_x, S3_x')
 S1_y, S2_y, S3_y = var('S1_y, S2_y, S3_y')
 
-Nu =  Matrix([[N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0, 0, 0, 0]])
-Nv =  Matrix([[0, N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0, 0, 0]])
-Nw =  Matrix([[0, 0, N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0, 0]])
-Nrx = Matrix([[0, 0, 0, N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0]])
-Nry = Matrix([[0, 0, 0, 0, N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0]])
-Nrz = Matrix([[0, 0, 0, 0, 0, N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3]])
+Nu =  Matrix([[S1, 0, 0, 0, 0, 0, S2, 0, 0, 0, 0, 0, S3, 0, 0, 0, 0, 0]])
+Nv =  Matrix([[0, S1, 0, 0, 0, 0, 0, S2, 0, 0, 0, 0, 0, S3, 0, 0, 0, 0]])
+Nw =  Matrix([[0, 0, S1, 0, 0, 0, 0, 0, S2, 0, 0, 0, 0, 0, S3, 0, 0, 0]])
+Nrx = Matrix([[0, 0, 0, S1, 0, 0, 0, 0, 0, S2, 0, 0, 0, 0, 0, S3, 0, 0]])
+Nry = Matrix([[0, 0, 0, 0, S1, 0, 0, 0, 0, 0, S2, 0, 0, 0, 0, 0, S3, 0]])
+Nrz = Matrix([[0, 0, 0, 0, 0, S1, 0, 0, 0, 0, 0, S2, 0, 0, 0, 0, 0, S3]])
 
 var('wij, intrho, intrhoz, intrhoz2')
 
@@ -79,7 +79,7 @@ y = Matrix([[y1, y2, y3]]).T
 # Brockman 1987, Eq. 5a
 s = Matrix([[1, 1, 1]]).T
 
-N = Matrix([[N1, N2, N3]]).T
+N = Matrix([[S1, S2, S3]]).T
 print()
 print('H matrix exactly integrated')
 # Brockman 1987, Eq. 19
@@ -128,7 +128,7 @@ b2 = Matrix([[S1_y, S2_y, S3_y]]).T
 print('b1, b2 constant over the element')
 
 # Brockman 1987, Eq. 31, H matrix with 1-point reduced integration, adapted to
-# the triangle: the centroid, N1 = N2 = N3 = 1/3, with the weight 1/2 times
+# the triangle: the centroid, S1 = S2 = S3 = 1/3, with the weight 1/2 times
 # detJ = 2*A, i.e. A, see derive_tria3r_mass.py
 valH1 = A/9
 print('valH1 =', valH1)

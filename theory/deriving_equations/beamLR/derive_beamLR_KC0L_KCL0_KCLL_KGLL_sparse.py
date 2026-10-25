@@ -47,23 +47,23 @@ var('L, E, Iyy, Izz, Iyz, G12, G13, GJ, A, Ay, Az', real=True)
 Iy = Izz
 Iz = Iyy
 
-N1 = (1-xi)/2
-N2 = (1+xi)/2
+S1 = (1-xi)/2
+S2 = (1+xi)/2
 
 #              u, v, w, rx, ry, rz (for each node)
 # linear interpolation for all field variables
-Nu =  Matrix([[N1, 0, 0, 0, 0, 0,
-               N2, 0, 0, 0, 0, 0]])
-Nv =  Matrix([[0, N1, 0, 0, 0, 0,
-               0, N2, 0, 0, 0, 0]])
-Nw =  Matrix([[0, 0, N1, 0, 0, 0,
-               0, 0, N2, 0, 0, 0]])
-Nrx = Matrix([[0, 0, 0, N1, 0, 0,
-               0, 0, 0, N2, 0, 0]])
-Nry = Matrix([[0, 0, 0, 0, N1, 0,
-               0, 0, 0, 0, N2, 0]])
-Nrz = Matrix([[0, 0, 0, 0, 0, N1,
-               0, 0, 0, 0, 0, N2]])
+Nu =  Matrix([[S1, 0, 0, 0, 0, 0,
+               S2, 0, 0, 0, 0, 0]])
+Nv =  Matrix([[0, S1, 0, 0, 0, 0,
+               0, S2, 0, 0, 0, 0]])
+Nw =  Matrix([[0, 0, S1, 0, 0, 0,
+               0, 0, S2, 0, 0, 0]])
+Nrx = Matrix([[0, 0, 0, S1, 0, 0,
+               0, 0, 0, S2, 0, 0]])
+Nry = Matrix([[0, 0, 0, 0, S1, 0,
+               0, 0, 0, 0, S2, 0]])
+Nrz = Matrix([[0, 0, 0, 0, 0, S1,
+               0, 0, 0, 0, 0, S2]])
 
 # From Eqs. 12 in Luo, Y. 2008
 # NOTE two transverse shear moduli, as the attributes of

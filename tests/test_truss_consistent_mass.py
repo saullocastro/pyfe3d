@@ -44,11 +44,11 @@ def test_truss_consistent_mass_kinetic_energy():
     Me = np.zeros((12, 12))
     points, weights = np.polynomial.legendre.leggauss(3)
     for p, w in zip(points, weights):
-        N1, N2 = (1 - p)/2, (1 + p)/2
-        Nu = np.zeros(12); Nu[[0, 6]] = N1, N2
-        Nv = np.zeros(12); Nv[[1, 7]] = N1, N2
-        Nw = np.zeros(12); Nw[[2, 8]] = N1, N2
-        Nrx = np.zeros(12); Nrx[[3, 9]] = N1, N2
+        S1, S2 = (1 - p)/2, (1 + p)/2
+        Nu = np.zeros(12); Nu[[0, 6]] = S1, S2
+        Nv = np.zeros(12); Nv[[1, 7]] = S1, S2
+        Nw = np.zeros(12); Nw[[2, 8]] = S1, S2
+        Nrx = np.zeros(12); Nrx[[3, 9]] = S1, S2
         wL = w*L/2
         Me += wL*(prop.intrho*(np.outer(Nu, Nu) + np.outer(Nv, Nv)
                                + np.outer(Nw, Nw))

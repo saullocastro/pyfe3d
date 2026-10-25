@@ -131,16 +131,16 @@ def test_static_deflection_plate_clpt():
     K = np.zeros((N, N))
     detJ = a*b/4
     for xi, wxi in zip(pts1, weights1):
-        P_xi = vecf(m1, xi, xit1, xir1, xit2, xir2)
-        P_xi_xi = vecf_xi(m1, xi, xit1, xir1, xit2, xir2)
-        P_xi_xixi = vecf_xixi(m1, xi, xit1, xir1, xit2, xir2)
+        Pxi = vecf(m1, xi, xit1, xir1, xit2, xir2)
+        Pxi_xi = vecf_xi(m1, xi, xit1, xir1, xit2, xir2)
+        Pxi_xixi = vecf_xixi(m1, xi, xit1, xir1, xit2, xir2)
         for eta, weta in zip(pts2, weights2):
-            P_eta = vecf(m2, eta, etat1, etar1, etat2, etar2)
-            P_eta_eta = vecf_xi(m2, eta, etat1, etar1, etat2, etar2)
-            P_eta_etaeta = vecf_xixi(m2, eta, etat1, etar1, etat2, etar2)
-            Sw_xx = (P_xi_xixi[:, None]*P_eta[None, :]*(2/a)**2).ravel()
-            Sw_yy = (P_xi[:, None]*P_eta_etaeta[None, :]*(2/b)**2).ravel()
-            Sw_xy = (P_xi_xi[:, None]*P_eta_eta[None, :]*(2/a)*(2/b)).ravel()
+            Peta = vecf(m2, eta, etat1, etar1, etat2, etar2)
+            Peta_eta = vecf_xi(m2, eta, etat1, etar1, etat2, etar2)
+            Peta_etaeta = vecf_xixi(m2, eta, etat1, etar1, etat2, etar2)
+            Sw_xx = (Pxi_xixi[:, None]*Peta[None, :]*(2/a)**2).ravel()
+            Sw_yy = (Pxi[:, None]*Peta_etaeta[None, :]*(2/b)**2).ravel()
+            Sw_xy = (Pxi_xi[:, None]*Peta_eta[None, :]*(2/a)*(2/b)).ravel()
             e1xx = -Sw_xx
             e1yy = -Sw_yy
             e1xy = -2*Sw_xy
@@ -151,9 +151,9 @@ def test_static_deflection_plate_clpt():
             K += np.outer(detJ*weight*Mxx, e1xx)
             K += np.outer(detJ*weight*Myy, e1yy)
             K += np.outer(detJ*weight*Mxy, e1xy)
-    P_xi = vecf(m1, 0., xit1, xir1, xit2, xir2)
-    P_eta = vecf(m2, 0., etat1, etar1, etat2, etar2)
-    Sw = (P_xi[:, None]*P_eta[None, :]).ravel()
+    Pxi = vecf(m1, 0., xit1, xir1, xit2, xir2)
+    Peta = vecf(m2, 0., etat1, etar1, etat2, etar2)
+    Sw = (Pxi[:, None]*Peta[None, :]).ravel()
     Pforce = 1.0
     # NOTE the Ritz model applies the boundary conditions by zeroing
     #      approximation functions, whose null rows and columns are

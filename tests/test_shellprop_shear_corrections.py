@@ -461,14 +461,14 @@ def test_large_offset_stresses():
                         for z in zs])
         assert np.allclose(tau, tau0, rtol=0, atol=tol*np.abs(tau0).max())
         # same strain field, eps0 + z eps1, about the new reference surface
-        eps_x_o = eps_x.copy()
-        eps_y_o = eps_y.copy()
-        eps_x_o[:3] -= offset*eps_x_o[3:]
-        eps_y_o[:3] -= offset*eps_y_o[3:]
-        z, tyz, txz = prop.calc_equilibrium_transverse_shear(eps_x_o, eps_y_o,
+        eps_x0 = eps_x.copy()
+        eps_y0 = eps_y.copy()
+        eps_x0[:3] -= offset*eps_x0[3:]
+        eps_y0[:3] -= offset*eps_y0[3:]
+        z, tyz, txz = prop.calc_equilibrium_transverse_shear(eps_x0, eps_y0,
                                                              z=zs + offset)
         assert np.array_equal(z, zs + offset)
         assert np.allclose(txz, txz0, rtol=0, atol=tol*np.abs(txz0).max())
         assert np.allclose(tyz, tyz0, rtol=0, atol=tol*np.abs(tyz0).max())
-        U = np.array(prop.calc_aposteriori_energy(eps_x_o, eps_y_o))
+        U = np.array(prop.calc_aposteriori_energy(eps_x0, eps_y0))
         assert np.allclose(U, U0, rtol=0, atol=tol*np.abs(U0).max())

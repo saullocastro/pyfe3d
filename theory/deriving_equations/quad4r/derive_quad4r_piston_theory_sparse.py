@@ -13,17 +13,17 @@ detJ = var('detJ')
 var('wij, r11, r12')
 
 # u v w  rx  ry  rz  (rows are node 1, node2, node3, node4)
-N1, N2, N3, N4 = var('N1, N2, N3, N4')
+S1, S2, S3, S4 = var('S1, S2, S3, S4')
 S1_x, S2_x, S3_x, S4_x = var('S1_x, S2_x, S3_x, S4_x')
 S1_y, S2_y, S3_y, S4_y = var('S1_y, S2_y, S3_y, S4_y')
 
 # u v w  rx  ry  rz  (node 1, node2, node3, node4)
 
 #w
-Nw = Matrix([[0, 0, N1, 0, 0, 0,
-              0, 0, N2, 0, 0, 0,
-              0, 0, N3, 0, 0, 0,
-              0, 0, N4, 0, 0, 0]])
+Nw = Matrix([[0, 0, S1, 0, 0, 0,
+              0, 0, S2, 0, 0, 0,
+              0, 0, S3, 0, 0, 0,
+              0, 0, S4, 0, 0, 0]])
 #dw/dx
 Sw_x = Matrix([[0, 0, S1_x, 0, 0, 0,
                0, 0, S2_x, 0, 0, 0,

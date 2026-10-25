@@ -171,20 +171,20 @@ j12_x1, j12_y1, j12_x2, j12_y2, j12_x3, j12_y3, j12_x4, j12_y4 = sympy.var('j12_
 j21_x1, j21_y1, j21_x2, j21_y2, j21_x3, j21_y3, j21_x4, j21_y4 = sympy.var('j21_x1, j21_y1, j21_x2, j21_y2, j21_x3, j21_y3, j21_x4, j21_y4')
 j22_x1, j22_y1, j22_x2, j22_y2, j22_x3, j22_y3, j22_x4, j22_y4 = sympy.var('j22_x1, j22_y1, j22_x2, j22_y2, j22_x3, j22_y3, j22_x4, j22_y4')
 
-N1 = (eta*xi - eta - xi + 1)/4
-N2 = -(eta*xi + eta - xi - 1)/4
-N3 = (eta*xi + eta + xi + 1)/4
-N4 = -(eta*xi - eta + xi - 1)/4
+S1 = (eta*xi - eta - xi + 1)/4
+S2 = -(eta*xi + eta - xi - 1)/4
+S3 = (eta*xi + eta + xi + 1)/4
+S4 = -(eta*xi - eta + xi - 1)/4
 
-S1_xi = N1.diff(xi)
-S2_xi = N2.diff(xi)
-S3_xi = N3.diff(xi)
-S4_xi = N4.diff(xi)
+S1_xi = S1.diff(xi)
+S2_xi = S2.diff(xi)
+S3_xi = S3.diff(xi)
+S4_xi = S4.diff(xi)
 
-S1_eta = N1.diff(eta)
-S2_eta = N2.diff(eta)
-S3_eta = N3.diff(eta)
-S4_eta = N4.diff(eta)
+S1_eta = S1.diff(eta)
+S2_eta = S2.diff(eta)
+S3_eta = S3.diff(eta)
+S4_eta = S4.diff(eta)
 
 S1_x = j11*S1_xi + j12*S1_eta
 S1_x_x1 = j11_x1*S1_xi + j12_x1*S1_eta
@@ -507,10 +507,10 @@ S4_yx_y3 = (j11_y3*S4_yxi + j12_y3*S4_yeta + j11*S4_yxi_y3 + j12*S4_yeta_y3)
 S4_yx_x4 = (j11_x4*S4_yxi + j12_x4*S4_yeta + j11*S4_yxi_x4 + j12*S4_yeta_x4)
 S4_yx_y4 = (j11_y4*S4_yxi + j12_y4*S4_yeta + j11*S4_yxi_y4 + j12*S4_yeta_y4)
 
-print('N1 =', N1)
-print('N2 =', N2)
-print('N3 =', N3)
-print('N4 =', N4)
+print('S1 =', S1)
+print('S2 =', S2)
+print('S3 =', S3)
+print('S4 =', S4)
 
 print('S1_x =', S1_x.simplify())
 print('S1_x_x1 =', S1_x_x1.simplify())
@@ -643,7 +643,7 @@ print('')
 
 detJfunc = detJ
 detJ = sympy.var('detJ')
-N1, N2, N3, N4 = sympy.var('N1, N2, N3, N4')
+S1, S2, S3, S4 = sympy.var('S1, S2, S3, S4')
 S1_x, S2_x, S3_x, S4_x = sympy.var('S1_x, S2_x, S3_x, S4_x')
 S1_x_x1, S2_x_x1, S3_x_x1, S4_x_x1 = sympy.var('S1_x_x1, S2_x_x1, S3_x_x1, S4_x_x1')
 S1_x_y1, S2_x_y1, S3_x_y1, S4_x_y1 = sympy.var('S1_x_y1, S2_x_y1, S3_x_y1, S4_x_y1')
@@ -674,12 +674,12 @@ S1_xy_y3, S2_xy_y3, S3_xy_y3, S4_xy_y3 = sympy.var('S1_xy_y3, S2_xy_y3, S3_xy_y3
 S1_xy_x4, S2_xy_x4, S3_xy_x4, S4_xy_x4 = sympy.var('S1_xy_x4, S2_xy_x4, S3_xy_x4, S4_xy_x4')
 S1_xy_y4, S2_xy_y4, S3_xy_y4, S4_xy_y4 = sympy.var('S1_xy_y4, S2_xy_y4, S3_xy_y4, S4_xy_y4')
 
-Nu = Matrix(   [[N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0, 0, 0, 0, N4, 0, 0, 0, 0, 0]])
-Nv = Matrix(   [[0, N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0, 0, 0, 0, N4, 0, 0, 0, 0]])
-Nw = Matrix(   [[0, 0, N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0, 0, 0, 0, N4, 0, 0, 0]])
-Nrx = Matrix([[0, 0, 0, N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0, 0, 0, 0, N4, 0, 0]])
-Nry = Matrix([[0, 0, 0, 0, N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0, 0, 0, 0, N4, 0]])
-Nrz = Matrix([[0, 0, 0, 0, 0, N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0, 0, 0, 0, N4]])
+Nu = Matrix(   [[S1, 0, 0, 0, 0, 0, S2, 0, 0, 0, 0, 0, S3, 0, 0, 0, 0, 0, S4, 0, 0, 0, 0, 0]])
+Nv = Matrix(   [[0, S1, 0, 0, 0, 0, 0, S2, 0, 0, 0, 0, 0, S3, 0, 0, 0, 0, 0, S4, 0, 0, 0, 0]])
+Nw = Matrix(   [[0, 0, S1, 0, 0, 0, 0, 0, S2, 0, 0, 0, 0, 0, S3, 0, 0, 0, 0, 0, S4, 0, 0, 0]])
+Nrx = Matrix([[0, 0, 0, S1, 0, 0, 0, 0, 0, S2, 0, 0, 0, 0, 0, S3, 0, 0, 0, 0, 0, S4, 0, 0]])
+Nry = Matrix([[0, 0, 0, 0, S1, 0, 0, 0, 0, 0, S2, 0, 0, 0, 0, 0, S3, 0, 0, 0, 0, 0, S4, 0]])
+Nrz = Matrix([[0, 0, 0, 0, 0, S1, 0, 0, 0, 0, 0, S2, 0, 0, 0, 0, 0, S3, 0, 0, 0, 0, 0, S4]])
 
 # u v w  rx  ry  rz  (node 1, node2, node3, node4)
 
@@ -754,7 +754,7 @@ BLkxy_y3 = Matrix([[0, 0, 0, -S1_x_y3, S1_y_y3, 0, 0, 0, 0, -S2_x_y3, S2_y_y3, 0
 BLkxy_x4 = Matrix([[0, 0, 0, -S1_x_x4, S1_y_x4, 0, 0, 0, 0, -S2_x_x4, S2_y_x4, 0, 0, 0, 0, -S3_x_x4, S3_y_x4, 0, 0, 0, 0, -S4_x_x4, S4_y_x4, 0]])
 BLkxy_y4 = Matrix([[0, 0, 0, -S1_x_y4, S1_y_y4, 0, 0, 0, 0, -S2_x_y4, S2_y_y4, 0, 0, 0, 0, -S3_x_y4, S3_y_y4, 0, 0, 0, 0, -S4_x_y4, S4_y_y4, 0]])
 
-BLgyz = Matrix([[0, 0, S1_y, -N1, 0, 0, 0, 0, S2_y, -N2, 0, 0, 0, 0, S3_y, -N3, 0, 0, 0, 0, S4_y, -N4, 0, 0]])
+BLgyz = Matrix([[0, 0, S1_y, -S1, 0, 0, 0, 0, S2_y, -S2, 0, 0, 0, 0, S3_y, -S3, 0, 0, 0, 0, S4_y, -S4, 0, 0]])
 BLgyz_x1 = Matrix([[0, 0, S1_y_x1, 0, 0, 0, 0, 0, S2_y_x1, 0, 0, 0, 0, 0, S3_y_x1, 0, 0, 0, 0, 0, S4_y_x1, 0, 0, 0]])
 BLgyz_y1 = Matrix([[0, 0, S1_y_y1, 0, 0, 0, 0, 0, S2_y_y1, 0, 0, 0, 0, 0, S3_y_y1, 0, 0, 0, 0, 0, S4_y_y1, 0, 0, 0]])
 BLgyz_x2 = Matrix([[0, 0, S1_y_x2, 0, 0, 0, 0, 0, S2_y_x2, 0, 0, 0, 0, 0, S3_y_x2, 0, 0, 0, 0, 0, S4_y_x2, 0, 0, 0]])
@@ -764,7 +764,7 @@ BLgyz_y3 = Matrix([[0, 0, S1_y_y3, 0, 0, 0, 0, 0, S2_y_y3, 0, 0, 0, 0, 0, S3_y_y
 BLgyz_x4 = Matrix([[0, 0, S1_y_x4, 0, 0, 0, 0, 0, S2_y_x4, 0, 0, 0, 0, 0, S3_y_x4, 0, 0, 0, 0, 0, S4_y_x4, 0, 0, 0]])
 BLgyz_y4 = Matrix([[0, 0, S1_y_y4, 0, 0, 0, 0, 0, S2_y_y4, 0, 0, 0, 0, 0, S3_y_y4, 0, 0, 0, 0, 0, S4_y_y4, 0, 0, 0]])
 
-BLgxz = Matrix([[0, 0, S1_x, 0, N1, 0, 0, 0, S2_x, 0, N2, 0, 0, 0, S3_x, 0, N3, 0, 0, 0, S4_x, 0, N4, 0]])
+BLgxz = Matrix([[0, 0, S1_x, 0, S1, 0, 0, 0, S2_x, 0, S2, 0, 0, 0, S3_x, 0, S3, 0, 0, 0, S4_x, 0, S4, 0]])
 BLgxz_x1 = Matrix([[0, 0, S1_x_x1, 0, 0, 0, 0, 0, S2_x_x1, 0, 0, 0, 0, 0, S3_x_x1, 0, 0, 0, 0, 0, S4_x_x1, 0, 0, 0]])
 BLgxz_y1 = Matrix([[0, 0, S1_x_y1, 0, 0, 0, 0, 0, S2_x_y1, 0, 0, 0, 0, 0, S3_x_y1, 0, 0, 0, 0, 0, S4_x_y1, 0, 0, 0]])
 BLgxz_x2 = Matrix([[0, 0, S1_x_x2, 0, 0, 0, 0, 0, S2_x_x2, 0, 0, 0, 0, 0, S3_x_x2, 0, 0, 0, 0, 0, S4_x_x2, 0, 0, 0]])
@@ -776,7 +776,7 @@ BLgxz_y4 = Matrix([[0, 0, S1_x_y4, 0, 0, 0, 0, 0, S2_x_y4, 0, 0, 0, 0, 0, S3_x_y
 
 #drilling stiffness
 #[1] F.M. Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013) 10–20. www.iosrjen.org (accessed April 20, 2020).
-BLdrilling = Matrix([[S1_y/2, -S1_x/2, 0, 0, 0, N1, S2_y/2, -S2_x/2, 0, 0, 0, N2, S3_y/2, -S3_x/2, 0, 0, 0, N3, S4_y/2, -S4_x/2, 0, 0, 0, N4]])
+BLdrilling = Matrix([[S1_y/2, -S1_x/2, 0, 0, 0, S1, S2_y/2, -S2_x/2, 0, 0, 0, S2, S3_y/2, -S3_x/2, 0, 0, 0, S3, S4_y/2, -S4_x/2, 0, 0, 0, S4]])
 BLdrilling_x1 = Matrix([[S1_y_x1/2, -S1_x_x1/2, 0, 0, 0, 0, S2_y_x1/2, -S2_x_x1/2, 0, 0, 0, 0, S3_y_x1/2, -S3_x_x1/2, 0, 0, 0, 0, S4_y_x1/2, -S4_x_x1/2, 0, 0, 0, 0]])
 BLdrilling_y1 = Matrix([[S1_y_y1/2, -S1_x_y1/2, 0, 0, 0, 0, S2_y_y1/2, -S2_x_y1/2, 0, 0, 0, 0, S3_y_y1/2, -S3_x_y1/2, 0, 0, 0, 0, S4_y_y1/2, -S4_x_y1/2, 0, 0, 0, 0]])
 BLdrilling_x2 = Matrix([[S1_y_x2/2, -S1_x_x2/2, 0, 0, 0, 0, S2_y_x2/2, -S2_x_x2/2, 0, 0, 0, 0, S3_y_x2/2, -S3_x_x2/2, 0, 0, 0, 0, S4_y_x2/2, -S4_x_x2/2, 0, 0, 0, 0]])

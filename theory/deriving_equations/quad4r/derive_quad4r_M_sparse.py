@@ -81,20 +81,20 @@ print('j22 =', j22.subs(dict(xi=0, eta=0)).simplify())
 
 j11, j12, j21, j22 = var('j11, j12, j21, j22')
 
-N1 = (eta*xi - eta - xi + 1)/4
-N2 = -(eta*xi + eta - xi - 1)/4
-N3 = (eta*xi + eta + xi + 1)/4
-N4 = -(eta*xi - eta + xi - 1)/4
+S1 = (eta*xi - eta - xi + 1)/4
+S2 = -(eta*xi + eta - xi - 1)/4
+S3 = (eta*xi + eta + xi + 1)/4
+S4 = -(eta*xi - eta + xi - 1)/4
 
-S1_xi = N1.diff(xi)
-S2_xi = N2.diff(xi)
-S3_xi = N3.diff(xi)
-S4_xi = N4.diff(xi)
+S1_xi = S1.diff(xi)
+S2_xi = S2.diff(xi)
+S3_xi = S3.diff(xi)
+S4_xi = S4.diff(xi)
 
-S1_eta = N1.diff(eta)
-S2_eta = N2.diff(eta)
-S3_eta = N3.diff(eta)
-S4_eta = N4.diff(eta)
+S1_eta = S1.diff(eta)
+S2_eta = S2.diff(eta)
+S3_eta = S3.diff(eta)
+S4_eta = S4.diff(eta)
 
 S1_x = j11*S1_xi + j12*S1_eta
 S2_x = j11*S2_xi + j12*S2_eta
@@ -134,10 +134,10 @@ S2_yx = j11*S2_yxi + j12*S2_yeta
 S3_yx = j11*S3_yxi + j12*S3_yeta
 S4_yx = j11*S4_yxi + j12*S4_yeta
 
-print('N1 =', N1.simplify())
-print('N2 =', N2.simplify())
-print('N3 =', N3.simplify())
-print('N4 =', N4.simplify())
+print('S1 =', S1.simplify())
+print('S2 =', S2.simplify())
+print('S3 =', S3.simplify())
+print('S4 =', S4.simplify())
 
 print('S1_x =', S1_x.simplify())
 print('S2_x =', S2_x.simplify())
@@ -168,10 +168,10 @@ print('S2_yx =', S2_yx.subs(dict(xi=0, eta=0)).simplify())
 print('S3_yx =', S3_yx.subs(dict(xi=0, eta=0)).simplify())
 print('S4_yx =', S4_yx.subs(dict(xi=0, eta=0)).simplify())
 
-print('N1 =', N1.subs(dict(xi=0, eta=0)).simplify())
-print('N2 =', N2.subs(dict(xi=0, eta=0)).simplify())
-print('N3 =', N3.subs(dict(xi=0, eta=0)).simplify())
-print('N4 =', N4.subs(dict(xi=0, eta=0)).simplify())
+print('S1 =', S1.subs(dict(xi=0, eta=0)).simplify())
+print('S2 =', S2.subs(dict(xi=0, eta=0)).simplify())
+print('S3 =', S3.subs(dict(xi=0, eta=0)).simplify())
+print('S4 =', S4.subs(dict(xi=0, eta=0)).simplify())
 
 print('S1_x =', S1_x.subs(dict(xi=0, eta=0)).simplify())
 print('S2_x =', S2_x.subs(dict(xi=0, eta=0)).simplify())
@@ -190,16 +190,16 @@ print('S4_xy =', S4_xy.subs(dict(xi=0, eta=0)).simplify())
 print('')
 
 detJ = var('detJ')
-N1, N2, N3, N4 = var('N1, N2, N3, N4')
+S1, S2, S3, S4 = var('S1, S2, S3, S4')
 S1_x, S2_x, S3_x, S4_x = var('S1_x, S2_x, S3_x, S4_x')
 S1_y, S2_y, S3_y, S4_y = var('S1_y, S2_y, S3_y, S4_y')
 
-Nu =  Matrix([[N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0, 0, 0, 0, N4, 0, 0, 0, 0, 0]])
-Nv =  Matrix([[0, N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0, 0, 0, 0, N4, 0, 0, 0, 0]])
-Nw =  Matrix([[0, 0, N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0, 0, 0, 0, N4, 0, 0, 0]])
-Nrx = Matrix([[0, 0, 0, N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0, 0, 0, 0, N4, 0, 0]])
-Nry = Matrix([[0, 0, 0, 0, N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0, 0, 0, 0, N4, 0]])
-Nrz = Matrix([[0, 0, 0, 0, 0, N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0, 0, 0, 0, N4]])
+Nu =  Matrix([[S1, 0, 0, 0, 0, 0, S2, 0, 0, 0, 0, 0, S3, 0, 0, 0, 0, 0, S4, 0, 0, 0, 0, 0]])
+Nv =  Matrix([[0, S1, 0, 0, 0, 0, 0, S2, 0, 0, 0, 0, 0, S3, 0, 0, 0, 0, 0, S4, 0, 0, 0, 0]])
+Nw =  Matrix([[0, 0, S1, 0, 0, 0, 0, 0, S2, 0, 0, 0, 0, 0, S3, 0, 0, 0, 0, 0, S4, 0, 0, 0]])
+Nrx = Matrix([[0, 0, 0, S1, 0, 0, 0, 0, 0, S2, 0, 0, 0, 0, 0, S3, 0, 0, 0, 0, 0, S4, 0, 0]])
+Nry = Matrix([[0, 0, 0, 0, S1, 0, 0, 0, 0, 0, S2, 0, 0, 0, 0, 0, S3, 0, 0, 0, 0, 0, S4, 0]])
+Nrz = Matrix([[0, 0, 0, 0, 0, S1, 0, 0, 0, 0, 0, S2, 0, 0, 0, 0, 0, S3, 0, 0, 0, 0, 0, S4]])
 
 var('wij, intrho, intrhoz, intrhoz2')
 
@@ -241,7 +241,7 @@ y = Matrix([[y1, y2, y3, y4]]).T
 # Brockman 1987, Eq. 5a
 s = Matrix([[1, 1, 1, 1]]).T
 
-N = Matrix([[N1, N2, N3, N4]]).T
+N = Matrix([[S1, S2, S3, S4]]).T
 print()
 print('H matrix exactly integrated')
 # Brockman 1987, Eq. 19

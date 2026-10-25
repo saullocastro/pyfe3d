@@ -42,8 +42,8 @@ Iz = Iyy
 # betaz = 1/(1 - alphaz)
 var('alphay, alphaz, betay, betaz', real=True)
 
-N1 = 1 - xi
-N2 = xi
+S1 = 1 - xi
+S2 = xi
 Hv1 = betay*( 2*xi**3 - 3*xi**2 + alphay*xi + 1 - alphay)
 Hv2 = betay*(-2*xi**3 + 3*xi**2 - alphay*xi)
 Hw1 = betaz*( 2*xi**3 - 3*xi**2 + alphaz*xi + 1 - alphaz)
@@ -65,14 +65,14 @@ Gry2 = Gpsi2   = betaz*(3*xi**2 - (alphaz + 2)*xi)
 #              u, v, w, phi, psi, theta (for each node)
 #              u, v, w, rx, ry, rz
 # interpolation according to Eq. 19 of Luo, Y. 2008
-Nu =  Matrix([[N1, 0, 0, 0, 0, 0,
-               N2, 0, 0, 0, 0, 0]])
+Nu =  Matrix([[S1, 0, 0, 0, 0, 0,
+               S2, 0, 0, 0, 0, 0]])
 Nv =  Matrix([[0, Hv1, 0, 0, 0, Hrz1,
                0, Hv2, 0, 0, 0, Hrz2]])
 Nw =  Matrix([[0, 0, Hw1, 0, Hry1, 0,
                0, 0, Hw2, 0, Hry2, 0]])
-Nrx = Matrix([[0, 0, 0, N1, 0, 0,
-               0, 0, 0, N2, 0, 0]])
+Nrx = Matrix([[0, 0, 0, S1, 0, 0,
+               0, 0, 0, S2, 0, 0]])
 Nry = Matrix([[0, 0, Gw1, 0, Gry1, 0,
                0, 0, Gw2, 0, Gry2, 0]])
 Nrz = Matrix([[0, Gv1, 0, 0, 0, Grz1,

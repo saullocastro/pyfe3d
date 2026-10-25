@@ -40,20 +40,20 @@ print('A =', Aexpr)
 
 AN1 = cross(r2 - r, r3 - r).components[R.k]/2
 AN2 = cross(r3 - r, r1 - r).components[R.k]/2
-N1 = simplify(AN1/A)
-N2 = simplify(AN2/A)
-N3 = simplify((A - AN1 - AN2)/A)
+S1 = simplify(AN1/A)
+S2 = simplify(AN2/A)
+S3 = simplify((A - AN1 - AN2)/A)
 
-S1_x = N1.diff(x)
-S2_x = N2.diff(x)
-S3_x = N3.diff(x)
-S1_y = N1.diff(y)
-S2_y = N2.diff(y)
-S3_y = N3.diff(y)
+S1_x = S1.diff(x)
+S2_x = S2.diff(x)
+S3_x = S3.diff(x)
+S1_y = S1.diff(y)
+S2_y = S2.diff(y)
+S3_y = S3.diff(y)
 
 # Jacobian
-# N1 = N1(x, y)
-# N2 = N2(x, y)
+# S1 = S1(x, y)
+# S2 = S2(x, y)
 # dN1 = [dN1/dx  dN1/dy] dx
 # dN2   [dN2/dx  dN2/dy] dy
 #
@@ -76,8 +76,8 @@ S1_y, S2_y, S3_y = sympy.var('S1_y, S2_y, S3_y')
 # d/dx = dN1/dx*d/dN1 + dN2/dx*d/dN2 + dN3/dx*d/dN3
 
 #NOTE evaluating at 1 integration point at the centre
-N1, N2 = sympy.var('N1, N2')
-N3 = 1 - N1 - N2
+S1, S2 = sympy.var('S1, S2')
+S3 = 1 - S1 - S2
 
 # u v w  rx  ry  rz  (rows are node 1, node2, node3)
 
@@ -110,19 +110,19 @@ BLkxy = Matrix([[0, 0, 0, -S1_x, S1_y, 0,
                  0, 0, 0, -S3_x, S3_y, 0]])
 #gyz = phiy + w,y
 #    = -rx + w,y
-BLgyz = Matrix([[0, 0, S1_y, -N1, 0, 0,
-                 0, 0, S2_y, -N2, 0, 0,
-                 0, 0, S3_y, -N3, 0, 0]])
+BLgyz = Matrix([[0, 0, S1_y, -S1, 0, 0,
+                 0, 0, S2_y, -S2, 0, 0,
+                 0, 0, S3_y, -S3, 0, 0]])
 #gxz = phix + w,x
 #    = ry + w,x
-BLgxz = Matrix([[0, 0, S1_x, 0, N1, 0,
-                 0, 0, S2_x, 0, N2, 0,
-                 0, 0, S3_x, 0, N3, 0]])
+BLgxz = Matrix([[0, 0, S1_x, 0, S1, 0,
+                 0, 0, S2_x, 0, S2, 0,
+                 0, 0, S3_x, 0, S3, 0]])
 # for drilling stiffness
 #   see Eq. 2.20 in F.M. Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013) 10–20. www.iosrjen.org (accessed April 20, 2020).
-BLdrilling = Matrix([[S1_y/2., -S1_x/2., 0, 0, 0, N1,
-                      S2_y/2., -S2_x/2., 0, 0, 0, N2,
-                      S3_y/2., -S3_x/2., 0, 0, 0, N3]])
+BLdrilling = Matrix([[S1_y/2., -S1_x/2., 0, 0, 0, S1,
+                      S2_y/2., -S2_x/2., 0, 0, 0, S2,
+                      S3_y/2., -S3_x/2., 0, 0, 0, S3]])
 
 BL = Matrix([BLexx, BLeyy, BLgxy, BLkxx, BLkyy, BLkxy, BLgyz, BLgxz])
 

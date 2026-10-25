@@ -582,30 +582,39 @@ select the other matrix.
     `tests/test_solver_linear_buckling.py` and `tests/test_solver_static.py`,
     `Swx`, `Swy`, `Swxx`, `Swyy`, `Swxy` become `Sw_x`, `Sw_y`, `Sw_xx`,
     `Sw_yy`, `Sw_xy`, `Sphixx`, `Sphixy`, `Sphiyx`, `Sphiyy` become
-    `Sphix_x`, `Sphix_y`, `Sphiy_x`, `Sphiy_y`, and the derivatives
-    `Px_xi`, `Pxx_xi`, `Px_eta`, ... of the functions `P_xi` and `P_eta`
-    at `xi` and `eta`, which keep their names, become `P_xi_xi`,
-    `P_xi_xixi`, `P_eta_eta`, ...; `Nvx`, `Nwx`, `dHv1`, `dHr1`, `dHr2` of
+    `Sphix_x`, `Sphix_y`, `Sphiy_x`, `Sphiy_y`, the functions at `xi` and
+    `eta`, `P_xi` and `P_eta`, become `Pxi` and `Peta`, and their
+    derivatives `Px_xi`, `Pxx_xi`, `Px_eta`, ... become `Pxi_xi`,
+    `Pxi_xixi`, `Peta_eta`, ...; `Nvx`, `Nwx`, `dHv1`, `dHr1`, `dHr2` of
     `tests/test_beamc_timoshenko_shape_functions.py` and the Timoshenko
     tutorial become `Sv_x`, `Sw_x`, `Hv1_x`, `Hr1_x`, `Hr2_x`, and `dNrz`
     of the tutorial `Srz_x`; `dNxi`, `dNeta` of `tests/test_element_mass.py`
     and `Nxi`, `Neta` of `tests/test_quad4r_hourglass_control.py` become
     `S_xi`, `S_eta`; `Nx`, `Ny` of `tests/test_tria3dsg.py` become `S_x`,
-    `S_y`; the sensitivities `dKdrho`, `dEdrho`, `dCdrho` of the topology
+    `S_y`; in `tests/test_shellprop_shear_corrections.py`, `grad_x`,
+    `grad_y` become `eps_x`, `eps_y`, and `gx`, `gy`, the same strains
+    about another reference surface, `eps_x0`, `eps_y0`; the sensitivities
+    `dKdrho`, `dEdrho`, `dCdrho` of the topology
     optimization tutorial become `K_rho`, `E_rho`, `C_rho`.
 
-  The Jacobian entries `j11`, ..., `J22`, the rotation interpolations
-  `Gv1`, `Gr1`, ..., the quadrature weights, e.g. `wxi`, `weta`, and the
-  values `N1`, ..., `N4` of the shape functions keep their names. No
-  released name changes. The matrices, internal forces and probe arrays of
+  The values of the shape functions, `N1`, ..., `N4`, become `S1`, ...,
+  `S4`, as `S_i` in the documentation, in `Quad4`, `Quad4R`, `Tria3R`, the
+  derivation scripts of every element and the tests, e.g.
+  `tests/test_truss_consistent_mass.py`; the area coordinates `N1`, `N2`
+  of the reference triangle in `tria3r/derive_tria3r_mass.py`, the
+  integration variables of `h_{ij}`, keep their names. The Jacobian
+  entries `j11`, ..., `J22`, the rotation interpolations `Gv1`, `Gr1`,
+  ..., the interpolation matrices `Nu`, `Nv`, ..., `Nrz` of the
+  derivation scripts and the quadrature weights, e.g. `wxi`, `weta`, keep
+  their names. No released name changes. The matrices, internal forces and probe arrays of
   every element and the outputs of `ShellProp` are bit-identical before and
   after. The derivation scripts print the same lines apart from the names,
-  except for the order of the factors, which SymPy sorts by name: the
-  changed lines of the geometric stiffness of `Quad4R` and `Tria3R`, the
-  same in `Quad4`, are pasted in the new order, which gives the same bits;
-  14 lines of the drilling penalty of `Quad4R` and `Tria3R` keep the former
-  order, which the new one changes in the last bits, see
-  `theory/README.md`.
+  except for the order of the factors, which SymPy sorts by name, in some
+  lines of the geometric stiffness of `Quad4R` and `Tria3R`, the same in
+  `Quad4`; these lines are pasted in the new order, which gives the same
+  bits. The 14 lines of the drilling penalty of `Quad4R` and `Tria3R`
+  that the renaming of the derivatives alone would have printed with
+  another order of the factors are printed as in the `.pyx` again.
 - `pyfe3d.solver.eigen` no longer imports `scipy.sparse.linalg.eigsh`,
   which it did not use (the solvers call `capped_eigsh` of
   `pyfe3d.solver.arpackutils`).

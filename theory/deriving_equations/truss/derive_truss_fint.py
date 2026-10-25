@@ -22,17 +22,17 @@ num_nodes = 2
 var('xi', real=True)
 sympy.var('L, E, GJ, A', real=True, positive=True)
 
-N1 = (1-xi)/2
-N2 = (1+xi)/2
+S1 = (1-xi)/2
+S2 = (1+xi)/2
 
 # Degrees-of-freedom illustrated in Fig. 1 of Luo, Y., 2008
 #              u, v, w, phi, psi, theta (for each node)
 #              u, v, w, rx, ry, rz
 # linear interpolation for all field variables
-Nu =  Matrix([[N1, 0, 0, 0, 0, 0,
-               N2, 0, 0, 0, 0, 0]])
-Nrx =  Matrix([[0, 0, 0, N1, 0, 0,
-                0, 0, 0, N2, 0, 0]])
+Nu =  Matrix([[S1, 0, 0, 0, 0, 0,
+               S2, 0, 0, 0, 0, 0]])
+Nrx =  Matrix([[0, 0, 0, S1, 0, 0,
+                0, 0, 0, S2, 0, 0]])
 
 # u v w  rx  ry  rz  (rows are node 1, node2, node3, node4)
 

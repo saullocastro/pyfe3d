@@ -406,13 +406,13 @@ def allman_cantilever(nx, ny, drilling_model):
         na, nb = tipcol[j], tipcol[j + 1]
         ya, yb = y[na], y[nb]
         for xi, wq in zip(gp, gw):
-            N1 = 0.5*(1. - xi)
-            N2 = 0.5*(1. + xi)
-            yq = N1*ya + N2*yb
+            S1 = 0.5*(1. - xi)
+            S2 = 0.5*(1. + xi)
+            yq = S1*ya + S2*yb
             tau = 3.*W/(2.*H*t)*(1. - 4.*(yq/H)**2)
             jac = (yb - ya)/2.
-            fext[DOF*na + 1] += wq*jac*N1*tau*t
-            fext[DOF*nb + 1] += wq*jac*N2*tau*t
+            fext[DOF*na + 1] += wq*jac*S1*tau*t
+            fext[DOF*nb + 1] += wq*jac*S2*tau*t
     assert np.isclose(fext.sum(), W, rtol=1.e-10)
 
     u = solve(K, N, bk, fext)
