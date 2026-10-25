@@ -7,17 +7,17 @@ constraint is imposed exactly, by a null-space reduction:
 
 .. math::
 
-    \{c\} = [T]\{c_r\} + \{c_{p0}\} + \lambda \{c_{p1}\}, \qquad
-    [T] = \begin{bmatrix} 1 & 0 \\ 0 & 1 \\ 0 & 0 \end{bmatrix}, \qquad
+    \{c\} = [Z]\{c_r\} + \{c_{p0}\} + \lambda \{c_{p1}\}, \qquad
+    [Z] = \begin{bmatrix} 1 & 0 \\ 0 & 1 \\ 0 & 0 \end{bmatrix}, \qquad
     \{c_{p0}\} = \{0, 0, d_0\}, \qquad \{c_{p1}\} = \{0, 0, d_1\}
 
 such that the reduced problem has two degrees of freedom and the residual
 
 .. math::
 
-    \{R_r(c_r, \lambda)\} = [T]^T \left(\lambda \{F_{ext}\} -
+    \{R_r(c_r, \lambda)\} = [Z]^T \left(\lambda \{F_{ext}\} -
     \{F_{int}(c)\}\right), \qquad
-    \frac{\partial R_r}{\partial \lambda} = [T]^T \left(\{F_{ext}\} -
+    \frac{\partial R_r}{\partial \lambda} = [Z]^T \left(\{F_{ext}\} -
     [K_T(c)] \{c_{p1}\}\right)
 
 whose derivative with respect to the load factor depends on the
@@ -36,7 +36,7 @@ from pyfe3d.solver import Analysis
 from pyfe3d.solver import callbacks
 
 
-T = np.array([[1., 0.], [0., 1.], [0., 0.]])
+Z = np.array([[1., 0.], [0., 1.], [0., 0.]])
 
 
 class SpringsProblem(object):
@@ -55,7 +55,7 @@ class SpringsProblem(object):
         self.fint_calls = []
 
     def full(self, c_r, lbd):
-        return T @ c_r + self.cp0 + lbd*self.cp1
+        return Z @ c_r + self.cp0 + lbd*self.cp1
 
     def elongations(self, c):
         return np.array([c[0], c[1] - c[0], c[2] - c[1]])
@@ -72,11 +72,11 @@ class SpringsProblem(object):
                          [0., -ke[2], ke[2]]])
 
     def residual(self, c_r, lbd):
-        return T.T @ (lbd*self.Fext - self.fint_full(self.full(c_r, lbd)))
+        return Z.T @ (lbd*self.Fext - self.fint_full(self.full(c_r, lbd)))
 
     def dR_dlbd(self, c_r, lbd):
         c = self.full(c_r, lbd)
-        return T.T @ (self.Fext - self.kT_full(c) @ self.cp1)
+        return Z.T @ (self.Fext - self.kT_full(c) @ self.cp1)
 
     def reaction(self, c_r, lbd):
         r"""Force of the support on node 3, `c_{p1}^T r / d_1`, with `r =
@@ -88,7 +88,7 @@ class SpringsProblem(object):
     # callables of pyfe3d.solver.Analysis
     def calc_fext(self, inc=1., silent=True, c=None, lbd=None):
         if c is None:
-            return inc*(T.T @ self.Fext)
+            return inc*(Z.T @ self.Fext)
         self.fext_calls.append((lbd, c.copy()))
         return inc*self.dR_dlbd(c, lbd)
 
@@ -96,12 +96,12 @@ class SpringsProblem(object):
         step = len(self.an.increments) if self.an is not None else 0
         self.fint_calls.append((inc, np.linalg.norm(self.residual(c, inc)),
                                 step))
-        return T.T @ self.fint_full(self.full(c, inc))
+        return Z.T @ self.fint_full(self.full(c, inc))
 
     def calc_kC(self, c=None, NLgeom=False, inc=1., silent=True):
         if c is None or not NLgeom:
-            return csr_matrix(T.T @ self.kT_full(np.zeros(3)) @ T)
-        return csr_matrix(T.T @ self.kT_full(self.full(c, inc)) @ T)
+            return csr_matrix(Z.T @ self.kT_full(np.zeros(3)) @ Z)
+        return csr_matrix(Z.T @ self.kT_full(self.full(c, inc)) @ Z)
 
     def calc_kG(self, c=None, NLgeom=False, silent=True):
         return csr_matrix((2, 2))
@@ -144,7 +144,7 @@ class SpringsProblem(object):
                 if np.linalg.norm(R) <= tol*max(1., np.linalg.norm(
                         self.dR_dlbd(c_r, l))):
                     break
-                kT = T.T @ self.kT_full(self.full(c_r, l)) @ T
+                kT = Z.T @ self.kT_full(self.full(c_r, l)) @ Z
                 c_r = c_r + np.linalg.solve(kT, R)
         return c_r
 

@@ -505,6 +505,15 @@ select the other matrix.
   and attributes of the elements, the code comments and the tests. The
   bubbles of the Allman enrichment are written `\hat{S}_k` instead of
   `N_k`.
+- In `pyfe3d.solver`, the basis of the null space of the constraints of
+  the prescribed displacements imposed exactly is written `[Z]` instead
+  of `[T]`, which is the transformation matrix of the elements:
+  `{u} = [Z]{c} + lambda {u_k}` in `Analysis`, `{c} = [Z]{c_r} + {c_p0}
+  + lambda {c_p1}` and `[Z]^T` in the reduced residual in
+  `pyfe3d.solver.callbacks`, and the variable `Z` of
+  `tests/test_solver_load_factor_dependent_load.py`. No public name
+  changes: the matrix is not an argument, attribute or function of the
+  API.
 - User guide pages: overview and workflow, conventions, choice of the
   element, shell and beam properties, non-linear static analyses, linear
   buckling and natural frequencies, installation and changelog. The usage

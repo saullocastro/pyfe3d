@@ -80,8 +80,8 @@ class FreeDofs(object):
 
     .. math::
 
-        \{u\} = [T]\{c\} + \lambda \{u_k\}, \qquad
-        [T] = \begin{bmatrix} [I_{ff}] \\ [0_{kf}] \end{bmatrix}
+        \{u\} = [Z]\{c\} + \lambda \{u_k\}, \qquad
+        [Z] = \begin{bmatrix} [I_{ff}] \\ [0_{kf}] \end{bmatrix}
 
     the null-space reduction of the constraints `\{u_k\} = \lambda
     \{\bar{u}_k\}` imposed exactly, see :mod:`.callbacks`. The solvers see
