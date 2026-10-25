@@ -166,10 +166,10 @@ def shell_element(name, xy):
 def quad_N_detJ(xy, xi, eta):
     N = np.array([(1 - xi)*(1 - eta), (1 + xi)*(1 - eta),
                   (1 + xi)*(1 + eta), (1 - xi)*(1 + eta)])/4
-    dNxi = np.array([-(1 - eta), (1 - eta), (1 + eta), -(1 + eta)])/4
-    dNeta = np.array([-(1 - xi), -(1 + xi), (1 + xi), (1 - xi)])/4
-    J = np.array([[dNxi @ xy[:, 0], dNxi @ xy[:, 1]],
-                  [dNeta @ xy[:, 0], dNeta @ xy[:, 1]]])
+    S_xi = np.array([-(1 - eta), (1 - eta), (1 + eta), -(1 + eta)])/4
+    S_eta = np.array([-(1 - xi), -(1 + xi), (1 + xi), (1 - xi)])/4
+    J = np.array([[S_xi @ xy[:, 0], S_xi @ xy[:, 1]],
+                  [S_eta @ xy[:, 0], S_eta @ xy[:, 1]]])
     return N, np.linalg.det(J)
 
 

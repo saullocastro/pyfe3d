@@ -32,8 +32,8 @@ Iz = Iyy
 N1 = (1-xi)/2
 N2 = (1+xi)/2
 
-N1x = -1/L
-N2x = +1/L
+S1_x = -1/L
+S2_x = +1/L
 
 # Degrees-of-freedom illustrated in Fig. 1 of Luo, Y., 2008
 #              u, v, w, phi, psi, theta (for each node)
@@ -44,10 +44,10 @@ Nu =  Matrix([[N1, 0, 0, 0, 0, 0,
 Nrx =  Matrix([[0, 0, 0, N1, 0, 0,
                 0, 0, 0, N2, 0, 0]])
 
-Nvx =  Matrix([[0, N1x, 0, 0, 0, 0,
-                0, N2x, 0, 0, 0, 0]])
-Nwx =  Matrix([[0, 0, N1x, 0, 0, 0,
-                0, 0, N2x, 0, 0, 0]])
+Sv_x =  Matrix([[0, S1_x, 0, 0, 0, 0,
+                0, S2_x, 0, 0, 0, 0]])
+Sw_x =  Matrix([[0, 0, S1_x, 0, 0, 0,
+                0, 0, S2_x, 0, 0, 0]])
 
 # u v w  rx  ry  rz  (rows are node 1, node2, node3, node4)
 
@@ -85,8 +85,8 @@ N = var('N', real=True)
 
 #NOTE v,x and w,x enter the von Karman strain as two separate squares,
 #     exx = u,x + (v,x**2 + w,x**2)/2, so the geometric stiffness is
-#     N*(Nvx.T*Nvx + Nwx.T*Nwx), without coupling between v and w
-KGe = L/2.*simplify(integrate((Nvx.T*Nvx + Nwx.T*Nwx)*N, (xi, -1, +1)))
+#     N*(Sv_x.T*Sv_x + Sw_x.T*Sw_x), without coupling between v and w
+KGe = L/2.*simplify(integrate((Sv_x.T*Sv_x + Sw_x.T*Sw_x)*N, (xi, -1, +1)))
 
 print('transformation local to global')
 var('r11, r12, r13, r21, r22, r23, r31, r32, r33')

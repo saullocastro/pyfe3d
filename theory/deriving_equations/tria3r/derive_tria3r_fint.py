@@ -44,12 +44,12 @@ N1 = simplify(AN1/A)
 N2 = simplify(AN2/A)
 N3 = simplify((A - AN1 - AN2)/A)
 
-N1x = N1.diff(x)
-N2x = N2.diff(x)
-N3x = N3.diff(x)
-N1y = N1.diff(y)
-N2y = N2.diff(y)
-N3y = N3.diff(y)
+S1_x = N1.diff(x)
+S2_x = N2.diff(x)
+S3_x = N3.diff(x)
+S1_y = N1.diff(y)
+S2_y = N2.diff(y)
+S3_y = N3.diff(y)
 
 # Jacobian
 # N1 = N1(x, y)
@@ -57,21 +57,21 @@ N3y = N3.diff(y)
 # dN1 = [dN1/dx  dN1/dy] dx
 # dN2   [dN2/dx  dN2/dy] dy
 #
-Jinv = Matrix([[N1x, N1y],
-               [N2x, N2y]])
+Jinv = Matrix([[S1_x, S1_y],
+               [S2_x, S2_y]])
 detJ = Jinv.inv().det().simplify()
 print('detJ =', detJ)
 detJ = sympy.var('detJ')
 
-print('N1x =', N1x)
-print('N2x =', N2x)
-print('N3x =', N3x)
-print('N1y =', N1y)
-print('N2y =', N2y)
-print('N3y =', N3y)
+print('S1_x =', S1_x)
+print('S2_x =', S2_x)
+print('S3_x =', S3_x)
+print('S1_y =', S1_y)
+print('S2_y =', S2_y)
+print('S3_y =', S3_y)
 
-N1x, N2x, N3x = sympy.var('N1x, N2x, N3x')
-N1y, N2y, N3y = sympy.var('N1y, N2y, N3y')
+S1_x, S2_x, S3_x = sympy.var('S1_x, S2_x, S3_x')
+S1_y, S2_y, S3_y = sympy.var('S1_y, S2_y, S3_y')
 
 # d/dx = dN1/dx*d/dN1 + dN2/dx*d/dN2 + dN3/dx*d/dN3
 
@@ -82,47 +82,47 @@ N3 = 1 - N1 - N2
 # u v w  rx  ry  rz  (rows are node 1, node2, node3)
 
 #exx = u,x
-BLexx = Matrix([[N1x, 0, 0, 0, 0, 0,
-                 N2x, 0, 0, 0, 0, 0,
-                 N3x, 0, 0, 0, 0, 0]])
+BLexx = Matrix([[S1_x, 0, 0, 0, 0, 0,
+                 S2_x, 0, 0, 0, 0, 0,
+                 S3_x, 0, 0, 0, 0, 0]])
 #eyy = v,y
-BLeyy = Matrix([[0, N1y, 0, 0, 0, 0,
-                 0, N2y, 0, 0, 0, 0,
-                 0, N3y, 0, 0, 0, 0]])
+BLeyy = Matrix([[0, S1_y, 0, 0, 0, 0,
+                 0, S2_y, 0, 0, 0, 0,
+                 0, S3_y, 0, 0, 0, 0]])
 #gxy = u,y + v,x
-BLgxy = Matrix([[N1y, N1x, 0, 0, 0, 0,
-                 N2y, N2x, 0, 0, 0, 0,
-                 N3y, N3x, 0, 0, 0, 0]])
+BLgxy = Matrix([[S1_y, S1_x, 0, 0, 0, 0,
+                 S2_y, S2_x, 0, 0, 0, 0,
+                 S3_y, S3_x, 0, 0, 0, 0]])
 #kxx = phix,x
 #kxx = ry,x
-BLkxx = Matrix([[0, 0, 0, 0, N1x, 0,
-                 0, 0, 0, 0, N2x, 0,
-                 0, 0, 0, 0, N3x, 0]])
+BLkxx = Matrix([[0, 0, 0, 0, S1_x, 0,
+                 0, 0, 0, 0, S2_x, 0,
+                 0, 0, 0, 0, S3_x, 0]])
 #kyy = phiy,y
 #kyy = -rx,y
-BLkyy = Matrix([[0, 0, 0, -N1y, 0, 0,
-                 0, 0, 0, -N2y, 0, 0,
-                 0, 0, 0, -N3y, 0, 0]])
+BLkyy = Matrix([[0, 0, 0, -S1_y, 0, 0,
+                 0, 0, 0, -S2_y, 0, 0,
+                 0, 0, 0, -S3_y, 0, 0]])
 #kxy = phix,y + phiy,x
 #kxy = ry,y + (-rx),x
-BLkxy = Matrix([[0, 0, 0, -N1x, N1y, 0,
-                 0, 0, 0, -N2x, N2y, 0,
-                 0, 0, 0, -N3x, N3y, 0]])
+BLkxy = Matrix([[0, 0, 0, -S1_x, S1_y, 0,
+                 0, 0, 0, -S2_x, S2_y, 0,
+                 0, 0, 0, -S3_x, S3_y, 0]])
 #gyz = phiy + w,y
 #    = -rx + w,y
-BLgyz = Matrix([[0, 0, N1y, -N1, 0, 0,
-                 0, 0, N2y, -N2, 0, 0,
-                 0, 0, N3y, -N3, 0, 0]])
+BLgyz = Matrix([[0, 0, S1_y, -N1, 0, 0,
+                 0, 0, S2_y, -N2, 0, 0,
+                 0, 0, S3_y, -N3, 0, 0]])
 #gxz = phix + w,x
 #    = ry + w,x
-BLgxz = Matrix([[0, 0, N1x, 0, N1, 0,
-                 0, 0, N2x, 0, N2, 0,
-                 0, 0, N3x, 0, N3, 0]])
+BLgxz = Matrix([[0, 0, S1_x, 0, N1, 0,
+                 0, 0, S2_x, 0, N2, 0,
+                 0, 0, S3_x, 0, N3, 0]])
 # for drilling stiffness
 #   see Eq. 2.20 in F.M. Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013) 10–20. www.iosrjen.org (accessed April 20, 2020).
-BLdrilling = Matrix([[N1y/2., -N1x/2., 0, 0, 0, N1,
-                      N2y/2., -N2x/2., 0, 0, 0, N2,
-                      N3y/2., -N3x/2., 0, 0, 0, N3]])
+BLdrilling = Matrix([[S1_y/2., -S1_x/2., 0, 0, 0, N1,
+                      S2_y/2., -S2_x/2., 0, 0, 0, N2,
+                      S3_y/2., -S3_x/2., 0, 0, 0, N3]])
 
 BL = Matrix([BLexx, BLeyy, BLgxy, BLkxx, BLkyy, BLkxy, BLgyz, BLgxz])
 

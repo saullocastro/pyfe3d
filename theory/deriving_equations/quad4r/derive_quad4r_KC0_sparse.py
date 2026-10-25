@@ -90,113 +90,113 @@ N2 = -(eta*xi + eta - xi - 1)/4.
 N3 = (eta*xi + eta + xi + 1)/4.
 N4 = -(eta*xi - eta + xi - 1)/4.
 
-N1xi = N1.diff(xi)
-N2xi = N2.diff(xi)
-N3xi = N3.diff(xi)
-N4xi = N4.diff(xi)
+S1_xi = N1.diff(xi)
+S2_xi = N2.diff(xi)
+S3_xi = N3.diff(xi)
+S4_xi = N4.diff(xi)
 
-N1eta = N1.diff(eta)
-N2eta = N2.diff(eta)
-N3eta = N3.diff(eta)
-N4eta = N4.diff(eta)
+S1_eta = N1.diff(eta)
+S2_eta = N2.diff(eta)
+S3_eta = N3.diff(eta)
+S4_eta = N4.diff(eta)
 
-N1x = j11*N1xi + j12*N1eta
-N2x = j11*N2xi + j12*N2eta
-N3x = j11*N3xi + j12*N3eta
-N4x = j11*N4xi + j12*N4eta
+S1_x = j11*S1_xi + j12*S1_eta
+S2_x = j11*S2_xi + j12*S2_eta
+S3_x = j11*S3_xi + j12*S3_eta
+S4_x = j11*S4_xi + j12*S4_eta
 
-N1xxi = N1x.diff(xi)
-N1xeta = N1x.diff(eta)
-N2xxi = N2x.diff(xi)
-N2xeta = N2x.diff(eta)
-N3xxi = N3x.diff(xi)
-N3xeta = N3x.diff(eta)
-N4xxi = N4x.diff(xi)
-N4xeta = N4x.diff(eta)
+S1_xxi = S1_x.diff(xi)
+S1_xeta = S1_x.diff(eta)
+S2_xxi = S2_x.diff(xi)
+S2_xeta = S2_x.diff(eta)
+S3_xxi = S3_x.diff(xi)
+S3_xeta = S3_x.diff(eta)
+S4_xxi = S4_x.diff(xi)
+S4_xeta = S4_x.diff(eta)
 
-N1xy = j21*N1xxi + j22*N1xeta
-N2xy = j21*N2xxi + j22*N2xeta
-N3xy = j21*N3xxi + j22*N3xeta
-N4xy = j21*N4xxi + j22*N4xeta
+S1_xy = j21*S1_xxi + j22*S1_xeta
+S2_xy = j21*S2_xxi + j22*S2_xeta
+S3_xy = j21*S3_xxi + j22*S3_xeta
+S4_xy = j21*S4_xxi + j22*S4_xeta
 
-N1y = j21*N1xi + j22*N1eta
-N2y = j21*N2xi + j22*N2eta
-N3y = j21*N3xi + j22*N3eta
-N4y = j21*N4xi + j22*N4eta
+S1_y = j21*S1_xi + j22*S1_eta
+S2_y = j21*S2_xi + j22*S2_eta
+S3_y = j21*S3_xi + j22*S3_eta
+S4_y = j21*S4_xi + j22*S4_eta
 
-N1yxi = N1y.diff(xi)
-N1yeta = N1y.diff(eta)
-N2yxi = N2y.diff(xi)
-N2yeta = N2y.diff(eta)
-N3yxi = N3y.diff(xi)
-N3yeta = N3y.diff(eta)
-N4yxi = N4y.diff(xi)
-N4yeta = N4y.diff(eta)
+S1_yxi = S1_y.diff(xi)
+S1_yeta = S1_y.diff(eta)
+S2_yxi = S2_y.diff(xi)
+S2_yeta = S2_y.diff(eta)
+S3_yxi = S3_y.diff(xi)
+S3_yeta = S3_y.diff(eta)
+S4_yxi = S4_y.diff(xi)
+S4_yeta = S4_y.diff(eta)
 
-N1yx = j11*N1yxi + j12*N1yeta
-N2yx = j11*N2yxi + j12*N2yeta
-N3yx = j11*N3yxi + j12*N3yeta
-N4yx = j11*N4yxi + j12*N4yeta
+S1_yx = j11*S1_yxi + j12*S1_yeta
+S2_yx = j11*S2_yxi + j12*S2_yeta
+S3_yx = j11*S3_yxi + j12*S3_yeta
+S4_yx = j11*S4_yxi + j12*S4_yeta
 
 print('N1 =', N1.simplify())
 print('N2 =', N2.simplify())
 print('N3 =', N3.simplify())
 print('N4 =', N4.simplify())
 
-print('N1x =', N1x.simplify())
-print('N2x =', N2x.simplify())
-print('N3x =', N3x.simplify())
-print('N4x =', N4x.simplify())
+print('S1_x =', S1_x.simplify())
+print('S2_x =', S2_x.simplify())
+print('S3_x =', S3_x.simplify())
+print('S4_x =', S4_x.simplify())
 
-print('N1y =', N1y.simplify())
-print('N2y =', N2y.simplify())
-print('N3y =', N3y.simplify())
-print('N4y =', N4y.simplify())
+print('S1_y =', S1_y.simplify())
+print('S2_y =', S2_y.simplify())
+print('S3_y =', S3_y.simplify())
+print('S4_y =', S4_y.simplify())
 print('')
-print('N1xy =', N1xy.simplify())
-print('N2xy =', N2xy.simplify())
-print('N3xy =', N3xy.simplify())
-print('N4xy =', N4xy.simplify())
+print('S1_xy =', S1_xy.simplify())
+print('S2_xy =', S2_xy.simplify())
+print('S3_xy =', S3_xy.simplify())
+print('S4_xy =', S4_xy.simplify())
 print('')
-print('Niyx only for checking purposes')
+print('Si_yx only for checking purposes')
 print('')
-print('N1yx =', N1yx.simplify())
-print('N2yx =', N2yx.simplify())
-print('N3yx =', N3yx.simplify())
-print('N4yx =', N4yx.simplify())
+print('S1_yx =', S1_yx.simplify())
+print('S2_yx =', S2_yx.simplify())
+print('S3_yx =', S3_yx.simplify())
+print('S4_yx =', S4_yx.simplify())
 print('')
 print('')
 print('xi=0, eta=0')
-print('N1yx =', N1yx.subs(dict(xi=0, eta=0)).simplify())
-print('N2yx =', N2yx.subs(dict(xi=0, eta=0)).simplify())
-print('N3yx =', N3yx.subs(dict(xi=0, eta=0)).simplify())
-print('N4yx =', N4yx.subs(dict(xi=0, eta=0)).simplify())
+print('S1_yx =', S1_yx.subs(dict(xi=0, eta=0)).simplify())
+print('S2_yx =', S2_yx.subs(dict(xi=0, eta=0)).simplify())
+print('S3_yx =', S3_yx.subs(dict(xi=0, eta=0)).simplify())
+print('S4_yx =', S4_yx.subs(dict(xi=0, eta=0)).simplify())
 
 print('N1 =', N1.subs(dict(xi=0, eta=0)).simplify())
 print('N2 =', N2.subs(dict(xi=0, eta=0)).simplify())
 print('N3 =', N3.subs(dict(xi=0, eta=0)).simplify())
 print('N4 =', N4.subs(dict(xi=0, eta=0)).simplify())
 
-print('N1x =', N1x.subs(dict(xi=0, eta=0)).simplify())
-print('N2x =', N2x.subs(dict(xi=0, eta=0)).simplify())
-print('N3x =', N3x.subs(dict(xi=0, eta=0)).simplify())
-print('N4x =', N4x.subs(dict(xi=0, eta=0)).simplify())
+print('S1_x =', S1_x.subs(dict(xi=0, eta=0)).simplify())
+print('S2_x =', S2_x.subs(dict(xi=0, eta=0)).simplify())
+print('S3_x =', S3_x.subs(dict(xi=0, eta=0)).simplify())
+print('S4_x =', S4_x.subs(dict(xi=0, eta=0)).simplify())
 
-print('N1y =', N1y.subs(dict(xi=0, eta=0)).simplify())
-print('N2y =', N2y.subs(dict(xi=0, eta=0)).simplify())
-print('N3y =', N3y.subs(dict(xi=0, eta=0)).simplify())
-print('N4y =', N4y.subs(dict(xi=0, eta=0)).simplify())
+print('S1_y =', S1_y.subs(dict(xi=0, eta=0)).simplify())
+print('S2_y =', S2_y.subs(dict(xi=0, eta=0)).simplify())
+print('S3_y =', S3_y.subs(dict(xi=0, eta=0)).simplify())
+print('S4_y =', S4_y.subs(dict(xi=0, eta=0)).simplify())
 print('')
-print('N1xy =', N1xy.subs(dict(xi=0, eta=0)).simplify())
-print('N2xy =', N2xy.subs(dict(xi=0, eta=0)).simplify())
-print('N3xy =', N3xy.subs(dict(xi=0, eta=0)).simplify())
-print('N4xy =', N4xy.subs(dict(xi=0, eta=0)).simplify())
+print('S1_xy =', S1_xy.subs(dict(xi=0, eta=0)).simplify())
+print('S2_xy =', S2_xy.subs(dict(xi=0, eta=0)).simplify())
+print('S3_xy =', S3_xy.subs(dict(xi=0, eta=0)).simplify())
+print('S4_xy =', S4_xy.subs(dict(xi=0, eta=0)).simplify())
 print('')
 
 detJ = var('detJ')
 N1, N2, N3, N4 = var('N1, N2, N3, N4')
-N1x, N2x, N3x, N4x = var('N1x, N2x, N3x, N4x')
-N1y, N2y, N3y, N4y = var('N1y, N2y, N3y, N4y')
+S1_x, S2_x, S3_x, S4_x = var('S1_x, S2_x, S3_x, S4_x')
+S1_y, S2_y, S3_y, S4_y = var('S1_y, S2_y, S3_y, S4_y')
 
 #Nu =  Matrix([[N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0, 0, 0, 0, N4, 0, 0, 0, 0, 0]])
 #Nv =  Matrix([[0, N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0, 0, 0, 0, N4, 0, 0, 0, 0]])
@@ -208,58 +208,58 @@ N1y, N2y, N3y, N4y = var('N1y, N2y, N3y, N4y')
 # u v w  rx  ry  rz  (rows are node 1, node2, node3, node4)
 
 #exx = u,x = (dxi/dx)*u,xi + (deta/dx)*u,eta = j11 u,xi + j12 u,eta
-BLexx = Matrix([[N1x, 0, 0, 0, 0, 0,
-                 N2x, 0, 0, 0, 0, 0,
-                 N3x, 0, 0, 0, 0, 0,
-                 N4x, 0, 0, 0, 0, 0]])
+BLexx = Matrix([[S1_x, 0, 0, 0, 0, 0,
+                 S2_x, 0, 0, 0, 0, 0,
+                 S3_x, 0, 0, 0, 0, 0,
+                 S4_x, 0, 0, 0, 0, 0]])
 #eyy = v,y = (dxi/dy)*v,xi + (deta/dy)*v,eta = j21 v,xi + j22 v,eta
-BLeyy = Matrix([[0, N1y, 0, 0, 0, 0,
-                 0, N2y, 0, 0, 0, 0,
-                 0, N3y, 0, 0, 0, 0,
-                 0, N4y, 0, 0, 0, 0]])
+BLeyy = Matrix([[0, S1_y, 0, 0, 0, 0,
+                 0, S2_y, 0, 0, 0, 0,
+                 0, S3_y, 0, 0, 0, 0,
+                 0, S4_y, 0, 0, 0, 0]])
 #gxy = u,y + v,x = (dxi/dy)*u,xi + (deta/dy)*u,eta + (dxi/dx)*v,xi + (deta/dy)*v,eta
-BLgxy = Matrix([[N1y, N1x, 0, 0, 0, 0,
-                 N2y, N2x, 0, 0, 0, 0,
-                 N3y, N3x, 0, 0, 0, 0,
-                 N4y, N4x, 0, 0, 0, 0]])
+BLgxy = Matrix([[S1_y, S1_x, 0, 0, 0, 0,
+                 S2_y, S2_x, 0, 0, 0, 0,
+                 S3_y, S3_x, 0, 0, 0, 0,
+                 S4_y, S4_x, 0, 0, 0, 0]])
 #kxx = phix,x = (dxi/dx)*phix,xi + (deta/dx)*phix,eta
 #kxx = ry,x = (dxi/dx)*ry,xi + (deta/dx)*ry,eta
-BLkxx = Matrix([[0, 0, 0, 0, N1x, 0,
-                 0, 0, 0, 0, N2x, 0,
-                 0, 0, 0, 0, N3x, 0,
-                 0, 0, 0, 0, N4x, 0]])
+BLkxx = Matrix([[0, 0, 0, 0, S1_x, 0,
+                 0, 0, 0, 0, S2_x, 0,
+                 0, 0, 0, 0, S3_x, 0,
+                 0, 0, 0, 0, S4_x, 0]])
 #kyy = phiy,y = (dxi/dy)*phiy,xi + (deta/dy)*phiy,eta
 #kyy = -rx,y = (dxi/dy)*(-rx),xi + (deta/dy)*(-rx),eta
-BLkyy = Matrix([[0, 0, 0, -N1y, 0, 0,
-                 0, 0, 0, -N2y, 0, 0,
-                 0, 0, 0, -N3y, 0, 0,
-                 0, 0, 0, -N4y, 0, 0]])
+BLkyy = Matrix([[0, 0, 0, -S1_y, 0, 0,
+                 0, 0, 0, -S2_y, 0, 0,
+                 0, 0, 0, -S3_y, 0, 0,
+                 0, 0, 0, -S4_y, 0, 0]])
 #kxy = phix,y + phiy,x = (dxi/dy)*phix,xi + (deta/dy)*phix,eta
 #                       +(dxi/dx)*phiy,xi + (deta/dx)*phiy,eta
 #kxy = ry,y + (-rx),x = (dxi/dy)*ry,xi + (deta/dy)*ry,eta
 #                       +(dxi/dx)*(-rx),xi + (deta/dx)*(-rx),eta
-BLkxy = Matrix([[0, 0, 0, -N1x, N1y, 0,
-                 0, 0, 0, -N2x, N2y, 0,
-                 0, 0, 0, -N3x, N3y, 0,
-                 0, 0, 0, -N4x, N4y, 0]])
+BLkxy = Matrix([[0, 0, 0, -S1_x, S1_y, 0,
+                 0, 0, 0, -S2_x, S2_y, 0,
+                 0, 0, 0, -S3_x, S3_y, 0,
+                 0, 0, 0, -S4_x, S4_y, 0]])
 #gyz = phiy + w,y
 #    = -rx + w,y
-BLgyz = Matrix([[0, 0, N1y, -N1, 0, 0,
-                 0, 0, N2y, -N2, 0, 0,
-                 0, 0, N3y, -N3, 0, 0,
-                 0, 0, N4y, -N4, 0, 0]])
+BLgyz = Matrix([[0, 0, S1_y, -N1, 0, 0,
+                 0, 0, S2_y, -N2, 0, 0,
+                 0, 0, S3_y, -N3, 0, 0,
+                 0, 0, S4_y, -N4, 0, 0]])
 #gxz = phix + w,x
 #    = ry + w,x
-BLgxz = Matrix([[0, 0, N1x, 0, N1, 0,
-                 0, 0, N2x, 0, N2, 0,
-                 0, 0, N3x, 0, N3, 0,
-                 0, 0, N4x, 0, N4, 0]])
+BLgxz = Matrix([[0, 0, S1_x, 0, N1, 0,
+                 0, 0, S2_x, 0, N2, 0,
+                 0, 0, S3_x, 0, N3, 0,
+                 0, 0, S4_x, 0, N4, 0]])
 # for drilling stiffness
 #   see Eq. 2.20 in F.M. Adam, A.E. Mohamed, A.E. Hassaballa, Degenerated Four Nodes Shell Element with Drilling Degree of Freedom, IOSR J. Eng. 3 (2013) 10–20. www.iosrjen.org (accessed April 20, 2020).
-BLdrilling = Matrix([[N1y/2., -N1x/2., 0, 0, 0, N1,
-                      N2y/2., -N2x/2., 0, 0, 0, N2,
-                      N3y/2., -N3x/2., 0, 0, 0, N3,
-                      N4y/2., -N4x/2., 0, 0, 0, N4]])
+BLdrilling = Matrix([[S1_y/2., -S1_x/2., 0, 0, 0, N1,
+                      S2_y/2., -S2_x/2., 0, 0, 0, N2,
+                      S3_y/2., -S3_x/2., 0, 0, 0, N3,
+                      S4_y/2., -S4_x/2., 0, 0, 0, N4]])
 
 BL = Matrix([BLexx, BLeyy, BLgxy, BLkxx, BLkyy, BLkxy, BLgyz, BLgxz])
 
@@ -310,10 +310,10 @@ BL = Matrix([BLexx, BLeyy, BLgxy, BLkxx, BLkyy, BLkxy, BLgyz, BLgxz])
 # dimensionless constant serves both; Brockman's factor does, because it
 # grows with the element area. See the Quad4R module documentation.
 var('E1eq, E2eq, E1b, E2b')
-print('gamma1 = N1xy')
-print('gamma2 = N2xy')
-print('gamma3 = N3xy')
-print('gamma4 = N4xy')
+print('gamma1 = S1_xy')
+print('gamma2 = S2_xy')
+print('gamma3 = S3_xy')
+print('gamma4 = S4_xy')
 Eu = 0.10*E1eq*h*A
 Ev = 0.10*E2eq*h*A
 Erx = 0.10*E2b*h**3*A

@@ -78,8 +78,8 @@ Nry = Matrix([[0, 0, Gw1, 0, Gry1, 0,
 Nrz = Matrix([[0, Gv1, 0, 0, 0, Grz1,
                0, Gv2, 0, 0, 0, Grz2]])
 
-Nvx = simplify(Nv.diff(x))
-Nwx = simplify(Nw.diff(x))
+Sv_x = simplify(Nv.diff(x))
+Sw_x = simplify(Nw.diff(x))
 
 # u v w  rx  ry  rz  (rows are node 1, node2, node3, node4)
 
@@ -146,10 +146,10 @@ N = Na + (Nb - Na)*x/L
 
 # NOTE v,x and w,x enter the von Karman strain as two separate squares,
 #      exx = u,x + (v,x**2 + w,x**2)/2, so the geometric stiffness is
-#      N*(Nvx.T*Nvx + Nwx.T*Nwx). Using the square of the sum,
-#      N*(Nvx + Nwx).T*(Nvx + Nwx), couples the two bending planes and halves
-#      the buckling load of a column with a square cross section
-KGe = simplify(integrate((Nvx.T*Nvx + Nwx.T*Nwx)*N, (x, 0, L)))
+#      N*(Sv_x.T*Sv_x + Sw_x.T*Sw_x). Using the square of the sum,
+#      N*(Sv_x + Sw_x).T*(Sv_x + Sw_x), couples the two bending planes and
+#      halves the buckling load of a column with a square cross section
+KGe = simplify(integrate((Sv_x.T*Sv_x + Sw_x.T*Sw_x)*N, (x, 0, L)))
 
 print('transformation local to global')
 var('r11, r12, r13, r21, r22, r23, r31, r32, r33')

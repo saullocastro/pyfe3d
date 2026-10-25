@@ -53,12 +53,12 @@ def vecf(n, xi, d1t, d1r, d2t, d2r):
     return legendre.legval(xi, _coefficients(n, d1t, d1r, d2t, d2r, 0))
 
 
-def vecfxi(n, xi, d1t, d1r, d2t, d2r):
+def vecf_xi(n, xi, d1t, d1r, d2t, d2r):
     """First derivative of :func:`vecf` with respect to ``xi``"""
     return legendre.legval(xi, _coefficients(n, d1t, d1r, d2t, d2r, 1))
 
 
-def vecfxixi(n, xi, d1t, d1r, d2t, d2r):
+def vecf_xixi(n, xi, d1t, d1r, d2t, d2r):
     """Second derivative of :func:`vecf` with respect to ``xi``"""
     return legendre.legval(xi, _coefficients(n, d1t, d1r, d2t, d2r, 2))
 

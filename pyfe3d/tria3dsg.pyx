@@ -969,9 +969,9 @@ cdef class Tria3DSG:
         cdef int i, ip, iq, kk
         cdef double x1, y1, x2, y2, x3, y3, detJ, area
         cdef double dx, dy, cx, cy
-        cdef double N1x, N2x, N3x, N1y, N2y, N3y
-        cdef double Nxa[3]
-        cdef double Nya[3]
+        cdef double S1_x, S2_x, S3_x, S1_y, S2_y, S3_y
+        cdef double S_x[3]
+        cdef double S_y[3]
         cdef double xa[3]
         cdef double ya[3]
         cdef double *BLexx
@@ -1017,12 +1017,12 @@ cdef class Tria3DSG:
             area = -area # pragma: no cover
         self.area = area
 
-        N1x = (y2 - y3)/detJ
-        N2x = (y3 - y1)/detJ
-        N3x = (y1 - y2)/detJ
-        N1y = (x3 - x2)/detJ
-        N2y = (x1 - x3)/detJ
-        N3y = (x2 - x1)/detJ
+        S1_x = (y2 - y3)/detJ
+        S2_x = (y3 - y1)/detJ
+        S3_x = (y1 - y2)/detJ
+        S1_y = (x3 - x2)/detJ
+        S2_y = (x1 - x3)/detJ
+        S3_y = (x2 - x1)/detJ
 
         for i in range(18):
             BLexx[i] = 0.
@@ -1038,41 +1038,41 @@ cdef class Tria3DSG:
             Sw_y[i] = 0.
 
         # membrane, constant strain triangle
-        BLexx[0] = N1x
-        BLexx[6] = N2x
-        BLexx[12] = N3x
-        BLeyy[1] = N1y
-        BLeyy[7] = N2y
-        BLeyy[13] = N3y
-        BLgxy[0] = N1y
-        BLgxy[6] = N2y
-        BLgxy[12] = N3y
-        BLgxy[1] = N1x
-        BLgxy[7] = N2x
-        BLgxy[13] = N3x
+        BLexx[0] = S1_x
+        BLexx[6] = S2_x
+        BLexx[12] = S3_x
+        BLeyy[1] = S1_y
+        BLeyy[7] = S2_y
+        BLeyy[13] = S3_y
+        BLgxy[0] = S1_y
+        BLgxy[6] = S2_y
+        BLgxy[12] = S3_y
+        BLgxy[1] = S1_x
+        BLgxy[7] = S2_x
+        BLgxy[13] = S3_x
 
         # curvature, same convention as Quad4 and Tria3R:
         #     kxx = dry/dx,  kyy = -drx/dy,  kxy = -drx/dx + dry/dy
-        BLkxx[4] = N1x
-        BLkxx[10] = N2x
-        BLkxx[16] = N3x
-        BLkyy[3] = -N1y
-        BLkyy[9] = -N2y
-        BLkyy[15] = -N3y
-        BLkxy[3] = -N1x
-        BLkxy[9] = -N2x
-        BLkxy[15] = -N3x
-        BLkxy[4] = N1y
-        BLkxy[10] = N2y
-        BLkxy[16] = N3y
+        BLkxx[4] = S1_x
+        BLkxx[10] = S2_x
+        BLkxx[16] = S3_x
+        BLkyy[3] = -S1_y
+        BLkyy[9] = -S2_y
+        BLkyy[15] = -S3_y
+        BLkxy[3] = -S1_x
+        BLkxy[9] = -S2_x
+        BLkxy[15] = -S3_x
+        BLkxy[4] = S1_y
+        BLkxy[10] = S2_y
+        BLkxy[16] = S3_y
 
         # gradients of w, used by the geometrically nonlinear terms
-        Sw_x[2] = N1x
-        Sw_x[8] = N2x
-        Sw_x[14] = N3x
-        Sw_y[2] = N1y
-        Sw_y[8] = N2y
-        Sw_y[14] = N3y
+        Sw_x[2] = S1_x
+        Sw_x[8] = S2_x
+        Sw_x[14] = S3_x
+        Sw_y[2] = S1_y
+        Sw_y[8] = S2_y
+        Sw_y[14] = S3_y
 
         # NOTE transverse shear, the discrete shear gap of Bletzinger,
         #      Bischoff and Ramm (2000), symmetrised over the three
@@ -1103,12 +1103,12 @@ cdef class Tria3DSG:
         #
         #      and the assumed strain is the gradient of the
         #      interpolated gap, sum_q dw_q grad(N_q), with dw_p = 0.
-        Nxa[0] = N1x
-        Nxa[1] = N2x
-        Nxa[2] = N3x
-        Nya[0] = N1y
-        Nya[1] = N2y
-        Nya[2] = N3y
+        S_x[0] = S1_x
+        S_x[1] = S2_x
+        S_x[2] = S3_x
+        S_y[0] = S1_y
+        S_y[1] = S2_y
+        S_y[2] = S3_y
         xa[0] = x1
         xa[1] = x2
         xa[2] = x3
@@ -1121,8 +1121,8 @@ cdef class Tria3DSG:
                 iq = (ip + kk) % 3
                 dx = xa[iq] - xa[ip]
                 dy = ya[iq] - ya[ip]
-                cx = Nxa[iq]/3.
-                cy = Nya[iq]/3.
+                cx = S_x[iq]/3.
+                cy = S_y[iq]/3.
                 BLgxz[DOF*iq + 2] += cx
                 BLgxz[DOF*ip + 2] -= cx
                 BLgxz[DOF*ip + 4] += cx*0.5*dx
@@ -1142,12 +1142,12 @@ cdef class Tria3DSG:
         #      S_i = 1/3, which is what a caller reading the operator back
         #      expects. _update_probe_KC0ve() overwrites them with the
         #      three-point rule, which is what the stiffness matrix needs
-        BLdrilling[0] = N1y/2.
-        BLdrilling[6] = N2y/2.
-        BLdrilling[12] = N3y/2.
-        BLdrilling[1] = -N1x/2.
-        BLdrilling[7] = -N2x/2.
-        BLdrilling[13] = -N3x/2.
+        BLdrilling[0] = S1_y/2.
+        BLdrilling[6] = S2_y/2.
+        BLdrilling[12] = S3_y/2.
+        BLdrilling[1] = -S1_x/2.
+        BLdrilling[7] = -S2_x/2.
+        BLdrilling[13] = -S3_x/2.
         BLdrilling[5] = 1./3.
         BLdrilling[11] = 1./3.
         BLdrilling[17] = 1./3.
@@ -1999,8 +1999,8 @@ cdef class Tria3DSG:
         cdef int m, n, k, node_i, node_j
         cdef int c[3]
         cdef double rz[3]
-        cdef double Nx[3]
-        cdef double Ny[3]
+        cdef double Sw_x[3]
+        cdef double Sw_y[3]
         cdef double area, tmp
 
         with nogil:
@@ -2009,8 +2009,8 @@ cdef class Tria3DSG:
             #      internal forces of update_fint() are built with
             area = self._update_probe_BL_G()
             for node_i in range(NUM_NODES):
-                Nx[node_i] = self.probe.Sw_x[DOF*node_i + 2]
-                Ny[node_i] = self.probe.Sw_y[DOF*node_i + 2]
+                Sw_x[node_i] = self.probe.Sw_x[DOF*node_i + 2]
+                Sw_y[node_i] = self.probe.Sw_y[DOF*node_i + 2]
 
             rz[0] = self.r13
             rz[1] = self.r23
@@ -2036,10 +2036,10 @@ cdef class Tria3DSG:
                         for n in range(3):
                             k = (self.init_k_KG
                                  + 9*(node_i*3 + m) + node_j*3 + n)
-                            tmp = (Nx[node_i]*(Nx[node_j]*Nxx
-                                               + Ny[node_j]*Nxy)
-                                   + Ny[node_i]*(Nx[node_j]*Nxy
-                                                 + Ny[node_j]*Nyy))
+                            tmp = (Sw_x[node_i]*(Sw_x[node_j]*Nxx
+                                                 + Sw_y[node_j]*Nxy)
+                                   + Sw_y[node_i]*(Sw_x[node_j]*Nxy
+                                                   + Sw_y[node_j]*Nyy))
                             KGv[k] += rz[m]*rz[n]*tmp*area
 
     cpdef void update_KG(Tria3DSG self,

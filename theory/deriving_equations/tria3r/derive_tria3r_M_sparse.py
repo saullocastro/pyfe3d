@@ -27,8 +27,8 @@ ONE = sympy.Integer(1)
 
 detJ = 2*A # it can be easily shown
 N1, N2, N3 = var('N1, N2, N3')
-N1x, N2x, N3x = var('N1x, N2x, N3x')
-N1y, N2y, N3y = var('N1y, N2y, N3y')
+S1_x, S2_x, S3_x = var('S1_x, S2_x, S3_x')
+S1_y, S2_y, S3_y = var('S1_y, S2_y, S3_y')
 
 Nu =  Matrix([[N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0, 0, 0, 0]])
 Nv =  Matrix([[0, N1, 0, 0, 0, 0, 0, N2, 0, 0, 0, 0, 0, N3, 0, 0, 0, 0]])
@@ -121,10 +121,10 @@ print()
 cxx, cyy, cxy = var('cxx, cyy, cxy')
 
 # Brockman 1987, Eq. 6a and 6b
-# NOTE for the linear triangle N1x, ..., N3y are constant over the
+# NOTE for the linear triangle S1_x, ..., S3_y are constant over the
 #      element, so b1 and b2 need no evaluation point
-b1 = Matrix([[N1x, N2x, N3x]]).T
-b2 = Matrix([[N1y, N2y, N3y]]).T
+b1 = Matrix([[S1_x, S2_x, S3_x]]).T
+b2 = Matrix([[S1_y, S2_y, S3_y]]).T
 print('b1, b2 constant over the element')
 
 # Brockman 1987, Eq. 31, H matrix with 1-point reduced integration, adapted to

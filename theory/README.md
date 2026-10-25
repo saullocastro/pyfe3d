@@ -19,6 +19,24 @@ These scripts were kept in the separate repository `pyfe3d-dev` until its
 commit 9b9971c, from which they were copied here unchanged; the later changes
 are in the history of this folder.
 
+SymPy prints the factors and terms sorted by the names of the symbols.
+Since the shape-function derivatives are named `S1_x`, `S1_y`, ... instead
+of `N1x`, `N1y`, ..., 14 lines of the drilling penalty of `Quad4R` and
+`Tria3R` are printed with another order of the factors, e.g.
+`5.0e-7*A66*K6ROT*N2*S1_y*detJ*wij` instead of
+`5.0e-7*A66*K6ROT*S1_y*N2*detJ*wij`: `KC0e0011`, `KC0e0017`, `KC0e0023`,
+`KC0e0111`, `KC0e0117`, `KC0e0123`, `KC0e0617`, `KC0e0623`, `KC0e0717`,
+`KC0e0723`, `KC0e1223` and `KC0e1323` of `quad4r/derive_quad4r_KC0_sparse.py`
+and `quad4r/derive_quad4r_fint.py`, `KC0e0011` and `KC0e0111` of
+`tria3r/derive_tria3r_KC0_sparse.py` and `tria3r/derive_tria3r_fint.py`.
+The `.pyx` keep the former order, whose products are evaluated in the same
+sequence as before the renaming; the new order changes the last bits of
+the results. The lines of the geometric stiffness whose order changed,
+printed by `quad4r/derive_quad4r_KG_sparse.py` and
+`tria3r/derive_tria3r_KG_sparse.py`, are pasted in the new order, which
+gives the same bits, in `Quad4R`, `Tria3R` and in `Quad4`, whose lines are
+the same.
+
 ## Elements covered
 
 `beamc`, `beamLR`, `beamcurvedLR`, `quad4r`, `tria3r`, `spring`, `truss`.

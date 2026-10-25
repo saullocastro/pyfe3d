@@ -252,9 +252,9 @@ def centroid_derivatives(probe):
     detJ = J11*J22 - J12*J21
     j11, j12 = J22/detJ, -J12/detJ
     j21, j22 = -J21/detJ, J11/detJ
-    Nxi = 0.25*np.array([-1., 1., 1., -1.])
-    Neta = 0.25*np.array([-1., -1., 1., 1.])
-    return j11*Nxi + j12*Neta, j21*Nxi + j22*Neta
+    S_xi = 0.25*np.array([-1., 1., 1., -1.])
+    S_eta = 0.25*np.array([-1., -1., 1., 1.])
+    return j11*S_xi + j12*S_eta, j21*S_xi + j22*S_eta
 
 
 def brockman_stiffnesses(area, E=E_BROCKMAN, t=T_BROCKMAN):

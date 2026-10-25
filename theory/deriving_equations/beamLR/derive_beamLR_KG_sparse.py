@@ -118,7 +118,7 @@ print('N =', N, flush=True)
 N = var('N', real=True)
 
 # the slopes are taken from the rotations, v,x = rz and w,x = -ry
-#NOTE, I tried Nvx and Nwx here and it does not work, leading to the same KG
+#NOTE, I tried Sv_x and Sw_x here and it does not work, leading to the same KG
 #      obtained for the truss element. Thus, I recommend keeping Nrz and Nry,
 #      which might become more inconsistent when the beam becomes thicker, i.e.
 #      when L/sqrt(A) becomes lower.

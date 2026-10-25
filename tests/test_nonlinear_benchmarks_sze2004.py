@@ -51,7 +51,7 @@ from pyfe3d import (BeamC, BeamCData, BeamCProbe, BeamLR, BeamLRData,
                     BeamLRProbe, Quad4R, Quad4RData, Quad4RProbe, Tria3DSG,
                     Tria3DSGData, Tria3DSGProbe, DOF)
 
-from ritz import vecf, vecfxi, vecfxixi
+from ritz import vecf, vecf_xi, vecf_xixi
 from test_solver_nonlinear_static import Model
 
 # NOTE Fig. 3a of Sze et al. (2004)
@@ -384,8 +384,8 @@ def ritz_roof_WC(m=20, h=12.7):
     xi, weights = np.polynomial.legendre.leggauss(200)
 
     def basis(flags, a):
-        F = [vecf(m, xi, *flags).T, vecfxi(m, xi, *flags).T*(2/a),
-             vecfxixi(m, xi, *flags).T*(2/a)**2]
+        F = [vecf(m, xi, *flags).T, vecf_xi(m, xi, *flags).T*(2/a),
+             vecf_xixi(m, xi, *flags).T*(2/a)**2]
         # NOTE the functions removed by the flags are identically zero
         keep = np.abs(F[0]).sum(axis=0) + np.abs(F[1]).sum(axis=0) > 1e-14
         return [Fi[:, keep] for Fi in F], weights*a/2, keep

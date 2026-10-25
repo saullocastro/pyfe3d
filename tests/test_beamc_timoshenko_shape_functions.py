@@ -88,18 +88,18 @@ def shape_functions(xi, alpha):
     Gr1 = beta*(3*xi**2 + (alpha - 4)*xi + 1 - alpha)
     Gr2 = beta*(3*xi**2 - (alpha + 2)*xi)
     # derivatives with respect to x
-    dHv1 = beta*(6*xi**2 - 6*xi + alpha)/L
-    dHr1 = beta*(3*xi**2 + (alpha - 4)*xi + 1 - alpha/2)
-    dHr2 = beta*(3*xi**2 - (2 + alpha)*xi + alpha/2)
+    Hv1_x = beta*(6*xi**2 - 6*xi + alpha)/L
+    Hr1_x = beta*(3*xi**2 + (alpha - 4)*xi + 1 - alpha/2)
+    Hr2_x = beta*(3*xi**2 - (2 + alpha)*xi + alpha/2)
     Nu = np.zeros(12); Nu[[0, 6]] = [1 - xi, xi]
     Nrx = np.zeros(12); Nrx[[3, 9]] = [1 - xi, xi]
     Nv = np.zeros(12); Nv[[1, 5, 7, 11]] = [Hv1, Hr1, Hv2, Hr2]
     Nrz = np.zeros(12); Nrz[[1, 5, 7, 11]] = [Gv1, Gr1, -Gv1, Gr2]
     Nw = np.zeros(12); Nw[[2, 4, 8, 10]] = [Hv1, -Hr1, Hv2, -Hr2]
     Nry = np.zeros(12); Nry[[2, 4, 8, 10]] = [-Gv1, Gr1, Gv1, Gr2]
-    Nvx = np.zeros(12); Nvx[[1, 5, 7, 11]] = [dHv1, dHr1, -dHv1, dHr2]
-    Nwx = np.zeros(12); Nwx[[2, 4, 8, 10]] = [dHv1, -dHr1, -dHv1, -dHr2]
-    return Nu, Nv, Nw, Nrx, Nry, Nrz, Nvx, Nwx
+    Sv_x = np.zeros(12); Sv_x[[1, 5, 7, 11]] = [Hv1_x, Hr1_x, -Hv1_x, Hr2_x]
+    Sw_x = np.zeros(12); Sw_x[[2, 4, 8, 10]] = [Hv1_x, -Hr1_x, -Hv1_x, -Hr2_x]
+    return Nu, Nv, Nw, Nrx, Nry, Nrz, Sv_x, Sw_x
 
 
 def test_KG_M_same_interpolation():
@@ -134,9 +134,9 @@ def test_KG_M_same_interpolation():
     points, weights = np.polynomial.legendre.leggauss(6)
     for p, w in zip(points, weights):
         xi = (p + 1)/2
-        Nu, Nv, Nw, Nrx, Nry, Nrz, Nvx, Nwx = shape_functions(xi, alpha)
+        Nu, Nv, Nw, Nrx, Nry, Nrz, Sv_x, Sw_x = shape_functions(xi, alpha)
         wL = w*L/2
-        KGref += wL*Nforce*(np.outer(Nvx, Nvx) + np.outer(Nwx, Nwx))
+        KGref += wL*Nforce*(np.outer(Sv_x, Sv_x) + np.outer(Sw_x, Sw_x))
         Mref += wL*(prop.intrho*(np.outer(Nu, Nu) + np.outer(Nv, Nv)
                                  + np.outer(Nw, Nw))
                     + prop.intrhoy2*np.outer(Nrz, Nrz)

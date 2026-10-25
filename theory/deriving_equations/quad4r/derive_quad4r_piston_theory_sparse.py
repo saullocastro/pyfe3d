@@ -14,8 +14,8 @@ var('wij, r11, r12')
 
 # u v w  rx  ry  rz  (rows are node 1, node2, node3, node4)
 N1, N2, N3, N4 = var('N1, N2, N3, N4')
-N1x, N2x, N3x, N4x = var('N1x, N2x, N3x, N4x')
-N1y, N2y, N3y, N4y = var('N1y, N2y, N3y, N4y')
+S1_x, S2_x, S3_x, S4_x = var('S1_x, S2_x, S3_x, S4_x')
+S1_y, S2_y, S3_y, S4_y = var('S1_y, S2_y, S3_y, S4_y')
 
 # u v w  rx  ry  rz  (node 1, node2, node3, node4)
 
@@ -25,20 +25,20 @@ Nw = Matrix([[0, 0, N1, 0, 0, 0,
               0, 0, N3, 0, 0, 0,
               0, 0, N4, 0, 0, 0]])
 #dw/dx
-Nwx = Matrix([[0, 0, N1x, 0, 0, 0,
-               0, 0, N2x, 0, 0, 0,
-               0, 0, N3x, 0, 0, 0,
-               0, 0, N4x, 0, 0, 0]])
+Sw_x = Matrix([[0, 0, S1_x, 0, 0, 0,
+               0, 0, S2_x, 0, 0, 0,
+               0, 0, S3_x, 0, 0, 0,
+               0, 0, S4_x, 0, 0, 0]])
 #dw/dy
-Nwy = Matrix([[0, 0, N1y, 0, 0, 0,
-               0, 0, N2y, 0, 0, 0,
-               0, 0, N3y, 0, 0, 0,
-               0, 0, N4y, 0, 0, 0]])
+Sw_y = Matrix([[0, 0, S1_y, 0, 0, 0,
+               0, 0, S2_y, 0, 0, 0,
+               0, 0, S3_y, 0, 0, 0,
+               0, 0, S4_y, 0, 0, 0]])
 
-NwX = Nwx * r11 + Nwy * r12 # NOTE assuming airflow parallel to global X;
+Sw_X = Sw_x * r11 + Sw_y * r12 # NOTE assuming airflow parallel to global X;
 # dx/dX = r11 and dy/dX = r12, since Rlocal2global has the element axes as columns
 
-KAe_beta = -wij*detJ*(Nw.T*NwX)
+KAe_beta = -wij*detJ*(Nw.T*Sw_X)
 KAe_gamma = wij*detJ*(Nw.T*Nw)
 CAe = -wij*detJ*(Nw.T*Nw)
 

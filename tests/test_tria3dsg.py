@@ -527,9 +527,9 @@ def shape_function_gradients(ncoords):
     y = ncoords[:, 1]
     detJ = (x[0]*(y[1] - y[2]) + x[1]*(y[2] - y[0])
             + x[2]*(y[0] - y[1]))
-    Nx = np.array([y[1] - y[2], y[2] - y[0], y[0] - y[1]])/detJ
-    Ny = np.array([x[2] - x[1], x[0] - x[2], x[1] - x[0]])/detJ
-    return abs(detJ)/2., Nx, Ny
+    S_x = np.array([y[1] - y[2], y[2] - y[0], y[0] - y[1]])/detJ
+    S_y = np.array([x[2] - x[1], x[0] - x[2], x[1] - x[0]])/detJ
+    return abs(detJ)/2., S_x, S_y
 
 
 def test_nonlinear_internal_forces_of_an_imposed_slope():
@@ -563,7 +563,7 @@ def test_nonlinear_internal_forces_of_an_imposed_slope():
     c = 0.03
     el, prop, data, flat = single_element(Tria3DSG, Tria3DSGData,
                                          Tria3DSGProbe, ALIGNED, h)
-    area, Nx, Ny = shape_function_gradients(ALIGNED)
+    area, S_x, S_y = shape_function_gradients(ALIGNED)
     n = DOF*NUM_NODES_TRI
 
     u = np.zeros(n)
@@ -618,9 +618,9 @@ def test_nonlinear_internal_forces_of_an_imposed_slope():
     #      stress: Bm.T*N for the in-plane rows and w_x*G.T*N for the
     #      transverse one
     expected = np.zeros(n)
-    expected[0::DOF] = area*Nx*Nxx
-    expected[1::DOF] = area*Ny*Nyy
-    expected[2::DOF] = area*c*Nx*Nxx
+    expected[0::DOF] = area*S_x*Nxx
+    expected[1::DOF] = area*S_y*Nyy
+    expected[2::DOF] = area*c*S_x*Nxx
     assert np.allclose(fint, expected, rtol=1e-13, atol=1e-13*scale)
 
 

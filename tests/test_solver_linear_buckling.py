@@ -26,7 +26,7 @@ from pyfe3d.solver import (linear_buckling, check_eigenpairs,
                            is_symmetric)
 from pyfe3d.solver import eigen
 
-from ritz import isotropic_plate, vecf, vecfxi
+from ritz import isotropic_plate, vecf, vecf_xi
 from test_solver import plate_matrices
 
 
@@ -261,46 +261,46 @@ def test_plate_buckling_fsdt_ritz():
     a, b, h = 0.3, 0.1, 0.003
     prop = isotropic_plate(thickness=h, E=E, nu=nu)
     Nxxhat = -100.
-    Swx = np.zeros(N)
-    Swy = np.zeros(N)
+    Sw_x = np.zeros(N)
+    Sw_y = np.zeros(N)
     Sphix = np.zeros(N)
     Sphiy = np.zeros(N)
-    Sphixx = np.zeros(N)
-    Sphixy = np.zeros(N)
-    Sphiyx = np.zeros(N)
-    Sphiyy = np.zeros(N)
+    Sphix_x = np.zeros(N)
+    Sphix_y = np.zeros(N)
+    Sphiy_x = np.zeros(N)
+    Sphiy_y = np.zeros(N)
     K = np.zeros((N, N))
     KG = np.zeros((N, N))
     detJ = a*b/4
     for xi, wxi in zip(pts1, weights1):
-        wPx_xi = vecfxi(m1, xi, wxit1, wxir1, wxit2, wxir2)
+        wP_xi_xi = vecf_xi(m1, xi, wxit1, wxir1, wxit2, wxir2)
         wP_xi = vecf(m1, xi, wxit1, wxir1, wxit2, wxir2)
         P_xi = vecf(m1, xi, xit1, xir1, xit2, xir2)
-        Px_xi = vecfxi(m1, xi, xit1, xir1, xit2, xir2)
+        P_xi_xi = vecf_xi(m1, xi, xit1, xir1, xit2, xir2)
         for eta, weta in zip(pts2, weights2):
             wP_eta = vecf(m2, eta, wetat1, wetar1, wetat2, wetar2)
-            wPx_eta = vecfxi(m2, eta, wetat1, wetar1, wetat2, wetar2)
+            wP_eta_eta = vecf_xi(m2, eta, wetat1, wetar1, wetat2, wetar2)
             P_eta = vecf(m2, eta, etat1, etar1, etat2, etar2)
-            Px_eta = vecfxi(m2, eta, etat1, etar1, etat2, etar2)
+            P_eta_eta = vecf_xi(m2, eta, etat1, etar1, etat2, etar2)
             weight = wxi*weta
             Pi, Pj = np.meshgrid(P_xi, P_eta, indexing='ij')
             Sphix[m1*m2:2*m1*m2] = (Pi*Pj).flatten()
             Sphiy[2*m1*m2:] = (Pi*Pj).flatten()
-            Pxi, Pj = np.meshgrid(wPx_xi, wP_eta, indexing='ij')
-            Swx[:m1*m2] = (Pxi*Pj*(2/a)).flatten()
-            Pxi, Pj = np.meshgrid(Px_xi, P_eta, indexing='ij')
-            Sphixx[m1*m2:2*m1*m2] = (Pxi*Pj*(2/a)).flatten()
-            Sphiyx[2*m1*m2:] = (Pxi*Pj*(2/a)).flatten()
-            Pi, Pxj = np.meshgrid(wP_xi, wPx_eta, indexing='ij')
-            Swy[:m1*m2] = (Pi*Pxj*(2/b)).flatten()
-            Pi, Pxj = np.meshgrid(P_xi, Px_eta, indexing='ij')
-            Sphixy[m1*m2:2*m1*m2] = (Pi*Pxj*(2/b)).flatten()
-            Sphiyy[2*m1*m2:] = (Pi*Pxj*(2/b)).flatten()
-            e1xx = Sphixx
-            e1yy = Sphiyy
-            e1xy = Sphixy + Sphiyx
-            g0yz = Sphiy + Swy
-            g0xz = Sphix + Swx
+            Pi_xi, Pj = np.meshgrid(wP_xi_xi, wP_eta, indexing='ij')
+            Sw_x[:m1*m2] = (Pi_xi*Pj*(2/a)).flatten()
+            Pi_xi, Pj = np.meshgrid(P_xi_xi, P_eta, indexing='ij')
+            Sphix_x[m1*m2:2*m1*m2] = (Pi_xi*Pj*(2/a)).flatten()
+            Sphiy_x[2*m1*m2:] = (Pi_xi*Pj*(2/a)).flatten()
+            Pi, Pj_eta = np.meshgrid(wP_xi, wP_eta_eta, indexing='ij')
+            Sw_y[:m1*m2] = (Pi*Pj_eta*(2/b)).flatten()
+            Pi, Pj_eta = np.meshgrid(P_xi, P_eta_eta, indexing='ij')
+            Sphix_y[m1*m2:2*m1*m2] = (Pi*Pj_eta*(2/b)).flatten()
+            Sphiy_y[2*m1*m2:] = (Pi*Pj_eta*(2/b)).flatten()
+            e1xx = Sphix_x
+            e1yy = Sphiy_y
+            e1xy = Sphix_y + Sphiy_x
+            g0yz = Sphiy + Sw_y
+            g0xz = Sphix + Sw_x
             Mxx = prop.D11*e1xx + prop.D12*e1yy + prop.D16*e1xy
             Myy = prop.D12*e1xx + prop.D22*e1yy + prop.D26*e1xy
             Mxy = prop.D16*e1xx + prop.D26*e1yy + prop.D66*e1xy
@@ -311,7 +311,7 @@ def test_plate_buckling_fsdt_ritz():
             K += np.outer(detJ*weight*Mxy, e1xy)
             K += np.outer(detJ*weight*Qy, g0yz)
             K += np.outer(detJ*weight*Qx, g0xz)
-            KG += np.outer(detJ*weight*Nxxhat*Swx, Swx)
+            KG += np.outer(detJ*weight*Nxxhat*Sw_x, Sw_x)
     # NOTE the Ritz model applies the boundary conditions by zeroing
     #      approximation functions, whose null rows and columns are
     #      partitioned out before calling the solver

@@ -548,6 +548,64 @@ select the other matrix.
   and as in the beams: `BmL`, `ABmL` and `sBmL` become `BNL`, `ABNL` and
   `sBNL`. No public name changes. The matrices, internal forces and probe
   arrays of every element are bit-identical before and after.
+- The partial derivatives are named with an underscore introducing the
+  derivative, as the probe attributes `Sw_x`, `Sw_y` and `Sv_x` above, in
+  the elements, the derivation scripts, the tests and the tutorials:
+  - `Quad4`, `Quad4R`, `Tria3R`, `Tria3DSG` and the scripts of `quad4r`,
+    `tria3r` and `truss`: `N1x`, ..., `N4x`, `N1y`, ..., `N4y` become
+    `S1_x`, ..., `S4_x`, `S1_y`, ..., `S4_y`, i.e. `\partial S_i/\partial
+    x` and `\partial S_i/\partial y`, and `N1xy`, ... of the hourglass
+    control of `Quad4R` become `S1_xy`, ...; the scripts also rename
+    `N1xi`, `N1eta`, `N1xxi`, `N1xeta`, `N1yx`, ... to `S1_xi`, `S1_eta`,
+    `S1_xxi`, `S1_xeta`, `S1_yx`, ..., the sensitivities `N1x_x1`, ... to
+    `S1_x_x1`, ..., and the rows `Nvx`, `Nwx`, `Nwy` and `NwX` to `Sv_x`,
+    `Sw_x`, `Sw_y` and `Sw_X`;
+  - the derivatives of the bubbles of the Allman enrichment, `Nb1xi`,
+    `Nb1eta`, `Nb1x`, `Nb1y`, ... of `pyfe3d.quad4.allman_enrichment` and
+    `Nbx`, `Nby` of `pyfe3d.tria3r.allman_enrichment`, become `Sb1_xi`,
+    `Sb1_eta`, `Sb1_x`, `Sb1_y`, ... and `Sb_x`, `Sb_y`; the arguments
+    `Nx`, `Ny` of `allman_enrichment` and `allman_delta_Ke` of
+    `pyfe3d.tria3r`, and the local arrays `Nxv`, `Nyv` of `Tria3R` and
+    `Nxa`, `Nya` of `Tria3DSG` that are passed to them or used alike,
+    become `S_x`, `S_y`; the local arrays `Nx`, `Ny` of
+    `Tria3DSG.update_KG_given_stress`, which hold the `w` entries of the
+    probe rows, become `Sw_x`, `Sw_y`;
+  - the arguments `grad_x` and `grad_y` of
+    `ShellProp.calc_equilibrium_transverse_shear()` and
+    `calc_aposteriori_energy()`, new in this version, become `eps_x` and
+    `eps_y`, the derivatives `\varepsilon_{,x}` and `\varepsilon_{,y}` of
+    the generalized strains, also in `_equilibrium_integrals`, whose
+    docstring writes them `\varepsilon^{(0)}_{,x}`, ... instead of
+    `g_x^{(0)}`, ...;
+  - tests and tutorials: `vecfxi`, `vecfxixi` of `tests/ritz.py` become
+    `vecf_xi`, `vecf_xixi`; in the Ritz models of
+    `tests/test_solver_linear_buckling.py` and `tests/test_solver_static.py`,
+    `Swx`, `Swy`, `Swxx`, `Swyy`, `Swxy` become `Sw_x`, `Sw_y`, `Sw_xx`,
+    `Sw_yy`, `Sw_xy`, `Sphixx`, `Sphixy`, `Sphiyx`, `Sphiyy` become
+    `Sphix_x`, `Sphix_y`, `Sphiy_x`, `Sphiy_y`, and the derivatives
+    `Px_xi`, `Pxx_xi`, `Px_eta`, ... of the functions `P_xi` and `P_eta`
+    at `xi` and `eta`, which keep their names, become `P_xi_xi`,
+    `P_xi_xixi`, `P_eta_eta`, ...; `Nvx`, `Nwx`, `dHv1`, `dHr1`, `dHr2` of
+    `tests/test_beamc_timoshenko_shape_functions.py` and the Timoshenko
+    tutorial become `Sv_x`, `Sw_x`, `Hv1_x`, `Hr1_x`, `Hr2_x`, and `dNrz`
+    of the tutorial `Srz_x`; `dNxi`, `dNeta` of `tests/test_element_mass.py`
+    and `Nxi`, `Neta` of `tests/test_quad4r_hourglass_control.py` become
+    `S_xi`, `S_eta`; `Nx`, `Ny` of `tests/test_tria3dsg.py` become `S_x`,
+    `S_y`; the sensitivities `dKdrho`, `dEdrho`, `dCdrho` of the topology
+    optimization tutorial become `K_rho`, `E_rho`, `C_rho`.
+
+  The Jacobian entries `j11`, ..., `J22`, the rotation interpolations
+  `Gv1`, `Gr1`, ..., the quadrature weights, e.g. `wxi`, `weta`, and the
+  values `N1`, ..., `N4` of the shape functions keep their names. No
+  released name changes. The matrices, internal forces and probe arrays of
+  every element and the outputs of `ShellProp` are bit-identical before and
+  after. The derivation scripts print the same lines apart from the names,
+  except for the order of the factors, which SymPy sorts by name: the
+  changed lines of the geometric stiffness of `Quad4R` and `Tria3R`, the
+  same in `Quad4`, are pasted in the new order, which gives the same bits;
+  14 lines of the drilling penalty of `Quad4R` and `Tria3R` keep the former
+  order, which the new one changes in the last bits, see
+  `theory/README.md`.
 - `pyfe3d.solver.eigen` no longer imports `scipy.sparse.linalg.eigsh`,
   which it did not use (the solvers call `capped_eigsh` of
   `pyfe3d.solver.arpackutils`).
@@ -641,6 +699,9 @@ select the other matrix.
   `^\top` instead of `^T`, in the docstrings, the user guide and the
   tutorials. A matrix in the docstring of `Tria3R.update_KG_given_stress`
   had a single backslash as row separator.
+- In the docstrings of the drilling penalty of `Quad4` and `Quad4R`, the
+  interpolation of `v` is `v = S^v u_e`, as `S^u` and `S^{r_z}`, instead
+  of `v = S_v u_e`, which reads as a derivative.
 - Vectors and matrices as in the book, in the docstrings, the user guide,
   the tutorials, the math of the tests and the derivation scripts: vectors
   are bold lower case and matrices bold upper case, without braces or
