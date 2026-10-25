@@ -117,9 +117,11 @@ Sign conventions
 - Forces and moments are positive along the positive axes, the external
   force vector and the internal force vector of ``update_fint`` alike. A
   pressure is a set of nodal forces given by the user.
-- The residual of :class:`.Analysis` is `\boldsymbol{R} = \lambda \boldsymbol{F}_{ext} -
-  \boldsymbol{F}_{int}`, with the tangent stiffness matrix `\boldsymbol{K}_T = -\partial
-  \boldsymbol{R}/\partial \boldsymbol{u}`, see :doc:`nonlinear_analyses`.
+- The residual of :class:`.Analysis` is `\boldsymbol{R} = \boldsymbol{F}_{int} -
+  \lambda \boldsymbol{F}_{ext}`, with the tangent stiffness matrix `\boldsymbol{K}_T = \partial
+  \boldsymbol{R}/\partial \boldsymbol{u}`, such that the Newton-Raphson corrections solve
+  `\boldsymbol{K}_T \delta \boldsymbol{u} = -\boldsymbol{R}`, and `\partial \boldsymbol{R}/\partial
+  \lambda = -\boldsymbol{F}_{ext}`, see :doc:`nonlinear_analyses`.
 - The linear buckling problem is `(\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}`
   and the frequency problem `(\boldsymbol{K}_{C0} - \omega_n^2 \boldsymbol{M}) \boldsymbol{u} = \boldsymbol{0}`, see
   :doc:`eigenvalue_analyses`.

@@ -8,7 +8,7 @@ the load factor `\lambda`:
 
 .. math::
 
-    \boldsymbol{R}(\boldsymbol{u}, \lambda) = \lambda \boldsymbol{F}_{ext} - \boldsymbol{F}_{int}(\boldsymbol{u}) = \boldsymbol{0}
+    \boldsymbol{R}(\boldsymbol{u}, \lambda) = \boldsymbol{F}_{int}(\boldsymbol{u}) - \lambda \boldsymbol{F}_{ext} = \boldsymbol{0}
 
 The elements give the terms of the residual and of its Jacobian, the
 solvers of :mod:`pyfe3d.solver` the increments and the iterations.
@@ -38,7 +38,7 @@ From the elements to the callables
       - ``update_KG`` at ``c``
 
 ``calc_kC() + calc_kG()`` is then the exact Jacobian of ``calc_fint``,
-`\boldsymbol{K}_T = -\partial \boldsymbol{R}/\partial \boldsymbol{u}`, and the full Newton-Raphson method
+`\boldsymbol{K}_T = \partial \boldsymbol{R}/\partial \boldsymbol{u}`, and the full Newton-Raphson method
 converges quadratically. The class ``Model`` of
 ``tests/test_solver_nonlinear_static.py``, see :doc:`ex_nonlinear_static`,
 wraps a list of elements of one type into these four callables.
@@ -168,7 +168,7 @@ arguments, passed only to the callables that declare them, see
   matrix `\lambda \boldsymbol{K}_F = -\lambda \, \partial \boldsymbol{F}/\partial \boldsymbol{c}`, which is
   unsymmetric in general, see below; the solvers use LU factorizations;
 - ``calc_fext(inc=1., c=...)`` returns the load vector of the
-  configuration ``c`` for a unit load factor, `\partial \boldsymbol{R}/\partial
+  configuration ``c`` for a unit load factor, `-\partial \boldsymbol{R}/\partial
   \lambda`, used by the arc-length methods.
 
 The aerodynamic load of the piston theory, `\lambda \beta

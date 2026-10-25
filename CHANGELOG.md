@@ -147,6 +147,27 @@ depending on structsolve:
   `pyfe3d.solver.eigen._backward_errors` and `_quadratic_backward_errors`,
   and test data `tests/data/beam_cantilever_K.npz`, `_KG.npz` and `_M.npz`.
 
+### Sign convention of the residual
+
+- The residual of the non-linear solvers is `R = Fint - lbd*Fext`, instead
+  of `lbd*Fext - Fint`, in the code and the documentation, such that the
+  tangent stiffness matrix is its Jacobian, `K_T = dR/dc`, the
+  Newton-Raphson corrections solve `K_T dc = -R`, and
+  `dR/dlbd = -Fext`; the load vector that `calc_fext(inc=1., c=c)` and
+  `calc_fext(inc=1., c=c, lbd=lbd)` return, unchanged, is `-dR/dlbd`. The
+  same convention as structsolve and panels. Every operation is the
+  negation of the former one, `fint - fext` instead of `fext - fint` and
+  `solve_kT(-R)` instead of `solve_kT(R)`, exact in floating-point
+  arithmetic: over the test suite, the load factors and the solution
+  vectors of the 162 calls of `Analysis.static`, 1979 vectors, among them
+  the hinged roofs of Sze et al. (2004), the low arch of Fung and Kaplan
+  (1952) and the follower loads, are bitwise identical before and after,
+  signs of the zeros included. The argument `R` of
+  `convergence.check_convergence` and `convergence.crisfield_zeta` is
+  documented as `fint - fext`; they use only norms of `R`, and return the
+  same values for either sign. These functions and the non-linear solvers
+  are new in this version: no function of 0.10.0 changes.
+
 ### Damped frequencies: `complex_frequency()`
 
 - New `pyfe3d.solver.complex_frequency(K, C, M, ...)`: the complex

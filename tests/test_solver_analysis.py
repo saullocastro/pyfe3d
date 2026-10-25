@@ -104,11 +104,11 @@ def test_crisfield_weights_and_zeta():
     np.testing.assert_allclose(w, [0.25, 0.5])
     fext = np.array([2., 0.])
     fint = np.array([1., 1.])
-    R = fext - fint
+    R = fint - fext
     zeta = crisfield_zeta(R, fext, fint, w)
     ref = max(np.sqrt(4*0.25), np.sqrt(0.25 + 0.5))
     np.testing.assert_allclose(zeta, np.sqrt(0.25 + 0.5)/ref)
-    # NOTE an additional reference, e.g. lbd*dR/dlbd
+    # NOTE an additional reference, e.g. -lbd*dR/dlbd
     assert crisfield_zeta(R, fext, fint, w, q=np.array([10., 0.])) < zeta
     assert crisfield_zeta(np.zeros(2), np.zeros(2), np.zeros(2), w) == 0.
     assert crisfield_zeta(R, np.zeros(2), np.zeros(2), w) == np.inf
@@ -131,7 +131,7 @@ def test_check_convergence_criteria():
     w = np.array([1., 1.e-6])
     fext = np.array([1., 0.])
     fint = np.array([1., 0.5])
-    R = fext - fint
+    R = fint - fext
     # NOTE the second component is a moment of a stiff rotation
     conv, Rnorm, zeta = check_convergence(an, R, fint, fext, w=w)
     assert conv and zeta < 1.e-3
@@ -265,7 +265,7 @@ def test_free_dofs_configuration_and_load_factor_dependent_load():
         assert c[0] == 0.
         np.testing.assert_allclose(c[1:], cr, rtol=1e-12)
     # NOTE the residual uses the reference load, calc_fext(c=c, lbd=lbd)
-    #      being dR/dlbd, see pyfe3d.solver.callbacks
+    #      being -dR/dlbd, see pyfe3d.solver.callbacks
     np.testing.assert_allclose(K[1:, :] @ full.cs[-1], [0., P],
                                rtol=1e-10, atol=1e-10)
     assert 3 in seen

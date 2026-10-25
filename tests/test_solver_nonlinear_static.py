@@ -137,7 +137,7 @@ class Model(object):
         for c in self.fint_calls:
             fint = (self.internal_forces(c/self.S)/self.S)[bu]
             fext = (self.fext/self.S)[bu]
-            out.append(crisfield_zeta(fext - fint, fext, fint, w))
+            out.append(crisfield_zeta(fint - fext, fext, fint, w))
         return out
 
 
@@ -244,7 +244,7 @@ def test_crisfield_criterion_free_dofs_only():
     increments, cs = an.static(NLgeom=True, silent=True)
     u = cs[-1]
     fint = model.internal_forces(u)
-    R = fext - fint
+    R = fint - fext
     w_free = crisfield_weights(model.KC0[bu, :][:, bu])
     zeta_free = crisfield_zeta(R[bu], fext[bu], fint[bu], w_free)
     # NOTE the drilling rotations of the flat plate have a null diagonal, all
@@ -369,7 +369,7 @@ def test_piston_theory_load_unsymmetric_tangent():
 
     def calc_fint(c, inc=1., silent=True):
         f = model.internal_forces(c) - inc*(BKA @ c)
-        R = (inc*model.fext - f)[bu]
+        R = (f - inc*model.fext)[bu]
         w = crisfield_weights(model.KC0[bu, :][:, bu])
         zetas.append((inc, crisfield_zeta(R, inc*model.fext[bu], f[bu], w)))
         return f
@@ -390,7 +390,7 @@ def test_piston_theory_load_unsymmetric_tangent():
     increments, cs = an.static(NLgeom=True, silent=True)
     assert increments == [1.]
     u = cs[-1]
-    R = (model.fext + BKA @ u - model.internal_forces(u))[bu]
+    R = (model.internal_forces(u) - (model.fext + BKA @ u))[bu]
     assert np.linalg.norm(R) <= 1.e-8*np.linalg.norm(model.fext[bu])
     z = [zeta for inc, zeta in zetas]
     print('zeta', ' '.join('%.1e' % zi for zi in z))

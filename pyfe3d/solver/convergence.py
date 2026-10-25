@@ -14,7 +14,7 @@ force vector is small, measured by one of two criteria selected with
   largest scaled norm of the reference force vectors, the external and the
   internal ones and, when they apply, the external force vector of the
   increment of the arc-length solvers and the load factor times
-  `\partial \boldsymbol{R}/\partial \lambda`, over the free degrees-of-freedom only, see
+  `-\partial \boldsymbol{R}/\partial \lambda`, over the free degrees-of-freedom only, see
   :func:`crisfield_zeta`;
 - ``'relative'``: the Euclidean norm of the residual compared with the
   largest Euclidean norm of the force vectors, ``Analysis.relTOL``, or the
@@ -80,7 +80,7 @@ a load-controlled analysis the internal forces are small and the external
 load is the reference; when the arc-length solvers pass through a load
 factor close to zero, `\Delta\lambda \boldsymbol{F}_{ext}` is the reference; and under
 prescribed displacements alone the external and the free part of the
-internal force vectors both vanish at equilibrium, whereas `\lambda \,
+internal force vectors both vanish at equilibrium, whereas `-\lambda \,
 \partial \boldsymbol{R}/\partial \lambda`, the out-of-balance force that the prescribed
 displacements produce with the free degrees-of-freedom held fixed, does
 not. The norms are evaluated over the free degrees-of-freedom only, since the
@@ -274,7 +274,7 @@ def crisfield_zeta(R, fext, fint, w, q=None, fext_inc=None):
     Parameters
     ----------
     R : np.ndarray
-        Residual force vector, ``fext - fint``, 1-D array of size ``n``.
+        Residual force vector, ``fint - fext``, 1-D array of size ``n``.
     fext : np.ndarray
         External force vector at the current load factor, 1-D array of size
         ``n``.
@@ -284,7 +284,7 @@ def crisfield_zeta(R, fext, fint, w, q=None, fext_inc=None):
     w : np.ndarray
         Weights of :func:`crisfield_weights`, 1-D array of size ``n``.
     q : np.ndarray or None, optional
-        Additional reference, the load factor times `\partial \boldsymbol{R}/\partial
+        Additional reference, the load factor times `-\partial \boldsymbol{R}/\partial
         \lambda` when the load vector depends on the load factor, see
         :mod:`.callbacks`. Default ``None``.
     fext_inc : np.ndarray or None, optional
@@ -381,7 +381,7 @@ def check_convergence(an, R, fint, fext_total, fext_ref=None, q_ref=None,
         Analysis object with the attributes ``convergence``, ``relTOL`` and
         ``absTOL``.
     R : np.ndarray
-        Residual force vector, 1-D array.
+        Residual force vector, ``fint - fext_total``, 1-D array.
     fint : np.ndarray
         Internal force vector of the same evaluation, 1-D array.
     fext_total : np.ndarray
@@ -391,7 +391,7 @@ def check_convergence(an, R, fint, fext_total, fext_ref=None, q_ref=None,
         the current increment of the arc-length solvers. Default ``None``.
     q_ref : np.ndarray or None, optional
         Additional reference of both criteria, the load factor times
-        `\partial \boldsymbol{R}/\partial \lambda` when ``calc_fext`` accepts ``lbd``, see
+        `-\partial \boldsymbol{R}/\partial \lambda` when ``calc_fext`` accepts ``lbd``, see
         :mod:`.callbacks`. Default ``None``.
     w : np.ndarray or None, optional
         Weights of :func:`crisfield_weights`, required with ``'crisfield'``.

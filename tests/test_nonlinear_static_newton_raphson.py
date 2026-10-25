@@ -79,12 +79,12 @@ def solve(elements, data, prop, x, N, bu, fext, max_iter=20, tol=1.e-10):
             elem.update_fint(fint, prop, nonlinear=1)
             elem.update_KCNL(KCNLr, KCNLc, KCNLv, prop)
             elem.update_KG(KGr, KGc, KGv, prop)
-        residual = fext[bu] - fint[bu]
+        residual = fint[bu] - fext[bu]
         residuals.append(np.linalg.norm(residual)/np.linalg.norm(fext[bu]))
         if residuals[-1] < tol:
             break
         KT = sparse(KC0r, KC0c, KC0v, N) + sparse(KCNLr, KCNLc, KCNLv, N) + sparse(KGr, KGc, KGv, N)
-        u[bu] += spsolve(KT[bu, :][:, bu], residual)
+        u[bu] += spsolve(KT[bu, :][:, bu], -residual)
     return u_linear, u, residuals
 
 

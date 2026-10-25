@@ -20,7 +20,7 @@ def check_increments_and_equilibrium(p, rtol=1e-5):
     assert np.all(np.diff(inc) > 0)
     assert np.all(inc > 0)
     for lbd, c in zip(an.increments, an.cs):
-        R = lbd*p.fext - p.fint(c)
+        R = p.fint(c) - lbd*p.fext
         assert np.linalg.norm(R) <= rtol*np.linalg.norm(lbd*p.fext)
 
 

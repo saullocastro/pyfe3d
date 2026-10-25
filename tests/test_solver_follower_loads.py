@@ -39,7 +39,7 @@ class FollowerProblem(object):
         return self.K @ c + self.a*c**3
 
     def residual(self, c, lbd):
-        return lbd*(self.q0 + self.Q @ c) - self.fint_el(c)
+        return self.fint_el(c) - lbd*(self.q0 + self.Q @ c)
 
     def calc_fext(self, inc=1., silent=True, c=None):
         if c is None:
@@ -162,7 +162,7 @@ def test_newton_raphson_quadratic_with_follower_load():
 
 def test_riks_quadratic_only_with_configuration_load_vector():
     r"""The bordered system of Riks is the Newton-Raphson method of the
-    augmented system only when dR/dlbd = q0 + Q c, i.e. with ``calc_fext``
+    augmented system only when -dR/dlbd = q0 + Q c, i.e. with ``calc_fext``
     accepting ``c``; with the constant reference vector the corrections
     converge linearly"""
     worst = {}

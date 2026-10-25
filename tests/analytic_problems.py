@@ -55,10 +55,10 @@ class Problem(object):
         """Plain dense Newton-Raphson to obtain a reference solution"""
         c = np.linalg.solve(self.kC, lbd*self.fext) if c0 is None else c0
         for _ in range(100):
-            R = lbd*self.fext - self.fint(c)
+            R = self.fint(c) - lbd*self.fext
             if np.linalg.norm(R) <= tol*np.linalg.norm(lbd*self.fext):
                 return c
-            c = c + np.linalg.solve(self.kC + self.kG(c), R)
+            c = c + np.linalg.solve(self.kC + self.kG(c), -R)
         raise RuntimeError('reference solution did not converge')
 
 

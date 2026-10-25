@@ -1,6 +1,6 @@
 r"""Reuse of evaluations and factorizations by the solvers
 
-- With a ``calc_fext`` that declares ``lbd``, `\partial \boldsymbol{R}/\partial \lambda`
+- With a ``calc_fext`` that declares ``lbd``, `-\partial \boldsymbol{R}/\partial \lambda`
   is evaluated only together with the tangent stiffness matrix, right after
   ``calc_kC`` and ``calc_kG`` at the same configuration, see
   :mod:`pyfe3d.solver.callbacks`; the solutions are those of the tests of
@@ -42,7 +42,7 @@ class Recorder(SpringsProblem):
 
 
 def check_events(pb, origin_calls=1):
-    r"""Every `\partial \boldsymbol{R}/\partial \lambda` but those at the origin follows
+    r"""Every `-\partial \boldsymbol{R}/\partial \lambda` but those at the origin follows
     the tangent stiffness matrix at the same configuration and load factor,
     and there is at most one per tangent"""
     ev = pb.events
@@ -85,7 +85,7 @@ def test_load_vector_evaluated_with_the_tangent(method, modified_NR):
         ref = pb.solve_reference(lbd)
         assert np.allclose(c_r, ref, rtol=1e-8, atol=1e-12), (lbd, c_r, ref)
     n_fext, n_tangents = check_events(pb)
-    # dR/dlbd at the origin, then at most one per tangent
+    # -dR/dlbd at the origin, then at most one per tangent
     assert n_fext >= 2
     if method == 'NR':
         # one per tangent, none at the converged iterates

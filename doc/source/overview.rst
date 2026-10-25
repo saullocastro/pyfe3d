@@ -207,8 +207,8 @@ static problem use the same element matrices:
 
 .. math::
 
-    \boldsymbol{R}(\boldsymbol{u}, \lambda) = \lambda \boldsymbol{F}_{ext} - \boldsymbol{F}_{int}(\boldsymbol{u}) = \boldsymbol{0},
-    \qquad \boldsymbol{K}_T = -\frac{\partial \boldsymbol{R}}{\partial \boldsymbol{u}} = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u})
+    \boldsymbol{R}(\boldsymbol{u}, \lambda) = \boldsymbol{F}_{int}(\boldsymbol{u}) - \lambda \boldsymbol{F}_{ext} = \boldsymbol{0},
+    \qquad \boldsymbol{K}_T = \frac{\partial \boldsymbol{R}}{\partial \boldsymbol{u}} = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u})
     + \boldsymbol{K}_G(\boldsymbol{u})
 
 where `\boldsymbol{u}_0` is the linear static solution of the reference load of the

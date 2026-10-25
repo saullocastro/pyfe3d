@@ -85,12 +85,12 @@ class FreeDofs(object):
 
     the null-space reduction of the constraints `\boldsymbol{u}_k = \lambda
     \bar{\boldsymbol{u}}_k` imposed exactly, see :mod:`.callbacks`. The solvers see
-    the reduced residual `\boldsymbol{R}_f = \lambda \boldsymbol{F}_{{ext}_f} - \boldsymbol{F}_{{int}_f}(\boldsymbol{u})`,
+    the reduced residual `\boldsymbol{R}_f = \boldsymbol{F}_{{int}_f}(\boldsymbol{u}) - \lambda \boldsymbol{F}_{{ext}_f}`,
     its Jacobian `\boldsymbol{K}_{T_{ff}}` and
 
     .. math::
 
-        \frac{\partial \boldsymbol{R}_f}{\partial \lambda} = \boldsymbol{F}_{{ext}_f} -
+        -\frac{\partial \boldsymbol{R}_f}{\partial \lambda} = \boldsymbol{F}_{{ext}_f} -
         \boldsymbol{K}_{T_{fk}} \bar{\boldsymbol{u}}_k
 
     with `\boldsymbol{K}_T` at the current configuration and load factor, reused from
@@ -495,14 +495,15 @@ class Analysis(object):
 
     .. math::
 
-        \boldsymbol{R} = \lambda \boldsymbol{F}_{ext} - \boldsymbol{F}_{int}(\boldsymbol{c}) = \boldsymbol{0}
+        \boldsymbol{R} = \boldsymbol{F}_{int}(\boldsymbol{c}) - \lambda \boldsymbol{F}_{ext} = \boldsymbol{0}
 
     and the tangent stiffness matrix `\boldsymbol{K}_T = \boldsymbol{K}_C + \boldsymbol{K}_G`, given by the
     callables ``calc_kC`` and ``calc_kG``, should be the exact derivative of
-    `\boldsymbol{F}_{int}` with respect to `\boldsymbol{c}`, such that the Newton-Raphson
-    iterations converge quadratically ([1]_, Section 1.2.2, p. 9). The
-    convergence is checked by default with Crisfield's criterion, see
-    :mod:`.convergence`.
+    `\boldsymbol{F}_{int}` with respect to `\boldsymbol{c}`, `\boldsymbol{K}_T = \partial
+    \boldsymbol{R}/\partial \boldsymbol{c}`, such that the Newton-Raphson iterations,
+    `\boldsymbol{K}_T \delta \boldsymbol{c} = -\boldsymbol{R}`, converge quadratically ([1]_,
+    Section 1.2.2, p. 9). The convergence is checked by default with
+    Crisfield's criterion, see :mod:`.convergence`.
 
     The line-search tries the full step first and only reduces it when it
     fails a sufficient-decrease test on the residual norm, see
@@ -525,15 +526,15 @@ class Analysis(object):
       the load, scaled by ``inc``, and ``calc_kC + calc_kG`` its derivative,
       the load stiffness matrix.
     - ``calc_fext(inc=1., c=c)`` must return the load vector of the
-      configuration ``c`` for a unit load factor, the derivative of the
-      residual with respect to the load factor, used by the arc-length
-      solvers.
+      configuration ``c`` for a unit load factor, minus the derivative of
+      the residual with respect to the load factor, `-\partial
+      \boldsymbol{R}/\partial \lambda`, used by the arc-length solvers.
     - ``calc_fext(inc=1., c=c, lbd=lbd)`` also receives the current load
       factor when it declares ``lbd``, for a derivative `\partial
       \boldsymbol{R}/\partial \lambda` that depends on the load factor, e.g. prescribed
       displacements imposed exactly as linear constraints, where the
       reference vector ``calc_fext(inc=1.)`` may be null. The solvers then
-      use `\partial \boldsymbol{R}/\partial \lambda` for the displacement scale of the
+      use `-\partial \boldsymbol{R}/\partial \lambda` for the displacement scale of the
       arc-length methods, for the predictor of the first Newton-Raphson
       increment and as a reference of the convergence criteria. The linear
       static analysis never passes ``lbd``.
@@ -762,7 +763,7 @@ class Analysis(object):
             else:
                 fext = pb.calc_fext(inc=1., c=c, silent=True)
             fint = k0 @ c
-            R = fext - fint
+            R = fint - fext
             conv, Rnorm, zeta, roundoff = check_convergence(self, R, fint,
                     fext, w=w, Kc_abs=k0_abs @ np.abs(c), full_output=True)
             msg('Iteration: %d, %s = %1.3e%s' % (iteration, 'zeta' if
@@ -778,7 +779,7 @@ class Analysis(object):
                     solve_k0 = _factorize(k0)
                 except LinAlgError:
                     break
-            c = c + solve_k0(R)
+            c = c + solve_k0(-R)
         warn('The load correction iterations did not converge, the load may '
              'exceed the critical load of the linearized problem', level=1,
              silent=silent)

@@ -26,7 +26,7 @@ def check_equilibrium(p, rtol=1e-5):
     fext_norm = np.linalg.norm(p.fext)
     for lbd, c in zip(an.increments, an.cs):
         fint = p.fint(c)
-        R = lbd*p.fext - fint
+        R = fint - lbd*p.fext
         ref = max(np.linalg.norm(lbd*p.fext), np.linalg.norm(fint))
         assert np.linalg.norm(R) <= rtol*ref + 1e-9*fext_norm, (lbd, R)
 
