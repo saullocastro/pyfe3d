@@ -79,3 +79,16 @@ path is not traced backwards:
 
 .. literalinclude:: ../../tests/test_solver_arc_length.py
     :pyobject: test_arc_length_no_doubling_back
+
+
+The snap-through of a low sinusoidal arch of :class:`.BeamC` elements, hinged
+at both ends under a sinusoidal load, against the limit loads of Fung and
+Kaplan (1952), at the default tolerances: the null load between the limit
+points is passed thanks to the round-off floor of the convergence criteria,
+see :doc:`nonlinear_analyses`:
+
+.. literalinclude:: ../../tests/test_solver_arc_length_fung_kaplan.py
+    :pyobject: arch
+
+.. literalinclude:: ../../tests/test_solver_arc_length_fung_kaplan.py
+    :pyobject: test_fung_kaplan_beam_arch

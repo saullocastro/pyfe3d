@@ -145,6 +145,56 @@ def test_check_convergence_criteria():
         check_convergence(an, R, fint, fext)
 
 
+@pytest.mark.parametrize('convergence', ['crisfield', 'relative'])
+def test_check_convergence_roundoff_floor(convergence, monkeypatch):
+    r"""An iteration has also converged when the norm of the residual of
+    the criterion is not larger than ``ROUNDOFF_FACTOR`` `\varepsilon \|
+    |K_{C0}| |c| \|`, whatever ``relTOL``, and only when ``Kc_abs`` is
+    given; `\zeta` is unchanged"""
+    from pyfe3d.solver import convergence as cv
+
+    class An(object):
+        relTOL = 1.e-20
+        absTOL = None
+    an = An()
+    an.convergence = convergence
+    eps = np.finfo(float).eps
+    w = np.array([1., 1.e-6]) if convergence == 'crisfield' else None
+    # NOTE |K_C0| |c| of a translation and of a stiff rotation
+    Kc_abs = np.array([1.e3, 1.e9])
+    fext = np.array([1., 0.])
+    fint = np.array([1., 0.])
+    if convergence == 'crisfield':
+        norm_Kc = np.sqrt(1.e6 + 1.e-6*1.e18)
+    else:
+        norm_Kc = np.sqrt(1.e6 + 1.e18)
+    floor = cv.ROUNDOFF_FACTOR*eps*norm_Kc
+    assert cv.ROUNDOFF_FACTOR == 3.
+    assert np.isclose(cv.roundoff_floor(Kc_abs, w=w), floor, rtol=1e-14)
+    # NOTE residual on the first component only: its norm is |R_0| with both
+    #      criteria
+    for factor, expected in ((0.99, True), (1.01, False)):
+        R = np.array([factor*floor, 0.])
+        conv, Rnorm, zeta, roundoff = cv.check_convergence(an, R, fint,
+                fext, w=w, Kc_abs=Kc_abs, full_output=True)
+        assert conv is expected and roundoff is expected
+        assert np.isclose(Rnorm, factor*floor, rtol=1e-14)
+        assert zeta > an.relTOL
+        # NOTE without Kc_abs, the criterion of relTOL only
+        assert cv.check_convergence(an, R, fint, fext, w=w) == (False,
+                Rnorm, zeta)
+    R = np.array([0.5*floor, 0.])
+    # NOTE an iteration accepted by relTOL is not marked
+    an.relTOL = 1.e-3
+    assert cv.check_convergence(an, R, fint, fext, w=w, Kc_abs=Kc_abs,
+                                full_output=True)[::3] == (True, False)
+    # NOTE ROUNDOFF_FACTOR = 0 disables the floor
+    an.relTOL = 1.e-20
+    monkeypatch.setattr(cv, 'ROUNDOFF_FACTOR', 0.)
+    assert not cv.check_convergence(an, R, fint, fext, w=w,
+                                    Kc_abs=Kc_abs)[0]
+
+
 
 def test_free_dofs_invalid_bu_and_uk():
     from pyfe3d.solver import FreeDofs

@@ -132,7 +132,22 @@ to ``an.convergence``, see :mod:`.convergence`:
   of moments.
 
 ``an.absTOL`` also accepts the iterations whose largest absolute residual
-is smaller, in the units of force of the model. With a consistent tangent
+is smaller, in the units of force of the model. With both criteria, an
+iteration has also converged at the round-off floor of the residual,
+
+.. math::
+
+    \|R\|_{\boldsymbol{d}} \le 3 \varepsilon \, \| |K_{C0}| \, |u| \|_{\boldsymbol{d}}
+
+with `\varepsilon` the machine precision, `|K_{C0}|` and `|u|` the
+elementwise absolute values of the linear stiffness matrix and of the
+displacements of the free dofs, and the Euclidean norm with
+``'relative'``, see :func:`.roundoff_floor`: the residual cannot be
+computed more accurately, and, under large self-equilibrated axial forces,
+e.g. of an arch near a null load, `\zeta` would otherwise stagnate above
+``relTOL`` and the analysis stop, see ``test_fung_kaplan_beam_arch`` in
+:doc:`ex_nonlinear_static`. The log messages mark the iterations converged
+at the round-off floor. With a consistent tangent
 stiffness matrix and full Newton-Raphson, `\zeta` falls quadratically, as
 verified in :doc:`ex_nonlinear_static`; a slow decrease of `\zeta` reveals
 an inconsistent tangent stiffness matrix, e.g. a missing ``calc_kG``, which

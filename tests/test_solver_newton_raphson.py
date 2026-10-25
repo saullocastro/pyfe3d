@@ -202,10 +202,13 @@ def test_inconsistent_tangent_converges_linearly():
     assert max(orders) < 1.2, orders
 
 
-def test_nr_unreachable_tolerance_stops_without_increments():
-    """A tolerance below the round-off cannot be met: every step is cut
+def test_nr_unreachable_tolerance_stops_without_increments(monkeypatch):
+    """A tolerance below the round-off cannot be met without the round-off
+    floor of the convergence criteria, disabled here: every step is cut
     until the increment is smaller than minInc, and no increment is
     stored"""
+    from pyfe3d.solver import convergence
+    monkeypatch.setattr(convergence, 'ROUNDOFF_FACTOR', 0.)
     p = hardening_springs()
     p.analysis(relTOL=1e-20)
     p.an.static(NLgeom=True, silent=True)

@@ -113,6 +113,58 @@ Euclidean norm over all the degrees-of-freedom of the solver, or when
 `\max|R_j| \le` ``absTOL``, which depends on the units of the model, see
 :func:`check_convergence`.
 
+.. rubric:: The round-off floor
+
+The residual is the difference of force vectors computed in floating-point
+arithmetic. Each component of `\{F_{int}\}` sums element contributions of
+the order of `\sum_k |K_{{C0}_{jk}}| |c_k|`, which may be much larger than
+the component itself, e.g. under large self-equilibrated axial forces,
+such that the residual cannot be computed more accurately than about
+`\varepsilon \| |K_{C0}| \, |c| \|`, with `\varepsilon` the machine
+precision and `|K_{C0}|` and `|c|` the elementwise absolute values of the
+linear stiffness matrix and of the solution. When this level is above
+`\epsilon` times the references of `\zeta_i`, e.g. near a null load, where
+the references, net force vectors, are small and the element contributions
+are not, the iterations stagnate and every step fails. The iteration `i`
+has therefore also converged when
+
+.. math::
+
+    \|R_i\|_{\boldsymbol{d}} \le C \, \varepsilon \,
+    \| |K_{C0}| \, |c_i| \|_{\boldsymbol{d}}
+
+with `C` = ``ROUNDOFF_FACTOR`` `= 3`, `c_i` the solution of the iteration,
+and the Euclidean norm instead of `\|\cdot\|_{\boldsymbol{d}}` with the
+relative criterion, see :func:`roundoff_floor`. Like ``absTOL``, the floor
+is an alternative to ``relTOL`` with both criteria. `|K_{C0}|` is computed
+once, with `\boldsymbol{d}`, and the floor adds one product by `|c_i|` per
+iteration. It does not change `\zeta_i`, which may then be larger than
+`\epsilon`: the log of the iterations marks the iterations converged at the
+round-off floor. With prescribed displacements, ``uk``, `|K_{C0}|` and
+`|c|` are those of the free degrees-of-freedom, the product
+`|K_{ff}| \, |u_f|` omitting the contribution of the prescribed
+displacements, `|K_{fp}| \, |u_p|`: the floor is then lower, i.e.
+conservative.
+
+Measured on the low sinusoidal arch of Fung and Kaplan [4]_, hinged at both
+ends under a sinusoidal load, `\lambda_1 = 2.2`, modelled with 40
+:class:`.BeamC` elements, traced with both arc-length methods and both
+criteria, with arc-length increments of 0.05 and `\epsilon = 10^{-9}`, and
+a reference load of 1.25 times the upper limit load, reached at the load
+factor 0.80: without the floor, the four analyses stop at load factors of
+0.026 to 0.032, close to the null load between the limit points; after the
+last converged step, the residuals of the iterations that follow the first
+correction of each attempt remain between 0.29 and 0.47 times
+`\varepsilon \| |K_{C0}| \, |c| \|`, with `\zeta_i \ge 1.0 \times 10^{-9}`,
+and no residual of the analyses is below 0.21 times this level. With 80
+elements they stop at load factors of 0.20 to 0.21, between the limit
+points, and with 160 elements at 0.67 to 0.71, before the upper limit
+point. With the floor, all of them reach the load factor 1.0, the floor
+accepting 9 to 31 of the about 360 iterations with 40 elements, with
+`\zeta_i` up to `8.8 \times 10^{-9}` and residuals of 0.30 to 2.9 times
+`\varepsilon \| |K_{C0}| \, |c| \|`, and 83 to 86 iterations with 160
+elements.
+
 References
 ----------
 .. [1] Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
@@ -123,6 +175,10 @@ References
 .. [3] Crisfield, M. A., A fast incremental/iterative solution procedure
    that handles "snap-through", Computers & Structures, 13(1-3), 55-62,
    1981. https://doi.org/10.1016/0045-7949(81)90108-5
+.. [4] Fung, Y. C. and Kaplan, A., Buckling of low arches or curved beams of
+   small curvature, NACA Technical Note 2840, National Advisory Committee
+   for Aeronautics, Washington, 1952.
+   https://ntrs.nasa.gov/citations/19930083579
 
 """
 import numpy as np
@@ -132,6 +188,11 @@ from .sparseutils import check_null_rows_cols
 
 #: Names of the convergence criteria accepted by ``Analysis.convergence``
 CRITERIA = ('crisfield', 'relative')
+#: An iteration has also converged when the norm of its residual is not
+#: larger than this factor times the machine precision times the norm of
+#: `|K_{C0}| |c|`, the round-off floor of the residual, see
+#: :func:`roundoff_floor` and :func:`check_convergence`
+ROUNDOFF_FACTOR = 3.
 
 
 def crisfield_weights(K0):
@@ -258,8 +319,46 @@ def crisfield_zeta(R, fext, fint, w, q=None, fext_inc=None):
     return 0. if Rn == 0 else np.inf
 
 
+def roundoff_floor(Kc_abs, w=None):
+    r"""Round-off floor of the residual norm
+
+    Parameters
+    ----------
+    Kc_abs : np.ndarray
+        `|K_{C0}| |c|`, the product of the elementwise absolute values of
+        the linear stiffness matrix and of the current solution, 1-D array
+        of size ``n``.
+    w : np.ndarray or None, optional
+        Weights of :func:`crisfield_weights`, for the scaled norm of
+        Crisfield's criterion; the Euclidean norm when ``None``. Default
+        ``None``.
+
+    Returns
+    -------
+    floor : float
+        ``ROUNDOFF_FACTOR*eps*norm(Kc_abs)``, with ``eps`` the machine
+        precision of ``float`` and the norm of the criterion.
+
+    See Also
+    --------
+    check_convergence : the criterion that uses it.
+
+    Notes
+    -----
+    `C \varepsilon \| |K_{C0}| |c| \|`, with `C` = ``ROUNDOFF_FACTOR``,
+    see the module documentation.
+
+    """
+    Kc_abs = np.asarray(Kc_abs)
+    if w is None:
+        norm = float(np.linalg.norm(Kc_abs))
+    else:
+        norm = scaled_norm(Kc_abs, w)
+    return ROUNDOFF_FACTOR*np.finfo(float).eps*norm
+
+
 def check_convergence(an, R, fint, fext_total, fext_ref=None, q_ref=None,
-                      w=None):
+                      w=None, Kc_abs=None, full_output=False):
     r"""Check the convergence of the residual force vector
 
     With ``an.convergence = 'crisfield'`` the convergence is achieved when
@@ -272,7 +371,9 @@ def check_convergence(an, R, fint, fext_total, fext_ref=None, q_ref=None,
     - ``max(abs(R)) <= an.absTOL``, if ``an.absTOL`` is not ``None``.
 
     ``an.absTOL`` is also accepted as an additional criterion with
-    ``'crisfield'``.
+    ``'crisfield'``. With both criteria, when ``Kc_abs`` is given, the
+    convergence is also achieved when the norm of ``R`` of the criterion is
+    not larger than the round-off floor of :func:`roundoff_floor`.
 
     Parameters
     ----------
@@ -295,6 +396,13 @@ def check_convergence(an, R, fint, fext_total, fext_ref=None, q_ref=None,
     w : np.ndarray or None, optional
         Weights of :func:`crisfield_weights`, required with ``'crisfield'``.
         Default ``None``.
+    Kc_abs : np.ndarray or None, optional
+        `|K_{C0}| |c|`, the product of the elementwise absolute values of
+        the linear stiffness matrix ``calc_kC()`` and of the solution of the
+        evaluation of ``R``, 1-D array. ``None`` disables the round-off
+        floor. Default ``None``.
+    full_output : bool, optional
+        Whether to also return ``roundoff``. Default ``False``.
 
     Returns
     -------
@@ -307,6 +415,10 @@ def check_convergence(an, R, fint, fext_total, fext_ref=None, q_ref=None,
     zeta : float
         Relative residual, `\zeta` with ``'crisfield'``, ``norm(R)`` over
         the largest Euclidean norm of the references with ``'relative'``.
+    roundoff : bool
+        Only with ``full_output=True``: whether the convergence is achieved
+        by the round-off floor only, i.e. not by ``an.relTOL`` or
+        ``an.absTOL``.
 
     Raises
     ------
@@ -322,6 +434,9 @@ def check_convergence(an, R, fint, fext_total, fext_ref=None, q_ref=None,
     zero, where ``fext_total`` and ``fint`` are small. When all its
     references are null, the relative residual is ``norm(R)`` itself.
 
+    The round-off floor, see the module documentation, does not change
+    ``zeta``: an iteration that it accepts may have `\zeta >` ``an.relTOL``.
+
     """
     if an.convergence not in CRITERIA:
         raise ValueError('%r is an invalid convergence criterion, use one of '
@@ -336,6 +451,7 @@ def check_convergence(an, R, fint, fext_total, fext_ref=None, q_ref=None,
         zeta = crisfield_zeta(R, fext_total, fint, w, q=q_ref,
                               fext_inc=fext_ref)
     else:
+        w = None
         Rnorm = float(np.linalg.norm(R))
         ref = max(np.linalg.norm(fext_total), np.linalg.norm(fint))
         if fext_ref is not None:
@@ -351,4 +467,11 @@ def check_convergence(an, R, fint, fext_total, fext_ref=None, q_ref=None,
             converged = Rnorm <= an.relTOL*ref
     if an.absTOL is not None and np.abs(R).max() <= an.absTOL:
         converged = True
+    roundoff = False
+    if (not converged and Kc_abs is not None
+            and Rnorm <= roundoff_floor(Kc_abs, w=w)):
+        converged = roundoff = True
+    converged = bool(converged)
+    if full_output:
+        return converged, Rnorm, zeta, roundoff
     return converged, Rnorm, zeta

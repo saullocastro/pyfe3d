@@ -18,7 +18,7 @@ from .logger import msg, warn
 from .static import solve, _factorize
 from .convergence import check_convergence
 from .newton_raphson import (_check_divergence, _NR_iterations, _weights,
-                             _log_iteration, INC_CUT_FACTOR)
+                             _abs_matrix, _log_iteration, INC_CUT_FACTOR)
 from . import callbacks
 
 
@@ -291,6 +291,7 @@ def _solver_arc_length(an, pb, method, silent=False):
     fext = pb.calc_fext(inc=1., silent=True)
     kC0 = pb.calc_kC(silent=True)
     w = _weights(an, kC0)
+    K0_abs = _abs_matrix(kC0)
     lbd_dependent = callbacks.is_load_factor_dependent(pb)
     if lbd_dependent:
         # NOTE dR/dlbd at c = 0 and lbd = 0
@@ -379,10 +380,11 @@ def _solver_arc_length(an, pb, method, silent=False):
             q_ref = None
             if lbd_dependent:
                 q_ref = (lbd + dlbd)*q_iter
-            conv, Rnorm, zeta = check_convergence(an, R, fint, fext_total,
-                                                  fext_ref=dlbd*fext,
-                                                  q_ref=q_ref, w=w)
-            _log_iteration(an, iteration, R, zeta, silent, lbd=lbd + dlbd)
+            conv, Rnorm, zeta, roundoff = check_convergence(an, R, fint,
+                    fext_total, fext_ref=dlbd*fext, q_ref=q_ref, w=w,
+                    Kc_abs=K0_abs @ np.abs(c + dc), full_output=True)
+            _log_iteration(an, iteration, R, zeta, silent, lbd=lbd + dlbd,
+                           roundoff=roundoff)
             if conv:
                 converged = True
                 break
@@ -458,7 +460,7 @@ def _solver_arc_length(an, pb, method, silent=False):
             t = (1. - lbd)/dlbd
             converged, dc1, _ = _NR_iterations(an, pb, c, t*dc, 1., fext, w,
                     kT0=None, silent=silent, lbd_dependent=lbd_dependent,
-                    q=q_iter)
+                    q=q_iter, K0_abs=K0_abs)
             if converged:
                 msg('Converged at load factor 1.00000', level=2,
                     silent=silent)

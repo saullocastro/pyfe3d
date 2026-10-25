@@ -218,10 +218,13 @@ def test_displacement_control_relative_criterion(method, convergence):
         assert len(set(lbds)) > 2
 
 
-def test_displacement_control_without_lbd_does_not_converge():
+def test_displacement_control_without_lbd_does_not_converge(monkeypatch):
     r"""The reason for ``lbd``: without it, the reference vector and the
     reduced internal force vector vanish at equilibrium, and the relative
-    criterion cannot be satisfied"""
+    criterion cannot be satisfied; only the round-off floor of the
+    convergence criteria, disabled here, would accept the residual"""
+    from pyfe3d.solver import convergence
+    monkeypatch.setattr(convergence, 'ROUNDOFF_FACTOR', 0.)
     pb = SpringsProblem(d1=0.8, with_lbd=False)
     an = pb.analysis(initialInc=0.2, relTOL=1e-10, absTOL=None,
                      maxNumIter=10, minInc=0.01)

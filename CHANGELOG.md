@@ -42,6 +42,45 @@ depending on structsolve:
   default of the non-linear solvers, the residual scaled with the diagonal
   of the linear stiffness matrix over the free degrees-of-freedom; the
   relative criterion remains available with `convergence='relative'`;
+- `pyfe3d.solver.convergence`, round-off floor, as in structsolve 0.9.3:
+  with both criteria, an iteration has also converged when the norm of its
+  residual, `||R||_d` with `'crisfield'` and the Euclidean norm with
+  `'relative'`, is not larger than `ROUNDOFF_FACTOR = 3` times the machine
+  precision times the same norm of `|K_C0| |u|`, the product of the
+  elementwise absolute values of the linear stiffness matrix and of the
+  displacements of the free degrees-of-freedom, below which the residual
+  cannot be computed. Like `absTOL`, it is an alternative to `relTOL`;
+  `zeta` is unchanged, and the log of the iterations marks those converged
+  at the round-off floor. With prescribed displacements, `|K_ff| |u_f|`
+  omits `|K_fp| |u_p|`: the floor is then lower, i.e. conservative. In the
+  development version of 0.11.0, the arc-length methods stopped on a low
+  sinusoidal arch of 40 `BeamC` elements (Fung and Kaplan, NACA TN 2840,
+  1952) at load factors of 0.026 to 0.032, close to the null load between
+  the limit points, where the residual of the large self-equilibrated
+  axial forces stagnates at 0.29 to 0.47 times `eps ||(|K_C0| |u|)||_d`
+  above `relTOL = 1e-9`, and with 160 elements before the upper limit
+  point; they now reach the load factor 1.0. New `roundoff_floor()`,
+  keyword arguments `Kc_abs` and `full_output` of `check_convergence()`,
+  whose defaults keep the former behaviour, `K0_abs` of
+  `newton_raphson._NR_iterations` and `newton_raphson._abs_matrix`. Over
+  the test suite the floor changes the verdict of 76 iterations: 69 of the
+  new test of the arch, 2 of the new unit test, 4 of
+  `test_crisfield_criterion_units_invariance[plate-Quad4R]`, whose
+  relative criterion with the rotations in micro-units now converges in
+  four increments instead of stopping without any, and 1 of
+  `test_piston_theory_load_unsymmetric_tangent` (`relTOL = 1e-12`), all
+  with residuals of at most 3 times `eps ||(|K_C0| |u|)||`.
+  `test_nr_unreachable_tolerance_stops_without_increments` and
+  `test_displacement_control_without_lbd_does_not_converge` set
+  `ROUNDOFF_FACTOR = 0`, which disables the floor, to test the behaviour
+  without it. New tests `tests/test_solver_arc_length_fung_kaplan.py`,
+  both arc-length methods and both criteria at the default tolerances: the
+  load factor 1.0 is reached, both limit loads within `0.01 R_cr` of Eq.
+  (25) of Fung and Kaplan, the 40-element mesh being 0.0094 and 0.040 off
+  them, and at least one iteration is accepted by the floor; the modal
+  model of the same arch is tested in structsolve,
+  `tests/test_arc_length_fung_kaplan.py`; and
+  `test_check_convergence_roundoff_floor`;
 - singular matrices raise `numpy.linalg.LinAlgError`: the solvers do not
   remove null rows and columns. A null row or column of the matrix given
   to `solve()`, to the factorization of the non-linear solvers, to

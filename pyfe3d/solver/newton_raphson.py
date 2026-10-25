@@ -13,6 +13,7 @@ they are shared with the arc-length solvers of :mod:`.arc_length`.
 """
 import numpy as np
 from numpy.linalg import LinAlgError
+from scipy.sparse import csr_matrix
 
 from .logger import msg, warn
 from .static import solve, _factorize
@@ -49,6 +50,13 @@ def _weights(an, kC0):
     return None
 
 
+def _abs_matrix(kC0):
+    r"""Elementwise absolute value `|K_{C0}|` of the linear stiffness matrix
+    ``kC0``, sparse, for the round-off floor of the convergence criteria,
+    see :func:`.roundoff_floor`"""
+    return abs(csr_matrix(kC0))
+
+
 def _norm(v, w):
     r"""Norm of the convergence criterion: `\|v\|_{\boldsymbol{d}}` with the
     weights ``w`` of Crisfield's criterion, the Euclidean norm when ``w`` is
@@ -58,13 +66,17 @@ def _norm(v, w):
     return scaled_norm(v, w)
 
 
-def _log_iteration(an, iteration, R, zeta, silent, lbd=None):
+def _log_iteration(an, iteration, R, zeta, silent, lbd=None,
+                   roundoff=False):
     r"""Message of one equilibrium iteration, with `\zeta` of Crisfield's
-    criterion or the relative residual of the relative criterion"""
+    criterion or the relative residual of the relative criterion, marked
+    when the iteration converged by the round-off floor only, see
+    :func:`.check_convergence`"""
     name = 'zeta' if an.convergence == 'crisfield' else 'relative ||R||'
     load = '' if lbd is None else ', lbd %1.5f' % lbd
-    msg('Iteration: %d%s, max(|R|) = %1.3e, %s = %1.3e'
-        % (iteration, load, np.abs(R).max(), name, zeta), level=2,
+    floor = ', converged at the round-off floor' if roundoff else ''
+    msg('Iteration: %d%s, max(|R|) = %1.3e, %s = %1.3e%s'
+        % (iteration, load, np.abs(R).max(), name, zeta, floor), level=2,
         silent=silent)
 
 
@@ -140,7 +152,7 @@ def _check_divergence(an, Rnorm, Rnorms, iteration, silent=False):
 
 
 def _NR_iterations(an, pb, c, dc, total, fext, w, kT0=None, silent=False,
-                   lbd_dependent=False, q=None):
+                   lbd_dependent=False, q=None, K0_abs=None):
     r"""Newton-Raphson iterations at a fixed load factor
 
     Corrects the predictor ``dc`` at the load factor ``total`` until the
@@ -186,6 +198,10 @@ def _NR_iterations(an, pb, c, dc, total, fext, w, kT0=None, silent=False,
         The last `\{q\}` evaluated before these iterations, the reference
         until the first update of the tangent stiffness matrix, used only
         when ``lbd_dependent=True``. Default ``None``.
+    K0_abs : sparse_matrix or None, optional
+        `|K_{C0}|` of the round-off floor of the convergence criteria, see
+        :func:`.check_convergence`, computed from ``pb.calc_kC()`` when
+        ``None``. Default ``None``.
 
     Returns
     -------
@@ -271,6 +287,8 @@ def _NR_iterations(an, pb, c, dc, total, fext, w, kT0=None, silent=False,
 
     """
     modified_NR = an.modified_NR
+    if K0_abs is None:
+        K0_abs = _abs_matrix(pb.calc_kC(silent=True))
     fext_total = total*fext
     if not lbd_dependent:
         q = None
@@ -289,9 +307,10 @@ def _NR_iterations(an, pb, c, dc, total, fext, w, kT0=None, silent=False,
         if q is not None:
             q_ref = total*q
 
-        conv, Rnorm, zeta = check_convergence(an, R, fint, fext_total,
-                                              q_ref=q_ref, w=w)
-        _log_iteration(an, iteration, R, zeta, silent)
+        conv, Rnorm, zeta, roundoff = check_convergence(an, R, fint,
+                fext_total, q_ref=q_ref, w=w, Kc_abs=K0_abs @ np.abs(c + dc),
+                full_output=True)
+        _log_iteration(an, iteration, R, zeta, silent, roundoff=roundoff)
         if conv:
             return True, dc, q
         if _check_divergence(an, Rnorm, Rnorms, iteration, silent=silent):
@@ -451,6 +470,7 @@ def _solver_NR(an, pb, silent=False, initialInc=None):
     fext = pb.calc_fext(inc=1., silent=True)
     kC0 = pb.calc_kC(silent=True)
     w = _weights(an, kC0)
+    K0_abs = _abs_matrix(kC0)
     q = None
     lbd_dependent = callbacks.is_load_factor_dependent(pb)
     if lbd_dependent:
@@ -480,7 +500,8 @@ def _solver_NR(an, pb, silent=False, initialInc=None):
         if an.modified_NR and step_num == 1 and not an.kT_initial_state:
             kT0 = kC0
         converged, dc, q_new = _NR_iterations(an, pb, c, dc, total, fext, w,
-                kT0=kT0, silent=silent, lbd_dependent=lbd_dependent, q=q)
+                kT0=kT0, silent=silent, lbd_dependent=lbd_dependent, q=q,
+                K0_abs=K0_abs)
 
         if converged:
             msg('Converged at load factor %1.5f' % total, level=2,
