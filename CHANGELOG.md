@@ -449,6 +449,9 @@ select the other matrix.
   implement, copies of rotation-matrix terms and properties never read, and
   dead assignments. The matrices, internal forces and probe arrays of every
   element are bit-identical before and after.
+- `pyfe3d.solver.eigen` no longer imports `scipy.sparse.linalg.eigsh`,
+  which it did not use (the solvers call `capped_eigsh` of
+  `pyfe3d.solver.arpackutils`).
 
 ### Documentation
 

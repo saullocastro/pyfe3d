@@ -111,7 +111,7 @@ import warnings
 
 import numpy as np
 from scipy.sparse import csc_matrix, csr_matrix, diags
-from scipy.sparse.linalg import eigsh, eigs, splu, LinearOperator
+from scipy.sparse.linalg import eigs, splu, LinearOperator
 from scipy.linalg import eigh, eig, LinAlgError
 
 from .sparseutils import check_null_rows_cols, is_symmetric
