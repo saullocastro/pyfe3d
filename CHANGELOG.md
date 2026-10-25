@@ -494,6 +494,12 @@ select the other matrix.
 
 ### Documentation
 
+- `tut-nonlinear-benchmarks.ipynb`: Williams' toggle frame (Williams, QJMAM
+  17(4), 451-469, 1964) as reproduced in Fig. 7 of Karamanlidis, Honecker
+  and Knothe (1981), with `BeamC` elements and both arc-length methods,
+  against the load-deflection curve digitised from the figure; the limit
+  loads converge with the mesh to 1.6 % and 2.9 % below those read from
+  the figure.
 - Functional docstrings of the public API, and Notes and References with
   the theory of the beams, truss, spring, shell elements, `shellprop` and
   the solver. The docstring of `Truss.update_M` had the wrong signs of the
