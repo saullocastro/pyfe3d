@@ -298,7 +298,7 @@ cdef class Truss:
         """
         cdef double vxyi, vxyj, vxyk
         cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk, tmp
-        cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k, x4i, x4j, x4k
+        cdef double x1i, x1j, x1k, x2i, x2j, x2k
 
         with nogil:
             x1i = x[self.c1//2 + 0]
@@ -525,7 +525,7 @@ cdef class Truss:
         """
         cdef int c1, c2, k
         cdef double L, A, E, GJ
-        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
+        cdef double r11, r21, r31
 
         with nogil:
             L = self.length
@@ -535,14 +535,8 @@ cdef class Truss:
 
             # local to global transformation
             r11 = self.r11
-            r12 = self.r12
-            r13 = self.r13
             r21 = self.r21
-            r22 = self.r22
-            r23 = self.r23
             r31 = self.r31
-            r32 = self.r32
-            r33 = self.r33
 
             if update_KC0v_only == 0:
                 # positions in the global stiffness matrix
@@ -1047,7 +1041,7 @@ cdef class Truss:
         cdef int c1, c2, k
         cdef double intrho, intrhoy, intrhoz, intrhoy2, intrhoz2
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
-        cdef double L, A, E
+        cdef double L
 
         # NOTE checked once per call, before the code without the GIL
         if mtype != 0 and mtype != 1:
@@ -1063,8 +1057,6 @@ cdef class Truss:
             intrhoz = prop.intrhoz
             intrhoy2 = prop.intrhoy2
             intrhoz2 = prop.intrhoz2
-            A = prop.A
-            E = prop.E
 
             # local to global transformation
             r11 = self.r11

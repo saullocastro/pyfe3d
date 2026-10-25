@@ -250,7 +250,6 @@ cdef class Spring:
 
         """
         cdef double yi, yj, yk, zi, zj, zk, tmp
-        cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k, x4i, x4j, x4k
 
         with nogil:
             self.vxyi = vxyi

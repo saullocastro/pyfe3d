@@ -391,7 +391,7 @@ cdef class BeamC:
 
         """
         cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk, tmp
-        cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k, x4i, x4j, x4k
+        cdef double x1i, x1j, x1k, x2i, x2j, x2k
 
         with nogil:
             self.vxyi = vxyi
@@ -2195,8 +2195,8 @@ cdef class BeamC:
         """
         cdef double *ue
         cdef int c1, c2, k
-        cdef double L, A, E, G12, G13, Ay, Az, Iyy, Izz, Iyz, Na, Nb
-        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
+        cdef double L, A, E, G12, G13, Ay, Az, Iyy, Izz, Na, Nb
+        cdef double r12, r13, r22, r23, r32, r33
         cdef double alphay, alphaz, betay, betaz
 
         with nogil:
@@ -2209,7 +2209,6 @@ cdef class BeamC:
             G13 = prop.get_G13()
             Iyy = prop.Iyy
             Izz = prop.Izz
-            Iyz = prop.Iyz
 
             alphay = -12*E*Izz/(G12*A*L**2)
             alphaz = -12*E*Iyy/(G13*A*L**2)
@@ -2217,13 +2216,10 @@ cdef class BeamC:
             betaz = 1/(1. - alphaz)
 
             # local to global transformation
-            r11 = self.r11
             r12 = self.r12
             r13 = self.r13
-            r21 = self.r21
             r22 = self.r22
             r23 = self.r23
-            r31 = self.r31
             r32 = self.r32
             r33 = self.r33
 
@@ -3063,7 +3059,7 @@ cdef class BeamC:
         cdef int c1, c2, k
         cdef double intrho, intrhoy, intrhoz, intrhoy2, intrhoz2, intrhoyz
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
-        cdef double L, A, E, G12, G13, Iyy, Izz, Iyz
+        cdef double L, A, E, G12, G13, Iyy, Izz
         cdef double alphay, alphaz, betay, betaz
 
         # NOTE checked once per call, before the code without the GIL
@@ -3087,7 +3083,6 @@ cdef class BeamC:
             G13 = prop.get_G13()
             Iyy = prop.Iyy
             Izz = prop.Izz
-            Iyz = prop.Iyz
 
             alphay = -12*E*Izz/(G12*A*L**2)
             alphaz = -12*E*Iyy/(G13*A*L**2)
