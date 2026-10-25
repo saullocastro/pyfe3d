@@ -1392,8 +1392,7 @@ cdef class Quad4:
         :mod:`pyfe3d.quad4`.
 
         """
-        cdef int i, j, k, ke
-        cdef int node_i, node_j
+        cdef int i, j, ke
         cdef double x1, x2, x3, x4, y1, y2, y3, y4
         cdef double Ae[9]
         cdef double Be[9]
@@ -1405,7 +1404,6 @@ cdef class Quad4:
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
         cdef double length
-        cdef double m11, m12, m21, m22
         cdef double N1, N2, N3, N4
         cdef double N1x, N2x, N3x, N4x
         cdef double N1y, N2y, N3y, N4y
@@ -1416,16 +1414,6 @@ cdef class Quad4:
         cdef double qweights[3]
         cdef int nq
         cdef int pti, ptj
-        # NOTE MITC4 assumed transverse shear: the covariant tying-point
-        #      rows, each with six non-zeros, and the interpolated operator
-        cdef double qrA[24]
-        cdef double qrB[24]
-        cdef double qsC[24]
-        cdef double qsD[24]
-        cdef double BLgxz_a[24]
-        cdef double BLgyz_a[24]
-        cdef double qr, qs, fA, fB, fC, fD
-        cdef int itie
         cdef double* BLexx
         cdef double* BLeyy
         cdef double* BLgxy
@@ -1567,11 +1555,6 @@ cdef class Quad4:
                     j12 = -J12/(J11*J22 - J12*J21)
                     j21 = -J21/(J11*J22 - J12*J21)
                     j22 = J11/(J11*J22 - J12*J21)
-
-                    N1 = eta*xi/4. - eta/4. - xi/4. + 1/4.
-                    N2 = -eta*xi/4. - eta/4. + xi/4. + 1/4.
-                    N3 = eta*xi/4. + eta/4. + xi/4. + 1/4.
-                    N4 = -eta*xi/4. + eta/4. - xi/4. + 1/4.
 
                     N1x = 0.25*j11*(eta - 1) + 0.25*j12*(xi - 1)
                     N2x = -0.25*eta*j11 + 0.25*j11 - 0.25*j12*xi - 0.25*j12
@@ -2879,8 +2862,7 @@ cdef class Quad4:
         # NOTE ABD in the element direction
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
-        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
-        cdef double m11, m12, m21, m22
+        cdef double r13, r23, r33
         cdef double j11, j12, j21, j22
         cdef double N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
         cdef double Nxx, Nyy, Nxy
@@ -2903,14 +2885,8 @@ cdef class Quad4:
             B66 = Be[8]
 
             # local to global transformation
-            r11 = self.r11
-            r12 = self.r12
             r13 = self.r13
-            r21 = self.r21
-            r22 = self.r22
             r23 = self.r23
-            r31 = self.r31
-            r32 = self.r32
             r33 = self.r33
 
             # NOTE ignoring z in local coordinates
@@ -3768,20 +3744,14 @@ cdef class Quad4:
         cdef double y1, y2, y3, y4
         cdef double xi, eta, wij, J11, J12, J21, J22, detJ
         cdef double points[2]
-        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
+        cdef double r13, r23, r33
         cdef double j11, j12, j21, j22
         cdef double N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
 
         with nogil:
             # local to global transformation
-            r11 = self.r11
-            r12 = self.r12
             r13 = self.r13
-            r21 = self.r21
-            r22 = self.r22
             r23 = self.r23
-            r31 = self.r31
-            r32 = self.r32
             r33 = self.r33
 
             # NOTE ignoring z in local coordinates
@@ -10314,7 +10284,7 @@ cdef class Quad4:
 
         """
         cdef int c1, c2, c3, c4, i, j, k
-        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
+        cdef double r11, r12, r13, r23, r33
         cdef double x1, x2, x3, x4
         cdef double y1, y2, y3, y4
         cdef double j11, j12, j21, j22
@@ -10344,11 +10314,7 @@ cdef class Quad4:
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
-            r21 = self.r21
-            r22 = self.r22
             r23 = self.r23
-            r31 = self.r31
-            r32 = self.r32
             r33 = self.r33
 
             # positions the global matrices
@@ -11169,7 +11135,7 @@ cdef class Quad4:
 
         """
         cdef int c1, c2, c3, c4, i, j, k
-        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
+        cdef double r13, r23, r33
         cdef double x1, x2, x3, x4
         cdef double y1, y2, y3, y4
         cdef double N1, N2, N3, N4
@@ -11193,14 +11159,8 @@ cdef class Quad4:
             # z4 = self.probe.xe[11]
 
             # local to global transformation
-            r11 = self.r11
-            r12 = self.r12
             r13 = self.r13
-            r21 = self.r21
-            r22 = self.r22
             r23 = self.r23
-            r31 = self.r31
-            r32 = self.r32
             r33 = self.r33
 
             # positions the global matrices
@@ -12005,7 +11965,7 @@ cdef class Quad4:
 
         """
         cdef int c1, c2, c3, c4, i, j, k
-        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
+        cdef double r13, r23, r33
         cdef double x1, x2, x3, x4
         cdef double y1, y2, y3, y4
         cdef double N1, N2, N3, N4
@@ -12029,14 +11989,8 @@ cdef class Quad4:
             # z4 = self.probe.xe[11]
 
             # local to global transformation
-            r11 = self.r11
-            r12 = self.r12
             r13 = self.r13
-            r21 = self.r21
-            r22 = self.r22
             r23 = self.r23
-            r31 = self.r31
-            r32 = self.r32
             r33 = self.r33
 
             # positions the global matrices

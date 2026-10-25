@@ -1115,8 +1115,7 @@ cdef class Quad4R:
         cdef double E1eq, E2eq, E1b, E2b
         cdef double K6ROT
         cdef double Eu, Ev, Erx, Ery, Ew
-        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
-        cdef double m11, m12, m21, m22, a11, a22
+        cdef double a11, a22
         cdef double J11, J12, J21, J22
         cdef double j11, j12, j21, j22
         cdef double N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
@@ -1852,7 +1851,7 @@ cdef class Quad4R:
         cdef double K6ROT
         cdef double Eu, Ev, Erx, Ery, Ew
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
-        cdef double m11, m12, m21, m22, a11, a22
+        cdef double a11, a22
         cdef double J11, J12, J21, J22
         cdef double j11, j12, j21, j22
         cdef double N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
@@ -6005,8 +6004,7 @@ cdef class Quad4R:
         # NOTE ABD in the element direction
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
-        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
-        cdef double m11, m12, m21, m22
+        cdef double r13, r23, r33
         cdef double j11, j12, j21, j22
         cdef double N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
         cdef double Nxx, Nyy, Nxy
@@ -6029,14 +6027,8 @@ cdef class Quad4R:
             B66 = Be[8]
 
             # local to global transformation
-            r11 = self.r11
-            r12 = self.r12
             r13 = self.r13
-            r21 = self.r21
-            r22 = self.r22
             r23 = self.r23
-            r31 = self.r31
-            r32 = self.r32
             r33 = self.r33
 
             # NOTE ignoring z in local coordinates
@@ -6876,20 +6868,14 @@ cdef class Quad4R:
         cdef double y1, y2, y3, y4
         cdef double wij, detJ, xi, eta
         cdef double points[2]
-        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
+        cdef double r13, r23, r33
         cdef double j11, j12, j21, j22
         cdef double N1x, N2x, N3x, N4x, N1y, N2y, N3y, N4y
 
         with nogil:
             # local to global transformation
-            r11 = self.r11
-            r12 = self.r12
             r13 = self.r13
-            r21 = self.r21
-            r22 = self.r22
             r23 = self.r23
-            r31 = self.r31
-            r32 = self.r32
             r33 = self.r33
 
             # NOTE ignoring z in local coordinates
@@ -13401,7 +13387,7 @@ cdef class Quad4R:
 
         """
         cdef int c1, c2, c3, c4, i, j, k
-        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
+        cdef double r11, r12, r13, r23, r33
         cdef double x1, x2, x3, x4
         cdef double y1, y2, y3, y4
         cdef double j11, j12, j21, j22
@@ -13431,11 +13417,7 @@ cdef class Quad4R:
             r11 = self.r11
             r12 = self.r12
             r13 = self.r13
-            r21 = self.r21
-            r22 = self.r22
             r23 = self.r23
-            r31 = self.r31
-            r32 = self.r32
             r33 = self.r33
 
             # positions the global matrices
@@ -14251,7 +14233,7 @@ cdef class Quad4R:
 
         """
         cdef int c1, c2, c3, c4, i, j, k
-        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
+        cdef double r13, r23, r33
         cdef double x1, x2, x3, x4
         cdef double y1, y2, y3, y4
         cdef double N1, N2, N3, N4
@@ -14275,14 +14257,8 @@ cdef class Quad4R:
             # z4 = self.probe.xe[11]
 
             # local to global transformation
-            r11 = self.r11
-            r12 = self.r12
             r13 = self.r13
-            r21 = self.r21
-            r22 = self.r22
             r23 = self.r23
-            r31 = self.r31
-            r32 = self.r32
             r33 = self.r33
 
             # positions the global matrices
@@ -15082,7 +15058,7 @@ cdef class Quad4R:
 
         """
         cdef int c1, c2, c3, c4, i, j, k
-        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
+        cdef double r13, r23, r33
         cdef double x1, x2, x3, x4
         cdef double y1, y2, y3, y4
         cdef double N1, N2, N3, N4
@@ -15106,14 +15082,8 @@ cdef class Quad4R:
             # z4 = self.probe.xe[11]
 
             # local to global transformation
-            r11 = self.r11
-            r12 = self.r12
             r13 = self.r13
-            r21 = self.r21
-            r22 = self.r22
             r23 = self.r23
-            r31 = self.r31
-            r32 = self.r32
             r33 = self.r33
 
             # positions the global matrices
