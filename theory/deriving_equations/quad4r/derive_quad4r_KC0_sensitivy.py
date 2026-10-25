@@ -651,8 +651,8 @@ S1_x_x2, S2_x_x2, S3_x_x2, S4_x_x2 = sympy.var('S1_x_x2, S2_x_x2, S3_x_x2, S4_x_
 S1_x_y2, S2_x_y2, S3_x_y2, S4_x_y2 = sympy.var('S1_x_y2, S2_x_y2, S3_x_y2, S4_x_y2')
 S1_x_x3, S2_x_x3, S3_x_x3, S4_x_x3 = sympy.var('S1_x_x3, S2_x_x3, S3_x_x3, S4_x_x3')
 S1_x_y3, S2_x_y3, S3_x_y3, S4_x_y3 = sympy.var('S1_x_y3, S2_x_y3, S3_x_y3, S4_x_y3')
-S1_x_x4, S2_x_x4, S3_x_x4, S4_x_x4 = sympy.var('S1_x_x4, S2_x_x4, S3_x_x4, S4_x_x3')
-S1_x_y4, S2_x_y4, S3_x_y4, S4_x_y4 = sympy.var('S1_x_y4, S2_x_y4, S3_x_y4, S4_x_y3')
+S1_x_x4, S2_x_x4, S3_x_x4, S4_x_x4 = sympy.var('S1_x_x4, S2_x_x4, S3_x_x4, S4_x_x4')
+S1_x_y4, S2_x_y4, S3_x_y4, S4_x_y4 = sympy.var('S1_x_y4, S2_x_y4, S3_x_y4, S4_x_y4')
 
 S1_y, S2_y, S3_y, S4_y = sympy.var('S1_y, S2_y, S3_y, S4_y')
 S1_y_x1, S2_y_x1, S3_y_x1, S4_y_x1 = sympy.var('S1_y_x1, S2_y_x1, S3_y_x1, S4_y_x1')
