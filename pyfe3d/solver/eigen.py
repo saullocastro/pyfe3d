@@ -379,7 +379,7 @@ def _negative_pivots(A):
     ``A`` is factorized with :func:`scipy.sparse.linalg.splu`, with the
     ordering ``'MMD_AT_PLUS_A'``, ``diag_pivot_thresh=0.`` and the symmetric
     mode, i.e. with a symmetric permutation and without row interchanges,
-    `\boldsymbol{P} \boldsymbol{A} \boldsymbol{P}^\top = \boldsymbol{L} \boldsymbol{D} \boldsymbol{L}^\top` with the pivots `\boldsymbol{D}` on the diagonal of
+    `\boldsymbol{\Pi} \boldsymbol{A} \boldsymbol{\Pi}^\top = \boldsymbol{L} \boldsymbol{D} \boldsymbol{L}^\top` with the pivots `\boldsymbol{D}` on the diagonal of
     `\boldsymbol{U} = \boldsymbol{D} \boldsymbol{L}^\top`. By Sylvester's law of inertia, the number of negative
     pivots is the number of negative eigenvalues of `\boldsymbol{A}`.
 
@@ -1427,7 +1427,7 @@ def _permutation_parity(p):
 
 def _det_sign(lu):
     r"""Sign of the determinant of a real matrix from its SuperLU
-    factorization `\boldsymbol{P}_r \boldsymbol{A} \boldsymbol{P}_c = \boldsymbol{L} \boldsymbol{U}`, with a unit `\boldsymbol{L}`"""
+    factorization `\boldsymbol{\Pi}_r \boldsymbol{A} \boldsymbol{\Pi}_c = \boldsymbol{L} \boldsymbol{U}`, with a unit `\boldsymbol{L}`"""
     d = lu.U.diagonal()
     return (int(np.prod(np.sign(d))) * _permutation_parity(lu.perm_r)
             * _permutation_parity(lu.perm_c))
@@ -2590,7 +2590,7 @@ def _qep_modes(lam, U, k, sigma):
     Notes
     -----
     The eigenvalues of real matrices are real or come in complex conjugate
-    pairs `(\lambda, \bar{\lambda})`, with the eigenvectors `\boldsymbol{u}` and
+    pairs `(\lambda, \lambda^*)`, with the eigenvectors `\boldsymbol{u}` and
     `\boldsymbol{u}^*` ([1]_, Table 1.1, p. 237). The eigenvalues whose imaginary
     part is not larger than ``1e-8`` times their modulus are made real with
     :func:`_real_if_close`. Each eigenvalue with `Im(\lambda) < 0` is then
@@ -2599,7 +2599,7 @@ def _qep_modes(lam, U, k, sigma):
     by its conjugate, with the conjugate eigenvector, its partner not having
     been computed, e.g. with a complex shift, or when the solver kept one
     eigenvalue of the last pair. The ``k`` eigenvalues nearest the shift,
-    `\min(|\lambda - \sigma|, |\bar{\lambda} - \sigma|)`, are kept.
+    `\min(|\lambda - \sigma|, |\lambda^* - \sigma|)`, are kept.
 
     References
     ----------
@@ -2711,18 +2711,18 @@ def _eigs_qep(K, C, M, k, tol, sigma):
     -----
     With the first companion linearization `\boldsymbol{A} - \lambda \boldsymbol{B}`, see
     :func:`complex_frequency`, the operator of the shift-invert mode is
-    `\boldsymbol{S} = (\boldsymbol{A} - \sigma \boldsymbol{B})^{-1} \boldsymbol{B}`, whose eigenvalues are `\nu =
+    `\boldsymbol{O} = (\boldsymbol{A} - \sigma \boldsymbol{B})^{-1} \boldsymbol{B}`, whose eigenvalues are `\nu =
     1/(\lambda - \sigma)`, and those of largest modulus are found. For
-    `\boldsymbol{y} = \boldsymbol{S} \boldsymbol{z}`, with the halves `\boldsymbol{z}_1`, `\boldsymbol{z}_2` and `\boldsymbol{y}_1`,
+    `\boldsymbol{y} = \boldsymbol{O} \boldsymbol{z}`, with the halves `\boldsymbol{z}_1`, `\boldsymbol{z}_2` and `\boldsymbol{y}_1`,
     `\boldsymbol{y}_2`:
 
     .. math::
 
-        \boldsymbol{y}_1 = -\boldsymbol{Q}(\sigma)^{-1} \left( \boldsymbol{M} \boldsymbol{z}_2 + (\boldsymbol{C} + \sigma \boldsymbol{M})
+        \boldsymbol{y}_1 = -\boldsymbol{K}_{dyn}(\sigma)^{-1} \left( \boldsymbol{M} \boldsymbol{z}_2 + (\boldsymbol{C} + \sigma \boldsymbol{M})
         \boldsymbol{z}_1 \right), \qquad \boldsymbol{y}_2 = \boldsymbol{z}_1 + \sigma \boldsymbol{y}_1
 
-    with `\boldsymbol{Q}(\sigma) = \sigma^2 \boldsymbol{M} + \sigma \boldsymbol{C} + \boldsymbol{K}`, such that only the
-    `n \times n` matrix `\boldsymbol{Q}(\sigma)` is factorized, not the `2n \times 2n`
+    with `\boldsymbol{K}_{dyn}(\sigma) = \sigma^2 \boldsymbol{M} + \sigma \boldsymbol{C} + \boldsymbol{K}`, such that only the
+    `n \times n` matrix `\boldsymbol{K}_{dyn}(\sigma)` is factorized, not the `2n \times 2n`
     matrix `\boldsymbol{A} - \sigma \boldsymbol{B}` ([1]_, Section 6.1, Eq. (6.3), p. 273). A
     complex shift gives a complex operator. The `\nu` with `|\nu| \le`
     ``NULL_MU_RTOL`` `\max |\nu|`, infinite eigenvalues of a singular
@@ -2736,20 +2736,20 @@ def _eigs_qep(K, C, M, k, tol, sigma):
 
     """
     n = K.shape[0]
-    Q = csc_matrix(sigma**2*M + sigma*C + K)
+    Kdyn = csc_matrix(sigma**2*M + sigma*C + K)
     try:
-        lu = _splu(Q)
+        lu = _splu(Kdyn)
     except RuntimeError:
         raise RuntimeError('lambda**2*M + lambda*C + K is singular at the '
                            'shift sigma=%r' % sigma)
     CsM = csr_matrix(C + sigma*M)
-    dtype = np.result_type(Q.dtype, float)
+    dtype = np.result_type(Kdyn.dtype, float)
 
     def matvec(z):
         z = np.ravel(z)
         z1, z2 = z[:n], z[n:]
         rhs = np.asarray(M @ z2 + CsM @ z1)
-        if np.iscomplexobj(Q.data):
+        if np.iscomplexobj(Kdyn.data):
             y1 = -lu.solve(np.ascontiguousarray(rhs, dtype=complex))
         else:
             y1 = -_lu_solve(lu, rhs)
@@ -2963,7 +2963,7 @@ def complex_frequency(K, C, M, num_eigvalues=6, tol=0, sigma=None,
     `\boldsymbol{M}`, e.g. a lumped mass matrix without rotary inertia, only gives
     infinite eigenvalues, `\boldsymbol{B}` being singular, which are discarded. Its
     shift-invert operator needs the factorization of the `n \times n`
-    matrix `\boldsymbol{Q}(\sigma) = \sigma^2 \boldsymbol{M} + \sigma \boldsymbol{C} + \boldsymbol{K}` only, see
+    matrix `\boldsymbol{K}_{dyn}(\sigma) = \sigma^2 \boldsymbol{M} + \sigma \boldsymbol{C} + \boldsymbol{K}` only, see
     :func:`_eigs_qep`; MSC/Nastran uses this linearization with a
     shift-invert Lanczos algorithm ([1]_, Section 7.1, p. 278). The
     symmetric linearizations of symmetric `\boldsymbol{K}`, `\boldsymbol{C}` and `\boldsymbol{M}` give
@@ -2984,8 +2984,8 @@ def complex_frequency(K, C, M, num_eigvalues=6, tol=0, sigma=None,
     With `\lambda = \omega_n(-\zeta \pm i \sqrt{1 - \zeta^2})`, `|\lambda -
     1|^2 = 1 + 2 \zeta \omega_n + \omega_n^2`, which increases with
     `\omega_n` for `\omega_n > -\zeta`. When `\boldsymbol{M}` is non-singular,
-    `\det \boldsymbol{Q}(\sigma) = \det \boldsymbol{M} \prod_i (\sigma - \lambda_i)` over the
-    `2n` eigenvalues, such that `\boldsymbol{Q}(1)` is singular only when `\lambda =
+    `\det \boldsymbol{K}_{dyn}(\sigma) = \det \boldsymbol{M} \prod_i (\sigma - \lambda_i)` over the
+    `2n` eigenvalues, such that `\boldsymbol{K}_{dyn}(1)` is singular only when `\lambda =
     1` is an eigenvalue, i.e. never for the rigid-body modes, `\lambda =
     0`, nor for a stable system, `Re(\lambda) \le 0`. A complex shift gives
     a complex operator, and the conjugate of each eigenvalue found with

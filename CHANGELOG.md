@@ -430,6 +430,27 @@ its Notes, the variables of `linear_buckling()`, `natural_frequency()` and
 matrix are unchanged, and code that names it `D` keeps working; only the
 documented name changes.
 
+### Breaking: probe attributes `Sw_x`, `Sw_y` and `Sv_x`
+
+The rows of the slopes in the probes, public since 0.10.0, are renamed,
+the underscore denoting the partial derivative, as in `w_{,x}`, without a
+deprecation step:
+
+- `Quad4Probe`, `Quad4RProbe`, `Tria3RProbe`, `Tria3DSGProbe`: `Gwx` →
+  `Sw_x`, `Gwy` → `Sw_y`, the book's `\boldsymbol{G}_x = \partial
+  \boldsymbol{S}^w/\partial x` and `\boldsymbol{G}_y = \partial
+  \boldsymbol{S}^w/\partial y`;
+- `BeamCProbe`: `Gvx` → `Sv_x`, `Gwx` → `Sw_x`, i.e. `\partial
+  \boldsymbol{S}^v/\partial x` and `\partial \boldsymbol{S}^w/\partial x`;
+- `BeamLRProbe`: `Gvx` → `Sv_x`, `Gwx` → `Sw_x`, the same names as in
+  `BeamCProbe`, holding the interpolations of the rotations,
+  `\boldsymbol{S}^{r_z}` and `-\boldsymbol{S}^{r_y}`, since `v_{,x} = r_z`
+  and `w_{,x} = -r_y`.
+
+The local pointers of the element methods and the derivation scripts
+follow. No result changes: all the element outputs, matrices, internal
+forces and probe arrays, are bitwise identical before and after.
+
 ### Breaking: one `mtype` numbering for every element
 
 `mtype` of `update_M` has the same meaning for every element: `0`
@@ -641,8 +662,8 @@ select the other matrix.
   of `[G]^\top [N] [G]`, and `\partial \boldsymbol{S}^v/\partial x`,
   `\partial \boldsymbol{S}^w/\partial x` (`BeamC`) or
   `\boldsymbol{S}^{r_z}`, `\boldsymbol{S}^{r_y}` (`BeamLR`) for the beams
-  instead of `[G_v]` and `[G_w]`; the probe attributes ``Gwx``, ``Gwy``
-  and ``Gvx`` keep their names. The first moment of the mass is
+  instead of `[G_v]` and `[G_w]`; the probe attributes are renamed
+  ``Sw_x``, ``Sw_y`` and ``Sv_x``, see above. The first moment of the mass is
   `\boldsymbol{Q}` in `tests/test_element_mass.py` and
   `tut-shell-lumped-mass.ipynb`, whose shape functions are `S_i` and
   `\boldsymbol{S}`, as in the elements; the rows of the shape functions
@@ -661,7 +682,29 @@ select the other matrix.
   and `\boldsymbol{CA}` in the docstrings of `Quad4` and `Quad4R`, the
   tests and the user guide; the methods and attributes, e.g.
   `update_KA_beta`, `KA_BETA_SPARSE_SIZE` and `init_k_CA`, keep their
-  names. The tutorials were not re-executed: only their Markdown changed.
+  names. In `pyfe3d.solver.eigen`, the permutation matrices of the sparse
+  factorizations are `\boldsymbol{\Pi}`, `\boldsymbol{\Pi}_r` and
+  `\boldsymbol{\Pi}_c`, `\boldsymbol{\Pi} \boldsymbol{A}
+  \boldsymbol{\Pi}^\top = \boldsymbol{L} \boldsymbol{D} \boldsymbol{L}^\top`
+  and `\boldsymbol{\Pi}_r \boldsymbol{A} \boldsymbol{\Pi}_c = \boldsymbol{L}
+  \boldsymbol{U}`, instead of `\boldsymbol{P}`, `\boldsymbol{P}_r` and
+  `\boldsymbol{P}_c`, `\boldsymbol{P}` being the Jacobi equilibration
+  matrix; the shift-invert operator of the quadratic eigenvalue problem is
+  `\boldsymbol{O} = (\boldsymbol{A} - \sigma \boldsymbol{B})^{-1}
+  \boldsymbol{B}`, as the other operators, instead of `\boldsymbol{S}`, and
+  the factorized quadratic pencil `\boldsymbol{K}_{dyn}(\sigma) = \sigma^2
+  \boldsymbol{M} + \sigma \boldsymbol{C} + \boldsymbol{K}` instead of
+  `\boldsymbol{Q}(\sigma)`, with the local variable `Kdyn` instead of `Q`
+  in `_eigs_qep`; the conjugate of a complex eigenvalue is `\lambda^*`
+  instead of `\bar{\lambda}`. The configuration-dependent load of
+  `tests/test_solver_follower_loads.py` is written with the load stiffness
+  matrix of the book, `\boldsymbol{K}_F = -\partial \boldsymbol{F}/\partial
+  \boldsymbol{c} = \lambda \boldsymbol{K}_{F_{ref}}`, i.e.
+  `\boldsymbol{F}(\boldsymbol{c}, \lambda) = \lambda (\boldsymbol{q}_0 -
+  \boldsymbol{K}_{F_{ref}} \boldsymbol{c})`, instead of `\lambda
+  (\boldsymbol{q}_0 + \boldsymbol{Q} \boldsymbol{c})`; the variable `Q` of
+  the test, `-\boldsymbol{K}_{F_{ref}}`, keeps its name. The tutorials were
+  not re-executed: only their Markdown changed.
 - User guide pages: overview and workflow, conventions, choice of the
   element, shell and beam properties, non-linear static analyses, linear
   buckling and natural frequencies, installation and changelog. The usage

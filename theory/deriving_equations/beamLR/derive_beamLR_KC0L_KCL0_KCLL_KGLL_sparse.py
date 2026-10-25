@@ -11,9 +11,9 @@ derive_beamLR_KG_sparse.py
 - KC0L = BL.T*D*BNL
 - KCL0 = BNL.T*D*BL = KC0L.T
 - KCLL = BNL.T*D*BNL
-- KGLL = NNL*(Gvx.T*Gvx + Gwx.T*Gwx), with NNL = E*A*eNL
+- KGLL = NNL*(Sv_x.T*Sv_x + Sw_x.T*Sw_x), with NNL = E*A*eNL
 
-where BNL = d(eNL)/d(ue) = v,x*Gvx + w,x*Gwx acts on the axial strain only,
+where BNL = d(eNL)/d(ue) = v,x*Sv_x + w,x*Sw_x acts on the axial strain only,
 such that eNL = BNL*ue/2 and not BNL*ue.
 
 KGLL is the geometric stiffness carried by the axial force of the nonlinear
@@ -93,17 +93,17 @@ BL = Matrix([
     2/L*Nrx.diff(xi)])
 
 # slopes taken from the rotations, v,x = rz and w,x = -ry
-Gvx = Nrz
-Gwx = -Nry
+Sv_x = Nrz
+Sw_x = -Nry
 
 ue = Matrix([symbols(r'ue[%d]' % i) for i in range(NUM_NODES*DOF)])
-v_x = (Gvx*ue)[0]
-w_x = (Gwx*ue)[0]
+v_x = (Sv_x*ue)[0]
+w_x = (Sw_x*ue)[0]
 
 # nonlinear part of the axial strain and its variation
 eNL = (v_x**2 + w_x**2)/2
 BNL = Matrix([[eNL.diff(ui) for ui in ue]])
-assert expand(BNL - (v_x*Gvx + w_x*Gwx)) == sympy.zeros(1, NUM_NODES*DOF)
+assert expand(BNL - (v_x*Sv_x + w_x*Sw_x)) == sympy.zeros(1, NUM_NODES*DOF)
 # NOTE eNL is quadratic in ue, such that BNL*ue counts it twice
 assert expand((BNL*ue)[0]/2 - eNL) == 0
 # BNL acts on the axial strain only
@@ -115,13 +115,13 @@ NNL = (D*epsNL)[0]
 KC0Le = BL.T*D*BNLfull
 KCL0e = BNLfull.T*D*BL
 KCLLe = BNLfull.T*D*BNLfull
-KGLLe = NNL*(Gvx.T*Gvx + Gwx.T*Gwx)
+KGLLe = NNL*(Sv_x.T*Sv_x + Sw_x.T*Sw_x)
 KCNLe = KC0Le + KCL0e + KCLLe + KGLLe
 
 print('checking that KC0 + KCNL + KG is the Hessian of the strain energy', flush=True)
 N = (D*BL*ue)[0]
 KC0e = BL.T*D*BL
-KGe = N*(Gvx.T*Gvx + Gwx.T*Gwx)
+KGe = N*(Sv_x.T*Sv_x + Sw_x.T*Sw_x)
 eps = BL*ue + epsNL
 U = (eps.T*D*eps)[0]/2
 grad = [U.diff(ui) for ui in ue]
@@ -150,7 +150,7 @@ print('_______________________________________')
 print()
 print()
 for name, row in [('BLexx', BLexx), ('BLky', BLky), ('BLkz', BLkz),
-                  ('Gvx', Gvx), ('Gwx', Gwx)]:
+                  ('Sv_x', Sv_x), ('Sw_x', Sw_x)]:
     for i, val in enumerate(row):
         if val == 0:
             continue
@@ -168,7 +168,7 @@ print()
 EBL = (D*BL)[0, :]
 assert expand(EBL - E*(A*BLexx + Ay*BLky + Az*BLkz)) == sympy.zeros(1, NUM_NODES*DOF)
 print('            # EBL = E*(A*BLexx + Ay*BLky + Az*BLkz)')
-print('            # BNL = v_x*Gvx + w_x*Gwx')
+print('            # BNL = v_x*Sv_x + w_x*Sw_x')
 print('            # NNL =', NNL.subs(eNL, var('eNL')), 'with eNL = (v_x**2 + w_x**2)/2')
 print()
 
@@ -180,12 +180,12 @@ def row(name, vals):
 sBLexx = row('BLexx', BLexx)
 sBLky = row('BLky', BLky)
 sBLkz = row('BLkz', BLkz)
-sGvx = row('Gvx', Gvx)
-sGwx = row('Gwx', Gwx)
+sSv_x = row('Sv_x', Sv_x)
+sSw_x = row('Sw_x', Sw_x)
 sEBL = E*(A*sBLexx + Ay*sBLky + Az*sBLkz)
-sBNL = v_x*sGvx + w_x*sGwx
+sBNL = v_x*sSv_x + w_x*sSw_x
 sKCNLe = weight*(sEBL.T*sBNL + sBNL.T*sEBL + E*A*sBNL.T*sBNL
-                 + NNL*(sGvx.T*sGvx + sGwx.T*sGwx))
+                 + NNL*(sSv_x.T*sSv_x + sSw_x.T*sSw_x))
 for ind, val in np.ndenumerate(sKCNLe):
     if val == 0:
         continue

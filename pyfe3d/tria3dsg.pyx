@@ -350,9 +350,12 @@ cdef class Tria3DSGProbe:
         centroid values `1/3`; the stiffness matrix uses three points
         instead, see :meth:`.Tria3DSG.update_KC0`.
         Its product with ``ue`` is dimensionless.
-    Gwx, Gwy : array-like
+    Sw_x, Sw_y : array-like
         Rows of 18 values giving `w_{,x}` and `w_{,y}`, used by the
         geometrically nonlinear terms.
+        ``Sw_x`` holds `\boldsymbol{G}_x = \partial \boldsymbol{S}^w/\partial x`
+        and ``Sw_y`` holds `\boldsymbol{G}_y = \partial \boldsymbol{S}^w/\partial
+        y`, the underscore denoting the partial derivative.
         Their products with ``ue`` are dimensionless. The rows above are
         written by the methods of :class:`.Tria3DSG` that compute stiffness
         matrices or internal forces.
@@ -390,8 +393,8 @@ cdef class Tria3DSGProbe:
     cdef public double [::1] BLgxz
     cdef public double [::1] BLgyz
     cdef public double [::1] BLdrilling
-    cdef public double [::1] Gwx
-    cdef public double [::1] Gwy
+    cdef public double [::1] Sw_x
+    cdef public double [::1] Sw_y
 
     def __cinit__(Tria3DSGProbe self):
         self.xe = np.zeros(NUM_NODES*DOF//2, dtype=np.float64)
@@ -408,8 +411,8 @@ cdef class Tria3DSGProbe:
         self.BLgxz = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.BLgyz = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.BLdrilling = np.zeros(NUM_NODES*DOF, dtype=np.float64)
-        self.Gwx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
-        self.Gwy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.Sw_x = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.Sw_y = np.zeros(NUM_NODES*DOF, dtype=np.float64)
 
 
 cdef class Tria3DSG:
@@ -893,7 +896,7 @@ cdef class Tria3DSG:
         Fills ``BLexx, BLeyy, BLgxy`` with the membrane strains,
         ``BLkxx, BLkyy, BLkxy`` with the curvatures, ``BLgxz, BLgyz`` with
         the discrete shear gap transverse shear strains, ``BLdrilling`` with
-        `r_z - \theta_z`, and ``Gwx, Gwy`` with `w_{,x}` and `w_{,y}`. It is
+        `r_z - \theta_z`, and ``Sw_x, Sw_y`` with `w_{,x}` and `w_{,y}`. It is
         called once per element, with no quadrature loop. The derivatives
         use the signed area of the probe coordinates, so the operators are
         correct for either node ordering, and the area returned is its
@@ -980,8 +983,8 @@ cdef class Tria3DSG:
         cdef double *BLgxz
         cdef double *BLgyz
         cdef double *BLdrilling
-        cdef double *Gwx
-        cdef double *Gwy
+        cdef double *Sw_x
+        cdef double *Sw_y
 
         BLexx = &self.probe.BLexx[0]
         BLeyy = &self.probe.BLeyy[0]
@@ -992,8 +995,8 @@ cdef class Tria3DSG:
         BLgxz = &self.probe.BLgxz[0]
         BLgyz = &self.probe.BLgyz[0]
         BLdrilling = &self.probe.BLdrilling[0]
-        Gwx = &self.probe.Gwx[0]
-        Gwy = &self.probe.Gwy[0]
+        Sw_x = &self.probe.Sw_x[0]
+        Sw_y = &self.probe.Sw_y[0]
 
         # NOTE ignoring z in local coordinates, the element is flat
         x1 = self.probe.xe[0]
@@ -1031,8 +1034,8 @@ cdef class Tria3DSG:
             BLgxz[i] = 0.
             BLgyz[i] = 0.
             BLdrilling[i] = 0.
-            Gwx[i] = 0.
-            Gwy[i] = 0.
+            Sw_x[i] = 0.
+            Sw_y[i] = 0.
 
         # membrane, constant strain triangle
         BLexx[0] = N1x
@@ -1064,12 +1067,12 @@ cdef class Tria3DSG:
         BLkxy[16] = N3y
 
         # gradients of w, used by the geometrically nonlinear terms
-        Gwx[2] = N1x
-        Gwx[8] = N2x
-        Gwx[14] = N3x
-        Gwy[2] = N1y
-        Gwy[8] = N2y
-        Gwy[14] = N3y
+        Sw_x[2] = N1x
+        Sw_x[8] = N2x
+        Sw_x[14] = N3x
+        Sw_y[2] = N1y
+        Sw_y[8] = N2y
+        Sw_y[14] = N3y
 
         # NOTE transverse shear, the discrete shear gap of Bletzinger,
         #      Bischoff and Ramm (2000), symmetrised over the three
@@ -1486,8 +1489,8 @@ cdef class Tria3DSG:
         cdef double *BLkxx
         cdef double *BLkyy
         cdef double *BLkxy
-        cdef double *Gwx
-        cdef double *Gwy
+        cdef double *Sw_x
+        cdef double *Sw_y
 
         area = self._update_probe_BL_G()
 
@@ -1499,8 +1502,8 @@ cdef class Tria3DSG:
         BLkxx = &self.probe.BLkxx[0]
         BLkyy = &self.probe.BLkyy[0]
         BLkxy = &self.probe.BLkxy[0]
-        Gwx = &self.probe.Gwx[0]
-        Gwy = &self.probe.Gwy[0]
+        Sw_x = &self.probe.Sw_x[0]
+        Sw_y = &self.probe.Sw_y[0]
 
         prop.get_constitutive_element(self.m11, self.m12, self.m21, self.m22,
                                       Ae, Be, NULL, NULL)
@@ -1520,8 +1523,8 @@ cdef class Tria3DSG:
             kxx += BLkxx[i]*ue[i]
             kyy += BLkyy[i]*ue[i]
             kxy += BLkxy[i]*ue[i]
-            w_x += Gwx[i]*ue[i]
-            w_y += Gwy[i]*ue[i]
+            w_x += Sw_x[i]*ue[i]
+            w_y += Sw_y[i]*ue[i]
 
         epsNL[0] = w_x*w_x/2.
         epsNL[1] = w_y*w_y/2.
@@ -1545,9 +1548,9 @@ cdef class Tria3DSG:
                   BLexx[i]*NNL[0] + BLeyy[i]*NNL[1] + BLgxy[i]*NNL[2]
                 + BLkxx[i]*MNL[0] + BLkyy[i]*MNL[1] + BLkxy[i]*MNL[2]
                 # BNL.T*(N + NNL)
-                + w_x*Gwx[i]*(N[0] + NNL[0])
-                + w_y*Gwy[i]*(N[1] + NNL[1])
-                + (w_x*Gwy[i] + w_y*Gwx[i])*(N[2] + NNL[2])
+                + w_x*Sw_x[i]*(N[0] + NNL[0])
+                + w_y*Sw_y[i]*(N[1] + NNL[1])
+                + (w_x*Sw_y[i] + w_y*Sw_x[i])*(N[2] + NNL[2])
             )
 
     cpdef void update_probe_finte(Tria3DSG self, ShellProp prop,
@@ -1688,8 +1691,8 @@ cdef class Tria3DSG:
         cdef double *BLkxx
         cdef double *BLkyy
         cdef double *BLkxy
-        cdef double *Gwx
-        cdef double *Gwy
+        cdef double *Sw_x
+        cdef double *Sw_y
 
         area = self._update_probe_BL_G()
 
@@ -1701,8 +1704,8 @@ cdef class Tria3DSG:
         BLkxx = &self.probe.BLkxx[0]
         BLkyy = &self.probe.BLkyy[0]
         BLkxy = &self.probe.BLkxy[0]
-        Gwx = &self.probe.Gwx[0]
-        Gwy = &self.probe.Gwy[0]
+        Sw_x = &self.probe.Sw_x[0]
+        Sw_y = &self.probe.Sw_y[0]
 
         prop.get_constitutive_element(self.m11, self.m12, self.m21, self.m22,
                                       Ae, Be, NULL, NULL)
@@ -1713,8 +1716,8 @@ cdef class Tria3DSG:
         w_x = 0.
         w_y = 0.
         for i in range(18):
-            w_x += Gwx[i]*ue[i]
-            w_y += Gwy[i]*ue[i]
+            w_x += Sw_x[i]*ue[i]
+            w_y += Sw_y[i]*ue[i]
 
         # stress resultants of the nonlinear membrane strain,
         # epsNL = {w_x**2/2, w_y**2/2, w_x*w_y}
@@ -1725,9 +1728,9 @@ cdef class Tria3DSG:
         # BNL, the variation of the nonlinear membrane strain, and the
         # products A*Bm + B*Bb and A*BNL, all stored row by row with 3 rows
         for i in range(18):
-            BNL[i] = w_x*Gwx[i]
-            BNL[18 + i] = w_y*Gwy[i]
-            BNL[36 + i] = w_x*Gwy[i] + w_y*Gwx[i]
+            BNL[i] = w_x*Sw_x[i]
+            BNL[18 + i] = w_y*Sw_y[i]
+            BNL[36 + i] = w_x*Sw_y[i] + w_y*Sw_x[i]
             for a in range(3):
                 ABL[18*a + i] = (Ae[3*a]*BLexx[i] + Ae[3*a + 1]*BLeyy[i]
                                  + Ae[3*a + 2]*BLgxy[i]
@@ -1751,8 +1754,8 @@ cdef class Tria3DSG:
                     + BNL[i]*ABNL[j] + BNL[18 + i]*ABNL[18 + j]
                     + BNL[36 + i]*ABNL[36 + j]
                     # KGNL = G.T*[NNL]*G
-                    + Gwx[i]*(NNL[0]*Gwx[j] + NNL[2]*Gwy[j])
-                    + Gwy[i]*(NNL[2]*Gwx[j] + NNL[1]*Gwy[j])
+                    + Sw_x[i]*(NNL[0]*Sw_x[j] + NNL[2]*Sw_y[j])
+                    + Sw_y[i]*(NNL[2]*Sw_x[j] + NNL[1]*Sw_y[j])
                 )
 
     cpdef void update_KCNL(Tria3DSG self,
@@ -1908,7 +1911,7 @@ cdef class Tria3DSG:
 
         A constant membrane stress state `N_{xx}, N_{yy}, N_{xy}` is assumed
         within the element. The operator involves only the gradients of the
-        element-frame `w`, which are taken from the ``Gwx, Gwy`` rows of the
+        element-frame `w`, which are taken from the ``Sw_x, Sw_y`` rows of the
         probe and turned into global translations with the third row of the
         rotation matrix, so only the translational degrees-of-freedom appear.
 
@@ -2006,8 +2009,8 @@ cdef class Tria3DSG:
             #      internal forces of update_fint() are built with
             area = self._update_probe_BL_G()
             for node_i in range(NUM_NODES):
-                Nx[node_i] = self.probe.Gwx[DOF*node_i + 2]
-                Ny[node_i] = self.probe.Gwy[DOF*node_i + 2]
+                Nx[node_i] = self.probe.Sw_x[DOF*node_i + 2]
+                Ny[node_i] = self.probe.Sw_y[DOF*node_i + 2]
 
             rz[0] = self.r13
             rz[1] = self.r23

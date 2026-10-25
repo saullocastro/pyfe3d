@@ -1,17 +1,21 @@
 r"""Configuration-dependent (follower) loads in the static analyses
 
 The analytic problem has the internal force of hardening springs and a load
-that depends on the configuration through an unsymmetric matrix ``Q``:
+that depends on the configuration, with the unsymmetric load stiffness
+matrix `\boldsymbol{K}_F = -\partial \boldsymbol{F}/\partial \boldsymbol{c} = \lambda \boldsymbol{K}_{F_{ref}}`:
 
 .. math::
 
     \boldsymbol{F}_{int}(\boldsymbol{c}) = \boldsymbol{K} \boldsymbol{c} + \{a c^3\}, \qquad
-    \boldsymbol{F}(\boldsymbol{c}, \lambda) = \lambda (\boldsymbol{q}_0 + \boldsymbol{Q} \boldsymbol{c})
+    \boldsymbol{F}(\boldsymbol{c}, \lambda) = \lambda (\boldsymbol{q}_0 - \boldsymbol{K}_{F_{ref}} \boldsymbol{c})
 
-passed to :class:`pyfe3d.solver.Analysis` as described in
-:mod:`pyfe3d.solver.callbacks`: ``calc_fint(c, inc)`` contains ``-inc Q c``,
-``calc_kC(c, NLgeom, inc)`` contains ``-inc Q``, and ``calc_fext(inc, c)`` is
-the load of the configuration ``c``. A geometrically linear structure under
+with `\boldsymbol{K}_{F_{ref}}` given as ``-Q`` in the code, passed to
+:class:`pyfe3d.solver.Analysis` as described in
+:mod:`pyfe3d.solver.callbacks`: ``calc_fint(c, inc)`` contains
+`\boldsymbol{K}_F \boldsymbol{c}`, i.e. ``-inc Q c``,
+``calc_kC(c, NLgeom, inc)`` contains `\boldsymbol{K}_F`, i.e. ``-inc Q``,
+and ``calc_fext(inc, c)`` is the load of the configuration ``c``. A
+geometrically linear structure under
 a load affine in the configuration is solved by the load correction
 iterations of the linear static analysis.
 """

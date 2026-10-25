@@ -690,9 +690,12 @@ cdef class Tria3RProbe:
         at the last evaluated integration point.
         Their products with ``ue`` give the membrane strains, dimensionless,
         and the curvatures, with dimension of one over length.
-    Gwx, Gwy : array-like
+    Sw_x, Sw_y : array-like
         Arrays of size ``NUM_NODES*DOF=18`` with the rows giving `w_{,x}` and
         `w_{,y}`, at the last evaluated integration point.
+        ``Sw_x`` holds `\boldsymbol{G}_x = \partial \boldsymbol{S}^w/\partial x`
+        and ``Sw_y`` holds `\boldsymbol{G}_y = \partial \boldsymbol{S}^w/\partial
+        y`, the underscore denoting the partial derivative.
         Their products with ``ue`` are dimensionless.
     KCNLve : array-like
         Array of size ``(NUM_NODES*DOF)**2=324`` with the nonlinear
@@ -710,8 +713,8 @@ cdef class Tria3RProbe:
     cdef public double [::1] BLkxx
     cdef public double [::1] BLkyy
     cdef public double [::1] BLkxy
-    cdef public double [::1] Gwx
-    cdef public double [::1] Gwy
+    cdef public double [::1] Sw_x
+    cdef public double [::1] Sw_y
     cdef public double [::1] KCNLve
 
     def __cinit__(Tria3RProbe self):
@@ -724,8 +727,8 @@ cdef class Tria3RProbe:
         self.BLkxx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.BLkyy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.BLkxy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
-        self.Gwx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
-        self.Gwy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.Sw_x = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.Sw_y = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.KCNLve = np.zeros((NUM_NODES*DOF)**2, dtype=np.float64)
 
 
@@ -3807,7 +3810,7 @@ cdef class Tria3R:
           \gamma_{xy}`
         - ``BLkxx, BLkyy, BLkxy``: curvatures `\kappa_{xx}, \kappa_{yy},
           \kappa_{xy}`
-        - ``Gwx, Gwy``: `\boldsymbol{G}_x` and `\boldsymbol{G}_y`, the rows of `w_{,x}` and `w_{,y}`
+        - ``Sw_x, Sw_y``: `\boldsymbol{G}_x` and `\boldsymbol{G}_y`, the rows of `w_{,x}` and `w_{,y}`
 
         With ``drilling_model = 0`` the membrane rows also carry, in their
         drilling columns, the Allman enrichment evaluated at the centroid,
@@ -3855,8 +3858,8 @@ cdef class Tria3R:
         cdef double *BLkxx
         cdef double *BLkyy
         cdef double *BLkxy
-        cdef double *Gwx
-        cdef double *Gwy
+        cdef double *Sw_x
+        cdef double *Sw_y
 
         BLexx = &self.probe.BLexx[0]
         BLeyy = &self.probe.BLeyy[0]
@@ -3864,8 +3867,8 @@ cdef class Tria3R:
         BLkxx = &self.probe.BLkxx[0]
         BLkyy = &self.probe.BLkyy[0]
         BLkxy = &self.probe.BLkxy[0]
-        Gwx = &self.probe.Gwx[0]
-        Gwy = &self.probe.Gwy[0]
+        Sw_x = &self.probe.Sw_x[0]
+        Sw_y = &self.probe.Sw_y[0]
 
         # NOTE ignoring z in local coordinates
         x1 = self.probe.xe[0]
@@ -3889,8 +3892,8 @@ cdef class Tria3R:
             BLkxx[i] = 0.
             BLkyy[i] = 0.
             BLkxy[i] = 0.
-            Gwx[i] = 0.
-            Gwy[i] = 0.
+            Sw_x[i] = 0.
+            Sw_y[i] = 0.
 
         # exx = u,x
         BLexx[0] = N1x
@@ -3929,14 +3932,14 @@ cdef class Tria3R:
         BLkxy[16] = N3y
 
         # w,x
-        Gwx[2] = N1x
-        Gwx[8] = N2x
-        Gwx[14] = N3x
+        Sw_x[2] = N1x
+        Sw_x[8] = N2x
+        Sw_x[14] = N3x
 
         # w,y
-        Gwy[2] = N1y
-        Gwy[8] = N2y
-        Gwy[14] = N3y
+        Sw_y[2] = N1y
+        Sw_y[8] = N2y
+        Sw_y[14] = N3y
 
         # NOTE Allman enrichment of the membrane rows, which keeps the
         #      nonlinear tangent of update_KCNL and the nonlinear internal
@@ -3997,8 +4000,8 @@ cdef class Tria3R:
         cdef double *BLkxx
         cdef double *BLkyy
         cdef double *BLkxy
-        cdef double *Gwx
-        cdef double *Gwy
+        cdef double *Sw_x
+        cdef double *Sw_y
 
         ue = &self.probe.ue[0]
         KCNLve = &self.probe.KCNLve[0]
@@ -4008,8 +4011,8 @@ cdef class Tria3R:
         BLkxx = &self.probe.BLkxx[0]
         BLkyy = &self.probe.BLkyy[0]
         BLkxy = &self.probe.BLkxy[0]
-        Gwx = &self.probe.Gwx[0]
-        Gwy = &self.probe.Gwy[0]
+        Sw_x = &self.probe.Sw_x[0]
+        Sw_y = &self.probe.Sw_y[0]
 
         prop.get_constitutive_element(self.m11, self.m12, self.m21, self.m22, A, B, NULL, NULL)
 
@@ -4024,8 +4027,8 @@ cdef class Tria3R:
         w_x = 0.
         w_y = 0.
         for i in range(18):
-            w_x += Gwx[i]*ue[i]
-            w_y += Gwy[i]*ue[i]
+            w_x += Sw_x[i]*ue[i]
+            w_y += Sw_y[i]*ue[i]
 
         # stress resultants of the nonlinear membrane strain,
         # epsNL = {w_x**2/2, w_y**2/2, w_x*w_y}
@@ -4035,9 +4038,9 @@ cdef class Tria3R:
         # BNL, the variation of the nonlinear membrane strain, and the products
         # A*Bm + B*Bb and A*BNL, all stored row by row with 3 rows
         for i in range(18):
-            BNL[i] = w_x*Gwx[i]
-            BNL[18 + i] = w_y*Gwy[i]
-            BNL[36 + i] = w_x*Gwy[i] + w_y*Gwx[i]
+            BNL[i] = w_x*Sw_x[i]
+            BNL[18 + i] = w_y*Sw_y[i]
+            BNL[36 + i] = w_x*Sw_y[i] + w_y*Sw_x[i]
             for a in range(3):
                 ABL[18*a + i] = (A[3*a]*BLexx[i] + A[3*a + 1]*BLeyy[i] + A[3*a + 2]*BLgxy[i]
                                + B[3*a]*BLkxx[i] + B[3*a + 1]*BLkyy[i] + B[3*a + 2]*BLkxy[i])
@@ -4053,8 +4056,8 @@ cdef class Tria3R:
                     # KCLL = BNL.T*A*BNL
                     + BNL[i]*ABNL[j] + BNL[18 + i]*ABNL[18 + j] + BNL[36 + i]*ABNL[36 + j]
                     # KGNL = G.T*[NNL]*G
-                    + Gwx[i]*(NNL[0]*Gwx[j] + NNL[2]*Gwy[j])
-                    + Gwy[i]*(NNL[2]*Gwx[j] + NNL[1]*Gwy[j])
+                    + Sw_x[i]*(NNL[0]*Sw_x[j] + NNL[2]*Sw_y[j])
+                    + Sw_y[i]*(NNL[2]*Sw_x[j] + NNL[1]*Sw_y[j])
                 )
 
 
@@ -4106,8 +4109,8 @@ cdef class Tria3R:
         cdef double *BLkxx
         cdef double *BLkyy
         cdef double *BLkxy
-        cdef double *Gwx
-        cdef double *Gwy
+        cdef double *Sw_x
+        cdef double *Sw_y
 
         ue = &self.probe.ue[0]
         finte = &self.probe.finte[0]
@@ -4117,8 +4120,8 @@ cdef class Tria3R:
         BLkxx = &self.probe.BLkxx[0]
         BLkyy = &self.probe.BLkyy[0]
         BLkxy = &self.probe.BLkxy[0]
-        Gwx = &self.probe.Gwx[0]
-        Gwy = &self.probe.Gwy[0]
+        Sw_x = &self.probe.Sw_x[0]
+        Sw_y = &self.probe.Sw_y[0]
 
         prop.get_constitutive_element(self.m11, self.m12, self.m21, self.m22, A, B, NULL, NULL)
 
@@ -4142,8 +4145,8 @@ cdef class Tria3R:
             kxx += BLkxx[i]*ue[i]
             kyy += BLkyy[i]*ue[i]
             kxy += BLkxy[i]*ue[i]
-            w_x += Gwx[i]*ue[i]
-            w_y += Gwy[i]*ue[i]
+            w_x += Sw_x[i]*ue[i]
+            w_y += Sw_y[i]*ue[i]
 
         epsNL[0] = w_x*w_x/2.
         epsNL[1] = w_y*w_y/2.
@@ -4163,9 +4166,9 @@ cdef class Tria3R:
                   BLexx[i]*NNL[0] + BLeyy[i]*NNL[1] + BLgxy[i]*NNL[2]
                 + BLkxx[i]*MNL[0] + BLkyy[i]*MNL[1] + BLkxy[i]*MNL[2]
                 # BNL.T*(N + NNL)
-                + w_x*Gwx[i]*(N[0] + NNL[0])
-                + w_y*Gwy[i]*(N[1] + NNL[1])
-                + (w_x*Gwy[i] + w_y*Gwx[i])*(N[2] + NNL[2])
+                + w_x*Sw_x[i]*(N[0] + NNL[0])
+                + w_y*Sw_y[i]*(N[1] + NNL[1])
+                + (w_x*Sw_y[i] + w_y*Sw_x[i])*(N[2] + NNL[2])
             )
 
 
@@ -4964,7 +4967,7 @@ cdef class Tria3R:
             + \boldsymbol{G}_y^\top \boldsymbol{G}_x) \right)
 
         with `A_e` the element area and `\boldsymbol{G}_x`, `\boldsymbol{G}_y`
-        the rows ``Gwx``, ``Gwy`` of
+        the rows ``Sw_x``, ``Sw_y`` of
         :meth:`._update_probe_BL_G`, the element-frame `w` being obtained
         from the global translations with the element normal `\{T_{13},
         T_{23}, T_{33}\}`. The integrand is constant over the triangle, so the

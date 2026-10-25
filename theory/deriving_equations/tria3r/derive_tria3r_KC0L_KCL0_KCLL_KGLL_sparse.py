@@ -88,11 +88,11 @@ BLkxy = Matrix([[0, 0, 0, -N1x, N1y, 0,
                  0, 0, 0, -N2x, N2y, 0,
                  0, 0, 0, -N3x, N3y, 0]])
 #w,x
-Gwx = Matrix([[0, 0, N1x, 0, 0, 0,
+Sw_x = Matrix([[0, 0, N1x, 0, 0, 0,
                0, 0, N2x, 0, 0, 0,
                0, 0, N3x, 0, 0, 0]])
 #w,y
-Gwy = Matrix([[0, 0, N1y, 0, 0, 0,
+Sw_y = Matrix([[0, 0, N1y, 0, 0, 0,
                0, 0, N2y, 0, 0, 0,
                0, 0, N3y, 0, 0, 0]])
 
@@ -101,16 +101,16 @@ Bm = Matrix([BLexx, BLeyy, BLgxy])
 # bending
 Bb = Matrix([BLkxx, BLkyy, BLkxy])
 # gradient of w (see Eq. A.10, for Donnell's equations, in https://www.sciencedirect.com/science/article/pii/S0263822314003602)
-G = Matrix([Gwx, Gwy])
+G = Matrix([Sw_x, Sw_y])
 
 ue = Matrix([symbols(r'ue[%d]' % i) for i in range(NUM_NODES*DOF)])
-w_x = (Gwx*ue)[0]
-w_y = (Gwy*ue)[0]
+w_x = (Sw_x*ue)[0]
+w_y = (Sw_y*ue)[0]
 
 # nonlinear part of the membrane strains and its variation
 epsNL = Matrix([w_x**2/2, w_y**2/2, w_x*w_y])
 BNL = epsNL.jacobian(ue)
-assert expand(BNL - Matrix([w_x*Gwx, w_y*Gwy, w_x*Gwy + w_y*Gwx])) == sympy.zeros(3, NUM_NODES*DOF)
+assert expand(BNL - Matrix([w_x*Sw_x, w_y*Sw_y, w_x*Sw_y + w_y*Sw_x])) == sympy.zeros(3, NUM_NODES*DOF)
 # NOTE epsNL is quadratic in ue, such that BNL*ue counts it twice
 assert expand(BNL*ue/2 - epsNL) == sympy.zeros(3, 1)
 NNL = A*epsNL
@@ -155,7 +155,7 @@ for i, val in enumerate(A*Matrix([w_x**2/2, w_y**2/2, w_x*w_y])):
 print()
 
 sNNL = Matrix(symbols('NNL[0], NNL[1], NNL[2]'))
-sBNL = Matrix([w_x*Gwx, w_y*Gwy, w_x*Gwy + w_y*Gwx])
+sBNL = Matrix([w_x*Sw_x, w_y*Sw_y, w_x*Sw_y + w_y*Sw_x])
 sNNLmatrix = Matrix([[sNNL[0], sNNL[2]],
                      [sNNL[2], sNNL[1]]])
 sKCNLe = wij*detJ*(Bm.T*A*sBNL + Bb.T*B*sBNL

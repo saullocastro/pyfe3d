@@ -104,9 +104,12 @@ cdef class BeamCProbe:
         Arrays of size ``NUM_NODES*DOF=12`` with the rows of the linear
         strain-displacement matrix for the axial strain and the two
         curvatures, at the last evaluated integration point.
-    Gvx, Gwx : array-like
+    Sv_x, Sw_x : array-like
         Arrays of size ``NUM_NODES*DOF=12`` with the rows giving the slopes
         `v_{,x}` and `w_{,x}`, at the last evaluated integration point.
+        ``Sv_x`` holds `\partial \boldsymbol{S}^v/\partial x` and ``Sw_x``
+        holds `\partial \boldsymbol{S}^w/\partial x`, the underscore denoting
+        the partial derivative.
     KCNLve : array-like
         Array of size ``(NUM_NODES*DOF)**2=144`` with the nonlinear
         constitutive stiffness matrix KCNL in element coordinates, stored row
@@ -119,8 +122,8 @@ cdef class BeamCProbe:
     cdef public double [::1] BLexx
     cdef public double [::1] BLky
     cdef public double [::1] BLkz
-    cdef public double [::1] Gvx
-    cdef public double [::1] Gwx
+    cdef public double [::1] Sv_x
+    cdef public double [::1] Sw_x
     cdef public double [::1] KCNLve
 
     def __cinit__(BeamCProbe self):
@@ -130,8 +133,8 @@ cdef class BeamCProbe:
         self.BLexx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.BLky = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.BLkz = np.zeros(NUM_NODES*DOF, dtype=np.float64)
-        self.Gvx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
-        self.Gwx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.Sv_x = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.Sw_x = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.KCNLve = np.zeros((NUM_NODES*DOF)**2, dtype=np.float64)
 
 
@@ -1694,7 +1697,7 @@ cdef class BeamC:
                                  double xi) noexcept nogil:
         r"""Update the probe rows of the axial strain, curvatures and slopes
 
-        The arrays ``BLexx``, ``BLky``, ``BLkz``, ``Gvx`` and ``Gwx`` of the
+        The arrays ``BLexx``, ``BLky``, ``BLkz``, ``Sv_x`` and ``Sw_x`` of the
         :class:`.BeamCProbe` are overwritten with the rows that, multiplied by
         the element displacements ``ue``, give in element coordinates the axial
         strain of the beam axis, the two curvatures and the two slopes of the
@@ -1710,7 +1713,7 @@ cdef class BeamC:
         - ``BLexx``: `u_{,x}`
         - ``BLky``: `\kappa_y = -{r_z}_{,x}`
         - ``BLkz``: `\kappa_z = {r_y}_{,x}`
-        - ``Gvx``, ``Gwx``: `v_{,x}` and `w_{,x}`
+        - ``Sv_x``, ``Sw_x``: `v_{,x}` and `w_{,x}`
 
         References
         ----------
@@ -1724,14 +1727,14 @@ cdef class BeamC:
         cdef double *BLexx
         cdef double *BLky
         cdef double *BLkz
-        cdef double *Gvx
-        cdef double *Gwx
+        cdef double *Sv_x
+        cdef double *Sw_x
 
         BLexx = &self.probe.BLexx[0]
         BLky = &self.probe.BLky[0]
         BLkz = &self.probe.BLkz[0]
-        Gvx = &self.probe.Gvx[0]
-        Gwx = &self.probe.Gwx[0]
+        Sv_x = &self.probe.Sv_x[0]
+        Sw_x = &self.probe.Sw_x[0]
 
         L = self.length
         alphay = -12*prop.E*prop.Izz/(prop.get_G12()*prop.A*L**2)
@@ -1743,8 +1746,8 @@ cdef class BeamC:
             BLexx[i] = 0.
             BLky[i] = 0.
             BLkz[i] = 0.
-            Gvx[i] = 0.
-            Gwx[i] = 0.
+            Sv_x[i] = 0.
+            Sw_x[i] = 0.
 
         # u,x
         BLexx[0] = -1/L
@@ -1763,16 +1766,16 @@ cdef class BeamC:
         BLkz[10] = betaz*(6*xi - alphaz - 2)/L
 
         # v,x, with v = Hv1*v1 + Hrz1*rz1 + Hv2*v2 + Hrz2*rz2
-        Gvx[1] = betay*(6*xi**2 - 6*xi + alphay)/L
-        Gvx[5] = betay*(3*xi**2 + (alphay - 4)*xi + 1 - alphay/2)
-        Gvx[7] = betay*(-6*xi**2 + 6*xi - alphay)/L
-        Gvx[11] = betay*(3*xi**2 - (alphay + 2)*xi + alphay/2)
+        Sv_x[1] = betay*(6*xi**2 - 6*xi + alphay)/L
+        Sv_x[5] = betay*(3*xi**2 + (alphay - 4)*xi + 1 - alphay/2)
+        Sv_x[7] = betay*(-6*xi**2 + 6*xi - alphay)/L
+        Sv_x[11] = betay*(3*xi**2 - (alphay + 2)*xi + alphay/2)
 
         # w,x, with w = Hw1*w1 + Hry1*ry1 + Hw2*w2 + Hry2*ry2
-        Gwx[2] = betaz*(6*xi**2 - 6*xi + alphaz)/L
-        Gwx[4] = -betaz*(3*xi**2 + (alphaz - 4)*xi + 1 - alphaz/2)
-        Gwx[8] = betaz*(-6*xi**2 + 6*xi - alphaz)/L
-        Gwx[10] = -betaz*(3*xi**2 - (alphaz + 2)*xi + alphaz/2)
+        Sw_x[2] = betaz*(6*xi**2 - 6*xi + alphaz)/L
+        Sw_x[4] = -betaz*(3*xi**2 + (alphaz - 4)*xi + 1 - alphaz/2)
+        Sw_x[8] = betaz*(-6*xi**2 + 6*xi - alphaz)/L
+        Sw_x[10] = -betaz*(3*xi**2 - (alphaz + 2)*xi + alphaz/2)
 
 
     cdef void _update_probe_KCNLve(BeamC self, BeamProp prop) noexcept nogil:
@@ -1784,7 +1787,7 @@ cdef class BeamC:
         ``ue`` of the probe, from ``length`` and the attributes ``E``, ``A``,
         ``Ay`` and ``Az`` of ``prop`` (and those read by
         :meth:`._update_probe_BL_G`). The arrays ``BLexx``, ``BLky``,
-        ``BLkz``, ``Gvx`` and ``Gwx`` of the probe are overwritten too. See
+        ``BLkz``, ``Sv_x`` and ``Sw_x`` of the probe are overwritten too. See
         :meth:`.update_KCNL`.
 
         Notes
@@ -1794,14 +1797,14 @@ cdef class BeamC:
         quadrature, exact for these polynomials of degree up to 8 in ``xi``.
         At each point, with the rows of :meth:`._update_probe_BL_G`, the
         slopes `v_{,x}` and `w_{,x}` at ``ue``, ``EBL = E*(A*BLexx + Ay*BLky +
-        Az*BLkz)``, the row of the axial force, ``BNL = v_x*Gvx + w_x*Gwx``,
+        Az*BLkz)``, the row of the axial force, ``BNL = v_x*Sv_x + w_x*Sw_x``,
         the variation of the nonlinear axial strain, and the axial force of
         the nonlinear axial strain ``NNL = E*A*(v_x**2 + w_x**2)/2``, the
         entry `(i, j)` receives, times the weight of the point and `L/2`:
 
         .. math::
             EBL_i BNL_j + BNL_i EBL_j + E A \, BNL_i BNL_j
-            + NNL \left( Gvx_i Gvx_j + Gwx_i Gwx_j \right)
+            + NNL \left( {Sv_x}_i {Sv_x}_j + {Sw_x}_i {Sw_x}_j \right)
 
         """
         cdef int i, j, pt
@@ -1815,8 +1818,8 @@ cdef class BeamC:
         cdef double *BLexx
         cdef double *BLky
         cdef double *BLkz
-        cdef double *Gvx
-        cdef double *Gwx
+        cdef double *Sv_x
+        cdef double *Sw_x
 
         L = self.length
         E = prop.E
@@ -1829,8 +1832,8 @@ cdef class BeamC:
         BLexx = &self.probe.BLexx[0]
         BLky = &self.probe.BLky[0]
         BLkz = &self.probe.BLkz[0]
-        Gvx = &self.probe.Gvx[0]
-        Gwx = &self.probe.Gwx[0]
+        Sv_x = &self.probe.Sv_x[0]
+        Sw_x = &self.probe.Sw_x[0]
 
         for i in range(12*12):
             KCNLve[i] = 0.
@@ -1855,8 +1858,8 @@ cdef class BeamC:
             v_x = 0.
             w_x = 0.
             for i in range(NUM_NODES*DOF):
-                v_x += Gvx[i]*ue[i]
-                w_x += Gwx[i]*ue[i]
+                v_x += Sv_x[i]*ue[i]
+                w_x += Sw_x[i]*ue[i]
 
             # axial force of the nonlinear axial strain, eNL = (v_x**2 + w_x**2)/2
             NNL = E*A*(v_x*v_x + w_x*w_x)/2.
@@ -1865,7 +1868,7 @@ cdef class BeamC:
                 # row of D*BL giving the axial force N = E*(A*u,x + Ay*ky + Az*kz)
                 EBL[i] = E*(A*BLexx[i] + Ay*BLky[i] + Az*BLkz[i])
                 # BNL, the variation of the nonlinear axial strain
-                BNL[i] = v_x*Gvx[i] + w_x*Gwx[i]
+                BNL[i] = v_x*Sv_x[i] + w_x*Sw_x[i]
 
             for i in range(NUM_NODES*DOF):
                 for j in range(NUM_NODES*DOF):
@@ -1876,8 +1879,8 @@ cdef class BeamC:
                         + BNL[i]*EBL[j]
                         # KCLL = BNL.T*D*BNL
                         + E*A*BNL[i]*BNL[j]
-                        # KGNL = NNL*(Gvx.T*Gvx + Gwx.T*Gwx)
-                        + NNL*(Gvx[i]*Gvx[j] + Gwx[i]*Gwx[j])
+                        # KGNL = NNL*(Sv_x.T*Sv_x + Sw_x.T*Sw_x)
+                        + NNL*(Sv_x[i]*Sv_x[j] + Sw_x[i]*Sw_x[j])
                     )
 
 
@@ -1891,7 +1894,7 @@ cdef class BeamC:
         are added to the attribute ``finte`` of the :class:`.BeamCProbe`, which
         must already contain the linear internal forces, see
         :meth:`.update_probe_finte`. The arrays ``BLexx``, ``BLky``,
-        ``BLkz``, ``Gvx`` and ``Gwx`` of the probe are overwritten. See
+        ``BLkz``, ``Sv_x`` and ``Sw_x`` of the probe are overwritten. See
         :meth:`.update_KCNL`.
 
         Notes
@@ -1923,8 +1926,8 @@ cdef class BeamC:
         cdef double *BLexx
         cdef double *BLky
         cdef double *BLkz
-        cdef double *Gvx
-        cdef double *Gwx
+        cdef double *Sv_x
+        cdef double *Sw_x
 
         L = self.length
         E = prop.E
@@ -1937,8 +1940,8 @@ cdef class BeamC:
         BLexx = &self.probe.BLexx[0]
         BLky = &self.probe.BLky[0]
         BLkz = &self.probe.BLkz[0]
-        Gvx = &self.probe.Gvx[0]
-        Gwx = &self.probe.Gwx[0]
+        Sv_x = &self.probe.Sv_x[0]
+        Sw_x = &self.probe.Sw_x[0]
 
         # NOTE 5-point Gauss-Legendre quadrature, exact for these polynomials
         points[0] = -0.906179845938663992797626878299
@@ -1961,8 +1964,8 @@ cdef class BeamC:
             w_x = 0.
             N = 0.
             for i in range(NUM_NODES*DOF):
-                v_x += Gvx[i]*ue[i]
-                w_x += Gwx[i]*ue[i]
+                v_x += Sv_x[i]*ue[i]
+                w_x += Sw_x[i]*ue[i]
                 # row of D*BL giving the axial force N = E*(A*u,x + Ay*ky + Az*kz)
                 EBL[i] = E*(A*BLexx[i] + Ay*BLky[i] + Az*BLkz[i])
                 N += EBL[i]*ue[i]
@@ -1976,7 +1979,7 @@ cdef class BeamC:
                     # BL.T*D*{eNL, 0, 0, 0, 0, 0}
                       EBL[i]*eNL
                     # BNL.T*(N + NNL)
-                    + (v_x*Gvx[i] + w_x*Gwx[i])*(N + NNL)
+                    + (v_x*Sv_x[i] + w_x*Sw_x[i])*(N + NNL)
                 )
 
 
@@ -2186,7 +2189,7 @@ cdef class BeamC:
         the Hessian of `\frac{1}{2} \int_0^L N (v_{,x}^2 + w_{,x}^2) dx` at a
         constant axial force `N`, where `\partial \boldsymbol{S}^v /
         \partial x` and `\partial \boldsymbol{S}^w / \partial x` are the rows
-        ``Gvx`` and ``Gwx`` of :meth:`._update_probe_BL_G`, giving the slopes
+        ``Sv_x`` and ``Sw_x`` of :meth:`._update_probe_BL_G`, giving the slopes
         `v_{,x}` and `w_{,x}` with the consistent shape functions, and `N = E
         (A u_{,x} + A_y \kappa_y + A_z \kappa_z)` is the axial force of the
         linear strains at ``probe.ue``, see the notes of :class:`.BeamC`.

@@ -104,9 +104,13 @@ cdef class BeamLRProbe:
         Arrays of size ``NUM_NODES*DOF=12`` with the rows of the linear
         strain-displacement matrix for the axial strain and the two
         curvatures, at the last evaluated integration point.
-    Gvx, Gwx : array-like
+    Sv_x, Sw_x : array-like
         Arrays of size ``NUM_NODES*DOF=12`` with the rows giving the slopes
         `v_{,x}` and `w_{,x}`, at the last evaluated integration point.
+        The names are those of :class:`.BeamCProbe`, the same API, but here
+        the rows hold the interpolations of the rotations, the slopes being
+        `v_{,x} = r_z` and `w_{,x} = -r_y`: ``Sv_x`` holds
+        `\boldsymbol{S}^{r_z}` and ``Sw_x`` holds `-\boldsymbol{S}^{r_y}`.
     KCNLve : array-like
         Array of size ``(NUM_NODES*DOF)**2=144`` with the nonlinear
         constitutive stiffness matrix KCNL in element coordinates, stored row
@@ -119,8 +123,8 @@ cdef class BeamLRProbe:
     cdef public double [::1] BLexx
     cdef public double [::1] BLky
     cdef public double [::1] BLkz
-    cdef public double [::1] Gvx
-    cdef public double [::1] Gwx
+    cdef public double [::1] Sv_x
+    cdef public double [::1] Sw_x
     cdef public double [::1] KCNLve
 
     def __cinit__(BeamLRProbe self):
@@ -130,8 +134,8 @@ cdef class BeamLRProbe:
         self.BLexx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.BLky = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.BLkz = np.zeros(NUM_NODES*DOF, dtype=np.float64)
-        self.Gvx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
-        self.Gwx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.Sv_x = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.Sw_x = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.KCNLve = np.zeros((NUM_NODES*DOF)**2, dtype=np.float64)
 
 
@@ -1439,7 +1443,7 @@ cdef class BeamLR:
     cdef void _update_probe_BL_G(BeamLR self, double xi) noexcept nogil:
         r"""Update the probe rows of the axial strain, curvatures and slopes
 
-        The arrays ``BLexx``, ``BLky``, ``BLkz``, ``Gvx`` and ``Gwx`` of the
+        The arrays ``BLexx``, ``BLky``, ``BLkz``, ``Sv_x`` and ``Sw_x`` of the
         :class:`.BeamLRProbe` are overwritten with the rows that, multiplied by
         the element displacements ``ue``, give in element coordinates the axial
         strain of the beam axis, the two curvatures and the two slopes of the
@@ -1453,7 +1457,7 @@ cdef class BeamLR:
         - ``BLexx``: `u_{,x}`
         - ``BLky``: `\kappa_y = -{r_z}_{,x}`
         - ``BLkz``: `\kappa_z = {r_y}_{,x}`
-        - ``Gvx``, ``Gwx``: the slopes `v_{,x}` and `w_{,x}`, taken from the
+        - ``Sv_x``, ``Sw_x``: the slopes `v_{,x}` and `w_{,x}`, taken from the
           rotations as `v_{,x} = r_z` and `w_{,x} = -r_y`, as in
           :meth:`.update_KG`
 
@@ -1463,14 +1467,14 @@ cdef class BeamLR:
         cdef double *BLexx
         cdef double *BLky
         cdef double *BLkz
-        cdef double *Gvx
-        cdef double *Gwx
+        cdef double *Sv_x
+        cdef double *Sw_x
 
         BLexx = &self.probe.BLexx[0]
         BLky = &self.probe.BLky[0]
         BLkz = &self.probe.BLkz[0]
-        Gvx = &self.probe.Gvx[0]
-        Gwx = &self.probe.Gwx[0]
+        Sv_x = &self.probe.Sv_x[0]
+        Sw_x = &self.probe.Sw_x[0]
 
         L = self.length
 
@@ -1478,8 +1482,8 @@ cdef class BeamLR:
             BLexx[i] = 0.
             BLky[i] = 0.
             BLkz[i] = 0.
-            Gvx[i] = 0.
-            Gwx[i] = 0.
+            Sv_x[i] = 0.
+            Sw_x[i] = 0.
 
         # u,x
         BLexx[0] = -1/L
@@ -1494,12 +1498,12 @@ cdef class BeamLR:
         BLkz[10] = 1/L
 
         # v,x = rz
-        Gvx[5] = (1 - xi)/2
-        Gvx[11] = (1 + xi)/2
+        Sv_x[5] = (1 - xi)/2
+        Sv_x[11] = (1 + xi)/2
 
         # w,x = -ry
-        Gwx[4] = -(1 - xi)/2
-        Gwx[10] = -(1 + xi)/2
+        Sw_x[4] = -(1 - xi)/2
+        Sw_x[10] = -(1 + xi)/2
 
 
     cdef void _update_probe_KCNLve(BeamLR self, BeamProp prop) noexcept nogil:
@@ -1510,7 +1514,7 @@ cdef class BeamLR:
         coordinates, stored row by row and evaluated at the displacements
         ``ue`` of the probe, from ``length`` and the attributes ``E``, ``A``,
         ``Ay`` and ``Az`` of ``prop``. The arrays ``BLexx``, ``BLky``,
-        ``BLkz``, ``Gvx`` and ``Gwx`` of the probe are overwritten too. See
+        ``BLkz``, ``Sv_x`` and ``Sw_x`` of the probe are overwritten too. See
         :meth:`.update_KCNL`.
 
         Notes
@@ -1534,8 +1538,8 @@ cdef class BeamLR:
         cdef double *BLexx
         cdef double *BLky
         cdef double *BLkz
-        cdef double *Gvx
-        cdef double *Gwx
+        cdef double *Sv_x
+        cdef double *Sw_x
 
         L = self.length
         E = prop.E
@@ -1548,8 +1552,8 @@ cdef class BeamLR:
         BLexx = &self.probe.BLexx[0]
         BLky = &self.probe.BLky[0]
         BLkz = &self.probe.BLkz[0]
-        Gvx = &self.probe.Gvx[0]
-        Gwx = &self.probe.Gwx[0]
+        Sv_x = &self.probe.Sv_x[0]
+        Sw_x = &self.probe.Sw_x[0]
 
         for i in range(12*12):
             KCNLve[i] = 0.
@@ -1570,8 +1574,8 @@ cdef class BeamLR:
             v_x = 0.
             w_x = 0.
             for i in range(NUM_NODES*DOF):
-                v_x += Gvx[i]*ue[i]
-                w_x += Gwx[i]*ue[i]
+                v_x += Sv_x[i]*ue[i]
+                w_x += Sw_x[i]*ue[i]
 
             # axial force of the nonlinear axial strain, eNL = (v_x**2 + w_x**2)/2
             NNL = E*A*(v_x*v_x + w_x*w_x)/2.
@@ -1580,7 +1584,7 @@ cdef class BeamLR:
                 # row of D*BL giving the axial force N = E*(A*u,x + Ay*ky + Az*kz)
                 EBL[i] = E*(A*BLexx[i] + Ay*BLky[i] + Az*BLkz[i])
                 # BNL, the variation of the nonlinear axial strain
-                BNL[i] = v_x*Gvx[i] + w_x*Gwx[i]
+                BNL[i] = v_x*Sv_x[i] + w_x*Sw_x[i]
 
             for i in range(NUM_NODES*DOF):
                 for j in range(NUM_NODES*DOF):
@@ -1591,8 +1595,8 @@ cdef class BeamLR:
                         + BNL[i]*EBL[j]
                         # KCLL = BNL.T*D*BNL
                         + E*A*BNL[i]*BNL[j]
-                        # KGNL = NNL*(Gvx.T*Gvx + Gwx.T*Gwx)
-                        + NNL*(Gvx[i]*Gvx[j] + Gwx[i]*Gwx[j])
+                        # KGNL = NNL*(Sv_x.T*Sv_x + Sw_x.T*Sw_x)
+                        + NNL*(Sv_x[i]*Sv_x[j] + Sw_x[i]*Sw_x[j])
                     )
 
 
@@ -1605,7 +1609,7 @@ cdef class BeamLR:
         ``Az`` of ``prop``, are added to the attribute ``finte`` of the
         :class:`.BeamLRProbe`, which must already contain the linear internal
         forces, see :meth:`.update_probe_finte`. The arrays ``BLexx``,
-        ``BLky``, ``BLkz``, ``Gvx`` and ``Gwx`` of the probe are overwritten.
+        ``BLky``, ``BLkz``, ``Sv_x`` and ``Sw_x`` of the probe are overwritten.
         See :meth:`.update_KCNL`.
 
         Notes
@@ -1628,8 +1632,8 @@ cdef class BeamLR:
         cdef double *BLexx
         cdef double *BLky
         cdef double *BLkz
-        cdef double *Gvx
-        cdef double *Gwx
+        cdef double *Sv_x
+        cdef double *Sw_x
 
         L = self.length
         E = prop.E
@@ -1642,8 +1646,8 @@ cdef class BeamLR:
         BLexx = &self.probe.BLexx[0]
         BLky = &self.probe.BLky[0]
         BLkz = &self.probe.BLkz[0]
-        Gvx = &self.probe.Gvx[0]
-        Gwx = &self.probe.Gwx[0]
+        Sv_x = &self.probe.Sv_x[0]
+        Sw_x = &self.probe.Sw_x[0]
 
         # NOTE 3-point Gauss-Legendre quadrature, exact for these polynomials
         points[0] = -0.774596669241483377035853079956
@@ -1662,8 +1666,8 @@ cdef class BeamLR:
             w_x = 0.
             N = 0.
             for i in range(NUM_NODES*DOF):
-                v_x += Gvx[i]*ue[i]
-                w_x += Gwx[i]*ue[i]
+                v_x += Sv_x[i]*ue[i]
+                w_x += Sw_x[i]*ue[i]
                 # row of D*BL giving the axial force N = E*(A*u,x + Ay*ky + Az*kz)
                 EBL[i] = E*(A*BLexx[i] + Ay*BLky[i] + Az*BLkz[i])
                 N += EBL[i]*ue[i]
@@ -1677,7 +1681,7 @@ cdef class BeamLR:
                     # BL.T*D*{eNL, 0, 0, 0, 0, 0}
                       EBL[i]*eNL
                     # BNL.T*(N + NNL)
-                    + (v_x*Gvx[i] + w_x*Gwx[i])*(N + NNL)
+                    + (v_x*Sv_x[i] + w_x*Sw_x[i])*(N + NNL)
                 )
 
 
