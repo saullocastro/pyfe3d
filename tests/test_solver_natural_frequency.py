@@ -249,6 +249,105 @@ def test_rigid_body_mode_penalty(symmetric):
                                rtol=1e-12)
 
 
+def beam_cantilever():
+    r"""The cantilever of ``test_beamc_natural_freq_cantilever_pre_stress.py``
+    saved in ``tests/data``: 49 ``BeamC`` elements of a steel beam of length
+    3 m with a 0.05 x 0.05 m square cross-section, clamped at one end,
+    ``KC0`` and ``M`` (``mtype=0``) of the free degrees-of-freedom, and
+    ``KG`` of a unit axial compression at the tip"""
+    import os
+    from scipy.sparse import load_npz
+
+    data = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
+    return [load_npz(os.path.join(data, 'beam_cantilever_%s.npz' % name)
+                     ).tocsr() for name in ('K', 'KG', 'M')]
+
+
+@pytest.mark.parametrize('precondition', [True, False])
+@pytest.mark.parametrize('symmetric', [True, False])
+def test_near_buckling(symmetric, precondition):
+    r"""Regression test: the cantilever pre-stressed to 0.9999 of its
+    buckling load has a nearly singular `[K]`. Its two lowest eigenpairs,
+    `\omega_n^2 = 0.0895`, a double eigenvalue of the square cross-section,
+    have relative residuals of 2.3e-6 to 1.3e-5 with the sparse and the
+    dense solvers, larger than the default ``check_rtol=1e-6``, but backward
+    errors at the round-off, and pass the verification of the sparse solver
+    without the dense fallback and without a larger ``check_rtol``"""
+    from pyfe3d.solver import linear_buckling
+
+    K0, KG, M = beam_cantilever()
+    lambda_cr = linear_buckling(K0, KG, num_eigvalues=1)[0][0]
+    K = (K0 + 0.9999*lambda_cr*KG).tocsr()
+    with warnings.catch_warnings():
+        warnings.simplefilter('error', DenseFallbackWarning)
+        omegan, eigvecs = natural_frequency(K, M, num_eigvalues=3,
+                                            symmetric=symmetric,
+                                            precondition=precondition,
+                                            max_dense_size=0)
+    w2 = np.real(omegan)**2
+    # NOTE M u = (1/omega**2) K u, accurate for the lowest omega**2
+    mu = eigh(M.toarray(), K.toarray(), eigvals_only=True)
+    w2_ref = np.sort(1/mu[mu > 0])[:3]
+    np.testing.assert_allclose(w2, w2_ref, rtol=1e-4)
+    assert np.all(w2[:2] < 1e-5*w2[2])
+    # NOTE ||K u|| + omega**2 ||M u|| is about 5000 eps times the
+    #      matrix-norm scale, which amplifies the relative residual
+    u = np.real(eigvecs[:, :2])
+    d = (np.linalg.norm(K @ u, axis=0)
+         + w2[:2]*np.linalg.norm(M @ u, axis=0))
+    scale = ((eigen._frobenius(K) + w2[:2]*eigen._frobenius(M))
+             *np.linalg.norm(u, axis=0))
+    assert np.all(d < 1e4*np.finfo(float).eps*scale)
+    res = eigen._relative_residuals(K, M, -w2, np.real(eigvecs),
+                                    rigid_rtol=eigen.RIGID_BODY_RTOL)
+    be = eigen._backward_errors(K, M, -w2, np.real(eigvecs))
+    assert np.all((res <= 1e-6) | (be <= eigen.BACKWARD_ERROR_RTOL))
+
+
+def test_check_freq_backward_error():
+    r"""The residual check of :func:`pyfe3d.solver.natural_frequency` on both
+    sides of ``BACKWARD_ERROR_RTOL``, with eigenvalues perturbed from the
+    dense eigenpairs: the lowest eigenpair of the cantilever pre-stressed to
+    0.9999 of its buckling load, `\omega_n^2` 1e-5 too large, relative
+    residual about 5e-6, backward error about 0.03 eps, is accepted; the
+    lowest eigenpairs of the blade-stiffened plate with penalty connections
+    of ``tests/data``, `\lambda` 0.1 % too low as the inaccurate eigenpairs
+    of ``eigsh()``, relative residuals about 5e-4, backward errors of 16 eps
+    and more, are rejected"""
+    import os
+    from scipy.sparse import load_npz
+
+    K0, KG, M = beam_cantilever()
+    mu, u = eigh(KG.toarray(), K0.toarray())
+    lambda_cr = -1/mu[0]
+    K = (K0 + 0.9999*lambda_cr*KG).tocsr()
+    mu, u = eigh(M.toarray(), K.toarray())
+    w2 = 1/mu[-1:]*(1 + 1e-5)
+    u = u[:, -1:]
+    res = eigen._relative_residuals(K, M, -w2, u,
+                                    rigid_rtol=eigen.RIGID_BODY_RTOL)
+    be = eigen._backward_errors(K, M, -w2, u)
+    assert np.all(res > 1e-6)
+    assert np.all(be <= 0.1*eigen.BACKWARD_ERROR_RTOL)
+    assert eigen._check_freq(K, M, w2, u, 1e-6, True) is None
+
+    data = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'data')
+    K = load_npz(os.path.join(data, 'blade_stiffened_penalty_K.npz')).tocsr()
+    KG = load_npz(os.path.join(data,
+                               'blade_stiffened_penalty_KG.npz')).tocsr()
+    mu, u = eigen._eigh_condensed(K, KG, 4)
+    lam = -1/mu
+    # NOTE (K + lam KG) u = 0 checked as (K - omega**2 M) u = 0
+    assert eigen._check_freq(K, -KG, lam, u, 1e-6, False) is None
+    lam = lam*(1 - 1e-3)
+    res = eigen._relative_residuals(K, KG, lam, u)
+    be = eigen._backward_errors(K, KG, lam, u)
+    assert np.all(res > 1e-4)
+    assert np.all(be >= 10*eigen.BACKWARD_ERROR_RTOL)
+    error = eigen._check_freq(K, -KG, lam, u, 1e-6, False)
+    assert 'relative residual' in error and 'backward error' in error
+
+
 def test_quad4_plate_prestress():
     r"""The Quad4 plate of ``test_solver.py`` under a compressive prestress
     `\lambda [K_G]`: the frequencies decrease with `\lambda`, and the

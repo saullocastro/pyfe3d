@@ -422,3 +422,36 @@ def test_warnings_shown_once():
             emit()
             complex_frequency(K, C, M, num_eigvalues=2)
     assert [str(w.message) for w in caught] == ['caller warning']
+
+
+@pytest.mark.parametrize('damping', [0., 1e-6])
+def test_near_buckling(damping):
+    r"""Regression test: the cantilever of
+    ``test_beamc_natural_freq_cantilever_pre_stress.py``, saved in
+    ``tests/data``, pre-stressed to 0.9999 of its buckling load, with
+    `[C] = c [K_{C0}]`: the lowest eigenpairs, `|\lambda| = 0.30`, have
+    relative residuals larger than the default ``check_rtol=1e-6`` but
+    backward errors at the round-off, see
+    :func:`pyfe3d.solver.eigen._quadratic_backward_errors`, and pass the
+    verification of the sparse solver without the dense fallback; with
+    `[C]` null, `\lambda = i \omega_n` of
+    :func:`pyfe3d.solver.natural_frequency`"""
+    from test_solver_natural_frequency import beam_cantilever
+    from pyfe3d.solver import linear_buckling
+
+    K0, KG, M = beam_cantilever()
+    lambda_cr = linear_buckling(K0, KG, num_eigvalues=1)[0][0]
+    K = (K0 + 0.9999*lambda_cr*KG).tocsr()
+    C = (damping*K0).tocsr()
+    with warnings.catch_warnings():
+        warnings.simplefilter('error', DenseFallbackWarning)
+        lam, U = complex_frequency(K, C, M, num_eigvalues=3,
+                                   max_dense_size=0)
+        omegan = natural_frequency(K, M, num_eigvalues=3,
+                                   max_dense_size=0)[0]
+    np.testing.assert_allclose(np.abs(lam), omegan, rtol=1e-4)
+    assert np.all(lam.imag > 0)
+    res = eigen._quadratic_residuals(K, C, M, lam, U,
+                                     rigid_rtol=eigen.RIGID_BODY_RTOL)
+    be = eigen._quadratic_backward_errors(K, C, M, lam, U)
+    assert np.all((res <= 1e-6) | (be <= eigen.BACKWARD_ERROR_RTOL))

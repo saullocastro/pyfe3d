@@ -145,6 +145,12 @@ INERTIA_COUNT_FACTOR = 1.e6
 #: |\omega_n^2| \, \|[M]\|_F)\|\{u\}\|`, 100 times the machine precision,
 #: see :func:`_relative_residuals`
 RIGID_BODY_RTOL = 100*np.finfo(float).eps
+#: An eigenpair of :func:`natural_frequency` or :func:`complex_frequency`
+#: whose relative residual is larger than ``check_rtol`` passes the residual
+#: check when its normwise backward error is not larger than this value, the
+#: machine precision, i.e. when it is accurate up to the round-off, see
+#: :func:`_backward_errors`
+BACKWARD_ERROR_RTOL = np.finfo(float).eps
 #: Minimum number of eigenvalues per step of the shift search of
 #: unsymmetric problems: few eigenvalues give small discs and many steps
 SHIFT_SEARCH_MIN_EIGVALUES = 6
@@ -516,7 +522,10 @@ def _relative_residuals(A, B, lam, u, rigid_rtol=None):
     spring `10^6` or `10^8` times stiffer than the others connects two
     chains, hence ``RIGID_BODY_RTOL``.
     :func:`check_eigenpairs` uses the relative residual only: a finite load
-    multiplier is never null.
+    multiplier is never null. The eigenpairs of :func:`natural_frequency`
+    whose relative residual is larger than ``check_rtol`` are also accepted
+    when their backward error is at the round-off, see
+    :func:`_backward_errors`.
 
     """
     Au = A @ u
@@ -531,6 +540,111 @@ def _relative_residuals(A, B, lam, u, rigid_rtol=None):
     residual = np.full(lam.shape, np.inf)
     np.divide(num, den, out=residual, where=den > 0)
     return residual
+
+
+def _backward_errors(A, B, lam, u):
+    r"""Normwise backward errors of the eigenpairs of `([A] + \lambda [B])
+    \{u\} = \{0\}`
+
+    Parameters
+    ----------
+    A, B : sparse_matrix or np.ndarray
+        Matrices, shape ``(n, n)``.
+    lam : array_like
+        Finite eigenvalues, real or complex, 1-D array of size ``k``.
+    u : array_like
+        Eigenvectors, shape ``(n, k)``.
+
+    Returns
+    -------
+    backward_error : np.ndarray
+        ``norm(A @ u + lam*(B @ u))`` divided by ``(norm_F(A) +
+        abs(lam)*norm_F(B))*norm(u)`` for each eigenpair, ``norm_F`` being
+        the Frobenius norm, dimensionless, ``inf`` when the denominator is
+        null.
+
+    Notes
+    -----
+    The normwise backward error of an approximate eigenpair `(\lambda,
+    \{u\})`
+
+    .. math::
+
+        \eta = \frac{\|[A]\{u\} + \lambda [B]\{u\}\|}{(\|[A]\|_F + |\lambda|
+        \, \|[B]\|_F) \|\{u\}\|}
+
+    is the smallest `\epsilon` such that `(\lambda, \{u\})` is an exact
+    eigenpair of `([A] + [\Delta A]) + \lambda ([B] + [\Delta B])` with
+    `\|[\Delta A]\| \le \epsilon \|[A]\|_F` and `\|[\Delta B]\| \le \epsilon
+    \|[B]\|_F` ([1]_, Theorem 1, Eq. (2.3), with the tolerances `\|[A]\|_F`
+    and `\|[B]\|_F`). The perturbations that attain it are of rank one, so
+    that their Frobenius norm is their 2-norm, and for symmetric matrices and
+    a real `\lambda` the minimum is the same with symmetric perturbations
+    ([1]_, Theorem 2).
+
+    The relative residual of :func:`_relative_residuals` is `\eta` times
+    `(\|[A]\|_F + |\lambda| \, \|[B]\|_F)\|\{u\}\|/(\|[A]\{u\}\| + |\lambda|
+    \, \|[B]\{u\}\|)`, a ratio that is large for an eigenvalue close to zero
+    of a nearly singular `[A]`, e.g. a natural frequency pre-stressed close
+    to buckling, whose eigenvalue is then sensitive to the round-off of the
+    entries of `[A]`. :func:`natural_frequency` accepts an eigenpair whose
+    relative residual is larger than ``check_rtol`` when `\eta \le`
+    ``BACKWARD_ERROR_RTOL`` `= \epsilon`, the machine precision: the
+    eigenpair is exact for matrices that differ from `[K]` and `[M]` by
+    perturbations of the order of the round-off of their entries, and it is
+    as accurate as the matrices allow; see :func:`_quadratic_backward_errors`
+    for :func:`complex_frequency`.
+
+    Measured with SciPy 1.17.1 and Intel MKL 2025.0.0 for the cantilever of
+    ``tests/test_beamc_natural_freq_cantilever_pre_stress.py``, pre-stressed
+    to 0.9999 of its buckling load, whose two lowest eigenvalues are
+    `\omega_n^2 = 0.0895`: the relative residuals of these eigenpairs are
+    `2.3 \cdot 10^{-6}` to `1.3 \cdot 10^{-5}`, larger than the default
+    ``check_rtol=1e-6``, with ``eigsh``, ``eigs`` and the dense solvers,
+    with and without the preconditioner, and `(\|[K]\{u\}\| + |\omega_n^2|
+    \, \|[M]\{u\}\|)/((\|[K]\|_F + |\omega_n^2| \, \|[M]\|_F)\|\{u\}\|) =
+    5.0 \cdot 10^3 \epsilon`, while their backward errors are `0.011
+    \epsilon` to `0.063 \epsilon`, i.e. ``BACKWARD_ERROR_RTOL`` is 16 times
+    the largest one. The inaccurate eigenpairs of ``eigsh`` for the lowest load
+    multipliers of the blade-stiffened panel with penalty connections of
+    ``tests/data/blade_stiffened_penalty_*.npz``, see
+    :func:`_relative_residuals`, and of six variants with other blade
+    heights, numbers of terms and 1000 times the penalty constants, have
+    relative residuals of `1.6 \cdot 10^{-3}` to `9.7 \cdot 10^{-2}` and
+    backward errors of `14 \epsilon` to `1200 \epsilon`: the smallest one is
+    14 times ``BACKWARD_ERROR_RTOL``, and they are rejected. The backward
+    error of an inaccurate eigenpair is its relative residual times the
+    ratio above, which decreases as the penalty constants increase; the
+    smallest one, `14 \epsilon`, was measured with 1000 times the penalty
+    constants of the panel of ``tests/data``.
+
+    :func:`check_eigenpairs` keeps the relative residual only. For the
+    cantilever above, with `[K] = [K_{C0}] + f \lambda_{cr} [K_G]`, the load
+    multipliers `(1 - f) \lambda_{cr}` close to zero of the dense solver
+    have relative residuals from `4.7 \cdot 10^{-7}` for `f = 0.9999` to
+    `5.1 \cdot 10^{-4}` for `f = 1 - 10^{-7}`, below the default
+    ``check_rtol=1e-3`` of :func:`linear_buckling`. With a tolerance of
+    `10^{-3}` the backward error would only accept eigenpairs whose ratio
+    above is lower than `1000 \epsilon`, the range of the penalty
+    connections with 1000 times the penalty constants, where the inaccurate
+    eigenpairs above lie.
+
+    References
+    ----------
+    .. [1] Tisseur, F., Backward error and condition of polynomial eigenvalue
+       problems, Linear Algebra and its Applications, 309(1-3), 339-361,
+       2000. https://doi.org/10.1016/S0024-3795(99)00063-4
+
+    """
+    Au = A @ u
+    Bu = B @ u
+    lam = np.asarray(lam)
+    num = np.linalg.norm(Au + Bu*lam, axis=0)
+    scale = (_frobenius(A) + np.abs(lam)*_frobenius(B)
+             )*np.linalg.norm(u, axis=0)
+    backward_error = np.full(lam.shape, np.inf)
+    np.divide(num, scale, out=backward_error, where=scale > 0)
+    return backward_error
 
 
 def check_eigenpairs(K, KG, eigvals, eigvecs, rtol=1.e-3, min_rel_gap=1.e-4,
@@ -1951,6 +2065,12 @@ def _check_freq(K, M, omega2, eigvecs, rtol, symmetric, min_rel_gap=1.e-4):
       \|M u\|` is not larger than ``RIGID_BODY_RTOL`` times the
       matrix-norm scale `(\|K\|_F + |\omega_n^2| \|M\|_F) \|u\|`, the
       residual is relative to this scale, see :func:`_relative_residuals`.
+      An eigenpair with a larger relative residual also passes when its
+      normwise backward error, the residual relative to the matrix-norm
+      scale, is not larger than ``BACKWARD_ERROR_RTOL``, the machine
+      precision, i.e. when it is accurate up to the round-off, e.g. an
+      eigenvalue close to zero of a model pre-stressed close to buckling,
+      see :func:`_backward_errors`.
     - With ``symmetric=True``, no eigenvalue is missing below the highest
       one returned, `\omega^2_k`: the number of negative pivots of `[K] - s
       [M]`, with `s = \omega^2_k - min\_rel\_gap |\omega^2_k|`, must be the
@@ -1971,10 +2091,15 @@ def _check_freq(K, M, omega2, eigvecs, rtol, symmetric, min_rel_gap=1.e-4):
     u = eigvecs[:, finite]
     w2 = omega2[finite]
     res = _relative_residuals(K, M, -w2, u, rigid_rtol=RIGID_BODY_RTOL)
-    if not np.all(res <= rtol):
-        i = int(np.argmax(np.nan_to_num(res, nan=np.inf)))
-        return ('relative residual %.2e > %.1e for the eigenvalue '
-                'omega**2=%r' % (res[i], rtol, w2[i]))
+    backward_error = _backward_errors(K, M, -w2, u)
+    failed = ~((res <= rtol) | (backward_error <= BACKWARD_ERROR_RTOL))
+    if np.any(failed):
+        i = int(np.argmax(np.where(failed, np.nan_to_num(res, nan=np.inf),
+                                   -np.inf)))
+        return ('relative residual %.2e > %.1e and backward error %.1e > '
+                '%.1e for the eigenvalue omega**2=%r'
+                % (res[i], rtol, backward_error[i], BACKWARD_ERROR_RTOL,
+                   w2[i]))
     if symmetric:
         w2 = np.real(w2)
         if not w2.size:
@@ -2069,9 +2194,10 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
     of computed frequencies is ``k = min(num_eigvalues, n - 2)``.
 
     The eigenpairs are verified, see :func:`_check_freq`: the relative
-    residual of each eigenpair must not be larger than ``check_rtol`` and,
-    for symmetric matrices, no eigenvalue lower than the highest one
-    returned may be missing. When the verification fails or the sparse
+    residual of each eigenpair must not be larger than ``check_rtol``,
+    unless its backward error is at the round-off, and, for symmetric
+    matrices, no eigenvalue lower than the highest one returned may be
+    missing. When the verification fails or the sparse
     solver raises an error, the dense solver of :func:`_dense_freq` is used
     as a last resort, with a :class:`DenseFallbackWarning`, see the solver
     policy of :mod:`pyfe3d.solver.eigen`.
@@ -2106,7 +2232,11 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
         fallback. Default ``True``.
     check_rtol : float, optional
         Largest acceptable relative residual of the eigenpairs,
-        dimensionless. Default ``1.e-6``.
+        dimensionless. An eigenpair with a larger one is also accepted when
+        its normwise backward error is not larger than
+        ``BACKWARD_ERROR_RTOL``, the machine precision, e.g. an eigenvalue
+        close to zero of a model pre-stressed close to buckling, see
+        :func:`_backward_errors`. Default ``1.e-6``.
     sparse_solver : bool, optional
         With ``False``, the full problem is solved with a dense solver,
         returning all the frequencies, without verification. Default
@@ -2312,6 +2442,67 @@ def _quadratic_residuals(K, C, M, lam, u, rigid_rtol=None):
     residual = np.full(lam.shape, np.inf)
     np.divide(num, den, out=residual, where=den > 0)
     return residual
+
+
+def _quadratic_backward_errors(K, C, M, lam, u):
+    r"""Normwise backward errors of the eigenpairs of `(\lambda^2 [M] +
+    \lambda [C] + [K])\{u\} = \{0\}`
+
+    Parameters
+    ----------
+    K, C, M : sparse_matrix or np.ndarray
+        Stiffness, damping and mass matrices, shape ``(n, n)``.
+    lam : array_like
+        Finite eigenvalues, real or complex, 1-D array of size ``k``.
+    u : array_like
+        Eigenvectors, shape ``(n, k)``.
+
+    Returns
+    -------
+    backward_error : np.ndarray
+        ``norm(lam**2*(M @ u) + lam*(C @ u) + K @ u)/((abs(lam)**2*norm_F(M)
+        + abs(lam)*norm_F(C) + norm_F(K))*norm(u))`` of each eigenpair,
+        ``norm_F`` being the Frobenius norm, dimensionless, ``inf`` when the
+        denominator is null.
+
+    Notes
+    -----
+    The quadratic counterpart of :func:`_backward_errors`, the normwise
+    backward error of [1]_ (Theorem 1, Eq. (2.3)) with the tolerances
+    `\|[K]\|_F`, `\|[C]\|_F` and `\|[M]\|_F`, see also [2]_ (Section 4.2,
+    Eq. (4.7), pp. 264-265). :func:`complex_frequency` accepts an eigenpair
+    whose relative residual of :func:`_quadratic_residuals` is larger than
+    ``check_rtol`` when its backward error is not larger than
+    ``BACKWARD_ERROR_RTOL``, the machine precision. Measured with SciPy
+    1.17.1 and Intel MKL 2025.0.0 for the cantilever of
+    ``tests/test_beamc_natural_freq_cantilever_pre_stress.py`` pre-stressed
+    to 0.9999 of its buckling load, with `[C]` null, `10^{-6} [K_{C0}]` or
+    `10^{-4} [K_{C0}] + 10^{-2} [M]`: the lowest eigenpairs of ``eigs`` on
+    the linearization, `|\lambda| = 0.30`, have relative residuals of `2.6
+    \cdot 10^{-6}` to `7.0 \cdot 10^{-6}`, larger than the default
+    ``check_rtol=1e-6``, and backward errors of `0.022 \epsilon` to `0.035
+    \epsilon`.
+
+    References
+    ----------
+    .. [1] Tisseur, F., Backward error and condition of polynomial eigenvalue
+       problems, Linear Algebra and its Applications, 309(1-3), 339-361,
+       2000. https://doi.org/10.1016/S0024-3795(99)00063-4
+    .. [2] Tisseur, F. and Meerbergen, K., The quadratic eigenvalue
+       problem, SIAM Review, 43(2), 235-286, 2001.
+       https://doi.org/10.1137/S0036144500381988
+
+    """
+    Ku = K @ u
+    Cu = C @ u
+    Mu = M @ u
+    lam = np.asarray(lam)
+    num = np.linalg.norm(Ku + Cu*lam + Mu*lam**2, axis=0)
+    scale = (_frobenius(K) + np.abs(lam)*_frobenius(C)
+             + np.abs(lam)**2*_frobenius(M))*np.linalg.norm(u, axis=0)
+    backward_error = np.full(lam.shape, np.inf)
+    np.divide(num, scale, out=backward_error, where=scale > 0)
+    return backward_error
 
 
 def _companion_vectors(K, C, M, lam, Z):
@@ -2596,19 +2787,27 @@ def _check_qep(K, C, M, lam, U, rtol):
     -----
     The relative residual of every eigenpair, see
     :func:`_quadratic_residuals` with ``rigid_rtol=RIGID_BODY_RTOL``, must
-    not be larger than ``rtol``. Whether an eigenvalue nearer the shift was
-    missed is not verified, see :func:`complex_frequency`.
+    not be larger than ``rtol``, unless its normwise backward error, see
+    :func:`_quadratic_backward_errors`, is not larger than
+    ``BACKWARD_ERROR_RTOL``, the machine precision. Whether an eigenvalue
+    nearer the shift was missed is not verified, see
+    :func:`complex_frequency`.
 
     """
     lam = np.asarray(lam)
     if not lam.size:
         return 'no eigenpair was found'
-    res = _quadratic_residuals(K, C, M, lam, np.asarray(U),
-                               rigid_rtol=RIGID_BODY_RTOL)
-    if not np.all(res <= rtol):
-        i = int(np.argmax(np.nan_to_num(res, nan=np.inf)))
-        return ('relative residual %.2e > %.1e for the eigenvalue lambda=%r'
-                % (res[i], rtol, lam[i]))
+    U = np.asarray(U)
+    res = _quadratic_residuals(K, C, M, lam, U, rigid_rtol=RIGID_BODY_RTOL)
+    backward_error = _quadratic_backward_errors(K, C, M, lam, U)
+    failed = ~((res <= rtol) | (backward_error <= BACKWARD_ERROR_RTOL))
+    if np.any(failed):
+        i = int(np.argmax(np.where(failed, np.nan_to_num(res, nan=np.inf),
+                                   -np.inf)))
+        return ('relative residual %.2e > %.1e and backward error %.1e > '
+                '%.1e for the eigenvalue lambda=%r'
+                % (res[i], rtol, backward_error[i], BACKWARD_ERROR_RTOL,
+                   lam[i]))
     return None
 
 
@@ -2642,7 +2841,8 @@ def complex_frequency(K, C, M, num_eigvalues=6, tol=0, sigma=None,
     the real ones, e.g. of overdamped modes, come first.
 
     The relative residual of each eigenpair must not be larger than
-    ``check_rtol``, see :func:`_check_qep`. When the verification fails or
+    ``check_rtol``, unless its backward error is at the round-off, see
+    :func:`_check_qep`. When the verification fails or
     the sparse solver raises an error, the dense solver of
     :func:`_dense_qep`, :func:`scipy.linalg.eig` on the linearization, is
     used as a last resort, with a :class:`DenseFallbackWarning`, see the
@@ -2680,7 +2880,10 @@ def complex_frequency(K, C, M, num_eigvalues=6, tol=0, sigma=None,
         fallback. Default ``True``.
     check_rtol : float, optional
         Largest acceptable relative residual of the eigenpairs,
-        dimensionless. Default ``1.e-6``.
+        dimensionless. An eigenpair with a larger one is also accepted when
+        its normwise backward error is not larger than
+        ``BACKWARD_ERROR_RTOL``, the machine precision, see
+        :func:`_quadratic_backward_errors`. Default ``1.e-6``.
     sparse_solver : bool, optional
         With ``False``, the full problem is solved with the dense solver,
         returning all the finite eigenvalues, one per complex conjugate

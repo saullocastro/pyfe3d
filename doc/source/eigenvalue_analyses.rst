@@ -126,6 +126,11 @@ Then:
   for symmetric matrices, the absence of an eigenvalue missed below the
   highest one returned, from the count of the negative pivots of a shifted
   matrix, see :func:`.check_eigenpairs` and :func:`.is_positive_definite`;
+  an eigenpair of :func:`.natural_frequency` or :func:`.complex_frequency`
+  whose relative residual is too large still passes when its backward
+  error is at the round-off, e.g. an eigenvalue close to zero of a model
+  pre-stressed close to buckling, see
+  :func:`pyfe3d.solver.eigen._backward_errors`;
   for the complex eigenvalues of :func:`.complex_frequency` no such count
   is implemented, and only the residuals are verified;
 - when the sparse solvers fail, a dense solver of SciPy is used as a last

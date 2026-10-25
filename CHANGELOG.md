@@ -86,6 +86,27 @@ depending on structsolve:
   residuals of 1 to 2 % and a lowest load multiplier 0.08 % too low; they
   are now rejected and computed with the dense fallback. New test data
   `tests/data/blade_stiffened_penalty_K.npz` and `_KG.npz`.
+- `natural_frequency()` and `complex_frequency()`: an eigenpair whose
+  relative residual is larger than `check_rtol` passes the verification
+  when its normwise backward error, `||K u - omega_n^2 M u||/((||K||_F +
+  |omega_n^2| ||M||_F) ||u||)`, or `||(lambda^2 M + lambda C + K) u||/
+  ((|lambda|^2 ||M||_F + |lambda| ||C||_F + ||K||_F) ||u||)`, is not larger
+  than `pyfe3d.solver.eigen.BACKWARD_ERROR_RTOL`, the machine precision,
+  i.e. when it is accurate up to the round-off, as in structsolve (issue
+  #49, structsolve issue #14). The genuine eigenpairs with an eigenvalue
+  close to zero of a nearly singular `K`, e.g. pre-stressed close to
+  buckling, failed the verification of the sparse solvers and of the dense
+  fallback, raising a `RuntimeError` unless a larger `check_rtol` was
+  given: for the cantilever of
+  `tests/test_beamc_natural_freq_cantilever_pre_stress.py` at 0.9999 of
+  its buckling load, `omega_n**2 = 0.0895` with relative residuals of
+  2.3e-6 to 1.3e-5 and backward errors of at most 0.063 times the machine
+  precision; the test no longer needs `check_rtol=1e-4`. The inaccurate
+  eigenpairs of the penalty models above, with backward errors of 14 times
+  the machine precision and more, are still rejected; `linear_buckling()`
+  and `check_eigenpairs()` keep the relative residual only. New
+  `pyfe3d.solver.eigen._backward_errors` and `_quadratic_backward_errors`,
+  and test data `tests/data/beam_cantilever_K.npz`, `_KG.npz` and `_M.npz`.
 
 ### Damped frequencies: `complex_frequency()`
 
