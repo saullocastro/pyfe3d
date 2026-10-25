@@ -72,15 +72,15 @@ and the strain energy
 
 .. math::
 
-    U = \frac{1}{2} \int_A \left( \{\epsilon\}^\top [A] \{\epsilon\}
-        + 2 \{\epsilon\}^\top [B] \{\kappa\}
-        + \{\kappa\}^\top [D] \{\kappa\}
-        + \{\gamma\}^\top [A_s] \{\gamma\} \right) dA + U_{r_z}
+    U = \frac{1}{2} \int_A \left( \boldsymbol{\epsilon}^\top \boldsymbol{A} \boldsymbol{\epsilon}
+        + 2 \boldsymbol{\epsilon}^\top \boldsymbol{B} \boldsymbol{\kappa}
+        + \boldsymbol{\kappa}^\top \boldsymbol{D} \boldsymbol{\kappa}
+        + \boldsymbol{\gamma}^\top \boldsymbol{A}_s \boldsymbol{\gamma} \right) dA + U_{r_z}
 
-with `\{\epsilon\} = \{\epsilon_{xx}, \epsilon_{yy}, \gamma_{xy}\}^\top`,
-`\{\kappa\} = \{\kappa_{xx}, \kappa_{yy}, \kappa_{xy}\}^\top`,
-`\{\gamma\} = \{\gamma_{yz}, \gamma_{xz}\}^\top`, `[A]`, `[B]` and `[D]` the
-laminate stiffness matrices and `[A_s]` the matrix of `A_{44}`, `A_{45}` and
+with `\boldsymbol{\epsilon} = \{\epsilon_{xx}, \epsilon_{yy}, \gamma_{xy}\}^\top`,
+`\boldsymbol{\kappa} = \{\kappa_{xx}, \kappa_{yy}, \kappa_{xy}\}^\top`,
+`\boldsymbol{\gamma} = \{\gamma_{yz}, \gamma_{xz}\}^\top`, `\boldsymbol{A}`, `\boldsymbol{B}` and `\boldsymbol{D}` the
+laminate stiffness matrices and `\boldsymbol{A}_s` the matrix of `A_{44}`, `A_{45}` and
 `A_{55}`, all in the element coordinate system, and `U_{r_z}` the drilling
 term described below. These are the rows of :meth:`.Quad4Probe.update_BL`.
 All DOF are interpolated bi-linearly between the nodes, such that any of the
@@ -936,7 +936,7 @@ cdef class Quad4:
         extensional stiffness matrix is used.
         Dimension of force per unit length, as ``A66``.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Entries `T_{ij}` of the transformation matrix `[T_{3\times 3}]` from
+        Entries `T_{ij}` of the transformation matrix `\boldsymbol{T}_{3\times 3}` from
         element to global coordinates, whose columns are the element axes.
     m11, m12, m21, m22 : double
         Rotation matrix only for the constitutive relations. Used when a
@@ -1047,7 +1047,7 @@ cdef class Quad4:
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated, with
-        the entries `T_{ij}` of the transformation matrix `[T_{3\times 3}]`
+        the entries `T_{ij}` of the transformation matrix `\boldsymbol{T}_{3\times 3}`
         from element to global coordinates, whose columns are the element axes.
 
         The element coordinate system is determined, identifying the `ijk`
@@ -1197,7 +1197,7 @@ cdef class Quad4:
 
         The displacements and rotations of the four nodes, read from ``u`` at
         the positions ``c1``, ``c2``, ``c3`` and ``c4``, are rotated to the
-        element coordinate system with the transpose `[T_{3\times 3}]^\top` of the
+        element coordinate system with the transpose `\boldsymbol{T}_{3\times 3}^\top` of the
         transformation matrix and written to ``probe.ue``.
         :meth:`.update_rotation_matrix` must have been called before.
 
@@ -1260,7 +1260,7 @@ cdef class Quad4:
 
         The coordinates of the four nodes, read from ``x`` at the positions
         ``c1//2``, ``c2//2``, ``c3//2`` and ``c4//2``, are rotated to the
-        element coordinate system with the transpose `[T_{3\times 3}]^\top` of the
+        element coordinate system with the transpose `\boldsymbol{T}_{3\times 3}^\top` of the
         transformation matrix and written to ``probe.xe``. :meth:`.update_area`
         is then called, updating ``area``. :meth:`.update_rotation_matrix` must
         have been called before.
@@ -1362,28 +1362,28 @@ cdef class Quad4:
         Notes
         -----
         The matrix is the Hessian of the strain energy of the Notes of
-        :mod:`pyfe3d.quad4`, ``KC0ve`` `= \sum w_{ij} \det J \, [B]^\top [C]
-        [B]`, with the rows `[B]` of :meth:`.Quad4Probe.update_BL` and the
-        constitutive matrices `[C]` of
+        :mod:`pyfe3d.quad4`, ``KC0ve`` `= \sum w_{ij} \det J \, \boldsymbol{B}^\top \boldsymbol{C}
+        \boldsymbol{B}`, with the rows `\boldsymbol{B}` of :meth:`.Quad4Probe.update_BL` and the
+        constitutive matrices `\boldsymbol{C}` of
         :meth:`pyfe3d.shellprop.ShellProp.get_constitutive_element`, rotated
         with ``m11, m12, m21, m22``. The terms and their quadratures are:
 
-        - membrane, `[B_m]^\top [A] [B_m]`, and membrane-bending coupling,
-          `[B_m]^\top [B] [B_b] + [B_b]^\top [B] [B_m]`, with the membrane rows
-          `[B_m]` of ``BLexx``, ``BLeyy``, ``BLgxy`` and the curvature rows
-          `[B_b]` of ``BLkxx``, ``BLkyy``, ``BLkxy``: three-by-three
+        - membrane, `\boldsymbol{B}_m^\top \boldsymbol{A} \boldsymbol{B}_m`, and membrane-bending coupling,
+          `\boldsymbol{B}_m^\top \boldsymbol{B} \boldsymbol{B}_b + \boldsymbol{B}_b^\top \boldsymbol{B} \boldsymbol{B}_m`, with the membrane rows
+          `\boldsymbol{B}_m` of ``BLexx``, ``BLeyy``, ``BLgxy`` and the curvature rows
+          `\boldsymbol{B}_b` of ``BLkxx``, ``BLkyy``, ``BLkxy``: three-by-three
           Gauss-Legendre quadrature with the enriched membrane rows when
           ``drilling_model`` is ``0``, two-by-two with the unenriched rows
           otherwise;
-        - bending, `[B_b]^\top [D] [B_b]`: two-by-two;
-        - transverse shear, `\{\gamma\}^\top [A_s] \{\gamma\}`, each strain
+        - bending, `\boldsymbol{B}_b^\top \boldsymbol{D} \boldsymbol{B}_b`: two-by-two;
+        - transverse shear, `\boldsymbol{\gamma}^\top \boldsymbol{A}_s \boldsymbol{\gamma}`, each strain
           being the sum of a gradient part, ``BLgyz_grad`` or
           ``BLgxz_grad``, and of a rotation part, ``BLgyz_rot`` or
           ``BLgxz_rot``: with `\ell = \sqrt{\text{area}}` and the thickness
           ``prop.h``, all the terms at the centroid, `\xi = \eta = 0` with
           weight 4, when `h/\ell < 1`; the gradient-gradient terms with
           two-by-two and the other terms at the centroid otherwise;
-        - drilling, `\gamma_{r_z} [B_{r_z}]^\top [B_{r_z}]` with the row
+        - drilling, `\gamma_{r_z} \boldsymbol{B}_{r_z}^\top \boldsymbol{B}_{r_z}` with the row
           ``BLdrilling``: for ``drilling_model = 0``, the enriched
           `\tilde{\boldsymbol{B}}_{r_z}` at the centroid, with `\gamma_{r_z}` equal to
           ``gamma_rz`` when it is not negative and to `A_{66}` otherwise; for
@@ -2061,9 +2061,9 @@ cdef class Quad4:
         -----
         The element matrix in element coordinates, ``KC0ve``, is computed by
         :meth:`._update_probe_KC0ve`, whose Notes give its terms and
-        quadratures. It is rotated to global coordinates with `[K_g] = [T]
-        [K_e] [T]^\top`, where `[T]` is block diagonal, with the matrix
-        `[T_{3\times 3}]` of the entries `T_{ij}` stored in ``r11, ..., r33``,
+        quadratures. It is rotated to global coordinates with `\boldsymbol{K}_g = \boldsymbol{T}
+        \boldsymbol{K}_e \boldsymbol{T}^\top`, where `\boldsymbol{T}` is block diagonal, with the matrix
+        `\boldsymbol{T}_{3\times 3}` of the entries `T_{ij}` stored in ``r11, ..., r33``,
         whose columns are the element axes, applied to the translations and to
         the rotations of each node.
 
@@ -2234,7 +2234,7 @@ cdef class Quad4:
           \gamma_{xy}`
         - ``BLkxx, BLkyy, BLkxy``: curvatures `\kappa_{xx}, \kappa_{yy},
           \kappa_{xy}`
-        - ``Gwx, Gwy``: `w_{,x}` and `w_{,y}`
+        - ``Gwx, Gwy``: `\boldsymbol{G}_x` and `\boldsymbol{G}_y`, the rows of `w_{,x}` and `w_{,y}`
 
         Returns
         -------
@@ -2403,20 +2403,24 @@ cdef class Quad4:
         KCNL = KC0L + KCL0 + KCLL + KGNL, see the Notes of
         :meth:`.update_KCNL`. At each integration point, with the rows of
         :meth:`._update_probe_BL_G`, the slopes `w_{,x}` and `w_{,y}` are
-        ``Gwx @ ue`` and ``Gwy @ ue``, the rows of `[B_{NL}]` are
-        `w_{,x}` ``Gwx``, `w_{,y}` ``Gwy`` and `w_{,x}` ``Gwy`` `+ w_{,y}`
-        ``Gwx``, and `\{N_{NL}\} = [A] \{w_{,x}^2/2, w_{,y}^2/2, w_{,x}
-        w_{,y}\}^\top`, such that
+        `\boldsymbol{G}_x \boldsymbol{u}_e` and `\boldsymbol{G}_y \boldsymbol{u}_e`, with the rows
+        `\boldsymbol{G}_x` ``Gwx`` and `\boldsymbol{G}_y` ``Gwy``, the rows of
+        `\boldsymbol{B}_{NL}` are `w_{,x} \boldsymbol{G}_x`, `w_{,y} \boldsymbol{G}_y` and
+        `w_{,x} \boldsymbol{G}_y + w_{,y} \boldsymbol{G}_x`, and `\boldsymbol{N}_{NL} =
+        \{N_{NL,xx}, N_{NL,yy}, N_{NL,xy}\}^\top = \boldsymbol{A} \{w_{,x}^2/2,
+        w_{,y}^2/2, w_{,x} w_{,y}\}^\top`, such that
 
         .. math::
 
-            K_{CNL} = \sum w_{ij} \det J \left( ([A][B_m] + [B][B_b])^\top [B_{NL}]
-                + [B_{NL}]^\top ([A][B_m] + [B][B_b])
-                + [B_{NL}]^\top [A] [B_{NL}] + [G]^\top [N_{NL}] [G] \right)
+            \boldsymbol{K}_{CNL} = \sum w_{ij} \det J \left( (\boldsymbol{A} \boldsymbol{B}_m + \boldsymbol{B} \boldsymbol{B}_b)^\top \boldsymbol{B}_{NL}
+                + \boldsymbol{B}_{NL}^\top (\boldsymbol{A} \boldsymbol{B}_m + \boldsymbol{B} \boldsymbol{B}_b)
+                + \boldsymbol{B}_{NL}^\top \boldsymbol{A} \boldsymbol{B}_{NL}
+                + N_{NL,xx} \boldsymbol{G}_x^\top \boldsymbol{G}_x
+                + N_{NL,yy} \boldsymbol{G}_y^\top \boldsymbol{G}_y
+                + N_{NL,xy} (\boldsymbol{G}_x^\top \boldsymbol{G}_y
+                + \boldsymbol{G}_y^\top \boldsymbol{G}_x) \right)
 
-        with `[G]` the rows ``Gwx`` and ``Gwy`` and `[N_{NL}]` the 2 by 2
-        matrix of `N_{NL,xx}`, `N_{NL,yy}` and `N_{NL,xy}`. `[A]` and `[B]`
-        are rotated with ``m11, m12, m21, m22``.
+        `\boldsymbol{A}` and `\boldsymbol{B}` are rotated with ``m11, m12, m21, m22``.
 
         """
         cdef int i, j, a
@@ -2517,20 +2521,20 @@ cdef class Quad4:
 
         Notes
         -----
-        With the nonlinear membrane strain `\{\epsilon_{NL}\} =
+        With the nonlinear membrane strain `\boldsymbol{\epsilon}_{NL} =
         \{w_{,x}^2/2, w_{,y}^2/2, w_{,x} w_{,y}\}^\top`, ``finte`` becomes the
         gradient of the strain energy whose Hessian is KC0 + KCNL + KG. At
         each integration point, with the rows of :meth:`._update_probe_BL_G`
-        and `[B_{NL}]` of :meth:`._update_probe_KCNLve`, the stress
-        resultants of the linear strains `\{N\} = [A]\{\epsilon\} +
-        [B]\{\kappa\}`, as in :meth:`.update_KG`, and those of the nonlinear
-        strain `\{N_{NL}\} = [A]\{\epsilon_{NL}\}` and `\{M_{NL}\} =
-        [B]\{\epsilon_{NL}\}`, the added terms are
+        and `\boldsymbol{B}_{NL}` of :meth:`._update_probe_KCNLve`, the stress
+        resultants of the linear strains `\boldsymbol{N} = \boldsymbol{A} \boldsymbol{\epsilon} +
+        \boldsymbol{B} \boldsymbol{\kappa}`, as in :meth:`.update_KG`, and those of the nonlinear
+        strain `\boldsymbol{N}_{NL} = \boldsymbol{A} \boldsymbol{\epsilon}_{NL}` and `\boldsymbol{M}_{NL} =
+        \boldsymbol{B} \boldsymbol{\epsilon}_{NL}`, the added terms are
 
         .. math::
 
-            \sum w_{ij} \det J \left( [B_m]^\top \{N_{NL}\} + [B_b]^\top \{M_{NL}\}
-                + [B_{NL}]^\top (\{N\} + \{N_{NL}\}) \right)
+            \sum w_{ij} \det J \left( \boldsymbol{B}_m^\top \boldsymbol{N}_{NL} + \boldsymbol{B}_b^\top \boldsymbol{M}_{NL}
+                + \boldsymbol{B}_{NL}^\top (\boldsymbol{N} + \boldsymbol{N}_{NL}) \right)
 
         """
         cdef int i, a
@@ -2682,15 +2686,19 @@ cdef class Quad4:
             \epsilon_{yy} = v_{,y} + \frac{1}{2} w_{,y}^2, \quad
             \gamma_{xy} = u_{,y} + v_{,x} + w_{,x} w_{,y}
 
-        whose nonlinear part is `\{\epsilon_{NL}\} = \frac{1}{2} [B_{NL}]
-        \{u_e\}`, with `[B_{NL}]` its variation. With `[B_m]` and `[B_b]` the
-        linear membrane and bending strain-displacement matrices, `[G]` the
-        gradient of `w`, and `[A]`, `[B]` the laminate matrices:
+        whose nonlinear part is `\boldsymbol{\epsilon}_{NL} = \frac{1}{2} \boldsymbol{B}_{NL}
+        \boldsymbol{u}_e`, with `\boldsymbol{B}_{NL}` its variation. With `\boldsymbol{B}_m` and `\boldsymbol{B}_b` the
+        linear membrane and bending strain-displacement matrices, `\boldsymbol{G}_x = \partial \boldsymbol{S}^w / \partial x` and `\boldsymbol{G}_y = \partial \boldsymbol{S}^w / \partial y`
+        the gradients of `w`, and `\boldsymbol{A}`, `\boldsymbol{B}` the laminate matrices:
 
-        - KC0L = `[B_m]^\top [A] [B_{NL}] + [B_b]^\top [B] [B_{NL}]`
+        - KC0L = `\boldsymbol{B}_m^\top \boldsymbol{A} \boldsymbol{B}_{NL} + \boldsymbol{B}_b^\top \boldsymbol{B} \boldsymbol{B}_{NL}`
         - KCL0 = KC0L`^\top`
-        - KCLL = `[B_{NL}]^\top [A] [B_{NL}]`
-        - KGNL = `[G]^\top [N_{NL}] [G]`, with `\{N_{NL}\} = [A] \{\epsilon_{NL}\}`
+        - KCLL = `\boldsymbol{B}_{NL}^\top \boldsymbol{A} \boldsymbol{B}_{NL}`
+        - KGNL = `N_{NL,xx} \boldsymbol{G}_x^\top \boldsymbol{G}_x + N_{NL,yy}
+          \boldsymbol{G}_y^\top \boldsymbol{G}_y + N_{NL,xy} (\boldsymbol{G}_x^\top
+          \boldsymbol{G}_y + \boldsymbol{G}_y^\top \boldsymbol{G}_x)`, with
+          `\boldsymbol{N}_{NL} = \{N_{NL,xx}, N_{NL,yy}, N_{NL,xy}\}^\top
+          = \boldsymbol{A} \boldsymbol{\epsilon}_{NL}`
 
         The first three groups are the constitutive terms coupling the linear and
         the nonlinear parts of the membrane strain. KGNL is geometric, carrying the
@@ -2699,7 +2707,7 @@ cdef class Quad4:
         which is what a linear buckling analysis needs. With it here,
 
         .. math::
-            K_T = K_{C0} + K_{CNL}(u) + K_G(u)
+            \boldsymbol{K}_T = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u}) + \boldsymbol{K}_G(\boldsymbol{u})
 
         is the exact Jacobian of the internal forces of :meth:`.update_fint` with
         ``nonlinear=1``, and a Newton-Raphson iteration built on them converges
@@ -2834,15 +2842,17 @@ cdef class Quad4:
 
         .. math::
 
-            K_G = \sum w_{ij} \det J \, [G]^\top
-            \begin{bmatrix} N_{xx} & N_{xy} \\ N_{xy} & N_{yy} \end{bmatrix}
-            [G]
+            \boldsymbol{K}_G = \sum w_{ij} \det J \left( N_{xx} \boldsymbol{G}_x^\top
+            \boldsymbol{G}_x + N_{yy} \boldsymbol{G}_y^\top \boldsymbol{G}_y
+            + N_{xy} (\boldsymbol{G}_x^\top \boldsymbol{G}_y
+            + \boldsymbol{G}_y^\top \boldsymbol{G}_x) \right)
 
-        with `[G]` the rows of `w_{,x}` and `w_{,y}` of
+        with `\boldsymbol{G}_x` and `\boldsymbol{G}_y` the rows of `w_{,x}`
+        and `w_{,y}` of
         :meth:`._update_probe_BL_G`, `w` being the displacement along the
         element normal, i.e. the combination of the global translations with
-        ``r13, r23, r33``, and `\{N_{xx}, N_{yy}, N_{xy}\}^\top = [A]\{\epsilon\}
-        + [B]\{\kappa\}` the stress resultants of the linear strains of the
+        ``r13, r23, r33``, and `\{N_{xx}, N_{yy}, N_{xy}\}^\top = \boldsymbol{A} \boldsymbol{\epsilon}
+        + \boldsymbol{B} \boldsymbol{\kappa}` the stress resultants of the linear strains of the
         Notes of :mod:`pyfe3d.quad4`. For ``drilling_model=0`` the membrane
         strains include those of the drilling enrichment of
         :func:`allman_enrichment`, without which KG would not be part of the
@@ -10234,14 +10244,14 @@ cdef class Quad4:
 
         .. math::
 
-            KA_{\beta} = -\int_A \{S\}^\top \left( T_{11} \{S_{,x}\}
-                + T_{12} \{S_{,y}\} \right) dA
+            \boldsymbol{KA}_{\beta} = -\int_A \boldsymbol{S}^\top \left( T_{11} \boldsymbol{S}_{,x}
+                + T_{12} \boldsymbol{S}_{,y} \right) dA
 
-        acting on the nodal values of `w_n`, where `\{S\}` holds the bilinear
-        shape functions and `\{S_{,x}\}`, `\{S_{,y}\}` their derivatives along
+        acting on the nodal values of `w_n`, where `\boldsymbol{S}` holds the bilinear
+        shape functions and `\boldsymbol{S}_{,x}`, `\boldsymbol{S}_{,y}` their derivatives along
         the element axes. The element coordinates are `x = T_{11} X + T_{21}
         Y + T_{31} Z` and `y = T_{12} X + T_{22} Y + T_{32} Z`, such that
-        `T_{11} \{S_{,x}\} + T_{12} \{S_{,y}\}` is the derivative along the
+        `T_{11} \boldsymbol{S}_{,x} + T_{12} \boldsymbol{S}_{,y}` is the derivative along the
         global `X` axis, the direction of the flow, projected on the plane of
         the element.
 
@@ -10261,14 +10271,14 @@ cdef class Quad4:
             q = -\beta \, w_{n,X} + \gamma \, w_n - \mu \, \dot{w}_n
 
         whichever side of the element the flow is on, because `q` and `w_n`
-        change sign together. The load vector is then `\{f_A\} = \beta
-        [KA_{\beta}] \{u\} + \gamma [KA_{\gamma}] \{u\} + \mu [CA]
-        \{\dot{u}\}` and the equations of motion are
+        change sign together. The load vector is then `\boldsymbol{f}_A = \beta
+        \boldsymbol{KA}_{\beta} \boldsymbol{u} + \gamma \boldsymbol{KA}_{\gamma} \boldsymbol{u} + \mu \boldsymbol{CA}
+        \dot{\boldsymbol{u}}` and the equations of motion are
 
         .. math::
 
-            [M] \{\ddot{u}\} - \mu [CA] \{\dot{u}\} + \left([K] - \beta
-            [KA_{\beta}] - \gamma [KA_{\gamma}]\right) \{u\} = \{0\}
+            \boldsymbol{M} \ddot{\boldsymbol{u}} - \mu \boldsymbol{CA} \dot{\boldsymbol{u}} + \left(\boldsymbol{K} - \beta
+            \boldsymbol{KA}_{\beta} - \gamma \boldsymbol{KA}_{\gamma}\right) \boldsymbol{u} = \boldsymbol{0}
 
         The coefficients are given by the caller; with the density
         `\rho_{\infty}`, speed `U` and Mach number `M` of the flow, `\beta =
@@ -11127,13 +11137,13 @@ cdef class Quad4:
 
         .. math::
 
-            KA_{\gamma} = \int_A \{S\}^\top \{S\} dA
+            \boldsymbol{KA}_{\gamma} = \int_A \boldsymbol{S}^\top \boldsymbol{S} dA
 
         acting on the nodal values of `w_n`. With the piston-theory
-        coefficient `\gamma` given by the caller, `\gamma [KA_{\gamma}]
-        \{u\}` is the load of the term `\gamma w_n` of the pressure law, which
+        coefficient `\gamma` given by the caller, `\gamma \boldsymbol{KA}_{\gamma}
+        \boldsymbol{u}` is the load of the term `\gamma w_n` of the pressure law, which
         enters the stiffness of the equations of motion as `-\gamma
-        [KA_{\gamma}]`, see the piston theory in the notes of
+        \boldsymbol{KA}_{\gamma}`, see the piston theory in the notes of
         :meth:`.update_KA_beta`.
 
         """
@@ -11957,13 +11967,13 @@ cdef class Quad4:
 
         .. math::
 
-            CA = -\int_A \{S\}^\top \{S\} dA
+            \boldsymbol{CA} = -\int_A \boldsymbol{S}^\top \boldsymbol{S} dA
 
         acting on the nodal values of the velocity `\dot w_n`. With the
         piston-theory damping coefficient `\mu` given by the caller, `\mu
-        [CA] \{\dot{u}\}` is the load of the term `-\mu \dot{w}_n` of the
+        \boldsymbol{CA} \dot{\boldsymbol{u}}` is the load of the term `-\mu \dot{w}_n` of the
         pressure law, which enters the damping of the equations of motion as
-        `-\mu [CA]`, positive definite, see the piston theory in the notes of
+        `-\mu \boldsymbol{CA}`, positive definite, see the piston theory in the notes of
         :meth:`.update_KA_beta`.
 
         """

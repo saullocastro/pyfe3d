@@ -758,7 +758,7 @@ cdef void _rotate_ply(double *pd, double m11, double m12, double m21,
 
     Notes
     -----
-    With `\{v\}_e = [[m_{11}, m_{12}], [m_{21}, m_{22}]] \{v\}_m` for the
+    With `\boldsymbol{v}_e = [[m_{11}, m_{12}], [m_{21}, m_{22}]] \boldsymbol{v}_m` for the
     in-plane vectors, the plane-stress stiffness `C = [[q_{11L}, q_{12L},
     q_{16L}], [q_{12L}, q_{22L}, q_{26L}], [q_{16L}, q_{26L}, q_{66L}]]` and
     the transverse shear stiffness `C_s = [[q_{44L}, q_{45L}], [q_{45L},
@@ -1565,8 +1565,8 @@ cdef class ShellProp:
 
         Notes
         -----
-        ``A``, ``B`` and ``D`` are rotated with `[A]_e = [T_\sigma] [A]
-        [T_\sigma]^\top`, with `T_\sigma` of :func:`_rotate_ply`. Without the
+        ``A``, ``B`` and ``D`` are rotated with `\boldsymbol{A}_e = \boldsymbol{T}_\sigma \boldsymbol{A}
+        \boldsymbol{T}_\sigma^\top`, with `\boldsymbol{T}_\sigma` of :func:`_rotate_ply`. Without the
         Fourier coefficients of :meth:`.calc_Ats_element`, ``Ats`` is rotated
         with `T_s A_{ts} T_s^\top`, `T_s = [[m_{22}, m_{21}], [m_{12},
         m_{11}]]`. With them, the compliance `S = A_{ts}^{-1}` is evaluated

@@ -3,12 +3,12 @@ Non-linear static analyses
 
 The geometrically non-linear static analyses are run with
 :class:`.Analysis`, which receives four callables of the model and finds
-the configurations `\{u\}` in equilibrium with the external load scaled by
+the configurations `\boldsymbol{u}` in equilibrium with the external load scaled by
 the load factor `\lambda`:
 
 .. math::
 
-    \{R(u, \lambda)\} = \lambda \{F_{ext}\} - \{F_{int}(u)\} = \{0\}
+    \boldsymbol{R}(\boldsymbol{u}, \lambda) = \lambda \boldsymbol{F}_{ext} - \boldsymbol{F}_{int}(\boldsymbol{u}) = \boldsymbol{0}
 
 The elements give the terms of the residual and of its Jacobian, the
 solvers of :mod:`pyfe3d.solver` the increments and the iterations.
@@ -24,21 +24,21 @@ From the elements to the callables
       - Returns
       - With the elements
     * - ``calc_fext(inc=1., silent=True)``
-      - `\{F_{ext}\}`, scaled by ``inc``
+      - `\boldsymbol{F}_{ext}`, scaled by ``inc``
       - the nodal loads of the model
     * - ``calc_fint(c, silent=True)``
-      - `\{F_{int}(c)\}`
+      - `\boldsymbol{F}_{int}(\boldsymbol{c})`
       - ``update_fint(fint, prop, nonlinear=1)`` of every element, after
         ``update_probe_xe(x)`` and ``update_probe_ue(c)``
     * - ``calc_kC(c=None, NLgeom=False, silent=True)``
-      - `[K_{C0}]`, or `[K_{C0}] + [K_{CNL}(c)]` with ``NLgeom=True``
+      - `\boldsymbol{K}_{C0}`, or `\boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{c})` with ``NLgeom=True``
       - ``update_KC0`` once, ``update_KCNL`` at ``c``
     * - ``calc_kG(c=None, NLgeom=False, silent=True)``
-      - `[K_G(c)]`
+      - `\boldsymbol{K}_G(\boldsymbol{c})`
       - ``update_KG`` at ``c``
 
 ``calc_kC() + calc_kG()`` is then the exact Jacobian of ``calc_fint``,
-`[K_T] = -\partial R/\partial u`, and the full Newton-Raphson method
+`\boldsymbol{K}_T = -\partial \boldsymbol{R}/\partial \boldsymbol{u}`, and the full Newton-Raphson method
 converges quadratically. The class ``Model`` of
 ``tests/test_solver_nonlinear_static.py``, see :doc:`ex_nonlinear_static`,
 wraps a list of elements of one type into these four callables.
@@ -55,7 +55,7 @@ and :class:`.FreeDofs` restricts them to the free dofs ``bu``. The solution
 vectors ``an.cs`` have size ``N``, with zeros at the constrained dofs.
 
 With ``uk``, the constrained dofs have the prescribed displacements
-`\lambda \{u_k\}`, imposed exactly, proportional to the load factor:
+`\lambda \boldsymbol{u}_k`, imposed exactly, proportional to the load factor:
 ``uk[~bu]`` are the values at `\lambda = 1`, and a load-free analysis,
 ``calc_fext`` returning zeros, is displacement controlled. The reaction at
 a prescribed dof is ``calc_fint(u)`` at that dof minus the load applied
@@ -102,7 +102,7 @@ detected with::
         ...  # stopped at increments[-1], see the log messages
 
 The linear static analysis, ``an.static(NLgeom=False)``, solves
-`[K_{C0}]\{u\} = \{F_{ext}\}` with :func:`.solve` and returns a single
+`\boldsymbol{K}_{C0} \boldsymbol{u} = \boldsymbol{F}_{ext}` with :func:`.solve` and returns a single
 increment.
 
 
@@ -118,8 +118,8 @@ to ``an.convergence``, see :mod:`.convergence`:
 
   .. math::
 
-      \zeta = \frac{\|R\|_{\boldsymbol{d}}}{\max(
-      \|\lambda F_{ext}\|_{\boldsymbol{d}}, \|F_{int}\|_{\boldsymbol{d}},
+      \zeta = \frac{\|\boldsymbol{R}\|_{\boldsymbol{d}}}{\max(
+      \|\lambda \boldsymbol{F}_{ext}\|_{\boldsymbol{d}}, \|\boldsymbol{F}_{int}\|_{\boldsymbol{d}},
       \ldots)} \le \text{relTOL}, \qquad
       \|v\|_{\boldsymbol{d}} = \sqrt{\sum_j v_j^2/|d_j|}
 
@@ -137,9 +137,9 @@ iteration has also converged at the round-off floor of the residual,
 
 .. math::
 
-    \|R\|_{\boldsymbol{d}} \le 3 \varepsilon \, \| |K_{C0}| \, |u| \|_{\boldsymbol{d}}
+    \|\boldsymbol{R}\|_{\boldsymbol{d}} \le 3 \varepsilon \, \| |\boldsymbol{K}_{C0}| \, |\boldsymbol{u}| \|_{\boldsymbol{d}}
 
-with `\varepsilon` the machine precision, `|K_{C0}|` and `|u|` the
+with `\varepsilon` the machine precision, `|\boldsymbol{K}_{C0}|` and `|\boldsymbol{u}|` the
 elementwise absolute values of the linear stiffness matrix and of the
 displacements of the free dofs, and the Euclidean norm with
 ``'relative'``, see :func:`.roundoff_floor`: the residual cannot be
@@ -163,28 +163,28 @@ arguments, passed only to the callables that declare them, see
 :mod:`.callbacks`:
 
 - ``calc_fint(c, inc=...)`` receives the load factor and includes the
-  configuration-dependent part of the load, `-\lambda \{F(c)\}`, and
+  configuration-dependent part of the load, `-\lambda \boldsymbol{F}(\boldsymbol{c})`, and
   ``calc_kC(c, NLgeom=True, inc=...)`` its derivative, the load stiffness
-  matrix `\lambda [K_F] = -\lambda \, \partial F/\partial c`, which is
+  matrix `\lambda \boldsymbol{K}_F = -\lambda \, \partial \boldsymbol{F}/\partial \boldsymbol{c}`, which is
   unsymmetric in general, see below; the solvers use LU factorizations;
 - ``calc_fext(inc=1., c=...)`` returns the load vector of the
-  configuration ``c`` for a unit load factor, `\partial R/\partial
+  configuration ``c`` for a unit load factor, `\partial \boldsymbol{R}/\partial
   \lambda`, used by the arc-length methods.
 
 The aerodynamic load of the piston theory, `\lambda \beta
-[K_{A\beta}]\{u\}`, with ``update_KA_beta`` of :class:`.Quad4R` or
+\boldsymbol{K}_{A\beta} \boldsymbol{u}`, with ``update_KA_beta`` of :class:`.Quad4R` or
 :class:`.Quad4`, is such a load, see ``test_piston_theory_load_unsymmetric_tangent``
 in :doc:`ex_nonlinear_static`. The keyword argument ``lbd`` of
 ``calc_fext`` gives a load vector that depends on the load factor, which is
 how :class:`.FreeDofs` imposes the prescribed displacements.
 
-`[K_F]` is symmetric, and the load conservative, only in particular cases.
+`\boldsymbol{K}_F` is symmetric, and the load conservative, only in particular cases.
 For a pressure normal to the deformed surface, Hibbitt (1979, p. 938)
 splits the load stiffness of a uniform pressure into a symmetric surface
 integral and an antisymmetric integral along the boundary of the loaded
 surface, which vanishes where the displacements are prescribed: a uniform
 pressure on a fully enclosed volume, or on a surface whose boundaries have
-prescribed displacements, gives a symmetric `[K_F]`, whereas free edges,
+prescribed displacements, gives a symmetric `\boldsymbol{K}_F`, whereas free edges,
 where the pressure changes, and a non-uniform pressure give unsymmetric
 terms (p. 939). In Table 2 of Schweizerhof and Ramm (1984), the domain
 terms are symmetric for a uniform pressure, and for a non-uniform one only
@@ -194,9 +194,9 @@ pressure is zero on the whole boundary; at least two displacement
 components are prescribed at the edge; the edge is restrained normal to a
 continuous surface, e.g. the undeformed surface, `w = 0` for a plate on
 the `XY` plane; or the boundary terms add up to zero. pyfe3d does not
-symmetrise `[K_F]`: the tangent stiffness matrix, with the matrix returned
+symmetrise `\boldsymbol{K}_F`: the tangent stiffness matrix, with the matrix returned
 by ``calc_kC``, is factorized with :func:`scipy.sparse.linalg.splu`, as in
-:func:`.solve`, such that a consistent unsymmetric `[K_F]` keeps the
+:func:`.solve`, such that a consistent unsymmetric `\boldsymbol{K}_F` keeps the
 quadratic convergence of the Newton-Raphson method, as verified by
 ``test_newton_raphson_quadratic_with_follower_load`` of
 ``tests/test_solver_follower_loads.py``.

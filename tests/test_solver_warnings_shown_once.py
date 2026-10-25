@@ -38,7 +38,7 @@ def symmetric_problem():
 
 def unsymmetric_problem():
     r"""``K`` and an unsymmetric ``KG`` with null rows and columns, of an
-    upper triangular `[K]^{-1}[K_G]` with the load multipliers ``1, 2,
+    upper triangular `\boldsymbol{K}^{-1} \boldsymbol{K}_G` with the load multipliers ``1, 2,
     ...``"""
     K = diags(np.arange(1., N + 1)).tocsr()
     KG = -np.eye(N) + 0.05*np.triu(np.ones((N, N)), k=1)

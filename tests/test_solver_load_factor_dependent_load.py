@@ -7,18 +7,18 @@ constraint is imposed exactly, by a null-space reduction:
 
 .. math::
 
-    \{c\} = [Z]\{c_r\} + \{c_{p0}\} + \lambda \{c_{p1}\}, \qquad
-    [Z] = \begin{bmatrix} 1 & 0 \\ 0 & 1 \\ 0 & 0 \end{bmatrix}, \qquad
-    \{c_{p0}\} = \{0, 0, d_0\}, \qquad \{c_{p1}\} = \{0, 0, d_1\}
+    \boldsymbol{c} = \boldsymbol{Z} \boldsymbol{c}_r + \boldsymbol{c}_{p0} + \lambda \boldsymbol{c}_{p1}, \qquad
+    \boldsymbol{Z} = \begin{bmatrix} 1 & 0 \\ 0 & 1 \\ 0 & 0 \end{bmatrix}, \qquad
+    \boldsymbol{c}_{p0} = \{0, 0, d_0\}, \qquad \boldsymbol{c}_{p1} = \{0, 0, d_1\}
 
 such that the reduced problem has two degrees of freedom and the residual
 
 .. math::
 
-    \{R_r(c_r, \lambda)\} = [Z]^\top \left(\lambda \{F_{ext}\} -
-    \{F_{int}(c)\}\right), \qquad
-    \frac{\partial R_r}{\partial \lambda} = [Z]^\top \left(\{F_{ext}\} -
-    [K_T(c)] \{c_{p1}\}\right)
+    \boldsymbol{R}_r(\boldsymbol{c}_r, \lambda) = \boldsymbol{Z}^\top \left(\lambda \boldsymbol{F}_{ext} -
+    \boldsymbol{F}_{int}(\boldsymbol{c})\right), \qquad
+    \frac{\partial \boldsymbol{R}_r}{\partial \lambda} = \boldsymbol{Z}^\top \left(\boldsymbol{F}_{ext} -
+    \boldsymbol{K}_T(\boldsymbol{c}) \boldsymbol{c}_{p1}\right)
 
 whose derivative with respect to the load factor depends on the
 configuration and on the load factor, passed to :class:`pyfe3d.solver.Analysis`
@@ -79,8 +79,8 @@ class SpringsProblem(object):
         return Z.T @ (self.Fext - self.kT_full(c) @ self.cp1)
 
     def reaction(self, c_r, lbd):
-        r"""Force of the support on node 3, `c_{p1}^\top r / d_1`, with `r =
-        F_{int}(c) - \lambda F_{ext}`"""
+        r"""Force of the support on node 3, `\boldsymbol{c}_{p1}^\top \boldsymbol{r} / d_1`, with `\boldsymbol{r} =
+        \boldsymbol{F}_{int}(\boldsymbol{c}) - \lambda \boldsymbol{F}_{ext}`"""
         c = self.full(c_r, lbd)
         r = self.fint_full(c) - lbd*self.Fext
         return self.cp1 @ r/self.cp1[2]
@@ -234,7 +234,7 @@ def test_displacement_control_without_lbd_does_not_converge(monkeypatch):
 
 def test_newton_raphson_first_predictor_is_linear_solution():
     r"""With linear springs the predictor of the first increment,
-    `[K_{C0}]^{-1} \partial R/\partial \lambda`, is the solution: each
+    `\boldsymbol{K}_{C0}^{-1} \partial \boldsymbol{R}/\partial \lambda`, is the solution: each
     increment converges at its first evaluation of the residual"""
     pb = SpringsProblem(a=(0., 0., 0.), d1=0.5)
     an = pb.analysis(initialInc=0.3, relTOL=1e-12)
@@ -255,7 +255,7 @@ def orders(errors, floor=1e-12):
 
 def test_riks_quadratic_with_load_factor_dependent_load_vector():
     r"""The bordered system of Riks is Newton-Raphson applied to the
-    augmented system with the exact `\partial R/\partial \lambda`"""
+    augmented system with the exact `\partial \boldsymbol{R}/\partial \lambda`"""
     pb = SpringsProblem(k=(10., 15., 20.), a=(200., 400., 600.), d1=1.)
     an = pb.analysis(NL_method='arc_length_riks', initialInc=0.5,
                      relTOL=1e-13, maxNumIter=60)
@@ -289,8 +289,8 @@ def test_constant_and_incremented_prescriptions(method):
                                     'arc_length_crisfield'])
 def test_null_load_vector_at_the_origin(method):
     r"""The last spring is purely cubic, `f_3 = a_3 e^3`, such that
-    `\partial R/\partial \lambda = 0` at `c = 0`, `\lambda = 0`: the
-    reference of the relative criterion is `\lambda \partial R/\partial
+    `\partial \boldsymbol{R}/\partial \lambda = 0` at `\boldsymbol{c} = \boldsymbol{0}`, `\lambda = 0`: the
+    reference of the relative criterion is `\lambda \partial \boldsymbol{R}/\partial
     \lambda` at the current iterate, not at the origin"""
     pb = SpringsProblem(k=(100., 150., 0.), a=(20., 40., 600.), d1=0.5)
     assert np.linalg.norm(pb.dR_dlbd(np.zeros(2), 0.)) == 0.

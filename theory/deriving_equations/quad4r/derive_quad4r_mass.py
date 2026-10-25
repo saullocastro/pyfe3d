@@ -5,7 +5,7 @@ This script generates no code. It prints:
 - the integrals through the thickness, per unit density, ``intrho``,
   ``intrhoz`` and ``intrhoz2`` of ShellProp, for a reference surface at the
   distance ``offset`` from the mid-surface;
-- the matrix `h_{ij} = \int_A N_i N_j dA` of the bilinear quadrilateral
+- the matrix `h_{ij} = \int_A S_i S_j dA` of the bilinear quadrilateral
   computed with the Gauss rules of `n` points in each direction of the
   natural coordinates `\xi, \eta \in [-1, 1]`, whose weights sum to 2, and
   the Jacobian determinant of the element, for a rectangle and for a

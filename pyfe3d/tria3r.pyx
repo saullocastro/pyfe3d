@@ -807,7 +807,7 @@ cdef class Tria3R:
         rather than for normal use.
         Dimension of force per unit length, as ``A66``.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Entries `T_{ij}` of the transformation matrix `[T_{3\times 3}]` from
+        Entries `T_{ij}` of the transformation matrix `\boldsymbol{T}_{3\times 3}` from
         element to global coordinates, whose columns are the element axes.
     m11, m12, m21, m22 : double
         Rotation matrix only for the constitutive relations. Used when a
@@ -964,7 +964,7 @@ cdef class Tria3R:
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated, with
-        the entries `T_{ij}` of the transformation matrix `[T_{3\times 3}]`
+        the entries `T_{ij}` of the transformation matrix `\boldsymbol{T}_{3\times 3}`
         from element to global coordinates, whose columns are the element axes.
 
         The element coordinate system is determined, identifying the `ijk`
@@ -1110,7 +1110,7 @@ cdef class Tria3R:
 
         The displacements and rotations of the three nodes, read from ``u`` at
         the positions ``c1``, ``c2`` and ``c3``, are rotated to the element
-        coordinate system with the transpose `[T_{3\times 3}]^\top` of the
+        coordinate system with the transpose `\boldsymbol{T}_{3\times 3}^\top` of the
         transformation matrix and written to ``probe.ue``.
         :meth:`.update_rotation_matrix` must have been called before.
 
@@ -1172,7 +1172,7 @@ cdef class Tria3R:
 
         The coordinates of the three nodes, read from ``x`` at the positions
         ``c1//2``, ``c2//2`` and ``c3//2``, are rotated to the element
-        coordinate system with the transpose `[T_{3\times 3}]^\top` of the
+        coordinate system with the transpose `\boldsymbol{T}_{3\times 3}^\top` of the
         transformation matrix and written to ``probe.xe``. :meth:`.update_area`
         is then called, updating ``area``. :meth:`.update_rotation_matrix` must
         have been called before.
@@ -3807,7 +3807,7 @@ cdef class Tria3R:
           \gamma_{xy}`
         - ``BLkxx, BLkyy, BLkxy``: curvatures `\kappa_{xx}, \kappa_{yy},
           \kappa_{xy}`
-        - ``Gwx, Gwy``: `w_{,x}` and `w_{,y}`
+        - ``Gwx, Gwy``: `\boldsymbol{G}_x` and `\boldsymbol{G}_y`, the rows of `w_{,x}` and `w_{,y}`
 
         With ``drilling_model = 0`` the membrane rows also carry, in their
         drilling columns, the Allman enrichment evaluated at the centroid,
@@ -4069,19 +4069,19 @@ cdef class Tria3R:
 
         Notes
         -----
-        With the von Karman membrane strain `\{\epsilon_{NL}\} = \{w_{,x}^2/2,
-        w_{,y}^2/2, w_{,x} w_{,y}\}^\top`, the linear stress resultants `\{N\} =
-        [A]\{\epsilon\} + [B]\{\kappa\}`, and `\{N_{NL}\} =
-        [A]\{\epsilon_{NL}\}`, `\{M_{NL}\} = [B]\{\epsilon_{NL}\}`, the terms
+        With the von Karman membrane strain `\boldsymbol{\epsilon}_{NL} = \{w_{,x}^2/2,
+        w_{,y}^2/2, w_{,x} w_{,y}\}^\top`, the linear stress resultants `\boldsymbol{N} =
+        \boldsymbol{A} \boldsymbol{\epsilon} + \boldsymbol{B} \boldsymbol{\kappa}`, and `\boldsymbol{N}_{NL} =
+        \boldsymbol{A} \boldsymbol{\epsilon}_{NL}`, `\boldsymbol{M}_{NL} = \boldsymbol{B} \boldsymbol{\epsilon}_{NL}`, the terms
         added are
 
         .. math::
 
-            A_e \left( [B_m]^\top \{N_{NL}\} + [B_b]^\top \{M_{NL}\}
-            + [B_{NL}]^\top (\{N\} + \{N_{NL}\}) \right)
+            A_e \left( \boldsymbol{B}_m^\top \boldsymbol{N}_{NL} + \boldsymbol{B}_b^\top \boldsymbol{M}_{NL}
+            + \boldsymbol{B}_{NL}^\top (\boldsymbol{N} + \boldsymbol{N}_{NL}) \right)
 
-        with `A_e` the element area and `[B_{NL}]` the variation of
-        `\{\epsilon_{NL}\}`, see :meth:`.update_KCNL`, such that ``finte``
+        with `A_e` the element area and `\boldsymbol{B}_{NL}` the variation of
+        `\boldsymbol{\epsilon}_{NL}`, see :meth:`.update_KCNL`, such that ``finte``
         becomes the gradient of the strain energy whose Hessian is
         KC0 + KCNL + KG. The rows are those of :meth:`._update_probe_BL_G`, integrated
         with one point, as in :meth:`.update_KG`, the strains being constant
@@ -4231,15 +4231,19 @@ cdef class Tria3R:
             \epsilon_{yy} = v_{,y} + \frac{1}{2} w_{,y}^2, \quad
             \gamma_{xy} = u_{,y} + v_{,x} + w_{,x} w_{,y}
 
-        whose nonlinear part is `\{\epsilon_{NL}\} = \frac{1}{2} [B_{NL}]
-        \{u_e\}`, with `[B_{NL}]` its variation. With `[B_m]` and `[B_b]` the
-        linear membrane and bending strain-displacement matrices, `[G]` the
-        gradient of `w`, and `[A]`, `[B]` the laminate matrices:
+        whose nonlinear part is `\boldsymbol{\epsilon}_{NL} = \frac{1}{2} \boldsymbol{B}_{NL}
+        \boldsymbol{u}_e`, with `\boldsymbol{B}_{NL}` its variation. With `\boldsymbol{B}_m` and `\boldsymbol{B}_b` the
+        linear membrane and bending strain-displacement matrices, `\boldsymbol{G}_x = \partial \boldsymbol{S}^w / \partial x` and `\boldsymbol{G}_y = \partial \boldsymbol{S}^w / \partial y`
+        the gradients of `w`, and `\boldsymbol{A}`, `\boldsymbol{B}` the laminate matrices:
 
-        - KC0L = `[B_m]^\top [A] [B_{NL}] + [B_b]^\top [B] [B_{NL}]`
+        - KC0L = `\boldsymbol{B}_m^\top \boldsymbol{A} \boldsymbol{B}_{NL} + \boldsymbol{B}_b^\top \boldsymbol{B} \boldsymbol{B}_{NL}`
         - KCL0 = KC0L`^\top`
-        - KCLL = `[B_{NL}]^\top [A] [B_{NL}]`
-        - KGNL = `[G]^\top [N_{NL}] [G]`, with `\{N_{NL}\} = [A] \{\epsilon_{NL}\}`
+        - KCLL = `\boldsymbol{B}_{NL}^\top \boldsymbol{A} \boldsymbol{B}_{NL}`
+        - KGNL = `N_{NL,xx} \boldsymbol{G}_x^\top \boldsymbol{G}_x + N_{NL,yy}
+          \boldsymbol{G}_y^\top \boldsymbol{G}_y + N_{NL,xy} (\boldsymbol{G}_x^\top
+          \boldsymbol{G}_y + \boldsymbol{G}_y^\top \boldsymbol{G}_x)`, with
+          `\boldsymbol{N}_{NL} = \{N_{NL,xx}, N_{NL,yy}, N_{NL,xy}\}^\top
+          = \boldsymbol{A} \boldsymbol{\epsilon}_{NL}`
 
         The first three groups are the constitutive terms coupling the linear and
         the nonlinear parts of the membrane strain. KGNL is geometric, carrying the
@@ -4248,7 +4252,7 @@ cdef class Tria3R:
         which is what a linear buckling analysis needs. With it here,
 
         .. math::
-            K_T = K_{C0} + K_{CNL}(u) + K_G(u)
+            \boldsymbol{K}_T = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u}) + \boldsymbol{K}_G(\boldsymbol{u})
 
         is the exact Jacobian of the internal forces of :meth:`.update_fint` with
         ``nonlinear=1``, and a Newton-Raphson iteration built on them converges
@@ -4376,8 +4380,8 @@ cdef class Tria3R:
 
         .. math::
 
-            \{N_{xx}, N_{yy}, N_{xy}\}^\top = [A]\{\epsilon_{xx}, \epsilon_{yy},
-            \gamma_{xy}\}^\top + [B]\{\kappa_{xx}, \kappa_{yy}, \kappa_{xy}\}^\top
+            \{N_{xx}, N_{yy}, N_{xy}\}^\top = \boldsymbol{A}\{\epsilon_{xx}, \epsilon_{yy},
+            \gamma_{xy}\}^\top + \boldsymbol{B}\{\kappa_{xx}, \kappa_{yy}, \kappa_{xy}\}^\top
 
         with the linear strains of the probe displacements, which for
         ``drilling_model = 0`` include the contribution of the Allman
@@ -4954,10 +4958,13 @@ cdef class Tria3R:
 
         .. math::
 
-            K_G = A_e [G]^\top \begin{bmatrix} N_{xx} & N_{xy} \\ N_{xy} &
-            N_{yy} \end{bmatrix} [G]
+            \boldsymbol{K}_G = A_e \left( N_{xx} \boldsymbol{G}_x^\top \boldsymbol{G}_x
+            + N_{yy} \boldsymbol{G}_y^\top \boldsymbol{G}_y
+            + N_{xy} (\boldsymbol{G}_x^\top \boldsymbol{G}_y
+            + \boldsymbol{G}_y^\top \boldsymbol{G}_x) \right)
 
-        with `A_e` the element area and `[G]` the rows ``Gwx``, ``Gwy`` of
+        with `A_e` the element area and `\boldsymbol{G}_x`, `\boldsymbol{G}_y`
+        the rows ``Gwx``, ``Gwy`` of
         :meth:`._update_probe_BL_G`, the element-frame `w` being obtained
         from the global translations with the element normal `\{T_{13},
         T_{23}, T_{33}\}`. The integrand is constant over the triangle, so the

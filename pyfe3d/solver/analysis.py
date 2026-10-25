@@ -80,24 +80,24 @@ class FreeDofs(object):
 
     .. math::
 
-        \{u\} = [Z]\{c\} + \lambda \{u_k\}, \qquad
-        [Z] = \begin{bmatrix} [I_{ff}] \\ [0_{kf}] \end{bmatrix}
+        \boldsymbol{u} = \boldsymbol{Z} \boldsymbol{c} + \lambda \boldsymbol{u}_k, \qquad
+        \boldsymbol{Z} = \begin{bmatrix} \boldsymbol{I}_{ff} \\ \boldsymbol{0}_{kf} \end{bmatrix}
 
-    the null-space reduction of the constraints `\{u_k\} = \lambda
-    \{\bar{u}_k\}` imposed exactly, see :mod:`.callbacks`. The solvers see
-    the reduced residual `\{R_f\} = \lambda \{F_{ext}\}_f - \{F_{int}(u)\}_f`,
-    its Jacobian `[K_T]_{ff}` and
+    the null-space reduction of the constraints `\boldsymbol{u}_k = \lambda
+    \bar{\boldsymbol{u}}_k` imposed exactly, see :mod:`.callbacks`. The solvers see
+    the reduced residual `\boldsymbol{R}_f = \lambda \boldsymbol{F}_{{ext}_f} - \boldsymbol{F}_{{int}_f}(\boldsymbol{u})`,
+    its Jacobian `\boldsymbol{K}_{T_{ff}}` and
 
     .. math::
 
-        \frac{\partial R_f}{\partial \lambda} = \{F_{ext}\}_f -
-        [K_T]_{fk}\{\bar{u}_k\}
+        \frac{\partial \boldsymbol{R}_f}{\partial \lambda} = \boldsymbol{F}_{{ext}_f} -
+        \boldsymbol{K}_{T_{fk}} \bar{\boldsymbol{u}}_k
 
-    with `[K_T]` at the current configuration and load factor, reused from
+    with `\boldsymbol{K}_T` at the current configuration and load factor, reused from
     the last evaluation of the tangent stiffness matrix when it was done at
     the same configuration and load factor. The norms of the convergence
     criteria are thus over the free degrees-of-freedom only. The reaction
-    forces are `\{F_{int}(u)\}_k - \lambda \{F_{ext}\}_k`, given by the
+    forces are `\boldsymbol{F}_{{int}_k}(\boldsymbol{u}) - \lambda \boldsymbol{F}_{{ext}_k}`, given by the
     callables of the full model at a converged configuration.
 
     """
@@ -306,7 +306,7 @@ class FreeDofs(object):
         Returns
         -------
         f : np.ndarray
-            `\{F_{ext}\}_f - [K_{C0}]_{fk}\{\bar{u}_k\}`, with `[K_{C0}]`
+            `\boldsymbol{F}_{{ext}_f} - \boldsymbol{K}_{{C0}_{fk}} \bar{\boldsymbol{u}}_k`, with `\boldsymbol{K}_{C0}`
             the linear stiffness matrix of the full model.
 
         """
@@ -490,16 +490,16 @@ class Analysis(object):
     Notes
     -----
     For non-linear analyses, the internal force vector
-    `\{F_{int}(c)\}` must be in equilibrium with the external force
+    `\boldsymbol{F}_{int}(\boldsymbol{c})` must be in equilibrium with the external force
     vector scaled by the load factor `\lambda`:
 
     .. math::
 
-        \{R\} = \lambda \{F_{ext}\} - \{F_{int}(c)\} = \{0\}
+        \boldsymbol{R} = \lambda \boldsymbol{F}_{ext} - \boldsymbol{F}_{int}(\boldsymbol{c}) = \boldsymbol{0}
 
-    and the tangent stiffness matrix `[K_T] = [K_C] + [K_G]`, given by the
+    and the tangent stiffness matrix `\boldsymbol{K}_T = \boldsymbol{K}_C + \boldsymbol{K}_G`, given by the
     callables ``calc_kC`` and ``calc_kG``, should be the exact derivative of
-    `\{F_{int}\}` with respect to `\{c\}`, such that the Newton-Raphson
+    `\boldsymbol{F}_{int}` with respect to `\boldsymbol{c}`, such that the Newton-Raphson
     iterations converge quadratically ([1]_, Section 1.2.2, p. 9). The
     convergence is checked by default with Crisfield's criterion, see
     :mod:`.convergence`.
@@ -530,10 +530,10 @@ class Analysis(object):
       solvers.
     - ``calc_fext(inc=1., c=c, lbd=lbd)`` also receives the current load
       factor when it declares ``lbd``, for a derivative `\partial
-      R/\partial \lambda` that depends on the load factor, e.g. prescribed
+      \boldsymbol{R}/\partial \lambda` that depends on the load factor, e.g. prescribed
       displacements imposed exactly as linear constraints, where the
       reference vector ``calc_fext(inc=1.)`` may be null. The solvers then
-      use `\partial R/\partial \lambda` for the displacement scale of the
+      use `\partial \boldsymbol{R}/\partial \lambda` for the displacement scale of the
       arc-length methods, for the predictor of the first Newton-Raphson
       increment and as a reference of the convergence criteria. The linear
       static analysis never passes ``lbd``.
@@ -656,28 +656,28 @@ class Analysis(object):
 
         Notes
         -----
-        The linear analysis solves `[K_{C0}]\{c\} = \{F_{ext}\}`; with
-        ``bu`` and ``uk``, `[K_{C0}]_{ff}\{c\} = \{F_{ext}\}_f -
-        [K_{C0}]_{fk}\{\bar{u}_k\}`. When the load depends on the
+        The linear analysis solves `\boldsymbol{K}_{C0} \boldsymbol{c} = \boldsymbol{F}_{ext}`; with
+        ``bu`` and ``uk``, `\boldsymbol{K}_{{C0}_{ff}} \boldsymbol{c} = \boldsymbol{F}_{{ext}_f} -
+        \boldsymbol{K}_{{C0}_{fk}} \bar{\boldsymbol{u}}_k`. When the load depends on the
         configuration, the structure is still geometrically linear but the
-        load is evaluated in the current configuration, `[K_{C0}]\{c\} =
-        \{F_{ext}(c)\}`, which is solved by the load correction iterations
+        load is evaluated in the current configuration, `\boldsymbol{K}_{C0} \boldsymbol{c} =
+        \boldsymbol{F}_{ext}(\boldsymbol{c})`, which is solved by the load correction iterations
 
         .. math::
 
-            \{c_{k+1}\} = \{c_k\} + [K_{C0}]^{-1}(\{F_{ext}(c_k)\}
-                          - [K_{C0}]\{c_k\})
+            \boldsymbol{c}_{k+1} = \boldsymbol{c}_k + \boldsymbol{K}_{C0}^{-1}(\boldsymbol{F}_{ext}(\boldsymbol{c}_k)
+                          - \boldsymbol{K}_{C0} \boldsymbol{c}_k)
 
-        starting from `\{c_0\} = [K_{C0}]^{-1}\{F_{ext}\}`, the solution of
-        the reference load ``calc_fext()``, with `\{F_{ext}(c_k)\}` given by
+        starting from `\boldsymbol{c}_0 = \boldsymbol{K}_{C0}^{-1} \boldsymbol{F}_{ext}`, the solution of
+        the reference load ``calc_fext()``, with `\boldsymbol{F}_{ext}(\boldsymbol{c}_k)` given by
         ``calc_fext(inc=1., c=c_k)``. This is a fixed-point iteration
         without the load stiffness in the iteration matrix. For a follower
-        load whose force vector is affine in `c`, `\{F(c)\} = \{F_0\} -
-        [K_F]\{c\}`, this is the solution of `([K_{C0}] + [K_F])\{c\} =
-        \{F_0\}`, the error being multiplied by `-[K_{C0}]^{-1}[K_F]` at
+        load whose force vector is affine in `\boldsymbol{c}`, `\boldsymbol{F}(\boldsymbol{c}) = \boldsymbol{F}_0 -
+        \boldsymbol{K}_F \boldsymbol{c}`, this is the solution of `(\boldsymbol{K}_{C0} + \boldsymbol{K}_F) \boldsymbol{c} =
+        \boldsymbol{F}_0`, the error being multiplied by `-\boldsymbol{K}_{C0}^{-1} \boldsymbol{K}_F` at
         each iteration, whose spectral radius is `1/\min|\lambda|` over the
-        load multipliers `\lambda` of `([K_{C0}] + \lambda [K_F])\{u\} =
-        \{0\}`, including the negative and complex ones; beyond the load of
+        load multipliers `\lambda` of `(\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_F) \boldsymbol{u} =
+        \boldsymbol{0}`, including the negative and complex ones; beyond the load of
         the smallest `|\lambda|` the iterations diverge.
 
         """
@@ -747,7 +747,7 @@ class Analysis(object):
         The iterations and their convergence are described in
         :meth:`static`; the convergence criterion is the one of the
         non-linear solvers, see :func:`.check_convergence`, with the
-        internal force vector `[K_{C0}]\{c_k\}`.
+        internal force vector `\boldsymbol{K}_{C0} \boldsymbol{c}_k`.
 
         """
         msg('Configuration-dependent load: load correction iterations',

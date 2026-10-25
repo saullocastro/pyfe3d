@@ -25,7 +25,7 @@ the quantities being verified are
   .. math::
       \tilde\gamma = 2 \frac{x_{31} y_{31} + x_{24} y_{42}}{A^2}
       \quad , \quad
-      \boldsymbol{\gamma} = \left. \frac{\partial^2 \boldsymbol{N}}
+      \boldsymbol{\gamma} = \left. \frac{\partial^2 \boldsymbol{S}}
                                  {\partial x \partial y}\right|_{\xi=\eta=0}
       = \frac{\tilde\gamma}{4} \boldsymbol{h}
 
@@ -231,7 +231,7 @@ def gamma_tilde(el, probe):
 
 def gamma_vector(el, probe):
     r"""The hourglass operator that Eq. (15) defines, `\gamma = \tilde\gamma
-    \boldsymbol{h}/4`, equal to the centroidal `\partial^2 N/\partial x \partial y`
+    \boldsymbol{h}/4`, equal to the centroidal `\partial^2 \boldsymbol{S}/\partial x \partial y`
 
     """
     return gamma_tilde(el, probe)/4.*H
@@ -331,7 +331,7 @@ def test_hourglass_operator_matches_brockman_eq15():
 def test_hourglass_operator_equals_second_derivative_of_N():
     r"""The two expressions of Eq. (15) define the same operator
 
-    ``Quad4R`` builds the operator as the centroidal `\partial^2 N/\partial x
+    ``Quad4R`` builds the operator as the centroidal `\partial^2 \boldsymbol{S}/\partial x
     \partial y`, which the element code evaluates as ``0.25*(j11*j22 +
     j12*j21)`` times the alternating pattern. Eq. (15) also gives it in
     closed form as `\tilde\gamma \boldsymbol{h}/4`. The two agree on any shape.
@@ -1000,7 +1000,7 @@ def laminates():
     r"""Plates whose equivalent membrane and bending moduli differ
 
     The isotropic plate with an offset reference surface is included because
-    its `[D]` is not `E t^3/(12(1 - \nu^2))` there, while its bending
+    its `\boldsymbol{D}` is not `E t^3/(12(1 - \nu^2))` there, while its bending
     moduli must still be `E`.
 
     """
@@ -1077,7 +1077,7 @@ def test_bending_moduli_differ_from_membrane_moduli_for_laminates():
     `E_{1b}/E_{1eq}` and `E_{2b}/E_{2eq}` are 1 for the isotropic plate,
     with or without offset, and differ from 1 for the laminates: about 1.7
     and 0.34 for the symmetric cross-ply, 0.41 for the unsymmetric
-    cross-ply, through the coupling `[B]`, and above 2.5 for the sandwich,
+    cross-ply, through the coupling `\boldsymbol{B}`, and above 2.5 for the sandwich,
     whose bending stiffness comes from the faces.
 
     """
@@ -1244,7 +1244,7 @@ def test_laminated_plates_against_navier():
     of the rotations is the same fraction of the bending stiffness of the
     plate for every laminate, as Brockman calibrated it for isotropic
     plates. The deflection then improves where the membrane moduli
-    over-stabilised, e.g. the unsymmetric cross-ply, whose `[B]` makes
+    over-stabilised, e.g. the unsymmetric cross-ply, whose `\boldsymbol{B}` makes
     `E_{1b} = 0.36 E_{1eq}`, and worsens where they under-stabilised, e.g.
     the sandwich, with `E_{1b} = 2.7 E_{1eq}`, which is then as accurate as
     a symmetric cross-ply.

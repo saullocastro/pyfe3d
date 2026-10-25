@@ -122,12 +122,12 @@ cdef class BeamProp:
     `\gamma_{xz}` are those of the beam axis and `{r_x}_{,x}` is the twist.
     With `G_{12}` = ``G12`` multiplying the first and `G_{13}` = ``G13``
     the second, their integral over the cross section gives the shear part
-    of the strain energy per unit length, `\frac{1}{2} \{\gamma\}^\top [D_s]
-    \{\gamma\}` with `\{\gamma\} = \{\gamma_{xy}, \gamma_{xz},
+    of the strain energy per unit length, `\frac{1}{2} \boldsymbol{\gamma}^\top \boldsymbol{D}_s
+    \boldsymbol{\gamma}` with `\boldsymbol{\gamma} = \{\gamma_{xy}, \gamma_{xz},
     {r_x}_{,x}\}^\top` and
 
     .. math::
-        [D_s] = \begin{bmatrix}
+        \boldsymbol{D}_s = \begin{bmatrix}
             G_{12} A & 0 & -G_{12} A_z \\
             0 & G_{13} A & G_{13} A_y \\
             -G_{12} A_z & G_{13} A_y & G_{12} I_{yy} + G_{13} I_{zz}

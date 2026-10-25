@@ -45,7 +45,7 @@ def check_null_rows_cols(A, name='A'):
     -----
     A row or column is null when none of its stored entries is non-zero,
     explicitly stored zeros being ignored; the cost is of the order of the
-    number of stored entries of `[A]`.
+    number of stored entries of `\boldsymbol{A}`.
 
     In a finite element model, a null row or column of the matrix given to
     the solvers is a degree-of-freedom without stiffness, e.g. an unattached
@@ -103,7 +103,7 @@ def is_symmetric(A, rtol=1.e-10):
 
     Notes
     -----
-    The test is `\|[A] - [A]^\top\|_F \le rtol \|[A]\|_F`. The relative
+    The test is `\|\boldsymbol{A} - \boldsymbol{A}^\top\|_F \le rtol \|\boldsymbol{A}\|_F`. The relative
     tolerance absorbs the round-off of matrices that are symmetric in exact
     arithmetic but assembled from terms evaluated in a different order on
     each side of the diagonal, whereas a genuinely unsymmetric term, such as

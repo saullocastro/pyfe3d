@@ -44,19 +44,19 @@ Notes
 The eigenvalue problems are linear buckling
 
 .. math::
-    ([K_{C0}] + \lambda [K_G])\{u\} = \{0\}
+    (\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}
 
 and natural frequency
 
 .. math::
-    ([K_{C0}] - \omega_n^2 [M])\{u\} = \{0\}
+    (\boldsymbol{K}_{C0} - \omega_n^2 \boldsymbol{M}) \boldsymbol{u} = \boldsymbol{0}
 
 The reason this module exists is that neither problem is safe to hand to
 :func:`scipy.sparse.linalg.eigsh` without preparation, and the two traps are
 easy to fall into and silent when they bite:
 
 1. **The matrices are badly scaled.** A shell element mixes translations and
-   rotations, so the diagonal of `[K_{C0}]` spans many orders of magnitude,
+   rotations, so the diagonal of `\boldsymbol{K}_{C0}` spans many orders of magnitude,
    and the drilling stiffness makes that worse: with the fictitious penalty
    of ``K6ROT`` the drilling entries are some six orders of magnitude below
    the membrane ones, and a condition number of `10^{14}` is easy to reach.
@@ -75,7 +75,7 @@ easy to fall into and silent when they bite:
    matrices themselves.
 
 The inertia check of :func:`check_eigenpairs`, the number of negative pivots
-of `[K_{C0}] + s [K_G]` just below the highest load multiplier found, is the
+of `\boldsymbol{K}_{C0} + s \boldsymbol{K}_G` just below the highest load multiplier found, is the
 only cheap way to know that no mode was skipped, and it is what distinguishes
 a converged answer from a plausible-looking one.
 
@@ -96,7 +96,7 @@ giving the reasons of the failures; its result is verified as well. A
 increasing order, followed by the negative ones closest to zero, i.e. the
 critical load multipliers of the reversed load, then the complex ones by
 increasing modulus. For symmetric matrices, the negative ones are computed
-with `-[K_G]` when fewer than ``num_eigvalues`` positive load multipliers
+with `-\boldsymbol{K}_G` when fewer than ``num_eigvalues`` positive load multipliers
 exist, see :func:`_eigsh_both_signs`.
 
 The shift estimate, the verification, the dense fallback, the solvers of
@@ -123,10 +123,10 @@ __all__ = ['DenseFallbackWarning', 'diagonal_preconditioner',
            'check_eigenpairs', 'linear_buckling', 'natural_frequency',
            'complex_frequency']
 
-#: An eigenvalue `\mu` of `[K_G]\{u\} = \mu [K]\{u\}` with `|\mu|` not
+#: An eigenvalue `\mu` of `\boldsymbol{K}_G \boldsymbol{u} = \mu \boldsymbol{K} \boldsymbol{u}` with `|\mu|` not
 #: larger than this fraction of the largest `|\mu|` is null, i.e. its load
 #: multiplier is infinite up to the round-off, e.g. at the
-#: degrees-of-freedom where `[K_G]` is null; also the fraction of the scale
+#: degrees-of-freedom where `\boldsymbol{K}_G` is null; also the fraction of the scale
 #: of the null `\nu` of :func:`_eigs_shifted`
 NULL_MU_RTOL = 1.e-12
 #: An eigenvalue `\mu` of the dense solvers is also null when `|\mu|` is
@@ -135,14 +135,14 @@ NULL_MU_RTOL = 1.e-12
 #: :func:`_null_mu_pencil`
 NULL_MU_PERTURBATION_FACTOR = 10.
 #: The load multipliers of each sign are counted with the inertia of
-#: `[K] + s [K_G]` below the modulus `|s|`, this factor divided by the
+#: `\boldsymbol{K} + s \boldsymbol{K}_G` below the modulus `|s|`, this factor divided by the
 #: largest `|\mu|`, i.e. this factor times the lowest modulus that a load
 #: multiplier may have
 INERTIA_COUNT_FACTOR = 1.e6
 #: An eigenpair of :func:`natural_frequency` is a rigid-body mode, null up
-#: to the round-off, when `\|[K]\{u\}\| + |\omega_n^2| \, \|[M]\{u\}\|` is
-#: not larger than this fraction of the matrix-norm scale `(\|[K]\|_F +
-#: |\omega_n^2| \, \|[M]\|_F)\|\{u\}\|`, 100 times the machine precision,
+#: to the round-off, when `\|\boldsymbol{K} \boldsymbol{u}\| + |\omega_n^2| \, \|\boldsymbol{M} \boldsymbol{u}\|` is
+#: not larger than this fraction of the matrix-norm scale `(\|\boldsymbol{K}\|_F +
+#: |\omega_n^2| \, \|\boldsymbol{M}\|_F)\|\boldsymbol{u}\|`, 100 times the machine precision,
 #: see :func:`_relative_residuals`
 RIGID_BODY_RTOL = 100*np.finfo(float).eps
 #: An eigenpair of :func:`natural_frequency` or :func:`complex_frequency`
@@ -208,18 +208,18 @@ def diagonal_preconditioner(K, floor=1.e-30):
 
     Notes
     -----
-    The diagonal matrix `[P]` has the entries
+    The diagonal matrix `\boldsymbol{P}` has the entries
 
     .. math::
         P_{ii} = \frac{1}{\sqrt{max(|K_{{C0}_{ii}}|, floor)}}
 
-    such that `[P][K_{C0}][P]` has a unit diagonal, up to the sign of the
+    such that `\boldsymbol{P} \boldsymbol{K}_{C0} \boldsymbol{P}` has a unit diagonal, up to the sign of the
     negative entries, which appear e.g. in a stiffness matrix with the load
     stiffness of a follower load beyond the critical load. For a generalized
-    eigenvalue problem both matrices are transformed, `[P][A][P]` and
-    `[P][B][P]`, which leaves the eigenvalues unchanged and maps the
-    eigenvectors to `[P]^{-1}\{u\}`: `[P][A][P]\{y\} = w [P][B][P]\{y\}` is
-    `[A]\{u\} = w [B]\{u\}` with `\{u\} = [P]\{y\}`, `[P]` being
+    eigenvalue problem both matrices are transformed, `\boldsymbol{P} \boldsymbol{A} \boldsymbol{P}` and
+    `\boldsymbol{P} \boldsymbol{B} \boldsymbol{P}`, which leaves the eigenvalues unchanged and maps the
+    eigenvectors to `\boldsymbol{P}^{-1} \boldsymbol{u}`: `\boldsymbol{P} \boldsymbol{A} \boldsymbol{P} \boldsymbol{y} = w \boldsymbol{P} \boldsymbol{B} \boldsymbol{P} \boldsymbol{y}` is
+    `\boldsymbol{A} \boldsymbol{u} = w \boldsymbol{B} \boldsymbol{u}` with `\boldsymbol{u} = \boldsymbol{P} \boldsymbol{y}`, `\boldsymbol{P}` being
     non-singular. The equilibration removes the spread of the diagonal
     entries, which usually reduces the condition number, see the notes of
     :mod:`pyfe3d.solver.eigen`.
@@ -236,7 +236,7 @@ def diagonal_preconditioner(K, floor=1.e-30):
 
 
 def _estimate_mu_max(K, KG, max_iter=50, rel_tol=1.e-3):
-    r"""Largest `|\mu|` of `[K_G]\{u\} = \mu [K]\{u\}` by power iterations
+    r"""Largest `|\mu|` of `\boldsymbol{K}_G \boldsymbol{u} = \mu \boldsymbol{K} \boldsymbol{u}` by power iterations
 
     Parameters
     ----------
@@ -331,24 +331,24 @@ def estimate_cayley_sigma(K, KG, safety=10., max_iter=50, rel_tol=1.e-3):
     Notes
     -----
     The shift has to exceed `|\mu|` of the critical eigenvalues of
-    `[K_G]\{u\} = \mu [K_{C0}]\{u\}`, see the module documentation. The
+    `\boldsymbol{K}_G \boldsymbol{u} = \mu \boldsymbol{K}_{C0} \boldsymbol{u}`, see the module documentation. The
     largest `|\mu|` is estimated with power iterations on
-    `[K_{C0}]^{-1}[K_G]`, whose ratio of norms in the `[K_{C0}]`-norm grows
+    `\boldsymbol{K}_{C0}^{-1} \boldsymbol{K}_G`, whose ratio of norms in the `\boldsymbol{K}_{C0}`-norm grows
     towards it, and the result is multiplied by ``safety``.
 
-    At each iteration `\{x\}` is normalized such that `\{x\}^\top [K_{C0}]
-    \{x\} = 1`, `\{y\} = [K_{C0}]^{-1} [K_G] \{x\}` is computed and the
-    ratio of norms is `\sqrt{|\{y\}^\top [K_{C0}] \{y\}|}`; `\{y\}` becomes
-    the next `\{x\}`. The estimate is the largest ratio found, and the
+    At each iteration `\boldsymbol{x}` is normalized such that `\boldsymbol{x}^\top \boldsymbol{K}_{C0}
+    \boldsymbol{x} = 1`, `\boldsymbol{y} = \boldsymbol{K}_{C0}^{-1} \boldsymbol{K}_G \boldsymbol{x}` is computed and the
+    ratio of norms is `\sqrt{|\boldsymbol{y}^\top \boldsymbol{K}_{C0} \boldsymbol{y}|}`; `\boldsymbol{y}` becomes
+    the next `\boldsymbol{x}`. The estimate is the largest ratio found, and the
     iterations stop when a ratio exceeds the previous estimate by at most
     ``rel_tol`` times the ratio, or after ``max_iter`` iterations. For a
-    symmetric positive definite `[K_{C0}]` and a symmetric `[K_G]`,
-    `[K_{C0}]^{-1}[K_G]` is self-adjoint in the inner product of
-    `[K_{C0}]`, such that the ratio tends to its spectral radius
+    symmetric positive definite `\boldsymbol{K}_{C0}` and a symmetric `\boldsymbol{K}_G`,
+    `\boldsymbol{K}_{C0}^{-1} \boldsymbol{K}_G` is self-adjoint in the inner product of
+    `\boldsymbol{K}_{C0}`, such that the ratio tends to its spectral radius
     `\max |\mu|`. At the first iteration the relative residual of the linear
     solution must not exceed ``1e-6``.
 
-    The fallback value ``1.`` is returned when `[K_{C0}]` is singular or not
+    The fallback value ``1.`` is returned when `\boldsymbol{K}_{C0}` is singular or not
     positive definite, or when the linear solution is inaccurate, since in
     those cases the power iteration says nothing.
 
@@ -379,9 +379,9 @@ def _negative_pivots(A):
     ``A`` is factorized with :func:`scipy.sparse.linalg.splu`, with the
     ordering ``'MMD_AT_PLUS_A'``, ``diag_pivot_thresh=0.`` and the symmetric
     mode, i.e. with a symmetric permutation and without row interchanges,
-    `[P][A][P]^\top = [L][D][L]^\top` with the pivots `[D]` on the diagonal of
-    `[U] = [D][L]^\top`. By Sylvester's law of inertia, the number of negative
-    pivots is the number of negative eigenvalues of `[A]`.
+    `\boldsymbol{P} \boldsymbol{A} \boldsymbol{P}^\top = \boldsymbol{L} \boldsymbol{D} \boldsymbol{L}^\top` with the pivots `\boldsymbol{D}` on the diagonal of
+    `\boldsymbol{U} = \boldsymbol{D} \boldsymbol{L}^\top`. By Sylvester's law of inertia, the number of negative
+    pivots is the number of negative eigenvalues of `\boldsymbol{A}`.
 
     """
     try:
@@ -431,9 +431,9 @@ def is_positive_definite(A):
     The Gaussian elimination of a positive definite matrix never meets a zero
     or a negative pivot, and by Sylvester's law of inertia a negative pivot
     means a negative eigenvalue: without row interchanges, the factorization
-    of the symmetric matrix is `[L][D_U][L]^\top`, with the pivots on the
-    diagonal `[D_U]` of `[U]`, and `[A]` has as many negative eigenvalues as
-    `[D_U]` has negative entries, see :func:`_negative_pivots`.
+    of the symmetric matrix is `\boldsymbol{L} \boldsymbol{D}_U \boldsymbol{L}^\top`, with the pivots on the
+    diagonal `\boldsymbol{D}_U` of `\boldsymbol{U}`, and `\boldsymbol{A}` has as many negative eigenvalues as
+    `\boldsymbol{D}_U` has negative entries, see :func:`_negative_pivots`.
 
     """
     return _negative_pivots(A) == 0
@@ -446,8 +446,8 @@ def _frobenius(A):
 
 
 def _relative_residuals(A, B, lam, u, rigid_rtol=None):
-    r"""Relative residuals of the eigenpairs of `([A] + \lambda [B])\{u\} =
-    \{0\}`
+    r"""Relative residuals of the eigenpairs of `(\boldsymbol{A} + \lambda \boldsymbol{B}) \boldsymbol{u} =
+    \boldsymbol{0}`
 
     Parameters
     ----------
@@ -479,11 +479,11 @@ def _relative_residuals(A, B, lam, u, rigid_rtol=None):
 
     .. math::
 
-        \frac{\|[A]\{u\} + \lambda [B]\{u\}\|}{\|[A]\{u\}\|
-        + |\lambda| \, \|[B]\{u\}\|}
+        \frac{\|\boldsymbol{A} \boldsymbol{u} + \lambda \boldsymbol{B} \boldsymbol{u}\|}{\|\boldsymbol{A} \boldsymbol{u}\|
+        + |\lambda| \, \|\boldsymbol{B} \boldsymbol{u}\|}
 
     compares the residual with the terms of the eigenvalue problem for the
-    eigenvector itself. For an eigenvector in the null space of `[A]` with a
+    eigenvector itself. For an eigenvector in the null space of `\boldsymbol{A}` with a
     null eigenvalue, e.g. a rigid-body mode of :func:`natural_frequency`,
     both the residual and the denominator are round-off errors, and their
     ratio is meaningless, of the order of 1. With ``rigid_rtol`` `=
@@ -491,33 +491,33 @@ def _relative_residuals(A, B, lam, u, rigid_rtol=None):
 
     .. math::
 
-        \|[A]\{u\}\| + |\lambda| \, \|[B]\{u\}\| \le \epsilon_r
-        (\|[A]\|_F + |\lambda| \, \|[B]\|_F) \|\{u\}\|
+        \|\boldsymbol{A} \boldsymbol{u}\| + |\lambda| \, \|\boldsymbol{B} \boldsymbol{u}\| \le \epsilon_r
+        (\|\boldsymbol{A}\|_F + |\lambda| \, \|\boldsymbol{B}\|_F) \|\boldsymbol{u}\|
 
     is null up to the round-off: its residual is relative to the
     matrix-norm scale, i.e. it is the normwise backward error
-    `\|\{r\}\|/((\|[A]\|_F + |\lambda| \, \|[B]\|_F) \|\{u\}\|)`, with
-    `\{r\}` the residual vector, not larger than `\epsilon_r`. Every other
+    `\|\boldsymbol{r}\|/((\|\boldsymbol{A}\|_F + |\lambda| \, \|\boldsymbol{B}\|_F) \|\boldsymbol{u}\|)`, with
+    `\boldsymbol{r}` the residual vector, not larger than `\epsilon_r`. Every other
     eigenpair keeps the relative residual, such that the check of a genuine
     eigenpair is never loosened.
 
     A backward error at the round-off does not tell that a genuine
-    eigenpair is accurate when `\|[A]\|_F` is set by stiff springs, e.g. the
+    eigenpair is accurate when `\|\boldsymbol{A}\|_F` is set by stiff springs, e.g. the
     penalty connections of multi-domain models: the eigenpairs that satisfy
-    the connections give `\|[A]\{u\}\|` many orders of magnitude smaller
-    than `\|[A]\|_F \|\{u\}\|`. For the lowest load multipliers of a
-    blade-stiffened panel with penalty connections, `\|[K]\|_F = 5.1 \cdot
+    the connections give `\|\boldsymbol{A} \boldsymbol{u}\|` many orders of magnitude smaller
+    than `\|\boldsymbol{A}\|_F \|\boldsymbol{u}\|`. For the lowest load multipliers of a
+    blade-stiffened panel with penalty connections, `\|\boldsymbol{K}\|_F = 5.1 \cdot
     10^{12}`, :func:`linear_buckling` with ``precondition=False`` and
     ``check=False`` returns eigenpairs with relative residuals of 1 to 2 %
     and a lowest load multiplier 0.08 % too low, whose backward errors are
-    `6.5 \cdot 10^{-14}` to `2.7 \cdot 10^{-13}` and whose `(\|[K]\{u\}\| +
-    |\lambda| \, \|[K_G]\{u\}\|)/((\|[K]\|_F + |\lambda| \, \|[K_G]\|_F)
-    \|\{u\}\|)` are `6.5 \cdot 10^{-12}` to `1.6 \cdot 10^{-11}`. A floor
-    `\epsilon_f (\|[A]\|_F + |\lambda| \, \|[B]\|_F)\|\{u\}\|` of the
+    `6.5 \cdot 10^{-14}` to `2.7 \cdot 10^{-13}` and whose `(\|\boldsymbol{K} \boldsymbol{u}\| +
+    |\lambda| \, \|\boldsymbol{K}_G \boldsymbol{u}\|)/((\|\boldsymbol{K}\|_F + |\lambda| \, \|\boldsymbol{K}_G\|_F)
+    \|\boldsymbol{u}\|)` are `6.5 \cdot 10^{-12}` to `1.6 \cdot 10^{-11}`. A floor
+    `\epsilon_f (\|\boldsymbol{A}\|_F + |\lambda| \, \|\boldsymbol{B}\|_F)\|\boldsymbol{u}\|` of the
     denominator with `\epsilon_f = 10^{-8}` would accept them. The
-    rigid-body modes of :func:`natural_frequency` give `(\|[K]\{u\}\| +
-    |\omega_n^2| \, \|[M]\{u\}\|)/((\|[K]\|_F + |\omega_n^2| \, \|[M]\|_F)
-    \|\{u\}\|)` below the machine precision, with the sparse and the dense
+    rigid-body modes of :func:`natural_frequency` give `(\|\boldsymbol{K} \boldsymbol{u}\| +
+    |\omega_n^2| \, \|\boldsymbol{M} \boldsymbol{u}\|)/((\|\boldsymbol{K}\|_F + |\omega_n^2| \, \|\boldsymbol{M}\|_F)
+    \|\boldsymbol{u}\|)` below the machine precision, with the sparse and the dense
     solvers, for the chains of springs of the tests, also when a penalty
     spring `10^6` or `10^8` times stiffer than the others connects two
     chains, hence ``RIGID_BODY_RTOL``.
@@ -543,8 +543,8 @@ def _relative_residuals(A, B, lam, u, rigid_rtol=None):
 
 
 def _backward_errors(A, B, lam, u):
-    r"""Normwise backward errors of the eigenpairs of `([A] + \lambda [B])
-    \{u\} = \{0\}`
+    r"""Normwise backward errors of the eigenpairs of `(\boldsymbol{A} + \lambda \boldsymbol{B})
+    \boldsymbol{u} = \boldsymbol{0}`
 
     Parameters
     ----------
@@ -566,31 +566,31 @@ def _backward_errors(A, B, lam, u):
     Notes
     -----
     The normwise backward error of an approximate eigenpair `(\lambda,
-    \{u\})`
+    \boldsymbol{u})`
 
     .. math::
 
-        \eta = \frac{\|[A]\{u\} + \lambda [B]\{u\}\|}{(\|[A]\|_F + |\lambda|
-        \, \|[B]\|_F) \|\{u\}\|}
+        \eta = \frac{\|\boldsymbol{A} \boldsymbol{u} + \lambda \boldsymbol{B} \boldsymbol{u}\|}{(\|\boldsymbol{A}\|_F + |\lambda|
+        \, \|\boldsymbol{B}\|_F) \|\boldsymbol{u}\|}
 
-    is the smallest `\epsilon` such that `(\lambda, \{u\})` is an exact
-    eigenpair of `([A] + [\Delta A]) + \lambda ([B] + [\Delta B])` with
-    `\|[\Delta A]\| \le \epsilon \|[A]\|_F` and `\|[\Delta B]\| \le \epsilon
-    \|[B]\|_F` ([1]_, Theorem 1, Eq. (2.3), with the tolerances `\|[A]\|_F`
-    and `\|[B]\|_F`). The perturbations that attain it are of rank one, so
+    is the smallest `\epsilon` such that `(\lambda, \boldsymbol{u})` is an exact
+    eigenpair of `(\boldsymbol{A} + \Delta \boldsymbol{A}) + \lambda (\boldsymbol{B} + \Delta \boldsymbol{B})` with
+    `\|\Delta \boldsymbol{A}\| \le \epsilon \|\boldsymbol{A}\|_F` and `\|\Delta \boldsymbol{B}\| \le \epsilon
+    \|\boldsymbol{B}\|_F` ([1]_, Theorem 1, Eq. (2.3), with the tolerances `\|\boldsymbol{A}\|_F`
+    and `\|\boldsymbol{B}\|_F`). The perturbations that attain it are of rank one, so
     that their Frobenius norm is their 2-norm, and for symmetric matrices and
     a real `\lambda` the minimum is the same with symmetric perturbations
     ([1]_, Theorem 2).
 
     The relative residual of :func:`_relative_residuals` is `\eta` times
-    `(\|[A]\|_F + |\lambda| \, \|[B]\|_F)\|\{u\}\|/(\|[A]\{u\}\| + |\lambda|
-    \, \|[B]\{u\}\|)`, a ratio that is large for an eigenvalue close to zero
-    of a nearly singular `[A]`, e.g. a natural frequency pre-stressed close
+    `(\|\boldsymbol{A}\|_F + |\lambda| \, \|\boldsymbol{B}\|_F)\|\boldsymbol{u}\|/(\|\boldsymbol{A} \boldsymbol{u}\| + |\lambda|
+    \, \|\boldsymbol{B} \boldsymbol{u}\|)`, a ratio that is large for an eigenvalue close to zero
+    of a nearly singular `\boldsymbol{A}`, e.g. a natural frequency pre-stressed close
     to buckling, whose eigenvalue is then sensitive to the round-off of the
-    entries of `[A]`. :func:`natural_frequency` accepts an eigenpair whose
+    entries of `\boldsymbol{A}`. :func:`natural_frequency` accepts an eigenpair whose
     relative residual is larger than ``check_rtol`` when `\eta \le`
     ``BACKWARD_ERROR_RTOL`` `= \epsilon`, the machine precision: the
-    eigenpair is exact for matrices that differ from `[K]` and `[M]` by
+    eigenpair is exact for matrices that differ from `\boldsymbol{K}` and `\boldsymbol{M}` by
     perturbations of the order of the round-off of their entries, and it is
     as accurate as the matrices allow; see :func:`_quadratic_backward_errors`
     for :func:`complex_frequency`.
@@ -601,8 +601,8 @@ def _backward_errors(A, B, lam, u):
     `\omega_n^2 = 0.0895`: the relative residuals of these eigenpairs are
     `2.3 \cdot 10^{-6}` to `1.3 \cdot 10^{-5}`, larger than the default
     ``check_rtol=1e-6``, with ``eigsh``, ``eigs`` and the dense solvers,
-    with and without the preconditioner, and `(\|[K]\{u\}\| + |\omega_n^2|
-    \, \|[M]\{u\}\|)/((\|[K]\|_F + |\omega_n^2| \, \|[M]\|_F)\|\{u\}\|) =
+    with and without the preconditioner, and `(\|\boldsymbol{K} \boldsymbol{u}\| + |\omega_n^2|
+    \, \|\boldsymbol{M} \boldsymbol{u}\|)/((\|\boldsymbol{K}\|_F + |\omega_n^2| \, \|\boldsymbol{M}\|_F)\|\boldsymbol{u}\|) =
     5.0 \cdot 10^3 \epsilon`, while their backward errors are `0.011
     \epsilon` to `0.063 \epsilon`, i.e. ``BACKWARD_ERROR_RTOL`` is 16 times
     the largest one. The inaccurate eigenpairs of ``eigsh`` for the lowest load
@@ -619,7 +619,7 @@ def _backward_errors(A, B, lam, u):
     constants of the panel of ``tests/data``.
 
     :func:`check_eigenpairs` keeps the relative residual only. For the
-    cantilever above, with `[K] = [K_{C0}] + f \lambda_{cr} [K_G]`, the load
+    cantilever above, with `\boldsymbol{K} = \boldsymbol{K}_{C0} + f \lambda_{cr} \boldsymbol{K}_G`, the load
     multipliers `(1 - f) \lambda_{cr}` close to zero of the dense solver
     have relative residuals from `4.7 \cdot 10^{-7}` for `f = 0.9999` to
     `5.1 \cdot 10^{-4}` for `f = 1 - 10^{-7}`, below the default
@@ -711,26 +711,26 @@ def check_eigenpairs(K, KG, eigvals, eigvecs, rtol=1.e-3, min_rel_gap=1.e-4,
 
     Notes
     -----
-    The eigenpairs are those of `([K_{C0}] + \lambda [K_G])\{u\} = \{0\}`.
+    The eigenpairs are those of `(\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}`.
     The inertia check is the one that catches a solver that converged to an
     interior part of the spectrum, which is silent otherwise. For symmetric
-    `[K_{C0}]` and `[K_G]` with a positive definite `[K_{C0}]`,
-    `[K_{C0}] + s [K_G]` is congruent to `[I] + s
-    [K_{C0}]^{-1/2}[K_G][K_{C0}]^{-1/2}`, whose eigenvalues are `1 + s
+    `\boldsymbol{K}_{C0}` and `\boldsymbol{K}_G` with a positive definite `\boldsymbol{K}_{C0}`,
+    `\boldsymbol{K}_{C0} + s \boldsymbol{K}_G` is congruent to `\boldsymbol{I} + s
+    \boldsymbol{K}_{C0}^{-1/2} \boldsymbol{K}_G \boldsymbol{K}_{C0}^{-1/2}`, whose eigenvalues are `1 + s
     \mu_i = 1 - s/\lambda_i`, with `\mu_i = -1/\lambda_i` the eigenvalues of
-    `[K_G]\{u\} = \mu [K_{C0}]\{u\}`. For `s > 0`, `1 - s/\lambda_i < 0`
+    `\boldsymbol{K}_G \boldsymbol{u} = \mu \boldsymbol{K}_{C0} \boldsymbol{u}`. For `s > 0`, `1 - s/\lambda_i < 0`
     exactly when `0 < \lambda_i < s`, hence the number of negative
-    eigenvalues of `[K_{C0}] + s [K_G]`, equal to its number of negative
+    eigenvalues of `\boldsymbol{K}_{C0} + s \boldsymbol{K}_G`, equal to its number of negative
     pivots by Sylvester's law of inertia, is the number of load multipliers
     in `(0, s)`. This is the Sturm sequence check of the eigenvalue solvers
     of structural analysis ([1]_, Section 10.2.2, p. 849, Section 11.4.3,
     p. 943, and Section 11.6, p. 954), where the number of negative
-    elements of `[D]` in the factorization `[L][D][L]^\top` of `[K] - \mu
-    [M]` is the number of eigenvalues of the pencil `([K], [M])` smaller
+    elements of `\boldsymbol{D}` in the factorization `\boldsymbol{L} \boldsymbol{D} \boldsymbol{L}^\top` of `\boldsymbol{K} - \mu
+    \boldsymbol{M}` is the number of eigenvalues of the pencil `(\boldsymbol{K}, \boldsymbol{M})` smaller
     than `\mu`. When only one
     positive load multiplier was returned, none is expected in `(0, s)` and
     the weaker check is done. The gap ``min_rel_gap`` keeps `s` away from
-    `\lambda_n`, where `[K_{C0}] + s [K_G]` is singular.
+    `\lambda_n`, where `\boldsymbol{K}_{C0} + s \boldsymbol{K}_G` is singular.
 
     References
     ----------
@@ -787,7 +787,7 @@ def _null_mu(mu, scale=None):
     Parameters
     ----------
     mu : array_like
-        Eigenvalues of `[K_G]\{u\} = \mu [K]\{u\}`, real or complex.
+        Eigenvalues of `\boldsymbol{K}_G \boldsymbol{u} = \mu \boldsymbol{K} \boldsymbol{u}`, real or complex.
     scale : float or None, optional
         Reference modulus; the largest finite `|\mu|` when ``None``. Default
         ``None``.
@@ -806,7 +806,7 @@ def _null_mu(mu, scale=None):
 
 
 def _null_mu_pencil(a, b, mu, vl, vr):
-    r"""Tell which eigenvalues `\mu` of `[a]\{v\} = \mu [b]\{v\}` are null up
+    r"""Tell which eigenvalues `\mu` of `[a]\boldsymbol{v} = \mu [b]\boldsymbol{v}` are null up
     to the round-off of a dense solver
 
     Parameters
@@ -827,8 +827,8 @@ def _null_mu_pencil(a, b, mu, vl, vr):
         Boolean array, shape ``(m,)``, ``True`` where `\mu` is null for
         :func:`_null_mu` or where `|\mu| \le c\,\epsilon\,\|[a]\|_F\,\kappa`,
         with `c` = ``NULL_MU_PERTURBATION_FACTOR``, `\epsilon` the machine
-        precision and `\kappa = \|\{y\}\| \|\{x\}\| / |\{y\}^H [b] \{x\}|`
-        the condition number of `\mu`, `\{y\}` and `\{x\}` its left and
+        precision and `\kappa = \|\boldsymbol{y}\| \|\boldsymbol{x}\| / |\boldsymbol{y}^H [b] \boldsymbol{x}|`
+        the condition number of `\mu`, `\boldsymbol{y}` and `\boldsymbol{x}` its left and
         right eigenvectors.
 
     Notes
@@ -837,13 +837,13 @@ def _null_mu_pencil(a, b, mu, vl, vr):
     returns the exact eigenvalues of `[a] + [\delta a]`, `[b] + [\delta b]`
     with `\|[\delta a]\| \approx \gamma \epsilon \|[a]\|`, `\gamma` of order
     one. Multiplying `([a] + [\delta a] - (\mu + \delta\mu)([b] + [\delta
-    b]))(\{x\} + \{\delta x\}) = 0` by `\{y\}^H`, with `\{y\}^H ([a] - \mu
-    [b]) = 0`, gives to first order `\delta\mu = \{y\}^H ([\delta a] - \mu
-    [\delta b]) \{x\} / (\{y\}^H [b] \{x\})`: a null eigenvalue moves by up
+    b]))(\boldsymbol{x} + \delta \boldsymbol{x}) = 0` by `\boldsymbol{y}^H`, with `\boldsymbol{y}^H ([a] - \mu
+    [b]) = 0`, gives to first order `\delta\mu = \boldsymbol{y}^H ([\delta a] - \mu
+    [\delta b]) \boldsymbol{x} / (\boldsymbol{y}^H [b] \boldsymbol{x})`: a null eigenvalue moves by up
     to `\gamma \epsilon \|[a]\| \kappa`.
 
     A null eigenvalue of a Jordan block of size `m`, e.g. `m = 2` for the
-    nilpotent `[K]^{-1}[K_G]` of Ziegler's double pendulum, is split by a
+    nilpotent `\boldsymbol{K}^{-1} \boldsymbol{K}_G` of Ziegler's double pendulum, is split by a
     perturbation of size `\eta` into `m` eigenvalues with `\mu^m \propto
     \eta`, i.e. `|\mu| \approx (\gamma \epsilon)^{1/m} \|[a]\|`, and
     `d\mu/d\eta = \mu/(m \eta)`: their condition number gives `\epsilon
@@ -857,8 +857,8 @@ def _null_mu_pencil(a, b, mu, vl, vr):
     which are null as well. A well-conditioned genuine eigenvalue is null
     only when `|\mu| \le 2.2 \cdot 10^{-15} \|[a]\|`, below the
     :func:`_null_mu` threshold when `\|[a]\|` is of the order of `\max
-    |\mu|`. For symmetric matrices no Jordan block exists, and `\{x\}^\top [b]
-    \{x\} = 1` of :func:`scipy.linalg.eigh` gives `\kappa = \|\{x\}\|^2`.
+    |\mu|`. For symmetric matrices no Jordan block exists, and `\boldsymbol{x}^\top [b]
+    \boldsymbol{x} = 1` of :func:`scipy.linalg.eigh` gives `\kappa = \|\boldsymbol{x}\|^2`.
 
     """
     mu = np.asarray(mu)
@@ -882,7 +882,7 @@ def _lb_order(mu, scale=None):
     Parameters
     ----------
     mu : array_like
-        Eigenvalues of `[K_G]\{u\} = \mu [K]\{u\}`, real or complex.
+        Eigenvalues of `\boldsymbol{K}_G \boldsymbol{u} = \mu \boldsymbol{K} \boldsymbol{u}`, real or complex.
     scale : float or None, optional
         Reference modulus of :func:`_null_mu`. Default ``None``.
 
@@ -914,7 +914,7 @@ def _lb_order(mu, scale=None):
 
 
 def _sort_eigenpairs(mu, eigvecs, scale=None):
-    r"""Eigenpairs of `[K_G]\{u\} = \mu [K]\{u\}` in the order of
+    r"""Eigenpairs of `\boldsymbol{K}_G \boldsymbol{u} = \mu \boldsymbol{K} \boldsymbol{u}` in the order of
     :func:`_lb_order`, returned as ``(mu, eigvecs)``"""
     order = _lb_order(mu, scale)
     return mu[order], eigvecs[:, order]
@@ -937,7 +937,7 @@ def _eigsh_cayley(K, KG, k, tol, sigma):
     Returns
     -------
     mu, eigvecs : np.ndarray
-        The ``k`` eigenvalues `\mu` of `[K_G]\{u\} = \mu [K]\{u\}` selected
+        The ``k`` eigenvalues `\mu` of `\boldsymbol{K}_G \boldsymbol{u} = \mu \boldsymbol{K} \boldsymbol{u}` selected
         by the Cayley mode and their eigenvectors, sorted by
         :func:`_sort_eigenpairs`. :func:`.capped_eigsh` keeps ARPACK's
         ``ncv`` within the cap of the faulty Intel MKL versions, see
@@ -947,9 +947,9 @@ def _eigsh_cayley(K, KG, k, tol, sigma):
     Notes
     -----
     In the Cayley mode, ARPACK computes the eigenvalues `(\mu + \sigma)/(\mu
-    - \sigma)` of the operator `([K_G] - \sigma [K])^{-1}([K_G] + \sigma
-    [K])` ([1]_, Appendix A, Section A.1, "Cayley Transformation Mode", with
-    `[A] = [K_G]` and `[M] = [K]`), and ``which='SM'`` selects those of
+    - \sigma)` of the operator `(\boldsymbol{K}_G - \sigma \boldsymbol{K})^{-1}(\boldsymbol{K}_G + \sigma
+    \boldsymbol{K})` ([1]_, Appendix A, Section A.1, "Cayley Transformation Mode", with
+    `\boldsymbol{A} = \boldsymbol{K}_G` and `\boldsymbol{M} = \boldsymbol{K}`), and ``which='SM'`` selects those of
     smallest modulus. When `\sigma` is larger than `|\mu|` of all the
     eigenvalues, `(\mu + \sigma)/(\mu - \sigma)` increases in modulus with
     `\mu` in `(-\sigma, \sigma)`, such that the most negative
@@ -992,8 +992,8 @@ def _count_multipliers(K, KG, mu_max, K_positive_definite):
 
     Notes
     -----
-    By Sylvester's law of inertia, for a positive definite `[K]`, the number
-    of negative pivots of `[K] + s [K_G]` is the number of load multipliers
+    By Sylvester's law of inertia, for a positive definite `\boldsymbol{K}`, the number
+    of negative pivots of `\boldsymbol{K} + s \boldsymbol{K}_G` is the number of load multipliers
     in `(0, s)` for `s > 0`, see :func:`check_eigenpairs`.
 
     """
@@ -1043,7 +1043,7 @@ def _eigsh_both_signs(K, KG, k, tol, sigma, mu_max, K_positive_definite):
     ones being then in the cluster of the null `\mu`, e.g. for a tensile
     reference load. The number of requested eigenvalues of each sign is
     therefore limited by the number of load multipliers of that sign,
-    counted with the inertia of `[K] + s [K_G]` below the modulus
+    counted with the inertia of `\boldsymbol{K} + s \boldsymbol{K}_G` below the modulus
     ``INERTIA_COUNT_FACTOR`` divided by the largest `|\mu|`, see
     :func:`_count_multipliers`:
 
@@ -1099,7 +1099,7 @@ def _check_both_signs(K, KG, mu, eigvecs, rtol, K_positive_definite=None):
     K, KG : sparse_matrix
         Symmetric matrices, shape ``(n, n)``.
     mu : array_like
-        Eigenvalues of `[K_G]\{u\} = \mu [K]\{u\}`, 1-D array of size ``k``.
+        Eigenvalues of `\boldsymbol{K}_G \boldsymbol{u} = \mu \boldsymbol{K} \boldsymbol{u}`, 1-D array of size ``k``.
     eigvecs : array_like
         Eigenvectors, shape ``(n, k)``.
     rtol : float
@@ -1149,12 +1149,12 @@ def _condense(K, KG, active):
     Returns
     -------
     S : np.ndarray
-        Dense Schur complement `[K_{bb}] - [K_{ba}][K_{aa}]^{-1}[K_{ab}]`.
+        Dense Schur complement `\boldsymbol{K}_{bb} - \boldsymbol{K}_{ba} \boldsymbol{K}_{aa}^{-1} \boldsymbol{K}_{ab}`.
     KGbb : np.ndarray
         Dense block of ``KG``.
     back : callable
-        ``back(ub)`` returns the full eigenvectors, with `\{u_a\} =
-        -[K_{aa}]^{-1}[K_{ab}]\{u_b\}`, for real or complex ``ub``.
+        ``back(ub)`` returns the full eigenvectors, with `\boldsymbol{u}_a =
+        -\boldsymbol{K}_{aa}^{-1} \boldsymbol{K}_{ab} \boldsymbol{u}_b`, for real or complex ``ub``.
 
     Raises
     ------
@@ -1205,21 +1205,21 @@ def _eigh_condensed(K, KG, k):
     Returns
     -------
     mu, eigvecs : np.ndarray
-        The first ``k`` eigenvalues `\mu` of `[K_G]\{u\} = \mu [K]\{u\}` in
+        The first ``k`` eigenvalues `\mu` of `\boldsymbol{K}_G \boldsymbol{u} = \mu \boldsymbol{K} \boldsymbol{u}` in
         the order of :func:`_sort_eigenpairs`, i.e. the positive load
         multipliers first, and the eigenvectors, shape ``(n, k)``.
 
     Notes
     -----
-    With the degrees-of-freedom split in `b`, where `[K_G]` has non-null
+    With the degrees-of-freedom split in `b`, where `\boldsymbol{K}_G` has non-null
     rows, and `a`, where it does not, the static condensation of the `a`
     degrees-of-freedom gives
 
     .. math::
 
-        ([K_{bb}] - [K_{ba}][K_{aa}]^{-1}[K_{ab}]
-         + \lambda [K_{G_{bb}}])\{u_b\} = \{0\}, \qquad
-        \{u_a\} = -[K_{aa}]^{-1}[K_{ab}]\{u_b\}
+        (\boldsymbol{K}_{bb} - \boldsymbol{K}_{ba} \boldsymbol{K}_{aa}^{-1} \boldsymbol{K}_{ab}
+         + \lambda \boldsymbol{K}_{G_{bb}}) \boldsymbol{u}_b = \boldsymbol{0}, \qquad
+        \boldsymbol{u}_a = -\boldsymbol{K}_{aa}^{-1} \boldsymbol{K}_{ab} \boldsymbol{u}_b
 
     solved with :func:`scipy.linalg.eigh`, which requires a positive
     definite Schur complement. The null `\mu` of :func:`_null_mu_pencil`
@@ -1252,7 +1252,7 @@ def _lu_solve(lu, b):
 
 
 def _eig_complex(a, b=None, left=False):
-    r"""All the eigenpairs of `[a]\{v\} = w [b]\{v\}` with
+    r"""All the eigenpairs of `[a]\boldsymbol{v} = w [b]\boldsymbol{v}` with
     :func:`scipy.linalg.eig`, through the complex LAPACK drivers
 
     The matrices are converted to complex, such that ``zgeev`` or ``zggev``
@@ -1332,7 +1332,7 @@ def _general_eigenpairs(mu, eigvecs, k=None):
     Parameters
     ----------
     mu : array_like
-        Eigenvalues `\mu` of `[K_G]\{u\} = \mu [K]\{u\}`, real or complex.
+        Eigenvalues `\mu` of `\boldsymbol{K}_G \boldsymbol{u} = \mu \boldsymbol{K} \boldsymbol{u}`, real or complex.
     eigvecs : array_like
         Eigenvectors, one per column.
     k : int or None, optional
@@ -1427,41 +1427,41 @@ def _permutation_parity(p):
 
 def _det_sign(lu):
     r"""Sign of the determinant of a real matrix from its SuperLU
-    factorization `[P_r][A][P_c] = [L][U]`, with a unit `[L]`"""
+    factorization `\boldsymbol{P}_r \boldsymbol{A} \boldsymbol{P}_c = \boldsymbol{L} \boldsymbol{U}`, with a unit `\boldsymbol{L}`"""
     d = lu.U.diagonal()
     return (int(np.prod(np.sign(d))) * _permutation_parity(lu.perm_r)
             * _permutation_parity(lu.perm_c))
 
 
 def _norm_estimate(lu, KG, v):
-    r"""Estimate from below of `\|[A]^{-1} [K_G]\|_2`, with `[A]` the matrix
+    r"""Estimate from below of `\|\boldsymbol{A}^{-1} \boldsymbol{K}_G\|_2`, with `\boldsymbol{A}` the matrix
     factorized in ``lu``
 
     Parameters
     ----------
     lu : SuperLU
-        Factorization of `[A]`.
+        Factorization of `\boldsymbol{A}`.
     KG : sparse_matrix
-        Matrix `[K_G]`, shape ``(n, n)``.
+        Matrix `\boldsymbol{K}_G`, shape ``(n, n)``.
     v : np.ndarray
         Starting vector, shape ``(n,)``.
 
     Returns
     -------
     norm : float
-        `\|[O]^H [O] \{v\}\|/\|[O] \{v\}\|`, with `[O] = [A]^{-1} [K_G]`, or
-        ``0.`` when `[O] \{v\} = 0`.
+        `\|\boldsymbol{O}^H \boldsymbol{O} \boldsymbol{v}\|/\|\boldsymbol{O} \boldsymbol{v}\|`, with `\boldsymbol{O} = \boldsymbol{A}^{-1} \boldsymbol{K}_G`, or
+        ``0.`` when `\boldsymbol{O} \boldsymbol{v} = 0`.
 
     Notes
     -----
-    One step of the power iteration of `[O]^H [O]`, whose largest
-    eigenvalue is `\|[O]\|_2^2`, with two solutions with ``lu``. The
-    estimate is not larger than `\|[O]\|_2` and, by the Cauchy-Schwarz
-    inequality `\|[O]\{v\}\|^2 = \{v\}^H [O]^H [O] \{v\} \le \|\{v\}\|
-    \|[O]^H [O] \{v\}\|`, not smaller than `\|[O]\{v\}\|/\|\{v\}\|`. The
-    vector `[O]\{v\}` is in the range of `[O]`, i.e. of `[A]^{-1} [K_G]`,
+    One step of the power iteration of `\boldsymbol{O}^H \boldsymbol{O}`, whose largest
+    eigenvalue is `\|\boldsymbol{O}\|_2^2`, with two solutions with ``lu``. The
+    estimate is not larger than `\|\boldsymbol{O}\|_2` and, by the Cauchy-Schwarz
+    inequality `\|\boldsymbol{O} \boldsymbol{v}\|^2 = \boldsymbol{v}^H \boldsymbol{O}^H \boldsymbol{O} \boldsymbol{v} \le \|\boldsymbol{v}\|
+    \|\boldsymbol{O}^H \boldsymbol{O} \boldsymbol{v}\|`, not smaller than `\|\boldsymbol{O} \boldsymbol{v}\|/\|\boldsymbol{v}\|`. The
+    vector `\boldsymbol{O} \boldsymbol{v}` is in the range of `\boldsymbol{O}`, i.e. of `\boldsymbol{A}^{-1} \boldsymbol{K}_G`,
     such that the estimate does not decrease with the number of
-    degrees-of-freedom where `[K_G]` is null, as `\|[O]\{v\}\|/\|\{v\}\|`
+    degrees-of-freedom where `\boldsymbol{K}_G` is null, as `\|\boldsymbol{O} \boldsymbol{v}\|/\|\boldsymbol{v}\|`
     does.
 
     """
@@ -1488,7 +1488,7 @@ def _eigs_shifted(K, KG, s, k, tol, lu):
     tol : float
         Tolerance of :func:`scipy.sparse.linalg.eigs`.
     lu : SuperLU
-        Factorization of `[K] + s [K_G]`.
+        Factorization of `\boldsymbol{K} + s \boldsymbol{K}_G`.
 
     Returns
     -------
@@ -1497,8 +1497,8 @@ def _eigs_shifted(K, KG, s, k, tol, lu):
         :func:`_general_eigenpairs`, empty when all the eigenvalues found
         are null. The eigenvalues `\nu = -1/(\lambda - s)` with `|\nu| \le`
         ``NULL_MU_RTOL`` times the largest of `\max |\nu|` and the estimate
-        of :func:`_norm_estimate` of the norm of `([K] + s [K_G])^{-1}
-        [K_G]` from the starting vector of ARPACK are null, i.e. infinite
+        of :func:`_norm_estimate` of the norm of `(\boldsymbol{K} + s \boldsymbol{K}_G)^{-1}
+        \boldsymbol{K}_G` from the starting vector of ARPACK are null, i.e. infinite
         load multipliers, and are not returned.
     radius : float
         `\max |\lambda - s|` of the returned load multipliers: all the load
@@ -1508,27 +1508,27 @@ def _eigs_shifted(K, KG, s, k, tol, lu):
 
     Notes
     -----
-    With `\lambda = s + \delta`, `([K] + s[K_G] + \delta [K_G])\{u\} = 0`
-    gives the standard problem `[O] \{u\} = \nu \{u\}`, `[O] = ([K] + s
-    [K_G])^{-1} [K_G]`, `\nu = -1/(\lambda - s)`, whose ``k`` eigenvalues
+    With `\lambda = s + \delta`, `(\boldsymbol{K} + s \boldsymbol{K}_G + \delta \boldsymbol{K}_G) \boldsymbol{u} = 0`
+    gives the standard problem `\boldsymbol{O} \boldsymbol{u} = \nu \boldsymbol{u}`, `\boldsymbol{O} = (\boldsymbol{K} + s
+    \boldsymbol{K}_G)^{-1} \boldsymbol{K}_G`, `\nu = -1/(\lambda - s)`, whose ``k`` eigenvalues
     of largest `|\nu|` are found with :func:`scipy.sparse.linalg.eigs`.
     Then `\mu = \nu/(1 - s \nu)`. The eigenvalues `|\nu| \le \epsilon_0
-    \max(\max |\nu|, \|[O]\|)`, with `\epsilon_0` = ``NULL_MU_RTOL``, are
-    taken as null, e.g. those of the null rows of `[K_G]`.
+    \max(\max |\nu|, \|\boldsymbol{O}\|)`, with `\epsilon_0` = ``NULL_MU_RTOL``, are
+    taken as null, e.g. those of the null rows of `\boldsymbol{K}_G`.
 
-    The null `\nu` are found as round-off: each product with `[O]` is
+    The null `\nu` are found as round-off: each product with `\boldsymbol{O}` is
     computed with an error of the order of the machine precision times
-    `\|[O]\|`, and a null `\nu` comes out with a modulus up to this order,
-    or larger for a defective null eigenvalue. When `[O]` has non-null
+    `\|\boldsymbol{O}\|`, and a null `\nu` comes out with a modulus up to this order,
+    or larger for a defective null eigenvalue. When `\boldsymbol{O}` has non-null
     eigenvalues, `\max |\nu|` is a scale of the round-off; when it has
-    none, e.g. when `[K]^{-1}[K_G]` is nilpotent as with the follower load
+    none, e.g. when `\boldsymbol{K}^{-1} \boldsymbol{K}_G` is nilpotent as with the follower load
     of Ziegler's double pendulum, all the `\nu` are round-off, e.g. about
     `10^{-33}` or `10^{-17}` instead of 0 depending on the restarts of
     ARPACK, and `\max |\nu|` is not a scale: the largest `\nu` would not be
     null and their spurious load multipliers, about `10^{33}` or
-    `10^{17}`, would be returned. The norm `\|[O]\|` is a scale that does
+    `10^{17}`, would be returned. The norm `\|\boldsymbol{O}\|` is a scale that does
     not depend on the eigenvalues. The estimate is not larger than `\max
-    |\nu|` for a normal `[O]`, whose largest `|\nu|` is its norm, and both
+    |\nu|` for a normal `\boldsymbol{O}`, whose largest `|\nu|` is its norm, and both
     scales then give the same null `\nu`.
 
     """
@@ -1606,22 +1606,22 @@ def _eigs_shift_search(K, KG, k, tol, check_rtol):
        axis, inside which all the multipliers were found. With `c` the end of
        the union of these intervals starting at 0, i.e. `(0, c)` is covered,
        the next shift is `s_{j+1} = c + r_j`. The shift is perturbed when
-       `[K] + s [K_G]` is exactly singular.
+       `\boldsymbol{K} + s \boldsymbol{K}_G` is exactly singular.
     3. The search stops when the lowest positive real multiplier found,
        `\lambda_{cr}`, is not larger than `c`: no multiplier of `(0,
        \lambda_{cr})` was missed. It fails after
        ``SHIFT_SEARCH_MAX_STEPS`` steps, or when the shift exceeds
        ``SHIFT_SEARCH_MAX_GROWTH`` times `r_0`.
-    4. Parity check: `\det([K] + (1 - \epsilon_p) \lambda_{cr} [K_G])`, with
-       `\epsilon_p` = ``PARITY_REL_GAP``, must have the sign of `\det [K]`,
+    4. Parity check: `\det(\boldsymbol{K} + (1 - \epsilon_p) \lambda_{cr} \boldsymbol{K}_G)`, with
+       `\epsilon_p` = ``PARITY_REL_GAP``, must have the sign of `\det \boldsymbol{K}`,
        i.e. an even number, normally zero, of real multipliers in `(0, (1 -
        \epsilon_p) \lambda_{cr})`. The signs come from the SuperLU
        factorizations, see :func:`_det_sign`. This check cannot detect two
        missing real multipliers, nor a missing complex pair.
 
-    The parity check follows from `\det([K] + s [K_G]) = \det [K]
+    The parity check follows from `\det(\boldsymbol{K} + s \boldsymbol{K}_G) = \det \boldsymbol{K}
     \prod_i (1 + s \mu_i)`, with `\mu_i = -1/\lambda_i` the eigenvalues of
-    `[K]^{-1}[K_G]`: a complex conjugate pair gives the positive factor
+    `\boldsymbol{K}^{-1} \boldsymbol{K}_G`: a complex conjugate pair gives the positive factor
     `|1 + s \mu_i|^2`, a null `\mu_i` the factor 1, and a real `\mu_i` a
     negative factor exactly when `0 < \lambda_i < s`.
 
@@ -1901,22 +1901,22 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
 
     Notes
     -----
-    The problem solved is `([K_{C0}] + \lambda [K_G])\{u\} = \{0\}`, written
-    as `[K_G]\{u\} = \mu [K_{C0}]\{u\}` with `\lambda = -1/\mu`, whose lowest
+    The problem solved is `(\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}`, written
+    as `\boldsymbol{K}_G \boldsymbol{u} = \mu \boldsymbol{K}_{C0} \boldsymbol{u}` with `\lambda = -1/\mu`, whose lowest
     positive load multipliers are the most negative `\mu`, returned by the
     Cayley mode while the shift is large enough, see the notes of
     :mod:`pyfe3d.solver.eigen`. With ``precondition=True`` the problem
-    solved is the one of `[P][K_{C0}][P]` and `[P][K_G][P]`, with the same
+    solved is the one of `\boldsymbol{P} \boldsymbol{K}_{C0} \boldsymbol{P}` and `\boldsymbol{P} \boldsymbol{K}_G \boldsymbol{P}`, with the same
     eigenvalues, see :func:`diagonal_preconditioner`; the verification
     always uses the original matrices.
 
-    A null row or column of `[K_{C0}]` is a degree-of-freedom without
+    A null row or column of `\boldsymbol{K}_{C0}` is a degree-of-freedom without
     stiffness, a modelling error: with the same null row or column of
-    `[K_G]`, `\det([K_{C0}] + \lambda [K_G]) = 0` for every `\lambda`, a
+    `\boldsymbol{K}_G`, `\det(\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) = 0` for every `\lambda`, a
     singular pencil whose computed eigenvalues are arbitrary, and otherwise
     `\lambda = 0` is a spurious load multiplier. It is therefore reported
     instead of being removed, unlike in structsolve, see
-    :func:`.check_null_rows_cols`. A null row of `[K_G]`, at a
+    :func:`.check_null_rows_cols`. A null row of `\boldsymbol{K}_G`, at a
     degree-of-freedom that the load does not destabilize, only gives an
     infinite load multiplier.
 
@@ -2060,11 +2060,11 @@ def _check_freq(K, M, omega2, eigvecs, rtol, symmetric, min_rel_gap=1.e-4):
 
     Notes
     -----
-    - The relative residual `\|K u - \omega_n^2 M u\|/(\|K u\| +
+    - The relative residual `\|\boldsymbol{K} \boldsymbol{u} - \omega_n^2 \boldsymbol{M} \boldsymbol{u}\|/(\|\boldsymbol{K} \boldsymbol{u}\| +
       |\omega_n^2| \|M u\|)` of every finite eigenpair must not be larger
-      than ``rtol``. For a rigid-body mode, whose `\|K u\| + |\omega_n^2|
+      than ``rtol``. For a rigid-body mode, whose `\|\boldsymbol{K} \boldsymbol{u}\| + |\omega_n^2|
       \|M u\|` is not larger than ``RIGID_BODY_RTOL`` times the
-      matrix-norm scale `(\|K\|_F + |\omega_n^2| \|M\|_F) \|u\|`, the
+      matrix-norm scale `(\|\boldsymbol{K}\|_F + |\omega_n^2| \|\boldsymbol{M}\|_F) \|\boldsymbol{u}\|`, the
       residual is relative to this scale, see :func:`_relative_residuals`.
       An eigenpair with a larger relative residual also passes when its
       normwise backward error, the residual relative to the matrix-norm
@@ -2073,11 +2073,11 @@ def _check_freq(K, M, omega2, eigvecs, rtol, symmetric, min_rel_gap=1.e-4):
       eigenvalue close to zero of a model pre-stressed close to buckling,
       see :func:`_backward_errors`.
     - With ``symmetric=True``, no eigenvalue is missing below the highest
-      one returned, `\omega^2_k`: the number of negative pivots of `[K] - s
-      [M]`, with `s = \omega^2_k - min\_rel\_gap |\omega^2_k|`, must be the
-      number of returned eigenvalues lower than `s`. For symmetric `[K]` and
-      a positive definite `[M]`, `[K] - s [M]` is congruent to
-      `[M]^{-1/2}[K][M]^{-1/2} - s [I]`, whose eigenvalues are `\omega_i^2 -
+      one returned, `\omega^2_k`: the number of negative pivots of `\boldsymbol{K} - s
+      \boldsymbol{M}`, with `s = \omega^2_k - min\_rel\_gap |\omega^2_k|`, must be the
+      number of returned eigenvalues lower than `s`. For symmetric `\boldsymbol{K}` and
+      a positive definite `\boldsymbol{M}`, `\boldsymbol{K} - s \boldsymbol{M}` is congruent to
+      `\boldsymbol{M}^{-1/2} \boldsymbol{K} \boldsymbol{M}^{-1/2} - s \boldsymbol{I}`, whose eigenvalues are `\omega_i^2 -
       s`, hence its number of negative eigenvalues, equal to its number of
       negative pivots by Sylvester's law of inertia, is the number of
       `\omega_i^2 < s`. The check is skipped when the count is unknown, see
@@ -2137,16 +2137,16 @@ def _dense_freq(K, M, k, sigma, symmetric):
 
     Notes
     -----
-    With ``symmetric=True``, `[M]\{u\} = (1/\omega_n^2) [K]\{u\}` is solved
+    With ``symmetric=True``, `\boldsymbol{M} \boldsymbol{u} = (1/\omega_n^2) \boldsymbol{K} \boldsymbol{u}` is solved
     with :func:`scipy.linalg.eigh`, which gives the lowest frequencies with
-    smaller residuals than `[K]\{u\} = \omega_n^2 [M]\{u\}` for stiff models,
+    smaller residuals than `\boldsymbol{K} \boldsymbol{u} = \omega_n^2 \boldsymbol{M} \boldsymbol{u}` for stiff models,
     e.g. relative residuals of at most 1.6e-10 against 1.4e-8 for the 10
     lowest frequencies of the Quad4 plate of
     ``test_dense_symmetric_lowest_frequencies`` in
     ``tests/test_solver_natural_frequency.py``, and accepts a singular
-    `[M]`, but requires a positive definite `[K]`; otherwise `[K]\{u\} =
-    \omega_n^2 [M]\{u\}` is solved. The eigenvectors are normalized with
-    respect to `[M]`. With ``symmetric=False``, :func:`scipy.linalg.eig` is
+    `\boldsymbol{M}`, but requires a positive definite `\boldsymbol{K}`; otherwise `\boldsymbol{K} \boldsymbol{u} =
+    \omega_n^2 \boldsymbol{M} \boldsymbol{u}` is solved. The eigenvectors are normalized with
+    respect to `\boldsymbol{M}`. With ``symmetric=False``, :func:`scipy.linalg.eig` is
     used through :func:`_eig_complex`, and the finite `\omega_n^2` nearest
     ``sigma`` are returned.
 
@@ -2273,17 +2273,17 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
 
     Notes
     -----
-    The problem solved is `([K_{C0}] - \omega_n^2 [M])\{u\} = \{0\}`, and
+    The problem solved is `(\boldsymbol{K}_{C0} - \omega_n^2 \boldsymbol{M}) \boldsymbol{u} = \boldsymbol{0}`, and
     the frequencies of symmetric matrices are `\omega_n = \sqrt{\max(
     \omega_n^2, 0)}`. In the shift-invert mode, the sparse solvers find the
     eigenvalues closest to the shift ``sigma=-1.``, i.e. the lowest ones
-    when `[K_{C0}]` is positive semi-definite and `[M]` positive definite,
-    factorizing `[K_{C0}] + [M]`, which is not singular when `[K_{C0}]` is
+    when `\boldsymbol{K}_{C0}` is positive semi-definite and `\boldsymbol{M}` positive definite,
+    factorizing `\boldsymbol{K}_{C0} + \boldsymbol{M}`, which is not singular when `\boldsymbol{K}_{C0}` is
     singular only because of unconstrained rigid-body modes that have mass.
 
-    A null row or column of `[K_{C0}]` is a degree-of-freedom without
+    A null row or column of `\boldsymbol{K}_{C0}` is a degree-of-freedom without
     stiffness, a modelling error: with the same null row or column of
-    `[M]`, `\det([K_{C0}] - \omega_n^2 [M]) = 0` for every `\omega_n^2`,
+    `\boldsymbol{M}`, `\det(\boldsymbol{K}_{C0} - \omega_n^2 \boldsymbol{M}) = 0` for every `\omega_n^2`,
     a singular pencil whose computed eigenvalues are arbitrary, and
     otherwise `\omega_n^2 = 0` is a spurious frequency. It is therefore
     reported instead of being removed, unlike in structsolve, see
@@ -2379,8 +2379,8 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
 
 
 def _quadratic_residuals(K, C, M, lam, u, rigid_rtol=None):
-    r"""Relative residuals of the eigenpairs of `(\lambda^2 [M] + \lambda [C]
-    + [K])\{u\} = \{0\}`
+    r"""Relative residuals of the eigenpairs of `(\lambda^2 \boldsymbol{M} + \lambda \boldsymbol{C}
+    + \boldsymbol{K}) \boldsymbol{u} = \boldsymbol{0}`
 
     Parameters
     ----------
@@ -2412,15 +2412,15 @@ def _quadratic_residuals(K, C, M, lam, u, rigid_rtol=None):
 
     .. math::
 
-        \frac{\|(\lambda^2 [M] + \lambda [C] + [K])\{u\}\|}{|\lambda|^2
-        \|[M]\{u\}\| + |\lambda| \, \|[C]\{u\}\| + \|[K]\{u\}\|}
+        \frac{\|(\lambda^2 \boldsymbol{M} + \lambda \boldsymbol{C} + \boldsymbol{K}) \boldsymbol{u}\|}{|\lambda|^2
+        \|\boldsymbol{M} \boldsymbol{u}\| + |\lambda| \, \|\boldsymbol{C} \boldsymbol{u}\| + \|\boldsymbol{K} \boldsymbol{u}\|}
 
     is the quadratic counterpart of the one of :func:`_relative_residuals`,
     with the same treatment of the eigenpairs null up to the round-off: with
     ``rigid_rtol``, their residual is the normwise backward error of the
-    quadratic eigenvalue problem in the Frobenius norm, `\|\{r\}\|/
-    ((|\lambda|^2 \|[M]\|_F + |\lambda| \, \|[C]\|_F + \|[K]\|_F)
-    \|\{u\}\|)`, see [1]_ (Section 4.2, Eq. (4.7), pp. 264-265).
+    quadratic eigenvalue problem in the Frobenius norm, `\|\boldsymbol{r}\|/
+    ((|\lambda|^2 \|\boldsymbol{M}\|_F + |\lambda| \, \|\boldsymbol{C}\|_F + \|\boldsymbol{K}\|_F)
+    \|\boldsymbol{u}\|)`, see [1]_ (Section 4.2, Eq. (4.7), pp. 264-265).
 
     References
     ----------
@@ -2446,8 +2446,8 @@ def _quadratic_residuals(K, C, M, lam, u, rigid_rtol=None):
 
 
 def _quadratic_backward_errors(K, C, M, lam, u):
-    r"""Normwise backward errors of the eigenpairs of `(\lambda^2 [M] +
-    \lambda [C] + [K])\{u\} = \{0\}`
+    r"""Normwise backward errors of the eigenpairs of `(\lambda^2 \boldsymbol{M} +
+    \lambda \boldsymbol{C} + \boldsymbol{K}) \boldsymbol{u} = \boldsymbol{0}`
 
     Parameters
     ----------
@@ -2470,15 +2470,15 @@ def _quadratic_backward_errors(K, C, M, lam, u):
     -----
     The quadratic counterpart of :func:`_backward_errors`, the normwise
     backward error of [1]_ (Theorem 1, Eq. (2.3)) with the tolerances
-    `\|[K]\|_F`, `\|[C]\|_F` and `\|[M]\|_F`, see also [2]_ (Section 4.2,
+    `\|\boldsymbol{K}\|_F`, `\|\boldsymbol{C}\|_F` and `\|\boldsymbol{M}\|_F`, see also [2]_ (Section 4.2,
     Eq. (4.7), pp. 264-265). :func:`complex_frequency` accepts an eigenpair
     whose relative residual of :func:`_quadratic_residuals` is larger than
     ``check_rtol`` when its backward error is not larger than
     ``BACKWARD_ERROR_RTOL``, the machine precision. Measured with SciPy
     1.17.1 and Intel MKL 2025.0.0 for the cantilever of
     ``tests/test_beamc_natural_freq_cantilever_pre_stress.py`` pre-stressed
-    to 0.9999 of its buckling load, with `[C]` null, `10^{-6} [K_{C0}]` or
-    `10^{-4} [K_{C0}] + 10^{-2} [M]`: the lowest eigenpairs of ``eigs`` on
+    to 0.9999 of its buckling load, with `\boldsymbol{C}` null, `10^{-6} \boldsymbol{K}_{C0}` or
+    `10^{-4} \boldsymbol{K}_{C0} + 10^{-2} \boldsymbol{M}`: the lowest eigenpairs of ``eigs`` on
     the linearization, `|\lambda| = 0.30`, have relative residuals of `2.6
     \cdot 10^{-6}` to `7.0 \cdot 10^{-6}`, larger than the default
     ``check_rtol=1e-6``, and backward errors of `0.022 \epsilon` to `0.035
@@ -2517,7 +2517,7 @@ def _companion_vectors(K, C, M, lam, Z):
     lam : np.ndarray
         Finite eigenvalues, 1-D array of size ``k``.
     Z : np.ndarray
-        Eigenvectors `\{z\} = \{\{u\}^\top, \lambda \{u\}^\top\}^\top` of the
+        Eigenvectors `\boldsymbol{z} = \{\boldsymbol{u}^\top, \lambda \boldsymbol{u}^\top\}^\top` of the
         linearization, shape ``(2n, k)``.
 
     Returns
@@ -2528,8 +2528,8 @@ def _companion_vectors(K, C, M, lam, Z):
 
     Notes
     -----
-    In finite precision the first and the last `n` components of `\{z\}`
-    are not equivalent approximations of `\{u\}`; the one with the smaller
+    In finite precision the first and the last `n` components of `\boldsymbol{z}`
+    are not equivalent approximations of `\boldsymbol{u}`; the one with the smaller
     relative residual, see :func:`_quadratic_residuals`, is kept, as in
     Algorithm 5.1 of [1]_ (Section 5.1, p. 267). E.g. the last `n`
     components vanish with `\lambda`.
@@ -2590,8 +2590,8 @@ def _qep_modes(lam, U, k, sigma):
     Notes
     -----
     The eigenvalues of real matrices are real or come in complex conjugate
-    pairs `(\lambda, \bar{\lambda})`, with the eigenvectors `\{u\}` and
-    `\{\bar{u}\}` ([1]_, Table 1.1, p. 237). The eigenvalues whose imaginary
+    pairs `(\lambda, \bar{\lambda})`, with the eigenvectors `\boldsymbol{u}` and
+    `\bar{\boldsymbol{u}}` ([1]_, Table 1.1, p. 237). The eigenvalues whose imaginary
     part is not larger than ``1e-8`` times their modulus are made real with
     :func:`_real_if_close`. Each eigenvalue with `Im(\lambda) < 0` is then
     paired with the nearest unpaired one with `Im(\lambda) > 0` within
@@ -2635,8 +2635,8 @@ def _qep_modes(lam, U, k, sigma):
 
 
 def _companion(K, C, M):
-    r"""Dense first companion linearization ``(A, B)`` of `(\lambda^2 [M] +
-    \lambda [C] + [K])\{u\} = \{0\}`, see :func:`complex_frequency`"""
+    r"""Dense first companion linearization ``(A, B)`` of `(\lambda^2 \boldsymbol{M} +
+    \lambda \boldsymbol{C} + \boldsymbol{K}) \boldsymbol{u} = \boldsymbol{0}`, see :func:`complex_frequency`"""
     n = K.shape[0]
     I = np.eye(n)
     Z = np.zeros((n, n))
@@ -2668,7 +2668,7 @@ def _dense_qep(K, C, M, k, sigma):
     All the eigenpairs of the first companion linearization, see
     :func:`_companion`, are computed with :func:`scipy.linalg.eig`
     through :func:`_eig_complex`; the infinite eigenvalues of a singular
-    `[M]` are discarded.
+    `\boldsymbol{M}` are discarded.
 
     """
     A, B = _companion(K, C, M)
@@ -2704,29 +2704,29 @@ def _eigs_qep(K, C, M, k, tol, sigma):
     Raises
     ------
     RuntimeError
-        When `\lambda^2 [M] + \lambda [C] + [K]` is exactly singular at
+        When `\lambda^2 \boldsymbol{M} + \lambda \boldsymbol{C} + \boldsymbol{K}` is exactly singular at
         `\lambda = \sigma`.
 
     Notes
     -----
-    With the first companion linearization `[A] - \lambda [B]`, see
+    With the first companion linearization `\boldsymbol{A} - \lambda \boldsymbol{B}`, see
     :func:`complex_frequency`, the operator of the shift-invert mode is
-    `[S] = ([A] - \sigma [B])^{-1} [B]`, whose eigenvalues are `\nu =
+    `\boldsymbol{S} = (\boldsymbol{A} - \sigma \boldsymbol{B})^{-1} \boldsymbol{B}`, whose eigenvalues are `\nu =
     1/(\lambda - \sigma)`, and those of largest modulus are found. For
-    `\{y\} = [S]\{z\}`, with the halves `\{z_1\}`, `\{z_2\}` and `\{y_1\}`,
-    `\{y_2\}`:
+    `\boldsymbol{y} = \boldsymbol{S} \boldsymbol{z}`, with the halves `\boldsymbol{z}_1`, `\boldsymbol{z}_2` and `\boldsymbol{y}_1`,
+    `\boldsymbol{y}_2`:
 
     .. math::
 
-        \{y_1\} = -[Q(\sigma)]^{-1} \left( [M]\{z_2\} + ([C] + \sigma [M])
-        \{z_1\} \right), \qquad \{y_2\} = \{z_1\} + \sigma \{y_1\}
+        \boldsymbol{y}_1 = -\boldsymbol{Q}(\sigma)^{-1} \left( \boldsymbol{M} \boldsymbol{z}_2 + (\boldsymbol{C} + \sigma \boldsymbol{M})
+        \boldsymbol{z}_1 \right), \qquad \boldsymbol{y}_2 = \boldsymbol{z}_1 + \sigma \boldsymbol{y}_1
 
-    with `[Q(\sigma)] = \sigma^2 [M] + \sigma [C] + [K]`, such that only the
-    `n \times n` matrix `[Q(\sigma)]` is factorized, not the `2n \times 2n`
-    matrix `[A] - \sigma [B]` ([1]_, Section 6.1, Eq. (6.3), p. 273). A
+    with `\boldsymbol{Q}(\sigma) = \sigma^2 \boldsymbol{M} + \sigma \boldsymbol{C} + \boldsymbol{K}`, such that only the
+    `n \times n` matrix `\boldsymbol{Q}(\sigma)` is factorized, not the `2n \times 2n`
+    matrix `\boldsymbol{A} - \sigma \boldsymbol{B}` ([1]_, Section 6.1, Eq. (6.3), p. 273). A
     complex shift gives a complex operator. The `\nu` with `|\nu| \le`
     ``NULL_MU_RTOL`` `\max |\nu|`, infinite eigenvalues of a singular
-    `[M]`, are discarded.
+    `\boldsymbol{M}`, are discarded.
 
     References
     ----------
@@ -2930,10 +2930,10 @@ def complex_frequency(K, C, M, num_eigvalues=6, tol=0, sigma=None,
 
     .. math::
 
-        (\lambda^2 [M] + \lambda [C] + [K])\{u\} = \{0\}
+        (\lambda^2 \boldsymbol{M} + \lambda \boldsymbol{C} + \boldsymbol{K}) \boldsymbol{u} = \boldsymbol{0}
 
-    the free vibrations `\{q\} = \{u\} e^{\lambda t}` of `[M]\{\ddot{q}\} +
-    [C]\{\dot{q}\} + [K]\{q\} = \{0\}`. With `\lambda = -\zeta \omega_n \pm
+    the free vibrations `\boldsymbol{q} = \boldsymbol{u} e^{\lambda t}` of `\boldsymbol{M} \ddot{\boldsymbol{q}} +
+    \boldsymbol{C} \dot{\boldsymbol{q}} + \boldsymbol{K} \boldsymbol{q} = \boldsymbol{0}`. With `\lambda = -\zeta \omega_n \pm
     i \omega_d`, `\omega_d = |Im(\lambda)|` is the damped circular frequency
     and `\zeta = -Re(\lambda)/|\lambda|` the damping ratio: a single
     degree-of-freedom, `m \lambda^2 + c \lambda + k = 0`, has the roots
@@ -2942,50 +2942,50 @@ def complex_frequency(K, C, M, num_eigvalues=6, tol=0, sigma=None,
     c/(2 \sqrt{k m})`. A real `\lambda`, e.g. of an overdamped mode, gives
     `\omega_d = 0`, and a positive `Re(\lambda)` a growing motion, i.e. an
     unstable system, by flutter when `\lambda` is complex. `\zeta` is not
-    defined for `\lambda = 0`. With `[C] = [0]`, `\lambda^2 = -\omega_n^2`
+    defined for `\lambda = 0`. With `\boldsymbol{C} = \boldsymbol{0}`, `\lambda^2 = -\omega_n^2`
     of :func:`natural_frequency`.
 
     .. rubric:: Linearization
 
-    With `\{z\} = \{\{u\}^\top, \lambda \{u\}^\top\}^\top`, the problem is the
+    With `\boldsymbol{z} = \{\boldsymbol{u}^\top, \lambda \boldsymbol{u}^\top\}^\top`, the problem is the
     generalized eigenvalue problem of size `2n`
 
     .. math::
 
-        \begin{bmatrix} [0] & [I] \\ -[K] & -[C] \end{bmatrix} \{z\} =
-        \lambda \begin{bmatrix} [I] & [0] \\ [0] & [M] \end{bmatrix} \{z\}
+        \begin{bmatrix} \boldsymbol{0} & \boldsymbol{I} \\ -\boldsymbol{K} & -\boldsymbol{C} \end{bmatrix} \boldsymbol{z} =
+        \lambda \begin{bmatrix} \boldsymbol{I} & \boldsymbol{0} \\ \boldsymbol{0} & \boldsymbol{M} \end{bmatrix} \boldsymbol{z}
 
-    the first companion form `[A] - \lambda [B]` of [1]_ (Section 3.4, Eq.
-    (3.6) with `[N] = [I]`, p. 253): the first row is `\lambda \{u\} =
-    \lambda \{u\}`, and the second gives the quadratic problem. It is valid
-    for any `[C]`, symmetric or not, singular or not, and it requires
-    neither a non-singular `[K]` nor a non-singular `[M]`: a singular
-    `[M]`, e.g. a lumped mass matrix without rotary inertia, only gives
-    infinite eigenvalues, `[B]` being singular, which are discarded. Its
+    the first companion form `\boldsymbol{A} - \lambda \boldsymbol{B}` of [1]_ (Section 3.4, Eq.
+    (3.6) with `\boldsymbol{N} = \boldsymbol{I}`, p. 253): the first row is `\lambda \boldsymbol{u} =
+    \lambda \boldsymbol{u}`, and the second gives the quadratic problem. It is valid
+    for any `\boldsymbol{C}`, symmetric or not, singular or not, and it requires
+    neither a non-singular `\boldsymbol{K}` nor a non-singular `\boldsymbol{M}`: a singular
+    `\boldsymbol{M}`, e.g. a lumped mass matrix without rotary inertia, only gives
+    infinite eigenvalues, `\boldsymbol{B}` being singular, which are discarded. Its
     shift-invert operator needs the factorization of the `n \times n`
-    matrix `[Q(\sigma)] = \sigma^2 [M] + \sigma [C] + [K]` only, see
+    matrix `\boldsymbol{Q}(\sigma) = \sigma^2 \boldsymbol{M} + \sigma \boldsymbol{C} + \boldsymbol{K}` only, see
     :func:`_eigs_qep`; MSC/Nastran uses this linearization with a
     shift-invert Lanczos algorithm ([1]_, Section 7.1, p. 278). The
-    symmetric linearizations of symmetric `[K]`, `[C]` and `[M]` give
+    symmetric linearizations of symmetric `\boldsymbol{K}`, `\boldsymbol{C}` and `\boldsymbol{M}` give
     pencils that are indefinite, unless the system is overdamped ([1]_,
     Section 3.8.2, p. 258), for which the symmetric solver of ARPACK cannot
     be used, and they exclude the unsymmetric matrices of the piston
-    theory. The eigenvectors `\{u\}`
-    are taken from the first or the last `n` rows of `\{z\}`, see
+    theory. The eigenvectors `\boldsymbol{u}`
+    are taken from the first or the last `n` rows of `\boldsymbol{z}`, see
     :func:`_companion_vectors`.
 
     .. rubric:: Shift
 
     The default shift `\sigma = 1` rad/s is the counterpart of the shift
     `\omega_n^2 = -1` of :func:`natural_frequency`, `\lambda^2 =
-    -\omega_n^2 = 1`: with `[C] = [0]` the factorized matrix is the same,
-    `[K] + [M]`, and `|\lambda - 1|^2 = 1 + \omega_n^2` for `\lambda = \pm
+    -\omega_n^2 = 1`: with `\boldsymbol{C} = \boldsymbol{0}` the factorized matrix is the same,
+    `\boldsymbol{K} + \boldsymbol{M}`, and `|\lambda - 1|^2 = 1 + \omega_n^2` for `\lambda = \pm
     i \omega_n`, such that the lowest natural frequencies are found first.
     With `\lambda = \omega_n(-\zeta \pm i \sqrt{1 - \zeta^2})`, `|\lambda -
     1|^2 = 1 + 2 \zeta \omega_n + \omega_n^2`, which increases with
-    `\omega_n` for `\omega_n > -\zeta`. When `[M]` is non-singular,
-    `\det [Q(\sigma)] = \det [M] \prod_i (\sigma - \lambda_i)` over the
-    `2n` eigenvalues, such that `[Q(1)]` is singular only when `\lambda =
+    `\omega_n` for `\omega_n > -\zeta`. When `\boldsymbol{M}` is non-singular,
+    `\det \boldsymbol{Q}(\sigma) = \det \boldsymbol{M} \prod_i (\sigma - \lambda_i)` over the
+    `2n` eigenvalues, such that `\boldsymbol{Q}(1)` is singular only when `\lambda =
     1` is an eigenvalue, i.e. never for the rigid-body modes, `\lambda =
     0`, nor for a stable system, `Re(\lambda) \le 0`. A complex shift gives
     a complex operator, and the conjugate of each eigenvalue found with
@@ -2993,26 +2993,26 @@ def complex_frequency(K, C, M, num_eigvalues=6, tol=0, sigma=None,
 
     .. rubric:: Verification
 
-    The relative residual `\|(\lambda^2 [M] + \lambda [C] + [K])\{u\}\| /
-    (|\lambda|^2 \|[M]\{u\}\| + |\lambda| \, \|[C]\{u\}\| + \|[K]\{u\}\|)`
+    The relative residual `\|(\lambda^2 \boldsymbol{M} + \lambda \boldsymbol{C} + \boldsymbol{K}) \boldsymbol{u}\| /
+    (|\lambda|^2 \|\boldsymbol{M} \boldsymbol{u}\| + |\lambda| \, \|\boldsymbol{C} \boldsymbol{u}\| + \|\boldsymbol{K} \boldsymbol{u}\|)`
     of each eigenpair is checked, the rigid-body modes being relative to the
     matrix-norm scale, see :func:`_quadratic_residuals`. Unlike
     :func:`natural_frequency`, no inertia check tells that no eigenvalue
     nearer the shift was missed: by Sylvester's law of inertia, the
-    negative pivots of `[K] - s [M]` count the real eigenvalues below `s`
-    of a symmetric pencil with a positive definite `[M]`, whereas the
+    negative pivots of `\boldsymbol{K} - s \boldsymbol{M}` count the real eigenvalues below `s`
+    of a symmetric pencil with a positive definite `\boldsymbol{M}`, whereas the
     eigenvalues of a damped system are complex, and the symmetric
     linearizations are definite only for overdamped systems, whose
     eigenvalues are real ([1]_, Sections 3.8.2 and 3.9, p. 258). No count
     of the eigenvalues of a quadratic eigenvalue problem inside a region of
     the complex plane is implemented, and that ARPACK found the eigenvalues
     of largest `|1/(\lambda - \sigma)|` is therefore not verified; the
-    dense solution, ``sparse_solver=False``, is the reference. With `[C] =
-    [0]` and symmetric matrices, :func:`natural_frequency` verifies it with
+    dense solution, ``sparse_solver=False``, is the reference. With `\boldsymbol{C} =
+    \boldsymbol{0}` and symmetric matrices, :func:`natural_frequency` verifies it with
     the inertia check.
 
-    A rigid-body mode, `[K]\{u\} = \{0\}`, gives `\lambda = 0`, a double
-    eigenvalue when `[C]\{u\} = \{0\}`, which the solvers return as two
+    A rigid-body mode, `\boldsymbol{K} \boldsymbol{u} = \boldsymbol{0}`, gives `\lambda = 0`, a double
+    eigenvalue when `\boldsymbol{C} \boldsymbol{u} = \boldsymbol{0}`, which the solvers return as two
     eigenvalues null up to the round-off.
 
     References

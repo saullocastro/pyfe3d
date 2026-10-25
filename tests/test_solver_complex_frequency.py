@@ -1,20 +1,20 @@
 r"""Tests for :func:`pyfe3d.solver.complex_frequency`: damped free vibrations,
-`(\lambda^2 [M] + \lambda [C] + [K])\{u\} = \{0\}`
+`(\lambda^2 \boldsymbol{M} + \lambda \boldsymbol{C} + \boldsymbol{K}) \boldsymbol{u} = \boldsymbol{0}`
 
 A single degree-of-freedom `m \lambda^2 + c \lambda + k = 0` has the roots
 `\lambda = -\zeta \omega_n \pm i \omega_n \sqrt{1 - \zeta^2}`, with `\omega_n
 = \sqrt{k/m}` and `\zeta = c/(2 \sqrt{k m})`, for `\zeta < 1`, and the real
 roots `\lambda = -\zeta \omega_n \pm \omega_n \sqrt{\zeta^2 - 1}` for `\zeta
-> 1`. With proportional (Rayleigh) damping, `[C] = \alpha [M] + \beta [K]`,
+> 1`. With proportional (Rayleigh) damping, `\boldsymbol{C} = \alpha \boldsymbol{M} + \beta \boldsymbol{K}`,
 each undamped mode `\omega_j` is a single degree-of-freedom with `\zeta_j =
 \alpha/(2 \omega_j) + \beta \omega_j/2`. The other cases are compared with
 :func:`scipy.linalg.eig` on the second companion linearization ([1]_,
-Section 3.4, Eq. (3.7) with `[N] = [I]`, p. 253),
+Section 3.4, Eq. (3.7) with `\boldsymbol{N} = \boldsymbol{I}`, p. 253),
 
 .. math::
 
-    \begin{bmatrix} -[K] & [0] \\ [0] & [I] \end{bmatrix} -
-    \lambda \begin{bmatrix} [C] & [M] \\ [I] & [0] \end{bmatrix}
+    \begin{bmatrix} -\boldsymbol{K} & \boldsymbol{0} \\ \boldsymbol{0} & \boldsymbol{I} \end{bmatrix} -
+    \lambda \begin{bmatrix} \boldsymbol{C} & \boldsymbol{M} \\ \boldsymbol{I} & \boldsymbol{0} \end{bmatrix}
 
 independent of the first companion form used by the solver.
 
@@ -194,8 +194,8 @@ def test_nonproportional_against_dense(skew):
 
 
 def test_gyroscopic_undamped():
-    r"""Symmetric positive definite `[K]` and `[M]` with a skew-symmetric
-    `[C]` (gyroscopic, without damping): the eigenvalues are purely
+    r"""Symmetric positive definite `\boldsymbol{K}` and `\boldsymbol{M}` with a skew-symmetric
+    `\boldsymbol{C}` (gyroscopic, without damping): the eigenvalues are purely
     imaginary"""
     K, _, M = nonproportional(seed=3)
     G = sprandom(60, 60, density=0.05, random_state=np.random.RandomState(4))
@@ -207,7 +207,7 @@ def test_gyroscopic_undamped():
 
 
 def test_null_damping_natural_frequency():
-    r"""With `[C] = [0]`, `\lambda = i \omega_n` and the modes of
+    r"""With `\boldsymbol{C} = \boldsymbol{0}`, `\lambda = i \omega_n` and the modes of
     :func:`pyfe3d.solver.natural_frequency`, for the Quad4 plate of
     ``test_solver.py``"""
     K, _, M = plate_matrices(Nxx=-1., with_mass=True)
@@ -429,12 +429,12 @@ def test_near_buckling(damping):
     r"""Regression test: the cantilever of
     ``test_beamc_natural_freq_cantilever_pre_stress.py``, saved in
     ``tests/data``, pre-stressed to 0.9999 of its buckling load, with
-    `[C] = c [K_{C0}]`: the lowest eigenpairs, `|\lambda| = 0.30`, have
+    `\boldsymbol{C} = c \boldsymbol{K}_{C0}`: the lowest eigenpairs, `|\lambda| = 0.30`, have
     relative residuals larger than the default ``check_rtol=1e-6`` but
     backward errors at the round-off, see
     :func:`pyfe3d.solver.eigen._quadratic_backward_errors`, and pass the
     verification of the sparse solver without the dense fallback; with
-    `[C]` null, `\lambda = i \omega_n` of
+    `\boldsymbol{C}` null, `\lambda = i \omega_n` of
     :func:`pyfe3d.solver.natural_frequency`"""
     from test_solver_natural_frequency import beam_cantilever
     from pyfe3d.solver import linear_buckling

@@ -5,7 +5,7 @@ This script generates no code. It prints:
 - the integrals through the thickness, per unit density, ``intrho``,
   ``intrhoz`` and ``intrhoz2`` of ShellProp, for a reference surface at the
   distance ``offset`` from the mid-surface;
-- the matrix `h_{ij} = \int_A N_i N_j dA` of the linear triangle, exactly,
+- the matrix `h_{ij} = \int_A S_i S_j dA` of the linear triangle, exactly,
   and with the three rules of Tria3R.update_M, for a right triangle and for
   a distorted one.
 

@@ -30,13 +30,13 @@ Coordinate systems
 
 The element matrices are computed in an element coordinate system `x`,
 `y`, `z` and rotated to the global one by the ``update_*`` methods, with the
-`3 \times 3` transformation matrix `[T_{3\times 3}]` of each element, whose
+`3 \times 3` transformation matrix `\boldsymbol{T}_{3\times 3}` of each element, whose
 entries `T_{ij}` are stored in the attributes ``r11, ..., r33`` (`T_{12}` in
 ``r12`` etc.). Its columns are the global components of the element axes:
 
 .. math::
 
-    [T_{3\times 3}] = \begin{bmatrix}
+    \boldsymbol{T}_{3\times 3} = \begin{bmatrix}
         T_{11} & T_{12} & T_{13} \\
         T_{21} & T_{22} & T_{23} \\
         T_{31} & T_{32} & T_{33}
@@ -47,22 +47,22 @@ entries `T_{ij}` are stored in the attributes ``r11, ..., r33`` (`T_{12}` in
         x_Z & y_Z & z_Z
     \end{bmatrix}, \qquad
     \begin{Bmatrix} u \\ v \\ w \end{Bmatrix}_{global}
-    = [T_{3\times 3}] \begin{Bmatrix} u \\ v \\ w \end{Bmatrix}_{element}
+    = \boldsymbol{T}_{3\times 3} \begin{Bmatrix} u \\ v \\ w \end{Bmatrix}_{element}
 
 such that the translations and the rotations of every node are brought to
-the global system with `[T_{3\times 3}]`, and to the element system with
-`[T_{3\times 3}]^\top`. The transformation matrix `[T]` of the element is block
-diagonal, with one block `[T_{3\times 3}]` for the translations and one for
+the global system with `\boldsymbol{T}_{3\times 3}`, and to the element system with
+`\boldsymbol{T}_{3\times 3}^\top`. The transformation matrix `\boldsymbol{T}` of the element is block
+diagonal, with one block `\boldsymbol{T}_{3\times 3}` for the translations and one for
 the rotations of each node, e.g. `12 \times 12` for the two-node elements,
 such that
 
 .. math::
 
-    \{u\} = [T]\{u_e\}, \qquad \{u_e\} = [T]^\top\{u\}, \qquad
-    [K] = [T][K_e][T]^\top, \qquad \{F\} = [T]\{F_e\}
+    \boldsymbol{u} = \boldsymbol{T} \boldsymbol{u}_e, \qquad \boldsymbol{u}_e = \boldsymbol{T}^\top \boldsymbol{u}, \qquad
+    \boldsymbol{K} = \boldsymbol{T} \boldsymbol{K}_e \boldsymbol{T}^\top, \qquad \boldsymbol{F} = \boldsymbol{T} \boldsymbol{F}_e
 
-with `\{u\}`, `[K]` and `\{F\}` the element dofs, matrices and forces in
-global coordinates, and `\{u_e\}`, `[K_e]` and `\{F_e\}` in element
+with `\boldsymbol{u}`, `\boldsymbol{K}` and `\boldsymbol{F}` the element dofs, matrices and forces in
+global coordinates, and `\boldsymbol{u}_e`, `\boldsymbol{K}_e` and `\boldsymbol{F}_e` in element
 coordinates. The element axes are defined by ``update_rotation_matrix``:
 
 .. list-table::
@@ -117,11 +117,11 @@ Sign conventions
 - Forces and moments are positive along the positive axes, the external
   force vector and the internal force vector of ``update_fint`` alike. A
   pressure is a set of nodal forces given by the user.
-- The residual of :class:`.Analysis` is `\{R\} = \lambda \{F_{ext}\} -
-  \{F_{int}\}`, with the tangent stiffness matrix `[K_T] = -\partial
-  R/\partial u`, see :doc:`nonlinear_analyses`.
-- The linear buckling problem is `([K_{C0}] + \lambda [K_G])\{u\} = \{0\}`
-  and the frequency problem `([K_{C0}] - \omega_n^2 [M])\{u\} = \{0\}`, see
+- The residual of :class:`.Analysis` is `\boldsymbol{R} = \lambda \boldsymbol{F}_{ext} -
+  \boldsymbol{F}_{int}`, with the tangent stiffness matrix `\boldsymbol{K}_T = -\partial
+  \boldsymbol{R}/\partial \boldsymbol{u}`, see :doc:`nonlinear_analyses`.
+- The linear buckling problem is `(\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}`
+  and the frequency problem `(\boldsymbol{K}_{C0} - \omega_n^2 \boldsymbol{M}) \boldsymbol{u} = \boldsymbol{0}`, see
   :doc:`eigenvalue_analyses`.
 
 

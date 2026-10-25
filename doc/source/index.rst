@@ -22,15 +22,15 @@ non-linear constitutive and geometric stiffness matrices, the mass matrix
 and, for the quadrilaterals, the aerodynamic matrices of the piston theory.
 With the solvers of :mod:`pyfe3d.solver` you can run:
 
-* Linear static analyses, `[K_{C0}]\{u\} = \{f\}`, with :func:`.solve` or
+* Linear static analyses, `\boldsymbol{K}_{C0} \boldsymbol{u} = \boldsymbol{f}`, with :func:`.solve` or
   :class:`.Analysis`
 
-* Linear buckling analyses, `([K_{C0}] + \lambda [K_G])\{u\} = \{0\}`, with
+* Linear buckling analyses, `(\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}`, with
   :func:`.linear_buckling`
 
-* Natural frequency analyses, `([K_{C0}] - \omega_n^2 [M])\{u\} = \{0\}`,
+* Natural frequency analyses, `(\boldsymbol{K}_{C0} - \omega_n^2 \boldsymbol{M}) \boldsymbol{u} = \boldsymbol{0}`,
   with :func:`.natural_frequency`, and complex frequencies of damped
-  systems, `(\lambda^2 [M] + \lambda [C] + [K])\{u\} = \{0\}`, with
+  systems, `(\lambda^2 \boldsymbol{M} + \lambda \boldsymbol{C} + \boldsymbol{K}) \boldsymbol{u} = \boldsymbol{0}`, with
   :func:`.complex_frequency`
 
 * Geometrically non-linear static analyses with :class:`.Analysis`, using

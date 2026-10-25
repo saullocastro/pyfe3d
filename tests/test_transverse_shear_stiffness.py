@@ -224,7 +224,7 @@ def test_rohwer_differs_from_the_constant_factor_on_a_real_laminate():
 
 
 def patch_stiffness(cls, Data, Probe, n, L, h, triangles=False):
-    r"""Assembled `K_{C0}` of an `n` by `n` patch of side `L`"""
+    r"""Assembled `\boldsymbol{K}_{C0}` of an `n` by `n` patch of side `L`"""
     prop = isotropic_plate(thickness=h, E=E_ISO, nu=NU_ISO)
     xs = np.linspace(0., L, n + 1)
     X, Y = np.meshgrid(xs, xs, indexing='ij')

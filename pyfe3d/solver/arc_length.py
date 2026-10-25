@@ -84,30 +84,30 @@ def _solver_arc_length(an, pb, method, silent=False):
 
     Notes
     -----
-    The equilibrium path `\{F_{int}(c)\} = \lambda \{F_{ext}\}` is traced with
+    The equilibrium path `\boldsymbol{F}_{int}(\boldsymbol{c}) = \lambda \boldsymbol{F}_{ext}` is traced with
     the arc-length constraint
 
     .. math::
 
-        \frac{\{\Delta c\}^\top\{\Delta c\}}{\{u_{ref}\}^\top\{u_{ref}\}}
+        \frac{\Delta \boldsymbol{c}^\top \Delta \boldsymbol{c}}{\boldsymbol{u}_{ref}^\top \boldsymbol{u}_{ref}}
         + \psi^2 \Delta\lambda^2 = \Delta s^2
 
-    where `\{\Delta c\}` and `\Delta\lambda` are the increments of the current
-    step and `\{u_{ref}\}` is the linear solution for `\lambda=1`, which makes
+    where `\Delta \boldsymbol{c}` and `\Delta\lambda` are the increments of the current
+    step and `\boldsymbol{u}_{ref}` is the linear solution for `\lambda=1`, which makes
     the arc length `\Delta s` independent of a uniform change of the units
     of the displacements; it is not independent of a change of the units of
     the rotations only. In the linear regime `\Delta s \approx \sqrt{1 +
     \psi^2} \Delta\lambda`. It is the spherical arc-length constraint of
     [4]_ (Section 9.3.2, Eq. (9.19), p. 271), where the displacement term is
     not scaled and the load term is `\psi^2 \Delta\lambda^2
-    \{F_{ext}\}^\top\{F_{ext}\}`. `\psi` is the constant ``PSI``, and
-    `\{u_{ref}\}^\top\{u_{ref}\}` is replaced by 1 when it is null. With the
+    \boldsymbol{F}_{ext}^\top \boldsymbol{F}_{ext}`. `\psi` is the constant ``PSI``, and
+    `\boldsymbol{u}_{ref}^\top \boldsymbol{u}_{ref}` is replaced by 1 when it is null. With the
     inner product
 
     .. math::
 
         \langle (a, \alpha), (b, \beta) \rangle =
-        \frac{\{a\}^\top\{b\}}{\{u_{ref}\}^\top\{u_{ref}\}} + \psi^2 \alpha \beta
+        \frac{\boldsymbol{a}^\top \boldsymbol{b}}{\boldsymbol{u}_{ref}^\top \boldsymbol{u}_{ref}} + \psi^2 \alpha \beta
 
     the constraint reads `g = \frac{1}{2}(\langle (\Delta c, \Delta\lambda),
     (\Delta c, \Delta\lambda) \rangle - \Delta s^2) = 0`.
@@ -116,14 +116,14 @@ def _solver_arc_length(an, pb, method, silent=False):
 
     Each step starts from a tangent predictor, whose direction follows the
     previous increment, allowing limit points to be passed. With
-    `\{\delta c_q\} = [K_T]^{-1}\{F_{ext}\}` at the last converged state,
+    `\delta \boldsymbol{c}_q = \boldsymbol{K}_T^{-1} \boldsymbol{F}_{ext}` at the last converged state,
     the predictor
 
     .. math::
 
         \Delta\lambda = \pm \frac{\Delta s}{\sqrt{\langle (\delta c_q, 1),
         (\delta c_q, 1) \rangle}}, \qquad
-        \{\Delta c\} = \Delta\lambda \{\delta c_q\}
+        \Delta \boldsymbol{c} = \Delta\lambda \delta \boldsymbol{c}_q
 
     satisfies the constraint, with the sign of `\langle (\delta c_q, 1),
     (\Delta c_{prev}, \Delta\lambda_{prev}) \rangle`, where
@@ -135,19 +135,19 @@ def _solver_arc_length(an, pb, method, silent=False):
 
     .. rubric:: Corrections
 
-    At each iteration, the residual is `\{R\} = (\lambda + \Delta\lambda)
-    \{F_{ext}\} - \{F_{int}(c + \Delta c)\}`, and the bordered system is
+    At each iteration, the residual is `\boldsymbol{R} = (\lambda + \Delta\lambda)
+    \boldsymbol{F}_{ext} - \boldsymbol{F}_{int}(\boldsymbol{c} + \Delta \boldsymbol{c})`, and the bordered system is
     solved with two solutions of the tangent stiffness matrix,
-    `\{\delta c_R\} = [K_T]^{-1}\{R\}` and `\{\delta c_q\} =
-    [K_T]^{-1}\{F_{ext}\}`; the increment is updated to `(\Delta c +
-    \delta c_R + \delta\lambda \, \delta c_q, \Delta\lambda +
+    `\delta \boldsymbol{c}_R = \boldsymbol{K}_T^{-1} \boldsymbol{R}` and `\delta \boldsymbol{c}_q =
+    \boldsymbol{K}_T^{-1} \boldsymbol{F}_{ext}`; the increment is updated to `(\Delta \boldsymbol{c} +
+    \delta \boldsymbol{c}_R + \delta\lambda \, \delta \boldsymbol{c}_q, \Delta\lambda +
     \delta\lambda)`, where the correction of the load factor
     `\delta\lambda` comes from the constraint:
 
     - ``method='riks'``: the constraint is linearized at the current
       increment (updated normal plane), which is Newton-Raphson applied to
       the augmented system of the equilibrium equations and the constraint
-      ([4]_, Section 9.3.2, p. 272), with quadratic convergence when `[K_T]`
+      ([4]_, Section 9.3.2, p. 272), with quadratic convergence when `\boldsymbol{K}_T`
       is updated at every iteration and is the exact Jacobian. It follows
       Riks [1]_, who applies Newton's method to the equilibrium equations
       augmented with an equation that controls the arc length, and states
@@ -172,7 +172,7 @@ def _solver_arc_length(an, pb, method, silent=False):
     - ``method='crisfield'``: the quadratic (spherical) constraint is solved
       exactly, choosing the root with the smallest angle to the current
       increment. When the roots are complex, the linearized constraint is
-      used, see [2]_. With `\{u\} = \{\Delta c\} + \{\delta c_R\}`, the
+      used, see [2]_. With `\boldsymbol{u} = \Delta \boldsymbol{c} + \delta \boldsymbol{c}_R`, the
       constraint `\langle (u + \delta\lambda \, \delta c_q, \Delta\lambda +
       \delta\lambda), (u + \delta\lambda \, \delta c_q, \Delta\lambda +
       \delta\lambda) \rangle = \Delta s^2` is the quadratic equation
@@ -198,7 +198,7 @@ def _solver_arc_length(an, pb, method, silent=False):
     tangent predictor of the hyperplane normal to it, in the inner product
     above, through the last converged point, as the points of the plane of
     Riks [1]_, normal to the tangent at the distance `\Delta s` from the
-    last converged point. With full Newton-Raphson, `[K_T]` is updated at
+    last converged point. With full Newton-Raphson, `\boldsymbol{K}_T` is updated at
     every iteration at the current iterate `(c + \Delta c, \lambda +
     \Delta\lambda)`; with ``an.modified_NR = True`` the factorization at
     the last converged state is used for the first ``an.compute_every_n``
@@ -212,7 +212,7 @@ def _solver_arc_length(an, pb, method, silent=False):
     \Delta\lambda`, the arc-length method changing only how the load factor
     is updated and not the residual. Both criteria also consider the
     external force vector of the increment, `\Delta\lambda
-    \{F_{ext}\}`, as a reference.
+    \boldsymbol{F}_{ext}`, as a reference.
 
     .. rubric:: Adaptation of the arc length
 
@@ -232,28 +232,28 @@ def _solver_arc_length(an, pb, method, silent=False):
     `\lambda < 1` to `\lambda + \Delta\lambda > 1`, the step is replaced by
     Newton-Raphson iterations at exactly `\lambda = 1`, see
     :func:`.newton_raphson._NR_iterations`, from the predictor
-    `t \{\Delta c\}` with `t = (1 - \lambda)/\Delta\lambda`. When these
+    `t \Delta \boldsymbol{c}` with `t = (1 - \lambda)/\Delta\lambda`. When these
     iterations do not converge, the step is repeated with a shorter arc
     length.
 
     .. rubric:: Configuration- and load-factor-dependent loads
 
-    When ``calc_fext`` accepts the keyword argument ``c``, `\{F_{ext}\}` in
-    `\{\delta c_q\}` and in the tangent predictor is the load vector of the
+    When ``calc_fext`` accepts the keyword argument ``c``, `\boldsymbol{F}_{ext}` in
+    `\delta \boldsymbol{c}_q` and in the tangent predictor is the load vector of the
     current configuration ``calc_fext(inc=1., c=c)``, the derivative
-    `\partial R/\partial \lambda` of the residual, whereas `\{u_{ref}\}`
+    `\partial \boldsymbol{R}/\partial \lambda` of the residual, whereas `\boldsymbol{u}_{ref}`
     remains the linear solution of the reference vector. The callables that
     accept ``inc`` receive the current load factor, see :mod:`.callbacks`.
 
     When ``calc_fext`` also accepts the keyword argument ``lbd``, e.g. for
     prescribed displacements imposed exactly, it receives the load factor
-    together with the configuration, `\{F_{ext}\}` above being then
-    `\partial R/\partial \lambda` at the current `c` and `\lambda`;
-    `\{u_{ref}\}` is the linear solution of `\partial R/\partial \lambda`
+    together with the configuration, `\boldsymbol{F}_{ext}` above being then
+    `\partial \boldsymbol{R}/\partial \lambda` at the current `\boldsymbol{c}` and `\lambda`;
+    `\boldsymbol{u}_{ref}` is the linear solution of `\partial \boldsymbol{R}/\partial \lambda`
     at `c = 0`, `\lambda = 0`, since the reference vector may be null, e.g.
     under a prescribed displacement alone; and `\lambda \, \partial
-    R/\partial \lambda` is an additional reference of the convergence
-    criterion. `\partial R/\partial \lambda` is evaluated together with the
+    \boldsymbol{R}/\partial \lambda` is an additional reference of the convergence
+    criterion. `\partial \boldsymbol{R}/\partial \lambda` is evaluated together with the
     tangent stiffness matrix, at the same iterate, i.e. once per update of
     the tangent stiffness matrix, and used in the bordered solution; the
     last one evaluated is the reference of the next convergence checks. At

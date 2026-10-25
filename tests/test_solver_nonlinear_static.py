@@ -221,8 +221,11 @@ def test_crisfield_criterion_units_invariance(kind, name):
         assert np.isclose(w, w0, rtol=1.e-7)
     # NOTE the Euclidean norm of the residual mixes forces and moments: with
     #      the rotations in micro-units the moments dominate it, and the
-    #      relative criterion needs another number of iterations, or does not
-    #      converge at all
+    #      relative criterion needs another number of iterations. With the
+    #      round-off floor of the criteria it converges, in the four
+    #      increments of Crisfield's criterion, with 18 instead of 20 calls of
+    #      calc_fint for the plate and 20 instead of 19 for the beam: the
+    #      margin of the assertion below is 2 and 1 calls
     calls = [results['relative', s][1] for s in SCALES]
     assert results['relative', 1.][0][-1] == 1.
     assert calls[-1] != calls[0], calls
@@ -332,7 +335,7 @@ def test_prescribed_displacement_and_reaction(NL_method):
 
 def piston_theory_plate():
     r"""Quad4R plate under pressure with the piston-theory aerodynamic load
-    `\{F_a\} = \beta [K_{A_\beta}]\{u\}`, scaled to 20 % of the pressure
+    `\boldsymbol{F}_a = \beta \boldsymbol{K}_{A_\beta} \boldsymbol{u}`, scaled to 20 % of the pressure
     load in the linear solution"""
     elements, data, prop, x, N, bu, fext, deflection = plate('Quad4R')
     r = np.zeros(data.KA_BETA_SPARSE_SIZE*len(elements), dtype=INT)
@@ -351,13 +354,13 @@ def piston_theory_plate():
 
 
 def test_piston_theory_load_unsymmetric_tangent():
-    r"""The aerodynamic load is configuration-dependent, `\{F_a(u)\} =
-    \lambda \beta [K_{A_\beta}]\{u\}` with the load factor `\lambda`: it
+    r"""The aerodynamic load is configuration-dependent, `\boldsymbol{F}_a(\boldsymbol{u}) =
+    \lambda \beta \boldsymbol{K}_{A_\beta} \boldsymbol{u}` with the load factor `\lambda`: it
     enters ``calc_fint`` with ``inc`` and its load stiffness `-\lambda \beta
-    [K_{A_\beta}]`, unsymmetric, enters ``calc_kC``. Newton-Raphson
+    \boldsymbol{K}_{A_\beta}`, unsymmetric, enters ``calc_kC``. Newton-Raphson
     converges quadratically, the residual of the full model vanishes, and
     the linear static analysis with ``calc_fext(c=...)`` gives the solution
-    of `([K_{C0}] - \beta [K_{A_\beta}])\{u\} = \{F\}`"""
+    of `(\boldsymbol{K}_{C0} - \beta \boldsymbol{K}_{A_\beta}) \boldsymbol{u} = \boldsymbol{F}`"""
     model, bu, BKA, deflection = piston_theory_plate()
     from pyfe3d.solver import is_symmetric
     assert not is_symmetric((model.KC0 - BKA)[bu, :][:, bu])

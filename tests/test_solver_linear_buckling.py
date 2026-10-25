@@ -350,7 +350,7 @@ def test_check_eigenpairs_wrong_and_missing():
 
 def penalty_chains(n=20, kp=1e8):
     r"""Two chains of ``n`` unit springs, each fixed at its outer end,
-    connected by a penalty spring ``kp``, which sets `\|K\|_F`, and ``KG =
+    connected by a penalty spring ``kp``, which sets `\|\boldsymbol{K}\|_F`, and ``KG =
     -I``: the load multipliers are the eigenvalues of ``K``"""
     K = 2*np.eye(2*n) - np.eye(2*n, k=1) - np.eye(2*n, k=-1)
     K[n - 1, n] = K[n, n - 1] = -kp
@@ -359,11 +359,11 @@ def penalty_chains(n=20, kp=1e8):
 
 
 def test_check_eigenpairs_penalty():
-    r"""Regression test: with a penalty spring setting `\|K\|_F`, load
+    r"""Regression test: with a penalty spring setting `\|\boldsymbol{K}\|_F`, load
     multipliers 2 % too low, relative residuals of 1 %, are rejected. A
-    floor of the denominator of 1e-8 times the matrix-norm scale `(\|K\|_F
-    + |\lambda| \|K_G\|_F) \|u\|`, about 170 times `\|K u\| + |\lambda|
-    \|K_G u\|` here, accepted them"""
+    floor of the denominator of 1e-8 times the matrix-norm scale `(\|\boldsymbol{K}\|_F
+    + |\lambda| \|\boldsymbol{K}_G\|_F) \|\boldsymbol{u}\|`, about 170 times `\|\boldsymbol{K} \boldsymbol{u}\| + |\lambda|
+    \|\boldsymbol{K}_G \boldsymbol{u}\|` here, accepted them"""
     K, KG = penalty_chains()
     lam, u = np.linalg.eigh(K.toarray())
     lam, u = lam[:4], u[:, :4]
@@ -378,12 +378,12 @@ def test_check_eigenpairs_penalty():
 def test_penalty_connections(precondition):
     r"""Regression test: blade-stiffened plate with penalty connections,
     whose matrices are saved in ``tests/data``, the stiff penalty springs
-    setting `\|K\|_F = 5.1 \cdot 10^{12}`. The lowest load multiplier is that
-    certified by the inertia of `[K] + s [K_G]`. With
+    setting `\|\boldsymbol{K}\|_F = 5.1 \cdot 10^{12}`. The lowest load multiplier is that
+    certified by the inertia of `\boldsymbol{K} + s \boldsymbol{K}_G`. With
     ``precondition=False``, ``eigsh()`` returns eigenpairs with relative
     residuals of 1 to 2 % and a lowest load multiplier 0.08 % too low,
     which a floor of the denominator of the relative residual, 1e-8 times
-    the matrix-norm scale `(\|K\|_F + |\lambda| \|K_G\|_F) \|u\|`,
+    the matrix-norm scale `(\|\boldsymbol{K}\|_F + |\lambda| \|\boldsymbol{K}_G\|_F) \|\boldsymbol{u}\|`,
     accepted; they fail the verification, and the dense fallback is used.
     With ``precondition=True``, the default, the relative residuals of
     ``eigsh()`` are below 2.2e-4 (SciPy 1.17.1, Intel MKL 2025.0.0)
@@ -1084,7 +1084,7 @@ def test_splu_warnings_shown_once():
     search of :func:`linear_buckling` for unsymmetric matrices, which
     factorizes with it: no :func:`warnings.catch_warnings` block resets the
     registry of the warnings already shown. Load multipliers 1 to 20 of an
-    upper triangular `[K]^{-1}[K_G]`"""
+    upper triangular `\boldsymbol{K}^{-1} \boldsymbol{K}_G`"""
     n = 20
     K = diags(np.arange(1., n + 1)).tocsr()
     KG = csr_matrix(-np.eye(n) + 0.05*np.triu(np.ones((n, n)), k=1))

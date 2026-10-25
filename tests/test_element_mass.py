@@ -1,20 +1,20 @@
 r"""Element mass matrices: total mass, matrices and rigid-body inertia
 
 Every element with ``update_M`` is placed in a generic orientation in space
-and its mass matrix `[M]`, in global coordinates, is projected on the six
+and its mass matrix `\boldsymbol{M}`, in global coordinates, is projected on the six
 rigid-body motions, the three translations and the three rotations about the
-global origin, whose nodal values are the columns of `[\Phi]`. The 6 x 6
-matrix `[\Phi]^\top [M] [\Phi]` contains the mass `m`, the first moment of the
-mass `\boldsymbol{S}` and the inertia tensor of the element,
+global origin, whose nodal values are the columns of `\boldsymbol{\Phi}`. The 6 x 6
+matrix `\boldsymbol{\Phi}^\top \boldsymbol{M} \boldsymbol{\Phi}` contains the mass `m`, the first moment of the
+mass `\boldsymbol{Q}` and the inertia tensor of the element,
 
 .. math::
 
-    [\Phi]^\top [M] [\Phi] = \begin{bmatrix}
-        m \boldsymbol{I} & -\tilde{\boldsymbol{S}} \\
-        \tilde{\boldsymbol{S}} & \mathrm{tr}(\boldsymbol{S}_2) \boldsymbol{I} - \boldsymbol{S}_2
+    \boldsymbol{\Phi}^\top \boldsymbol{M} \boldsymbol{\Phi} = \begin{bmatrix}
+        m \boldsymbol{I} & -\tilde{\boldsymbol{Q}} \\
+        \tilde{\boldsymbol{Q}} & \mathrm{tr}(\boldsymbol{S}_2) \boldsymbol{I} - \boldsymbol{S}_2
     \end{bmatrix}
 
-with `\tilde{\boldsymbol{S}}` the skew-symmetric matrix of `\boldsymbol{S}` and `\boldsymbol{S}_2
+with `\tilde{\boldsymbol{Q}}` the skew-symmetric matrix of `\boldsymbol{Q}` and `\boldsymbol{S}_2
 = \int \rho \boldsymbol{p} \boldsymbol{p}^\top dV`. For the shells, `\boldsymbol{p} = \boldsymbol{x} + z
 \boldsymbol{n}` and the integrals through the thickness are ``intrho``, ``intrhoz``
 and ``intrhoz2`` of the property, with an offset, such that ``intrhoz`` is
@@ -24,7 +24,7 @@ rule of points `\boldsymbol{x}_q` and weights `w_q` over the area, for which
 .. math::
 
     m = I_\rho \sum_q w_q, \quad
-    \boldsymbol{S} = I_\rho \sum_q w_q \boldsymbol{x}_q + I_{\rho z} \boldsymbol{n} \sum_q w_q,
+    \boldsymbol{Q} = I_\rho \sum_q w_q \boldsymbol{x}_q + I_{\rho z} \boldsymbol{n} \sum_q w_q,
 
     \boldsymbol{S}_2 = I_\rho \sum_q w_q \boldsymbol{x}_q \boldsymbol{x}_q^\top
         + I_{\rho z} \sum_q w_q (\boldsymbol{x}_q \boldsymbol{n}^\top + \boldsymbol{n} \boldsymbol{x}_q^\top)
@@ -466,7 +466,7 @@ def test_mtype_numbering(name, mtype):
 
     The integrals `h_{ij}` between the translations `u` of the nodes `i`
     and `j`, in element coordinates, identify the matrix: with ``mtype=0``
-    the exact integrals of `N_i N_j`; with ``mtype=1`` no coupling between
+    the exact integrals of `S_i S_j`; with ``mtype=1`` no coupling between
     different nodes, a weight at each node; with ``mtype=2``, the one-point
     rule at the centre, every `h_{ij}` equal. All give the exact mass.
     """

@@ -175,7 +175,7 @@ cdef class BeamC:
         Element length, dimension length. Updated by
         :meth:`.update_length`.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Entries `T_{ij}` of the transformation matrix `[T_{3\times 3}]` from
+        Entries `T_{ij}` of the transformation matrix `\boldsymbol{T}_{3\times 3}` from
         element to global coordinates, whose columns are the element axes.
         Dimensionless.
     vxyi, vxyj, vxyk : double
@@ -311,8 +311,8 @@ cdef class BeamC:
 
     The matrices and the internal forces are computed in element coordinates
     and transformed to global coordinates with the transformation matrix of the
-    element, e.g. `[K] = [T] [K_e] [T]^\top`, where `[T]` is block diagonal with
-    four copies of the matrix `[T_{3\times 3}]` of the entries `T_{ij}` stored
+    element, e.g. `\boldsymbol{K} = \boldsymbol{T} \boldsymbol{K}_e \boldsymbol{T}^\top`, where `\boldsymbol{T}` is block diagonal with
+    four copies of the matrix `\boldsymbol{T}_{3\times 3}` of the entries `T_{ij}` stored
     in ``r11, ..., r33``, whose columns are the element axes, one for the
     translations and one for the rotations of each node. The element coordinate
     system is not updated with the displacements.
@@ -363,7 +363,7 @@ cdef class BeamC:
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated, with
-        the entries `T_{ij}` of the transformation matrix `[T_{3\times 3}]`
+        the entries `T_{ij}` of the transformation matrix `\boldsymbol{T}_{3\times 3}`
         from element to global coordinates, whose columns are the element axes.
 
         The element attributes ``vxyi``, ``vxyj`` and ``vxyk`` are also updated
@@ -454,7 +454,7 @@ cdef class BeamC:
         The translations and rotations of the two nodes, read from ``u`` at the
         positions ``c1`` to ``c1 + 5`` and ``c2`` to ``c2 + 5``, are
         transformed to the element coordinate system with the transpose
-        `[T_{3\times 3}]^\top` of the transformation matrix, which must be updated
+        `\boldsymbol{T}_{3\times 3}^\top` of the transformation matrix, which must be updated
         before, see :meth:`.update_rotation_matrix`.
 
         Parameters
@@ -513,7 +513,7 @@ cdef class BeamC:
 
         The coordinates of the two nodes, read from ``x`` at the positions
         ``c1//2`` and ``c2//2``, are transformed to the element coordinate
-        system with the transpose `[T_{3\times 3}]^\top` of the transformation
+        system with the transpose `\boldsymbol{T}_{3\times 3}^\top` of the transformation
         matrix, which must be updated before, see
         :meth:`.update_rotation_matrix`. Then :meth:`.update_length` is called,
         updating ``length``.
@@ -614,8 +614,8 @@ cdef class BeamC:
 
         Notes
         -----
-        The linear internal forces are `[K_{C0_e}] \{u_e\}`, with the matrix
-        `[K_{C0_e}]` of :meth:`.update_KC0` in element coordinates. With
+        The linear internal forces are `\boldsymbol{K}_{C0_e} \boldsymbol{u}_e`, with the matrix
+        `\boldsymbol{K}_{C0_e}` of :meth:`.update_KC0` in element coordinates. With
         ``nonlinear`` different from ``0``, the terms of the von Karman strains
         are added, see :meth:`._update_probe_finte_nonlinear`, such that
         ``finte`` is the gradient of the strain energy with the von Karman
@@ -1906,7 +1906,7 @@ cdef class BeamC:
         .. math::
             EBL_i \, \epsilon_{NL} + BNL_i \left( N + NNL \right)
 
-        i.e. `[B_L]^\top [C_{sec}] \{\epsilon_{NL}, 0, 0, 0, 0, 0\}^\top + [B_{NL}]^\top (N +
+        i.e. `\boldsymbol{B}_L^\top \boldsymbol{C}_{sec} \{\epsilon_{NL}, 0, 0, 0, 0, 0\}^\top + \boldsymbol{B}_{NL}^\top (N +
         N_{NL})`, the variation of the axial strain energy `\frac{1}{2} \int_0^L
         \int_A E (\epsilon_L + \epsilon_{NL})^2 dA dx` minus its linear part,
         where `\epsilon_L` is the linear axial strain of the notes of
@@ -2035,16 +2035,17 @@ cdef class BeamC:
         .. math::
             \epsilon_{xx} = u_{,x} + \frac{1}{2} \left( v_{,x}^2 + w_{,x}^2 \right)
 
-        whose nonlinear part is `\epsilon_{NL} = \frac{1}{2} [B_{NL}] \{u_e\}`, with
-        `[B_{NL}] = v_{,x} [G_v] + w_{,x} [G_w]` its variation. With
-        `[B_L]` the linear strain-displacement matrix, `[C_{sec}]` the sectional
+        whose nonlinear part is `\epsilon_{NL} = \frac{1}{2} \boldsymbol{B}_{NL} \boldsymbol{u}_e`, with
+        `\boldsymbol{B}_{NL} = v_{,x} \frac{\partial \boldsymbol{S}^v}{\partial x} + w_{,x} \frac{\partial \boldsymbol{S}^w}{\partial x}` its variation. With
+        `\boldsymbol{B}_L` the linear strain-displacement matrix, `\boldsymbol{C}_{sec}` the sectional
         constitutive matrix, whose first column couples the axial strain with `E A`, `E A_y`
         and `E A_z`, and `N_{NL} = E A \epsilon_{NL}`:
 
-        - KC0L = `[B_L]^\top [C_{sec}] [B_{NL}]`
+        - KC0L = `\boldsymbol{B}_L^\top \boldsymbol{C}_{sec} \boldsymbol{B}_{NL}`
         - KCL0 = KC0L`^\top`
-        - KCLL = `[B_{NL}]^\top [C_{sec}] [B_{NL}]`
-        - KGNL = `N_{NL} ([G_v]^\top [G_v] + [G_w]^\top [G_w])`
+        - KCLL = `\boldsymbol{B}_{NL}^\top \boldsymbol{C}_{sec} \boldsymbol{B}_{NL}`
+        - KGNL = `N_{NL} \left( \left(\frac{\partial \boldsymbol{S}^v}{\partial x}\right)^\top \frac{\partial \boldsymbol{S}^v}{\partial x}
+          + \left(\frac{\partial \boldsymbol{S}^w}{\partial x}\right)^\top \frac{\partial \boldsymbol{S}^w}{\partial x} \right)`
 
         The first three groups are the constitutive terms coupling the linear and
         the nonlinear parts of the axial strain. KGNL is geometric, carrying the
@@ -2053,7 +2054,7 @@ cdef class BeamC:
         which is what a linear buckling analysis needs. With it here,
 
         .. math::
-            K_T = K_{C0} + K_{CNL}(u) + K_G(u)
+            \boldsymbol{K}_T = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u}) + \boldsymbol{K}_G(\boldsymbol{u})
 
         is the exact Jacobian of the internal forces of :meth:`.update_fint` with
         ``nonlinear=1``, and a Newton-Raphson iteration built on them converges
@@ -2179,10 +2180,12 @@ cdef class BeamC:
         The geometric stiffness matrix is
 
         .. math::
-            [K_G] = \int_0^L N \left( [G_v]^\top [G_v] + [G_w]^\top [G_w] \right) dx
+            \boldsymbol{K}_G = \int_0^L N \left[ \left(\frac{\partial \boldsymbol{S}^v}{\partial x}\right)^\top \frac{\partial \boldsymbol{S}^v}{\partial x}
+            + \left(\frac{\partial \boldsymbol{S}^w}{\partial x}\right)^\top \frac{\partial \boldsymbol{S}^w}{\partial x} \right] dx
 
         the Hessian of `\frac{1}{2} \int_0^L N (v_{,x}^2 + w_{,x}^2) dx` at a
-        constant axial force `N`, where `[G_v]` and `[G_w]` are the rows
+        constant axial force `N`, where `\partial \boldsymbol{S}^v /
+        \partial x` and `\partial \boldsymbol{S}^w / \partial x` are the rows
         ``Gvx`` and ``Gwx`` of :meth:`._update_probe_BL_G`, giving the slopes
         `v_{,x}` and `w_{,x}` with the consistent shape functions, and `N = E
         (A u_{,x} + A_y \kappa_y + A_z \kappa_z)` is the axial force of the
@@ -2191,10 +2194,10 @@ cdef class BeamC:
         ``Nb`` at node 2 in the code, and the integral is computed
         analytically.
 
-        `[K_G]` is homogeneous of degree one in ``probe.ue``. With ``probe.ue``
+        `\boldsymbol{K}_G` is homogeneous of degree one in ``probe.ue``. With ``probe.ue``
         from the linear static solution of a reference load, the critical
         load multipliers `\lambda` of the linear buckling analysis solve
-        `([K_{C0}] + \lambda [K_G]) \{u\} = \{0\}`, see
+        `(\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}`, see
         :func:`.linear_buckling`. The geometric term of the
         nonlinear axial strain is in :meth:`.update_KCNL`.
 

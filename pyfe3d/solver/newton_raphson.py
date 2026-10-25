@@ -51,7 +51,7 @@ def _weights(an, kC0):
 
 
 def _abs_matrix(kC0):
-    r"""Elementwise absolute value `|K_{C0}|` of the linear stiffness matrix
+    r"""Elementwise absolute value `|\boldsymbol{K}_{C0}|` of the linear stiffness matrix
     ``kC0``, sparse, for the round-off floor of the convergence criteria,
     see :func:`.roundoff_floor`"""
     return abs(csr_matrix(kC0))
@@ -189,17 +189,17 @@ def _NR_iterations(an, pb, c, dc, total, fext, w, kT0=None, silent=False,
         Whether the log messages are suppressed. Default ``False``.
     lbd_dependent : bool, optional
         Whether ``calc_fext`` accepts ``lbd``, see :mod:`.callbacks`;
-        ``total*q``, with `\{q\} = \partial R/\partial \lambda`, is then an
-        additional reference of the convergence criterion. `\{q\}` is
+        ``total*q``, with `\boldsymbol{q} = \partial \boldsymbol{R}/\partial \lambda`, is then an
+        additional reference of the convergence criterion. `\boldsymbol{q}` is
         evaluated together with the tangent stiffness matrix, at the same
         iterate, and the last one evaluated is the reference until the next
         update of the tangent. Default ``False``.
     q : np.ndarray or None, optional
-        The last `\{q\}` evaluated before these iterations, the reference
+        The last `\boldsymbol{q}` evaluated before these iterations, the reference
         until the first update of the tangent stiffness matrix, used only
         when ``lbd_dependent=True``. Default ``None``.
     K0_abs : sparse_matrix or None, optional
-        `|K_{C0}|` of the round-off floor of the convergence criteria, see
+        `|\boldsymbol{K}_{C0}|` of the round-off floor of the convergence criteria, see
         :func:`.check_convergence`, computed from ``pb.calc_kC()`` when
         ``None``. Default ``None``.
 
@@ -210,7 +210,7 @@ def _NR_iterations(an, pb, c, dc, total, fext, w, kT0=None, silent=False,
     dc : np.ndarray
         Solution increment, such that ``c + dc`` is the solution.
     q : np.ndarray or None
-        The last `\{q\}` evaluated, ``None`` when ``lbd_dependent=False``.
+        The last `\boldsymbol{q}` evaluated, ``None`` when ``lbd_dependent=False``.
 
     Notes
     -----
@@ -218,19 +218,19 @@ def _NR_iterations(an, pb, c, dc, total, fext, w, kT0=None, silent=False,
 
     .. math::
 
-        \{R\} = \lambda \{F_{ext}\} - \{F_{int}(c + \Delta c, \lambda)\},
-        \qquad \{\delta c\} = [K_T]^{-1}\{R\}, \qquad
-        \{\Delta c\} \leftarrow \{\Delta c\} + \eta \{\delta c\}
+        \boldsymbol{R} = \lambda \boldsymbol{F}_{ext} - \boldsymbol{F}_{int}(\boldsymbol{c} + \Delta \boldsymbol{c}, \lambda),
+        \qquad \delta \boldsymbol{c} = \boldsymbol{K}_T^{-1} \boldsymbol{R}, \qquad
+        \Delta \boldsymbol{c} \leftarrow \Delta \boldsymbol{c} + \eta \delta \boldsymbol{c}
 
-    With full Newton-Raphson, `[K_T]` is computed and factorized at every
+    With full Newton-Raphson, `\boldsymbol{K}_T` is computed and factorized at every
     iteration at `c + \Delta c`, and the convergence is quadratic when it is
-    the exact Jacobian `-\partial R/\partial c` ([1]_, Section 1.2.2,
-    p. 9). With ``an.modified_NR = True``, `[K_T]` is computed at the first
+    the exact Jacobian `-\partial \boldsymbol{R}/\partial \boldsymbol{c}` ([1]_, Section 1.2.2,
+    p. 9). With ``an.modified_NR = True``, `\boldsymbol{K}_T` is computed at the first
     iteration, or given as ``kT0``, and then every ``an.compute_every_n``
     iterations, its LU factorization being reused in the other iterations.
 
     `\eta = 1` without line search. With ``an.line_search = True``, with
-    `\phi(\eta) = \|R(c + \Delta c + \eta \, \delta c)\|^2` in the norm of
+    `\phi(\eta) = \|\boldsymbol{R}(\boldsymbol{c} + \Delta \boldsymbol{c} + \eta \, \delta \boldsymbol{c})\|^2` in the norm of
     the convergence criterion, the scaled norm `\|\cdot\|_{\boldsymbol{d}}`
     of Crisfield's criterion or the Euclidean norm, the step `\eta` is
     accepted when it satisfies the sufficient-decrease (Armijo) test
@@ -241,7 +241,7 @@ def _NR_iterations(an, pb, c, dc, total, fext, w, kT0=None, silent=False,
 
     with `\alpha` = ``LINE_SEARCH_ALPHA``, which assumes `\phi'(0) =
     -2\phi(0)`, exact for a Newton direction in any norm whose weights do
-    not change along the line, i.e. when `[K_T]` is the exact Jacobian at
+    not change along the line, i.e. when `\boldsymbol{K}_T` is the exact Jacobian at
     `c + \Delta c`; with ``an.modified_NR = True`` it is an approximation.
     The full step `\eta = 1` is tried first. Otherwise `\eta` is replaced by
     the minimizer `\phi(0)/A` of the quadratic interpolation of `\phi(0)`,
@@ -408,13 +408,13 @@ def _solver_NR(an, pb, silent=False, initialInc=None):
 
     .. math::
 
-        \{R\} = \lambda \{F_{ext}\} - \{F_{int}(c)\} = \{0\}
+        \boldsymbol{R} = \lambda \boldsymbol{F}_{ext} - \boldsymbol{F}_{int}(\boldsymbol{c}) = \boldsymbol{0}
 
     Each increment starts from a predictor that extrapolates the previous
     converged increment of the solution, scaled by the ratio between the new
     and the previous load increments. The first increment uses the linear
-    solution as predictor: `\Delta\lambda [K_{C0}]^{-1}\{F_{ext}\}`, with
-    `[K_{C0}]` the linear stiffness matrix ``calc_kC()``, which also gives
+    solution as predictor: `\Delta\lambda \boldsymbol{K}_{C0}^{-1} \boldsymbol{F}_{ext}`, with
+    `\boldsymbol{K}_{C0}` the linear stiffness matrix ``calc_kC()``, which also gives
     the scaling of Crisfield's criterion, computed once for the whole
     analysis, see :mod:`.convergence`.
 
@@ -423,15 +423,15 @@ def _solver_NR(an, pb, silent=False, initialInc=None):
     configuration-dependent loads such as follower pressures.
 
     When ``calc_fext`` accepts the keyword argument ``lbd``, e.g. for
-    prescribed displacements imposed exactly, the load vector `\{q\} =
-    \partial R/\partial \lambda` at `c = 0`, `\lambda = 0` gives the
-    predictor of the first increment, its linear solution `[K_{C0}]^{-1}
-    \{q\}`, instead of the linear solution of the reference vector, which is
-    null under a prescribed displacement alone, and `\lambda \{q\}` is an
-    additional reference of the convergence criterion. `\{q\}` is evaluated
+    prescribed displacements imposed exactly, the load vector `\boldsymbol{q} =
+    \partial \boldsymbol{R}/\partial \lambda` at `\boldsymbol{c} = \boldsymbol{0}`, `\lambda = 0` gives the
+    predictor of the first increment, its linear solution `\boldsymbol{K}_{C0}^{-1}
+    \boldsymbol{q}`, instead of the linear solution of the reference vector, which is
+    null under a prescribed displacement alone, and `\lambda \boldsymbol{q}` is an
+    additional reference of the convergence criterion. `\boldsymbol{q}` is evaluated
     together with the tangent stiffness matrix, at the same iterate, i.e.
     ``calc_fext`` is called once per update of the tangent stiffness matrix,
-    and the last `\{q\}` evaluated is the reference of the next convergence
+    and the last `\boldsymbol{q}` evaluated is the reference of the next convergence
     checks, also in the next step.
 
     By default full Newton-Raphson is used, i.e. the tangent stiffness matrix
@@ -441,7 +441,7 @@ def _solver_NR(an, pb, silent=False, initialInc=None):
     each step and every ``an.compute_every_n`` iterations, and its LU
     factorization is reused in the other iterations, at the cost of a
     linear convergence rate; at the first step with ``an.kT_initial_state =
-    False``, `[K_{C0}]` is used instead of the tangent at the first
+    False``, `\boldsymbol{K}_{C0}` is used instead of the tangent at the first
     iteration. The full and modified Newton-Raphson methods, combined with
     incremental predictors, are described in [1]_ (Sections 1.2.2 and
     1.2.3, pp. 8-13), with the quadratic and the linear convergence rates.

@@ -95,8 +95,8 @@ def test_invalid_parameters():
 
 
 def test_crisfield_weights_and_zeta():
-    r"""`w_j = 1/|K_{jj}|`; `\zeta = \|R\|_{\boldsymbol{d}}/
-    \max(\|F_{ext}\|_{\boldsymbol{d}}, \|F_{int}\|_{\boldsymbol{d}})`; a
+    r"""`w_j = 1/|K_{jj}|`; `\zeta = \|\boldsymbol{R}\|_{\boldsymbol{d}}/
+    \max(\|\boldsymbol{F}_{ext}\|_{\boldsymbol{d}}, \|\boldsymbol{F}_{int}\|_{\boldsymbol{d}})`; a
     null row and column raises the error of the solvers, a null diagonal
     entry in a row that is not null a ValueError"""
     K = csr_matrix(np.array([[4., -1.], [-1., -2.]]))
@@ -149,7 +149,7 @@ def test_check_convergence_criteria():
 def test_check_convergence_roundoff_floor(convergence, monkeypatch):
     r"""An iteration has also converged when the norm of the residual of
     the criterion is not larger than ``ROUNDOFF_FACTOR`` `\varepsilon \|
-    |K_{C0}| |c| \|`, whatever ``relTOL``, and only when ``Kc_abs`` is
+    |\boldsymbol{K}_{C0}| |\boldsymbol{c}| \|`, whatever ``relTOL``, and only when ``Kc_abs`` is
     given; `\zeta` is unchanged"""
     from pyfe3d.solver import convergence as cv
 

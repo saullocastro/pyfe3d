@@ -431,27 +431,27 @@ def _rayleigh_ritz(A, M, V):
     Notes
     -----
     The eigenvectors of different passes of :func:`capped_eigsh` are only
-    `[M]`-orthogonal to the accuracy of ARPACK, e.g. `10^{-6}` between
-    close eigenvalues of different passes. `[V]` is `[M]`-orthonormalized
-    with the Cholesky factor `[L]` of `[V]^\top[M][V]`, and the projected
-    problem `[W]^\top[A][W]\{y\} = w\{y\}`, with `[W] = [V][L]^{-\top}`, is
+    `\boldsymbol{M}`-orthogonal to the accuracy of ARPACK, e.g. `10^{-6}` between
+    close eigenvalues of different passes. `\boldsymbol{V}` is `\boldsymbol{M}`-orthonormalized
+    with the Cholesky factor `\boldsymbol{L}` of `\boldsymbol{V}^\top \boldsymbol{M} \boldsymbol{V}`, and the projected
+    problem `\boldsymbol{W}^\top \boldsymbol{A} \boldsymbol{W} \boldsymbol{y} = w \boldsymbol{y}`, with `\boldsymbol{W} = \boldsymbol{V} \boldsymbol{L}^{-\top}`, is
     solved with the LAPACK driver ``dsyevr`` (``driver='evr'``), which does
     not use the ``dsteqr`` of Intel MKL broken above 32 x 32 matrices, see
-    :func:`dsteqr_is_faulty`. The returned eigenvectors `[W]\{y\}` are
-    `[M]`-orthonormal to the rounding errors, and the Ritz values are at
-    least as accurate as the eigenvalues of the passes. `[V]^\top[M][V]` and
-    `[W]^\top[A][W]` are symmetrized, `\frac{1}{2}([B] + [B]^\top)`, before the
+    :func:`dsteqr_is_faulty`. The returned eigenvectors `\boldsymbol{W} \boldsymbol{y}` are
+    `\boldsymbol{M}`-orthonormal to the rounding errors, and the Ritz values are at
+    least as accurate as the eigenvalues of the passes. `\boldsymbol{V}^\top \boldsymbol{M} \boldsymbol{V}` and
+    `\boldsymbol{W}^\top \boldsymbol{A} \boldsymbol{W}` are symmetrized, `\frac{1}{2}(\boldsymbol{B} + \boldsymbol{B}^\top)`, before the
     Cholesky factorization and the eigenvalue solution.
 
     The Ritz values are the optimal approximations of the eigenvalues that
-    can be obtained from the subspace spanned by the columns of `[V]`
+    can be obtained from the subspace spanned by the columns of `\boldsymbol{V}`
     ([1]_, Chapter 11, "Approximations from a Subspace", Section 11.4,
     "Optimality", Eq. (11.5) and Theorem 11.4.1, p. 236): the `j`-th
     Ritz value is the minimum over the `j`-dimensional subspaces of the span
     of the maximum of the Rayleigh quotient, so it can only improve when the
     span grows, and the span contains the eigenvectors of every pass. The
     theorem is stated for the standard problem; it holds for the pencil in
-    the `[M]` inner product, through the Cholesky factor of `[V]^\top[M][V]`.
+    the `\boldsymbol{M}` inner product, through the Cholesky factor of `\boldsymbol{V}^\top \boldsymbol{M} \boldsymbol{V}`.
 
     References
     ----------
@@ -470,7 +470,7 @@ def _rayleigh_ritz(A, M, V):
 def capped_eigsh(A, k, M, sigma, which, mode='normal', tol=0):
     r""":func:`scipy.sparse.linalg.eigsh` with ``ncv`` from :func:`arpack_ncv`
 
-    Solves `[A]\{x\} = w [M]\{x\}` with a positive definite ``M`` about the
+    Solves `\boldsymbol{A} \boldsymbol{x} = w \boldsymbol{M} \boldsymbol{x}` with a positive definite ``M`` about the
     shift ``sigma``, in the shift-invert (``mode='normal'``) or Cayley
     (``mode='cayley'``) mode, selecting the eigenvalues by increasing `w`,
     e.g. the Cayley mode with ``which='SM'`` and ``sigma`` larger than all
@@ -514,7 +514,7 @@ def capped_eigsh(A, k, M, sigma, which, mode='normal', tol=0):
     Returns
     -------
     w, x : ndarray
-        The eigenvalues and the `[M]`-orthonormal eigenvectors, by
+        The eigenvalues and the `\boldsymbol{M}`-orthonormal eigenvectors, by
         increasing `w` when computed in passes. ``w`` is a 1-D array of size
         ``k`` and ``x`` an array of shape ``(n, k)``.
 
@@ -526,7 +526,7 @@ def capped_eigsh(A, k, M, sigma, which, mode='normal', tol=0):
     -----
     In the shift-invert mode ARPACK computes the eigenvalues
     `\nu = 1/(w - \sigma)` of largest modulus of the operator
-    `([A] - \sigma [M])^{-1}[M]`, i.e. the `w` nearest `\sigma` ([1]_,
+    `(\boldsymbol{A} - \sigma \boldsymbol{M})^{-1} \boldsymbol{M}`, i.e. the `w` nearest `\sigma` ([1]_,
     Chapter 3, Section 3.2, Eq. (3.2.2)).
     The passes keep ``k <= (max_ncv - 1)//2``, i.e. ``ncv >= 2 k + 1``.
     With ``k`` close to ``ncv`` ARPACK converges very slowly, not at all, or
@@ -534,20 +534,20 @@ def capped_eigsh(A, k, M, sigma, which, mode='normal', tol=0):
 
     The passes after the first one use the shift-invert mode about
     `\sigma_d`, the middle of the largest gap between the last five
-    eigenvalues found, with the eigenvectors `[V]` of the previous passes
+    eigenvalues found, with the eigenvectors `\boldsymbol{V}` of the previous passes
     deflated from the operator:
 
     .. math::
 
-        \{y\} = ([I] - [V][V]^\top[M])([A] - \sigma_d [M])^{-1}\{x\}
+        \boldsymbol{y} = (\boldsymbol{I} - \boldsymbol{V} \boldsymbol{V}^\top \boldsymbol{M})(\boldsymbol{A} - \sigma_d \boldsymbol{M})^{-1} \boldsymbol{x}
 
-    such that the eigenvalues of `[V]`, already found, become null and are
+    such that the eigenvalues of `\boldsymbol{V}`, already found, become null and are
     not found again. Each pass therefore returns the eigenvalues nearest
     `\sigma_d` among those not found yet, i.e. the next ones by increasing
     `w`. A shift close to them, instead of ``sigma``, separates them better.
-    ARPACK applies the operator to `[M]\{x\}`; for an eigenvector `\{v_i\}` of `[V]`,
-    `([A] - \sigma_d [M])^{-1}[M]\{v_i\} = \{v_i\}/(w_i - \sigma_d)` and,
-    `[V]` being `[M]`-orthonormal, `([I] - [V][V]^\top[M])\{v_i\} = \{0\}`.
+    ARPACK applies the operator to `\boldsymbol{M} \boldsymbol{x}`; for an eigenvector `\boldsymbol{v}_i` of `\boldsymbol{V}`,
+    `(\boldsymbol{A} - \sigma_d \boldsymbol{M})^{-1} \boldsymbol{M} \boldsymbol{v}_i = \boldsymbol{v}_i/(w_i - \sigma_d)` and,
+    `\boldsymbol{V}` being `\boldsymbol{M}`-orthonormal, `(\boldsymbol{I} - \boldsymbol{V} \boldsymbol{V}^\top \boldsymbol{M}) \boldsymbol{v}_i = \boldsymbol{0}`.
 
     References
     ----------

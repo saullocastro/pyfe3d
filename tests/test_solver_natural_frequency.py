@@ -12,8 +12,8 @@ degrees-of-freedom:
 
 .. math::
 
-    [M] = m l^2 \begin{bmatrix} 3 & 1 \\ 1 & 1 \end{bmatrix}, \qquad
-    [K(P)] = \begin{bmatrix} 2k - P l & -k + P l \\ -k & k \end{bmatrix}
+    \boldsymbol{M} = m l^2 \begin{bmatrix} 3 & 1 \\ 1 & 1 \end{bmatrix}, \qquad
+    \boldsymbol{K}(P) = \begin{bmatrix} 2k - P l & -k + P l \\ -k & k \end{bmatrix}
 
 The stiffness matrix is unsymmetric and never singular, ``det K = k**2``,
 and the system loses stability by flutter at ``P_f = (7/2 - sqrt(2)) k/l``,
@@ -164,7 +164,7 @@ def test_rigid_body_modes(symmetric):
     r"""A free-free chain of springs has a rigid-body mode, `\omega_n^2 = 0`
     up to the round-off, which passes the residual check of the sparse
     solvers without the dense fallback, its residual being relative to the
-    matrix-norm scale `(\|K\|_F + |\omega_n^2| \|M\|_F) \|u\|`"""
+    matrix-norm scale `(\|\boldsymbol{K}\|_F + |\omega_n^2| \|\boldsymbol{M}\|_F) \|\boldsymbol{u}\|`"""
     n = 30
     K = 100.*(2*np.eye(n) - np.eye(n, k=1) - np.eye(n, k=-1))
     K[0, 0] = K[-1, -1] = 100.
@@ -195,11 +195,11 @@ def penalty_chains(n=20, kp=1e8, free=False):
 
 
 def test_check_freq_penalty():
-    r"""Regression test: with a penalty spring setting `\|K\|_F`, an
+    r"""Regression test: with a penalty spring setting `\|\boldsymbol{K}\|_F`, an
     eigenvalue `\omega_n^2` 0.01 % too low, relative residual 5e-5, is
     rejected with ``rtol=1e-6``. A floor of the denominator of 1e-8 times
-    the matrix-norm scale `(\|K\|_F + |\omega_n^2| \|M\|_F) \|u\|`, about
-    170 times `\|K u\| + |\omega_n^2| \|M u\|` here, accepted it"""
+    the matrix-norm scale `(\|\boldsymbol{K}\|_F + |\omega_n^2| \|\boldsymbol{M}\|_F) \|\boldsymbol{u}\|`, about
+    170 times `\|\boldsymbol{K} \boldsymbol{u}\| + |\omega_n^2| \|\boldsymbol{M} \boldsymbol{u}\|` here, accepted it"""
     K, M = penalty_chains()
     w2, u = np.linalg.eigh(K.toarray())
     w2, u = w2[:1], u[:, :1]
@@ -218,7 +218,7 @@ def test_check_freq_penalty():
 @pytest.mark.parametrize('symmetric', [True, False])
 def test_rigid_body_mode_penalty(symmetric):
     r"""Two free-free chains of springs connected by a penalty spring: the
-    rigid-body mode, whose `\|K u\| + |\omega_n^2| \|M u\|` is at the
+    rigid-body mode, whose `\|\boldsymbol{K} \boldsymbol{u}\| + |\omega_n^2| \|\boldsymbol{M} \boldsymbol{u}\|` is at the
     round-off of the matrix-norm scale, passes the residual check without
     the dense fallback, while the other eigenpairs keep the relative
     residual"""
@@ -267,7 +267,7 @@ def beam_cantilever():
 @pytest.mark.parametrize('symmetric', [True, False])
 def test_near_buckling(symmetric, precondition):
     r"""Regression test: the cantilever pre-stressed to 0.9999 of its
-    buckling load has a nearly singular `[K]`. Its two lowest eigenpairs,
+    buckling load has a nearly singular `\boldsymbol{K}`. Its two lowest eigenpairs,
     `\omega_n^2 = 0.0895`, a double eigenvalue of the square cross-section,
     have relative residuals of 2.3e-6 to 1.3e-5 with the sparse and the
     dense solvers, larger than the default ``check_rtol=1e-6``, but backward
@@ -350,7 +350,7 @@ def test_check_freq_backward_error():
 
 def test_quad4_plate_prestress():
     r"""The Quad4 plate of ``test_solver.py`` under a compressive prestress
-    `\lambda [K_G]`: the frequencies decrease with `\lambda`, and the
+    `\lambda \boldsymbol{K}_G`: the frequencies decrease with `\lambda`, and the
     squared lowest one vanishes linearly at the critical load multiplier of
     :func:`pyfe3d.solver.linear_buckling`; with ``symmetric=True`` the
     eigenvectors are normalized with respect to the mass matrix"""
@@ -513,12 +513,12 @@ def test_missing_mode_detected(monkeypatch):
 
 
 def test_dense_symmetric_lowest_frequencies():
-    r"""The dense solver of symmetric matrices solves `[M]\{u\} =
-    (1/\omega_n^2) [K]\{u\}`: for the Quad4 plate of ``test_solver.py``
+    r"""The dense solver of symmetric matrices solves `\boldsymbol{M} \boldsymbol{u} =
+    (1/\omega_n^2) \boldsymbol{K} \boldsymbol{u}`: for the Quad4 plate of ``test_solver.py``
     (726 dofs) with a lumped, positive definite mass matrix, the 10 lowest
     frequencies have relative residuals of about 1.6e-10, against about
-    1.4e-8 for :func:`scipy.linalg.eigh` on `[K]\{u\} = \omega_n^2
-    [M]\{u\}` (SciPy 1.17.1, Intel MKL 2025.0.0); the frequencies agree"""
+    1.4e-8 for :func:`scipy.linalg.eigh` on `\boldsymbol{K} \boldsymbol{u} = \omega_n^2
+    \boldsymbol{M} \boldsymbol{u}` (SciPy 1.17.1, Intel MKL 2025.0.0); the frequencies agree"""
     K, _, _ = plate_matrices(Nxx=-1., with_mass=True)
     rng = np.random.RandomState(3)
     M = diags(1. + rng.rand(K.shape[0])).tocsr()
@@ -546,7 +546,7 @@ def test_check_freq_without_eigenpairs():
 
 def test_dense_freq_indefinite_K():
     r"""With an indefinite ``K`` the symmetric dense solver solves
-    `[K]\{u\} = \omega^2 [M]\{u\}` directly, the lowest ``k`` eigenvalues
+    `\boldsymbol{K} \boldsymbol{u} = \omega^2 \boldsymbol{M} \boldsymbol{u}` directly, the lowest ``k`` eigenvalues
     first, a negative one included"""
     K = diags([3., -1., 2.]).tocsr()
     M = diags([1., 1., 2.]).tocsr()

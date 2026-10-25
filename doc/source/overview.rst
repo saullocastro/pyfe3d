@@ -62,13 +62,13 @@ assembly
 
 .. math::
 
-    [K] = \sum_e [L_e]^\top [T_e] [K_e] [T_e]^\top [L_e]
+    \boldsymbol{K} = \sum_e \boldsymbol{L}_e^\top \boldsymbol{T}_e \boldsymbol{K}_e \boldsymbol{T}_e^\top \boldsymbol{L}_e
 
-with `[K_e]` the element matrix in element coordinates, `[T_e]` the
+with `\boldsymbol{K}_e` the element matrix in element coordinates, `\boldsymbol{T}_e` the
 transformation matrix of the element, block diagonal with the matrix
-`[T_{3\times 3}]` of the element, whose entries are ``r11, ..., r33``, one
+`\boldsymbol{T}_{3\times 3}` of the element, whose entries are ``r11, ..., r33``, one
 block per node and per translations or rotations, see :doc:`conventions`, and
-`[L_e]` the Boolean matrix that extracts the dofs of the element, given by
+`\boldsymbol{L}_e` the Boolean matrix that extracts the dofs of the element, given by
 ``c1, c2, ...``. The internal force vector is assembled in place, by
 ``update_fint``, into a dense vector of size ``N``.
 
@@ -126,11 +126,11 @@ block per node and per translations or rotations, see :doc:`conventions`, and
 
 The matrices are:
 
-- ``KC0``, the linear constitutive stiffness matrix `[K_{C0}]`;
+- ``KC0``, the linear constitutive stiffness matrix `\boldsymbol{K}_{C0}`;
 - ``KCNL``, the non-linear part of the constitutive stiffness matrix,
-  `[K_{CNL}(u)]`, such that `[K_{C0}] + [K_{CNL}] + [K_G]` is the tangent
+  `\boldsymbol{K}_{CNL}(\boldsymbol{u})`, such that `\boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL} + \boldsymbol{K}_G` is the tangent
   stiffness matrix of the geometrically non-linear analyses;
-- ``KG``, the geometric stiffness matrix `[K_G(u)]`, from the stress
+- ``KG``, the geometric stiffness matrix `\boldsymbol{K}_G(\boldsymbol{u})`, from the stress
   resultants of the displacements in the probe, or, for the shells, of
   given membrane stress resultants with ``update_KG_given_stress``;
 - ``M``, the mass matrix, consistent, lumped or, for some shells, with
@@ -171,7 +171,7 @@ steps:
    drilling rotation or a missing boundary condition, raises a
    :class:`numpy.linalg.LinAlgError` naming the dofs, see
    :func:`.check_null_rows_cols`.
-6. Solution: the linear static system `[K_{C0}]_{uu}\{u\}_u = \{f\}_u`, with
+6. Solution: the linear static system `\boldsymbol{K}_{{C0}_{uu}} \boldsymbol{u}_u = \boldsymbol{f}_u`, with
    :func:`.solve` or :func:`scipy.sparse.linalg.spsolve`; the eigenvalue
    problems with :func:`.linear_buckling`, :func:`.natural_frequency` and
    :func:`.complex_frequency`,
@@ -180,8 +180,8 @@ steps:
 7. Post-processing: ``update_probe_ue(u)`` brings the displacements of an
    element to element coordinates, in ``probe.ue``; ``update_fint`` adds
    its internal forces, in global coordinates, to a global vector, whose
-   values at the constrained dofs are the reactions, `\{F_{int}\}_k -
-   \{f\}_k`; and the strains of :class:`.Quad4` are recovered with
+   values at the constrained dofs are the reactions, `\boldsymbol{F}_{{int}_k} -
+   \boldsymbol{f}_k`; and the strains of :class:`.Quad4` are recovered with
    :meth:`.Quad4Probe.update_BL`.
 
 Since the probe is shared, ``update_probe_xe`` and ``update_probe_ue``
@@ -198,21 +198,21 @@ static problem use the same element matrices:
 
 .. math::
 
-    [K_{C0}]\{u\} = \{f\}
+    \boldsymbol{K}_{C0} \boldsymbol{u} = \boldsymbol{f}
 
 .. math::
 
-    ([K_{C0}] + \lambda [K_G(u_0)])\{u\} = \{0\}, \qquad
-    ([K_{C0}] - \omega_n^2 [M])\{u\} = \{0\}
+    (\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G(\boldsymbol{u}_0)) \boldsymbol{u} = \boldsymbol{0}, \qquad
+    (\boldsymbol{K}_{C0} - \omega_n^2 \boldsymbol{M}) \boldsymbol{u} = \boldsymbol{0}
 
 .. math::
 
-    \{R(u, \lambda)\} = \lambda \{F_{ext}\} - \{F_{int}(u)\} = \{0\},
-    \qquad [K_T] = -\frac{\partial R}{\partial u} = [K_{C0}] + [K_{CNL}(u)]
-    + [K_G(u)]
+    \boldsymbol{R}(\boldsymbol{u}, \lambda) = \lambda \boldsymbol{F}_{ext} - \boldsymbol{F}_{int}(\boldsymbol{u}) = \boldsymbol{0},
+    \qquad \boldsymbol{K}_T = -\frac{\partial \boldsymbol{R}}{\partial \boldsymbol{u}} = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u})
+    + \boldsymbol{K}_G(\boldsymbol{u})
 
-where `\{u_0\}` is the linear static solution of the reference load of the
-buckling analysis and `\{F_{int}(u)\}` is the vector of ``update_fint(...,
-nonlinear=1)``, whose exact derivative is `[K_T]` for every element with
+where `\boldsymbol{u}_0` is the linear static solution of the reference load of the
+buckling analysis and `\boldsymbol{F}_{int}(\boldsymbol{u})` is the vector of ``update_fint(...,
+nonlinear=1)``, whose exact derivative is `\boldsymbol{K}_T` for every element with
 ``update_KCNL`` (verified in ``tests/test_tangent_consistency.py``). The
-linear internal force vector, ``nonlinear=0``, is `[K_{C0}]\{u\}`.
+linear internal force vector, ``nonlinear=0``, is `\boldsymbol{K}_{C0} \boldsymbol{u}`.

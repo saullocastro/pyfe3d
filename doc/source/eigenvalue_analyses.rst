@@ -14,9 +14,9 @@ Linear buckling
 
 A linear buckling analysis has three steps:
 
-1. the linear static solution `\{u_0\}` of a reference load `\{F_{ref}\}`,
-   `[K_{C0}]_{uu}\{u_0\}_u = \{F_{ref}\}_u`, see :doc:`overview`;
-2. the geometric stiffness matrix of the prestress of `\{u_0\}`: for each
+1. the linear static solution `\boldsymbol{u}_0` of a reference load `\boldsymbol{F}_{ref}`,
+   `\boldsymbol{K}_{{C0}_{uu}} \boldsymbol{u}_{0_u} = \boldsymbol{F}_{{ref}_u}`, see :doc:`overview`;
+2. the geometric stiffness matrix of the prestress of `\boldsymbol{u}_0`: for each
    element, ``update_probe_xe(x)``, ``update_probe_ue(u0)`` and
    ``update_KG(KGr, KGc, KGv, prop)``. For the shells, a known constant
    membrane state can be given instead with ``update_KG_given_stress(Nxx,
@@ -26,18 +26,18 @@ A linear buckling analysis has three steps:
 
    .. math::
 
-       ([K_{C0}] + \lambda [K_G])\{u\} = \{0\}
+       (\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}
 
    solved by ``eigvals, eigvecs = linear_buckling(KC0uu, KGuu,
    num_eigvalues=...)``.
 
-`[K_G]` is linear in `\{u_0\}`, hence in the reference load, and the
-critical load is `\lambda_1 \{F_{ref}\}`, with `\lambda_1` = ``eigvals[0]``.
+`\boldsymbol{K}_G` is linear in `\boldsymbol{u}_0`, hence in the reference load, and the
+critical load is `\lambda_1 \boldsymbol{F}_{ref}`, with `\lambda_1` = ``eigvals[0]``.
 :func:`.linear_buckling` returns the positive load multipliers first, in
 increasing order, followed, when fewer than ``num_eigvalues`` positive ones
 exist, by the negative ones closest to zero, which are the critical load
 multipliers of the reversed reference load. A load that is not scaled by
-`\lambda`, e.g. a preload with the geometric stiffness matrix `[K_{G0}]`,
+`\lambda`, e.g. a preload with the geometric stiffness matrix `\boldsymbol{K}_{G0}`,
 belongs to the first matrix, ``linear_buckling(KC0uu + KG0uu, KGuu)``,
 which is also how the critical value of one load component is found under
 the other components kept constant.
@@ -54,18 +54,18 @@ The frequency problem
 
 .. math::
 
-    ([K] - \omega_n^2 [M])\{u\} = \{0\}
+    (\boldsymbol{K} - \omega_n^2 \boldsymbol{M}) \boldsymbol{u} = \boldsymbol{0}
 
 is solved by ``omegan, eigvecs = natural_frequency(Kuu, Muu,
 num_eigvalues=...)``, which returns the circular frequencies `\omega_n`,
-in rad/s with consistent units, in increasing order. `[K]` is
-`[K_{C0}]`, plus the geometric stiffness matrix of a prestress when it
+in rad/s with consistent units, in increasing order. `\boldsymbol{K}` is
+`\boldsymbol{K}_{C0}`, plus the geometric stiffness matrix of a prestress when it
 applies, e.g. ``KC0uu + KGuu``, see
 ``tests/test_quad4r_natural_freq_pre_stress.py``. The mass matrix is
 assembled with ``update_M``, whose ``mtype`` selects the mass matrix of
 each element, see :doc:`element_choice`.
 
-With an unsymmetric `[K]`, e.g. with the aerodynamic stiffness matrix of
+With an unsymmetric `\boldsymbol{K}`, e.g. with the aerodynamic stiffness matrix of
 the piston theory or the load stiffness of a follower load, the
 frequencies may become complex; ``omegan`` is then the principal square
 root of the complex eigenvalues. Two frequencies that coalesce and become
@@ -79,12 +79,12 @@ Bolotin (1963), see :func:`.natural_frequency`.
 Damped frequencies
 ------------------
 
-With a damping matrix `[C]`, the free vibrations `\{u\} e^{\lambda t}`
+With a damping matrix `\boldsymbol{C}`, the free vibrations `\boldsymbol{u} e^{\lambda t}`
 give the quadratic eigenvalue problem
 
 .. math::
 
-    (\lambda^2 [M] + \lambda [C] + [K])\{u\} = \{0\}
+    (\lambda^2 \boldsymbol{M} + \lambda \boldsymbol{C} + \boldsymbol{K}) \boldsymbol{u} = \boldsymbol{0}
 
 solved by ``eigvals, eigvecs = complex_frequency(Kuu, Cuu, Muu,
 num_eigvalues=...)``, which returns the complex eigenvalues `\lambda`,
@@ -92,11 +92,11 @@ one per complex conjugate pair, with `Im(\lambda) \ge 0`, and the complex
 eigenvectors. The damped circular frequency is `\omega_d = |Im(\lambda)|`,
 ``abs(eigvals.imag)``, the damping ratio `\zeta = -Re(\lambda)/|\lambda|`,
 ``-eigvals.real/abs(eigvals)``, and a positive `Re(\lambda)` is a growing
-motion. With `[C] = [0]`, `\lambda = i \omega_n`, with the `\omega_n` of
+motion. With `\boldsymbol{C} = \boldsymbol{0}`, `\lambda = i \omega_n`, with the `\omega_n` of
 :func:`.natural_frequency`.
 
 The damping matrix is assembled by the user, e.g. Rayleigh damping
-`[C] = \alpha [M] + \beta [K]`, or the aerodynamic damping of the piston
+`\boldsymbol{C} = \alpha \boldsymbol{M} + \beta \boldsymbol{K}`, or the aerodynamic damping of the piston
 theory, ``Cuu = -mu*CAuu`` with ``update_CA`` of :class:`.Quad4` and
 :class:`.Quad4R`, with the aerodynamic stiffness in ``Kuu = KC0uu -
 beta*KA_betauu - gamma*KA_gammauu``, see ``update_KA_beta``. A flutter
@@ -109,10 +109,10 @@ frequencies of :func:`.natural_frequency`, see
 Verification and dense fallback
 -------------------------------
 
-The three functions check that `[K]` has no null row or column, a dof
+The three functions check that `\boldsymbol{K}` has no null row or column, a dof
 without stiffness, which raises a :class:`numpy.linalg.LinAlgError` naming
-the dofs, see :func:`.check_null_rows_cols`, whereas `[K_G]`, `[C]` and
-`[M]` may have null rows, e.g. a lumped mass matrix without rotary
+the dofs, see :func:`.check_null_rows_cols`, whereas `\boldsymbol{K}_G`, `\boldsymbol{C}` and
+`\boldsymbol{M}` may have null rows, e.g. a lumped mass matrix without rotary
 inertia. They equilibrate the diagonal of the matrices with
 :func:`.diagonal_preconditioner`, which does not change the eigenvalues,
 and :func:`.linear_buckling` and :func:`.natural_frequency` select the

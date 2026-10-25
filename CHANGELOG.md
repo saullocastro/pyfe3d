@@ -554,29 +554,34 @@ select the other matrix.
   with the signs of those of `v` and `r_z`. In `pyfe3d.solver.convergence`,
   the dependence of the Euclidean norm on the units is no longer attributed
   to Crisfield (1991).
-- The load stiffness matrix of a follower load is written `[K_F]` instead
-  of `[K_L]`, as in the book.
+- The load stiffness matrix of a follower load is written
+  `\boldsymbol{K}_F` instead of `[K_L]`, as in the book.
 - The page on the non-linear static analyses gives the cases in which
-  `[K_F]` is symmetric, as Hibbitt (1979, pp. 938-939) and Schweizerhof and
+  `\boldsymbol{K}_F` is symmetric, as Hibbitt (1979, pp. 938-939) and Schweizerhof and
   Ramm (1984, Table 2, Sec. 3.2.1, Eqs. 32-35) state them, and that pyfe3d
-  keeps the unsymmetric `[K_F]` and factorizes the tangent stiffness matrix
+  keeps the unsymmetric `\boldsymbol{K}_F` and factorizes the tangent stiffness matrix
   with LU.
-- The transformation matrix of an element is written `[T]` instead of
-  `[R]`, which is the residual, as in the book: `[T]` is block diagonal
-  with one `3x3` block `[T_{3x3}]` per node and per translations or
+- The transformation matrix of an element is written `\boldsymbol{T}`
+  instead of `[R]`, `\boldsymbol{R}` being the residual, as in the book:
+  `\boldsymbol{T}` is block diagonal with one `3x3` block
+  `\boldsymbol{T}_{3 \times 3}` per node and per translations or
   rotations, whose entries `T_{ij}` are stored in the attributes
   `r11, ..., r33` of the elements, with the same indices and unchanged
   names, and whose columns are the element axes in global components,
-  such that `{u} = [T]{u_e}`, `{u_e} = [T]^T{u}`, `[K] = [T][K_e][T]^T`
-  and `{F} = [T]{F_e}`, in the conventions and overview pages, the Notes
+  such that `\boldsymbol{u} = \boldsymbol{T} \boldsymbol{u}_e`,
+  `\boldsymbol{u}_e = \boldsymbol{T}^\top \boldsymbol{u}`, `\boldsymbol{K} =
+  \boldsymbol{T} \boldsymbol{K}_e \boldsymbol{T}^\top` and `\boldsymbol{F} =
+  \boldsymbol{T} \boldsymbol{F}_e`, in the conventions and overview pages, the Notes
   and attributes of the elements, the code comments and the tests. The
   bubbles of the Allman enrichment are written `\hat{S}_k` instead of
   `N_k`.
 - In `pyfe3d.solver`, the basis of the null space of the constraints of
-  the prescribed displacements imposed exactly is written `[Z]` instead
-  of `[T]`, which is the transformation matrix of the elements:
-  `{u} = [Z]{c} + lambda {u_k}` in `Analysis`, `{c} = [Z]{c_r} + {c_p0}
-  + lambda {c_p1}` and `[Z]^T` in the reduced residual in
+  the prescribed displacements imposed exactly is written
+  `\boldsymbol{Z}` instead of `[T]`, `\boldsymbol{T}` being the
+  transformation matrix of the elements: `\boldsymbol{u} = \boldsymbol{Z}
+  \boldsymbol{c} + \lambda \boldsymbol{u}_k` in `Analysis`, `\boldsymbol{c} =
+  \boldsymbol{Z} \boldsymbol{c}_r + \boldsymbol{c}_{p0} + \lambda
+  \boldsymbol{c}_{p1}` and `\boldsymbol{Z}^\top` in the reduced residual in
   `pyfe3d.solver.callbacks`, and the variable `Z` of
   `tests/test_solver_load_factor_dependent_load.py`. No public name
   changes: the matrix is not an argument, attribute or function of the
@@ -587,13 +592,43 @@ select the other matrix.
   model are `B_{r_z}` and `U_{r_z}` instead of `B_{drill}` and
   `U_{drill}`, and the drilling stiffness of the physics-based model
   `K_{C_e}^{r_z}`; the sectional constitutive matrix of the beams is
-  `[C_{sec}]` instead of `[D]`; the variation of the nonlinear membrane
-  strains of the shells is `[B_{NL}]` instead of `[B_{mL}]`, as for the
-  beams; bold symbols use `\boldsymbol`, with the accents outside, e.g.
+  `\boldsymbol{C}_{sec}` instead of `[D]`; the variation of the nonlinear
+  membrane strains of the shells is `\boldsymbol{B}_{NL}` instead of
+  `[B_{mL}]`, as for the beams; bold symbols use `\boldsymbol`, with the accents outside, e.g.
   `\tilde{\boldsymbol{S}}`, instead of `\pmb`, and the transpose is
   `^\top` instead of `^T`, in the docstrings, the user guide and the
   tutorials. A matrix in the docstring of `Tria3R.update_KG_given_stress`
   had a single backslash as row separator.
+- Vectors and matrices as in the book, in the docstrings, the user guide,
+  the tutorials, the math of the tests and the derivation scripts: vectors
+  are bold lower case and matrices bold upper case, without braces or
+  brackets, e.g. `\boldsymbol{u}`, `\Delta \boldsymbol{c}`,
+  `\boldsymbol{K}_{C0}` and `\boldsymbol{T}_{3 \times 3}` instead of
+  `\{u\}`, `\{\Delta c\}`, `[K_{C0}]` and `[T_{3\times 3}]`; the force
+  vectors, the residual and the stress resultants keep their upper case,
+  e.g. `\boldsymbol{F}_{ext}`, `\boldsymbol{R}` and `\boldsymbol{N}_{NL}`,
+  also in the derivatives and in the scaled norms of the convergence
+  criteria, e.g. `\partial \boldsymbol{R}/\partial \lambda` and
+  `\|\boldsymbol{R}\|_{\boldsymbol{d}}`; the partitions are subscripts,
+  e.g. `\boldsymbol{K}_{T_{fk}}` and `\boldsymbol{F}_{{ext}_f}`; the
+  overbar is kept for the prescribed displacements,
+  `\bar{\boldsymbol{u}}_k`; explicit lists of components keep their
+  braces. The gradient matrices of the geometric stiffness are those of
+  the book: `\boldsymbol{G}_x = \partial \boldsymbol{S}^w/\partial x` and
+  `\boldsymbol{G}_y = \partial \boldsymbol{S}^w/\partial y` for the
+  shells, whose `\boldsymbol{K}_G` and KGNL are written with them term by term instead
+  of `[G]^\top [N] [G]`, and `\partial \boldsymbol{S}^v/\partial x`,
+  `\partial \boldsymbol{S}^w/\partial x` (`BeamC`) or
+  `\boldsymbol{S}^{r_z}`, `\boldsymbol{S}^{r_y}` (`BeamLR`) for the beams
+  instead of `[G_v]` and `[G_w]`; the probe attributes ``Gwx``, ``Gwy``
+  and ``Gvx`` keep their names. The first moment of the mass is
+  `\boldsymbol{Q}` in `tests/test_element_mass.py` and
+  `tut-shell-lumped-mass.ipynb`, whose shape functions are `S_i` and
+  `\boldsymbol{S}`, as in the elements; the rows of the shape functions
+  in `tut-timoshenko-beam-benchmarks.ipynb` are
+  `\boldsymbol{S}_{r_z,x}` and `\boldsymbol{S}_\gamma`, and the hourglass
+  operator of `Quad4R` is `\partial^2 \boldsymbol{S}/\partial x \partial
+  y`. The tutorials were not re-executed: only their Markdown changed.
 - User guide pages: overview and workflow, conventions, choice of the
   element, shell and beam properties, non-linear static analyses, linear
   buckling and natural frequencies, installation and changelog. The usage
@@ -628,7 +663,8 @@ select the other matrix.
   `natural_frequency()` solves the undamped problem; the damped one, e.g.
   with the damping matrix `CA` of the piston theory, is solved by the new
   `complex_frequency()`.
-- `Spring` verified in an arbitrary orientation against `[T][K_e][T]^T`,
+- `Spring` verified in an arbitrary orientation against `\boldsymbol{T}
+  \boldsymbol{K}_e \boldsymbol{T}^\top`,
   with symmetry, rigid-body translation and equal rotations without
   energy, and the internal forces, new tests in `tests/test_spring.py`;
   its Notes state that a rigid rotation of two nodes at different

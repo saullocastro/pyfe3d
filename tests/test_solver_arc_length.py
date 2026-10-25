@@ -348,11 +348,11 @@ def sharp_peak(cp=0.05*(1 - 1e-12)):
 
 def test_arc_length_riks_at_a_sharp_peak(capsys):
     r"""Riks' linearized constraint has no solution when the tangent
-    `\{\Delta c_q\}` of the iterate is orthogonal to the increment, here
+    `\Delta \boldsymbol{c}_q` of the iterate is orthogonal to the increment, here
     when the stiffness changes sign from 1 to -1: the step is repeated with a
     shorter arc length. The predictor of the next step is orthogonal to the
     last increment, and the sign of the predictor is then positive, along
-    `\{\Delta c_q\} = \{-1\}`; the analysis stops at the peak when the arc
+    `\Delta \boldsymbol{c}_q = \{-1\}`; the analysis stops at the peak when the arc
     length becomes smaller than ``minInc``"""
     p = sharp_peak()
     p.analysis(NL_method='arc_length_riks', initialInc=0.1, minInc=1e-3)

@@ -5,8 +5,8 @@ that depends on the configuration through an unsymmetric matrix ``Q``:
 
 .. math::
 
-    \{F_{int}(c)\} = [K]\{c\} + \{a c^3\}, \qquad
-    \{F(c, \lambda)\} = \lambda (\{q_0\} + [Q]\{c\})
+    \boldsymbol{F}_{int}(\boldsymbol{c}) = \boldsymbol{K} \boldsymbol{c} + \{a c^3\}, \qquad
+    \boldsymbol{F}(\boldsymbol{c}, \lambda) = \lambda (\boldsymbol{q}_0 + \boldsymbol{Q} \boldsymbol{c})
 
 passed to :class:`pyfe3d.solver.Analysis` as described in
 :mod:`pyfe3d.solver.callbacks`: ``calc_fint(c, inc)`` contains ``-inc Q c``,

@@ -142,7 +142,7 @@ def test_estimate_cayley_sigma_fallback():
 
 
 def test_estimate_cayley_sigma_degenerate_inputs():
-    r"""The other two exits of the power iteration: a null `[K_G]` makes the
+    r"""The other two exits of the power iteration: a null `\boldsymbol{K}_G` makes the
     ratio of norms vanish, and a factorization too inaccurate to trust is
     detected by the residual of the first solve"""
     n = 10
@@ -170,7 +170,7 @@ def test_check_eigenpairs_detects_a_missing_multiplier():
     r"""The completeness check is the one that catches a solver that
     converged to the interior of the spectrum
 
-    With `[K] = diag(1, 2, 3, ...)` and `[K_G] = -[I]` the load multipliers
+    With `\boldsymbol{K} = diag(1, 2, 3, ...)` and `\boldsymbol{K}_G = -\boldsymbol{I}` the load multipliers
     are `1, 2, 3, ...`. Handing the second one in as if it were the lowest
     must be rejected.
 

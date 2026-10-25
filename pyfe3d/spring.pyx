@@ -136,7 +136,7 @@ cdef class Spring:
         Rotational stiffnesses in the element coordinate system, moment per
         unit rotation.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Entries `T_{ij}` of the transformation matrix `[T_{3\times 3}]` from
+        Entries `T_{ij}` of the transformation matrix `\boldsymbol{T}_{3\times 3}` from
         element to global coordinates, whose columns are the element axes. By
         default it assumes that the element is aligned with the global
         coordinate system. Dimensionless.
@@ -172,19 +172,19 @@ cdef class Spring:
     ``finte = [K_e] ue`` with
 
     .. math::
-        [K_e] = \begin{bmatrix} [k] & -[k] \\ -[k] & [k] \end{bmatrix},
+        \boldsymbol{K}_e = \begin{bmatrix} [k] & -[k] \\ -[k] & [k] \end{bmatrix},
         \qquad [k] = \mathrm{diag}(k_1, ..., k_6)
 
     transformed to global coordinates with the transformation matrix of the
-    element, `[K] = [T] [K_e] [T]^\top`, where `[T]` is block diagonal with four
-    copies of the matrix `[T_{3\times 3}]` of the entries `T_{ij}` stored in
+    element, `\boldsymbol{K} = \boldsymbol{T} \boldsymbol{K}_e \boldsymbol{T}^\top`, where `\boldsymbol{T}` is block diagonal with four
+    copies of the matrix `\boldsymbol{T}_{3\times 3}` of the entries `T_{ij}` stored in
     ``r11, ..., r33``, whose columns are the element axes.
 
     A rigid translation and equal rotations of the two nodes give no
     internal forces. Since the nodal coordinates are not used, a rigid
-    rotation `\{\theta\}` of two nodes at different positions `\{p_1\}`
-    and `\{p_2\}` gives the relative translation `\{\theta\} \times
-    (\{p_2\} - \{p_1\})`, normal to the line of the nodes, which loads
+    rotation `\boldsymbol{\theta}` of two nodes at different positions `\boldsymbol{p}_1`
+    and `\boldsymbol{p}_2` gives the relative translation `\boldsymbol{\theta} \times
+    (\boldsymbol{p}_2 - \boldsymbol{p}_1)`, normal to the line of the nodes, which loads
     the translational stiffnesses in that direction: with the element `x`
     axis along the line of the nodes, ``kye`` and ``kze``. These
     properties are verified in ``tests/test_spring.py``.
@@ -226,7 +226,7 @@ cdef class Spring:
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated, with
-        the entries `T_{ij}` of the transformation matrix `[T_{3\times 3}]`
+        the entries `T_{ij}` of the transformation matrix `\boldsymbol{T}_{3\times 3}`
         from element to global coordinates, whose columns are the element axes.
 
         The element coordinate system is determined, identifying the `ijk`
@@ -300,7 +300,7 @@ cdef class Spring:
         The translations and rotations of the two nodes, read from ``u`` at the
         positions ``c1`` to ``c1 + 5`` and ``c2`` to ``c2 + 5``, are
         transformed to the element coordinate system with the transpose
-        `[T_{3\times 3}]^\top` of the transformation matrix, which must be updated
+        `\boldsymbol{T}_{3\times 3}^\top` of the transformation matrix, which must be updated
         before, see :meth:`.update_rotation_matrix`.
 
         Parameters

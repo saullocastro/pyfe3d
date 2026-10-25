@@ -175,7 +175,7 @@ cdef class BeamLR:
         Element length, dimension length. Updated by
         :meth:`.update_length`.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Entries `T_{ij}` of the transformation matrix `[T_{3\times 3}]` from
+        Entries `T_{ij}` of the transformation matrix `\boldsymbol{T}_{3\times 3}` from
         element to global coordinates, whose columns are the element axes.
         Dimensionless.
     vxyi, vxyj, vxyk : double
@@ -277,7 +277,7 @@ cdef class BeamLR:
         r"""Update the rotation matrix of the element
 
         Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated, with
-        the entries `T_{ij}` of the transformation matrix `[T_{3\times 3}]`
+        the entries `T_{ij}` of the transformation matrix `\boldsymbol{T}_{3\times 3}`
         from element to global coordinates, whose columns are the element axes.
 
         The element attributes ``vxyi``, ``vxyj`` and ``vxyk`` are also updated
@@ -368,7 +368,7 @@ cdef class BeamLR:
         The translations and rotations of the two nodes, read from ``u`` at the
         positions ``c1`` to ``c1 + 5`` and ``c2`` to ``c2 + 5``, are
         transformed to the element coordinate system with the transpose
-        `[T_{3\times 3}]^\top` of the transformation matrix, which must be updated
+        `\boldsymbol{T}_{3\times 3}^\top` of the transformation matrix, which must be updated
         before, see :meth:`.update_rotation_matrix`.
 
         Parameters
@@ -427,7 +427,7 @@ cdef class BeamLR:
 
         The coordinates of the two nodes, read from ``x`` at the positions
         ``c1//2`` and ``c2//2``, are transformed to the element coordinate
-        system with the transpose `[T_{3\times 3}]^\top` of the transformation
+        system with the transpose `\boldsymbol{T}_{3\times 3}^\top` of the transformation
         matrix, which must be updated before, see
         :meth:`.update_rotation_matrix`. Then :meth:`.update_length` is called,
         updating ``length``.
@@ -528,8 +528,8 @@ cdef class BeamLR:
 
         Notes
         -----
-        The linear internal forces are `[K_{C0_e}] \{u_e\}`, with the matrix
-        `[K_{C0_e}]` of :meth:`.update_KC0` in element coordinates. With
+        The linear internal forces are `\boldsymbol{K}_{C0_e} \boldsymbol{u}_e`, with the matrix
+        `\boldsymbol{K}_{C0_e}` of :meth:`.update_KC0` in element coordinates. With
         ``nonlinear`` different from ``0``, the terms of the von Karman strains
         are added, see :meth:`._update_probe_finte_nonlinear`, such that
         ``finte`` is the gradient of the strain energy with the von Karman
@@ -1736,16 +1736,16 @@ cdef class BeamLR:
         .. math::
             \epsilon_{xx} = u_{,x} + \frac{1}{2} \left( v_{,x}^2 + w_{,x}^2 \right)
 
-        whose nonlinear part is `\epsilon_{NL} = \frac{1}{2} [B_{NL}] \{u_e\}`, with
-        `[B_{NL}] = v_{,x} [G_v] + w_{,x} [G_w]` its variation, where the slopes are taken from the rotations as `v_{,x} = r_z` and `w_{,x} = -r_y`. With
-        `[B_L]` the linear strain-displacement matrix, `[C_{sec}]` the sectional
+        whose nonlinear part is `\epsilon_{NL} = \frac{1}{2} \boldsymbol{B}_{NL} \boldsymbol{u}_e`, with
+        `\boldsymbol{B}_{NL} = v_{,x} \boldsymbol{S}^{r_z} - w_{,x} \boldsymbol{S}^{r_y}` its variation, where the slopes are taken from the rotations as `v_{,x} = r_z` and `w_{,x} = -r_y`, `\boldsymbol{S}^{r_z}` and `\boldsymbol{S}^{r_y}` being the linear interpolations of the rotations. With
+        `\boldsymbol{B}_L` the linear strain-displacement matrix, `\boldsymbol{C}_{sec}` the sectional
         constitutive matrix, whose first column couples the axial strain with `E A`, `E A_y`
         and `E A_z`, and `N_{NL} = E A \epsilon_{NL}`:
 
-        - KC0L = `[B_L]^\top [C_{sec}] [B_{NL}]`
+        - KC0L = `\boldsymbol{B}_L^\top \boldsymbol{C}_{sec} \boldsymbol{B}_{NL}`
         - KCL0 = KC0L`^\top`
-        - KCLL = `[B_{NL}]^\top [C_{sec}] [B_{NL}]`
-        - KGNL = `N_{NL} ([G_v]^\top [G_v] + [G_w]^\top [G_w])`
+        - KCLL = `\boldsymbol{B}_{NL}^\top \boldsymbol{C}_{sec} \boldsymbol{B}_{NL}`
+        - KGNL = `N_{NL} \left( (\boldsymbol{S}^{r_z})^\top \boldsymbol{S}^{r_z} + (\boldsymbol{S}^{r_y})^\top \boldsymbol{S}^{r_y} \right)`
 
         The first three groups are the constitutive terms coupling the linear and
         the nonlinear parts of the axial strain. KGNL is geometric, carrying the
@@ -1754,7 +1754,7 @@ cdef class BeamLR:
         which is what a linear buckling analysis needs. With it here,
 
         .. math::
-            K_T = K_{C0} + K_{CNL}(u) + K_G(u)
+            \boldsymbol{K}_T = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u}) + \boldsymbol{K}_G(\boldsymbol{u})
 
         is the exact Jacobian of the internal forces of :meth:`.update_fint` with
         ``nonlinear=1``, and a Newton-Raphson iteration built on them converges
@@ -1880,7 +1880,7 @@ cdef class BeamLR:
         The geometric stiffness matrix is
 
         .. math::
-            [K_G] = \int_0^L N \left( [G_v]^\top [G_v] + [G_w]^\top [G_w] \right) dx
+            \boldsymbol{K}_G = \int_0^L N \left[ (\boldsymbol{S}^{r_z})^\top \boldsymbol{S}^{r_z} + (\boldsymbol{S}^{r_y})^\top \boldsymbol{S}^{r_y} \right] dx
 
         the Hessian of `\frac{1}{2} \int_0^L N (v_{,x}^2 + w_{,x}^2) dx` at a
         constant axial force `N`, where the slopes are taken from the
@@ -1891,10 +1891,10 @@ cdef class BeamLR:
         :class:`.BeamC`. The integral is computed exactly, hence the matrix
         involves only the rotations.
 
-        `[K_G]` is homogeneous of degree one in ``probe.ue``. With ``probe.ue``
+        `\boldsymbol{K}_G` is homogeneous of degree one in ``probe.ue``. With ``probe.ue``
         from the linear static solution of a reference load, the critical
         load multipliers `\lambda` of the linear buckling analysis solve
-        `([K_{C0}] + \lambda [K_G]) \{u\} = \{0\}`, see
+        `(\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}`, see
         :func:`.linear_buckling`. The geometric term of the
         nonlinear axial strain is in :meth:`.update_KCNL`.
 

@@ -200,20 +200,20 @@ with the same split of the tangent stiffness as
 
 .. math::
 
-    [K_T] = [K_{C0}] + [K_{CNL}(u)] + [K_G(u)]
+    \boldsymbol{K}_T = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u}) + \boldsymbol{K}_G(\boldsymbol{u})
 
 which is the exact Jacobian of the internal forces of
-:meth:`.Tria3DSG.update_fint` called with ``nonlinear=1``. `[K_G]` is left
+:meth:`.Tria3DSG.update_fint` called with ``nonlinear=1``. `\boldsymbol{K}_G` is left
 homogeneous of degree one in the displacements so that a linear buckling
 analysis can use it directly, the stress of the nonlinear membrane strain
-being collected in `[K_{CNL}]` instead. See :meth:`.Tria3DSG.update_KCNL`.
+being collected in `\boldsymbol{K}_{CNL}` instead. See :meth:`.Tria3DSG.update_KCNL`.
 
 Two things are simpler here than in the quadrilateral. First, the transverse
 shear strains of first-order shear deformation theory have no von Karman
-terms, so the discrete shear gap operator appears in `[K_{C0}]` alone and
+terms, so the discrete shear gap operator appears in `\boldsymbol{K}_{C0}` alone and
 the nonlinear methods never touch it. Second, every operator of this element
-is constant over the triangle, so `[K_{CNL}]`, its internal forces and
-`[K_G]` are all integrated exactly by a single multiplication by the area,
+is constant over the triangle, so `\boldsymbol{K}_{CNL}`, its internal forces and
+`\boldsymbol{K}_G` are all integrated exactly by a single multiplication by the area,
 with no quadrature loop and no quadrature to keep consistent between the
 matrix and the residual. The drilling term is the only one that needs more
 than one point, and it is linear.
@@ -474,7 +474,7 @@ cdef class Tria3DSG:
         In-plane rotation from the material to the element coordinate
         system, set by :meth:`.update_rotation_matrix`.
     r11, r12, ..., r33 : double
-        Entries `T_{ij}` of the transformation matrix `[T_{3\times 3}]` from
+        Entries `T_{ij}` of the transformation matrix `\boldsymbol{T}_{3\times 3}` from
         element to global coordinates, whose columns are the element axes.
     probe, : :class:`.Tria3DSGProbe`
         Shared probe object.
@@ -545,7 +545,7 @@ cdef class Tria3DSG:
       `L` of that test, whose longest edge is `\ell = \sqrt{2} L`, i.e.
       `0.125` at `\ell/h = 10` and `1.4 \times 10^{-7}` at
       `\ell/h = 10^4`;
-    * the sensitivity of `[K_{C0}]` to `A_{ts}` falls by about three
+    * the sensitivity of `\boldsymbol{K}_{C0}` to `A_{ts}` falls by about three
       hundred on the geometry of
       ``test_transverse_shear_stays_out_of_the_nonlinear_terms``, that
       is the element uses a fraction of a per cent of the transverse
@@ -771,7 +771,7 @@ cdef class Tria3DSG:
 
         The coordinates of the three nodes, read from ``x`` at the positions
         ``c1//2``, ``c2//2`` and ``c3//2``, are rotated to the element
-        coordinate system with the transpose `[T_{3\times 3}]^\top` of the
+        coordinate system with the transpose `\boldsymbol{T}_{3\times 3}^\top` of the
         transformation matrix and written to ``probe.xe``.
         :meth:`.update_rotation_matrix` must have been called before. The
         ``area`` attribute is not updated here, see :meth:`.update_area`.
@@ -820,7 +820,7 @@ cdef class Tria3DSG:
 
         The displacements and rotations of the three nodes, read from ``u`` at
         the positions ``c1``, ``c2`` and ``c3``, are rotated to the element
-        coordinate system with the transpose `[T_{3\times 3}]^\top` of the
+        coordinate system with the transpose `\boldsymbol{T}_{3\times 3}^\top` of the
         transformation matrix and written to ``probe.ue``.
         :meth:`.update_rotation_matrix` must have been called before.
 
@@ -940,7 +940,7 @@ cdef class Tria3DSG:
         .. math::
 
             \{\gamma_{xz}, \gamma_{yz}\} = \frac{1}{3} \sum_{p=1}^{3}
-            \sum_{q \neq p} \Delta w_q \{N_{q,x}, N_{q,y}\}
+            \sum_{q \neq p} \Delta w_q \{S_{q,x}, S_{q,y}\}
 
         Each of the three operators is separately exact for the rigid-body
         modes, for a state of constant transverse shear and for every
@@ -1386,11 +1386,11 @@ cdef class Tria3DSG:
         Notes
         -----
         The formulation of the element matrix is given in
-        :meth:`._update_probe_KC0ve`. With `[T]` the transformation matrix of
-        the element, block diagonal with the matrix `[T_{3\times 3}]` of the
+        :meth:`._update_probe_KC0ve`. With `\boldsymbol{T}` the transformation matrix of
+        the element, block diagonal with the matrix `\boldsymbol{T}_{3\times 3}` of the
         entries `T_{ij}` stored in ``r11, ..., r33``, whose columns are the
         element axes, for the translations and for the rotations of each node,
-        the global values are `[K_g] = [T] [K_e] [T]^\top`, i.e. `K_{g,mn} =
+        the global values are `\boldsymbol{K}_g = \boldsymbol{T} \boldsymbol{K}_e \boldsymbol{T}^\top`, i.e. `K_{g,mn} =
         T_{mi} K_{e,ij} T_{nj}`.
 
         """
@@ -1451,19 +1451,19 @@ cdef class Tria3DSG:
 
         Notes
         -----
-        With the von Karman membrane strain `\{\epsilon_{NL}\} =
+        With the von Karman membrane strain `\boldsymbol{\epsilon}_{NL} =
         \{w_{,x}^2/2, w_{,y}^2/2, w_{,x} w_{,y}\}^\top`, the linear stress
-        resultants `\{N\} = [A]\{\epsilon\} + [B]\{\kappa\}`, and
-        `\{N_{NL}\} = [A]\{\epsilon_{NL}\}`, `\{M_{NL}\} =
-        [B]\{\epsilon_{NL}\}`, the terms added are
+        resultants `\boldsymbol{N} = \boldsymbol{A} \boldsymbol{\epsilon} + \boldsymbol{B} \boldsymbol{\kappa}`, and
+        `\boldsymbol{N}_{NL} = \boldsymbol{A} \boldsymbol{\epsilon}_{NL}`, `\boldsymbol{M}_{NL} =
+        \boldsymbol{B} \boldsymbol{\epsilon}_{NL}`, the terms added are
 
         .. math::
 
-            A_e \left( [B_m]^\top \{N_{NL}\} + [B_b]^\top \{M_{NL}\}
-            + [B_{NL}]^\top (\{N\} + \{N_{NL}\}) \right)
+            A_e \left( \boldsymbol{B}_m^\top \boldsymbol{N}_{NL} + \boldsymbol{B}_b^\top \boldsymbol{M}_{NL}
+            + \boldsymbol{B}_{NL}^\top (\boldsymbol{N} + \boldsymbol{N}_{NL}) \right)
 
-        with `A_e` the element area and `[B_{NL}]` the variation of
-        `\{\epsilon_{NL}\}`, see :meth:`.update_KCNL`, such that ``finte``
+        with `A_e` the element area and `\boldsymbol{B}_{NL}` the variation of
+        `\boldsymbol{\epsilon}_{NL}`, see :meth:`.update_KCNL`, such that ``finte``
         becomes the gradient of the strain energy whose Hessian is KC0 +
         KCNL + KG. Every operator is constant over the triangle and so is the
         integrand, so the area is the whole of the quadrature.
@@ -1809,16 +1809,19 @@ cdef class Tria3DSG:
             \epsilon_{yy} = v_{,y} + \frac{1}{2} w_{,y}^2, \quad
             \gamma_{xy} = u_{,y} + v_{,x} + w_{,x} w_{,y}
 
-        whose nonlinear part is `\{\epsilon_{NL}\} = \frac{1}{2} [B_{NL}]
-        \{u_e\}`, with `[B_{NL}]` its variation. With `[B_m]` and `[B_b]`
-        the linear membrane and bending strain-displacement matrices, `[G]`
-        the gradient of `w`, and `[A]`, `[B]` the laminate matrices:
+        whose nonlinear part is `\boldsymbol{\epsilon}_{NL} = \frac{1}{2} \boldsymbol{B}_{NL}
+        \boldsymbol{u}_e`, with `\boldsymbol{B}_{NL}` its variation. With `\boldsymbol{B}_m` and `\boldsymbol{B}_b`
+        the linear membrane and bending strain-displacement matrices, `\boldsymbol{G}_x = \partial \boldsymbol{S}^w / \partial x`
+        and `\boldsymbol{G}_y = \partial \boldsymbol{S}^w / \partial y` the gradients of `w`, and `\boldsymbol{A}`, `\boldsymbol{B}` the laminate matrices:
 
-        - KC0L = `[B_m]^\top [A] [B_{NL}] + [B_b]^\top [B] [B_{NL}]`
+        - KC0L = `\boldsymbol{B}_m^\top \boldsymbol{A} \boldsymbol{B}_{NL} + \boldsymbol{B}_b^\top \boldsymbol{B} \boldsymbol{B}_{NL}`
         - KCL0 = KC0L`^\top`
-        - KCLL = `[B_{NL}]^\top [A] [B_{NL}]`
-        - KGNL = `[G]^\top [N_{NL}] [G]`, with `\{N_{NL}\} = [A]
-          \{\epsilon_{NL}\}`
+        - KCLL = `\boldsymbol{B}_{NL}^\top \boldsymbol{A} \boldsymbol{B}_{NL}`
+        - KGNL = `N_{NL,xx} \boldsymbol{G}_x^\top \boldsymbol{G}_x + N_{NL,yy}
+          \boldsymbol{G}_y^\top \boldsymbol{G}_y + N_{NL,xy} (\boldsymbol{G}_x^\top
+          \boldsymbol{G}_y + \boldsymbol{G}_y^\top \boldsymbol{G}_x)`, with
+          `\boldsymbol{N}_{NL} = \{N_{NL,xx}, N_{NL,yy}, N_{NL,xy}\}^\top
+          = \boldsymbol{A} \boldsymbol{\epsilon}_{NL}`
 
         The first three groups are the constitutive terms coupling the
         linear and the nonlinear parts of the membrane strain. KGNL is
@@ -1828,7 +1831,7 @@ cdef class Tria3DSG:
         analysis needs. With it here,
 
         .. math::
-            K_T = K_{C0} + K_{CNL}(u) + K_G(u)
+            \boldsymbol{K}_T = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u}) + \boldsymbol{K}_G(\boldsymbol{u})
 
         is the exact Jacobian of the internal forces of :meth:`.update_fint`
         with ``nonlinear=1``, and a Newton-Raphson iteration built on them
@@ -1836,7 +1839,7 @@ cdef class Tria3DSG:
 
         .. note:: The transverse shear strains of first-order shear
             deformation theory carry no von Karman terms, so the discrete
-            shear gap operator of this element enters `K_{C0}` alone and
+            shear gap operator of this element enters `\boldsymbol{K}_{C0}` alone and
             needs nothing here. The membrane rows have no `r_z` entries,
             this element having no Allman enrichment, so the drilling
             regularisation is likewise untouched. Both are unlike
@@ -1955,7 +1958,7 @@ cdef class Tria3DSG:
         The operator is the Donnell one. With `S_{i,x}` and `S_{i,y}` the
         constant derivatives of the shape functions, `A_e` the element area and
         `\{T_{13}, T_{23}, T_{33}\}` the element normal in global coordinates,
-        the third column of `[T_{3\times 3}]`, the entry of the global
+        the third column of `\boldsymbol{T}_{3\times 3}`, the entry of the global
         translation `m` of node `i` and `n` of node `j` is
 
         .. math::
@@ -1967,11 +1970,11 @@ cdef class Tria3DSG:
 
         the integrand being constant over the triangle.
 
-        A uniaxial state `N` along a global direction `\{d\}` has to be
-        rotated. With `[T_{3\times 3}]` the transformation matrix of this
-        object, whose columns are the element axes, `\{a\} = [T_{3\times 3}]^\top
-        \{d\}` is that direction in element coordinates and the state `N \{a\}
-        \{a\}^\top` has components
+        A uniaxial state `N` along a global direction `\boldsymbol{d}` has to be
+        rotated. With `\boldsymbol{T}_{3\times 3}` the transformation matrix of this
+        object, whose columns are the element axes, `\boldsymbol{a} = \boldsymbol{T}_{3\times 3}^\top
+        \boldsymbol{d}` is that direction in element coordinates and the state `N \boldsymbol{a}
+        \boldsymbol{a}^\top` has components
 
         .. math::
             N^e_{xx} = N a_x^2, \quad
@@ -1979,7 +1982,7 @@ cdef class Tria3DSG:
             N^e_{xy} = N a_x a_y
 
         which reduces to `(N, 0, 0)` when the element `x` axis is along
-        `\{d\}`, so a quadrilateral mesh aligned with the load needs
+        `\boldsymbol{d}`, so a quadrilateral mesh aligned with the load needs
         nothing. Measured on the cylinder of
         ``tests/test_quad4_linear_buckling_cylinder_displ.py``, whose
         cells are nearly square so the diagonal sits at 44.3 degrees,
@@ -2082,11 +2085,11 @@ cdef class Tria3DSG:
 
         .. math::
 
-            \{N_{xx}, N_{yy}, N_{xy}\}^\top = [A]\{\epsilon_{xx}, \epsilon_{yy},
-            \gamma_{xy}\}^\top + [B]\{\kappa_{xx}, \kappa_{yy}, \kappa_{xy}\}^\top
+            \{N_{xx}, N_{yy}, N_{xy}\}^\top = \boldsymbol{A}\{\epsilon_{xx}, \epsilon_{yy},
+            \gamma_{xy}\}^\top + \boldsymbol{B}\{\kappa_{xx}, \kappa_{yy}, \kappa_{xy}\}^\top
 
-        with the linear strains of :meth:`._update_probe_BL_G` and `[A]`,
-        `[B]` in the element coordinate system. Both the strains and the
+        with the linear strains of :meth:`._update_probe_BL_G` and `\boldsymbol{A}`,
+        `\boldsymbol{B}` in the element coordinate system. Both the strains and the
         curvatures are constant over the triangle, so the resulting stress
         state is constant too, which is what
         :meth:`.update_KG_given_stress` assumes.

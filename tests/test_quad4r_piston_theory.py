@@ -16,14 +16,14 @@ def test_quad4r_piston_theory(plot=False, refinement=1):
     along `X`, with the piston theory, see ``update_KA_beta`` of
     :class:`.Quad4R`, and the aerodynamic damping
 
-    The equations of motion are `[M]\{\ddot{u}\} + [C]\{\dot{u}\} +
-    [K]\{u\} = \{0\}`, with `[K] = [K_{C0}] - \beta [KA_{\beta}] - \gamma
-    [KA_{\gamma}]` and the damping matrix `[C] = -\mu [CA]`. For this plate
-    in the `XY` plane, `[CA]` acts on `w` only and `-\rho h [CA]` is the
-    block of `w` of the mass matrix, such that `[C] = a [M]` on `w`, `a =
+    The equations of motion are `\boldsymbol{M} \ddot{\boldsymbol{u}} + \boldsymbol{C} \dot{\boldsymbol{u}} +
+    \boldsymbol{K} \boldsymbol{u} = \boldsymbol{0}`, with `\boldsymbol{K} = \boldsymbol{K}_{C0} - \beta \boldsymbol{KA}_{\beta} - \gamma
+    \boldsymbol{KA}_{\gamma}` and the damping matrix `\boldsymbol{C} = -\mu \boldsymbol{CA}`. For this plate
+    in the `XY` plane, `\boldsymbol{CA}` acts on `w` only and `-\rho h \boldsymbol{CA}` is the
+    block of `w` of the mass matrix, such that `\boldsymbol{C} = a \boldsymbol{M}` on `w`, `a =
     \mu/(\rho h)`, which is asserted. Neglecting the rotary inertia, the
-    damped eigenvalues follow from the undamped ones, `\omega^2` of `([K] -
-    \omega^2 [M])\{u\} = \{0\}`: `\lambda^2 + a \lambda + \omega^2 = 0`,
+    damped eigenvalues follow from the undamped ones, `\omega^2` of `(\boldsymbol{K} -
+    \omega^2 \boldsymbol{M}) \boldsymbol{u} = \boldsymbol{0}`: `\lambda^2 + a \lambda + \omega^2 = 0`,
     i.e. `\lambda = -a/2 \pm \sqrt{a^2/4 - \omega^2}`, against which
     :func:`.complex_frequency` is verified at each Mach number. Hence:
 

@@ -60,9 +60,9 @@ def solve(A, b, **kwargs):
 
     Notes
     -----
-    The system `[A]\{x\} = \{b\}` is solved as given. In a finite element
+    The system `\boldsymbol{A} \boldsymbol{x} = \boldsymbol{b}` is solved as given. In a finite element
     model the known displacements are partitioned out beforehand, and a null
-    row or column of `[A]` is a degree-of-freedom without stiffness, i.e. a
+    row or column of `\boldsymbol{A}` is a degree-of-freedom without stiffness, i.e. a
     modelling error, which is reported instead of being removed. This
     deliberately differs from structsolve, whose solvers remove the null
     rows and columns left by the boundary conditions of its semi-analytical
@@ -173,12 +173,12 @@ def linear_static(K, fext):
 
     Notes
     -----
-    The system solved is `[K]\{u\} = \{F_{ext}\}`, the first Newton-Raphson
-    iteration of the non-linear problem from `\{u\} = \{0\}`, where the
+    The system solved is `\boldsymbol{K} \boldsymbol{u} = \boldsymbol{F}_{ext}`, the first Newton-Raphson
+    iteration of the non-linear problem from `\boldsymbol{u} = \boldsymbol{0}`, where the
     tangent stiffness matrix is the linear constitutive stiffness matrix
-    `[K_{C0}]`. For a follower load affine in the displacements, `\{F(u)\}
-    = \{F_0\} - [K_F]\{u\}`, the linear solution is that of `([K_{C0}] +
-    [K_F])\{u\} = \{F_0\}`.
+    `\boldsymbol{K}_{C0}`. For a follower load affine in the displacements, `\boldsymbol{F}(\boldsymbol{u})
+    = \boldsymbol{F}_0 - \boldsymbol{K}_F \boldsymbol{u}`, the linear solution is that of `(\boldsymbol{K}_{C0} +
+    \boldsymbol{K}_F) \boldsymbol{u} = \boldsymbol{F}_0`.
 
     """
     return [1.], [solve(K, fext)]

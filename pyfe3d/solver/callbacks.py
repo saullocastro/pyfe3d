@@ -57,32 +57,32 @@ With ``inc``, the residual is
 
 .. math::
 
-    \{R(c, \lambda)\} = \lambda \{F_{ext}\} - \{F_{int}(c, \lambda)\}
+    \boldsymbol{R}(\boldsymbol{c}, \lambda) = \lambda \boldsymbol{F}_{ext} - \boldsymbol{F}_{int}(\boldsymbol{c}, \lambda)
 
-with ``calc_kC + calc_kG`` its exact Jacobian `-\partial R/\partial c`. The
-sign is the opposite of `\{F_{int}\} - \lambda \{F_{ext}\}`, which changes
+with ``calc_kC + calc_kG`` its exact Jacobian `-\partial \boldsymbol{R}/\partial \boldsymbol{c}`. The
+sign is the opposite of `\boldsymbol{F}_{int} - \lambda \boldsymbol{F}_{ext}`, which changes
 neither the Newton-Raphson corrections nor any norm of the residual.
 
-With ``c``, ``calc_fext(inc=1., c=c)`` is `\partial R/\partial \lambda` at
+With ``c``, ``calc_fext(inc=1., c=c)`` is `\partial \boldsymbol{R}/\partial \lambda` at
 `c`.
 
 With ``lbd``, prescribed displacements imposed exactly as linear
-constraints `c = [Z] c_r + \{c_{p0}\} + \lambda \{c_{p1}\}` give the
+constraints `\boldsymbol{c} = \boldsymbol{Z} \boldsymbol{c}_r + \boldsymbol{c}_{p0} + \lambda \boldsymbol{c}_{p1}` give the
 reduced residual
 
 .. math::
 
-    \{R_r(c_r, \lambda)\} = [Z]^\top \left( \lambda \{F_{ext}\} -
-    \{F_{int}([Z] c_r + \{c_{p0}\} + \lambda \{c_{p1}\})\} \right)
+    \boldsymbol{R}_r(\boldsymbol{c}_r, \lambda) = \boldsymbol{Z}^\top \left( \lambda \boldsymbol{F}_{ext} -
+    \boldsymbol{F}_{int}(\boldsymbol{Z} \boldsymbol{c}_r + \boldsymbol{c}_{p0} + \lambda \boldsymbol{c}_{p1}) \right)
 
-which has `\partial R_r/\partial \lambda = [Z]^\top(\{F_{ext}\} - [K_T]
-\{c_{p1}\})`, with `[K_T]` evaluated at the current configuration and
+which has `\partial \boldsymbol{R}_r/\partial \lambda = \boldsymbol{Z}^\top(\boldsymbol{F}_{ext} - \boldsymbol{K}_T
+\boldsymbol{c}_{p1})`, with `\boldsymbol{K}_T` evaluated at the current configuration and
 load factor, the vector that ``calc_fext(inc=1., c=c, lbd=lbd)`` must
 return. Under a prescribed displacement alone the reference vector and the
 reduced internal force vector both vanish at equilibrium, and the
-convergence criteria use `\lambda \, \partial R/\partial \lambda` as an
+convergence criteria use `\lambda \, \partial \boldsymbol{R}/\partial \lambda` as an
 additional reference; the displacements of the arc-length solvers are
-scaled with the linear solution of `\partial R/\partial \lambda` at `c = 0,
+scaled with the linear solution of `\partial \boldsymbol{R}/\partial \lambda` at `\boldsymbol{c} = \boldsymbol{0},
 \lambda = 0`, since the reference vector ``calc_fext(inc=1.)`` may then be
 null.
 
@@ -260,18 +260,18 @@ def calc_load_vector(pb, c, fext, lbd=None):
     Returns
     -------
     q : np.ndarray
-        `\partial R/\partial \lambda`, of the size of ``c``.
+        `\partial \boldsymbol{R}/\partial \lambda`, of the size of ``c``.
 
     Notes
     -----
-    `\{q\} = \partial R/\partial \lambda` is the external load vector only
+    `\boldsymbol{q} = \partial \boldsymbol{R}/\partial \lambda` is the external load vector only
     for loads that do not depend on the configuration; with prescribed
-    displacements imposed exactly it also contains `-[Z]^\top [K_T]
-    \{c_{p1}\}`, see the module documentation, i.e. the out-of-balance force
+    displacements imposed exactly it also contains `-\boldsymbol{Z}^\top \boldsymbol{K}_T
+    \boldsymbol{c}_{p1}`, see the module documentation, i.e. the out-of-balance force
     produced by a unit increment of the load factor at the current
     configuration with the free degrees-of-freedom held fixed. The reaction
-    is a quantity of the full problem, `\{F_{int}(c)\} - \lambda
-    \{F_{ext}\}` at the constrained degrees-of-freedom.
+    is a quantity of the full problem, `\boldsymbol{F}_{int}(\boldsymbol{c}) - \lambda
+    \boldsymbol{F}_{ext}` at the constrained degrees-of-freedom.
 
     """
     kwargs = {}
