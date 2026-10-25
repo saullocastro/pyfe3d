@@ -172,7 +172,7 @@ arguments, passed only to the callables that declare them, see
   \lambda`, used by the arc-length methods.
 
 The aerodynamic load of the piston theory, `\lambda \beta
-\boldsymbol{K}_{A\beta} \boldsymbol{u}`, with ``update_KA_beta`` of :class:`.Quad4R` or
+\boldsymbol{K}_{A_\beta} \boldsymbol{u}`, with ``update_KA_beta`` of :class:`.Quad4R` or
 :class:`.Quad4`, is such a load, see ``test_piston_theory_load_unsymmetric_tangent``
 in :doc:`ex_nonlinear_static`. The keyword argument ``lbd`` of
 ``calc_fext`` gives a load vector that depends on the load factor, which is

@@ -2591,7 +2591,7 @@ def _qep_modes(lam, U, k, sigma):
     -----
     The eigenvalues of real matrices are real or come in complex conjugate
     pairs `(\lambda, \bar{\lambda})`, with the eigenvectors `\boldsymbol{u}` and
-    `\bar{\boldsymbol{u}}` ([1]_, Table 1.1, p. 237). The eigenvalues whose imaginary
+    `\boldsymbol{u}^*` ([1]_, Table 1.1, p. 237). The eigenvalues whose imaginary
     part is not larger than ``1e-8`` times their modulus are made real with
     :func:`_real_if_close`. Each eigenvalue with `Im(\lambda) < 0` is then
     paired with the nearest unpaired one with `Im(\lambda) > 0` within

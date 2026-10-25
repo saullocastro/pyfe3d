@@ -649,7 +649,19 @@ select the other matrix.
   in `tut-timoshenko-beam-benchmarks.ipynb` are
   `\boldsymbol{S}_{r_z,x}` and `\boldsymbol{S}_\gamma`, and the hourglass
   operator of `Quad4R` is `\partial^2 \boldsymbol{S}/\partial x \partial
-  y`. The tutorials were not re-executed: only their Markdown changed.
+  y`. The second moments of the mass are `\boldsymbol{I}_2`, by analogy
+  with the second moments of area, instead of `\boldsymbol{S}_2`, `S`
+  being the shape functions, in `tests/test_element_mass.py` and
+  `tut-shell-lumped-mass.ipynb`; the conjugate of a complex eigenvector
+  is `\boldsymbol{u}^*` instead of `\bar{\boldsymbol{u}}`, the overbar
+  being reserved for prescribed values; the aerodynamic matrices of the
+  piston theory are written `\boldsymbol{K}_{A_\beta}`,
+  `\boldsymbol{K}_{A_\gamma}` and `\boldsymbol{C}_A` instead of
+  `\boldsymbol{KA}_\beta`, `\boldsymbol{K}_{A\beta}`, `\boldsymbol{KA}_\gamma`
+  and `\boldsymbol{CA}` in the docstrings of `Quad4` and `Quad4R`, the
+  tests and the user guide; the methods and attributes, e.g.
+  `update_KA_beta`, `KA_BETA_SPARSE_SIZE` and `init_k_CA`, keep their
+  names. The tutorials were not re-executed: only their Markdown changed.
 - User guide pages: overview and workflow, conventions, choice of the
   element, shell and beam properties, non-linear static analyses, linear
   buckling and natural frequencies, installation and changelog. The usage

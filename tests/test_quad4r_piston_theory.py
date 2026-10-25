@@ -17,9 +17,9 @@ def test_quad4r_piston_theory(plot=False, refinement=1):
     :class:`.Quad4R`, and the aerodynamic damping
 
     The equations of motion are `\boldsymbol{M} \ddot{\boldsymbol{u}} + \boldsymbol{C} \dot{\boldsymbol{u}} +
-    \boldsymbol{K} \boldsymbol{u} = \boldsymbol{0}`, with `\boldsymbol{K} = \boldsymbol{K}_{C0} - \beta \boldsymbol{KA}_{\beta} - \gamma
-    \boldsymbol{KA}_{\gamma}` and the damping matrix `\boldsymbol{C} = -\mu \boldsymbol{CA}`. For this plate
-    in the `XY` plane, `\boldsymbol{CA}` acts on `w` only and `-\rho h \boldsymbol{CA}` is the
+    \boldsymbol{K} \boldsymbol{u} = \boldsymbol{0}`, with `\boldsymbol{K} = \boldsymbol{K}_{C0} - \beta \boldsymbol{K}_{A_\beta} - \gamma
+    \boldsymbol{K}_{A_\gamma}` and the damping matrix `\boldsymbol{C} = -\mu \boldsymbol{C}_A`. For this plate
+    in the `XY` plane, `\boldsymbol{C}_A` acts on `w` only and `-\rho h \boldsymbol{C}_A` is the
     block of `w` of the mass matrix, such that `\boldsymbol{C} = a \boldsymbol{M}` on `w`, `a =
     \mu/(\rho h)`, which is asserted. Neglecting the rotary inertia, the
     damped eigenvalues follow from the undamped ones, `\omega^2` of `(\boldsymbol{K} -

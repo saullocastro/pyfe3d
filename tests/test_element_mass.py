@@ -11,10 +11,10 @@ mass `\boldsymbol{Q}` and the inertia tensor of the element,
 
     \boldsymbol{\Phi}^\top \boldsymbol{M} \boldsymbol{\Phi} = \begin{bmatrix}
         m \boldsymbol{I} & -\tilde{\boldsymbol{Q}} \\
-        \tilde{\boldsymbol{Q}} & \mathrm{tr}(\boldsymbol{S}_2) \boldsymbol{I} - \boldsymbol{S}_2
+        \tilde{\boldsymbol{Q}} & \mathrm{tr}(\boldsymbol{I}_2) \boldsymbol{I} - \boldsymbol{I}_2
     \end{bmatrix}
 
-with `\tilde{\boldsymbol{Q}}` the skew-symmetric matrix of `\boldsymbol{Q}` and `\boldsymbol{S}_2
+with `\tilde{\boldsymbol{Q}}` the skew-symmetric matrix of `\boldsymbol{Q}` and `\boldsymbol{I}_2
 = \int \rho \boldsymbol{p} \boldsymbol{p}^\top dV`. For the shells, `\boldsymbol{p} = \boldsymbol{x} + z
 \boldsymbol{n}` and the integrals through the thickness are ``intrho``, ``intrhoz``
 and ``intrhoz2`` of the property, with an offset, such that ``intrhoz`` is
@@ -26,7 +26,7 @@ rule of points `\boldsymbol{x}_q` and weights `w_q` over the area, for which
     m = I_\rho \sum_q w_q, \quad
     \boldsymbol{Q} = I_\rho \sum_q w_q \boldsymbol{x}_q + I_{\rho z} \boldsymbol{n} \sum_q w_q,
 
-    \boldsymbol{S}_2 = I_\rho \sum_q w_q \boldsymbol{x}_q \boldsymbol{x}_q^\top
+    \boldsymbol{I}_2 = I_\rho \sum_q w_q \boldsymbol{x}_q \boldsymbol{x}_q^\top
         + I_{\rho z} \sum_q w_q (\boldsymbol{x}_q \boldsymbol{n}^\top + \boldsymbol{n} \boldsymbol{x}_q^\top)
         + I_{\rho z^2} \boldsymbol{n} \boldsymbol{n}^\top \sum_q w_q
 

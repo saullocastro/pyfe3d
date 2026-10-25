@@ -45,7 +45,7 @@ Configuration-dependent load
 ----------------------------
 
 The aerodynamic load of the piston theory, `\lambda \beta
-\boldsymbol{K}_{A\beta} \boldsymbol{u}`, from ``update_KA_beta`` of :class:`.Quad4R`, enters
+\boldsymbol{K}_{A_\beta} \boldsymbol{u}`, from ``update_KA_beta`` of :class:`.Quad4R`, enters
 ``calc_fint`` with the load factor ``inc``, and its unsymmetric load
 stiffness enters ``calc_kC``; ``calc_fext(c=...)`` gives the load vector of
 the current configuration:

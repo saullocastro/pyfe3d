@@ -10208,7 +10208,7 @@ cdef class Quad4:
                         long [::1] KA_betac,
                         double [::1] KA_betav,
                         ):
-        r"""Update sparse vectors for piston-theory aerodynamic matrix `KA_{\beta}`
+        r"""Update sparse vectors for piston-theory aerodynamic matrix `\boldsymbol{K}_{A_\beta}`
 
         The matrix is integrated over the element with 2 by 2 Gauss-Legendre
         quadrature, from the coordinates ``probe.xe`` and the rotation matrix,
@@ -10244,7 +10244,7 @@ cdef class Quad4:
 
         .. math::
 
-            \boldsymbol{KA}_{\beta} = -\int_A \boldsymbol{S}^\top \left( T_{11} \boldsymbol{S}_{,x}
+            \boldsymbol{K}_{A_\beta} = -\int_A \boldsymbol{S}^\top \left( T_{11} \boldsymbol{S}_{,x}
                 + T_{12} \boldsymbol{S}_{,y} \right) dA
 
         acting on the nodal values of `w_n`, where `\boldsymbol{S}` holds the bilinear
@@ -10272,13 +10272,13 @@ cdef class Quad4:
 
         whichever side of the element the flow is on, because `q` and `w_n`
         change sign together. The load vector is then `\boldsymbol{f}_A = \beta
-        \boldsymbol{KA}_{\beta} \boldsymbol{u} + \gamma \boldsymbol{KA}_{\gamma} \boldsymbol{u} + \mu \boldsymbol{CA}
+        \boldsymbol{K}_{A_\beta} \boldsymbol{u} + \gamma \boldsymbol{K}_{A_\gamma} \boldsymbol{u} + \mu \boldsymbol{C}_A
         \dot{\boldsymbol{u}}` and the equations of motion are
 
         .. math::
 
-            \boldsymbol{M} \ddot{\boldsymbol{u}} - \mu \boldsymbol{CA} \dot{\boldsymbol{u}} + \left(\boldsymbol{K} - \beta
-            \boldsymbol{KA}_{\beta} - \gamma \boldsymbol{KA}_{\gamma}\right) \boldsymbol{u} = \boldsymbol{0}
+            \boldsymbol{M} \ddot{\boldsymbol{u}} - \mu \boldsymbol{C}_A \dot{\boldsymbol{u}} + \left(\boldsymbol{K} - \beta
+            \boldsymbol{K}_{A_\beta} - \gamma \boldsymbol{K}_{A_\gamma}\right) \boldsymbol{u} = \boldsymbol{0}
 
         The coefficients are given by the caller; with the density
         `\rho_{\infty}`, speed `U` and Mach number `M` of the flow, `\beta =
@@ -11101,7 +11101,7 @@ cdef class Quad4:
                         long [::1] KA_gammac,
                         double [::1] KA_gammav,
                         ):
-        r"""Update sparse vectors for piston-theory aerodynamic matrix `KA_{\gamma}`
+        r"""Update sparse vectors for piston-theory aerodynamic matrix `\boldsymbol{K}_{A_\gamma}`
 
         The matrix is integrated over the element with 2 by 2 Gauss-Legendre
         quadrature, from the coordinates ``probe.xe`` and the rotation matrix,
@@ -11137,13 +11137,13 @@ cdef class Quad4:
 
         .. math::
 
-            \boldsymbol{KA}_{\gamma} = \int_A \boldsymbol{S}^\top \boldsymbol{S} dA
+            \boldsymbol{K}_{A_\gamma} = \int_A \boldsymbol{S}^\top \boldsymbol{S} dA
 
         acting on the nodal values of `w_n`. With the piston-theory
-        coefficient `\gamma` given by the caller, `\gamma \boldsymbol{KA}_{\gamma}
+        coefficient `\gamma` given by the caller, `\gamma \boldsymbol{K}_{A_\gamma}
         \boldsymbol{u}` is the load of the term `\gamma w_n` of the pressure law, which
         enters the stiffness of the equations of motion as `-\gamma
-        \boldsymbol{KA}_{\gamma}`, see the piston theory in the notes of
+        \boldsymbol{K}_{A_\gamma}`, see the piston theory in the notes of
         :meth:`.update_KA_beta`.
 
         """
@@ -11932,7 +11932,7 @@ cdef class Quad4:
                         long [::1] CAc,
                         double [::1] CAv,
                         ):
-        r"""Update sparse vectors for piston-theory aerodynamic damping matrix `CA`
+        r"""Update sparse vectors for piston-theory aerodynamic damping matrix `\boldsymbol{C}_A`
 
         The matrix is integrated over the element with 2 by 2 Gauss-Legendre
         quadrature, from the coordinates ``probe.xe`` and the rotation matrix,
@@ -11967,13 +11967,13 @@ cdef class Quad4:
 
         .. math::
 
-            \boldsymbol{CA} = -\int_A \boldsymbol{S}^\top \boldsymbol{S} dA
+            \boldsymbol{C}_A = -\int_A \boldsymbol{S}^\top \boldsymbol{S} dA
 
         acting on the nodal values of the velocity `\dot w_n`. With the
         piston-theory damping coefficient `\mu` given by the caller, `\mu
-        \boldsymbol{CA} \dot{\boldsymbol{u}}` is the load of the term `-\mu \dot{w}_n` of the
+        \boldsymbol{C}_A \dot{\boldsymbol{u}}` is the load of the term `-\mu \dot{w}_n` of the
         pressure law, which enters the damping of the equations of motion as
-        `-\mu \boldsymbol{CA}`, positive definite, see the piston theory in the notes of
+        `-\mu \boldsymbol{C}_A`, positive definite, see the piston theory in the notes of
         :meth:`.update_KA_beta`.
 
         """
