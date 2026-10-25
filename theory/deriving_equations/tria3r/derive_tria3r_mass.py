@@ -51,10 +51,10 @@ rules = {
          (sympy.Rational(1, 6), sympy.Rational(2, 3), sympy.Rational(1, 6)),
          (sympy.Rational(1, 6), sympy.Rational(1, 6), sympy.Rational(2, 3))],
         [sympy.Rational(1, 6)]*3),
-    # centroid, weight 1/2; degree of precision 1, Tria3R mtype=1
+    # centroid, weight 1/2; degree of precision 1, Tria3R mtype=2
     'one-point, centroid': ([(third, third, third)], [sympy.Rational(1, 2)]),
     # vertices, the nodal quadrature, weight 1/6 each; degree of precision
-    # 1, Tria3R mtype=2 and Tria3DSG mtype=2
+    # 1, Tria3R mtype=1 and Tria3DSG mtype=1
     'vertex rule': ([(1, 0, 0), (0, 1, 0), (0, 0, 1)],
                     [sympy.Rational(1, 6)]*3),
 }

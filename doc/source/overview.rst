@@ -133,8 +133,8 @@ The matrices are:
   resultants of the displacements in the probe, or, for the shells, of
   given membrane stress resultants with ``update_KG_given_stress``;
 - ``M``, the mass matrix, consistent, lumped or, for some shells, with
-  reduced integration, selected by the ``mtype`` argument of ``update_M``,
-  see :doc:`element_choice`;
+  reduced integration, ``mtype`` 0, 1 or 2 of ``update_M`` for every
+  element, see :doc:`element_choice`;
 - ``KA_beta``, ``KA_gamma`` and ``CA``, the aerodynamic stiffness and
   damping matrices of the piston theory, for the quadrilaterals.
 

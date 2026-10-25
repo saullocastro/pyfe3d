@@ -13,7 +13,7 @@ This script generates no code. It prints:
   Brockman (1987), Eq. (22).
 
 Gauss-Legendre with 2 points per direction (Quad4R and Quad4 ``mtype=0``) is
-exact; the 2-point Gauss-Lobatto rule (``mtype=2``), whose points are the
+exact; the 2-point Gauss-Lobatto rule (``mtype=1``), whose points are the
 nodes, gives `h_{ii}` equal to the Jacobian determinant at node `i` and
 `h_{ij} = 0` for `i \neq j`.
 

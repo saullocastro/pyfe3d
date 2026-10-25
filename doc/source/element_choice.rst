@@ -182,29 +182,26 @@ Mass matrices
 -------------
 
 The argument ``mtype`` of ``update_M`` selects how the kinetic energy of
-the element is integrated, with values that depend on the element:
+the element is integrated, with the same values for every element:
 
 .. list-table::
     :header-rows: 1
 
     * - ``mtype``
-      - Quad4, Quad4R, Tria3R
-      - Tria3DSG
-      - BeamC, BeamLR, Truss
+      - Mass matrix
+      - Elements
     * - ``0``
       - consistent
-      - consistent
-      - consistent
+      - Quad4, Quad4R, Tria3R, Tria3DSG, BeamC, BeamLR, Truss
     * - ``1``
-      - reduced integration, one point
-      -
       - lumped
+      - Quad4, Quad4R, Tria3R, Tria3DSG, BeamC, BeamLR, Truss
     * - ``2``
-      - lumped
-      - lumped
-      -
+      - reduced integration, one point
+      - Quad4, Quad4R, Tria3R
 
-Any other value raises a ``ValueError``. Each matrix is the integral over
+Any other value, and ``2`` for an element without a reduced-integration
+mass matrix, raises a ``ValueError``. Each matrix is the integral over
 the element of the inertia of the section between the interpolated
 velocities: for the shells, `I_\rho`, `I_{\rho z}` and `I_{\rho z^2}`, the
 ``intrho``, ``intrhoz`` and ``intrhoz2`` of the :class:`.ShellProp`, which

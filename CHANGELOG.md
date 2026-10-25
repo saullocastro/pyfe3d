@@ -338,10 +338,31 @@ New:
   `pyfe3d.solver.eigen._null_mu_pencil`, `NULL_MU_PERTURBATION_FACTOR`;
   argument `left` of `_eig_complex`. The same rule as structsolve.
 
+### Breaking: one `mtype` numbering for every element
+
+`mtype` of `update_M` has the same meaning for every element: `0`
+consistent, `1` lumped and `2` reduced integration, the last only for the
+elements that have it, `Quad4`, `Quad4R` and `Tria3R`. In 0.10.x, `mtype=1`
+was the reduced-integration matrix of the shells and the lumped matrix of
+the beams, and a model with one `mtype` for shells and beams got massless
+beams with `mtype=2`. Changed, without a deprecation step:
+
+- `Quad4`, `Quad4R`, `Tria3R`: lumped `2` → `1`, reduced integration
+  `1` → `2`;
+- `Tria3DSG`: lumped `2` → `1`; `1`, treated as `0` (consistent) in 0.10.x,
+  is now the lumped matrix, and `2` raises;
+- `BeamC`, `BeamLR`, `Truss`: unchanged, `0` consistent and `1` lumped; `2`
+  raises.
+
+Any other value raises a `ValueError` that names the element, the value
+and the valid values, see below. Scripts that pass `mtype=1` or `mtype=2`
+to the shells must swap the two values: they run without an error and
+select the other matrix.
+
 ### Mass matrices
 
-- Lumped mass matrices of the shells, `mtype=2` of `update_M` of `Quad4`,
-  `Quad4R`, `Tria3R` and `Tria3DSG`: the coupling between the translations
+- Lumped mass matrices of the shells, `mtype=1` of `update_M` of `Quad4`,
+  `Quad4R`, `Tria3R` and `Tria3DSG` (`mtype=2` before, see above): the coupling between the translations
   and the rotations through `intrhoz`, the first moment of the density about
   the reference surface, is kept in the block of each node. The lumped
   matrix is the nodal quadrature of the kinetic energy, the Lobatto
@@ -350,7 +371,7 @@ New:
   is zero. With an offset, the centre of mass of each element was on the
   reference surface instead of at the offset; the mass and the first moment
   of the mass are now exact (in the plane, for the triangles and the
-  parallelograms). Without offset the matrices are unchanged. `mtype=2`
+  parallelograms). Without offset the matrices are unchanged. `mtype=1`
   writes 90 entries for `Tria3R` (162 before) and 120 for `Quad4` and
   `Quad4R` (288 before), generated with
   `theory/deriving_equations/tria3r/derive_tria3r_M_sparse.py` and
@@ -360,13 +381,16 @@ New:
   `intrhoz2`, which already included the offset.
 - `update_M` of every element raises a `ValueError` for an unsupported
   `mtype`, checked before the code without the GIL: `0`, `1` or `2` for
-  `Quad4`, `Quad4R` and `Tria3R`; `0` or `2` for `Tria3DSG`, which treated
-  any other value as `0`; `0` or `1` for `BeamC`, `BeamLR` and `Truss`. Other
-  values wrote nothing before, e.g. `mtype=2` gave massless beams. The
-  values per element are listed on the page on the choice of the element.
+  `Quad4`, `Quad4R` and `Tria3R`; `0` or `1` for `Tria3DSG`, `BeamC`,
+  `BeamLR` and `Truss`. Before, `Tria3DSG` treated any value other than its
+  lumped `2` as `0`, and the other elements wrote nothing for other values,
+  e.g. `mtype=2` gave massless beams. The values are listed on the page on
+  the choice of the element.
 - New `tests/test_element_mass.py`: total mass, the matrices of the Notes and
   the rigid-body inertia of every element and every `mtype`, with an offset
-  and with the first moments of the beam sections; unsupported `mtype`.
+  and with the first moments of the beam sections; the numbering of
+  `mtype` for every element; unsupported `mtype`, `-1`, `3` and `2` for the
+  elements without a reduced-integration matrix, and the message.
 - New tutorial `tut-shell-lumped-mass.ipynb`: derivation of the lumped
   matrices with the offset and verification with the rigid-body inertia of
   one element and of a mesh.
