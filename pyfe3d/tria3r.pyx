@@ -505,7 +505,7 @@ cdef void allman_delta_Ke(double *Nx, double *Ny, double *xe, double area,
        1989. https://doi.org/10.1016/0045-7825(89)90124-2
 
     """
-    cdef int i, j, a, b, n
+    cdef int i, j, a, n
     cdef double S1, S2, S3, wij
     cdef double d[12]
     cdef double Bm[54]
@@ -1305,15 +1305,13 @@ cdef class Tria3R:
         cdef double D11, D12, D16, D22, D26, D66
         cdef double K6ROT
         cdef double points[3]
-        cdef double m11, m12, m21, m22
         cdef double N1x, N2x, N3x, N1y, N2y, N3y
-        cdef double N1, N2, N3
+        cdef double N1, N2
         cdef double factor, maxl, l12, l23, l31
-        cdef int bi, bj, qa, qb, qi, qj
-        cdef double tmp, gamma_drill
+        cdef int qi, qj
+        cdef double gamma_drill
         cdef double Nxv[3]
         cdef double Nyv[3]
-        cdef double rmat[9]
         cdef double Kedelta[324]
 
         cdef double KC0e0000, KC0e0001, KC0e0003, KC0e0004, KC0e0005, KC0e0006, KC0e0007, KC0e0009, KC0e0010, KC0e0011, KC0e0012, KC0e0013, KC0e0015, KC0e0016, KC0e0017
@@ -1412,7 +1410,7 @@ cdef class Tria3R:
             N3y = (-x1 + x2)/(2*self.area)
 
             wij = 0.5
-            N1 = N2 = N3 = 0.333333333333333333333333333333333333333333333
+            N1 = N2 = 0.333333333333333333333333333333333333333333333
 
             KC0e0000 = detJ*wij*(N1x*(A11*N1x + A16*N1y) + N1y*(A16*N1x + A66*N1y))
             KC0e0001 = detJ*wij*(N1x*(A16*N1x + A66*N1y) + N1y*(A12*N1x + A26*N1y))
@@ -1557,15 +1555,12 @@ cdef class Tria3R:
                 if i == 0:
                     N1 = points[0]
                     N2 = points[1]
-                    N3 = points[2]
                 elif i == 1:
                     N1 = points[1]
                     N2 = points[2]
-                    N3 = points[0]
                 elif i == 2:
                     N1 = points[2]
                     N2 = points[0]
-                    N3 = points[1]
 
                 KC0e0000 += 2.5e-7*A66*K6ROT*N1y**2*detJ*wij
                 KC0e0001 += -2.5e-7*A66*K6ROT*N1x*N1y*detJ*wij
@@ -1749,9 +1744,8 @@ cdef class Tria3R:
         cdef double K6ROT
         cdef double points[3]
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
-        cdef double m11, m12, m21, m22
         cdef double N1x, N2x, N3x, N1y, N2y, N3y
-        cdef double N1, N2, N3
+        cdef double N1, N2
         cdef double factor, maxl, l12, l23, l31
         cdef int bi, bj, qa, qb, qi, qj
         cdef double tmp, gamma_drill
@@ -2844,7 +2838,7 @@ cdef class Tria3R:
 
             # NOTE KC0e terms for REDUCED integration
             wij = 0.5
-            N1 = N2 = N3 = 0.333333333333333333333333333333333333333333333
+            N1 = N2 = 0.333333333333333333333333333333333333333333333
 
             KC0e0000 = detJ*wij*(N1x*(A11*N1x + A16*N1y) + N1y*(A16*N1x + A66*N1y))
             KC0e0001 = detJ*wij*(N1x*(A16*N1x + A66*N1y) + N1y*(A12*N1x + A26*N1y))
@@ -2989,15 +2983,12 @@ cdef class Tria3R:
                 if i == 0:
                     N1 = points[0]
                     N2 = points[1]
-                    N3 = points[2]
                 elif i == 1:
                     N1 = points[1]
                     N2 = points[2]
-                    N3 = points[0]
                 elif i == 2:
                     N1 = points[2]
                     N2 = points[0]
-                    N3 = points[1]
 
                 KC0e0000 += 2.5e-7*A66*K6ROT*N1y**2*detJ*wij
                 KC0e0001 += -2.5e-7*A66*K6ROT*N1x*N1y*detJ*wij
@@ -4408,8 +4399,7 @@ cdef class Tria3R:
         # NOTE ABD in the element direction
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
-        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
-        cdef double m11, m12, m21, m22
+        cdef double r13, r23, r33
         cdef double N1x, N2x, N3x, N1y, N2y, N3y
         cdef double Nxx, Nyy, Nxy
         cdef double Nxv[3]
@@ -4438,14 +4428,8 @@ cdef class Tria3R:
             B66 = Be[8]
 
             # local to global transformation
-            r11 = self.r11
-            r12 = self.r12
             r13 = self.r13
-            r21 = self.r21
-            r22 = self.r22
             r23 = self.r23
-            r31 = self.r31
-            r32 = self.r32
             r33 = self.r33
 
             # NOTE ignoring z in local coordinates
@@ -4982,21 +4966,15 @@ cdef class Tria3R:
         cdef double x1, x2, x3
         cdef double y1, y2, y3
         cdef double wij, detJ
-        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
+        cdef double r13, r23, r33
         cdef double N1x, N2x, N3x, N1y, N2y, N3y
 
         with nogil:
             detJ = 2*self.area
 
             # local to global transformation
-            r11 = self.r11
-            r12 = self.r12
             r13 = self.r13
-            r21 = self.r21
-            r22 = self.r22
             r23 = self.r23
-            r31 = self.r31
-            r32 = self.r32
             r33 = self.r33
 
             # NOTE ignoring z in local coordinates
