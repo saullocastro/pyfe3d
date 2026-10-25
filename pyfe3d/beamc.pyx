@@ -309,9 +309,10 @@ cdef class BeamC:
 
     The matrices and the internal forces are computed in element
     coordinates and transformed to global coordinates with the rotation
-    matrix of the element, e.g. `[K] = [R][K_e][R]^T`, where `[R]` is block
-    diagonal with four copies of the rotation matrix ``r11, ..., r33``, one
-    for the translations and one for the rotations of each node. The
+    matrix of the element, e.g. `[K] = [T]^T [K_e] [T]`, where `[T]` is block
+    diagonal with four copies of the direction cosine matrix `[r]`, the
+    transpose of the rotation matrix ``r11, ..., r33``, one for the
+    translations and one for the rotations of each node. The
     element coordinate system is not updated with the displacements.
 
     References
@@ -473,7 +474,7 @@ cdef class BeamC:
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements (R.T)
+            # global to local transformation of displacements (T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -532,7 +533,7 @@ cdef class BeamC:
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements (R.T)
+            # global to local transformation of coordinates (r)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -2111,7 +2112,7 @@ cdef class BeamC:
 
             # NOTE from element to global coordinates:
             #
-            # Kg = R @ Ke @ R.T
+            # Kg = T.T @ Ke @ T
             #
             # in tensor notation:
             #

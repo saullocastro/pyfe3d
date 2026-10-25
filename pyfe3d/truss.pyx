@@ -179,9 +179,9 @@ cdef class Truss:
     other elements or by boundary conditions; the element has no geometric
     stiffness matrix. The matrices and the internal forces are computed in
     element coordinates and transformed to global coordinates with the
-    rotation matrix of the element, `[K] = [R][K_e][R]^T`, where `[R]` is
-    block diagonal with four copies of the rotation matrix ``r11, ...,
-    r33``.
+    rotation matrix of the element, `[K] = [T]^T [K_e] [T]`, where `[T]` is
+    block diagonal with four copies of the direction cosine matrix `[r]`,
+    the transpose of the rotation matrix ``r11, ..., r33``.
 
     """
     cdef public int eid, pid
@@ -242,7 +242,7 @@ cdef class Truss:
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements (R.T)
+            # global to local transformation of displacements (T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -380,7 +380,7 @@ cdef class Truss:
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements (R.T)
+            # global to local transformation of coordinates (r)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31

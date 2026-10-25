@@ -31,11 +31,12 @@ Coordinate systems
 The element matrices are computed in an element coordinate system `x`,
 `y`, `z` and rotated to the global one by the ``update_*`` methods, with the
 rotation matrix ``r11, ..., r33`` of each element. Its columns are the
-global components of the element axes:
+global components of the element axes, i.e. it is the transpose of the
+direction cosine matrix `[r]`, whose rows are the element axes:
 
 .. math::
 
-    [R] = \begin{bmatrix}
+    [r]^T = \begin{bmatrix}
         r_{11} & r_{12} & r_{13} \\
         r_{21} & r_{22} & r_{23} \\
         r_{31} & r_{32} & r_{33}
@@ -45,12 +46,16 @@ global components of the element axes:
         x_Y & y_Y & z_Y \\
         x_Z & y_Z & z_Z
     \end{bmatrix}, \qquad
-    \begin{Bmatrix} u \\ v \\ w \end{Bmatrix}_{global}
-    = [R] \begin{Bmatrix} u \\ v \\ w \end{Bmatrix}_{element}
+    \begin{Bmatrix} u \\ v \\ w \end{Bmatrix}_{element}
+    = [r] \begin{Bmatrix} u \\ v \\ w \end{Bmatrix}_{global}
 
-such that the translations and the rotations of every node transform with
-`[R]`, and `[R]^T` brings the global quantities to the element system. The
-element axes are defined by ``update_rotation_matrix``:
+such that the translations and the rotations of every node are brought to
+the element system with `[r]`, and back to the global system with `[r]^T`.
+With one block `[r]` for the translations and one for the rotations of each
+node, the transformation matrix `[T]` of the element is block diagonal, the
+element dofs are `\{u_e\} = [T]\{u\}`, and an element matrix in global
+coordinates is `[T]^T [K_e] [T]`. The element axes are defined by
+``update_rotation_matrix``:
 
 .. list-table::
     :header-rows: 1

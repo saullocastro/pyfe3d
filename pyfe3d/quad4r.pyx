@@ -929,7 +929,7 @@ cdef class Quad4R:
             c[2] = self.c3
             c[3] = self.c4
 
-            # global to local transformation of displacements (R.T)
+            # global to local transformation of displacements (T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -991,7 +991,7 @@ cdef class Quad4R:
             c[2] = self.c3
             c[3] = self.c4
 
-            # global to local transformation of displacements (R.T)
+            # global to local transformation of coordinates (r)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -1821,9 +1821,10 @@ cdef class Quad4R:
         other values, `\gamma_{r_z} = K6ROT \cdot 10^{-6} A_{66}`.
 
         The element matrix is rotated to global coordinates with
-        `K_g = R K_e R^T`, where `R` is block diagonal, with the rotation
-        matrix ``r11, ..., r33`` applied to the translations and to the
-        rotations of each node.
+        `K_g = T^T K_e T`, where `T` is block diagonal, with the direction
+        cosine matrix `r`, the transpose of the rotation matrix ``r11, ...,
+        r33``, applied to the translations and to the rotations of each
+        node.
 
         References
         ----------
@@ -5907,7 +5908,7 @@ cdef class Quad4R:
 
             # NOTE from element to global coordinates:
             #
-            # Kg = R @ Ke @ R.T
+            # Kg = T.T @ Ke @ T
             #
             # in tensor notation:
             #

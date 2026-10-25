@@ -492,6 +492,12 @@ select the other matrix.
   Ramm (1984, Table 2, Sec. 3.2.1, Eqs. 32-35) state them, and that pyfe3d
   keeps the unsymmetric `[K_F]` and factorizes the tangent stiffness matrix
   with LU.
+- The transformation matrix of an element is written `[T]` instead of
+  `[R]`, which is the residual, as in the book: `[T]` is block diagonal
+  with the direction cosine matrix `[r]`, whose rows are the element axes,
+  `{u_e} = [T]{u}` and `[K] = [T]^T [K_e] [T]`; the rotation matrix
+  `r11, ..., r33` of the elements is `[r]^T`. The bubbles of the Allman
+  enrichment are written `\hat{S}_k` instead of `N_k`.
 - User guide pages: overview and workflow, conventions, choice of the
   element, shell and beam properties, non-linear static analyses, linear
   buckling and natural frequencies, installation and changelog. The usage
@@ -526,7 +532,7 @@ select the other matrix.
   `natural_frequency()` solves the undamped problem; the damped one, e.g.
   with the damping matrix `CA` of the piston theory, is solved by the new
   `complex_frequency()`.
-- `Spring` verified in an arbitrary orientation against `[R][K_e][R]^T`,
+- `Spring` verified in an arbitrary orientation against `[T]^T[K_e][T]`,
   with symmetry, rigid-body translation and equal rotations without
   energy, and the internal forces, new tests in `tests/test_spring.py`;
   its Notes state that a rigid rotation of two nodes at different

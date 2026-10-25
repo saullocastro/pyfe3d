@@ -188,12 +188,12 @@ in-plane field becomes
 
     \left\{\begin{matrix} u \\ v \end{matrix}\right\}
     = \sum_i S_i \left\{\begin{matrix} u_i \\ v_i \end{matrix}\right\}
-    + \sum_k N_k \frac{\ell_k}{8}\left({r_z}_i - {r_z}_j\right) \pmb{n}_k
+    + \sum_k \hat{S}_k \frac{\ell_k}{8}\left({r_z}_i - {r_z}_j\right) \pmb{n}_k
 
-with `\pmb{n}_k` the unit normal of edge `k` and `N_k` the hierarchical
-bubble of that edge, equal to unity at its mid-point and zero at every
-corner, which for the quadrilateral are the mid-side functions of the
-eight-node serendipity element, see :func:`allman_enrichment`. In row form
+with `\pmb{n}_k` the unit normal of edge `k` and `\hat{S}_k` the
+hierarchical bubble of that edge, equal to unity at its mid-point and zero
+at every corner, which for the quadrilateral are the mid-side functions of
+the eight-node serendipity element, see :func:`allman_enrichment`. In row form
 the enrichment populates the drilling columns of the membrane operator,
 giving `\pmb{\tilde B}_m`, whereas the curvature and transverse shear
 operators are untouched, because the edge modes act only on the in-plane
@@ -394,22 +394,22 @@ cdef void allman_enrichment(double *xe, double xi, double eta,
     :mod:`pyfe3d.quad4`, which enter the enriched rows
 
     .. math::
-        \pmb{\tilde S}^u = \pmb{S}^u + \frac{1}{8} \sum_k N_k (y_i - y_j)
+        \pmb{\tilde S}^u = \pmb{S}^u + \frac{1}{8} \sum_k \hat{S}_k (y_i - y_j)
                            (\pmb{e}_i - \pmb{e}_j)
         \
-        \pmb{\tilde S}^v = \pmb{S}^v + \frac{1}{8} \sum_k N_k (x_j - x_i)
+        \pmb{\tilde S}^v = \pmb{S}^v + \frac{1}{8} \sum_k \hat{S}_k (x_j - x_i)
                            (\pmb{e}_i - \pmb{e}_j)
 
     where `\pmb{e}_i` selects `{r_z}_i`, edge `k` joins nodes `i` and `j`,
-    and `N_k` is the hierarchical bubble of that edge, equal to unity at its
-    mid-point and zero at every corner. For the quadrilateral these are the
-    mid-side functions of the eight-node serendipity element:
+    and `\hat{S}_k` is the hierarchical bubble of that edge, equal to unity
+    at its mid-point and zero at every corner. For the quadrilateral these
+    are the mid-side functions of the eight-node serendipity element:
 
     .. math::
-        N_k = \frac{1}{2}(1 - \xi^2)(1 + \eta_k \eta)
+        \hat{S}_k = \frac{1}{2}(1 - \xi^2)(1 + \eta_k \eta)
         \quad \text{for the edges at } \eta = \eta_k = \pm 1
         \
-        N_k = \frac{1}{2}(1 + \xi_k \xi)(1 - \eta^2)
+        \hat{S}_k = \frac{1}{2}(1 + \xi_k \xi)(1 - \eta^2)
         \quad \text{for the edges at } \xi = \xi_k = \pm 1
 
     The factors `(y_i - y_j)/8` and `(x_j - x_i)/8` are the components of
@@ -1226,7 +1226,7 @@ cdef class Quad4:
             c[2] = self.c3
             c[3] = self.c4
 
-            # global to local transformation of displacements (R.T)
+            # global to local transformation of displacements (T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -1288,7 +1288,7 @@ cdef class Quad4:
             c[2] = self.c3
             c[3] = self.c4
 
-            # global to local transformation of displacements (R.T)
+            # global to local transformation of coordinates (r)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -2060,9 +2060,10 @@ cdef class Quad4:
         The element matrix in element coordinates, ``KC0ve``, is computed by
         :meth:`._update_probe_KC0ve`, whose Notes give its terms and
         quadratures. It is rotated to global coordinates with
-        `K_g = R K_e R^T`, where `R` is block diagonal, with the rotation
-        matrix ``r11, ..., r33`` applied to the translations and to the
-        rotations of each node.
+        `K_g = T^T K_e T`, where `T` is block diagonal, with the direction
+        cosine matrix `r`, the transpose of the rotation matrix ``r11, ...,
+        r33``, applied to the translations and to the rotations of each
+        node.
 
         """
         cdef int i, j, node_i, node_j, k, ke, m, n
@@ -2133,7 +2134,7 @@ cdef class Quad4:
 
             # NOTE from element to global coordinates:
             #
-            # Kg = R @ Ke @ R.T
+            # Kg = T.T @ Ke @ T
             #
             # in tensor notation:
             #
@@ -2762,7 +2763,7 @@ cdef class Quad4:
 
             # NOTE from element to global coordinates:
             #
-            # Kg = R @ Ke @ R.T
+            # Kg = T.T @ Ke @ T
             #
             # in tensor notation:
             #

@@ -388,7 +388,7 @@ cdef class BeamLR:
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements (R.T)
+            # global to local transformation of displacements (T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -447,7 +447,7 @@ cdef class BeamLR:
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements (R.T)
+            # global to local transformation of coordinates (r)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -1813,7 +1813,7 @@ cdef class BeamLR:
 
             # NOTE from element to global coordinates:
             #
-            # Kg = R @ Ke @ R.T
+            # Kg = T.T @ Ke @ T
             #
             # in tensor notation:
             #

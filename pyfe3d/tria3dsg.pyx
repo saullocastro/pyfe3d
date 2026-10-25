@@ -1385,10 +1385,12 @@ cdef class Tria3DSG:
         Notes
         -----
         The formulation of the element matrix is given in
-        :meth:`._update_probe_KC0ve`. With `[R]` the rotation matrix from the
-        element to the global coordinate system, the same for the
-        translations and for the rotations of each node, the global values
-        are `K_{g,mn} = r_{mi} K_{e,ij} r_{nj}`.
+        :meth:`._update_probe_KC0ve`. With `[T]` the transformation matrix
+        of the element, block diagonal with the direction cosine matrix
+        `[r]` for the translations and for the rotations of each node, the
+        global values are `[K_g] = [T]^T [K_e] [T]`, i.e. `K_{g,mn} = r_{mi}
+        K_{e,ij} r_{nj}` with `r_{mi}` the entries of the rotation matrix
+        ``r11, ..., r33``, which is `[r]^T`.
 
         """
         cdef int i, j, m, n, k, ke, node_i, node_j
@@ -1965,8 +1967,9 @@ cdef class Tria3DSG:
         the integrand being constant over the triangle.
 
         A uniaxial state `N` along a global direction `\{d\}` has to be
-        rotated. With `[R]` the element-to-global rotation of this
-        object, `\{a\} = [R]^T \{d\}` is that direction in element
+        rotated. With `[r]` the direction cosine matrix of this object,
+        whose rows are the element axes, `\{a\} = [r] \{d\}` is that
+        direction in element
         coordinates and the state `N \{a\} \{a\}^T` has components
 
         .. math::

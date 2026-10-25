@@ -175,8 +175,9 @@ cdef class Spring:
         \qquad [k] = \mathrm{diag}(k_1, ..., k_6)
 
     transformed to global coordinates with the rotation matrix of the
-    element, `[K] = [R][K_e][R]^T`, where `[R]` is block diagonal with four
-    copies of the rotation matrix ``r11, ..., r33``.
+    element, `[K] = [T]^T [K_e] [T]`, where `[T]` is block diagonal with
+    four copies of the direction cosine matrix `[r]`, the transpose of the
+    rotation matrix ``r11, ..., r33``.
 
     A rigid translation and equal rotations of the two nodes give no
     internal forces. Since the nodal coordinates are not used, a rigid
@@ -316,13 +317,13 @@ cdef class Spring:
         cdef double s2[3]
         cdef double s3[3]
 
-        # NOTE verified against [R]^T u in tests/test_spring.py
+        # NOTE verified against [T] u in tests/test_spring.py
         with nogil:
             # positions in the global stiffness matrix
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements (R.T)
+            # global to local transformation of displacements (T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31

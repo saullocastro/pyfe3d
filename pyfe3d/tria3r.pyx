@@ -197,7 +197,7 @@ hierarchical bubble of that edge is
 
 .. math::
 
-    N_k = 4 S_i S_j
+    \hat{S}_k = 4 S_i S_j
 
 with `S_i` the area coordinates, equal to unity at the mid-point of the edge
 and zero at every vertex. The enrichment populates the drilling columns of
@@ -358,19 +358,19 @@ cdef void allman_enrichment(double *Nx, double *Ny, double *xe,
     in-plane displacement rows are
 
     .. math::
-        \pmb{\tilde S}^u = \pmb{S}^u + \frac{1}{8} \sum_k N_k (y_i - y_j)
+        \pmb{\tilde S}^u = \pmb{S}^u + \frac{1}{8} \sum_k \hat{S}_k (y_i - y_j)
                            (\pmb{e}_i - \pmb{e}_j)
         \
-        \pmb{\tilde S}^v = \pmb{S}^v + \frac{1}{8} \sum_k N_k (x_j - x_i)
+        \pmb{\tilde S}^v = \pmb{S}^v + \frac{1}{8} \sum_k \hat{S}_k (x_j - x_i)
                            (\pmb{e}_i - \pmb{e}_j)
 
     where `\pmb{e}_i` selects `{r_z}_i`, as for
     :func:`pyfe3d.quad4.allman_enrichment`. For the triangle the
-    hierarchical bubble of the edge joining nodes `i` and `j` is `N_k = 4
-    S_i S_j`, with `S_i` the area coordinates, so that
+    hierarchical bubble of the edge joining nodes `i` and `j` is `\hat{S}_k
+    = 4 S_i S_j`, with `S_i` the area coordinates, so that
 
     .. math::
-        N_{k,x} = 4 \left( S_{i,x} S_j + S_i S_{j,x} \right)
+        \hat{S}_{k,x} = 4 \left( S_{i,x} S_j + S_i S_{j,x} \right)
 
     and `S_{i,x}` is the constant ``Nx[i]``. The derivatives of the bubbles
     are linear in the area coordinates, so the values filled in ``d`` vary
@@ -1138,7 +1138,7 @@ cdef class Tria3R:
             c[1] = self.c2
             c[2] = self.c3
 
-            # global to local transformation of displacements (R.T)
+            # global to local transformation of displacements (T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -1199,7 +1199,7 @@ cdef class Tria3R:
             c[1] = self.c2
             c[2] = self.c3
 
-            # global to local transformation of displacements (R.T)
+            # global to local transformation of coordinates (r)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -4303,7 +4303,7 @@ cdef class Tria3R:
 
             # NOTE from element to global coordinates:
             #
-            # Kg = R @ Ke @ R.T
+            # Kg = T.T @ Ke @ T
             #
             # in tensor notation:
             #
