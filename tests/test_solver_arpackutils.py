@@ -25,8 +25,8 @@ from test_solver import plate_matrices
 def scaled_plate(with_mass=False):
     r"""Preconditioned matrices of the Quad4 plate of ``test_solver.py``"""
     out = plate_matrices(Nxx=-1., with_mass=with_mass)
-    D = diagonal_preconditioner(out[0])
-    return [csc_matrix(D @ A @ D) for A in out]
+    P = diagonal_preconditioner(out[0])
+    return [csc_matrix(P @ A @ P) for A in out]
 
 
 @pytest.fixture

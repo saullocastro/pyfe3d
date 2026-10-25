@@ -180,14 +180,14 @@ class DenseFallbackWarning(RuntimeWarning):
 def diagonal_preconditioner(K, floor=1.e-30):
     r"""Jacobi preconditioner of a stiffness matrix
 
-    Returns the diagonal matrix ``D`` with the entries
-    ``1/sqrt(max(abs(K[i, i]), floor))``, such that ``D @ K @ D`` has a
+    Returns the diagonal matrix ``P`` with the entries
+    ``1/sqrt(max(abs(K[i, i]), floor))``, such that ``P @ K @ P`` has a
     diagonal of ones, or minus ones for negative entries, when the moduli of
     the diagonal entries of ``K`` are larger than ``floor``.
     For a generalized eigenvalue problem both matrices are transformed,
-    ``D @ A @ D`` and ``D @ B @ D``, which leaves the eigenvalues unchanged,
+    ``P @ A @ P`` and ``P @ B @ P``, which leaves the eigenvalues unchanged,
     and the eigenvectors of the original problem are recovered with
-    ``u = D @ u_scaled``.
+    ``u = P @ u_scaled``.
 
     Parameters
     ----------
@@ -202,33 +202,33 @@ def diagonal_preconditioner(K, floor=1.e-30):
 
     Returns
     -------
-    D : sparse_matrix
+    P : sparse_matrix
         Diagonal preconditioner, created with :func:`scipy.sparse.diags`,
         shape ``(n, n)``.
 
     Notes
     -----
-    The diagonal matrix `[D]` has the entries
+    The diagonal matrix `[P]` has the entries
 
     .. math::
-        D_{ii} = \frac{1}{\sqrt{max(|K_{{C0}_{ii}}|, floor)}}
+        P_{ii} = \frac{1}{\sqrt{max(|K_{{C0}_{ii}}|, floor)}}
 
-    such that `[D][K_{C0}][D]` has a unit diagonal, up to the sign of the
+    such that `[P][K_{C0}][P]` has a unit diagonal, up to the sign of the
     negative entries, which appear e.g. in a stiffness matrix with the load
     stiffness of a follower load beyond the critical load. For a generalized
-    eigenvalue problem both matrices are transformed, `[D][A][D]` and
-    `[D][B][D]`, which leaves the eigenvalues unchanged and maps the
-    eigenvectors to `[D]^{-1}\{u\}`: `[D][A][D]\{y\} = w [D][B][D]\{y\}` is
-    `[A]\{u\} = w [B]\{u\}` with `\{u\} = [D]\{y\}`, `[D]` being
+    eigenvalue problem both matrices are transformed, `[P][A][P]` and
+    `[P][B][P]`, which leaves the eigenvalues unchanged and maps the
+    eigenvectors to `[P]^{-1}\{u\}`: `[P][A][P]\{y\} = w [P][B][P]\{y\}` is
+    `[A]\{u\} = w [B]\{u\}` with `\{u\} = [P]\{y\}`, `[P]` being
     non-singular. The equilibration removes the spread of the diagonal
     entries, which usually reduces the condition number, see the notes of
     :mod:`pyfe3d.solver.eigen`.
 
     Examples
     --------
-    >>> D = diagonal_preconditioner(Kuu)                  # doctest: +SKIP
-    >>> eigvals, eigvecs = eigsh(A=D@KGuu@D, M=D@Kuu@D)   # doctest: +SKIP
-    >>> eigvecs = D @ eigvecs                             # doctest: +SKIP
+    >>> P = diagonal_preconditioner(Kuu)                  # doctest: +SKIP
+    >>> eigvals, eigvecs = eigsh(A=P@KGuu@P, M=P@Kuu@P)   # doctest: +SKIP
+    >>> eigvecs = P @ eigvecs                             # doctest: +SKIP
 
     """
     d = np.abs(np.asarray(K.diagonal(), dtype=float))
@@ -1906,7 +1906,7 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
     positive load multipliers are the most negative `\mu`, returned by the
     Cayley mode while the shift is large enough, see the notes of
     :mod:`pyfe3d.solver.eigen`. With ``precondition=True`` the problem
-    solved is the one of `[D][K_{C0}][D]` and `[D][K_G][D]`, with the same
+    solved is the one of `[P][K_{C0}][P]` and `[P][K_G][P]`, with the same
     eigenvalues, see :func:`diagonal_preconditioner`; the verification
     always uses the original matrices.
 
@@ -1937,17 +1937,17 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
     if symmetric is None:
         symmetric = is_symmetric(K) and is_symmetric(KG)
     if precondition:
-        D = diagonal_preconditioner(K)
-        Ks = csr_matrix(D @ K @ D)
-        KGs = csr_matrix(D @ KG @ D)
+        P = diagonal_preconditioner(K)
+        Ks = csr_matrix(P @ K @ P)
+        KGs = csr_matrix(P @ KG @ P)
     else:
-        D = None
+        P = None
         Ks, KGs = K, KG
 
     def unscale(result):
         mu, eigvecs = result
-        if D is not None:
-            eigvecs = np.asarray(D @ eigvecs)
+        if P is not None:
+            eigvecs = np.asarray(P @ eigvecs)
         return mu, eigvecs
 
     if not sparse_solver:
@@ -2321,18 +2321,18 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
     if symmetric is None:
         symmetric = is_symmetric(K) and is_symmetric(M)
     if precondition:
-        D = diagonal_preconditioner(K)
-        Ks = csr_matrix(D @ K @ D)
-        Ms = csr_matrix(D @ M @ D)
+        P = diagonal_preconditioner(K)
+        Ks = csr_matrix(P @ K @ P)
+        Ms = csr_matrix(P @ M @ P)
     else:
-        D = None
+        P = None
         Ks, Ms = K, M
     sigma = -1.
 
     def unscale(result):
         w2, eigvecs = result
-        if D is not None:
-            eigvecs = np.asarray(D @ eigvecs)
+        if P is not None:
+            eigvecs = np.asarray(P @ eigvecs)
         return w2, eigvecs
 
     if not sparse_solver:
@@ -3030,18 +3030,18 @@ def complex_frequency(K, C, M, num_eigvalues=6, tol=0, sigma=None,
     if sigma is None:
         sigma = 1.
     if precondition:
-        D = diagonal_preconditioner(K)
-        Ks = csr_matrix(D @ K @ D)
-        Cs = csr_matrix(D @ C @ D)
-        Ms = csr_matrix(D @ M @ D)
+        P = diagonal_preconditioner(K)
+        Ks = csr_matrix(P @ K @ P)
+        Cs = csr_matrix(P @ C @ P)
+        Ms = csr_matrix(P @ M @ P)
     else:
-        D = None
+        P = None
         Ks, Cs, Ms = K, C, M
 
     def unscale(result):
         lam, U = result
-        if D is not None:
-            U = _normalize_vectors(D @ U)
+        if P is not None:
+            U = _normalize_vectors(P @ U)
         return lam, U
 
     if not sparse_solver:

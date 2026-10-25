@@ -398,6 +398,17 @@ New:
   `pyfe3d.solver.eigen._null_mu_pencil`, `NULL_MU_PERTURBATION_FACTOR`;
   argument `left` of `_eig_complex`. The same rule as structsolve.
 
+### Breaking: the Jacobi equilibration matrix is `P`
+
+The diagonal matrix returned by `pyfe3d.solver.diagonal_preconditioner()`,
+public since 0.10.0, where it was documented as `D`, is now `P`, as in
+the book, which keeps `D` for the diagonal of the `LDL^\top` factorization:
+the returned value of the docstring, `P @ K @ P` instead of `D @ K @ D`,
+its Notes, the variables of `linear_buckling()`, `natural_frequency()` and
+`complex_frequency()` and of the tests. The signature and the returned
+matrix are unchanged, and code that names it `D` keeps working; only the
+documented name changes.
+
 ### Breaking: one `mtype` numbering for every element
 
 `mtype` of `update_M` has the same meaning for every element: `0`
