@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Beam property module (pyfe3d.beamprop) &#8212; pyfe3d 0.10.0 documentation</title>
+    <title>Beam property module (pyfe3d.beamprop) &#8212; pyfe3d 0.11.0 documentation</title>
   
   
   
@@ -26,18 +26,18 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=82662543"></script>
+    <script src="_static/documentation_options.js?v=f3b36f1a"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -47,7 +47,10 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Solvers (pyfe3d.solver)" href="solver.html" />
+    <link rel="prev" title="Shell property utils module (pyfe3d.shellprop_utils)" href="shellprop_utils.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
   
@@ -117,7 +120,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.10.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.11.0 documentation</p>
   
 </a></div>
     
@@ -132,39 +135,147 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_static.html">
-    Linear static analysis
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
     Linear buckling analysis of a plate
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
   </a>
 </li>
 
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -246,15 +357,57 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
   </a>
 </li>
 
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_linear_static.html">
-    Linear static analysis
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
   </a>
 </li>
 
@@ -267,6 +420,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
@@ -274,8 +434,57 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changelog.html">
+    Changelog
   </a>
 </li>
 
@@ -321,7 +530,143 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"></div>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="fe_overview.html">Finite elements</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="quad4.html">Quad4 - Quadrilateral element with mixed integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="tria3dsg.html">Tria3DSG - Triangular element with discrete shear gap (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3dsg</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="beamc.html">BeamC - Consistent Timoshenko 3D beam element (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamc</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html">BeamLR - Linear Timoshenko 3D beam element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamlr</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="spring.html">Spring - 3D spring element with constant stiffnesses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.spring</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="truss.html">Truss - Linear truss 3D element with analytical integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code>)</a></li>
+
+
+
+</ul>
+</details></li>
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="properties.html">Properties</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="shellprop.html">Shell property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="shellprop_utils.html">Shell property utils module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop_utils</span></code>)</a></li>
+
+
+
+<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
+
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="solver.html">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solver_static.html">Linear static solution (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code>)</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_analysis.html">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_convergence.html">Convergence criteria of the non-linear solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.convergence</span></code>)</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_newton_raphson.html">Newton-Raphson solver (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.newton_raphson</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_arc_length.html">Arc-length solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arc_length</span></code>)</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_callbacks.html">Calls to the callables of the non-linear solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.callbacks</span></code>)</a></li>
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_eigen.html">Eigenvalue analyses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen</span></code>)</a></li>
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html">Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_sparseutils.html">Utilities for sparse matrices (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.sparseutils</span></code>)</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_logger.html">Log messages of the solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.logger</span></code>)</a></li>
+
+
+</ul>
+</div>
 </nav></div>
     </div>
   
@@ -360,6 +705,12 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
+    
+    <li class="breadcrumb-item"><a href="api.html" class="nav-link">API reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="properties.html" class="nav-link">Properties</a></li>
+    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</span></li>
   </ul>
 </nav>
@@ -379,59 +730,138 @@
                   
   <section id="beam-property-module-pyfe3d-beamprop">
 <span id="module-pyfe3d.beamprop"></span><h1>Beam property module (<a class="reference internal" href="#module-pyfe3d.beamprop" title="pyfe3d.beamprop"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code></a>)<a class="headerlink" href="#beam-property-module-pyfe3d-beamprop" title="Link to this heading">#</a></h1>
+<p>Defines <a class="reference internal" href="#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>, the cross-section and material properties read
+by the elements <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>, <a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a> and <a class="reference internal" href="truss.html#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a>.</p>
 </section>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyfe3d.beamprop.</span></span><span class="sig-name descname"><span class="pre">BeamProp</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp" title="Link to this definition">#</a></dt>
 <dd><p>General class to represent beam properties.</p>
-<p>About shear correction factors, usually one should only apply the shear
-correction factor to the shear modulus <code class="docutils literal notranslate"><span class="pre">G</span></code>. It is, however, possible to
-have more complex scenarios where the different cross section parameters
-<code class="docutils literal notranslate"><span class="pre">Ay</span></code>, <code class="docutils literal notranslate"><span class="pre">Az</span></code>, <code class="docutils literal notranslate"><span class="pre">J</span></code> have different corrections applied due to geometric
-properties. It is the user’s responsability to apply these correction
-factors properly to achieve a general representation of the beam element
-behaviour by means of this property class. No shear correction factors or
-geometric correction factors are applied internally during the calculation
-of the structural matrices.</p>
+<p>No shear correction factors or geometric correction factors are applied
+internally during the calculation of the structural matrices; any
+correction must be applied by the user to the attributes.</p>
+<p>The constructor takes no argument and sets all attributes to <code class="docutils literal notranslate"><span class="pre">0</span></code>. The
+attributes are read, each time it is called, by the <code class="docutils literal notranslate"><span class="pre">update_*</span></code> methods
+of <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>, <a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a> and <a class="reference internal" href="truss.html#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a> that receive
+the property.</p>
+<p>The integrals over the cross section are taken with the coordinates <span class="math notranslate nohighlight">\(y\)</span>
+and <span class="math notranslate nohighlight">\(z\)</span> of the element coordinate system, measured from the beam axis
+that joins the two nodes of the element.</p>
+<p><code class="docutils literal notranslate"><span class="pre">G12</span></code>, <code class="docutils literal notranslate"><span class="pre">G13</span></code> and <code class="docutils literal notranslate"><span class="pre">GJ</span></code> follow <code class="docutils literal notranslate"><span class="pre">G</span></code> until they are set: reading
+<code class="docutils literal notranslate"><span class="pre">G12</span></code> or <code class="docutils literal notranslate"><span class="pre">G13</span></code> returns <code class="docutils literal notranslate"><span class="pre">G</span></code>, and reading <code class="docutils literal notranslate"><span class="pre">GJ</span></code> returns <code class="docutils literal notranslate"><span class="pre">G*J</span></code>,
+with the values of <code class="docutils literal notranslate"><span class="pre">G</span></code> and <code class="docutils literal notranslate"><span class="pre">J</span></code> at the time of reading. Once set, the
+attribute keeps its own value, independently of <code class="docutils literal notranslate"><span class="pre">G</span></code> and <code class="docutils literal notranslate"><span class="pre">J</span></code>, until
+it is deleted, e.g. <code class="docutils literal notranslate"><span class="pre">del</span> <span class="pre">prop.G12</span></code>, which makes it follow <code class="docutils literal notranslate"><span class="pre">G</span></code> again.
+A property that sets only <code class="docutils literal notranslate"><span class="pre">G</span></code> and <code class="docutils literal notranslate"><span class="pre">J</span></code> gives the same matrices as in
+the versions of pyfe3d without <code class="docutils literal notranslate"><span class="pre">G12</span></code>, <code class="docutils literal notranslate"><span class="pre">G13</span></code> and <code class="docutils literal notranslate"><span class="pre">GJ</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>A,</strong><span class="classifier">float</span></dt><dd><p>Area of the cross section</p>
+<dt><strong>A,</strong><span class="classifier">float</span></dt><dd><p>Area of the cross section, dimension length squared.</p>
 </dd>
-<dt><strong>E,</strong><span class="classifier">float</span></dt><dd><p>Young modulus</p>
+<dt><strong>E,</strong><span class="classifier">float</span></dt><dd><p>Young modulus, force per unit area.</p>
 </dd>
-<dt><strong>G,</strong><span class="classifier">float</span></dt><dd><p>Shear modulus</p>
+<dt><strong>G,</strong><span class="classifier">float</span></dt><dd><p>Shear modulus, force per unit area. It is the value of <code class="docutils literal notranslate"><span class="pre">G12</span></code> and
+<code class="docutils literal notranslate"><span class="pre">G13</span></code> when they are not set, and it multiplies <code class="docutils literal notranslate"><span class="pre">J</span></code> in <code class="docutils literal notranslate"><span class="pre">GJ</span></code> when
+<code class="docutils literal notranslate"><span class="pre">GJ</span></code> is not set.</p>
 </dd>
-<dt><strong>Iyy,</strong><span class="classifier">float</span></dt><dd><p>Second moment of area about the y axis <span class="math notranslate nohighlight">\(\int_y \int_z z^2 dy dz\)</span></p>
+<dt><strong>G12,</strong><span class="classifier">float</span></dt><dd><p>Transverse shear modulus of the element plane <span class="math notranslate nohighlight">\(xy\)</span>, of the bending
+with the displacement <span class="math notranslate nohighlight">\(v\)</span>, force per unit area. Returns <code class="docutils literal notranslate"><span class="pre">G</span></code> when
+not set.</p>
 </dd>
-<dt><strong>Izz,</strong><span class="classifier">float</span></dt><dd><p>Second moment of area about the z axis <span class="math notranslate nohighlight">\(\int_y \int_z y^2 dy dz\)</span></p>
+<dt><strong>G13,</strong><span class="classifier">float</span></dt><dd><p>Transverse shear modulus of the element plane <span class="math notranslate nohighlight">\(xz\)</span>, of the bending
+with the displacement <span class="math notranslate nohighlight">\(w\)</span>, force per unit area. Returns <code class="docutils literal notranslate"><span class="pre">G</span></code> when
+not set.</p>
 </dd>
-<dt><strong>Iyz,</strong><span class="classifier">float</span></dt><dd><p>Product moment of area <span class="math notranslate nohighlight">\(\int_y \int_z y z dy dz\)</span></p>
+<dt><strong>GJ,</strong><span class="classifier">float</span></dt><dd><p>Torsional stiffness, dimension force times length squared. Returns
+<code class="docutils literal notranslate"><span class="pre">G*J</span></code> when not set.</p>
 </dd>
-<dt><strong>J,</strong><span class="classifier">float</span></dt><dd><p>Torsion stiffness or torsion constant, see
-<a class="reference external" href="https://en.wikipedia.org/wiki/Torsion_constant">https://en.wikipedia.org/wiki/Torsion_constant</a>.</p>
+<dt><strong>Iyy,</strong><span class="classifier">float</span></dt><dd><p>Second moment of area about the y axis, the integral of the square of
+<span class="math notranslate nohighlight">\(z\)</span> over the cross section, dimension length to the fourth.</p>
 </dd>
-<dt><strong>Ay,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z y dy dz\)</span></p>
+<dt><strong>Izz,</strong><span class="classifier">float</span></dt><dd><p>Second moment of area about the z axis, the integral of the square of
+<span class="math notranslate nohighlight">\(y\)</span> over the cross section, dimension length to the fourth.</p>
 </dd>
-<dt><strong>Az,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z z dy dz\)</span></p>
+<dt><strong>Iyz,</strong><span class="classifier">float</span></dt><dd><p>Product moment of area, the integral of <span class="math notranslate nohighlight">\(y\)</span> times <span class="math notranslate nohighlight">\(z\)</span> over the cross
+section, dimension length to the fourth.</p>
 </dd>
-<dt><strong>intrho,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_{y_e} \int_{z_e} \rho(y, z) dy dz\)</span>, where <span class="math notranslate nohighlight">\(\rho\)</span> Is the
-density</p>
+<dt><strong>J,</strong><span class="classifier">float</span></dt><dd><p>Torsion constant, dimension length to the fourth. The elements use it
+only through <code class="docutils literal notranslate"><span class="pre">GJ</span></code>, when <code class="docutils literal notranslate"><span class="pre">GJ</span></code> is not set.</p>
 </dd>
-<dt><strong>intrhoy,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z y \rho(y, z) dy dz\)</span></p>
+<dt><strong>Ay,</strong><span class="classifier">float</span></dt><dd><p>Integral of <span class="math notranslate nohighlight">\(y\)</span> over the cross section, dimension length cubed.</p>
 </dd>
-<dt><strong>intrhoz,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z z \rho(y, z) dy dz\)</span></p>
+<dt><strong>Az,</strong><span class="classifier">float</span></dt><dd><p>Integral of <span class="math notranslate nohighlight">\(z\)</span> over the cross section, dimension length cubed.</p>
 </dd>
-<dt><strong>intrhoy2,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z y^2 \rho(y, z) dy dz\)</span></p>
+<dt><strong>intrho,</strong><span class="classifier">float</span></dt><dd><p>Integral of the density over the cross section, dimension mass per
+unit length.</p>
 </dd>
-<dt><strong>intrhoz2,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z z^2 \rho(y, z) dy dz\)</span></p>
+<dt><strong>intrhoy,</strong><span class="classifier">float</span></dt><dd><p>Integral of <span class="math notranslate nohighlight">\(y\)</span> times the density over the cross section, dimension
+mass.</p>
 </dd>
-<dt><strong>intrhoyz,</strong><span class="classifier">float</span></dt><dd><p>Integral <span class="math notranslate nohighlight">\(\int_y \int_z y z \rho(y, z) dy dz\)</span></p>
+<dt><strong>intrhoz,</strong><span class="classifier">float</span></dt><dd><p>Integral of <span class="math notranslate nohighlight">\(z\)</span> times the density over the cross section, dimension
+mass.</p>
+</dd>
+<dt><strong>intrhoy2,</strong><span class="classifier">float</span></dt><dd><p>Integral of the square of <span class="math notranslate nohighlight">\(y\)</span> times the density over the cross
+section, dimension mass times length.</p>
+</dd>
+<dt><strong>intrhoz2,</strong><span class="classifier">float</span></dt><dd><p>Integral of the square of <span class="math notranslate nohighlight">\(z\)</span> times the density over the cross
+section, dimension mass times length.</p>
+</dd>
+<dt><strong>intrhoyz,</strong><span class="classifier">float</span></dt><dd><p>Integral of <span class="math notranslate nohighlight">\(y\)</span> times <span class="math notranslate nohighlight">\(z\)</span> times the density over the cross section,
+dimension mass times length.</p>
 </dd>
 </dl>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
+<p>The attributes are the following integrals over the cross section, where
+<span class="math notranslate nohighlight">\(\rho\)</span> Is the density:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Iyy</span></code>: <span class="math notranslate nohighlight">\(\int_y \int_z z^2 dy dz\)</span></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Izz</span></code>: <span class="math notranslate nohighlight">\(\int_y \int_z y^2 dy dz\)</span></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Iyz</span></code>: <span class="math notranslate nohighlight">\(\int_y \int_z y z dy dz\)</span></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Ay</span></code>: <span class="math notranslate nohighlight">\(\int_y \int_z y dy dz\)</span></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Az</span></code>: <span class="math notranslate nohighlight">\(\int_y \int_z z dy dz\)</span></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">intrho</span></code>: <span class="math notranslate nohighlight">\(\int_{y_e} \int_{z_e} \rho(y, z) dy dz\)</span></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">intrhoy</span></code>: <span class="math notranslate nohighlight">\(\int_y \int_z y \rho(y, z) dy dz\)</span></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">intrhoz</span></code>: <span class="math notranslate nohighlight">\(\int_y \int_z z \rho(y, z) dy dz\)</span></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">intrhoy2</span></code>: <span class="math notranslate nohighlight">\(\int_y \int_z y^2 \rho(y, z) dy dz\)</span></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">intrhoz2</span></code>: <span class="math notranslate nohighlight">\(\int_y \int_z z^2 \rho(y, z) dy dz\)</span></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">intrhoyz</span></code>: <span class="math notranslate nohighlight">\(\int_y \int_z y z \rho(y, z) dy dz\)</span></p></li>
+</ul>
+<p>In the beam elements, see <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>, the transverse shear strains
+of the rigid cross section at the point <span class="math notranslate nohighlight">\((y, z)\)</span> are <span class="math notranslate nohighlight">\(\gamma_{xy} - z
+{r_x}_{,x}\)</span> and <span class="math notranslate nohighlight">\(\gamma_{xz} + y {r_x}_{,x}\)</span>, where <span class="math notranslate nohighlight">\(\gamma_{xy}\)</span> and
+<span class="math notranslate nohighlight">\(\gamma_{xz}\)</span> are those of the beam axis and <span class="math notranslate nohighlight">\({r_x}_{,x}\)</span> is the twist.
+With <span class="math notranslate nohighlight">\(G_{12}\)</span> = <code class="docutils literal notranslate"><span class="pre">G12</span></code> multiplying the first and <span class="math notranslate nohighlight">\(G_{13}\)</span> = <code class="docutils literal notranslate"><span class="pre">G13</span></code>
+the second, their integral over the cross section gives the shear part
+of the strain energy per unit length, <span class="math notranslate nohighlight">\(\frac{1}{2} \boldsymbol{\gamma}^\top \boldsymbol{D}_s
+\boldsymbol{\gamma}\)</span> with <span class="math notranslate nohighlight">\(\boldsymbol{\gamma} = \{\gamma_{xy}, \gamma_{xz},
+{r_x}_{,x}\}^\top\)</span> and</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}\boldsymbol{D}_s = \begin{bmatrix}
+    G_{12} A &amp; 0 &amp; -G_{12} A_z \\
+    0 &amp; G_{13} A &amp; G_{13} A_y \\
+    -G_{12} A_z &amp; G_{13} A_y &amp; G_{12} I_{yy} + G_{13} I_{zz}
+\end{bmatrix}\end{split}\]</div>
+<p>The elements replace the last entry, the torsional stiffness of the
+rigid cross section without warping, by <code class="docutils literal notranslate"><span class="pre">GJ</span></code>, given by the user, e.g.
+<span class="math notranslate nohighlight">\(G J\)</span> with the torsion constant <span class="math notranslate nohighlight">\(J\)</span> <a class="reference internal" href="#rb59dbb4f5270-1" id="id1">[1]</a> of the Saint-Venant torsion,
+in which the cross section warps freely. <code class="docutils literal notranslate"><span class="pre">G12</span></code> and <code class="docutils literal notranslate"><span class="pre">G13</span></code> also enter
+the shear parameters <span class="math notranslate nohighlight">\(\alpha_y\)</span> and <span class="math notranslate nohighlight">\(\alpha_z\)</span> of the shape functions of
+<a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>. With non-zero <code class="docutils literal notranslate"><span class="pre">Ay</span></code> and <code class="docutils literal notranslate"><span class="pre">Az</span></code>, i.e. when the beam axis
+is not the centroidal axis, the axial strain is coupled with the bending
+curvatures and the transverse shear strains with the twist.
+<code class="docutils literal notranslate"><span class="pre">intrhoy</span></code>, <code class="docutils literal notranslate"><span class="pre">intrhoz</span></code> and <code class="docutils literal notranslate"><span class="pre">intrhoyz</span></code> couple the inertia of the
+translations and of the rotations, see <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.update_M" title="pyfe3d.beamc.BeamC.update_M"><code class="xref py py-meth docutils literal notranslate"><span class="pre">BeamC.update_M()</span></code></a>.</p>
+<p>The shear correction factors <span class="math notranslate nohighlight">\(k_y\)</span> and <span class="math notranslate nohighlight">\(k_z\)</span> of the two planes are
+applied to the moduli, <code class="docutils literal notranslate"><span class="pre">G12</span></code> <span class="math notranslate nohighlight">\(= k_y G\)</span> and <code class="docutils literal notranslate"><span class="pre">G13</span></code> <span class="math notranslate nohighlight">\(= k_z G\)</span>, which
+leaves the torsional stiffness <code class="docutils literal notranslate"><span class="pre">G*J</span></code> unchanged. It is possible to have
+more complex scenarios where the different cross section parameters
+<code class="docutils literal notranslate"><span class="pre">Ay</span></code>, <code class="docutils literal notranslate"><span class="pre">Az</span></code> and <code class="docutils literal notranslate"><span class="pre">GJ</span></code> have different corrections applied due to
+geometric properties. It is the user’s responsability to apply these
+correction factors properly to achieve a general representation of the
+beam element behaviour by means of this property class.</p>
 <p>For beams with homogeneous material along the cross section some of the
 quantities above can be calculated as follows, assuming that <code class="docutils literal notranslate"><span class="pre">rho</span></code> is the
 material density:</p>
@@ -441,6 +871,14 @@ material density:</p>
 <code class="docutils literal notranslate"><span class="pre">intrhoz2</span> <span class="pre">=</span> <span class="pre">Iyy*rho</span></code>
 <code class="docutils literal notranslate"><span class="pre">intrhoyz</span> <span class="pre">=</span> <span class="pre">Iyz*rho</span></code></p>
 </div></blockquote>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="rb59dbb4f5270-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>Torsion constant, Wikipedia,
+<a class="reference external" href="https://en.wikipedia.org/wiki/Torsion_constant">https://en.wikipedia.org/wiki/Torsion_constant</a></p>
+</div>
+</div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamprop.BeamProp.A">
 <span class="sig-name descname"><span class="pre">A</span></span><a class="headerlink" href="#pyfe3d.beamprop.BeamProp.A" title="Link to this definition">#</a></dt>
@@ -544,6 +982,24 @@ material density:</p>
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="shellprop_utils.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Shell property utils module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop_utils</span></code>)</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="solver.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -608,8 +1064,8 @@ material density:</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -642,7 +1098,7 @@ material density:</p>
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
 </p></div>
       
     </div>

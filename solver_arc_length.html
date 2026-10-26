@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Arc-length solvers (pyfe3d.solver.arc_length) &#8212; pyfe3d 0.11.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="_static/documentation_options.js?v=f3b36f1a"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'solver_arc_length';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Calls to the callables of the non-linear solvers (pyfe3d.solver.callbacks)" href="solver_callbacks.html" />
+    <link rel="prev" title="Newton-Raphson solver (pyfe3d.solver.newton_raphson)" href="solver_newton_raphson.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.11.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="fe_overview.html">Finite elements</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="quad4.html">Quad4 - Quadrilateral element with mixed integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="tria3dsg.html">Tria3DSG - Triangular element with discrete shear gap (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3dsg</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="beamc.html">BeamC - Consistent Timoshenko 3D beam element (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamc</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html">BeamLR - Linear Timoshenko 3D beam element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamlr</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="spring.html">Spring - 3D spring element with constant stiffnesses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.spring</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="truss.html">Truss - Linear truss 3D element with analytical integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code>)</a></li>
+
+
+
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="properties.html">Properties</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="shellprop.html">Shell property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="shellprop_utils.html">Shell property utils module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop_utils</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="beamprop.html">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
+
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="solver.html">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solver_static.html">Linear static solution (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code>)</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_analysis.html">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_convergence.html">Convergence criteria of the non-linear solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.convergence</span></code>)</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_newton_raphson.html">Newton-Raphson solver (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.newton_raphson</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Arc-length solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arc_length</span></code>)</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_callbacks.html">Calls to the callables of the non-linear solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.callbacks</span></code>)</a></li>
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_eigen.html">Eigenvalue analyses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen</span></code>)</a></li>
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html">Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_sparseutils.html">Utilities for sparse matrices (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.sparseutils</span></code>)</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_logger.html">Log messages of the solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.logger</span></code>)</a></li>
+
+
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="api.html" class="nav-link">API reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="solver.html" class="nav-link">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Arc-length solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arc_length</span></code>)</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="arc-length-solvers-pyfe3d-solver-arc-length">
+<span id="module-pyfe3d.solver.arc_length"></span><h1>Arc-length solvers (<a class="reference internal" href="#module-pyfe3d.solver.arc_length" title="pyfe3d.solver.arc_length"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arc_length</span></code></a>)<a class="headerlink" href="#arc-length-solvers-pyfe3d-solver-arc-length" title="Link to this heading">#</a></h1>
+<p>The arc-length methods of Riks and of Crisfield share the implementation of
+<a class="reference internal" href="#pyfe3d.solver.arc_length._solver_arc_length" title="pyfe3d.solver.arc_length._solver_arc_length"><code class="xref py py-func docutils literal notranslate"><span class="pre">_solver_arc_length()</span></code></a>, and are selected with <code class="docutils literal notranslate"><span class="pre">Analysis.NL_method</span> <span class="pre">=</span>
+<span class="pre">'arc_length_riks'</span></code> or <code class="docutils literal notranslate"><span class="pre">Analysis.NL_method</span> <span class="pre">=</span> <span class="pre">'arc_length_crisfield'</span></code>. The
+module-level constants control the arc-length scaling and adaptation.</p>
+</section>
+<dl class="py data">
+<dt class="sig sig-object py" id="pyfe3d.solver.arc_length.DESIRED_NUM_ITER">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arc_length.</span></span><span class="sig-name descname"><span class="pre">DESIRED_NUM_ITER</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">4</span></span><a class="headerlink" href="#pyfe3d.solver.arc_length.DESIRED_NUM_ITER" title="Link to this definition">#</a></dt>
+<dd><p>Desired number of corrections per step, used to adapt the arc length</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyfe3d.solver.arc_length.MAX_GROWTH_FACTOR">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arc_length.</span></span><span class="sig-name descname"><span class="pre">MAX_GROWTH_FACTOR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.5</span></span><a class="headerlink" href="#pyfe3d.solver.arc_length.MAX_GROWTH_FACTOR" title="Link to this definition">#</a></dt>
+<dd><p>Maximum factor to increase the arc length after a converged step</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyfe3d.solver.arc_length.MAX_NUM_STEPS">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arc_length.</span></span><span class="sig-name descname"><span class="pre">MAX_NUM_STEPS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1000</span></span><a class="headerlink" href="#pyfe3d.solver.arc_length.MAX_NUM_STEPS" title="Link to this definition">#</a></dt>
+<dd><p>Maximum number of converged steps of an arc-length analysis</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyfe3d.solver.arc_length.METHODS">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arc_length.</span></span><span class="sig-name descname"><span class="pre">METHODS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('riks',</span> <span class="pre">'crisfield')</span></span><a class="headerlink" href="#pyfe3d.solver.arc_length.METHODS" title="Link to this definition">#</a></dt>
+<dd><p>Names of the arc-length methods, see <a class="reference internal" href="#pyfe3d.solver.arc_length._solver_arc_length" title="pyfe3d.solver.arc_length._solver_arc_length"><code class="xref py py-func docutils literal notranslate"><span class="pre">_solver_arc_length()</span></code></a></p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyfe3d.solver.arc_length.MIN_GROWTH_FACTOR">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arc_length.</span></span><span class="sig-name descname"><span class="pre">MIN_GROWTH_FACTOR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">0.5</span></span><a class="headerlink" href="#pyfe3d.solver.arc_length.MIN_GROWTH_FACTOR" title="Link to this definition">#</a></dt>
+<dd><p>Minimum factor to reduce the arc length after a converged step</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyfe3d.solver.arc_length.PSI">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arc_length.</span></span><span class="sig-name descname"><span class="pre">PSI</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">1.0</span></span><a class="headerlink" href="#pyfe3d.solver.arc_length.PSI" title="Link to this definition">#</a></dt>
+<dd><p>Scaling factor of the load-factor term in the arc-length constraint</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.arc_length._solver_arc_length">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arc_length.</span></span><span class="sig-name descname"><span class="pre">_solver_arc_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">an</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">pb</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">method</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">silent</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.arc_length._solver_arc_length" title="Link to this definition">#</a></dt>
+<dd><p>Arc-length solver</p>
+<p>Traces the equilibrium path of the model with an arc-length method, in
+which the load factor is an unknown of each step besides the solution
+vector, such that limit points can be passed. <code class="docutils literal notranslate"><span class="pre">method</span></code> selects how the
+load factor of each iteration is computed. Used by
+<a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis.static" title="pyfe3d.solver.analysis.Analysis.static"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Analysis.static()</span></code></a> when <code class="docutils literal notranslate"><span class="pre">NL_method</span></code> is <code class="docutils literal notranslate"><span class="pre">'arc_length_riks'</span></code> or
+<code class="docutils literal notranslate"><span class="pre">'arc_length_crisfield'</span></code>.</p>
+<p>The steps are controlled by the attributes <code class="docutils literal notranslate"><span class="pre">initialInc</span></code>, <code class="docutils literal notranslate"><span class="pre">minInc</span></code>,
+<code class="docutils literal notranslate"><span class="pre">maxInc</span></code> and <code class="docutils literal notranslate"><span class="pre">maxArcLength</span></code> of <code class="docutils literal notranslate"><span class="pre">an</span></code>, and by the module-level
+constants; the iterations of each step by <code class="docutils literal notranslate"><span class="pre">convergence</span></code>, <code class="docutils literal notranslate"><span class="pre">relTOL</span></code>,
+<code class="docutils literal notranslate"><span class="pre">absTOL</span></code>, <code class="docutils literal notranslate"><span class="pre">maxNumIter</span></code> and <code class="docutils literal notranslate"><span class="pre">too_slow_TOL</span></code>, with the checks of
+<a class="reference internal" href="solver_convergence.html#pyfe3d.solver.convergence.check_convergence" title="pyfe3d.solver.convergence.check_convergence"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_convergence()</span></code></a> and
+<a class="reference internal" href="solver_newton_raphson.html#pyfe3d.solver.newton_raphson._check_divergence" title="pyfe3d.solver.newton_raphson._check_divergence"><code class="xref py py-func docutils literal notranslate"><span class="pre">newton_raphson._check_divergence()</span></code></a>; and <code class="docutils literal notranslate"><span class="pre">an.modified_NR</span></code>,
+<code class="docutils literal notranslate"><span class="pre">an.compute_every_n</span></code> and <code class="docutils literal notranslate"><span class="pre">an.kT_initial_state</span></code> control how often the
+tangent stiffness matrix is updated. A step that fails is repeated with
+the arc length multiplied by <code class="docutils literal notranslate"><span class="pre">INC_CUT_FACTOR</span></code>. The analysis stops
+when:</p>
+<ul class="simple">
+<li><p>the load factor reaches 1.0, the last solution being computed at a load
+factor of exactly 1.0;</p></li>
+<li><p>the cumulative arc length reaches <code class="docutils literal notranslate"><span class="pre">an.maxArcLength</span></code>;</p></li>
+<li><p>the arc length becomes smaller than <code class="docutils literal notranslate"><span class="pre">an.minInc</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">MAX_NUM_STEPS</span></code> steps converged;</p></li>
+<li><p>the tangent stiffness matrix at the last converged state is singular.</p></li>
+</ul>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>an</strong><span class="classifier"><a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis" title="pyfe3d.solver.analysis.Analysis"><code class="xref py py-class docutils literal notranslate"><span class="pre">Analysis</span></code></a></span></dt><dd><p>Analysis object; the converged load factors and solutions are
+appended to <code class="docutils literal notranslate"><span class="pre">an.increments</span></code> and <code class="docutils literal notranslate"><span class="pre">an.cs</span></code>.</p>
+</dd>
+<dt><strong>pb</strong><span class="classifier">object</span></dt><dd><p>Object with the callables, <code class="docutils literal notranslate"><span class="pre">an</span></code> itself or a <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.FreeDofs" title="pyfe3d.solver.analysis.FreeDofs"><code class="xref py py-class docutils literal notranslate"><span class="pre">FreeDofs</span></code></a>.</p>
+</dd>
+<dt><strong>method</strong><span class="classifier">str</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">'riks'</span></code> or <code class="docutils literal notranslate"><span class="pre">'crisfield'</span></code>.</p>
+</dd>
+<dt><strong>silent</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether the log messages are suppressed. Default <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>When <code class="docutils literal notranslate"><span class="pre">method</span></code> is not one of <a class="reference internal" href="#pyfe3d.solver.arc_length.METHODS" title="pyfe3d.solver.arc_length.METHODS"><code class="xref py py-data docutils literal notranslate"><span class="pre">METHODS</span></code></a>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The equilibrium path <span class="math notranslate nohighlight">\(\boldsymbol{F}_{int}(\boldsymbol{c}) = \lambda \boldsymbol{F}_{ext}\)</span> is traced with
+the arc-length constraint</p>
+<div class="math notranslate nohighlight">
+\[\frac{\Delta \boldsymbol{c}^\top \Delta \boldsymbol{c}}{\boldsymbol{u}_{ref}^\top \boldsymbol{u}_{ref}}
++ \psi^2 \Delta\lambda^2 = \Delta s^2\]</div>
+<p>where <span class="math notranslate nohighlight">\(\Delta \boldsymbol{c}\)</span> and <span class="math notranslate nohighlight">\(\Delta\lambda\)</span> are the increments of the current
+step and <span class="math notranslate nohighlight">\(\boldsymbol{u}_{ref}\)</span> is the linear solution for <span class="math notranslate nohighlight">\(\lambda=1\)</span>, which makes
+the arc length <span class="math notranslate nohighlight">\(\Delta s\)</span> independent of a uniform change of the units
+of the displacements; it is not independent of a change of the units of
+the rotations only. In the linear regime <span class="math notranslate nohighlight">\(\Delta s \approx \sqrt{1 +
+\psi^2} \Delta\lambda\)</span>. It is the spherical arc-length constraint of
+<a class="reference internal" href="#r04ec435afe12-4" id="id1">[4]</a> (Section 9.3.2, Eq. (9.19), p. 271), where the displacement term is
+not scaled and the load term is <span class="math notranslate nohighlight">\(\psi^2 \Delta\lambda^2
+\boldsymbol{F}_{ext}^\top \boldsymbol{F}_{ext}\)</span>. <span class="math notranslate nohighlight">\(\psi\)</span> is the constant <code class="docutils literal notranslate"><span class="pre">PSI</span></code>, and
+<span class="math notranslate nohighlight">\(\boldsymbol{u}_{ref}^\top \boldsymbol{u}_{ref}\)</span> is replaced by 1 when it is null. With the
+inner product</p>
+<div class="math notranslate nohighlight">
+\[\langle (a, \alpha), (b, \beta) \rangle =
+\frac{\boldsymbol{a}^\top \boldsymbol{b}}{\boldsymbol{u}_{ref}^\top \boldsymbol{u}_{ref}} + \psi^2 \alpha \beta\]</div>
+<p>the constraint reads <span class="math notranslate nohighlight">\(g = \frac{1}{2}(\langle (\Delta c, \Delta\lambda),
+(\Delta c, \Delta\lambda) \rangle - \Delta s^2) = 0\)</span>.</p>
+<p class="rubric">Predictor</p>
+<p>Each step starts from a tangent predictor, whose direction follows the
+previous increment, allowing limit points to be passed. With
+<span class="math notranslate nohighlight">\(\delta \boldsymbol{c}_q = \boldsymbol{K}_T^{-1} \boldsymbol{F}_{ext}\)</span> at the last converged state,
+the predictor</p>
+<div class="math notranslate nohighlight">
+\[\Delta\lambda = \pm \frac{\Delta s}{\sqrt{\langle (\delta c_q, 1),
+(\delta c_q, 1) \rangle}}, \qquad
+\Delta \boldsymbol{c} = \Delta\lambda \delta \boldsymbol{c}_q\]</div>
+<p>satisfies the constraint, with the sign of <span class="math notranslate nohighlight">\(\langle (\delta c_q, 1),
+(\Delta c_{prev}, \Delta\lambda_{prev}) \rangle\)</span>, where
+<span class="math notranslate nohighlight">\((\Delta c_{prev}, \Delta\lambda_{prev})\)</span> is the increment of the
+previous converged step, and a positive sign at the first step. The
+initial arc length, <span class="math notranslate nohighlight">\(\Delta s_0 = initialInc \sqrt{\langle (\delta c_q,
+1), (\delta c_q, 1) \rangle}\)</span> at the origin, corresponds to a load factor
+increment of <code class="docutils literal notranslate"><span class="pre">an.initialInc</span></code> along the initial tangent.</p>
+<p class="rubric">Corrections</p>
+<p>At each iteration, the residual is <span class="math notranslate nohighlight">\(\boldsymbol{R} = \boldsymbol{F}_{int}(\boldsymbol{c} +
+\Delta \boldsymbol{c}) - (\lambda + \Delta\lambda) \boldsymbol{F}_{ext}\)</span>, with <span class="math notranslate nohighlight">\(\partial
+\boldsymbol{R}/\partial \lambda = -\boldsymbol{F}_{ext}\)</span>, and the bordered system
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_T \delta \boldsymbol{c} - \delta\lambda \, \boldsymbol{F}_{ext} = -\boldsymbol{R}\)</span> is
+solved with two solutions of the tangent stiffness matrix,
+<span class="math notranslate nohighlight">\(\delta \boldsymbol{c}_R = -\boldsymbol{K}_T^{-1} \boldsymbol{R}\)</span> and <span class="math notranslate nohighlight">\(\delta \boldsymbol{c}_q =
+\boldsymbol{K}_T^{-1} \boldsymbol{F}_{ext}\)</span>; the increment is updated to <span class="math notranslate nohighlight">\((\Delta \boldsymbol{c} +
+\delta \boldsymbol{c}_R + \delta\lambda \, \delta \boldsymbol{c}_q, \Delta\lambda +
+\delta\lambda)\)</span>, where the correction of the load factor
+<span class="math notranslate nohighlight">\(\delta\lambda\)</span> comes from the constraint:</p>
+<ul>
+<li><p><code class="docutils literal notranslate"><span class="pre">method='riks'</span></code>: the constraint is linearized at the current
+increment (updated normal plane), which is Newton-Raphson applied to
+the augmented system of the equilibrium equations and the constraint
+(<a class="reference internal" href="#r04ec435afe12-4" id="id2">[4]</a>, Section 9.3.2, p. 272), with quadratic convergence when <span class="math notranslate nohighlight">\(\boldsymbol{K}_T\)</span>
+is updated at every iteration and is the exact Jacobian. It follows
+Riks <a class="reference internal" href="#r04ec435afe12-1" id="id3">[1]</a>, who applies Newton’s method to the equilibrium equations
+augmented with an equation that controls the arc length, and states
+its quadratic convergence (Sections 3.2 and 3.3, Eqs. (3.7), (3.11)
+and (3.17), pp. 537-539). The equation of Riks is linear (Section 3.1,
+Eqs. (3.4) and (3.9), pp. 537-538): the plane normal to the unit
+tangent of the path at the last converged point, at the distance
+<span class="math notranslate nohighlight">\(\Delta s\)</span> from it, in the unscaled Euclidean space of the load
+parameter and the generalized coordinates; the plane is fixed during
+the iterations of a step and redefined at each converged point.
+Without the mismatch <span class="math notranslate nohighlight">\(g\)</span> of the constraint, it is the updated normal
+plane of Ramm <a class="reference internal" href="#r04ec435afe12-3" id="id4">[3]</a> (p. 75); <a class="reference internal" href="#r04ec435afe12-4" id="id5">[4]</a> (Section 9.3.2.2, Eq. (9.29),
+pp. 274-275) attributes the mismatch term to Schweizerhof and
+Wriggers and to Riks:</p>
+<div class="math notranslate nohighlight">
+\[\delta\lambda = -\frac{g + \langle (\Delta c, \Delta\lambda),
+(\delta c_R, 0) \rangle}{\langle (\Delta c, \Delta\lambda),
+(\delta c_q, 1) \rangle}\]</div>
+</li>
+<li><p><code class="docutils literal notranslate"><span class="pre">method='crisfield'</span></code>: the quadratic (spherical) constraint is solved
+exactly, choosing the root with the smallest angle to the current
+increment. When the roots are complex, the linearized constraint is
+used, see <a class="reference internal" href="#r04ec435afe12-2" id="id6">[2]</a>. With <span class="math notranslate nohighlight">\(\boldsymbol{u} = \Delta \boldsymbol{c} + \delta \boldsymbol{c}_R\)</span>, the
+constraint <span class="math notranslate nohighlight">\(\langle (u + \delta\lambda \, \delta c_q, \Delta\lambda +
+\delta\lambda), (u + \delta\lambda \, \delta c_q, \Delta\lambda +
+\delta\lambda) \rangle = \Delta s^2\)</span> is the quadratic equation
+<span class="math notranslate nohighlight">\(a \, \delta\lambda^2 + b \, \delta\lambda + c = 0\)</span> with
+<span class="math notranslate nohighlight">\(a = \langle (\delta c_q, 1), (\delta c_q, 1) \rangle\)</span>,
+<span class="math notranslate nohighlight">\(b = 2 \langle (u, \Delta\lambda), (\delta c_q, 1) \rangle\)</span> and
+<span class="math notranslate nohighlight">\(c = \langle (u, \Delta\lambda), (u, \Delta\lambda) \rangle -
+\Delta s^2\)</span>. Its roots are computed as <span class="math notranslate nohighlight">\(q/a\)</span> and <span class="math notranslate nohighlight">\(c/q\)</span>, with
+<span class="math notranslate nohighlight">\(q = -\frac{1}{2}(b + \mathrm{sign}(b) \sqrt{b^2 - 4 a c})\)</span>, and the
+root that maximizes the inner product of the new increment with the
+current one <span class="math notranslate nohighlight">\((\Delta c, \Delta\lambda)\)</span> is chosen, i.e. the smallest
+angle, since both have the length <span class="math notranslate nohighlight">\(\Delta s\)</span>.</p></li>
+</ul>
+<p>The step fails when <span class="math notranslate nohighlight">\(\delta\lambda\)</span> cannot be computed or is not
+finite, and when the converged increment points against the tangent
+predictor <span class="math notranslate nohighlight">\((\Delta c_{pred}, \Delta\lambda_{pred})\)</span> of the step,
+<span class="math notranslate nohighlight">\(\langle (\Delta c, \Delta\lambda), (\Delta c_{pred},
+\Delta\lambda_{pred}) \rangle \le 0\)</span>. The previous converged point is
+also at the distance <span class="math notranslate nohighlight">\(\Delta s\)</span> from the last one, and with long steps
+or near a limit point the iterations may converge to it and then trace
+the path backwards, the “doubling back” that <a class="reference internal" href="#r04ec435afe12-2" id="id7">[2]</a> (p. 56) avoids with
+the choice of the root. The accepted points are thus on the side of the
+tangent predictor of the hyperplane normal to it, in the inner product
+above, through the last converged point, as the points of the plane of
+Riks <a class="reference internal" href="#r04ec435afe12-1" id="id8">[1]</a>, normal to the tangent at the distance <span class="math notranslate nohighlight">\(\Delta s\)</span> from the
+last converged point. With full Newton-Raphson, <span class="math notranslate nohighlight">\(\boldsymbol{K}_T\)</span> is updated at
+every iteration at the current iterate <span class="math notranslate nohighlight">\((c + \Delta c, \lambda +
+\Delta\lambda)\)</span>; with <code class="docutils literal notranslate"><span class="pre">an.modified_NR</span> <span class="pre">=</span> <span class="pre">True</span></code> the factorization at
+the last converged state is used for the first <code class="docutils literal notranslate"><span class="pre">an.compute_every_n</span></code>
+iterations and the tangent is then updated every
+<code class="docutils literal notranslate"><span class="pre">an.compute_every_n</span></code> iterations; at the first
+step with <code class="docutils literal notranslate"><span class="pre">an.kT_initial_state</span> <span class="pre">=</span> <span class="pre">False</span></code> the linear constitutive
+stiffness matrix replaces the tangent of the initial state.</p>
+<p>The convergence criterion is the one of the Newton-Raphson solver, see
+<a class="reference internal" href="solver_convergence.html#pyfe3d.solver.convergence.check_convergence" title="pyfe3d.solver.convergence.check_convergence"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_convergence()</span></code></a>, at the current load factor <span class="math notranslate nohighlight">\(\lambda +
+\Delta\lambda\)</span>, the arc-length method changing only how the load factor
+is updated and not the residual. Both criteria also consider the
+external force vector of the increment, <span class="math notranslate nohighlight">\(\Delta\lambda
+\boldsymbol{F}_{ext}\)</span>, as a reference.</p>
+<p class="rubric">Adaptation of the arc length</p>
+<p>After each converged step, the arc length is multiplied by
+<code class="docutils literal notranslate"><span class="pre">sqrt(DESIRED_NUM_ITER/num_iter)</span></code>, bounded by <code class="docutils literal notranslate"><span class="pre">MIN_GROWTH_FACTOR</span></code> and
+<code class="docutils literal notranslate"><span class="pre">MAX_GROWTH_FACTOR</span></code> and limited by <code class="docutils literal notranslate"><span class="pre">an.maxInc</span></code>, where <code class="docutils literal notranslate"><span class="pre">num_iter</span></code> is
+the number of corrections of the step. The factor is at most 1 after a
+step that was repeated, and the limit is in fact
+<code class="docutils literal notranslate"><span class="pre">max(an.maxInc,</span> <span class="pre">initial</span> <span class="pre">arc</span> <span class="pre">length)</span></code>. When a step fails, the arc length
+is multiplied by <code class="docutils literal notranslate"><span class="pre">INC_CUT_FACTOR</span></code> and the step is repeated from the
+same tangent predictor direction. The square root of the ratio is the
+rule recommended by Ramm <a class="reference internal" href="#r04ec435afe12-3" id="id9">[3]</a> (p. 76), who found that the ratio itself,
+as used by Crisfield <a class="reference internal" href="#r04ec435afe12-2" id="id10">[2]</a> (Eq. 15), makes the number of iterations
+oscillate from step to step.</p>
+<p>When the load factor 1.0 is exceeded within a converged step, from
+<span class="math notranslate nohighlight">\(\lambda &lt; 1\)</span> to <span class="math notranslate nohighlight">\(\lambda + \Delta\lambda &gt; 1\)</span>, the step is replaced by
+Newton-Raphson iterations at exactly <span class="math notranslate nohighlight">\(\lambda = 1\)</span>, see
+<a class="reference internal" href="solver_newton_raphson.html#pyfe3d.solver.newton_raphson._NR_iterations" title="pyfe3d.solver.newton_raphson._NR_iterations"><code class="xref py py-func docutils literal notranslate"><span class="pre">newton_raphson._NR_iterations()</span></code></a>, from the predictor
+<span class="math notranslate nohighlight">\(t \Delta \boldsymbol{c}\)</span> with <span class="math notranslate nohighlight">\(t = (1 - \lambda)/\Delta\lambda\)</span>. When these
+iterations do not converge, the step is repeated with a shorter arc
+length.</p>
+<p class="rubric">Configuration- and load-factor-dependent loads</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">calc_fext</span></code> accepts the keyword argument <code class="docutils literal notranslate"><span class="pre">c</span></code>, <span class="math notranslate nohighlight">\(\boldsymbol{F}_{ext}\)</span> in
+<span class="math notranslate nohighlight">\(\delta \boldsymbol{c}_q\)</span> and in the tangent predictor is the load vector of the
+current configuration <code class="docutils literal notranslate"><span class="pre">calc_fext(inc=1.,</span> <span class="pre">c=c)</span></code>, minus the derivative
+<span class="math notranslate nohighlight">\(\partial \boldsymbol{R}/\partial \lambda\)</span> of the residual, whereas <span class="math notranslate nohighlight">\(\boldsymbol{u}_{ref}\)</span>
+remains the linear solution of the reference vector. The callables that
+accept <code class="docutils literal notranslate"><span class="pre">inc</span></code> receive the current load factor, see <a class="reference internal" href="solver_callbacks.html#module-pyfe3d.solver.callbacks" title="pyfe3d.solver.callbacks"><code class="xref py py-mod docutils literal notranslate"><span class="pre">callbacks</span></code></a>.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">calc_fext</span></code> also accepts the keyword argument <code class="docutils literal notranslate"><span class="pre">lbd</span></code>, e.g. for
+prescribed displacements imposed exactly, it receives the load factor
+together with the configuration, <span class="math notranslate nohighlight">\(\boldsymbol{F}_{ext}\)</span> above being then
+<span class="math notranslate nohighlight">\(-\partial \boldsymbol{R}/\partial \lambda\)</span> at the current <span class="math notranslate nohighlight">\(\boldsymbol{c}\)</span> and <span class="math notranslate nohighlight">\(\lambda\)</span>;
+<span class="math notranslate nohighlight">\(\boldsymbol{u}_{ref}\)</span> is the linear solution of <span class="math notranslate nohighlight">\(-\partial \boldsymbol{R}/\partial \lambda\)</span>
+at <span class="math notranslate nohighlight">\(c = 0\)</span>, <span class="math notranslate nohighlight">\(\lambda = 0\)</span>, since the reference vector may be null, e.g.
+under a prescribed displacement alone; and <span class="math notranslate nohighlight">\(-\lambda \, \partial
+\boldsymbol{R}/\partial \lambda\)</span> is an additional reference of the convergence
+criterion. <span class="math notranslate nohighlight">\(-\partial \boldsymbol{R}/\partial \lambda\)</span> is evaluated together with the
+tangent stiffness matrix, at the same iterate, i.e. once per update of
+the tangent stiffness matrix, and used in the bordered solution; the
+last one evaluated is the reference of the next convergence checks. At
+the converged state it is kept with the tangent stiffness matrix when
+the step is repeated with a shorter arc length.</p>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="r04ec435afe12-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id3">1</a>,<a role="doc-backlink" href="#id8">2</a>)</span>
+<p>Riks, E., An incremental approach to the solution of snapping and
+buckling problems, International Journal of Solids and Structures,
+15(7), 529-551, 1979.
+<a class="reference external" href="https://doi.org/10.1016/0020-7683(79)90081-7">https://doi.org/10.1016/0020-7683(79)90081-7</a></p>
+</div>
+<div class="citation" id="r04ec435afe12-2" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id6">1</a>,<a role="doc-backlink" href="#id7">2</a>,<a role="doc-backlink" href="#id10">3</a>)</span>
+<p>Crisfield, M. A., A fast incremental/iterative solution procedure
+that handles “snap-through”, Computers &amp; Structures, 13(1-3), 55-62,
+1981. <a class="reference external" href="https://doi.org/10.1016/0045-7949(81)90108-5">https://doi.org/10.1016/0045-7949(81)90108-5</a></p>
+</div>
+<div class="citation" id="r04ec435afe12-3" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id4">1</a>,<a role="doc-backlink" href="#id9">2</a>)</span>
+<p>Ramm, E., Strategies for tracing the nonlinear response near
+limit points, in: Wunderlich, W., Stein, E., Bathe, K. J. (eds.),
+Nonlinear Finite Element Analysis in Structural Mechanics, Springer,
+63-89, 1981. <a class="reference external" href="https://doi.org/10.1007/978-3-642-81589-8_5">https://doi.org/10.1007/978-3-642-81589-8_5</a></p>
+</div>
+<div class="citation" id="r04ec435afe12-4" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id2">2</a>,<a role="doc-backlink" href="#id5">3</a>)</span>
+<p>Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
+Structures, Volume 1: Essentials, John Wiley &amp; Sons, Chichester,
+1991.</p>
+</div>
+</div>
+</dd></dl>
+
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="solver_newton_raphson.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Newton-Raphson solver (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.newton_raphson</span></code>)</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="solver_callbacks.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Calls to the callables of the non-linear solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.callbacks</span></code>)</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Arc-length solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arc_length</span></code>)</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arc_length.DESIRED_NUM_ITER"><code class="docutils literal notranslate"><span class="pre">DESIRED_NUM_ITER</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arc_length.MAX_GROWTH_FACTOR"><code class="docutils literal notranslate"><span class="pre">MAX_GROWTH_FACTOR</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arc_length.MAX_NUM_STEPS"><code class="docutils literal notranslate"><span class="pre">MAX_NUM_STEPS</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arc_length.METHODS"><code class="docutils literal notranslate"><span class="pre">METHODS</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arc_length.MIN_GROWTH_FACTOR"><code class="docutils literal notranslate"><span class="pre">MIN_GROWTH_FACTOR</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arc_length.PSI"><code class="docutils literal notranslate"><span class="pre">PSI</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arc_length._solver_arc_length"><code class="docutils literal notranslate"><span class="pre">_solver_arc_length()</span></code></a></li>
+</ul>
+
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/solver_arc_length.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

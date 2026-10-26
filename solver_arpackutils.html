@@ -1,0 +1,1315 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Utilities for ARPACK, against the Intel MKL bug of dsteqr (pyfe3d.solver.arpackutils) &#8212; pyfe3d 0.11.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="_static/documentation_options.js?v=f3b36f1a"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'solver_arpackutils';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Utilities for sparse matrices (pyfe3d.solver.sparseutils)" href="solver_sparseutils.html" />
+    <link rel="prev" title="Eigenvalue analyses (pyfe3d.solver.eigen)" href="solver_eigen.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.11.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="fe_overview.html">Finite elements</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="quad4.html">Quad4 - Quadrilateral element with mixed integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="tria3dsg.html">Tria3DSG - Triangular element with discrete shear gap (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3dsg</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="beamc.html">BeamC - Consistent Timoshenko 3D beam element (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamc</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html">BeamLR - Linear Timoshenko 3D beam element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamlr</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="spring.html">Spring - 3D spring element with constant stiffnesses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.spring</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="truss.html">Truss - Linear truss 3D element with analytical integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code>)</a></li>
+
+
+
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="properties.html">Properties</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="shellprop.html">Shell property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="shellprop_utils.html">Shell property utils module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop_utils</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="beamprop.html">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
+
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="solver.html">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solver_static.html">Linear static solution (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code>)</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_analysis.html">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_convergence.html">Convergence criteria of the non-linear solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.convergence</span></code>)</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_newton_raphson.html">Newton-Raphson solver (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.newton_raphson</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_arc_length.html">Arc-length solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arc_length</span></code>)</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_callbacks.html">Calls to the callables of the non-linear solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.callbacks</span></code>)</a></li>
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_eigen.html">Eigenvalue analyses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen</span></code>)</a></li>
+
+
+
+
+
+
+
+
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_sparseutils.html">Utilities for sparse matrices (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.sparseutils</span></code>)</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_logger.html">Log messages of the solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.logger</span></code>)</a></li>
+
+
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="api.html" class="nav-link">API reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="solver.html" class="nav-link">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code>)</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="utilities-for-arpack-against-the-intel-mkl-bug-of-dsteqr-pyfe3d-solver-arpackutils">
+<span id="module-pyfe3d.solver.arpackutils"></span><h1>Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<a class="reference internal" href="#module-pyfe3d.solver.arpackutils" title="pyfe3d.solver.arpackutils"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code></a>)<a class="headerlink" href="#utilities-for-arpack-against-the-intel-mkl-bug-of-dsteqr-pyfe3d-solver-arpackutils" title="Link to this heading">#</a></h1>
+<p>With Intel MKL 2024.2.0 to 2025.0.0, <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code>
+returns wrong eigenpairs, without any error, or raises <code class="docutils literal notranslate"><span class="pre">ArpackError</span> <span class="pre">-8</span></code>,
+whenever its number of Lanczos vectors is <code class="docutils literal notranslate"><span class="pre">ncv</span> <span class="pre">&gt;</span> <span class="pre">32</span></code>, e.g. with SciPy’s
+default <code class="docutils literal notranslate"><span class="pre">ncv</span> <span class="pre">=</span> <span class="pre">2</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">1</span></code> for <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">&gt;=</span> <span class="pre">16</span></code> eigenpairs. MKL 2025.0.1 or newer
+is not affected, neither is <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigs()</span></code>. The detection
+and the cap depend only on NumPy and SciPy.</p>
+<p><a class="reference internal" href="#pyfe3d.solver.arpackutils.capped_eigsh" title="pyfe3d.solver.arpackutils.capped_eigsh"><code class="xref py py-func docutils literal notranslate"><span class="pre">capped_eigsh()</span></code></a> keeps <code class="docutils literal notranslate"><span class="pre">ncv</span> <span class="pre">&lt;=</span> <span class="pre">32</span></code> when <a class="reference internal" href="#pyfe3d.solver.arpackutils.arpack_max_ncv" title="pyfe3d.solver.arpackutils.arpack_max_ncv"><code class="xref py py-func docutils literal notranslate"><span class="pre">arpack_max_ncv()</span></code></a> says so,
+computing more than 15 eigenpairs in several calls with a deflation of the
+eigenvectors already found, which are combined with a Rayleigh-Ritz
+projection such that they are orthonormal also across the calls. It is used
+by <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> and <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> for symmetric
+matrices.</p>
+<p>The cap is decided by <a class="reference internal" href="#pyfe3d.solver.arpackutils.arpack_max_ncv" title="pyfe3d.solver.arpackutils.arpack_max_ncv"><code class="xref py py-func docutils literal notranslate"><span class="pre">arpack_max_ncv()</span></code></a> and can be overridden with
+the module attribute <a class="reference internal" href="#pyfe3d.solver.arpackutils.ARPACK_MAX_NCV" title="pyfe3d.solver.arpackutils.ARPACK_MAX_NCV"><code class="xref py py-data docutils literal notranslate"><span class="pre">ARPACK_MAX_NCV</span></code></a> or the environment variable
+<code class="docutils literal notranslate"><span class="pre">PYFE3D_ARPACK_MAX_NCV</span></code>, e.g. to lift it with a fixed MKL that cannot be
+identified as such:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">pyfe3d.solver.arpackutils</span>
+<span class="n">pyfe3d</span><span class="o">.</span><span class="n">solver</span><span class="o">.</span><span class="n">arpackutils</span><span class="o">.</span><span class="n">ARPACK_MAX_NCV</span> <span class="o">=</span> <span class="mi">0</span>  <span class="c1"># no cap</span>
+</pre></div>
+</div>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">#</a></h2>
+<p>The symmetric drivers of ARPACK, used by <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code>,
+compute the Ritz vectors with the LAPACK routine <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> applied to the
+<code class="docutils literal notranslate"><span class="pre">ncv</span> <span class="pre">x</span> <span class="pre">ncv</span></code> tridiagonal matrix of the Lanczos process. The <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> of
+Intel MKL 2024.2.0 to 2025.0.0 returns wrong eigenvectors for matrices
+larger than 32 x 32, hence the wrong eigenpairs whenever <code class="docutils literal notranslate"><span class="pre">ncv</span> <span class="pre">&gt;</span> <span class="pre">32</span></code>. The
+non-symmetric drivers of <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigs()</span></code> do not call
+<code class="docutils literal notranslate"><span class="pre">dsteqr</span></code>.</p>
+</section>
+</section>
+<dl class="py data">
+<dt class="sig sig-object py" id="pyfe3d.solver.arpackutils.ARPACK_MAX_NCV">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">ARPACK_MAX_NCV</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">None</span></span><a class="headerlink" href="#pyfe3d.solver.arpackutils.ARPACK_MAX_NCV" title="Link to this definition">#</a></dt>
+<dd><p>Maximum <code class="docutils literal notranslate"><span class="pre">ncv</span></code> of <a class="reference internal" href="#pyfe3d.solver.arpackutils.capped_eigsh" title="pyfe3d.solver.arpackutils.capped_eigsh"><code class="xref py py-func docutils literal notranslate"><span class="pre">capped_eigsh()</span></code></a>. <code class="docutils literal notranslate"><span class="pre">None</span></code>, the default, reads the
+environment variable <code class="docutils literal notranslate"><span class="pre">PYFE3D_ARPACK_MAX_NCV</span></code> and, when it is not
+defined, uses <code class="docutils literal notranslate"><span class="pre">'auto'</span></code>: the cap <a class="reference internal" href="#pyfe3d.solver.arpackutils.DSTEQR_MAX_SIZE" title="pyfe3d.solver.arpackutils.DSTEQR_MAX_SIZE"><code class="xref py py-data docutils literal notranslate"><span class="pre">DSTEQR_MAX_SIZE</span></code></a> is applied when
+the LAPACK of SciPy is detected as faulty, see <a class="reference internal" href="#pyfe3d.solver.arpackutils.arpack_max_ncv" title="pyfe3d.solver.arpackutils.arpack_max_ncv"><code class="xref py py-func docutils literal notranslate"><span class="pre">arpack_max_ncv()</span></code></a>.
+<code class="docutils literal notranslate"><span class="pre">0</span></code> (or <code class="docutils literal notranslate"><span class="pre">'none'</span></code>) disables the cap, an integer of at least <code class="docutils literal notranslate"><span class="pre">3</span></code> sets
+it.</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyfe3d.solver.arpackutils.DSTEQR_MAX_SIZE">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">DSTEQR_MAX_SIZE</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">32</span></span><a class="headerlink" href="#pyfe3d.solver.arpackutils.DSTEQR_MAX_SIZE" title="Link to this definition">#</a></dt>
+<dd><p>Largest tridiagonal matrix for which the faulty <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> is correct</p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyfe3d.solver.arpackutils.MKL_FAULTY_VERSIONS">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">MKL_FAULTY_VERSIONS</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">((2024,</span> <span class="pre">2,</span> <span class="pre">0),</span> <span class="pre">(2025,</span> <span class="pre">0,</span> <span class="pre">0))</span></span><a class="headerlink" href="#pyfe3d.solver.arpackutils.MKL_FAULTY_VERSIONS" title="Link to this definition">#</a></dt>
+<dd><p>First and last Intel MKL versions with the faulty <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.arpackutils._arpack_takes_rng">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">_arpack_takes_rng</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.arpackutils._arpack_takes_rng" title="Link to this definition">#</a></dt>
+<dd><p>Tell whether <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigs()</span></code> and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> accept the argument <code class="docutils literal notranslate"><span class="pre">rng</span></code>, i.e.
+SciPy 1.17 or newer</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.arpackutils._auto_max_ncv">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">_auto_max_ncv</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.arpackutils._auto_max_ncv" title="Link to this definition">#</a></dt>
+<dd><p>Cap of <code class="docutils literal notranslate"><span class="pre">ncv</span></code> in the <code class="docutils literal notranslate"><span class="pre">'auto'</span></code> mode of <a class="reference internal" href="#pyfe3d.solver.arpackutils.arpack_max_ncv" title="pyfe3d.solver.arpackutils.arpack_max_ncv"><code class="xref py py-func docutils literal notranslate"><span class="pre">arpack_max_ncv()</span></code></a>,
+<a class="reference internal" href="#pyfe3d.solver.arpackutils.DSTEQR_MAX_SIZE" title="pyfe3d.solver.arpackutils.DSTEQR_MAX_SIZE"><code class="xref py py-data docutils literal notranslate"><span class="pre">DSTEQR_MAX_SIZE</span></code></a> or <code class="docutils literal notranslate"><span class="pre">None</span></code>, decided once per process</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.arpackutils._deflation_shift">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">_deflation_shift</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">far_shift</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.arpackutils._deflation_shift" title="Link to this definition">#</a></dt>
+<dd><p>Shift of the passes after the first one of <a class="reference internal" href="#pyfe3d.solver.arpackutils.capped_eigsh" title="pyfe3d.solver.arpackutils.capped_eigsh"><code class="xref py py-func docutils literal notranslate"><span class="pre">capped_eigsh()</span></code></a></p>
+<p>The middle of the largest gap between the last five eigenvalues found,
+sorted by increasing value. <code class="docutils literal notranslate"><span class="pre">far_shift</span></code> when they are all equal, i.e.
+when their largest gap is not larger than <code class="docutils literal notranslate"><span class="pre">1e-8</span></code> times their largest
+modulus.</p>
+<p class="rubric">Notes</p>
+<p>The shift-invert mode finds first the eigenvalues nearest the shift.
+The middle of the largest gap is close to the next eigenvalues and away
+from the deflated ones.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.arpackutils._lapack_name_from_config">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">_lapack_name_from_config</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">module</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.arpackutils._lapack_name_from_config" title="Link to this definition">#</a></dt>
+<dd><p>Name of the LAPACK library in the build configuration of a module</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>module</strong><span class="classifier">module</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">scipy</span></code> or <code class="docutils literal notranslate"><span class="pre">numpy</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>name</strong><span class="classifier">str or None</span></dt><dd><p>The name in lower case, <code class="docutils literal notranslate"><span class="pre">None</span></code> when unknown. Builds with
+<code class="docutils literal notranslate"><span class="pre">numpy.distutils</span></code> give <code class="docutils literal notranslate"><span class="pre">'mkl'</span></code> when their configuration has an
+MKL entry.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.arpackutils._parse_mkl_version">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">_parse_mkl_version</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">text</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.arpackutils._parse_mkl_version" title="Link to this definition">#</a></dt>
+<dd><p>Version <code class="docutils literal notranslate"><span class="pre">(major,</span> <span class="pre">minor,</span> <span class="pre">update)</span></code> in a text such as
+<code class="docutils literal notranslate"><span class="pre">'2025.0.1'</span></code>, <code class="docutils literal notranslate"><span class="pre">None</span></code> when there is none; a missing update is 0</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.arpackutils._rayleigh_ritz">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">_rayleigh_ritz</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">M</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.arpackutils._rayleigh_ritz" title="Link to this definition">#</a></dt>
+<dd><p>Rayleigh-Ritz projection of <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">x</span> <span class="pre">=</span> <span class="pre">w</span> <span class="pre">M</span> <span class="pre">x</span></code> onto the columns of <code class="docutils literal notranslate"><span class="pre">V</span></code></p>
+<p>Returns the Ritz values and the <code class="docutils literal notranslate"><span class="pre">M</span></code>-orthonormal Ritz vectors of the
+eigenvalue problem of the symmetric <code class="docutils literal notranslate"><span class="pre">A</span></code> and the positive definite
+<code class="docutils literal notranslate"><span class="pre">M</span></code> in the subspace spanned by the columns of <code class="docutils literal notranslate"><span class="pre">V</span></code>, which must be
+linearly independent. Used by <a class="reference internal" href="#pyfe3d.solver.arpackutils.capped_eigsh" title="pyfe3d.solver.arpackutils.capped_eigsh"><code class="xref py py-func docutils literal notranslate"><span class="pre">capped_eigsh()</span></code></a> to combine the
+eigenvectors of its passes. The projected problem is solved with the
+LAPACK driver <code class="docutils literal notranslate"><span class="pre">dsyevr</span></code> (<code class="docutils literal notranslate"><span class="pre">driver='evr'</span></code>) of
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.linalg.eigh()</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>w, x</strong><span class="classifier">ndarray</span></dt><dd><p>The Ritz values by increasing value and the Ritz vectors.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The eigenvectors of different passes of <a class="reference internal" href="#pyfe3d.solver.arpackutils.capped_eigsh" title="pyfe3d.solver.arpackutils.capped_eigsh"><code class="xref py py-func docutils literal notranslate"><span class="pre">capped_eigsh()</span></code></a> are only
+<span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span>-orthogonal to the accuracy of ARPACK, e.g. <span class="math notranslate nohighlight">\(10^{-6}\)</span> between
+close eigenvalues of different passes. <span class="math notranslate nohighlight">\(\boldsymbol{V}\)</span> is <span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span>-orthonormalized
+with the Cholesky factor <span class="math notranslate nohighlight">\(\boldsymbol{L}\)</span> of <span class="math notranslate nohighlight">\(\boldsymbol{V}^\top \boldsymbol{M} \boldsymbol{V}\)</span>, and the projected
+problem <span class="math notranslate nohighlight">\(\boldsymbol{W}^\top \boldsymbol{A} \boldsymbol{W} \boldsymbol{y} = w \boldsymbol{y}\)</span>, with <span class="math notranslate nohighlight">\(\boldsymbol{W} = \boldsymbol{V} \boldsymbol{L}^{-\top}\)</span>, is
+solved with the LAPACK driver <code class="docutils literal notranslate"><span class="pre">dsyevr</span></code> (<code class="docutils literal notranslate"><span class="pre">driver='evr'</span></code>), which does
+not use the <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> of Intel MKL broken above 32 x 32 matrices, see
+<a class="reference internal" href="#pyfe3d.solver.arpackutils.dsteqr_is_faulty" title="pyfe3d.solver.arpackutils.dsteqr_is_faulty"><code class="xref py py-func docutils literal notranslate"><span class="pre">dsteqr_is_faulty()</span></code></a>. The returned eigenvectors <span class="math notranslate nohighlight">\(\boldsymbol{W} \boldsymbol{y}\)</span> are
+<span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span>-orthonormal to the rounding errors, and the Ritz values are at
+least as accurate as the eigenvalues of the passes. <span class="math notranslate nohighlight">\(\boldsymbol{V}^\top \boldsymbol{M} \boldsymbol{V}\)</span> and
+<span class="math notranslate nohighlight">\(\boldsymbol{W}^\top \boldsymbol{A} \boldsymbol{W}\)</span> are symmetrized, <span class="math notranslate nohighlight">\(\frac{1}{2}(\boldsymbol{B} + \boldsymbol{B}^\top)\)</span>, before the
+Cholesky factorization and the eigenvalue solution.</p>
+<p>The Ritz values are the optimal approximations of the eigenvalues that
+can be obtained from the subspace spanned by the columns of <span class="math notranslate nohighlight">\(\boldsymbol{V}\)</span>
+(<a class="reference internal" href="#r1e1a6f43e373-1" id="id1">[1]</a>, Chapter 11, “Approximations from a Subspace”, Section 11.4,
+“Optimality”, Eq. (11.5) and Theorem 11.4.1, p. 236): the <span class="math notranslate nohighlight">\(j\)</span>-th
+Ritz value is the minimum over the <span class="math notranslate nohighlight">\(j\)</span>-dimensional subspaces of the span
+of the maximum of the Rayleigh quotient, so it can only improve when the
+span grows, and the span contains the eigenvectors of every pass. The
+theorem is stated for the standard problem; it holds for the pencil in
+the <span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span> inner product, through the Cholesky factor of <span class="math notranslate nohighlight">\(\boldsymbol{V}^\top \boldsymbol{M} \boldsymbol{V}\)</span>.</p>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="r1e1a6f43e373-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>Parlett, B. N., The Symmetric Eigenvalue Problem, SIAM,
+Philadelphia, 1998. <a class="reference external" href="https://doi.org/10.1137/1.9781611971163">https://doi.org/10.1137/1.9781611971163</a></p>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.arpackutils.arpack_max_ncv">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">arpack_max_ncv</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.arpackutils.arpack_max_ncv" title="Link to this definition">#</a></dt>
+<dd><p>Maximum <code class="docutils literal notranslate"><span class="pre">ncv</span></code> of <a class="reference internal" href="#pyfe3d.solver.arpackutils.capped_eigsh" title="pyfe3d.solver.arpackutils.capped_eigsh"><code class="xref py py-func docutils literal notranslate"><span class="pre">capped_eigsh()</span></code></a>, <code class="docutils literal notranslate"><span class="pre">None</span></code> when not capped</p>
+<p>The value of <a class="reference internal" href="#pyfe3d.solver.arpackutils.ARPACK_MAX_NCV" title="pyfe3d.solver.arpackutils.ARPACK_MAX_NCV"><code class="xref py py-data docutils literal notranslate"><span class="pre">ARPACK_MAX_NCV</span></code></a> is used, or, when it is <code class="docutils literal notranslate"><span class="pre">None</span></code>,
+the environment variable <code class="docutils literal notranslate"><span class="pre">PYFE3D_ARPACK_MAX_NCV</span></code>. Both accept
+<code class="docutils literal notranslate"><span class="pre">'auto'</span></code>, <code class="docutils literal notranslate"><span class="pre">0</span></code> or <code class="docutils literal notranslate"><span class="pre">'none'</span></code> (no cap), or an integer of at least
+<code class="docutils literal notranslate"><span class="pre">3</span></code>. In the <code class="docutils literal notranslate"><span class="pre">'auto'</span></code> mode, the default, <code class="docutils literal notranslate"><span class="pre">ncv</span></code> is capped at
+<a class="reference internal" href="#pyfe3d.solver.arpackutils.DSTEQR_MAX_SIZE" title="pyfe3d.solver.arpackutils.DSTEQR_MAX_SIZE"><code class="xref py py-data docutils literal notranslate"><span class="pre">DSTEQR_MAX_SIZE</span></code></a> when:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#pyfe3d.solver.arpackutils.dsteqr_is_faulty" title="pyfe3d.solver.arpackutils.dsteqr_is_faulty"><code class="xref py py-func docutils literal notranslate"><span class="pre">dsteqr_is_faulty()</span></code></a> is true; or</p></li>
+<li><p><a class="reference internal" href="#pyfe3d.solver.arpackutils.lapack_is_mkl" title="pyfe3d.solver.arpackutils.lapack_is_mkl"><code class="xref py py-func docutils literal notranslate"><span class="pre">lapack_is_mkl()</span></code></a> is true and <a class="reference internal" href="#pyfe3d.solver.arpackutils.mkl_version" title="pyfe3d.solver.arpackutils.mkl_version"><code class="xref py py-func docutils literal notranslate"><span class="pre">mkl_version()</span></code></a> is unknown or
+within <a class="reference internal" href="#pyfe3d.solver.arpackutils.MKL_FAULTY_VERSIONS" title="pyfe3d.solver.arpackutils.MKL_FAULTY_VERSIONS"><code class="xref py py-data docutils literal notranslate"><span class="pre">MKL_FAULTY_VERSIONS</span></code></a>.</p></li>
+</ul>
+<p>The detection runs once per process.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>max_ncv</strong><span class="classifier">int or None</span></dt><dd><p>The cap of <code class="docutils literal notranslate"><span class="pre">ncv</span></code>, at least <code class="docutils literal notranslate"><span class="pre">3</span></code>, or <code class="docutils literal notranslate"><span class="pre">None</span></code> when <code class="docutils literal notranslate"><span class="pre">ncv</span></code> is not
+capped.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>When the value given is an integer lower than <code class="docutils literal notranslate"><span class="pre">3</span></code> and not <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.arpackutils.arpack_ncv">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">arpack_ncv</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.arpackutils.arpack_ncv" title="Link to this definition">#</a></dt>
+<dd><p><code class="docutils literal notranslate"><span class="pre">ncv</span></code> of <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> for <code class="docutils literal notranslate"><span class="pre">k</span></code> eigenpairs of
+a problem of size <code class="docutils literal notranslate"><span class="pre">n</span></code></p>
+<p>SciPy’s default <code class="docutils literal notranslate"><span class="pre">min(n,</span> <span class="pre">max(2</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">1,</span> <span class="pre">20))</span></code>, capped at
+<a class="reference internal" href="#pyfe3d.solver.arpackutils.arpack_max_ncv" title="pyfe3d.solver.arpackutils.arpack_max_ncv"><code class="xref py py-func docutils literal notranslate"><span class="pre">arpack_max_ncv()</span></code></a>. With a cap, <code class="docutils literal notranslate"><span class="pre">k</span></code> should not exceed
+<code class="docutils literal notranslate"><span class="pre">(max_ncv</span> <span class="pre">-</span> <span class="pre">1)//2</span></code>, see <a class="reference internal" href="#pyfe3d.solver.arpackutils.capped_eigsh" title="pyfe3d.solver.arpackutils.capped_eigsh"><code class="xref py py-func docutils literal notranslate"><span class="pre">capped_eigsh()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>k</strong><span class="classifier">int</span></dt><dd><p>Number of eigenpairs.</p>
+</dd>
+<dt><strong>n</strong><span class="classifier">int</span></dt><dd><p>Size of the problem, the number of rows of the matrices.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>ncv</strong><span class="classifier">int</span></dt><dd><p>Number of Lanczos vectors.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.arpackutils.capped_eigsh">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">capped_eigsh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">M</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">which</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">mode</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">'normal'</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.arpackutils.capped_eigsh" title="Link to this definition">#</a></dt>
+<dd><p><code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> with <code class="docutils literal notranslate"><span class="pre">ncv</span></code> from <a class="reference internal" href="#pyfe3d.solver.arpackutils.arpack_ncv" title="pyfe3d.solver.arpackutils.arpack_ncv"><code class="xref py py-func docutils literal notranslate"><span class="pre">arpack_ncv()</span></code></a></p>
+<p>Solves <span class="math notranslate nohighlight">\(\boldsymbol{A} \boldsymbol{x} = w \boldsymbol{M} \boldsymbol{x}\)</span> with a positive definite <code class="docutils literal notranslate"><span class="pre">M</span></code> about the
+shift <code class="docutils literal notranslate"><span class="pre">sigma</span></code>, in the shift-invert (<code class="docutils literal notranslate"><span class="pre">mode='normal'</span></code>) or Cayley
+(<code class="docutils literal notranslate"><span class="pre">mode='cayley'</span></code>) mode, selecting the eigenvalues by increasing <span class="math notranslate nohighlight">\(w\)</span>,
+e.g. the Cayley mode with <code class="docutils literal notranslate"><span class="pre">which='SM'</span></code> and <code class="docutils literal notranslate"><span class="pre">sigma</span></code> larger than all
+<span class="math notranslate nohighlight">\(|w|\)</span>, or the shift-invert mode with <code class="docutils literal notranslate"><span class="pre">which='LM'</span></code> and <code class="docutils literal notranslate"><span class="pre">sigma</span></code> lower
+than all <span class="math notranslate nohighlight">\(w\)</span>.</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">ncv</span></code> is capped at <code class="docutils literal notranslate"><span class="pre">max_ncv</span></code>, see <a class="reference internal" href="#pyfe3d.solver.arpackutils.arpack_max_ncv" title="pyfe3d.solver.arpackutils.arpack_max_ncv"><code class="xref py py-func docutils literal notranslate"><span class="pre">arpack_max_ncv()</span></code></a>, and
+<code class="docutils literal notranslate"><span class="pre">k</span></code> is larger than <code class="docutils literal notranslate"><span class="pre">(max_ncv</span> <span class="pre">-</span> <span class="pre">1)//2</span></code>, i.e. 15, the eigenpairs are
+computed in passes of at most 15 eigenpairs, each with <code class="docutils literal notranslate"><span class="pre">ncv=max_ncv</span></code>.
+The first pass is a call in the requested mode. The following passes
+use the shift-invert mode about the shift <code class="docutils literal notranslate"><span class="pre">sigma_d</span></code> given by
+<a class="reference internal" href="#pyfe3d.solver.arpackutils._deflation_shift" title="pyfe3d.solver.arpackutils._deflation_shift"><code class="xref py py-func docutils literal notranslate"><span class="pre">_deflation_shift()</span></code></a>, with the eigenvectors of the previous passes
+deflated from the operator, and each of them returns the next
+eigenvalues by increasing <span class="math notranslate nohighlight">\(w\)</span>. Each pass factorizes <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">-</span> <span class="pre">sigma_d*M</span></code>
+with SuperLU, and every call starts from <a class="reference internal" href="#pyfe3d.solver.arpackutils.start_kwargs" title="pyfe3d.solver.arpackutils.start_kwargs"><code class="xref py py-func docutils literal notranslate"><span class="pre">start_kwargs()</span></code></a>. The
+eigenvectors of all the passes are finally combined with a
+Rayleigh-Ritz projection, see <a class="reference internal" href="#pyfe3d.solver.arpackutils._rayleigh_ritz" title="pyfe3d.solver.arpackutils._rayleigh_ritz"><code class="xref py py-func docutils literal notranslate"><span class="pre">_rayleigh_ritz()</span></code></a>, such that they are
+<code class="docutils literal notranslate"><span class="pre">M</span></code>-orthonormal also across the passes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>A</strong><span class="classifier">sparse matrix</span></dt><dd><p>Square matrix of the left-hand side, of size <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">x</span> <span class="pre">n</span></code>.</p>
+</dd>
+<dt><strong>k</strong><span class="classifier">int</span></dt><dd><p>Number of eigenpairs.</p>
+</dd>
+<dt><strong>M</strong><span class="classifier">sparse matrix</span></dt><dd><p>Positive definite matrix of the right-hand side, of size <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">x</span> <span class="pre">n</span></code>.</p>
+</dd>
+<dt><strong>sigma</strong><span class="classifier">float</span></dt><dd><p>Shift of the shift-invert or Cayley mode, in the units of <span class="math notranslate nohighlight">\(w\)</span>.</p>
+</dd>
+<dt><strong>which</strong><span class="classifier">str</span></dt><dd><p>Eigenvalues to find, passed to <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code>, e.g.
+<code class="docutils literal notranslate"><span class="pre">'LM'</span></code> or <code class="docutils literal notranslate"><span class="pre">'SM'</span></code>.</p>
+</dd>
+<dt><strong>mode</strong><span class="classifier">str, optional</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">'normal'</span></code> (shift-invert, default) or <code class="docutils literal notranslate"><span class="pre">'cayley'</span></code>, passed to
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code>.</p>
+</dd>
+<dt><strong>tol</strong><span class="classifier">float, optional</span></dt><dd><p>Relative accuracy of the eigenvalues, passed to
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code>; <code class="docutils literal notranslate"><span class="pre">0</span></code> (default) means the machine
+precision.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>w, x</strong><span class="classifier">ndarray</span></dt><dd><p>The eigenvalues and the <span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span>-orthonormal eigenvectors, by
+increasing <span class="math notranslate nohighlight">\(w\)</span> when computed in passes. <code class="docutils literal notranslate"><span class="pre">w</span></code> is a 1-D array of size
+<code class="docutils literal notranslate"><span class="pre">k</span></code> and <code class="docutils literal notranslate"><span class="pre">x</span></code> an array of shape <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">k)</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#pyfe3d.solver.arpackutils.arpack_max_ncv" title="pyfe3d.solver.arpackutils.arpack_max_ncv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">arpack_max_ncv</span></code></a>, <a class="reference internal" href="#pyfe3d.solver.arpackutils.arpack_ncv" title="pyfe3d.solver.arpackutils.arpack_ncv"><code class="xref py py-obj docutils literal notranslate"><span class="pre">arpack_ncv</span></code></a>, <a class="reference internal" href="#pyfe3d.solver.arpackutils.start_kwargs" title="pyfe3d.solver.arpackutils.start_kwargs"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_kwargs</span></code></a>, <a class="reference internal" href="#pyfe3d.solver.arpackutils.start_vector" title="pyfe3d.solver.arpackutils.start_vector"><code class="xref py py-obj docutils literal notranslate"><span class="pre">start_vector</span></code></a></dt><dd></dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p>In the shift-invert mode ARPACK computes the eigenvalues
+<span class="math notranslate nohighlight">\(\nu = 1/(w - \sigma)\)</span> of largest modulus of the operator
+<span class="math notranslate nohighlight">\((\boldsymbol{A} - \sigma \boldsymbol{M})^{-1} \boldsymbol{M}\)</span>, i.e. the <span class="math notranslate nohighlight">\(w\)</span> nearest <span class="math notranslate nohighlight">\(\sigma\)</span> (<a class="reference internal" href="#r66d50ffc18a7-1" id="id3">[1]</a>,
+Chapter 3, Section 3.2, Eq. (3.2.2)).
+The passes keep <code class="docutils literal notranslate"><span class="pre">k</span> <span class="pre">&lt;=</span> <span class="pre">(max_ncv</span> <span class="pre">-</span> <span class="pre">1)//2</span></code>, i.e. <code class="docutils literal notranslate"><span class="pre">ncv</span> <span class="pre">&gt;=</span> <span class="pre">2</span> <span class="pre">k</span> <span class="pre">+</span> <span class="pre">1</span></code>.
+With <code class="docutils literal notranslate"><span class="pre">k</span></code> close to <code class="docutils literal notranslate"><span class="pre">ncv</span></code> ARPACK converges very slowly, not at all, or
+misses eigenvalues, e.g. <code class="docutils literal notranslate"><span class="pre">k=31</span></code> and <code class="docutils literal notranslate"><span class="pre">ncv=32</span></code>.</p>
+<p>The passes after the first one use the shift-invert mode about
+<span class="math notranslate nohighlight">\(\sigma_d\)</span>, the middle of the largest gap between the last five
+eigenvalues found, with the eigenvectors <span class="math notranslate nohighlight">\(\boldsymbol{V}\)</span> of the previous passes
+deflated from the operator:</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{y} = (\boldsymbol{I} - \boldsymbol{V} \boldsymbol{V}^\top \boldsymbol{M})(\boldsymbol{A} - \sigma_d \boldsymbol{M})^{-1} \boldsymbol{x}\]</div>
+<p>such that the eigenvalues of <span class="math notranslate nohighlight">\(\boldsymbol{V}\)</span>, already found, become null and are
+not found again. Each pass therefore returns the eigenvalues nearest
+<span class="math notranslate nohighlight">\(\sigma_d\)</span> among those not found yet, i.e. the next ones by increasing
+<span class="math notranslate nohighlight">\(w\)</span>. A shift close to them, instead of <code class="docutils literal notranslate"><span class="pre">sigma</span></code>, separates them better.
+ARPACK applies the operator to <span class="math notranslate nohighlight">\(\boldsymbol{M} \boldsymbol{x}\)</span>; for an eigenvector <span class="math notranslate nohighlight">\(\boldsymbol{v}_i\)</span> of <span class="math notranslate nohighlight">\(\boldsymbol{V}\)</span>,
+<span class="math notranslate nohighlight">\((\boldsymbol{A} - \sigma_d \boldsymbol{M})^{-1} \boldsymbol{M} \boldsymbol{v}_i = \boldsymbol{v}_i/(w_i - \sigma_d)\)</span> and,
+<span class="math notranslate nohighlight">\(\boldsymbol{V}\)</span> being <span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span>-orthonormal, <span class="math notranslate nohighlight">\((\boldsymbol{I} - \boldsymbol{V} \boldsymbol{V}^\top \boldsymbol{M}) \boldsymbol{v}_i = \boldsymbol{0}\)</span>.</p>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="r66d50ffc18a7-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">1</a><span class="fn-bracket">]</span></span>
+<p>Lehoucq, R. B., Sorensen, D. C. and Yang, C., ARPACK Users’
+Guide: Solution of Large-Scale Eigenvalue Problems with Implicitly
+Restarted Arnoldi Methods, SIAM, Philadelphia, 1998.
+<a class="reference external" href="https://doi.org/10.1137/1.9780898719628">https://doi.org/10.1137/1.9780898719628</a></p>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.arpackutils.dsteqr_is_faulty">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">dsteqr_is_faulty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.arpackutils.dsteqr_is_faulty" title="Link to this definition">#</a></dt>
+<dd><p>Tell whether the LAPACK <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> of SciPy returns wrong eigenvectors</p>
+<p><code class="docutils literal notranslate"><span class="pre">scipy.linalg.lapack.dstev</span></code> computes the eigenvectors of a symmetric
+tridiagonal matrix with <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code>. It is called for three random
+matrices of sizes 33, 40 and 64, whose eigenpairs must have relative
+residuals and an orthogonality error below <code class="docutils literal notranslate"><span class="pre">1e-10</span></code>. With Intel MKL
+2025.0.0 every size above 32 fails, with rare exceptions for sizes close
+to 32, hence the three sizes.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>faulty</strong><span class="classifier">bool or None</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">None</span></code> when <code class="docutils literal notranslate"><span class="pre">dstev</span></code> is not available.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.arpackutils.lapack_is_mkl">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">lapack_is_mkl</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.arpackutils.lapack_is_mkl" title="Link to this definition">#</a></dt>
+<dd><p>Tell whether the LAPACK of SciPy is Intel MKL</p>
+<p><code class="docutils literal notranslate"><span class="pre">scipy.show_config(mode='dicts')</span></code> is read first, NumPy’s build
+configuration only when SciPy’s does not name the LAPACK library. Older
+versions of SciPy without <code class="docutils literal notranslate"><span class="pre">mode='dicts'</span></code> are checked through
+<code class="docutils literal notranslate"><span class="pre">scipy.__config__</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>is_mkl</strong><span class="classifier">bool or None</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">None</span></code> when the build configuration does not tell.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.arpackutils.mkl_version">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">mkl_version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.arpackutils.mkl_version" title="Link to this definition">#</a></dt>
+<dd><p>Version of the Intel MKL loaded in the process, as a tuple
+<code class="docutils literal notranslate"><span class="pre">(major,</span> <span class="pre">minor,</span> <span class="pre">update)</span></code></p>
+<p>The build configuration of SciPy only gives the major version, e.g.
+<code class="docutils literal notranslate"><span class="pre">'2025'</span></code>, therefore the version is read at runtime from the optional
+packages <code class="docutils literal notranslate"><span class="pre">mkl-service</span></code> (<code class="docutils literal notranslate"><span class="pre">mkl.get_version()</span></code>) or <code class="docutils literal notranslate"><span class="pre">threadpoolctl</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>version</strong><span class="classifier">tuple or None</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">None</span></code> when neither package is installed or no MKL is loaded.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.arpackutils.release_memory">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">release_memory</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.arpackutils.release_memory" title="Link to this definition">#</a></dt>
+<dd><p>Collect the reference cycles of SciPy’s ARPACK wrappers in the browser</p>
+<p>The objects of <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigs()</span></code> keep the SuperLU factorizations of the
+shift-invert modes in reference cycles, freed only by the cyclic garbage
+collector. Natively this is harmless, but the WebAssembly heap of
+Pyodide (<code class="docutils literal notranslate"><span class="pre">sys.platform</span> <span class="pre">==</span> <span class="pre">'emscripten'</span></code>) is exhausted before the
+collector runs, e.g. after about ten <code class="docutils literal notranslate"><span class="pre">eigs</span></code> calls on a problem with
+1,000 dofs, raising <code class="docutils literal notranslate"><span class="pre">MemoryError</span></code>. <code class="xref py py-func docutils literal notranslate"><span class="pre">gc.collect()</span></code> is then called
+after each ARPACK call; it does nothing on other platforms.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.arpackutils.start_kwargs">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">start_kwargs</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.arpackutils.start_kwargs" title="Link to this definition">#</a></dt>
+<dd><p>Arguments of <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigs()</span></code> and
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> such that the results are
+reproducible</p>
+<p><code class="docutils literal notranslate"><span class="pre">v0</span></code> is <a class="reference internal" href="#pyfe3d.solver.arpackutils.start_vector" title="pyfe3d.solver.arpackutils.start_vector"><code class="xref py py-func docutils literal notranslate"><span class="pre">start_vector()</span></code></a> and, with SciPy 1.17 or newer, <code class="docutils literal notranslate"><span class="pre">rng</span></code>
+is a <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.Generator</span></code> with the seed <code class="docutils literal notranslate"><span class="pre">42</span></code>, from which
+ARPACK draws a new starting vector whenever the Krylov subspace is
+invariant, e.g. when the operator is nilpotent.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>n</strong><span class="classifier">int</span></dt><dd><p>Size of the problem.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>kwargs</strong><span class="classifier">dict</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">{'v0':</span> <span class="pre">start_vector(n)}</span></code>, with the key <code class="docutils literal notranslate"><span class="pre">'rng'</span></code> when supported.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Since SciPy 1.17, ARPACK asks the caller for a random vector when the
+Arnoldi or Lanczos process breaks down, i.e. finds an invariant
+subspace, and SciPy draws it from <code class="docutils literal notranslate"><span class="pre">rng</span></code>. With <code class="docutils literal notranslate"><span class="pre">rng=None</span></code> it comes
+from the entropy of the operating system: with the same <code class="docutils literal notranslate"><span class="pre">v0</span></code> the
+results then differ from one call to the next. Older versions of SciPy
+draw it inside ARPACK, with a seed kept from one call to the next in
+the same process, which <code class="docutils literal notranslate"><span class="pre">rng</span></code> cannot fix.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.arpackutils.start_vector">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">start_vector</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">n</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.arpackutils.start_vector" title="Link to this definition">#</a></dt>
+<dd><p>Fixed starting vector of ARPACK, uniform in <code class="docutils literal notranslate"><span class="pre">[-1,</span> <span class="pre">1]</span></code> as ARPACK’s
+random one, such that the results are reproducible</p>
+<p>The vector is drawn from <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code> with the seed
+<code class="docutils literal notranslate"><span class="pre">42</span></code>, so that the same <code class="docutils literal notranslate"><span class="pre">n</span></code> always gives the same vector. The
+calls of ARPACK use <a class="reference internal" href="#pyfe3d.solver.arpackutils.start_kwargs" title="pyfe3d.solver.arpackutils.start_kwargs"><code class="xref py py-func docutils literal notranslate"><span class="pre">start_kwargs()</span></code></a>, which also fixes the vectors
+drawn when ARPACK restarts.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>n</strong><span class="classifier">int</span></dt><dd><p>Size of the problem.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>v0</strong><span class="classifier">ndarray</span></dt><dd><p>1-D array of size <code class="docutils literal notranslate"><span class="pre">n</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="solver_eigen.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Eigenvalue analyses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen</span></code>)</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="solver_sparseutils.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Utilities for sparse matrices (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.sparseutils</span></code>)</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code>)</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#notes">Notes</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils.ARPACK_MAX_NCV"><code class="docutils literal notranslate"><span class="pre">ARPACK_MAX_NCV</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils.DSTEQR_MAX_SIZE"><code class="docutils literal notranslate"><span class="pre">DSTEQR_MAX_SIZE</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils.MKL_FAULTY_VERSIONS"><code class="docutils literal notranslate"><span class="pre">MKL_FAULTY_VERSIONS</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils._arpack_takes_rng"><code class="docutils literal notranslate"><span class="pre">_arpack_takes_rng()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils._auto_max_ncv"><code class="docutils literal notranslate"><span class="pre">_auto_max_ncv()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils._deflation_shift"><code class="docutils literal notranslate"><span class="pre">_deflation_shift()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils._lapack_name_from_config"><code class="docutils literal notranslate"><span class="pre">_lapack_name_from_config()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils._parse_mkl_version"><code class="docutils literal notranslate"><span class="pre">_parse_mkl_version()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils._rayleigh_ritz"><code class="docutils literal notranslate"><span class="pre">_rayleigh_ritz()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils.arpack_max_ncv"><code class="docutils literal notranslate"><span class="pre">arpack_max_ncv()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils.arpack_ncv"><code class="docutils literal notranslate"><span class="pre">arpack_ncv()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils.capped_eigsh"><code class="docutils literal notranslate"><span class="pre">capped_eigsh()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils.dsteqr_is_faulty"><code class="docutils literal notranslate"><span class="pre">dsteqr_is_faulty()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils.lapack_is_mkl"><code class="docutils literal notranslate"><span class="pre">lapack_is_mkl()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils.mkl_version"><code class="docutils literal notranslate"><span class="pre">mkl_version()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils.release_memory"><code class="docutils literal notranslate"><span class="pre">release_memory()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils.start_kwargs"><code class="docutils literal notranslate"><span class="pre">start_kwargs()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils.start_vector"><code class="docutils literal notranslate"><span class="pre">start_vector()</span></code></a></li>
+</ul>
+
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/solver_arpackutils.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

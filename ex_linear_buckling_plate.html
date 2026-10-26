@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Linear buckling analysis of a plate &#8212; pyfe3d 0.10.0 documentation</title>
+    <title>Linear buckling analysis of a plate &#8212; pyfe3d 0.11.0 documentation</title>
   
   
   
@@ -26,18 +26,18 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=82662543"></script>
+    <script src="_static/documentation_options.js?v=f3b36f1a"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -45,9 +45,10 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Linear buckling analysis of a cylinder under torsion" href="ex_linear_buckling_cylinder_torsion.html" />
-    <link rel="prev" title="Linear static analysis" href="ex_linear_static.html" />
+    <link rel="next" title="Linear buckling analysis of a column" href="ex_linear_buckling_column.html" />
+    <link rel="prev" title="Linear static analysis of beams and frames" href="ex_beam_frame.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
   
@@ -117,7 +118,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.10.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.11.0 documentation</p>
   
 </a></div>
     
@@ -132,39 +133,147 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_static.html">
-    Linear static analysis
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
   </a>
 </li>
 
 
-<li class="nav-item current active">
-  <a class="nav-link nav-internal" href="#" aria-current="page">
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#" aria-current="page">
     Linear buckling analysis of a plate
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
   </a>
 </li>
 
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -246,15 +355,57 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
   </a>
 </li>
 
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_linear_static.html">
-    Linear static analysis
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
   </a>
 </li>
 
@@ -267,6 +418,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
@@ -274,8 +432,57 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changelog.html">
+    Changelog
   </a>
 </li>
 
@@ -379,26 +586,15 @@
                   
   <section id="linear-buckling-analysis-of-a-plate">
 <h1>Linear buckling analysis of a plate<a class="headerlink" href="#linear-buckling-analysis-of-a-plate" title="Link to this heading">#</a></h1>
-<p>Here wee see the first 4 buckling modes of a simply supported plate, generated
-using <code class="docutils literal notranslate"><span class="pre">refinement=3</span></code> in the script.</p>
+<p>A simply supported plate under uniaxial compression, with <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>
+elements. The first four buckling modes, computed with <code class="docutils literal notranslate"><span class="pre">refinement=3</span></code>:</p>
 <img alt="_images/ex_linear_buckling_plate.jpg" src="_images/ex_linear_buckling_plate.jpg" />
-<p>The linear buckling eigenvalue analysis is performed from the fundamental state
-calculated after a static analysis.  The code used to generate this figure is
-extracted from one of <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code> unit tests:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">sys</span>
-<span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">'..'</span><span class="p">)</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">np</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">numpy</span><span class="w"> </span><span class="kn">import</span> <span class="n">isclose</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse.linalg</span><span class="w"> </span><span class="kn">import</span> <span class="n">cg</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">scipy.sparse</span><span class="w"> </span><span class="kn">import</span> <span class="n">coo_matrix</span><span class="p">,</span> <span class="n">diags</span> <span class="k">as</span> <span class="n">sp_diags</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">pyfe3d.shellprop_utils</span><span class="w"> </span><span class="kn">import</span> <span class="n">isotropic_plate</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pyfe3d</span><span class="w"> </span><span class="kn">import</span> <span class="n">Quad4R</span><span class="p">,</span> <span class="n">Quad4RData</span><span class="p">,</span> <span class="n">Quad4RProbe</span><span class="p">,</span> <span class="n">INT</span><span class="p">,</span> <span class="n">DOUBLE</span><span class="p">,</span> <span class="n">DOF</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">pyfe3d.solver</span><span class="w"> </span><span class="kn">import</span> <span class="n">linear_buckling</span>
-
-
-<span class="k">def</span><span class="w"> </span><span class="nf">test_linear_buckling_plate</span><span class="p">(</span><span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">refinement</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<p>The geometric stiffness matrix comes from the linear static solution of
+the reference load, through <code class="docutils literal notranslate"><span class="pre">update_probe_ue</span></code> and <code class="docutils literal notranslate"><span class="pre">update_KG</span></code>, and the
+eigenvalue problem is solved with <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a>, see
+<a class="reference internal" href="eigenvalue_analyses.html"><span class="doc">Linear buckling and natural frequencies</span></a>. The critical load is compared with the
+classical buckling coefficient of the simply supported plate:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_linear_buckling_plate</span><span class="p">(</span><span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">refinement</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">Quad4RData</span><span class="p">()</span>
     <span class="n">probe</span> <span class="o">=</span> <span class="n">Quad4RProbe</span><span class="p">()</span>
     <span class="n">nx</span> <span class="o">=</span> <span class="n">refinement</span><span class="o">*</span><span class="mi">31</span>
@@ -606,11 +802,120 @@ extracted from one of <code class="docutils literal notranslate"><span class="pr
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
     <span class="k">assert</span> <span class="n">isclose</span><span class="p">(</span><span class="n">P_cr_theory</span><span class="p">,</span> <span class="n">P_cr_calc</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The same plate with <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> elements and a constant membrane
+stress state given directly with <code class="docutils literal notranslate"><span class="pre">update_KG_given_stress</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">plate_matrices</span><span class="p">(</span><span class="n">Nxx</span><span class="o">=-</span><span class="mf">1.</span><span class="p">,</span> <span class="n">with_mass</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Assemble the simply supported plate and return ``KC0uu``, ``KGuu``,</span>
+<span class="sd">    optionally ``Muu``, and the free-dof mask"""</span>
+    <span class="n">prop</span> <span class="o">=</span> <span class="n">isotropic_plate</span><span class="p">(</span><span class="n">E</span><span class="o">=</span><span class="n">E_PLATE</span><span class="p">,</span> <span class="n">nu</span><span class="o">=</span><span class="n">NU_PLATE</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=</span><span class="n">H_PLATE</span><span class="p">,</span>
+                           <span class="n">rho</span><span class="o">=</span><span class="n">RHO_PLATE</span><span class="p">)</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">Quad4Data</span><span class="p">()</span>
+    <span class="n">probe</span> <span class="o">=</span> <span class="n">Quad4Probe</span><span class="p">()</span>
+    <span class="n">xtmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">A_PLATE</span><span class="p">,</span> <span class="n">NX</span><span class="p">)</span>
+    <span class="n">ytmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">B_PLATE</span><span class="p">,</span> <span class="n">NY</span><span class="p">)</span>
+    <span class="n">xmesh</span><span class="p">,</span> <span class="n">ymesh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">xtmp</span><span class="p">,</span> <span class="n">ytmp</span><span class="p">)</span>
+    <span class="n">ncoords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">xmesh</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">ymesh</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
+                         <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">NX</span><span class="o">*</span><span class="n">NY</span><span class="p">)))</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">x</span> <span class="o">=</span> <span class="n">ncoords</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="n">y</span> <span class="o">=</span> <span class="n">ncoords</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">ncoords_flatten</span> <span class="o">=</span> <span class="n">ncoords</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">nids</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ncoords</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+    <span class="n">nid_pos</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">nids</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nids</span><span class="p">))))</span>
+    <span class="n">nids_mesh</span> <span class="o">=</span> <span class="n">nids</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">NX</span><span class="p">,</span> <span class="n">NY</span><span class="p">)</span>
+    <span class="n">n1s</span> <span class="o">=</span> <span class="n">nids_mesh</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">n2s</span> <span class="o">=</span> <span class="n">nids_mesh</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">n3s</span> <span class="o">=</span> <span class="n">nids_mesh</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">n4s</span> <span class="o">=</span> <span class="n">nids_mesh</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
+    <span class="n">num_elements</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">n1s</span><span class="p">)</span>
+    <span class="n">N</span> <span class="o">=</span> <span class="n">DOF</span><span class="o">*</span><span class="n">ncoords</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">KC0r</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">KC0_SPARSE_SIZE</span><span class="o">*</span><span class="n">num_elements</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">INT</span><span class="p">)</span>
+    <span class="n">KC0c</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">KC0_SPARSE_SIZE</span><span class="o">*</span><span class="n">num_elements</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">INT</span><span class="p">)</span>
+    <span class="n">KC0v</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">KC0_SPARSE_SIZE</span><span class="o">*</span><span class="n">num_elements</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">DOUBLE</span><span class="p">)</span>
+    <span class="n">KGr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">KG_SPARSE_SIZE</span><span class="o">*</span><span class="n">num_elements</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">INT</span><span class="p">)</span>
+    <span class="n">KGc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">KG_SPARSE_SIZE</span><span class="o">*</span><span class="n">num_elements</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">INT</span><span class="p">)</span>
+    <span class="n">KGv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">KG_SPARSE_SIZE</span><span class="o">*</span><span class="n">num_elements</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">DOUBLE</span><span class="p">)</span>
+    <span class="n">Mr</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">M_SPARSE_SIZE</span><span class="o">*</span><span class="n">num_elements</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">INT</span><span class="p">)</span>
+    <span class="n">Mc</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">M_SPARSE_SIZE</span><span class="o">*</span><span class="n">num_elements</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">INT</span><span class="p">)</span>
+    <span class="n">Mv</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">M_SPARSE_SIZE</span><span class="o">*</span><span class="n">num_elements</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">DOUBLE</span><span class="p">)</span>
+    <span class="n">init_k_KC0</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">init_k_KG</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">init_k_M</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">n3</span><span class="p">,</span> <span class="n">n4</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">n1s</span><span class="p">,</span> <span class="n">n2s</span><span class="p">,</span> <span class="n">n3s</span><span class="p">,</span> <span class="n">n4s</span><span class="p">):</span>
+        <span class="n">quad</span> <span class="o">=</span> <span class="n">Quad4</span><span class="p">(</span><span class="n">probe</span><span class="p">)</span>
+        <span class="n">quad</span><span class="o">.</span><span class="n">n1</span><span class="p">,</span> <span class="n">quad</span><span class="o">.</span><span class="n">n2</span><span class="p">,</span> <span class="n">quad</span><span class="o">.</span><span class="n">n3</span><span class="p">,</span> <span class="n">quad</span><span class="o">.</span><span class="n">n4</span> <span class="o">=</span> <span class="n">n1</span><span class="p">,</span> <span class="n">n2</span><span class="p">,</span> <span class="n">n3</span><span class="p">,</span> <span class="n">n4</span>
+        <span class="n">quad</span><span class="o">.</span><span class="n">c1</span> <span class="o">=</span> <span class="n">DOF</span><span class="o">*</span><span class="n">nid_pos</span><span class="p">[</span><span class="n">n1</span><span class="p">]</span>
+        <span class="n">quad</span><span class="o">.</span><span class="n">c2</span> <span class="o">=</span> <span class="n">DOF</span><span class="o">*</span><span class="n">nid_pos</span><span class="p">[</span><span class="n">n2</span><span class="p">]</span>
+        <span class="n">quad</span><span class="o">.</span><span class="n">c3</span> <span class="o">=</span> <span class="n">DOF</span><span class="o">*</span><span class="n">nid_pos</span><span class="p">[</span><span class="n">n3</span><span class="p">]</span>
+        <span class="n">quad</span><span class="o">.</span><span class="n">c4</span> <span class="o">=</span> <span class="n">DOF</span><span class="o">*</span><span class="n">nid_pos</span><span class="p">[</span><span class="n">n4</span><span class="p">]</span>
+        <span class="n">quad</span><span class="o">.</span><span class="n">init_k_KC0</span> <span class="o">=</span> <span class="n">init_k_KC0</span>
+        <span class="n">quad</span><span class="o">.</span><span class="n">init_k_KG</span> <span class="o">=</span> <span class="n">init_k_KG</span>
+        <span class="n">quad</span><span class="o">.</span><span class="n">init_k_M</span> <span class="o">=</span> <span class="n">init_k_M</span>
+        <span class="n">quad</span><span class="o">.</span><span class="n">update_rotation_matrix</span><span class="p">(</span><span class="n">ncoords_flatten</span><span class="p">)</span>
+        <span class="n">quad</span><span class="o">.</span><span class="n">update_probe_xe</span><span class="p">(</span><span class="n">ncoords_flatten</span><span class="p">)</span>
+        <span class="n">quad</span><span class="o">.</span><span class="n">update_KC0</span><span class="p">(</span><span class="n">KC0r</span><span class="p">,</span> <span class="n">KC0c</span><span class="p">,</span> <span class="n">KC0v</span><span class="p">,</span> <span class="n">prop</span><span class="p">)</span>
+        <span class="n">quad</span><span class="o">.</span><span class="n">update_KG_given_stress</span><span class="p">(</span><span class="n">Nxx</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">KGr</span><span class="p">,</span> <span class="n">KGc</span><span class="p">,</span> <span class="n">KGv</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">with_mass</span><span class="p">:</span>
+            <span class="n">quad</span><span class="o">.</span><span class="n">update_M</span><span class="p">(</span><span class="n">Mr</span><span class="p">,</span> <span class="n">Mc</span><span class="p">,</span> <span class="n">Mv</span><span class="p">,</span> <span class="n">prop</span><span class="p">)</span>
+        <span class="n">init_k_KC0</span> <span class="o">+=</span> <span class="n">data</span><span class="o">.</span><span class="n">KC0_SPARSE_SIZE</span>
+        <span class="n">init_k_KG</span> <span class="o">+=</span> <span class="n">data</span><span class="o">.</span><span class="n">KG_SPARSE_SIZE</span>
+        <span class="n">init_k_M</span> <span class="o">+=</span> <span class="n">data</span><span class="o">.</span><span class="n">M_SPARSE_SIZE</span>
+    <span class="n">KC0</span> <span class="o">=</span> <span class="n">coo_matrix</span><span class="p">((</span><span class="n">KC0v</span><span class="p">,</span> <span class="p">(</span><span class="n">KC0r</span><span class="p">,</span> <span class="n">KC0c</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span><span class="o">.</span><span class="n">tocsc</span><span class="p">()</span>
+    <span class="n">KG</span> <span class="o">=</span> <span class="n">coo_matrix</span><span class="p">((</span><span class="n">KGv</span><span class="p">,</span> <span class="p">(</span><span class="n">KGr</span><span class="p">,</span> <span class="n">KGc</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span><span class="o">.</span><span class="n">tocsc</span><span class="p">()</span>
+    <span class="n">bk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+    <span class="n">edge</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">A_PLATE</span><span class="p">)</span>
+            <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="mf">0.</span><span class="p">)</span> <span class="o">|</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">y</span><span class="p">,</span> <span class="n">B_PLATE</span><span class="p">))</span>
+    <span class="n">bk</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="n">DOF</span><span class="p">]</span> <span class="o">=</span> <span class="n">edge</span>
+    <span class="n">bk</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="n">DOF</span><span class="p">]</span> <span class="o">=</span> <span class="n">edge</span>
+    <span class="n">bk</span><span class="p">[</span><span class="mi">2</span><span class="p">::</span><span class="n">DOF</span><span class="p">]</span> <span class="o">=</span> <span class="n">edge</span>
+    <span class="n">bu</span> <span class="o">=</span> <span class="o">~</span><span class="n">bk</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[</span><span class="n">KC0</span><span class="p">[</span><span class="n">bu</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">bu</span><span class="p">],</span> <span class="n">KG</span><span class="p">[</span><span class="n">bu</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">bu</span><span class="p">]]</span>
+    <span class="k">if</span> <span class="n">with_mass</span><span class="p">:</span>
+        <span class="n">M</span> <span class="o">=</span> <span class="n">coo_matrix</span><span class="p">((</span><span class="n">Mv</span><span class="p">,</span> <span class="p">(</span><span class="n">Mr</span><span class="p">,</span> <span class="n">Mc</span><span class="p">)),</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">N</span><span class="p">))</span><span class="o">.</span><span class="n">tocsc</span><span class="p">()</span>
+        <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">M</span><span class="p">[</span><span class="n">bu</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">bu</span><span class="p">])</span>
+    <span class="k">return</span> <span class="n">out</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_linear_buckling_plate</span><span class="p">():</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""End-to-end against the classical buckling coefficient, and against</span>
+<span class="sd">    the hand-rolled recipe used elsewhere in this suite"""</span>
+    <span class="n">Nxx</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.</span>
+    <span class="n">KC0uu</span><span class="p">,</span> <span class="n">KGuu</span> <span class="o">=</span> <span class="n">plate_matrices</span><span class="p">(</span><span class="n">Nxx</span><span class="o">=</span><span class="n">Nxx</span><span class="p">)</span>
+    <span class="n">eigvals</span><span class="p">,</span> <span class="n">eigvecs</span> <span class="o">=</span> <span class="n">linear_buckling</span><span class="p">(</span><span class="n">KC0uu</span><span class="p">,</span> <span class="n">KGuu</span><span class="p">,</span> <span class="n">num_eigvalues</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">P_cr_calc</span> <span class="o">=</span> <span class="n">eigvals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">Nxx</span><span class="o">*</span><span class="n">B_PLATE</span>
 
+    <span class="n">kcmin</span> <span class="o">=</span> <span class="mf">1e6</span>
+    <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">21</span><span class="p">):</span>
+        <span class="n">kc</span> <span class="o">=</span> <span class="p">(</span><span class="n">m</span><span class="o">*</span><span class="n">B_PLATE</span><span class="o">/</span><span class="n">A_PLATE</span> <span class="o">+</span> <span class="n">A_PLATE</span><span class="o">/</span><span class="p">(</span><span class="n">m</span><span class="o">*</span><span class="n">B_PLATE</span><span class="p">))</span><span class="o">**</span><span class="mi">2</span>
+        <span class="n">kcmin</span> <span class="o">=</span> <span class="nb">min</span><span class="p">(</span><span class="n">kc</span><span class="p">,</span> <span class="n">kcmin</span><span class="p">)</span>
+    <span class="n">sigma_cr</span> <span class="o">=</span> <span class="o">-</span><span class="n">kcmin</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">E_PLATE</span><span class="o">/</span><span class="p">(</span><span class="mi">12</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">NU_PLATE</span><span class="o">**</span><span class="mi">2</span><span class="p">))</span><span class="o">*</span><span class="p">(</span>
+        <span class="n">H_PLATE</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">B_PLATE</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">P_cr_theory</span> <span class="o">=</span> <span class="n">sigma_cr</span><span class="o">*</span><span class="n">H_PLATE</span><span class="o">*</span><span class="n">B_PLATE</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'P_cr_calc </span><span class="si">%.4f</span><span class="s1">  P_cr_theory </span><span class="si">%.4f</span><span class="s1">'</span> <span class="o">%</span> <span class="p">(</span><span class="n">P_cr_calc</span><span class="p">,</span> <span class="n">P_cr_theory</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">P_cr_theory</span><span class="p">,</span> <span class="n">P_cr_calc</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.03</span><span class="p">)</span>
 
-<span class="k">if</span> <span class="vm">__name__</span> <span class="o">==</span> <span class="s1">'__main__'</span><span class="p">:</span>
-    <span class="n">test_linear_buckling_plate</span><span class="p">(</span><span class="n">plot</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">refinement</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+    <span class="c1"># NOTE the same answer as the recipe spelled out in the other tests of</span>
+    <span class="c1">#      this suite. The two are not bit-identical because the shift</span>
+    <span class="c1">#      differs, estimated here and hardcoded to 1 there, so they agree</span>
+    <span class="c1">#      only to the tolerance requested of the eigensolver, which is</span>
+    <span class="c1">#      1e-9 in both calls below</span>
+    <span class="n">lam_est</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">linear_buckling</span><span class="p">(</span><span class="n">KC0uu</span><span class="p">,</span> <span class="n">KGuu</span><span class="p">,</span> <span class="n">num_eigvalues</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">)</span>
+    <span class="n">P</span> <span class="o">=</span> <span class="n">diagonal_preconditioner</span><span class="p">(</span><span class="n">KC0uu</span><span class="p">)</span>
+    <span class="n">mu</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">eigsh</span><span class="p">(</span><span class="n">A</span><span class="o">=</span><span class="n">P</span> <span class="o">@</span> <span class="n">KGuu</span> <span class="o">@</span> <span class="n">P</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">which</span><span class="o">=</span><span class="s1">'SM'</span><span class="p">,</span> <span class="n">M</span><span class="o">=</span><span class="n">P</span> <span class="o">@</span> <span class="n">KC0uu</span> <span class="o">@</span> <span class="n">P</span><span class="p">,</span>
+                  <span class="n">tol</span><span class="o">=</span><span class="mf">1e-9</span><span class="p">,</span> <span class="n">sigma</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">'cayley'</span><span class="p">)</span>
+    <span class="n">lam</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="o">-</span><span class="mf">1.</span><span class="o">/</span><span class="n">mu</span><span class="p">)</span>
+    <span class="n">lam</span> <span class="o">=</span> <span class="n">lam</span><span class="p">[</span><span class="n">lam</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">]</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'linear_buckling </span><span class="si">%.9f</span><span class="s1">  hand-rolled </span><span class="si">%.9f</span><span class="s1">  rel diff </span><span class="si">%.2e</span><span class="s1">'</span>
+          <span class="o">%</span> <span class="p">(</span><span class="n">lam_est</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">lam</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="nb">abs</span><span class="p">(</span><span class="n">lam_est</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">lam</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">lam_est</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">lam</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
 
+    <span class="c1"># NOTE the eigenvectors come back in the original scaling</span>
+    <span class="n">residual</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">KC0uu</span> <span class="o">@</span> <span class="n">eigvecs</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
+                              <span class="o">+</span> <span class="n">eigvals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="p">(</span><span class="n">KGuu</span> <span class="o">@</span> <span class="n">eigvecs</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]))</span>
+    <span class="n">residual</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">KC0uu</span> <span class="o">@</span> <span class="n">eigvecs</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'eigenvector residual </span><span class="si">%.3e</span><span class="s1">'</span> <span class="o">%</span> <span class="n">residual</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">residual</span> <span class="o">&lt;</span> <span class="mf">1e-8</span>
 </pre></div>
 </div>
 </section>
@@ -626,20 +931,20 @@ extracted from one of <code class="docutils literal notranslate"><span class="pr
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="ex_linear_static.html"
+       href="ex_beam_frame.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Linear static analysis</p>
+        <p class="prev-next-title">Linear static analysis of beams and frames</p>
       </div>
     </a>
     <a class="right-next"
-       href="ex_linear_buckling_cylinder_torsion.html"
+       href="ex_linear_buckling_column.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Linear buckling analysis of a cylinder under torsion</p>
+        <p class="prev-next-title">Linear buckling analysis of a column</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -676,8 +981,8 @@ extracted from one of <code class="docutils literal notranslate"><span class="pr
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -710,7 +1015,7 @@ extracted from one of <code class="docutils literal notranslate"><span class="pr
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
 </p></div>
       
     </div>

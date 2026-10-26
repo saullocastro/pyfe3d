@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>General-purpose finite element solver - pyfe3d &#8212; pyfe3d 0.10.0 documentation</title>
+    <title>General-purpose finite element solver - pyfe3d &#8212; pyfe3d 0.11.0 documentation</title>
   
   
   
@@ -26,27 +26,30 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=82662543"></script>
+    <script src="_static/documentation_options.js?v=f3b36f1a"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
     <script>DOCUMENTATION_OPTIONS.pagename = 'index';</script>
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Tutorials" href="tutorials.html" />
+    <link rel="next" title="Overview and workflow" href="overview.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
   
@@ -116,7 +119,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.10.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.11.0 documentation</p>
   
 </a></div>
     
@@ -131,39 +134,147 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_static.html">
-    Linear static analysis
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
     Linear buckling analysis of a plate
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
   </a>
 </li>
 
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -247,15 +358,57 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
   </a>
 </li>
 
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_linear_static.html">
-    Linear static analysis
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
   </a>
 </li>
 
@@ -268,6 +421,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
@@ -275,8 +435,57 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changelog.html">
+    Changelog
   </a>
 </li>
 
@@ -344,13 +553,66 @@ analysis and optimization based on Python and Cython. The main principles
 guiding the development of <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code> are: simplicity, efficiency and
 compatibility. The aimed level of compatibility allows one to run this solver
 in any platform, including the Google Colab environment.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code> you can build models of:</p>
+<ul class="simple">
+<li><p>Shells, with the quadrilaterals <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> and <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a> and
+the triangles <a class="reference internal" href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a> and <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3R</span></code></a>, and laminated or
+isotropic properties, <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a></p></li>
+<li><p>Beams, with the Timoshenko elements <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> and <a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a>,
+trusses, <a class="reference internal" href="truss.html#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a>, and springs, <a class="reference internal" href="spring.html#pyfe3d.spring.Spring" title="pyfe3d.spring.Spring"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spring</span></code></a></p></li>
+</ul>
+<p>all with six degrees of freedom per node, whose element matrices are written
+into sparse arrays: the linear constitutive stiffness matrix, the
+non-linear constitutive and geometric stiffness matrices, the mass matrix
+and, for the quadrilaterals, the aerodynamic matrices of the piston theory.
+With the solvers of <a class="reference internal" href="solver.html#module-pyfe3d.solver" title="pyfe3d.solver"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code></a> you can run:</p>
+<ul class="simple">
+<li><p>Linear static analyses, <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0} \boldsymbol{u} = \boldsymbol{f}\)</span>, with <a class="reference internal" href="solver_static.html#pyfe3d.solver.static.solve" title="pyfe3d.solver.static.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">solve()</span></code></a> or
+<a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis" title="pyfe3d.solver.analysis.Analysis"><code class="xref py py-class docutils literal notranslate"><span class="pre">Analysis</span></code></a></p></li>
+<li><p>Linear buckling analyses, <span class="math notranslate nohighlight">\((\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}\)</span>, with
+<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a></p></li>
+<li><p>Natural frequency analyses, <span class="math notranslate nohighlight">\((\boldsymbol{K}_{C0} - \omega_n^2 \boldsymbol{M}) \boldsymbol{u} = \boldsymbol{0}\)</span>,
+with <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a>, and complex frequencies of damped
+systems, <span class="math notranslate nohighlight">\((\lambda^2 \boldsymbol{M} + \lambda \boldsymbol{C} + \boldsymbol{K}) \boldsymbol{u} = \boldsymbol{0}\)</span>, with
+<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.complex_frequency" title="pyfe3d.solver.eigen.complex_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">complex_frequency()</span></code></a></p></li>
+<li><p>Geometrically non-linear static analyses with <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis" title="pyfe3d.solver.analysis.Analysis"><code class="xref py py-class docutils literal notranslate"><span class="pre">Analysis</span></code></a>, using
+the Newton-Raphson method or the arc-length methods of Riks and of
+Crisfield, with Crisfield’s convergence criterion, configuration-dependent
+loads and prescribed displacements</p></li>
+</ul>
+<p>The eigenvalue solvers verify their results and use a dense solver only as
+a last resort, see <a class="reference internal" href="eigenvalue_analyses.html"><span class="doc">Linear buckling and natural frequencies</span></a>.</p>
 <section id="code-repository">
 <h2>Code repository<a class="headerlink" href="#code-repository" title="Link to this heading">#</a></h2>
 <p><a class="github reference external" href="https://github.com/saullocastro/pyfe3d">saullocastro/pyfe3d</a></p>
 </section>
-<section id="citing-this-library">
-<h2>Citing this library<a class="headerlink" href="#citing-this-library" title="Link to this heading">#</a></h2>
-<p>Saullo G. P. Castro. (2026). General-purpose finite element solver based on Python and Cython (Version 0.10.0). Zenodo. DOI: <a class="reference external" href="https://doi.org/10.5281/zenodo.6573489">https://doi.org/10.5281/zenodo.6573489</a>.</p>
+<section id="user-guide">
+<h2>User guide<a class="headerlink" href="#user-guide" title="Link to this heading">#</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview and workflow</a></li>
+<li class="toctree-l1"><a class="reference internal" href="conventions.html">Conventions</a></li>
+<li class="toctree-l1"><a class="reference internal" href="element_choice.html">Choosing an element</a></li>
+<li class="toctree-l1"><a class="reference internal" href="shell_properties.html">Shell and beam properties</a></li>
+<li class="toctree-l1"><a class="reference internal" href="nonlinear_analyses.html">Non-linear static analyses</a></li>
+<li class="toctree-l1"><a class="reference internal" href="eigenvalue_analyses.html">Linear buckling and natural frequencies</a></li>
+</ul>
+</div>
+</section>
+<section id="usage-examples">
+<h2>Usage examples<a class="headerlink" href="#usage-examples" title="Link to this heading">#</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="ex_linear_static.html">Linear static analysis of a plate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ex_beam_frame.html">Linear static analysis of beams and frames</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ex_linear_buckling_plate.html">Linear buckling analysis of a plate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ex_linear_buckling_column.html">Linear buckling analysis of a column</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ex_linear_buckling_cylinder_torsion.html">Linear buckling analysis of a cylinder under torsion</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ex_natural_frequency_plate.html">Natural frequency analysis of a plate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ex_natural_frequency_cylinder.html">Natural frequency analysis of a cylinder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="ex_nonlinear_static.html">Non-linear static analysis with pyfe3d.solver</a></li>
+</ul>
+</div>
 </section>
 <section id="tutorials">
 <h2>Tutorials<a class="headerlink" href="#tutorials" title="Link to this heading">#</a></h2>
@@ -360,55 +622,131 @@ in any platform, including the Google Colab environment.</p>
 <li class="toctree-l2"><a class="reference internal" href="tut-opt-lightweight-smeared-deflection-GA.html">Tutorial: Ply tailoring using GA for a simply-supported plate under normal load</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tut-opt-lightweight-smeared-deflection-SLSQP.html">Tutorial: Ply tailoring using SLSPQ for a simply-supported plate under normal load</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tut-opt-topology.html">Tutorial: topology optimisation using pyfe3d</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tut-timoshenko-beam-benchmarks.html">Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tut-shell-lumped-mass.html">Tutorial: lumped mass matrices of the shells with an offset</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tut-bench-macneal-harder.html">Benchmark: MacNeal-Harder standard problems for the shell elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tut-bench-shell-obstacle-course.html">Benchmark: shell obstacle course</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tut-nonlinear-benchmarks.html">Tutorial: geometrically non-linear benchmarks with pyfe3d.solver</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </section>
-<section id="usage-examples">
-<h2>Usage Examples<a class="headerlink" href="#usage-examples" title="Link to this heading">#</a></h2>
+<section id="pyfe3d-api">
+<h2>pyfe3d API<a class="headerlink" href="#pyfe3d-api" title="Link to this heading">#</a></h2>
 <div class="toctree-wrapper compound">
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="ex_linear_static.html">Linear static analysis</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ex_linear_buckling_plate.html">Linear buckling analysis of a plate</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ex_linear_buckling_cylinder_torsion.html">Linear buckling analysis of a cylinder under torsion</a></li>
-<li class="toctree-l1"><a class="reference internal" href="ex_natural_frequency_cylinder.html">Natural frequency analysis of a cylinder</a></li>
+<li class="toctree-l1"><a class="reference internal" href="api.html">API reference</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="api.html#finite-elements-for-3d-problems-in-python-cython">Finite elements for 3D problems in Python/Cython</a></li>
+<li class="toctree-l2"><a class="reference internal" href="fe_overview.html">Finite elements</a></li>
+<li class="toctree-l2"><a class="reference internal" href="properties.html">Properties</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver.html">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_static.html">Linear static solution (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_static.html#pyfe3d.solver.static.linear_static"><code class="docutils literal notranslate"><span class="pre">linear_static()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_static.html#pyfe3d.solver.static.solve"><code class="docutils literal notranslate"><span class="pre">solve()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_analysis.html">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis"><code class="docutils literal notranslate"><span class="pre">Analysis</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.FreeDofs"><code class="docutils literal notranslate"><span class="pre">FreeDofs</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_convergence.html">Convergence criteria of the non-linear solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.convergence</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_convergence.html#pyfe3d.solver.convergence.CRITERIA"><code class="docutils literal notranslate"><span class="pre">CRITERIA</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_convergence.html#pyfe3d.solver.convergence.ROUNDOFF_FACTOR"><code class="docutils literal notranslate"><span class="pre">ROUNDOFF_FACTOR</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_convergence.html#pyfe3d.solver.convergence.check_convergence"><code class="docutils literal notranslate"><span class="pre">check_convergence()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_convergence.html#pyfe3d.solver.convergence.crisfield_weights"><code class="docutils literal notranslate"><span class="pre">crisfield_weights()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_convergence.html#pyfe3d.solver.convergence.crisfield_zeta"><code class="docutils literal notranslate"><span class="pre">crisfield_zeta()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_convergence.html#pyfe3d.solver.convergence.roundoff_floor"><code class="docutils literal notranslate"><span class="pre">roundoff_floor()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_convergence.html#pyfe3d.solver.convergence.scaled_norm"><code class="docutils literal notranslate"><span class="pre">scaled_norm()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_newton_raphson.html">Newton-Raphson solver (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.newton_raphson</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_newton_raphson.html#pyfe3d.solver.newton_raphson.DIVERGENCE_FACTOR"><code class="docutils literal notranslate"><span class="pre">DIVERGENCE_FACTOR</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_newton_raphson.html#pyfe3d.solver.newton_raphson.INC_CUT_FACTOR"><code class="docutils literal notranslate"><span class="pre">INC_CUT_FACTOR</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_newton_raphson.html#pyfe3d.solver.newton_raphson.INC_GROWTH_FACTOR"><code class="docutils literal notranslate"><span class="pre">INC_GROWTH_FACTOR</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_newton_raphson.html#pyfe3d.solver.newton_raphson.LINE_SEARCH_ALPHA"><code class="docutils literal notranslate"><span class="pre">LINE_SEARCH_ALPHA</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_newton_raphson.html#pyfe3d.solver.newton_raphson.NUM_ITER_BEFORE_DIVERGENCE_CHECK"><code class="docutils literal notranslate"><span class="pre">NUM_ITER_BEFORE_DIVERGENCE_CHECK</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_newton_raphson.html#pyfe3d.solver.newton_raphson.TOO_SLOW_WINDOW"><code class="docutils literal notranslate"><span class="pre">TOO_SLOW_WINDOW</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_newton_raphson.html#pyfe3d.solver.newton_raphson._NR_iterations"><code class="docutils literal notranslate"><span class="pre">_NR_iterations()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_newton_raphson.html#pyfe3d.solver.newton_raphson._abs_matrix"><code class="docutils literal notranslate"><span class="pre">_abs_matrix()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_newton_raphson.html#pyfe3d.solver.newton_raphson._check_divergence"><code class="docutils literal notranslate"><span class="pre">_check_divergence()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_newton_raphson.html#pyfe3d.solver.newton_raphson._log_iteration"><code class="docutils literal notranslate"><span class="pre">_log_iteration()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_newton_raphson.html#pyfe3d.solver.newton_raphson._norm"><code class="docutils literal notranslate"><span class="pre">_norm()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_newton_raphson.html#pyfe3d.solver.newton_raphson._solver_NR"><code class="docutils literal notranslate"><span class="pre">_solver_NR()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_newton_raphson.html#pyfe3d.solver.newton_raphson._weights"><code class="docutils literal notranslate"><span class="pre">_weights()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arc_length.html">Arc-length solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arc_length</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arc_length.html#pyfe3d.solver.arc_length.DESIRED_NUM_ITER"><code class="docutils literal notranslate"><span class="pre">DESIRED_NUM_ITER</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arc_length.html#pyfe3d.solver.arc_length.MAX_GROWTH_FACTOR"><code class="docutils literal notranslate"><span class="pre">MAX_GROWTH_FACTOR</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arc_length.html#pyfe3d.solver.arc_length.MAX_NUM_STEPS"><code class="docutils literal notranslate"><span class="pre">MAX_NUM_STEPS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arc_length.html#pyfe3d.solver.arc_length.METHODS"><code class="docutils literal notranslate"><span class="pre">METHODS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arc_length.html#pyfe3d.solver.arc_length.MIN_GROWTH_FACTOR"><code class="docutils literal notranslate"><span class="pre">MIN_GROWTH_FACTOR</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arc_length.html#pyfe3d.solver.arc_length.PSI"><code class="docutils literal notranslate"><span class="pre">PSI</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arc_length.html#pyfe3d.solver.arc_length._solver_arc_length"><code class="docutils literal notranslate"><span class="pre">_solver_arc_length()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_callbacks.html">Calls to the callables of the non-linear solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.callbacks</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_callbacks.html#pyfe3d.solver.callbacks.accepts_kwarg"><code class="docutils literal notranslate"><span class="pre">accepts_kwarg()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_callbacks.html#pyfe3d.solver.callbacks.calc_fint"><code class="docutils literal notranslate"><span class="pre">calc_fint()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_callbacks.html#pyfe3d.solver.callbacks.calc_kT"><code class="docutils literal notranslate"><span class="pre">calc_kT()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_callbacks.html#pyfe3d.solver.callbacks.calc_load_vector"><code class="docutils literal notranslate"><span class="pre">calc_load_vector()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_callbacks.html#pyfe3d.solver.callbacks.is_load_configuration_dependent"><code class="docutils literal notranslate"><span class="pre">is_load_configuration_dependent()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_callbacks.html#pyfe3d.solver.callbacks.is_load_factor_dependent"><code class="docutils literal notranslate"><span class="pre">is_load_factor_dependent()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_eigen.html">Eigenvalue analyses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.DenseFallbackWarning"><code class="docutils literal notranslate"><span class="pre">DenseFallbackWarning</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.check_eigenpairs"><code class="docutils literal notranslate"><span class="pre">check_eigenpairs()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.complex_frequency"><code class="docutils literal notranslate"><span class="pre">complex_frequency()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.diagonal_preconditioner"><code class="docutils literal notranslate"><span class="pre">diagonal_preconditioner()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.estimate_cayley_sigma"><code class="docutils literal notranslate"><span class="pre">estimate_cayley_sigma()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.is_positive_definite"><code class="docutils literal notranslate"><span class="pre">is_positive_definite()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling"><code class="docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency"><code class="docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arpackutils.html">Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.ARPACK_MAX_NCV"><code class="docutils literal notranslate"><span class="pre">ARPACK_MAX_NCV</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.DSTEQR_MAX_SIZE"><code class="docutils literal notranslate"><span class="pre">DSTEQR_MAX_SIZE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.MKL_FAULTY_VERSIONS"><code class="docutils literal notranslate"><span class="pre">MKL_FAULTY_VERSIONS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils._arpack_takes_rng"><code class="docutils literal notranslate"><span class="pre">_arpack_takes_rng()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils._auto_max_ncv"><code class="docutils literal notranslate"><span class="pre">_auto_max_ncv()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils._deflation_shift"><code class="docutils literal notranslate"><span class="pre">_deflation_shift()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils._lapack_name_from_config"><code class="docutils literal notranslate"><span class="pre">_lapack_name_from_config()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils._parse_mkl_version"><code class="docutils literal notranslate"><span class="pre">_parse_mkl_version()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils._rayleigh_ritz"><code class="docutils literal notranslate"><span class="pre">_rayleigh_ritz()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.arpack_max_ncv"><code class="docutils literal notranslate"><span class="pre">arpack_max_ncv()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.arpack_ncv"><code class="docutils literal notranslate"><span class="pre">arpack_ncv()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.capped_eigsh"><code class="docutils literal notranslate"><span class="pre">capped_eigsh()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.dsteqr_is_faulty"><code class="docutils literal notranslate"><span class="pre">dsteqr_is_faulty()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.lapack_is_mkl"><code class="docutils literal notranslate"><span class="pre">lapack_is_mkl()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.mkl_version"><code class="docutils literal notranslate"><span class="pre">mkl_version()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.release_memory"><code class="docutils literal notranslate"><span class="pre">release_memory()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.start_kwargs"><code class="docutils literal notranslate"><span class="pre">start_kwargs()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.start_vector"><code class="docutils literal notranslate"><span class="pre">start_vector()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_sparseutils.html">Utilities for sparse matrices (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.sparseutils</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.NUM_LISTED_DOFS"><code class="docutils literal notranslate"><span class="pre">NUM_LISTED_DOFS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.is_symmetric"><code class="docutils literal notranslate"><span class="pre">is_symmetric()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_logger.html">Log messages of the solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.logger</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_logger.html#pyfe3d.solver.logger.msg"><code class="docutils literal notranslate"><span class="pre">msg()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="solver_logger.html#pyfe3d.solver.logger.warn"><code class="docutils literal notranslate"><span class="pre">warn()</span></code></a></li>
+</ul>
+</li>
 </ul>
 </div>
 </section>
-<section id="available-finite-elements">
-<h2>Available finite elements<a class="headerlink" href="#available-finite-elements" title="Link to this heading">#</a></h2>
-<p><a class="reference internal" href="fe_overview.html"><span class="doc">Available finite elements</span></a></p>
-<p><a class="reference internal" href="properties.html"><span class="doc">Property definitions</span></a></p>
-</section>
-<section id="solvers-and-preconditioners">
-<h2>Solvers and preconditioners<a class="headerlink" href="#solvers-and-preconditioners" title="Link to this heading">#</a></h2>
-<p><a class="reference internal" href="solver.html"><span class="doc">Solvers and preconditioners (pyfe3d.solver)</span></a></p>
-</section>
-<section id="repository-structure">
-<h2>Repository structure<a class="headerlink" href="#repository-structure" title="Link to this heading">#</a></h2>
-<p><a class="reference internal" href="repository_structure.html"><span class="doc">Repository structure</span></a></p>
-</section>
 <section id="installing-pyfe3d">
 <h2>Installing pyfe3d<a class="headerlink" href="#installing-pyfe3d" title="Link to this heading">#</a></h2>
-<p>First, you should try to install from the distributed binaries by simply
-doing:</p>
+<p>Install the distributed binaries by simply doing:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="n">pyfe3d</span>
 </pre></div>
 </div>
-<p>If a distribution could not be found, you can try to install from the source
-code using:</p>
+<p>or, from the source code, with a C++ compiler:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">.</span>
 </pre></div>
 </div>
-<p>Another alternative is the following:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">python</span> <span class="o">-</span><span class="n">m</span> <span class="n">pip</span> <span class="n">install</span> <span class="o">-</span><span class="n">r</span> <span class="n">requirements</span><span class="o">.</span><span class="n">txt</span>
-<span class="n">python</span> <span class="n">setup</span><span class="o">.</span><span class="n">py</span> <span class="n">install</span>
-</pre></div>
+<p>See <a class="reference internal" href="installation.html"><span class="doc">Installation and building</span></a> for building in place, running the tests and
+building this documentation, and <a class="reference internal" href="repository_structure.html"><span class="doc">Repository structure</span></a> for the
+layout of the repository.</p>
+<div class="toctree-wrapper compound">
 </div>
-<p>If none of the above alternatives worked for you, this link shares some
-information on how to set up a C compiler on different operating systems:</p>
-<p><a class="reference external" href="https://cython2.readthedocs.io/en/latest/src/quickstart/install.html">https://cython2.readthedocs.io/en/latest/src/quickstart/install.html</a></p>
+</section>
+<section id="changelog">
+<h2>Changelog<a class="headerlink" href="#changelog" title="Link to this heading">#</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+</ul>
+</div>
 </section>
 <section id="license">
 <h2>License<a class="headerlink" href="#license" title="Link to this heading">#</a></h2>
@@ -433,6 +771,12 @@ information on how to set up a C compiler on different operating systems:</p>
 </pre></div>
 </div>
 </section>
+<section id="citing-this-library">
+<h2>Citing this library<a class="headerlink" href="#citing-this-library" title="Link to this heading">#</a></h2>
+<p>Saullo G. P. Castro. (2026). General-purpose finite element solver based on Python and Cython (Version 0.11.0). Zenodo. DOI: <a class="reference external" href="https://doi.org/10.5281/zenodo.6573489">https://doi.org/10.5281/zenodo.6573489</a>.</p>
+<p>The DOI represents all the versions and resolves to the latest one. The
+repository also has a <code class="docutils literal notranslate"><span class="pre">CITATION.cff</span></code> file with the same data.</p>
+</section>
 <section id="indices-and-tables">
 <h2>Indices and tables<a class="headerlink" href="#indices-and-tables" title="Link to this heading">#</a></h2>
 <ul class="simple">
@@ -454,11 +798,11 @@ information on how to set up a C compiler on different operating systems:</p>
                   
 <div class="prev-next-area">
     <a class="right-next"
-       href="tutorials.html"
+       href="overview.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Tutorials</p>
+        <p class="prev-next-title">Overview and workflow</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -482,15 +826,15 @@ information on how to set up a C compiler on different operating systems:</p>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#code-repository">Code repository</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#citing-this-library">Citing this library</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#user-guide">User guide</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-examples">Usage examples</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#tutorials">Tutorials</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#usage-examples">Usage Examples</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#available-finite-elements">Available finite elements</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#solvers-and-preconditioners">Solvers and preconditioners</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#repository-structure">Repository structure</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d-api">pyfe3d API</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#installing-pyfe3d">Installing pyfe3d</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#changelog">Changelog</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#license">License</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#authors">AUTHORS</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#citing-this-library">Citing this library</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#indices-and-tables">Indices and tables</a></li>
 </ul>
   </nav></div>
@@ -517,8 +861,8 @@ information on how to set up a C compiler on different operating systems:</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -551,7 +895,7 @@ information on how to set up a C compiler on different operating systems:</p>
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
 </p></div>
       
     </div>

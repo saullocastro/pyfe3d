@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Tria3DSG - Triangular element with discrete shear gap (pyfe3d.tria3dsg) &#8212; pyfe3d 0.10.0 documentation</title>
+    <title>Tria3DSG - Triangular element with discrete shear gap (pyfe3d.tria3dsg) &#8212; pyfe3d 0.11.0 documentation</title>
   
   
   
@@ -26,18 +26,18 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=82662543"></script>
+    <script src="_static/documentation_options.js?v=f3b36f1a"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -47,7 +47,10 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tria3R - Triangular element with reduced integration (pyfe3d.tria3r)" href="tria3r.html" />
+    <link rel="prev" title="Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r)" href="quad4r.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
   
@@ -117,7 +120,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.10.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.11.0 documentation</p>
   
 </a></div>
     
@@ -132,39 +135,147 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_static.html">
-    Linear static analysis
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
     Linear buckling analysis of a plate
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
   </a>
 </li>
 
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -246,15 +357,57 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
   </a>
 </li>
 
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_linear_static.html">
-    Linear static analysis
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
   </a>
 </li>
 
@@ -267,6 +420,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
@@ -274,8 +434,57 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changelog.html">
+    Changelog
   </a>
 </li>
 
@@ -321,7 +530,143 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"></div>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="fe_overview.html">Finite elements</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="quad4.html">Quad4 - Quadrilateral element with mixed integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</a></li>
+
+
+
+<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">Tria3DSG - Triangular element with discrete shear gap (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3dsg</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="beamc.html">BeamC - Consistent Timoshenko 3D beam element (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamc</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html">BeamLR - Linear Timoshenko 3D beam element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamlr</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="spring.html">Spring - 3D spring element with constant stiffnesses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.spring</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="truss.html">Truss - Linear truss 3D element with analytical integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code>)</a></li>
+
+
+
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="properties.html">Properties</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="shellprop.html">Shell property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="shellprop_utils.html">Shell property utils module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop_utils</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="beamprop.html">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
+
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="solver.html">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solver_static.html">Linear static solution (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code>)</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_analysis.html">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_convergence.html">Convergence criteria of the non-linear solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.convergence</span></code>)</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_newton_raphson.html">Newton-Raphson solver (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.newton_raphson</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_arc_length.html">Arc-length solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arc_length</span></code>)</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_callbacks.html">Calls to the callables of the non-linear solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.callbacks</span></code>)</a></li>
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_eigen.html">Eigenvalue analyses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen</span></code>)</a></li>
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html">Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_sparseutils.html">Utilities for sparse matrices (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.sparseutils</span></code>)</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_logger.html">Log messages of the solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.logger</span></code>)</a></li>
+
+
+</ul>
+</div>
 </nav></div>
     </div>
   
@@ -360,6 +705,12 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
+    
+    <li class="breadcrumb-item"><a href="api.html" class="nav-link">API reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="fe_overview.html" class="nav-link">Finite elements</a></li>
+    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Tria3DSG - Triangular element with discrete shear gap (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3dsg</span></code>)</span></li>
   </ul>
 </nav>
@@ -379,21 +730,38 @@
                   
   <section id="tria3dsg-triangular-element-with-discrete-shear-gap-pyfe3d-tria3dsg">
 <span id="module-pyfe3d.tria3dsg"></span><h1>Tria3DSG - Triangular element with discrete shear gap (<a class="reference internal" href="#module-pyfe3d.tria3dsg" title="pyfe3d.tria3dsg"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3dsg</span></code></a>)<a class="headerlink" href="#tria3dsg-triangular-element-with-discrete-shear-gap-pyfe3d-tria3dsg" title="Link to this heading">#</a></h1>
+<p>The module has three classes: <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSGData" title="pyfe3d.tria3dsg.Tria3DSGData"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSGData</span></code></a>, with the sizes of the
+sparse arrays that one element fills; <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSGProbe" title="pyfe3d.tria3dsg.Tria3DSGProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSGProbe</span></code></a>, with the
+buffers in element coordinates that one or more elements share; and
+<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a>, the element. The <code class="docutils literal notranslate"><span class="pre">update_*</span></code> methods of
+<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a> write the element contributions in sparse row, column and
+value arrays, from the positions given by its <code class="docutils literal notranslate"><span class="pre">init_k_*</span></code> attributes, or add
+them to a global internal force vector.</p>
 <p>Three-node triangular shell element with 6 degrees-of-freedom per node, <span class="math notranslate nohighlight">\(u\)</span>,
 <span class="math notranslate nohighlight">\(v\)</span>, <span class="math notranslate nohighlight">\(w\)</span>, <span class="math notranslate nohighlight">\(r_x\)</span>, <span class="math notranslate nohighlight">\(r_y\)</span>, <span class="math notranslate nohighlight">\(r_z\)</span>, first-order shear deformation theory, and a
-transverse shear field obtained with the discrete shear gap (DSG) method:</p>
-<blockquote>
-<div><p>Bletzinger, K.-U., Bischoff, M., and Ramm, E., 2000, “A unified approach
-for shear-locking-free triangular and rectangular shell finite
-elements”, Computers &amp; Structures, 75(3), pp. 321-334.
-<a class="reference external" href="https://doi.org/10.1016/S0045-7949(99)00140-6">https://doi.org/10.1016/S0045-7949(99)00140-6</a></p>
-</div></blockquote>
-<section id="why-this-element-exists">
-<h2>Why this element exists<a class="headerlink" href="#why-this-element-exists" title="Link to this heading">#</a></h2>
+transverse shear field obtained with the discrete shear gap (DSG) method.</p>
+<p>The membrane, bending and transverse shear operators of the element are
+formed once per element, without a quadrature loop. The transverse shear
+stiffnesses of the <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp</span></code></a> are used as given,
+unless the <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span></code> attribute of <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a>, <code class="docutils literal notranslate"><span class="pre">0.</span></code> by
+default, is set. The drilling rotation <span class="math notranslate nohighlight">\(r_z\)</span> is tied to the in-plane rotation
+of the membrane field with a coefficient selected by the <code class="docutils literal notranslate"><span class="pre">drilling_model</span></code>
+attribute: by default the in-plane shear stiffness <code class="docutils literal notranslate"><span class="pre">A66</span></code> of the laminate,
+otherwise a small fictitious penalty scaled by <code class="docutils literal notranslate"><span class="pre">K6ROT</span></code>. The in-plane
+displacement field has no drilling enrichment; for problems dominated by
+in-plane bending, <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a> and <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.quad4.Quad4</span></code></a>
+carry one. Geometrically nonlinear analyses with the von Karman membrane
+strains are supported by <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_fint" title="pyfe3d.tria3dsg.Tria3DSG.update_fint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG.update_fint()</span></code></a> with <code class="docutils literal notranslate"><span class="pre">nonlinear=1</span></code>,
+<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KCNL" title="pyfe3d.tria3dsg.Tria3DSG.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG.update_KCNL()</span></code></a> and <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KG" title="pyfe3d.tria3dsg.Tria3DSG.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG.update_KG()</span></code></a>.</p>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">#</a></h2>
+<p>The transverse shear field is obtained with the discrete shear gap (DSG)
+method of Bletzinger, Bischoff and Ramm (2000) <a class="reference internal" href="#r467003471fab-1" id="id1">[1]</a>.</p>
+<p class="rubric">Why this element exists</p>
 <p><a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a> takes its transverse shear from a single point
 at the centroid, which still locks, and cures the locking by dividing the
 transverse shear stiffnesses by <span class="math notranslate nohighlight">\(1 + \alpha \ell^2/h^2\)</span> with
-<span class="math notranslate nohighlight">\(\alpha = 0.7\)</span>, following Lyly, Stenberg and Vihinen (1993). That works for
+<span class="math notranslate nohighlight">\(\alpha = 0.7\)</span>, following Lyly, Stenberg and Vihinen (1993) <a class="reference internal" href="#r467003471fab-2" id="id2">[2]</a>. That works for
 plate bending, where the error it introduces is <span class="math notranslate nohighlight">\(O(1/n^2)\)</span> in the number of
 elements per span, but it leaves the element unable to reproduce a state of
 constant transverse shear: measured on an 8 by 8 patch, its stiffness
@@ -406,12 +774,15 @@ is exactly that subspace, so thin-shell buckling suffers badly. See
 <p>The DSG removes the locking in the operator instead of in the constitutive
 matrix, so no stabilisation parameter is needed and the transverse shear
 stiffness is used as the laminate gives it.</p>
-<p>The algebraic stabilisation of Bischoff and Bletzinger (2004) and Castro et
-al. (2019) is nevertheless available through the <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span></code>
-attribute, which is <code class="docutils literal notranslate"><span class="pre">0.</span></code> by default and then has no effect whatsoever. It
-is there because in those papers the factor is applied on top of a discrete
-shear gap field exactly like this one, so setting it reproduces the element
-they describe, and because on a coarse mesh of a thin plate it does improve
+<p>The algebraic stabilisation of Lyly, Stenberg and Vihinen (1993) <a class="reference internal" href="#r467003471fab-2" id="id3">[2]</a>, called
+Stenberg’s method by Bischoff and Bletzinger (2004) <a class="reference internal" href="#r467003471fab-3" id="id4">[3]</a> (Sec. 3.1), is
+nevertheless available through the <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span></code> attribute, in the
+form of Castro et al. (2019) <a class="reference internal" href="#r467003471fab-4" id="id5">[4]</a> (Eq. (26)), which is <code class="docutils literal notranslate"><span class="pre">0.</span></code> by default and
+then has no effect whatsoever. It is there because Castro et al. apply the
+factor on top of a discrete shear gap field, as this one, and Lyly et al. on
+top of the assumed-strain field of the MITC4 quadrilateral, so setting it
+reproduces the stabilisation they describe, and because on a coarse mesh of a
+thin plate it does improve
 the answer: <span class="math notranslate nohighlight">\(\alpha = 0.07\)</span>, the lower bound of the range recommended by
 Castro et al., takes the first natural frequency of a <span class="math notranslate nohighlight">\(5 \times 7\)</span> mesh from
 <span class="math notranslate nohighlight">\(12.06\)</span> to <span class="math notranslate nohighlight">\(7.93\)</span> per cent above the analytical value and the buckling load
@@ -422,40 +793,50 @@ is why that element defaults to <span class="math notranslate nohighlight">\(\al
 <p>The default here is zero because the factor is unbounded in <span class="math notranslate nohighlight">\(\ell/h\)</span>, so any
 non-zero <span class="math notranslate nohighlight">\(\alpha\)</span> removes nearly all of the transverse shear stiffness on a
 practical shell mesh and with it the three properties listed above. The
-<code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span></code> attribute documentation carries the measurements and
-the recommended value.</p>
-</section>
-<section id="the-discrete-shear-gap">
-<h2>The discrete shear gap<a class="headerlink" href="#the-discrete-shear-gap" title="Link to this heading">#</a></h2>
-<p>With <span class="math notranslate nohighlight">\(\pmb{\phi} = (-r_y, r_x)\)</span> the transverse shear strains of this
+Notes of <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a> carry the measurements and the recommended value
+of <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span></code>.</p>
+<p>The transverse shear stiffnesses <span class="math notranslate nohighlight">\(A_{44}\)</span>, <span class="math notranslate nohighlight">\(A_{45}\)</span> and <span class="math notranslate nohighlight">\(A_{55}\)</span> are read
+from the <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp</span></code></a> object with the shear correction
+already applied, see
+<a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness" title="pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness()</span></code></a>, and
+brought to the element coordinate system with
+<a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp.calc_Ats_element" title="pyfe3d.shellprop.ShellProp.calc_Ats_element"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp.calc_Ats_element()</span></code></a>, which, with
+<code class="docutils literal notranslate"><span class="pre">shear_correction='rohwer'</span></code> and the plies available, re-evaluates the
+equilibrium-based stiffness of Rohwer (1988) <a class="reference internal" href="#r467003471fab-7" id="id6">[7]</a> with the plies rotated to
+the element coordinate system. No shear correction factor is applied by the
+element.</p>
+<p class="rubric">The discrete shear gap</p>
+<p>With <span class="math notranslate nohighlight">\(\boldsymbol{\phi} = (-r_y, r_x)\)</span> the transverse shear strains of this
 element’s convention are</p>
 <div class="math notranslate nohighlight">
 \[\gamma_{xz} = \frac{\partial w}{\partial x} + r_y
 \qquad
 \gamma_{yz} = \frac{\partial w}{\partial y} - r_x\]</div>
-<p>that is <span class="math notranslate nohighlight">\(\pmb{\gamma} = \nabla w - \pmb{\phi}\)</span>. The shear gap <span class="math notranslate nohighlight">\(\Delta w\)</span> is
-the function whose gradient is the shear strain, and its nodal values are
-obtained by integrating along the straight edges from node 1, with
-<span class="math notranslate nohighlight">\(\pmb{\phi}\)</span> interpolated linearly,</p>
+<p>that is <span class="math notranslate nohighlight">\(\boldsymbol{\gamma} = \nabla w - \boldsymbol{\phi}\)</span>. The shear gap <span class="math notranslate nohighlight">\(\Delta w\)</span> is
+the part of the increase of the deflection between two points that is due to
+shear rather than to bending (<a class="reference internal" href="#r467003471fab-1" id="id7">[1]</a>, Sec. 2, Eq. (3)). On the three-node
+triangle its nodal values are obtained by integrating the shear strains along
+the straight edges that join node 1 to the other two nodes (<a class="reference internal" href="#r467003471fab-1" id="id8">[1]</a>, Sec. 4.1.1),
+with <span class="math notranslate nohighlight">\(\boldsymbol{\phi}\)</span> interpolated linearly,</p>
 <div class="math notranslate nohighlight">
 \[\Delta w_1 = 0
 \qquad
 \Delta w_i = (w_i - w_1)
-  - \frac{1}{2}(\pmb{\phi}_1 + \pmb{\phi}_i) \cdot
-    (\pmb{r}_i - \pmb{r}_1)\]</div>
+  - \frac{1}{2}(\boldsymbol{\phi}_1 + \boldsymbol{\phi}_i) \cdot
+    (\boldsymbol{r}_i - \boldsymbol{r}_1)\]</div>
 <p>The assumed shear strain is then the gradient of the interpolated gap,</p>
 <div class="math notranslate nohighlight">
-\[\pmb{\gamma} = \nabla \left( \sum_i N_i \Delta w_i \right)
-             = \sum_i \Delta w_i \nabla N_i\]</div>
+\[\boldsymbol{\gamma} = \nabla \left( \sum_i S_i \Delta w_i \right)
+             = \sum_i \Delta w_i \nabla S_i\]</div>
 <p>which is constant over the element because the shape functions are linear.
 Four properties follow, all of them verified symbolically and then
 numerically in <code class="docutils literal notranslate"><span class="pre">tests/test_tria3dsg.py</span></code>:</p>
 <ul class="simple">
-<li><p>the three rigid-body modes that involve <span class="math notranslate nohighlight">\(w\)</span> give <span class="math notranslate nohighlight">\(\pmb{\gamma} = 0\)</span>
+<li><p>the three rigid-body modes that involve <span class="math notranslate nohighlight">\(w\)</span> give <span class="math notranslate nohighlight">\(\boldsymbol{\gamma} = 0\)</span>
 exactly;</p></li>
 <li><p>a state of constant transverse shear is reproduced exactly, which is what
 Tria3R cannot do;</p></li>
-<li><p>a state of constant curvature gives <span class="math notranslate nohighlight">\(\pmb{\gamma} = 0\)</span> exactly, so the
+<li><p>a state of constant curvature gives <span class="math notranslate nohighlight">\(\boldsymbol{\gamma} = 0\)</span> exactly, so the
 element develops no parasitic shear in pure bending. <strong>This is the
 locking-free property</strong>, and it is the reason no stabilisation parameter
 appears anywhere in this element;</p></li>
@@ -463,7 +844,9 @@ appears anywhere in this element;</p></li>
 constant over the element, so it is formed once per element.</p></li>
 </ul>
 <p>The gap is integrated away from one node, which makes the plain operator
-depend on which node that is: measured on an irregular triangle, the element
+depend on which node that is, a dependence inherent to the method whose
+influence on the solution diminishes with mesh refinement (<a class="reference internal" href="#r467003471fab-1" id="id9">[1]</a>,
+Sec. 4.1.1): measured on an irregular triangle, the element
 matrix moves by 14 and 17 per cent under the two cyclic relabellings, against
 <span class="math notranslate nohighlight">\(3 \times 10^{-16}\)</span> for <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a>, whose shear comes from
 a symmetric centroid evaluation. A mesh generator orders the nodes of a
@@ -473,36 +856,31 @@ exact for all of the properties listed above, and those are linear in the
 operator, so the mean inherits them, which the tests confirm. What it buys is
 invariance, measured at <span class="math notranslate nohighlight">\(6 \times 10^{-16}\)</span> in
 <code class="docutils literal notranslate"><span class="pre">tests/test_tria3dsg.py::test_node_numbering_invariance</span></code>.</p>
-</section>
-<section id="membrane-bending-and-drilling">
-<h2>Membrane, bending and drilling<a class="headerlink" href="#membrane-bending-and-drilling" title="Link to this heading">#</a></h2>
+<p class="rubric">Membrane, bending and drilling</p>
 <p>The in-plane and curvature fields are the constant-strain ones of the linear
 triangle, so no locking arises there and one point integrates them exactly.
 The drilling rotation <span class="math notranslate nohighlight">\(r_z\)</span> is given stiffness with the regularisation of
-Hughes and Brezzi (1989), tying <span class="math notranslate nohighlight">\(r_z\)</span> to the in-plane rotation
+Hughes and Brezzi (1989) <a class="reference internal" href="#r467003471fab-5" id="id10">[5]</a>, tying <span class="math notranslate nohighlight">\(r_z\)</span> to the in-plane rotation
 <span class="math notranslate nohighlight">\(\theta_z = (v_{,x} - u_{,y})/2\)</span>, exactly as in <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.quad4.Quad4</span></code></a>
-and <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a>:</p>
-<blockquote>
-<div><p>Hughes, T. J. R., and Brezzi, F., 1989, “On drilling degrees of
-freedom,” Computer Methods in Applied Mechanics and Engineering, 72(1),
-pp. 105-121. <a class="reference external" href="https://doi.org/10.1016/0045-7825(89)90124-2">https://doi.org/10.1016/0045-7825(89)90124-2</a></p>
-</div></blockquote>
+and <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a>.</p>
 <p><code class="docutils literal notranslate"><span class="pre">drilling_model</span> <span class="pre">=</span> <span class="pre">0</span></code>, the default, uses the physics-based coefficient
 <span class="math notranslate nohighlight">\(\gamma_{r_z} = A_{66}\)</span>, a modulus of the laminate and not an adjustable
 parameter. Any other value uses the fictitious penalty
-<span class="math notranslate nohighlight">\(\gamma_{r_z} = K6ROT \cdot 10^{-6} A_{66}\)</span>.</p>
+<span class="math notranslate nohighlight">\(\gamma_{r_z} = K6ROT \cdot 10^{-6} A_{66}\)</span>. With either coefficient the
+term <span class="math notranslate nohighlight">\(\gamma_{r_z} \int_A (r_z - \theta_z)^2 dA\)</span> is integrated with the
+three-point rule, see <code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG._update_probe_KC0ve()</span></code>, whereas the
+physics-based model of <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a>, which adds the Allman
+enrichment, integrates it with a single point at the centroid.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This element does <strong>not</strong> carry the hierarchical edge-mode
-enrichment of Allman (1984) that <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a> and
+enrichment of Allman (1984) <a class="reference internal" href="#r467003471fab-6" id="id11">[6]</a> that <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a> and
 <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.quad4.Quad4</span></code></a> apply to the in-plane displacement field, so
 its membrane response in in-plane bending is the stiff one of the
 constant-strain triangle. The element is aimed at the transverse shear
 behaviour; for in-plane dominated problems prefer the enriched elements.</p>
 </div>
-</section>
-<section id="geometrically-nonlinear-analysis">
-<h2>Geometrically nonlinear analysis<a class="headerlink" href="#geometrically-nonlinear-analysis" title="Link to this heading">#</a></h2>
+<p class="rubric">Geometrically nonlinear analysis</p>
 <p>The element carries the von Karman membrane strains,</p>
 <div class="math notranslate nohighlight">
 \[\epsilon_{xx} = u_{,x} + \frac{1}{2} w_{,x}^2, \quad
@@ -511,74 +889,143 @@ behaviour; for in-plane dominated problems prefer the enriched elements.</p>
 <p>with the same split of the tangent stiffness as
 <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.quad4.Quad4</span></code></a> and <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a>,</p>
 <div class="math notranslate nohighlight">
-\[[K_T] = [K_{C_0}] + [K_{CNL}(u)] + [K_G(u)]\]</div>
+\[\boldsymbol{K}_T = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u}) + \boldsymbol{K}_{GNL}(\boldsymbol{u}) + \boldsymbol{K}_G(\boldsymbol{u})\]</div>
 <p>which is the exact Jacobian of the internal forces of
-<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_fint" title="pyfe3d.tria3dsg.Tria3DSG.update_fint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG.update_fint()</span></code></a> called with <code class="docutils literal notranslate"><span class="pre">nonlinear=1</span></code>. <span class="math notranslate nohighlight">\([K_G]\)</span> is left
+<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_fint" title="pyfe3d.tria3dsg.Tria3DSG.update_fint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG.update_fint()</span></code></a> called with <code class="docutils literal notranslate"><span class="pre">nonlinear=1</span></code>. <span class="math notranslate nohighlight">\(\boldsymbol{K}_G\)</span> is left
 homogeneous of degree one in the displacements so that a linear buckling
 analysis can use it directly, the stress of the nonlinear membrane strain
-being collected in <span class="math notranslate nohighlight">\([K_{CNL}]\)</span> instead. See <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KCNL" title="pyfe3d.tria3dsg.Tria3DSG.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG.update_KCNL()</span></code></a>.</p>
+being collected in <span class="math notranslate nohighlight">\(\boldsymbol{K}_{GNL}\)</span> instead, which
+<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KCNL" title="pyfe3d.tria3dsg.Tria3DSG.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG.update_KCNL()</span></code></a> computes together with <span class="math notranslate nohighlight">\(\boldsymbol{K}_{CNL}\)</span>.</p>
 <p>Two things are simpler here than in the quadrilateral. First, the transverse
 shear strains of first-order shear deformation theory have no von Karman
-terms, so the discrete shear gap operator appears in <span class="math notranslate nohighlight">\([K_{C_0}]\)</span> alone and
+terms, so the discrete shear gap operator appears in <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> alone and
 the nonlinear methods never touch it. Second, every operator of this element
-is constant over the triangle, so <span class="math notranslate nohighlight">\([K_{CNL}]\)</span>, its internal forces and
-<span class="math notranslate nohighlight">\([K_G]\)</span> are all integrated exactly by a single multiplication by the area,
+is constant over the triangle, so <span class="math notranslate nohighlight">\(\boldsymbol{K}_{CNL} + \boldsymbol{K}_{GNL}\)</span>, its internal forces and
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_G\)</span> are all integrated exactly by a single multiplication by the area,
 with no quadrature loop and no quadrature to keep consistent between the
 matrix and the residual. The drilling term is the only one that needs more
 than one point, and it is linear.</p>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<div role="list" class="citation-list">
+<div class="citation" id="r467003471fab-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id7">2</a>,<a role="doc-backlink" href="#id8">3</a>,<a role="doc-backlink" href="#id9">4</a>)</span>
+<p>Bletzinger, K.-U., Bischoff, M., and Ramm, E., A unified approach for
+shear-locking-free triangular and rectangular shell finite elements,
+Computers &amp; Structures, 75(3), 321-334, 2000.
+<a class="reference external" href="https://doi.org/10.1016/S0045-7949(99)00140-6">https://doi.org/10.1016/S0045-7949(99)00140-6</a></p>
+</div>
+<div class="citation" id="r467003471fab-2" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id2">1</a>,<a role="doc-backlink" href="#id3">2</a>)</span>
+<p>Lyly, M., Stenberg, R., and Vihinen, T., A stable bilinear element for
+the Reissner-Mindlin plate model, Computer Methods in Applied Mechanics
+and Engineering, 110(3-4), 343-357, 1993.
+<a class="reference external" href="https://doi.org/10.1016/0045-7825(93)90214-I">https://doi.org/10.1016/0045-7825(93)90214-I</a></p>
+</div>
+<div class="citation" id="r467003471fab-3" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id4">3</a><span class="fn-bracket">]</span></span>
+<p>Bischoff, M., and Bletzinger, K.-U., Improving stability and accuracy
+of Reissner-Mindlin plate finite elements via algebraic subgrid scale
+stabilization, Computer Methods in Applied Mechanics and Engineering,
+193(15-16), 1517-1528, 2004. <a class="reference external" href="https://doi.org/10.1016/j.cma.2003.12.036">https://doi.org/10.1016/j.cma.2003.12.036</a></p>
+</div>
+<div class="citation" id="r467003471fab-4" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id5">4</a><span class="fn-bracket">]</span></span>
+<p>Castro, S. G. P., Donadon, M. V., and Guimaraes, T. A. M., ES-PIM
+applied to buckling of variable angle tow laminates, Composite
+Structures, 209, 67-78, 2019.
+<a class="reference external" href="https://doi.org/10.1016/j.compstruct.2018.10.058">https://doi.org/10.1016/j.compstruct.2018.10.058</a></p>
+</div>
+<div class="citation" id="r467003471fab-5" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id10">5</a><span class="fn-bracket">]</span></span>
+<p>Hughes, T. J. R., and Brezzi, F., On drilling degrees of freedom,
+Computer Methods in Applied Mechanics and Engineering, 72(1), 105-121,
+1989. <a class="reference external" href="https://doi.org/10.1016/0045-7825(89)90124-2">https://doi.org/10.1016/0045-7825(89)90124-2</a></p>
+</div>
+<div class="citation" id="r467003471fab-6" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id11">6</a><span class="fn-bracket">]</span></span>
+<p>Allman, D. J., A compatible triangular element including vertex
+rotations for plane elasticity analysis, Computers &amp; Structures,
+19(1-2), 1-8, 1984. <a class="reference external" href="https://doi.org/10.1016/0045-7949(84)90197-4">https://doi.org/10.1016/0045-7949(84)90197-4</a></p>
+</div>
+<div class="citation" id="r467003471fab-7" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id6">7</a><span class="fn-bracket">]</span></span>
+<p>Rohwer, K., Improved transverse shear stiffness for layered finite
+elements, DFVLR-FB 88-32, 1988.</p>
+</div>
+</div>
 </section>
 </section>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.tria3dsg.Tria3DSG">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyfe3d.tria3dsg.</span></span><span class="sig-name descname"><span class="pre">Tria3DSG</span></span><a class="headerlink" href="#pyfe3d.tria3dsg.Tria3DSG" title="Link to this definition">#</a></dt>
 <dd><p>Three-node triangular shell element with a discrete shear gap</p>
+<p>The constructor stores the probe and sets the identification numbers and
+the positions <code class="docutils literal notranslate"><span class="pre">c1,</span> <span class="pre">c2,</span> <span class="pre">c3</span></code> to <code class="docutils literal notranslate"><span class="pre">-1</span></code>, the <code class="docutils literal notranslate"><span class="pre">init_k_*</span></code> positions to
+<code class="docutils literal notranslate"><span class="pre">0</span></code>, and the rotation matrices <code class="docutils literal notranslate"><span class="pre">r11,</span> <span class="pre">...,</span> <span class="pre">r33</span></code> and <code class="docutils literal notranslate"><span class="pre">m11,</span> <span class="pre">m12,</span> <span class="pre">m21,</span>
+<span class="pre">m22</span></code> to the identity. Before computing any element matrix, the caller
+sets <code class="docutils literal notranslate"><span class="pre">c1,</span> <span class="pre">c2,</span> <span class="pre">c3</span></code> and the <code class="docutils literal notranslate"><span class="pre">init_k_*</span></code> positions, and calls
+<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_rotation_matrix" title="pyfe3d.tria3dsg.Tria3DSG.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a> and <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_xe" title="pyfe3d.tria3dsg.Tria3DSG.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a>.</p>
 <dl class="field-list">
-<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
+<dt><strong>p</strong><span class="classifier"><a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSGProbe" title="pyfe3d.tria3dsg.Tria3DSGProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSGProbe</span></code></a></span></dt><dd><p>Probe used by the element, stored in <code class="docutils literal notranslate"><span class="pre">probe</span></code>. One probe can be
+shared by many elements.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
 <dt><strong>eid,</strong><span class="classifier">int</span></dt><dd><p>Element identification number.</p>
 </dd>
 <dt><strong>pid,</strong><span class="classifier">int</span></dt><dd><p>Property identification number.</p>
 </dd>
-<dt><strong>area,</strong><span class="classifier">double</span></dt><dd><p>Element area.</p>
+<dt><strong>area,</strong><span class="classifier">double</span></dt><dd><p>Element area.
+Dimension of length squared. Updated by <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_area" title="pyfe3d.tria3dsg.Tria3DSG.update_area"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_area()</span></code></a> and by
+the methods that compute stiffness matrices, internal forces or the
+mass matrix.</p>
 </dd>
 <dt><strong>n1, n2, n3</strong><span class="classifier">int</span></dt><dd><p>Node identification numbers.</p>
 </dd>
 <dt><strong>c1, c2, c3</strong><span class="classifier">int</span></dt><dd><p>Position of each node’s first degree-of-freedom in the global
-displacement vector.</p>
+displacement vector.
+The coordinates of a node are read at the positions <code class="docutils literal notranslate"><span class="pre">c1//2</span></code>,
+<code class="docutils literal notranslate"><span class="pre">c2//2</span></code> and <code class="docutils literal notranslate"><span class="pre">c3//2</span></code> of the coordinate array.</p>
 </dd>
 <dt><strong>init_k_KC0, init_k_KCNL, init_k_KG, init_k_M</strong><span class="classifier">int</span></dt><dd><p>Position of this element’s first entry in the sparse vectors.</p>
 </dd>
-<dt><strong>drilling_model,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">0</span></code>, the default, uses <span class="math notranslate nohighlight">\(\gamma_{r_z} = A_{66}\)</span> of Hughes and
-Brezzi. Any other value uses <span class="math notranslate nohighlight">\(K6ROT \cdot 10^{-6} A_{66}\)</span>.</p>
+<dt><strong>drilling_model,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">0</span></code>, the default, uses the in-plane shear stiffness <code class="docutils literal notranslate"><span class="pre">A66</span></code> of the
+laminate, or <code class="docutils literal notranslate"><span class="pre">gamma_rz</span></code>, as the coefficient of the drilling term.
+Any other value uses the fictitious penalty <code class="docutils literal notranslate"><span class="pre">K6ROT*1e-6*A66</span></code>.</p>
 </dd>
-<dt><strong>gamma_rz,</strong><span class="classifier">double</span></dt><dd><p>When non-negative and <code class="docutils literal notranslate"><span class="pre">drilling_model</span> <span class="pre">=</span> <span class="pre">0</span></code>, overrides <span class="math notranslate nohighlight">\(A_{66}\)</span> as
-the regularisation coefficient, which is what makes the sensitivity
-study recommended in the literature possible. Negative means use
-<span class="math notranslate nohighlight">\(A_{66}\)</span>.</p>
+<dt><strong>gamma_rz,</strong><span class="classifier">double</span></dt><dd><p>When non-negative and <code class="docutils literal notranslate"><span class="pre">drilling_model</span> <span class="pre">=</span> <span class="pre">0</span></code>, overrides <code class="docutils literal notranslate"><span class="pre">A66</span></code> as
+the coefficient of the drilling term. Negative, the default <code class="docutils literal notranslate"><span class="pre">-1.</span></code>,
+means use <code class="docutils literal notranslate"><span class="pre">A66</span></code>.
+Dimension of force per unit length, as <code class="docutils literal notranslate"><span class="pre">A66</span></code>.</p>
 </dd>
 <dt><strong>K6ROT,</strong><span class="classifier">double</span></dt><dd><p>Coefficient of the fictitious penalty, used when
-<code class="docutils literal notranslate"><span class="pre">drilling_model</span> <span class="pre">!=</span> <span class="pre">0</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">drilling_model</span> <span class="pre">!=</span> <span class="pre">0</span></code>. Default <code class="docutils literal notranslate"><span class="pre">1.</span></code>.
+Dimensionless.</p>
 </dd>
-<dt><strong>alpha_shear_locking,</strong><span class="classifier">double</span></dt><dd><p>Optional algebraic stabilisation of the transverse shear stiffness,
-<span class="math notranslate nohighlight">\(\hat{A}_{ts} = A_{ts}/(1 + \alpha \ell^2/h^2)\)</span> with <span class="math notranslate nohighlight">\(\ell\)</span> the
-longest edge and <span class="math notranslate nohighlight">\(h\)</span> the total thickness, applied after the rotation
-into the element coordinate system and after the shear correction.
-The default <code class="docutils literal notranslate"><span class="pre">0.</span></code> disables it entirely and is the element as
-described above: the discrete shear gap is already locking-free, so
-nothing has to be rescaled.</p>
-<p>A non-zero value reproduces the element of Bischoff and Bletzinger
-(2004) and Castro et al. (2019) as those papers actually define it,
-that is the stabilisation applied on top of a discrete shear gap
-field, which is not how <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a> uses the same
-symbol. There the factor is applied to a centroid-sampled shear
-field and has to do the unlocking itself, which is why its default
-is 0.7, seven times the literature value, and why it is load
-bearing there and merely helpful here.</p>
-<p><strong>Recommended value.</strong> <code class="docutils literal notranslate"><span class="pre">0.07</span></code>, the lower bound of the range
-recommended by Castro et al. (2019), on a thin plate discretised
-coarsely, and only there. Measured with this element, with the
-remaining columns from <code class="docutils literal notranslate"><span class="pre">tests/test_tria3dsg.py</span></code> and the study
-described in the module documentation:</p>
+<dt><strong>alpha_shear_locking,</strong><span class="classifier">double</span></dt><dd><p>Optional reduction of the transverse shear stiffnesses <code class="docutils literal notranslate"><span class="pre">A44</span></code>,
+<code class="docutils literal notranslate"><span class="pre">A45</span></code> and <code class="docutils literal notranslate"><span class="pre">A55</span></code> of the element, by a factor that grows with the
+square of the ratio of the longest edge to the total thickness,
+applied after the rotation into the element coordinate system and
+after the shear correction. The default <code class="docutils literal notranslate"><span class="pre">0.</span></code> disables it entirely.
+Set it deliberately, per problem class, and never as a constant of
+the element.
+Dimensionless.</p>
+</dd>
+<dt><strong>m11, m12, m21, m22</strong><span class="classifier">double</span></dt><dd><p>In-plane rotation from the material to the element coordinate
+system, set by <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_rotation_matrix" title="pyfe3d.tria3dsg.Tria3DSG.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a>.</p>
+</dd>
+<dt><strong>r11, r12, …, r33</strong><span class="classifier">double</span></dt><dd><p>Entries <span class="math notranslate nohighlight">\(T_{ij}\)</span> of the transformation matrix <span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3}\)</span> from
+element to global coordinates, whose columns are the element axes.</p>
+</dd>
+<dt><strong>probe,</strong><span class="classifier"><a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSGProbe" title="pyfe3d.tria3dsg.Tria3DSGProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSGProbe</span></code></a></span></dt><dd><p>Shared probe object.</p>
 </dd>
 </dl>
 </dd>
@@ -590,7 +1037,7 @@ described in the module documentation:</p>
 <td><p>Update the sparse vectors of the constitutive stiffness matrix</p></td>
 </tr>
 <tr class="row-even"><td><p><a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KCNL" title="pyfe3d.tria3dsg.Tria3DSG.update_KCNL"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KCNL</span></code></a>(self, long[, long[, double[, ...)</p></td>
-<td><p>Update the sparse vectors of the nonlinear constitutive stiffness matrix</p></td>
+<td><p>Update the sparse vectors of the nonlinear stiffness matrix</p></td>
 </tr>
 <tr class="row-odd"><td><p><a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KG" title="pyfe3d.tria3dsg.Tria3DSG.update_KG"><code class="xref py py-obj docutils literal notranslate"><span class="pre">update_KG</span></code></a>(self, long[, long[, double[, ...)</p></td>
 <td><p>Update the geometric stiffness from the current displacements</p></td>
@@ -621,6 +1068,102 @@ described in the module documentation:</p>
 </tr>
 </tbody>
 </table>
+</div>
+<p class="rubric">Notes</p>
+<p><code class="docutils literal notranslate"><span class="pre">drilling_model</span> <span class="pre">=</span> <span class="pre">0</span></code> uses <span class="math notranslate nohighlight">\(\gamma_{r_z} = A_{66}\)</span> of Hughes and
+Brezzi <a class="reference internal" href="#r157ad23e8ff2-1" id="id12">[1]</a>, and any other value <span class="math notranslate nohighlight">\(K6ROT \cdot 10^{-6} A_{66}\)</span>, see the
+module documentation. Overriding <span class="math notranslate nohighlight">\(A_{66}\)</span> with <code class="docutils literal notranslate"><span class="pre">gamma_rz</span></code> is what makes
+the sensitivity study recommended in the literature possible.</p>
+<p><code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span></code> is the optional algebraic stabilisation of the
+transverse shear stiffness,
+<span class="math notranslate nohighlight">\(\hat{A}_{ts} = A_{ts}/(1 + \alpha \ell^2/h^2)\)</span> with <span class="math notranslate nohighlight">\(\ell\)</span> the longest
+edge and <span class="math notranslate nohighlight">\(h\)</span> the total thickness. The default <code class="docutils literal notranslate"><span class="pre">0.</span></code> is the element as
+described in the module documentation: the discrete shear gap is
+already locking-free, so nothing has to be rescaled.</p>
+<p>A non-zero value applies the factor of Stenberg’s method, as Bischoff
+and Bletzinger (2004) <a class="reference internal" href="#r157ad23e8ff2-2" id="id13">[2]</a> (Sec. 3.1) call the stabilisation of Lyly,
+Stenberg and Vihinen, on top of a discrete shear gap field, as Castro
+et al. (2019) <a class="reference internal" href="#r157ad23e8ff2-3" id="id14">[3]</a> (Eq. (26)) do, which is not how
+<a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a> uses the same symbol. There the factor
+is applied to a centroid-sampled shear field and has to do the
+unlocking itself, which is why its default
+is 0.7, seven times the literature value, and why it is load
+bearing there and merely helpful here.</p>
+<p><strong>Recommended value.</strong> <code class="docutils literal notranslate"><span class="pre">0.07</span></code>, the lower bound of the range
+recommended by Castro et al. (2019), on a thin plate discretised
+coarsely, and only there. Measured with this element, with the
+remaining columns from <code class="docutils literal notranslate"><span class="pre">tests/test_tria3dsg.py</span></code> and the study
+described in the module documentation:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">alpha</span>                     <span class="mi">0</span>      <span class="mf">0.07</span>     <span class="mf">0.10</span>     <span class="mf">0.15</span>
+<span class="o">~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~</span>
+<span class="n">omega_11</span><span class="p">,</span>  <span class="mi">5</span> <span class="n">x</span> <span class="mi">7</span>     <span class="o">+</span><span class="mf">12.06</span><span class="o">%</span>   <span class="o">+</span><span class="mf">7.93</span><span class="o">%</span>   <span class="o">+</span><span class="mf">6.73</span><span class="o">%</span>   <span class="o">+</span><span class="mf">4.86</span><span class="o">%</span>
+<span class="n">omega_11</span><span class="p">,</span>  <span class="mi">9</span> <span class="n">x</span> <span class="mi">11</span>     <span class="o">+</span><span class="mf">2.75</span><span class="o">%</span>   <span class="o">+</span><span class="mf">1.69</span><span class="o">%</span>   <span class="o">+</span><span class="mf">1.27</span><span class="o">%</span>   <span class="o">+</span><span class="mf">0.60</span><span class="o">%</span>
+<span class="n">omega_11</span><span class="p">,</span> <span class="mi">33</span> <span class="n">x</span> <span class="mi">41</span>     <span class="o">-</span><span class="mf">0.61</span><span class="o">%</span>   <span class="o">-</span><span class="mf">0.72</span><span class="o">%</span>   <span class="o">-</span><span class="mf">0.76</span><span class="o">%</span>   <span class="o">-</span><span class="mf">0.84</span><span class="o">%</span>
+<span class="n">Nxx_cr</span><span class="p">,</span>   <span class="n">l</span><span class="o">/</span><span class="n">h</span> <span class="o">=</span> <span class="mi">30</span>    <span class="o">+</span><span class="mf">1.71</span><span class="o">%</span>   <span class="o">+</span><span class="mf">0.11</span><span class="o">%</span>   <span class="o">-</span><span class="mf">0.33</span><span class="o">%</span>   <span class="o">-</span><span class="mf">1.02</span><span class="o">%</span>
+<span class="n">w_max</span><span class="p">,</span>    <span class="n">a</span><span class="o">/</span><span class="n">h</span> <span class="o">=</span> <span class="mi">5</span>     <span class="o">+</span><span class="mf">9.81</span><span class="o">%</span>  <span class="o">+</span><span class="mf">10.14</span><span class="o">%</span>  <span class="o">+</span><span class="mf">10.30</span><span class="o">%</span>  <span class="o">+</span><span class="mf">10.51</span><span class="o">%</span>
+</pre></div>
+</div>
+<p>the first three rows being the first natural frequency of a
+thin plate under refinement, the fourth the buckling load of a
+thin plate and the last the deflection of a plate thick enough
+for transverse shear to carry 19 per cent of it, every entry a
+relative error against the analytical value.</p>
+<p>The buckling row crosses from the stiff to the soft side between
+<span class="math notranslate nohighlight">\(0.07\)</span> and <span class="math notranslate nohighlight">\(0.1\)</span>, which is the behaviour Castro et al. report above
+<span class="math notranslate nohighlight">\(\alpha = 0.09\)</span>, reproduced here on a discrete shear gap field
+rather than on the ES-PIM of that paper.</p>
+<p><strong>Why the default is nevertheless zero.</strong> The factor
+<span class="math notranslate nohighlight">\(\alpha \ell^2/h^2\)</span> is unbounded in <span class="math notranslate nohighlight">\(\ell/h\)</span>, so a non-zero
+<span class="math notranslate nohighlight">\(\alpha\)</span> removes essentially all of the transverse shear stiffness
+on any practical shell mesh, and with it three properties this
+element was built to have. Measured at the default <span class="math notranslate nohighlight">\(\alpha = 0\)</span>
+against <span class="math notranslate nohighlight">\(\alpha = 0.07\)</span>:</p>
+<ul class="simple">
+<li><p>the constant transverse shear state of
+<code class="docutils literal notranslate"><span class="pre">test_constant_transverse_shear_state_is_exact</span></code>, exact to
+<span class="math notranslate nohighlight">\(10^{-12}\)</span> at every element size, drops to <span class="math notranslate nohighlight">\(1/(1 + factor)\)</span> of
+the correct energy, which is <span class="math notranslate nohighlight">\(0.067\)</span> at <span class="math notranslate nohighlight">\(L/h = 10\)</span> and
+<span class="math notranslate nohighlight">\(7 \times 10^{-8}\)</span> at <span class="math notranslate nohighlight">\(L/h = 10^4\)</span> for the right triangles of leg
+<span class="math notranslate nohighlight">\(L\)</span> of that test, whose longest edge is <span class="math notranslate nohighlight">\(\ell = \sqrt{2} L\)</span>, i.e.
+<span class="math notranslate nohighlight">\(0.125\)</span> at <span class="math notranslate nohighlight">\(\ell/h = 10\)</span> and <span class="math notranslate nohighlight">\(1.4 \times 10^{-7}\)</span> at
+<span class="math notranslate nohighlight">\(\ell/h = 10^4\)</span>;</p></li>
+<li><p>the sensitivity of <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> to <span class="math notranslate nohighlight">\(A_{ts}\)</span> falls by about three
+hundred on the geometry of
+<code class="docutils literal notranslate"><span class="pre">test_transverse_shear_stays_out_of_the_nonlinear_terms</span></code>, that
+is the element uses a fraction of a per cent of the transverse
+shear stiffness the laminate gives it;</p></li>
+<li><p>the last row of the table above: where transverse shear is real
+physics rather than a penalty, <span class="math notranslate nohighlight">\(\alpha\)</span> can only add error, and
+it does so monotonically.</p></li>
+</ul>
+<p>So the gain is confined to coarse meshes of thin plates, where the
+element is already accurate, and it is paid for in the regime the
+FSDT exists to describe. Set it deliberately, per problem class, as
+for <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a>, and never as a constant of the
+element.</p>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="r157ad23e8ff2-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id12">1</a><span class="fn-bracket">]</span></span>
+<p>Hughes, T. J. R., and Brezzi, F., On drilling degrees of freedom,
+Computer Methods in Applied Mechanics and Engineering, 72(1), 105-121,
+1989. <a class="reference external" href="https://doi.org/10.1016/0045-7825(89)90124-2">https://doi.org/10.1016/0045-7825(89)90124-2</a></p>
+</div>
+<div class="citation" id="r157ad23e8ff2-2" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id13">2</a><span class="fn-bracket">]</span></span>
+<p>Bischoff, M., and Bletzinger, K.-U., Improving stability and
+accuracy of Reissner-Mindlin plate finite elements via algebraic
+subgrid scale stabilization, Computer Methods in Applied Mechanics and
+Engineering, 193(15-16), 1517-1528, 2004.
+<a class="reference external" href="https://doi.org/10.1016/j.cma.2003.12.036">https://doi.org/10.1016/j.cma.2003.12.036</a></p>
+</div>
+<div class="citation" id="r157ad23e8ff2-3" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id14">3</a><span class="fn-bracket">]</span></span>
+<p>Castro, S. G. P., Donadon, M. V., and Guimaraes, T. A. M., ES-PIM
+applied to buckling of variable angle tow laminates, Composite
+Structures, 209, 67-78, 2019.
+<a class="reference external" href="https://doi.org/10.1016/j.compstruct.2018.10.058">https://doi.org/10.1016/j.compstruct.2018.10.058</a></p>
+</div>
 </div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.tria3dsg.Tria3DSG.K6ROT">
@@ -817,12 +1360,24 @@ into the <code class="docutils literal notranslate"><span class="pre">KC0ve</spa
 coordinates here.</p>
 <p>Before this method is called, <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_xe" title="pyfe3d.tria3dsg.Tria3DSG.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a> must have
 been used to set the element-frame coordinates of the probe.</p>
+<p>The values in global coordinates are added to <code class="docutils literal notranslate"><span class="pre">KC0v</span></code> at the
+positions <code class="docutils literal notranslate"><span class="pre">init_k_KC0</span></code> to <code class="docutils literal notranslate"><span class="pre">init_k_KC0</span> <span class="pre">+</span> <span class="pre">KC0_SPARSE_SIZE</span> <span class="pre">-</span> <span class="pre">1</span></code>. With
+<code class="docutils literal notranslate"><span class="pre">update_KC0v_only=0</span></code> the global row and column indices are written
+to <code class="docutils literal notranslate"><span class="pre">KC0r</span></code> and <code class="docutils literal notranslate"><span class="pre">KC0c</span></code> at the same positions. The rotation matrix of
+<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_rotation_matrix" title="pyfe3d.tria3dsg.Tria3DSG.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a> is used. The <code class="docutils literal notranslate"><span class="pre">area</span></code> attribute and
+the strain rows of the probe are updated as well.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
-<dt><strong>KC0r, KC0c</strong><span class="classifier">array-like</span></dt><dd><p>Row and column positions of the sparse values.</p>
+<dt><strong>KC0r, KC0c</strong><span class="classifier">array-like</span></dt><dd><p>Row and column positions of the sparse values.
+1-D arrays of integers (<code class="docutils literal notranslate"><span class="pre">INT</span></code>) of size at least <code class="docutils literal notranslate"><span class="pre">init_k_KC0</span> <span class="pre">+</span>
+<span class="pre">KC0_SPARSE_SIZE</span></code>.</p>
 </dd>
-<dt><strong>KC0v</strong><span class="classifier">array-like</span></dt><dd><p>Sparse values.</p>
+<dt><strong>KC0v</strong><span class="classifier">array-like</span></dt><dd><p>Sparse values.
+1-D array of <code class="docutils literal notranslate"><span class="pre">DOUBLE</span></code>, same size as <code class="docutils literal notranslate"><span class="pre">KC0r</span></code>. The values are
+added to the existing ones, with dimension of force per unit
+length between translations, of force between a translation and a
+rotation, and of force times length between rotations.</p>
 </dd>
 <dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp</span></code></a></span></dt><dd><p>Shell property.</p>
 </dd>
@@ -831,60 +1386,47 @@ been used to set the element-frame coordinates of the probe.</p>
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>The formulation of the element matrix is given in
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_probe_KC0ve()</span></code>. With <span class="math notranslate nohighlight">\(\boldsymbol{T}\)</span> the transformation matrix of
+the element, block diagonal with the matrix <span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3}\)</span> of the
+entries <span class="math notranslate nohighlight">\(T_{ij}\)</span> stored in <code class="docutils literal notranslate"><span class="pre">r11,</span> <span class="pre">...,</span> <span class="pre">r33</span></code>, whose columns are the
+element axes, for the translations and for the rotations of each node,
+the global values are <span class="math notranslate nohighlight">\(\boldsymbol{K}_g = \boldsymbol{T} \boldsymbol{K}_e \boldsymbol{T}^\top\)</span>, i.e. <span class="math notranslate nohighlight">\(K_{g,mn} =
+T_{mi} K_{e,ij} T_{nj}\)</span>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.tria3dsg.Tria3DSG.update_KCNL">
 <span class="sig-name descname"><span class="pre">update_KCNL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KCNLr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KCNLc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KCNLv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KCNLv_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.tria3dsg.Tria3DSG.update_KCNL" title="Link to this definition">#</a></dt>
-<dd><p>Update the sparse vectors of the nonlinear constitutive stiffness matrix</p>
-<p>Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, built from the von
-Karman membrane strains</p>
-<div class="math notranslate nohighlight">
-\[\epsilon_{xx} = u_{,x} + \frac{1}{2} w_{,x}^2, \quad
-\epsilon_{yy} = v_{,y} + \frac{1}{2} w_{,y}^2, \quad
-\gamma_{xy} = u_{,y} + v_{,x} + w_{,x} w_{,y}\]</div>
-<p>whose nonlinear part is <span class="math notranslate nohighlight">\(\{\epsilon_{NL}\} = \frac{1}{2} [B_{mL}]
-\{u_e\}\)</span>, with <span class="math notranslate nohighlight">\([B_{mL}]\)</span> its variation. With <span class="math notranslate nohighlight">\([B_m]\)</span> and <span class="math notranslate nohighlight">\([B_b]\)</span>
-the linear membrane and bending strain-displacement matrices, <span class="math notranslate nohighlight">\([G]\)</span>
-the gradient of <span class="math notranslate nohighlight">\(w\)</span>, and <span class="math notranslate nohighlight">\([A]\)</span>, <span class="math notranslate nohighlight">\([B]\)</span> the laminate matrices:</p>
-<ul class="simple">
-<li><p>KC0L = <span class="math notranslate nohighlight">\([B_m]^T [A] [B_{mL}] + [B_b]^T [B] [B_{mL}]\)</span></p></li>
-<li><p>KCL0 = KC0L`^T`</p></li>
-<li><p>KCLL = <span class="math notranslate nohighlight">\([B_{mL}]^T [A] [B_{mL}]\)</span></p></li>
-<li><p>KGNL = <span class="math notranslate nohighlight">\([G]^T [N_{NL}] [G]\)</span>, with <span class="math notranslate nohighlight">\(\{N_{NL}\} = [A]
-\{\epsilon_{NL}\}\)</span></p></li>
-</ul>
-<p>The first three groups are the constitutive terms coupling the
-linear and the nonlinear parts of the membrane strain. KGNL is
-geometric, carrying the stress of the nonlinear membrane strain. It
-is collected here so that <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KG" title="pyfe3d.tria3dsg.Tria3DSG.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG()</span></code></a> stays homogeneous of
-degree one in the displacements, which is what a linear buckling
-analysis needs. With it here,</p>
-<div class="math notranslate nohighlight">
-\[K_T = K_{C0} + K_{CNL}(u) + K_G(u)\]</div>
-<p>is the exact Jacobian of the internal forces of <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_fint" title="pyfe3d.tria3dsg.Tria3DSG.update_fint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_fint()</span></code></a>
-with <code class="docutils literal notranslate"><span class="pre">nonlinear=1</span></code>, and a Newton-Raphson iteration built on them
-converges quadratically.</p>
-<div class="admonition note">
-<p class="admonition-title">Note</p>
-<p>The transverse shear strains of first-order shear
-deformation theory carry no von Karman terms, so the discrete
-shear gap operator of this element enters <span class="math notranslate nohighlight">\(K_{C0}\)</span> alone and
-needs nothing here. The membrane rows have no <span class="math notranslate nohighlight">\(r_z\)</span> entries,
-this element having no Allman enrichment, so the drilling
-regularisation is likewise untouched. Both are unlike
-<a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.quad4.Quad4</span></code></a>, whose enriched membrane rows have
-to be carried into its nonlinear tangent.</p>
-</div>
+<dd><p>Update the sparse vectors of the nonlinear stiffness matrix</p>
+<p>The nonlinear stiffness matrix KCNL is the part of the
+tangent stiffness matrix, besides <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KC0" title="pyfe3d.tria3dsg.Tria3DSG.update_KC0"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KC0()</span></code></a> and
+<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KG" title="pyfe3d.tria3dsg.Tria3DSG.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG()</span></code></a>, that depends on the displacements through the von
+Karman membrane strains, evaluated at the displacements <code class="docutils literal notranslate"><span class="pre">ue</span></code> of the
+probe. The sum of the three is the tangent stiffness matrix of the
+internal forces of <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_fint" title="pyfe3d.tria3dsg.Tria3DSG.update_fint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_fint()</span></code></a> with <code class="docutils literal notranslate"><span class="pre">nonlinear=1</span></code>.</p>
 <p>Before this method is called, <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_xe" title="pyfe3d.tria3dsg.Tria3DSG.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a> must have
 been used with the node coordinates and <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_ue" title="pyfe3d.tria3dsg.Tria3DSG.update_probe_ue"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_ue()</span></code></a>
 with the current displacements.</p>
+<p>The element matrix is computed in element coordinates into the probe
+attribute <code class="docutils literal notranslate"><span class="pre">KCNLve</span></code>, rotated to global coordinates, and its values
+are added to <code class="docutils literal notranslate"><span class="pre">KCNLv</span></code> at the positions <code class="docutils literal notranslate"><span class="pre">init_k_KCNL</span></code> to
+<code class="docutils literal notranslate"><span class="pre">init_k_KCNL</span> <span class="pre">+</span> <span class="pre">KCNL_SPARSE_SIZE</span> <span class="pre">-</span> <span class="pre">1</span></code>. With <code class="docutils literal notranslate"><span class="pre">update_KCNLv_only=0</span></code>
+the global row and column indices are written to <code class="docutils literal notranslate"><span class="pre">KCNLr</span></code> and
+<code class="docutils literal notranslate"><span class="pre">KCNLc</span></code> at the same positions.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
-<dt><strong>KCNLr, KCNLc</strong><span class="classifier">array-like</span></dt><dd><p>Row and column positions of the sparse values.</p>
+<dt><strong>KCNLr, KCNLc</strong><span class="classifier">array-like</span></dt><dd><p>Row and column positions of the sparse values.
+1-D arrays of integers (<code class="docutils literal notranslate"><span class="pre">INT</span></code>) of size at least <code class="docutils literal notranslate"><span class="pre">init_k_KCNL</span> <span class="pre">+</span>
+<span class="pre">KCNL_SPARSE_SIZE</span></code>.</p>
 </dd>
-<dt><strong>KCNLv</strong><span class="classifier">array-like</span></dt><dd><p>Sparse values.</p>
+<dt><strong>KCNLv</strong><span class="classifier">array-like</span></dt><dd><p>Sparse values.
+1-D array of <code class="docutils literal notranslate"><span class="pre">DOUBLE</span></code>, same size as <code class="docutils literal notranslate"><span class="pre">KCNLr</span></code>. The values are
+added to the existing ones, with dimension of force per unit
+length between translations, of force between a translation and a
+rotation, and of force times length between rotations.</p>
 </dd>
 <dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp</span></code></a></span></dt><dd><p>Shell property.</p>
 </dd>
@@ -893,6 +1435,52 @@ with the current displacements.</p>
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, that is <span class="math notranslate nohighlight">\(\boldsymbol{K}_{CNL} + \boldsymbol{K}_{GNL}\)</span>, the book’s nonlinear constitutive stiffness matrix <span class="math notranslate nohighlight">\(\boldsymbol{K}_{CNL}\)</span> of the terms of <span class="math notranslate nohighlight">\(\boldsymbol{B}_{NL}\)</span> plus the geometric <span class="math notranslate nohighlight">\(\boldsymbol{K}_{GNL}\)</span>, built from the von
+Karman membrane strains</p>
+<div class="math notranslate nohighlight">
+\[\epsilon_{xx} = u_{,x} + \frac{1}{2} w_{,x}^2, \quad
+\epsilon_{yy} = v_{,y} + \frac{1}{2} w_{,y}^2, \quad
+\gamma_{xy} = u_{,y} + v_{,x} + w_{,x} w_{,y}\]</div>
+<p>whose nonlinear part is <span class="math notranslate nohighlight">\(\boldsymbol{\epsilon}_{NL} = \frac{1}{2} \boldsymbol{B}_{NL}
+\boldsymbol{u}_e\)</span>, with <span class="math notranslate nohighlight">\(\boldsymbol{B}_{NL}\)</span> its variation. With <span class="math notranslate nohighlight">\(\boldsymbol{B}_m\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{B}_b\)</span>
+the linear membrane and bending strain-displacement matrices, <span class="math notranslate nohighlight">\(\boldsymbol{G}_x = \partial \boldsymbol{S}^w / \partial x\)</span>
+and <span class="math notranslate nohighlight">\(\boldsymbol{G}_y = \partial \boldsymbol{S}^w / \partial y\)</span> the gradients of <span class="math notranslate nohighlight">\(w\)</span>, and <span class="math notranslate nohighlight">\(\boldsymbol{A}\)</span>, <span class="math notranslate nohighlight">\(\boldsymbol{B}\)</span> the laminate matrices:</p>
+<ul class="simple">
+<li><p>KC0L = <span class="math notranslate nohighlight">\(\boldsymbol{B}_m^\top \boldsymbol{A} \boldsymbol{B}_{NL} + \boldsymbol{B}_b^\top \boldsymbol{B} \boldsymbol{B}_{NL}\)</span></p></li>
+<li><p>KCL0 = KC0L`^top`</p></li>
+<li><p>KCLL = <span class="math notranslate nohighlight">\(\boldsymbol{B}_{NL}^\top \boldsymbol{A} \boldsymbol{B}_{NL}\)</span></p></li>
+<li><p>KGNL = <span class="math notranslate nohighlight">\(N_{NL,xx} \boldsymbol{G}_x^\top \boldsymbol{G}_x + N_{NL,yy}
+\boldsymbol{G}_y^\top \boldsymbol{G}_y + N_{NL,xy} (\boldsymbol{G}_x^\top
+\boldsymbol{G}_y + \boldsymbol{G}_y^\top \boldsymbol{G}_x)\)</span>, with
+<span class="math notranslate nohighlight">\(\boldsymbol{N}_{NL} = \{N_{NL,xx}, N_{NL,yy}, N_{NL,xy}\}^\top
+= \boldsymbol{A} \boldsymbol{\epsilon}_{NL}\)</span></p></li>
+</ul>
+<p>The first three groups are the constitutive terms coupling the
+linear and the nonlinear parts of the membrane strain. KGNL is
+geometric, carrying the stress of the nonlinear membrane strain. It
+is collected here so that <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KG" title="pyfe3d.tria3dsg.Tria3DSG.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG()</span></code></a> stays homogeneous of
+degree one in the displacements, which is what a linear buckling
+analysis needs. With it here,</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{K}_T = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u}) + \boldsymbol{K}_{GNL}(\boldsymbol{u}) + \boldsymbol{K}_G(\boldsymbol{u})\]</div>
+<p>is the exact Jacobian of the internal forces of <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_fint" title="pyfe3d.tria3dsg.Tria3DSG.update_fint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_fint()</span></code></a>
+with <code class="docutils literal notranslate"><span class="pre">nonlinear=1</span></code>, and a Newton-Raphson iteration built on them
+converges quadratically.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The transverse shear strains of first-order shear
+deformation theory carry no von Karman terms, so the discrete
+shear gap operator of this element enters <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> alone and
+needs nothing here. The membrane rows have no <span class="math notranslate nohighlight">\(r_z\)</span> entries,
+this element having no Allman enrichment, so the drilling
+regularisation is likewise untouched. Both are unlike
+<a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.quad4.Quad4</span></code></a>, whose enriched membrane rows have
+to be carried into its nonlinear tangent.</p>
+</div>
+<p>Every operator is constant over the triangle, so each term is
+integrated exactly by a multiplication by the element area, see
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_probe_KCNLve()</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -903,19 +1491,26 @@ with the current displacements.</p>
 displacements, which <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_ue" title="pyfe3d.tria3dsg.Tria3DSG.update_probe_ue"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_ue()</span></code></a> must have updated,
 using the same strain operators and the same membrane constitutive
 relation that <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_fint" title="pyfe3d.tria3dsg.Tria3DSG.update_fint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_fint()</span></code></a> uses, and then handed to
-<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KG_given_stress" title="pyfe3d.tria3dsg.Tria3DSG.update_KG_given_stress"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG_given_stress()</span></code></a>. Both the strains and the curvatures
-are constant over the triangle, so the resulting stress state is
-constant too, which is what that method assumes.</p>
-<p>Only the linear strains contribute, which leaves this matrix
-homogeneous of degree one in the displacements, as a linear buckling
-analysis needs. The stress of the von Karman terms of the membrane
-strain is carried by <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KCNL" title="pyfe3d.tria3dsg.Tria3DSG.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a> instead.</p>
+<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KG_given_stress" title="pyfe3d.tria3dsg.Tria3DSG.update_KG_given_stress"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG_given_stress()</span></code></a>. Only the linear strains contribute;
+the stress of the von Karman terms of the membrane strain is carried
+by <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KCNL" title="pyfe3d.tria3dsg.Tria3DSG.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a> instead.</p>
+<p>The values are added to <code class="docutils literal notranslate"><span class="pre">KGv</span></code> at the positions <code class="docutils literal notranslate"><span class="pre">init_k_KG</span></code> to
+<code class="docutils literal notranslate"><span class="pre">init_k_KG</span> <span class="pre">+</span> <span class="pre">KG_SPARSE_SIZE</span> <span class="pre">-</span> <span class="pre">1</span></code>. With <code class="docutils literal notranslate"><span class="pre">update_KGv_only=0</span></code> the
+global row and column indices are written to <code class="docutils literal notranslate"><span class="pre">KGr</span></code> and <code class="docutils literal notranslate"><span class="pre">KGc</span></code> at
+the same positions. Before this method is called,
+<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_rotation_matrix" title="pyfe3d.tria3dsg.Tria3DSG.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a> and <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_xe" title="pyfe3d.tria3dsg.Tria3DSG.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a> must
+also have been used.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
-<dt><strong>KGr, KGc</strong><span class="classifier">array-like</span></dt><dd><p>Row and column positions of the sparse values.</p>
+<dt><strong>KGr, KGc</strong><span class="classifier">array-like</span></dt><dd><p>Row and column positions of the sparse values.
+1-D arrays of integers (<code class="docutils literal notranslate"><span class="pre">INT</span></code>) of size at least <code class="docutils literal notranslate"><span class="pre">init_k_KG</span> <span class="pre">+</span>
+<span class="pre">KG_SPARSE_SIZE</span></code>.</p>
 </dd>
-<dt><strong>KGv</strong><span class="classifier">array-like</span></dt><dd><p>Sparse values.</p>
+<dt><strong>KGv</strong><span class="classifier">array-like</span></dt><dd><p>Sparse values.
+1-D array of <code class="docutils literal notranslate"><span class="pre">DOUBLE</span></code>, same size as <code class="docutils literal notranslate"><span class="pre">KGr</span></code>. The values are
+added to the existing ones, with dimension of force per unit
+length.</p>
 </dd>
 <dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp</span></code></a></span></dt><dd><p>Shell property.</p>
 </dd>
@@ -924,6 +1519,19 @@ strain is carried by <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3D
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>The stress resultants are</p>
+<div class="math notranslate nohighlight">
+\[\{N_{xx}, N_{yy}, N_{xy}\}^\top = \boldsymbol{A}\{\epsilon_{xx}, \epsilon_{yy},
+\gamma_{xy}\}^\top + \boldsymbol{B}\{\kappa_{xx}, \kappa_{yy}, \kappa_{xy}\}^\top\]</div>
+<p>with the linear strains of <code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_probe_BL_G()</span></code> and <span class="math notranslate nohighlight">\(\boldsymbol{A}\)</span>,
+<span class="math notranslate nohighlight">\(\boldsymbol{B}\)</span> in the element coordinate system. Both the strains and the
+curvatures are constant over the triangle, so the resulting stress
+state is constant too, which is what
+<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KG_given_stress" title="pyfe3d.tria3dsg.Tria3DSG.update_KG_given_stress"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG_given_stress()</span></code></a> assumes.</p>
+<p>Only the linear strains contribute, which leaves this matrix
+homogeneous of degree one in the displacements, as a linear buckling
+analysis needs.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -931,11 +1539,10 @@ strain is carried by <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3D
 <span class="sig-name descname"><span class="pre">update_KG_given_stress</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">Nxx</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">Nyy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">Nxy</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KGr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KGc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KGv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KGv_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.tria3dsg.Tria3DSG.update_KG_given_stress" title="Link to this definition">#</a></dt>
 <dd><p>Update the sparse vectors of the geometric stiffness matrix</p>
 <p>A constant membrane stress state <span class="math notranslate nohighlight">\(N_{xx}, N_{yy}, N_{xy}\)</span> is assumed
-within the element. The operator is the Donnell one, involving only
-the gradients of the element-frame <span class="math notranslate nohighlight">\(w\)</span>, which are taken from the
-<code class="docutils literal notranslate"><span class="pre">Gwx,</span> <span class="pre">Gwy</span></code> rows of the probe and turned into global translations
-with the third row of the rotation matrix, so only the translational
-degrees-of-freedom appear.</p>
+within the element. The operator involves only the gradients of the
+element-frame <span class="math notranslate nohighlight">\(w\)</span>, which are taken from the <code class="docutils literal notranslate"><span class="pre">Sw_x,</span> <span class="pre">Sw_y</span></code> rows of the
+probe and turned into global translations with the third row of the
+rotation matrix, so only the translational degrees-of-freedom appear.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>The stress resultants are in the <strong>element</strong> coordinate
@@ -946,17 +1553,63 @@ of each cell has its frame along the mesh while the second has
 it along the diagonal, some 45 degrees away. Handing the same
 <span class="math notranslate nohighlight">\((N_{xx}, 0, 0)\)</span> to both then loads half the elements along the
 diagonal, and the answer comes to depend on how the mesh
-generator happened to order the nodes of each triangle.</p>
-<p>A uniaxial state <span class="math notranslate nohighlight">\(N\)</span> along a global direction <span class="math notranslate nohighlight">\(\{d\}\)</span> has to be
-rotated. With <span class="math notranslate nohighlight">\([R]\)</span> the element-to-global rotation of this
-object, <span class="math notranslate nohighlight">\(\{a\} = [R]^T \{d\}\)</span> is that direction in element
-coordinates and the state <span class="math notranslate nohighlight">\(N \{a\} \{a\}^T\)</span> has components</p>
+generator happened to order the nodes of each triangle. A
+uniaxial state along a global direction has to be rotated to
+the element coordinate system with the rotation matrix <code class="docutils literal notranslate"><span class="pre">r11,</span>
+<span class="pre">...,</span> <span class="pre">r33</span></code> of this object.</p>
+<p><a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KG" title="pyfe3d.tria3dsg.Tria3DSG.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG()</span></code></a> is free of this, recovering the stress from
+the element’s own strains in its own frame.</p>
+</div>
+<p>The values are added to <code class="docutils literal notranslate"><span class="pre">KGv</span></code> at the positions <code class="docutils literal notranslate"><span class="pre">init_k_KG</span></code> to
+<code class="docutils literal notranslate"><span class="pre">init_k_KG</span> <span class="pre">+</span> <span class="pre">KG_SPARSE_SIZE</span> <span class="pre">-</span> <span class="pre">1</span></code>. With <code class="docutils literal notranslate"><span class="pre">update_KGv_only=0</span></code> the
+global row and column indices are written to <code class="docutils literal notranslate"><span class="pre">KGr</span></code> and <code class="docutils literal notranslate"><span class="pre">KGc</span></code> at
+the same positions. Before this method is called,
+<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_rotation_matrix" title="pyfe3d.tria3dsg.Tria3DSG.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a> and <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_xe" title="pyfe3d.tria3dsg.Tria3DSG.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a> must
+have been used. The <code class="docutils literal notranslate"><span class="pre">area</span></code> attribute and the strain rows of the
+probe are updated as well.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>Nxx, Nyy, Nxy</strong><span class="classifier">double</span></dt><dd><p>Membrane stress resultants in the element coordinate system.
+Force per unit length.</p>
+</dd>
+<dt><strong>KGr, KGc</strong><span class="classifier">array-like</span></dt><dd><p>Row and column positions of the sparse values.
+1-D arrays of integers (<code class="docutils literal notranslate"><span class="pre">INT</span></code>) of size at least <code class="docutils literal notranslate"><span class="pre">init_k_KG</span> <span class="pre">+</span>
+<span class="pre">KG_SPARSE_SIZE</span></code>.</p>
+</dd>
+<dt><strong>KGv</strong><span class="classifier">array-like</span></dt><dd><p>Sparse values.
+1-D array of <code class="docutils literal notranslate"><span class="pre">DOUBLE</span></code>, same size as <code class="docutils literal notranslate"><span class="pre">KGr</span></code>. The values are
+added to the existing ones, with dimension of force per unit
+length.</p>
+</dd>
+<dt><strong>update_KGv_only</strong><span class="classifier">int, optional</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">0</span></code>, the default, also fills <code class="docutils literal notranslate"><span class="pre">KGr</span></code> and <code class="docutils literal notranslate"><span class="pre">KGc</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The operator is the Donnell one. With <span class="math notranslate nohighlight">\(S_{i,x}\)</span> and <span class="math notranslate nohighlight">\(S_{i,y}\)</span> the
+constant derivatives of the shape functions, <span class="math notranslate nohighlight">\(A_e\)</span> the element area and
+<span class="math notranslate nohighlight">\(\{T_{13}, T_{23}, T_{33}\}\)</span> the element normal in global coordinates,
+the third column of <span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3}\)</span>, the entry of the global
+translation <span class="math notranslate nohighlight">\(m\)</span> of node <span class="math notranslate nohighlight">\(i\)</span> and <span class="math notranslate nohighlight">\(n\)</span> of node <span class="math notranslate nohighlight">\(j\)</span> is</p>
+<div class="math notranslate nohighlight">
+\[\begin{split}K_{G} = A_e T_{m3} T_{n3}
+\begin{bmatrix} S_{i,x} &amp; S_{i,y} \end{bmatrix}
+\begin{bmatrix} N_{xx} &amp; N_{xy} \\ N_{xy} &amp; N_{yy} \end{bmatrix}
+\begin{bmatrix} S_{j,x} \\ S_{j,y} \end{bmatrix}\end{split}\]</div>
+<p>the integrand being constant over the triangle.</p>
+<p>A uniaxial state <span class="math notranslate nohighlight">\(N\)</span> along a global direction <span class="math notranslate nohighlight">\(\boldsymbol{d}\)</span> has to be
+rotated. With <span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3}\)</span> the transformation matrix of this
+object, whose columns are the element axes, <span class="math notranslate nohighlight">\(\boldsymbol{a} = \boldsymbol{T}_{3\times 3}^\top
+\boldsymbol{d}\)</span> is that direction in element coordinates and the state <span class="math notranslate nohighlight">\(N \boldsymbol{a}
+\boldsymbol{a}^\top\)</span> has components</p>
 <div class="math notranslate nohighlight">
 \[N^e_{xx} = N a_x^2, \quad
 N^e_{yy} = N a_y^2, \quad
 N^e_{xy} = N a_x a_y\]</div>
 <p>which reduces to <span class="math notranslate nohighlight">\((N, 0, 0)\)</span> when the element <span class="math notranslate nohighlight">\(x\)</span> axis is along
-<span class="math notranslate nohighlight">\(\{d\}\)</span>, so a quadrilateral mesh aligned with the load needs
+<span class="math notranslate nohighlight">\(\boldsymbol{d}\)</span>, so a quadrilateral mesh aligned with the load needs
 nothing. Measured on the cylinder of
 <code class="docutils literal notranslate"><span class="pre">tests/test_quad4_linear_buckling_cylinder_displ.py</span></code>, whose
 cells are nearly square so the diagonal sits at 44.3 degrees,
@@ -965,76 +1618,136 @@ spanning a factor of fifteen without this rotation and agree to
 2e-3 with it. This is checked by
 <code class="docutils literal notranslate"><span class="pre">test_buckling_load_does_not_depend_on_triangle_node_numbering</span></code>
 in <code class="docutils literal notranslate"><span class="pre">tests/test_tria3dsg.py</span></code>.</p>
-<p><a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KG" title="pyfe3d.tria3dsg.Tria3DSG.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG()</span></code></a> is free of this, recovering the stress from
-the element’s own strains in its own frame.</p>
-</div>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>Nxx, Nyy, Nxy</strong><span class="classifier">double</span></dt><dd><p>Membrane stress resultants in the element coordinate system.</p>
-</dd>
-<dt><strong>KGr, KGc</strong><span class="classifier">array-like</span></dt><dd><p>Row and column positions of the sparse values.</p>
-</dd>
-<dt><strong>KGv</strong><span class="classifier">array-like</span></dt><dd><p>Sparse values.</p>
-</dd>
-<dt><strong>update_KGv_only</strong><span class="classifier">int, optional</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">0</span></code>, the default, also fills <code class="docutils literal notranslate"><span class="pre">KGr</span></code> and <code class="docutils literal notranslate"><span class="pre">KGc</span></code>.</p>
-</dd>
-</dl>
-</dd>
-</dl>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.tria3dsg.Tria3DSG.update_M">
 <span class="sig-name descname"><span class="pre">update_M</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">Mr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">Mc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">Mv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">mtype</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.tria3dsg.Tria3DSG.update_M" title="Link to this definition">#</a></dt>
 <dd><p>Update the sparse vectors of the mass matrix</p>
+<p>The element matrix is computed from <code class="docutils literal notranslate"><span class="pre">intrho</span></code>, <code class="docutils literal notranslate"><span class="pre">intrhoz</span></code> and
+<code class="docutils literal notranslate"><span class="pre">intrhoz2</span></code> of <code class="docutils literal notranslate"><span class="pre">prop</span></code> and from the area of the element coordinates
+<code class="docutils literal notranslate"><span class="pre">probe.xe</span></code>, which is also stored in <code class="docutils literal notranslate"><span class="pre">area</span></code>; <code class="docutils literal notranslate"><span class="pre">intrhoz</span></code> couples
+the translations <code class="docutils literal notranslate"><span class="pre">u</span></code> and <code class="docutils literal notranslate"><span class="pre">v</span></code> with the rotations <code class="docutils literal notranslate"><span class="pre">r_y</span></code> and
+<code class="docutils literal notranslate"><span class="pre">r_x</span></code>, and <code class="docutils literal notranslate"><span class="pre">intrhoz2</span></code> enters only the rotations <code class="docutils literal notranslate"><span class="pre">r_x</span></code> and
+<code class="docutils literal notranslate"><span class="pre">r_y</span></code>. The matrix is rotated to global coordinates and its values
+are added to <code class="docutils literal notranslate"><span class="pre">Mv</span></code> at the positions <code class="docutils literal notranslate"><span class="pre">init_k_M</span></code> to <code class="docutils literal notranslate"><span class="pre">init_k_M</span> <span class="pre">+</span>
+<span class="pre">M_SPARSE_SIZE</span> <span class="pre">-</span> <span class="pre">1</span></code>; the global row and column indices are always
+written to <code class="docutils literal notranslate"><span class="pre">Mr</span></code> and <code class="docutils literal notranslate"><span class="pre">Mc</span></code> at the same positions. Before this method
+is called, <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_rotation_matrix" title="pyfe3d.tria3dsg.Tria3DSG.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a> and
+<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_xe" title="pyfe3d.tria3dsg.Tria3DSG.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a> must have been used.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
-<dt><strong>Mr, Mc</strong><span class="classifier">array-like</span></dt><dd><p>Row and column positions of the sparse values.</p>
+<dt><strong>Mr, Mc</strong><span class="classifier">array-like</span></dt><dd><p>Row and column positions of the sparse values.
+1-D arrays of integers (<code class="docutils literal notranslate"><span class="pre">INT</span></code>) of size at least <code class="docutils literal notranslate"><span class="pre">init_k_M</span> <span class="pre">+</span>
+<span class="pre">M_SPARSE_SIZE</span></code>.</p>
 </dd>
-<dt><strong>Mv</strong><span class="classifier">array-like</span></dt><dd><p>Sparse values.</p>
+<dt><strong>Mv</strong><span class="classifier">array-like</span></dt><dd><p>Sparse values.
+1-D array of <code class="docutils literal notranslate"><span class="pre">DOUBLE</span></code>, same size as <code class="docutils literal notranslate"><span class="pre">Mr</span></code>. The values are added
+to the existing ones, with dimension of mass between translations,
+of mass times length between a translation and a rotation, and of
+mass times length squared between rotations.</p>
 </dd>
-<dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp</span></code></a></span></dt><dd><p>Shell property.</p>
+<dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp</span></code></a></span></dt><dd><p>Shell property.
+<code class="docutils literal notranslate"><span class="pre">intrho</span></code>, <code class="docutils literal notranslate"><span class="pre">intrhoz</span></code> and <code class="docutils literal notranslate"><span class="pre">intrhoz2</span></code> are read from it.</p>
 </dd>
-<dt><strong>mtype</strong><span class="classifier">int, optional</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">0</span></code> for the consistent mass matrix, for which
-<span class="math notranslate nohighlight">\(\int N_i N_j dA\)</span> is <span class="math notranslate nohighlight">\(A/6\)</span> when <span class="math notranslate nohighlight">\(i = j\)</span> and <span class="math notranslate nohighlight">\(A/12\)</span> otherwise,
-and <code class="docutils literal notranslate"><span class="pre">2</span></code> for the lumped one, which puts <span class="math notranslate nohighlight">\(A/3\)</span> on each node. Any
-other value is treated as <code class="docutils literal notranslate"><span class="pre">0</span></code>.</p>
+<dt><strong>mtype</strong><span class="classifier">int, optional</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">0</span></code> for the consistent mass matrix and <code class="docutils literal notranslate"><span class="pre">1</span></code> for the lumped
+one, which puts a third of the element area on each node.
+Default <code class="docutils literal notranslate"><span class="pre">0</span></code>. The element has no reduced-integration mass
+matrix, <code class="docutils literal notranslate"><span class="pre">2</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">mtype</span></code> is not 0 or 1.</p>
 </dd>
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>With the displacements <span class="math notranslate nohighlight">\(u + z r_y\)</span>, <span class="math notranslate nohighlight">\(v - z r_x\)</span> and <span class="math notranslate nohighlight">\(w\)</span> through the
+thickness, consistent with the curvatures of
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_probe_BL_G()</span></code>, the kinetic energy integrated through the
+thickness is that of Eq. (20) of Brockman <a class="reference internal" href="#r4f3a296c1e73-1" id="id18">[1]</a>,</p>
+<div class="math notranslate nohighlight">
+\[T = \frac{1}{2} \int_A \left[ I_\rho (\dot{u}^2 + \dot{v}^2 +
+\dot{w}^2) + 2 I_{\rho z} (\dot{u} \dot{r}_y - \dot{v} \dot{r}_x)
++ I_{\rho z^2} (\dot{r}_x^2 + \dot{r}_y^2) \right] dA\]</div>
+<p>with <span class="math notranslate nohighlight">\(I_\rho\)</span>, <span class="math notranslate nohighlight">\(I_{\rho z}\)</span> and <span class="math notranslate nohighlight">\(I_{\rho z^2}\)</span> given by <code class="docutils literal notranslate"><span class="pre">intrho</span></code>,
+<code class="docutils literal notranslate"><span class="pre">intrhoz</span></code> and <code class="docutils literal notranslate"><span class="pre">intrhoz2</span></code>, which include the offset. With <span class="math notranslate nohighlight">\(h_{ij}\)</span>
+the integral of the products of the linear shape functions over the
+element, the element matrix has <span class="math notranslate nohighlight">\(I_{\rho} h_{ij}\)</span> between the
+translations <span class="math notranslate nohighlight">\(u\)</span>, <span class="math notranslate nohighlight">\(v\)</span>, <span class="math notranslate nohighlight">\(w\)</span> of nodes <span class="math notranslate nohighlight">\(i\)</span> and <span class="math notranslate nohighlight">\(j\)</span>, <span class="math notranslate nohighlight">\(I_{\rho z^2} h_{ij}\)</span>
+between the rotations <span class="math notranslate nohighlight">\(r_x\)</span> and between the rotations <span class="math notranslate nohighlight">\(r_y\)</span>, <span class="math notranslate nohighlight">\(+I_{\rho
+z} h_{ij}\)</span> between <span class="math notranslate nohighlight">\(u\)</span> and <span class="math notranslate nohighlight">\(r_y\)</span>, and <span class="math notranslate nohighlight">\(-I_{\rho z} h_{ij}\)</span> between <span class="math notranslate nohighlight">\(v\)</span>
+and <span class="math notranslate nohighlight">\(r_x\)</span>. The drilling rotation <span class="math notranslate nohighlight">\(r_z\)</span> has no inertia. For the
+consistent mass matrix, <span class="math notranslate nohighlight">\(h_{ij} = \int S_i S_j dA\)</span> is <span class="math notranslate nohighlight">\(A/6\)</span> when <span class="math notranslate nohighlight">\(i =
+j\)</span> and <span class="math notranslate nohighlight">\(A/12\)</span> otherwise. The lumped mass matrix integrates <span class="math notranslate nohighlight">\(T\)</span> with
+the vertex rule, the nodal quadrature with the weight <span class="math notranslate nohighlight">\(A/3\)</span> at each
+node, where <span class="math notranslate nohighlight">\(S_i\)</span> is 1 at node <span class="math notranslate nohighlight">\(i\)</span> and 0 at the other nodes, giving
+<span class="math notranslate nohighlight">\(h_{ii} = A/3\)</span> and <span class="math notranslate nohighlight">\(h_{ij} = 0\)</span> for <span class="math notranslate nohighlight">\(i \neq j\)</span>. The coupling through
+<span class="math notranslate nohighlight">\(I_{\rho z}\)</span> stays in the block of each node, such that the lumped
+matrix is block-diagonal per node, diagonal only when <span class="math notranslate nohighlight">\(I_{\rho z} =
+0\)</span>, and has the exact mass and the exact first moment of the mass,
+with the centre of mass at the offset from the reference surface.
+The rotary inertia from the distribution of <span class="math notranslate nohighlight">\(I_\rho\)</span> over the area is
+concentrated at the nodes, 4 times the exact value about the
+centroid of the element; the term <span class="math notranslate nohighlight">\(I_{\rho z^2} A\)</span> is exact.</p>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="r4f3a296c1e73-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id18">1</a><span class="fn-bracket">]</span></span>
+<p>Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
+International Journal for Numerical Methods in Engineering, 24(12),
+2343-2356, 1987. <a class="reference external" href="https://doi.org/10.1002/nme.1620241208">https://doi.org/10.1002/nme.1620241208</a></p>
+</div>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.tria3dsg.Tria3DSG.update_area">
 <span class="sig-name descname"><span class="pre">update_area</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.tria3dsg.Tria3DSG.update_area" title="Link to this definition">#</a></dt>
 <dd><p>Update the element area from the probe coordinates</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">area</span></code> attribute is updated with the area of the triangle given
+by the element coordinates <code class="docutils literal notranslate"><span class="pre">probe.xe</span></code>, ignoring the <code class="docutils literal notranslate"><span class="pre">z</span></code>
+coordinates. The methods that compute stiffness matrices, internal
+forces or the mass matrix compute the area themselves and also store
+it in <code class="docutils literal notranslate"><span class="pre">area</span></code>, so they do not depend on this method.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.tria3dsg.Tria3DSG.update_fint">
 <span class="sig-name descname"><span class="pre">update_fint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">fint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">nonlinear</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.tria3dsg.Tria3DSG.update_fint" title="Link to this definition">#</a></dt>
 <dd><p>Update the internal force vector</p>
+<p>The element internal forces, computed in element coordinates with
+<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_finte" title="pyfe3d.tria3dsg.Tria3DSG.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_finte()</span></code></a>, are rotated to global coordinates and
+added to <code class="docutils literal notranslate"><span class="pre">fint</span></code> at the positions of the nodes, <code class="docutils literal notranslate"><span class="pre">c1</span></code>, <code class="docutils literal notranslate"><span class="pre">c2</span></code> and
+<code class="docutils literal notranslate"><span class="pre">c3</span></code>. Before this method is called, <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_rotation_matrix" title="pyfe3d.tria3dsg.Tria3DSG.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a>,
+<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_xe" title="pyfe3d.tria3dsg.Tria3DSG.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a> and <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_ue" title="pyfe3d.tria3dsg.Tria3DSG.update_probe_ue"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_ue()</span></code></a> must have been
+used.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
 <dt><strong>fint</strong><span class="classifier">array-like</span></dt><dd><p>Array updated in place with the internal forces, in global
 coordinates. <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_finte" title="pyfe3d.tria3dsg.Tria3DSG.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_finte()</span></code></a> is called to obtain the
 element-frame internal forces, available afterwards as
-<code class="docutils literal notranslate"><span class="pre">.probe.finte</span></code>.</p>
+<code class="docutils literal notranslate"><span class="pre">.probe.finte</span></code>.
+1-D array of size <code class="docutils literal notranslate"><span class="pre">DOF*M</span></code>, with forces for the translations and
+moments (force times length) for the rotations.</p>
 </dd>
 <dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp</span></code></a></span></dt><dd><p>Shell property.</p>
 </dd>
 <dt><strong>nonlinear</strong><span class="classifier">int, optional</span></dt><dd><p>The default <code class="docutils literal notranslate"><span class="pre">0</span></code> gives the linear internal forces, <code class="docutils literal notranslate"><span class="pre">KC0*u</span></code>.
 Any other value adds the geometrically nonlinear terms of the
-von Karman strains, for which the exact Jacobian of the internal
-forces is <code class="docutils literal notranslate"><span class="pre">KC0</span> <span class="pre">+</span> <span class="pre">KCNL</span> <span class="pre">+</span> <span class="pre">KG</span></code>, see <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KCNL" title="pyfe3d.tria3dsg.Tria3DSG.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>.</p>
+von Karman strains, see <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KCNL" title="pyfe3d.tria3dsg.Tria3DSG.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>.</p>
 </dd>
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">nonlinear=1</span></code> the exact Jacobian of the internal forces is
+<code class="docutils literal notranslate"><span class="pre">KC0</span> <span class="pre">+</span> <span class="pre">KCNL</span> <span class="pre">+</span> <span class="pre">KG</span></code>, see <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KCNL" title="pyfe3d.tria3dsg.Tria3DSG.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1047,6 +1760,9 @@ can be shared amongst more than one finite element, so it always
 holds the values of the last update.</p>
 <p>Before this method is called, <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_xe" title="pyfe3d.tria3dsg.Tria3DSG.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a> and
 <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_ue" title="pyfe3d.tria3dsg.Tria3DSG.update_probe_ue"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_ue()</span></code></a> must have been used.</p>
+<p>The attribute <code class="docutils literal notranslate"><span class="pre">KC0ve</span></code> of the probe is updated first, as in
+<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KC0" title="pyfe3d.tria3dsg.Tria3DSG.update_KC0"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KC0()</span></code></a>, the linear internal forces being <code class="docutils literal notranslate"><span class="pre">KC0ve</span></code>
+times <code class="docutils literal notranslate"><span class="pre">ue</span></code>.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
@@ -1054,22 +1770,33 @@ holds the values of the last update.</p>
 </dd>
 <dt><strong>nonlinear</strong><span class="classifier">int, optional</span></dt><dd><p>The default <code class="docutils literal notranslate"><span class="pre">0</span></code> gives the linear internal forces, <code class="docutils literal notranslate"><span class="pre">KC0*u</span></code>.
 Any other value adds the geometrically nonlinear terms of the
-von Karman strains, for which the exact Jacobian of the internal
-forces is <code class="docutils literal notranslate"><span class="pre">KC0</span> <span class="pre">+</span> <span class="pre">KCNL</span> <span class="pre">+</span> <span class="pre">KG</span></code>, see <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KCNL" title="pyfe3d.tria3dsg.Tria3DSG.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>.</p>
+von Karman strains, see <code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_probe_finte_nonlinear()</span></code>
+and <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KCNL" title="pyfe3d.tria3dsg.Tria3DSG.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>.</p>
 </dd>
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">nonlinear=1</span></code> the exact Jacobian of the internal forces is
+<code class="docutils literal notranslate"><span class="pre">KC0</span> <span class="pre">+</span> <span class="pre">KCNL</span> <span class="pre">+</span> <span class="pre">KG</span></code>, see <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KCNL" title="pyfe3d.tria3dsg.Tria3DSG.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.tria3dsg.Tria3DSG.update_probe_ue">
 <span class="sig-name descname"><span class="pre">update_probe_ue</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">u</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_ue" title="Link to this definition">#</a></dt>
 <dd><p>Update the element-frame nodal displacements in the probe</p>
+<p>The displacements and rotations of the three nodes, read from <code class="docutils literal notranslate"><span class="pre">u</span></code> at
+the positions <code class="docutils literal notranslate"><span class="pre">c1</span></code>, <code class="docutils literal notranslate"><span class="pre">c2</span></code> and <code class="docutils literal notranslate"><span class="pre">c3</span></code>, are rotated to the element
+coordinate system with the transpose <span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3}^\top\)</span> of the
+transformation matrix and written to <code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>.
+<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_rotation_matrix" title="pyfe3d.tria3dsg.Tria3DSG.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a> must have been called before.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>u</strong><span class="classifier">array-like</span></dt><dd><p>Global displacement vector.</p>
+<dt><strong>u</strong><span class="classifier">array-like</span></dt><dd><p>Global displacement vector.
+1-D array of size <code class="docutils literal notranslate"><span class="pre">DOF*M</span></code>, for <code class="docutils literal notranslate"><span class="pre">M</span></code> nodes, with the six
+degrees-of-freedom of each node in sequence; translations with
+dimension of length and rotations dimensionless.</p>
 </dd>
 </dl>
 </dd>
@@ -1080,10 +1807,18 @@ forces is <code class="docutils literal notranslate"><span class="pre">KC0</span
 <dt class="sig sig-object py" id="pyfe3d.tria3dsg.Tria3DSG.update_probe_xe">
 <span class="sig-name descname"><span class="pre">update_probe_xe</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_xe" title="Link to this definition">#</a></dt>
 <dd><p>Update the element-frame nodal coordinates in the probe</p>
+<p>The coordinates of the three nodes, read from <code class="docutils literal notranslate"><span class="pre">x</span></code> at the positions
+<code class="docutils literal notranslate"><span class="pre">c1//2</span></code>, <code class="docutils literal notranslate"><span class="pre">c2//2</span></code> and <code class="docutils literal notranslate"><span class="pre">c3//2</span></code>, are rotated to the element
+coordinate system with the transpose <span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3}^\top\)</span> of the
+transformation matrix and written to <code class="docutils literal notranslate"><span class="pre">probe.xe</span></code>.
+<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_rotation_matrix" title="pyfe3d.tria3dsg.Tria3DSG.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a> must have been called before. The
+<code class="docutils literal notranslate"><span class="pre">area</span></code> attribute is not updated here, see <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_area" title="pyfe3d.tria3dsg.Tria3DSG.update_area"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_area()</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Global nodal coordinates.</p>
+<dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Global nodal coordinates.
+1-D array of size <code class="docutils literal notranslate"><span class="pre">3*M</span></code>, for <code class="docutils literal notranslate"><span class="pre">M</span></code> nodes, arranged as <code class="docutils literal notranslate"><span class="pre">x_1,</span>
+<span class="pre">y_1,</span> <span class="pre">z_1,</span> <span class="pre">...,</span> <span class="pre">x_M,</span> <span class="pre">y_M,</span> <span class="pre">z_M</span></code>, dimension of length.</p>
 </dd>
 </dl>
 </dd>
@@ -1097,14 +1832,23 @@ forces is <code class="docutils literal notranslate"><span class="pre">KC0</span
 <p>The element <span class="math notranslate nohighlight">\(x\)</span> axis runs from node 1 to node 2 and the element <span class="math notranslate nohighlight">\(z\)</span>
 axis is the triangle normal, which is the same construction used by
 <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.tria3r.Tria3R</span></code></a>.</p>
+<p>The attributes <code class="docutils literal notranslate"><span class="pre">r11,</span> <span class="pre">...,</span> <span class="pre">r33</span></code> are updated. <code class="docutils literal notranslate"><span class="pre">m11,</span> <span class="pre">m12,</span> <span class="pre">m21,</span> <span class="pre">m22</span></code>
+are first reset to the identity and, when the material direction is
+not the zero vector and not parallel to the element normal, set to the
+rotation from the material direction projected onto the element to
+the element <code class="docutils literal notranslate"><span class="pre">x</span></code> axis.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Global nodal coordinates, <code class="docutils literal notranslate"><span class="pre">x_1,</span> <span class="pre">y_1,</span> <span class="pre">z_1,</span> <span class="pre">...,</span> <span class="pre">x_M,</span> <span class="pre">y_M,</span> <span class="pre">z_M</span></code>.</p>
+<dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Global nodal coordinates, <code class="docutils literal notranslate"><span class="pre">x_1,</span> <span class="pre">y_1,</span> <span class="pre">z_1,</span> <span class="pre">...,</span> <span class="pre">x_M,</span> <span class="pre">y_M,</span> <span class="pre">z_M</span></code>.
+1-D array of size <code class="docutils literal notranslate"><span class="pre">3*M</span></code>, dimension of length. The coordinates
+of each node are read from the positions <code class="docutils literal notranslate"><span class="pre">c1//2</span></code>, <code class="docutils literal notranslate"><span class="pre">c2//2</span></code>
+and <code class="docutils literal notranslate"><span class="pre">c3//2</span></code>.</p>
 </dd>
 <dt><strong>xmati, xmatj, xmatk</strong><span class="classifier">double, optional</span></dt><dd><p>Material direction in global coordinates, projected onto the
 element. Leaving it at zero means the material and element
-directions coincide.</p>
+directions coincide.
+Only the direction of the vector is used. Default <code class="docutils literal notranslate"><span class="pre">0.</span></code>.</p>
 </dd>
 </dl>
 </dd>
@@ -1117,23 +1861,33 @@ directions coincide.</p>
 <dt class="sig sig-object py" id="pyfe3d.tria3dsg.Tria3DSGData">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyfe3d.tria3dsg.</span></span><span class="sig-name descname"><span class="pre">Tria3DSGData</span></span><a class="headerlink" href="#pyfe3d.tria3dsg.Tria3DSGData" title="Link to this definition">#</a></dt>
 <dd><p>Sizes needed to allocate the sparse matrices</p>
+<p>Each attribute is the number of entries that one <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a>
+writes in the row, column and value arrays of the corresponding sparse
+matrix, starting at the position given by the matching <code class="docutils literal notranslate"><span class="pre">init_k_*</span></code>
+attribute of the element. For <code class="docutils literal notranslate"><span class="pre">n</span></code> elements the arrays need <code class="docutils literal notranslate"><span class="pre">n</span></code> times
+these sizes. The constructor takes no parameters.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>KC0_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KC0_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">324</span></code>, the full 18 by 18 element matrix stored
 row by row.</p>
 </dd>
-<dt><strong>KCNL_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KCNL_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">324</span></code>, also the full element matrix, since the
-nonlinear constitutive terms couple every degree-of-freedom.</p>
+<dt><strong>KCNL_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KCNL_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">324</span></code>, also the full element matrix stored row
+by row.</p>
 </dd>
-<dt><strong>KG_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KG_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">81</span></code>, the 9 by 9 translational block, the Donnell
-geometric stiffness involving only the gradients of <span class="math notranslate nohighlight">\(w\)</span>.</p>
+<dt><strong>KG_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KG_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">81</span></code>, the 9 by 9 block of the translational
+degrees-of-freedom.</p>
 </dd>
 <dt><strong>M_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">M_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">324</span></code></p>
 </dd>
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>The nonlinear constitutive terms couple every degree-of-freedom, hence
+the full element matrix for KCNL. The geometric stiffness is the Donnell
+one, involving only the gradients of <span class="math notranslate nohighlight">\(w\)</span>, hence the translational block
+for KG, see <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KG_given_stress" title="pyfe3d.tria3dsg.Tria3DSG.update_KG_given_stress"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG.update_KG_given_stress()</span></code></a>.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.tria3dsg.Tria3DSGData.KC0_SPARSE_SIZE">
 <span class="sig-name descname"><span class="pre">KC0_SPARSE_SIZE</span></span><a class="headerlink" href="#pyfe3d.tria3dsg.Tria3DSGData.KC0_SPARSE_SIZE" title="Link to this definition">#</a></dt>
@@ -1168,45 +1922,78 @@ geometric stiffness involving only the gradients of <span class="math notranslat
 per finite element. The buffers belong to the probe, and one probe can be
 shared amongst many elements, the contents being updated and read on
 demand. Mind that the probe always holds the values of the last update.</p>
+<p>The constructor takes no parameters and allocates every array filled with
+zeros.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
-<dt><strong>xe,</strong><span class="classifier">array-like</span></dt><dd><p>Element-frame nodal coordinates, <code class="docutils literal notranslate"><span class="pre">x1,</span> <span class="pre">y1,</span> <span class="pre">z1,</span> <span class="pre">x2,</span> <span class="pre">...,</span> <span class="pre">z3</span></code>.</p>
+<dt><strong>xe,</strong><span class="classifier">array-like</span></dt><dd><p>Element-frame nodal coordinates, <code class="docutils literal notranslate"><span class="pre">x1,</span> <span class="pre">y1,</span> <span class="pre">z1,</span> <span class="pre">x2,</span> <span class="pre">...,</span> <span class="pre">z3</span></code>.
+Dimension of length. Updated by <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_xe" title="pyfe3d.tria3dsg.Tria3DSG.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG.update_probe_xe()</span></code></a>.</p>
 </dd>
 <dt><strong>ue,</strong><span class="classifier">array-like</span></dt><dd><p>Element-frame nodal displacements, 18 values, in the order <span class="math notranslate nohighlight">\(u_1,
-v_1, w_1, {r_x}_1, {r_y}_1, {r_z}_1, u_2, \ldots, {r_z}_3\)</span>.</p>
+v_1, w_1, {r_x}_1, {r_y}_1, {r_z}_1, u_2, \ldots, {r_z}_3\)</span>.
+Translations with dimension of length, rotations dimensionless.
+Updated by <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_ue" title="pyfe3d.tria3dsg.Tria3DSG.update_probe_ue"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG.update_probe_ue()</span></code></a>.</p>
 </dd>
 <dt><strong>finte,</strong><span class="classifier">array-like</span></dt><dd><p>Element-frame internal forces corresponding to <code class="docutils literal notranslate"><span class="pre">ue</span></code>, 18 values,
-updated by <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_finte" title="pyfe3d.tria3dsg.Tria3DSG.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG.update_probe_finte()</span></code></a>.</p>
+updated by <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_finte" title="pyfe3d.tria3dsg.Tria3DSG.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG.update_probe_finte()</span></code></a>.
+Forces, and moments (force times length) for the rotations.</p>
 </dd>
 <dt><strong>KC0ve,</strong><span class="classifier">array-like</span></dt><dd><p>The 18 by 18 element-frame constitutive stiffness matrix stored row
-by row, 324 values.</p>
+by row, 324 values.
+Updated by <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KC0" title="pyfe3d.tria3dsg.Tria3DSG.update_KC0"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG.update_KC0()</span></code></a> and
+<a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_probe_finte" title="pyfe3d.tria3dsg.Tria3DSG.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG.update_probe_finte()</span></code></a>.</p>
 </dd>
-<dt><strong>KCNLve,</strong><span class="classifier">array-like</span></dt><dd><p>The 18 by 18 element-frame nonlinear constitutive stiffness matrix
+<dt><strong>KCNLve,</strong><span class="classifier">array-like</span></dt><dd><p>The 18 by 18 element-frame nonlinear stiffness matrix
 stored row by row, see <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG.update_KCNL" title="pyfe3d.tria3dsg.Tria3DSG.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG.update_KCNL()</span></code></a>.</p>
 </dd>
 <dt><strong>BLexx, BLeyy, BLgxy</strong><span class="classifier">array-like</span></dt><dd><p>Rows of 18 values giving the membrane strains <span class="math notranslate nohighlight">\(\epsilon_{xx},
-\epsilon_{yy}, \gamma_{xy}\)</span>.</p>
+\epsilon_{yy}, \gamma_{xy}\)</span>.
+Their product with <code class="docutils literal notranslate"><span class="pre">ue</span></code> gives the membrane strains, dimensionless.</p>
 </dd>
 <dt><strong>BLkxx, BLkyy, BLkxy</strong><span class="classifier">array-like</span></dt><dd><p>Rows of 18 values giving the curvatures <span class="math notranslate nohighlight">\(\kappa_{xx}, \kappa_{yy},
-\kappa_{xy}\)</span>.</p>
+\kappa_{xy}\)</span>.
+Their product with <code class="docutils literal notranslate"><span class="pre">ue</span></code> gives the curvatures, with dimension of one
+over length.</p>
 </dd>
 <dt><strong>BLgxz, BLgyz</strong><span class="classifier">array-like</span></dt><dd><p>Rows of 18 values giving the transverse shear strains <span class="math notranslate nohighlight">\(\gamma_{xz},
 \gamma_{yz}\)</span> of the discrete shear gap, symmetrised over the three
-starting nodes.</p>
+starting nodes.
+Their product with <code class="docutils literal notranslate"><span class="pre">ue</span></code> gives the strains, dimensionless.</p>
 </dd>
 <dt><a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSGProbe.BLdrilling" title="pyfe3d.tria3dsg.Tria3DSGProbe.BLdrilling"><code class="xref py py-obj docutils literal notranslate"><span class="pre">BLdrilling</span></code></a><span class="classifier">array-like</span></dt><dd><p>BLdrilling: ‘double[::1]’</p>
 </dd>
-<dt><strong>Gwx, Gwy</strong><span class="classifier">array-like</span></dt><dd><p>Rows of 18 values giving <span class="math notranslate nohighlight">\(w_{,x}\)</span> and <span class="math notranslate nohighlight">\(w_{,y}\)</span>, used by the
-geometrically nonlinear terms.</p>
-</dd>
-<dt><strong>.. note:: Every one of these operators is constant over the triangle,</strong></dt><dd><p>because all three shape functions are linear, so each is formed
-once per element and no quadrature loop appears anywhere in this
-module except for the drilling term.</p>
+<dt><strong>Sw_x, Sw_y</strong><span class="classifier">array-like</span></dt><dd><p>Rows of 18 values giving <span class="math notranslate nohighlight">\(w_{,x}\)</span> and <span class="math notranslate nohighlight">\(w_{,y}\)</span>, used by the
+geometrically nonlinear terms.
+<code class="docutils literal notranslate"><span class="pre">Sw_x</span></code> holds <span class="math notranslate nohighlight">\(\boldsymbol{G}_x = \partial \boldsymbol{S}^w/\partial x\)</span>
+and <code class="docutils literal notranslate"><span class="pre">Sw_y</span></code> holds <span class="math notranslate nohighlight">\(\boldsymbol{G}_y = \partial \boldsymbol{S}^w/\partial
+y\)</span>, the underscore denoting the partial derivative.
+Their products with <code class="docutils literal notranslate"><span class="pre">ue</span></code> are dimensionless. The rows above are
+written by the methods of <a class="reference internal" href="#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a> that compute stiffness
+matrices or internal forces.</p>
 </dd>
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>Every one of these operators is constant over the triangle, because all
+three shape functions are linear, so each is formed once per element and
+no quadrature loop appears anywhere in this module except for the
+drilling term. <code class="docutils literal notranslate"><span class="pre">BLdrilling</span></code> is the residual of the regularisation of
+Hughes and Brezzi <a class="reference internal" href="#rfd5aee371127-1" id="id20">[1]</a>, whose <span class="math notranslate nohighlight">\(r_z\)</span> part varies over the element; its
+stiffness is integrated exactly with the three-point rule, see
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG._update_probe_KC0ve()</span></code>. <code class="docutils literal notranslate"><span class="pre">BLgxz</span></code> and <code class="docutils literal notranslate"><span class="pre">BLgyz</span></code> are the
+discrete shear gap operators averaged over the three starting nodes, see
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">Tria3DSG._update_probe_BL_G()</span></code>.</p>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="rfd5aee371127-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id20">1</a><span class="fn-bracket">]</span></span>
+<p>Hughes, T. J. R., and Brezzi, F., On drilling degrees of freedom,
+Computer Methods in Applied Mechanics and Engineering, 72(1), 105-121,
+1989. <a class="reference external" href="https://doi.org/10.1016/0045-7825(89)90124-2">https://doi.org/10.1016/0045-7825(89)90124-2</a></p>
+</div>
+</div>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.tria3dsg.Tria3DSGProbe.BLdrilling">
 <span class="sig-name descname"><span class="pre">BLdrilling</span></span><a class="headerlink" href="#pyfe3d.tria3dsg.Tria3DSGProbe.BLdrilling" title="Link to this definition">#</a></dt>
@@ -1262,18 +2049,6 @@ module except for the drilling term.</p>
 </dd></dl>
 
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pyfe3d.tria3dsg.Tria3DSGProbe.Gwx">
-<span class="sig-name descname"><span class="pre">Gwx</span></span><a class="headerlink" href="#pyfe3d.tria3dsg.Tria3DSGProbe.Gwx" title="Link to this definition">#</a></dt>
-<dd><p>Gwx: ‘double[::1]’</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pyfe3d.tria3dsg.Tria3DSGProbe.Gwy">
-<span class="sig-name descname"><span class="pre">Gwy</span></span><a class="headerlink" href="#pyfe3d.tria3dsg.Tria3DSGProbe.Gwy" title="Link to this definition">#</a></dt>
-<dd><p>Gwy: ‘double[::1]’</p>
-</dd></dl>
-
-<dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.tria3dsg.Tria3DSGProbe.KC0ve">
 <span class="sig-name descname"><span class="pre">KC0ve</span></span><a class="headerlink" href="#pyfe3d.tria3dsg.Tria3DSGProbe.KC0ve" title="Link to this definition">#</a></dt>
 <dd><p>KC0ve: ‘double[::1]’</p>
@@ -1283,6 +2058,18 @@ module except for the drilling term.</p>
 <dt class="sig sig-object py" id="pyfe3d.tria3dsg.Tria3DSGProbe.KCNLve">
 <span class="sig-name descname"><span class="pre">KCNLve</span></span><a class="headerlink" href="#pyfe3d.tria3dsg.Tria3DSGProbe.KCNLve" title="Link to this definition">#</a></dt>
 <dd><p>KCNLve: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.tria3dsg.Tria3DSGProbe.Sw_x">
+<span class="sig-name descname"><span class="pre">Sw_x</span></span><a class="headerlink" href="#pyfe3d.tria3dsg.Tria3DSGProbe.Sw_x" title="Link to this definition">#</a></dt>
+<dd><p>Sw_x: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.tria3dsg.Tria3DSGProbe.Sw_y">
+<span class="sig-name descname"><span class="pre">Sw_y</span></span><a class="headerlink" href="#pyfe3d.tria3dsg.Tria3DSGProbe.Sw_y" title="Link to this definition">#</a></dt>
+<dd><p>Sw_y: ‘double[::1]’</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1316,6 +2103,24 @@ module except for the drilling term.</p>
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="quad4r.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="tria3r.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -1336,10 +2141,8 @@ module except for the drilling term.</p>
   <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
     <ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Tria3DSG - Triangular element with discrete shear gap (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3dsg</span></code>)</a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#why-this-element-exists">Why this element exists</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#the-discrete-shear-gap">The discrete shear gap</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#membrane-bending-and-drilling">Membrane, bending and drilling</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#geometrically-nonlinear-analysis">Geometrically nonlinear analysis</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#notes">Notes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
 </ul>
 </li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.tria3dsg.Tria3DSG"><code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
@@ -1404,10 +2207,10 @@ module except for the drilling term.</p>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.tria3dsg.Tria3DSGProbe.BLkxx"><code class="docutils literal notranslate"><span class="pre">Tria3DSGProbe.BLkxx</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.tria3dsg.Tria3DSGProbe.BLkxy"><code class="docutils literal notranslate"><span class="pre">Tria3DSGProbe.BLkxy</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.tria3dsg.Tria3DSGProbe.BLkyy"><code class="docutils literal notranslate"><span class="pre">Tria3DSGProbe.BLkyy</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.tria3dsg.Tria3DSGProbe.Gwx"><code class="docutils literal notranslate"><span class="pre">Tria3DSGProbe.Gwx</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.tria3dsg.Tria3DSGProbe.Gwy"><code class="docutils literal notranslate"><span class="pre">Tria3DSGProbe.Gwy</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.tria3dsg.Tria3DSGProbe.KC0ve"><code class="docutils literal notranslate"><span class="pre">Tria3DSGProbe.KC0ve</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.tria3dsg.Tria3DSGProbe.KCNLve"><code class="docutils literal notranslate"><span class="pre">Tria3DSGProbe.KCNLve</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.tria3dsg.Tria3DSGProbe.Sw_x"><code class="docutils literal notranslate"><span class="pre">Tria3DSGProbe.Sw_x</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.tria3dsg.Tria3DSGProbe.Sw_y"><code class="docutils literal notranslate"><span class="pre">Tria3DSGProbe.Sw_y</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.tria3dsg.Tria3DSGProbe.finte"><code class="docutils literal notranslate"><span class="pre">Tria3DSGProbe.finte</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.tria3dsg.Tria3DSGProbe.ue"><code class="docutils literal notranslate"><span class="pre">Tria3DSGProbe.ue</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.tria3dsg.Tria3DSGProbe.xe"><code class="docutils literal notranslate"><span class="pre">Tria3DSGProbe.xe</span></code></a></li>
@@ -1439,8 +2242,8 @@ module except for the drilling term.</p>
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -1473,7 +2276,7 @@ module except for the drilling term.</p>
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
 </p></div>
       
     </div>

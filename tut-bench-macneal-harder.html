@@ -1,0 +1,1415 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Benchmark: MacNeal-Harder standard problems for the shell elements &#8212; pyfe3d 0.11.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css?v=2aa19091" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="_static/documentation_options.js?v=f3b36f1a"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tut-bench-macneal-harder';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Benchmark: shell obstacle course" href="tut-bench-shell-obstacle-course.html" />
+    <link rel="prev" title="Tutorial: lumped mass matrices of the shells with an offset" href="tut-shell-lumped-mass.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.11.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="tut-opt-lightweight-smeared-deflection-GA.html">Tutorial: Ply tailoring using GA for a simply-supported plate under normal load</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-opt-lightweight-smeared-deflection-SLSQP.html">Tutorial: Ply tailoring using SLSPQ for a simply-supported plate under normal load</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-opt-topology.html">Tutorial: topology optimisation using pyfe3d</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-timoshenko-beam-benchmarks.html">Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-shell-lumped-mass.html">Tutorial: lumped mass matrices of the shells with an offset</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Benchmark: MacNeal-Harder standard problems for the shell elements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-bench-shell-obstacle-course.html">Benchmark: shell obstacle course</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-nonlinear-benchmarks.html">Tutorial: geometrically non-linear benchmarks with pyfe3d.solver</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="tutorials.html" class="nav-link">Tutorials</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Benchmark: MacNeal-Harder standard problems for the shell elements</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Benchmark:-MacNeal-Harder-standard-problems-for-the-shell-elements">
+<h1>Benchmark: MacNeal-Harder standard problems for the shell elements<a class="headerlink" href="#Benchmark:-MacNeal-Harder-standard-problems-for-the-shell-elements" title="Link to this heading">#</a></h1>
+<p>Date: 22 of October 2026</p>
+<p>Author: Saullo G. P. Castro</p>
+<p>MacNeal and Harder [1] proposed a set of small problems that excite, with coarse and distorted meshes, the failure modes of shell and solid elements: spurious mechanisms and locking. This notebook runs the problems of that set that a flat shell element can model with the four shell elements of <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code>, <code class="docutils literal notranslate"><span class="pre">Quad4</span></code>, <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>, <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> and <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code>, every element with its default attributes, and compares the normalised results with the theoretical values of the paper and with the results
+of the MSC/NASTRAN QUAD4 element tabulated there.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Problem of [1]</p></th>
+<th class="head"><p>Figure, tables</p></th>
+<th class="head"><p>Here</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Patch test for plates</p></td>
+<td><p>Fig. 2, Tables 2 and 7</p></td>
+<td><p>membrane and bending</p></td>
+</tr>
+<tr class="row-odd"><td><p>Straight cantilever beam</p></td>
+<td><p>Fig. 4, Tables 3 and 8</p></td>
+<td><p>regular, trapezoidal and parallelogram meshes</p></td>
+</tr>
+<tr class="row-even"><td><p>Curved beam</p></td>
+<td><p>Fig. 5, Tables 3 and 9</p></td>
+<td><p>in-plane and out-of-plane load</p></td>
+</tr>
+<tr class="row-odd"><td><p>Twisted beam</p></td>
+<td><p>Fig. 6, Tables 3 and 10</p></td>
+<td><p>in-plane and out-of-plane load</p></td>
+</tr>
+<tr class="row-even"><td><p>Rectangular plate</p></td>
+<td><p>Fig. 7, Tables 4, 11 and 12</p></td>
+<td><p>the two cases of Tables 11 and 12</p></td>
+</tr>
+<tr class="row-odd"><td><p>Scordelis-Lo roof, spherical shell</p></td>
+<td><p>Figs. 8 and 9, Tables 5, 13 and 14</p></td>
+<td><p>in the notebook of the shell obstacle course</p></td>
+</tr>
+<tr class="row-even"><td><p>Patch test for solids, thick-walled cylinder</p></td>
+<td><p>Figs. 3 and 10</p></td>
+<td><p>not modelled: solid and plane strain problems</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The triangular meshes are obtained by cutting every quadrilateral of the mesh of [1] along its diagonal 1-3, as the paper suggests for triangles (p. 7). Unless said otherwise, a displacement is normalised by the theoretical value of [1], and the letter grades follow the rule of [1], p. 14: A for an error of at most 2%, B up to 10%, C up to 20%, D up to 50% and F above, the absolute errors being averaged when several cases contribute to one grade.</p>
+<section id="Common-code">
+<h2>Common code<a class="headerlink" href="#Common-code" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">stiffness()</span></code> assembles the linear stiffness matrix <code class="docutils literal notranslate"><span class="pre">KC0</span></code> of a mesh of quadrilaterals for one of the four elements, <code class="docutils literal notranslate"><span class="pre">solve()</span></code> solves the static problem with prescribed degrees-of-freedom, <code class="docutils literal notranslate"><span class="pre">tip_forces()</span></code> distributes a unit end load as in Fig. 11(a) of [1], half of the load of each element edge going to each of its two nodes.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import numpy as np
+from scipy.sparse import coo_matrix
+from scipy.sparse.linalg import spsolve
+
+from pyfe3d.shellprop_utils import isotropic_plate
+from pyfe3d import (Quad4, Quad4Data, Quad4Probe, Quad4R, Quad4RData,
+                    Quad4RProbe, Tria3R, Tria3RData, Tria3RProbe, Tria3DSG,
+                    Tria3DSGData, Tria3DSGProbe, INT, DOUBLE, DOF)
+
+ELEMENTS = {
+    'Quad4': (Quad4, Quad4Data, Quad4Probe),
+    'Quad4R': (Quad4R, Quad4RData, Quad4RProbe),
+    'Tria3R': (Tria3R, Tria3RData, Tria3RProbe),
+    'Tria3DSG': (Tria3DSG, Tria3DSGData, Tria3DSGProbe),
+}
+
+
+def split(quads):
+    # two triangles per quadrilateral, cut along the diagonal 1-3
+    return [t for (n1, n2, n3, n4) in quads for t in ((n1, n2, n3), (n1, n3, n4))]
+
+
+def stiffness(ncoords, quads, name, prop):
+    Elem, Data, Probe = ELEMENTS[name]
+    conn = split(quads) if name.startswith('Tria') else quads
+    data, probe = Data(), Probe()
+    ncf = np.ascontiguousarray(ncoords, dtype=DOUBLE).flatten()
+    N = DOF*ncoords.shape[0]
+    size = data.KC0_SPARSE_SIZE*len(conn)
+    KC0r = np.zeros(size, dtype=INT)
+    KC0c = np.zeros(size, dtype=INT)
+    KC0v = np.zeros(size, dtype=DOUBLE)
+    areas = np.zeros(len(conn))
+    for k, nodes in enumerate(conn):
+        e = Elem(probe)
+        for i, n in enumerate(nodes):
+            setattr(e, 'n%d' % (i + 1), n)
+            setattr(e, 'c%d' % (i + 1), DOF*n)
+        e.init_k_KC0 = k*data.KC0_SPARSE_SIZE
+        e.update_rotation_matrix(ncf)
+        e.update_probe_xe(ncf)
+        e.update_area()
+        e.update_KC0(KC0r, KC0c, KC0v, prop)
+        areas[k] = e.area
+    K = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
+    return K, conn, areas
+
+
+def solve(K, bk, f, uk=None):
+    # static solution with the degrees-of-freedom of the mask bk prescribed to uk
+    u = np.zeros(K.shape[0])
+    if uk is not None:
+        u[bk] = uk[bk]
+    bu = ~bk
+    u[bu] = spsolve(K[bu][:, bu], f[bu] - K[bu][:, bk] @ u[bk])
+    return u
+
+
+def area_load(ncoords, conn, areas, q):
+    # nodal forces of a load per unit area q, lumped equally to the nodes
+    f = np.zeros(DOF*ncoords.shape[0])
+    for nodes, A in zip(conn, areas):
+        for n in nodes:
+            f[DOF*n:DOF*n + 3] += np.asarray(q)*A/len(nodes)
+    return f
+
+
+def grid(nx, ny):
+    # node ids of a structured grid and its quadrilaterals
+    ids = np.arange((nx + 1)*(ny + 1)).reshape(nx + 1, ny + 1)
+    quads = [(ids[i, j], ids[i + 1, j], ids[i + 1, j + 1], ids[i, j + 1])
+             for i in range(nx) for j in range(ny)]
+    return ids, quads
+
+
+def tip_forces(N, tip, comp, total=1.):
+    f = np.zeros(N)
+    for a, b in zip(tip[:-1], tip[1:]):
+        f[DOF*a + comp] += total/(len(tip) - 1)/2
+        f[DOF*b + comp] += total/(len(tip) - 1)/2
+    return f
+
+
+def grade(normalised):
+    # letter grade of [1], p. 14, from the mean absolute error
+    err = 100*np.mean(np.abs(np.atleast_1d(normalised) - 1.))
+    for letter, limit in (('A', 2.), ('B', 10.), ('C', 20.), ('D', 50.)):
+        if err &lt;= limit:
+            return letter
+    return 'F'
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Patch-tests-for-plates">
+<h2>Patch tests for plates<a class="headerlink" href="#Patch-tests-for-plates" title="Link to this heading">#</a></h2>
+<p>The patch of Fig. 2 of [1] is a rectangle of 0.24 by 0.12 divided into five quadrilaterals by four interior nodes at (0.04, 0.02), (0.18, 0.03), (0.16, 0.08) and (0.08, 0.08), with <span class="math notranslate nohighlight">\(t = 0.001\)</span>, <span class="math notranslate nohighlight">\(E = 10^6\)</span> and <span class="math notranslate nohighlight">\(\nu = 0.25\)</span>. The displacements of the exact field of Table 2 of [1] are prescribed at the four corner nodes and the interior nodes are free:</p>
+<ul class="simple">
+<li><p>membrane: <span class="math notranslate nohighlight">\(u = 10^{-3}(x + y/2)\)</span>, <span class="math notranslate nohighlight">\(v = 10^{-3}(y + x/2)\)</span>, a state of constant strain <span class="math notranslate nohighlight">\(\epsilon_x = \epsilon_y = \gamma_{xy} = 10^{-3}\)</span>;</p></li>
+<li><p>bending: <span class="math notranslate nohighlight">\(w = 10^{-3}(x^2 + xy + y^2)/2\)</span>, with the rotations of zero transverse shear, which in the convention of <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code> are <span class="math notranslate nohighlight">\(r_x = \partial w/\partial y\)</span> and <span class="math notranslate nohighlight">\(r_y = -\partial w/\partial x\)</span>, a state of constant curvature.</p></li>
+</ul>
+<p>The out-of-plane degrees-of-freedom are fixed in the membrane test, and <span class="math notranslate nohighlight">\(u\)</span>, <span class="math notranslate nohighlight">\(v\)</span> and <span class="math notranslate nohighlight">\(r_z\)</span> in the bending test. The table of [1] prescribes <span class="math notranslate nohighlight">\(u\)</span> and <span class="math notranslate nohighlight">\(v\)</span> only, for elements without drilling rotations. <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> and <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> enrich their in-plane displacements with the drilling rotations [2], so that the displacement of a boundary edge depends on <span class="math notranslate nohighlight">\(r_z\)</span> at its nodes, and the drilling rotation of the boundary nodes is prescribed as well, to the in-plane rotation
+of the exact field, <span class="math notranslate nohighlight">\((v_{,x} - u_{,y})/2 = 0\)</span>. Left free, it lets the boundary edges deform beyond the prescribed field.</p>
+<p>[1] records the maximum error of the stresses (Table 7). Stresses are recovered differently by each element of <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code>, so the measures here are the maximum error of the displacements of the interior nodes, relative to the largest value of the exact field, and the error of the strain energy <span class="math notranslate nohighlight">\(U = \frac{1}{2} \boldsymbol{u}^\top \boldsymbol{K} \boldsymbol{u}\)</span> against the exact <span class="math notranslate nohighlight">\(\frac{1}{2} \boldsymbol{\epsilon}^\top \boldsymbol{A} \boldsymbol{\epsilon}\)</span> (membrane) or
+<span class="math notranslate nohighlight">\(\frac{1}{2} \boldsymbol{\kappa}^\top \boldsymbol{D} \boldsymbol{\kappa}\)</span> (bending) times the area. Both are zero, to round-off, when the element passes.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>PATCH_XY = np.array([[0., 0.], [0.24, 0.], [0.24, 0.12], [0., 0.12],
+                     [0.04, 0.02], [0.18, 0.03], [0.16, 0.08], [0.08, 0.08]])
+PATCH_QUADS = [(4, 5, 6, 7), (0, 1, 5, 4), (1, 2, 6, 5), (2, 3, 7, 6), (3, 0, 4, 7)]
+
+
+def patch_test(name, form):
+    ncoords = np.column_stack((PATCH_XY, np.zeros(8)))
+    prop = isotropic_plate(thickness=0.001, E=1.e6, nu=0.25)
+    K, conn, areas = stiffness(ncoords, PATCH_QUADS, name, prop)
+    N = K.shape[0]
+    x, y = PATCH_XY.T
+    boundary = np.arange(8) &lt; 4
+    uex = np.zeros(N)
+    bk = np.zeros(N, dtype=bool)
+    if form == 'membrane':
+        uex[0::DOF] = 1e-3*(x + y/2)
+        uex[1::DOF] = 1e-3*(y + x/2)
+        checked, fixed, prescribed = (0, 1), (2, 3, 4), (0, 1, 5)
+        C = np.array([[prop.A11, prop.A12, prop.A16],
+                      [prop.A12, prop.A22, prop.A26],
+                      [prop.A16, prop.A26, prop.A66]])
+    else:
+        uex[2::DOF] = 1e-3*(x**2 + x*y + y**2)/2
+        uex[3::DOF] = 1e-3*(y + x/2)
+        uex[4::DOF] = -1e-3*(x + y/2)
+        checked, fixed, prescribed = (2, 3, 4), (0, 1, 5), (2, 3, 4)
+        C = np.array([[prop.D11, prop.D12, prop.D16],
+                      [prop.D12, prop.D22, prop.D26],
+                      [prop.D16, prop.D26, prop.D66]])
+    for d in fixed:
+        bk[d::DOF] = True
+    for d in prescribed:
+        bk[d::DOF] |= boundary
+    u = solve(K, bk, np.zeros(N), uex)
+    err_u = max(np.abs(u[d::DOF][~boundary] - uex[d::DOF][~boundary]).max()
+                /np.abs(uex[d::DOF]).max() for d in checked)
+    # the three strains, or the three curvatures, are all equal to 1e-3 in magnitude
+    e = np.full(3, 1e-3)
+    U_exact = 0.5*e @ C @ e*0.24*0.12
+    err_U = 0.5*u @ (K @ u)/U_exact - 1.
+    return err_u, err_U
+
+
+patch = {}
+print('element    test       interior displ. error  energy error   check')
+for name in ELEMENTS:
+    for form in ('membrane', 'bending'):
+        err_u, err_U = patch[name, form] = patch_test(name, form)
+        ok = err_u &lt; 1e-8 and abs(err_U) &lt; 1e-8
+        print('%-10s %-10s %20.2e %14.2e   %s' % (name, form, err_u, err_U,
+                                                 'PASS' if ok else 'FAIL'))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+element    test       interior displ. error  energy error   check
+Quad4      membrane               2.82e-16      -1.11e-16   PASS
+Quad4      bending                7.39e-01       5.80e+00   FAIL
+Quad4R     membrane               4.52e-16      -1.11e-16   PASS
+Quad4R     bending                7.24e-01       1.34e+01   FAIL
+Tria3R     membrane               6.78e-16      -4.44e-16   PASS
+Tria3R     bending                8.41e-02       2.43e-01   FAIL
+Tria3DSG   membrane               1.08e-15      -1.11e-16   PASS
+Tria3DSG   bending                3.82e-14      -2.38e-11   PASS
+</pre></div></div>
+</div>
+<p>All four elements pass the membrane patch test. Only <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> passes the bending patch test. [1] reports 0.0% for the QUAD4 of MSC/NASTRAN in both tests (Table 7).</p>
+<p>The failure of <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> and <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> in bending is in the transverse shear. The exact transverse displacement is quadratic and both quadrilaterals interpolate it bilinearly, with the transverse shear sampled at the centroid; on these distorted elements the gradient of the bilinear interpolant at the centroid differs from the prescribed rotation there, on every element of the patch, which leaves a transverse shear strain and, with <span class="math notranslate nohighlight">\(\ell/t \approx 100\)</span>, a large parasitic shear energy.
+<code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> takes its transverse shear at the centroid as well, softened by its <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span></code> factor. The discrete shear gap of <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> makes the shear strain of a state of constant curvature vanish exactly, which is the property this test checks.</p>
+</section>
+<section id="Straight-cantilever-beam">
+<h2>Straight cantilever beam<a class="headerlink" href="#Straight-cantilever-beam" title="Link to this heading">#</a></h2>
+<p>Fig. 4 of [1]: length 6.0, width 0.2, thickness 0.1, <span class="math notranslate nohighlight">\(E = 10^7\)</span>, <span class="math notranslate nohighlight">\(\nu = 0.3\)</span>, a 6 by 1 mesh clamped at one end, with regular, trapezoidal and parallelogram elements, the interior node lines of the distorted meshes being slanted at 45 degrees. The unit loads are applied at the free end, the twist as a couple of transverse forces <span class="math notranslate nohighlight">\(\pm 1/0.2\)</span> on the two tip nodes (Fig. 11(b) of [1]). The extension and the shear results are the mean tip displacement in the direction of the load,
+the twist result is the tip rotation <span class="math notranslate nohighlight">\((w_2 - w_1)/0.2\)</span>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>STRAIGHT_REF = {'extension': 3.0e-5, 'in-plane shear': 0.1081,
+                'out-of-plane shear': 0.4321, 'twist': 0.03208}   # Table 3 of [1]
+MH_QUAD4_STRAIGHT = {   # Table 8 of [1]
+    'regular': {'extension': 0.995, 'in-plane shear': 0.904, 'out-of-plane shear': 0.986, 'twist': 0.941},
+    'trapezoidal': {'extension': 0.996, 'in-plane shear': 0.071, 'out-of-plane shear': 0.968, 'twist': 0.951},
+    'parallelogram': {'extension': 0.996, 'in-plane shear': 0.080, 'out-of-plane shear': 0.977, 'twist': 0.945},
+}
+
+
+def straight_beam(name, shape, load):
+    L, w, nx, ny = 6., 0.2, 6, 1
+    ids, quads = grid(nx, ny)
+    ys = np.linspace(0., w, ny + 1)
+    ncoords = np.zeros(((nx + 1)*(ny + 1), 3))
+    for i in range(nx + 1):
+        d = 0.
+        if 0 &lt; i &lt; nx and shape == 'parallelogram':
+            d = 0.1
+        elif 0 &lt; i &lt; nx and shape == 'trapezoidal':
+            d = 0.1 if i % 2 else -0.1
+        ncoords[ids[i, :], 0] = i*L/nx + d*(2*ys/w - 1)
+        ncoords[ids[i, :], 1] = ys
+    prop = isotropic_plate(thickness=0.1, E=1.e7, nu=0.3)
+    K, conn, areas = stiffness(ncoords, quads, name, prop)
+    N = K.shape[0]
+    bk = np.zeros(N, dtype=bool)
+    for d in range(DOF):
+        bk[d::DOF] |= np.isclose(ncoords[:, 0], 0.)
+    tip = ids[-1, :]
+    if load == 'twist':
+        f = np.zeros(N)
+        f[DOF*tip[0] + 2] = -1/w
+        f[DOF*tip[-1] + 2] = +1/w
+        u = solve(K, bk, f)
+        return (u[DOF*tip[-1] + 2] - u[DOF*tip[0] + 2])/w
+    comp = {'extension': 0, 'in-plane shear': 1, 'out-of-plane shear': 2}[load]
+    u = solve(K, bk, tip_forces(N, tip, comp))
+    return u[DOF*tip + comp].mean()
+
+
+straight = {}
+print('normalised tip displacement')
+print('%-14s %-19s' % ('mesh', 'load') + ''.join('%10s' % n for n in ELEMENTS) + '  MH QUAD4')
+for shape in ('regular', 'trapezoidal', 'parallelogram'):
+    for load, ref in STRAIGHT_REF.items():
+        for name in ELEMENTS:
+            straight[name, shape, load] = straight_beam(name, shape, load)/ref
+        print('%-14s %-19s' % (shape, load)
+              + ''.join('%10.3f' % straight[name, shape, load] for name in ELEMENTS)
+              + '%10.3f' % MH_QUAD4_STRAIGHT[shape][load])
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+normalised tip displacement
+mesh           load                    Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
+regular        extension               0.999     0.998     0.992     0.992     0.995
+regular        in-plane shear          0.904     0.119     0.145     0.027     0.904
+regular        out-of-plane shear      0.980     0.973     0.876     0.971     0.986
+regular        twist                 377.368     4.780     1.669     0.675     0.941
+trapezoidal    extension               0.998     0.999     0.992     0.991     0.996
+trapezoidal    in-plane shear          0.761     0.033     0.149     0.013     0.071
+trapezoidal    out-of-plane shear      0.981     0.233     0.589     0.959     0.968
+trapezoidal    twist                 109.715     4.907     3.244     0.658     0.951
+parallelogram  extension               0.998     0.999     0.992     0.991     0.996
+parallelogram  in-plane shear          0.838     0.068     0.102     0.010     0.080
+parallelogram  out-of-plane shear      0.982     0.772     0.831     0.958     0.977
+parallelogram  twist                 137.968     5.258     2.709     0.638     0.945
+</pre></div></div>
+</div>
+<p>Extension is reproduced by every element on every mesh. The other cases show the following failures:</p>
+<ul class="simple">
+<li><p><strong>Twist of ``Quad4``.</strong> The one-point transverse shear of <code class="docutils literal notranslate"><span class="pre">Quad4</span></code>, from Hughes et al. [3], leaves the hourglass mode <span class="math notranslate nohighlight">\(w = (x - x_c)(y - y_c)\)</span> without stiffness, and a strip one element wide loaded in torsion deforms in that mode, so the twist is two orders of magnitude too large. <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> controls that mode with its hourglass stiffness, and the result depends on the amount of it, here about five times too flexible. Both are documented in the Notes of the two modules, and the tests
+<code class="docutils literal notranslate"><span class="pre">test_quad4_spurious_shear_mode.py</span></code> and <code class="docutils literal notranslate"><span class="pre">test_drilling_benchmarks.py</span></code> show that two elements across the width recover the twist with <code class="docutils literal notranslate"><span class="pre">Quad4</span></code>.</p></li>
+<li><p><strong>In-plane shear, i.e. in-plane bending.</strong> <code class="docutils literal notranslate"><span class="pre">Quad4</span></code>, with the drilling enrichment of Allman [2], reaches 90% of the reference on the regular mesh, like the QUAD4 of [1], and keeps 76% to 84% on the distorted meshes, where the QUAD4 of [1] locks (7% to 8%). <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> locks on all three meshes: its one-point membrane gives no strain to the in-plane bending pattern of the bilinear element, which is resisted only by its hourglass stabilisation and by its drilling term, and on this
+one-element-deep strip these make it far too stiff. The triangles lock too: <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> has the constant-strain membrane of the linear triangle, and <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code>, which carries the Allman enrichment, reaches 10% to 15%.</p></li>
+<li><p><strong>Out-of-plane shear on distorted meshes.</strong> <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> drops to 23% on the trapezoidal mesh and <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> to 59%.</p></li>
+<li><p><strong>Twist of the triangles.</strong> <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> is 1.7 to 3.2 times too flexible and <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> 32% to 36% too stiff.</p></li>
+</ul>
+</section>
+<section id="Curved-beam">
+<h2>Curved beam<a class="headerlink" href="#Curved-beam" title="Link to this heading">#</a></h2>
+<p>Fig. 5 of [1]: a 90 degree arc of inner radius 4.12 and outer radius 4.32, thickness 0.1, <span class="math notranslate nohighlight">\(E = 10^7\)</span>, <span class="math notranslate nohighlight">\(\nu = 0.25\)</span>, a 6 by 1 mesh clamped at one end and loaded by unit forces at the tip, in the plane of the arc (radially at the tip) or normal to it.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>CURVED_REF = {'in-plane': 0.08734, 'out-of-plane': 0.5022}   # Table 3 of [1]
+MH_QUAD4_CURVED = {'in-plane': 0.833, 'out-of-plane': 0.951}  # Table 9 of [1]
+
+
+def curved_beam(name, load):
+    nx, ny = 6, 1
+    th = np.linspace(0., np.pi/2, nx + 1)
+    r = np.linspace(4.12, 4.32, ny + 1)
+    T, Rr = np.meshgrid(th, r, indexing='ij')
+    ncoords = np.column_stack(((Rr*np.cos(T)).ravel(), (Rr*np.sin(T)).ravel(),
+                               np.zeros(T.size)))
+    ids, quads = grid(nx, ny)
+    prop = isotropic_plate(thickness=0.1, E=1.e7, nu=0.25)
+    K, conn, areas = stiffness(ncoords, quads, name, prop)
+    N = K.shape[0]
+    bk = np.zeros(N, dtype=bool)
+    for d in range(DOF):
+        bk[d::DOF] |= np.isclose(ncoords[:, 1], 0.)
+    tip = ids[-1, :]
+    comp = 1 if load == 'in-plane' else 2
+    u = solve(K, bk, tip_forces(N, tip, comp))
+    return u[DOF*tip + comp].mean()
+
+
+curved = {}
+print('normalised tip displacement')
+print('%-14s' % 'load' + ''.join('%10s' % n for n in ELEMENTS) + '  MH QUAD4')
+for load, ref in CURVED_REF.items():
+    for name in ELEMENTS:
+        curved[name, load] = curved_beam(name, load)/ref
+    print('%-14s' % load + ''.join('%10.3f' % curved[name, load] for name in ELEMENTS)
+          + '%10.3f' % MH_QUAD4_CURVED[load])
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+normalised tip displacement
+load               Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
+in-plane           0.908     0.103     0.119     0.022     0.833
+out-of-plane      26.828     1.587     1.100     0.760     0.951
+</pre></div></div>
+</div>
+<p>The in-plane case repeats the in-plane bending result of the straight beam: <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> reaches 91%, better than the 83% of the QUAD4 of [1], and the other three elements lock. The out-of-plane load twists the strip, and <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> is again far too flexible through the hourglass mode of its transverse shear.</p>
+</section>
+<section id="Twisted-beam">
+<h2>Twisted beam<a class="headerlink" href="#Twisted-beam" title="Link to this heading">#</a></h2>
+<p>Fig. 6 of [1]: length 12.0, width 1.1, thickness 0.32, twisted by 90 degrees from root to tip, <span class="math notranslate nohighlight">\(E = 29 \times 10^6\)</span>, <span class="math notranslate nohighlight">\(\nu = 0.22\)</span>, a 12 by 2 mesh clamped at the root, with unit forces at the tip. The reference surface is a helicoid, so every quadrilateral is warped, by 7.5 degrees according to [1] (p. 11). At the tip the width lies along <span class="math notranslate nohighlight">\(z\)</span>: the in-plane load is along <span class="math notranslate nohighlight">\(z\)</span> and the out-of-plane load along <span class="math notranslate nohighlight">\(y\)</span>.</p>
+<p>The quadrilaterals of <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code> take their normal from the cross product of the two diagonals and work with the coordinates of the nodes in that frame (<code class="docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code> and <code class="docutils literal notranslate"><span class="pre">update_probe_xe()</span></code>), with no correction for warping; a triangle is flat by construction. The mesh is refined beyond the one of [1] to show the effect.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>TWISTED_REF = {'in-plane': 0.005424, 'out-of-plane': 0.001754}   # Table 3 of [1]
+MH_QUAD4_TWISTED = {'in-plane': 0.993, 'out-of-plane': 0.985}     # Table 10 of [1]
+
+
+def twisted_beam(name, load, nx=12, ny=2):
+    L, w = 12., 1.1
+    X, S = np.meshgrid(np.linspace(0., L, nx + 1), np.linspace(-w/2, w/2, ny + 1),
+                       indexing='ij')
+    beta = np.pi/2*X/L
+    ncoords = np.column_stack((X.ravel(), (S*np.cos(beta)).ravel(),
+                               (S*np.sin(beta)).ravel()))
+    ids, quads = grid(nx, ny)
+    prop = isotropic_plate(thickness=0.32, E=29.e6, nu=0.22)
+    K, conn, areas = stiffness(ncoords, quads, name, prop)
+    N = K.shape[0]
+    bk = np.zeros(N, dtype=bool)
+    for d in range(DOF):
+        bk[d::DOF] |= np.isclose(ncoords[:, 0], 0.)
+    tip = ids[-1, :]
+    comp = 2 if load == 'in-plane' else 1
+    u = solve(K, bk, tip_forces(N, tip, comp))
+    return u[DOF*tip + comp].mean()
+
+
+twisted = {}
+print('normalised tip displacement')
+print('%-9s %-14s' % ('mesh', 'load') + ''.join('%10s' % n for n in ELEMENTS) + '  MH QUAD4')
+for nx, ny in ((12, 2), (48, 4), (192, 8), (768, 16)):
+    for load, ref in TWISTED_REF.items():
+        for name in ELEMENTS:
+            twisted[name, nx, load] = twisted_beam(name, load, nx, ny)/ref
+        print('%-9s %-14s' % ('%dx%d' % (nx, ny), load)
+              + ''.join('%10.3f' % twisted[name, nx, load] for name in ELEMENTS)
+              + ('%10.3f' % MH_QUAD4_TWISTED[load] if nx == 12 else ''))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+normalised tip displacement
+mesh      load               Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
+12x2      in-plane           0.252     0.234     0.910     0.969     0.993
+12x2      out-of-plane       0.332     0.325     0.884     0.817     0.985
+48x4      in-plane           0.659     0.691     0.967     0.994
+48x4      out-of-plane       0.711     0.743     0.965     0.954
+192x8     in-plane           0.899     0.946     0.994     0.998
+192x8     out-of-plane       0.917     0.957     0.994     0.990
+768x16    in-plane           0.973     0.992     0.998     0.999
+768x16    out-of-plane       0.978     0.994     0.998     0.997
+</pre></div></div>
+</div>
+<p>On the mesh of [1] the two quadrilaterals are three to four times too stiff, while the QUAD4 of [1] is within 2%. The triangles, which are flat by construction, are within 20%. The error of the quadrilaterals decreases as the warping of each element decreases with the refinement, and all four elements approach the reference of [1] on the finest mesh. MacNeal [4], one of the two references given for the QUAD4 in Table 6 of [1], modifies the matrices of the plane element for warped quadrilaterals;
+nothing equivalent is implemented in the quadrilaterals of <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code>.</p>
+</section>
+<section id="Rectangular-plate">
+<h2>Rectangular plate<a class="headerlink" href="#Rectangular-plate" title="Link to this heading">#</a></h2>
+<p>Fig. 7 of [1]: <span class="math notranslate nohighlight">\(a = 2.0\)</span>, <span class="math notranslate nohighlight">\(b = 2.0\)</span> or <span class="math notranslate nohighlight">\(10.0\)</span>, thickness 0.0001, <span class="math notranslate nohighlight">\(E = 1.7472 \times 10^7\)</span>, <span class="math notranslate nohighlight">\(\nu = 0.3\)</span>, an <span class="math notranslate nohighlight">\(N \times N\)</span> mesh on one quarter of the plate with symmetry conditions on the two inner edges. The two cases tabulated by [1] for the QUAD4 are computed: simply supported edges with a uniform pressure <span class="math notranslate nohighlight">\(q = 10^{-4}\)</span> (Table 11) and clamped edges with a central load <span class="math notranslate nohighlight">\(P = 4 \times 10^{-4}\)</span> (Table 12), the quarter model carrying <span class="math notranslate nohighlight">\(P/4\)</span>. Simply
+supported means <span class="math notranslate nohighlight">\(w = 0\)</span> on the edge, with free rotations; clamped means <span class="math notranslate nohighlight">\(w = r_x = r_y = 0\)</span>. The in-plane degrees-of-freedom <span class="math notranslate nohighlight">\(u\)</span>, <span class="math notranslate nohighlight">\(v\)</span> and <span class="math notranslate nohighlight">\(r_z\)</span> are fixed, the plate being loaded in bending only. The pressure is lumped to the nodes, one quarter (one third for triangles) of the load of each element going to each node. The result is the deflection at the centre normalised by Table 4 of [1].</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>PLATE_REF = {('simple', 1.): 4.062, ('simple', 5.): 12.97,     # Table 4 of [1]
+             ('clamped', 1.): 5.60, ('clamped', 5.): 7.23}
+MH_QUAD4_PLATE = {('simple', 1.): [0.981, 1.004, 1.003, 1.002],   # Table 11 of [1]
+                  ('simple', 5.): [1.052, 0.991, 0.997, 0.998],
+                  ('clamped', 1.): [0.934, 1.010, 1.012, 1.010],  # Table 12 of [1]
+                  ('clamped', 5.): [0.519, 0.863, 0.940, 0.972]}
+NS = (2, 4, 6, 8)
+
+
+def rect_plate(name, n, ratio, support):
+    a, t, E, nu = 2., 0.0001, 1.7472e7, 0.3
+    b = ratio*a
+    X, Y = np.meshgrid(np.linspace(0., a/2, n + 1), np.linspace(0., b/2, n + 1),
+                       indexing='ij')
+    ncoords = np.column_stack((X.ravel(), Y.ravel(), np.zeros(X.size)))
+    ids, quads = grid(n, n)
+    prop = isotropic_plate(thickness=t, E=E, nu=nu)
+    K, conn, areas = stiffness(ncoords, quads, name, prop)
+    N = K.shape[0]
+    x, y = ncoords[:, 0], ncoords[:, 1]
+    bk = np.zeros(N, dtype=bool)
+    for d in (0, 1, 5):
+        bk[d::DOF] = True
+    edge = np.isclose(x, 0.) | np.isclose(y, 0.)
+    bk[2::DOF] |= edge
+    if support == 'clamped':
+        bk[3::DOF] |= edge
+        bk[4::DOF] |= edge
+    bk[4::DOF] |= np.isclose(x, a/2)   # symmetry, rotation about y
+    bk[3::DOF] |= np.isclose(y, b/2)   # symmetry, rotation about x
+    centre = ids[n, n]
+    if support == 'simple':
+        f = area_load(ncoords, conn, areas, (0., 0., 1.e-4))
+    else:
+        f = np.zeros(N)
+        f[DOF*centre + 2] = 4.e-4/4
+    u = solve(K, bk, f)
+    return u[DOF*centre + 2]
+
+
+plate = {}
+for (support, ratio), ref in PLATE_REF.items():
+    print('%s, b/a = %g, normalised deflection at the centre'
+          % ('simple supports, uniform load' if support == 'simple'
+             else 'clamped supports, central load', ratio))
+    print('%-4s' % 'N' + ''.join('%10s' % n for n in ELEMENTS) + '  MH QUAD4')
+    for i, n in enumerate(NS):
+        for name in ELEMENTS:
+            plate[name, support, ratio, n] = rect_plate(name, n, ratio, support)/ref
+        print('%-4d' % n + ''.join('%10.3f' % plate[name, support, ratio, n] for name in ELEMENTS)
+              + '%10.3f' % MH_QUAD4_PLATE[support, ratio][i])
+    print()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+simple supports, uniform load, b/a = 1, normalised deflection at the centre
+N        Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
+2        1.065     0.781     1.410     0.883     0.981
+4        1.016     0.930     1.069     0.989     1.004
+6        1.007     0.967     0.995     1.009     1.003
+8        1.004     0.981     0.965     1.017     1.002
+
+simple supports, uniform load, b/a = 5, normalised deflection at the centre
+N        Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
+2        0.826     0.875     4.583     0.922     1.052
+4        0.978     0.974     1.868     1.115     0.991
+6        0.991     0.988     1.391     1.155     0.997
+8        0.995     0.993     1.225     1.170     0.998
+
+clamped supports, central load, b/a = 1, normalised deflection at the centre
+N        Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
+2        0.865     0.533     2.286     0.000     0.934
+4        0.965     0.819     1.401     0.000     1.010
+6        0.985     0.907     1.170     0.002     1.012
+8        0.992     0.944     1.074     0.009     1.010
+
+clamped supports, central load, b/a = 5, normalised deflection at the centre
+N        Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
+2        0.318     0.287     8.366     0.000     0.519
+4        0.825     0.666     3.942     0.000     0.863
+6        0.911     0.799     2.591     0.001     0.940
+8        0.946     0.867     1.994     0.003     0.972
+
+</pre></div></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">Quad4</span></code> converges in all four cases, more slowly than the QUAD4 of [1] for the clamped plate with <span class="math notranslate nohighlight">\(b/a = 5\)</span>. <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> converges from below, more slowly. The two triangles are the interesting cases at this thickness, <span class="math notranslate nohighlight">\(\ell/t\)</span> between 1250 and 25000:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> is too flexible on the coarse meshes, up to eight times on the elongated elements of <span class="math notranslate nohighlight">\(b/a = 5\)</span>, and is not converged at <span class="math notranslate nohighlight">\(N = 8\)</span>. This is the transverse shear stiffness divided by <span class="math notranslate nohighlight">\(1 + \alpha \ell^2/t^2\)</span> with the default <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span> <span class="pre">=</span> <span class="pre">0.7</span></code>, whose error behaves as <span class="math notranslate nohighlight">\(O(1/N^2)\)</span> (Notes of <code class="docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>).</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> locks with clamped supports and the central load, at less than 1% of the reference up to <span class="math notranslate nohighlight">\(N = 8\)</span>, and with simple supports and the uniform load it is too flexible on the elongated elements of <span class="math notranslate nohighlight">\(b/a = 5\)</span>, by 17% at <span class="math notranslate nohighlight">\(N = 8\)</span>. Both converge under further refinement, computed below, but slowly.</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>print('%-36s %4s %10s %10s' % ('case', 'N', 'Quad4', 'Tria3DSG'))
+for support, ratio, ns in (('clamped', 1., (16, 32)), ('simple', 5., (16, 32, 64))):
+    for n in ns:
+        print('%-36s %4d' % ('%s, b/a = %g' % (support, ratio), n)
+              + ''.join('%10.3f' % (rect_plate(name, n, ratio, support)/PLATE_REF[support, ratio])
+                        for name in ('Quad4', 'Tria3DSG')))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+case                                    N      Quad4   Tria3DSG
+clamped, b/a = 1                       16     0.999     0.328
+clamped, b/a = 1                       32     1.001     0.913
+simple, b/a = 5                        16     0.999     1.177
+simple, b/a = 5                        32     1.000     1.033
+simple, b/a = 5                        64     1.000     1.000
+</pre></div></div>
+</div>
+</section>
+<section id="Summary">
+<h2>Summary<a class="headerlink" href="#Summary" title="Link to this heading">#</a></h2>
+<p>The grades of Table 16 of [1] for the tests modelled here, the absolute errors of the cases of each test being averaged. For the patch tests the error is the larger of the two measures above, in per cent. As a check of the grading, the same function applied to the QUAD4 results of Tables 8 to 12 of [1] must give the QUAD4 column of their Table 16.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def summary(r):
+    # r(test) returns the normalised results of the cases of each test
+    tests = [
+        ('(1) Patch test, membrane', r('patch', 'membrane')),
+        ('(2) Patch test, bending', r('patch', 'bending')),
+        ('(3) Straight beam, extension', r('straight', 'extension', ('regular', 'trapezoidal', 'parallelogram'))),
+        ('(4) Straight beam, in-plane, regular', r('straight', 'in-plane shear', ('regular',))),
+        ('(5) Straight beam, in-plane, irregular', r('straight', 'in-plane shear', ('trapezoidal', 'parallelogram'))),
+        ('(6) Straight beam, out-of-plane, regular', r('straight', 'out-of-plane shear', ('regular',))),
+        ('(7) Straight beam, out-of-plane, irregular', r('straight', 'out-of-plane shear', ('trapezoidal', 'parallelogram'))),
+        ('(8) Straight beam, twist', r('straight', 'twist', ('regular', 'trapezoidal', 'parallelogram'))),
+        ('(9) Curved beam, in-plane', r('curved', 'in-plane')),
+        ('(10) Curved beam, out-of-plane', r('curved', 'out-of-plane')),
+        ('(11) Twisted beam', r('twisted')),
+        ('(12) Rectangular plate (N = 4)', r('plate')),
+    ]
+    return [(label, grade(v) if v is not None else '-') for label, v in tests]
+
+
+def ours(name):
+    def r(test, *args):
+        if test == 'patch':
+            # error in per cent turned into a normalised value
+            return 1. + max(abs(e) for e in patch[name, args[0]])
+        if test == 'straight':
+            load, shapes = args
+            return [straight[name, s, load] for s in shapes]
+        if test == 'curved':
+            return curved[name, args[0]]
+        if test == 'twisted':
+            return [twisted[name, 12, l] for l in TWISTED_REF]
+        if test == 'plate':
+            return [plate[name, s, ra, 4] for (s, ra) in PLATE_REF]
+    return r
+
+
+def macneal_harder_quad4(test, *args):
+    if test == 'patch':
+        return 1.   # Table 7 of [1]: 0.0% in both tests
+    if test == 'straight':
+        load, shapes = args
+        return [MH_QUAD4_STRAIGHT[s][load] for s in shapes]
+    if test == 'curved':
+        return MH_QUAD4_CURVED[args[0]]
+    if test == 'twisted':
+        return list(MH_QUAD4_TWISTED.values())
+    if test == 'plate':
+        return [MH_QUAD4_PLATE[k][1] for k in PLATE_REF]
+
+
+# QUAD4 column of Table 16 of [1], tests (1) to (12)
+TABLE16_QUAD4 = list('AAABFABBCBAB')
+check = [g for _, g in summary(macneal_harder_quad4)]
+print('grading of the QUAD4 results of [1] reproduces their Table 16:',
+      'PASS' if check == TABLE16_QUAD4 else 'FAIL %s' % check)
+print()
+grades = {name: summary(ours(name)) for name in ELEMENTS}
+labels = [label for label, _ in grades['Quad4']]
+print('%-44s' % 'test' + ''.join('%10s' % n for n in ELEMENTS) + '  MH QUAD4')
+for i, label in enumerate(labels):
+    print('%-44s' % label + ''.join('%10s' % grades[n][i][1] for n in ELEMENTS)
+          + '%10s' % TABLE16_QUAD4[i])
+print('%-44s' % 'failed tests (D and F)'
+      + ''.join('%10d' % sum(g in 'DF' for _, g in grades[n]) for n in ELEMENTS)
+      + '%10d' % sum(g in 'DF' for g in TABLE16_QUAD4))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+grading of the QUAD4 results of [1] reproduces their Table 16: PASS
+
+test                                             Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
+(1) Patch test, membrane                             A         A         A         A         A
+(2) Patch test, bending                              F         F         D         A         A
+(3) Straight beam, extension                         A         A         A         A         A
+(4) Straight beam, in-plane, regular                 B         F         F         F         B
+(5) Straight beam, in-plane, irregular               D         F         F         F         F
+(6) Straight beam, out-of-plane, regular             A         B         C         B         A
+(7) Straight beam, out-of-plane, irregular           A         D         D         B         B
+(8) Straight beam, twist                             F         F         F         D         B
+(9) Curved beam, in-plane                            B         F         F         F         C
+(10) Curved beam, out-of-plane                       F         F         B         D         B
+(11) Twisted beam                                    F         F         C         C         A
+(12) Rectangular plate (N = 4)                       B         C         F         F         B
+failed tests (D and F)                               5         8         7         6         1
+</pre></div></div>
+</div>
+<p>With their default attributes, the four elements of <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code> fail between five and eight of these twelve tests, against one for the QUAD4 of [1]. The failures of <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> are the bending patch test, the in-plane bending of the distorted straight beam (D, where the QUAD4 of [1] gets an F), the two tests that twist a strip one element wide, and the warped elements of the twisted beam. <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> and the two triangles lock in in-plane bending on these one-element-deep meshes, and <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> is
+the only element that passes both patch tests. Several failures are confined to the coarse meshes that [1] prescribes on purpose: the refinements above show the twisted beam converging for every element and the locked plates of <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> recovering.</p>
+<p>The Scordelis-Lo roof and the spherical shell of [1] are run, with Tables 13 and 14 of [1], in the notebook of the shell obstacle course.</p>
+</section>
+<section id="References">
+<h2>References<a class="headerlink" href="#References" title="Link to this heading">#</a></h2>
+<p>[1] MacNeal, R. H., and Harder, R. L., A proposed standard set of problems to test finite element accuracy, Finite Elements in Analysis and Design, 1(1), 3-20, 1985. <a class="reference external" href="https://doi.org/10.1016/0168-874X(85)90003-4">https://doi.org/10.1016/0168-874X(85)90003-4</a></p>
+<p>[2] Allman, D. J., A compatible triangular element including vertex rotations for plane elasticity analysis, Computers &amp; Structures, 19(1-2), 1-8, 1984. <a class="reference external" href="https://doi.org/10.1016/0045-7949(84)90197-4">https://doi.org/10.1016/0045-7949(84)90197-4</a></p>
+<p>[3] Hughes, T. J. R., Taylor, R. L., and Kanoknukulchai, W., A simple and efficient finite element for plate bending, International Journal for Numerical Methods in Engineering, 11(10), 1529-1543, 1977. <a class="reference external" href="https://doi.org/10.1002/nme.1620111005">https://doi.org/10.1002/nme.1620111005</a></p>
+<p>[4] MacNeal, R. H., A simple quadrilateral shell element, Computers &amp; Structures, 8(2), 175-183, 1978. <a class="reference external" href="https://doi.org/10.1016/0045-7949(78)90020-2">https://doi.org/10.1016/0045-7949(78)90020-2</a></p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="tut-shell-lumped-mass.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tutorial: lumped mass matrices of the shells with an offset</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="tut-bench-shell-obstacle-course.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Benchmark: shell obstacle course</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Common-code">Common code</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Patch-tests-for-plates">Patch tests for plates</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Straight-cantilever-beam">Straight cantilever beam</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Curved-beam">Curved beam</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Twisted-beam">Twisted beam</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Rectangular-plate">Rectangular plate</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Summary">Summary</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#References">References</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/tut-bench-macneal-harder.ipynb.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

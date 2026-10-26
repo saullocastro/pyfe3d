@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Truss - Linear truss 3D element with analytical integration (pyfe3d.truss) &#8212; pyfe3d 0.10.0 documentation</title>
+    <title>Truss - Linear truss 3D element with analytical integration (pyfe3d.truss) &#8212; pyfe3d 0.11.0 documentation</title>
   
   
   
@@ -26,18 +26,18 @@
   </noscript>
   
   <!-- Loaded before other Sphinx assets -->
-  <link href="_static/styles/theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
-<link href="_static/styles/pydata-sphinx-theme.css?digest=64cc4de3f052d77215f0" rel="stylesheet" />
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
   
   <!-- So that users can add custom icons -->
-  <script defer src="_static/scripts/fontawesome.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
   <!-- Pre-loaded scripts that we'll load fully later -->
-  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0" />
-<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0" />
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=82662543"></script>
+    <script src="_static/documentation_options.js?v=f3b36f1a"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -47,7 +47,10 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Properties" href="properties.html" />
+    <link rel="prev" title="Spring - 3D spring element with constant stiffnesses (pyfe3d.spring)" href="spring.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
   <meta name="docsearch:version" content="" />
   
@@ -117,7 +120,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.10.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.11.0 documentation</p>
   
 </a></div>
     
@@ -132,39 +135,147 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_static.html">
-    Linear static analysis
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
   </a>
 </li>
 
 
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
     Linear buckling analysis of a plate
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
 </li>
 
 
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
   </a>
 </li>
 
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
   </ul>
 </nav></div>
       
@@ -246,15 +357,57 @@
   <ul class="bd-navbar-elements navbar-nav">
     
 <li class="nav-item ">
-  <a class="nav-link nav-internal" href="tutorials.html">
-    Tutorials
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
   </a>
 </li>
 
 
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_linear_static.html">
-    Linear static analysis
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
   </a>
 </li>
 
@@ -267,6 +420,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
     Linear buckling analysis of a cylinder under torsion
   </a>
@@ -274,8 +434,57 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
     Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changelog.html">
+    Changelog
   </a>
 </li>
 
@@ -321,7 +530,143 @@
 <nav class="bd-docs-nav bd-links"
      aria-label="Section Navigation">
   <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
-  <div class="bd-toc-item navbar-nav"></div>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 current active has-children"><a class="reference internal" href="fe_overview.html">Finite elements</a><details open="open"><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="quad4.html">Quad4 - Quadrilateral element with mixed integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="tria3dsg.html">Tria3DSG - Triangular element with discrete shear gap (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3dsg</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="beamc.html">BeamC - Consistent Timoshenko 3D beam element (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamc</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html">BeamLR - Linear Timoshenko 3D beam element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamlr</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="spring.html">Spring - 3D spring element with constant stiffnesses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.spring</span></code>)</a></li>
+
+
+
+<li class="toctree-l2 current active"><a aria-current="page" class="current reference internal" href="#">Truss - Linear truss 3D element with analytical integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code>)</a></li>
+
+
+
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="properties.html">Properties</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="shellprop.html">Shell property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="shellprop_utils.html">Shell property utils module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop_utils</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="beamprop.html">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
+
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="solver.html">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solver_static.html">Linear static solution (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code>)</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_analysis.html">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_convergence.html">Convergence criteria of the non-linear solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.convergence</span></code>)</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_newton_raphson.html">Newton-Raphson solver (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.newton_raphson</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_arc_length.html">Arc-length solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arc_length</span></code>)</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_callbacks.html">Calls to the callables of the non-linear solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.callbacks</span></code>)</a></li>
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_eigen.html">Eigenvalue analyses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen</span></code>)</a></li>
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html">Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_sparseutils.html">Utilities for sparse matrices (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.sparseutils</span></code>)</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_logger.html">Log messages of the solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.logger</span></code>)</a></li>
+
+
+</ul>
+</div>
 </nav></div>
     </div>
   
@@ -360,6 +705,12 @@
         <i class="fa-solid fa-home"></i>
       </a>
     </li>
+    
+    <li class="breadcrumb-item"><a href="api.html" class="nav-link">API reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="fe_overview.html" class="nav-link">Finite elements</a></li>
+    
     <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Truss - Linear truss 3D element with analytical integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code>)</span></li>
   </ul>
 </nav>
@@ -389,6 +740,11 @@ physical representation.</p>
 <p>The <a class="reference internal" href="#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a> element does not support linear buckling
 analysis.</p>
 </div>
+<p>Defines the two-node element <a class="reference internal" href="#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a>, with six degrees-of-freedom
+per node, its probe <a class="reference internal" href="#pyfe3d.truss.TrussProbe" title="pyfe3d.truss.TrussProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrussProbe</span></code></a> and <a class="reference internal" href="#pyfe3d.truss.TrussData" title="pyfe3d.truss.TrussData"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrussData</span></code></a>, which
+gives the number of sparse entries per element of each structural matrix.
+The cross-section and material properties are given by a
+<a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a> object.</p>
 </section>
 <dl class="py class">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss">
@@ -404,23 +760,46 @@ analysis.</p>
 <p>The <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> is recommended because of the better
 physical representation.</p>
 </div>
+<p>The constructor stores <code class="docutils literal notranslate"><span class="pre">p</span></code> in <code class="docutils literal notranslate"><span class="pre">probe</span></code>, sets <code class="docutils literal notranslate"><span class="pre">eid</span></code>, <code class="docutils literal notranslate"><span class="pre">pid</span></code>,
+<code class="docutils literal notranslate"><span class="pre">n1</span></code>, <code class="docutils literal notranslate"><span class="pre">n2</span></code>, <code class="docutils literal notranslate"><span class="pre">c1</span></code> and <code class="docutils literal notranslate"><span class="pre">c2</span></code> to <code class="docutils literal notranslate"><span class="pre">-1</span></code>, and sets the <code class="docutils literal notranslate"><span class="pre">init_k_*</span></code>
+positions, <code class="docutils literal notranslate"><span class="pre">length</span></code> and the rotation matrix to <code class="docutils literal notranslate"><span class="pre">0</span></code>. The methods use
+the attributes updated by the others: <a class="reference internal" href="#pyfe3d.truss.Truss.update_rotation_matrix" title="pyfe3d.truss.Truss.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a>
+reads <code class="docutils literal notranslate"><span class="pre">c1</span></code> and <code class="docutils literal notranslate"><span class="pre">c2</span></code>; <a class="reference internal" href="#pyfe3d.truss.Truss.update_probe_xe" title="pyfe3d.truss.Truss.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a> reads the rotation
+matrix and updates <code class="docutils literal notranslate"><span class="pre">length</span></code>; <a class="reference internal" href="#pyfe3d.truss.Truss.update_KC0" title="pyfe3d.truss.Truss.update_KC0"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KC0()</span></code></a>, <a class="reference internal" href="#pyfe3d.truss.Truss.update_M" title="pyfe3d.truss.Truss.update_M"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_M()</span></code></a>
+and <a class="reference internal" href="#pyfe3d.truss.Truss.update_probe_finte" title="pyfe3d.truss.Truss.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_finte()</span></code></a> read <code class="docutils literal notranslate"><span class="pre">length</span></code> and the rotation matrix;
+<a class="reference internal" href="#pyfe3d.truss.Truss.update_probe_finte" title="pyfe3d.truss.Truss.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_finte()</span></code></a> also reads <code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>, updated by
+<a class="reference internal" href="#pyfe3d.truss.Truss.update_probe_ue" title="pyfe3d.truss.Truss.update_probe_ue"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_ue()</span></code></a>.</p>
 <dl class="field-list">
-<dt class="field-odd">Attributes<span class="colon">:</span></dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
+<dt><strong>p</strong><span class="classifier"><a class="reference internal" href="#pyfe3d.truss.TrussProbe" title="pyfe3d.truss.TrussProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrussProbe</span></code></a> object</span></dt><dd><p>Probe of the element, stored in <code class="docutils literal notranslate"><span class="pre">probe</span></code>. It can be shared with
+other elements.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Attributes<span class="colon">:</span></dt>
+<dd class="field-even"><dl>
 <dt><strong>eid,</strong><span class="classifier">int</span></dt><dd><p>Element identification number.</p>
 </dd>
 <dt><strong>pid,</strong><span class="classifier">int</span></dt><dd><p>Property identification number.</p>
 </dd>
-<dt><strong>length,</strong><span class="classifier">double</span></dt><dd><p>Element length.</p>
+<dt><strong>length,</strong><span class="classifier">double</span></dt><dd><p>Element length, dimension length. Updated by
+<a class="reference internal" href="#pyfe3d.truss.Truss.update_length" title="pyfe3d.truss.Truss.update_length"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_length()</span></code></a>.</p>
 </dd>
-<dt><strong>r11, r12, r13, r21, r22, r23, r31, r32, r33</strong><span class="classifier">double</span></dt><dd><p>Rotation matrix from local to global coordinates.</p>
+<dt><strong>r11, r12, r13, r21, r22, r23, r31, r32, r33</strong><span class="classifier">double</span></dt><dd><p>Entries <span class="math notranslate nohighlight">\(T_{ij}\)</span> of the transformation matrix <span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3}\)</span> from
+element to global coordinates, whose columns are the element axes.
+Dimensionless.</p>
 </dd>
-<dt><strong>c1, c2</strong><span class="classifier">int</span></dt><dd><p>Position of each node in the global stiffness matrix.</p>
+<dt><strong>c1, c2</strong><span class="classifier">int</span></dt><dd><p>Position of each node in the global stiffness matrix, i.e. of the
+first of its <code class="docutils literal notranslate"><span class="pre">6</span></code> degrees-of-freedom. The coordinates of the node
+are read from the position <code class="docutils literal notranslate"><span class="pre">c1//2</span></code> or <code class="docutils literal notranslate"><span class="pre">c2//2</span></code> of the array of
+nodal coordinates.</p>
 </dd>
 <dt><strong>n1, n2</strong><span class="classifier">int</span></dt><dd><p>Node identification number.</p>
 </dd>
 <dt><strong>init_k_KC0, init_k_M</strong><span class="classifier">int</span></dt><dd><p>Position in the arrays storing the sparse data for the structural
-matrices.</p>
+matrices, where the entries of this element start, see
+<a class="reference internal" href="#pyfe3d.truss.TrussData" title="pyfe3d.truss.TrussData"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrussData</span></code></a> for their number.</p>
 </dd>
 <dt><strong>probe,</strong><span class="classifier"><a class="reference internal" href="#pyfe3d.truss.TrussProbe" title="pyfe3d.truss.TrussProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrussProbe</span></code></a> object</span></dt><dd><p>Pointer to the probe.</p>
 </dd>
@@ -457,6 +836,22 @@ matrices.</p>
 </tbody>
 </table>
 </div>
+<p class="rubric">Notes</p>
+<p>The strain energy of the element is</p>
+<div class="math notranslate nohighlight">
+\[U = \frac{1}{2} \int_0^L \left( E A u_{,x}^2 + G J {r_x}_{,x}^2
+    \right) dx\]</div>
+<p>where <span class="math notranslate nohighlight">\(G J\)</span> is the torsional stiffness <code class="docutils literal notranslate"><span class="pre">GJ</span></code> of <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>, with
+the axial displacement <span class="math notranslate nohighlight">\(u\)</span> and the twist rotation <span class="math notranslate nohighlight">\(r_x\)</span> interpolated
+linearly between the nodes, in the element coordinate system, and <span class="math notranslate nohighlight">\(L\)</span> =
+<code class="docutils literal notranslate"><span class="pre">length</span></code>. The transverse translations <span class="math notranslate nohighlight">\(v\)</span>, <span class="math notranslate nohighlight">\(w\)</span> and the rotations <span class="math notranslate nohighlight">\(r_y\)</span>,
+<span class="math notranslate nohighlight">\(r_z\)</span> have no stiffness and must be supported by other elements or by
+boundary conditions; the element has no geometric stiffness matrix. The
+matrices and the internal forces are computed in element coordinates and
+transformed to global coordinates with the transformation matrix of the
+element, <span class="math notranslate nohighlight">\(\boldsymbol{K} = \boldsymbol{T} \boldsymbol{K}_e \boldsymbol{T}^\top\)</span>, where <span class="math notranslate nohighlight">\(\boldsymbol{T}\)</span> is block diagonal with four
+copies of the matrix <span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3}\)</span> of the entries <span class="math notranslate nohighlight">\(T_{ij}\)</span> stored in
+<code class="docutils literal notranslate"><span class="pre">r11,</span> <span class="pre">...,</span> <span class="pre">r33</span></code>, whose columns are the element axes.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.c1">
 <span class="sig-name descname"><span class="pre">c1</span></span><a class="headerlink" href="#pyfe3d.truss.Truss.c1" title="Link to this definition">#</a></dt>
@@ -575,25 +970,42 @@ matrices.</p>
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.update_KC0">
 <span class="sig-name descname"><span class="pre">update_KC0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KC0r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KC0c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KC0v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeamProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KC0v_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_KC0" title="Link to this definition">#</a></dt>
 <dd><p>Update sparse vectors for linear constitutive stiffness matrix KC0</p>
+<p>The 72 entries of the matrix of the element, in global coordinates,
+are written at the positions <code class="docutils literal notranslate"><span class="pre">init_k_KC0</span></code> to <code class="docutils literal notranslate"><span class="pre">init_k_KC0</span> <span class="pre">+</span> <span class="pre">71</span></code>:
+the row and column indices, built from <code class="docutils literal notranslate"><span class="pre">c1</span></code> and <code class="docutils literal notranslate"><span class="pre">c2</span></code>, are stored
+in <code class="docutils literal notranslate"><span class="pre">KC0r</span></code> and <code class="docutils literal notranslate"><span class="pre">KC0c</span></code>, and the values are added to those already
+in <code class="docutils literal notranslate"><span class="pre">KC0v</span></code>. The matrix is computed from <code class="docutils literal notranslate"><span class="pre">length</span></code>, the rotation
+matrix and the attributes <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">E</span></code> and <code class="docutils literal notranslate"><span class="pre">GJ</span></code> of <code class="docutils literal notranslate"><span class="pre">prop</span></code>.
+<code class="docutils literal notranslate"><span class="pre">length</span></code> and the rotation matrix must be updated before,
+see <a class="reference internal" href="#pyfe3d.truss.Truss.update_rotation_matrix" title="pyfe3d.truss.Truss.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a> and <a class="reference internal" href="#pyfe3d.truss.Truss.update_probe_xe" title="pyfe3d.truss.Truss.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a>.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
-<dt><strong>KC0r</strong><span class="classifier">np.array</span></dt><dd><p>Array to store row positions of sparse values</p>
+<dt><strong>KC0r</strong><span class="classifier">np.array</span></dt><dd><p>Array to store row positions of sparse values. 1-D array of
+integers of the C type <code class="docutils literal notranslate"><span class="pre">long</span></code>, of size at least
+<code class="docutils literal notranslate"><span class="pre">init_k_KC0</span> <span class="pre">+</span> <span class="pre">72</span></code>.</p>
 </dd>
-<dt><strong>KC0c</strong><span class="classifier">np.array</span></dt><dd><p>Array to store column positions of sparse values</p>
+<dt><strong>KC0c</strong><span class="classifier">np.array</span></dt><dd><p>Array to store column positions of sparse values. Same type and
+size as <code class="docutils literal notranslate"><span class="pre">KC0r</span></code>.</p>
 </dd>
-<dt><strong>KC0v</strong><span class="classifier">np.array</span></dt><dd><p>Array to store sparse values</p>
+<dt><strong>KC0v</strong><span class="classifier">np.array</span></dt><dd><p>Array to store sparse values. 1-D array of floats of size at least
+<code class="docutils literal notranslate"><span class="pre">init_k_KC0</span> <span class="pre">+</span> <span class="pre">72</span></code>.</p>
 </dd>
-<dt><strong>prop</strong><span class="classifier"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code> object</span></dt><dd><p>Beam property object from where the stiffness and mass attributes
+<dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a> object</span></dt><dd><p>Beam property object from where the stiffness and mass attributes
 are read from.</p>
 </dd>
-<dt><strong>update_KC0v_only</strong><span class="classifier">int</span></dt><dd><p>The default <code class="docutils literal notranslate"><span class="pre">0</span></code> means that the row and column indices <code class="docutils literal notranslate"><span class="pre">KC0r</span></code>
+<dt><strong>update_KC0v_only</strong><span class="classifier">int, optional</span></dt><dd><p>The default <code class="docutils literal notranslate"><span class="pre">0</span></code> means that the row and column indices <code class="docutils literal notranslate"><span class="pre">KC0r</span></code>
 and <code class="docutils literal notranslate"><span class="pre">KC0c</span></code> should also be updated. Any other value will only
 update the stiffness matrix values <code class="docutils literal notranslate"><span class="pre">KC0v</span></code>.</p>
 </dd>
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>In element coordinates, <code class="docutils literal notranslate"><span class="pre">KC0</span></code> is the Hessian of the strain energy
+given in the notes of <a class="reference internal" href="#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a>, with the entries <span class="math notranslate nohighlight">\(\pm E A/L\)</span>
+between the axial translations and <span class="math notranslate nohighlight">\(\pm G J/L\)</span> between the twist
+rotations of the two nodes.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -603,27 +1015,96 @@ update the stiffness matrix values <code class="docutils literal notranslate"><s
 <p>For the <a class="reference internal" href="#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a> element, the inertial terms <code class="docutils literal notranslate"><span class="pre">intrho</span></code>,
 <code class="docutils literal notranslate"><span class="pre">intrhoy</span></code>, <code class="docutils literal notranslate"><span class="pre">intrhoz</span></code>, <code class="docutils literal notranslate"><span class="pre">intrhoy2</span></code> and <code class="docutils literal notranslate"><span class="pre">intrhoz2</span></code> of the beam
 property are important.</p>
-<dl class="field-list simple">
+<p>The entries of the matrix of the element, in global coordinates, are
+written from the position <code class="docutils literal notranslate"><span class="pre">init_k_M</span></code>: 144 entries with
+<code class="docutils literal notranslate"><span class="pre">mtype=0</span></code> and 36 entries with <code class="docutils literal notranslate"><span class="pre">mtype=1</span></code>. The row and column
+indices, built from <code class="docutils literal notranslate"><span class="pre">c1</span></code> and <code class="docutils literal notranslate"><span class="pre">c2</span></code>, are stored in <code class="docutils literal notranslate"><span class="pre">Mr</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Mc</span></code>, and the values are added to those already in <code class="docutils literal notranslate"><span class="pre">Mv</span></code>. The
+matrix is computed from <code class="docutils literal notranslate"><span class="pre">length</span></code>, the rotation matrix and the inertial terms above.
+<code class="docutils literal notranslate"><span class="pre">length</span></code> and the rotation matrix must be updated before, see
+<a class="reference internal" href="#pyfe3d.truss.Truss.update_rotation_matrix" title="pyfe3d.truss.Truss.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a> and <a class="reference internal" href="#pyfe3d.truss.Truss.update_probe_xe" title="pyfe3d.truss.Truss.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a>.</p>
+<dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
-<dd class="field-odd"><dl class="simple">
-<dt><strong>Mr</strong><span class="classifier">np.array</span></dt><dd><p>Array to store row positions of sparse values</p>
+<dd class="field-odd"><dl>
+<dt><strong>Mr</strong><span class="classifier">np.array</span></dt><dd><p>Array to store row positions of sparse values. 1-D array of
+integers of the C type <code class="docutils literal notranslate"><span class="pre">long</span></code>, of size at least
+<code class="docutils literal notranslate"><span class="pre">init_k_M</span> <span class="pre">+</span> <span class="pre">144</span></code> (<code class="docutils literal notranslate"><span class="pre">init_k_M</span> <span class="pre">+</span> <span class="pre">36</span></code> with <code class="docutils literal notranslate"><span class="pre">mtype=1</span></code>).</p>
 </dd>
-<dt><strong>Mc</strong><span class="classifier">np.array</span></dt><dd><p>Array to store column positions of sparse values</p>
+<dt><strong>Mc</strong><span class="classifier">np.array</span></dt><dd><p>Array to store column positions of sparse values. Same type and
+size as <code class="docutils literal notranslate"><span class="pre">Mr</span></code>.</p>
 </dd>
-<dt><strong>Mv</strong><span class="classifier">np.array</span></dt><dd><p>Array to store sparse values</p>
+<dt><strong>Mv</strong><span class="classifier">np.array</span></dt><dd><p>Array to store sparse values. 1-D array of floats, of the same
+size as <code class="docutils literal notranslate"><span class="pre">Mr</span></code>.</p>
 </dd>
-<dt><strong>mtype</strong><span class="classifier">int, optional</span></dt><dd><p>0 for consistent mass matrix using method from Brockman 1987
-1 for lumped mass matrix using method from Brockman 1987</p>
+<dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a> object</span></dt><dd><p>Beam property object from where the inertial attributes are read.</p>
+</dd>
+<dt><strong>mtype</strong><span class="classifier">int, optional</span></dt><dd><p>0 for consistent mass matrix, 1 for lumped mass matrix. Default
+<code class="docutils literal notranslate"><span class="pre">0</span></code>. The element has no reduced-integration mass matrix,
+<code class="docutils literal notranslate"><span class="pre">2</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt>ValueError</dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">mtype</span></code> is not 0 or 1.</p>
 </dd>
 </dl>
 </dd>
 </dl>
+<p class="rubric">Notes</p>
+<p>The mass matrices come from the kinetic energy of the rigid cross
+section, whose point <span class="math notranslate nohighlight">\((y, z)\)</span> has the displacements <span class="math notranslate nohighlight">\(u_x = u\)</span>, <span class="math notranslate nohighlight">\(u_y
+= v - z r_x\)</span> and <span class="math notranslate nohighlight">\(u_z = w + y r_x\)</span>, with the three translations and
+the twist rotation <span class="math notranslate nohighlight">\(r_x\)</span> interpolated linearly:</p>
+<div class="math notranslate nohighlight">
+\[T = \frac{1}{2} \int_0^L \Big[ m (\dot{u}^2 + \dot{v}^2 + \dot{w}^2)
+    - 2 m_z \dot{v} \dot{r}_x + 2 m_y \dot{w} \dot{r}_x
+    + (m_{yy} + m_{zz}) \dot{r}_x^2 \Big] dx\]</div>
+<p>with <span class="math notranslate nohighlight">\(m\)</span> = <code class="docutils literal notranslate"><span class="pre">intrho</span></code>, <span class="math notranslate nohighlight">\(m_y\)</span> = <code class="docutils literal notranslate"><span class="pre">intrhoy</span></code>, <span class="math notranslate nohighlight">\(m_z\)</span> = <code class="docutils literal notranslate"><span class="pre">intrhoz</span></code>,
+<span class="math notranslate nohighlight">\(m_{yy}\)</span> = <code class="docutils literal notranslate"><span class="pre">intrhoy2</span></code> and <span class="math notranslate nohighlight">\(m_{zz}\)</span> = <code class="docutils literal notranslate"><span class="pre">intrhoz2</span></code>. The coupling
+terms, <span class="math notranslate nohighlight">\(-m_z\)</span> between <span class="math notranslate nohighlight">\(v\)</span> and <span class="math notranslate nohighlight">\(r_x\)</span> and <span class="math notranslate nohighlight">\(+m_y\)</span> between <span class="math notranslate nohighlight">\(w\)</span> and <span class="math notranslate nohighlight">\(r_x\)</span>,
+are those of <a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR.update_M" title="pyfe3d.beamlr.BeamLR.update_M"><code class="xref py py-meth docutils literal notranslate"><span class="pre">BeamLR.update_M()</span></code></a> and <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC.update_M" title="pyfe3d.beamc.BeamC.update_M"><code class="xref py py-meth docutils literal notranslate"><span class="pre">BeamC.update_M()</span></code></a>.
+The rotations <span class="math notranslate nohighlight">\(r_y\)</span> and <span class="math notranslate nohighlight">\(r_z\)</span> have no inertia. <code class="docutils literal notranslate"><span class="pre">mtype=0</span></code> gives the
+consistent mass matrix, the Hessian of <span class="math notranslate nohighlight">\(T\)</span> with respect to the nodal
+velocities, integrated exactly along the element. <code class="docutils literal notranslate"><span class="pre">mtype=1</span></code> gives
+the lumped mass matrix, diagonal in element coordinates: at each node
+<span class="math notranslate nohighlight">\(L m/2\)</span> for the three translations and <span class="math notranslate nohighlight">\(L (m_{yy} + m_{zz})/2\)</span> for
+<span class="math notranslate nohighlight">\(r_x\)</span>, without the coupling terms of <span class="math notranslate nohighlight">\(m_y\)</span> and <span class="math notranslate nohighlight">\(m_z\)</span>.</p>
+<p>The lumped mass matrix follows the lumped mass matrix by Lobatto
+integration of Brockman (1987) <a class="reference internal" href="#r5a2abc5752cf-1" id="id1">[1]</a>, p. 2348, adapted to the beam:
+the two-point Gauss-Lobatto quadrature of <span class="math notranslate nohighlight">\(T\)</span>, whose points are the
+nodes, gives a diagonal matrix only without the first moments of the
+density, which are therefore dropped. The consistent mass matrix is
+the integral of Petyt (2010) <a class="reference internal" href="#r5a2abc5752cf-2" id="id2">[2]</a>, Sec. 3.3, Eqs. (3.58) and (3.59),
+for each linearly interpolated field, e.g. <span class="math notranslate nohighlight">\(L m/6\)</span> times <span class="math notranslate nohighlight">\([2, 1; 1,
+2]\)</span> for each translation, and Sec. 3.4, Eq. (3.102), with <span class="math notranslate nohighlight">\(m_{yy} +
+m_{zz}\)</span> in place of <span class="math notranslate nohighlight">\(\rho I_x\)</span>, for the twist <span class="math notranslate nohighlight">\(r_x\)</span>.</p>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="r5a2abc5752cf-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
+Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
+<a class="reference external" href="https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208">https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208</a></p>
+</div>
+<div class="citation" id="r5a2abc5752cf-2" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">2</a><span class="fn-bracket">]</span></span>
+<p>Petyt, M., 2010, Introduction to Finite Element Vibration
+Analysis, 2nd ed., Cambridge University Press, Cambridge.
+<a class="reference external" href="https://doi.org/10.1017/CBO9780511761195">https://doi.org/10.1017/CBO9780511761195</a></p>
+</div>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.update_fint">
 <span class="sig-name descname"><span class="pre">update_fint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">fint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">BeamProp</span> <span class="pre">prop</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_fint" title="Link to this definition">#</a></dt>
 <dd><p>Update the internal force vector</p>
+<p>Calls <code class="docutils literal notranslate"><span class="pre">update_probe_finte(prop)</span></code>, transforms the forces and moments
+of <code class="docutils literal notranslate"><span class="pre">probe.finte</span></code> to global coordinates with the rotation matrix and
+adds them to <code class="docutils literal notranslate"><span class="pre">fint</span></code> at the positions <code class="docutils literal notranslate"><span class="pre">c1</span></code> to <code class="docutils literal notranslate"><span class="pre">c1</span> <span class="pre">+</span> <span class="pre">5</span></code> and <code class="docutils literal notranslate"><span class="pre">c2</span></code>
+to <code class="docutils literal notranslate"><span class="pre">c2</span> <span class="pre">+</span> <span class="pre">5</span></code>. The displacements <code class="docutils literal notranslate"><span class="pre">probe.ue</span></code> must be updated before,
+see <a class="reference internal" href="#pyfe3d.truss.Truss.update_probe_ue" title="pyfe3d.truss.Truss.update_probe_ue"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_ue()</span></code></a>.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
@@ -631,7 +1112,8 @@ property are important.</p>
 internal forces stored in <code class="docutils literal notranslate"><span class="pre">fint</span></code> are calculated in global
 coordinates. Method <a class="reference internal" href="#pyfe3d.truss.Truss.update_probe_finte" title="pyfe3d.truss.Truss.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_finte()</span></code></a> is called to update
 the parameter <code class="docutils literal notranslate"><span class="pre">finte</span></code> of the <a class="reference internal" href="#pyfe3d.truss.TrussProbe" title="pyfe3d.truss.TrussProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrussProbe</span></code></a> with the
-internal forces in local coordinates.</p>
+internal forces in local coordinates. 1-D array of size <code class="docutils literal notranslate"><span class="pre">6*M</span></code>,
+for <span class="math notranslate nohighlight">\(M\)</span> nodes in the model.</p>
 </dd>
 <dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a> object</span></dt><dd><p>Beam property object from where the stiffness and mass attributes
 are read from.</p>
@@ -645,6 +1127,9 @@ are read from.</p>
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.update_length">
 <span class="sig-name descname"><span class="pre">update_length</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_length" title="Link to this definition">#</a></dt>
 <dd><p>Update element length</p>
+<p>The distance between the two nodes, computed from the coordinates
+<code class="docutils literal notranslate"><span class="pre">probe.xe</span></code> in the element coordinate system, is stored in the
+attribute <code class="docutils literal notranslate"><span class="pre">length</span></code>. Called by <a class="reference internal" href="#pyfe3d.truss.Truss.update_probe_xe" title="pyfe3d.truss.Truss.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -661,6 +1146,12 @@ the values from the last udpate.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">finte</span></code> attribute of object <a class="reference internal" href="#pyfe3d.truss.TrussProbe" title="pyfe3d.truss.TrussProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrussProbe</span></code></a> is
 updated, accessible using <code class="docutils literal notranslate"><span class="pre">.probe.finte</span></code>.</p>
 </div>
+<p>The 12 values of <code class="docutils literal notranslate"><span class="pre">finte</span></code> are overwritten. They are computed from
+<code class="docutils literal notranslate"><span class="pre">length</span></code>, from the attributes <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">E</span></code> and <code class="docutils literal notranslate"><span class="pre">GJ</span></code> of
+<code class="docutils literal notranslate"><span class="pre">prop</span></code> and from the displacements <code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>, which must be
+updated before, see <a class="reference internal" href="#pyfe3d.truss.Truss.update_probe_xe" title="pyfe3d.truss.Truss.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a> and
+<a class="reference internal" href="#pyfe3d.truss.Truss.update_probe_ue" title="pyfe3d.truss.Truss.update_probe_ue"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_ue()</span></code></a>. Only the axial forces and the torsion
+moments are not zero.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
@@ -681,13 +1172,19 @@ are read from.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">ue</span></code> attribute of object <a class="reference internal" href="#pyfe3d.truss.TrussProbe" title="pyfe3d.truss.TrussProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrussProbe</span></code></a> is
 updated, accessible using <code class="docutils literal notranslate"><span class="pre">.probe.ue</span></code>.</p>
 </div>
+<p>The translations and rotations of the two nodes, read from <code class="docutils literal notranslate"><span class="pre">u</span></code> at the
+positions <code class="docutils literal notranslate"><span class="pre">c1</span></code> to <code class="docutils literal notranslate"><span class="pre">c1</span> <span class="pre">+</span> <span class="pre">5</span></code> and <code class="docutils literal notranslate"><span class="pre">c2</span></code> to <code class="docutils literal notranslate"><span class="pre">c2</span> <span class="pre">+</span> <span class="pre">5</span></code>, are
+transformed to the element coordinate system with the transpose
+<span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3}^\top\)</span> of the transformation matrix, which must be updated
+before, see <a class="reference internal" href="#pyfe3d.truss.Truss.update_rotation_matrix" title="pyfe3d.truss.Truss.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>u</strong><span class="classifier">array-like</span></dt><dd><p>Array with global displacements, for a total of <span class="math notranslate nohighlight">\(M\)</span> nodes in
 the model, this array will be arranged as: <span class="math notranslate nohighlight">\(u_1, v_1, w_1, {r_x}_1,
 {r_y}_1, {r_z}_1, u_2, v_2, w_2, {r_x}_2, {r_y}_2, {r_z}_2, ...,
-u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M\)</span>.</p>
+u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M\)</span>. Translations of
+dimension length and rotations, 1-D array of size <code class="docutils literal notranslate"><span class="pre">6*M</span></code>.</p>
 </dd>
 </dl>
 </dd>
@@ -703,12 +1200,19 @@ u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M\)</span>.</p>
 <p>The <code class="docutils literal notranslate"><span class="pre">xe</span></code> attribute of object <a class="reference internal" href="#pyfe3d.truss.TrussProbe" title="pyfe3d.truss.TrussProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">TrussProbe</span></code></a> is
 updated, accessible using <code class="docutils literal notranslate"><span class="pre">.probe.xe</span></code>.</p>
 </div>
+<p>The coordinates of the two nodes, read from <code class="docutils literal notranslate"><span class="pre">x</span></code> at the positions
+<code class="docutils literal notranslate"><span class="pre">c1//2</span></code> and <code class="docutils literal notranslate"><span class="pre">c2//2</span></code>, are transformed to the element coordinate
+system with the transpose <span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3}^\top\)</span> of the transformation
+matrix, which must be updated before, see
+<a class="reference internal" href="#pyfe3d.truss.Truss.update_rotation_matrix" title="pyfe3d.truss.Truss.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a>. Then <a class="reference internal" href="#pyfe3d.truss.Truss.update_length" title="pyfe3d.truss.Truss.update_length"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_length()</span></code></a> is called,
+updating <code class="docutils literal notranslate"><span class="pre">length</span></code>.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Array with global nodal coordinates, for a total of <span class="math notranslate nohighlight">\(M\)</span> nodes in
 the model, this array will be arranged as: <span class="math notranslate nohighlight">\(x_1, y_1, z_1, x_2,
-y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
+y_2, z_2, ..., x_M, y_M, z_M\)</span>. Dimension length, 1-D array of size
+<code class="docutils literal notranslate"><span class="pre">3*M</span></code>.</p>
 </dd>
 </dl>
 </dd>
@@ -719,17 +1223,25 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 <dt class="sig sig-object py" id="pyfe3d.truss.Truss.update_rotation_matrix">
 <span class="sig-name descname"><span class="pre">update_rotation_matrix</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">x</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.truss.Truss.update_rotation_matrix" title="Link to this definition">#</a></dt>
 <dd><p>Update the rotation matrix of the element</p>
-<p>Attributes <code class="docutils literal notranslate"><span class="pre">r11,r12,r13,r21,r22,r23,r31,r32,r33</span></code> are updated,
-corresponding to the rotation matrix from local to global coordinates.</p>
+<p>Attributes <code class="docutils literal notranslate"><span class="pre">r11,r12,r13,r21,r22,r23,r31,r32,r33</span></code> are updated, with
+the entries <span class="math notranslate nohighlight">\(T_{ij}\)</span> of the transformation matrix <span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3}\)</span>
+from element to global coordinates, whose columns are the element axes.</p>
 <p>The element coordinate system is determined, identifying the <span class="math notranslate nohighlight">\(ijk\)</span>
 components of each axis: <span class="math notranslate nohighlight">\({x_e}_i, {x_e}_j, {x_e}_k\)</span>; <span class="math notranslate nohighlight">\({y_e}_i,
 {y_e}_j, {y_e}_k\)</span>; <span class="math notranslate nohighlight">\({z_e}_i, {z_e}_j, {z_e}_k\)</span>.</p>
+<p>The element <span class="math notranslate nohighlight">\(x\)</span> axis goes from node 1 to node 2, whose coordinates are
+read from <code class="docutils literal notranslate"><span class="pre">x</span></code> at the positions <code class="docutils literal notranslate"><span class="pre">c1//2</span></code> and <code class="docutils literal notranslate"><span class="pre">c2//2</span></code>. The <span class="math notranslate nohighlight">\(z\)</span> axis
+is normal to the <span class="math notranslate nohighlight">\(x\)</span> axis and to the vector obtained by a cyclic
+permutation of the components of the <span class="math notranslate nohighlight">\(x\)</span> axis, <code class="docutils literal notranslate"><span class="pre">(xj,</span> <span class="pre">xk,</span> <span class="pre">xi)</span></code>, the
+<span class="math notranslate nohighlight">\(y\)</span> axis completes the right-handed system, and the three axes are
+normalized.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt><strong>x</strong><span class="classifier">array-like</span></dt><dd><p>Array with global nodal coordinates, for a total of <span class="math notranslate nohighlight">\(M\)</span> nodes in
 the model, this array will be arranged as: <span class="math notranslate nohighlight">\(x_1, y_1, z_1, x_2,
-y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
+y_2, z_2, ..., x_M, y_M, z_M\)</span>. Dimension length, 1-D array of size
+<code class="docutils literal notranslate"><span class="pre">3*M</span></code>.</p>
 </dd>
 </dl>
 </dd>
@@ -742,6 +1254,11 @@ y_2, z_2, ..., x_M, y_M, z_M\)</span>.</p>
 <dt class="sig sig-object py" id="pyfe3d.truss.TrussData">
 <span class="property"><span class="k"><span class="pre">class</span></span><span class="w"> </span></span><span class="sig-prename descclassname"><span class="pre">pyfe3d.truss.</span></span><span class="sig-name descname"><span class="pre">TrussData</span></span><a class="headerlink" href="#pyfe3d.truss.TrussData" title="Link to this definition">#</a></dt>
 <dd><p>Used to allocate memory for the sparse matrices.</p>
+<p>Each attribute is the number of entries that one <a class="reference internal" href="#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a>
+element writes in the arrays of rows, columns and values of a sparse
+matrix, at the consecutive positions that start at its <code class="docutils literal notranslate"><span class="pre">init_k_KC0</span></code> or
+<code class="docutils literal notranslate"><span class="pre">init_k_M</span></code>. The constructor takes no argument and sets the values
+below.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -780,6 +1297,8 @@ being updated and retrieved on demand.</p>
 depending on how you defined them. Mind that the probe will
 always safe the values from the last udpate.</p>
 </div>
+<p>The constructor takes no argument and allocates the arrays below, filled
+with zeros.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Attributes<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
@@ -788,7 +1307,8 @@ always safe the values from the last udpate.</p>
 <dt><a class="reference internal" href="#pyfe3d.truss.TrussProbe.ue" title="pyfe3d.truss.TrussProbe.ue"><code class="xref py py-obj docutils literal notranslate"><span class="pre">ue</span></code></a><span class="classifier">array-like</span></dt><dd><p>ue: ‘double[::1]’</p>
 </dd>
 <dt><strong>finte,</strong><span class="classifier">array-like</span></dt><dd><p>Array of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF=12</span></code> containing the element internal
-forces corresponding to the degrees-of-freedom described by <code class="docutils literal notranslate"><span class="pre">ue</span></code>.</p>
+forces corresponding to the degrees-of-freedom described by <code class="docutils literal notranslate"><span class="pre">ue</span></code>,
+forces and moments. Updated by <a class="reference internal" href="#pyfe3d.truss.Truss.update_probe_finte" title="pyfe3d.truss.Truss.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Truss.update_probe_finte()</span></code></a>.</p>
 </dd>
 </dl>
 </dd>
@@ -824,6 +1344,24 @@ forces corresponding to the degrees-of-freedom described by <code class="docutil
                 <footer class="prev-next-footer d-print-none">
                   
 <div class="prev-next-area">
+    <a class="left-prev"
+       href="spring.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Spring - 3D spring element with constant stiffnesses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.spring</span></code>)</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="properties.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Properties</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
 </div>
                 </footer>
               
@@ -911,8 +1449,8 @@ forces corresponding to the degrees-of-freedom described by <code class="docutil
   </div>
   
   <!-- Scripts loaded after <body> so the DOM is not blocked -->
-  <script defer src="_static/scripts/bootstrap.js?digest=64cc4de3f052d77215f0"></script>
-<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=64cc4de3f052d77215f0"></script>
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
 
   <footer class="bd-footer">
 <div class="bd-footer__inner bd-page-width">
@@ -945,7 +1483,7 @@ forces corresponding to the degrees-of-freedom described by <code class="docutil
         <div class="footer-item">
 <p class="theme-version">
   <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
-  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.22.0.
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
 </p></div>
       
     </div>

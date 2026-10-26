@@ -1,0 +1,1287 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Convergence criteria of the non-linear solvers (pyfe3d.solver.convergence) &#8212; pyfe3d 0.11.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="_static/documentation_options.js?v=f3b36f1a"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'solver_convergence';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Newton-Raphson solver (pyfe3d.solver.newton_raphson)" href="solver_newton_raphson.html" />
+    <link rel="prev" title="Static analyses of a model given by callables (pyfe3d.solver.analysis)" href="solver_analysis.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.11.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1 has-children"><a class="reference internal" href="fe_overview.html">Finite elements</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="quad4.html">Quad4 - Quadrilateral element with mixed integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="quad4r.html">Quad4R - Quadrilateral element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="tria3dsg.html">Tria3DSG - Triangular element with discrete shear gap (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3dsg</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="tria3r.html">Tria3R - Triangular element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="beamc.html">BeamC - Consistent Timoshenko 3D beam element (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamc</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="beamlr.html">BeamLR - Linear Timoshenko 3D beam element with reduced integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamlr</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="spring.html">Spring - 3D spring element with constant stiffnesses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.spring</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="truss.html">Truss - Linear truss 3D element with analytical integration (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.truss</span></code>)</a></li>
+
+
+
+</ul>
+</details></li>
+<li class="toctree-l1 has-children"><a class="reference internal" href="properties.html">Properties</a><details><summary><span class="toctree-toggle" role="presentation"><i class="fa-solid fa-chevron-down"></i></span></summary><ul>
+<li class="toctree-l2"><a class="reference internal" href="shellprop.html">Shell property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="shellprop_utils.html">Shell property utils module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.shellprop_utils</span></code>)</a></li>
+
+
+
+<li class="toctree-l2"><a class="reference internal" href="beamprop.html">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
+
+</ul>
+</details></li>
+<li class="toctree-l1"><a class="reference internal" href="solver.html">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solver_static.html">Linear static solution (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code>)</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_analysis.html">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</a></li>
+
+
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Convergence criteria of the non-linear solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.convergence</span></code>)</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_newton_raphson.html">Newton-Raphson solver (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.newton_raphson</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_arc_length.html">Arc-length solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arc_length</span></code>)</a></li>
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_callbacks.html">Calls to the callables of the non-linear solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.callbacks</span></code>)</a></li>
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_eigen.html">Eigenvalue analyses (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen</span></code>)</a></li>
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html">Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_sparseutils.html">Utilities for sparse matrices (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.sparseutils</span></code>)</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="solver_logger.html">Log messages of the solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.logger</span></code>)</a></li>
+
+
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="api.html" class="nav-link">API reference</a></li>
+    
+    
+    <li class="breadcrumb-item"><a href="solver.html" class="nav-link">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Convergence criteria of the non-linear solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.convergence</span></code>)</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="convergence-criteria-of-the-non-linear-solvers-pyfe3d-solver-convergence">
+<span id="module-pyfe3d.solver.convergence"></span><h1>Convergence criteria of the non-linear solvers (<a class="reference internal" href="#module-pyfe3d.solver.convergence" title="pyfe3d.solver.convergence"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.convergence</span></code></a>)<a class="headerlink" href="#convergence-criteria-of-the-non-linear-solvers-pyfe3d-solver-convergence" title="Link to this heading">#</a></h1>
+<p>The equilibrium iterations of <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis" title="pyfe3d.solver.analysis.Analysis"><code class="xref py py-class docutils literal notranslate"><span class="pre">Analysis</span></code></a> stop when the residual
+force vector is small, measured by one of two criteria selected with
+<code class="docutils literal notranslate"><span class="pre">Analysis.convergence</span></code>:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">'crisfield'</span></code>, the default: Crisfield’s criterion, the residual scaled
+with the diagonal of the linear stiffness matrix and compared with the
+largest scaled norm of the reference force vectors, the external and the
+internal ones and, when they apply, the external force vector of the
+increment of the arc-length solvers and the load factor times
+<span class="math notranslate nohighlight">\(-\partial \boldsymbol{R}/\partial \lambda\)</span>, over the free degrees-of-freedom only, see
+<a class="reference internal" href="#pyfe3d.solver.convergence.crisfield_zeta" title="pyfe3d.solver.convergence.crisfield_zeta"><code class="xref py py-func docutils literal notranslate"><span class="pre">crisfield_zeta()</span></code></a>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">'relative'</span></code>: the Euclidean norm of the residual compared with the
+largest Euclidean norm of the force vectors, <code class="docutils literal notranslate"><span class="pre">Analysis.relTOL</span></code>, or the
+largest absolute residual force, <code class="docutils literal notranslate"><span class="pre">Analysis.absTOL</span></code>.</p></li>
+</ul>
+<section id="notes">
+<h2>Notes<a class="headerlink" href="#notes" title="Link to this heading">#</a></h2>
+<p class="rubric">The need for scaling</p>
+<p>In beam, plate and shell models the degrees-of-freedom mix translations and
+rotations, such that the residual mixes forces and moments, and its
+Euclidean norm <span class="math notranslate nohighlight">\(\|\boldsymbol{R}\|\)</span> adds the squares of forces and of moments: the
+quantity has no physical meaning and its value depends on the system of
+units, the moments being scaled by a change of the length unit while the
+forces are not. Each component is therefore scaled with the
+corresponding diagonal entry of a reference stiffness matrix, a scaling
+that <a class="reference internal" href="#r4134a01e5a1b-3" id="id1">[3]</a> (p. 58) attributes to <a class="reference internal" href="#r4134a01e5a1b-2" id="id2">[2]</a> and that he used (his Eqs. 27 and 28)
+in the convergence test of his arc-length procedure, with the diagonal of
+the tangent stiffness matrix at the beginning of the increment. <a class="reference internal" href="#r4134a01e5a1b-1" id="id3">[1]</a> (Sec.
+9.5.4, Eq. 9.48) presents the same scaling as an alternative to the
+Euclidean norm of the residual, with a scaling matrix that could, for
+example, be used to ensure that, for a problem involving rotational
+variables, all parameters have the same dimensions:</p>
+<div class="math notranslate nohighlight">
+\[d_j = K_{{C0}_{jj}}, \qquad
+\|v\|_{\boldsymbol{d}} = \sqrt{\sum_{j=1}^{n} \frac{v_j^2}{|d_j|}}\]</div>
+<p>with <span class="math notranslate nohighlight">\(n\)</span> the number of free degrees-of-freedom and <span class="math notranslate nohighlight">\(d_j\)</span> the entries of
+the diagonal scaling vector <span class="math notranslate nohighlight">\(\boldsymbol{d}\)</span>. <span class="math notranslate nohighlight">\(d_j\)</span> is a stiffness, of
+the units of the generalized force of the degree-of-freedom <span class="math notranslate nohighlight">\(j\)</span> divided by
+those of its generalized displacement, such that each term <span class="math notranslate nohighlight">\(v_j^2/|d_j|\)</span>
+has the units of energy, whether the degree-of-freedom is a translation or
+a rotation: <span class="math notranslate nohighlight">\(\|v\|_{\boldsymbol{d}}\)</span> is the square root of an energy-like
+quantity, independent of the units of each degree-of-freedom. The absolute
+value guards against negative diagonal entries.</p>
+<p class="rubric">Crisfield’s criterion</p>
+<p>The iteration <span class="math notranslate nohighlight">\(i\)</span> has converged when</p>
+<div class="math notranslate nohighlight">
+\[\zeta_i = \frac{\|\boldsymbol{R}_i\|_{\boldsymbol{d}}}{\max\left(
+\|\lambda \boldsymbol{F}_{ext}\|_{\boldsymbol{d}}, \|\boldsymbol{F}_{int}(\boldsymbol{u}_i)\|_{\boldsymbol{d}},
+\|\Delta\lambda \boldsymbol{F}_{ext}\|_{\boldsymbol{d}},
+\|\lambda \, \partial \boldsymbol{R}/\partial \lambda\|_{\boldsymbol{d}}\right)}
+\le \epsilon\]</div>
+<p>with <span class="math notranslate nohighlight">\(\epsilon\)</span> = <code class="docutils literal notranslate"><span class="pre">Analysis.relTOL</span></code>, <span class="math notranslate nohighlight">\(\lambda\)</span> the current load factor
+and <span class="math notranslate nohighlight">\(\boldsymbol{F}_{ext}\)</span> the reference external force vector. The third reference
+only applies to the arc-length solvers, <span class="math notranslate nohighlight">\(\Delta\lambda\)</span> being the
+increment of the load factor of the current step, and the fourth one only
+to load vectors that depend on the load factor, e.g. prescribed
+displacements imposed exactly, see <a class="reference internal" href="solver_callbacks.html#module-pyfe3d.solver.callbacks" title="pyfe3d.solver.callbacks"><code class="xref py py-mod docutils literal notranslate"><span class="pre">callbacks</span></code></a>. These are also the
+references of the relative criterion, see <a class="reference internal" href="#pyfe3d.solver.convergence.check_convergence" title="pyfe3d.solver.convergence.check_convergence"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_convergence()</span></code></a>,
+measured here with the scaled norm. The maximum does not degenerate:
+under self-equilibrated loads <span class="math notranslate nohighlight">\(\|\lambda \boldsymbol{F}_{ext}\|_{\boldsymbol{d}}\)</span> may be
+negligible whereas <span class="math notranslate nohighlight">\(\|\boldsymbol{F}_{int}\|_{\boldsymbol{d}}\)</span> reflects the internal
+force carried by the structure; at the beginning of
+a load-controlled analysis the internal forces are small and the external
+load is the reference; when the arc-length solvers pass through a load
+factor close to zero, <span class="math notranslate nohighlight">\(\Delta\lambda \boldsymbol{F}_{ext}\)</span> is the reference; and under
+prescribed displacements alone the external and the free part of the
+internal force vectors both vanish at equilibrium, whereas <span class="math notranslate nohighlight">\(-\lambda \,
+\partial \boldsymbol{R}/\partial \lambda\)</span>, the out-of-balance force that the prescribed
+displacements produce with the free degrees-of-freedom held fixed, does
+not. The norms are evaluated over the free degrees-of-freedom only, since the
+components of the residual at the constrained ones are the support
+reactions, not an imbalance. <span class="math notranslate nohighlight">\(\boldsymbol{d}\)</span> is computed once from the
+linear stiffness matrix <code class="docutils literal notranslate"><span class="pre">calc_kC()</span></code>, assembled once for the whole
+analysis, and kept constant during the iterations, such that <span class="math notranslate nohighlight">\(\zeta_i\)</span>
+measures the progress of the iterations and not the evolution of the
+tangent stiffness matrix. The internal force vector of the numerator and of
+the denominator comes from the same evaluation, at no additional cost.</p>
+<p>With a consistent tangent stiffness matrix the Newton-Raphson iterations
+converge quadratically, <span class="math notranslate nohighlight">\(\zeta_{i+1} \sim \zeta_i^2\)</span>, and a tight
+tolerance such as <span class="math notranslate nohighlight">\(\epsilon = 10^{-9}\)</span> is reached in a few iterations; with
+the modified Newton-Raphson method the convergence is linear (<a class="reference internal" href="#r4134a01e5a1b-1" id="id4">[1]</a>,
+Sections 1.2.2 and 1.2.3, pp. 8-13). A number of iterations consistently
+larger than three or four for moderate increments indicates a tangent
+stiffness matrix inconsistent with the internal force vector, which is why
+<span class="math notranslate nohighlight">\(\zeta_i\)</span> is printed at every iteration.</p>
+<p>The criterion applies to the arc-length methods <a class="reference internal" href="#r4134a01e5a1b-3" id="id5">[3]</a>, which only change
+how the load factor is updated, not the residual, with the additional
+reference <span class="math notranslate nohighlight">\(\Delta\lambda \boldsymbol{F}_{ext}\)</span>.</p>
+<p class="rubric">The relative criterion</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">Analysis.convergence</span> <span class="pre">=</span> <span class="pre">'relative'</span></code>, the iteration has converged
+when <span class="math notranslate nohighlight">\(\|\boldsymbol{R}\| \le\)</span> <code class="docutils literal notranslate"><span class="pre">relTOL</span></code> <span class="math notranslate nohighlight">\(\max(\|\boldsymbol{F}_{ext}\|, \|\boldsymbol{F}_{int}\|, ...)\)</span>, with the
+Euclidean norm over all the degrees-of-freedom of the solver, or when
+<span class="math notranslate nohighlight">\(\max|R_j| \le\)</span> <code class="docutils literal notranslate"><span class="pre">absTOL</span></code>, which depends on the units of the model, see
+<a class="reference internal" href="#pyfe3d.solver.convergence.check_convergence" title="pyfe3d.solver.convergence.check_convergence"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_convergence()</span></code></a>.</p>
+<p class="rubric">The round-off floor</p>
+<p>The residual is the difference of force vectors computed in floating-point
+arithmetic. Each component of <span class="math notranslate nohighlight">\(\boldsymbol{F}_{int}\)</span> sums element contributions of
+the order of <span class="math notranslate nohighlight">\(\sum_k |K_{{C0}_{jk}}| |c_k|\)</span>, which may be much larger than
+the component itself, e.g. under large self-equilibrated axial forces,
+such that the residual cannot be computed more accurately than about
+<span class="math notranslate nohighlight">\(\varepsilon \| |\boldsymbol{K}_{C0}| \, |\boldsymbol{c}| \|\)</span>, with <span class="math notranslate nohighlight">\(\varepsilon\)</span> the machine
+precision and <span class="math notranslate nohighlight">\(|\boldsymbol{K}_{C0}|\)</span> and <span class="math notranslate nohighlight">\(|\boldsymbol{c}|\)</span> the elementwise absolute values of the
+linear stiffness matrix and of the solution. When this level is above
+<span class="math notranslate nohighlight">\(\epsilon\)</span> times the references of <span class="math notranslate nohighlight">\(\zeta_i\)</span>, e.g. near a null load, where
+the references, net force vectors, are small and the element contributions
+are not, the iterations stagnate and every step fails. The iteration <span class="math notranslate nohighlight">\(i\)</span>
+has therefore also converged when</p>
+<div class="math notranslate nohighlight">
+\[\|\boldsymbol{R}_i\|_{\boldsymbol{d}} \le C \, \varepsilon \,
+\| |\boldsymbol{K}_{C0}| \, |\boldsymbol{c}_i| \|_{\boldsymbol{d}}\]</div>
+<p>with <span class="math notranslate nohighlight">\(C\)</span> = <code class="docutils literal notranslate"><span class="pre">ROUNDOFF_FACTOR</span></code> <span class="math notranslate nohighlight">\(= 3\)</span>, <span class="math notranslate nohighlight">\(c_i\)</span> the solution of the iteration,
+and the Euclidean norm instead of <span class="math notranslate nohighlight">\(\|\cdot\|_{\boldsymbol{d}}\)</span> with the
+relative criterion, see <a class="reference internal" href="#pyfe3d.solver.convergence.roundoff_floor" title="pyfe3d.solver.convergence.roundoff_floor"><code class="xref py py-func docutils literal notranslate"><span class="pre">roundoff_floor()</span></code></a>. Like <code class="docutils literal notranslate"><span class="pre">absTOL</span></code>, the floor
+is an alternative to <code class="docutils literal notranslate"><span class="pre">relTOL</span></code> with both criteria. <span class="math notranslate nohighlight">\(|\boldsymbol{K}_{C0}|\)</span> is computed
+once, with <span class="math notranslate nohighlight">\(\boldsymbol{d}\)</span>, and the floor adds one product by <span class="math notranslate nohighlight">\(|\boldsymbol{c}_i|\)</span> per
+iteration. It does not change <span class="math notranslate nohighlight">\(\zeta_i\)</span>, which may then be larger than
+<span class="math notranslate nohighlight">\(\epsilon\)</span>: the log of the iterations marks the iterations converged at the
+round-off floor. With prescribed displacements, <code class="docutils literal notranslate"><span class="pre">uk</span></code>, <span class="math notranslate nohighlight">\(|\boldsymbol{K}_{C0}|\)</span> and
+<span class="math notranslate nohighlight">\(|\boldsymbol{c}|\)</span> are those of the free degrees-of-freedom, the product
+<span class="math notranslate nohighlight">\(|K_{ff}| \, |u_f|\)</span> omitting the contribution of the prescribed
+displacements, <span class="math notranslate nohighlight">\(|K_{fp}| \, |u_p|\)</span>: the floor is then lower, i.e.
+conservative.</p>
+<p>Measured on the low sinusoidal arch of Fung and Kaplan <a class="reference internal" href="#r4134a01e5a1b-4" id="id6">[4]</a>, hinged at both
+ends under a sinusoidal load, <span class="math notranslate nohighlight">\(\lambda_1 = 2.2\)</span>, modelled with 40
+<a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> elements, traced with both arc-length methods and both
+criteria, with arc-length increments of 0.05 and <span class="math notranslate nohighlight">\(\epsilon = 10^{-9}\)</span>, and
+a reference load of 1.25 times the upper limit load, reached at the load
+factor 0.80: without the floor, the four analyses stop at load factors of
+0.026 to 0.032, close to the null load between the limit points; after the
+last converged step, the residuals of the iterations that follow the first
+correction of each attempt remain between 0.29 and 0.47 times
+<span class="math notranslate nohighlight">\(\varepsilon \| |\boldsymbol{K}_{C0}| \, |\boldsymbol{c}| \|\)</span>, with <span class="math notranslate nohighlight">\(\zeta_i \ge 1.0 \times 10^{-9}\)</span>,
+and no residual of the analyses is below 0.21 times this level. With 80
+elements they stop at load factors of 0.20 to 0.21, between the limit
+points, and with 160 elements at 0.67 to 0.71, before the upper limit
+point. With the floor, all of them reach the load factor 1.0, the floor
+accepting 9 to 31 of the about 360 iterations with 40 elements, with
+<span class="math notranslate nohighlight">\(\zeta_i\)</span> up to <span class="math notranslate nohighlight">\(8.8 \times 10^{-9}\)</span> and residuals of 0.30 to 2.9 times
+<span class="math notranslate nohighlight">\(\varepsilon \| |\boldsymbol{K}_{C0}| \, |\boldsymbol{c}| \|\)</span>, and 83 to 86 iterations with 160
+elements.</p>
+</section>
+<section id="references">
+<h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
+<div role="list" class="citation-list">
+<div class="citation" id="r4134a01e5a1b-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id3">1</a>,<a role="doc-backlink" href="#id4">2</a>)</span>
+<p>Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
+Structures, Volume 1: Essentials, John Wiley &amp; Sons, Chichester, 1991.</p>
+</div>
+<div class="citation" id="r4134a01e5a1b-2" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">2</a><span class="fn-bracket">]</span></span>
+<p>Peano, A. and Riccioni, R., Automated discretisation error control in
+finite element analysis, in: Robinson, J. (ed.), Finite Elements in the
+Commercial Environment, Robinson and Associates, Verwood, 368-387, 1978.</p>
+</div>
+<div class="citation" id="r4134a01e5a1b-3" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>3<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id5">2</a>)</span>
+<p>Crisfield, M. A., A fast incremental/iterative solution procedure
+that handles “snap-through”, Computers &amp; Structures, 13(1-3), 55-62,
+1981. <a class="reference external" href="https://doi.org/10.1016/0045-7949(81)90108-5">https://doi.org/10.1016/0045-7949(81)90108-5</a></p>
+</div>
+<div class="citation" id="r4134a01e5a1b-4" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id6">4</a><span class="fn-bracket">]</span></span>
+<p>Fung, Y. C. and Kaplan, A., Buckling of low arches or curved beams of
+small curvature, NACA Technical Note 2840, National Advisory Committee
+for Aeronautics, Washington, 1952.
+<a class="reference external" href="https://ntrs.nasa.gov/citations/19930083579">https://ntrs.nasa.gov/citations/19930083579</a></p>
+</div>
+</div>
+</section>
+</section>
+<dl class="py data">
+<dt class="sig sig-object py" id="pyfe3d.solver.convergence.CRITERIA">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.convergence.</span></span><span class="sig-name descname"><span class="pre">CRITERIA</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">('crisfield',</span> <span class="pre">'relative')</span></span><a class="headerlink" href="#pyfe3d.solver.convergence.CRITERIA" title="Link to this definition">#</a></dt>
+<dd><p>Names of the convergence criteria accepted by <code class="docutils literal notranslate"><span class="pre">Analysis.convergence</span></code></p>
+</dd></dl>
+
+<dl class="py data">
+<dt class="sig sig-object py" id="pyfe3d.solver.convergence.ROUNDOFF_FACTOR">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.convergence.</span></span><span class="sig-name descname"><span class="pre">ROUNDOFF_FACTOR</span></span><span class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">3.0</span></span><a class="headerlink" href="#pyfe3d.solver.convergence.ROUNDOFF_FACTOR" title="Link to this definition">#</a></dt>
+<dd><p>An iteration has also converged when the norm of its residual is not
+larger than this factor times the machine precision times the norm of
+<span class="math notranslate nohighlight">\(|\boldsymbol{K}_{C0}| |\boldsymbol{c}|\)</span>, the round-off floor of the residual, see
+<a class="reference internal" href="#pyfe3d.solver.convergence.roundoff_floor" title="pyfe3d.solver.convergence.roundoff_floor"><code class="xref py py-func docutils literal notranslate"><span class="pre">roundoff_floor()</span></code></a> and <a class="reference internal" href="#pyfe3d.solver.convergence.check_convergence" title="pyfe3d.solver.convergence.check_convergence"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_convergence()</span></code></a></p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.convergence.check_convergence">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.convergence.</span></span><span class="sig-name descname"><span class="pre">check_convergence</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">an</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">R</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fext_total</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fext_ref</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q_ref</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">Kc_abs</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">full_output</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">False</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.convergence.check_convergence" title="Link to this definition">#</a></dt>
+<dd><p>Check the convergence of the residual force vector</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">an.convergence</span> <span class="pre">=</span> <span class="pre">'crisfield'</span></code> the convergence is achieved when
+<span class="math notranslate nohighlight">\(\zeta \le\)</span> <code class="docutils literal notranslate"><span class="pre">an.relTOL</span></code>, see <a class="reference internal" href="#pyfe3d.solver.convergence.crisfield_zeta" title="pyfe3d.solver.convergence.crisfield_zeta"><code class="xref py py-func docutils literal notranslate"><span class="pre">crisfield_zeta()</span></code></a>, with the weights
+<code class="docutils literal notranslate"><span class="pre">w</span></code>. With <code class="docutils literal notranslate"><span class="pre">an.convergence</span> <span class="pre">=</span> <span class="pre">'relative'</span></code> it is achieved when either:</p>
+<ul class="simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">norm(R)</span> <span class="pre">&lt;=</span> <span class="pre">an.relTOL*max(norm(fext_total),</span> <span class="pre">norm(fint),</span>
+<span class="pre">norm(fext_ref),</span> <span class="pre">norm(q_ref))</span></code>, with the Euclidean norm, if
+<code class="docutils literal notranslate"><span class="pre">an.relTOL</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">max(abs(R))</span> <span class="pre">&lt;=</span> <span class="pre">an.absTOL</span></code>, if <code class="docutils literal notranslate"><span class="pre">an.absTOL</span></code> is not <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p></li>
+</ul>
+<p><code class="docutils literal notranslate"><span class="pre">an.absTOL</span></code> is also accepted as an additional criterion with
+<code class="docutils literal notranslate"><span class="pre">'crisfield'</span></code>. With both criteria, when <code class="docutils literal notranslate"><span class="pre">Kc_abs</span></code> is given, the
+convergence is also achieved when the norm of <code class="docutils literal notranslate"><span class="pre">R</span></code> of the criterion is
+not larger than the round-off floor of <a class="reference internal" href="#pyfe3d.solver.convergence.roundoff_floor" title="pyfe3d.solver.convergence.roundoff_floor"><code class="xref py py-func docutils literal notranslate"><span class="pre">roundoff_floor()</span></code></a>.</p>
+<dl class="field-list">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl>
+<dt><strong>an</strong><span class="classifier"><a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis" title="pyfe3d.solver.analysis.Analysis"><code class="xref py py-class docutils literal notranslate"><span class="pre">Analysis</span></code></a></span></dt><dd><p>Analysis object with the attributes <code class="docutils literal notranslate"><span class="pre">convergence</span></code>, <code class="docutils literal notranslate"><span class="pre">relTOL</span></code> and
+<code class="docutils literal notranslate"><span class="pre">absTOL</span></code>.</p>
+</dd>
+<dt><strong>R</strong><span class="classifier">np.ndarray</span></dt><dd><p>Residual force vector, <code class="docutils literal notranslate"><span class="pre">fint</span> <span class="pre">-</span> <span class="pre">fext_total</span></code>, 1-D array.</p>
+</dd>
+<dt><strong>fint</strong><span class="classifier">np.ndarray</span></dt><dd><p>Internal force vector of the same evaluation, 1-D array.</p>
+</dd>
+<dt><strong>fext_total</strong><span class="classifier">np.ndarray</span></dt><dd><p>External force vector at the current load factor, 1-D array.</p>
+</dd>
+<dt><strong>fext_ref</strong><span class="classifier">np.ndarray or None, optional</span></dt><dd><p>Additional reference of both criteria, the external force vector of
+the current increment of the arc-length solvers. Default <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt><strong>q_ref</strong><span class="classifier">np.ndarray or None, optional</span></dt><dd><p>Additional reference of both criteria, the load factor times
+<span class="math notranslate nohighlight">\(-\partial \boldsymbol{R}/\partial \lambda\)</span> when <code class="docutils literal notranslate"><span class="pre">calc_fext</span></code> accepts <code class="docutils literal notranslate"><span class="pre">lbd</span></code>, see
+<a class="reference internal" href="solver_callbacks.html#module-pyfe3d.solver.callbacks" title="pyfe3d.solver.callbacks"><code class="xref py py-mod docutils literal notranslate"><span class="pre">callbacks</span></code></a>. Default <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt><strong>w</strong><span class="classifier">np.ndarray or None, optional</span></dt><dd><p>Weights of <a class="reference internal" href="#pyfe3d.solver.convergence.crisfield_weights" title="pyfe3d.solver.convergence.crisfield_weights"><code class="xref py py-func docutils literal notranslate"><span class="pre">crisfield_weights()</span></code></a>, required with <code class="docutils literal notranslate"><span class="pre">'crisfield'</span></code>.
+Default <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt><strong>Kc_abs</strong><span class="classifier">np.ndarray or None, optional</span></dt><dd><p><span class="math notranslate nohighlight">\(|\boldsymbol{K}_{C0}| |\boldsymbol{c}|\)</span>, the product of the elementwise absolute values of
+the linear stiffness matrix <code class="docutils literal notranslate"><span class="pre">calc_kC()</span></code> and of the solution of the
+evaluation of <code class="docutils literal notranslate"><span class="pre">R</span></code>, 1-D array. <code class="docutils literal notranslate"><span class="pre">None</span></code> disables the round-off
+floor. Default <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt><strong>full_output</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to also return <code class="docutils literal notranslate"><span class="pre">roundoff</span></code>. Default <code class="docutils literal notranslate"><span class="pre">False</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>converged</strong><span class="classifier">bool</span></dt><dd><p>Whether the criterion is satisfied.</p>
+</dd>
+<dt><strong>Rnorm</strong><span class="classifier">float</span></dt><dd><p>Norm of the residual used by the criterion,
+<span class="math notranslate nohighlight">\(\|\boldsymbol{R}\|_{\boldsymbol{d}}\)</span> with <code class="docutils literal notranslate"><span class="pre">'crisfield'</span></code>, the Euclidean norm
+with <code class="docutils literal notranslate"><span class="pre">'relative'</span></code>, used by the divergence checks of the solvers.</p>
+</dd>
+<dt><strong>zeta</strong><span class="classifier">float</span></dt><dd><p>Relative residual, <span class="math notranslate nohighlight">\(\zeta\)</span> with <code class="docutils literal notranslate"><span class="pre">'crisfield'</span></code>, <code class="docutils literal notranslate"><span class="pre">norm(R)</span></code> over
+the largest Euclidean norm of the references with <code class="docutils literal notranslate"><span class="pre">'relative'</span></code>.</p>
+</dd>
+<dt><strong>roundoff</strong><span class="classifier">bool</span></dt><dd><p>Only with <code class="docutils literal notranslate"><span class="pre">full_output=True</span></code>: whether the convergence is achieved
+by the round-off floor only, i.e. not by <code class="docutils literal notranslate"><span class="pre">an.relTOL</span></code> or
+<code class="docutils literal notranslate"><span class="pre">an.absTOL</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>When <code class="docutils literal notranslate"><span class="pre">an.convergence</span></code> is not one of <a class="reference internal" href="#pyfe3d.solver.convergence.CRITERIA" title="pyfe3d.solver.convergence.CRITERIA"><code class="xref py py-data docutils literal notranslate"><span class="pre">CRITERIA</span></code></a>, when
+<code class="docutils literal notranslate"><span class="pre">an.relTOL</span></code> and <code class="docutils literal notranslate"><span class="pre">an.absTOL</span></code> are both <code class="docutils literal notranslate"><span class="pre">None</span></code>, or when <code class="docutils literal notranslate"><span class="pre">w</span></code> is
+missing with <code class="docutils literal notranslate"><span class="pre">'crisfield'</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The relative criterion is that of the first versions of these solvers;
+its reference <code class="docutils literal notranslate"><span class="pre">fext_ref</span></code> is useful when the load factor is close to
+zero, where <code class="docutils literal notranslate"><span class="pre">fext_total</span></code> and <code class="docutils literal notranslate"><span class="pre">fint</span></code> are small. When all its
+references are null, the relative residual is <code class="docutils literal notranslate"><span class="pre">norm(R)</span></code> itself.</p>
+<p>The round-off floor, see the module documentation, does not change
+<code class="docutils literal notranslate"><span class="pre">zeta</span></code>: an iteration that it accepts may have <span class="math notranslate nohighlight">\(\zeta &gt;\)</span> <code class="docutils literal notranslate"><span class="pre">an.relTOL</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.convergence.crisfield_weights">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.convergence.</span></span><span class="sig-name descname"><span class="pre">crisfield_weights</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">K0</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.convergence.crisfield_weights" title="Link to this definition">#</a></dt>
+<dd><p>Weights <span class="math notranslate nohighlight">\(1/|d_j|\)</span> of the scaled norm of Crisfield’s criterion</p>
+<p>The weight of each degree-of-freedom is the inverse of the modulus of
+the diagonal entry of <code class="docutils literal notranslate"><span class="pre">K0</span></code>. <code class="docutils literal notranslate"><span class="pre">K0</span></code> must have no null row or column, as
+the matrices given to the solvers, see <a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols" title="pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>K0</strong><span class="classifier">sparse_matrix or np.ndarray</span></dt><dd><p>Linear stiffness matrix of the free degrees-of-freedom, shape <code class="docutils literal notranslate"><span class="pre">(n,</span>
+<span class="pre">n)</span></code>, normally <code class="docutils literal notranslate"><span class="pre">calc_kC()</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>w</strong><span class="classifier">np.ndarray</span></dt><dd><p>Weights, 1-D array of size <code class="docutils literal notranslate"><span class="pre">n</span></code>, of the inverse of the dimension of
+the diagonal entries of <code class="docutils literal notranslate"><span class="pre">K0</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>numpy.linalg.LinAlgError</dt><dd><p>When <code class="docutils literal notranslate"><span class="pre">K0</span></code> has a null row or column, see
+<a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols" title="pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a>.</p>
+</dd>
+<dt>ValueError</dt><dd><p>When a diagonal entry is null in a row or column that is not null,
+which leaves the scaling of its degree-of-freedom undefined.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#pyfe3d.solver.convergence.crisfield_zeta" title="pyfe3d.solver.convergence.crisfield_zeta"><code class="xref py py-obj docutils literal notranslate"><span class="pre">crisfield_zeta</span></code></a></dt><dd><p>the criterion that uses them.</p>
+</dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p><span class="math notranslate nohighlight">\(w_j = 1/|K_{{C0}_{jj}}|\)</span>, see the module documentation. The
+constrained degrees-of-freedom are partitioned out before calling the
+solvers, so that every degree-of-freedom of <code class="docutils literal notranslate"><span class="pre">K0</span></code> is free and enters
+the norms. A null diagonal entry in a row that is not null, e.g. of a
+Lagrange multiplier, gives no scale to its degree-of-freedom, in which
+case the relative criterion is the alternative,
+<code class="docutils literal notranslate"><span class="pre">convergence='relative'</span></code>.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.convergence.crisfield_zeta">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.convergence.</span></span><span class="sig-name descname"><span class="pre">crisfield_zeta</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">R</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fext</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">q</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">fext_inc</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.convergence.crisfield_zeta" title="Link to this definition">#</a></dt>
+<dd><p>Relative force imbalance <span class="math notranslate nohighlight">\(\zeta\)</span> of Crisfield’s criterion</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>R</strong><span class="classifier">np.ndarray</span></dt><dd><p>Residual force vector, <code class="docutils literal notranslate"><span class="pre">fint</span> <span class="pre">-</span> <span class="pre">fext</span></code>, 1-D array of size <code class="docutils literal notranslate"><span class="pre">n</span></code>.</p>
+</dd>
+<dt><strong>fext</strong><span class="classifier">np.ndarray</span></dt><dd><p>External force vector at the current load factor, 1-D array of size
+<code class="docutils literal notranslate"><span class="pre">n</span></code>.</p>
+</dd>
+<dt><strong>fint</strong><span class="classifier">np.ndarray</span></dt><dd><p>Internal force vector, from the same evaluation as <code class="docutils literal notranslate"><span class="pre">R</span></code>, 1-D array
+of size <code class="docutils literal notranslate"><span class="pre">n</span></code>.</p>
+</dd>
+<dt><strong>w</strong><span class="classifier">np.ndarray</span></dt><dd><p>Weights of <a class="reference internal" href="#pyfe3d.solver.convergence.crisfield_weights" title="pyfe3d.solver.convergence.crisfield_weights"><code class="xref py py-func docutils literal notranslate"><span class="pre">crisfield_weights()</span></code></a>, 1-D array of size <code class="docutils literal notranslate"><span class="pre">n</span></code>.</p>
+</dd>
+<dt><strong>q</strong><span class="classifier">np.ndarray or None, optional</span></dt><dd><p>Additional reference, the load factor times <span class="math notranslate nohighlight">\(-\partial \boldsymbol{R}/\partial
+\lambda\)</span> when the load vector depends on the load factor, see
+<a class="reference internal" href="solver_callbacks.html#module-pyfe3d.solver.callbacks" title="pyfe3d.solver.callbacks"><code class="xref py py-mod docutils literal notranslate"><span class="pre">callbacks</span></code></a>. Default <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt><strong>fext_inc</strong><span class="classifier">np.ndarray or None, optional</span></dt><dd><p>Additional reference, the external force vector of the increment of
+the arc-length solvers, <span class="math notranslate nohighlight">\(\Delta\lambda \boldsymbol{F}_{ext}\)</span>. Default
+<code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>zeta</strong><span class="classifier">float</span></dt><dd><p><span class="math notranslate nohighlight">\(\|\boldsymbol{R}\|_{\boldsymbol{d}}\)</span> over the largest scaled norm of the
+references, dimensionless, <code class="docutils literal notranslate"><span class="pre">0.</span></code> when the residual and all the
+references are null.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The criterion is <span class="math notranslate nohighlight">\(\zeta \le \epsilon\)</span>, see the module documentation:
+the reference is <span class="math notranslate nohighlight">\(\max(\|\boldsymbol{F}_{ext}\|_{\boldsymbol{d}},
+\|\boldsymbol{F}_{int}\|_{\boldsymbol{d}})\)</span>, with also <span class="math notranslate nohighlight">\(\|\boldsymbol{q}\|_{\boldsymbol{d}}\)</span> and
+<span class="math notranslate nohighlight">\(\|\Delta\lambda \boldsymbol{F}_{ext}\|_{\boldsymbol{d}}\)</span> when given. When the
+reference is null and the residual is not, <span class="math notranslate nohighlight">\(\zeta\)</span> is infinite.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.convergence.roundoff_floor">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.convergence.</span></span><span class="sig-name descname"><span class="pre">roundoff_floor</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">Kc_abs</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.convergence.roundoff_floor" title="Link to this definition">#</a></dt>
+<dd><p>Round-off floor of the residual norm</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>Kc_abs</strong><span class="classifier">np.ndarray</span></dt><dd><p><span class="math notranslate nohighlight">\(|\boldsymbol{K}_{C0}| |\boldsymbol{c}|\)</span>, the product of the elementwise absolute values of
+the linear stiffness matrix and of the current solution, 1-D array
+of size <code class="docutils literal notranslate"><span class="pre">n</span></code>.</p>
+</dd>
+<dt><strong>w</strong><span class="classifier">np.ndarray or None, optional</span></dt><dd><p>Weights of <a class="reference internal" href="#pyfe3d.solver.convergence.crisfield_weights" title="pyfe3d.solver.convergence.crisfield_weights"><code class="xref py py-func docutils literal notranslate"><span class="pre">crisfield_weights()</span></code></a>, for the scaled norm of
+Crisfield’s criterion; the Euclidean norm when <code class="docutils literal notranslate"><span class="pre">None</span></code>. Default
+<code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>floor</strong><span class="classifier">float</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">ROUNDOFF_FACTOR*eps*norm(Kc_abs)</span></code>, with <code class="docutils literal notranslate"><span class="pre">eps</span></code> the machine
+precision of <code class="docutils literal notranslate"><span class="pre">float</span></code> and the norm of the criterion.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<dl class="simple">
+<dt><a class="reference internal" href="#pyfe3d.solver.convergence.check_convergence" title="pyfe3d.solver.convergence.check_convergence"><code class="xref py py-obj docutils literal notranslate"><span class="pre">check_convergence</span></code></a></dt><dd><p>the criterion that uses it.</p>
+</dd>
+</dl>
+</div>
+<p class="rubric">Notes</p>
+<p><span class="math notranslate nohighlight">\(C \varepsilon \| |\boldsymbol{K}_{C0}| |\boldsymbol{c}| \|\)</span>, with <span class="math notranslate nohighlight">\(C\)</span> = <code class="docutils literal notranslate"><span class="pre">ROUNDOFF_FACTOR</span></code>,
+see the module documentation.</p>
+</dd></dl>
+
+<dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.convergence.scaled_norm">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.convergence.</span></span><span class="sig-name descname"><span class="pre">scaled_norm</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">w</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.convergence.scaled_norm" title="Link to this definition">#</a></dt>
+<dd><p>Scaled norm <span class="math notranslate nohighlight">\(\|v\|_{\boldsymbol{d}}\)</span> of a force-like vector</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>v</strong><span class="classifier">np.ndarray</span></dt><dd><p>Force-like vector, 1-D array of size <code class="docutils literal notranslate"><span class="pre">n</span></code>.</p>
+</dd>
+<dt><strong>w</strong><span class="classifier">np.ndarray</span></dt><dd><p>Weights of <a class="reference internal" href="#pyfe3d.solver.convergence.crisfield_weights" title="pyfe3d.solver.convergence.crisfield_weights"><code class="xref py py-func docutils literal notranslate"><span class="pre">crisfield_weights()</span></code></a>, 1-D array of size <code class="docutils literal notranslate"><span class="pre">n</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>norm</strong><span class="classifier">float</span></dt><dd><p><span class="math notranslate nohighlight">\(\sqrt{\sum_j w_j v_j^2}\)</span>, of the dimension of the square root of an
+energy.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd></dl>
+
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="solver_analysis.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="solver_newton_raphson.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Newton-Raphson solver (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.newton_raphson</span></code>)</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Convergence criteria of the non-linear solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.convergence</span></code>)</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#notes">Notes</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#references">References</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.convergence.CRITERIA"><code class="docutils literal notranslate"><span class="pre">CRITERIA</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.convergence.ROUNDOFF_FACTOR"><code class="docutils literal notranslate"><span class="pre">ROUNDOFF_FACTOR</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.convergence.check_convergence"><code class="docutils literal notranslate"><span class="pre">check_convergence()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.convergence.crisfield_weights"><code class="docutils literal notranslate"><span class="pre">crisfield_weights()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.convergence.crisfield_zeta"><code class="docutils literal notranslate"><span class="pre">crisfield_zeta()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.convergence.roundoff_floor"><code class="docutils literal notranslate"><span class="pre">roundoff_floor()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.convergence.scaled_norm"><code class="docutils literal notranslate"><span class="pre">scaled_norm()</span></code></a></li>
+</ul>
+
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/solver_convergence.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

@@ -1,16 +1,19 @@
 Linear buckling analysis of a cylinder under torsion
-----------------------------------------------------
+====================================================
 
-The figure below shows the first linear buckling mode of a cylindrical shell
-under torsion. Note that the local coordinates of each element are also
-plotted, all using PyVista. The figure was generated using ``refinement=2`` and
-running the script directly.
+The cylinders Z11 and Z33 of Castro et al. (2014),
+`doi:10.1016/j.compstruct.2014.07.037
+<https://doi.org/10.1016/j.compstruct.2014.07.037>`_, two unsymmetric
+laminates of :class:`.Quad4` elements, under torsion. The figure shows the
+first buckling mode and the element axes, plotted with PyVista using
+``refinement=2``:
 
 .. image:: ./ex_linear_buckling_cylinder_torsion.jpg
 
-The code used to generate this figure is extracted from one of ``pyfe3d`` unit
-tests:
+The laminate of each element is oriented by a material direction along the
+axis of the cylinder, see :doc:`conventions`. The asserted torques are a
+regression lock of this mesh; the comparison with the semi-analytical
+results of the paper is discussed in the comments of the test:
 
 .. literalinclude:: ../../tests/test_quad4_linear_buckling_cylinder_Nxy.py
-    :encoding: latin-1
-
+    :pyobject: test_linear_buckling_cylinder_Nxy

@@ -1,0 +1,1172 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Benchmark: shell obstacle course &#8212; pyfe3d 0.11.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css?v=2aa19091" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="_static/documentation_options.js?v=f3b36f1a"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tut-bench-shell-obstacle-course';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tutorial: geometrically non-linear benchmarks with pyfe3d.solver" href="tut-nonlinear-benchmarks.html" />
+    <link rel="prev" title="Benchmark: MacNeal-Harder standard problems for the shell elements" href="tut-bench-macneal-harder.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.11.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="tut-opt-lightweight-smeared-deflection-GA.html">Tutorial: Ply tailoring using GA for a simply-supported plate under normal load</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-opt-lightweight-smeared-deflection-SLSQP.html">Tutorial: Ply tailoring using SLSPQ for a simply-supported plate under normal load</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-opt-topology.html">Tutorial: topology optimisation using pyfe3d</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-timoshenko-beam-benchmarks.html">Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-shell-lumped-mass.html">Tutorial: lumped mass matrices of the shells with an offset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-bench-macneal-harder.html">Benchmark: MacNeal-Harder standard problems for the shell elements</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Benchmark: shell obstacle course</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-nonlinear-benchmarks.html">Tutorial: geometrically non-linear benchmarks with pyfe3d.solver</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="tutorials.html" class="nav-link">Tutorials</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Benchmark: shell obstacle course</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Benchmark:-shell-obstacle-course">
+<h1>Benchmark: shell obstacle course<a class="headerlink" href="#Benchmark:-shell-obstacle-course" title="Link to this heading">#</a></h1>
+<p>Date: 22 of October 2026</p>
+<p>Author: Saullo G. P. Castro</p>
+<p>Belytschko et al. [1] assembled three linear problems, the “obstacle course” of their Section 5, that together test whether a shell element represents inextensional bending, rigid-body rotations about the normal and complex membrane states: the Scordelis-Lo roof, the pinched cylinder with rigid diaphragms and the pinched hemispherical shell. This notebook runs the three problems with the four shell elements of <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code>, <code class="docutils literal notranslate"><span class="pre">Quad4</span></code>, <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>, <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> and <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code>, each with its default
+attributes, on <span class="math notranslate nohighlight">\(N \times N\)</span> meshes of the symmetric part of each shell, and compares the converged and the coarse-mesh results with the reference values of Table 3 of [1] (p. 239). The roof and the hemisphere are also problems of MacNeal and Harder [2], whose Tables 13 and 14 give the results of the QUAD4 of MSC/NASTRAN, compared at the end.</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"></th>
+<th class="head"><p>Scordelis-Lo roof</p></th>
+<th class="head"><p>Pinched cylinder</p></th>
+<th class="head"><p>Hemispherical shell</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>Length <span class="math notranslate nohighlight">\(L\)</span></p></td>
+<td><p>50.0</p></td>
+<td><p>600.0</p></td>
+<td><ul class="simple">
+<li></li>
+</ul>
+</td>
+</tr>
+<tr class="row-odd"><td><p>Radius <span class="math notranslate nohighlight">\(R\)</span></p></td>
+<td><p>25.0</p></td>
+<td><p>300.0</p></td>
+<td><p>10.0</p></td>
+</tr>
+<tr class="row-even"><td><p>Thickness <span class="math notranslate nohighlight">\(t\)</span></p></td>
+<td><p>0.25</p></td>
+<td><p>3.0</p></td>
+<td><p>0.04</p></td>
+</tr>
+<tr class="row-odd"><td><p><span class="math notranslate nohighlight">\(E\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(4.32 \times 10^8\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(3.0 \times 10^6\)</span></p></td>
+<td><p><span class="math notranslate nohighlight">\(6.825 \times 10^7\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p><span class="math notranslate nohighlight">\(\nu\)</span></p></td>
+<td><p>0.0</p></td>
+<td><p>0.3</p></td>
+<td><p>0.3</p></td>
+</tr>
+<tr class="row-odd"><td><p>Load</p></td>
+<td><p>gravity, 90.0 per unit area</p></td>
+<td><p>two opposite radial forces <span class="math notranslate nohighlight">\(F = 1.0\)</span></p></td>
+<td><p>radial forces <span class="math notranslate nohighlight">\(F = \pm 2.0\)</span> alternating at 90 degrees</p></td>
+</tr>
+<tr class="row-even"><td><p>Reference</p></td>
+<td><p>vertical displacement at the midside of the free edge, 0.3024</p></td>
+<td><p>radial displacement under the load, <span class="math notranslate nohighlight">\(0.18248 \times 10^{-4}\)</span></p></td>
+<td><p>radial displacement under the load, 0.0924</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The table is Table 3 of [1]. The modelling choices that [1] does not state are given with each problem. The triangular meshes are obtained by cutting every quadrilateral along its diagonal 1-3.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import numpy as np
+import matplotlib.pyplot as plt
+from scipy.sparse import coo_matrix
+from scipy.sparse.linalg import spsolve
+
+from pyfe3d.shellprop_utils import isotropic_plate
+from pyfe3d import (Quad4, Quad4Data, Quad4Probe, Quad4R, Quad4RData,
+                    Quad4RProbe, Tria3R, Tria3RData, Tria3RProbe, Tria3DSG,
+                    Tria3DSGData, Tria3DSGProbe, INT, DOUBLE, DOF)
+
+ELEMENTS = {
+    'Quad4': (Quad4, Quad4Data, Quad4Probe),
+    'Quad4R': (Quad4R, Quad4RData, Quad4RProbe),
+    'Tria3R': (Tria3R, Tria3RData, Tria3RProbe),
+    'Tria3DSG': (Tria3DSG, Tria3DSGData, Tria3DSGProbe),
+}
+
+
+def split(quads):
+    # two triangles per quadrilateral, cut along the diagonal 1-3
+    return [t for (n1, n2, n3, n4) in quads for t in ((n1, n2, n3), (n1, n3, n4))]
+
+
+def stiffness(ncoords, quads, name, prop):
+    Elem, Data, Probe = ELEMENTS[name]
+    conn = split(quads) if name.startswith('Tria') else quads
+    data, probe = Data(), Probe()
+    ncf = np.ascontiguousarray(ncoords, dtype=DOUBLE).flatten()
+    N = DOF*ncoords.shape[0]
+    size = data.KC0_SPARSE_SIZE*len(conn)
+    KC0r = np.zeros(size, dtype=INT)
+    KC0c = np.zeros(size, dtype=INT)
+    KC0v = np.zeros(size, dtype=DOUBLE)
+    areas = np.zeros(len(conn))
+    for k, nodes in enumerate(conn):
+        e = Elem(probe)
+        for i, n in enumerate(nodes):
+            setattr(e, 'n%d' % (i + 1), n)
+            setattr(e, 'c%d' % (i + 1), DOF*n)
+        e.init_k_KC0 = k*data.KC0_SPARSE_SIZE
+        e.update_rotation_matrix(ncf)
+        e.update_probe_xe(ncf)
+        e.update_area()
+        e.update_KC0(KC0r, KC0c, KC0v, prop)
+        areas[k] = e.area
+    K = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
+    return K, conn, areas
+
+
+def solve(K, bk, f):
+    u = np.zeros(K.shape[0])
+    bu = ~bk
+    u[bu] = spsolve(K[bu][:, bu], f[bu])
+    return u
+
+
+def area_load(ncoords, conn, areas, q):
+    # nodal forces of a load per unit area q, lumped equally to the nodes
+    f = np.zeros(DOF*ncoords.shape[0])
+    for nodes, A in zip(conn, areas):
+        for n in nodes:
+            f[DOF*n:DOF*n + 3] += np.asarray(q)*A/len(nodes)
+    return f
+
+
+def mapped_grid(n, X, Y, Z):
+    # an n by n grid of quadrilaterals on the surface given by the
+    # (n + 1, n + 1) arrays of coordinates X, Y and Z
+    ids = np.arange((n + 1)**2).reshape(n + 1, n + 1)
+    quads = [(ids[i, j], ids[i + 1, j], ids[i + 1, j + 1], ids[i, j + 1])
+             for i in range(n) for j in range(n)]
+    return np.column_stack((X.ravel(), Y.ravel(), Z.ravel())), ids, quads
+
+
+def fix(bk, mask, dofs):
+    for d in dofs:
+        bk[d::DOF] |= mask
+
+
+def grade(normalised):
+    # letter grade of MacNeal and Harder [2], p. 14
+    err = 100*abs(normalised - 1.)
+    for letter, limit in (('A', 2.), ('B', 10.), ('C', 20.), ('D', 50.)):
+        if err &lt;= limit:
+            return letter
+    return 'F'
+
+
+NS = (2, 4, 6, 8, 10, 12, 16, 24, 32, 48)
+</pre></div>
+</div>
+</div>
+<section id="Scordelis-Lo-roof">
+<h2>Scordelis-Lo roof<a class="headerlink" href="#Scordelis-Lo-roof" title="Link to this heading">#</a></h2>
+<p>A cylindrical roof of radius 25.0 and length 50.0, with its axis along <span class="math notranslate nohighlight">\(y\)</span>, <span class="math notranslate nohighlight">\(z\)</span> vertical and a half-angle of 40 degrees, supported at both ends by rigid diaphragms and loaded by its own weight, 90.0 per unit area in the <span class="math notranslate nohighlight">\(-z\)</span> direction (Fig. 5 and Table 3 of [1]). One quarter is modelled, <span class="math notranslate nohighlight">\(0 \le \theta \le 40^\circ\)</span> from the crown and <span class="math notranslate nohighlight">\(0 \le y \le 25\)</span> from the diaphragm, with symmetry at the crown, <span class="math notranslate nohighlight">\(u_x = r_y = r_z = 0\)</span>, and at mid-length,
+<span class="math notranslate nohighlight">\(u_y = r_x = r_z = 0\)</span>. [1] does not define the diaphragm for this problem; it is taken from Fig. 8 of [2], <span class="math notranslate nohighlight">\(u_x = u_z = 0\)</span> on the curved edge. The gravity load is lumped to the nodes. The result is the vertical displacement at the midside of the free edge.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def scordelis_lo(name, n):
+    R, L = 25., 50.
+    T, Y = np.meshgrid(np.linspace(0., np.deg2rad(40.), n + 1),
+                       np.linspace(0., L/2, n + 1), indexing='ij')
+    ncoords, ids, quads = mapped_grid(n, R*np.sin(T), Y, R*np.cos(T))
+    prop = isotropic_plate(thickness=0.25, E=4.32e8, nu=0.)
+    K, conn, areas = stiffness(ncoords, quads, name, prop)
+    x, y, z = ncoords.T
+    bk = np.zeros(K.shape[0], dtype=bool)
+    fix(bk, np.isclose(y, 0.), (0, 2))        # diaphragm
+    fix(bk, np.isclose(y, L/2), (1, 3, 5))    # symmetry at mid-length
+    fix(bk, np.isclose(x, 0.), (0, 4, 5))     # symmetry at the crown
+    u = solve(K, bk, area_load(ncoords, conn, areas, (0., 0., -90.)))
+    return -u[DOF*ids[n, n] + 2]
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Pinched-cylinder-with-rigid-diaphragms">
+<h2>Pinched cylinder with rigid diaphragms<a class="headerlink" href="#Pinched-cylinder-with-rigid-diaphragms" title="Link to this heading">#</a></h2>
+<p>A cylinder of radius 300.0 and length 600.0, axis along <span class="math notranslate nohighlight">\(y\)</span>, pinched at mid-length by two diametrically opposite radial forces <span class="math notranslate nohighlight">\(F = 1.0\)</span>, and constrained at each end by a rigid diaphragm, defined in Table 3 of [1] as <span class="math notranslate nohighlight">\(u_x = u_y = \phi_z = 0\)</span> with <span class="math notranslate nohighlight">\(z\)</span> the axis of the cylinder in their Fig. 5, here <span class="math notranslate nohighlight">\(u_x = u_z = r_y = 0\)</span>. One eighth is modelled, <span class="math notranslate nohighlight">\(0 \le \theta \le 90^\circ\)</span> from the loaded generator and <span class="math notranslate nohighlight">\(0 \le y \le 300\)</span> from mid-length, with symmetry on the
+three cut planes: <span class="math notranslate nohighlight">\(u_x = r_y = r_z = 0\)</span> at <span class="math notranslate nohighlight">\(x = 0\)</span>, <span class="math notranslate nohighlight">\(u_z = r_x = r_y = 0\)</span> at <span class="math notranslate nohighlight">\(z = 0\)</span> and <span class="math notranslate nohighlight">\(u_y = r_x = r_z = 0\)</span> at mid-length. The load node carries <span class="math notranslate nohighlight">\(F/4\)</span>. The result is the radial displacement under the load.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def pinched_cylinder(name, n):
+    R, L, F = 300., 600., 1.
+    T, Y = np.meshgrid(np.linspace(0., np.pi/2, n + 1),
+                       np.linspace(0., L/2, n + 1), indexing='ij')
+    ncoords, ids, quads = mapped_grid(n, R*np.sin(T), Y, R*np.cos(T))
+    prop = isotropic_plate(thickness=3., E=3.e6, nu=0.3)
+    K, conn, areas = stiffness(ncoords, quads, name, prop)
+    x, y, z = ncoords.T
+    bk = np.zeros(K.shape[0], dtype=bool)
+    fix(bk, np.isclose(y, L/2), (0, 2, 4))          # diaphragm
+    fix(bk, np.isclose(y, 0.), (1, 3, 5))           # symmetry at mid-length
+    fix(bk, np.isclose(x, 0.), (0, 4, 5))           # symmetry, plane x = 0
+    fix(bk, np.isclose(z, 0., atol=1e-9), (2, 3, 4))  # symmetry, plane z = 0
+    f = np.zeros(K.shape[0])
+    load = ids[0, 0]
+    f[DOF*load + 2] = -F/4
+    u = solve(K, bk, f)
+    return -u[DOF*load + 2]
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Pinched-hemispherical-shell">
+<h2>Pinched hemispherical shell<a class="headerlink" href="#Pinched-hemispherical-shell" title="Link to this heading">#</a></h2>
+<p>A hemisphere of radius 10.0 with a free equator, loaded at the equator by four radial point loads alternating in sign at 90 degrees. Fig. 1(b) of [1], whose caption refers to their Table 3 for the data of the problem, and Fig. 9 of [2] give a hole at the pole, of 18 degrees, which is modelled here; the reference 0.0924 of [1] is, according to [2] (Table 5(b)), a lower bound computed for the hemisphere without the hole, and [2] normalises the results with the hole by 0.094 instead. One quadrant
+is modelled with symmetry on the planes <span class="math notranslate nohighlight">\(x = 0\)</span>, <span class="math notranslate nohighlight">\(u_x = r_y = r_z = 0\)</span>, and <span class="math notranslate nohighlight">\(y = 0\)</span>, <span class="math notranslate nohighlight">\(u_y = r_x = r_z = 0\)</span>. The quadrant carries <span class="math notranslate nohighlight">\(F = 1.0\)</span> at each load point, outward along <span class="math notranslate nohighlight">\(x\)</span> and inward along <span class="math notranslate nohighlight">\(y\)</span>, as drawn in Figs. 1(b) and 5 of [1], half of the <span class="math notranslate nohighlight">\(F = \pm 2.0\)</span> of their Table 3 because each load point lies on a plane of symmetry. Fig. 9 of [2] labels the forces “F = 2.0 (on quadrant)”; with 2.0 applied to the quadrant every result below doubles.
+Nothing in the quadrant prevents a translation along <span class="math notranslate nohighlight">\(z\)</span>, so <span class="math notranslate nohighlight">\(u_z = 0\)</span> is imposed at one node of the hole, which does not change the solution because the loads have no component along <span class="math notranslate nohighlight">\(z\)</span>. The result is the radial displacement under the load along <span class="math notranslate nohighlight">\(x\)</span>.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def hemisphere(name, n):
+    R, F = 10., 1.
+    PSI, PHI = np.meshgrid(np.linspace(np.pi/2, np.deg2rad(18.), n + 1),
+                           np.linspace(0., np.pi/2, n + 1), indexing='ij')
+    ncoords, ids, quads = mapped_grid(n, R*np.sin(PSI)*np.cos(PHI),
+                                      R*np.sin(PSI)*np.sin(PHI), R*np.cos(PSI))
+    prop = isotropic_plate(thickness=0.04, E=6.825e7, nu=0.3)
+    K, conn, areas = stiffness(ncoords, quads, name, prop)
+    x, y, z = ncoords.T
+    bk = np.zeros(K.shape[0], dtype=bool)
+    fix(bk, np.isclose(x, 0., atol=1e-9), (0, 4, 5))
+    fix(bk, np.isclose(y, 0., atol=1e-9), (1, 3, 5))
+    bk[DOF*ids[n, 0] + 2] = True
+    f = np.zeros(K.shape[0])
+    f[DOF*ids[0, 0] + 0] = +F
+    f[DOF*ids[0, n] + 1] = -F
+    u = solve(K, bk, f)
+    return u[DOF*ids[0, 0] + 0]
+</pre></div>
+</div>
+</div>
+</section>
+<section id="Convergence">
+<h2>Convergence<a class="headerlink" href="#Convergence" title="Link to this heading">#</a></h2>
+<p>Every problem is solved with <span class="math notranslate nohighlight">\(N\)</span> from 2 to 48 elements per side, on the quadrilateral mesh or on the triangles obtained from it, and the result is normalised by the reference of Table 3 of [1].</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>PROBLEMS = {'Scordelis-Lo roof': (scordelis_lo, 0.3024),
+            'Pinched cylinder': (pinched_cylinder, 0.18248e-4),
+            'Hemispherical shell': (hemisphere, 0.0924)}
+
+res = {}
+for problem, (func, ref) in PROBLEMS.items():
+    print(problem + ', normalised displacement')
+    print('%-4s' % 'N' + ''.join('%10s' % name for name in ELEMENTS))
+    for n in NS:
+        for name in ELEMENTS:
+            res[problem, name, n] = func(name, n)/ref
+        print('%-4d' % n + ''.join('%10.3f' % res[problem, name, n] for name in ELEMENTS))
+    print()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Scordelis-Lo roof, normalised displacement
+N        Quad4    Quad4R    Tria3R  Tria3DSG
+2        1.416     0.858     1.544     0.665
+4        1.059     0.779     0.929     0.675
+6        1.022     0.809     0.892     0.783
+8        1.010     0.830     0.882     0.853
+10       1.006     0.845     0.877     0.895
+12       1.003     0.859     0.874     0.922
+16       1.001     0.882     0.872     0.951
+24       1.000     0.917     0.871     0.975
+32       0.999     0.941     0.873     0.984
+48       0.999     0.967     0.882     0.991
+
+Pinched cylinder, normalised displacement
+N        Quad4    Quad4R    Tria3R  Tria3DSG
+2        0.035     0.034     0.082     0.022
+4        0.370     0.339     0.854     0.142
+6        0.604     0.545     1.194     0.357
+8        0.743     0.666     1.271     0.545
+10       0.827     0.740     1.300     0.667
+12       0.879     0.789     1.303     0.747
+16       0.935     0.848     1.267     0.843
+24       0.980     0.899     1.169     0.925
+32       0.998     0.921     1.105     0.958
+48       1.012     0.940     1.045     0.985
+
+Hemispherical shell, normalised displacement
+N        Quad4    Quad4R    Tria3R  Tria3DSG
+2        0.021     0.021     0.228     0.004
+4        0.106     0.118     0.069     0.049
+6        0.356     0.345     0.188     0.206
+8        0.633     0.549     0.364     0.451
+10       0.811     0.675     0.533     0.666
+12       0.903     0.749     0.653     0.803
+16       0.975     0.832     0.770     0.926
+24       1.005     0.911     0.821     0.985
+32       1.011     0.948     0.826     0.998
+48       1.013     0.982     0.825     1.006
+
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>colors = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100']
+markers = ['o', 's', '^', 'D']
+fig, axes = plt.subplots(1, 3, figsize=(12, 3.8), sharey=True)
+for ax, problem in zip(axes, PROBLEMS):
+    for name, c, m in zip(ELEMENTS, colors, markers):
+        ax.plot(np.array(NS) + 1, [res[problem, name, n] for n in NS],
+                color=c, marker=m, markersize=5, lw=1.5, label=name)
+    ax.axhline(1., color='0.4', lw=1, ls='--')
+    ax.set_title(problem, fontsize=11)
+    ax.set_xlabel('nodes per side')
+    ax.set_ylim(0., 1.6)
+    ax.grid(color='0.9')
+axes[0].set_ylabel('normalised displacement')
+axes[0].legend(frameon=False)
+fig.tight_layout()
+plt.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/tut-bench-shell-obstacle-course_10_0.png" src="_images/tut-bench-shell-obstacle-course_10_0.png" />
+</div>
+</div>
+</section>
+<section id="Checks">
+<h2>Checks<a class="headerlink" href="#Checks" title="Link to this heading">#</a></h2>
+<p>The convergence is checked on the finest mesh, <span class="math notranslate nohighlight">\(N = 48\)</span>, with the tolerance of grade A of [2], 2%. On the coarse meshes the grade of [2] is printed for the meshes it uses in its Table 16, <span class="math notranslate nohighlight">\(N = 4\)</span> for the roof and <span class="math notranslate nohighlight">\(N = 8\)</span> for the hemisphere, and for <span class="math notranslate nohighlight">\(N = 16\)</span> (17 nodes per side) for the cylinder, the mesh on which [1] (p. 242) finds their 4-node element with selective reduced integration “still 5% in error”.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>COARSE = {'Scordelis-Lo roof': 4, 'Pinched cylinder': 16, 'Hemispherical shell': 8}
+print('%-22s %-8s %12s %12s %10s %12s' % ('problem', 'element', 'N = 48', 'converged', 'coarse N',
+                                          'grade [2]'))
+for problem in PROBLEMS:
+    for name in ELEMENTS:
+        v = res[problem, name, 48]
+        nc = COARSE[problem]
+        print('%-22s %-8s %12.4f %12s %10d %12s'
+              % (problem, name, v, 'PASS' if abs(v - 1.) &lt;= 0.02 else 'FAIL', nc,
+                 grade(res[problem, name, nc])))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+problem                element        N = 48    converged   coarse N    grade [2]
+Scordelis-Lo roof      Quad4          0.9991         PASS          4            B
+Scordelis-Lo roof      Quad4R         0.9672         FAIL          4            D
+Scordelis-Lo roof      Tria3R         0.8825         FAIL          4            B
+Scordelis-Lo roof      Tria3DSG       0.9910         PASS          4            D
+Pinched cylinder       Quad4          1.0120         PASS         16            B
+Pinched cylinder       Quad4R         0.9402         FAIL         16            C
+Pinched cylinder       Tria3R         1.0447         FAIL         16            D
+Pinched cylinder       Tria3DSG       0.9848         PASS         16            C
+Hemispherical shell    Quad4          1.0134         PASS          8            D
+Hemispherical shell    Quad4R         0.9817         PASS          8            D
+Hemispherical shell    Tria3R         0.8250         FAIL          8            F
+Hemispherical shell    Tria3DSG       1.0061         PASS          8            F
+</pre></div></div>
+</div>
+</section>
+<section id="Comparison-with-MacNeal-and-Harder">
+<h2>Comparison with MacNeal and Harder<a class="headerlink" href="#Comparison-with-MacNeal-and-Harder" title="Link to this heading">#</a></h2>
+<p>Tables 13 and 14 of [2] give the QUAD4 of MSC/NASTRAN on the roof and on the hemisphere, normalised by 0.3024 and 0.094 respectively. The results of <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code> are normalised in the same way below.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>MH_QUAD4 = {'Scordelis-Lo roof': (0.3024, {2: 1.376, 4: 1.050, 6: 1.018, 8: 1.008, 10: 1.004}),   # Table 13 of [2]
+            'Hemispherical shell': (0.094, {2: 0.972, 4: 1.024, 6: 1.013, 8: 1.005, 10: 1.001,
+                                            12: 0.998})}                                          # Table 14 of [2]
+for problem, (ref_mh, table) in MH_QUAD4.items():
+    ref = PROBLEMS[problem][1]
+    print(problem + ', displacement normalised by %g' % ref_mh)
+    print('%-4s' % 'N' + ''.join('%10s' % name for name in ELEMENTS) + '  MH QUAD4')
+    for n, v in table.items():
+        print('%-4d' % n + ''.join('%10.3f' % (res[problem, name, n]*ref/ref_mh) for name in ELEMENTS)
+              + '%10.3f' % v)
+    print()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Scordelis-Lo roof, displacement normalised by 0.3024
+N        Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
+2        1.416     0.858     1.544     0.665     1.376
+4        1.059     0.779     0.929     0.675     1.050
+6        1.022     0.809     0.892     0.783     1.018
+8        1.010     0.830     0.882     0.853     1.008
+10       1.006     0.845     0.877     0.895     1.004
+
+Hemispherical shell, displacement normalised by 0.094
+N        Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
+2        0.021     0.021     0.225     0.004     0.972
+4        0.104     0.116     0.068     0.049     1.024
+6        0.350     0.339     0.184     0.202     1.013
+8        0.622     0.540     0.358     0.443     1.005
+10       0.797     0.663     0.524     0.654     1.001
+12       0.888     0.736     0.642     0.789     0.998
+
+</pre></div></div>
+</div>
+</section>
+<section id="Discussion">
+<h2>Discussion<a class="headerlink" href="#Discussion" title="Link to this heading">#</a></h2>
+<p>The output above is the result of the default elements, with no parameter adjusted to these problems.</p>
+<ul class="simple">
+<li><p><strong>``Quad4``</strong> is within 2% of the three references at <span class="math notranslate nohighlight">\(N = 48\)</span>. On the roof it behaves like the QUAD4 of [2] on every mesh, over-flexible on the coarsest. On the pinched cylinder it converges from below, with an error of 6.5% at 17 nodes per side, close to the 5% that [1] (p. 242) reports for their 4-node element with selective reduced integration on that mesh, and ends 1.2% above the reference. The hemisphere is where it differs most from the QUAD4 of [2]: far too stiff on the coarse
+meshes, 10% of the displacement at <span class="math notranslate nohighlight">\(N = 4\)</span> against 102% for the QUAD4, and within 3% of the reference of [1] only from <span class="math notranslate nohighlight">\(N = 16\)</span>.</p></li>
+<li><p><strong>``Quad4R``</strong> converges from below on the three problems, more slowly than <code class="docutils literal notranslate"><span class="pre">Quad4</span></code>, and is still 3% and 6% too stiff on the roof and on the cylinder at <span class="math notranslate nohighlight">\(N = 48\)</span>.</p></li>
+<li><p><strong>``Tria3R``</strong> does not converge to the references within <span class="math notranslate nohighlight">\(N = 48\)</span>: it settles 12% below the reference on the roof and 18% below on the hemisphere, and on the cylinder it overshoots by up to 30% before coming down to 4.5% above. Its transverse shear stiffness is divided by <span class="math notranslate nohighlight">\(1 + \alpha \ell^2/t^2\)</span> with the default <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span> <span class="pre">=</span> <span class="pre">0.7</span></code>, and the Notes of <code class="docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code> explain why no single value of <span class="math notranslate nohighlight">\(\alpha\)</span> serves every problem class; this notebook records the
+default.</p></li>
+<li><p><strong>``Tria3DSG``</strong> is within 2% of the three references at <span class="math notranslate nohighlight">\(N = 48\)</span>, converging from below and more slowly than <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> on the coarse meshes, with no parameter to set.</p></li>
+</ul>
+</section>
+<section id="References">
+<h2>References<a class="headerlink" href="#References" title="Link to this heading">#</a></h2>
+<p>[1] Belytschko, T., Stolarski, H., Liu, W. K., Carpenter, N., and Ong, J. S.-J., Stress projection for membrane and shear locking in shell finite elements, Computer Methods in Applied Mechanics and Engineering, 51(1-3), 221-258, 1985. <a class="reference external" href="https://doi.org/10.1016/0045-7825(85)90035-0">https://doi.org/10.1016/0045-7825(85)90035-0</a></p>
+<p>[2] MacNeal, R. H., and Harder, R. L., A proposed standard set of problems to test finite element accuracy, Finite Elements in Analysis and Design, 1(1), 3-20, 1985. <a class="reference external" href="https://doi.org/10.1016/0168-874X(85)90003-4">https://doi.org/10.1016/0168-874X(85)90003-4</a></p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="tut-bench-macneal-harder.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Benchmark: MacNeal-Harder standard problems for the shell elements</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="tut-nonlinear-benchmarks.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tutorial: geometrically non-linear benchmarks with pyfe3d.solver</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Scordelis-Lo-roof">Scordelis-Lo roof</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Pinched-cylinder-with-rigid-diaphragms">Pinched cylinder with rigid diaphragms</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Pinched-hemispherical-shell">Pinched hemispherical shell</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Convergence">Convergence</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Checks">Checks</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Comparison-with-MacNeal-and-Harder">Comparison with MacNeal and Harder</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Discussion">Discussion</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#References">References</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/tut-bench-shell-obstacle-course.ipynb.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

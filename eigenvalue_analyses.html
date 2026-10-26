@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Linear buckling and natural frequencies &#8212; pyfe3d 0.11.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="_static/documentation_options.js?v=f3b36f1a"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'eigenvalue_analyses';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Linear static analysis of a plate" href="ex_linear_static.html" />
+    <link rel="prev" title="Non-linear static analyses" href="nonlinear_analyses.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.11.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="#" aria-current="page">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="#" aria-current="page">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"></div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Linear buckling and natural frequencies</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="linear-buckling-and-natural-frequencies">
+<h1>Linear buckling and natural frequencies<a class="headerlink" href="#linear-buckling-and-natural-frequencies" title="Link to this heading">#</a></h1>
+<p>The eigenvalue analyses use the matrices of the free dofs, e.g.
+<code class="docutils literal notranslate"><span class="pre">KC0uu</span> <span class="pre">=</span> <span class="pre">KC0[bu,</span> <span class="pre">:][:,</span> <span class="pre">bu]</span></code>, and are solved with
+<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a>, <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> and
+<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.complex_frequency" title="pyfe3d.solver.eigen.complex_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">complex_frequency()</span></code></a> of <a class="reference internal" href="solver_eigen.html#module-pyfe3d.solver.eigen" title="pyfe3d.solver.eigen"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen</span></code></a>, which return the
+eigenvectors with the size of the matrices received, to be expanded by the
+user, <code class="docutils literal notranslate"><span class="pre">u[bu]</span> <span class="pre">=</span> <span class="pre">eigvecs[:,</span> <span class="pre">i]</span></code>.</p>
+<section id="linear-buckling">
+<h2>Linear buckling<a class="headerlink" href="#linear-buckling" title="Link to this heading">#</a></h2>
+<p>A linear buckling analysis has three steps:</p>
+<ol class="arabic">
+<li><p>the linear static solution <span class="math notranslate nohighlight">\(\boldsymbol{u}_0\)</span> of a reference load <span class="math notranslate nohighlight">\(\boldsymbol{F}_{ref}\)</span>,
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_{{C0}_{uu}} \boldsymbol{u}_{0_u} = \boldsymbol{F}_{{ref}_u}\)</span>, see <a class="reference internal" href="overview.html"><span class="doc">Overview and workflow</span></a>;</p></li>
+<li><p>the geometric stiffness matrix of the prestress of <span class="math notranslate nohighlight">\(\boldsymbol{u}_0\)</span>: for each
+element, <code class="docutils literal notranslate"><span class="pre">update_probe_xe(x)</span></code>, <code class="docutils literal notranslate"><span class="pre">update_probe_ue(u0)</span></code> and
+<code class="docutils literal notranslate"><span class="pre">update_KG(KGr,</span> <span class="pre">KGc,</span> <span class="pre">KGv,</span> <span class="pre">prop)</span></code>. For the shells, a known constant
+membrane state can be given instead with <code class="docutils literal notranslate"><span class="pre">update_KG_given_stress(Nxx,</span>
+<span class="pre">Nyy,</span> <span class="pre">Nxy,</span> <span class="pre">KGr,</span> <span class="pre">KGc,</span> <span class="pre">KGv)</span></code>, with the stress resultants in the element
+coordinate system of each element, see <a class="reference internal" href="conventions.html"><span class="doc">Conventions</span></a>;</p></li>
+<li><p>the eigenvalue problem</p>
+<div class="math notranslate nohighlight">
+\[(\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}\]</div>
+<p>solved by <code class="docutils literal notranslate"><span class="pre">eigvals,</span> <span class="pre">eigvecs</span> <span class="pre">=</span> <span class="pre">linear_buckling(KC0uu,</span> <span class="pre">KGuu,</span>
+<span class="pre">num_eigvalues=...)</span></code>.</p>
+</li>
+</ol>
+<p><span class="math notranslate nohighlight">\(\boldsymbol{K}_G\)</span> is linear in <span class="math notranslate nohighlight">\(\boldsymbol{u}_0\)</span>, hence in the reference load, and the
+critical load is <span class="math notranslate nohighlight">\(\lambda_1 \boldsymbol{F}_{ref}\)</span>, with <span class="math notranslate nohighlight">\(\lambda_1\)</span> = <code class="docutils literal notranslate"><span class="pre">eigvals[0]</span></code>.
+<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> returns the positive load multipliers first, in
+increasing order, followed, when fewer than <code class="docutils literal notranslate"><span class="pre">num_eigvalues</span></code> positive ones
+exist, by the negative ones closest to zero, which are the critical load
+multipliers of the reversed reference load. A load that is not scaled by
+<span class="math notranslate nohighlight">\(\lambda\)</span>, e.g. a preload with the geometric stiffness matrix <span class="math notranslate nohighlight">\(\boldsymbol{K}_{G0}\)</span>,
+belongs to the first matrix, <code class="docutils literal notranslate"><span class="pre">linear_buckling(KC0uu</span> <span class="pre">+</span> <span class="pre">KG0uu,</span> <span class="pre">KGuu)</span></code>,
+which is also how the critical value of one load component is found under
+the other components kept constant.</p>
+<p>The beams have <code class="docutils literal notranslate"><span class="pre">update_KG</span></code> for the axial force of the prestress, see
+<code class="docutils literal notranslate"><span class="pre">tests/test_beam_linear_buckling_3D_column.py</span></code>; <a class="reference internal" href="truss.html#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a> and
+<a class="reference internal" href="spring.html#pyfe3d.spring.Spring" title="pyfe3d.spring.Spring"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spring</span></code></a> have no geometric stiffness matrix.</p>
+</section>
+<section id="natural-frequencies">
+<h2>Natural frequencies<a class="headerlink" href="#natural-frequencies" title="Link to this heading">#</a></h2>
+<p>The frequency problem</p>
+<div class="math notranslate nohighlight">
+\[(\boldsymbol{K} - \omega_n^2 \boldsymbol{M}) \boldsymbol{u} = \boldsymbol{0}\]</div>
+<p>is solved by <code class="docutils literal notranslate"><span class="pre">omegan,</span> <span class="pre">eigvecs</span> <span class="pre">=</span> <span class="pre">natural_frequency(Kuu,</span> <span class="pre">Muu,</span>
+<span class="pre">num_eigvalues=...)</span></code>, which returns the circular frequencies <span class="math notranslate nohighlight">\(\omega_n\)</span>,
+in rad/s with consistent units, in increasing order. <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span> is
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span>, plus the geometric stiffness matrix of a prestress when it
+applies, e.g. <code class="docutils literal notranslate"><span class="pre">KC0uu</span> <span class="pre">+</span> <span class="pre">KGuu</span></code>, see
+<code class="docutils literal notranslate"><span class="pre">tests/test_quad4r_natural_freq_pre_stress.py</span></code>. The mass matrix is
+assembled with <code class="docutils literal notranslate"><span class="pre">update_M</span></code>, whose <code class="docutils literal notranslate"><span class="pre">mtype</span></code> selects the mass matrix of
+each element, see <a class="reference internal" href="element_choice.html"><span class="doc">Choosing an element</span></a>.</p>
+<p>With an unsymmetric <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span>, e.g. with the aerodynamic stiffness matrix of
+the piston theory or the load stiffness of a follower load, the
+frequencies may become complex; <code class="docutils literal notranslate"><span class="pre">omegan</span></code> is then the principal square
+root of the complex eigenvalues. Two frequencies that coalesce and become
+complex indicate the loss of stability by flutter, which
+<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> does not detect: this is the dynamic method of
+Bolotin (1963), see <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a>.</p>
+<p><a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> solves the undamped problem.</p>
+</section>
+<section id="damped-frequencies">
+<h2>Damped frequencies<a class="headerlink" href="#damped-frequencies" title="Link to this heading">#</a></h2>
+<p>With a damping matrix <span class="math notranslate nohighlight">\(\boldsymbol{C}\)</span>, the free vibrations <span class="math notranslate nohighlight">\(\boldsymbol{u} e^{\lambda t}\)</span>
+give the quadratic eigenvalue problem</p>
+<div class="math notranslate nohighlight">
+\[(\lambda^2 \boldsymbol{M} + \lambda \boldsymbol{C} + \boldsymbol{K}) \boldsymbol{u} = \boldsymbol{0}\]</div>
+<p>solved by <code class="docutils literal notranslate"><span class="pre">eigvals,</span> <span class="pre">eigvecs</span> <span class="pre">=</span> <span class="pre">complex_frequency(Kuu,</span> <span class="pre">Cuu,</span> <span class="pre">Muu,</span>
+<span class="pre">num_eigvalues=...)</span></code>, which returns the complex eigenvalues <span class="math notranslate nohighlight">\(\lambda\)</span>,
+one per complex conjugate pair, with <span class="math notranslate nohighlight">\(Im(\lambda) \ge 0\)</span>, and the complex
+eigenvectors. The damped circular frequency is <span class="math notranslate nohighlight">\(\omega_d = |Im(\lambda)|\)</span>,
+<code class="docutils literal notranslate"><span class="pre">abs(eigvals.imag)</span></code>, the damping ratio <span class="math notranslate nohighlight">\(\zeta = -Re(\lambda)/|\lambda|\)</span>,
+<code class="docutils literal notranslate"><span class="pre">-eigvals.real/abs(eigvals)</span></code>, and a positive <span class="math notranslate nohighlight">\(Re(\lambda)\)</span> is a growing
+motion. With <span class="math notranslate nohighlight">\(\boldsymbol{C} = \boldsymbol{0}\)</span>, <span class="math notranslate nohighlight">\(\lambda = i \omega_n\)</span>, with the <span class="math notranslate nohighlight">\(\omega_n\)</span> of
+<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a>.</p>
+<p>The damping matrix is assembled by the user, e.g. Rayleigh damping
+<span class="math notranslate nohighlight">\(\boldsymbol{C} = \alpha \boldsymbol{M} + \beta \boldsymbol{K}\)</span>, or the aerodynamic damping of the piston
+theory, <code class="docutils literal notranslate"><span class="pre">Cuu</span> <span class="pre">=</span> <span class="pre">-mu*CAuu</span></code> with <code class="docutils literal notranslate"><span class="pre">update_CA</span></code> of <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> and
+<a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>, with the aerodynamic stiffness in <code class="docutils literal notranslate"><span class="pre">Kuu</span> <span class="pre">=</span> <span class="pre">KC0uu</span> <span class="pre">-</span>
+<span class="pre">beta*KA_betauu</span> <span class="pre">-</span> <span class="pre">gamma*KA_gammauu</span></code>, see <code class="docutils literal notranslate"><span class="pre">update_KA_beta</span></code>. A flutter
+analysis then follows the largest <span class="math notranslate nohighlight">\(Re(\lambda)\)</span> over the flow speed: the
+aerodynamic damping moves the flutter onset beyond the coalescence of the
+frequencies of <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a>, see
+<code class="docutils literal notranslate"><span class="pre">tests/test_quad4_piston_theory.py</span></code>.</p>
+</section>
+<section id="verification-and-dense-fallback">
+<h2>Verification and dense fallback<a class="headerlink" href="#verification-and-dense-fallback" title="Link to this heading">#</a></h2>
+<p>The three functions check that <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span> has no null row or column, a dof
+without stiffness, which raises a <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.linalg.LinAlgError</span></code> naming
+the dofs, see <a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols" title="pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a>, whereas <span class="math notranslate nohighlight">\(\boldsymbol{K}_G\)</span>, <span class="math notranslate nohighlight">\(\boldsymbol{C}\)</span> and
+<span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span> may have null rows, e.g. a lumped mass matrix without rotary
+inertia. They equilibrate the diagonal of the matrices with
+<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.diagonal_preconditioner" title="pyfe3d.solver.eigen.diagonal_preconditioner"><code class="xref py py-func docutils literal notranslate"><span class="pre">diagonal_preconditioner()</span></code></a>, which does not change the eigenvalues,
+and <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> and <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> select the
+solvers of symmetric or unsymmetric matrices with <a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.is_symmetric" title="pyfe3d.solver.sparseutils.is_symmetric"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_symmetric()</span></code></a>.
+Then:</p>
+<ul class="simple">
+<li><p>the sparse solvers of SciPy run first, in shift-invert or Cayley mode,
+with a shift estimated from the matrices for the linear buckling,
+<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.estimate_cayley_sigma" title="pyfe3d.solver.eigen.estimate_cayley_sigma"><code class="xref py py-func docutils literal notranslate"><span class="pre">estimate_cayley_sigma()</span></code></a>;</p></li>
+<li><p>every result is verified: the relative residual of each eigenpair and,
+for symmetric matrices, the absence of an eigenvalue missed below the
+highest one returned, from the count of the negative pivots of a shifted
+matrix, see <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.check_eigenpairs" title="pyfe3d.solver.eigen.check_eigenpairs"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_eigenpairs()</span></code></a> and <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.is_positive_definite" title="pyfe3d.solver.eigen.is_positive_definite"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_positive_definite()</span></code></a>;
+an eigenpair of <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> or <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.complex_frequency" title="pyfe3d.solver.eigen.complex_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">complex_frequency()</span></code></a>
+whose relative residual is too large still passes when its backward
+error is at the round-off, e.g. an eigenvalue close to zero of a model
+pre-stressed close to buckling, see
+<code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen._backward_errors()</span></code>;
+for the complex eigenvalues of <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.complex_frequency" title="pyfe3d.solver.eigen.complex_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">complex_frequency()</span></code></a> no such count
+is implemented, and only the residuals are verified;</p></li>
+<li><p>when the sparse solvers fail, a dense solver of SciPy is used as a last
+resort, when the dense problem has at most <code class="docutils literal notranslate"><span class="pre">max_dense_size</span></code> dofs, with a
+<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.DenseFallbackWarning" title="pyfe3d.solver.eigen.DenseFallbackWarning"><code class="xref py py-class docutils literal notranslate"><span class="pre">DenseFallbackWarning</span></code></a> giving the reasons; otherwise a
+<code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code> lists every failure, such that no unverified result is
+returned silently;</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">sparse_solver=False</span></code> solves the full problem with a dense solver,
+returning all the eigenvalues, as a reference for validations.</p></li>
+</ul>
+<p>The fallback can be turned into an error, e.g. in a test suite:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span><span class="w"> </span><span class="nn">warnings</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">pyfe3d.solver</span><span class="w"> </span><span class="kn">import</span> <span class="n">DenseFallbackWarning</span>
+<span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">'error'</span><span class="p">,</span> <span class="n">DenseFallbackWarning</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>With Intel MKL 2024.2.0 to 2025.0.0, the symmetric solver of ARPACK
+returns wrong eigenpairs when its number of Lanczos vectors exceeds 32;
+these versions are detected and the number is capped, see
+<a class="reference internal" href="solver_arpackutils.html#module-pyfe3d.solver.arpackutils" title="pyfe3d.solver.arpackutils"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code></a>, also for the override with the
+environment variable <code class="docutils literal notranslate"><span class="pre">PYFE3D_ARPACK_MAX_NCV</span></code>.</p>
+</section>
+<section id="examples">
+<h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
+<p>The reference load, a preload and the reversed reference load of a
+<a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> plate:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_quad4_plate_reference_load</span><span class="p">():</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""The Quad4 plate of ``test_solver.py``: a reference load twice as</span>
+<span class="sd">    large halves the load multipliers, a constant preload belongs to ``K``,</span>
+<span class="sd">    and the tensile reference load gives the negative load multipliers</span>
+<span class="sd">    closest to zero, without the dense fallback"""</span>
+    <span class="n">KC0uu</span><span class="p">,</span> <span class="n">KGuu</span> <span class="o">=</span> <span class="n">plate_matrices</span><span class="p">(</span><span class="n">Nxx</span><span class="o">=-</span><span class="mf">1.</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">'error'</span><span class="p">,</span> <span class="n">DenseFallbackWarning</span><span class="p">)</span>
+        <span class="n">eigvals</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">linear_buckling</span><span class="p">(</span><span class="n">KC0uu</span><span class="p">,</span> <span class="n">KGuu</span><span class="p">,</span> <span class="n">num_eigvalues</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="n">lambda_1</span> <span class="o">=</span> <span class="n">eigvals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">eigvals2</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">linear_buckling</span><span class="p">(</span><span class="n">KC0uu</span><span class="p">,</span> <span class="mi">2</span><span class="o">*</span><span class="n">KGuu</span><span class="p">,</span> <span class="n">num_eigvalues</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="n">eigvals_pre</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">linear_buckling</span><span class="p">(</span><span class="n">KC0uu</span> <span class="o">+</span> <span class="mf">0.4</span><span class="o">*</span><span class="n">lambda_1</span><span class="o">*</span><span class="n">KGuu</span><span class="p">,</span> <span class="n">KGuu</span><span class="p">,</span>
+                                         <span class="n">num_eigvalues</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="n">eigvals_rev</span><span class="p">,</span> <span class="n">eigvecs_rev</span> <span class="o">=</span> <span class="n">linear_buckling</span><span class="p">(</span><span class="n">KC0uu</span><span class="p">,</span> <span class="o">-</span><span class="n">KGuu</span><span class="p">,</span>
+                                                   <span class="n">num_eigvalues</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">eigvals</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">eigvals2</span><span class="p">,</span> <span class="n">eigvals</span><span class="o">/</span><span class="mi">2</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">eigvals_pre</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mf">0.6</span><span class="o">*</span><span class="n">lambda_1</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">eigvals_rev</span><span class="p">,</span> <span class="o">-</span><span class="n">eigvals</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">relative_residuals</span><span class="p">(</span><span class="n">KC0uu</span><span class="p">,</span> <span class="o">-</span><span class="n">KGuu</span><span class="p">,</span> <span class="n">eigvals_rev</span><span class="p">,</span> <span class="n">eigvecs_rev</span><span class="p">)</span>
+                  <span class="o">&lt;</span> <span class="mf">1e-6</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The frequencies of the same plate under a compressive prestress, whose
+lowest one vanishes at the critical load multiplier:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_quad4_plate_prestress</span><span class="p">():</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""The Quad4 plate of ``test_solver.py`` under a compressive prestress</span>
+<span class="sd">    `\lambda \boldsymbol{K}_G`: the frequencies decrease with `\lambda`, and the</span>
+<span class="sd">    squared lowest one vanishes linearly at the critical load multiplier of</span>
+<span class="sd">    :func:`pyfe3d.solver.linear_buckling`; with ``symmetric=True`` the</span>
+<span class="sd">    eigenvectors are normalized with respect to the mass matrix"""</span>
+    <span class="kn">from</span><span class="w"> </span><span class="nn">pyfe3d.solver</span><span class="w"> </span><span class="kn">import</span> <span class="n">linear_buckling</span>
+    <span class="n">KC0uu</span><span class="p">,</span> <span class="n">KGuu</span><span class="p">,</span> <span class="n">Muu</span> <span class="o">=</span> <span class="n">plate_matrices</span><span class="p">(</span><span class="n">Nxx</span><span class="o">=-</span><span class="mf">1.</span><span class="p">,</span> <span class="n">with_mass</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">lambda_1</span> <span class="o">=</span> <span class="n">linear_buckling</span><span class="p">(</span><span class="n">KC0uu</span><span class="p">,</span> <span class="n">KGuu</span><span class="p">,</span> <span class="n">num_eigvalues</span><span class="o">=</span><span class="mi">2</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">omega2</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">'error'</span><span class="p">,</span> <span class="n">DenseFallbackWarning</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">frac</span> <span class="ow">in</span> <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.9</span><span class="p">,</span> <span class="mf">0.99</span><span class="p">,</span> <span class="mf">0.999</span><span class="p">]:</span>
+            <span class="n">omegan</span><span class="p">,</span> <span class="n">eigvecs</span> <span class="o">=</span> <span class="n">natural_frequency</span><span class="p">(</span><span class="n">KC0uu</span> <span class="o">+</span> <span class="n">frac</span><span class="o">*</span><span class="n">lambda_1</span><span class="o">*</span><span class="n">KGuu</span><span class="p">,</span>
+                                                <span class="n">Muu</span><span class="p">,</span> <span class="n">num_eigvalues</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                                                <span class="n">symmetric</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">omegan</span><span class="p">)</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">eigvecs</span><span class="o">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">Muu</span> <span class="o">@</span> <span class="n">eigvecs</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span>
+                                       <span class="n">atol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span>
+            <span class="n">omega2</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">omegan</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">omega2</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">omega2</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">diff</span><span class="p">(</span><span class="n">omega2</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span> <span class="o">&lt;=</span> <span class="mf">1e-12</span><span class="o">*</span><span class="n">omega2</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">])</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">omega2</span><span class="p">[</span><span class="o">-</span><span class="mi">2</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">/</span><span class="n">omega2</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="mf">10.</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-2</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The damped eigenvalues of a chain of masses with Rayleigh damping, against
+the analytical modal values:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_rayleigh_damping_chain</span><span class="p">():</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Rayleigh damping of a chain of masses: the analytical modal</span>
+<span class="sd">    eigenvalues and modes"""</span>
+    <span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="mi">40</span><span class="p">,</span> <span class="mf">100.</span><span class="p">,</span> <span class="mf">2.</span>
+    <span class="n">K</span><span class="p">,</span> <span class="n">M</span> <span class="o">=</span> <span class="n">chain</span><span class="p">(</span><span class="n">n</span><span class="p">,</span> <span class="n">k</span><span class="p">,</span> <span class="n">m</span><span class="p">)</span>
+    <span class="n">alpha</span><span class="p">,</span> <span class="n">beta</span> <span class="o">=</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">2e-3</span>
+    <span class="n">C</span> <span class="o">=</span> <span class="n">alpha</span><span class="o">*</span><span class="n">M</span> <span class="o">+</span> <span class="n">beta</span><span class="o">*</span><span class="n">K</span>
+    <span class="n">j</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+    <span class="n">omega</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">k</span><span class="o">/</span><span class="n">m</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">j</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)))</span>
+    <span class="n">zeta</span> <span class="o">=</span> <span class="n">alpha</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">omega</span><span class="p">)</span> <span class="o">+</span> <span class="n">beta</span><span class="o">*</span><span class="n">omega</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">lam_ref</span> <span class="o">=</span> <span class="o">-</span><span class="n">zeta</span><span class="o">*</span><span class="n">omega</span> <span class="o">+</span> <span class="mi">1</span><span class="n">j</span><span class="o">*</span><span class="n">omega</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">zeta</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+        <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">'error'</span><span class="p">,</span> <span class="n">DenseFallbackWarning</span><span class="p">)</span>
+        <span class="n">lam</span><span class="p">,</span> <span class="n">U</span> <span class="o">=</span> <span class="n">complex_frequency</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">num_eigvalues</span><span class="o">=</span><span class="mi">6</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">lam</span><span class="p">,</span> <span class="n">lam_ref</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="o">-</span><span class="n">lam</span><span class="o">.</span><span class="n">real</span><span class="o">/</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lam</span><span class="p">),</span> <span class="n">zeta</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">)</span>
+    <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">lam</span><span class="p">),</span> <span class="n">omega</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">col</span><span class="p">,</span> <span class="n">jj</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">j</span><span class="p">):</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">i</span><span class="o">*</span><span class="n">jj</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">/</span><span class="p">(</span><span class="n">n</span> <span class="o">+</span> <span class="mi">1</span><span class="p">))</span>
+        <span class="n">mode</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span>
+        <span class="n">np</span><span class="o">.</span><span class="n">testing</span><span class="o">.</span><span class="n">assert_allclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">mode</span> <span class="o">@</span> <span class="n">U</span><span class="p">[:,</span> <span class="n">col</span><span class="p">]),</span> <span class="mf">1.</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-10</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">residuals</span><span class="p">(</span><span class="n">K</span><span class="p">,</span> <span class="n">C</span><span class="p">,</span> <span class="n">M</span><span class="p">,</span> <span class="n">lam</span><span class="p">,</span> <span class="n">U</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-10</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Complete models are in <a class="reference internal" href="ex_linear_buckling_plate.html"><span class="doc">Linear buckling analysis of a plate</span></a>,
+<a class="reference internal" href="ex_linear_buckling_cylinder_torsion.html"><span class="doc">Linear buckling analysis of a cylinder under torsion</span></a>, <a class="reference internal" href="ex_natural_frequency_plate.html"><span class="doc">Natural frequency analysis of a plate</span></a>
+and <a class="reference internal" href="ex_natural_frequency_cylinder.html"><span class="doc">Natural frequency analysis of a cylinder</span></a>.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="nonlinear_analyses.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Non-linear static analyses</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="ex_linear_static.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Linear static analysis of a plate</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#linear-buckling">Linear buckling</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#natural-frequencies">Natural frequencies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#damped-frequencies">Damped frequencies</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#verification-and-dense-fallback">Verification and dense fallback</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#examples">Examples</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/eigenvalue_analyses.rst.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>
