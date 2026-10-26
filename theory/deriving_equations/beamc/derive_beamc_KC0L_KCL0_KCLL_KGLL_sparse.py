@@ -1,5 +1,5 @@
 """
-Nonlinear constitutive stiffness matrix KCNL for the BeamC element
+Nonlinear stiffness matrix KCNL, K_CNL + K_GNL, for the BeamC element
 
 KCNL = KC0L + KCL0 + KCLL + KGLL, built from the von Karman axial strain
 

@@ -31,7 +31,7 @@ From the elements to the callables
       - ``update_fint(fint, prop, nonlinear=1)`` of every element, after
         ``update_probe_xe(x)`` and ``update_probe_ue(c)``
     * - ``calc_kC(c=None, NLgeom=False, silent=True)``
-      - `\boldsymbol{K}_{C0}`, or `\boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{c})` with ``NLgeom=True``
+      - `\boldsymbol{K}_{C0}`, or `\boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{c}) + \boldsymbol{K}_{GNL}(\boldsymbol{c})` with ``NLgeom=True``
       - ``update_KC0`` once, ``update_KCNL`` at ``c``
     * - ``calc_kG(c=None, NLgeom=False, silent=True)``
       - `\boldsymbol{K}_G(\boldsymbol{c})`

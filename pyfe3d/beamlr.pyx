@@ -1507,10 +1507,10 @@ cdef class BeamLR:
 
 
     cdef void _update_probe_KCNLve(BeamLR self, BeamProp prop) noexcept nogil:
-        r"""Update the probe values of the nonlinear constitutive stiffness matrix
+        r"""Update the probe values of the nonlinear stiffness matrix
 
         The attribute ``KCNLve`` of the :class:`.BeamLRProbe` is overwritten
-        with the nonlinear constitutive stiffness matrix KCNL in element
+        with the nonlinear stiffness matrix KCNL in element
         coordinates, stored row by row and evaluated at the displacements
         ``ue`` of the probe, from ``length`` and the attributes ``E``, ``A``,
         ``Ay`` and ``Az`` of ``prop``. The arrays ``BLexx``, ``BLky``,
@@ -1692,7 +1692,7 @@ cdef class BeamLR:
                            BeamProp prop,
                            int update_KCNLv_only=0
                            ):
-        r"""Update sparse vectors for the nonlinear constitutive stiffness matrix KCNL
+        r"""Update sparse vectors for the nonlinear stiffness matrix KCNL
 
         The matrix, evaluated at the displacements ``probe.ue``, is computed
         from ``length``, the rotation matrix and the attributes of ``prop``
@@ -1734,7 +1734,7 @@ cdef class BeamLR:
 
         Notes
         -----
-        Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, built from the von Karman
+        Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, that is `\boldsymbol{K}_{CNL} + \boldsymbol{K}_{GNL}`, the book's nonlinear constitutive stiffness matrix `\boldsymbol{K}_{CNL}` of the terms of `\boldsymbol{B}_{NL}` plus the geometric `\boldsymbol{K}_{GNL}`, built from the von Karman
         axial strain
 
         .. math::
@@ -1758,7 +1758,7 @@ cdef class BeamLR:
         which is what a linear buckling analysis needs. With it here,
 
         .. math::
-            \boldsymbol{K}_T = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u}) + \boldsymbol{K}_G(\boldsymbol{u})
+            \boldsymbol{K}_T = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u}) + \boldsymbol{K}_{GNL}(\boldsymbol{u}) + \boldsymbol{K}_G(\boldsymbol{u})
 
         is the exact Jacobian of the internal forces of :meth:`.update_fint` with
         ``nonlinear=1``, and a Newton-Raphson iteration built on them converges

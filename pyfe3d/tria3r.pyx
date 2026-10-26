@@ -3967,10 +3967,10 @@ cdef class Tria3R:
 
 
     cdef void _update_probe_KCNLve(Tria3R self, ShellProp prop) noexcept nogil:
-        r"""Update the probe values of the nonlinear constitutive stiffness matrix
+        r"""Update the probe values of the nonlinear stiffness matrix
 
         The attribute ``KCNLve`` of the :class:`.Tria3RProbe` is updated with
-        the nonlinear constitutive stiffness matrix in element coordinates,
+        the nonlinear stiffness matrix in element coordinates,
         stored row by row and evaluated at the displacements ``ue`` of the
         probe. See :meth:`.update_KCNL`.
 
@@ -4179,9 +4179,9 @@ cdef class Tria3R:
                            ShellProp prop,
                            int update_KCNLv_only=0
                            ):
-        r"""Update sparse vectors for the nonlinear constitutive stiffness matrix KCNL
+        r"""Update sparse vectors for the nonlinear stiffness matrix KCNL
 
-        The nonlinear constitutive stiffness matrix KCNL is the part of the
+        The nonlinear stiffness matrix KCNL is the part of the
         tangent stiffness matrix, besides :meth:`.update_KC0` and
         :meth:`.update_KG`, that depends on the displacements through the von
         Karman membrane strains, evaluated at the displacements ``ue`` of the
@@ -4226,7 +4226,7 @@ cdef class Tria3R:
 
         Notes
         -----
-        Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, built from the von Karman
+        Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, that is `\boldsymbol{K}_{CNL} + \boldsymbol{K}_{GNL}`, the book's nonlinear constitutive stiffness matrix `\boldsymbol{K}_{CNL}` of the terms of `\boldsymbol{B}_{NL}` plus the geometric `\boldsymbol{K}_{GNL}`, built from the von Karman
         membrane strains
 
         .. math::
@@ -4255,7 +4255,7 @@ cdef class Tria3R:
         which is what a linear buckling analysis needs. With it here,
 
         .. math::
-            \boldsymbol{K}_T = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u}) + \boldsymbol{K}_G(\boldsymbol{u})
+            \boldsymbol{K}_T = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u}) + \boldsymbol{K}_{GNL}(\boldsymbol{u}) + \boldsymbol{K}_G(\boldsymbol{u})
 
         is the exact Jacobian of the internal forces of :meth:`.update_fint` with
         ``nonlinear=1``, and a Newton-Raphson iteration built on them converges

@@ -127,8 +127,11 @@ block per node and per translations or rotations, see :doc:`conventions`, and
 The matrices are:
 
 - ``KC0``, the linear constitutive stiffness matrix `\boldsymbol{K}_{C0}`;
-- ``KCNL``, the non-linear part of the constitutive stiffness matrix,
-  `\boldsymbol{K}_{CNL}(\boldsymbol{u})`, such that `\boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL} + \boldsymbol{K}_G` is the tangent
+- ``KCNL``, the non-linear constitutive stiffness matrix
+  `\boldsymbol{K}_{CNL}(\boldsymbol{u})`, of the terms of
+  `\boldsymbol{B}_{NL}`, plus the geometric stiffness matrix
+  `\boldsymbol{K}_{GNL}(\boldsymbol{u})` of the stress resultants of the
+  non-linear strains, `\boldsymbol{K}_{CNL}(\boldsymbol{u}) + \boldsymbol{K}_{GNL}(\boldsymbol{u})`, such that `\boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL} + \boldsymbol{K}_{GNL} + \boldsymbol{K}_G` is the tangent
   stiffness matrix of the geometrically non-linear analyses;
 - ``KG``, the geometric stiffness matrix `\boldsymbol{K}_G(\boldsymbol{u})`, from the stress
   resultants of the displacements in the probe, or, for the shells, of
@@ -208,7 +211,7 @@ static problem use the same element matrices:
 .. math::
 
     \boldsymbol{R}(\boldsymbol{u}, \lambda) = \boldsymbol{F}_{int}(\boldsymbol{u}) - \lambda \boldsymbol{F}_{ext} = \boldsymbol{0},
-    \qquad \boldsymbol{K}_T = \frac{\partial \boldsymbol{R}}{\partial \boldsymbol{u}} = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u})
+    \qquad \boldsymbol{K}_T = \frac{\partial \boldsymbol{R}}{\partial \boldsymbol{u}} = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u}) + \boldsymbol{K}_{GNL}(\boldsymbol{u})
     + \boldsymbol{K}_G(\boldsymbol{u})
 
 where `\boldsymbol{u}_0` is the linear static solution of the reference load of the

@@ -725,7 +725,17 @@ select the other matrix.
   e.g. `\boldsymbol{K}_{T_{fk}}` and `\boldsymbol{F}_{{ext}_f}`; the
   overbar is kept for the prescribed displacements,
   `\bar{\boldsymbol{u}}_k`; explicit lists of components keep their
-  braces. The gradient matrices of the geometric stiffness are those of
+  braces. The matrix KCNL of `update_KCNL`, which in every element with
+  it (`Quad4`, `Quad4R`, `Tria3R`, `Tria3DSG`, `BeamC`, `BeamLR`) contains
+  KC0L + KCL0 + KCLL and the geometric term KGNL, is written
+  `\boldsymbol{K}_{CNL} + \boldsymbol{K}_{GNL}` (was
+  `\boldsymbol{K}_{CNL}`), the book's `\boldsymbol{K}_{CNL}` having only
+  the terms of `\boldsymbol{B}_{NL}`, e.g. `\boldsymbol{K}_T =
+  \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u}) +
+  \boldsymbol{K}_{GNL}(\boldsymbol{u}) + \boldsymbol{K}_G(\boldsymbol{u})`;
+  it is called the nonlinear stiffness matrix (was the nonlinear
+  constitutive stiffness matrix) in the docstrings and the derivation
+  scripts. The gradient matrices of the geometric stiffness are those of
   the book: `\boldsymbol{G}_x = \partial \boldsymbol{S}^w/\partial x` and
   `\boldsymbol{G}_y = \partial \boldsymbol{S}^w/\partial y` for the
   shells, whose `\boldsymbol{K}_G` and KGNL are written with them term by term instead

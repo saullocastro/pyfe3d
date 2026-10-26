@@ -1,5 +1,5 @@
 """
-Nonlinear constitutive stiffness matrix KCNL for the Tria3R element
+Nonlinear stiffness matrix KCNL, K_CNL + K_GNL, for the Tria3R element
 
 KCNL = KC0L + KCL0 + KCLL + KGLL, built from the von Karman membrane strains
 

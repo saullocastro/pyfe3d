@@ -2394,7 +2394,7 @@ cdef class Quad4:
 
 
     cdef void _update_probe_KCNLve(Quad4 self, ShellProp prop) noexcept nogil:
-        r"""Update the probe values of the nonlinear constitutive stiffness matrix
+        r"""Update the probe values of the nonlinear stiffness matrix
 
         The attribute ``KCNLve`` of the :class:`.Quad4Probe` is updated with
         KCNL in element coordinates, stored row by row and evaluated at the
@@ -2415,7 +2415,7 @@ cdef class Quad4:
 
         .. math::
 
-            \boldsymbol{K}_{CNL} = \sum w_{ij} \det J \left( (\boldsymbol{A} \boldsymbol{B}_m + \boldsymbol{B} \boldsymbol{B}_b)^\top \boldsymbol{B}_{NL}
+            \boldsymbol{K}_{CNL} + \boldsymbol{K}_{GNL} = \sum w_{ij} \det J \left( (\boldsymbol{A} \boldsymbol{B}_m + \boldsymbol{B} \boldsymbol{B}_b)^\top \boldsymbol{B}_{NL}
                 + \boldsymbol{B}_{NL}^\top (\boldsymbol{A} \boldsymbol{B}_m + \boldsymbol{B} \boldsymbol{B}_b)
                 + \boldsymbol{B}_{NL}^\top \boldsymbol{A} \boldsymbol{B}_{NL}
                 + N_{NL,xx} \boldsymbol{G}_x^\top \boldsymbol{G}_x
@@ -2636,7 +2636,7 @@ cdef class Quad4:
                            ShellProp prop,
                            int update_KCNLv_only=0
                            ):
-        r"""Update sparse vectors for the nonlinear constitutive stiffness matrix KCNL
+        r"""Update sparse vectors for the nonlinear stiffness matrix KCNL
 
         KCNL collects the terms of the tangent stiffness matrix of the
         geometrically nonlinear analysis with the von Karman membrane strains
@@ -2681,7 +2681,7 @@ cdef class Quad4:
 
         Notes
         -----
-        Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, built from the von Karman
+        Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, that is `\boldsymbol{K}_{CNL} + \boldsymbol{K}_{GNL}`, the book's nonlinear constitutive stiffness matrix `\boldsymbol{K}_{CNL}` of the terms of `\boldsymbol{B}_{NL}` plus the geometric `\boldsymbol{K}_{GNL}`, built from the von Karman
         membrane strains
 
         .. math::
@@ -2710,7 +2710,7 @@ cdef class Quad4:
         which is what a linear buckling analysis needs. With it here,
 
         .. math::
-            \boldsymbol{K}_T = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u}) + \boldsymbol{K}_G(\boldsymbol{u})
+            \boldsymbol{K}_T = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u}) + \boldsymbol{K}_{GNL}(\boldsymbol{u}) + \boldsymbol{K}_G(\boldsymbol{u})
 
         is the exact Jacobian of the internal forces of :meth:`.update_fint` with
         ``nonlinear=1``, and a Newton-Raphson iteration built on them converges
