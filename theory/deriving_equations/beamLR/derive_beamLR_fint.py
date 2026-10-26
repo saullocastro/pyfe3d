@@ -1,0 +1,163 @@
+import numpy as np
+import sympy
+from sympy import simplify, Matrix, var, symbols
+
+r"""
+
+   ^ y axis
+   |
+   |
+   ______   --> x axis
+   1    2
+   Reference 2D plane for all derivations
+
+   Timoshenko 3D beam element with consistent shape functions from:
+   Luo, Y., 2008, “An Efficient 3D Timoshenko Beam Element with Consistent Shape Functions,” Adv. Theor. Appl. Mech., 1(3), pp. 95–106.
+
+"""
+
+DOF = 6
+num_nodes = 2
+
+var('xi', real=True)
+var('L, E, Iyy, Izz, Iyz, G12, G13, GJ, A, Ay, Az', real=True)
+
+# definitions of Eqs. 20 and 21 of Luo, Y., 2008
+# NOTE in Luo 2008 Iy represents the area moment of inertia in the plane of y
+#     or rotating about the z axis. Here we say that Izz = Iy
+# NOTE in Luo 2008 Iz represents the area moment of inertia in the plane of z
+#     or rotating about the y axis. Here we say that Iyy = Iz
+Iy = Izz
+Iz = Iyy
+
+S1 = (1-xi)/2
+S2 = (1+xi)/2
+
+# Degrees-of-freedom illustrated in Fig. 1 of Luo, Y., 2008
+#              u, v, w, phi, psi, theta (for each node)
+#              u, v, w, rx, ry, rz
+# linear interpolation for all field variables
+Nu =  Matrix([[S1, 0, 0, 0, 0, 0,
+               S2, 0, 0, 0, 0, 0]])
+Nv =  Matrix([[0, S1, 0, 0, 0, 0,
+               0, S2, 0, 0, 0, 0]])
+Nw =  Matrix([[0, 0, S1, 0, 0, 0,
+               0, 0, S2, 0, 0, 0]])
+Nrx = Matrix([[0, 0, 0, S1, 0, 0,
+               0, 0, 0, S2, 0, 0]])
+Nry = Matrix([[0, 0, 0, 0, S1, 0,
+               0, 0, 0, 0, S2, 0]])
+Nrz = Matrix([[0, 0, 0, 0, 0, S1,
+               0, 0, 0, 0, 0, S2]])
+
+# u v w  rx  ry  rz  (rows are node 1, node2, node3, node4)
+
+#From Eqs. 8 and 9 in Luo, Y. 2008
+#exx = u,x + (-rz,x)*y + (ry,x)*z
+#exy = (v.diff(x) - rz) - (rx)*z
+#exz = (w.diff(x) + ry) + (rx)*y
+#BL = Matrix([
+    #Nu.diff(x) + (-Nrz.diff(x))*y + Nry.diff(x)*z,
+    #(Nv.diff(x) - Nrz) - Nrx*z,
+    #(Nw.diff(x) + Nry) + Nrx*y,
+    #])
+#dy = dz = 0
+#BL = integrate(BL, (y, -hy/2+dy, +hy/2+dy))
+#BL = simplify(integrate(BL, (z, -hz/2+dz, +hz/2+dz)))
+
+#From Eqs. 12 in Luo, Y. 2008
+# p = D rho
+# p = [N My Mz Qy Qz Mx]
+# p = [e ky kz gammay gammaz kx]
+# NOTE two transverse shear moduli, as the attributes of
+#      pyfe3d.beamprop.BeamProp: G12 for gammay of the plane xy (v, rz) and
+#      G13 for gammaz of the plane xz (w, ry), and the torsional stiffness
+#      GJ given directly; the shear block of D is checked in
+#      derive_beamLR_KC0_sparse.py
+D = Matrix([
+    [ E*A, E*Ay, E*Az, 0, 0, 0],
+    [E*Ay, E*Iy,  E*Iyz, 0, 0, 0],
+    [E*Az,  E*Iyz, E*Iz, 0, 0, 0],
+    [   0,     0,     0,   G12*A,      0, -G12*Az],
+    [   0,     0,     0,       0,  G13*A,  G13*Ay],
+    [   0,     0,     0, -G12*Az, G13*Ay,      GJ]])
+#From Eq. 8 in Luo, Y. 2008
+#epsilon = u,x
+#kappay = -theta,x = -rz,x
+#kappaz = psi,x = ry,x
+#gammay = v,x - theta = v,x - rz
+#gammaz = w,x + psi = w,x + ry
+#kappax = phi,x
+# putting in a BL matrix
+BL = Matrix([
+    2/L*Nu.diff(xi),
+    -2/L*Nrz.diff(xi),
+    2/L*Nry.diff(xi),
+    2/L*Nv.diff(xi) - Nrz,
+    2/L*Nw.diff(xi) + Nry,
+    2/L*Nrx.diff(xi)])
+
+# displacements in global coordinates corresponding to one finite element
+ue = Matrix([symbols(r'ue[%d]' % i) for i in range(0, BL.shape[1])])
+
+finte = BL.T*D*BL*ue
+# NOTE numerical integration with one point at the centre, xi = 0, and
+#      weight = 2, as in derive_beamLR_KC0_sparse.py
+finte = finte.expand()
+finte = finte.subs({xi: 0})
+wi = 2
+finte = wi*L/2.*simplify(finte)
+
+print('transformation local to global')
+var('r11, r12, r13, r21, r22, r23, r31, r32, r33')
+Rlocal2global = Matrix([[r11, r12, r13],
+                        [r21, r22, r23],
+                        [r31, r32, r33]])
+R = sympy.zeros(num_nodes*DOF, num_nodes*DOF)
+for i in range(2*num_nodes):
+    R[i*DOF//2:(i+1)*DOF//2, i*DOF//2:(i+1)*DOF//2] += Rlocal2global
+
+nonzero = set()
+for ind, val in np.ndenumerate(finte):
+    if sympy.expand(val) == 0:
+        continue
+    i, j = ind
+    name = 'finte[%d]' % (i)
+    nonzero.add(name)
+    print('%s = %s' % (name, simplify(val)))
+
+rows = []
+for i in range(num_nodes*DOF):
+    name = 'finte[%d]' % (i)
+    if name in nonzero:
+        rows.append(var(name))
+    else:
+        rows.append(0)
+finte = Matrix(rows)
+fint = R*finte
+
+
+def name_ind(i):
+    if i >= 0*DOF and i < 1*DOF:
+        return 'c1'
+    elif i >= 1*DOF and i < 2*DOF:
+        return 'c2'
+
+        raise
+
+print()
+print()
+print('_______________________________________')
+print()
+print('printing fint')
+print('_______________________________________')
+print()
+print()
+for ind, val in np.ndenumerate(fint):
+    i, j = ind
+    si = name_ind(i)
+    if sympy.expand(val) == 0:
+        continue
+    print('            fint[%d+%s] +=' % (i%DOF, si), val)
+print()
+print()

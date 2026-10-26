@@ -50,6 +50,10 @@ exclude_patterns = []
 
 default_role = 'math'
 
+# NOTE the lists of methods of the classes are not tables of contents, whose
+#      entries would require a page for each method
+numpydoc_class_members_toctree = False
+
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for

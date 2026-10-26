@@ -265,7 +265,7 @@ def test_A3_drilling_energy_vanishes_at_constant_strain():
 
     The K6ROT penalty vanishes in this state as well, and that is worth
     recording rather than assuming otherwise: it is built from the same
-    operator `B_{drill} = S^{r_z} + \frac{1}{2}S^u_{,y} -
+    operator `B_{r_z} = S^{r_z} + \frac{1}{2}S^u_{,y} -
     \frac{1}{2}S^v_{,x}`, which is the residual `r_z - \theta_z`, and not
     from a diagonal addition on the `r_z` terms. A diagonal addition would
     stiffen the rigid rotation of the element about its normal and break the

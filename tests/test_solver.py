@@ -112,8 +112,8 @@ def test_diagonal_preconditioner():
     r"""The preconditioner normalises the diagonal and leaves the
     eigenvalues untouched, which is the property that makes it safe"""
     KC0uu, KGuu = plate_matrices()
-    D = diagonal_preconditioner(KC0uu)
-    scaled = (D @ KC0uu @ D).diagonal()
+    P = diagonal_preconditioner(KC0uu)
+    scaled = (P @ KC0uu @ P).diagonal()
     print('scaled diagonal min %.6f max %.6f' % (scaled.min(), scaled.max()))
     assert np.allclose(scaled, 1., rtol=1e-12, atol=1e-12)
     # NOTE the condition number of the plate, which is what motivates it
@@ -142,7 +142,7 @@ def test_estimate_cayley_sigma_fallback():
 
 
 def test_estimate_cayley_sigma_degenerate_inputs():
-    r"""The other two exits of the power iteration: a null `[K_G]` makes the
+    r"""The other two exits of the power iteration: a null `\boldsymbol{K}_G` makes the
     ratio of norms vanish, and a factorization too inaccurate to trust is
     detected by the residual of the first solve"""
     n = 10
@@ -170,7 +170,7 @@ def test_check_eigenpairs_detects_a_missing_multiplier():
     r"""The completeness check is the one that catches a solver that
     converged to the interior of the spectrum
 
-    With `[K] = diag(1, 2, 3, ...)` and `[K_G] = -[I]` the load multipliers
+    With `\boldsymbol{K} = diag(1, 2, 3, ...)` and `\boldsymbol{K}_G = -\boldsymbol{I}` the load multipliers
     are `1, 2, 3, ...`. Handing the second one in as if it were the lowest
     must be rejected.
 
@@ -233,8 +233,8 @@ def test_linear_buckling_plate():
     #      only to the tolerance requested of the eigensolver, which is
     #      1e-9 in both calls below
     lam_est, _ = linear_buckling(KC0uu, KGuu, num_eigvalues=4, tol=1e-9)
-    D = diagonal_preconditioner(KC0uu)
-    mu, _ = eigsh(A=D @ KGuu @ D, k=4, which='SM', M=D @ KC0uu @ D,
+    P = diagonal_preconditioner(KC0uu)
+    mu, _ = eigsh(A=P @ KGuu @ P, k=4, which='SM', M=P @ KC0uu @ P,
                   tol=1e-9, sigma=1., mode='cayley')
     lam = np.sort(-1./mu)
     lam = lam[lam > 0]

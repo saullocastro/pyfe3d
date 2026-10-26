@@ -7,41 +7,58 @@
 #cython: embedsignature=True
 #cython: infer_types=False
 r"""
+===========================================================================
 Tria3R - Triangular element with reduced integration (:mod:`pyfe3d.tria3r`)
 ===========================================================================
 
 .. currentmodule:: pyfe3d.tria3r
 
+The module has three classes: :class:`.Tria3RData`, with the sizes of the
+sparse arrays that one element fills; :class:`.Tria3RProbe`, with the
+buffers in element coordinates that one or more elements share; and
+:class:`.Tria3R`, the element. The ``update_*`` methods of :class:`.Tria3R`
+write the element contributions in sparse row, column and value arrays, from
+the positions given by its ``init_k_*`` attributes, or add them to a global
+internal force vector.
 
+Three-node triangular shell element with 6 degrees-of-freedom per node, `u`,
+`v`, `w`, `r_x`, `r_y`, `r_z`, with reduced integration.
+
+The transverse shear stiffnesses ``A44``, ``A45`` and ``A55`` of the
+:class:`pyfe3d.shellprop.ShellProp` are reduced by a factor controlled by the
+``alpha_shear_locking`` attribute of :class:`.Tria3R`, ``0.7`` by default,
+which is a parameter to be verified per problem class and not a constant of
+the element. :class:`pyfe3d.tria3dsg.Tria3DSG` takes no such parameter and is
+the triangle to reach for by default; this one is kept for continuity with
+results obtained before it, and for the comparison itself.
+
+The drilling rotation `r_z` is given stiffness by one of two models, selected
+with the ``drilling_model`` attribute of :class:`.Tria3R`: the physics-based
+default, for which the nodal moments about the shell normal recovered in the
+internal force vector are physical and no user parameter is involved, and a
+fictitious penalty scaled by ``K6ROT``, the default before version 0.10.0,
+whose only purpose is to remove the singularity of the drilling
+degree-of-freedom. Geometrically nonlinear analyses with the von Karman
+membrane strains are supported by :meth:`.Tria3R.update_fint` with
+``nonlinear=1``, :meth:`.Tria3R.update_KCNL` and :meth:`.Tria3R.update_KG`.
+
+Notes
+-----
 Triangular element with reduced integration, where a single point at
-the centroid (`N1=N2=N3=1/3`) and weight `weight=1` is evaluated,
-preventing shear locking. The drilling stiffness is evaluated with
-full integration.
+the centroid (`S1=S2=S3=1/3`) is evaluated with the weight `1/2` times the
+Jacobian determinant `2 A_e`, i.e. the area `A_e`, preventing shear
+locking. The drilling stiffness is evaluated with
+full integration. Under the default ``drilling_model = 0`` this applies to
+the terms of the Allman enrichment, the Hughes-Brezzi term being integrated
+with a single point at the centroid, see the drilling stiffness below.
 
 The transverse shear stiffnesses `A_{44}`, `A_{45}` and `A_{55}` are stabilised
-using the method of Lyly, Stenberg and Vihinen, often called Stenberg's
-method:
-
-    Lyly, M., Stenberg, R., & Vihinen, T. (1993). A stable bilinear element
-    for the Reissner-Mindlin plate model. Computer Methods in Applied
-    Mechanics and Engineering, 110(3-4), 343-357.
-    https://doi.org/10.1016/0045-7825(93)90214-I
-
-    Bischoff, M., & Bletzinger, K.-U. (2004). Improving stability and
-    accuracy of Reissner-Mindlin plate finite elements via algebraic subgrid
-    scale stabilization. Computer Methods in Applied Mechanics and
-    Engineering, 193(15-16), 1517-1528.
-    https://doi.org/10.1016/j.cma.2003.12.036
-
-in the form adopted by Castro et al.:
-
-    Castro, S. G. P., Donadon, M. V., & Guimaraes, T. A. M. (2019).
-    ES-PIM applied to buckling of variable angle tow laminates.
-    Composite Structures, 209, 67-78.
-    https://doi.org/10.1016/j.compstruct.2018.10.058
-
-where the transverse shear terms are changed as per Eq. (26) in Castro et al., here repeated
-for convenience:
+with the scalar factor that Lyly, Stenberg and Vihinen [1]_ proposed for the
+MITC4 quadrilateral, with the longest edge of the element as its size
+(their Eq. (3.12)), called Stenberg's method by Bischoff and Bletzinger [2]_
+(Sec. 3.1), in the form adopted by Castro et al. [3]_, with the longest edge
+of the triangle as the element size, where the transverse shear terms are
+changed as per Eq. (26) in Castro et al., here repeated for convenience:
 
 .. math::
 
@@ -73,17 +90,29 @@ so the thickness cancels and the error behaves as an ordinary
 ``tests/test_transverse_shear_stiffness.py``.
 
 .. warning:: The default `\alpha = 0.7` is roughly seven times the value
-    used in all three references above, which is near `0.1`: Eq. (24) of
-    Bischoff and Bletzinger gives `\alpha = 0.17 (\ell_g/\ell_n)/(2(1-\nu))`,
-    i.e. `0.12` for a square element with `\nu = 0.3`, and Castro et al.
+    of Stenberg's method in the references above, which is near `0.1`:
+    Lyly et al. chose `0.1`, the value Bischoff and Bletzinger quote from
+    them, and Castro et al.
     investigate `0.05` to `0.15` and recommend `0.07` to `0.09`, reporting
     that above `0.09` the linear buckling behaviour becomes overly soft and
-    converges from below.
+    converges from below. Bischoff and Bletzinger show, however, that
+    matching the deflection of a Timoshenko beam element gives `\alpha =
+    \kappa/(2(1+\nu))`, i.e. `0.32` for `\kappa = 5/6` and `\nu = 0.3`
+    (their Eq. (22)), about half the default, a value that works well when
+    bending is dominant in one direction but that they find too flexible
+    as soon as bending in two directions and twist are present (their
+    Sec. 4.2). Their own algebraic subgrid scale stabilisation uses one
+    parameter per direction of the element, `\alpha_\xi = 0.17
+    (\ell_\eta/\ell_\xi)/(2(1+\nu))` and likewise `\alpha_\eta` (their
+    Eqs. (23) and (24)), i.e. `0.065` for a square element with
+    `\nu = 0.3`.
 
     The difference is not a retune but a consequence of where the factor is
-    applied. In all three references it sits on top of a discrete shear gap
-    (DSG) formulation, which is already free of shear locking, so there the
-    factor is a mild stabilisation that improves coarse-mesh accuracy. This
+    applied. In all three references it sits on top of an assumed-strain or
+    discrete shear gap (DSG) field, the MITC4 field for Lyly et al. and a
+    DSG field for Castro et al., whose operator already contains the cure
+    of the shear locking, so there the factor is a mild stabilisation that
+    improves stability and coarse-mesh accuracy. This
     element has no DSG: the transverse shear is taken from a single point at
     the centroid, which still locks, and the factor is therefore doing the
     unlocking. Reducing `\alpha` to the literature value makes this element
@@ -124,7 +153,7 @@ so the thickness cancels and the error behaves as an ordinary
     both problem classes.
 
     The proper fix is to give the element a locking-free transverse shear
-    field, the DSG of Bletzinger, Bischoff and Ramm (2000) being the
+    field, the DSG of Bletzinger, Bischoff and Ramm (2000) [8]_ being the
     triangular counterpart of the MITC4 treatment used for quadrilaterals,
     after which no `\alpha` is needed at all. That element now exists as
     :mod:`pyfe3d.tria3dsg`, and it is the triangle to reach for by default;
@@ -138,12 +167,14 @@ from the :class:`pyfe3d.shellprop.ShellProp` object with the shear correction
 already applied, see :meth:`pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness`,
 and brought to the element coordinate system with
 :meth:`pyfe3d.shellprop.ShellProp.calc_Ats_element`, before the stabilisation
-above is applied. As described in Castro et al., the shear correction is no
-longer a very relevant parameter when the stabilisation scheme presented above
-is used.
+above is applied. With ``shear_correction='rohwer'`` and the plies available,
+that method re-evaluates the equilibrium-based stiffness of Rohwer (1988) [9]_
+with the plies rotated to the element coordinate system. As concluded by
+Lyly et al. (Sec. 5) and recalled by Castro et al., the shear correction is
+no longer a very relevant parameter when the stabilisation scheme presented
+above is used.
 
-Drilling stiffness
-------------------
+.. rubric:: Drilling stiffness
 
 The FSDT kinematics contains no strain measure associated with `r_z`, so the
 rows and columns of the drilling degree-of-freedom would be empty and a mesh
@@ -154,17 +185,9 @@ the reader is referred for the derivation.
 
 **Physics-based, the default** (``drilling_model = 0``). The in-plane
 displacement field is enriched with the hierarchical quadratic edge modes of
-Allman, so that the drilling rotations produce membrane strain energy, and
-the independently interpolated `r_z` is tied to the rotation of the membrane
-field by the regularised functional of Hughes and Brezzi:
-
-    Allman, D. J., 1984, "A compatible triangular element including vertex
-    rotations for plane elasticity analysis," Computers & Structures,
-    19(1-2), pp. 1-8. https://doi.org/10.1016/0045-7949(84)90197-4
-
-    Hughes, T. J. R., and Brezzi, F., 1989, "On drilling degrees of
-    freedom," Computer Methods in Applied Mechanics and Engineering, 72(1),
-    pp. 105-121. https://doi.org/10.1016/0045-7825(89)90124-2
+Allman [4]_, so that the drilling rotations produce membrane strain energy,
+and the independently interpolated `r_z` is tied to the rotation of the
+membrane field by the regularised functional of Hughes and Brezzi [5]_.
 
 The amplitude of the mode of the edge `k` joining nodes `i` and `j` is `a_k =
 \frac{\ell_k}{8}\left({r_z}_i - {r_z}_j\right)`, so the enrichment is the
@@ -174,29 +197,31 @@ hierarchical bubble of that edge is
 
 .. math::
 
-    N_k = 4 S_i S_j
+    \hat{S}_k = 4 S_i S_j
 
 with `S_i` the area coordinates, equal to unity at the mid-point of the edge
 and zero at every vertex. The enrichment populates the drilling columns of
-the membrane operator, giving `\pmb{\tilde B}_m`, and the drilling residual
-becomes `\pmb{\tilde B}_{r_z} = \pmb{S}^{r_z} + \frac{1}{2}\pmb{\tilde
-S}^u_{,y} - \frac{1}{2}\pmb{\tilde S}^v_{,x}`, whose contribution to the
-element stiffness matrix is `\gamma_{r_z} \int_A \pmb{\tilde B}_{r_z}^\top
-\pmb{\tilde B}_{r_z} dA` with `\gamma_{r_z} = A_{66}`, a modulus and not a
+the membrane operator, giving `\tilde{\boldsymbol{B}}_m`, and the drilling residual
+becomes `\tilde{\boldsymbol{B}}_{r_z} = \boldsymbol{S}^{r_z} + \frac{1}{2}\boldsymbol{\tilde
+S}^u_{,y} - \frac{1}{2}\tilde{\boldsymbol{S}}^v_{,x}`, whose contribution to the
+element stiffness matrix is `\gamma_{r_z} \int_A \tilde{\boldsymbol{B}}_{r_z}^\top
+\tilde{\boldsymbol{B}}_{r_z} dA` with `\gamma_{r_z} = A_{66}`, a modulus and not a
 user parameter. The curvature and transverse shear operators are untouched,
 the edge modes acting only on the in-plane translations, so the bending and
 the transverse shear response of the element are identical for the two
 drilling models.
 
 Two quadrature choices matter. Because the derivatives of the bubbles are
-linear in the area coordinates, the drilling columns of `\pmb{\tilde B}_m`
+linear in the area coordinates, the drilling columns of `\tilde{\boldsymbol{B}}_m`
 vary linearly, and the terms quadratic in them are integrated with the
-three-point rule of Cowper, the same one the element already used for its
-drilling terms. A single point at the centroid would leave those terms
+three-point rule of degree of precision 2, first row of Table I in Cowper
+[10]_, the same one the element already used for its drilling terms. A
+single point at the centroid would leave those terms
 unsampled and would give the element five zero eigenvalues over its nine
 in-plane degrees-of-freedom instead of three. The Hughes-Brezzi term itself
 is integrated with a single point at the centroid, following Ibrahimbegovic
-et al. (1990), which is what makes the element insensitive to `\gamma_{r_z}`.
+et al. (1990) [7]_, which is what makes the element insensitive to
+`\gamma_{r_z}`.
 
 Unlike the penalty below, the added term is consistent rather than
 artificial: stationarity with respect to `r_z` gives `r_z = \theta_z`
@@ -216,7 +241,7 @@ meaningless. The penalty energy is defined per element as:
 
 .. math::
 
-    U_{drill} = \frac{1}{2} K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)^2 dA
+    U_{r_z} = \frac{1}{2} K6ROT \cdot 10^{-6} \cdot \int_A A_{66} (r_z - \theta_z)^2 dA
 
 where `10^{-6}` is a scaling factor suggested by MSC Nastran's approach
 (CQUAD4) to make the artificial drilling stiffness sufficiently small.
@@ -230,19 +255,16 @@ u_{,y}\right)`, such that the penalty is built from the operator
 
 .. math::
 
-    B_{drill} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}
+    B_{r_z} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}
 
-which is the same operator as `\pmb{\tilde B}_{r_z}` above, evaluated on the
+which is the same operator as `\tilde{\boldsymbol{B}}_{r_z}` above, evaluated on the
 unenriched field. Being built from that operator and not from an addition on
 the diagonal terms is what keeps the penalty from stiffening a rigid rotation
 of the element about its normal, so both models represent all rigid-body
 motions and all constant-strain states exactly. `A_{66}` is assumed constant
-over the element. The approach herein presented is very similar to the one
-presented in Eq. 2.20 of:
-
-    Adam, F. M., Mohamed, A. E., and Hassaballa, A. E., 2013,
-    \u201cDegenerated Four Nodes Shell Element with Drilling Degree of
-    Freedom,\u201d IOSR J. Eng., 3(8), pp. 10\u201320.
+over the element. This term is integrated with the three-point rule. The
+approach herein presented is very similar to the one presented in Eq. 2.20 of
+[6]_.
 
 **Choosing between them.** The physics-based model is the default because it
 is the one that is correct when the drilling moment is part of the load path,
@@ -253,6 +275,42 @@ skew membrane with a four by four mesh of split quadrilaterals it gives 20.7
 against the reference 23.9, where the penalty gives 11.3. The penalty remains
 available for reproducing results obtained before 0.10.0.
 
+References
+----------
+.. [1] Lyly, M., Stenberg, R., and Vihinen, T., A stable bilinear element for
+   the Reissner-Mindlin plate model, Computer Methods in Applied Mechanics
+   and Engineering, 110(3-4), 343-357, 1993.
+   https://doi.org/10.1016/0045-7825(93)90214-I
+.. [2] Bischoff, M., and Bletzinger, K.-U., Improving stability and accuracy
+   of Reissner-Mindlin plate finite elements via algebraic subgrid scale
+   stabilization, Computer Methods in Applied Mechanics and Engineering,
+   193(15-16), 1517-1528, 2004. https://doi.org/10.1016/j.cma.2003.12.036
+.. [3] Castro, S. G. P., Donadon, M. V., and Guimaraes, T. A. M., ES-PIM
+   applied to buckling of variable angle tow laminates, Composite
+   Structures, 209, 67-78, 2019.
+   https://doi.org/10.1016/j.compstruct.2018.10.058
+.. [4] Allman, D. J., A compatible triangular element including vertex
+   rotations for plane elasticity analysis, Computers & Structures,
+   19(1-2), 1-8, 1984. https://doi.org/10.1016/0045-7949(84)90197-4
+.. [5] Hughes, T. J. R., and Brezzi, F., On drilling degrees of freedom,
+   Computer Methods in Applied Mechanics and Engineering, 72(1), 105-121,
+   1989. https://doi.org/10.1016/0045-7825(89)90124-2
+.. [6] Adam, F. M., Mohamed, A. E., and Hassaballa, A. E., Degenerated Four
+   Nodes Shell Element with Drilling Degree of Freedom, IOSR Journal of
+   Engineering, 3(8), 10-20, 2013.
+.. [7] Ibrahimbegovic, A., Taylor, R. L., and Wilson, E. L., A robust
+   quadrilateral membrane finite element with drilling degrees of freedom,
+   International Journal for Numerical Methods in Engineering, 30(3),
+   445-457, 1990. https://doi.org/10.1002/nme.1620300305
+.. [8] Bletzinger, K.-U., Bischoff, M., and Ramm, E., A unified approach for
+   shear-locking-free triangular and rectangular shell finite elements,
+   Computers & Structures, 75(3), 321-334, 2000.
+   https://doi.org/10.1016/S0045-7949(99)00140-6
+.. [9] Rohwer, K., Improved transverse shear stiffness for layered finite
+   elements, DFVLR-FB 88-32, 1988.
+.. [10] Cowper, G. R., Gaussian quadrature formulas for triangles,
+   International Journal for Numerical Methods in Engineering, 7(3),
+   405-408, 1973. https://doi.org/10.1002/nme.1620070316
 
 """
 from libc.math cimport fabs
@@ -265,28 +323,23 @@ cdef int DOF = 6
 cdef int NUM_NODES = 3
 
 
-cdef void allman_enrichment(double *Nx, double *Ny, double *xe,
+cdef void allman_enrichment(double *S_x, double *S_y, double *xe,
                             double S1, double S2, double S3,
                             double *d) noexcept nogil:
     r"""Cartesian derivatives of the Allman drilling enrichment, triangle
 
     Fills ``d`` with the contribution of the hierarchical quadratic edge
-    modes of Allman (1984) to the Cartesian derivatives of the enriched
-    in-plane displacement rows, evaluated at the drilling column of each
-    node, exactly as :func:`pyfe3d.quad4.allman_enrichment` does for the
-    quadrilateral. For the triangle the hierarchical bubble of the edge
-    joining nodes `i` and `j` is `N_k = 4 S_i S_j`, with `S_i` the area
-    coordinates, so that
-
-    .. math::
-        N_{k,x} = 4 \left( S_{i,x} S_j + S_i S_{j,x} \right)
-
-    and `S_{i,x}` is the constant ``Nx[i]``. The edges are numbered 1-2, 2-3
-    and 3-1, consistently with the nodal connectivity of :class:`.Tria3R`.
+    modes of the Allman enrichment to the Cartesian derivatives of the
+    enriched in-plane displacement rows, evaluated at the drilling column of
+    each node, exactly as :func:`pyfe3d.quad4.allman_enrichment` does for
+    the quadrilateral. The edges are numbered 1-2, 2-3 and 3-1, consistently
+    with the nodal connectivity of :class:`.Tria3R`. Called by
+    :func:`.allman_delta_Ke` and by the methods of :class:`.Tria3R` that
+    use the enriched membrane rows when ``drilling_model = 0``.
 
     Parameters
     ----------
-    Nx, Ny : double pointer
+    S_x, S_y : double pointer
         The three constant Cartesian derivatives of the area coordinates.
     xe : double pointer
         Nodal coordinates in the element coordinate system.
@@ -298,13 +351,44 @@ cdef void allman_enrichment(double *Nx, double *Ny, double *xe,
         for the three nodes, so ``d[0:3]`` holds `\tilde S^u_{,x}` at the
         drilling column of nodes 1 to 3.
 
+    Notes
+    -----
+    The edge modes are those of Allman (1984) [1]_, see the module
+    documentation. With the edge `k` joining nodes `i` and `j`, the enriched
+    in-plane displacement rows are
+
+    .. math::
+        \tilde{\boldsymbol{S}}^u = \boldsymbol{S}^u + \frac{1}{8} \sum_k \hat{S}_k (y_i - y_j)
+                           (\boldsymbol{e}_i - \boldsymbol{e}_j)
+        \
+        \tilde{\boldsymbol{S}}^v = \boldsymbol{S}^v + \frac{1}{8} \sum_k \hat{S}_k (x_j - x_i)
+                           (\boldsymbol{e}_i - \boldsymbol{e}_j)
+
+    where `\boldsymbol{e}_i` selects `{r_z}_i`, as for
+    :func:`pyfe3d.quad4.allman_enrichment`. For the triangle the
+    hierarchical bubble of the edge joining nodes `i` and `j` is `\hat{S}_k
+    = 4 S_i S_j`, with `S_i` the area coordinates, so that
+
+    .. math::
+        \hat{S}_{k,x} = 4 \left( S_{i,x} S_j + S_i S_{j,x} \right)
+
+    and `S_{i,x}` is the constant ``S_x[i]``. The derivatives of the bubbles
+    are linear in the area coordinates, so the values filled in ``d`` vary
+    linearly over the element.
+
+    References
+    ----------
+    .. [1] Allman, D. J., A compatible triangular element including vertex
+       rotations for plane elasticity analysis, Computers & Structures,
+       19(1-2), 1-8, 1984. https://doi.org/10.1016/0045-7949(84)90197-4
+
     """
     cdef int k
     cdef double S[3]
     cdef double cu[3]
     cdef double cv[3]
-    cdef double Nbx[3]
-    cdef double Nby[3]
+    cdef double Sb_x[3]
+    cdef double Sb_y[3]
     cdef int ei[3]
     cdef int ej[3]
 
@@ -324,62 +408,104 @@ cdef void allman_enrichment(double *Nx, double *Ny, double *xe,
         # NOTE (l_k/8)*n_k = (1/8)*{y_i - y_j, x_j - x_i}
         cu[k] = 0.125*(xe[3*ei[k] + 1] - xe[3*ej[k] + 1])
         cv[k] = 0.125*(xe[3*ej[k] + 0] - xe[3*ei[k] + 0])
-        Nbx[k] = 4.*(Nx[ei[k]]*S[ej[k]] + S[ei[k]]*Nx[ej[k]])
-        Nby[k] = 4.*(Ny[ei[k]]*S[ej[k]] + S[ei[k]]*Ny[ej[k]])
+        Sb_x[k] = 4.*(S_x[ei[k]]*S[ej[k]] + S[ei[k]]*S_x[ej[k]])
+        Sb_y[k] = 4.*(S_y[ei[k]]*S[ej[k]] + S[ei[k]]*S_y[ej[k]])
 
     # NOTE node m is the first vertex of edge m and the second vertex of the
     #      previous edge, hence the two contributions with opposite signs
-    d[0] = cu[0]*Nbx[0] - cu[2]*Nbx[2]
-    d[1] = cu[1]*Nbx[1] - cu[0]*Nbx[0]
-    d[2] = cu[2]*Nbx[2] - cu[1]*Nbx[1]
+    d[0] = cu[0]*Sb_x[0] - cu[2]*Sb_x[2]
+    d[1] = cu[1]*Sb_x[1] - cu[0]*Sb_x[0]
+    d[2] = cu[2]*Sb_x[2] - cu[1]*Sb_x[1]
 
-    d[3] = cu[0]*Nby[0] - cu[2]*Nby[2]
-    d[4] = cu[1]*Nby[1] - cu[0]*Nby[0]
-    d[5] = cu[2]*Nby[2] - cu[1]*Nby[1]
+    d[3] = cu[0]*Sb_y[0] - cu[2]*Sb_y[2]
+    d[4] = cu[1]*Sb_y[1] - cu[0]*Sb_y[0]
+    d[5] = cu[2]*Sb_y[2] - cu[1]*Sb_y[1]
 
-    d[6] = cv[0]*Nbx[0] - cv[2]*Nbx[2]
-    d[7] = cv[1]*Nbx[1] - cv[0]*Nbx[0]
-    d[8] = cv[2]*Nbx[2] - cv[1]*Nbx[1]
+    d[6] = cv[0]*Sb_x[0] - cv[2]*Sb_x[2]
+    d[7] = cv[1]*Sb_x[1] - cv[0]*Sb_x[0]
+    d[8] = cv[2]*Sb_x[2] - cv[1]*Sb_x[1]
 
-    d[9] = cv[0]*Nby[0] - cv[2]*Nby[2]
-    d[10] = cv[1]*Nby[1] - cv[0]*Nby[0]
-    d[11] = cv[2]*Nby[2] - cv[1]*Nby[1]
+    d[9] = cv[0]*Sb_y[0] - cv[2]*Sb_y[2]
+    d[10] = cv[1]*Sb_y[1] - cv[0]*Sb_y[0]
+    d[11] = cv[2]*Sb_y[2] - cv[1]*Sb_y[1]
 
 
-cdef void allman_delta_Ke(double *Nx, double *Ny, double *xe, double area,
+cdef void allman_delta_Ke(double *S_x, double *S_y, double *xe, double area,
                           double *Ae, double *Be, double gamma,
                           double *Ke) noexcept nogil:
     r"""The drilling enrichment contribution to the element stiffness matrix
 
     Fills the 18 by 18 buffer ``Ke``, stored row by row, with everything that
-    the Allman enrichment and the Hughes-Brezzi term add to the element
-    matrix of :class:`.Tria3R` in element coordinates, and with nothing else.
+    the drilling enrichment and the term tying `r_z` to the in-plane rotation
+    add to the element matrix of :class:`.Tria3R` in element coordinates,
+    and with nothing else. It is used when ``drilling_model = 0``, by
+    :meth:`.Tria3R.update_KC0`, which rotates ``Ke`` to global coordinates,
+    and by :meth:`.Tria3R.update_probe_finte`, which adds ``Ke`` times the
+    element displacements to the internal forces. ``S_x`` and ``S_y`` are the
+    constant Cartesian derivatives of the area coordinates, ``xe`` the nodal
+    coordinates in the element coordinate system, ``area`` the element area,
+    ``Ae`` and ``Be`` the 3 by 3 extensional and extension-bending coupling
+    matrices in the element coordinate system stored row by row, and
+    ``gamma`` the coefficient of the drilling term, with dimension of force
+    per unit length.
 
-    Writing the enriched membrane operator as `\pmb{\tilde B}_m = \pmb{B}_m +
-    \pmb{\Delta}_m`, where `\pmb{\Delta}_m` is non-zero only in the drilling
+    Notes
+    -----
+    The enrichment is the one of Allman [1]_ and the drilling term the one
+    of Hughes and Brezzi [2]_, see the module documentation.
+
+    Writing the enriched membrane operator as `\tilde{\boldsymbol{B}}_m = \boldsymbol{B}_m +
+    \boldsymbol{\Delta}_m`, where `\boldsymbol{\Delta}_m` is non-zero only in the drilling
     columns, the membrane and coupling contributions expand as
 
     .. math::
-        \pmb{\tilde B}_m^\top \pmb{A} \pmb{\tilde B}_m
-        + \pmb{\tilde B}_m^\top \pmb{B} \pmb{B}_b
-        + \pmb{B}_b^\top \pmb{B} \pmb{\tilde B}_m
-        = (\text{unenriched}) + \pmb{B}_m^\top \pmb{A} \pmb{\Delta}_m
-        + \pmb{\Delta}_m^\top \pmb{A} \pmb{B}_m
-        + \pmb{\Delta}_m^\top \pmb{A} \pmb{\Delta}_m
-        + \pmb{\Delta}_m^\top \pmb{B} \pmb{B}_b
-        + \pmb{B}_b^\top \pmb{B} \pmb{\Delta}_m
+        \tilde{\boldsymbol{B}}_m^\top \boldsymbol{A} \tilde{\boldsymbol{B}}_m
+        + \tilde{\boldsymbol{B}}_m^\top \boldsymbol{B} \boldsymbol{B}_b
+        + \boldsymbol{B}_b^\top \boldsymbol{B} \tilde{\boldsymbol{B}}_m
+        = (\text{unenriched}) + \boldsymbol{B}_m^\top \boldsymbol{A} \boldsymbol{\Delta}_m
+        + \boldsymbol{\Delta}_m^\top \boldsymbol{A} \boldsymbol{B}_m
+        + \boldsymbol{\Delta}_m^\top \boldsymbol{A} \boldsymbol{\Delta}_m
+        + \boldsymbol{\Delta}_m^\top \boldsymbol{B} \boldsymbol{B}_b
+        + \boldsymbol{B}_b^\top \boldsymbol{B} \boldsymbol{\Delta}_m
 
-    and only the five terms in `\pmb{\Delta}_m` are assembled here, so the
+    and only the five terms in `\boldsymbol{\Delta}_m` are assembled here, so the
     block of the translations and of the bending rotations is left exactly as
     the unenriched element computed it. Those terms are integrated with the
-    three-point rule, which is needed because `\pmb{\Delta}_m` varies
+    three-point rule, which is needed because `\boldsymbol{\Delta}_m` varies
     linearly over the element, so that the term quadratic in it would
     otherwise be unsampled and would leave a zero-energy mode. The
     Hughes-Brezzi term is integrated with a single point at the centroid, as
     in :mod:`pyfe3d.quad4`.
 
+    The three-point rule has the area coordinates `(2/3, 1/6, 1/6)` and their
+    permutations, each with the weight ``area/3``, with `\boldsymbol{\Delta}_m`
+    given by :func:`.allman_enrichment` at each point,
+
+    .. math::
+        \boldsymbol{\Delta}_m = \begin{bmatrix} \tilde S^u_{,x} \ \tilde S^v_{,y}
+        \ \tilde S^u_{,y} + \tilde S^v_{,x} \end{bmatrix}
+
+    in the drilling columns. The Hughes-Brezzi term is
+
+    .. math::
+        \gamma A_e \tilde{\boldsymbol{B}}_{r_z}^\top \tilde{\boldsymbol{B}}_{r_z}, \qquad
+        \tilde{\boldsymbol{B}}_{r_z} = \boldsymbol{S}^{r_z} + \frac{1}{2}\boldsymbol{\tilde
+        S}^u_{,y} - \frac{1}{2}\tilde{\boldsymbol{S}}^v_{,x}
+
+    evaluated at the centroid, where `\boldsymbol{S}^{r_z} = 1/3` at each node,
+    with `A_e` given by ``area``.
+
+    References
+    ----------
+    .. [1] Allman, D. J., A compatible triangular element including vertex
+       rotations for plane elasticity analysis, Computers & Structures,
+       19(1-2), 1-8, 1984. https://doi.org/10.1016/0045-7949(84)90197-4
+    .. [2] Hughes, T. J. R., and Brezzi, F., On drilling degrees of freedom,
+       Computer Methods in Applied Mechanics and Engineering, 72(1), 105-121,
+       1989. https://doi.org/10.1016/0045-7825(89)90124-2
+
     """
-    cdef int i, j, a, b, n
+    cdef int i, j, a, n
     cdef double S1, S2, S3, wij
     cdef double d[12]
     cdef double Bm[54]
@@ -400,17 +526,18 @@ cdef void allman_delta_Ke(double *Nx, double *Ny, double *xe, double area,
         Bm[i] = 0.
         Bb[i] = 0.
     for i in range(3):
-        Bm[0*18 + 6*i + 0] = Nx[i]          # exx = u,x
-        Bm[1*18 + 6*i + 1] = Ny[i]          # eyy = v,y
-        Bm[2*18 + 6*i + 0] = Ny[i]          # gxy = u,y + v,x
-        Bm[2*18 + 6*i + 1] = Nx[i]
-        Bb[0*18 + 6*i + 4] = Nx[i]          # kxx = ry,x
-        Bb[1*18 + 6*i + 3] = -Ny[i]         # kyy = -rx,y
-        Bb[2*18 + 6*i + 3] = -Nx[i]         # kxy = ry,y - rx,x
-        Bb[2*18 + 6*i + 4] = Ny[i]
+        Bm[0*18 + 6*i + 0] = S_x[i]          # exx = u,x
+        Bm[1*18 + 6*i + 1] = S_y[i]          # eyy = v,y
+        Bm[2*18 + 6*i + 0] = S_y[i]          # gxy = u,y + v,x
+        Bm[2*18 + 6*i + 1] = S_x[i]
+        Bb[0*18 + 6*i + 4] = S_x[i]          # kxx = ry,x
+        Bb[1*18 + 6*i + 3] = -S_y[i]         # kyy = -rx,y
+        Bb[2*18 + 6*i + 3] = -S_x[i]         # kxy = ry,y - rx,x
+        Bb[2*18 + 6*i + 4] = S_y[i]
 
-    # NOTE three-point rule of Cowper, the same one already used for the
-    #      drilling terms of the unenriched element
+    # NOTE three-point rule of degree of precision 2, first row of Table I
+    #      in Cowper (1973), the same one already used for the drilling
+    #      terms of the unenriched element
     points[0] = 0.66666666666666666666666666666666666666666667
     points[1] = 0.16666666666666666666666666666666666666666667
     points[2] = 0.16666666666666666666666666666666666666666667
@@ -430,7 +557,7 @@ cdef void allman_delta_Ke(double *Nx, double *Ny, double *xe, double area,
             S2 = points[2]
             S3 = points[0]
 
-        allman_enrichment(Nx, Ny, xe, S1, S2, S3, d)
+        allman_enrichment(S_x, S_y, xe, S1, S2, S3, d)
 
         for i in range(54):
             Dm[i] = 0.
@@ -469,10 +596,10 @@ cdef void allman_delta_Ke(double *Nx, double *Ny, double *xe, double area,
                     )
 
     # NOTE Hughes-Brezzi term, one point at the centroid
-    allman_enrichment(Nx, Ny, xe, 1./3., 1./3., 1./3., d)
+    allman_enrichment(S_x, S_y, xe, 1./3., 1./3., 1./3., d)
     for i in range(3):
-        bdrill[6*i + 0] = Ny[i]/2.
-        bdrill[6*i + 1] = -Nx[i]/2.
+        bdrill[6*i + 0] = S_y[i]/2.
+        bdrill[6*i + 1] = -S_x[i]/2.
         bdrill[6*i + 2] = 0.
         bdrill[6*i + 3] = 0.
         bdrill[6*i + 4] = 0.
@@ -485,6 +612,12 @@ cdef void allman_delta_Ke(double *Nx, double *Ny, double *xe, double area,
 cdef class Tria3RData:
     r"""
     Used to allocate memory for the sparse matrices.
+
+    Each attribute is the number of entries that one :class:`.Tria3R` writes
+    in the row, column and value arrays of the corresponding sparse matrix,
+    starting at the position given by the matching ``init_k_*`` attribute of
+    the element. For ``n`` elements the arrays need ``n`` times these sizes.
+    The constructor takes no parameters.
 
     Attributes
     ----------
@@ -527,6 +660,9 @@ cdef class Tria3RProbe:
               always safe the values from the last udpate.
 
 
+    The constructor takes no parameters and allocates every array filled with
+    zeros.
+
     Attributes
     ----------
     xe, : array-like
@@ -534,26 +670,38 @@ cdef class Tria3RProbe:
         in the element coordinate system, in the following order
         `{x_e}_1, {y_e}_1, {z_e}_1, `{x_e}_2, {y_e}_2, {z_e}_2`, `{x_e}_3,
         {y_e}_3, {z_e}_3`.
+        Dimension of length. Updated by :meth:`.Tria3R.update_probe_xe`.
     ue, : array-like
         Array of size ``NUM_NODES*DOF=18`` containing the element displacements
         in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
         {{r_y}_e}_1, {{r_z}_e}_1`, `{u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
         {{r_y}_e}_2, {{r_z}_e}_2`, `{u_e}_3, {v_e}_3, {w_e}_3, {{r_x}_e}_3,
         {{r_y}_e}_3, {{r_z}_e}_3`.
+        Translations with dimension of length, rotations dimensionless.
+        Updated by :meth:`.Tria3R.update_probe_ue`.
     finte, : array-like
         Array of size ``NUM_NODES*DOF=18`` containing the element internal
         forces corresponding to the degrees-of-freedom described by ``ue``.
+        Forces, and moments (force times length) for the rotations. Updated
+        by :meth:`.Tria3R.update_probe_finte`.
     BLexx, BLeyy, BLgxy, BLkxx, BLkyy, BLkxy : array-like
         Arrays of size ``NUM_NODES*DOF=18`` with the rows of the linear
         strain-displacement matrix for the membrane strains and curvatures,
         at the last evaluated integration point.
-    Gwx, Gwy : array-like
+        Their products with ``ue`` give the membrane strains, dimensionless,
+        and the curvatures, with dimension of one over length.
+    Sw_x, Sw_y : array-like
         Arrays of size ``NUM_NODES*DOF=18`` with the rows giving `w_{,x}` and
         `w_{,y}`, at the last evaluated integration point.
+        ``Sw_x`` holds `\boldsymbol{G}_x = \partial \boldsymbol{S}^w/\partial x`
+        and ``Sw_y`` holds `\boldsymbol{G}_y = \partial \boldsymbol{S}^w/\partial
+        y`, the underscore denoting the partial derivative.
+        Their products with ``ue`` are dimensionless.
     KCNLve : array-like
         Array of size ``(NUM_NODES*DOF)**2=324`` with the nonlinear
         constitutive stiffness matrix KCNL in element coordinates, stored row
         by row.
+        Updated by :meth:`.Tria3R.update_KCNL`.
 
     """
     cdef public double [::1] xe
@@ -565,8 +713,8 @@ cdef class Tria3RProbe:
     cdef public double [::1] BLkxx
     cdef public double [::1] BLkyy
     cdef public double [::1] BLkxy
-    cdef public double [::1] Gwx
-    cdef public double [::1] Gwy
+    cdef public double [::1] Sw_x
+    cdef public double [::1] Sw_y
     cdef public double [::1] KCNLve
 
     def __cinit__(Tria3RProbe self):
@@ -579,13 +727,15 @@ cdef class Tria3RProbe:
         self.BLkxx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.BLkyy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.BLkxy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
-        self.Gwx = np.zeros(NUM_NODES*DOF, dtype=np.float64)
-        self.Gwy = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.Sw_x = np.zeros(NUM_NODES*DOF, dtype=np.float64)
+        self.Sw_y = np.zeros(NUM_NODES*DOF, dtype=np.float64)
         self.KCNLve = np.zeros((NUM_NODES*DOF)**2, dtype=np.float64)
 
 
 cdef class Tria3R:
     r"""
+    Three-node triangular shell element with reduced integration
+
     Nodal connectivity for the triangular element similar to Nastran's CTRIA3::
 
         3
@@ -601,6 +751,19 @@ cdef class Tria3R:
 
     .. image:: ../figures/nastran_ctria3.svg
 
+    The constructor stores the probe and sets the identification numbers and
+    the positions ``c1, c2, c3`` to ``-1``, the ``init_k_*`` positions to
+    ``0``, the rotation matrix ``r11, ..., r33`` to zero and ``m11, m12, m21,
+    m22`` to the identity. Before computing any element matrix, the caller
+    sets ``c1, c2, c3`` and the ``init_k_*`` positions, and calls
+    :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe`.
+
+    Parameters
+    ----------
+    p : :class:`.Tria3RProbe`
+        Probe used by the element, stored in ``probe``. One probe can be
+        shared by many elements.
+
     Attributes
     ----------
     eid, : int
@@ -609,109 +772,153 @@ cdef class Tria3R:
         Property identification number.
     area, : double
         Element area.
+        Dimension of length squared. Updated by :meth:`.update_area`.
     alpha_shear_locking, : double
-        Factor used to prevent shear locking, adopted from the DFG element,
-        affecting the transverse shear stiffness terms ``A44``, ``A45``,
-        ``A55``, already in the element coordinate system and with the shear
-        correction applied (see :meth:`.ShellProp.calc_Ats_element`)::
-
-            maxl = max(edge_12, edge_23, edge_31)
-            factor = alpha_shear_locking*maxl**2/thickness**2
-            A44 = 1 / (1 + factor) * A44
-            A45 = 1 / (1 + factor) * A45
-            A55 = 1 / (1 + factor) * A55
-
-        The adopted default is ``alpha_shear_locking = 0.7``, based on a linear
-        buckling analysis of a simply supported plate, such that the result
-        approaches the one of the :class:`.Quad4R` element for an equivalent
-        mesh (see the test case ``test_tria3r_linear_buckling_plate.py``).
-
-        .. warning:: `\alpha = 0.7` is about seven times the value used
-            in the references this scheme comes from, and it is the
-            dominant error term on problems where transverse shear carries
-            load. The reason, and the measurements, are in the section "The
-            transverse shear stiffnesses" of the module documentation.
-
-            No single value serves every problem class, so this is a
-            parameter to be verified per problem and not a constant of the
-            element. Two measurements bracket it, and they pull in opposite
-            directions:
-
-            - on the plate of ``tests/test_tria3r_natural_freq.py`` with
-              the consistent mass matrix, `\alpha = 0.7` gives a first
-              natural frequency 0.6 per cent above the analytical value
-              while the literature `\alpha = 0.1` gives one 30.6 per cent
-              above it, so here the default is much the better of the two.
-              With the stabilisation off the error is 96.1 per cent, which
-              is how much of this element's accuracy rests on `\alpha`;
-
-            - on the cylinder of
-              ``tests/test_quad4_linear_buckling_cylinder_displ.py`` at
-              ``ntheta = 60``, where `factor` reaches 1852, the ordering
-              reverses. At `\alpha = 0.7` the critical eigenvalue belongs
-              to a mode at two elements per wavelength, the mesh Nyquist
-              limit, carrying 36.6 per cent of its energy in transverse
-              shear: a numerical mechanism rather than a physical mode. At
-              `\alpha = 0.1` the physical eight-wave mode is critical
-              instead, and there this element agrees with the
-              quadrilateral and with the discrete shear gap triangle to
-              3 per cent, 2.520 against 2.453 and 2.534 times the reference
-              load, all three overpredicting at so coarse a mesh.
-
-            So on a thin shell in buckling the default is not merely
-            inaccurate, it can change which mode is critical, and a
-            plausible-looking eigenvalue can belong to a mesh artefact.
-            Where the answer matters, either sweep `\alpha` and confirm
-            that the critical mode is physical and resolved by several
-            elements per wavelength, or use :class:`.Tria3DSG`, whose
-            discrete shear gap transverse shear field is locking-free and
-            takes no such parameter.
-
+        Factor used to prevent shear locking, affecting the transverse shear
+        stiffness terms ``A44``, ``A45``, ``A55``, already in the element
+        coordinate system and with the shear correction applied (see
+        :meth:`.ShellProp.calc_Ats_element`), which are reduced by a factor
+        that grows with the square of the ratio of the longest edge to the
+        thickness. ``0.`` disables the reduction. The adopted default is
+        ``alpha_shear_locking = 0.7``, chosen such that the linear buckling
+        load of a simply supported plate approaches the one of the
+        :class:`.Quad4R` element for an equivalent mesh (see the test case
+        ``test_tria3r_linear_buckling_plate.py``). No single value serves
+        every problem class, so this is a parameter to be verified per
+        problem and not a constant of the element; :class:`.Tria3DSG` takes
+        no such parameter.
+        Dimensionless.
     drilling_model, : int
-        Selects how the drilling degree-of-freedom `r_z` is given stiffness,
-        see the module documentation. The default ``0`` is the physics-based
-        stiffness of Allman (1984) and Hughes and Brezzi (1989), for which
-        the drilling rotation is a kinematic variable that carries strain
-        energy, the recovered nodal moments about the shell normal are
-        physical, and no user parameter is involved. Any other value selects
-        the fictitious penalty of MSC Nastran and Autodesk Nastran, which was
-        the default up to version 0.9.0 and is controlled by ``K6ROT``.
-        Setting ``elem.drilling_model = 1`` before calling :meth:`.update_KC0`
-        is the way to reproduce results obtained before 0.10.0.
+        Selects how the drilling degree-of-freedom `r_z` is given stiffness.
+        The default ``0`` is the physics-based stiffness, for which the
+        recovered nodal moments about the shell normal are physical, and no
+        user parameter is involved. Any other value selects the fictitious
+        penalty of MSC Nastran and Autodesk Nastran, which was the default up
+        to version 0.9.0 and is controlled by ``K6ROT``. Setting
+        ``elem.drilling_model = 1`` before calling :meth:`.update_KC0` is the
+        way to reproduce results obtained before 0.10.0.
     K6ROT, : double
         Dimensionless multiplier for the fictitious drilling stiffness, only
         read when ``drilling_model`` is not ``0``. It has no effect under the
-        default physics-based model, which takes its regularisation parameter
-        from the laminate stiffness instead, see ``gamma_rz``.
-        AUTODESK NASTRAN's quick reference guide recommends ``K6ROT = 100.``
-        for static analysis. For modal solutions, ``K6ROT=1.e4`` is suggested.
-        MSC NASTRAN's quick reference guide states that ``K6ROT > 100.``
-        should not be used, but this is contradicting AUTODESK NASTRAN.
+        default physics-based model, which takes its coefficient from the
+        laminate stiffness instead, see ``gamma_rz``. Default ``100.``.
     gamma_rz, : double
-        Regularisation parameter `\gamma_{r_z}` of the physics-based drilling
-        stiffness, only read when ``drilling_model`` is ``0``. The default is
-        a negative value, which means that `A_{66}` of the laminate
-        extensional stiffness matrix is used, the value identified by Hughes
-        and Brezzi (1989). This is a modulus and not a parameter that needs
-        tuning: the element response has a broad plateau of insensitivity
-        around it, and the attribute is exposed for the sensitivity study
-        that the literature recommends rather than for normal use. Very large
-        values over-constrain `r_z = \theta_z`, and a zero value leaves the
-        Allman enrichment rank-deficient by one.
+        Coefficient `\gamma_{r_z}` of the physics-based drilling stiffness,
+        only read when ``drilling_model`` is ``0``. The default is a negative
+        value, which means that ``A66`` of the laminate extensional stiffness
+        matrix is used. The attribute is exposed for sensitivity studies
+        rather than for normal use.
+        Dimension of force per unit length, as ``A66``.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Rotation matrix from local to global coordinates.
+        Entries `T_{ij}` of the transformation matrix `\boldsymbol{T}_{3\times 3}` from
+        element to global coordinates, whose columns are the element axes.
     m11, m12, m21, m22 : double
         Rotation matrix only for the constitutive relations. Used when a
         material direction is used instead of the element local coordinates.
-    c1, c2, c3: int
+    c1, c2, c3 : int
         Position of each node in the global stiffness matrix.
-    n1, n2, n3: int
+        The coordinates of a node are read at the positions ``c1//2``,
+        ``c2//2`` and ``c3//2`` of the coordinate array.
+    n1, n2, n3 : int
         Node identification number.
     init_k_KC0, init_k_KCNL, init_k_KG, init_k_M : int
         Position in the arrays storing the sparse data for the structural
         matrices.
     probe, : :class:`.Tria3RProbe` object
         Pointer to the probe.
+
+    Notes
+    -----
+    The factor used to prevent shear locking, ``alpha_shear_locking``, is
+    adopted from the stabilised assumed-strain and discrete shear gap (DSG)
+    elements: it is the factor of Lyly, Stenberg and Vihinen, called
+    Stenberg's method by Bischoff and Bletzinger [1]_ (Sec. 3.1), in the
+    form of Castro et al. [2]_ (Eq. (26)), see the module documentation,
+    and scales the transverse shear stiffnesses as::
+
+        maxl = max(edge_12, edge_23, edge_31)
+        factor = alpha_shear_locking*maxl**2/thickness**2
+        A44 = 1 / (1 + factor) * A44
+        A45 = 1 / (1 + factor) * A45
+        A55 = 1 / (1 + factor) * A55
+
+    .. warning:: `\alpha = 0.7` is about seven times the value used
+        in the references this scheme comes from, and it is the
+        dominant error term on problems where transverse shear carries
+        load. The reason, and the measurements, are in the Notes of the
+        module documentation.
+
+        No single value serves every problem class, so this is a
+        parameter to be verified per problem and not a constant of the
+        element. Two measurements bracket it, and they pull in opposite
+        directions:
+
+        - on the plate of ``tests/test_tria3r_natural_freq.py`` with
+          the consistent mass matrix, `\alpha = 0.7` gives a first
+          natural frequency 0.6 per cent above the analytical value
+          while the literature `\alpha = 0.1` gives one 30.6 per cent
+          above it, so here the default is much the better of the two.
+          With the stabilisation off the error is 96.1 per cent, which
+          is how much of this element's accuracy rests on `\alpha`;
+
+        - on the cylinder of
+          ``tests/test_quad4_linear_buckling_cylinder_displ.py`` at
+          ``ntheta = 60``, where `factor` reaches 1852, the ordering
+          reverses. At `\alpha = 0.7` the critical eigenvalue belongs
+          to a mode at two elements per wavelength, the mesh Nyquist
+          limit, carrying 36.6 per cent of its energy in transverse
+          shear: a numerical mechanism rather than a physical mode. At
+          `\alpha = 0.1` the physical eight-wave mode is critical
+          instead, and there this element agrees with the
+          quadrilateral and with the discrete shear gap triangle to
+          3 per cent, 2.520 against 2.453 and 2.534 times the reference
+          load, all three overpredicting at so coarse a mesh.
+
+        So on a thin shell in buckling the default is not merely
+        inaccurate, it can change which mode is critical, and a
+        plausible-looking eigenvalue can belong to a mesh artefact.
+        Where the answer matters, either sweep `\alpha` and confirm
+        that the critical mode is physical and resolved by several
+        elements per wavelength, or use :class:`.Tria3DSG`, whose
+        discrete shear gap transverse shear field is locking-free and
+        takes no such parameter.
+
+    Under the default ``drilling_model = 0``, the physics-based stiffness is
+    the one of Allman (1984) [3]_ and Hughes and Brezzi (1989) [4]_, for
+    which the drilling rotation is a kinematic variable that carries strain
+    energy, see the module documentation.
+
+    For ``K6ROT``, AUTODESK NASTRAN's quick reference guide recommends
+    ``K6ROT = 100.`` for static analysis. For modal solutions,
+    ``K6ROT=1.e4`` is suggested. MSC NASTRAN's quick reference guide states
+    that ``K6ROT > 100.`` should not be used, but this is contradicting
+    AUTODESK NASTRAN.
+
+    The default of ``gamma_rz``, `\gamma_{r_z} = A_{66}`, is the value
+    identified by Hughes and Brezzi (1989) [4]_. This is a modulus and not a
+    parameter that needs tuning: the element response has a broad plateau of
+    insensitivity around it, and the attribute is exposed for the sensitivity
+    study that the literature recommends rather than for normal use. Very
+    large values over-constrain `r_z = \theta_z`, and a zero value leaves the
+    Allman enrichment rank-deficient by one.
+
+    References
+    ----------
+    .. [1] Bischoff, M., and Bletzinger, K.-U., Improving stability and
+       accuracy of Reissner-Mindlin plate finite elements via algebraic
+       subgrid scale stabilization, Computer Methods in Applied Mechanics and
+       Engineering, 193(15-16), 1517-1528, 2004.
+       https://doi.org/10.1016/j.cma.2003.12.036
+    .. [2] Castro, S. G. P., Donadon, M. V., and Guimaraes, T. A. M., ES-PIM
+       applied to buckling of variable angle tow laminates, Composite
+       Structures, 209, 67-78, 2019.
+       https://doi.org/10.1016/j.compstruct.2018.10.058
+    .. [3] Allman, D. J., A compatible triangular element including vertex
+       rotations for plane elasticity analysis, Computers & Structures,
+       19(1-2), 1-8, 1984. https://doi.org/10.1016/0045-7949(84)90197-4
+    .. [4] Hughes, T. J. R., and Brezzi, F., On drilling degrees of freedom,
+       Computer Methods in Applied Mechanics and Engineering, 72(1), 105-121,
+       1989. https://doi.org/10.1016/0045-7825(89)90124-2
 
     """
     cdef public int eid, pid
@@ -759,12 +966,21 @@ cdef class Tria3R:
             double xmati=0., double xmatj=0., double xmatk=0.):
         r"""Update the rotation matrix of the element
 
-        Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
-        corresponding to the rotation matrix from local to global coordinates.
+        Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated, with
+        the entries `T_{ij}` of the transformation matrix `\boldsymbol{T}_{3\times 3}`
+        from element to global coordinates, whose columns are the element axes.
 
         The element coordinate system is determined, identifying the `ijk`
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
         {y_e}_j, {y_e}_k`; `{z_e}_i, {z_e}_j, {z_e}_k`.
+
+        The element ``x`` axis runs from node 1 to node 2 and the element
+        ``z`` axis is along the cross product of the vectors from node 1 to
+        node 2 and from node 1 to node 3. When a material direction is given,
+        ``m11, m12, m21, m22`` are updated with the rotation from the material
+        direction projected onto the element to the element ``x`` axis. When
+        it is the zero vector, the default, or parallel to the element normal,
+        ``m11, m12, m21, m22`` are not changed.
 
 
         Parameters
@@ -773,13 +989,18 @@ cdef class Tria3R:
             Array with global nodal coordinates, for a total of `M` nodes in
             the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
             y_2, z_2, ..., x_M, y_M, z_M`.
+            1-D array of size ``3*M``, dimension of length. The coordinates
+            of each node are read from the positions ``c1//2``, ``c2//2``
+            and ``c3//2``.
 
-        xmati, xmatj, xmatk: array-like
+        xmati, xmatj, xmatk : double, optional
             Vector in global coordinates representing the material direction.
             This vector is projected onto the plate element, thus becoming the
             material direction. The `ABD` matrix defining the constitutive
             behavior of the element is rotated from the material direction to
             the element `x` axis while calculating the stiffness matrices.
+            Only the direction of the vector is used. Default ``0.``, the
+            zero vector, which leaves ``m11, m12, m21, m22`` unchanged.
 
         """
         cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk
@@ -890,6 +1111,12 @@ cdef class Tria3R:
     cpdef void update_probe_ue(Tria3R self, double [::1] u):
         r"""Update the local displacement vector of the probe of the element
 
+        The displacements and rotations of the three nodes, read from ``u`` at
+        the positions ``c1``, ``c2`` and ``c3``, are rotated to the element
+        coordinate system with the transpose `\boldsymbol{T}_{3\times 3}^\top` of the
+        transformation matrix and written to ``probe.ue``.
+        :meth:`.update_rotation_matrix` must have been called before.
+
         .. note:: The ``ue`` attribute of object :class:`.Tria3RProbe` is
                   updated, accessible using ``.probe.ue``.
 
@@ -900,6 +1127,8 @@ cdef class Tria3R:
             the model, this array will be arranged as: `u_1, v_1, w_1, {r_x}_1,
             {r_y}_1, {r_z}_1, u_2, v_2, w_2, {r_x}_2, {r_y}_2, {r_z}_2, ...,
             u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M`.
+            1-D array of size ``DOF*M``, translations with dimension of
+            length and rotations dimensionless.
 
         """
         cdef int i, j
@@ -914,7 +1143,7 @@ cdef class Tria3R:
             c[1] = self.c2
             c[2] = self.c3
 
-            # global to local transformation of displacements (R.T)
+            # global to local transformation of displacements (T.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -944,6 +1173,13 @@ cdef class Tria3R:
     cpdef void update_probe_xe(Tria3R self, double [::1] x):
         r"""Update the 3D coordinates of the probe of the element
 
+        The coordinates of the three nodes, read from ``x`` at the positions
+        ``c1//2``, ``c2//2`` and ``c3//2``, are rotated to the element
+        coordinate system with the transpose `\boldsymbol{T}_{3\times 3}^\top` of the
+        transformation matrix and written to ``probe.xe``. :meth:`.update_area`
+        is then called, updating ``area``. :meth:`.update_rotation_matrix` must
+        have been called before.
+
         .. note:: The ``xe`` attribute of object :class:`.Tria3RProbe` is
                   updated, accessible using ``.probe.xe``.
 
@@ -953,6 +1189,7 @@ cdef class Tria3R:
             Array with global nodal coordinates, for a total of `M` nodes in
             the model, this array will be arranged as: `x_1, y_1, z_1, x_2,
             y_2, z_2, ..., x_M, y_M, z_M`.
+            1-D array of size ``3*M``, dimension of length.
 
         """
         cdef int i, j
@@ -967,7 +1204,7 @@ cdef class Tria3R:
             c[1] = self.c2
             c[2] = self.c3
 
-            # global to local transformation of displacements (R.T)
+            # global to local transformation of coordinates (T.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -993,6 +1230,10 @@ cdef class Tria3R:
 
     cpdef void update_area(Tria3R self):
         r"""Update element area
+
+        The ``area`` attribute is updated with the area of the triangle given
+        by the element coordinates ``probe.xe``, ignoring the ``z``
+        coordinates. Called by :meth:`.update_probe_xe`.
 
         """
         cdef double x1, x2, x3, y1, y2, y3
@@ -1021,6 +1262,12 @@ cdef class Tria3R:
         depending how you defined them, meaning that the probe will always safe
         the values from the last udpate.
 
+        The internal forces are computed from the probe coordinates ``xe``
+        and displacements ``ue``, the ``area`` and the constitutive matrices
+        of ``prop`` rotated with ``m11, m12, m21, m22``. Before this method is
+        called, :meth:`.update_probe_xe` and :meth:`.update_probe_ue` must
+        have been used.
+
         .. note:: The ``finte`` attribute of object :class:`.Tria3RProbe` is
                   updated, accessible using ``.probe.finte``.
 
@@ -1029,11 +1276,22 @@ cdef class Tria3R:
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
-        nonlinear : int
+        nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
             value adds the geometrically nonlinear terms of the von Karman strains,
-            for which the exact Jacobian of the internal forces is ``KC0 + KCNL +
-            KG``, see :meth:`.update_KCNL`.
+            see :meth:`._update_probe_finte_nonlinear` and :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        The linear internal forces are the product of the element stiffness
+        matrix of :meth:`.update_KC0`, in element coordinates, with ``ue``,
+        computed with the same quadrature: the generated terms with the
+        transverse shear stiffnesses scaled according to
+        ``alpha_shear_locking``, plus, for ``drilling_model = 0``, the
+        contribution of :func:`.allman_delta_Ke`, which keeps ``finte``
+        exactly equal to the product of the element matrix with the element
+        displacements. With ``nonlinear=1`` the exact Jacobian of the
+        internal forces is ``KC0 + KCNL + KG``, see :meth:`.update_KCNL`.
 
         """
         cdef double *ue
@@ -1052,15 +1310,13 @@ cdef class Tria3R:
         cdef double D11, D12, D16, D22, D26, D66
         cdef double K6ROT
         cdef double points[3]
-        cdef double m11, m12, m21, m22
-        cdef double N1x, N2x, N3x, N1y, N2y, N3y
-        cdef double N1, N2, N3
+        cdef double S1_x, S2_x, S3_x, S1_y, S2_y, S3_y
+        cdef double S1, S2
         cdef double factor, maxl, l12, l23, l31
-        cdef int bi, bj, qa, qb, qi, qj
-        cdef double tmp, gamma_drill
-        cdef double Nxv[3]
-        cdef double Nyv[3]
-        cdef double rmat[9]
+        cdef int qi, qj
+        cdef double gamma_drill
+        cdef double S_x[3]
+        cdef double S_y[3]
         cdef double Kedelta[324]
 
         cdef double KC0e0000, KC0e0001, KC0e0003, KC0e0004, KC0e0005, KC0e0006, KC0e0007, KC0e0009, KC0e0010, KC0e0011, KC0e0012, KC0e0013, KC0e0015, KC0e0016, KC0e0017
@@ -1135,7 +1391,7 @@ cdef class Tria3R:
             if l31 > maxl:
                 maxl = l31
 
-            # NOTE strategy to prevent shear locking used in DFG elements imported here...
+            # NOTE strategy to prevent shear locking used in the stabilised DSG elements imported here...
             factor = self.alpha_shear_locking*maxl**2/prop.h**2
             A44 = 1 / (1 + factor) * A44
             A45 = 1 / (1 + factor) * A45
@@ -1151,118 +1407,118 @@ cdef class Tria3R:
             else:
                 K6ROT = self.K6ROT
 
-            N1x = (y2 - y3)/(2*self.area)
-            N2x = (-y1 + y3)/(2*self.area)
-            N3x = (y1 - y2)/(2*self.area)
-            N1y = (-x2 + x3)/(2*self.area)
-            N2y = (x1 - x3)/(2*self.area)
-            N3y = (-x1 + x2)/(2*self.area)
+            S1_x = (y2 - y3)/(2*self.area)
+            S2_x = (-y1 + y3)/(2*self.area)
+            S3_x = (y1 - y2)/(2*self.area)
+            S1_y = (-x2 + x3)/(2*self.area)
+            S2_y = (x1 - x3)/(2*self.area)
+            S3_y = (-x1 + x2)/(2*self.area)
 
             wij = 0.5
-            N1 = N2 = N3 = 0.333333333333333333333333333333333333333333333
+            S1 = S2 = 0.333333333333333333333333333333333333333333333
 
-            KC0e0000 = detJ*wij*(N1x*(A11*N1x + A16*N1y) + N1y*(A16*N1x + A66*N1y))
-            KC0e0001 = detJ*wij*(N1x*(A16*N1x + A66*N1y) + N1y*(A12*N1x + A26*N1y))
-            KC0e0003 = -detJ*wij*(N1x*(B16*N1x + B66*N1y) + N1y*(B12*N1x + B26*N1y))
-            KC0e0004 = detJ*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y))
-            KC0e0006 = detJ*wij*(N2x*(A11*N1x + A16*N1y) + N2y*(A16*N1x + A66*N1y))
-            KC0e0007 = detJ*wij*(N2x*(A16*N1x + A66*N1y) + N2y*(A12*N1x + A26*N1y))
-            KC0e0009 = -detJ*wij*(N2x*(B16*N1x + B66*N1y) + N2y*(B12*N1x + B26*N1y))
-            KC0e0010 = detJ*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y))
-            KC0e0012 = detJ*wij*(N3x*(A11*N1x + A16*N1y) + N3y*(A16*N1x + A66*N1y))
-            KC0e0013 = detJ*wij*(N3x*(A16*N1x + A66*N1y) + N3y*(A12*N1x + A26*N1y))
-            KC0e0015 = -detJ*wij*(N3x*(B16*N1x + B66*N1y) + N3y*(B12*N1x + B26*N1y))
-            KC0e0016 = detJ*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y))
-            KC0e0101 = detJ*wij*(N1x*(A26*N1y + A66*N1x) + N1y*(A22*N1y + A26*N1x))
-            KC0e0103 = -detJ*wij*(N1x*(B26*N1y + B66*N1x) + N1y*(B22*N1y + B26*N1x))
-            KC0e0104 = detJ*wij*(N1x*(B12*N1y + B16*N1x) + N1y*(B26*N1y + B66*N1x))
-            KC0e0106 = detJ*wij*(N2x*(A12*N1y + A16*N1x) + N2y*(A26*N1y + A66*N1x))
-            KC0e0107 = detJ*wij*(N2x*(A26*N1y + A66*N1x) + N2y*(A22*N1y + A26*N1x))
-            KC0e0109 = -detJ*wij*(N2x*(B26*N1y + B66*N1x) + N2y*(B22*N1y + B26*N1x))
-            KC0e0110 = detJ*wij*(N2x*(B12*N1y + B16*N1x) + N2y*(B26*N1y + B66*N1x))
-            KC0e0112 = detJ*wij*(N3x*(A12*N1y + A16*N1x) + N3y*(A26*N1y + A66*N1x))
-            KC0e0113 = detJ*wij*(N3x*(A26*N1y + A66*N1x) + N3y*(A22*N1y + A26*N1x))
-            KC0e0115 = -detJ*wij*(N3x*(B26*N1y + B66*N1x) + N3y*(B22*N1y + B26*N1x))
-            KC0e0116 = detJ*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x))
-            KC0e0202 = detJ*wij*(N1x*(A45*N1y + A55*N1x) + N1y*(A44*N1y + A45*N1x))
-            KC0e0203 = -N1*detJ*wij*(A44*N1y + A45*N1x)
-            KC0e0204 = N1*detJ*wij*(A45*N1y + A55*N1x)
-            KC0e0208 = detJ*wij*(N2x*(A45*N1y + A55*N1x) + N2y*(A44*N1y + A45*N1x))
-            KC0e0209 = -N2*detJ*wij*(A44*N1y + A45*N1x)
-            KC0e0210 = N2*detJ*wij*(A45*N1y + A55*N1x)
-            KC0e0214 = detJ*wij*(N3x*(A45*N1y + A55*N1x) + N3y*(A44*N1y + A45*N1x))
-            KC0e0215 = detJ*wij*(A44*N1y + A45*N1x)*(N1 + N2 - 1)
-            KC0e0216 = -detJ*wij*(A45*N1y + A55*N1x)*(N1 + N2 - 1)
-            KC0e0303 = detJ*wij*(D22*N1y**2 + 2*D26*N1x*N1y + D66*N1x**2 + A44*N1**2)
-            KC0e0304 = -detJ*wij*(A45*N1**2 + N1x*(D12*N1y + D16*N1x) + N1y*(D26*N1y + D66*N1x))
-            KC0e0306 = -detJ*wij*(N2x*(B12*N1y + B16*N1x) + N2y*(B26*N1y + B66*N1x))
-            KC0e0307 = -detJ*wij*(N2x*(B26*N1y + B66*N1x) + N2y*(B22*N1y + B26*N1x))
-            KC0e0308 = -N1*detJ*wij*(A44*N2y + A45*N2x)
-            KC0e0309 = detJ*wij*(A44*N1*N2 + N2x*(D26*N1y + D66*N1x) + N2y*(D22*N1y + D26*N1x))
-            KC0e0310 = -detJ*wij*(A45*N1*N2 + N2x*(D12*N1y + D16*N1x) + N2y*(D26*N1y + D66*N1x))
-            KC0e0312 = -detJ*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x))
-            KC0e0313 = -detJ*wij*(N3x*(B26*N1y + B66*N1x) + N3y*(B22*N1y + B26*N1x))
-            KC0e0314 = -N1*detJ*wij*(A44*N3y + A45*N3x)
-            KC0e0315 = detJ*wij*(-A44*N1*(N1 + N2 - 1) + N3x*(D26*N1y + D66*N1x) + N3y*(D22*N1y + D26*N1x))
-            KC0e0316 = -detJ*wij*(-A45*N1*(N1 + N2 - 1) + N3x*(D12*N1y + D16*N1x) + N3y*(D26*N1y + D66*N1x))
-            KC0e0404 = detJ*wij*(A55*N1**2 + N1x*(D11*N1x + D16*N1y) + N1y*(D16*N1x + D66*N1y))
-            KC0e0406 = detJ*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y))
-            KC0e0407 = detJ*wij*(N2x*(B16*N1x + B66*N1y) + N2y*(B12*N1x + B26*N1y))
-            KC0e0408 = N1*detJ*wij*(A45*N2y + A55*N2x)
-            KC0e0409 = -detJ*wij*(A45*N1*N2 + N2x*(D16*N1x + D66*N1y) + N2y*(D12*N1x + D26*N1y))
-            KC0e0410 = detJ*wij*(A55*N1*N2 + N2x*(D11*N1x + D16*N1y) + N2y*(D16*N1x + D66*N1y))
-            KC0e0412 = detJ*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y))
-            KC0e0413 = detJ*wij*(N3x*(B16*N1x + B66*N1y) + N3y*(B12*N1x + B26*N1y))
-            KC0e0414 = N1*detJ*wij*(A45*N3y + A55*N3x)
-            KC0e0415 = -detJ*wij*(-A45*N1*(N1 + N2 - 1) + N3x*(D16*N1x + D66*N1y) + N3y*(D12*N1x + D26*N1y))
-            KC0e0416 = detJ*wij*(-A55*N1*(N1 + N2 - 1) + N3x*(D11*N1x + D16*N1y) + N3y*(D16*N1x + D66*N1y))
-            KC0e0606 = detJ*wij*(N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y))
-            KC0e0607 = detJ*wij*(N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y))
-            KC0e0609 = -detJ*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))
-            KC0e0610 = detJ*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y))
-            KC0e0612 = detJ*wij*(N3x*(A11*N2x + A16*N2y) + N3y*(A16*N2x + A66*N2y))
-            KC0e0613 = detJ*wij*(N3x*(A16*N2x + A66*N2y) + N3y*(A12*N2x + A26*N2y))
-            KC0e0615 = -detJ*wij*(N3x*(B16*N2x + B66*N2y) + N3y*(B12*N2x + B26*N2y))
-            KC0e0616 = detJ*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y))
-            KC0e0707 = detJ*wij*(N2x*(A26*N2y + A66*N2x) + N2y*(A22*N2y + A26*N2x))
-            KC0e0709 = -detJ*wij*(N2x*(B26*N2y + B66*N2x) + N2y*(B22*N2y + B26*N2x))
-            KC0e0710 = detJ*wij*(N2x*(B12*N2y + B16*N2x) + N2y*(B26*N2y + B66*N2x))
-            KC0e0712 = detJ*wij*(N3x*(A12*N2y + A16*N2x) + N3y*(A26*N2y + A66*N2x))
-            KC0e0713 = detJ*wij*(N3x*(A26*N2y + A66*N2x) + N3y*(A22*N2y + A26*N2x))
-            KC0e0715 = -detJ*wij*(N3x*(B26*N2y + B66*N2x) + N3y*(B22*N2y + B26*N2x))
-            KC0e0716 = detJ*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x))
-            KC0e0808 = detJ*wij*(N2x*(A45*N2y + A55*N2x) + N2y*(A44*N2y + A45*N2x))
-            KC0e0809 = -N2*detJ*wij*(A44*N2y + A45*N2x)
-            KC0e0810 = N2*detJ*wij*(A45*N2y + A55*N2x)
-            KC0e0814 = detJ*wij*(N3x*(A45*N2y + A55*N2x) + N3y*(A44*N2y + A45*N2x))
-            KC0e0815 = detJ*wij*(A44*N2y + A45*N2x)*(N1 + N2 - 1)
-            KC0e0816 = -detJ*wij*(A45*N2y + A55*N2x)*(N1 + N2 - 1)
-            KC0e0909 = detJ*wij*(D22*N2y**2 + 2*D26*N2x*N2y + D66*N2x**2 + A44*N2**2)
-            KC0e0910 = -detJ*wij*(A45*N2**2 + N2x*(D12*N2y + D16*N2x) + N2y*(D26*N2y + D66*N2x))
-            KC0e0912 = -detJ*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x))
-            KC0e0913 = -detJ*wij*(N3x*(B26*N2y + B66*N2x) + N3y*(B22*N2y + B26*N2x))
-            KC0e0914 = -N2*detJ*wij*(A44*N3y + A45*N3x)
-            KC0e0915 = detJ*wij*(-A44*N2*(N1 + N2 - 1) + N3x*(D26*N2y + D66*N2x) + N3y*(D22*N2y + D26*N2x))
-            KC0e0916 = -detJ*wij*(-A45*N2*(N1 + N2 - 1) + N3x*(D12*N2y + D16*N2x) + N3y*(D26*N2y + D66*N2x))
-            KC0e1010 = detJ*wij*(A55*N2**2 + N2x*(D11*N2x + D16*N2y) + N2y*(D16*N2x + D66*N2y))
-            KC0e1012 = detJ*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y))
-            KC0e1013 = detJ*wij*(N3x*(B16*N2x + B66*N2y) + N3y*(B12*N2x + B26*N2y))
-            KC0e1014 = N2*detJ*wij*(A45*N3y + A55*N3x)
-            KC0e1015 = -detJ*wij*(-A45*N2*(N1 + N2 - 1) + N3x*(D16*N2x + D66*N2y) + N3y*(D12*N2x + D26*N2y))
-            KC0e1016 = detJ*wij*(-A55*N2*(N1 + N2 - 1) + N3x*(D11*N2x + D16*N2y) + N3y*(D16*N2x + D66*N2y))
-            KC0e1212 = detJ*wij*(N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y))
-            KC0e1213 = detJ*wij*(N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y))
-            KC0e1215 = -detJ*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))
-            KC0e1216 = detJ*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y))
-            KC0e1313 = detJ*wij*(N3x*(A26*N3y + A66*N3x) + N3y*(A22*N3y + A26*N3x))
-            KC0e1315 = -detJ*wij*(N3x*(B26*N3y + B66*N3x) + N3y*(B22*N3y + B26*N3x))
-            KC0e1316 = detJ*wij*(N3x*(B12*N3y + B16*N3x) + N3y*(B26*N3y + B66*N3x))
-            KC0e1414 = detJ*wij*(N3x*(A45*N3y + A55*N3x) + N3y*(A44*N3y + A45*N3x))
-            KC0e1415 = detJ*wij*(A44*N3y + A45*N3x)*(N1 + N2 - 1)
-            KC0e1416 = -detJ*wij*(A45*N3y + A55*N3x)*(N1 + N2 - 1)
-            KC0e1515 = detJ*wij*(A44*(N1 + N2 - 1)**2 + N3x*(D26*N3y + D66*N3x) + N3y*(D22*N3y + D26*N3x))
-            KC0e1516 = -detJ*wij*(A45*(N1 + N2 - 1)**2 + N3x*(D12*N3y + D16*N3x) + N3y*(D26*N3y + D66*N3x))
-            KC0e1616 = detJ*wij*(A55*(N1 + N2 - 1)**2 + N3x*(D11*N3x + D16*N3y) + N3y*(D16*N3x + D66*N3y))
+            KC0e0000 = detJ*wij*(S1_x*(A11*S1_x + A16*S1_y) + S1_y*(A16*S1_x + A66*S1_y))
+            KC0e0001 = detJ*wij*(S1_x*(A16*S1_x + A66*S1_y) + S1_y*(A12*S1_x + A26*S1_y))
+            KC0e0003 = -detJ*wij*(S1_x*(B16*S1_x + B66*S1_y) + S1_y*(B12*S1_x + B26*S1_y))
+            KC0e0004 = detJ*wij*(S1_x*(B11*S1_x + B16*S1_y) + S1_y*(B16*S1_x + B66*S1_y))
+            KC0e0006 = detJ*wij*(S2_x*(A11*S1_x + A16*S1_y) + S2_y*(A16*S1_x + A66*S1_y))
+            KC0e0007 = detJ*wij*(S2_x*(A16*S1_x + A66*S1_y) + S2_y*(A12*S1_x + A26*S1_y))
+            KC0e0009 = -detJ*wij*(S2_x*(B16*S1_x + B66*S1_y) + S2_y*(B12*S1_x + B26*S1_y))
+            KC0e0010 = detJ*wij*(S2_x*(B11*S1_x + B16*S1_y) + S2_y*(B16*S1_x + B66*S1_y))
+            KC0e0012 = detJ*wij*(S3_x*(A11*S1_x + A16*S1_y) + S3_y*(A16*S1_x + A66*S1_y))
+            KC0e0013 = detJ*wij*(S3_x*(A16*S1_x + A66*S1_y) + S3_y*(A12*S1_x + A26*S1_y))
+            KC0e0015 = -detJ*wij*(S3_x*(B16*S1_x + B66*S1_y) + S3_y*(B12*S1_x + B26*S1_y))
+            KC0e0016 = detJ*wij*(S3_x*(B11*S1_x + B16*S1_y) + S3_y*(B16*S1_x + B66*S1_y))
+            KC0e0101 = detJ*wij*(S1_x*(A26*S1_y + A66*S1_x) + S1_y*(A22*S1_y + A26*S1_x))
+            KC0e0103 = -detJ*wij*(S1_x*(B26*S1_y + B66*S1_x) + S1_y*(B22*S1_y + B26*S1_x))
+            KC0e0104 = detJ*wij*(S1_x*(B12*S1_y + B16*S1_x) + S1_y*(B26*S1_y + B66*S1_x))
+            KC0e0106 = detJ*wij*(S2_x*(A12*S1_y + A16*S1_x) + S2_y*(A26*S1_y + A66*S1_x))
+            KC0e0107 = detJ*wij*(S2_x*(A26*S1_y + A66*S1_x) + S2_y*(A22*S1_y + A26*S1_x))
+            KC0e0109 = -detJ*wij*(S2_x*(B26*S1_y + B66*S1_x) + S2_y*(B22*S1_y + B26*S1_x))
+            KC0e0110 = detJ*wij*(S2_x*(B12*S1_y + B16*S1_x) + S2_y*(B26*S1_y + B66*S1_x))
+            KC0e0112 = detJ*wij*(S3_x*(A12*S1_y + A16*S1_x) + S3_y*(A26*S1_y + A66*S1_x))
+            KC0e0113 = detJ*wij*(S3_x*(A26*S1_y + A66*S1_x) + S3_y*(A22*S1_y + A26*S1_x))
+            KC0e0115 = -detJ*wij*(S3_x*(B26*S1_y + B66*S1_x) + S3_y*(B22*S1_y + B26*S1_x))
+            KC0e0116 = detJ*wij*(S3_x*(B12*S1_y + B16*S1_x) + S3_y*(B26*S1_y + B66*S1_x))
+            KC0e0202 = detJ*wij*(S1_x*(A45*S1_y + A55*S1_x) + S1_y*(A44*S1_y + A45*S1_x))
+            KC0e0203 = -S1*detJ*wij*(A44*S1_y + A45*S1_x)
+            KC0e0204 = S1*detJ*wij*(A45*S1_y + A55*S1_x)
+            KC0e0208 = detJ*wij*(S2_x*(A45*S1_y + A55*S1_x) + S2_y*(A44*S1_y + A45*S1_x))
+            KC0e0209 = -S2*detJ*wij*(A44*S1_y + A45*S1_x)
+            KC0e0210 = S2*detJ*wij*(A45*S1_y + A55*S1_x)
+            KC0e0214 = detJ*wij*(S3_x*(A45*S1_y + A55*S1_x) + S3_y*(A44*S1_y + A45*S1_x))
+            KC0e0215 = detJ*wij*(A44*S1_y + A45*S1_x)*(S1 + S2 - 1)
+            KC0e0216 = -detJ*wij*(A45*S1_y + A55*S1_x)*(S1 + S2 - 1)
+            KC0e0303 = detJ*wij*(D22*S1_y**2 + 2*D26*S1_x*S1_y + D66*S1_x**2 + A44*S1**2)
+            KC0e0304 = -detJ*wij*(A45*S1**2 + S1_x*(D12*S1_y + D16*S1_x) + S1_y*(D26*S1_y + D66*S1_x))
+            KC0e0306 = -detJ*wij*(S2_x*(B12*S1_y + B16*S1_x) + S2_y*(B26*S1_y + B66*S1_x))
+            KC0e0307 = -detJ*wij*(S2_x*(B26*S1_y + B66*S1_x) + S2_y*(B22*S1_y + B26*S1_x))
+            KC0e0308 = -S1*detJ*wij*(A44*S2_y + A45*S2_x)
+            KC0e0309 = detJ*wij*(A44*S1*S2 + S2_x*(D26*S1_y + D66*S1_x) + S2_y*(D22*S1_y + D26*S1_x))
+            KC0e0310 = -detJ*wij*(A45*S1*S2 + S2_x*(D12*S1_y + D16*S1_x) + S2_y*(D26*S1_y + D66*S1_x))
+            KC0e0312 = -detJ*wij*(S3_x*(B12*S1_y + B16*S1_x) + S3_y*(B26*S1_y + B66*S1_x))
+            KC0e0313 = -detJ*wij*(S3_x*(B26*S1_y + B66*S1_x) + S3_y*(B22*S1_y + B26*S1_x))
+            KC0e0314 = -S1*detJ*wij*(A44*S3_y + A45*S3_x)
+            KC0e0315 = detJ*wij*(-A44*S1*(S1 + S2 - 1) + S3_x*(D26*S1_y + D66*S1_x) + S3_y*(D22*S1_y + D26*S1_x))
+            KC0e0316 = -detJ*wij*(-A45*S1*(S1 + S2 - 1) + S3_x*(D12*S1_y + D16*S1_x) + S3_y*(D26*S1_y + D66*S1_x))
+            KC0e0404 = detJ*wij*(A55*S1**2 + S1_x*(D11*S1_x + D16*S1_y) + S1_y*(D16*S1_x + D66*S1_y))
+            KC0e0406 = detJ*wij*(S2_x*(B11*S1_x + B16*S1_y) + S2_y*(B16*S1_x + B66*S1_y))
+            KC0e0407 = detJ*wij*(S2_x*(B16*S1_x + B66*S1_y) + S2_y*(B12*S1_x + B26*S1_y))
+            KC0e0408 = S1*detJ*wij*(A45*S2_y + A55*S2_x)
+            KC0e0409 = -detJ*wij*(A45*S1*S2 + S2_x*(D16*S1_x + D66*S1_y) + S2_y*(D12*S1_x + D26*S1_y))
+            KC0e0410 = detJ*wij*(A55*S1*S2 + S2_x*(D11*S1_x + D16*S1_y) + S2_y*(D16*S1_x + D66*S1_y))
+            KC0e0412 = detJ*wij*(S3_x*(B11*S1_x + B16*S1_y) + S3_y*(B16*S1_x + B66*S1_y))
+            KC0e0413 = detJ*wij*(S3_x*(B16*S1_x + B66*S1_y) + S3_y*(B12*S1_x + B26*S1_y))
+            KC0e0414 = S1*detJ*wij*(A45*S3_y + A55*S3_x)
+            KC0e0415 = -detJ*wij*(-A45*S1*(S1 + S2 - 1) + S3_x*(D16*S1_x + D66*S1_y) + S3_y*(D12*S1_x + D26*S1_y))
+            KC0e0416 = detJ*wij*(-A55*S1*(S1 + S2 - 1) + S3_x*(D11*S1_x + D16*S1_y) + S3_y*(D16*S1_x + D66*S1_y))
+            KC0e0606 = detJ*wij*(S2_x*(A11*S2_x + A16*S2_y) + S2_y*(A16*S2_x + A66*S2_y))
+            KC0e0607 = detJ*wij*(S2_x*(A16*S2_x + A66*S2_y) + S2_y*(A12*S2_x + A26*S2_y))
+            KC0e0609 = -detJ*wij*(S2_x*(B16*S2_x + B66*S2_y) + S2_y*(B12*S2_x + B26*S2_y))
+            KC0e0610 = detJ*wij*(S2_x*(B11*S2_x + B16*S2_y) + S2_y*(B16*S2_x + B66*S2_y))
+            KC0e0612 = detJ*wij*(S3_x*(A11*S2_x + A16*S2_y) + S3_y*(A16*S2_x + A66*S2_y))
+            KC0e0613 = detJ*wij*(S3_x*(A16*S2_x + A66*S2_y) + S3_y*(A12*S2_x + A26*S2_y))
+            KC0e0615 = -detJ*wij*(S3_x*(B16*S2_x + B66*S2_y) + S3_y*(B12*S2_x + B26*S2_y))
+            KC0e0616 = detJ*wij*(S3_x*(B11*S2_x + B16*S2_y) + S3_y*(B16*S2_x + B66*S2_y))
+            KC0e0707 = detJ*wij*(S2_x*(A26*S2_y + A66*S2_x) + S2_y*(A22*S2_y + A26*S2_x))
+            KC0e0709 = -detJ*wij*(S2_x*(B26*S2_y + B66*S2_x) + S2_y*(B22*S2_y + B26*S2_x))
+            KC0e0710 = detJ*wij*(S2_x*(B12*S2_y + B16*S2_x) + S2_y*(B26*S2_y + B66*S2_x))
+            KC0e0712 = detJ*wij*(S3_x*(A12*S2_y + A16*S2_x) + S3_y*(A26*S2_y + A66*S2_x))
+            KC0e0713 = detJ*wij*(S3_x*(A26*S2_y + A66*S2_x) + S3_y*(A22*S2_y + A26*S2_x))
+            KC0e0715 = -detJ*wij*(S3_x*(B26*S2_y + B66*S2_x) + S3_y*(B22*S2_y + B26*S2_x))
+            KC0e0716 = detJ*wij*(S3_x*(B12*S2_y + B16*S2_x) + S3_y*(B26*S2_y + B66*S2_x))
+            KC0e0808 = detJ*wij*(S2_x*(A45*S2_y + A55*S2_x) + S2_y*(A44*S2_y + A45*S2_x))
+            KC0e0809 = -S2*detJ*wij*(A44*S2_y + A45*S2_x)
+            KC0e0810 = S2*detJ*wij*(A45*S2_y + A55*S2_x)
+            KC0e0814 = detJ*wij*(S3_x*(A45*S2_y + A55*S2_x) + S3_y*(A44*S2_y + A45*S2_x))
+            KC0e0815 = detJ*wij*(A44*S2_y + A45*S2_x)*(S1 + S2 - 1)
+            KC0e0816 = -detJ*wij*(A45*S2_y + A55*S2_x)*(S1 + S2 - 1)
+            KC0e0909 = detJ*wij*(D22*S2_y**2 + 2*D26*S2_x*S2_y + D66*S2_x**2 + A44*S2**2)
+            KC0e0910 = -detJ*wij*(A45*S2**2 + S2_x*(D12*S2_y + D16*S2_x) + S2_y*(D26*S2_y + D66*S2_x))
+            KC0e0912 = -detJ*wij*(S3_x*(B12*S2_y + B16*S2_x) + S3_y*(B26*S2_y + B66*S2_x))
+            KC0e0913 = -detJ*wij*(S3_x*(B26*S2_y + B66*S2_x) + S3_y*(B22*S2_y + B26*S2_x))
+            KC0e0914 = -S2*detJ*wij*(A44*S3_y + A45*S3_x)
+            KC0e0915 = detJ*wij*(-A44*S2*(S1 + S2 - 1) + S3_x*(D26*S2_y + D66*S2_x) + S3_y*(D22*S2_y + D26*S2_x))
+            KC0e0916 = -detJ*wij*(-A45*S2*(S1 + S2 - 1) + S3_x*(D12*S2_y + D16*S2_x) + S3_y*(D26*S2_y + D66*S2_x))
+            KC0e1010 = detJ*wij*(A55*S2**2 + S2_x*(D11*S2_x + D16*S2_y) + S2_y*(D16*S2_x + D66*S2_y))
+            KC0e1012 = detJ*wij*(S3_x*(B11*S2_x + B16*S2_y) + S3_y*(B16*S2_x + B66*S2_y))
+            KC0e1013 = detJ*wij*(S3_x*(B16*S2_x + B66*S2_y) + S3_y*(B12*S2_x + B26*S2_y))
+            KC0e1014 = S2*detJ*wij*(A45*S3_y + A55*S3_x)
+            KC0e1015 = -detJ*wij*(-A45*S2*(S1 + S2 - 1) + S3_x*(D16*S2_x + D66*S2_y) + S3_y*(D12*S2_x + D26*S2_y))
+            KC0e1016 = detJ*wij*(-A55*S2*(S1 + S2 - 1) + S3_x*(D11*S2_x + D16*S2_y) + S3_y*(D16*S2_x + D66*S2_y))
+            KC0e1212 = detJ*wij*(S3_x*(A11*S3_x + A16*S3_y) + S3_y*(A16*S3_x + A66*S3_y))
+            KC0e1213 = detJ*wij*(S3_x*(A16*S3_x + A66*S3_y) + S3_y*(A12*S3_x + A26*S3_y))
+            KC0e1215 = -detJ*wij*(S3_x*(B16*S3_x + B66*S3_y) + S3_y*(B12*S3_x + B26*S3_y))
+            KC0e1216 = detJ*wij*(S3_x*(B11*S3_x + B16*S3_y) + S3_y*(B16*S3_x + B66*S3_y))
+            KC0e1313 = detJ*wij*(S3_x*(A26*S3_y + A66*S3_x) + S3_y*(A22*S3_y + A26*S3_x))
+            KC0e1315 = -detJ*wij*(S3_x*(B26*S3_y + B66*S3_x) + S3_y*(B22*S3_y + B26*S3_x))
+            KC0e1316 = detJ*wij*(S3_x*(B12*S3_y + B16*S3_x) + S3_y*(B26*S3_y + B66*S3_x))
+            KC0e1414 = detJ*wij*(S3_x*(A45*S3_y + A55*S3_x) + S3_y*(A44*S3_y + A45*S3_x))
+            KC0e1415 = detJ*wij*(A44*S3_y + A45*S3_x)*(S1 + S2 - 1)
+            KC0e1416 = -detJ*wij*(A45*S3_y + A55*S3_x)*(S1 + S2 - 1)
+            KC0e1515 = detJ*wij*(A44*(S1 + S2 - 1)**2 + S3_x*(D26*S3_y + D66*S3_x) + S3_y*(D22*S3_y + D26*S3_x))
+            KC0e1516 = -detJ*wij*(A45*(S1 + S2 - 1)**2 + S3_x*(D12*S3_y + D16*S3_x) + S3_y*(D26*S3_y + D66*S3_x))
+            KC0e1616 = detJ*wij*(A55*(S1 + S2 - 1)**2 + S3_x*(D11*S3_x + D16*S3_y) + S3_y*(D16*S3_x + D66*S3_y))
 
             # NOTE KC0e drilling terms with FULL integration
 
@@ -1291,73 +1547,71 @@ cdef class Tria3R:
             KC0e1317 = 0
             KC0e1717 = 0
 
-            # NOTE 3-point Gauss-Legendre quadrature for KG
-            # GAUSSIAN QUADRATURE FORMULAS FOR TRIANGLES
-            # G. R. COWPER
-            # https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620070316
+            # NOTE three-point rule of degree of precision 2, first row of Table I
+            #      in Cowper, G. R., Gaussian quadrature formulas for triangles,
+            #      IJNME 7(3), 405-408, 1973, doi:10.1002/nme.1620070316: area
+            #      coordinates (2/3, 1/6, 1/6) and their permutations, weight 1/6
+            #      times detJ = 2*area, i.e. area/3
             wij = 0.5*0.333333333333333333333333333333333333333333333
             points[0] = 0.66666666666666666666666666666666666666666667
             points[1] = 0.16666666666666666666666666666666666666666667
             points[2] = 0.16666666666666666666666666666666666666666667
             for i in range(3):
                 if i == 0:
-                    N1 = points[0]
-                    N2 = points[1]
-                    N3 = points[2]
+                    S1 = points[0]
+                    S2 = points[1]
                 elif i == 1:
-                    N1 = points[1]
-                    N2 = points[2]
-                    N3 = points[0]
+                    S1 = points[1]
+                    S2 = points[2]
                 elif i == 2:
-                    N1 = points[2]
-                    N2 = points[0]
-                    N3 = points[1]
+                    S1 = points[2]
+                    S2 = points[0]
 
-                KC0e0000 += 2.5e-7*A66*K6ROT*N1y**2*detJ*wij
-                KC0e0001 += -2.5e-7*A66*K6ROT*N1x*N1y*detJ*wij
-                KC0e0005 += 5.0e-7*A66*K6ROT*N1*N1y*detJ*wij
-                KC0e0006 += 2.5e-7*A66*K6ROT*N1y*N2y*detJ*wij
-                KC0e0007 += -2.5e-7*A66*K6ROT*N1y*N2x*detJ*wij
-                KC0e0011 += 5.0e-7*A66*K6ROT*N1y*N2*detJ*wij
-                KC0e0012 += 2.5e-7*A66*K6ROT*N1y*N3y*detJ*wij
-                KC0e0013 += -2.5e-7*A66*K6ROT*N1y*N3x*detJ*wij
-                KC0e0017 += 5.0e-7*A66*K6ROT*N1y*detJ*wij*(-N1 - N2 + 1)
-                KC0e0101 += 2.5e-7*A66*K6ROT*N1x**2*detJ*wij
-                KC0e0105 += -5.0e-7*A66*K6ROT*N1*N1x*detJ*wij
-                KC0e0106 += -2.5e-7*A66*K6ROT*N1x*N2y*detJ*wij
-                KC0e0107 += 2.5e-7*A66*K6ROT*N1x*N2x*detJ*wij
-                KC0e0111 += -5.0e-7*A66*K6ROT*N1x*N2*detJ*wij
-                KC0e0112 += -2.5e-7*A66*K6ROT*N1x*N3y*detJ*wij
-                KC0e0113 += 2.5e-7*A66*K6ROT*N1x*N3x*detJ*wij
-                KC0e0117 += 5.0e-7*A66*K6ROT*N1x*detJ*wij*(N1 + N2 - 1)
-                KC0e0505 += 1.0e-6*A66*K6ROT*N1**2*detJ*wij
-                KC0e0506 += 5.0e-7*A66*K6ROT*N1*N2y*detJ*wij
-                KC0e0507 += -5.0e-7*A66*K6ROT*N1*N2x*detJ*wij
-                KC0e0511 += 1.0e-6*A66*K6ROT*N1*N2*detJ*wij
-                KC0e0512 += 5.0e-7*A66*K6ROT*N1*N3y*detJ*wij
-                KC0e0513 += -5.0e-7*A66*K6ROT*N1*N3x*detJ*wij
-                KC0e0517 += 1.0e-6*A66*K6ROT*N1*detJ*wij*(-N1 - N2 + 1)
-                KC0e0606 += 2.5e-7*A66*K6ROT*N2y**2*detJ*wij
-                KC0e0607 += -2.5e-7*A66*K6ROT*N2x*N2y*detJ*wij
-                KC0e0611 += 5.0e-7*A66*K6ROT*N2*N2y*detJ*wij
-                KC0e0612 += 2.5e-7*A66*K6ROT*N2y*N3y*detJ*wij
-                KC0e0613 += -2.5e-7*A66*K6ROT*N2y*N3x*detJ*wij
-                KC0e0617 += 5.0e-7*A66*K6ROT*N2y*detJ*wij*(-N1 - N2 + 1)
-                KC0e0707 += 2.5e-7*A66*K6ROT*N2x**2*detJ*wij
-                KC0e0711 += -5.0e-7*A66*K6ROT*N2*N2x*detJ*wij
-                KC0e0712 += -2.5e-7*A66*K6ROT*N2x*N3y*detJ*wij
-                KC0e0713 += 2.5e-7*A66*K6ROT*N2x*N3x*detJ*wij
-                KC0e0717 += 5.0e-7*A66*K6ROT*N2x*detJ*wij*(N1 + N2 - 1)
-                KC0e1111 += 1.0e-6*A66*K6ROT*N2**2*detJ*wij
-                KC0e1112 += 5.0e-7*A66*K6ROT*N2*N3y*detJ*wij
-                KC0e1113 += -5.0e-7*A66*K6ROT*N2*N3x*detJ*wij
-                KC0e1117 += 1.0e-6*A66*K6ROT*N2*detJ*wij*(-N1 - N2 + 1)
-                KC0e1212 += 2.5e-7*A66*K6ROT*N3y**2*detJ*wij
-                KC0e1213 += -2.5e-7*A66*K6ROT*N3x*N3y*detJ*wij
-                KC0e1217 += 5.0e-7*A66*K6ROT*N3y*detJ*wij*(-N1 - N2 + 1)
-                KC0e1313 += 2.5e-7*A66*K6ROT*N3x**2*detJ*wij
-                KC0e1317 += 5.0e-7*A66*K6ROT*N3x*detJ*wij*(N1 + N2 - 1)
-                KC0e1717 += 1.0e-6*A66*K6ROT*detJ*wij*(N1 + N2 - 1)**2
+                KC0e0000 += 2.5e-7*A66*K6ROT*S1_y**2*detJ*wij
+                KC0e0001 += -2.5e-7*A66*K6ROT*S1_x*S1_y*detJ*wij
+                KC0e0005 += 5.0e-7*A66*K6ROT*S1*S1_y*detJ*wij
+                KC0e0006 += 2.5e-7*A66*K6ROT*S1_y*S2_y*detJ*wij
+                KC0e0007 += -2.5e-7*A66*K6ROT*S1_y*S2_x*detJ*wij
+                KC0e0011 += 5.0e-7*A66*K6ROT*S1_y*S2*detJ*wij
+                KC0e0012 += 2.5e-7*A66*K6ROT*S1_y*S3_y*detJ*wij
+                KC0e0013 += -2.5e-7*A66*K6ROT*S1_y*S3_x*detJ*wij
+                KC0e0017 += 5.0e-7*A66*K6ROT*S1_y*detJ*wij*(-S1 - S2 + 1)
+                KC0e0101 += 2.5e-7*A66*K6ROT*S1_x**2*detJ*wij
+                KC0e0105 += -5.0e-7*A66*K6ROT*S1*S1_x*detJ*wij
+                KC0e0106 += -2.5e-7*A66*K6ROT*S1_x*S2_y*detJ*wij
+                KC0e0107 += 2.5e-7*A66*K6ROT*S1_x*S2_x*detJ*wij
+                KC0e0111 += -5.0e-7*A66*K6ROT*S1_x*S2*detJ*wij
+                KC0e0112 += -2.5e-7*A66*K6ROT*S1_x*S3_y*detJ*wij
+                KC0e0113 += 2.5e-7*A66*K6ROT*S1_x*S3_x*detJ*wij
+                KC0e0117 += 5.0e-7*A66*K6ROT*S1_x*detJ*wij*(S1 + S2 - 1)
+                KC0e0505 += 1.0e-6*A66*K6ROT*S1**2*detJ*wij
+                KC0e0506 += 5.0e-7*A66*K6ROT*S1*S2_y*detJ*wij
+                KC0e0507 += -5.0e-7*A66*K6ROT*S1*S2_x*detJ*wij
+                KC0e0511 += 1.0e-6*A66*K6ROT*S1*S2*detJ*wij
+                KC0e0512 += 5.0e-7*A66*K6ROT*S1*S3_y*detJ*wij
+                KC0e0513 += -5.0e-7*A66*K6ROT*S1*S3_x*detJ*wij
+                KC0e0517 += 1.0e-6*A66*K6ROT*S1*detJ*wij*(-S1 - S2 + 1)
+                KC0e0606 += 2.5e-7*A66*K6ROT*S2_y**2*detJ*wij
+                KC0e0607 += -2.5e-7*A66*K6ROT*S2_x*S2_y*detJ*wij
+                KC0e0611 += 5.0e-7*A66*K6ROT*S2*S2_y*detJ*wij
+                KC0e0612 += 2.5e-7*A66*K6ROT*S2_y*S3_y*detJ*wij
+                KC0e0613 += -2.5e-7*A66*K6ROT*S2_y*S3_x*detJ*wij
+                KC0e0617 += 5.0e-7*A66*K6ROT*S2_y*detJ*wij*(-S1 - S2 + 1)
+                KC0e0707 += 2.5e-7*A66*K6ROT*S2_x**2*detJ*wij
+                KC0e0711 += -5.0e-7*A66*K6ROT*S2*S2_x*detJ*wij
+                KC0e0712 += -2.5e-7*A66*K6ROT*S2_x*S3_y*detJ*wij
+                KC0e0713 += 2.5e-7*A66*K6ROT*S2_x*S3_x*detJ*wij
+                KC0e0717 += 5.0e-7*A66*K6ROT*S2_x*detJ*wij*(S1 + S2 - 1)
+                KC0e1111 += 1.0e-6*A66*K6ROT*S2**2*detJ*wij
+                KC0e1112 += 5.0e-7*A66*K6ROT*S2*S3_y*detJ*wij
+                KC0e1113 += -5.0e-7*A66*K6ROT*S2*S3_x*detJ*wij
+                KC0e1117 += 1.0e-6*A66*K6ROT*S2*detJ*wij*(-S1 - S2 + 1)
+                KC0e1212 += 2.5e-7*A66*K6ROT*S3_y**2*detJ*wij
+                KC0e1213 += -2.5e-7*A66*K6ROT*S3_x*S3_y*detJ*wij
+                KC0e1217 += 5.0e-7*A66*K6ROT*S3_y*detJ*wij*(-S1 - S2 + 1)
+                KC0e1313 += 2.5e-7*A66*K6ROT*S3_x**2*detJ*wij
+                KC0e1317 += 5.0e-7*A66*K6ROT*S3_x*detJ*wij*(S1 + S2 - 1)
+                KC0e1717 += 1.0e-6*A66*K6ROT*detJ*wij*(S1 + S2 - 1)**2
 
             finte[0] = KC0e0000*ue[0] + KC0e0001*ue[1] + KC0e0003*ue[3] + KC0e0004*ue[4] + KC0e0005*ue[5] + KC0e0006*ue[6] + KC0e0007*ue[7] + KC0e0009*ue[9] + KC0e0010*ue[10] + KC0e0011*ue[11] + KC0e0012*ue[12] + KC0e0013*ue[13] + KC0e0015*ue[15] + KC0e0016*ue[16] + KC0e0017*ue[17]
             finte[1] = KC0e0001*ue[0] + KC0e0101*ue[1] + KC0e0103*ue[3] + KC0e0104*ue[4] + KC0e0105*ue[5] + KC0e0106*ue[6] + KC0e0107*ue[7] + KC0e0109*ue[9] + KC0e0110*ue[10] + KC0e0111*ue[11] + KC0e0112*ue[12] + KC0e0113*ue[13] + KC0e0115*ue[15] + KC0e0116*ue[16] + KC0e0117*ue[17]
@@ -1388,13 +1642,13 @@ cdef class Tria3R:
                     gamma_drill = self.gamma_rz
                 else:
                     gamma_drill = A66
-                Nxv[0] = N1x
-                Nxv[1] = N2x
-                Nxv[2] = N3x
-                Nyv[0] = N1y
-                Nyv[1] = N2y
-                Nyv[2] = N3y
-                allman_delta_Ke(Nxv, Nyv, &self.probe.xe[0], self.area,
+                S_x[0] = S1_x
+                S_x[1] = S2_x
+                S_x[2] = S3_x
+                S_y[0] = S1_y
+                S_y[1] = S2_y
+                S_y[2] = S3_y
+                allman_delta_Ke(S_x, S_y, &self.probe.xe[0], self.area,
                                 Ae, Be, gamma_drill, Kedelta)
                 for qi in range(18):
                     for qj in range(18):
@@ -1413,22 +1667,71 @@ cdef class Tria3R:
                           ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
+        The element matrix is computed from the coordinates ``probe.xe``, the
+        ``area`` and the constitutive matrices of ``prop`` rotated with
+        ``m11, m12, m21, m22``, the transverse shear stiffnesses being scaled
+        according to ``alpha_shear_locking``. Its values, in global
+        coordinates, are added to ``KC0v`` at the positions ``init_k_KC0`` to
+        ``init_k_KC0 + KC0_SPARSE_SIZE - 1``. With ``update_KC0v_only=0`` the
+        global row and column indices are written to ``KC0r`` and ``KC0c`` at
+        the same positions. Before this method is called,
+        :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe` must have
+        been used.
+
 
         Parameters
         ----------
         KC0r : np.array
             Array to store row positions of sparse values
+            1-D array of integers (``INT``) of size at least ``init_k_KC0 +
+            KC0_SPARSE_SIZE``.
         KC0c : np.array
             Array to store column positions of sparse values
+            Same type and size as ``KC0r``.
         KC0v : np.array
             Array to store sparse values
+            1-D array of ``DOUBLE``, same size as ``KC0r``. The values are
+            added to the existing ones. Dimension of force per unit length
+            between translations, of force between a translation and a
+            rotation, and of force times length between rotations.
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
-        update_KC0v_only : int
+        update_KC0v_only : int, optional
             The default ``0`` means that the row and column indices ``KC0r``
             and ``KC0c`` should also be updated. Any other value will only
             update the stiffness matrix values ``KC0v``.
+
+        Notes
+        -----
+        The membrane, bending, extension-bending coupling and transverse shear
+        terms are integrated with a single point at the centroid, with the
+        weight ``0.5`` times ``detJ = 2*area``, the transverse shear
+        stiffnesses `A_{44}`, `A_{45}`, `A_{55}` divided by `1 + \alpha
+        \ell^2/h^2`, with `\alpha` given by ``alpha_shear_locking``, `\ell`
+        the longest edge and `h` the total thickness ``prop.h``, see the
+        module documentation. The fictitious drilling penalty,
+
+        .. math::
+            K6ROT \cdot 10^{-6} A_{66} \int_A B_{r_z}^\top B_{r_z} dA,
+            \qquad B_{r_z} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}
+
+        is integrated with the three-point rule of degree of precision 2,
+        first row of Table I in Cowper [1]_, with the area coordinates
+        `(2/3, 1/6, 1/6)` and their permutations, each with the weight
+        ``area/3``. With ``drilling_model = 0`` this penalty is
+        switched off, ``K6ROT`` being replaced by zero, and the physics-based
+        drilling stiffness of :func:`.allman_delta_Ke` is added instead,
+        rotated to global coordinates with `K_{g,mn} = T_{mi} K_{e,ij}
+        T_{nj}`. It is added separately because the enrichment couples the
+        drilling rotation to the curvatures whenever the extension-bending
+        matrix `B` is not zero.
+
+        References
+        ----------
+        .. [1] Cowper, G. R., Gaussian quadrature formulas for triangles,
+           International Journal for Numerical Methods in Engineering,
+           7(3), 405-408, 1973. https://doi.org/10.1002/nme.1620070316
 
         """
         cdef int c1, c2, c3, i, k
@@ -1446,14 +1749,13 @@ cdef class Tria3R:
         cdef double K6ROT
         cdef double points[3]
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
-        cdef double m11, m12, m21, m22
-        cdef double N1x, N2x, N3x, N1y, N2y, N3y
-        cdef double N1, N2, N3
+        cdef double S1_x, S2_x, S3_x, S1_y, S2_y, S3_y
+        cdef double S1, S2
         cdef double factor, maxl, l12, l23, l31
         cdef int bi, bj, qa, qb, qi, qj
         cdef double tmp, gamma_drill
-        cdef double Nxv[3]
-        cdef double Nyv[3]
+        cdef double S_x[3]
+        cdef double S_y[3]
         cdef double rmat[9]
         cdef double Kedelta[324]
 
@@ -1526,7 +1828,7 @@ cdef class Tria3R:
             if l31 > maxl:
                 maxl = l31
 
-            # NOTE strategy to prevent shear locking used in the DFG elements imported here...
+            # NOTE strategy to prevent shear locking used in the stabilised DSG elements imported here...
             factor = self.alpha_shear_locking*maxl**2/prop.h**2
             A44 = 1 / (1 + factor) * A44
             A45 = 1 / (1 + factor) * A45
@@ -2532,119 +2834,119 @@ cdef class Tria3R:
                 KC0r[k] = 5+c3
                 KC0c[k] = 5+c3
 
-            N1x = (y2 - y3)/(2*self.area)
-            N2x = (-y1 + y3)/(2*self.area)
-            N3x = (y1 - y2)/(2*self.area)
-            N1y = (-x2 + x3)/(2*self.area)
-            N2y = (x1 - x3)/(2*self.area)
-            N3y = (-x1 + x2)/(2*self.area)
+            S1_x = (y2 - y3)/(2*self.area)
+            S2_x = (-y1 + y3)/(2*self.area)
+            S3_x = (y1 - y2)/(2*self.area)
+            S1_y = (-x2 + x3)/(2*self.area)
+            S2_y = (x1 - x3)/(2*self.area)
+            S3_y = (-x1 + x2)/(2*self.area)
 
             # NOTE KC0e terms for REDUCED integration
             wij = 0.5
-            N1 = N2 = N3 = 0.333333333333333333333333333333333333333333333
+            S1 = S2 = 0.333333333333333333333333333333333333333333333
 
-            KC0e0000 = detJ*wij*(N1x*(A11*N1x + A16*N1y) + N1y*(A16*N1x + A66*N1y))
-            KC0e0001 = detJ*wij*(N1x*(A16*N1x + A66*N1y) + N1y*(A12*N1x + A26*N1y))
-            KC0e0003 = -detJ*wij*(N1x*(B16*N1x + B66*N1y) + N1y*(B12*N1x + B26*N1y))
-            KC0e0004 = detJ*wij*(N1x*(B11*N1x + B16*N1y) + N1y*(B16*N1x + B66*N1y))
-            KC0e0006 = detJ*wij*(N2x*(A11*N1x + A16*N1y) + N2y*(A16*N1x + A66*N1y))
-            KC0e0007 = detJ*wij*(N2x*(A16*N1x + A66*N1y) + N2y*(A12*N1x + A26*N1y))
-            KC0e0009 = -detJ*wij*(N2x*(B16*N1x + B66*N1y) + N2y*(B12*N1x + B26*N1y))
-            KC0e0010 = detJ*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y))
-            KC0e0012 = detJ*wij*(N3x*(A11*N1x + A16*N1y) + N3y*(A16*N1x + A66*N1y))
-            KC0e0013 = detJ*wij*(N3x*(A16*N1x + A66*N1y) + N3y*(A12*N1x + A26*N1y))
-            KC0e0015 = -detJ*wij*(N3x*(B16*N1x + B66*N1y) + N3y*(B12*N1x + B26*N1y))
-            KC0e0016 = detJ*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y))
-            KC0e0101 = detJ*wij*(N1x*(A26*N1y + A66*N1x) + N1y*(A22*N1y + A26*N1x))
-            KC0e0103 = -detJ*wij*(N1x*(B26*N1y + B66*N1x) + N1y*(B22*N1y + B26*N1x))
-            KC0e0104 = detJ*wij*(N1x*(B12*N1y + B16*N1x) + N1y*(B26*N1y + B66*N1x))
-            KC0e0106 = detJ*wij*(N2x*(A12*N1y + A16*N1x) + N2y*(A26*N1y + A66*N1x))
-            KC0e0107 = detJ*wij*(N2x*(A26*N1y + A66*N1x) + N2y*(A22*N1y + A26*N1x))
-            KC0e0109 = -detJ*wij*(N2x*(B26*N1y + B66*N1x) + N2y*(B22*N1y + B26*N1x))
-            KC0e0110 = detJ*wij*(N2x*(B12*N1y + B16*N1x) + N2y*(B26*N1y + B66*N1x))
-            KC0e0112 = detJ*wij*(N3x*(A12*N1y + A16*N1x) + N3y*(A26*N1y + A66*N1x))
-            KC0e0113 = detJ*wij*(N3x*(A26*N1y + A66*N1x) + N3y*(A22*N1y + A26*N1x))
-            KC0e0115 = -detJ*wij*(N3x*(B26*N1y + B66*N1x) + N3y*(B22*N1y + B26*N1x))
-            KC0e0116 = detJ*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x))
-            KC0e0202 = detJ*wij*(N1x*(A45*N1y + A55*N1x) + N1y*(A44*N1y + A45*N1x))
-            KC0e0203 = -N1*detJ*wij*(A44*N1y + A45*N1x)
-            KC0e0204 = N1*detJ*wij*(A45*N1y + A55*N1x)
-            KC0e0208 = detJ*wij*(N2x*(A45*N1y + A55*N1x) + N2y*(A44*N1y + A45*N1x))
-            KC0e0209 = -N2*detJ*wij*(A44*N1y + A45*N1x)
-            KC0e0210 = N2*detJ*wij*(A45*N1y + A55*N1x)
-            KC0e0214 = detJ*wij*(N3x*(A45*N1y + A55*N1x) + N3y*(A44*N1y + A45*N1x))
-            KC0e0215 = detJ*wij*(A44*N1y + A45*N1x)*(N1 + N2 - 1)
-            KC0e0216 = -detJ*wij*(A45*N1y + A55*N1x)*(N1 + N2 - 1)
-            KC0e0303 = detJ*wij*(D22*N1y**2 + 2*D26*N1x*N1y + D66*N1x**2 + A44*N1**2)
-            KC0e0304 = -detJ*wij*(A45*N1**2 + N1x*(D12*N1y + D16*N1x) + N1y*(D26*N1y + D66*N1x))
-            KC0e0306 = -detJ*wij*(N2x*(B12*N1y + B16*N1x) + N2y*(B26*N1y + B66*N1x))
-            KC0e0307 = -detJ*wij*(N2x*(B26*N1y + B66*N1x) + N2y*(B22*N1y + B26*N1x))
-            KC0e0308 = -N1*detJ*wij*(A44*N2y + A45*N2x)
-            KC0e0309 = detJ*wij*(A44*N1*N2 + N2x*(D26*N1y + D66*N1x) + N2y*(D22*N1y + D26*N1x))
-            KC0e0310 = -detJ*wij*(A45*N1*N2 + N2x*(D12*N1y + D16*N1x) + N2y*(D26*N1y + D66*N1x))
-            KC0e0312 = -detJ*wij*(N3x*(B12*N1y + B16*N1x) + N3y*(B26*N1y + B66*N1x))
-            KC0e0313 = -detJ*wij*(N3x*(B26*N1y + B66*N1x) + N3y*(B22*N1y + B26*N1x))
-            KC0e0314 = -N1*detJ*wij*(A44*N3y + A45*N3x)
-            KC0e0315 = detJ*wij*(-A44*N1*(N1 + N2 - 1) + N3x*(D26*N1y + D66*N1x) + N3y*(D22*N1y + D26*N1x))
-            KC0e0316 = -detJ*wij*(-A45*N1*(N1 + N2 - 1) + N3x*(D12*N1y + D16*N1x) + N3y*(D26*N1y + D66*N1x))
-            KC0e0404 = detJ*wij*(A55*N1**2 + N1x*(D11*N1x + D16*N1y) + N1y*(D16*N1x + D66*N1y))
-            KC0e0406 = detJ*wij*(N2x*(B11*N1x + B16*N1y) + N2y*(B16*N1x + B66*N1y))
-            KC0e0407 = detJ*wij*(N2x*(B16*N1x + B66*N1y) + N2y*(B12*N1x + B26*N1y))
-            KC0e0408 = N1*detJ*wij*(A45*N2y + A55*N2x)
-            KC0e0409 = -detJ*wij*(A45*N1*N2 + N2x*(D16*N1x + D66*N1y) + N2y*(D12*N1x + D26*N1y))
-            KC0e0410 = detJ*wij*(A55*N1*N2 + N2x*(D11*N1x + D16*N1y) + N2y*(D16*N1x + D66*N1y))
-            KC0e0412 = detJ*wij*(N3x*(B11*N1x + B16*N1y) + N3y*(B16*N1x + B66*N1y))
-            KC0e0413 = detJ*wij*(N3x*(B16*N1x + B66*N1y) + N3y*(B12*N1x + B26*N1y))
-            KC0e0414 = N1*detJ*wij*(A45*N3y + A55*N3x)
-            KC0e0415 = -detJ*wij*(-A45*N1*(N1 + N2 - 1) + N3x*(D16*N1x + D66*N1y) + N3y*(D12*N1x + D26*N1y))
-            KC0e0416 = detJ*wij*(-A55*N1*(N1 + N2 - 1) + N3x*(D11*N1x + D16*N1y) + N3y*(D16*N1x + D66*N1y))
-            KC0e0606 = detJ*wij*(N2x*(A11*N2x + A16*N2y) + N2y*(A16*N2x + A66*N2y))
-            KC0e0607 = detJ*wij*(N2x*(A16*N2x + A66*N2y) + N2y*(A12*N2x + A26*N2y))
-            KC0e0609 = -detJ*wij*(N2x*(B16*N2x + B66*N2y) + N2y*(B12*N2x + B26*N2y))
-            KC0e0610 = detJ*wij*(N2x*(B11*N2x + B16*N2y) + N2y*(B16*N2x + B66*N2y))
-            KC0e0612 = detJ*wij*(N3x*(A11*N2x + A16*N2y) + N3y*(A16*N2x + A66*N2y))
-            KC0e0613 = detJ*wij*(N3x*(A16*N2x + A66*N2y) + N3y*(A12*N2x + A26*N2y))
-            KC0e0615 = -detJ*wij*(N3x*(B16*N2x + B66*N2y) + N3y*(B12*N2x + B26*N2y))
-            KC0e0616 = detJ*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y))
-            KC0e0707 = detJ*wij*(N2x*(A26*N2y + A66*N2x) + N2y*(A22*N2y + A26*N2x))
-            KC0e0709 = -detJ*wij*(N2x*(B26*N2y + B66*N2x) + N2y*(B22*N2y + B26*N2x))
-            KC0e0710 = detJ*wij*(N2x*(B12*N2y + B16*N2x) + N2y*(B26*N2y + B66*N2x))
-            KC0e0712 = detJ*wij*(N3x*(A12*N2y + A16*N2x) + N3y*(A26*N2y + A66*N2x))
-            KC0e0713 = detJ*wij*(N3x*(A26*N2y + A66*N2x) + N3y*(A22*N2y + A26*N2x))
-            KC0e0715 = -detJ*wij*(N3x*(B26*N2y + B66*N2x) + N3y*(B22*N2y + B26*N2x))
-            KC0e0716 = detJ*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x))
-            KC0e0808 = detJ*wij*(N2x*(A45*N2y + A55*N2x) + N2y*(A44*N2y + A45*N2x))
-            KC0e0809 = -N2*detJ*wij*(A44*N2y + A45*N2x)
-            KC0e0810 = N2*detJ*wij*(A45*N2y + A55*N2x)
-            KC0e0814 = detJ*wij*(N3x*(A45*N2y + A55*N2x) + N3y*(A44*N2y + A45*N2x))
-            KC0e0815 = detJ*wij*(A44*N2y + A45*N2x)*(N1 + N2 - 1)
-            KC0e0816 = -detJ*wij*(A45*N2y + A55*N2x)*(N1 + N2 - 1)
-            KC0e0909 = detJ*wij*(D22*N2y**2 + 2*D26*N2x*N2y + D66*N2x**2 + A44*N2**2)
-            KC0e0910 = -detJ*wij*(A45*N2**2 + N2x*(D12*N2y + D16*N2x) + N2y*(D26*N2y + D66*N2x))
-            KC0e0912 = -detJ*wij*(N3x*(B12*N2y + B16*N2x) + N3y*(B26*N2y + B66*N2x))
-            KC0e0913 = -detJ*wij*(N3x*(B26*N2y + B66*N2x) + N3y*(B22*N2y + B26*N2x))
-            KC0e0914 = -N2*detJ*wij*(A44*N3y + A45*N3x)
-            KC0e0915 = detJ*wij*(-A44*N2*(N1 + N2 - 1) + N3x*(D26*N2y + D66*N2x) + N3y*(D22*N2y + D26*N2x))
-            KC0e0916 = -detJ*wij*(-A45*N2*(N1 + N2 - 1) + N3x*(D12*N2y + D16*N2x) + N3y*(D26*N2y + D66*N2x))
-            KC0e1010 = detJ*wij*(A55*N2**2 + N2x*(D11*N2x + D16*N2y) + N2y*(D16*N2x + D66*N2y))
-            KC0e1012 = detJ*wij*(N3x*(B11*N2x + B16*N2y) + N3y*(B16*N2x + B66*N2y))
-            KC0e1013 = detJ*wij*(N3x*(B16*N2x + B66*N2y) + N3y*(B12*N2x + B26*N2y))
-            KC0e1014 = N2*detJ*wij*(A45*N3y + A55*N3x)
-            KC0e1015 = -detJ*wij*(-A45*N2*(N1 + N2 - 1) + N3x*(D16*N2x + D66*N2y) + N3y*(D12*N2x + D26*N2y))
-            KC0e1016 = detJ*wij*(-A55*N2*(N1 + N2 - 1) + N3x*(D11*N2x + D16*N2y) + N3y*(D16*N2x + D66*N2y))
-            KC0e1212 = detJ*wij*(N3x*(A11*N3x + A16*N3y) + N3y*(A16*N3x + A66*N3y))
-            KC0e1213 = detJ*wij*(N3x*(A16*N3x + A66*N3y) + N3y*(A12*N3x + A26*N3y))
-            KC0e1215 = -detJ*wij*(N3x*(B16*N3x + B66*N3y) + N3y*(B12*N3x + B26*N3y))
-            KC0e1216 = detJ*wij*(N3x*(B11*N3x + B16*N3y) + N3y*(B16*N3x + B66*N3y))
-            KC0e1313 = detJ*wij*(N3x*(A26*N3y + A66*N3x) + N3y*(A22*N3y + A26*N3x))
-            KC0e1315 = -detJ*wij*(N3x*(B26*N3y + B66*N3x) + N3y*(B22*N3y + B26*N3x))
-            KC0e1316 = detJ*wij*(N3x*(B12*N3y + B16*N3x) + N3y*(B26*N3y + B66*N3x))
-            KC0e1414 = detJ*wij*(N3x*(A45*N3y + A55*N3x) + N3y*(A44*N3y + A45*N3x))
-            KC0e1415 = detJ*wij*(A44*N3y + A45*N3x)*(N1 + N2 - 1)
-            KC0e1416 = -detJ*wij*(A45*N3y + A55*N3x)*(N1 + N2 - 1)
-            KC0e1515 = detJ*wij*(A44*(N1 + N2 - 1)**2 + N3x*(D26*N3y + D66*N3x) + N3y*(D22*N3y + D26*N3x))
-            KC0e1516 = -detJ*wij*(A45*(N1 + N2 - 1)**2 + N3x*(D12*N3y + D16*N3x) + N3y*(D26*N3y + D66*N3x))
-            KC0e1616 = detJ*wij*(A55*(N1 + N2 - 1)**2 + N3x*(D11*N3x + D16*N3y) + N3y*(D16*N3x + D66*N3y))
+            KC0e0000 = detJ*wij*(S1_x*(A11*S1_x + A16*S1_y) + S1_y*(A16*S1_x + A66*S1_y))
+            KC0e0001 = detJ*wij*(S1_x*(A16*S1_x + A66*S1_y) + S1_y*(A12*S1_x + A26*S1_y))
+            KC0e0003 = -detJ*wij*(S1_x*(B16*S1_x + B66*S1_y) + S1_y*(B12*S1_x + B26*S1_y))
+            KC0e0004 = detJ*wij*(S1_x*(B11*S1_x + B16*S1_y) + S1_y*(B16*S1_x + B66*S1_y))
+            KC0e0006 = detJ*wij*(S2_x*(A11*S1_x + A16*S1_y) + S2_y*(A16*S1_x + A66*S1_y))
+            KC0e0007 = detJ*wij*(S2_x*(A16*S1_x + A66*S1_y) + S2_y*(A12*S1_x + A26*S1_y))
+            KC0e0009 = -detJ*wij*(S2_x*(B16*S1_x + B66*S1_y) + S2_y*(B12*S1_x + B26*S1_y))
+            KC0e0010 = detJ*wij*(S2_x*(B11*S1_x + B16*S1_y) + S2_y*(B16*S1_x + B66*S1_y))
+            KC0e0012 = detJ*wij*(S3_x*(A11*S1_x + A16*S1_y) + S3_y*(A16*S1_x + A66*S1_y))
+            KC0e0013 = detJ*wij*(S3_x*(A16*S1_x + A66*S1_y) + S3_y*(A12*S1_x + A26*S1_y))
+            KC0e0015 = -detJ*wij*(S3_x*(B16*S1_x + B66*S1_y) + S3_y*(B12*S1_x + B26*S1_y))
+            KC0e0016 = detJ*wij*(S3_x*(B11*S1_x + B16*S1_y) + S3_y*(B16*S1_x + B66*S1_y))
+            KC0e0101 = detJ*wij*(S1_x*(A26*S1_y + A66*S1_x) + S1_y*(A22*S1_y + A26*S1_x))
+            KC0e0103 = -detJ*wij*(S1_x*(B26*S1_y + B66*S1_x) + S1_y*(B22*S1_y + B26*S1_x))
+            KC0e0104 = detJ*wij*(S1_x*(B12*S1_y + B16*S1_x) + S1_y*(B26*S1_y + B66*S1_x))
+            KC0e0106 = detJ*wij*(S2_x*(A12*S1_y + A16*S1_x) + S2_y*(A26*S1_y + A66*S1_x))
+            KC0e0107 = detJ*wij*(S2_x*(A26*S1_y + A66*S1_x) + S2_y*(A22*S1_y + A26*S1_x))
+            KC0e0109 = -detJ*wij*(S2_x*(B26*S1_y + B66*S1_x) + S2_y*(B22*S1_y + B26*S1_x))
+            KC0e0110 = detJ*wij*(S2_x*(B12*S1_y + B16*S1_x) + S2_y*(B26*S1_y + B66*S1_x))
+            KC0e0112 = detJ*wij*(S3_x*(A12*S1_y + A16*S1_x) + S3_y*(A26*S1_y + A66*S1_x))
+            KC0e0113 = detJ*wij*(S3_x*(A26*S1_y + A66*S1_x) + S3_y*(A22*S1_y + A26*S1_x))
+            KC0e0115 = -detJ*wij*(S3_x*(B26*S1_y + B66*S1_x) + S3_y*(B22*S1_y + B26*S1_x))
+            KC0e0116 = detJ*wij*(S3_x*(B12*S1_y + B16*S1_x) + S3_y*(B26*S1_y + B66*S1_x))
+            KC0e0202 = detJ*wij*(S1_x*(A45*S1_y + A55*S1_x) + S1_y*(A44*S1_y + A45*S1_x))
+            KC0e0203 = -S1*detJ*wij*(A44*S1_y + A45*S1_x)
+            KC0e0204 = S1*detJ*wij*(A45*S1_y + A55*S1_x)
+            KC0e0208 = detJ*wij*(S2_x*(A45*S1_y + A55*S1_x) + S2_y*(A44*S1_y + A45*S1_x))
+            KC0e0209 = -S2*detJ*wij*(A44*S1_y + A45*S1_x)
+            KC0e0210 = S2*detJ*wij*(A45*S1_y + A55*S1_x)
+            KC0e0214 = detJ*wij*(S3_x*(A45*S1_y + A55*S1_x) + S3_y*(A44*S1_y + A45*S1_x))
+            KC0e0215 = detJ*wij*(A44*S1_y + A45*S1_x)*(S1 + S2 - 1)
+            KC0e0216 = -detJ*wij*(A45*S1_y + A55*S1_x)*(S1 + S2 - 1)
+            KC0e0303 = detJ*wij*(D22*S1_y**2 + 2*D26*S1_x*S1_y + D66*S1_x**2 + A44*S1**2)
+            KC0e0304 = -detJ*wij*(A45*S1**2 + S1_x*(D12*S1_y + D16*S1_x) + S1_y*(D26*S1_y + D66*S1_x))
+            KC0e0306 = -detJ*wij*(S2_x*(B12*S1_y + B16*S1_x) + S2_y*(B26*S1_y + B66*S1_x))
+            KC0e0307 = -detJ*wij*(S2_x*(B26*S1_y + B66*S1_x) + S2_y*(B22*S1_y + B26*S1_x))
+            KC0e0308 = -S1*detJ*wij*(A44*S2_y + A45*S2_x)
+            KC0e0309 = detJ*wij*(A44*S1*S2 + S2_x*(D26*S1_y + D66*S1_x) + S2_y*(D22*S1_y + D26*S1_x))
+            KC0e0310 = -detJ*wij*(A45*S1*S2 + S2_x*(D12*S1_y + D16*S1_x) + S2_y*(D26*S1_y + D66*S1_x))
+            KC0e0312 = -detJ*wij*(S3_x*(B12*S1_y + B16*S1_x) + S3_y*(B26*S1_y + B66*S1_x))
+            KC0e0313 = -detJ*wij*(S3_x*(B26*S1_y + B66*S1_x) + S3_y*(B22*S1_y + B26*S1_x))
+            KC0e0314 = -S1*detJ*wij*(A44*S3_y + A45*S3_x)
+            KC0e0315 = detJ*wij*(-A44*S1*(S1 + S2 - 1) + S3_x*(D26*S1_y + D66*S1_x) + S3_y*(D22*S1_y + D26*S1_x))
+            KC0e0316 = -detJ*wij*(-A45*S1*(S1 + S2 - 1) + S3_x*(D12*S1_y + D16*S1_x) + S3_y*(D26*S1_y + D66*S1_x))
+            KC0e0404 = detJ*wij*(A55*S1**2 + S1_x*(D11*S1_x + D16*S1_y) + S1_y*(D16*S1_x + D66*S1_y))
+            KC0e0406 = detJ*wij*(S2_x*(B11*S1_x + B16*S1_y) + S2_y*(B16*S1_x + B66*S1_y))
+            KC0e0407 = detJ*wij*(S2_x*(B16*S1_x + B66*S1_y) + S2_y*(B12*S1_x + B26*S1_y))
+            KC0e0408 = S1*detJ*wij*(A45*S2_y + A55*S2_x)
+            KC0e0409 = -detJ*wij*(A45*S1*S2 + S2_x*(D16*S1_x + D66*S1_y) + S2_y*(D12*S1_x + D26*S1_y))
+            KC0e0410 = detJ*wij*(A55*S1*S2 + S2_x*(D11*S1_x + D16*S1_y) + S2_y*(D16*S1_x + D66*S1_y))
+            KC0e0412 = detJ*wij*(S3_x*(B11*S1_x + B16*S1_y) + S3_y*(B16*S1_x + B66*S1_y))
+            KC0e0413 = detJ*wij*(S3_x*(B16*S1_x + B66*S1_y) + S3_y*(B12*S1_x + B26*S1_y))
+            KC0e0414 = S1*detJ*wij*(A45*S3_y + A55*S3_x)
+            KC0e0415 = -detJ*wij*(-A45*S1*(S1 + S2 - 1) + S3_x*(D16*S1_x + D66*S1_y) + S3_y*(D12*S1_x + D26*S1_y))
+            KC0e0416 = detJ*wij*(-A55*S1*(S1 + S2 - 1) + S3_x*(D11*S1_x + D16*S1_y) + S3_y*(D16*S1_x + D66*S1_y))
+            KC0e0606 = detJ*wij*(S2_x*(A11*S2_x + A16*S2_y) + S2_y*(A16*S2_x + A66*S2_y))
+            KC0e0607 = detJ*wij*(S2_x*(A16*S2_x + A66*S2_y) + S2_y*(A12*S2_x + A26*S2_y))
+            KC0e0609 = -detJ*wij*(S2_x*(B16*S2_x + B66*S2_y) + S2_y*(B12*S2_x + B26*S2_y))
+            KC0e0610 = detJ*wij*(S2_x*(B11*S2_x + B16*S2_y) + S2_y*(B16*S2_x + B66*S2_y))
+            KC0e0612 = detJ*wij*(S3_x*(A11*S2_x + A16*S2_y) + S3_y*(A16*S2_x + A66*S2_y))
+            KC0e0613 = detJ*wij*(S3_x*(A16*S2_x + A66*S2_y) + S3_y*(A12*S2_x + A26*S2_y))
+            KC0e0615 = -detJ*wij*(S3_x*(B16*S2_x + B66*S2_y) + S3_y*(B12*S2_x + B26*S2_y))
+            KC0e0616 = detJ*wij*(S3_x*(B11*S2_x + B16*S2_y) + S3_y*(B16*S2_x + B66*S2_y))
+            KC0e0707 = detJ*wij*(S2_x*(A26*S2_y + A66*S2_x) + S2_y*(A22*S2_y + A26*S2_x))
+            KC0e0709 = -detJ*wij*(S2_x*(B26*S2_y + B66*S2_x) + S2_y*(B22*S2_y + B26*S2_x))
+            KC0e0710 = detJ*wij*(S2_x*(B12*S2_y + B16*S2_x) + S2_y*(B26*S2_y + B66*S2_x))
+            KC0e0712 = detJ*wij*(S3_x*(A12*S2_y + A16*S2_x) + S3_y*(A26*S2_y + A66*S2_x))
+            KC0e0713 = detJ*wij*(S3_x*(A26*S2_y + A66*S2_x) + S3_y*(A22*S2_y + A26*S2_x))
+            KC0e0715 = -detJ*wij*(S3_x*(B26*S2_y + B66*S2_x) + S3_y*(B22*S2_y + B26*S2_x))
+            KC0e0716 = detJ*wij*(S3_x*(B12*S2_y + B16*S2_x) + S3_y*(B26*S2_y + B66*S2_x))
+            KC0e0808 = detJ*wij*(S2_x*(A45*S2_y + A55*S2_x) + S2_y*(A44*S2_y + A45*S2_x))
+            KC0e0809 = -S2*detJ*wij*(A44*S2_y + A45*S2_x)
+            KC0e0810 = S2*detJ*wij*(A45*S2_y + A55*S2_x)
+            KC0e0814 = detJ*wij*(S3_x*(A45*S2_y + A55*S2_x) + S3_y*(A44*S2_y + A45*S2_x))
+            KC0e0815 = detJ*wij*(A44*S2_y + A45*S2_x)*(S1 + S2 - 1)
+            KC0e0816 = -detJ*wij*(A45*S2_y + A55*S2_x)*(S1 + S2 - 1)
+            KC0e0909 = detJ*wij*(D22*S2_y**2 + 2*D26*S2_x*S2_y + D66*S2_x**2 + A44*S2**2)
+            KC0e0910 = -detJ*wij*(A45*S2**2 + S2_x*(D12*S2_y + D16*S2_x) + S2_y*(D26*S2_y + D66*S2_x))
+            KC0e0912 = -detJ*wij*(S3_x*(B12*S2_y + B16*S2_x) + S3_y*(B26*S2_y + B66*S2_x))
+            KC0e0913 = -detJ*wij*(S3_x*(B26*S2_y + B66*S2_x) + S3_y*(B22*S2_y + B26*S2_x))
+            KC0e0914 = -S2*detJ*wij*(A44*S3_y + A45*S3_x)
+            KC0e0915 = detJ*wij*(-A44*S2*(S1 + S2 - 1) + S3_x*(D26*S2_y + D66*S2_x) + S3_y*(D22*S2_y + D26*S2_x))
+            KC0e0916 = -detJ*wij*(-A45*S2*(S1 + S2 - 1) + S3_x*(D12*S2_y + D16*S2_x) + S3_y*(D26*S2_y + D66*S2_x))
+            KC0e1010 = detJ*wij*(A55*S2**2 + S2_x*(D11*S2_x + D16*S2_y) + S2_y*(D16*S2_x + D66*S2_y))
+            KC0e1012 = detJ*wij*(S3_x*(B11*S2_x + B16*S2_y) + S3_y*(B16*S2_x + B66*S2_y))
+            KC0e1013 = detJ*wij*(S3_x*(B16*S2_x + B66*S2_y) + S3_y*(B12*S2_x + B26*S2_y))
+            KC0e1014 = S2*detJ*wij*(A45*S3_y + A55*S3_x)
+            KC0e1015 = -detJ*wij*(-A45*S2*(S1 + S2 - 1) + S3_x*(D16*S2_x + D66*S2_y) + S3_y*(D12*S2_x + D26*S2_y))
+            KC0e1016 = detJ*wij*(-A55*S2*(S1 + S2 - 1) + S3_x*(D11*S2_x + D16*S2_y) + S3_y*(D16*S2_x + D66*S2_y))
+            KC0e1212 = detJ*wij*(S3_x*(A11*S3_x + A16*S3_y) + S3_y*(A16*S3_x + A66*S3_y))
+            KC0e1213 = detJ*wij*(S3_x*(A16*S3_x + A66*S3_y) + S3_y*(A12*S3_x + A26*S3_y))
+            KC0e1215 = -detJ*wij*(S3_x*(B16*S3_x + B66*S3_y) + S3_y*(B12*S3_x + B26*S3_y))
+            KC0e1216 = detJ*wij*(S3_x*(B11*S3_x + B16*S3_y) + S3_y*(B16*S3_x + B66*S3_y))
+            KC0e1313 = detJ*wij*(S3_x*(A26*S3_y + A66*S3_x) + S3_y*(A22*S3_y + A26*S3_x))
+            KC0e1315 = -detJ*wij*(S3_x*(B26*S3_y + B66*S3_x) + S3_y*(B22*S3_y + B26*S3_x))
+            KC0e1316 = detJ*wij*(S3_x*(B12*S3_y + B16*S3_x) + S3_y*(B26*S3_y + B66*S3_x))
+            KC0e1414 = detJ*wij*(S3_x*(A45*S3_y + A55*S3_x) + S3_y*(A44*S3_y + A45*S3_x))
+            KC0e1415 = detJ*wij*(A44*S3_y + A45*S3_x)*(S1 + S2 - 1)
+            KC0e1416 = -detJ*wij*(A45*S3_y + A55*S3_x)*(S1 + S2 - 1)
+            KC0e1515 = detJ*wij*(A44*(S1 + S2 - 1)**2 + S3_x*(D26*S3_y + D66*S3_x) + S3_y*(D22*S3_y + D26*S3_x))
+            KC0e1516 = -detJ*wij*(A45*(S1 + S2 - 1)**2 + S3_x*(D12*S3_y + D16*S3_x) + S3_y*(D26*S3_y + D66*S3_x))
+            KC0e1616 = detJ*wij*(A55*(S1 + S2 - 1)**2 + S3_x*(D11*S3_x + D16*S3_y) + S3_y*(D16*S3_x + D66*S3_y))
 
             # NOTE KC0e drilling terms with FULL integration
 
@@ -2673,73 +2975,71 @@ cdef class Tria3R:
             KC0e1317 = 0
             KC0e1717 = 0
 
-            # NOTE 3-point Gauss-Legendre quadrature for KG
-            # GAUSSIAN QUADRATURE FORMULAS FOR TRIANGLES
-            # G. R. COWPER
-            # https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620070316
+            # NOTE three-point rule of degree of precision 2, first row of Table I
+            #      in Cowper, G. R., Gaussian quadrature formulas for triangles,
+            #      IJNME 7(3), 405-408, 1973, doi:10.1002/nme.1620070316: area
+            #      coordinates (2/3, 1/6, 1/6) and their permutations, weight 1/6
+            #      times detJ = 2*area, i.e. area/3
             wij = 0.5*0.333333333333333333333333333333333333333333333
             points[0] = 0.66666666666666666666666666666666666666666667
             points[1] = 0.16666666666666666666666666666666666666666667
             points[2] = 0.16666666666666666666666666666666666666666667
             for i in range(3):
                 if i == 0:
-                    N1 = points[0]
-                    N2 = points[1]
-                    N3 = points[2]
+                    S1 = points[0]
+                    S2 = points[1]
                 elif i == 1:
-                    N1 = points[1]
-                    N2 = points[2]
-                    N3 = points[0]
+                    S1 = points[1]
+                    S2 = points[2]
                 elif i == 2:
-                    N1 = points[2]
-                    N2 = points[0]
-                    N3 = points[1]
+                    S1 = points[2]
+                    S2 = points[0]
 
-                KC0e0000 += 2.5e-7*A66*K6ROT*N1y**2*detJ*wij
-                KC0e0001 += -2.5e-7*A66*K6ROT*N1x*N1y*detJ*wij
-                KC0e0005 += 5.0e-7*A66*K6ROT*N1*N1y*detJ*wij
-                KC0e0006 += 2.5e-7*A66*K6ROT*N1y*N2y*detJ*wij
-                KC0e0007 += -2.5e-7*A66*K6ROT*N1y*N2x*detJ*wij
-                KC0e0011 += 5.0e-7*A66*K6ROT*N1y*N2*detJ*wij
-                KC0e0012 += 2.5e-7*A66*K6ROT*N1y*N3y*detJ*wij
-                KC0e0013 += -2.5e-7*A66*K6ROT*N1y*N3x*detJ*wij
-                KC0e0017 += 5.0e-7*A66*K6ROT*N1y*detJ*wij*(-N1 - N2 + 1)
-                KC0e0101 += 2.5e-7*A66*K6ROT*N1x**2*detJ*wij
-                KC0e0105 += -5.0e-7*A66*K6ROT*N1*N1x*detJ*wij
-                KC0e0106 += -2.5e-7*A66*K6ROT*N1x*N2y*detJ*wij
-                KC0e0107 += 2.5e-7*A66*K6ROT*N1x*N2x*detJ*wij
-                KC0e0111 += -5.0e-7*A66*K6ROT*N1x*N2*detJ*wij
-                KC0e0112 += -2.5e-7*A66*K6ROT*N1x*N3y*detJ*wij
-                KC0e0113 += 2.5e-7*A66*K6ROT*N1x*N3x*detJ*wij
-                KC0e0117 += 5.0e-7*A66*K6ROT*N1x*detJ*wij*(N1 + N2 - 1)
-                KC0e0505 += 1.0e-6*A66*K6ROT*N1**2*detJ*wij
-                KC0e0506 += 5.0e-7*A66*K6ROT*N1*N2y*detJ*wij
-                KC0e0507 += -5.0e-7*A66*K6ROT*N1*N2x*detJ*wij
-                KC0e0511 += 1.0e-6*A66*K6ROT*N1*N2*detJ*wij
-                KC0e0512 += 5.0e-7*A66*K6ROT*N1*N3y*detJ*wij
-                KC0e0513 += -5.0e-7*A66*K6ROT*N1*N3x*detJ*wij
-                KC0e0517 += 1.0e-6*A66*K6ROT*N1*detJ*wij*(-N1 - N2 + 1)
-                KC0e0606 += 2.5e-7*A66*K6ROT*N2y**2*detJ*wij
-                KC0e0607 += -2.5e-7*A66*K6ROT*N2x*N2y*detJ*wij
-                KC0e0611 += 5.0e-7*A66*K6ROT*N2*N2y*detJ*wij
-                KC0e0612 += 2.5e-7*A66*K6ROT*N2y*N3y*detJ*wij
-                KC0e0613 += -2.5e-7*A66*K6ROT*N2y*N3x*detJ*wij
-                KC0e0617 += 5.0e-7*A66*K6ROT*N2y*detJ*wij*(-N1 - N2 + 1)
-                KC0e0707 += 2.5e-7*A66*K6ROT*N2x**2*detJ*wij
-                KC0e0711 += -5.0e-7*A66*K6ROT*N2*N2x*detJ*wij
-                KC0e0712 += -2.5e-7*A66*K6ROT*N2x*N3y*detJ*wij
-                KC0e0713 += 2.5e-7*A66*K6ROT*N2x*N3x*detJ*wij
-                KC0e0717 += 5.0e-7*A66*K6ROT*N2x*detJ*wij*(N1 + N2 - 1)
-                KC0e1111 += 1.0e-6*A66*K6ROT*N2**2*detJ*wij
-                KC0e1112 += 5.0e-7*A66*K6ROT*N2*N3y*detJ*wij
-                KC0e1113 += -5.0e-7*A66*K6ROT*N2*N3x*detJ*wij
-                KC0e1117 += 1.0e-6*A66*K6ROT*N2*detJ*wij*(-N1 - N2 + 1)
-                KC0e1212 += 2.5e-7*A66*K6ROT*N3y**2*detJ*wij
-                KC0e1213 += -2.5e-7*A66*K6ROT*N3x*N3y*detJ*wij
-                KC0e1217 += 5.0e-7*A66*K6ROT*N3y*detJ*wij*(-N1 - N2 + 1)
-                KC0e1313 += 2.5e-7*A66*K6ROT*N3x**2*detJ*wij
-                KC0e1317 += 5.0e-7*A66*K6ROT*N3x*detJ*wij*(N1 + N2 - 1)
-                KC0e1717 += 1.0e-6*A66*K6ROT*detJ*wij*(N1 + N2 - 1)**2
+                KC0e0000 += 2.5e-7*A66*K6ROT*S1_y**2*detJ*wij
+                KC0e0001 += -2.5e-7*A66*K6ROT*S1_x*S1_y*detJ*wij
+                KC0e0005 += 5.0e-7*A66*K6ROT*S1*S1_y*detJ*wij
+                KC0e0006 += 2.5e-7*A66*K6ROT*S1_y*S2_y*detJ*wij
+                KC0e0007 += -2.5e-7*A66*K6ROT*S1_y*S2_x*detJ*wij
+                KC0e0011 += 5.0e-7*A66*K6ROT*S1_y*S2*detJ*wij
+                KC0e0012 += 2.5e-7*A66*K6ROT*S1_y*S3_y*detJ*wij
+                KC0e0013 += -2.5e-7*A66*K6ROT*S1_y*S3_x*detJ*wij
+                KC0e0017 += 5.0e-7*A66*K6ROT*S1_y*detJ*wij*(-S1 - S2 + 1)
+                KC0e0101 += 2.5e-7*A66*K6ROT*S1_x**2*detJ*wij
+                KC0e0105 += -5.0e-7*A66*K6ROT*S1*S1_x*detJ*wij
+                KC0e0106 += -2.5e-7*A66*K6ROT*S1_x*S2_y*detJ*wij
+                KC0e0107 += 2.5e-7*A66*K6ROT*S1_x*S2_x*detJ*wij
+                KC0e0111 += -5.0e-7*A66*K6ROT*S1_x*S2*detJ*wij
+                KC0e0112 += -2.5e-7*A66*K6ROT*S1_x*S3_y*detJ*wij
+                KC0e0113 += 2.5e-7*A66*K6ROT*S1_x*S3_x*detJ*wij
+                KC0e0117 += 5.0e-7*A66*K6ROT*S1_x*detJ*wij*(S1 + S2 - 1)
+                KC0e0505 += 1.0e-6*A66*K6ROT*S1**2*detJ*wij
+                KC0e0506 += 5.0e-7*A66*K6ROT*S1*S2_y*detJ*wij
+                KC0e0507 += -5.0e-7*A66*K6ROT*S1*S2_x*detJ*wij
+                KC0e0511 += 1.0e-6*A66*K6ROT*S1*S2*detJ*wij
+                KC0e0512 += 5.0e-7*A66*K6ROT*S1*S3_y*detJ*wij
+                KC0e0513 += -5.0e-7*A66*K6ROT*S1*S3_x*detJ*wij
+                KC0e0517 += 1.0e-6*A66*K6ROT*S1*detJ*wij*(-S1 - S2 + 1)
+                KC0e0606 += 2.5e-7*A66*K6ROT*S2_y**2*detJ*wij
+                KC0e0607 += -2.5e-7*A66*K6ROT*S2_x*S2_y*detJ*wij
+                KC0e0611 += 5.0e-7*A66*K6ROT*S2*S2_y*detJ*wij
+                KC0e0612 += 2.5e-7*A66*K6ROT*S2_y*S3_y*detJ*wij
+                KC0e0613 += -2.5e-7*A66*K6ROT*S2_y*S3_x*detJ*wij
+                KC0e0617 += 5.0e-7*A66*K6ROT*S2_y*detJ*wij*(-S1 - S2 + 1)
+                KC0e0707 += 2.5e-7*A66*K6ROT*S2_x**2*detJ*wij
+                KC0e0711 += -5.0e-7*A66*K6ROT*S2*S2_x*detJ*wij
+                KC0e0712 += -2.5e-7*A66*K6ROT*S2_x*S3_y*detJ*wij
+                KC0e0713 += 2.5e-7*A66*K6ROT*S2_x*S3_x*detJ*wij
+                KC0e0717 += 5.0e-7*A66*K6ROT*S2_x*detJ*wij*(S1 + S2 - 1)
+                KC0e1111 += 1.0e-6*A66*K6ROT*S2**2*detJ*wij
+                KC0e1112 += 5.0e-7*A66*K6ROT*S2*S3_y*detJ*wij
+                KC0e1113 += -5.0e-7*A66*K6ROT*S2*S3_x*detJ*wij
+                KC0e1117 += 1.0e-6*A66*K6ROT*S2*detJ*wij*(-S1 - S2 + 1)
+                KC0e1212 += 2.5e-7*A66*K6ROT*S3_y**2*detJ*wij
+                KC0e1213 += -2.5e-7*A66*K6ROT*S3_x*S3_y*detJ*wij
+                KC0e1217 += 5.0e-7*A66*K6ROT*S3_y*detJ*wij*(-S1 - S2 + 1)
+                KC0e1313 += 2.5e-7*A66*K6ROT*S3_x**2*detJ*wij
+                KC0e1317 += 5.0e-7*A66*K6ROT*S3_x*detJ*wij*(S1 + S2 - 1)
+                KC0e1717 += 1.0e-6*A66*K6ROT*detJ*wij*(S1 + S2 - 1)**2
 
             k = self.init_k_KC0
             KC0v[k] += KC0e0202*r13**2 + r11*(KC0e0000*r11 + KC0e0001*r12) + r12*(KC0e0001*r11 + KC0e0101*r12)
@@ -3403,13 +3703,13 @@ cdef class Tria3R:
                     gamma_drill = self.gamma_rz
                 else:
                     gamma_drill = A66
-                Nxv[0] = N1x
-                Nxv[1] = N2x
-                Nxv[2] = N3x
-                Nyv[0] = N1y
-                Nyv[1] = N2y
-                Nyv[2] = N3y
-                allman_delta_Ke(Nxv, Nyv, &self.probe.xe[0], self.area,
+                S_x[0] = S1_x
+                S_x[1] = S2_x
+                S_x[2] = S3_x
+                S_y[0] = S1_y
+                S_y[1] = S2_y
+                S_y[2] = S3_y
+                allman_delta_Ke(S_x, S_y, &self.probe.xe[0], self.area,
                                 Ae, Be, gamma_drill, Kedelta)
                 rmat[0] = r11
                 rmat[1] = r12
@@ -3444,6 +3744,12 @@ cdef class Tria3R:
                            int nonlinear=0):
         r"""Update the internal force vector
 
+        The element internal forces, computed in element coordinates with
+        :meth:`.update_probe_finte`, are rotated to global coordinates and
+        added to ``fint`` at the positions of the nodes, ``c1``, ``c2`` and
+        ``c3``. Before this method is called, :meth:`.update_probe_xe` and
+        :meth:`.update_probe_ue` must have been used.
+
         Parameters
         ----------
         fint : np.array
@@ -3452,14 +3758,20 @@ cdef class Tria3R:
             coordinates. Method :meth:`.update_probe_finte` is called to update
             the parameter ``finte`` of the :class:`.Tria3RProbe` with the
             internal forces in local coordinates.
+            1-D array of size ``DOF*M``, with forces for the translations and
+            moments (force times length) for the rotations.
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
-        nonlinear : int
+        nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
             value adds the geometrically nonlinear terms of the von Karman strains,
-            for which the exact Jacobian of the internal forces is ``KC0 + KCNL +
-            KG``, see :meth:`.update_KCNL`.
+            see :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        With ``nonlinear=1`` the exact Jacobian of the internal forces is
+        ``KC0 + KCNL + KG``, see :meth:`.update_KCNL`.
 
         """
         cdef double *finte
@@ -3498,19 +3810,47 @@ cdef class Tria3R:
           \gamma_{xy}`
         - ``BLkxx, BLkyy, BLkxy``: curvatures `\kappa_{xx}, \kappa_{yy},
           \kappa_{xy}`
-        - ``Gwx, Gwy``: `w_{,x}` and `w_{,y}`
+        - ``Sw_x, Sw_y``: `\boldsymbol{G}_x` and `\boldsymbol{G}_y`, the rows of `w_{,x}` and `w_{,y}`
+
+        With ``drilling_model = 0`` the membrane rows also carry, in their
+        drilling columns, the Allman enrichment evaluated at the centroid,
+        see :func:`.allman_enrichment`. The curvature rows and the rows of
+        the gradient of `w` are not enriched. The ``area`` attribute must be
+        up to date, see :meth:`.update_area`.
 
         Returns
         -------
         detJ : double
             Determinant of the Jacobian matrix, ``2*area``.
 
+        Notes
+        -----
+        The rows are
+
+        .. math::
+
+            \epsilon_{xx} = u_{,x}, \quad
+            \epsilon_{yy} = v_{,y}, \quad
+            \gamma_{xy} = u_{,y} + v_{,x}, \quad
+            \kappa_{xx} = {r_y}_{,x}, \quad
+            \kappa_{yy} = -{r_x}_{,y}, \quad
+            \kappa_{xy} = {r_y}_{,y} - {r_x}_{,x}
+
+        with the constant derivatives of the linear shape functions,
+        `S_{1,x} = (y_2 - y_3)/(2 A_e)`, `S_{1,y} = (x_3 - x_2)/(2 A_e)` and
+        their cyclic permutations, `A_e` being ``area``. The Allman
+        enrichment keeps the nonlinear tangent of :meth:`.update_KCNL` and
+        the nonlinear internal forces consistent with the enriched KC0. The
+        drilling columns are linear over the element, so evaluating them at
+        the centroid integrates them exactly with the single point that those
+        methods use.
+
         """
         cdef int i
         cdef double x1, x2, x3, y1, y2, y3
-        cdef double N1x, N2x, N3x, N1y, N2y, N3y
-        cdef double Nxv[3]
-        cdef double Nyv[3]
+        cdef double S1_x, S2_x, S3_x, S1_y, S2_y, S3_y
+        cdef double S_x[3]
+        cdef double S_y[3]
         cdef double d[12]
         cdef double *BLexx
         cdef double *BLeyy
@@ -3518,8 +3858,8 @@ cdef class Tria3R:
         cdef double *BLkxx
         cdef double *BLkyy
         cdef double *BLkxy
-        cdef double *Gwx
-        cdef double *Gwy
+        cdef double *Sw_x
+        cdef double *Sw_y
 
         BLexx = &self.probe.BLexx[0]
         BLeyy = &self.probe.BLeyy[0]
@@ -3527,8 +3867,8 @@ cdef class Tria3R:
         BLkxx = &self.probe.BLkxx[0]
         BLkyy = &self.probe.BLkyy[0]
         BLkxy = &self.probe.BLkxy[0]
-        Gwx = &self.probe.Gwx[0]
-        Gwy = &self.probe.Gwy[0]
+        Sw_x = &self.probe.Sw_x[0]
+        Sw_y = &self.probe.Sw_y[0]
 
         # NOTE ignoring z in local coordinates
         x1 = self.probe.xe[0]
@@ -3538,12 +3878,12 @@ cdef class Tria3R:
         x3 = self.probe.xe[6]
         y3 = self.probe.xe[7]
 
-        N1x = (y2 - y3)/(2*self.area)
-        N2x = (-y1 + y3)/(2*self.area)
-        N3x = (y1 - y2)/(2*self.area)
-        N1y = (-x2 + x3)/(2*self.area)
-        N2y = (x1 - x3)/(2*self.area)
-        N3y = (-x1 + x2)/(2*self.area)
+        S1_x = (y2 - y3)/(2*self.area)
+        S2_x = (-y1 + y3)/(2*self.area)
+        S3_x = (y1 - y2)/(2*self.area)
+        S1_y = (-x2 + x3)/(2*self.area)
+        S2_y = (x1 - x3)/(2*self.area)
+        S3_y = (-x1 + x2)/(2*self.area)
 
         for i in range(18):
             BLexx[i] = 0.
@@ -3552,54 +3892,54 @@ cdef class Tria3R:
             BLkxx[i] = 0.
             BLkyy[i] = 0.
             BLkxy[i] = 0.
-            Gwx[i] = 0.
-            Gwy[i] = 0.
+            Sw_x[i] = 0.
+            Sw_y[i] = 0.
 
         # exx = u,x
-        BLexx[0] = N1x
-        BLexx[6] = N2x
-        BLexx[12] = N3x
+        BLexx[0] = S1_x
+        BLexx[6] = S2_x
+        BLexx[12] = S3_x
 
         # eyy = v,y
-        BLeyy[1] = N1y
-        BLeyy[7] = N2y
-        BLeyy[13] = N3y
+        BLeyy[1] = S1_y
+        BLeyy[7] = S2_y
+        BLeyy[13] = S3_y
 
         # gxy = u,y + v,x
-        BLgxy[0] = N1y
-        BLgxy[6] = N2y
-        BLgxy[12] = N3y
-        BLgxy[1] = N1x
-        BLgxy[7] = N2x
-        BLgxy[13] = N3x
+        BLgxy[0] = S1_y
+        BLgxy[6] = S2_y
+        BLgxy[12] = S3_y
+        BLgxy[1] = S1_x
+        BLgxy[7] = S2_x
+        BLgxy[13] = S3_x
 
         # kxx = ry,x
-        BLkxx[4] = N1x
-        BLkxx[10] = N2x
-        BLkxx[16] = N3x
+        BLkxx[4] = S1_x
+        BLkxx[10] = S2_x
+        BLkxx[16] = S3_x
 
         # kyy = -rx,y
-        BLkyy[3] = -N1y
-        BLkyy[9] = -N2y
-        BLkyy[15] = -N3y
+        BLkyy[3] = -S1_y
+        BLkyy[9] = -S2_y
+        BLkyy[15] = -S3_y
 
         # kxy = ry,y - rx,x
-        BLkxy[3] = -N1x
-        BLkxy[9] = -N2x
-        BLkxy[15] = -N3x
-        BLkxy[4] = N1y
-        BLkxy[10] = N2y
-        BLkxy[16] = N3y
+        BLkxy[3] = -S1_x
+        BLkxy[9] = -S2_x
+        BLkxy[15] = -S3_x
+        BLkxy[4] = S1_y
+        BLkxy[10] = S2_y
+        BLkxy[16] = S3_y
 
         # w,x
-        Gwx[2] = N1x
-        Gwx[8] = N2x
-        Gwx[14] = N3x
+        Sw_x[2] = S1_x
+        Sw_x[8] = S2_x
+        Sw_x[14] = S3_x
 
         # w,y
-        Gwy[2] = N1y
-        Gwy[8] = N2y
-        Gwy[14] = N3y
+        Sw_y[2] = S1_y
+        Sw_y[8] = S2_y
+        Sw_y[14] = S3_y
 
         # NOTE Allman enrichment of the membrane rows, which keeps the
         #      nonlinear tangent of update_KCNL and the nonlinear internal
@@ -3610,13 +3950,13 @@ cdef class Tria3R:
         #      are not enriched, the edge modes acting only on the in-plane
         #      translations
         if self.drilling_model == 0:
-            Nxv[0] = N1x
-            Nxv[1] = N2x
-            Nxv[2] = N3x
-            Nyv[0] = N1y
-            Nyv[1] = N2y
-            Nyv[2] = N3y
-            allman_enrichment(Nxv, Nyv, &self.probe.xe[0], 1./3., 1./3.,
+            S_x[0] = S1_x
+            S_x[1] = S2_x
+            S_x[2] = S3_x
+            S_y[0] = S1_y
+            S_y[1] = S2_y
+            S_y[2] = S3_y
+            allman_enrichment(S_x, S_y, &self.probe.xe[0], 1./3., 1./3.,
                               1./3., d)
             for i in range(3):
                 BLexx[6*i + 5] = d[i]
@@ -3627,12 +3967,19 @@ cdef class Tria3R:
 
 
     cdef void _update_probe_KCNLve(Tria3R self, ShellProp prop) noexcept nogil:
-        r"""Update the probe values of the nonlinear constitutive stiffness matrix
+        r"""Update the probe values of the nonlinear stiffness matrix
 
         The attribute ``KCNLve`` of the :class:`.Tria3RProbe` is updated with
-        KCNL = KC0L + KCL0 + KCLL + KGNL in element coordinates, stored row by
-        row and evaluated at the displacements ``ue`` of the probe. See
-        :meth:`.update_KCNL`.
+        the nonlinear stiffness matrix in element coordinates,
+        stored row by row and evaluated at the displacements ``ue`` of the
+        probe. See :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        KCNL = KC0L + KCL0 + KCLL + KGNL, with the terms given in
+        :meth:`.update_KCNL`, built from the rows of
+        :meth:`._update_probe_BL_G` and integrated with one point, as in
+        :meth:`.update_KG`, the strains being constant within the element.
 
         """
         cdef int i, j, a
@@ -3643,8 +3990,8 @@ cdef class Tria3R:
         cdef double NNL[3]
         # NOTE products stored row by row, with 3 rows and NUM_NODES*DOF columns
         cdef double ABL[54]
-        cdef double BmL[54]
-        cdef double ABmL[54]
+        cdef double BNL[54]
+        cdef double ABNL[54]
         cdef double *ue
         cdef double *KCNLve
         cdef double *BLexx
@@ -3653,8 +4000,8 @@ cdef class Tria3R:
         cdef double *BLkxx
         cdef double *BLkyy
         cdef double *BLkxy
-        cdef double *Gwx
-        cdef double *Gwy
+        cdef double *Sw_x
+        cdef double *Sw_y
 
         ue = &self.probe.ue[0]
         KCNLve = &self.probe.KCNLve[0]
@@ -3664,8 +4011,8 @@ cdef class Tria3R:
         BLkxx = &self.probe.BLkxx[0]
         BLkyy = &self.probe.BLkyy[0]
         BLkxy = &self.probe.BLkxy[0]
-        Gwx = &self.probe.Gwx[0]
-        Gwy = &self.probe.Gwy[0]
+        Sw_x = &self.probe.Sw_x[0]
+        Sw_y = &self.probe.Sw_y[0]
 
         prop.get_constitutive_element(self.m11, self.m12, self.m21, self.m22, A, B, NULL, NULL)
 
@@ -3680,37 +4027,37 @@ cdef class Tria3R:
         w_x = 0.
         w_y = 0.
         for i in range(18):
-            w_x += Gwx[i]*ue[i]
-            w_y += Gwy[i]*ue[i]
+            w_x += Sw_x[i]*ue[i]
+            w_y += Sw_y[i]*ue[i]
 
         # stress resultants of the nonlinear membrane strain,
         # epsNL = {w_x**2/2, w_y**2/2, w_x*w_y}
         for a in range(3):
             NNL[a] = A[3*a]*w_x*w_x/2. + A[3*a + 1]*w_y*w_y/2. + A[3*a + 2]*w_x*w_y
 
-        # BmL, the variation of the nonlinear membrane strain, and the products
-        # A*Bm + B*Bb and A*BmL, all stored row by row with 3 rows
+        # BNL, the variation of the nonlinear membrane strain, and the products
+        # A*Bm + B*Bb and A*BNL, all stored row by row with 3 rows
         for i in range(18):
-            BmL[i] = w_x*Gwx[i]
-            BmL[18 + i] = w_y*Gwy[i]
-            BmL[36 + i] = w_x*Gwy[i] + w_y*Gwx[i]
+            BNL[i] = w_x*Sw_x[i]
+            BNL[18 + i] = w_y*Sw_y[i]
+            BNL[36 + i] = w_x*Sw_y[i] + w_y*Sw_x[i]
             for a in range(3):
                 ABL[18*a + i] = (A[3*a]*BLexx[i] + A[3*a + 1]*BLeyy[i] + A[3*a + 2]*BLgxy[i]
                                + B[3*a]*BLkxx[i] + B[3*a + 1]*BLkyy[i] + B[3*a + 2]*BLkxy[i])
-                ABmL[18*a + i] = A[3*a]*BmL[i] + A[3*a + 1]*BmL[18 + i] + A[3*a + 2]*BmL[36 + i]
+                ABNL[18*a + i] = A[3*a]*BNL[i] + A[3*a + 1]*BNL[18 + i] + A[3*a + 2]*BNL[36 + i]
 
         for i in range(18):
             for j in range(18):
                 KCNLve[18*i + j] += wij*detJ*(
-                    # KC0L = (Bm.T*A + Bb.T*B)*BmL
-                      ABL[i]*BmL[j] + ABL[18 + i]*BmL[18 + j] + ABL[36 + i]*BmL[36 + j]
-                    # KCL0 = BmL.T*(A*Bm + B*Bb)
-                    + BmL[i]*ABL[j] + BmL[18 + i]*ABL[18 + j] + BmL[36 + i]*ABL[36 + j]
-                    # KCLL = BmL.T*A*BmL
-                    + BmL[i]*ABmL[j] + BmL[18 + i]*ABmL[18 + j] + BmL[36 + i]*ABmL[36 + j]
+                    # KC0L = (Bm.T*A + Bb.T*B)*BNL
+                      ABL[i]*BNL[j] + ABL[18 + i]*BNL[18 + j] + ABL[36 + i]*BNL[36 + j]
+                    # KCL0 = BNL.T*(A*Bm + B*Bb)
+                    + BNL[i]*ABL[j] + BNL[18 + i]*ABL[18 + j] + BNL[36 + i]*ABL[36 + j]
+                    # KCLL = BNL.T*A*BNL
+                    + BNL[i]*ABNL[j] + BNL[18 + i]*ABNL[18 + j] + BNL[36 + i]*ABNL[36 + j]
                     # KGNL = G.T*[NNL]*G
-                    + Gwx[i]*(NNL[0]*Gwx[j] + NNL[2]*Gwy[j])
-                    + Gwy[i]*(NNL[2]*Gwx[j] + NNL[1]*Gwy[j])
+                    + Sw_x[i]*(NNL[0]*Sw_x[j] + NNL[2]*Sw_y[j])
+                    + Sw_y[i]*(NNL[2]*Sw_x[j] + NNL[1]*Sw_y[j])
                 )
 
 
@@ -3719,10 +4066,29 @@ cdef class Tria3R:
         r"""Add the geometrically nonlinear terms to the probe internal forces
 
         The attribute ``finte`` of the :class:`.Tria3RProbe` receives the terms
-        of the von Karman membrane strain `\{\epsilon_{NL}\} = \{w_{,x}^2/2,
-        w_{,y}^2/2, w_{,x} w_{,y}\}^T`, evaluated at the displacements ``ue`` of
-        the probe, such that ``finte`` becomes the gradient of the strain energy
-        whose Hessian is KC0 + KCNL + KG. See :meth:`.update_KCNL`.
+        of the von Karman membrane strains, evaluated at the displacements
+        ``ue`` of the probe and added to the linear internal forces already in
+        ``finte``. See :meth:`.update_KCNL`.
+
+        Notes
+        -----
+        With the von Karman membrane strain `\boldsymbol{\epsilon}_{NL} = \{w_{,x}^2/2,
+        w_{,y}^2/2, w_{,x} w_{,y}\}^\top`, the linear stress resultants `\boldsymbol{N} =
+        \boldsymbol{A} \boldsymbol{\epsilon} + \boldsymbol{B} \boldsymbol{\kappa}`, and `\boldsymbol{N}_{NL} =
+        \boldsymbol{A} \boldsymbol{\epsilon}_{NL}`, `\boldsymbol{M}_{NL} = \boldsymbol{B} \boldsymbol{\epsilon}_{NL}`, the terms
+        added are
+
+        .. math::
+
+            A_e \left( \boldsymbol{B}_m^\top \boldsymbol{N}_{NL} + \boldsymbol{B}_b^\top \boldsymbol{M}_{NL}
+            + \boldsymbol{B}_{NL}^\top (\boldsymbol{N} + \boldsymbol{N}_{NL}) \right)
+
+        with `A_e` the element area and `\boldsymbol{B}_{NL}` the variation of
+        `\boldsymbol{\epsilon}_{NL}`, see :meth:`.update_KCNL`, such that ``finte``
+        becomes the gradient of the strain energy whose Hessian is
+        KC0 + KCNL + KG. The rows are those of :meth:`._update_probe_BL_G`, integrated
+        with one point, as in :meth:`.update_KG`, the strains being constant
+        within the element.
 
         """
         cdef int i, a
@@ -3743,8 +4109,8 @@ cdef class Tria3R:
         cdef double *BLkxx
         cdef double *BLkyy
         cdef double *BLkxy
-        cdef double *Gwx
-        cdef double *Gwy
+        cdef double *Sw_x
+        cdef double *Sw_y
 
         ue = &self.probe.ue[0]
         finte = &self.probe.finte[0]
@@ -3754,8 +4120,8 @@ cdef class Tria3R:
         BLkxx = &self.probe.BLkxx[0]
         BLkyy = &self.probe.BLkyy[0]
         BLkxy = &self.probe.BLkxy[0]
-        Gwx = &self.probe.Gwx[0]
-        Gwy = &self.probe.Gwy[0]
+        Sw_x = &self.probe.Sw_x[0]
+        Sw_y = &self.probe.Sw_y[0]
 
         prop.get_constitutive_element(self.m11, self.m12, self.m21, self.m22, A, B, NULL, NULL)
 
@@ -3779,8 +4145,8 @@ cdef class Tria3R:
             kxx += BLkxx[i]*ue[i]
             kyy += BLkyy[i]*ue[i]
             kxy += BLkxy[i]*ue[i]
-            w_x += Gwx[i]*ue[i]
-            w_y += Gwy[i]*ue[i]
+            w_x += Sw_x[i]*ue[i]
+            w_y += Sw_y[i]*ue[i]
 
         epsNL[0] = w_x*w_x/2.
         epsNL[1] = w_y*w_y/2.
@@ -3799,10 +4165,10 @@ cdef class Tria3R:
                 # Bm.T*NNL + Bb.T*MNL
                   BLexx[i]*NNL[0] + BLeyy[i]*NNL[1] + BLgxy[i]*NNL[2]
                 + BLkxx[i]*MNL[0] + BLkyy[i]*MNL[1] + BLkxy[i]*MNL[2]
-                # BmL.T*(N + NNL)
-                + w_x*Gwx[i]*(N[0] + NNL[0])
-                + w_y*Gwy[i]*(N[1] + NNL[1])
-                + (w_x*Gwy[i] + w_y*Gwx[i])*(N[2] + NNL[2])
+                # BNL.T*(N + NNL)
+                + w_x*Sw_x[i]*(N[0] + NNL[0])
+                + w_y*Sw_y[i]*(N[1] + NNL[1])
+                + (w_x*Sw_y[i] + w_y*Sw_x[i])*(N[2] + NNL[2])
             )
 
 
@@ -3813,9 +4179,54 @@ cdef class Tria3R:
                            ShellProp prop,
                            int update_KCNLv_only=0
                            ):
-        r"""Update sparse vectors for the nonlinear constitutive stiffness matrix KCNL
+        r"""Update sparse vectors for the nonlinear stiffness matrix KCNL
 
-        Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, built from the von Karman
+        The nonlinear stiffness matrix KCNL is the part of the
+        tangent stiffness matrix, besides :meth:`.update_KC0` and
+        :meth:`.update_KG`, that depends on the displacements through the von
+        Karman membrane strains, evaluated at the displacements ``ue`` of the
+        probe. The sum of the three is the tangent stiffness matrix of the
+        internal forces of :meth:`.update_fint` with ``nonlinear=1``. With
+        ``drilling_model = 0`` the membrane rows include the Allman
+        enrichment, see :meth:`._update_probe_BL_G`.
+
+        Before this function is called, the probe :class:`.Tria3RProbe` attribute
+        of the :class:`.Tria3R` object must be updated using
+        :meth:`.update_probe_ue` with the current displacements; and
+        :meth:`.update_probe_xe` with the node coordinates.
+
+        The element matrix is computed in element coordinates into the probe
+        attribute ``KCNLve``, rotated to global coordinates, and its values
+        are added to ``KCNLv`` at the positions ``init_k_KCNL`` to
+        ``init_k_KCNL + KCNL_SPARSE_SIZE - 1``. With ``update_KCNLv_only=0``
+        the global row and column indices are written to ``KCNLr`` and
+        ``KCNLc`` at the same positions.
+
+        Parameters
+        ----------
+        KCNLr : np.array
+            Array to store row positions of sparse values
+            1-D array of integers (``INT``) of size at least ``init_k_KCNL +
+            KCNL_SPARSE_SIZE``.
+        KCNLc : np.array
+            Array to store column positions of sparse values
+            Same type and size as ``KCNLr``.
+        KCNLv : np.array
+            Array to store sparse values
+            1-D array of ``DOUBLE``, same size as ``KCNLr``. The values are
+            added to the existing ones, with the dimensions given for
+            ``KC0v`` in :meth:`.update_KC0`.
+        prop : :class:`.ShellProp` object
+            Shell property object from where the stiffness and mass attributes are
+            read from.
+        update_KCNLv_only : int, optional
+            The default ``0`` means that the row and column indices ``KCNLr`` and
+            ``KCNLc`` should also be updated. Any other value will only update the
+            stiffness matrix values ``KCNLv``.
+
+        Notes
+        -----
+        Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, that is `\boldsymbol{K}_{CNL} + \boldsymbol{K}_{GNL}`, the book's nonlinear constitutive stiffness matrix `\boldsymbol{K}_{CNL}` of the terms of `\boldsymbol{B}_{NL}` plus the geometric `\boldsymbol{K}_{GNL}`, built from the von Karman
         membrane strains
 
         .. math::
@@ -3823,15 +4234,19 @@ cdef class Tria3R:
             \epsilon_{yy} = v_{,y} + \frac{1}{2} w_{,y}^2, \quad
             \gamma_{xy} = u_{,y} + v_{,x} + w_{,x} w_{,y}
 
-        whose nonlinear part is `\{\epsilon_{NL}\} = \frac{1}{2} [B_{mL}]
-        \{u_e\}`, with `[B_{mL}]` its variation. With `[B_m]` and `[B_b]` the
-        linear membrane and bending strain-displacement matrices, `[G]` the
-        gradient of `w`, and `[A]`, `[B]` the laminate matrices:
+        whose nonlinear part is `\boldsymbol{\epsilon}_{NL} = \frac{1}{2} \boldsymbol{B}_{NL}
+        \boldsymbol{u}_e`, with `\boldsymbol{B}_{NL}` its variation. With `\boldsymbol{B}_m` and `\boldsymbol{B}_b` the
+        linear membrane and bending strain-displacement matrices, `\boldsymbol{G}_x = \partial \boldsymbol{S}^w / \partial x` and `\boldsymbol{G}_y = \partial \boldsymbol{S}^w / \partial y`
+        the gradients of `w`, and `\boldsymbol{A}`, `\boldsymbol{B}` the laminate matrices:
 
-        - KC0L = `[B_m]^T [A] [B_{mL}] + [B_b]^T [B] [B_{mL}]`
-        - KCL0 = KC0L`^T`
-        - KCLL = `[B_{mL}]^T [A] [B_{mL}]`
-        - KGNL = `[G]^T [N_{NL}] [G]`, with `\{N_{NL}\} = [A] \{\epsilon_{NL}\}`
+        - KC0L = `\boldsymbol{B}_m^\top \boldsymbol{A} \boldsymbol{B}_{NL} + \boldsymbol{B}_b^\top \boldsymbol{B} \boldsymbol{B}_{NL}`
+        - KCL0 = KC0L`^\top`
+        - KCLL = `\boldsymbol{B}_{NL}^\top \boldsymbol{A} \boldsymbol{B}_{NL}`
+        - KGNL = `N_{NL,xx} \boldsymbol{G}_x^\top \boldsymbol{G}_x + N_{NL,yy}
+          \boldsymbol{G}_y^\top \boldsymbol{G}_y + N_{NL,xy} (\boldsymbol{G}_x^\top
+          \boldsymbol{G}_y + \boldsymbol{G}_y^\top \boldsymbol{G}_x)`, with
+          `\boldsymbol{N}_{NL} = \{N_{NL,xx}, N_{NL,yy}, N_{NL,xy}\}^\top
+          = \boldsymbol{A} \boldsymbol{\epsilon}_{NL}`
 
         The first three groups are the constitutive terms coupling the linear and
         the nonlinear parts of the membrane strain. KGNL is geometric, carrying the
@@ -3840,32 +4255,11 @@ cdef class Tria3R:
         which is what a linear buckling analysis needs. With it here,
 
         .. math::
-            K_T = K_{C0} + K_{CNL}(u) + K_G(u)
+            \boldsymbol{K}_T = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u}) + \boldsymbol{K}_{GNL}(\boldsymbol{u}) + \boldsymbol{K}_G(\boldsymbol{u})
 
         is the exact Jacobian of the internal forces of :meth:`.update_fint` with
         ``nonlinear=1``, and a Newton-Raphson iteration built on them converges
         quadratically. The quadrature of :meth:`.update_KG` is used.
-
-        Before this function is called, the probe :class:`.Tria3RProbe` attribute
-        of the :class:`.Tria3R` object must be updated using
-        :func:`.update_probe_ue` with the current displacements; and
-        :func:`.update_probe_xe` with the node coordinates.
-
-        Parameters
-        ----------
-        KCNLr : np.array
-            Array to store row positions of sparse values
-        KCNLc : np.array
-            Array to store column positions of sparse values
-        KCNLv : np.array
-            Array to store sparse values
-        prop : :class:`.ShellProp` object
-            Shell property object from where the stiffness and mass attributes are
-            read from.
-        update_KCNLv_only : int
-            The default ``0`` means that the row and column indices ``KCNLr`` and
-            ``KCNLc`` should also be updated. Any other value will only update the
-            stiffness matrix values ``KCNLv``.
 
         """
         cdef int i, j, node_i, node_j, k, ke, m, n
@@ -3918,7 +4312,7 @@ cdef class Tria3R:
 
             # NOTE from element to global coordinates:
             #
-            # Kg = R @ Ke @ R.T
+            # Kg = T @ Ke @ T.T
             #
             # in tensor notation:
             #
@@ -3944,28 +4338,64 @@ cdef class Tria3R:
                          ):
         r"""Update sparse vectors for geometric stiffness matrix KG
 
-        Two-point Gauss-Legendre quadrature is used, which showed more accuracy
-        for linear buckling load predictions.
+        The matrix is evaluated once, with no quadrature loop.
 
         Before this function is called, the probe :class:`.Tria3RProbe`
         attribute of the :class:`Tria3R` object must be updated using
-        :func:`.update_probe_ue` with the correct pre-buckling displacements;
-        and :func:`.update_probe_xe` with the node coordinates.
+        :meth:`.update_probe_ue` with the correct pre-buckling displacements;
+        and :meth:`.update_probe_xe` with the node coordinates.
+
+        The membrane stress resultants are obtained from the linear membrane
+        strains and curvatures of the probe displacements ``ue``, including
+        for ``drilling_model=0`` the contribution of the drilling rotations,
+        and from the extensional and extension-bending coupling matrices of
+        ``prop`` rotated with ``m11, m12, m21, m22``. Only the translational
+        degrees-of-freedom appear. The values are added to ``KGv`` at the
+        positions ``init_k_KG`` to ``init_k_KG + KG_SPARSE_SIZE - 1``. With
+        ``update_KGv_only=0`` the global row and column indices are written
+        to ``KGr`` and ``KGc`` at the same positions.
 
         Parameters
         ----------
         KGr : np.array
            Array to store row positions of sparse values
+           1-D array of integers (``INT``) of size at least ``init_k_KG +
+           KG_SPARSE_SIZE``.
         KGc : np.array
            Array to store column positions of sparse values
+           Same type and size as ``KGr``.
         KGv : np.array
             Array to store sparse values
+            1-D array of ``DOUBLE``, same size as ``KGr``. The values are
+            added to the existing ones, with dimension of force per unit
+            length.
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
-        update_KGv_only : int
-            The default `0` means that only `KGv` is updated. Any other value will
-            lead to `KGr` and `KGc` also being updated.
+        update_KGv_only : int, optional
+            The default ``0`` means that the row and column indices ``KGr``
+            and ``KGc`` are also updated. Any other value will only update the
+            values ``KGv``.
+
+        Notes
+        -----
+        The stress resultants are
+
+        .. math::
+
+            \{N_{xx}, N_{yy}, N_{xy}\}^\top = \boldsymbol{A}\{\epsilon_{xx}, \epsilon_{yy},
+            \gamma_{xy}\}^\top + \boldsymbol{B}\{\kappa_{xx}, \kappa_{yy}, \kappa_{xy}\}^\top
+
+        with the linear strains of the probe displacements, which for
+        ``drilling_model = 0`` include the contribution of the Allman
+        enrichment at the centroid, see :func:`.allman_enrichment`, since the
+        edge modes populate the drilling columns of the membrane operator;
+        without it KG would not be part of the exact Jacobian of the internal
+        forces, see :meth:`.update_KCNL`. The matrix is then the one of
+        :meth:`.update_KG_given_stress`. Only the linear strains contribute,
+        which leaves this matrix homogeneous of degree one in the
+        displacements, as a linear buckling analysis needs; the stress of the
+        nonlinear membrane strain is carried by :meth:`.update_KCNL`.
 
         """
         cdef double *ue
@@ -3978,12 +4408,11 @@ cdef class Tria3R:
         # NOTE ABD in the element direction
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
-        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
-        cdef double m11, m12, m21, m22
-        cdef double N1x, N2x, N3x, N1y, N2y, N3y
+        cdef double r13, r23, r33
+        cdef double S1_x, S2_x, S3_x, S1_y, S2_y, S3_y
         cdef double Nxx, Nyy, Nxy
-        cdef double Nxv[3]
-        cdef double Nyv[3]
+        cdef double S_x[3]
+        cdef double S_y[3]
         cdef double denr[12]
         cdef double dexx, deyy, dgxy
         cdef int qi
@@ -4008,14 +4437,8 @@ cdef class Tria3R:
             B66 = Be[8]
 
             # local to global transformation
-            r11 = self.r11
-            r12 = self.r12
             r13 = self.r13
-            r21 = self.r21
-            r22 = self.r22
             r23 = self.r23
-            r31 = self.r31
-            r32 = self.r32
             r33 = self.r33
 
             # NOTE ignoring z in local coordinates
@@ -4283,16 +4706,16 @@ cdef class Tria3R:
 
             wij = 0.5
 
-            N1x = (y2 - y3)/(2*self.area)
-            N2x = (-y1 + y3)/(2*self.area)
-            N3x = (y1 - y2)/(2*self.area)
-            N1y = (-x2 + x3)/(2*self.area)
-            N2y = (x1 - x3)/(2*self.area)
-            N3y = (-x1 + x2)/(2*self.area)
+            S1_x = (y2 - y3)/(2*self.area)
+            S2_x = (-y1 + y3)/(2*self.area)
+            S3_x = (y1 - y2)/(2*self.area)
+            S1_y = (-x2 + x3)/(2*self.area)
+            S2_y = (x1 - x3)/(2*self.area)
+            S3_y = (-x1 + x2)/(2*self.area)
 
-            Nxx = ue[0]*(A11*N1x + A16*N1y) + ue[10]*(B11*N2x + B16*N2y) + ue[12]*(A11*N3x + A16*N3y) + ue[13]*(A12*N3y + A16*N3x) - ue[15]*(B12*N3y + B16*N3x) + ue[16]*(B11*N3x + B16*N3y) + ue[1]*(A12*N1y + A16*N1x) - ue[3]*(B12*N1y + B16*N1x) + ue[4]*(B11*N1x + B16*N1y) + ue[6]*(A11*N2x + A16*N2y) + ue[7]*(A12*N2y + A16*N2x) - ue[9]*(B12*N2y + B16*N2x)
-            Nyy = ue[0]*(A12*N1x + A26*N1y) + ue[10]*(B12*N2x + B26*N2y) + ue[12]*(A12*N3x + A26*N3y) + ue[13]*(A22*N3y + A26*N3x) - ue[15]*(B22*N3y + B26*N3x) + ue[16]*(B12*N3x + B26*N3y) + ue[1]*(A22*N1y + A26*N1x) - ue[3]*(B22*N1y + B26*N1x) + ue[4]*(B12*N1x + B26*N1y) + ue[6]*(A12*N2x + A26*N2y) + ue[7]*(A22*N2y + A26*N2x) - ue[9]*(B22*N2y + B26*N2x)
-            Nxy = ue[0]*(A16*N1x + A66*N1y) + ue[10]*(B16*N2x + B66*N2y) + ue[12]*(A16*N3x + A66*N3y) + ue[13]*(A26*N3y + A66*N3x) - ue[15]*(B26*N3y + B66*N3x) + ue[16]*(B16*N3x + B66*N3y) + ue[1]*(A26*N1y + A66*N1x) - ue[3]*(B26*N1y + B66*N1x) + ue[4]*(B16*N1x + B66*N1y) + ue[6]*(A16*N2x + A66*N2y) + ue[7]*(A26*N2y + A66*N2x) - ue[9]*(B26*N2y + B66*N2x)
+            Nxx = ue[0]*(A11*S1_x + A16*S1_y) + ue[10]*(B11*S2_x + B16*S2_y) + ue[12]*(A11*S3_x + A16*S3_y) + ue[13]*(A12*S3_y + A16*S3_x) - ue[15]*(B12*S3_y + B16*S3_x) + ue[16]*(B11*S3_x + B16*S3_y) + ue[1]*(A12*S1_y + A16*S1_x) - ue[3]*(B12*S1_y + B16*S1_x) + ue[4]*(B11*S1_x + B16*S1_y) + ue[6]*(A11*S2_x + A16*S2_y) + ue[7]*(A12*S2_y + A16*S2_x) - ue[9]*(B12*S2_y + B16*S2_x)
+            Nyy = ue[0]*(A12*S1_x + A26*S1_y) + ue[10]*(B12*S2_x + B26*S2_y) + ue[12]*(A12*S3_x + A26*S3_y) + ue[13]*(A22*S3_y + A26*S3_x) - ue[15]*(B22*S3_y + B26*S3_x) + ue[16]*(B12*S3_x + B26*S3_y) + ue[1]*(A22*S1_y + A26*S1_x) - ue[3]*(B22*S1_y + B26*S1_x) + ue[4]*(B12*S1_x + B26*S1_y) + ue[6]*(A12*S2_x + A26*S2_y) + ue[7]*(A22*S2_y + A26*S2_x) - ue[9]*(B22*S2_y + B26*S2_x)
+            Nxy = ue[0]*(A16*S1_x + A66*S1_y) + ue[10]*(B16*S2_x + B66*S2_y) + ue[12]*(A16*S3_x + A66*S3_y) + ue[13]*(A26*S3_y + A66*S3_x) - ue[15]*(B26*S3_y + B66*S3_x) + ue[16]*(B16*S3_x + B66*S3_y) + ue[1]*(A26*S1_y + A66*S1_x) - ue[3]*(B26*S1_y + B66*S1_x) + ue[4]*(B16*S1_x + B66*S1_y) + ue[6]*(A16*S2_x + A66*S2_y) + ue[7]*(A26*S2_y + A66*S2_x) - ue[9]*(B26*S2_y + B66*S2_x)
 
             # NOTE the Allman enrichment populates the drilling columns of
             #      the membrane operator, so the membrane stress resultants
@@ -4301,13 +4724,13 @@ cdef class Tria3R:
             #      be part of the exact Jacobian of the internal forces, see
             #      update_KCNL
             if self.drilling_model == 0:
-                Nxv[0] = N1x
-                Nxv[1] = N2x
-                Nxv[2] = N3x
-                Nyv[0] = N1y
-                Nyv[1] = N2y
-                Nyv[2] = N3y
-                allman_enrichment(Nxv, Nyv, &self.probe.xe[0], 1./3., 1./3.,
+                S_x[0] = S1_x
+                S_x[1] = S2_x
+                S_x[2] = S3_x
+                S_y[0] = S1_y
+                S_y[1] = S2_y
+                S_y[2] = S3_y
+                allman_enrichment(S_x, S_y, &self.probe.xe[0], 1./3., 1./3.,
                                   1./3., denr)
                 dexx = 0.
                 deyy = 0.
@@ -4321,167 +4744,167 @@ cdef class Tria3R:
                 Nxy += A16*dexx + A26*deyy + A66*dgxy
 
             k = self.init_k_KG
-            KGv[k] += r13**2*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13**2*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13**2*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13**2*(S2_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S2_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S2_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S2_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S2_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S2_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13**2*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13**2*(S3_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S3_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S3_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S3_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S3_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S3_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r23**2*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r23**2*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S2_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S2_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r23**2*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r23**2*(S2_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S2_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S2_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S2_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S3_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S3_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r23**2*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r23**2*(S3_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S3_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S3_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S3_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r33**2*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r33**2*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S2_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S2_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S2_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S2_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r33**2*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r33**2*(S2_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S2_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S3_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S3_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S3_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S3_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r33**2*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r33**2*(S3_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S3_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13**2*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13**2*(S1_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S1_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S1_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S1_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S1_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S1_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13**2*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13**2*(S2_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S2_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S2_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S2_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S2_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S2_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13**2*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13**2*(S3_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S3_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S3_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S3_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S3_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S3_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S1_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S1_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r23**2*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r23**2*(S1_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S1_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S1_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S1_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S2_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S2_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r23**2*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r23**2*(S2_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S2_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S2_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S2_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S3_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S3_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r23**2*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r23**2*(S3_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S3_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S3_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S3_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S1_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S1_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S1_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S1_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r33**2*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r33**2*(S1_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S1_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S2_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S2_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S2_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S2_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r33**2*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r33**2*(S2_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S2_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S3_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S3_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S3_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S3_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r33**2*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r33**2*(S3_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S3_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13**2*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13**2*(S1_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S1_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S1_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S1_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S1_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S1_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13**2*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13**2*(S2_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S2_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S2_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S2_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S2_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S2_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13**2*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13**2*(S3_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S3_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S3_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S3_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S3_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S3_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S1_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S1_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r23**2*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r23**2*(S1_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S1_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S1_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S1_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S2_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S2_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r23**2*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r23**2*(S2_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S2_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S2_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S2_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S3_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S3_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r23**2*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r23**2*(S3_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S3_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S3_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S3_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S1_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S1_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S1_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S1_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r33**2*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r33**2*(S1_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S1_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S2_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S2_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S2_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S2_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r33**2*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r33**2*(S2_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S2_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S3_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S3_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S3_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S3_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r33**2*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r33**2*(S3_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S3_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
 
 
     cpdef void update_KG_given_stress(Tria3R self,
@@ -4496,45 +4919,74 @@ cdef class Tria3R:
         .. note:: A constant stress state is assumed within the element,
                   according to the given values of `N_{xx}, N_{yy}, N_{xy}`.
 
-        Two-point Gauss-Legendre quadrature is used, which showed more accuracy
-        for linear buckling load predictions.
+        The matrix is evaluated once, with no quadrature loop.
 
         Before this function is called, the probe :class:`.Tria3RProbe`
         attribute of the :class:`.Tria3R` object must be updated using
-        :func:`.update_probe_xe` with the node coordinates.
+        :meth:`.update_probe_xe` with the node coordinates.
+
+        Only the translational degrees-of-freedom appear. The values are added
+        to ``KGv`` at the positions ``init_k_KG`` to ``init_k_KG +
+        KG_SPARSE_SIZE - 1``. With ``update_KGv_only=0`` the global row and
+        column indices are written to ``KGr`` and ``KGc`` at the same
+        positions. :meth:`.update_rotation_matrix` must also have been called
+        before.
 
         Parameters
         ----------
+        Nxx, Nyy, Nxy : double
+            Membrane stress resultants in the element coordinate system,
+            force per unit length.
         KGr : np.array
            Array to store row positions of sparse values
+           1-D array of integers (``INT``) of size at least ``init_k_KG +
+           KG_SPARSE_SIZE``.
         KGc : np.array
            Array to store column positions of sparse values
+           Same type and size as ``KGr``.
         KGv : np.array
             Array to store sparse values
-        update_KGv_only : int
-            The default `0` means that only `KGv` is updated. Any other value will
-            lead to `KGr` and `KGc` also being updated.
+            1-D array of ``DOUBLE``, same size as ``KGr``. The values are
+            added to the existing ones, with dimension of force per unit
+            length.
+        update_KGv_only : int, optional
+            The default ``0`` means that the row and column indices ``KGr``
+            and ``KGc`` are also updated. Any other value will only update the
+            values ``KGv``.
+
+        Notes
+        -----
+        The geometric stiffness is the Donnell one, involving only the
+        gradient of the element-frame `w`,
+
+        .. math::
+
+            \boldsymbol{K}_G = A_e \left( N_{xx} \boldsymbol{G}_x^\top \boldsymbol{G}_x
+            + N_{yy} \boldsymbol{G}_y^\top \boldsymbol{G}_y
+            + N_{xy} (\boldsymbol{G}_x^\top \boldsymbol{G}_y
+            + \boldsymbol{G}_y^\top \boldsymbol{G}_x) \right)
+
+        with `A_e` the element area and `\boldsymbol{G}_x`, `\boldsymbol{G}_y`
+        the rows ``Sw_x``, ``Sw_y`` of
+        :meth:`._update_probe_BL_G`, the element-frame `w` being obtained
+        from the global translations with the element normal `\{T_{13},
+        T_{23}, T_{33}\}`. The integrand is constant over the triangle, so the
+        single evaluation is exact.
 
         """
         cdef int c1, c2, c3, k
         cdef double x1, x2, x3
         cdef double y1, y2, y3
         cdef double wij, detJ
-        cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
-        cdef double N1x, N2x, N3x, N1y, N2y, N3y
+        cdef double r13, r23, r33
+        cdef double S1_x, S2_x, S3_x, S1_y, S2_y, S3_y
 
         with nogil:
             detJ = 2*self.area
 
             # local to global transformation
-            r11 = self.r11
-            r12 = self.r12
             r13 = self.r13
-            r21 = self.r21
-            r22 = self.r22
             r23 = self.r23
-            r31 = self.r31
-            r32 = self.r32
             r33 = self.r33
 
             # NOTE ignoring z in local coordinates
@@ -4800,175 +5252,175 @@ cdef class Tria3R:
 
             wij = 0.5
 
-            N1x = (y2 - y3)/(2*self.area)
-            N2x = (-y1 + y3)/(2*self.area)
-            N3x = (y1 - y2)/(2*self.area)
-            N1y = (-x2 + x3)/(2*self.area)
-            N2y = (x1 - x3)/(2*self.area)
-            N3y = (-x1 + x2)/(2*self.area)
+            S1_x = (y2 - y3)/(2*self.area)
+            S2_x = (-y1 + y3)/(2*self.area)
+            S3_x = (y1 - y2)/(2*self.area)
+            S1_y = (-x2 + x3)/(2*self.area)
+            S2_y = (x1 - x3)/(2*self.area)
+            S3_y = (-x1 + x2)/(2*self.area)
 
             k = self.init_k_KG
-            KGv[k] += r13**2*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13**2*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13**2*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13**2*(S2_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S2_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S2_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S2_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S2_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S2_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13**2*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13**2*(S3_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S3_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S3_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S3_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S3_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S3_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r23**2*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r23**2*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S2_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S2_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r23**2*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r23**2*(S2_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S2_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S2_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S2_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S3_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S3_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r23**2*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r23**2*(S3_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S3_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S3_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S3_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r33**2*(N1x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N1y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r33**2*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S2_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S2_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S2_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S2_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r33**2*(N2x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N2y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r33**2*(S2_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S2_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S3_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S3_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S3_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S3_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r33**2*(N3x*(N1x*Nxx*detJ*wij + N1y*Nxy*detJ*wij) + N3y*(N1x*Nxy*detJ*wij + N1y*Nyy*detJ*wij))
+            KGv[k] += r33**2*(S3_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S3_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
             k += 1
-            KGv[k] += r13**2*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13**2*(S1_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S1_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S1_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S1_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S1_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S1_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13**2*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13**2*(S2_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S2_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S2_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S2_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S2_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S2_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13**2*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13**2*(S3_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S3_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S3_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S3_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S3_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S3_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S1_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S1_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r23**2*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r23**2*(S1_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S1_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S1_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S1_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S2_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S2_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r23**2*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r23**2*(S2_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S2_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S2_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S2_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S3_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S3_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r23**2*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r23**2*(S3_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S3_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S3_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S3_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S1_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S1_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S1_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S1_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r33**2*(N1x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N1y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r33**2*(S1_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S1_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S2_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S2_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S2_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S2_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r33**2*(N2x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N2y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r33**2*(S2_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S2_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S3_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S3_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S3_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S3_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r33**2*(N3x*(N2x*Nxx*detJ*wij + N2y*Nxy*detJ*wij) + N3y*(N2x*Nxy*detJ*wij + N2y*Nyy*detJ*wij))
+            KGv[k] += r33**2*(S3_x*(Nxx*S2_x*detJ*wij + Nxy*S2_y*detJ*wij) + S3_y*(Nxy*S2_x*detJ*wij + Nyy*S2_y*detJ*wij))
             k += 1
-            KGv[k] += r13**2*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13**2*(S1_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S1_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S1_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S1_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S1_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S1_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13**2*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13**2*(S2_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S2_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S2_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S2_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S2_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S2_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13**2*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13**2*(S3_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S3_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S3_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S3_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S3_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S3_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S1_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S1_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r23**2*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r23**2*(S1_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S1_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S1_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S1_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S2_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S2_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r23**2*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r23**2*(S2_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S2_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S2_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S2_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r23*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r23*(S3_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S3_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r23**2*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r23**2*(S3_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S3_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S3_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S3_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S1_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S1_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S1_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S1_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r33**2*(N1x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N1y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r33**2*(S1_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S1_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S2_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S2_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S2_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S2_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r33**2*(N2x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N2y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r33**2*(S2_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S2_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r13*r33*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r13*r33*(S3_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S3_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r23*r33*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r23*r33*(S3_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S3_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
             k += 1
-            KGv[k] += r33**2*(N3x*(N3x*Nxx*detJ*wij + N3y*Nxy*detJ*wij) + N3y*(N3x*Nxy*detJ*wij + N3y*Nyy*detJ*wij))
+            KGv[k] += r33**2*(S3_x*(Nxx*S3_x*detJ*wij + Nxy*S3_y*detJ*wij) + S3_y*(Nxy*S3_x*detJ*wij + Nyy*S3_y*detJ*wij))
 
 
     cpdef void update_M(Tria3R self,
@@ -4983,32 +5435,137 @@ cdef class Tria3R:
         Different integration schemes are available by means of the ``mtype``
         parameter.
 
+        The element matrix is computed from ``intrho``, ``intrhoz`` and
+        ``intrhoz2`` of ``prop``, the coordinates ``probe.xe`` and the
+        ``area``, rotated to global coordinates, and its values are added to
+        ``Mv`` at the positions starting at ``init_k_M``; the global row and
+        column indices are always written to ``Mr`` and ``Mc`` at the same
+        positions. ``mtype=0`` and ``mtype=2`` write ``M_SPARSE_SIZE``
+        entries and ``mtype=1`` writes the first 90 of them. Before this
+        method is called, :meth:`.update_rotation_matrix` and
+        :meth:`.update_probe_xe` must have been used.
+
         Parameters
         ----------
         Mr : np.array
             Array to store row positions of sparse values
+            1-D array of integers (``INT``) of size at least ``init_k_M +
+            M_SPARSE_SIZE``.
         Mc : np.array
             Array to store column positions of sparse values
+            Same type and size as ``Mr``.
         Mv : np.array
             Array to store sparse values
+            1-D array of ``DOUBLE``, same size as ``Mr``. The values are added
+            to the existing ones. Dimension of mass between translations, of
+            mass times length between a translation and a rotation, and of
+            mass times length squared between rotations.
+        prop : :class:`.ShellProp` object
+            Shell property object, from which ``intrho``, ``intrhoz`` and
+            ``intrhoz2`` are read.
         mtype : int, optional
-            0 for consistent mass matrix using method from Brockman 1987
-            1 for reduced integration mass matrix using method from Brockman 1987
-            2 for lumped mass matrix using method from Brockman 1987
+            0 for consistent mass matrix
+            1 for lumped mass matrix
+            2 for reduced integration mass matrix
+            Default ``0``.
+
+        Raises
+        ------
+        ValueError
+            If ``mtype`` is not 0, 1 or 2.
+
+        Notes
+        -----
+        The element matrices follow from the kinetic energy of Brockman [1]_,
+        Eq. (20), with the displacements `u + z r_y`, `v - z r_x` and `w`
+        through the thickness,
+
+        .. math::
+
+            T = \frac{1}{2} \int_A \left[ I_\rho (\dot{u}^2 + \dot{v}^2 +
+            \dot{w}^2) + 2 I_{\rho z} (\dot{u} \dot{r}_y - \dot{v} \dot{r}_x)
+            + I_{\rho z^2} (\dot{r}_x^2 + \dot{r}_y^2) \right] dA
+
+        with `I_\rho`, `I_{\rho z}` and `I_{\rho z^2}` given by ``intrho``,
+        ``intrhoz`` and ``intrhoz2``, which include the offset. With `h_{ij}`
+        the integral of the product of the shape functions `S_i S_j` over
+        the element, the element matrix has, as in Eq. (21) of [1]_, `I_\rho
+        h_{ij}` between the translations of nodes `i` and `j`, `I_{\rho z^2}
+        h_{ij}` between the rotations `r_x` and between the rotations `r_y`,
+        and `I_{\rho z} h_{ij}` coupling the translations to the rotations.
+        The drilling rotation `r_z` has no inertia. The schemes differ in how
+        `h_{ij}` is integrated:
+
+        - ``mtype=0``: the three-point rule of degree of precision 2, first
+          row of Table I in Cowper [2]_, with the area coordinates `(2/3,
+          1/6, 1/6)` and their permutations, each with the weight `A_e/3`,
+          which is exact for the quadratic `S_i S_j`, `h_{ii} = A_e/6` and
+          `h_{ij} = A_e/12`
+        - ``mtype=1``: the vertex rule, the three nodes, each with the weight
+          `A_e/3`, `h_{ii} = A_e/3` and `h_{ij} = 0`
+        - ``mtype=2``: a single point at the centroid, `h_{ij} = A_e/9`
+
+        with `A_e` the element area. In element coordinates the coupling
+        terms are `+I_{\rho z} h_{ij}` between `u` and `r_y` and `-I_{\rho z}
+        h_{ij}` between `v` and `r_x`, consistently with the curvatures of
+        :meth:`._update_probe_BL_G`.
+
+        .. rubric:: Lumped mass matrix
+
+        The vertex rule is a nodal quadrature. Applied to the whole integrand
+        of `T`, in which `S_i` is 1 at node `i` and 0 at the other nodes, it
+        gives no coupling between different nodes and, for node `i`, the
+        block
+
+        .. math::
+
+            \frac{A_e}{3} \begin{bmatrix}
+                I_\rho & 0 & 0 & 0 & I_{\rho z} & 0 \\
+                0 & I_\rho & 0 & -I_{\rho z} & 0 & 0 \\
+                0 & 0 & I_\rho & 0 & 0 & 0 \\
+                0 & -I_{\rho z} & 0 & I_{\rho z^2} & 0 & 0 \\
+                I_{\rho z} & 0 & 0 & 0 & I_{\rho z^2} & 0 \\
+                0 & 0 & 0 & 0 & 0 & 0
+            \end{bmatrix}
+
+        for the DOF `u, v, w, r_x, r_y, r_z`. The coupling through `I_{\rho
+        z}` stays in the nodal block: the matrix is block-diagonal per node,
+        and diagonal only when `I_{\rho z} = 0`, as Brockman [1]_ notes for the
+        Lobatto integration at the nodes of the quadrilateral. Since the
+        weights sum to `A_e` and `\sum_i (A_e/3) \boldsymbol{x}_i = \int_A \boldsymbol{x}
+        dA`, with `\boldsymbol{x}_i` the position of node `i`, the lumped matrix has
+        the exact mass and the exact first moment of the mass, including the
+        term `I_{\rho z} A_e` that places the centre of mass at the offset
+        from the reference surface. Of the rotary inertia, the term `I_{\rho
+        z^2} A_e` about the axes in the plane of the element is exact, while
+        the part from the distribution of `I_\rho` over the area, about any
+        axis, is concentrated at the nodes: 4 times the exact value about the
+        centroid of the element, an error that decreases with the size of
+        the elements.
+
+        References
+        ----------
+        .. [1] Brockman, R. A., Dynamics of the Bilinear Mindlin Plate
+           Element, International Journal for Numerical Methods in
+           Engineering, 24(12), 2343-2356, 1987.
+           https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208
+        .. [2] Cowper, G. R., Gaussian quadrature formulas for triangles,
+           International Journal for Numerical Methods in Engineering,
+           7(3), 405-408, 1973. https://doi.org/10.1002/nme.1620070316
 
         """
         cdef int c1, c2, c3, i, k
         cdef double intrho, intrhoz, intrhoz2
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
-        cdef double x1, x2, x3
-        cdef double y1, y2, y3
-        cdef double j11, j12, j21, j22
-        cdef double N1x, N2x, N3x
-        cdef double N1y, N2y, N3y
-        cdef double cxx, cyy, cxy
         cdef double h11, h12, h13, h22, h23, h33, valH1
-        cdef double wij, detJ, N1, N2, N3
+        cdef double wij, detJ, S1, S2, S3
         cdef double points[3]
+
+        # NOTE checked once per call, before the code without the GIL
+        if mtype != 0 and mtype != 1 and mtype != 2:
+            raise ValueError('mtype=%d is not supported by Tria3R.update_M, '
+                             'use 0 (consistent), 1 (lumped) or 2 (reduced '
+                             'integration)' % mtype)
 
         with nogil:
             intrho = prop.intrho
@@ -5017,17 +5574,6 @@ cdef class Tria3R:
 
             detJ = 2*self.area
             valH1 = detJ/18.
-
-            # NOTE ignoring z in local coordinates
-            x1 = self.probe.xe[0]
-            y1 = self.probe.xe[1]
-            # z1 = self.probe.xe[2]
-            x2 = self.probe.xe[3]
-            y2 = self.probe.xe[4]
-            # z2 = self.probe.xe[5]
-            x3 = self.probe.xe[6]
-            y3 = self.probe.xe[7]
-            # z3 = self.probe.xe[8]
 
             # local to global transformation
             r11 = self.r11
@@ -5045,7 +5591,7 @@ cdef class Tria3R:
             c2 = self.c2
             c3 = self.c3
 
-            if mtype == 0: # M_cons consistent mass matrix, using two-point Gauss-Legendre quadrature
+            if mtype == 0: # M_cons consistent mass matrix, three-point rule of Cowper (1973), see below
                 k = self.init_k_M
                 Mr[k] = 0+c1
                 Mc[k] = 0+c1
@@ -5857,10 +6403,11 @@ cdef class Tria3R:
                 Mr[k] = 5+c3
                 Mc[k] = 5+c3
 
-                # NOTE 3-point Gauss-Legendre quadrature for KG
-                # GAUSSIAN QUADRATURE FORMULAS FOR TRIANGLES
-                # G. R. COWPER
-                # https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620070316
+                # NOTE three-point rule of degree of precision 2, first row of Table I
+                #      in Cowper, G. R., Gaussian quadrature formulas for triangles,
+                #      IJNME 7(3), 405-408, 1973, doi:10.1002/nme.1620070316: area
+                #      coordinates (2/3, 1/6, 1/6) and their permutations, weight 1/6
+                #      times detJ = 2*area, i.e. area/3
                 wij = 0.5*0.333333333333333333333333333333333333333333333
                 points[0] = 0.66666666666666666666666666666666666666666667
                 points[1] = 0.16666666666666666666666666666666666666666667
@@ -5873,24 +6420,24 @@ cdef class Tria3R:
                 h33 = 0.
                 for i in range(3):
                     if i == 0:
-                        N1 = points[0]
-                        N2 = points[1]
-                        N3 = points[2]
+                        S1 = points[0]
+                        S2 = points[1]
+                        S3 = points[2]
                     elif i == 1:
-                        N1 = points[1]
-                        N2 = points[2]
-                        N3 = points[0]
+                        S1 = points[1]
+                        S2 = points[2]
+                        S3 = points[0]
                     elif i == 2:
-                        N1 = points[2]
-                        N2 = points[0]
-                        N3 = points[1]
+                        S1 = points[2]
+                        S2 = points[0]
+                        S3 = points[1]
 
-                    h11 += N1**2*detJ*wij
-                    h12 += N1*N2*detJ*wij
-                    h13 += N1*N3*detJ*wij
-                    h22 += N2**2*detJ*wij
-                    h23 += N2*N3*detJ*wij
-                    h33 += N3**2*detJ*wij
+                    h11 += S1**2*detJ*wij
+                    h12 += S1*S2*detJ*wij
+                    h13 += S1*S3*detJ*wij
+                    h22 += S2**2*detJ*wij
+                    h23 += S2*S3*detJ*wij
+                    h33 += S3**2*detJ*wij
 
                 k = self.init_k_M
                 Mv[k] += h11*intrho*r11**2 + h11*intrho*r12**2 + h11*intrho*r13**2
@@ -6433,7 +6980,7 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h33*intrhoz2*r31**2 + h33*intrhoz2*r32**2
 
-            elif mtype == 1: # M_red mass matrix purely by reduced integration
+            elif mtype == 2: # M_red mass matrix purely by reduced integration
                 k = self.init_k_M
                 Mr[k] = 0+c1
                 Mc[k] = 0+c1
@@ -7787,7 +8334,7 @@ cdef class Tria3R:
                 Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
 
 
-            elif mtype == 2: # M_lump lumped mass matrix using two-point Gauss-Lobatto quadrature
+            elif mtype == 1: # M_lump lumped mass matrix, vertex rule, see the Notes
                 k = self.init_k_M
                 Mr[k] = 0+c1
                 Mc[k] = 0+c1
@@ -7799,22 +8346,10 @@ cdef class Tria3R:
                 Mc[k] = 2+c1
                 k += 1
                 Mr[k] = 0+c1
-                Mc[k] = 0+c2
+                Mc[k] = 4+c1
                 k += 1
                 Mr[k] = 0+c1
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 0+c1
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 0+c1
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 0+c1
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 0+c1
-                Mc[k] = 2+c3
+                Mc[k] = 5+c1
                 k += 1
                 Mr[k] = 1+c1
                 Mc[k] = 0+c1
@@ -7826,22 +8361,10 @@ cdef class Tria3R:
                 Mc[k] = 2+c1
                 k += 1
                 Mr[k] = 1+c1
-                Mc[k] = 0+c2
+                Mc[k] = 3+c1
                 k += 1
                 Mr[k] = 1+c1
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 1+c1
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 1+c1
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 1+c1
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 1+c1
-                Mc[k] = 2+c3
+                Mc[k] = 5+c1
                 k += 1
                 Mr[k] = 2+c1
                 Mc[k] = 0+c1
@@ -7853,22 +8376,16 @@ cdef class Tria3R:
                 Mc[k] = 2+c1
                 k += 1
                 Mr[k] = 2+c1
-                Mc[k] = 0+c2
+                Mc[k] = 3+c1
                 k += 1
                 Mr[k] = 2+c1
-                Mc[k] = 1+c2
+                Mc[k] = 4+c1
                 k += 1
-                Mr[k] = 2+c1
-                Mc[k] = 2+c2
+                Mr[k] = 3+c1
+                Mc[k] = 1+c1
                 k += 1
-                Mr[k] = 2+c1
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 2+c1
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 2+c1
-                Mc[k] = 2+c3
+                Mr[k] = 3+c1
+                Mc[k] = 2+c1
                 k += 1
                 Mr[k] = 3+c1
                 Mc[k] = 3+c1
@@ -7879,338 +8396,176 @@ cdef class Tria3R:
                 Mr[k] = 3+c1
                 Mc[k] = 5+c1
                 k += 1
-                Mr[k] = 3+c1
-                Mc[k] = 3+c2
+                Mr[k] = 4+c1
+                Mc[k] = 0+c1
                 k += 1
-                Mr[k] = 3+c1
+                Mr[k] = 4+c1
+                Mc[k] = 2+c1
+                k += 1
+                Mr[k] = 4+c1
+                Mc[k] = 3+c1
+                k += 1
+                Mr[k] = 4+c1
+                Mc[k] = 4+c1
+                k += 1
+                Mr[k] = 4+c1
+                Mc[k] = 5+c1
+                k += 1
+                Mr[k] = 5+c1
+                Mc[k] = 0+c1
+                k += 1
+                Mr[k] = 5+c1
+                Mc[k] = 1+c1
+                k += 1
+                Mr[k] = 5+c1
+                Mc[k] = 3+c1
+                k += 1
+                Mr[k] = 5+c1
+                Mc[k] = 4+c1
+                k += 1
+                Mr[k] = 5+c1
+                Mc[k] = 5+c1
+                k += 1
+                Mr[k] = 0+c2
+                Mc[k] = 0+c2
+                k += 1
+                Mr[k] = 0+c2
+                Mc[k] = 1+c2
+                k += 1
+                Mr[k] = 0+c2
+                Mc[k] = 2+c2
+                k += 1
+                Mr[k] = 0+c2
                 Mc[k] = 4+c2
                 k += 1
-                Mr[k] = 3+c1
+                Mr[k] = 0+c2
                 Mc[k] = 5+c2
                 k += 1
-                Mr[k] = 3+c1
-                Mc[k] = 3+c3
+                Mr[k] = 1+c2
+                Mc[k] = 0+c2
                 k += 1
-                Mr[k] = 3+c1
+                Mr[k] = 1+c2
+                Mc[k] = 1+c2
+                k += 1
+                Mr[k] = 1+c2
+                Mc[k] = 2+c2
+                k += 1
+                Mr[k] = 1+c2
+                Mc[k] = 3+c2
+                k += 1
+                Mr[k] = 1+c2
+                Mc[k] = 5+c2
+                k += 1
+                Mr[k] = 2+c2
+                Mc[k] = 0+c2
+                k += 1
+                Mr[k] = 2+c2
+                Mc[k] = 1+c2
+                k += 1
+                Mr[k] = 2+c2
+                Mc[k] = 2+c2
+                k += 1
+                Mr[k] = 2+c2
+                Mc[k] = 3+c2
+                k += 1
+                Mr[k] = 2+c2
+                Mc[k] = 4+c2
+                k += 1
+                Mr[k] = 3+c2
+                Mc[k] = 1+c2
+                k += 1
+                Mr[k] = 3+c2
+                Mc[k] = 2+c2
+                k += 1
+                Mr[k] = 3+c2
+                Mc[k] = 3+c2
+                k += 1
+                Mr[k] = 3+c2
+                Mc[k] = 4+c2
+                k += 1
+                Mr[k] = 3+c2
+                Mc[k] = 5+c2
+                k += 1
+                Mr[k] = 4+c2
+                Mc[k] = 0+c2
+                k += 1
+                Mr[k] = 4+c2
+                Mc[k] = 2+c2
+                k += 1
+                Mr[k] = 4+c2
+                Mc[k] = 3+c2
+                k += 1
+                Mr[k] = 4+c2
+                Mc[k] = 4+c2
+                k += 1
+                Mr[k] = 4+c2
+                Mc[k] = 5+c2
+                k += 1
+                Mr[k] = 5+c2
+                Mc[k] = 0+c2
+                k += 1
+                Mr[k] = 5+c2
+                Mc[k] = 1+c2
+                k += 1
+                Mr[k] = 5+c2
+                Mc[k] = 3+c2
+                k += 1
+                Mr[k] = 5+c2
+                Mc[k] = 4+c2
+                k += 1
+                Mr[k] = 5+c2
+                Mc[k] = 5+c2
+                k += 1
+                Mr[k] = 0+c3
+                Mc[k] = 0+c3
+                k += 1
+                Mr[k] = 0+c3
+                Mc[k] = 1+c3
+                k += 1
+                Mr[k] = 0+c3
+                Mc[k] = 2+c3
+                k += 1
+                Mr[k] = 0+c3
                 Mc[k] = 4+c3
                 k += 1
-                Mr[k] = 3+c1
+                Mr[k] = 0+c3
                 Mc[k] = 5+c3
                 k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 3+c1
+                Mr[k] = 1+c3
+                Mc[k] = 0+c3
                 k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 4+c1
+                Mr[k] = 1+c3
+                Mc[k] = 1+c3
                 k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 5+c1
+                Mr[k] = 1+c3
+                Mc[k] = 2+c3
                 k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 4+c1
+                Mr[k] = 1+c3
                 Mc[k] = 3+c3
                 k += 1
-                Mr[k] = 4+c1
-                Mc[k] = 4+c3
-                k += 1
-                Mr[k] = 4+c1
+                Mr[k] = 1+c3
                 Mc[k] = 5+c3
                 k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 3+c1
+                Mr[k] = 2+c3
+                Mc[k] = 0+c3
                 k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 4+c1
+                Mr[k] = 2+c3
+                Mc[k] = 1+c3
                 k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 5+c1
+                Mr[k] = 2+c3
+                Mc[k] = 2+c3
                 k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 5+c1
+                Mr[k] = 2+c3
                 Mc[k] = 3+c3
                 k += 1
-                Mr[k] = 5+c1
+                Mr[k] = 2+c3
                 Mc[k] = 4+c3
                 k += 1
-                Mr[k] = 5+c1
-                Mc[k] = 5+c3
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 0+c2
+                Mr[k] = 3+c3
                 Mc[k] = 1+c3
                 k += 1
-                Mr[k] = 0+c2
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 1+c2
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 2+c2
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 3+c1
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 3+c3
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 4+c3
-                k += 1
-                Mr[k] = 3+c2
-                Mc[k] = 5+c3
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 3+c1
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 3+c3
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 4+c3
-                k += 1
-                Mr[k] = 4+c2
-                Mc[k] = 5+c3
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 3+c1
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 5+c2
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 3+c3
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 4+c3
-                k += 1
-                Mr[k] = 5+c2
-                Mc[k] = 5+c3
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 0+c3
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 1+c3
-                Mc[k] = 2+c3
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 0+c1
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 1+c1
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 2+c1
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 0+c2
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 1+c2
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 2+c2
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 0+c3
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 1+c3
-                k += 1
-                Mr[k] = 2+c3
-                Mc[k] = 2+c3
-                k += 1
                 Mr[k] = 3+c3
-                Mc[k] = 3+c1
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 3+c3
-                Mc[k] = 5+c2
+                Mc[k] = 2+c3
                 k += 1
                 Mr[k] = 3+c3
                 Mc[k] = 3+c3
@@ -8222,22 +8577,10 @@ cdef class Tria3R:
                 Mc[k] = 5+c3
                 k += 1
                 Mr[k] = 4+c3
-                Mc[k] = 3+c1
+                Mc[k] = 0+c3
                 k += 1
                 Mr[k] = 4+c3
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 4+c3
-                Mc[k] = 5+c2
+                Mc[k] = 2+c3
                 k += 1
                 Mr[k] = 4+c3
                 Mc[k] = 3+c3
@@ -8249,22 +8592,10 @@ cdef class Tria3R:
                 Mc[k] = 5+c3
                 k += 1
                 Mr[k] = 5+c3
-                Mc[k] = 3+c1
+                Mc[k] = 0+c3
                 k += 1
                 Mr[k] = 5+c3
-                Mc[k] = 4+c1
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 5+c1
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 3+c2
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 4+c2
-                k += 1
-                Mr[k] = 5+c3
-                Mc[k] = 5+c2
+                Mc[k] = 1+c3
                 k += 1
                 Mr[k] = 5+c3
                 Mc[k] = 3+c3
@@ -8275,37 +8606,33 @@ cdef class Tria3R:
                 Mr[k] = 5+c3
                 Mc[k] = 5+c3
 
+                # NOTE vertex rule, area coordinates (1, 0, 0) and their permutations,
+                #      weight 1/6 times detJ = 2*area, i.e. area/3; S_i is 1 at node i
+                #      and 0 at the other nodes, such that h12 = h13 = h23 = 0
                 wij = 0.5*0.3333333333333333333333333333333333333
-                # NOTE three-point Gauss-Lobatto quadrature
                 points[0] = 1.
                 points[1] = 0.
                 points[2] = 0.
                 h11 = 0.
-                h12 = 0.
-                h13 = 0.
                 h22 = 0.
-                h23 = 0.
                 h33 = 0.
                 for i in range(3):
                     if i == 0:
-                        N1 = points[0]
-                        N2 = points[1]
-                        N3 = points[2]
+                        S1 = points[0]
+                        S2 = points[1]
+                        S3 = points[2]
                     elif i == 1:
-                        N1 = points[1]
-                        N2 = points[2]
-                        N3 = points[0]
+                        S1 = points[1]
+                        S2 = points[2]
+                        S3 = points[0]
                     elif i == 2:
-                        N1 = points[2]
-                        N2 = points[0]
-                        N3 = points[1]
-                        
-                    h11 += N1**2*detJ*wij
-                    h12 += N1*N2*detJ*wij
-                    h13 += N1*N3*detJ*wij
-                    h22 += N2**2*detJ*wij
-                    h23 += N2*N3*detJ*wij
-                    h33 += N3**2*detJ*wij
+                        S1 = points[2]
+                        S2 = points[0]
+                        S3 = points[1]
+
+                    h11 += S1**2*detJ*wij
+                    h22 += S2**2*detJ*wij
+                    h33 += S3**2*detJ*wij
 
                 k = self.init_k_M
                 Mv[k] += h11*intrho*r11**2 + h11*intrho*r12**2 + h11*intrho*r13**2
@@ -8314,17 +8641,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h11*intrho*r11*r31 + h11*intrho*r12*r32 + h11*intrho*r13*r33
                 k += 1
-                Mv[k] += h12*intrho*r11**2 + h12*intrho*r12**2 + h12*intrho*r13**2
+                Mv[k] += h11*intrhoz*r11*r22 - h11*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h12*intrho*r11*r21 + h12*intrho*r12*r22 + h12*intrho*r13*r23
-                k += 1
-                Mv[k] += h12*intrho*r11*r31 + h12*intrho*r12*r32 + h12*intrho*r13*r33
-                k += 1
-                Mv[k] += h13*intrho*r11**2 + h13*intrho*r12**2 + h13*intrho*r13**2
-                k += 1
-                Mv[k] += h13*intrho*r11*r21 + h13*intrho*r12*r22 + h13*intrho*r13*r23
-                k += 1
-                Mv[k] += h13*intrho*r11*r31 + h13*intrho*r12*r32 + h13*intrho*r13*r33
+                Mv[k] += h11*intrhoz*r11*r32 - h11*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h11*intrho*r11*r21 + h11*intrho*r12*r22 + h11*intrho*r13*r23
                 k += 1
@@ -8332,17 +8651,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h11*intrho*r21*r31 + h11*intrho*r22*r32 + h11*intrho*r23*r33
                 k += 1
-                Mv[k] += h12*intrho*r11*r21 + h12*intrho*r12*r22 + h12*intrho*r13*r23
+                Mv[k] += -h11*intrhoz*r11*r22 + h11*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h12*intrho*r21**2 + h12*intrho*r22**2 + h12*intrho*r23**2
-                k += 1
-                Mv[k] += h12*intrho*r21*r31 + h12*intrho*r22*r32 + h12*intrho*r23*r33
-                k += 1
-                Mv[k] += h13*intrho*r11*r21 + h13*intrho*r12*r22 + h13*intrho*r13*r23
-                k += 1
-                Mv[k] += h13*intrho*r21**2 + h13*intrho*r22**2 + h13*intrho*r23**2
-                k += 1
-                Mv[k] += h13*intrho*r21*r31 + h13*intrho*r22*r32 + h13*intrho*r23*r33
+                Mv[k] += h11*intrhoz*r21*r32 - h11*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h11*intrho*r11*r31 + h11*intrho*r12*r32 + h11*intrho*r13*r33
                 k += 1
@@ -8350,17 +8661,13 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h11*intrho*r31**2 + h11*intrho*r32**2 + h11*intrho*r33**2
                 k += 1
-                Mv[k] += h12*intrho*r11*r31 + h12*intrho*r12*r32 + h12*intrho*r13*r33
+                Mv[k] += -h11*intrhoz*r11*r32 + h11*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h12*intrho*r21*r31 + h12*intrho*r22*r32 + h12*intrho*r23*r33
+                Mv[k] += -h11*intrhoz*r21*r32 + h11*intrhoz*r22*r31
                 k += 1
-                Mv[k] += h12*intrho*r31**2 + h12*intrho*r32**2 + h12*intrho*r33**2
+                Mv[k] += -h11*intrhoz*r11*r22 + h11*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h13*intrho*r11*r31 + h13*intrho*r12*r32 + h13*intrho*r13*r33
-                k += 1
-                Mv[k] += h13*intrho*r21*r31 + h13*intrho*r22*r32 + h13*intrho*r23*r33
-                k += 1
-                Mv[k] += h13*intrho*r31**2 + h13*intrho*r32**2 + h13*intrho*r33**2
+                Mv[k] += -h11*intrhoz*r11*r32 + h11*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h11*intrhoz2*r11**2 + h11*intrhoz2*r12**2
                 k += 1
@@ -8368,17 +8675,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h11*intrhoz2*r11*r31 + h11*intrhoz2*r12*r32
                 k += 1
-                Mv[k] += h12*intrhoz2*r11**2 + h12*intrhoz2*r12**2
+                Mv[k] += h11*intrhoz*r11*r22 - h11*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h12*intrhoz2*r11*r21 + h12*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h12*intrhoz2*r11*r31 + h12*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h13*intrhoz2*r11**2 + h13*intrhoz2*r12**2
-                k += 1
-                Mv[k] += h13*intrhoz2*r11*r21 + h13*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h13*intrhoz2*r11*r31 + h13*intrhoz2*r12*r32
+                Mv[k] += -h11*intrhoz*r21*r32 + h11*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h11*intrhoz2*r11*r21 + h11*intrhoz2*r12*r22
                 k += 1
@@ -8386,17 +8685,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h11*intrhoz2*r21*r31 + h11*intrhoz2*r22*r32
                 k += 1
-                Mv[k] += h12*intrhoz2*r11*r21 + h12*intrhoz2*r12*r22
+                Mv[k] += h11*intrhoz*r11*r32 - h11*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h12*intrhoz2*r21**2 + h12*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h12*intrhoz2*r21*r31 + h12*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h13*intrhoz2*r11*r21 + h13*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h13*intrhoz2*r21**2 + h13*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h13*intrhoz2*r21*r31 + h13*intrhoz2*r22*r32
+                Mv[k] += h11*intrhoz*r21*r32 - h11*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h11*intrhoz2*r11*r31 + h11*intrhoz2*r12*r32
                 k += 1
@@ -8404,41 +8695,15 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h11*intrhoz2*r31**2 + h11*intrhoz2*r32**2
                 k += 1
-                Mv[k] += h12*intrhoz2*r11*r31 + h12*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h12*intrhoz2*r21*r31 + h12*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h12*intrhoz2*r31**2 + h12*intrhoz2*r32**2
-                k += 1
-                Mv[k] += h13*intrhoz2*r11*r31 + h13*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h13*intrhoz2*r21*r31 + h13*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h13*intrhoz2*r31**2 + h13*intrhoz2*r32**2
-                k += 1
-                Mv[k] += h12*intrho*r11**2 + h12*intrho*r12**2 + h12*intrho*r13**2
-                k += 1
-                Mv[k] += h12*intrho*r11*r21 + h12*intrho*r12*r22 + h12*intrho*r13*r23
-                k += 1
-                Mv[k] += h12*intrho*r11*r31 + h12*intrho*r12*r32 + h12*intrho*r13*r33
-                k += 1
                 Mv[k] += h22*intrho*r11**2 + h22*intrho*r12**2 + h22*intrho*r13**2
                 k += 1
                 Mv[k] += h22*intrho*r11*r21 + h22*intrho*r12*r22 + h22*intrho*r13*r23
                 k += 1
                 Mv[k] += h22*intrho*r11*r31 + h22*intrho*r12*r32 + h22*intrho*r13*r33
                 k += 1
-                Mv[k] += h23*intrho*r11**2 + h23*intrho*r12**2 + h23*intrho*r13**2
+                Mv[k] += h22*intrhoz*r11*r22 - h22*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h23*intrho*r11*r21 + h23*intrho*r12*r22 + h23*intrho*r13*r23
-                k += 1
-                Mv[k] += h23*intrho*r11*r31 + h23*intrho*r12*r32 + h23*intrho*r13*r33
-                k += 1
-                Mv[k] += h12*intrho*r11*r21 + h12*intrho*r12*r22 + h12*intrho*r13*r23
-                k += 1
-                Mv[k] += h12*intrho*r21**2 + h12*intrho*r22**2 + h12*intrho*r23**2
-                k += 1
-                Mv[k] += h12*intrho*r21*r31 + h12*intrho*r22*r32 + h12*intrho*r23*r33
+                Mv[k] += h22*intrhoz*r11*r32 - h22*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h22*intrho*r11*r21 + h22*intrho*r12*r22 + h22*intrho*r13*r23
                 k += 1
@@ -8446,17 +8711,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h22*intrho*r21*r31 + h22*intrho*r22*r32 + h22*intrho*r23*r33
                 k += 1
-                Mv[k] += h23*intrho*r11*r21 + h23*intrho*r12*r22 + h23*intrho*r13*r23
+                Mv[k] += -h22*intrhoz*r11*r22 + h22*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h23*intrho*r21**2 + h23*intrho*r22**2 + h23*intrho*r23**2
-                k += 1
-                Mv[k] += h23*intrho*r21*r31 + h23*intrho*r22*r32 + h23*intrho*r23*r33
-                k += 1
-                Mv[k] += h12*intrho*r11*r31 + h12*intrho*r12*r32 + h12*intrho*r13*r33
-                k += 1
-                Mv[k] += h12*intrho*r21*r31 + h12*intrho*r22*r32 + h12*intrho*r23*r33
-                k += 1
-                Mv[k] += h12*intrho*r31**2 + h12*intrho*r32**2 + h12*intrho*r33**2
+                Mv[k] += h22*intrhoz*r21*r32 - h22*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h22*intrho*r11*r31 + h22*intrho*r12*r32 + h22*intrho*r13*r33
                 k += 1
@@ -8464,17 +8721,13 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h22*intrho*r31**2 + h22*intrho*r32**2 + h22*intrho*r33**2
                 k += 1
-                Mv[k] += h23*intrho*r11*r31 + h23*intrho*r12*r32 + h23*intrho*r13*r33
+                Mv[k] += -h22*intrhoz*r11*r32 + h22*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h23*intrho*r21*r31 + h23*intrho*r22*r32 + h23*intrho*r23*r33
+                Mv[k] += -h22*intrhoz*r21*r32 + h22*intrhoz*r22*r31
                 k += 1
-                Mv[k] += h23*intrho*r31**2 + h23*intrho*r32**2 + h23*intrho*r33**2
+                Mv[k] += -h22*intrhoz*r11*r22 + h22*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h12*intrhoz2*r11**2 + h12*intrhoz2*r12**2
-                k += 1
-                Mv[k] += h12*intrhoz2*r11*r21 + h12*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h12*intrhoz2*r11*r31 + h12*intrhoz2*r12*r32
+                Mv[k] += -h22*intrhoz*r11*r32 + h22*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h22*intrhoz2*r11**2 + h22*intrhoz2*r12**2
                 k += 1
@@ -8482,17 +8735,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h22*intrhoz2*r11*r31 + h22*intrhoz2*r12*r32
                 k += 1
-                Mv[k] += h23*intrhoz2*r11**2 + h23*intrhoz2*r12**2
+                Mv[k] += h22*intrhoz*r11*r22 - h22*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h23*intrhoz2*r11*r21 + h23*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h23*intrhoz2*r11*r31 + h23*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h12*intrhoz2*r11*r21 + h12*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h12*intrhoz2*r21**2 + h12*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h12*intrhoz2*r21*r31 + h12*intrhoz2*r22*r32
+                Mv[k] += -h22*intrhoz*r21*r32 + h22*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h22*intrhoz2*r11*r21 + h22*intrhoz2*r12*r22
                 k += 1
@@ -8500,17 +8745,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h22*intrhoz2*r21*r31 + h22*intrhoz2*r22*r32
                 k += 1
-                Mv[k] += h23*intrhoz2*r11*r21 + h23*intrhoz2*r12*r22
+                Mv[k] += h22*intrhoz*r11*r32 - h22*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h23*intrhoz2*r21**2 + h23*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h23*intrhoz2*r21*r31 + h23*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h12*intrhoz2*r11*r31 + h12*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h12*intrhoz2*r21*r31 + h12*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h12*intrhoz2*r31**2 + h12*intrhoz2*r32**2
+                Mv[k] += h22*intrhoz*r21*r32 - h22*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h22*intrhoz2*r11*r31 + h22*intrhoz2*r12*r32
                 k += 1
@@ -8518,41 +8755,15 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h22*intrhoz2*r31**2 + h22*intrhoz2*r32**2
                 k += 1
-                Mv[k] += h23*intrhoz2*r11*r31 + h23*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h23*intrhoz2*r21*r31 + h23*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h23*intrhoz2*r31**2 + h23*intrhoz2*r32**2
-                k += 1
-                Mv[k] += h13*intrho*r11**2 + h13*intrho*r12**2 + h13*intrho*r13**2
-                k += 1
-                Mv[k] += h13*intrho*r11*r21 + h13*intrho*r12*r22 + h13*intrho*r13*r23
-                k += 1
-                Mv[k] += h13*intrho*r11*r31 + h13*intrho*r12*r32 + h13*intrho*r13*r33
-                k += 1
-                Mv[k] += h23*intrho*r11**2 + h23*intrho*r12**2 + h23*intrho*r13**2
-                k += 1
-                Mv[k] += h23*intrho*r11*r21 + h23*intrho*r12*r22 + h23*intrho*r13*r23
-                k += 1
-                Mv[k] += h23*intrho*r11*r31 + h23*intrho*r12*r32 + h23*intrho*r13*r33
-                k += 1
                 Mv[k] += h33*intrho*r11**2 + h33*intrho*r12**2 + h33*intrho*r13**2
                 k += 1
                 Mv[k] += h33*intrho*r11*r21 + h33*intrho*r12*r22 + h33*intrho*r13*r23
                 k += 1
                 Mv[k] += h33*intrho*r11*r31 + h33*intrho*r12*r32 + h33*intrho*r13*r33
                 k += 1
-                Mv[k] += h13*intrho*r11*r21 + h13*intrho*r12*r22 + h13*intrho*r13*r23
+                Mv[k] += h33*intrhoz*r11*r22 - h33*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h13*intrho*r21**2 + h13*intrho*r22**2 + h13*intrho*r23**2
-                k += 1
-                Mv[k] += h13*intrho*r21*r31 + h13*intrho*r22*r32 + h13*intrho*r23*r33
-                k += 1
-                Mv[k] += h23*intrho*r11*r21 + h23*intrho*r12*r22 + h23*intrho*r13*r23
-                k += 1
-                Mv[k] += h23*intrho*r21**2 + h23*intrho*r22**2 + h23*intrho*r23**2
-                k += 1
-                Mv[k] += h23*intrho*r21*r31 + h23*intrho*r22*r32 + h23*intrho*r23*r33
+                Mv[k] += h33*intrhoz*r11*r32 - h33*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h33*intrho*r11*r21 + h33*intrho*r12*r22 + h33*intrho*r13*r23
                 k += 1
@@ -8560,17 +8771,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h33*intrho*r21*r31 + h33*intrho*r22*r32 + h33*intrho*r23*r33
                 k += 1
-                Mv[k] += h13*intrho*r11*r31 + h13*intrho*r12*r32 + h13*intrho*r13*r33
+                Mv[k] += -h33*intrhoz*r11*r22 + h33*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h13*intrho*r21*r31 + h13*intrho*r22*r32 + h13*intrho*r23*r33
-                k += 1
-                Mv[k] += h13*intrho*r31**2 + h13*intrho*r32**2 + h13*intrho*r33**2
-                k += 1
-                Mv[k] += h23*intrho*r11*r31 + h23*intrho*r12*r32 + h23*intrho*r13*r33
-                k += 1
-                Mv[k] += h23*intrho*r21*r31 + h23*intrho*r22*r32 + h23*intrho*r23*r33
-                k += 1
-                Mv[k] += h23*intrho*r31**2 + h23*intrho*r32**2 + h23*intrho*r33**2
+                Mv[k] += h33*intrhoz*r21*r32 - h33*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h33*intrho*r11*r31 + h33*intrho*r12*r32 + h33*intrho*r13*r33
                 k += 1
@@ -8578,17 +8781,13 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h33*intrho*r31**2 + h33*intrho*r32**2 + h33*intrho*r33**2
                 k += 1
-                Mv[k] += h13*intrhoz2*r11**2 + h13*intrhoz2*r12**2
+                Mv[k] += -h33*intrhoz*r11*r32 + h33*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h13*intrhoz2*r11*r21 + h13*intrhoz2*r12*r22
+                Mv[k] += -h33*intrhoz*r21*r32 + h33*intrhoz*r22*r31
                 k += 1
-                Mv[k] += h13*intrhoz2*r11*r31 + h13*intrhoz2*r12*r32
+                Mv[k] += -h33*intrhoz*r11*r22 + h33*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h23*intrhoz2*r11**2 + h23*intrhoz2*r12**2
-                k += 1
-                Mv[k] += h23*intrhoz2*r11*r21 + h23*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h23*intrhoz2*r11*r31 + h23*intrhoz2*r12*r32
+                Mv[k] += -h33*intrhoz*r11*r32 + h33*intrhoz*r12*r31
                 k += 1
                 Mv[k] += h33*intrhoz2*r11**2 + h33*intrhoz2*r12**2
                 k += 1
@@ -8596,17 +8795,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h33*intrhoz2*r11*r31 + h33*intrhoz2*r12*r32
                 k += 1
-                Mv[k] += h13*intrhoz2*r11*r21 + h13*intrhoz2*r12*r22
+                Mv[k] += h33*intrhoz*r11*r22 - h33*intrhoz*r12*r21
                 k += 1
-                Mv[k] += h13*intrhoz2*r21**2 + h13*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h13*intrhoz2*r21*r31 + h13*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h23*intrhoz2*r11*r21 + h23*intrhoz2*r12*r22
-                k += 1
-                Mv[k] += h23*intrhoz2*r21**2 + h23*intrhoz2*r22**2
-                k += 1
-                Mv[k] += h23*intrhoz2*r21*r31 + h23*intrhoz2*r22*r32
+                Mv[k] += -h33*intrhoz*r21*r32 + h33*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h33*intrhoz2*r11*r21 + h33*intrhoz2*r12*r22
                 k += 1
@@ -8614,17 +8805,9 @@ cdef class Tria3R:
                 k += 1
                 Mv[k] += h33*intrhoz2*r21*r31 + h33*intrhoz2*r22*r32
                 k += 1
-                Mv[k] += h13*intrhoz2*r11*r31 + h13*intrhoz2*r12*r32
+                Mv[k] += h33*intrhoz*r11*r32 - h33*intrhoz*r12*r31
                 k += 1
-                Mv[k] += h13*intrhoz2*r21*r31 + h13*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h13*intrhoz2*r31**2 + h13*intrhoz2*r32**2
-                k += 1
-                Mv[k] += h23*intrhoz2*r11*r31 + h23*intrhoz2*r12*r32
-                k += 1
-                Mv[k] += h23*intrhoz2*r21*r31 + h23*intrhoz2*r22*r32
-                k += 1
-                Mv[k] += h23*intrhoz2*r31**2 + h23*intrhoz2*r32**2
+                Mv[k] += h33*intrhoz*r21*r32 - h33*intrhoz*r22*r31
                 k += 1
                 Mv[k] += h33*intrhoz2*r11*r31 + h33*intrhoz2*r12*r32
                 k += 1

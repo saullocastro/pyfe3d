@@ -208,12 +208,12 @@ def test_kirchhoff_states_produce_no_parasitic_shear():
     r"""The locking-free property, and the reason no parameter is needed
 
     For each of the three constant-curvature states, with the rotations set
-    to the Kirchhoff values `\pmb{\phi} = \nabla w`, the exact transverse
+    to the Kirchhoff values `\boldsymbol{\phi} = \nabla w`, the exact transverse
     shear strain is zero. A displacement-based three-node triangle cannot
     represent the quadratic `w` in its interior and so develops parasitic
     shear, which is what locks it. The DSG operator uses only the nodal
     values and gives exactly zero, so the element energy equals the bending
-    energy `\pmb{\kappa}^T [D] \pmb{\kappa} A/2` to machine precision.
+    energy `\boldsymbol{\kappa}^\top \boldsymbol{D} \boldsymbol{\kappa} A/2` to machine precision.
 
     Tria3R is 8 to 23 per cent above that on the same triangle, which is the
     parasitic shear its stabilisation is there to suppress.
@@ -356,7 +356,7 @@ def test_clockwise_node_ordering():
         fint = np.zeros(n)
         el.update_fint(fint, prop, nonlinear=1)
         out['fint'] = fint
-        for mtype in (0, 2):
+        for mtype in (0, 1):
             r = np.zeros(data.M_SPARSE_SIZE, dtype=INT)
             c = np.zeros(data.M_SPARSE_SIZE, dtype=INT)
             v = np.zeros(data.M_SPARSE_SIZE, dtype=DOUBLE)
@@ -381,13 +381,13 @@ def test_clockwise_node_ordering():
             assert err < 1e-12, (key, order, err)
 
     mass = prop.intrho*area
-    M2 = ccw['M2']
+    M1 = ccw['M1']
     # NOTE diagonal up to the round-off of the rotation to global coordinates
-    assert np.abs(M2 - np.diag(np.diag(M2))).max() < 1e-14*np.abs(M2).max()
+    assert np.abs(M1 - np.diag(np.diag(M1))).max() < 1e-14*np.abs(M1).max()
     for dof in range(3):
-        assert np.allclose(np.diag(M2)[dof::DOF], mass/3, rtol=1e-14)
+        assert np.allclose(np.diag(M1)[dof::DOF], mass/3, rtol=1e-14)
     for dof in range(3, 5):
-        assert np.allclose(np.diag(M2)[dof::DOF], prop.intrhoz2*area/3,
+        assert np.allclose(np.diag(M1)[dof::DOF], prop.intrhoz2*area/3,
                            rtol=1e-14)
     # NOTE same total mass for the consistent matrix
     for dof in range(3):
@@ -522,14 +522,14 @@ def element_matrix(el, data, prop, u, which):
 
 
 def shape_function_gradients(ncoords):
-    r"""``area``, `\partial N_i/\partial x` and `\partial N_i/\partial y`"""
+    r"""``area``, `\partial S_i/\partial x` and `\partial S_i/\partial y`"""
     x = ncoords[:, 0]
     y = ncoords[:, 1]
     detJ = (x[0]*(y[1] - y[2]) + x[1]*(y[2] - y[0])
             + x[2]*(y[0] - y[1]))
-    Nx = np.array([y[1] - y[2], y[2] - y[0], y[0] - y[1]])/detJ
-    Ny = np.array([x[2] - x[1], x[0] - x[2], x[1] - x[0]])/detJ
-    return abs(detJ)/2., Nx, Ny
+    S_x = np.array([y[1] - y[2], y[2] - y[0], y[0] - y[1]])/detJ
+    S_y = np.array([x[2] - x[1], x[0] - x[2], x[1] - x[0]])/detJ
+    return abs(detJ)/2., S_x, S_y
 
 
 def test_nonlinear_internal_forces_of_an_imposed_slope():
@@ -546,7 +546,7 @@ def test_nonlinear_internal_forces_of_an_imposed_slope():
     Karman kinematics, not a defect of the element.
 
     The only nonlinear strain is `\epsilon_{NL} = \{c^2/2, 0, 0\}`, giving
-    the uniform membrane stress `\{N\} = [A] \{\epsilon_{NL}\}`, and the
+    the uniform membrane stress `\boldsymbol{N} = \boldsymbol{A} \boldsymbol{\epsilon}_{NL}`, and the
     internal forces are checked by virtual work against three fields whose
     virtual strains are elementary:
 
@@ -563,7 +563,7 @@ def test_nonlinear_internal_forces_of_an_imposed_slope():
     c = 0.03
     el, prop, data, flat = single_element(Tria3DSG, Tria3DSGData,
                                          Tria3DSGProbe, ALIGNED, h)
-    area, Nx, Ny = shape_function_gradients(ALIGNED)
+    area, S_x, S_y = shape_function_gradients(ALIGNED)
     n = DOF*NUM_NODES_TRI
 
     u = np.zeros(n)
@@ -618,9 +618,9 @@ def test_nonlinear_internal_forces_of_an_imposed_slope():
     #      stress: Bm.T*N for the in-plane rows and w_x*G.T*N for the
     #      transverse one
     expected = np.zeros(n)
-    expected[0::DOF] = area*Nx*Nxx
-    expected[1::DOF] = area*Ny*Nyy
-    expected[2::DOF] = area*c*Nx*Nxx
+    expected[0::DOF] = area*S_x*Nxx
+    expected[1::DOF] = area*S_y*Nyy
+    expected[2::DOF] = area*c*S_x*Nxx
     assert np.allclose(fint, expected, rtol=1e-13, atol=1e-13*scale)
 
 
@@ -771,8 +771,8 @@ def combined_state_energy(cls, Data, Probe, n, prop, matangle,
         w = (c_1 x^2 + c_2 y^2)/2 + c_3 x y
 
     with `r_x = w_{,y}`, `r_y = -w_{,x}` and `r_z = 0`, which gives the
-    constant strains `\{\epsilon\}` and the constant curvatures
-    `\{\kappa\} = \{-c_1, -c_2, -2 c_3\}` and zero transverse shear.
+    constant strains `\boldsymbol{\epsilon}` and the constant curvatures
+    `\boldsymbol{\kappa} = \{-c_1, -c_2, -2 c_3\}` and zero transverse shear.
 
     The zero shear is exact for the discrete shear gap even though `w` is
     quadratic and the element interpolates it linearly: the gap integrates a
@@ -840,11 +840,11 @@ def test_unsymmetric_laminate_couples_membrane_and_bending_exactly():
     strain energy is
 
     .. math::
-        U = \frac{A}{2} \left( \{\epsilon\}^T [A] \{\epsilon\}
-            + 2 \{\epsilon\}^T [B] \{\kappa\}
-            + \{\kappa\}^T [D] \{\kappa\} \right)
+        U = \frac{A}{2} \left( \boldsymbol{\epsilon}^\top \boldsymbol{A} \boldsymbol{\epsilon}
+            + 2 \boldsymbol{\epsilon}^\top \boldsymbol{B} \boldsymbol{\kappa}
+            + \boldsymbol{\kappa}^\top \boldsymbol{D} \boldsymbol{\kappa} \right)
 
-    and the cross term is the only place `[B]` appears, so this is the one
+    and the cross term is the only place `\boldsymbol{B}` appears, so this is the one
     state that tests it. With the material direction along the element `x`
     axis the closed form can be written straight from the laminate, and it
     is checked first. At other material directions the laminate has to be
@@ -910,15 +910,16 @@ def triangulated_plate_buckling(cls, Data, Probe, n, h, second='diagonal',
       triangle whose element `x` axis runs along a mesh edge instead.
 
     The two describe the same triangle, and for an element whose matrices do
-    not depend on the node numbering they give the identical `K_{C_0}`. What
+    not depend on the node numbering they give the identical `\boldsymbol{K}_{C0}`. What
     differs is the element coordinate system, and therefore what
     ``update_KG_given_stress`` has to be given.
 
     ``rotate_prestress`` selects how the uniaxial state `N_{xx}` along the
     global `x` axis is handed over. The correct way is a tensor rotation:
-    with `[R]` the element-to-global rotation and
-    `\{a\} = [R]^T \{1, 0, 0\}` the loading direction in element
-    coordinates, the state `N_{xx} \{a\} \{a\}^T` has components
+    with `\boldsymbol{T}_{3\times 3}` the transformation matrix of the element, whose
+    columns are the element axes, and `\boldsymbol{a} = \boldsymbol{T}_{3\times 3}^\top \{1, 0, 0\}`
+    the loading direction in element coordinates, the state `N_{xx} \boldsymbol{a}
+    \boldsymbol{a}^\top` has components
 
     .. math::
         N^e_{xx} = N_{xx} a_x^2, \quad
@@ -1014,7 +1015,7 @@ def test_buckling_load_does_not_depend_on_triangle_node_numbering():
 
     The consequence is a result that depends on how the mesh generator
     happened to number the nodes of each triangle, which is not acceptable:
-    a cyclic relabelling of the second triangle leaves `K_{C_0}` untouched,
+    a cyclic relabelling of the second triangle leaves `\boldsymbol{K}_{C0}` untouched,
     as :func:`test_node_numbering_invariance` shows, and must therefore
     leave the buckling load untouched too.
 
@@ -1086,7 +1087,9 @@ def test_optional_stabilisation_is_off_by_default_and_mild_when_on():
         https://doi.org/10.1016/j.cma.2003.12.036
 
     In both papers the factor `1/(1 + \alpha \ell^2/h^2)` is applied on top
-    of a discrete shear gap field, which is already free of locking, and the
+    of a field whose operator already contains the cure of the locking, a
+    discrete shear gap field in Castro et al. and an assumed-strain or
+    discrete shear gap field in Bischoff and Bletzinger, and the
     recommended `\alpha` is near 0.1. Tria3R applies the same factor to a
     centroid-sampled shear field, where it has to do the unlocking itself,
     which is why its default is 0.7. This test pins both halves of that

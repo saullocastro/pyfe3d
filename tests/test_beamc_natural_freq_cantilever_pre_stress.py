@@ -136,6 +136,11 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         # NOTE pyfe3d.solver.natural_frequency equilibrates the diagonal
         #      before calling the eigensolver and returns the circular
         #      frequencies already sorted
+        # NOTE at 0.9999 of the buckling load the stiffness matrix is nearly
+        #      singular: the two lowest eigenpairs, omega**2 = 0.0895, have
+        #      relative residuals above the default check_rtol=1e-6, but
+        #      backward errors at the round-off, and pass the verification,
+        #      see pyfe3d.solver.eigen._backward_errors
         omegan, eigvecsu = natural_frequency(Kuu + 0.9999*load_mult[0]*KGuu, Muu, num_eigvalues=num_eigenvalues, tol=1e-4)
 
         alpha123 = np.array([1.875, 4.694, 7.885])

@@ -11,7 +11,7 @@ Nastran through the K6ROT parameter, and is very close to Eq. 2.20 of:
 The penalty energy per element is
 
 .. math::
-    U_{drill} = \frac{1}{2} K6ROT \cdot 10^{-6}
+    U_{r_z} = \frac{1}{2} K6ROT \cdot 10^{-6}
                 \int_A A_{66} (r_z - \theta_z)^2 dA
 
 so for the uniform drilling state `u_i = v_i = 0`, `{r_z}_i = \omega_0`, which

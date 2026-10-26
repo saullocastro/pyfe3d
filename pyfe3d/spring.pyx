@@ -7,10 +7,16 @@
 #cython: embedsignature=True
 #cython: infer_types=False
 r"""
+===========================================================================
 Spring - 3D spring element with constant stiffnesses (:mod:`pyfe3d.spring`)
-=========================================================================
+===========================================================================
 
 .. currentmodule:: pyfe3d.spring
+
+Defines the two-node element :class:`.Spring`, with six degrees-of-freedom
+per node and a constant stiffness for each of them, its probe
+:class:`.SpringProbe` and :class:`.SpringData`, which gives the number of
+sparse entries per element of each structural matrix.
 
 """
 import numpy as np
@@ -23,16 +29,23 @@ cdef class SpringData:
     r"""
     Used to allocate memory for the sparse matrices.
 
+    Each attribute is the number of entries that one :class:`.Spring`
+    element writes in the arrays of rows, columns and values of a sparse
+    matrix, at the consecutive positions that start at its ``init_k_KC0``,
+    ``init_k_KG`` or ``init_k_M``. The constructor takes no argument and
+    sets the values below.
+
     Attributes
     ----------
     KC0_SPARSE_SIZE, : int
-        ``KC0_SPARSE_SIZE = 72``
+        ``KC0_SPARSE_SIZE = 72``, written by :meth:`.Spring.update_KC0`.
 
     KG_SPARSE_SIZE, : int
-        ``KG_SPARSE_SIZE = 0``
+        ``KG_SPARSE_SIZE = 0``, the element has no geometric stiffness
+        matrix.
 
     M_SPARSE_SIZE, : int
-        ``M_SPARSE_SIZE = 0``
+        ``M_SPARSE_SIZE = 0``, the element has no mass matrix.
 
     """
     cdef public int KC0_SPARSE_SIZE
@@ -57,21 +70,27 @@ cdef class SpringProbe:
               depending on how you defined them. Mind that the probe will
               always safe the values from the last udpate.
 
+    The constructor takes no argument and allocates the arrays below, filled
+    with zeros.
+
 
     Attributes
     ----------
     xe, : array-like
         Array of size ``NUM_NODES*DOF//2=6`` containing the nodal coordinates
         in the element coordinate system, in the following order `{x_e}_1,
-        {y_e}_1, {z_e}_1, {x_e}_2, {y_e}_2, {z_e}_2`.
+        {y_e}_1, {z_e}_1, {x_e}_2, {y_e}_2, {z_e}_2`. Dimension length.
+        Not updated by the methods of :class:`.Spring`.
     ue, : array-like
         Array of size ``NUM_NODES*DOF=12`` containing the element displacements
         in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
         {{r_y}_e}_1, {{r_z}_e}_1, {u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
-        {{r_y}_e}_2, {{r_z}_e}_2`.
+        {{r_y}_e}_2, {{r_z}_e}_2`. Translations of dimension length and
+        rotations. Updated by :meth:`.Spring.update_probe_ue`.
     finte, : array-like
         Array of size ``NUM_NODES*DOF=12`` containing the element internal
-        forces corresponding to the degrees-of-freedom described by ``ue``.
+        forces corresponding to the degrees-of-freedom described by ``ue``,
+        forces and moments. Updated by :meth:`.Spring.update_probe_finte`.
 
     """
     cdef public double [::1] xe
@@ -91,27 +110,84 @@ cdef class Spring:
     .. note:: The default behaviour assumes that the local coordinate system is
               aligned with the global coordinate system
 
+    The constructor stores ``p`` in ``probe``, sets ``eid``, ``n1``, ``n2``,
+    ``c1`` and ``c2`` to ``-1``, sets the ``init_k_*`` positions, the
+    stiffnesses and ``vxyi``, ``vxyj``, ``vxyk`` to ``0``, and sets the
+    rotation matrix to the identity. :meth:`.update_KC0` and
+    :meth:`.update_probe_finte` read the stiffnesses and the rotation matrix;
+    :meth:`.update_probe_finte` also reads ``probe.ue``, updated by
+    :meth:`.update_probe_ue`. The element has no length, and the nodal
+    coordinates are not used.
+
+    Parameters
+    ----------
+    p : :class:`.SpringProbe` object
+        Probe of the element, stored in ``probe``. It can be shared with
+        other elements.
+
     Attributes
     ----------
     eid, : int
         Element identification number.
     kxe, kye, kze: double
-        Translational stiffnesses in the element coordinate system.
+        Translational stiffnesses in the element coordinate system, force per
+        unit length.
     krxe, krye, krze : double
-        Rotational stiffnesses in the element coordinate system.
+        Rotational stiffnesses in the element coordinate system, moment per
+        unit rotation.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
-        Rotation matrix from local to global coordinates. By default it assumes
-        that the element is aligned with the global coordinate system.
+        Entries `T_{ij}` of the transformation matrix `\boldsymbol{T}_{3\times 3}` from
+        element to global coordinates, whose columns are the element axes. By
+        default it assumes that the element is aligned with the global
+        coordinate system. Dimensionless.
     vxyi, vxyj, vxyk : double
         Components of a vector on the `XY` plane of the element coordinate
-        system, defined using global coordinates.
+        system, defined using global coordinates. Only the direction of the
+        vector is used.
     c1, c2 : int
-        Position of each node in the global stiffness matrix.
+        Position of each node in the global stiffness matrix, i.e. of the
+        first of its ``6`` degrees-of-freedom.
     n1, n2 : int
         Node identification number.
     init_k_KC0, init_k_KG, init_k_M : int
         Position in the arrays storing the sparse data for the structural
-        matrices.
+        matrices, where the entries of this element start, see
+        :class:`.SpringData` for their number.
+    probe : :class:`.SpringProbe` object
+        Pointer to the probe.
+
+    Notes
+    -----
+    The strain energy of the element is
+
+    .. math::
+        U = \frac{1}{2} \sum_{i=1}^{6} k_i \left( {u_e}_{i+6} - {u_e}_{i}
+            \right)^2
+
+    where `k_1, ..., k_6` are ``kxe``, ``kye``, ``kze``, ``krxe``, ``krye``
+    and ``krze``, and ``ue`` are the displacements in the element coordinate
+    system, in the order of :class:`.SpringProbe`. Each stiffness connects
+    only the same degree-of-freedom of the two nodes, without coupling
+    between translations and rotations, such that the internal forces are
+    ``finte = [K_e] ue`` with
+
+    .. math::
+        \boldsymbol{K}_e = \begin{bmatrix} [k] & -[k] \\ -[k] & [k] \end{bmatrix},
+        \qquad [k] = \mathrm{diag}(k_1, ..., k_6)
+
+    transformed to global coordinates with the transformation matrix of the
+    element, `\boldsymbol{K} = \boldsymbol{T} \boldsymbol{K}_e \boldsymbol{T}^\top`, where `\boldsymbol{T}` is block diagonal with four
+    copies of the matrix `\boldsymbol{T}_{3\times 3}` of the entries `T_{ij}` stored in
+    ``r11, ..., r33``, whose columns are the element axes.
+
+    A rigid translation and equal rotations of the two nodes give no
+    internal forces. Since the nodal coordinates are not used, a rigid
+    rotation `\boldsymbol{\theta}` of two nodes at different positions `\boldsymbol{p}_1`
+    and `\boldsymbol{p}_2` gives the relative translation `\boldsymbol{\theta} \times
+    (\boldsymbol{p}_2 - \boldsymbol{p}_1)`, normal to the line of the nodes, which loads
+    the translational stiffnesses in that direction: with the element `x`
+    axis along the line of the nodes, ``kye`` and ``kze``. These
+    properties are verified in ``tests/test_spring.py``.
 
     """
     cdef public int eid
@@ -149,25 +225,34 @@ cdef class Spring:
             double vxyi, double vxyj, double vxyk):
         r"""Update the rotation matrix of the element
 
-        Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated,
-        corresponding to the rotation matrix from local to global coordinates.
+        Attributes ``r11,r12,r13,r21,r22,r23,r31,r32,r33`` are updated, with
+        the entries `T_{ij}` of the transformation matrix `\boldsymbol{T}_{3\times 3}`
+        from element to global coordinates, whose columns are the element axes.
 
         The element coordinate system is determined, identifying the `ijk`
         components of each axis: `{x_e}_i, {x_e}_j, {x_e}_k`; `{y_e}_i,
         {y_e}_j, {y_e}_k`; `{z_e}_i, {z_e}_j, {z_e}_k`.
 
+        The element `x` axis is ``(xi, xj, xk)``, the `z` axis is normal to the
+        `x` axis and to the vector ``(vxyi, vxyj, vxyk)``, the `y` axis
+        completes the right-handed system, and the three axes are normalized.
+        The element attributes ``vxyi``, ``vxyj`` and ``vxyk`` are also
+        updated.
+
 
         Parameters
         ----------
         xi, xj, xk : double
-            Components, in global coordinates, of the element x-axis.
+            Components, in global coordinates, of the element x-axis. Only the
+            direction of the vector is used.
         vxyi, vxyj, vxyk : double
             Components, in global coordinates, of a vector on the `XY` plane of
-            the element coordinate system.
+            the element coordinate system. Only the direction of the vector is
+            used. A vector parallel to the element x-axis gives a null `z` axis
+            and a rotation matrix with ``nan`` entries.
 
         """
         cdef double yi, yj, yk, zi, zj, zk, tmp
-        cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k, x4i, x4j, x4k
 
         with nogil:
             self.vxyi = vxyi
@@ -212,13 +297,20 @@ cdef class Spring:
         .. note:: The ``ue`` attribute of object :class:`.SpringProbe` is
                   updated, accessible using ``.probe.ue``.
 
+        The translations and rotations of the two nodes, read from ``u`` at the
+        positions ``c1`` to ``c1 + 5`` and ``c2`` to ``c2 + 5``, are
+        transformed to the element coordinate system with the transpose
+        `\boldsymbol{T}_{3\times 3}^\top` of the transformation matrix, which must be updated
+        before, see :meth:`.update_rotation_matrix`.
+
         Parameters
         ----------
         u : array-like
             Array with global displacements, for a total of `M` nodes in
             the model, this array will be arranged as: `u_1, v_1, w_1, {r_x}_1,
             {r_y}_1, {r_z}_1, u_2, v_2, w_2, {r_x}_2, {r_y}_2, {r_z}_2, ...,
-            u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M`.
+            u_M, v_M, w_M, {r_x}_M, {r_y}_M, {r_z}_M`. Translations of
+            dimension length and rotations, 1-D array of size ``6*M``.
 
         """
         cdef int i, j
@@ -227,13 +319,13 @@ cdef class Spring:
         cdef double s2[3]
         cdef double s3[3]
 
-        # TODO double check all this part
+        # NOTE verified against [T]^T u in tests/test_spring.py
         with nogil:
             # positions in the global stiffness matrix
             c[0] = self.c1
             c[1] = self.c2
 
-            # global to local transformation of displacements (R.T)
+            # global to local transformation of displacements (T.T)
             s1[0] = self.r11
             s1[1] = self.r21
             s1[2] = self.r31
@@ -269,8 +361,13 @@ cdef class Spring:
         depending how you defined them, meaning that the probe will always safe
         the values from the last udpate.
 
-        .. note:: The ``finte`` attribute of object :class:`.TrussProbe` is
+        .. note:: The ``finte`` attribute of object :class:`.SpringProbe` is
                   updated, accessible using ``.probe.finte``.
+
+        The 12 values of ``finte`` are overwritten. They are computed from the
+        stiffnesses ``kxe``, ``kye``, ``kze``, ``krxe``, ``krye`` and ``krze``
+        and from the displacements ``probe.ue``, which must be updated before,
+        see :meth:`.update_probe_ue`.
 
         """
         cdef double *ue
@@ -301,15 +398,29 @@ cdef class Spring:
                           ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
+        The 72 entries of the matrix of the element, in global coordinates,
+        are written at the positions ``init_k_KC0`` to ``init_k_KC0 + 71``:
+        the row and column indices, built from ``c1`` and ``c2``, are stored
+        in ``KC0r`` and ``KC0c``, and the values are added to those already
+        in ``KC0v``. The matrix is computed from the rotation matrix and the
+        stiffnesses ``kxe``, ``kye``, ``kze``, ``krxe``, ``krye`` and
+        ``krze``. The rotation matrix must be updated before, when the
+        element is not aligned with the global coordinate system, see
+        :meth:`.update_rotation_matrix`.
+
         Parameters
         ----------
         KC0r : np.array
-            Array to store row positions of sparse values
+            Array to store row positions of sparse values. 1-D array of
+            integers of the C type ``long``, of size at least
+            ``init_k_KC0 + 72``.
         KC0c : np.array
-            Array to store column positions of sparse values
+            Array to store column positions of sparse values. Same type and
+            size as ``KC0r``.
         KC0v : np.array
-            Array to store sparse values
-        update_KC0v_only : int
+            Array to store sparse values. 1-D array of floats of size at least
+            ``init_k_KC0 + 72``.
+        update_KC0v_only : int, optional
             The default ``0`` means that the row and column indices ``KC0r``
             and ``KC0c`` should also be updated. Any other value will only
             update the stiffness matrix values ``KC0v``.
@@ -709,14 +820,21 @@ cdef class Spring:
     cpdef void update_fint(Spring self, double [::1] fint):
         r"""Update the internal force vector
 
+        Calls ``update_probe_finte()``, transforms the forces and moments of
+        ``probe.finte`` to global coordinates with the rotation matrix and
+        adds them to ``fint`` at the positions ``c1`` to ``c1 + 5`` and ``c2``
+        to ``c2 + 5``. The displacements ``probe.ue`` must be updated before,
+        see :meth:`.update_probe_ue`.
+
         Parameters
         ----------
         fint : np.array
             Array that is updated in place with the internal forces. The
             internal forces stored in ``fint`` are calculated in global
             coordinates. Method :meth:`.update_probe_finte` is called to update
-            the parameter ``finte`` of the :class:`.TrussProbe` with the
-            internal forces in local coordinates.
+            the parameter ``finte`` of the :class:`.SpringProbe` with the
+            internal forces in local coordinates. 1-D array of size ``6*M``,
+            for `M` nodes in the model.
 
         """
         cdef double *finte

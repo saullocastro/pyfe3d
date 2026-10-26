@@ -270,9 +270,21 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     #      parameter, and that the same change brings the torsional buckling
     #      load of tests/test_quad4r_linear_buckling_cylinder_Nxy.py to
     #      within 0.1 per cent of the one of the enriched Quad4
-    assert np.allclose(omegan, [2229.65277474, 2229.65277474,
-                                2377.24306359, 2377.24306359,
-                                2432.59469823, 2432.59469823], rtol=1e-4)
+    # NOTE values updated again in 0.11.0, when the hourglass stiffnesses of
+    #      w, rx and ry became based on the bending compliance of the
+    #      laminate instead of on its extensional compliance, see the Notes
+    #      of Quad4R.update_KC0. The previous values were
+    #
+    #          2229.65277474, 2377.24306359, 2432.59469823
+    #
+    #      each of them doubled. The new ones are 0.4, 0.7 and 0.2 per cent
+    #      lower, and closer to those of the same mesh of Quad4 in
+    #      tests/test_quad4_natural_freq_cylinder.py, 2176.65594707,
+    #      2303.51717602 and 2396.44964069, from which they differ by 2.0,
+    #      2.5 and 1.3 per cent instead of 2.4, 3.2 and 1.5 per cent
+    assert np.allclose(omegan, [2220.19148042, 2220.19148042,
+                                2361.14023288, 2361.14023288,
+                                2428.01086828, 2428.01086828], rtol=1e-4)
 
 if __name__ == '__main__':
     test_linear_nat_freq_cylinder(mode=0, plot_pyvista=True, refinement=1)

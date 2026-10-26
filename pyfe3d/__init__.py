@@ -1,6 +1,20 @@
 r"""
+================================================
 Finite elements for 3D problems in Python/Cython
 ================================================
+
+The ``pyfe3d`` namespace gives the element classes :class:`.Quad4`,
+:class:`.Quad4R`, :class:`.Tria3R`, :class:`.Tria3DSG`, :class:`.BeamC`,
+:class:`.BeamLR`, :class:`.Truss` and :class:`.Spring`, each with its
+``Data`` and ``Probe`` classes (e.g. :class:`.BeamCData` and
+:class:`.BeamCProbe`), and the module :mod:`pyfe3d.solver`. It also defines:
+
+- ``DOF = 6``: number of degrees of freedom per node;
+- ``INT``: NumPy integer type of the C ``long`` of the platform,
+  ``np.int64`` when a C ``long`` has 8 bytes and ``np.int32`` otherwise,
+  matching the ``long`` arrays of row and column indices of the ``update_*``
+  methods of the elements;
+- ``DOUBLE = np.float64``: NumPy type of the arrays of values.
 
 """
 import ctypes

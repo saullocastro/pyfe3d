@@ -30,10 +30,10 @@ cdef class Lamina:
     cdef public double q11L, q12L, q22L, q16L, q26L, q66L, q44L, q45L, q55L
     cdef public MatLamina matlamina
     cpdef void rebuild(Lamina)
-    cpdef double [:, ::1] get_transf_matrix_displ_to_laminate(Lamina)
     cpdef double [:, ::1] get_constitutive_matrix(Lamina)
     cpdef double [:, ::1] get_transf_matrix_stress_to_lamina(Lamina)
     cpdef double [:, ::1] get_transf_matrix_stress_to_laminate(Lamina)
+    cpdef double [:, ::1] get_transf_matrix_displ_to_lamina(Lamina)
 
 cdef class ShellProp:
     cdef public double A11, A12, A16, A22, A26, A66
@@ -50,7 +50,6 @@ cdef class ShellProp:
     # NOTE ply data, one row per ply:
     #      h, q11L, q12L, q16L, q22L, q26L, q66L, q44L, q45L, q55L
     cdef int _ts_nplies
-    cdef double _ts_offset
     cdef double [:, ::1] _ts_plydata
     # NOTE Fourier coefficients of the transverse shear compliance in the
     #      element frame (Rohwer, 1988), see get_constitutive_element
@@ -74,9 +73,10 @@ cdef class ShellProp:
     cpdef tuple calc_transverse_shear_stress(ShellProp, double, double, double)
     cpdef void calc_equivalent_properties(ShellProp)
     cpdef void calc_constitutive_matrix(ShellProp) except *
-    cpdef void force_balanced(ShellProp)
-    cpdef void force_orthotropic(ShellProp)
-    cpdef void force_symmetric(ShellProp)
+    cpdef void make_balanced(ShellProp)
+    cpdef void make_orthotropic(ShellProp)
+    cpdef void make_symmetric(ShellProp)
+    cpdef void make_smeared(ShellProp)
     cpdef LaminationParameters calc_lamination_parameters(ShellProp)
 
 cdef class GradABD:

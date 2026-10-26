@@ -148,4 +148,4 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
 
 
 if __name__ == '__main__':
-    test_nat_freq_plate(plot=True, mode=29, mtypes=[2], refinement=5)
+    test_nat_freq_plate(plot=True, mode=29, mtypes=[1], refinement=5)
