@@ -762,9 +762,10 @@ cdef void _rotate_ply(double *pd, double m11, double m12, double m21,
     in-plane vectors, the plane-stress stiffness `C = [[q_{11L}, q_{12L},
     q_{16L}], [q_{12L}, q_{22L}, q_{26L}], [q_{16L}, q_{26L}, q_{66L}]]` and
     the transverse shear stiffness `C_s = [[q_{44L}, q_{45L}], [q_{45L},
-    q_{55L}]]` are rotated as `C^e = T_\sigma C T_\sigma^\top` and `C_s^e = T_s
-    C_s T_s^\top`, with the transformations of `\{\sigma_{xx}, \sigma_{yy},
-    \tau_{xy}\}` and of `\{\tau_{yz}, \tau_{xz}\}`:
+    q_{55L}]]` are rotated as `C^e = T_\sigma C T_\sigma^\top` and `C_s^e =
+    T_\gamma^\top C_s T_\gamma`, with `T_\sigma` the transformation of
+    `\{\sigma_{xx}, \sigma_{yy}, \tau_{xy}\}` and `T_\gamma` the transformation
+    of `\{\gamma_{yz}, \gamma_{xz}\}` from the element to the material frame:
 
     .. math::
 
@@ -772,7 +773,7 @@ cdef void _rotate_ply(double *pd, double m11, double m12, double m21,
         m_{21}^2 & m_{22}^2 & 2 m_{21} m_{22} \\
         m_{11} m_{21} & m_{12} m_{22} & m_{11} m_{22} + m_{12} m_{21}
         \end{bmatrix}, \qquad
-        T_s = \begin{bmatrix} m_{22} & m_{21} \\ m_{12} & m_{11}
+        T_\gamma = \begin{bmatrix} m_{22} & m_{12} \\ m_{21} & m_{11}
         \end{bmatrix}
 
     """
@@ -1573,8 +1574,8 @@ cdef class ShellProp:
         ``A``, ``B`` and ``D`` are rotated with `\boldsymbol{A}_e = \boldsymbol{T}_\sigma \boldsymbol{A}
         \boldsymbol{T}_\sigma^\top`, with `\boldsymbol{T}_\sigma` of :func:`_rotate_ply`. Without the
         Fourier coefficients of :meth:`.calc_Ats_element`, ``Ats`` is rotated
-        with `T_s A_{ts} T_s^\top`, `T_s = [[m_{22}, m_{21}], [m_{12},
-        m_{11}]]`. With them, the compliance `S = A_{ts}^{-1}` is evaluated
+        with `T_\gamma^\top A_{ts} T_\gamma`, `T_\gamma = [[m_{22}, m_{12}],
+        [m_{21}, m_{11}]]`. With them, the compliance `S = A_{ts}^{-1}` is evaluated
         from its Fourier series, with `\cos 2\theta = m_{11}^2 - m_{21}^2`,
         `\sin 2\theta = 2 m_{11} m_{21}` and the higher harmonics obtained by
         the recurrences `\cos 2(n+1)\theta = 2 \cos 2\theta \cos 2n\theta -
@@ -1660,7 +1661,7 @@ cdef class ShellProp:
             Ats[3] = S[0]/detS
             return
 
-        # NOTE tensor rotation A_e = T_s A T_s^T, T_s = [[m22, m21], [m12, m11]]
+        # NOTE tensor rotation A_e = T_gamma^T A T_gamma, T_gamma = [[m22, m12], [m21, m11]]
         t44 = self.A44
         t45 = self.A45
         t55 = self.A55
@@ -1782,10 +1783,14 @@ cdef class ShellProp:
 
         .. math::
 
-            A_{ts}^e = T_s A_{ts} T_s^\top \qquad T_s = \begin{bmatrix}
-            \cos\theta & \sin\theta \\ -\sin\theta & \cos\theta \end{bmatrix}
+            A_{ts}^e = T_\gamma^\top A_{ts} T_\gamma \qquad T_\gamma =
+            \begin{bmatrix} \cos\varphi & \sin\varphi \\ -\sin\varphi &
+            \cos\varphi \end{bmatrix} \qquad \varphi = -\theta
 
-        which is exact for the constant-strain stiffness.
+        in the ordering `\{\gamma_{yz}, \gamma_{xz}\}`, as in the book, with
+        `\varphi` the rotation of the element frame relative to the frame of
+        ``A44``, ``A45``, ``A55``. The rotation is exact for the
+        constant-strain stiffness.
 
         References
         ----------
