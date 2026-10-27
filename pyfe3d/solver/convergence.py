@@ -122,7 +122,8 @@ the component itself, e.g. under large self-equilibrated axial forces,
 such that the residual cannot be computed more accurately than about
 `\varepsilon \| |\boldsymbol{K}_{C0}| \, |\boldsymbol{c}| \|`, with `\varepsilon` the machine
 precision and `|\boldsymbol{K}_{C0}|` and `|\boldsymbol{c}|` the elementwise absolute values of the
-linear stiffness matrix and of the solution. When this level is above
+linear stiffness matrix and of the solution, which is the componentwise
+bound of the rounding error of a matrix-vector product [5]_. When this level is above
 `\epsilon` times the references of `\zeta_i`, e.g. near a null load, where
 the references, net force vectors, are small and the element contributions
 are not, the iterations stagnate and every step fails. The iteration `i`
@@ -179,6 +180,9 @@ References
    small curvature, NACA Technical Note 2840, National Advisory Committee
    for Aeronautics, Washington, 1952.
    https://ntrs.nasa.gov/citations/19930083579
+.. [5] Higham, N. J., Accuracy and Stability of Numerical Algorithms, 2nd
+   ed., SIAM, 2002, Sec. 3.5, Eqs. (3.12) and (3.13).
+   https://doi.org/10.1137/1.9780898718027
 
 """
 import numpy as np

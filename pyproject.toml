@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyfe3d"
-version = "0.11.0"
+version = "0.11.3"
 description = "General-purpose finite element solver for structural analysis and optimization based on Python and Cython"
 readme = "README.md"
 license = "BSD-3-Clause"
