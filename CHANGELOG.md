@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.11.3 (2026-10-27)
+
+Documentation only: no change of the code or of any result.
+
+### Documentation
+
+- `pyfe3d.shellprop`: the tensor rotation of the transverse shear stiffness is
+  written as in the book, `T_\gamma^\top A_{ts} T_\gamma`, with `T_\gamma =
+  [[m_{22}, m_{12}], [m_{21}, m_{11}]]` the transpose of the former `T_s`,
+  in `_rotate_ply`, `get_constitutive_element` and `calc_Ats_element`;
+  `calc_Ats_element` gives `T_\gamma` as a function of `\varphi = -\theta`,
+  the rotation of the element frame relative to the frame of `A44`, `A45`,
+  `A55`. Checked numerically: for `shear_correction='constant'`,
+  `calc_Ats_element(theta)` equals this rotation to 1e-16 for an unsymmetric
+  laminate.
+- Derivation scripts of `BeamLR` and of the curved `BeamLR`: the moments of
+  the sectional force vector are listed as `p = [N Mz My Qy Qz Mx]`, with `Mz =
+  int(sigma_xx*y)` and `My = int(sigma_xx*z)`, as in Eq. (11) of Luo (2008);
+  his Eq. (12), copied before, lists `My` before `Mz`. The matrix `D` is
+  unchanged.
+- `pyfe3d.solver.convergence`: the round-off floor cites Higham (2002), Sec.
+  3.5, Eqs. (3.12) and (3.13), for the componentwise bound of the rounding
+  error of a matrix-vector product.
+
 ## 0.11.0 (2026-10-26)
 
 ### Python versions
