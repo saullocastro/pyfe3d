@@ -65,9 +65,11 @@ Nrz = Matrix([[0, 0, 0, 0, 0, S1,
 #BL = integrate(BL, (y, -hy/2+dy, +hy/2+dy))
 #BL = simplify(integrate(BL, (z, -hz/2+dz, +hz/2+dz)))
 
-#From Eqs. 12 in Luo, Y. 2008
+#From Eqs. 11 and 12 in Luo, Y. 2008
 # p = D rho
-# p = [N My Mz Qy Qz Mx]
+# p = [N Mz My Qy Qz Mx]
+# NOTE Mz = int(sigma_xx*y) and My = int(sigma_xx*z), Eq. 11 of Luo, Y. 2008,
+#      whose Eq. 12 lists My before Mz
 # p = [e ky kz gammay gammaz kx]
 # NOTE two transverse shear moduli, as the attributes of
 #      pyfe3d.beamprop.BeamProp: G12 for gammay of the plane xy (v, rz) and
