@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Changelog &#8212; pyfe3d 0.11.0 documentation</title>
+    <title>Changelog &#8212; pyfe3d 0.11.3 documentation</title>
   
   
   
@@ -37,7 +37,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=f3b36f1a"></script>
+    <script src="_static/documentation_options.js?v=c44be570"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -117,7 +117,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
   
 </a></div>
     
@@ -588,6 +588,30 @@
 <p>The changes of each version, from the file <code class="docutils literal notranslate"><span class="pre">CHANGELOG.md</span></code> of the
 <a class="reference external" href="https://github.com/saullocastro/pyfe3d/blob/main/CHANGELOG.md">repository</a>:</p>
 <div class="highlight-markdown notranslate"><div class="highlight"><pre><span></span><span class="gh"># Changelog</span>
+
+<span class="gu">## 0.11.3 (2026-10-27)</span>
+
+Documentation only: no change of the code or of any result.
+
+<span class="gu">### Documentation</span>
+
+<span class="k">-</span><span class="w"> </span><span class="sb">`pyfe3d.shellprop`</span>: the tensor rotation of the transverse shear stiffness is
+  written as in the book, <span class="sb">`T_\gamma^\top A_{ts} T_\gamma`</span>, with `T_\gamma =
+  [[m_{22}, m<span class="ge">_{12}], [m_</span>{21}, m<span class="ge">_{11}]]` the transpose of the former `T_</span>s`,
+  in <span class="sb">`_rotate_ply`</span>, <span class="sb">`get_constitutive_element`</span> and <span class="sb">`calc_Ats_element`</span>;
+  <span class="sb">`calc_Ats_element`</span> gives <span class="sb">`T_\gamma`</span> as a function of <span class="sb">`\varphi = -\theta`</span>,
+  the rotation of the element frame relative to the frame of <span class="sb">`A44`</span>, <span class="sb">`A45`</span>,
+  <span class="sb">`A55`</span>. Checked numerically: for <span class="sb">`shear_correction='constant'`</span>,
+  <span class="sb">`calc_Ats_element(theta)`</span> equals this rotation to 1e-16 for an unsymmetric
+  laminate.
+<span class="k">-</span><span class="w"> </span>Derivation scripts of <span class="sb">`BeamLR`</span> and of the curved <span class="sb">`BeamLR`</span>: the moments of
+  the sectional force vector are listed as <span class="sb">`p = [N Mz My Qy Qz Mx]`</span>, with `Mz =
+  int(sigma_xx*y)` and <span class="sb">`My = int(sigma_xx*z)`</span>, as in Eq. (11) of Luo (2008);
+  his Eq. (12), copied before, lists <span class="sb">`My`</span> before <span class="sb">`Mz`</span>. The matrix <span class="sb">`D`</span> is
+  unchanged.
+<span class="k">-</span><span class="w"> </span><span class="sb">`pyfe3d.solver.convergence`</span>: the round-off floor cites Higham (2002), Sec.
+  3.5, Eqs. (3.12) and (3.13), for the componentwise bound of the rounding
+  error of a matrix-vector product.
 
 <span class="gu">## 0.11.0 (2026-10-26)</span>
 

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Convergence criteria of the non-linear solvers (pyfe3d.solver.convergence) &#8212; pyfe3d 0.11.0 documentation</title>
+    <title>Convergence criteria of the non-linear solvers (pyfe3d.solver.convergence) &#8212; pyfe3d 0.11.3 documentation</title>
   
   
   
@@ -37,7 +37,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=f3b36f1a"></script>
+    <script src="_static/documentation_options.js?v=c44be570"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -120,7 +120,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
   
 </a></div>
     
@@ -832,7 +832,8 @@ the component itself, e.g. under large self-equilibrated axial forces,
 such that the residual cannot be computed more accurately than about
 <span class="math notranslate nohighlight">\(\varepsilon \| |\boldsymbol{K}_{C0}| \, |\boldsymbol{c}| \|\)</span>, with <span class="math notranslate nohighlight">\(\varepsilon\)</span> the machine
 precision and <span class="math notranslate nohighlight">\(|\boldsymbol{K}_{C0}|\)</span> and <span class="math notranslate nohighlight">\(|\boldsymbol{c}|\)</span> the elementwise absolute values of the
-linear stiffness matrix and of the solution. When this level is above
+linear stiffness matrix and of the solution, which is the componentwise
+bound of the rounding error of a matrix-vector product <a class="reference internal" href="#r4134a01e5a1b-5" id="id6">[5]</a>. When this level is above
 <span class="math notranslate nohighlight">\(\epsilon\)</span> times the references of <span class="math notranslate nohighlight">\(\zeta_i\)</span>, e.g. near a null load, where
 the references, net force vectors, are small and the element contributions
 are not, the iterations stagnate and every step fails. The iteration <span class="math notranslate nohighlight">\(i\)</span>
@@ -852,7 +853,7 @@ round-off floor. With prescribed displacements, <code class="docutils literal no
 <span class="math notranslate nohighlight">\(|K_{ff}| \, |u_f|\)</span> omitting the contribution of the prescribed
 displacements, <span class="math notranslate nohighlight">\(|K_{fp}| \, |u_p|\)</span>: the floor is then lower, i.e.
 conservative.</p>
-<p>Measured on the low sinusoidal arch of Fung and Kaplan <a class="reference internal" href="#r4134a01e5a1b-4" id="id6">[4]</a>, hinged at both
+<p>Measured on the low sinusoidal arch of Fung and Kaplan <a class="reference internal" href="#r4134a01e5a1b-4" id="id7">[4]</a>, hinged at both
 ends under a sinusoidal load, <span class="math notranslate nohighlight">\(\lambda_1 = 2.2\)</span>, modelled with 40
 <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> elements, traced with both arc-length methods and both
 criteria, with arc-length increments of 0.05 and <span class="math notranslate nohighlight">\(\epsilon = 10^{-9}\)</span>, and
@@ -894,11 +895,17 @@ that handles “snap-through”, Computers &amp; Structures, 13(1-3), 55-62,
 1981. <a class="reference external" href="https://doi.org/10.1016/0045-7949(81)90108-5">https://doi.org/10.1016/0045-7949(81)90108-5</a></p>
 </div>
 <div class="citation" id="r4134a01e5a1b-4" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id6">4</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id7">4</a><span class="fn-bracket">]</span></span>
 <p>Fung, Y. C. and Kaplan, A., Buckling of low arches or curved beams of
 small curvature, NACA Technical Note 2840, National Advisory Committee
 for Aeronautics, Washington, 1952.
 <a class="reference external" href="https://ntrs.nasa.gov/citations/19930083579">https://ntrs.nasa.gov/citations/19930083579</a></p>
+</div>
+<div class="citation" id="r4134a01e5a1b-5" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id6">5</a><span class="fn-bracket">]</span></span>
+<p>Higham, N. J., Accuracy and Stability of Numerical Algorithms, 2nd
+ed., SIAM, 2002, Sec. 3.5, Eqs. (3.12) and (3.13).
+<a class="reference external" href="https://doi.org/10.1137/1.9780898718027">https://doi.org/10.1137/1.9780898718027</a></p>
 </div>
 </div>
 </section>

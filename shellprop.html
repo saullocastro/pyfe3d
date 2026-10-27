@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Shell property module (pyfe3d.shellprop) &#8212; pyfe3d 0.11.0 documentation</title>
+    <title>Shell property module (pyfe3d.shellprop) &#8212; pyfe3d 0.11.3 documentation</title>
   
   
   
@@ -37,7 +37,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=f3b36f1a"></script>
+    <script src="_static/documentation_options.js?v=c44be570"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -120,7 +120,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.0 documentation</p>
+    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
   
 </a></div>
     
@@ -2456,9 +2456,13 @@ harmonics would be <span class="math notranslate nohighlight">\(M - n \ge 11\)</
 <p>In all other cases the stiffness is rotated as a second-order
 tensor:</p>
 <div class="math notranslate nohighlight">
-\[\begin{split}A_{ts}^e = T_s A_{ts} T_s^\top \qquad T_s = \begin{bmatrix}
-\cos\theta &amp; \sin\theta \\ -\sin\theta &amp; \cos\theta \end{bmatrix}\end{split}\]</div>
-<p>which is exact for the constant-strain stiffness.</p>
+\[\begin{split}A_{ts}^e = T_\gamma^\top A_{ts} T_\gamma \qquad T_\gamma =
+\begin{bmatrix} \cos\varphi &amp; \sin\varphi \\ -\sin\varphi &amp;
+\cos\varphi \end{bmatrix} \qquad \varphi = -\theta\end{split}\]</div>
+<p>in the ordering <span class="math notranslate nohighlight">\(\{\gamma_{yz}, \gamma_{xz}\}\)</span>, as in the book, with
+<span class="math notranslate nohighlight">\(\varphi\)</span> the rotation of the element frame relative to the frame of
+<code class="docutils literal notranslate"><span class="pre">A44</span></code>, <code class="docutils literal notranslate"><span class="pre">A45</span></code>, <code class="docutils literal notranslate"><span class="pre">A55</span></code>. The rotation is exact for the
+constant-strain stiffness.</p>
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="r4ea636078690-1" role="doc-biblioentry">
