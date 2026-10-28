@@ -24,11 +24,14 @@ def test_linear_buckling_plate(plot=False, mode=0):
 
     with `N_{cr,K}` the Kirchhoff value, is the exact reference; it is 5.6 %
     below the Kirchhoff value here. Measured against it, with the 13 x 13
-    mesh: +0.91 %. Up to version 0.11 the thick elements used the modified
-    one-point shear rule of Hughes et al. (1977), whose spurious twist
-    stiffness gave +11.2 %, see ``tests/test_quad4_thick_twist.py``; with the
-    soft simple support previously used here, the same spurious stiffness
-    brought the result within 3 % of the Kirchhoff value.
+    mesh: +1.49 %, +0.91 % with the slopes of `w` of KG at the two-by-two
+    points instead of the centroid, see
+    ``tests/test_quad4_geometric_hourglass.py``. Up to version 0.11 the thick
+    elements used the modified one-point shear rule of Hughes et al. (1977),
+    whose spurious twist stiffness gave +11.2 %, see
+    ``tests/test_quad4_thick_twist.py``; with the soft simple support
+    previously used here, the same spurious stiffness brought the result
+    within 3 % of the Kirchhoff value.
 
     """
     thetas = np.linspace(-np.pi, np.pi, 5)
