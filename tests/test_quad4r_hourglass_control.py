@@ -956,16 +956,37 @@ def test_transverse_coefficient_has_no_unit_invariant_constant():
     stabilisation also stiffens real twist and the acceptable amount is a
     property of the problem rather than of the element. This test measures
     the two ends of that range on this element's own benchmarks and shows
-    they are two orders of magnitude apart, which is why no dimensionless
+    they are almost two orders of magnitude apart, which is why no dimensionless
     constant replaces the factor and why the other four coefficients could
     be made homogeneous while this one could not.
 
     Expressed as a multiple of `E t^3`, Brockman's factor supplies
     `0.1/(1 + 1/A)`, so what it gives is set by the element area in the unit
     used. The two cases are the plate of
-    ``test_quad4r_linear_buckling_plate.py``, whose elements have
+    ``test_quad4r_linear_buckling_plate.py`` with ``refinement=1``, whose
+    30x14 elements have
     `A = 2.381 \times 10^{-3}` in metres, and the one-element-wide torsion
     strip of MacNeal and Harder (1985), whose elements have `A = 0.2`.
+
+    The strip is the straight cantilever beam of MacNeal and Harder, Fig. 4,
+    6 by 1 elements, under the twist load, a unit moment applied as the
+    nodal forces of Fig. 11b, p. 12, whose tip twist is 0.03208, Table 3, p.
+    10. Their results are graded on p. 14: A for an error of at most 2 %, B
+    10 %, C 20 %, D 50 %, F above 50 %; their QUAD4 gives 0.941, Table 8,
+    p. 15. With Brockman's coefficient Quad4R gives 4.78 times the
+    reference, grade F, because on a single element across the width the
+    twist is the hourglass pattern `w = xy`. Refining the width removes the
+    failure: 0.923, 1.034 and 1.053 times the reference with 6x2, 12x4 and
+    24x4 elements (finer meshes keep growing slowly, 1.075 with 96x16, the
+    deflection under the concentrated nodal forces being singular in a
+    Mindlin plate). At the thin-plate coefficient the 6x1 strip gives 49.9
+    times the reference.
+
+    The twist is the work of the unit torque, `\boldsymbol{f}^\top
+    \boldsymbol{u}`, i.e. the compliance of the strip. With `K = K_0 + c
+    K_h` and both terms positive semi-definite, dividing the hourglass
+    coefficient `c` by `r` gives `K' \geq K/r`, so the twist grows, but by
+    at most the factor `r`, here `c_{strip}/c_{plate} = 70.2`.
 
     """
     A_plate = (2.0/30.)*(0.5/14.)
@@ -981,13 +1002,21 @@ def test_transverse_coefficient_has_no_unit_invariant_constant():
 
     # and the consequence, measured: holding the coefficient down at the
     # value the thin plate wants leaves the torsion strip far too flexible
+    # NOTE MacNeal and Harder (1985), Table 3, p. 10
     ref = 0.03208
     brockman = strip_twist(hgfactor_w=1.)
     reduced = strip_twist(hgfactor_w=c_plate/c_strip)
+    refined = strip_twist(hgfactor_w=1., nx=12, ny=4)
     print('strip twist / reference: Brockman %.3g, at the thin-plate '
-          'coefficient %.3g' % (brockman/ref, reduced/ref))
-    assert 3. < brockman/ref < 8.
-    assert reduced/ref > 4.*brockman/ref
+          'coefficient %.3g, Brockman with 12x4 elements %.4f'
+          % (brockman/ref, reduced/ref, refined/ref))
+    # NOTE grade F of MacNeal and Harder, p. 14, on their 6x1 mesh, which
+    #      a mesh with four elements across the width brings to grade B
+    assert brockman/ref - 1 > 0.5
+    assert abs(refined/ref - 1) <= 0.10
+    # NOTE the compliance bounds of the docstring, and grade F again
+    assert brockman < reduced <= c_strip/c_plate*brockman
+    assert reduced/ref - 1 > 0.5
 
 
 # NOTE input properties of a carbon-epoxy ply and of a sandwich core, used
@@ -1227,27 +1256,72 @@ def ss1_plate_center_deflection(prop, a, n, hgfactors):
 
 
 def test_laminated_plates_against_navier():
-    r"""Accuracy of the bending moduli against the FSDT Navier solution
+    r"""Convergence of Quad4R to the FSDT Navier solution, and the effect of
+    the bending moduli in the hourglass stiffnesses
 
-    Simply supported square plates under uniform pressure, 8 by 8 Quad4R,
-    against :func:`navier_ss1_center_deflection`. The hourglass stiffnesses
-    with the membrane moduli used before 0.11.0 for `w`, `r_x` and `r_y`
-    are reproduced with ``hgfactor_w``, ``hgfactor_rx`` and ``hgfactor_ry``
-    equal to `(E_{1eq} + E_{2eq})/(E_{1b} + E_{2b})`, `E_{2eq}/E_{2b}` and
-    `E_{1eq}/E_{1b}`. The ply has `E_1/E_2 = 25`, `G_{12} = G_{13} = 0.5
-    E_2`, `G_{23} = 0.2 E_2`, `\nu_{12} = 0.25`, and the sandwich has two
-    `[0/90]` faces of 0.5 mm on a 10 mm core of 100 MPa and 40 MPa.
+    Simply supported square plates under uniform pressure, 8 by 8, 16 by 16
+    and 32 by 32 Quad4R, against :func:`navier_ss1_center_deflection`. The
+    reference is the Navier solution of the first-order shear deformation
+    theory of Reddy, J. N., Mechanics of Laminated Composite Plates and
+    Shells: Theory and Analysis, 2nd ed., CRC Press, 2004,
+    https://doi.org/10.1201/b12409, Sec. 7.2.1, pp. 379-380: the SS-1
+    conditions, Eq. (7.2.1a) and Fig. 7.2.1, the expansions, Eqs. (7.2.2) to
+    (7.2.4), and the load, Eq. (7.2.6a), which for a uniform pressure gives
+    ``16/(pi**2*m*n)``, and the condition ``A16 = A26 = B16 = B26 = D16 =
+    D26 = A45 = 0``, p. 380, under which the coefficients follow from the 5
+    by 5 system of Eqs. (7.2.7a,b), Eq. (7.2.8) in statics, p. 381. These
+    are the conditions and the coefficients of
+    :func:`navier_ss1_center_deflection`, with `\phi_x = r_y` and `\phi_y =
+    -r_x`. The same conditions are stated as Eqs. (14) and (15), pp. 9-10,
+    of Part 1 of Reddy, J. N., Chandrashekhara, K., and Chao, W. C.,
+    "Geometrically nonlinear analysis of laminated elastic structures", NASA
+    CR-191055, 1993. The series changes by less than 1e-8 from 199 to 399
+    terms in each direction, and with the transverse shear stiffnesses of
+    Reddy, ``K = 5/6`` times the thickness-weighted sum of `G_{13}` and
+    `G_{23}`, it reproduces the deflections of the (0/90/90/0) square plate
+    under uniform load of his Table 7.2.1, p. 385, which uses the ply of
+    this test, ``100*w*E_2*h**3/(a**4*q_0)`` = 1.0250, 0.7694 and 0.6833 for
+    `a/h` = 10, 20 and 100, within half a unit of the last printed digit.
+    The plates below keep the transverse shear stiffnesses of
+    :func:`pyfe3d.shellprop_utils.laminated_plate`, so their reference
+    differs from Reddy's, by 0.21 % for the [0/90]s plate with `a/h = 100`.
 
-    The one-point rule makes Quad4R stiffer than the reference on coarse
-    meshes, mostly through the hourglass stiffness of the rotations, so its
-    deflection is smaller. With the bending moduli the artificial stiffness
-    of the rotations is the same fraction of the bending stiffness of the
-    plate for every laminate, as Brockman calibrated it for isotropic
-    plates. The deflection then improves where the membrane moduli
-    over-stabilised, e.g. the unsymmetric cross-ply, whose `\boldsymbol{B}` makes
-    `E_{1b} = 0.36 E_{1eq}`, and worsens where they under-stabilised, e.g.
-    the sandwich, with `E_{1b} = 2.7 E_{1eq}`, which is then as accurate as
-    a symmetric cross-ply.
+    The hourglass stiffnesses with the membrane moduli used before 0.11.0
+    for `w`, `r_x` and `r_y` are reproduced with ``hgfactor_w``,
+    ``hgfactor_rx`` and ``hgfactor_ry`` equal to `(E_{1eq} + E_{2eq})/(E_{1b}
+    + E_{2b})`, `E_{2eq}/E_{2b}` and `E_{1eq}/E_{1b}`. The ply has `E_1/E_2 =
+    25`, `G_{12} = G_{13} = 0.5 E_2`, `G_{23} = 0.2 E_2`, `\nu_{12} = 0.25`,
+    and the sandwich has two `[0/90]` faces of 0.5 mm on a 10 mm core of 100
+    MPa and 40 MPa.
+
+    The one-point rule and the hourglass stiffness of the rotations make
+    Quad4R stiffer than the reference, so its deflection is smaller, and the
+    error decreases as `h^2`, the rate of the bilinear element. Measured
+    `w/w_{ref}` with the membrane moduli and with the bending moduli:
+
+    ==========  ===============  ===============  ===============
+    plate       8x8              16x16            32x32
+    ==========  ===============  ===============  ===============
+    isotropic   0.9210, 0.9210   0.9794, 0.9794   0.9948, 0.9948
+    [0/90]s     0.8547, 0.8521   0.9603, 0.9590   0.9899, 0.9895
+    [0/90]      0.6822, 0.8465   0.8970, 0.9572   0.9721, 0.9890
+    sandwich    0.9431, 0.8612   0.9854, 0.9617   0.9963, 0.9902
+    ==========  ===============  ===============  ===============
+
+    The observed order of convergence from 16x16 to 32x32 is 1.89 to 1.99,
+    and the Richardson extrapolation of these two meshes with the order 2
+    agrees with the Navier solution within 0.3 % with the membrane moduli
+    and 0.04 % with the bending moduli, so the meshes converge to the
+    reference and not to another limit.
+
+    With the bending moduli the artificial stiffness of the rotations is the
+    same fraction of the bending stiffness of the plate for every laminate,
+    as Brockman calibrated it for isotropic plates. For the isotropic plate
+    the two choices are identical. The deflection improves on every mesh
+    where the membrane moduli over-stabilised, the unsymmetric cross-ply,
+    whose `\boldsymbol{B}` makes `E_{1b} = 0.36 E_{1eq}`, and worsens on
+    every mesh where they under-stabilised, the sandwich, with `E_{1b} = 2.7
+    E_{1eq}`, which is then about as accurate as a symmetric cross-ply.
 
     """
     E2 = 1.e9
@@ -1265,20 +1339,51 @@ def test_laminated_plates_against_navier():
             laminaprops=[laminaprop, laminaprop, core, laminaprop,
                          laminaprop]), 0.5),
     }
-    # NOTE w/wref with the membrane moduli and with the bending moduli
-    expected = {'isotropic': (0.9210, 0.9210), '[0/90]s': (0.8547, 0.8521),
-                '[0/90]': (0.6822, 0.8465), 'sandwich': (0.9431, 0.8612)}
+    # NOTE Reddy (2004), Table 7.2.1, (0/90/90/0), uniform load
+    for a_h, wbar in ((10, 1.0250), (20, 0.7694), (100, 0.6833)):
+        h = 1./a_h
+        prop = laminated_plate([0, 90, 90, 0], plyt=h/4,
+                               laminaprop=laminaprop)
+        prop.A44 = prop.A55 = 5/6*h*(laminaprop[4] + laminaprop[5])/2
+        w = 100*navier_ss1_center_deflection(prop, 1.)*E2*h**3
+        print('Reddy Table 7.2.1, a/h = %3d: %.4f, Navier %.6f'
+              % (a_h, wbar, w))
+        assert abs(w - wbar) <= 0.5e-4
+    meshes = (8, 16, 32)
+    errors = {}
     for name, (prop, a) in plates.items():
         E1eq, E2eq, E1b, E2b = equivalent_moduli(prop, 0.)
         membrane = (1., 1., (E1eq + E2eq)/(E1b + E2b), E2eq/E2b, E1eq/E1b)
         wref = navier_ss1_center_deflection(prop, a)
-        old = ss1_plate_center_deflection(prop, a, 8, membrane)/wref
-        new = ss1_plate_center_deflection(prop, a, 8, (1.,)*5)/wref
-        print('%-10s a/h = %5.1f  E1b/E1eq %.3f  E2b/E2eq %.3f  w/wref: '
-              'membrane moduli %.4f, bending moduli %.4f'
-              % (name, a/prop.h, E1b/E1eq, E2b/E2eq, old, new))
-        assert np.allclose((old, new), expected[name], atol=5e-4), name
-
+        # NOTE truncation of the Navier series
+        assert abs(navier_ss1_center_deflection(prop, a, 399)/wref - 1) < 1e-8
+        for label, hgfactors in (('membrane', membrane),
+                                 ('bending', (1.,)*5)):
+            w = np.array([ss1_plate_center_deflection(prop, a, n, hgfactors)
+                          for n in meshes])/wref
+            e = 1 - w
+            order = np.log2(e[1]/e[2])
+            w_inf = w[2] + (w[2] - w[1])/3
+            print('%-10s a/h = %5.1f  %-8s moduli  w/wref %s  order %.2f  '
+                  'Richardson %.5f' % (name, a/prop.h, label,
+                  ' '.join('%.4f' % wi for wi in w), order, w_inf))
+            # NOTE stiffer than the reference, monotonic convergence at the
+            #      rate h**2 of the bilinear element
+            assert np.all(e > 0), (name, label)
+            assert e[0] > e[1] > e[2], (name, label)
+            assert 1.5 < order < 2.5, (name, label)
+            # NOTE the extrapolation removes at least two thirds of the
+            #      error of the finest mesh: the limit is the Navier solution
+            assert abs(w_inf - 1) < e[2]/3, (name, label)
+            errors[name, label] = e
+    # NOTE the isotropic moduli ratios are 1 to round-off, so are the
+    #      hourglass factors and the deflections w/wref = 1 - e
+    assert np.allclose(1 - errors['isotropic', 'membrane'],
+                       1 - errors['isotropic', 'bending'], rtol=1e-10,
+                       atol=0)
+    assert np.all(errors['[0/90]', 'bending'] < errors['[0/90]', 'membrane'])
+    assert np.all(errors['sandwich', 'bending']
+                  > errors['sandwich', 'membrane'])
 
 
 def test_mass_formulations_match_brockman():

@@ -22,22 +22,27 @@ of `3n - 3`. The Hughes-Brezzi term gives that state the energy
 the two must be used together.
 
 The counts below are taken over the in-plane subspace `\{u, v, r_z\}`, which
-is where the drilling formulation is responsible for the rank. The full
-element matrix of a single free element has more zero eigenvalues than the
-six rigid-body modes, one more for a rectangle and two more for a distorted
-quadrilateral, identically for both drilling models. The mode that a
-rectangle carries is `r_x = 2x - 1`, `r_y = 2y - 1`, `w = 0`, which has zero
-curvature everywhere and whose transverse shear rotation part vanishes at the
-centroid, so the one-point sampled rotation term of the transverse shear does
-not see it. Those modes live entirely in the out-of-plane block `\{w, r_x,
-r_y\}`, which is exactly decoupled from the in-plane one for a flat element
-with `B = 0`, and the drilling enrichment acts only on the in-plane
-translations. They are therefore a property of the mixed integration of the
-plate formulation, documented as Figure 10 of Hughes, Taylor and
-Kanoknukulchai (1977) and measured in ``test_quad4_spurious_shear_mode.py``.
-They predate the drilling work and are unrelated to it, which is why the
-assertion below compares the two drilling models against each other rather
-than against an absolute number.
+is where the drilling formulation is responsible for the rank. The number of
+zero eigenvalues of the full element matrix of a single free element depends
+on the transverse shear rule of Quad4, see :mod:`pyfe3d.quad4`, identically
+for both drilling models. When `h/\ell < 1`, `\ell` the square root of the
+element area, the one-point rule of Hughes, Taylor and Kanoknukulchai (1977)
+leaves the two zero-energy modes of their Figure 10, p. 1542, besides the six
+rigid-body modes: the hourglass mode `w = (x - x_c)(y - y_c)` with zero
+rotations, and the in-plane twist `w = 0`, `r_x = x - x_c`, `r_y = y - y_c`,
+`(x_c, y_c)` the centroid, whose transverse shear strains vanish at the
+centroid. When `h/\ell \ge 1` the assumed transverse shear strains of MITC4
+give stiffness to both, and only the six rigid-body modes are left. In
+:func:`test_B1_rank_of_a_single_free_element`, with `h = 1`, the unit square
+has `h/\ell = 1` and six zero eigenvalues, the distorted quadrilateral `h/\ell
+= 0.63` and eight. Those modes live entirely in the out-of-plane block `\{w,
+r_x, r_y\}`, which is exactly decoupled from the in-plane one for a flat
+element with `B = 0`, and the drilling enrichment acts only on the in-plane
+translations. They are therefore a property of the integration of the
+transverse shear of the plate formulation, measured in
+``test_quad4_spurious_shear_mode.py``. They predate the drilling work and are
+unrelated to it, which is why the assertion below compares the two drilling
+models against each other, besides checking the absolute count.
 
 """
 import sys

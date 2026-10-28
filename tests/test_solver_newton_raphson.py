@@ -105,6 +105,15 @@ def test_nr_predictor_scaled_with_increment():
     assert p.calls_per_step() == [1]*len(p.an.increments)
 
 
+def exact_apex_deflection(frac):
+    r"""Apex deflection of :func:`von_mises_truss` under ``frac`` times the
+    limit load, the smallest positive root of ``w**3 - 3*w**2 + 2*w =
+    frac*2/(3*sqrt(3))``, before the limit point at ``w = 1 - 1/sqrt(3)``"""
+    roots = np.roots([1., -3., 2., -frac*2/(3*np.sqrt(3))])
+    roots = roots[np.isreal(roots)].real
+    return roots[roots > 0].min()
+
+
 def test_nr_softening_with_step_cutting():
     p = von_mises_truss(frac=0.99)
     # plain Newton needs 5 corrections to reach relTOL=1e-6 at full load, a
@@ -117,6 +126,10 @@ def test_nr_softening_with_step_cutting():
     np.testing.assert_allclose(p.an.cs[-1], ref, rtol=1e-6)
     # the converged apex deflection is before the limit point
     assert p.an.cs[-1][0] < 1 - 1/np.sqrt(3)
+    # NOTE rtol of the residual 1e-6, the tangent at 0.99 of the limit load
+    #      is about 1/4 of the initial one: the error in w is below 1e-5
+    np.testing.assert_allclose(p.an.cs[-1][0], exact_apex_deflection(0.99),
+                               rtol=1e-5)
 
 
 def test_nr_softening_incremental():
@@ -125,6 +138,8 @@ def test_nr_softening_incremental():
     p.an.static(NLgeom=True, silent=True)
     check_increments_and_equilibrium(p)
     assert p.an.cs[-1][0] < 1 - 1/np.sqrt(3)
+    np.testing.assert_allclose(p.an.cs[-1][0], exact_apex_deflection(0.99),
+                               rtol=1e-5)
 
 
 def test_nr_non_monotonic_residual_is_not_divergence():

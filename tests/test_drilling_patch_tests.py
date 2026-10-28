@@ -123,9 +123,10 @@ def membrane_field(ncoords, a, b):
 def bending_field(ncoords, c):
     r"""w = c(x^2 + xy + y^2)/2, r_x = w_{,y}, r_y = -w_{,x}
 
-    The constant-curvature state of Table 2(b) of MacNeal and Harder, written
-    with the six-degree-of-freedom rotations of the element, for which `r_x =
-    \partial w/\partial y` and `r_y = -\partial w/\partial x`.
+    The constant-curvature state of Table 2(b), p. 10, of MacNeal and Harder
+    (1985), written with the six-degree-of-freedom rotations of the element,
+    for which `r_x = \partial w/\partial y` and `r_y = -\partial
+    w/\partial x`.
 
     """
     u = np.zeros(DOF*ncoords.shape[0])
@@ -133,7 +134,10 @@ def bending_field(ncoords, c):
     y = ncoords[:, 1]
     u[2::DOF] = c*(x**2 + x*y + y**2)/2.
     u[3::DOF] = c*(y + x/2.)
-    u[4::DOF] = -c*(-x - y/2.)
+    # NOTE Table 2(b) of MacNeal and Harder: theta_y = -w_x = c*(-x - y/2),
+    #      which with gamma_xz = w_x + r_y, see :mod:`pyfe3d.quad4`, is the
+    #      r_y of zero transverse shear
+    u[4::DOF] = c*(-x - y/2.)
     return u
 
 

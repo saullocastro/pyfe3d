@@ -15,8 +15,10 @@ Vlasov's `E h^3 b^3/144`, Eq. (17) of the paper, but changes the I-beam and the
 channel by about 0.1 per cent or less, and changes neither the first four rows
 and columns of ``Kv``, nor the shear centre, nor the torsional warping `w_1`.
 For the I-beam, the geometry is that of Fig. 6, flanges of width ``1.0`` and
-outer height ``0.5``, which gives the published torsional and warping
-rigidities within 1 per cent; the text of Section 5.2 swaps the two dimensions.
+outer height ``0.5``, with which the torsional rigidity is 0.8 per cent above
+and the warping rigidity 1.0 to 1.1 per cent below the published VABS values,
+see :func:`test_Ibeam_isotropic_Table5`; the text of Section 5.2 swaps the two
+dimensions.
 The "Analytical (VAM)" warping rigidity of Table 5, 2083.33, equals `E t a^3
 b^2/24` with the dimensions of the text, but is not consistent with the VABS
 values of the same table, and is not used.
@@ -28,12 +30,15 @@ elastic anisotropic I-beams", International Journal of Solids and
 Structures 36(7) (1999) 1017--1043, doi:10.1016/S0020-7683(97)00341-7,
 p. 1038 and Fig. 8; the published effective torsional rigidity is
 reproduced within 1.1 per cent and the warping rigidity within 4 per cent.
-The composite I-beam of Pandey et al. (1995), with the sectional constants
-of the asymptotic theory given by Hodges and Peters, "Lateral-torsional
-buckling of cantilevered elastically coupled composite strip- and
-I-beams", International Journal of Solids and Structures 38(9) (2001)
-1585--1603, doi:10.1016/S0020-7683(00)00111-6, p. 1601, is reproduced
-within 3.5 per cent, with an assumption on the out-of-plane constants.
+The composite I-beam of Pandey, Kabir and Sherbourne, "Flexural-torsional
+stability of thin-walled composite I-section beams", Composites Engineering
+5(3) (1995) 321--342, doi:10.1016/0961-9526(94)00101-E, with the sectional
+constants of the asymptotic theory given by Hodges and Peters,
+"Lateral-torsional buckling of cantilevered elastically coupled composite
+strip- and I-beams", International Journal of Solids and Structures 38(9)
+(2001) 1585--1603, doi:10.1016/S0020-7683(00)00111-6, p. 1601, is compared
+with an assumption on the out-of-plane constants, see
+:func:`test_Ibeam_Pandey_Hodges_Peters`.
 
 For a thin-walled channel, the torsional warping about the shear centre is
 compared with the principal sectorial coordinate `\omega` of Vlasov,
@@ -44,6 +49,27 @@ twist rate `\kappa_1` and `\rho` positive when the radius vector from the
 pole turns counter-clockwise, from `x_2` towards `x_3`, the condition of no
 shear strain on the mid-line, `u_{1,s} + \rho \kappa_1 = 0`, gives the
 axial warping displacement `u_1 = -\omega \kappa_1`.
+
+The thin-walled shear centres and sectorial moments of inertia
+`J_\omega`, the warping rigidity being `E J_\omega`, are those of Vlasov
+(1961), Chapter II, Sec. 1: for the I-section, Eq. (1.2), p. 58, the shear
+centre at mid-height for equal flanges, and the unnumbered equation `J_\omega
+= a_y^2 J_{1y} + (d_1 - a_y)^2 J_{2y}` of p. 59, which gives `t b^3 h^2/24`
+with `J_{1y} = J_{2y} = t b^3/12` and `a_y = d_1/2 = h/2`; for the channel
+("trough section"), web of depth `d`, flanges of width `d_1`, both of
+thickness `t`, the unnumbered equations of p. 61, the distance of the shear
+centre from the web, `a_x = d_1^2 \delta_1/(2 d_1 \delta_1 + d \delta/3)`,
+i.e. `3 b^2/(6 b + h)`, and `J_\omega = (d_1 - 3 a_x) d^2 d_1^2
+\delta_1/6 + a_x^2 J_x`, with `J_x` of Eq. (1.7) and `a_x` taken as a
+distance (Vlasov's `a_x` is negative), which equals `t b^3 h^2 (3 b + 2
+h)/[12 (6 b + h)]`. The same formulas are given by Timoshenko and Gere,
+Theory of Elastic Stability, 2nd ed., McGraw-Hill, 1961 (International
+Student Edition, 17th printing, 1985), Table A-3, p. 530: `C_w = t h^2
+b^3/24` for the I-section, `e = 3 b^2/(6 b + h)` and `C_w = t b^3 h^2 (3 b +
+2 h)/[12 (6 b + h)]` for the channel, and the torsion constant `J = t^3 (2 b
++ h)/3` of both; the warping rigidity of the I-beam, `C_1 = E I_f h^2/2`, is
+that of Eq. (5-8), p. 219, stated on p. 224, Art. 5.3, where `C_w` of the
+channel is derived.
 """
 import sys
 import os
@@ -119,6 +145,27 @@ def test_strip_composite_Tables3_4(theta, C22, C55, coupled, constraint):
 
 @pytest.mark.parametrize('constraint', ['yu2002', 'yu2012'])
 def test_Ibeam_isotropic_Table5(constraint):
+    r"""Isotropic I-beam of Yu et al. (2005), Table 5, VABS: `C_{22} =
+    199.944` lb in.\ :sup:`2` and `C_{55} = 3553.43` lb in.\ :sup:`4`
+
+    With the mesh of the paper, 2 elements through the thickness, 20 across
+    each flange and 10 along the web (``nf = 9`` elements on each side of
+    the junction), `C_{22}` is 0.78 per cent above the published value;
+    refining the mesh by 2 and 4 (18 x 20 and 36 x 40) reduces the
+    difference to 0.46 and 0.33 per cent, a discretisation error, within
+    the 1 per cent of the assertion. `C_{55}` is 0.97 per cent below the
+    published value with the constraints ``'yu2002'`` and 1.08 per cent
+    below with ``'yu2012'``, and 0.94 and 0.93 (``'yu2002'``), 1.05 and
+    1.03 per cent (``'yu2012'``) below with the refined meshes: this
+    difference is not a discretisation error and its origin is not
+    identified; with 4-node and 9-node elements it is 1.06 and 0.95 per cent
+    (``'yu2002'``). The thin-walled value of Vlasov (1961), `E t b^3
+    h^2/24` = 3526.67, is 0.76 per cent below the published value, and
+    `C_{55}` tends to it as the walls become thinner, see
+    :func:`test_Ibeam_thin_walled_limit`. The tolerance of 1.5 per cent on
+    the published `C_{55}` is not derived from an error estimate; it covers
+    this unexplained difference of about 1 per cent.
+    """
     # NOTE Section 5.2.1: 2 elements through the thickness, 20 across the
     #      flange, 10 along the web
     t = 0.04
@@ -127,7 +174,7 @@ def test_Ibeam_isotropic_Table5(constraint):
     assert np.isclose(sec.Kv[1, 1], 199.944, rtol=1e-2)
     assert np.isclose(sec.Kv[4, 4], 3553.43, rtol=1.5e-2)
     # NOTE thin-walled warping rigidity, E t bf**3 h**2/24, h between the
-    #      flange mid-planes
+    #      flange mid-planes, Vlasov (1961), Ch. II, Sec. 1, p. 59
     assert np.isclose(sec.Kv[4, 4], E*t*1.0**3*(0.5 - t)**2/24, rtol=3.5e-3)
     # NOTE doubly symmetric: no coupling of the bimoment
     assert np.abs(sec.Kv[4, :4]).max() < 1e-8*sec.Kv[4, 4]
@@ -169,7 +216,8 @@ def test_channel_sectorial_coordinate(t, rtol, rtol_EG, constraint):
     x2, x3, els = vm.channel(b, h, t, 20, 2, 20, 8)
     sec = iso_section(x2, x3, els)
     sec.calc_vlasov(constraint)
-    # NOTE shear centre of the thin-walled channel, behind the web
+    # NOTE shear centre of the thin-walled channel, behind the web, Vlasov
+    #      (1961), Ch. II, Sec. 1, p. 61
     e = 3*b**2/(h + 6*b)
     sc = sec.vlasov_section
     e2, e3 = sec.x2[0] - sc.x2[0], sec.x3[0] - sc.x3[0]
@@ -190,7 +238,8 @@ def test_channel_sectorial_coordinate(t, rtol, rtol_EG, constraint):
     scale = np.abs(W*area).sum()*h
     for f in (1., X2.mean(axis=1), X3.mean(axis=1)):
         assert abs((W*f*area).sum()) < 2e-2*scale
-    # NOTE warping rigidity, E t b**3 h**2 (3b + 2h)/[12 (6b + h)]
+    # NOTE warping rigidity, E t b**3 h**2 (3b + 2h)/[12 (6b + h)], Vlasov
+    #      (1961), Ch. II, Sec. 1, p. 61
     EG = E*t*b**3*h**2*(3*b + 2*h)/(12*(6*b + h))
     assert np.isclose(sec.Kv[4, 4], EG, rtol=rtol_EG)
 
@@ -381,32 +430,64 @@ PANDEY = {0.: (364., 71200., 1.14e6, 735.),
 @pytest.mark.parametrize('constraint', ['yu2002', 'yu2012'])
 @pytest.mark.parametrize('theta', [0., 45.])
 def test_Ibeam_Pandey_Hodges_Peters(theta, constraint):
-    r"""Composite I-beam of Pandey et al. (1995) as given by Hodges and
-    Peters (2001), p. 1601: wall thickness 0.00953 m, depth 0.2032 m,
-    flange width 0.1016 m, `E_{11}` = 42.7 GPa, `E_{22}` = 8.02 GPa,
-    `G_{12}` = 3.10 GPa, `\nu_{12}` = 0.248, flanges of 0 degrees, web of a
-    single layer of ply angle ``theta``; the asymptotic values of `D_{11}`
-    (torsion), `D_{22}` (weak-axis bending), `D_{33}` (strong-axis bending)
-    and `D_{44}` (warping), Eq. (1), are those of p. 1601
+    r"""Composite I-beam of Pandey, Kabir and Sherbourne (1995), Composites
+    Engineering 5(3) 321--342, doi:10.1016/0961-9526(94)00101-E, see the
+    module docstring, not available here: the data and the constants are
+    those given by Hodges and Peters (2001), p. 1601: wall thickness
+    0.00953 m, depth 0.2032 m, flange width 0.1016 m, `E_{11}` = 42.7 GPa,
+    `E_{22}` = 8.02 GPa, `G_{12}` = 3.10 GPa, `\nu_{12}` = 0.248, flanges
+    of 0 degrees, web of a single layer of ply angle ``theta``; the
+    asymptotic values of `D_{11}` (torsion), `D_{22}` (weak-axis bending),
+    `D_{33}` (strong-axis bending) and `D_{44}` (warping), Eq. (1), are
+    those of p. 1601, printed with three digits
 
-    The depth is taken between the mid-planes of the flanges, the reading
-    for which the thin-walled formulas give the published values, e.g. `E
-    t b^3 d^2/24 = 734` N m\ :sup:`4`. The out-of-plane constants are not
-    given; the material is taken as transversely isotropic, `E_{33} =
-    E_{22}`, `G_{13} = G_{12}`, `\nu_{13} = \nu_{12}`, `\nu_{23} = 0.4` and
-    `G_{23} = E_{22}/[2 (1 + \nu_{23})]`; `\nu_{23}` from 0.25 to 0.5
-    changes the four constants by less than 0.03 per cent. The differences
-    are below 1 per cent, except `D_{11}`, 0.9 and 2.1 per cent below, of
-    the order of `h/b` = 0.094, and `D_{33}` at 0 degrees, 3.5 per cent
-    below, because the published value counts the web up to the mid-planes
-    of the flanges: with the web between the flanges, the thin-walled value
-    is 1.10e6 N m\ :sup:`2`.
+    The depth is taken between the mid-planes of the flanges. The out-of-plane
+    constants are not given; the material is taken as transversely
+    isotropic, `E_{33} = E_{22}`, `G_{13} = G_{12}`, `\nu_{13} = \nu_{12}`,
+    `\nu_{23} = 0.4` and `G_{23} = E_{22}/[2 (1 + \nu_{23})]`; `\nu_{23}`
+    from 0.25 to 0.5 changes the four constants by less than 0.03 per cent.
+
+    The published `D_{33}` and `D_{44}` are the thin-walled values with the
+    web counted over the full depth `d`, `E_{11} b t d^2/2 + E_x t d^3/12`,
+    `E_x` the uniaxial modulus of the web ply along the beam axis, and `E_{11}
+    t b^3 d^2/24` plus the warping of the two flanges as strips, `E_{11}
+    t^3 b^3/144` each, Eq. (17) of Yu et al. (2005), which reproduce them
+    within half a unit of the last printed digit (1.138e6, 911600 and
+    734.8). The 2-D section has the web between the flanges, and its
+    `D_{33}` is the exact `E I` of the meshed geometry, to rounding at 0
+    degrees, the section being homogeneous, and within 4e-8 at 45 degrees;
+    at 0 degrees it is 1.10e6 N m\ :sup:`2`, 3.5 per cent below the
+    published value. The published `D_{22}`, 71200 N m\ :sup:`2`,
+    constant with the ply angle, omits the web; the flanges alone give
+    71130, 0.1 per cent below; the 2-D value includes the web, `E_x (d -
+    t) t^3/12`, 0.84 per cent of `D_{22}` at 0 degrees and 0.17 per cent at
+    45, and is 0.74 and 0.10 per cent above the published value, within the
+    bound given by the web and the 0.1 per cent.
+
+    `D_{11}` is 0.92 per cent below the published value at 0 degrees and
+    2.08 per cent below at 45 degrees, 1.17 and 2.30 per cent with 16
+    elements on each side of the junction, 8 through the thickness and 32
+    along the web; `D_{44}` is 0.35 and 0.58 per cent below with
+    ``'yu2002'``, 0.49 and 0.60 per cent with ``'yu2012'``, 0.32 to 0.56
+    per cent with the refined mesh. These differences do not decrease with
+    refinement; they are of the order of the terms of relative order `t/b`
+    = 0.094 that the thin-walled theory neglects, e.g. the factor `1 -
+    0.630 t/b` of the torsion constant `b t^3/3` of a narrow rectangle of
+    width `b` and thickness `t`, due to its two short free edges,
+    Timoshenko and Goodier, Theory of Elasticity, 2nd ed., McGraw-Hill,
+    1951, Art. 95, Eq. (161), p. 278 (written there `M_t = G \theta (2a)^3
+    (2b) (1 - 0.630 a/b)/3` for the thickness `2a` and the width `2b`):
+    5.9 per cent for each flange, 3.0 per cent of `D_{11}` for the two at 0
+    degrees. The thin-walled `D_{11}` at 0 degrees, `G_{12} t^3 (2 b +
+    d)/3` = 363.5, Table A-3 of Timoshenko and Gere (1961), is 0.15 per
+    cent below the published 364. The tolerances of 2.5 and 1 per cent are not
+    derived from an error estimate.
     """
     t, d, b = 0.00953, 0.2032, 0.1016
+    E1, E2, G12, nu12 = 42.7e9, 8.02e9, 3.10e9, 0.248
     nu23 = 0.4
-    D = orthotropic(E1=42.7e9, E2=8.02e9, E3=8.02e9, G12=3.10e9,
-                    G13=3.10e9, G23=8.02e9/(2*(1 + nu23)), nu12=0.248,
-                    nu13=0.248, nu23=nu23)
+    D = orthotropic(E1=E1, E2=E2, E3=E2, G12=G12, G13=G12,
+                    G23=E2/(2*(1 + nu23)), nu12=nu12, nu13=nu12, nu23=nu23)
     x2, x3, els = vm.ibeam(b, d + t, t, 8, 4, 16, 8)
     th1, th3 = [], []
     for el in els:
@@ -421,8 +502,26 @@ def test_Ibeam_Pandey_Hodges_Peters(theta, constraint):
     sec.calc_vlasov(constraint)
     Kv = sec.Kv
     D11, D22, D33, D44 = PANDEY[theta]
-    # NOTE the web is along x3: kappa_2 is the strong-axis bending
+    # NOTE uniaxial modulus of the web ply along the beam axis
+    c, s = np.cos(np.deg2rad(theta)), np.sin(np.deg2rad(theta))
+    Ex = 1/(c**4/E1 + s**4/E2 + c**2*s**2*(1/G12 - 2*nu12/E1))
+    # NOTE thin-walled values of the published reading, web over the full
+    #      depth d, against half a unit of the last printed digit
+    half_unit = {0.: (5e3, 0.5), 45.: (500., 0.5)}[theta]
+    D33_pub = E1*b*t*d**2/2 + Ex*t*d**3/12
+    D44_pub = E1*t*b**3*d**2/24 + 2*E1*t**3*b**3/144
+    assert abs(D33_pub - D33) <= half_unit[0]
+    assert abs(D44_pub - D44) <= half_unit[1]
+    # NOTE the web is along x3: kappa_2 is the strong-axis bending, exact
+    #      E I of the 2-D geometry, web between the flanges
+    D33_2d = E1*(b*t**3/6 + b*t*d**2/2) + Ex*t*(d - t)**3/12
+    assert np.isclose(Kv[2, 2], D33_2d, rtol=1e-6)
+    # NOTE weak-axis bending: flanges and web, the published value omits
+    #      the web
+    D22_flanges = E1*t*b**3/6
+    D22_web = Ex*(d - t)*t**3/12
+    assert abs(Kv[3, 3] - D22_flanges - D22_web) < D22_web
+    assert (abs(Kv[3, 3]/D22 - 1)
+            <= D22_web/D22 + abs(D22_flanges/D22 - 1))
     assert np.isclose(Kv[1, 1], D11, rtol=2.5e-2)
-    assert np.isclose(Kv[3, 3], D22, rtol=1e-2)
-    assert np.isclose(Kv[2, 2], D33, rtol=4e-2)
     assert np.isclose(Kv[4, 4], D44, rtol=1e-2)

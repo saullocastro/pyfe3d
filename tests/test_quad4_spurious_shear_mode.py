@@ -47,7 +47,8 @@ energy in a state of pure twist, see ``tests/test_quad4_thick_twist.py``, and
 since 0.12.0 the elements with `h/\ell \ge 1` use the assumed transverse shear
 strains of Dvorkin and Bathe given at the end of this docstring, which remove
 both modes. The gate is measured below: Modes 1 and 2 cost nothing at `h/\ell
-< 1`, and 0.1496 and 0.0187 of the largest eigenvalue at `h/\ell \ge 1`.
+< 1`, and at `h/\ell \ge 1` exactly the energies of their transverse shear
+strains interpolated as in Eqs. (6) and (7) of Bathe and Dvorkin (1985).
 
 What the paper says about each mode is also confirmed here. Mode 2 "cannot
 persist" in an assembled mesh once the rigid-body modes are removed, and it
@@ -59,9 +60,10 @@ boundary line, which is why it is invisible in the rest of this test suite.
 Where it does bite is a strip one element wide loaded in torsion, because the
 twist of such a strip *is* the hourglass pattern `w \propto xy`, so the
 element has no stiffness against precisely the deformation being asked for.
-On the twist case of the MacNeal and Harder straight cantilever, at their 6 by
-1 mesh, the ratio to the reference value is 377 for Quad4, 4.9 for Quad4R and
-1.7 for Tria3R, the last two being helped by the hourglass control of
+On the twist case of the straight cantilever of MacNeal and Harder (1985),
+see ``test_torsion_of_a_one_element_wide_strip``, at their 6 by 1 mesh, the
+ratio to the reference value is 377 for Quad4, 4.8 for Quad4R and 1.7 for
+Tria3R, the last two being helped by the hourglass control of
 Brockman (1987) and by the transverse shear stabilisation of Bischoff and
 Bletzinger (2004) respectively. Two elements across the width bring Quad4 to
 1.02 and Quad4R to 0.92.
@@ -170,6 +172,28 @@ def test_figure_10_modes_of_hughes_taylor_kanoknukulchai():
     with the paper, which offers no remedy for it and argues instead that it
     cannot persist in a mesh.
 
+    Above the gate the energies follow in closed form from the assumed
+    shear strains of Bathe and Dvorkin (1985), p. 370, Eq. (6): on a
+    rectangle `\gamma_{xz}` is interpolated linearly in `y` between its
+    values at the mid-points of the edges `y = \pm \ell/2`, Eq. (7a),
+    `\gamma_{yz}` linearly in `x`, Eq. (7b), and these edge values are
+    exact for the bilinear fields of both modes. On the unit square, with
+    the modes normalised to unit length:
+
+    - Mode 1, nodal `w = \pm 1/2`, is `w = 2 X Y`: `\gamma_{xz} = 2 Y`,
+      `\gamma_{yz} = 2 X`, no curvature, `u^T K u = 2 U = A_{55}
+      \int (4 Y^2 + 4 X^2) dA = 2 A_{55}/3`;
+    - Mode 2, `r_x = X/\sqrt{2}`, `r_y = Y/\sqrt{2}`: `\gamma_{xz} =
+      Y/\sqrt{2}`, `\gamma_{yz} = -X/\sqrt{2}`, no curvature and no
+      drilling, `u^T K u = A_{55}/12`;
+
+    `A_{44} = A_{55} = k G h`, `k = 5/6`. The ratios of the table follow
+    with the largest eigenvalue, the equal biaxial stretching of the
+    membrane, `E h/(1 - \nu)` for these `h`: `(5/9)(1 - \nu) G/E = 0.1496`
+    and `(5/72)(1 - \nu) G/E = 0.0187`. The energies, not the ratios, are
+    asserted, the largest eigenvalue depending on the membrane and drilling
+    parts of the element.
+
     """
     for drilling_model in (0, 1):
         for h in (0.01, 0.1, 0.5):
@@ -189,11 +213,13 @@ def test_figure_10_modes_of_hughes_taylor_kanoknukulchai():
                               drilling_model)
             mode1, mode2 = htk_modes(xe, 4)
             emax = np.linalg.eigvalsh(K).max()
-            U1 = mode1.dot(K.dot(mode1))/emax
-            U2 = mode2.dot(K.dot(mode2))/emax
-            print('h/l=%g: mode1 %.4f mode2 %.3e' % (h, U1, U2))
-            assert abs(U1 - 0.1496) < 1.e-3, (h, U1)
-            assert abs(U2 - 0.0187) < 1.e-3, (h, U2)
+            U1 = mode1.dot(K.dot(mode1))
+            U2 = mode2.dot(K.dot(mode2))
+            A55 = isotropic_plate(thickness=h, E=1., nu=0.3).A55
+            print('h/l=%g: mode1 %.4f mode2 %.4f of the largest eigenvalue'
+                  % (h, U1/emax, U2/emax))
+            assert np.isclose(U1, 2*A55/3, rtol=1.e-10), (h, U1)
+            assert np.isclose(U2, A55/12, rtol=1.e-10), (h, U2)
 
 
 def test_mode_2_is_shared_by_the_three_shell_elements():
@@ -372,7 +398,8 @@ def test_a_supported_boundary_suppresses_mode_1():
 
 
 def strip_twist(cls, Data, Probe, ny, triangles=False):
-    r"""Twist of the MacNeal and Harder 6 by ny strip, reference 0.03208"""
+    r"""Tip twist under a unit torque of the 6 by ny strip of the straight
+    cantilever of MacNeal and Harder (1985), reference 0.03208"""
     K, ncoords, ids, N = plate_K(cls, Data, Probe, 6, ny, 6., 0.2, 0.1,
                                  1.e7, 0.3, triangles)
     bk = np.zeros(N, dtype=bool)
@@ -392,29 +419,56 @@ def strip_twist(cls, Data, Probe, ny, triangles=False):
 def test_torsion_of_a_one_element_wide_strip():
     r"""The twist of such a strip is the hourglass pattern itself
 
-    Ratio to the reference value of 0.03208:
+    Straight cantilever of
+
+        MacNeal, R. H. and Harder, R. L., 1985, "A proposed standard set of
+        problems to test finite element accuracy", Finite Elements in
+        Analysis and Design, 1(1), pp. 3-20. doi:10.1016/0168-874X(85)90003-4
+
+    Fig. 4, p. 7: length 6, width 0.2, thickness 0.1, `E = 10^7`, `\nu =
+    0.3`, 6 by 1 mesh, clamped root; twist under a unit tip torque, here a
+    couple of normal forces at the two tip corners, theoretical value
+    0.03208, Table 3, p. 10. Ratio to it, measured:
 
         element      ny=1    ny=2    ny=4
         Quad4       377.4    1.019   1.059
-        Quad4R        4.85   0.923   1.002
+        Quad4R        4.78   0.923   1.001
         Tria3R        1.67   1.649   1.645
 
-    Quad4 has no stiffness against the deformation being asked for. Quad4R
-    and Tria3R are helped by their stabilisations but are still wrong at
-    ny=1, so the practical rule is at least two elements across the width for
-    any strip that carries torsion.
+    The grades of MacNeal and Harder (1985), p. 14, are used as the
+    thresholds: A for an error of at most 2 %, B at most 10 %, C at most
+    20 %, D at most 50 %, F above. Quad4 has no stiffness against the
+    deformation being asked for, more than 100 times the reference. Quad4R
+    and Tria3R are helped by their stabilisations but still fail at ny=1,
+    grade F, so the practical rule is at least two elements across the
+    width for any strip that carries torsion; with two and four Quad4 and
+    Quad4R get grade B or better. Tria3R stays at 1.65 with 6 elements along
+    the length, still grade F, and is not asserted at ny > 1.
+
+    The theoretical value of the table is 0.94 times the Saint-Venant twist
+    `T L/(G J)` of the 0.2 x 0.1 rectangle, 0.03411, `J = 0.2287 b h^3`
+    from the series of Timoshenko, S. P. and Goodier, J. N., Theory of
+    Elasticity, 2nd ed., McGraw-Hill, 1951, p. 278, Eq. (160), whose table
+    on p. 277 gives `k_1 = 0.229` for `b/a = 2`, see
+    ``tests/test_quad4_thick_twist.py``; Quad4R meshes of 24x4, 48x8 and
+    96x16 elements, the torque applied as normal forces proportional to the
+    distance from the axis, give 1.049, 1.063 and 1.067 times 0.03208. The
+    ratios above are kept against the value of MacNeal and Harder, whose
+    grades refer to it.
 
     """
     ref = 0.03208
     assert strip_twist(Quad4, Quad4Data, Quad4Probe, 1)/ref > 100.
-    assert 3. < strip_twist(Quad4R, Quad4RData, Quad4RProbe, 1)/ref < 8.
-    assert 1.4 < strip_twist(Tria3R, Tria3RData, Tria3RProbe, 1,
-                             triangles=True)/ref < 2.
+    # NOTE grade F of MacNeal and Harder (1985), error above 50 %
+    assert strip_twist(Quad4R, Quad4RData, Quad4RProbe, 1)/ref - 1 > 0.5
+    assert strip_twist(Tria3R, Tria3RData, Tria3RProbe, 1,
+                       triangles=True)/ref - 1 > 0.5
+    # NOTE grade B or better, error at most 10 %
     for ny in (2, 4):
         assert abs(strip_twist(Quad4, Quad4Data, Quad4Probe, ny)/ref
-                   - 1.) < 0.07, ny
+                   - 1.) <= 0.10, ny
         assert abs(strip_twist(Quad4R, Quad4RData, Quad4RProbe, ny)/ref
-                   - 1.) < 0.09, ny
+                   - 1.) <= 0.10, ny
 
 
 def reference_K(nx, ny, Lx, Ly, h, E, nu, scheme):
@@ -426,8 +480,9 @@ def reference_K(nx, ny, Lx, Ly, h, E, nu, scheme):
     - ``pure1``: the whole term at the centroid, which is what Quad4 uses
       below the thickness gate
     - ``modified``: two-by-two on the gradient-gradient part and one point on
-      the rest, the modified rule of the paper, which Quad4 uses above the
-      gate
+      the rest, the modified rule of the paper, which Quad4 used above the
+      gate up to 0.11; since 0.12.0 Quad4 uses there the assumed strains of
+      the MITC4 element, not rebuilt here
     - ``full2x2``: the whole term at two-by-two
 
     """
@@ -531,7 +586,9 @@ def test_no_cheap_quadrature_fix_exists():
     The two-by-two rule gets the strip right and locks the plate. The
     modified rule of the paper, applied without its thickness gate, locks the
     plate just as badly and makes the strip thirty times too stiff as well,
-    so the gate that :class:`.Quad4` applies is the right one.
+    so it could only be used behind the thickness gate, where :class:`.Quad4`
+    applied it up to 0.11 and has applied the MITC4 assumed strains since
+    0.12.0.
 
     """
     # (a) the strip

@@ -38,6 +38,7 @@ no hourglass control, and against the shallow-shell Kirchhoff solution of
 :func:`ritz_roof_WC`. The hourglass stiffness that suits a problem depends on
 the problem; the default is kept.
 """
+import functools
 import sys
 sys.path.append('..')
 
@@ -264,19 +265,66 @@ def test_cantilever_end_moment_beams_membrane_locking(name):
     integrate the von Karman axial strain ``u_x + w_x**2/2`` at Gauss
     points along the element, where ``w_x**2`` is not constant, so that the
     axial strain cannot vanish and the cantilever is too stiff (membrane
-    locking); the error decreases with the number of elements"""
+    locking, Stolarski, H. and Belytschko, T., Membrane locking and reduced
+    integration for curved elements, Journal of Applied Mechanics, 49(1),
+    172-176, 1982, https://doi.org/10.1115/1.3161961)
+
+    Under ``M = 0.05*M_max`` the von Karman curvature is uniform, ``kappa =
+    M/(E*I)``, and the slope ``theta = kappa*x``. In an element of length
+    ``l_e`` and mid-point slope ``theta_m`` the linear part of
+    ``theta**2/2``, ``theta_m*kappa*s``, cannot be balanced by the constant
+    ``u_x``; its energy, ``E*A*theta_m**2*kappa**2*l_e**3/24``, summed over
+    the elements, ``sum(theta_m**2*l_e) ~ theta_tip**2*L/3``, and
+    differentiated with respect to ``kappa``, gives ``M = E*I*kappa*(1 +
+    e)``, ``e = 2/3*theta_tip**2*(l_e/h)**2``, ``theta_tip = M*L/(E*I)``,
+    for a uniform curvature imposed on the mesh. The excess stiffness ``W_vk/W
+    - 1`` therefore tends to zero as ``l_e**2``, i.e. as ``num_elements**-2``.
+
+    Measured ``W/W_vk - 1`` (BeamC and BeamLR agree within 0.1 %): -43.6 %,
+    -26.9 %, -12.6 %, -4.33 %, -1.21 % and -0.313 % with 16, 32, 64, 128, 256
+    and 512 elements; ``W_vk/W - 1`` = 0.772, 0.368, 0.144, 0.0452, 0.01227
+    and 0.003138, of observed orders 1.07, 1.35, 1.67, 1.88 and 1.97, which
+    tend to 2; the deviation from 2 decreases by a factor of 3.5 from the
+    pair 128/256 to the pair 256/512, the tolerance 0.1 on the order of the
+    last pair is below the deviation of the pair 128/256, 0.12. With 512
+    elements the excess, 0.00314, is 0.87 times the estimate with a uniform
+    curvature, 0.00361; the finite elements relax the curvature where the
+    locking is largest, near the tip, and are less stiff than the estimate.
+
+    With the 16 elements of Table 3a of Sze et al. (2004) the error is
+    worse than grade C of MacNeal and Harder (1985) (``> 20 %``), and with
+    512 elements of grade A (``<= 2 %``); MacNeal, R. H. and Harder, R. L., A
+    proposed standard set of problems to test finite element accuracy,
+    Finite Elements in Analysis and Design, 1(1), 3-20, 1985,
+    https://doi.org/10.1016/0168-874X(85)90003-4, p. 14.
+    """
+    L, h = CANTILEVER['L'], CANTILEVER['h']
+    nums = (16, 64, 256, 512)
     errors = []
-    for num_elements in (16, 64, 256):
+    excess = []
+    for num_elements in nums:
         m, U, W = run_cantilever_end_moment(name, num_elements, inc=0.25,
                                             m_max=0.05)
         U_vk, W_vk = von_karman_tip(m[-1])
         errors.append(abs(W[-1] - W_vk)/W_vk)
+        excess.append(W_vk/W[-1] - 1)
         print('%s %3d elements, M/Mmax %.2f: W/L %.5f von Karman %.5f, '
-              'error %.2f %%' % (name, num_elements, m[-1], W[-1], W_vk,
-                                 100*errors[-1]))
-    assert errors[0] > 0.4
-    assert errors[0] > errors[1] > errors[2]
-    assert errors[2] < 0.015
+              'error %.3f %%, W_vk/W - 1 = %.5f'
+              % (name, num_elements, m[-1], W[-1], W_vk, 100*errors[-1],
+                 excess[-1]))
+    assert np.isclose(m[-1], 0.05)
+    assert np.all(np.diff(errors) < 0)
+    assert np.all(np.array(excess) > 0)
+    assert errors[0] > 0.20
+    assert errors[-1] <= 0.02
+    order = np.log(excess[-2]/excess[-1])/np.log(nums[-1]/nums[-2])
+    print('observed order %.3f' % order)
+    assert abs(order - 2) < 0.1
+    theta_tip = 2*np.pi*m[-1]
+    estimate = 2/3*theta_tip**2*(L/nums[-1]/h)**2
+    print('excess %.5f, uniform-curvature estimate %.5f'
+          % (excess[-1], estimate))
+    assert 0 < excess[-1] < estimate
 
 
 def hinged_roof(n=16, h=12.7, element='Quad4R', hgfactor_w=1.,
@@ -496,16 +544,37 @@ def test_hinged_roof_thick():
     assert 0.05 < P_calc[0]/TABLE_9A[0, 0] - 1 < 0.12
 
 
-def test_hinged_roof_thin_snap_back():
-    r"""Snap-through and snap-back of the 6.35 thick roof with 16x16 Quad4R
-    elements and Crisfield's arc-length method against Table 9d of Sze et
-    al. (2004)
+@functools.lru_cache(maxsize=None)
+def thin_roof_path():
+    r"""Path of the 6.35 thick roof with 24x24 Quad4R elements on the
+    quarter, the mesh of Table 9d of Sze et al. (2004), up to ``1.1*P_max``,
+    computed once for the tests that use it"""
+    return run_hinged_roof(n=24, h=6.35, load_factor=1.1, initialInc=0.075,
+                           maxInc=0.075)
 
-    The path turns back in ``-W_C`` twice; the upper limit load agrees
-    within 1 % with the largest load of Table 9d, the lower limit load,
-    negative, is 0.015 P_max lower than the smallest load of Table 9d.
+
+def test_hinged_roof_thin_snap_back():
+    r"""Snap-through and snap-back of the 6.35 thick roof with 24x24 Quad4R
+    elements, the mesh of Table 9d of Sze et al. (2004), and Crisfield's
+    arc-length method against that table
+
+    The path turns back in ``-W_C`` twice. The tolerance of the upper limit
+    load is grade A of MacNeal, R. H. and Harder, R. L., A proposed standard
+    set of problems to test finite element accuracy, Finite Elements in
+    Analysis and Design, 1(1), 3-20, 1985,
+    https://doi.org/10.1016/0168-874X(85)90003-4, p. 14: a normalised error
+    within 2 %.
+
+    Measured upper limit load P/P_max, sampled with ``initialInc = maxInc =
+    0.05``: 16x16 0.1945, 24x24 0.1939, 32x32 0.1938, 48x48 0.1937; with
+    the 24x24 mesh and 0.02, 0.075 (this test) and 0.1: 0.1944, 0.1944 and
+    0.1939; Table 9d 0.1953, -0.5 to -0.7 %. The lower limit load of the
+    same paths: -0.1442, -0.1433, -0.1429 and -0.1429, and -0.1439, -0.1440
+    and -0.1421, converged within 0.001 P_max with the mesh, against -0.1288
+    in Table 9d, 11 % lower, see
+    :func:`test_hinged_roof_thin_lower_limit_load`.
     """
-    P, W = run_hinged_roof(n=16, h=6.35, load_factor=1.1)
+    P, W = thin_roof_path()
     assert np.isclose(P[-1], 1.1)
     # NOTE snap-back: -W_C decreases along part of the path
     dW = np.diff(W)
@@ -516,8 +585,36 @@ def test_hinged_roof_thin_snap_back():
     Pmin_ref = TABLE_9D[:, 0].min()
     print('limit loads: P/Pmax %.4f, %.4f; Table 9d: %.4f, %.4f'
           % (Pmax, Pmin, Pmax_ref, Pmin_ref))
-    assert abs(Pmax - Pmax_ref) < 0.01*Pmax_ref
-    assert -0.02 < Pmin - Pmin_ref < -0.01
+    assert abs(Pmax/Pmax_ref - 1) <= 0.02
+    # NOTE the lower limit load is negative, the roof snaps back
+    assert Pmin < 0
+
+
+@pytest.mark.xfail(strict=True, reason='the default transverse hourglass '
+                   'stiffness of Quad4R makes the lower limit load of the '
+                   'thin roof 11 % lower than Table 9d of Sze et al. (2004)')
+def test_hinged_roof_thin_lower_limit_load():
+    r"""Lower limit load of the 6.35 thick roof with 24x24 Quad4R elements
+    against Table 9d of Sze et al. (2004), with the tolerance of grade A of
+    MacNeal and Harder (1985), see :func:`test_hinged_roof_thin_snap_back`
+
+    Known discrepancy, an expected failure: Quad4R with its default
+    hourglass control gives -0.1440 P_max, converged with the mesh within
+    0.001 P_max (16x16 to 48x48 elements), against -0.1288 in Table 9d, 11 %
+    lower (grade C). With the 24x24 mesh and arc-length increments of
+    0.05, the transverse hourglass stiffness of Quad4R multiplied by 0.1
+    (``hgfactor_w = 0.1``) gives the limit loads 0.1951 and -0.1298
+    P_max, and 2x24x24 Tria3DSG elements, without hourglass control, 0.1952
+    and -0.1281, within 0.1 % and 0.8 % of Table 9d: the discrepancy is that
+    of the hourglass stiffness, see
+    :func:`test_hinged_roof_hourglass_sensitivity`, not of the arc-length
+    method nor of the von Karman strains.
+    """
+    P, W = thin_roof_path()
+    Pmin = P.min()
+    Pmin_ref = TABLE_9D[:, 0].min()
+    print('lower limit load: P/Pmax %.4f; Table 9d: %.4f' % (Pmin, Pmin_ref))
+    assert abs(Pmin/Pmin_ref - 1) <= 0.02
 
 
 def test_hinged_roof_hourglass_sensitivity():

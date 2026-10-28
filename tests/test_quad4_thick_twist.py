@@ -213,16 +213,71 @@ def strip_twist(nx, ny, Lx=2., b=0.5, h=0.04, E=10.e6, nu=0.3):
 
 
 def test_strip_torsion_is_continuous_across_the_gate():
-    r"""Clamped strip 2 x 0.5, h = 0.04, square elements
+    r"""Clamped strip 2 x 0.5, h = 0.04, square elements, unit end torque
 
     Tip twist with 12 elements across the width, `h/\ell = 0.96`, and with
     14, `h/\ell = 1.12`: 0.048880 and 0.048278 now, 0.048880 and 0.036544
     with the modified one-point shear rule of Hughes et al. (1977), whose
-    spurious twist stiffness made the finer mesh 25 % stiffer.
+    spurious twist stiffness made the finer mesh 25 % stiffer. Continuity
+    across the gate is asserted within 2 %, the grade A of MacNeal and
+    Harder (1985), see below; the old rule fails it by 25 %.
+
+    The reference is the Saint-Venant twist rate `\theta' = T/(G J)` of the
+    `b \times h` rectangle, `b/h = 12.5`, with the series of
+
+        Timoshenko, S. P. and Goodier, J. N., Theory of Elasticity, 2nd ed.,
+        McGraw-Hill, 1951, Art. 86, "Torsion of rectangular bars", p. 278,
+        Eq. (160), with `2a = h` and `2b = b`,
+
+    `J = (b h^3/3)(1 - (192/\pi^5)(h/b) \sum_{n=1,3,5...} \tanh(n \pi b/2h)
+    /n^5) = 0.94958 b h^3/3`; for a narrow rectangle it becomes `(b h^3/3)(1
+    - 0.630 h/b)`, Eq. (161), the correction of the `b h^3/3` of Art. 84,
+    p. 273, Eq. (155), due to the stress free short edges. The Reissner-Mindlin plate reproduces it through the
+    boundary layer of the transverse shear at the free edges: with `w =
+    \theta' x y`, `r_y = -\theta' f(y)`, `r_x = \theta' x`, the equilibrium
+    `f'' = \lambda^2 (f - y)`, `\lambda^2 = 12 k/h^2`, and the free edges,
+    `f'(\pm b/2) = -1`, give `J = (b h^3/3)(1 - (2/\lambda b) \tanh(\lambda
+    b/2)) = 0.94940 b h^3/3` for `k = 5/6`, 0.02 % from Saint-Venant, against
+    `b h^3/3` for the Kirchhoff plate, 5.3 % stiffer.
+
+    The tip twist itself also contains the effect of the clamped root, which
+    prevents the `w_{,x} = \theta' y` of the free twist, and of the tip load,
+    applied as normal forces proportional to `y`, both decaying within the
+    width. They cancel in the difference of the tip twists of the 2 and 4
+    long strips: the twist rate from the lengths 1 and 2, 2 and 4, 4 and 6
+    agree within 0.003 %, and the clamped root reduces the tip twist of the
+    2 long strip by 0.0024, 4.8 %, on all the meshes below.
+
+    `G J \theta'/T` of the twist rate, measured, against Saint-Venant:
+
+        elements across   h/l    G J theta'/T - 1
+        12                0.96      -0.02 %
+        14                1.12      +1.18 %
+        24                1.92      +0.50 %
+        48                3.84      +0.13 %
+
+    the thick elements, MITC4, converging to the reference; 12 and 14 are
+    asserted within 2 %, the grade A of
+
+        MacNeal, R. H. and Harder, R. L., 1985, "A proposed standard set of
+        problems to test finite element accuracy", Finite Elements in
+        Analysis and Design, 1(1), pp. 3-20, p. 14.
+        doi:10.1016/0168-874X(85)90003-4
 
     """
+    E, nu, b, h = 10.e6, 0.3, 0.5, 0.04
+    G = E/2/(1 + nu)
+    n = np.arange(1, 200, 2)
+    J = b*h**3/3*(1 - 192/np.pi**5*h/b
+                  *np.sum(np.tanh(n*np.pi*b/(2*h))/n**5))
+    rate_ref = 1./(G*J)
     t12 = strip_twist(48, 12)
     t14 = strip_twist(56, 14)
     print(t12, t14, t14/t12)
-    assert abs(t12 - 0.048880) < 1.e-5
     assert abs(t14/t12 - 1) < 0.02
+    for ny, t2 in ((12, t12), (14, t14)):
+        t4 = strip_twist(8*ny, ny, Lx=4.)
+        rate = (t4 - t2)/2.
+        print('%d across: twist rate %.6f, Saint-Venant %.6f, J_FE/J %.5f'
+              % (ny, rate, rate_ref, rate_ref/rate))
+        assert abs(rate_ref/rate - 1) < 0.02, (ny, rate_ref/rate)

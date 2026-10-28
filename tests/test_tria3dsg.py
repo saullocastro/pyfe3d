@@ -1101,13 +1101,41 @@ def test_optional_stabilisation_is_off_by_default_and_mild_when_on():
     Second that on top of the DSG the parameter is mild, while on the
     centroid-sampled element it is load bearing.
 
+    The reference is the fundamental frequency of the simply supported
+    Kirchhoff plate, Leissa, A. W., Vibration of Plates, NASA SP-160, 1969,
+    Sec. 4.1, Eq. (4.20), p. 44, ``omega_11 = pi**2*(1/a**2 +
+    1/b**2)*sqrt(D/(rho*h))``. The mesh restrains only the translations of
+    the edges, a soft simple support of the Mindlin plate, which is more
+    flexible than the Kirchhoff plate: the error of Tria3DSG without
+    stabilisation is +2.75, +0.20, -0.61 and -0.96 % with 9x11, 17x21, 33x41
+    and 65x81 nodes, toward a limit near -1.2 % (the hard simple support of
+    the Mindlin plate, with rotary inertia, gives -0.28 %). Tria3R without
+    stabilisation gives +96.1, +34.7, +10.0 and +1.9 % on the same meshes.
+
+    The accuracy on the 9x11 mesh is graded with the rules of MacNeal, R. H.,
+    and Harder, R. L., 1985, "A proposed standard set of problems to test
+    finite element accuracy", Finite Elements in Analysis and Design, 1(1),
+    pp. 3-20, https://doi.org/10.1016/0168-874X(85)90003-4, p. 14: A for an
+    error of at most 2 %, B 10 %, C 20 %, D 50 %, F above 50 %. Measured,
+    in %:
+
+    ======  ========  =======
+    alpha   Tria3DSG  Tria3R
+    ======  ========  =======
+    0       +2.75     +96.09
+    0.07    +1.69     +38.08
+    0.1     +1.27     +30.64
+    0.7     -5.41     +0.60
+    ======  ========  =======
+
     """
     nx, ny = 9, 11
     a, b = 0.3, 0.5
     E, nu, rho, h = 203.e9, 0.33, 7.83e3, 0.01
 
-    D = 2*h**3*E/(3*(1 - nu**2))
-    wmn = (1/a**2 + 1/b**2)*np.sqrt(D*np.pi**4/(2*rho*h))/2
+    # NOTE Leissa (1969), Eq. (4.20), m = n = 1
+    D = E*h**3/(12*(1 - nu**2))
+    wmn = np.pi**2*(1/a**2 + 1/b**2)*np.sqrt(D/(rho*h))
 
     def assemble(cls, datacls, probecls, alpha):
         data = datacls()
@@ -1193,20 +1221,23 @@ def test_optional_stabilisation_is_off_by_default_and_mild_when_on():
         print('%5.2f    %+8.2f%% %+8.2f%%' % (al, e_dsg[al], e_r[al]))
 
     # NOTE the discrete shear gap is already accurate with no parameter,
-    #      whereas the centroid-sampled element is nearly twice too stiff.
-    #      This is the locking, and it is what alpha is curing in Tria3R
-    assert abs(e_dsg[0.]) < 5.
-    assert e_r[0.] > 80.
+    #      grade B of MacNeal and Harder, whereas the centroid-sampled
+    #      element is nearly twice too stiff, grade F. This is the locking,
+    #      and it is what alpha is curing in Tria3R
+    assert abs(e_dsg[0.]) <= 10.
+    assert e_r[0.] > 50.
 
     # NOTE at the literature value the stabilisation is a mild improvement
-    #      on top of the DSG, and nowhere near enough on its own
+    #      on top of the DSG, and nowhere near enough on its own: Tria3R
+    #      still gets grade D or worse
     assert abs(e_dsg[0.1]) < abs(e_dsg[0.])
-    assert e_r[0.1] > 25.
+    assert e_r[0.1] > 20.
 
-    # NOTE while Tria3R's default over-softens the DSG element, the two
-    #      being different jobs for the same symbol
-    assert e_dsg[0.7] < -3.
-    assert abs(e_r[0.7]) < 5.
+    # NOTE while Tria3R's default, grade A on Tria3R, over-softens the DSG
+    #      element below the reference by more than the 2 % of grade A, the
+    #      two being different jobs for the same symbol
+    assert e_dsg[0.7] < -2.
+    assert abs(e_r[0.7]) <= 2.
 
     # NOTE 0.07 is the value the attribute documentation recommends for a
     #      coarse mesh of a thin plate, being the lower bound of the range
