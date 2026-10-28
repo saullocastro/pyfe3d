@@ -183,3 +183,32 @@ def box(a2, a3, t, n2, n3, nt, etype):
                (straight(o[2], o[3], i[2], i[3]), n2),
                (straight(o[3], o[0], i[3], i[0]), n3)]
     return walls(patches, nt, etype)
+
+
+def ibeam(bf, H, t, nf, nt, nw, etype):
+    r"""Doubly symmetric I-section with flanges of width ``bf`` and outer
+    height ``H``, walls of thickness ``t``, centred at the origin, web
+    along `x_3`; ``nf`` elements along each half flange outside the web,
+    ``nt`` across the walls and ``nw`` along the web between the flanges"""
+    w = (bf - t)/2
+    parts = []
+    for yc in (-H/2 + t/2, H/2 - t/2):
+        parts.append(rectangle(w, t, nf, nt, etype, -t/2 - w/2, yc))
+        parts.append(rectangle(t, t, nt, nt, etype, 0., yc))
+        parts.append(rectangle(w, t, nf, nt, etype, t/2 + w/2, yc))
+    parts.append(rectangle(t, H - 2*t, nt, nw, etype, 0., 0.))
+    return merge(parts)
+
+
+def channel(b, h, t, nf, nt, nw, etype):
+    r"""Channel with the mid-line of the web on `x_2 = 0`, from `x_3 =
+    -h/2` to `h/2`, and flanges along `+x_2` up to `x_2 = b`, walls of
+    thickness ``t``; ``nf`` elements along each flange outside the web,
+    ``nt`` across the walls and ``nw`` along the web between the flanges"""
+    lf = b - t/2
+    parts = []
+    for yc in (-h/2, h/2):
+        parts.append(rectangle(t, t, nt, nt, etype, 0., yc))
+        parts.append(rectangle(lf, t, nf, nt, etype, t/2 + lf/2, yc))
+    parts.append(rectangle(t, h - t, nt, nw, etype, 0., 0.))
+    return merge(parts)
