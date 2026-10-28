@@ -329,6 +329,26 @@ def test_Ibeam_anisotropic_Table6(constraint):
     of opposite sense in the two flanges there is no bending-twist coupling
     and `\bar{C}_{22}` is 8.4 per cent above the published value, which
     confirms the same sense in both flanges.
+
+    The formulation for unsymmetric laminated walls was checked against
+    an independent thin-walled estimate, from the classical lamination
+    theory of each half flange: the torsional warping through the
+    thickness is `(p - n) x_2`, `n` outwards from the mid-plane, with the
+    slope `p = d/2 + \gamma_{12}^0` given by the mid-plane shear of the
+    flange in St Venant torsion, `N_{22} = N_{12} = M_{22} = 0`, and the
+    warping rigidity is that of the axial strain `p x_2` and curvature
+    `-x_2` per unit `\kappa_1'`, with `\epsilon_{22}`, `\gamma_{12}` and
+    `\kappa_{22}` free. It gives `C_{55}` = 4433.1 for this lay-up and
+    4475.2 with the same order in both half flanges, against 4400.4 and
+    4442.0 here, i.e. 0.74 per cent below in both cases, as the isotropic
+    I-beam, 3519.9 against 3535.6, 0.44 per cent below, and as I-beams with
+    isotropic flanges of a stiff and a soft layer, within 0.7 per cent,
+    whose `C_{55}` differ by 17 per cent between the stiff layer outer and
+    inner. The published value is 4.5 per cent below the thin-walled value
+    of the drawn lay-up and lies between those with the ``theta`` plies at
+    mid-thickness, 4289.5, and on the inner surface, 3953.6, which points
+    to a difference between the drawing and the model of the paper rather
+    than to the formulation.
     """
     C22bar, C55, Kv = ibeam_table6(constraint=constraint)
     assert np.isclose(C22bar, 55.8658, rtol=1.5e-2)
