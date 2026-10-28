@@ -474,7 +474,7 @@ def test_hinged_roof_thick():
     r"""Snap-through of the 12.7 thick roof with 8x8 Quad4R elements and
     Crisfield's arc-length method against Table 9a of Sze et al. (2004)
 
-    The limit loads agree within 1.5 %, the load at a given deflection
+    The limit loads agree within 1.6 %, the load at a given deflection
     within 0.07 P_max along the path; pyfe3d is stiffer at the start of the
     path, about 9 % at the first point of Table 9a, see
     :func:`test_hinged_roof_hourglass_sensitivity`.
@@ -490,7 +490,9 @@ def test_hinged_roof_thick():
     (Pmax_ref, _), (Pmin_ref, _) = limit_points(TABLE_9A[:, 0],
                                                 TABLE_9A[:, 1], 15.)
     assert abs(Pmax - Pmax_ref) < 0.015*Pmax_ref
-    assert abs(Pmin - Pmin_ref) < 0.015*Pmin_ref
+    # NOTE 1.6 % since 0.12.0, which takes the slopes of w of KG and of the
+    #      nonlinear terms at the centroid, 1.4 % before
+    assert abs(Pmin - Pmin_ref) < 0.016*Pmin_ref
     assert np.abs(P_calc - TABLE_9A[:, 0]).max() < 0.07
     assert 0.05 < P_calc[0]/TABLE_9A[0, 0] - 1 < 0.12
 

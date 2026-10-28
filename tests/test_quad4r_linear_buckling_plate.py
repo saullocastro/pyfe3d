@@ -218,7 +218,10 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=1):
                            levels=10, cmap='coolwarm')
         plt.show()
 
-    assert isclose(P_cr_theory, P_cr_calc, rtol=0.05)
+    # NOTE 5.27 % above the theory with this mesh since 0.12.0, which takes
+    #      the slopes of w of KG at the centroid, 4.87 % before, see
+    #      test_quad4r_geometric_hourglass.py
+    assert isclose(P_cr_theory, P_cr_calc, rtol=0.06)
 
 
 if __name__ == '__main__':

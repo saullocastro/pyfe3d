@@ -146,7 +146,10 @@ def test_linear_buckling(mode=0, refinement=1):
     sigma_cr = -kcmin*np.pi**2*E/(12*(1-nu**2))*h**2/b**2
     P_cr_theory = sigma_cr*h*b
     print('Theoretical P_cr_theory', P_cr_theory)
-    assert isclose(P_cr_theory, P_cr_calc, rtol=0.05)
+    # NOTE 5.35 % above the theory with this mesh since 0.12.0, which takes
+    #      the slopes of w of KG at the centroid, 4.95 % before, see
+    #      test_quad4r_geometric_hourglass.py
+    assert isclose(P_cr_theory, P_cr_calc, rtol=0.06)
 
 
 if __name__ == '__main__':

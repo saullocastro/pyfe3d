@@ -213,7 +213,11 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
 
         print('Theoretical omega123', wmn)
         print('Numerical omega123', omegan[0:10])
-        wmn_at_buckling = 39.1 # approximately from my tryouts, with coarse mesh
+        # NOTE regression value with this coarse mesh, whose pre-stress is close
+        #      to its buckling load, such that the frequency is sensitive to
+        #      KG: 43.7 since 0.12.0, which takes the slopes of w of KG at the
+        #      centroid, 39.8 before, see test_quad4r_geometric_hourglass.py
+        wmn_at_buckling = 43.7
         assert isclose(wmn_at_buckling, omegan[0], rtol=0.05)
 
     if plot:
