@@ -13,7 +13,15 @@ results:
 The plies are oriented with :func:`pyfe3d.vabs.rotate_material`: the local
 axis `y_2` of each wall is tangent to the wall, counter-clockwise around
 the section, `y_3` points inwards, and the ply angle is measured from the
-beam axis towards `y_2`.
+beam axis towards `y_2`, see the figure of :class:`pyfe3d.vabs.CrossSection`.
+
+This convention of pyfe3d reproduces all signs of the CUS box. With it, the
+pipe and CAS1 give three couplings each with the published magnitude and
+the opposite sign: ``S14``, ``S25``, ``S36`` of the pipe and ``S12``,
+``S45``, ``S46`` of CAS1. These differences are attributed to the
+labelling of the axes and ply angles in those papers, as explained in the
+docstrings of the two tests, which check the magnitudes and assert the
+opposite signs explicitly.
 
 References: Yu, W., Hodges, D. H., and Ho, J. C., International Journal of
 Engineering Science, 59, pp. 40-64, 2012; Yu, W., and Hodges, D. H.,
@@ -105,11 +113,12 @@ def test_pipe_Yu2005_Table3():
     shear-bending couplings ``S14``, ``S25`` and ``S36`` agree, but with the
     ply angles read from Fig. 4 their signs are opposite to those of
     Table 3; the signs of Table 3 are obtained with the opposite ply angles
-    in the half circles. TODO(author): the convention of the ply angles of
-    Fig. 4 of Yu and Hodges (2005) is not stated on the pages read; with
-    the convention of :func:`pyfe3d.vabs.rotate_material`, which reproduces
-    the signs of the CUS box of Yu et al. (2012), the outer -45 degree layer
-    dominates and gives a negative ``S14``.
+    in the half circles. Yu and Hodges (2005) do not state the convention
+    of the ply angles of Fig. 4. With the convention of pyfe3d,
+    :func:`pyfe3d.vabs.rotate_material`, which reproduces all signs of the
+    CUS box of Yu et al. (2012), the outer -45 degree layer dominates and
+    gives a negative ``S14``; the difference is attributed to the labelling
+    of the ply angles of Fig. 4, and the convention of pyfe3d is kept.
     """
     D = orthotropic(20.59e6, 1.42e6, 1.42e6, 8.7e5, 8.7e5, 8.7e5,
                     0.42, 0.42, 0.42)
@@ -139,10 +148,19 @@ def test_pipe_Yu2005_Table3():
     for (i, j), v in vabs.items():
         assert np.isclose(abs(Kt[i, j]), abs(v), rtol=5e-3)
         assert np.isclose(abs(Kt[i, j]), abs(svbt[(i, j)]), rtol=3e-3)
-    # NOTE the signs of the three couplings relative to each other agree
-    assert Kt[0, 3]*Kt[1, 4] < 0 and Kt[0, 3]*Kt[2, 5] < 0
-    # NOTE ... and all three are opposite to Table 3, see the docstring
-    assert Kt[0, 3] < 0
+    # NOTE S14, S25 and S36 have the opposite signs of Table 3, see the
+    #      docstring; all other entries have the signs of Table 3
+    flipped = [(0, 3), (1, 4), (2, 5)]
+    for (i, j), v in vabs.items():
+        s = -1 if (i, j) in flipped else 1
+        assert np.sign(Kt[i, j]) == s*np.sign(v), (i, j, Kt[i, j], v)
+    # NOTE the signs of Table 3 with the opposite ply angles in the half
+    #      circles
+    sec2 = CrossSection(x2, x3, els, [D], [0]*len(els), theta1=theta1,
+                        theta3=np.where(straight, theta3, -theta3))
+    sec2.calc_stiffness()
+    for (i, j), v in vabs.items():
+        assert np.isclose(sec2.Kt[i, j], v, rtol=5e-3), (i, j, sec2.Kt[i, j])
     for i in range(6):
         for j in range(i, 6):
             if (i, j) not in vabs:
@@ -164,8 +182,10 @@ def test_CAS1_Yu2002_Table2():
     coupling ``S12`` of the Timoshenko matrix are opposite to those of
     Table 2; they are those of Table 2 if the walls named upper and right
     are those at negative `x_3` and `x_2`, i.e. for the section rotated by
-    180 degrees. TODO(author): Yu et al. (2002) show no sketch of the axes
-    of CAS1.
+    180 degrees. Yu et al. (2002) show no sketch of the axes of CAS1; the
+    difference is attributed to the labelling of the walls, and the
+    convention of pyfe3d, which reproduces all signs of the CUS box, is
+    kept.
     """
     D = orthotropic(20.59e6, 1.42e6, 1.42e6, 8.7e5, 8.7e5, 6.96e5,
                     0.42, 0.42, 0.42)
@@ -190,8 +210,16 @@ def test_CAS1_Yu2002_Table2():
     for (i, j), v in small.items():
         assert np.isclose(abs(Kc[i, j]), abs(v), rtol=5e-3)
     assert abs(Kc[0, 1]) < 1e-8*np.sqrt(Kc[0, 0]*Kc[1, 1])
-    # NOTE the opposite signs discussed in the docstring
-    assert Kc[1, 2] < 0 and sec.Kt[0, 1] > 0
+    # NOTE S45 and S46 have the opposite signs of Table 2, see the
+    #      docstring; S11, S44, S55, S66 and S56 have the signs of Table 2
+    table = dict(main)
+    table.update(small)
+    flipped = [(1, 2), (1, 3)]
+    for (i, j), v in table.items():
+        s = -1 if (i, j) in flipped else 1
+        assert np.sign(Kc[i, j]) == s*np.sign(v), (i, j, Kc[i, j], v)
+    # NOTE ... and so has S12 of the Timoshenko matrix, negative in Table 2
+    assert sec.Kt[0, 1] > 0
     # NOTE section rotated by 180 degrees: all signs of Table 2
     sec = CrossSection(-x2, -x3, els, [D], [0]*len(els), theta1=theta1 + 180,
                        theta3=theta3)
