@@ -15,10 +15,13 @@ def test_nat_freq_plate(plot=False, mode=0):
     ``b = 0.5``, ``h = 0.01``, with a distorted mesh and the reduced mass
     matrix
 
-    The inner nodes are moved along ``x`` and ``y`` by the same random
-    fraction, up to 0.4, of the element size. Up to now the coordinates
-    passed to the elements were copied before that distortion, so that the
-    mesh analysed was the regular one; they are now copied after it.
+    The inner nodes are moved along ``x`` and ``y`` by independent random
+    fractions, up to 0.25, of the element size, which keeps every element
+    convex, as asserted at its four corners. Before, the coordinates passed
+    to the elements were copied before the distortion, so that the regular
+    mesh was analysed, and the distortion moved the nodes by the same
+    fraction, up to 0.4, along ``x`` and ``y``, which made up to 7 % of the
+    elements re-entrant.
 
     The reference is the exact solution of Leissa, A. W., Vibration of
     Plates, NASA SP-160, 1969, Sec. 4.1, p. 44, Eq. (4.20),
@@ -38,13 +41,12 @@ def test_nat_freq_plate(plot=False, mode=0):
     converge to about 1 % below the reference, through the boundary layer
     of the Mindlin plate along the edges.
 
-    With 32x40 elements the frequency is 1.18 % above the reference, with
-    8x10 elements 14.3 %, with 16x20 elements 4.07 %, with 24x30 elements
-    2.45 %. With 40x50 and 48x60 elements
-    :func:`pyfe3d.solver.natural_frequency` stops, its verification
-    counting more eigenvalues below the shift than it found, although
-    ``eigsh()`` with a zero shift finds no spurious mode and the first
-    frequency 0.65 % above the reference with 40x50 elements.
+    With 32x40 elements the frequency is 0.43 % above the reference, with
+    8x10, 16x20 and 24x30 elements 9.64, 2.16 and 1.00 %, with 40x50 and
+    48x60 elements 0.14 and 0.05 %. With the re-entrant elements of the
+    former distortion, the stiffness matrix of the 40x50 and 48x60 meshes
+    had negative eigenvalues, local membrane modes of single elements, which
+    :func:`pyfe3d.solver.natural_frequency` detected.
     """
     data = Quad4RData()
     probe = Quad4RProbe()
@@ -75,12 +77,13 @@ def test_nat_freq_plate(plot=False, mode=0):
     ncoords_flatten = ncoords.flatten()
 
     inner = np.logical_not(isclose(x, 0) | isclose(x, a) | isclose(y, 0) | isclose(y, b))
+    # NOTE independent random fractions along x and y, up to 0.25 of the
+    #      element size, which keep every element convex
     np.random.seed(20)
-    rdm = (-1 + 2*np.random.rand(x[inner].shape[0]))
-    np.random.seed(20)
-    rdm = (-1 + 2*np.random.rand(y[inner].shape[0]))
-    x[inner] += dx*rdm*0.4
-    y[inner] += dy*rdm*0.4
+    rdmx = -1 + 2*np.random.rand(x[inner].shape[0])
+    rdmy = -1 + 2*np.random.rand(y[inner].shape[0])
+    x[inner] += dx*rdmx*0.25
+    y[inner] += dy*rdmy*0.25
     # NOTE the coordinates passed to the elements, after the distortion
     ncoords_flatten = ncoords.flatten()
 
@@ -116,8 +119,10 @@ def test_nat_freq_plate(plot=False, mode=0):
         r1 = ncoords[pos1]
         r2 = ncoords[pos2]
         r3 = ncoords[pos3]
-        normal = np.cross(r2 - r1, r3 - r2)[2]
-        assert normal > 0
+        r4 = ncoords[pos4]
+        # NOTE convex element: positive cross products at the four corners
+        for ra, rb, rc in ((r4, r1, r2), (r1, r2, r3), (r2, r3, r4), (r3, r4, r1)):
+            assert np.cross(rb - ra, rc - rb)[2] > 0
         quad = Quad4R(probe)
         quad.n1 = n1
         quad.n2 = n2
@@ -209,7 +214,7 @@ def test_nat_freq_plate(plot=False, mode=0):
         plt.contourf(xmesh, ymesh, u[2::DOF].reshape(nx, ny).T)
         plt.show()
 
-    assert np.isclose(wmn_ref, omegan[0], rtol=0.02)
+    assert np.isclose(wmn_ref, omegan[0], rtol=0.01)
 
 
 

@@ -45,12 +45,13 @@ def test_nat_freq_plate(plot=False, mode=0):
         z = ncoords[:, 2]
 
         inner = np.logical_not(isclose(x, 0) | isclose(x, a) | isclose(y, 0) | isclose(y, b))
+        # NOTE independent random fractions along x and y, up to 0.25 of the
+        #      element size, which keep every element convex
         np.random.seed(20)
-        rdm = (-1 + 2*np.random.rand(x[inner].shape[0]))
-        np.random.seed(20)
-        rdm = (-1 + 2*np.random.rand(y[inner].shape[0]))
-        x[inner] += dx*rdm*0.4
-        y[inner] += dy*rdm*0.4
+        rdmx = -1 + 2*np.random.rand(x[inner].shape[0])
+        rdmy = -1 + 2*np.random.rand(y[inner].shape[0])
+        x[inner] += dx*rdmx*0.25
+        y[inner] += dy*rdmy*0.25
         # NOTE the coordinates passed to the elements, after the distortion
         ncoords_flatten = ncoords.flatten()
 
@@ -87,8 +88,10 @@ def test_nat_freq_plate(plot=False, mode=0):
             r1 = ncoords[pos1]
             r2 = ncoords[pos2]
             r3 = ncoords[pos3]
-            normal = np.cross(r2 - r1, r3 - r2)[2]
-            assert normal > 0
+            r4 = ncoords[pos4]
+            # NOTE convex element: positive cross products at the four corners
+            for ra, rb, rc in ((r4, r1, r2), (r1, r2, r3), (r2, r3, r4), (r3, r4, r1)):
+                assert np.cross(rb - ra, rc - rb)[2] > 0
             quad = Quad4(probe)
             quad.n1 = n1
             quad.n2 = n2

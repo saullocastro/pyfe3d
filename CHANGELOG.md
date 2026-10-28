@@ -187,7 +187,10 @@
   of their coarse meshes: against the literature, its error grows as the
   mesh is refined before it decreases, see the Notes of `pyfe3d.tria3r`.
 - Bugs of the tests: the "distorted" frequency tests copied the nodal
-  coordinates before distorting the mesh and analysed the regular mesh;
+  coordinates before distorting the mesh and analysed the regular mesh,
+  and their distortion, by the same random fraction along `x` and `y`,
+  made up to 7 per cent of the elements re-entrant, which made the
+  stiffness matrix indefinite from 40x50 elements;
   the constant-curvature patch test of the drilling rotations prescribed
   `r_y` with the wrong sign; the displacement-controlled cylinder built
   `KG` from a displacement vector without the prescribed shortening; the

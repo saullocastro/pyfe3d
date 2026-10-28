@@ -15,10 +15,13 @@ def test_tria3r_nat_freq_distorted(plot=False, mode=0):
     ``b = 0.5``, ``h = 0.01``, with a distorted mesh and the reduced mass
     matrix
 
-    The inner nodes are moved along ``x`` and ``y`` by the same random
-    fraction, up to 0.4, of the element size. Up to now the coordinates
-    passed to the elements were copied before that distortion, so that the
-    mesh analysed was the regular one; they are now copied after it.
+    The inner nodes are moved along ``x`` and ``y`` by independent random
+    fractions, up to 0.25, of the element size, which keeps every element
+    convex, as asserted at its four corners. Before, the coordinates passed
+    to the elements were copied before the distortion, so that the regular
+    mesh was analysed, and the distortion moved the nodes by the same
+    fraction, up to 0.4, along ``x`` and ``y``, which made up to 7 % of the
+    elements re-entrant.
 
     The reference is the exact solution of Leissa, A. W., Vibration of
     Plates, NASA SP-160, 1969, Sec. 4.1, p. 44, Eq. (4.20),
@@ -28,9 +31,9 @@ def test_tria3r_nat_freq_distorted(plot=False, mode=0):
     The edges are soft simply supported, rotations free. The assertion with
     ``rtol=0.05`` is kept from before, see
     :func:`test_tria3r_natural_freq.test_tria3r_nat_freq`. On the distorted
-    mesh the frequency is 0.97 % above the reference with 8x10
-    quadrilaterals split in two triangles, 3.47 % with 16x20, 3.32 % with
-    24x30 and 2.92 % with 32x40.
+    mesh the frequency is 1.65 % above the reference with 8x10
+    quadrilaterals split in two triangles, 3.58 % with 16x20, 3.48 % with
+    24x30, 2.99 % with 32x40, 2.38 % with 40x50 and 1.82 % with 48x60.
     """
     data = Tria3RData()
     probe = Tria3RProbe()
@@ -63,12 +66,13 @@ def test_tria3r_nat_freq_distorted(plot=False, mode=0):
         ncoords_flatten = ncoords.flatten()
 
         inner = np.logical_not(isclose(x, 0) | isclose(x, a) | isclose(y, 0) | isclose(y, b))
+        # NOTE independent random fractions along x and y, up to 0.25 of the
+        #      element size, which keep every element convex
         np.random.seed(20)
-        rdm = (-1 + 2*np.random.rand(x[inner].shape[0]))
-        np.random.seed(20)
-        rdm = (-1 + 2*np.random.rand(y[inner].shape[0]))
-        x[inner] += dx*rdm*0.4
-        y[inner] += dy*rdm*0.4
+        rdmx = -1 + 2*np.random.rand(x[inner].shape[0])
+        rdmy = -1 + 2*np.random.rand(y[inner].shape[0])
+        x[inner] += dx*rdmx*0.25
+        y[inner] += dy*rdmy*0.25
         # NOTE the coordinates passed to the elements, after the distortion
         ncoords_flatten = ncoords.flatten()
 
@@ -105,6 +109,9 @@ def test_tria3r_nat_freq_distorted(plot=False, mode=0):
             r2 = ncoords[pos2]
             r3 = ncoords[pos3]
             r4 = ncoords[pos4]
+            # NOTE convex element: positive cross products at the four corners
+            for ra, rb, rc in ((r4, r1, r2), (r1, r2, r3), (r2, r3, r4), (r3, r4, r1)):
+                assert np.cross(rb - ra, rc - rb)[2] > 0
 
             # first tria
             normal = np.cross(r2 - r1, r3 - r1)[2]
