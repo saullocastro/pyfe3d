@@ -26,7 +26,9 @@ geometrically non-linear analyses.
         shear terms against shear locking, and the drilling enrichment of
         the in-plane displacement field, see :mod:`.quad4`. A strip one
         element wide is too flexible in torsion, see the zero-energy modes
-        in the Notes of :mod:`.quad4`.
+        in the Notes of :mod:`.quad4`; the geometric stiffness takes the
+        slopes of `w` at the centroid, such that the hourglass mode of `w`
+        is not a spurious buckling mode, see :meth:`.Quad4.update_KG`.
     * - :class:`.Quad4R`
       - 4
       - One integration point, cheaper than :class:`.Quad4` for the

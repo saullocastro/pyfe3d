@@ -46,6 +46,19 @@ The beams have ``update_KG`` for the axial force of the prestress, see
 ``tests/test_beam_linear_buckling_3D_column.py``; :class:`.Truss` and
 :class:`.Spring` have no geometric stiffness matrix.
 
+The geometric stiffness matrices of :class:`.Quad4` and :class:`.Quad4R`
+integrate the membrane stress resultants with two-by-two quadrature and take
+the slopes of `w` at the centroid of the element, where the transverse shear
+of :class:`.Quad4R` and of the thin :class:`.Quad4` elements is sampled. The
+hourglass pattern of `w`, alternating in sign from node to node with zero
+rotations, which that transverse shear does not resist, then has no
+geometric stiffness either; with the slopes at the two-by-two points, as up
+to version 0.11, it could give a spurious buckling mode below the physical
+load when the transverse shear stiffness is low compared with the bending
+stiffness, e.g. in sandwich plates. The buckling loads of coarse meshes are
+somewhat higher, see the Notes of :meth:`.Quad4.update_KG` and
+:meth:`.Quad4R.update_KG`.
+
 
 Natural frequencies
 -------------------
