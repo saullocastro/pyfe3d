@@ -32,12 +32,16 @@ elements = new[np.array(elements)]
 sec = CrossSection(x2, x3, elements, materials=[isotropic(70e9, 0.3)],
                    mat_ids=[0]*len(elements))
 sec.calc_stiffness()
-w1 = sec.warping([0., 1., 0., 0.])[:, 0]  # warping per unit twist rate
+e2, e3 = sec.shear_centre
+# warping per unit twist rate about the shear centre, -omega
+sc = sec.translated(e2, e3)
+sc.calc_stiffness()
+w1 = sc.warping([0., 1., 0., 0.])[:, 0]
 tri = sec.triangles()
 
 # beam of length L under the uniform twist rate k1: the sections rotate by
-# k1*x1 about the reference axis and warp by k1*w1 along x1, exaggerated
-# by scale
+# k1*x1 about the shear centre and warp by k1*w1 along x1, exaggerated by
+# scale
 L, k1, scale = 3., np.pi/(3*3.), 3.
 stations = np.linspace(0., L, 31)
 # NOTE edges used by one triangle only are on the boundary of the section
@@ -50,14 +54,15 @@ X, Y, Z, C = [], [], [], []
 for s in stations:
     c, si = np.cos(k1*s), np.sin(k1*s)
     X.append(s + scale*k1*w1)
-    Y.append(c*x2 - si*x3)
-    Z.append(si*x2 + c*x3)
+    Y.append(e2 + c*(x2 - e2) - si*(x3 - e3))
+    Z.append(e3 + si*(x2 - e2) + c*(x3 - e3))
     C.append(w1)
 X, Y, Z, C = map(np.concatenate, (X, Y, Z, C))
 faces = [tri, tri + (stations.size - 1)*nn]  # end sections
 for k in range(stations.size - 1):
     a, e = edges[:, 0] + k*nn, edges[:, 1] + k*nn
-    faces += [np.column_stack((a, e, e + nn)), np.column_stack((a, e + nn, a + nn))]
+    faces += [np.column_stack((a, e, e + nn)),
+              np.column_stack((a, e + nn, a + nn))]
 I, J, K = np.vstack(faces).T
 
 fig = go.Figure(go.Mesh3d(x=X, y=Y, z=Z, i=I, j=J, k=K, intensity=C,

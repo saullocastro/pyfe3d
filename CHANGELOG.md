@@ -27,6 +27,12 @@
   `CrossSection.triangles` a triangulation of the mesh through all its
   nodes, to plot the warping with any plotting library; pyfe3d does not
   depend on one.
+- `CrossSection.calc_vlasov` gives the 5x5 stiffness `Kv` of the
+  generalized Vlasov model of Yu et al. (2005), for thin-walled open
+  sections, of `{gamma11, kappa1, kappa2, kappa3, kappa1'}` about the shear
+  centre, with the warping rigidity; `CrossSection.translated` moves the
+  origin of a cross section, e.g. to the shear centre. No beam element
+  uses `Kv`.
 - Initially twisted and curved beams are not implemented: non-zero `k1`,
   `k2`, `k3` raise `NotImplementedError`.
 
@@ -45,6 +51,11 @@
 - `tests/test_vabs_warping.py`: the torsional warping of an ellipse against
   the Saint-Venant solution, linearity and conventions of
   `CrossSection.warping`, and the triangles of every element type.
+- `tests/test_vabs_vlasov.py`: the strips of Yu et al. (2005), Tables 1, 3
+  and 4, reproduced to five digits or more, the isotropic I-beam of Table
+  5, within 1 per cent, and the torsional warping of a thin-walled channel
+  about its shear centre against the principal sectorial coordinate,
+  `w1 = -omega kappa1`, with its warping rigidity.
 
 ### Documentation
 
@@ -55,8 +66,10 @@
 - `cross_sectional_analysis` shows how to plot the warping of a channel:
   in 2D with matplotlib, through the plot directive, and in 3D with
   plotly, as an interactive figure written at the start of the build by
-  `doc/source/_scripts/vabs_warping_3d.py`. matplotlib and plotly are added
-  to `requirements_doc.txt` only.
+  `doc/source/_scripts/vabs_warping_3d.py`. The torsional warping is
+  shown about the shear centre, i.e. the principal sectorial coordinate.
+  matplotlib and plotly are added to `requirements_doc.txt` only.
+- `cross_sectional_analysis` describes the generalized Vlasov model.
 
 ## 0.11.3 (2026-10-27)
 

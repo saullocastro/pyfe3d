@@ -52,6 +52,9 @@ Steps of an analysis
    matrices to the convention of pyfe3d, and :func:`.beamprop_from_vabs`
    creates the :class:`.BeamProp`, when the matrix can be represented by
    one, see below.
+7. **Generalized Vlasov model.** For thin-walled open sections,
+   :meth:`.CrossSection.calc_vlasov` gives the `5 \times 5` stiffness
+   ``Kv``, which adds the restrained warping, see below.
 
 The analysis is linear and per station: a beam whose section varies along
 its length needs one analysis per station.
@@ -137,6 +140,39 @@ computed ``G12``, ``G13`` and ``GJ`` replace the shear correction factors
 and the torsion constant that the user would otherwise supply.
 
 
+Generalized Vlasov model
+------------------------
+
+In a thin-walled open section, a twist rate that varies along the beam
+produces axial stresses through the warping, with a stiffness that can
+exceed the Saint-Venant ``GJ`` by far, which neither the classical nor the
+Timoshenko model represents. Following Yu et al. (2005), Section 2,
+:meth:`.CrossSection.calc_vlasov` moves the origin of the cross section
+to the shear centre with :meth:`.CrossSection.translated`, analyses the
+translated section, and keeps, in its second-order energy, only the
+derivative `\kappa_1'` of the twist rate among the derivatives of the
+classical strains. The result is the `5 \times 5` stiffness ``Kv`` of the
+strains `\{\gamma_{11}, \kappa_1, \kappa_2, \kappa_3, \kappa_1'\}`
+referred to the shear centre, work-conjugate to `\{F_1, M_1, M_2, M_3,
+M_\omega\}`, with the bimoment `M_\omega`; its last diagonal entry is the
+warping rigidity, `E\Gamma` for an isotropic thin-walled section::
+
+    sec.calc_vlasov()
+    EGamma = sec.Kv[4, 4]
+    w1 = sec.vlasov_section.warping([0., 1., 0., 0.])[:, 0]
+
+The first four rows and columns are the classical stiffness about the
+shear centre. The model is computed by default with the warping
+constraints of Yu et al. (2002), ``constraint='yu2002'``, which reproduce
+the VABS results of Yu et al. (2005) and, for a strip, their asymptotic
+thin-walled warping rigidity; with ``'yu2012'``, the warping rigidity of a
+strip is about 9 per cent lower, see the notes of
+:meth:`.CrossSection.calc_vlasov`. No beam element of pyfe3d has a
+warping degree-of-freedom: ``Kv`` is an output for one-dimensional
+Vlasov beam analyses outside pyfe3d, such as that of Section 3 of Yu et
+al. (2005).
+
+
 Plotting the warping
 --------------------
 
@@ -145,19 +181,32 @@ returns the warping displacements `w_1, w_2, w_3` of the nodes for given
 strains of the beam, and :meth:`.CrossSection.triangles` a triangulation of
 the mesh through all its nodes. These two arrays are all that a plotting
 library needs, and pyfe3d does not depend on any. The warping satisfies
-the constraints chosen in :meth:`.CrossSection.calc_stiffness`, by default
-zero average and zero average rotation, i.e. it is the warping relative
-to the rigid motion of the section about the reference axis.
+the constraints chosen in :meth:`.CrossSection.calc_stiffness`, among them
+zero average, and it is the warping relative to the rigid motion of the
+section about the reference axis.
+
+The torsional warping is therefore shown, as in the literature, about the
+shear centre: the section translated to the shear centre with
+:meth:`.CrossSection.translated`, as in :meth:`.CrossSection.calc_vlasov`,
+gives the warping relative to the rotation about the shear centre, with
+zero average. For a thin-walled open section it is the principal
+sectorial coordinate `\omega` of Vlasov (1961), `\omega = \int \rho \,
+ds`, `\rho` being the distance from the pole to the tangent of the
+mid-line, normalised with the pole at the shear centre such that
+`\omega` has zero average and is orthogonal to `x_2` and `x_3`: with
+`\rho` positive when the radius from the pole turns from `x_2` towards
+`x_3`, the absence of shear strain on the mid-line gives `w_1 = -\omega
+\kappa_1`. This is checked for a channel in
+``tests/test_vabs_vlasov.py``.
 
 With matplotlib, for a thin-walled channel, the out-of-plane warping
-`w_1` per unit twist rate `\kappa_1`, with the tension centre (circle)
-and the shear centre (cross), and the in-plane warping per unit curvature
+`w_1` per unit twist rate `\kappa_1` about the shear centre (cross), with
+the tension centre (circle), and the in-plane warping per unit curvature
 `\kappa_2`, i.e. the anticlastic deformation due to the Poisson effect,
 drawn to scale on the undeformed mesh: the flange in tension, `x_3 > 0`,
-contracts, and the flange in compression expands. On the web, which
-contains the reference axis, the torsional warping is almost zero; it is
-the warping relative to the rotation about the reference axis, not about
-the shear centre.
+contracts, and the flange in compression expands. The torsional warping
+is linear along each wall, `-\omega`, and changes sign on the web, at the
+centre of the section, and along the flanges.
 
 .. plot::
    :include-source:
@@ -193,14 +242,17 @@ the shear centre.
                       mat_ids=[0]*len(elements))
    sec.calc_stiffness()
    tri = Triangulation(sec.x2, sec.x3, sec.triangles())
+   # origin at the shear centre, same nodes and triangles
+   sc = sec.translated(*sec.shear_centre)
+   sc.calc_stiffness()
 
    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 4.5))
-   w = sec.warping([0., 1., 0., 0.])  # unit twist rate kappa1
+   w = sc.warping([0., 1., 0., 0.])  # unit twist rate kappa1
    cs = ax1.tricontourf(tri, w[:, 0], levels=21, cmap='RdBu_r')
-   fig.colorbar(cs, ax=ax1, label=r'$w_1$ per unit $\kappa_1$')
+   fig.colorbar(cs, ax=ax1, label=r'$w_1 = -\omega$ per unit $\kappa_1$')
    ax1.plot(*sec.tension_centre, 'ko', mfc='none')
    ax1.plot(*sec.shear_centre, 'kx')
-   ax1.set_title('torsion')
+   ax1.set_title('torsion, about the shear centre')
 
    w = sec.warping([0., 0., 1., 0.])  # unit curvature kappa2
    ax2.triplot(tri, color='0.8', lw=0.5)
@@ -215,9 +267,9 @@ the shear centre.
 
 The same arrays give a three-dimensional view with plotly. The script
 below draws the channel as a beam of length 3 under a uniform twist rate:
-the sections rotate about the reference axis and warp along it, the
-warping being exaggerated and coloured by `w_1`. The figure can be
-rotated, panned and zoomed:
+the sections rotate about the shear centre and warp along the beam by
+`w_1 = -\omega \kappa_1`, the warping being exaggerated and coloured by
+`w_1`. The figure can be rotated, panned and zoomed:
 
 .. literalinclude:: _scripts/vabs_warping_3d.py
    :start-at: import numpy as np
@@ -248,7 +300,13 @@ published VABS results:
   material rotation and conventions.
 - ``tests/test_vabs_warping.py``: the torsional warping of an ellipse
   against the Saint-Venant solution, and the triangulation of every
-  element type.
+  element type;
+- ``tests/test_vabs_vlasov.py``: the generalized Vlasov model against the
+  VABS results of Yu et al. (2005), Tables 1, 3 and 4, isotropic,
+  orthotropic and anisotropic strips, reproduced to five digits or more,
+  and Table 5, isotropic I-beam, within 1 per cent, and the torsional
+  warping about the shear centre of a thin-walled channel against
+  `-\omega`, with its warping rigidity.
 
 
 Limitations
@@ -260,7 +318,8 @@ Limitations
 - No applied loads in the sectional analysis, Yu et al. (2012), Section
   5.3, and no recovery of the three-dimensional strains and stresses,
   although the warping is available, see :meth:`.CrossSection.warping`.
-- No Vlasov refinement for thin-walled open sections.
+- The generalized Vlasov model is not used by any beam element of
+  pyfe3d.
 
 
 References
@@ -279,6 +338,13 @@ Yu, W., and Hodges, D. H., "Generalized Timoshenko Theory of the
 Variational Asymptotic Beam Sectional Analysis", Journal of the American
 Helicopter Society, 50(1), pp. 46-55, 2005.
 https://doi.org/10.4050/1.3092842
+
+Yu, W., Hodges, D. H., Volovoi, V. V., and Fuchs, E. D., "A generalized
+Vlasov theory for composite beams", Thin-Walled Structures, 43(9), pp.
+1493-1511, 2005. https://doi.org/10.1016/j.tws.2005.02.003
+
+Vlasov, V. Z., Thin-Walled Elastic Beams, 2nd ed., Israel Program for
+Scientific Translations, Jerusalem, 1961.
 
 Yu, W., Hodges, D. H., and Ho, J. C., "Variational asymptotic beam
 sectional analysis -- An updated version", International Journal of
