@@ -1552,7 +1552,8 @@ cdef class CrossSection:
         rate about the shear centre, the first column of
         ``vlasov_section.warping([0, 1, 0, 0])``, approaches `-\omega`,
         with `\omega` the principal sectorial coordinate of Vlasov [2]_,
-        normalised to zero average with the pole at the shear centre, and
+        Eqs. (3.15) and (7.1), pp. 14--16 and 40--41, normalised to zero
+        average with the pole at the shear centre, Sec. 9, pp. 51--53, and
         `K_{v,55}` approaches the warping rigidity `E \Gamma`.
 
         References
@@ -1563,6 +1564,7 @@ cdef class CrossSection:
            https://doi.org/10.1016/j.tws.2005.02.003
         .. [2] Vlasov, V. Z., Thin-Walled Elastic Beams, 2nd ed., Israel
            Program for Scientific Translations, Jerusalem, 1961.
+           Translated by Y. Schechtman.
 
         """
         if (self.shear_centre is not None and self.constraint == constraint):

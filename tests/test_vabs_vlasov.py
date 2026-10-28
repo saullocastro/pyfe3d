@@ -37,7 +37,8 @@ within 3.5 per cent, with an assumption on the out-of-plane constants.
 
 For a thin-walled channel, the torsional warping about the shear centre is
 compared with the principal sectorial coordinate `\omega` of Vlasov,
-Thin-Walled Elastic Beams, 2nd ed., 1961, `\omega = \int \rho \, ds`,
+Thin-Walled Elastic Beams, 2nd ed., 1961, Eqs. (3.15) and (7.1), pp. 14-16
+and 40-41, `\omega = \int \rho \, ds`,
 normalised to zero average with the pole at the shear centre. With the
 twist rate `\kappa_1` and `\rho` positive when the radius vector from the
 pole turns counter-clockwise, from `x_2` towards `x_3`, the condition of no

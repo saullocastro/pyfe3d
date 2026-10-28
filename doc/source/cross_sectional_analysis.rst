@@ -232,8 +232,8 @@ shear centre: the section translated to the shear centre with
 :meth:`.CrossSection.translated`, as in :meth:`.CrossSection.calc_vlasov`,
 gives the warping relative to the rotation about the shear centre, with
 zero average. For a thin-walled open section it is the principal
-sectorial coordinate `\omega` of Vlasov (1961), `\omega = \int \rho \,
-ds`, `\rho` being the distance from the pole to the tangent of the
+sectorial coordinate `\omega` of Vlasov (1961, Eqs. (3.15) and (7.1), pp.
+14-16 and 40-41), `\omega = \int \rho \, ds`, `\rho` being the distance from the pole to the tangent of the
 mid-line, normalised with the pole at the shear centre such that
 `\omega` has zero average and is orthogonal to `x_2` and `x_3`: with
 `\rho` positive when the radius from the pole turns from `x_2` towards
@@ -392,7 +392,7 @@ Vlasov theory for composite beams", Thin-Walled Structures, 43(9), pp.
 1493-1511, 2005. https://doi.org/10.1016/j.tws.2005.02.003
 
 Vlasov, V. Z., Thin-Walled Elastic Beams, 2nd ed., Israel Program for
-Scientific Translations, Jerusalem, 1961.
+Scientific Translations, Jerusalem, 1961. Translated by Y. Schechtman.
 
 Volovoi, V. V., Hodges, D. H., Berdichevsky, V. L., and Sutyrin, V. G.,
 "Asymptotic theory for static behavior of elastic anisotropic I-beams",
