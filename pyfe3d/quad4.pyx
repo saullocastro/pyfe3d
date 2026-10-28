@@ -94,28 +94,44 @@ paper of Hughes et al. [1]_, whose rotations `\theta_1` and `\theta_2`
 enter the transverse shear strains as `w_{,x} - \theta_1` and `w_{,y} -
 \theta_2`, their Eq. (7), such that `\theta_1 = -r_y` and `\theta_2 = r_x`.
 
-Hughes et al. (1977) proposed the following integration scheme:
+The integration scheme is:
 
 - For thin and moderately thick plates, when `h/\ell < 1`, where `\ell` is
   the element characteristic length, here calculated as the square root of
-  the element area `\ell = \sqrt{\text{area}}`
+  the element area `\ell = \sqrt{\text{area}}`, the scheme of Hughes et al.
+  (1977)
 
 -- two-by-two quadrature for the bending energy terms
 
 -- one-point quadrature for the transverse shear energy terms
 
-- For very thick plates, when `h/\ell >= 1`, the "modified one-point
-  shear" element of the paper (pp. 1541-1542)
+- For very thick plates, when `h/\ell \ge 1`
 
 -- two-by-two quadrature for the bending energy terms
 
--- two-by-two quadrature for the transverse shear terms that are products
-of the gradients of `w`, the `(\partial w/\partial x)^2` and
-`(\partial w/\partial y)^2` contributions of the paper and, for a
-laminate, the `\partial w/\partial x \, \partial w/\partial y` term of
-`A_{45}`
+-- the assumed transverse shear strains of the MITC4 element of Dvorkin
+and Bathe [8]_, in the plate form of Bathe and Dvorkin [9]_, with
+two-by-two quadrature: the covariant strain `\gamma_{\xi z}` is
+interpolated linearly in `\eta` between its values at the mid-points of the
+edges `\eta = \pm 1`, and `\gamma_{\eta z}` linearly in `\xi` between its
+values at the mid-points of the edges `\xi = \pm 1`
 
--- one-point quadrature for the remaining transverse shear terms
+For `h/\ell \ge 1`, Hughes et al. [1]_ propose instead the "modified
+one-point shear" element (pp. 1541-1542), which integrates the
+`(\partial w/\partial x)^2` and `(\partial w/\partial y)^2` contributions to
+the shear energy with two-by-two quadrature and the remaining terms with one
+point. It was the rule of pyfe3d up to version 0.11. Because the products of
+the gradients of `w` and the terms that contain the rotations are integrated
+with different rules, a state of pure twist, `w = \kappa x y`, `r_x =
+\kappa x`, `r_y = -\kappa y`, whose transverse shear strains vanish
+everywhere, stores the spurious shear energy `A_{55} \ell^4 \kappa^2/12` in a
+square element, `(5/12)(\ell/h)^2` times its twist energy for an isotropic
+plate, 42 % at `h/\ell = 1`, and a mesh refined across `h/\ell = 1` became
+abruptly stiffer in torsion, e.g. by 21 % for the tip twist of a thin-walled
+I-beam, see ``tests/test_quad4_thick_twist.py``. The assumed strains are
+exact for pure twist and pure bending of a rectangle, and the elements with
+`h/\ell < 1` keep the one-point rule, such that their results are those of
+the earlier versions.
 
 The membrane stiffness terms, which are not specified in the paper of Hughes
 et al. (1977), are integrated with a three-by-three quadrature when the
@@ -129,10 +145,10 @@ stiffness matrix has two zero-energy modes besides the rigid-body modes, as
 reported by Hughes et al. [1]_: the hourglass mode `w = (x - x_c)(y - y_c)`
 with zero rotations, and the in-plane twist `w = 0`, `r_x = x - x_c`,
 `r_y = y - y_c`, where `(x_c, y_c)` is the centroid. Their transverse shear
-strains vanish at the centroid. The two-by-two quadrature of the gradient
-terms for `h/\ell \ge 1` gives stiffness to the hourglass mode, the
-"modified one-point shear" element of the paper. The hourglass mode is the
-one that survives assembly. It is suppressed by any support that constrains
+strains vanish at the centroid. The assumed strains used for `h/\ell \ge
+1` give stiffness to both, such that the thick element has only the six
+rigid-body modes. For `h/\ell < 1`, the hourglass mode is the one that
+survives assembly. It is suppressed by any support that constrains
 `w` along a boundary line, but a strip one element wide loaded in torsion,
 whose twist is the hourglass pattern, is much too flexible, e.g. the twist
 case of the straight cantilever of MacNeal and Harder [7]_.
@@ -345,6 +361,13 @@ References
 .. [7] MacNeal, R. H., and Harder, R. L., A proposed standard set of problems
    to test finite element accuracy, Finite Elements in Analysis and Design,
    1(1), 3-20, 1985. https://doi.org/10.1016/0168-874X(85)90003-4
+.. [8] Dvorkin, E. N., and Bathe, K. J., A continuum mechanics based
+   four-node shell element for general non-linear analysis, Engineering
+   Computations, 1(1), 77-88, 1984. https://doi.org/10.1108/eb023562
+.. [9] Bathe, K. J., and Dvorkin, E. N., A four-node plate bending element
+   based on Mindlin/Reissner plate theory and a mixed interpolation,
+   International Journal for Numerical Methods in Engineering, 21(2),
+   367-383, 1985. https://doi.org/10.1002/nme.1620210213
 
 """
 from libc.math cimport fabs
@@ -502,6 +525,103 @@ cdef void allman_enrichment(double *xe, double xi, double eta,
     d[14] = cv3*Sb3_y - cv2*Sb2_y
     d[15] = cv4*Sb4_y - cv3*Sb3_y
 
+
+cdef void _mitc4_covariant(double *xe, double xi, double eta, double *cxi,
+                           double *ceta) noexcept nogil:
+    r"""Rows of the covariant transverse shear strains at a point
+
+    ``cxi`` and ``ceta`` (24 values each) receive the rows of
+    `\gamma_{\xi z} = x_{,\xi} \gamma_{xz} + y_{,\xi} \gamma_{yz} = w_{,\xi}
+    + x_{,\xi} r_y - y_{,\xi} r_x` and of `\gamma_{\eta z} = w_{,\eta} +
+    x_{,\eta} r_y - y_{,\eta} r_x` at the natural coordinates ``xi``,
+    ``eta`` of the element with the local nodal coordinates ``xe``.
+
+    """
+    cdef double S[4]
+    cdef double S_xi[4]
+    cdef double S_eta[4]
+    cdef double J11, J12, J21, J22
+    cdef int i
+    S[0] = (1 - xi)*(1 - eta)/4.
+    S[1] = (1 + xi)*(1 - eta)/4.
+    S[2] = (1 + xi)*(1 + eta)/4.
+    S[3] = (1 - xi)*(1 + eta)/4.
+    S_xi[0] = -(1 - eta)/4.
+    S_xi[1] = (1 - eta)/4.
+    S_xi[2] = (1 + eta)/4.
+    S_xi[3] = -(1 + eta)/4.
+    S_eta[0] = -(1 - xi)/4.
+    S_eta[1] = -(1 + xi)/4.
+    S_eta[2] = (1 + xi)/4.
+    S_eta[3] = (1 - xi)/4.
+    J11 = 0.
+    J12 = 0.
+    J21 = 0.
+    J22 = 0.
+    for i in range(4):
+        J11 += S_xi[i]*xe[3*i]
+        J12 += S_xi[i]*xe[3*i + 1]
+        J21 += S_eta[i]*xe[3*i]
+        J22 += S_eta[i]*xe[3*i + 1]
+    for i in range(24):
+        cxi[i] = 0.
+        ceta[i] = 0.
+    for i in range(4):
+        cxi[6*i + 2] = S_xi[i]
+        cxi[6*i + 3] = -J12*S[i]
+        cxi[6*i + 4] = J11*S[i]
+        ceta[6*i + 2] = S_eta[i]
+        ceta[6*i + 3] = -J22*S[i]
+        ceta[6*i + 4] = J21*S[i]
+
+
+cdef void mitc4_shear_rows(double *xe, double xi, double eta, double *gxz,
+                           double *gyz) noexcept nogil:
+    r"""Rows of the assumed transverse shear strains of the MITC4 element
+
+    ``gxz`` and ``gyz`` (24 values each) receive the rows of `\gamma_{xz}`
+    and `\gamma_{yz}` at the natural coordinates ``xi``, ``eta`` of the
+    element with the local nodal coordinates ``xe``. The covariant strain
+    `\gamma_{\xi z}` is interpolated linearly in `\eta` between its values
+    at the mid-points of the edges `\eta = \pm 1`, and `\gamma_{\eta z}`
+    linearly in `\xi` between its values at the mid-points of the edges `\xi
+    = \pm 1`, and both are brought to the element axes with the inverse of
+    the Jacobian at the point. Used by :class:`.Quad4` when `h/\ell \ge 1`,
+    see the Notes of :mod:`pyfe3d.quad4`.
+
+    """
+    cdef double cA[24]
+    cdef double cC[24]
+    cdef double cB[24]
+    cdef double cD[24]
+    cdef double tmp[24]
+    cdef double J11, J12, J21, J22, detJ, j11, j12, j21, j22
+    cdef double cxi, ceta
+    cdef int i
+    # NOTE tying points: gamma_xi at (0, -1) and (0, +1), gamma_eta at
+    #      (-1, 0) and (+1, 0)
+    _mitc4_covariant(xe, 0., -1., cA, tmp)
+    _mitc4_covariant(xe, 0., 1., cC, tmp)
+    _mitc4_covariant(xe, -1., 0., tmp, cD)
+    _mitc4_covariant(xe, 1., 0., tmp, cB)
+    J11 = (-(1 - eta)*xe[0] + (1 - eta)*xe[3] + (1 + eta)*xe[6]
+           - (1 + eta)*xe[9])/4.
+    J12 = (-(1 - eta)*xe[1] + (1 - eta)*xe[4] + (1 + eta)*xe[7]
+           - (1 + eta)*xe[10])/4.
+    J21 = (-(1 - xi)*xe[0] - (1 + xi)*xe[3] + (1 + xi)*xe[6]
+           + (1 - xi)*xe[9])/4.
+    J22 = (-(1 - xi)*xe[1] - (1 + xi)*xe[4] + (1 + xi)*xe[7]
+           + (1 - xi)*xe[10])/4.
+    detJ = J11*J22 - J12*J21
+    j11 = J22/detJ
+    j12 = -J12/detJ
+    j21 = -J21/detJ
+    j22 = J11/detJ
+    for i in range(24):
+        cxi = 0.5*(1 - eta)*cA[i] + 0.5*(1 + eta)*cC[i]
+        ceta = 0.5*(1 - xi)*cD[i] + 0.5*(1 + xi)*cB[i]
+        gxz[i] = j11*cxi + j12*ceta
+        gyz[i] = j21*cxi + j22*ceta
 
 cdef class Quad4Data:
     r"""
@@ -1384,8 +1504,8 @@ cdef class Quad4:
           ``BLgxz_grad``, and of a rotation part, ``BLgyz_rot`` or
           ``BLgxz_rot``: with `\ell = \sqrt{\text{area}}` and the thickness
           ``prop.h``, all the terms at the centroid, `\xi = \eta = 0` with
-          weight 4, when `h/\ell < 1`; the gradient-gradient terms with
-          two-by-two and the other terms at the centroid otherwise;
+          weight 4, when `h/\ell < 1`; otherwise the assumed strains of the
+          MITC4 element, from ``mitc4_shear_rows``, with two-by-two;
         - drilling, `\gamma_{r_z} \boldsymbol{B}_{r_z}^\top \boldsymbol{B}_{r_z}` with the row
           ``BLdrilling``: for ``drilling_model = 0``, the enriched
           `\tilde{\boldsymbol{B}}_{r_z}` at the centroid, with `\gamma_{r_z}` equal to
@@ -1436,6 +1556,8 @@ cdef class Quad4:
         cdef double denr[16]
         cdef double exx, eyy, gxy, kxx, kyy, kxy
         cdef double gyz_rot, gxz_rot, gyz_grad, gxz_grad
+        cdef double mgxz[24]
+        cdef double mgyz[24]
 
         with nogil:
             BLexx = &self.probe.BLexx[0]
@@ -1715,11 +1837,13 @@ cdef class Quad4:
                               + kxy*D16*BLkxx[j] + kxy*D26*BLkyy[j] + kxy*D66*BLkxy[j]
                             )
 
-            # NOTE two-point quadrature of the transverse shear gradient
-            #      term of the thick elements, kept independent of the rule
-            #      used above for the membrane
+            # NOTE thick elements, h/l >= 1: assumed transverse shear strains
+            #      of the MITC4 element (Dvorkin and Bathe 1984, Bathe and
+            #      Dvorkin 1985) with the two-point rule, instead of the
+            #      modified one-point shear rule of Hughes et al. (1977),
+            #      which stores spurious shear energy in a state of pure
+            #      twist; see the module documentation
             if prop.h/length >= 1.: # thick elements
-                wij = 1.
                 for pti in range(2):
                     xi = points[pti]
                     for ptj in range(2):
@@ -1732,39 +1856,15 @@ cdef class Quad4:
 
                         detJ = J11*J22 - J12*J21
 
-                        j11 = J22/(J11*J22 - J12*J21)
-                        j12 = -J12/(J11*J22 - J12*J21)
-                        j21 = -J21/(J11*J22 - J12*J21)
-                        j22 = J11/(J11*J22 - J12*J21)
-
-                        S1_x = 0.25*j11*(eta - 1) + 0.25*j12*(xi - 1)
-                        S2_x = -0.25*eta*j11 + 0.25*j11 - 0.25*j12*xi - 0.25*j12
-                        S3_x = 0.25*j11*(eta + 1) + 0.25*j12*(xi + 1)
-                        S4_x = -0.25*eta*j11 - 0.25*j11 - 0.25*j12*xi + 0.25*j12
-
-                        S1_y = 0.25*j21*(eta - 1) + 0.25*j22*(xi - 1)
-                        S2_y = -0.25*eta*j21 + 0.25*j21 - 0.25*j22*xi - 0.25*j22
-                        S3_y = 0.25*j21*(eta + 1) + 0.25*j22*(xi + 1)
-                        S4_y = -0.25*eta*j21 - 0.25*j21 - 0.25*j22*xi + 0.25*j22
-
-                        BLgyz_grad[2] = S1_y
-                        BLgyz_grad[8] = S2_y
-                        BLgyz_grad[14] = S3_y
-                        BLgyz_grad[20] = S4_y
-
-                        BLgxz_grad[2] = S1_x
-                        BLgxz_grad[8] = S2_x
-                        BLgxz_grad[14] = S3_x
-                        BLgxz_grad[20] = S4_x
+                        mitc4_shear_rows(&self.probe.xe[0], xi, eta, mgxz, mgyz)
                         for i in range(24):
-                            gyz_grad = BLgyz_grad[i]
-                            gxz_grad = BLgxz_grad[i]
+                            gyz_grad = mgyz[i]
+                            gxz_grad = mgxz[i]
                             for j in range(24):
                                 ke = 24*i + j
-                                self.probe.KC0ve[ke] += wij*detJ*(
-                                # transverse shear (gradient term)
-                                    gyz_grad*A44*BLgyz_grad[j] + gyz_grad*A45*BLgxz_grad[j]
-                                  + gxz_grad*A45*BLgyz_grad[j] + gxz_grad*A55*BLgxz_grad[j]
+                                self.probe.KC0ve[ke] += detJ*(
+                                    gyz_grad*A44*mgyz[j] + gyz_grad*A45*mgxz[j]
+                                  + gxz_grad*A45*mgyz[j] + gxz_grad*A55*mgxz[j]
                                 )
 
             # NOTE the fictitious penalty of the K6ROT model is integrated
@@ -1915,6 +2015,9 @@ cdef class Quad4:
                         ke = 24*i + j
                         self.probe.KC0ve[ke] += wij*detJ*BLdrilling_i*BLdrilling[j]
 
+            # NOTE thin elements, h/l < 1: one-point transverse shear of
+            #      Hughes et al. (1977); the thick elements are
+            #      integrated above
             if prop.h/length < 1.: # thin elements
                 for i in range(24):
                     gyz_rot = BLgyz_rot[i]
@@ -1930,27 +2033,6 @@ cdef class Quad4:
 
                         # transverse shear (coupled terms)
                           + gyz_grad*A44*BLgyz_rot[j] + gyz_grad*A45*BLgxz_rot[j]
-                          + gxz_grad*A45*BLgyz_rot[j] + gxz_grad*A55*BLgxz_rot[j]
-
-                          + gyz_rot*A44*BLgyz_grad[j] + gyz_rot*A45*BLgxz_grad[j]
-                          + gxz_rot*A45*BLgyz_grad[j] + gxz_rot*A55*BLgxz_grad[j]
-
-                        # transverse shear (rotation term)
-                          + gyz_rot*A44*BLgyz_rot[j] + gyz_rot*A45*BLgxz_rot[j]
-                          + gxz_rot*A45*BLgyz_rot[j] + gxz_rot*A55*BLgxz_rot[j]
-                        )
-
-            else: # thick elements
-                for i in range(24):
-                    gyz_rot = BLgyz_rot[i]
-                    gxz_rot = BLgxz_rot[i]
-                    gyz_grad = BLgyz_grad[i]
-                    gxz_grad = BLgxz_grad[i]
-                    for j in range(24):
-                        ke = 24*i + j
-                        self.probe.KC0ve[ke] += wij*detJ*(
-                        # transverse shear (coupled terms)
-                            gyz_grad*A44*BLgyz_rot[j] + gyz_grad*A45*BLgxz_rot[j]
                           + gxz_grad*A45*BLgyz_rot[j] + gxz_grad*A55*BLgxz_rot[j]
 
                           + gyz_rot*A44*BLgyz_grad[j] + gyz_rot*A45*BLgxz_grad[j]
