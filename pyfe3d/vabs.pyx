@@ -25,7 +25,10 @@ centre, the shear centre and the mass properties. The functions
 :func:`.pyfe3d_to_yu` convert the stiffness matrices between the ordering
 and signs of this module and those of the beam elements of pyfe3d, and
 :func:`.beamprop_from_vabs` creates a :class:`.BeamProp` from them when
-possible.
+possible. The methods :meth:`.CrossSection.warping` and
+:meth:`.CrossSection.triangles` give the warping displacements of the nodes
+and a triangulation of the mesh, to plot the warping with any plotting
+library.
 
 The coordinates of the cross section are `x_2` and `x_3`, which are the
 `y` and `z` of the element coordinate system of :class:`.BeamC` and
@@ -110,6 +113,17 @@ VOIGT_TO_YU = np.array([0, 5, 4, 1, 3, 2])
 # NOTE positions of {gamma11, kappa1, kappa2, kappa3, 2gamma12, 2gamma13} in
 #      {gamma11, 2gamma12, 2gamma13, kappa1, kappa2, kappa3}
 BLOCK_TO_INTERLEAVED = np.array([0, 4, 5, 1, 2, 3])
+
+# NOTE local nodes of the linear triangles of each element, counter-clockwise,
+#      see CrossSection.triangles
+SUB_TRIANGLES = {
+    3: ((0, 1, 2),),
+    6: ((0, 3, 5), (3, 1, 4), (5, 4, 2), (3, 4, 5)),
+    4: ((0, 1, 2), (0, 2, 3)),
+    8: ((0, 4, 7), (4, 1, 5), (5, 2, 6), (6, 3, 7), (4, 5, 6), (4, 6, 7)),
+    9: ((0, 4, 8), (0, 8, 7), (4, 1, 5), (4, 5, 8), (8, 5, 2), (8, 2, 6),
+        (7, 8, 6), (7, 6, 3)),
+}
 
 
 def isotropic(double E, double nu):
@@ -787,7 +801,9 @@ cdef class CrossSection:
     analysis is done by :meth:`calc_stiffness`, which sets the stiffness
     attributes, and by :meth:`calc_mass`, which sets the mass attributes;
     both set ``area``, ``centroid`` and the integrals of the cross section.
-    All results refer to the origin of the coordinates `x_2`, `x_3`, i.e.
+    After :meth:`calc_stiffness`, :meth:`warping` gives the warping of the
+    nodes for given beam strains, and :meth:`triangles` a triangulation of
+    the mesh on which to plot it. All results refer to the origin of the coordinates `x_2`, `x_3`, i.e.
     the beam reference axis passes through `(0, 0)`.
 
     .. figure:: ../figures/vabs_axes.svg
@@ -1428,6 +1444,121 @@ cdef class CrossSection:
         M[:3, 3:] = S.T
         M[3:, 3:] = i
         self.mass_matrix = M
+
+    def warping(CrossSection self, eps, deps=None, str convention='yu'):
+        r"""Nodal warping displacements for given beam strains
+
+        Combines the warping per unit strain stored by
+        :meth:`calc_stiffness`, ``V0`` for the classical strains and ``V1S``
+        for their derivatives along the beam, into the warping displacements
+        `w_1, w_2, w_3` of every node, e.g. to plot the warping of a
+        cross section with :meth:`triangles`.
+
+        Parameters
+        ----------
+        eps : array-like
+            Classical strains, size ``4``: `\{\gamma_{11}, \kappa_1,
+            \kappa_2, \kappa_3\}` for ``convention='yu'``, or
+            `\{\bar{\varepsilon}, \kappa_x, \kappa_y, \kappa_z\}` for
+            ``convention='pyfe3d'``, see :func:`.yu_to_pyfe3d`; dimension
+            inverse of length for the curvatures.
+        deps : array-like, optional
+            Derivatives of the classical strains along the beam axis `x_1`,
+            size ``4``, same convention as ``eps``. Default ``None``,
+            meaning zero, i.e. without the warping of the transverse shear
+            of the generalized Timoshenko model.
+        convention : str, optional
+            ``'yu'``, the default, or ``'pyfe3d'``.
+
+        Returns
+        -------
+        w : np.ndarray
+            Warping displacements `w_1, w_2, w_3` of each node, shape
+            ``(n_nodes, 3)``, dimension length; `w_1` is along the beam axis
+            and `w_2`, `w_3` in the plane of the cross section.
+
+        Raises
+        ------
+        RuntimeError
+            If :meth:`calc_stiffness` has not been called.
+        ValueError
+            If ``eps`` or ``deps`` does not have size ``4``, or if
+            ``convention`` is not ``'yu'`` or ``'pyfe3d'``.
+
+        Examples
+        --------
+        Torsional warping per unit twist rate `\kappa_1 = 1` of a
+        rectangle, which is antisymmetric about both axes:
+
+        >>> import numpy as np
+        >>> from pyfe3d.vabs import CrossSection, isotropic
+        >>> x2, x3 = np.meshgrid([-1., 0., 1.], [-0.25, 0., 0.25])
+        >>> elements = [[0, 1, 4, 3], [1, 2, 5, 4], [3, 4, 7, 6], [4, 5, 8, 7]]
+        >>> sec = CrossSection(x2.ravel(), x3.ravel(), elements,
+        ...                    materials=[isotropic(1., 0.3)], mat_ids=[0]*4)
+        >>> sec.calc_stiffness()
+        >>> w = sec.warping([0., 1., 0., 0.])
+        >>> w.shape
+        (9, 3)
+        >>> bool(np.isclose(w[0, 0], -w[2, 0]))
+        True
+
+        """
+        if self.V0 is None:
+            raise RuntimeError('calc_stiffness must be called first')
+        if convention == 'yu':
+            T = np.eye(4)
+        elif convention == 'pyfe3d':
+            T, _ = _Ts(4, 1.)
+        else:
+            raise ValueError("convention must be 'yu' or 'pyfe3d'")
+        eps = np.asarray(eps, dtype=DOUBLE).ravel()
+        if eps.shape[0] != 4:
+            raise ValueError('eps must have size 4')
+        V = self.V0 @ (T @ eps)
+        if deps is not None:
+            deps = np.asarray(deps, dtype=DOUBLE).ravel()
+            if deps.shape[0] != 4:
+                raise ValueError('deps must have size 4')
+            V = V + self.V1S @ (T @ deps)
+        return V.reshape(-1, 3)
+
+    def triangles(CrossSection self):
+        r"""Linear triangles over all the nodes of the mesh, for plotting
+
+        Splits every element into 3-node triangles whose vertices are its
+        nodes, counter-clockwise, such that a field given at the nodes, e.g.
+        a column of :meth:`warping`, can be drawn with any plotting library
+        that accepts a triangulation. The bilinear quadrilateral gives two
+        triangles; the 6-node triangle four, through its mid-side nodes; the
+        9-node quadrilateral eight, two for each quarter around the centre
+        node; and the 8-node quadrilateral six, one at each corner, cut
+        through the two adjacent mid-side nodes, and two for the
+        quadrilateral of the four mid-side nodes.
+
+        Returns
+        -------
+        tri : np.ndarray
+            Node indices of the triangles, shape ``(n_triangles, 3)``.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from pyfe3d.vabs import CrossSection, isotropic
+        >>> x2, x3 = np.meshgrid([-0.5, 0., 0.5], [-0.5, 0., 0.5])
+        >>> elements = [[0, 1, 4, 3], [1, 2, 5, 4], [3, 4, 7, 6], [4, 5, 8, 7]]
+        >>> sec = CrossSection(x2.ravel(), x3.ravel(), elements,
+        ...                    materials=[isotropic(1., 0.3)], mat_ids=[0]*4)
+        >>> sec.triangles().shape
+        (8, 3)
+
+        """
+        tri = []
+        for e in range(self.conn.shape[0]):
+            n = self.conn[e]
+            for t in SUB_TRIANGLES[int(self.nen[e])]:
+                tri.append([n[t[0]], n[t[1]], n[t[2]]])
+        return np.array(tri, dtype=np.intc)
 
 
 def _Ts(int n, double h):
