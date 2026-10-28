@@ -438,6 +438,38 @@ cdef inline void _hourglass_bending_moduli(double h, double *Ae, double *Be,
     E2b[0] = 12.*detDs/(h**3*(Ds[0]*Ds[8] - Ds[2]*Ds[6]))
 
 
+cdef inline void _centroid_slopes(double x1, double x2, double x3, double x4,
+                                  double y1, double y2, double y3, double y4,
+                                  double *Sx, double *Sy) noexcept nogil:
+    r"""Derivatives `S_{i,x}` and `S_{i,y}` of the bilinear shape functions at
+    the centroid, `\xi = \eta = 0`, written in ``Sx`` and ``Sy``, 4 values
+    each, from the node coordinates in element coordinates
+
+    They are the rows of the slopes `w_{,x}` and `w_{,y}` of the geometrically
+    nonlinear terms, see the Notes of :meth:`.Quad4R.update_KG`.
+
+    """
+    cdef double J11, J12, J21, J22, detJ
+    cdef double j11, j12, j21, j22
+    J11 = 0.25*(-x1 + x2 + x3 - x4)
+    J12 = 0.25*(-y1 + y2 + y3 - y4)
+    J21 = 0.25*(-x1 - x2 + x3 + x4)
+    J22 = 0.25*(-y1 - y2 + y3 + y4)
+    detJ = J11*J22 - J12*J21
+    j11 = J22/detJ
+    j12 = -J12/detJ
+    j21 = -J21/detJ
+    j22 = J11/detJ
+    Sx[0] = -0.25*j11 - 0.25*j12
+    Sx[1] = 0.25*j11 - 0.25*j12
+    Sx[2] = 0.25*j11 + 0.25*j12
+    Sx[3] = -0.25*j11 + 0.25*j12
+    Sy[0] = -0.25*j21 - 0.25*j22
+    Sy[1] = 0.25*j21 - 0.25*j22
+    Sy[2] = 0.25*j21 + 0.25*j22
+    Sy[3] = -0.25*j21 + 0.25*j22
+
+
 
 cdef class Quad4RData:
     r"""
@@ -5394,7 +5426,8 @@ cdef class Quad4R:
           \gamma_{xy}`
         - ``BLkxx, BLkyy, BLkxy``: curvatures `\kappa_{xx}, \kappa_{yy},
           \kappa_{xy}`
-        - ``Sw_x, Sw_y``: `\boldsymbol{G}_x` and `\boldsymbol{G}_y`, the rows of `w_{,x}` and `w_{,y}`
+        - ``Sw_x, Sw_y``: `\boldsymbol{G}_x` and `\boldsymbol{G}_y`, the rows of `w_{,x}` and `w_{,y}`,
+          at the centroid for every ``xi, eta``
 
         Returns
         -------
@@ -5411,7 +5444,8 @@ cdef class Quad4R:
         ``BLkxx``, ``BLkyy`` and ``BLkxy`` give `\kappa_{xx} = {r_y}_{,x}`,
         `\kappa_{yy} = -{r_x}_{,y}` and `\kappa_{xy} = {r_y}_{,y} -
         {r_x}_{,x}`; and ``Sw_x``, ``Sw_y`` hold `S_{i,x}`, `S_{i,y}` at the `w`
-        columns.
+        columns, evaluated at the centroid, see the Notes of
+        :meth:`.update_KG`.
 
         """
         cdef int i
@@ -5419,6 +5453,8 @@ cdef class Quad4R:
         cdef double J11, J12, J21, J22, detJ
         cdef double j11, j12, j21, j22
         cdef double S1_x, S2_x, S3_x, S4_x, S1_y, S2_y, S3_y, S4_y
+        cdef double Scx[4]
+        cdef double Scy[4]
         cdef double *BLexx
         cdef double *BLeyy
         cdef double *BLgxy
@@ -5523,17 +5559,21 @@ cdef class Quad4R:
         BLkxy[16] = S3_y
         BLkxy[22] = S4_y
 
+        # NOTE the slopes of w are taken at the centroid at every integration
+        #      point, see the Notes of update_KG
+        _centroid_slopes(x1, x2, x3, x4, y1, y2, y3, y4, Scx, Scy)
+
         # w,x
-        Sw_x[2] = S1_x
-        Sw_x[8] = S2_x
-        Sw_x[14] = S3_x
-        Sw_x[20] = S4_x
+        Sw_x[2] = Scx[0]
+        Sw_x[8] = Scx[1]
+        Sw_x[14] = Scx[2]
+        Sw_x[20] = Scx[3]
 
         # w,y
-        Sw_y[2] = S1_y
-        Sw_y[8] = S2_y
-        Sw_y[14] = S3_y
-        Sw_y[20] = S4_y
+        Sw_y[2] = Scy[0]
+        Sw_y[8] = Scy[1]
+        Sw_y[14] = Scy[2]
+        Sw_y[20] = Scy[3]
 
         return detJ
 
@@ -5544,7 +5584,8 @@ cdef class Quad4R:
         The attribute ``KCNLve`` of the :class:`.Quad4RProbe` is updated with
         KCNL in element coordinates, stored row by row and evaluated at the
         displacements ``ue`` of the probe, with a two-point Gauss-Legendre
-        quadrature in each direction. See :meth:`.update_KCNL`.
+        quadrature in each direction and the slopes of `w` at the centroid.
+        See :meth:`.update_KCNL`.
 
         Notes
         -----
@@ -5665,7 +5706,8 @@ cdef class Quad4R:
         The attribute ``finte`` of the :class:`.Quad4RProbe` receives the terms
         of the nonlinear part of the von Karman membrane strains, evaluated at
         the displacements ``ue`` of the probe with a two-point Gauss-Legendre
-        quadrature in each direction. See :meth:`.update_KCNL`.
+        quadrature in each direction and the slopes of `w` at the centroid.
+        See :meth:`.update_KCNL`.
 
         Notes
         -----
@@ -5864,8 +5906,9 @@ cdef class Quad4R:
         The linear part of the internal forces, ``KC0*u``, keeps the
         quadratures of KC0, whereas the nonlinear terms of
         :meth:`._update_probe_finte_nonlinear`, KCNL and KG use the
-        two-by-two quadrature; each part of the strain energy is
-        differentiated with its own quadrature, so the Jacobian remains exact.
+        two-by-two quadrature, with the slopes of `w` at the centroid, see
+        :meth:`.update_KG`; each part of the strain energy is differentiated
+        with its own quadrature, so the Jacobian remains exact.
         The element matrix is computed by :meth:`._update_probe_KCNLve` and
         rotated to global coordinates as in :meth:`.update_KC0`.
 
@@ -5947,7 +5990,9 @@ cdef class Quad4R:
                          ):
         r"""Update sparse vectors for geometric stiffness matrix KG
 
-        Two-point Gauss-Legendre quadrature is used.
+        The stress resultants are integrated with a two-point Gauss-Legendre
+        quadrature in each direction and the slopes of `w` are taken at the
+        centroid, see the Notes.
 
         Before this function is called, the probe :class:`.Quad4RProbe`
         attribute of the :class:`.Quad4R` object must be updated using
@@ -5988,8 +6033,7 @@ cdef class Quad4R:
 
         Notes
         -----
-        The two-point quadrature showed more accuracy for linear buckling load
-        predictions. The matrix is
+        The matrix is
 
         .. math::
 
@@ -5999,14 +6043,38 @@ cdef class Quad4R:
             + \boldsymbol{G}_y^\top \boldsymbol{G}_x) \right)
 
         with `\boldsymbol{G}_x` and `\boldsymbol{G}_y` the rows of `w_{,x}`
-        and `w_{,y}` of
-        :meth:`._update_probe_BL_G`, `w` being the displacement along the
+        and `w_{,y}` at the centroid, see :meth:`._update_probe_BL_G`, `w` being the displacement along the
         element normal, i.e. the combination of the global translations with
         ``r13, r23, r33``, and `\{N_{xx}, N_{yy}, N_{xy}\}^\top = \boldsymbol{A} \boldsymbol{\epsilon}
         + \boldsymbol{B} \boldsymbol{\kappa}` the stress resultants of the linear strains of the
         Notes of :mod:`pyfe3d.quad4r`. KG is linear in the displacements
         ``ue``, such that ``KC0 + lambda*KG`` gives the linear buckling problem
         for the load multiplier ``lambda`` of the pre-buckling state.
+
+        The slopes are taken at the centroid, the single integration point of
+        the transverse shear and of the curvatures in KC0, whereas the stress
+        resultants are integrated with two points in each direction. The
+        hourglass pattern of `w`, `w = \xi \eta`, has no gradient at the
+        centroid, so it has no geometric stiffness, just as it has no
+        stiffness in KC0 besides the artificial one of `E^{(h)}_w`, see
+        :meth:`.update_KC0`. With the slopes at the two-point quadrature
+        points, as before version 0.12.0, that pattern had the geometric
+        stiffness of the full quadrature, and a linear buckling analysis could
+        return a spurious mode of `w` alternating in sign from node to node,
+        below the physical buckling load. On a simply supported square plate
+        with `b/h = 10` under uniaxial compression, the lowest buckling load
+        was 41 % below the Mindlin solution with 16 by 16 elements, `h/\ell =
+        1.6`, and 86 % below with 48 by 48 elements; with `b/h = 100` and the
+        transverse shear stiffness reduced to 1/1000 of the isotropic one, as
+        in a sandwich, it was 60 % below with 8 by 8 elements, `h/\ell =
+        0.08`. The thin elements of the isotropic plate were protected only
+        because the transverse shear energy of the smooth envelope of that
+        pattern exceeded its geometric work. With the slopes at the centroid
+        these cases converge to the Mindlin solution, and the buckling loads
+        of coarse meshes of thin plates increase slightly, e.g. 11.4 % instead
+        of 10.0 % above the Mindlin solution with 8 by 8 elements, `b/h =
+        100` and hard simple supports. See
+        ``tests/test_quad4r_geometric_hourglass.py``.
 
         """
         cdef double *ue
@@ -6023,6 +6091,8 @@ cdef class Quad4R:
         cdef double r13, r23, r33
         cdef double j11, j12, j21, j22
         cdef double S1_x, S2_x, S3_x, S4_x, S1_y, S2_y, S3_y, S4_y
+        cdef double Scx[4]
+        cdef double Scy[4]
         cdef double Nxx, Nyy, Nxy
 
         with nogil:
@@ -6503,7 +6573,11 @@ cdef class Quad4R:
                 KGr[k] = 2+c4
                 KGc[k] = 2+c4
 
-            # NOTE full integration for KG with two-point Gauss-Legendre quadrature
+            # NOTE the slopes of w are taken at the centroid, see the Notes of
+            #      update_KG
+            _centroid_slopes(x1, x2, x3, x4, y1, y2, y3, y4, Scx, Scy)
+
+            # NOTE two-point Gauss-Legendre quadrature for the stress resultants
             wij = 1.
             points[0] = -0.5773502691896257645092
             points[1] = +0.5773502691896257645092
@@ -6533,6 +6607,16 @@ cdef class Quad4R:
                     Nxx = ue[0]*(A11*S1_x + A16*S1_y) + ue[10]*(B11*S2_x + B16*S2_y) + ue[12]*(A11*S3_x + A16*S3_y) + ue[13]*(A12*S3_y + A16*S3_x) - ue[15]*(B12*S3_y + B16*S3_x) + ue[16]*(B11*S3_x + B16*S3_y) + ue[18]*(A11*S4_x + A16*S4_y) + ue[19]*(A12*S4_y + A16*S4_x) + ue[1]*(A12*S1_y + A16*S1_x) - ue[21]*(B12*S4_y + B16*S4_x) + ue[22]*(B11*S4_x + B16*S4_y) - ue[3]*(B12*S1_y + B16*S1_x) + ue[4]*(B11*S1_x + B16*S1_y) + ue[6]*(A11*S2_x + A16*S2_y) + ue[7]*(A12*S2_y + A16*S2_x) - ue[9]*(B12*S2_y + B16*S2_x)
                     Nyy = ue[0]*(A12*S1_x + A26*S1_y) + ue[10]*(B12*S2_x + B26*S2_y) + ue[12]*(A12*S3_x + A26*S3_y) + ue[13]*(A22*S3_y + A26*S3_x) - ue[15]*(B22*S3_y + B26*S3_x) + ue[16]*(B12*S3_x + B26*S3_y) + ue[18]*(A12*S4_x + A26*S4_y) + ue[19]*(A22*S4_y + A26*S4_x) + ue[1]*(A22*S1_y + A26*S1_x) - ue[21]*(B22*S4_y + B26*S4_x) + ue[22]*(B12*S4_x + B26*S4_y) - ue[3]*(B22*S1_y + B26*S1_x) + ue[4]*(B12*S1_x + B26*S1_y) + ue[6]*(A12*S2_x + A26*S2_y) + ue[7]*(A22*S2_y + A26*S2_x) - ue[9]*(B22*S2_y + B26*S2_x)
                     Nxy = ue[0]*(A16*S1_x + A66*S1_y) + ue[10]*(B16*S2_x + B66*S2_y) + ue[12]*(A16*S3_x + A66*S3_y) + ue[13]*(A26*S3_y + A66*S3_x) - ue[15]*(B26*S3_y + B66*S3_x) + ue[16]*(B16*S3_x + B66*S3_y) + ue[18]*(A16*S4_x + A66*S4_y) + ue[19]*(A26*S4_y + A66*S4_x) + ue[1]*(A26*S1_y + A66*S1_x) - ue[21]*(B26*S4_y + B66*S4_x) + ue[22]*(B16*S4_x + B66*S4_y) - ue[3]*(B26*S1_y + B66*S1_x) + ue[4]*(B16*S1_x + B66*S1_y) + ue[6]*(A16*S2_x + A66*S2_y) + ue[7]*(A26*S2_y + A66*S2_x) - ue[9]*(B26*S2_y + B66*S2_x)
+
+                    # NOTE slopes of w at the centroid
+                    S1_x = Scx[0]
+                    S2_x = Scx[1]
+                    S3_x = Scx[2]
+                    S4_x = Scx[3]
+                    S1_y = Scy[0]
+                    S2_y = Scy[1]
+                    S3_y = Scy[2]
+                    S4_y = Scy[3]
 
                     k = self.init_k_KG
                     KGv[k] += r13**2*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
@@ -6836,7 +6920,8 @@ cdef class Quad4R:
         .. note:: A constant stress state is assumed within the element,
                   according to the given values of `N_{xx}, N_{yy}, N_{xy}`.
 
-        Two-point Gauss-Legendre quadrature is used.
+        The slopes of `w` are taken at the centroid, see the Notes of
+        :meth:`.update_KG`.
 
         Before this function is called, the probe :class:`.Quad4RProbe`
         attribute of the :class:`.Quad4R` object must be updated using
@@ -6875,8 +6960,9 @@ cdef class Quad4R:
         -----
         The matrix is the one of :meth:`.update_KG`, with the given constant
         stress resultants ``Nxx, Nyy, Nxy`` instead of the ones computed from
-        the displacements of the probe. The two-point quadrature showed more
-        accuracy for linear buckling load predictions.
+        the displacements of the probe. With constant stress resultants and
+        the slopes at the centroid, it is the element area times the
+        integrand at the centroid.
 
         """
         cdef int c1, c2, c3, c4, i, j, k
@@ -6887,6 +6973,8 @@ cdef class Quad4R:
         cdef double r13, r23, r33
         cdef double j11, j12, j21, j22
         cdef double S1_x, S2_x, S3_x, S4_x, S1_y, S2_y, S3_y, S4_y
+        cdef double Scx[4]
+        cdef double Scy[4]
 
         with nogil:
             # local to global transformation
@@ -7348,7 +7436,11 @@ cdef class Quad4R:
                 KGr[k] = 2+c4
                 KGc[k] = 2+c4
 
-            # NOTE full integration for KG with two-point Gauss-Legendre quadrature
+            # NOTE the slopes of w are taken at the centroid, see the Notes of
+            #      update_KG
+            _centroid_slopes(x1, x2, x3, x4, y1, y2, y3, y4, Scx, Scy)
+
+            # NOTE two-point Gauss-Legendre quadrature for the stress resultants
             wij = 1.
             points[0] = -0.5773502691896257645092
             points[1] = +0.5773502691896257645092
@@ -7374,6 +7466,16 @@ cdef class Quad4R:
                     S2_y = -0.25*eta*j21 + 0.25*j21 - 0.25*j22*xi - 0.25*j22
                     S3_y = 0.25*j21*(eta + 1) + 0.25*j22*(xi + 1)
                     S4_y = -0.25*eta*j21 - 0.25*j21 - 0.25*j22*xi + 0.25*j22
+
+                    # NOTE slopes of w at the centroid
+                    S1_x = Scx[0]
+                    S2_x = Scx[1]
+                    S3_x = Scx[2]
+                    S4_x = Scx[3]
+                    S1_y = Scy[0]
+                    S2_y = Scy[1]
+                    S3_y = Scy[2]
+                    S4_y = Scy[3]
 
                     k = self.init_k_KG
                     KGv[k] += r13**2*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
