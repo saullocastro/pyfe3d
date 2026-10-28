@@ -13,15 +13,64 @@ from pyfe3d.solver import linear_buckling
 
 
 def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
-    r"""Test case from reference
+    r"""Linear buckling of the laminated cylinder Z11 under a prescribed axial
+    shortening, displacement control against load control
+
+    The cylinder is Z11 of
 
         Saullo G. P. Castro, Christian Mittelstedt, Francisco A. C. Monteiro, Mariano
         A. Arbelo, Gerhard Ziegmann, Richard Degenhardt. "Linear buckling predictions
         of unstiffened laminated composite cylinders and cones under various loading
         and boundary conditions using semi-analytical models". Composite Structures,
-        2014. 10.1016/j.compstruct.2014.07.037
+        118, 303-315, 2014. 10.1016/j.compstruct.2014.07.037
 
-        Cylinder Z11
+    with the geometry and stacking sequence of its Table 4, p. 307, the
+    material Geier1997 of its Table 3, p. 307, and the boundary condition SS1
+    of its Table 1, p. 304, ``u = v = w = 0`` at both edges, the top edge being
+    moved axially by the prescribed shortening.
+
+    What is asserted is a property of the model and not a literature value.
+    The buckling load is computed three times on the same mesh:
+
+    1. displacement control, the axial shortening prescribed at the top edge;
+    2. displacement control with twice that shortening, which must halve the
+       load multiplier and leave ``Pcr`` unchanged, because the prebuckling
+       field is linear in the shortening and the geometric stiffness linear
+       in the prebuckling field;
+    3. load control, with the axial displacement of the top edge released in
+       the static analysis and loaded by the axial reaction forces of
+       analysis 1. The static solution is unique, so the prebuckling field,
+       the geometric stiffness and ``Pcr`` must be those of analysis 1. The
+       buckling analysis keeps the same constraints as analysis 1.
+
+    The three must agree to round-off, which checks the recovery of the
+    reaction forces from ``KC0``, the static solution with prescribed
+    displacements and the assembly of the geometric stiffness from a
+    displacement field through ``update_probe_ue`` and ``update_KG``.
+
+    Why there is no comparison with the paper. Table 6, p. 308, of Castro et
+    al. gives the axial buckling load of Z11, 282.82 kN with FSDT-BC2 and SS2
+    and 284.06 kN with FSDT-BC2 and CC2, the tests giving 228.0 kN (Z11) and
+    221.7 kN (Z23, the same laminate). SS1, the boundary condition here, is
+    not tabulated, it only appears through FSDT-BC1 with CC1 in the curves of
+    Fig. 12, p. 311. More importantly this element does not converge to a
+    physical axial buckling load of this cylinder on any mesh affordable in a
+    test. Measured with this test, ``Pcr`` in kN::
+
+        refinement  ntheta  elements     Pcr   time
+             1         40       440   -494.9    1 s
+             2         80      1920   -330.0   18 s
+             4        160      8000    -81.6  100 s
+
+    The first two are far above the 283 kN of the paper and the third has
+    already dropped to 29 per cent of it, which is the behaviour documented
+    below for the related laminate Z22, where the critical mode at such
+    meshes is a mesh-scale mode whose load keeps falling under refinement.
+    The mode of Z11 at ``ntheta = 160`` has not been examined. A converged
+    value would need elements of the order of the wall thickness, 1.25 mm,
+    that is several hundred thousand elements. A comparison would also need
+    the shear correction factor of 5/6 used by the paper (Sec. 6, p. 307),
+    which this test does not force.
 
     """
     data = Quad4Data()
@@ -34,8 +83,7 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     ntheta = 40*refinement # circumferential
     nlength = int(ntheta*L/b)
 
-    # NOTE material proporties from Table 3 in Castro et al.
-    # Actual values from reference can be found here https://github.com/saullocastro/compmech/blob/e7e5342bf212743e70da22c94cc0452911099db3/compmech/conecyl/conecylDB.py#L32C34-L32C76
+    # NOTE material Geier1997 of Table 3 in Castro et al.
     E11 = 123.55e9
     E22 = 8.708e9
     nu12 = 0.319
@@ -103,7 +151,6 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
         quad.c4 = DOF*nid_pos[n4]
         quad.init_k_KC0 = init_k_KC0
         quad.init_k_KG = init_k_KG
-        quad.K6ROT = 100.
         quad.update_rotation_matrix(ncoords_flatten, 0, 0, 1)
         quad.update_probe_xe(ncoords_flatten)
         quad.update_KC0(KC0r, KC0c, KC0v, prop)
@@ -127,123 +174,86 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
 
     bu = ~bk
 
-    u = np.zeros(N, dtype=DOUBLE)
-
-    compression = -0.001
     checkTopEdge = isclose(z, L)
-    u[2::DOF] += checkTopEdge*compression
-    uk = u[bk]
 
-    KC0uu = KC0[bu, :][:, bu]
-    KC0uk = KC0[bu, :][:, bk]
-    KC0kk = KC0[bk, :][:, bk]
+    def solve_static(bk_static, uk_static, fext_static):
+        bu_static = ~bk_static
+        Kuu = KC0[bu_static, :][:, bu_static]
+        Kuk = KC0[bu_static, :][:, bk_static]
+        rhs = fext_static[bu_static] - Kuk @ uk_static
+        # NOTE pre-conditioning the linear system
+        kuu_diag = Kuu.diagonal()
+        D_inv_sqrt = sp_diags(1.0/np.sqrt(np.maximum(kuu_diag, 1e-30)))
+        uu_scaled = spsolve(D_inv_sqrt @ Kuu @ D_inv_sqrt, D_inv_sqrt @ rhs)
+        u = np.zeros(N)
+        u[bu_static] = D_inv_sqrt @ uu_scaled
+        u[bk_static] = uk_static
+        return u
 
-    fextu = -KC0uk*uk
-
-    # NOTE pre-conditioning the linear system to improve convergence of the iterative solver
-    kuu_diag = KC0uu.diagonal()
-    kuu_diag_inv_sqrt = 1.0/np.sqrt(np.maximum(kuu_diag, 1e-30))
-    D_inv_sqrt = sp_diags(kuu_diag_inv_sqrt)
-    KC0uu_scaled = D_inv_sqrt @ KC0uu @ D_inv_sqrt
-    fextu_scaled = D_inv_sqrt @ fextu
-    uu_scaled = spsolve(KC0uu_scaled, fextu_scaled)
-    uu = D_inv_sqrt @ uu_scaled
-    u = np.zeros(N)
-    u[bu] = uu
-
-    for quad in quads:
-        quad.update_probe_xe(ncoords_flatten) # NOTE update affects the Quad4Probe class attribute xe
-        quad.update_probe_ue(u) # NOTE update affects the Quad4Probe class attribute ue
-        quad.update_KG(KGr, KGc, KGv, prop)
-    KG = coo_matrix((KGv, (KGr, KGc)), shape=(N, N)).tocsc()
-    KGuu = KG[bu, :][:, bu]
-    print('sparse KG created')
+    def buckling(u, num_eigvalues):
+        KGv[:] = 0
+        for quad in quads:
+            quad.update_probe_xe(ncoords_flatten) # NOTE update affects the Quad4Probe class attribute xe
+            quad.update_probe_ue(u) # NOTE update affects the Quad4Probe class attribute ue
+            quad.update_KG(KGr, KGc, KGv, prop)
+        KG = coo_matrix((KGv, (KGr, KGc)), shape=(N, N)).tocsc()
+        KC0uu = KC0[bu, :][:, bu]
+        KGuu = KG[bu, :][:, bu]
+        # NOTE pyfe3d.solver.linear_buckling equilibrates the diagonal,
+        #      estimates the Cayley shift and verifies that no lower load
+        #      multiplier was missed, which a hardcoded shift does not
+        return linear_buckling(KC0uu, KGuu, num_eigvalues=num_eigvalues, tol=1e-9)
 
     num_eig_lb = max(mode+1, 1)
 
+    # 1. displacement control
+    compression = -0.001
+    u_prescribed = np.zeros(N, dtype=DOUBLE)
+    u_prescribed[2::DOF] += checkTopEdge*compression
+    u = solve_static(bk, u_prescribed[bk], np.zeros(N))
+    # NOTE earlier versions of this test computed the geometric stiffness
+    #      from a displacement field that held the solution at the free
+    #      degrees-of-freedom but zero at the prescribed ones, dropping the
+    #      shortening of the top edge from the prebuckling field of the
+    #      elements of the top row. With the full field the load at
+    #      refinement=1 is -494.9 kN instead of -498.4 kN
+    # NOTE reaction forces at the constrained degrees-of-freedom
+    reactions = KC0 @ u
+    P = reactions[2::DOF][checkTopEdge].sum()
+    eigvals, eigvecsu = buckling(u, num_eig_lb)
     eigvecs = np.zeros((N, num_eig_lb))
-
-    # NOTE pyfe3d.solver.linear_buckling equilibrates the diagonal,
-    #      estimates the Cayley shift and verifies that no lower load
-    #      multiplier was missed, which a hardcoded shift does not
-    eigvals, eigvecsu = linear_buckling(KC0uu, KGuu, num_eigvalues=num_eig_lb, tol=1e-9)
-
     eigvecs[bu] = eigvecsu
-
     print('eigvals', eigvals)
-
-    print('linear buckling analysis OK')
-    fext = np.zeros(N)
-    fk = KC0uk.T*uu + KC0kk*uk
-    fext[bk] = fk
-    Pcr = (eigvals[0]*fext[2::DOF][checkTopEdge]).sum()
+    Pcr = eigvals[0]*P
     print('Pcr =', Pcr)
 
-    # NOTE values used for CI tests, values derived after running the tests in
-    # a local compuer with refinement=5 first and then with refinement=1
-    reference_Pcr_refinement_5 =  -159363.4
-    #assert np.isclose(Pcr, -518147.5, rtol=1e-3)
-    # NOTE there is no active assertion on Pcr here, so this test only checks
-    #      that the analysis runs. Table 6 of Castro et al. does tabulate the
-    #      axial buckling load of this cylinder, 282.82 kN for FSDT-BC2 with
-    #      SS2 and 284.06 kN with CC2, against test results of 228.0 and
-    #      221.7 kN, so it is the one cylinder case of this suite where a
-    #      published number is available for a direct comparison. The value
-    #      computed above is far from it, in part because the load is applied
-    #      as a prescribed axial shortening with all three translations held
-    #      at both edges, which is not the uniform membrane prestress of the
-    #      paper, and in part because this test does not force the shear
-    #      correction factor of 5/6 that the paper uses, see the beginning of
-    #      its Section 6.
-    #
-    # NOTE a verification against Table 6 needs more than those two changes,
-    #      and it needs a mesh fine enough to resolve the critical
-    #      wavelength. With the uniform membrane prestress of Eq. (13) of the
-    #      paper applied through update_KG_given_stress, and SS2 or CC2 from
-    #      its Table 1, a mesh that does not resolve that wavelength puts
-    #      spurious modes below the physical one, at two elements per
-    #      wavelength, whose load falls as the square of the element size.
-    #      Those are genuine eigenvalues of the discrete problem and not a
-    #      solver artefact: the Rayleigh quotient agrees to all digits, the
-    #      residual is 4e-10, and an independent shift-invert finds the same
-    #      values.
-    #
-    #      They disappear once the mesh resolves the critical wavelength. On
-    #      an isotropic cylinder of this radius and length with a 5 mm wall,
-    #      for which sqrt(R*t) = 35.4 mm and the classical load
-    #      E t^2/(R sqrt(3(1-nu^2))) times the circumference is 19.014 MN,
-    #
-    #          ntheta   element   el per sqrt(R*t)   lowest eigenvalue
-    #             80    19.6 mm         1.8            11.09 MN
-    #            160     9.8 mm         3.6             2.48 MN
-    #            240     6.5 mm         5.4             1.07 MN
-    #            320     4.9 mm         7.2            18.73 MN
-    #            480     3.3 mm        10.8            18.46 MN
-    #
-    #      and at ntheta = 320 the ten lowest eigenvalues form a cluster from
-    #      18.73 to 19.24 MN, all within 1.5 per cent of the classical value,
-    #      with nothing below them. That is a good verification of the
-    #      element and it shows the criterion: about seven elements per
-    #      sqrt(R*t).
-    #
-    #      Axial compression is much more demanding than the torsion of
-    #      test_quad4_linear_buckling_cylinder_Nxy.py because of that
-    #      wavelength. Under torsion it spans about a tenth of the
-    #      circumference, some 10 waves, resolved with 5 to 30 elements per
-    #      wave already at the meshes used there. Under axial compression it
-    #      is of the order of sqrt(R*t) = 17.7 mm for this laminate, so the
-    #      same criterion asks for about 620 elements around the
-    #      circumference, of the order of 130000 elements.
-    #
-    # NOTE the "seven elements per sqrt(R*t)" criterion above was measured on
-    #      the isotropic cylinder only, and a later run of the laminated
-    #      cylinder Z22 at ntheta = 640 shows that it does not carry over: it
-    #      is a coincidence of that wall thickness. The criterion that fits
-    #      both datasets is the element size itself, the spurious modes being
-    #      suppressed once the element size is of the order of the shell
-    #      thickness rather than of sqrt(R*t). That is a much harsher
-    #      requirement and it is the reason the axial case is not asserted
-    #      here.
+    # 2. displacement control with twice the shortening
+    u2 = solve_static(bk, 2*u_prescribed[bk], np.zeros(N))
+    P2 = (KC0 @ u2)[2::DOF][checkTopEdge].sum()
+    eigvals2, _ = buckling(u2, num_eig_lb)
+    Pcr2 = eigvals2[0]*P2
+    print('Pcr with twice the shortening =', Pcr2)
+
+    # 3. load control, the axial displacement of the top edge released in
+    #    the static analysis and loaded by the axial reactions of analysis 1
+    bk_load = bk.copy()
+    bk_load[2::DOF][checkTopEdge] = False
+    fext = np.zeros(N)
+    fext[2::DOF][checkTopEdge] = reactions[2::DOF][checkTopEdge]
+    u3 = solve_static(bk_load, np.zeros(bk_load.sum()), fext)
+    eigvals3, _ = buckling(u3, num_eig_lb)
+    Pcr3 = eigvals3[0]*fext[2::DOF].sum()
+    print('Pcr under load control =', Pcr3)
+
+    assert Pcr < 0
+    assert np.isclose(eigvals2[0], eigvals[0]/2, rtol=1e-6)
+    assert np.isclose(Pcr2, Pcr, rtol=1e-6)
+    assert np.allclose(u3, u, rtol=0, atol=1e-9*abs(compression))
+    assert np.isclose(Pcr3, Pcr, rtol=1e-6)
+
+    # NOTE a record of a related study on the laminated cylinder Z22 of
+    #      Castro et al., kept because it explains why the axial buckling
+    #      load of these laminated cylinders cannot be verified in a test.
     #
     # NOTE for the record, the mesh convergence of the axial buckling load,
     #      here for cylinder Z22 with the uniform membrane prestress of

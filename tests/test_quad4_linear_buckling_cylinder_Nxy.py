@@ -4,114 +4,139 @@ sys.path.append('..')
 import time
 import numpy as np
 from numpy import isclose
-from scipy.sparse.linalg import spsolve
 from scipy.sparse import coo_matrix
 
-from pyfe3d.shellprop_utils import laminated_plate
+from pyfe3d.shellprop_utils import laminated_plate, isotropic_plate
 from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 from pyfe3d.solver import linear_buckling
 
 
+def _cylindrical_transformation(ncoords):
+    r"""Sparse matrix ``T`` such that ``u_global = T @ u_cyl``
+
+    For a cylinder along the global z axis the nodal degrees-of-freedom of
+    ``u_cyl`` are the radial, circumferential and axial translations and the
+    rotations about the same three directions. A matrix ``K`` assembled in
+    the global system becomes ``T.T @ K @ T``.
+
+    """
+    theta = np.arctan2(ncoords[:, 1], ncoords[:, 0])
+    c = np.cos(theta)
+    s = np.sin(theta)
+    one = np.ones_like(c)
+    zero = np.zeros_like(c)
+    # NOTE columns of the 3x3 blocks are the radial, circumferential and
+    #      axial unit vectors
+    Q = np.array([[c, -s, zero],
+                  [s, c, zero],
+                  [zero, zero, one]]) # shape (3, 3, num_nodes)
+    rows = []
+    cols = []
+    vals = []
+    base = DOF*np.arange(len(theta))
+    for offset in (0, 3):
+        for i in range(3):
+            for j in range(3):
+                rows.append(base + offset + i)
+                cols.append(base + offset + j)
+                vals.append(Q[i, j])
+    N = DOF*len(theta)
+    return coo_matrix((np.concatenate(vals), (np.concatenate(rows),
+        np.concatenate(cols))), shape=(N, N)).tocsc()
+
+
 def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
-    r"""Test case from reference
+    r"""Torsional buckling of the laminated cylinders Z11 and Z33 of
 
         Saullo G. P. Castro, Christian Mittelstedt, Francisco A. C. Monteiro, Mariano
         A. Arbelo, Gerhard Ziegmann, Richard Degenhardt. "Linear buckling predictions
         of unstiffened laminated composite cylinders and cones under various loading
         and boundary conditions using semi-analytical models". Composite Structures,
-        2014. 10.1016/j.compstruct.2014.07.037
+        118, 303-315, 2014. 10.1016/j.compstruct.2014.07.037
 
-        Cylinders Z11 and Z33 are used given their distinct torsion buckling
-        behaviour.
+    The paper gives the geometry (Table 4, p. 307, R = 250 mm, H = 510 mm,
+    ply thickness 0.125 mm), the material Geier1997 (Table 3, p. 307), the
+    stacking sequences (Table 4, from inwards to outwards), the boundary
+    condition CC2, ``v = w = w,x = 0`` with ``u`` free (Table 1, p. 304), the
+    torsion load ``N_xtheta = -T/(2*pi*r**2)`` (Eq. (13), p. 305), and the shear
+    correction factor 5/6 (Sec. 6, p. 307). It does not tabulate the
+    torsional buckling load. The reference values are the intercepts with the
+    zero axial load axis, that is pure torsion, of the FSDT-BC2 curves of
+    Fig. 13, p. 311 ("Combined torsion-axial compression, FSDT-BC2, CC2"),
+    read off the figure to about 0.1 kNm:
+
+        Z11    T = +16.8 kNm   and   T = -15.8 kNm
+        Z33    T = +9.2 kNm    and   T = -9.5 kNm
+
+    the two signs differing because the laminates are unsymmetric.
+    ``Tcr = eigval*Nxy*b*R`` below, with ``Nxy < 0``, is minus the torque T of
+    the paper, so ``-Tcr`` is compared with the positive intercepts. Running
+    the same model with ``Nxy > 0`` gives the negative intercepts.
+
+    Measured ``|Tcr|`` in Nm, for ``ntheta`` elements around the
+    circumference and nearly square elements, and its relative difference to
+    the intercept of Fig. 13 of the same sign::
+
+        ntheta        Z11, Nxy < 0       Z11, Nxy > 0
+           40      26567.1  +58.1 %    25090.6  +58.8 %
+           80      18773.5  +11.7 %    17656.8  +11.8 %
+          120      17548.8   +4.5 %    16507.2   +4.5 %
+          160      17162.0   +2.2 %    16144.8   +2.2 %
+          240      16891.2   +0.5 %    15891.1   +0.6 %
+        extrapolated 16684   -0.7 %      15697   -0.7 %
+
+        ntheta        Z33, Nxy < 0       Z33, Nxy > 0
+           40      17343.1  +88.5 %    17318.5  +82.3 %
+           80      10788.3  +17.3 %    10987.5  +15.7 %
+          120       9880.7   +7.4 %    10082.2   +6.1 %
+          160       9543.3   +3.7 %     9799.2   +3.2 %
+          240       9310.1   +1.2 %     9602.5   +1.1 %
+        extrapolated  9136   -0.7 %       9454   -0.5 %
+
+    The extrapolation fits ``a + c*ntheta**-p`` to the three finest meshes,
+    giving p = 2.1 in every column. The element thus converges to within
+    0.5 to 0.7 per cent of the semi-analytical prediction for both laminates
+    and both senses of the torque, which is the precision with which the
+    figure can be read. Quad4R converges to the same values, 16684 and 9136
+    Nm, see tests/test_quad4r_linear_buckling_cylinder_Nxy.py.
+
+    The default ``refinement=1`` uses ``ntheta = 80``, where the measured
+    discretisation error is +11.7 % (Z11) and +17.3 % (Z33), and the test
+    takes about 8 s. ``refinement=2`` uses ``ntheta = 160``, +2.2 and +3.7 %,
+    and takes about 70 s.
 
     """
-    # NOTE in Fig. 1 of Castro's paper that in their coordinate system a
-    # positive angle should be represented also a positive angle here
-    # NOTE stacking sequences from Table 4 in Castro et al.
+    # NOTE stacking sequences from Table 4 of Castro et al., from inwards to
+    #      outwards. The element normal of this mesh points outwards and the
+    #      element x axis is the cylinder axis, so the plies are listed from
+    #      the bottom to the top of the laminate. That the sign conventions
+    #      of the ply angles and of the torque agree with those of the paper
+    #      is shown by the table of the docstring: Nxy < 0 reproduces the
+    #      positive-torque intercepts of Fig. 13 and Nxy > 0 the negative
+    #      ones, for both laminates
     stacks = {
-        # NOTE actual values from reference can be found here https://github.com/saullocastro/compmech/blob/e7e5342bf212743e70da22c94cc0452911099db3/compmech/conecyl/conecylDB.py#L334
         'Z11' : [+60, -60, 0, 0, +68, -68, +52, -52, +37, -37],
-        # NOTE actual values from reference can be found here https://github.com/saullocastro/compmech/blob/e7e5342bf212743e70da22c94cc0452911099db3/compmech/conecyl/conecylDB.py#L145
         'Z33' : [0, 0, 19, -19, 37, -37, 45, -45, 51, -51],
     }
-    # NOTE the paper is the source of the geometry, the material, the
-    #      stacking sequences and the boundary conditions. It does not
-    #      tabulate the torsional buckling load: the closest published value
-    #      is the intercept of the curves of Fig. 13 (FSDT-BC2, CC2) with the
-    #      axis of zero axial load, which is pure torsion. Read off that
-    #      figure, those intercepts are about
-    #
-    #          Z11   -15.4 kNm  and  +16.6 kNm
-    #          Z33    -9.3 kNm  and   +9.0 kNm
-    #
-    #      the two signs differing because the laminates are unsymmetric.
-    #      Note that ``Tcr`` below is ``eigval*Nxy*b*R``, which by the sign
-    #      convention stated further down is minus the torque T of the paper,
-    #      so the magnitudes here are to be compared with the positive
-    #      intercepts, +16.6 and +9.0 kNm.
-    #
-    #      The converged values below are therefore about 16 per cent (Z11)
-    #      and 23 per cent (Z33) above the semi-analytical prediction. They
-    #      are kept as a regression lock of this element and not as a claim
-    #      of agreement with the paper, and the gap is not explained by the
-    #      drilling formulation: it is the same for every drilling model and
-    #      for both quadrilateral elements, which agree with each other to
-    #      about one per cent at this mesh.
-    #
-    #      The refinement=8 values are mesh converged. For Z11 the critical
-    #      mode is a long wave pattern and the sequence over ntheta is
-    #
-    #          ntheta    40      80     160     320
-    #          Tcr   -33163  -22193  -19791  -19214  Nm
-    #          waves      8       9      10      10
-    #          el/wave  5.0     8.9    16.0    30.4
-    #
-    #      so the mode is well resolved and the load is settling near
-    #      -19.1 kNm, the last step being 2.9 per cent. Torsional buckling is
-    #      favourable in this respect: its critical wavelength spans about a
-    #      tenth of the circumference. The axial compression of the same
-    #      cylinder is not comparable in this way, its critical half
-    #      wavelength being of the order of sqrt(R*t) = 17.7 mm, some 89
-    #      circumferential waves, so a comparison with Table 6 of the paper
-    #      needs a far finer mesh than the ones used here, see
-    #      test_quad4_linear_buckling_cylinder_displ.py
-    # NOTE values updated in 0.10.0, when the physics-based drilling
-    #      stiffness of Allman, Hughes and Brezzi became the default. The
-    #      previous values were Z11 -18365.1 and Z33 -10844.0, obtained with
-    #      a Quad4 whose drilling penalty coefficient K6ROT*1e-6*A66 had been
-    #      lost, leaving an effective coefficient of 1. Restoring that
-    #      coefficient alone gives Z11 -19159.9 and Z33 -11091.2, and the new
-    #      default gives the values below, only 0.3% and 0.2% away from them.
-    #      At this converged mesh the three-way agreement is the useful
-    #      check: the restored penalty, the physics-based default and the
-    #      Quad4R values -18995.4 and -11032.4 all lie within about 1%,
-    #      whereas the lost coefficient put Quad4 3.3% away from Quad4R
-    reference_Tcr_value_Castro_refinement_8 = {
-        'Z11' : -19214.0,
-        'Z33' : -11110.4
+    # NOTE intercepts of the FSDT-BC2 CC2 curves of Fig. 13 of Castro et al.
+    #      with the axis of zero axial load, positive torque, in Nm
+    reference_T = {
+        'Z11' : 16.8e3,
+        'Z33' : 9.2e3,
     }
-    # NOTE values used for CI tests, values derived after running the tests in
-    # a local compuer with refinement=8 first and then with refinement=1
-    # NOTE values updated in 0.10.0 together with the refinement=8 ones above.
-    #      The previous values were Z11 -31583.4 and Z33 -21716.0, and the
-    #      restored penalty alone gives Z11 -32074.5 and Z33 -22330.7. This
-    #      mesh is far too coarse for the buckling load, roughly 70% above
-    #      the converged one, so the coarse-mesh values are a regression lock
-    #      and not a measure of accuracy. Running this case with
-    #      quad.drilling_model = 1 recovers the penalty values
-    reference_Tcr_value_Castro_refinement_1 = {
-        'Z11' : -33162.7,
-        'Z33' : -23028.4
+    # NOTE upper bounds of the relative error, from the measured
+    #      discretisation errors of the docstring rounded up. The lower bound
+    #      -0.03 covers the extrapolated -0.7 % and the reading precision of
+    #      the figure, 0.1 kNm, which is 0.6 % for Z11 and 1.1 % for Z33
+    upper_bound = {
+        1: {'Z11': 0.13, 'Z33': 0.19},
+        2: {'Z11': 0.03, 'Z33': 0.045},
     }
+    if refinement not in upper_bound:
+        raise ValueError('refinement must be 1 or 2')
 
     for cyl in ['Z11', 'Z33']:
         stack = stacks[cyl]
-        if refinement == 1:
-            ref_Tcr = reference_Tcr_value_Castro_refinement_1[cyl]
-        elif refinement == 8:
-            ref_Tcr = reference_Tcr_value_Castro_refinement_8[cyl]
-        else:
-            raise ValueError('refinement must be 1 or 8')
 
         data = Quad4Data()
         probe = Quad4Probe()
@@ -120,15 +145,14 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         R = 0.250 # m
         b = 2*np.pi*R # m
 
-        ntheta = 40*refinement # circumferential
+        ntheta = 80*refinement # circumferential
         nlength = int(ntheta*L/b)
         if nlength % 2 == 0:
             nlength += 1
         print('ntheta', ntheta)
         print('nlength', nlength)
 
-        # NOTE material proporties from Table 3 in Castro et al.
-        # Actual values from reference can be found here https://github.com/saullocastro/compmech/blob/e7e5342bf212743e70da22c94cc0452911099db3/compmech/conecyl/conecylDB.py#L32C34-L32C76
+        # NOTE material Geier1997 of Table 3 of Castro et al.
         E11 = 123.55e9
         E22 = 8.708e9
         nu12 = 0.319
@@ -141,7 +165,6 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         # NOTE forcing 5/6 according to Castro et al., beginning of Section 6
         prop = laminated_plate(stack=stack, plyt=plyt, laminaprop=laminaprop,
                                shear_correction='constant')
-
 
         nids = 1 + np.arange(nlength*(ntheta+1))
         nids_mesh = nids.reshape(nlength, ntheta+1)
@@ -180,6 +203,13 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         KGv = np.zeros(data.KG_SPARSE_SIZE*num_elements, dtype=DOUBLE)
         N = DOF*nlength*ntheta
 
+        # NOTE in Fig. 1 and Eq. (13) of Castro et al. a positive torque (T)
+        #      gives a negative shear force per unit length Nxy. The sign
+        #      must be consistent with the sign of the ply angles because it
+        #      changes the buckling load of an unsymmetric laminate
+        Nxy = -1000/b
+        print('Nxy', Nxy)
+
         quads = []
         init_k_KC0 = 0
         init_k_KG = 0
@@ -196,10 +226,12 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
             quad.c4 = DOF*nid_pos[n4]
             quad.init_k_KC0 = init_k_KC0
             quad.init_k_KG = init_k_KG
-            quad.K6ROT = 100.
             quad.update_rotation_matrix(ncoords_flatten, 0., 0., 1.)
             quad.update_probe_xe(ncoords_flatten)
             quad.update_KC0(KC0r, KC0c, KC0v, prop)
+            # NOTE the element x axis is the cylinder axis, so the membrane
+            #      prestress in the element frame is (0, 0, Nxy)
+            quad.update_KG_given_stress(0, 0, Nxy, KGr, KGc, KGv)
             quads.append(quad)
             init_k_KC0 += data.KC0_SPARSE_SIZE
             init_k_KG += data.KG_SPARSE_SIZE
@@ -207,48 +239,50 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         print('elements created', time.time()-t0)
 
         KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
+        KG = coo_matrix((KGv, (KGr, KGc)), shape=(N, N)).tocsc()
 
-        print('sparse KC0 created')
+        print('sparse KC0 and KG created')
+
+        # NOTE boundary condition CC2 of Table 1 of Castro et al.,
+        #      v = w = w,x = 0 at both edges, with the axial displacement u
+        #      and the rotation about the radial direction free. These are
+        #      constraints on the radial and circumferential directions,
+        #      which change from node to node, so KC0 and KG are transformed
+        #      to nodal cylindrical degrees-of-freedom
+        #      (u_r, u_theta, u_z, r_r, r_theta, r_z)
+        T = _cylindrical_transformation(ncoords)
+        KC0 = (T.T @ KC0 @ T).tocsc()
+        KG = (T.T @ KG @ T).tocsc()
 
         bk = np.zeros(N, dtype=bool)
-
-        # NOTE cylinders with CC2 boundary condition as decribed in Table 1 of Castro et al.
-        bottom_edge = isclose(z, 0)
-        bk[0::DOF][bottom_edge] = True
-        bk[1::DOF][bottom_edge] = True
-        bk[3::DOF][bottom_edge] = True
-        bk[4::DOF][bottom_edge] = True
-
-        top_edge = isclose(z, L)
-        bk[0::DOF][top_edge] = True
-        bk[1::DOF][top_edge] = True
-        bk[3::DOF][top_edge] = True
-        bk[4::DOF][top_edge] = True
-
-        middle = isclose(z, L/2)
-        bk[2::DOF][middle] = True
+        edges = isclose(z, 0) | isclose(z, L)
+        bk[0::DOF][edges] = True # w
+        bk[1::DOF][edges] = True # v
+        bk[4::DOF][edges] = True # w,x, rotation about the circumferential direction
+        # NOTE removing the rigid axial translation with a single node
+        middle = np.where(isclose(z, L/2))[0]
+        bk[2::DOF][middle[0]] = True
+        # NOTE earlier versions of this test held the axial displacement of the
+        #      whole ring of nodes at mid-length and both rotations at the
+        #      edges, which is not CC2. That ring constraint stiffens the
+        #      torsional mode, whose buckles are inclined helices crossing
+        #      the mid-length: at ntheta = 80 it raised Tcr of Z11 from
+        #      -18980.9 to -22193.3 Nm, +16.9 per cent, and holding the
+        #      rotation about the radial direction at the edges added another
+        #      1.1 per cent. Together they were the 16 per cent (Z11) and
+        #      23 per cent (Z33) by which the converged values exceeded
+        #      Fig. 13, -19214.0 and -11110.4 Nm at ntheta = 320
 
         bu = ~bk
-
-        # NOTE in Fig. 1 of Castro et al. that a positive torque (T) represents a
-        # negative distributed shear force Nxy. This must be consistent with the
-        # sign of the stacking sequence angles given that it significantly
-        # influences the results for torsion buckling.
-        #
-        Nxy = -1000/b
-        print('Nxy', Nxy)
-
-        for quad in quads:
-            quad.update_probe_xe(ncoords_flatten) # NOTE update affects the Quad4Probe class attribute xe
-            quad.update_KG_given_stress(0, 0, Nxy, KGr, KGc, KGv)
-        KG = coo_matrix((KGv, (KGr, KGc)), shape=(N, N)).tocsc()
 
         KC0uu = KC0[bu, :][:, bu]
         KGuu = KG[bu, :][:, bu]
 
-        print('sparse KG created')
-
-        num_eig_lb = max(mode+1, 3)
+        # NOTE the torsional buckling loads come in close pairs. With only 4
+        #      load multipliers requested eigsh() misses members of these
+        #      clusters for Z33 at ntheta = 80, which the verification of
+        #      linear_buckling detects and reports as an error; 6 are enough
+        num_eig_lb = max(mode+1, 6)
 
         eigvecs = np.zeros((N, num_eig_lb))
 
@@ -258,6 +292,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         eigvals, eigvecsu = linear_buckling(KC0uu, KGuu, num_eigvalues=num_eig_lb, tol=1e-9)
 
         eigvecs[bu] = eigvecsu
+        eigvecs = T @ eigvecs # back to the global system
         print('eigvals', eigvals)
 
         print('linear buckling analysis OK')
@@ -275,31 +310,16 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
             contour_label = 'Radial displacement'
             contour_vec = np.sqrt(vector[0::DOF]**2 + vector[1::DOF]**2)
 
-            displ_vec = np.zeros_like(ncoords)
-            displ_vec[:, 0] = vector[0::DOF]*10
-            displ_vec[:, 1] = vector[1::DOF]*10
-            displ_vec[:, 2] = vector[2::DOF]*10
-            intensitymode = 'vertex'
-
             plotter = pv.Plotter(off_screen=False)
             faces_quad = []
             for q in quads:
                 faces_quad.append([4, nid_pos[q.n1], nid_pos[q.n2], nid_pos[q.n3], nid_pos[q.n4]])
             faces_quad = np.array(faces_quad)
             quad_plot = pv.PolyData(ncoords, faces_quad)
-            if contour_vec is not None:
-                quad_plot[contour_label] = contour_vec
-                plotter.add_mesh(quad_plot, scalars=contour_label,
-                        cmap=contour_colorscale, edge_color='black', show_edges=True,
-                        line_width=1.)
-            else:
-                plotter.add_mesh(quad_plot, edge_color='black', show_edges=True,
-                        line_width=1.)
-            displ_vec = None
-            if displ_vec is not None:
-                quad_plot = pv.PolyData(ncoords + displ_vec, faces_quad)
-                plotter.add_mesh(quad_plot, edge_color='red', show_edges=True,
-                        line_width=1., opacity=0.5)
+            quad_plot[contour_label] = contour_vec
+            plotter.add_mesh(quad_plot, scalars=contour_label,
+                    cmap=contour_colorscale, edge_color='black', show_edges=True,
+                    line_width=1.)
             #NOTE plotting coordinate system
             xaxis = pv.Arrow(start=(0, 0, 0), direction=(1, 0, 0), scale=R/3)
             plotter.add_mesh(xaxis, color='blue')
@@ -308,40 +328,189 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
             zaxis = pv.Arrow(start=(0, 0, 0), direction=(0, 0, 1), scale=R/3)
             plotter.add_mesh(zaxis, color='green')
 
-            for q in quads:
-                pos1 = nid_pos[q.n1]
-                pos2 = nid_pos[q.n2]
-                pos3 = nid_pos[q.n3]
-                pos4 = nid_pos[q.n4]
-                centroid = (ncoords[pos1] + ncoords[pos2] + ncoords[pos3] + ncoords[pos4])/4
-                ze = np.array([0., 0., 1.])
-                zg = np.array([[q.r11, q.r12, q.r13],
-                               [q.r21, q.r22, q.r23],
-                               [q.r31, q.r32, q.r33]]) @ ze
-                normal = pv.Arrow(start=centroid, direction=zg, scale=R/20)
-                plotter.add_mesh(normal, color='green')
-
-                xe = np.array([1., 0., 0.])
-                xg = np.array([[q.r11, q.r12, q.r13],
-                               [q.r21, q.r22, q.r23],
-                               [q.r31, q.r32, q.r33]]) @ xe
-                x_axis = pv.Arrow(start=centroid, direction=xg, scale=R/20)
-                plotter.add_mesh(x_axis, color='blue')
-
-                ye = np.array([0., 1., 0.])
-                yg = np.array([[q.r11, q.r12, q.r13],
-                               [q.r21, q.r22, q.r23],
-                               [q.r31, q.r32, q.r33]]) @ ye
-                y_axis = pv.Arrow(start=centroid, direction=yg, scale=R/20)
-                plotter.add_mesh(y_axis, color='yellow')
-
             plotter.set_background(background)
             plotter.parallel_projection = True
             plotter.show()
 
-        assert np.isclose(Tcr, ref_Tcr, rtol=1e-3)
+        # NOTE -Tcr is the positive torque T of Castro et al.
+        error = -Tcr/reference_T[cyl] - 1
+        print('relative difference to Fig. 13 of Castro et al.', error)
+        assert -0.03 < error < upper_bound[refinement][cyl]
+
+
+def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
+    r"""Torsional buckling of a moderately long isotropic cylinder with simply
+    supported edges
+
+    The critical shear stress is ``tau_cr = k_s*pi**2*D/(L**2*t)`` with the
+    straight-line approximation ``k_s = 0.85*Z**(3/4)`` for simply supported
+    edges, ``Z = L**2/(R*t)*sqrt(1 - nu**2)``, from
+
+        Batdorf, S. B., Stein, M., Schildcrout, M., "Critical stress of
+        thin-walled cylinders in torsion", NACA TN 1344, 1947, p. 3, with the
+        symbols on p. 2 and the range of validity ``100 < Z < 10*R**2/t**2``
+        on p. 4,
+
+    and the same equation with the correlation factor set to one is
+    Eq. (25), Sec. 4.2.4, p. 11, of NASA SP-8007, Buckling of thin-walled
+    circular cylinders, 1965, revised 1968, valid there for
+    ``50 < Z < 78*(R/t)**2*(1 - nu**2)``. The simply supported edges of
+    Batdorf et al. are ``w = w,xx = v = 0`` with ``u`` unrestrained (TN 1344,
+    p. 8), which is what the constraints below impose.
+
+    Here ``R = 250 mm``, ``L = 4*R``, ``t = 4 mm`` and ``nu = 0.3``, so that
+    ``Z = 954``, well inside both ranges, and the cylinder buckles with five
+    circumferential waves. Measured ratio of the critical ``N_xy`` to the
+    reference, for ``ntheta`` elements around the circumference and nearly
+    square elements::
+
+        ntheta    ratio
+           32     1.2311
+           48     1.0839
+           64     1.0386
+           96     1.0079
+          128     0.9975
+        extrapolated 0.985
+
+    the extrapolation fitting ``a + c*ntheta**-p`` to the three finest meshes
+    (p = 2.1). The converged element is therefore 1.5 per cent below the
+    formula, which is within the accuracy of the formula itself: it is a
+    straight-line fit of Batdorf's Galerkin solution of a Donnell-type
+    equation, and Table 1, p. 20, of TN 1344 gives k_s = 153.0 at Z = 1000 in
+    the second approximation, 1.2 per cent above the 151.2 of the straight
+    line, while the third approximation is 1.6 and 2.2 per cent below the
+    second at Z = 300 and 10000, the neighbouring entries where both are
+    tabulated. A cylinder with the R and L of
+    test_linear_buckling_cylinder_Nxy and ``t = 1 mm``, Z = 992, nine to ten
+    waves, converges to 0.995 of the formula (ratios 1.1257, 1.0542, 1.0282,
+    1.0152, 1.0084 for ntheta = 80, 120, 160, 200, 240), but needs about
+    twice the elements for the same accuracy, which is why the longer
+    cylinder is used here.
+
+    With the default ``refinement=1``, ``ntheta = 64`` and the test takes
+    about 5 s; ``refinement=2`` uses ``ntheta = 128`` and takes about 50 s.
+
+    """
+    data = Quad4Data()
+    probe = Quad4Probe()
+
+    E = 70.e9 # Pa
+    nu = 0.3
+    R = 0.250 # m
+    L = 4*R # m
+    t = 0.004 # m
+    b = 2*np.pi*R # m
+
+    D = E*t**3/(12*(1 - nu**2))
+    Z = L**2/(R*t)*np.sqrt(1 - nu**2)
+    assert 100 < Z < 10*R**2/t**2
+    k_s = 0.85*Z**0.75
+    Nxy_cr_reference = k_s*np.pi**2*D/L**2
+    print('Z', Z, 'k_s', k_s, 'Nxy_cr_reference', Nxy_cr_reference)
+
+    ntheta = 64*refinement # circumferential
+    nlength = int(ntheta*L/b)
+    if nlength % 2 == 0:
+        nlength += 1
+    print('ntheta', ntheta)
+    print('nlength', nlength)
+
+    prop = isotropic_plate(thickness=t, E=E, nu=nu)
+
+    nids = 1 + np.arange(nlength*(ntheta+1))
+    nids_mesh = nids.reshape(nlength, ntheta+1)
+    nids_mesh[:, -1] = nids_mesh[:, 0]
+    nids = np.unique(nids_mesh)
+    nid_pos = dict(zip(nids, np.arange(len(nids))))
+
+    zlin = np.linspace(0, L, nlength)
+    thetatmp = np.linspace(0, 2*np.pi, ntheta+1)
+    thetalin = np.linspace(0, 2*np.pi-(thetatmp[-1] - thetatmp[-2]), ntheta)[::-1]
+    zmesh, thetamesh = np.meshgrid(zlin, thetalin)
+    zmesh = zmesh.T
+    thetamesh = thetamesh.T
+    xmesh = np.cos(thetamesh)*R
+    ymesh = np.sin(thetamesh)*R
+
+    ncoords = np.vstack((xmesh.flatten(), ymesh.flatten(), zmesh.flatten())).T
+    ncoords_flatten = ncoords.flatten()
+    z = ncoords[:, 2]
+
+    n1s = nids_mesh[:-1, :-1].flatten()
+    n2s = nids_mesh[1:, :-1].flatten()
+    n3s = nids_mesh[1:, 1:].flatten()
+    n4s = nids_mesh[:-1, 1:].flatten()
+
+    num_elements = len(n1s)
+    print('num_elements', num_elements)
+
+    KC0r = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
+    KC0c = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
+    KC0v = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=DOUBLE)
+    KGr = np.zeros(data.KG_SPARSE_SIZE*num_elements, dtype=INT)
+    KGc = np.zeros(data.KG_SPARSE_SIZE*num_elements, dtype=INT)
+    KGv = np.zeros(data.KG_SPARSE_SIZE*num_elements, dtype=DOUBLE)
+    N = DOF*nlength*ntheta
+
+    Nxy = -1.
+    init_k_KC0 = 0
+    init_k_KG = 0
+    for n1, n2, n3, n4 in zip(n1s, n2s, n3s, n4s):
+        quad = Quad4(probe)
+        quad.n1 = n1
+        quad.n2 = n2
+        quad.n3 = n3
+        quad.n4 = n4
+        quad.c1 = DOF*nid_pos[n1]
+        quad.c2 = DOF*nid_pos[n2]
+        quad.c3 = DOF*nid_pos[n3]
+        quad.c4 = DOF*nid_pos[n4]
+        quad.init_k_KC0 = init_k_KC0
+        quad.init_k_KG = init_k_KG
+        quad.update_rotation_matrix(ncoords_flatten, 0., 0., 1.)
+        quad.update_probe_xe(ncoords_flatten)
+        quad.update_KC0(KC0r, KC0c, KC0v, prop)
+        quad.update_KG_given_stress(0, 0, Nxy, KGr, KGc, KGv)
+        init_k_KC0 += data.KC0_SPARSE_SIZE
+        init_k_KG += data.KG_SPARSE_SIZE
+
+    KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
+    KG = coo_matrix((KGv, (KGr, KGc)), shape=(N, N)).tocsc()
+
+    # NOTE simply supported edges of Batdorf et al., w = v = 0 with u and the
+    #      rotations free: for a cylinder along the global z axis the radial
+    #      and circumferential translations are the global x and y ones
+    bk = np.zeros(N, dtype=bool)
+    edges = isclose(z, 0) | isclose(z, L)
+    bk[0::DOF][edges] = True
+    bk[1::DOF][edges] = True
+    # NOTE removing the rigid axial translation with a single node
+    middle = np.where(isclose(z, L/2))[0]
+    bk[2::DOF][middle[0]] = True
+    bu = ~bk
+
+    KC0uu = KC0[bu, :][:, bu]
+    KGuu = KG[bu, :][:, bu]
+
+    # NOTE every buckling load of this isotropic cylinder is a degenerate
+    #      pair, so 4 load multipliers are requested
+    eigvals, eigvecsu = linear_buckling(KC0uu, KGuu, num_eigvalues=4, tol=1e-9)
+    print('eigvals', eigvals)
+    Nxy_cr = eigvals[0]*abs(Nxy)
+    ratio = Nxy_cr/Nxy_cr_reference
+    print('Nxy_cr', Nxy_cr, 'ratio', ratio)
+
+    # NOTE bounds from the measured ratios of the docstring: 1.0386 at
+    #      ntheta = 64 and 0.9975 at ntheta = 128, with the converged value
+    #      0.985
+    if refinement == 1:
+        assert 0.97 < ratio < 1.05
+    elif refinement == 2:
+        assert 0.97 < ratio < 1.01
+    else:
+        raise ValueError('refinement must be 1 or 2')
 
 
 if __name__ == '__main__':
-    test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=8)
-
+    test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1)
+    test_linear_buckling_cylinder_torsion_isotropic(refinement=1)
