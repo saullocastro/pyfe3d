@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.12.0 (2026-10-28)
+## 0.12.0 (2026-10-29)
 
 ### New features
 
@@ -124,11 +124,22 @@
 - `tests/test_quad4r_geometric_hourglass.py`: buckling of hard simply
   supported square plates with thick elements and with a low transverse
   shear stiffness, without the spurious mode, and the one-point form of
-  `KG` with constant stress resultants on a distorted element. The
-  tolerances of `test_quad4r_linear_buckling_plate*.py`, 5 to 6 per cent,
-  of the lower limit load of `test_hinged_roof_thick`, 1.5 to 1.6 per
-  cent, and the regression value of `test_quad4r_natural_freq_pre_stress`,
-  39.1 to 43.7, follow the new `KG`.
+  `KG` with constant stress resultants on a distorted element.
+- `tests/test_quad4r_linear_buckling_plate.py` and
+  `tests/test_quad4r_linear_buckling_plate_given_stress.py`: with 92x44
+  elements, within 1 per cent of the exact buckling load of Leissa
+  (1969), NASA SP-160, Eq. (10.46), instead of 5 per cent with 30x14
+  elements; `tests/test_quad4r_linear_buckling_plate_rotated.py`: the
+  buckling load of the 25 orientations is the same within 1e-6, instead
+  of each within 5 per cent of the exact one.
+- `tests/test_quad4r_natural_freq_pre_stress.py`: the fundamental
+  frequency of a simply supported plate under half of its buckling load
+  against the exact solution of Leissa (1969), Eq. (10.44), within 1 per
+  cent for the three mass matrices, instead of a regression value with a
+  load above the exact buckling load.
+- `test_hinged_roof_thick`: with the 16x16 mesh of Table 9a of Sze et
+  al. (2004) instead of 8x8, the limit loads within 1 per cent instead
+  of 1.5 per cent.
 
 ### Documentation
 

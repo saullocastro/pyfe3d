@@ -11,7 +11,18 @@ from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
 from pyfe3d.solver import linear_buckling
 
 
-def test_linear_buckling(mode=0, refinement=1):
+def test_linear_buckling(mode=0, refinement=3):
+    r"""Linear buckling of a simply supported plate, ``a/b = 4``, under a
+    uniform compression ``N_xx``
+
+    The reference is the exact solution of Leissa, A. W., Vibration of Plates,
+    NASA SP-160, 1969, Sec. 10.2.1, p. 277, Eq. (10.46), the buckling load
+    for which the frequency of Eq. (10.44) vanishes, minimised over the
+    number ``m`` of half-waves along ``x``: ``N_xx,cr = -k_c*pi**2*D/b**2``,
+    ``k_c = (m*b/a + a/(m*b))**2``. With 92x44 elements the buckling load is
+    above the reference by 0.39 %, with 62x30 elements 1.11 %, with 30x14
+    elements 5.7 %.
+    """
     data = Quad4RData()
     probe = Quad4RProbe()
     nx = refinement*31
@@ -146,12 +157,9 @@ def test_linear_buckling(mode=0, refinement=1):
     sigma_cr = -kcmin*np.pi**2*E/(12*(1-nu**2))*h**2/b**2
     P_cr_theory = sigma_cr*h*b
     print('Theoretical P_cr_theory', P_cr_theory)
-    # NOTE 5.35 % above the theory with this mesh since 0.12.0, which takes
-    #      the slopes of w of KG at the centroid, 4.95 % before, see
-    #      test_quad4r_geometric_hourglass.py
-    assert isclose(P_cr_theory, P_cr_calc, rtol=0.06)
+    assert isclose(P_cr_theory, P_cr_calc, rtol=0.01)
 
 
 if __name__ == '__main__':
-    test_linear_buckling(mode=0, refinement=1)
+    test_linear_buckling(mode=0, refinement=3)
 
