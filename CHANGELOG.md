@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.12.0 (unreleased)
+## 0.12.0 (2026-10-28)
 
 ### New features
 
@@ -33,11 +33,17 @@
   Yu and Hodges (2005); the box beam CUS of Yu et al. (2012), Table 2,
   reproduced to its four digits; the pipe of Yu and Hodges (2005), Table 3
   and Eq. (26); the box beam CAS1 of Yu et al. (2002), Table 2; the
-  T-section of Yu and Hodges (2005), Table 1.
+  T-section of Yu and Hodges (2005), Table 1. The angle convention of
+  `rotate_material` reproduces all signs of the CUS box; the three
+  couplings of the pipe and of CAS1 that have the opposite sign with it
+  are asserted explicitly and explained in the tests.
 
 ### Documentation
 
-- User guide page `cross_sectional_analysis` and API page `vabs`.
+- User guide page `cross_sectional_analysis` and API page `vabs`, with
+  the figure `doc/figures/vabs_axes.svg` (TikZ source `vabs_axes.tex`) of
+  the axes, the angles `theta1` and `theta3`, and the tension and shear
+  centres.
 
 ## 0.11.3 (2026-10-27)
 
