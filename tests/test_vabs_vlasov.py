@@ -3,17 +3,23 @@ r"""Generalized Vlasov model of :mod:`pyfe3d.vabs`
 Checks of :meth:`pyfe3d.vabs.CrossSection.calc_vlasov` and
 :meth:`pyfe3d.vabs.CrossSection.translated` against Yu, Hodges, Volovoi and
 Fuchs, "A generalized Vlasov theory for composite beams", Thin-Walled
-Structures 43 (2005) 1493--1511, doi:10.1016/j.tws.2005.02.003: the
-isotropic, orthotropic and anisotropic strips of Tables 1, 3 and 4 and the
-isotropic I-beam of Table 5, with the meshes described in Sections 5.1.1
-and 5.2.1. The strips are reproduced to five digits or more with the
-warping constraints of Yu et al. (2002). For the I-beam, the geometry is
-that of Fig. 6, flanges of width ``1.0`` and outer height ``0.5``, which
-gives the published torsional and warping rigidities within 1 per cent;
-the text of Section 5.2 swaps the two dimensions. The "Analytical (VAM)"
-warping rigidity of Table 5, 2083.33, equals `E t a^3 b^2/24` with the
-dimensions of the text, but is not consistent with the VABS values of the
-same table, and is not used.
+Structures 43 (2005) 1493--1511, doi:10.1016/j.tws.2005.02.003: the isotropic,
+orthotropic and anisotropic strips of Tables 1, 3 and 4 and the isotropic
+I-beam of Table 5, with the meshes described in Sections 5.1.1 and 5.2.1. The
+strips are reproduced to five digits or more with the warping constraints of Yu
+et al. (2002), the default of ``calc_vlasov``. The constraints of Yu et al.
+(2012) are tested as well: they differ in the fourth constraint, on the
+rotation of the in-plane warping, which changes the warping rigidity of the
+strips, by 9.5 per cent for the isotropic one, whose value is then close to
+Vlasov's `E h^3 b^3/144`, Eq. (17) of the paper, but changes the I-beam and the
+channel by about 0.1 per cent or less, and changes neither the first four rows
+and columns of ``Kv``, nor the shear centre, nor the torsional warping `w_1`.
+For the I-beam, the geometry is that of Fig. 6, flanges of width ``1.0`` and
+outer height ``0.5``, which gives the published torsional and warping
+rigidities within 1 per cent; the text of Section 5.2 swaps the two dimensions.
+The "Analytical (VAM)" warping rigidity of Table 5, 2083.33, equals `E t a^3
+b^2/24` with the dimensions of the text, but is not consistent with the VABS
+values of the same table, and is not used.
 
 For a thin-walled channel, the torsional warping about the shear centre is
 compared with the principal sectorial coordinate `\omega` of Vlasov,
@@ -50,64 +56,77 @@ def strip(etype=8, **kwargs):
     return x2, x3, els
 
 
-def test_strip_isotropic_Table1():
+@pytest.mark.parametrize('constraint', ['yu2002', 'yu2012'])
+def test_strip_isotropic_Table1(constraint):
     sec = iso_section(*strip())
-    sec.calc_vlasov()
+    sec.calc_vlasov(constraint)
     assert np.isclose(sec.Kv[1, 1], 32.3418, rtol=5e-5)
-    assert np.isclose(sec.Kv[4, 4], 1.78635, rtol=1e-5)
-    # NOTE asymptotic thin-walled value, Eq. (18)
     b, h = 0.953, 0.03
-    assert np.isclose(sec.Kv[4, 4], E*h**3*b**3/(144*(1 - NU**2)), rtol=2e-3)
-    # NOTE with the constraints of Yu et al. (2012), close to Vlasov's
-    #      value, Eq. (17)
-    sec.calc_vlasov('yu2012')
-    assert np.isclose(sec.Kv[4, 4], E*h**3*b**3/144, rtol=5e-3)
+    if constraint == 'yu2002':
+        # NOTE VABS value of Table 1 and asymptotic thin-walled value,
+        #      Eq. (18)
+        assert np.isclose(sec.Kv[4, 4], 1.78635, rtol=1e-5)
+        assert np.isclose(sec.Kv[4, 4], E*h**3*b**3/(144*(1 - NU**2)),
+                          rtol=2e-3)
+    else:
+        # NOTE 9.5 per cent lower, close to Vlasov's value, Eq. (17)
+        assert np.isclose(sec.Kv[4, 4], E*h**3*b**3/144, rtol=5e-3)
 
 
+@pytest.mark.parametrize('constraint', ['yu2002', 'yu2012'])
 @pytest.mark.parametrize('theta, C22, C55, coupled', [
     (0., 7.31562, 3.39251, False),    # Table 3
     (15., 7.96547, 1.82499, True),    # Table 4
     (-15., 7.96547, 1.82499, True)])
-def test_strip_composite_Tables3_4(theta, C22, C55, coupled):
+def test_strip_composite_Tables3_4(theta, C22, C55, coupled, constraint):
+    r"""The warping rigidity of the paper is reproduced with the
+    constraints ``'yu2002'``; with ``'yu2012'`` it is lower, by 1.9 per
+    cent for the orthotropic strip and 12 per cent for the anisotropic one,
+    and only the torsional rigidity is compared"""
     # NOTE Table 2; one layer, ply angle theta from the beam axis
     D = orthotropic(E1=20.59e6, E2=1.42e6, E3=1.42e6, G12=0.87e6, G13=0.87e6,
                     G23=0.696e6, nu12=0.42, nu13=0.42, nu23=0.42)
     x2, x3, els = strip()
     ne = len(els)
     sec = CrossSection(x2, x3, els, [D], [0]*ne, theta3=[theta]*ne)
-    sec.calc_vlasov()
+    sec.calc_vlasov(constraint)
     Kv = sec.Kv
     # NOTE effective torsional rigidity with the bending-twist coupling,
     #      C22 - C23**2/C33 in the numbering of the paper
     C22bar = Kv[1, 1] - Kv[1, 2]**2/Kv[2, 2]
     assert np.isclose(C22bar, C22, rtol=2e-5)
-    assert np.isclose(Kv[4, 4], C55, rtol=2e-5)
+    if constraint == 'yu2002':
+        assert np.isclose(Kv[4, 4], C55, rtol=2e-5)
+    else:
+        assert 0.85*C55 < Kv[4, 4] < 0.99*C55
     assert (abs(Kv[1, 2]) > 1e-3*Kv[1, 1]) == coupled
 
 
-def test_Ibeam_isotropic_Table5():
+@pytest.mark.parametrize('constraint', ['yu2002', 'yu2012'])
+def test_Ibeam_isotropic_Table5(constraint):
     # NOTE Section 5.2.1: 2 elements through the thickness, 20 across the
     #      flange, 10 along the web
     t = 0.04
     sec = iso_section(*vm.ibeam(1.0, 0.5, t, 9, 2, 10, 8))
-    sec.calc_vlasov()
+    sec.calc_vlasov(constraint)
     assert np.isclose(sec.Kv[1, 1], 199.944, rtol=1e-2)
     assert np.isclose(sec.Kv[4, 4], 3553.43, rtol=1.5e-2)
     # NOTE thin-walled warping rigidity, E t bf**3 h**2/24, h between the
     #      flange mid-planes
-    assert np.isclose(sec.Kv[4, 4], E*t*1.0**3*(0.5 - t)**2/24, rtol=3e-3)
+    assert np.isclose(sec.Kv[4, 4], E*t*1.0**3*(0.5 - t)**2/24, rtol=3.5e-3)
     # NOTE doubly symmetric: no coupling of the bimoment
     assert np.abs(sec.Kv[4, :4]).max() < 1e-8*sec.Kv[4, 4]
 
 
-def test_Ibeam_thin_walled_limit():
+@pytest.mark.parametrize('constraint', ['yu2002', 'yu2012'])
+def test_Ibeam_thin_walled_limit(constraint):
     errors = []
     for t in (0.04, 0.02, 0.01):
         sec = iso_section(*vm.ibeam(1.0, 0.5, t, 12, 2, 12, 8))
-        sec.calc_vlasov()
+        sec.calc_vlasov(constraint)
         EG = E*t*1.0**3*(0.5 - t)**2/24
         errors.append(abs(sec.Kv[4, 4]/EG - 1))
-    assert errors[2] < errors[1] < errors[0] < 3e-3
+    assert errors[2] < errors[1] < errors[0] < 3.5e-3
 
 
 def channel_omega(sec, b, h, e):
@@ -127,13 +146,14 @@ def channel_omega(sec, b, h, e):
     return omega
 
 
+@pytest.mark.parametrize('constraint', ['yu2002', 'yu2012'])
 @pytest.mark.parametrize('t, rtol, rtol_EG', [(0.02, 2e-3, 5e-3),
                                               (0.01, 5e-4, 1.5e-3)])
-def test_channel_sectorial_coordinate(t, rtol, rtol_EG):
+def test_channel_sectorial_coordinate(t, rtol, rtol_EG, constraint):
     b, h = 0.5, 1.0
     x2, x3, els = vm.channel(b, h, t, 20, 2, 20, 8)
     sec = iso_section(x2, x3, els)
-    sec.calc_vlasov()
+    sec.calc_vlasov(constraint)
     # NOTE shear centre of the thin-walled channel, behind the web
     e = 3*b**2/(h + 6*b)
     sc = sec.vlasov_section
