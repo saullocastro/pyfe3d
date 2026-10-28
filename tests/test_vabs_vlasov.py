@@ -21,6 +21,20 @@ The "Analytical (VAM)" warping rigidity of Table 5, 2083.33, equals `E t a^3
 b^2/24` with the dimensions of the text, but is not consistent with the VABS
 values of the same table, and is not used.
 
+The anisotropic I-beam of Table 6, whose lay-up the paper gives only as a
+drawing, Fig. 6, is reconstructed with the description of Volovoi,
+Hodges, Berdichevsky and Sutyrin, "Asymptotic theory for static behavior of
+elastic anisotropic I-beams", International Journal of Solids and
+Structures 36(7) (1999) 1017--1043, doi:10.1016/S0020-7683(97)00341-7,
+p. 1038 and Fig. 8; the published effective torsional rigidity is
+reproduced within 1.1 per cent and the warping rigidity within 4 per cent.
+The composite I-beam of Pandey et al. (1995), with the sectional constants
+of the asymptotic theory given by Hodges and Peters, "Lateral-torsional
+buckling of cantilevered elastically coupled composite strip- and
+I-beams", International Journal of Solids and Structures 38(9) (2001)
+1585--1603, doi:10.1016/S0020-7683(00)00111-6, p. 1601, is reproduced
+within 3.5 per cent, with an assumption on the out-of-plane constants.
+
 For a thin-walled channel, the torsional warping about the shear centre is
 compared with the principal sectorial coordinate `\omega` of Vlasov,
 Thin-Walled Elastic Beams, 2nd ed., 1961, `\omega = \int \rho \, ds`,
@@ -220,3 +234,174 @@ def test_translated():
     assert np.array_equal(tr.theta3, sec.theta3)
     assert np.array_equal(tr.densities, sec.densities)
     assert tr.Kc is None
+
+
+# NOTE Table 2 of Yu et al. (2005): graphite-epoxy of the strips and of the
+#      anisotropic I-beam, psi
+D_TABLE2 = orthotropic(E1=20.59e6, E2=1.42e6, E3=1.42e6, G12=0.87e6,
+                       G13=0.87e6, G23=0.696e6, nu12=0.42, nu13=0.42,
+                       nu23=0.42)
+
+
+def ibeam_table6_layup(x2, x3, els, theta, wrapped=True):
+    r"""Ply angles ``theta1``, ``theta3`` of the anisotropic I-beam of Yu et
+    al. (2005), Table 6, flanges of width ``1.0``, outer height ``0.5``,
+    walls of 8 plies of thickness ``0.005``, one element per ply
+
+    The lay-up is that of Volovoi et al. (1999), p. 1038, "[0/90]4 lay-up in
+    the web and a [(0/90)3/(theta)2]" in the flanges, the two ``theta``
+    plies outermost, with the ply-by-ply reading of the drawing, Fig. 6 of
+    Yu et al. (2005) and Fig. 8 of Volovoi et al. (1999): two back-to-back
+    channels of 4 plies, from the left face of the web 0/90/0/90 and
+    0/90/0/90, which wrap around the junctions into the inner 4 plies of the
+    flanges, covered by a 0/90 pair, the 90 ply outer, and by the two
+    ``theta`` plies, all three over the full width. From the inner to the
+    outer surface, the left half of each flange is 0/90/0/90/0/90/theta/
+    theta and the right half 90/0/90/0/0/90/theta/theta. Each channel ply
+    turns at the junction with a square corner, which is assigned to its
+    flange part. The ``theta`` plies have the same sense, ``theta3 =
+    theta``, with ``theta1 = 0``, in both flanges. With ``wrapped=False``,
+    the inner 4 plies of the flanges are 0/90/0/90, from the inner surface,
+    over the full width, including the junctions, i.e. the same order in
+    both halves.
+    """
+    t, hp = 0.04, 0.005
+    th1, th3 = [], []
+    for el in els:
+        xc, yc = x2[el[:4]].mean(), x3[el[:4]].mean()
+        if abs(yc) < 0.25 - t:
+            # NOTE web, ply c from the left face
+            c = int((xc + t/2)/hp)
+            th1.append(90.)
+            th3.append(0. if c % 2 == 0 else 90.)
+            continue
+        # NOTE flange, row r from the outer surface
+        r = int((0.25 - abs(yc))/hp)
+        th1.append(0.)
+        if r < 4:
+            th3.append([theta, theta, 90., 0.][r])
+            continue
+        if not wrapped:
+            th3.append([90., 0., 90., 0.][r - 4])
+            continue
+        left = xc < 0
+        j = r - 3
+        if abs(xc) < t/2:
+            # NOTE junction: column cc from the face of the web on the side
+            #      of the element; vertical arm of the channel ply 4 - cc
+            cc = int((xc + t/2)/hp)
+            cc = cc if left else 7 - cc
+            if cc > 7 - r:
+                j = 4 - cc
+                th1[-1] = 90.
+        # NOTE channel ply j from the outer: left 90/0/90/0, right 0/90/0/90
+        th3.append([90., 0., 90., 0.][j - 1] if left
+                   else [0., 90., 0., 90.][j - 1])
+    return np.array(th1), np.array(th3)
+
+
+def ibeam_table6(theta=15., wrapped=True, constraint='yu2002'):
+    # NOTE Section 5.2.1: 8 elements through the thickness, here one per
+    #      ply, 20 across each flange, 10 along the web
+    x2, x3, els = vm.ibeam(1.0, 0.5, 0.04, 10, 8, 10, 8)
+    th1, th3 = ibeam_table6_layup(x2, x3, els, theta, wrapped)
+    sec = CrossSection(x2, x3, els, [D_TABLE2], [0]*len(els), theta1=th1,
+                       theta3=th3)
+    sec.calc_vlasov(constraint)
+    Kv = sec.Kv
+    # NOTE effective torsional rigidity C22 - C23**2/C33 of the paper
+    return Kv[1, 1] - Kv[1, 2]**2/Kv[2, 2], Kv[4, 4], Kv
+
+
+@pytest.mark.parametrize('constraint', ['yu2002', 'yu2012'])
+def test_Ibeam_anisotropic_Table6(constraint):
+    r"""Anisotropic I-beam of Yu et al. (2005), Table 6, VABS: `\bar{C}_{22}
+    = 55.8658` lb in.\ :sup:`2` and `C_{55} = 4232.17` lb in.\ :sup:`4`
+
+    The lay-up is reconstructed, see :func:`ibeam_table6_layup`. With it,
+    `\bar{C}_{22}` is 1.05 per cent and `C_{55}` 4.0 per cent above the
+    published values, with both constraints; refining the mesh to 40
+    elements per half flange and along the web changes them to 0.75 and
+    3.95 per cent. The isotropic I-beam of Table 5, with the same geometry
+    and mesh, is 0.9 per cent below VABS, so that the difference of `C_{55}`
+    is attributed to the lay-up, of which the paper gives only the drawing,
+    and not to the geometry or to the formulation. With the ``theta`` plies
+    of opposite sense in the two flanges there is no bending-twist coupling
+    and `\bar{C}_{22}` is 8.4 per cent above the published value, which
+    confirms the same sense in both flanges.
+    """
+    C22bar, C55, Kv = ibeam_table6(constraint=constraint)
+    assert np.isclose(C22bar, 55.8658, rtol=1.5e-2)
+    assert np.isclose(C55, 4232.17, rtol=4.5e-2)
+    # NOTE bending-twist coupling, kappa_1 with kappa_2
+    assert abs(Kv[1, 2]) > 0.1*np.sqrt(Kv[1, 1]*Kv[2, 2])
+
+
+def test_Ibeam_anisotropic_Table6_sensitivity():
+    r"""Sensitivity of the anisotropic I-beam of Table 6 to the sign of
+    ``theta`` and to the plies at the junctions"""
+    ref = ibeam_table6()
+    # NOTE theta -> -theta reverses the coupling only
+    neg = ibeam_table6(theta=-15.)
+    assert np.isclose(neg[0], ref[0], rtol=1e-8)
+    assert np.isclose(neg[1], ref[1], rtol=1e-8)
+    assert np.isclose(neg[2][1, 2], -ref[2][1, 2], rtol=1e-8)
+    # NOTE the same order in both half flanges changes C22bar by 0.07 and
+    #      C55 by 0.95 per cent
+    flat = ibeam_table6(wrapped=False)
+    assert np.isclose(flat[0], ref[0], rtol=5e-3)
+    assert np.isclose(flat[1], ref[1], rtol=2e-2)
+
+
+PANDEY = {0.: (364., 71200., 1.14e6, 735.),
+          45.: (610., 71200., 912000., 735.)}
+
+
+@pytest.mark.parametrize('constraint', ['yu2002', 'yu2012'])
+@pytest.mark.parametrize('theta', [0., 45.])
+def test_Ibeam_Pandey_Hodges_Peters(theta, constraint):
+    r"""Composite I-beam of Pandey et al. (1995) as given by Hodges and
+    Peters (2001), p. 1601: wall thickness 0.00953 m, depth 0.2032 m,
+    flange width 0.1016 m, `E_{11}` = 42.7 GPa, `E_{22}` = 8.02 GPa,
+    `G_{12}` = 3.10 GPa, `\nu_{12}` = 0.248, flanges of 0 degrees, web of a
+    single layer of ply angle ``theta``; the asymptotic values of `D_{11}`
+    (torsion), `D_{22}` (weak-axis bending), `D_{33}` (strong-axis bending)
+    and `D_{44}` (warping), Eq. (1), are those of p. 1601
+
+    The depth is taken between the mid-planes of the flanges, the reading
+    for which the thin-walled formulas give the published values, e.g. `E
+    t b^3 d^2/24 = 734` N m\ :sup:`4`. The out-of-plane constants are not
+    given; the material is taken as transversely isotropic, `E_{33} =
+    E_{22}`, `G_{13} = G_{12}`, `\nu_{13} = \nu_{12}`, `\nu_{23} = 0.4` and
+    `G_{23} = E_{22}/[2 (1 + \nu_{23})]`; `\nu_{23}` from 0.25 to 0.5
+    changes the four constants by less than 0.03 per cent. The differences
+    are below 1 per cent, except `D_{11}`, 0.9 and 2.1 per cent below, of
+    the order of `h/b` = 0.094, and `D_{33}` at 0 degrees, 3.5 per cent
+    below, because the published value counts the web up to the mid-planes
+    of the flanges: with the web between the flanges, the thin-walled value
+    is 1.10e6 N m\ :sup:`2`.
+    """
+    t, d, b = 0.00953, 0.2032, 0.1016
+    nu23 = 0.4
+    D = orthotropic(E1=42.7e9, E2=8.02e9, E3=8.02e9, G12=3.10e9,
+                    G13=3.10e9, G23=8.02e9/(2*(1 + nu23)), nu12=0.248,
+                    nu13=0.248, nu23=nu23)
+    x2, x3, els = vm.ibeam(b, d + t, t, 8, 4, 16, 8)
+    th1, th3 = [], []
+    for el in els:
+        if abs(x3[el[:4]].mean()) < d/2 - t/2:
+            th1.append(90.)
+            th3.append(theta)
+        else:
+            th1.append(0.)
+            th3.append(0.)
+    sec = CrossSection(x2, x3, els, [D], [0]*len(els), theta1=th1,
+                       theta3=th3)
+    sec.calc_vlasov(constraint)
+    Kv = sec.Kv
+    D11, D22, D33, D44 = PANDEY[theta]
+    # NOTE the web is along x3: kappa_2 is the strong-axis bending
+    assert np.isclose(Kv[1, 1], D11, rtol=2.5e-2)
+    assert np.isclose(Kv[3, 3], D22, rtol=1e-2)
+    assert np.isclose(Kv[2, 2], D33, rtol=4e-2)
+    assert np.isclose(Kv[4, 4], D44, rtol=1e-2)
