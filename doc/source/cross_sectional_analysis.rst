@@ -137,6 +137,96 @@ computed ``G12``, ``G13`` and ``GJ`` replace the shear correction factors
 and the torsion constant that the user would otherwise supply.
 
 
+Plotting the warping
+--------------------
+
+After :meth:`.CrossSection.calc_stiffness`, :meth:`.CrossSection.warping`
+returns the warping displacements `w_1, w_2, w_3` of the nodes for given
+strains of the beam, and :meth:`.CrossSection.triangles` a triangulation of
+the mesh through all its nodes. These two arrays are all that a plotting
+library needs, and pyfe3d does not depend on any. The warping satisfies
+the constraints chosen in :meth:`.CrossSection.calc_stiffness`, by default
+zero average and zero average rotation, i.e. it is the warping relative
+to the rigid motion of the section about the reference axis.
+
+With matplotlib, for a thin-walled channel, the out-of-plane warping
+`w_1` per unit twist rate `\kappa_1`, with the tension centre (circle)
+and the shear centre (cross), and the in-plane warping per unit curvature
+`\kappa_2`, i.e. the anticlastic deformation due to the Poisson effect,
+drawn to scale on the undeformed mesh: the flange in tension, `x_3 > 0`,
+contracts, and the flange in compression expands. On the web, which
+contains the reference axis, the torsional warping is almost zero; it is
+the warping relative to the rotation about the reference axis, not about
+the shear centre.
+
+.. plot::
+   :include-source:
+
+   import numpy as np
+   import matplotlib.pyplot as plt
+   from matplotlib.tri import Triangulation
+
+   from pyfe3d.vabs import CrossSection, isotropic
+
+   # channel: web of height h along x3, flanges of width b along x2,
+   # thickness t, meshed with bilinear quadrilaterals of side t/2
+   h, b, t = 1., 0.5, 0.05
+   d = t/2
+   xs = np.linspace(0., b, round(b/d) + 1)
+   ys = np.linspace(-h/2, h/2, round(h/d) + 1)
+   X2, X3 = np.meshgrid(xs, ys)
+   nx = xs.size
+   elements = []
+   for j in range(ys.size - 1):
+       for i in range(nx - 1):
+           xc, yc = (xs[i] + xs[i + 1])/2, (ys[j] + ys[j + 1])/2
+           if xc < t or abs(yc) > h/2 - t:
+               n = j*nx + i
+               elements.append([n, n + 1, n + 1 + nx, n + nx])
+   used = np.unique(elements)
+   new = -np.ones(X2.size, dtype=int)
+   new[used] = np.arange(used.size)
+   x2, x3 = X2.ravel()[used], X3.ravel()[used]
+   elements = new[np.array(elements)]
+
+   sec = CrossSection(x2, x3, elements, materials=[isotropic(70e9, 0.3)],
+                      mat_ids=[0]*len(elements))
+   sec.calc_stiffness()
+   tri = Triangulation(sec.x2, sec.x3, sec.triangles())
+
+   fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 4.5))
+   w = sec.warping([0., 1., 0., 0.])  # unit twist rate kappa1
+   cs = ax1.tricontourf(tri, w[:, 0], levels=21, cmap='RdBu_r')
+   fig.colorbar(cs, ax=ax1, label=r'$w_1$ per unit $\kappa_1$')
+   ax1.plot(*sec.tension_centre, 'ko', mfc='none')
+   ax1.plot(*sec.shear_centre, 'kx')
+   ax1.set_title('torsion')
+
+   w = sec.warping([0., 0., 1., 0.])  # unit curvature kappa2
+   ax2.triplot(tri, color='0.8', lw=0.5)
+   ax2.triplot(sec.x2 + w[:, 1], sec.x3 + w[:, 2], sec.triangles(),
+               color='C0', lw=0.5)
+   ax2.set_title('bending, in-plane warping')
+   for ax in (ax1, ax2):
+       ax.set_aspect('equal')
+       ax.set_xlabel('$x_2$')
+       ax.set_ylabel('$x_3$')
+   fig.tight_layout()
+
+The same arrays give a three-dimensional view with plotly. The script
+below draws the channel as a beam of length 3 under a uniform twist rate:
+the sections rotate about the reference axis and warp along it, the
+warping being exaggerated and coloured by `w_1`. The figure can be
+rotated, panned and zoomed:
+
+.. literalinclude:: _scripts/vabs_warping_3d.py
+   :start-at: import numpy as np
+   :end-before: # NOTE written for the documentation
+
+.. raw:: html
+   :file: _generated/vabs_warping_3d.html
+
+
 Validation
 ----------
 
@@ -156,6 +246,9 @@ published VABS results:
   couplings of the last two examples asserted explicitly, see above;
 - ``tests/test_vabs_elements.py``: integration rules, shape functions,
   material rotation and conventions.
+- ``tests/test_vabs_warping.py``: the torsional warping of an ellipse
+  against the Saint-Venant solution, and the triangulation of every
+  element type.
 
 
 Limitations
@@ -166,7 +259,7 @@ Limitations
   ``k2``, ``k3`` of :class:`.CrossSection` raise ``NotImplementedError``.
 - No applied loads in the sectional analysis, Yu et al. (2012), Section
   5.3, and no recovery of the three-dimensional strains and stresses,
-  although the warping ``V0`` and ``V1S`` is stored.
+  although the warping is available, see :meth:`.CrossSection.warping`.
 - No Vlasov refinement for thin-walled open sections.
 
 

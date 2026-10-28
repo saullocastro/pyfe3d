@@ -31,3 +31,6 @@ temp*.*
 
 shellprop.cpp 
 derive_*.txt 
+
+# Documentation, files written during the build
+doc/source/_generated/

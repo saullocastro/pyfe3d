@@ -2,3 +2,5 @@ sphinx
 numpydoc
 pydata-sphinx-theme
 nbsphinx
+matplotlib
+plotly
