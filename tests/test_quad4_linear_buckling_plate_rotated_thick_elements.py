@@ -11,7 +11,26 @@ from pyfe3d.solver import linear_buckling
 
 
 def test_linear_buckling_plate(plot=False, mode=0):
-    #
+    r"""Square plate with b/h = 10 and elements with h/l = 1.2
+
+    The plate is hard simply supported, `w = 0` and the rotation about the
+    normal to each edge in the plane of the plate equal to zero, such that the
+    Navier solution of the Mindlin plate,
+
+    .. math::
+
+        N_{cr} = \frac{N_{cr,K}}{1 + D \alpha^2/A_{55}}, \qquad \alpha^2 =
+        \left(\frac{m \pi}{a}\right)^2 + \left(\frac{\pi}{b}\right)^2
+
+    with `N_{cr,K}` the Kirchhoff value, is the exact reference; it is 5.6 %
+    below the Kirchhoff value here. Measured against it, with the 13 x 13
+    mesh: +0.91 %. Up to version 0.11 the thick elements used the modified
+    one-point shear rule of Hughes et al. (1977), whose spurious twist
+    stiffness gave +11.2 %, see ``tests/test_quad4_thick_twist.py``; with the
+    soft simple support previously used here, the same spurious stiffness
+    brought the result within 3 % of the Kirchhoff value.
+
+    """
     thetas = np.linspace(-np.pi, np.pi, 5)
 
     nx = 13
@@ -118,6 +137,16 @@ def test_linear_buckling_plate(plot=False, mode=0):
             bk[0::DOF] = check
             bk[1::DOF] = check
             bk[2::DOF] = check
+            # NOTE hard simple support: rotation about the local x axis on
+            #      the edges x = 0, a and about the local y axis on the edges
+            #      y = 0, b; the rotations of the plate are multiples of 90
+            #      degrees, such that each local axis is a global one
+            ex = np.array([np.cos(yaw)*np.cos(pitch), np.sin(yaw)*np.cos(pitch),
+                           -np.sin(pitch)])
+            ey = np.array([-np.sin(yaw), np.cos(yaw), 0.])
+            assert isclose(np.abs(ex).max(), 1.) and isclose(np.abs(ey).max(), 1.)
+            bk[3 + np.argmax(np.abs(ex))::DOF] |= isclose(x_local, 0.) | isclose(x_local, a)
+            bk[3 + np.argmax(np.abs(ey))::DOF] |= isclose(y_local, 0.) | isclose(y_local, b)
 
             bu = ~bk
 
@@ -144,9 +173,13 @@ def test_linear_buckling_plate(plot=False, mode=0):
                     kcmin = kc
                     mmin = m
             sigma_cr = -kcmin*np.pi**2*E/(12*(1-nu**2))*h**2/b**2
-            P_cr_theory = sigma_cr*h*b
-            print('Theoretical P_cr_theory', P_cr_theory)
-            assert isclose(P_cr_theory, P_cr_calc, rtol=0.03)
+            P_cr_kirchhoff = sigma_cr*h*b
+            D = E*h**3/(12*(1 - nu**2))
+            alpha2 = (mmin*np.pi/a)**2 + (np.pi/b)**2
+            P_cr_theory = P_cr_kirchhoff/(1 + D*alpha2/prop.A55)
+            print('Kirchhoff P_cr', P_cr_kirchhoff)
+            print('Mindlin P_cr_theory', P_cr_theory)
+            assert isclose(P_cr_theory, P_cr_calc, rtol=0.02)
 
     if plot:
         import matplotlib.pyplot as plt

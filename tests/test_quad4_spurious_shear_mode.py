@@ -38,12 +38,16 @@ shear energy of their Eq. 7. Against the convention of pyfe3d, where
 Both therefore cost no energy when the rotation part of the shear is sampled
 at the centroid alone.
 
-The paper also gives the remedy for Mode 1, the "modified one-point shear"
+The paper also gives a remedy for Mode 1, the "modified one-point shear"
 element, which moves the `(\partial w/\partial x_\alpha)^2` contributions to a
 two-by-two rule and leaves the rest at one point, and recommends it "when the
-t/h ratio exceeds unity". :class:`pyfe3d.Quad4` implements exactly that, gated
-at `h/\ell \ge 1`, and the gate is measured below: Mode 1 costs nothing at
-`h/\ell < 1` and 0.1496 of the largest eigenvalue at `h/\ell \ge 1`.
+t/h ratio exceeds unity". :class:`pyfe3d.Quad4` applied it, gated at
+`h/\ell \ge 1`, up to version 0.11, but the modified rule stores spurious shear
+energy in a state of pure twist, see ``tests/test_quad4_thick_twist.py``, and
+since 0.12.0 the elements with `h/\ell \ge 1` use the assumed transverse shear
+strains of Dvorkin and Bathe given at the end of this docstring, which remove
+both modes. The gate is measured below: Modes 1 and 2 cost nothing at `h/\ell
+< 1`, and 0.1496 and 0.0187 of the largest eigenvalue at `h/\ell \ge 1`.
 
 What the paper says about each mode is also confirmed here. Mode 2 "cannot
 persist" in an assembled mesh once the rigid-body modes are removed, and it
@@ -71,7 +75,9 @@ slenderness of 10 and 0.04% at 1000, which is the very failure the paper was
 written to avoid, and which its Tables I and II report for the beam.
 Ungating the paper's own modified scheme is worse still, locking the plate to
 the same degree while also making the strip 33 times too stiff. The remedy
-that removes the modes without locking is an assumed transverse shear field:
+that removes the modes without locking is an assumed transverse shear field,
+which :class:`pyfe3d.Quad4` uses for `h/\ell \ge 1` since 0.12.0, whereas the
+thin elements keep the one-point rule and the two modes:
 
     Dvorkin, E. N. and Bathe, K. J., 1984, "A continuum mechanics based
     four-node shell element for general nonlinear analysis", Engineering
@@ -151,17 +157,18 @@ def test_figure_10_modes_of_hughes_taylor_kanoknukulchai():
     element matrix:
 
         h/l      Mode 2 in-plane twist   Mode 1 hourglass
-        0.01            1.2e-18              0.0
-        0.1             5.3e-18              0.0
-        0.5            -1.0e-18              0.0
-        1.0            -1.9e-18              0.1496
-        2.0            -8.3e-18              0.1496
+        0.01            5.0e-19              0.0
+        0.1             4.6e-18              0.0
+        0.5             1.3e-18              0.0
+        1.0             0.0187               0.1496
+        2.0             0.0187               0.1496
 
-    The step in Mode 1 is the switch to the modified one-point shear rule of
-    the paper, which the paper recommends for `t/h > 1` and which
-    :class:`.Quad4` applies at `h/\ell \ge 1`. Mode 2 is not touched by it,
-    consistently with the paper, which offers no remedy for it and argues
-    instead that it cannot persist in a mesh.
+    The step is the switch to the assumed transverse shear strains of the
+    MITC4 element, which :class:`.Quad4` applies at `h/\ell \ge 1` since
+    0.12.0. The modified one-point shear rule of the paper, applied up to
+    0.11, gave the same 0.1496 to Mode 1 but left Mode 2 free, consistently
+    with the paper, which offers no remedy for it and argues instead that it
+    cannot persist in a mesh.
 
     """
     for drilling_model in (0, 1):
@@ -176,8 +183,7 @@ def test_figure_10_modes_of_hughes_taylor_kanoknukulchai():
             assert abs(U1) < 1.e-14, (h, U1)
             assert abs(U2) < 1.e-14, (h, U2)
 
-        # above the gate the modified rule of the paper removes Mode 1 and
-        # leaves Mode 2 alone
+        # above the gate the assumed strains remove both modes
         for h in (1., 2.):
             K, xe = element_K(Quad4, Quad4Data, Quad4Probe, SQUARE, h,
                               drilling_model)
@@ -187,7 +193,7 @@ def test_figure_10_modes_of_hughes_taylor_kanoknukulchai():
             U2 = mode2.dot(K.dot(mode2))/emax
             print('h/l=%g: mode1 %.4f mode2 %.3e' % (h, U1, U2))
             assert abs(U1 - 0.1496) < 1.e-3, (h, U1)
-            assert abs(U2) < 1.e-14, (h, U2)
+            assert abs(U2 - 0.0187) < 1.e-3, (h, U2)
 
 
 def test_mode_2_is_shared_by_the_three_shell_elements():
@@ -323,7 +329,7 @@ def test_mode_2_does_not_persist_in_a_mesh_but_mode_1_does():
                                  1., 1., 0.01, 1., 0.3,
                                  triangles=True)[0]) == 6, n
 
-    # above the thickness gate the modified rule removes it here too
+    # above the thickness gate the assumed strains remove it here too
     assert num_zeros(plate_K(Quad4, Quad4Data, Quad4Probe, 4, 4,
                              1., 1., 1., 1., 0.3)[0]) == 6
 
