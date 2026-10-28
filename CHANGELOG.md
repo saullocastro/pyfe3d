@@ -140,6 +140,61 @@
 - `test_hinged_roof_thick`: with the 16x16 mesh of Table 9a of Sze et
   al. (2004) instead of 8x8, the limit loads within 1 per cent instead
   of 1.5 per cent.
+- The expected values of the tests come from the literature or from a
+  closed form written in the test, with its source, and no longer from the
+  output of the code; where a finite element result is compared with the
+  literature, the mesh is refined until the discretisation error, measured
+  and stated in the docstring, is well inside the tolerance. Without
+  changing the name of any test:
+  - beams: the cantilever frequencies against the exact Timoshenko beam
+    solution (Petyt, 2010, Table 3.6) instead of the Euler-Bernoulli roots
+    with `beta*L = 7.885` for 7.8548; the pre-stressed cantilevers at half
+    the Euler load (Timoshenko and Gere, 1961, Eqs. (2-4) and (2-57))
+    against the exact solution with axial load (Bokaian, 1988; Abramovich,
+    2017) instead of regression values; the curved arch against Table 6 of
+    Yoon et al. (2006), with and without shear deformation, instead of the
+    output of the code; the static point load against Gere and Goodno
+    (2009) with the shear term instead of a web calculator; the column
+    and the truss with their sources;
+  - plates: the point-loaded plate against the series of Timoshenko and
+    Woinowsky-Krieger (1959), Eq. (147), instead of the output of the code;
+    the frequencies against Leissa (1969), Eq. (4.20); the buckling of thick
+    plates against the shear-deformable solution of Seide and Stowell
+    (1950), NACA Report 967, Eq. (1), instead of the classical one; the
+    rotated plates assert the invariance of the buckling load under 25
+    rotations;
+  - cylinders: the torsional buckling of the laminates Z11 and Z33 against
+    Fig. 13 of Castro et al. (2014), to which `Quad4` and `Quad4R` converge
+    within 0.7 per cent once the boundary conditions CC2 of the paper are
+    used, and of an isotropic cylinder against Batdorf et al. (1947), NACA
+    TN 1344; the frequencies of an isotropic cylinder against Leissa (1973),
+    NASA SP-288, Table 2.8, instead of regression values;
+  - shell properties: the ABD matrices against the closed forms and an
+    independent lamination sum, and the transverse shear stiffness of
+    Rohwer against his Table 2 and an independent implementation of his
+    equations, instead of pasted values;
+  - benchmarks: the drilling benchmarks, the strip torsion and the
+    optional stabilisation of `Tria3DSG` graded with the accuracy grades of
+    MacNeal and Harder (1985); the thin hinged roof with the 24x24 mesh of
+    Table 9d of Sze et al. (2004), its lower limit load, 11 per cent below
+    the table with the default hourglass stiffness of `Quad4R`, as an
+    expected failure; the energies of the zero-energy modes of `Quad4` in
+    closed form (Bathe and Dvorkin, 1985); the FE/Navier ratios of the
+    laminated plates as converging to the Navier solution (Reddy, 2004)
+    instead of locked; the von Mises truss and Ziegler's column with their
+    sources.
+- The tests of `Tria3R` keep their assertions, whose tolerances are those
+  of their coarse meshes: against the literature, its error grows as the
+  mesh is refined before it decreases, see the Notes of `pyfe3d.tria3r`.
+- Bugs of the tests: the "distorted" frequency tests copied the nodal
+  coordinates before distorting the mesh and analysed the regular mesh;
+  the constant-curvature patch test of the drilling rotations prescribed
+  `r_y` with the wrong sign; the displacement-controlled cylinder built
+  `KG` from a displacement vector without the prescribed shortening; the
+  torsion cylinders restrained the axial displacement of a whole ring,
+  which raised the buckling load by 17 per cent; `test_errors` of
+  `test_shellprop.py` passed when no exception was raised, and
+  `test_trace_normalized` used `Q44` for `Q66`.
 
 ### Documentation
 
@@ -154,6 +209,23 @@
   shown about the shear centre, i.e. the principal sectorial coordinate.
   matplotlib and plotly are added to `requirements_doc.txt` only.
 - `cross_sectional_analysis` describes the generalized Vlasov model.
+- New user guide page `documentation_levels`: the four levels of the
+  documentation (functional docstrings, theory in the `Notes` and
+  `References` sections, the pages, the notebooks) and what the tests
+  verify and against what.
+- The example pages of the plate, the column and the cylinders name the
+  references of their tests, and the figures of the cylinders are those of
+  the new models.
+- The Notes of `pyfe3d.quad4r` give the measured range of the transverse
+  hourglass coefficient: the one-element-wide torsion strip of MacNeal and
+  Harder needs about `0.1 E t^3` and Brockman's factor gives it `1.67e-2`,
+  4.77 times too flexible, so that it needs two elements across, which the
+  former text did not say. The Notes of `pyfe3d.tria3r` and
+  `element_choice` give its error under mesh refinement.
+- `tut-nonlinear-benchmarks` re-executed with the geometric stiffness of
+  `Quad4R` of this version: with small values of `hgfactor_w`, the paths of
+  the thinner hinged roof no longer depend on the mesh and on the
+  increments, and follow Table 9d of Sze et al. (2004).
 
 ## 0.11.3 (2026-10-27)
 

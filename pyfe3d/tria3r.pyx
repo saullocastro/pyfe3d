@@ -152,6 +152,21 @@ so the thickness cancels and the error behaves as an ordinary
     makes the plate above 30.6 per cent too stiff. No single value serves
     both problem classes.
 
+    Nor does one value serve all the meshes of one problem. The factor is
+    proportional to `(\ell/h)^2`, so it fades as the mesh is refined while
+    the shear taken at the centroid still locks, and the error does not
+    decrease monotonically. Against the exact solutions of the literature,
+    the central deflection of the point-loaded plate of
+    ``test_tria3r_static_point_load.py``, `b/h = 600`, is 26.2 per cent too
+    large with 6x10 elements, -0.18 per cent with 14x22, then -4.7, -8.4
+    and -9.6 per cent with 20x32, 42x66 and 112x176; the buckling load of
+    the plate of ``test_tria3r_linear_buckling_plate.py``, `b/h = 167`, is
+    4.9, 12.0 and 13.4 per cent too high with 30x14, 62x30 and 92x44
+    elements; the first frequency of the plate of
+    ``test_tria3r_natural_freq.py`` is within 1.5 per cent with 8x10
+    elements and 2.3 to 3.3 per cent too high with 17x21 to 35x43. The
+    tolerances of those tests are those of their original, coarse meshes.
+
     The proper fix is to give the element a locking-free transverse shear
     field, the DSG of Bletzinger, Bischoff and Ramm (2000) [8]_ being the
     triangular counterpart of the MITC4 treatment used for quadrilaterals,

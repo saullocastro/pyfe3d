@@ -53,7 +53,9 @@ geometrically non-linear analyses.
         :class:`.Tria3DSG` existed. Its transverse shear, taken at the
         centroid, locks and is reduced by the factor of
         ``alpha_shear_locking``, ``0.7`` by default, a value that must be
-        verified per problem class, see :mod:`.tria3r`.
+        verified per problem class and per mesh: on thin plates the error
+        grows as the mesh is refined, before it decreases, see
+        :mod:`.tria3r`.
 
 Practical rules:
 

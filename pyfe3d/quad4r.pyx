@@ -195,15 +195,23 @@ give `\gamma^\top w = \partial^2 w/\partial x \partial y`. The stabilisation
 therefore also stiffens real twist, by the ratio
 `3 E^{(h)}_w/(E t^3)`, and the amount that is acceptable is a property of
 the problem rather than of the element. Measured on this element's own
-benchmarks, the thin plates want a coefficient near `2 \times 10^{-4}` of
-`E t^3`, above which their buckling loads stiffen past their tolerances,
-while the one-element-wide torsion strip of MacNeal and Harder (1985) [7]_,
-for which the twist *is* the hourglass pattern, wants near
-`2 \times 10^{-2}`, below which it becomes several times too flexible.
-Those are two orders of magnitude apart and no single dimensionless
-constant serves both. Brockman's factor does serve both, because it grows
-with the element area, which in SI units happens to correlate with which of
-the two regimes a given problem is in.
+benchmarks, as a multiple of `E t^3`: the simply supported plate of
+``test_quad4r_linear_buckling_plate_given_stress.py``, `b/t = 250`,
+tolerates up to about `10^{-3}`, which changes its buckling load by 0.2
+to 0.3 %, whereas `1.67 \times 10^{-2}` stiffens it by about 4.5 %, with
+30x14 and with 92x44 elements; the one-element-wide torsion strip of
+MacNeal and Harder (1985) [7]_, for which the twist *is* the hourglass
+pattern, needs about `10^{-1}`, which gives 0.90 times the reference
+twist, and is 1.75, 4.77 and 34 times too flexible with `5 \times
+10^{-2}`, `1.67 \times 10^{-2}` and `10^{-3}`. Those are two orders of
+magnitude apart and no single dimensionless constant serves both.
+Brockman's factor grows with the element area, and in SI units it gives
+the thin plates `2.4 \times 10^{-4}` (30x14) and `2.5 \times 10^{-5}`
+(92x44), but the strip, whose elements have the area 0.2 in the unit of
+its model, only `1.67 \times 10^{-2}`: with one element across its width
+the strip remains 4.77 times too flexible, grade F of MacNeal and Harder,
+and needs at least two elements across, see
+``test_transverse_coefficient_has_no_unit_invariant_constant``.
 
 So the residual unit dependence of this element's hourglass control is
 confined to `E^{(h)}_w`, it is documented, and it is measured in

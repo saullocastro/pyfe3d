@@ -55,6 +55,7 @@ User guide
     :maxdepth: 1
 
     overview.rst
+    documentation_levels.rst
     conventions.rst
     element_choice.rst
     shell_properties.rst
