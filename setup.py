@@ -138,6 +138,11 @@ extensions = [
             './pyfe3d/quad4r.pyx',
             ],
         **extension_kwargs),
+    Extension('pyfe3d.vabs',
+        sources=[
+            './pyfe3d/vabs.pyx',
+            ],
+        **extension_kwargs),
 
     ]
 

@@ -150,6 +150,11 @@ the two planes, e.g. `5/6` for a rectangular section, are applied by the
 user to ``G12`` and ``G13``. Applied to ``G``, as in some of the examples,
 they also scale ``GJ``, unless ``GJ`` is set.
 
+The torsional and shear stiffnesses of an arbitrary, possibly composite,
+cross section, with the couplings that a :class:`.BeamProp` cannot
+represent, are computed by :mod:`pyfe3d.vabs`, see
+:doc:`cross_sectional_analysis`.
+
 
 Examples
 --------

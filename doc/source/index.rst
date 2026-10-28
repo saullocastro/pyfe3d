@@ -58,6 +58,7 @@ User guide
     conventions.rst
     element_choice.rst
     shell_properties.rst
+    cross_sectional_analysis.rst
     nonlinear_analyses.rst
     eigenvalue_analyses.rst
 

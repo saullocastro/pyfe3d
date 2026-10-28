@@ -10,6 +10,7 @@ beam*.cpp
 spring*.cpp
 truss*.cpp
 shell*.cpp
+vabs*.cpp
 build
 dist
 .coverage
