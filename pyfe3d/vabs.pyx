@@ -19,7 +19,9 @@ finite elements over the cross section. The class :class:`.CrossSection`
 receives the mesh, the material matrices and the orientation of each
 element, and computes the classical `4 \times 4` and the generalized
 Timoshenko `6 \times 6` stiffness and flexibility matrices, the tension
-centre, the shear centre and the mass properties. The functions
+centre, the shear centre and the mass properties, and the `5 \times 5`
+stiffness of the generalized Vlasov model, for thin-walled open sections.
+The functions
 :func:`.isotropic` and :func:`.orthotropic` create the material matrices,
 :func:`.rotate_material` rotates them, :func:`.yu_to_pyfe3d` and
 :func:`.pyfe3d_to_yu` convert the stiffness matrices between the ordering
@@ -58,6 +60,9 @@ work-conjugate to `\kappa_2` and `\kappa_3` are then `M_2 = \int
 \sigma_{11} x_3 \, dA = M_y` and `M_3 = -\int \sigma_{11} x_2 \, dA = -M_z`,
 with `M_y` and `M_z` those of pyfe3d, see :func:`.yu_to_pyfe3d`.
 
+The generalized Vlasov model is that of Yu et al. [5]_, see
+:meth:`.CrossSection.calc_vlasov`.
+
 Only prismatic (straight and untwisted) beams are implemented: the
 initial twist `k_1` and curvatures `k_2`, `k_3` of [2]_ and [3]_, which
 enter the operator `\boldsymbol{\Gamma}_R` and the perturbation solution
@@ -81,6 +86,10 @@ References
    Variational Asymptotic Beam Sectional Analysis", Journal of the
    American Helicopter Society, 50(1), pp. 46--55, 2005.
    https://doi.org/10.4050/1.3092842
+.. [5] Yu, W., Hodges, D. H., Volovoi, V. V., and Fuchs, E. D., "A
+   generalized Vlasov theory for composite beams", Thin-Walled
+   Structures, 43(9), pp. 1493--1511, 2005.
+   https://doi.org/10.1016/j.tws.2005.02.003
 
 """
 from libc.math cimport sqrt, sin, cos
@@ -803,8 +812,11 @@ cdef class CrossSection:
     both set ``area``, ``centroid`` and the integrals of the cross section.
     After :meth:`calc_stiffness`, :meth:`warping` gives the warping of the
     nodes for given beam strains, and :meth:`triangles` a triangulation of
-    the mesh on which to plot it. All results refer to the origin of the coordinates `x_2`, `x_3`, i.e.
-    the beam reference axis passes through `(0, 0)`.
+    the mesh on which to plot it. :meth:`calc_vlasov` computes the
+    stiffness of the generalized Vlasov model, in the axes of the shear
+    centre obtained with :meth:`translated`. All results refer to the
+    origin of the coordinates `x_2`, `x_3`, i.e. the beam reference axis
+    passes through `(0, 0)`, except those of :meth:`calc_vlasov`.
 
     .. figure:: ../figures/vabs_axes.svg
 
@@ -931,6 +943,22 @@ cdef class CrossSection:
     A, B, C : np.ndarray
         Matrices of the second-order energy, shape ``(4, 4)``, dimension of
         ``Kc`` times length to the power ``0``, ``1`` and ``2``.
+    Kv : np.ndarray
+        Stiffness matrix of the generalized Vlasov model, set by
+        :meth:`calc_vlasov`, shape ``(5, 5)``, of the strains
+        `\{\gamma_{11}, \kappa_1, \kappa_2, \kappa_3, \kappa_1'\}`
+        referred to the shear centre, i.e. of the forces `\{F_1, M_1, M_2,
+        M_3, M_\omega\}`, with `M_\omega` the bimoment; the last row and
+        column have the dimensions of those of ``Kc`` times length, and the
+        last diagonal entry, the warping rigidity, force times length to the
+        fourth.
+    Fv : np.ndarray
+        Flexibility matrix of the generalized Vlasov model, the inverse of
+        ``Kv``.
+    vlasov_section : CrossSection
+        The cross section with the origin at the shear centre, from
+        :meth:`translated`, analysed by :meth:`calc_vlasov`; its
+        :meth:`warping` gives the warping about the shear centre.
     mass_per_length : float
         Mass per unit length.
     mass_centre : np.ndarray
@@ -988,6 +1016,7 @@ cdef class CrossSection:
     cdef public object centroid
     cdef public object Kc, Fc, Kt, Ft, tension_centre, shear_centre
     cdef public object V0, V1S, A, B, C
+    cdef public object Kv, Fv, vlasov_section
     cdef public double mass_per_length
     cdef public object mass_centre, mass_matrix
     cdef public double intrho, intrhoy, intrhoz, intrhoy2, intrhoz2, intrhoyz
@@ -1091,6 +1120,9 @@ cdef class CrossSection:
         self.A = None
         self.B = None
         self.C = None
+        self.Kv = None
+        self.Fv = None
+        self.vlasov_section = None
         self.mass_per_length = 0
         self.mass_centre = None
         self.mass_matrix = None
@@ -1362,6 +1394,183 @@ cdef class CrossSection:
         self.tension_centre = np.linalg.solve(M, -Fc[[2, 3], 0])
         # NOTE shear centre, Yu et al. (2002), Eq. (66)
         self.shear_centre = np.array([-Ft[2, 3]/Ft[3, 3], Ft[1, 3]/Ft[3, 3]])
+
+    def translated(CrossSection self, double e2, double e3):
+        r"""Copy of the cross section with the origin moved to a given point
+
+        Creates a new :class:`.CrossSection` with the same mesh, materials,
+        orientations and densities, whose coordinates are `x_2 - e_2` and
+        `x_3 - e_3`, i.e. whose reference axis passes through the point
+        `(e_2, e_3)` of this cross section. Nothing is computed.
+
+        Parameters
+        ----------
+        e2, e3 : float
+            Coordinates of the new origin in the axes of this cross section,
+            dimension length, e.g. ``*shear_centre``.
+
+        Returns
+        -------
+        sec : CrossSection
+            The translated cross section.
+
+        Examples
+        --------
+        >>> import numpy as np
+        >>> from pyfe3d.vabs import CrossSection, isotropic
+        >>> x2, x3 = np.meshgrid([-0.5, 0., 0.5], [-0.5, 0., 0.5])
+        >>> elements = [[0, 1, 4, 3], [1, 2, 5, 4], [3, 4, 7, 6], [4, 5, 8, 7]]
+        >>> sec = CrossSection(x2.ravel(), x3.ravel(), elements,
+        ...                    materials=[isotropic(1., 0.3)], mat_ids=[0]*4)
+        >>> float(sec.translated(0.5, 0.).x2.min())
+        -1.0
+
+        """
+        elements = [self.conn[e, :self.nen[e]]
+                    for e in range(self.conn.shape[0])]
+        return CrossSection(self.x2 - e2, self.x3 - e3, elements,
+                            self.materials, self.mat_ids, theta1=self.theta1,
+                            theta3=self.theta3, densities=self.densities)
+
+    def calc_vlasov(CrossSection self, str constraint='yu2002'):
+        r"""Compute the stiffness of the generalized Vlasov model
+
+        Locates the shear centre, analyses with :meth:`calc_stiffness` the
+        cross section translated to it, stored in ``vlasov_section``, and
+        sets ``Kv`` and ``Fv``, the `5 \times 5` stiffness and flexibility
+        of the strains `\{\gamma_{11}, \kappa_1, \kappa_2, \kappa_3,
+        \kappa_1'\}` referred to the shear centre, where `\kappa_1'` is the
+        derivative of the twist rate along the beam and the bimoment
+        `M_\omega` its work-conjugate. The model is intended for thin-walled
+        open sections, whose restrained warping is not represented by the
+        classical and Timoshenko models. The other attributes are not
+        changed. No beam element of pyfe3d uses
+        ``Kv``: :class:`.BeamC` and :class:`.BeamLR` have no warping
+        degree-of-freedom, and ``Kv`` is meant for one-dimensional Vlasov
+        beam analyses outside pyfe3d.
+
+        Parameters
+        ----------
+        constraint : str, optional
+            The warping constraints of :meth:`calc_stiffness`. Default
+            ``'yu2002'``, with which the published values of the generalized
+            Vlasov model are reproduced, see the Notes; ``'yu2012'`` gives
+            the same first four rows and columns but a different warping
+            rigidity.
+
+        Raises
+        ------
+        ValueError
+            As :meth:`calc_stiffness`.
+        RuntimeError
+            As :meth:`calc_stiffness`.
+
+        Examples
+        --------
+        Warping rigidity of a thin-walled I-section, flanges of width ``1``
+        and walls of thickness ``0.04``, outer height ``0.5``, close to
+        `E t b_f^3 h^2/24` with `h = 0.46` between the flange mid-planes:
+
+        >>> import numpy as np
+        >>> from pyfe3d.vabs import CrossSection, isotropic
+        >>> t, H, w = 0.04, 0.5, 0.48
+        >>> def rect(a, b, nx, ny, x0, y0):
+        ...     x2, x3 = np.meshgrid(x0 + np.linspace(-a/2, a/2, nx + 1),
+        ...                          y0 + np.linspace(-b/2, b/2, ny + 1))
+        ...     els = [[j*(nx + 1) + i, j*(nx + 1) + i + 1,
+        ...             (j + 1)*(nx + 1) + i + 1, (j + 1)*(nx + 1) + i]
+        ...            for j in range(ny) for i in range(nx)]
+        ...     return x2.ravel(), x3.ravel(), els
+        >>> parts = [rect(w, t, 12, 2, -t/2 - w/2, y) for y in (-0.23, 0.23)]
+        >>> parts += [rect(w, t, 12, 2, t/2 + w/2, y) for y in (-0.23, 0.23)]
+        >>> parts += [rect(t, t, 2, 2, 0., y) for y in (-0.23, 0.23)]
+        >>> parts += [rect(t, H - 2*t, 2, 10, 0., 0.)]
+        >>> xy = np.round(np.concatenate([np.column_stack(p[:2])
+        ...                               for p in parts]), 9)
+        >>> uniq, inv = np.unique(xy, axis=0, return_inverse=True)
+        >>> inv = inv.ravel()
+        >>> offsets = np.cumsum([0] + [len(p[0]) for p in parts])
+        >>> elements = [[int(inv[o + n]) for n in el]
+        ...             for p, o in zip(parts, offsets) for el in p[2]]
+        >>> sec = CrossSection(uniq[:, 0], uniq[:, 1], elements,
+        ...                    materials=[isotropic(10e6, 0.3)],
+        ...                    mat_ids=[0]*len(elements))
+        >>> sec.calc_vlasov()
+        >>> EG = 10e6*t*1.**3*0.46**2/24
+        >>> bool(abs(sec.Kv[4, 4]/EG - 1) < 0.01)
+        True
+
+        Notes
+        -----
+        The second-order energy of a prismatic beam, `2\mathcal{U} =
+        \bar{\boldsymbol{\epsilon}}^\top \boldsymbol{A}
+        \bar{\boldsymbol{\epsilon}} + 2 \bar{\boldsymbol{\epsilon}}^\top
+        \boldsymbol{B} \bar{\boldsymbol{\epsilon}}' +
+        \bar{\boldsymbol{\epsilon}}'^\top \boldsymbol{C}
+        \bar{\boldsymbol{\epsilon}}' + 2 \bar{\boldsymbol{\epsilon}}^\top
+        \boldsymbol{D} \bar{\boldsymbol{\epsilon}}''`, Eq. (1) of [1]_, see
+        :meth:`calc_stiffness`, depends on the reference axis. Following
+        Section 2 of [1]_, the shear centre is obtained from the generalized
+        Timoshenko flexibility, Eq. (3) of [1]_, ``shear_centre``, the
+        origin is moved to it, and only the derivative `\kappa_1'` of the
+        twist rate is kept, `\gamma_{11}' = \kappa_2' = \kappa_3' = 0`,
+        which gives the generalized Vlasov model, Eq. (4) of [1]_,
+
+        .. math::
+            \boldsymbol{K}_v = \begin{bmatrix} \boldsymbol{A} &
+            \boldsymbol{b} \\ \boldsymbol{b}^\top & C_{22} \end{bmatrix}
+            \qquad \boldsymbol{b} = \{B_{12}, B_{22}, B_{32}, B_{42}\}
+
+        with `\boldsymbol{A}`, `\boldsymbol{B}` and `\boldsymbol{C}` those
+        of the translated section and the entries numbered from 1. The first
+        four rows and columns are the classical stiffness in the axes of the
+        shear centre. The term in `\boldsymbol{D}` contains
+        `\kappa_1''` and has no place in Eq. (4) of [1]_; it is omitted, as
+        in [1]_, whose values are reproduced without it.
+
+        The warping constraints change `\boldsymbol{C}`. With those of
+        Yu et al. (2002), ``constraint='yu2002'``, `K_{v,55}` reproduces the
+        values computed with VABS in Tables 1, 3 and 4 of [1]_ for strips to
+        five digits or more, and for the isotropic strip it agrees with the
+        asymptotic thin-walled value `E h^3 b^3/[144 (1 - \nu^2)]`, Eq. (18)
+        of [1]_; with ``constraint='yu2012'`` it is about `9` per cent
+        lower for that strip, close to the value `E h^3 b^3/144` of Vlasov's
+        theory, Eq. (17) of [1]_. For an I-section, both are within `0.2`
+        per cent of each other and of the thin-walled warping rigidity.
+
+        For a thin-walled open section, the torsional warping per unit twist
+        rate about the shear centre, the first column of
+        ``vlasov_section.warping([0, 1, 0, 0])``, approaches `-\omega`,
+        with `\omega` the principal sectorial coordinate of Vlasov [2]_,
+        normalised to zero average with the pole at the shear centre, and
+        `K_{v,55}` approaches the warping rigidity `E \Gamma`.
+
+        References
+        ----------
+        .. [1] Yu, W., Hodges, D. H., Volovoi, V. V., and Fuchs, E. D., "A
+           generalized Vlasov theory for composite beams", Thin-Walled
+           Structures, 43(9), pp. 1493--1511, 2005.
+           https://doi.org/10.1016/j.tws.2005.02.003
+        .. [2] Vlasov, V. Z., Thin-Walled Elastic Beams, 2nd ed., Israel
+           Program for Scientific Translations, Jerusalem, 1961.
+
+        """
+        if (self.shear_centre is not None and self.constraint == constraint):
+            e = self.shear_centre
+        else:
+            tmp = self.translated(0., 0.)
+            tmp.calc_stiffness(constraint)
+            e = tmp.shear_centre
+        sec = self.translated(e[0], e[1])
+        sec.calc_stiffness(constraint)
+        Kv = np.zeros((5, 5), dtype=DOUBLE)
+        Kv[:4, :4] = sec.A
+        Kv[:4, 4] = sec.B[:, 1]
+        Kv[4, :4] = sec.B[:, 1]
+        Kv[4, 4] = sec.C[1, 1]
+        self.Kv = Kv
+        self.Fv = np.linalg.inv(Kv)
+        self.vlasov_section = sec
 
     def calc_mass(CrossSection self):
         r"""Compute the mass properties of the cross section
