@@ -30,9 +30,17 @@ from pyfe3d import (Quad4, Quad4Data, Quad4Probe, Quad4R, Quad4RData,
                     Quad4RProbe, Tria3R, Tria3RData, Tria3RProbe,
                     INT, DOUBLE, DOF)
 
+from test_shellprop_transverse_shear import rohwer_stiffness
+
 E_ISO = 210.e9
 NU_ISO = 0.3
-# NOTE laminate of cylinder Z22, Table 4 of Castro et al. (2014)
+# NOTE laminate of cylinder Z22 of Castro, S. G. P., Zimmermann, R., Arbelo,
+#      M. A., Khakimova, R., Hilburger, M. W. and Degenhardt, R., "Geometric
+#      imperfections and lower-bound methods used to calculate knock-down
+#      factors for axially compressed composite cylindrical shells",
+#      Thin-Walled Structures, 74, 118-132, 2014,
+#      https://doi.org/10.1016/j.tws.2013.08.011 (the table number of the
+#      material data is not verified here)
 LAMINAPROP = (123.55e9, 8.708e9, 0.319, 5.595e9, 5.595e9, 5.595e9)
 STACK = [49, -49, 36, -36, 0, 0]
 PLYT = 0.125e-3
@@ -180,6 +188,17 @@ def test_tria3r_scales_the_shear_stiffness_with_the_element_size():
     stabilisation is visible, and it is the reason Tria3R is excluded from
     :func:`test_quads_reproduce_a_constant_transverse_shear_state`.
 
+    It is a check of the specification of Tria3R, not of a published value:
+    the form of the factor is Eq. (3.12) of Lyly, Stenberg and Vihinen
+    (1993), "A stable bilinear element for the Reissner-Mindlin plate model",
+    Computer Methods in Applied Mechanics and Engineering, 110, 343-357,
+    p. 347, https://doi.org/10.1016/0045-7825(93)90214-I, where the shear
+    energy coefficient `G\kappa t/2` becomes `G\kappa t^3/(2(t^2 + \alpha
+    h_K^2))`, i.e. it is divided by `1 + \alpha h_K^2/t^2`, with `h_K` "the
+    longest of the edges of the element" and `\alpha` "a fixed positive
+    constant". Lyly et al. choose `\alpha = 0.1` (p. 349), while
+    `\alpha = 0.7` is the default of pyfe3d.
+
     """
     alpha = 0.7
     for L, h in SIZES:
@@ -198,10 +217,13 @@ def test_rohwer_differs_from_the_constant_factor_on_a_real_laminate():
     r"""What the equilibrium approach buys over `k = 5/6`
 
     On the laminate of cylinder Z22 the equilibrium approach gives
-    `k_{13} = 0.721` and `k_{23} = 0.726`, so it is noticeably more
-    compliant than `5/6`, and it produces a non-zero `A_{45}` that neither
-    the constant factor nor the Vlachoutsis factors can represent, both of
-    them leaving `A_{45} = 0` because `\bar{A}_{45} = 0` for this stacking.
+    `A_{44}/\bar{A}_{44} = 0.726` and `A_{55}/\bar{A}_{55} = 0.721`, so
+    it is noticeably more compliant than `5/6`, and it produces a non-zero
+    `A_{45}` that neither the constant factor nor the Vlachoutsis factors can
+    represent, both of them leaving `A_{45} = 0` because `\bar{A}_{45} = 0`
+    for this stacking. No published value is known for this laminate, the
+    reference is Eq. (43) of Rohwer (1988) written out independently in
+    :func:`test_shellprop_transverse_shear.rohwer_stiffness`.
 
     """
     got = {}
@@ -211,8 +233,19 @@ def test_rohwer_differs_from_the_constant_factor_on_a_real_laminate():
         got[mode] = (prop.A44, prop.A45, prop.A55)
         print('%-12s A44 %.6e  A45 %+.6e  A55 %.6e'
               % (mode, prop.A44, prop.A45, prop.A55))
-    assert np.isclose(got['rohwer'][0]/got[None][0], 0.7262, rtol=1e-3)
-    assert np.isclose(got['rohwer'][2]/got[None][2], 0.7208, rtol=1e-3)
+    # NOTE G12 = G13 = G23 = G, constant strain stiffness G h, no correction
+    G = LAMINAPROP[4]
+    h = PLYT*len(STACK)
+    assert np.allclose([got[None][0], got[None][2]], G*h, rtol=1e-14)
+    assert abs(got[None][1]) < 1e-14*G*h
+    Ats, top = rohwer_stiffness(STACK, [PLYT]*len(STACK),
+                                [LAMINAPROP]*len(STACK))
+    assert np.allclose(top, 0., atol=1e-12*G*h)
+    assert np.allclose(got['rohwer'], (Ats[0, 0], Ats[0, 1], Ats[1, 1]),
+                       rtol=1e-12, atol=1e-12*Ats.max())
+    # NOTE noticeably more compliant than 5/6
+    assert got['rohwer'][0]/(G*h) < 0.75
+    assert got['rohwer'][2]/(G*h) < 0.75
     # NOTE only the equilibrium approach couples the two directions here
     assert abs(got['rohwer'][1]) > 1.e-4*got['rohwer'][0]
     assert got['vlachoutsis'][1] == 0.

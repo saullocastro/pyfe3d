@@ -20,6 +20,68 @@ data = {
 'T4708/MR60H': dict(Ex=142e9, Ey=7.72e9, vx=0.34, Es=3.80e9, tr=158e9),
 }
 
+
+# Classical lamination theory
+# ---------------------------
+#
+# Reference stiffnesses computed in the tests, independently of pyfe3d, with
+#
+#     (A_ij, B_ij, D_ij) = sum_k int_{z_{k-1}}^{z_k} Qbar_ij^(k) (1, z, z^2) dz
+#
+# Reddy, J. N., Chandrashekhara, K. and Chao, W. C., "Geometrically nonlinear
+# analysis of laminated elastic structures", NASA CR-191055, 1993, Part 1,
+# Eq. (12), p. 8, where Qbar^(k) is the plane-stress reduced stiffness of ply
+# k in the laminate axes, see ``qbar``. The homogeneous plate is the special
+# case of one ply: A = h Q, B = 0, D = h^3/12 Q.
+
+def qbar(E1, E2, nu12, G12, thetadeg):
+    r"""Plane-stress reduced stiffness of a ply in the laminate axes
+
+    ``Q = [[E1, nu12 E2, 0], [nu12 E2, E2, 0], [0, 0, G12 (1 - nu12
+    nu21)]]/(1 - nu12 nu21)`` in the material axes, with ``nu21 = nu12
+    E2/E1``, and ``Qbar = Ts^-1 Q Te``, where ``Ts`` and ``Te`` transform the
+    stresses and the engineering strains ``{xx, yy, xy}`` from the laminate
+    axes to the material axes, whose direction 1 is at ``thetadeg`` from the
+    laminate x axis, counterclockwise.
+    """
+    nu21 = nu12*E2/E1
+    den = 1 - nu12*nu21
+    Q = np.array([[E1/den, nu12*E2/den, 0.],
+                  [nu12*E2/den, E2/den, 0.],
+                  [0., 0., G12]])
+    c = np.cos(np.deg2rad(thetadeg))
+    s = np.sin(np.deg2rad(thetadeg))
+    Ts = np.array([[c*c, s*s, 2*c*s], [s*s, c*c, -2*c*s],
+                   [-c*s, c*s, c*c - s*s]])
+    Te = np.array([[c*c, s*s, c*s], [s*s, c*c, -c*s],
+                   [-2*c*s, 2*c*s, c*c - s*s]])
+    return np.linalg.solve(Ts, Q @ Te)
+
+
+def clt_abd(stack, plyts, laminaprops, offset=0.):
+    r"""A, B, D of Eq. (12) of Reddy et al. (1993), plies from the bottom,
+    ``laminaprops`` with the entries ``(E1, E2, nu12, G12)`` first"""
+    h = sum(plyts)
+    z = offset - h/2 + np.concatenate(([0.], np.cumsum(plyts)))
+    A = np.zeros((3, 3))
+    B = np.zeros((3, 3))
+    D = np.zeros((3, 3))
+    for k, (thetadeg, lp) in enumerate(zip(stack, laminaprops)):
+        Qb = qbar(lp[0], lp[1], lp[2], lp[3], thetadeg)
+        A += Qb*(z[k+1] - z[k])
+        B += Qb*(z[k+1]**2 - z[k]**2)/2
+        D += Qb*(z[k+1]**3 - z[k]**3)/3
+    return A, B, D
+
+
+def assert_abd(A, B, D, A_ref, B_ref, D_ref, h):
+    r"""Round-off tolerance, where the terms that vanish are compared with
+    an absolute tolerance relative to the scale of the respective matrix"""
+    scale = np.abs(A_ref).max()
+    assert np.allclose(A, A_ref, rtol=1e-12, atol=1e-14*scale)
+    assert np.allclose(B, B_ref, rtol=1e-12, atol=1e-14*scale*h)
+    assert np.allclose(D, D_ref, rtol=1e-12, atol=1e-14*scale*h**2)
+
 def test_lampar_tri_axial():
     E = 71e9
     nu = 0.33
@@ -44,25 +106,26 @@ def test_lampar_tri_axial():
         0.5, 0.4, -0.3, -0.6,
         0.5, 0.4, -0.3, -0.6,
         0.5, 0.4)
-    A = np.array([[1.05196816e+11, 5.18133569e+10, 0.00000000e+00],
-                  [5.18133569e+10, 1.05196816e+11, 0.00000000e+00],
-                  [0.00000000e+00, 0.00000000e+00, 2.66917293e+10]])
-    B = np.array([[0, 0, 0],
-                  [0, 0, 0],
-                  [0, 0, 0]])
-    D = np.array([[8.76640130e+09, 4.31777974e+09, 0.00000000e+00],
-                  [4.31777974e+09, 8.76640130e+09, 0.00000000e+00],
-                  [0.00000000e+00, 0.00000000e+00, 2.22431078e+09]])
-    Abar_ts = np.array([[2.66917293e+10,  0.00000000e+00],
-                  [0.00000000e+00,  2.66917293e+10]])
-    assert np.allclose(prop.A, A)
+    # NOTE with e3 given, the invariants are those of the three-dimensional
+    #      stiffness, see MatLamina.rebuild, which for an isotropic material
+    #      are the Lame constants: C11 = lambda + 2 mu, C12 = lambda, C66 =
+    #      mu. For an isotropic material u2 = u3 = u7 = 0, such that the
+    #      lamination parameters have no effect: A = h C, B = 0, D = h^3/12 C
+    lam = E*nu/((1 + nu)*(1 - 2*nu))
+    C = np.array([[lam + 2*G, lam, 0.],
+                  [lam, lam + 2*G, 0.],
+                  [0., 0., G]])
+    A = thickness*C
+    B = np.zeros((3, 3))
+    D = thickness**3/12*C
+    Abar_ts = G*thickness*np.eye(2)
+    assert_abd(prop.A, prop.B, prop.D, A, B, D, thickness)
     prop.make_symmetric()
-    assert np.allclose(prop.B, B)
-    assert np.allclose(prop.D, D)
-    assert np.allclose(prop.Abar_ts, Abar_ts)
+    assert np.array_equal(prop.B, B)
+    assert np.allclose(prop.Abar_ts, Abar_ts, rtol=1e-12,
+                       atol=1e-14*G*thickness)
     ABD = prop.ABD
-    assert np.allclose(ABD[:3, :3], A)
-    assert np.allclose(ABD[3:, 3:], D)
+    assert_abd(ABD[:3, :3], ABD[:3, 3:], ABD[3:, 3:], A, B, D, thickness)
 
 
 def test_lampar_plane_stress():
@@ -88,25 +151,24 @@ def test_lampar_plane_stress():
         0.5, 0.4, -0.3, -0.6,
         0.5, 0.4, -0.3, -0.6,
         0.5, 0.4)
-    A = np.array([[7.96768040e+10, 2.62933453e+10, 1.14440918e-06],
-                  [2.62933453e+10, 7.96768040e+10, -1.14440918e-06],
-                  [1.14440918e-06, -1.14440918e-06, 2.66917293e+10]])
-    B = np.array([[0., 0., 0.],
-                  [0., 0., 0.],
-                  [0., 0., 0.]])
-    D = np.array([[6.63973366e+09, 2.19111211e+09, 9.53674316e-08],
-                  [2.19111211e+09, 6.63973366e+09, -9.53674316e-08],
-                  [9.53674316e-08, -9.53674316e-08, 2.22431078e+09]])
-    Abar_ts = np.array([[2.66917293e+10, 0.00000000e+00],
-                  [0.00000000e+00, 2.66917293e+10]])
-    assert np.allclose(prop.A, A)
+    # NOTE isotropic plane stress, u2 = u3 = u7 = 0 such that the lamination
+    #      parameters have no effect: A = E h/(1 - nu^2) [[1, nu, 0], [nu,
+    #      1, 0], [0, 0, (1 - nu)/2]], D = h^2/12 A, Abar_ts = G h I
+    G = E/(2*(1 + nu))
+    Q = E/(1 - nu**2)*np.array([[1., nu, 0.],
+                                [nu, 1., 0.],
+                                [0., 0., (1 - nu)/2]])
+    A = thickness*Q
+    B = np.zeros((3, 3))
+    D = thickness**3/12*Q
+    Abar_ts = G*thickness*np.eye(2)
+    assert_abd(prop.A, prop.B, prop.D, A, B, D, thickness)
     prop.make_symmetric()
-    assert np.allclose(prop.B, B)
-    assert np.allclose(prop.D, D)
-    assert np.allclose(prop.Abar_ts, Abar_ts)
+    assert np.array_equal(prop.B, B)
+    assert np.allclose(prop.Abar_ts, Abar_ts, rtol=1e-12,
+                       atol=1e-14*G*thickness)
     ABD = prop.ABD
-    assert np.allclose(ABD[:3, :3], A)
-    assert np.allclose(ABD[3:, 3:], D)
+    assert_abd(ABD[:3, :3], ABD[:3, 3:], ABD[3:, 3:], A, B, D, thickness)
 
 
 def test_laminated_plate_tri_axial():
@@ -114,21 +176,15 @@ def test_laminated_plate_tri_axial():
     stack = [0, 45, 90]
     plyt = 0.000125
     prop = laminated_plate(stack, plyt, lamprop)
-    A = np.array([[ 13280892.30559593, 2198758.85719477, 2015579.57848837],
-                  [  2198758.85719477,13280892.30559593, 2015579.57848837],
-                  [  2015579.57848837, 2015579.57848837, 4083033.36210029]])
-    B = np.array([[ -1.00778979e+03, 0.00000000e+00, 8.53496487e-15],
-                  [  0.00000000e+00, 1.00778979e+03, 5.31743621e-14],
-                  [  8.53496487e-15, 5.31743621e-14, 0.00000000e+00]])
-    D = np.array([[ 0.1708233 , 0.01057886, 0.00262445],
-                  [ 0.01057886, 0.1708233 , 0.00262445],
-                  [ 0.00262445, 0.00262445, 0.0326602 ]])
-    Abar_ts = np.array([[ 2625000.,       0.],
-                  [       0., 2625000.]])
-    assert np.allclose(prop.A, A)
-    assert np.allclose(prop.B, B)
-    assert np.allclose(prop.D, D)
-    assert np.allclose(prop.Abar_ts, Abar_ts)
+    # NOTE the plies use the plane-stress reduced stiffnesses of E1, E2,
+    #      nu12 and G12 whether or not e3 is given, see Lamina.rebuild, such
+    #      that the result is the same as in the plane-stress test below
+    A, B, D = clt_abd(stack, [plyt]*3, [lamprop]*3)
+    # NOTE G13 = G23 = G, constant-strain transverse shear stiffness G h
+    Abar_ts = 7e9*3*plyt*np.eye(2)
+    assert_abd(prop.A, prop.B, prop.D, A, B, D, prop.h)
+    assert np.allclose(prop.Abar_ts, Abar_ts, rtol=1e-12,
+                       atol=1e-14*Abar_ts.max())
 
 
 def test_laminated_plate_plane_stress():
@@ -136,21 +192,11 @@ def test_laminated_plate_plane_stress():
     stack = [0, 45, 90]
     plyt = 0.000125
     prop = laminated_plate(stack, plyt, lamprop)
-    A = np.array([[ 13280892.30559593, 2198758.85719477, 2015579.57848837],
-                  [  2198758.85719477,13280892.30559593, 2015579.57848837],
-                  [  2015579.57848837, 2015579.57848837, 4083033.36210029]])
-    B = np.array([[ -1.00778979e+03, 0.00000000e+00, 8.53496487e-15],
-                  [  0.00000000e+00, 1.00778979e+03, 5.31743621e-14],
-                  [  8.53496487e-15, 5.31743621e-14, 0.00000000e+00]])
-    D = np.array([[ 0.1708233 , 0.01057886, 0.00262445],
-                  [ 0.01057886, 0.1708233 , 0.00262445],
-                  [ 0.00262445, 0.00262445, 0.0326602 ]])
-    Abar_ts = np.array([[ 2625000.,       0.],
-                  [       0., 2625000.]])
-    assert np.allclose(prop.A, A)
-    assert np.allclose(prop.B, B)
-    assert np.allclose(prop.D, D)
-    assert np.allclose(prop.Abar_ts, Abar_ts)
+    A, B, D = clt_abd(stack, [plyt]*3, [lamprop]*3)
+    Abar_ts = 7e9*3*plyt*np.eye(2)
+    assert_abd(prop.A, prop.B, prop.D, A, B, D, prop.h)
+    assert np.allclose(prop.Abar_ts, Abar_ts, rtol=1e-12,
+                       atol=1e-14*Abar_ts.max())
     prop.calc_equivalent_properties()
     lp = prop.calc_lamination_parameters()
     matlamina = prop.plies[0].matlamina
@@ -198,19 +244,28 @@ def helper_isotropic_plate():
 
 def test_isotropic_plate():
     prop = helper_isotropic_plate()
-    A = np.array([[9629991.31944444, 2696397.56944444,       0.   ],
-                  [2696397.56944444, 9629991.31944444,       0.   ],
-                  [      0.        ,       0.        , 3466796.875]])
-    D = np.array([[0.01253905, 0.00351093, 0.        ],
-                  [0.00351093, 0.01253905, 0.        ],
-                  [0.        , 0.        , 0.00451406]])
-    Abar_ts = np.array([[3466796.875,       0.   ],
-                  [      0.   , 3466796.875]])
-    assert np.allclose(prop.A, A)
-    assert np.allclose(prop.B, 0)
-    assert np.allclose(prop.D, D)
-    assert np.allclose(prop.Abar_ts, Abar_ts)
-    assert np.allclose(prop.Ats, 5/6*Abar_ts)
+    E = 71e9
+    nu = 0.28
+    h = 0.000125
+    G = E/(2*(1 + nu))
+    # NOTE A = E h/(1 - nu^2) [[1, nu, 0], [nu, 1, 0], [0, 0, (1 - nu)/2]],
+    #      B = 0 and D = E h^3/(12 (1 - nu^2)) [...]
+    Q = E/(1 - nu**2)*np.array([[1., nu, 0.],
+                                [nu, 1., 0.],
+                                [0., 0., (1 - nu)/2]])
+    A = h*Q
+    B = np.zeros((3, 3))
+    D = h**3/12*Q
+    Abar_ts = G*h*np.eye(2)
+    assert_abd(prop.A, prop.B, prop.D, A, B, D, h)
+    assert np.allclose(prop.Abar_ts, Abar_ts, rtol=1e-12, atol=1e-14*G*h)
+    # NOTE Rohwer (1988), DFVLR-FB 88-32, Sec. 4.1, p. 17: for a homogeneous
+    #      isotropic plate the improved stiffness is 5/6 of the simple ones,
+    #      "independent of the Poisson's ratio or the position of the
+    #      reference surface"
+    assert prop.shear_correction == 'rohwer'
+    assert np.allclose(prop.Ats, 5/6*G*h*np.eye(2), rtol=1e-12,
+                       atol=1e-14*G*h)
 
 
 def test_offset_isotropic_plate():
@@ -237,25 +292,17 @@ def test_offset_isotropic_plate():
 def test_errors():
     prop = helper_isotropic_plate()
     prop.offset = 1.
-    try:
+    with pytest.raises(RuntimeError, match='cannot be made balanced'):
         prop.make_balanced()
-    except RuntimeError:
-        pass
-    try:
+    with pytest.raises(RuntimeError, match='cannot be made orthotropic'):
         prop.make_orthotropic()
-    except RuntimeError:
-        pass
-    try:
+    with pytest.raises(RuntimeError, match='cannot be made symmetric'):
         prop.make_symmetric()
-    except RuntimeError:
-        pass
-    with pytest.raises(NotImplementedError):
+    with pytest.raises(NotImplementedError, match='cannot be made smeared'):
         prop.make_smeared()
-    try:
-        prop.plies = []
+    prop.plies = []
+    with pytest.raises(ValueError, match='0 plies'):
         prop.calc_lamination_parameters()
-    except ValueError:
-        pass
 
 
 def test_trace_normalized():
@@ -264,44 +311,69 @@ def test_trace_normalized():
 
         Melo, J. D. D., Bi, J., and Tsai, S. W., 2017, “A Novel Invariant-Based
         Design Approach to Carbon Fiber Reinforced Laminates,” Compos. Struct.,
-        159, pp. 44–52.
+        159, pp. 44–52. https://doi.org/10.1016/j.compstruct.2016.09.055
+
+    The trace is ``tr = Q11 + Q22 + 2 Q66``, the in-plane invariants are
+    written with Q66 = G12, and the transverse shear invariants with Q44 =
+    G23 and Q55 = G13, checked below against the rotation of the transverse
+    shear moduli. ``data`` has G12 only; G13 and G23 are arbitrary and
+    distinct, such that Q44, Q55 and Q66 cannot be interchanged unnoticed.
 
     """
     for material, d in data.items():
-        m = read_laminaprop((d['Ex'], d['Ey'], d['vx'], d['Es'], d['Es'], d['Es']))
-        tr = m.q11 + m.q22 + 2*m.q66
+        G12 = d['Es']
+        G13 = 0.9*G12
+        G23 = 0.5*G12
+        laminaprop = (d['Ex'], d['Ey'], d['vx'], G12, G13, G23)
+        m = read_laminaprop(laminaprop)
+        nu21 = d['vx']*d['Ey']/d['Ex']
+        den = 1 - d['vx']*nu21
+        Q11 = d['Ex']/den
+        Q12 = d['vx']*d['Ey']/den
+        Q22 = d['Ey']/den
+        Q44 = G23
+        Q55 = G13
+        Q66 = G12
+        tr = Q11 + Q22 + 2*Q66
+        assert np.isclose(m.q11 + m.q22 + 2*m.q66, tr, rtol=1e-14)
         assert np.isclose(tr, d['tr'], rtol=0.01)
-        q11 = m.q11
-        q12 = m.q12
-        q22 = m.q22
-        q44 = m.q44
-        q55 = m.q55
-        q66 = m.q66
-        q11 /= tr
-        q12 /= tr
-        q22 /= tr
-        q44 /= tr
-        q55 /= tr
-        q66 /= tr
-        u1 = (3*q11 + 3*q22 + 2*q12 + 4*q44) / 8.
-        u2 = (q11 - q22) / 2.
-        u3 = (q11 + q22 - 2*q12 - 4*q44) / 8.
-        u4 = (q11 + q22 + 6*q12 - 4*q44) / 8.
+        u1 = (3*Q11 + 3*Q22 + 2*Q12 + 4*Q66) / 8.
+        u2 = (Q11 - Q22) / 2.
+        u3 = (Q11 + Q22 - 2*Q12 - 4*Q66) / 8.
+        u4 = (Q11 + Q22 + 6*Q12 - 4*Q66) / 8.
         u5 = (u1 - u4) / 2.
-        u6 = (q55 + q66) / 2.
-        u7 = (q55 - q66) / 2.
-        tr_norm_inv = (u1, u2, u3, u4, u5, u6, u7)
+        u6 = (Q44 + Q55) / 2.
+        u7 = (Q44 - Q55) / 2.
+        # NOTE tau_yz and tau_xz of a ply at theta: G_yz = G23 c^2 + G13 s^2
+        #      = u6 + u7 cos 2 theta, G_xz = G13 c^2 + G23 s^2 = u6 - u7 cos 2
+        #      theta, G_yz,xz = (G13 - G23) c s = -u7 sin 2 theta
+        ply = Lamina()
+        ply.thetadeg = 30.
+        ply.h = 1.
+        ply.matlamina = m
+        ply.rebuild()
+        c2 = np.cos(np.deg2rad(2*30.))
+        s2 = np.sin(np.deg2rad(2*30.))
+        assert np.isclose(ply.q44L, u6 + u7*c2, rtol=1e-14)
+        assert np.isclose(ply.q55L, u6 - u7*c2, rtol=1e-14)
+        assert np.isclose(ply.q45L, -u7*s2, rtol=1e-14)
+        tr_norm_inv = np.array((u1, u2, u3, u4, u5, u6, u7))/tr
         m.trace_normalize_plane_stress()
         tr_norm_inv2 = (m.u1, m.u2, m.u3, m.u4, m.u5, m.u6, m.u7)
-        assert np.allclose(tr_norm_inv, tr_norm_inv2)
+        assert np.allclose(tr_norm_inv2, tr_norm_inv, rtol=1e-13,
+                           atol=1e-15)
+        tr_norm_q = np.array((Q11, Q12, Q22, Q44, Q55, Q66))/tr
+        assert np.allclose((m.q11, m.q12, m.q22, m.q44, m.q55, m.q66),
+                           tr_norm_q, rtol=1e-14, atol=0)
 
 
 def test_laminate_LP_gradients():
-    E = 71e9
-    nu = 0.33
-    lamprop = (E, nu)
+    # NOTE orthotropic plies with G13 != G23, such that no column of the
+    #      gradients vanishes identically, compared with central finite
+    #      differences of shellprop_from_LaminationParameters
+    lamprop = (142.5e9, 8.7e9, 0.28, 5.1e9, 5.1e9, 3.0e9)
     rho = 0
-    thickness = 1
+    thickness = 1.
     matlamina = read_laminaprop(lamprop, rho)
     lp = LaminationParameters()
     lp.xiA1 = 0.5
@@ -316,10 +388,53 @@ def test_laminate_LP_gradients():
     lp.xiD2 = 0.4
     lp.xiD3 = -0.3
     lp.xiD4 = -0.6
+    lp.xiAts1 = 0.2
+    lp.xiAts2 = -0.1
     gradABD = GradABD()
     gradABD.calc_LP_grad(thickness, matlamina, lp)
-    print(gradABD.gradAij)
-    print(np.asarray(gradABD.gradAtsij))
+
+    lp_names = ['xi%s%d' % (m, i) for m in 'ABD' for i in (1, 2, 3, 4)]
+    lp_names += ['xiAts1', 'xiAts2']
+    ij = ('11', '12', '16', '22', '26', '66')
+    def stiffnesses(h, lp):
+        prop = shellprop_from_LaminationParameters(h, matlamina, lp)
+        return dict(A=np.array([getattr(prop, 'A' + s) for s in ij]),
+                    B=np.array([getattr(prop, 'B' + s) for s in ij]),
+                    D=np.array([getattr(prop, 'D' + s) for s in ij]),
+                    Ats=np.array([prop.Abar44, prop.Abar45, prop.Abar55]))
+
+    def central_difference(name, var, step):
+        def perturbed(delta):
+            lp2 = LaminationParameters()
+            for attr in lp_names:
+                setattr(lp2, attr, getattr(lp, attr))
+            h = thickness
+            if var == 'h':
+                h += delta
+            else:
+                setattr(lp2, var, getattr(lp, var) + delta)
+            return stiffnesses(h, lp2)[name]
+        return (perturbed(step) - perturbed(-step))/(2*step)
+
+    variables = dict(A=['h', 'xiA1', 'xiA2', 'xiA3', 'xiA4'],
+                     B=['h', 'xiB1', 'xiB2', 'xiB3', 'xiB4'],
+                     D=['h', 'xiD1', 'xiD2', 'xiD3', 'xiD4'],
+                     Ats=['h', 'xiAts1', 'xiAts2'])
+    grads = dict(A=gradABD.gradAij, B=gradABD.gradBij, D=gradABD.gradDij,
+                 Ats=gradABD.gradAtsij)
+    for name, names in variables.items():
+        grad = np.asarray(grads[name])
+        fd = np.array([central_difference(name, var,
+                           1e-6*thickness if var == 'h' else 1e-3)
+                       for var in names]).T
+        # NOTE A, B, D and Abar_ts are linear in the lamination parameters
+        #      and at most cubic in h, such that the central differences are
+        #      exact to round-off and to (step/h)^2 for D
+        scale = np.abs(fd).max()
+        assert scale > 0
+        assert np.allclose(grad, fd, rtol=1e-7, atol=1e-7*scale), name
+        # NOTE no column is identically zero
+        assert np.all(np.abs(fd).max(axis=0) > 1e-3*scale), name
 
 
 def test_laminated_plate_length_error():

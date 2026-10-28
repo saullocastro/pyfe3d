@@ -1,5 +1,6 @@
 import sys
 sys.path.append('..')
+from decimal import Decimal
 
 import numpy as np
 import pytest
@@ -10,12 +11,41 @@ from pyfe3d.shellprop_utils import (read_laminaprop, laminated_plate,
 from pyfe3d import (Quad4, Quad4Data, Quad4Probe, Quad4R, Quad4RData,
         Quad4RProbe, Tria3R, Tria3RData, Tria3RProbe, INT, DOUBLE, DOF)
 
-# NOTE CFRP of Rohwer (1988), kN/mm^2 and mm
+from test_shellprop import qbar
+
+# Rohwer, K. "Improved transverse shear stiffness for layered finite elements",
+# DFVLR-FB 88-32, 1988. Table 1, p. 19: "CFRP material constants", kN/mm^2
+# E_L, E_T, G_LT, G_TT, nu_LT, as laminaprop = (E11, E22, nu12, G12, G13, G23)
+# of a transversely isotropic ply
 CFRP = (138., 9.3, 0.3, 4.6, 4.6, 2.3)
 PLYT = 0.25
 CROSS_PLY = [0, 90, 90, 0]
 QUASI_ISO = [0, 45, -45, 90, 90, -45, 45, 0]
 UNSYM = [30, -60, 15, 75, 0]
+
+# Rohwer (1988), p. 18: "A laminate with a stacking sequence of [0,90]s is
+# built from this material where each of the four layers is 0.25mm thick. The
+# simple tansverse shear stiffnesses as calculated from Eqs. (22) and (25) and
+# the improved values according to Eq. (43) are given in Table 2. Coupling
+# terms are zero." Table 2, p. 19, "Shear stiffnesses in kN/mm", printed as
+# Hbar11 = Hbar22, Hbarbar11 = Hbarbar22, H11, H22. Index 1 of Rohwer is x
+# and 2 is y, Eq. (41), i.e. H11 is A55 and H22 is A44.
+ROHWER_1988_TABLE_2 = dict(Abar='3.450', Abarbar='3.067', A55='2.313',
+                           A44='2.521')
+
+
+def assert_printed(value, printed, rtol=None):
+    r"""Assert that ``value`` agrees with the number ``printed`` in a paper
+
+    The tolerance is half a unit of the last printed digit, i.e. ``value`` must
+    round to ``printed``, unless the relative tolerance ``rtol`` is given.
+    """
+    ref = float(printed)
+    if rtol is None:
+        tol = 0.5*10.**Decimal(printed).as_tuple().exponent
+    else:
+        tol = rtol*abs(ref)
+    assert abs(value - ref) <= tol*(1 + 1e-12), (value, printed)
 
 
 def tensor_rotation(Ats, thetadeg):
@@ -23,6 +53,68 @@ def tensor_rotation(Ats, thetadeg):
     s = np.sin(np.deg2rad(thetadeg))
     Ts = np.array([[c, s], [-s, c]])
     return Ts @ Ats @ Ts.T
+
+
+def rohwer_stiffness(stack, plyts, laminaprops, offset=0.):
+    r"""Improved transverse shear stiffness of Rohwer (1988), Eq. (43)
+
+    Written out here independently of pyfe3d, with the notation of Rohwer
+    (1988), Sec. 3.4, pp. 15-17: the shear stresses of Eqs. (35) and (36),
+    ``tau_xz = -int Q1 [A* + z B*, B* + z D*] RFXX R dz`` and ``tau_yz = -int
+    Q2 [...] RFYY R dz``, with ``Q1`` and ``Q2`` the first two rows of the
+    plane-stress stiffness of the ply in the laminate axes, the compliance
+    ``[[A*, B*], [B*^T, D*]] = ABD^-1`` and ``R = {Rx, Ry}`` the shear forces,
+    vanishing at the bottom face; the cylindrical bending states of Eq. (34),
+    ``M_x,x = Rx``, ``M_xy,x = Ry`` for ``tau_xz`` and ``M_y,y = Ry``,
+    ``M_xy,y = Rx`` for ``tau_yz``, with no membrane force gradients; and Eq.
+    (43), ``H = [sum_k int f^T G^-1 f dz]^-1``, where ``tau = f R``, Eq. (41),
+    with the 3-point Gauss-Legendre rule, exact for the polynomial of degree 4
+    in each ply.
+
+    Returns ``Ats = [[A44, A45], [A45, A55]]``, 4 <-> yz, 5 <-> xz, and the
+    shear stresses at the top face, which must vanish.
+    """
+    h = sum(plyts)
+    z = offset - h/2 + np.concatenate(([0.], np.cumsum(plyts)))
+    Qbs = [qbar(p[0], p[1], p[2], p[3], t)
+           for t, p in zip(stack, laminaprops)]
+    ABD = np.zeros((6, 6))
+    for k, Qb in enumerate(Qbs):
+        ABD[:3, :3] += Qb*(z[k+1] - z[k])
+        ABD[:3, 3:] += Qb*(z[k+1]**2 - z[k]**2)/2
+        ABD[3:, 3:] += Qb*(z[k+1]**3 - z[k]**3)/3
+    ABD[3:, :3] = ABD[:3, 3:].T
+    compliance = np.linalg.inv(ABD)
+    # NOTE strain gradients from the moment gradients only: z-dependent
+    #      part (B* + z D*) {M_x, M_y, M_xy}_,x
+    Bs, Ds = compliance[:3, 3:], compliance[3:, 3:]
+    RFXX = np.array([[1., 0.], [0., 0.], [0., 1.]])
+    RFYY = np.array([[0., 0.], [0., 1.], [1., 0.]])
+    xg, wg = np.polynomial.legendre.leggauss(3)
+    F = np.zeros((2, 2))
+    f0 = np.zeros((2, 2))
+    for k, (thetadeg, p) in enumerate(zip(stack, laminaprops)):
+        Qb = Qbs[k]
+        z0, z1 = z[k], z[k+1]
+        def f(zz):
+            # rows tau_xz, tau_yz; columns Rx, Ry
+            integral = Bs*(zz - z0) + Ds*(zz**2 - z0**2)/2
+            return np.vstack((f0[0] - Qb[0] @ integral @ RFXX,
+                              f0[1] - Qb[1] @ integral @ RFYY))
+        c = np.cos(np.deg2rad(thetadeg))
+        s = np.sin(np.deg2rad(thetadeg))
+        G13, G23 = p[4], p[5]
+        # transverse shear moduli in the laminate axes, rows xz, yz
+        G = np.array([[G13*c**2 + G23*s**2, (G13 - G23)*c*s],
+                      [(G13 - G23)*c*s, G13*s**2 + G23*c**2]])
+        Ginv = np.linalg.inv(G)
+        for xi, wi in zip(xg, wg):
+            fz = f((z0 + z1)/2 + xi*(z1 - z0)/2)
+            F += wi*(z1 - z0)/2*fz.T @ Ginv @ fz
+        f0 = f(z1)
+    H = np.linalg.inv(F)
+    Ats = np.array([[H[1, 1], H[0, 1]], [H[1, 0], H[0, 0]]])
+    return Ats, f0
 
 
 def test_isotropic_five_sixths():
@@ -46,32 +138,57 @@ def test_isotropic_five_sixths():
 
 
 def test_rohwer_cross_ply_reference_values():
-    # NOTE Rohwer (1988), and Table plate-shear-rotation of the theory
+    # NOTE Rohwer (1988), [0,90]s of Table 2, p. 19
+    ref = ROHWER_1988_TABLE_2
     prop = laminated_plate(stack=CROSS_PLY, plyt=PLYT, laminaprop=CFRP)
-    assert np.isclose(prop.Abar44, 3.450, rtol=1e-4)
-    assert np.isclose(prop.Abar55, 3.450, rtol=1e-4)
-    assert np.isclose(prop.Abarbar44, 3.067, rtol=1e-3)
-    assert np.isclose(prop.Abarbar55, 3.067, rtol=1e-3)
-    assert np.isclose(prop.A44, 2.5252, rtol=1e-4)
-    assert np.isclose(prop.A55, 2.3131, rtol=1e-4)
-    assert np.isclose(prop.A45, 0., atol=1e-12)
-    assert np.isclose(prop.scf_k13, prop.A55/prop.Abar55)
-    assert np.isclose(prop.scf_k23, prop.A44/prop.Abar44)
+    G12, G13, G23 = CFRP[3:]
+    h = PLYT*len(CROSS_PLY)
+    # NOTE simple stiffnesses, constant strain sum_k G_k h_k and constant
+    #      stress h^2/sum_k (h_k/G_k): in the yz plane G23 for the 0 plies
+    #      and G13 for the 90 plies, the reverse in the xz plane
+    Abar = 2*PLYT*G23 + 2*PLYT*G13
+    Abarbar = h**2/(2*PLYT/G23 + 2*PLYT/G13)
+    for name in ['Abar44', 'Abar55']:
+        assert np.isclose(getattr(prop, name), Abar, rtol=1e-14)
+        assert_printed(getattr(prop, name), ref['Abar'])
+    for name in ['Abarbar44', 'Abarbar55']:
+        assert np.isclose(getattr(prop, name), Abarbar, rtol=1e-14)
+        assert_printed(getattr(prop, name), ref['Abarbar'])
+    # NOTE improved stiffness, Eq. (43), written out in rohwer_stiffness
+    Ats, top = rohwer_stiffness(CROSS_PLY, [PLYT]*4, [CFRP]*4)
+    assert np.allclose(top, 0., atol=1e-14)
+    assert np.allclose(prop.Ats, Ats, rtol=1e-12, atol=1e-14*Ats.max())
+    assert_printed(prop.A55, ref['A55'])
+    # NOTE A44 = 2.52525, and the independent rohwer_stiffness gives the same,
+    #      which Rohwer prints as H22 = 2.521; the other three values round
+    #      correctly. Both 2.52525/3.067 and 2.521/3.067 round to the
+    #      reduction 0.82 given for the y-direction on p. 18-19
+    assert_printed(prop.A44, ref['A44'], rtol=1.7e-3)
+    # NOTE "Coupling terms are zero", p. 18
+    assert abs(prop.A45) < 1e-14*prop.A44
+    assert np.isclose(prop.scf_k13, prop.A55/prop.Abar55, rtol=1e-14)
+    assert np.isclose(prop.scf_k23, prop.A44/prop.Abar44, rtol=1e-14)
 
 
 def test_rohwer_rotated_plies_reference_values():
-    # NOTE "direct" columns of Table plate-shear-rotation, with the plies at
-    #      theta_k - phi
-    ref = {
-        (tuple(CROSS_PLY), 45): (2.5885, 0.1204, 2.5885),
-        (tuple(CROSS_PLY), 30): (2.6109, 0.0849, 2.4500),
-        (tuple(QUASI_ISO), 0): (5.0341, -0.0724, 4.9906),
-        (tuple(QUASI_ISO), 60): (4.8049, -0.3695, 3.8566),
-    }
-    for (stack, phi), (A44, A45, A55) in ref.items():
-        prop = laminated_plate(stack=[t - phi for t in stack], plyt=PLYT,
-                               laminaprop=CFRP)
-        assert np.allclose(prop.Ats, [[A44, A45], [A45, A55]], atol=1.5e-4)
+    # NOTE plies at theta_k - phi, the cases of Table plate-shear-rotation of
+    #      the theory, whose values are computed with pyfe3d and therefore
+    #      not used here; the reference is Eq. (43) of Rohwer (1988) written
+    #      out in rohwer_stiffness, also with an offset and an unsymmetric
+    #      laminate, for which A45 does not vanish
+    cases = [(CROSS_PLY, 45, 0.), (CROSS_PLY, 30, 0.), (QUASI_ISO, 0, 0.),
+             (QUASI_ISO, 60, 0.), (QUASI_ISO, 60, 0.3), (UNSYM, 0, 0.),
+             (UNSYM, 20, 0.3)]
+    for stack, phi, offset in cases:
+        stack = [t - phi for t in stack]
+        prop = laminated_plate(stack=stack, plyt=PLYT, laminaprop=CFRP,
+                               offset=offset)
+        Ats, top = rohwer_stiffness(stack, [PLYT]*len(stack),
+                                    [CFRP]*len(stack), offset=offset)
+        assert np.allclose(top, 0., atol=1e-13)
+        assert abs(Ats[0, 1]) > 1e-3*Ats[0, 0]
+        assert np.allclose(prop.Ats, Ats, rtol=1e-12,
+                           atol=1e-12*np.abs(Ats).max())
 
 
 @pytest.mark.parametrize('stack, offset', [(CROSS_PLY, 0.), (QUASI_ISO, 0.),
