@@ -114,8 +114,13 @@
   cent with 40 x 12 elements; from 2.0 to 3.3 per cent above the Mindlin
   solution for the plate with `b/h = 10` and 8 x 8 elements, `h/l = 0.8`,
   of the entry above, and from 0.91 to 1.49 per cent with 12 x 12
-  elements, `h/l = 1.2`. `KC0 + KCNL + KG` remains the exact Jacobian of
-  the internal forces.
+  elements, `h/l = 1.2`. The laminated cylinder Z11 of Castro et al.
+  (2014) under an end shortening, whose buckling load fell under mesh
+  refinement through such a mode, to -81.6 kN with 160 elements around the
+  circumference, now converges, -297.0 kN. The torsional buckling loads are
+  unchanged: with a pure shear prestress the two-by-two and the centroid
+  `KG` coincide on rectangles. `KC0 + KCNL + KG` remains the exact Jacobian
+  of the internal forces.
 
 ### Tests
 
@@ -162,8 +167,9 @@
 - `tests/test_quad4_geometric_hourglass.py`: buckling of hard simply
   supported square plates with `b/h = 100` and the transverse shear
   stiffness reduced to 1/100 and 1/1000, without the spurious mode,
-  against Seide and Stowell (1950), with bounds from the measured
-  convergence as the square of the element size; the one-point form of
+  against Seide and Stowell (1950), converging from above as the square
+  of the element size, within 0.5 per cent with 32 x 32 elements; the
+  one-point form of
   `KG` on a distorted element, no nonlinear terms for the hourglass pattern
   of `w`, and the tangent against central differences for `h/l < 1` and
   `h/l >= 1`.
