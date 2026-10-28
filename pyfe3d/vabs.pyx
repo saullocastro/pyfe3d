@@ -382,17 +382,17 @@ cdef int _gauss_points(int nen, double *xi, double *eta, double *w) noexcept nog
     Triangles, in the area coordinates `\xi`, `\eta` with weights summing
     to `1/2`: for 3 nodes the 3-point rule of degree 2, at `(1/6, 1/6)`,
     `(2/3, 1/6)`, `(1/6, 2/3)`; for 6 nodes the 6-point rule of degree 4 of
-    Dunavant [1]_. Quadrilaterals, in `-1 \le \xi, \eta \le 1`: the
-    `2 \times 2` Gauss rule for 4 nodes and the `3 \times 3` rule for 8 and
-    9 nodes. The degrees are checked in ``tests/test_vabs_elements.py``.
+    Dunavant [1]_, Appendix II, p. 1140, with the weights halved.
+    Quadrilaterals, in `-1 \le \xi, \eta \le 1`: the `2 \times 2` Gauss
+    rule for 4 nodes and the `3 \times 3` rule for 8 and 9 nodes. The
+    degrees are checked in ``tests/test_vabs_elements.py``.
 
     References
     ----------
     .. [1] Dunavant, D. A., "High degree efficient symmetrical Gaussian
        quadrature rules for the triangle", International Journal for
        Numerical Methods in Engineering, 21(6), pp. 1129--1148, 1985.
-       TODO(author): confirm this source; the points and weights are
-       checked only numerically, by the degree of the rule.
+       https://doi.org/10.1002/nme.1620210612
 
     """
     cdef double a, b, wa, wb, g, g0, w0, w1
