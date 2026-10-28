@@ -244,8 +244,36 @@ def test_sparse_mixed_spectrum_coupled(ratio):
 
 
 def test_plate_buckling_fsdt_ritz():
-    r"""Simply supported Ritz plate, first-order shear deformation theory,
-    against the classical critical load `4 \pi^2 D/b^2`"""
+    r"""Hard simply supported Ritz plate, first-order shear deformation
+    theory, ``a/b = 3``, ``b/h = 33``, uniform compression, against the
+    Navier solution of the same theory
+
+    The reference is given by Seide, P., and Stowell, E. Z., Elastic and
+    Plastic Buckling of Simply Supported Solid-Core Sandwich Plates in
+    Compression, NACA Report 967, 1950, Eq. (1), p. 2, derived in Appendix
+    A, Eq. (A7), p. 7,
+
+    .. math::
+        N_{cr} = k \frac{\pi^2 D}{b^2}, \qquad
+        k = \frac{(m/\beta + \beta/m)^2}{1 + r (1 + m^2/\beta^2)}, \qquad
+        \beta = \frac{a}{b}, \qquad r = \frac{\pi^2 D}{b^2 D_Q}
+
+    minimised over `m`, with the transverse shear stiffness `D_Q` of the
+    sandwich core taken equal to `A_{55}`, their governing equation (A5)
+    being that of a plate with transverse shear stiffness `D_Q`; the same
+    load follows from Wang, C. M., Wang, C. Y., and Reddy, J. N., Exact
+    Solutions for Buckling of Structural Members, CRC Press, 2005, Sec.
+    4.7.2, Eq. (4.7.17), with the foundation moduli equal to zero and
+    `\gamma = 0` (page not verified). It is 0.51 % below the classical load
+    `4 \pi^2 D/b^2`. The rotations are zero across the edges they are
+    tangent to, the hard simple support of their Navier solution, Wang et al.
+    (2005), Eq. (4.7.10b). With 20x10 terms the load agrees with the
+    reference to 1e-8, with 10x5 terms it is 0.025 % above it. With the
+    rotations free on all edges, the soft simple support used before, the
+    load is 1.28 % below the reference with 20x10 terms and 1.73 % with
+    30x15, the soft support lowering the load as the terms resolve the
+    boundary layer along the edges.
+    """
     m1 = 20
     m2 = 10
     N = 3*m1*m2
@@ -253,7 +281,8 @@ def test_plate_buckling_fsdt_ritz():
     pts2, weights2 = roots_legendre(2*m2 - 1)
     E = 200.e9
     nu = 0.3
-    # NOTE w simply supported, rotations free
+    # NOTE w simply supported; each rotation uses the functions of w across
+    #      the edges it is tangent to, and free functions along them
     wxit1, wxir1, wxit2, wxir2 = 0, 1, 0, 1
     wetat1, wetar1, wetat2, wetar2 = 0, 1, 0, 1
     xit1, xir1, xit2, xir2 = 1, 1, 1, 1
@@ -283,19 +312,16 @@ def test_plate_buckling_fsdt_ritz():
             Peta = vecf(m2, eta, etat1, etar1, etat2, etar2)
             Peta_eta = vecf_xi(m2, eta, etat1, etar1, etat2, etar2)
             weight = wxi*weta
-            Pi, Pj = np.meshgrid(Pxi, Peta, indexing='ij')
-            Sphix[m1*m2:2*m1*m2] = (Pi*Pj).flatten()
-            Sphiy[2*m1*m2:] = (Pi*Pj).flatten()
-            Pi_xi, Pj = np.meshgrid(wPxi_xi, wPeta, indexing='ij')
-            Sw_x[:m1*m2] = (Pi_xi*Pj*(2/a)).flatten()
-            Pi_xi, Pj = np.meshgrid(Pxi_xi, Peta, indexing='ij')
-            Sphix_x[m1*m2:2*m1*m2] = (Pi_xi*Pj*(2/a)).flatten()
-            Sphiy_x[2*m1*m2:] = (Pi_xi*Pj*(2/a)).flatten()
-            Pi, Pj_eta = np.meshgrid(wPxi, wPeta_eta, indexing='ij')
-            Sw_y[:m1*m2] = (Pi*Pj_eta*(2/b)).flatten()
-            Pi, Pj_eta = np.meshgrid(Pxi, Peta_eta, indexing='ij')
-            Sphix_y[m1*m2:2*m1*m2] = (Pi*Pj_eta*(2/b)).flatten()
-            Sphiy_y[2*m1*m2:] = (Pi*Pj_eta*(2/b)).flatten()
+            # NOTE hard simple support: phix is zero on the edges y = 0, b
+            #      and phiy on the edges x = 0, a
+            Sphix[m1*m2:2*m1*m2] = np.outer(Pxi, wPeta).flatten()
+            Sphix_x[m1*m2:2*m1*m2] = np.outer(Pxi_xi*(2/a), wPeta).flatten()
+            Sphix_y[m1*m2:2*m1*m2] = np.outer(Pxi, wPeta_eta*(2/b)).flatten()
+            Sphiy[2*m1*m2:] = np.outer(wPxi, Peta).flatten()
+            Sphiy_x[2*m1*m2:] = np.outer(wPxi_xi*(2/a), Peta).flatten()
+            Sphiy_y[2*m1*m2:] = np.outer(wPxi, Peta_eta*(2/b)).flatten()
+            Sw_x[:m1*m2] = np.outer(wPxi_xi*(2/a), wPeta).flatten()
+            Sw_y[:m1*m2] = np.outer(wPxi, wPeta_eta*(2/b)).flatten()
             e1xx = Sphix_x
             e1yy = Sphiy_y
             e1xy = Sphix_y + Sphiy_x
@@ -320,11 +346,16 @@ def test_plate_buckling_fsdt_ritz():
     eigvals, eigvecs = linear_buckling(csc_matrix(K[bu, :][:, bu]),
                                        csc_matrix(KG[bu, :][:, bu]),
                                        num_eigvalues=4)
+    # NOTE Seide and Stowell (1950), Eq. (1), with D_Q = A55
     D = E*h**3/(12*(1 - nu**2))
-    Ncr_analytical = 4*np.pi**2*D/b**2
+    r = np.pi**2*D/(b**2*prop.A55)
+    beta = a/b
+    k = min((m/beta + beta/m)**2/(1 + r*(1 + m**2/beta**2))
+            for m in range(1, 21))
+    Ncr_analytical = k*np.pi**2*D/b**2
     Ncr_computed = eigvals[0]*abs(Nxxhat)
     print('Ncr %.4f  analytical %.4f' % (Ncr_computed, Ncr_analytical))
-    np.testing.assert_allclose(Ncr_computed, Ncr_analytical, rtol=0.02)
+    np.testing.assert_allclose(Ncr_computed, Ncr_analytical, rtol=1e-5)
 
 
 def test_check_eigenpairs_wrong_and_missing():
@@ -766,7 +797,13 @@ def test_ziegler_no_divergence():
     runs: ``K(P) = K0 + P KF`` is never singular, and neither the shift
     search nor the dense fallback finds a finite load multiplier, the
     defective null pair of the condensed problem, split into about +-1e-9 by
-    the round-off, being null"""
+    the round-off, being null
+
+    Reference: H. Ziegler, Die Stabilitätskriterien der Elastomechanik,
+    Ingenieur-Archiv, 20(1), 49-56, 1952,
+    https://doi.org/10.1007/BF00536796: the follower force does not make
+    the stiffness singular, ``det K(P) = k**2`` for every ``P``, and the
+    pendulum loses stability by flutter, not by divergence."""
     k, l = 3., 0.5
     K0 = block_diag(np.array([[2*k, -k], [-k, k]]), np.diag(np.arange(1., 9.)))
     KF = block_diag(np.array([[-l, l], [0., 0.]]), np.zeros((8, 8)))
@@ -828,9 +865,13 @@ def test_null_mu_pencil():
 
 
 def ziegler_decoupled(extra=8):
-    r"""``K0`` and ``KF`` of Ziegler's double pendulum with ``extra``
-    decoupled degrees-of-freedom: ``K0^-1 KF`` has rank 1 and is nilpotent,
-    of norm 1/3"""
+    r"""``K0`` and ``KF`` of Ziegler's double pendulum (Ziegler, H., Die
+    Stabilitätskriterien der Elastomechanik, Ingenieur-Archiv, 20(1), 49-56,
+    1952, https://doi.org/10.1007/BF00536796, see
+    ``test_solver_natural_frequency.py``) with ``extra`` decoupled
+    degrees-of-freedom: ``K0^-1 KF = (l/k)*[[-1, 1], [-1, 1]]`` in the
+    pendulum block, of rank 1, nilpotent (null trace and determinant) and of
+    2-norm ``2*l/k = 1/3`` for ``k = 3`` and ``l = 0.5``"""
     from scipy.sparse import block_diag as sparse_block_diag
 
     k, l = 3., 0.5

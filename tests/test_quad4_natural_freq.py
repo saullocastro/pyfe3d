@@ -9,7 +9,34 @@ from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 from pyfe3d.solver import natural_frequency
 
 
-def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
+def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=3):
+    r"""Fundamental frequency of a simply supported plate, ``a = 0.3``,
+    ``b = 0.5``, ``h = 0.01``, with the consistent, lumped and reduced mass
+    matrices
+
+    The reference is the exact solution of Leissa, A. W., Vibration of
+    Plates, NASA SP-160, 1969, Sec. 4.1, p. 44, Eq. (4.20),
+    ``omega = sqrt(D/rho)*((m*pi/a)**2 + (n*pi/b)**2)``, with ``m = n = 1``
+    and Leissa's ``rho`` the mass per unit area, here ``rho*h``.
+
+    The reference is that of the Kirchhoff plate. The edges are hard simply
+    supported, ``w = 0`` and the rotation about the axis of the edge equal to
+    zero, for which the Navier mode is also exact for the Mindlin plate: with
+    ``a/h = 30``, the rotary inertia and ``A44 = A55 = 5/6 G h``, its
+    frequency is 0.28 % below the reference, from the characteristic equation
+    (76) of Wittrick, W. H., Analytical, three-dimensional elasticity
+    solutions to some plate problems, and some observations on Mindlin's
+    plate theory, International Journal of Solids and Structures, 23(4),
+    441-464, 1987, Sec. 3.2, p. 457, and the elements converge to that
+    value. With the soft simple support used before, rotations free, they
+    converge to about 1 % below the reference, through the boundary layer
+    of the Mindlin plate along the edges.
+
+    With 26x32 elements the frequencies of the three mass matrices are
+    0.03 to 0.33 % below the reference, with 17x21 elements from 0.40 %
+    below to 0.31 % above it, with 8x10 elements from 0.78 % below to 2.42 %
+    above it, with 35x43 elements 0.14 to 0.31 % below it.
+    """
     data = Quad4Data()
     probe = Quad4Probe()
     for mtype in mtypes:
@@ -101,6 +128,10 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
         bk[0::DOF] = check
         bk[1::DOF] = check
         bk[2::DOF] = check
+        # NOTE hard simple support: rotation about the x axis on the edges
+        #      x = 0, a and about the y axis on the edges y = 0, b
+        bk[3::DOF] = np.isclose(x, 0.) | np.isclose(x, a)
+        bk[4::DOF] = np.isclose(y, 0.) | np.isclose(y, b)
 
         bu = ~bk
 
@@ -126,15 +157,15 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=1):
         u = np.zeros(N)
         u[bu] = eigvecsu[:, mode]
 
-        # theoretical reference
+        # NOTE Leissa (1969), Eq. (4.20), with rho*h the mass per unit area
         m = 1
         n = 1
-        D = 2*h**3*E/(3*(1 - nu**2))
-        wmn = (m**2/a**2 + n**2/b**2)*np.sqrt(D*np.pi**4/(2*rho*h))/2
+        D = E*h**3/(12*(1 - nu**2))
+        wmn = np.sqrt(D/(rho*h))*((m*np.pi/a)**2 + (n*np.pi/b)**2)
 
         print('Theoretical omega123', wmn)
         print('Numerical omega123', omegan[0:10])
-        assert np.isclose(wmn, omegan[0], rtol=0.05)
+        assert np.isclose(wmn, omegan[0], rtol=0.01)
 
     if plot:
         import matplotlib.pyplot as plt

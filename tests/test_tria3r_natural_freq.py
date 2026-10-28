@@ -11,6 +11,27 @@ from pyfe3d.solver import natural_frequency
 
 
 def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
+    r"""Fundamental frequency of a simply supported plate, ``a = 0.3``,
+    ``b = 0.5``, ``h = 0.01``, with the consistent, lumped and reduced mass
+    matrices
+
+    The reference is the exact solution of Leissa, A. W., Vibration of
+    Plates, NASA SP-160, 1969, Sec. 4.1, p. 44, Eq. (4.20),
+    ``omega = sqrt(D/rho)*((m*pi/a)**2 + (n*pi/b)**2)``, with ``m = n = 1``
+    and Leissa's ``rho`` the mass per unit area, here ``rho*h``.
+
+    The edges are soft simply supported, rotations free. The assertion with
+    ``rtol=0.05`` is kept from before: this element does not converge
+    monotonically to the reference, because ``alpha_shear_locking = 0.7``
+    divides the transverse shear stiffness by a factor that depends on the
+    element size, see :mod:`pyfe3d.tria3r`. With the soft simple support
+    and the three mass matrices the errors are from -1.47 to +1.31 % with
+    8x10 quadrilaterals split in two triangles, +2.65 to +3.29 % with 17x21,
+    +2.79 to +3.06 % with 26x32, +2.32 to +2.47 % with 35x43, +1.26 to
+    +1.33 % with 53x65 and +0.52 to +0.55 % with 71x87; with the hard simple
+    support, which converges to the Mindlin plate 0.28 % below the
+    reference, +1.39 to +1.42 % with 71x87.
+    """
     data = Tria3RData()
     probe = Tria3RProbe()
     for mtype in mtypes:
@@ -145,11 +166,11 @@ def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
         u = np.zeros(N)
         u[bu] = eigvecsu[:, mode]
 
-        # theoretical reference
+        # NOTE Leissa (1969), Eq. (4.20), with rho*h the mass per unit area
         m = 1
         n = 1
-        D = 2*h**3*E/(3*(1 - nu**2))
-        wmn = (m**2/a**2 + n**2/b**2)*np.sqrt(D*np.pi**4/(2*rho*h))/2
+        D = E*h**3/(12*(1 - nu**2))
+        wmn = np.sqrt(D/(rho*h))*((m*np.pi/a)**2 + (n*np.pi/b)**2)
 
         print('Theoretical omega123', wmn)
         print('Numerical omega123', omegan[0:10])

@@ -12,6 +12,27 @@ from pyfe3d.solver import linear_buckling
 
 
 def test_tria3r_linear_buckling_plate(plot=False, mode=0, refinement=1):
+    r"""Linear buckling of a simply supported plate, ``a/b = 4``, under a
+    uniform compression ``N_xx`` from a prestress analysis, ``KG`` from the
+    displacements
+
+    The reference is the exact solution of Leissa, A. W., Vibration of
+    Plates, NASA SP-160, 1969, Sec. 10.2.1, p. 277, Eq. (10.46), minimised
+    over the number ``m`` of half-waves along ``x``:
+    ``N_xx,cr = -k_c*pi**2*D/b**2``, ``k_c = (m*b/a + a/(m*b))**2``. With
+    ``b/h = 167`` the Mindlin plate buckles 0.02 % below it.
+
+    The assertion with ``rtol=0.05`` is kept from before. This element does
+    not converge to the reference: ``alpha_shear_locking = 0.7`` was chosen
+    such that the buckling load of this plate approaches that of
+    :class:`pyfe3d.Quad4R` with the mesh of ``refinement=1``, see
+    :mod:`pyfe3d.tria3r`, and the transverse shear stiffness it removes
+    shrinks with the element size, so that the locking of the one-point
+    transverse shear returns as the mesh is refined. The buckling load is
+    above the reference by 4.9 % with 30x14 quadrilaterals split in two
+    triangles, ``refinement=1``, by 12.0 % with 62x30 and by 13.4 % with
+    92x44.
+    """
     data = Tria3RData()
     probe = Tria3RProbe()
     nx = refinement*31

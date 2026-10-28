@@ -22,6 +22,20 @@ With the slopes at the centroid the pattern carries no geometric stiffness
 and the same cases give +4.7, +2.6, +0.3 and +7.0 %, converging to the
 Mindlin solution.
 
+The Mindlin solution of the hard simply supported plate, ``w = 0`` and the
+rotation about the axis of each edge equal to zero, is the Navier solution
+of a plate with transverse shear stiffness ``D_Q``, given by Seide, P., and
+Stowell, E. Z., Elastic and Plastic Buckling of Simply Supported Solid-Core
+Sandwich Plates in Compression, NACA Report 967, 1950, Eq. (1), p. 2,
+derived in Appendix A, Eq. (A7), p. 7, with the shear stiffness ``D_Q`` of
+the sandwich core taken equal to ``A55``: for the square plate, with one
+half-wave in each direction, ``N_cr = 4*pi**2*D/b**2/(1 + 2*pi**2*D/(b**2*A55))``.
+The same load follows from Wang, C. M., Wang, C. Y., and Reddy, J. N.,
+Exact Solutions for Buckling of Structural Members, CRC Press, 2005, Sec.
+4.7.2, Eq. (4.7.17), with the foundation moduli equal to zero and
+``gamma = 0`` (page not verified). With ``A44 = A55`` reduced to 1/1000,
+two half-waves along the load give a load only 0.4 % higher.
+
 """
 import sys
 sys.path.append('..')
@@ -108,6 +122,10 @@ def buckling_ss_plate(n, h, shear_factor=1.):
 
 
 def test_thick_elements():
+    r"""``b/h = 10``: the errors measured against the Mindlin solution are
+    +4.67, +2.61 and +0.29 % with 12x12, 16x16 and 48x48 elements; the
+    bounds follow that convergence, a regression of the hourglass pattern
+    giving the negative errors of the module documentation"""
     for n, err_max in ((13, 0.06), (17, 0.035), (49, 0.005)):
         err, checkerboard = buckling_ss_plate(n, h=0.05)
         print('b/h = 10, %dx%d elements: %+.2f %%, checkerboard %.3f'
@@ -117,6 +135,9 @@ def test_thick_elements():
 
 
 def test_low_transverse_shear_stiffness():
+    r"""``b/h = 100`` with ``A44 = A55`` reduced to 1/1000: the errors
+    measured against the Mindlin solution are +7.00 and +1.74 % with 8x8
+    and 16x16 elements"""
     for n, err_max in ((9, 0.08), (17, 0.02)):
         err, checkerboard = buckling_ss_plate(n, h=0.005, shear_factor=1e-3)
         print('b/h = 100, A44 = A55 = 1/1000, %dx%d elements: %+.2f %%, '

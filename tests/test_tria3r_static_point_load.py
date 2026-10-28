@@ -10,6 +10,26 @@ from pyfe3d import Tria3R, Tria3RData, Tria3RProbe, INT, DOUBLE, DOF
 
 
 def test_tria3r_static_point_load(plot=False, refinement=1):
+    r"""Simply supported rectangular plate, ``a = 3``, ``b = 7``,
+    ``h = 0.005``, under a point load at its centre
+
+    The exact deflection at the centre of the Kirchhoff plate is
+    ``6.5986e-5``, from the Navier solution of Timoshenko, S., and
+    Woinowsky-Krieger, S., Theory of Plates and Shells, 2nd ed., McGraw-Hill,
+    1959, Art. 29, p. 111, Eq. (133), summed in Art. 34, p. 143, Eq. (147),
+    see :func:`test_quad4r_static_point_load.test_static_plate_quad_point_load`,
+    where the transverse shear deflection of the Mindlin plate is shown to be
+    negligible here.
+
+    The value asserted is still the output of this element with 6x10
+    quadrilaterals split in two triangles, 26.2 % above that reference,
+    because this element does not converge to it: the deflection is 0.18 %
+    below it with 14x22, 4.7 % with 20x32, 8.4 % with 42x66, 9.0 % with
+    56x88, 9.5 % with 84x132 and 9.6 % with 112x176. The factor of
+    ``alpha_shear_locking = 0.7``, which divides the transverse shear
+    stiffness, shrinks with the element size, see :mod:`pyfe3d.tria3r`, and
+    the locking of the one-point transverse shear returns.
+    """
     data = Tria3RData()
     probe = Tria3RProbe()
     nx = 7*refinement

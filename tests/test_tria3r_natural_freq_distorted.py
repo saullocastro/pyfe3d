@@ -11,6 +11,27 @@ from pyfe3d.solver import natural_frequency
 
 
 def test_tria3r_nat_freq_distorted(plot=False, mode=0):
+    r"""Fundamental frequency of a simply supported plate, ``a = 0.3``,
+    ``b = 0.5``, ``h = 0.01``, with a distorted mesh and the reduced mass
+    matrix
+
+    The inner nodes are moved along ``x`` and ``y`` by the same random
+    fraction, up to 0.4, of the element size. Up to now the coordinates
+    passed to the elements were copied before that distortion, so that the
+    mesh analysed was the regular one; they are now copied after it.
+
+    The reference is the exact solution of Leissa, A. W., Vibration of
+    Plates, NASA SP-160, 1969, Sec. 4.1, p. 44, Eq. (4.20),
+    ``omega = sqrt(D/rho)*((m*pi/a)**2 + (n*pi/b)**2)``, with ``m = n = 1``
+    and Leissa's ``rho`` the mass per unit area, here ``rho*h``.
+
+    The edges are soft simply supported, rotations free. The assertion with
+    ``rtol=0.05`` is kept from before, see
+    :func:`test_tria3r_natural_freq.test_tria3r_nat_freq`. On the distorted
+    mesh the frequency is 0.97 % above the reference with 8x10
+    quadrilaterals split in two triangles, 3.47 % with 16x20, 3.32 % with
+    24x30 and 2.92 % with 32x40.
+    """
     data = Tria3RData()
     probe = Tria3RProbe()
     mtype = 2
@@ -48,6 +69,8 @@ def test_tria3r_nat_freq_distorted(plot=False, mode=0):
         rdm = (-1 + 2*np.random.rand(y[inner].shape[0]))
         x[inner] += dx*rdm*0.4
         y[inner] += dy*rdm*0.4
+        # NOTE the coordinates passed to the elements, after the distortion
+        ncoords_flatten = ncoords.flatten()
 
         nids = 1 + np.arange(ncoords.shape[0])
         nid_pos = dict(zip(nids, np.arange(len(nids))))
@@ -158,11 +181,11 @@ def test_tria3r_nat_freq_distorted(plot=False, mode=0):
         u = np.zeros(N)
         u[bu] = eigvecsu[:, mode]
 
-        # theoretical reference
+        # NOTE Leissa (1969), Eq. (4.20), with rho*h the mass per unit area
         m = 1
         n = 1
-        D = 2*h**3*E/(3*(1 - nu**2))
-        wmn = (m**2/a**2 + n**2/b**2)*np.sqrt(D*np.pi**4/(2*rho*h))/2
+        D = E*h**3/(12*(1 - nu**2))
+        wmn = np.sqrt(D/(rho*h))*((m*np.pi/a)**2 + (n*np.pi/b)**2)
 
         print('Theoretical omega123', wmn)
         print('Numerical omega123', omegan[0:10])

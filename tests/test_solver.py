@@ -1,20 +1,22 @@
 r"""Tests for :mod:`pyfe3d.solver`
 
 The plate used for the two end-to-end tests is the one of
-``test_quad4_linear_buckling_plate_rotated.py``, so that the load multiplier
-can be compared with the classical buckling coefficient
+``test_quad4_linear_buckling_plate_rotated.py``, with a finer mesh, so that
+the load multiplier can be compared with the buckling load of Leissa, A. W.,
+Vibration of Plates, NASA SP-160, 1969, Sec. 10.2.1, p. 277, Eq. (10.46),
 
 .. math::
     k_c = \left(\frac{m b}{a} + \frac{a}{m b}\right)^2
     \quad , \quad
     \sigma_{cr} = -k_c \frac{\pi^2 E}{12(1 - \nu^2)} \frac{h^2}{b^2}
 
-and, with the mass matrix added, with the natural frequency of a simply
-supported plate
+minimised over `m`, and, with the mass matrix added, with the natural
+frequency of a simply supported plate of Leissa (1969), Sec. 4.1, p. 44,
+Eq. (4.20), with `\rho h` the mass per unit area,
 
 .. math::
-    \omega_{mn} = \left(\frac{m^2}{a^2} + \frac{n^2}{b^2}\right)
-                  \frac{1}{2}\sqrt{\frac{D \pi^4}{2 \rho h}}
+    \omega_{mn} = \sqrt{\frac{D}{\rho h}}\left[\left(\frac{m \pi}{a}\right)^2
+                  + \left(\frac{n \pi}{b}\right)^2\right]
 
 """
 import sys
@@ -37,24 +39,24 @@ A_PLATE, B_PLATE, H_PLATE = 2.0, 0.5, 0.002
 E_PLATE, NU_PLATE, RHO_PLATE = 203.e9, 0.33, 7830.
 
 
-def plate_matrices(Nxx=-1., with_mass=False):
+def plate_matrices(Nxx=-1., with_mass=False, nx=NX, ny=NY):
     r"""Assemble the simply supported plate and return ``KC0uu``, ``KGuu``,
-    optionally ``Muu``, and the free-dof mask"""
+    and optionally ``Muu``, with ``nx`` by ``ny`` nodes"""
     prop = isotropic_plate(E=E_PLATE, nu=NU_PLATE, thickness=H_PLATE,
                            rho=RHO_PLATE)
     data = Quad4Data()
     probe = Quad4Probe()
-    xtmp = np.linspace(0, A_PLATE, NX)
-    ytmp = np.linspace(0, B_PLATE, NY)
+    xtmp = np.linspace(0, A_PLATE, nx)
+    ytmp = np.linspace(0, B_PLATE, ny)
     xmesh, ymesh = np.meshgrid(xtmp, ytmp)
     ncoords = np.vstack((xmesh.T.flatten(), ymesh.T.flatten(),
-                         np.zeros(NX*NY))).T
+                         np.zeros(nx*ny))).T
     x = ncoords[:, 0]
     y = ncoords[:, 1]
     ncoords_flatten = ncoords.flatten()
     nids = 1 + np.arange(ncoords.shape[0])
     nid_pos = dict(zip(nids, np.arange(len(nids))))
-    nids_mesh = nids.reshape(NX, NY)
+    nids_mesh = nids.reshape(nx, ny)
     n1s = nids_mesh[:-1, :-1].flatten()
     n2s = nids_mesh[1:, :-1].flatten()
     n3s = nids_mesh[1:, 1:].flatten()
@@ -210,10 +212,17 @@ def test_is_positive_definite():
 
 
 def test_linear_buckling_plate():
-    r"""End-to-end against the classical buckling coefficient, and against
-    the hand-rolled recipe used elsewhere in this suite"""
+    r"""End-to-end against the buckling load of Leissa (1969), Eq. (10.46),
+    see the module documentation, and against the hand-rolled recipe used
+    elsewhere in this suite
+
+    With ``b/h = 250`` the Mindlin plate buckles 0.01 % below the reference.
+    With 60x18 elements the buckling load is 0.16 % above it, with 20x6
+    elements 2.22 %, with 40x12 elements 0.51 %, with 80x24 elements
+    0.02 %.
+    """
     Nxx = -1.
-    KC0uu, KGuu = plate_matrices(Nxx=Nxx)
+    KC0uu, KGuu = plate_matrices(Nxx=Nxx, nx=61, ny=19)
     eigvals, eigvecs = linear_buckling(KC0uu, KGuu, num_eigvalues=4)
     P_cr_calc = eigvals[0]*Nxx*B_PLATE
 
@@ -225,7 +234,7 @@ def test_linear_buckling_plate():
         H_PLATE**2/B_PLATE**2)
     P_cr_theory = sigma_cr*H_PLATE*B_PLATE
     print('P_cr_calc %.4f  P_cr_theory %.4f' % (P_cr_calc, P_cr_theory))
-    assert np.isclose(P_cr_theory, P_cr_calc, rtol=0.03)
+    assert np.isclose(P_cr_theory, P_cr_calc, rtol=0.01)
 
     # NOTE the same answer as the recipe spelled out in the other tests of
     #      this suite. The two are not bit-identical because the shift
@@ -252,14 +261,21 @@ def test_linear_buckling_plate():
 
 def test_natural_frequency_plate():
     r"""End-to-end against the natural frequency of a simply supported
-    plate"""
-    KC0uu, KGuu, Muu = plate_matrices(with_mass=True)
+    plate of Leissa (1969), Eq. (4.20), see the module documentation
+
+    With ``b/h = 250`` the frequency of the Mindlin plate, with its rotary
+    inertia, is 0.003 % below the reference. With 60x18 elements and the
+    consistent mass matrix the frequency is 0.32 % above it, with 20x6
+    elements 3.05 %, with 40x12 elements 0.74 %, with 80x24 elements
+    0.17 %.
+    """
+    KC0uu, KGuu, Muu = plate_matrices(with_mass=True, nx=61, ny=19)
     omegan, eigvecs = natural_frequency(KC0uu, Muu, num_eigvalues=4)
-    Dp = 2*H_PLATE**3*E_PLATE/(3*(1 - NU_PLATE**2))
-    wmn = (1./A_PLATE**2 + 1./B_PLATE**2)*np.sqrt(
-        Dp*np.pi**4/(2*RHO_PLATE*H_PLATE))/2
+    D = E_PLATE*H_PLATE**3/(12*(1 - NU_PLATE**2))
+    wmn = np.sqrt(D/(RHO_PLATE*H_PLATE))*((np.pi/A_PLATE)**2
+                                          + (np.pi/B_PLATE)**2)
     print('omegan[0] %.4f  theory %.4f' % (omegan[0], wmn))
-    assert np.isclose(wmn, omegan[0], rtol=0.05)
+    assert np.isclose(wmn, omegan[0], rtol=0.01)
     assert np.all(np.diff(omegan) >= -1e-9)
 
     # NOTE same frequencies without the scaling
