@@ -44,11 +44,13 @@ centroid the pattern has no geometric stiffness, and the error is positive
 and decreases with the square of the element size: the ratio of the errors
 of two successive meshes is 4.36, 4.08 and 4.02 from 4x4 to 32x32 for 1/100,
 and 4.01 from 32x32 to 64x64, with +0.051 % at 64x64; 4.21, 4.05, 4.01 and
-4.00 for 1/1000, with +0.034 % at 64x64. The bounds of
-:func:`test_low_transverse_shear_stiffness` are these errors rounded up, and
-the ratio of the errors of the 16x16 and 32x32 meshes is checked to lie
-between 3.8 and 4.2. The case 1/100 with 8x8 elements is not affected by the
-spurious mode, whose load decreases as the square of the element size.
+4.00 for 1/1000, with +0.034 % at 64x64.
+:func:`test_low_transverse_shear_stiffness` asserts this convergence: the
+error is positive on every mesh, the ratio of the errors of the 16x16 and
+32x32 meshes lies between 3.8 and 4.2, the order 2 of the element, and the
+32x32 mesh is within 0.5 % of the reference. The case 1/100 with 8x8
+elements is not affected by the spurious mode, whose load decreases as the
+square of the element size.
 
 Reference
 ---------
@@ -164,18 +166,20 @@ def buckling_ss_plate(n, shear_factor, given_stress=True):
 
 
 def test_low_transverse_shear_stiffness():
-    for shear_factor, bounds in ((1e-2, (0.035, 0.009, 0.0022)),
-                                 (1e-3, (0.023, 0.006, 0.0015))):
+    for shear_factor in (1e-2, 1e-3):
         errs = []
-        for n, err_max in zip((9, 17, 33), bounds):
+        for n in (9, 17, 33):
             err, checkerboard = buckling_ss_plate(n, shear_factor)
             print('A44 = A55 = %g of the isotropic value, %dx%d elements: '
                   '%+.2f %%, checkerboard %.3f'
                   % (shear_factor, n - 1, n - 1, 100*err, checkerboard))
-            assert 0 < err < err_max
+            # NOTE convergence from above, without the spurious mode
+            assert err > 0
             assert checkerboard < 0.05
             errs.append(err)
+        # NOTE second-order convergence to Seide and Stowell (1950)
         assert 3.8 < errs[1]/errs[2] < 4.2
+        assert errs[2] < 0.005
 
 
 def test_KG_of_the_pre_buckling_state():

@@ -53,24 +53,23 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     and 284.06 kN with FSDT-BC2 and CC2, the tests giving 228.0 kN (Z11) and
     221.7 kN (Z23, the same laminate). SS1, the boundary condition here, is
     not tabulated, it only appears through FSDT-BC1 with CC1 in the curves of
-    Fig. 12, p. 311. More importantly this element does not converge to a
-    physical axial buckling load of this cylinder on any mesh affordable in a
-    test. Measured with this test, ``Pcr`` in kN::
+    Fig. 12, p. 311. Measured with this test, ``Pcr`` in kN::
 
         refinement  ntheta  elements     Pcr   time
-             1         40       440   -494.9    1 s
-             2         80      1920   -330.0   18 s
-             4        160      8000    -81.6  100 s
+             1         40       440   -590.3    1 s
+             2         80      1920   -352.0   18 s
+             4        160      8000   -297.0  115 s
 
-    The first two are far above the 283 kN of the paper and the third has
-    already dropped to 29 per cent of it, which is the behaviour documented
-    below for the related laminate Z22, where the critical mode at such
-    meshes is a mesh-scale mode whose load keeps falling under refinement.
-    The mode of Z11 at ``ntheta = 160`` has not been examined. A converged
-    value would need elements of the order of the wall thickness, 1.25 mm,
-    that is several hundred thousand elements. A comparison would also need
-    the shear correction factor of 5/6 used by the paper (Sec. 6, p. 307),
-    which this test does not force.
+    The load decreases towards the values of the paper for SS2 and CC2,
+    5 per cent above them with ``ntheta = 160``, but SS1 is not tabulated and
+    a converged value would need a finer mesh than a test affords. A
+    comparison would also need the shear correction factor of 5/6 used by the
+    paper (Sec. 6, p. 307), which this test does not force. Before the
+    geometric stiffness of :class:`.Quad4` took the slopes of `w` at the
+    centroid, in version 0.12.0, the loads were -494.9, -330.0 and -81.6 kN:
+    the hourglass pattern of `w` had the geometric stiffness of the
+    two-by-two quadrature and the load of a mesh-scale mode kept falling
+    under refinement.
 
     """
     data = Quad4Data()
@@ -254,6 +253,12 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     # NOTE a record of a related study on the laminated cylinder Z22 of
     #      Castro et al., kept because it explains why the axial buckling
     #      load of these laminated cylinders cannot be verified in a test.
+    #      It was measured before version 0.12.0, in which Quad4 and Quad4R
+    #      take the slopes of w at the centroid in the geometric stiffness;
+    #      the mesh-scale modes it describes for the quadrilaterals have the
+    #      signature of the hourglass pattern of w that the former geometric
+    #      stiffness did not exclude, and their values are not those of the
+    #      present elements. The values of Tria3R and Tria3DSG are unchanged.
     #
     # NOTE for the record, the mesh convergence of the axial buckling load,
     #      here for cylinder Z22 with the uniform membrane prestress of

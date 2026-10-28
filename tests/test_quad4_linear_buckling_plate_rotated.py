@@ -16,12 +16,12 @@ def test_linear_buckling_plate(plot=False, mode=0):
     rotated by 25 combinations of pitch and yaw
 
     The buckling load must not depend on the orientation of the plate. With
-    this mesh it is 2.2 % above the exact solution of Leissa, A. W.,
+    this mesh it is 4.7 % above the exact solution of Leissa, A. W.,
     Vibration of Plates, NASA SP-160, 1969, Sec. 10.2.1, p. 277, Eq.
     (10.46); the convergence to that solution with the mesh is verified by
     the flat plate of :func:`test_solver.test_linear_buckling_plate`, the
     same element, plate, boundary conditions and given stress, where it is
-    0.16 % above it with 60x18 elements.
+    0.41 % above it with 60x18 elements.
     """
     thetas = np.linspace(-np.pi, np.pi, 5)
     P_cr_calcs = []

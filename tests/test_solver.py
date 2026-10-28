@@ -217,9 +217,9 @@ def test_linear_buckling_plate():
     elsewhere in this suite
 
     With ``b/h = 250`` the Mindlin plate buckles 0.01 % below the reference.
-    With 60x18 elements the buckling load is 0.16 % above it, with 20x6
-    elements 2.22 %, with 40x12 elements 0.51 %, with 80x24 elements
-    0.02 %.
+    With 60x18 elements the buckling load is 0.41 % above it, with 20x6
+    elements 4.67 %, with 40x12 elements 1.09 %, with 80x24 elements
+    0.16 %.
     """
     Nxx = -1.
     KC0uu, KGuu = plate_matrices(Nxx=Nxx, nx=61, ny=19)
