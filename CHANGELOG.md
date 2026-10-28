@@ -60,6 +60,29 @@
   plate converges monotonically to the Mindlin solution, +0.91 per cent
   with 12 x 12 elements. The elements with `h/l < 1` are unchanged.
 
+### Behaviour change: geometric stiffness of `Quad4R`
+
+- The slopes of `w` in the geometric stiffness `KG`, of `update_KG` and
+  `update_KG_given_stress`, and in the geometrically nonlinear terms of
+  `update_KCNL` and of the internal forces are taken at the centroid,
+  the single integration point of the transverse shear and of the
+  curvatures in `KC0`, instead of at the two-by-two quadrature points; the
+  stress resultants keep the two-by-two quadrature. The hourglass pattern
+  of `w`, which `KC0` resists only with the artificial hourglass
+  stiffness, then has no geometric stiffness. With the slopes at the
+  two-by-two points it had the geometric stiffness of the full quadrature,
+  and a linear buckling analysis could return a spurious mode of `w`
+  alternating in sign from node to node, below the physical buckling load:
+  on a hard simply supported square plate with `b/h = 10`, 3.0 per cent
+  below the Mindlin solution with 12 x 12 elements, `h/l = 1.2`, 40.8 per
+  cent below with 16 x 16 and 85.7 per cent below with 48 x 48; with `b/h =
+  100` and the transverse shear stiffness reduced to 1/1000, as in a
+  sandwich, 59.9 per cent below with 8 x 8 elements, `h/l = 0.08`. These
+  cases now give +4.7, +2.6, +0.3 and +7.0 per cent. The buckling loads of
+  coarse meshes of thin plates increase slightly, e.g. from 10.0 to 11.4
+  per cent above the Mindlin solution with 8 x 8 elements and `b/h = 100`,
+  and `KC0 + KCNL + KG` remains the exact Jacobian of the internal forces.
+
 ### Tests
 
 - `tests/test_vabs_isotropic.py`, `tests/test_vabs_composite.py` and
@@ -98,6 +121,14 @@
   `tests/test_quad4_spurious_shear_mode.py` and `tests/test_drilling_rank.py`
   record the energies of the two zero-energy modes and the rank of the thick
   element.
+- `tests/test_quad4r_geometric_hourglass.py`: buckling of hard simply
+  supported square plates with thick elements and with a low transverse
+  shear stiffness, without the spurious mode, and the one-point form of
+  `KG` with constant stress resultants on a distorted element. The
+  tolerances of `test_quad4r_linear_buckling_plate*.py`, 5 to 6 per cent,
+  of the lower limit load of `test_hinged_roof_thick`, 1.5 to 1.6 per
+  cent, and the regression value of `test_quad4r_natural_freq_pre_stress`,
+  39.1 to 43.7, follow the new `KG`.
 
 ### Documentation
 
