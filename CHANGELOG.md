@@ -1,5 +1,44 @@
 # Changelog
 
+## 0.12.0 (unreleased)
+
+### New features
+
+- New module `pyfe3d.vabs`, a variational asymptotic cross-sectional
+  analysis (VABS) of prismatic beams, after Cesnik and Hodges (1997), Yu et
+  al. (2002) and Yu et al. (2012). `CrossSection` takes an arbitrary mesh of
+  the cross section, with 3- and 6-node triangles and 4-, 8- and 9-node
+  quadrilaterals, the 6x6 material matrices, created e.g. by `isotropic` or
+  `orthotropic`, and the angles `theta1` and `theta3` that orient each
+  element, see `rotate_material`; `calc_stiffness` gives the classical 4x4
+  and the generalized Timoshenko 6x6 stiffness and flexibility matrices,
+  the tension and shear centres, with the warping constraints of Yu et al.
+  (2012) or of Yu et al. (2002), and `calc_mass` the mass matrix, the mass
+  centre and the mass integrals of `BeamProp`.
+- The matrices are in the convention of Yu, `{gamma11, 2gamma12, 2gamma13,
+  kappa1, kappa2, kappa3}`; `yu_to_pyfe3d` and `pyfe3d_to_yu` convert them
+  to and from that of the beam elements, `{N, Vy, Vz, Mx, Mz, My}`, with
+  `kappa2 = kappa_z` and `kappa3 = -kappa_y`, `classical_from_timoshenko`
+  condenses the shear strains, and `beamprop_from_vabs` creates a
+  `BeamProp` when the matrix has the pattern that the elements can
+  represent. The beam elements are unchanged.
+- Initially twisted and curved beams are not implemented: non-zero `k1`,
+  `k2`, `k3` raise `NotImplementedError`.
+
+### Tests
+
+- `tests/test_vabs_isotropic.py`, `tests/test_vabs_composite.py` and
+  `tests/test_vabs_elements.py`: elasticity solutions of rectangles,
+  circles and tubes, including the shear correction factors of Eq. (25) of
+  Yu and Hodges (2005); the box beam CUS of Yu et al. (2012), Table 2,
+  reproduced to its four digits; the pipe of Yu and Hodges (2005), Table 3
+  and Eq. (26); the box beam CAS1 of Yu et al. (2002), Table 2; the
+  T-section of Yu and Hodges (2005), Table 1.
+
+### Documentation
+
+- User guide page `cross_sectional_analysis` and API page `vabs`.
+
 ## 0.11.3 (2026-10-27)
 
 Documentation only: no change of the code or of any result.

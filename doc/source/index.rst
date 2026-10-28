@@ -144,7 +144,7 @@ AUTHORS
 Citing this library
 -------------------
 
-Saullo G. P. Castro. (2026). General-purpose finite element solver based on Python and Cython (Version 0.11.3). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
+Saullo G. P. Castro. (2026). General-purpose finite element solver based on Python and Cython (Version 0.12.0). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
 
 The DOI represents all the versions and resolves to the latest one. The
 repository also has a ``CITATION.cff`` file with the same data.
