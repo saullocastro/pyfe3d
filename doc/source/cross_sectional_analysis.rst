@@ -346,10 +346,15 @@ published VABS results:
 - ``tests/test_vabs_vlasov.py``: the generalized Vlasov model against the
   VABS results of Yu et al. (2005), Tables 1, 3 and 4, isotropic,
   orthotropic and anisotropic strips, reproduced to five digits or more,
-  and Table 5, isotropic I-beam, within 1 per cent, and the torsional
-  warping about the shear centre of a thin-walled channel against
-  `-\omega`, with its warping rigidity, all with the constraints
-  ``'yu2002'`` and ``'yu2012'``.
+  and Table 5, isotropic I-beam, within 1 per cent; the anisotropic
+  I-beam of Table 6, with the lay-up reconstructed from Volovoi et al.
+  (1999), p. 1038 and Fig. 8, within 1.1 per cent for the effective
+  torsional rigidity and 4 per cent for the warping rigidity; the
+  composite I-beam of Hodges and Peters (2001), p. 1601, against their
+  asymptotic constants, within 3.5 per cent; and the torsional warping
+  about the shear centre of a thin-walled channel against `-\omega`,
+  with its warping rigidity, all with the constraints ``'yu2002'`` and
+  ``'yu2012'``.
 
 
 Limitations
@@ -388,6 +393,16 @@ Vlasov theory for composite beams", Thin-Walled Structures, 43(9), pp.
 
 Vlasov, V. Z., Thin-Walled Elastic Beams, 2nd ed., Israel Program for
 Scientific Translations, Jerusalem, 1961.
+
+Volovoi, V. V., Hodges, D. H., Berdichevsky, V. L., and Sutyrin, V. G.,
+"Asymptotic theory for static behavior of elastic anisotropic I-beams",
+International Journal of Solids and Structures, 36(7), pp. 1017-1043,
+1999. https://doi.org/10.1016/S0020-7683(97)00341-7
+
+Hodges, D. H., and Peters, D. A., "Lateral-torsional buckling of
+cantilevered elastically coupled composite strip- and I-beams",
+International Journal of Solids and Structures, 38(9), pp. 1585-1603,
+2001. https://doi.org/10.1016/S0020-7683(00)00111-6
 
 Yu, W., Hodges, D. H., and Ho, J. C., "Variational asymptotic beam
 sectional analysis -- An updated version", International Journal of

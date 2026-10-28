@@ -56,8 +56,13 @@
   `CrossSection.warping`, and the triangles of every element type.
 - `tests/test_vabs_vlasov.py`: the strips of Yu et al. (2005), Tables 1, 3
   and 4, reproduced to five digits or more, the isotropic I-beam of Table
-  5, within 1 per cent, and the torsional warping of a thin-walled channel
-  about its shear centre against the principal sectorial coordinate,
+  5, within 1 per cent, the anisotropic I-beam of Table 6, with the lay-up
+  of Volovoi et al. (1999), p. 1038, within 1.1 per cent for the effective
+  torsional rigidity and 4 per cent for the warping rigidity, the composite
+  I-beam of Hodges and Peters (2001), p. 1601, against their asymptotic
+  constants, within 3.5 per cent, and the torsional warping of a
+  thin-walled channel about its shear centre against the principal
+  sectorial coordinate,
   `w1 = -omega kappa1`, with its warping rigidity; all with both
   `'yu2002'` and `'yu2012'`.
 
