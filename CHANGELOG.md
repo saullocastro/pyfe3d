@@ -83,6 +83,40 @@
   per cent above the Mindlin solution with 8 x 8 elements and `b/h = 100`,
   and `KC0 + KCNL + KG` remains the exact Jacobian of the internal forces.
 
+### Behaviour change: geometric stiffness of `Quad4`
+
+- The slopes of `w` in the geometric stiffness `KG`, of `update_KG` and
+  `update_KG_given_stress`, and in the geometrically nonlinear terms of
+  `update_KCNL` and of the internal forces are taken at the centroid,
+  instead of at the two-by-two quadrature points, as for `Quad4R`; the
+  stress resultants keep the two-by-two quadrature. The elements with
+  `h/l < 1` integrate the transverse shear at the centroid, so the
+  hourglass pattern of `w`, with zero rotations, has no stiffness in `KC0`,
+  and it now has no geometric stiffness either. With the slopes at the
+  two-by-two points it had the geometric stiffness of the full quadrature,
+  and a linear buckling analysis could return a spurious mode of `w`
+  alternating in sign from node to node, with nearly zero rotations, below
+  the physical buckling load, once the transverse shear stiffness is low
+  compared with the bending stiffness: on a hard simply supported square
+  plate with `b/h = 100` and the transverse shear stiffness reduced to
+  1/100, as in a sandwich, 49.2 per cent below the solution of Seide and
+  Stowell (1950), NACA Report 967, Eq. (1), with 16 x 16 elements, `h/l =
+  0.16`, and 87.1 per cent below with 32 x 32; with 1/1000, 71.4, 92.4 and
+  98.1 per cent below with 8 x 8, 16 x 16 and 32 x 32 elements. These
+  cases now converge to that solution from above, as the square of the
+  element size: +0.81, +0.20, +2.19, +0.54 and +0.13 per cent. The
+  elements with `h/l >= 1`, whose MITC4 transverse shear resists the
+  pattern, did not have the spurious mode; they take the slopes at the
+  centroid as well, such that `KG` does not depend on the thickness. The
+  buckling loads of coarse meshes increase: from 2.2 to 4.7 per cent above
+  the Kirchhoff solution for the plate with 20 x 6 elements of
+  `tests/test_quad4_linear_buckling_plate_rotated.py`, from 0.5 to 1.1 per
+  cent with 40 x 12 elements; from 2.0 to 3.3 per cent above the Mindlin
+  solution for the plate with `b/h = 10` and 8 x 8 elements, `h/l = 0.8`,
+  of the entry above, and from 0.91 to 1.49 per cent with 12 x 12
+  elements, `h/l = 1.2`. `KC0 + KCNL + KG` remains the exact Jacobian of
+  the internal forces.
+
 ### Tests
 
 - `tests/test_vabs_isotropic.py`, `tests/test_vabs_composite.py` and
@@ -125,6 +159,14 @@
   supported square plates with thick elements and with a low transverse
   shear stiffness, without the spurious mode, and the one-point form of
   `KG` with constant stress resultants on a distorted element.
+- `tests/test_quad4_geometric_hourglass.py`: buckling of hard simply
+  supported square plates with `b/h = 100` and the transverse shear
+  stiffness reduced to 1/100 and 1/1000, without the spurious mode,
+  against Seide and Stowell (1950), with bounds from the measured
+  convergence as the square of the element size; the one-point form of
+  `KG` on a distorted element, no nonlinear terms for the hourglass pattern
+  of `w`, and the tangent against central differences for `h/l < 1` and
+  `h/l >= 1`.
 - `tests/test_quad4r_linear_buckling_plate.py` and
   `tests/test_quad4r_linear_buckling_plate_given_stress.py`: with 92x44
   elements, within 1 per cent of the exact buckling load of Leissa
