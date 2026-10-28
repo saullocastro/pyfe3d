@@ -323,11 +323,15 @@ def test_tangent_is_the_jacobian_of_the_internal_forces():
                        data.KCNL_SPARSE_SIZE)
               + matrix(lambda r, c, v: quad.update_KG(r, c, v, prop),
                        data.KG_SPARSE_SIZE))
-        # NOTE relative error 2.7e-5, 2.7e-7, 2.7e-9 and 2.7e-11 with eps =
-        #      1e-2, 1e-3, 1e-4 and 1e-5, decreasing as eps**2
-        eps = 1e-4
-        fd = (fint(u + eps*d) - fint(u - eps*d))/(2*eps)
-        assert np.linalg.norm(fd - KT @ d) < 1e-8*np.linalg.norm(KT @ d)
+        # NOTE relative difference 2.7e-5, 2.7e-7, 2.7e-9 and 2.7e-11 with
+        #      eps = 1e-2, 1e-3, 1e-4 and 1e-5, decreasing as eps**2; an
+        #      inexact tangent leaves a difference independent of eps
+        errs = []
+        for eps in (1e-3, 1e-4):
+            fd = (fint(u + eps*d) - fint(u - eps*d))/(2*eps)
+            errs.append(np.linalg.norm(fd - KT @ d)/np.linalg.norm(KT @ d))
+        assert errs[1] < 1e-7
+        assert 80 < errs[0]/errs[1] < 120
 
 
 if __name__ == '__main__':
