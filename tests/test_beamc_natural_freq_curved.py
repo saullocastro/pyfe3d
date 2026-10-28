@@ -9,125 +9,143 @@ from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
 from pyfe3d.solver import natural_frequency
 
 def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
-    for mtype in mtypes:
-        print('mtype', mtype)
-        n = 50*refinement
-        # comparing with:
-        # https://www.sciencedirect.com/science/article/pii/S0168874X06000916
-        #NOTE 2D problem, using only Izz, ignoring any out of XY plane displacement
-        #                 ignoring torsion (rx) as well
-        # see section 5.5
-        E = 206.8e9 # Pa
-        #nu = 0.3
-        G = 77.9e9 # Pa
-        rho = 7855 # kg/m3
-        A = 4.071e-3
-        Izz = 6.456e-6
+    r"""First three in-plane frequencies of a hinged circular arch
 
-        thetabeam = np.deg2rad(97)
-        r = 2.438
-        thetas = np.linspace(thetabeam, 0, n)
-        x = r*np.cos(thetas)
-        y = r*np.sin(thetas)
+    The reference is Table 6, p. 1186, of Yoon, K.-Y., Park, N.-H., Choi,
+    Y.-J., Kang, Y.-J., Natural frequencies of thin-walled curved beams,
+    Finite Elements in Analysis and Design, 42(13), 2006, pp. 1176-1186,
+    https://doi.org/10.1016/j.finel.2006.05.002: 396.98, 931.22 and 1797.31
+    rad/s for the hinged-hinged arch of Sec. 5.5 and Fig. 8, p. 1185, with
+    ``R = 2.438 m``, an angle of 97 degrees, ``A = 4.071e-3 m**2``, ``I_z =
+    6.456e-6 m**4``, ``E = 206.8 GPa``, ``G = 77.9 GPa`` and ``rho = 7855
+    kg/m**3``. These values come from the curved finite element of the
+    paper, whose mesh is not given; they differ from those of Chaudhuri in
+    the same table by 2.1, 0.7 and 7.6 %. The element follows the
+    Euler-Bernoulli hypothesis, Sec. 2.1, assumption (3), p. 1177, i.e. it
+    has no shear deformation, and its kinetic energy, Eq. (5), is that of
+    the displacements (1) of the whole cross section, with rotary inertia.
 
-        ncoords = np.vstack((x, y, np.zeros_like(x))).T
-        nids = 1 + np.arange(ncoords.shape[0])
-        nid_pos = dict(zip(nids, np.arange(len(nids))))
+    The arch is modelled twice:
 
-        n1s = nids[0:-1]
-        n2s = nids[1:]
+    - with shear deformation, shear correction factor 5/6, the frequencies
+      converge to 394.42, 918.51 and 1756.26 rad/s (800 elements), 0.64,
+      1.36 and 2.28 % below the reference; with 49 elements they are 0.61,
+      1.31 and 2.24 to 2.26 % below, with 24 elements 0.49 to 2.17 %. The
+      tolerance of 3 % covers this difference of model;
+    - without shear deformation, with ``G`` multiplied by ``1e4`` (the
+      frequencies change by less than 1e-5 between ``1e3`` and ``1e6``),
+      the frequencies converge to 396.71, 929.86 and 1795.51 rad/s, 0.07,
+      0.15 and 0.10 % below the reference; with 49 elements they are 0.03 to
+      0.09 % below, with 24 elements 0.04 to 0.11 % above. Without the rotary
+      inertia as well they would converge 0.06, 0.16 and 0.56 % above.
+    """
+    for G_factor, rtol in [(1., 0.03), (1.e4, 0.003)]:
+        for mtype in mtypes:
+            print('mtype', mtype, 'G_factor', G_factor)
+            n = 50*refinement
+            #NOTE 2D problem, using only Izz, ignoring any out of XY plane displacement
+            #                 ignoring torsion (rx) as well
+            E = 206.8e9 # Pa
+            #nu = 0.3
+            G = 77.9e9 # Pa
+            rho = 7855 # kg/m3
+            A = 4.071e-3
+            Izz = 6.456e-6
 
-        num_elements = len(n1s)
-        print('num_elements', num_elements)
+            thetabeam = np.deg2rad(97)
+            r = 2.438
+            thetas = np.linspace(thetabeam, 0, n)
+            x = r*np.cos(thetas)
+            y = r*np.sin(thetas)
 
-        p = BeamCProbe()
-        data = BeamCData()
+            ncoords = np.vstack((x, y, np.zeros_like(x))).T
+            nids = 1 + np.arange(ncoords.shape[0])
+            nid_pos = dict(zip(nids, np.arange(len(nids))))
 
-        KC0r = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
-        KC0c = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
-        KC0v = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=DOUBLE)
-        Mr = np.zeros(data.M_SPARSE_SIZE*num_elements, dtype=INT)
-        Mc = np.zeros(data.M_SPARSE_SIZE*num_elements, dtype=INT)
-        Mv = np.zeros(data.M_SPARSE_SIZE*num_elements, dtype=DOUBLE)
-        N = DOF*n
-        print('num_DOF', N)
+            n1s = nids[0:-1]
+            n2s = nids[1:]
 
-        prop = BeamProp()
-        prop.A = A
-        prop.E = E
-        scf = 5/6.
-        prop.G = scf*G
-        prop.Izz = Izz
-        prop.intrho = rho*A
-        prop.intrhoy2 = rho*Izz
+            num_elements = len(n1s)
+            print('num_elements', num_elements)
 
-        ncoords_flatten = ncoords.flatten()
+            p = BeamCProbe()
+            data = BeamCData()
 
-        beams = []
-        init_k_KC0 = 0
-        init_k_M = 0
-        for n1, n2 in zip(n1s, n2s):
-            pos1 = nid_pos[n1]
-            pos2 = nid_pos[n2]
-            beam = BeamC(p)
-            beam.init_k_KC0 = init_k_KC0
-            beam.init_k_M = init_k_M
-            beam.n1 = n1
-            beam.n2 = n2
-            beam.c1 = DOF*pos1
-            beam.c2 = DOF*pos2
-            beam.update_rotation_matrix(10., 1., 0, ncoords_flatten)
-            print(beam.r11, beam.r12, beam.r13)
-            print(beam.r21, beam.r22, beam.r23)
-            print(beam.r31, beam.r32, beam.r33)
+            KC0r = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
+            KC0c = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=INT)
+            KC0v = np.zeros(data.KC0_SPARSE_SIZE*num_elements, dtype=DOUBLE)
+            Mr = np.zeros(data.M_SPARSE_SIZE*num_elements, dtype=INT)
+            Mc = np.zeros(data.M_SPARSE_SIZE*num_elements, dtype=INT)
+            Mv = np.zeros(data.M_SPARSE_SIZE*num_elements, dtype=DOUBLE)
+            N = DOF*n
+            print('num_DOF', N)
+
+            prop = BeamProp()
+            prop.A = A
+            prop.E = E
+            scf = 5/6.
+            prop.G = scf*G*G_factor
+            prop.Izz = Izz
+            prop.intrho = rho*A
+            prop.intrhoy2 = rho*Izz
+
+            ncoords_flatten = ncoords.flatten()
+
+            beams = []
+            init_k_KC0 = 0
+            init_k_M = 0
+            for n1, n2 in zip(n1s, n2s):
+                pos1 = nid_pos[n1]
+                pos2 = nid_pos[n2]
+                beam = BeamC(p)
+                beam.init_k_KC0 = init_k_KC0
+                beam.init_k_M = init_k_M
+                beam.n1 = n1
+                beam.n2 = n2
+                beam.c1 = DOF*pos1
+                beam.c2 = DOF*pos2
+                beam.update_rotation_matrix(10., 1., 0, ncoords_flatten)
+                beam.update_probe_xe(ncoords_flatten)
+                beam.update_KC0(KC0r, KC0c, KC0v, prop)
+                beam.update_M(Mr, Mc, Mv, prop, mtype=mtype)
+                beams.append(beam)
+                init_k_KC0 += data.KC0_SPARSE_SIZE
+                init_k_M += data.M_SPARSE_SIZE
+
+            print('elements created')
+
+            KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
+            M = coo_matrix((Mv, (Mr, Mc)), shape=(N, N)).tocsc()
+
+            print('sparse KC0 and M created')
+
+            bk = np.zeros(N, dtype=bool)
+            # NOTE the end nodes are the first and the last of the arc; selecting
+            #      them with np.isclose(x, x.max()) also caught the neighbour of
+            #      the end at theta = 0 with fine meshes, where x varies as theta**2
+            check = np.zeros(n, dtype=bool)
+            check[[0, -1]] = True
+            bk[0::DOF] = check
+            bk[1::DOF] = check
+            bk[2::DOF] = True
+            bk[3::DOF] = True
+            bk[4::DOF] = True
+            bu = ~bk
+
+            Kuu = KC0[bu, :][:, bu]
+            Muu = M[bu, :][:, bu]
+
+            num_eigenvalues = 3
+            # NOTE pyfe3d.solver.natural_frequency equilibrates the diagonal
+            #      before calling the eigensolver and returns the circular
+            #      frequencies already sorted
+            omegan, eigvecsu = natural_frequency(Kuu, Muu, num_eigvalues=num_eigenvalues, tol=1e-3)
+            # NOTE Table 6 of Yoon et al. (2006)
+            omega123_from_paper = [396.98, 931.22, 1797.31]
+            print('Reference omega123_from_paper', omega123_from_paper)
+            print('Numerical omega123', omegan)
             print()
-            beam.update_probe_xe(ncoords_flatten)
-            beam.update_KC0(KC0r, KC0c, KC0v, prop)
-            beam.update_M(Mr, Mc, Mv, prop, mtype=mtype)
-            beams.append(beam)
-            init_k_KC0 += data.KC0_SPARSE_SIZE
-            init_k_M += data.M_SPARSE_SIZE
-
-        print('elements created')
-
-        KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
-        M = coo_matrix((Mv, (Mr, Mc)), shape=(N, N)).tocsc()
-
-        print('sparse KC0 and M created')
-
-        bk = np.zeros(N, dtype=bool)
-        # NOTE the end nodes are the first and the last of the arc; selecting
-        #      them with np.isclose(x, x.max()) also caught the neighbour of
-        #      the end at theta = 0 with fine meshes, where x varies as theta**2
-        check = np.zeros(n, dtype=bool)
-        check[[0, -1]] = True
-        bk[0::DOF] = check
-        bk[1::DOF] = check
-        bk[2::DOF] = True
-        bk[3::DOF] = True
-        bk[4::DOF] = True
-        bu = ~bk
-
-        Kuu = KC0[bu, :][:, bu]
-        Muu = M[bu, :][:, bu]
-
-        num_eigenvalues = 3
-        # NOTE pyfe3d.solver.natural_frequency equilibrates the diagonal
-        #      before calling the eigensolver and returns the circular
-        #      frequencies already sorted
-        omegan, eigvecsu = natural_frequency(Kuu, Muu, num_eigvalues=num_eigenvalues, tol=1e-3)
-        omega123_from_paper = [396.98, 931.22, 1797.31]
-        # NOTE values of 50 elements with the shear parameter of the consistent
-        #      shape functions corrected to alpha = -12*E*I/(G*A*L**2); they agree
-        #      to 0.05 % with 200 BeamC elements (394.431, 918.543, 1756.301)
-        #      and with 200 BeamLR elements (394.472, 918.751, 1757.086)
-        omega123_expected_here = [394.54891673, 919.02124464, 1757.02096637]
-        print('Reference omega123_from_paper', omega123_from_paper)
-        print('Reference omega123_expected_here', omega123_expected_here)
-        print('Numerical omega123', omegan)
-        print()
-        assert np.allclose(omega123_expected_here, omegan, rtol=1e-3)
+            assert np.allclose(omega123_from_paper, omegan, rtol=rtol)
 
 if __name__ == '__main__':
     test_nat_freq_curved_beam(refinement=1)
-

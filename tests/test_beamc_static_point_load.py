@@ -10,7 +10,23 @@ from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
 
 
 def test_static_point_load():
-    nnodes = 25 # NOTE must be multiple of 8 + 1 due to the position of the load
+    r"""Tip deflection of a cantilever under a transverse point load at
+    ``x = a``, in both planes of its square cross section
+
+    The Euler-Bernoulli tip deflection is ``P*a**2*(3*L - a)/(6*E*I)``,
+    Table G-1, Case 5, p. 985, of Gere, J. M., Goodno, B. J., Mechanics of
+    Materials, 7th ed., Cengage Learning, 2009. The shear deformation adds
+    ``P*a/(kappa*G*A)``, the second term of Eq. (1.2), p. 5, of Bathe, K.
+    J., Finite Element Procedures, 2nd ed., 2014, applied to the loaded
+    length ``a``, beyond which the shear force is zero. For this beam the
+    shear term is 4.1e-5 of the total.
+
+    The interdependent interpolation of BeamC is exact for nodal point
+    loads: with 8 and 16 elements the tip deflection equals the reference
+    to 1e-12.
+    """
+    # NOTE the number of nodes must be a multiple of 8 plus 1 due to the
+    #      position of the load
     n = 9
     L = 8
     a = 5
@@ -108,10 +124,14 @@ def test_static_point_load():
     u = np.zeros(N)
     u[bu] = spsolve(Kuu, fext[bu])
 
-    # NOTE reference value from https://calcresource.com/statics-cantilever-beam.html
-    ref_value = 7.48768
-    assert np.isclose(u[1::DOF].min(), -ref_value, rtol=0.001)
-    assert np.isclose(u[2::DOF].max(), +ref_value, rtol=0.001)
+    # NOTE Table G-1, Case 5, of Gere and Goodno (2009), plus the shear
+    #      deflection under the load, Eq. (1.2) of Bathe (2014)
+    ref_bending = -P*a**2*(3*L - a)/(6*E*Izz)
+    ref_value = ref_bending - P*a/(prop.G*A)
+    print('tip deflections', u[1::DOF].min(), u[2::DOF].max())
+    print('reference', ref_value, 'bending only', ref_bending)
+    assert np.isclose(u[1::DOF].min(), -ref_value, rtol=1e-10)
+    assert np.isclose(u[2::DOF].max(), +ref_value, rtol=1e-10)
 
     fint = np.zeros(N)
     for beam in beams:
