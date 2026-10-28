@@ -165,9 +165,46 @@ The first four rows and columns are the classical stiffness about the
 shear centre. The model is computed by default with the warping
 constraints of Yu et al. (2002), ``constraint='yu2002'``, which reproduce
 the VABS results of Yu et al. (2005) and, for a strip, their asymptotic
-thin-walled warping rigidity; with ``'yu2012'``, the warping rigidity of a
-strip is about 9 per cent lower, see the notes of
-:meth:`.CrossSection.calc_vlasov`. No beam element of pyfe3d has a
+thin-walled warping rigidity. The constraints of Yu et al. (2012),
+``constraint='yu2012'``, the default of
+:meth:`.CrossSection.calc_stiffness`, differ in the fourth constraint, on
+the rotation of the in-plane warping. They give the same first four rows
+and columns of ``Kv`` and, in the tested cases, the same shear centre, but
+a different warping rigidity ``Kv[4, 4]``, lower for strips and nearly
+equal for I- and channel sections. For the cases of ``tests/test_vabs_vlasov.py``, with
+`E = 10^7` and `\nu = 0.3` for the isotropic ones:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Case
+     - ``'yu2002'``
+     - ``'yu2012'``
+     - Reference
+   * - Isotropic strip, Table 1 of Yu et al. (2005)
+     - 1.78634
+     - 1.61715
+     - VABS 1.78635; `E h^3 b^3/[144(1 - \nu^2)]` = 1.78336;
+       `E h^3 b^3/144` = 1.62286
+   * - Orthotropic strip, Table 3
+     - 3.39252
+     - 3.32682
+     - VABS 3.39251
+   * - Anisotropic strip, 15 degrees, Table 4
+     - 1.82501
+     - 1.59940
+     - VABS 1.82499
+   * - Isotropic I-beam, Table 5, mesh of the paper
+     - 3518.92
+     - 3515.17
+     - VABS 3553.43; thin-walled `E t b_f^3 h^2/24` = 3526.67
+   * - Channel, `t = 0.01`
+     - 912.037
+     - 911.853
+     - thin-walled `E \Gamma` = 911.458
+
+The torsional warping `w_1` per unit twist rate is the same for both. No
+beam element of pyfe3d has a
 warping degree-of-freedom: ``Kv`` is an output for one-dimensional
 Vlasov beam analyses outside pyfe3d, such as that of Section 3 of Yu et
 al. (2005).
@@ -183,7 +220,12 @@ the mesh through all its nodes. These two arrays are all that a plotting
 library needs, and pyfe3d does not depend on any. The warping satisfies
 the constraints chosen in :meth:`.CrossSection.calc_stiffness`, among them
 zero average, and it is the warping relative to the rigid motion of the
-section about the reference axis.
+section about the reference axis. In the tested cases, the two sets of
+constraints, ``'yu2012'`` and ``'yu2002'``, give the same out-of-plane
+warping per unit classical strain, but they can differ in the in-plane
+warping and in the
+term of the derivatives of the strains; :meth:`.CrossSection.translated`
+does not depend on them.
 
 The torsional warping is therefore shown, as in the literature, about the
 shear centre: the section translated to the shear centre with
@@ -306,7 +348,8 @@ published VABS results:
   orthotropic and anisotropic strips, reproduced to five digits or more,
   and Table 5, isotropic I-beam, within 1 per cent, and the torsional
   warping about the shear centre of a thin-walled channel against
-  `-\omega`, with its warping rigidity.
+  `-\omega`, with its warping rigidity, all with the constraints
+  ``'yu2002'`` and ``'yu2012'``.
 
 
 Limitations

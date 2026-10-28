@@ -32,7 +32,10 @@
   sections, of `{gamma11, kappa1, kappa2, kappa3, kappa1'}` about the shear
   centre, with the warping rigidity; `CrossSection.translated` moves the
   origin of a cross section, e.g. to the shear centre. No beam element
-  uses `Kv`.
+  uses `Kv`. The default warping constraints of `calc_vlasov` are
+  `'yu2002'`, which reproduce Yu et al. (2005); `'yu2012'` gives the same
+  classical block and a warping rigidity lower by up to 12 per cent for
+  strips and within about 0.1 per cent for I- and channel sections.
 - Initially twisted and curved beams are not implemented: non-zero `k1`,
   `k2`, `k3` raise `NotImplementedError`.
 
@@ -55,7 +58,8 @@
   and 4, reproduced to five digits or more, the isotropic I-beam of Table
   5, within 1 per cent, and the torsional warping of a thin-walled channel
   about its shear centre against the principal sectorial coordinate,
-  `w1 = -omega kappa1`, with its warping rigidity.
+  `w1 = -omega kappa1`, with its warping rigidity; all with both
+  `'yu2002'` and `'yu2012'`.
 
 ### Documentation
 

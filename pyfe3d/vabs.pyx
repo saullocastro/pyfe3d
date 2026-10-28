@@ -1454,9 +1454,12 @@ cdef class CrossSection:
         constraint : str, optional
             The warping constraints of :meth:`calc_stiffness`. Default
             ``'yu2002'``, with which the published values of the generalized
-            Vlasov model are reproduced, see the Notes; ``'yu2012'`` gives
-            the same first four rows and columns but a different warping
-            rigidity.
+            Vlasov model are reproduced, see the Notes. ``'yu2012'``, the
+            default of :meth:`calc_stiffness`, gives the same first four
+            rows and columns and, in the tested cases, the same shear
+            centre, but a different warping rigidity ``Kv[4, 4]``: lower by
+            up to about 12 per cent for a strip, and by about 0.1 per cent
+            for I- and channel sections.
 
         Raises
         ------
@@ -1528,15 +1531,22 @@ cdef class CrossSection:
         `\kappa_1''` and has no place in Eq. (4) of [1]_; it is omitted, as
         in [1]_, whose values are reproduced without it.
 
-        The warping constraints change `\boldsymbol{C}`. With those of
-        Yu et al. (2002), ``constraint='yu2002'``, `K_{v,55}` reproduces the
-        values computed with VABS in Tables 1, 3 and 4 of [1]_ for strips to
-        five digits or more, and for the isotropic strip it agrees with the
-        asymptotic thin-walled value `E h^3 b^3/[144 (1 - \nu^2)]`, Eq. (18)
-        of [1]_; with ``constraint='yu2012'`` it is about `9` per cent
-        lower for that strip, close to the value `E h^3 b^3/144` of Vlasov's
-        theory, Eq. (17) of [1]_. For an I-section, both are within `0.2`
-        per cent of each other and of the thin-walled warping rigidity.
+        The two sets of warping constraints differ in the fourth one, on
+        the rotation of the in-plane warping. This changes `\boldsymbol{C}`,
+        hence `K_{v,55}`, but not `\boldsymbol{A}` and `\boldsymbol{B}`.
+        With the constraints of Yu et al. (2002), ``constraint='yu2002'``,
+        `K_{v,55}` reproduces the values computed with VABS in Tables 1, 3
+        and 4 of [1]_ for strips to five digits or more, and for the
+        isotropic strip it agrees with the asymptotic thin-walled value `E
+        h^3 b^3/[144 (1 - \nu^2)]`, Eq. (18) of [1]_. With
+        ``constraint='yu2012'`` it is lower for the strips, by `9.5` per
+        cent for the isotropic one, close to the value `E h^3 b^3/144` of
+        Vlasov's theory, Eq. (17) of [1]_, by `1.9` per cent for the
+        orthotropic one and by `12` per cent for the anisotropic one of
+        Table 4 of [1]_. For I- and channel sections, the two are within
+        about `0.1` per cent of each other and within `0.4` per cent of the
+        thin-walled warping rigidity. Since only ``'yu2002'`` reproduces
+        [1]_, it is the default.
 
         For a thin-walled open section, the torsional warping per unit twist
         rate about the shear centre, the first column of
