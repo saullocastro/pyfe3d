@@ -39,6 +39,27 @@
 - Initially twisted and curved beams are not implemented: non-zero `k1`,
   `k2`, `k3` raise `NotImplementedError`.
 
+### Behaviour change: transverse shear of thick `Quad4` elements
+
+- The elements with `h/l >= 1`, `l` the square root of the element area,
+  integrate the transverse shear with the assumed strains of the MITC4
+  element of Dvorkin and Bathe (1984), in the plate form of Bathe and
+  Dvorkin (1985), with two-by-two quadrature, instead of the modified
+  one-point shear rule of Hughes et al. (1977). That rule integrates the
+  products of the gradients of `w` with two-by-two quadrature and the terms
+  with the rotations with one point, such that a state of pure twist, whose
+  transverse shear strains vanish, stored spurious shear energy,
+  `(5/12)(l/h)^2` times the twist energy of an isotropic square element,
+  42 per cent at `h/l = 1`, and a mesh refined across `h/l = 1` became
+  abruptly stiffer in torsion: the tip twist of a thin-walled I-beam fell by
+  21 per cent, and the buckling load of a hard simply supported square
+  plate with `b/h = 10` was 2.0 per cent above the Mindlin solution with
+  8 x 8 elements, `h/l = 0.8`, and 11.2 per cent above it with 12 x 12,
+  `h/l = 1.2`. The thick element is now exact for pure twist and pure bending
+  of a rectangle, has only the six rigid-body zero-energy modes, and the
+  plate converges monotonically to the Mindlin solution, +0.91 per cent
+  with 12 x 12 elements. The elements with `h/l < 1` are unchanged.
+
 ### Tests
 
 - `tests/test_vabs_isotropic.py`, `tests/test_vabs_composite.py` and
@@ -65,6 +86,18 @@
   sectorial coordinate,
   `w1 = -omega kappa1`, with its warping rigidity; all with both
   `'yu2002'` and `'yu2012'`.
+- `tests/test_quad4_thick_twist.py`: pure twist and pure bending exact for
+  thick and thin `Quad4` elements, constant transverse shear on a distorted
+  element, the rank of the thick element and the torsion of a strip refined
+  across `h/l = 1`.
+- `tests/test_quad4_linear_buckling_plate_rotated_thick_elements.py`: the
+  plate is hard simply supported and compared with the Mindlin solution,
+  within 2 per cent, instead of soft simply supported and compared with the
+  Kirchhoff solution, which the spurious twist stiffness of the modified
+  one-point shear rule had matched within 3 per cent;
+  `tests/test_quad4_spurious_shear_mode.py` and `tests/test_drilling_rank.py`
+  record the energies of the two zero-energy modes and the rank of the thick
+  element.
 
 ### Documentation
 
