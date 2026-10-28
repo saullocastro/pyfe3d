@@ -293,10 +293,9 @@ def rotate_material(D, double theta1, double theta3):
     m_2, m_3` are obtained from the local axes by the rotation ``theta3``
     about `y_3`, positive from `y_1` towards `y_2`, such that `m_3 = y_3`.
     For a laminated wall with `y_2` along the wall, ``theta3`` is the ply
-    angle measured from the beam axis. TODO(author): this is a convention
-    of pyfe3d; that it coincides with the angles of the input of a
-    commercial release of VABS has not been verified, see
-    ``tests/test_vabs_composite.py``.
+    angle measured from the beam axis. Both angles are shown in the figure
+    of :class:`.CrossSection`; this convention is used by
+    :class:`.CrossSection` for the angles of each element.
 
     Parameters
     ----------
@@ -320,6 +319,36 @@ def rotate_material(D, double theta1, double theta3):
     >>> D = orthotropic(20.59e6, 1.42e6, 1.42e6, 0.87e6, 0.87e6, 0.696e6,
     ...                 0.30, 0.30, 0.34)
     >>> Drot = rotate_material(D, theta1=90., theta3=15.)
+
+    Notes
+    -----
+    With this convention, the stiffness of the box beam CUS of Table 2 of
+    [1]_ is reproduced with all the signs of its VABS 3.2 column, for the
+    plies at ``theta3 = 15`` in every wall, `y_2` tangent to the wall
+    counter-clockwise around the section and `y_3` pointing inwards. Two
+    other published examples give couplings of the same magnitude but of
+    the opposite sign: `S_{12}`, `S_{45}` and `S_{46}` of the box beam CAS1
+    of Table 2 of [2]_, which has no sketch of its axes and whose signs are
+    obtained for the section rotated by 180 degrees, and `S_{14}`, `S_{25}`
+    and `S_{36}` of the pipe of Table 3 of [3]_, whose signs are obtained
+    with the opposite ply angles in the half circles. These differences are
+    attributed to the labelling of the axes and of the ply angles in [2]_
+    and [3]_; they are checked in ``tests/test_vabs_composite.py``.
+
+    References
+    ----------
+    .. [1] Yu, W., Hodges, D. H., and Ho, J. C., "Variational asymptotic
+       beam sectional analysis -- An updated version", International
+       Journal of Engineering Science, 59, pp. 40--64, 2012.
+       https://doi.org/10.1016/j.ijengsci.2012.03.006
+    .. [2] Yu, W., Hodges, D. H., Volovoi, V. V., and Cesnik, C. E. S., "On
+       Timoshenko-like modeling of initially curved and twisted composite
+       beams", International Journal of Solids and Structures, 39(19),
+       pp. 5101--5121, 2002. https://doi.org/10.1016/S0020-7683(02)00399-2
+    .. [3] Yu, W., and Hodges, D. H., "Generalized Timoshenko Theory of the
+       Variational Asymptotic Beam Sectional Analysis", Journal of the
+       American Helicopter Society, 50(1), pp. 46--55, 2005.
+       https://doi.org/10.4050/1.3092842
 
     """
     cdef double [:, ::1] Dm = np.ascontiguousarray(D, dtype=DOUBLE)
@@ -761,6 +790,15 @@ cdef class CrossSection:
     All results refer to the origin of the coordinates `x_2`, `x_3`, i.e.
     the beam reference axis passes through `(0, 0)`.
 
+    .. figure:: ../figures/vabs_axes.svg
+
+       (a) Axes `x_1, x_2, x_3` of a cross section, here a flared channel,
+       with the local axes `y_1, y_2, y_3` of an element, oriented by
+       ``theta1``, and the tension and shear centres computed by
+       :meth:`calc_stiffness`; (b) the material axes `m_1, m_2, m_3` of the
+       element, oriented by the ply angle ``theta3``, see
+       :func:`.rotate_material`.
+
     Elements with 3, 4, 6, 8 and 9 nodes are supported: the linear and the
     quadratic triangles and the bilinear, serendipity and biquadratic
     quadrilaterals, with the nodes numbered counter-clockwise in the
@@ -855,11 +893,13 @@ cdef class CrossSection:
     Ft : np.ndarray
         Generalized Timoshenko flexibility matrix, the inverse of ``Kt``.
     tension_centre : np.ndarray
-        Coordinates `x_2`, `x_3` of the point where an axial force gives no
-        bending curvature, from ``Fc``, dimension length, size ``2``.
+        Coordinates `(a_2, a_3)` of the point where an axial force `F_1`
+        gives no bending curvature, `\kappa_2 = \kappa_3 = 0`, from ``Fc``,
+        dimension length, size ``2``, see the figure.
     shear_centre : np.ndarray
-        Coordinates `x_2`, `x_3` of the point where a transverse force gives
-        no twist, from ``Ft``, dimension length, size ``2``.
+        Coordinates `(e_2, e_3)` of the point where a transverse force gives
+        no twist, `\kappa_1 = 0`, from ``Ft``, dimension length, size ``2``,
+        see the figure.
     V0 : np.ndarray
         Nodal warping displacements of the classical model per unit
         classical strain, shape ``(ndof, 4)``, with the warping
@@ -1095,7 +1135,10 @@ cdef class CrossSection:
         problems of the classical model and of its refinement with one
         sparse LU factorization, and sets ``Kc``, ``Fc``, ``Kt``, ``Ft``,
         ``tension_centre``, ``shear_centre``, ``V0``, ``V1S``, ``A``, ``B``,
-        ``C``, ``constraint``, ``area`` and ``centroid``.
+        ``C``, ``constraint``, ``area`` and ``centroid``. The tension centre
+        is the point where an axial force gives no bending curvature, and
+        the shear centre the point where a transverse force gives no twist,
+        see the figure of :class:`.CrossSection`.
 
         Parameters
         ----------

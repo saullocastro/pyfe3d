@@ -57,6 +57,46 @@ The analysis is linear and per station: a beam whose section varies along
 its length needs one analysis per station.
 
 
+Axes, angles and centres
+------------------------
+
+.. figure:: ../figures/vabs_axes.svg
+
+   (a) Flared channel of constant thickness, made of one isotropic
+   material, with the tension and shear centres computed by
+   :meth:`.CrossSection.calc_stiffness`, and an element of the upper
+   flange with its local axes; (b) that element seen from the tip of
+   `y_3`, with its material axes.
+
+The beam axis `x_1` points to the viewer of the cross section and `x_2`,
+`x_3` are the `y`, `z` of :class:`.BeamC` and :class:`.BeamLR`, with the
+origin at the reference axis. Each element has two angles, see
+:func:`.rotate_material`:
+
+- `\theta_1` (``theta1``) rotates the local axes `y_2`, `y_3` of the
+  element about `y_1 = x_1`, positive from `x_2` towards `x_3`; for a
+  wall, `y_2` is usually taken along the wall and `y_3` across it;
+- `\theta_3` (``theta3``) rotates the material axes `m_1`, `m_2` about
+  `m_3 = y_3`, positive from `y_1` towards `y_2`; for a laminated wall,
+  it is the ply angle measured from the beam axis.
+
+The tension centre `(a_2, a_3)` is the point where an axial force `F_1`
+gives no bending curvature, `\kappa_2 = \kappa_3 = 0`, and the shear
+centre `(e_2, e_3)` the point where the transverse forces `F_2`, `F_3`
+give no twist, `\kappa_1 = 0`. Both are measured from the reference axis.
+For the homogeneous channel of the figure, the tension centre is the
+centroid and the shear centre lies outside the section, on the side of
+the web opposite to the flanges.
+
+This convention of the angles reproduces all the signs of the box beam
+CUS computed with VABS 3.2 by Yu et al. (2012). With it, two other
+published examples give three couplings each with the published magnitude
+and the opposite sign, which is attributed to the labelling of their axes
+and ply angles: the box beam CAS1 of Yu et al. (2002) and the pipe of Yu
+and Hodges (2005), see the notes of :func:`.rotate_material` and
+``tests/test_vabs_composite.py``.
+
+
 Two conventions
 ---------------
 
@@ -112,8 +152,8 @@ published VABS results:
 - ``tests/test_vabs_composite.py``: the box beam CUS of Yu et al. (2012),
   reproduced to the four digits of their VABS 3.2 results, the
   anisotropic pipe of Yu and Hodges (2005), with its mass properties, and
-  the box beam CAS1 of Yu et al. (2002), with the remarks on the sign
-  conventions of the ply angles given in the tests;
+  the box beam CAS1 of Yu et al. (2002), with the opposite signs of three
+  couplings of the last two examples asserted explicitly, see above;
 - ``tests/test_vabs_elements.py``: integration rules, shape functions,
   material rotation and conventions.
 
