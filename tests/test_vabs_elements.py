@@ -205,6 +205,8 @@ def test_input_errors():
         CrossSection(x2, x3, [[0, 1, 2, 3]], [np.eye(5)], [0])
     with pytest.raises(ValueError):
         CrossSection(x2[:3], x3, [[0, 1, 2]], [D], [0])
+    with pytest.raises(NotImplementedError):
+        CrossSection(x2, x3, [[0, 1, 2, 3]], [D], [0], k1=0.01)
     # NOTE clockwise element
     sec = CrossSection(x2, x3, [[0, 3, 2, 1]], [D], [0])
     with pytest.raises(ValueError):

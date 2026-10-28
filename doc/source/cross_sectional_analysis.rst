@@ -122,7 +122,8 @@ Limitations
 -----------
 
 - Prismatic beams only: initially twisted and curved beams, whose theory
-  is in Yu et al. (2002, 2012), are not implemented.
+  is in Yu et al. (2002, 2012), are not implemented, and non-zero ``k1``,
+  ``k2``, ``k3`` of :class:`.CrossSection` raise ``NotImplementedError``.
 - No applied loads in the sectional analysis, Yu et al. (2012), Section
   5.3, and no recovery of the three-dimensional strains and stresses,
   although the warping ``V0`` and ``V1S`` is stored.

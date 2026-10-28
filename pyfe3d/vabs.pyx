@@ -295,10 +295,7 @@ def rotate_material(D, double theta1, double theta3):
     For a laminated wall with `y_2` along the wall, ``theta3`` is the ply
     angle measured from the beam axis. TODO(author): this is a convention
     of pyfe3d; that it coincides with the angles of the input of a
-    commercial release of VABS has not been verified. With `y_2`
-    counter-clockwise around the section, it reproduces the values and the
-    signs of the box beam CUS of Yu et al. (2012), but not the signs of the
-    couplings of two other published examples, see
+    commercial release of VABS has not been verified, see
     ``tests/test_vabs_composite.py``.
 
     Parameters
@@ -799,9 +796,14 @@ cdef class CrossSection:
         Density of each material, mass per unit volume, size
         ``len(materials)``. Default ``None``, meaning zero for all
         materials.
+    k1, k2, k3 : float, optional
+        Initial twist and initial curvatures of the beam, dimension inverse
+        of length. Default ``0.``, the only value implemented.
 
     Raises
     ------
+    NotImplementedError
+        If ``k1``, ``k2`` or ``k3`` is not zero.
     ValueError
         If ``x2`` and ``x3`` have different sizes, if there is no element,
         if an element does not have 3, 4, 6, 8 or 9 nodes or refers to a
@@ -936,8 +938,16 @@ cdef class CrossSection:
     cdef object _mats
 
     def __init__(CrossSection self, x2, x3, elements, materials, mat_ids,
-                 theta1=None, theta3=None, densities=None):
+                 theta1=None, theta3=None, densities=None, double k1=0.,
+                 double k2=0., double k3=0.):
         cdef int e, ne, k
+        # TODO(author): initially twisted and curved beams, operator Gamma_R
+        #      and the perturbation solution of the appendix of Yu et al.
+        #      (2012), are not implemented
+        if k1 != 0 or k2 != 0 or k3 != 0:
+            raise NotImplementedError('initially twisted or curved beams '
+                                      '(k1, k2, k3 not zero) are not '
+                                      'implemented')
         cdef double [:, :, ::1] Del
         cdef double [:, :, ::1] Dmat
         cdef int [::1] mids
