@@ -1112,6 +1112,31 @@ def test_optional_stabilisation_is_off_by_default_and_mild_when_on():
     the Mindlin plate, with rotary inertia, gives -0.28 %). Tria3R without
     stabilisation gives +96.1, +34.7, +10.0 and +1.9 % on the same meshes.
 
+    The error of Tria3DSG on the 9x11 mesh is one of the mesh, and its limit
+    one of the model, not of the formulation: with 9x11, 17x21, 33x41, 65x81
+    and 129x161 nodes, measured on 2026-10-29, the errors are, in %,
+
+    ==============  ======  ======  ======  ======  =======
+    nodes           9x11    17x21   33x41   65x81   129x161
+    ==============  ======  ======  ======  ======  =======
+    Tria3DSG, soft  +2.747  +0.197  -0.612  -0.958  -1.092
+    Quad4, soft     +0.291  -0.757  -1.049  -1.035  -1.115
+    Quad4R, soft    +2.785  -0.144  -0.894  -1.082  -1.130
+    Tria3DSG, hard  +3.215  +0.528  -0.083  -0.233  -0.271
+    Quad4, hard     +1.333  +0.117  -0.183  -0.258  -0.277
+    Quad4R, hard    +3.946  +0.763  -0.022  -0.218  -0.267
+    ==============  ======  ======  ======  ======  =======
+
+    the hard support also restraining the rotation about the edge: the
+    three elements converge to the same limits, about -1.1 % (soft) and
+    -0.27 % (hard, the -0.28 % above), and Leissa's Kirchhoff value is not
+    the limit of either. Following the policy of the tests whose reference
+    is reached only on fine meshes, the error of Tria3DSG without
+    stabilisation on the 9x11 mesh is compared with the value pre-determined
+    by this same test, +2.7470556272093605 %, i.e. the frequency with
+    ``rtol = 1e-4`` for the round-off of the eigenvalue solver, and with
+    grade B against Leissa as a bound.
+
     The accuracy on the 9x11 mesh is graded with the rules of MacNeal, R. H.,
     and Harder, R. L., 1985, "A proposed standard set of problems to test
     finite element accuracy", Finite Elements in Analysis and Design, 1(1),
@@ -1225,6 +1250,10 @@ def test_optional_stabilisation_is_off_by_default_and_mild_when_on():
     #      element is nearly twice too stiff, grade F. This is the locking,
     #      and it is what alpha is curing in Tria3R
     assert abs(e_dsg[0.]) <= 10.
+    # NOTE value pre-determined by this test on 2026-10-29, see the
+    #      docstring, compared as a frequency with rtol 1e-4
+    assert np.isclose(1 + e_dsg[0.]/100, 1 + 2.7470556272093605/100,
+                      rtol=1e-4)
     assert e_r[0.] > 50.
 
     # NOTE at the literature value the stabilisation is a mild improvement

@@ -122,27 +122,58 @@ def buckling_ss_plate(n, h, shear_factor=1.):
 
 
 def test_thick_elements():
-    r"""``b/h = 10``: the errors measured against the Mindlin solution are
-    +4.67, +2.61 and +0.29 % with 12x12, 16x16 and 48x48 elements; the
-    bounds follow that convergence, a regression of the hourglass pattern
-    giving the negative errors of the module documentation"""
-    for n, err_max in ((13, 0.06), (17, 0.035), (49, 0.005)):
+    r"""``b/h = 10``: errors against the Mindlin solution, measured on
+    2026-10-29 (time of one buckling analysis, ``OMP_NUM_THREADS=1``):
+
+    =======  =========  ======
+    mesh     error      time
+    =======  =========  ======
+    12x12    +4.667 %   0.12 s
+    16x16    +2.606 %   0.20 s
+    24x24    +1.152 %   0.56 s
+    32x32    +0.647 %   1.2 s
+    48x48    +0.287 %   4.3 s
+    64x64    +0.161 %   9.5 s
+    =======  =========  ======
+
+    converging as the square of the element size to the Mindlin solution,
+    a mesh error; a regression of the hourglass pattern gives the negative
+    errors of the module documentation. Following the policy of the tests
+    whose reference is reached only on fine meshes, the 12x12 and 16x16
+    meshes are compared with the errors pre-determined by this same test,
+    as buckling loads with ``rtol = 1e-4`` for the round-off of the
+    eigenvalue solver, and with grade B of MacNeal, R. H. and Harder, R.
+    L., A proposed standard set of problems to test finite element
+    accuracy, Finite Elements in Analysis and Design, 1(1), 3-20, 1985,
+    https://doi.org/10.1016/0168-874X(85)90003-4, p. 14 (at most 10 %), as
+    a bound. Until 0.12.0 the 48x48 mesh was also run, with bounds that
+    followed the measured errors."""
+    predetermined = {13: 0.04667239613971885, 17: 0.02605820880600551}
+    for n in (13, 17):
         err, checkerboard = buckling_ss_plate(n, h=0.05)
         print('b/h = 10, %dx%d elements: %+.2f %%, checkerboard %.3f'
               % (n - 1, n - 1, 100*err, checkerboard))
-        assert 0 < err < err_max
+        assert np.isclose(1 + err, 1 + predetermined[n], rtol=1e-4)
+        assert 0 < err <= 0.10
         assert checkerboard < 0.05
 
 
 def test_low_transverse_shear_stiffness():
-    r"""``b/h = 100`` with ``A44 = A55`` reduced to 1/1000: the errors
-    measured against the Mindlin solution are +7.00 and +1.74 % with 8x8
-    and 16x16 elements"""
-    for n, err_max in ((9, 0.08), (17, 0.02)):
+    r"""``b/h = 100`` with ``A44 = A55`` reduced to 1/1000: errors against
+    the Mindlin solution, measured on 2026-10-29: +7.001, +1.745, +0.436
+    and +0.109 % with 8x8, 16x16, 32x32 and 64x64 elements (0.08, 0.30,
+    1.7 and 10 s), converging as the square of the element size, a mesh
+    error. The 8x8 and 16x16 meshes are compared with the errors
+    pre-determined by this same test, as buckling loads with ``rtol =
+    1e-4``, and with grade B of MacNeal and Harder (1985), see
+    :func:`test_thick_elements`."""
+    predetermined = {9: 0.0700082826903361, 17: 0.01744833951526137}
+    for n in (9, 17):
         err, checkerboard = buckling_ss_plate(n, h=0.005, shear_factor=1e-3)
         print('b/h = 100, A44 = A55 = 1/1000, %dx%d elements: %+.2f %%, '
               'checkerboard %.3f' % (n - 1, n - 1, 100*err, checkerboard))
-        assert 0 < err < err_max
+        assert np.isclose(1 + err, 1 + predetermined[n], rtol=1e-4)
+        assert 0 < err <= 0.10
         assert checkerboard < 0.05
 
 

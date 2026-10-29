@@ -138,8 +138,34 @@ def test_fung_kaplan_beam_arch(method, convergence_criterion, monkeypatch):
     -0.0053 and +0.0087, and to -0.0042 and +0.0007. The converged point of
     extreme load is within about `3 B_{1,lim} h^2 + h^3 = 0.006` of the
     limit load of the model, with `B_{1,lim} = 1.13` and `h = 0.042` the
-    largest increment of `B_1` of a step, as in Eq. (23). Hence the
-    tolerance ``0.01*R_cr = 0.051`` of both limit loads.
+    largest increment of `B_1` of a step, as in Eq. (23). Measured on
+    2026-10-29 with the increments of this test, 0.05, the same for both
+    methods and both criteria within 2e-10 (time of one analysis on a
+    loaded machine):
+
+    ========  ==========  ==========  ======
+    elements  upper - R   lower - R   time
+    ========  ==========  ==========  ======
+    40        -0.0108     +0.0406     3.5 s
+    80        -0.0067     +0.0086     5.0 s
+    160       -0.0056     +0.0007     7.8 s
+    320       -0.0054     -0.0013     10 s
+    ========  ==========  ==========  ======
+
+    the lower limit load converging with the mesh, the upper one to the
+    sampling difference above. Following the policy of the tests whose
+    reference is reached only on fine meshes, the limit loads of the 40
+    elements are compared with the values pre-determined by this same test,
+    5.0854743909 and -0.6557002018, with ``rtol = 1e-6`` (the methods and
+    criteria differ by 2e-10 relative), and with Fung and Kaplan with the
+    grades of MacNeal, R. H. and Harder, R. L., A proposed standard set of
+    problems to test finite element accuracy, Finite Elements in Analysis
+    and Design, 1(1), 3-20, 1985,
+    https://doi.org/10.1016/0168-874X(85)90003-4, p. 14, as bounds: A (at
+    most 2 %) for the upper limit load, 0.21 % measured, and B (at most
+    10 %) for the lower one, 5.8 % measured. Until 0.12.0 both were
+    compared with ``0.01*R_cr = 0.051``, close to the 0.046 of the lower
+    one.
 
     The round-off floor of the convergence criteria must accept at least one
     iteration, see the module documentation.
@@ -180,7 +206,11 @@ def test_fung_kaplan_beam_arch(method, convergence_criterion, monkeypatch):
     assert B1s[kmax] > 0 > B1s[kmin]
     assert abs(B1s[kmax] - B1_lim) < 0.05
     assert abs(B1s[kmin] + B1_lim) < 0.05
-    assert abs(R[kmax] - R_cr) <= 0.01*R_cr
-    assert abs(R[kmin] - R_low) <= 0.01*R_cr
+    # NOTE values pre-determined with 40 elements, see the docstring
+    assert np.isclose(R[kmax], 5.0854743909, rtol=1e-6)
+    assert np.isclose(R[kmin], -0.6557002018, rtol=1e-6)
+    # NOTE grades A and B against Fung and Kaplan
+    assert abs(R[kmax]/R_cr - 1) <= 0.02
+    assert abs(R[kmin]/R_low - 1) <= 0.10
     # NOTE two null loads, between the limit points and after the lower one
     assert np.count_nonzero(R[:-1]*R[1:] < 0) == 2
