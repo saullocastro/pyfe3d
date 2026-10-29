@@ -261,6 +261,7 @@ def test_cantilever_end_moment_quad4r():
     assert W_ex[-1] < 1.e-12
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize('name', ['BeamC', 'BeamLR'])
 def test_cantilever_end_moment_beams_membrane_locking(name):
     r"""The beam elements interpolate the axial displacement linearly and
@@ -520,6 +521,7 @@ def limit_points(P, W, W_split):
     return (P[i_max], W[i_max]), (P[i_min], W[i_min])
 
 
+@pytest.mark.slow
 def test_hinged_roof_thick():
     r"""Snap-through of the 12.7 thick roof with Quad4R elements and
     Crisfield's arc-length method against Table 9a of Sze et al. (2004),
@@ -600,6 +602,7 @@ def thin_roof_path():
                            maxInc=0.075)
 
 
+@pytest.mark.slow
 def test_hinged_roof_thin_snap_back():
     r"""Snap-through and snap-back of the 6.35 thick roof with Quad4R
     elements and Crisfield's arc-length method against Table 9d of Sze et
@@ -663,6 +666,7 @@ def test_hinged_roof_thin_snap_back():
     assert Pmin < 0
 
 
+@pytest.mark.slow
 def test_hinged_roof_thin_lower_limit_load():
     r"""Lower limit load of the 6.35 thick roof with the Quad4R elements of
     :func:`thin_roof_path` against Table 9d of Sze et al. (2004)
@@ -695,6 +699,7 @@ def test_hinged_roof_thin_lower_limit_load():
     assert abs(Pmin/Pmin_ref - 1) <= 0.10
 
 
+@pytest.mark.slow
 def test_hinged_roof_hourglass_sensitivity():
     r"""Linear deflection ``-W_C`` of the 12.7 thick roof under ``P_max``
     against the physical stabilisation of the bending and of the transverse
