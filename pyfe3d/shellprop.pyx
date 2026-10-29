@@ -2883,9 +2883,10 @@ cdef class ShellProp:
             for i in range(6):
                 colM += fabs(ABDv[i, j])/(sq[i]*sq[j])
                 colMinv += fabs(AIv[i, j])*sq[i]*sq[j]
-            if colM > n1:
+            # NOTE a nan, e.g. of an inverse with nan, is kept
+            if colM > n1 or colM != colM:
                 n1 = colM
-            if colMinv > n2:
+            if colMinv > n2 or colMinv != colMinv:
                 n2 = colMinv
         if not n1*n2 <= 1e12:
             raise np.linalg.LinAlgError(msg)

@@ -611,6 +611,33 @@ def test_singular_ABD_positive_diagonal(thetadeg):
     assert np.isfinite(prop.e1) and prop.e1 > 0
 
 
+@pytest.mark.parametrize('platform', ['raises', 'inf', 'nan'])
+def test_singular_ABD_any_platform(platform, monkeypatch):
+    r"""The singular ``ABD`` is detected also when ``np.linalg.inv`` does not
+    raise ``LinAlgError`` but returns inf or nan, as the LAPACK of Pyodide
+    does; here every inverse is replaced, so a regular laminate reaches the
+    checks after the inversion, which must raise the same ``LinAlgError``
+    """
+    prop = laminated_plate([0, 45, 90], plyt=0.125,
+                           laminaprop=(142e9, 8.7e9, 0.28, 5e9, 5e9, 3e9))
+    e1 = prop.e1
+    inv = np.linalg.inv
+
+    def fake(a):
+        if platform == 'raises':
+            raise np.linalg.LinAlgError('Singular matrix')
+        inv(a)
+        return np.full(np.shape(a), np.inf if platform == 'inf' else np.nan)
+
+    monkeypatch.setattr(np.linalg, 'inv', fake)
+    with pytest.raises(np.linalg.LinAlgError,
+                       match='singular or ill-conditioned, its'):
+        prop.calc_equivalent_properties()
+    monkeypatch.undo()
+    prop.calc_equivalent_properties()
+    assert prop.e1 == e1
+
+
 def test_zero_young_modulus_errors():
     r"""Undefined Poisson's ratios with a zero Young modulus
 
