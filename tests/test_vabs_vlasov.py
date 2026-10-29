@@ -278,6 +278,11 @@ def test_consistency():
     ref.calc_vlasov('yu2012')
     assert np.allclose(ref.Kv[:4, :4], Kv[:4, :4], rtol=1e-8,
                        atol=1e-8*np.abs(Kv).max())
+    # NOTE the shear centre of calc_stiffness, with the same constraints,
+    #      is reused
+    sec.calc_stiffness('yu2002')
+    sec.calc_vlasov('yu2002')
+    assert np.allclose(sec.Kv, Kv, rtol=1e-8, atol=1e-8*np.abs(Kv).max())
 
 
 def test_translated():

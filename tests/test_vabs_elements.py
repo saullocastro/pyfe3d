@@ -161,6 +161,9 @@ def test_conventions():
     assert np.allclose(classical_from_timoshenko(C), Kc)
     with pytest.raises(ValueError):
         yu_to_pyfe3d(np.eye(5))
+    for convert in (yu_to_pyfe3d, pyfe3d_to_yu):
+        with pytest.raises(ValueError, match='shape'):
+            convert(np.ones((4, 6)))
     with pytest.raises(ValueError):
         classical_from_timoshenko(np.eye(4))
 
@@ -207,6 +210,12 @@ def test_input_errors():
         CrossSection(x2[:3], x3, [[0, 1, 2]], [D], [0])
     with pytest.raises(NotImplementedError):
         CrossSection(x2, x3, [[0, 1, 2, 3]], [D], [0], k1=0.01)
+    with pytest.raises(ValueError, match='at least one element'):
+        CrossSection(x2, x3, [], [D], [])
+    with pytest.raises(ValueError, match='one entry per element'):
+        CrossSection(x2, x3, [[0, 1, 2, 3]], [D], [0, 0])
+    with pytest.raises(ValueError, match='shape'):
+        rotate_material(np.eye(5), 0., 0.)
     # NOTE clockwise element
     sec = CrossSection(x2, x3, [[0, 3, 2, 1]], [D], [0])
     with pytest.raises(ValueError):
@@ -221,6 +230,10 @@ def test_input_errors():
     x3d = np.concatenate((x3, x3))
     sec = CrossSection(x2d, x3d, [[0, 1, 2, 3], [4, 5, 6, 7]], [D], [0, 0])
     with pytest.raises(RuntimeError, match='not connected'):
+        sec.calc_stiffness()
+    # NOTE a material without stiffness
+    sec = CrossSection(x2, x3, [[0, 1, 2, 3]], [np.zeros((6, 6))], [0])
+    with pytest.raises(RuntimeError, match='singular'):
         sec.calc_stiffness()
 
 

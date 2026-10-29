@@ -1298,6 +1298,61 @@ def test_completion_not_applicable(monkeypatch):
                         max_dense_size=0)
     assert 'deflated' not in str(e.value)
 
+    eigsh_both_signs = eigen._eigsh_both_signs
+
+    def nan_eigsh(*args):
+        mu, v = eigsh_both_signs(*args)
+        return np.full_like(mu, np.nan), v
+
+    # NOTE no finite eigenpair to complete
+    monkeypatch.setattr(eigen, '_eigsh_both_signs', nan_eigsh)
+    with pytest.raises(RuntimeError) as e:
+        linear_buckling(K, KG, num_eigvalues=4, max_dense_size=0)
+    assert 'deflated' not in str(e.value)
+
+
+def test_completion_capped_ncv(monkeypatch):
+    r"""With ``ncv`` of ARPACK capped, see
+    :func:`pyfe3d.solver.arpackutils.arpack_max_ncv`, each deflated pass
+    asks for at most ``(max_ncv - 1)//2`` eigenpairs, and the missing
+    copies of :func:`test_repeated_load_multipliers_completed` are still
+    found within ``MAX_COMPLETION_PASSES`` passes"""
+    K, lam = laplacian_3d(6)
+    KG = -identity(K.shape[0], format='csr')
+    k = 4
+    max_ncv = 7
+    asked = []
+    deflated = eigen.deflated_eigsh
+
+    def spy_deflated(A, k_pass, *args, **kwargs):
+        asked.append(k_pass)
+        return deflated(A, k_pass, *args, **kwargs)
+
+    monkeypatch.setattr(eigen, '_eigsh_cayley',
+                        one_copy_each(eigen._eigsh_cayley))
+    monkeypatch.setattr(eigen, 'deflated_eigsh', spy_deflated)
+    monkeypatch.setattr(eigen, 'arpack_max_ncv', lambda: max_ncv)
+    with warnings.catch_warnings():
+        warnings.simplefilter('error', DenseFallbackWarning)
+        eigvals, eigvecs = linear_buckling(K, KG, num_eigvalues=k)
+    np.testing.assert_allclose(eigvals, lam[:k], rtol=1e-10)
+    assert asked and max(asked) <= (max_ncv - 1)//2
+
+
+def test_dense_solver_error_K_positive_definite(monkeypatch):
+    r"""With the dense solver, an error of ``eigh()`` is raised unchanged
+    when `\boldsymbol{K}` is positive definite, the diagnosis of a
+    stiffness matrix that is not positive definite being then wrong"""
+    K, lam = laplacian_3d(4)
+    KG = -identity(K.shape[0], format='csr')
+
+    def failing_eigh(a, b):
+        raise LinAlgError('eigh failed')
+
+    monkeypatch.setattr(eigen, 'eigh', failing_eigh)
+    with pytest.raises(LinAlgError, match='^eigh failed$'):
+        linear_buckling(K, KG, num_eigvalues=4, sparse_solver=False)
+
 
 def torsion_cylinder_Z33(ntheta):
     r"""``K`` and ``KG`` of the cylinder Z33 under torsion of
