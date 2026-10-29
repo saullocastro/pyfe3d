@@ -46,8 +46,19 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     so the element converges to the three-dimensional solution: Table 2.6
     (concluded), p. 53, of the same reference puts the Flugge shell theory
     0.40 % above the elasticity value for ``n = 3`` at this geometry, and at
-    ``ntheta = 96`` the error is already below that. With the default
-    ``refinement=1``, ``ntheta = 48`` and the test takes about 2 s.
+    ``ntheta = 96`` the error is already below that.
+
+    From ``ntheta = 48``, the default ``refinement=1``, the errors are within
+    grade A, 2 per cent, of MacNeal, R. H., and Harder, R. L., "A proposed
+    standard set of problems to test finite element accuracy", Finite
+    Elements in Analysis and Design, 1(1), 3-20, 1985, p. 14, which the test
+    checks. It also compares Omega with the values pre-determined by this
+    same test, with a tolerance for the round-off of other platforms only;
+    wall times on a machine shared with other jobs::
+
+        refinement  ntheta  elements   n = 2       n = 3       time
+            1         48      1440    0.12168186  0.13180857    1 s
+            2         96      5760    0.12131378  0.13024089   11 s
 
     """
     data = Quad4Data()
@@ -186,14 +197,25 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     assert isclose(Omega[0], Omega[1], rtol=1e-6)
     assert isclose(Omega[2], Omega[3], rtol=1e-6)
 
-    # NOTE convergence is from above. The tolerances are the measured errors
-    #      of the docstring rounded up: +0.36 and +1.48 per cent at
-    #      ntheta = 48, and +0.05 and +0.28 per cent at ntheta = 96
+    # NOTE convergence is from above, and from ntheta = 48 the errors of
+    #      the docstring are within grade A of MacNeal and Harder (1985),
+    #      p. 14, 2 per cent
     assert Omega[0] > Omega_n2
     assert Omega[2] > Omega_n3
-    rtol_n2, rtol_n3 = (0.005, 0.02) if refinement == 1 else (0.001, 0.004)
-    assert isclose(Omega[0], Omega_n2, rtol=rtol_n2)
-    assert isclose(Omega[2], Omega_n3, rtol=rtol_n3)
+    assert isclose(Omega[0], Omega_n2, rtol=0.02)
+    assert isclose(Omega[2], Omega_n3, rtol=0.02)
+
+    # NOTE Omega of the n = 2 and n = 3 pairs pre-determined with this same
+    #      test at the same refinement, see the table of the docstring. The
+    #      tolerance, rtol = 1e-4, is for the round-off of other platforms
+    #      and solvers only
+    predetermined = {
+        1: (0.12168186, 0.13180857),
+        2: (0.12131378, 0.13024089),
+    }
+    if refinement in predetermined:
+        assert isclose(Omega[0], predetermined[refinement][0], rtol=1e-4)
+        assert isclose(Omega[2], predetermined[refinement][1], rtol=1e-4)
 
     if plot_pyvista:
         import pyvista as pv
