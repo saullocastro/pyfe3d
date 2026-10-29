@@ -424,21 +424,20 @@ cdef int DOF = 6
 cdef int NUM_NODES = 4
 
 
-cdef inline void _hourglass_bending_moduli(double h, double *Ae, double *Be,
-        double *De, double *E1b, double *E2b) noexcept nogil:
-    r"""Equivalent bending moduli of the hourglass control
+cdef inline void _reduced_bending_stiffness(double *Ae, double *Be,
+        double *De, double *Ds) noexcept nogil:
+    r"""Bending stiffness with zero membrane forces, ``Ds = D - B A^-1 B``
 
-    ``E1b = 12/(h**3 d11)`` and ``E2b = 12/(h**3 d22)``, with `[d] = (D -
-    B A^{-1} B)^{-1}` the lower-right block of `[[A, B], [B, D]]^{-1}`, from
-    the row-major 3x3 matrices ``Ae``, ``Be`` and ``De`` in the element
-    coordinate system. See the Notes of :meth:`.Quad4R.update_KC0`.
+    From the row-major 3x3 matrices ``Ae``, ``Be`` and ``De`` in the element
+    coordinate system. It is ``D`` itself when ``B`` is zero and does not
+    depend on the reference surface set by ``ShellProp.offset``. Used by the
+    physical stabilisation of the bending, see :func:`_bending_bl94`.
 
     """
     cdef int i, j, k
-    cdef double detA, detDs
+    cdef double detA
     cdef double Ai[9]
     cdef double BAi[9]
-    cdef double Ds[9]
     # NOTE inverse of the extensional stiffness by cofactors
     detA = (Ae[0]*(Ae[4]*Ae[8] - Ae[5]*Ae[7])
             - Ae[1]*(Ae[3]*Ae[8] - Ae[5]*Ae[6])
@@ -452,9 +451,6 @@ cdef inline void _hourglass_bending_moduli(double h, double *Ae, double *Be,
     Ai[6] = (Ae[3]*Ae[7] - Ae[4]*Ae[6])/detA
     Ai[7] = (Ae[1]*Ae[6] - Ae[0]*Ae[7])/detA
     Ai[8] = (Ae[0]*Ae[4] - Ae[1]*Ae[3])/detA
-    # NOTE bending stiffness with zero membrane forces, D - B A^-1 B, which
-    #      is D itself when B is zero and does not depend on the reference
-    #      surface set by ShellProp.offset
     for i in range(3):
         for j in range(3):
             BAi[3*i + j] = 0.
@@ -465,12 +461,102 @@ cdef inline void _hourglass_bending_moduli(double h, double *Ae, double *Be,
             Ds[3*i + j] = De[3*i + j]
             for k in range(3):
                 Ds[3*i + j] -= BAi[3*i + k]*Be[3*k + j]
-    detDs = (Ds[0]*(Ds[4]*Ds[8] - Ds[5]*Ds[7])
-             - Ds[1]*(Ds[3]*Ds[8] - Ds[5]*Ds[6])
-             + Ds[2]*(Ds[3]*Ds[7] - Ds[4]*Ds[6]))
-    # NOTE 1/d11 and 1/d22 from the cofactors of D - B A^-1 B
-    E1b[0] = 12.*detDs/(h**3*(Ds[4]*Ds[8] - Ds[5]*Ds[7]))
-    E2b[0] = 12.*detDs/(h**3*(Ds[0]*Ds[8] - Ds[2]*Ds[6]))
+
+
+cdef inline void _bending_bl94(double x1, double x2, double x3, double x4,
+        double y1, double y2, double y3, double y4, double *Ds, double fH,
+        double *K) noexcept nogil:
+    r"""Physical stabilisation of the bending of Belytschko and Leviathan
+    (1994), added to ``K``
+
+    ``K`` is the 12 x 12 row-major matrix of :func:`_shear_bl94`, on ``w,
+    r_x, r_y`` of nodes 1 to 4 in element coordinates, to which this adds
+    the rows and columns of ``r_x`` and ``r_y``. The bilinear shape
+    functions are written as in their Eq. (3.23), ``N_I = Delta_I + x b_xI +
+    y b_yI + h gamma_I``, with ``h = xi*eta`` and ``gamma_I = (h_I - (h.x)
+    b_xI - (h.y) b_yI)/4``, Eq. (3.24d), so that ``N_I,x = b_xI + h,x
+    gamma_I``, Eq. (3.25). The nonconstant part of the curvatures,
+    ``kappa_xx = h,x q_y``, ``kappa_yy = -h,y q_x`` and ``kappa_xy = h,y q_y
+    - h,x q_x`` with ``q_x = gamma^T r_x`` and ``q_y = gamma^T r_y``, Eq.
+    (3.28), gives the stiffness of their Eqs. (4.13), (B.17) and (B.18),
+    with ``H_xx``, ``H_yy`` and ``H_xy`` of Eq. (4.14) integrated with two
+    by two Gauss points and the bending stiffness ``Ds`` of the laminate,
+    which reduces to ``a**2/12*C_b*a`` of Eq. (B.18) for an isotropic plate;
+    multiplied by ``fH``.
+
+    """
+    cdef int I, J, p, q
+    cdef double xs[4]
+    cdef double ys[4]
+    cdef double XI[4]
+    cdef double ETA[4]
+    cdef double h[4]
+    cdef double bx[4]
+    cdef double by[4]
+    cdef double gam[4]
+    cdef double pts[2]
+    cdef double xi, eta, xxi, yxi, xeta, yeta, detJ, hx, hy
+    cdef double hdotx, hdoty, detJ0
+    cdef double Hxx, Hyy, Hxy, Qxx, Qyy, Qxy
+    cdef double D11, D12, D16, D22, D26, D66
+    xs[0] = x1; xs[1] = x2; xs[2] = x3; xs[3] = x4
+    ys[0] = y1; ys[1] = y2; ys[2] = y3; ys[3] = y4
+    XI[0] = -1.; XI[1] = 1.; XI[2] = 1.; XI[3] = -1.
+    ETA[0] = -1.; ETA[1] = -1.; ETA[2] = 1.; ETA[3] = 1.
+    D11 = Ds[0]; D12 = Ds[1]; D16 = Ds[2]
+    D22 = Ds[4]; D26 = Ds[5]; D66 = Ds[8]
+    # NOTE centroidal derivatives b_x, b_y and the projected hourglass
+    #      vector gamma of Eqs. (3.24)
+    xxi = 0.; yxi = 0.; xeta = 0.; yeta = 0.
+    for I in range(4):
+        xxi += 0.25*XI[I]*xs[I]
+        yxi += 0.25*XI[I]*ys[I]
+        xeta += 0.25*ETA[I]*xs[I]
+        yeta += 0.25*ETA[I]*ys[I]
+    detJ0 = xxi*yeta - yxi*xeta
+    hdotx = 0.
+    hdoty = 0.
+    for I in range(4):
+        h[I] = XI[I]*ETA[I]
+        bx[I] = (yeta*0.25*XI[I] - yxi*0.25*ETA[I])/detJ0
+        by[I] = (-xeta*0.25*XI[I] + xxi*0.25*ETA[I])/detJ0
+        hdotx += h[I]*xs[I]
+        hdoty += h[I]*ys[I]
+    for I in range(4):
+        gam[I] = 0.25*(h[I] - hdotx*bx[I] - hdoty*by[I])
+    # NOTE H_xx, H_yy, H_xy of Eq. (4.14), per unit thickness, with h,x
+    #      and h,y the Cartesian derivatives of h = xi*eta
+    pts[0] = -0.5773502691896257645092
+    pts[1] = +0.5773502691896257645092
+    Hxx = 0.; Hyy = 0.; Hxy = 0.
+    for p in range(2):
+        for q in range(2):
+            xi = pts[p]
+            eta = pts[q]
+            xxi = 0.; yxi = 0.; xeta = 0.; yeta = 0.
+            for I in range(4):
+                xxi += 0.25*XI[I]*(1 + ETA[I]*eta)*xs[I]
+                yxi += 0.25*XI[I]*(1 + ETA[I]*eta)*ys[I]
+                xeta += 0.25*ETA[I]*(1 + XI[I]*xi)*xs[I]
+                yeta += 0.25*ETA[I]*(1 + XI[I]*xi)*ys[I]
+            detJ = xxi*yeta - yxi*xeta
+            # NOTE [h,x, h,y] = J^-1 [h,xi, h,eta] = J^-1 [eta, xi]
+            hx = (yeta*eta - yxi*xi)/detJ
+            hy = (-xeta*eta + xxi*xi)/detJ
+            Hxx += detJ*hx*hx
+            Hyy += detJ*hy*hy
+            Hxy += detJ*hx*hy
+    # NOTE energy H_xx a^T Ds a + 2 H_xy a^T Ds c + H_yy c^T Ds c with
+    #      a = [q_y, 0, -q_x] and c = [0, -q_x, q_y], over 2
+    Qxx = Hxx*D66 + Hyy*D22 + 2*Hxy*D26
+    Qyy = Hxx*D11 + Hyy*D66 + 2*Hxy*D16
+    Qxy = -Hxx*D16 - Hyy*D26 - Hxy*(D12 + D66)
+    for I in range(4):
+        for J in range(4):
+            K[12*(3*I + 1) + 3*J + 1] += fH*Qxx*gam[I]*gam[J]
+            K[12*(3*I + 2) + 3*J + 2] += fH*Qyy*gam[I]*gam[J]
+            K[12*(3*I + 1) + 3*J + 2] += fH*Qxy*gam[I]*gam[J]
+            K[12*(3*I + 2) + 3*J + 1] += fH*Qxy*gam[I]*gam[J]
 
 
 cdef inline void _shear_bl94(double x1, double x2, double x3, double x4,
@@ -1244,11 +1330,8 @@ cdef class Quad4R:
 
     cpdef void update_probe_finte(Quad4R self,
                            ShellProp prop,
-                           double hgfactor_u = 1.,
-                           double hgfactor_v = 1.,
-                           double hgfactor_w = 1.,
-                           double hgfactor_rx = 1.,
-                           double hgfactor_ry = 1.,
+                           double hgfactor_membrane = 1.,
+                           double hgfactor_physical = 1.,
                            int nonlinear=0
                                   ):
         r"""Update the internal force vector of the probe
@@ -1273,15 +1356,17 @@ cdef class Quad4R:
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
-        hgfactor_u, hgfactor_v, hgfactor_w, hgfactor_rx, hgfactor_ry : double
-            These offer the possibility to change the default hourglass
-            stiffnesses for each degree-of-freedom.
-            Dimensionless multipliers of the hourglass stiffnesses of ``u``,
-            ``v``, ``r_x`` and ``r_y``, and, ``hgfactor_w``, of the
-            stabilisation of the transverse shear, which controls the
-            hourglass mode of ``w``, see the Notes of :mod:`pyfe3d.quad4r`.
-            Default ``1.``. Up to 0.11 ``hgfactor_w`` multiplied Brockman's
-            hourglass stiffness of ``w``.
+        hgfactor_membrane : double, optional
+            Dimensionless multiplier of the artificial hourglass stiffness
+            of the in-plane displacements ``u`` and ``v``, of Brockman
+            (1987). Default ``1.``.
+        hgfactor_physical : double, optional
+            Dimensionless multiplier of the physical stabilisation of the
+            bending and of the transverse shear of Belytschko and Leviathan
+            (1994), which controls the hourglass modes of ``w``, ``r_x`` and
+            ``r_y``; the default ``1.`` is the formulation of the paper,
+            which has no parameter, and other values serve verification and
+            sensitivity studies. See the Notes of :mod:`pyfe3d.quad4r`.
         nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
             value adds the geometrically nonlinear terms of the von Karman strains,
@@ -1317,9 +1402,10 @@ cdef class Quad4R:
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
-        cdef double E1eq, E2eq, E1b, E2b
+        cdef double E1eq, E2eq
         cdef double K6ROT
-        cdef double Eu, Ev, Erx, Ery
+        cdef double Eu, Ev
+        cdef double Ds[9]
         cdef double Kws[144]
         cdef double a11, a22
         cdef double J11, J12, J21, J22
@@ -1392,10 +1478,9 @@ cdef class Quad4R:
             a22 = (-A11*A66 + A16**2)/(-A11*A22*A66 + A11*A26**2 + A12**2*A66 - 2*A12*A16*A26 + A16**2*A22)
             E1eq = 1./(prop.h*a11)
             E2eq = 1./(prop.h*a22)
-            # NOTE equivalent bending moduli of the hourglass control of w,
-            #      rx and ry, from the bending compliance of the laminate in
-            #      the element coordinate system, see the Notes of update_KC0
-            _hourglass_bending_moduli(prop.h, Ae, Be, De, &E1b, &E2b)
+            # NOTE bending stiffness with zero membrane forces, of the
+            #      physical stabilisation of the bending
+            _reduced_bending_stiffness(Ae, Be, De, Ds)
 
 
             # NOTE both drilling models use the same operator, the one of
@@ -1444,14 +1529,12 @@ cdef class Quad4R:
             #      rx and ry. Brockman's factor tends to A only in the
             #      limit A << 1, so it supplies the missing area in some
             #      units and not in others
-            Eu = hgfactor_u*0.1*E1eq*prop.h*self.area
-            Ev = hgfactor_v*0.1*E2eq*prop.h*self.area
-            Erx = hgfactor_rx*0.1*E2b*prop.h**3*self.area
-            Ery = hgfactor_ry*0.1*E1b*prop.h**3*self.area
+            Eu = hgfactor_membrane*0.1*E1eq*prop.h*self.area
+            Ev = hgfactor_membrane*0.1*E2eq*prop.h*self.area
             # NOTE the transverse displacement w has no artificial hourglass
             #      stiffness: its hourglass mode is controlled by the
             #      physical stabilisation of the transverse shear below,
-            #      scaled by hgfactor_w, see _shear_bl94
+            #      scaled by hgfactor_physical, see _shear_bl94
 
             # NOTE using only one integration point at xi=0, eta=0 to avoid shear locking
             detJ = 0.125*x1*y2 - 0.125*x1*y4 - 0.125*x2*y1 + 0.125*x2*y3 - 0.125*x3*y2 + 0.125*x3*y4 + 0.125*x4*y1 - 0.125*x4*y3
@@ -1548,39 +1631,39 @@ cdef class Quad4R:
             KC0e0220 = detJ*wij*(S4_x*(A45*S1_y + A55*S1_x) + S4_y*(A44*S1_y + A45*S1_x))
             KC0e0221 = -S4*detJ*wij*(A44*S1_y + A45*S1_x)
             KC0e0222 = S4*detJ*wij*(A45*S1_y + A55*S1_x)
-            KC0e0303 = detJ*wij*(A44*S1**2 + Erx*gamma1**2 + S1_x*(D26*S1_y + D66*S1_x) + S1_y*(D22*S1_y + D26*S1_x))
+            KC0e0303 = detJ*wij*(A44*S1**2 + S1_x*(D26*S1_y + D66*S1_x) + S1_y*(D22*S1_y + D26*S1_x))
             KC0e0304 = -detJ*wij*(A45*S1**2 + S1_x*(D12*S1_y + D16*S1_x) + S1_y*(D26*S1_y + D66*S1_x))
             KC0e0306 = -detJ*wij*(S2_x*(B12*S1_y + B16*S1_x) + S2_y*(B26*S1_y + B66*S1_x))
             KC0e0307 = -detJ*wij*(S2_x*(B26*S1_y + B66*S1_x) + S2_y*(B22*S1_y + B26*S1_x))
             KC0e0308 = -S1*detJ*wij*(A44*S2_y + A45*S2_x)
-            KC0e0309 = detJ*wij*(A44*S1*S2 + Erx*gamma1*gamma2 + S2_x*(D26*S1_y + D66*S1_x) + S2_y*(D22*S1_y + D26*S1_x))
+            KC0e0309 = detJ*wij*(A44*S1*S2 + S2_x*(D26*S1_y + D66*S1_x) + S2_y*(D22*S1_y + D26*S1_x))
             KC0e0310 = -detJ*wij*(A45*S1*S2 + S2_x*(D12*S1_y + D16*S1_x) + S2_y*(D26*S1_y + D66*S1_x))
             KC0e0312 = -detJ*wij*(S3_x*(B12*S1_y + B16*S1_x) + S3_y*(B26*S1_y + B66*S1_x))
             KC0e0313 = -detJ*wij*(S3_x*(B26*S1_y + B66*S1_x) + S3_y*(B22*S1_y + B26*S1_x))
             KC0e0314 = -S1*detJ*wij*(A44*S3_y + A45*S3_x)
-            KC0e0315 = detJ*wij*(A44*S1*S3 + Erx*gamma1*gamma3 + S3_x*(D26*S1_y + D66*S1_x) + S3_y*(D22*S1_y + D26*S1_x))
+            KC0e0315 = detJ*wij*(A44*S1*S3 + S3_x*(D26*S1_y + D66*S1_x) + S3_y*(D22*S1_y + D26*S1_x))
             KC0e0316 = -detJ*wij*(A45*S1*S3 + S3_x*(D12*S1_y + D16*S1_x) + S3_y*(D26*S1_y + D66*S1_x))
             KC0e0318 = -detJ*wij*(S4_x*(B12*S1_y + B16*S1_x) + S4_y*(B26*S1_y + B66*S1_x))
             KC0e0319 = -detJ*wij*(S4_x*(B26*S1_y + B66*S1_x) + S4_y*(B22*S1_y + B26*S1_x))
             KC0e0320 = -S1*detJ*wij*(A44*S4_y + A45*S4_x)
-            KC0e0321 = detJ*wij*(A44*S1*S4 + Erx*gamma1*gamma4 + S4_x*(D26*S1_y + D66*S1_x) + S4_y*(D22*S1_y + D26*S1_x))
+            KC0e0321 = detJ*wij*(A44*S1*S4 + S4_x*(D26*S1_y + D66*S1_x) + S4_y*(D22*S1_y + D26*S1_x))
             KC0e0322 = -detJ*wij*(A45*S1*S4 + S4_x*(D12*S1_y + D16*S1_x) + S4_y*(D26*S1_y + D66*S1_x))
-            KC0e0404 = detJ*wij*(A55*S1**2 + Ery*gamma1**2 + S1_x*(D11*S1_x + D16*S1_y) + S1_y*(D16*S1_x + D66*S1_y))
+            KC0e0404 = detJ*wij*(A55*S1**2 + S1_x*(D11*S1_x + D16*S1_y) + S1_y*(D16*S1_x + D66*S1_y))
             KC0e0406 = detJ*wij*(S2_x*(B11*S1_x + B16*S1_y) + S2_y*(B16*S1_x + B66*S1_y))
             KC0e0407 = detJ*wij*(S2_x*(B16*S1_x + B66*S1_y) + S2_y*(B12*S1_x + B26*S1_y))
             KC0e0408 = S1*detJ*wij*(A45*S2_y + A55*S2_x)
             KC0e0409 = -detJ*wij*(A45*S1*S2 + S2_x*(D16*S1_x + D66*S1_y) + S2_y*(D12*S1_x + D26*S1_y))
-            KC0e0410 = detJ*wij*(A55*S1*S2 + Ery*gamma1*gamma2 + S2_x*(D11*S1_x + D16*S1_y) + S2_y*(D16*S1_x + D66*S1_y))
+            KC0e0410 = detJ*wij*(A55*S1*S2 + S2_x*(D11*S1_x + D16*S1_y) + S2_y*(D16*S1_x + D66*S1_y))
             KC0e0412 = detJ*wij*(S3_x*(B11*S1_x + B16*S1_y) + S3_y*(B16*S1_x + B66*S1_y))
             KC0e0413 = detJ*wij*(S3_x*(B16*S1_x + B66*S1_y) + S3_y*(B12*S1_x + B26*S1_y))
             KC0e0414 = S1*detJ*wij*(A45*S3_y + A55*S3_x)
             KC0e0415 = -detJ*wij*(A45*S1*S3 + S3_x*(D16*S1_x + D66*S1_y) + S3_y*(D12*S1_x + D26*S1_y))
-            KC0e0416 = detJ*wij*(A55*S1*S3 + Ery*gamma1*gamma3 + S3_x*(D11*S1_x + D16*S1_y) + S3_y*(D16*S1_x + D66*S1_y))
+            KC0e0416 = detJ*wij*(A55*S1*S3 + S3_x*(D11*S1_x + D16*S1_y) + S3_y*(D16*S1_x + D66*S1_y))
             KC0e0418 = detJ*wij*(S4_x*(B11*S1_x + B16*S1_y) + S4_y*(B16*S1_x + B66*S1_y))
             KC0e0419 = detJ*wij*(S4_x*(B16*S1_x + B66*S1_y) + S4_y*(B12*S1_x + B26*S1_y))
             KC0e0420 = S1*detJ*wij*(A45*S4_y + A55*S4_x)
             KC0e0421 = -detJ*wij*(A45*S1*S4 + S4_x*(D16*S1_x + D66*S1_y) + S4_y*(D12*S1_x + D26*S1_y))
-            KC0e0422 = detJ*wij*(A55*S1*S4 + Ery*gamma1*gamma4 + S4_x*(D11*S1_x + D16*S1_y) + S4_y*(D16*S1_x + D66*S1_y))
+            KC0e0422 = detJ*wij*(A55*S1*S4 + S4_x*(D11*S1_x + D16*S1_y) + S4_y*(D16*S1_x + D66*S1_y))
             KC0e0606 = detJ*wij*(Eu*gamma2**2 + S2_x*(A11*S2_x + A16*S2_y) + S2_y*(A16*S2_x + A66*S2_y))
             KC0e0607 = detJ*wij*(S2_x*(A16*S2_x + A66*S2_y) + S2_y*(A12*S2_x + A26*S2_y))
             KC0e0609 = -detJ*wij*(S2_x*(B16*S2_x + B66*S2_y) + S2_y*(B12*S2_x + B26*S2_y))
@@ -1613,29 +1696,29 @@ cdef class Quad4R:
             KC0e0820 = detJ*wij*(S4_x*(A45*S2_y + A55*S2_x) + S4_y*(A44*S2_y + A45*S2_x))
             KC0e0821 = -S4*detJ*wij*(A44*S2_y + A45*S2_x)
             KC0e0822 = S4*detJ*wij*(A45*S2_y + A55*S2_x)
-            KC0e0909 = detJ*wij*(A44*S2**2 + Erx*gamma2**2 + S2_x*(D26*S2_y + D66*S2_x) + S2_y*(D22*S2_y + D26*S2_x))
+            KC0e0909 = detJ*wij*(A44*S2**2 + S2_x*(D26*S2_y + D66*S2_x) + S2_y*(D22*S2_y + D26*S2_x))
             KC0e0910 = -detJ*wij*(A45*S2**2 + S2_x*(D12*S2_y + D16*S2_x) + S2_y*(D26*S2_y + D66*S2_x))
             KC0e0912 = -detJ*wij*(S3_x*(B12*S2_y + B16*S2_x) + S3_y*(B26*S2_y + B66*S2_x))
             KC0e0913 = -detJ*wij*(S3_x*(B26*S2_y + B66*S2_x) + S3_y*(B22*S2_y + B26*S2_x))
             KC0e0914 = -S2*detJ*wij*(A44*S3_y + A45*S3_x)
-            KC0e0915 = detJ*wij*(A44*S2*S3 + Erx*gamma2*gamma3 + S3_x*(D26*S2_y + D66*S2_x) + S3_y*(D22*S2_y + D26*S2_x))
+            KC0e0915 = detJ*wij*(A44*S2*S3 + S3_x*(D26*S2_y + D66*S2_x) + S3_y*(D22*S2_y + D26*S2_x))
             KC0e0916 = -detJ*wij*(A45*S2*S3 + S3_x*(D12*S2_y + D16*S2_x) + S3_y*(D26*S2_y + D66*S2_x))
             KC0e0918 = -detJ*wij*(S4_x*(B12*S2_y + B16*S2_x) + S4_y*(B26*S2_y + B66*S2_x))
             KC0e0919 = -detJ*wij*(S4_x*(B26*S2_y + B66*S2_x) + S4_y*(B22*S2_y + B26*S2_x))
             KC0e0920 = -S2*detJ*wij*(A44*S4_y + A45*S4_x)
-            KC0e0921 = detJ*wij*(A44*S2*S4 + Erx*gamma2*gamma4 + S4_x*(D26*S2_y + D66*S2_x) + S4_y*(D22*S2_y + D26*S2_x))
+            KC0e0921 = detJ*wij*(A44*S2*S4 + S4_x*(D26*S2_y + D66*S2_x) + S4_y*(D22*S2_y + D26*S2_x))
             KC0e0922 = -detJ*wij*(A45*S2*S4 + S4_x*(D12*S2_y + D16*S2_x) + S4_y*(D26*S2_y + D66*S2_x))
-            KC0e1010 = detJ*wij*(A55*S2**2 + Ery*gamma2**2 + S2_x*(D11*S2_x + D16*S2_y) + S2_y*(D16*S2_x + D66*S2_y))
+            KC0e1010 = detJ*wij*(A55*S2**2 + S2_x*(D11*S2_x + D16*S2_y) + S2_y*(D16*S2_x + D66*S2_y))
             KC0e1012 = detJ*wij*(S3_x*(B11*S2_x + B16*S2_y) + S3_y*(B16*S2_x + B66*S2_y))
             KC0e1013 = detJ*wij*(S3_x*(B16*S2_x + B66*S2_y) + S3_y*(B12*S2_x + B26*S2_y))
             KC0e1014 = S2*detJ*wij*(A45*S3_y + A55*S3_x)
             KC0e1015 = -detJ*wij*(A45*S2*S3 + S3_x*(D16*S2_x + D66*S2_y) + S3_y*(D12*S2_x + D26*S2_y))
-            KC0e1016 = detJ*wij*(A55*S2*S3 + Ery*gamma2*gamma3 + S3_x*(D11*S2_x + D16*S2_y) + S3_y*(D16*S2_x + D66*S2_y))
+            KC0e1016 = detJ*wij*(A55*S2*S3 + S3_x*(D11*S2_x + D16*S2_y) + S3_y*(D16*S2_x + D66*S2_y))
             KC0e1018 = detJ*wij*(S4_x*(B11*S2_x + B16*S2_y) + S4_y*(B16*S2_x + B66*S2_y))
             KC0e1019 = detJ*wij*(S4_x*(B16*S2_x + B66*S2_y) + S4_y*(B12*S2_x + B26*S2_y))
             KC0e1020 = S2*detJ*wij*(A45*S4_y + A55*S4_x)
             KC0e1021 = -detJ*wij*(A45*S2*S4 + S4_x*(D16*S2_x + D66*S2_y) + S4_y*(D12*S2_x + D26*S2_y))
-            KC0e1022 = detJ*wij*(A55*S2*S4 + Ery*gamma2*gamma4 + S4_x*(D11*S2_x + D16*S2_y) + S4_y*(D16*S2_x + D66*S2_y))
+            KC0e1022 = detJ*wij*(A55*S2*S4 + S4_x*(D11*S2_x + D16*S2_y) + S4_y*(D16*S2_x + D66*S2_y))
             KC0e1212 = detJ*wij*(Eu*gamma3**2 + S3_x*(A11*S3_x + A16*S3_y) + S3_y*(A16*S3_x + A66*S3_y))
             KC0e1213 = detJ*wij*(S3_x*(A16*S3_x + A66*S3_y) + S3_y*(A12*S3_x + A26*S3_y))
             KC0e1215 = -detJ*wij*(S3_x*(B16*S3_x + B66*S3_y) + S3_y*(B12*S3_x + B26*S3_y))
@@ -1657,19 +1740,19 @@ cdef class Quad4R:
             KC0e1420 = detJ*wij*(S4_x*(A45*S3_y + A55*S3_x) + S4_y*(A44*S3_y + A45*S3_x))
             KC0e1421 = -S4*detJ*wij*(A44*S3_y + A45*S3_x)
             KC0e1422 = S4*detJ*wij*(A45*S3_y + A55*S3_x)
-            KC0e1515 = detJ*wij*(A44*S3**2 + Erx*gamma3**2 + S3_x*(D26*S3_y + D66*S3_x) + S3_y*(D22*S3_y + D26*S3_x))
+            KC0e1515 = detJ*wij*(A44*S3**2 + S3_x*(D26*S3_y + D66*S3_x) + S3_y*(D22*S3_y + D26*S3_x))
             KC0e1516 = -detJ*wij*(A45*S3**2 + S3_x*(D12*S3_y + D16*S3_x) + S3_y*(D26*S3_y + D66*S3_x))
             KC0e1518 = -detJ*wij*(S4_x*(B12*S3_y + B16*S3_x) + S4_y*(B26*S3_y + B66*S3_x))
             KC0e1519 = -detJ*wij*(S4_x*(B26*S3_y + B66*S3_x) + S4_y*(B22*S3_y + B26*S3_x))
             KC0e1520 = -S3*detJ*wij*(A44*S4_y + A45*S4_x)
-            KC0e1521 = detJ*wij*(A44*S3*S4 + Erx*gamma3*gamma4 + S4_x*(D26*S3_y + D66*S3_x) + S4_y*(D22*S3_y + D26*S3_x))
+            KC0e1521 = detJ*wij*(A44*S3*S4 + S4_x*(D26*S3_y + D66*S3_x) + S4_y*(D22*S3_y + D26*S3_x))
             KC0e1522 = -detJ*wij*(A45*S3*S4 + S4_x*(D12*S3_y + D16*S3_x) + S4_y*(D26*S3_y + D66*S3_x))
-            KC0e1616 = detJ*wij*(A55*S3**2 + Ery*gamma3**2 + S3_x*(D11*S3_x + D16*S3_y) + S3_y*(D16*S3_x + D66*S3_y))
+            KC0e1616 = detJ*wij*(A55*S3**2 + S3_x*(D11*S3_x + D16*S3_y) + S3_y*(D16*S3_x + D66*S3_y))
             KC0e1618 = detJ*wij*(S4_x*(B11*S3_x + B16*S3_y) + S4_y*(B16*S3_x + B66*S3_y))
             KC0e1619 = detJ*wij*(S4_x*(B16*S3_x + B66*S3_y) + S4_y*(B12*S3_x + B26*S3_y))
             KC0e1620 = S3*detJ*wij*(A45*S4_y + A55*S4_x)
             KC0e1621 = -detJ*wij*(A45*S3*S4 + S4_x*(D16*S3_x + D66*S3_y) + S4_y*(D12*S3_x + D26*S3_y))
-            KC0e1622 = detJ*wij*(A55*S3*S4 + Ery*gamma3*gamma4 + S4_x*(D11*S3_x + D16*S3_y) + S4_y*(D16*S3_x + D66*S3_y))
+            KC0e1622 = detJ*wij*(A55*S3*S4 + S4_x*(D11*S3_x + D16*S3_y) + S4_y*(D16*S3_x + D66*S3_y))
             KC0e1818 = detJ*wij*(Eu*gamma4**2 + S4_x*(A11*S4_x + A16*S4_y) + S4_y*(A16*S4_x + A66*S4_y))
             KC0e1819 = detJ*wij*(S4_x*(A16*S4_x + A66*S4_y) + S4_y*(A12*S4_x + A26*S4_y))
             KC0e1821 = -detJ*wij*(S4_x*(B16*S4_x + B66*S4_y) + S4_y*(B12*S4_x + B26*S4_y))
@@ -1680,16 +1763,21 @@ cdef class Quad4R:
             KC0e2020 = detJ*wij*(S4_x*(A45*S4_y + A55*S4_x) + S4_y*(A44*S4_y + A45*S4_x))
             KC0e2021 = -S4*detJ*wij*(A44*S4_y + A45*S4_x)
             KC0e2022 = S4*detJ*wij*(A45*S4_y + A55*S4_x)
-            KC0e2121 = detJ*wij*(A44*S4**2 + Erx*gamma4**2 + S4_x*(D26*S4_y + D66*S4_x) + S4_y*(D22*S4_y + D26*S4_x))
+            KC0e2121 = detJ*wij*(A44*S4**2 + S4_x*(D26*S4_y + D66*S4_x) + S4_y*(D22*S4_y + D26*S4_x))
             KC0e2122 = -detJ*wij*(A45*S4**2 + S4_x*(D12*S4_y + D16*S4_x) + S4_y*(D26*S4_y + D66*S4_x))
-            KC0e2222 = detJ*wij*(A55*S4**2 + Ery*gamma4**2 + S4_x*(D11*S4_x + D16*S4_y) + S4_y*(D16*S4_x + D66*S4_y))
+            KC0e2222 = detJ*wij*(A55*S4**2 + S4_x*(D11*S4_x + D16*S4_y) + S4_y*(D16*S4_x + D66*S4_y))
             # NOTE transverse shear of Belytschko and Leviathan (1994), the
             #      constant part of the assumed strains of Dvorkin and Bathe
             #      (1984) instead of the displacement-based centroid value, and
             #      the physical stabilisation of their nonconstant part,
-            #      multiplied by hgfactor_w, see the module documentation
+            #      multiplied by hgfactor_physical, see the module documentation
             _shear_bl94(x1, x2, x3, x4, y1, y2, y3, y4, A44, A45, A55,
-                        hgfactor_w, Kws)
+                        hgfactor_physical, Kws)
+            # NOTE physical stabilisation of the bending of Belytschko and
+            #      Leviathan (1994), Eq. (B.18), multiplied by
+            #      hgfactor_physical
+            _bending_bl94(x1, x2, x3, x4, y1, y2, y3, y4, Ds,
+                          hgfactor_physical, Kws)
             KC0e0202 += Kws[0]
             KC0e0203 += Kws[1]
             KC0e0204 += Kws[2]
@@ -1963,11 +2051,8 @@ cdef class Quad4R:
                           double [::1] KC0v,
                           ShellProp prop,
                           int update_KC0v_only=0,
-                          double hgfactor_u = 1.,
-                          double hgfactor_v = 1.,
-                          double hgfactor_w = 1.,
-                          double hgfactor_rx = 1.,
-                          double hgfactor_ry = 1.,
+                          double hgfactor_membrane = 1.,
+                          double hgfactor_physical = 1.,
                           ):
         r"""Update sparse vectors for linear constitutive stiffness matrix KC0
 
@@ -2005,15 +2090,17 @@ cdef class Quad4R:
             The default ``0`` means that the row and column indices ``KC0r``
             and ``KC0c`` should also be updated. Any other value will only
             update the stiffness matrix values ``KC0v``.
-        hgfactor_u, hgfactor_v, hgfactor_w, hgfactor_rx, hgfactor_ry : double
-            These offer the possibility to change the default hourglass
-            stiffnesses for each degree-of-freedom.
-            Dimensionless multipliers of the hourglass stiffnesses of ``u``,
-            ``v``, ``r_x`` and ``r_y``, and, ``hgfactor_w``, of the
-            stabilisation of the transverse shear, which controls the
-            hourglass mode of ``w``, see the Notes of :mod:`pyfe3d.quad4r`.
-            Default ``1.``. Up to 0.11 ``hgfactor_w`` multiplied Brockman's
-            hourglass stiffness of ``w``.
+        hgfactor_membrane : double, optional
+            Dimensionless multiplier of the artificial hourglass stiffness
+            of the in-plane displacements ``u`` and ``v``, of Brockman
+            (1987). Default ``1.``.
+        hgfactor_physical : double, optional
+            Dimensionless multiplier of the physical stabilisation of the
+            bending and of the transverse shear of Belytschko and Leviathan
+            (1994), which controls the hourglass modes of ``w``, ``r_x`` and
+            ``r_y``; the default ``1.`` is the formulation of the paper,
+            which has no parameter, and other values serve verification and
+            sensitivity studies. See the Notes of :mod:`pyfe3d.quad4r`.
 
         Notes
         -----
@@ -2134,9 +2221,10 @@ cdef class Quad4R:
         cdef double A11, A12, A16, A22, A26, A66
         cdef double B11, B12, B16, B22, B26, B66
         cdef double D11, D12, D16, D22, D26, D66
-        cdef double E1eq, E2eq, E1b, E2b
+        cdef double E1eq, E2eq
         cdef double K6ROT
-        cdef double Eu, Ev, Erx, Ery
+        cdef double Eu, Ev
+        cdef double Ds[9]
         cdef double Kws[144]
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double a11, a22
@@ -2207,10 +2295,9 @@ cdef class Quad4R:
             a22 = (-A11*A66 + A16**2)/(-A11*A22*A66 + A11*A26**2 + A12**2*A66 - 2*A12*A16*A26 + A16**2*A22)
             E1eq = 1./(prop.h*a11)
             E2eq = 1./(prop.h*a22)
-            # NOTE equivalent bending moduli of the hourglass control of w,
-            #      rx and ry, from the bending compliance of the laminate in
-            #      the element coordinate system, see the Notes of update_KC0
-            _hourglass_bending_moduli(prop.h, Ae, Be, De, &E1b, &E2b)
+            # NOTE bending stiffness with zero membrane forces, of the
+            #      physical stabilisation of the bending
+            _reduced_bending_stiffness(Ae, Be, De, Ds)
 
 
             # NOTE both drilling models use the same operator, the one of
@@ -4006,14 +4093,12 @@ cdef class Quad4R:
             #      rx and ry. Brockman's factor tends to A only in the
             #      limit A << 1, so it supplies the missing area in some
             #      units and not in others
-            Eu = hgfactor_u*0.1*E1eq*prop.h*self.area
-            Ev = hgfactor_v*0.1*E2eq*prop.h*self.area
-            Erx = hgfactor_rx*0.1*E2b*prop.h**3*self.area
-            Ery = hgfactor_ry*0.1*E1b*prop.h**3*self.area
+            Eu = hgfactor_membrane*0.1*E1eq*prop.h*self.area
+            Ev = hgfactor_membrane*0.1*E2eq*prop.h*self.area
             # NOTE the transverse displacement w has no artificial hourglass
             #      stiffness: its hourglass mode is controlled by the
             #      physical stabilisation of the transverse shear below,
-            #      scaled by hgfactor_w, see _shear_bl94
+            #      scaled by hgfactor_physical, see _shear_bl94
 
             # NOTE using only one integration point at xi=0, eta=0 to avoid shear locking
             detJ = 0.125*x1*y2 - 0.125*x1*y4 - 0.125*x2*y1 + 0.125*x2*y3 - 0.125*x3*y2 + 0.125*x3*y4 + 0.125*x4*y1 - 0.125*x4*y3
@@ -4110,39 +4195,39 @@ cdef class Quad4R:
             KC0e0220 = detJ*wij*(S4_x*(A45*S1_y + A55*S1_x) + S4_y*(A44*S1_y + A45*S1_x))
             KC0e0221 = -S4*detJ*wij*(A44*S1_y + A45*S1_x)
             KC0e0222 = S4*detJ*wij*(A45*S1_y + A55*S1_x)
-            KC0e0303 = detJ*wij*(A44*S1**2 + Erx*gamma1**2 + S1_x*(D26*S1_y + D66*S1_x) + S1_y*(D22*S1_y + D26*S1_x))
+            KC0e0303 = detJ*wij*(A44*S1**2 + S1_x*(D26*S1_y + D66*S1_x) + S1_y*(D22*S1_y + D26*S1_x))
             KC0e0304 = -detJ*wij*(A45*S1**2 + S1_x*(D12*S1_y + D16*S1_x) + S1_y*(D26*S1_y + D66*S1_x))
             KC0e0306 = -detJ*wij*(S2_x*(B12*S1_y + B16*S1_x) + S2_y*(B26*S1_y + B66*S1_x))
             KC0e0307 = -detJ*wij*(S2_x*(B26*S1_y + B66*S1_x) + S2_y*(B22*S1_y + B26*S1_x))
             KC0e0308 = -S1*detJ*wij*(A44*S2_y + A45*S2_x)
-            KC0e0309 = detJ*wij*(A44*S1*S2 + Erx*gamma1*gamma2 + S2_x*(D26*S1_y + D66*S1_x) + S2_y*(D22*S1_y + D26*S1_x))
+            KC0e0309 = detJ*wij*(A44*S1*S2 + S2_x*(D26*S1_y + D66*S1_x) + S2_y*(D22*S1_y + D26*S1_x))
             KC0e0310 = -detJ*wij*(A45*S1*S2 + S2_x*(D12*S1_y + D16*S1_x) + S2_y*(D26*S1_y + D66*S1_x))
             KC0e0312 = -detJ*wij*(S3_x*(B12*S1_y + B16*S1_x) + S3_y*(B26*S1_y + B66*S1_x))
             KC0e0313 = -detJ*wij*(S3_x*(B26*S1_y + B66*S1_x) + S3_y*(B22*S1_y + B26*S1_x))
             KC0e0314 = -S1*detJ*wij*(A44*S3_y + A45*S3_x)
-            KC0e0315 = detJ*wij*(A44*S1*S3 + Erx*gamma1*gamma3 + S3_x*(D26*S1_y + D66*S1_x) + S3_y*(D22*S1_y + D26*S1_x))
+            KC0e0315 = detJ*wij*(A44*S1*S3 + S3_x*(D26*S1_y + D66*S1_x) + S3_y*(D22*S1_y + D26*S1_x))
             KC0e0316 = -detJ*wij*(A45*S1*S3 + S3_x*(D12*S1_y + D16*S1_x) + S3_y*(D26*S1_y + D66*S1_x))
             KC0e0318 = -detJ*wij*(S4_x*(B12*S1_y + B16*S1_x) + S4_y*(B26*S1_y + B66*S1_x))
             KC0e0319 = -detJ*wij*(S4_x*(B26*S1_y + B66*S1_x) + S4_y*(B22*S1_y + B26*S1_x))
             KC0e0320 = -S1*detJ*wij*(A44*S4_y + A45*S4_x)
-            KC0e0321 = detJ*wij*(A44*S1*S4 + Erx*gamma1*gamma4 + S4_x*(D26*S1_y + D66*S1_x) + S4_y*(D22*S1_y + D26*S1_x))
+            KC0e0321 = detJ*wij*(A44*S1*S4 + S4_x*(D26*S1_y + D66*S1_x) + S4_y*(D22*S1_y + D26*S1_x))
             KC0e0322 = -detJ*wij*(A45*S1*S4 + S4_x*(D12*S1_y + D16*S1_x) + S4_y*(D26*S1_y + D66*S1_x))
-            KC0e0404 = detJ*wij*(A55*S1**2 + Ery*gamma1**2 + S1_x*(D11*S1_x + D16*S1_y) + S1_y*(D16*S1_x + D66*S1_y))
+            KC0e0404 = detJ*wij*(A55*S1**2 + S1_x*(D11*S1_x + D16*S1_y) + S1_y*(D16*S1_x + D66*S1_y))
             KC0e0406 = detJ*wij*(S2_x*(B11*S1_x + B16*S1_y) + S2_y*(B16*S1_x + B66*S1_y))
             KC0e0407 = detJ*wij*(S2_x*(B16*S1_x + B66*S1_y) + S2_y*(B12*S1_x + B26*S1_y))
             KC0e0408 = S1*detJ*wij*(A45*S2_y + A55*S2_x)
             KC0e0409 = -detJ*wij*(A45*S1*S2 + S2_x*(D16*S1_x + D66*S1_y) + S2_y*(D12*S1_x + D26*S1_y))
-            KC0e0410 = detJ*wij*(A55*S1*S2 + Ery*gamma1*gamma2 + S2_x*(D11*S1_x + D16*S1_y) + S2_y*(D16*S1_x + D66*S1_y))
+            KC0e0410 = detJ*wij*(A55*S1*S2 + S2_x*(D11*S1_x + D16*S1_y) + S2_y*(D16*S1_x + D66*S1_y))
             KC0e0412 = detJ*wij*(S3_x*(B11*S1_x + B16*S1_y) + S3_y*(B16*S1_x + B66*S1_y))
             KC0e0413 = detJ*wij*(S3_x*(B16*S1_x + B66*S1_y) + S3_y*(B12*S1_x + B26*S1_y))
             KC0e0414 = S1*detJ*wij*(A45*S3_y + A55*S3_x)
             KC0e0415 = -detJ*wij*(A45*S1*S3 + S3_x*(D16*S1_x + D66*S1_y) + S3_y*(D12*S1_x + D26*S1_y))
-            KC0e0416 = detJ*wij*(A55*S1*S3 + Ery*gamma1*gamma3 + S3_x*(D11*S1_x + D16*S1_y) + S3_y*(D16*S1_x + D66*S1_y))
+            KC0e0416 = detJ*wij*(A55*S1*S3 + S3_x*(D11*S1_x + D16*S1_y) + S3_y*(D16*S1_x + D66*S1_y))
             KC0e0418 = detJ*wij*(S4_x*(B11*S1_x + B16*S1_y) + S4_y*(B16*S1_x + B66*S1_y))
             KC0e0419 = detJ*wij*(S4_x*(B16*S1_x + B66*S1_y) + S4_y*(B12*S1_x + B26*S1_y))
             KC0e0420 = S1*detJ*wij*(A45*S4_y + A55*S4_x)
             KC0e0421 = -detJ*wij*(A45*S1*S4 + S4_x*(D16*S1_x + D66*S1_y) + S4_y*(D12*S1_x + D26*S1_y))
-            KC0e0422 = detJ*wij*(A55*S1*S4 + Ery*gamma1*gamma4 + S4_x*(D11*S1_x + D16*S1_y) + S4_y*(D16*S1_x + D66*S1_y))
+            KC0e0422 = detJ*wij*(A55*S1*S4 + S4_x*(D11*S1_x + D16*S1_y) + S4_y*(D16*S1_x + D66*S1_y))
             KC0e0606 = detJ*wij*(Eu*gamma2**2 + S2_x*(A11*S2_x + A16*S2_y) + S2_y*(A16*S2_x + A66*S2_y))
             KC0e0607 = detJ*wij*(S2_x*(A16*S2_x + A66*S2_y) + S2_y*(A12*S2_x + A26*S2_y))
             KC0e0609 = -detJ*wij*(S2_x*(B16*S2_x + B66*S2_y) + S2_y*(B12*S2_x + B26*S2_y))
@@ -4175,29 +4260,29 @@ cdef class Quad4R:
             KC0e0820 = detJ*wij*(S4_x*(A45*S2_y + A55*S2_x) + S4_y*(A44*S2_y + A45*S2_x))
             KC0e0821 = -S4*detJ*wij*(A44*S2_y + A45*S2_x)
             KC0e0822 = S4*detJ*wij*(A45*S2_y + A55*S2_x)
-            KC0e0909 = detJ*wij*(A44*S2**2 + Erx*gamma2**2 + S2_x*(D26*S2_y + D66*S2_x) + S2_y*(D22*S2_y + D26*S2_x))
+            KC0e0909 = detJ*wij*(A44*S2**2 + S2_x*(D26*S2_y + D66*S2_x) + S2_y*(D22*S2_y + D26*S2_x))
             KC0e0910 = -detJ*wij*(A45*S2**2 + S2_x*(D12*S2_y + D16*S2_x) + S2_y*(D26*S2_y + D66*S2_x))
             KC0e0912 = -detJ*wij*(S3_x*(B12*S2_y + B16*S2_x) + S3_y*(B26*S2_y + B66*S2_x))
             KC0e0913 = -detJ*wij*(S3_x*(B26*S2_y + B66*S2_x) + S3_y*(B22*S2_y + B26*S2_x))
             KC0e0914 = -S2*detJ*wij*(A44*S3_y + A45*S3_x)
-            KC0e0915 = detJ*wij*(A44*S2*S3 + Erx*gamma2*gamma3 + S3_x*(D26*S2_y + D66*S2_x) + S3_y*(D22*S2_y + D26*S2_x))
+            KC0e0915 = detJ*wij*(A44*S2*S3 + S3_x*(D26*S2_y + D66*S2_x) + S3_y*(D22*S2_y + D26*S2_x))
             KC0e0916 = -detJ*wij*(A45*S2*S3 + S3_x*(D12*S2_y + D16*S2_x) + S3_y*(D26*S2_y + D66*S2_x))
             KC0e0918 = -detJ*wij*(S4_x*(B12*S2_y + B16*S2_x) + S4_y*(B26*S2_y + B66*S2_x))
             KC0e0919 = -detJ*wij*(S4_x*(B26*S2_y + B66*S2_x) + S4_y*(B22*S2_y + B26*S2_x))
             KC0e0920 = -S2*detJ*wij*(A44*S4_y + A45*S4_x)
-            KC0e0921 = detJ*wij*(A44*S2*S4 + Erx*gamma2*gamma4 + S4_x*(D26*S2_y + D66*S2_x) + S4_y*(D22*S2_y + D26*S2_x))
+            KC0e0921 = detJ*wij*(A44*S2*S4 + S4_x*(D26*S2_y + D66*S2_x) + S4_y*(D22*S2_y + D26*S2_x))
             KC0e0922 = -detJ*wij*(A45*S2*S4 + S4_x*(D12*S2_y + D16*S2_x) + S4_y*(D26*S2_y + D66*S2_x))
-            KC0e1010 = detJ*wij*(A55*S2**2 + Ery*gamma2**2 + S2_x*(D11*S2_x + D16*S2_y) + S2_y*(D16*S2_x + D66*S2_y))
+            KC0e1010 = detJ*wij*(A55*S2**2 + S2_x*(D11*S2_x + D16*S2_y) + S2_y*(D16*S2_x + D66*S2_y))
             KC0e1012 = detJ*wij*(S3_x*(B11*S2_x + B16*S2_y) + S3_y*(B16*S2_x + B66*S2_y))
             KC0e1013 = detJ*wij*(S3_x*(B16*S2_x + B66*S2_y) + S3_y*(B12*S2_x + B26*S2_y))
             KC0e1014 = S2*detJ*wij*(A45*S3_y + A55*S3_x)
             KC0e1015 = -detJ*wij*(A45*S2*S3 + S3_x*(D16*S2_x + D66*S2_y) + S3_y*(D12*S2_x + D26*S2_y))
-            KC0e1016 = detJ*wij*(A55*S2*S3 + Ery*gamma2*gamma3 + S3_x*(D11*S2_x + D16*S2_y) + S3_y*(D16*S2_x + D66*S2_y))
+            KC0e1016 = detJ*wij*(A55*S2*S3 + S3_x*(D11*S2_x + D16*S2_y) + S3_y*(D16*S2_x + D66*S2_y))
             KC0e1018 = detJ*wij*(S4_x*(B11*S2_x + B16*S2_y) + S4_y*(B16*S2_x + B66*S2_y))
             KC0e1019 = detJ*wij*(S4_x*(B16*S2_x + B66*S2_y) + S4_y*(B12*S2_x + B26*S2_y))
             KC0e1020 = S2*detJ*wij*(A45*S4_y + A55*S4_x)
             KC0e1021 = -detJ*wij*(A45*S2*S4 + S4_x*(D16*S2_x + D66*S2_y) + S4_y*(D12*S2_x + D26*S2_y))
-            KC0e1022 = detJ*wij*(A55*S2*S4 + Ery*gamma2*gamma4 + S4_x*(D11*S2_x + D16*S2_y) + S4_y*(D16*S2_x + D66*S2_y))
+            KC0e1022 = detJ*wij*(A55*S2*S4 + S4_x*(D11*S2_x + D16*S2_y) + S4_y*(D16*S2_x + D66*S2_y))
             KC0e1212 = detJ*wij*(Eu*gamma3**2 + S3_x*(A11*S3_x + A16*S3_y) + S3_y*(A16*S3_x + A66*S3_y))
             KC0e1213 = detJ*wij*(S3_x*(A16*S3_x + A66*S3_y) + S3_y*(A12*S3_x + A26*S3_y))
             KC0e1215 = -detJ*wij*(S3_x*(B16*S3_x + B66*S3_y) + S3_y*(B12*S3_x + B26*S3_y))
@@ -4219,19 +4304,19 @@ cdef class Quad4R:
             KC0e1420 = detJ*wij*(S4_x*(A45*S3_y + A55*S3_x) + S4_y*(A44*S3_y + A45*S3_x))
             KC0e1421 = -S4*detJ*wij*(A44*S3_y + A45*S3_x)
             KC0e1422 = S4*detJ*wij*(A45*S3_y + A55*S3_x)
-            KC0e1515 = detJ*wij*(A44*S3**2 + Erx*gamma3**2 + S3_x*(D26*S3_y + D66*S3_x) + S3_y*(D22*S3_y + D26*S3_x))
+            KC0e1515 = detJ*wij*(A44*S3**2 + S3_x*(D26*S3_y + D66*S3_x) + S3_y*(D22*S3_y + D26*S3_x))
             KC0e1516 = -detJ*wij*(A45*S3**2 + S3_x*(D12*S3_y + D16*S3_x) + S3_y*(D26*S3_y + D66*S3_x))
             KC0e1518 = -detJ*wij*(S4_x*(B12*S3_y + B16*S3_x) + S4_y*(B26*S3_y + B66*S3_x))
             KC0e1519 = -detJ*wij*(S4_x*(B26*S3_y + B66*S3_x) + S4_y*(B22*S3_y + B26*S3_x))
             KC0e1520 = -S3*detJ*wij*(A44*S4_y + A45*S4_x)
-            KC0e1521 = detJ*wij*(A44*S3*S4 + Erx*gamma3*gamma4 + S4_x*(D26*S3_y + D66*S3_x) + S4_y*(D22*S3_y + D26*S3_x))
+            KC0e1521 = detJ*wij*(A44*S3*S4 + S4_x*(D26*S3_y + D66*S3_x) + S4_y*(D22*S3_y + D26*S3_x))
             KC0e1522 = -detJ*wij*(A45*S3*S4 + S4_x*(D12*S3_y + D16*S3_x) + S4_y*(D26*S3_y + D66*S3_x))
-            KC0e1616 = detJ*wij*(A55*S3**2 + Ery*gamma3**2 + S3_x*(D11*S3_x + D16*S3_y) + S3_y*(D16*S3_x + D66*S3_y))
+            KC0e1616 = detJ*wij*(A55*S3**2 + S3_x*(D11*S3_x + D16*S3_y) + S3_y*(D16*S3_x + D66*S3_y))
             KC0e1618 = detJ*wij*(S4_x*(B11*S3_x + B16*S3_y) + S4_y*(B16*S3_x + B66*S3_y))
             KC0e1619 = detJ*wij*(S4_x*(B16*S3_x + B66*S3_y) + S4_y*(B12*S3_x + B26*S3_y))
             KC0e1620 = S3*detJ*wij*(A45*S4_y + A55*S4_x)
             KC0e1621 = -detJ*wij*(A45*S3*S4 + S4_x*(D16*S3_x + D66*S3_y) + S4_y*(D12*S3_x + D26*S3_y))
-            KC0e1622 = detJ*wij*(A55*S3*S4 + Ery*gamma3*gamma4 + S4_x*(D11*S3_x + D16*S3_y) + S4_y*(D16*S3_x + D66*S3_y))
+            KC0e1622 = detJ*wij*(A55*S3*S4 + S4_x*(D11*S3_x + D16*S3_y) + S4_y*(D16*S3_x + D66*S3_y))
             KC0e1818 = detJ*wij*(Eu*gamma4**2 + S4_x*(A11*S4_x + A16*S4_y) + S4_y*(A16*S4_x + A66*S4_y))
             KC0e1819 = detJ*wij*(S4_x*(A16*S4_x + A66*S4_y) + S4_y*(A12*S4_x + A26*S4_y))
             KC0e1821 = -detJ*wij*(S4_x*(B16*S4_x + B66*S4_y) + S4_y*(B12*S4_x + B26*S4_y))
@@ -4242,16 +4327,21 @@ cdef class Quad4R:
             KC0e2020 = detJ*wij*(S4_x*(A45*S4_y + A55*S4_x) + S4_y*(A44*S4_y + A45*S4_x))
             KC0e2021 = -S4*detJ*wij*(A44*S4_y + A45*S4_x)
             KC0e2022 = S4*detJ*wij*(A45*S4_y + A55*S4_x)
-            KC0e2121 = detJ*wij*(A44*S4**2 + Erx*gamma4**2 + S4_x*(D26*S4_y + D66*S4_x) + S4_y*(D22*S4_y + D26*S4_x))
+            KC0e2121 = detJ*wij*(A44*S4**2 + S4_x*(D26*S4_y + D66*S4_x) + S4_y*(D22*S4_y + D26*S4_x))
             KC0e2122 = -detJ*wij*(A45*S4**2 + S4_x*(D12*S4_y + D16*S4_x) + S4_y*(D26*S4_y + D66*S4_x))
-            KC0e2222 = detJ*wij*(A55*S4**2 + Ery*gamma4**2 + S4_x*(D11*S4_x + D16*S4_y) + S4_y*(D16*S4_x + D66*S4_y))
+            KC0e2222 = detJ*wij*(A55*S4**2 + S4_x*(D11*S4_x + D16*S4_y) + S4_y*(D16*S4_x + D66*S4_y))
             # NOTE transverse shear of Belytschko and Leviathan (1994), the
             #      constant part of the assumed strains of Dvorkin and Bathe
             #      (1984) instead of the displacement-based centroid value, and
             #      the physical stabilisation of their nonconstant part,
-            #      multiplied by hgfactor_w, see the module documentation
+            #      multiplied by hgfactor_physical, see the module documentation
             _shear_bl94(x1, x2, x3, x4, y1, y2, y3, y4, A44, A45, A55,
-                        hgfactor_w, Kws)
+                        hgfactor_physical, Kws)
+            # NOTE physical stabilisation of the bending of Belytschko and
+            #      Leviathan (1994), Eq. (B.18), multiplied by
+            #      hgfactor_physical
+            _bending_bl94(x1, x2, x3, x4, y1, y2, y3, y4, Ds,
+                          hgfactor_physical, Kws)
             KC0e0202 += Kws[0]
             KC0e0203 += Kws[1]
             KC0e0204 += Kws[2]
@@ -5649,11 +5739,8 @@ cdef class Quad4R:
     cpdef void update_fint(Quad4R self,
                            double [::1] fint,
                            ShellProp prop,
-                           double hgfactor_u = 1.,
-                           double hgfactor_v = 1.,
-                           double hgfactor_w = 1.,
-                           double hgfactor_rx = 1.,
-                           double hgfactor_ry = 1.,
+                           double hgfactor_membrane = 1.,
+                           double hgfactor_physical = 1.,
                            int nonlinear=0
                            ):
         r"""Update the internal force vector
@@ -5678,15 +5765,17 @@ cdef class Quad4R:
         prop : :class:`.ShellProp` object
             Shell property object from where the stiffness and mass attributes
             are read from.
-        hgfactor_u, hgfactor_v, hgfactor_w, hgfactor_rx, hgfactor_ry : double
-            These offer the possibility to change the default hourglass
-            stiffnesses for each degree-of-freedom.
-            Dimensionless multipliers of the hourglass stiffnesses of ``u``,
-            ``v``, ``r_x`` and ``r_y``, and, ``hgfactor_w``, of the
-            stabilisation of the transverse shear, which controls the
-            hourglass mode of ``w``, see the Notes of :mod:`pyfe3d.quad4r`.
-            Default ``1.``. Up to 0.11 ``hgfactor_w`` multiplied Brockman's
-            hourglass stiffness of ``w``.
+        hgfactor_membrane : double, optional
+            Dimensionless multiplier of the artificial hourglass stiffness
+            of the in-plane displacements ``u`` and ``v``, of Brockman
+            (1987). Default ``1.``.
+        hgfactor_physical : double, optional
+            Dimensionless multiplier of the physical stabilisation of the
+            bending and of the transverse shear of Belytschko and Leviathan
+            (1994), which controls the hourglass modes of ``w``, ``r_x`` and
+            ``r_y``; the default ``1.`` is the formulation of the paper,
+            which has no parameter, and other values serve verification and
+            sensitivity studies. See the Notes of :mod:`pyfe3d.quad4r`.
         nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
             value adds the geometrically nonlinear terms of the von Karman strains,
@@ -5704,8 +5793,7 @@ cdef class Quad4R:
         """
         cdef double *finte
 
-        self.update_probe_finte(prop, hgfactor_u, hgfactor_v, hgfactor_w,
-                                hgfactor_rx, hgfactor_ry, nonlinear)
+        self.update_probe_finte(prop, hgfactor_membrane, hgfactor_physical, nonlinear)
 
         with nogil:
             finte = &self.probe.finte[0]
