@@ -262,11 +262,11 @@ def test_cantilever_end_moment_quad4r():
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize('name', ['BeamC', 'BeamLR'])
+@pytest.mark.parametrize('name', ['BeamC'])
 def test_cantilever_end_moment_beams_membrane_locking(name):
-    r"""The beam elements interpolate the axial displacement linearly and
-    integrate the von Karman axial strain ``u_x + w_x**2/2`` at Gauss
-    points along the element, where ``w_x**2`` is not constant, so that the
+    r"""BeamC interpolates the axial displacement linearly and integrates
+    the von Karman axial strain ``u_x + w_x**2/2`` at Gauss points along
+    the element, where ``w_x**2`` is not constant, so that the
     axial strain cannot vanish and the cantilever is too stiff (membrane
     locking, Stolarski, H. and Belytschko, T., Membrane locking and reduced
     integration for curved elements, Journal of Applied Mechanics, 49(1),
@@ -283,7 +283,8 @@ def test_cantilever_end_moment_beams_membrane_locking(name):
     for a uniform curvature imposed on the mesh. The excess stiffness ``W_vk/W
     - 1`` therefore tends to zero as ``l_e**2``, i.e. as ``num_elements**-2``.
 
-    Measured ``W/W_vk - 1`` (BeamC and BeamLR agree within 0.1 %): -43.6 %,
+    Measured ``W/W_vk - 1`` (BeamLR up to pyfe3d 0.11 agreed within 0.1 %,
+    see :func:`test_cantilever_end_moment_beamlr_no_membrane_locking`): -43.6 %,
     -26.9 %, -12.6 %, -4.33 %, -1.21 % and -0.313 % with 16, 32, 64, 128, 256
     and 512 elements; ``W_vk/W - 1`` = 0.772, 0.368, 0.144, 0.0452, 0.01227
     and 0.003138, of observed orders 1.07, 1.35, 1.67, 1.88 and 1.97, which
@@ -328,6 +329,40 @@ def test_cantilever_end_moment_beams_membrane_locking(name):
     print('excess %.5f, uniform-curvature estimate %.5f'
           % (excess[-1], estimate))
     assert 0 < excess[-1] < estimate
+
+
+@pytest.mark.parametrize('num_elements', [4, 16])
+def test_cantilever_end_moment_beamlr_no_membrane_locking(num_elements):
+    r"""BeamLR takes the slope ``w_x`` of the von Karman axial strain from
+    its linear interpolation of ``w``, constant in the element as ``u_x``,
+    so that the axial strain ``u_x + w_x**2/2`` can vanish in each element
+    and there is no membrane locking.
+
+    Under ``M = 0.05*M_max`` the von Karman cantilever has no axial force,
+    the curvature ``kappa = M/(E*I)`` is uniform, the rotation linear and
+    ``w = kappa*x**2/2`` quadratic. The linear rotations of BeamLR give the
+    uniform curvature exactly, and the transverse shear strain, sampled at
+    the element centre, vanishes for the nodal values of the quadratic
+    ``w``: the nodal deflections are exact, ``W = W_vk``. The axial
+    displacement follows from ``u_x = -w_x**2/2`` with the mean slope of
+    each element, whose square misses the variance ``kappa**2*l_e**2/12``
+    of the linear slope, so that ``U - U_vk = kappa**2*L*l_e**2/24`` and
+    ``U/U_vk - 1 = -1/(4*num_elements**2)``, with ``U_vk =
+    -kappa**2*L**3/6``.
+
+    Measured with 4, 16 and 64 elements: ``W/W_vk - 1`` = 3.9e-12, -7.7e-11
+    and -5.7e-10, at the level of the convergence criterion of the
+    Newton-Raphson increments, ``relTOL = 1e-9``; ``U/U_vk - 1`` =
+    -1.5625e-2, -9.766e-4 and -6.104e-5, the closed form above. Up to pyfe3d
+    0.11 BeamLR took the slopes from the rotations, linear in the element,
+    and locked as BeamC: ``W/W_vk - 1`` = -43.6 % with 16 elements.
+    """
+    m, U, W = run_cantilever_end_moment('BeamLR', num_elements, inc=0.25,
+                                        m_max=0.05)
+    U_vk, W_vk = von_karman_tip(m[-1])
+    assert np.isclose(m[-1], 0.05)
+    assert np.isclose(W[-1], W_vk, rtol=1e-8)
+    assert np.isclose(U[-1]/U_vk - 1, -1/(4*num_elements**2), rtol=1e-4)
 
 
 def hinged_roof(n=16, h=12.7, element='Quad4R', hgfactor_physical=1.,

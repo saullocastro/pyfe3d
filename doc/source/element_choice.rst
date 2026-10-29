@@ -121,7 +121,12 @@ Beams, truss and spring
       - Timoshenko kinematics with linear interpolation and reduced
         integration; it converges to the same solutions with mesh
         refinement, quadratically, and needs many more elements, see
-        ``tests/test_timoshenko_beam_literature.py``.
+        ``tests/test_timoshenko_beam_literature.py``. Since version 0.12.0
+        its buckling load includes the reduction due to shear deformation,
+        see :doc:`ex_linear_buckling_column`, and its constant slopes leave
+        it free of the membrane locking of :class:`.BeamC` in the
+        geometrically nonlinear cantilever under an end moment, see
+        :doc:`tut-nonlinear-benchmarks`.
     * - :class:`.Truss`
       - Axial and torsional stiffness only, linear analyses and mass matrix,
         without geometric stiffness matrix, hence no linear buckling. The

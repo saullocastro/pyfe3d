@@ -106,11 +106,10 @@ cdef class BeamLRProbe:
         curvatures, at the last evaluated integration point.
     Sv_x, Sw_x : array-like
         Arrays of size ``NUM_NODES*DOF=12`` with the rows giving the slopes
-        `v_{,x}` and `w_{,x}`, at the last evaluated integration point.
-        The names are those of :class:`.BeamCProbe`, the same API, but here
-        the rows hold the interpolations of the rotations, the slopes being
-        `v_{,x} = r_z` and `w_{,x} = -r_y`: ``Sv_x`` holds
-        `\boldsymbol{S}^{r_z}` and ``Sw_x`` holds `-\boldsymbol{S}^{r_y}`.
+        `v_{,x}` and `w_{,x}` of the linear interpolations of `v` and `w`,
+        constant along the element, as in :class:`.BeamCProbe`. Up to
+        version 0.11 they held the interpolations of the rotations, `r_z`
+        and `-r_y`, see the notes of :class:`.BeamLR`.
     KCNLve : array-like
         Array of size ``(NUM_NODES*DOF)**2=144`` with the nonlinear
         constitutive stiffness matrix KCNL in element coordinates, stored row
@@ -231,6 +230,34 @@ cdef class BeamLR:
     Table 3.6 of [3]_; in ``tests/test_beam_shear_moduli.py`` they do so in
     each plane with its own modulus when ``G12`` and ``G13`` differ.
 
+    The geometric stiffness matrix of :meth:`.update_KG`, the nonlinear
+    matrix of :meth:`.update_KCNL` and the nonlinear internal forces of
+    :meth:`.update_probe_finte` come from the von Karman axial strain
+    `\epsilon_{xx} = u_{,x} + (v_{,x}^2 + w_{,x}^2)/2`, whose slopes
+    `v_{,x}` and `w_{,x}` are taken, since version 0.12.0, from the linear
+    interpolations of `v` and `w`, as the axial strain requires and as in
+    :class:`.BeamC`. They are constant along the element, and the geometric
+    stiffness matrix is that of a string, `N/L` times ``[[1, -1], [-1,
+    1]]`` for `v` and for `w`. Up to version 0.11 the slopes were taken from
+    the rotations, `v_{,x} = r_z` and `w_{,x} = -r_y`, which holds only
+    without shear deformation: the buckling mode could then deflect with
+    vanishing shear strains, and the buckling load converged to the Euler
+    load `P_e` whatever the shear stiffness `\kappa G A`, instead of `P_e/(1
+    + P_e/(\kappa G A))`, Eq. (2-57) of [4]_. For a clamped-free column with
+    `P_e/(\kappa G A)` = 0.0002, 0.018, 0.18 and 0.59, `P_{cr}/P_e` was
+    1.0000 with 100 and with 800 elements, against 0.9998, 0.9825, 0.8488
+    and 0.6274 from Eq. (2-57), i.e. 0.02 % to 59 % unconservative. It is
+    now 0.9998, 0.9825, 0.8488 and 0.6274 with 160 elements, converging to
+    Eq. (2-57) as the square of the element length, see
+    ``tests/test_beam_linear_buckling_3D_column.py``. For slender columns
+    the discretization error is about twice that of the former matrix: for
+    `P_e/(\kappa G A) = 0.0002`, the load is 4.1e-3 and 1.0e-3 above Eq.
+    (2-57) with 10 and 20 elements, where it was 2.1e-3 and 5.1e-4 above
+    `P_e`. With constant slopes the axial strain `u_{,x} + w_{,x}^2/2` can
+    vanish in each element, which removes the membrane locking that BeamC
+    shows in a cantilever under an end moment, see
+    ``tests/test_nonlinear_benchmarks_sze2004.py``.
+
     The matrices and the internal forces are computed in element
     coordinates and transformed to global coordinates with the rotation
     matrix of the element, as described in the notes of :class:`.BeamC`.
@@ -246,6 +273,8 @@ cdef class BeamLR:
     .. [3] Petyt, M., 2010, Introduction to Finite Element Vibration
        Analysis, 2nd ed., Cambridge University Press, Section 3.9.
        https://doi.org/10.1017/CBO9780511761195
+    .. [4] Timoshenko, S. P., Gere, J. M., 1961, Theory of Elastic
+       Stability, 2nd ed., McGraw-Hill, Section 2.17, p. 133, Eq. (2-57).
 
     """
     cdef public int eid, pid
@@ -1447,8 +1476,10 @@ cdef class BeamLR:
         :class:`.BeamLRProbe` are overwritten with the rows that, multiplied by
         the element displacements ``ue``, give in element coordinates the axial
         strain of the beam axis, the two curvatures and the two slopes of the
-        axis, evaluated at the natural coordinate ``xi``, from ``-1`` at node 1
-        to ``+1`` at node 2. They depend on ``length``.
+        axis, at the natural coordinate ``xi``, from ``-1`` at node 1 to
+        ``+1`` at node 2. They depend on ``length`` only: with linear shape
+        functions they are constant along the element and ``xi`` is not
+        used.
 
         Notes
         -----
@@ -1457,9 +1488,10 @@ cdef class BeamLR:
         - ``BLexx``: `u_{,x}`
         - ``BLky``: `\kappa_y = -{r_z}_{,x}`
         - ``BLkz``: `\kappa_z = {r_y}_{,x}`
-        - ``Sv_x``, ``Sw_x``: the slopes `v_{,x}` and `w_{,x}`, taken from the
-          rotations as `v_{,x} = r_z` and `w_{,x} = -r_y`, as in
-          :meth:`.update_KG`
+        - ``Sv_x``, ``Sw_x``: the slopes `v_{,x}` and `w_{,x}` of the
+          interpolations of `v` and `w`, as in :meth:`.update_KG`; up to
+          version 0.11 they were taken from the rotations, `v_{,x} = r_z`
+          and `w_{,x} = -r_y`, see the notes of :class:`.BeamLR`
 
         """
         cdef int i
@@ -1497,13 +1529,13 @@ cdef class BeamLR:
         BLkz[4] = -1/L
         BLkz[10] = 1/L
 
-        # v,x = rz
-        Sv_x[5] = (1 - xi)/2
-        Sv_x[11] = (1 + xi)/2
+        # v,x, from the interpolation of v
+        Sv_x[1] = -1/L
+        Sv_x[7] = 1/L
 
-        # w,x = -ry
-        Sw_x[4] = -(1 - xi)/2
-        Sw_x[10] = -(1 + xi)/2
+        # w,x, from the interpolation of w
+        Sw_x[2] = -1/L
+        Sw_x[8] = 1/L
 
 
     cdef void _update_probe_KCNLve(BeamLR self, BeamProp prop) noexcept nogil:
@@ -1519,18 +1551,15 @@ cdef class BeamLR:
 
         Notes
         -----
-        KCNL = KC0L + KCL0 + KCLL + KGNL, see :meth:`.update_KCNL`, is
-        integrated along the element with the 3-point Gauss-Legendre
-        quadrature, exact for these polynomials of degree up to 4 in ``xi``.
-        At each point the entries receive the terms given in
-        :meth:`.BeamC._update_probe_KCNLve`, with the rows of
-        :meth:`._update_probe_BL_G`.
+        KCNL = KC0L + KCL0 + KCLL + KGNL, see :meth:`.update_KCNL`, has the
+        terms given in :meth:`.BeamC._update_probe_KCNLve`, with the rows of
+        :meth:`._update_probe_BL_G`. These rows and the slopes are constant
+        along the element, so the integral is exactly the integrand at the
+        center times ``length``.
 
         """
-        cdef int i, j, pt
-        cdef double L, E, A, Ay, Az, xi, weight, v_x, w_x, NNL
-        cdef double points[3]
-        cdef double weights[3]
+        cdef int i, j
+        cdef double L, E, A, Ay, Az, weight, v_x, w_x, NNL
         cdef double EBL[12]
         cdef double BNL[12]
         cdef double *ue
@@ -1558,46 +1587,39 @@ cdef class BeamLR:
         for i in range(12*12):
             KCNLve[i] = 0.
 
-        # NOTE 3-point Gauss-Legendre quadrature, exact for these polynomials
-        points[0] = -0.774596669241483377035853079956
-        weights[0] = 0.555555555555555555555555555556
-        points[1] = 0.
-        weights[1] = 0.888888888888888888888888888889
-        points[2] = +0.774596669241483377035853079956
-        weights[2] = 0.555555555555555555555555555556
+        # NOTE the integrands are constant along the element, as the rows of
+        #      _update_probe_BL_G, hence the integral is the integrand at
+        #      the center times L
+        weight = L
+        self._update_probe_BL_G(0.)
 
-        for pt in range(3):
-            xi = points[pt]
-            weight = weights[pt]*L/2.
-            self._update_probe_BL_G(xi)
+        v_x = 0.
+        w_x = 0.
+        for i in range(NUM_NODES*DOF):
+            v_x += Sv_x[i]*ue[i]
+            w_x += Sw_x[i]*ue[i]
 
-            v_x = 0.
-            w_x = 0.
-            for i in range(NUM_NODES*DOF):
-                v_x += Sv_x[i]*ue[i]
-                w_x += Sw_x[i]*ue[i]
+        # axial force of the nonlinear axial strain, eNL = (v_x**2 + w_x**2)/2
+        NNL = E*A*(v_x*v_x + w_x*w_x)/2.
 
-            # axial force of the nonlinear axial strain, eNL = (v_x**2 + w_x**2)/2
-            NNL = E*A*(v_x*v_x + w_x*w_x)/2.
+        for i in range(NUM_NODES*DOF):
+            # row of D*BL giving the axial force N = E*(A*u,x + Ay*ky + Az*kz)
+            EBL[i] = E*(A*BLexx[i] + Ay*BLky[i] + Az*BLkz[i])
+            # BNL, the variation of the nonlinear axial strain
+            BNL[i] = v_x*Sv_x[i] + w_x*Sw_x[i]
 
-            for i in range(NUM_NODES*DOF):
-                # row of D*BL giving the axial force N = E*(A*u,x + Ay*ky + Az*kz)
-                EBL[i] = E*(A*BLexx[i] + Ay*BLky[i] + Az*BLkz[i])
-                # BNL, the variation of the nonlinear axial strain
-                BNL[i] = v_x*Sv_x[i] + w_x*Sw_x[i]
-
-            for i in range(NUM_NODES*DOF):
-                for j in range(NUM_NODES*DOF):
-                    KCNLve[12*i + j] += weight*(
-                        # KC0L = BL.T*D*BNL
-                          EBL[i]*BNL[j]
-                        # KCL0 = BNL.T*D*BL
-                        + BNL[i]*EBL[j]
-                        # KCLL = BNL.T*D*BNL
-                        + E*A*BNL[i]*BNL[j]
-                        # KGNL = NNL*(Sv_x.T*Sv_x + Sw_x.T*Sw_x)
-                        + NNL*(Sv_x[i]*Sv_x[j] + Sw_x[i]*Sw_x[j])
-                    )
+        for i in range(NUM_NODES*DOF):
+            for j in range(NUM_NODES*DOF):
+                KCNLve[12*i + j] += weight*(
+                    # KC0L = BL.T*D*BNL
+                      EBL[i]*BNL[j]
+                    # KCL0 = BNL.T*D*BL
+                    + BNL[i]*EBL[j]
+                    # KCLL = BNL.T*D*BNL
+                    + E*A*BNL[i]*BNL[j]
+                    # KGNL = NNL*(Sv_x.T*Sv_x + Sw_x.T*Sw_x)
+                    + NNL*(Sv_x[i]*Sv_x[j] + Sw_x[i]*Sw_x[j])
+                )
 
 
     cdef void _update_probe_finte_nonlinear(BeamLR self,
@@ -1615,17 +1637,16 @@ cdef class BeamLR:
         Notes
         -----
         The added terms are those of the von Karman axial strain
-        `\epsilon_{NL} = (v_{,x}^2 + w_{,x}^2)/2`, with the slopes taken from
-        the rotations, such that ``finte`` becomes the gradient of the strain
-        energy whose Hessian is KC0 + KCNL + KG. They are integrated with the
-        3-point Gauss-Legendre quadrature, each point adding the terms given
-        in :meth:`.BeamC._update_probe_finte_nonlinear`.
+        `\epsilon_{NL} = (v_{,x}^2 + w_{,x}^2)/2`, with the slopes of the
+        interpolations of `v` and `w`, such that ``finte`` becomes the
+        gradient of the strain energy whose Hessian is KC0 + KCNL + KG. They
+        are the terms given in :meth:`.BeamC._update_probe_finte_nonlinear`,
+        constant along the element, integrated exactly as their value at
+        the center times ``length``.
 
         """
-        cdef int i, pt
-        cdef double L, E, A, Ay, Az, xi, weight, v_x, w_x, eNL, N, NNL
-        cdef double points[3]
-        cdef double weights[3]
+        cdef int i
+        cdef double L, E, A, Ay, Az, weight, v_x, w_x, eNL, N, NNL
         cdef double EBL[12]
         cdef double *ue
         cdef double *finte
@@ -1649,40 +1670,33 @@ cdef class BeamLR:
         Sv_x = &self.probe.Sv_x[0]
         Sw_x = &self.probe.Sw_x[0]
 
-        # NOTE 3-point Gauss-Legendre quadrature, exact for these polynomials
-        points[0] = -0.774596669241483377035853079956
-        weights[0] = 0.555555555555555555555555555556
-        points[1] = 0.
-        weights[1] = 0.888888888888888888888888888889
-        points[2] = +0.774596669241483377035853079956
-        weights[2] = 0.555555555555555555555555555556
+        # NOTE the integrands are constant along the element, as the rows of
+        #      _update_probe_BL_G, hence the integral is the integrand at
+        #      the center times L
+        weight = L
+        self._update_probe_BL_G(0.)
 
-        for pt in range(3):
-            xi = points[pt]
-            weight = weights[pt]*L/2.
-            self._update_probe_BL_G(xi)
+        v_x = 0.
+        w_x = 0.
+        N = 0.
+        for i in range(NUM_NODES*DOF):
+            v_x += Sv_x[i]*ue[i]
+            w_x += Sw_x[i]*ue[i]
+            # row of D*BL giving the axial force N = E*(A*u,x + Ay*ky + Az*kz)
+            EBL[i] = E*(A*BLexx[i] + Ay*BLky[i] + Az*BLkz[i])
+            N += EBL[i]*ue[i]
 
-            v_x = 0.
-            w_x = 0.
-            N = 0.
-            for i in range(NUM_NODES*DOF):
-                v_x += Sv_x[i]*ue[i]
-                w_x += Sw_x[i]*ue[i]
-                # row of D*BL giving the axial force N = E*(A*u,x + Ay*ky + Az*kz)
-                EBL[i] = E*(A*BLexx[i] + Ay*BLky[i] + Az*BLkz[i])
-                N += EBL[i]*ue[i]
+        # nonlinear axial strain and its axial force
+        eNL = (v_x*v_x + w_x*w_x)/2.
+        NNL = E*A*eNL
 
-            # nonlinear axial strain and its axial force
-            eNL = (v_x*v_x + w_x*w_x)/2.
-            NNL = E*A*eNL
-
-            for i in range(NUM_NODES*DOF):
-                finte[i] += weight*(
-                    # BL.T*D*{eNL, 0, 0, 0, 0, 0}
-                      EBL[i]*eNL
-                    # BNL.T*(N + NNL)
-                    + (v_x*Sv_x[i] + w_x*Sw_x[i])*(N + NNL)
-                )
+        for i in range(NUM_NODES*DOF):
+            finte[i] += weight*(
+                # BL.T*D*{eNL, 0, 0, 0, 0, 0}
+                  EBL[i]*eNL
+                # BNL.T*(N + NNL)
+                + (v_x*Sv_x[i] + w_x*Sw_x[i])*(N + NNL)
+            )
 
 
     cpdef void update_KCNL(BeamLR self,
@@ -1741,7 +1755,7 @@ cdef class BeamLR:
             \epsilon_{xx} = u_{,x} + \frac{1}{2} \left( v_{,x}^2 + w_{,x}^2 \right)
 
         whose nonlinear part is `\epsilon_{NL} = \frac{1}{2} \boldsymbol{B}_{NL} \boldsymbol{u}_e`, with
-        `\boldsymbol{B}_{NL} = v_{,x} \boldsymbol{S}^{r_z} - w_{,x} \boldsymbol{S}^{r_y}` its variation, where the slopes are taken from the rotations as `v_{,x} = r_z` and `w_{,x} = -r_y`, `\boldsymbol{S}^{r_z}` and `\boldsymbol{S}^{r_y}` being the linear interpolations of the rotations. With
+        `\boldsymbol{B}_{NL} = v_{,x} \frac{\partial \boldsymbol{S}^v}{\partial x} + w_{,x} \frac{\partial \boldsymbol{S}^w}{\partial x}` its variation, `\boldsymbol{S}^v` and `\boldsymbol{S}^w` being the linear interpolations of `v` and `w`, whose derivatives, the rows ``Sv_x`` and ``Sw_x`` of :meth:`._update_probe_BL_G`, are constant along the element. Up to version 0.11 the slopes were taken from the rotations, `v_{,x} = r_z` and `w_{,x} = -r_y`, see the notes of :class:`.BeamLR`. With
         `\boldsymbol{B}_L` the linear strain-displacement matrix, `\boldsymbol{C}_{sec}` the sectional
         constitutive matrix, whose first column couples the axial strain with `E A`, `E A_y`
         and `E A_z`, and `N_{NL} = E A \epsilon_{NL}`:
@@ -1749,7 +1763,7 @@ cdef class BeamLR:
         - KC0L = `\boldsymbol{B}_L^\top \boldsymbol{C}_{sec} \boldsymbol{B}_{NL}`
         - KCL0 = KC0L`^\top`
         - KCLL = `\boldsymbol{B}_{NL}^\top \boldsymbol{C}_{sec} \boldsymbol{B}_{NL}`
-        - KGNL = `N_{NL} \left( (\boldsymbol{S}^{r_z})^\top \boldsymbol{S}^{r_z} + (\boldsymbol{S}^{r_y})^\top \boldsymbol{S}^{r_y} \right)`
+        - KGNL = `N_{NL} \left( \frac{\partial \boldsymbol{S}^v}{\partial x}^\top \frac{\partial \boldsymbol{S}^v}{\partial x} + \frac{\partial \boldsymbol{S}^w}{\partial x}^\top \frac{\partial \boldsymbol{S}^w}{\partial x} \right)`
 
         The first three groups are the constitutive terms coupling the linear and
         the nonlinear parts of the axial strain. KGNL is geometric, carrying the
@@ -1764,9 +1778,8 @@ cdef class BeamLR:
         ``nonlinear=1``, and a Newton-Raphson iteration built on them converges
         quadratically.
 
-        The integration is made by :meth:`._update_probe_KCNLve` with the
-        3-point Gauss-Legendre quadrature, exact for the linear shape
-        functions. The von Karman axial strain is valid for small strains and
+        The integration is made by :meth:`._update_probe_KCNLve`, exactly,
+        since the integrands are constant along the element. The von Karman axial strain is valid for small strains and
         moderate rotations: the nonlinear axial strain `\epsilon_{NL}` is
         uniform over the cross section, the curvatures and the transverse
         shear strains are linear in the displacements, and the element
@@ -1857,7 +1870,8 @@ cdef class BeamLR:
         ``A``, ``E``, ``Ay`` and ``Az`` of ``prop``. ``probe.ue``,
         ``length`` and the rotation matrix must be updated before, see
         :meth:`.update_probe_ue` and :meth:`.update_probe_xe`. The rows and
-        columns of the entries are those of the rotations of the two nodes.
+        columns of the entries are those of the translations of the two
+        nodes; up to version 0.11 they were those of the rotations.
 
         Parameters
         ----------
@@ -1884,16 +1898,22 @@ cdef class BeamLR:
         The geometric stiffness matrix is
 
         .. math::
-            \boldsymbol{K}_G = \int_0^L N \left[ (\boldsymbol{S}^{r_z})^\top \boldsymbol{S}^{r_z} + (\boldsymbol{S}^{r_y})^\top \boldsymbol{S}^{r_y} \right] dx
+            \boldsymbol{K}_G = \int_0^L N \left( \frac{\partial \boldsymbol{S}^v}{\partial x}^\top \frac{\partial \boldsymbol{S}^v}{\partial x} + \frac{\partial \boldsymbol{S}^w}{\partial x}^\top \frac{\partial \boldsymbol{S}^w}{\partial x} \right) dx
 
         the Hessian of `\frac{1}{2} \int_0^L N (v_{,x}^2 + w_{,x}^2) dx` at a
-        constant axial force `N`, where the slopes are taken from the
-        rotations, `v_{,x} = r_z` and `w_{,x} = -r_y`, interpolated linearly,
-        see :meth:`._update_probe_BL_G`, and `N = E (A u_{,x} + A_y \kappa_y
-        + A_z \kappa_z)` is the axial force of the linear strains at
+        constant axial force `N`, where the slopes are those of the linear
+        interpolations `\boldsymbol{S}^v` and `\boldsymbol{S}^w` of `v` and
+        `w`, see :meth:`._update_probe_BL_G`, and `N = E (A u_{,x} + A_y
+        \kappa_y + A_z \kappa_z)` is the axial force of the linear strains at
         ``probe.ue``, constant along the element, see the notes of
-        :class:`.BeamC`. The integral is computed exactly, hence the matrix
-        involves only the rotations.
+        :class:`.BeamC`. In element coordinates the matrix is `N/L` times
+        ``[[1, -1], [-1, 1]]`` for the `v` and for the `w` of the two nodes.
+
+        The slopes are those that enter the axial strain: up to version 0.11
+        they were taken from the rotations, `v_{,x} = r_z` and `w_{,x} =
+        -r_y`, which neglects the shear deformation in buckling, so that the
+        buckling load converged to the Euler load instead of Eq. (2-57) of
+        Timoshenko and Gere (1961), see the notes of :class:`.BeamLR`.
 
         `\boldsymbol{K}_G` is homogeneous of degree one in ``probe.ue``. With ``probe.ue``
         from the linear static solution of a reference load, the critical
@@ -1904,9 +1924,10 @@ cdef class BeamLR:
 
         """
         cdef double *ue
-        cdef int c1, c2, k
-        cdef double L, A, E, Ay, Az, N
-        cdef double r12, r13, r22, r23, r32, r33
+        cdef int k, node_i, node_j, m, n
+        cdef int c[2]
+        cdef double L, A, E, Ay, Az, N, sign
+        cdef double r[3][3]
 
         with nogil:
             L = self.length
@@ -1916,203 +1937,46 @@ cdef class BeamLR:
             Az = prop.Az
 
             # local to global transformation
-            r12 = self.r12
-            r13 = self.r13
-            r22 = self.r22
-            r23 = self.r23
-            r32 = self.r32
-            r33 = self.r33
+            r[0][0] = self.r11
+            r[0][1] = self.r12
+            r[0][2] = self.r13
+            r[1][0] = self.r21
+            r[1][1] = self.r22
+            r[1][2] = self.r23
+            r[2][0] = self.r31
+            r[2][1] = self.r32
+            r[2][2] = self.r33
 
             ue = &self.probe.ue[0]
 
             if update_KGv_only == 0:
-                # positions of nodes 1,2,3,4 in the global matrix
-                c1 = self.c1
-                c2 = self.c2
+                # positions in the global stiffness matrix
+                c[0] = self.c1
+                c[1] = self.c2
 
-                k = self.init_k_KG
-                KGr[k] = 3+c1
-                KGc[k] = 3+c1
-                k += 1
-                KGr[k] = 3+c1
-                KGc[k] = 4+c1
-                k += 1
-                KGr[k] = 3+c1
-                KGc[k] = 5+c1
-                k += 1
-                KGr[k] = 3+c1
-                KGc[k] = 3+c2
-                k += 1
-                KGr[k] = 3+c1
-                KGc[k] = 4+c2
-                k += 1
-                KGr[k] = 3+c1
-                KGc[k] = 5+c2
-                k += 1
-                KGr[k] = 4+c1
-                KGc[k] = 3+c1
-                k += 1
-                KGr[k] = 4+c1
-                KGc[k] = 4+c1
-                k += 1
-                KGr[k] = 4+c1
-                KGc[k] = 5+c1
-                k += 1
-                KGr[k] = 4+c1
-                KGc[k] = 3+c2
-                k += 1
-                KGr[k] = 4+c1
-                KGc[k] = 4+c2
-                k += 1
-                KGr[k] = 4+c1
-                KGc[k] = 5+c2
-                k += 1
-                KGr[k] = 5+c1
-                KGc[k] = 3+c1
-                k += 1
-                KGr[k] = 5+c1
-                KGc[k] = 4+c1
-                k += 1
-                KGr[k] = 5+c1
-                KGc[k] = 5+c1
-                k += 1
-                KGr[k] = 5+c1
-                KGc[k] = 3+c2
-                k += 1
-                KGr[k] = 5+c1
-                KGc[k] = 4+c2
-                k += 1
-                KGr[k] = 5+c1
-                KGc[k] = 5+c2
-                k += 1
-                KGr[k] = 3+c2
-                KGc[k] = 3+c1
-                k += 1
-                KGr[k] = 3+c2
-                KGc[k] = 4+c1
-                k += 1
-                KGr[k] = 3+c2
-                KGc[k] = 5+c1
-                k += 1
-                KGr[k] = 3+c2
-                KGc[k] = 3+c2
-                k += 1
-                KGr[k] = 3+c2
-                KGc[k] = 4+c2
-                k += 1
-                KGr[k] = 3+c2
-                KGc[k] = 5+c2
-                k += 1
-                KGr[k] = 4+c2
-                KGc[k] = 3+c1
-                k += 1
-                KGr[k] = 4+c2
-                KGc[k] = 4+c1
-                k += 1
-                KGr[k] = 4+c2
-                KGc[k] = 5+c1
-                k += 1
-                KGr[k] = 4+c2
-                KGc[k] = 3+c2
-                k += 1
-                KGr[k] = 4+c2
-                KGc[k] = 4+c2
-                k += 1
-                KGr[k] = 4+c2
-                KGc[k] = 5+c2
-                k += 1
-                KGr[k] = 5+c2
-                KGc[k] = 3+c1
-                k += 1
-                KGr[k] = 5+c2
-                KGc[k] = 4+c1
-                k += 1
-                KGr[k] = 5+c2
-                KGc[k] = 5+c1
-                k += 1
-                KGr[k] = 5+c2
-                KGc[k] = 3+c2
-                k += 1
-                KGr[k] = 5+c2
-                KGc[k] = 4+c2
-                k += 1
-                KGr[k] = 5+c2
-                KGc[k] = 5+c2
+                # NOTE rows and columns of the translations of the two nodes
+                for node_i in range(NUM_NODES):
+                    for m in range(3):
+                        for node_j in range(NUM_NODES):
+                            for n in range(3):
+                                k = self.init_k_KG + 6*(3*node_i + m) + 3*node_j + n
+                                KGr[k] = c[node_i] + m
+                                KGc[k] = c[node_j] + n
 
             N = E*(-A*ue[0] + A*ue[6] - Ay*ue[11] + Ay*ue[5] + Az*ue[10] - Az*ue[4])/L
 
-            k = self.init_k_KG
-            KGv[k] += 0.333333333333333*L*N*r12**2 + 0.333333333333333*L*N*r13**2
-            k += 1
-            KGv[k] += 0.333333333333333*L*N*r12*r22 + 0.333333333333333*L*N*r13*r23
-            k += 1
-            KGv[k] += 0.333333333333333*L*N*r12*r32 + 0.333333333333333*L*N*r13*r33
-            k += 1
-            KGv[k] += 0.166666666666667*L*N*r12**2 + 0.166666666666667*L*N*r13**2
-            k += 1
-            KGv[k] += 0.166666666666667*L*N*r12*r22 + 0.166666666666667*L*N*r13*r23
-            k += 1
-            KGv[k] += 0.166666666666667*L*N*r12*r32 + 0.166666666666667*L*N*r13*r33
-            k += 1
-            KGv[k] += 0.333333333333333*L*N*r12*r22 + 0.333333333333333*L*N*r13*r23
-            k += 1
-            KGv[k] += 0.333333333333333*L*N*r22**2 + 0.333333333333333*L*N*r23**2
-            k += 1
-            KGv[k] += 0.333333333333333*L*N*r22*r32 + 0.333333333333333*L*N*r23*r33
-            k += 1
-            KGv[k] += 0.166666666666667*L*N*r12*r22 + 0.166666666666667*L*N*r13*r23
-            k += 1
-            KGv[k] += 0.166666666666667*L*N*r22**2 + 0.166666666666667*L*N*r23**2
-            k += 1
-            KGv[k] += 0.166666666666667*L*N*r22*r32 + 0.166666666666667*L*N*r23*r33
-            k += 1
-            KGv[k] += 0.333333333333333*L*N*r12*r32 + 0.333333333333333*L*N*r13*r33
-            k += 1
-            KGv[k] += 0.333333333333333*L*N*r22*r32 + 0.333333333333333*L*N*r23*r33
-            k += 1
-            KGv[k] += 0.333333333333333*L*N*r32**2 + 0.333333333333333*L*N*r33**2
-            k += 1
-            KGv[k] += 0.166666666666667*L*N*r12*r32 + 0.166666666666667*L*N*r13*r33
-            k += 1
-            KGv[k] += 0.166666666666667*L*N*r22*r32 + 0.166666666666667*L*N*r23*r33
-            k += 1
-            KGv[k] += 0.166666666666667*L*N*r32**2 + 0.166666666666667*L*N*r33**2
-            k += 1
-            KGv[k] += 0.166666666666667*L*N*r12**2 + 0.166666666666667*L*N*r13**2
-            k += 1
-            KGv[k] += 0.166666666666667*L*N*r12*r22 + 0.166666666666667*L*N*r13*r23
-            k += 1
-            KGv[k] += 0.166666666666667*L*N*r12*r32 + 0.166666666666667*L*N*r13*r33
-            k += 1
-            KGv[k] += 0.333333333333333*L*N*r12**2 + 0.333333333333333*L*N*r13**2
-            k += 1
-            KGv[k] += 0.333333333333333*L*N*r12*r22 + 0.333333333333333*L*N*r13*r23
-            k += 1
-            KGv[k] += 0.333333333333333*L*N*r12*r32 + 0.333333333333333*L*N*r13*r33
-            k += 1
-            KGv[k] += 0.166666666666667*L*N*r12*r22 + 0.166666666666667*L*N*r13*r23
-            k += 1
-            KGv[k] += 0.166666666666667*L*N*r22**2 + 0.166666666666667*L*N*r23**2
-            k += 1
-            KGv[k] += 0.166666666666667*L*N*r22*r32 + 0.166666666666667*L*N*r23*r33
-            k += 1
-            KGv[k] += 0.333333333333333*L*N*r12*r22 + 0.333333333333333*L*N*r13*r23
-            k += 1
-            KGv[k] += 0.333333333333333*L*N*r22**2 + 0.333333333333333*L*N*r23**2
-            k += 1
-            KGv[k] += 0.333333333333333*L*N*r22*r32 + 0.333333333333333*L*N*r23*r33
-            k += 1
-            KGv[k] += 0.166666666666667*L*N*r12*r32 + 0.166666666666667*L*N*r13*r33
-            k += 1
-            KGv[k] += 0.166666666666667*L*N*r22*r32 + 0.166666666666667*L*N*r23*r33
-            k += 1
-            KGv[k] += 0.166666666666667*L*N*r32**2 + 0.166666666666667*L*N*r33**2
-            k += 1
-            KGv[k] += 0.333333333333333*L*N*r12*r32 + 0.333333333333333*L*N*r13*r33
-            k += 1
-            KGv[k] += 0.333333333333333*L*N*r22*r32 + 0.333333333333333*L*N*r23*r33
-            k += 1
-            KGv[k] += 0.333333333333333*L*N*r32**2 + 0.333333333333333*L*N*r33**2
+            # NOTE in element coordinates KG = N/L*[[1, -1], [-1, 1]] for v
+            #      and for w, i.e. N*L*(Sv_x.T*Sv_x + Sw_x.T*Sw_x) with the
+            #      constant rows of _update_probe_BL_G, transformed to global
+            #      coordinates as KG_mn = r_m1*N/L*r_n1 + r_m2*N/L*r_n2 for
+            #      each pair of nodes, with a minus sign between two nodes
+            for node_i in range(NUM_NODES):
+                for m in range(3):
+                    for node_j in range(NUM_NODES):
+                        sign = 1. if node_i == node_j else -1.
+                        for n in range(3):
+                            k = self.init_k_KG + 6*(3*node_i + m) + 3*node_j + n
+                            KGv[k] += sign*N/L*(r[m][1]*r[n][1] + r[m][2]*r[n][2])
 
 
     cpdef void update_M(BeamLR self,

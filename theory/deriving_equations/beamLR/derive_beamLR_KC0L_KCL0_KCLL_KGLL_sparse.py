@@ -5,8 +5,9 @@ KCNL = KC0L + KCL0 + KCLL + KGLL, built from the von Karman axial strain
 
     exx = u,x + eNL,    eNL = (v,x**2 + w,x**2)/2
 
-with the slopes taken from the rotations, v,x = rz and w,x = -ry, as in
-derive_beamLR_KG_sparse.py
+with the slopes v,x and w,x of the linear interpolations of v and w, as in
+derive_beamLR_KG_sparse.py; up to pyfe3d 0.11 they were taken from the
+rotations, v,x = rz and w,x = -ry, which neglects the shear deformation
 
 - KC0L = BL.T*D*BNL
 - KCL0 = BNL.T*D*BL = KC0L.T
@@ -34,8 +35,9 @@ from sympy import simplify, expand, Matrix, var, symbols, Poly
 
 DOF = 6
 NUM_NODES = 2
-# NOTE number of Gauss-Legendre points used in beamlr.pyx
-NUM_GAUSS_POINTS = 3
+# NOTE number of Gauss-Legendre points used in beamlr.pyx: the integrands are
+#      constant along the element and one point at the center is exact
+NUM_GAUSS_POINTS = 1
 
 var('xi', real=True)
 var('L, E, Iyy, Izz, Iyz, G12, G13, GJ, A, Ay, Az', real=True)
@@ -92,9 +94,9 @@ BL = Matrix([
     2/L*Nw.diff(xi) + Nry,
     2/L*Nrx.diff(xi)])
 
-# slopes taken from the rotations, v,x = rz and w,x = -ry
-Sv_x = Nrz
-Sw_x = -Nry
+# slopes of the interpolations of v and w
+Sv_x = 2/L*Nv.diff(xi)
+Sw_x = 2/L*Nw.diff(xi)
 
 ue = Matrix([symbols(r'ue[%d]' % i) for i in range(NUM_NODES*DOF)])
 v_x = (Sv_x*ue)[0]

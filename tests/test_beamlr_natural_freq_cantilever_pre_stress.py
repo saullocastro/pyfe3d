@@ -70,10 +70,13 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
     shear deformation the buckling load is ``P_e/(1 + n*P_e/(A*G))``, Eq.
     (2-57), Sec. 2.17, p. 133, ``n = 1.2`` for a rectangular cross section
     (p. 132), i.e. 0.018 % below ``P_e`` for this beam. The buckling load
-    of BeamLR is 0.069, 0.026 and 0.020 % above Eq. (2-57) with 20, 49 and
-    99 elements, and converges to ``P_e``, without the reduction due to shear
-    deformation (0.0021 and 0.0005 % above Eq. (2-4) with 99 and 199
-    elements).
+    of BeamLR converges to Eq. (2-57) as the square of the element length,
+    1.71e-4, 4.20e-5 and 1.04e-5 above it with 49, 99 and 199 elements
+    (``refinement`` 1, 2 and 4), hence the tolerance 5e-4. Up to pyfe3d
+    0.11, BeamLR took the slopes of its geometric stiffness matrix from the
+    rotations and its buckling load converged to ``P_e``, without the
+    reduction due to shear deformation (2.6e-4 and 2.0e-4 above Eq. (2-57)
+    with 49 and 99 elements).
 
     The frequencies under the axial load are compared with the exact ones of
     a Timoshenko beam, with shear deformation and rotary inertia, as BeamLR,
@@ -96,14 +99,22 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
     and rotary inertia lower the three frequencies by 0.028, 0.160 and 0.371
     % with respect to these Euler-Bernoulli ones.
 
-    BeamLR converges quadratically. With 49 elements the frequencies of the
-    consistent mass matrix are 0.020, 0.11 and 0.30 % above the Timoshenko
-    reference, with 99 elements 0.015, 0.035 and 0.081 %, with 20 elements
-    0.05, 0.64 and 1.79 %; those of the lumped mass matrix are 0.002, 0.002
-    and 0.036 % above with 49 elements, 0.05 to 0.18 % off with 20
-    elements. With 199 elements both mass matrices are still 0.009 to 0.027
-    % above the reference, consistently with the buckling load converging
-    to ``P_e`` instead of Eq. (2-57).
+    BeamLR converges quadratically to the Timoshenko reference. Measured
+    errors of the three frequencies:
+
+    ==========  ========  ============================  ===========================
+    refinement  elements  consistent mass               lumped mass
+    ==========  ========  ============================  ===========================
+    1           49        +1.07e-4, +1.08e-3, +2.97e-3  -6.6e-5, -5.4e-5, +2.88e-4
+    2           99        +2.6e-5, +2.63e-4, +7.26e-4   -1.6e-5, -1.3e-5, +7.0e-5
+    4           199       +6.4e-6, +6.5e-5, +1.80e-4    -4.1e-6, -3.3e-6, +1.7e-5
+    ==========  ========  ============================  ===========================
+
+    hence the tolerances 5e-3 (consistent) and 5e-4 (lumped) with 49
+    elements. Up to pyfe3d 0.11, with the slopes of the geometric stiffness
+    matrix taken from the rotations, the frequencies stopped converging at
+    0.009 to 0.027 % above the reference with 199 elements, since the
+    buckling load converged to ``P_e`` instead of Eq. (2-57).
     """
     L = 3
     E = 203.e9 # Pa
@@ -247,7 +258,7 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         load_mult = -eigvals
         Pcr = -load_mult[0]*load
         print('linear buckling Pcr=', Pcr, 'Pe=', Pe, 'Pcr_shear=', Pcr_shear)
-        assert np.isclose(Pcr, Pcr_shear, rtol=1e-3)
+        assert np.isclose(Pcr, Pcr_shear, rtol=5e-4)
 
         num_eigenvalues = 3
         # NOTE pyfe3d.solver.natural_frequency equilibrates the diagonal
@@ -259,7 +270,7 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         print('Timoshenko omega123 with pre-stress', omega123)
         print('Numerical omega123', omegan)
         print()
-        rtol = {0: 5e-3, 1: 1e-3}[mtype]
+        rtol = {0: 5e-3, 1: 5e-4}[mtype]
         assert np.allclose(omega123, omegan, rtol=rtol)
 
 if __name__ == '__main__':
