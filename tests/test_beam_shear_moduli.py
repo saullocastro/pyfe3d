@@ -14,7 +14,12 @@ Until they are set they follow ``G``: ``G12 = G13 = G`` and ``GJ = G*J``.
    differently, e.g. ``G12``, ``G13`` and ``GJ`` multiply separate terms of
    the torsional rows, where ``G`` was a common factor. On other platforms
    the compiler may contract products and sums differently, hence a
-   tolerance of round-off.
+   tolerance of round-off. The geometric and nonlinear arrays of BeamLR,
+   ``BeamLR_KGv``, ``BeamLR_KCNLv``, ``BeamLR_finte1`` and
+   ``BeamLR_fint1``, which do not depend on the shear moduli, were
+   rewritten with pyfe3d 0.12.0, whose BeamLR takes the slopes `v_{,x}`
+   and `w_{,x}` of these terms from the displacements instead of the
+   rotations.
 2. One element of BeamC gives the exact tip deflection of a cantilever with
    shear deformation, ``P*L**3/(3*E*I) + P*L/(G*A)``, Eq. (1.2) of Bathe,
    K. J., Finite Element Procedures, 2nd ed., 2014, Section 1.2, p. 5, in
@@ -128,7 +133,10 @@ def reference_arrays(prop):
     """Inputs and arrays of the three elements
 
     ``tests/data/beam_single_G_reference.npz`` was written with pyfe3d
-    0.10.x as ``np.savez(REFERENCE, **reference_arrays(general_prop()))``.
+    0.10.x as ``np.savez(REFERENCE, **reference_arrays(general_prop()))``;
+    its arrays ``BeamLR_KGv``, ``BeamLR_KCNLv``, ``BeamLR_finte1`` and
+    ``BeamLR_fint1`` were replaced by those of pyfe3d 0.12.0, see the
+    docstring of the module.
     """
     ncoords = np.array([0.1, -0.2, 0.05, 0.9, 0.35, -0.4])
     u = np.array([1.2e-3, -0.7e-3, 2.1e-3, 0.03, -0.02, 0.025,
