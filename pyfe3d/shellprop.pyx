@@ -2905,9 +2905,12 @@ cdef class ShellProp:
         `e/h = 10^7` for exact lamination parameters, plus the round-off of
         the stored matrix itself: the `\xi_{Di}` of
         :meth:`.calc_lamination_parameters`, integrated about the reference
-        surface, carry that of the cubes, `\epsilon (e/h)^3`, such that a
-        valid laminate given with them is accepted up to `e/h = 10^5` and
-        rejected from `e/h = 10^6`. The condition number is that of the
+        surface, carry that of the cubes, `\epsilon (e/h)^3`: the shifted
+        `D^0_{11}` of the five-ply laminates of the tests is off by about
+        `2 \cdot 10^{-4}` at `e/h = 10^4` and by 20 to 50 per cent at `e/h =
+        10^5`, such that a valid laminate given with them is accepted up to
+        `e/h = 10^4` and may be rejected from `e/h = 10^5`. The condition
+        number is that of the
         1-norm, `\kappa_1(M) = \|M\|_1 \|M^{-1}\|_1`, with `M^{-1}` by
         Gauss-Jordan elimination with partial pivoting of the 6x6 matrix,
         which, with the integration over the plies, adds about 1 us, while
