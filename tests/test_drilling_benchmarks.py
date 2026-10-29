@@ -373,8 +373,22 @@ def test_C2_twist_needs_two_elements_across_the_width():
         2                         0.03268       6.4e-9
         4                         0.03398       1.5e-9
 
+    The 1.9 % and 5.9 % from the reference 0.03208 with two and four
+    elements across are not mesh errors that refinement removes: the strip
+    converges to about 1.067 times 0.03208, 0.3 % above the Saint-Venant
+    twist, see the table of ``test_torsion_of_a_one_element_wide_strip`` in
+    ``test_quad4_spurious_shear_mode.py``. Following the policy of the tests
+    whose reference is not reached on the coarse mesh used, the twists are
+    compared with the values pre-determined by this same test on
+    2026-10-29, 0.032684006858721734 and 0.033975948654968564, with ``rtol =
+    1e-6`` for the round-off of the linear solution, whose condition
+    number is about 1e9 (eigmin/eigmax above; the same strip assembled in
+    ``test_quad4_spurious_shear_mode.py`` agrees within 1e-12), and with grade B of MacNeal and Harder (1985), p. 14, at most
+    10 %, against 0.03208 as a bound.
+
     """
     ref = MH_STRAIGHT_REF['twist']
+    predetermined = {2: 0.032684006858721734, 4: 0.033975948654968564}
     for drilling_model in (0, 1):
         bad = straight_cantilever('regular', 'twist', drilling_model, ny=1)
         assert bad > 100.*ref
@@ -387,7 +401,8 @@ def test_C2_twist_needs_two_elements_across_the_width():
             good = straight_cantilever('regular', 'twist', drilling_model,
                                        ny=ny)
             print('ny=%d twist %.5f, reference %.5f' % (ny, good, ref))
-            assert abs(good/ref - 1.) < 0.07
+            assert np.isclose(good, predetermined[ny], rtol=1e-6)
+            assert abs(good/ref - 1.) <= 0.10
 
 
 # ------------------------------------------------------------------- C3

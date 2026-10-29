@@ -31,7 +31,10 @@ Brockman (1987), see :mod:`pyfe3d.quad4r`. The transverse hourglass
 stiffness, ``0.10*E*h**3/(1 + 1/A)``, is ``0.94*0.1*E*h**3`` to
 ``0.1*E*h**3`` for the element areas ``A`` of the 64x64 to 8x8 meshes of the
 quarter, 16 to 1008 in the unit of length of the model, and it also stiffens
-the twist curvature, by about ``3*0.1 = 30 %``. The sensitivity of the roof
+a uniform twist, whose energy it increases by ``0.6*(1 + nu)/(1 + 1/A)``,
+78 % for these areas, see
+``test_constant_twist_patch_test_depends_on_the_length_unit`` in
+``tests/test_quad4r_hourglass_control.py``. The sensitivity of the roof
 to this stiffness, scaled with the ``hgfactor_w`` of Quad4R, is measured by
 :func:`test_hinged_roof_hourglass_sensitivity`, against Tria3DSG, which has
 no hourglass control, and against the shallow-shell Kirchhoff solution of
@@ -519,16 +522,54 @@ def limit_points(P, W, W_split):
 
 
 def test_hinged_roof_thick():
-    r"""Snap-through of the 12.7 thick roof with 16x16 Quad4R elements,
-    the mesh of Table 9a of Sze et al. (2004), and Crisfield's arc-length
-    method against that table
+    r"""Snap-through of the 12.7 thick roof with Quad4R elements and
+    Crisfield's arc-length method against Table 9a of Sze et al. (2004),
+    computed with 16x16 S4R elements on the quarter
 
-    The limit loads agree within 1 %, the load at a given deflection within
-    0.07 P_max along the path; pyfe3d is stiffer at the start of the path,
-    about 7 % at the first point of Table 9a, see
-    :func:`test_hinged_roof_hourglass_sensitivity`.
+    The path of :func:`run_hinged_roof` against the mesh, ``initialInc =
+    maxInc = 0.05``, measured on 2026-10-29: the limit loads, relative to
+    Table 9a, 0.7421 and 0.1729, the largest difference of the load at the
+    deflections of Table 9a, and the relative difference at its first
+    point, 0.0877 P_max (times with three such runs in parallel, the 8x8
+    time with one):
+
+    ============  ===============  ===============  ======  ======  =====
+    mesh          upper            lower            max dP  first   time
+    ============  ===============  ===============  ======  ======  =====
+    8x8 Quad4R    0.74702 (+0.7%)  0.17560 (+1.6%)  0.067   +9.1%     9 s
+    12x12         0.74626 (+0.6%)  0.17249 (-0.2%)  0.061   +7.8%    29 s
+    16x16         0.74596 (+0.5%)  0.17141 (-0.9%)  0.058   +7.3%    61 s
+    24x24         0.74572 (+0.5%)  0.17069 (-1.3%)  0.056   +6.9%   174 s
+    32x32         0.74562 (+0.5%)  0.17046 (-1.4%)  0.055   +6.7%   348 s
+    8x8 Tria3DSG  0.74253 (+0.1%)  0.17063 (-1.3%)  0.027   +3.4%    10 s
+    16x16         0.74198 (-0.0%)  0.16793 (-2.9%)  0.0087  +0.8%    49 s
+    32x32         0.74175 (-0.1%)  0.16691 (-3.5%)  0.016   -0.2%   331 s
+    ============  ===============  ===============  ======  ======  =====
+
+    (Tria3DSG: 2 x n x n elements.) The upper limit loads stay within 0.7 %
+    of Table 9a on every mesh, the lower ones within 1.6 % with Quad4R and
+    3.5 % with Tria3DSG; the 7 % excess stiffness of Quad4R at the start
+    of the path does not decrease with the mesh, it is that of the
+    transverse hourglass stiffness, which Tria3DSG does not have, see
+    :func:`test_hinged_roof_hourglass_sensitivity` and
+    ``test_constant_twist_patch_test_depends_on_the_length_unit`` in
+    ``tests/test_quad4r_hourglass_control.py``. Table 9a is itself a 16x16
+    S4R result, and the lower limit loads of both elements move away from it
+    with the mesh, in opposite directions.
+
+    Following the policy of the tests whose reference is reached only on
+    fine meshes, this test uses the 8x8 mesh and compares the two limit
+    loads, the largest difference along the path and the difference at the
+    first point with the values pre-determined by this same test with that
+    mesh, with ``rtol = 1e-4`` for the platform round-off (fixed arc-length
+    increments, each converged to ``relTOL = 1e-9``; two runs on one machine
+    are identical to the bit). The limit loads are also checked against
+    Table 9a with the tolerance of grade A of MacNeal and Harder (1985), see
+    :func:`test_hinged_roof_thin_snap_back`. Until 0.12.0 this test used
+    the 16x16 mesh, with the bounds 1 % on the limit loads and 0.07 P_max
+    along the path, close to the errors measured on that mesh.
     """
-    P, W = run_hinged_roof(n=16)
+    P, W = run_hinged_roof(n=8)
     P_calc = compare_with_table_9a(P, W)
     for (Pr, Wr), Pc in zip(TABLE_9A, P_calc):
         print('-W_C %7.3f  P/Pmax Sze et al. %.4f  pyfe3d %.4f'
@@ -538,41 +579,70 @@ def test_hinged_roof_thick():
           % (Pmax, Wmax, Pmin, Wmin))
     (Pmax_ref, _), (Pmin_ref, _) = limit_points(TABLE_9A[:, 0],
                                                 TABLE_9A[:, 1], 15.)
-    assert abs(Pmax - Pmax_ref) < 0.01*Pmax_ref
-    assert abs(Pmin - Pmin_ref) < 0.01*Pmin_ref
-    assert np.abs(P_calc - TABLE_9A[:, 0]).max() < 0.07
-    assert 0.05 < P_calc[0]/TABLE_9A[0, 0] - 1 < 0.12
+    dP = np.abs(P_calc - TABLE_9A[:, 0]).max()
+    first = P_calc[0]/TABLE_9A[0, 0] - 1
+    # NOTE values pre-determined with the 8x8 mesh, see the docstring
+    assert np.isclose(Pmax, 0.7470211049151955, rtol=1e-4)
+    assert np.isclose(Pmin, 0.17560440909786681, rtol=1e-4)
+    assert np.isclose(dP, 0.06694745352628229, rtol=1e-4)
+    assert np.isclose(first, 0.09098140962723611, rtol=1e-4)
+    # NOTE grade A against Table 9a
+    assert abs(Pmax/Pmax_ref - 1) <= 0.02
+    assert abs(Pmin/Pmin_ref - 1) <= 0.02
 
 
 @functools.lru_cache(maxsize=None)
 def thin_roof_path():
-    r"""Path of the 6.35 thick roof with 24x24 Quad4R elements on the
-    quarter, the mesh of Table 9d of Sze et al. (2004), up to ``1.1*P_max``,
-    computed once for the tests that use it"""
-    return run_hinged_roof(n=24, h=6.35, load_factor=1.1, initialInc=0.075,
+    r"""Path of the 6.35 thick roof with 8x8 Quad4R elements on the quarter
+    up to ``1.1*P_max``, ``initialInc = maxInc = 0.075``, computed once for
+    the tests that use it
+
+    The mesh of Table 9d of Sze et al. (2004) is 24x24; the convergence
+    from 8x8 to 48x48 is in :func:`test_hinged_roof_thin_snap_back`.
+    """
+    return run_hinged_roof(n=8, h=6.35, load_factor=1.1, initialInc=0.075,
                            maxInc=0.075)
 
 
 def test_hinged_roof_thin_snap_back():
-    r"""Snap-through and snap-back of the 6.35 thick roof with 24x24 Quad4R
-    elements, the mesh of Table 9d of Sze et al. (2004), and Crisfield's
-    arc-length method against that table
+    r"""Snap-through and snap-back of the 6.35 thick roof with Quad4R
+    elements and Crisfield's arc-length method against Table 9d of Sze et
+    al. (2004), computed with 24x24 S4R elements on the quarter
 
-    The path turns back in ``-W_C`` twice. The tolerance of the upper limit
-    load is grade A of MacNeal, R. H. and Harder, R. L., A proposed standard
-    set of problems to test finite element accuracy, Finite Elements in
-    Analysis and Design, 1(1), 3-20, 1985,
-    https://doi.org/10.1016/0168-874X(85)90003-4, p. 14: a normalised error
-    within 2 %.
+    The path turns back in ``-W_C`` twice. Limit loads of the path of
+    :func:`thin_roof_path` against the mesh, ``initialInc = maxInc =
+    0.075``, Quad4R with its default hourglass control, measured on
+    2026-10-29 (times with four such runs in parallel, except 8x8, alone):
 
-    Measured upper limit load P/P_max, sampled with ``initialInc = maxInc =
-    0.05``: 16x16 0.1945, 24x24 0.1939, 32x32 0.1938, 48x48 0.1937; with
-    the 24x24 mesh and 0.02, 0.075 (this test) and 0.1: 0.1944, 0.1944 and
-    0.1939; Table 9d 0.1953, -0.5 to -0.7 %. The lower limit load of the
-    same paths: -0.1442, -0.1433, -0.1429 and -0.1429, and -0.1439, -0.1440
-    and -0.1421, converged within 0.001 P_max with the mesh, against -0.1288
-    in Table 9d, 11 % lower, see
-    :func:`test_hinged_roof_thin_lower_limit_load`.
+    =====  ===============  =================  =====
+    mesh   upper, P/P_max   lower, P/P_max     time
+    =====  ===============  =================  =====
+    8x8    0.19827 (+1.5%)  -0.14370 (+11.6%)  5 s
+    12x12  0.19584 (+0.3%)  -0.14371 (+11.6%)  18 s
+    16x16  0.19499 (-0.2%)  -0.14397 (+11.8%)  36 s
+    24x24  0.19438 (-0.5%)  -0.14397 (+11.8%)  90 s
+    32x32  0.19417 (-0.6%)  -0.14383 (+11.7%)  315 s
+    48x48  0.19401 (-0.7%)  -0.14347 (+11.4%)  549 s
+    =====  ===============  =================  =====
+
+    the percentages relative to Table 9d, 0.1953 and -0.1288 (a positive
+    one for the lower limit load means a more negative load). The upper
+    limit load converges to 0.7 % below Table 9d; the lower limit load does
+    not converge to it, see :func:`test_hinged_roof_thin_lower_limit_load`.
+
+    Following the policy of the tests whose reference is reached only on
+    fine meshes, this test uses the 8x8 mesh and compares its limit loads
+    with the values pre-determined by this same test with that mesh,
+    0.19827203422512588 and -0.14370365340520463, with ``rtol = 1e-4`` for
+    the platform round-off (the path is sampled at fixed arc-length
+    increments and each increment converges to ``relTOL = 1e-9``; two runs
+    on one machine are identical to the bit). The upper limit load is also
+    checked against Table 9d with the tolerance of grade A of MacNeal, R. H.
+    and Harder, R. L., A proposed standard set of problems to test finite
+    element accuracy, Finite Elements in Analysis and Design, 1(1), 3-20,
+    1985, https://doi.org/10.1016/0168-874X(85)90003-4, p. 14: a normalised
+    error within 2 %. Until 0.12.0 this test used the 24x24 mesh, about 23
+    s.
     """
     P, W = thin_roof_path()
     assert np.isclose(P[-1], 1.1)
@@ -585,30 +655,57 @@ def test_hinged_roof_thin_snap_back():
     Pmin_ref = TABLE_9D[:, 0].min()
     print('limit loads: P/Pmax %.4f, %.4f; Table 9d: %.4f, %.4f'
           % (Pmax, Pmin, Pmax_ref, Pmin_ref))
+    # NOTE values pre-determined with the 8x8 mesh, see the docstring
+    assert np.isclose(Pmax, 0.19827203422512588, rtol=1e-4)
+    assert np.isclose(Pmin, -0.14370365340520463, rtol=1e-4)
+    # NOTE grade A against Table 9d
     assert abs(Pmax/Pmax_ref - 1) <= 0.02
     # NOTE the lower limit load is negative, the roof snaps back
     assert Pmin < 0
 
 
 @pytest.mark.xfail(strict=True, reason='the default transverse hourglass '
-                   'stiffness of Quad4R makes the lower limit load of the '
-                   'thin roof 11 % lower than Table 9d of Sze et al. (2004)')
+                   'stiffness of Quad4R stiffens a uniform twist, the lower '
+                   'limit load of the thin roof converges to a value 11 % '
+                   'lower than Table 9d of Sze et al. (2004)')
 def test_hinged_roof_thin_lower_limit_load():
-    r"""Lower limit load of the 6.35 thick roof with 24x24 Quad4R elements
-    against Table 9d of Sze et al. (2004), with the tolerance of grade A of
-    MacNeal and Harder (1985), see :func:`test_hinged_roof_thin_snap_back`
+    r"""Lower limit load of the 6.35 thick roof with the Quad4R elements of
+    :func:`thin_roof_path` against Table 9d of Sze et al. (2004), with the
+    tolerance of grade A of MacNeal and Harder (1985), see
+    :func:`test_hinged_roof_thin_snap_back`
 
-    Known discrepancy, an expected failure: Quad4R with its default
-    hourglass control gives -0.1440 P_max, converged with the mesh within
-    0.001 P_max (16x16 to 48x48 elements), against -0.1288 in Table 9d, 11 %
-    lower (grade C). With the 24x24 mesh and arc-length increments of
-    0.05, the transverse hourglass stiffness of Quad4R multiplied by 0.1
-    (``hgfactor_w = 0.1``) gives the limit loads 0.1951 and -0.1298
-    P_max, and 2x24x24 Tria3DSG elements, without hourglass control, 0.1952
-    and -0.1281, within 0.1 % and 0.8 % of Table 9d: the discrepancy is that
-    of the hourglass stiffness, see
-    :func:`test_hinged_roof_hourglass_sensitivity`, not of the arc-length
-    method nor of the von Karman strains.
+    Known discrepancy of the element, an expected failure, not one of the
+    mesh: Quad4R with its default hourglass control gives -0.1437 to
+    -0.1440 P_max with 8x8 to 48x48 elements on the quarter, 11.4 to 11.8 %
+    below -0.1288 of Table 9d, without approaching it, see the table of
+    :func:`test_hinged_roof_thin_snap_back`. The same paths, measured on
+    2026-10-29:
+
+    =========================  =======  =======  =======  =======  =======
+    lower limit load, P/P_max  8x8      16x16    24x24    32x32    48x48
+    =========================  =======  =======  =======  =======  =======
+    2 x n x n Tria3DSG         -.12915  -.12918  -.12914  -.12902  -.12879
+    Quad4R, hgfactor_w = 1     -.14370  -.14397  -.14397  -.14383  -.14347
+    =========================  =======  =======  =======  =======  =======
+
+    and with the 24x24 mesh Quad4R gives -0.13084, -0.12931 and -0.12915
+    with ``hgfactor_w`` = 0.1, 0.01 and 0.001; the upper limit loads stay
+    within 0.5 % of Table 9d. Tria3DSG, which has no hourglass control,
+    agrees with Table 9d within 0.3 % on every mesh. The default transverse
+    hourglass stiffness of Quad4R, ``0.1*E*h**3/(1 + 1/A)`` with element
+    areas ``A`` of 16 to 1008 in the unit of length of the model, adds 73
+    to 78 % to the energy of a uniform twist whatever the mesh, see
+    ``test_constant_twist_patch_test_depends_on_the_length_unit`` in
+    ``tests/test_quad4r_hourglass_control.py``: a failure of the
+    constant-twist patch test, of the formulation, which refinement does not
+    remove. Removing the stabilisation does not cure it either: with the
+    lengths of the model in a unit 1000 times larger (``E`` divided by
+    ``10**6``), where Brockman's factor makes the transverse hourglass
+    stiffness vanish under refinement, Quad4R gives -0.12585, -0.12587,
+    -0.12595, -0.12603 and -0.12614 with 12x12 to 48x48 elements, 2.1 to
+    2.3 % above (less negative than) Table 9d, and the upper limit loads 0.1937 to 0.1924, 0.8 to
+    1.5 % below it. The arc-length method and the von Karman strains are
+    not the cause, Tria3DSG with the same ones agreeing with Table 9d.
     """
     P, W = thin_roof_path()
     Pmin = P.min()
@@ -620,35 +717,74 @@ def test_hinged_roof_thin_lower_limit_load():
 def test_hinged_roof_hourglass_sensitivity():
     r"""Linear deflection ``-W_C`` of the 12.7 thick roof under ``P_max``
     against the transverse hourglass stiffness of Quad4R, ``hgfactor_w``
-    times the default, with 32x32 meshes
+    times the default, with 16x16 meshes
 
     The deflection grows monotonically as ``hgfactor_w`` decreases from 1 to
     0.002, and with the default the Quad4R mesh is more than 5 % stiffer
     than the Tria3DSG mesh, which has no hourglass control. With the
     transverse shear stiffnesses multiplied by 100, close to the Kirchhoff
-    theory, Tria3DSG agrees within 0.5 % with the shallow-shell Kirchhoff
-    solution of :func:`ritz_roof_WC`, converged within 0.02 %, Quad4R with
-    the default is more than 5 % stiffer and approaches it as
-    ``hgfactor_w`` decreases. The values of ``hgfactor_w`` measure the
-    sensitivity of this problem; they are not recommendations.
+    theory, Tria3DSG converges to the shallow-shell Kirchhoff solution of
+    :func:`ritz_roof_WC`, itself converged within 0.01 % (7.47913 and
+    7.47981 with ``m = 15`` and 20), Quad4R with the default is more than
+    5 % stiffer and approaches it as ``hgfactor_w`` decreases. The values of
+    ``hgfactor_w`` measure the sensitivity of this problem; they are not
+    recommendations. Measured on 2026-10-29, relative to the Ritz solution
+    with ``m = 20``, transverse shear x100 (time of all ten meshes of a row,
+    with ``OMP_NUM_THREADS=1`` on a loaded machine):
+
+    =====  ========  ===============  ===============  ======
+    mesh   Tria3DSG  Quad4R, default  Quad4R, 0.002    time
+    =====  ========  ===============  ===============  ======
+    16x16  -1.07 %   -6.95 %          -0.94 %           1.1 s
+    32x32  -0.23 %   -6.35 %          -0.23 %           7.7 s
+    64x64  -0.005 %  -5.95 %          +0.006 %         51.7 s
+    =====  ========  ===============  ===============  ======
+
+    and with the actual transverse shear stiffness Tria3DSG is 6.4, 6.9 and
+    7.1 % more flexible than Quad4R with the default. The error of
+    Tria3DSG and of Quad4R with ``hgfactor_w = 0.002`` is one of the mesh,
+    that of Quad4R with the default is not: its stabilisation stiffens a
+    uniform twist by 73 to 78 % whatever the mesh, see
+    ``test_constant_twist_patch_test_depends_on_the_length_unit`` in
+    ``tests/test_quad4r_hourglass_control.py``, the excess decreasing only
+    with Brockman's factor ``1/(1 + 1/A)``, from 1.0 to 0.94.
+
+    Following the policy of the tests whose reference is reached only on
+    fine meshes, this test uses the 16x16 meshes and compares the ten
+    deflections with the values pre-determined by this same test with these
+    meshes, with ``rtol = 1e-6`` for the round-off of the sparse linear
+    solution, and Tria3DSG and Quad4R with ``hgfactor_w = 0.002`` with the
+    Ritz solution with grade A of MacNeal and Harder (1985), see
+    :func:`test_hinged_roof_thin_snap_back`. Until 0.12.0 it used the 32x32
+    meshes, with the bound 0.5 % against the Ritz solution.
     """
     W_ritz = [ritz_roof_WC(m) for m in (15, 20)]
     hgs = [1., 0.1, 0.01, 0.002]
-    W_tria = linear_roof_WC(32, element='Tria3DSG')
-    W_quad = [linear_roof_WC(32, hgfactor_w=hg) for hg in hgs]
-    W_tria_K = linear_roof_WC(32, element='Tria3DSG', shear_factor=100.)
-    W_quad_K = [linear_roof_WC(32, hgfactor_w=hg, shear_factor=100.)
+    W_tria = linear_roof_WC(16, element='Tria3DSG')
+    W_quad = [linear_roof_WC(16, hgfactor_w=hg) for hg in hgs]
+    W_tria_K = linear_roof_WC(16, element='Tria3DSG', shear_factor=100.)
+    W_quad_K = [linear_roof_WC(16, hgfactor_w=hg, shear_factor=100.)
                 for hg in hgs]
     print('-W_C, Ritz Kirchhoff: %.4f (m = 15), %.4f (m = 20)' % tuple(W_ritz))
-    print('-W_C, 32x32 Tria3DSG: %.4f; transverse shear x100: %.4f'
+    print('-W_C, 16x16 Tria3DSG: %.4f; transverse shear x100: %.4f'
           % (W_tria, W_tria_K))
     for hg, W, W_K in zip(hgs, W_quad, W_quad_K):
-        print('-W_C, 32x32 Quad4R, hgfactor_w = %g: %.4f; transverse shear '
+        print('-W_C, 16x16 Quad4R, hgfactor_w = %g: %.4f; transverse shear '
               'x100: %.4f' % (hg, W, W_K))
+    # NOTE values pre-determined with the 16x16 meshes, see the docstring:
+    #      Tria3DSG, Quad4R with hgfactor_w = 1, 0.1, 0.01 and 0.002, with
+    #      the actual transverse shear stiffness and with it x100
+    predetermined = [7.547952062067695, 7.094869252662951,
+                     7.5542910759577815, 7.649407714713757, 7.682508933476745,
+                     7.399604085019292, 6.9602087955649985, 7.356167040731915,
+                     7.405048893094332, 7.409499724390926]
+    np.testing.assert_allclose([W_tria] + W_quad + [W_tria_K] + W_quad_K,
+                               predetermined, rtol=1e-6)
     assert abs(W_ritz[0]/W_ritz[1] - 1) < 2e-4
     assert np.all(np.diff(W_quad) > 0)
     assert np.all(np.diff(W_quad_K) > 0)
     assert W_tria/W_quad[0] - 1 > 0.05
-    assert abs(W_tria_K/W_ritz[1] - 1) < 0.005
     assert 1 - W_quad_K[0]/W_ritz[1] > 0.05
-    assert abs(W_quad_K[-1]/W_ritz[1] - 1) < 0.005
+    # NOTE grade A against the Ritz solution
+    assert abs(W_tria_K/W_ritz[1] - 1) <= 0.02
+    assert abs(W_quad_K[-1]/W_ritz[1] - 1) <= 0.02

@@ -192,8 +192,15 @@ a deliberate limitation rather than an oversight. The hourglass operator
 cannot distinguish the spurious pattern `w = xy` with
 `\theta_x = \theta_y = 0` from a legitimate twist curvature, since both
 give `\gamma^\top w = \partial^2 w/\partial x \partial y`. The stabilisation
-therefore also stiffens real twist, by the ratio
-`3 E^{(h)}_w/(E t^3)`, and the amount that is acceptable is a property of
+therefore also stiffens real twist: it adds to the energy of a uniform
+twist the fraction `E^{(h)}_w/(4 D_{66}) = 6 (1 + \nu) E^{(h)}_w/(E t^3)` of
+an isotropic plate, `0.6 (1 + \nu)/(1 + 1/A)` with the default, 0.78 for
+`\nu = 0.3` and `A \gg 1`. That fraction does not depend on the mesh
+except through `A`: the element fails the constant-twist patch test by a
+fixed amount wherever the element areas are large in the unit of length of
+the model, and passes it under refinement only where they are small, see
+``test_constant_twist_patch_test_depends_on_the_length_unit``. The amount
+that is acceptable is a property of
 the problem rather than of the element. Measured on this element's own
 benchmarks, as a multiple of `E t^3`: the simply supported plate of
 ``test_quad4r_linear_buckling_plate_given_stress.py``, `b/t = 250`,
@@ -211,7 +218,12 @@ the thin plates `2.4 \times 10^{-4}` (30x14) and `2.5 \times 10^{-5}`
 its model, only `1.67 \times 10^{-2}`: with one element across its width
 the strip remains 4.77 times too flexible, grade F of MacNeal and Harder,
 and needs at least two elements across, see
-``test_transverse_coefficient_has_no_unit_invariant_constant``.
+``test_transverse_coefficient_has_no_unit_invariant_constant``. That is a
+limitation of the one-element-wide mesh, not of the element: with two or
+more elements across, the twist of the strip converges under refinement to
+the same value, about 1.067 times the reference of MacNeal and Harder, with
+`10^{-2}` times the default coefficient, with the default, and with
+:class:`.Quad4`, the element areas of that model being small in its unit.
 
 So the residual unit dependence of this element's hourglass control is
 confined to `E^{(h)}_w`, it is documented, and it is measured in
@@ -227,7 +239,16 @@ of the model, the default `E^{(h)}_w` is then `0.94` to `1.0` times
 6 to 7 % smaller than with :class:`.Tria3DSG`, which has no hourglass
 control, and, with the transverse shear stiffness multiplied by 100, than
 with a shallow-shell Kirchhoff solution. Smaller values of ``hgfactor_w``
-approach both.
+approach both. The lower limit load of the thinner roof, `t = 6.35`,
+converges with the default to -0.1435 to -0.1440 `P_{max}` (8x8 to 48x48
+elements on the quarter), 11.4 to 11.8 % below the -0.1288 of Sze et
+al., whereas :class:`.Tria3DSG` agrees with it within 0.3 % on every mesh
+and ``hgfactor_w = 0.001`` within 0.3 % with 24x24 elements: an error of
+the formulation, the constant-twist patch test above, that refinement does
+not remove, see ``test_hinged_roof_thin_lower_limit_load``. With the model
+written in a unit of length 1000 times larger, where the default
+coefficient vanishes under refinement, the same lower limit load converges
+to about 2 % above the reference instead.
 These measurements show the sensitivity of one problem and do not recommend
 another value: the default follows the references above, and a different
 default would need further studies.
