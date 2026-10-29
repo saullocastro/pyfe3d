@@ -49,9 +49,11 @@ method of Bletzinger, Bischoff and Ramm (2000) [1]_.
 :class:`pyfe3d.tria3r.Tria3R` takes its transverse shear from a single point
 at the centroid, which still locks, and cures the locking by dividing the
 transverse shear stiffnesses by `1 + \alpha \ell^2/h^2` with
-`\alpha = 0.7`, following Lyly, Stenberg and Vihinen (1993) [2]_. That works for
-plate bending, where the error it introduces is `O(1/n^2)` in the number of
-elements per span, but it leaves the element unable to reproduce a state of
+`\alpha = 0.7`, following Lyly, Stenberg and Vihinen (1993) [2]_. On a thin
+plate the error that remains stalls under refinement at a value set by
+`\alpha`, -14 per cent on the deflection of a simply supported plate with
+`a/h = 1000`, see the Notes of :mod:`pyfe3d.tria3r`, and the factor leaves
+the element unable to reproduce a state of
 constant transverse shear: measured on an 8 by 8 patch, its stiffness
 against a transverse displacement field with all rotations at zero is
 `3 \times 10^{-1}`, `2 \times 10^{-2}` and `1 \times 10^{-3}` of the
