@@ -666,9 +666,12 @@ def test_transverse_shear_stays_out_of_the_nonlinear_terms():
 #      and that is exactly why the two tests below had to be added: they
 #      cover the only part of this element that an isotropic plate cannot
 #      exercise. See test_material_direction_matches_tria3r.
+#      Stacking of cylinder Z22 and material Geier1997 of Castro et al.,
+#      Composite Structures, 118, 303-315, 2014, Tables 3 and 4, p. 307,
+#      with G23 set equal to G12 = G13 instead of 3.400 GPa.
 UNSYM_STACK = [+49, -49, +36, -36, 0, 0]
 UNSYM_PLYT = 0.125e-3
-UNSYM_LAMINAPROP = (123.55e9, 8.708e9, 0.319, 5.595e9, 5.595e9, 5.595e9)
+UNSYM_LAMINAPROP = (123.55e9, 8.708e9, 0.319, 5.695e9, 5.695e9, 5.695e9)
 
 
 def unsymmetric_prop():
