@@ -37,7 +37,10 @@ displacement field has no drilling enrichment; for problems dominated by
 in-plane bending, :class:`pyfe3d.tria3r.Tria3R` and :class:`pyfe3d.quad4.Quad4`
 carry one. Since version 0.12.0 :class:`pyfe3d.tria3r.Tria3R` takes, by
 default, the transverse shear field of this element, so the two triangles
-differ only in the membrane and drilling terms, see :mod:`pyfe3d.tria3r`. Geometrically nonlinear analyses with the von Karman membrane
+differ only in the membrane and drilling terms, see :mod:`pyfe3d.tria3r`.
+With its enriched membrane :class:`pyfe3d.tria3r.Tria3R` is the recommended
+triangle; this element is the better choice on a coarse mesh of a doubly
+curved shell, where it is the less stiff of the two. Geometrically nonlinear analyses with the von Karman membrane
 strains are supported by :meth:`.Tria3DSG.update_fint` with ``nonlinear=1``,
 :meth:`.Tria3DSG.update_KCNL` and :meth:`.Tria3DSG.update_KG`.
 
