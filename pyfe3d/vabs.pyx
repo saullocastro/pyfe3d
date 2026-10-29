@@ -96,6 +96,7 @@ from libc.math cimport sqrt, sin, cos
 
 import numpy as np
 from scipy.sparse import coo_matrix, bmat
+from scipy.sparse.csgraph import connected_components
 from scipy.sparse.linalg import splu
 
 from .beamprop cimport BeamProp
@@ -1204,8 +1205,8 @@ cdef class CrossSection:
             a non-positive Jacobian determinant, e.g. when its nodes are
             numbered clockwise.
         RuntimeError
-            If the constrained warping problem is singular, e.g. for a mesh
-            that is not connected.
+            If the mesh is not connected, or if the constrained warping
+            problem is otherwise singular.
 
         Notes
         -----
@@ -1339,14 +1340,25 @@ cdef class CrossSection:
             icons = 1
         else:
             raise ValueError("constraint must be 'yu2012' or 'yu2002'")
+        # NOTE a mesh that is not connected makes the constrained warping
+        #      problem singular, but the factorization reports it only when
+        #      a pivot rounds to exactly zero, which depends on the platform
+        first = np.repeat(self.conn[:, 0], self.nen)
+        nodes = np.concatenate([self.conn[e, :self.nen[e]]
+                                for e in range(self.nen.shape[0])])
+        nnodes = self.x2.shape[0]
+        adj = coo_matrix((np.ones(nodes.shape[0]), (first, nodes)),
+                         shape=(nnodes, nnodes))
+        if connected_components(adj, directed=False)[0] > 1:
+            raise RuntimeError('the mesh is not connected')
         Dhh, Dhl, Dll, Dheps, Dleps, Dc, Depseps, _ = self._assemble(icons)
         Dcs = coo_matrix(Dc).tocsc()
         Kaug = bmat([[Dhh, Dcs], [Dcs.T, None]], format='csc')
         try:
             lu = splu(Kaug)
         except RuntimeError as err:
-            raise RuntimeError('the constrained warping problem is singular, '
-                               'check that the mesh is connected') from err
+            raise RuntimeError('the constrained warping problem is '
+                               'singular') from err
         nc = 4
         rhs = np.zeros((self.ndof + nc, 4), dtype=DOUBLE)
         # NOTE classical warping

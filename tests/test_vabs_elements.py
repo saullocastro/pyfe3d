@@ -220,7 +220,7 @@ def test_input_errors():
     x2d = np.concatenate((x2, x2 + 2))
     x3d = np.concatenate((x3, x3))
     sec = CrossSection(x2d, x3d, [[0, 1, 2, 3], [4, 5, 6, 7]], [D], [0, 0])
-    with pytest.raises(RuntimeError):
+    with pytest.raises(RuntimeError, match='not connected'):
         sec.calc_stiffness()
 
 
