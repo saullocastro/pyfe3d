@@ -220,6 +220,15 @@ local bending and the shear strains of the faces that Allen neglects:
 .. literalinclude:: ../../tests/test_shellprop_transverse_shear.py
     :pyobject: test_sandwich_antiplane_core_converges_to_allen_1969
 
+Rohwer (1988), Sec. 4.3, also gives the stiffnesses of a sandwich panel,
+Table 4, p. 23, which are not used as a test: its transverse shear
+stiffnesses are reproduced only with a foam shear modulus of 0.04 kN/mm\ :sup:`2`,
+i.e. `\nu = 0.25` instead of the stated 0.3, and its bending stiffnesses
+contradict the stated lay-up, since the ratio `(D_{11} - D_{22})/D_{16}`,
+which depends on the positions of the layers alone, is 4.216 for the lay-up
+of his Fig. 9 against 4.71 from the printed values. The details are in the
+comments of ``tests/test_shellprop_transverse_shear.py``.
+
 Allen, H. G., Analysis and Design of Structural Sandwich Panels, Pergamon
 Press, 1969, Chap. 2,
 `doi:10.1016/B978-0-08-012870-2.50006-7

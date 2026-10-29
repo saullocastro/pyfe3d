@@ -34,6 +34,46 @@ ROHWER_1988_TABLE_2 = dict(Abar='3.450', Abarbar='3.067', A55='2.313',
                            A44='2.521')
 
 
+# NOTE Rohwer (1988), Sec. 4.3, pp. 22-23, gives a second example, the
+#      sandwich solar panel of Fig. 9, p. 22: faces of four CFRP layers of
+#      0.125 mm, [0,90,+45,-45] on top and [-45,+45,90,0] at the bottom, the
+#      -45 layers adhered to the core, a foam core of 9 mm with E = 0.1
+#      kN/mm^2 and nu = 0.3 (Table 3, p. 22), and the CFRP of Table 1. Its
+#      stiffnesses, Table 4, p. 23, are not used as a test, because they
+#      cannot be reproduced from these data and are not consistent with the
+#      stated lay-up:
+#      - the transverse shear stiffnesses, H11 = 0.416, H12 = 0.008 and
+#        H22 = 0.403 kN/mm, depend on the foam only through its shear
+#        modulus; with nu = 0.3, G = 0.0385 kN/mm^2, Eq. (43) gives 0.400,
+#        0.008 and 0.387; all three round to the printed values for G
+#        between 0.03999 and 0.04005 kN/mm^2, i.e. nu = 0.25 with E = 0.1,
+#        which is the suspected value of the computation;
+#      - D13 = D23 = 9.36 kNmm, the bending-twisting couplings, written D16
+#        and D26 in pyfe3d, are reproduced, 9.3573, but D11 = 1366.08, D12
+#        = 395.09 and D22 = 1321.97 kNmm are not, +0.12, +0.62 and +0.47 per
+#        cent with nu = 0.3 and nearly the same with nu = 0.25;
+#      - the printed bending entries contradict each other for this lay-up:
+#        for any ply material, the +-45 layers and the isotropic core add the
+#        same amount to D11 and D22 and Qbar16 = +-(Q11 - Q22)/4 at +-45
+#        degrees, such that (D11 - D22)/D13 = 4 (I0 - I90)/(I+45 - I-45),
+#        with I the integral of z^2 over the layers of each angle, a number
+#        given by the layer positions alone: 4.2162 for Fig. 9, against
+#        4.709 to 4.716 from the printed values within half a unit of their
+#        last digits. No change of the material constants, of the foam or of
+#        the CFRP, can reproduce Table 4; its bending entries were computed
+#        for layer positions, or a lay-up, other than those of Fig. 9, or
+#        are misprinted. A search over all orderings of the face layers and
+#        over the material constants and thicknesses found no single
+#        correction of the data that reproduces the whole table.
+#      The only other publication of this panel found is by the same author,
+#      Rohwer, K., "Improved transverse shear stiffnesses for anisotropic
+#      sandwich plates and shells", Sandwich Constructions 2, Vol. 1, EMAS,
+#      1992, pp. 465-484, not available here. The sandwich case is tested
+#      instead against Vlachoutsis (1992) and Allen (1969), see
+#      test_sandwich_vlachoutsis_1992_reference_values and
+#      test_sandwich_antiplane_core_converges_to_allen_1969.
+
+
 def assert_printed(value, printed, rtol=None):
     r"""Assert that ``value`` agrees with the number ``printed`` in a paper
 
