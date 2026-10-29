@@ -885,9 +885,10 @@ cdef class Tria3R:
           shear: a numerical mechanism rather than a physical mode. At
           `\alpha = 0.1` the physical eight-wave mode is critical
           instead, and there this element agrees with the
-          quadrilateral and with the discrete shear gap triangle to
-          3 per cent, 2.520 against 2.453 and 2.534 times the reference
-          load, all three overpredicting at so coarse a mesh.
+          quadrilateral to 4 per cent and with the discrete shear gap
+          triangle to 1 per cent, 2.520 against 2.613 and 2.534 times
+          the reference load, all three overpredicting at so coarse a
+          mesh.
 
         So on a thin shell in buckling the default is not merely
         inaccurate, it can change which mode is critical, and a
