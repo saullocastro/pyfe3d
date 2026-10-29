@@ -29,8 +29,10 @@ integration scheme for the :class:`.Quad4R` element, with a single point at
 the centroid, making it very efficient concerning the time needed to
 calculate the internal forces and stiffness matrices, in comparison with the
 :class:`.Quad4` element. An hourglass control adds an artificial
-stiffness to `u`, `v`, `w`, `r_x` and `r_y`, whose magnitude can be scaled
-with the ``hgfactor_*`` parameters of :meth:`.Quad4R.update_KC0`,
+stiffness to `u`, `v`, `r_x` and `r_y`, and the transverse shear, that of
+Belytschko and Leviathan (1994), controls the hourglass mode of `w` with
+the physical stabilisation of its nonconstant part; their magnitudes can be
+scaled with the ``hgfactor_*`` parameters of :meth:`.Quad4R.update_KC0`,
 :meth:`.Quad4R.update_probe_finte` and :meth:`.Quad4R.update_fint`.
 
 The drilling rotation `r_z` is tied to the in-plane rotation of the membrane
@@ -92,7 +94,8 @@ gradients can be constant over the element when the element is rectangular.
 
 In the reduced integration scheme used, a single point at the centroid
 (`\xi=\eta=0`) and weight `w_{ij}=4`, preventing shear locking.
-The hourglass control is used according to Brockman 1987 [1]_, with the
+The hourglass control of `u`, `v`, `r_x` and `r_y` is used according to
+Brockman 1987 [1]_, with the
 orthogonalised hourglass operator of his Eq. (14), which he quotes from
 Belytschko and Tsay 1983 [2]_. Brockman considers only isotropic plates,
 and his generalized stiffnesses contain the Young's modulus `E`, times `t`
@@ -101,8 +104,8 @@ rotations. For a laminate, `E` is replaced by equivalent moduli in the
 element coordinate system, see :meth:`.Quad4R.update_KC0`: the membrane
 moduli `E_{1eq}` and `E_{2eq}` of the extensional compliance `\boldsymbol{A}^{-1}` for
 `u` and `v`, and the bending moduli `E_{1b}` and `E_{2b}` of the bending
-compliance, the lower-right block of `[[A, B], [B, D]]^{-1}`, for `w`,
-`r_x` and `r_y`. Each is the modulus of the homogeneous plate that has the
+compliance, the lower-right block of `[[A, B], [B, D]]^{-1}`, for `r_x`
+and `r_y`. Each is the modulus of the homogeneous plate that has the
 compliance of the laminate in that direction, so both pairs reduce to `E`
 for an isotropic plate, and they differ for a laminate whose bending
 stiffness is not `t^2/12` times its extensional stiffness, e.g. a cross-ply
@@ -115,7 +118,7 @@ laminate as for an isotropic plate. On simply supported plates under
 uniform pressure, with 8 by 8 elements, the centre deflection of an
 unsymmetric `[0/90]` cross-ply, whose `\boldsymbol{B}` gives `E_{1b} = 0.36
 E_{1eq}`, is 15 % smaller than the Navier solution of the FSDT, against
-32 % with the membrane moduli for the rotations, used before 0.11.0, which
+31 % with the membrane moduli for the rotations, used before 0.11.0, which
 over-stabilised it; that of a sandwich with thin faces, `E_{1b} = 2.7
 E_{1eq}`, is 14 % smaller, against 6 %, the membrane moduli having
 under-stabilised it; see ``test_laminated_plates_against_navier`` in
@@ -161,8 +164,9 @@ supplying it in a unit that makes them large. The switch happens at
 dimensions", and reports good behaviour "over a range of six orders of
 magnitude in the planform dimension".
 
-This element replaces the factor by the area itself wherever doing so costs
-nothing, which is four of the five coefficients:
+This element replaces the factor by the area itself in the four
+coefficients it uses, the transverse displacement `w` being controlled by
+the transverse shear, see below:
 
 .. math::
 
@@ -187,71 +191,66 @@ whose response legitimately contains hourglass components, is reproduced to
 twelve significant figures over nine orders of magnitude of length unit,
 where before it drifted at the metre and collapsed at the kilometre.
 
-The transverse coefficient `E^{(h)}_w` keeps Brockman's factor, and this is
-a deliberate limitation rather than an oversight. The hourglass operator
-cannot distinguish the spurious pattern `w = xy` with
-`\theta_x = \theta_y = 0` from a legitimate twist curvature, since both
-give `\gamma^\top w = \partial^2 w/\partial x \partial y`. The stabilisation
-therefore also stiffens real twist: it adds to the energy of a uniform
-twist the fraction `E^{(h)}_w/(4 D_{66}) = 6 (1 + \nu) E^{(h)}_w/(E t^3)` of
-an isotropic plate, `0.6 (1 + \nu)/(1 + 1/A)` with the default, 0.78 for
-`\nu = 0.3` and `A \gg 1`. That fraction does not depend on the mesh
-except through `A`: the element fails the constant-twist patch test by a
-fixed amount wherever the element areas are large in the unit of length of
-the model, and passes it under refinement only where they are small, see
-``test_constant_twist_patch_test_depends_on_the_length_unit``. The amount
-that is acceptable is a property of
-the problem rather than of the element. Measured on this element's own
-benchmarks, as a multiple of `E t^3`: the simply supported plate of
-``test_quad4r_linear_buckling_plate_given_stress.py``, `b/t = 250`,
-tolerates up to about `10^{-3}`, which changes its buckling load by 0.2
-to 0.3 %, whereas `1.67 \times 10^{-2}` stiffens it by about 4.5 %, with
-30x14 and with 92x44 elements; the one-element-wide torsion strip of
-MacNeal and Harder (1985) [7]_, for which the twist *is* the hourglass
-pattern, needs about `10^{-1}`, which gives 0.90 times the reference
-twist, and is 1.75, 4.77 and 34 times too flexible with `5 \times
-10^{-2}`, `1.67 \times 10^{-2}` and `10^{-3}`. Those are two orders of
-magnitude apart and no single dimensionless constant serves both.
-Brockman's factor grows with the element area, and in SI units it gives
-the thin plates `2.4 \times 10^{-4}` (30x14) and `2.5 \times 10^{-5}`
-(92x44), but the strip, whose elements have the area 0.2 in the unit of
-its model, only `1.67 \times 10^{-2}`: with one element across its width
-the strip remains 4.77 times too flexible, grade F of MacNeal and Harder,
-and needs at least two elements across, see
-``test_transverse_coefficient_has_no_unit_invariant_constant``. That is a
-limitation of the one-element-wide mesh, not of the element: with two or
-more elements across, the twist of the strip converges under refinement to
-the same value, about 1.067 times the reference of MacNeal and Harder, with
-`10^{-2}` times the default coefficient, with the default, and with
-:class:`.Quad4`, the element areas of that model being small in its unit.
+.. rubric:: Transverse shear and the hourglass mode of `w`
 
-So the residual unit dependence of this element's hourglass control is
-confined to `E^{(h)}_w`, it is documented, and it is measured in
-``test_quad4r_hourglass_control.py``. Removing it properly needs an
-operator that separates the spurious transverse pattern from genuine twist,
-which is what an assumed-strain formulation such as MITC4 provides, rather
-than a better choice of coefficient.
+The transverse shear is that of Belytschko and Leviathan (1994) [9]_: the
+assumed covariant shear strains of Dvorkin and Bathe (1984) [10]_, tied at
+the mid-sides, `e_{\xi z}` at `(0, \pm 1)` and `e_{\eta z}` at
+`(\pm 1, 0)`, from `\gamma_{xz} = w_{,x} + r_y` and `\gamma_{yz} = w_{,y} -
+r_x`, split into a constant part and a nonconstant part, linear in `\eta`
+for `\gamma_{xz}` and in `\xi` for `\gamma_{yz}`, both mapped to Cartesian
+components with the Jacobian at the centroid, their Eqs. (3.35)-(3.42),
+pp. 328-329. The constant part is integrated at the centroid, their
+Eq. (4.12), p. 330, in place of the displacement-based shear at the
+centroid used up to 0.11, and the nonconstant part gives the
+stabilisation of their Eq. (4.13), p. 331, integrated exactly with
+`\int \xi^2 dA = \int \eta^2 dA = A/3` and `\int \xi \eta \, dA = 0`,
+their Eqs. (4.15) and (4.10), the coupling between the two parts being
+omitted as in the paper. The stabilisation has no parameter: its
+stiffness is that of the transverse shear, `A_{44}`, `A_{45}` and
+`A_{55}`, and ``hgfactor_w`` multiplies it, ``1`` being the formulation of
+the paper.
 
-The hinged cylindrical roof of Sze et al. (2004) [8]_ shows this dependence
-on the problem. Its elements have areas of 16 to 1008 in the unit of length
-of the model, the default `E^{(h)}_w` is then `0.94` to `1.0` times
-`0.1 E t^3`, and the linear deflection under the central point load is
-6 to 7 % smaller than with :class:`.Tria3DSG`, which has no hourglass
-control, and, with the transverse shear stiffness multiplied by 100, than
-with a shallow-shell Kirchhoff solution. Smaller values of ``hgfactor_w``
-approach both. The lower limit load of the thinner roof, `t = 6.35`,
-converges with the default to -0.1435 to -0.1440 `P_{max}` (8x8 to 48x48
-elements on the quarter), 11.4 to 11.8 % below the -0.1288 of Sze et
-al., whereas :class:`.Tria3DSG` agrees with it within 0.3 % on every mesh
-and ``hgfactor_w = 0.001`` within 0.3 % with 24x24 elements: an error of
-the formulation, the constant-twist patch test above, that refinement does
-not remove, see ``test_hinged_roof_thin_lower_limit_load``. With the model
-written in a unit of length 1000 times larger, where the default
-coefficient vanishes under refinement, the same lower limit load converges
-to about 2 % above the reference instead.
-These measurements show the sensitivity of one problem and do not recommend
-another value: the default follows the references above, and a different
-default would need further studies.
+A uniform twist, `w = kxy`, `r_x = kx`, `r_y = -ky`, and every state of
+constant curvature have no assumed shear strain, constant or not, on any
+quadrilateral, so the element passes the constant-twist patch test and
+the thin-plate bending patch test of Belytschko and Leviathan, their
+Section 6.1, Fig. 3 and Tables 2 and 3, pp. 336-337, for any thickness,
+length unit and ``hgfactor_w``, see ``test_constant_twist_patch_test`` and
+``test_bending_patch_test_belytschko_leviathan`` in
+``test_quad4r_hourglass_control.py``. The hourglass mode of `w` and the
+twisting mode of Brockman's Eq. (13) vary the assumed shear strains along
+the element, so the stabilisation resists both, and a single element is
+singular only in its six rigid-body motions. The stiffness scales with the
+length unit as the transverse shear does, so the response of a model is
+independent of the unit of length.
+
+Up to 0.11, `w` was stabilised as `u` and `v` are, with Brockman's
+`E^{(h)}_w = 0.1 E t^3/(1 + 1/A)` and the operator `\gamma^\top w`, which
+is `w_{,xy}` and thus `k` for a uniform twist: it added the fraction
+`0.6 (1 + \nu)/(1 + 1/A)` to the energy of a uniform twist, 0.78 for `\nu
+= 0.3` and `A \gg 1`, whatever the mesh, a failure of the constant-twist
+patch test where the element areas were large in the unit of length of the
+model. The consequences, measured on 2026-10-29, before and after:
+
+* the one-element-wide torsion strip of MacNeal and Harder (1985) [7]_:
+  4.78 times the reference twist, grade F, against 0.928, grade B, see
+  ``test_one_element_wide_strip_in_torsion``;
+* the hinged cylindrical roof of Sze et al. (2004) [8]_, `t = 6.35`: the
+  lower limit load converged to -0.1435 to -0.1440 `P_{max}`, 11 % below
+  the -0.1288 of their Table 9d, against -0.12886 with 48x48 elements on
+  the quarter, see ``test_hinged_roof_thin_lower_limit_load``; with `t =
+  12.7`, the start of the path was 6.7 to 9.1 % stiffer than their Table
+  9a, against 0.6 % with 16x16 elements, and the linear deflection 6 to 7 %
+  smaller than with :class:`.Tria3DSG`, against 0.25 % larger;
+* the thin-plate bending patch test above: the interior deflections were
+  0.88 to 1.21 times the exact ones;
+* in SI units, where Brockman's factor made `E^{(h)}_w` negligible, the
+  simply supported thin plates of ``test_quad4r_linear_buckling_plate.py``
+  and ``test_quad4r_linear_buckling_plate_given_stress.py`` buckle 0.2 %
+  higher with 92x44 elements, the errors still converging as the square of
+  the element size, and the frequencies and deflections of the other
+  plate tests change by less than 0.4 %, see their docstrings.
 
 The coefficients and the operator, as computed, are given in the Notes of
 :meth:`.Quad4R.update_KC0`.
@@ -406,6 +405,13 @@ References
    for geometric nonlinear analysis of shells, Finite Elements in Analysis
    and Design, 40(11), 1551-1569, 2004.
    https://doi.org/10.1016/j.finel.2003.11.001
+.. [9] Belytschko, T., and Leviathan, I., Physical stabilization of the
+   4-node shell element with one point quadrature, Computer Methods in
+   Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
+   https://doi.org/10.1016/0045-7825(94)90052-3
+.. [10] Dvorkin, E. N., and Bathe, K. J., A continuum mechanics based
+   four-node shell element for general non-linear analysis, Engineering
+   Computations, 1(1), 77-88, 1984. https://doi.org/10.1108/eb023562
 
 """
 from libc.math cimport fabs
@@ -465,6 +471,135 @@ cdef inline void _hourglass_bending_moduli(double h, double *Ae, double *Be,
     # NOTE 1/d11 and 1/d22 from the cofactors of D - B A^-1 B
     E1b[0] = 12.*detDs/(h**3*(Ds[4]*Ds[8] - Ds[5]*Ds[7]))
     E2b[0] = 12.*detDs/(h**3*(Ds[0]*Ds[8] - Ds[2]*Ds[6]))
+
+
+cdef inline void _shear_bl94(double x1, double x2, double x3, double x4,
+        double y1, double y2, double y3, double y4, double A44, double A45,
+        double A55, double fH, double *K) noexcept nogil:
+    r"""Transverse shear of Belytschko and Leviathan (1994) minus the
+    one-point displacement-based transverse shear
+
+    Writes in ``K`` the 12 x 12 row-major matrix, on the degrees-of-freedom
+    ``w, r_x, r_y`` of nodes 1 to 4 in element coordinates, to be added to
+    the stiffness matrix whose transverse shear is
+    ``A*B0^T*C_s*B0``, ``B0`` the displacement-based shear strains
+    ``gamma_xz = w_x + r_y`` and ``gamma_yz = w_y - r_x`` at the centroid.
+
+    The assumed covariant shear strains of Dvorkin and Bathe (1984), as in
+    Belytschko and Leviathan (1994), Eqs. (3.35)-(3.39), are interpolated
+    from the tying points ``B (0, -1)``, ``D (0, 1)``, ``A (-1, 0)`` and
+    ``C (1, 0)``: ``e_xi = (eB + eD)/2 + eta*(eD - eB)/2`` and
+    ``e_eta = (eA + eC)/2 + xi*(eC - eA)/2``, mapped to Cartesian components
+    with the Jacobian ``J0`` at the centroid. The constant part replaces the
+    displacement-based centroid value, Eq. (4.12), and the nonconstant part
+    gives the stabilisation of Eq. (4.13), integrated with
+    ``int eta**2 dA = int xi**2 dA = A/3`` and ``int xi*eta dA = 0``, Eqs.
+    (4.15) and (4.10), multiplied by ``fH``; the coupling of the constant
+    and nonconstant parts is omitted, as in that paper.
+
+    """
+    cdef int i, j, k, I
+    cdef double xs[4]
+    cdef double ys[4]
+    cdef double XI[4]
+    cdef double ETA[4]
+    cdef double tie_xi[4]
+    cdef double tie_eta[4]
+    cdef double N[4]
+    cdef double Nxi[4]
+    cdef double Neta[4]
+    cdef double xxi, yxi, xeta, yeta
+    cdef double J0[4]
+    cdef double J0inv[4]
+    cdef double detJ0, A
+    cdef double e[4][12]
+    cdef double ec[2][12]
+    cdef double G0m[2][12]
+    cdef double G0d[2][12]
+    cdef double D1[2][12]
+    cdef double D2[2][12]
+    cdef double ex[2][12]
+    cdef double Cs[4]
+    xs[0] = x1; xs[1] = x2; xs[2] = x3; xs[3] = x4
+    ys[0] = y1; ys[1] = y2; ys[2] = y3; ys[3] = y4
+    XI[0] = -1.; XI[1] = 1.; XI[2] = 1.; XI[3] = -1.
+    ETA[0] = -1.; ETA[1] = -1.; ETA[2] = 1.; ETA[3] = 1.
+    # NOTE tying points B, D (e_xi) and A, C (e_eta)
+    tie_xi[0] = 0.; tie_eta[0] = -1.
+    tie_xi[1] = 0.; tie_eta[1] = 1.
+    tie_xi[2] = -1.; tie_eta[2] = 0.
+    tie_xi[3] = 1.; tie_eta[3] = 0.
+    Cs[0] = A55; Cs[1] = A45; Cs[2] = A45; Cs[3] = A44
+    # NOTE covariant shear at each tying point, e_xi = w_xi + x_xi*r_y -
+    #      y_xi*r_x for B and D, and e_eta = w_eta + x_eta*r_y - y_eta*r_x
+    #      for A and C, from gamma_xz = w_x + r_y and gamma_yz = w_y - r_x
+    for k in range(5):
+        if k < 4:
+            for I in range(4):
+                N[I] = 0.25*(1 + XI[I]*tie_xi[k])*(1 + ETA[I]*tie_eta[k])
+                Nxi[I] = 0.25*XI[I]*(1 + ETA[I]*tie_eta[k])
+                Neta[I] = 0.25*ETA[I]*(1 + XI[I]*tie_xi[k])
+        else:
+            for I in range(4):
+                N[I] = 0.25
+                Nxi[I] = 0.25*XI[I]
+                Neta[I] = 0.25*ETA[I]
+        xxi = 0.; yxi = 0.; xeta = 0.; yeta = 0.
+        for I in range(4):
+            xxi += Nxi[I]*xs[I]
+            yxi += Nxi[I]*ys[I]
+            xeta += Neta[I]*xs[I]
+            yeta += Neta[I]*ys[I]
+        if k < 4:
+            for I in range(4):
+                if k < 2:
+                    e[k][3*I + 0] = Nxi[I]
+                    e[k][3*I + 1] = -yxi*N[I]
+                    e[k][3*I + 2] = xxi*N[I]
+                else:
+                    e[k][3*I + 0] = Neta[I]
+                    e[k][3*I + 1] = -yeta*N[I]
+                    e[k][3*I + 2] = xeta*N[I]
+        else:
+            # NOTE centroid: both covariant components and the Jacobian
+            J0[0] = xxi; J0[1] = yxi; J0[2] = xeta; J0[3] = yeta
+            for I in range(4):
+                ec[0][3*I + 0] = Nxi[I]
+                ec[0][3*I + 1] = -yxi*N[I]
+                ec[0][3*I + 2] = xxi*N[I]
+                ec[1][3*I + 0] = Neta[I]
+                ec[1][3*I + 1] = -yeta*N[I]
+                ec[1][3*I + 2] = xeta*N[I]
+    detJ0 = J0[0]*J0[3] - J0[1]*J0[2]
+    A = 4.*detJ0
+    J0inv[0] = J0[3]/detJ0
+    J0inv[1] = -J0[1]/detJ0
+    J0inv[2] = -J0[2]/detJ0
+    J0inv[3] = J0[0]/detJ0
+    # NOTE Cartesian strains gamma = J0^-1 [e_xi, e_eta]
+    for j in range(12):
+        # MITC4 constant part
+        G0m[0][j] = J0inv[0]*0.5*(e[0][j] + e[1][j]) + J0inv[1]*0.5*(e[2][j] + e[3][j])
+        G0m[1][j] = J0inv[2]*0.5*(e[0][j] + e[1][j]) + J0inv[3]*0.5*(e[2][j] + e[3][j])
+        # displacement-based centroid value
+        G0d[0][j] = J0inv[0]*ec[0][j] + J0inv[1]*ec[1][j]
+        G0d[1][j] = J0inv[2]*ec[0][j] + J0inv[3]*ec[1][j]
+        # nonconstant parts, multiplying eta and xi
+        D1[0][j] = J0inv[0]*0.5*(e[1][j] - e[0][j])
+        D1[1][j] = J0inv[2]*0.5*(e[1][j] - e[0][j])
+        D2[0][j] = J0inv[1]*0.5*(e[3][j] - e[2][j])
+        D2[1][j] = J0inv[3]*0.5*(e[3][j] - e[2][j])
+    for i in range(12):
+        for j in range(12):
+            K[12*i + j] = (
+                A*(G0m[0][i]*(Cs[0]*G0m[0][j] + Cs[1]*G0m[1][j])
+                   + G0m[1][i]*(Cs[2]*G0m[0][j] + Cs[3]*G0m[1][j])
+                   - G0d[0][i]*(Cs[0]*G0d[0][j] + Cs[1]*G0d[1][j])
+                   - G0d[1][i]*(Cs[2]*G0d[0][j] + Cs[3]*G0d[1][j]))
+                + fH*A/3.*(D1[0][i]*(Cs[0]*D1[0][j] + Cs[1]*D1[1][j])
+                           + D1[1][i]*(Cs[2]*D1[0][j] + Cs[3]*D1[1][j])
+                           + D2[0][i]*(Cs[0]*D2[0][j] + Cs[1]*D2[1][j])
+                           + D2[1][i]*(Cs[2]*D2[0][j] + Cs[3]*D2[1][j])))
 
 
 cdef inline void _centroid_slopes(double x1, double x2, double x3, double x4,
@@ -1142,7 +1277,11 @@ cdef class Quad4R:
             These offer the possibility to change the default hourglass
             stiffnesses for each degree-of-freedom.
             Dimensionless multipliers of the hourglass stiffnesses of ``u``,
-            ``v``, ``w``, ``r_x`` and ``r_y``. Default ``1.``.
+            ``v``, ``r_x`` and ``r_y``, and, ``hgfactor_w``, of the
+            stabilisation of the transverse shear, which controls the
+            hourglass mode of ``w``, see the Notes of :mod:`pyfe3d.quad4r`.
+            Default ``1.``. Up to 0.11 ``hgfactor_w`` multiplied Brockman's
+            hourglass stiffness of ``w``.
         nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
             value adds the geometrically nonlinear terms of the von Karman strains,
@@ -1180,7 +1319,8 @@ cdef class Quad4R:
         cdef double D11, D12, D16, D22, D26, D66
         cdef double E1eq, E2eq, E1b, E2b
         cdef double K6ROT
-        cdef double Eu, Ev, Erx, Ery, Ew
+        cdef double Eu, Ev, Erx, Ery
+        cdef double Kws[144]
         cdef double a11, a22
         cdef double J11, J12, J21, J22
         cdef double j11, j12, j21, j22
@@ -1293,14 +1433,14 @@ cdef class Quad4R:
             # NOTE Brockman's hourglass control is derived for isotropic
             #      plates, and applied to laminates with the membrane moduli
             #      E1eq and E2eq for u and v, and with the bending moduli
-            #      E1b and E2b for w, rx and ry, see the module documentation
+            #      E1b and E2b for rx and ry, see the module documentation
             # NOTE Brockman's 1/(1 + 1/A) of Eq. (16) is replaced by the
             #      dimensionally homogeneous area factor, see the section
             #      "Dimensional homogeneity of the hourglass stiffnesses"
             #      of the module documentation. In short, the term enters
             #      as K_ij = A*E^(h)*gamma_i*gamma_j with gamma of
             #      dimension 1/L**2, so E^(h) must be F*L for the
-            #      translations u, v and w and F*L**3 for the rotations
+            #      translations u and v and F*L**3 for the rotations
             #      rx and ry. Brockman's factor tends to A only in the
             #      limit A << 1, so it supplies the missing area in some
             #      units and not in others
@@ -1308,29 +1448,10 @@ cdef class Quad4R:
             Ev = hgfactor_v*0.1*E2eq*prop.h*self.area
             Erx = hgfactor_rx*0.1*E2b*prop.h**3*self.area
             Ery = hgfactor_ry*0.1*E1b*prop.h**3*self.area
-            # NOTE w alone keeps Brockman's 1/(1 + 1/A), so this is the
-            #      one coefficient of the scheme that remains unit
-            #      dependent, and that is deliberate. The operator cannot
-            #      separate the spurious pattern w = x*y from a legitimate
-            #      twist curvature, both giving gamma'w = d2w/dxdy, so the
-            #      amount of stabilisation wanted is a property of the
-            #      problem and not of the element, and no dimensionless
-            #      constant reproduces it: the thin plates want about
-            #      2e-4 of E*h**3 and the one-element-wide torsion strip of
-            #      MacNeal and Harder wants about 2e-2, two orders of
-            #      magnitude apart. Brockman's factor happens to supply
-            #      both, because it grows with the element area, which in
-            #      SI units correlates with what each of those problems
-            #      needs. See the module documentation, and
-            #      test_quad4r_hourglass_control.py for the measurements.
-            #      The mean of the two bending moduli generalises
-            #      Eq. (16b) to laminates and reduces to it for an
-            #      isotropic plate. It is built from the moduli and not
-            #      from Erx and Ery, which already carry hgfactor_rx and
-            #      hgfactor_ry, so that hgfactor_w scales this term and
-            #      nothing else
-            Ew = (hgfactor_w*0.05*(E1b + E2b)*prop.h**3
-                  /(1.0 + 1.0/self.area))
+            # NOTE the transverse displacement w has no artificial hourglass
+            #      stiffness: its hourglass mode is controlled by the
+            #      physical stabilisation of the transverse shear below,
+            #      scaled by hgfactor_w, see _shear_bl94
 
             # NOTE using only one integration point at xi=0, eta=0 to avoid shear locking
             detJ = 0.125*x1*y2 - 0.125*x1*y4 - 0.125*x2*y1 + 0.125*x2*y3 - 0.125*x3*y2 + 0.125*x3*y4 + 0.125*x4*y1 - 0.125*x4*y3
@@ -1415,16 +1536,16 @@ cdef class Quad4R:
             KC0e0119 = detJ*wij*(Ev*gamma1*gamma4 + S4_x*(A26*S1_y + A66*S1_x) + S4_y*(A22*S1_y + A26*S1_x))
             KC0e0121 = -detJ*wij*(S4_x*(B26*S1_y + B66*S1_x) + S4_y*(B22*S1_y + B26*S1_x))
             KC0e0122 = detJ*wij*(S4_x*(B12*S1_y + B16*S1_x) + S4_y*(B26*S1_y + B66*S1_x))
-            KC0e0202 = detJ*wij*(Ew*gamma1**2 + S1_x*(A45*S1_y + A55*S1_x) + S1_y*(A44*S1_y + A45*S1_x))
+            KC0e0202 = detJ*wij*(S1_x*(A45*S1_y + A55*S1_x) + S1_y*(A44*S1_y + A45*S1_x))
             KC0e0203 = -S1*detJ*wij*(A44*S1_y + A45*S1_x)
             KC0e0204 = S1*detJ*wij*(A45*S1_y + A55*S1_x)
-            KC0e0208 = detJ*wij*(Ew*gamma1*gamma2 + S2_x*(A45*S1_y + A55*S1_x) + S2_y*(A44*S1_y + A45*S1_x))
+            KC0e0208 = detJ*wij*(S2_x*(A45*S1_y + A55*S1_x) + S2_y*(A44*S1_y + A45*S1_x))
             KC0e0209 = -S2*detJ*wij*(A44*S1_y + A45*S1_x)
             KC0e0210 = S2*detJ*wij*(A45*S1_y + A55*S1_x)
-            KC0e0214 = detJ*wij*(Ew*gamma1*gamma3 + S3_x*(A45*S1_y + A55*S1_x) + S3_y*(A44*S1_y + A45*S1_x))
+            KC0e0214 = detJ*wij*(S3_x*(A45*S1_y + A55*S1_x) + S3_y*(A44*S1_y + A45*S1_x))
             KC0e0215 = -S3*detJ*wij*(A44*S1_y + A45*S1_x)
             KC0e0216 = S3*detJ*wij*(A45*S1_y + A55*S1_x)
-            KC0e0220 = detJ*wij*(Ew*gamma1*gamma4 + S4_x*(A45*S1_y + A55*S1_x) + S4_y*(A44*S1_y + A45*S1_x))
+            KC0e0220 = detJ*wij*(S4_x*(A45*S1_y + A55*S1_x) + S4_y*(A44*S1_y + A45*S1_x))
             KC0e0221 = -S4*detJ*wij*(A44*S1_y + A45*S1_x)
             KC0e0222 = S4*detJ*wij*(A45*S1_y + A55*S1_x)
             KC0e0303 = detJ*wij*(A44*S1**2 + Erx*gamma1**2 + S1_x*(D26*S1_y + D66*S1_x) + S1_y*(D22*S1_y + D26*S1_x))
@@ -1483,13 +1604,13 @@ cdef class Quad4R:
             KC0e0719 = detJ*wij*(Ev*gamma2*gamma4 + S4_x*(A26*S2_y + A66*S2_x) + S4_y*(A22*S2_y + A26*S2_x))
             KC0e0721 = -detJ*wij*(S4_x*(B26*S2_y + B66*S2_x) + S4_y*(B22*S2_y + B26*S2_x))
             KC0e0722 = detJ*wij*(S4_x*(B12*S2_y + B16*S2_x) + S4_y*(B26*S2_y + B66*S2_x))
-            KC0e0808 = detJ*wij*(Ew*gamma2**2 + S2_x*(A45*S2_y + A55*S2_x) + S2_y*(A44*S2_y + A45*S2_x))
+            KC0e0808 = detJ*wij*(S2_x*(A45*S2_y + A55*S2_x) + S2_y*(A44*S2_y + A45*S2_x))
             KC0e0809 = -S2*detJ*wij*(A44*S2_y + A45*S2_x)
             KC0e0810 = S2*detJ*wij*(A45*S2_y + A55*S2_x)
-            KC0e0814 = detJ*wij*(Ew*gamma2*gamma3 + S3_x*(A45*S2_y + A55*S2_x) + S3_y*(A44*S2_y + A45*S2_x))
+            KC0e0814 = detJ*wij*(S3_x*(A45*S2_y + A55*S2_x) + S3_y*(A44*S2_y + A45*S2_x))
             KC0e0815 = -S3*detJ*wij*(A44*S2_y + A45*S2_x)
             KC0e0816 = S3*detJ*wij*(A45*S2_y + A55*S2_x)
-            KC0e0820 = detJ*wij*(Ew*gamma2*gamma4 + S4_x*(A45*S2_y + A55*S2_x) + S4_y*(A44*S2_y + A45*S2_x))
+            KC0e0820 = detJ*wij*(S4_x*(A45*S2_y + A55*S2_x) + S4_y*(A44*S2_y + A45*S2_x))
             KC0e0821 = -S4*detJ*wij*(A44*S2_y + A45*S2_x)
             KC0e0822 = S4*detJ*wij*(A45*S2_y + A55*S2_x)
             KC0e0909 = detJ*wij*(A44*S2**2 + Erx*gamma2**2 + S2_x*(D26*S2_y + D66*S2_x) + S2_y*(D22*S2_y + D26*S2_x))
@@ -1530,10 +1651,10 @@ cdef class Quad4R:
             KC0e1319 = detJ*wij*(Ev*gamma3*gamma4 + S4_x*(A26*S3_y + A66*S3_x) + S4_y*(A22*S3_y + A26*S3_x))
             KC0e1321 = -detJ*wij*(S4_x*(B26*S3_y + B66*S3_x) + S4_y*(B22*S3_y + B26*S3_x))
             KC0e1322 = detJ*wij*(S4_x*(B12*S3_y + B16*S3_x) + S4_y*(B26*S3_y + B66*S3_x))
-            KC0e1414 = detJ*wij*(Ew*gamma3**2 + S3_x*(A45*S3_y + A55*S3_x) + S3_y*(A44*S3_y + A45*S3_x))
+            KC0e1414 = detJ*wij*(S3_x*(A45*S3_y + A55*S3_x) + S3_y*(A44*S3_y + A45*S3_x))
             KC0e1415 = -S3*detJ*wij*(A44*S3_y + A45*S3_x)
             KC0e1416 = S3*detJ*wij*(A45*S3_y + A55*S3_x)
-            KC0e1420 = detJ*wij*(Ew*gamma3*gamma4 + S4_x*(A45*S3_y + A55*S3_x) + S4_y*(A44*S3_y + A45*S3_x))
+            KC0e1420 = detJ*wij*(S4_x*(A45*S3_y + A55*S3_x) + S4_y*(A44*S3_y + A45*S3_x))
             KC0e1421 = -S4*detJ*wij*(A44*S3_y + A45*S3_x)
             KC0e1422 = S4*detJ*wij*(A45*S3_y + A55*S3_x)
             KC0e1515 = detJ*wij*(A44*S3**2 + Erx*gamma3**2 + S3_x*(D26*S3_y + D66*S3_x) + S3_y*(D22*S3_y + D26*S3_x))
@@ -1556,12 +1677,97 @@ cdef class Quad4R:
             KC0e1919 = detJ*wij*(Ev*gamma4**2 + S4_x*(A26*S4_y + A66*S4_x) + S4_y*(A22*S4_y + A26*S4_x))
             KC0e1921 = -detJ*wij*(S4_x*(B26*S4_y + B66*S4_x) + S4_y*(B22*S4_y + B26*S4_x))
             KC0e1922 = detJ*wij*(S4_x*(B12*S4_y + B16*S4_x) + S4_y*(B26*S4_y + B66*S4_x))
-            KC0e2020 = detJ*wij*(Ew*gamma4**2 + S4_x*(A45*S4_y + A55*S4_x) + S4_y*(A44*S4_y + A45*S4_x))
+            KC0e2020 = detJ*wij*(S4_x*(A45*S4_y + A55*S4_x) + S4_y*(A44*S4_y + A45*S4_x))
             KC0e2021 = -S4*detJ*wij*(A44*S4_y + A45*S4_x)
             KC0e2022 = S4*detJ*wij*(A45*S4_y + A55*S4_x)
             KC0e2121 = detJ*wij*(A44*S4**2 + Erx*gamma4**2 + S4_x*(D26*S4_y + D66*S4_x) + S4_y*(D22*S4_y + D26*S4_x))
             KC0e2122 = -detJ*wij*(A45*S4**2 + S4_x*(D12*S4_y + D16*S4_x) + S4_y*(D26*S4_y + D66*S4_x))
             KC0e2222 = detJ*wij*(A55*S4**2 + Ery*gamma4**2 + S4_x*(D11*S4_x + D16*S4_y) + S4_y*(D16*S4_x + D66*S4_y))
+            # NOTE transverse shear of Belytschko and Leviathan (1994), the
+            #      constant part of the assumed strains of Dvorkin and Bathe
+            #      (1984) instead of the displacement-based centroid value, and
+            #      the physical stabilisation of their nonconstant part,
+            #      multiplied by hgfactor_w, see the module documentation
+            _shear_bl94(x1, x2, x3, x4, y1, y2, y3, y4, A44, A45, A55,
+                        hgfactor_w, Kws)
+            KC0e0202 += Kws[0]
+            KC0e0203 += Kws[1]
+            KC0e0204 += Kws[2]
+            KC0e0208 += Kws[3]
+            KC0e0209 += Kws[4]
+            KC0e0210 += Kws[5]
+            KC0e0214 += Kws[6]
+            KC0e0215 += Kws[7]
+            KC0e0216 += Kws[8]
+            KC0e0220 += Kws[9]
+            KC0e0221 += Kws[10]
+            KC0e0222 += Kws[11]
+            KC0e0303 += Kws[13]
+            KC0e0304 += Kws[14]
+            KC0e0308 += Kws[15]
+            KC0e0309 += Kws[16]
+            KC0e0310 += Kws[17]
+            KC0e0314 += Kws[18]
+            KC0e0315 += Kws[19]
+            KC0e0316 += Kws[20]
+            KC0e0320 += Kws[21]
+            KC0e0321 += Kws[22]
+            KC0e0322 += Kws[23]
+            KC0e0404 += Kws[26]
+            KC0e0408 += Kws[27]
+            KC0e0409 += Kws[28]
+            KC0e0410 += Kws[29]
+            KC0e0414 += Kws[30]
+            KC0e0415 += Kws[31]
+            KC0e0416 += Kws[32]
+            KC0e0420 += Kws[33]
+            KC0e0421 += Kws[34]
+            KC0e0422 += Kws[35]
+            KC0e0808 += Kws[39]
+            KC0e0809 += Kws[40]
+            KC0e0810 += Kws[41]
+            KC0e0814 += Kws[42]
+            KC0e0815 += Kws[43]
+            KC0e0816 += Kws[44]
+            KC0e0820 += Kws[45]
+            KC0e0821 += Kws[46]
+            KC0e0822 += Kws[47]
+            KC0e0909 += Kws[52]
+            KC0e0910 += Kws[53]
+            KC0e0914 += Kws[54]
+            KC0e0915 += Kws[55]
+            KC0e0916 += Kws[56]
+            KC0e0920 += Kws[57]
+            KC0e0921 += Kws[58]
+            KC0e0922 += Kws[59]
+            KC0e1010 += Kws[65]
+            KC0e1014 += Kws[66]
+            KC0e1015 += Kws[67]
+            KC0e1016 += Kws[68]
+            KC0e1020 += Kws[69]
+            KC0e1021 += Kws[70]
+            KC0e1022 += Kws[71]
+            KC0e1414 += Kws[78]
+            KC0e1415 += Kws[79]
+            KC0e1416 += Kws[80]
+            KC0e1420 += Kws[81]
+            KC0e1421 += Kws[82]
+            KC0e1422 += Kws[83]
+            KC0e1515 += Kws[91]
+            KC0e1516 += Kws[92]
+            KC0e1520 += Kws[93]
+            KC0e1521 += Kws[94]
+            KC0e1522 += Kws[95]
+            KC0e1616 += Kws[104]
+            KC0e1620 += Kws[105]
+            KC0e1621 += Kws[106]
+            KC0e1622 += Kws[107]
+            KC0e2020 += Kws[117]
+            KC0e2021 += Kws[118]
+            KC0e2022 += Kws[119]
+            KC0e2121 += Kws[130]
+            KC0e2122 += Kws[131]
+            KC0e2222 += Kws[143]
 
             # NOTE drilling rotation uses full integration with two-point Gauss-Legendre quadrature
             wij = 1.
@@ -1803,7 +2009,11 @@ cdef class Quad4R:
             These offer the possibility to change the default hourglass
             stiffnesses for each degree-of-freedom.
             Dimensionless multipliers of the hourglass stiffnesses of ``u``,
-            ``v``, ``w``, ``r_x`` and ``r_y``. Default ``1.``.
+            ``v``, ``r_x`` and ``r_y``, and, ``hgfactor_w``, of the
+            stabilisation of the transverse shear, which controls the
+            hourglass mode of ``w``, see the Notes of :mod:`pyfe3d.quad4r`.
+            Default ``1.``. Up to 0.11 ``hgfactor_w`` multiplied Brockman's
+            hourglass stiffness of ``w``.
 
         Notes
         -----
@@ -1814,8 +2024,26 @@ cdef class Quad4R:
         :meth:`pyfe3d.shellprop.ShellProp.get_constitutive_element` rotated
         with ``m11, m12, m21, m22``, are evaluated at the centroid,
         `\xi = \eta = 0`, with weight `w_{ij} = 4`, `4 \det J` being the
-        element area `A`. The hourglass term adds, for each of `u`, `v`, `w`,
-        `r_x` and `r_y`,
+        element area `A`. The transverse shear strains are those of
+        Belytschko and Leviathan (1994): the constant part of the assumed
+        strains of Dvorkin and Bathe at the centroid, and the stabilisation
+        of their nonconstant part,
+
+        .. math::
+
+            \boldsymbol{K}_{stab} = f_w \frac{A}{3} \left(
+            \boldsymbol{D}_1^\top \boldsymbol{A}_s \boldsymbol{D}_1
+            + \boldsymbol{D}_2^\top \boldsymbol{A}_s \boldsymbol{D}_2 \right)
+
+        with `\boldsymbol{D}_1 = \boldsymbol{J}_0^{-1} \{(e^D_{\xi z} - e^B_{\xi
+        z})/2, 0\}^\top` and `\boldsymbol{D}_2 = \boldsymbol{J}_0^{-1} \{0, (e^C_{\eta
+        z} - e^A_{\eta z})/2\}^\top`, the rows of the covariant shear strains
+        at the tying points `A (-1, 0)`, `B (0, -1)`, `C (1, 0)` and `D (0,
+        1)`, `\boldsymbol{J}_0` the Jacobian at the centroid and `\boldsymbol{A}_s` the
+        matrix of `A_{55}`, `A_{45}` and `A_{44}` for `\gamma_{xz}` and
+        `\gamma_{yz}`, see the module documentation; `f_w` is
+        ``hgfactor_w``. The hourglass term adds, for each of `u`, `v`, `r_x`
+        and `r_y`,
 
         .. math::
 
@@ -1843,11 +2071,7 @@ cdef class Quad4R:
             E^{(h)}_{r_x} = 0.1 \, f_{r_x} E_{2b} t^3 A, \qquad
             E^{(h)}_{r_y} = 0.1 \, f_{r_y} E_{1b} t^3 A
 
-        .. math::
-
-            E^{(h)}_w = \frac{0.05 \, f_w (E_{1b} + E_{2b}) t^3}{1 + 1/A}
-
-        where `f_u, f_v, f_w, f_{r_x}, f_{r_y}` are the ``hgfactor_*``
+        where `f_u, f_v, f_{r_x}, f_{r_y}` are the ``hgfactor_*``
         parameters. The reasons for the area factors are given in the Notes
         of :mod:`pyfe3d.quad4r`. The equivalent moduli, all in the element
         coordinate system, are
@@ -1873,11 +2097,7 @@ cdef class Quad4R:
         is moved with ``prop.offset``, while `\boldsymbol{D}` does, so neither pair
         depends on the offset. `r_x` enters the curvature `\kappa_{yy} =
         -r_{x,y}` and `r_y` the curvature `\kappa_{xx} = r_{y,x}`, hence
-        `E_{2b}` in `E^{(h)}_{r_x}` and `E_{1b}` in `E^{(h)}_{r_y}`. The
-        hourglass pattern of `w`, `w = xy` on a rectangle, is a twist, and
-        the mean of the two bending moduli in `E^{(h)}_w` generalises
-        Eq. (16b) of Brockman to laminates and reduces to it for an
-        isotropic plate.
+        `E_{2b}` in `E^{(h)}_{r_x}` and `E_{1b}` in `E^{(h)}_{r_y}`.
 
         The drilling term, `\gamma_{r_z} \boldsymbol{B}_{r_z}^\top \boldsymbol{B}_{r_z}` with
         `B_{r_z} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}`, is integrated
@@ -1916,7 +2136,8 @@ cdef class Quad4R:
         cdef double D11, D12, D16, D22, D26, D66
         cdef double E1eq, E2eq, E1b, E2b
         cdef double K6ROT
-        cdef double Eu, Ev, Erx, Ery, Ew
+        cdef double Eu, Ev, Erx, Ery
+        cdef double Kws[144]
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
         cdef double a11, a22
         cdef double J11, J12, J21, J22
@@ -3774,14 +3995,14 @@ cdef class Quad4R:
             # NOTE Brockman's hourglass control is derived for isotropic
             #      plates, and applied to laminates with the membrane moduli
             #      E1eq and E2eq for u and v, and with the bending moduli
-            #      E1b and E2b for w, rx and ry, see the module documentation
+            #      E1b and E2b for rx and ry, see the module documentation
             # NOTE Brockman's 1/(1 + 1/A) of Eq. (16) is replaced by the
             #      dimensionally homogeneous area factor, see the section
             #      "Dimensional homogeneity of the hourglass stiffnesses"
             #      of the module documentation. In short, the term enters
             #      as K_ij = A*E^(h)*gamma_i*gamma_j with gamma of
             #      dimension 1/L**2, so E^(h) must be F*L for the
-            #      translations u, v and w and F*L**3 for the rotations
+            #      translations u and v and F*L**3 for the rotations
             #      rx and ry. Brockman's factor tends to A only in the
             #      limit A << 1, so it supplies the missing area in some
             #      units and not in others
@@ -3789,29 +4010,10 @@ cdef class Quad4R:
             Ev = hgfactor_v*0.1*E2eq*prop.h*self.area
             Erx = hgfactor_rx*0.1*E2b*prop.h**3*self.area
             Ery = hgfactor_ry*0.1*E1b*prop.h**3*self.area
-            # NOTE w alone keeps Brockman's 1/(1 + 1/A), so this is the
-            #      one coefficient of the scheme that remains unit
-            #      dependent, and that is deliberate. The operator cannot
-            #      separate the spurious pattern w = x*y from a legitimate
-            #      twist curvature, both giving gamma'w = d2w/dxdy, so the
-            #      amount of stabilisation wanted is a property of the
-            #      problem and not of the element, and no dimensionless
-            #      constant reproduces it: the thin plates want about
-            #      2e-4 of E*h**3 and the one-element-wide torsion strip of
-            #      MacNeal and Harder wants about 2e-2, two orders of
-            #      magnitude apart. Brockman's factor happens to supply
-            #      both, because it grows with the element area, which in
-            #      SI units correlates with what each of those problems
-            #      needs. See the module documentation, and
-            #      test_quad4r_hourglass_control.py for the measurements.
-            #      The mean of the two bending moduli generalises
-            #      Eq. (16b) to laminates and reduces to it for an
-            #      isotropic plate. It is built from the moduli and not
-            #      from Erx and Ery, which already carry hgfactor_rx and
-            #      hgfactor_ry, so that hgfactor_w scales this term and
-            #      nothing else
-            Ew = (hgfactor_w*0.05*(E1b + E2b)*prop.h**3
-                  /(1.0 + 1.0/self.area))
+            # NOTE the transverse displacement w has no artificial hourglass
+            #      stiffness: its hourglass mode is controlled by the
+            #      physical stabilisation of the transverse shear below,
+            #      scaled by hgfactor_w, see _shear_bl94
 
             # NOTE using only one integration point at xi=0, eta=0 to avoid shear locking
             detJ = 0.125*x1*y2 - 0.125*x1*y4 - 0.125*x2*y1 + 0.125*x2*y3 - 0.125*x3*y2 + 0.125*x3*y4 + 0.125*x4*y1 - 0.125*x4*y3
@@ -3896,16 +4098,16 @@ cdef class Quad4R:
             KC0e0119 = detJ*wij*(Ev*gamma1*gamma4 + S4_x*(A26*S1_y + A66*S1_x) + S4_y*(A22*S1_y + A26*S1_x))
             KC0e0121 = -detJ*wij*(S4_x*(B26*S1_y + B66*S1_x) + S4_y*(B22*S1_y + B26*S1_x))
             KC0e0122 = detJ*wij*(S4_x*(B12*S1_y + B16*S1_x) + S4_y*(B26*S1_y + B66*S1_x))
-            KC0e0202 = detJ*wij*(Ew*gamma1**2 + S1_x*(A45*S1_y + A55*S1_x) + S1_y*(A44*S1_y + A45*S1_x))
+            KC0e0202 = detJ*wij*(S1_x*(A45*S1_y + A55*S1_x) + S1_y*(A44*S1_y + A45*S1_x))
             KC0e0203 = -S1*detJ*wij*(A44*S1_y + A45*S1_x)
             KC0e0204 = S1*detJ*wij*(A45*S1_y + A55*S1_x)
-            KC0e0208 = detJ*wij*(Ew*gamma1*gamma2 + S2_x*(A45*S1_y + A55*S1_x) + S2_y*(A44*S1_y + A45*S1_x))
+            KC0e0208 = detJ*wij*(S2_x*(A45*S1_y + A55*S1_x) + S2_y*(A44*S1_y + A45*S1_x))
             KC0e0209 = -S2*detJ*wij*(A44*S1_y + A45*S1_x)
             KC0e0210 = S2*detJ*wij*(A45*S1_y + A55*S1_x)
-            KC0e0214 = detJ*wij*(Ew*gamma1*gamma3 + S3_x*(A45*S1_y + A55*S1_x) + S3_y*(A44*S1_y + A45*S1_x))
+            KC0e0214 = detJ*wij*(S3_x*(A45*S1_y + A55*S1_x) + S3_y*(A44*S1_y + A45*S1_x))
             KC0e0215 = -S3*detJ*wij*(A44*S1_y + A45*S1_x)
             KC0e0216 = S3*detJ*wij*(A45*S1_y + A55*S1_x)
-            KC0e0220 = detJ*wij*(Ew*gamma1*gamma4 + S4_x*(A45*S1_y + A55*S1_x) + S4_y*(A44*S1_y + A45*S1_x))
+            KC0e0220 = detJ*wij*(S4_x*(A45*S1_y + A55*S1_x) + S4_y*(A44*S1_y + A45*S1_x))
             KC0e0221 = -S4*detJ*wij*(A44*S1_y + A45*S1_x)
             KC0e0222 = S4*detJ*wij*(A45*S1_y + A55*S1_x)
             KC0e0303 = detJ*wij*(A44*S1**2 + Erx*gamma1**2 + S1_x*(D26*S1_y + D66*S1_x) + S1_y*(D22*S1_y + D26*S1_x))
@@ -3964,13 +4166,13 @@ cdef class Quad4R:
             KC0e0719 = detJ*wij*(Ev*gamma2*gamma4 + S4_x*(A26*S2_y + A66*S2_x) + S4_y*(A22*S2_y + A26*S2_x))
             KC0e0721 = -detJ*wij*(S4_x*(B26*S2_y + B66*S2_x) + S4_y*(B22*S2_y + B26*S2_x))
             KC0e0722 = detJ*wij*(S4_x*(B12*S2_y + B16*S2_x) + S4_y*(B26*S2_y + B66*S2_x))
-            KC0e0808 = detJ*wij*(Ew*gamma2**2 + S2_x*(A45*S2_y + A55*S2_x) + S2_y*(A44*S2_y + A45*S2_x))
+            KC0e0808 = detJ*wij*(S2_x*(A45*S2_y + A55*S2_x) + S2_y*(A44*S2_y + A45*S2_x))
             KC0e0809 = -S2*detJ*wij*(A44*S2_y + A45*S2_x)
             KC0e0810 = S2*detJ*wij*(A45*S2_y + A55*S2_x)
-            KC0e0814 = detJ*wij*(Ew*gamma2*gamma3 + S3_x*(A45*S2_y + A55*S2_x) + S3_y*(A44*S2_y + A45*S2_x))
+            KC0e0814 = detJ*wij*(S3_x*(A45*S2_y + A55*S2_x) + S3_y*(A44*S2_y + A45*S2_x))
             KC0e0815 = -S3*detJ*wij*(A44*S2_y + A45*S2_x)
             KC0e0816 = S3*detJ*wij*(A45*S2_y + A55*S2_x)
-            KC0e0820 = detJ*wij*(Ew*gamma2*gamma4 + S4_x*(A45*S2_y + A55*S2_x) + S4_y*(A44*S2_y + A45*S2_x))
+            KC0e0820 = detJ*wij*(S4_x*(A45*S2_y + A55*S2_x) + S4_y*(A44*S2_y + A45*S2_x))
             KC0e0821 = -S4*detJ*wij*(A44*S2_y + A45*S2_x)
             KC0e0822 = S4*detJ*wij*(A45*S2_y + A55*S2_x)
             KC0e0909 = detJ*wij*(A44*S2**2 + Erx*gamma2**2 + S2_x*(D26*S2_y + D66*S2_x) + S2_y*(D22*S2_y + D26*S2_x))
@@ -4011,10 +4213,10 @@ cdef class Quad4R:
             KC0e1319 = detJ*wij*(Ev*gamma3*gamma4 + S4_x*(A26*S3_y + A66*S3_x) + S4_y*(A22*S3_y + A26*S3_x))
             KC0e1321 = -detJ*wij*(S4_x*(B26*S3_y + B66*S3_x) + S4_y*(B22*S3_y + B26*S3_x))
             KC0e1322 = detJ*wij*(S4_x*(B12*S3_y + B16*S3_x) + S4_y*(B26*S3_y + B66*S3_x))
-            KC0e1414 = detJ*wij*(Ew*gamma3**2 + S3_x*(A45*S3_y + A55*S3_x) + S3_y*(A44*S3_y + A45*S3_x))
+            KC0e1414 = detJ*wij*(S3_x*(A45*S3_y + A55*S3_x) + S3_y*(A44*S3_y + A45*S3_x))
             KC0e1415 = -S3*detJ*wij*(A44*S3_y + A45*S3_x)
             KC0e1416 = S3*detJ*wij*(A45*S3_y + A55*S3_x)
-            KC0e1420 = detJ*wij*(Ew*gamma3*gamma4 + S4_x*(A45*S3_y + A55*S3_x) + S4_y*(A44*S3_y + A45*S3_x))
+            KC0e1420 = detJ*wij*(S4_x*(A45*S3_y + A55*S3_x) + S4_y*(A44*S3_y + A45*S3_x))
             KC0e1421 = -S4*detJ*wij*(A44*S3_y + A45*S3_x)
             KC0e1422 = S4*detJ*wij*(A45*S3_y + A55*S3_x)
             KC0e1515 = detJ*wij*(A44*S3**2 + Erx*gamma3**2 + S3_x*(D26*S3_y + D66*S3_x) + S3_y*(D22*S3_y + D26*S3_x))
@@ -4037,12 +4239,97 @@ cdef class Quad4R:
             KC0e1919 = detJ*wij*(Ev*gamma4**2 + S4_x*(A26*S4_y + A66*S4_x) + S4_y*(A22*S4_y + A26*S4_x))
             KC0e1921 = -detJ*wij*(S4_x*(B26*S4_y + B66*S4_x) + S4_y*(B22*S4_y + B26*S4_x))
             KC0e1922 = detJ*wij*(S4_x*(B12*S4_y + B16*S4_x) + S4_y*(B26*S4_y + B66*S4_x))
-            KC0e2020 = detJ*wij*(Ew*gamma4**2 + S4_x*(A45*S4_y + A55*S4_x) + S4_y*(A44*S4_y + A45*S4_x))
+            KC0e2020 = detJ*wij*(S4_x*(A45*S4_y + A55*S4_x) + S4_y*(A44*S4_y + A45*S4_x))
             KC0e2021 = -S4*detJ*wij*(A44*S4_y + A45*S4_x)
             KC0e2022 = S4*detJ*wij*(A45*S4_y + A55*S4_x)
             KC0e2121 = detJ*wij*(A44*S4**2 + Erx*gamma4**2 + S4_x*(D26*S4_y + D66*S4_x) + S4_y*(D22*S4_y + D26*S4_x))
             KC0e2122 = -detJ*wij*(A45*S4**2 + S4_x*(D12*S4_y + D16*S4_x) + S4_y*(D26*S4_y + D66*S4_x))
             KC0e2222 = detJ*wij*(A55*S4**2 + Ery*gamma4**2 + S4_x*(D11*S4_x + D16*S4_y) + S4_y*(D16*S4_x + D66*S4_y))
+            # NOTE transverse shear of Belytschko and Leviathan (1994), the
+            #      constant part of the assumed strains of Dvorkin and Bathe
+            #      (1984) instead of the displacement-based centroid value, and
+            #      the physical stabilisation of their nonconstant part,
+            #      multiplied by hgfactor_w, see the module documentation
+            _shear_bl94(x1, x2, x3, x4, y1, y2, y3, y4, A44, A45, A55,
+                        hgfactor_w, Kws)
+            KC0e0202 += Kws[0]
+            KC0e0203 += Kws[1]
+            KC0e0204 += Kws[2]
+            KC0e0208 += Kws[3]
+            KC0e0209 += Kws[4]
+            KC0e0210 += Kws[5]
+            KC0e0214 += Kws[6]
+            KC0e0215 += Kws[7]
+            KC0e0216 += Kws[8]
+            KC0e0220 += Kws[9]
+            KC0e0221 += Kws[10]
+            KC0e0222 += Kws[11]
+            KC0e0303 += Kws[13]
+            KC0e0304 += Kws[14]
+            KC0e0308 += Kws[15]
+            KC0e0309 += Kws[16]
+            KC0e0310 += Kws[17]
+            KC0e0314 += Kws[18]
+            KC0e0315 += Kws[19]
+            KC0e0316 += Kws[20]
+            KC0e0320 += Kws[21]
+            KC0e0321 += Kws[22]
+            KC0e0322 += Kws[23]
+            KC0e0404 += Kws[26]
+            KC0e0408 += Kws[27]
+            KC0e0409 += Kws[28]
+            KC0e0410 += Kws[29]
+            KC0e0414 += Kws[30]
+            KC0e0415 += Kws[31]
+            KC0e0416 += Kws[32]
+            KC0e0420 += Kws[33]
+            KC0e0421 += Kws[34]
+            KC0e0422 += Kws[35]
+            KC0e0808 += Kws[39]
+            KC0e0809 += Kws[40]
+            KC0e0810 += Kws[41]
+            KC0e0814 += Kws[42]
+            KC0e0815 += Kws[43]
+            KC0e0816 += Kws[44]
+            KC0e0820 += Kws[45]
+            KC0e0821 += Kws[46]
+            KC0e0822 += Kws[47]
+            KC0e0909 += Kws[52]
+            KC0e0910 += Kws[53]
+            KC0e0914 += Kws[54]
+            KC0e0915 += Kws[55]
+            KC0e0916 += Kws[56]
+            KC0e0920 += Kws[57]
+            KC0e0921 += Kws[58]
+            KC0e0922 += Kws[59]
+            KC0e1010 += Kws[65]
+            KC0e1014 += Kws[66]
+            KC0e1015 += Kws[67]
+            KC0e1016 += Kws[68]
+            KC0e1020 += Kws[69]
+            KC0e1021 += Kws[70]
+            KC0e1022 += Kws[71]
+            KC0e1414 += Kws[78]
+            KC0e1415 += Kws[79]
+            KC0e1416 += Kws[80]
+            KC0e1420 += Kws[81]
+            KC0e1421 += Kws[82]
+            KC0e1422 += Kws[83]
+            KC0e1515 += Kws[91]
+            KC0e1516 += Kws[92]
+            KC0e1520 += Kws[93]
+            KC0e1521 += Kws[94]
+            KC0e1522 += Kws[95]
+            KC0e1616 += Kws[104]
+            KC0e1620 += Kws[105]
+            KC0e1621 += Kws[106]
+            KC0e1622 += Kws[107]
+            KC0e2020 += Kws[117]
+            KC0e2021 += Kws[118]
+            KC0e2022 += Kws[119]
+            KC0e2121 += Kws[130]
+            KC0e2122 += Kws[131]
+            KC0e2222 += Kws[143]
 
             # NOTE drilling rotation uses full integration with two-point Gauss-Legendre quadrature
             wij = 1.
@@ -5395,7 +5682,11 @@ cdef class Quad4R:
             These offer the possibility to change the default hourglass
             stiffnesses for each degree-of-freedom.
             Dimensionless multipliers of the hourglass stiffnesses of ``u``,
-            ``v``, ``w``, ``r_x`` and ``r_y``. Default ``1.``.
+            ``v``, ``r_x`` and ``r_y``, and, ``hgfactor_w``, of the
+            stabilisation of the transverse shear, which controls the
+            hourglass mode of ``w``, see the Notes of :mod:`pyfe3d.quad4r`.
+            Default ``1.``. Up to 0.11 ``hgfactor_w`` multiplied Brockman's
+            hourglass stiffness of ``w``.
         nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
             value adds the geometrically nonlinear terms of the von Karman strains,
@@ -6085,8 +6376,8 @@ cdef class Quad4R:
         resultants are integrated with two points in each direction. The
         hourglass pattern of `w`, `w = \xi \eta`, has no gradient at the
         centroid, so it has no geometric stiffness, just as it has no
-        stiffness in KC0 besides the artificial one of `E^{(h)}_w`, see
-        :meth:`.update_KC0`. With the slopes at the two-point quadrature
+        stiffness in KC0 besides the stabilisation of the transverse shear,
+        see :meth:`.update_KC0`. With the slopes at the two-point quadrature
         points, as before version 0.12.0, that pattern had the geometric
         stiffness of the full quadrature, and a linear buckling analysis could
         return a spurious mode of `w` alternating in sign from node to node,
