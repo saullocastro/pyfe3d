@@ -24,7 +24,7 @@ The shell elements of pyfe3d take their constitutive matrices from a
 these objects from the ply data.
 
 """
-from libc.math cimport fabs, sqrt
+from libc.math cimport fabs, sqrt, INFINITY
 
 import copyreg
 
@@ -102,6 +102,63 @@ def _not_positive_definite(MatLamina mat, double det):
     return ('MatLamina constants not positive definite (Jones, R. M., '
             'Mechanics of Composite Materials, 2nd ed., 1999, Sec. 2.4.2): '
             + '; '.join(msgs))
+
+
+cdef double _scaled_cond1(double *M) noexcept nogil:
+    # NOTE condition number in the 1-norm of the symmetric 6x6 matrix M
+    #      scaled by its diagonal, S M S with S = diag(M)^(-1/2), inverted by
+    #      Gauss-Jordan elimination with partial pivoting; INFINITY for a
+    #      non-positive diagonal term or a vanishing pivot, nan propagated;
+    #      M is overwritten
+    cdef int i, j, k, p
+    cdef double n1, n2, col, piv, f, tmp
+    cdef double sq[6]
+    cdef double W[72]
+    for i in range(6):
+        if not M[7*i] > 0:
+            return INFINITY
+        sq[i] = sqrt(M[7*i])
+    n1 = 0.
+    for j in range(6):
+        col = 0.
+        for i in range(6):
+            M[6*i + j] = M[6*i + j]/(sq[i]*sq[j])
+            col += fabs(M[6*i + j])
+        if col > n1 or col != col:
+            n1 = col
+    for i in range(6):
+        for j in range(6):
+            W[12*i + j] = M[6*i + j]
+            W[12*i + 6 + j] = 1. if i == j else 0.
+    for k in range(6):
+        p = k
+        for i in range(k + 1, 6):
+            if fabs(W[12*i + k]) > fabs(W[12*p + k]):
+                p = i
+        if not fabs(W[12*p + k]) > 0:
+            return INFINITY
+        if p != k:
+            for j in range(12):
+                tmp = W[12*k + j]
+                W[12*k + j] = W[12*p + j]
+                W[12*p + j] = tmp
+        piv = W[12*k + k]
+        for j in range(12):
+            W[12*k + j] = W[12*k + j]/piv
+        for i in range(6):
+            if i != k:
+                f = W[12*i + k]
+                if f != 0:
+                    for j in range(12):
+                        W[12*i + j] -= f*W[12*k + j]
+    n2 = 0.
+    for j in range(6):
+        col = 0.
+        for i in range(6):
+            col += fabs(W[12*i + 6 + j])
+        if col > n2 or col != col:
+            n2 = col
+    return n1*n2
 
 
 cdef class MatLamina:
@@ -2821,22 +2878,47 @@ cdef class ShellProp:
 
         Notes
         -----
-        The ``ABD`` matrix must have a positive diagonal, and its condition
-        number after the symmetric diagonal scaling `M = S \, ABD \, S`,
-        `S = \mathrm{diag}(ABD)^{-1/2}`, which does not depend on the units,
-        must not exceed `10^{12}`, the scaling and the threshold of the
-        ``'rohwer'`` transverse shear distribution, see
-        :meth:`.calc_transverse_shear_stiffness`. The condition number is
-        that of the 1-norm, `\kappa_1(M) = \|M\|_1 \|M^{-1}\|_1`, computed
-        with the inverse that gives the equivalent properties, `M^{-1} =
-        S^{-1} \, a \, S^{-1}`, which adds less than 1 us, while the 2-norm
-        of ``np.linalg.cond`` would add about 20 us, 20 to 35 per cent of
-        :func:`.laminated_plate` for 8 plies; `\kappa_2/6 \le \kappa_1 \le 6
-        \kappa_2` for a 6x6 matrix. Being invariant to the scaling, the check
-        does not detect a term that vanishes only to round-off and is
-        decoupled from the others, e.g. ``A66`` of a ``[0/90]`` laminate with
-        ``g12 = 0``, of the order of `e_1 \cos^2 90^\circ \, h`, which gives
-        a tiny but finite ``g12`` instead.
+        The ``ABD`` matrix must have a positive diagonal and a finite
+        inverse, and the ``ABD`` matrix about the mid-surface, `[[A, B^0],
+        [B^0, D^0]]`, must have a condition number not above `10^{12}` after
+        the symmetric diagonal scaling `M = S \, ABD \, S`, `S =
+        \mathrm{diag}(ABD)^{-1/2}`, which does not depend on the units; the
+        scaling and the threshold are those of the ``'rohwer'`` transverse
+        shear distribution, see :meth:`.calc_transverse_shear_stiffness`.
+        Singularity is a property of the laminate, and the matrix about the
+        mid-surface makes the check independent of ``offset``, while the
+        condition number of the matrix about the reference surface, `B = B^0
+        + e A`, `D = D^0 + 2 e B^0 + e^2 A` (Vasiliev and Morozov [1]_, Eq.
+        (5.28), p. 235), grows as `(e/h)^2`, e.g. from 2.3 to `1.6 \cdot
+        10^{10}` at `e/h = 10^4` and to round-off noise near `10^{12}` from
+        `e/h = 10^5`. With ``offset = 0`` the matrix is the stored ``ABD``;
+        otherwise it is integrated from the plies, with `z` measured from the
+        mid-surface, exactly as for ``offset = 0``, such that the check gives
+        the same result for any offset. The matrix about the reference
+        surface cannot be shifted back accurately at large offsets: its
+        `D_{ij}` carry the round-off of the cubes of the heights, about
+        `\epsilon (e/h)^3` relative to `D^0`, which reaches 1 at `e/h
+        \approx 10^5`. Without plies, e.g. created from lamination
+        parameters, the stored matrix is shifted back, `B^0 = B - e A`, `D^0
+        = D - 2 e B + e^2 A`, with a relative round-off of about `12 \epsilon
+        (e/h)^2`, measured `8 \cdot 10^{-4}` at `e/h = 10^6` and 0.16 at
+        `e/h = 10^7` for exact lamination parameters, plus the round-off of
+        the stored matrix itself: the `\xi_{Di}` of
+        :meth:`.calc_lamination_parameters`, integrated about the reference
+        surface, carry that of the cubes, `\epsilon (e/h)^3`, such that a
+        valid laminate given with them is accepted up to `e/h = 10^5` and
+        rejected from `e/h = 10^6`. The condition number is that of the
+        1-norm, `\kappa_1(M) = \|M\|_1 \|M^{-1}\|_1`, with `M^{-1}` by
+        Gauss-Jordan elimination with partial pivoting of the 6x6 matrix,
+        which, with the integration over the plies, adds about 1 us, while
+        ``np.linalg.cond``, of the 2-norm, would add about 20 us;
+        `\kappa_2/6 \le \kappa_1 \le 6 \kappa_2` for a 6x6 matrix. Being
+        invariant to the scaling, the check does not detect a term that
+        vanishes only to round-off and is decoupled from the others, e.g.
+        ``A66`` of a ``[0/90]`` laminate with ``g12 = 0``, of the order of
+        `e_1 \cos^2 90^\circ \, h`, which gives a tiny but finite ``g12``
+        instead. The equivalent properties are computed from the inverse of
+        the stored ``ABD``, about the reference surface.
 
         With `a = [[A, B], [B, D]]^{-1}`, whose upper-left 3x3 block is the
         membrane compliance of the laminate with zero moments and free
@@ -2851,11 +2933,18 @@ cdef class ShellProp:
 
         where the index 6 is the third row and column of `a`.
 
+        References
+        ----------
+        .. [1] Vasiliev, V. V. and Morozov, E. V., Mechanics and Analysis of
+           Composite Materials, Elsevier, Oxford, 2001.
+
         """
         cdef int i, j
-        cdef double n1, n2, colM, colMinv
-        cdef double sq[6]
+        cdef double e, za, zb, dz1, dz2, dz3, hsum, Aij, Bij, Dij
+        cdef double q[9]
+        cdef double Mmid[36]
         cdef double [:, ::1] ABDv, AIv
+        cdef Lamina ply
         msg = ('The ABD matrix of the laminate is singular or '
                'ill-conditioned, its equivalent properties are undefined, '
                'e.g. for a laminate of antiplane cores only, whose in-plane '
@@ -2867,28 +2956,55 @@ cdef class ShellProp:
         for i in range(6):
             if not ABDv[i, i] > 0:
                 raise np.linalg.LinAlgError(msg)
-            sq[i] = sqrt(ABDv[i, i])
         try:
             AI = np.linalg.inv(ABDv)
         except np.linalg.LinAlgError:
             raise np.linalg.LinAlgError(msg)
-        # NOTE condition number of the scaled matrix in the 1-norm, see the
-        #      Notes; an inverse with inf or nan gives inf or nan here
         AIv = AI
-        n1 = 0.
-        n2 = 0.
-        for j in range(6):
-            colM = 0.
-            colMinv = 0.
+        for i in range(6):
+            for j in range(6):
+                if not fabs(AIv[i, j]) <= 1.7976931348623157e308:
+                    raise np.linalg.LinAlgError(msg)
+        # NOTE conditioning of the ABD matrix about the mid-surface, which
+        #      does not depend on the offset, see the Notes
+        e = self.offset
+        if e == 0:
             for i in range(6):
-                colM += fabs(ABDv[i, j])/(sq[i]*sq[j])
-                colMinv += fabs(AIv[i, j])*sq[i]*sq[j]
-            # NOTE a nan, e.g. of an inverse with nan, is kept
-            if colM > n1 or colM != colM:
-                n1 = colM
-            if colMinv > n2 or colMinv != colMinv:
-                n2 = colMinv
-        if not n1*n2 <= 1e12:
+                for j in range(6):
+                    Mmid[6*i + j] = ABDv[i, j]
+        elif len(self.plies) > 0:
+            for i in range(36):
+                Mmid[i] = 0.
+            hsum = 0.
+            for ply in self.plies:
+                hsum += ply.h
+            za = -hsum/2.
+            for ply in self.plies:
+                zb = za + ply.h
+                dz1 = zb - za
+                dz2 = (zb*zb - za*za)/2.
+                dz3 = (zb*zb*zb - za*za*za)/3.
+                q[0] = ply.q11L; q[1] = ply.q12L; q[2] = ply.q16L
+                q[3] = ply.q12L; q[4] = ply.q22L; q[5] = ply.q26L
+                q[6] = ply.q16L; q[7] = ply.q26L; q[8] = ply.q66L
+                for i in range(3):
+                    for j in range(3):
+                        Mmid[6*i + j] += q[3*i + j]*dz1
+                        Mmid[6*i + j + 3] += q[3*i + j]*dz2
+                        Mmid[6*(i + 3) + j] += q[3*i + j]*dz2
+                        Mmid[6*(i + 3) + j + 3] += q[3*i + j]*dz3
+                za = zb
+        else:
+            for i in range(3):
+                for j in range(3):
+                    Aij = ABDv[i, j]
+                    Bij = ABDv[i, j + 3] - e*Aij
+                    Dij = ABDv[i + 3, j + 3] - 2*e*ABDv[i, j + 3] + e*e*Aij
+                    Mmid[6*i + j] = Aij
+                    Mmid[6*i + j + 3] = Bij
+                    Mmid[6*(i + 3) + j] = Bij
+                    Mmid[6*(i + 3) + j + 3] = Dij
+        if not _scaled_cond1(Mmid) <= 1e12:
             raise np.linalg.LinAlgError(msg)
         a11, a12, a22, a33 = AI[0,0], AI[0,1], AI[1,1], AI[2,2]
         self.e1 = 1./(self.h*a11)
