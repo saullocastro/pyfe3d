@@ -111,8 +111,9 @@ meshes split along the diagonal 1-3, normalised by the reference:
   stiffening is in the enrichment, not in the Hughes-Brezzi coefficient.
   It is gone at `N = 32`.
 
-The assembly of :meth:`.update_KC0` takes about half the time of the one of
-:class:`.Tria3DSG`, 0.64 against 1.36 s for 80000 elements on one thread.
+The assembly of :meth:`.Tria3R.update_KC0` takes about half the time of
+the one of :class:`.Tria3DSG`, 0.64 against 1.36 s for 80000 elements on
+one thread.
 
 These measurements are why :class:`.Tria3R` is the recommended triangle, and
 why :class:`.Tria3DSG` is the better choice on a coarse mesh of a doubly
