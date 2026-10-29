@@ -1225,6 +1225,54 @@ def test_repeated_load_multipliers_completed(monkeypatch, k):
     np.testing.assert_allclose(eigvals, lam[:k], rtol=1e-10)
 
 
+def test_repeated_load_multipliers_completed_second_strategy(monkeypatch):
+    r"""The result of the second sparse strategy, ``eigsh()`` with a 10
+    times larger shift, is also completed by deflated passes when it misses
+    copies of repeated load multipliers, before the dense fallback: the
+    first call of ``eigsh()`` raises, such that there is nothing to complete
+    after it, and the second one returns one copy of each repeated load
+    multiplier of :func:`laplacian_3d`, as in
+    :func:`test_repeated_load_multipliers_completed`"""
+    K, lam = laplacian_3d(6)
+    KG = -identity(K.shape[0], format='csr')
+    k = 7
+    one_copy = one_copy_each(eigen._eigsh_cayley)
+    sigmas = []
+    events = []
+
+    def first_raises(K, KG, k, tol, sigma):
+        sigmas.append(sigma)
+        events.append('eigsh')
+        if len(sigmas) == 1:
+            raise RuntimeError('ARPACK failed')
+        return one_copy(K, KG, k, tol, sigma)
+
+    deflated = eigen.deflated_eigsh
+
+    def spy_deflated(*args, **kwargs):
+        events.append('deflated')
+        return deflated(*args, **kwargs)
+
+    monkeypatch.setattr(eigen, '_eigsh_cayley', first_raises)
+    monkeypatch.setattr(eigen, 'deflated_eigsh', spy_deflated)
+    with warnings.catch_warnings():
+        warnings.simplefilter('error', DenseFallbackWarning)
+        eigvals, eigvecs = linear_buckling(K, KG, num_eigvalues=k)
+    np.testing.assert_allclose(eigvals, lam[:k], rtol=1e-10)
+    assert np.all(relative_residuals(K, KG, eigvals, eigvecs) < 1e-8)
+    assert len(sigmas) == 2 and np.isclose(sigmas[1], 10*sigmas[0])
+    # NOTE the deflated passes follow the second call of eigsh()
+    assert events[:2] == ['eigsh', 'eigsh'] and 'deflated' in events[2:]
+    # NOTE without them the dense solver is used, the second strategy
+    #      having missed copies
+    sigmas.clear()
+    monkeypatch.setattr(eigen, 'MAX_COMPLETION_PASSES', 0)
+    with pytest.warns(DenseFallbackWarning, match='10 times larger shift: '
+                      r'\d+ load multiplier\(s\) lower than .* are missing'):
+        eigvals, _ = linear_buckling(K, KG, num_eigvalues=k)
+    np.testing.assert_allclose(eigvals, lam[:k], rtol=1e-10)
+
+
 def test_completion_not_applicable(monkeypatch):
     r"""The deflated passes complete only accurate eigenpairs, found with a
     shift of the Cayley mode larger than the estimate of the largest
