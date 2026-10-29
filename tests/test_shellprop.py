@@ -10,7 +10,7 @@ import pytest
 from pyfe3d.shellprop import (Lamina, shellprop_from_LaminationParameters,
         shellprop_from_lamination_parameters, make_balanced_LP,
         make_orthotropic_LP, make_symmetric_LP, LaminationParameters,
-        GradABD)
+        GradABD, ShellProp)
 from pyfe3d.shellprop_utils import (read_laminaprop, laminated_plate,
         isotropic_plate)
 
@@ -653,6 +653,27 @@ def test_singular_ABD_offset_invariant():
                                                               offset)
                 prop_lp.calc_equivalent_properties()
                 assert np.isfinite(prop_lp.e1) and prop_lp.e1 > 0
+
+
+def test_ABD_non_positive_about_mid_surface():
+    r"""Stored ABD whose diagonal about the mid-surface is not positive
+
+    Without plies the matrix about the mid-surface is shifted back from the
+    stored one, ``D - 2 offset B + offset**2 A``. A stored ``ABD`` with a
+    positive diagonal and a regular inverse, but not positive definite,
+    ``A_ii = D_ii = 1`` and ``B_ii = 2``, gives ``D_ii = -2`` about the
+    mid-surface for ``offset = 1``, which the conditioning check rejects.
+    """
+    prop = ShellProp()
+    prop.h = 1.
+    prop.offset = 1.
+    prop.A11 = prop.A22 = prop.A66 = 1.
+    prop.B11 = prop.B22 = prop.B66 = 2.
+    prop.D11 = prop.D22 = prop.D66 = 1.
+    assert np.all(np.diag(prop.ABD) > 0)
+    assert np.isfinite(np.linalg.inv(prop.ABD)).all()
+    with pytest.raises(ValueError, match='singular or ill-conditioned'):
+        prop.calc_equivalent_properties()
 
 
 @pytest.mark.parametrize('platform', ['raises', 'inf', 'nan'])

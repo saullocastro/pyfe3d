@@ -108,8 +108,8 @@ cdef double _scaled_cond1(double *M) noexcept nogil:
     # NOTE condition number in the 1-norm of the symmetric 6x6 matrix M
     #      scaled by its diagonal, S M S with S = diag(M)^(-1/2), inverted by
     #      Gauss-Jordan elimination with partial pivoting; INFINITY for a
-    #      non-positive diagonal term or a vanishing pivot, nan propagated;
-    #      M is overwritten
+    #      non-positive diagonal term, inf or nan for a vanishing pivot,
+    #      divided by with cdivision, nan propagated; M is overwritten
     cdef int i, j, k, p
     cdef double n1, n2, col, piv, f, tmp
     cdef double sq[6]
@@ -135,8 +135,6 @@ cdef double _scaled_cond1(double *M) noexcept nogil:
         for i in range(k + 1, 6):
             if fabs(W[12*i + k]) > fabs(W[12*p + k]):
                 p = i
-        if not fabs(W[12*p + k]) > 0:
-            return INFINITY
         if p != k:
             for j in range(12):
                 tmp = W[12*k + j]
