@@ -1746,7 +1746,7 @@ u_{12} = 0.25`, and the sandwich has two `[0/90]` faces of 0.5
             laminaprops=[laminaprop, laminaprop, core, laminaprop,
                          laminaprop]), 0.5),
     }
-    # NOTE Reddy (2004), Table 7.2.1, (0/90/90/0), uniform load
+    # NOTE Reddy (2003), Table 7.2.1, (0/90/90/0), uniform load
     for a_h, wbar in ((10, 1.0250), (20, 0.7694), (100, 0.6833)):
         h = 1./a_h
         prop = laminated_plate([0, 90, 90, 0], plyt=h/4,
