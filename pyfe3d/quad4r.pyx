@@ -28,12 +28,13 @@ All stiffness terms, besides drilling, are integrated using the reduced
 integration scheme for the :class:`.Quad4R` element, with a single point at
 the centroid, making it very efficient concerning the time needed to
 calculate the internal forces and stiffness matrices, in comparison with the
-:class:`.Quad4` element. An hourglass control adds an artificial
-stiffness to `u`, `v`, `r_x` and `r_y`, and the transverse shear, that of
-Belytschko and Leviathan (1994), controls the hourglass mode of `w` with
-the physical stabilisation of its nonconstant part; their magnitudes can be
-scaled with the ``hgfactor_*`` parameters of :meth:`.Quad4R.update_KC0`,
-:meth:`.Quad4R.update_probe_finte` and :meth:`.Quad4R.update_fint`.
+:class:`.Quad4` element. The hourglass modes of the bending and of the
+transverse shear, of `w`, `r_x` and `r_y`, are controlled by the physical
+stabilisation of Belytschko and Leviathan (1994), which has no parameter,
+and those of the membrane, of `u` and `v`, by the artificial stiffness of
+Brockman (1987); ``hgfactor_physical`` and ``hgfactor_membrane`` of
+:meth:`.Quad4R.update_KC0`, :meth:`.Quad4R.update_probe_finte` and
+:meth:`.Quad4R.update_fint` multiply them.
 
 The drilling rotation `r_z` is tied to the in-plane rotation of the membrane
 field by a term integrated with two points per direction, whose coefficient
@@ -93,105 +94,13 @@ gradients can be constant over the element when the element is rectangular.
 .. rubric:: Integration scheme and hourglass control
 
 In the reduced integration scheme used, a single point at the centroid
-(`\xi=\eta=0`) and weight `w_{ij}=4`, preventing shear locking.
-The hourglass control of `u`, `v`, `r_x` and `r_y` is used according to
-Brockman 1987 [1]_, with the
-orthogonalised hourglass operator of his Eq. (14), which he quotes from
-Belytschko and Tsay 1983 [2]_. Brockman considers only isotropic plates,
-and his generalized stiffnesses contain the Young's modulus `E`, times `t`
-for the in-plane translations `u`, `v` and times `t^3` for `w` and the
-rotations. For a laminate, `E` is replaced by equivalent moduli in the
-element coordinate system, see :meth:`.Quad4R.update_KC0`: the membrane
-moduli `E_{1eq}` and `E_{2eq}` of the extensional compliance `\boldsymbol{A}^{-1}` for
-`u` and `v`, and the bending moduli `E_{1b}` and `E_{2b}` of the bending
-compliance, the lower-right block of `[[A, B], [B, D]]^{-1}`, for `r_x`
-and `r_y`. Each is the modulus of the homogeneous plate that has the
-compliance of the laminate in that direction, so both pairs reduce to `E`
-for an isotropic plate, and they differ for a laminate whose bending
-stiffness is not `t^2/12` times its extensional stiffness, e.g. a cross-ply
-or a sandwich. Brockman calibrated the coefficients of his Eq. (16) on
-isotropic plates, and this generalisation does not recalibrate them for
-laminates; :class:`.Quad4`, with its mixed quadrature, needs no hourglass
-control. With the bending moduli, the artificial stiffness of the rotations
-is the same fraction of the bending stiffness of the plate for every
-laminate as for an isotropic plate. On simply supported plates under
-uniform pressure, with 8 by 8 elements, the centre deflection of an
-unsymmetric `[0/90]` cross-ply, whose `\boldsymbol{B}` gives `E_{1b} = 0.36
-E_{1eq}`, is 15 % smaller than the Navier solution of the FSDT, against
-31 % with the membrane moduli for the rotations, used before 0.11.0, which
-over-stabilised it; that of a sandwich with thin faces, `E_{1b} = 2.7
-E_{1eq}`, is 14 % smaller, against 6 %, the membrane moduli having
-under-stabilised it; see ``test_laminated_plates_against_navier`` in
-``test_quad4r_hourglass_control.py``.
+(`\xi=\eta=0`) and weight `w_{ij}=4`, the membrane, bending and transverse
+shear terms leave hourglass modes without stiffness. Those of the bending
+and of the transverse shear are controlled with the physical stabilisation
+of Belytschko and Leviathan (1994) [9]_, described below, and those of the
+membrane with the artificial stiffness of Brockman 1987 [1]_.
 
-.. rubric:: Dimensional homogeneity of the hourglass stiffnesses
-
-The generalized stiffnesses of Brockman's Eqs. (16a) and (16b),
-
-.. math::
-
-    E^{(h)}_u = E^{(h)}_v = \frac{0.10 E t}{1 + 1/A}
-    \qquad
-    E^{(h)}_w = E^{(h)}_{\theta_x} = E^{(h)}_{\theta_y}
-              = \frac{0.10 E t^3}{1 + 1/A}
-
-are not dimensionally homogeneous, `1/A` being an inverse area, so the
-artificial stiffness depends on the unit of length the model is written in.
-The hourglass term enters the element matrix as
-
-.. math::
-
-    K_{ij} = A E^{(h)} \gamma_i \gamma_j
-
-with `\gamma = \partial^2 \boldsymbol{S}/\partial x \partial y` evaluated at the
-centroid, of dimension `1/L^2`. The hourglass amplitude of a translation is
-`\gamma^\top u`, of dimension `1/L`, and of a rotation is `\gamma^\top \theta`, of
-dimension `1/L^2`. Requiring `K_{ij}` to be a force per unit displacement
-for the translations and a moment per unit rotation for the rotations gives
-
-.. math::
-
-    \boldsymbol{E}^{(h)} = F L \quad \text{for } u, v, w
-    \qquad
-    \boldsymbol{E}^{(h)} = F L^3 \quad \text{for } \theta_x, \theta_y
-
-Since `1/(1 + 1/A) \rightarrow A` for `A \ll 1` and `\rightarrow 1` for
-`A \gg 1`, Brockman's factor supplies the area that Eq. (16a) is missing
-only in a unit of length that makes the element areas small, and stops
-supplying it in a unit that makes them large. The switch happens at
-`A = 1` in whatever unit is used. He introduces the factor knowingly, as
-"motivated by locking problems observed in elements with extremely small
-dimensions", and reports good behaviour "over a range of six orders of
-magnitude in the planform dimension".
-
-This element replaces the factor by the area itself in the four
-coefficients it uses, the transverse displacement `w` being controlled by
-the transverse shear, see below:
-
-.. math::
-
-    E^{(h)}_u = 0.10 E_{1eq} t A
-    \qquad
-    E^{(h)}_v = 0.10 E_{2eq} t A
-
-.. math::
-
-    E^{(h)}_{\theta_x} = 0.10 E_{2b} t^3 A
-    \qquad
-    E^{(h)}_{\theta_y} = 0.10 E_{1b} t^3 A
-
-Each of these scales under a change of length unit exactly as the physical
-stiffness it stabilises, `Et` for the in-plane translations and `Et^3` for
-the rotations, so the ratio of artificial to physical stiffness is the same
-number in every unit. In the small-area limit they coincide with
-Eqs. (16a) and (16b), so no benchmark of this element moves: the change is
-a reinterpretation of Brockman's factor as the area it tends to, not a
-different magnitude of stabilisation. Cook's in-plane bending problem,
-whose response legitimately contains hourglass components, is reproduced to
-twelve significant figures over nine orders of magnitude of length unit,
-where before it drifted at the metre and collapsed at the kilometre.
-
-.. rubric:: Transverse shear and the hourglass mode of `w`
+.. rubric:: Physical stabilisation of the bending and of the transverse shear
 
 The transverse shear is that of Belytschko and Leviathan (1994) [9]_: the
 assumed covariant shear strains of Dvorkin and Bathe (1984) [10]_, tied at
@@ -201,58 +110,133 @@ r_x`, split into a constant part and a nonconstant part, linear in `\eta`
 for `\gamma_{xz}` and in `\xi` for `\gamma_{yz}`, both mapped to Cartesian
 components with the Jacobian at the centroid, their Eqs. (3.35)-(3.42),
 pp. 328-329. The constant part is integrated at the centroid, their
-Eq. (4.12), p. 330, in place of the displacement-based shear at the
-centroid used up to 0.11, and the nonconstant part gives the
-stabilisation of their Eq. (4.13), p. 331, integrated exactly with
-`\int \xi^2 dA = \int \eta^2 dA = A/3` and `\int \xi \eta \, dA = 0`,
-their Eqs. (4.15) and (4.10), the coupling between the two parts being
-omitted as in the paper. The stabilisation has no parameter: its
-stiffness is that of the transverse shear, `A_{44}`, `A_{45}` and
-`A_{55}`, and ``hgfactor_w`` multiplies it, ``1`` being the formulation of
-the paper.
+Eq. (4.12), p. 330, and the nonconstant part gives the stabilisation of
+their Eq. (4.13), p. 331, integrated exactly with `\int \xi^2 dA = \int
+\eta^2 dA = A/3` and `\int \xi \eta \, dA = 0`, their Eqs. (4.15) and
+(4.10), with the transverse shear stiffness `A_{44}`, `A_{45}` and
+`A_{55}`.
 
-A uniform twist, `w = kxy`, `r_x = kx`, `r_y = -ky`, and every state of
-constant curvature have no assumed shear strain, constant or not, on any
-quadrilateral, so the element passes the constant-twist patch test and
-the thin-plate bending patch test of Belytschko and Leviathan, their
-Section 6.1, Fig. 3 and Tables 2 and 3, pp. 336-337, for any thickness,
-length unit and ``hgfactor_w``, see ``test_constant_twist_patch_test`` and
+The bending is stabilised in the same way: with the bilinear shape
+functions written as `N_I = \Delta_I + x b_{xI} + y b_{yI} + h \gamma_I`,
+their Eq. (3.23), `h = \xi \eta` and `\gamma_I = (h_I - (\boldsymbol{h}^\top
+\boldsymbol{x}) b_{xI} - (\boldsymbol{h}^\top \boldsymbol{y}) b_{yI})/4`,
+Eq. (3.24), the derivatives are `N_{I,x} = b_{xI} + h_{,x} \gamma_I`,
+Eq. (3.25), and the nonconstant part of the curvatures, `\kappa_{xx} =
+h_{,x} q_y`, `\kappa_{yy} = -h_{,y} q_x` and `\kappa_{xy} = h_{,y} q_y -
+h_{,x} q_x` with `q_x = \boldsymbol{\gamma}^\top \boldsymbol{r}_x` and `q_y =
+\boldsymbol{\gamma}^\top \boldsymbol{r}_y`, Eq. (3.28), p. 327, gives the
+stabilisation of Eqs. (4.13), (B.17) and (B.18), pp. 331 and 349, with
+the integrals `H_{xx}`, `H_{yy}` and `H_{xy}` of `h_{,x}^2`, `h_{,y}^2`
+and `h_{,x} h_{,y}` of their Eq. (4.14), here integrated with two by two
+Gauss points, and the bending stiffness `\boldsymbol{D} - \boldsymbol{B}
+\boldsymbol{A}^{-1} \boldsymbol{B}` of the laminate in the element
+coordinate system, which is `\boldsymbol{D}` for a symmetric laminate,
+`E t^3/12` times `\hat{\boldsymbol{C}}_b` of Eq. (B.18) for an isotropic
+plate, and does not depend on the reference surface set by
+``prop.offset``. For a parallelogram the one-point bending plus this
+stabilisation is the bending integrated with two by two points.
+
+Neither stabilisation has a parameter; ``hgfactor_physical`` multiplies
+both, ``1`` being the formulation of the paper, other values serving
+verification and sensitivity studies. The rigid-body motions and every
+state of constant strain, of constant curvature, including a uniform twist
+`w = kxy`, `r_x = kx`, `r_y = -ky`, and of constant transverse shear have
+no nonconstant strain, on any quadrilateral, and the assumed shear strains
+of constant curvature vanish there too: the element passes the
+constant-twist patch test and the thin-plate bending patch test of
+Belytschko and Leviathan, their Section 6.1, Fig. 3 and Tables 2 and 3,
+pp. 336-337, for any thickness, length unit and ``hgfactor_physical``, see
+``test_constant_twist_patch_test`` and
 ``test_bending_patch_test_belytschko_leviathan`` in
-``test_quad4r_hourglass_control.py``. The hourglass mode of `w` and the
-twisting mode of Brockman's Eq. (13) vary the assumed shear strains along
-the element, so the stabilisation resists both, and a single element is
-singular only in its six rigid-body motions. The stiffness scales with the
-length unit as the transverse shear does, so the response of a model is
-independent of the unit of length.
+``test_quad4r_hourglass_control.py``. The hourglass modes of `w`, `r_x`
+and `r_y` and the twisting mode of Brockman's Eq. (13) have nonconstant
+strains, so a single element is singular only in its six rigid-body
+motions. Both stiffnesses scale with the length unit as the physical ones
+do, so the response of a model is independent of the unit of length.
 
-Up to 0.11, `w` was stabilised as `u` and `v` are, with Brockman's
-`E^{(h)}_w = 0.1 E t^3/(1 + 1/A)` and the operator `\gamma^\top w`, which
-is `w_{,xy}` and thus `k` for a uniform twist: it added the fraction
-`0.6 (1 + \nu)/(1 + 1/A)` to the energy of a uniform twist, 0.78 for `\nu
-= 0.3` and `A \gg 1`, whatever the mesh, a failure of the constant-twist
-patch test where the element areas were large in the unit of length of the
-model. The consequences, measured on 2026-10-29, before and after:
+.. rubric:: Hourglass control of the membrane
+
+The hourglass modes of `u` and `v` have the artificial stiffness of
+Brockman 1987 [1]_, with the orthogonalised hourglass operator of his
+Eq. (14), which he quotes from Belytschko and Tsay 1983 [2]_. Brockman
+considers only isotropic plates, and his generalized stiffnesses contain
+the Young's modulus `E` times `t`; for a laminate, `E` is replaced by the
+membrane moduli `E_{1eq}` and `E_{2eq}` of the extensional compliance
+`\boldsymbol{A}^{-1}` in the element coordinate system, see
+:meth:`.Quad4R.update_KC0`, which reduce to `E` for an isotropic plate.
+The generalized stiffnesses of Brockman's Eq. (16a),
+
+.. math::
+
+    E^{(h)}_u = E^{(h)}_v = \frac{0.10 E t}{1 + 1/A}
+
+are not dimensionally homogeneous, `1/A` being an inverse area. The
+hourglass term enters the element matrix as `K_{ij} = A E^{(h)} \gamma_i
+\gamma_j`, with `\gamma = \partial^2 \boldsymbol{S}/\partial x \partial y`
+at the centroid, of dimension `1/L^2`, so `E^{(h)}` must be a force times a
+length; Brockman's factor `1/(1 + 1/A)` tends to `A` only for `A \ll 1`,
+the regime in which he calibrated it, "over a range of six orders of
+magnitude in the planform dimension". This element uses the area itself,
+
+.. math::
+
+    E^{(h)}_u = 0.10 \, f_m E_{1eq} t A
+    \qquad
+    E^{(h)}_v = 0.10 \, f_m E_{2eq} t A
+
+with `f_m` = ``hgfactor_membrane``, which scales with the length unit as
+the extensional stiffness `E t` does: Cook's in-plane bending problem is
+reproduced to twelve significant figures over nine orders of magnitude of
+length unit, see ``test_hourglass_stiffness_is_independent_of_the_length_unit``.
+
+Belytschko and Leviathan stabilise the membrane physically too, with the
+nonconstant part of the membrane strains, their Eqs. (3.27) and (B.13),
+which on a flat element is the bilinear membrane integrated with two by two
+points and locks in in-plane bending. Measured on 2026-10-29 with that
+stabilisation, integrated with two by two points, in place of Brockman's:
+the in-plane tip load of the straight cantilever of MacNeal and Harder
+(1985) [7]_, 6 by 1 elements, gives 0.076, 0.024 and 0.028 times the
+reference on the regular, trapezoidal and parallelogram meshes, against
+0.119, 0.033 and 0.064 with Brockman's; Cook's membrane gives 11.32, 18.14,
+22.44 and 24.18 with 2x2 to 16x16 elements, against 13.95, 20.28, 23.41 and
+24.54 (reference 23.96). Neither is free of locking on the one-element-deep
+strips, and the physical form is the stiffer, so the membrane keeps
+Brockman's stabilisation. :class:`.Quad4`, with its drilling enrichment,
+does not lock in in-plane bending.
+
+Up to 0.11 the hourglass modes of `w`, `r_x` and `r_y` also had Brockman's
+artificial stiffnesses, `0.1 E t^3/(1 + 1/A)` for `w` and `0.1 E_{b} t^3
+A` for the rotations, with the bending moduli, and the transverse shear was
+the displacement-based one at the centroid. The operator `\gamma^\top w`
+is `w_{,xy}`, `k` for a uniform twist, and added the fraction `0.6 (1 +
+\nu)/(1 + 1/A)` to its energy, 0.78 for `\nu = 0.3` and `A \gg 1`, a
+failure of the constant-twist patch test that refinement did not remove
+where the element areas were large in the unit of length of the model; the
+parameters were ``hgfactor_u``, ``hgfactor_v``, ``hgfactor_w``,
+``hgfactor_rx`` and ``hgfactor_ry``. The consequences, measured on
+2026-10-29, before and after:
 
 * the one-element-wide torsion strip of MacNeal and Harder (1985) [7]_:
-  4.78 times the reference twist, grade F, against 0.928, grade B, see
-  ``test_one_element_wide_strip_in_torsion``;
+  4.78 times the reference twist, grade F, against 0.941, grade B, the
+  value of their QUAD4, see ``test_one_element_wide_strip_in_torsion``;
 * the hinged cylindrical roof of Sze et al. (2004) [8]_, `t = 6.35`: the
   lower limit load converged to -0.1435 to -0.1440 `P_{max}`, 11 % below
-  the -0.1288 of their Table 9d, against -0.12886 with 48x48 elements on
-  the quarter, see ``test_hinged_roof_thin_lower_limit_load``; with `t =
-  12.7`, the start of the path was 6.7 to 9.1 % stiffer than their Table
-  9a, against 0.6 % with 16x16 elements, and the linear deflection 6 to 7 %
-  smaller than with :class:`.Tria3DSG`, against 0.25 % larger;
+  the -0.1288 of their Table 9d, against 0.2 % with 32x32 elements on the
+  quarter, see ``test_hinged_roof_thin_snap_back``; with `t = 12.7` the
+  linear deflection was 6 to 7 % smaller than with :class:`.Tria3DSG`;
 * the thin-plate bending patch test above: the interior deflections were
   0.88 to 1.21 times the exact ones;
-* in SI units, where Brockman's factor made `E^{(h)}_w` negligible, the
-  simply supported thin plates of ``test_quad4r_linear_buckling_plate.py``
-  and ``test_quad4r_linear_buckling_plate_given_stress.py`` buckle 0.2 %
-  higher with 92x44 elements, the errors still converging as the square of
-  the element size, and the frequencies and deflections of the other
-  plate tests change by less than 0.4 %, see their docstrings.
+* simply supported laminated plates under uniform pressure, 8x8 elements:
+  the centre deflection was 8 to 15 % below the Navier solution, against
+  0.5 to 3 %, see ``test_laminated_plates_against_navier``;
+* the thin plates of ``test_quad4r_linear_buckling_plate.py``: the
+  buckling load was 0.27 % above Leissa's with 92x44 elements, against
+  0.05 %; the thick plate of
+  ``test_quad4r_linear_buckling_plate_rotated_thick_elements.py``, 30x14
+  elements: 10.7 % above the reference with tuned hourglass factors,
+  against 1.4 % with the default.
 
-The coefficients and the operator, as computed, are given in the Notes of
+The operators and the coefficients, as computed, are given in the Notes of
 :meth:`.Quad4R.update_KC0`.
 
 .. rubric:: Transverse shear stiffness
@@ -1515,26 +1499,20 @@ cdef class Quad4R:
             # NOTE reduced integration to remove shear locking
             wij = 4.
 
-            # NOTE Brockman's hourglass control is derived for isotropic
-            #      plates, and applied to laminates with the membrane moduli
-            #      E1eq and E2eq for u and v, and with the bending moduli
-            #      E1b and E2b for rx and ry, see the module documentation
-            # NOTE Brockman's 1/(1 + 1/A) of Eq. (16) is replaced by the
-            #      dimensionally homogeneous area factor, see the section
-            #      "Dimensional homogeneity of the hourglass stiffnesses"
-            #      of the module documentation. In short, the term enters
-            #      as K_ij = A*E^(h)*gamma_i*gamma_j with gamma of
-            #      dimension 1/L**2, so E^(h) must be F*L for the
-            #      translations u and v and F*L**3 for the rotations
-            #      rx and ry. Brockman's factor tends to A only in the
-            #      limit A << 1, so it supplies the missing area in some
-            #      units and not in others
+            # NOTE Brockman's hourglass control of u and v, derived for
+            #      isotropic plates, applied to laminates with the membrane
+            #      moduli E1eq and E2eq, and with the area in place of his
+            #      1/(1 + 1/A) of Eq. (16), see the section "Hourglass
+            #      control of the membrane" of the module documentation: the
+            #      term enters as K_ij = A*E^(h)*gamma_i*gamma_j with gamma
+            #      of dimension 1/L**2, so E^(h) must be F*L
             Eu = hgfactor_membrane*0.1*E1eq*prop.h*self.area
             Ev = hgfactor_membrane*0.1*E2eq*prop.h*self.area
-            # NOTE the transverse displacement w has no artificial hourglass
-            #      stiffness: its hourglass mode is controlled by the
-            #      physical stabilisation of the transverse shear below,
-            #      scaled by hgfactor_physical, see _shear_bl94
+            # NOTE w, rx and ry have no artificial hourglass stiffness: their
+            #      hourglass modes are controlled by the physical
+            #      stabilisation of the bending and of the transverse shear
+            #      below, scaled by hgfactor_physical, see _shear_bl94 and
+            #      _bending_bl94
 
             # NOTE using only one integration point at xi=0, eta=0 to avoid shear locking
             detJ = 0.125*x1*y2 - 0.125*x1*y4 - 0.125*x2*y1 + 0.125*x2*y3 - 0.125*x3*y2 + 0.125*x3*y4 + 0.125*x4*y1 - 0.125*x4*y3
@@ -2118,7 +2096,7 @@ cdef class Quad4R:
 
         .. math::
 
-            \boldsymbol{K}_{stab} = f_w \frac{A}{3} \left(
+            \boldsymbol{K}^s_{stab} = f_p \frac{A}{3} \left(
             \boldsymbol{D}_1^\top \boldsymbol{A}_s \boldsymbol{D}_1
             + \boldsymbol{D}_2^\top \boldsymbol{A}_s \boldsymbol{D}_2 \right)
 
@@ -2128,9 +2106,32 @@ cdef class Quad4R:
         at the tying points `A (-1, 0)`, `B (0, -1)`, `C (1, 0)` and `D (0,
         1)`, `\boldsymbol{J}_0` the Jacobian at the centroid and `\boldsymbol{A}_s` the
         matrix of `A_{55}`, `A_{45}` and `A_{44}` for `\gamma_{xz}` and
-        `\gamma_{yz}`, see the module documentation; `f_w` is
-        ``hgfactor_w``. The hourglass term adds, for each of `u`, `v`, `r_x`
-        and `r_y`,
+        `\gamma_{yz}`. The bending has the stabilisation of their Eq. (B.18),
+
+        .. math::
+
+            K^b_{r_{xI} r_{xJ}} = f_p Q_{xx} \gamma_I \gamma_J, \quad
+            K^b_{r_{yI} r_{yJ}} = f_p Q_{yy} \gamma_I \gamma_J, \quad
+            K^b_{r_{xI} r_{yJ}} = f_p Q_{xy} \gamma_I \gamma_J
+
+        .. math::
+
+            Q_{xx} = H_{xx} D_{66} + H_{yy} D_{22} + 2 H_{xy} D_{26}, \quad
+            Q_{yy} = H_{xx} D_{11} + H_{yy} D_{66} + 2 H_{xy} D_{16}
+
+        .. math::
+
+            Q_{xy} = -H_{xx} D_{16} - H_{yy} D_{26} - H_{xy} (D_{12} + D_{66})
+
+        with `\gamma_I = (h_I - (\boldsymbol{h}^\top \boldsymbol{x}) S_{I,x} -
+        (\boldsymbol{h}^\top \boldsymbol{y}) S_{I,y})/4`, their Eq. (3.24),
+        `H_{xx}`, `H_{yy}` and `H_{xy}` the integrals over the element of
+        `h_{,x}^2`, `h_{,y}^2` and `h_{,x} h_{,y}`, `h = \xi \eta`, evaluated
+        with two by two Gauss points, and `D_{ij}` the entries of `\boldsymbol{D} -
+        \boldsymbol{B} \boldsymbol{A}^{-1} \boldsymbol{B}`, which do not change
+        when the reference surface is moved with ``prop.offset``; `f_p` is
+        ``hgfactor_physical``. The membrane hourglass term adds, for `u` and
+        `v`,
 
         .. math::
 
@@ -2150,41 +2151,25 @@ cdef class Quad4R:
 
         .. math::
 
-            E^{(h)}_u = 0.1 \, f_u E_{1eq} t A, \qquad
-            E^{(h)}_v = 0.1 \, f_v E_{2eq} t A
+            E^{(h)}_u = 0.1 \, f_m E_{1eq} t A, \qquad
+            E^{(h)}_v = 0.1 \, f_m E_{2eq} t A
 
-        .. math::
-
-            E^{(h)}_{r_x} = 0.1 \, f_{r_x} E_{2b} t^3 A, \qquad
-            E^{(h)}_{r_y} = 0.1 \, f_{r_y} E_{1b} t^3 A
-
-        where `f_u, f_v, f_{r_x}, f_{r_y}` are the ``hgfactor_*``
-        parameters. The reasons for the area factors are given in the Notes
-        of :mod:`pyfe3d.quad4r`. The equivalent moduli, all in the element
-        coordinate system, are
+        where `f_m` is ``hgfactor_membrane``. The reason for the area factor
+        is given in the Notes of :mod:`pyfe3d.quad4r`. The equivalent moduli,
+        in the element coordinate system, are
 
         .. math::
 
             E_{1eq} = \frac{1}{t a_{11}}, \quad
-            E_{2eq} = \frac{1}{t a_{22}}, \quad
-            E_{1b} = \frac{12}{t^3 d_{11}}, \quad
-            E_{2b} = \frac{12}{t^3 d_{22}}
+            E_{2eq} = \frac{1}{t a_{22}}
 
-        with `[a] = \boldsymbol{A}^{-1}`, the coupling matrix `\boldsymbol{B}` being neglected,
-        and `[d] = (\boldsymbol{D} - \boldsymbol{B} \boldsymbol{A}^{-1} \boldsymbol{B})^{-1}` the lower-right block of
-        `[[A, B], [B, D]]^{-1}`. A homogeneous plate of modulus `E` has
-        `a_{11} = 1/(E t)` and `d_{11} = 12/(E t^3)`, so `E_{1eq}` is the
-        modulus of the homogeneous plate that stretches as the laminate under
-        `N_{xx}` alone with the curvatures restrained, and `E_{1b}` that of
-        the homogeneous plate that bends as the laminate under `M_{xx}`
-        alone with the membrane forces zero; analogously in `y`. Both pairs
-        reduce to `E` for an isotropic plate, as in Eq. (16) of Brockman,
-        whereas `12 D_{11}/t^3` would give `E/(1 - \nu^2)`. `\boldsymbol{D} -
-        \boldsymbol{B} \boldsymbol{A}^{-1} \boldsymbol{B}` and `\boldsymbol{A}` do not change when the reference surface
-        is moved with ``prop.offset``, while `\boldsymbol{D}` does, so neither pair
-        depends on the offset. `r_x` enters the curvature `\kappa_{yy} =
-        -r_{x,y}` and `r_y` the curvature `\kappa_{xx} = r_{y,x}`, hence
-        `E_{2b}` in `E^{(h)}_{r_x}` and `E_{1b}` in `E^{(h)}_{r_y}`.
+        with `[a] = \boldsymbol{A}^{-1}`, the coupling matrix `\boldsymbol{B}` being
+        neglected. A homogeneous plate of modulus `E` has `a_{11} = 1/(E
+        t)`, so `E_{1eq}` is the modulus of the homogeneous plate that
+        stretches as the laminate under `N_{xx}` alone with the curvatures
+        restrained; analogously in `y`. Both reduce to `E` for an isotropic
+        plate, as in Eq. (16) of Brockman, whereas `A_{11}/t` would give `E/(1
+        - \nu^2)`, and neither depends on the offset.
 
         The drilling term, `\gamma_{r_z} \boldsymbol{B}_{r_z}^\top \boldsymbol{B}_{r_z}` with
         `B_{r_z} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}`, is integrated
@@ -4079,26 +4064,20 @@ cdef class Quad4R:
             # NOTE reduced integration to remove shear locking
             wij = 4.
 
-            # NOTE Brockman's hourglass control is derived for isotropic
-            #      plates, and applied to laminates with the membrane moduli
-            #      E1eq and E2eq for u and v, and with the bending moduli
-            #      E1b and E2b for rx and ry, see the module documentation
-            # NOTE Brockman's 1/(1 + 1/A) of Eq. (16) is replaced by the
-            #      dimensionally homogeneous area factor, see the section
-            #      "Dimensional homogeneity of the hourglass stiffnesses"
-            #      of the module documentation. In short, the term enters
-            #      as K_ij = A*E^(h)*gamma_i*gamma_j with gamma of
-            #      dimension 1/L**2, so E^(h) must be F*L for the
-            #      translations u and v and F*L**3 for the rotations
-            #      rx and ry. Brockman's factor tends to A only in the
-            #      limit A << 1, so it supplies the missing area in some
-            #      units and not in others
+            # NOTE Brockman's hourglass control of u and v, derived for
+            #      isotropic plates, applied to laminates with the membrane
+            #      moduli E1eq and E2eq, and with the area in place of his
+            #      1/(1 + 1/A) of Eq. (16), see the section "Hourglass
+            #      control of the membrane" of the module documentation: the
+            #      term enters as K_ij = A*E^(h)*gamma_i*gamma_j with gamma
+            #      of dimension 1/L**2, so E^(h) must be F*L
             Eu = hgfactor_membrane*0.1*E1eq*prop.h*self.area
             Ev = hgfactor_membrane*0.1*E2eq*prop.h*self.area
-            # NOTE the transverse displacement w has no artificial hourglass
-            #      stiffness: its hourglass mode is controlled by the
-            #      physical stabilisation of the transverse shear below,
-            #      scaled by hgfactor_physical, see _shear_bl94
+            # NOTE w, rx and ry have no artificial hourglass stiffness: their
+            #      hourglass modes are controlled by the physical
+            #      stabilisation of the bending and of the transverse shear
+            #      below, scaled by hgfactor_physical, see _shear_bl94 and
+            #      _bending_bl94
 
             # NOTE using only one integration point at xi=0, eta=0 to avoid shear locking
             detJ = 0.125*x1*y2 - 0.125*x1*y4 - 0.125*x2*y1 + 0.125*x2*y3 - 0.125*x3*y2 + 0.125*x3*y4 + 0.125*x4*y1 - 0.125*x4*y3

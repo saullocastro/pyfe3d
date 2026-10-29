@@ -33,19 +33,21 @@ geometrically non-linear analyses.
       - 4
       - One integration point, cheaper than :class:`.Quad4` for the
         internal forces and the stiffness matrices; no drilling enrichment,
-        see :mod:`.quad4r`. The transverse shear is that of Belytschko and
-        Leviathan (1994), the assumed strains of Dvorkin and Bathe with the
-        physical stabilisation of their nonconstant part, which controls the
-        hourglass mode of `w` and passes the constant-twist and the
-        thin-plate bending patch tests; the hourglass modes of `u`, `v`,
-        `r_x` and `r_y` have the artificial stiffness of Brockman (1987),
-        derived for isotropic plates and applied to laminates with
-        equivalent moduli of the membrane compliance for `u` and `v` and of
-        the bending compliance for `r_x` and `r_y`. Both are scaled by the
-        ``hgfactor_*`` arguments of :meth:`.Quad4R.update_KC0`. Up to 0.11
-        the hourglass mode of `w` had Brockman's artificial stiffness, which
-        also stiffened a uniform twist, by up to 78 % of its energy whatever
-        the mesh where the element areas were large in the unit of length.
+        see :mod:`.quad4r`. The bending and the transverse shear, the
+        assumed strains of Dvorkin and Bathe, have the physical
+        stabilisation of Belytschko and Leviathan (1994), without parameter,
+        which controls the hourglass modes of `w`, `r_x` and `r_y` and
+        passes the constant-twist and the thin-plate bending patch tests;
+        the hourglass modes of `u` and `v` have the artificial stiffness of
+        Brockman (1987), with the membrane moduli of a laminate, and the
+        one-element-deep strips of MacNeal and Harder lock in in-plane
+        bending. ``hgfactor_physical`` and ``hgfactor_membrane`` of
+        :meth:`.Quad4R.update_KC0` multiply the two. Up to 0.11 the
+        hourglass modes of `w`, `r_x` and `r_y` had Brockman's artificial
+        stiffnesses, set with ``hgfactor_w``, ``hgfactor_rx`` and
+        ``hgfactor_ry``, which also stiffened a uniform twist, by up to 78 %
+        of its energy whatever the mesh where the element areas were large
+        in the unit of length.
     * - :class:`.Tria3DSG`
       - 3
       - Discrete shear gap transverse shear field, free of shear locking

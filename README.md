@@ -43,8 +43,10 @@ Available finite elements
 - 'Quad4' - 4-node plate with linear interpolation, equivalent to Nastran's
   CQUAD4. The recommended quadrilateral plate element.
 
-- 'Quad4R' - 4-node plate with linear interpolation, equivalent to Abaqus' S4R.
-  It has a not very robust hourglass control.
+- 'Quad4R' - 4-node plate with linear interpolation and one integration point,
+  with the physical stabilisation of Belytschko and Leviathan (1994) for the
+  bending and the transverse shear, and the hourglass control of Brockman
+  (1987) for the membrane.
 
 - 'Tria3DSG' - 3-node plate with linear interpolation and a discrete shear
   gap transverse shear field, after Bletzinger, Bischoff and Ramm (2000), free
