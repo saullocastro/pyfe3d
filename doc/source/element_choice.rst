@@ -48,24 +48,26 @@ geometrically non-linear analyses.
         `r_x` and `r_y`.
     * - :class:`.Tria3DSG`
       - 3
-      - The recommended triangle. Discrete shear gap transverse shear field,
-        free of shear locking by construction and without a tuning
-        parameter, see :mod:`.tria3dsg`. No drilling enrichment: for
-        problems dominated by in-plane bending, :class:`.Quad4` and
-        :class:`.Tria3R` have one.
+      - Discrete shear gap transverse shear field, free of shear locking
+        by construction and without a tuning parameter, see
+        :mod:`.tria3dsg`. Constant-strain membrane without drilling
+        enrichment, stiff in in-plane bending: Cook's membrane is 54 % too
+        stiff with 4x4 cells split in two, against 14 % for
+        :class:`.Tria3R`. On coarse meshes of doubly curved shells it is
+        the less stiff of the two triangles, see :mod:`.tria3r`.
     * - :class:`.Tria3R`
       - 3
-      - Kept for continuity with the results obtained before
-        :class:`.Tria3DSG` existed. Its transverse shear, taken at the
-        centroid, locks and is reduced by the factor of
-        ``alpha_shear_locking``, ``0.7`` by default, a value that must be
-        verified per problem class and per mesh: on thin plates the error
-        grows as the mesh is refined and then stalls, at -14 % on the
-        deflection of a simply supported plate with `a/h = 1000`, until the
-        elements are about as small as the thickness, see :mod:`.tria3r`.
-        Proposal: ``shear_model = 1`` replaces its transverse shear by the
-        discrete shear gap field of :class:`.Tria3DSG` and keeps its Allman
-        membrane.
+      - Since 0.12.0 the same discrete shear gap transverse shear field as
+        :class:`.Tria3DSG`, ``shear_model = 1``, with the membrane enriched
+        by the drilling rotations of Allman: identical to
+        :class:`.Tria3DSG` on flat plates in bending, buckling and
+        vibration, better in in-plane bending, on the Scordelis-Lo roof and
+        on the twisted beam, stiffer on the coarse meshes of the pinched
+        hemisphere, and assembled in half the time, see :mod:`.tria3r`.
+        ``shear_model = 0`` with ``alpha_shear_locking = 0.7`` reproduces
+        the centroid-sampled shear of the versions up to 0.11, which does not
+        converge on thin plates and shells: -14 % on the deflection of a
+        simply supported plate with `a/h = 1000`.
 
 Practical rules:
 
