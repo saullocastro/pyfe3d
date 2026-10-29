@@ -32,7 +32,22 @@ stiffnesses times `1`, `z` and `z^2`, and `\boldsymbol{A}_{ts}` = ``[[A44, A45],
   gradients are given by :class:`.GradABD`, e.g. for the optimisation of
   the stiffness distribution, see the tutorials.
 
-The ply stiffnesses are those of plane stress, see :meth:`.Lamina.rebuild`.
+The ply stiffnesses are those of plane stress, `\sigma_{33} = 0`, see
+:meth:`.Lamina.rebuild`, which depend on ``E11``, ``E22``, ``nu12``,
+``G12``, ``G13`` and ``G23`` only, also when ``laminaprop`` gives ``E33``,
+``nu13`` and ``nu23``. The invariants of :class:`.MatLamina`, used by
+:func:`.shellprop_from_LaminationParameters` and :class:`.GradABD`, are by
+default those of the same plane-stress stiffnesses, see
+:meth:`.MatLamina.rebuild`, such that the lamination parameters of
+:meth:`.ShellProp.calc_lamination_parameters` give back the stiffnesses of
+:func:`.laminated_plate`, for any ``laminaprop``:
+
+.. literalinclude:: ../../tests/test_shellprop.py
+    :pyobject: test_lamination_parameters_three_dimensional_constants
+
+``MatLamina.rebuild(plane_stress=False)`` gives the three-dimensional
+stiffnesses and invariants instead, e.g. for continuum shell elements of
+other codes; the shell elements of pyfe3d do not use them.
 Plane strain and thermal expansion are not modelled: the thermal expansion
 coefficients and the reference temperature of :class:`.MatLamina` are not
 used.
