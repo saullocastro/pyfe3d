@@ -611,6 +611,50 @@ def test_singular_ABD_positive_diagonal(thetadeg):
     assert np.isfinite(prop.e1) and prop.e1 > 0
 
 
+def test_singular_ABD_offset_invariant():
+    r"""The conditioning check does not depend on the offset
+
+    The condition number of the scaled ABD matrix about the reference
+    surface grows as ``(offset/h)**2``, 1.6e10 at ``offset/h = 1e4``, and
+    is round-off noise near the threshold 1e12 from ``offset/h = 1e5``,
+    which made ``tests/test_shellprop_shear_corrections.py::
+    test_large_offset`` platform-dependent. The check uses the matrix about
+    the mid-surface, see the Notes of ``calc_equivalent_properties``: a
+    singular laminate, a single ply at 45 degrees with ``g12 = 0``, is
+    rejected for every offset, and regular laminates are accepted, with the
+    equivalent properties computed from the stored matrix, as before.
+    Without plies, from lamination parameters, the stored matrix is shifted
+    back, which with the lamination parameters of
+    ``calc_lamination_parameters``, carrying the round-off of the cubes of
+    the heights, is accurate up to ``offset/h = 1e4``.
+    """
+    singular = (142e9, 8.7e9, 0.28, 0., 5e9, 3e9)
+    CFRP = (138.0, 9.3, 0.3, 4.6, 4.6, 2.3)
+    offsets = [0., 1e2, -1e4, 1e5, 1e6, -1e6, 1e7]
+    for offset in offsets:
+        for mode in [None, 'constant']:
+            with pytest.raises(ValueError,
+                               match='singular or ill-conditioned'):
+                laminated_plate([45], plyt=1., laminaprop=singular,
+                                offset=offset, shear_correction=mode)
+    mat = read_laminaprop(CFRP)
+    for stack in ([0, 90, 45, 90, 0], [0, 90, 45, -45, 30]):
+        for offset in offsets:
+            prop = laminated_plate(stack, plyt=0.2, laminaprop=CFRP,
+                                   offset=offset, shear_correction='constant')
+            # NOTE the equivalent properties, about the reference surface,
+            #      fall as (h/offset)**2 and are round-off from offset/h =
+            #      1e5, unchanged
+            assert np.isfinite(prop.e1)
+            if abs(offset) <= 1e4:
+                assert prop.e1 > 0
+                lp = prop.calc_lamination_parameters()
+                prop_lp = shellprop_from_LaminationParameters(prop.h, mat, lp,
+                                                              offset)
+                prop_lp.calc_equivalent_properties()
+                assert np.isfinite(prop_lp.e1) and prop_lp.e1 > 0
+
+
 @pytest.mark.parametrize('platform', ['raises', 'inf', 'nan'])
 def test_singular_ABD_any_platform(platform, monkeypatch):
     r"""The singular ``ABD`` is detected also when ``np.linalg.inv`` does not
