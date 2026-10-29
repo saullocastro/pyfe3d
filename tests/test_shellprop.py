@@ -47,9 +47,16 @@ def qbar(E1, E2, nu12, G12, thetadeg):
     E2/E1``, and ``Qbar = Ts^-1 Q Te``, where ``Ts`` and ``Te`` transform the
     stresses and the engineering strains ``{xx, yy, xy}`` from the laminate
     axes to the material axes, whose direction 1 is at ``thetadeg`` from the
-    laminate x axis, counterclockwise.
+    laminate x axis, counterclockwise. With ``E1 = 0``, e.g. an antiplane
+    core, ``nu12 E2 = 0`` and ``nu12 nu21 = 0``, the limit of a
+    positive-definite material, ``|nu12| < (E1/E2)**0.5`` (Jones, 1999, Eq.
+    (2.51), p. 69).
     """
-    nu21 = nu12*E2/E1
+    if E1 != 0:
+        nu21 = nu12*E2/E1
+    else:
+        assert nu12*E2 == 0
+        nu21 = 0.
     den = 1 - nu12*nu21
     Q = np.array([[E1/den, nu12*E2/den, 0.],
                   [nu12*E2/den, E2/den, 0.],
@@ -456,6 +463,159 @@ def test_trace_normalized_three_dimensional_constants(material):
     m3d.rebuild(plane_stress=False)
     with pytest.raises(ValueError, match='plane-stress stiffnesses'):
         m3d.trace_normalize_plane_stress()
+
+
+# Antiplane cores: "an idealized core in which the modulus of elasticity in
+# planes parallel with the faces is zero but the shear modulus in planes
+# perpendicular to the faces is finite" (Allen, H. G., Analysis and Design of
+# Structural Sandwich Panels, Pergamon Press, 1969, p. 14), with G13 != G23,
+# given with 6 and with 9 entries, the latter with a through-thickness
+# modulus E3, as a honeycomb
+G13_CORE, G23_CORE = 50e6, 30e6
+ANTIPLANE_CORES = {
+    '6 entries': (0., 0., 0.3, 0., G13_CORE, G23_CORE),
+    '9 entries': (0., 0., 0.3, 0., G13_CORE, G23_CORE, 1.2e9, 0., 0.),
+}
+
+
+@pytest.mark.parametrize('core', ANTIPLANE_CORES.keys())
+def test_antiplane_core_matlamina(core):
+    r"""MatLamina of an antiplane core, e1 = e2 = g12 = 0
+
+    The plane-stress reduced stiffnesses of Jones (1999), Eq. (2.66), p. 72,
+    vanish, Q11 = Q12 = Q22 = Q66 = 0, and Q44 = G23, Q55 = G13, such that
+    u1 to u5 vanish and u6 = (G23 + G13)/2, u7 = (G23 - G13)/2. The
+    three-dimensional stiffness matrix, the limit e1, e2 -> 0 of the inverse
+    compliance, has C33 = E3, C44 = G23, C55 = G13 and all other terms zero.
+    The reciprocal Poisson's ratios are stored as zero, and the trace of
+    Melo et al. (2017), Eq. (1), being zero, the trace normalization is
+    refused.
+    """
+    lamprop = ANTIPLANE_CORES[core]
+    e3 = lamprop[6] if len(lamprop) == 9 else 0.
+    m = read_laminaprop(lamprop)
+    assert m.nu21 == 0 and m.nu31 == 0 and m.nu32 == 0
+    for name in ('q11', 'q12', 'q13', 'q21', 'q22', 'q23', 'q31', 'q32',
+                 'q33', 'q66', 'u1', 'u2', 'u3', 'u4', 'u5'):
+        assert getattr(m, name) == 0, name
+    assert (m.q44, m.q55) == (G23_CORE, G13_CORE)
+    assert m.u6 == (G23_CORE + G13_CORE)/2
+    assert m.u7 == (G23_CORE - G13_CORE)/2
+    C_ref = np.zeros((6, 6))
+    C_ref[2, 2] = e3
+    C_ref[3, 3] = G23_CORE
+    C_ref[4, 4] = G13_CORE
+    C = np.asarray(m.get_constitutive_matrix())
+    assert np.all(np.isfinite(C))
+    assert np.array_equal(C, C_ref)
+    # NOTE the limit of a positive-definite material, e1 = e2 = 1e-8 E3
+    if e3 > 0:
+        eps = 1e-8*e3
+        m_eps = read_laminaprop((eps, eps) + lamprop[2:])
+        C_eps = np.asarray(m_eps.get_constitutive_matrix())
+        assert np.allclose(C, C_eps, rtol=0, atol=1e-7*e3)
+    with pytest.raises(ValueError, match='not positive'):
+        m.trace_normalize_plane_stress()
+    # three-dimensional option
+    m.rebuild(plane_stress=False)
+    assert m.q33 == e3
+    for name in ('q11', 'q12', 'q13', 'q22', 'q23', 'u1', 'u2', 'u3', 'u4',
+                 'u5'):
+        assert getattr(m, name) == 0, name
+
+
+def test_zero_young_modulus_errors():
+    r"""Undefined Poisson's ratios with a zero Young modulus
+
+    A positive-definite material has ``|nu_ij| < (E_i/E_j)**0.5`` (Jones,
+    1999, Eq. (2.51), p. 69), such that ``E_i = 0`` with ``E_j > 0``
+    requires ``nu_ij = 0``; otherwise ``nu_ji = nu_ij E_j/E_i`` is undefined
+    and ``read_laminaprop`` raises ``ValueError``. With ``E_i = E_j = 0``
+    any ``nu_ij`` is accepted. A laminate of antiplane cores only has no
+    in-plane and bending stiffness, and its equivalent properties and its
+    shear correction factors are undefined.
+    """
+    for lamprop, match in [
+            ((0., 8.7e9, 0.28, 5e9, 5e9, 3e9), 'requires nu12 = 0'),
+            ((0., 0., 0.3, 0., 5e7, 3e7, 1e9, 0.2, 0.), 'requires nu13 = 0'),
+            ((142e9, 0., 0.28, 0., 5e7, 3e7, 1e9, 0.2, 0.3),
+             'requires nu23 = 0')]:
+        with pytest.raises(ValueError, match=match):
+            read_laminaprop(lamprop)
+    # accepted: e1 = 0 with nu12 = 0, and e1 = e2 = 0 with any nu12
+    m = read_laminaprop((0., 8.7e9, 0., 5e9, 5e9, 3e9))
+    assert (m.q11, m.q12, m.q22, m.q66) == (0., 0., 8.7e9, 5e9)
+    read_laminaprop((0., 0., 0.45, 0., 5e7, 3e7))
+    core = ANTIPLANE_CORES['6 entries']
+    with pytest.raises(ValueError, match='singular'):
+        laminated_plate([0, 30], plyts=[1e-3, 2e-3], laminaprop=core,
+                        shear_correction=None)
+    with pytest.raises(ValueError, match='singular'):
+        laminated_plate([0, 30], plyts=[1e-3, 2e-3], laminaprop=core)
+
+
+@pytest.mark.parametrize('core', ANTIPLANE_CORES.keys())
+@pytest.mark.parametrize('stack', [[0, 0, 0], [0, 30, 90], [45, -20, 0]])
+def test_antiplane_core_sandwich(core, stack):
+    r"""Sandwich with an antiplane core, unequal faces and an offset
+
+    The A, B and D of :func:`.laminated_plate` are those of the classical
+    lamination theory, ``clt_abd``, in which the core contributes nothing,
+    and the constant-strain transverse shear stiffness is ``abar_ts``, where
+    only G13 and G23 of the core enter, rotated by its angle. All are
+    finite. The element-frame matrices of
+    :meth:`.ShellProp.calc_constitutive_element` are those of the laminate
+    with all ply angles increased by the element angle, as in
+    ``test_element_frame_tensor_rotation`` of
+    ``tests/test_shellprop_transverse_shear.py``. For a core of a single
+    material, the lamination-parameter route gives A = B = D = 0 and the
+    same constant-strain transverse shear stiffness, for any offset.
+    """
+    face = (71e9, 7e9, 0.28, 4e9, 4e9, 2.5e9)
+    lamprop = ANTIPLANE_CORES[core]
+    plyts = [0.5e-3, 10e-3, 0.8e-3]
+    offset = 0.3e-3
+    laminaprops = [face, lamprop, face]
+    prop = laminated_plate(stack, plyts=plyts, laminaprops=laminaprops,
+                           offset=offset)
+    A, B, D = clt_abd(stack, plyts, laminaprops, offset=offset)
+    assert_abd(prop.A, prop.B, prop.D, A, B, D, sum(plyts))
+    Abar = np.zeros((2, 2))
+    for thetadeg, hk, lp in zip(stack, plyts, laminaprops):
+        Abar += abar_ts([thetadeg], [hk], lp[4], lp[5])
+    assert np.allclose(prop.Abar_ts, Abar, rtol=1e-12,
+                       atol=1e-14*np.abs(Abar).max())
+    for name in ('ABD', 'Ats', 'Abarbar_ts'):
+        assert np.all(np.isfinite(getattr(prop, name))), name
+    # NOTE no shear correction factor exceeds one, and the core carries the
+    #      transverse shear: the corrected stiffness is far below Abar
+    assert 0 < prop.scf_k13 < 1 and 0 < prop.scf_k23 < 1
+    # NOTE element frame, the laminate rotated by the element angle
+    for theta in (25., 90.):
+        ref = laminated_plate([t + theta for t in stack], plyts=plyts,
+                              laminaprops=laminaprops, offset=offset)
+        A_e, B_e, D_e, Ats_e = [np.asarray(M)
+                                for M in prop.calc_constitutive_element(theta)]
+        assert_abd(A_e, B_e, D_e, ref.A, ref.B, ref.D, sum(plyts))
+        assert np.allclose(Ats_e, ref.Ats, rtol=1e-10,
+                           atol=1e-12*np.abs(ref.Ats).max())
+    # NOTE lamination parameters of the core alone
+    hc = plyts[1]
+    for e in (0., offset):
+        lp = LaminationParameters()
+        c2, s2 = (np.cos(np.deg2rad(2*stack[1])),
+                  np.sin(np.deg2rad(2*stack[1])))
+        lp.xiA1, lp.xiA2, lp.xiAts1, lp.xiAts2 = c2, s2, c2, s2
+        lp.xiB1, lp.xiB2 = 4*e/hc*c2, 4*e/hc*s2
+        lp.xiD1, lp.xiD2 = (1 + 12*(e/hc)**2)*c2, (1 + 12*(e/hc)**2)*s2
+        lp.xiA3 = lp.xiB3 = lp.xiD3 = 1.
+        prop_lp = shellprop_from_LaminationParameters(hc,
+                read_laminaprop(lamprop), lp, e)
+        for name in ('A', 'B', 'D'):
+            assert np.array_equal(getattr(prop_lp, name), np.zeros((3, 3)))
+        Abar_c = abar_ts([stack[1]], [hc], lamprop[4], lamprop[5])
+        assert np.allclose(prop_lp.Abar_ts, Abar_c, rtol=1e-12,
+                           atol=1e-14*np.abs(Abar_c).max())
 
 
 def helper_isotropic_plate():
