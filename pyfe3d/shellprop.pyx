@@ -3041,7 +3041,10 @@ cdef class ShellProp:
         integrated exactly ply by ply, such that ``xiAts1 = xiA1`` and
         ``xiAts2 = xiA2``. With these definitions, the stiffnesses of the
         laminate are linear in the lamination parameters, see
-        :func:`.shellprop_from_LaminationParameters`.
+        :func:`.shellprop_from_LaminationParameters`, which must be given the
+        same ``offset`` to reproduce the stiffnesses of the laminate. The
+        `\xi_{Ai}` and `\xi_{Ats,i}` do not depend on ``offset``, the
+        `\xi_{Bi}` and `\xi_{Di}` do.
 
         The `\xi_{Ai}` and `\xi_{Di}` are those of Krupa et al. [1]_, who
         integrate from `z = -h/2` to `z = h/2`, i.e. with ``offset = 0``. The
@@ -3172,7 +3175,11 @@ cpdef LaminationParameters make_symmetric_LP(LaminationParameters lp):
     In a laminate symmetric about its mid-surface, the integrands of
     `\xi_{Bi}`, linear in `\bar{z}`, are odd functions of `\bar{z}`, see
     :meth:`.ShellProp.calc_lamination_parameters`, such that `\xi_{Bi} = 0`
-    and the coupling stiffnesses `B_{ij}` vanish.
+    and the coupling stiffnesses `B_{ij}` vanish. This holds for the
+    lamination parameters about the mid-surface, i.e. with ``offset = 0``,
+    as :meth:`.ShellProp.make_symmetric`: about another reference surface
+    `\xi_{Bi} = 4 (e/h) \xi_{Ai}` in a symmetric laminate, see
+    :func:`.shellprop_from_LaminationParameters`.
 
     """
     lp.xiB1 = 0
@@ -3227,18 +3234,18 @@ cpdef LaminationParameters make_orthotropic_LP(LaminationParameters lp):
 
 
 cpdef ShellProp shellprop_from_LaminationParameters(double thickness, MatLamina
-        mat, LaminationParameters lp):
+        mat, LaminationParameters lp, double offset=0.):
     r"""Return a :class:`.ShellProp` object based in the thickness, material and
     lamination parameters
 
     In a new :class:`.ShellProp` object, the stiffnesses ``A11`` to ``D66`` and
-    ``Abar44``, ``Abar45``, ``Abar55`` are computed from ``thickness``, from
-    the invariants ``u1`` to ``u7`` of ``mat`` and from the lamination
-    parameters of ``lp``, with the combinations of
+    ``Abar44``, ``Abar45``, ``Abar55`` are computed from ``thickness``,
+    ``offset``, from the invariants ``u1`` to ``u7`` of ``mat`` and from the
+    lamination parameters of ``lp``, with the combinations of
     :meth:`.MatLamina.get_invariant_matrix`. No plies are created, ``offset``
-    is zero, and the mass integrals ``intrho``, ``intrhoz``, ``intrhoz2`` and
-    the equivalent properties ``e1``, ``e2``, ``g12``, ``nu12``, ``nu21`` are
-    not computed, remaining zero.
+    is stored, and the mass integrals ``intrho``, ``intrhoz``, ``intrhoz2``
+    and the equivalent properties ``e1``, ``e2``, ``g12``, ``nu12``, ``nu21``
+    are not computed, remaining zero.
     The transverse shear stiffnesses ``A44``, ``A45``, ``A55`` are equal to
     the constant-strain ``Abar44``, ``Abar45``, ``Abar55``,
     ``shear_correction`` is ``None``, ``scf_k13 = scf_k23 = 1`` and the
@@ -3254,6 +3261,11 @@ cpdef ShellProp shellprop_from_LaminationParameters(double thickness, MatLamina
         Material object
     lp : :class:`.LaminationParameters` object
         The container class with all lamination parameters already defined
+    offset : float, optional
+        Offset of the mid-surface of the laminate from the reference surface,
+        as ``offset`` of :class:`.ShellProp`, with which ``lp`` was computed
+        by :meth:`.ShellProp.calc_lamination_parameters`. Length. Default
+        ``0.``.
 
     Returns
     -------
@@ -3266,10 +3278,15 @@ cpdef ShellProp shellprop_from_LaminationParameters(double thickness, MatLamina
     its angle, with the invariants of ``mat`` as coefficients, see
     :meth:`.MatLamina.get_invariant_matrix`, and the lamination parameters
     are their thickness integrals, see
-    :meth:`.ShellProp.calc_lamination_parameters`. For a laminate of a
-    single material, with `h` = ``thickness``, `\int dz = h \int d\bar{z}`,
-    `\int z dz = h^2/4 \cdot 4\int \bar{z} d\bar{z}` and `\int z^2 dz =
-    h^3/12 \cdot 12 \int \bar{z}^2 d\bar{z}` give:
+    :meth:`.ShellProp.calc_lamination_parameters`, with `\bar{z} = z/h` and
+    `z` measured from the reference surface, i.e. the laminate occupies
+    `\bar{e} - 1/2 \le \bar{z} \le \bar{e} + 1/2`, `\bar{e}` = ``offset``
+    `/h`. For a laminate of a single material, with `h` = ``thickness``,
+    `\int dz = h \int d\bar{z}`, `\int z dz = h^2/4 \cdot 4\int \bar{z}
+    d\bar{z}` and `\int z^2 dz = h^3/12 \cdot 12 \int \bar{z}^2 d\bar{z}`,
+    and the integrals of the constant terms `\int d\bar{z} = 1`, `4 \int
+    \bar{z} d\bar{z} = 4\bar{e}` and `12 \int \bar{z}^2 d\bar{z} = 1 + 12
+    \bar{e}^2`, give:
 
     .. math::
 
@@ -3279,23 +3296,37 @@ cpdef ShellProp shellprop_from_LaminationParameters(double thickness, MatLamina
         A_{16} = h (u_2/2 \, \xi_{A2} + u_3 \xi_{A4}), \quad
         A_{26} = h (u_2/2 \, \xi_{A2} - u_3 \xi_{A4}), \quad
         A_{66} = h (u_5 - u_3 \xi_{A3}) \\
-        B_{11} = \frac{h^2}{4} (u_2 \xi_{B1} + u_3 \xi_{B3}), \quad
-        B_{12} = -\frac{h^2}{4} u_3 \xi_{B3}, \quad
-        B_{22} = \frac{h^2}{4} (-u_2 \xi_{B1} + u_3 \xi_{B3}) \\
+        B_{11} = \frac{h^2}{4} (4\bar{e} u_1 + u_2 \xi_{B1} + u_3 \xi_{B3}),
+        \quad
+        B_{12} = \frac{h^2}{4} (4\bar{e} u_4 - u_3 \xi_{B3}), \quad
+        B_{22} = \frac{h^2}{4} (4\bar{e} u_1 - u_2 \xi_{B1} + u_3 \xi_{B3}) \\
         B_{16} = \frac{h^2}{4} (u_2/2 \, \xi_{B2} + u_3 \xi_{B4}), \quad
         B_{26} = \frac{h^2}{4} (u_2/2 \, \xi_{B2} - u_3 \xi_{B4}), \quad
-        B_{66} = -\frac{h^2}{4} u_3 \xi_{B3} \\
+        B_{66} = \frac{h^2}{4} (4\bar{e} u_5 - u_3 \xi_{B3}) \\
         \bar{A}_{44} = h (u_6 + u_7 \xi_{Ats,1}), \quad
         \bar{A}_{45} = -h u_7 \xi_{Ats,2}, \quad
         \bar{A}_{55} = h (u_6 - u_7 \xi_{Ats,1})
 
-    and `D_{ij}` as `A_{ij}`, with the factor `h^3/12` instead of `h` and
-    `\xi_{Di}` instead of `\xi_{Ai}`. With the plane-stress invariants of
+    and `D_{ij}` as `A_{ij}`, with the factor `h^3/12` instead of `h`,
+    `\xi_{Di}` instead of `\xi_{Ai}` and `(1 + 12\bar{e}^2) u_1`, `(1 +
+    12\bar{e}^2) u_4`, `(1 + 12\bar{e}^2) u_5` instead of `u_1`, `u_4`,
+    `u_5`. The `\xi_{Bi}` and `\xi_{Di}` about the reference surface are
+    related to those about the mid-surface, `\xi_{Bi}^0` and `\xi_{Di}^0`,
+    by `\xi_{Bi} = \xi_{Bi}^0 + 4\bar{e} \xi_{Ai}` and `\xi_{Di} =
+    \xi_{Di}^0 + 6\bar{e} \xi_{Bi}^0 + 12\bar{e}^2 \xi_{Ai}`, such that
+    `B = B^0 + e A` and `D = D^0 + 2 e B^0 + e^2 A`, the shift of the
+    stiffness integrals to another reference plane (Vasiliev and Morozov
+    [2]_, Eq. (5.28), p. 235), with `B^0`, `D^0` about the mid-surface.
+    ``A`` and the transverse shear stiffnesses do not depend on ``offset``,
+    and ``lp`` with an offset may lie outside the feasible region of the
+    lamination parameters about the mid-surface.
+
+    With the plane-stress invariants of
     :meth:`.MatLamina.rebuild`, its default ``plane_stress=True``, these are
     the stiffnesses of the classical lamination theory, the thickness
     integrals of the plane-stress `q_{ijL}` (Jones [1]_, Eq. (4.24), p.
-    198), equal to those of :func:`.laminated_plate` for the same layup with
-    ``offset = 0``, also when ``e3``, ``nu13`` and ``nu23`` are given; after
+    198), equal to those of :func:`.laminated_plate` for the same layup and
+    ``offset``, also when ``e3``, ``nu13`` and ``nu23`` are given; after
     ``mat.rebuild(plane_stress=False)`` they integrate the rotated
     three-dimensional stiffnesses instead, see :meth:`.MatLamina.rebuild`,
     which the shell elements of pyfe3d do not use. Since the through-thickness
@@ -3308,10 +3339,19 @@ cpdef ShellProp shellprop_from_LaminationParameters(double thickness, MatLamina
     ----------
     .. [1] Jones, R. M., Mechanics of Composite Materials, Second Edition,
        Taylor & Francis, Philadelphia, 1999.
+    .. [2] Vasiliev, V. V. and Morozov, E. V., Mechanics and Analysis of
+       Composite Materials, Elsevier, Oxford, 2001.
 
     """
+    cdef double fB, fD
     lam = ShellProp()
     lam.h = thickness
+    lam.offset = offset
+    # NOTE int z dz and int z^2 dz of the constant terms with z measured from
+    #      the reference surface: h^2/4 fB = h offset and h^3/12 fD = h^3/12
+    #      + h offset^2
+    fB = 4*offset/thickness
+    fD = 1 + 12*(offset/thickness)**2
 
     lam.A11 = lam.h*(mat.u1 + mat.u2*lp.xiA1 + 0*lp.xiA2 + mat.u3*lp.xiA3 + 0*lp.xiA4)
     lam.A12 = lam.h*(mat.u4 + 0*lp.xiA1 + 0*lp.xiA2 + (-1)*mat.u3*lp.xiA3 + 0*lp.xiA4)
@@ -3320,19 +3360,19 @@ cpdef ShellProp shellprop_from_LaminationParameters(double thickness, MatLamina
     lam.A26 = lam.h*(0 + 0*lp.xiA1 + mat.u2/2.*lp.xiA2 + 0*lp.xiA3 + (-1)*mat.u3*lp.xiA4)
     lam.A66 = lam.h*(mat.u5 + 0*lp.xiA1 + 0*lp.xiA2 + (-1)*mat.u3*lp.xiA3 + 0*lp.xiA4)
 
-    lam.B11 = lam.h*lam.h/4.*(mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
-    lam.B12 = lam.h*lam.h/4.*(0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
-    lam.B22 = lam.h*lam.h/4.*((-1)*mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
+    lam.B11 = lam.h*lam.h/4.*(fB*mat.u1 + mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
+    lam.B12 = lam.h*lam.h/4.*(fB*mat.u4 + 0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
+    lam.B22 = lam.h*lam.h/4.*(fB*mat.u1 + (-1)*mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
     lam.B16 = lam.h*lam.h/4.*(0*lp.xiB1 + mat.u2/2.*lp.xiB2 + 0*lp.xiB3 + mat.u3*lp.xiB4)
     lam.B26 = lam.h*lam.h/4.*(0*lp.xiB1 + mat.u2/2.*lp.xiB2 + 0*lp.xiB3 + (-1)*mat.u3*lp.xiB4)
-    lam.B66 = lam.h*lam.h/4.*(0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
+    lam.B66 = lam.h*lam.h/4.*(fB*mat.u5 + 0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
 
-    lam.D11 = lam.h*lam.h*lam.h/12.*(mat.u1 + mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
-    lam.D12 = lam.h*lam.h*lam.h/12.*(mat.u4 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
-    lam.D22 = lam.h*lam.h*lam.h/12.*(mat.u1 + (-1)*mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
+    lam.D11 = lam.h*lam.h*lam.h/12.*(fD*mat.u1 + mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
+    lam.D12 = lam.h*lam.h*lam.h/12.*(fD*mat.u4 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
+    lam.D22 = lam.h*lam.h*lam.h/12.*(fD*mat.u1 + (-1)*mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
     lam.D16 = lam.h*lam.h*lam.h/12.*(0 + 0*lp.xiD1 + mat.u2/2.*lp.xiD2 + 0*lp.xiD3 + mat.u3*lp.xiD4)
     lam.D26 = lam.h*lam.h*lam.h/12.*(0 + 0*lp.xiD1 + mat.u2/2.*lp.xiD2 + 0*lp.xiD3 + (-1)*mat.u3*lp.xiD4)
-    lam.D66 = lam.h*lam.h*lam.h/12.*(mat.u5 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
+    lam.D66 = lam.h*lam.h*lam.h/12.*(fD*mat.u5 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
 
     lam.Abar44 = lam.h*(mat.u6 + mat.u7*lp.xiAts1 + 0*lp.xiAts2)
     lam.Abar45 = lam.h*(0 + 0*lp.xiAts1 + (-1)*mat.u7*lp.xiAts2)
@@ -3356,7 +3396,7 @@ cpdef ShellProp shellprop_from_lamination_parameters(double thickness, MatLamina
         matlamina, double xiA1, double xiA2, double xiA3, double xiA4,
         double xiB1, double xiB2, double xiB3, double xiB4,
         double xiD1, double xiD2, double xiD3, double xiD4,
-        double xiAts1=0, double xiAts2=0):
+        double xiAts1=0, double xiAts2=0, double offset=0.):
     r"""Return a :class:`.ShellProp` object based in the thickness, material and
     lamination parameters
 
@@ -3382,6 +3422,10 @@ cpdef ShellProp shellprop_from_lamination_parameters(double thickness, MatLamina
     xiAts1, xiAts2 : float, optional
         Lamination parameters `\xi_{Ats,1}` and `\xi_{Ats,2}`,
         dimensionless. Default ``0``.
+    offset : float, optional
+        Offset of the mid-surface from the reference surface, about which
+        the lamination parameters are defined, see
+        :func:`.shellprop_from_LaminationParameters`. Length. Default ``0.``.
 
 
     Returns
@@ -3415,7 +3459,7 @@ cpdef ShellProp shellprop_from_lamination_parameters(double thickness, MatLamina
     lp.xiD4 = xiD4
     lp.xiAts1 = xiAts1
     lp.xiAts2 = xiAts2
-    return shellprop_from_LaminationParameters(thickness, matlamina, lp)
+    return shellprop_from_LaminationParameters(thickness, matlamina, lp, offset)
 
 
 _GRADABD_STATE = ('gradAij', 'gradBij', 'gradDij', 'gradAtsij')
@@ -3503,16 +3547,18 @@ cdef class GradABD:
         for name, value in state.items():
             setattr(self, name, np.ascontiguousarray(value, dtype=DOUBLE))
 
-    cpdef void calc_LP_grad(GradABD self, double thickness, MatLamina mat, LaminationParameters lp):
+    cpdef void calc_LP_grad(GradABD self, double thickness, MatLamina mat, LaminationParameters lp,
+            double offset=0.):
         r"""Gradients of the shell stiffnesses with respect to the thickness and
         lamination parameters
 
         Updates ``gradAij``, ``gradBij``, ``gradDij`` and ``gradAtsij`` with
         the derivatives of the stiffnesses computed by
         :func:`.shellprop_from_LaminationParameters` from ``thickness``,
-        from the invariants ``u1`` to ``u7`` of ``mat`` and from the
-        lamination parameters of ``lp``; column 0 contains the derivatives
-        with respect to the thickness. The entries ``[0, 2]``, ``[1, 1]`` and
+        from the invariants ``u1`` to ``u7`` of ``mat``, from the
+        lamination parameters of ``lp`` and from ``offset``; column 0
+        contains the derivatives with respect to the thickness, at constant
+        lamination parameters and ``offset``. The entries ``[0, 2]``, ``[1, 1]`` and
         ``[2, 2]`` of ``gradAtsij``, which do not depend on the lamination
         parameters, are not updated. All six rows of ``gradAij``, ``gradBij``
         and ``gradDij`` are updated, including row 5 (``A66``, ``B66``,
@@ -3527,6 +3573,10 @@ cdef class GradABD:
             Material object
         lp : :class:`.LaminationParameters` object
             The container class with all lamination parameters already defined
+        offset : float, optional
+            Offset of the mid-surface from the reference surface, about which
+            the lamination parameters are defined, see
+            :func:`.shellprop_from_LaminationParameters`. Length. Default ``0.``.
 
         Returns
         -------
@@ -3536,14 +3586,17 @@ cdef class GradABD:
         Notes
         -----
         The stiffnesses of :func:`.shellprop_from_LaminationParameters` are
-        `A = h \, U \{1, \xi_A\}`, `B = h^2/4 \, U \{0, \xi_B\}`, `D = h^3/12
-        \, U \{1, \xi_D\}` and `\bar{A}_{ts} = h \, U_{ts} \{1,
-        \xi_{Ats}\}`, with `U` the rows of the in-plane terms of
+        `A = h \, U \{1, \xi_A\}`, `B = h e \, U \{1, 0\} + h^2/4 \, U \{0,
+        \xi_B\}`, `D = (h^3/12 + h e^2) \, U \{1, 0\} + h^3/12 \, U \{0,
+        \xi_D\}` and `\bar{A}_{ts} = h \, U_{ts} \{1, \xi_{Ats}\}`, with
+        `e` = ``offset``, `U` the rows of the in-plane terms of
         :meth:`.MatLamina.get_invariant_matrix` and `U_{ts}` those of the
-        transverse shear terms. At constant lamination parameters,
-        `\partial A/\partial h = U \{1, \xi_A\}`, `\partial B/\partial h = h/2
-        \, U \{0, \xi_B\}`, `\partial D/\partial h = h^2/4 \, U \{1, \xi_D\}`
-        and `\partial \bar{A}_{ts}/\partial h = U_{ts} \{1, \xi_{Ats}\}`, and
+        transverse shear terms. At constant lamination parameters and
+        offset, `\partial A/\partial h = U \{1, \xi_A\}`, `\partial
+        B/\partial h = e \, U \{1, 0\} + h/2 \, U \{0, \xi_B\}`, `\partial
+        D/\partial h = (h^2/4 + e^2) \, U \{1, 0\} + h^2/4 \, U \{0,
+        \xi_D\}` and `\partial \bar{A}_{ts}/\partial h = U_{ts} \{1,
+        \xi_{Ats}\}`, and
         at constant thickness the derivatives with respect to the lamination
         parameters are the columns of `U` multiplied by `h`, `h^2/4` and
         `h^3/12`, respectively, and those of `U_{ts}` by `h`.
@@ -3576,12 +3629,12 @@ cdef class GradABD:
                 self.gradAij[i, j+1] = h*gradinv[i, j]
 
         # d(B11 B12 B16 B22 B26 B66) / dh
-        self.gradBij[0, 0] = h/2.*(mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
-        self.gradBij[1, 0] = h/2.*(0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
+        self.gradBij[0, 0] = offset*mat.u1 + h/2.*(mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
+        self.gradBij[1, 0] = offset*mat.u4 + h/2.*(0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
         self.gradBij[2, 0] = h/2.*(0*lp.xiB1 + mat.u2/2.*lp.xiB2 + 0*lp.xiB3 + mat.u3*lp.xiB4)
-        self.gradBij[3, 0] = h/2.*((-1)*mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
+        self.gradBij[3, 0] = offset*mat.u1 + h/2.*((-1)*mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
         self.gradBij[4, 0] = h/2.*(0*lp.xiB1 + mat.u2/2.*lp.xiB2 + 0*lp.xiB3 + (-1)*mat.u3*lp.xiB4)
-        self.gradBij[5, 0] = h/2.*(0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
+        self.gradBij[5, 0] = offset*mat.u5 + h/2.*(0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
 
         # d(B11 B12 B16 B22 B26 B66) / d(xiB1, xiB2, xiB3, xiB4)
         for i in range(6):
@@ -3589,12 +3642,12 @@ cdef class GradABD:
                 self.gradBij[i, j+1] = h*h/4.*gradinv[i, j]
 
         # d(D11 D12 D16 D22 D26 D66) / dh
-        self.gradDij[0, 0] = h*h/4.*(mat.u1 + mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
-        self.gradDij[1, 0] = h*h/4.*(mat.u4 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
+        self.gradDij[0, 0] = offset*offset*mat.u1 + h*h/4.*(mat.u1 + mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
+        self.gradDij[1, 0] = offset*offset*mat.u4 + h*h/4.*(mat.u4 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
         self.gradDij[2, 0] = h*h/4.*(0 + 0*lp.xiD1 + mat.u2/2.*lp.xiD2 + 0*lp.xiD3 + mat.u3*lp.xiD4)
-        self.gradDij[3, 0] = h*h/4.*(mat.u1 + (-1)*mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
+        self.gradDij[3, 0] = offset*offset*mat.u1 + h*h/4.*(mat.u1 + (-1)*mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
         self.gradDij[4, 0] = h*h/4.*(0 + 0*lp.xiD1 + mat.u2/2.*lp.xiD2 + 0*lp.xiD3 + (-1)*mat.u3*lp.xiD4)
-        self.gradDij[5, 0] = h*h/4.*(mat.u5 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
+        self.gradDij[5, 0] = offset*offset*mat.u5 + h*h/4.*(mat.u5 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
 
         # d(D11 D12 D16 D22 D26 D66) / d(xiD1, xiD2, xiD3, xiD4)
         for i in range(6):
