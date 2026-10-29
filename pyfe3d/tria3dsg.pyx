@@ -35,7 +35,9 @@ attribute: by default the in-plane shear stiffness ``A66`` of the laminate,
 otherwise a small fictitious penalty scaled by ``K6ROT``. The in-plane
 displacement field has no drilling enrichment; for problems dominated by
 in-plane bending, :class:`pyfe3d.tria3r.Tria3R` and :class:`pyfe3d.quad4.Quad4`
-carry one. Geometrically nonlinear analyses with the von Karman membrane
+carry one. Since version 0.12.0 :class:`pyfe3d.tria3r.Tria3R` takes, by
+default, the transverse shear field of this element, so the two triangles
+differ only in the membrane and drilling terms, see :mod:`pyfe3d.tria3r`. Geometrically nonlinear analyses with the von Karman membrane
 strains are supported by :meth:`.Tria3DSG.update_fint` with ``nonlinear=1``,
 :meth:`.Tria3DSG.update_KCNL` and :meth:`.Tria3DSG.update_KG`.
 
@@ -46,10 +48,11 @@ method of Bletzinger, Bischoff and Ramm (2000) [1]_.
 
 .. rubric:: Why this element exists
 
-:class:`pyfe3d.tria3r.Tria3R` takes its transverse shear from a single point
-at the centroid, which still locks, and cures the locking by dividing the
-transverse shear stiffnesses by `1 + \alpha \ell^2/h^2` with
-`\alpha = 0.7`, following Lyly, Stenberg and Vihinen (1993) [2]_. On a thin
+Up to version 0.11, :class:`pyfe3d.tria3r.Tria3R` took its transverse
+shear from a single point at the centroid, which still locks, and cured the
+locking by dividing the transverse shear stiffnesses by `1 + \alpha
+\ell^2/h^2` with `\alpha = 0.7`, following Lyly, Stenberg and Vihinen (1993)
+[2]_, a field still available there with ``shear_model = 0``. On a thin
 plate the error that remains stalls under refinement at a value set by
 `\alpha`, -14 per cent on the deflection of a simply supported plate with
 `a/h = 1000`, see the Notes of :mod:`pyfe3d.tria3r`, and the factor leaves
@@ -79,9 +82,11 @@ the answer: `\alpha = 0.07`, the lower bound of the range recommended by
 Castro et al., takes the first natural frequency of a `5 \times 7` mesh from
 `12.06` to `7.93` per cent above the analytical value and the buckling load
 of a thin plate from `+1.71` to `+0.11` per cent. That is the opposite of
-its role in :class:`pyfe3d.tria3r.Tria3R`, where the same factor is applied
-to a centroid-sampled shear field and has to do the unlocking itself, which
-is why that element defaults to `\alpha = 0.7`.
+its role in :class:`pyfe3d.tria3r.Tria3R` with ``shear_model = 0``, where the
+same factor is applied to a centroid-sampled shear field and has to do the
+unlocking itself, which is why that element used `\alpha = 0.7` up to
+version 0.11. Its default since 0.12.0 is this element's field with
+`\alpha = 0`, and the same remarks then apply to it.
 
 The default here is zero because the factor is unbounded in `\ell/h`, so any
 non-zero `\alpha` removes nearly all of the transverse shear stiffness on a
@@ -140,7 +145,7 @@ numerically in ``tests/test_tria3dsg.py``:
 * the three rigid-body modes that involve `w` give `\boldsymbol{\gamma} = 0`
   exactly;
 * a state of constant transverse shear is reproduced exactly, which is what
-  Tria3R cannot do;
+  Tria3R with ``shear_model = 0`` cannot do;
 * a state of constant curvature gives `\boldsymbol{\gamma} = 0` exactly, so the
   element develops no parasitic shear in pure bending. **This is the
   locking-free property**, and it is the reason no stabilisation parameter
@@ -153,8 +158,8 @@ depend on which node that is, a dependence inherent to the method whose
 influence on the solution diminishes with mesh refinement ([1]_,
 Sec. 4.1.1): measured on an irregular triangle, the element
 matrix moves by 14 and 17 per cent under the two cyclic relabellings, against
-`3 \times 10^{-16}` for :class:`pyfe3d.tria3r.Tria3R`, whose shear comes from
-a symmetric centroid evaluation. A mesh generator orders the nodes of a
+`3 \times 10^{-16}` for :class:`pyfe3d.tria3r.Tria3R` with
+``shear_model = 0``, whose shear comes from a symmetric centroid evaluation. A mesh generator orders the nodes of a
 triangle as it pleases, so this element averages the three operators, one per
 starting node. The averaging costs nothing: each of the three is separately
 exact for all of the properties listed above, and those are linear in the
@@ -503,11 +508,13 @@ cdef class Tria3DSG:
     and Bletzinger (2004) [2]_ (Sec. 3.1) call the stabilisation of Lyly,
     Stenberg and Vihinen, on top of a discrete shear gap field, as Castro
     et al. (2019) [3]_ (Eq. (26)) do, which is not how
-    :class:`pyfe3d.tria3r.Tria3R` uses the same symbol. There the factor
-    is applied to a centroid-sampled shear field and has to do the
-    unlocking itself, which is why its default
-    is 0.7, seven times the literature value, and why it is load
-    bearing there and merely helpful here.
+    :class:`pyfe3d.tria3r.Tria3R` with ``shear_model = 0`` uses the same
+    symbol. There the factor is applied to a centroid-sampled shear field
+    and has to do the unlocking itself, which is why that field was used
+    with 0.7 up to version 0.11, seven times the literature value, and why
+    it is load bearing there and merely helpful here. The default Tria3R
+    since 0.12.0 uses the field of this element, with the same default
+    ``0.``.
 
     **Recommended value.** ``0.07``, the lower bound of the range
     recommended by Castro et al. (2019), on a thin plate discretised
@@ -562,9 +569,8 @@ cdef class Tria3DSG:
 
     So the gain is confined to coarse meshes of thin plates, where the
     element is already accurate, and it is paid for in the regime the
-    FSDT exists to describe. Set it deliberately, per problem class, as
-    for :class:`pyfe3d.tria3r.Tria3R`, and never as a constant of the
-    element.
+    FSDT exists to describe. Set it deliberately, per problem class, and
+    never as a constant of the element.
 
     References
     ----------
@@ -1086,8 +1092,8 @@ cdef class Tria3DSG:
         #      operator depend on which node that is: measured on an
         #      irregular triangle, the element matrix moves by 14 and
         #      17 per cent for the two cyclic relabellings, while
-        #      Tria3R, whose shear comes from a symmetric centroid
-        #      evaluation, moves by 3e-16. A mesh generator is free to
+        #      Tria3R with shear_model = 0, whose shear comes from a
+        #      symmetric centroid evaluation, moves by 3e-16. A mesh generator is free to
         #      order the nodes of a triangle any way it likes, so that
         #      is not acceptable, and the three operators are averaged.
         #

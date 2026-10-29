@@ -243,3 +243,41 @@ def test_solve_complex_and_options():
                                np.linalg.solve(Ac, b.real), rtol=1e-12)
     np.testing.assert_allclose(solve(A, b.real, permc_spec='NATURAL'),
                                np.linalg.solve(A, b.real), rtol=1e-12)
+
+
+def test_linear_static_not_positive_definite():
+    r"""A linear static analysis requires a symmetric ``K`` to be positive
+    definite: the chain of unit springs without support, singular with the
+    rigid translation, whose last pivot is exactly zero, and an indefinite
+    ``K`` raise a ``LinAlgError`` naming the analysis and the likely causes,
+    with :func:`linear_static` and :meth:`pyfe3d.solver.Analysis.static`;
+    :func:`solve` itself solves symmetric indefinite systems, and a positive
+    definite one is solved with the factorization of the check, also with a
+    complex right-hand side"""
+    from pyfe3d.solver import Analysis
+    n = 6
+    chain = csr_matrix(np.diag(np.r_[1., 2*np.ones(n - 2), 1.])
+                       - np.eye(n, k=1) - np.eye(n, k=-1))
+    f = np.ones(n)
+    with pytest.raises(LinAlgError, match=r'^Linear static analysis: the '
+                       r'stiffness matrix K is not positive definite, its '
+                       r'factorization met a zero pivot, i.e. K is singular '
+                       r'or indefinite. Likely causes: insufficient boundary '
+                       r'conditions.*mechanism.*re-entrant.*preload'):
+        linear_static(chain, f)
+    K = csr_matrix(np.diag([1., -2., 3., 4.]))
+    with pytest.raises(LinAlgError, match=r'has 1 negative pivot\(s\), i.e. '
+                       r'K has 1 eigenvalue\(s\) that are negative'):
+        linear_static(K, np.ones(4))
+    an = Analysis(lambda inc=1., silent=True: np.ones(4), None,
+                  lambda c=None, NLgeom=False, silent=True: K, None)
+    with pytest.raises(LinAlgError, match='^Linear static analysis: the '
+                       'stiffness matrix K is not positive definite'):
+        an.static(silent=True)
+    np.testing.assert_allclose(solve(K, np.ones(4)), [1., -0.5, 1/3, 0.25])
+    Kpd = csr_matrix(np.array([[4., -1., 0.], [-1., 4., -1.],
+                               [0., -1., 3.]]))
+    b = np.array([1. + 2j, -1j, 3.])
+    np.testing.assert_allclose(linear_static(Kpd, b)[1][0],
+                               np.linalg.solve(Kpd.toarray(), b),
+                               rtol=1e-12)

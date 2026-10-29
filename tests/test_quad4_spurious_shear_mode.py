@@ -63,10 +63,17 @@ element has no stiffness against precisely the deformation being asked for.
 On the twist case of the straight cantilever of MacNeal and Harder (1985),
 see ``test_torsion_of_a_one_element_wide_strip``, at their 6 by 1 mesh, the
 ratio to the reference value is 377 for Quad4, 4.8 for Quad4R and 1.7 for
-Tria3R, the last two being helped by the hourglass control of
-Brockman (1987) and by the transverse shear stabilisation of Bischoff and
-Bletzinger (2004) respectively. Two elements across the width bring Quad4 to
-1.02 and Quad4R to 0.92.
+Tria3R with ``shear_model = 0``, the last two being helped by the hourglass
+control of Brockman (1987) and by the transverse shear stabilisation of
+Bischoff and Bletzinger (2004) respectively. Two elements across the width
+bring Quad4 to 1.02 and Quad4R to 0.92.
+
+``shear_model = 0`` is the centroid-sampled transverse shear that Tria3R used
+by default up to 0.11, and it is the one these tests are about, so every
+Tria3R built here is given it, with ``alpha_shear_locking = 0.7``, by
+:func:`legacy_tria3r`, except in the torsion of the strip, which also
+measures the default since 0.12.0, the discrete shear gap field of
+``shear_model = 1``.
 
 Neither of the two obvious remedies works for a thin plate, which is measured
 in ``test_no_cheap_quadrature_fix_exists``. Integrating the whole shear term
@@ -109,12 +116,25 @@ TRIANGLE = np.array([[0., 0., 0.], [2., 0., 0.], [0.3, 1.2, 0.]])
 GAUSS2 = (-0.5773502691896257, 0.5773502691896257)
 
 
-def element_K(cls, Data, Probe, ncoords, h, drilling_model=0):
+def legacy_tria3r(el):
+    r"""Give a Tria3R the centroid-sampled transverse shear of before 0.12.0
+
+    ``shear_model = 0`` with ``alpha_shear_locking = 0.7``, the former
+    defaults. Any other element is left alone.
+    """
+    if isinstance(el, Tria3R):
+        el.shear_model = 0
+        el.alpha_shear_locking = 0.7
+
+
+def element_K(cls, Data, Probe, ncoords, h, drilling_model=0, legacy=True):
     prop = isotropic_plate(thickness=h, E=1., nu=0.3)
     num_nodes = ncoords.shape[0]
     data = Data()
     probe = Probe()
     el = cls(probe)
+    if legacy:
+        legacy_tria3r(el)
     ncoords_flatten = ncoords.flatten()
     for i in range(num_nodes):
         setattr(el, 'n%d' % (i + 1), i + 1)
@@ -265,7 +285,8 @@ def test_mode_2_is_shared_by_the_three_shell_elements():
         previous = U
 
 
-def plate_K(cls, Data, Probe, nx, ny, Lx, Ly, h, E, nu, triangles=False):
+def plate_K(cls, Data, Probe, nx, ny, Lx, Ly, h, E, nu, triangles=False,
+            legacy=True):
     prop = isotropic_plate(thickness=h, E=E, nu=nu)
     xs = np.linspace(0., Lx, nx + 1)
     ys = np.linspace(0., Ly, ny + 1)
@@ -292,6 +313,8 @@ def plate_K(cls, Data, Probe, nx, ny, Lx, Ly, h, E, nu, triangles=False):
     k = 0
     for el_nodes in conn:
         el = cls(probe)
+        if legacy:
+            legacy_tria3r(el)
         for t, nid in enumerate(el_nodes):
             setattr(el, 'n%d' % (t + 1), nid + 1)
             setattr(el, 'c%d' % (t + 1), DOF*nid)
@@ -410,11 +433,11 @@ def test_a_supported_boundary_suppresses_mode_1():
         assert num_zeros(K, ~bk) == 6, n
 
 
-def strip_twist(cls, Data, Probe, ny, triangles=False):
+def strip_twist(cls, Data, Probe, ny, triangles=False, legacy=True):
     r"""Tip twist under a unit torque of the 6 by ny strip of the straight
     cantilever of MacNeal and Harder (1985), reference 0.03208"""
     K, ncoords, ids, N = plate_K(cls, Data, Probe, 6, ny, 6., 0.2, 0.1,
-                                 1.e7, 0.3, triangles)
+                                 1.e7, 0.3, triangles, legacy)
     bk = np.zeros(N, dtype=bool)
     root = np.isclose(ncoords[:, 0], 0.)
     for d in range(DOF):
@@ -443,10 +466,11 @@ def test_torsion_of_a_one_element_wide_strip():
     couple of normal forces at the two tip corners, theoretical value
     0.03208, Table 3, p. 10. Ratio to it, measured:
 
-        element      ny=1    ny=2    ny=4
-        Quad4       377.4    1.019   1.059
-        Quad4R        0.928  0.934   1.010
-        Tria3R        1.67   1.649   1.645
+        element                 ny=1    ny=2    ny=4
+        Quad4                  377.4    1.019   1.059
+        Quad4R                   0.928  0.934   1.010
+        Tria3R, shear_model=0    1.67   1.649   1.645
+        Tria3R, default          0.675  0.674   0.674
 
     (Quad4R up to 0.11: 4.78, 0.923 and 1.001.)
 
@@ -454,13 +478,18 @@ def test_torsion_of_a_one_element_wide_strip():
     thresholds: A for an error of at most 2 %, B at most 10 %, C at most
     20 %, D at most 50 %, F above. Quad4 has no stiffness against the
     deformation being asked for, more than 100 times the reference. Tria3R
-    is helped by its stabilisation but still fails at ny=1, grade F, as
-    Quad4R did up to 0.11, so the practical rule for these elements is at
-    least two elements across the width for any strip that carries torsion;
-    with two and four Quad4 gets grade B or better. Since 0.12.0 Quad4R,
-    whose transverse shear is that of Belytschko and Leviathan (1994), gets
-    grade B with one, two and four. Tria3R stays at 1.65 with 6 elements along
-    the length, still grade F, and is not asserted at ny > 1.
+    with ``shear_model = 0`` is helped by its stabilisation but still fails
+    at ny=1, grade F, as Quad4R did up to 0.11, so the practical rule for
+    these elements is at least two elements across the width for any strip
+    that carries torsion; with two and four Quad4 gets grade B or better.
+    Since 0.12.0 Quad4R, whose transverse shear is that of Belytschko and
+    Leviathan (1994), gets grade B with one, two and four. Tria3R with
+    ``shear_model = 0`` stays at 1.65 with 6 elements along the length,
+    still grade F, and is not asserted at ny > 1. The default Tria3R since
+    0.12.0, the discrete shear gap field of ``shear_model = 1``, is 33 per
+    cent too stiff on every one of the three meshes, grade D, the same as
+    :class:`pyfe3d.Tria3DSG`, with six pairs of triangles along the length;
+    it is asserted at ny=1 only.
 
     The theoretical value of the table is 0.94 times the Saint-Venant twist
     `T L/(G J)` of the 0.2 x 0.1 rectangle, 0.03411, `J = 0.2287 b h^3`
@@ -491,8 +520,8 @@ def test_torsion_of_a_one_element_wide_strip():
     the reference, whose derivation is not given in MacNeal and Harder, and
     no mesh is graded A against it. Following the policy of the tests whose
     reference is not reached on the coarse mesh used, the 6x2 and 6x4 meshes,
-    and the 6x1 mesh of Quad4R, are compared with the values pre-determined by this same test, with
-    ``rtol = 1e-6`` for the round-off of the dense linear solution, whose
+    and the 6x1 mesh of Quad4R, are compared with the values pre-determined
+    by this same test, with ``rtol = 1e-6`` for the round-off of the dense linear solution, whose
     condition number is about 1e9 (``test_drilling_benchmarks.py``), and with
     grade B against 0.03208 as a bound.
 
@@ -512,6 +541,10 @@ def test_torsion_of_a_one_element_wide_strip():
     # NOTE grade F of MacNeal and Harder (1985), error above 50 %
     assert strip_twist(Tria3R, Tria3RData, Tria3RProbe, 1,
                        triangles=True)/ref - 1 > 0.5
+    # NOTE grade D, error between 20 and 50 %, for the default Tria3R
+    twist = strip_twist(Tria3R, Tria3RData, Tria3RProbe, 1, triangles=True,
+                        legacy=False)
+    assert 0.2 < abs(twist/ref - 1.) <= 0.5, twist/ref
     for ny in (2, 4):
         for cls, Data, Probe in ((Quad4, Quad4Data, Quad4Probe),
                                  (Quad4R, Quad4RData, Quad4RProbe)):

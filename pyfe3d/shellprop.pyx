@@ -177,7 +177,7 @@ cdef class MatLamina:
     def __init__(MatLamina self):
         self.plane_stress = True
 
-    cpdef void rebuild(MatLamina self, bint plane_stress=True):
+    cpdef void rebuild(MatLamina self, bint plane_stress=True) except *:
         r"""Update constitutive and invariant terms
 
         Computes, from the moduli ``e1``, ``e2``, ``e3``, ``g12``, ``g13``,
@@ -185,7 +185,8 @@ cdef class MatLamina:
         ``nu31``, ``nu23``, ``nu32``, the stiffness constants ``c11`` to
         ``c66``, the constitutive constants ``q11`` to ``q66`` and the
         invariants ``u1`` to ``u7``, with the dimension of force per unit
-        area. ``e1`` and ``e2`` must be non-zero.
+        area. The moduli may be zero, e.g. ``e1 = e2 = g12 = 0`` for an
+        antiplane core, see :func:`.read_laminaprop` and the Notes.
 
         Parameters
         ----------
@@ -274,6 +275,22 @@ cdef class MatLamina:
         -\nu_{13}/e_1`, `S_{23} = -\nu_{23}/e_2`, `S_{44} = 1/g_{23}`,
         `S_{55} = 1/g_{13}` and `S_{66} = 1/g_{12}` [1]_.
 
+        A zero modulus is the limit of a positive-definite material, where
+        the stiffnesses stay finite while the compliances diverge. With
+        `e_1 = 0` or `e_2 = 0`, the stiffness constants are computed as
+        `c_{11} = e_1 (1 - \nu_{23}\nu_{32})/(\delta e_1 e_2)`, ..., `c_{33}
+        = e_3 (1 - \nu_{12}\nu_{21})/(\delta e_1 e_2)`, with `\delta e_1 e_2
+        = 1 - \nu_{12}\nu_{21} - \nu_{23}\nu_{32} - \nu_{31}\nu_{13} -
+        2\nu_{21}\nu_{32}\nu_{13}`, the same values without dividing by the
+        moduli, and ``ValueError`` is raised if this determinant is not
+        positive; the compliance matrix is then undefined and the stiffness
+        matrix singular. E.g. an antiplane core given as ``(0, 0, nu12, 0,
+        g13, g23, e3, 0, 0)``, see :func:`.read_laminaprop`, has `c_{33} =
+        e_3`, `c_{44} = g_{23}`, `c_{55} = g_{13}` and all other constants
+        zero, and its plane-stress `q_{11} = q_{12} = q_{22} = q_{66} = 0`
+        and `u_1 = \dots = u_5 = 0`, such that it adds only transverse shear
+        stiffness to a laminate.
+
         The invariants `u_1` to `u_5` are those of Tsai and Pagano, as given
         by Jones [3]_, Sec. 2.7, Eq. (2.99), p. 86, and `u_6`, `u_7` the
         transverse shear invariants of the ABAQUS manual [4]_:
@@ -305,9 +322,10 @@ cdef class MatLamina:
         26, 44, 45 and 55 of the three-dimensional stiffness matrix of
         :meth:`get_constitutive_matrix` rotated by the ply angle about the 3
         axis, whose in-plane components transform with the same formulas as
-        the plane-stress ones. They are stiffer than the plane-stress
-        `q_{ijL}`, e.g. `\lambda + 2\mu = E (1 - \nu)/((1 + \nu)(1 - 2\nu))`
-        instead of `E/(1 - \nu^2)` for an isotropic material, and are meant
+        the plane-stress ones (Tsai [5]_, Sec. 3.3). They are stiffer than
+        the plane-stress `q_{ijL}`, e.g. `\lambda + 2\mu = E (1 - \nu)/((1 +
+        \nu)(1 - 2\nu))` instead of `E/(1 - \nu^2)` for an isotropic
+        material, and are meant
         for three-dimensional properties, e.g. for continuum shell elements
         integrated with a user material (UMAT), not for the shell elements
         of pyfe3d.
@@ -325,6 +343,8 @@ cdef class MatLamina:
         .. [4] ABAQUS Example Problems Manual, Vol. 1, Example 1.2.2,
            Laminated composite shell: buckling of a cylindrical panel with a
            circular hole.
+        .. [5] Tsai, S. W., Theory of Composites Design, 2008, Sec. 3.3,
+           Transformation in three dimensions.
 
         """
         cdef double e1, e2, e3, nu12, nu21, nu13, nu31, nu23, nu32, delta, den
@@ -337,13 +357,29 @@ cdef class MatLamina:
         nu31 = self.nu31
         nu23 = self.nu23
         nu32 = self.nu32
-        delta = (1-nu12*nu21-nu23*nu32-nu31*nu13-2*nu21*nu32*nu13)/(e1*e2)
-        self.c11 = (1    - nu23*nu32)/(delta*e2)
-        self.c12 = (nu21 + nu31*nu23)/(delta*e2)
-        self.c13 = (nu31 + nu21*nu32)/(delta*e2)
-        self.c22 = (1    - nu13*nu31)/(delta*e1)
-        self.c23 = (nu32 + nu12*nu31)/(delta*e1)
-        self.c33 = e3*(1    - nu12*nu21)/(delta*e1*e2)
+        if e1 != 0 and e2 != 0:
+            delta = (1-nu12*nu21-nu23*nu32-nu31*nu13-2*nu21*nu32*nu13)/(e1*e2)
+            self.c11 = (1    - nu23*nu32)/(delta*e2)
+            self.c12 = (nu21 + nu31*nu23)/(delta*e2)
+            self.c13 = (nu31 + nu21*nu32)/(delta*e2)
+            self.c22 = (1    - nu13*nu31)/(delta*e1)
+            self.c23 = (nu32 + nu12*nu31)/(delta*e1)
+            self.c33 = e3*(1    - nu12*nu21)/(delta*e1*e2)
+        else:
+            # NOTE zero e1 or e2, e.g. an antiplane core: the same constants
+            #      with delta e1 e2 = 1 - nu12 nu21 - ..., without dividing by
+            #      the moduli, see the Notes
+            den = 1-nu12*nu21-nu23*nu32-nu31*nu13-2*nu21*nu32*nu13
+            if not den > 0:
+                raise ValueError('MatLamina with a non-positive determinant '
+                                 '1 - nu12*nu21 - nu23*nu32 - nu31*nu13 - '
+                                 '2*nu21*nu32*nu13 = %r' % den)
+            self.c11 = e1*(1    - nu23*nu32)/den
+            self.c12 = e1*(nu21 + nu31*nu23)/den
+            self.c13 = e1*(nu31 + nu21*nu32)/den
+            self.c22 = e2*(1    - nu13*nu31)/den
+            self.c23 = e2*(nu32 + nu12*nu31)/den
+            self.c33 = e3*(1    - nu12*nu21)/den
         self.c44 = self.g23
         self.c55 = self.g13
         self.c66 = self.g12
@@ -421,7 +457,9 @@ cdef class MatLamina:
         ValueError
             If ``plane_stress`` is ``False``, i.e. after
             ``rebuild(plane_stress=False)``, since the trace is defined with
-            the plane-stress stiffnesses.
+            the plane-stress stiffnesses, or if the trace is not positive,
+            e.g. zero for an antiplane core, whose in-plane stiffnesses
+            vanish.
 
         Notes
         -----
@@ -459,6 +497,11 @@ cdef class MatLamina:
                              'plane-stress stiffnesses, call '
                              'rebuild(plane_stress=True) first')
         tr = self.q11 + self.q22 + 2*self.q66
+        if not tr > 0:
+            raise ValueError('trace_normalize_plane_stress: the trace q11 + '
+                             'q22 + 2*q66 = %r is not positive, e.g. that '
+                             'of an antiplane core with zero in-plane '
+                             'stiffnesses' % tr)
         self.q11 /= tr
         self.q12 /= tr
         self.q22 /= tr
@@ -2704,6 +2747,14 @@ cdef class ShellProp:
         They are computed from the inverse of the 6x6 ``ABD`` matrix and from
         ``h``.
 
+        Raises
+        ------
+        numpy.linalg.LinAlgError
+            A subclass of ``ValueError``, if the ``ABD`` matrix is singular,
+            e.g. for a laminate of antiplane cores only, whose in-plane and
+            bending stiffnesses vanish: the equivalent properties are then
+            undefined.
+
         Notes
         -----
         With `a = [[A, B], [B, D]]^{-1}`, whose upper-left 3x3 block is the
@@ -2720,7 +2771,13 @@ cdef class ShellProp:
         where the index 6 is the third row and column of `a`.
 
         """
-        AI = np.linalg.inv(self.get_ABD())
+        try:
+            AI = np.linalg.inv(self.get_ABD())
+        except np.linalg.LinAlgError:
+            raise np.linalg.LinAlgError('The ABD matrix of the laminate is '
+                    'singular, its equivalent properties are undefined, e.g. '
+                    'for a laminate of antiplane cores only, whose in-plane '
+                    'and bending stiffnesses vanish')
         a11, a12, a22, a33 = AI[0,0], AI[0,1], AI[1,1], AI[2,2]
         self.e1 = 1./(self.h*a11)
         self.e2 = 1./(self.h*a22)

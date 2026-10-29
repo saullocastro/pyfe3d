@@ -47,15 +47,17 @@ Available finite elements
   It has a not very robust hourglass control.
 
 - 'Tria3DSG' - 3-node plate with linear interpolation and a discrete shear
-  gap transverse shear field, after Bletzinger, Bischoff and Ramm (2000). The
-  recommended triangular plate element: it is free of shear locking by
-  construction and needs no tuning parameter.
+  gap transverse shear field, after Bletzinger, Bischoff and Ramm (2000), free
+  of shear locking by construction and without a tuning parameter, with a
+  constant-strain membrane.
 
-- 'Tria3R' - 3-node plate with linear interpolation, equivalent to Abaqus' S3R
-  or Nastran's CTRIA3. Its transverse shear is taken at the centroid and locks,
-  and it relies on the `alpha_shear_locking` stabilisation to unlock. No single
-  value of that parameter serves every problem class, so it has to be verified
-  per problem, see the element documentation. Prefer Tria3DSG for new work.
+- 'Tria3R' - 3-node shell with linear interpolation. Since 0.12.0 it takes
+  the discrete shear gap transverse shear field of Tria3DSG by default, with
+  the membrane enriched by the drilling rotations of Allman (1984), which makes
+  it much better than Tria3DSG in in-plane bending. Its former transverse
+  shear, sampled at the centroid and stabilised by `alpha_shear_locking`,
+  remains available with `shear_model = 0`, but it does not converge on thin
+  plates and shells, see the element documentation.
 
 - 'BeamC' - 2-node Timoshenko beam element with consistent shape functions and
 analytical integration. The recommended beam element.

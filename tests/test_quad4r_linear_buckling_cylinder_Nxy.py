@@ -371,10 +371,7 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     and the same equation with the correlation factor set to one is
     Eq. (25), Sec. 4.2.4, p. 11, of NASA SP-8007, Buckling of thin-walled
     circular cylinders, 1965, revised 1968, valid there for
-    ``50 < Z < 78*(R/t)**2*(1 - nu**2)``. The straight line is also quoted,
-    from TN 1344, by Batdorf, S. B., "A simplified method of elastic-stability
-    analysis for thin cylindrical shells", NACA Report 874, 1947, p. 291,
-    which is reference 3 of SP-8007. The simply supported edges of
+    ``50 < Z < 78*(R/t)**2*(1 - nu**2)``. The simply supported edges of
     Batdorf et al. are ``w = w,xx = v = 0`` with ``u`` unrestrained (TN 1344,
     p. 8), which is what the constraints below impose.
 
@@ -405,7 +402,14 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     the second approximation, 1.2 per cent above the 151.2 of the straight
     line, while the third approximation is 1.6 and 2.2 per cent below the
     second at Z = 300 and 10000, the neighbouring entries where both are
-    tabulated. A cylinder with the R and L of
+    tabulated. Table 1 has no entry at the Z = 954 of this test;
+    interpolated linearly in log k_s against log Z, the third
+    approximation between Z = 300 and 10000, 61.47 and 851.9, gives
+    k_s = 146.3, 0.3 per cent above the 145.9 of the straight line, and
+    the second approximation between Z = 300 and 1000 gives 147.7, 1.3 per
+    cent above it. The straight line is kept as the reference: it is the
+    formula the paper gives, and the interpolation adds an error of its
+    own. A cylinder with the R and L of
     test_linear_buckling_cylinder_Nxy and ``t = 1 mm``, Z = 992, nine to ten
     waves, converges with the enriched Quad4 to 0.995 of the formula, see
     tests/test_quad4_linear_buckling_cylinder_Nxy.py, but needs about twice

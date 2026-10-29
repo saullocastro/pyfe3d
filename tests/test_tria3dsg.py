@@ -7,12 +7,18 @@ The element is described in :mod:`pyfe3d.tria3dsg` and follows
     elements", Computers & Structures, 75(3), pp. 321-334.
     https://doi.org/10.1016/S0045-7949(99)00140-6
 
-It exists because :class:`pyfe3d.tria3r.Tria3R` cures its shear locking by
-dividing the transverse shear stiffnesses by `1 + \alpha \ell^2/h^2`, which
-leaves it unable to reproduce a constant transverse shear state and makes it
-converge to the wrong answer on bending problems. The tests below check the
-properties the DSG buys and contrast them with Tria3R throughout, so the
-comparison is part of the record rather than a claim.
+It was written because :class:`pyfe3d.tria3r.Tria3R`, up to 0.11, cured
+its shear locking by dividing the transverse shear stiffnesses of a
+centroid-sampled shear field by `1 + \alpha \ell^2/h^2`, which leaves it
+unable to reproduce a constant transverse shear state and makes it converge
+to the wrong answer on bending problems. The tests below check the
+properties the DSG buys and contrast them with that field throughout, so the
+comparison is part of the record rather than a claim. Since 0.12.0 the
+default of Tria3R is this element's DSG field, ``shear_model = 1``, see
+``tests/test_tria3r_shear_model_dsg.py``; the centroid-sampled field remains
+available with ``shear_model = 0``, and every Tria3R built in this module is
+given that field and ``alpha_shear_locking = 0.7`` explicitly by
+:func:`legacy_tria3r`, unless a test sets ``alpha_shear_locking`` itself.
 
 """
 import sys
@@ -32,6 +38,18 @@ from pyfe3d import (Tria3DSG, Tria3DSGData, Tria3DSGProbe,
 
 E_ISO = 210.e9
 NU_ISO = 0.3
+def legacy_tria3r(el):
+    r"""Give a Tria3R the centroid-sampled transverse shear of before 0.12.0
+
+    ``shear_model = 0`` with ``alpha_shear_locking = 0.7``, the former
+    defaults, which the contrasts of this module are about. Any other
+    element is left alone.
+    """
+    if isinstance(el, Tria3R):
+        el.shear_model = 0
+        el.alpha_shear_locking = 0.7
+
+
 # NOTE a deliberately irregular triangle, so that no result below can be an
 #      accident of symmetry
 IRREGULAR = np.array([[0.13, -0.07, 0.], [1.21, 0.31, 0.], [0.44, 0.93, 0.]])
@@ -48,6 +66,7 @@ def element_K(cls, Data, Probe, ncoords, h, drilling_model=0, alpha=None):
     flat = ncoords.flatten()
     data = Data()
     el = cls(Probe())
+    legacy_tria3r(el)
     for k in range(nn):
         setattr(el, 'n%d' % (k + 1), k + 1)
         setattr(el, 'c%d' % (k + 1), DOF*k)
@@ -99,6 +118,7 @@ def assemble(cls, Data, Probe, X, Y, cells, h):
     init_k_KC0 = 0
     for e in cells:
         el = cls(probe)
+        legacy_tria3r(el)
         for a in range(len(e)):
             setattr(el, 'n%d' % (a + 1), e[a] + 1)
             setattr(el, 'c%d' % (a + 1), DOF*e[a])
@@ -420,6 +440,7 @@ def plate_point_load(cls, Data, Probe, n, h, triangles=True):
     init_k_KC0 = 0
     for e in cells:
         el = cls(probe)
+        legacy_tria3r(el)
         for a in range(len(e)):
             setattr(el, 'n%d' % (a + 1), e[a] + 1)
             setattr(el, 'c%d' % (a + 1), DOF*e[a])
@@ -493,6 +514,7 @@ def single_element(cls, Data, Probe, ncoords, h, prop=None):
     nn = len(ncoords)
     flat = ncoords.flatten()
     el = cls(Probe())
+    legacy_tria3r(el)
     for k in range(nn):
         setattr(el, 'n%d' % (k + 1), k + 1)
         setattr(el, 'c%d' % (k + 1), DOF*k)
@@ -693,6 +715,7 @@ def material_rotation(cls, Probe, ncoords, xmat):
     nn = len(ncoords)
     flat = np.asarray(ncoords, dtype=float).flatten()
     el = cls(Probe())
+    legacy_tria3r(el)
     for k in range(nn):
         setattr(el, 'n%d' % (k + 1), k + 1)
         setattr(el, 'c%d' % (k + 1), DOF*k)
@@ -814,6 +837,7 @@ def combined_state_energy(cls, Data, Probe, n, prop, matangle,
     init_k_KC0 = 0
     for e in cells:
         el = cls(probe)
+        legacy_tria3r(el)
         for a in range(len(e)):
             setattr(el, 'n%d' % (a + 1), e[a] + 1)
             setattr(el, 'c%d' % (a + 1), DOF*e[a])
@@ -966,6 +990,7 @@ def triangulated_plate_buckling(cls, Data, Probe, n, h, second='diagonal',
     init_k_KG = 0
     for e in cells:
         el = cls(probe)
+        legacy_tria3r(el)
         for a in range(3):
             setattr(el, 'n%d' % (a + 1), e[a] + 1)
             setattr(el, 'c%d' % (a + 1), DOF*e[a])
@@ -1200,6 +1225,7 @@ def test_optional_stabilisation_is_off_by_default_and_mild_when_on():
         for n1, n2, n3, n4 in zip(n1s, n2s, n3s, n4s):
             for (a1, a2, a3) in ((n1, n2, n3), (n1, n3, n4)):
                 el = cls(probe)
+                legacy_tria3r(el)
                 el.n1, el.n2, el.n3 = a1, a2, a3
                 el.c1 = DOF*nid_pos[a1]
                 el.c2 = DOF*nid_pos[a2]
