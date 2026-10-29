@@ -80,6 +80,20 @@ models e.g. a skin whose nodes are on its inner surface, shared with the
 beams of a stiffener. The mass integrals ``intrho``, ``intrhoz`` and
 ``intrhoz2`` enter the mass matrices of the shells.
 
+For any laminate, `\boldsymbol{B} = \boldsymbol{B}_{e=0} + e
+\boldsymbol{A}` and `\boldsymbol{D} = \boldsymbol{D}_{e=0} + 2 e
+\boldsymbol{B}_{e=0} + e^2 \boldsymbol{A}`, the shift of the stiffness
+integrals to another reference plane (Vasiliev and Morozov, Mechanics and
+Analysis of Composite Materials, Elsevier, 2001, Eq. (5.28), p. 235), while
+`\boldsymbol{A}` and the transverse shear stiffnesses do not change. The
+lamination parameters of :meth:`.ShellProp.calc_lamination_parameters` are
+integrated about the reference surface, i.e. they include the offset, and
+:func:`.shellprop_from_LaminationParameters` needs the same ``offset`` to
+give back the stiffnesses:
+
+.. literalinclude:: ../../tests/test_shellprop.py
+    :pyobject: test_lamination_parameters_offset
+
 
 Transverse shear correction
 ---------------------------

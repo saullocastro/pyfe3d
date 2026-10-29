@@ -355,6 +355,72 @@ def test_lamination_parameters_three_dimensional_constants(material, layup):
     assert prop_3d.A22 > (1 + 1e-3)*prop.A22
 
 
+@pytest.mark.parametrize('offset', ['+0.2 mm', '-0.2 mm', 'one ply'])
+@pytest.mark.parametrize('layup', LAYUPS.keys())
+@pytest.mark.parametrize('material', LAMINAPROPS_9.keys())
+def test_lamination_parameters_offset(material, layup, offset):
+    r"""Lamination parameters of a laminate with an offset
+
+    With ``offset`` `= e`, the laminate occupies `-h/2 + e \le z \le h/2 +
+    e`, and :meth:`.ShellProp.calc_lamination_parameters` integrates about
+    the reference surface. :func:`.shellprop_from_LaminationParameters`
+    given the same offset must give the A, B and D of ``clt_abd`` with the
+    offset, which also satisfy the shift of the stiffness integrals to
+    another reference plane, `B = B^0 + e A` and `D = D^0 + 2 e B^0 + e^2
+    A`, with `B^0`, `D^0` about the mid-surface (Vasiliev and Morozov,
+    Mechanics and Analysis of Composite Materials, Elsevier, 2001, Eq.
+    (5.28), p. 235). The constant-strain transverse shear stiffness does not
+    depend on the offset. The derivatives of GradABD with respect to the
+    thickness, at constant lamination parameters and offset, are compared
+    with central differences of the stiffnesses, polynomials of degree 3 in
+    h, whose truncation error is `(\Delta h/h)^2 = 10^{-12}` and whose
+    round-off error is about `10^{-16} h/\Delta h = 10^{-10}`, relative.
+    """
+    lamprop = LAMINAPROPS_9[material]
+    stack, plyts = LAYUPS[layup]
+    e = {'+0.2 mm': 0.2e-3, '-0.2 mm': -0.2e-3, 'one ply': plyts[0]}[offset]
+    h = sum(plyts)
+    lam = laminated_plate(stack, plyts=plyts, laminaprop=lamprop, offset=e,
+                          shear_correction=None)
+    mat = read_laminaprop(lamprop)
+    lp = lam.calc_lamination_parameters()
+    lam_lp = shellprop_from_LaminationParameters(lam.h, mat, lp, e)
+    assert lam_lp.offset == e
+
+    A, B, D = clt_abd(stack, plyts, [lamprop]*len(stack), offset=e)
+    A0, B0, D0 = clt_abd(stack, plyts, [lamprop]*len(stack))
+    assert_abd(A, B, D, A0, B0 + e*A0, D0 + 2*e*B0 + e**2*A0, h)
+    Abar = abar_ts(stack, plyts, lamprop[4], lamprop[5])
+    for p in (lam, lam_lp):
+        assert_abd(p.A, p.B, p.D, A, B, D, h)
+        assert np.allclose(p.Abar_ts, Abar, rtol=1e-12,
+                           atol=1e-14*np.abs(Abar).max())
+    assert np.allclose(lam_lp.Ats, lam.Ats, rtol=1e-12,
+                       atol=1e-14*np.abs(Abar).max())
+
+    # NOTE the same through the function with the lamination parameters as
+    #      arguments
+    names = ['xi%s%d' % (m, i) for m in 'ABD' for i in (1, 2, 3, 4)]
+    lam_lp2 = shellprop_from_lamination_parameters(lam.h, mat,
+            *[getattr(lp, name) for name in names], lp.xiAts1, lp.xiAts2,
+            offset=e)
+    assert_abd(lam_lp2.A, lam_lp2.B, lam_lp2.D, A, B, D, h)
+
+    grad = GradABD()
+    grad.calc_LP_grad(lam.h, mat, lp, e)
+    ij = ('11', '12', '16', '22', '26', '66')
+    def stiffnesses(hh):
+        p = shellprop_from_LaminationParameters(hh, mat, lp, e)
+        return {m: np.array([getattr(p, m + s) for s in ij]) for m in 'ABD'}
+    dh = 1e-6*h
+    plus, minus = stiffnesses(h + dh), stiffnesses(h - dh)
+    for m, g in (('A', grad.gradAij), ('B', grad.gradBij),
+                 ('D', grad.gradDij)):
+        fd = (plus[m] - minus[m])/(2*dh)
+        assert np.allclose(np.asarray(g)[:, 0], fd, rtol=1e-8,
+                           atol=1e-8*np.abs(fd).max()), m
+
+
 @pytest.mark.parametrize('material', LAMINAPROPS_9.keys())
 def test_trace_normalized_three_dimensional_constants(material):
     r"""Trace normalization with e3 given
