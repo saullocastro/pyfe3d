@@ -36,7 +36,13 @@ The matrices given to the solvers are those of the free degrees-of-freedom,
 e.g. ``KC0uu = KC0[bu, :][:, bu]``: a null row or column of the stiffness
 matrix, a degree-of-freedom without stiffness, raises a
 :class:`numpy.linalg.LinAlgError` naming the degrees-of-freedom, see
-:func:`.check_null_rows_cols`.
+:func:`.check_null_rows_cols`. A symmetric stiffness matrix that is not
+positive definite, e.g. with insufficient boundary conditions, a mechanism
+or re-entrant elements, raises a :class:`numpy.linalg.LinAlgError` that
+says so, with the likely causes, in :func:`.linear_buckling`,
+:func:`.linear_static` and the linear :meth:`.Analysis.static`, and the
+``RuntimeError`` of :func:`.natural_frequency` starts with that diagnosis
+when its solvers fail.
 
 The log messages of the non-linear static analyses are printed by
 :mod:`pyfe3d.solver.logger`, unless ``silent=True``.

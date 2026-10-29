@@ -82,13 +82,29 @@ a converged answer from a plausible-looking one.
 .. rubric:: Solver policy
 
 With ``sparse_solver=True`` the sparse solvers run first for every problem
-size, and each result must pass the verification. Only when all of them
-failed, e.g. a failed verification, an ARPACK error or a singular
+size, and each result must pass the verification. For symmetric matrices,
+when the inertia check finds eigenvalues missing below the highest one
+returned by the first sparse solver, e.g. copies of repeated eigenvalues,
+which the Lanczos process may miss, they are computed by deflated passes
+before any other solver, see :func:`_complete_repeated`. Only when all of
+them failed, e.g. a failed verification, an ARPACK error or a singular
 factorization, a dense solver is used, if the dense problem has at most
 ``max_dense_size`` degrees-of-freedom, with a :class:`DenseFallbackWarning`
 giving the reasons of the failures; its result is verified as well. A
 ``RuntimeError`` listing every attempted solver is raised otherwise. See
 :func:`_sparse_first`.
+
+.. rubric:: Positive definite stiffness matrix
+
+The Cayley mode of :func:`linear_buckling` and its inertia check require a
+positive definite `\boldsymbol{K}_{C0}` for symmetric matrices: with ``check=True``
+a `\boldsymbol{K}_{C0}` that is not raises a :class:`numpy.linalg.LinAlgError` that
+says so, with its likely causes, see
+:func:`.sparseutils._not_positive_definite_message`.
+:func:`natural_frequency` accepts an indefinite `\boldsymbol{K}_{C0}`, e.g. with a
+preload beyond the buckling load, and a singular one, with unconstrained
+rigid-body modes; when its solvers fail and `\boldsymbol{K}_{C0}` is not positive
+definite, its ``RuntimeError`` starts with the same diagnosis.
 
 .. rubric:: Order of the load multipliers
 
@@ -114,8 +130,10 @@ from scipy.sparse import csc_matrix, csr_matrix, diags
 from scipy.sparse.linalg import eigs, splu, LinearOperator
 from scipy.linalg import eigh, eig, LinAlgError
 
-from .sparseutils import check_null_rows_cols, is_symmetric
-from .arpackutils import capped_eigsh, start_kwargs
+from .sparseutils import (check_null_rows_cols, is_symmetric,
+                          _not_positive_definite_message)
+from .arpackutils import (arpack_max_ncv, capped_eigsh, deflated_eigsh,
+                          start_kwargs, _rayleigh_ritz)
 from .logger import msg
 
 __all__ = ['DenseFallbackWarning', 'diagonal_preconditioner',
@@ -162,6 +180,19 @@ SHIFT_SEARCH_MAX_GROWTH = 1.e10
 #: Relative gap below the critical load multiplier of the parity check of
 #: the shift search
 PARITY_REL_GAP = 1.e-4
+#: Maximum number of deflated passes of :func:`_complete_repeated`; in
+#: exact arithmetic each pass finds one more copy of every repeated
+#: eigenvalue whose copies were missed, such that three passes complete
+#: eigenvalues of multiplicity up to four found once
+MAX_COMPLETION_PASSES = 3
+#: Relative gap below the highest eigenvalue found of the inertia counts of
+#: :func:`_complete_repeated`, the default ``min_rel_gap`` of
+#: :func:`check_eigenpairs` and :func:`_check_freq`
+COMPLETION_REL_GAP = 1.e-4
+#: Seed of the starting vector of the first deflated pass of
+#: :func:`_complete_repeated`, incremented for each pass; it differs from the
+#: seed ``42`` of :func:`.start_vector`, see :func:`.deflated_eigsh`
+COMPLETION_SEED = 43
 
 
 class DenseFallbackWarning(RuntimeWarning):
@@ -175,6 +206,13 @@ class DenseFallbackWarning(RuntimeWarning):
     ``warnings.simplefilter('error', DenseFallbackWarning)``.
 
     """
+
+
+class _NotApplicable(Exception):
+    r"""Raised by a strategy of :func:`_sparse_first` that does not apply,
+    e.g. the completion of :func:`_complete_repeated` when no eigenvalue is
+    missing; the strategy is skipped without being listed among the
+    failures"""
 
 
 def diagonal_preconditioner(K, floor=1.e-30):
@@ -384,19 +422,41 @@ def _negative_pivots(A):
     pivots is the number of negative eigenvalues of `\boldsymbol{A}`.
 
     """
+    return _symmetric_lu(A)[1]
+
+
+def _symmetric_lu(A):
+    r"""Factorization of a symmetric sparse matrix without row interchanges
+    and its number of negative pivots
+
+    Parameters
+    ----------
+    A : sparse_matrix
+        Symmetric matrix, shape ``(n, n)``. The symmetry is not checked.
+
+    Returns
+    -------
+    lu : SuperLU or None
+        The factorization of :func:`_negative_pivots`, ``None`` when
+        :func:`scipy.sparse.linalg.splu` found ``A`` exactly singular.
+    num : int or None
+        The number of negative pivots, ``None`` when it is unknown, see
+        :func:`_negative_pivots`.
+
+    """
     try:
         lu = splu(csc_matrix(A), permc_spec='MMD_AT_PLUS_A',
                   diag_pivot_thresh=0., options=dict(SymmetricMode=True))
     except RuntimeError:
         # NOTE exactly singular
-        return None
+        return None, None
     if not np.array_equal(lu.perm_r, lu.perm_c):
         # NOTE a zero pivot forced a row interchange
-        return None
+        return lu, None
     d = lu.U.diagonal()
     if not np.all(np.isfinite(d)) or np.any(d == 0):
-        return None
-    return int(np.count_nonzero(d < 0))
+        return lu, None
+    return lu, int(np.count_nonzero(d < 0))
 
 
 def is_positive_definite(A):
@@ -1687,8 +1747,210 @@ def _eigs_shift_search(K, KG, k, tol, check_rtol):
     return mu, eigvecs
 
 
+def _complete_repeated(A, M, w, V, shift, tol, num_missing, wanted, k):
+    r"""Complete the lowest eigenpairs of `\boldsymbol{A} \boldsymbol{x} = w \boldsymbol{M} \boldsymbol{x}` with
+    deflated passes, e.g. the missing copies of repeated eigenvalues
+
+    Parameters
+    ----------
+    A, M : sparse_matrix
+        Symmetric matrices, shape ``(n, n)``, ``M`` positive definite on the
+        eigenvectors, ``A - shift*M`` non-singular.
+    w : np.ndarray
+        Eigenvalues found, 1-D array of size ``p``, the lowest ones but for
+        those missing.
+    V : np.ndarray
+        Their `\boldsymbol{M}`-orthonormal eigenvectors, shape ``(n, p)``.
+    shift : float
+        Shift of the shift-invert mode, lower than the eigenvalues sought,
+        which are those nearest it.
+    tol : float
+        Tolerance of :func:`scipy.sparse.linalg.eigsh`.
+    num_missing : callable
+        ``num_missing(w)`` returns the number of eigenvalues missing below
+        the ``k``-th lowest one of ``w``, counted with an inertia, ``0``
+        when none is missing or when the count is unknown, see
+        :func:`_missing_counter`.
+    wanted : callable
+        ``wanted(w)`` returns the boolean mask of the eigenvalues of a pass
+        that are kept.
+    k : int
+        Number of eigenpairs requested, the largest number computed by a
+        pass.
+
+    Returns
+    -------
+    w, V : np.ndarray
+        The Ritz values by increasing value and the `\boldsymbol{M}`-orthonormal Ritz
+        vectors of the eigenvectors found and of those added, see
+        :func:`.arpackutils._rayleigh_ritz`.
+    num_added : int
+        Number of eigenpairs added.
+
+    Notes
+    -----
+    The Lanczos process of ARPACK, started from a single vector, finds in
+    exact arithmetic only one eigenvector of each eigenspace, and the other
+    copies of a repeated eigenvalue only through the rounding errors,
+    whereas the structures with a symmetry have repeated eigenvalues equal
+    up to the round-off, e.g. the pairs of modes `\cos n\theta` and `\sin
+    n\theta` of a cylinder with a rotationally symmetric mesh, see
+    :func:`.deflated_eigsh`. Measured with SciPy 1.17.1 and Intel MKL
+    2025.0.0 for the torsion of the cylinder Z33 of
+    ``tests/test_quad4_linear_buckling_cylinder_Nxy.py`` with 80 elements
+    around the circumference: ``eigsh()`` in Cayley mode with 4 load
+    multipliers requested returns one copy of each of the four lowest
+    pairs, 3 copies are missing, and with 2 or 3 requested 1 or 2. The
+    inertia counts of the verification, see
+    :func:`check_eigenpairs` and :func:`_check_freq`, detect the missing
+    copies below the highest eigenvalue found. Each pass counts them, with
+    the relative gap ``COMPLETION_REL_GAP`` below the ``k``-th lowest
+    eigenvalue found, as the verification does below the highest one
+    returned, and computes as many eigenpairs, at most ``k``, with
+    :func:`.deflated_eigsh`, about ``shift``, with the eigenvectors already
+    found deflated and the starting vector drawn with the seed
+    ``COMPLETION_SEED`` plus the number of the pass, i.e. the eigenvalues
+    nearest the shift not found yet, which are the missing ones. The
+    eigenvectors found and added are combined with a Rayleigh-Ritz
+    projection, which keeps them `\boldsymbol{M}`-orthonormal. At most
+    ``MAX_COMPLETION_PASSES`` passes are made, each also limited to the cap
+    of ``ncv`` of :func:`.arpack_max_ncv`, and the passes stop when no
+    eigenvalue is missing or when a pass adds nothing. The result is
+    verified as any other.
+
+    """
+    n = A.shape[0]
+    lu = None
+    num_added = 0
+    for i in range(MAX_COMPLETION_PASSES):
+        m = num_missing(w)
+        if not m:
+            break
+        k_pass = min(m, k, n - V.shape[1] - 2)
+        max_ncv = arpack_max_ncv()
+        if max_ncv is not None:
+            k_pass = min(k_pass, (max_ncv - 1)//2)
+        if k_pass < 1:
+            break
+        if lu is None:
+            lu = _splu(A - shift*M)
+        v0 = np.random.RandomState(COMPLETION_SEED + i).uniform(-1., 1., n)
+        wi, Vi = deflated_eigsh(A, k_pass, M, shift, V, tol=tol, lu=lu,
+                                v0=v0)
+        keep = wanted(wi)
+        if not np.any(keep):
+            break
+        w, V = _rayleigh_ritz(A, M, np.hstack((V, Vi[:, keep])))
+        num_added += int(np.count_nonzero(keep))
+    return w, V, num_added
+
+
+def _missing_counter(K, B, s_of, k):
+    r"""``num_missing`` of :func:`_complete_repeated` from the inertia of
+    `\boldsymbol{K} + s \boldsymbol{B}`
+
+    Parameters
+    ----------
+    K, B : sparse_matrix
+        Symmetric matrices, shape ``(n, n)``: ``B = KG`` or ``-KG`` for
+        linear buckling, `\boldsymbol{K}` being positive definite, ``B = -M`` for
+        natural frequency.
+    s_of : callable
+        ``s_of(w)`` returns the eigenvalues found as the values `s` of the
+        inertia, the load multipliers `\lambda = -1/\mu` or the `\omega_n^2`,
+        whose number below `s` is the number of negative pivots of `\boldsymbol{K} +
+        s \boldsymbol{B}`.
+    k : int
+        Number of eigenvalues requested: the count is made below the
+        ``k``-th lowest one found, the highest one that will be returned.
+
+    Returns
+    -------
+    num_missing : callable
+        See :func:`_complete_repeated`.
+
+    """
+    def num_missing(w):
+        s_found = np.sort(s_of(w))
+        if not s_found.size:
+            return 0
+        top = s_found[min(k, s_found.size) - 1]
+        s = top - COMPLETION_REL_GAP*abs(top)
+        if s == 0:
+            return 0
+        expected = int(np.count_nonzero(s_found < s))
+        count = _negative_pivots(csr_matrix(K) + s*csr_matrix(B))
+        if count is None or count <= expected:
+            return 0
+        return count - expected
+    return num_missing
+
+
+def _complete_both_signs(K, KG, mu, eigvecs, k, tol, sigma, mu_max):
+    r"""Completion of the eigenpairs of :func:`_eigsh_both_signs` with
+    :func:`_complete_repeated`, for each sign of the load multipliers
+
+    Parameters
+    ----------
+    K, KG : sparse_matrix
+        Symmetric matrices, ``K`` positive definite, shape ``(n, n)``.
+    mu, eigvecs : np.ndarray
+        Eigenpairs of :func:`_eigsh_both_signs`, the eigenvectors
+        `\boldsymbol{K}`-orthonormal.
+    k : int
+        Number of eigenpairs.
+    tol : float
+        Tolerance of :func:`scipy.sparse.linalg.eigsh`.
+    sigma : float
+        Shift of the Cayley mode that found the eigenpairs; the deflated
+        passes use the shift `-\sigma`, below all the `\mu`.
+    mu_max : float or None
+        Estimate of the largest `|\mu|`, the scale of the null `\mu`.
+
+    Returns
+    -------
+    mu, eigvecs : np.ndarray
+        At most ``k`` eigenpairs, in the order of :func:`_sort_eigenpairs`.
+    num_added : int
+        Number of eigenpairs added.
+
+    Notes
+    -----
+    The positive load multipliers, `\mu < 0`, are completed with ``KG``,
+    with the count of :func:`check_eigenpairs`, and, when fewer than ``k``
+    of them exist, the negative ones, `\mu > 0`, with ``-KG``, i.e. the
+    reversed load, as in :func:`_eigsh_both_signs`. With `\sigma` larger
+    than all `|\mu|`, `\boldsymbol{K}_G + \sigma \boldsymbol{K}` is positive definite and the
+    eigenvalues nearest `-\sigma` not found yet are the most negative ones,
+    i.e. the lowest load multipliers missing.
+
+    """
+    mu = np.asarray(mu)
+    kept = np.isfinite(mu) & ~_null_mu(mu, mu_max)
+    parts_mu = []
+    parts_vecs = []
+    num_added = 0
+    for sign in (1., -1.):
+        sel = kept & (sign*mu < 0)
+        if not np.any(sel) or sum(p.size for p in parts_mu) >= k:
+            continue
+        B = sign*csr_matrix(KG)
+        num_missing = _missing_counter(K, B, lambda w: -1./w, k)
+        w, vecs, added = _complete_repeated(
+            B, K, sign*mu[sel], eigvecs[:, sel], -sigma, tol, num_missing,
+            lambda w: (w < 0) & ~_null_mu(w, mu_max), k)
+        parts_mu.append(sign*w)
+        parts_vecs.append(vecs)
+        num_added += added
+    mu = np.concatenate(parts_mu) if parts_mu else np.zeros(0)
+    eigvecs = (np.hstack(parts_vecs) if parts_vecs
+               else np.zeros((K.shape[0], 0)))
+    mu, eigvecs = _sort_eigenpairs(mu, eigvecs, mu_max)
+    return mu[:k], eigvecs[:, :k], num_added
+
+
 def _sparse_first(analysis, strategies, verify, dense, dense_size,
-                  max_dense_size, hint=''):
+                  max_dense_size, hint='', diagnose=None):
     r"""Solver policy: the sparse solvers first, the dense solver as a last
     resort
 
@@ -1698,7 +1960,9 @@ def _sparse_first(analysis, strategies, verify, dense, dense_size,
         Name of the analysis, used in the messages.
     strategies : list
         The sparse strategies as ``(name, solver)`` pairs, tried in this
-        order. ``solver()`` returns the eigenpairs as a tuple.
+        order. ``solver()`` returns the eigenpairs as a tuple, or raises
+        :class:`_NotApplicable` when the strategy does not apply, which is
+        then skipped without being listed among the failures.
     verify : callable or None
         ``verify(*eigenpairs)`` returns ``None`` when the eigenpairs pass
         the verification, otherwise the description of the failure. With
@@ -1713,6 +1977,12 @@ def _sparse_first(analysis, strategies, verify, dense, dense_size,
         Size of the dense problem and its maximum.
     hint : str, optional
         Appended to the message of the ``RuntimeError``. Default ``''``.
+    diagnose : callable or None, optional
+        ``diagnose()``, called only when every solver failed, returns a
+        description of the likely cause, put at the start of the message of
+        the ``RuntimeError``, or ``None``; e.g. a stiffness matrix that is
+        not positive definite, see :func:`natural_frequency`. Default
+        ``None``.
 
     Returns
     -------
@@ -1751,7 +2021,10 @@ def _sparse_first(analysis, strategies, verify, dense, dense_size,
         return result, error
 
     for name, solver in strategies:
-        result, error = attempt(name, solver)
+        try:
+            result, error = attempt(name, solver)
+        except _NotApplicable:
+            continue
         if error is None:
             return result, name
     name, solver = dense
@@ -1770,9 +2043,12 @@ def _sparse_first(analysis, strategies, verify, dense, dense_size,
         result, error = attempt(name, solver)
         if error is None:
             return result, name
-    raise RuntimeError('%s failed, no eigenvalue solver passed the '
-                       'verification. Attempted: %s.%s' % (analysis,
-                           '; '.join(errors), hint))
+    text = ('%s failed, no eigenvalue solver passed the verification. '
+            'Attempted: %s.%s' % (analysis, '; '.join(errors), hint))
+    diagnosis = diagnose() if diagnose is not None else None
+    if diagnosis is not None:
+        text = '%s. %s' % (diagnosis, text)
+    raise RuntimeError(text)
 
 
 def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
@@ -1787,10 +2063,14 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
     columns. ``K`` and ``KG`` are symmetric when ``symmetric=None`` finds
     them so, see :func:`.is_symmetric`.
 
-    **Symmetric matrices.** The sparse solvers are
+    **Symmetric matrices.** ``K`` must be positive definite, which is
+    checked with ``check=True``. The sparse solvers are
     :func:`scipy.sparse.linalg.eigsh` in Cayley mode, using the shift of
-    :func:`estimate_cayley_sigma`, or ``sigma`` when given, and then the
-    same with a 10 times larger shift. Each one computes the lowest positive
+    :func:`estimate_cayley_sigma`, or ``sigma`` when given; when its
+    accurate eigenpairs miss load multipliers below the highest one, e.g.
+    copies of repeated ones, the same completed by deflated passes, see
+    :func:`_complete_both_signs`; and then :func:`scipy.sparse.linalg.eigsh`
+    with a 10 times larger shift. Each one computes the lowest positive
     load multipliers and, when fewer than ``num_eigvalues`` exist, the
     negative ones closest to zero, i.e. the critical load multipliers of the
     reversed load, with ``-KG``, see :func:`_eigsh_both_signs`. The
@@ -1841,7 +2121,8 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
         :func:`diagonal_preconditioner`. This does not change the
         eigenvalues. Default ``True``.
     check : bool, optional
-        Whether to verify the eigenpairs of the sparse solvers. With
+        Whether to verify the eigenpairs of the sparse solvers, and, for
+        symmetric matrices, that ``K`` is positive definite. With
         ``False``, the first sparse solver is returned without verification
         and without dense fallback. Default ``True``.
     check_rtol : float, optional
@@ -1885,7 +2166,13 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
     ------
     numpy.linalg.LinAlgError
         When ``K`` has a null row or column, with the indices of these
-        degrees-of-freedom, see :func:`.check_null_rows_cols`.
+        degrees-of-freedom, see :func:`.check_null_rows_cols`; for symmetric
+        matrices, when ``check=True`` or ``sparse_solver=False`` and ``K`` is
+        not positive definite, i.e. its factorization has a negative or a
+        zero pivot, with the likely causes: insufficient boundary
+        conditions, a mechanism, distorted elements, e.g. re-entrant
+        quadrilaterals, or a preload beyond the buckling load included in
+        ``K``, see :func:`.sparseutils._not_positive_definite_message`.
     RuntimeError
         When ``check=True`` and no eigenvalue solver passed the
         verification, with the list of the attempted solvers and their
@@ -1920,10 +2207,14 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
     degree-of-freedom that the load does not destabilize, only gives an
     infinite load multiplier.
 
-    A failure of the verification usually means that the mesh, and not the
-    solver, needs attention: a spectrum with many nearly coincident
-    eigenvalues, as in the buckling of a cylindrical shell, is the typical
-    case.
+    The load multipliers of a cylindrical shell with a rotationally
+    symmetric mesh and load, e.g. torsion, come in pairs equal up to the
+    round-off, of which the Lanczos process of ARPACK may return one
+    copy only; the missing copies, detected by the inertia check, are
+    computed by deflated passes, see :func:`_complete_repeated`. A
+    failure of the verification that remains usually means that the mesh,
+    and not the solver, needs attention, e.g. a spectrum with many nearly
+    coincident eigenvalues.
 
     Non-conservative systems, e.g. under follower loads, may lose stability
     by flutter, which this static criterion does not detect, see
@@ -1953,7 +2244,16 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
     if not sparse_solver:
         a, b = KGs.toarray(), Ks.toarray()
         if symmetric:
-            mu, eigvecs = eigh(a=a, b=b)
+            try:
+                mu, eigvecs = eigh(a=a, b=b)
+            except LinAlgError as e:
+                # NOTE eigh() needs the Cholesky factorization of b
+                count = _negative_pivots(K)
+                if count == 0:
+                    raise
+                raise LinAlgError(_not_positive_definite_message(
+                    'Linear buckling analysis', 'K', count)
+                    + ' (scipy.linalg.eigh: %s)' % e) from e
             mu[_null_mu_pencil(a, b, mu, eigvecs, eigvecs)] = 0.
             mu, eigvecs = _sort_eigenpairs(mu, eigvecs)
         else:
@@ -1975,6 +2275,10 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
                 once['pd'] = is_positive_definite(K)
             return once['pd']
 
+        if check and not K_positive_definite():
+            raise LinAlgError(_not_positive_definite_message(
+                'Linear buckling analysis', 'K', _negative_pivots(K)))
+
         def cayley(factor):
             def solver():
                 if sigma is None:
@@ -1982,8 +2286,37 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
                     s = 1. if m is None else 10.*m
                 else:
                     s = sigma
-                return unscale(_eigsh_both_signs(Ks, KGs, k, tol, factor*s,
-                               mu_max(), K_positive_definite))
+                result = _eigsh_both_signs(Ks, KGs, k, tol, factor*s,
+                                           mu_max(), K_positive_definite)
+                once['cayley', factor] = result + (factor*s,)
+                return unscale(result)
+            return solver
+
+        def completed(factor):
+            def solver():
+                if ('cayley', factor) not in once:
+                    raise _NotApplicable()
+                mu, eigvecs, s = once['cayley', factor]
+                # NOTE the deflated passes about -s find the lowest missing
+                #      load multipliers only when s exceeds all |mu|, see
+                #      _complete_both_signs
+                if mu_max() is not None and s <= mu_max():
+                    raise _NotApplicable()
+                # NOTE only accurate eigenpairs are completed
+                mu_u, eigvecs_u = unscale((mu, eigvecs))
+                kept = np.isfinite(mu_u) & ~_null_mu(mu_u)
+                if not np.any(kept):
+                    raise _NotApplicable()
+                with np.errstate(divide='ignore'):
+                    lam = -1./mu_u[kept]
+                if not np.all(_relative_residuals(K, KG, lam,
+                        eigvecs_u[:, kept]) <= check_rtol):
+                    raise _NotApplicable()
+                mu, eigvecs, num_added = _complete_both_signs(Ks, KGs, mu,
+                        eigvecs, k, tol, s, mu_max())
+                if not num_added:
+                    raise _NotApplicable()
+                return unscale((mu, eigvecs))
             return solver
 
         def verify(mu, eigvecs):
@@ -1993,6 +2326,8 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
         num_active = int(np.count_nonzero(
             np.asarray(abs(KG).sum(axis=1)).ravel()))
         strategies = [('eigsh() in Cayley mode', cayley(1.)),
+                      ('eigsh() in Cayley mode completed by deflated passes',
+                       completed(1.)),
                       ('eigsh() in Cayley mode with a 10 times larger shift',
                        cayley(10.))]
         dense = ('eigh() with condensed degrees-of-freedom',
@@ -2198,7 +2533,10 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
     residual of each eigenpair must not be larger than ``check_rtol``,
     unless its backward error is at the round-off, and, for symmetric
     matrices, no eigenvalue lower than the highest one returned may be
-    missing. When the verification fails or the sparse
+    missing. For symmetric matrices with a ``K`` without negative pivots,
+    accurate eigenpairs that miss eigenvalues, e.g. copies of repeated
+    ones, are completed by deflated passes, see :func:`_complete_repeated`.
+    When the verification still fails or the sparse
     solver raises an error, the dense solver of :func:`_dense_freq` is used
     as a last resort, with a :class:`DenseFallbackWarning`, see the solver
     policy of :mod:`pyfe3d.solver.eigen`.
@@ -2264,7 +2602,13 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
         degrees-of-freedom, see :func:`.check_null_rows_cols`.
     RuntimeError
         When ``check=True`` and no eigenvalue solver passed the
-        verification.
+        verification. For symmetric matrices with a ``K`` that is not
+        positive definite, the message starts with that diagnosis and its
+        likely causes, see
+        :func:`.sparseutils._not_positive_definite_message`: an indefinite
+        ``K`` is accepted, e.g. with a preload beyond the buckling load,
+        but its negative eigenvalues may be far below the shift and missed
+        by the sparse solver.
 
     Warns
     -----
@@ -2339,26 +2683,62 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
         w2, eigvecs = unscale(_dense_freq(Ks, Ms, None, sigma, symmetric))
     else:
         k = min(num_eigvalues, n - 2)
+        once = {}
         if symmetric:
-            name = 'eigsh() in shift-invert mode'
-            solver = lambda: unscale(capped_eigsh(A=Ks, k=k, M=Ms,
-                                                  sigma=sigma, which='LM',
-                                                  tol=tol))
+            def solver():
+                result = capped_eigsh(A=Ks, k=k, M=Ms, sigma=sigma,
+                                      which='LM', tol=tol)
+                once['eigsh'] = result
+                return unscale(result)
+
+            def completed():
+                if 'eigsh' not in once:
+                    raise _NotApplicable()
+                w2, eigvecs = once['eigsh']
+                # NOTE only accurate eigenpairs are completed, and the
+                #      missing eigenvalues of an indefinite K may be far
+                #      below the shift, i.e. not the nearest to it
+                if (_check_freq(K, M, *unscale((w2, eigvecs)), check_rtol,
+                                False) is not None
+                        or K_negative_pivots() != 0):
+                    raise _NotApplicable()
+                num_missing = _missing_counter(Ks, -Ms, lambda w: w, k)
+                w2, eigvecs, num_added = _complete_repeated(Ks, Ms, w2,
+                        eigvecs, sigma, tol, num_missing, np.isfinite, k)
+                if not num_added:
+                    raise _NotApplicable()
+                return unscale((w2[:k], eigvecs[:, :k]))
+
+            strategies = [('eigsh() in shift-invert mode', solver),
+                          ('eigsh() in shift-invert mode completed by '
+                           'deflated passes', completed)]
         else:
-            name = 'eigs() in shift-invert mode'
-            solver = lambda: unscale(eigs(A=Ks, k=k, M=Ms, sigma=sigma,
-                                          which='LM', tol=tol,
-                                          **start_kwargs(n)))
+            strategies = [('eigs() in shift-invert mode',
+                           lambda: unscale(eigs(A=Ks, k=k, M=Ms, sigma=sigma,
+                                                which='LM', tol=tol,
+                                                **start_kwargs(n))))]
         dense = ('eigh()' if symmetric else 'eig()',
                  lambda: unscale(_dense_freq(Ks, Ms, k, sigma, symmetric)))
+
+        def K_negative_pivots():
+            if 'count' not in once:
+                once['count'] = _negative_pivots(K)
+            return once['count']
+
+        def diagnose():
+            if not symmetric or K_negative_pivots() == 0:
+                return None
+            return (_not_positive_definite_message('Frequency analysis',
+                    'K', K_negative_pivots()) + '; negative eigenvalues '
+                    'omega**2 are expected only in the latter case')
 
         def verify(w2, eigvecs):
             return _check_freq(K, M, w2, eigvecs, check_rtol, symmetric)
 
         (w2, eigvecs), _ = _sparse_first('Frequency analysis',
-                [(name, solver)], verify if check else None, dense, n,
+                strategies, verify if check else None, dense, n,
                 max_dense_size, hint=' Try sparse_solver=False or a larger '
-                'max_dense_size.')
+                'max_dense_size.', diagnose=diagnose)
     if symmetric:
         w2 = np.real(w2)
         eigvecs = np.real(eigvecs)

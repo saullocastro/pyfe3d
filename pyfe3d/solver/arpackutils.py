@@ -17,7 +17,9 @@ computing more than 15 eigenpairs in several calls with a deflation of the
 eigenvectors already found, which are combined with a Rayleigh-Ritz
 projection such that they are orthonormal also across the calls. It is used
 by :func:`.linear_buckling` and :func:`.natural_frequency` for symmetric
-matrices.
+matrices. :func:`deflated_eigsh`, the call with the eigenvectors already
+found deflated, also completes the eigenpairs of repeated eigenvalues in
+these two analyses.
 
 The cap is decided by :func:`arpack_max_ncv` and can be overridden with
 the module attribute :data:`ARPACK_MAX_NCV` or the environment variable
@@ -574,24 +576,111 @@ def capped_eigsh(A, k, M, sigma, which, mode='normal', tol=0):
                         mode=mode, tol=tol, ncv=ncv, **start_kwargs(n))
     release_memory()
     far_shift = -sigma if mode == 'cayley' else sigma
-    dtype = np.result_type(A.dtype, M.dtype)
     while w.shape[0] < k:
         order = np.argsort(w, kind='stable')
         w, V = w[order], V[:, order]
         sigma_d = _deflation_shift(w, far_shift)
-        lu = splu(csc_matrix(A - sigma_d*M))
-        MV = M @ V
-
-        def matvec(x, V=V, MV=MV, lu=lu):
-            y = lu.solve(np.asarray(x, dtype=dtype).ravel())
-            return y - V @ (MV.T @ y)
-
-        OPinv = LinearOperator((n, n), matvec=matvec, dtype=dtype)
-        wi, Vi = _scipy_eigsh(A=A, k=min(k_pass, k - w.shape[0]), M=M,
-                              sigma=sigma_d, which='LM', mode='normal',
-                              tol=tol, ncv=ncv, OPinv=OPinv,
-                              **start_kwargs(n))
+        wi, Vi = deflated_eigsh(A, min(k_pass, k - w.shape[0]), M, sigma_d,
+                                V, tol=tol, ncv=ncv)
         w = np.concatenate((w, wi))
         V = np.hstack((V, Vi))
-        release_memory()
     return _rayleigh_ritz(A, M, V)
+
+
+def deflated_eigsh(A, k, M, sigma, V, tol=0, ncv=None, lu=None, v0=None):
+    r""":func:`scipy.sparse.linalg.eigsh` in shift-invert mode with the
+    eigenvectors ``V`` deflated from the operator
+
+    Returns the ``k`` eigenpairs of `\boldsymbol{A} \boldsymbol{x} = w \boldsymbol{M} \boldsymbol{x}` nearest the
+    shift ``sigma`` among those whose eigenvectors are `\boldsymbol{M}`-orthogonal to
+    the columns of ``V``, i.e. the eigenpairs nearest the shift that were
+    not found yet. Used for the passes of :func:`capped_eigsh` and for the
+    completion of the eigenpairs of repeated eigenvalues by
+    :func:`.linear_buckling` and :func:`.natural_frequency`. The call starts
+    from :func:`start_kwargs`, with the starting vector ``v0`` when given.
+
+    Parameters
+    ----------
+    A : sparse matrix
+        Symmetric matrix of the left-hand side, of size ``n x n``.
+    k : int
+        Number of eigenpairs, at most ``n - V.shape[1] - 2``.
+    M : sparse matrix
+        Positive definite matrix of the right-hand side, of size ``n x n``.
+    sigma : float
+        Shift, in the units of `w`; ``A - sigma*M`` must not be singular.
+    V : ndarray
+        `\boldsymbol{M}`-orthonormal eigenvectors already found, shape ``(n, p)``.
+    tol : float, optional
+        Relative accuracy of the eigenvalues, passed to
+        :func:`scipy.sparse.linalg.eigsh`; ``0`` (default) means the machine
+        precision.
+    ncv : int or None, optional
+        Number of Lanczos vectors; ``None`` uses :func:`arpack_ncv`.
+        Default ``None``.
+    lu : SuperLU or None, optional
+        Factorization of ``A - sigma*M`` with :func:`scipy.sparse.linalg.splu`,
+        e.g. to reuse it for several passes; ``None`` computes it. Default
+        ``None``.
+    v0 : ndarray or None, optional
+        Starting vector, 1-D array of size ``n``; ``None`` uses
+        :func:`start_vector`. Default ``None``.
+
+    Returns
+    -------
+    w, x : ndarray
+        The eigenvalues, 1-D array of size ``k``, and the
+        `\boldsymbol{M}`-orthonormal eigenvectors, shape ``(n, k)``.
+
+    Notes
+    -----
+    The operator of the shift-invert mode, with the eigenvectors `\boldsymbol{V}`
+    deflated, is
+
+    .. math::
+
+        \boldsymbol{y} = (\boldsymbol{I} - \boldsymbol{V} \boldsymbol{V}^\top \boldsymbol{M})(\boldsymbol{A} - \sigma \boldsymbol{M})^{-1} \boldsymbol{x}
+
+    such that the eigenvalues of `\boldsymbol{V}` become null and are not found
+    again, see :func:`capped_eigsh`. A Krylov subspace generated from a
+    single starting vector contains at most one direction of each
+    eigenspace, so that in exact arithmetic the Lanczos process "must
+    [...] fail to detect the multiplicity of any eigenvalue" it finds, the
+    other copies appearing only through the rounding errors ([1]_,
+    Section 12.2.1, "A Theoretical Limitation", pp. 263-264); even with
+    full reorthogonalization it "cannot detect the multiplicity of the
+    eigenvalues which it computes" ([1]_, Section 13.10, p. 316): the
+    direction found within an eigenspace is that of the component of the
+    starting vector. With the eigenvectors found deflated and another
+    starting vector ``v0``, whose component within the eigenspace has, in
+    general, a part orthogonal to the direction already found, the
+    remaining directions are found as the eigenvalues nearest the shift
+    that were not found yet.
+
+    References
+    ----------
+    .. [1] Parlett, B. N., The Symmetric Eigenvalue Problem, SIAM,
+       Philadelphia, 1998. https://doi.org/10.1137/1.9781611971163
+
+    """
+    n = A.shape[0]
+    dtype = np.result_type(A.dtype, M.dtype)
+    if lu is None:
+        lu = splu(csc_matrix(A - sigma*M))
+    if ncv is None:
+        ncv = arpack_ncv(k, n)
+    MV = M @ V
+
+    def matvec(x):
+        y = lu.solve(np.asarray(x, dtype=dtype).ravel())
+        return y - V @ (MV.T @ y)
+
+    OPinv = LinearOperator((n, n), matvec=matvec, dtype=dtype)
+    kwargs = start_kwargs(n)
+    if v0 is not None:
+        kwargs['v0'] = v0
+    w, x = _scipy_eigsh(A=A, k=k, M=M, sigma=sigma, which='LM',
+                        mode='normal', tol=tol, ncv=ncv, OPinv=OPinv,
+                        **kwargs)
+    release_memory()
+    return w, x

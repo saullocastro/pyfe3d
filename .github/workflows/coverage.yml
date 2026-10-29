@@ -2,6 +2,21 @@ name: coverage
 
 on: [push]
 
+# NOTE the coverage of the Cython code needs a build with line tracing, see
+#      setup.py, in which every line executed in a .pyx file calls the
+#      tracer of coverage.py, with the GIL taken for each line of the nogil
+#      loops of the elements, in an unoptimized build: the whole suite took
+#      1h11m to 2h15m with it, against about 2 min of pytest without it.
+#      The job therefore runs the tests twice, in 4 processes of
+#      pytest-xdist:
+#      1. every test, with the optimized build, which measures the Python
+#         code, pyfe3d/solver among it, at little cost;
+#      2. with the line-traced build, every test except those listed in
+#         .github/coverage_deselect.txt, the slowest ones under line tracing,
+#         none of which covers a line of the .pyx files that the other tests
+#         do not cover, which measures the Cython code.
+#      pytest-cov combines both runs and the processes into .coverage.
+
 jobs:
   build:
 
@@ -22,17 +37,22 @@ jobs:
         python -m pip install --upgrade pip
         python -m pip install --upgrade -r requirements.txt
         python -m pip install --upgrade -r requirements_ci.txt
+        python -m pip install pytest-xdist
     - name: Install module
       run: |
-        export CYTHON_TRACE_NOGIL=1
-        python setup.py build_ext --inplace --define CYTHON_TRACE_NOGIL
+        python setup.py build_ext --inplace
     - name: Test with pytest and coverage report
       run: |
-        coverage run -m pytest tests
+        python -m pytest tests -n auto --cov --cov-report=
+        export CYTHON_TRACE_NOGIL=1
+        python setup.py build_ext --inplace --define CYTHON_TRACE_NOGIL
+        python -m pytest tests -n auto --cov --cov-append --cov-report= \
+            $(tr -d '\r' < .github/coverage_deselect.txt \
+              | grep -v -e '^#' -e '^ *$' | sed 's/^/--deselect=/')
         coverage report
     - name: "Upload coverage to Codecov"
       uses: codecov/codecov-action@v5
       with:
-        token: ${{ secrets.CODECOV_UPLOAD_TOKEN }} 
+        token: ${{ secrets.CODECOV_UPLOAD_TOKEN }}
         fail_ci_if_error: true
         verbose: true

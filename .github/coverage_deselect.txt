@@ -1,0 +1,48 @@
+# Tests deselected from the run with the line-traced build of the coverage
+# workflow, .github/workflows/coverage.yml: the slowest ones under line
+# tracing, whose lines of pyfe3d are all covered by the other tests, as
+# measured with pytest-cov --cov-context=test (2026-10-29). They run in
+# that workflow with the optimized build, which measures the Python code,
+# and in the pytest workflow. One pytest node id per line.
+tests/test_drilling_benchmarks.py::test_C1_cook_skew_membrane
+tests/test_drilling_benchmarks.py::test_C4_allman_cantilever
+tests/test_nonlinear_benchmarks_sze2004.py::test_cantilever_end_moment_beams_membrane_locking[BeamC]
+tests/test_nonlinear_benchmarks_sze2004.py::test_cantilever_end_moment_beams_membrane_locking[BeamLR]
+tests/test_nonlinear_benchmarks_sze2004.py::test_hinged_roof_hourglass_sensitivity
+tests/test_nonlinear_benchmarks_sze2004.py::test_hinged_roof_thick
+tests/test_nonlinear_benchmarks_sze2004.py::test_hinged_roof_thin_lower_limit_load
+tests/test_nonlinear_benchmarks_sze2004.py::test_hinged_roof_thin_snap_back
+tests/test_nonlinear_static_newton_raphson.py::test_elements_agree
+tests/test_nonlinear_static_newton_raphson.py::test_plate_newton_raphson[Tria3DSG]
+tests/test_nonlinear_static_newton_raphson.py::test_plate_newton_raphson[Tria3R]
+tests/test_nonlinear_static_newton_raphson.py::test_triangles_under_refinement
+tests/test_quad4_geometric_hourglass.py::test_low_transverse_shear_stiffness
+tests/test_quad4_linear_buckling_cylinder_Nxy.py::test_linear_buckling_cylinder_Nxy
+tests/test_quad4_linear_buckling_cylinder_Nxy.py::test_linear_buckling_cylinder_torsion_isotropic
+tests/test_quad4_linear_buckling_plate_rotated.py::test_linear_buckling_plate
+tests/test_quad4_linear_buckling_plate_rotated_thick_elements.py::test_linear_buckling_plate
+tests/test_quad4_natural_freq.py::test_nat_freq_plate
+tests/test_quad4_thick_twist.py::test_strip_torsion_is_continuous_across_the_gate
+tests/test_quad4r_linear_buckling_plate_rotated_thick_elements.py::test_linear_buckling_plate
+tests/test_solver.py::test_linear_buckling_plate
+tests/test_solver.py::test_natural_frequency_plate
+tests/test_solver_arc_length_fung_kaplan.py::test_fung_kaplan_beam_arch[arc_length_crisfield-crisfield]
+tests/test_solver_arc_length_fung_kaplan.py::test_fung_kaplan_beam_arch[arc_length_crisfield-relative]
+tests/test_solver_arc_length_fung_kaplan.py::test_fung_kaplan_beam_arch[arc_length_riks-crisfield]
+tests/test_solver_arc_length_fung_kaplan.py::test_fung_kaplan_beam_arch[arc_length_riks-relative]
+tests/test_solver_nonlinear_static.py::test_crisfield_criterion_units_invariance[plate-Quad4R]
+tests/test_solver_nonlinear_static.py::test_newton_raphson_reproduces_the_hand_written_loop[plate-Quad4R]
+tests/test_solver_nonlinear_static.py::test_newton_raphson_reproduces_the_hand_written_loop[plate-Tria3DSG]
+tests/test_solver_nonlinear_static.py::test_piston_theory_load_unsymmetric_tangent
+tests/test_solver_nonlinear_static.py::test_prescribed_displacement_and_reaction[NR]
+tests/test_solver_nonlinear_static.py::test_prescribed_displacement_and_reaction[arc_length_riks]
+tests/test_tria3dsg.py::test_converges_where_tria3r_converges_to_the_wrong_answer
+tests/test_vabs_composite.py::test_CAS1_Yu2002_Table2
+tests/test_vabs_composite.py::test_CUS_Yu2012_Table2
+tests/test_vabs_composite.py::test_pipe_Yu2005_Table3
+tests/test_vabs_isotropic.py::test_rectangle_convergence
+tests/test_vabs_vlasov.py::test_Ibeam_anisotropic_Table6[yu2002]
+tests/test_vabs_vlasov.py::test_Ibeam_anisotropic_Table6[yu2012]
+tests/test_vabs_vlasov.py::test_Ibeam_anisotropic_Table6_sensitivity
+tests/test_vabs_vlasov.py::test_Ibeam_thin_walled_limit[yu2002]
+tests/test_vabs_vlasov.py::test_Ibeam_thin_walled_limit[yu2012]
