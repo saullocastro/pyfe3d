@@ -44,7 +44,14 @@ the other components kept constant.
 
 The beams have ``update_KG`` for the axial force of the prestress, see
 ``tests/test_beam_linear_buckling_3D_column.py``; :class:`.Truss` and
-:class:`.Spring` have no geometric stiffness matrix.
+:class:`.Spring` have no geometric stiffness matrix. Both beams take the
+slopes `v_{,x}` and `w_{,x}` of their geometric stiffness matrices from the
+interpolations of `v` and `w`, such that the buckling load includes the
+reduction due to shear deformation, Eq. (2-57) of Timoshenko, S. P. and
+Gere, J. M., Theory of Elastic Stability, 2nd ed., McGraw-Hill, 1961, Sec.
+2.17, p. 133; up to version 0.11 :class:`.BeamLR` took them from the rotations
+and its buckling load converged to the Euler load whatever the shear
+stiffness, see the Notes of :class:`.BeamLR`.
 
 The geometric stiffness matrices of :class:`.Quad4` and :class:`.Quad4R`
 integrate the membrane stress resultants with two-by-two quadrature and take
