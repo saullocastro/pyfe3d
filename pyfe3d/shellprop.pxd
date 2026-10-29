@@ -20,7 +20,7 @@ cdef class MatLamina:
     cdef public double c11, c12, c13, c22, c23, c33, c44, c55, c66
     cdef public double u1, u2, u3, u4, u5, u6, u7
     cdef readonly bint plane_stress
-    cpdef void rebuild(MatLamina, bint plane_stress=*)
+    cpdef void rebuild(MatLamina, bint plane_stress=*) except *
     cpdef void trace_normalize_plane_stress(MatLamina) except *
     cpdef double [:, ::1] get_constitutive_matrix(MatLamina)
     cpdef double [:, ::1] get_invariant_matrix(MatLamina)
