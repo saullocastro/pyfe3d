@@ -456,19 +456,49 @@ def test_torsion_of_a_one_element_wide_strip():
     ratios above are kept against the value of MacNeal and Harder, whose
     grades refer to it.
 
+    The 6 % between Quad4 with 6x4 elements and 0.03208 is not a mesh error
+    that refinement removes: with two or more elements across, Quad4, Quad4R
+    with its default hourglass stiffness and with 1/100 of it converge to
+    the same twist, about 1.067 times 0.03208, measured on 2026-10-29 with
+    the distributed torque above (ratio to 0.03208):
+
+    ========  ======  ======  ======  ======  ======  ======  =======
+    element   6x2     6x4     12x4    24x8    48x8    96x16   192x32
+    ========  ======  ======  ======  ======  ======  ======  =======
+    Quad4     1.0188  1.0583  1.0651  1.0499  1.0518  1.0622  1.0655
+    Quad4R    0.9227  1.0006  1.0315  1.0561  1.0613  1.0651  1.0663
+    ========  ======  ======  ======  ======  ======  ======  =======
+
+    and with the corner forces of this test, whose deflection is singular,
+    1.0700 and 1.0782 with 192x32 elements. The converged value, 0.0342, is
+    0.3 % above the Saint-Venant twist; the difference to 0.03208 is one of
+    the reference, whose derivation is not given in MacNeal and Harder, and
+    no mesh is graded A against it. Following the policy of the tests whose
+    reference is not reached on the coarse mesh used, the 6x2 and 6x4 meshes
+    are compared with the values pre-determined by this same test, with
+    ``rtol = 1e-6`` for the round-off of the dense linear solution, whose
+    condition number is about 1e9 (``test_drilling_benchmarks.py``), and with
+    grade B against 0.03208 as a bound.
+
     """
     ref = 0.03208
+    # NOTE values pre-determined by strip_twist on 2026-10-29
+    predetermined = {(Quad4, 2): 0.03268400685870222,
+                     (Quad4, 4): 0.03397594865499767,
+                     (Quad4R, 2): 0.02960038557831665,
+                     (Quad4R, 4): 0.032120867214737954}
     assert strip_twist(Quad4, Quad4Data, Quad4Probe, 1)/ref > 100.
     # NOTE grade F of MacNeal and Harder (1985), error above 50 %
     assert strip_twist(Quad4R, Quad4RData, Quad4RProbe, 1)/ref - 1 > 0.5
     assert strip_twist(Tria3R, Tria3RData, Tria3RProbe, 1,
                        triangles=True)/ref - 1 > 0.5
-    # NOTE grade B or better, error at most 10 %
     for ny in (2, 4):
-        assert abs(strip_twist(Quad4, Quad4Data, Quad4Probe, ny)/ref
-                   - 1.) <= 0.10, ny
-        assert abs(strip_twist(Quad4R, Quad4RData, Quad4RProbe, ny)/ref
-                   - 1.) <= 0.10, ny
+        for cls, Data, Probe in ((Quad4, Quad4Data, Quad4Probe),
+                                 (Quad4R, Quad4RData, Quad4RProbe)):
+            twist = strip_twist(cls, Data, Probe, ny)
+            assert np.isclose(twist, predetermined[cls, ny], rtol=1e-6), ny
+            # NOTE grade B or better, error at most 10 %
+            assert abs(twist/ref - 1.) <= 0.10, ny
 
 
 def reference_K(nx, ny, Lx, Ly, h, E, nu, scheme):

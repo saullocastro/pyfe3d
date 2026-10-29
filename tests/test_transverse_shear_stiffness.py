@@ -34,14 +34,18 @@ from test_shellprop_transverse_shear import rohwer_stiffness
 
 E_ISO = 210.e9
 NU_ISO = 0.3
-# NOTE laminate of cylinder Z22 of Castro, S. G. P., Zimmermann, R., Arbelo,
-#      M. A., Khakimova, R., Hilburger, M. W. and Degenhardt, R., "Geometric
-#      imperfections and lower-bound methods used to calculate knock-down
-#      factors for axially compressed composite cylindrical shells",
-#      Thin-Walled Structures, 74, 118-132, 2014,
-#      https://doi.org/10.1016/j.tws.2013.08.011 (the table number of the
-#      material data is not verified here)
-LAMINAPROP = (123.55e9, 8.708e9, 0.319, 5.595e9, 5.595e9, 5.595e9)
+# NOTE stacking of cylinder Z22, [+-49/+-36/0_2], and material Geier1997 of
+#      Castro, S. G. P., Mittelstedt, C., Monteiro, F. A. C., Arbelo, M. A.,
+#      Ziegmann, G. and Degenhardt, R., "Linear buckling predictions of
+#      unstiffened laminated composite cylinders and cones under various
+#      loading and boundary conditions using semi-analytical models",
+#      Composite Structures, 118, 303-315, 2014,
+#      https://doi.org/10.1016/j.compstruct.2014.07.037, Tables 3 and 4,
+#      p. 307, except G23, which is set equal to G12 = G13 = 5.695 GPa
+#      instead of 3.400 GPa, such that G h is the transverse shear stiffness
+#      without correction in
+#      test_rohwer_differs_from_the_constant_factor_on_a_real_laminate
+LAMINAPROP = (123.55e9, 8.708e9, 0.319, 5.695e9, 5.695e9, 5.695e9)
 STACK = [49, -49, 36, -36, 0, 0]
 PLYT = 0.125e-3
 

@@ -22,7 +22,8 @@ def read_laminaprop(laminaprop, rho=0):
     The entries of ``laminaprop`` and ``rho`` are stored in a new
     :class:`.MatLamina` object, the Poisson's ratios ``nu21``, ``nu31`` and
     ``nu32`` are computed from ``nu12``, ``nu13``, ``nu23`` and the Young
-    moduli, and :meth:`.MatLamina.rebuild` is called. With 2 entries, ``g12 =
+    moduli, and :meth:`.MatLamina.rebuild` is called with its default
+    ``plane_stress=True``. With 2 entries, ``g12 =
     g13 = g23 = e/(2*(1+nu))``; with 2 or 6 entries, ``e3``, ``nu13`` and
     ``nu23`` are zero. Another number of entries fails an ``assert``
     statement.
@@ -91,9 +92,14 @@ def read_laminaprop(laminaprop, rho=0):
         \nu_{31} = \nu_{13} \frac{E_3}{E_1}, \quad
         \nu_{32} = \nu_{23} \frac{E_3}{E_2}
 
-    and for an isotropic material `G = E/(2(1 + \nu))`. With 2 or 6 entries,
-    ``e3 = 0`` makes the constitutive constants of :meth:`.MatLamina.rebuild`
-    the plane-stress reduced stiffnesses.
+    and for an isotropic material `G = E/(2(1 + \nu))`. The constitutive
+    constants and the invariants computed by :meth:`.MatLamina.rebuild`,
+    called with its default ``plane_stress=True``, are those of plane
+    stress for 2, 6 or 9 entries, i.e. ``e3``, ``nu13`` and ``nu23`` do not
+    change them; ``matlam.rebuild(plane_stress=False)`` gives the
+    three-dimensional ones. The stiffness constants ``c11`` to ``c66`` are
+    three-dimensional, with ``c13 = c23 = c33 = 0`` for 2 or 6 entries,
+    where ``e3 = 0``.
 
     References
     ----------

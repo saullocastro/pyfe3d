@@ -46,10 +46,33 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
 
     The frequencies of the rotated arch equal those of the arch in the XY
     plane to 1e-8.
+
+    Following the policy of the tests whose reference is not reached on the
+    mesh used, the frequencies are compared with the values pre-determined by
+    this same test with the default ``refinement`` on 2026-10-29, with
+    ``rtol = 1e-4`` for the round-off of the eigenvalue solver, called with
+    ``tol=1e-9``; the frequencies with shear deformation, whose difference
+    to the reference is one of the model, are compared with the reference
+    with grade B of MacNeal, R. H. and Harder, R. L., A proposed standard set
+    of problems to test finite element accuracy, Finite Elements in Analysis
+    and Design, 1(1), 3-20, 1985,
+    https://doi.org/10.1016/0168-874X(85)90003-4, p. 14 (at most 10 %), as a
+    bound; until 0.12.0 with 3 %, close to the 2.3 % of the model.
     """
+    # NOTE frequencies pre-determined with refinement=1, see the
+    #      docstring, keyed by G_factor and mtype
+    predetermined = {
+        (1., 0): [394.5489167335613,
+                   919.0212446352618, 1757.0209663714218],
+        (1., 1): [394.569239055893,
+                   919.0454814580039, 1756.78275824624],
+        (1.e4, 0): [396.83279417856835,
+                   930.3531910407385, 1796.1148029669862],
+        (1.e4, 1): [396.8579775456273,
+                   930.4329371637741, 1796.2675851597546]}
     # NOTE these rotation_rad values will keep the problem 2D on the XZ plane
     for rotation_rad in [np.pi/2, 3*np.pi/2]:
-        for G_factor, rtol in [(1., 0.03), (1.e4, 0.003)]:
+        for G_factor, rtol in [(1., 0.10), (1.e4, 0.003)]:
             for mtype in mtypes:
                 print('mtype', mtype, 'G_factor', G_factor)
                 n = 50*refinement
@@ -148,13 +171,16 @@ def test_nat_freq_curved_beam(refinement=1, mtypes=range(2)):
                 # NOTE pyfe3d.solver.natural_frequency equilibrates the diagonal
                 #      before calling the eigensolver and returns the circular
                 #      frequencies already sorted
-                omegan, eigvecsu = natural_frequency(Kuu, Muu, num_eigvalues=num_eigenvalues, tol=1e-5)
+                omegan, eigvecsu = natural_frequency(Kuu, Muu, num_eigvalues=num_eigenvalues, tol=1e-9)
                 # NOTE Table 6 of Yoon et al. (2006)
                 omega123_from_paper = [396.98, 931.22, 1797.31]
                 print('Reference omega123_from_paper', omega123_from_paper)
                 print('Numerical omega123', omegan)
                 print()
                 assert np.allclose(omega123_from_paper, omegan, rtol=rtol)
+                if refinement == 1:
+                    assert np.allclose(omegan, predetermined[G_factor, mtype],
+                                       rtol=1e-4)
 
 if __name__ == '__main__':
     test_nat_freq_curved_beam(refinement=1)

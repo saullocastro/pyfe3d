@@ -982,6 +982,45 @@ def test_transverse_coefficient_has_no_unit_invariant_constant():
     Mindlin plate). At the thin-plate coefficient the 6x1 strip gives 49.9
     times the reference.
 
+    The failure of the 6x1 strip is one of the mesh, not of the element:
+    with two or more elements across the width the twist no longer depends
+    on the hourglass stiffness in the limit of refinement. Tip twist over
+    0.03208, the torque applied as the corner forces of this test (corner)
+    or as normal forces proportional to the distance from the axis
+    (distributed), Brockman's coefficient (``hgfactor_w = 1``) or 1/100 of
+    it, measured on 2026-10-29:
+
+    ======  =========  ===========  ===========  ============  ======
+    mesh    corner, 1  corner, .01  distrib., 1  distrib. .01  Quad4
+    ======  =========  ===========  ===========  ============  ======
+    6x1     4.780      52.24        4.780        52.24         377.4
+    6x2     0.9227     1.0127       0.9227       1.0127        1.0188
+    6x4     1.0013     1.0547       1.0006       1.0539        1.0591
+    12x4    1.0344     1.0634       1.0315       1.0599        1.0686
+    24x8    1.0621     1.0715       1.0561       1.0635        1.0507
+    48x8    1.0684     1.0747       1.0613       1.0651        1.0532
+    96x16   1.0747     1.0801       1.0651       1.0661        1.0649
+    192x32  1.0782     1.0845       1.0663       1.0665        1.0700
+    ======  =========  ===========  ===========  ============  ======
+
+    (Quad4 with the corner forces; 4.9 s for the 192x32 Quad4R mesh.) With
+    the distributed torque, Quad4R with both coefficients and Quad4 (1.0655
+    with it) converge to about 1.067 times 0.03208, 0.0342, which is 0.3 %
+    above the Saint-Venant twist of the 0.2 x 0.1 rectangle, 0.03411, see
+    ``test_torsion_of_a_one_element_wide_strip`` in
+    ``test_quad4_spurious_shear_mode.py``; with the corner forces the twist
+    keeps growing slowly, the singularity under the forces. The 6.7 %
+    between the converged plate and 0.03208 is a difference of the
+    reference, whose derivation MacNeal and Harder do not give, not a mesh
+    error: no mesh reaches grade A against it.
+
+    Following the policy of the tests for references reached only on fine
+    meshes, the 12x4 mesh is compared with its value pre-determined by this
+    same function, 0.03318482464227277, with ``rtol = 1e-6`` for the
+    round-off of the linear solution (the 6x1 strip of this file and of
+    ``test_quad4_spurious_shear_mode.py``, assembled and solved differently,
+    agree within 6e-13), and with grade B against 0.03208 as a bound.
+
     The twist is the work of the unit torque, `\boldsymbol{f}^\top
     \boldsymbol{u}`, i.e. the compliance of the strip. With `K = K_0 + c
     K_h` and both terms positive semi-definite, dividing the hourglass
@@ -1013,10 +1052,133 @@ def test_transverse_coefficient_has_no_unit_invariant_constant():
     # NOTE grade F of MacNeal and Harder, p. 14, on their 6x1 mesh, which
     #      a mesh with four elements across the width brings to grade B
     assert brockman/ref - 1 > 0.5
+    # NOTE value pre-determined by this function on 2026-10-29, see the
+    #      docstring, rtol for the round-off of the linear solution
+    assert np.isclose(refined, 0.03318482464227277, rtol=1e-6)
     assert abs(refined/ref - 1) <= 0.10
     # NOTE the compliance bounds of the docstring, and grade F again
     assert brockman < reduced <= c_strip/c_plate*brockman
     assert reduced/ref - 1 > 0.5
+
+
+def twist_patch_energy_ratio(n, scale=1., hgfactor_w=1.):
+    r"""Constant-twist patch test of an ``n x n`` mesh of Quad4R
+
+    Square plate of side ``254*scale``, thickness ``6.35*scale``, ``E =
+    3102.75/scale**2``, ``nu = 0.3``, the dimensions and material of the
+    hinged roof of Sze et al. (2004), see
+    ``tests/test_nonlinear_benchmarks_sze2004.py``, with ``scale = 1`` in
+    the unit of length of that paper and ``scale = 1e-3`` in a unit 1000
+    times larger, the force unit being the same. The boundary nodes carry
+    the exact Mindlin solution of a uniform twist, ``w = k*x*y``, ``r_x =
+    k*x``, ``r_y = -k*y`` (zero transverse shear with ``gamma_xz = w_x +
+    r_y`` and ``gamma_yz = w_y - r_x``), ``u = v = 0``, and the interior
+    nodes are free. Returns the strain energy over the exact one, ``2*D66*
+    k**2*a**2``, ``D66 = E*h**3/(24*(1 + nu))``.
+    """
+    a, h = 254.*scale, 6.35*scale
+    E, nu = 3102.75/scale**2, 0.3
+    prop = isotropic_plate(thickness=h, E=E, nu=nu)
+    xs = np.linspace(-a/2, a/2, n + 1)
+    X, Y = np.meshgrid(xs, xs, indexing='ij')
+    nid = np.arange((n + 1)**2).reshape(n + 1, n + 1)
+    els = [(nid[i, j], nid[i+1, j], nid[i+1, j+1], nid[i, j+1])
+           for i in range(n) for j in range(n)]
+    X = X.ravel()
+    Y = Y.ravel()
+    ncoords_flatten = np.vstack((X, Y, 0*X)).T.flatten()
+    data = Quad4RData()
+    probe = Quad4RProbe()
+    N = DOF*X.size
+    KC0r = np.zeros(data.KC0_SPARSE_SIZE*len(els), dtype=INT)
+    KC0c = np.zeros(data.KC0_SPARSE_SIZE*len(els), dtype=INT)
+    KC0v = np.zeros(data.KC0_SPARSE_SIZE*len(els), dtype=DOUBLE)
+    for k, e in enumerate(els):
+        el = Quad4R(probe)
+        for i in range(4):
+            setattr(el, 'n%d' % (i + 1), e[i])
+            setattr(el, 'c%d' % (i + 1), DOF*e[i])
+        el.init_k_KC0 = k*data.KC0_SPARSE_SIZE
+        el.update_rotation_matrix(ncoords_flatten, 0., 0., 1.)
+        el.update_probe_xe(ncoords_flatten)
+        el.update_area()
+        el.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_w=hgfactor_w)
+    KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
+    kt = 1.e-3/scale
+    u = np.zeros(N)
+    u[2::DOF] = kt*X*Y
+    u[3::DOF] = kt*X
+    u[4::DOF] = -kt*Y
+    edge = np.isclose(abs(X), a/2) | np.isclose(abs(Y), a/2)
+    bk = np.zeros(N, dtype=bool)
+    for d in range(DOF):
+        bk[d::DOF] = edge
+    # NOTE drilling rotations restrained, they do not take part in the twist
+    bk[5::DOF] = True
+    bu = ~bk
+    u[bu] = 0.
+    u[bu] = spsolve(KC0[bu, :][:, bu], -KC0[bu, :][:, bk] @ u[bk])
+    D66 = E*h**3/(24*(1 + nu))
+    return 0.5*u @ (KC0 @ u)/(0.5*D66*(2*kt)**2*a**2)
+
+
+def test_constant_twist_patch_test_depends_on_the_length_unit():
+    r"""The transverse hourglass stiffness `E^{(h)}_w` adds the energy
+    density `E^{(h)}_w w_{,xy}^2/2` to a uniform twist, because the
+    hourglass amplitude `\gamma^\top w` of the bilinear `w = kxy` is
+    `w_{,xy} = k`, whereas the exact Mindlin twist has no transverse shear
+    and the energy density `2 D_{66} k^2`. The ratio of the two is, for an
+    isotropic plate,
+
+    .. math::
+        \frac{E^{(h)}_w}{4 D_{66}} = 6 (1 + \nu) \frac{E^{(h)}_w}{E t^3}
+        = \frac{0.6 (1 + \nu)}{1 + 1/A}
+
+    0.78 for `\nu = 0.3` and `A \gg 1`. It does not depend on the mesh
+    except through Brockman's factor `1/(1 + 1/A)`: the element fails the
+    constant-twist patch test by a fixed amount wherever the element areas
+    are large in the unit of length of the model, and passes it in the
+    limit of refinement only where they are small, the excess energy
+    tending to zero as `A`. Measured with :func:`twist_patch_energy_ratio`,
+    the energy over the exact one with ``n x n`` elements:
+
+    ===========================  =======  =======  =======  =======  =======
+    unit of length, hgfactor_w   n = 4    8        16       32       64
+    ===========================  =======  =======  =======  =======  =======
+    roof unit (A = 4032 to 16)   1.77981  1.77923  1.77692  1.76781  1.73344
+    same, ``hgfactor_w = 0.1``   1.07798  1.07792  1.07769  1.07678  1.07334
+    1000 times larger unit       1.00313  1.00079  1.00020  1.00005  1.00001
+    ``hgfactor_w = 0``           1        1        1        1        1
+    ===========================  =======  =======  =======  =======  =======
+
+    every value equal to the closed form above. Without the transverse
+    hourglass stiffness the one-point rule integrates the uniform twist
+    exactly; :class:`pyfe3d.Quad4`, with no hourglass control, also gives 1.
+    The lower limit load of the thinner hinged roof of Sze et al. (2004)
+    is affected by this patch-test failure, see
+    ``test_hinged_roof_thin_lower_limit_load`` in
+    ``tests/test_nonlinear_benchmarks_sze2004.py``.
+    """
+    nu = 0.3
+
+    def closed_form(n, scale, hgfactor_w):
+        A = (254.*scale/n)**2
+        return 1 + hgfactor_w*0.6*(1 + nu)/(1 + 1/A)
+
+    for scale in (1., 1.e-3):
+        for hg in (1., 0.1, 0.):
+            for n in (4, 16):
+                ratio = twist_patch_energy_ratio(n, scale, hg)
+                print('scale %g, hgfactor_w %g, %dx%d: U/U_exact = %.6f'
+                      % (scale, hg, n, n, ratio))
+                assert np.isclose(ratio, closed_form(n, scale, hg),
+                                  rtol=1e-8)
+    # NOTE in the roof unit the excess energy does not decrease with the
+    #      mesh, in the larger unit it decreases as the element area
+    e4, e16 = (twist_patch_energy_ratio(n) - 1 for n in (4, 16))
+    assert e16 > 0.99*e4 > 0.77
+    e4, e16 = (twist_patch_energy_ratio(n, 1.e-3) - 1 for n in (4, 16))
+    assert np.isclose(e4/e16, 16, rtol=1e-2)
 
 
 # NOTE input properties of a carbon-epoxy ply and of a sandwich core, used
@@ -1459,6 +1621,7 @@ if __name__ == '__main__':
     test_hourglass_stiffness_is_independent_of_the_length_unit()
     test_homogeneous_stiffnesses_agree_with_brockman_for_small_areas()
     test_transverse_coefficient_has_no_unit_invariant_constant()
+    test_constant_twist_patch_test_depends_on_the_length_unit()
     test_laminate_hourglass_stiffnesses_use_membrane_and_bending_moduli()
     test_bending_moduli_differ_from_membrane_moduli_for_laminates()
     test_laminate_zero_energy_modes()

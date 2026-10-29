@@ -226,7 +226,7 @@ def test_strip_torsion_is_continuous_across_the_gate():
     `b \times h` rectangle, `b/h = 12.5`, with the series of
 
         Timoshenko, S. P. and Goodier, J. N., Theory of Elasticity, 2nd ed.,
-        McGraw-Hill, 1951, Art. 86, "Torsion of rectangular bars", p. 278,
+        McGraw-Hill, 1951, Art. 95, "Torsion of rectangular bars", p. 278,
         Eq. (160), with `2a = h` and `2b = b`,
 
     `J = (b h^3/3)(1 - (192/\pi^5)(h/b) \sum_{n=1,3,5...} \tanh(n \pi b/2h)

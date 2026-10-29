@@ -38,7 +38,9 @@ constants of the asymptotic theory given by Hodges and Peters,
 strip- and I-beams", International Journal of Solids and Structures 38(9)
 (2001) 1585--1603, doi:10.1016/S0020-7683(00)00111-6, p. 1601, is compared
 with an assumption on the out-of-plane constants, see
-:func:`test_Ibeam_Pandey_Hodges_Peters`.
+:func:`test_Ibeam_Pandey_Hodges_Peters`, and these constants are shown to
+be the thin-walled limit of the 2-D values, see
+:func:`test_Ibeam_Pandey_thin_walled_limit`.
 
 For a thin-walled channel, the torsional warping about the shear centre is
 compared with the principal sectorial coordinate `\omega` of Vlasov,
@@ -162,9 +164,15 @@ def test_Ibeam_isotropic_Table5(constraint):
     (``'yu2002'``). The thin-walled value of Vlasov (1961), `E t b^3
     h^2/24` = 3526.67, is 0.76 per cent below the published value, and
     `C_{55}` tends to it as the walls become thinner, see
-    :func:`test_Ibeam_thin_walled_limit`. The tolerance of 1.5 per cent on
-    the published `C_{55}` is not derived from an error estimate; it covers
-    this unexplained difference of about 1 per cent.
+    :func:`test_Ibeam_thin_walled_limit`. The tolerance on the published
+    `C_{55}` is 2 per cent, the grade A of MacNeal and Harder (1985), p. 14:
+    the measured offset, 0.93 to 1.08 per cent below the published value,
+    is converged, not a discretisation error, and so gives no grounds for a
+    tighter bound.
+
+    MacNeal, R. H. and Harder, R. L., 1985, "A proposed standard set of
+    problems to test finite element accuracy", Finite Elements in Analysis
+    and Design, 1(1), pp. 3-20. doi:10.1016/0168-874X(85)90003-4
     """
     # NOTE Section 5.2.1: 2 elements through the thickness, 20 across the
     #      flange, 10 along the web
@@ -172,7 +180,8 @@ def test_Ibeam_isotropic_Table5(constraint):
     sec = iso_section(*vm.ibeam(1.0, 0.5, t, 9, 2, 10, 8))
     sec.calc_vlasov(constraint)
     assert np.isclose(sec.Kv[1, 1], 199.944, rtol=1e-2)
-    assert np.isclose(sec.Kv[4, 4], 3553.43, rtol=1.5e-2)
+    # NOTE grade A of MacNeal and Harder (1985), p. 14
+    assert np.isclose(sec.Kv[4, 4], 3553.43, rtol=2e-2)
     # NOTE thin-walled warping rigidity, E t bf**3 h**2/24, h between the
     #      flange mid-planes, Vlasov (1961), Ch. II, Sec. 1, p. 59
     assert np.isclose(sec.Kv[4, 4], E*t*1.0**3*(0.5 - t)**2/24, rtol=3.5e-3)
@@ -425,6 +434,85 @@ def test_Ibeam_anisotropic_Table6_sensitivity():
 
 PANDEY = {0.: (364., 71200., 1.14e6, 735.),
           45.: (610., 71200., 912000., 735.)}
+# NOTE Hodges and Peters (2001), p. 1601: wall thickness, depth and flange
+#      width in m; E11, E22, G12 in Pa and nu12
+PANDEY_TDB = (0.00953, 0.2032, 0.1016)
+PANDEY_MAT = (42.7e9, 8.02e9, 3.10e9, 0.248)
+
+
+def pandey_ibeam(theta, t, nf, nt, nw, constraint):
+    r"""``Kv`` of the I-beam of Hodges and Peters (2001), p. 1601, with walls
+    of thickness ``t``, the depth and flange width of the paper and the
+    out-of-plane constants of :func:`test_Ibeam_Pandey_Hodges_Peters`"""
+    _, d, b = PANDEY_TDB
+    E1, E2, G12, nu12 = PANDEY_MAT
+    nu23 = 0.4
+    D = orthotropic(E1=E1, E2=E2, E3=E2, G12=G12, G13=G12,
+                    G23=E2/(2*(1 + nu23)), nu12=nu12, nu13=nu12, nu23=nu23)
+    x2, x3, els = vm.ibeam(b, d + t, t, nf, nt, nw, 8)
+    th1, th3 = [], []
+    for el in els:
+        if abs(x3[el[:4]].mean()) < d/2 - t/2:
+            th1.append(90.)
+            th3.append(theta)
+        else:
+            th1.append(0.)
+            th3.append(0.)
+    sec = CrossSection(x2, x3, els, [D], [0]*len(els), theta1=th1,
+                       theta3=th3)
+    sec.calc_vlasov(constraint)
+    return sec.Kv
+
+
+def pandey_thin_walled(theta, t, d=PANDEY_TDB[1], b=PANDEY_TDB[2],
+                       mat=PANDEY_MAT):
+    r"""Thin-walled `D_{11}` and `D_{44}` of the I-beam of Hodges and Peters
+    (2001) with walls of thickness ``t``, and the share of the flanges in
+    `D_{11}`
+
+    `D_{11} = 2 G_{12} b t^3/3 + G_w d t^3/3`, with the web counted over the
+    full depth `d` and `G_w` the twisting modulus of the web ply with the
+    curvature along the contour free, `\bar{Q}_{66} -
+    \bar{Q}_{26}^2/\bar{Q}_{22}`, `x` along the beam axis and `y` along the
+    contour, from the reduced stiffnesses of Jones, Mechanics of Composite
+    Materials, 2nd ed., Taylor & Francis, 1999, Eqs. (2.61) to (2.63), p.
+    71, rotated with Eq. (2.85), p. 77; `G_w = G_{12}` at 0 degrees, and
+    7.279 GPa at 45 degrees. `D_{44} = E_{11} t b^3 d^2/24 + 2 E_{11} t^3
+    b^3/144`, see :func:`test_Ibeam_Pandey_Hodges_Peters`.
+    """
+    E1, E2, G12, nu12 = mat
+    S = np.array([[1/E1, -nu12/E1], [-nu12/E1, 1/E2]])
+    (Q11, Q12), (_, Q22) = np.linalg.inv(S)
+    Q66 = G12
+    c, s = np.cos(np.deg2rad(theta)), np.sin(np.deg2rad(theta))
+    Q22b = Q11*s**4 + 2*(Q12 + 2*Q66)*s**2*c**2 + Q22*c**4
+    Q26b = (Q11 - Q12 - 2*Q66)*s**3*c + (Q12 - Q22 + 2*Q66)*s*c**3
+    Q66b = (Q11 + Q22 - 2*Q12 - 2*Q66)*s**2*c**2 + Q66*(s**4 + c**4)
+    Gw = Q66b - Q26b**2/Q22b
+    D11_flanges = 2*G12*b*t**3/3
+    D11 = D11_flanges + Gw*d*t**3/3
+    D44 = E1*t*b**3*d**2/24 + 2*E1*t**3*b**3/144
+    return D11, D44, D11_flanges/D11
+
+
+def pandey_input_rounding(theta):
+    r"""Relative change of the thin-walled `D_{11}` and `D_{44}` of
+    :func:`pandey_thin_walled` due to the rounding of the data printed by
+    Hodges and Peters (2001), p. 1601: the sum of the changes due to half a
+    unit of the last printed digit of `t`, `d`, `b`, `E_{11}`, `E_{22}`,
+    `G_{12}` and `\nu_{12}`, each alone"""
+    t, d, b = PANDEY_TDB
+    D11, D44, _ = pandey_thin_walled(theta, t)
+    data = list(PANDEY_TDB) + list(PANDEY_MAT)
+    halves = [5e-6, 5e-5, 5e-5, 0.05e9, 0.005e9, 0.005e9, 0.0005]
+    r11 = r44 = 0.
+    for i, half in enumerate(halves):
+        p = list(data)
+        p[i] += half
+        D11p, D44p, _ = pandey_thin_walled(theta, p[0], p[1], p[2], p[3:])
+        r11 += abs(D11p/D11 - 1)
+        r44 += abs(D44p/D44 - 1)
+    return r11, r44
 
 
 @pytest.mark.parametrize('constraint', ['yu2002', 'yu2012'])
@@ -439,7 +527,11 @@ def test_Ibeam_Pandey_Hodges_Peters(theta, constraint):
     of 0 degrees, web of a single layer of ply angle ``theta``; the
     asymptotic values of `D_{11}` (torsion), `D_{22}` (weak-axis bending),
     `D_{33}` (strong-axis bending) and `D_{44}` (warping), Eq. (1), are
-    those of p. 1601, printed with three digits
+    those of p. 1601, printed with three digits, obtained there with the
+    asymptotic thin-walled theory of Volovoi et al. (1999). The same values
+    are repeated by Simitses and Hodges, Fundamentals of Structural
+    Stability, Butterworth-Heinemann, 2006, p. 273; no two-dimensional
+    sectional result for this section was found in the literature.
 
     The depth is taken between the mid-planes of the flanges. The out-of-plane
     constants are not given; the material is taken as transversely
@@ -447,71 +539,110 @@ def test_Ibeam_Pandey_Hodges_Peters(theta, constraint):
     `\nu_{23} = 0.4` and `G_{23} = E_{22}/[2 (1 + \nu_{23})]`; `\nu_{23}`
     from 0.25 to 0.5 changes the four constants by less than 0.03 per cent.
 
-    The published `D_{33}` and `D_{44}` are the thin-walled values with the
-    web counted over the full depth `d`, `E_{11} b t d^2/2 + E_x t d^3/12`,
-    `E_x` the uniaxial modulus of the web ply along the beam axis, and `E_{11}
+    The published constants are the thin-walled values with the web counted
+    over the full depth `d`: `E_{11} b t d^2/2 + E_x t d^3/12` for `D_{33}`,
+    `E_x` the uniaxial modulus of the web ply along the beam axis; `E_{11}
     t b^3 d^2/24` plus the warping of the two flanges as strips, `E_{11}
-    t^3 b^3/144` each, Eq. (17) of Yu et al. (2005), which reproduce them
-    within half a unit of the last printed digit (1.138e6, 911600 and
-    734.8). The 2-D section has the web between the flanges, and its
-    `D_{33}` is the exact `E I` of the meshed geometry, to rounding at 0
-    degrees, the section being homogeneous, and within 4e-8 at 45 degrees;
-    at 0 degrees it is 1.10e6 N m\ :sup:`2`, 3.5 per cent below the
-    published value. The published `D_{22}`, 71200 N m\ :sup:`2`,
-    constant with the ply angle, omits the web; the flanges alone give
-    71130, 0.1 per cent below; the 2-D value includes the web, `E_x (d -
-    t) t^3/12`, 0.84 per cent of `D_{22}` at 0 degrees and 0.17 per cent at
-    45, and is 0.74 and 0.10 per cent above the published value, within the
-    bound given by the web and the 0.1 per cent.
+    t^3 b^3/144` each, Eq. (17) of Yu et al. (2005), for `D_{44}`; and `2
+    G_{12} b t^3/3 + G_w d t^3/3` for `D_{11}`, `G_w` the twisting modulus
+    of the web ply with the curvature along the contour free, see
+    :func:`pandey_thin_walled`, which at 0 degrees is `G_{12} t^3 (2 b +
+    d)/3` of Table A-3 of Timoshenko and Gere (1961). They reproduce the
+    published values within half a unit of the last printed digit
+    (1.138e6, 911600, 734.8 and 608.5), except `D_{11}` at 0 degrees,
+    363.47 against 364, 0.14 per cent below, within half a unit plus the
+    rounding of the printed data, see :func:`pandey_input_rounding`, of
+    which that of `G_{12}`, 3.10 GPa, alone is 0.16 per cent; with
+    `\bar{Q}_{66}` or `1/\bar{S}_{66}` for `G_w`, `D_{11}` at 45 degrees
+    would be 875 or 549. The 2-D section has the web between the flanges,
+    and its `D_{33}` is the exact `E I` of the meshed geometry, to rounding
+    at 0 degrees, the section being homogeneous, and within 4e-8 at 45
+    degrees; at 0 degrees it is 1.10e6 N m\ :sup:`2`, 3.5 per cent below
+    the published value.
+    The published `D_{22}`, 71200 N m\ :sup:`2`, constant with the ply
+    angle, omits the web; the flanges alone give 71130, 0.1 per cent below;
+    the 2-D value includes the web, `E_x (d - t) t^3/12`, 0.84 per cent of
+    `D_{22}` at 0 degrees and 0.17 per cent at 45, and is 0.74 and 0.10 per
+    cent above the published value, within the bound given by the web and
+    the 0.1 per cent.
 
-    `D_{11}` is 0.92 per cent below the published value at 0 degrees and
-    2.08 per cent below at 45 degrees, 1.17 and 2.30 per cent with 16
-    elements on each side of the junction, 8 through the thickness and 32
-    along the web; `D_{44}` is 0.35 and 0.58 per cent below with
-    ``'yu2002'``, 0.49 and 0.60 per cent with ``'yu2012'``, 0.32 to 0.56
-    per cent with the refined mesh. These differences do not decrease with
-    refinement; they are of the order of the terms of relative order `t/b`
-    = 0.094 that the thin-walled theory neglects, e.g. the factor `1 -
-    0.630 t/b` of the torsion constant `b t^3/3` of a narrow rectangle of
-    width `b` and thickness `t`, due to its two short free edges,
-    Timoshenko and Goodier, Theory of Elasticity, 2nd ed., McGraw-Hill,
-    1951, Art. 95, Eq. (161), p. 278 (written there `M_t = G \theta (2a)^3
-    (2b) (1 - 0.630 a/b)/3` for the thickness `2a` and the width `2b`):
-    5.9 per cent for each flange, 3.0 per cent of `D_{11}` for the two at 0
-    degrees. The thin-walled `D_{11}` at 0 degrees, `G_{12} t^3 (2 b +
-    d)/3` = 363.5, Table A-3 of Timoshenko and Gere (1961), is 0.15 per
-    cent below the published 364. The tolerances of 2.5 and 1 per cent are not
-    derived from an error estimate.
+    `D_{11}` and `D_{44}` are compared with the published values with
+    tolerances built from the error of the thin-walled theory, intrinsic
+    and of order `t/b` = 0.0938, Volovoi et al. (1999), pp. 1039 and 1042,
+    from half a unit of the last printed digit, and from the rounding of
+    the printed data, :func:`pandey_input_rounding`, 0.36 and 0.31 per cent
+    for `D_{11}` at 0 and 45 degrees and 0.37 per cent for `D_{44}`:
+
+    - `D_{11}`: the share of the flanges in the thin-walled `D_{11}`, 0.500
+      at 0 and 0.299 at 45 degrees, times the reduction `0.630 t/b` of the
+      torsion constant of a narrow rectangle by its two short free edges,
+      Timoshenko and Goodier, Theory of Elasticity, 2nd ed., McGraw-Hill,
+      1951, Art. 95, Eq. (161), p. 278 (written there `M_t = G \theta
+      (2a)^3 (2b) (1 - 0.630 a/b)/3` for the thickness `2a` and the width
+      `2b`), plus 0.5/364 and 5/610 and the rounding of the data: 3.45
+      per cent at 0 and 2.90 per cent at 45 degrees. The isolated 0-degree
+      flange, meshed alone with 8 elements through the thickness,
+      reproduces the factor, `1 - 0.6302 t/b`.
+    - `D_{44}`: the thin-walled limit, see
+      :func:`test_Ibeam_Pandey_thin_walled_limit`, shows that the
+      difference has no term of first order in `t/b`; the first neglected
+      term, of order `(t/b)^2`, taken with a unit coefficient, plus 0.5/735
+      and the rounding of the data: 1.31 per cent.
+
+    The measured differences from the published values, with the mesh of
+    this test, ``(nf, nt, nw) = (8, 4, 16)``, and its refinements by 2 and
+    4 (896 and 3584 elements), and the values extrapolated with the rate
+    `h^{4/3}` of the re-entrant corners, observed ratios of successive
+    differences 2.4 to 2.75, are, in per cent:
+
+    ===================  =====  =====  =====  ============  =========
+    elements             224    896    3584   extrapolated  tolerance
+    ===================  =====  =====  =====  ============  =========
+    D11, 0 degrees       -0.92  -1.17  -1.27  -1.33         3.45
+    D11, 45 degrees      -2.08  -2.30  -2.40  -2.46         2.90
+    D44, 0, 'yu2002'     -0.35  -0.32  -0.30  -0.29         1.31
+    D44, 0, 'yu2012'     -0.49  -0.45  -0.43  -0.42         1.31
+    D44, 45, 'yu2002'    -0.58  -0.54  -0.52  -0.51         1.31
+    D44, 45, 'yu2012'    -0.60  -0.56  -0.55  -0.53         1.31
+    ===================  =====  =====  =====  ============  =========
+
+    At 45 degrees the converged `D_{11}` is within the tolerance only
+    through the half unit of the printed 610 and the rounding of the data:
+    its difference from the thin-walled value, 2.21 per cent, `-0.236
+    t/b`, exceeds the free-edge share of the flanges, 1.77 per cent,
+    `0.188 t/b`, so that the free-edge factor alone does not bound the
+    terms of order `t/b` for the off-axis web. At 0 degrees the
+    difference from the thin-walled value is `-0.127 t/b`, smaller than the
+    free-edge share of the flanges, `0.315 t/b`: the junctions add
+    stiffness. The isolated 45-degree web, meshed alone, has a free-edge
+    factor `1 - 0.984 t/d`, i.e. `0.630 \sqrt{G_w/G_{xn}}` with the
+    transverse shear modulus `G_{xn}` = 2.98 GPa of the ply, but the web of
+    the I-beam has no free edges, and this term is not part of the bound.
+
+    Volovoi, V. V., Hodges, D. H., Berdichevsky, V. L., and Sutyrin, V. G.,
+    1999, "Asymptotic theory for static behavior of elastic anisotropic
+    I-beams", International Journal of Solids and Structures, 36(7), pp.
+    1017-1043. doi:10.1016/S0020-7683(97)00341-7
     """
-    t, d, b = 0.00953, 0.2032, 0.1016
-    E1, E2, G12, nu12 = 42.7e9, 8.02e9, 3.10e9, 0.248
-    nu23 = 0.4
-    D = orthotropic(E1=E1, E2=E2, E3=E2, G12=G12, G13=G12,
-                    G23=E2/(2*(1 + nu23)), nu12=nu12, nu13=nu12, nu23=nu23)
-    x2, x3, els = vm.ibeam(b, d + t, t, 8, 4, 16, 8)
-    th1, th3 = [], []
-    for el in els:
-        if abs(x3[el[:4]].mean()) < d/2 - t/2:
-            th1.append(90.)
-            th3.append(theta)
-        else:
-            th1.append(0.)
-            th3.append(0.)
-    sec = CrossSection(x2, x3, els, [D], [0]*len(els), theta1=th1,
-                       theta3=th3)
-    sec.calc_vlasov(constraint)
-    Kv = sec.Kv
+    t, d, b = PANDEY_TDB
+    E1, E2, G12, nu12 = PANDEY_MAT
+    Kv = pandey_ibeam(theta, t, 8, 4, 16, constraint)
     D11, D22, D33, D44 = PANDEY[theta]
     # NOTE uniaxial modulus of the web ply along the beam axis
     c, s = np.cos(np.deg2rad(theta)), np.sin(np.deg2rad(theta))
     Ex = 1/(c**4/E1 + s**4/E2 + c**2*s**2*(1/G12 - 2*nu12/E1))
+    # NOTE half a unit of the last of the three printed digits
+    half11 = {0.: 0.5, 45.: 5.}[theta]
+    half33 = {0.: 5e3, 45.: 500.}[theta]
+    half44 = 0.5
     # NOTE thin-walled values of the published reading, web over the full
-    #      depth d, against half a unit of the last printed digit
-    half_unit = {0.: (5e3, 0.5), 45.: (500., 0.5)}[theta]
-    D33_pub = E1*b*t*d**2/2 + Ex*t*d**3/12
-    D44_pub = E1*t*b**3*d**2/24 + 2*E1*t**3*b**3/144
-    assert abs(D33_pub - D33) <= half_unit[0]
-    assert abs(D44_pub - D44) <= half_unit[1]
+    #      depth d
+    D11_tw, D44_tw, share = pandey_thin_walled(theta, t)
+    D33_tw = E1*b*t*d**2/2 + Ex*t*d**3/12
+    r11, r44 = pandey_input_rounding(theta)
+    assert abs(D11_tw - D11) <= half11 + r11*D11_tw
+    assert abs(D33_tw - D33) <= half33
+    assert abs(D44_tw - D44) <= half44
     # NOTE the web is along x3: kappa_2 is the strong-axis bending, exact
     #      E I of the 2-D geometry, web between the flanges
     D33_2d = E1*(b*t**3/6 + b*t*d**2/2) + Ex*t*(d - t)**3/12
@@ -523,5 +654,68 @@ def test_Ibeam_Pandey_Hodges_Peters(theta, constraint):
     assert abs(Kv[3, 3] - D22_flanges - D22_web) < D22_web
     assert (abs(Kv[3, 3]/D22 - 1)
             <= D22_web/D22 + abs(D22_flanges/D22 - 1))
-    assert np.isclose(Kv[1, 1], D11, rtol=2.5e-2)
-    assert np.isclose(Kv[4, 4], D44, rtol=1e-2)
+    # NOTE tolerance of D11: free-edge factor 1 - 0.630 t/b of the flanges,
+    #      Timoshenko and Goodier (1951), Art. 95, Eq. (161), p. 278, times
+    #      their share of D11, plus half a unit and the rounding of the
+    #      data: 3.45 and 2.90 per cent
+    rtol11 = share*0.630*t/b + half11/D11 + r11
+    assert np.isclose(Kv[1, 1], D11, rtol=rtol11)
+    # NOTE tolerance of D44: first neglected term (t/b)**2, unit
+    #      coefficient, plus half a unit and the rounding of the data: 1.31
+    #      per cent
+    rtol44 = (t/b)**2 + half44/D44 + r44
+    assert np.isclose(Kv[4, 4], D44, rtol=rtol44)
+
+
+@pytest.mark.parametrize('constraint', ['yu2002', 'yu2012'])
+@pytest.mark.parametrize('theta', [0., 45.])
+def test_Ibeam_Pandey_thin_walled_limit(theta, constraint):
+    r"""Thin-walled limit of the I-beam of
+    :func:`test_Ibeam_Pandey_Hodges_Peters`: with the depth `d` and the
+    flange width `b` fixed and the wall thickness `t` halved twice from
+    0.00953 m, the relative differences of `D_{11}` and `D_{44}` from the
+    thin-walled values of :func:`pandey_thin_walled`, which reproduce the
+    published values at the actual `t`, decrease as `t/b` and as `(t/b)^2`
+
+    The meshes have 2 elements through the thickness and elements of length
+    about `t` along the walls, so that they are geometrically similar near
+    the edges and the junctions. The ratio of successive differences is
+    asserted between the geometric means of the ratios of adjacent orders,
+    `2^{-1/2}` and `2^{-3/2}` for the first order (1/2), and `2^{-3/2}` and
+    `2^{-5/2}` for the second (1/4), which separates the orders. Measured
+    differences in per cent, `t/b` = 0.0938, 0.0469, 0.0234 and 0.0117,
+    with these meshes and with the meshes refined by 2 in both directions:
+
+    =========================  =================================
+    quantity                   differences, per cent
+    =========================  =================================
+    D11, 0 degrees             -0.479, -0.249, -0.115, -0.058
+    D11, 0 degrees, refined    -0.944, -0.474, -0.235, -0.117
+    D11, 45 degrees            -1.496, -0.756, -0.370, -0.186
+    D11, 45 degrees, refined   -1.949, -0.977, -0.486, -0.243
+    D44, 0, 'yu2002'           -0.341, -0.079, -0.019, -0.005
+    D44, 0, 'yu2002', refined  -0.294, -0.067, -0.016, -0.004
+    D44, 0, 'yu2012'           -0.475, -0.114, -0.028, -0.007
+    D44, 45, 'yu2002'          -0.588, -0.142, -0.035, -0.009
+    D44, 45, 'yu2012'          -0.616, -0.150, -0.037, -0.009
+    =========================  =================================
+
+    The difference of `D_{11}` is therefore of first order in `t/b`,
+    `-0.127 t/b` at 0 and `-0.236 t/b` at 45 degrees for the converged
+    values at the actual `t`, see :func:`test_Ibeam_Pandey_Hodges_Peters`,
+    and that of `D_{44}` of second order, `-(0.3` to `0.6) (t/b)^2`; the
+    published values are the limits of the 2-D values as `t/b \to 0`.
+    """
+    t0, d, b = PANDEY_TDB
+    e11, e44 = [], []
+    for k in (1, 2, 4):
+        t = t0/k
+        nf = int(np.ceil((b - t)/(2*t)))
+        nw = int(np.ceil((d - t)/t))
+        Kv = pandey_ibeam(theta, t, nf, 2, nw, constraint)
+        D11, D44, _ = pandey_thin_walled(theta, t)
+        e11.append(Kv[1, 1]/D11 - 1)
+        e44.append(Kv[4, 4]/D44 - 1)
+    for i in (0, 1):
+        assert 2**-1.5 < e11[i + 1]/e11[i] < 2**-0.5
+        assert 2**-2.5 < e44[i + 1]/e44[i] < 2**-1.5

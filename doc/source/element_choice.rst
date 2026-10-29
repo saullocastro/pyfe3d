@@ -38,7 +38,11 @@ geometrically non-linear analyses.
         enrichment, see :mod:`.quad4r`. The transverse hourglass stiffness
         also stiffens the twist, by an amount that depends on the problem,
         e.g. 6 to 7 % on the linear deflection of the hinged roof of Sze et
-        al. (2004). The hourglass control is derived for isotropic plates
+        al. (2004), and on the unit of length: where the element areas are
+        large in that unit it adds about 78 % to the energy of a uniform
+        twist whatever the mesh, a failure of the constant-twist patch test
+        that makes the lower limit load of the thinner roof of Sze et al.
+        converge 11 % below their value. The hourglass control is derived for isotropic plates
         and applied to laminates with equivalent moduli of the membrane
         compliance for `u` and `v` and of the bending compliance for `w`,
         `r_x` and `r_y`.

@@ -73,13 +73,16 @@ cdef class MatLamina:
     Orthotropic material lamina
 
     Container of the elastic, thermal, density and strength properties of a
-    material, created with all attributes equal to zero. After the elastic
-    properties are set, :meth:`rebuild` computes the constitutive constants
-    ``q11`` to ``q66``, the stiffness constants ``c11`` to ``c66`` and the
-    invariants ``u1`` to ``u7``, all with the dimension of force per unit
-    area; :meth:`trace_normalize_plane_stress` divides some of them by the
-    trace, such that they become dimensionless. Usually created by
-    :func:`.read_laminaprop`.
+    material, created with all attributes equal to zero, except
+    ``plane_stress = True``. After the elastic properties are set,
+    :meth:`rebuild` computes the constitutive constants ``q11`` to ``q66``,
+    the stiffness constants ``c11`` to ``c66`` and the invariants ``u1`` to
+    ``u7``, all with the dimension of force per unit area;
+    :meth:`trace_normalize_plane_stress` divides some of them by the trace,
+    such that they become dimensionless. Usually created by
+    :func:`.read_laminaprop`. By default, the constitutive constants and the
+    invariants are those of plane stress, used by the shell elements, also
+    when ``e3``, ``nu13`` and ``nu23`` are given, see :meth:`rebuild`.
 
     Attributes
     ----------
@@ -127,6 +130,10 @@ cdef class MatLamina:
         area
     ss12 : float
         allowable in-plane stress for shear, force per unit area
+    plane_stress : bool
+        ``True`` when the constitutive constants and the invariants are
+        those of plane stress, ``False`` when they are three-dimensional, as
+        selected in the last call of :meth:`rebuild`. Read-only.
     q11 : float
         lamina constitutive constant 11
     q12 : float
@@ -168,9 +175,9 @@ cdef class MatLamina:
 
     """
     def __init__(MatLamina self):
-        pass
+        self.plane_stress = True
 
-    cpdef void rebuild(MatLamina self):
+    cpdef void rebuild(MatLamina self, bint plane_stress=True):
         r"""Update constitutive and invariant terms
 
         Computes, from the moduli ``e1``, ``e2``, ``e3``, ``g12``, ``g13``,
@@ -180,12 +187,49 @@ cdef class MatLamina:
         invariants ``u1`` to ``u7``, with the dimension of force per unit
         area. ``e1`` and ``e2`` must be non-zero.
 
+        Parameters
+        ----------
+        plane_stress : bool, optional
+            ``True`` (default): ``q11`` to ``q33`` and the invariants ``u1``
+            to ``u5`` are those of plane stress, `\sigma_{33} = 0`, which
+            the shell elements use, whether or not ``e3``, ``nu13`` and
+            ``nu23`` are given. ``False``: they are three-dimensional, e.g.
+            for continuum shell elements, see the Notes. The choice is
+            stored in the attribute ``plane_stress``. The stiffness
+            constants ``c11`` to ``c66`` are three-dimensional in both cases.
+
         Notes
         -----
-        With `\Delta = 1 - \nu_{12}\nu_{21} - \nu_{13}\nu_{31} -
-        \nu_{23}\nu_{32} - \nu_{12}\nu_{23}\nu_{31} -
+        With ``plane_stress=True``, the default, the constitutive constants
+        are the plane-stress reduced stiffnesses of Jones [3]_, Sec. 2.5,
+        Eq. (2.66), p. 72, and of Reddy [1]_, Sec. 2.4, Eq. (2.4.4), p. 101:
+
+        .. math::
+
+            q_{11} = \frac{e_1}{1 - \nu_{12}\nu_{21}}, \quad
+            q_{12} = q_{21} = \frac{\nu_{21} e_1}{1 - \nu_{12}\nu_{21}},
+            \quad
+            q_{22} = \frac{e_2}{1 - \nu_{12}\nu_{21}} \\
+            q_{44} = g_{23}, \quad q_{55} = g_{13}, \quad q_{66} = g_{12}
+
+        and `q_{13} = q_{23} = q_{31} = q_{32} = q_{33} = 0`. They follow
+        from the three-dimensional stiffnesses with `\sigma_{33} = 0`,
+        `q_{ij} = c_{ij} - c_{i3} c_{j3}/c_{33}`, `i, j = 1, 2` (Jones [3]_,
+        Eq. (2.64), p. 72), and do not depend on ``e3``, ``nu13`` and
+        ``nu23``: "the reduced stiffnesses involve six independent
+        engineering constants: `E_1`, `E_2`, `\nu_{12}`, `G_{12}`, `G_{13}`,
+        and `G_{23}`" (Reddy [1]_, p. 101). They are the stiffnesses of
+        :meth:`.Lamina.rebuild`, such that
+        :func:`.shellprop_from_LaminationParameters` with the lamination
+        parameters of :meth:`.ShellProp.calc_lamination_parameters` gives the
+        `A_{ij}`, `B_{ij}` and `D_{ij}` of :func:`.laminated_plate` for any
+        ``laminaprop``.
+
+        With ``plane_stress=False`` and `\Delta = 1 - \nu_{12}\nu_{21} -
+        \nu_{13}\nu_{31} - \nu_{23}\nu_{32} - \nu_{12}\nu_{23}\nu_{31} -
         \nu_{13}\nu_{21}\nu_{32}`, the constitutive constants are the
-        stiffnesses of the orthotropic material in its principal axes [2]_:
+        three-dimensional stiffnesses of the orthotropic material in its
+        principal axes [2]_:
 
         .. math::
 
@@ -204,12 +248,9 @@ cdef class MatLamina:
         satisfy the reciprocity `\nu_{ij}/e_i = \nu_{ji}/e_j`, see
         :func:`.read_laminaprop`; the matrix of `q_{ij}`, `i, j = 1, 2, 3`, is
         then the inverse of the upper-left block of the compliance matrix
-        given below. With `e_3 = 0`, as given by
+        given below, i.e. `q_{ij} = c_{ij}`. With `e_3 = 0`, as given by
         :func:`.read_laminaprop` for 2 or 6 entries, `\nu_{31} = \nu_{32} =
-        0` and `q_{11}`, `q_{12}`, `q_{22}` are the plane-stress reduced
-        stiffnesses `e_1/(1 - \nu_{12}\nu_{21})`, `e_1 \nu_{21}/(1 -
-        \nu_{12}\nu_{21})` and `e_2/(1 - \nu_{12}\nu_{21})` used by
-        :meth:`.Lamina.rebuild`.
+        0` and they are equal to the plane-stress ones.
 
         The stiffness constants are computed with `\delta = (1 -
         \nu_{12}\nu_{21} - \nu_{23}\nu_{32} - \nu_{31}\nu_{13} -
@@ -233,8 +274,9 @@ cdef class MatLamina:
         -\nu_{13}/e_1`, `S_{23} = -\nu_{23}/e_2`, `S_{44} = 1/g_{23}`,
         `S_{55} = 1/g_{13}` and `S_{66} = 1/g_{12}` [1]_.
 
-        The invariants `u_1` to `u_5` are those of Jones [3]_, and `u_6`,
-        `u_7` the transverse shear invariants of the ABAQUS manual [4]_:
+        The invariants `u_1` to `u_5` are those of Tsai and Pagano, as given
+        by Jones [3]_, Sec. 2.7, Eq. (2.99), p. 86, and `u_6`, `u_7` the
+        transverse shear invariants of the ABAQUS manual [4]_:
 
         .. math::
 
@@ -249,19 +291,26 @@ cdef class MatLamina:
         They give the stiffnesses of a ply at any angle, see
         :meth:`get_invariant_matrix`.
 
-        The intended use is plane stress, with the default `e_3 = 0` of
-        :func:`.read_laminaprop` for 2 or 6 entries: `q_{11}`, `q_{12}`,
-        `q_{22}` are then the plane-stress reduced stiffnesses also used by
-        :meth:`.Lamina.rebuild`, and the invariants give the plane-stress
-        stiffnesses `q_{ijL}` of the ply in the laminate axes. With `e_3 \ne
-        0`, `q_{11}`, `q_{12}`, `q_{22}` are the three-dimensional stiffnesses
-        `c_{11}`, `c_{12}`, `c_{22}`, and the invariants give the components
-        11, 22, 12, 66, 16, 26, 44, 45 and 55 of the three-dimensional
-        stiffness matrix of :meth:`get_constitutive_matrix` rotated by the
-        ply angle about the 3 axis, which differ from the plane-stress
-        `q_{ijL}` of :meth:`.Lamina.rebuild`. This is meant to compute
-        three-dimensional properties, e.g. for continuum shell elements
-        integrated with a user material (UMAT).
+        With ``plane_stress=True``, the invariants are those of the
+        plane-stress reduced stiffnesses, as in Jones [3]_, and give the
+        plane-stress stiffnesses `q_{ijL}` of the ply in the laminate axes of
+        :meth:`.Lamina.rebuild`, Jones [3]_, Eqs. (2.85) and (2.98), pp.
+        77 and 85. This is what the shell elements need, since the stress
+        resultants of the laminate integrate the plane-stress `q_{ijL}`
+        (Jones [3]_, Eq. (4.24), p. 198; Reddy [1]_, Eq. (3.3.38), p. 128).
+
+        With ``plane_stress=False`` and `e_3 \ne 0`, `q_{11}`, `q_{12}`,
+        `q_{22}` are the three-dimensional stiffnesses `c_{11}`, `c_{12}`,
+        `c_{22}`, and the invariants give the components 11, 22, 12, 66, 16,
+        26, 44, 45 and 55 of the three-dimensional stiffness matrix of
+        :meth:`get_constitutive_matrix` rotated by the ply angle about the 3
+        axis, whose in-plane components transform with the same formulas as
+        the plane-stress ones. They are stiffer than the plane-stress
+        `q_{ijL}`, e.g. `\lambda + 2\mu = E (1 - \nu)/((1 + \nu)(1 - 2\nu))`
+        instead of `E/(1 - \nu^2)` for an isotropic material, and are meant
+        for three-dimensional properties, e.g. for continuum shell elements
+        integrated with a user material (UMAT), not for the shell elements
+        of pyfe3d.
 
         References
         ----------
@@ -299,25 +348,42 @@ cdef class MatLamina:
         self.c55 = self.g13
         self.c66 = self.g12
 
-        # from references:
-        #   hansen_hvejsen_2007 page 43
-        #
-        #   Guerdal Z., R. T. Haftka and P. Hajela (1999), Design and
-        #   Optimization of Laminated Composite Materials, Wiley-Interscience.
-        den = (1 - self.nu12 * self.nu21
-                 - self.nu13 * self.nu31
-                 - self.nu23 * self.nu32
-                 - self.nu12 * self.nu23 * self.nu31
-                 - self.nu13 * self.nu21 * self.nu32)
-        self.q11 = self.e1*(1         - self.nu23 * self.nu32) / den
-        self.q12 = self.e1*(self.nu21 + self.nu23 * self.nu31) / den
-        self.q13 = self.e1*(self.nu31 + self.nu21 * self.nu32) / den
-        self.q21 = self.e2*(self.nu12 + self.nu13 * self.nu32) / den
-        self.q22 = self.e2*(1         - self.nu13 * self.nu31) / den
-        self.q23 = self.e2*(self.nu32 + self.nu12 * self.nu31) / den
-        self.q31 = self.e3*(self.nu13 + self.nu12 * self.nu23) / den
-        self.q32 = self.e3*(self.nu23 + self.nu13 * self.nu21) / den
-        self.q33 = self.e3*(1         - self.nu12 * self.nu21) / den
+        self.plane_stress = plane_stress
+        if plane_stress:
+            # NOTE plane-stress reduced stiffnesses, sigma_33 = 0, Jones
+            #      (1999), Eq. (2.66), the same as in Lamina.rebuild; with
+            #      e3 = 0 the same operations as the three-dimensional branch
+            den = 1 - self.nu12 * self.nu21
+            self.q11 = self.e1 / den
+            self.q12 = self.e1*self.nu21 / den
+            self.q13 = 0.
+            self.q21 = self.e2*self.nu12 / den
+            self.q22 = self.e2 / den
+            self.q23 = 0.
+            self.q31 = 0.
+            self.q32 = 0.
+            self.q33 = 0.
+        else:
+            # from references:
+            #   hansen_hvejsen_2007 page 43
+            #
+            #   Guerdal Z., R. T. Haftka and P. Hajela (1999), Design and
+            #   Optimization of Laminated Composite Materials,
+            #   Wiley-Interscience.
+            den = (1 - self.nu12 * self.nu21
+                     - self.nu13 * self.nu31
+                     - self.nu23 * self.nu32
+                     - self.nu12 * self.nu23 * self.nu31
+                     - self.nu13 * self.nu21 * self.nu32)
+            self.q11 = self.e1*(1         - self.nu23 * self.nu32) / den
+            self.q12 = self.e1*(self.nu21 + self.nu23 * self.nu31) / den
+            self.q13 = self.e1*(self.nu31 + self.nu21 * self.nu32) / den
+            self.q21 = self.e2*(self.nu12 + self.nu13 * self.nu32) / den
+            self.q22 = self.e2*(1         - self.nu13 * self.nu31) / den
+            self.q23 = self.e2*(self.nu32 + self.nu12 * self.nu31) / den
+            self.q31 = self.e3*(self.nu13 + self.nu12 * self.nu23) / den
+            self.q32 = self.e3*(self.nu23 + self.nu13 * self.nu21) / den
+            self.q33 = self.e3*(1         - self.nu12 * self.nu21) / den
         self.q66 = self.g12
         self.q44 = self.g23
         self.q55 = self.g13
@@ -339,7 +405,7 @@ cdef class MatLamina:
         self.u6 = (self.q44 + self.q55) / 2.
         self.u7 = (self.q44 - self.q55) / 2.
 
-    cpdef void trace_normalize_plane_stress(MatLamina self):
+    cpdef void trace_normalize_plane_stress(MatLamina self) except *:
         r"""Trace-normalize the lamina properties for plane stress
 
         Modify the original :class:`.MatLamina` object with a
@@ -350,26 +416,48 @@ cdef class MatLamina:
         accessed using the same attributes. The other attributes are not
         modified.
 
+        Raises
+        ------
+        ValueError
+            If ``plane_stress`` is ``False``, i.e. after
+            ``rebuild(plane_stress=False)``, since the trace is defined with
+            the plane-stress stiffnesses.
+
         Notes
         -----
-        The trace is calculated according to Eq. 1 of Melo et al. [1]_, `tr
-        = Q_{11} + Q_{22} + 2Q_{66}`.  The universal in-plane stress
-        stiffness components `Q_{11},Q_{12},Q_{22},Q_{44},Q_{55},Q_{66}` are
-        divided by `tr`, and the invariants `U_1,U_2,U_3,U_4,U_5,U_6,U_7` are
-        calculated with the normalized stiffnesses, such they also become
-        trace-normalized invariants; since the invariants are linear in the
-        stiffnesses, they are divided by `tr` as well. The trace does not
-        depend on the ply angle, since `q_{11L} + q_{22L} + 2 q_{66L} = 2(u_1
-        + u_5)`, see :meth:`get_invariant_matrix`.
+        The trace is calculated according to Eq. (1), p. 45, of Melo et al.
+        [1]_, `tr = Q_{11} + Q_{22} + 2Q_{66}`, the trace of the
+        plane-stress stiffness matrix, with the plane-stress reduced
+        stiffnesses of :meth:`rebuild`, also when ``e3`` is given, i.e. `tr
+        = (e_1 + e_2)/(1 - \nu_{12}\nu_{21}) + 2 g_{12}`.  The universal
+        in-plane stress stiffness components
+        `Q_{11},Q_{12},Q_{22},Q_{44},Q_{55},Q_{66}` are divided by `tr`, and
+        the invariants `U_1,U_2,U_3,U_4,U_5,U_6,U_7` are calculated with the
+        normalized stiffnesses, such they also become trace-normalized
+        invariants; since the invariants are linear in the stiffnesses, they
+        are divided by `tr` as well. The trace does not depend on the ply
+        angle, since `q_{11L} + q_{22L} + 2 q_{66L} = 2(u_1 + u_5)`, see
+        :meth:`get_invariant_matrix` and Jones [2]_, Sec. 2.7, Eq. (2.98), p.
+        85. Since the stiffnesses of
+        :func:`.shellprop_from_LaminationParameters` are linear in the
+        invariants, those computed with the trace-normalized invariants are
+        the ones of :func:`.laminated_plate` divided by `tr`.
 
         References
         ----------
         .. [1] Melo, J. D. D., Bi, J., and Tsai, S. W., A Novel
            Invariant-Based Design Approach to Carbon Fiber Reinforced
            Laminates, Composite Structures, 159, 44-52, 2017.
+           https://doi.org/10.1016/j.compstruct.2016.09.055
+        .. [2] Jones, R. M., Mechanics of Composite Materials, Second
+           Edition, Taylor & Francis, Philadelphia, 1999.
 
         """
         cdef double tr
+        if not self.plane_stress:
+            raise ValueError('trace_normalize_plane_stress requires the '
+                             'plane-stress stiffnesses, call '
+                             'rebuild(plane_stress=True) first')
         tr = self.q11 + self.q22 + 2*self.q66
         self.q11 /= tr
         self.q12 /= tr
@@ -434,10 +522,15 @@ cdef class MatLamina:
             q_{45L}, q_{55L}\}^\top = U \{1, \cos 2\theta, \sin 2\theta, \cos
             4\theta, \sin 4\theta\}^\top
 
-        which holds when ``u1`` to ``u5`` are computed from the plane-stress
-        reduced stiffnesses, i.e. with ``e3 = 0``. Integrated through the
-        thickness, the trigonometric terms give the lamination parameters,
-        see :func:`.shellprop_from_LaminationParameters`.
+        where `q_{ijL}` are the plane-stress stiffnesses of
+        :meth:`.Lamina.rebuild` when ``u1`` to ``u5`` are computed from the
+        plane-stress reduced stiffnesses, i.e. with ``plane_stress=True``,
+        the default of :meth:`rebuild`, for any ``e3`` (Jones [1]_, Sec.
+        2.7, Eq. (2.98), p. 85), and the components of the
+        three-dimensional stiffness matrix rotated about the 3 axis after
+        ``rebuild(plane_stress=False)``. Integrated through the thickness,
+        the trigonometric terms give the lamination parameters, see
+        :func:`.shellprop_from_LaminationParameters`.
 
         References
         ----------
@@ -2948,7 +3041,10 @@ cdef class ShellProp:
         integrated exactly ply by ply, such that ``xiAts1 = xiA1`` and
         ``xiAts2 = xiA2``. With these definitions, the stiffnesses of the
         laminate are linear in the lamination parameters, see
-        :func:`.shellprop_from_LaminationParameters`.
+        :func:`.shellprop_from_LaminationParameters`, which must be given the
+        same ``offset`` to reproduce the stiffnesses of the laminate. The
+        `\xi_{Ai}` and `\xi_{Ats,i}` do not depend on ``offset``, the
+        `\xi_{Bi}` and `\xi_{Di}` do.
 
         The `\xi_{Ai}` and `\xi_{Di}` are those of Krupa et al. [1]_, who
         integrate from `z = -h/2` to `z = h/2`, i.e. with ``offset = 0``. The
@@ -3079,7 +3175,11 @@ cpdef LaminationParameters make_symmetric_LP(LaminationParameters lp):
     In a laminate symmetric about its mid-surface, the integrands of
     `\xi_{Bi}`, linear in `\bar{z}`, are odd functions of `\bar{z}`, see
     :meth:`.ShellProp.calc_lamination_parameters`, such that `\xi_{Bi} = 0`
-    and the coupling stiffnesses `B_{ij}` vanish.
+    and the coupling stiffnesses `B_{ij}` vanish. This holds for the
+    lamination parameters about the mid-surface, i.e. with ``offset = 0``,
+    as :meth:`.ShellProp.make_symmetric`: about another reference surface
+    `\xi_{Bi} = 4 (e/h) \xi_{Ai}` in a symmetric laminate, see
+    :func:`.shellprop_from_LaminationParameters`.
 
     """
     lp.xiB1 = 0
@@ -3134,18 +3234,18 @@ cpdef LaminationParameters make_orthotropic_LP(LaminationParameters lp):
 
 
 cpdef ShellProp shellprop_from_LaminationParameters(double thickness, MatLamina
-        mat, LaminationParameters lp):
+        mat, LaminationParameters lp, double offset=0.):
     r"""Return a :class:`.ShellProp` object based in the thickness, material and
     lamination parameters
 
     In a new :class:`.ShellProp` object, the stiffnesses ``A11`` to ``D66`` and
-    ``Abar44``, ``Abar45``, ``Abar55`` are computed from ``thickness``, from
-    the invariants ``u1`` to ``u7`` of ``mat`` and from the lamination
-    parameters of ``lp``, with the combinations of
+    ``Abar44``, ``Abar45``, ``Abar55`` are computed from ``thickness``,
+    ``offset``, from the invariants ``u1`` to ``u7`` of ``mat`` and from the
+    lamination parameters of ``lp``, with the combinations of
     :meth:`.MatLamina.get_invariant_matrix`. No plies are created, ``offset``
-    is zero, and the mass integrals ``intrho``, ``intrhoz``, ``intrhoz2`` and
-    the equivalent properties ``e1``, ``e2``, ``g12``, ``nu12``, ``nu21`` are
-    not computed, remaining zero.
+    is stored, and the mass integrals ``intrho``, ``intrhoz``, ``intrhoz2``
+    and the equivalent properties ``e1``, ``e2``, ``g12``, ``nu12``, ``nu21``
+    are not computed, remaining zero.
     The transverse shear stiffnesses ``A44``, ``A45``, ``A55`` are equal to
     the constant-strain ``Abar44``, ``Abar45``, ``Abar55``,
     ``shear_correction`` is ``None``, ``scf_k13 = scf_k23 = 1`` and the
@@ -3161,6 +3261,11 @@ cpdef ShellProp shellprop_from_LaminationParameters(double thickness, MatLamina
         Material object
     lp : :class:`.LaminationParameters` object
         The container class with all lamination parameters already defined
+    offset : float, optional
+        Offset of the mid-surface of the laminate from the reference surface,
+        as ``offset`` of :class:`.ShellProp`, with which ``lp`` was computed
+        by :meth:`.ShellProp.calc_lamination_parameters`. Length. Default
+        ``0.``.
 
     Returns
     -------
@@ -3173,10 +3278,15 @@ cpdef ShellProp shellprop_from_LaminationParameters(double thickness, MatLamina
     its angle, with the invariants of ``mat`` as coefficients, see
     :meth:`.MatLamina.get_invariant_matrix`, and the lamination parameters
     are their thickness integrals, see
-    :meth:`.ShellProp.calc_lamination_parameters`. For a laminate of a
-    single material, with `h` = ``thickness``, `\int dz = h \int d\bar{z}`,
-    `\int z dz = h^2/4 \cdot 4\int \bar{z} d\bar{z}` and `\int z^2 dz =
-    h^3/12 \cdot 12 \int \bar{z}^2 d\bar{z}` give:
+    :meth:`.ShellProp.calc_lamination_parameters`, with `\bar{z} = z/h` and
+    `z` measured from the reference surface, i.e. the laminate occupies
+    `\bar{e} - 1/2 \le \bar{z} \le \bar{e} + 1/2`, `\bar{e}` = ``offset``
+    `/h`. For a laminate of a single material, with `h` = ``thickness``,
+    `\int dz = h \int d\bar{z}`, `\int z dz = h^2/4 \cdot 4\int \bar{z}
+    d\bar{z}` and `\int z^2 dz = h^3/12 \cdot 12 \int \bar{z}^2 d\bar{z}`,
+    and the integrals of the constant terms `\int d\bar{z} = 1`, `4 \int
+    \bar{z} d\bar{z} = 4\bar{e}` and `12 \int \bar{z}^2 d\bar{z} = 1 + 12
+    \bar{e}^2`, give:
 
     .. math::
 
@@ -3186,26 +3296,62 @@ cpdef ShellProp shellprop_from_LaminationParameters(double thickness, MatLamina
         A_{16} = h (u_2/2 \, \xi_{A2} + u_3 \xi_{A4}), \quad
         A_{26} = h (u_2/2 \, \xi_{A2} - u_3 \xi_{A4}), \quad
         A_{66} = h (u_5 - u_3 \xi_{A3}) \\
-        B_{11} = \frac{h^2}{4} (u_2 \xi_{B1} + u_3 \xi_{B3}), \quad
-        B_{12} = -\frac{h^2}{4} u_3 \xi_{B3}, \quad
-        B_{22} = \frac{h^2}{4} (-u_2 \xi_{B1} + u_3 \xi_{B3}) \\
+        B_{11} = \frac{h^2}{4} (4\bar{e} u_1 + u_2 \xi_{B1} + u_3 \xi_{B3}),
+        \quad
+        B_{12} = \frac{h^2}{4} (4\bar{e} u_4 - u_3 \xi_{B3}), \quad
+        B_{22} = \frac{h^2}{4} (4\bar{e} u_1 - u_2 \xi_{B1} + u_3 \xi_{B3}) \\
         B_{16} = \frac{h^2}{4} (u_2/2 \, \xi_{B2} + u_3 \xi_{B4}), \quad
         B_{26} = \frac{h^2}{4} (u_2/2 \, \xi_{B2} - u_3 \xi_{B4}), \quad
-        B_{66} = -\frac{h^2}{4} u_3 \xi_{B3} \\
+        B_{66} = \frac{h^2}{4} (4\bar{e} u_5 - u_3 \xi_{B3}) \\
         \bar{A}_{44} = h (u_6 + u_7 \xi_{Ats,1}), \quad
         \bar{A}_{45} = -h u_7 \xi_{Ats,2}, \quad
         \bar{A}_{55} = h (u_6 - u_7 \xi_{Ats,1})
 
-    and `D_{ij}` as `A_{ij}`, with the factor `h^3/12` instead of `h` and
-    `\xi_{Di}` instead of `\xi_{Ai}`. Since the through-thickness
+    and `D_{ij}` as `A_{ij}`, with the factor `h^3/12` instead of `h`,
+    `\xi_{Di}` instead of `\xi_{Ai}` and `(1 + 12\bar{e}^2) u_1`, `(1 +
+    12\bar{e}^2) u_4`, `(1 + 12\bar{e}^2) u_5` instead of `u_1`, `u_4`,
+    `u_5`. The `\xi_{Bi}` and `\xi_{Di}` about the reference surface are
+    related to those about the mid-surface, `\xi_{Bi}^0` and `\xi_{Di}^0`,
+    by `\xi_{Bi} = \xi_{Bi}^0 + 4\bar{e} \xi_{Ai}` and `\xi_{Di} =
+    \xi_{Di}^0 + 6\bar{e} \xi_{Bi}^0 + 12\bar{e}^2 \xi_{Ai}`, such that
+    `B = B^0 + e A` and `D = D^0 + 2 e B^0 + e^2 A`, the shift of the
+    stiffness integrals to another reference plane (Vasiliev and Morozov
+    [2]_, Eq. (5.28), p. 235), with `B^0`, `D^0` about the mid-surface.
+    ``A`` and the transverse shear stiffnesses do not depend on ``offset``,
+    and ``lp`` with an offset may lie outside the feasible region of the
+    lamination parameters about the mid-surface.
+
+    With the plane-stress invariants of
+    :meth:`.MatLamina.rebuild`, its default ``plane_stress=True``, these are
+    the stiffnesses of the classical lamination theory, the thickness
+    integrals of the plane-stress `q_{ijL}` (Jones [1]_, Eq. (4.24), p.
+    198), equal to those of :func:`.laminated_plate` for the same layup and
+    ``offset``, also when ``e3``, ``nu13`` and ``nu23`` are given; after
+    ``mat.rebuild(plane_stress=False)`` they integrate the rotated
+    three-dimensional stiffnesses instead, see :meth:`.MatLamina.rebuild`,
+    which the shell elements of pyfe3d do not use. Since the through-thickness
     distribution of the plies is not known from the lamination parameters,
     no shear correction can be computed, hence the uncorrected transverse
     shear stiffnesses. Without plies, the elements rotate them as a tensor,
     see :meth:`.ShellProp.calc_Ats_element`.
 
+    References
+    ----------
+    .. [1] Jones, R. M., Mechanics of Composite Materials, Second Edition,
+       Taylor & Francis, Philadelphia, 1999.
+    .. [2] Vasiliev, V. V. and Morozov, E. V., Mechanics and Analysis of
+       Composite Materials, Elsevier, Oxford, 2001.
+
     """
+    cdef double fB, fD
     lam = ShellProp()
     lam.h = thickness
+    lam.offset = offset
+    # NOTE int z dz and int z^2 dz of the constant terms with z measured from
+    #      the reference surface: h^2/4 fB = h offset and h^3/12 fD = h^3/12
+    #      + h offset^2
+    fB = 4*offset/thickness
+    fD = 1 + 12*(offset/thickness)**2
 
     lam.A11 = lam.h*(mat.u1 + mat.u2*lp.xiA1 + 0*lp.xiA2 + mat.u3*lp.xiA3 + 0*lp.xiA4)
     lam.A12 = lam.h*(mat.u4 + 0*lp.xiA1 + 0*lp.xiA2 + (-1)*mat.u3*lp.xiA3 + 0*lp.xiA4)
@@ -3214,19 +3360,19 @@ cpdef ShellProp shellprop_from_LaminationParameters(double thickness, MatLamina
     lam.A26 = lam.h*(0 + 0*lp.xiA1 + mat.u2/2.*lp.xiA2 + 0*lp.xiA3 + (-1)*mat.u3*lp.xiA4)
     lam.A66 = lam.h*(mat.u5 + 0*lp.xiA1 + 0*lp.xiA2 + (-1)*mat.u3*lp.xiA3 + 0*lp.xiA4)
 
-    lam.B11 = lam.h*lam.h/4.*(mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
-    lam.B12 = lam.h*lam.h/4.*(0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
-    lam.B22 = lam.h*lam.h/4.*((-1)*mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
+    lam.B11 = lam.h*lam.h/4.*(fB*mat.u1 + mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
+    lam.B12 = lam.h*lam.h/4.*(fB*mat.u4 + 0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
+    lam.B22 = lam.h*lam.h/4.*(fB*mat.u1 + (-1)*mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
     lam.B16 = lam.h*lam.h/4.*(0*lp.xiB1 + mat.u2/2.*lp.xiB2 + 0*lp.xiB3 + mat.u3*lp.xiB4)
     lam.B26 = lam.h*lam.h/4.*(0*lp.xiB1 + mat.u2/2.*lp.xiB2 + 0*lp.xiB3 + (-1)*mat.u3*lp.xiB4)
-    lam.B66 = lam.h*lam.h/4.*(0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
+    lam.B66 = lam.h*lam.h/4.*(fB*mat.u5 + 0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
 
-    lam.D11 = lam.h*lam.h*lam.h/12.*(mat.u1 + mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
-    lam.D12 = lam.h*lam.h*lam.h/12.*(mat.u4 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
-    lam.D22 = lam.h*lam.h*lam.h/12.*(mat.u1 + (-1)*mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
+    lam.D11 = lam.h*lam.h*lam.h/12.*(fD*mat.u1 + mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
+    lam.D12 = lam.h*lam.h*lam.h/12.*(fD*mat.u4 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
+    lam.D22 = lam.h*lam.h*lam.h/12.*(fD*mat.u1 + (-1)*mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
     lam.D16 = lam.h*lam.h*lam.h/12.*(0 + 0*lp.xiD1 + mat.u2/2.*lp.xiD2 + 0*lp.xiD3 + mat.u3*lp.xiD4)
     lam.D26 = lam.h*lam.h*lam.h/12.*(0 + 0*lp.xiD1 + mat.u2/2.*lp.xiD2 + 0*lp.xiD3 + (-1)*mat.u3*lp.xiD4)
-    lam.D66 = lam.h*lam.h*lam.h/12.*(mat.u5 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
+    lam.D66 = lam.h*lam.h*lam.h/12.*(fD*mat.u5 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
 
     lam.Abar44 = lam.h*(mat.u6 + mat.u7*lp.xiAts1 + 0*lp.xiAts2)
     lam.Abar45 = lam.h*(0 + 0*lp.xiAts1 + (-1)*mat.u7*lp.xiAts2)
@@ -3250,7 +3396,7 @@ cpdef ShellProp shellprop_from_lamination_parameters(double thickness, MatLamina
         matlamina, double xiA1, double xiA2, double xiA3, double xiA4,
         double xiB1, double xiB2, double xiB3, double xiB4,
         double xiD1, double xiD2, double xiD3, double xiD4,
-        double xiAts1=0, double xiAts2=0):
+        double xiAts1=0, double xiAts2=0, double offset=0.):
     r"""Return a :class:`.ShellProp` object based in the thickness, material and
     lamination parameters
 
@@ -3276,6 +3422,10 @@ cpdef ShellProp shellprop_from_lamination_parameters(double thickness, MatLamina
     xiAts1, xiAts2 : float, optional
         Lamination parameters `\xi_{Ats,1}` and `\xi_{Ats,2}`,
         dimensionless. Default ``0``.
+    offset : float, optional
+        Offset of the mid-surface from the reference surface, about which
+        the lamination parameters are defined, see
+        :func:`.shellprop_from_LaminationParameters`. Length. Default ``0.``.
 
 
     Returns
@@ -3309,7 +3459,7 @@ cpdef ShellProp shellprop_from_lamination_parameters(double thickness, MatLamina
     lp.xiD4 = xiD4
     lp.xiAts1 = xiAts1
     lp.xiAts2 = xiAts2
-    return shellprop_from_LaminationParameters(thickness, matlamina, lp)
+    return shellprop_from_LaminationParameters(thickness, matlamina, lp, offset)
 
 
 _GRADABD_STATE = ('gradAij', 'gradBij', 'gradDij', 'gradAtsij')
@@ -3397,16 +3547,18 @@ cdef class GradABD:
         for name, value in state.items():
             setattr(self, name, np.ascontiguousarray(value, dtype=DOUBLE))
 
-    cpdef void calc_LP_grad(GradABD self, double thickness, MatLamina mat, LaminationParameters lp):
+    cpdef void calc_LP_grad(GradABD self, double thickness, MatLamina mat, LaminationParameters lp,
+            double offset=0.):
         r"""Gradients of the shell stiffnesses with respect to the thickness and
         lamination parameters
 
         Updates ``gradAij``, ``gradBij``, ``gradDij`` and ``gradAtsij`` with
         the derivatives of the stiffnesses computed by
         :func:`.shellprop_from_LaminationParameters` from ``thickness``,
-        from the invariants ``u1`` to ``u7`` of ``mat`` and from the
-        lamination parameters of ``lp``; column 0 contains the derivatives
-        with respect to the thickness. The entries ``[0, 2]``, ``[1, 1]`` and
+        from the invariants ``u1`` to ``u7`` of ``mat``, from the
+        lamination parameters of ``lp`` and from ``offset``; column 0
+        contains the derivatives with respect to the thickness, at constant
+        lamination parameters and ``offset``. The entries ``[0, 2]``, ``[1, 1]`` and
         ``[2, 2]`` of ``gradAtsij``, which do not depend on the lamination
         parameters, are not updated. All six rows of ``gradAij``, ``gradBij``
         and ``gradDij`` are updated, including row 5 (``A66``, ``B66``,
@@ -3421,6 +3573,10 @@ cdef class GradABD:
             Material object
         lp : :class:`.LaminationParameters` object
             The container class with all lamination parameters already defined
+        offset : float, optional
+            Offset of the mid-surface from the reference surface, about which
+            the lamination parameters are defined, see
+            :func:`.shellprop_from_LaminationParameters`. Length. Default ``0.``.
 
         Returns
         -------
@@ -3430,14 +3586,17 @@ cdef class GradABD:
         Notes
         -----
         The stiffnesses of :func:`.shellprop_from_LaminationParameters` are
-        `A = h \, U \{1, \xi_A\}`, `B = h^2/4 \, U \{0, \xi_B\}`, `D = h^3/12
-        \, U \{1, \xi_D\}` and `\bar{A}_{ts} = h \, U_{ts} \{1,
-        \xi_{Ats}\}`, with `U` the rows of the in-plane terms of
+        `A = h \, U \{1, \xi_A\}`, `B = h e \, U \{1, 0\} + h^2/4 \, U \{0,
+        \xi_B\}`, `D = (h^3/12 + h e^2) \, U \{1, 0\} + h^3/12 \, U \{0,
+        \xi_D\}` and `\bar{A}_{ts} = h \, U_{ts} \{1, \xi_{Ats}\}`, with
+        `e` = ``offset``, `U` the rows of the in-plane terms of
         :meth:`.MatLamina.get_invariant_matrix` and `U_{ts}` those of the
-        transverse shear terms. At constant lamination parameters,
-        `\partial A/\partial h = U \{1, \xi_A\}`, `\partial B/\partial h = h/2
-        \, U \{0, \xi_B\}`, `\partial D/\partial h = h^2/4 \, U \{1, \xi_D\}`
-        and `\partial \bar{A}_{ts}/\partial h = U_{ts} \{1, \xi_{Ats}\}`, and
+        transverse shear terms. At constant lamination parameters and
+        offset, `\partial A/\partial h = U \{1, \xi_A\}`, `\partial
+        B/\partial h = e \, U \{1, 0\} + h/2 \, U \{0, \xi_B\}`, `\partial
+        D/\partial h = (h^2/4 + e^2) \, U \{1, 0\} + h^2/4 \, U \{0,
+        \xi_D\}` and `\partial \bar{A}_{ts}/\partial h = U_{ts} \{1,
+        \xi_{Ats}\}`, and
         at constant thickness the derivatives with respect to the lamination
         parameters are the columns of `U` multiplied by `h`, `h^2/4` and
         `h^3/12`, respectively, and those of `U_{ts}` by `h`.
@@ -3470,12 +3629,12 @@ cdef class GradABD:
                 self.gradAij[i, j+1] = h*gradinv[i, j]
 
         # d(B11 B12 B16 B22 B26 B66) / dh
-        self.gradBij[0, 0] = h/2.*(mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
-        self.gradBij[1, 0] = h/2.*(0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
+        self.gradBij[0, 0] = offset*mat.u1 + h/2.*(mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
+        self.gradBij[1, 0] = offset*mat.u4 + h/2.*(0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
         self.gradBij[2, 0] = h/2.*(0*lp.xiB1 + mat.u2/2.*lp.xiB2 + 0*lp.xiB3 + mat.u3*lp.xiB4)
-        self.gradBij[3, 0] = h/2.*((-1)*mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
+        self.gradBij[3, 0] = offset*mat.u1 + h/2.*((-1)*mat.u2*lp.xiB1 + 0*lp.xiB2 + mat.u3*lp.xiB3 + 0*lp.xiB4)
         self.gradBij[4, 0] = h/2.*(0*lp.xiB1 + mat.u2/2.*lp.xiB2 + 0*lp.xiB3 + (-1)*mat.u3*lp.xiB4)
-        self.gradBij[5, 0] = h/2.*(0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
+        self.gradBij[5, 0] = offset*mat.u5 + h/2.*(0*lp.xiB1 + 0*lp.xiB2 + (-1)*mat.u3*lp.xiB3 + 0*lp.xiB4)
 
         # d(B11 B12 B16 B22 B26 B66) / d(xiB1, xiB2, xiB3, xiB4)
         for i in range(6):
@@ -3483,12 +3642,12 @@ cdef class GradABD:
                 self.gradBij[i, j+1] = h*h/4.*gradinv[i, j]
 
         # d(D11 D12 D16 D22 D26 D66) / dh
-        self.gradDij[0, 0] = h*h/4.*(mat.u1 + mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
-        self.gradDij[1, 0] = h*h/4.*(mat.u4 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
+        self.gradDij[0, 0] = offset*offset*mat.u1 + h*h/4.*(mat.u1 + mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
+        self.gradDij[1, 0] = offset*offset*mat.u4 + h*h/4.*(mat.u4 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
         self.gradDij[2, 0] = h*h/4.*(0 + 0*lp.xiD1 + mat.u2/2.*lp.xiD2 + 0*lp.xiD3 + mat.u3*lp.xiD4)
-        self.gradDij[3, 0] = h*h/4.*(mat.u1 + (-1)*mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
+        self.gradDij[3, 0] = offset*offset*mat.u1 + h*h/4.*(mat.u1 + (-1)*mat.u2*lp.xiD1 + 0*lp.xiD2 + mat.u3*lp.xiD3 + 0*lp.xiD4)
         self.gradDij[4, 0] = h*h/4.*(0 + 0*lp.xiD1 + mat.u2/2.*lp.xiD2 + 0*lp.xiD3 + (-1)*mat.u3*lp.xiD4)
-        self.gradDij[5, 0] = h*h/4.*(mat.u5 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
+        self.gradDij[5, 0] = offset*offset*mat.u5 + h*h/4.*(mat.u5 + 0*lp.xiD1 + 0*lp.xiD2 + (-1)*mat.u3*lp.xiD3 + 0*lp.xiD4)
 
         # d(D11 D12 D16 D22 D26 D66) / d(xiD1, xiD2, xiD3, xiD4)
         for i in range(6):
