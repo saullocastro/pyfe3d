@@ -20,8 +20,11 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=2):
     ``rho*h*omega_mn**2 = D*((m*pi/a)**2 + (n*pi/b)**2)**2 + N_xx*(m*pi/a)**2``,
     minimised over ``m`` and ``n``, and the buckling load (10.46).
 
-    With 42x26 elements the frequencies of the three mass matrices are 0.14
-    to 0.39 % above the reference, with 20x12 elements 0.77 to 1.95 %.
+    With 42x26 elements the frequencies of the three mass matrices are 0.18 to
+    0.44 % above the reference, with 20x12 elements 0.89 to 2.08 %, measured on
+    2026-10-29 with the transverse shear of Belytschko and Leviathan (1994)
+    that Quad4R uses since 0.12.0, see :mod:`pyfe3d.quad4r`; 0.14 to 0.39 % and
+    0.77 to 1.95 % before.
     """
     data = Quad4RData()
     probe = Quad4RProbe()

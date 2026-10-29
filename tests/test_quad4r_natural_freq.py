@@ -34,9 +34,12 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=3):
 
     With 26x32 elements the frequencies of the three mass matrices are from
     0.09 % below to 0.22 % above the reference, with 17x21 elements 0.18 to
-    0.89 % above it, with 8x10 elements 1.78 to 5.07 % above it, with 35x43
-    elements 0.01 to 0.17 % below it, with 53x65 elements 0.16 to 0.24 %
-    below it.
+    0.89 % above it, with 8x10 elements 1.76 to 5.05 % above it, with 35x43
+    elements 0.01 to 0.17 % below it, with 53x65 elements 0.16 to 0.24 % below
+    it (measured again on 2026-10-29 with the transverse shear of Belytschko
+    and Leviathan (1994) that Quad4R uses since 0.12.0, see
+    :mod:`pyfe3d.quad4r`, which changed only the 8x10 values, from 1.78 to
+    5.07 %).
     """
     data = Quad4RData()
     probe = Quad4RProbe()

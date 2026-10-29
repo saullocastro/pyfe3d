@@ -47,13 +47,16 @@ def test_linear_buckling_plate(plot=False, mode=0):
     reference is reached only on fine meshes, the 90x42 flat plate, 10 s of
     the 27 s of this test (measured on 2026-10-29 on a loaded machine,
     +1.17 %), is no longer run: the 30x14 meshes are compared with the load pre-determined by this
-    same test with that mesh, -195870012.17574 N, with ``rtol = 1e-4`` for
+    same test with that mesh, -195834310.09689 N, with ``rtol = 1e-4`` for
     the round-off of the eigenvalue solver, and with the reference within
     grade C of MacNeal, R. H. and Harder, R. L., A proposed standard set of
     problems to test finite element accuracy, Finite Elements in Analysis
     and Design, 1(1), 3-20, 1985,
     https://doi.org/10.1016/0168-874X(85)90003-4, p. 14 (at most 20 %), as
-    a bound: +10.70 % measured.
+    a bound: +10.68 % measured; +10.70 % (-195870012.17574 N) up to 0.11,
+    before the transverse shear of Belytschko and Leviathan (1994), see
+    :mod:`pyfe3d.quad4r`, which the errors quoted above for the finer flat
+    plates also predate.
     """
     thetas = np.linspace(-np.pi, np.pi, 5)
     # NOTE (pitch, yaw, nx, ny)
@@ -222,7 +225,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
     print('Theoretical P_cr_theory', P_cr_theory)
     assert np.allclose(P_cr_calcs, P_cr_calcs[0], rtol=1e-6)
     # NOTE value pre-determined with the 30x14 mesh, see the docstring
-    assert isclose(P_cr_calcs[0], -195870012.17574, rtol=1e-4)
+    assert isclose(P_cr_calcs[0], -195834310.09689, rtol=1e-4)
     # NOTE grade C against Seide and Stowell (1950)
     assert abs(P_cr_calcs[0]/P_cr_theory - 1) <= 0.20
 

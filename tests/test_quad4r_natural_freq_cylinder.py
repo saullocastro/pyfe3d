@@ -59,8 +59,12 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     wall times on a machine shared with other jobs::
 
         refinement  ntheta  elements   n = 2       n = 3       time
-            1         48      1440    0.12188130  0.13236280    1 s
-            2         96      5760    0.12136325  0.13037796   10 s
+            1         48      1440    0.12189813  0.13240979    1 s
+            2         96      5760    0.12137179  0.13040327   10 s
+
+    measured again on 2026-10-29 with the transverse shear of Quad4R of
+    Belytschko and Leviathan (1994), 0.12.0; before it 0.12188130,
+    0.13236280, 0.12136325 and 0.13037796.
 
     """
     data = Quad4RData()
@@ -218,8 +222,8 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     #      tolerance, rtol = 1e-4, is for the round-off of other platforms
     #      and solvers only
     predetermined = {
-        1: (0.12188130, 0.13236280),
-        2: (0.12136325, 0.13037796),
+        1: (0.12189813, 0.13240979),
+        2: (0.12137179, 0.13040327),
     }
     if refinement in predetermined:
         assert isclose(Omega[0], predetermined[refinement][0], rtol=1e-4)

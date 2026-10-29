@@ -228,10 +228,23 @@ def test_mode_2_is_shared_by_the_three_shell_elements():
     Exactly free on a regular shape, and of order `(h/\ell)^2` on a distorted
     one, so still a mechanism for any thin element.
 
+    Quad4R shared it up to 0.11. Since 0.12.0 its transverse shear is that
+    of Belytschko and Leviathan (1994), whose stabilisation of the
+    nonconstant part of the assumed shear strains gives Mode 2 the energy
+    0.018697 times the largest eigenvalue on the square, at both
+    thicknesses (measured on 2026-10-29), see
+    ``test_twisting_mode_is_stabilised`` in
+    ``test_quad4r_hourglass_control.py``.
+
     """
+    for h in (0.01, 0.1):
+        K, xe = element_K(Quad4R, Quad4RData, Quad4RProbe, SQUARE, h)
+        _, mode2 = htk_modes(xe, 4)
+        U = mode2.dot(K.dot(mode2))/np.linalg.eigvalsh(K).max()
+        print('Quad4R h/l=%g: %.6f' % (h, U))
+        assert np.isclose(U, 0.01869658119658119, rtol=1e-6), (h, U)
     for name, cls, Data, Probe, ncoords, num_nodes in [
             ('Quad4', Quad4, Quad4Data, Quad4Probe, SQUARE, 4),
-            ('Quad4R', Quad4R, Quad4RData, Quad4RProbe, SQUARE, 4),
             ('Tria3R', Tria3R, Tria3RData, Tria3RProbe, TRIANGLE, 3)]:
         for h in (0.01, 0.1):
             K, xe = element_K(cls, Data, Probe, ncoords, h)
@@ -432,17 +445,21 @@ def test_torsion_of_a_one_element_wide_strip():
 
         element      ny=1    ny=2    ny=4
         Quad4       377.4    1.019   1.059
-        Quad4R        4.78   0.923   1.001
+        Quad4R        0.928  0.934   1.010
         Tria3R        1.67   1.649   1.645
+
+    (Quad4R up to 0.11: 4.78, 0.923 and 1.001.)
 
     The grades of MacNeal and Harder (1985), p. 14, are used as the
     thresholds: A for an error of at most 2 %, B at most 10 %, C at most
     20 %, D at most 50 %, F above. Quad4 has no stiffness against the
-    deformation being asked for, more than 100 times the reference. Quad4R
-    and Tria3R are helped by their stabilisations but still fail at ny=1,
-    grade F, so the practical rule is at least two elements across the
-    width for any strip that carries torsion; with two and four Quad4 and
-    Quad4R get grade B or better. Tria3R stays at 1.65 with 6 elements along
+    deformation being asked for, more than 100 times the reference. Tria3R
+    is helped by its stabilisation but still fails at ny=1, grade F, as
+    Quad4R did up to 0.11, so the practical rule for these elements is at
+    least two elements across the width for any strip that carries torsion;
+    with two and four Quad4 gets grade B or better. Since 0.12.0 Quad4R,
+    whose transverse shear is that of Belytschko and Leviathan (1994), gets
+    grade B with one, two and four. Tria3R stays at 1.65 with 6 elements along
     the length, still grade F, and is not asserted at ny > 1.
 
     The theoretical value of the table is 0.94 times the Saint-Venant twist
@@ -457,25 +474,24 @@ def test_torsion_of_a_one_element_wide_strip():
     grades refer to it.
 
     The 6 % between Quad4 with 6x4 elements and 0.03208 is not a mesh error
-    that refinement removes: with two or more elements across, Quad4, Quad4R
-    with its default hourglass stiffness and with 1/100 of it converge to
-    the same twist, about 1.067 times 0.03208, measured on 2026-10-29 with
-    the distributed torque above (ratio to 0.03208):
+    that refinement removes: Quad4 and Quad4R converge to the same twist,
+    about 1.067 times 0.03208, measured on 2026-10-29 with the distributed
+    torque above (ratio to 0.03208):
 
     ========  ======  ======  ======  ======  ======  ======  =======
     element   6x2     6x4     12x4    24x8    48x8    96x16   192x32
     ========  ======  ======  ======  ======  ======  ======  =======
     Quad4     1.0188  1.0583  1.0651  1.0499  1.0518  1.0622  1.0655
-    Quad4R    0.9227  1.0006  1.0315  1.0561  1.0613  1.0651  1.0663
+    Quad4R    0.9339  1.0101  1.0142  1.0481  1.0505  1.0616  1.0653
     ========  ======  ======  ======  ======  ======  ======  =======
 
     and with the corner forces of this test, whose deflection is singular,
-    1.0700 and 1.0782 with 192x32 elements. The converged value, 0.0342, is
+    1.0700 and 1.0697 with 192x32 elements. The converged value, 0.0342, is
     0.3 % above the Saint-Venant twist; the difference to 0.03208 is one of
     the reference, whose derivation is not given in MacNeal and Harder, and
     no mesh is graded A against it. Following the policy of the tests whose
-    reference is not reached on the coarse mesh used, the 6x2 and 6x4 meshes
-    are compared with the values pre-determined by this same test, with
+    reference is not reached on the coarse mesh used, the 6x2 and 6x4 meshes,
+    and the 6x1 mesh of Quad4R, are compared with the values pre-determined by this same test, with
     ``rtol = 1e-6`` for the round-off of the dense linear solution, whose
     condition number is about 1e9 (``test_drilling_benchmarks.py``), and with
     grade B against 0.03208 as a bound.
@@ -485,11 +501,15 @@ def test_torsion_of_a_one_element_wide_strip():
     # NOTE values pre-determined by strip_twist on 2026-10-29
     predetermined = {(Quad4, 2): 0.03268400685870222,
                      (Quad4, 4): 0.03397594865499767,
-                     (Quad4R, 2): 0.02960038557831665,
-                     (Quad4R, 4): 0.032120867214737954}
+                     (Quad4R, 1): 0.02977197292453833,
+                     (Quad4R, 2): 0.029960702298012846,
+                     (Quad4R, 4): 0.03240695925149363}
     assert strip_twist(Quad4, Quad4Data, Quad4Probe, 1)/ref > 100.
+    twist = strip_twist(Quad4R, Quad4RData, Quad4RProbe, 1)
+    assert np.isclose(twist, predetermined[Quad4R, 1], rtol=1e-6)
+    # NOTE grade B of MacNeal and Harder (1985), error at most 10 %
+    assert abs(twist/ref - 1.) <= 0.10
     # NOTE grade F of MacNeal and Harder (1985), error above 50 %
-    assert strip_twist(Quad4R, Quad4RData, Quad4RProbe, 1)/ref - 1 > 0.5
     assert strip_twist(Tria3R, Tria3RData, Tria3RProbe, 1,
                        triangles=True)/ref - 1 > 0.5
     for ny in (2, 4):

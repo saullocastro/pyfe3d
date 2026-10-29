@@ -16,12 +16,14 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=3):
     uniform compression ``N_xx``
 
     The reference is the exact solution of Leissa, A. W., Vibration of Plates,
-    NASA SP-160, 1969, Sec. 10.2.1, p. 277, Eq. (10.46), the buckling load
-    for which the frequency of Eq. (10.44) vanishes, minimised over the
-    number ``m`` of half-waves along ``x``: ``N_xx,cr = -k_c*pi**2*D/b**2``,
-    ``k_c = (m*b/a + a/(m*b))**2``. With 92x44 elements the buckling load is
-    above the reference by 0.27 %, with 62x30 elements 0.99 %, with 30x14
-    elements 5.6 %.
+    NASA SP-160, 1969, Sec. 10.2.1, p. 277, Eq. (10.46), the buckling load for
+    which the frequency of Eq. (10.44) vanishes, minimised over the number
+    ``m`` of half-waves along ``x``: ``N_xx,cr = -k_c*pi**2*D/b**2``, ``k_c =
+    (m*b/a + a/(m*b))**2``. With 92x44 elements the buckling load is above the
+    reference by 0.50 %, with 62x30 elements 1.24 %, with 30x14 elements
+    5.96 %, measured on 2026-10-29 with the transverse shear of Belytschko and
+    Leviathan (1994) that Quad4R uses since 0.12.0, see :mod:`pyfe3d.quad4r`;
+    0.27, 0.99 and 5.6 % before.
     """
     data = Quad4RData()
     probe = Quad4RProbe()

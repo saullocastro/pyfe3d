@@ -33,9 +33,11 @@ def test_static_plate_quad_point_load(plot=False):
     below resolve, ``m < 2*(nx - 1)`` and ``n < 2*(ny - 1)``, it adds
     2.0e-5 to 3.6e-5 of the reference deflection.
 
-    With 18x30 elements the deflection at the centre is 0.27 % below the
-    reference, with 6x10 elements 1.77 %, with 12x20 elements 0.57 %, with
-    24x40 elements 0.15 %.
+    With 18x30 elements the deflection at the centre is 0.32 % below the
+    reference, measured on 2026-10-29 with the transverse shear of Belytschko
+    and Leviathan (1994) that Quad4R uses since 0.12.0, see
+    :mod:`pyfe3d.quad4r`; before that change 0.27 %, with 6x10 elements 1.77 %,
+    with 12x20 elements 0.57 %, with 24x40 elements 0.15 %.
     """
     data = Quad4RData()
     probe = Quad4RProbe()

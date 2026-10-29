@@ -388,14 +388,17 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
         refinement  ntheta  elements    Nxy_cr    ratio    time
            0.5         32       640    765745.5   1.2962     1 s
            0.75        48      1440    659117.4   1.1157     2 s
-           1           64      2560    623627.9   1.0556     6 s
+           1           64      2560    623706.1   1.0558     6 s
            1.5         96      5760    599769.1   1.0152    24 s
-           2          128     10240    591694.8   1.0016    55 s
+           2          128     10240    591746.7   1.0017    55 s
            3          192     23424    585982.2   0.9919   191 s
         extrapolated                              0.984
 
-    the extrapolation fitting ``a + c*ntheta**-p`` to the three finest meshes
-    (p = 2.0). The converged element is therefore 1.6 per cent below the
+    The rows of refinements 1 and 2 were measured again on 2026-10-29 with
+    the transverse shear of Quad4R of Belytschko and Leviathan (1994),
+    0.12.0, which raised them by 0.013 and 0.009 per cent; the others predate
+    it. The extrapolation fits ``a + c*ntheta**-p`` to the three finest
+    meshes (p = 2.0). The converged element is therefore 1.6 per cent below the
     formula, which is within the accuracy of the formula itself: it is a
     straight-line fit of Batdorf's Galerkin solution of a Donnell-type
     equation, and Table 1, p. 20, of TN 1344 gives k_s = 153.0 at Z = 1000 in
@@ -539,8 +542,8 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     #      refinement, see the table of the docstring. The tolerance, rtol =
     #      1e-4, is for the round-off of other platforms and solvers only
     predetermined = {
-        1: 623627.89,
-        2: 591694.82,
+        1: 623706.10,
+        2: 591746.74,
     }
     if refinement in predetermined:
         assert isclose(Nxy_cr, predetermined[refinement], rtol=1e-4)
