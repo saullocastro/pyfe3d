@@ -10,7 +10,7 @@ from pyfe3d import Tria3R, Tria3RData, Tria3RProbe, INT, DOUBLE, DOF
 from pyfe3d.solver import natural_frequency
 
 
-def test_tria3r_nat_freq_distorted(plot=False, mode=0):
+def test_tria3r_nat_freq_distorted(plot=False, mode=0, refinement=1):
     r"""Fundamental frequency of a simply supported plate, ``a = 0.3``,
     ``b = 0.5``, ``h = 0.01``, with a distorted mesh and the reduced mass
     matrix
@@ -28,19 +28,37 @@ def test_tria3r_nat_freq_distorted(plot=False, mode=0):
     ``omega = sqrt(D/rho)*((m*pi/a)**2 + (n*pi/b)**2)``, with ``m = n = 1``
     and Leissa's ``rho`` the mass per unit area, here ``rho*h``.
 
-    The edges are soft simply supported, rotations free. The assertion with
-    ``rtol=0.05`` is kept from before, see
-    :func:`test_tria3r_natural_freq.test_tria3r_nat_freq`. On the distorted
-    mesh the frequency is 1.65 % above the reference with 8x10
-    quadrilaterals split in two triangles, 3.58 % with 16x20, 3.48 % with
-    24x30, 2.99 % with 32x40, 2.38 % with 40x50 and 1.82 % with 48x60.
+    The edges are soft simply supported, rotations free. With the default
+    transverse shear since 0.12.0, the discrete shear gap field of
+    ``shear_model = 1``, the error against the reference, measured with
+    this test (quadrilaterals split in two triangles, the inner nodes
+    distorted with the same seed, time on one thread), is:
+
+        refinement   mesh      omega_1         error    time
+        1            8x10      2412.861       +3.90 %   0.0 s
+        2            16x20     2334.011       +0.51 %   0.1 s
+        3            24x30     2317.061       -0.22 %   0.2 s
+        4            32x40     2309.989       -0.53 %   0.3 s
+        6            48x60     2303.533       -0.81 %   0.8 s
+
+    approaching from above the limit of the regular mesh of
+    :func:`test_tria3r_natural_freq.test_tria3r_nat_freq`, about -1.15 %,
+    the soft simple support of the Mindlin plate. ``refinement=1`` is
+    compared with the value pre-determined by this test, with ``rtol=1e-4``
+    for the round-off of the eigensolver, and with grade B of MacNeal and
+    Harder (1985), p. 14, as the bound against the reference; from
+    ``refinement=2`` grade A is asserted against the reference alone.
+    Before 0.12.0, with the centroid-sampled shear and
+    ``alpha_shear_locking = 0.7``, the frequency was 1.65 % above the
+    reference with 8x10 elements and rose to 3.58 % with 16x20 before
+    falling to 1.82 % with 48x60.
     """
     data = Tria3RData()
     probe = Tria3RProbe()
     mtype = 2
     if True:
-        nx = 9
-        ny = 11
+        nx = 8*refinement + 1
+        ny = 10*refinement + 1
 
         a = 0.3
         b = 0.5
@@ -196,7 +214,14 @@ def test_tria3r_nat_freq_distorted(plot=False, mode=0):
 
         print('Theoretical omega123', wmn)
         print('Numerical omega123', omegan[0:10])
-        assert isclose(wmn, omegan[0], rtol=0.05)
+        error = abs(omegan[0]/wmn - 1)
+        print('error', omegan[0]/wmn - 1)
+        if refinement == 1:
+            # NOTE pre-determined by this test with refinement=1 on 2026-10-29
+            assert isclose(omegan[0], 2412.86091037, rtol=1e-4)
+            assert error <= 0.10
+        else:
+            assert error <= 0.02
 
     if plot:
         import matplotlib.pyplot as plt

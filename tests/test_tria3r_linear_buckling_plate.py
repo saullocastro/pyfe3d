@@ -3,8 +3,8 @@ sys.path.append('..')
 
 import numpy as np
 from numpy import isclose
-from scipy.sparse.linalg import cg
-from scipy.sparse import coo_matrix, diags as sp_diags
+from scipy.sparse.linalg import spsolve
+from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import isotropic_plate
 from pyfe3d import Tria3R, Tria3RData, Tria3RProbe, INT, DOUBLE, DOF
@@ -22,16 +22,27 @@ def test_tria3r_linear_buckling_plate(plot=False, mode=0, refinement=1):
     ``N_xx,cr = -k_c*pi**2*D/b**2``, ``k_c = (m*b/a + a/(m*b))**2``. With
     ``b/h = 167`` the Mindlin plate buckles 0.02 % below it.
 
-    The assertion with ``rtol=0.05`` is kept from before. This element does
-    not converge to the reference: ``alpha_shear_locking = 0.7`` was chosen
-    such that the buckling load of this plate approaches that of
-    :class:`pyfe3d.Quad4R` with the mesh of ``refinement=1``, see
-    :mod:`pyfe3d.tria3r`, and the transverse shear stiffness it removes
-    shrinks with the element size, so that the locking of the one-point
-    transverse shear returns as the mesh is refined. The buckling load is
-    above the reference by 4.9 % with 30x14 quadrilaterals split in two
-    triangles, ``refinement=1``, by 12.0 % with 62x30 and by 13.4 % with
-    92x44.
+    With the default transverse shear since 0.12.0, the discrete shear gap
+    field of ``shear_model = 1``, the buckling load converges to the
+    reference, measured with this test (quadrilaterals split in two
+    triangles, time on one thread):
+
+        refinement   mesh      P_cr          error    time
+        1            30x14     -42550.4     +5.14 %   0.2 s
+        2            62x30     -40767.5     +0.73 %   1.2 s
+        3            92x44     -40583.2     +0.28 %   3.8 s
+        4            124x60    -40511.4     +0.10 %   8.4 s
+        6            186x90    -40455.1     -0.04 %  25.7 s
+
+    ``refinement=1`` is compared with the value pre-determined by this test,
+    with ``rtol=1e-4`` for the round-off of the eigensolver, and with grade B
+    of MacNeal and Harder (1985), p. 14, as the bound against the
+    reference; from ``refinement=2`` grade A is asserted against the
+    reference alone. Before 0.12.0, with the centroid-sampled shear and
+    ``alpha_shear_locking = 0.7``, the load was 4.9 % above the reference
+    with 30x14 elements and 13.4 % above with 92x44, see
+    :mod:`pyfe3d.tria3r`. The prestress system is solved directly; the
+    preconditioned conjugate gradient used before does not converge on it.
     """
     data = Tria3RData()
     probe = Tria3RProbe()
@@ -105,7 +116,6 @@ def test_tria3r_linear_buckling_plate(plot=False, mode=0, refinement=1):
         tria.c1 = DOF*nid_pos[n1]
         tria.c2 = DOF*nid_pos[n2]
         tria.c3 = DOF*nid_pos[n3]
-        tria.alpha_shear_locking = 0.7
         tria.init_k_KC0 = init_k_KC0
         tria.init_k_KG = init_k_KG
         tria.update_rotation_matrix(ncoords_flatten)
@@ -125,7 +135,6 @@ def test_tria3r_linear_buckling_plate(plot=False, mode=0, refinement=1):
         tria.c1 = DOF*nid_pos[n1]
         tria.c2 = DOF*nid_pos[n3]
         tria.c3 = DOF*nid_pos[n4]
-        tria.alpha_shear_locking = 0.7
         tria.init_k_KC0 = init_k_KC0
         tria.init_k_KG = init_k_KG
         tria.update_rotation_matrix(ncoords_flatten)
@@ -178,15 +187,7 @@ def test_tria3r_linear_buckling_plate(plot=False, mode=0, refinement=1):
     KC0uu = KC0[bu, :][:, bu]
     fextu = fext[bu]
 
-    # NOTE pre-conditioning the linear system to improve convergence of the iterative solver
-    kuu_diag = KC0uu.diagonal()
-    kuu_diag_inv_sqrt = 1.0/np.sqrt(np.maximum(kuu_diag, 1e-30))
-    D_inv_sqrt = sp_diags(kuu_diag_inv_sqrt)
-    KC0uu_scaled = D_inv_sqrt @ KC0uu @ D_inv_sqrt
-    fextu_scaled = D_inv_sqrt @ fextu
-    uu_scaled, out = cg(KC0uu_scaled, fextu_scaled, atol=1e-8)
-    assert out == 0, 'cg failed'
-    uu = D_inv_sqrt @ uu_scaled
+    uu = spsolve(KC0uu, fextu)
     u = np.zeros(N)
     u[bu] = uu
 
@@ -249,7 +250,14 @@ def test_tria3r_linear_buckling_plate(plot=False, mode=0, refinement=1):
         plt.contourf(xmesh, ymesh, u[2::DOF].reshape(nx, ny).T)
         plt.show()
 
-    assert isclose(P_cr_theory, P_cr_calc, rtol=0.05)
+    error = abs(P_cr_calc/P_cr_theory - 1)
+    print('error', P_cr_calc/P_cr_theory - 1)
+    if refinement == 1:
+        # NOTE pre-determined by this test with refinement=1 on 2026-10-29
+        assert isclose(P_cr_calc, -42550.38531708875, rtol=1e-4)
+        assert error <= 0.10
+    else:
+        assert error <= 0.02
 
 
 if __name__ == '__main__':

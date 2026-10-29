@@ -1,7 +1,8 @@
-r"""PROPOSAL: Tria3R with the discrete shear gap field, ``shear_model = 1``
+r"""Tria3R with the discrete shear gap field, ``shear_model = 1``, the default
 
-With the default ``shear_model = 0`` the transverse shear strains of
-:class:`pyfe3d.tria3r.Tria3R` are sampled at the centroid, a field that locks,
+With ``shear_model = 0``, the default before 0.12.0, the transverse shear
+strains of :class:`pyfe3d.tria3r.Tria3R` are sampled at the centroid, a field
+that locks,
 and the locking is relaxed by dividing the transverse shear stiffnesses by
 `1 + \alpha \ell^2/h^2`. Lyly, Stenberg and Vihinen (1993), p. 348, state
 that this stabilisation was introduced for a piecewise quadratic deflection,
@@ -9,8 +10,8 @@ and that linear or bilinear deflections need an MITC reduction operator with
 it; the centroid sample is neither, and on a thin plate the error stalls at a
 value set by `\alpha` instead of decreasing under refinement.
 
-``shear_model = 1`` replaces that field by the discrete shear gap (DSG) field
-of Bletzinger, Bischoff and Ramm (2000), the one of
+``shear_model = 1``, the default since 0.12.0, replaces that field by the
+discrete shear gap (DSG) field of Bletzinger, Bischoff and Ramm (2000), the one of
 :class:`pyfe3d.tria3dsg.Tria3DSG`, and keeps the Allman membrane of Tria3R.
 The tests check that the shear stiffness is the one of Tria3DSG to round-off,
 that the internal forces stay consistent with the stiffness matrix, and that
@@ -170,7 +171,7 @@ def test_thin_plate_converges():
 
     Measured error of the centre deflection, ``shear_model = 1`` with
     ``alpha_shear_locking = 0``, i.e. the field of Tria3DSG, against the
-    default ``shear_model = 0`` with ``alpha_shear_locking = 0.7``:
+    former default ``shear_model = 0`` with ``alpha_shear_locking = 0.7``:
 
         n x n      shear_model = 1     shear_model = 0
         16x16          -12.33 %            -13.00 %
@@ -179,7 +180,7 @@ def test_thin_plate_converges():
         128x128         -0.02 %            -14.32 %
 
     The DSG field converges at second order once the mesh resolves the
-    plate; the default stalls at -14 per cent. The 32x32 mesh is asserted
+    plate; the former default stalls at -14 per cent. The 32x32 mesh is asserted
     with the tolerance of grade A of MacNeal and Harder (1985), p. 14, 2 %.
     """
     ref = 0.00406235
