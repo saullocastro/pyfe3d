@@ -2,6 +2,7 @@ import sys
 sys.path.append('..')
 
 import numpy as np
+import pytest
 from numpy import isclose
 from scipy.sparse import coo_matrix
 
@@ -10,6 +11,7 @@ from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 from pyfe3d.solver import linear_buckling
 
 
+@pytest.mark.slow
 def test_linear_buckling_plate(plot=False, mode=0):
     r"""Linear buckling of the simply supported plate of
     :func:`test_solver.test_linear_buckling_plate` with 20x6 elements,

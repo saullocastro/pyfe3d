@@ -63,6 +63,7 @@ import sys
 sys.path.append('..')
 
 import numpy as np
+import pytest
 from numpy import isclose
 from scipy.sparse import coo_matrix
 
@@ -165,6 +166,7 @@ def buckling_ss_plate(n, shear_factor, given_stress=True):
     return eigvals[0]/N_ref - 1, checkerboard
 
 
+@pytest.mark.slow
 def test_low_transverse_shear_stiffness():
     for shear_factor in (1e-2, 1e-3):
         errs = []

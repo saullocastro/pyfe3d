@@ -11,10 +11,10 @@ on: [push]
 #      pytest-xdist:
 #      1. every test, with the optimized build, which measures the Python
 #         code, pyfe3d/solver among it, at little cost;
-#      2. with the line-traced build, every test except those listed in
-#         .github/coverage_deselect.txt, the slowest ones under line tracing,
-#         none of which covers a line of the .pyx files that the other tests
-#         do not cover, which measures the Cython code.
+#      2. with the line-traced build, every test except those marked slow,
+#         -m "not slow", the slowest ones under line tracing, none of which
+#         covers a line of the .pyx files that the other tests do not cover,
+#         see the marker in pyproject.toml, which measures the Cython code.
 #      pytest-cov combines both runs and the processes into .coverage.
 
 jobs:
@@ -47,8 +47,7 @@ jobs:
         export CYTHON_TRACE_NOGIL=1
         python setup.py build_ext --inplace --define CYTHON_TRACE_NOGIL
         python -m pytest tests -n auto --cov --cov-append --cov-report= \
-            $(tr -d '\r' < .github/coverage_deselect.txt \
-              | grep -v -e '^#' -e '^ *$' | sed 's/^/--deselect=/')
+            -m "not slow"
         coverage report
     - name: "Upload coverage to Codecov"
       uses: codecov/codecov-action@v5

@@ -84,9 +84,11 @@ a converged answer from a plausible-looking one.
 With ``sparse_solver=True`` the sparse solvers run first for every problem
 size, and each result must pass the verification. For symmetric matrices,
 when the inertia check finds eigenvalues missing below the highest one
-returned by the first sparse solver, e.g. copies of repeated eigenvalues,
-which the Lanczos process may miss, they are computed by deflated passes
-before any other solver, see :func:`_complete_repeated`. Only when all of
+returned by a sparse solver, e.g. copies of repeated eigenvalues, which
+the Lanczos process may miss, they are computed by deflated passes before
+the next solver, see :func:`_complete_repeated`: for :func:`linear_buckling`
+after each of its two calls of :func:`scipy.sparse.linalg.eigsh`, for
+:func:`natural_frequency` after its single one. Only when all of
 them failed, e.g. a failed verification, an ARPACK error or a singular
 factorization, a dense solver is used, if the dense problem has at most
 ``max_dense_size`` degrees-of-freedom, with a :class:`DenseFallbackWarning`
@@ -2066,12 +2068,12 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
     **Symmetric matrices.** ``K`` must be positive definite, which is
     checked with ``check=True``. The sparse solvers are
     :func:`scipy.sparse.linalg.eigsh` in Cayley mode, using the shift of
-    :func:`estimate_cayley_sigma`, or ``sigma`` when given; when its
-    accurate eigenpairs miss load multipliers below the highest one, e.g.
-    copies of repeated ones, the same completed by deflated passes, see
-    :func:`_complete_both_signs`; and then :func:`scipy.sparse.linalg.eigsh`
-    with a 10 times larger shift. Each one computes the lowest positive
-    load multipliers and, when fewer than ``num_eigvalues`` exist, the
+    :func:`estimate_cayley_sigma`, or ``sigma`` when given, and then the
+    same with a 10 times larger shift; when the accurate eigenpairs of
+    either one miss load multipliers below the highest one, e.g. copies of
+    repeated ones, they are completed by deflated passes before the next
+    solver, see :func:`_complete_both_signs`. Each one computes the lowest
+    positive load multipliers and, when fewer than ``num_eigvalues`` exist, the
     negative ones closest to zero, i.e. the critical load multipliers of the
     reversed load, with ``-KG``, see :func:`_eigsh_both_signs`. The
     eigenpairs are verified with the residual and inertia checks of
@@ -2325,11 +2327,15 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
 
         num_active = int(np.count_nonzero(
             np.asarray(abs(KG).sum(axis=1)).ravel()))
+        # NOTE each result of eigsh() is completed by deflated passes when
+        #      it misses load multipliers, before the next strategy
         strategies = [('eigsh() in Cayley mode', cayley(1.)),
                       ('eigsh() in Cayley mode completed by deflated passes',
                        completed(1.)),
                       ('eigsh() in Cayley mode with a 10 times larger shift',
-                       cayley(10.))]
+                       cayley(10.)),
+                      ('eigsh() in Cayley mode with a 10 times larger shift '
+                       'completed by deflated passes', completed(10.))]
         dense = ('eigh() with condensed degrees-of-freedom',
                  lambda: unscale(_eigh_condensed(Ks, KGs, k)))
         (mu, eigvecs), _ = _sparse_first('Linear buckling analysis',

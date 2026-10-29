@@ -47,6 +47,7 @@ import sys
 sys.path.append('..')
 
 import numpy as np
+import pytest
 from scipy.sparse import coo_matrix
 from scipy.sparse.linalg import spsolve
 
@@ -212,6 +213,7 @@ def strip_twist(nx, ny, Lx=2., b=0.5, h=0.04, E=10.e6, nu=0.3):
     return np.polyfit(ys, u[DOF*tip + 2], 1)[0]
 
 
+@pytest.mark.slow
 def test_strip_torsion_is_continuous_across_the_gate():
     r"""Clamped strip 2 x 0.5, h = 0.04, square elements, unit end torque
 

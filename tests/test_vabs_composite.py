@@ -33,6 +33,7 @@ import sys
 import os
 
 import numpy as np
+import pytest
 
 from pyfe3d.vabs import (CrossSection, orthotropic, classical_from_timoshenko,
                          yu_to_pyfe3d, pyfe3d_to_yu)
@@ -62,6 +63,7 @@ def pipe_mesh(ns, na, nt, etype, L=2., Ri=0.3, Ro=0.5):
                     nt, etype)
 
 
+@pytest.mark.slow
 def test_CUS_Yu2012_Table2():
     r"""Box beam CUS: outer width ``0.953 in.``, height ``0.53 in.``,
     thickness ``0.03 in.``, six plies at 15 degrees in every wall, Table 1
@@ -99,6 +101,7 @@ def test_CUS_Yu2012_Table2():
     assert np.allclose(sec.Kc, Kc, rtol=1e-10, atol=1e-10*np.abs(Kc).max())
 
 
+@pytest.mark.slow
 def test_pipe_Yu2005_Table3():
     r"""Anisotropic pipe of Fig. 4 and Table 2 of Yu and Hodges (2005): two
     layers of thickness ``0.1 in.``, 0 degrees outside and 90 degrees
@@ -167,6 +170,7 @@ def test_pipe_Yu2005_Table3():
                 assert abs(Kt[i, j]) < 1e-10*np.sqrt(Kt[i, i]*Kt[j, j])
 
 
+@pytest.mark.slow
 def test_CAS1_Yu2002_Table2():
     r"""Box beam CAS1 of Table 1 of Yu et al. (2002), same geometry as the
     CUS box, ``nu_lt = nu_tn = 0.42``, ``Glt = 8.7e5 psi``, ``Gtn = 6.96e5

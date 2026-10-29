@@ -52,6 +52,17 @@ integration of the repository::
 Several tests can also be run as scripts, plotting their results, e.g.
 ``python test_quad4_static_point_load.py``.
 
+The tests marked ``slow``, ``@pytest.mark.slow``, registered in
+``pyproject.toml``, are those that are slow under the line tracing of the
+Cython code and cover no line of the ``.pyx`` files that the other tests
+do not cover. Every test runs by default; the coverage workflow,
+``.github/workflows/coverage.yml``, deselects them with ``-m "not slow"``
+in its run with the line-traced build only, and runs them in its run with
+the optimized build, which measures the Python code. A new test that is
+slow under line tracing can be marked once the coverage of the other tests,
+measured with ``pytest --cov --cov-context=test``, is shown to include
+every line of the ``.pyx`` files that it covers.
+
 
 Building the documentation
 --------------------------

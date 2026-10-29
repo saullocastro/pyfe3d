@@ -52,6 +52,7 @@ import sys
 sys.path.append('..')
 
 import numpy as np
+import pytest
 from scipy.sparse import coo_matrix
 from scipy.sparse.linalg import spsolve
 
@@ -165,6 +166,7 @@ def cook(n, drilling_model):
     return np.interp(52., ys[o], vs[o])
 
 
+@pytest.mark.slow
 def test_C1_cook_skew_membrane():
     r"""Tip displacement at (48, 52), reference 23.91
 
@@ -545,6 +547,7 @@ def allman_cantilever(nx, ny, drilling_model):
     return np.interp(0., y[pos][o], u[1::DOF][pos][o])
 
 
+@pytest.mark.slow
 def test_C4_allman_cantilever():
     r"""Tip deflection of Allman's cantilever, reference 0.3558
 

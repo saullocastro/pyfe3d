@@ -2,6 +2,7 @@ import sys
 sys.path.append('..')
 
 import numpy as np
+import pytest
 from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import isotropic_plate
@@ -9,6 +10,7 @@ from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 from pyfe3d.solver import natural_frequency
 
 
+@pytest.mark.slow
 def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=3):
     r"""Fundamental frequency of a simply supported plate, ``a = 0.3``,
     ``b = 0.5``, ``h = 0.01``, with the consistent, lumped and reduced mass
