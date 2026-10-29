@@ -663,8 +663,11 @@ def test_sandwich_antiplane_core_converges_to_allen_1969():
 
     Allen, H. G., "Analysis and Design of Structural Sandwich Panels",
     Pergamon Press, 1969, Chap. 2, pp. 8-47,
-    https://doi.org/10.1016/B978-0-08-012870-2.50006-7. An antiplane core has
-    ``E_c = 0`` and a finite transverse shear modulus ``G_c``, p. 14. Then
+    https://doi.org/10.1016/B978-0-08-012870-2.50006-7. An antiplane core is
+    "an idealized core in which the modulus of elasticity in planes parallel
+    with the faces is zero but the shear modulus in planes perpendicular to
+    the faces is finite", ``E_c = 0``, p. 14, given here as ``laminaprop =
+    (0, 0, nu, 0, G_c, G_c)``, see :func:`.read_laminaprop`. Then
     the shear stress is constant in the core, Eq. (2.12), p. 13, ``tau_c = Q
     E_f t d/(2 D)``, with ``D = E_f (t^3/6 + t d^2/2)``, Eq. (2.2), p. 9,
     i.e. ``tau_c = Q/(d phi)``, ``phi = 1 + t^2/(3 d^2)``, and parabolic in
@@ -691,33 +694,34 @@ def test_sandwich_antiplane_core_converges_to_allen_1969():
 
     ===  =======  =========  =============  ===========  ======
      k    eps      phi^2-1    A/A_Allen - 1  pyfe3d vs    K
-                                             Eq. (44)
+                                             Eq. (45)
     ===  =======  =========  =============  ===========  ======
-     1    3.4e-4   1.51e-3    1.17e-3        1e-15        0.1003
-     2    3.3e-6   1.65e-5    1.32e-5        2e-14        0.0918
-     3    3.3e-8   1.67e-7    1.33e-7        9e-14        0.0910
+     1    3.4e-4   1.51e-3    1.17e-3        7e-16        0.1003
+     2    3.3e-6   1.65e-5    1.32e-5        1e-14        0.0918
+     3    3.3e-8   1.67e-7    1.33e-7        7e-14        0.0910
     ===  =======  =========  =============  ===========  ======
 
     The deviation from Allen decreases by a factor 100 per step, as both
     bounds, while K tends to 1/11, such that the constant 5/6 overestimates
-    the shear stiffness 9.2 times. ``read_laminaprop`` divides by ``E_1`` of
-    the core, ``nu21 = nu12 E2/E1``, so ``E_c = 0`` is replaced by ``E_c/E_f
-    = 1e-12``, which changes K by 3.3e-13 relative to the antiplane Eq.
-    (45), measured with Eq. (44) of Vlachoutsis. This difference, plus
-    1e-12 for the round-off of pyfe3d against Eq. (44), is the only allowance
-    added to the derived bounds.
+    the shear stiffness 9.2 times. The column "pyfe3d vs Eq. (45)" is the
+    largest relative difference of ``A44`` and ``A55`` of ``'rohwer'`` and
+    ``'vlachoutsis'`` and of the independent ``rohwer_stiffness`` from
+    ``K_ant sum_i G_i h_i``. With ``E_c = 0``, Eq. (44) of Vlachoutsis
+    reduces to Eq. (45), ``K = K_ant``, checked exactly, and the only
+    allowance added to the derived bounds is 1e-12 for round-off, also the
+    tolerance against Eq. (45).
     """
     Ef = 70e3
     nu = 0.3
     Gf = Ef/(2*(1 + nu))
     c = 10.
-    Ec = 1e-12*Ef
     lf = (Ef, Ef, nu, Gf, Gf, Gf)
     devs = []
     for k in [1, 2, 3]:
         t = c*10.**(-k)/2
         Gc = Gf*10.**(-k)/10
-        lc = (Ec, Ec, nu, Ec/(2*(1 + nu)), Gc, Gc)
+        # NOTE antiplane core, E_c = 0 in the plane of the faces
+        lc = (0., 0., nu, 0., Gc, Gc)
         plyts = [t, c, t]
         h = c + 2*t
         p = c/h
@@ -726,12 +730,12 @@ def test_sandwich_antiplane_core_converges_to_allen_1969():
         eps = Gc/Gf*2*t*(h**2/3 - h*t/2 + t**2/5)/(c*d**2)
         A_allen = Gc*d**2/c
         Abar = 2*t*Gf + c*Gc
-        K, K_ant, _ = vlachoutsis_sandwich_K(p, Ec/Ef, Gc/Gf)
-        # NOTE the closed form above is Eq. (45) of Vlachoutsis (1992)
+        K, K_ant, _ = vlachoutsis_sandwich_K(p, 0., Gc/Gf)
+        # NOTE the closed form above is Eq. (45) of Vlachoutsis (1992), and
+        #      Eq. (44) reduces to it for Dc/Df = 0
         assert np.isclose(A_allen*phi**2/(1 + eps), K_ant*Abar, rtol=1e-13)
-        # NOTE E_c/E_f = 1e-12 is the antiplane core to round-off
-        slack = abs(K/K_ant - 1) + 1e-12
-        assert slack < 2e-12
+        assert K == K_ant
+        slack = 1e-12
         for mode in ['rohwer', 'vlachoutsis']:
             prop = laminated_plate(stack=[0, 0, 0], plyts=plyts,
                                    laminaprops=[lf, lc, lf],

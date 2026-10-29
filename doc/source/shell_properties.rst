@@ -215,7 +215,12 @@ Vlachoutsis (1992), Tables I and II, down to `K = 0.01964`, for which `5/6`
 overestimates the shear stiffness 42 times, and, for an antiplane core, the
 shear stiffness `G_c d^2/c` of Allen (1969), Eq. (2.15b), with `d` the
 distance between the centroids of the faces, within the bounds given by the
-local bending and the shear strains of the faces that Allen neglects:
+local bending and the shear strains of the faces that Allen neglects. The
+antiplane core, with zero moduli in the plane of the faces and finite
+transverse shear moduli (Allen, 1969, p. 14), is given by ``laminaprop =
+(0, 0, nu12, 0, G13, G23)``, or with nine entries ``(0, 0, nu12, 0, G13,
+G23, E33, 0, 0)``, see :func:`.read_laminaprop`; it adds only transverse
+shear stiffness:
 
 .. literalinclude:: ../../tests/test_shellprop_transverse_shear.py
     :pyobject: test_sandwich_antiplane_core_converges_to_allen_1969
