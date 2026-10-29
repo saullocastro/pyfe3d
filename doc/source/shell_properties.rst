@@ -208,3 +208,19 @@ cross-ply laminate given by Rohwer (1988):
 
 Rohwer, K., Improved transverse shear stiffness for layered finite elements,
 DFVLR-FB 88-32, 1988.
+
+For a sandwich, stiff faces on a soft core, the factor `5/6` is badly wrong:
+``'rohwer'`` and ``'vlachoutsis'`` reproduce the factors tabulated by
+Vlachoutsis (1992), Tables I and II, down to `K = 0.01964`, for which `5/6`
+overestimates the shear stiffness 42 times, and, for an antiplane core, the
+shear stiffness `G_c d^2/c` of Allen (1969), Eq. (2.15b), with `d` the
+distance between the centroids of the faces, within the bounds given by the
+local bending and the shear strains of the faces that Allen neglects:
+
+.. literalinclude:: ../../tests/test_shellprop_transverse_shear.py
+    :pyobject: test_sandwich_antiplane_core_converges_to_allen_1969
+
+Allen, H. G., Analysis and Design of Structural Sandwich Panels, Pergamon
+Press, 1969, Chap. 2,
+`doi:10.1016/B978-0-08-012870-2.50006-7
+<https://doi.org/10.1016/B978-0-08-012870-2.50006-7>`_.
