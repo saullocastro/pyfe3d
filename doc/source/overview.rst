@@ -173,7 +173,12 @@ steps:
    dof left without stiffness, e.g. an unattached node, an unstiffened
    drilling rotation or a missing boundary condition, raises a
    :class:`numpy.linalg.LinAlgError` naming the dofs, see
-   :func:`.check_null_rows_cols`.
+   :func:`.check_null_rows_cols`. Insufficient boundary conditions, a
+   mechanism or re-entrant elements leave `\boldsymbol{K}_{{C0}_{uu}}` not positive
+   definite, which :func:`.linear_static`, :func:`.linear_buckling` and
+   the linear :meth:`.Analysis.static` report with a
+   :class:`numpy.linalg.LinAlgError` naming the likely causes, see
+   :doc:`eigenvalue_analyses`.
 6. Solution: the linear static system `\boldsymbol{K}_{{C0}_{uu}} \boldsymbol{u}_u = \boldsymbol{f}_u`, with
    :func:`.solve` or :func:`scipy.sparse.linalg.spsolve`; the eigenvalue
    problems with :func:`.linear_buckling`, :func:`.natural_frequency` and
