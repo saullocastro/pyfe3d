@@ -56,8 +56,12 @@ geometrically non-linear analyses.
         centroid, locks and is reduced by the factor of
         ``alpha_shear_locking``, ``0.7`` by default, a value that must be
         verified per problem class and per mesh: on thin plates the error
-        grows as the mesh is refined, before it decreases, see
-        :mod:`.tria3r`.
+        grows as the mesh is refined and then stalls, at -14 % on the
+        deflection of a simply supported plate with `a/h = 1000`, until the
+        elements are about as small as the thickness, see :mod:`.tria3r`.
+        Proposal: ``shear_model = 1`` replaces its transverse shear by the
+        discrete shear gap field of :class:`.Tria3DSG` and keeps its Allman
+        membrane.
 
 Practical rules:
 

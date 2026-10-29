@@ -72,22 +72,40 @@ where `\alpha` is a positive constant parameters (see the ``alpha_shear_locking`
 `\ell` is the longest edge of the corresponding triangle, and `h` the total thickness of the element.
 
 Note that `factor \rightarrow 0` as the element size shrinks, so the true
-stiffness is recovered under mesh refinement and the scheme is consistent.
-The rate matters though: `\ell < 0.12 h` is needed for the stabilised
-stiffness to be within 1 per cent of the true one, which for a thin shell is
-not a mesh anyone would build. What makes the scheme legitimate all the same
-is that in a load-driven problem the error it introduces is
-`factor \times f_s`, with `f_s` the shear fraction of the response, and for a
-plate or beam of span `L` discretised with `n` elements
+stiffness is recovered once `\ell` is well below `h`: `\ell < 0.12 h` is
+needed for the stabilised stiffness to be within 1 per cent of the true one,
+which for a thin shell is not a mesh anyone would build. Before that the
+error does not behave as a discretisation error. The factor scales the
+transverse shear stiffness, but the centroid-sampled shear field it scales
+still locks, so on a thin plate the error stalls at a value set by `\alpha`
+and by the mesh pattern instead of decreasing. Measured on a simply
+supported square plate under a uniform pressure, with `n \times n` squares
+cut along one diagonal, against the closed form of Timoshenko and
+Woinowsky-Krieger (1959), Table 8, p. 120, the error of the centre
+deflection, in per cent, is::
 
-.. math::
+    n x n squares          8x8    16x16   32x32   64x64  128x128
+    a/h = 1000, alpha 0.7  -8.6   -13.0   -14.1   -14.4   -14.3
+    a/h = 100,  alpha 0.7  -8.5   -12.8   -13.3   -11.6    -7.3
+    a/h = 1000, alpha 0.1 -52.1   -51.5   -51.3   -50.9   -49.6
+    a/h = 1000, alpha 0.3 -26.8   -27.4   -27.5   -27.5   -27.1
+    a/h = 1000, alpha 2   +20.0    +0.8    -4.1    -5.3    -5.6
 
-    factor \times f_s \sim \frac{\alpha \ell^2}{h^2} c \frac{h^2}{L^2}
-                       = \frac{\alpha c}{n^2}
-
-so the thickness cancels and the error behaves as an ordinary
-`O(1/n^2)` discretisation error. This is measured in
-``tests/test_transverse_shear_stiffness.py``.
+with :class:`pyfe3d.tria3dsg.Tria3DSG` at `-12.3`, `-0.8`, `-0.1` and
+`-0.02` per cent for `n` = 16 to 128 and `a/h = 1000`. The stall moves
+with `\alpha`, a larger value lowering it at the price of a much too
+flexible coarse mesh, so no constant `\alpha` makes the element converge.
+At `a/h = 100` the error has started to fall at `n = 128`, where
+`\ell/h = 1.1`. Lyly, Stenberg and Vihinen [1]_ (p. 348) state that the
+stabilisation was first introduced for a piecewise quadratic deflection, and
+that a linear or bilinear deflection needs an MITC reduction operator with
+it; the centroid sample is neither, which is the root cause. The product
+`factor \times f_s`, with `f_s` the physical shear fraction of the response,
+does fall as `1/n^2`, see ``tests/test_transverse_shear_stiffness.py``, but
+it is only the softening of the physical shear and not the dominant error.
+The ``shear_model`` attribute of :class:`.Tria3R` is a proposal that
+replaces the centroid sample by the discrete shear gap field of
+:class:`.Tria3DSG`.
 
 .. warning:: The default `\alpha = 0.7` is roughly seven times the value
     of Stenberg's method in the references above, which is near `0.1`:
@@ -624,6 +642,77 @@ cdef void allman_delta_Ke(double *S_x, double *S_y, double *xe, double area,
             Ke[18*i + j] += area*gamma*bdrill[i]*bdrill[j]
 
 
+cdef void dsg_shear_Ke(double *S_x, double *S_y, double *xe, double area,
+                       double A44, double A45, double A55,
+                       double *Ke) noexcept nogil:
+    r"""Add the discrete shear gap transverse shear stiffness, triangle
+
+    Adds to the 18 by 18 buffer ``Ke``, stored row by row, the transverse
+    shear stiffness `A_e \boldsymbol{B}_s^\top \boldsymbol{A}_{ts}
+    \boldsymbol{B}_s` of the discrete shear gap (DSG) field of Bletzinger,
+    Bischoff and Ramm (2000) [1]_, averaged over the three choices of the
+    starting node, identical to the operator of
+    :class:`pyfe3d.tria3dsg.Tria3DSG`. Used by :class:`.Tria3R` when
+    ``shear_model = 1``, a proposal, see the attribute.
+
+    Parameters
+    ----------
+    S_x, S_y : double pointer
+        The three constant Cartesian derivatives of the area coordinates.
+    xe : double pointer
+        Nodal coordinates in the element coordinate system.
+    area : double
+        Element area.
+    A44, A45, A55 : double
+        Transverse shear stiffnesses in the element coordinate system, `A_{44}`
+        pairing with `\gamma_{yz} = w_{,y} - r_x` and `A_{55}` with
+        `\gamma_{xz} = w_{,x} + r_y`.
+    Ke : double pointer
+        Buffer of 324 positions, added to in place.
+
+    References
+    ----------
+    .. [1] Bletzinger, K.-U., Bischoff, M., and Ramm, E., A unified approach
+       for shear-locking-free triangular and rectangular shell finite
+       elements, Computers & Structures, 75(3), 321-334, 2000.
+       https://doi.org/10.1016/S0045-7949(99)00140-6
+
+    """
+    cdef int i, j, ip, iq, kk
+    cdef double dx, dy, cx, cy
+    cdef double Bxz[18]
+    cdef double Byz[18]
+    for i in range(18):
+        Bxz[i] = 0.
+        Byz[i] = 0.
+    # NOTE same operator as Tria3DSG._update_probe_BL, with p the starting
+    #      node and q either of the other two:
+    #      dw_q = (w_q - w_p) + (ry_p + ry_q) dx/2 - (rx_p + rx_q) dy/2
+    for ip in range(3):
+        for kk in range(1, 3):
+            iq = (ip + kk) % 3
+            dx = xe[3*iq + 0] - xe[3*ip + 0]
+            dy = xe[3*iq + 1] - xe[3*ip + 1]
+            cx = S_x[iq]/3.
+            cy = S_y[iq]/3.
+            Bxz[DOF*iq + 2] += cx
+            Bxz[DOF*ip + 2] -= cx
+            Bxz[DOF*ip + 4] += cx*0.5*dx
+            Bxz[DOF*iq + 4] += cx*0.5*dx
+            Bxz[DOF*ip + 3] -= cx*0.5*dy
+            Bxz[DOF*iq + 3] -= cx*0.5*dy
+            Byz[DOF*iq + 2] += cy
+            Byz[DOF*ip + 2] -= cy
+            Byz[DOF*ip + 4] += cy*0.5*dx
+            Byz[DOF*iq + 4] += cy*0.5*dx
+            Byz[DOF*ip + 3] -= cy*0.5*dy
+            Byz[DOF*iq + 3] -= cy*0.5*dy
+    for i in range(18):
+        for j in range(18):
+            Ke[18*i + j] += area*(Byz[i]*(A44*Byz[j] + A45*Bxz[j])
+                                  + Bxz[i]*(A45*Byz[j] + A55*Bxz[j]))
+
+
 cdef class Tria3RData:
     r"""
     Used to allocate memory for the sparse matrices.
@@ -803,6 +892,15 @@ cdef class Tria3R:
         problem and not a constant of the element; :class:`.Tria3DSG` takes
         no such parameter.
         Dimensionless.
+    shear_model, : int
+        PROPOSAL, not part of a release. Selects the transverse shear field.
+        The default ``0`` samples the shear strains at the centroid and
+        divides the transverse shear stiffnesses by `1 + \alpha \ell^2/h^2`,
+        see ``alpha_shear_locking``. ``1`` uses the discrete shear gap field
+        of :class:`.Tria3DSG` instead, which is locking-free without any
+        parameter, keeping the Allman membrane of this element; set
+        ``alpha_shear_locking = 0.`` with it, since the factor is then applied
+        on top of the DSG field exactly as in :class:`.Tria3DSG`.
     drilling_model, : int
         Selects how the drilling degree-of-freedom `r_z` is given stiffness.
         The default ``0`` is the physics-based stiffness, for which the
@@ -944,6 +1042,7 @@ cdef class Tria3R:
     cdef public double K6ROT
     cdef public double alpha_shear_locking
     cdef public int drilling_model
+    cdef public int shear_model
     cdef public double gamma_rz
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public double m11, m12, m21, m22
@@ -967,6 +1066,7 @@ cdef class Tria3R:
         self.K6ROT = 100. # NOTE default value in MSC Nastran
         self.alpha_shear_locking = 0.7
         self.drilling_model = 0 # NOTE Allman + Hughes-Brezzi, the default
+        self.shear_model = 0 # NOTE centroid-sampled shear, the default
         self.gamma_rz = -1. # NOTE negative means "use A66"
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.
@@ -1328,6 +1428,7 @@ cdef class Tria3R:
         cdef double S1_x, S2_x, S3_x, S1_y, S2_y, S3_y
         cdef double S1, S2
         cdef double factor, maxl, l12, l23, l31
+        cdef double As44, As45, As55
         cdef int qi, qj
         cdef double gamma_drill
         cdef double S_x[3]
@@ -1411,6 +1512,16 @@ cdef class Tria3R:
             A44 = 1 / (1 + factor) * A44
             A45 = 1 / (1 + factor) * A45
             A55 = 1 / (1 + factor) * A55
+            # NOTE PROPOSAL shear_model = 1: the generated centroid shear
+            #      terms are switched off and the DSG field of Tria3DSG is
+            #      added through the 18 by 18 block below
+            As44 = A44
+            As45 = A45
+            As55 = A55
+            if self.shear_model == 1:
+                A44 = 0.
+                A45 = 0.
+                A55 = 0.
 
             # NOTE the fictitious penalty is switched off when the
             #      physics-based drilling stiffness is active, so that the
@@ -1652,19 +1763,26 @@ cdef class Tria3R:
             #      that update_KC0 assembles keeps finte exactly equal to
             #      the product of the element matrix with the element
             #      displacements
-            if self.drilling_model == 0:
-                if self.gamma_rz >= 0.:
-                    gamma_drill = self.gamma_rz
-                else:
-                    gamma_drill = A66
+            if self.drilling_model == 0 or self.shear_model == 1:
                 S_x[0] = S1_x
                 S_x[1] = S2_x
                 S_x[2] = S3_x
                 S_y[0] = S1_y
                 S_y[1] = S2_y
                 S_y[2] = S3_y
-                allman_delta_Ke(S_x, S_y, &self.probe.xe[0], self.area,
-                                Ae, Be, gamma_drill, Kedelta)
+                if self.drilling_model == 0:
+                    if self.gamma_rz >= 0.:
+                        gamma_drill = self.gamma_rz
+                    else:
+                        gamma_drill = A66
+                    allman_delta_Ke(S_x, S_y, &self.probe.xe[0], self.area,
+                                    Ae, Be, gamma_drill, Kedelta)
+                else:
+                    for qi in range(324):
+                        Kedelta[qi] = 0.
+                if self.shear_model == 1:
+                    dsg_shear_Ke(S_x, S_y, &self.probe.xe[0], self.area,
+                                 As44, As45, As55, Kedelta)
                 for qi in range(18):
                     for qj in range(18):
                         finte[qi] += Kedelta[18*qi + qj]*ue[qj]
@@ -1767,6 +1885,7 @@ cdef class Tria3R:
         cdef double S1_x, S2_x, S3_x, S1_y, S2_y, S3_y
         cdef double S1, S2
         cdef double factor, maxl, l12, l23, l31
+        cdef double As44, As45, As55
         cdef int bi, bj, qa, qb, qi, qj
         cdef double tmp, gamma_drill
         cdef double S_x[3]
@@ -1848,6 +1967,16 @@ cdef class Tria3R:
             A44 = 1 / (1 + factor) * A44
             A45 = 1 / (1 + factor) * A45
             A55 = 1 / (1 + factor) * A55
+            # NOTE PROPOSAL shear_model = 1: the generated centroid shear
+            #      terms are switched off and the DSG field of Tria3DSG is
+            #      added through the 18 by 18 block below
+            As44 = A44
+            As45 = A45
+            As55 = A55
+            if self.shear_model == 1:
+                A44 = 0.
+                A45 = 0.
+                A55 = 0.
 
             # NOTE the fictitious penalty is switched off when the
             #      physics-based drilling stiffness is active, so that the
@@ -3713,19 +3842,26 @@ cdef class Tria3R:
             #      those. The sparse pattern is the full 18 by 18 element
             #      matrix stored row by row, so the entry of the element
             #      degrees-of-freedom i and j sits at init_k_KC0 + 18*i + j
-            if self.drilling_model == 0:
-                if self.gamma_rz >= 0.:
-                    gamma_drill = self.gamma_rz
-                else:
-                    gamma_drill = A66
+            if self.drilling_model == 0 or self.shear_model == 1:
                 S_x[0] = S1_x
                 S_x[1] = S2_x
                 S_x[2] = S3_x
                 S_y[0] = S1_y
                 S_y[1] = S2_y
                 S_y[2] = S3_y
-                allman_delta_Ke(S_x, S_y, &self.probe.xe[0], self.area,
-                                Ae, Be, gamma_drill, Kedelta)
+                if self.drilling_model == 0:
+                    if self.gamma_rz >= 0.:
+                        gamma_drill = self.gamma_rz
+                    else:
+                        gamma_drill = A66
+                    allman_delta_Ke(S_x, S_y, &self.probe.xe[0], self.area,
+                                    Ae, Be, gamma_drill, Kedelta)
+                else:
+                    for i in range(324):
+                        Kedelta[i] = 0.
+                if self.shear_model == 1:
+                    dsg_shear_Ke(S_x, S_y, &self.probe.xe[0], self.area,
+                                 As44, As45, As55, Kedelta)
                 rmat[0] = r11
                 rmat[1] = r12
                 rmat[2] = r13
