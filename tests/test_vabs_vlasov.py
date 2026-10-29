@@ -114,6 +114,12 @@ def test_strip_isotropic_Table1(constraint):
     else:
         # NOTE 9.5 per cent lower, close to Vlasov's value, Eq. (17)
         assert np.isclose(sec.Kv[4, 4], E*h**3*b**3/144, rtol=5e-3)
+    # NOTE the shear centre of calc_stiffness, with the same constraints,
+    #      is reused
+    Kv = sec.Kv.copy()
+    sec.calc_stiffness(constraint)
+    sec.calc_vlasov(constraint)
+    assert np.allclose(sec.Kv, Kv, rtol=1e-10, atol=1e-10*np.abs(Kv).max())
 
 
 @pytest.mark.parametrize('constraint', ['yu2002', 'yu2012'])
@@ -278,11 +284,6 @@ def test_consistency():
     ref.calc_vlasov('yu2012')
     assert np.allclose(ref.Kv[:4, :4], Kv[:4, :4], rtol=1e-8,
                        atol=1e-8*np.abs(Kv).max())
-    # NOTE the shear centre of calc_stiffness, with the same constraints,
-    #      is reused
-    sec.calc_stiffness('yu2002')
-    sec.calc_vlasov('yu2002')
-    assert np.allclose(sec.Kv, Kv, rtol=1e-8, atol=1e-8*np.abs(Kv).max())
 
 
 def test_translated():
