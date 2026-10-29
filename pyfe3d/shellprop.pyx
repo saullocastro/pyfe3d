@@ -73,13 +73,16 @@ cdef class MatLamina:
     Orthotropic material lamina
 
     Container of the elastic, thermal, density and strength properties of a
-    material, created with all attributes equal to zero. After the elastic
-    properties are set, :meth:`rebuild` computes the constitutive constants
-    ``q11`` to ``q66``, the stiffness constants ``c11`` to ``c66`` and the
-    invariants ``u1`` to ``u7``, all with the dimension of force per unit
-    area; :meth:`trace_normalize_plane_stress` divides some of them by the
-    trace, such that they become dimensionless. Usually created by
-    :func:`.read_laminaprop`.
+    material, created with all attributes equal to zero, except
+    ``plane_stress = True``. After the elastic properties are set,
+    :meth:`rebuild` computes the constitutive constants ``q11`` to ``q66``,
+    the stiffness constants ``c11`` to ``c66`` and the invariants ``u1`` to
+    ``u7``, all with the dimension of force per unit area;
+    :meth:`trace_normalize_plane_stress` divides some of them by the trace,
+    such that they become dimensionless. Usually created by
+    :func:`.read_laminaprop`. By default, the constitutive constants and the
+    invariants are those of plane stress, used by the shell elements, also
+    when ``e3``, ``nu13`` and ``nu23`` are given, see :meth:`rebuild`.
 
     Attributes
     ----------
@@ -127,6 +130,10 @@ cdef class MatLamina:
         area
     ss12 : float
         allowable in-plane stress for shear, force per unit area
+    plane_stress : bool
+        ``True`` when the constitutive constants and the invariants are
+        those of plane stress, ``False`` when they are three-dimensional, as
+        selected in the last call of :meth:`rebuild`. Read-only.
     q11 : float
         lamina constitutive constant 11
     q12 : float
@@ -168,9 +175,9 @@ cdef class MatLamina:
 
     """
     def __init__(MatLamina self):
-        pass
+        self.plane_stress = True
 
-    cpdef void rebuild(MatLamina self):
+    cpdef void rebuild(MatLamina self, bint plane_stress=True):
         r"""Update constitutive and invariant terms
 
         Computes, from the moduli ``e1``, ``e2``, ``e3``, ``g12``, ``g13``,
@@ -180,12 +187,49 @@ cdef class MatLamina:
         invariants ``u1`` to ``u7``, with the dimension of force per unit
         area. ``e1`` and ``e2`` must be non-zero.
 
+        Parameters
+        ----------
+        plane_stress : bool, optional
+            ``True`` (default): ``q11`` to ``q33`` and the invariants ``u1``
+            to ``u5`` are those of plane stress, `\sigma_{33} = 0`, which
+            the shell elements use, whether or not ``e3``, ``nu13`` and
+            ``nu23`` are given. ``False``: they are three-dimensional, e.g.
+            for continuum shell elements, see the Notes. The choice is
+            stored in the attribute ``plane_stress``. The stiffness
+            constants ``c11`` to ``c66`` are three-dimensional in both cases.
+
         Notes
         -----
-        With `\Delta = 1 - \nu_{12}\nu_{21} - \nu_{13}\nu_{31} -
-        \nu_{23}\nu_{32} - \nu_{12}\nu_{23}\nu_{31} -
+        With ``plane_stress=True``, the default, the constitutive constants
+        are the plane-stress reduced stiffnesses of Jones [3]_, Sec. 2.5,
+        Eq. (2.66), p. 72, and of Reddy [1]_, Sec. 2.4, Eq. (2.4.4), p. 101:
+
+        .. math::
+
+            q_{11} = \frac{e_1}{1 - \nu_{12}\nu_{21}}, \quad
+            q_{12} = q_{21} = \frac{\nu_{21} e_1}{1 - \nu_{12}\nu_{21}},
+            \quad
+            q_{22} = \frac{e_2}{1 - \nu_{12}\nu_{21}} \\
+            q_{44} = g_{23}, \quad q_{55} = g_{13}, \quad q_{66} = g_{12}
+
+        and `q_{13} = q_{23} = q_{31} = q_{32} = q_{33} = 0`. They follow
+        from the three-dimensional stiffnesses with `\sigma_{33} = 0`,
+        `q_{ij} = c_{ij} - c_{i3} c_{j3}/c_{33}`, `i, j = 1, 2` (Jones [3]_,
+        Eq. (2.64), p. 72), and do not depend on ``e3``, ``nu13`` and
+        ``nu23``: "the reduced stiffnesses involve six independent
+        engineering constants: `E_1`, `E_2`, `\nu_{12}`, `G_{12}`, `G_{13}`,
+        and `G_{23}`" (Reddy [1]_, p. 101). They are the stiffnesses of
+        :meth:`.Lamina.rebuild`, such that
+        :func:`.shellprop_from_LaminationParameters` with the lamination
+        parameters of :meth:`.ShellProp.calc_lamination_parameters` gives the
+        `A_{ij}`, `B_{ij}` and `D_{ij}` of :func:`.laminated_plate` for any
+        ``laminaprop``.
+
+        With ``plane_stress=False`` and `\Delta = 1 - \nu_{12}\nu_{21} -
+        \nu_{13}\nu_{31} - \nu_{23}\nu_{32} - \nu_{12}\nu_{23}\nu_{31} -
         \nu_{13}\nu_{21}\nu_{32}`, the constitutive constants are the
-        stiffnesses of the orthotropic material in its principal axes [2]_:
+        three-dimensional stiffnesses of the orthotropic material in its
+        principal axes [2]_:
 
         .. math::
 
@@ -204,12 +248,9 @@ cdef class MatLamina:
         satisfy the reciprocity `\nu_{ij}/e_i = \nu_{ji}/e_j`, see
         :func:`.read_laminaprop`; the matrix of `q_{ij}`, `i, j = 1, 2, 3`, is
         then the inverse of the upper-left block of the compliance matrix
-        given below. With `e_3 = 0`, as given by
+        given below, i.e. `q_{ij} = c_{ij}`. With `e_3 = 0`, as given by
         :func:`.read_laminaprop` for 2 or 6 entries, `\nu_{31} = \nu_{32} =
-        0` and `q_{11}`, `q_{12}`, `q_{22}` are the plane-stress reduced
-        stiffnesses `e_1/(1 - \nu_{12}\nu_{21})`, `e_1 \nu_{21}/(1 -
-        \nu_{12}\nu_{21})` and `e_2/(1 - \nu_{12}\nu_{21})` used by
-        :meth:`.Lamina.rebuild`.
+        0` and they are equal to the plane-stress ones.
 
         The stiffness constants are computed with `\delta = (1 -
         \nu_{12}\nu_{21} - \nu_{23}\nu_{32} - \nu_{31}\nu_{13} -
@@ -233,8 +274,9 @@ cdef class MatLamina:
         -\nu_{13}/e_1`, `S_{23} = -\nu_{23}/e_2`, `S_{44} = 1/g_{23}`,
         `S_{55} = 1/g_{13}` and `S_{66} = 1/g_{12}` [1]_.
 
-        The invariants `u_1` to `u_5` are those of Jones [3]_, and `u_6`,
-        `u_7` the transverse shear invariants of the ABAQUS manual [4]_:
+        The invariants `u_1` to `u_5` are those of Tsai and Pagano, as given
+        by Jones [3]_, Sec. 2.7, Eq. (2.99), p. 86, and `u_6`, `u_7` the
+        transverse shear invariants of the ABAQUS manual [4]_:
 
         .. math::
 
@@ -249,19 +291,26 @@ cdef class MatLamina:
         They give the stiffnesses of a ply at any angle, see
         :meth:`get_invariant_matrix`.
 
-        The intended use is plane stress, with the default `e_3 = 0` of
-        :func:`.read_laminaprop` for 2 or 6 entries: `q_{11}`, `q_{12}`,
-        `q_{22}` are then the plane-stress reduced stiffnesses also used by
-        :meth:`.Lamina.rebuild`, and the invariants give the plane-stress
-        stiffnesses `q_{ijL}` of the ply in the laminate axes. With `e_3 \ne
-        0`, `q_{11}`, `q_{12}`, `q_{22}` are the three-dimensional stiffnesses
-        `c_{11}`, `c_{12}`, `c_{22}`, and the invariants give the components
-        11, 22, 12, 66, 16, 26, 44, 45 and 55 of the three-dimensional
-        stiffness matrix of :meth:`get_constitutive_matrix` rotated by the
-        ply angle about the 3 axis, which differ from the plane-stress
-        `q_{ijL}` of :meth:`.Lamina.rebuild`. This is meant to compute
-        three-dimensional properties, e.g. for continuum shell elements
-        integrated with a user material (UMAT).
+        With ``plane_stress=True``, the invariants are those of the
+        plane-stress reduced stiffnesses, as in Jones [3]_, and give the
+        plane-stress stiffnesses `q_{ijL}` of the ply in the laminate axes of
+        :meth:`.Lamina.rebuild`, Jones [3]_, Eqs. (2.85) and (2.98), pp.
+        77 and 85. This is what the shell elements need, since the stress
+        resultants of the laminate integrate the plane-stress `q_{ijL}`
+        (Jones [3]_, Eq. (4.24), p. 198; Reddy [1]_, Eq. (3.3.38), p. 128).
+
+        With ``plane_stress=False`` and `e_3 \ne 0`, `q_{11}`, `q_{12}`,
+        `q_{22}` are the three-dimensional stiffnesses `c_{11}`, `c_{12}`,
+        `c_{22}`, and the invariants give the components 11, 22, 12, 66, 16,
+        26, 44, 45 and 55 of the three-dimensional stiffness matrix of
+        :meth:`get_constitutive_matrix` rotated by the ply angle about the 3
+        axis, whose in-plane components transform with the same formulas as
+        the plane-stress ones. They are stiffer than the plane-stress
+        `q_{ijL}`, e.g. `\lambda + 2\mu = E (1 - \nu)/((1 + \nu)(1 - 2\nu))`
+        instead of `E/(1 - \nu^2)` for an isotropic material, and are meant
+        for three-dimensional properties, e.g. for continuum shell elements
+        integrated with a user material (UMAT), not for the shell elements
+        of pyfe3d.
 
         References
         ----------
@@ -299,25 +348,42 @@ cdef class MatLamina:
         self.c55 = self.g13
         self.c66 = self.g12
 
-        # from references:
-        #   hansen_hvejsen_2007 page 43
-        #
-        #   Guerdal Z., R. T. Haftka and P. Hajela (1999), Design and
-        #   Optimization of Laminated Composite Materials, Wiley-Interscience.
-        den = (1 - self.nu12 * self.nu21
-                 - self.nu13 * self.nu31
-                 - self.nu23 * self.nu32
-                 - self.nu12 * self.nu23 * self.nu31
-                 - self.nu13 * self.nu21 * self.nu32)
-        self.q11 = self.e1*(1         - self.nu23 * self.nu32) / den
-        self.q12 = self.e1*(self.nu21 + self.nu23 * self.nu31) / den
-        self.q13 = self.e1*(self.nu31 + self.nu21 * self.nu32) / den
-        self.q21 = self.e2*(self.nu12 + self.nu13 * self.nu32) / den
-        self.q22 = self.e2*(1         - self.nu13 * self.nu31) / den
-        self.q23 = self.e2*(self.nu32 + self.nu12 * self.nu31) / den
-        self.q31 = self.e3*(self.nu13 + self.nu12 * self.nu23) / den
-        self.q32 = self.e3*(self.nu23 + self.nu13 * self.nu21) / den
-        self.q33 = self.e3*(1         - self.nu12 * self.nu21) / den
+        self.plane_stress = plane_stress
+        if plane_stress:
+            # NOTE plane-stress reduced stiffnesses, sigma_33 = 0, Jones
+            #      (1999), Eq. (2.66), the same as in Lamina.rebuild; with
+            #      e3 = 0 the same operations as the three-dimensional branch
+            den = 1 - self.nu12 * self.nu21
+            self.q11 = self.e1 / den
+            self.q12 = self.e1*self.nu21 / den
+            self.q13 = 0.
+            self.q21 = self.e2*self.nu12 / den
+            self.q22 = self.e2 / den
+            self.q23 = 0.
+            self.q31 = 0.
+            self.q32 = 0.
+            self.q33 = 0.
+        else:
+            # from references:
+            #   hansen_hvejsen_2007 page 43
+            #
+            #   Guerdal Z., R. T. Haftka and P. Hajela (1999), Design and
+            #   Optimization of Laminated Composite Materials,
+            #   Wiley-Interscience.
+            den = (1 - self.nu12 * self.nu21
+                     - self.nu13 * self.nu31
+                     - self.nu23 * self.nu32
+                     - self.nu12 * self.nu23 * self.nu31
+                     - self.nu13 * self.nu21 * self.nu32)
+            self.q11 = self.e1*(1         - self.nu23 * self.nu32) / den
+            self.q12 = self.e1*(self.nu21 + self.nu23 * self.nu31) / den
+            self.q13 = self.e1*(self.nu31 + self.nu21 * self.nu32) / den
+            self.q21 = self.e2*(self.nu12 + self.nu13 * self.nu32) / den
+            self.q22 = self.e2*(1         - self.nu13 * self.nu31) / den
+            self.q23 = self.e2*(self.nu32 + self.nu12 * self.nu31) / den
+            self.q31 = self.e3*(self.nu13 + self.nu12 * self.nu23) / den
+            self.q32 = self.e3*(self.nu23 + self.nu13 * self.nu21) / den
+            self.q33 = self.e3*(1         - self.nu12 * self.nu21) / den
         self.q66 = self.g12
         self.q44 = self.g23
         self.q55 = self.g13
@@ -339,7 +405,7 @@ cdef class MatLamina:
         self.u6 = (self.q44 + self.q55) / 2.
         self.u7 = (self.q44 - self.q55) / 2.
 
-    cpdef void trace_normalize_plane_stress(MatLamina self):
+    cpdef void trace_normalize_plane_stress(MatLamina self) except *:
         r"""Trace-normalize the lamina properties for plane stress
 
         Modify the original :class:`.MatLamina` object with a
@@ -350,26 +416,48 @@ cdef class MatLamina:
         accessed using the same attributes. The other attributes are not
         modified.
 
+        Raises
+        ------
+        ValueError
+            If ``plane_stress`` is ``False``, i.e. after
+            ``rebuild(plane_stress=False)``, since the trace is defined with
+            the plane-stress stiffnesses.
+
         Notes
         -----
-        The trace is calculated according to Eq. 1 of Melo et al. [1]_, `tr
-        = Q_{11} + Q_{22} + 2Q_{66}`.  The universal in-plane stress
-        stiffness components `Q_{11},Q_{12},Q_{22},Q_{44},Q_{55},Q_{66}` are
-        divided by `tr`, and the invariants `U_1,U_2,U_3,U_4,U_5,U_6,U_7` are
-        calculated with the normalized stiffnesses, such they also become
-        trace-normalized invariants; since the invariants are linear in the
-        stiffnesses, they are divided by `tr` as well. The trace does not
-        depend on the ply angle, since `q_{11L} + q_{22L} + 2 q_{66L} = 2(u_1
-        + u_5)`, see :meth:`get_invariant_matrix`.
+        The trace is calculated according to Eq. (1), p. 45, of Melo et al.
+        [1]_, `tr = Q_{11} + Q_{22} + 2Q_{66}`, the trace of the
+        plane-stress stiffness matrix, with the plane-stress reduced
+        stiffnesses of :meth:`rebuild`, also when ``e3`` is given, i.e. `tr
+        = (e_1 + e_2)/(1 - \nu_{12}\nu_{21}) + 2 g_{12}`.  The universal
+        in-plane stress stiffness components
+        `Q_{11},Q_{12},Q_{22},Q_{44},Q_{55},Q_{66}` are divided by `tr`, and
+        the invariants `U_1,U_2,U_3,U_4,U_5,U_6,U_7` are calculated with the
+        normalized stiffnesses, such they also become trace-normalized
+        invariants; since the invariants are linear in the stiffnesses, they
+        are divided by `tr` as well. The trace does not depend on the ply
+        angle, since `q_{11L} + q_{22L} + 2 q_{66L} = 2(u_1 + u_5)`, see
+        :meth:`get_invariant_matrix` and Jones [2]_, Sec. 2.7, Eq. (2.98), p.
+        85. Since the stiffnesses of
+        :func:`.shellprop_from_LaminationParameters` are linear in the
+        invariants, those computed with the trace-normalized invariants are
+        the ones of :func:`.laminated_plate` divided by `tr`.
 
         References
         ----------
         .. [1] Melo, J. D. D., Bi, J., and Tsai, S. W., A Novel
            Invariant-Based Design Approach to Carbon Fiber Reinforced
            Laminates, Composite Structures, 159, 44-52, 2017.
+           https://doi.org/10.1016/j.compstruct.2016.09.055
+        .. [2] Jones, R. M., Mechanics of Composite Materials, Second
+           Edition, Taylor & Francis, Philadelphia, 1999.
 
         """
         cdef double tr
+        if not self.plane_stress:
+            raise ValueError('trace_normalize_plane_stress requires the '
+                             'plane-stress stiffnesses, call '
+                             'rebuild(plane_stress=True) first')
         tr = self.q11 + self.q22 + 2*self.q66
         self.q11 /= tr
         self.q12 /= tr
@@ -434,10 +522,15 @@ cdef class MatLamina:
             q_{45L}, q_{55L}\}^\top = U \{1, \cos 2\theta, \sin 2\theta, \cos
             4\theta, \sin 4\theta\}^\top
 
-        which holds when ``u1`` to ``u5`` are computed from the plane-stress
-        reduced stiffnesses, i.e. with ``e3 = 0``. Integrated through the
-        thickness, the trigonometric terms give the lamination parameters,
-        see :func:`.shellprop_from_LaminationParameters`.
+        where `q_{ijL}` are the plane-stress stiffnesses of
+        :meth:`.Lamina.rebuild` when ``u1`` to ``u5`` are computed from the
+        plane-stress reduced stiffnesses, i.e. with ``plane_stress=True``,
+        the default of :meth:`rebuild`, for any ``e3`` (Jones [1]_, Sec.
+        2.7, Eq. (2.98), p. 85), and the components of the
+        three-dimensional stiffness matrix rotated about the 3 axis after
+        ``rebuild(plane_stress=False)``. Integrated through the thickness,
+        the trigonometric terms give the lamination parameters, see
+        :func:`.shellprop_from_LaminationParameters`.
 
         References
         ----------
@@ -3197,11 +3290,24 @@ cpdef ShellProp shellprop_from_LaminationParameters(double thickness, MatLamina
         \bar{A}_{55} = h (u_6 - u_7 \xi_{Ats,1})
 
     and `D_{ij}` as `A_{ij}`, with the factor `h^3/12` instead of `h` and
-    `\xi_{Di}` instead of `\xi_{Ai}`. Since the through-thickness
+    `\xi_{Di}` instead of `\xi_{Ai}`. With the plane-stress invariants of
+    :meth:`.MatLamina.rebuild`, its default ``plane_stress=True``, these are
+    the stiffnesses of the classical lamination theory, the thickness
+    integrals of the plane-stress `q_{ijL}` (Jones [1]_, Eq. (4.24), p.
+    198), equal to those of :func:`.laminated_plate` for the same layup with
+    ``offset = 0``, also when ``e3``, ``nu13`` and ``nu23`` are given; after
+    ``mat.rebuild(plane_stress=False)`` they integrate the rotated
+    three-dimensional stiffnesses instead, see :meth:`.MatLamina.rebuild`,
+    which the shell elements of pyfe3d do not use. Since the through-thickness
     distribution of the plies is not known from the lamination parameters,
     no shear correction can be computed, hence the uncorrected transverse
     shear stiffnesses. Without plies, the elements rotate them as a tensor,
     see :meth:`.ShellProp.calc_Ats_element`.
+
+    References
+    ----------
+    .. [1] Jones, R. M., Mechanics of Composite Materials, Second Edition,
+       Taylor & Francis, Philadelphia, 1999.
 
     """
     lam = ShellProp()
