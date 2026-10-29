@@ -524,6 +524,93 @@ def test_antiplane_core_matlamina(core):
         assert getattr(m, name) == 0, name
 
 
+def test_not_positive_definite_rejected():
+    r"""Material constants that are not positive definite
+
+    Jones, R. M., Mechanics of Composite Materials, 2nd ed., 1999, Sec.
+    2.4.2, pp. 68-69: ``E_i, G_ij >= 0``, Eq. (2.45) with the zero limits
+    of an antiplane core or of a singular transverse shear stiffness,
+    ``|nu_ij| < (E_i/E_j)**0.5``, Eq. (2.51), and ``1 - nu12 nu21 - nu23
+    nu32 - nu31 nu13 - 2 nu21 nu32 nu13 > 0``, Eq. (2.48). The message
+    names the violated conditions with their values. With 2 or 6 entries
+    only the in-plane conditions apply, e.g. an isotropic ``nu = 0.5`` is
+    accepted in plane stress and rejected with 9 entries, whose determinant
+    ``1 - 3 nu^2 - 2 nu^3`` vanishes.
+    """
+    E = 8.7e9
+    # NOTE e2 = e3 with nu23 = 1 would give a negative c22
+    with pytest.raises(ValueError) as exc:
+        read_laminaprop((142e9, E, 0.28, 5e9, 5e9, 3e9, E, 0.3, 1.0))
+    msg = str(exc.value)
+    assert 'not positive definite' in msg
+    assert '|nu23| = 1.0 is not < (e2/e3)**0.5 = 1.0' in msg
+    assert 'Eq. (2.51)' in msg and 'Eq. (2.48)' in msg
+    for lamprop, matches, absent in [
+            ((142e9, -E, 0.28, 5e9, 5e9, 3e9), ['e2 = %r' % -E,
+                                                 'Eq. (2.45)'], []),
+            ((142e9, E, 0.28, 5e9, -1., 3e9), ['g13 = -1.0',
+                                                'Eq. (2.45)'], []),
+            ((70e9, 1.0), ['|nu12| = 1.0', 'Eq. (2.51)'], []),
+            ((10e9, 1e9, 3.2, 1e9, 1e9, 1e9), ['|nu12| = 3.2',
+                                                'Eq. (2.51)'], []),
+            # NOTE bounds satisfied, determinant 1 - 3 nu^2 - 2 nu^3 < 0
+            ((E, E, 0.6, 1e9, 1e9, 1e9, E, 0.6, 0.6), ['Eq. (2.48)'],
+             ['Eq. (2.51)']),
+            ((E, E, 0.5, 1e9, 1e9, 1e9, E, 0.5, 0.5), ['= 0.0, Eq. (2.48)'],
+             [])]:
+        with pytest.raises(ValueError) as exc:
+            read_laminaprop(lamprop)
+        for match in matches:
+            assert match in str(exc.value), (lamprop, str(exc.value))
+        for match in absent:
+            assert match not in str(exc.value), (lamprop, str(exc.value))
+    # accepted: in-plane conditions only with 2 or 6 entries, the bound
+    # approached from below, and the zero limits
+    read_laminaprop((E, 0.5))
+    read_laminaprop((10e9, 1e9, 0.999*10**0.5, 1e9, 1e9, 1e9))
+    read_laminaprop((142e9, E, 0.28, 5e9, 0., 0.))
+    # the same check when the constants are set directly
+    m = read_laminaprop((142e9, E, 0.28, 5e9, 5e9, 3e9))
+    m.g12 = -1.
+    with pytest.raises(ValueError, match='g12 = -1.0'):
+        m.rebuild()
+
+
+@pytest.mark.parametrize('thetadeg', [45., 30., -60.])
+def test_singular_ABD_positive_diagonal(thetadeg):
+    r"""Singular ABD with a positive diagonal
+
+    A single ply with ``g12 = 0`` has a plane-stress stiffness of rank 2, so
+    ``A`` and ``D`` are singular in any axes, while at an angle other than 0
+    or 90 degrees all their diagonal terms are positive. The equivalent
+    properties are undefined, and ``calc_equivalent_properties`` must
+    detect it by the condition number of the ABD matrix scaled by its
+    diagonal, see its Notes, raising ``LinAlgError``, a ``ValueError``. At 0
+    degrees ``A66 = D66 = 0`` exactly, rejected by the diagonal check. The
+    scaling makes the check blind to a decoupled term that vanishes only to
+    round-off: ``[0/90]`` has ``A66`` of the order of ``E1 cos^2(90 deg)
+    h``, about 1e-22 N/m, decoupled from the other terms, and is accepted
+    with a tiny but finite ``g12``. With ``g12 > 0`` all are accepted.
+    """
+    lamprop = (142e9, 8.7e9, 0.28, 0., 5e9, 3e9)
+    A, B, D = clt_abd([thetadeg], [1e-3], [lamprop])
+    assert np.all(np.diag(A) > 0) and np.all(np.diag(D) > 0)
+    for mode in (None, 'constant'):
+        with pytest.raises(ValueError, match='singular or ill-conditioned'):
+            laminated_plate([thetadeg], plyt=1e-3, laminaprop=lamprop,
+                            shear_correction=mode)
+    with pytest.raises(ValueError, match='singular or ill-conditioned'):
+        laminated_plate([0], plyt=1e-3, laminaprop=lamprop,
+                        shear_correction=None)
+    prop = laminated_plate([0, 90], plyt=1e-3, laminaprop=lamprop,
+                           shear_correction=None)
+    assert 0 < prop.A66 < 1e-15*prop.A11
+    prop = laminated_plate([thetadeg], plyt=1e-3,
+                           laminaprop=lamprop[:3] + (5e9, ) + lamprop[4:],
+                           shear_correction=None)
+    assert np.isfinite(prop.e1) and prop.e1 > 0
+
+
 def test_zero_young_modulus_errors():
     r"""Undefined Poisson's ratios with a zero Young modulus
 
