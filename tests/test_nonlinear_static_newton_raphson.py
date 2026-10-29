@@ -225,6 +225,7 @@ def check_quadratic_convergence(residuals):
             'residual %.3e -> %.3e is not quadratic convergence' % (r0, r1))
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize('name', sorted(SHELLS))
 def test_plate_newton_raphson(name):
     *model, deflection = plate(name)
@@ -243,6 +244,7 @@ def test_beam_newton_raphson(name):
     assert deflection(u) < 0.7*deflection(u_linear)
 
 
+@pytest.mark.slow
 def test_elements_agree():
     """Different elements must give similar nonlinear deflections"""
     plates = {}
@@ -260,6 +262,7 @@ def test_elements_agree():
     assert values.max()/values.min() < 1.05, beams
 
 
+@pytest.mark.slow
 def test_triangles_under_refinement():
     """Which triangle converges to the quadrilateral answer, nonlinearly
 

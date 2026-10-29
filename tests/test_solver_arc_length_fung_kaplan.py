@@ -127,6 +127,7 @@ def arch(lam1, num_elements=40, L=100., t=1., b=1., E=1.e7, nu=0.3,
     return model, ~bk, B1
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize('convergence_criterion', CONVERGENCE)
 @pytest.mark.parametrize('method', METHODS)
 def test_fung_kaplan_beam_arch(method, convergence_criterion, monkeypatch):

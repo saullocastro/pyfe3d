@@ -3,6 +3,7 @@ sys.path.append('..')
 
 import time
 import numpy as np
+import pytest
 from numpy import isclose
 from scipy.sparse import coo_matrix
 
@@ -45,6 +46,7 @@ def _cylindrical_transformation(ncoords):
         np.concatenate(cols))), shape=(N, N)).tocsc()
 
 
+@pytest.mark.slow
 def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     r"""Torsional buckling of the laminated cylinders Z11 and Z33 of
 
@@ -357,6 +359,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
             assert abs(error) < grade[refinement]
 
 
+@pytest.mark.slow
 def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     r"""Torsional buckling of a moderately long isotropic cylinder with simply
     supported edges
