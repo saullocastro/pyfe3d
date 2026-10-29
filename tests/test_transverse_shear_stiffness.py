@@ -432,6 +432,13 @@ def test_the_stabilisation_error_is_a_discretisation_error():
     that product over three decades of slenderness and shows it depends on
     `n` alone, falling as `1/n^2`.
 
+    The product is only the softening of the physical shear. It is not the
+    error of Tria3R, whose centroid-sampled shear field still locks under
+    the factor: on a simply supported square plate with `a/h = 1000` under
+    a uniform pressure the error of its centre deflection stalls at -14 per
+    cent from 32x32 to 128x128 squares cut in two, see the Notes of
+    :mod:`pyfe3d.tria3r`.
+
     """
     h = 0.01
     alpha = 0.7
