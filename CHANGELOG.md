@@ -279,6 +279,35 @@
   `KG` coincide on rectangles. `KC0 + KCNL + KG` remains the exact Jacobian
   of the internal forces.
 
+### Behaviour change: geometric stiffness of `BeamLR`
+
+- `BeamLR` takes the slopes `v_{,x}` and `w_{,x}` of the geometric
+  stiffness `KG`, of `update_KCNL` and of the nonlinear internal forces
+  from the linear interpolations of `v` and `w`, as `BeamC` does, instead
+  of from the rotations, `v_{,x} = r_z` and `w_{,x} = -r_y`, which hold
+  only without shear deformation. With the slopes from the rotations a
+  buckling mode could have no shear strain, and the buckling load
+  converged to the Euler load whatever the shear stiffness: for a
+  clamped-free column with `P_e/(kGA)` = 0.0002, 0.018, 0.18 and 0.59,
+  `Pcr/P_e` was 1.0000 with 100 and 800 elements, against 0.9998, 0.9825,
+  0.8488 and 0.6274 from Eq. (2-57) of Timoshenko and Gere (1961), i.e.
+  up to 59 per cent unconservative for shear-flexible beams. It now
+  converges to Eq. (2-57) as the square of the element size, from above,
+  +2.6e-3 with 10 elements and +1.0e-5 with 160 for `P_e/(kGA) = 0.59`.
+  For slender columns the discretisation error is about twice the former
+  one, +4.1e-3 against +2.1e-3 with 10 elements.
+- The entries of `KG` move from the rotations to the translations,
+  `N/L [[1, -1], [-1, 1]]` for `v` and for `w`, with `KG_SPARSE_SIZE`
+  unchanged; the rows `Sv_x` and `Sw_x` of `BeamLRProbe` now hold
+  `dS^v/dx` and `dS^w/dx`, as in `BeamCProbe`, instead of the
+  interpolations of the rotations described for 0.11.0. The nonlinear
+  terms are constant along the element and are integrated with one point.
+  `KC0 + KCNL + KG` remains the exact Jacobian of the internal forces.
+- `BeamLR` no longer has membrane locking in the cantilever under an end
+  moment of Sze et al. (2004): the tip deflection of the von Karman
+  solution with any mesh, instead of 43.6 per cent below it with 16
+  elements.
+
 ### Tests
 
 - `tests/test_vabs_isotropic.py`, `tests/test_vabs_composite.py` and
@@ -437,6 +466,16 @@
   default; `test_tria3r_linear_buckling_plate_given_stress` rotates the
   given `N_xx` to the element axes, as `update_KG_given_stress` requires;
   the tests of the former field set `shear_model = 0` explicitly.
+- `tests/test_beam_linear_buckling_3D_column.py`: new
+  `test_shear_flexible_column`, `BeamC` and `BeamLR` against Eq. (2-57) of
+  Timoshenko and Gere (1961) for `P_e/(kGA)` = 0.2 and 0.6; the tolerance
+  of `BeamLR` on the slender columns from 2e-3 to 1e-4, below the shear
+  reduction of 1.8e-4 that the former element missed.
+  `tests/test_beamlr_natural_freq_cantilever_pre_stress.py`: buckling load
+  and lumped-mass frequencies within 5e-4 instead of 1e-3, the frequencies
+  now converging as the square of the element size.
+  `test_cantilever_end_moment_beamlr_no_membrane_locking` in
+  `tests/test_nonlinear_benchmarks_sze2004.py`.
 - The piston-theory tangent test of `Quad4R` requires an aerodynamic
   effect of 1e-4 instead of 1e-3 of the deflection, 0.09996 per cent with
   the physical stabilisation.
