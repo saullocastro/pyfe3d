@@ -1361,6 +1361,37 @@ def test_repeated_load_multipliers_cylinder():
     assert eigen._negative_pivots(K + lam*(1 + 1e-6)*KG) == 2
 
 
+def test_complete_repeated_stops():
+    r"""The count of :func:`pyfe3d.solver.eigen._missing_counter` is null
+    without eigenvalues or at a null shift, and the passes of
+    :func:`pyfe3d.solver.eigen._complete_repeated` stop when no
+    eigenpair can be added, the subspace being full, or when a pass keeps
+    nothing; ``K = diag(1, ..., 6)``, ``M = I``"""
+    n = 6
+    K = diags(np.arange(1., n + 1)).tocsr()
+    M = identity(n, format='csr')
+    count = eigen._missing_counter(K, -M, lambda w: w, 3)
+    assert count(np.zeros(0)) == 0
+    assert count(np.array([0.])) == 0
+    assert count(np.array([1., 3.])) == 1
+    V = np.eye(n)[:, [0, 2]]
+    w, vecs, num_added = eigen._complete_repeated(
+        K, M, np.array([1., 3.]), V, -1., 0, lambda w: 1,
+        lambda w: np.zeros(w.size, dtype=bool), 3)
+    assert num_added == 0
+    np.testing.assert_allclose(w, [1., 3.])
+    V = np.eye(n)[:, :n - 2]
+    w, vecs, num_added = eigen._complete_repeated(
+        K, M, np.arange(1., n - 1), V, -1., 0, lambda w: 1, np.isfinite, 3)
+    assert num_added == 0
+    # NOTE the missing eigenvalue 2 is added
+    V = np.eye(n)[:, [0, 2]]
+    w, vecs, num_added = eigen._complete_repeated(
+        K, M, np.array([1., 3.]), V, -1., 0, count, np.isfinite, 3)
+    assert num_added == 1
+    np.testing.assert_allclose(w, [1., 2., 3.], rtol=1e-12)
+
+
 # NOTE stiffness matrices that are not positive definite
 
 

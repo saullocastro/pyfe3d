@@ -708,3 +708,20 @@ def test_reentrant_elements():
                        r'stiffness matrix K is not positive definite, '
                        + causes):
         linear_static(K, np.ones(K.shape[0]))
+
+
+def test_completion_after_solver_error(monkeypatch):
+    r"""When the sparse solver raises, there are no eigenpairs to complete:
+    the deflated passes are skipped, without being listed among the
+    attempted solvers, and the dense fallback is used"""
+    K, M = freq_problem(True, n=120)
+    ref, _ = natural_frequency(K, M, num_eigvalues=5)
+
+    def fails(*args, **kwargs):
+        raise RuntimeError('ARPACK failed')
+
+    monkeypatch.setattr(eigen, 'capped_eigsh', fails)
+    with pytest.warns(DenseFallbackWarning, match='ARPACK failed') as w:
+        omegan, _ = natural_frequency(K, M, num_eigvalues=5)
+    assert 'deflated' not in str(w[0].message)
+    np.testing.assert_allclose(omegan, ref, rtol=1e-10)
