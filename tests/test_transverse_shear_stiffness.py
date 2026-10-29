@@ -358,34 +358,42 @@ def test_shear_only_subspace_is_the_mechanism_the_stabilisation_opens():
     measured for a cylinder in
     ``test_quad4_linear_buckling_cylinder_displ.py``.
 
-    Quad4 and Quad4R agree with each other here, and Tria3R with
-    ``shear_model = 0``, the centroid-sampled shear of before 0.12.0 set
-    explicitly, is softer by exactly its stabilisation factor. The default
-    Tria3R since 0.12.0, the discrete shear gap field, carries no factor
-    and is printed for comparison.
+    Quad4 is the reference, and Tria3R with ``shear_model = 0``, the
+    centroid-sampled shear of before 0.12.0 set explicitly, is softer by
+    exactly its stabilisation factor. The default Tria3R since 0.12.0, the
+    discrete shear gap field, carries no factor and is printed for
+    comparison. Quad4R is stiffer than Quad4 by the factor 1.0131887, the
+    same for the three thicknesses (measured on 2026-10-29): its transverse
+    shear, Belytschko and Leviathan (1994), adds the physical stabilisation
+    of the nonconstant part of the assumed shear strains, which this
+    subspace, with every rotation held at zero, activates in proportion to
+    the one-point shear energy. Until 0.12.0 the two quadrilaterals agreed
+    within 1e-5.
 
     """
     n = 8
     L = 0.1
     for h in (0.01, 0.002, 0.0005):
-        ref, el_len = shear_only_subspace(Quad4R, Quad4RData, Quad4RProbe,
-                                          n, L, h)
-        q4, _ = shear_only_subspace(Quad4, Quad4Data, Quad4Probe, n, L, h)
+        ref, el_len = shear_only_subspace(Quad4, Quad4Data, Quad4Probe, n, L,
+                                          h)
+        q4r, _ = shear_only_subspace(Quad4R, Quad4RData, Quad4RProbe, n, L,
+                                     h)
         t3, _ = shear_only_subspace(Tria3R, Tria3RData, Tria3RProbe, n, L, h,
                                     triangles=True, legacy=True)
         t3d, _ = shear_only_subspace(Tria3R, Tria3RData, Tria3RProbe, n, L,
                                      h, triangles=True)
-        print('default Tria3R/Quad4R %.4f' % (t3d/ref))
+        print('default Tria3R/Quad4 %.4f' % (t3d/ref))
         # NOTE measured 1.0396 at the three thicknesses: no factor, only
         #      the difference between a quadrilateral and two triangles
         assert np.isclose(t3d/ref, 1., rtol=0.2), (h, t3d/ref)
         maxl = el_len*2.**0.5
         expected = 1./(1. + 0.7*maxl**2/h**2)
-        print('l/h = %-7.4g Quad4R %.6e  Quad4/Quad4R %.6f  '
-              'Tria3R/Quad4R %.4e  1/(1+factor) %.4e'
-              % (el_len/h, ref, q4/ref, t3/ref, expected))
-        # NOTE the two quadrilaterals use Ats as given, so they agree
-        assert np.isclose(q4, ref, rtol=1e-5)
+        print('l/h = %-7.4g Quad4 %.6e  Quad4R/Quad4 %.6f  '
+              'Tria3R/Quad4 %.4e  1/(1+factor) %.4e'
+              % (el_len/h, ref, q4r/ref, t3/ref, expected))
+        # NOTE value pre-determined on 2026-10-29, rtol for the round-off
+        #      of the eigenvalue solver
+        assert np.isclose(q4r/ref, 1.013188709965525, rtol=1e-6)
         # NOTE and Tria3R is softened by its factor, to within the
         #      difference between a quadrilateral and two triangles
         assert np.isclose(t3/ref, expected, rtol=0.2), (h, t3/ref, expected)

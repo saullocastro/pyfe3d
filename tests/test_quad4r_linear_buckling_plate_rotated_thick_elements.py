@@ -13,7 +13,7 @@ from pyfe3d.solver import linear_buckling
 def test_linear_buckling_plate(plot=False, mode=0):
     r"""Plate with ``a/b = 4`` and ``b/h = 10``, uniform compression
     ``N_xx``, hard simply supported, 30x14 elements rotated by 25
-    combinations of pitch and yaw, and the flat plate with 90x42 elements
+    combinations of pitch and yaw
 
     The edges are hard simply supported, ``w = 0`` and the rotation about the
     axis of each edge equal to zero, for which the Navier solution of the
@@ -35,25 +35,27 @@ def test_linear_buckling_plate(plot=False, mode=0):
     10.2.1, p. 277, Eq. (10.46).
 
     The buckling load must not depend on the orientation of the plate. With
-    30x14 elements and the hourglass factors used here it is 10.7 % above
-    the reference; the flat plate converges to it, 2.64 % above it with
-    60x28 elements, 1.17 % with 90x42 elements, 0.66 % with 120x56
-    elements. With the soft simple support used before, rotations free,
-    the 30x14 mesh gave a buckling load 1.8 % below the Kirchhoff value
-    and 4.0 % above the reference, and 60x28 elements 2.7 % below the
-    reference, the soft support lowering the load.
+    30x14 elements it is 1.41 % above the reference, measured on 2026-10-29
+    with the default stabilisation of Quad4R since 0.12.0, the physical
+    stabilisation of the bending and of the transverse shear of Belytschko
+    and Leviathan (1994), see :mod:`pyfe3d.quad4r`. Up to 0.11, with twice
+    the hourglass stiffnesses of Brockman (1987) for `u`, `v`, `r_x` and
+    `r_y` and four times that of `w`, it was 10.7 % above the reference
+    (-195870012.17574 N), and the flat plate converged to it, 2.64 % above
+    it with 60x28 elements, 1.17 % with 90x42 elements, 0.66 % with 120x56
+    elements; with the soft simple support used before those, rotations
+    free, the 30x14 mesh gave a buckling load 1.8 % below the Kirchhoff value
+    and 4.0 % above the reference.
 
-    The error is one of the mesh. Following the policy of the tests whose
-    reference is reached only on fine meshes, the 90x42 flat plate, 10 s of
-    the 27 s of this test (measured on 2026-10-29 on a loaded machine,
-    +1.17 %), is no longer run: the 30x14 meshes are compared with the load pre-determined by this
-    same test with that mesh, -195870012.17574 N, with ``rtol = 1e-4`` for
-    the round-off of the eigenvalue solver, and with the reference within
-    grade C of MacNeal, R. H. and Harder, R. L., A proposed standard set of
+    The 30x14 meshes are compared with the load pre-determined by this same
+    test with that mesh, -179433757.7496 N, with ``rtol = 1e-4`` for the
+    round-off of the eigenvalue solver, and with the reference within grade
+    A of MacNeal, R. H. and Harder, R. L., A proposed standard set of
     problems to test finite element accuracy, Finite Elements in Analysis
     and Design, 1(1), 3-20, 1985,
-    https://doi.org/10.1016/0168-874X(85)90003-4, p. 14 (at most 20 %), as
-    a bound: +10.70 % measured.
+    https://doi.org/10.1016/0168-874X(85)90003-4, p. 14 (at most 2 %). The
+    90x42 flat plate, run until 0.12.0 against the reference within 2 %, is
+    no longer run.
     """
     thetas = np.linspace(-np.pi, np.pi, 5)
     # NOTE (pitch, yaw, nx, ny)
@@ -139,27 +141,10 @@ def test_linear_buckling_plate(plot=False, mode=0):
             quad.init_k_KG = init_k_KG
             quad.update_rotation_matrix(ncoords_flatten)
             quad.update_probe_xe(ncoords_flatten)
-            # NOTE the thick plate requires twice as much hourglass stiffness
-            #      to avoid hourglass modes. Note that "hgfactor" has too be
-            #      as small as possible, and the user needs to check the
-            #      eigenvectors to ensure that the hourglass modes are not
-            #      present in the first few eigenvectors.
-            # NOTE hgfactor_w is four and not two because this case needs
-            #      four times the transverse hourglass stiffness of
-            #      Eq. (16b) of Brockman 1987. Until 0.10.0 the same
-            #      element matrix was obtained with hgfactor_w = 2.,
-            #      because the transverse generalized stiffness was built
-            #      from the rotational ones and therefore picked up
-            #      hgfactor_rx and hgfactor_ry as well, making it
-            #      quadratic in the factors. That coupling was removed, so
-            #      the factor is now stated explicitly and the element
-            #      matrix, and every result of this test, are unchanged
-            quad.update_KC0(KC0r, KC0c, KC0v, prop,
-                            hgfactor_u = 2.,
-                            hgfactor_v = 2.,
-                            hgfactor_w = 4.,
-                            hgfactor_rx = 2.,
-                            hgfactor_ry = 2.)
+            # NOTE the default stabilisation: until 0.12.0 this test used
+            #      twice the hourglass stiffnesses of u, v, r_x and r_y and
+            #      four times that of w of Brockman (1987)
+            quad.update_KC0(KC0r, KC0c, KC0v, prop)
             quads.append(quad)
             init_k_KC0 += data.KC0_SPARSE_SIZE
             init_k_KG += data.KG_SPARSE_SIZE
@@ -222,9 +207,9 @@ def test_linear_buckling_plate(plot=False, mode=0):
     print('Theoretical P_cr_theory', P_cr_theory)
     assert np.allclose(P_cr_calcs, P_cr_calcs[0], rtol=1e-6)
     # NOTE value pre-determined with the 30x14 mesh, see the docstring
-    assert isclose(P_cr_calcs[0], -195870012.17574, rtol=1e-4)
-    # NOTE grade C against Seide and Stowell (1950)
-    assert abs(P_cr_calcs[0]/P_cr_theory - 1) <= 0.20
+    assert isclose(P_cr_calcs[0], -179433757.7496, rtol=1e-4)
+    # NOTE grade A against Seide and Stowell (1950)
+    assert abs(P_cr_calcs[0]/P_cr_theory - 1) <= 0.02
 
     if plot:
         import matplotlib.pyplot as plt

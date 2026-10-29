@@ -2,6 +2,7 @@ import sys
 sys.path.append('..')
 
 import numpy as np
+import pytest
 from numpy import isclose
 from scipy.sparse import coo_matrix
 
@@ -10,13 +11,14 @@ from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
 from pyfe3d.solver import linear_buckling
 
 
+@pytest.mark.slow
 def test_linear_buckling_plate(plot=False, mode=0):
     r"""Linear buckling of the simply supported plate of
     :func:`test_quad4r_linear_buckling_plate_given_stress.test_linear_buckling`
     with 30x14 elements, rotated by 25 combinations of pitch and yaw
 
     The buckling load must not depend on the orientation of the plate. With
-    this mesh it is 5.7 % above the exact solution of Leissa, A. W.,
+    this mesh it is 1.5 % above the exact solution of Leissa, A. W.,
     Vibration of Plates, NASA SP-160, 1969, Sec. 10.2.1, p. 277, Eq.
     (10.46); the convergence to that solution with the mesh is verified by
     the flat plate of

@@ -20,8 +20,12 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=2):
     ``rho*h*omega_mn**2 = D*((m*pi/a)**2 + (n*pi/b)**2)**2 + N_xx*(m*pi/a)**2``,
     minimised over ``m`` and ``n``, and the buckling load (10.46).
 
-    With 42x26 elements the frequencies of the three mass matrices are 0.14
-    to 0.39 % above the reference, with 20x12 elements 0.77 to 1.95 %.
+    With 42x26 elements the frequencies of the three mass matrices are 0.03 to
+    0.29 % above the reference, with 20x12 elements 0.21 to 1.39 %, measured on
+    2026-10-29 with the physical stabilisation of the bending and of the
+    transverse shear of Belytschko and Leviathan (1994) that Quad4R uses since
+    0.12.0, see :mod:`pyfe3d.quad4r`; up to 0.11, with the hourglass
+    stiffnesses of Brockman (1987), 0.14 to 0.39 % and 0.77 to 1.95 %.
     """
     data = Quad4RData()
     probe = Quad4RProbe()
@@ -105,10 +109,7 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=2):
             quad.K6ROT = 100.
             quad.update_rotation_matrix(ncoords_flatten)
             quad.update_probe_xe(ncoords_flatten)
-            factor = 1.
-            quad.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_u=factor,
-                            hgfactor_v=factor, hgfactor_w=factor,
-                            hgfactor_rx=factor, hgfactor_ry=factor)
+            quad.update_KC0(KC0r, KC0c, KC0v, prop)
             quad.update_M(Mr, Mc, Mv, prop, mtype=mtype)
             quads.append(quad)
             init_k_KC0 += data.KC0_SPARSE_SIZE
