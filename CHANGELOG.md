@@ -1499,10 +1499,10 @@ static state and the element kinematics refer to the same pair of directions.
 With `'constant'`, `'vlachoutsis'`, `None`, or without plies, the stiffness is
 rotated as a second-order tensor.
 
-Re-evaluating the method of Rohwer for each element costs about 330 ns per ply
-(see the cost comparison below). Instead, the compliance `S = inv(Ats)` in the
-element frame is represented exactly by a Fourier series in `2 theta` with 5
-harmonics: the equilibrium distribution `f(z)` is a polynomial of degree 4 in
+Re-evaluating the method of Rohwer for each element costs about 80 ns per ply,
+2.8 us with 32 plies (see the cost comparison below). Instead, the compliance
+`S = inv(Ats)` in the element frame is represented exactly by a Fourier series
+in `2 theta` with 5 harmonics: the equilibrium distribution `f(z)` is a polynomial of degree 4 in
 `cos(theta)`, `sin(theta)` and `inv(Cs)` of degree 2, such that `S` is a
 trigonometric polynomial of degree 10 with a period of 180 degrees. The 33
 coefficients are computed once per laminate, from 16 evaluations in rotated
