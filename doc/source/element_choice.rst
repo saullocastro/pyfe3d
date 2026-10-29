@@ -32,20 +32,20 @@ geometrically non-linear analyses.
     * - :class:`.Quad4R`
       - 4
       - One integration point, cheaper than :class:`.Quad4` for the
-        internal forces and the stiffness matrices, with an hourglass
-        control that adds an artificial stiffness, scaled by the
-        ``hgfactor_*`` arguments of :meth:`.Quad4R.update_KC0`; no drilling
-        enrichment, see :mod:`.quad4r`. The transverse hourglass stiffness
-        also stiffens the twist, by an amount that depends on the problem,
-        e.g. 6 to 7 % on the linear deflection of the hinged roof of Sze et
-        al. (2004), and on the unit of length: where the element areas are
-        large in that unit it adds about 78 % to the energy of a uniform
-        twist whatever the mesh, a failure of the constant-twist patch test
-        that makes the lower limit load of the thinner roof of Sze et al.
-        converge 11 % below their value. The hourglass control is derived for isotropic plates
-        and applied to laminates with equivalent moduli of the membrane
-        compliance for `u` and `v` and of the bending compliance for `w`,
-        `r_x` and `r_y`.
+        internal forces and the stiffness matrices; no drilling enrichment,
+        see :mod:`.quad4r`. The transverse shear is that of Belytschko and
+        Leviathan (1994), the assumed strains of Dvorkin and Bathe with the
+        physical stabilisation of their nonconstant part, which controls the
+        hourglass mode of `w` and passes the constant-twist and the
+        thin-plate bending patch tests; the hourglass modes of `u`, `v`,
+        `r_x` and `r_y` have the artificial stiffness of Brockman (1987),
+        derived for isotropic plates and applied to laminates with
+        equivalent moduli of the membrane compliance for `u` and `v` and of
+        the bending compliance for `r_x` and `r_y`. Both are scaled by the
+        ``hgfactor_*`` arguments of :meth:`.Quad4R.update_KC0`. Up to 0.11
+        the hourglass mode of `w` had Brockman's artificial stiffness, which
+        also stiffened a uniform twist, by up to 78 % of its energy whatever
+        the mesh where the element areas were large in the unit of length.
     * - :class:`.Tria3DSG`
       - 3
       - The recommended triangle. Discrete shear gap transverse shear field,

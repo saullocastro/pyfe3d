@@ -51,7 +51,8 @@ integrate the membrane stress resultants with two-by-two quadrature and take
 the slopes of `w` at the centroid of the element, where the transverse shear
 of :class:`.Quad4R` and of the thin :class:`.Quad4` elements is sampled. The
 hourglass pattern of `w`, alternating in sign from node to node with zero
-rotations, which that transverse shear does not resist, then has no
+rotations, which the shear sampled there does not resist (:class:`.Quad4R`
+resists it with the stabilisation of its transverse shear), then has no
 geometric stiffness either; with the slopes at the two-by-two points, as up
 to version 0.11, it could give a spurious buckling mode below the physical
 load when the transverse shear stiffness is low compared with the bending
