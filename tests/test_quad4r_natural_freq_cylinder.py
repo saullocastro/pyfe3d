@@ -59,12 +59,14 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     wall times on a machine shared with other jobs::
 
         refinement  ntheta  elements   n = 2       n = 3       time
-            1         48      1440    0.12189813  0.13240979    1 s
-            2         96      5760    0.12137179  0.13040327   10 s
+            1         48      1440    0.12182617  0.13190618    2 s
+            2         96      5760    0.12135407  0.13027999   17 s
 
-    measured again on 2026-10-29 with the transverse shear of Quad4R of
-    Belytschko and Leviathan (1994), 0.12.0; before it 0.12188130,
-    0.13236280, 0.12136325 and 0.13037796.
+    measured on 2026-10-29 with the default stabilisation of Quad4R since
+    0.12.0, the physical stabilisation of the bending and of the transverse shear of Belytschko and Leviathan (1994), +0.48 and +1.56 % and +0.09 and +0.31 % from the table;
+    up to 0.11, with the hourglass stiffnesses of Brockman (1987),
+    0.12188130, 0.13236280, 0.12136325 and 0.13037796, the values of the
+    table of relative errors above, which predates that change.
 
     """
     data = Quad4RData()
@@ -89,10 +91,6 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     print('nlength', nlength)
 
     prop = isotropic_plate(thickness=h, E=E, nu=nu, rho=rho)
-
-    # NOTE the default hourglass stiffness of Quad4R, the factors being
-    #      multipliers of the default hourglass stiffnesses
-    hgfactor = 1.
 
     nids = 1 + np.arange(nlength*(ntheta+1))
     nids_mesh = nids.reshape(nlength, ntheta+1)
@@ -149,9 +147,7 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
         quad.init_k_M = init_k_M
         quad.update_rotation_matrix(ncoords_flatten, 0., 0., 1.)
         quad.update_probe_xe(ncoords_flatten)
-        quad.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_u=hgfactor,
-                        hgfactor_v=hgfactor, hgfactor_w=hgfactor,
-                        hgfactor_rx=hgfactor, hgfactor_ry=hgfactor)
+        quad.update_KC0(KC0r, KC0c, KC0v, prop)
         quad.update_M(Mr, Mc, Mv, prop, mtype=0) # consistent mass
         quads.append(quad)
         init_k_KC0 += data.KC0_SPARSE_SIZE
@@ -222,8 +218,8 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     #      tolerance, rtol = 1e-4, is for the round-off of other platforms
     #      and solvers only
     predetermined = {
-        1: (0.12189813, 0.13240979),
-        2: (0.12137179, 0.13040327),
+        1: (0.12182617, 0.13190618),
+        2: (0.12135407, 0.13027999),
     }
     if refinement in predetermined:
         assert isclose(Omega[0], predetermined[refinement][0], rtol=1e-4)

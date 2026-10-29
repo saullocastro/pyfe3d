@@ -41,14 +41,16 @@ def test_nat_freq_plate(plot=False, mode=0):
     converge to about 1 % below the reference, through the boundary layer
     of the Mindlin plate along the edges.
 
-    With 32x40 elements the frequency is 0.07 % above the reference with the
+    With 32x40 elements the frequency is 0.10 % below the reference, measured
+    on 2026-10-29 with the physical stabilisation of the bending and of the
     transverse shear of Belytschko and Leviathan (1994) that Quad4R uses since
-    0.12.0, see :mod:`pyfe3d.quad4r`, measured on 2026-10-29, against 0.43 %
-    before; before that change, with 8x10, 16x20 and 24x30 elements 9.64, 2.16
-    and 1.00 %, with 40x50 and 48x60 elements 0.14 and 0.05 %. With the
-    re-entrant elements of the former distortion, the stiffness matrix of the
-    40x50 and 48x60 meshes had negative eigenvalues, local membrane modes of
-    single elements, which :func:`pyfe3d.solver.natural_frequency` detected.
+    0.12.0, see :mod:`pyfe3d.quad4r`; up to 0.11, with the hourglass
+    stiffnesses of Brockman (1987), it was 0.43 % above it, and with 8x10,
+    16x20 and 24x30 elements 9.64, 2.16 and 1.00 %, with 40x50 and 48x60
+    elements 0.14 and 0.05 %. With the re-entrant elements of the former
+    distortion, the stiffness matrix of the 40x50 and 48x60 meshes had negative
+    eigenvalues, local membrane modes of single elements, which
+    :func:`pyfe3d.solver.natural_frequency` detected.
     """
     data = Quad4RData()
     probe = Quad4RProbe()

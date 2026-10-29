@@ -33,11 +33,12 @@ def test_static_plate_quad_point_load(plot=False):
     below resolve, ``m < 2*(nx - 1)`` and ``n < 2*(ny - 1)``, it adds
     2.0e-5 to 3.6e-5 of the reference deflection.
 
-    With 18x30 elements the deflection at the centre is 0.32 % below the
-    reference, measured on 2026-10-29 with the transverse shear of Belytschko
-    and Leviathan (1994) that Quad4R uses since 0.12.0, see
-    :mod:`pyfe3d.quad4r`; before that change 0.27 %, with 6x10 elements 1.77 %,
-    with 12x20 elements 0.57 %, with 24x40 elements 0.15 %.
+    With 18x30 elements the deflection at the centre is 0.35 % below the
+    reference, measured on 2026-10-29 with the physical stabilisation of the
+    bending and of the transverse shear of Belytschko and Leviathan (1994) that
+    Quad4R uses since 0.12.0, see :mod:`pyfe3d.quad4r`; up to 0.11, with the
+    hourglass stiffnesses of Brockman (1987), 0.27 %, with 6x10 elements
+    1.77 %, with 12x20 elements 0.57 %, with 24x40 elements 0.15 %.
     """
     data = Quad4RData()
     probe = Quad4RProbe()
@@ -50,8 +51,6 @@ def test_static_plate_quad_point_load(plot=False):
 
     E = 200e9
     nu = 0.3
-
-    hgfactor = 0.1 # NOTE hour-glass factor
 
     xtmp = np.linspace(0, a, nx)
     ytmp = np.linspace(0, b, ny)
@@ -104,9 +103,7 @@ def test_static_plate_quad_point_load(plot=False):
         quad.K6ROT = 100.
         quad.update_rotation_matrix(ncoords_flatten)
         quad.update_probe_xe(ncoords_flatten)
-        quad.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_u=hgfactor,
-                        hgfactor_v=hgfactor, hgfactor_w=hgfactor,
-                        hgfactor_rx=hgfactor, hgfactor_ry=hgfactor)
+        quad.update_KC0(KC0r, KC0c, KC0v, prop)
         quads.append(quad)
         init_k_KC0 += data.KC0_SPARSE_SIZE
 
@@ -163,9 +160,7 @@ def test_static_plate_quad_point_load(plot=False):
     for quad in quads:
         quad.update_probe_xe(ncoords_flatten)
         quad.update_probe_ue(u)
-        quad.update_fint(fint, prop, hgfactor_u=hgfactor,
-                        hgfactor_v=hgfactor, hgfactor_w=hgfactor,
-                        hgfactor_rx=hgfactor, hgfactor_ry=hgfactor)
+        quad.update_fint(fint, prop)
 
     # NOTE adding reaction forces to external force vector
     Kku = KC0[bk, :][:, bu]

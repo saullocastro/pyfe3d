@@ -33,13 +33,15 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=3):
     of the Mindlin plate along the edges.
 
     With 26x32 elements the frequencies of the three mass matrices are from
-    0.09 % below to 0.22 % above the reference, with 17x21 elements 0.18 to
-    0.89 % above it, with 8x10 elements 1.76 to 5.05 % above it, with 35x43
-    elements 0.01 to 0.17 % below it, with 53x65 elements 0.16 to 0.24 % below
-    it (measured again on 2026-10-29 with the transverse shear of Belytschko
-    and Leviathan (1994) that Quad4R uses since 0.12.0, see
-    :mod:`pyfe3d.quad4r`, which changed only the 8x10 values, from 1.78 to
-    5.07 %).
+    0.33 % to 0.03 % below the reference, with 17x21 elements 0.40 % below to
+    0.31 % above it, with 8x10 elements 0.78 % below to 2.43 % above it, with
+    35x43 elements 0.14 to 0.31 % below it, with 53x65 elements 0.22 to 0.30 %
+    below it, converging to the Mindlin value above, measured on 2026-10-29
+    with the physical stabilisation of the bending and of the transverse shear
+    of Belytschko and Leviathan (1994) that Quad4R uses since 0.12.0, see
+    :mod:`pyfe3d.quad4r`. Up to 0.11, with the hourglass stiffnesses of
+    Brockman (1987), they were 0.09 % below to 0.22 % above the reference with
+    26x32 elements and 1.78 to 5.07 % above it with 8x10 elements.
     """
     data = Quad4RData()
     probe = Quad4RProbe()

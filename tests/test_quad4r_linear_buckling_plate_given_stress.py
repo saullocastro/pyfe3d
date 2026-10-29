@@ -20,11 +20,13 @@ def test_linear_buckling(mode=0, refinement=3):
     which the frequency of Eq. (10.44) vanishes, minimised over the number
     ``m`` of half-waves along ``x``: ``N_xx,cr = -k_c*pi**2*D/b**2``, ``k_c =
     (m*b/a + a/(m*b))**2``. With 92x44 elements the buckling load is above the
-    reference by 0.56 %, with 62x30 elements 1.29 %, with 30x14 elements
-    6.00 %, with 124x60 elements 0.27 %, with 186x90 elements 0.066 %,
-    converging as the square of the element size, measured on 2026-10-29 with
-    the transverse shear of Belytschko and Leviathan (1994) that Quad4R uses
-    since 0.12.0, see :mod:`pyfe3d.quad4r`; 0.39, 1.11 and 5.7 % before.
+    reference by 0.11 %, with 62x30 elements 0.30 %, with 30x14 elements
+    1.48 %, with 124x60 elements 0.02 %, with 186x90 elements 0.04 % below it,
+    measured on 2026-10-29 with the physical stabilisation of the bending and
+    of the transverse shear of Belytschko and Leviathan (1994) that Quad4R uses
+    since 0.12.0, see :mod:`pyfe3d.quad4r`; up to 0.11, with the hourglass
+    stiffnesses of Brockman (1987), 0.39, 1.11 and 5.7 % above it with 92x44,
+    62x30 and 30x14 elements.
     """
     data = Quad4RData()
     probe = Quad4RProbe()

@@ -468,7 +468,7 @@ def test_torsion_of_a_one_element_wide_strip():
 
         element                 ny=1    ny=2    ny=4
         Quad4                  377.4    1.019   1.059
-        Quad4R                   0.928  0.934   1.010
+        Quad4R                   0.941  0.941   1.014
         Tria3R, shear_model=0    1.67   1.649   1.645
         Tria3R, default          0.675  0.674   0.674
 
@@ -482,8 +482,9 @@ def test_torsion_of_a_one_element_wide_strip():
     at ny=1, grade F, as Quad4R did up to 0.11, so the practical rule for
     these elements is at least two elements across the width for any strip
     that carries torsion; with two and four Quad4 gets grade B or better.
-    Since 0.12.0 Quad4R, whose transverse shear is that of Belytschko and
-    Leviathan (1994), gets grade B with one, two and four. Tria3R with
+    Since 0.12.0 Quad4R, with the physical stabilisation of the bending
+    and of the transverse shear of Belytschko and Leviathan (1994), gets
+    grade B with one and two and A with four. Tria3R with
     ``shear_model = 0`` stays at 1.65 with 6 elements along the length,
     still grade F, and is not asserted at ny > 1. The default Tria3R since
     0.12.0, the discrete shear gap field of ``shear_model = 1``, is 33 per
@@ -511,11 +512,11 @@ def test_torsion_of_a_one_element_wide_strip():
     element   6x2     6x4     12x4    24x8    48x8    96x16   192x32
     ========  ======  ======  ======  ======  ======  ======  =======
     Quad4     1.0188  1.0583  1.0651  1.0499  1.0518  1.0622  1.0655
-    Quad4R    0.9339  1.0101  1.0142  1.0481  1.0505  1.0616  1.0653
+    Quad4R    0.9407  1.0135  1.0182  1.0499  1.0518  1.0622  1.0655
     ========  ======  ======  ======  ======  ======  ======  =======
 
     and with the corner forces of this test, whose deflection is singular,
-    1.0700 and 1.0697 with 192x32 elements. The converged value, 0.0342, is
+    1.0700 for both with 192x32 elements. The converged value, 0.0342, is
     0.3 % above the Saint-Venant twist; the difference to 0.03208 is one of
     the reference, whose derivation is not given in MacNeal and Harder, and
     no mesh is graded A against it. Following the policy of the tests whose
@@ -530,9 +531,9 @@ def test_torsion_of_a_one_element_wide_strip():
     # NOTE values pre-determined by strip_twist on 2026-10-29
     predetermined = {(Quad4, 2): 0.03268400685870222,
                      (Quad4, 4): 0.03397594865499767,
-                     (Quad4R, 1): 0.02977197292453833,
-                     (Quad4R, 2): 0.029960702298012846,
-                     (Quad4R, 4): 0.03240695925149363}
+                     (Quad4R, 1): 0.030178871085670064,
+                     (Quad4R, 2): 0.030178995785714476,
+                     (Quad4R, 4): 0.03251647082333005}
     assert strip_twist(Quad4, Quad4Data, Quad4Probe, 1)/ref > 100.
     twist = strip_twist(Quad4R, Quad4RData, Quad4RProbe, 1)
     assert np.isclose(twist, predetermined[Quad4R, 1], rtol=1e-6)

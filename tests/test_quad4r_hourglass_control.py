@@ -58,8 +58,12 @@ the quantities being verified are
   constant-twist and the thin-plate bending patch tests, see
   :func:`test_transverse_shear_matches_belytschko_leviathan`,
   :func:`test_constant_twist_patch_test` and
-  :func:`test_bending_patch_test_belytschko_leviathan`; the four other
-  coefficients of Eq. (16) are those verified below;
+  :func:`test_bending_patch_test_belytschko_leviathan`; the rotations `r_x`
+  and `r_y` are not stabilised with Eq. (16b) either, but with the physical
+  stabilisation of the bending of Belytschko and Leviathan (1994), Eq.
+  (B.18), see :func:`test_bending_stabilisation_matches_belytschko_leviathan`;
+  only the coefficients of `u` and `v` of Eq. (16a) are those verified
+  below, scaled by ``hgfactor_membrane``;
 
 * the classification of the element modes of Brockman's p. 2347, six proper
   rigid-body motions, eight uniform-strain states captured by the one-point
@@ -194,16 +198,16 @@ def make_element(ncoords, K6ROT=0., xmat=(0., 0., 1.)):
     return el, probe
 
 
-def element_KC0(el, prop, hgfactor=1., hgfactor_w=None):
-    r"""Element matrix in global coordinates, all the ``hgfactor_*`` equal
-    to ``hgfactor`` unless ``hgfactor_w`` is given"""
+def element_KC0(el, prop, hgfactor=1., hgfactor_physical=None):
+    r"""Element matrix in global coordinates, ``hgfactor_membrane`` and
+    ``hgfactor_physical`` equal to ``hgfactor`` unless ``hgfactor_physical``
+    is given"""
     data = Quad4RData()
     KC0r = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
     KC0c = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
     KC0v = np.zeros(data.KC0_SPARSE_SIZE, dtype=DOUBLE)
-    hgw = hgfactor if hgfactor_w is None else hgfactor_w
-    el.update_KC0(KC0r, KC0c, KC0v, prop, 0, hgfactor, hgfactor, hgw,
-                  hgfactor, hgfactor)
+    hgp = hgfactor if hgfactor_physical is None else hgfactor_physical
+    el.update_KC0(KC0r, KC0c, KC0v, prop, 0, hgfactor, hgp)
     return coo_matrix((KC0v, (KC0r, KC0c)), shape=(24, 24)).toarray()
 
 
@@ -305,16 +309,19 @@ def homogeneous_stiffnesses(area, E=E_BROCKMAN, t=T_BROCKMAN):
     transverse displacement `w` has no such coefficient since 0.12.0, see
     :func:`test_transverse_shear_matches_belytschko_leviathan`.
 
+    The rotations `r_x` and `r_y` have the physical stabilisation of the
+    bending of Belytschko and Leviathan (1994) since 0.12.0, see
+    :func:`test_bending_stabilisation_matches_belytschko_leviathan`.
+
     """
-    return {0: 0.1*E*t*area, 1: 0.1*E*t*area,
-            3: 0.1*E*t**3*area, 4: 0.1*E*t**3*area}
+    return {0: 0.1*E*t*area, 1: 0.1*E*t*area}
 
 
 def test_hourglass_operator_matches_brockman_eq15():
     r"""The hourglass energy against the closed form of Eqs. (15) and (16)
 
-    Each of the hourglass patterns of p. 2347 of `u`, `v`, `r_x` and `r_y`
-    produces no strain at the centroid, so the one-point rule gives it no
+    Each of the hourglass patterns of p. 2347 of `u` and `v` produces no
+    strain at the centroid, so the one-point rule gives it no
     energy and the whole of its energy comes from the stabilisation,
 
     .. math::
@@ -325,8 +332,10 @@ def test_hourglass_operator_matches_brockman_eq15():
     \tilde\gamma`. The identity is checked on four shapes, including two
     irregular ones, and holds to machine precision on all of them, which
     verifies the operator of Eq. (15) and the stiffnesses of Eq. (16)
-    together. The pattern of `w` is controlled by the transverse shear since
-    0.12.0, see :func:`test_transverse_shear_matches_belytschko_leviathan`.
+    together. The patterns of `w`, `r_x` and `r_y` are controlled by the
+    physical stabilisation of Belytschko and Leviathan (1994) since 0.12.0,
+    see :func:`test_transverse_shear_matches_belytschko_leviathan` and
+    :func:`test_bending_stabilisation_matches_belytschko_leviathan`.
 
     """
     prop = isotropic_plate(thickness=T_BROCKMAN, E=E_BROCKMAN,
@@ -339,7 +348,7 @@ def test_hourglass_operator_matches_brockman_eq15():
         KC0 = element_KC0(el, prop)
         gt = gamma_tilde(el, probe)
         Eh = homogeneous_stiffnesses(el.area)
-        for dof in (0, 1, 3, 4):
+        for dof in (0, 1):
             ue = hourglass_mode(el, dof)
             U = 0.5*ue.dot(KC0.dot(ue))
             U_ref = 0.5*Eh[dof]*gt**2*el.area
@@ -403,7 +412,7 @@ def test_generalized_stiffnesses_are_dimensionally_homogeneous():
         Eh = homogeneous_stiffnesses(el.area)
         K1 = element_KC0(el, prop, hgfactor=1.)
         K3 = element_KC0(el, prop, hgfactor=3.)
-        for dof in (0, 1, 3, 4):
+        for dof in (0, 1):
             ue = hourglass_mode(el, dof)
             slope = 0.5*(ue.dot(K3.dot(ue)) - ue.dot(K1.dot(ue)))/2.
             ref = 0.5*Eh[dof]*gt**2*el.area
@@ -709,8 +718,7 @@ def patch_solution(cls, Data, Probe, scale=1., hgfactor=1.):
         el.update_probe_xe(ncoords_flatten)
         el.update_area()
         if cls is Quad4R:
-            el.update_KC0(KC0r, KC0c, KC0v, prop, 0, hgfactor, hgfactor,
-                          hgfactor, hgfactor, hgfactor)
+            el.update_KC0(KC0r, KC0c, KC0v, prop, 0, hgfactor, hgfactor)
         else:
             el.update_KC0(KC0r, KC0c, KC0v, prop)
         init_k_KC0 += data.KC0_SPARSE_SIZE
@@ -918,7 +926,7 @@ def test_homogeneous_stiffnesses_agree_with_brockman_for_small_areas():
     assert hm[0]/br[0] > 1.e3
 
 
-def strip_twist(hgfactor_w=1., nx=6, ny=1):
+def strip_twist(hgfactor_physical=1., nx=6, ny=1):
     r"""Twist of the MacNeal and Harder (1985) 6 by 0.2 strip, reference 0.03208
 
         MacNeal, R. H., and Harder, R. L., 1985, "A proposed standard set of
@@ -962,7 +970,7 @@ def strip_twist(hgfactor_w=1., nx=6, ny=1):
         el.update_rotation_matrix(ncoords_flatten, 0., 0., 1.)
         el.update_probe_xe(ncoords_flatten)
         el.update_area()
-        el.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_w=hgfactor_w)
+        el.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_physical=hgfactor_physical)
         init_k_KC0 += data.KC0_SPARSE_SIZE
     KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
     bk = np.zeros(N, dtype=bool)
@@ -992,30 +1000,34 @@ def test_one_element_wide_strip_in_torsion():
     coefficient `E^{(h)}_w`, which also stiffened a uniform twist, see
     :func:`test_constant_twist_patch_test`: on a single element across the
     width the twist was the hourglass pattern `w = xy` and the 6x1 strip
-    gave 4.78 times the reference, grade F. Since 0.12.0 the transverse
-    shear is that of Belytschko and Leviathan (1994), and the 6x1 strip
-    gives 0.928 times the reference, grade B. Tip twist over 0.03208,
+    gave 4.78 times the reference, grade F. Since 0.12.0 the bending and
+    the transverse shear have the physical stabilisation of Belytschko and
+    Leviathan (1994), and the 6x1 strip gives 0.941 times the reference,
+    grade B, as the QUAD4 of MacNeal and Harder. Tip twist over 0.03208,
     measured on 2026-10-29, the torque applied as the corner forces of this
     test (corner) or as normal forces proportional to the distance from the
-    axis (distributed), with the default stabilisation (``hgfactor_w = 1``)
-    or 1/100 of it:
+    axis (distributed), with the default stabilisation
+    (``hgfactor_physical = 1``) or 1/100 of it:
 
     ======  =========  ===========  ===========
     mesh    corner, 1  corner, .01  distrib., 1
     ======  =========  ===========  ===========
-    6x1     0.9281     15.42        0.9281
-    6x2     0.9339     1.0123       0.9339
-    6x4     1.0102     1.0543       1.0101
-    12x4    1.0144     1.0614       1.0142
-    24x8    1.0488     1.0679       1.0481
-    48x8    1.0517     1.0715       1.0505
-    96x16   1.0642     1.0751       1.0616
-    192x32  1.0697     1.0779       1.0653
+    6x1     0.9407     22.34        0.9407
+    6x2     0.9407     1.0217       0.9407
+    6x4     1.0136     1.0669       1.0135
+    12x4    1.0185     1.0706       1.0182
+    24x8    1.0507     1.0721       1.0499
+    48x8    1.0532     1.0744       1.0518
+    96x16   1.0649     1.0763       1.0622
+    192x32  1.0700     1.0783       1.0655
     ======  =========  ===========  ===========
 
-    With the distributed torque the twist converges to about 1.067 times
-    0.03208, 0.0342, the value to which Quad4 and Tria3DSG converge too, 0.3
-    % above the Saint-Venant twist of the 0.2 x 0.1 rectangle, 0.03411, see
+    the meshes from 24x8 on giving the values of :class:`pyfe3d.Quad4` with
+    the corner forces to four digits, its thick elements having the same
+    assumed shear strains. With the distributed torque the
+    twist converges to about 1.067 times 0.03208, 0.0342, the value to which
+    Quad4 and Tria3DSG converge too, 0.3 % above the Saint-Venant twist of
+    the 0.2 x 0.1 rectangle, 0.03411, see
     ``test_torsion_of_a_one_element_wide_strip`` in
     ``test_quad4_spurious_shear_mode.py``; with the corner forces it keeps
     growing slowly, the deflection under concentrated forces being singular
@@ -1023,25 +1035,25 @@ def test_one_element_wide_strip_in_torsion():
     a difference of the reference, whose derivation MacNeal and Harder do
     not give. With 1/100 of the stabilisation the 6x1 strip is again far too
     flexible: one element across the width cannot represent the twist
-    without the nonconstant shear strains that the stabilisation resists.
+    without the nonconstant strains that the stabilisation resists.
 
     Following the policy of the tests whose reference is not reached on the
     mesh used, the 6x1 and 12x4 meshes are compared with the values
-    pre-determined by :func:`strip_twist`, 0.029771972924548588 and
-    0.032542641088210006, with ``rtol = 1e-6`` for the round-off of the
+    pre-determined by :func:`strip_twist`, 0.03017887108568292 and
+    0.032672815829645464, with ``rtol = 1e-6`` for the round-off of the
     linear solution, and with grade B against 0.03208 as a bound.
 
     """
     # NOTE MacNeal and Harder (1985), Table 3, p. 10
     ref = 0.03208
-    one = strip_twist(hgfactor_w=1.)
-    refined = strip_twist(hgfactor_w=1., nx=12, ny=4)
-    low = strip_twist(hgfactor_w=0.01)
+    one = strip_twist(hgfactor_physical=1.)
+    refined = strip_twist(hgfactor_physical=1., nx=12, ny=4)
+    low = strip_twist(hgfactor_physical=0.01)
     print('strip twist / reference: 6x1 %.4f, 12x4 %.4f, 6x1 with 1/100 of '
           'the stabilisation %.4g' % (one/ref, refined/ref, low/ref))
     # NOTE values pre-determined by strip_twist on 2026-10-29
-    assert np.isclose(one, 0.029771972924548588, rtol=1e-6)
-    assert np.isclose(refined, 0.032542641088210006, rtol=1e-6)
+    assert np.isclose(one, 0.03017887108568292, rtol=1e-6)
+    assert np.isclose(refined, 0.032672815829645464, rtol=1e-6)
     # NOTE grade B of MacNeal and Harder, p. 14
     assert abs(one/ref - 1) <= 0.10
     assert abs(refined/ref - 1) <= 0.10
@@ -1049,7 +1061,7 @@ def test_one_element_wide_strip_in_torsion():
     assert low/ref - 1 > 0.5
 
 
-def twist_patch_energy_ratio(n, scale=1., hgfactor_w=1.):
+def twist_patch_energy_ratio(n, scale=1., hgfactor_physical=1.):
     r"""Constant-twist patch test of an ``n x n`` mesh of Quad4R
 
     Square plate of side ``254*scale``, thickness ``6.35*scale``, ``E =
@@ -1090,7 +1102,7 @@ def twist_patch_energy_ratio(n, scale=1., hgfactor_w=1.):
         el.update_rotation_matrix(ncoords_flatten, 0., 0., 1.)
         el.update_probe_xe(ncoords_flatten)
         el.update_area()
-        el.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_w=hgfactor_w)
+        el.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_physical=hgfactor_physical)
     KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
     kt = 1.e-3/scale
     u = np.zeros(N)
@@ -1160,6 +1172,93 @@ def bl94_shear_reference(x, y, Cs):
     return KH, Kc
 
 
+def bl94_bending_reference(x, y, D):
+    r"""Physical stabilisation of the bending of Belytschko and Leviathan
+    (1994), written here independently of the element code, in element
+    coordinates
+
+    Returns the 12 x 12 matrix on ``w, r_x, r_y`` of nodes 1 to 4 of the
+    nonconstant part of the bilinear curvatures, `\boldsymbol{\kappa}(\xi,
+    \eta) - \boldsymbol{\kappa}(0, 0)`, with `\kappa_{xx} = r_{y,x}`,
+    `\kappa_{yy} = -r_{x,y}` and `\kappa_{xy} = r_{y,y} - r_{x,x}`,
+    integrated with two by two Gauss points with the bending stiffness
+    ``D``: the derivatives of the shape functions are evaluated directly,
+    not through the decomposition `N_{I,x} = b_{xI} + h_{,x} \gamma_I` of
+    their Eq. (3.25) that the element uses, which gives the same field.
+
+    """
+    XI = np.array([-1., 1., 1., -1.])
+    ETA = np.array([-1., -1., 1., 1.])
+
+    def Bk(xi, eta):
+        Nxi = 0.25*XI*(1 + ETA*eta)
+        Neta = 0.25*ETA*(1 + XI*xi)
+        J = np.array([[Nxi @ x, Nxi @ y], [Neta @ x, Neta @ y]])
+        dN = np.linalg.solve(J, np.vstack((Nxi, Neta)))
+        B = np.zeros((3, 12))
+        B[0, 2::3] = dN[0]
+        B[1, 1::3] = -dN[1]
+        B[2, 2::3] = dN[1]
+        B[2, 1::3] = -dN[0]
+        return B, np.linalg.det(J)
+
+    B0, _ = Bk(0., 0.)
+    K = np.zeros((12, 12))
+    g = 1/np.sqrt(3)
+    for xi in (-g, g):
+        for eta in (-g, g):
+            B, detJ = Bk(xi, eta)
+            K += detJ*(B - B0).T @ D @ (B - B0)
+    return K
+
+
+def test_bending_stabilisation_matches_belytschko_leviathan():
+    r"""The stabilisation of the rotations of Quad4R against the closed
+    form and :func:`bl94_bending_reference`
+
+    Belytschko, T., and Leviathan, I., 1994, "Physical stabilization of the
+    4-node shell element with one point quadrature", Comput. Methods Appl.
+    Mech. Engrg., 113(3-4), pp. 321-350,
+    https://doi.org/10.1016/0045-7825(94)90052-3: the nonconstant part of
+    the curvatures, Eq. (3.28), p. 327, gives the stabilisation of Eq.
+    (4.13), p. 331, and of Eqs. (B.17) and (B.18), p. 349, with the
+    integrals `H_{xx}`, `H_{yy}` and `H_{xy}` of Eq. (4.14), here with the
+    bending stiffness `\boldsymbol{D} - \boldsymbol{B} \boldsymbol{A}^{-1}
+    \boldsymbol{B}` of the laminate in the element coordinate system, which
+    is `\boldsymbol{D}` for a symmetric laminate and does not depend on the
+    offset. On a rectangle of half-sides `a` and `b` the patterns `r_x = h`
+    and `r_y = h`, `h = \xi\eta`, have the energies `A (D_{66}/a^2 +
+    D_{22}/b^2)/6` and `A (D_{11}/a^2 + D_{66}/b^2)/6`, all of them from the
+    stabilisation, checked for the plates of :func:`laminates` with the
+    material direction along the element `x` axis and at 30 degrees; on
+    four shapes, the stabilisation of the bending and of the transverse
+    shear, the difference between ``hgfactor_physical = 1`` and ``0``, is
+    the sum of :func:`bl94_bending_reference` and of the matrix ``KH`` of
+    :func:`bl94_shear_reference`, for random displacements, see
+    :func:`test_transverse_shear_matches_belytschko_leviathan`.
+
+    """
+    a, b = 1., 0.5
+    for name, prop in laminates().items():
+        for xmat in [(0., 0., 1.), (np.cos(np.pi/6), np.sin(np.pi/6), 0.)]:
+            el, probe = make_element(RECTANGLE, xmat=xmat)
+            thetadeg = np.rad2deg(np.arctan2(el.m21, el.m11))
+            A, B, D, _ = prop.calc_constitutive_element(thetadeg)
+            Ds = D - B @ np.linalg.inv(A) @ B
+            K1 = element_KC0(el, prop, hgfactor_physical=1.)
+            K0 = element_KC0(el, prop, hgfactor_physical=0.)
+            for dof, ref in ((3, el.area*(Ds[2, 2]/a**2 + Ds[1, 1]/b**2)/6),
+                             (4, el.area*(Ds[0, 0]/a**2 + Ds[2, 2]/b**2)/6)):
+                ue = hourglass_mode(el, dof)
+                U1 = 0.5*ue @ K1 @ ue
+                U0 = 0.5*ue @ K0 @ ue
+                print('%-17s theta=%4.1f %-7s %.6e %.6e' % (name, thetadeg,
+                      HG_NAMES[dof], U1, ref))
+                assert abs(U0) < 1e-12*np.abs(K0).max()*(ue @ ue), (name,
+                                                                 thetadeg)
+                assert np.isclose(U1, ref, rtol=1e-10), (name, thetadeg, dof)
+
+
 def test_transverse_shear_matches_belytschko_leviathan():
     r"""The transverse shear of Quad4R against :func:`bl94_shear_reference`
 
@@ -1171,10 +1270,13 @@ def test_transverse_shear_matches_belytschko_leviathan():
     nonconstant part, Eqs. (3.35)-(3.42), pp. 328-329; the one-point
     stiffness of the constant part, Eq. (4.12), p. 330, and the
     stabilisation of the nonconstant part, Eq. (4.13), p. 331, with no
-    parameter, ``hgfactor_w = 1`` in pyfe3d. The energy of the
-    stabilisation, the difference between ``hgfactor_w = 1`` and ``0``, and
-    its linearity in ``hgfactor_w`` are checked on four shapes with random
-    displacements, and on the rectangle of sides `2a = 2` and `2b = 1` the
+    parameter, ``hgfactor_physical = 1`` in pyfe3d. The energy of the
+    stabilisation, the difference between ``hgfactor_physical = 1`` and
+    ``0``, which also contains that of the bending, see
+    :func:`test_bending_stabilisation_matches_belytschko_leviathan`, and its
+    linearity in ``hgfactor_physical`` are checked on four shapes with
+    random displacements, and on the rectangle of sides `2a = 2` and `2b =
+    1` the
     hourglass pattern `w = \xi\eta`, whose assumed shear strains are
     `\gamma_{xz} = \eta/a` and `\gamma_{yz} = \xi/b`, has the energy
     `A (A_{55}/a^2 + A_{44}/b^2)/6`, all of it from the stabilisation.
@@ -1183,6 +1285,7 @@ def test_transverse_shear_matches_belytschko_leviathan():
     prop = isotropic_plate(thickness=T_BROCKMAN, E=E_BROCKMAN,
                            nu=NU_BROCKMAN)
     Cs = np.array([[prop.A55, prop.A45], [prop.A45, prop.A44]])
+    D = prop.calc_constitutive_element(0.)[2]
     rng = np.random.default_rng(1)
     for name, ncoords in [('rectangle', RECTANGLE),
                           ('parallelogram', PARALLELOGRAM),
@@ -1191,9 +1294,10 @@ def test_transverse_shear_matches_belytschko_leviathan():
         el, probe = make_element(ncoords)
         x, y = element_xy(probe)
         KH, _ = bl94_shear_reference(x, y, Cs)
-        K0 = element_KC0(el, prop, hgfactor_w=0.)
-        K1 = element_KC0(el, prop, hgfactor_w=1.)
-        K3 = element_KC0(el, prop, hgfactor_w=3.)
+        KH = KH + bl94_bending_reference(x, y, D)
+        K0 = element_KC0(el, prop, hgfactor_physical=0.)
+        K1 = element_KC0(el, prop, hgfactor_physical=1.)
+        K3 = element_KC0(el, prop, hgfactor_physical=3.)
         for _ in range(4):
             q = rng.standard_normal(12)
             ue = np.zeros(24)
@@ -1209,8 +1313,8 @@ def test_transverse_shear_matches_belytschko_leviathan():
     el, probe = make_element(RECTANGLE)
     a, b = 1., 0.5
     ue = hourglass_mode(el, 2)
-    U0 = 0.5*ue @ element_KC0(el, prop, hgfactor_w=0.) @ ue
-    U1 = 0.5*ue @ element_KC0(el, prop, hgfactor_w=1.) @ ue
+    U0 = 0.5*ue @ element_KC0(el, prop, hgfactor_physical=0.) @ ue
+    U1 = 0.5*ue @ element_KC0(el, prop, hgfactor_physical=1.) @ ue
     U_ref = el.area*(prop.A55/a**2 + prop.A44/b**2)/6
     print('w = xi*eta on the rectangle:', U0, U1, U_ref)
     assert abs(U0) < 1e-12*U1
@@ -1220,7 +1324,7 @@ def test_transverse_shear_matches_belytschko_leviathan():
 def test_constant_twist_patch_test():
     r"""A uniform twist, `w = kxy`, `r_x = kx`, `r_y = -ky`, has no
     transverse shear, and Quad4R reproduces its energy, `2 D_{66} k^2`
-    per unit area, exactly, for any mesh, length unit and ``hgfactor_w``
+    per unit area, exactly, for any mesh, length unit and ``hgfactor_physical``
 
     The assumed shear strains of Belytschko and Leviathan (1994), see
     :func:`test_transverse_shear_matches_belytschko_leviathan`, vanish for
@@ -1239,7 +1343,7 @@ def test_constant_twist_patch_test():
         for hg in (1., 0.1, 0.):
             for n in (4, 16):
                 ratio = twist_patch_energy_ratio(n, scale, hg)
-                print('scale %g, hgfactor_w %g, %dx%d: U/U_exact = %.12f'
+                print('scale %g, hgfactor_physical %g, %dx%d: U/U_exact = %.12f'
                       % (scale, hg, n, n, ratio))
                 assert abs(ratio - 1) < 1e-9, (scale, hg, n, ratio)
 
@@ -1271,10 +1375,10 @@ def test_bending_patch_test_belytschko_leviathan():
     zero under constant curvature on a non-rectangular element, and 1.00
     for MITC4 and for their element. Quad4R, whose constant transverse shear
     is that of Dvorkin and Bathe since 0.12.0, passes for any
-    ``hgfactor_w``; up to 0.11, with the displacement-based shear at the
+    ``hgfactor_physical``; up to 0.11, with the displacement-based shear at the
     centroid, it gave 0.875, 1.21, 0.98 and 1.20 times the exact `w` of
     nodes 5 to 8 with ``h = 0.01`` (measured on 2026-10-29 with
-    ``hgfactor_w = 0``).
+    ``hgfactor_physical = 0``).
 
     """
     def w(X, Y):
@@ -1310,7 +1414,7 @@ def test_bending_patch_test_belytschko_leviathan():
                 el.update_rotation_matrix(ncoords_flatten)
                 el.update_probe_xe(ncoords_flatten)
                 el.update_area()
-                el.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_w=hg)
+                el.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_physical=hg)
             KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
             exact = np.zeros(N)
             exact[2::DOF] = w(X, Y)
@@ -1323,7 +1427,7 @@ def test_bending_patch_test_belytschko_leviathan():
             u = exact.copy()
             u[bu] = spsolve(KC0[bu, :][:, bu], -KC0[bu, :][:, bk] @ exact[bk])
             ratio = u[DOF*4 + 2::DOF]/exact[DOF*4 + 2::DOF]
-            print('h = %g, hgfactor_w = %g: w/w_exact of nodes 5-8' % (h, hg),
+            print('h = %g, hgfactor_physical = %g: w/w_exact of nodes 5-8' % (h, hg),
                   ratio)
             assert np.allclose(u, exact, rtol=1e-9, atol=1e-12), (h, hg)
 
@@ -1374,9 +1478,10 @@ def equivalent_moduli(prop, thetadeg):
 
 
 def test_laminate_hourglass_stiffnesses_use_membrane_and_bending_moduli():
-    r"""`u`, `v` with the membrane moduli, `r_x`, `r_y` with the bending
-    moduli, in the element coordinate system; `w` is controlled by the
-    transverse shear since 0.12.0
+    r"""`u`, `v` with the membrane moduli, in the element coordinate
+    system; `w`, `r_x` and `r_y` have the physical stabilisation of
+    Belytschko and Leviathan (1994) since 0.12.0, see
+    :func:`test_bending_stabilisation_matches_belytschko_leviathan`
 
     The generalized stiffness of each hourglass pattern is recovered from
     its energy, `E^{(h)} = 2 U/(\tilde\gamma^2 A)`, see
@@ -1393,14 +1498,13 @@ def test_laminate_hourglass_stiffnesses_use_membrane_and_bending_moduli():
             thetadeg = np.rad2deg(np.arctan2(el.m21, el.m11))
             E1eq, E2eq, E1b, E2b = equivalent_moduli(prop, thetadeg)
             t, area = prop.h, el.area
-            ref = {0: 0.1*E1eq*t*area, 1: 0.1*E2eq*t*area,
-                   3: 0.1*E2b*t**3*area, 4: 0.1*E1b*t**3*area}
+            ref = {0: 0.1*E1eq*t*area, 1: 0.1*E2eq*t*area}
             if name.startswith('isotropic'):
                 assert np.allclose([E1eq, E2eq, E1b, E2b], E_BROCKMAN,
                                    rtol=1e-12)
             KC0 = element_KC0(el, prop)
             gt = gamma_tilde(el, probe)
-            for dof in (0, 1, 3, 4):
+            for dof in (0, 1):
                 ue = hourglass_mode(el, dof)
                 Eh = ue.dot(KC0.dot(ue))/(gt**2*area)
                 print('%-17s theta=%4.1f %-7s %.6e %.6e' % (name, thetadeg,
@@ -1518,7 +1622,7 @@ def navier_ss1_center_deflection(prop, a, nterms=199):
     return np.sum(W*np.sin(m.ravel()*np.pi/2)*np.sin(n.ravel()*np.pi/2))
 
 
-def ss1_plate_center_deflection(prop, a, n, hgfactors):
+def ss1_plate_center_deflection(prop, a, n):
     r"""Quad4R counterpart of :func:`navier_ss1_center_deflection`, on an
     ``n`` by ``n`` mesh, with the consistent nodal loads of the bilinear
     element
@@ -1545,7 +1649,7 @@ def ss1_plate_center_deflection(prop, a, n, hgfactors):
         el.update_rotation_matrix(ncoords_flatten)
         el.update_probe_xe(ncoords_flatten)
         el.update_area()
-        el.update_KC0(KC0r, KC0c, KC0v, prop, 0, *hgfactors)
+        el.update_KC0(KC0r, KC0c, KC0v, prop)
     KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()
     bk = np.zeros(N, dtype=bool)
     xedge = np.isclose(x, 0.) | np.isclose(x, a)
@@ -1596,48 +1700,35 @@ def test_laminated_plates_against_navier():
     :func:`pyfe3d.shellprop_utils.laminated_plate`, so their reference
     differs from Reddy's, by 0.21 % for the [0/90]s plate with `a/h = 100`.
 
-    The hourglass stiffnesses with the membrane moduli used before 0.11.0
-    for `r_x` and `r_y` are reproduced with ``hgfactor_rx`` and
-    ``hgfactor_ry`` equal to `E_{2eq}/E_{2b}` and `E_{1eq}/E_{1b}`; `w` has
-    had no modulus-based hourglass stiffness since 0.12.0, its hourglass
-    mode being controlled by the transverse shear of Belytschko and
-    Leviathan (1994), the same in both cases. The ply has `E_1/E_2 =
-    25`, `G_{12} = G_{13} = 0.5 E_2`, `G_{23} = 0.2 E_2`, `\nu_{12} = 0.25`,
-    and the sandwich has two `[0/90]` faces of 0.5 mm on a 10 mm core of 100
-    MPa and 40 MPa.
+    The ply has `E_1/E_2 = 25`, `G_{12} = G_{13} = 0.5 E_2`, `G_{23} = 0.2
+    E_2`, `
+u_{12} = 0.25`, and the sandwich has two `[0/90]` faces of 0.5
+    mm on a 10 mm core of 100 MPa and 40 MPa.
 
-    The one-point rule and the hourglass stiffness of the rotations make
-    Quad4R stiffer than the reference, so its deflection is smaller, and the
-    error decreases as `h^2`, the rate of the bilinear element. Measured
-    `w/w_{ref}` with the membrane moduli and with the bending moduli:
+    Quad4R is stiffer than the reference, so its deflection is smaller, and
+    the error decreases as `h^2`, the rate of the bilinear element.
+    Measured `w/w_{ref}` on 2026-10-29, with the physical stabilisation of
+    the bending and of the transverse shear of Belytschko and Leviathan
+    (1994) used since 0.12.0, and, up to 0.11, with Brockman's hourglass
+    stiffnesses of the rotations with the bending moduli:
 
     ==========  ===============  ===============  ===============
     plate       8x8              16x16            32x32
     ==========  ===============  ===============  ===============
-    isotropic   0.9246, 0.9246   0.9804, 0.9804   0.9950, 0.9950
-    [0/90]s     0.8608, 0.8583   0.9623, 0.9610   0.9904, 0.9900
-    [0/90]      0.6921, 0.8519   0.9013, 0.9589   0.9734, 0.9894
-    sandwich    0.9433, 0.8623   0.9854, 0.9621   0.9963, 0.9903
+    isotropic   0.9949 (0.9210)  0.9987 (0.9794)  0.9997 (0.9948)
+    [0/90]s     0.9924 (0.8521)  0.9981 (0.9590)  0.9995 (0.9895)
+    [0/90]      0.9687 (0.8465)  0.9921 (0.9572)  0.9980 (0.9890)
+    sandwich    0.9913 (0.8612)  0.9979 (0.9617)  0.9995 (0.9902)
     ==========  ===============  ===============  ===============
 
-    measured on 2026-10-29 with the transverse shear of Belytschko and
-    Leviathan (1994); up to 0.11, with Brockman's control of `w`, the 8x8
-    values were 0.9210, 0.8547, 0.8521, 0.6822, 0.8465, 0.9431 and 0.8612.
-
-    The observed order of convergence from 16x16 to 32x32 is 1.89 to 1.99,
+    The observed order of convergence from 16x16 to 32x32 is 2.00 to 2.01,
     and the Richardson extrapolation of these two meshes with the order 2
-    agrees with the Navier solution within 0.3 % with the membrane moduli
-    and 0.04 % with the bending moduli, so the meshes converge to the
-    reference and not to another limit.
-
-    With the bending moduli the artificial stiffness of the rotations is the
-    same fraction of the bending stiffness of the plate for every laminate,
-    as Brockman calibrated it for isotropic plates. For the isotropic plate
-    the two choices are identical. The deflection improves on every mesh
-    where the membrane moduli over-stabilised, the unsymmetric cross-ply,
-    whose `\boldsymbol{B}` makes `E_{1b} = 0.36 E_{1eq}`, and worsens on
-    every mesh where they under-stabilised, the sandwich, with `E_{1b} = 2.7
-    E_{1eq}`, which is then about as accurate as a symmetric cross-ply.
+    agrees with the Navier solution within 1e-5, so the meshes converge to
+    the reference and not to another limit. Up to 0.11 the artificial
+    stiffness of the rotations, 0.1 times the bending modulus, made the 8x8
+    meshes 8 to 15 % too stiff; the physical stabilisation, the
+    nonconstant part of the curvatures integrated with the bending
+    stiffness of the laminate, leaves 0.5 to 3 %.
 
     """
     E2 = 1.e9
@@ -1666,41 +1757,26 @@ def test_laminated_plates_against_navier():
               % (a_h, wbar, w))
         assert abs(w - wbar) <= 0.5e-4
     meshes = (8, 16, 32)
-    errors = {}
     for name, (prop, a) in plates.items():
-        E1eq, E2eq, E1b, E2b = equivalent_moduli(prop, 0.)
-        # NOTE w has no modulus-based hourglass stiffness since 0.12.0
-        membrane = (1., 1., 1., E2eq/E2b, E1eq/E1b)
         wref = navier_ss1_center_deflection(prop, a)
         # NOTE truncation of the Navier series
         assert abs(navier_ss1_center_deflection(prop, a, 399)/wref - 1) < 1e-8
-        for label, hgfactors in (('membrane', membrane),
-                                 ('bending', (1.,)*5)):
-            w = np.array([ss1_plate_center_deflection(prop, a, n, hgfactors)
-                          for n in meshes])/wref
-            e = 1 - w
-            order = np.log2(e[1]/e[2])
-            w_inf = w[2] + (w[2] - w[1])/3
-            print('%-10s a/h = %5.1f  %-8s moduli  w/wref %s  order %.2f  '
-                  'Richardson %.5f' % (name, a/prop.h, label,
-                  ' '.join('%.4f' % wi for wi in w), order, w_inf))
-            # NOTE stiffer than the reference, monotonic convergence at the
-            #      rate h**2 of the bilinear element
-            assert np.all(e > 0), (name, label)
-            assert e[0] > e[1] > e[2], (name, label)
-            assert 1.5 < order < 2.5, (name, label)
-            # NOTE the extrapolation removes at least two thirds of the
-            #      error of the finest mesh: the limit is the Navier solution
-            assert abs(w_inf - 1) < e[2]/3, (name, label)
-            errors[name, label] = e
-    # NOTE the isotropic moduli ratios are 1 to round-off, so are the
-    #      hourglass factors and the deflections w/wref = 1 - e
-    assert np.allclose(1 - errors['isotropic', 'membrane'],
-                       1 - errors['isotropic', 'bending'], rtol=1e-10,
-                       atol=0)
-    assert np.all(errors['[0/90]', 'bending'] < errors['[0/90]', 'membrane'])
-    assert np.all(errors['sandwich', 'bending']
-                  > errors['sandwich', 'membrane'])
+        w = np.array([ss1_plate_center_deflection(prop, a, n)
+                      for n in meshes])/wref
+        e = 1 - w
+        order = np.log2(e[1]/e[2])
+        w_inf = w[2] + (w[2] - w[1])/3
+        print('%-10s a/h = %5.1f  w/wref %s  order %.2f  Richardson %.5f'
+              % (name, a/prop.h, ' '.join('%.4f' % wi for wi in w), order,
+                 w_inf))
+        # NOTE stiffer than the reference, monotonic convergence at the
+        #      rate h**2 of the bilinear element
+        assert np.all(e > 0), name
+        assert e[0] > e[1] > e[2], name
+        assert 1.5 < order < 2.5, name
+        # NOTE the extrapolation removes at least two thirds of the error
+        #      of the finest mesh: the limit is the Navier solution
+        assert abs(w_inf - 1) < e[2]/3, name
 
 
 def test_mass_formulations_match_brockman():
@@ -1777,6 +1853,7 @@ if __name__ == '__main__':
     test_homogeneous_stiffnesses_agree_with_brockman_for_small_areas()
     test_one_element_wide_strip_in_torsion()
     test_transverse_shear_matches_belytschko_leviathan()
+    test_bending_stabilisation_matches_belytschko_leviathan()
     test_constant_twist_patch_test()
     test_bending_patch_test_belytschko_leviathan()
     test_laminate_hourglass_stiffnesses_use_membrane_and_bending_moduli()

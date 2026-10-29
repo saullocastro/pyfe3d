@@ -16,7 +16,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
     with 30x14 elements, rotated by 25 combinations of pitch and yaw
 
     The buckling load must not depend on the orientation of the plate. With
-    this mesh it is 6.0 % above the exact solution of Leissa, A. W.,
+    this mesh it is 1.5 % above the exact solution of Leissa, A. W.,
     Vibration of Plates, NASA SP-160, 1969, Sec. 10.2.1, p. 277, Eq.
     (10.46); the convergence to that solution with the mesh is verified by
     the flat plate of

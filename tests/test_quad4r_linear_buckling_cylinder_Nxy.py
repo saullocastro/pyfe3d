@@ -76,38 +76,43 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     the circumference and nearly square elements, ``|Tcr|`` in Nm and its
     relative difference to the intercept of Fig. 13 of the same sign, with
     the wall time of the test, both laminates, on a machine shared with
-    other jobs::
+    other jobs, measured on 2026-10-29 with the default stabilisation of
+    Quad4R since 0.12.0, the physical stabilisation of the bending and of the transverse shear of Belytschko and Leviathan (1994)::
 
         refinement ntheta elements  Z11, Nxy < 0      Z33, Nxy < 0     time
-           0.5       40      480   25067.1 +49.2 %   15663.7 +70.3 %     1 s
-           0.75      60     1080   20219.9 +20.4 %   11691.9 +27.1 %     4 s
-           1         80     1920   18537.7 +10.3 %   10509.2 +14.2 %    11 s
-           1.5      120     4560   17459.7  +3.9 %    9766.3  +6.2 %    31 s
-           2        160     8000   17113.2  +1.9 %    9480.9  +3.1 %    68 s
-           3        240    18240   16870.4  +0.4 %    9283.4  +0.9 %   208 s
-        extrapolated               16684    -0.7 %    9136    -0.7 %
+           0.5       40      480   26930.5 +60.3 %   17906.1 +94.6 %     2 s
+           0.75      60     1080   20868.7 +24.2 %   12465.2 +35.5 %     7 s
+           1         80     1920   18864.8 +12.3 %   10883.3 +18.3 %    16 s
+           1.5      120     4560   17585.6  +4.7 %    9913.6  +7.8 %    48 s
+           2        160     8000   17183.0  +2.3 %    9569.9  +4.0 %    98 s
+           3        240    18240   16900.5  +0.6 %    9321.7  +1.3 %   258 s
+        extrapolated               16683    -0.7 %    9118    -0.9 %
 
     The extrapolation fits ``a + c*ntheta**-p`` to the three finest meshes,
-    giving p = 2.1. The element thus converges to within 0.7 per cent of the
-    semi-analytical prediction for both laminates, which is the precision
-    with which the figure can be read, and to the same values as the enriched
-    Quad4, whose extrapolated values are 16684 and 9136 Nm too, see
+    giving p = 2.05 and 1.97. The element thus converges to within 0.9 per
+    cent of the semi-analytical prediction for both laminates, which is the
+    precision with which the figure can be read, and to the values of the
+    enriched Quad4 within 0.2 per cent, whose extrapolated values are 16684
+    and 9136 Nm, see
     tests/test_quad4_linear_buckling_cylinder_Nxy.py, where the model is also
     run with ``Nxy > 0`` and reproduces the negative intercepts. The
     geometric stiffness taking the slopes of `w` at the centroid, in
     version 0.12.0, changed none of these values: under a pure shear
     prestress it coincides with that of the two-by-two quadrature on
-    rectangles.
+    rectangles. Up to 0.11 this test used a thousandth of the hourglass
+    stiffnesses of Brockman (1987), and gave 18537.7 and 10509.2 Nm with
+    ``refinement=1``, 17113.2 and 9480.9 Nm with ``refinement=2``, and the
+    extrapolated values 16684 and 9136 Nm.
 
     The figure is matched within grade A, 2 per cent, of MacNeal, R. H.,
     and Harder, R. L., "A proposed standard set of problems to test finite
     element accuracy", Finite Elements in Analysis and Design, 1(1), 3-20,
     1985, p. 14, only from ``refinement=3``, too expensive for every run.
     The default ``refinement=1`` therefore compares ``-Tcr`` with the
-    values of the table pre-determined by this same test, 18537.7 and
-    10509.2 Nm, with a tolerance for the round-off of other platforms only,
+    values of the table pre-determined by this same test, 18864.8 and
+    10883.3 Nm, with a tolerance for the round-off of other platforms only,
     and with Fig. 13 within grade C, 20 per cent, as a sanity bound.
-    ``refinement=2`` compares with 17113.2 and 9480.9 Nm and grade B, 10 per
+    ``refinement=2`` compares with 17183.0 and 9569.9 Nm and grade B, 10 per
     cent, and ``refinement=3`` with grade A.
 
     """
@@ -133,8 +138,8 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     #      refinement, see the table of the docstring. The tolerance, rtol =
     #      1e-4, is for the round-off of other platforms and solvers only
     predetermined = {
-        1: {'Z11': 18537.667, 'Z33': 10509.195},
-        2: {'Z11': 17113.207, 'Z33': 9480.917},
+        1: {'Z11': 18864.768, 'Z33': 10883.319},
+        2: {'Z11': 17182.984, 'Z33': 9569.858},
     }
     # NOTE sanity bounds of the relative difference to Fig. 13 of Castro et
     #      al., the grades of MacNeal and Harder (1985), p. 14: C (20 %) with
@@ -172,10 +177,6 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         # NOTE forcing 5/6 according to Castro et al., beginning of Section 6
         prop = laminated_plate(stack=stack, plyt=plyt, laminaprop=laminaprop,
                                shear_correction='constant')
-
-        # NOTE a thousandth of the default hourglass stiffnesses, with which
-        #      the values of the docstring were measured
-        hgfactor = 0.001
 
         nids = 1 + np.arange(nlength*(ntheta+1))
         nids_mesh = nids.reshape(nlength, ntheta+1)
@@ -239,9 +240,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
             quad.init_k_KG = init_k_KG
             quad.update_rotation_matrix(ncoords_flatten, 0., 0., 1.)
             quad.update_probe_xe(ncoords_flatten)
-            quad.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_u=hgfactor,
-                            hgfactor_v=hgfactor, hgfactor_w=hgfactor,
-                            hgfactor_rx=hgfactor, hgfactor_ry=hgfactor)
+            quad.update_KC0(KC0r, KC0c, KC0v, prop)
             # NOTE the element x axis is the cylinder axis, so the membrane
             #      prestress in the element frame is (0, 0, Nxy)
             quad.update_KG_given_stress(0, 0, Nxy, KGr, KGc, KGv)
@@ -383,19 +382,19 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     reference, with the wall time on a machine shared with other jobs::
 
         refinement  ntheta  elements    Nxy_cr    ratio    time
-           0.5         32       640    765745.5   1.2962     1 s
-           0.75        48      1440    659117.4   1.1157     2 s
-           1           64      2560    623706.1   1.0558     6 s
-           1.5         96      5760    599769.1   1.0152    24 s
-           2          128     10240    591746.7   1.0017    55 s
-           3          192     23424    585982.2   0.9919   191 s
+           0.5         32       640    736961.3   1.2475     1 s
+           0.75        48      1440    644020.7   1.0901     5 s
+           1           64      2560    615541.7   1.0419    12 s
+           1.5         96      5760    596317.3   1.0094    40 s
+           2          128     10240    589793.7   0.9984    87 s
+           3          192     23424    585175.2   0.9905   252 s
         extrapolated                              0.984
 
-    The rows of refinements 1 and 2 were measured again on 2026-10-29 with
-    the transverse shear of Quad4R of Belytschko and Leviathan (1994),
-    0.12.0, which raised them by 0.013 and 0.009 per cent; the others predate
-    it. The extrapolation fits ``a + c*ntheta**-p`` to the three finest
-    meshes (p = 2.0). The converged element is therefore 1.6 per cent below the
+    measured on 2026-10-29 with the default stabilisation of Quad4R since
+    0.12.0, the physical stabilisation of the bending and of the transverse shear of Belytschko and Leviathan (1994); up to 0.11, with the hourglass stiffnesses of Brockman
+    (1987), 765745.5, 659117.4, 623627.9, 599769.1, 591694.8 and 585982.2
+    N/m, extrapolated 0.984 as well. The extrapolation fits ``a +
+    c*ntheta**-p`` to the three finest meshes (p = 2.0). The converged element is therefore 1.6 per cent below the
     formula, which is within the accuracy of the formula itself: it is a
     straight-line fit of Batdorf's Galerkin solution of a Donnell-type
     equation, and Table 1, p. 20, of TN 1344 gives k_s = 153.0 at Z = 1000 in
@@ -453,10 +452,6 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
 
     prop = isotropic_plate(thickness=t, E=E, nu=nu)
 
-    # NOTE the default hourglass stiffnesses, with which the values of the
-    #      docstring were measured
-    hgfactor = 1.
-
     nids = 1 + np.arange(nlength*(ntheta+1))
     nids_mesh = nids.reshape(nlength, ntheta+1)
     nids_mesh[:, -1] = nids_mesh[:, 0]
@@ -509,9 +504,7 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
         quad.init_k_KG = init_k_KG
         quad.update_rotation_matrix(ncoords_flatten, 0., 0., 1.)
         quad.update_probe_xe(ncoords_flatten)
-        quad.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_u=hgfactor,
-                        hgfactor_v=hgfactor, hgfactor_w=hgfactor,
-                        hgfactor_rx=hgfactor, hgfactor_ry=hgfactor)
+        quad.update_KC0(KC0r, KC0c, KC0v, prop)
         quad.update_KG_given_stress(0, 0, Nxy, KGr, KGc, KGv)
         init_k_KC0 += data.KC0_SPARSE_SIZE
         init_k_KG += data.KG_SPARSE_SIZE
@@ -546,8 +539,8 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     #      refinement, see the table of the docstring. The tolerance, rtol =
     #      1e-4, is for the round-off of other platforms and solvers only
     predetermined = {
-        1: 623706.10,
-        2: 591746.74,
+        1: 615541.74,
+        2: 589793.69,
     }
     if refinement in predetermined:
         assert isclose(Nxy_cr, predetermined[refinement], rtol=1e-4)
