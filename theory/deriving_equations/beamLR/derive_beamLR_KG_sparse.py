@@ -102,11 +102,9 @@ BL = Matrix([
 # Geometric stiffness matrix using Donnell's type of geometric nonlinearity
 # (or van Karman nonlinear terms)
 # exx = u,x + 1/2 w,x^2 + 1/2 v,x^2 - z d2w/dx2 - y d2v/dx2
-# remembering that
-# ry = -dw/dx
-# rz = dv/dx
-# then:
-# exx = u,x + 1/2 ry^2 + 1/2 rz^2 + z ry,x - y rz,x , compare with Eq. 7 in Luo, Y. 2008
+# where the slopes v,x and w,x are those of the interpolations of v and w;
+# with shear deformation they differ from the rotations, v,x = rz + gammay
+# and w,x = -ry + gammaz
 
 # displacements in global coordinates corresponding to one finite element
 ue = Matrix([symbols(r'ue[%d]' % i) for i in range(0, BL.shape[1])])
@@ -119,18 +117,26 @@ print('N =', N, flush=True)
 #     rz,x and ry,x are constant for linear shape functions
 N = var('N', real=True)
 
-# the slopes are taken from the rotations, v,x = rz and w,x = -ry
-#NOTE, I tried Sv_x and Sw_x here and it does not work, leading to the same KG
-#      obtained for the truss element. Thus, I recommend keeping Nrz and Nry,
-#      which might become more inconsistent when the beam becomes thicker, i.e.
-#      when L/sqrt(A) becomes lower.
+# the slopes are taken from the interpolations of v and w
+Sv_x = 2/L*Nv.diff(xi)
+Sw_x = 2/L*Nw.diff(xi)
+#NOTE up to pyfe3d 0.11 the slopes were taken from the rotations, v,x = rz
+#     and w,x = -ry, i.e. Nrz and -Nry here, which neglects the shear
+#     deformation: the buckling load of a clamped-free column converged to
+#     the Euler load P_e instead of P_e/(1 + P_e/(kappa*G*A)), Eq. (2-57) of
+#     Timoshenko and Gere (1961), 59 % above it for P_e/(kappa*G*A) = 0.59.
+#     With Sv_x and Sw_x the matrix is that of a string, N/L*[[1, -1], [-1,
+#     1]] for v and for w, and the buckling load converges to Eq. (2-57) as
+#     the square of the element length; for slender columns its
+#     discretization error is about twice that of the former matrix
 #NOTE the slopes enter the von Karman strain as two separate squares,
 #     exx = u,x + (v,x**2 + w,x**2)/2, so the geometric stiffness is
-#     N*(Nrz.T*Nrz + Nry.T*Nry). Using the square of the sum,
-#     N*(Nrz - Nry).T*(Nrz - Nry), couples the two bending planes and halves
-#     the buckling load of a column with a square cross section
+#     N*(Sv_x.T*Sv_x + Sw_x.T*Sw_x). Using the square of the sum,
+#     N*(Sv_x + Sw_x).T*(Sv_x + Sw_x), couples the two bending planes and
+#     halves the buckling load of a column with a square cross section
 
-KGe = L/2.*simplify(integrate((Nrz.T*Nrz + Nry.T*Nry)*N, (xi, -1, +1)))
+KGe = L/2.*simplify(integrate((Sv_x.T*Sv_x + Sw_x.T*Sw_x)*N, (xi, -1, +1)))
+assert simplify(KGe[1, 1] - N/L) == 0 and simplify(KGe[1, 7] + N/L) == 0
 
 print('transformation local to global')
 var('r11, r12, r13, r21, r22, r23, r31, r32, r33')
