@@ -72,18 +72,20 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     ``Tcr = eigval*Nxy*b*R`` below, with ``Nxy < 0``, is minus the torque T of
     the paper, so ``-Tcr`` is compared with the positive intercepts.
 
-    Measured ``|Tcr|`` in Nm, for ``ntheta`` elements around the
-    circumference and nearly square elements, and its relative difference to
-    the intercept of Fig. 13 of the same sign::
+    Measured with this test, with ``ntheta = 80*refinement`` elements around
+    the circumference and nearly square elements, ``|Tcr|`` in Nm and its
+    relative difference to the intercept of Fig. 13 of the same sign, with
+    the wall time of the test, both laminates, on a machine shared with
+    other jobs::
 
-        ntheta        Z11, Nxy < 0       Z33, Nxy < 0
-           40      25067.1  +49.2 %    15663.7  +70.3 %
-           60      20219.9  +20.4 %    11691.9  +27.1 %
-           80      18537.7  +10.3 %    10509.2  +14.2 %
-          120      17459.7   +3.9 %     9766.3   +6.2 %
-          160      17113.2   +1.9 %     9480.9   +3.1 %
-          240      16870.4   +0.4 %     9283.4   +0.9 %
-        extrapolated 16684   -0.7 %       9136   -0.7 %
+        refinement ntheta elements  Z11, Nxy < 0      Z33, Nxy < 0     time
+           0.5       40      480   25067.1 +49.2 %   15663.7 +70.3 %     1 s
+           0.75      60     1080   20219.9 +20.4 %   11691.9 +27.1 %     4 s
+           1         80     1920   18537.7 +10.3 %   10509.2 +14.2 %    11 s
+           1.5      120     4560   17459.7  +3.9 %    9766.3  +6.2 %    31 s
+           2        160     8000   17113.2  +1.9 %    9480.9  +3.1 %    68 s
+           3        240    18240   16870.4  +0.4 %    9283.4  +0.9 %   208 s
+        extrapolated               16684    -0.7 %    9136    -0.7 %
 
     The extrapolation fits ``a + c*ntheta**-p`` to the three finest meshes,
     giving p = 2.1. The element thus converges to within 0.7 per cent of the
@@ -91,12 +93,22 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     with which the figure can be read, and to the same values as the enriched
     Quad4, whose extrapolated values are 16684 and 9136 Nm too, see
     tests/test_quad4_linear_buckling_cylinder_Nxy.py, where the model is also
-    run with ``Nxy > 0`` and reproduces the negative intercepts.
+    run with ``Nxy > 0`` and reproduces the negative intercepts. The
+    geometric stiffness taking the slopes of `w` at the centroid, in
+    version 0.12.0, changed none of these values: under a pure shear
+    prestress it coincides with that of the two-by-two quadrature on
+    rectangles.
 
-    The default ``refinement=1`` uses ``ntheta = 80``, where the measured
-    discretisation error is +10.3 % (Z11) and +14.2 % (Z33), and the test
-    takes about 8 s. ``refinement=2`` uses ``ntheta = 160``, +1.9 and +3.1 %,
-    and takes about 60 s.
+    The figure is matched within grade A, 2 per cent, of MacNeal, R. H.,
+    and Harder, R. L., "A proposed standard set of problems to test finite
+    element accuracy", Finite Elements in Analysis and Design, 1(1), 3-20,
+    1985, p. 14, only from ``refinement=3``, too expensive for every run.
+    The default ``refinement=1`` therefore compares ``-Tcr`` with the
+    values of the table pre-determined by this same test, 18537.7 and
+    10509.2 Nm, with a tolerance for the round-off of other platforms only,
+    and with Fig. 13 within grade C, 20 per cent, as a sanity bound.
+    ``refinement=2`` compares with 17113.2 and 9480.9 Nm and grade B, 10 per
+    cent, and ``refinement=3`` with grade A.
 
     """
     # NOTE stacking sequences from Table 4 of Castro et al., from inwards to
@@ -117,16 +129,18 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         'Z11' : 16.8e3,
         'Z33' : 9.2e3,
     }
-    # NOTE upper bounds of the relative error, from the measured
-    #      discretisation errors of the docstring rounded up. The lower bound
-    #      -0.03 covers the extrapolated -0.7 % and the reading precision of
-    #      the figure, 0.1 kNm, which is 0.6 % for Z11 and 1.1 % for Z33
-    upper_bound = {
-        1: {'Z11': 0.12, 'Z33': 0.16},
-        2: {'Z11': 0.025, 'Z33': 0.04},
+    # NOTE -Tcr in Nm pre-determined with this same test at the same
+    #      refinement, see the table of the docstring. The tolerance, rtol =
+    #      1e-4, is for the round-off of other platforms and solvers only
+    predetermined = {
+        1: {'Z11': 18537.667, 'Z33': 10509.195},
+        2: {'Z11': 17113.207, 'Z33': 9480.917},
     }
-    if refinement not in upper_bound:
-        raise ValueError('refinement must be 1 or 2')
+    # NOTE sanity bounds of the relative difference to Fig. 13 of Castro et
+    #      al., the grades of MacNeal and Harder (1985), p. 14: C (20 %) with
+    #      ntheta = 80, B (10 %) with ntheta = 160 and A (2 %) with
+    #      ntheta = 240, which the table of the docstring shows to be met
+    grade = {1: 0.20, 2: 0.10, 3: 0.02}
 
     for cyl in ['Z11', 'Z33']:
         stack = stacks[cyl]
@@ -138,7 +152,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         R = 0.250 # m
         b = 2*np.pi*R # m
 
-        ntheta = 80*refinement # circumferential
+        ntheta = int(round(80*refinement)) # circumferential
         nlength = int(ntheta*L/b)
         if nlength % 2 == 0:
             nlength += 1
@@ -335,7 +349,10 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         # NOTE -Tcr is the positive torque T of Castro et al.
         error = -Tcr/reference_T[cyl] - 1
         print('relative difference to Fig. 13 of Castro et al.', error)
-        assert -0.03 < error < upper_bound[refinement][cyl]
+        if refinement in predetermined:
+            assert isclose(-Tcr, predetermined[refinement][cyl], rtol=1e-4)
+        if refinement in grade:
+            assert abs(error) < grade[refinement]
 
 
 def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
@@ -354,26 +371,31 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     and the same equation with the correlation factor set to one is
     Eq. (25), Sec. 4.2.4, p. 11, of NASA SP-8007, Buckling of thin-walled
     circular cylinders, 1965, revised 1968, valid there for
-    ``50 < Z < 78*(R/t)**2*(1 - nu**2)``. The simply supported edges of
+    ``50 < Z < 78*(R/t)**2*(1 - nu**2)``. The straight line is also quoted,
+    from TN 1344, by Batdorf, S. B., "A simplified method of elastic-stability
+    analysis for thin cylindrical shells", NACA Report 874, 1947, p. 291,
+    which is reference 3 of SP-8007. The simply supported edges of
     Batdorf et al. are ``w = w,xx = v = 0`` with ``u`` unrestrained (TN 1344,
     p. 8), which is what the constraints below impose.
 
     Here ``R = 250 mm``, ``L = 4*R``, ``t = 4 mm`` and ``nu = 0.3``, so that
     ``Z = 954``, well inside both ranges, and the cylinder buckles with five
-    circumferential waves. Measured ratio of the critical ``N_xy`` to the
-    reference, for ``ntheta`` elements around the circumference and nearly
-    square elements::
+    circumferential waves. Measured with this test, with
+    ``ntheta = 64*refinement`` elements around the circumference and nearly
+    square elements, the critical ``N_xy`` in N/m and its ratio to the
+    reference, with the wall time on a machine shared with other jobs::
 
-        ntheta    ratio
-           32     1.2962
-           48     1.1157
-           64     1.0556
-           96     1.0152
-          128     1.0016
-        extrapolated 0.985
+        refinement  ntheta  elements    Nxy_cr    ratio    time
+           0.5         32       640    765745.5   1.2962     1 s
+           0.75        48      1440    659117.4   1.1157     2 s
+           1           64      2560    623627.9   1.0556     6 s
+           1.5         96      5760    599769.1   1.0152    24 s
+           2          128     10240    591694.8   1.0016    55 s
+           3          192     23424    585982.2   0.9919   191 s
+        extrapolated                              0.984
 
     the extrapolation fitting ``a + c*ntheta**-p`` to the three finest meshes
-    (p = 2.1). The converged element is therefore 1.5 per cent below the
+    (p = 2.0). The converged element is therefore 1.6 per cent below the
     formula, which is within the accuracy of the formula itself: it is a
     straight-line fit of Batdorf's Galerkin solution of a Donnell-type
     equation, and Table 1, p. 20, of TN 1344 gives k_s = 153.0 at Z = 1000 in
@@ -386,10 +408,16 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     tests/test_quad4_linear_buckling_cylinder_Nxy.py, but needs about twice
     the elements for the same accuracy, which is why the longer cylinder is
     used here. The extrapolated values of Quad4 and Quad4R on the cylinder
-    of this test are both 0.985.
+    of this test are both 0.984.
 
-    With the default ``refinement=1``, ``ntheta = 64`` and the test takes
-    about 5 s; ``refinement=2`` uses ``ntheta = 128`` and takes about 50 s.
+    The default ``refinement=1``, ``ntheta = 64``, compares ``N_xy`` with
+    the value of the table pre-determined by this same test, with a
+    tolerance for the round-off of other platforms only, and the ratio with
+    the formula within grade B, 10 per cent, of MacNeal, R. H., and Harder,
+    R. L., "A proposed standard set of problems to test finite element
+    accuracy", Finite Elements in Analysis and Design, 1(1), 3-20, 1985,
+    p. 14; from ``refinement=2`` the ratio is checked within grade A, 2 per
+    cent.
 
     """
     data = Quad4RData()
@@ -409,7 +437,7 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     Nxy_cr_reference = k_s*np.pi**2*D/L**2
     print('Z', Z, 'k_s', k_s, 'Nxy_cr_reference', Nxy_cr_reference)
 
-    ntheta = 64*refinement # circumferential
+    ntheta = int(round(64*refinement)) # circumferential
     nlength = int(ntheta*L/b)
     if nlength % 2 == 0:
         nlength += 1
@@ -507,15 +535,22 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     ratio = Nxy_cr/Nxy_cr_reference
     print('Nxy_cr', Nxy_cr, 'ratio', ratio)
 
-    # NOTE bounds from the measured ratios of the docstring: 1.0556 at
-    #      ntheta = 64 and 1.0016 at ntheta = 128, with the converged value
-    #      0.985
-    if refinement == 1:
-        assert 0.97 < ratio < 1.07
-    elif refinement == 2:
-        assert 0.97 < ratio < 1.01
-    else:
-        raise ValueError('refinement must be 1 or 2')
+    # NOTE Nxy_cr in N/m pre-determined with this same test at the same
+    #      refinement, see the table of the docstring. The tolerance, rtol =
+    #      1e-4, is for the round-off of other platforms and solvers only
+    predetermined = {
+        1: 623627.89,
+        2: 591694.82,
+    }
+    if refinement in predetermined:
+        assert isclose(Nxy_cr, predetermined[refinement], rtol=1e-4)
+    # NOTE sanity bounds of the relative difference to the formula, the
+    #      grades of MacNeal and Harder (1985), p. 14: B (10 %) with
+    #      ntheta = 64 and A (2 %) from ntheta = 128, which the table of
+    #      the docstring shows to be met
+    grade = {1: 0.10, 2: 0.02, 3: 0.02}
+    if refinement in grade:
+        assert abs(ratio - 1) < grade[refinement]
 
 
 if __name__ == '__main__':

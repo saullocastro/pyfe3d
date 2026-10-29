@@ -48,28 +48,44 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     displacements and the assembly of the geometric stiffness from a
     displacement field through ``update_probe_ue`` and ``update_KG``.
 
-    Why there is no comparison with the paper. Table 6, p. 308, of Castro et
-    al. gives the axial buckling load of Z11, 282.82 kN with FSDT-BC2 and SS2
-    and 284.06 kN with FSDT-BC2 and CC2, the tests giving 228.0 kN (Z11) and
-    221.7 kN (Z23, the same laminate). SS1, the boundary condition here, is
-    not tabulated, it only appears through FSDT-BC1 with CC1 in the curves of
-    Fig. 12, p. 311. Measured with this test, ``Pcr`` in kN::
+    Why there is no assertion against the paper: SS1 at both edges is not
+    in it. Table 6, p. 308, of Castro et al. gives the axial buckling load
+    of Z11 with SS2 and CC2, 282.82 kN with FSDT-BC2 and SS2 and 284.06 kN
+    with FSDT-BC2 and CC2, the tests giving 228.0 kN (Z11) and 221.7 kN
+    (Z23, the same laminate). Its CLPT-BC2 value with SS2, 288.73 kN, is
+    that of Fig. 4(a), p. 308, for which the laminate is assumed
+    orthotropic; with the full constitutive matrix, as in pyfe3d, Fig. 4(b)
+    gives 280.08 kN, and Fig. 5(b), p. 308, gives 281.12 kN for CLPT-BC2
+    with SS1 at one edge and CC1 at the other. Under the uniform prestress
+    of the paper, SS1 at both edges constrains more than SS2 and less than
+    SS1-CC1, so its CLPT load lies between 280.08 and 281.12 kN. The model
+    here differs from that of the paper: its prebuckling field is that of a
+    static analysis, not uniform near the edges, its kinematics is FSDT,
+    lower than CLPT by 2.0 per cent with SS2 in Table 6, and its shear
+    correction is not forced to the 5/6 of the paper (Sec. 6, p. 307).
+    Measured with this test, ``Pcr`` in kN, with the wall time on a machine
+    shared with other jobs::
 
-        refinement  ntheta  elements     Pcr   time
-             1         40       440   -590.3    1 s
-             2         80      1920   -352.0   18 s
-             4        160      8000   -297.0  115 s
+        refinement  ntheta  elements     Pcr     time
+             1         40       440    -590.3      1 s
+             2         80      1920    -352.0     20 s
+             4        160      8000    -297.0    145 s
+             6        240     18240    -286.7    385 s
+             8        320     32640    -283.2    942 s
+        extrapolated                   -278.9
 
-    The load decreases towards the values of the paper for SS2 and CC2,
-    5 per cent above them with ``ntheta = 160``, but SS1 is not tabulated and
-    a converged value would need a finer mesh than a test affords. A
-    comparison would also need the shear correction factor of 5/6 used by the
-    paper (Sec. 6, p. 307), which this test does not force. Before the
+    the extrapolation fitting ``a + c*ntheta**-p`` to the three finest
+    meshes (p = 2.1). The load converges as the square of the element size,
+    to 0.4 per cent below the lower end of the CLPT interval, which is where
+    an FSDT value is expected, but that is no literature value to assert
+    against. The default ``refinement=1`` therefore also compares ``Pcr``
+    with the value of the table pre-determined by this same test, with a
+    tolerance for the round-off of other platforms only. Before the
     geometric stiffness of :class:`.Quad4` took the slopes of `w` at the
-    centroid, in version 0.12.0, the loads were -494.9, -330.0 and -81.6 kN:
-    the hourglass pattern of `w` had the geometric stiffness of the
-    two-by-two quadrature and the load of a mesh-scale mode kept falling
-    under refinement.
+    centroid, in version 0.12.0, the loads with refinements 1, 2 and 4 were
+    -494.9, -330.0 and -81.6 kN: the hourglass pattern of `w` had the
+    geometric stiffness of the two-by-two quadrature and the load of a
+    mesh-scale mode kept falling under refinement.
 
     """
     data = Quad4Data()
@@ -249,65 +265,91 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     assert np.isclose(Pcr2, Pcr, rtol=1e-6)
     assert np.allclose(u3, u, rtol=0, atol=1e-9*abs(compression))
     assert np.isclose(Pcr3, Pcr, rtol=1e-6)
+    # NOTE Pcr in N pre-determined with this same test at the same
+    #      refinement, see the table of the docstring. The tolerance, rtol =
+    #      1e-4, is for the round-off of other platforms and solvers only
+    predetermined = {
+        1: -590271.80,
+    }
+    if refinement in predetermined:
+        assert np.isclose(Pcr, predetermined[refinement], rtol=1e-4)
 
     # NOTE a record of a related study on the laminated cylinder Z22 of
-    #      Castro et al., kept because it explains why the axial buckling
-    #      load of these laminated cylinders cannot be verified in a test.
-    #      It was measured before version 0.12.0, in which Quad4 and Quad4R
-    #      take the slopes of w at the centroid in the geometric stiffness;
-    #      the mesh-scale modes it describes for the quadrilaterals have the
-    #      signature of the hourglass pattern of w that the former geometric
-    #      stiffness did not exclude, and their values are not those of the
-    #      present elements. The values of Tria3R and Tria3DSG are unchanged.
-    #
-    # NOTE for the record, the mesh convergence of the axial buckling load,
-    #      here for cylinder Z22 with the uniform membrane prestress of
-    #      Eq. (13) applied through update_KG_given_stress and SS2 of
-    #      Table 1, over both quadrilaterals and both drilling models. The
-    #      reference is Pcr = -35858 N, from
+    #      Castro et al., [+-49/+-36/0_2] of Geier1997 (Tables 3 and 4,
+    #      p. 307), under the uniform membrane prestress of Eq. (13) applied
+    #      through update_KG_given_stress, with SS2 of Table 1, over both
+    #      quadrilaterals and both drilling models. It is kept because it
+    #      shows what version 0.12.0, in which Quad4 and Quad4R take the
+    #      slopes of w at the centroid in the geometric stiffness, changed.
+    #      The reference of the ratios is Pcr = -35858 N, from
     #      bfsccylinder/tests/test_linear_buckling_Z22_constant_stress.py,
     #      which uses a C1 cubic element and CLPT with ny = 60. Table 6 of
     #      Castro et al. gives 36.35 kN for CLPT-BC2 SS2, 36.29 kN for
-    #      FSDT-BC2 SS2 and 34.4 kN for the test.
+    #      FSDT-BC2 SS2 and 34.4 kN for the test; 36.29 kN is the FSDT-BC2
+    #      load of an orthotropic laminate, Fig. 6(b), p. 308, while with the
+    #      full constitutive matrix, as in pyfe3d, Fig. 6(c) gives 35.27 kN,
+    #      0.984 of the reference.
     #
-    #      Every case below went through pyfe3d.solver.linear_buckling, so
-    #      the Cayley shift was estimated and the spectrum verified, and
-    #      every one of the sixteen reported that no lower load multiplier
-    #      had been missed. The divergence is therefore a property of the
-    #      discretisation and not of the eigensolver.
+    #      Every case went through pyfe3d.solver.linear_buckling, which
+    #      estimates the Cayley shift and verifies that no lower load
+    #      multiplier was missed; where it reported missed multipliers of the
+    #      close clusters with 4 requested, the case was repeated with 8. n
+    #      is the number of circumferential waves of the critical mode, n = 0
+    #      an axisymmetric mode. Measured with 0.12.0 and, on the right, as
+    #      recorded before 0.12.0, with the elements per circumferential
+    #      wave of that critical mode:
     #
-    #        element  drilling  ntheta  elements    Pcr (N)  Pcr/ref  el/wave
-    #         Quad4       0        60      1080     -87954.3   2.453      7.5
-    #         Quad4       0       120      4560     -50600.2   1.411    120.0
-    #         Quad4       0       240     18240     -24151.0   0.674      2.0
-    #         Quad4       0       480     73920      -5943.3   0.166      2.0
-    #         Quad4       1        60      1080     -89028.4   2.483      7.5
-    #         Quad4       1       120      4560     -48593.8   1.355    120.0
-    #         Quad4       1       240     18240     -20750.0   0.579      2.0
-    #         Quad4       1       480     73920      -5093.4   0.142      2.0
-    #         Quad4R      0        60      1080     -88689.5   2.473      7.5
-    #         Quad4R      0       120      4560     -44763.9   1.248     15.0
-    #         Quad4R      0       240     18240     -24184.7   0.674      2.0
-    #         Quad4R      0       480     73920      -5976.1   0.167      2.0
-    #         Quad4R      1        60      1080     -66710.4   1.860      7.5
-    #         Quad4R      1       120      4560     -42258.3   1.178    120.0
-    #         Quad4R      1       240     18240     -20784.0   0.580      2.0
-    #         Quad4R      1       480     73920      -5126.2   0.143      2.0
+    #                                         0.12.0               before
+    #        element  drilling ntheta elements  Pcr (N)  Pcr/ref  n   Pcr/ref el/wave
+    #         Quad4       0       60    1080   -93690.2   2.613   8    2.453    7.5
+    #         Quad4       0      120    4560   -51097.4   1.425   0    1.411  120.0
+    #         Quad4       0      240   18240   -38811.0   1.082   0    0.674    2.0
+    #         Quad4       0      480   73920   -36093.6   1.007   0    0.166    2.0
+    #         Quad4       1       60    1080   -94549.7   2.637   0    2.483    7.5
+    #         Quad4       1      120    4560   -49012.8   1.367   0    1.355  120.0
+    #         Quad4       1      240   18240   -38736.3   1.080   1    0.579    2.0
+    #         Quad4       1      480   73920   -36083.7   1.006   0    0.142    2.0
+    #         Quad4R      0       60    1080   -89209.9   2.488   0    2.473    7.5
+    #         Quad4R      0      120    4560   -45184.7   1.260   0    1.248   15.0
+    #         Quad4R      0      240   18240   -37600.1   1.049   0    0.674    2.0
+    #         Quad4R      0      480   73920   -35792.7   0.998   0    0.167    2.0
+    #         Quad4R      1       60    1080   -67285.6   1.876   0    1.860    7.5
+    #         Quad4R      1      120    4560   -42684.2   1.190   0    1.178  120.0
+    #         Quad4R      1      240   18240   -37157.8   1.036   0    0.580    2.0
+    #         Quad4R      1      480   73920   -35694.9   0.995   0    0.143    2.0
     #
-    #      Three things are worth keeping from this. First, the two drilling
-    #      models track each other, within 1 per cent at ntheta = 60 for
-    #      Quad4 and within 15 per cent at the finest meshes, with
-    #      drilling_model = 0 consistently the stiffer and therefore the
-    #      better of the two, so the drilling treatment is not the cause.
-    #      Second, Quad4 and Quad4R agree to within 1 per cent at every mesh
-    #      except Quad4R with drilling_model = 1 at ntheta = 60, although
-    #      Quad4 is fully integrated with the Allman enrichment and Quad4R is
-    #      reduced-integrated with hourglass control; whatever drives the
-    #      divergence is common to both and is therefore neither the reduced
-    #      integration nor the hourglass control. Third, from ntheta = 240
-    #      the critical mode sits at exactly two elements per wavelength, the
-    #      mesh Nyquist limit, which is the signature of a mesh-scale mode
-    #      rather than of a physical one.
+    #      Quad4 with drilling_model = 1 at ntheta = 240 has an axisymmetric
+    #      mode 0.01 per cent above the n = 1 pair. With 0.12.0 every element
+    #      and both drilling models converge from above, and from
+    #      ntheta = 120 the critical mode is axisymmetric, as in Fig. 6 of
+    #      Castro et al., with 15 axial half-waves at ntheta = 120, 2.5
+    #      elements per half-wave, and 17 at ntheta = 240 and 480, 4.5 and
+    #      9.1 elements per half-wave. Fitting a + c*ntheta**-p to the three
+    #      finest meshes gives -35322 N (p = 2.2) for Quad4 with
+    #      drilling_model = 0, -35161 N (p = 2.0) with drilling_model = 1
+    #      and -35227 N (p = 2.1) for Quad4R with drilling_model = 0, within
+    #      0.3 per cent of the 35.27 kN of Fig. 6(c). The energy split
+    #      computed as in the NOTEs below, for the mode of Quad4 with
+    #      drilling_model = 0 at ntheta = 240, closing to 5e-15, is +136.27 per cent membrane, -167.74 coupling,
+    #      +131.24 bending, 0.23 transverse shear and 0.00 drilling, the
+    #      large membrane and coupling shares cancelling as in the long-wave
+    #      mode of ntheta = 120 below.
+    #
+    #      Before 0.12.0 the critical mode from ntheta = 240 sat at exactly
+    #      two elements per wavelength, the mesh Nyquist limit, with Quad4
+    #      and Quad4R within 1 per cent of each other, and the load fell
+    #      under refinement, to a sixth of the reference with ntheta = 480.
+    #      That mode, a radial checkerboard with small rotations, see the
+    #      NOTEs below, is the hourglass pattern of w, whose geometric
+    #      stiffness the slopes at the two-by-two points did not exclude.
+    #      The NOTEs below were written before 0.12.0: their values for
+    #      Quad4 and Quad4R at ntheta = 120, 240 and 480, the energy splits,
+    #      the mode contents and the scaling of the transverse shear
+    #      stiffness, describe that mode and are not those of the present
+    #      elements, and their conclusion that the cure is an assumed
+    #      transverse shear field is superseded: the transverse shear is
+    #      unchanged and the mode is gone. The values of Tria3R and Tria3DSG
+    #      are unchanged, and those of Quad4 at ntheta = 60 are updated.
     #
     # NOTE CORRECTION. An earlier version of this block reported that
     #      Tria3R converges on this cylinder to -9.20 kN, a quarter of the
@@ -375,7 +417,8 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     #         Tria3DSG     240       0.253       1.262       4      60.0
     #
     #      as multiples of the -35858 N reference, with the corresponding
-    #      Quad4 column being 2.453, 1.411 and 0.674. The "as passed"
+    #      Quad4 column being 2.613, 1.425 and 1.082, and 2.453, 1.411 and
+    #      0.674 before 0.12.0. The "as passed"
     #      column reproduces the previously recorded Tria3R values exactly,
     #      0.213, 0.242 and 0.256, which is what makes this a comparison of
     #      the prestress alone.
@@ -398,7 +441,7 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     #      differs in the third digit from the table above:
     #
     #        element    Pcr/ref  el/wave       A        B        D     Ats   drill
-    #         Quad4       2.453      7.5   +71.40   -35.69   +64.26    0.02    0.01
+    #         Quad4       2.613      7.5   +71.60   -36.13   +64.49    0.03    0.01
     #         Tria3DSG    2.540      7.5   +70.78   -30.55   +56.32    2.17    1.28
     #         Tria3R      1.484      2.0   +31.71   +15.18   +14.37   36.62    2.12
     #
@@ -406,13 +449,15 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     #      the three modes are
     #
     #        element      |u_r|      |u_theta|    |u_axial|
-    #         Quad4        2.669e-02  3.103e-03    6.741e-04
+    #         Quad4        2.669e-02  3.103e-03    6.749e-04
     #         Tria3DSG     2.477e-02  2.877e-03    6.155e-04
     #         Tria3R       6.698e-03  8.993e-07    1.078e-04
     #
-    #      Tria3DSG and Quad4 agree to 4 per cent on the same eight-wave
+    #      Tria3DSG and Quad4 agree to 3 per cent on the same eight-wave
     #      mode and their mode contents agree component by component to
-    #      within 8 per cent.
+    #      within 9 per cent. The Quad4 rows are those of 0.12.0; before it
+    #      they were 2.453, +71.40, -35.69, +64.26, 0.02 and 0.01, and
+    #      |u_axial| = 6.741e-04.
     #
     #      Tria3R is the odd one out and is already sitting on a mode at two
     #      elements per wavelength, the mesh Nyquist limit, carrying 37 per
@@ -425,7 +470,7 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     #
     #      The same split at ntheta = 120, where the three elements have
     #      gone to three different modes, so only the Ats column is
-    #      comparable across the rows:
+    #      comparable across the rows, Quad4 measured before 0.12.0:
     #
     #        element    Pcr/ref  el/wave       A        B        D     Ats   drill
     #         Quad4       1.411    120.0  +140.74  -136.51   +95.64    0.13    0.01
@@ -465,7 +510,7 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     #         1e-6      0.003   10.309       5      12.0
     #
     #      At the literature value alpha = 0.1 Tria3R selects the physical
-    #      eight-wave mode and gives 2.520, against Quad4 at 2.453 and
+    #      eight-wave mode and gives 2.520, against Quad4 at 2.613 and
     #      Tria3DSG at 2.534 on that same mode. At the default alpha = 0.7
     #      it selects the Nyquist mode instead. So on this cylinder the
     #      default alpha is not merely inaccurate, it changes which mode is
@@ -476,8 +521,8 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     #      test_tria3r_natural_freq.py 30.6 per cent too stiff while
     #      alpha = 0.7 breaks this cylinder, so no single value serves both
     #      and alpha_shear_locking has to be verified per problem class.
-    #      Tria3DSG needs no such parameter and tracks Quad4 at every mesh
-    #      where Quad4 is healthy.
+    #      Tria3DSG needs no such parameter and agrees with Quad4 on the
+    #      eight-wave mode of ntheta = 60.
     #
     #      The union-jack control previously recorded here, 0.135 at
     #      ntheta = 60 and 0.157 at ntheta = 120, was measured with the same
@@ -485,7 +530,7 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     #      with the correction in place the diagonal pattern would have to
     #      be re-examined from scratch.
     #
-    # NOTE what the quadrilaterals' mesh-scale mode actually is. KC0 is
+    # NOTE what the quadrilaterals' mesh-scale mode was, before 0.12.0. KC0 is
     #      linear in the constitutive constants, so the strain energy of any
     #      displacement field splits exactly into the membrane (A), coupling
     #      (B), bending (D) and transverse shear (Ats) groups, plus the
@@ -561,8 +606,8 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     #      singular. Quad4 and Quad4R agree to 0.1 per cent on Pcr at every
     #      mesh of the tables above, so the Quad4 split stands for both.
     #
-    # NOTE the direct confirmation, and the unified answer for all three
-    #      elements. Scaling only the transverse shear stiffnesses A44, A45
+    # NOTE the direct confirmation before 0.12.0, and the answer then for
+    #      all three elements. Scaling only the transverse shear stiffnesses A44, A45
     #      and A55 of the laminate, at ntheta = 240 where both quadrilaterals
     #      have collapsed:
     #
@@ -604,8 +649,8 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     #      there. Tria3DSG, whose discrete shear gap uses Ats as the
     #      laminate gives it and needs no stabilisation, carries 2.17 per
     #      cent of its energy in transverse shear at that mesh against
-    #      Tria3R's 36.82, and tracks Quad4 to 3 per cent at every mesh
-    #      where Quad4 is healthy.
+    #      Tria3R's 36.82, and agrees with Quad4 to 3 per cent on the
+    #      eight-wave mode of ntheta = 60.
     #
     #      Scaling Ats is a diagnostic and not a fix: it removes the
     #      physical transverse shear deformation along with the spurious
