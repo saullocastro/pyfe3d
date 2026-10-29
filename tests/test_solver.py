@@ -23,6 +23,7 @@ import sys
 sys.path.append('..')
 
 import numpy as np
+import pytest
 from scipy.sparse import coo_matrix, diags, csr_matrix
 from scipy.sparse.linalg import eigsh
 from scipy.linalg import eigh, hilbert
@@ -211,6 +212,7 @@ def test_is_positive_definite():
                                                          [1., 0.]])))
 
 
+@pytest.mark.slow
 def test_linear_buckling_plate():
     r"""End-to-end against the buckling load of Leissa (1969), Eq. (10.46),
     see the module documentation, and against the hand-rolled recipe used
@@ -259,6 +261,7 @@ def test_linear_buckling_plate():
     assert residual < 1e-8
 
 
+@pytest.mark.slow
 def test_natural_frequency_plate():
     r"""End-to-end against the natural frequency of a simply supported
     plate of Leissa (1969), Eq. (4.20), see the module documentation

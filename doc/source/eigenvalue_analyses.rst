@@ -153,8 +153,12 @@ Then:
   for the complex eigenvalues of :func:`.complex_frequency` no such count
   is implemented, and only the residuals are verified;
 - when that count finds eigenvalues missing below the highest one returned
-  by the first sparse solver of symmetric matrices, they are computed by
-  deflated passes before any other solver, see
+  by a sparse solver of symmetric matrices, they are computed by deflated
+  passes before the next solver, after each of the two calls of
+  :func:`scipy.sparse.linalg.eigsh` of :func:`.linear_buckling` and after
+  the single one of :func:`.natural_frequency`, such that no accurate
+  result with missing copies reaches the dense fallback or the ``RuntimeError``
+  without a completion attempt, see
   :func:`pyfe3d.solver.eigen._complete_repeated`: the Lanczos process of
   ARPACK may return only one copy of a repeated eigenvalue, e.g. of the
   pairs of modes `\cos n\theta` and `\sin n\theta` of a cylinder, equal up

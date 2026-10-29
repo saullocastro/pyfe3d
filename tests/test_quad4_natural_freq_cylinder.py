@@ -3,6 +3,7 @@ sys.path.append('..')
 
 import time
 import numpy as np
+import pytest
 from numpy import isclose
 from scipy.sparse import coo_matrix
 
@@ -11,6 +12,7 @@ from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 from pyfe3d.solver import natural_frequency
 
 
+@pytest.mark.slow
 def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     r"""Lowest natural frequencies of an isotropic circular cylindrical shell
     supported at both ends by shear diaphragms

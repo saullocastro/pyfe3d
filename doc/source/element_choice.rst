@@ -55,13 +55,18 @@ geometrically non-linear analyses.
         :mod:`.tria3dsg`. Constant-strain membrane without drilling
         enrichment, stiff in in-plane bending: Cook's membrane is 54 % too
         stiff with 4x4 cells split in two, against 14 % for
-        :class:`.Tria3R`. On coarse meshes of doubly curved shells it is
-        the less stiff of the two triangles, see :mod:`.tria3r`.
+        :class:`.Tria3R`. Same results as :class:`.Tria3R` on flat plates
+        in bending, buckling and vibration. Preferable on coarse meshes of
+        doubly curved shells, where it is the less stiff of the two
+        triangles: 0.45 against 0.29 of the reference on the pinched
+        hemisphere with 8x8 cells, the two agreeing from 32x32, see
+        :mod:`.tria3r`.
     * - :class:`.Tria3R`
       - 3
-      - Since 0.12.0 the same discrete shear gap transverse shear field as
-        :class:`.Tria3DSG`, ``shear_model = 1``, with the membrane enriched
-        by the drilling rotations of Allman: identical to
+      - The recommended triangle. Since 0.12.0 the same discrete shear gap
+        transverse shear field as :class:`.Tria3DSG`, ``shear_model = 1``,
+        free of shear locking without a tuning parameter, with the membrane
+        enriched by the drilling rotations of Allman: identical to
         :class:`.Tria3DSG` on flat plates in bending, buckling and
         vibration, better in in-plane bending, on the Scordelis-Lo roof and
         on the twisted beam, stiffer on the coarse meshes of the pinched
@@ -76,7 +81,9 @@ Practical rules:
 - Prefer quadrilaterals in bending-dominated regions. A mesh of linear
   triangles is stiffer than the quadrilateral mesh it is split from, and its
   response depends on the direction of the diagonals; where triangles are
-  needed, alternating the diagonals reduces this bias.
+  needed, alternating the diagonals reduces this bias. :class:`.Tria3R` is
+  the recommended triangle, :class:`.Tria3DSG` the alternative for coarse
+  meshes of doubly curved shells.
 - The four nodes of a quadrilateral in a curved surface are, in general,
   not coplanar, and the element is flat: keep the warping, the
   out-of-plane deviation of the nodes over the in-plane size, small. The

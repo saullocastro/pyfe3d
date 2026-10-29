@@ -90,7 +90,9 @@ def test_rect_c2_exact():
     assert np.isclose(rect_c2(0.5, 1., 0.3), 0.784442, rtol=1e-6)
 
 
-@pytest.mark.parametrize('etype, n, rtol_c', [(3, 32, 2.e-3), (4, 32, 1.e-3),
+@pytest.mark.parametrize('etype, n, rtol_c', [pytest.param(3, 32, 2.e-3,
+                                                           marks=pytest.mark.slow),
+                                              (4, 32, 1.e-3),
                                               (6, 8, 2.e-5), (8, 8, 5.e-5),
                                               (9, 8, 5.e-5)])
 def test_rectangle(etype, n, rtol_c):
@@ -119,6 +121,7 @@ def test_rectangle(etype, n, rtol_c):
                        atol=1e-10*np.abs(sec.Kc).max())
 
 
+@pytest.mark.slow
 def test_rectangle_convergence():
     r"""Error of `c_2` against Eq. (25) of Yu and Hodges (2005) decreases
     with the mesh; with 8-node elements it decreases by about `2^4` per
@@ -152,7 +155,8 @@ def test_square_Yu2002_Table3():
         assert abs(Kt[i, j]) < 1e-8*Kt[0, 0]
 
 
-@pytest.mark.parametrize('etype', [6, 8, 9])
+@pytest.mark.parametrize('etype', [6, 8,
+                                   pytest.param(9, marks=pytest.mark.slow)])
 def test_circle(etype):
     E, nu, R = 1., 0.3, 1.
     G = E/(2*(1 + nu))

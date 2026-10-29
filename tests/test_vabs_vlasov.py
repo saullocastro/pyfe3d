@@ -189,6 +189,7 @@ def test_Ibeam_isotropic_Table5(constraint):
     assert np.abs(sec.Kv[4, :4]).max() < 1e-8*sec.Kv[4, 4]
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize('constraint', ['yu2002', 'yu2012'])
 def test_Ibeam_thin_walled_limit(constraint):
     errors = []
@@ -253,6 +254,7 @@ def test_channel_sectorial_coordinate(t, rtol, rtol_EG, constraint):
     assert np.isclose(sec.Kv[4, 4], EG, rtol=rtol_EG)
 
 
+@pytest.mark.slow
 def test_consistency():
     x2, x3, els = vm.channel(0.5, 1.0, 0.05, 10, 2, 10, 8)
     sec = iso_section(x2 + 0.3, x3 - 0.2, els)
@@ -372,6 +374,7 @@ def ibeam_table6(theta=15., wrapped=True, constraint='yu2002'):
     return Kv[1, 1] - Kv[1, 2]**2/Kv[2, 2], Kv[4, 4], Kv
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize('constraint', ['yu2002', 'yu2012'])
 def test_Ibeam_anisotropic_Table6(constraint):
     r"""Anisotropic I-beam of Yu et al. (2005), Table 6, VABS: `\bar{C}_{22}
@@ -416,6 +419,7 @@ def test_Ibeam_anisotropic_Table6(constraint):
     assert abs(Kv[1, 2]) > 0.1*np.sqrt(Kv[1, 1]*Kv[2, 2])
 
 
+@pytest.mark.slow
 def test_Ibeam_anisotropic_Table6_sensitivity():
     r"""Sensitivity of the anisotropic I-beam of Table 6 to the sign of
     ``theta`` and to the plies at the junctions"""
@@ -515,6 +519,7 @@ def pandey_input_rounding(theta):
     return r11, r44
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize('constraint', ['yu2002', 'yu2012'])
 @pytest.mark.parametrize('theta', [0., 45.])
 def test_Ibeam_Pandey_Hodges_Peters(theta, constraint):
@@ -667,6 +672,7 @@ def test_Ibeam_Pandey_Hodges_Peters(theta, constraint):
     assert np.isclose(Kv[4, 4], D44, rtol=rtol44)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize('constraint', ['yu2002', 'yu2012'])
 @pytest.mark.parametrize('theta', [0., 45.])
 def test_Ibeam_Pandey_thin_walled_limit(theta, constraint):

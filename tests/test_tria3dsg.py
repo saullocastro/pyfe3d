@@ -25,6 +25,7 @@ import sys
 sys.path.append('..')
 
 import numpy as np
+import pytest
 from scipy.sparse import coo_matrix
 from scipy.sparse.linalg import spsolve
 
@@ -467,6 +468,7 @@ def plate_point_load(cls, Data, Probe, n, h, triangles=True):
     return u[2::DOF].max()/(0.01160*P*L**2/Dpl)
 
 
+@pytest.mark.slow
 def test_converges_where_tria3r_converges_to_the_wrong_answer():
     r"""The point of the element, on a problem with an analytical value
 
@@ -1029,6 +1031,7 @@ def triangulated_plate_buckling(cls, Data, Probe, n, h, second='diagonal',
     return eigvals[0]*abs(Nxx)*L, exact, KC0[bu, :][:, bu]
 
 
+@pytest.mark.slow
 def test_buckling_load_does_not_depend_on_triangle_node_numbering():
     r"""A given stress state has to be rotated into the element frame
 

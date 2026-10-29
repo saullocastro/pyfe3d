@@ -154,9 +154,10 @@ def rotation_scaling(N, s):
     return S
 
 
-@pytest.mark.parametrize('kind, name', [('plate', 'Quad4R'),
-                                        ('plate', 'Tria3DSG'),
-                                        ('beam', 'BeamC')])
+@pytest.mark.parametrize('kind, name', [
+    pytest.param('plate', 'Quad4R', marks=pytest.mark.slow),
+    pytest.param('plate', 'Tria3DSG', marks=pytest.mark.slow),
+    ('beam', 'BeamC')])
 def test_newton_raphson_reproduces_the_hand_written_loop(kind, name):
     r"""A single increment at the full load, as the hand-written loop, gives
     the same solution, with the quadratic convergence of `\zeta`"""
@@ -185,8 +186,9 @@ def test_newton_raphson_reproduces_the_hand_written_loop(kind, name):
             assert z1 < max(10*z0**1.8, 1.e-11), zetas
 
 
-@pytest.mark.parametrize('kind, name', [('plate', 'Quad4R'),
-                                        ('beam', 'BeamC')])
+@pytest.mark.parametrize('kind, name', [
+    pytest.param('plate', 'Quad4R', marks=pytest.mark.slow),
+    ('beam', 'BeamC')])
 def test_crisfield_criterion_units_invariance(kind, name):
     r"""Measuring the rotations in other units, `\theta' = s \theta`, i.e.
     the moments `M' = M/s` and the stiffnesses `K' = S^{-1} K S^{-1}`, does
@@ -297,6 +299,7 @@ def point_loaded_plate():
     return model, bu, dof, P
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize('NL_method', ['NR', 'arc_length_riks'])
 def test_prescribed_displacement_and_reaction(NL_method):
     r"""Displacement control: the central deflection of the load-controlled
@@ -353,6 +356,7 @@ def piston_theory_plate():
     return model, bu, beta*KA, deflection
 
 
+@pytest.mark.slow
 def test_piston_theory_load_unsymmetric_tangent():
     r"""The aerodynamic load is configuration-dependent, `\boldsymbol{F}_a(\boldsymbol{u}) =
     \lambda \beta \boldsymbol{K}_{A_\beta} \boldsymbol{u}` with the load factor `\lambda`: it

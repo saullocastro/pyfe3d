@@ -51,11 +51,13 @@ Available finite elements
 - 'Tria3DSG' - 3-node plate with linear interpolation and a discrete shear
   gap transverse shear field, after Bletzinger, Bischoff and Ramm (2000), free
   of shear locking by construction and without a tuning parameter, with a
-  constant-strain membrane.
+  constant-strain membrane. The better choice on coarse meshes of doubly
+  curved shells, where it is less stiff than Tria3R.
 
-- 'Tria3R' - 3-node shell with linear interpolation. Since 0.12.0 it takes
-  the discrete shear gap transverse shear field of Tria3DSG by default, with
-  the membrane enriched by the drilling rotations of Allman (1984), which makes
+- 'Tria3R' - 3-node shell with linear interpolation, the recommended
+  triangular element. Since 0.12.0 it takes the discrete shear gap transverse
+  shear field of Tria3DSG by default, with the membrane enriched by the
+  drilling rotations of Allman (1984), which makes
   it much better than Tria3DSG in in-plane bending. Its former transverse
   shear, sampled at the centroid and stabilised by `alpha_shear_locking`,
   remains available with `shear_model = 0`, but it does not converge on thin
