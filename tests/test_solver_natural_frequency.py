@@ -32,7 +32,8 @@ import numpy as np
 import pytest
 from numpy.linalg import LinAlgError
 from scipy.linalg import block_diag, eigh, eig
-from scipy.sparse import csc_matrix, csr_matrix, diags, random as sprandom
+from scipy.sparse import (csc_matrix, csr_matrix, diags, identity,
+                          random as sprandom)
 
 from pyfe3d.solver import natural_frequency, DenseFallbackWarning
 from pyfe3d.solver import eigen
@@ -493,7 +494,10 @@ def test_dense_fallback(monkeypatch, symmetric):
 
 
 def test_missing_mode_detected(monkeypatch):
-    r"""The inertia of ``K - s M`` detects a missing lowest mode"""
+    r"""The inertia of ``K - s M`` detects a missing lowest mode, which a
+    deflated pass completes without the dense fallback; without the
+    deflated passes, ``MAX_COMPLETION_PASSES = 0``, the dense fallback is
+    used, or a ``RuntimeError`` raised"""
     K, M = freq_problem(True, n=120)
     sparse = eigen.capped_eigsh
 
@@ -503,12 +507,19 @@ def test_missing_mode_detected(monkeypatch):
         return w2[order[1:]], eigvecs[:, order[1:]]
 
     monkeypatch.setattr(eigen, 'capped_eigsh', missing_lowest)
+    w_ref = eigh(K.toarray(), M.toarray(), eigvals_only=True)[:10]
+    with warnings.catch_warnings():
+        warnings.simplefilter('error', DenseFallbackWarning)
+        omegan, eigvecs = natural_frequency(K, M, symmetric=True,
+                                            num_eigvalues=10)
+    np.testing.assert_allclose(omegan**2, w_ref, rtol=1e-10)
+    assert np.all(residuals(K, M, omegan, eigvecs) < 1e-8)
+    monkeypatch.setattr(eigen, 'MAX_COMPLETION_PASSES', 0)
     with pytest.raises(RuntimeError, match='eigenvalues omega'):
         natural_frequency(K, M, symmetric=True, num_eigvalues=10,
                           max_dense_size=0)
     with pytest.warns(DenseFallbackWarning, match='eigenvalues omega'):
         omegan, _ = natural_frequency(K, M, symmetric=True, num_eigvalues=10)
-    w_ref = eigh(K.toarray(), M.toarray(), eigvals_only=True)[:10]
     np.testing.assert_allclose(omegan**2, w_ref, rtol=1e-10)
 
 
@@ -557,3 +568,143 @@ def test_dense_freq_indefinite_K():
                                atol=1e-14)
     w2, eigvecs = eigen._dense_freq(K, M, None, 0., True)
     np.testing.assert_allclose(w2, [-1., 1., 3.])
+
+
+def test_K_not_positive_definite_message():
+    r"""When the solvers fail and ``K`` is not positive definite, the
+    ``RuntimeError`` starts with that diagnosis and the likely causes; an
+    indefinite ``K`` is otherwise accepted, e.g. by the dense fallback,
+    since a preload beyond the buckling load gives negative `\omega_n^2`
+    and null frequencies
+
+    ``K = diag(1, ..., 60)`` with ``-1e6`` as its sixth entry and ``M = I``:
+    the shift-invert mode about `\omega_n^2 = -1` finds the eigenvalues 1 to
+    4, nearer the shift than `-10^6`, which the inertia check finds
+    missing."""
+    d = np.arange(1., 61.)
+    d[5] = -1e6
+    K = diags(d).tocsr()
+    M = identity(60, format='csr')
+    with pytest.raises(RuntimeError, match=r'^Frequency analysis: the '
+                       r'stiffness matrix K is not positive definite, its '
+                       r'factorization has 1 negative pivot\(s\).*Likely '
+                       r'causes: insufficient boundary conditions.*'
+                       r're-entrant.*preload beyond the buckling load; '
+                       r'negative eigenvalues omega\*\*2 are expected only '
+                       r'in the latter case\. Frequency analysis failed.*'
+                       r'Attempted: eigsh\(\) in shift-invert mode: '):
+        natural_frequency(K, M, num_eigvalues=4, max_dense_size=0)
+    with pytest.warns(DenseFallbackWarning):
+        omegan, _ = natural_frequency(K, M, num_eigvalues=4)
+    np.testing.assert_allclose(omegan, [0., 1., np.sqrt(2.), np.sqrt(3.)])
+
+
+def reentrant_plate():
+    r"""``KC0uu``, ``Muu`` and ``KGuu`` of the hard simply supported plate of
+    ``test_quad4r_natural_freq_distorted.py``, 40x50 ``Quad4R`` elements,
+    with the former distortion of that test, the same random fraction, up
+    to 0.4 of the element size, along `x` and `y`, which makes elements
+    re-entrant, and the number of re-entrant elements"""
+    from scipy.sparse import coo_matrix
+    from pyfe3d.shellprop_utils import isotropic_plate
+    from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
+    nx, ny = 41, 51
+    a, b, h = 0.3, 0.5, 0.01
+    data = Quad4RData()
+    probe = Quad4RProbe()
+    xmesh, ymesh = np.meshgrid(np.linspace(0, a, nx), np.linspace(0, b, ny))
+    ncoords = np.vstack((xmesh.T.ravel(), ymesh.T.ravel(),
+                         np.zeros(nx*ny))).T
+    x = ncoords[:, 0]
+    y = ncoords[:, 1]
+    edge = (np.isclose(x, 0) | np.isclose(x, a) | np.isclose(y, 0)
+            | np.isclose(y, b))
+    np.random.seed(20)
+    rdm = -1 + 2*np.random.rand(np.count_nonzero(~edge))
+    x[~edge] += a/(nx - 1)*rdm*0.4
+    y[~edge] += b/(ny - 1)*rdm*0.4
+    xflat = ncoords.ravel()
+    nids_mesh = np.arange(nx*ny).reshape(nx, ny)
+    n1s = nids_mesh[:-1, :-1].ravel()
+    n2s = nids_mesh[1:, :-1].ravel()
+    n3s = nids_mesh[1:, 1:].ravel()
+    n4s = nids_mesh[:-1, 1:].ravel()
+    ne = n1s.size
+    KC0r = np.zeros(data.KC0_SPARSE_SIZE*ne, dtype=INT)
+    KC0c = np.zeros(data.KC0_SPARSE_SIZE*ne, dtype=INT)
+    KC0v = np.zeros(data.KC0_SPARSE_SIZE*ne, dtype=DOUBLE)
+    Mr = np.zeros(data.M_SPARSE_SIZE*ne, dtype=INT)
+    Mc = np.zeros(data.M_SPARSE_SIZE*ne, dtype=INT)
+    Mv = np.zeros(data.M_SPARSE_SIZE*ne, dtype=DOUBLE)
+    KGr = np.zeros(data.KG_SPARSE_SIZE*ne, dtype=INT)
+    KGc = np.zeros(data.KG_SPARSE_SIZE*ne, dtype=INT)
+    KGv = np.zeros(data.KG_SPARSE_SIZE*ne, dtype=DOUBLE)
+    prop = isotropic_plate(thickness=h, E=203.e9, nu=0.33, rho=7.83e3)
+    num_reentrant = 0
+    for i, nodes in enumerate(zip(n1s, n2s, n3s, n4s)):
+        r = ncoords[list(nodes)]
+        if any(np.cross(r[(j + 1) % 4] - r[j],
+                        r[(j + 2) % 4] - r[(j + 1) % 4])[2] <= 0
+               for j in range(4)):
+            num_reentrant += 1
+        quad = Quad4R(probe)
+        quad.n1, quad.n2, quad.n3, quad.n4 = nodes
+        quad.c1, quad.c2, quad.c3, quad.c4 = [DOF*n for n in nodes]
+        quad.init_k_KC0 = i*data.KC0_SPARSE_SIZE
+        quad.init_k_M = i*data.M_SPARSE_SIZE
+        quad.init_k_KG = i*data.KG_SPARSE_SIZE
+        quad.K6ROT = 100.
+        quad.update_rotation_matrix(xflat)
+        quad.update_probe_xe(xflat)
+        quad.update_KC0(KC0r, KC0c, KC0v, prop)
+        quad.update_M(Mr, Mc, Mv, prop, mtype=2)
+        quad.update_KG_given_stress(-1., -1., 0., KGr, KGc, KGv)
+    N = DOF*nx*ny
+    bk = np.zeros(N, dtype=bool)
+    bk[0::DOF] = edge
+    bk[1::DOF] = edge
+    bk[2::DOF] = edge
+    bk[3::DOF] = np.isclose(x, 0.) | np.isclose(x, a)
+    bk[4::DOF] = np.isclose(y, 0.) | np.isclose(y, b)
+    bu = ~bk
+    out = []
+    for r, c, v in ((KC0r, KC0c, KC0v), (Mr, Mc, Mv), (KGr, KGc, KGv)):
+        A = coo_matrix((v, (r, c)), shape=(N, N)).tocsc()
+        out.append(A[bu, :][:, bu])
+    return out + [num_reentrant]
+
+
+def test_reentrant_elements():
+    r"""The re-entrant elements of the former distortion of
+    ``test_quad4r_natural_freq_distorted.py`` make the stiffness matrix of
+    the 40x50 mesh indefinite, measured with 119 re-entrant elements of 2000
+    and 3 negative pivots: the frequency analysis, for which the solvers
+    fail, the linear buckling analysis and the linear static analysis raise
+    errors that say so, with the likely causes, instead of the former
+    message of the frequency analysis, "Frequency analysis failed, no
+    eigenvalue solver passed the verification. Attempted: eigsh() in
+    shift-invert mode: 6 eigenvalues omega**2 lower than 5.56422e+07 exist,
+    3 were found; eigh(): dense fallback skipped, size 11822 >
+    max_dense_size=2000. Try sparse_solver=False or a larger
+    max_dense_size.", and the former results of the two others"""
+    from pyfe3d.solver import linear_buckling, linear_static
+    K, M, KG, num_reentrant = reentrant_plate()
+    assert num_reentrant > 0
+    count = eigen._negative_pivots(K)
+    assert count > 0
+    causes = (r'its factorization has %d negative pivot\(s\).*Likely '
+              r'causes: insufficient boundary conditions.*mechanism.*'
+              r're-entrant'
+              % count)
+    with pytest.raises(RuntimeError, match=r'^Frequency analysis: the '
+                       r'stiffness matrix K is not positive definite, '
+                       + causes):
+        natural_frequency(K, M, num_eigvalues=4)
+    with pytest.raises(LinAlgError, match=r'^Linear buckling analysis: the '
+                       r'stiffness matrix K is not positive definite, '
+                       + causes):
+        linear_buckling(K, KG, num_eigvalues=4)
+    with pytest.raises(LinAlgError, match=r'^Linear static analysis: the '
+                       r'stiffness matrix K is not positive definite, '
+                       + causes):
+        linear_static(K, np.ones(K.shape[0]))

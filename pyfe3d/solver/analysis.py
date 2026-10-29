@@ -22,7 +22,7 @@ from numpy.linalg import LinAlgError
 from scipy.sparse import csr_matrix
 
 from .logger import msg, warn
-from .static import solve, _factorize
+from .static import _factorize, _solve_linear_static
 from .convergence import check_convergence
 from .newton_raphson import _solver_NR, _weights, _abs_matrix
 from .arc_length import _solver_arc_length
@@ -612,7 +612,9 @@ class Analysis(object):
 
         The linear analysis solves the system of the linear stiffness matrix
         ``calc_kC()`` and the external force vector ``calc_fext()`` using
-        :func:`.solve`. When the load depends on the configuration, i.e.
+        :func:`.solve`, after checking that a symmetric linear stiffness
+        matrix is positive definite, see :func:`.static._solve_linear_static`.
+        When the load depends on the configuration, i.e.
         ``calc_fext`` declares the keyword argument ``c``, see
         :mod:`.callbacks`, the load is evaluated in the current configuration
         and corrected by iterations that reuse one factorization of the
@@ -650,8 +652,12 @@ class Analysis(object):
         numpy.linalg.LinAlgError
             When the linear stiffness matrix of the solver ``calc_kC()``,
             with ``bu`` that of the free degrees-of-freedom, has a null row
-            or column, see :func:`.check_null_rows_cols`, or when it is
-            exactly singular. A singular tangent stiffness matrix during the
+            or column, see :func:`.check_null_rows_cols`, when it is exactly
+            singular, or when it is symmetric and not positive definite, with
+            the likely causes: insufficient boundary conditions, a
+            mechanism, distorted elements, e.g. re-entrant quadrilaterals, or
+            a preload beyond the buckling load in ``calc_kC()``. A singular
+            tangent stiffness matrix during the
             non-linear iterations does not raise, it stops the iterations,
             see the documentation of each solver.
 
@@ -708,7 +714,7 @@ class Analysis(object):
             else:
                 fext = pb.calc_fext(silent=silent)
                 follower = callbacks.is_load_configuration_dependent(pb)
-            c = solve(k0, fext)
+            c = _solve_linear_static(k0, fext)
             if follower:
                 c = self._linear_static_follower(pb, k0, c, silent)
             self.cs.append(c)
