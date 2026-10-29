@@ -146,6 +146,15 @@ Then:
   :func:`pyfe3d.solver.eigen._backward_errors`;
   for the complex eigenvalues of :func:`.complex_frequency` no such count
   is implemented, and only the residuals are verified;
+- when that count finds eigenvalues missing below the highest one returned
+  by the first sparse solver of symmetric matrices, they are computed by
+  deflated passes before any other solver, see
+  :func:`pyfe3d.solver.eigen._complete_repeated`: the Lanczos process of
+  ARPACK may return only one copy of a repeated eigenvalue, e.g. of the
+  pairs of modes `\cos n\theta` and `\sin n\theta` of a cylinder, equal up
+  to the round-off with a rotationally symmetric mesh, and each pass
+  computes the missing ones with the eigenvectors already found deflated
+  and another starting vector, see :func:`.deflated_eigsh`;
 - when the sparse solvers fail, a dense solver of SciPy is used as a last
   resort, when the dense problem has at most ``max_dense_size`` dofs, with a
   :class:`.DenseFallbackWarning` giving the reasons; otherwise a
@@ -159,6 +168,21 @@ The fallback can be turned into an error, e.g. in a test suite::
     import warnings
     from pyfe3d.solver import DenseFallbackWarning
     warnings.simplefilter('error', DenseFallbackWarning)
+
+For symmetric matrices, :func:`.linear_buckling` requires a positive
+definite `\boldsymbol{K}`, the matrix of its Cayley mode and of its count of the
+missing load multipliers: with ``check=True``, the default, a `\boldsymbol{K}`
+whose factorization has a negative or a zero pivot raises a
+:class:`numpy.linalg.LinAlgError` that says so, with the likely causes:
+insufficient boundary conditions, a mechanism, distorted elements, e.g.
+re-entrant quadrilaterals, or a preload beyond the buckling load included
+in `\boldsymbol{K}`; so do :func:`.linear_static` and the linear
+:meth:`.Analysis.static`. :func:`.natural_frequency` accepts an indefinite
+`\boldsymbol{K}`, whose negative `\omega_n^2` give null frequencies, e.g. with a
+preload beyond the buckling load, and the unconstrained rigid-body modes
+of a singular `\boldsymbol{K}`; when its solvers fail and `\boldsymbol{K}` is not positive
+definite, its ``RuntimeError`` starts with the same diagnosis. A singular
+`\boldsymbol{K}` whose round-off pivots all come out positive is not detected.
 
 With Intel MKL 2024.2.0 to 2025.0.0, the symmetric solver of ARPACK
 returns wrong eigenpairs when its number of Lanczos vectors exceeds 32;
