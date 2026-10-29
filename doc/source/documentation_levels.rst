@@ -57,5 +57,10 @@ verifies and against what:
 
 When a finite element result is compared with the literature, the
 tolerance is that of the discretisation, measured by refining the mesh
-and stated in the docstring, and not a value fitted to the output of the
-code.
+and stated in the docstring, or one of the grades of MacNeal and Harder
+(1985), and not a value fitted to the output of the code. When the
+literature is matched only on a mesh too expensive for a test, the
+docstring records the runs of the same test with a larger ``refinement``
+that match it, and the test compares its coarse mesh with the value that
+the same test gave on that mesh, with a tolerance for round-off only,
+keeping a check against the literature within a grade.
