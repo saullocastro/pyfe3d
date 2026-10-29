@@ -346,12 +346,23 @@ published VABS results:
 - ``tests/test_vabs_vlasov.py``: the generalized Vlasov model against the
   VABS results of Yu et al. (2005), Tables 1, 3 and 4, isotropic,
   orthotropic and anisotropic strips, reproduced to five digits or more,
-  and Table 5, isotropic I-beam, within 1 per cent; the anisotropic
+  and Table 5, isotropic I-beam, within 1 per cent for the torsional
+  rigidity and, for the warping rigidity, about 1 per cent below, a
+  converged difference, within 2 per cent, the grade A of MacNeal and
+  Harder (1985); the anisotropic
   I-beam of Table 6, with the lay-up reconstructed from Volovoi et al.
   (1999), p. 1038 and Fig. 8, within 1.1 per cent for the effective
   torsional rigidity and 4 per cent for the warping rigidity; the
   composite I-beam of Hodges and Peters (2001), p. 1601, against their
-  asymptotic constants, within 3.5 per cent; and the torsional warping
+  asymptotic thin-walled constants, with tolerances built from the
+  neglected terms of the thin-walled theory, the free-edge factor `1 -
+  0.630 t/b` of Timoshenko and Goodier (1951), Art. 95, Eq. (161), of
+  the flanges for the torsional rigidity, 3.45 and 2.90 per cent at 0
+  and 45 degrees, and `(t/b)^2` for the warping rigidity, 1.31 per cent,
+  plus the rounding of the printed values and data; with the walls made
+  thinner, the differences from the thin-walled values decrease as `t/b`
+  for the torsional and as `(t/b)^2` for the warping rigidity; and the
+  torsional warping
   about the shear centre of a thin-walled channel against `-\omega`,
   with its warping rigidity, all with the constraints ``'yu2002'`` and
   ``'yu2012'``.
@@ -403,6 +414,13 @@ Hodges, D. H., and Peters, D. A., "Lateral-torsional buckling of
 cantilevered elastically coupled composite strip- and I-beams",
 International Journal of Solids and Structures, 38(9), pp. 1585-1603,
 2001. https://doi.org/10.1016/S0020-7683(00)00111-6
+
+Timoshenko, S. P., and Goodier, J. N., Theory of Elasticity, 2nd ed.,
+McGraw-Hill, New York, 1951.
+
+MacNeal, R. H., and Harder, R. L., "A proposed standard set of problems
+to test finite element accuracy", Finite Elements in Analysis and Design,
+1(1), pp. 3-20, 1985. https://doi.org/10.1016/0168-874X(85)90003-4
 
 Yu, W., Hodges, D. H., and Ho, J. C., "Variational asymptotic beam
 sectional analysis -- An updated version", International Journal of
