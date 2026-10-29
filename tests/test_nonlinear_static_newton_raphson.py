@@ -88,10 +88,11 @@ def solve(elements, data, prop, x, N, bu, fext, max_iter=20, tol=1.e-10):
     return u_linear, u, residuals
 
 
-def plate(name, nx=11, ny=11):
+def plate(name, nx=11, ny=11, attrs=None):
     """Simply supported square plate with immovable edges, uniform pressure
 
     The pressure gives a linear deflection of about three times the thickness.
+    ``attrs``, when given, is a dictionary of attributes set on every element.
     """
     cls, probecls, datacls, num_nodes = SHELLS[name]
     a = b = 1.
@@ -124,6 +125,8 @@ def plate(name, nx=11, ny=11):
     elements = []
     for k, nodes in enumerate(connectivity):
         elem = cls(probe)
+        for key, value in (attrs or {}).items():
+            setattr(elem, key, value)
         for i, n in enumerate(nodes):
             setattr(elem, 'n%d' % (i + 1), n)
             setattr(elem, 'c%d' % (i + 1), DOF*n)
@@ -263,12 +266,18 @@ def test_elements_agree():
 def test_triangles_under_refinement():
     """Which triangle converges to the quadrilateral answer, nonlinearly
 
-    The nonlinear plate is refined and the two triangles are compared with
-    Quad4R. Tria3DSG closes the gap, Tria3R settles about two and a half per
-    cent away from the quadrilateral and stops improving, which is the same
-    signature its transverse shear stabilisation leaves on the linear
-    problem in ``tests/test_tria3dsg.py`` and on the buckling problem in
-    ``tests/test_quad4_linear_buckling_cylinder_displ.py``.
+    The nonlinear plate is refined and the triangles are compared with
+    Quad4R. Tria3DSG and the default Tria3R since 0.12.0, which takes the
+    discrete shear gap field of Tria3DSG, ``shear_model = 1``, close the gap.
+    Tria3R with ``shear_model = 0`` and ``alpha_shear_locking = 0.7``, the
+    centroid-sampled shear that was its default up to 0.11, set explicitly
+    here, settles about two and a half per cent away from the quadrilateral
+    and stops improving, which is the same signature that stabilisation
+    leaves on the linear problem in ``tests/test_tria3dsg.py`` and on the
+    buckling problem in ``tests/test_quad4_linear_buckling_cylinder_displ.py``.
+    The drilling rotations are held at zero by :func:`plate`, so the Allman
+    membrane of Tria3R is not active here and the default Tria3R and
+    Tria3DSG give the same deflections to round-off.
 
     The quadrilateral is the yardstick and not an analytical value, because
     the von Karman solution of a plate with immovable edges has none in
@@ -276,27 +285,33 @@ def test_triangles_under_refinement():
     approaches the quadrilateral and the other does not.
     """
     meshes = (11, 21, 31)
-    gaps = {'Tria3DSG': [], 'Tria3R': []}
+    legacy = {'shear_model': 0, 'alpha_shear_locking': 0.7}
+    cases = {'Tria3DSG': ('Tria3DSG', None),
+             'Tria3R default': ('Tria3R', None),
+             'Tria3R legacy': ('Tria3R', legacy)}
+    gaps = {key: [] for key in cases}
     for nx in meshes:
         *model, deflection = plate('Quad4R', nx, nx)
         reference = deflection(solve(*model)[1])
-        for name in gaps:
-            *model, deflection = plate(name, nx, nx)
+        for key, (name, attrs) in cases.items():
+            *model, deflection = plate(name, nx, nx, attrs)
             value = deflection(solve(*model)[1])
-            gaps[name].append(abs(value - reference)/reference)
-            print('nx = %-4d %-9s w/h %.6f  Quad4R %.6f  gap %.4f%%'
-                  % (nx, name, value, reference, 100*gaps[name][-1]))
+            gaps[key].append(abs(value - reference)/reference)
+            print('nx = %-4d %-15s w/h %.6f  Quad4R %.6f  gap %.4f%%'
+                  % (nx, key, value, reference, 100*gaps[key][-1]))
 
-    dsg = gaps['Tria3DSG']
-    t3r = gaps['Tria3R']
-    # NOTE the discrete shear gap triangle closes the gap monotonically, by
-    #      more than a factor of five over these three meshes, and ends
-    #      within half a per cent
-    for k in range(len(dsg) - 1):
-        assert dsg[k + 1] < dsg[k], dsg
-    assert dsg[0]/dsg[-1] > 5., dsg
-    assert dsg[-1] < 0.005, dsg
-    # NOTE whereas Tria3R stalls: its last two meshes agree with each other
+    t3r = gaps['Tria3R legacy']
+    for key in ('Tria3DSG', 'Tria3R default'):
+        dsg = gaps[key]
+        # NOTE the discrete shear gap triangles close the gap monotonically,
+        #      by more than a factor of five over these three meshes, and
+        #      end within half a per cent
+        for k in range(len(dsg) - 1):
+            assert dsg[k + 1] < dsg[k], (key, dsg)
+        assert dsg[0]/dsg[-1] > 5., (key, dsg)
+        assert dsg[-1] < 0.005, (key, dsg)
+    # NOTE whereas the legacy Tria3R stalls: its last two meshes agree
+    #      with each other
     #      much better than either agrees with the quadrilateral
     assert t3r[-1] > 0.02, t3r
     assert abs(t3r[-1] - t3r[-2]) < 0.1*t3r[-1], t3r

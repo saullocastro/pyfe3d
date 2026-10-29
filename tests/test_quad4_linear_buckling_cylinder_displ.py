@@ -350,6 +350,10 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     #      transverse shear field is superseded: the transverse shear is
     #      unchanged and the mode is gone. The values of Tria3R and Tria3DSG
     #      are unchanged, and those of Quad4 at ntheta = 60 are updated.
+    #      Every Tria3R value below is that of shear_model = 0 with
+    #      alpha_shear_locking = 0.7, its defaults up to 0.11. Since 0.12.0
+    #      Tria3R takes by default the discrete shear gap field of
+    #      Tria3DSG, shear_model = 1, with alpha_shear_locking = 0.
     #
     # NOTE CORRECTION. An earlier version of this block reported that
     #      Tria3R converges on this cylinder to -9.20 kN, a quarter of the

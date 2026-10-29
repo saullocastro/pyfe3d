@@ -3,8 +3,8 @@ sys.path.append('..')
 
 import numpy as np
 from numpy import isclose
-from scipy.sparse.linalg import cg
-from scipy.sparse import coo_matrix, diags as sp_diags
+from scipy.sparse.linalg import spsolve
+from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import laminated_plate
 from pyfe3d import Tria3R, Tria3RData, Tria3RProbe, INT, DOUBLE, DOF
@@ -163,15 +163,7 @@ def test_tria3r_linear_buckling_plate_mat_coord(plot=False, mode=0):
         KC0uu = KC0[bu, :][:, bu]
         fextu = fext[bu]
 
-        # NOTE pre-conditioning the linear system to improve convergence of the iterative solver
-        kuu_diag = KC0uu.diagonal()
-        kuu_diag_inv_sqrt = 1.0/np.sqrt(np.maximum(kuu_diag, 1e-30))
-        D_inv_sqrt = sp_diags(kuu_diag_inv_sqrt)
-        KC0uu_scaled = D_inv_sqrt @ KC0uu @ D_inv_sqrt
-        fextu_scaled = D_inv_sqrt @ fextu
-        uu_scaled, out = cg(KC0uu_scaled, fextu_scaled, atol=1e-8)
-        assert out == 0, 'cg failed'
-        uu = D_inv_sqrt @ uu_scaled
+        uu = spsolve(KC0uu, fextu)
         u = np.zeros(N)
         u[bu] = uu
 
