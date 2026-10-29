@@ -55,9 +55,14 @@ rotations, which that transverse shear does not resist, then has no
 geometric stiffness either; with the slopes at the two-by-two points, as up
 to version 0.11, it could give a spurious buckling mode below the physical
 load when the transverse shear stiffness is low compared with the bending
-stiffness, e.g. in sandwich plates. The buckling loads of coarse meshes are
-somewhat higher, see the Notes of :meth:`.Quad4.update_KG` and
-:meth:`.Quad4R.update_KG`.
+stiffness, e.g. in sandwich plates, and in thin laminated cylinders under
+axial compression once the mesh is fine: the buckling load of the cylinder
+Z22 of Castro et al. (2014) fell to a sixth of its value with 480 elements
+around the circumference, and now converges to within 0.3 % of the 35.27 kN
+of that paper, Fig. 6(c), see
+``tests/test_quad4_linear_buckling_cylinder_displ.py``. The buckling loads
+of coarse meshes are somewhat higher, see the Notes of
+:meth:`.Quad4.update_KG` and :meth:`.Quad4R.update_KG`.
 
 
 Natural frequencies
