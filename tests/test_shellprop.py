@@ -14,6 +14,11 @@ from pyfe3d.shellprop import (Lamina, shellprop_from_LaminationParameters,
 from pyfe3d.shellprop_utils import (read_laminaprop, laminated_plate,
         isotropic_plate)
 
+# Melo, J. D. D., Bi, J. and Tsai, S. W., "A novel invariant-based design
+# approach to carbon fiber reinforced laminates", Composite Structures, 159,
+# 44-52, 2017, https://doi.org/10.1016/j.compstruct.2016.09.055, Table 1,
+# p. 45: Ex, Ey, nux, Es and the trace Tr of Eq. (1), p. 45, of the
+# plane-stress stiffness matrix, in GPa, printed as integers
 data = {
 'IM6/epoxy': dict(Ex=203e9, Ey=11.20e9, vx=0.32, Es=8.40e9, tr=232e9),
 'IM7/977-3': dict(Ex=191e9, Ey=9.94e9, vx=0.35, Es=7.79e9, tr=218e9),
@@ -106,11 +111,32 @@ def test_lampar_tri_axial():
         0.5, 0.4, -0.3, -0.6,
         0.5, 0.4, -0.3, -0.6,
         0.5, 0.4)
-    # NOTE with e3 given, the invariants are those of the three-dimensional
-    #      stiffness, see MatLamina.rebuild, which for an isotropic material
-    #      are the Lame constants: C11 = lambda + 2 mu, C12 = lambda, C66 =
-    #      mu. For an isotropic material u2 = u3 = u7 = 0, such that the
-    #      lamination parameters have no effect: A = h C, B = 0, D = h^3/12 C
+    # NOTE with e3 given, the invariants are by default those of the
+    #      plane-stress reduced stiffnesses, see MatLamina.rebuild, as in
+    #      test_lampar_plane_stress: Q = E/(1 - nu^2) [[1, nu, 0], [nu, 1,
+    #      0], [0, 0, (1 - nu)/2]], Jones (1999), Eq. (2.71), p. 73. For an
+    #      isotropic material u2 = u3 = u7 = 0, such that the lamination
+    #      parameters have no effect: A = h Q, B = 0, D = h^3/12 Q
+    assert matlamina.plane_stress
+    Q = E/(1 - nu**2)*np.array([[1., nu, 0.],
+                                [nu, 1., 0.],
+                                [0., 0., (1 - nu)/2]])
+    Abar_ts = G*thickness*np.eye(2)
+    assert_abd(prop.A, prop.B, prop.D, thickness*Q, np.zeros((3, 3)),
+               thickness**3/12*Q, thickness)
+    assert np.allclose(prop.Abar_ts, Abar_ts, rtol=1e-12,
+                       atol=1e-14*G*thickness)
+
+    # NOTE three-dimensional option: the invariants are those of the
+    #      three-dimensional stiffness, which for an isotropic material are
+    #      the Lame constants: C11 = lambda + 2 mu, C12 = lambda, C66 = mu
+    matlamina.rebuild(plane_stress=False)
+    assert not matlamina.plane_stress
+    prop = shellprop_from_lamination_parameters(thickness, matlamina,
+        0.5, 0.4, -0.3, -0.6,
+        0.5, 0.4, -0.3, -0.6,
+        0.5, 0.4, -0.3, -0.6,
+        0.5, 0.4)
     lam = E*nu/((1 + nu)*(1 - 2*nu))
     C = np.array([[lam + 2*G, lam, 0.],
                   [lam, lam + 2*G, 0.],
@@ -118,7 +144,6 @@ def test_lampar_tri_axial():
     A = thickness*C
     B = np.zeros((3, 3))
     D = thickness**3/12*C
-    Abar_ts = G*thickness*np.eye(2)
     assert_abd(prop.A, prop.B, prop.D, A, B, D, thickness)
     prop.make_symmetric()
     assert np.array_equal(prop.B, B)
@@ -234,6 +259,139 @@ def test_laminated_plate_plane_stress():
     assert np.allclose(prop_2.Abar_ts, prop.Abar_ts)
 
 
+# Materials given with the nine constants of read_laminaprop, e3 != 0: an
+# isotropic one and an orthotropic one with E2 != E3, nu13 != nu23 and G13 !=
+# G23, the material of tests/test_matlamina_stiffness.py
+G_ISO = 71e9/(2*(1 + 0.33))
+LAMINAPROPS_9 = {
+    'isotropic': (71e9, 71e9, 0.33, G_ISO, G_ISO, G_ISO, 71e9, 0.33, 0.33),
+    'orthotropic': (150e9, 8.7e9, 0.28, 5.0e9, 5.5e9, 3.1e9, 10.1e9, 0.3,
+                    0.45),
+}
+# stack from the bottom ply, ply thicknesses
+LAYUPS = {
+    'cross-ply symmetric': ([0, 90, 90, 0], [0.125e-3]*4),
+    'unsymmetric': ([0, 45, 90], [0.125e-3]*3),
+    'antisymmetric': ([45, -45], [0.125e-3]*2),
+    'unbalanced unsymmetric': ([15, -70, 35, 90, 0],
+                               [0.1e-3, 0.2e-3, 0.125e-3, 0.15e-3, 0.3e-3]),
+}
+
+
+def abar_ts(stack, plyts, G13, G23):
+    r"""Constant-strain transverse shear stiffness ``sum_k Qbar_s^(k) h_k``,
+    ``[[Qbar44, Qbar45], [Qbar45, Qbar55]]`` of Reddy (2003), Eq. (3.4.17b),
+    p. 137, with ``Q44 = G23`` and ``Q55 = G13``, Eq. (2.4.4b), p. 101"""
+    Abar = np.zeros((2, 2))
+    for thetadeg, hk in zip(stack, plyts):
+        c = np.cos(np.deg2rad(thetadeg))
+        s = np.sin(np.deg2rad(thetadeg))
+        Abar += hk*np.array([[G23*c*c + G13*s*s, (G13 - G23)*c*s],
+                             [(G13 - G23)*c*s, G23*s*s + G13*c*c]])
+    return Abar
+
+
+@pytest.mark.parametrize('layup', LAYUPS.keys())
+@pytest.mark.parametrize('material', LAMINAPROPS_9.keys())
+def test_lamination_parameters_three_dimensional_constants(material, layup):
+    r"""Both routes give the plane-stress stiffnesses when e3 is given
+
+    The shell elements are plane stress, `\sigma_{33} = 0`: the reduced
+    stiffnesses depend on E1, E2, nu12, G12, G13 and G23 only (Reddy, 2003,
+    Eq. (2.4.4), p. 101; Jones, 1999, Eqs. (2.64) and (2.66), p. 72), and the
+    invariants of Tsai and Pagano are those of the reduced stiffnesses
+    (Jones, 1999, Eq. (2.99), p. 86). :func:`.laminated_plate` and
+    :func:`.shellprop_from_LaminationParameters`, with the lamination
+    parameters of the same layup, must give A, B and D of the classical
+    lamination theory, ``clt_abd``, and the constant-strain transverse shear
+    stiffness ``abar_ts``, to round-off, also for e3 != 0, and the same
+    values as for the six-entry ``laminaprop`` without e3, nu13 and nu23.
+    """
+    lamprop = LAMINAPROPS_9[material]
+    stack, plyts = LAYUPS[layup]
+    h = sum(plyts)
+    # NOTE no shear correction, such that Ats = Abar_ts in both routes
+    prop = laminated_plate(stack, plyts=plyts, laminaprop=lamprop,
+                           shear_correction=None)
+    mat = read_laminaprop(lamprop)
+    assert mat.e3 != 0 and mat.plane_stress
+    lp = prop.calc_lamination_parameters()
+    prop_lp = shellprop_from_LaminationParameters(prop.h, mat, lp)
+
+    A, B, D = clt_abd(stack, plyts, [lamprop]*len(stack))
+    Abar = abar_ts(stack, plyts, lamprop[4], lamprop[5])
+    for p in (prop, prop_lp):
+        assert_abd(p.A, p.B, p.D, A, B, D, h)
+        assert np.allclose(p.Abar_ts, Abar, rtol=1e-12,
+                           atol=1e-14*np.abs(Abar).max())
+    assert np.allclose(prop_lp.Ats, prop.Ats, rtol=1e-12,
+                       atol=1e-14*np.abs(Abar).max())
+
+    # NOTE e3, nu13 and nu23 do not change the plane-stress invariants
+    mat6 = read_laminaprop(lamprop[:6])
+    for name in ('q11', 'q12', 'q21', 'q22', 'q44', 'q55', 'q66', 'u1', 'u2',
+                 'u3', 'u4', 'u5', 'u6', 'u7'):
+        assert getattr(mat, name) == getattr(mat6, name), name
+
+    # NOTE the gradients use the same invariants: at constant lamination
+    #      parameters A is linear in h and D cubic, dA/dh = A/h and dD/dh =
+    #      3 D/h
+    grad = GradABD()
+    grad.calc_LP_grad(prop.h, mat, lp)
+    ij = ((0, 0), (0, 1), (0, 2), (1, 1), (1, 2), (2, 2))
+    gradA = np.array([A[i, j] for i, j in ij])/h
+    gradD = np.array([D[i, j] for i, j in ij])*3/h
+    assert np.allclose(np.asarray(grad.gradAij)[:, 0], gradA, rtol=1e-12,
+                       atol=1e-14*np.abs(gradA).max())
+    assert np.allclose(np.asarray(grad.gradDij)[:, 0], gradD, rtol=1e-12,
+                       atol=1e-14*np.abs(gradD).max())
+
+    # NOTE three-dimensional option: stiffer than plane stress, the
+    #      lamination-parameter route then no longer gives the stiffnesses of
+    #      the shell elements
+    mat.rebuild(plane_stress=False)
+    prop_3d = shellprop_from_LaminationParameters(prop.h, mat, lp)
+    assert prop_3d.A11 > (1 + 1e-3)*prop.A11
+    assert prop_3d.A22 > (1 + 1e-3)*prop.A22
+
+
+@pytest.mark.parametrize('material', LAMINAPROPS_9.keys())
+def test_trace_normalized_three_dimensional_constants(material):
+    r"""Trace normalization with e3 given
+
+    The trace of Melo et al. (2017), Eq. (1), p. 45, is that of the
+    plane-stress stiffness matrix, ``tr = Q11 + Q22 + 2 Q66`` with ``Q11 =
+    E1/(1 - nu12 nu21)``, ``Q22 = E2/(1 - nu12 nu21)``, ``Q66 = G12`` (Jones,
+    1999, Eq. (2.66), p. 72), independent of e3. The stiffnesses of the
+    lamination-parameter route are linear in the invariants, such that with
+    the trace-normalized invariants they are those of laminated_plate
+    divided by tr. After ``rebuild(plane_stress=False)`` the trace
+    normalization is refused.
+    """
+    lamprop = LAMINAPROPS_9[material]
+    E1, E2, nu12, G12 = lamprop[:4]
+    nu21 = nu12*E2/E1
+    tr = (E1 + E2)/(1 - nu12*nu21) + 2*G12
+    stack, plyts = LAYUPS['unbalanced unsymmetric']
+    prop = laminated_plate(stack, plyts=plyts, laminaprop=lamprop,
+                           shear_correction=None)
+    m = read_laminaprop(lamprop)
+    assert np.isclose(m.q11 + m.q22 + 2*m.q66, tr, rtol=1e-14, atol=0)
+    m.trace_normalize_plane_stress()
+    assert np.isclose(2*(m.u1 + m.u5), 1., rtol=1e-14, atol=0)
+    prop_lp = shellprop_from_LaminationParameters(prop.h, m,
+            prop.calc_lamination_parameters())
+    assert_abd(prop_lp.A*tr, prop_lp.B*tr, prop_lp.D*tr, prop.A, prop.B,
+               prop.D, prop.h)
+    assert np.allclose(prop_lp.Abar_ts*tr, prop.Abar_ts, rtol=1e-12,
+                       atol=1e-14*np.abs(prop.Abar_ts).max())
+
+    m3d = read_laminaprop(lamprop)
+    m3d.rebuild(plane_stress=False)
+    with pytest.raises(ValueError, match='plane-stress stiffnesses'):
+        m3d.trace_normalize_plane_stress()
+
+
 def helper_isotropic_plate():
     E = 71e9
     nu = 0.28
@@ -313,7 +471,9 @@ def test_trace_normalized():
         Design Approach to Carbon Fiber Reinforced Laminates,” Compos. Struct.,
         159, pp. 44–52. https://doi.org/10.1016/j.compstruct.2016.09.055
 
-    The trace is ``tr = Q11 + Q22 + 2 Q66``, the in-plane invariants are
+    The trace is ``tr = Q11 + Q22 + 2 Q66``, Eq. (1), p. 45, of the
+    plane-stress stiffnesses, with the materials of Table 1, p. 45, see
+    ``data``; the in-plane invariants are
     written with Q66 = G12, and the transverse shear invariants with Q44 =
     G23 and Q55 = G13, checked below against the rotation of the transverse
     shear moduli. ``data`` has G12 only; G13 and G23 are arbitrary and
@@ -336,7 +496,11 @@ def test_trace_normalized():
         Q66 = G12
         tr = Q11 + Q22 + 2*Q66
         assert np.isclose(m.q11 + m.q22 + 2*m.q66, tr, rtol=1e-14)
-        assert np.isclose(tr, d['tr'], rtol=0.01)
+        # NOTE Tr of Melo et al. (2017), Table 1, p. 45, is printed as an
+        #      integer in GPa: the traces of Eq. (1) computed from Ex, Ey,
+        #      nux and Es differ from it by +0.09 %, -0.09 % and +0.17 %,
+        #      within half a unit of the last printed digit
+        assert np.isclose(tr, d['tr'], atol=0.5e9, rtol=0)
         u1 = (3*Q11 + 3*Q22 + 2*Q12 + 4*Q66) / 8.
         u2 = (Q11 - Q22) / 2.
         u3 = (Q11 + Q22 - 2*Q12 - 4*Q66) / 8.
