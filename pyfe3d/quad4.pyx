@@ -267,7 +267,8 @@ and the contribution to the element stiffness matrix is
     \tilde{\boldsymbol{B}}_{r_z}^\top \tilde{\boldsymbol{B}}_{r_z} \det \boldsymbol{J} d\xi d\eta
     \qquad \text{with} \qquad \gamma_{r_z} = A_{66}
 
-The value `\gamma_{r_z} = A_{66}` is a modulus and not a user parameter.
+The value `\gamma_{r_z} = A_{66}` is a stiffness per unit length taken from
+the laminate, and not a user parameter.
 Hughes and Brezzi identify the shear modulus `G` as the natural
 regularisation parameter of the isotropic problem, and the thickness
 integration turns `G` into `hG = A_{66}`, which generalises to the `A_{66}`
@@ -778,11 +779,11 @@ cdef class Quad4Probe:
         Dimension of length. Updated by :meth:`.Quad4.update_probe_xe`.
     ue, : array-like
         Array of size ``NUM_NODES*DOF=24`` containing the element displacements
-        in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
-        {{r_y}_e}_1, {{r_z}_e}_1`, `{u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
-        {{r_y}_e}_2, {{r_z}_e}_2`, `{u_e}_3, {v_e}_3, {w_e}_3, {{r_x}_e}_3,
-        {{r_y}_e}_3, {{r_z}_e}_3`, `{u_e}_4, {v_e}_4, {w_e}_4, {{r_x}_e}_4,
-        {{r_y}_e}_4, {{r_z}_e}_4`.
+        in the following order `u_{e_1}, v_{e_1}, w_{e_1}, {r_x}_{e_1},
+        {r_y}_{e_1}, {r_z}_{e_1}`, `u_{e_2}, v_{e_2}, w_{e_2}, {r_x}_{e_2},
+        {r_y}_{e_2}, {r_z}_{e_2}`, `u_{e_3}, v_{e_3}, w_{e_3}, {r_x}_{e_3},
+        {r_y}_{e_3}, {r_z}_{e_3}`, `u_{e_4}, v_{e_4}, w_{e_4}, {r_x}_{e_4},
+        {r_y}_{e_4}, {r_z}_{e_4}`.
         Translations with dimension of length, rotations dimensionless.
         Updated by :meth:`.Quad4.update_probe_ue`.
     finte, : array-like
@@ -1174,8 +1175,9 @@ cdef class Quad4:
     AUTODESK NASTRAN.
 
     The default ``gamma_rz``, `A_{66}`, is the value identified by Hughes
-    and Brezzi (1989) [2]_. This is a modulus and not a parameter that needs
-    tuning: the element response has a broad plateau of insensitivity
+    and Brezzi (1989) [2]_. This is a stiffness per unit length taken from
+    the laminate, and not a parameter that needs tuning: the element
+    response has a broad plateau of insensitivity
     around it, and the attribute is exposed for the sensitivity study that
     the literature recommends rather than for normal use. Very large values
     over-constrain `r_z = \theta_z`, and a zero value leaves the Allman
@@ -1675,13 +1677,14 @@ cdef class Quad4:
             A45 = Atse[1]
             A55 = Atse[3]
 
-            # NOTE regularisation modulus of the drilling stiffness, see the
+            # NOTE regularisation parameter of the drilling stiffness, see the
             #      module documentation. The fictitious penalty of MSC Nastran
             #      and Autodesk Nastran is recovered with K6ROT*1e-6*A66
             enriched = 1 if self.drilling_model == 0 else 0
             if enriched:
-                # NOTE Hughes-Brezzi regularisation parameter, a modulus and
-                #      not a user parameter. Attribute gamma_rz allows the
+                # NOTE Hughes-Brezzi regularisation parameter, a stiffness per
+                #      unit length taken from the laminate, not a user
+                #      parameter. Attribute gamma_rz allows the
                 #      sensitivity study recommended in the literature
                 if self.gamma_rz >= 0.:
                     gamma_drill = self.gamma_rz

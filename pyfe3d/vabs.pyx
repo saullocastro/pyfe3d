@@ -1866,7 +1866,7 @@ def yu_to_pyfe3d(C, double h=1.):
     -----
     Without warping, the strains of the two conventions are related by
     `\boldsymbol{\epsilon} = \boldsymbol{H} \boldsymbol{T}_s
-    \boldsymbol{\epsilon}_s`, with `\boldsymbol{H} = \mathrm{diag}(1, 1, 1,
+    \boldsymbol{\epsilon}_{sec}`, with `\boldsymbol{H} = \mathrm{diag}(1, 1, 1,
     h, h, h)` and
 
     .. math::
@@ -1879,10 +1879,10 @@ def yu_to_pyfe3d(C, double h=1.):
     -\kappa_y`, which follows from comparing the first row of
     `\boldsymbol{\Gamma}_\epsilon`, see :func:`._integrate`, with the axial
     strain `\bar{\varepsilon} + y \kappa_y + z \kappa_z` of :class:`.BeamC`,
-    `y = x_2`, `z = x_3`. The energy is invariant, hence `\boldsymbol{C}_s
-    = \boldsymbol{T}_s^\top \boldsymbol{H} \boldsymbol{C} \boldsymbol{H}
-    \boldsymbol{T}_s`. For the classical matrices, the rows and columns of
-    the shear strains are removed from `\boldsymbol{T}_s` and
+    `y = x_2`, `z = x_3`. The energy is invariant, hence `\boldsymbol{C}_{sec}
+    = \boldsymbol{T}_s^\top \boldsymbol{H} \boldsymbol{C}_{sec}^{VABS}
+    \boldsymbol{H} \boldsymbol{T}_s`. For the classical matrices, the rows
+    and columns of the shear strains are removed from `\boldsymbol{T}_s` and
     `\boldsymbol{H}`.
 
     """
@@ -1932,9 +1932,9 @@ def pyfe3d_to_yu(Cs, double h=1.):
 
     Notes
     -----
-    `\boldsymbol{C} = \boldsymbol{H}^{-1} \boldsymbol{T}_s \boldsymbol{C}_s
-    \boldsymbol{T}_s^\top \boldsymbol{H}^{-1}`, with `\boldsymbol{T}_s`
-    orthogonal, see :func:`.yu_to_pyfe3d`.
+    `\boldsymbol{C}_{sec}^{VABS} = \boldsymbol{H}^{-1} \boldsymbol{T}_s
+    \boldsymbol{C}_{sec} \boldsymbol{T}_s^\top \boldsymbol{H}^{-1}`, with
+    `\boldsymbol{T}_s` orthogonal, see :func:`.yu_to_pyfe3d`.
 
     """
     Cs = np.asarray(Cs, dtype=DOUBLE)

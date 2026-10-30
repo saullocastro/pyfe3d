@@ -152,7 +152,8 @@ numerically in ``tests/test_tria3dsg.py``:
 * a state of constant curvature gives `\boldsymbol{\gamma} = 0` exactly, so the
   element develops no parasitic shear in pure bending. **This is the
   locking-free property**, and it is the reason no stabilisation parameter
-  appears anywhere in this element;
+  is needed in this element, whose optional ``alpha_shear_locking`` is
+  ``0.`` by default;
 * the operator is a linear functional of the nodal values only and is
   constant over the element, so it is formed once per element.
 
@@ -180,8 +181,9 @@ Hughes and Brezzi (1989) [5]_, tying `r_z` to the in-plane rotation
 and :class:`pyfe3d.tria3r.Tria3R`.
 
 ``drilling_model = 0``, the default, uses the physics-based coefficient
-`\gamma_{r_z} = A_{66}`, a modulus of the laminate and not an adjustable
-parameter. Any other value uses the fictitious penalty
+`\gamma_{r_z} = A_{66}`, a stiffness per unit length taken from the
+laminate and not an adjustable parameter. Any other value uses the
+fictitious penalty
 `\gamma_{r_z} = K6ROT \cdot 10^{-6} A_{66}`. With either coefficient the
 term `\gamma_{r_z} \int_A (r_z - \theta_z)^2 dA` is integrated with the
 three-point rule, see :meth:`.Tria3DSG._update_probe_KC0ve`, whereas the

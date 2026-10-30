@@ -217,8 +217,9 @@ the membrane operator, giving `\tilde{\boldsymbol{B}}_m`, and the drilling resid
 becomes `\tilde{\boldsymbol{B}}_{r_z} = \boldsymbol{S}^{r_z} + \frac{1}{2}\boldsymbol{\tilde
 S}^u_{,y} - \frac{1}{2}\tilde{\boldsymbol{S}}^v_{,x}`, whose contribution to the
 element stiffness matrix is `\gamma_{r_z} \int_A \tilde{\boldsymbol{B}}_{r_z}^\top
-\tilde{\boldsymbol{B}}_{r_z} dA` with `\gamma_{r_z} = A_{66}`, a modulus and not a
-user parameter. The curvature and transverse shear operators are untouched,
+\tilde{\boldsymbol{B}}_{r_z} dA` with `\gamma_{r_z} = A_{66}`, a stiffness per
+unit length taken from the laminate, and not a user parameter. The
+curvature and transverse shear operators are untouched,
 the edge modes acting only on the in-plane translations, so the bending and
 the transverse shear response of the element are identical for the two
 drilling models.
@@ -770,10 +771,10 @@ cdef class Tria3RProbe:
         Dimension of length. Updated by :meth:`.Tria3R.update_probe_xe`.
     ue, : array-like
         Array of size ``NUM_NODES*DOF=18`` containing the element displacements
-        in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
-        {{r_y}_e}_1, {{r_z}_e}_1`, `{u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
-        {{r_y}_e}_2, {{r_z}_e}_2`, `{u_e}_3, {v_e}_3, {w_e}_3, {{r_x}_e}_3,
-        {{r_y}_e}_3, {{r_z}_e}_3`.
+        in the following order `u_{e_1}, v_{e_1}, w_{e_1}, {r_x}_{e_1},
+        {r_y}_{e_1}, {r_z}_{e_1}`, `u_{e_2}, v_{e_2}, w_{e_2}, {r_x}_{e_2},
+        {r_y}_{e_2}, {r_z}_{e_2}`, `u_{e_3}, v_{e_3}, w_{e_3}, {r_x}_{e_3},
+        {r_y}_{e_3}, {r_z}_{e_3}`.
         Translations with dimension of length, rotations dimensionless.
         Updated by :meth:`.Tria3R.update_probe_ue`.
     finte, : array-like
@@ -966,8 +967,9 @@ cdef class Tria3R:
     AUTODESK NASTRAN.
 
     The default of ``gamma_rz``, `\gamma_{r_z} = A_{66}`, is the value
-    identified by Hughes and Brezzi (1989) [4]_. This is a modulus and not a
-    parameter that needs tuning: the element response has a broad plateau of
+    identified by Hughes and Brezzi (1989) [4]_. This is a stiffness per unit
+    length taken from the laminate, and not a parameter that needs tuning:
+    the element response has a broad plateau of
     insensitivity around it, and the attribute is exposed for the sensitivity
     study that the literature recommends rather than for normal use. Very
     large values over-constrain `r_z = \theta_z`, and a zero value leaves the

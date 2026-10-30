@@ -260,7 +260,8 @@ and they differ only in the coefficient `\gamma_{r_z}` that multiplies it:
 
 * ``drilling_model = 0``, the default, uses the physics-based value
   `\gamma_{r_z} = A_{66}` identified by Hughes and Brezzi, which is a
-  modulus of the laminate and not an adjustable parameter;
+  stiffness per unit length taken from the laminate and not an adjustable
+  parameter;
 * ``drilling_model = 1`` uses the fictitious value `\gamma_{r_z} = K6ROT
   \cdot 10^{-6} A_{66}` of MSC Nastran and Autodesk Nastran, derived below.
 
@@ -785,11 +786,11 @@ cdef class Quad4RProbe:
         Dimension of length. Updated by :meth:`.Quad4R.update_probe_xe`.
     ue, : array-like
         Array of size ``NUM_NODES*DOF=24`` containing the element displacements
-        in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
-        {{r_y}_e}_1, {{r_z}_e}_1`, `{u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
-        {{r_y}_e}_2, {{r_z}_e}_2`, `{u_e}_3, {v_e}_3, {w_e}_3, {{r_x}_e}_3,
-        {{r_y}_e}_3, {{r_z}_e}_3`, `{u_e}_4, {v_e}_4, {w_e}_4, {{r_x}_e}_4,
-        {{r_y}_e}_4, {{r_z}_e}_4`.
+        in the following order `u_{e_1}, v_{e_1}, w_{e_1}, {r_x}_{e_1},
+        {r_y}_{e_1}, {r_z}_{e_1}`, `u_{e_2}, v_{e_2}, w_{e_2}, {r_x}_{e_2},
+        {r_y}_{e_2}, {r_z}_{e_2}`, `u_{e_3}, v_{e_3}, w_{e_3}, {r_x}_{e_3},
+        {r_y}_{e_3}, {r_z}_{e_3}`, `u_{e_4}, v_{e_4}, w_{e_4}, {r_x}_{e_4},
+        {r_y}_{e_4}, {r_z}_{e_4}`.
         Translations with dimension of length, rotations dimensionless.
         Updated by :meth:`.Quad4R.update_probe_ue`.
     finte, : array-like

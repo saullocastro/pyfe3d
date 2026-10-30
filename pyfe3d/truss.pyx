@@ -88,9 +88,9 @@ cdef class TrussProbe:
         Updated by :meth:`.Truss.update_probe_xe`.
     ue : array-like
         Array of size ``NUM_NODES*DOF=12`` containing the element displacements
-        in the following order `{u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
-        {{r_y}_e}_1, {{r_z}_e}_1, {u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
-        {{r_y}_e}_2, {{r_z}_e}_2`. Translations of dimension length and
+        in the following order `u_{e_1}, v_{e_1}, w_{e_1}, {r_x}_{e_1},
+        {r_y}_{e_1}, {r_z}_{e_1}, u_{e_2}, v_{e_2}, w_{e_2}, {r_x}_{e_2},
+        {r_y}_{e_2}, {r_z}_{e_2}`. Translations of dimension length and
         rotations. Updated by :meth:`.Truss.update_probe_ue`.
     finte, : array-like
         Array of size ``NUM_NODES*DOF=12`` containing the element internal
