@@ -15,3 +15,4 @@ Tutorials
     tut-nonlinear-benchmarks
     tut-prescribed-displacement-cantilever
     tut-inertia-relief
+    tut-inertia-relief-aircraft-ha144a

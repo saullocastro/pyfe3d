@@ -92,6 +92,21 @@
     laminates with a large offset. A non-finite inverse, as returned by
     the LAPACK of Pyodide for a singular matrix, is also caught.
 
+- New function `pyfe3d.solver.inertia_relief`, module
+  `pyfe3d.solver.inertia_relief`: the linear static analysis of a structure
+  without supports under loads that need not be balanced, after Barnett et
+  al. (1995). With the sparse `KC0` and `M` of all the dofs, the loads
+  `fext`, a statically determinate reference support `bref` and the
+  optional constraints of the model `bfix`, e.g. a plane of symmetry, it
+  returns the displacements relative to the reference support, the
+  rigid-body accelerations and the rigid-body modes `Phi`, computed from
+  `KC0` with a unit displacement at each reference dof, and, with
+  `return_reactions=True`, the residual whose values at `bref` are the
+  reactions, zero. A reference support that leaves a rigid-body mode free
+  (`KC0uu` not positive definite or singular up to the round-off,
+  `pivot_rtol`), a statically indeterminate one (`rtol`) and a rigid-body
+  mode without mass raise `numpy.linalg.LinAlgError`.
+
 ### Behaviour change: physical hourglass stabilisation of `Quad4R`
 
 - `Quad4R` stabilises the bending and the transverse shear physically,
@@ -310,6 +325,18 @@
 
 ### Tests
 
+- `tests/test_inertia_relief.py`: `inertia_relief` checked for its input
+  errors, for balanced loads `KC0 @ v`, which give zero accelerations and
+  the displacements `v` less a rigid-body motion, and for the invariance
+  of the element forces under three reference supports; and against
+  closed-form solutions: three point masses joined by two springs, with
+  balanced and unbalanced loads and a fictitious support, a chain of
+  springs, a free beam of `BeamC` under its own weight balanced by
+  point loads, and a free beam and bar under an end force, exact at the
+  nodes with the consistent mass matrix.
+  `tests/test_inertia_relief_ha144a.py`: the airplane of the MSC Nastran
+  example HA144A against its published results.
+
 - `tests/test_vabs_isotropic.py`, `tests/test_vabs_composite.py` and
   `tests/test_vabs_elements.py`: elasticity solutions of rectangles,
   circles and tubes, including the shear correction factors of Eq. (25) of
@@ -493,6 +520,11 @@
   `test_trace_normalized` used `Q44` for `Q66`.
 
 ### Documentation
+
+- User guide page `inertia_relief`, API page `solver_inertia_relief` and
+  the tutorials `tut-inertia-relief` and
+  `tut-inertia-relief-aircraft-ha144a`; pointers from `overview`,
+  `linear_analyses` and the introduction of the documentation.
 
 - User guide page `cross_sectional_analysis` and API page `vabs`, with
   the figure `doc/figures/vabs_axes.svg` (TikZ source `vabs_axes.tex`) of

@@ -173,7 +173,8 @@ steps:
    :doc:`linear_analyses`. With :class:`.Analysis`, ``bu`` and ``uk`` are
    passed instead and the partition is done by the solver, see
    :doc:`nonlinear_analyses`. A dof without stiffness or a missing support
-   raises an error, see :doc:`linear_analyses`.
+   raises an error, see :doc:`linear_analyses`. A structure without
+   supports is solved with inertia relief, see :doc:`inertia_relief`.
 6. Solution: the linear static system `\boldsymbol{K}_{{C0}_{uu}} \boldsymbol{u}_u =
    \boldsymbol{f}_u - \boldsymbol{K}_{{C0}_{uk}} \boldsymbol{u}_k`, with :func:`.solve`,
    :func:`.linear_static` or :meth:`.Analysis.static`, see

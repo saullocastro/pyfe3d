@@ -10,6 +10,8 @@ assemble, all available from the ``pyfe3d.solver`` namespace:
 
 - linear static solution, :mod:`pyfe3d.solver.static`: :func:`.solve` and
   :func:`.linear_static`;
+- linear static analysis of unsupported structures with inertia relief,
+  :mod:`pyfe3d.solver.inertia_relief`: :func:`.inertia_relief`;
 - linear and non-linear static analyses of a model given by callables,
   :mod:`pyfe3d.solver.analysis`: :class:`.Analysis`, with the Newton-Raphson
   method, full or modified and with an optional line search,
@@ -53,12 +55,13 @@ from .eigen import (DenseFallbackWarning, diagonal_preconditioner,
                     check_eigenpairs, linear_buckling, natural_frequency,
                     complex_frequency)
 from .static import solve, linear_static
+from .inertia_relief import inertia_relief
 from .analysis import Analysis, FreeDofs
 from .convergence import crisfield_weights, crisfield_zeta
 from .sparseutils import check_null_rows_cols, is_symmetric
 
 __all__ = ['DenseFallbackWarning', 'diagonal_preconditioner', 'estimate_cayley_sigma',
            'is_positive_definite', 'check_eigenpairs', 'linear_buckling',
-           'natural_frequency', 'complex_frequency', 'solve', 'linear_static', 'Analysis',
+           'natural_frequency', 'complex_frequency', 'solve', 'linear_static', 'inertia_relief', 'Analysis',
            'FreeDofs', 'crisfield_weights', 'crisfield_zeta',
            'check_null_rows_cols', 'is_symmetric']

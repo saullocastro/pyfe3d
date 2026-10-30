@@ -90,7 +90,9 @@ mechanism or re-entrant elements leave `\boldsymbol{K}_{{C0}_{uu}}` not positive
 definite, which :func:`.linear_static`, :func:`.linear_buckling` and the
 linear :meth:`.Analysis.static` report with a
 :class:`numpy.linalg.LinAlgError` naming the likely causes, see
-:doc:`eigenvalue_analyses`.
+:doc:`eigenvalue_analyses`. A structure that has no supports, e.g. in
+flight, is solved with :func:`.inertia_relief`, whose reference support is
+a set of prescribed null displacements, see :doc:`inertia_relief`.
 
 
 References

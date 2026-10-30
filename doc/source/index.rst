@@ -25,6 +25,10 @@ With the solvers of :mod:`pyfe3d.solver` you can run:
 * Linear static analyses, `\boldsymbol{K}_{C0} \boldsymbol{u} = \boldsymbol{f}`, with :func:`.solve` or
   :class:`.Analysis`
 
+* Linear static analyses of unsupported structures with inertia relief,
+  balancing the loads with the inertia forces of the rigid-body
+  acceleration, with :func:`.inertia_relief`, see :doc:`inertia_relief`
+
 * Linear buckling analyses, `(\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}`, with
   :func:`.linear_buckling`
 
@@ -61,6 +65,7 @@ User guide
     shell_properties.rst
     cross_sectional_analysis.rst
     linear_analyses.rst
+    inertia_relief.rst
     nonlinear_analyses.rst
     eigenvalue_analyses.rst
 

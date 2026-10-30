@@ -1,11 +1,10 @@
 r"""Static analysis with inertia relief of unsupported structures
 
-pyfe3d has no inertia-relief function; the procedure is built here from the
-public API, the assembled ``KC0`` and ``M``, as in the notebook
-``doc/source/tut-inertia-relief.ipynb``. With the reference (statically
-determinate) degrees of freedom ``bref``, whose values are set to zero and
-which are part of ``bk``, the rigid-body modes are, Barnett et al. (1995),
-p. 6, Eq. (19),
+The function :func:`pyfe3d.solver.inertia_relief` is checked with the
+models of the notebook ``doc/source/tut-inertia-relief.ipynb``, built here.
+With the reference (statically determinate) degrees of freedom ``bref``,
+whose values are set to zero and which are part of ``bk``, the rigid-body
+modes are, Barnett et al. (1995), p. 6, Eq. (19),
 
 .. math::
 
@@ -24,8 +23,12 @@ Barnett, A. R., Widrick, T. W., Ludwiczak, D. R., 1995, Closed-Form Static
 Analysis with Inertia Relief and Displacement-Dependent Loads Using a
 MSC/NASTRAN DMAP Alter, NASA TM-106836, https://ntrs.nasa.gov/citations/19950013233
 
-The tests check, against closed-form solutions derived in the notebook:
-a spring between two point masses; a chain of springs and point masses; a
+The first tests check the function itself: the errors of its inputs, the
+rigid-body modes, zero accelerations for balanced loads and the invariance
+of the strains under the choice of the reference support. The others
+check, against closed-form solutions derived in the notebook: three point
+masses joined by two springs, with balanced and unbalanced loads, a
+fictitious support and inertia relief; a chain of springs and point masses; a
 free-free BeamC beam under a balanced load set, its own weight and axial
 loads, for which the rigid-body accelerations and the reactions of the
 reference support vanish; and a free-free beam and bar under an end force,
@@ -37,62 +40,160 @@ import sys
 sys.path.append('..')
 
 import numpy as np
+import pytest
+from numpy.linalg import LinAlgError
 from scipy.sparse import coo_matrix, csc_matrix
-from scipy.sparse.linalg import spsolve
 
 from pyfe3d.beamprop import BeamProp
+from pyfe3d.solver import inertia_relief as _inertia_relief
 from pyfe3d import (Spring, SpringData, SpringProbe, BeamC, BeamCData,
                     BeamCProbe, DOF, INT, DOUBLE)
 
 
 def inertia_relief(KC0, M, fext, bref, bfix=None):
-    r"""Static analysis with inertia relief
-
-    Parameters
-    ----------
-    KC0, M : sparse matrices
-        Stiffness and mass matrices of the unsupported model, shape (N, N).
-    fext : array
-        External forces, shape (N,).
-    bref : boolean array
-        Reference degrees of freedom, a statically determinate support,
-        set to zero.
-    bfix : boolean array, optional
-        Degrees of freedom that are constrained in the model itself, e.g.
-        the out-of-plane ones of a model in one dimension, also set to zero.
+    r"""Results of :func:`pyfe3d.solver.inertia_relief` collected in a
+    dict, with the d'Alembert forces
 
     Returns
     -------
     out : dict
-        ``Phi`` (N, nr), ``acc`` the rigid-body accelerations
-        `\ddot{\boldsymbol{\alpha}}` (nr,), ``finertia`` the d'Alembert forces
-        `-\boldsymbol{M} \boldsymbol{\Phi} \ddot{\boldsymbol{\alpha}}`, ``ftot``,
-        ``u`` the displacements relative to the reference support, ``R``
-        the residual `\boldsymbol{K}_{C0} \boldsymbol{u} - \boldsymbol{F}_{tot}`,
-        whose values at ``bref`` are the reactions of the reference
-        support, and ``bu``.
+        ``u``, ``acc``, ``Phi`` and ``R`` of
+        :func:`pyfe3d.solver.inertia_relief` with
+        ``return_reactions=True``; ``finertia``, the d'Alembert forces
+        `-\boldsymbol{M} \boldsymbol{\Phi} \ddot{\boldsymbol{\alpha}}`;
+        ``ftot = fext + finertia``; and ``bu``, the free dofs.
     """
-    N = KC0.shape[0]
-    bfix = np.zeros(N, dtype=bool) if bfix is None else bfix
-    bk = bref | bfix
-    bu = ~bk
-    KC0 = csc_matrix(KC0)
-    Kuu = KC0[bu, :][:, bu]
-    Kuref = KC0[bu, :][:, bref].toarray()
-    nr = bref.sum()
-    Phi = np.zeros((N, nr))
-    Phi[bref] = np.eye(nr)
-    Phiu = spsolve(Kuu, Kuref)
-    Phi[bu] = -Phiu.reshape(bu.sum(), nr)
-    Mrr = Phi.T @ (M @ Phi)
-    acc = np.linalg.solve(Mrr, Phi.T @ fext)
+    u, acc, Phi, R = _inertia_relief(KC0, M, fext, bref, bfix,
+                                     return_reactions=True)
     finertia = -(M @ (Phi @ acc))
-    ftot = fext + finertia
-    u = np.zeros(N)
-    u[bu] = spsolve(Kuu, ftot[bu])
-    R = KC0 @ u - ftot
-    return dict(Phi=Phi, acc=acc, finertia=finertia, ftot=ftot, u=u, R=R,
-                bu=bu)
+    bk = bref if bfix is None else bref | bfix
+    return dict(Phi=Phi, acc=acc, finertia=finertia, ftot=fext + finertia,
+                u=u, R=R, bu=~bk)
+
+
+def _free_beam(nel=6, **kwargs):
+    prop = beam_prop(**kwargs)
+    xs, KC0, M, beams = beam_model(2., nel, prop)
+    return prop, xs, KC0, M, beams
+
+
+def test_function_input_errors():
+    r"""Errors of :func:`pyfe3d.solver.inertia_relief` for invalid inputs
+
+    Shapes, Boolean arrays, an empty ``bref``, ``bref`` overlapping ``bfix``
+    and an unsymmetric ``KC0`` raise ``ValueError``; a reference support
+    that leaves a rigid-body mode free, five of the six dofs of a node of a
+    free beam, each of the six left out, raises a ``LinAlgError`` for a
+    ``KC0uu`` that is not positive definite or singular up to the round-off;
+    a statically indeterminate one, seven dofs, raises a
+    ``LinAlgError`` that says so; and a rigid-body mode without mass, the
+    rotation about the axis of a beam without rotary inertia, raises a
+    ``LinAlgError``.
+    """
+    prop, xs, KC0, M, beams = _free_beam()
+    N = KC0.shape[0]
+    f = np.zeros(N)
+    bref = reference_dofs(len(xs), 'clamp')
+    with pytest.raises(ValueError, match='M must have the shape'):
+        _inertia_relief(KC0, M[:-1, :-1], f, bref)
+    with pytest.raises(ValueError, match='fext must be'):
+        _inertia_relief(KC0, M, f[:-1], bref)
+    with pytest.raises(ValueError, match='bref must be a Boolean'):
+        _inertia_relief(KC0, M, f, np.flatnonzero(bref))
+    with pytest.raises(ValueError, match='bref has no'):
+        _inertia_relief(KC0, M, f, np.zeros(N, dtype=bool))
+    with pytest.raises(ValueError, match='overlap'):
+        _inertia_relief(KC0, M, f, bref, bfix=bref.copy())
+    Kuns = KC0.tolil()
+    Kuns[0, 1] += 1.
+    with pytest.raises(ValueError, match='symmetric'):
+        _inertia_relief(Kuns.tocsc(), M, f, bref)
+    for i in range(6):
+        too_few = bref.copy()
+        too_few[i] = False
+        with pytest.raises(LinAlgError, match='must suppress every rigid-body'):
+            _inertia_relief(KC0, M, f, too_few)
+    too_many = bref.copy()
+    too_many[DOF*(len(xs) - 1) + 2] = True
+    with pytest.raises(LinAlgError, match='statically indeterminate'):
+        _inertia_relief(KC0, M, f, too_many)
+    prop0 = beam_prop(rotary_xz=False)
+    prop0.intrhoy2 = 0.
+    _, KC00, M0, _ = beam_model(2., 6, prop0)
+    with pytest.raises(LinAlgError, match='no mass'):
+        _inertia_relief(KC00, M0, f, bref)
+
+
+def test_function_balanced_loads():
+    r"""Balanced loads give zero rigid-body accelerations and reactions
+
+    Loads ``f = KC0 @ v``, for any ``v``, are balanced, since
+    `\boldsymbol{\Phi}^\top \boldsymbol{K}_{C0} = \boldsymbol{0}`: the
+    rigid-body accelerations and the reactions vanish, and the displacements
+    are ``v`` minus the rigid-body motion ``Phi @ v[bref]`` that brings the
+    reference dofs to zero.
+    """
+    prop, xs, KC0, M, beams = _free_beam()
+    N = KC0.shape[0]
+    rng = np.random.default_rng(1)
+    v = rng.standard_normal(N)*1e-3
+    f = KC0 @ v
+    for choice in ('clamp', 'pin-roller'):
+        bref = reference_dofs(len(xs), choice)
+        u, acc, Phi, R = _inertia_relief(KC0, M, f, bref,
+                                         return_reactions=True)
+        assert np.allclose(Phi[bref], np.eye(6))
+        assert abs(KC0 @ Phi).max() < 1e-8*abs(KC0).max()
+        assert abs(acc).max() < 1e-10*abs(f).max()
+        assert abs(R).max() < 1e-8*abs(f).max()
+        assert np.allclose(u, v - Phi @ v[bref], rtol=0,
+                           atol=1e-10*abs(v).max())
+        # the default return
+        out = _inertia_relief(KC0, M, f, bref)
+        assert len(out) == 3 and np.allclose(out[0], u)
+
+
+def test_function_strains_independent_of_reference():
+    r"""The internal forces do not depend on the reference support
+
+    A free beam under an unbalanced load, an end force and an end moment in
+    both planes and an axial force: with three statically determinate
+    reference supports, the clamp at either end and the pin-roller, the
+    rigid-body accelerations of the centre of mass and the element
+    internal forces are the same, and the displacements differ by a
+    rigid-body motion.
+    """
+    prop, xs, KC0, M, beams = _free_beam()
+    N = KC0.shape[0]
+    n = len(xs)
+    f = np.zeros(N)
+    f[DOF*(n - 1):DOF*n] = [30., -20., 100., 5., -15., 8.]
+    choices = {'clamp': reference_dofs(n, 'clamp'),
+               'pin-roller': reference_dofs(n, 'pin-roller')}
+    end = np.zeros(N, dtype=bool)
+    end[DOF*(n - 1):] = True
+    choices['clamp at x = L'] = end
+    Phig = geometric_rigid_modes(xs)
+    results = {}
+    for name, bref in choices.items():
+        u, acc, Phi, R = _inertia_relief(KC0, M, f, bref,
+                                         return_reactions=True)
+        assert abs(R[bref]).max() < 1e-10*abs(f).max()
+        # accelerations of the 6 geometric rigid-body coordinates
+        C = np.linalg.lstsq(Phig, Phi, rcond=None)[0]
+        finte = []
+        for e in beams:
+            e.update_probe_ue(u)
+            e.update_probe_finte(prop)
+            finte.append(np.array(e.probe.finte))
+        results[name] = (u, C @ acc, np.array(finte))
+    u0, a0, fi0 = results['clamp']
+    for name, (u, a, fi) in results.items():
+        assert np.allclose(a, a0, rtol=1e-10)
+        assert np.allclose(fi, fi0, rtol=0, atol=1e-9*abs(fi0).max())
+        du = u - u0
+        c = np.linalg.lstsq(Phig, du, rcond=None)[0]
+        assert abs(Phig @ c - du).max() < 1e-9*max(abs(u0).max(), 1e-30)
 
 
 def spring_chain(ks, x=None):
@@ -239,34 +340,83 @@ def element_M(e, prop, mtype=0):
     return coo_matrix((Mv, (Mr, Mc)), shape=(2*DOF, 2*DOF)).toarray()
 
 
-def test_two_node_spring():
-    r"""Two point masses joined by a spring, free to move only along `x`
+def test_three_node_springs():
+    r"""Three point masses joined by two springs, `k_1` between the nodes 1
+    and 2 and `k_2` between the nodes 2 and 3, free to move only along `x`
 
-    Rigid-body acceleration `\ddot{\alpha} = (F_1 + F_2)/(m_1 + m_2)` and,
-    with the reference support `\bar{u}_1 = 0`, `u_2 = (m_1 F_2 - m_2
-    F_1)/(k (m_1 + m_2))`, derived in the notebook from the equations of
-    motion `m_1 \ddot{u}_1 + k (u_1 - u_2) = F_1` and `m_2 \ddot{u}_2 + k
-    (u_2 - u_1) = F_2` with `\ddot{u}_1 = \ddot{u}_2 = \ddot{\alpha}`.
+    The stiffness matrix has rank 2 and the null space `\{1, 1, 1\}`. For
+    balanced loads, `F_1 + F_2 + F_3 = 0`, the static solution is `u = \{0,
+    -F_1/k_1, -F_1/k_1 + F_3/k_2\} + \alpha \{1, 1, 1\}`. The fictitious
+    support `\bar{u}_1 = 0` alone, without inertia forces, gives `u_2 = (F_2
+    + F_3)/k_1`, `u_3 = u_2 + F_3/k_2` and the reaction `R_1 = -(F_1 + F_2 +
+    F_3)`, zero for balanced loads. With inertia relief and
+    the reference support `\bar{u}_1 = 0`, `\boldsymbol{K}_{{C0}_{uu}} = [[k_1 +
+    k_2, -k_2], [-k_2, k_2]]`, `\boldsymbol{K}_{{C0}_{uk}} = \{-k_1, 0\}`,
+    `\boldsymbol{\Phi}_u = \{1, 1\}`, `\ddot{\alpha} = (F_1 + F_2 + F_3)/(m_1
+    + m_2 + m_3)`, `u_2 = (F_2 + F_3 - (m_2 + m_3) \ddot{\alpha})/k_1` and
+    `u_3 = u_2 + (F_3 - m_3 \ddot{\alpha})/k_2`, derived and checked with
+    SymPy in the notebook. With the reference support at node 3, the
+    displacements change by `-u_3` and the spring forces do not.
     """
-    k, F, m1, m2 = 1000., 10., 2., 3.
-    KC0, bfix, springs = spring_chain([k])
-    M = point_masses([m1, m2])
-    bref = np.zeros(KC0.shape[0], dtype=bool)
-    bref[0] = True
-    for F1, F2 in [(-F, F), (0., F), (4., F)]:
-        fext = np.zeros(KC0.shape[0])
-        fext[0], fext[DOF] = F1, F2
-        out = inertia_relief(KC0, M, fext, bref, bfix)
-        assert np.allclose(out['Phi'][[0, DOF], 0], [1., 1.])
-        acc = (F1 + F2)/(m1 + m2)
-        assert np.isclose(out['acc'][0], acc, rtol=1e-14)
-        u2 = (m1*F2 - m2*F1)/(k*(m1 + m2))
-        assert np.isclose(out['u'][DOF], u2, rtol=1e-14)
-        assert abs(out['Phi'].T @ out['ftot']).max() < 1e-13*F
-        # reaction of the reference support
-        assert abs(out['R'][0]) < 1e-13*F
-        assert np.isclose(spring_forces(springs, out['u'])[0], k*u2,
-                          rtol=1e-14)
+    k1, k2 = 2000., 500.
+    ms = np.array([1., 2., 3.])
+    KC0, bfix, springs = spring_chain([k1, k2])
+    M = point_masses(ms)
+    N = KC0.shape[0]
+    Kx = KC0.toarray()[0::DOF, 0::DOF]
+    assert np.linalg.matrix_rank(Kx) == 2
+    assert np.allclose(Kx.sum(axis=1), 0.)
+    Kuu = Kx[1:, 1:]
+    assert np.allclose(Kuu, [[k1 + k2, -k2], [-k2, k2]])
+    assert np.isclose(np.linalg.det(Kuu), k1*k2)
+    assert np.allclose(Kx[1:, 0], [-k1, 0.])
+    # fictitious support u1 = 0 alone, without inertia forces
+    bref1 = np.zeros(N, dtype=bool)
+    bref1[0] = True
+    bu1 = ~(bref1 | bfix)
+    for Fs in ([-5., 1., 4.], [0., 0., 12.], [3., -4., 10.]):
+        Fs = np.array(Fs)
+        fext = np.zeros(N)
+        fext[0::DOF] = Fs
+        u = np.zeros(N)
+        u[bu1] = np.linalg.solve(KC0[bu1, :][:, bu1].toarray(), fext[bu1])
+        u2 = (Fs[1] + Fs[2])/k1
+        assert np.allclose(u[0::DOF], [0., u2, u2 + Fs[2]/k2], rtol=1e-12)
+        R1 = (KC0 @ u - fext)[0]
+        assert np.isclose(R1, -Fs.sum(), rtol=1e-12, atol=1e-13*abs(Fs).max())
+        if Fs.sum() == 0:
+            # the balanced static solution, with alpha = 0, and R1 = 0
+            ubal = np.array([0., -Fs[0]/k1, -Fs[0]/k1 + Fs[2]/k2])
+            assert np.allclose(Kx @ (ubal + 0.7), Fs, atol=1e-12)
+            assert np.allclose(u[0::DOF], ubal, rtol=1e-12)
+            assert abs(R1) < 1e-13*abs(Fs).max()
+            # inertia relief: no acceleration, the same solution
+            out = inertia_relief(KC0, M, fext, bref1, bfix)
+            assert abs(out['acc'][0]) < 1e-14*abs(Fs).max()
+            assert np.allclose(out['u'], u, rtol=1e-12, atol=1e-16)
+    for Fs in ([0., 0., 12.], [3., -4., 10.]):
+        Fs = np.array(Fs)
+        fext = np.zeros(N)
+        fext[0::DOF] = Fs
+        acc = Fs.sum()/ms.sum()
+        u2 = (Fs[1] + Fs[2] - (ms[1] + ms[2])*acc)/k1
+        u3 = u2 + (Fs[2] - ms[2]*acc)/k2
+        for r in (0, 2):
+            bref = np.zeros(N, dtype=bool)
+            bref[DOF*r] = True
+            out = inertia_relief(KC0, M, fext, bref, bfix)
+            assert np.allclose(out['Phi'][0::DOF, 0], 1., rtol=1e-14)
+            assert np.isclose(out['acc'][0], acc, rtol=1e-14)
+            assert abs(out['R'][DOF*r]) < 1e-13*abs(Fs).max()
+            uref = np.array([0., u2, u3]) - (u3 if r == 2 else 0.)
+            assert np.allclose(out['u'][0::DOF], uref, rtol=1e-12, atol=1e-16)
+            assert np.allclose(spring_forces(springs, out['u']),
+                               [k1*u2, k2*(u3 - u2)], rtol=1e-12)
+        if Fs[0] == Fs[1] == 0:
+            # 1 mm and 13 mm; the springs accelerate the masses on their left
+            assert np.isclose(u2, 1e-3) and np.isclose(u3, 13e-3)
+            assert np.isclose(k1*u2, ms[0]*acc)
+            assert np.isclose(k2*(u3 - u2), (ms[0] + ms[1])*acc)
 
 
 def chain_data():
@@ -460,7 +610,7 @@ def test_free_free_bar_end_force():
 
 
 if __name__ == '__main__':
-    test_two_node_spring()
+    test_three_node_springs()
     test_spring_chain()
     test_beam_balanced_loads()
     test_free_free_beam_end_force()
