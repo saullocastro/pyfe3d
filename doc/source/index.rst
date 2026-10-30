@@ -60,6 +60,7 @@ User guide
     element_choice.rst
     shell_properties.rst
     cross_sectional_analysis.rst
+    linear_analyses.rst
     nonlinear_analyses.rst
     eigenvalue_analyses.rst
 

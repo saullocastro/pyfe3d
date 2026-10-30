@@ -13,3 +13,5 @@ Tutorials
     tut-bench-macneal-harder
     tut-bench-shell-obstacle-course
     tut-nonlinear-benchmarks
+    tut-prescribed-displacement-cantilever
+    tut-inertia-relief

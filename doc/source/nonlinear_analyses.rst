@@ -59,8 +59,31 @@ With ``uk``, the constrained dofs have the prescribed displacements
 ``uk[~bu]`` are the values at `\lambda = 1`, and a load-free analysis,
 ``calc_fext`` returning zeros, is displacement controlled. The reaction at
 a prescribed dof is ``calc_fint(u)`` at that dof minus the load applied
-there, see ``test_prescribed_displacement_and_reaction`` in
-:doc:`ex_nonlinear_static`.
+there.
+
+In ``test_prescribed_displacement_and_reaction`` of
+:doc:`ex_nonlinear_static`, a point-loaded plate is first solved under load
+control; its central deflection ``w_c``, at the dof ``dof``, is then
+prescribed without load, with the callables of the full model::
+
+    bu_d = bu.copy()
+    bu_d[dof] = False        # the loaded dof becomes a known dof
+    uk = np.zeros(N)
+    uk[dof] = w_c            # value at the load factor 1
+
+    def calc_fext(inc=1., silent=True):
+        return np.zeros(N)   # no load: displacement control
+
+    an = Analysis(calc_fext, calc_fint, calc_kC, calc_kG, bu=bu_d, uk=uk)
+    an.NL_method = 'arc_length_riks'   # or 'NR'
+    increments, cs = an.static(NLgeom=True)
+    reaction = calc_fint(cs[-1])[dof]  # minus the load at dof, here none
+
+Each ``cs[i][dof]`` is ``increments[i]*w_c``, the displacement field at
+`\lambda = 1` is that of the load-controlled analysis, and the reaction
+equals the load. The same ``bu`` and ``uk`` serve the linear analysis,
+``an.static(NLgeom=False)``, see :doc:`linear_analyses` and the worked
+example :doc:`tut-prescribed-displacement-cantilever`.
 
 Without ``bu``, the callables return the vectors and matrices of the free
 dofs only. The solvers do not remove null rows and columns: a null row or
@@ -101,9 +124,8 @@ detected with::
     if not increments or increments[-1] != 1.:
         ...  # stopped at increments[-1], see the log messages
 
-The linear static analysis, ``an.static(NLgeom=False)``, solves
-`\boldsymbol{K}_{C0} \boldsymbol{u} = \boldsymbol{F}_{ext}` with :func:`.solve` and returns a single
-increment.
+The linear static analysis, ``an.static(NLgeom=False)``, returns a single
+increment, see :doc:`linear_analyses`.
 
 
 Convergence criterion
