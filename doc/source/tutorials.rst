@@ -16,5 +16,6 @@ Tutorials
     tut-corotational-large-rotations
     tut-prescribed-displacement-cantilever
     tut-prescribed-displacement-dome-riks
+    tut-nafems-cap-axisymmetric
     tut-inertia-relief
     tut-inertia-relief-aircraft-ha144a

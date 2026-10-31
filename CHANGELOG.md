@@ -815,6 +815,19 @@
   and translated by 1000, with the same increments and tip deflections
   within 1e-9 of `W`; with positions computed as `X + u` no increment of
   the translated cantilevers converges.
+- `tests/test_dome_prescribed_displacement.py`: the NAFEMS spherical cap
+  restricted to axisymmetric deformations, a sector of a polar mesh
+  (`polar_cap`) with the co-rotational kinematics and the nodal dofs `u = T
+  q` of `(u_r, u_z, theta)` per ring (`axisymmetric_T`, `Restricted`,
+  `run_cap_axisymmetric`). `test_cap_axisymmetric_map_exact`: the
+  unrestricted polar quarter follows the restricted path within 4.6e-7 up
+  to `w/th = 20`; `test_cap_axisymmetric`: no snap-back, and with 64 rings
+  and the radius `a + th/2` the limit load 1.835, +1.6 % on the 1.806 of
+  COMSOL with 16 shell elements (Fig. 3, new `FIG3_SHELL_COMSOL16`), 1.737
+  at `w/th = 25.51`, +1.1 % on 1.717; `test_cap_axisymmetric_convergence`
+  (slow): the limit load converges at second order to 1.828 with 256
+  rings, and in the Kirchhoff limit the minimum after it and the deflection
+  at the load 2.787 agree with COMSOL within 0.5 %.
 
 ### Documentation
 
@@ -894,9 +907,22 @@
   the loaded line; the one-point transverse shear of `Quad4` up to 0.11
   hid this through its zero-energy modes, while the MITC4 shear of this
   version enforces it and gave optima 5 to 8 times lighter. Corrected, the
-  two transverse shear rules agree within 0.8 % on uniform designs, and the
-  optimum volumes (printed as "mass") are 0.0041 (SLSQP) and 0.0015 (GA),
-  against 0.0060 and 0.0023 stored before with the wrong conditions.
+  two transverse shear rules agree within 0.8 % on uniform designs. Both
+  notebooks print the volume of the full plate in m^3, before labelled as a
+  mass in kg; the GA objective, the volume of the quarter model, is now that
+  of the full plate, as in SLSQP, which does not change the selection. The
+  optimum volumes are 0.0041 (SLSQP) and 0.0058 (GA), against 0.0060 and
+  4 x 0.0023 stored before with the wrong conditions.
+- Tutorial `tut-nafems-cap-axisymmetric`: the NAFEMS cap restricted to
+  axisymmetric deformations with the linear map `u = T q`, exact for
+  finite rotations since the nodal rotations are total rotation vectors,
+  passed to `Analysis` through restricted callables; the sector angle, the
+  mesh and the radius; the path without the snap-back of the quarter
+  model; the logarithmic singularity of the crown deflection under a point
+  load with transverse shear, which shifts the paths along `w` while the
+  loads converge; comparison with COMSOL and with an independent
+  axisymmetric shell. Linked from `nonlinear_analyses` and
+  `tut-prescribed-displacement-dome-riks`.
 
 ### Continuous integration
 
@@ -906,6 +932,9 @@
   `slow` (`-m "not slow"`), which take 40 s or more under line tracing
   and cover no `.pyx` line that the other tests do not, in 4 processes of
   pytest-xdist.
+- `requirements_ci.txt` installs SymPy, needed by the symbolic check
+  `test_closed_form_timoshenko_cantilever`, which is skipped when SymPy is
+  not installed.
 
 ## 0.11.3 (2026-10-27)
 

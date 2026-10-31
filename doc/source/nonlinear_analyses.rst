@@ -87,7 +87,10 @@ example :doc:`tut-prescribed-displacement-cantilever`.
 
 The worked example :doc:`tut-prescribed-displacement-dome-riks` traces with
 Riks' method the reaction of a clamped spherical cap and of a hinged shallow
-shell pressed down by a deflection prescribed at their crown.
+shell pressed down by a deflection prescribed at their crown, and
+:doc:`tut-nafems-cap-axisymmetric` restricts the co-rotational model of the
+cap to its axisymmetric deformations with a linear constraint ``u = T q``,
+passing the restricted callables to :class:`.Analysis`.
 
 Without ``bu``, the callables return the vectors and matrices of the free
 dofs only. The solvers do not remove null rows and columns: a null row or
