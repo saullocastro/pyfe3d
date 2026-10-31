@@ -22,7 +22,7 @@ in any platform, including the Google Colab environment.
 Citing this library
 -------------------
 
-Saullo G. P. Castro. (2026). General-purpose finite element solver based on Python and Cython (Version 0.11.3). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
+Saullo G. P. Castro. (2026). General-purpose finite element solver based on Python and Cython (Version 0.12.0). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
 
 
 Documentation
@@ -43,19 +43,25 @@ Available finite elements
 - 'Quad4' - 4-node plate with linear interpolation, equivalent to Nastran's
   CQUAD4. The recommended quadrilateral plate element.
 
-- 'Quad4R' - 4-node plate with linear interpolation, equivalent to Abaqus' S4R.
-  It has a not very robust hourglass control.
+- 'Quad4R' - 4-node plate with linear interpolation and one integration point,
+  with the physical stabilisation of Belytschko and Leviathan (1994) for the
+  bending and the transverse shear, and the hourglass control of Brockman
+  (1987) for the membrane.
 
 - 'Tria3DSG' - 3-node plate with linear interpolation and a discrete shear
-  gap transverse shear field, after Bletzinger, Bischoff and Ramm (2000). The
-  recommended triangular plate element: it is free of shear locking by
-  construction and needs no tuning parameter.
+  gap transverse shear field, after Bletzinger, Bischoff and Ramm (2000), free
+  of shear locking by construction and without a tuning parameter, with a
+  constant-strain membrane. The better choice on coarse meshes of doubly
+  curved shells, where it is less stiff than Tria3R.
 
-- 'Tria3R' - 3-node plate with linear interpolation, equivalent to Abaqus' S3R
-  or Nastran's CTRIA3. Its transverse shear is taken at the centroid and locks,
-  and it relies on the `alpha_shear_locking` stabilisation to unlock. No single
-  value of that parameter serves every problem class, so it has to be verified
-  per problem, see the element documentation. Prefer Tria3DSG for new work.
+- 'Tria3R' - 3-node shell with linear interpolation, the recommended
+  triangular element. Since 0.12.0 it takes the discrete shear gap transverse
+  shear field of Tria3DSG by default, with the membrane enriched by the
+  drilling rotations of Allman (1984), which makes
+  it much better than Tria3DSG in in-plane bending. Its former transverse
+  shear, sampled at the centroid and stabilised by `alpha_shear_locking`,
+  remains available with `shear_model = 0`, but it does not converge on thin
+  plates and shells, see the element documentation.
 
 - 'BeamC' - 2-node Timoshenko beam element with consistent shape functions and
 analytical integration. The recommended beam element.
@@ -77,6 +83,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the details of each version.
 
 | Main versions | Changes |
 | - | - |
+| 0.12.0 | New module `pyfe3d.vabs`: variational asymptotic cross-sectional analysis (VABS) of prismatic beams with arbitrary cross sections and anisotropic materials, giving the classical 4x4 and the generalized Timoshenko 6x6 stiffness matrices, the tension and shear centres and the mass properties, with the conversion to the convention of pyfe3d and to a `BeamProp`. |
 | 0.11.0 | Non-linear static solvers in `pyfe3d.solver` (Newton-Raphson, arc-length methods of Riks and Crisfield, Crisfield's convergence criterion as the default, with a round-off floor of the residual); damped (quadratic) eigenvalue solver `complex_frequency()`; fixed sign of the shear parameters of BeamC; fixed piston-theory slope of Quad4 and Quad4R; fixed `MatLamina` `c11` and `q31` and the 66 row of `GradABD.calc_LP_grad`; `pyfe3d.shellprop` mirrors `composites.Laminate` (breaking: `force_*` renamed `make_*`, `get_transf_matrix_displ_to_lamina`; new shear corrections, `make_smeared`, a posteriori transverse shear); derivation scripts in `theory/`. |
 | 0.10.0 | New Tria3DSG element with discrete shear gap transverse shear, the recommended triangle; physics-based drilling stiffness (Allman, Hughes-Brezzi) as the default, with the K6ROT penalty kept through `drilling_model`; fixed lost K6ROT coefficient; new `pyfe3d.solver` module for linear buckling and natural frequencies; speedup with Cython and compiler flags. |
 | 0.9.0 | Shear correction factors as per Rohwer and Vlachoutsis. |

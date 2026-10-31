@@ -1,5 +1,912 @@
 # Changelog
 
+## 0.12.0 (2026-10-31)
+
+### New features
+
+- New module `pyfe3d.vabs`, a variational asymptotic cross-sectional
+  analysis (VABS) of prismatic beams, after Cesnik and Hodges (1997), Yu et
+  al. (2002) and Yu et al. (2012). `CrossSection` takes an arbitrary mesh of
+  the cross section, with 3- and 6-node triangles and 4-, 8- and 9-node
+  quadrilaterals, the 6x6 material matrices, created e.g. by `isotropic` or
+  `orthotropic`, and the angles `theta1` and `theta3` that orient each
+  element, see `rotate_material`; `calc_stiffness` gives the classical 4x4
+  and the generalized Timoshenko 6x6 stiffness and flexibility matrices,
+  the tension and shear centres, with the warping constraints of Yu et al.
+  (2012) or of Yu et al. (2002), and `calc_mass` the mass matrix, the mass
+  centre and the mass integrals of `BeamProp`.
+- The matrices are in the convention of Yu, `{gamma11, 2gamma12, 2gamma13,
+  kappa1, kappa2, kappa3}`; `yu_to_pyfe3d` and `pyfe3d_to_yu` convert them
+  to and from that of the beam elements, `{N, Vy, Vz, Mx, Mz, My}`, with
+  `kappa2 = kappa_z` and `kappa3 = -kappa_y`, `classical_from_timoshenko`
+  condenses the shear strains, and `beamprop_from_vabs` creates a
+  `BeamProp` with the full 6x6 matrix in its new attribute `C`, see below.
+- `CrossSection.warping` gives the warping displacements of the nodes for
+  given beam strains, in the convention of Yu or of pyfe3d, and
+  `CrossSection.triangles` a triangulation of the mesh through all its
+  nodes, to plot the warping with any plotting library; pyfe3d does not
+  depend on one.
+- `CrossSection.calc_vlasov` gives the 5x5 stiffness `Kv` of the
+  generalized Vlasov model of Yu et al. (2005), for thin-walled open
+  sections, of `{gamma11, kappa1, kappa2, kappa3, kappa1'}` about the shear
+  centre, with the warping rigidity; `CrossSection.translated` moves the
+  origin of a cross section, e.g. to the shear centre. No beam element
+  uses `Kv`. The default warping constraints of `calc_vlasov` are
+  `'yu2002'`, which reproduce Yu et al. (2005); `'yu2012'` gives the same
+  classical block and a warping rigidity lower by up to 12 per cent for
+  strips and within about 0.1 per cent for I- and channel sections.
+- Initially twisted and curved beams are not implemented: non-zero `k1`,
+  `k2`, `k3` raise `NotImplementedError`.
+- `linear_buckling()` and `natural_frequency()` complete the eigenvalues
+  that the inertia check finds missing below the highest one returned by
+  the sparse solver, e.g. copies of the repeated eigenvalues of a cylinder
+  that the Lanczos process missed, with deflated passes before any other
+  solver (new `pyfe3d.solver.arpackutils.deflated_eigsh`, at most
+  `MAX_COMPLETION_PASSES = 3`); `linear_buckling()` also completes the
+  result of its second strategy, `eigsh()` with a 10 times larger shift,
+  before the dense fallback. The torsion of the cylinder Z33 with 80
+  elements around the circumference raised with 2 to 4 load multipliers
+  requested; it now returns them without the dense fallback.
+- A symmetric stiffness matrix that is not positive definite raises a
+  `numpy.linalg.LinAlgError` that says so, with the likely causes
+  (insufficient boundary conditions, a mechanism, re-entrant elements, a
+  preload beyond buckling), in `linear_buckling()` (with `check=True` or
+  `sparse_solver=False`), `linear_static()` and the linear
+  `Analysis.static()`, which previously returned results. The
+  `RuntimeError` of `natural_frequency()` starts with the same diagnosis
+  when its solvers fail; an indefinite or singular `K` remains accepted
+  there.
+- `MatLamina.rebuild(plane_stress=False)` keeps the three-dimensional
+  constants and invariants (Tsai, 2008, Sec. 3.3), e.g. for continuum
+  shells; the choice is stored in the new read-only attribute
+  `MatLamina.plane_stress`, `True` by default, see the behaviour change
+  below. `trace_normalize_plane_stress()` raises `ValueError` for
+  `plane_stress=False`, since the trace of Melo et al. (2017), Eq. (1), is
+  that of the plane-stress stiffness matrix.
+- Zero Young moduli, e.g. `laminaprop = (0, 0, nu12, 0, G13, G23)` for the
+  antiplane core of a sandwich (Allen, 1969, p. 14), are accepted by
+  `read_laminaprop()` and `MatLamina.rebuild()`, where `nu21 =
+  nu12*e2/e1` raised `ZeroDivisionError`. With `ei = 0` the reciprocal
+  Poisson's ratio is stored as zero; a non-zero `nuij` with `ei = 0` and
+  `ej != 0`, which violates `|nuij| < (ei/ej)**0.5` (Jones, 1999, Eq.
+  (2.51)), raises `ValueError`. Such a core adds only transverse shear
+  stiffness. Results with non-zero moduli are unchanged, bit for bit.
+- Input checks:
+  - `MatLamina.rebuild()`, and therefore `read_laminaprop()` and
+    `laminated_plate()`, raise `ValueError` for constants that are not
+    positive definite (Jones, 1999, Sec. 2.4.2): negative moduli, Eq.
+    (2.45), whose zero limits are kept for antiplane cores;
+    `|nu_ij| >= (e_i/e_j)**0.5`, Eq. (2.51); and a non-positive
+    determinant, Eq. (2.48). The message names the violated conditions
+    and their values. With 2 or 6 entries only the in-plane conditions
+    apply. Results with admissible constants are unchanged, bit for bit.
+  - `ShellProp.calc_equivalent_properties()`, called by
+    `laminated_plate()`, raises `numpy.linalg.LinAlgError`, a
+    `ValueError`, for an `ABD` matrix that is singular or ill-conditioned,
+    also with a positive diagonal, e.g. a single ply at 45 degrees with
+    `g12 = 0`, or a laminate of antiplane cores only. The check is the
+    condition number in the 1-norm of the `ABD` matrix about the
+    mid-surface, scaled by its diagonal, against `1e12`; about the
+    reference surface it would grow as `(offset/h)**2` and reject valid
+    laminates with a large offset. A non-finite inverse, as returned by
+    the LAPACK of Pyodide for a singular matrix, is also caught.
+
+- New function `pyfe3d.solver.apply_inertia_relief`, module
+  `pyfe3d.solver.inertia_relief`: the linear static analysis of a structure
+  without supports under loads that need not be balanced, after Barnett et
+  al. (1995). With the sparse `KC0` and `M` of all the dofs, the loads
+  `fext`, a statically determinate reference support `bref` and the
+  optional constraints of the model `bfix`, e.g. a plane of symmetry, it
+  returns the displacements relative to the reference support, the
+  rigid-body accelerations and the rigid-body modes `Phi`, computed from
+  `KC0` with a unit displacement at each reference dof, and, with
+  `return_reactions=True`, the residual whose values at `bref` are the
+  reactions, zero. A reference support that leaves a rigid-body mode free
+  (`KC0uu` not positive definite or singular up to the round-off,
+  `pivot_rtol`), a statically indeterminate one (`rtol`) and a rigid-body
+  mode without mass raise `numpy.linalg.LinAlgError`. The function is
+  named with a verb so that it does not hide its module in the
+  `pyfe3d.solver` namespace.
+
+- New module `pyfe3d.corotational`, an element-independent co-rotational
+  formulation (EICR) for large rotations, after Felippa and Haugen (2005),
+  with the consistent tangent of their CSE variant, Nour-Omid and Rankin
+  (1991), Crisfield (1997), Vol. 2, Section 17.4.2, and Battini and
+  Pacoste (2004). `CorotationalModel.add(elem, prop, kinematics=...)`
+  wraps `Quad4`, `Quad4R`, `Tria3R`, `Tria3DSG`, `BeamC`, `BeamLR`, `Truss`
+  (`CorotationalTruss`) and `Spring` (`CorotationalSpring`), with
+  `kinematics` one of `'linear'`, `'von_karman'`, `'corotational'` and
+  `'corotational_von_karman'`, the last one with the von Kármán strains
+  in the co-rotated frame, which differ from `'corotational'` for `BeamC`
+  only; the model gives `KC0`, `calc_fint`, `calc_kC`, `calc_kG` and
+  `calc_fext` to `Analysis` and its Newton-Raphson and arc-length solvers,
+  which are unchanged. The nodal rotations are total rotation vectors,
+  valid below 2 pi. Warped quadrilaterals use exact rigid offsets
+  (`warping='offsets'`, default) between the nodes and the flat element.
+  Applied moments are conjugate to the rotation vectors by default, with
+  moments about fixed axes and follower moments as configuration-dependent
+  loads. Checked against Sze, Liu and Lo (2004), Sections 3.1 to 3.4 and
+  3.8, see `tests/test_corotational_benchmarks.py`, and the section
+  "Choosing the kinematics" of the user guide page `nonlinear_analyses`.
+  `CorotationalModel`, `CorotationalShell`, `CorotationalBeam`,
+  `CorotationalTruss` and `CorotationalSpring` are also exported from the
+  `pyfe3d` namespace, e.g. `from pyfe3d import CorotationalModel`; the
+  finite-rotation utilities, e.g. `expso3`, stay in `pyfe3d.corotational`.
+  The current nodal positions are computed relative to the base centroid
+  of each element, so that the round-off of the internal force does not
+  depend on the origin of the coordinates and the default convergence
+  criterion (`relTOL = 1e-9` with the round-off floor) applies without
+  `absTOL`; computed as `X + u`, their round-off of about `eps*|X|` made
+  the iterations stagnate on fine meshes, at `zeta` of about 1e-8 for the
+  cantilever with 64 `BeamC` and 1e-6 with its root at 1000 from the
+  origin, see `test_cantilever_end_shear_translated`.
+  `pyfe3d.corotational` is a Cython extension, `pyfe3d/corotational.pyx`,
+  with the same classes, functions and signatures: the kinematics, the
+  projector and the internal force and tangent stiffness matrix of each
+  wrapper are computed by typed C kernels, and the finite-rotation
+  utilities, e.g. `expso3`, are their Python interface. The results equal
+  those of the former pure-Python module to round-off (worst relative
+  difference 3e-13 on `calc_fint`, `calc_kC` and `calc_kG` at random
+  states of every wrapper), and the co-rotational analyses run 7 to 9
+  times faster, e.g. the slit annular plate of Sze et al. (2004) with 6x30
+  `Quad4R` in 5.1 s instead of 41.6 s.
+
+### Behaviour change: physical hourglass stabilisation of `Quad4R`
+
+- `Quad4R` stabilises the bending and the transverse shear physically,
+  after Belytschko and Leviathan (1994), CMAME 113: the assumed transverse
+  shear strains of Dvorkin and Bathe, their constant part at the centroid,
+  Eq. (4.12), and a stabilisation of their nonconstant part, Eq. (4.13);
+  and the nonconstant curvatures, Eq. (3.28), integrated with the bending
+  stiffness of the laminate, `D - B A^-1 B`, Eqs. (4.13) and (B.18). This
+  replaces the artificial hourglass stiffnesses of Brockman for `w`, `r_x`
+  and `r_y`; that of `w` stiffened a uniform twist by up to 78 per cent
+  of its energy whatever the mesh, and depended on the length unit.
+  `Quad4R` now passes the constant-twist and the thin-plate bending patch
+  tests, and a single element is singular only in its six rigid-body
+  modes. The membrane keeps the hourglass stiffness of Brockman: the
+  physical form of the paper for `u`, `v` is the 2x2-integrated
+  quadrilateral, which was stiffer on the in-plane strips of MacNeal and
+  Harder and on Cook's membrane. The stabilisation is linear and enters
+  `KC0` and the internal forces; `KCNL` and `KG` are unchanged.
+- Results, before and after:
+  - one-element-wide torsion strip of MacNeal and Harder (1985): 4.78
+    (grade F) to 0.941 (grade B); failed tests of the set from 8 to 4;
+  - shell obstacle course with N = 48: Scordelis-Lo roof 0.967 to 0.996,
+    pinched cylinder 0.940 to 1.001, hemisphere 0.982 to 1.011;
+  - thin hinged roof of Sze et al. (2004): the lower limit load converges
+    to Table 9d, +0.02 per cent with 48x48 elements, instead of 11 per
+    cent below it;
+  - laminated plates with 8x8 elements: 0.5 to 3 per cent from the Navier
+    solution instead of 8 to 15 per cent;
+  - thick rotated plate with 30x14 elements: +1.4 per cent with the
+    defaults instead of +10.7 per cent with tuned factors;
+  - other plate frequencies and deflections move by at most 0.4 per cent;
+    the coarse meshes of the laminated cylinders are stiffer than with the
+    hourglass stiffnesses reduced to 1/1000 of the former tests, with the
+    same extrapolated limits.
+  - Assembling `KC0` costs about 5 to 25 per cent more.
+- Breaking: the arguments `hgfactor_u`, `hgfactor_v`, `hgfactor_w`,
+  `hgfactor_rx` and `hgfactor_ry` of `Quad4R.update_KC0`,
+  `update_probe_finte` and `update_fint` are removed and replaced by
+  `hgfactor_membrane`, which multiplies the hourglass stiffness of `u`,
+  `v`, and `hgfactor_physical`, which multiplies the stabilisation of
+  Belytschko and Leviathan, whose formulation has no parameter, 1 by
+  default, other values being for verification and sensitivity studies.
+  Positional calls change: `(..., prop, update_KC0v_only,
+  hgfactor_membrane, hgfactor_physical)`.
+
+### Behaviour change: transverse shear of `Tria3R`
+
+- `Tria3R` takes, by default, the discrete shear gap transverse shear field
+  of `Tria3DSG` (new attribute `shear_model = 1`), keeping its membrane
+  enriched with the drilling rotations of Allman, and `alpha_shear_locking`
+  defaults to `0.`. Up to 0.11 its transverse shear was sampled at the
+  centroid and divided by `1 + 0.7 l^2/h^2`, which does not converge on
+  thin plates and shells (Lyly, Stenberg and Vihinen, 1993, p. 348): on a
+  simply supported square plate with `a/h = 1000` the centre deflection
+  stalled at -14 per cent, the buckling load at +16 per cent and the first
+  frequency at +8 per cent under refinement, against 0.02 per cent now;
+  the Scordelis-Lo roof stalled at 0.88 to 0.89 and the pinched hemisphere
+  at 0.83 of the reference, now 0.996 and 1.008 with N = 48. The former
+  field is available with `shear_model = 0` and `alpha_shear_locking =
+  0.7`, for reproducing former results only.
+- On flat plates in bending, buckling and vibration `Tria3R` and `Tria3DSG`
+  now give the same results to round-off; `Tria3R` is better in in-plane
+  bending (Cook's membrane 0.86 against 0.46 with 4x4 cells), on the
+  Scordelis-Lo roof and on the twisted beam, and assembles `KC0` in about
+  half the time, but is stiffer on coarse meshes of the pinched hemisphere
+  (0.29 against 0.45 with N = 8, equal from N = 32). `Tria3R` is the
+  recommended triangle, `Tria3DSG` the alternative on coarse meshes of
+  doubly curved shells.
+
+### Behaviour change: plane-stress invariants of `MatLamina` for any `laminaprop`
+
+- `MatLamina.rebuild()` computes `q11`, `q12`, `q21`, `q22` and the
+  invariants `u1` to `u5` with the plane-stress reduced stiffnesses,
+  `sigma33 = 0` (Jones, 1999, Eq. (2.66); Reddy, 2003, Eq. (2.4.4)), also
+  when `e3`, `nu13` and `nu23` are given, i.e. for a 9-entry `laminaprop`,
+  and sets `q13`, `q23`, `q31`, `q32` and `q33` to zero. Before, with `e3
+  != 0` they were the three-dimensional stiffnesses, such that
+  `shellprop_from_LaminationParameters()`,
+  `shellprop_from_lamination_parameters()`, `GradABD.calc_LP_grad()` and
+  `trace_normalize_plane_stress()` gave stiffer `A`, `B`, `D` than
+  `laminated_plate()` for the same material and layup, e.g. `(lambda +
+  2 mu) h` instead of `E h/(1 - nu^2)` for an isotropic material, 32 per
+  cent higher for `nu = 0.33`. Both routes now agree to round-off for any
+  layup. The results with a 2- or 6-entry `laminaprop` and those of
+  `laminated_plate()` are unchanged, bit for bit.
+
+### Fix: lamination parameters with an offset
+
+- `shellprop_from_LaminationParameters()`,
+  `shellprop_from_lamination_parameters()` and `GradABD.calc_LP_grad()`
+  take a new argument `offset`, default `0.`.
+  `ShellProp.calc_lamination_parameters()` integrates `xiB` and `xiD`
+  about the reference surface, i.e. including the offset, while the
+  reverse route assumed the mid-surface, such that the round trip of a
+  laminate with an offset gave wrong `B` and `D`, e.g. `B11` 4.8 times too
+  small for a `[0/90]s` laminate with `offset = 0.2 mm` and `0.125 mm`
+  plies. Given the same offset, the stiffnesses now satisfy `B = B0 + e A`
+  and `D = D0 + 2 e B0 + e^2 A` (Vasiliev and Morozov, 2001, Eq. (5.28),
+  p. 235) and reproduce `laminated_plate()` to round-off; the created
+  property stores the offset. Results with `offset = 0` are unchanged.
+
+### Behaviour change: transverse shear of thick `Quad4` elements
+
+- The elements with `h/l >= 1`, `l` the square root of the element area,
+  integrate the transverse shear with the assumed strains of the MITC4
+  element of Dvorkin and Bathe (1984), in the plate form of Bathe and
+  Dvorkin (1985), with two-by-two quadrature, instead of the modified
+  one-point shear rule of Hughes et al. (1977). That rule integrates the
+  products of the gradients of `w` with two-by-two quadrature and the terms
+  with the rotations with one point, such that a state of pure twist, whose
+  transverse shear strains vanish, stored spurious shear energy,
+  `(5/12)(l/h)^2` times the twist energy of an isotropic square element,
+  42 per cent at `h/l = 1`, and a mesh refined across `h/l = 1` became
+  abruptly stiffer in torsion: the tip twist of a thin-walled I-beam fell by
+  21 per cent, and the buckling load of a hard simply supported square
+  plate with `b/h = 10` was 2.0 per cent above the Mindlin solution with
+  8 x 8 elements, `h/l = 0.8`, and 11.2 per cent above it with 12 x 12,
+  `h/l = 1.2`. The thick element is now exact for pure twist and pure bending
+  of a rectangle, has only the six rigid-body zero-energy modes, and the
+  plate converges monotonically to the Mindlin solution, +0.91 per cent
+  with 12 x 12 elements. The elements with `h/l < 1` are unchanged with
+  `shear_model = 0`; by default they take the same assumed strains, see the
+  next section.
+
+### Behaviour change: transverse shear of `Quad4` without zero-energy modes
+
+- New attribute `shear_model` of `Quad4`, default `1`: the assumed
+  transverse shear strains of the MITC4 element, two-by-two quadrature, for
+  every thickness, such that a single element has only the six rigid-body
+  zero-energy modes, instead of eight. `shear_model = 0` keeps the
+  one-point transverse shear of Hughes et al. (1977) for `h/l < 1`, the
+  rule up to 0.11, whose two zero-energy modes, the hourglass of `w` and
+  the in-plane twist of `r_x`, `r_y` (Hughes et al., 1977, p. 1542, Fig.
+  10), made a strip one element wide too flexible in torsion. `KG`, `KCNL`
+  and `M` have no transverse shear term and are unchanged; the rigid
+  offsets of warped elements are unchanged.
+- On a parallelogram the new element is that of Hughes et al. plus the
+  physical stabilisation of Belytschko and Leviathan (1994), Eq. (4.13), a
+  matrix of rank two that vanishes for every state of constant transverse
+  shear and curvature; on other quadrilaterals the constant part changes
+  too, and the element now passes the thin-plate bending patch test, which
+  the one-point rule fails (Belytschko and Leviathan, 1994, Table 3).
+- Results against the one-point rule, MacNeal and Harder (1985): bending
+  patch test passed to round-off instead of an energy error of 580 per
+  cent; twist of the 6 x 1 straight cantilever 0.941, 0.884 and 0.849 of
+  the reference on the regular, trapezoidal and parallelogram meshes
+  instead of 377, 110 and 138, and out-of-plane load of the curved beam
+  0.942 instead of 26.8; out-of-plane shear of the trapezoidal straight
+  cantilever 0.963 instead of 0.981; simply supported plate with 2 x 2
+  elements on a quarter 0.977 instead of 1.065 (`b/a = 1`) and 0.971
+  instead of 0.826 (`b/a = 5`); twisted beam with 12 x 2 elements 0.996 and
+  0.997 instead of 0.997 and 0.998 with offsets, 0.252 and 0.331 instead of
+  0.252 and 0.332 without; the other cases change by less than 2.1 per
+  cent. Failed tests of their grading (D and F): 1 instead of 4.
+
+### Behaviour change: geometric stiffness of `Quad4R`
+
+- The slopes of `w` in the geometric stiffness `KG`, of `update_KG` and
+  `update_KG_given_stress`, and in the geometrically nonlinear terms of
+  `update_KCNL` and of the internal forces are taken at the centroid,
+  the single integration point of the transverse shear and of the
+  curvatures in `KC0`, instead of at the two-by-two quadrature points; the
+  stress resultants keep the two-by-two quadrature. The hourglass pattern
+  of `w`, which `KC0` resists only with the hourglass stabilisation, then
+  has no geometric stiffness. With the slopes at the
+  two-by-two points it had the geometric stiffness of the full quadrature,
+  and a linear buckling analysis could return a spurious mode of `w`
+  alternating in sign from node to node, below the physical buckling load:
+  on a hard simply supported square plate with `b/h = 10`, 3.0 per cent
+  below the Mindlin solution with 12 x 12 elements, `h/l = 1.2`, 40.8 per
+  cent below with 16 x 16 and 85.7 per cent below with 48 x 48; with `b/h =
+  100` and the transverse shear stiffness reduced to 1/1000, as in a
+  sandwich, 59.9 per cent below with 8 x 8 elements, `h/l = 0.08`. These
+  cases now give +4.7, +2.6, +0.3 and +7.0 per cent. The buckling loads of
+  coarse meshes of thin plates increase slightly, e.g. from 10.0 to 11.4
+  per cent above the Mindlin solution with 8 x 8 elements and `b/h = 100`,
+  and `KC0 + KCNL + KG` remains the exact Jacobian of the internal forces.
+  These figures were measured with the hourglass stiffness of Brockman;
+  with the physical stabilisation above, the first case gives +1.5 per
+  cent.
+
+### Behaviour change: geometric stiffness of `Quad4`
+
+- The slopes of `w` in the geometric stiffness `KG`, of `update_KG` and
+  `update_KG_given_stress`, and in the geometrically nonlinear terms of
+  `update_KCNL` and of the internal forces are taken at the centroid,
+  instead of at the two-by-two quadrature points, as for `Quad4R`; the
+  stress resultants keep the two-by-two quadrature. The elements with
+  `h/l < 1` integrate the transverse shear at the centroid, so the
+  hourglass pattern of `w`, with zero rotations, has no stiffness in `KC0`,
+  and it now has no geometric stiffness either. With the slopes at the
+  two-by-two points it had the geometric stiffness of the full quadrature,
+  and a linear buckling analysis could return a spurious mode of `w`
+  alternating in sign from node to node, with nearly zero rotations, below
+  the physical buckling load, once the transverse shear stiffness is low
+  compared with the bending stiffness: on a hard simply supported square
+  plate with `b/h = 100` and the transverse shear stiffness reduced to
+  1/100, as in a sandwich, 49.2 per cent below the solution of Seide and
+  Stowell (1950), NACA Report 967, Eq. (1), with 16 x 16 elements, `h/l =
+  0.16`, and 87.1 per cent below with 32 x 32; with 1/1000, 71.4, 92.4 and
+  98.1 per cent below with 8 x 8, 16 x 16 and 32 x 32 elements. These
+  cases now converge to that solution from above, as the square of the
+  element size: +0.81, +0.20, +2.19, +0.54 and +0.13 per cent. The
+  elements with `h/l >= 1`, whose MITC4 transverse shear resists the
+  pattern, did not have the spurious mode; they take the slopes at the
+  centroid as well, such that `KG` does not depend on the thickness. The
+  buckling loads of coarse meshes increase: from 2.2 to 4.7 per cent above
+  the Kirchhoff solution for the plate with 20 x 6 elements of
+  `tests/test_quad4_linear_buckling_plate_rotated.py`, from 0.5 to 1.1 per
+  cent with 40 x 12 elements; from 2.0 to 3.3 per cent above the Mindlin
+  solution for the plate with `b/h = 10` and 8 x 8 elements, `h/l = 0.8`,
+  of the entry above, and from 0.91 to 1.49 per cent with 12 x 12
+  elements, `h/l = 1.2`. The laminated cylinder Z11 of Castro et al.
+  (2014) under an end shortening, whose buckling load fell under mesh
+  refinement through such a mode, to -81.6 kN with 160 elements around the
+  circumference, now converges, -297.0 kN. The torsional buckling loads are
+  unchanged: with a pure shear prestress the two-by-two and the centroid
+  `KG` coincide on rectangles. `KC0 + KCNL + KG` remains the exact Jacobian
+  of the internal forces.
+
+### Behaviour change: rigid offsets of warped `Quad4` and `Quad4R`
+
+- The matrices of a quadrilateral are those of its flat projection, in the
+  mean plane of the nodes, which is too stiff when the element is warped.
+  New attribute `warp_offsets` of `Quad4` and `Quad4R`, default `1`: the
+  flat element is linked to the nodes by rigid offsets along its normal,
+  `u_f = u - z_a r_y` and `v_f = v + z_a r_x` at each node, `z_a` the
+  height of the node above the flat element, i.e. `J ue`, applied in
+  element coordinates before the rotation to global coordinates:
+  `update_KC0` gives `J^T KC0 J`, `update_M` gives `J^T M J` with the three
+  mass matrices, `update_probe_finte` and `update_fint` give the linear
+  internal forces `J^T KC0 J ue`, and `update_KG` and
+  `update_KG_given_stress` take the stress resultants of `J ue` and add the
+  eccentricity geometric stiffness of the offsets on the rotations of each
+  node, `(n.r) I - (n r^T + r n^T)/2`, with `n` the nodal forces of the
+  flat element, which Felippa and Haugen (2005), Section 5.1, name without
+  giving it. The rigid links and that term are derived here, as the first
+  and the second order of the offsets of `CorotationalShell` with
+  `warping='offsets'`; MacNeal (1978), p. 180, and Cook (1994), p. 552,
+  correct warped quadrilaterals with normal nodal forces instead, and
+  Belytschko, Wong and Chiang (1992), Section 3.3, with warping terms in
+  the curvatures. `warp_offsets = 0` gives the previous results; flat
+  elements give the same results, bit for bit, with both values.
+- The von Kármán terms use the same first-order link: the part that
+  `nonlinear=1` adds to `update_probe_finte` and `update_fint` is `J^T`
+  times that of the flat element at `J ue`, and `update_KCNL` gives `J^T
+  KCNL J` of the flat element minus the eccentricity term that `update_KG`
+  adds, such that `KC0 + KCNL + KG` is the exact Jacobian of the internal
+  forces again (relative error 7e-12; 6e-5 when only the linear terms used
+  the offsets). The second-order link, whose Hessian is the eccentricity
+  term, is not used: it is beyond the order of the von Kármán strains,
+  with the ordering of Sanders (1963), and, measured on the twisted beam
+  with 12 x 2 elements and rotations up to 0.3, gives tip displacements 4
+  to 7 per cent smaller than the first-order link, whose `Quad4` results
+  are within 0.6 per cent of the converged von Kármán solution. With the
+  linear terms alone on the offsets, Newton-Raphson on that beam diverged
+  above a tip load of about 60 along z, against a linear tip displacement
+  of 0.33 (measured with a numpy prototype of that state).
+- `update_KG` and `update_KCNL` of `Quad4R` take the optional
+  `hgfactor_membrane` and `hgfactor_physical`, default `1.`, read only for
+  the nodal forces of the eccentricity term of a warped element; with the
+  default factors and other ones in `update_KC0`, that term was 2 to 80
+  per cent off on the twisted beam (factors from 0.1 to 10). The von
+  Kármán tangent is exact with any factors, as long as `update_KG` and
+  `update_KCNL` receive the same ones, as `CorotationalModel` does with
+  the defaults.
+- `Quad4Probe.update_BL` takes the optional `warp_offsets`, default `1`,
+  to be that of the element: the rows of the membrane strains and of the
+  drilling strain are multiplied by `J`, such that the strains recovered
+  with `ue` are those of the flat element at `J ue`; the methods of `Quad4`
+  do not call it, so its matrices are unchanged.
+- `KG_SPARSE_SIZE` of `Quad4Data` and `Quad4RData` is 180 instead of 144:
+  the 36 new entries, the rotations of each node, are zero for flat
+  elements and with `warp_offsets = 0`. `KC0_SPARSE_SIZE` and
+  `M_SPARSE_SIZE` do not change, and the lumped mass matrix remains
+  block-diagonal per node.
+- `KC0` of a warped element now annihilates the six rigid motions of its
+  nodes and is the tangent of `CorotationalShell` at the base
+  configuration. `CorotationalShell` sets `warp_offsets = 0` on its
+  element, since it treats the warping with its own exact offsets.
+- Results, with offsets and without. Twisted beam of MacNeal and Harder
+  (1985), Fig. 6, 12 x 2 elements, warp ratio 0.024, tip displacements
+  normalised by their Table 3: `Quad4` 0.997 and 0.998 instead of 0.25 and
+  0.33, `Quad4R` 0.991 and 0.930 instead of 0.24 and 0.32, the remaining
+  error of `Quad4R` being that of its in-plane bending with one element
+  across the width. The same beam with 6 x 1 `Quad4` elements, warp ratio
+  0.049: -0.6 per cent from a 96 x 16 mesh instead of -74 and -91 per
+  cent. Its linear buckling load under an axial tip load, against a 96 x 16
+  `Quad4` mesh with offsets: with 12 x 2, 24 x 4 and 48 x 8 elements
+  +0.00, +0.01 and +0.01 per cent instead of +366, +102 and +26 per cent
+  (`Quad4`), +1.2, +0.4 and +0.1 per cent instead of +329, +101 and +27
+  per cent (`Quad4R`); the eccentricity term changes the first one by 0.05
+  per cent with 12 x 2 elements. Its first natural frequency with 12 x 2
+  elements: +0.07 instead of +40 per cent (`Quad4`), +0.13 instead of +40
+  per cent (`Quad4R`).
+- See the section "Warped quadrilaterals" of the user guide page
+  `element_choice`, and `eigenvalue_analyses`.
+
+### Behaviour change: averaged von Kármán axial strain of `BeamC`
+
+- `BeamC` replaces the nonlinear part of its von Kármán axial strain,
+  `(v_{,x}^2 + w_{,x}^2)/2`, by its mean over the element, Crisfield
+  (1991), Vol. 1, Section 7.1.3, Eqs. (7.31)-(7.32), and Crisfield (1997),
+  Vol. 2, Section 17.1.5, Eqs. (17.56a)-(17.56b), in the internal forces
+  of `update_fint(..., nonlinear=1)` and in `update_KCNL`. With `u` linear
+  and `v`, `w` cubic, the constant `u_{,x}` could not balance the
+  pointwise value, of degree four in `x`, and the element had membrane
+  locking. `KC0 + KCNL + KG` remains the exact, symmetric Jacobian of the
+  internal forces; the means are integrated analytically instead of with
+  five Gauss points, and `KCNL_SPARSE_SIZE` is unchanged. `KC0`, the
+  linear internal forces and the mass matrices do not change.
+- `update_KG` builds the geometric stiffness with the element mean of the
+  axial force of the linear strains, `N_m = E (A (u_2 - u_1) + A_y
+  (r_{z1} - r_{z2}) + A_z (r_{y2} - r_{y1}))/L`, which the averaged strain
+  requires for a consistent tangent, instead of the linear variation of
+  `N` along the element. The two are equal when `Ay = Az = 0`, so linear
+  buckling loads change only for sections with `Ay` or `Az` non-zero.
+- Results. Cantilever under an end moment of Sze et al. (2004): the tip
+  deflections of the von Kármán solution with any mesh and up to `M_max`,
+  to 5e-12, instead of 43.6 per cent below it with 16 elements. Beam
+  clamped at both ends under a central load, linear deflection three times
+  the height, deflection with 2, 4, 8 and 16 elements -1.06, -0.60, -0.07
+  and -0.01 per cent from the converged value, instead of -10.1, -8.1,
+  -2.1 and -0.49 per cent. As the local element of `CorotationalBeam`
+  (`kinematics='corotational_von_karman'`), the cantilever of Sze et al.
+  (2004), Section 3.1, with 4, 8 and 16 elements: tip deflections within
+  0.013 per cent of the elastica, instead of -59, -15.6 and -1.5 per cent
+  for `-U`.
+- Breaking: the attributes `BLexx`, `BLky`, `BLkz`, `Sv_x` and `Sw_x` of
+  `BeamCProbe`, the rows at the last Gauss point, are removed, as is the
+  method `_update_probe_BL_G`; `KCNLve` remains.
+- See the row of `BeamC` in the user guide page `element_choice`, and the
+  section "Choosing the kinematics" of `nonlinear_analyses` for
+  `'corotational_von_karman'`.
+
+### Behaviour change: geometric stiffness of `BeamLR`
+
+- `BeamLR` takes the slopes `v_{,x}` and `w_{,x}` of the geometric
+  stiffness `KG`, of `update_KCNL` and of the nonlinear internal forces
+  from the linear interpolations of `v` and `w`, as `BeamC` does, instead
+  of from the rotations, `v_{,x} = r_z` and `w_{,x} = -r_y`, which hold
+  only without shear deformation. With the slopes from the rotations a
+  buckling mode could have no shear strain, and the buckling load
+  converged to the Euler load whatever the shear stiffness: for a
+  clamped-free column with `P_e/(kGA)` = 0.0002, 0.018, 0.18 and 0.59,
+  `Pcr/P_e` was 1.0000 with 100 and 800 elements, against 0.9998, 0.9825,
+  0.8488 and 0.6274 from Eq. (2-57) of Timoshenko and Gere (1961), i.e.
+  up to 59 per cent unconservative for shear-flexible beams. It now
+  converges to Eq. (2-57) as the square of the element size, from above,
+  +2.6e-3 with 10 elements and +1.0e-5 with 160 for `P_e/(kGA) = 0.59`.
+  For slender columns the discretisation error is about twice the former
+  one, +4.1e-3 against +2.1e-3 with 10 elements.
+- The entries of `KG` move from the rotations to the translations,
+  `N/L [[1, -1], [-1, 1]]` for `v` and for `w`, with `KG_SPARSE_SIZE`
+  unchanged; the rows `Sv_x` and `Sw_x` of `BeamLRProbe` now hold
+  `dS^v/dx` and `dS^w/dx`, as in `BeamCProbe`, instead of the
+  interpolations of the rotations described for 0.11.0. The nonlinear
+  terms are constant along the element and are integrated with one point.
+  `KC0 + KCNL + KG` remains the exact Jacobian of the internal forces.
+- `BeamLR` no longer has membrane locking in the cantilever under an end
+  moment of Sze et al. (2004): the tip deflection of the von Kármán
+  solution with any mesh, instead of 43.6 per cent below it with 16
+  elements.
+
+### New feature: general 6x6 sectional stiffness matrix of the beams
+
+- New attribute `BeamProp.C`, the symmetric 6x6 sectional stiffness matrix
+  of the strains `{eps, gamma_y, gamma_z, kappa_x, kappa_y, kappa_z}`, the
+  order of `yu_to_pyfe3d`, with its 21 independent entries. It follows the
+  11 stiffness attributes `A`, `E`, `G12`, `G13`, `GJ`, `Ay`, `Az`, `Iyy`,
+  `Izz`, `Iyz` until it is set, as `G12`, `G13` and `GJ` follow `G`; once
+  set, `BeamC` and `BeamLR` read the stiffness only from it, and `del
+  prop.C` returns to the attributes. The extension-shear, extension-twist,
+  shear-shear, bending-shear and bending-twist couplings of composite
+  sections, which the 11 attributes cannot represent, are now taken into
+  account. `Truss` reads `C[0, 0]` and `C[3, 3]`.
+- `BeamC` and `BeamLR`: `KC0`, the internal forces, `KG`, `KCNL` and the
+  nonlinear internal forces were regenerated with a symbolic `C` by the
+  scripts of `theory/deriving_equations/beamc` and `beamLR`, which assert
+  that they reduce to the former expressions with `C` built from the 11
+  attributes. The axial force of `KG` and of the von Kármán terms is the
+  first row of `C` times the strains; `BeamLR` evaluates it at the centre,
+  where its one-point integration evaluates the strain energy. The new
+  rows `BLgammay`, `BLgammaz` and `BLkx` of `BeamLRProbe` hold the shear
+  strains and the twist. The sparse sizes are unchanged.
+- `BeamC` takes `alphay = -12*C[4, 4]/(C[1, 1]*L**2)` and `alphaz =
+  -12*C[5, 5]/(C[2, 2]*L**2)` from the diagonal of `C`. It is exact for
+  nodal loads only when the only coupling is the extension-twist entry
+  `C[0, 3]`; with any other coupling, including those of `Ay`, `Az` and
+  `Iyz` of the former properties, it converges as the square of the
+  element length. The docstring claimed that it was exact for any
+  prismatic beam loaded at the nodes. For a cantilever of rectangular
+  section with a bending-shear coupling `C[1, 5] = 0.3 sqrt(C[1, 1]
+  C[5, 5])`, the error of the tip displacements is 8.9e-2, 2.4e-2, 2.0e-3
+  and 1.3e-4 with 1, 16, 64 and 256 elements, against 8.3e-2, 3.3e-4 and
+  1.3e-6 with 1, 16 and 256 elements of `BeamLR`, see the notes of
+  `BeamC`.
+- `beamprop_from_vabs(Cs, E, sec=None)` sets `C` to the full matrix and no
+  longer raises `ValueError` for couplings; its argument `rtol` is
+  removed. The 11 attributes are still filled from the entries of `Cs`.
+- Properties that do not set `C` give the former matrices to round-off,
+  2.0e-16 of the largest entry of each array of
+  `tests/data/beam_single_G_reference.npz`; the mass matrices and the
+  arrays of `Truss` are unchanged bit by bit.
+
+### Tests
+
+- `tests/test_beam_sectional_stiffness.py`: `BeamProp.C` against the 11
+  attributes, bit for bit; cantilevers of `BeamC` and `BeamLR` with a
+  coupled `C` against a closed form, the strains `inv(C) F(x)`
+  integrated, exact with any mesh for the extension-twist coupling, with
+  the convergence rates of the other couplings, and the box beam CUS of
+  Yu et al. (2012), Table 2, through `beamprop_from_vabs`; `KC0 + KCNL +
+  KG` against a central difference of the internal forces with all 21
+  entries of `C` non-zero. `test_beam_shear_moduli.py` compares the
+  arrays of `BeamC` and `BeamLR` with its reference to round-off instead
+  of bit for bit, and `test_vabs_elements.py` and `test_vabs_isotropic.py`
+  follow the new `beamprop_from_vabs`.
+- `tests/test_quad_warp_offsets.py`: the rigid offsets of `Quad4` and
+  `Quad4R`, flat elements bit for bit equal with `warp_offsets` 0 and 1,
+  `KC0` and `M` congruent with `J`, the rigid motions of a warped element,
+  the tangent of `CorotationalShell`, the eccentricity geometric stiffness
+  against the second derivative of the work of the nodal forces and against
+  central differences of the co-rotational internal force, and the twisted
+  beam of MacNeal and Harder (1985) with 12 x 2 and 24 x 4 elements; the
+  von Kármán internal forces and `KCNL` against those of the flat element
+  at `J ue`, the tangent `KC0 + KCNL + KG` against central differences,
+  with and without the `hgfactor_*` of `Quad4R`, also through
+  `CorotationalModel`, `warp_offsets = 0` bit for bit, the strain rows of
+  `Quad4Probe.update_BL`, and the non-linear twisted beam with 12 x 2
+  elements against `kinematics='corotational'`, within 0.33 per cent;
+  `theory/deriving_equations/quad4r/verify_quad4r_warp_offsets.py` checks
+  the post-steps of the Cython code symbolically.
+- `tests/test_inertia_relief.py`: `apply_inertia_relief` checked for its input
+  errors, for balanced loads `KC0 @ v`, which give zero accelerations and
+  the displacements `v` less a rigid-body motion, and for the invariance
+  of the element forces under three reference supports; and against
+  closed-form solutions: three point masses joined by two springs, with
+  balanced and unbalanced loads and a fictitious support, a chain of
+  springs, a free beam of `BeamC` under its own weight balanced by
+  point loads, and a free beam and bar under an end force, exact at the
+  nodes with the consistent mass matrix.
+  `tests/test_inertia_relief_ha144a.py`: the airplane of the MSC Nastran
+  example HA144A against its published results; the published box forces,
+  transferred with an emulation of Nastran's linear splines SPLINE2 1501
+  and 1601 (forces at the box centres with their moments, rigid arms),
+  reproduce all published bar forces and displacements of subcase 2 within
+  2e-6, and the transfer conserves the resultant force and moment to
+  round-off.
+
+- `tests/test_vabs_isotropic.py`, `tests/test_vabs_composite.py` and
+  `tests/test_vabs_elements.py`: elasticity solutions of rectangles,
+  circles and tubes, including the shear correction factors of Eq. (25) of
+  Yu and Hodges (2005); the box beam CUS of Yu et al. (2012), Table 2,
+  reproduced to its four digits; the pipe of Yu and Hodges (2005), Table 3
+  and Eq. (26); the box beam CAS1 of Yu et al. (2002), Table 2; the
+  T-section of Yu and Hodges (2005), Table 1. The angle convention of
+  `rotate_material` reproduces all signs of the CUS box; the three
+  couplings of the pipe and of CAS1 that have the opposite sign with it
+  are asserted explicitly and explained in the tests.
+- `tests/test_vabs_warping.py`: the torsional warping of an ellipse against
+  the Saint-Venant solution, linearity and conventions of
+  `CrossSection.warping`, and the triangles of every element type.
+- `tests/test_vabs_vlasov.py`: the strips of Yu et al. (2005), Tables 1, 3
+  and 4, reproduced to five digits or more, the isotropic I-beam of Table
+  5, within 1 per cent for the torsional rigidity and within 2 per cent,
+  the grade A of MacNeal and Harder (1985), for the warping rigidity, the
+  anisotropic I-beam of Table 6, with the lay-up of Volovoi et al. (1999),
+  p. 1038, within 1.1 per cent for the effective torsional rigidity and 4
+  per cent for the warping rigidity, the composite I-beam of Pandey, Kabir
+  and Sherbourne (1995) against the asymptotic constants given by Hodges
+  and Peters (2001), p. 1601, within tolerances built from the error of
+  the thin-walled theory and the rounding of the printed data, 3.45 and
+  2.90 per cent for the torsional rigidity at 0 and 45 degrees and 1.31 per
+  cent for the warping rigidity, with the thin-walled limit checked
+  separately, and the torsional warping of a
+  thin-walled channel about its shear centre against the principal
+  sectorial coordinate,
+  `w1 = -omega kappa1`, with its warping rigidity; all with both
+  `'yu2002'` and `'yu2012'`.
+- `tests/test_quad4_thick_twist.py`: pure twist and pure bending exact for
+  thick and thin `Quad4` elements, constant transverse shear on a distorted
+  element, the rank of the thick element and the torsion of a strip refined
+  across `h/l = 1`, for both values of `shear_model`.
+- `Quad4` with the default `shear_model = 1`: six zero eigenvalues of a
+  single element and of a free-free mesh, the energies of the two modes of
+  Hughes et al. (1977) in closed form, and, on a parallelogram, `KC0` minus
+  that of `shear_model = 0` equal to the stabilisation of Belytschko and
+  Leviathan (1994), Eq. (4.13), in
+  `tests/test_quad4_spurious_shear_mode.py`, whose other tests keep the
+  one-point element with `shear_model = 0`; pinned values updated for the
+  new default in `test_drilling_benchmarks.py` (twist of the strip and
+  out-of-plane cases of the straight and curved cantilevers),
+  `test_quad_warp_offsets.py` (twisted beam, linear and von Kármán),
+  `test_corotational_core.py` and `test_drilling_rank.py` (six zero
+  eigenvalues), `test_quad4_geometric_hourglass.py` and
+  `test_quad4_thin_limit.py` (both shear models).
+- `tests/test_quad4_linear_buckling_plate_rotated_thick_elements.py`: the
+  plate is hard simply supported and compared with the Mindlin solution,
+  within 2 per cent, instead of soft simply supported and compared with the
+  Kirchhoff solution, which the spurious twist stiffness of the modified
+  one-point shear rule had matched within 3 per cent;
+  `tests/test_quad4_spurious_shear_mode.py` and `tests/test_drilling_rank.py`
+  record the energies of the two zero-energy modes and the rank of the thick
+  element.
+- `tests/test_quad4r_geometric_hourglass.py`: buckling of hard simply
+  supported square plates with thick elements and with a low transverse
+  shear stiffness, without the spurious mode, and the one-point form of
+  `KG` with constant stress resultants on a distorted element.
+- `tests/test_quad4_geometric_hourglass.py`: buckling of hard simply
+  supported square plates with `b/h = 100` and the transverse shear
+  stiffness reduced to 1/100 and 1/1000, without the spurious mode,
+  against Seide and Stowell (1950), converging from above as the square
+  of the element size, within 0.5 per cent with 32 x 32 elements; the
+  one-point form of
+  `KG` on a distorted element, no nonlinear terms for the hourglass pattern
+  of `w`, and the tangent against central differences for `h/l < 1` and
+  `h/l >= 1`.
+- `tests/test_quad4r_linear_buckling_plate.py` and
+  `tests/test_quad4r_linear_buckling_plate_given_stress.py`: with 92x44
+  elements, within 1 per cent of the exact buckling load of Leissa
+  (1969), NASA SP-160, Eq. (10.46), instead of 5 per cent with 30x14
+  elements; `tests/test_quad4r_linear_buckling_plate_rotated.py`: the
+  buckling load of the 25 orientations is the same within 1e-6, instead
+  of each within 5 per cent of the exact one.
+- `tests/test_quad4r_natural_freq_pre_stress.py`: the fundamental
+  frequency of a simply supported plate under half of its buckling load
+  against the exact solution of Leissa (1969), Eq. (10.44), within 1 per
+  cent for the three mass matrices, instead of a regression value with a
+  load above the exact buckling load.
+- `test_hinged_roof_thick`: with the 16x16 mesh of Table 9a of Sze et
+  al. (2004) instead of 8x8, the limit loads within 1 per cent instead
+  of 1.5 per cent.
+- The expected values of the tests come from the literature or from a
+  closed form written in the test, with its source, and no longer from the
+  output of the code; where a finite element result is compared with the
+  literature, the mesh is refined until the discretisation error, measured
+  and stated in the docstring, is well inside the tolerance. Where the
+  literature is matched only with an expensive mesh, the test runs a
+  coarse mesh against the value pre-determined by the same test, to
+  round-off (`rtol = 1e-4` for eigenvalues, `1e-6` for linear results),
+  with the refinement table in the docstring and the literature bounded by
+  the accuracy grades of MacNeal and Harder (1985), see
+  `documentation_levels`. The names of the tests are kept, except
+  `test_twisting_mode_is_not_stabilised_and_needs_two_elements` and
+  `test_transverse_coefficient_has_no_unit_invariant_constant` of
+  `tests/test_quad4r_hourglass_control.py`, which became
+  `test_twisting_mode_is_stabilised` and
+  `test_one_element_wide_strip_in_torsion`:
+  - beams: the cantilever frequencies against the exact Timoshenko beam
+    solution (Petyt, 2010, Table 3.6) instead of the Euler-Bernoulli roots
+    with `beta*L = 7.885` for 7.8548; the pre-stressed cantilevers at half
+    the Euler load (Timoshenko and Gere, 1961, Eqs. (2-4) and (2-57))
+    against the exact solution with axial load (Bokaian, 1988; Abramovich,
+    2017) instead of regression values; the curved arch against Table 6 of
+    Yoon et al. (2006), with and without shear deformation, instead of the
+    output of the code; the static point load against Gere and Goodno
+    (2009) with the shear term instead of a web calculator; the column
+    and the truss with their sources;
+  - plates: the point-loaded plate against the series of Timoshenko and
+    Woinowsky-Krieger (1959), Eq. (147), instead of the output of the code;
+    the frequencies against Leissa (1969), Eq. (4.20); the buckling of thick
+    plates against the shear-deformable solution of Seide and Stowell
+    (1950), NACA Report 967, Eq. (1), instead of the classical one; the
+    rotated plates assert the invariance of the buckling load under 25
+    rotations;
+  - cylinders: the torsional buckling of the laminates Z11 and Z33 against
+    Fig. 13 of Castro et al. (2014), to which `Quad4` and `Quad4R` converge
+    within 0.7 per cent once the boundary conditions CC2 of the paper are
+    used, and of an isotropic cylinder against Batdorf et al. (1947), NACA
+    TN 1344; the frequencies of an isotropic cylinder against Leissa (1973),
+    NASA SP-288, Table 2.8, within grade A, instead of regression values;
+    the laminate Z11 under end shortening converging to -278.9 kN, and the
+    laminate Z22, cited from Castro et al. (2014), Tables 3 and 4, with
+    `G12 = G13 = 5.695 GPa`, converging within 0.3 per cent of the 35.27 kN
+    of Fig. 6(c), where it fell to 0.166 of it with 480 elements around the
+    circumference before the geometric stiffness of this version;
+  - shell properties: the ABD matrices against the closed forms and an
+    independent lamination sum, and the transverse shear stiffness of
+    Rohwer against his Table 2 and an independent implementation of his
+    equations, instead of pasted values; the trace of Melo et al. (2017),
+    Table 1, to half a unit of its last printed digit;
+  - sandwiches: `shear_correction='rohwer'` and `'vlachoutsis'` against the
+    factors and energy ratios of Vlachoutsis (1992), Tables I and II, for
+    `E_f/E_c` up to 1000, where 5/6 is 42 times too stiff, and his closed
+    forms, Eqs. (44), (45) and (48); an antiplane core, `E_c = 0`,
+    converging to `G_c d^2/c` of Allen (1969), Eq. (2.15b), within bounds
+    derived from the face terms that Allen neglects. Table 4 of Rohwer
+    (1988) is not used: its bending stiffnesses contradict the stated
+    lay-up, `(D11 - D22)/D13` being 4.2162 by the geometry against 4.709 to
+    4.716 printed, and its shear stiffnesses need a foam shear modulus of
+    0.04 instead of the stated one; the note is kept in
+    `tests/test_shellprop_transverse_shear.py` and in `shell_properties`;
+  - material input: constants that are not positive definite, a singular
+    `ABD` with a positive diagonal, the conditioning check independent of
+    the offset, an inversion that raises or returns inf or nan, antiplane
+    cores, the lamination-parameter route with an offset against the
+    classical lamination theory to `rtol = 1e-12`, and the plane-stress
+    and three-dimensional invariants;
+  - solver: completion of repeated eigenvalues, also after the second
+    strategy, its stops, and the stiffness matrices that are not positive
+    definite;
+  - benchmarks: the drilling benchmarks, the strip torsion and the
+    optional stabilisation of `Tria3DSG` graded with the accuracy grades of
+    MacNeal and Harder (1985); the thin hinged roof with the 24x24 mesh of
+    Table 9d of Sze et al. (2004), whose lower limit load converges to the
+    table with the physical stabilisation of `Quad4R` and is no longer an
+    expected failure; the constant-twist and the Belytschko-Leviathan
+    bending patch tests of `Quad4R`, its stabilisation against a closed
+    form and an independent implementation; the energies of the
+    zero-energy modes of `Quad4` in closed form (Bathe and Dvorkin, 1985);
+    the FE/Navier ratios of the
+    laminated plates as converging to the Navier solution (Reddy, 2003)
+    instead of locked; the von Mises truss and Ziegler's column with their
+    sources.
+- The tests of `Tria3R` are anchored to the literature with its new
+  default; `test_tria3r_linear_buckling_plate_given_stress` rotates the
+  given `N_xx` to the element axes, as `update_KG_given_stress` requires;
+  the tests of the former field set `shear_model = 0` explicitly.
+- `tests/test_beam_linear_buckling_3D_column.py`: new
+  `test_shear_flexible_column`, `BeamC` and `BeamLR` against Eq. (2-57) of
+  Timoshenko and Gere (1961) for `P_e/(kGA)` = 0.2 and 0.6; the tolerance
+  of `BeamLR` on the slender columns from 2e-3 to 1e-4, below the shear
+  reduction of 1.8e-4 that the former element missed.
+  `tests/test_beamlr_natural_freq_cantilever_pre_stress.py`: buckling load
+  and lumped-mass frequencies within 5e-4 instead of 1e-3, the frequencies
+  now converging as the square of the element size.
+  `test_cantilever_end_moment_beamlr_no_membrane_locking` in
+  `tests/test_nonlinear_benchmarks_sze2004.py`.
+- `tests/test_nonlinear_benchmarks_sze2004.py`:
+  `test_cantilever_end_moment_beams_membrane_locking`, which asserted that
+  `BeamC` locks, becomes
+  `test_cantilever_end_moment_beamc_no_membrane_locking`, the von Kármán
+  tip deflections to 1e-8 with 1, 4 and 16 elements up to `M_max`.
+  `test_cantilever_end_shear_corotational_von_karman` pins the new values
+  of 16 `BeamC`, `-U = 3.28948` and `W = 6.70008` instead of 3.24061 and
+  6.65339, within 1e-4 above the elastica instead of 1 to 2 per cent below
+  it, closer to it than `'corotational'`, and within the tolerance of
+  Table 2a. The arrays `BeamC_KGv`, `BeamC_KCNLv`, `BeamC_finte1` and
+  `BeamC_fint1` of `tests/data/beam_single_G_reference.npz` are rewritten,
+  checked against a prototype of the averaged strain.
+- The piston-theory tangent test of `Quad4R` requires an aerodynamic
+  effect of 1e-4 instead of 1e-3 of the deflection, 0.09996 per cent with
+  the physical stabilisation.
+- Bugs of the tests: the "distorted" frequency tests copied the nodal
+  coordinates before distorting the mesh and analysed the regular mesh,
+  and their distortion, by the same random fraction along `x` and `y`,
+  made up to 7 per cent of the elements re-entrant, which made the
+  stiffness matrix indefinite from 40x50 elements;
+  the constant-curvature patch test of the drilling rotations prescribed
+  `r_y` with the wrong sign; the displacement-controlled cylinder built
+  `KG` from a displacement vector without the prescribed shortening; the
+  torsion cylinders restrained the axial displacement of a whole ring,
+  which raised the buckling load by 17 per cent; `test_errors` of
+  `test_shellprop.py` passed when no exception was raised, and
+  `test_trace_normalized` used `Q44` for `Q66`.
+- `tests/test_corotational_benchmarks.py` no longer sets `absTOL`; its
+  `analysis()` accepts an `absTOL` argument, `None` by default, and
+  `round_off_absTOL()` is kept for the modules that import it.
+  `test_cantilever_end_shear_translated` runs the cantilever of Sze et al.
+  under the end shear force with 16 `BeamC` and 8x1 `Tria3R` at the origin
+  and translated by 1000, with the same increments and tip deflections
+  within 1e-9 of `W`; with positions computed as `X + u` no increment of
+  the translated cantilevers converges.
+
+### Documentation
+
+- `BeamProp.C` and the accuracy of `BeamC` with a coupled sectional
+  stiffness matrix: docstrings of `BeamProp`, `BeamC`, `BeamLR`, `Truss`
+  and `beamprop_from_vabs`, and the user guide pages
+  `cross_sectional_analysis`, with the correspondence of the indices of
+  `C` and `Kt`, `shell_properties` and `element_choice`.
+- User guide page `inertia_relief`, API page `solver_inertia_relief` and
+  the tutorials `tut-inertia-relief` and
+  `tut-inertia-relief-aircraft-ha144a`; pointers from `overview`,
+  `linear_analyses` and the introduction of the documentation.
+- API page `corotational` of `pyfe3d.corotational`, and the section
+  "Choosing the kinematics" of `nonlinear_analyses`: the four kinematics
+  of `CorotationalModel`, their assumptions, limits and elements, a model
+  with an end moment, the applied moments, the warping of the shells, the
+  `absTOL` of the co-rotational models and the benchmarks; pointers from
+  `overview` and `element_choice`.
+- `element_choice`: section "Warped quadrilaterals" on the rigid offsets
+  of `Quad4` and `Quad4R`, the warping ratio and the twisted beam, and the
+  averaged axial strain of `BeamC`; `eigenvalue_analyses`: the offsets in
+  buckling and vibration; `overview`: `KG_SPARSE_SIZE` of 180 for `Quad4`
+  and `Quad4R`.
+
+- User guide page `cross_sectional_analysis` and API page `vabs`, with
+  the figure `doc/figures/vabs_axes.svg` (TikZ source `vabs_axes.tex`) of
+  the axes, the angles `theta1` and `theta3`, and the tension and shear
+  centres.
+- `cross_sectional_analysis` shows how to plot the warping of a channel:
+  in 2D with matplotlib, through the plot directive, and in 3D with
+  plotly, as an interactive figure written at the start of the build by
+  `doc/source/_scripts/vabs_warping_3d.py`. The torsional warping is
+  shown about the shear centre, i.e. the principal sectorial coordinate.
+  matplotlib and plotly are added to `requirements_doc.txt` only.
+- `cross_sectional_analysis` describes the generalized Vlasov model.
+- New user guide page `documentation_levels`: the four levels of the
+  documentation (functional docstrings, theory in the `Notes` and
+  `References` sections, the pages, the notebooks) and what the tests
+  verify and against what.
+- The example pages of the plate, the column and the cylinders name the
+  references of their tests, and the figures of the cylinders are those of
+  the new models.
+- The Notes of `pyfe3d.quad4r` describe the stabilisation of Belytschko
+  and Leviathan (1994) with its equations and pages, the measurement of
+  their physical membrane against that of Brockman, and the results before
+  and after. `element_choice` and the README are updated for `Quad4R` and
+  `Tria3R`, the recommended triangle.
+- The Notes of `pyfe3d.tria3r` and `pyfe3d.tria3dsg` and `element_choice`
+  give the error of the former transverse shear of `Tria3R`, which stalls
+  on thin plates instead of falling as `1/n^2`, and the comparison of the
+  two triangles.
+- `MatLamina.rebuild` cites Tsai (2008), Theory of Composites Design, Sec.
+  3.3, for the three-dimensional constants; `shell_properties` shows the
+  sandwich case, cites Allen (1969) and records why Table 4 of Rohwer
+  (1988) is not used; `eigenvalue_analyses` describes the completion of
+  repeated eigenvalues and the positive definite stiffness matrix;
+  `documentation_levels` describes the tests on coarse meshes against
+  pre-determined values.
+- `tut-bench-macneal-harder`, `tut-bench-shell-obstacle-course`,
+  `tut-opt-topology` and `tut-nonlinear-benchmarks` re-executed with
+  `Quad4R` and `Tria3R` of this version; with `hgfactor_physical = 1`, the
+  default, the paths of the thinner hinged roof follow Table 9d of Sze et
+  al. (2004).
+- Notes of `update_KCNL` of `Quad4`, `Quad4R`, `Tria3R`, `Tria3DSG`,
+  `BeamLR` and `BeamC`: `KCNL` is defined from the terms of
+  `(B_L + B_NL)^T C (B_L + B_NL)` that contain `B_NL`, plus the geometric
+  term `K_GNL` of the stress of the nonlinear strains, and compared with
+  the grouping of Crisfield (1991), vol. 1, Eqs. (7.24) and (8.26)-(8.31),
+  whose initial-stress matrix holds `KG + K_GNL`; the warped quadrilaterals
+  write `J^T (K_CNL + K_GNL) J - K_E`. `element_choice` states that `KCNL`
+  subtracts the eccentricity term of warped quadrilaterals.
+- `tut-opt-lightweight-smeared-deflection-SLSQP` and
+  `tut-opt-lightweight-smeared-deflection-GA`: the quarter models
+  restrained `r_z` on the symmetry line `x = a/2` and `r_y` on `y = b/2`,
+  instead of `r_y` and `r_x`, and carried the whole central load instead of
+  one quarter of it. The restrained `r_y` along `y = b/2` nearly clamped
+  the loaded line; the one-point transverse shear of `Quad4` up to 0.11
+  hid this through its zero-energy modes, while the MITC4 shear of this
+  version enforces it and gave optima 5 to 8 times lighter. Corrected, the
+  two transverse shear rules agree within 0.8 % on uniform designs, and the
+  optimum volumes (printed as "mass") are 0.0041 (SLSQP) and 0.0015 (GA),
+  against 0.0060 and 0.0023 stored before with the wrong conditions.
+
+### Continuous integration
+
+- The coverage workflow runs in two parts: every test with the optimized
+  build, for the Python code, and, for the Cython code, with the
+  line-traced build every test except those with the new pytest marker
+  `slow` (`-m "not slow"`), which take 40 s or more under line tracing
+  and cover no `.pyx` line that the other tests do not, in 4 processes of
+  pytest-xdist.
+
 ## 0.11.3 (2026-10-27)
 
 Documentation only: no change of the code or of any result.
@@ -23,6 +930,11 @@ Documentation only: no change of the code or of any result.
 - `pyfe3d.solver.convergence`: the round-off floor cites Higham (2002), Sec.
   3.5, Eqs. (3.12) and (3.13), for the componentwise bound of the rounding
   error of a matrix-vector product.
+- `pyfe3d.solver.convergence`: the round-off floor assumes an internal
+  force computed from the displacements; a round-off that depends on the
+  nodal coordinates, e.g. of positions computed as `X + u`, is not covered,
+  since a translation of the origin changes none of the quantities the
+  criterion receives, with the measurement on the co-rotational cantilever.
 
 ## 0.11.0 (2026-10-26)
 
@@ -1221,10 +2133,10 @@ static state and the element kinematics refer to the same pair of directions.
 With `'constant'`, `'vlachoutsis'`, `None`, or without plies, the stiffness is
 rotated as a second-order tensor.
 
-Re-evaluating the method of Rohwer for each element costs about 330 ns per ply
-(see the cost comparison below). Instead, the compliance `S = inv(Ats)` in the
-element frame is represented exactly by a Fourier series in `2 theta` with 5
-harmonics: the equilibrium distribution `f(z)` is a polynomial of degree 4 in
+Re-evaluating the method of Rohwer for each element costs about 80 ns per ply,
+2.8 us with 32 plies (see the cost comparison below). Instead, the compliance
+`S = inv(Ats)` in the element frame is represented exactly by a Fourier series
+in `2 theta` with 5 harmonics: the equilibrium distribution `f(z)` is a polynomial of degree 4 in
 `cos(theta)`, `sin(theta)` and `inv(Cs)` of degree 2, such that `S` is a
 trigonometric polynomial of degree 10 with a period of 180 degrees. The 33
 coefficients are computed once per laminate, from 16 evaluations in rotated
@@ -1253,7 +2165,7 @@ nonlinear internal forces of `Quad4`, `Quad4R` and `Tria3R`. It replaces:
   forces, which rotated `A` and `B` with a separate loop-based implementation.
 
 `_update_AB_element` did not handle the transverse shear, but this did not
-produce wrong results: the von Karman strains only add nonlinear terms to the
+produce wrong results: the von Kármán strains only add nonlinear terms to the
 membrane strains, whereas `gamma_yz` and `gamma_xz` remain linear, such that
 the transverse shear stiffness only enters `KC0` and the linear internal
 forces. The two implementations were consistent (the tangent consistency tests

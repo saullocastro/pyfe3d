@@ -44,7 +44,50 @@ the other components kept constant.
 
 The beams have ``update_KG`` for the axial force of the prestress, see
 ``tests/test_beam_linear_buckling_3D_column.py``; :class:`.Truss` and
-:class:`.Spring` have no geometric stiffness matrix.
+:class:`.Spring` have no geometric stiffness matrix. Both beams take the
+slopes `v_{,x}` and `w_{,x}` of their geometric stiffness matrices from the
+interpolations of `v` and `w`, such that the buckling load includes the
+reduction due to shear deformation, Eq. (2-57) of Timoshenko, S. P. and
+Gere, J. M., Theory of Elastic Stability, 2nd ed., McGraw-Hill, 1961, Sec.
+2.17, p. 133; up to version 0.11 :class:`.BeamLR` took them from the rotations
+and its buckling load converged to the Euler load whatever the shear
+stiffness, see the Notes of :class:`.BeamLR`.
+
+The geometric stiffness matrices of :class:`.Quad4` and :class:`.Quad4R`
+integrate the membrane stress resultants with two-by-two quadrature and take
+the slopes of `w` at the centroid of the element, where the constant part of
+the transverse shear of :class:`.Quad4R`, and the transverse shear of the
+thin :class:`.Quad4` elements with ``shear_model = 0``, are sampled. The
+hourglass pattern of `w`, alternating in sign from node to node with zero
+rotations, which the shear sampled there does not resist (:class:`.Quad4R`
+resists it with the stabilisation of its transverse shear, and
+:class:`.Quad4` by default with the assumed strains of the MITC4 element),
+then has no geometric stiffness either; with the slopes at the two-by-two
+points, as up
+to version 0.11, it could give a spurious buckling mode below the physical
+load when the transverse shear stiffness is low compared with the bending
+stiffness, e.g. in sandwich plates, and in thin laminated cylinders under
+axial compression once the mesh is fine: the buckling load of the cylinder
+Z22 of Castro et al. (2014) fell to a sixth of its value with 480 elements
+around the circumference, and now converges to within 0.3 % of the 35.27 kN
+of that paper, Fig. 6(c), see
+``tests/test_quad4_linear_buckling_cylinder_displ.py``. The buckling loads
+of coarse meshes are somewhat higher, see the Notes of
+:meth:`.Quad4.update_KG` and :meth:`.Quad4R.update_KG`.
+
+For a warped quadrilateral, the rigid offsets of ``warp_offsets = 1``, the
+default, enter ``KC0``, ``M`` and ``KG``, which adds the eccentricity
+geometric stiffness of the offsets on the rotations of each node, see
+:doc:`element_choice`. Without them, warped meshes are too stiff in
+buckling and vibration as well: in the twisted beam of MacNeal and Harder
+(1985), Fig. 6, `doi:10.1016/0168-874X(85)90003-4
+<https://doi.org/10.1016/0168-874X(85)90003-4>`_, under an axial tip load, against a 96x16 :class:`.Quad4` mesh with
+the offsets, the linear buckling load of 12x2, 24x4 and 48x8 elements is
++0.00, +0.01 and +0.01 % off with the offsets and +366, +102 and +26 %
+without them (:class:`.Quad4`), +1.2, +0.4 and +0.1 % against +329, +101
+and +27 % (:class:`.Quad4R`), and the first natural frequency of 12x2
+elements +0.07 and +0.13 % against +40 %, see :doc:`changelog`, version
+0.12.0.
 
 
 Natural frequencies
@@ -133,6 +176,19 @@ Then:
   :func:`pyfe3d.solver.eigen._backward_errors`;
   for the complex eigenvalues of :func:`.complex_frequency` no such count
   is implemented, and only the residuals are verified;
+- when that count finds eigenvalues missing below the highest one returned
+  by a sparse solver of symmetric matrices, they are computed by deflated
+  passes before the next solver, after each of the two calls of
+  :func:`scipy.sparse.linalg.eigsh` of :func:`.linear_buckling` and after
+  the single one of :func:`.natural_frequency`, such that no accurate
+  result with missing copies reaches the dense fallback or the ``RuntimeError``
+  without a completion attempt, see
+  :func:`pyfe3d.solver.eigen._complete_repeated`: the Lanczos process of
+  ARPACK may return only one copy of a repeated eigenvalue, e.g. of the
+  pairs of modes `\cos n\theta` and `\sin n\theta` of a cylinder, equal up
+  to the round-off with a rotationally symmetric mesh, and each pass
+  computes the missing ones with the eigenvectors already found deflated
+  and another starting vector, see :func:`.deflated_eigsh`;
 - when the sparse solvers fail, a dense solver of SciPy is used as a last
   resort, when the dense problem has at most ``max_dense_size`` dofs, with a
   :class:`.DenseFallbackWarning` giving the reasons; otherwise a
@@ -146,6 +202,21 @@ The fallback can be turned into an error, e.g. in a test suite::
     import warnings
     from pyfe3d.solver import DenseFallbackWarning
     warnings.simplefilter('error', DenseFallbackWarning)
+
+For symmetric matrices, :func:`.linear_buckling` requires a positive
+definite `\boldsymbol{K}`, the matrix of its Cayley mode and of its count of the
+missing load multipliers: with ``check=True``, the default, a `\boldsymbol{K}`
+whose factorization has a negative or a zero pivot raises a
+:class:`numpy.linalg.LinAlgError` that says so, with the likely causes:
+insufficient boundary conditions, a mechanism, distorted elements, e.g.
+re-entrant quadrilaterals, or a preload beyond the buckling load included
+in `\boldsymbol{K}`; so do :func:`.linear_static` and the linear
+:meth:`.Analysis.static`. :func:`.natural_frequency` accepts an indefinite
+`\boldsymbol{K}`, whose negative `\omega_n^2` give null frequencies, e.g. with a
+preload beyond the buckling load, and the unconstrained rigid-body modes
+of a singular `\boldsymbol{K}`; when its solvers fail and `\boldsymbol{K}` is not positive
+definite, its ``RuntimeError`` starts with the same diagnosis. A singular
+`\boldsymbol{K}` whose round-off pivots all come out positive is not detected.
 
 With Intel MKL 2024.2.0 to 2025.0.0, the symmetric solver of ARPACK
 returns wrong eigenpairs when its number of Lanczos vectors exceeds 32;

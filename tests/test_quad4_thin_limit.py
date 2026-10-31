@@ -9,7 +9,7 @@ from pyfe3d.shellprop_utils import isotropic_plate
 from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 
 
-def central_deflection(h, n=9, a=1., E=1.e7, nu=0.3):
+def central_deflection(h, n=9, a=1., E=1.e7, nu=0.3, shear_model=1):
     r"""Normalized central deflection `w D/(P a^2)` of a simply supported
     square plate of side ``a`` under a central point load `P`, with
     ``(n - 1)**2`` :class:`.Quad4` elements"""
@@ -36,6 +36,7 @@ def central_deflection(h, n=9, a=1., E=1.e7, nu=0.3):
     init_k_KC0 = 0
     for n1, n2, n3, n4 in zip(n1s, n2s, n3s, n4s):
         quad = Quad4(probe)
+        quad.shear_model = shear_model
         quad.n1, quad.n2, quad.n3, quad.n4 = n1, n2, n3, n4
         quad.c1, quad.c2, quad.c3, quad.c4 = DOF*n1, DOF*n2, DOF*n3, DOF*n4
         quad.init_k_KC0 = init_k_KC0
@@ -68,13 +69,32 @@ def test_quad4_thin_limit():
     `10^5/8` of Hughes et al. (1977) in single precision, is the one at
     `\ell/h = 1.25 \times 10^3`, the thin limit of the mesh.
 
+    Relative change from `\ell/h = 1.25 \times 10^3`, measured on
+    2026-10-30:
+
+        ell/h         shear_model = 0    shear_model = 1
+        1.25e4                             5.9e-8
+        1.25e5           4.4e-6           -9.6e-5
+        1.25e6           3.4e-4            1.4e-3
+        1.25e7          -0.32             -0.33
+
+    The changes beyond `1.25 \times 10^4` are round-off, of alternating
+    sign with ``shear_model = 1`` (2.3e-5, -9.6e-5 and 3.0e-4 at `6
+    \times 10^4`, `1.25 \times 10^5` and `2.5 \times 10^5`). The
+    two-by-two transverse shear of the assumed strains of the MITC4
+    element, the default since 0.12.0, accumulates about twenty times the
+    round-off of the one-point rule of ``shear_model = 0``, and is asserted
+    within 3e-4 instead of 1e-4.
+
     """
     a = 1.
     ell = a/8
-    w_ref = central_deflection(h=ell/1.25e3, a=a)
-    w_thin = central_deflection(h=ell/1.25e5, a=a)
-    print('w D/(P a^2)', w_ref, w_thin)
-    assert np.isclose(w_thin, w_ref, rtol=1e-4)
+    for shear_model, rtol in ((0, 1e-4), (1, 3e-4)):
+        w_ref = central_deflection(h=ell/1.25e3, a=a, shear_model=shear_model)
+        w_thin = central_deflection(h=ell/1.25e5, a=a,
+                                    shear_model=shear_model)
+        print('shear_model %d, w D/(P a^2)' % shear_model, w_ref, w_thin)
+        assert np.isclose(w_thin, w_ref, rtol=rtol)
 
 
 if __name__ == '__main__':

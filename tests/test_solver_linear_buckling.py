@@ -244,8 +244,36 @@ def test_sparse_mixed_spectrum_coupled(ratio):
 
 
 def test_plate_buckling_fsdt_ritz():
-    r"""Simply supported Ritz plate, first-order shear deformation theory,
-    against the classical critical load `4 \pi^2 D/b^2`"""
+    r"""Hard simply supported Ritz plate, first-order shear deformation
+    theory, ``a/b = 3``, ``b/h = 33``, uniform compression, against the
+    Navier solution of the same theory
+
+    The reference is given by Seide, P., and Stowell, E. Z., Elastic and
+    Plastic Buckling of Simply Supported Solid-Core Sandwich Plates in
+    Compression, NACA Report 967, 1950, Eq. (1), p. 2, derived in Appendix
+    A, Eq. (A7), p. 7,
+
+    .. math::
+        N_{cr} = k \frac{\pi^2 D}{b^2}, \qquad
+        k = \frac{(m/\beta + \beta/m)^2}{1 + r (1 + m^2/\beta^2)}, \qquad
+        \beta = \frac{a}{b}, \qquad r = \frac{\pi^2 D}{b^2 D_Q}
+
+    minimised over `m`, with the transverse shear stiffness `D_Q` of the
+    sandwich core taken equal to `A_{55}`, their governing equation (A5)
+    being that of a plate with transverse shear stiffness `D_Q`; the same
+    load follows from Wang, C. M., Wang, C. Y., and Reddy, J. N., Exact
+    Solutions for Buckling of Structural Members, CRC Press, 2005, Sec.
+    4.7.2, Eq. (4.7.17), with the foundation moduli equal to zero and
+    `\gamma = 0` (page not verified). It is 0.51 % below the classical load
+    `4 \pi^2 D/b^2`. The rotations are zero across the edges they are
+    tangent to, the hard simple support of their Navier solution, Wang et al.
+    (2005), Eq. (4.7.10b). With 20x10 terms the load agrees with the
+    reference to 1e-8, with 10x5 terms it is 0.025 % above it. With the
+    rotations free on all edges, the soft simple support used before, the
+    load is 1.28 % below the reference with 20x10 terms and 1.73 % with
+    30x15, the soft support lowering the load as the terms resolve the
+    boundary layer along the edges.
+    """
     m1 = 20
     m2 = 10
     N = 3*m1*m2
@@ -253,7 +281,8 @@ def test_plate_buckling_fsdt_ritz():
     pts2, weights2 = roots_legendre(2*m2 - 1)
     E = 200.e9
     nu = 0.3
-    # NOTE w simply supported, rotations free
+    # NOTE w simply supported; each rotation uses the functions of w across
+    #      the edges it is tangent to, and free functions along them
     wxit1, wxir1, wxit2, wxir2 = 0, 1, 0, 1
     wetat1, wetar1, wetat2, wetar2 = 0, 1, 0, 1
     xit1, xir1, xit2, xir2 = 1, 1, 1, 1
@@ -283,19 +312,16 @@ def test_plate_buckling_fsdt_ritz():
             Peta = vecf(m2, eta, etat1, etar1, etat2, etar2)
             Peta_eta = vecf_xi(m2, eta, etat1, etar1, etat2, etar2)
             weight = wxi*weta
-            Pi, Pj = np.meshgrid(Pxi, Peta, indexing='ij')
-            Sphix[m1*m2:2*m1*m2] = (Pi*Pj).flatten()
-            Sphiy[2*m1*m2:] = (Pi*Pj).flatten()
-            Pi_xi, Pj = np.meshgrid(wPxi_xi, wPeta, indexing='ij')
-            Sw_x[:m1*m2] = (Pi_xi*Pj*(2/a)).flatten()
-            Pi_xi, Pj = np.meshgrid(Pxi_xi, Peta, indexing='ij')
-            Sphix_x[m1*m2:2*m1*m2] = (Pi_xi*Pj*(2/a)).flatten()
-            Sphiy_x[2*m1*m2:] = (Pi_xi*Pj*(2/a)).flatten()
-            Pi, Pj_eta = np.meshgrid(wPxi, wPeta_eta, indexing='ij')
-            Sw_y[:m1*m2] = (Pi*Pj_eta*(2/b)).flatten()
-            Pi, Pj_eta = np.meshgrid(Pxi, Peta_eta, indexing='ij')
-            Sphix_y[m1*m2:2*m1*m2] = (Pi*Pj_eta*(2/b)).flatten()
-            Sphiy_y[2*m1*m2:] = (Pi*Pj_eta*(2/b)).flatten()
+            # NOTE hard simple support: phix is zero on the edges y = 0, b
+            #      and phiy on the edges x = 0, a
+            Sphix[m1*m2:2*m1*m2] = np.outer(Pxi, wPeta).flatten()
+            Sphix_x[m1*m2:2*m1*m2] = np.outer(Pxi_xi*(2/a), wPeta).flatten()
+            Sphix_y[m1*m2:2*m1*m2] = np.outer(Pxi, wPeta_eta*(2/b)).flatten()
+            Sphiy[2*m1*m2:] = np.outer(wPxi, Peta).flatten()
+            Sphiy_x[2*m1*m2:] = np.outer(wPxi_xi*(2/a), Peta).flatten()
+            Sphiy_y[2*m1*m2:] = np.outer(wPxi, Peta_eta*(2/b)).flatten()
+            Sw_x[:m1*m2] = np.outer(wPxi_xi*(2/a), wPeta).flatten()
+            Sw_y[:m1*m2] = np.outer(wPxi, wPeta_eta*(2/b)).flatten()
             e1xx = Sphix_x
             e1yy = Sphiy_y
             e1xy = Sphix_y + Sphiy_x
@@ -320,11 +346,16 @@ def test_plate_buckling_fsdt_ritz():
     eigvals, eigvecs = linear_buckling(csc_matrix(K[bu, :][:, bu]),
                                        csc_matrix(KG[bu, :][:, bu]),
                                        num_eigvalues=4)
+    # NOTE Seide and Stowell (1950), Eq. (1), with D_Q = A55
     D = E*h**3/(12*(1 - nu**2))
-    Ncr_analytical = 4*np.pi**2*D/b**2
+    r = np.pi**2*D/(b**2*prop.A55)
+    beta = a/b
+    k = min((m/beta + beta/m)**2/(1 + r*(1 + m**2/beta**2))
+            for m in range(1, 21))
+    Ncr_analytical = k*np.pi**2*D/b**2
     Ncr_computed = eigvals[0]*abs(Nxxhat)
     print('Ncr %.4f  analytical %.4f' % (Ncr_computed, Ncr_analytical))
-    np.testing.assert_allclose(Ncr_computed, Ncr_analytical, rtol=0.02)
+    np.testing.assert_allclose(Ncr_computed, Ncr_analytical, rtol=1e-5)
 
 
 def test_check_eigenpairs_wrong_and_missing():
@@ -766,7 +797,13 @@ def test_ziegler_no_divergence():
     runs: ``K(P) = K0 + P KF`` is never singular, and neither the shift
     search nor the dense fallback finds a finite load multiplier, the
     defective null pair of the condensed problem, split into about +-1e-9 by
-    the round-off, being null"""
+    the round-off, being null
+
+    Reference: H. Ziegler, Die Stabilitätskriterien der Elastomechanik,
+    Ingenieur-Archiv, 20(1), 49-56, 1952,
+    https://doi.org/10.1007/BF00536796: the follower force does not make
+    the stiffness singular, ``det K(P) = k**2`` for every ``P``, and the
+    pendulum loses stability by flutter, not by divergence."""
     k, l = 3., 0.5
     K0 = block_diag(np.array([[2*k, -k], [-k, k]]), np.diag(np.arange(1., 9.)))
     KF = block_diag(np.array([[-l, l], [0., 0.]]), np.zeros((8, 8)))
@@ -828,9 +865,13 @@ def test_null_mu_pencil():
 
 
 def ziegler_decoupled(extra=8):
-    r"""``K0`` and ``KF`` of Ziegler's double pendulum with ``extra``
-    decoupled degrees-of-freedom: ``K0^-1 KF`` has rank 1 and is nilpotent,
-    of norm 1/3"""
+    r"""``K0`` and ``KF`` of Ziegler's double pendulum (Ziegler, H., Die
+    Stabilitätskriterien der Elastomechanik, Ingenieur-Archiv, 20(1), 49-56,
+    1952, https://doi.org/10.1007/BF00536796, see
+    ``test_solver_natural_frequency.py``) with ``extra`` decoupled
+    degrees-of-freedom: ``K0^-1 KF = (l/k)*[[-1, 1], [-1, 1]]`` in the
+    pendulum block, of rank 1, nilpotent (null trace and determinant) and of
+    2-norm ``2*l/k = 1/3`` for ``k = 3`` and ``l = 0.5``"""
     from scipy.sparse import block_diag as sparse_block_diag
 
     k, l = 3., 0.5
@@ -1103,3 +1144,379 @@ def test_splu_warnings_shown_once():
                                          symmetric=False)
             np.testing.assert_allclose(eigvals, [1., 2., 3.], rtol=1e-10)
     assert [str(w.message) for w in caught] == ['caller warning']
+
+
+# NOTE repeated load multipliers
+
+
+def laplacian_3d(n):
+    r"""Finite difference Laplacian of the unit cube with ``n`` inner points
+    per direction and its eigenvalues
+
+    `\boldsymbol{K} = \boldsymbol{T} \otimes \boldsymbol{I} \otimes \boldsymbol{I} + \boldsymbol{I} \otimes \boldsymbol{T} \otimes \boldsymbol{I} + \boldsymbol{I}
+    \otimes \boldsymbol{I} \otimes \boldsymbol{T}`, with `\boldsymbol{T}` = tridiag(-1, 2, -1) of size `n`.
+    Closed form: `\boldsymbol{T} \boldsymbol{x}_i = \mu_i \boldsymbol{x}_i` with `x_{i,j} = \sin(i j
+    \theta)`, `\theta = \pi/(n + 1)` and `\mu_i = 2 - 2\cos(i \theta)`, since
+    `-\sin((j - 1) i \theta) + 2\sin(j i \theta) - \sin((j + 1) i \theta) =
+    (2 - 2\cos(i \theta))\sin(j i \theta)` and `\sin(0) = \sin((n + 1) i
+    \theta) = 0` at the ends; the Kronecker products of the `\boldsymbol{x}_i` are
+    the eigenvectors of `\boldsymbol{K}`, with the eigenvalues `\mu_i + \mu_j + \mu_l`,
+    exactly repeated for the permutations of `(i, j, l)`: multiplicity 3 for
+    `(1, 1, 2)` and `(1, 2, 2)`, 6 for `(1, 2, 3)`. With `\boldsymbol{K}_G = -\boldsymbol{I}` they
+    are the load multipliers.
+    """
+    T = diags([-np.ones(n - 1), 2*np.ones(n), -np.ones(n - 1)], [-1, 0, 1])
+    I = identity(n)
+    from scipy.sparse import kron
+    K = (kron(kron(T, I), I) + kron(kron(I, T), I)
+         + kron(kron(I, I), T)).tocsr()
+    mu = 2 - 2*np.cos(np.arange(1, n + 1)*np.pi/(n + 1))
+    lam = np.sort((mu[:, None, None] + mu[None, :, None]
+                   + mu[None, None, :]).ravel())
+    return K, lam
+
+
+def one_copy_each(eigsh_cayley, rtol=1e-8):
+    r"""``_eigsh_cayley`` returning one copy of each repeated eigenvalue,
+    the lowest ``k`` of them, as the Lanczos process does in exact
+    arithmetic, see :func:`pyfe3d.solver.arpackutils.deflated_eigsh`"""
+    def wrapper(K, KG, k, tol, sigma):
+        mu, v = eigsh_cayley(K, KG, min(3*k, K.shape[0] - 2), tol, sigma)
+        keep = np.ones(mu.size, dtype=bool)
+        keep[1:] = np.abs(np.diff(mu)) > rtol*np.abs(mu[1:])
+        return mu[keep][:k], v[:, keep][:, :k]
+    return wrapper
+
+
+@pytest.mark.parametrize('k', [4, 7, 10])
+def test_repeated_load_multipliers_completed(monkeypatch, k):
+    r"""All the copies of the repeated load multipliers of
+    :func:`laplacian_3d`, of multiplicity 3, are returned without the dense
+    fallback when the first call of ``eigsh()`` returns one copy of each,
+    the missing copies being found by the deflated passes of
+    :func:`pyfe3d.solver.eigen._complete_repeated`; without them,
+    ``MAX_COMPLETION_PASSES = 0``, the verification reports the missing
+    copies and the dense solver is used"""
+    K, lam = laplacian_3d(6)
+    KG = -identity(K.shape[0], format='csr')
+    calls = []
+    deflated = eigen.deflated_eigsh
+
+    def spy_deflated(*args, **kwargs):
+        calls.append(1)
+        return deflated(*args, **kwargs)
+
+    monkeypatch.setattr(eigen, '_eigsh_cayley',
+                        one_copy_each(eigen._eigsh_cayley))
+    monkeypatch.setattr(eigen, 'deflated_eigsh', spy_deflated)
+    with warnings.catch_warnings():
+        warnings.simplefilter('error', DenseFallbackWarning)
+        eigvals, eigvecs = linear_buckling(K, KG, num_eigvalues=k)
+    np.testing.assert_allclose(eigvals, lam[:k], rtol=1e-10)
+    assert np.all(relative_residuals(K, KG, eigvals, eigvecs) < 1e-8)
+    # NOTE the copies are independent: K-orthogonal eigenvectors
+    G = eigvecs.T @ K @ eigvecs
+    d = np.sqrt(np.diag(G))
+    np.testing.assert_allclose(G/np.outer(d, d), np.eye(k), atol=1e-8)
+    assert calls
+    monkeypatch.setattr(eigen, 'MAX_COMPLETION_PASSES', 0)
+    with pytest.warns(DenseFallbackWarning, match='are missing'):
+        eigvals, _ = linear_buckling(K, KG, num_eigvalues=k)
+    np.testing.assert_allclose(eigvals, lam[:k], rtol=1e-10)
+
+
+def test_repeated_load_multipliers_completed_second_strategy(monkeypatch):
+    r"""The result of the second sparse strategy, ``eigsh()`` with a 10
+    times larger shift, is also completed by deflated passes when it misses
+    copies of repeated load multipliers, before the dense fallback: the
+    first call of ``eigsh()`` raises, such that there is nothing to complete
+    after it, and the second one returns one copy of each repeated load
+    multiplier of :func:`laplacian_3d`, as in
+    :func:`test_repeated_load_multipliers_completed`"""
+    K, lam = laplacian_3d(6)
+    KG = -identity(K.shape[0], format='csr')
+    k = 7
+    one_copy = one_copy_each(eigen._eigsh_cayley)
+    sigmas = []
+    events = []
+
+    def first_raises(K, KG, k, tol, sigma):
+        sigmas.append(sigma)
+        events.append('eigsh')
+        if len(sigmas) == 1:
+            raise RuntimeError('ARPACK failed')
+        return one_copy(K, KG, k, tol, sigma)
+
+    deflated = eigen.deflated_eigsh
+
+    def spy_deflated(*args, **kwargs):
+        events.append('deflated')
+        return deflated(*args, **kwargs)
+
+    monkeypatch.setattr(eigen, '_eigsh_cayley', first_raises)
+    monkeypatch.setattr(eigen, 'deflated_eigsh', spy_deflated)
+    with warnings.catch_warnings():
+        warnings.simplefilter('error', DenseFallbackWarning)
+        eigvals, eigvecs = linear_buckling(K, KG, num_eigvalues=k)
+    np.testing.assert_allclose(eigvals, lam[:k], rtol=1e-10)
+    assert np.all(relative_residuals(K, KG, eigvals, eigvecs) < 1e-8)
+    assert len(sigmas) == 2 and np.isclose(sigmas[1], 10*sigmas[0])
+    # NOTE the deflated passes follow the second call of eigsh()
+    assert events[:2] == ['eigsh', 'eigsh'] and 'deflated' in events[2:]
+    # NOTE without them the dense solver is used, the second strategy
+    #      having missed copies
+    sigmas.clear()
+    monkeypatch.setattr(eigen, 'MAX_COMPLETION_PASSES', 0)
+    with pytest.warns(DenseFallbackWarning, match='10 times larger shift: '
+                      r'\d+ load multiplier\(s\) lower than .* are missing'):
+        eigvals, _ = linear_buckling(K, KG, num_eigvalues=k)
+    np.testing.assert_allclose(eigvals, lam[:k], rtol=1e-10)
+
+
+def test_completion_not_applicable(monkeypatch):
+    r"""The deflated passes complete only accurate eigenpairs, found with a
+    shift of the Cayley mode larger than the estimate of the largest
+    `|\mu|`: the inaccurate eigenpairs of the wrong eigenvectors of
+    ``wrong_eigsh`` and the eigenpairs of too small a shift, which are not
+    the lowest ones, are not completed, and the completion is then not
+    listed among the attempted solvers"""
+    K, lam = laplacian_3d(6)
+    KG = -identity(K.shape[0], format='csr')
+    eigsh_cayley = eigen._eigsh_cayley
+
+    def wrong_eigsh(K, KG, k, tol, sigma):
+        mu, v = eigsh_cayley(K, KG, k, tol, sigma)
+        return mu, v[:, ::-1]
+
+    monkeypatch.setattr(eigen, '_eigsh_cayley', wrong_eigsh)
+    with pytest.raises(RuntimeError, match='verification') as e:
+        linear_buckling(K, KG, num_eigvalues=4, max_dense_size=0)
+    assert 'deflated' not in str(e.value)
+    monkeypatch.setattr(eigen, '_eigsh_cayley', eigsh_cayley)
+    with pytest.raises(RuntimeError, match='are missing') as e:
+        linear_buckling(K, KG, num_eigvalues=4, sigma=1e-6,
+                        max_dense_size=0)
+    assert 'deflated' not in str(e.value)
+
+    eigsh_both_signs = eigen._eigsh_both_signs
+
+    def nan_eigsh(*args):
+        mu, v = eigsh_both_signs(*args)
+        return np.full_like(mu, np.nan), v
+
+    # NOTE no finite eigenpair to complete
+    monkeypatch.setattr(eigen, '_eigsh_both_signs', nan_eigsh)
+    with pytest.raises(RuntimeError) as e:
+        linear_buckling(K, KG, num_eigvalues=4, max_dense_size=0)
+    assert 'deflated' not in str(e.value)
+
+
+def test_completion_capped_ncv(monkeypatch):
+    r"""With ``ncv`` of ARPACK capped, see
+    :func:`pyfe3d.solver.arpackutils.arpack_max_ncv`, each deflated pass
+    asks for at most ``(max_ncv - 1)//2`` eigenpairs, and the missing
+    copies of :func:`test_repeated_load_multipliers_completed` are still
+    found within ``MAX_COMPLETION_PASSES`` passes"""
+    K, lam = laplacian_3d(6)
+    KG = -identity(K.shape[0], format='csr')
+    k = 4
+    max_ncv = 7
+    asked = []
+    deflated = eigen.deflated_eigsh
+
+    def spy_deflated(A, k_pass, *args, **kwargs):
+        asked.append(k_pass)
+        return deflated(A, k_pass, *args, **kwargs)
+
+    monkeypatch.setattr(eigen, '_eigsh_cayley',
+                        one_copy_each(eigen._eigsh_cayley))
+    monkeypatch.setattr(eigen, 'deflated_eigsh', spy_deflated)
+    monkeypatch.setattr(eigen, 'arpack_max_ncv', lambda: max_ncv)
+    with warnings.catch_warnings():
+        warnings.simplefilter('error', DenseFallbackWarning)
+        eigvals, eigvecs = linear_buckling(K, KG, num_eigvalues=k)
+    np.testing.assert_allclose(eigvals, lam[:k], rtol=1e-10)
+    assert asked and max(asked) <= (max_ncv - 1)//2
+
+
+def test_dense_solver_error_K_positive_definite(monkeypatch):
+    r"""With the dense solver, an error of ``eigh()`` is raised unchanged
+    when `\boldsymbol{K}` is positive definite, the diagnosis of a
+    stiffness matrix that is not positive definite being then wrong"""
+    K, lam = laplacian_3d(4)
+    KG = -identity(K.shape[0], format='csr')
+
+    def failing_eigh(a, b):
+        raise LinAlgError('eigh failed')
+
+    monkeypatch.setattr(eigen, 'eigh', failing_eigh)
+    with pytest.raises(LinAlgError, match='^eigh failed$'):
+        linear_buckling(K, KG, num_eigvalues=4, sparse_solver=False)
+
+
+def torsion_cylinder_Z33(ntheta):
+    r"""``K`` and ``KG`` of the cylinder Z33 under torsion of
+    ``test_quad4_linear_buckling_cylinder_Nxy.py``, with ``ntheta`` elements
+    around the circumference: Castro et al. (2014), Composite Structures,
+    118, 303-315, Table 3 (material Geier1997), Table 4 (geometry and
+    stacking sequence), Table 1 (boundary condition CC2)"""
+    from scipy.sparse import coo_matrix
+    from pyfe3d.shellprop_utils import laminated_plate
+    from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
+    from test_quad4_linear_buckling_cylinder_Nxy import \
+        _cylindrical_transformation
+    L, R = 0.510, 0.250
+    b = 2*np.pi*R
+    nlength = int(ntheta*L/b)
+    if nlength % 2 == 0:
+        nlength += 1
+    prop = laminated_plate(stack=[0, 0, 19, -19, 37, -37, 45, -45, 51, -51],
+                           plyt=0.125e-3, laminaprop=(123.55e9, 8.708e9,
+                           0.319, 5.695e9, 5.695e9, 3.400e9),
+                           shear_correction='constant')
+    data = Quad4Data()
+    probe = Quad4Probe()
+    nids_mesh = (1 + np.arange(nlength*(ntheta + 1))).reshape(nlength,
+                                                              ntheta + 1)
+    nids_mesh[:, -1] = nids_mesh[:, 0]
+    nids = np.unique(nids_mesh)
+    nid_pos = dict(zip(nids, np.arange(len(nids))))
+    zlin = np.linspace(0, L, nlength)
+    thetalin = np.linspace(0, 2*np.pi - 2*np.pi/ntheta, ntheta)[::-1]
+    zmesh, thetamesh = np.meshgrid(zlin, thetalin)
+    ncoords = np.vstack((R*np.cos(thetamesh.T).ravel(),
+                         R*np.sin(thetamesh.T).ravel(), zmesh.T.ravel())).T
+    x = ncoords.ravel()
+    z = ncoords[:, 2]
+    n1s = nids_mesh[:-1, :-1].ravel()
+    n2s = nids_mesh[1:, :-1].ravel()
+    n3s = nids_mesh[1:, 1:].ravel()
+    n4s = nids_mesh[:-1, 1:].ravel()
+    ne = len(n1s)
+    KC0r = np.zeros(data.KC0_SPARSE_SIZE*ne, dtype=INT)
+    KC0c = np.zeros(data.KC0_SPARSE_SIZE*ne, dtype=INT)
+    KC0v = np.zeros(data.KC0_SPARSE_SIZE*ne, dtype=DOUBLE)
+    KGr = np.zeros(data.KG_SPARSE_SIZE*ne, dtype=INT)
+    KGc = np.zeros(data.KG_SPARSE_SIZE*ne, dtype=INT)
+    KGv = np.zeros(data.KG_SPARSE_SIZE*ne, dtype=DOUBLE)
+    N = DOF*nlength*ntheta
+    for i, (n1, n2, n3, n4) in enumerate(zip(n1s, n2s, n3s, n4s)):
+        quad = Quad4(probe)
+        quad.n1, quad.n2, quad.n3, quad.n4 = n1, n2, n3, n4
+        quad.c1 = DOF*nid_pos[n1]
+        quad.c2 = DOF*nid_pos[n2]
+        quad.c3 = DOF*nid_pos[n3]
+        quad.c4 = DOF*nid_pos[n4]
+        quad.init_k_KC0 = i*data.KC0_SPARSE_SIZE
+        quad.init_k_KG = i*data.KG_SPARSE_SIZE
+        quad.update_rotation_matrix(x, 0., 0., 1.)
+        quad.update_probe_xe(x)
+        quad.update_KC0(KC0r, KC0c, KC0v, prop)
+        quad.update_KG_given_stress(0, 0, -1000/b, KGr, KGc, KGv)
+    T = _cylindrical_transformation(ncoords)
+    KC0 = (T.T @ coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)) @ T).tocsc()
+    KG = (T.T @ coo_matrix((KGv, (KGr, KGc)), shape=(N, N)) @ T).tocsc()
+    bk = np.zeros(N, dtype=bool)
+    edges = np.isclose(z, 0) | np.isclose(z, L)
+    bk[0::DOF][edges] = True
+    bk[1::DOF][edges] = True
+    bk[4::DOF][edges] = True
+    bk[2::DOF][np.flatnonzero(np.isclose(z, L/2))[0]] = True
+    bu = ~bk
+    return KC0[bu, :][:, bu], KG[bu, :][:, bu]
+
+
+def test_repeated_load_multipliers_cylinder():
+    r"""The torsional buckling loads of a cylinder come in pairs equal up to
+    the round-off, the modes `\cos n\theta` and `\sin n\theta` of the
+    rotationally symmetric mesh; both copies of the lowest pair are
+    returned, without the dense fallback, and the inertia of `\boldsymbol{K} +
+    s \boldsymbol{K}_G` just below and above them confirms that exactly two load
+    multipliers lie there
+
+    The cylinder Z33 of ``test_quad4_linear_buckling_cylinder_Nxy.py`` with
+    32 elements around the circumference, ``n = 1919`` degrees-of-freedom:
+    measured with SciPy 1.17.1 and Intel MKL 2025.0.0, ``eigsh()`` in Cayley
+    mode with ``num_eigvalues=2`` returns 96.4816 and 100.4531, one copy of
+    each of the two lowest pairs, the verification reports 1 load multiplier
+    missing below 100.443, and the deflated pass of
+    :func:`pyfe3d.solver.eigen._complete_repeated` finds the second copy of
+    96.4816. Before it, with ``max_dense_size=0``, ``linear_buckling``
+    raised a ``RuntimeError``; with 80 elements around the circumference,
+    ``num_eigvalues`` of 2, 3 and 4 also raised for the 3680 non-null rows
+    of ``KG``, more than the default ``max_dense_size=2000``. Whether the
+    first call misses the copy depends on the rounding errors, so that
+    other platforms may not need the deflated pass.
+    """
+    K, KG = torsion_cylinder_Z33(32)
+    with warnings.catch_warnings():
+        warnings.simplefilter('error', DenseFallbackWarning)
+        eigvals, eigvecs = linear_buckling(K, KG, num_eigvalues=2,
+                                           max_dense_size=0)
+    np.testing.assert_allclose(eigvals[1], eigvals[0], rtol=1e-8)
+    assert np.all(relative_residuals(K, KG, eigvals, eigvecs) < 1e-6)
+    G = eigvecs.T @ K @ eigvecs
+    assert abs(G[0, 1])/np.sqrt(G[0, 0]*G[1, 1]) < 1e-6
+    # NOTE independent of the eigenvalue solvers, by Sylvester's law of
+    #      inertia: no load multiplier below the pair, two up to it
+    lam = eigvals[0]
+    assert eigen._negative_pivots(K + lam*(1 - 1e-6)*KG) == 0
+    assert eigen._negative_pivots(K + lam*(1 + 1e-6)*KG) == 2
+
+
+def test_complete_repeated_stops():
+    r"""The count of :func:`pyfe3d.solver.eigen._missing_counter` is null
+    without eigenvalues or at a null shift, and the passes of
+    :func:`pyfe3d.solver.eigen._complete_repeated` stop when no
+    eigenpair can be added, the subspace being full, or when a pass keeps
+    nothing; ``K = diag(1, ..., 6)``, ``M = I``"""
+    n = 6
+    K = diags(np.arange(1., n + 1)).tocsr()
+    M = identity(n, format='csr')
+    count = eigen._missing_counter(K, -M, lambda w: w, 3)
+    assert count(np.zeros(0)) == 0
+    assert count(np.array([0.])) == 0
+    assert count(np.array([1., 3.])) == 1
+    V = np.eye(n)[:, [0, 2]]
+    w, vecs, num_added = eigen._complete_repeated(
+        K, M, np.array([1., 3.]), V, -1., 0, lambda w: 1,
+        lambda w: np.zeros(w.size, dtype=bool), 3)
+    assert num_added == 0
+    np.testing.assert_allclose(w, [1., 3.])
+    V = np.eye(n)[:, :n - 2]
+    w, vecs, num_added = eigen._complete_repeated(
+        K, M, np.arange(1., n - 1), V, -1., 0, lambda w: 1, np.isfinite, 3)
+    assert num_added == 0
+    # NOTE the missing eigenvalue 2 is added
+    V = np.eye(n)[:, [0, 2]]
+    w, vecs, num_added = eigen._complete_repeated(
+        K, M, np.array([1., 3.]), V, -1., 0, count, np.isfinite, 3)
+    assert num_added == 1
+    np.testing.assert_allclose(w, [1., 2., 3.], rtol=1e-12)
+
+
+# NOTE stiffness matrices that are not positive definite
+
+
+def test_K_not_positive_definite():
+    r"""``linear_buckling`` requires a positive definite ``K``: an
+    indefinite ``K``, ``diag(1, -2, 3, ...)``, and a singular one, the
+    chain of unit springs without support, whose last pivot is exactly zero,
+    raise a ``LinAlgError`` naming the analysis and the likely causes, with
+    the sparse and the dense solvers"""
+    n = 10
+    KG = -identity(n, format='csr')
+    K = diags(np.arange(1., n + 1)*np.where(np.arange(n) == 1, -1, 1)).tocsr()
+    for sparse_solver in (True, False):
+        with pytest.raises(LinAlgError, match=r'^Linear buckling analysis: '
+                           r'the stiffness matrix K is not positive '
+                           r'definite, its factorization has 1 negative '
+                           r'pivot\(s\).*Likely causes: insufficient '
+                           r'boundary conditions.*re-entrant'):
+            linear_buckling(K, KG, sparse_solver=sparse_solver)
+    chain = diags([-np.ones(n - 1), np.r_[1., 2*np.ones(n - 2), 1.],
+                   -np.ones(n - 1)], [-1, 0, 1]).tocsr()
+    with pytest.raises(LinAlgError, match='met a zero pivot, i.e. K is '
+                       'singular or indefinite. Likely causes: insufficient '
+                       'boundary conditions'):
+        linear_buckling(chain, KG)

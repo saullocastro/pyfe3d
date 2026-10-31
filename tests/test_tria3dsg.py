@@ -7,18 +7,25 @@ The element is described in :mod:`pyfe3d.tria3dsg` and follows
     elements", Computers & Structures, 75(3), pp. 321-334.
     https://doi.org/10.1016/S0045-7949(99)00140-6
 
-It exists because :class:`pyfe3d.tria3r.Tria3R` cures its shear locking by
-dividing the transverse shear stiffnesses by `1 + \alpha \ell^2/h^2`, which
-leaves it unable to reproduce a constant transverse shear state and makes it
-converge to the wrong answer on bending problems. The tests below check the
-properties the DSG buys and contrast them with Tria3R throughout, so the
-comparison is part of the record rather than a claim.
+It was written because :class:`pyfe3d.tria3r.Tria3R`, up to 0.11, cured
+its shear locking by dividing the transverse shear stiffnesses of a
+centroid-sampled shear field by `1 + \alpha \ell^2/h^2`, which leaves it
+unable to reproduce a constant transverse shear state and makes it converge
+to the wrong answer on bending problems. The tests below check the
+properties the DSG buys and contrast them with that field throughout, so the
+comparison is part of the record rather than a claim. Since 0.12.0 the
+default of Tria3R is this element's DSG field, ``shear_model = 1``, see
+``tests/test_tria3r_shear_model_dsg.py``; the centroid-sampled field remains
+available with ``shear_model = 0``, and every Tria3R built in this module is
+given that field and ``alpha_shear_locking = 0.7`` explicitly by
+:func:`legacy_tria3r`, unless a test sets ``alpha_shear_locking`` itself.
 
 """
 import sys
 sys.path.append('..')
 
 import numpy as np
+import pytest
 from scipy.sparse import coo_matrix
 from scipy.sparse.linalg import spsolve
 
@@ -32,6 +39,18 @@ from pyfe3d import (Tria3DSG, Tria3DSGData, Tria3DSGProbe,
 
 E_ISO = 210.e9
 NU_ISO = 0.3
+def legacy_tria3r(el):
+    r"""Give a Tria3R the centroid-sampled transverse shear of before 0.12.0
+
+    ``shear_model = 0`` with ``alpha_shear_locking = 0.7``, the former
+    defaults, which the contrasts of this module are about. Any other
+    element is left alone.
+    """
+    if isinstance(el, Tria3R):
+        el.shear_model = 0
+        el.alpha_shear_locking = 0.7
+
+
 # NOTE a deliberately irregular triangle, so that no result below can be an
 #      accident of symmetry
 IRREGULAR = np.array([[0.13, -0.07, 0.], [1.21, 0.31, 0.], [0.44, 0.93, 0.]])
@@ -48,6 +67,7 @@ def element_K(cls, Data, Probe, ncoords, h, drilling_model=0, alpha=None):
     flat = ncoords.flatten()
     data = Data()
     el = cls(Probe())
+    legacy_tria3r(el)
     for k in range(nn):
         setattr(el, 'n%d' % (k + 1), k + 1)
         setattr(el, 'c%d' % (k + 1), DOF*k)
@@ -99,6 +119,7 @@ def assemble(cls, Data, Probe, X, Y, cells, h):
     init_k_KC0 = 0
     for e in cells:
         el = cls(probe)
+        legacy_tria3r(el)
         for a in range(len(e)):
             setattr(el, 'n%d' % (a + 1), e[a] + 1)
             setattr(el, 'c%d' % (a + 1), DOF*e[a])
@@ -420,6 +441,7 @@ def plate_point_load(cls, Data, Probe, n, h, triangles=True):
     init_k_KC0 = 0
     for e in cells:
         el = cls(probe)
+        legacy_tria3r(el)
         for a in range(len(e)):
             setattr(el, 'n%d' % (a + 1), e[a] + 1)
             setattr(el, 'c%d' % (a + 1), DOF*e[a])
@@ -446,6 +468,7 @@ def plate_point_load(cls, Data, Probe, n, h, triangles=True):
     return u[2::DOF].max()/(0.01160*P*L**2/Dpl)
 
 
+@pytest.mark.slow
 def test_converges_where_tria3r_converges_to_the_wrong_answer():
     r"""The point of the element, on a problem with an analytical value
 
@@ -493,6 +516,7 @@ def single_element(cls, Data, Probe, ncoords, h, prop=None):
     nn = len(ncoords)
     flat = ncoords.flatten()
     el = cls(Probe())
+    legacy_tria3r(el)
     for k in range(nn):
         setattr(el, 'n%d' % (k + 1), k + 1)
         setattr(el, 'c%d' % (k + 1), DOF*k)
@@ -533,7 +557,7 @@ def shape_function_gradients(ncoords):
 
 
 def test_nonlinear_internal_forces_of_an_imposed_slope():
-    r"""The von Karman terms, against virtual work on a state with a closed form
+    r"""The von Kármán terms, against virtual work on a state with a closed form
 
     The field `w = c x`, `r_y = -c`, with everything else zero, is the
     linearised rigid rotation about the `y` axis. Every linear strain of the
@@ -541,9 +565,9 @@ def test_nonlinear_internal_forces_of_an_imposed_slope():
     the discrete shear gap exactly, since
     `\Delta w_q = c(x_q - x_p) - c(x_q - x_p) = 0` edge by edge. So
     ``update_fint`` with ``nonlinear=0`` returns zero and everything left is
-    the von Karman contribution, which is what this test is after. That a
+    the von Kármán contribution, which is what this test is after. That a
     rotation is charged any energy at all is the known price of the von
-    Karman kinematics, not a defect of the element.
+    Kármán kinematics, not a defect of the element.
 
     The only nonlinear strain is `\epsilon_{NL} = \{c^2/2, 0, 0\}`, giving
     the uniform membrane stress `\boldsymbol{N} = \boldsymbol{A} \boldsymbol{\epsilon}_{NL}`, and the
@@ -556,7 +580,7 @@ def test_nonlinear_internal_forces_of_an_imposed_slope():
       c b`, work `N_{xx} c b A`
 
     The third one is the term that carries the factor `w_{,x}` and not
-    `w_{,x}/2`, the classic place to get the von Karman variation wrong.
+    `w_{,x}/2`, the classic place to get the von Kármán variation wrong.
 
     """
     h = 0.02
@@ -628,7 +652,7 @@ def test_transverse_shear_stays_out_of_the_nonlinear_terms():
     r"""The discrete shear gap enters KC0 alone
 
     First-order shear deformation theory gives the transverse shear strains
-    no von Karman terms, so scaling `A_{44}, A_{45}, A_{55}` must leave
+    no von Kármán terms, so scaling `A_{44}, A_{45}, A_{55}` must leave
     ``KCNL`` and ``KG`` untouched while it changes ``KC0``. If the shear
     operator ever leaked into the nonlinear tangent, the element would stop
     being the exact Jacobian of its own internal forces, which
@@ -666,9 +690,12 @@ def test_transverse_shear_stays_out_of_the_nonlinear_terms():
 #      and that is exactly why the two tests below had to be added: they
 #      cover the only part of this element that an isotropic plate cannot
 #      exercise. See test_material_direction_matches_tria3r.
+#      Stacking of cylinder Z22 and material Geier1997 of Castro et al.,
+#      Composite Structures, 118, 303-315, 2014, Tables 3 and 4, p. 307,
+#      with G23 set equal to G12 = G13 instead of 3.400 GPa.
 UNSYM_STACK = [+49, -49, +36, -36, 0, 0]
 UNSYM_PLYT = 0.125e-3
-UNSYM_LAMINAPROP = (123.55e9, 8.708e9, 0.319, 5.595e9, 5.595e9, 5.595e9)
+UNSYM_LAMINAPROP = (123.55e9, 8.708e9, 0.319, 5.695e9, 5.695e9, 5.695e9)
 
 
 def unsymmetric_prop():
@@ -690,6 +717,7 @@ def material_rotation(cls, Probe, ncoords, xmat):
     nn = len(ncoords)
     flat = np.asarray(ncoords, dtype=float).flatten()
     el = cls(Probe())
+    legacy_tria3r(el)
     for k in range(nn):
         setattr(el, 'n%d' % (k + 1), k + 1)
         setattr(el, 'c%d' % (k + 1), DOF*k)
@@ -811,6 +839,7 @@ def combined_state_energy(cls, Data, Probe, n, prop, matangle,
     init_k_KC0 = 0
     for e in cells:
         el = cls(probe)
+        legacy_tria3r(el)
         for a in range(len(e)):
             setattr(el, 'n%d' % (a + 1), e[a] + 1)
             setattr(el, 'c%d' % (a + 1), DOF*e[a])
@@ -963,6 +992,7 @@ def triangulated_plate_buckling(cls, Data, Probe, n, h, second='diagonal',
     init_k_KG = 0
     for e in cells:
         el = cls(probe)
+        legacy_tria3r(el)
         for a in range(3):
             setattr(el, 'n%d' % (a + 1), e[a] + 1)
             setattr(el, 'c%d' % (a + 1), DOF*e[a])
@@ -1001,6 +1031,7 @@ def triangulated_plate_buckling(cls, Data, Probe, n, h, second='diagonal',
     return eigvals[0]*abs(Nxx)*L, exact, KC0[bu, :][:, bu]
 
 
+@pytest.mark.slow
 def test_buckling_load_does_not_depend_on_triangle_node_numbering():
     r"""A given stress state has to be rotated into the element frame
 
@@ -1101,13 +1132,66 @@ def test_optional_stabilisation_is_off_by_default_and_mild_when_on():
     Second that on top of the DSG the parameter is mild, while on the
     centroid-sampled element it is load bearing.
 
+    The reference is the fundamental frequency of the simply supported
+    Kirchhoff plate, Leissa, A. W., Vibration of Plates, NASA SP-160, 1969,
+    Sec. 4.1, Eq. (4.20), p. 44, ``omega_11 = pi**2*(1/a**2 +
+    1/b**2)*sqrt(D/(rho*h))``. The mesh restrains only the translations of
+    the edges, a soft simple support of the Mindlin plate, which is more
+    flexible than the Kirchhoff plate: the error of Tria3DSG without
+    stabilisation is +2.75, +0.20, -0.61 and -0.96 % with 9x11, 17x21, 33x41
+    and 65x81 nodes, toward a limit near -1.2 % (the hard simple support of
+    the Mindlin plate, with rotary inertia, gives -0.28 %). Tria3R without
+    stabilisation gives +96.1, +34.7, +10.0 and +1.9 % on the same meshes.
+
+    The error of Tria3DSG on the 9x11 mesh is one of the mesh, and its limit
+    one of the model, not of the formulation: with 9x11, 17x21, 33x41, 65x81
+    and 129x161 nodes, measured on 2026-10-29, the errors are, in %,
+
+    ==============  ======  ======  ======  ======  =======
+    nodes           9x11    17x21   33x41   65x81   129x161
+    ==============  ======  ======  ======  ======  =======
+    Tria3DSG, soft  +2.747  +0.197  -0.612  -0.958  -1.092
+    Quad4, soft     +0.291  -0.757  -1.049  -1.035  -1.115
+    Quad4R, soft    +2.785  -0.144  -0.894  -1.082  -1.130
+    Tria3DSG, hard  +3.215  +0.528  -0.083  -0.233  -0.271
+    Quad4, hard     +1.333  +0.117  -0.183  -0.258  -0.277
+    Quad4R, hard    +3.946  +0.763  -0.022  -0.218  -0.267
+    ==============  ======  ======  ======  ======  =======
+
+    the hard support also restraining the rotation about the edge: the
+    three elements converge to the same limits, about -1.1 % (soft) and
+    -0.27 % (hard, the -0.28 % above), and Leissa's Kirchhoff value is not
+    the limit of either. Following the policy of the tests whose reference
+    is reached only on fine meshes, the error of Tria3DSG without
+    stabilisation on the 9x11 mesh is compared with the value pre-determined
+    by this same test, +2.7470556272093605 %, i.e. the frequency with
+    ``rtol = 1e-4`` for the round-off of the eigenvalue solver, and with
+    grade B against Leissa as a bound.
+
+    The accuracy on the 9x11 mesh is graded with the rules of MacNeal, R. H.,
+    and Harder, R. L., 1985, "A proposed standard set of problems to test
+    finite element accuracy", Finite Elements in Analysis and Design, 1(1),
+    pp. 3-20, https://doi.org/10.1016/0168-874X(85)90003-4, p. 14: A for an
+    error of at most 2 %, B 10 %, C 20 %, D 50 %, F above 50 %. Measured,
+    in %:
+
+    ======  ========  =======
+    alpha   Tria3DSG  Tria3R
+    ======  ========  =======
+    0       +2.75     +96.09
+    0.07    +1.69     +38.08
+    0.1     +1.27     +30.64
+    0.7     -5.41     +0.60
+    ======  ========  =======
+
     """
     nx, ny = 9, 11
     a, b = 0.3, 0.5
     E, nu, rho, h = 203.e9, 0.33, 7.83e3, 0.01
 
-    D = 2*h**3*E/(3*(1 - nu**2))
-    wmn = (1/a**2 + 1/b**2)*np.sqrt(D*np.pi**4/(2*rho*h))/2
+    # NOTE Leissa (1969), Eq. (4.20), m = n = 1
+    D = E*h**3/(12*(1 - nu**2))
+    wmn = np.pi**2*(1/a**2 + 1/b**2)*np.sqrt(D/(rho*h))
 
     def assemble(cls, datacls, probecls, alpha):
         data = datacls()
@@ -1144,6 +1228,7 @@ def test_optional_stabilisation_is_off_by_default_and_mild_when_on():
         for n1, n2, n3, n4 in zip(n1s, n2s, n3s, n4s):
             for (a1, a2, a3) in ((n1, n2, n3), (n1, n3, n4)):
                 el = cls(probe)
+                legacy_tria3r(el)
                 el.n1, el.n2, el.n3 = a1, a2, a3
                 el.c1 = DOF*nid_pos[a1]
                 el.c2 = DOF*nid_pos[a2]
@@ -1193,20 +1278,27 @@ def test_optional_stabilisation_is_off_by_default_and_mild_when_on():
         print('%5.2f    %+8.2f%% %+8.2f%%' % (al, e_dsg[al], e_r[al]))
 
     # NOTE the discrete shear gap is already accurate with no parameter,
-    #      whereas the centroid-sampled element is nearly twice too stiff.
-    #      This is the locking, and it is what alpha is curing in Tria3R
-    assert abs(e_dsg[0.]) < 5.
-    assert e_r[0.] > 80.
+    #      grade B of MacNeal and Harder, whereas the centroid-sampled
+    #      element is nearly twice too stiff, grade F. This is the locking,
+    #      and it is what alpha is curing in Tria3R
+    assert abs(e_dsg[0.]) <= 10.
+    # NOTE value pre-determined by this test on 2026-10-29, see the
+    #      docstring, compared as a frequency with rtol 1e-4
+    assert np.isclose(1 + e_dsg[0.]/100, 1 + 2.7470556272093605/100,
+                      rtol=1e-4)
+    assert e_r[0.] > 50.
 
     # NOTE at the literature value the stabilisation is a mild improvement
-    #      on top of the DSG, and nowhere near enough on its own
+    #      on top of the DSG, and nowhere near enough on its own: Tria3R
+    #      still gets grade D or worse
     assert abs(e_dsg[0.1]) < abs(e_dsg[0.])
-    assert e_r[0.1] > 25.
+    assert e_r[0.1] > 20.
 
-    # NOTE while Tria3R's default over-softens the DSG element, the two
-    #      being different jobs for the same symbol
-    assert e_dsg[0.7] < -3.
-    assert abs(e_r[0.7]) < 5.
+    # NOTE while Tria3R's default, grade A on Tria3R, over-softens the DSG
+    #      element below the reference by more than the 2 % of grade A, the
+    #      two being different jobs for the same symbol
+    assert e_dsg[0.7] < -2.
+    assert abs(e_r[0.7]) <= 2.
 
     # NOTE 0.07 is the value the attribute documentation recommends for a
     #      coarse mesh of a thin plate, being the lower bound of the range

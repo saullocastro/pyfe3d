@@ -25,6 +25,10 @@ With the solvers of :mod:`pyfe3d.solver` you can run:
 * Linear static analyses, `\boldsymbol{K}_{C0} \boldsymbol{u} = \boldsymbol{f}`, with :func:`.solve` or
   :class:`.Analysis`
 
+* Linear static analyses of unsupported structures with inertia relief,
+  balancing the loads with the inertia forces of the rigid-body
+  acceleration, with :func:`.apply_inertia_relief`, see :doc:`inertia_relief`
+
 * Linear buckling analyses, `(\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}`, with
   :func:`.linear_buckling`
 
@@ -55,9 +59,13 @@ User guide
     :maxdepth: 1
 
     overview.rst
+    documentation_levels.rst
     conventions.rst
     element_choice.rst
     shell_properties.rst
+    cross_sectional_analysis.rst
+    linear_analyses.rst
+    inertia_relief.rst
     nonlinear_analyses.rst
     eigenvalue_analyses.rst
 
@@ -143,7 +151,7 @@ AUTHORS
 Citing this library
 -------------------
 
-Saullo G. P. Castro. (2026). General-purpose finite element solver based on Python and Cython (Version 0.11.3). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
+Saullo G. P. Castro. (2026). General-purpose finite element solver based on Python and Cython (Version 0.12.0). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
 
 The DOI represents all the versions and resolves to the latest one. The
 repository also has a ``CITATION.cff`` file with the same data.

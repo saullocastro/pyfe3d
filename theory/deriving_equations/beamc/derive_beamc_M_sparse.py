@@ -35,9 +35,11 @@ Iz = Iyy
 #      xy (v, rz) and G13 for exz of the plane xz (w, ry), and the torsional
 #      stiffness GJ given directly; see the shear block of D, checked in
 #      derive_beamc_KC0_sparse.py
-# alphay = -12*E*Iy/(G12*A*L**2), negative: see the Notes of pyfe3d.beamc.BeamC
-#     (Luo 2008 Eq. (17); Eq. (21) prints the sign wrongly)
-# alphaz = -12*E*Iz/(G13*A*L**2)
+# alphay = -12*C44/(C11*L**2), negative: see the Notes of pyfe3d.beamc.BeamC
+#     (Luo 2008 Eq. (17); Eq. (21) prints the sign wrongly), from the
+#     diagonal of the sectional stiffness matrix C defined below, which is
+#     -12*E*Iy/(G12*A*L**2) without the attribute C of BeamProp
+# alphaz = -12*C55/(C22*L**2), or -12*E*Iz/(G13*A*L**2) without C
 # betay = 1/(1 - alphay)
 # betaz = 1/(1 - alphaz)
 var('alphay, alphaz, betay, betaz', real=True)

@@ -6,63 +6,91 @@ import numpy as np
 from numpy import isclose
 from scipy.sparse import coo_matrix
 
-from pyfe3d.shellprop_utils import laminated_plate
+from pyfe3d.shellprop_utils import isotropic_plate
 from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
 from pyfe3d.solver import natural_frequency
 
 
 def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
-    r"""Test case from reference
+    r"""Lowest natural frequencies of an isotropic circular cylindrical shell
+    supported at both ends by shear diaphragms
 
-        Saullo G. P. Castro, Christian Mittelstedt, Francisco A. C. Monteiro, Mariano
-        A. Arbelo, Gerhard Ziegmann, Richard Degenhardt. "Linear buckling predictions
-        of unstiffened laminated composite cylinders and cones under various loading
-        and boundary conditions using semi-analytical models". Composite Structures,
-        2014. 10.1016/j.compstruct.2014.07.037
+    The reference is Leissa, A. W., Vibration of Shells, NASA SP-288, 1973,
+    Sec. 2.3, Table 2.8, p. 55: lowest frequency parameters according to the
+    three-dimensional theory of elasticity, SD-SD supports, ``nu = 0.3``. For
+    ``R/h = 20`` and ``l/mR = 4`` the table gives
 
-        Cylinders Z11
+        n = 2    Omega = 0.121249
+        n = 3    Omega = 0.129881
+
+    and every other entry of that column is higher, ``n = 1`` being 0.257011
+    and ``n = 4`` 0.219098. The frequency parameter is defined by Eq. (2.26),
+    p. 38, ``Omega**2 = rho*(1 - nu**2)*R**2*omega**2/E``, and the shear
+    diaphragm supports by Eq. (2.33), p. 43, ``v = w = N_x = M_x = 0`` at both
+    ends. A cylinder of length ``L = 4*R`` vibrating with ``m = 1`` axial
+    half-wave therefore has the ``n = 2`` pair as its two lowest frequencies
+    and the ``n = 3`` pair as the next two.
+
+    The frequencies converge from above. Relative errors of the ``n = 2`` and
+    ``n = 3`` pairs against the table, for ``ntheta`` elements around the
+    circumference and nearly square elements::
+
+        ntheta    n = 2      n = 3
+           16    +5.30 %   +20.43 %
+           24    +2.43 %    +8.53 %
+           32    +1.24 %    +4.53 %
+           48    +0.52 %    +1.91 %
+           64    +0.27 %    +1.02 %
+           96    +0.09 %    +0.38 %
+
+    so the element converges to the three-dimensional solution: Table 2.6
+    (concluded), p. 53, of the same reference puts the Flugge shell theory
+    0.40 % above the elasticity value for ``n = 3`` at this geometry, and at
+    ``ntheta = 96`` the error is already below that. The same meshes of the
+    enriched Quad4 in tests/test_quad4_natural_freq_cylinder.py are somewhat
+    closer, +0.36 and +1.48 % at ``ntheta = 48``.
+
+    From ``ntheta = 48``, the default ``refinement=1``, the errors are within
+    grade A, 2 per cent, of MacNeal, R. H., and Harder, R. L., "A proposed
+    standard set of problems to test finite element accuracy", Finite
+    Elements in Analysis and Design, 1(1), 3-20, 1985, p. 14, which the test
+    checks. It also compares Omega with the values pre-determined by this
+    same test, with a tolerance for the round-off of other platforms only;
+    wall times on a machine shared with other jobs::
+
+        refinement  ntheta  elements   n = 2       n = 3       time
+            1         48      1440    0.12182617  0.13190618    2 s
+            2         96      5760    0.12135407  0.13027999   17 s
+
+    measured on 2026-10-29 with the default stabilisation of Quad4R since
+    0.12.0, the physical stabilisation of the bending and of the transverse shear of Belytschko and Leviathan (1994), +0.48 and +1.56 % and +0.09 and +0.31 % from the table;
+    up to 0.11, with the hourglass stiffnesses of Brockman (1987),
+    0.12188130, 0.13236280, 0.12136325 and 0.13037796, the values of the
+    table of relative errors above, which predates that change.
 
     """
     data = Quad4RData()
     probe = Quad4RProbe()
 
-    L = 0.510 # m
+    # NOTE geometry of Table 2.8 of Leissa (1973): R/h = 20 and l/mR = 4 with
+    #      m = 1. The frequency parameter Omega is dimensionless, so only
+    #      R/h, L/R and nu matter; E and rho are arbitrary
     R = 0.250 # m
+    h = R/20 # m
+    L = 4*R # m
     b = 2*np.pi*R # m
+    E = 70.e9 # Pa
+    nu = 0.3
+    rho = 2.7e3 # kg/m3
 
-    ntheta = 40*refinement # circumferential
-    nlength = int(ntheta*L/b)
+    ntheta = 48*refinement # circumferential
+    nlength = int(round(ntheta*L/b))
     if nlength % 2 == 0:
         nlength += 1
     print('ntheta', ntheta)
     print('nlength', nlength)
 
-    # NOTE material proporties from Table 3 in Castro et al.
-    # Actual values from reference can be found here https://github.com/saullocastro/compmech/blob/e7e5342bf212743e70da22c94cc0452911099db3/compmech/conecyl/conecylDB.py#L32C34-L32C76
-    E11 = 123.55e9
-    E22 = 8.7079e9
-    nu12 = 0.319
-    G12 = 5.696e9
-    G13 = 5.696e9
-    G23 = 3.400e9
-    plyt = 0.125e-3
-    rho = 1.78e3 # kg/m3
-    laminaprop = (E11, E22, nu12, G12, G13, G23)
-
-    # NOTE very small hourglass energy to make sure this doesn't affect
-    hgfactor = 1.
-
-    # NOTE cylinder Z11, Table 4 of Castro et al., Table 3 being the one
-    #      with the material properties
-    # NOTE the reference is the source of the geometry, the material and the
-    #      stacking sequence only. It is a linear buckling paper: it contains
-    #      no natural frequencies, and no density either, so the value of rho
-    #      above does not come from it. The frequencies asserted at the end
-    #      of this test are recorded pyfe3d output and are a regression lock,
-    #      not a comparison with the literature
-    stack = [+60, -60, 0, 0, +68, -68, +52, -52, +37, -37]
-    prop = laminated_plate(stack=stack, plyt=plyt, laminaprop=laminaprop,
-                           rho=rho)
+    prop = isotropic_plate(thickness=h, E=E, nu=nu, rho=rho)
 
     nids = 1 + np.arange(nlength*(ntheta+1))
     nids_mesh = nids.reshape(nlength, ntheta+1)
@@ -117,12 +145,9 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
         quad.c4 = DOF*nid_pos[n4]
         quad.init_k_KC0 = init_k_KC0
         quad.init_k_M = init_k_M
-        quad.K6ROT = 100.
         quad.update_rotation_matrix(ncoords_flatten, 0., 0., 1.)
         quad.update_probe_xe(ncoords_flatten)
-        quad.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_u=hgfactor,
-                        hgfactor_v=hgfactor, hgfactor_w=hgfactor,
-                        hgfactor_rx=hgfactor, hgfactor_ry=hgfactor)
+        quad.update_KC0(KC0r, KC0c, KC0v, prop)
         quad.update_M(Mr, Mc, Mv, prop, mtype=0) # consistent mass
         quads.append(quad)
         init_k_KC0 += data.KC0_SPARSE_SIZE
@@ -137,21 +162,19 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
 
     bk = np.zeros(N, dtype=bool)
 
-    # NOTE cylinders with CC2 boundary condition as decribed in Table 1 of Castro et al.
-    bottom_edge = isclose(z, 0)
-    bk[0::DOF][bottom_edge] = True
-    bk[1::DOF][bottom_edge] = True
-    bk[3::DOF][bottom_edge] = True
-    bk[4::DOF][bottom_edge] = True
-
-    top_edge = isclose(z, L)
-    bk[0::DOF][top_edge] = True
-    bk[1::DOF][top_edge] = True
-    bk[3::DOF][top_edge] = True
-    bk[4::DOF][top_edge] = True
-
-    middle = isclose(z, L/2)
-    bk[2::DOF][middle] = True
+    # NOTE shear diaphragms, Eq. (2.33) of Leissa (1973): the radial and the
+    #      circumferential displacements vanish at both ends, which for a
+    #      cylinder along the global z axis are the global x and y
+    #      translations, while the axial displacement and the rotations are
+    #      left free (N_x = M_x = 0)
+    edges = isclose(z, 0) | isclose(z, L)
+    bk[0::DOF][edges] = True
+    bk[1::DOF][edges] = True
+    # NOTE removing the rigid axial translation by holding the axial
+    #      displacement of a single node at mid-length, where the axial
+    #      displacement of every mode with m = 1 vanishes, u ~ cos(pi*z/L)
+    middle = np.where(isclose(z, L/2))[0]
+    bk[2::DOF][middle[0]] = True
 
     bu = ~bk
 
@@ -159,19 +182,48 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     Muu = M[bu, :][:, bu]
 
     num_eig = max(mode+1, 6)
-
     eigvecs = np.zeros((N, num_eig))
-
     # NOTE pyfe3d.solver.natural_frequency equilibrates the diagonal
     #      before calling the eigensolver and returns the circular
     #      frequencies already sorted
-    omegan, eigvecsu = natural_frequency(KC0uu, Muu, num_eigvalues=num_eig, tol=1e-6)
-    
+    omegan, eigvecsu = natural_frequency(KC0uu, Muu, num_eigvalues=num_eig, tol=1e-8)
     eigvecs[bu] = eigvecsu
 
     print('natural frequency analysis OK')
-
     print('omegan =', omegan)
+
+    # NOTE frequency parameter of Leissa (1973), Eq. (2.26)
+    Omega = omegan*R*np.sqrt(rho*(1 - nu**2)/E)
+    print('Omega =', Omega)
+
+    # NOTE Leissa (1973), Table 2.8, R/h = 20, l/mR = 4
+    Omega_n2 = 0.121249
+    Omega_n3 = 0.129881
+
+    # NOTE each circumferential wave number n >= 1 gives a pair of modes,
+    #      cos(n*theta) and sin(n*theta), with the same frequency
+    assert isclose(Omega[0], Omega[1], rtol=1e-6)
+    assert isclose(Omega[2], Omega[3], rtol=1e-6)
+
+    # NOTE convergence is from above, and from ntheta = 48 the errors of
+    #      the docstring are within grade A of MacNeal and Harder (1985),
+    #      p. 14, 2 per cent
+    assert Omega[0] > Omega_n2
+    assert Omega[2] > Omega_n3
+    assert isclose(Omega[0], Omega_n2, rtol=0.02)
+    assert isclose(Omega[2], Omega_n3, rtol=0.02)
+
+    # NOTE Omega of the n = 2 and n = 3 pairs pre-determined with this same
+    #      test at the same refinement, see the table of the docstring. The
+    #      tolerance, rtol = 1e-4, is for the round-off of other platforms
+    #      and solvers only
+    predetermined = {
+        1: (0.12182617, 0.13190618),
+        2: (0.12135407, 0.13027999),
+    }
+    if refinement in predetermined:
+        assert isclose(Omega[0], predetermined[refinement][0], rtol=1e-4)
+        assert isclose(Omega[2], predetermined[refinement][1], rtol=1e-4)
 
     if plot_pyvista:
         import pyvista as pv
@@ -181,11 +233,6 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
         contour_label = 'Radial displacement'
         vector = eigvecs[:, mode]
         contour_vec = np.sqrt(vector[0::DOF]**2 + vector[1::DOF]**2)
-        displ_vec = np.zeros_like(ncoords)
-        displ_vec[:, 0] = vector[0::DOF]*10
-        displ_vec[:, 1] = vector[1::DOF]*10
-        displ_vec[:, 2] = vector[2::DOF]*10
-        intensitymode = 'vertex'
 
         plotter = pv.Plotter(off_screen=False)
         faces_quad = []
@@ -193,19 +240,10 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
             faces_quad.append([4, nid_pos[q.n1], nid_pos[q.n2], nid_pos[q.n3], nid_pos[q.n4]])
         faces_quad = np.array(faces_quad)
         quad_plot = pv.PolyData(ncoords, faces_quad)
-        if contour_vec is not None:
-            quad_plot[contour_label] = contour_vec
-            plotter.add_mesh(quad_plot, scalars=contour_label,
-                    cmap=contour_colorscale, edge_color='black', show_edges=True,
-                    line_width=1.)
-        else:
-            plotter.add_mesh(quad_plot, edge_color='black', show_edges=True,
-                    line_width=1.)
-        displ_vec = None
-        if displ_vec is not None:
-            quad_plot = pv.PolyData(ncoords + displ_vec, faces_quad)
-            plotter.add_mesh(quad_plot, edge_color='red', show_edges=True,
-                    line_width=1., opacity=0.5)
+        quad_plot[contour_label] = contour_vec
+        plotter.add_mesh(quad_plot, scalars=contour_label,
+                cmap=contour_colorscale, edge_color='black', show_edges=True,
+                line_width=1.)
         #NOTE plotting coordinate system
         xaxis = pv.Arrow(start=(0, 0, 0), direction=(1, 0, 0), scale=R/3)
         plotter.add_mesh(xaxis, color='blue')
@@ -214,78 +252,10 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
         zaxis = pv.Arrow(start=(0, 0, 0), direction=(0, 0, 1), scale=R/3)
         plotter.add_mesh(zaxis, color='green')
 
-        for q in quads:
-            pos1 = nid_pos[q.n1]
-            pos2 = nid_pos[q.n2]
-            pos3 = nid_pos[q.n3]
-            pos4 = nid_pos[q.n4]
-            centroid = (ncoords[pos1] + ncoords[pos2] + ncoords[pos3] + ncoords[pos4])/4
-            ze = np.array([0., 0., 1.])
-            zg = np.array([[q.r11, q.r12, q.r13],
-                           [q.r21, q.r22, q.r23],
-                           [q.r31, q.r32, q.r33]]) @ ze
-            normal = pv.Arrow(start=centroid, direction=zg, scale=R/6)
-            plotter.add_mesh(normal, color='green')
-
-            xe = np.array([1., 0., 0.])
-            xg = np.array([[q.r11, q.r12, q.r13],
-                           [q.r21, q.r22, q.r23],
-                           [q.r31, q.r32, q.r33]]) @ xe
-            x_axis = pv.Arrow(start=centroid, direction=xg, scale=R/6)
-            plotter.add_mesh(x_axis, color='blue')
-
-            ye = np.array([0., 1., 0.])
-            yg = np.array([[q.r11, q.r12, q.r13],
-                           [q.r21, q.r22, q.r23],
-                           [q.r31, q.r32, q.r33]]) @ ye
-            y_axis = pv.Arrow(start=centroid, direction=yg, scale=R/6)
-            plotter.add_mesh(y_axis, color='yellow')
-
         plotter.set_background(background)
-        plotter.parallel_projection = True
+        plotter.parallel_projection = False
         plotter.show()
 
-    # NOTE reference values updated after adopting the equilibrium-based
-    #      transverse shear stiffness of Rohwer (1988), evaluated in the element
-    #      frame, which changed them by about 1.2e-4
-    # NOTE values updated again in 0.10.0, when the physics-based drilling
-    #      coefficient gamma_rz = A66 of Hughes and Brezzi (1989) became the
-    #      default of this element, in place of the fictitious K6ROT*1e-6*A66.
-    #      The previous values were
-    #
-    #          1981.51374432, 2117.61717749, 2203.24236915
-    #
-    #      each of them doubled, and they are recovered by setting
-    #      quad.drilling_model = 1 before update_KC0. The shift is about 12
-    #      per cent and it is a change of the drilling stiffness by four
-    #      orders of magnitude, which only a non-coplanar model such as this
-    #      cylinder can feel: on a flat mesh the drilling row is decoupled
-    #      from every other degree-of-freedom.
-    #
-    #      These are recorded pyfe3d output and not a comparison with the
-    #      literature, see the note on the reference at the top of this file,
-    #      so the shift cannot be classified as an improvement or otherwise
-    #      against an external value. What can be said is that the new
-    #      coefficient is a modulus of the laminate rather than an adjustable
-    #      parameter, and that the same change brings the torsional buckling
-    #      load of tests/test_quad4r_linear_buckling_cylinder_Nxy.py to
-    #      within 0.1 per cent of the one of the enriched Quad4
-    # NOTE values updated again in 0.11.0, when the hourglass stiffnesses of
-    #      w, rx and ry became based on the bending compliance of the
-    #      laminate instead of on its extensional compliance, see the Notes
-    #      of Quad4R.update_KC0. The previous values were
-    #
-    #          2229.65277474, 2377.24306359, 2432.59469823
-    #
-    #      each of them doubled. The new ones are 0.4, 0.7 and 0.2 per cent
-    #      lower, and closer to those of the same mesh of Quad4 in
-    #      tests/test_quad4_natural_freq_cylinder.py, 2176.65594707,
-    #      2303.51717602 and 2396.44964069, from which they differ by 2.0,
-    #      2.5 and 1.3 per cent instead of 2.4, 3.2 and 1.5 per cent
-    assert np.allclose(omegan, [2220.19148042, 2220.19148042,
-                                2361.14023288, 2361.14023288,
-                                2428.01086828, 2428.01086828], rtol=1e-4)
 
 if __name__ == '__main__':
-    test_linear_nat_freq_cylinder(mode=0, plot_pyvista=True, refinement=1)
-
+    test_linear_nat_freq_cylinder(mode=0, plot_pyvista=True, refinement=2)

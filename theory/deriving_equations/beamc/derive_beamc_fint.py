@@ -35,9 +35,11 @@ Iz = Iyy
 #      xy (v, rz) and G13 for exz of the plane xz (w, ry), and the torsional
 #      stiffness GJ given directly; see the shear block of D, checked in
 #      derive_beamc_KC0_sparse.py
-# alphay = -12*E*Iy/(G12*A*L**2), negative: see the Notes of pyfe3d.beamc.BeamC
-#     (Luo 2008 Eq. (17); Eq. (21) prints the sign wrongly)
-# alphaz = -12*E*Iz/(G13*A*L**2)
+# alphay = -12*C44/(C11*L**2), negative: see the Notes of pyfe3d.beamc.BeamC
+#     (Luo 2008 Eq. (17); Eq. (21) prints the sign wrongly), from the
+#     diagonal of the sectional stiffness matrix C defined below, which is
+#     -12*E*Iy/(G12*A*L**2) without the attribute C of BeamProp
+# alphaz = -12*C55/(C22*L**2), or -12*E*Iz/(G13*A*L**2) without C
 # betay = 1/(1 - alphay)
 # betaz = 1/(1 - alphaz)
 var('alphay, alphaz, betay, betaz', real=True)
@@ -98,13 +100,26 @@ Nrz = Matrix([[0, Gv1, 0, 0, 0, Grz1,
 # BL = simplify(integrate(BL, (z, -hz/2+dz, +hz/2+dz)))
 
 # From Eqs. 12 in Luo, Y. 2008
-D = Matrix([
+D11 = Matrix([
     [ E*A,  E*Ay,  E*Az, 0, 0, 0],
     [E*Ay,  E*Iy, E*Iyz, 0, 0, 0],
     [E*Az, E*Iyz,  E*Iz, 0, 0, 0],
     [   0,     0,     0,   G12*A,      0, -G12*Az],
     [   0,     0,     0,       0,  G13*A,  G13*Ay],
     [   0,     0,     0, -G12*Az, G13*Ay,      GJ]])
+
+# NOTE sectional stiffness matrix C of pyfe3d.beamprop.BeamProp, symmetric,
+#      with the 21 independent entries Cij, i <= j, in the order of the
+#      strains {eps, gammay, gammaz, kx, ky, kz} of pyfe3d, see
+#      pyfe3d.vabs.yu_to_pyfe3d. D is C in the order {exx, ky, kz, gammay,
+#      gammaz, kx} of the rows of BL below
+C = Matrix(6, 6, lambda i, j: var('C%d%d' % (min(i, j), max(i, j)), real=True))
+PERM = [0, 4, 5, 1, 2, 3]
+D = C.extract(PERM, PERM)
+# NOTE without the attribute C, BeamProp builds C from its 11 stiffness
+#      attributes, such that D becomes D11 above
+C_FROM_11 = {D[i, j]: D11[i, j] for i in range(6) for j in range(i, 6)}
+assert D.subs(C_FROM_11) == D11
 # From Eq. 8 in Luo, Y. 2008
 # epsilon = u,x
 # kappay = -theta,x = -rz,x

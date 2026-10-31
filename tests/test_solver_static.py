@@ -114,7 +114,23 @@ def test_linear_static_unsymmetric():
 
 def test_static_deflection_plate_clpt():
     r"""Simply supported Ritz plate under a central point load, classical
-    plate theory, against the Navier solution"""
+    plate theory, against the Navier solution
+
+    The reference is the Navier solution of Timoshenko, S., and
+    Woinowsky-Krieger, S., Theory of Plates and Shells, 2nd ed.,
+    McGraw-Hill, 1959, Art. 29, p. 111, Eq. (c), the deflection at the
+    centre under a load at the centre,
+    ``w_max = 4*P/(pi**4*a*b*D)*sum(1/((m/a)**2 + (n/b)**2)**2)`` over
+    ``m, n = 1, 3, 5, ...``, here summed up to 1999, which changes it by
+    less than 1e-5. For ``b/a = 7/3`` it gives ``w_max = alpha*P*a**2/D``
+    with ``alpha = 0.016785``, between the values 0.01651 and 0.01690 of
+    their Table 23, p. 143, for ``b/a = 2`` and 3.
+
+    The Ritz deflection converges slowly to it, the curvature being singular
+    under the point load: with 20x20 terms it is 1.09 % below the reference,
+    with 30x30 terms 0.44 %, with 40x40 terms 0.24 %; the two finer
+    approximations take 23 s and 160 s to assemble.
+    """
     m1 = m2 = 20
     N = m1*m2
     pts1, weights1 = roots_legendre(2*m1 - 1)
@@ -162,12 +178,12 @@ def test_static_deflection_plate_clpt():
     assert np.count_nonzero(bu) < N
     u = solve(csc_matrix(K[bu, :][:, bu]), Pforce*Sw[bu])
     w_center = Sw[bu] @ u
+    # NOTE Timoshenko and Woinowsky-Krieger (1959), Eq. (c) of Art. 29
     D = E*h**3/(12*(1 - nu**2))
-    w_navier = 0.0
-    for m in range(1, 80, 2):
-        for n in range(1, 80, 2):
-            w_navier += 1.0/(m**2/a**2 + n**2/b**2)**2
-    w_navier *= 4*Pforce/(np.pi**4*D*a*b)
+    m = np.arange(1, 2000, 2)[:, None]
+    n = np.arange(1, 2000, 2)[None, :]
+    w_navier = 4*Pforce/(np.pi**4*a*b*D)*np.sum(
+        1.0/((m/a)**2 + (n/b)**2)**2)
     print('w_center %.6e  w_navier %.6e' % (w_center, w_navier))
     np.testing.assert_allclose(w_center, w_navier, rtol=0.02)
 
@@ -227,3 +243,41 @@ def test_solve_complex_and_options():
                                np.linalg.solve(Ac, b.real), rtol=1e-12)
     np.testing.assert_allclose(solve(A, b.real, permc_spec='NATURAL'),
                                np.linalg.solve(A, b.real), rtol=1e-12)
+
+
+def test_linear_static_not_positive_definite():
+    r"""A linear static analysis requires a symmetric ``K`` to be positive
+    definite: the chain of unit springs without support, singular with the
+    rigid translation, whose last pivot is exactly zero, and an indefinite
+    ``K`` raise a ``LinAlgError`` naming the analysis and the likely causes,
+    with :func:`linear_static` and :meth:`pyfe3d.solver.Analysis.static`;
+    :func:`solve` itself solves symmetric indefinite systems, and a positive
+    definite one is solved with the factorization of the check, also with a
+    complex right-hand side"""
+    from pyfe3d.solver import Analysis
+    n = 6
+    chain = csr_matrix(np.diag(np.r_[1., 2*np.ones(n - 2), 1.])
+                       - np.eye(n, k=1) - np.eye(n, k=-1))
+    f = np.ones(n)
+    with pytest.raises(LinAlgError, match=r'^Linear static analysis: the '
+                       r'stiffness matrix K is not positive definite, its '
+                       r'factorization met a zero pivot, i.e. K is singular '
+                       r'or indefinite. Likely causes: insufficient boundary '
+                       r'conditions.*mechanism.*re-entrant.*preload'):
+        linear_static(chain, f)
+    K = csr_matrix(np.diag([1., -2., 3., 4.]))
+    with pytest.raises(LinAlgError, match=r'has 1 negative pivot\(s\), i.e. '
+                       r'K has 1 eigenvalue\(s\) that are negative'):
+        linear_static(K, np.ones(4))
+    an = Analysis(lambda inc=1., silent=True: np.ones(4), None,
+                  lambda c=None, NLgeom=False, silent=True: K, None)
+    with pytest.raises(LinAlgError, match='^Linear static analysis: the '
+                       'stiffness matrix K is not positive definite'):
+        an.static(silent=True)
+    np.testing.assert_allclose(solve(K, np.ones(4)), [1., -0.5, 1/3, 0.25])
+    Kpd = csr_matrix(np.array([[4., -1., 0.], [-1., 4., -1.],
+                               [0., -1., 3.]]))
+    b = np.array([1. + 2j, -1j, 3.])
+    np.testing.assert_allclose(linear_static(Kpd, b)[1][0],
+                               np.linalg.solve(Kpd.toarray(), b),
+                               rtol=1e-12)

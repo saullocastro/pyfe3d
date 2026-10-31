@@ -1,7 +1,7 @@
 """
 Nonlinear stiffness matrix KCNL, K_CNL + K_GNL, for the Quad4R element
 
-KCNL = KC0L + KCL0 + KCLL + KGLL, built from the von Karman membrane strains
+KCNL = KC0L + KCL0 + KCLL + KGLL, built from the von Kármán membrane strains
 
     exx = u,x + w,x**2/2
     eyy = v,y + w,y**2/2

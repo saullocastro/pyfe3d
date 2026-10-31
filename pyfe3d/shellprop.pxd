@@ -19,8 +19,9 @@ cdef class MatLamina:
     cdef public double q11, q12, q13, q21, q22, q23, q31, q32, q33, q44, q55, q66
     cdef public double c11, c12, c13, c22, c23, c33, c44, c55, c66
     cdef public double u1, u2, u3, u4, u5, u6, u7
-    cpdef void rebuild(MatLamina)
-    cpdef void trace_normalize_plane_stress(MatLamina)
+    cdef readonly bint plane_stress
+    cpdef void rebuild(MatLamina, bint plane_stress=*) except *
+    cpdef void trace_normalize_plane_stress(MatLamina) except *
     cpdef double [:, ::1] get_constitutive_matrix(MatLamina)
     cpdef double [:, ::1] get_invariant_matrix(MatLamina)
 
@@ -84,4 +85,5 @@ cdef class GradABD:
     cdef public double [:, ::1] gradBij
     cdef public double [:, ::1] gradDij
     cdef public double [:, ::1] gradAtsij
-    cpdef void calc_LP_grad(GradABD, double, MatLamina, LaminationParameters)
+    cpdef void calc_LP_grad(GradABD, double, MatLamina, LaminationParameters,
+                            double offset=*)

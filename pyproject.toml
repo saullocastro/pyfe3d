@@ -10,7 +10,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "pyfe3d"
-version = "0.11.3"
+version = "0.12.0"
 description = "General-purpose finite element solver for structural analysis and optimization based on Python and Cython"
 readme = "README.md"
 license = "BSD-3-Clause"
@@ -60,3 +60,8 @@ include = ["pyfe3d*"]
 
 [tool.setuptools.package-data]
 pyfe3d = ["*.pxd", "*.pyx"]
+
+[tool.pytest.ini_options]
+markers = [
+    "slow: 40 s or more per test with the line-traced build of the Cython code (measured on Windows, MSVC /Od, 6 pytest-xdist processes, 2026-10-29), and covering no line of the .pyx files that the other tests do not cover (pytest --cov-context=test); deselected with -m \"not slow\" in the line-traced run of .github/workflows/coverage.yml only, run everywhere else",
+]

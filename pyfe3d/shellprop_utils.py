@@ -16,13 +16,31 @@ material properties (:func:`.read_laminaprop`).
 from .shellprop import Lamina, MatLamina, ShellProp
 
 
+def _reciprocal_poisson(nuij, ei, ej, ij):
+    r"""Return ``nuji = nuij*ej/ei``, see :func:`.read_laminaprop`
+
+    With ``ei = 0``, ``nuji`` is undefined and ``0`` is returned when
+    ``nuij*ej = 0``, which a positive-definite material requires.
+    """
+    if ei != 0:
+        return nuij*ej/ei
+    if ej != 0 and nuij != 0:
+        raise ValueError(('nu%s = %r with e%s = 0 and e%s = %r: a material '
+            'with a zero Young modulus e%s requires nu%s = 0, since '
+            '|nu%s| < (e%s/e%s)**0.5, otherwise nu%s is undefined')
+            % (ij, nuij, ij[0], ij[1], ej, ij[0], ij, ij, ij[0], ij[1],
+               ij[::-1]))
+    return 0.
+
+
 def read_laminaprop(laminaprop, rho=0):
     r"""Returns a :class:`.MatLamina` object based on an input ``laminaprop`` tuple
 
     The entries of ``laminaprop`` and ``rho`` are stored in a new
     :class:`.MatLamina` object, the Poisson's ratios ``nu21``, ``nu31`` and
     ``nu32`` are computed from ``nu12``, ``nu13``, ``nu23`` and the Young
-    moduli, and :meth:`.MatLamina.rebuild` is called. With 2 entries, ``g12 =
+    moduli, and :meth:`.MatLamina.rebuild` is called with its default
+    ``plane_stress=True``. With 2 entries, ``g12 =
     g13 = g23 = e/(2*(1+nu))``; with 2 or 6 entries, ``e3``, ``nu13`` and
     ``nu23`` are zero. Another number of entries fails an ``assert``
     statement.
@@ -79,6 +97,13 @@ def read_laminaprop(laminaprop, rho=0):
     matlam : MatLamina
         A :class:`.MatLamina` object.
 
+    Raises
+    ------
+    ValueError
+        If a Young modulus ``ei`` is zero while ``ej`` and ``nuij`` are not,
+        for ``ij`` = ``12``, ``13`` or ``23``, since the Poisson's ratio
+        ``nuji`` is then undefined, see the Notes.
+
     Notes
     -----
     The Poisson's ratios not given follow from the reciprocity relations of
@@ -91,15 +116,40 @@ def read_laminaprop(laminaprop, rho=0):
         \nu_{31} = \nu_{13} \frac{E_3}{E_1}, \quad
         \nu_{32} = \nu_{23} \frac{E_3}{E_2}
 
-    and for an isotropic material `G = E/(2(1 + \nu))`. With 2 or 6 entries,
-    ``e3 = 0`` makes the constitutive constants of :meth:`.MatLamina.rebuild`
-    the plane-stress reduced stiffnesses.
+    and for an isotropic material `G = E/(2(1 + \nu))`.
+
+    A Young modulus may be zero, e.g. ``e1 = e2 = 0`` and ``g12 = 0`` with
+    finite ``g13`` and ``g23`` for an antiplane core, "an idealized core in
+    which the modulus of elasticity in planes parallel with the faces is
+    zero but the shear modulus in planes perpendicular to the faces is
+    finite" (Allen [2]_, p. 14). With `E_i = 0`, the reciprocity leaves
+    `\nu_{ji}` undefined, but the stiffnesses do not depend on it: the
+    bound `|\nu_{ij}| < (E_i/E_j)^{1/2}` of a positive-definite material
+    (Jones [3]_, Eq. (2.51), p. 69) requires `\nu_{ij} = 0` when `E_j > 0`,
+    such that `\nu_{ji} E_i = \nu_{ij} E_j = 0`, and `\nu_{ji} = 0` is
+    stored. A non-zero `\nu_{ij}` with `E_i = 0` and `E_j \ne 0` raises
+    ``ValueError``; with `E_i = E_j = 0` any `\nu_{ij}` is accepted, and
+    the stiffnesses that involve it vanish.
+
+    The constitutive
+    constants and the invariants computed by :meth:`.MatLamina.rebuild`,
+    called with its default ``plane_stress=True``, are those of plane
+    stress for 2, 6 or 9 entries, i.e. ``e3``, ``nu13`` and ``nu23`` do not
+    change them; ``matlam.rebuild(plane_stress=False)`` gives the
+    three-dimensional ones. The stiffness constants ``c11`` to ``c66`` are
+    three-dimensional, with ``c13 = c23 = c33 = 0`` for 2 or 6 entries,
+    where ``e3 = 0``.
 
     References
     ----------
     .. [1] Reddy, J. N., Mechanics of Laminated Composite Plates and Shells:
        Theory and Analysis, Second Edition, CRC Press, 2003.
        https://doi.org/10.1201/b12409
+    .. [2] Allen, H. G., Analysis and Design of Structural Sandwich Panels,
+       Pergamon Press, Oxford, 1969, Chap. 2.
+       https://doi.org/10.1016/B978-0-08-012870-2.50006-7
+    .. [3] Jones, R. M., Mechanics of Composite Materials, Second Edition,
+       Taylor & Francis, Philadelphia, 1999.
 
     """
     matlam = MatLamina()
@@ -120,9 +170,9 @@ def read_laminaprop(laminaprop, rho=0):
     matlam.nu12 = laminaprop[2]
     matlam.nu13 = laminaprop[7]
     matlam.nu23 = laminaprop[8]
-    matlam.nu21 = matlam.nu12 * matlam.e2 / matlam.e1
-    matlam.nu31 = matlam.nu13 * matlam.e3 / matlam.e1
-    matlam.nu32 = matlam.nu23 * matlam.e3 / matlam.e2
+    matlam.nu21 = _reciprocal_poisson(matlam.nu12, matlam.e1, matlam.e2, '12')
+    matlam.nu31 = _reciprocal_poisson(matlam.nu13, matlam.e1, matlam.e3, '13')
+    matlam.nu32 = _reciprocal_poisson(matlam.nu23, matlam.e2, matlam.e3, '23')
     matlam.g12 = laminaprop[3]
     matlam.g13 = laminaprop[4]
     matlam.g23 = laminaprop[5]
@@ -201,7 +251,12 @@ def laminated_plate(stack, plyt=None, laminaprop=None, rho=0., plyts=None,
         If neither ``plyt`` nor ``plyts`` is supplied, or if neither
         ``laminaprop`` nor ``laminaprops`` is supplied. Also if ``stack``,
         ``plyts``, ``laminaprops`` and ``rhos`` do not have the same
-        length.
+        length. Also, see :func:`.read_laminaprop`, if a ``laminaprop`` has
+        a zero Young modulus and an inadmissible Poisson's ratio, and, see
+        :meth:`.ShellProp.calc_equivalent_properties` and
+        :meth:`.ShellProp.calc_transverse_shear_stiffness`, if the laminate
+        has no in-plane or bending stiffness, e.g. when all plies are
+        antiplane cores.
 
     """
     prop = ShellProp()

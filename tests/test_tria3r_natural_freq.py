@@ -11,6 +11,47 @@ from pyfe3d.solver import natural_frequency
 
 
 def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
+    r"""Fundamental frequency of a simply supported plate, ``a = 0.3``,
+    ``b = 0.5``, ``h = 0.01``, with the consistent, lumped and reduced mass
+    matrices
+
+    The reference is the exact solution of Leissa, A. W., Vibration of
+    Plates, NASA SP-160, 1969, Sec. 4.1, p. 44, Eq. (4.20),
+    ``omega = sqrt(D/rho)*((m*pi/a)**2 + (n*pi/b)**2)``, with ``m = n = 1``
+    and Leissa's ``rho`` the mass per unit area, here ``rho*h``.
+
+    The edges are soft simply supported, rotations free. With the default
+    transverse shear since 0.12.0, the discrete shear gap field of
+    ``shear_model = 1``, the errors against the reference, measured with
+    this test for the consistent (``mtype=0``), lumped (``1``) and reduced
+    (``2``) mass matrices (quadrilaterals split in two triangles, time of
+    one mass matrix on one thread), are:
+
+        refinement   mesh      mtype=0   mtype=1   mtype=2   time
+        1            8x10      +2.75 %   +0.62 %   +3.49 %   0.0 s
+        2            17x21     +0.10 %   -0.37 %   +0.26 %   0.1 s
+        3            26x32     -0.44 %   -0.64 %   -0.37 %   0.3 s
+        4            35x43     -0.67 %   -0.78 %   -0.63 %   0.6 s
+        6            53x65     -0.89 %   -0.94 %   -0.87 %   1.6 s
+        8            71x87     -0.99 %   -1.01 %   -0.98 %   3.3 s
+        12           107x131   -1.07 %                        5.1 s
+        16           143x175   -1.10 %                       14.9 s
+
+    The soft simple support of the Mindlin plate, `h/a = 1/30`, lies below
+    the Kirchhoff reference: Richardson extrapolation of the last three
+    meshes, at second order, gives about -1.15 %, against -0.28 % for the
+    hard simple support. That limit is a measurement, not a published
+    value. ``refinement=1`` is compared with the values pre-determined by
+    this test, with ``rtol=1e-4`` for the round-off of the eigensolver, and
+    with grade B of MacNeal and Harder (1985), p. 14, as the bound against
+    the reference; from ``refinement=2`` grade A is asserted against the
+    reference alone. Before 0.12.0, with the centroid-sampled shear and
+    ``alpha_shear_locking = 0.7``, the errors were -1.47 to +1.31 % with
+    8x10 elements and rose to +2.65 to +3.29 % with 17x21 before falling,
+    see :mod:`pyfe3d.tria3r`.
+    """
+    # NOTE pre-determined by this test with refinement=1 on 2026-10-29
+    predetermined = {0: 2386.04605865, 1: 2336.69402554, 2: 2403.19824795}
     data = Tria3RData()
     probe = Tria3RProbe()
     for mtype in mtypes:
@@ -145,15 +186,21 @@ def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
         u = np.zeros(N)
         u[bu] = eigvecsu[:, mode]
 
-        # theoretical reference
+        # NOTE Leissa (1969), Eq. (4.20), with rho*h the mass per unit area
         m = 1
         n = 1
-        D = 2*h**3*E/(3*(1 - nu**2))
-        wmn = (m**2/a**2 + n**2/b**2)*np.sqrt(D*np.pi**4/(2*rho*h))/2
+        D = E*h**3/(12*(1 - nu**2))
+        wmn = np.sqrt(D/(rho*h))*((m*np.pi/a)**2 + (n*np.pi/b)**2)
 
         print('Theoretical omega123', wmn)
         print('Numerical omega123', omegan[0:10])
-        assert isclose(wmn, omegan[0], rtol=0.05)
+        error = abs(omegan[0]/wmn - 1)
+        print('error', omegan[0]/wmn - 1)
+        if refinement == 1:
+            assert isclose(omegan[0], predetermined[mtype], rtol=1e-4)
+            assert error <= 0.10
+        else:
+            assert error <= 0.02
 
     if plot:
         import matplotlib.pyplot as plt
