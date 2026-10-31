@@ -147,6 +147,27 @@ round-off floor. With prescribed displacements, ``uk``, `|\boldsymbol{K}_{C0}|` 
 displacements, `|K_{fp}| \, |u_p|`: the floor is then lower, i.e.
 conservative.
 
+The floor assumes that ``calc_fint`` computes the internal force from the
+displacements `\boldsymbol{c}`, whose round-off is then of the order of
+`\varepsilon |\boldsymbol{K}_{C0}| |\boldsymbol{c}|`. It cannot cover a
+round-off that depends on the nodal coordinates `\boldsymbol{X}`, e.g. of
+current positions computed as `\boldsymbol{X} + \boldsymbol{u}`: a
+translation of the origin changes `|\boldsymbol{X}|` but none of the
+quantities the criterion receives, `\boldsymbol{K}_{C0}`, `\boldsymbol{c}`,
+`\boldsymbol{F}_{int}` and `\boldsymbol{F}_{ext}`. Measured on 2026-10-30
+on the cantilever of Sze et al. under an end shear force with 64
+co-rotational :class:`.BeamC` elements, positions computed as
+`\boldsymbol{X} + \boldsymbol{u}`: with the root at `X = 0`, 100 and 1000,
+the iterations of the first increment stagnated at `\zeta` of about
+`10^{-8}`, `10^{-7}` and `10^{-6}`, at 0.12 to 0.19 times `\varepsilon \|
+|\boldsymbol{K}_{C0}| |\boldsymbol{X}| \|_{\boldsymbol{d}}`, whereas
+`\boldsymbol{K}_{C0}`, the iterates and the floor were the same, see
+``test_cantilever_end_shear_translated`` in
+``tests/test_corotational_benchmarks.py``. Such a
+model should compute the positions relative to a nearby point, as
+:mod:`pyfe3d.corotational` does with the base centroid of each element,
+or else set ``absTOL``.
+
 Measured on the low sinusoidal arch of Fung and Kaplan [4]_, hinged at both
 ends under a sinusoidal load, `\lambda_1 = 2.2`, modelled with 40
 :class:`.BeamC` elements, traced with both arc-length methods and both

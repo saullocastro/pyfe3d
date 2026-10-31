@@ -85,6 +85,10 @@ equals the load. The same ``bu`` and ``uk`` serve the linear analysis,
 ``an.static(NLgeom=False)``, see :doc:`linear_analyses` and the worked
 example :doc:`tut-prescribed-displacement-cantilever`.
 
+The worked example :doc:`tut-prescribed-displacement-dome-riks` traces with
+Riks' method the reaction of a clamped spherical cap and of a hinged shallow
+shell pressed down by a deflection prescribed at their crown.
+
 Without ``bu``, the callables return the vectors and matrices of the free
 dofs only. The solvers do not remove null rows and columns: a null row or
 column of the linear stiffness matrix, a dof without stiffness, raises a
@@ -224,6 +228,183 @@ quadratic convergence of the Newton-Raphson method, as verified by
 ``tests/test_solver_follower_loads.py``.
 
 
+Choosing the kinematics
+-----------------------
+
+The callables of the table above give the von Kármán kinematics of the
+elements. For large rotations, :class:`.CorotationalModel` of
+:mod:`pyfe3d.corotational` assembles a model in which each element is
+added with one of four kinematics, and provides the four callables of
+:class:`.Analysis`, which is used unchanged:
+
+.. list-table::
+    :header-rows: 1
+
+    * - ``kinematics``
+      - Assumes
+      - Limits
+      - Elements
+    * - ``'linear'``
+      - small displacements, `\boldsymbol{K}_{C0} \boldsymbol{u}`
+      - small rotations
+      - all
+    * - ``'von_karman'``
+      - the von Kármán strains of each element, ``update_fint(...,
+        nonlinear=1)``, ``update_KCNL`` and ``update_KG``, in the fixed
+        element axes; small strains
+      - small to moderate rotations
+      - :class:`.Quad4`, :class:`.Quad4R`, :class:`.Tria3R`,
+        :class:`.Tria3DSG`, :class:`.BeamC`, :class:`.BeamLR`
+    * - ``'corotational'``
+      - the element-independent co-rotational (EICR) formulation of Felippa
+        and Haugen (2005): the rigid motion of each element is removed, and
+        its local linear stiffness matrix acts on the deformational
+        displacements; small strains
+      - large displacements and rotations, each nodal rotation vector
+        below one full revolution, `|\boldsymbol{\psi}_a| < 2 \pi`
+      - all, :class:`.Truss` and :class:`.Spring` included
+    * - ``'corotational_von_karman'``
+      - as ``'corotational'``, with the von Kármán strains of the element
+        in its co-rotational frame instead of its linear strains,
+        Crisfield (1997), Section 17.1.5
+      - as ``'corotational'``
+      - as ``'corotational'``; it differs only for :class:`.BeamC`
+
+The von Kármán terms of the shells and of :class:`.BeamLR` vanish in their
+co-rotational frames, so ``'corotational_von_karman'`` gives the results of
+``'corotational'`` for them, to round-off; :class:`.Truss` and
+:class:`.Spring`, which have no von Kármán strains, take it as
+``'corotational'``. For :class:`.BeamC` it adds the higher-order terms of
+the local element, with its element-averaged axial strain, see
+:class:`.BeamC`: on the cantilever under an end force of Sze, Liu and Lo
+(2004), Section 3.1, the tip deflections `-U` and `W` of 16 elements differ
+from the elastica by -0.02 % and +0.05 % with ``'corotational'``, and by
++0.002 % and +0.007 % with ``'corotational_von_karman'``, see
+:class:`.CorotationalBeam`. ``'von_karman'`` follows the elastica only up
+to moderate rotations: on the cantilever rolled up by an end moment, Sze,
+Liu and Lo (2004), Section 3.2, its tip leaves the exact one by 0.6 % of
+the length at a tenth of the moment that closes the circle, see
+``test_cantilever_end_moment_full_circle`` of
+``tests/test_corotational_benchmarks.py``.
+
+The rotational dofs of a :class:`.CorotationalModel` are total rotation
+vectors `\boldsymbol{\psi}_a`, whose nodal rotation matrices are
+`\exp(\mathrm{Spin}(\boldsymbol{\psi}_a))`, see :func:`.expso3`, added by
+the solvers like the translations, without a state kept between the
+calls. The map is singular at `|\boldsymbol{\psi}_a| = 2 \pi`; the
+benchmark above reaches it at the tip only because the out-of-plane
+rotations are restrained, which is exact for that plane problem. A node
+shared by a co-rotational element and an element of another kinematics
+is valid only while its rotations remain small, and a warning is issued.
+
+A model is built as with the elements alone: set the connectivity, call
+``update_rotation_matrix`` with the coordinates ``x`` of the model, and
+pass each element to :meth:`.CorotationalModel.add`; the ``init_k_*``
+attributes are not needed. The cantilever of Sze, Liu and Lo (2004),
+Section 3.2, with 16 :class:`.BeamC` elements, rolled up into half a
+circle by an end moment that follows the tip::
+
+    import numpy as np
+    from pyfe3d import BeamC, BeamCProbe, DOF
+    from pyfe3d.beamprop import BeamProp
+    from pyfe3d.solver import Analysis
+    from pyfe3d.corotational import CorotationalModel
+
+    L, b, h, E = 12., 1., 0.1, 1.2e6
+    prop = BeamProp()
+    prop.A, prop.E, prop.G = b*h, E, E/2
+    prop.Iyy, prop.Izz, prop.J = b*h**3/12, h*b**3/12, b*h**3/3
+    n = 16
+    xs = np.linspace(0, L, n + 1)
+    x = np.vstack((xs, 0*xs, 0*xs)).T.ravel()
+    model = CorotationalModel(x)
+    probe = BeamCProbe()
+    for k in range(n):
+        elem = BeamC(probe)
+        elem.n1, elem.n2 = k, k + 1
+        elem.c1, elem.c2 = DOF*k, DOF*(k + 1)
+        elem.update_rotation_matrix(0., 1., 0., x)
+        model.add(elem, prop, kinematics='corotational')
+
+    M = np.pi*E*prop.Iyy/L   # half of the moment that closes the circle
+    model.add_moment(n, [0., -M, 0.], kind='follower')
+    bu = np.ones(model.N, dtype=bool)
+    bu[:DOF] = False         # clamped at X = 0
+
+    an = Analysis(model.calc_fext, model.calc_fint, model.calc_kC,
+                  model.calc_kG, bu=bu)
+    an.initialInc = an.maxInc = 0.1
+    increments, cs = an.static(NLgeom=True, silent=True)
+    tip = cs[-1][DOF*n:DOF*(n + 1)]   # -L, 0, 7.6517, 0, -pi, 0
+
+The tip reaches the end of the polygon of 16 equal chords inscribed in the
+circle of radius `L/\pi`, `W = 7.6517`, to round-off, against `2 L/\pi =
+7.6394` for the exact circle, and turns by `-\pi` about `Y`.
+
+Applied moments. The forces and moments in the attribute ``fext`` of the
+model are constant; a moment in ``fext`` is conjugate to the rotation
+vector, and equals a moment about fixed axes only while the rotation
+vector keeps a fixed direction, e.g. in plane problems.
+:meth:`.CorotationalModel.add_moment` adds a concentrated moment with
+``kind='rotation_vector'`` (into ``fext``), ``'fixed_axes'``, a moment
+about the fixed global axes, which is non-conservative and gives an
+unsymmetric tangent stiffness matrix, or ``'follower'``, a moment that
+rotates with the nodal triad. The last two depend on the configuration
+and enter ``calc_fint``, ``calc_kG`` and ``calc_fext(c=...)`` as described
+in the section above; pass ``model.calc_fext`` to :class:`.Analysis` after
+adding them, since the callable it returns depends on them.
+
+Shells and warping. :class:`.CorotationalShell` links a warped
+quadrilateral to its nodes with rigid offsets, ``warping='offsets'`` by
+default, and warns above the warp ratio of 0.07, up to which the offsets
+were verified; with ``warping=None`` it warns above 0.01, see
+:doc:`element_choice`. The frame of the triangles is along their side 1-2,
+so that their solution depends on the numbering of the nodes, see the
+Notes of :class:`.CorotationalShell`. The keyword arguments of
+:meth:`.CorotationalModel.add` reach the wrappers, e.g. ``warping`` and the
+``frame`` of :class:`.CorotationalTruss` and :class:`.CorotationalSpring`,
+and the ``update_KC0`` of the element, e.g. the ``hgfactor_*`` of
+:class:`.Quad4R`.
+
+Convergence tolerance. The default criterion, ``relTOL = 1e-9`` with the
+round-off floor of the section above, applies without ``absTOL``. The
+co-rotational elements compute the current nodal positions relative to the
+base centroid of each element, see the Notes of
+:class:`.CorotationalShell`, so that the round-off of the internal force
+does not depend on the origin of the coordinates, which changes neither
+`\boldsymbol{K}_{C0}` nor the force vectors of the criterion. Computed as
+`\boldsymbol{X} + \boldsymbol{u}`, with `\boldsymbol{X}` the nodal
+coordinates, the positions had a round-off of the order of `\varepsilon
+|\boldsymbol{X}|`, above the round-off floor `3 \varepsilon \|
+|\boldsymbol{K}_{C0}| |\boldsymbol{u}| \|_{\boldsymbol{d}}` on fine meshes:
+up to 2026-10-30, the iterations of the cantilever with 64 :class:`.BeamC`
+elements stagnated at `\zeta \approx 10^{-8}` and needed ``an.absTOL``, and
+with its root at 1000 from the origin at `\zeta \approx 10^{-6}`, see
+``test_cantilever_end_shear_translated`` in
+``tests/test_corotational_benchmarks.py``.
+
+Post-processing. :meth:`.CorotationalModel.nodal_rotations` gives the
+rotation matrices of the nodes and
+:meth:`.CorotationalModel.deformational_displacements` the deformational
+displacements of each co-rotational element in its frame;
+:meth:`.CorotationalShell.update_probe` writes them into the probe of the
+element, whose own routines then recover the stresses. ``model.KC0`` is
+the linear stiffness matrix of the elements; for a warped quadrilateral
+added with ``'corotational'`` or ``'corotational_von_karman'`` it is that
+of the flat element, since the wrapper switches off the offsets of the
+element, see the Notes of :class:`.CorotationalShell`.
+
+Benchmarks. ``tests/test_corotational_benchmarks.py`` reproduces cases 3.1
+(cantilever under an end force), 3.2 (cantilever rolled up into a full
+circle by an end moment), 3.3 (slit annular plate), 3.4 (hemispherical
+shell) and 3.8 (hinged cylindrical roof, with the arc-length method) of
+Sze, Liu and Lo (2004) with :class:`.BeamC`, :class:`.Quad4R` and
+:class:`.Tria3R`, and ``tests/test_corotational_core.py`` checks the
+finite-rotation utilities, the wrappers and their tangent stiffness
+matrices by finite differences. The worked example
+:doc:`tut-corotational-large-rotations` shows such analyses step by step.
+
+
 Log messages
 ------------
 
@@ -243,9 +424,20 @@ References
   https://doi.org/10.1016/0045-7949(81)90108-5
 - Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
   Structures, Volume 1: Essentials, John Wiley & Sons, Chichester, 1991.
+- Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
+  Structures, Volume 2: Advanced Topics, John Wiley & Sons, Chichester,
+  1997.
+- Felippa, C. A. and Haugen, B., A unified formulation of small-strain
+  corotational finite elements: I. Theory, Computer Methods in Applied
+  Mechanics and Engineering, 194(21-24), 2285-2335, 2005.
+  https://doi.org/10.1016/j.cma.2004.07.035
 - Hibbitt, H. D., Some follower forces and load stiffness, International
   Journal for Numerical Methods in Engineering, 14(6), 937-941, 1979.
   https://doi.org/10.1002/nme.1620140613
 - Schweizerhof, K. and Ramm, E., Displacement dependent pressure loads in
   nonlinear finite element analyses, Computers & Structures, 18(6),
   1099-1114, 1984. https://doi.org/10.1016/0045-7949(84)90154-8
+- Sze, K. Y., Liu, X. H. and Lo, S. H., Popular benchmark problems for
+  geometric nonlinear analysis of shells, Finite Elements in Analysis and
+  Design, 40(11), 1551-1569, 2004.
+  https://doi.org/10.1016/j.finel.2003.11.001

@@ -29,8 +29,9 @@ For development, the extensions are compiled next to their sources with::
     python setup.py build_ext --inplace
 
 which also writes ``pyfe3d/version.py`` with the version of
-``pyproject.toml``. Each element and property is one
-extension module, ``pyfe3d/*.pyx``, compiled as C++ with the optimization
+``pyproject.toml``. Each element and property, and the co-rotational
+layer :mod:`pyfe3d.corotational`, is one extension module,
+``pyfe3d/*.pyx``, compiled as C++ with the optimization
 flags of ``setup.py``, ``/O2`` with MSVC and ``-O3 -fno-math-errno`` with
 GCC and Clang, without flags that change the floating-point results.
 :mod:`pyfe3d.solver` and :mod:`pyfe3d.shellprop_utils` are pure Python.

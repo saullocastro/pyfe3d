@@ -11,6 +11,7 @@ spring*.cpp
 truss*.cpp
 shell*.cpp
 vabs*.cpp
+corotational.cpp
 build
 dist
 .coverage

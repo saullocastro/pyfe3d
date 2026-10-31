@@ -13,6 +13,8 @@ Tutorials
     tut-bench-macneal-harder
     tut-bench-shell-obstacle-course
     tut-nonlinear-benchmarks
+    tut-corotational-large-rotations
     tut-prescribed-displacement-cantilever
+    tut-prescribed-displacement-dome-riks
     tut-inertia-relief
     tut-inertia-relief-aircraft-ha144a
