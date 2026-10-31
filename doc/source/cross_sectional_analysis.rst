@@ -172,17 +172,18 @@ supply.
 
 With couplings, :class:`.BeamLR`, whose linear interpolation does not
 depend on ``C``, converges as the square of the element length as for an
-uncoupled section. :class:`.BeamC` takes the parameters of its shape
-functions from the diagonal of ``C``, and is exact for nodal loads only
-when the only coupling is the extension-twist entry ``C[0, 3]``; with the
-other couplings it also converges as the square of the element length,
-but more slowly, see the notes of :class:`.BeamC`. For the box beam CUS
-of Yu et al. (2012), whose bending-shear couplings are strong, the tip
-displacements of a cantilever of length 10 in. under transverse tip loads
-or moments have errors of 4.2e-3 with 32 elements of :class:`.BeamC` and
-2.3e-4 with 32 elements of :class:`.BeamLR`, which is exact under the tip
-moments; the twist due to an axial load is exact with both elements and
-any mesh, see ``tests/test_beam_sectional_stiffness.py``.
+uncoupled section. :class:`.BeamC` derives its shape functions from the
+equilibrium equations of the beam with the full ``C``, see "Shape
+functions with couplings" in the notes of :class:`.BeamC`, and is exact
+for nodal loads with any ``C``, which must then be positive definite.
+For the box beam CUS of Yu et al. (2012), whose bending-shear couplings
+are strong, the tip displacements of a cantilever of length 10 in. under
+tip loads or moments are exact to 5.4e-16 with one element of
+:class:`.BeamC`, and have errors of 2.3e-4 with 32 elements of
+:class:`.BeamLR`, which is exact under the tip moments; the twist due to
+an axial load is exact with both elements and any mesh, and the natural
+frequencies of BeamC converge to those of BeamLR, see
+``tests/test_beam_sectional_stiffness.py``.
 
 
 Generalized Vlasov model

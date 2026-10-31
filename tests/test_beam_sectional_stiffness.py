@@ -16,10 +16,10 @@ built from the 11 stiffness attributes, see the notes of
    extension-twist coupling ``C[0, 3]`` alone, the strains of an axial load
    or of a torque are constant, the tip twist under an axial load ``P`` is
    ``S[3, 0]*P*L``, ``S = inv(C)``, and both elements reproduce it with
-   any mesh; one BeamC reproduces all six load cases. With the other
-   couplings, BeamC, whose shape functions take `\alpha_y` and `\alpha_z`
-   from the diagonal of ``C``, converges as the square of the element
-   length, and so does BeamLR.
+   any mesh. BeamC, whose shape functions are derived from the same
+   equations for any ``C``, see the notes of :class:`pyfe3d.beamc.BeamC`,
+   reproduces the six load cases with one element for any coupling, and
+   BeamLR converges as the square of the element length.
 3. Thin-walled box beam CUS of Yu, W., Hodges, D. H., and Ho, J. C.,
    International Journal of Engineering Science, 59, pp. 40-64, 2012,
    https://doi.org/10.1016/j.ijengsci.2012.03.006, Tables 1-2 (VABS 3.2
@@ -28,6 +28,13 @@ built from the 11 stiffness attributes, see the notes of
    bending-shear couplings in a cantilever.
 4. ``KC0 + KCNL + KG`` is the Jacobian of the nonlinear internal forces for
    a section with all 21 entries of ``C`` non-zero.
+5. Without couplings other than ``C[0, 3]``, BeamC keeps the closed-form
+   expressions of the shape functions of Luo (2008); the general
+   evaluation, triggered by a coupling of 1e-30 relative to the diagonal,
+   gives the same arrays to round-off.
+6. Mass matrices with couplings: the kinetic energy of the rigid-body
+   motions is exact, and BeamC and BeamLR converge to the same natural
+   frequencies of the CUS box cantilever.
 """
 import copy
 import pickle
@@ -328,36 +335,42 @@ def test_extension_twist_any_mesh(name, num_elements):
             assert tip_error(name, num_elements, C, L, load) < 1e-12, load
 
 
-def test_BeamC_exact_only_with_extension_twist():
-    """One BeamC is exact for the six tip loads only when the only coupling
-    is ``C[0, 3]``; any other single coupling of 0.3 times the square root
-    of the product of the diagonal entries gives an error of 0.026 % to 9 %
-    of the largest tip displacement"""
+def test_BeamC_exact_with_any_coupling():
+    """One BeamC gives the closed form :func:`tip_closed_form` of the six
+    tip loads for each single coupling of 0.3 times the square root of the
+    product of the diagonal entries, for a ``C`` with all 21 entries
+    non-zero and for the CUS box; measured on 2026-10-31, the largest
+    error is 2.7e-15 of the largest tip displacement for the single
+    couplings, 2.0e-15 for the 21 entries and 5.4e-16 for the CUS box,
+    against 7.5e-3 to 8.9e-2 (single couplings other than ``C[0, 3]``) and
+    0.42 (CUS box) with the shape functions of Luo (2008), which BeamC used
+    for any ``C`` before"""
     C0 = rectangle_C()
     for i in range(6):
         for j in range(i + 1, 6):
             C = coupled(C0, i, j)
             err = max(tip_error('BeamC', 1, C, 0.5, load) for load in LOADS)
-            if (i, j) == (0, 3):
-                assert err < 1e-12
-            else:
-                assert 2e-4 < err < 0.1, (i, j, err)
+            assert err < 1e-12, (i, j, err)
+    _, _, prop, x = make_coupled_element('BeamC')
+    assert np.all(prop.C != 0)
+    for C, L in [(prop.C, 0.4), (CUS_C(), 10.)]:
+        err = max(tip_error('BeamC', 1, C, L, load) for load in LOADS)
+        assert err < 1e-12, err
 
 
 @pytest.mark.parametrize('i, j, load', [(1, 5, 'Pz'), (1, 5, 'My'),
                                         (1, 3, 'T'), (0, 4, 'Py'),
                                         (3, 5, 'Pz'), (4, 5, 'Py')])
 def test_convergence_with_couplings(i, j, load):
-    """BeamC converges as the square of the element length once the
-    elements are short, BeamLR from the first refinements; measured errors
-    of the bending-shear coupling ``C[1, 5]`` with the tip moment ``My``:
-    BeamC 8.9e-2, 2.4e-2, 2.0e-3 and 1.3e-4 with 1, 16, 64 and 256
-    elements, BeamLR exact"""
+    """BeamC is exact with any mesh, BeamLR converges as the square of the
+    element length; measured errors of the bending-shear coupling ``C[1,
+    5]`` with the tip load ``Pz``: BeamLR 8.3e-2, 5.2e-3, 3.3e-4 and 2.0e-5
+    with 1, 4, 16 and 64 elements; BeamC at most 9.8e-13 with 16
+    elements, the round-off of the solution, as BeamLR under ``My``"""
     C = coupled(rectangle_C(), i, j)
     L = 0.5
-    errC = [tip_error('BeamC', n, C, L, load) for n in [64, 256]]
-    assert 14 < errC[0]/errC[1] < 18, errC
-    assert errC[0] < 3e-3
+    for n in [1, 4, 16]:
+        assert tip_error('BeamC', n, C, L, load) < 1e-11, n
     errLR = [tip_error('BeamLR', n, C, L, load) for n in [4, 16]]
     assert errLR[1] < 1e-12 or 14 < errLR[0]/errLR[1] < 18, errLR
     assert errLR[1] < 4e-4
@@ -368,9 +381,9 @@ def test_CUS_box_cantilever(name):
     """CUS box of Yu et al. (2012): ``beamprop_from_vabs`` keeps the
     extension-twist coupling, whose tip twist under an axial load is
     ``S[3, 0]*P*L`` with any mesh, and the bending-shear couplings, with
-    which the tip displacements of transverse loads converge to the closed
-    form: measured errors 2.3e-4 (BeamLR) and 4.2e-3 (BeamC) with 32
-    elements"""
+    which the tip displacements of transverse loads are exact with BeamC
+    and converge to the closed form with BeamLR: measured error 2.3e-4
+    with 32 elements of BeamLR"""
     Cs = CUS_C()
     # NOTE extension-twist and bending-shear couplings, convention of pyfe3d
     assert Cs[0, 3] > 0 and Cs[1, 5] < 0 and Cs[2, 4] > 0
@@ -382,9 +395,9 @@ def test_CUS_box_cantilever(name):
     for n in [1, 4]:
         tip = tip_fe(name, n, prop, L, [P, 0, 0, 0, 0, 0])
         assert np.isclose(tip[3], S[3, 0]*P*L, rtol=1e-12)
-    tol = {'BeamC': 5e-3, 'BeamLR': 3e-4}[name]
+    n, tol = {'BeamC': (1, 1e-12), 'BeamLR': (32, 3e-4)}[name]
     for load in ['Py', 'Pz', 'My', 'Mz']:
-        assert tip_error(name, 32, Cs, L, load) < tol, load
+        assert tip_error(name, n, Cs, L, load) < tol, load
     # NOTE without C, i.e. with the 11 attributes, the couplings are lost
     del prop.C
     tip = tip_fe(name, 4, prop, L, [P, 0, 0, 0, 0, 0])
@@ -467,6 +480,165 @@ def test_tangent_coupled_section(name):
     KG0 = assemble(data.KG_SPARSE_SIZE,
                    lambda r, c, v: elem.update_KG(r, c, v, prop))
     assert np.linalg.norm(KG0 - KG) > 1e-4*np.linalg.norm(KG)
+
+
+@pytest.mark.parametrize('base', ['diagonal', 'extension-twist',
+                                  'attributes'])
+def test_general_shape_functions_uncoupled(base):
+    """Without couplings other than ``C[0, 3]``, BeamC uses the closed-form
+    shape functions of Luo (2008); a coupling ``C[1, 5]`` of 1e-30 times
+    the square root of ``C[1, 1]*C[5, 5]`` switches to their general
+    evaluation from ``inv(C)``, see the notes of :class:`pyfe3d.beamc.BeamC`,
+    which gives the same matrices and internal forces to round-off;
+    measured on 2026-10-31 up to 1.3e-14 of the largest entry, for the
+    nonlinear stiffness matrix KCNL"""
+    p = general_prop()
+    if base == 'attributes':
+        # NOTE the 11 attributes without the couplings of Ay, Az and Iyz
+        p.Ay = p.Az = p.Iyz = 0.
+        C0 = p.C
+    else:
+        C0 = rectangle_C()
+        if base == 'extension-twist':
+            C0 = coupled(C0, 0, 3)
+    p.C = C0
+    closed = element_arrays('BeamC', p)
+    Ct = C0.copy()
+    Ct[1, 5] = Ct[5, 1] = 1e-30*np.sqrt(C0[1, 1]*C0[5, 5])
+    p.C = Ct
+    general = element_arrays('BeamC', p)
+    for key in closed:
+        err = np.abs(general[key] - closed[key]).max()/np.abs(closed[key]).max()
+        assert err < 1e-13, (key, err)
+
+
+def test_coupled_C_not_positive_definite():
+    """With couplings other than ``C[0, 3]`` the shape functions need
+    ``inv(C)``: a ``C`` that is not positive definite raises"""
+    elem, data, prop, x = make_coupled_element('BeamC')
+    C = prop.C
+    C[3, 3] = 0.
+    prop.C = C
+    size = data.KC0_SPARSE_SIZE
+    r = np.zeros(size, dtype=INT)
+    c = np.zeros(size, dtype=INT)
+    v = np.zeros(size, dtype=DOUBLE)
+    for call in [lambda: elem.update_KC0(r, c, v, prop),
+                 lambda: elem.update_KG(r, c, v, prop),
+                 lambda: elem.update_KCNL(r, c, v, prop),
+                 lambda: elem.update_M(r, c, v, prop, 0),
+                 lambda: elem.update_fint(np.zeros(2*DOF), prop, 1)]:
+        with pytest.raises(ValueError, match='positive definite'):
+            call()
+
+
+def coupled_mass(prop):
+    """Mass integrals with all couplings non-zero"""
+    prop.intrho = 8.6
+    prop.intrhoy = 0.024
+    prop.intrhoz = -0.016
+    prop.intrhoy2 = 0.012
+    prop.intrhoz2 = 0.0072
+    prop.intrhoyz = 0.0011
+
+
+@pytest.mark.parametrize('name', ['BeamC', 'BeamLR'])
+def test_coupled_mass_rigid_body(name):
+    r"""The consistent mass matrix gives the exact kinetic energy of the six
+    rigid-body motions about node 1 for the section with 21 non-zero
+    entries of ``C``: ``Phi.T @ M @ Phi`` equals the integral along the
+    element of ``D.T @ Mrho @ D``, computed with Simpson's rule, exact for
+    the quadratic integrand, where ``D`` gives the rigid-body displacements
+    `\{u, v, w, r_x, r_y, r_z\}` at `x` and ``Mrho`` holds the mass
+    integrals of the kinetic energy in the notes of
+    :meth:`pyfe3d.beamc.BeamC.update_M`"""
+    elem, data, prop, x = make_coupled_element(name)
+    coupled_mass(prop)
+    size = data.M_SPARSE_SIZE
+    r = np.zeros(size, dtype=INT)
+    c = np.zeros(size, dtype=INT)
+    v = np.zeros(size, dtype=DOUBLE)
+    elem.update_M(r, c, v, prop, 0)
+    M = coo_matrix((v, (r, c)), shape=(2*DOF, 2*DOF)).toarray()
+    Mrho = np.zeros((6, 6))
+    Mrho[0, 0] = Mrho[1, 1] = Mrho[2, 2] = prop.intrho
+    Mrho[3, 3] = prop.intrhoy2 + prop.intrhoz2
+    Mrho[4, 4] = prop.intrhoz2
+    Mrho[5, 5] = prop.intrhoy2
+    Mrho[4, 5] = Mrho[5, 4] = -prop.intrhoyz
+    Mrho[0, 5] = Mrho[5, 0] = -prop.intrhoy
+    Mrho[0, 4] = Mrho[4, 0] = prop.intrhoz
+    Mrho[1, 3] = Mrho[3, 1] = -prop.intrhoz
+    Mrho[2, 3] = Mrho[3, 2] = prop.intrhoy
+
+    def D(xi):
+        """element displacements of the translations and rotations about
+        node 1, in element coordinates, at the distance ``xi`` from node 1"""
+        out = np.eye(6)
+        out[1, 5] = xi
+        out[2, 4] = -xi
+        return out
+
+    L = elem.length
+    exact = L/6*(D(0).T @ Mrho @ D(0) + 4*D(L/2).T @ Mrho @ D(L/2)
+                 + D(L).T @ Mrho @ D(L))
+    R = np.array([[elem.r11, elem.r12, elem.r13],
+                  [elem.r21, elem.r22, elem.r23],
+                  [elem.r31, elem.r32, elem.r33]])
+    T = np.kron(np.eye(4), R)
+    Phi = T @ np.vstack([D(0), D(L)])
+    err = np.abs(Phi.T @ M @ Phi - exact).max()/np.abs(exact).max()
+    assert err < 1e-12, err
+
+
+def test_coupled_frequencies_CUS():
+    """Natural frequencies of the CUS box cantilever, 10 in. long, with the
+    mass integrals of :func:`coupled_mass` scaled by 1e-5: BeamC converges
+    as the square of the element length to the frequencies of BeamLR,
+    extrapolated with Richardson's rule from 256 and 1024 elements;
+    measured on 2026-10-31, the relative errors of the first eight
+    frequencies are 3.2e-5 to 1.7e-2 with 16 BeamC elements and 2.0e-6 to
+    1.1e-3 with 64, the error of 1024 BeamLR elements being at most 1.1e-5.
+    Without the couplings, i.e. with the diagonal of ``C`` and of the mass
+    integrals, BeamC, with the shape functions of Luo (2008), converges at
+    the same rate"""
+    from scipy.sparse.linalg import eigsh
+    prop = beamprop_from_vabs(CUS_C(), E=20.59e6)
+    coupled_mass(prop)
+    for attr in ['intrho', 'intrhoy', 'intrhoz', 'intrhoy2', 'intrhoz2',
+                 'intrhoyz']:
+        setattr(prop, attr, 1e-5*getattr(prop, attr))
+    L = 10.
+
+    def frequencies(name, n):
+        cls, datacls, probecls = BEAMS[name]
+        x = np.zeros(3*(n + 1))
+        x[0::3] = np.linspace(0, L, n + 1)
+        N = DOF*(n + 1)
+        data = datacls()
+        probe = probecls()
+        size = n*data.KC0_SPARSE_SIZE
+        arrays = {key: (np.zeros(size, dtype=INT), np.zeros(size, dtype=INT),
+                        np.zeros(size, dtype=DOUBLE)) for key in 'KM'}
+        for i in range(n):
+            elem = cls(probe)
+            elem.c1, elem.c2 = DOF*i, DOF*(i + 1)
+            elem.init_k_KC0 = elem.init_k_M = i*data.KC0_SPARSE_SIZE
+            elem.update_rotation_matrix(0., 1., 0., x)
+            elem.update_probe_xe(x)
+            elem.update_KC0(*arrays['K'], prop)
+            elem.update_M(*arrays['M'], prop, 0)
+        K, M = [coo_matrix((v, (r, c)), shape=(N, N)).tocsc()[DOF:, DOF:]
+                for r, c, v in [arrays['K'], arrays['M']]]
+        w2 = eigsh(K, k=8, M=M, sigma=0., which='LM',
+                   return_eigenvectors=False)
+        return np.sqrt(np.sort(w2))
+
+    ref = (16*frequencies('BeamLR', 1024) - frequencies('BeamLR', 256))/15
+    err16 = np.abs(frequencies('BeamC', 16)/ref - 1)
+    err64 = np.abs(frequencies('BeamC', 64)/ref - 1)
+    assert np.all(err64 < 1.5e-3), err64
+    assert np.all((14 < err16/err64) & (err16/err64 < 18)), err16/err64
 
 
 if __name__ == '__main__':

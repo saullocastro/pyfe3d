@@ -536,36 +536,57 @@
   where its one-point integration evaluates the strain energy. The new
   rows `BLgammay`, `BLgammaz` and `BLkx` of `BeamLRProbe` hold the shear
   strains and the twist. The sparse sizes are unchanged.
-- `BeamC` takes `alphay = -12*C[4, 4]/(C[1, 1]*L**2)` and `alphaz =
-  -12*C[5, 5]/(C[2, 2]*L**2)` from the diagonal of `C`. It is exact for
-  nodal loads only when the only coupling is the extension-twist entry
-  `C[0, 3]`; with any other coupling, including those of `Ay`, `Az` and
-  `Iyz` of the former properties, it converges as the square of the
-  element length. The docstring claimed that it was exact for any
-  prismatic beam loaded at the nodes. For a cantilever of rectangular
-  section with a bending-shear coupling `C[1, 5] = 0.3 sqrt(C[1, 1]
-  C[5, 5])`, the error of the tip displacements is 8.9e-2, 2.4e-2, 2.0e-3
-  and 1.3e-4 with 1, 16, 64 and 256 elements, against 8.3e-2, 3.3e-4 and
-  1.3e-6 with 1, 16 and 256 elements of `BeamLR`, see the notes of
-  `BeamC`.
+- `BeamC`: with couplings in `C` other than the extension-twist entry
+  `C[0, 3]`, including those of `Ay`, `Az` and `Iyz` of the former
+  properties, the shape functions are derived from the equilibrium
+  equations of the beam with the full `C` (issue #52): the sectional
+  forces of an element loaded at its nodes are `(I + x Z) q`, the strains
+  `inv(C)` times them, and their integration gives a 12-parameter field
+  whose nodal values define the shape functions, with `KC0` the inverse of
+  the flexibility of the element clamped at one node. They are evaluated
+  numerically for each element and call, about 4 to 7 microseconds per
+  call, and `C` must then be positive definite (`ValueError` otherwise);
+  `KC0`, the internal forces, `KG`, `KCNL` and the consistent mass matrix
+  use them, the lumped mass matrix is unchanged. With `C[0, 3]` as the only
+  coupling, they are the functions of Luo (2008), whose closed-form
+  expressions are kept, unchanged bit by bit; the general evaluation
+  reproduces them to 1.3e-14. One element is now exact under nodal loads
+  for any `C`: for a cantilever of rectangular section with a
+  bending-shear coupling `C[1, 5] = 0.3 sqrt(C[1, 1] C[5, 5])`, the error
+  of the tip displacements with one element is 4.3e-16, against 8.9e-2
+  with `alphay`, `alphaz` taken from the diagonal of `C`, and 0.42 before
+  for the CUS box of Yu et al. (2012). New script
+  `theory/deriving_equations/beamc/derive_beamc_coupled_shape_functions.py`,
+  which asserts the field symbolically for a general `inv(C)`, and that it
+  reduces to the functions of Luo (2008) without couplings.
 - `beamprop_from_vabs(Cs, E, sec=None)` sets `C` to the full matrix and no
   longer raises `ValueError` for couplings; its argument `rtol` is
   removed. The 11 attributes are still filled from the entries of `Cs`.
 - Properties that do not set `C` give the former matrices to round-off,
   2.0e-16 of the largest entry of each array of
   `tests/data/beam_single_G_reference.npz`; the mass matrices and the
-  arrays of `Truss` are unchanged bit by bit.
+  arrays of `Truss` are unchanged bit by bit. The exception are the
+  arrays of `BeamC` with non-zero `Ay`, `Az` or `Iyz`, which now use the
+  shape functions of the coupled section: those of the reference file,
+  except the lumped mass matrix, changed by up to 1.0e-4 (`KC0`) and
+  4.3e-3 (consistent mass) of their largest entries and were rewritten;
+  they agree with an independent NumPy prototype to 2.2e-14.
 
 ### Tests
 
 - `tests/test_beam_sectional_stiffness.py`: `BeamProp.C` against the 11
   attributes, bit for bit; cantilevers of `BeamC` and `BeamLR` with a
   coupled `C` against a closed form, the strains `inv(C) F(x)`
-  integrated, exact with any mesh for the extension-twist coupling, with
-  the convergence rates of the other couplings, and the box beam CUS of
-  Yu et al. (2012), Table 2, through `beamprop_from_vabs`; `KC0 + KCNL +
-  KG` against a central difference of the internal forces with all 21
-  entries of `C` non-zero. `test_beam_shear_moduli.py` compares the
+  integrated, exact with any mesh for the extension-twist coupling, one
+  `BeamC` exact for every single coupling, for all 21 entries non-zero
+  and for the box beam CUS of Yu et al. (2012), Table 2, through
+  `beamprop_from_vabs`, and the convergence rate of `BeamLR`; `KC0 + KCNL
+  + KG` against a central difference of the internal forces with all 21
+  entries of `C` non-zero; the general shape functions of `BeamC` against
+  the closed-form ones without couplings, to round-off; the exact
+  rigid-body kinetic energy of the consistent mass matrices with a coupled
+  section, and the frequencies of `BeamC` converging to those of `BeamLR`
+  for the CUS box cantilever. `test_beam_shear_moduli.py` compares the
   arrays of `BeamC` and `BeamLR` with its reference to round-off instead
   of bit for bit, and `test_vabs_elements.py` and `test_vabs_isotropic.py`
   follow the new `beamprop_from_vabs`.

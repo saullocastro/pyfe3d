@@ -35,7 +35,14 @@ Until they are set they follow ``G``: ``G12 = G13 = G`` and ``GJ = G*J``.
    to 2.0e-16 of their largest entries (measured on Windows), i.e. to
    round-off; on Windows, the mass matrices and the arrays of Truss, which
    reads only ``C[0, 0]`` and ``C[3, 3]``, are still reproduced bit by
-   bit.
+   bit. The arrays of BeamC, except the lumped mass matrix ``BeamC_M1v``,
+   were rewritten again with pyfe3d 0.12.0, whose BeamC derives its shape
+   functions from the coupled sectional equations when ``C`` has couplings
+   other than ``C[0, 3]``, here those of ``Ay``, ``Az`` and ``Iyz``, see
+   the notes of :class:`pyfe3d.beamc.BeamC`. They changed by up to 1.0e-4
+   (``BeamC_KC0v``) and 4.3e-3 (``BeamC_M0v``) of their largest entries,
+   and agree with an independent NumPy prototype of that formulation to
+   2.2e-14 of their largest entries.
 2. One element of BeamC gives the exact tip deflection of a cantilever with
    shear deformation, ``P*L**3/(3*E*I) + P*L/(G*A)``, Eq. (1.2) of Bathe,
    K. J., Finite Element Procedures, 2nd ed., 2014, Section 1.2, p. 5, in
@@ -152,8 +159,9 @@ def reference_arrays(prop):
     0.10.x as ``np.savez(REFERENCE, **reference_arrays(general_prop()))``;
     its arrays ``BeamLR_KGv``, ``BeamLR_KCNLv``, ``BeamLR_finte1`` and
     ``BeamLR_fint1``, and ``BeamC_KGv``, ``BeamC_KCNLv``, ``BeamC_finte1``
-    and ``BeamC_fint1``, were replaced by those of pyfe3d 0.12.0, see the
-    docstring of the module.
+    and ``BeamC_fint1``, were replaced by those of pyfe3d 0.12.0, and then
+    all arrays of BeamC except ``BeamC_M1v``, see the docstring of the
+    module.
     """
     ncoords = np.array([0.1, -0.2, 0.05, 0.9, 0.35, -0.4])
     u = np.array([1.2e-3, -0.7e-3, 2.1e-3, 0.03, -0.02, 0.025,

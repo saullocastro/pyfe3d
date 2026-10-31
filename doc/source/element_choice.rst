@@ -207,9 +207,11 @@ Beams, truss and spring
         element gives the exact tip deflection of a cantilever with shear
         deformation, and the nodal displacements of a frame under nodal
         loads, see :doc:`ex_beam_frame`. With couplings in the sectional
-        stiffness matrix, other than extension-twist, e.g. an axis off the
-        centroid or the bending-shear couplings of a composite section, it
-        converges as the square of the element length, see the Notes of
+        stiffness matrix other than extension-twist, e.g. an axis off the
+        centroid or the bending-shear couplings of a composite section, its
+        shape functions are derived from the same equations with the full
+        matrix, evaluated numerically for each element, and one element
+        remains exact under nodal loads, see the Notes of
         :class:`.BeamC`. Since version 0.12.0 its von Kármán axial
         strain takes the element mean of `(v_{,x}^2 + w_{,x}^2)/2`, after
         Crisfield (1991), Section 7.1.3, which removes its membrane
@@ -232,7 +234,8 @@ Beams, truss and spring
         averaged axial strain, see :doc:`tut-nonlinear-benchmarks`. Its
         interpolation does not depend on the sectional stiffness matrix,
         and it converges as fast with strong bending-shear couplings, e.g.
-        of composite box beams, as without them, see
+        of composite box beams, as without them, while :class:`.BeamC` is
+        exact with one element under nodal loads, see
         :doc:`cross_sectional_analysis`.
     * - :class:`.Truss`
       - Axial and torsional stiffness only, linear analyses and mass matrix,

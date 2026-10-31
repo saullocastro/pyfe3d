@@ -161,8 +161,8 @@ cdef class BeamProp:
     rigid cross section without warping, by ``GJ``, given by the user, e.g.
     `G J` with the torsion constant `J` [1]_ of the Saint-Venant torsion,
     in which the cross section warps freely. ``G12`` and ``G13`` also enter
-    the shear parameters `\alpha_y` and `\alpha_z` of the shape functions of
-    :class:`.BeamC`. With non-zero ``Ay`` and ``Az``, i.e. when the beam axis
+    the shape functions of :class:`.BeamC`, through its shear parameters
+    `\alpha_y` and `\alpha_z` without couplings. With non-zero ``Ay`` and ``Az``, i.e. when the beam axis
     is not the centroidal axis, the axial strain is coupled with the bending
     curvatures and the transverse shear strains with the twist.
     ``intrhoy``, ``intrhoz`` and ``intrhoyz`` couple the inertia of the
@@ -215,12 +215,16 @@ cdef class BeamProp:
     (``C[1, 2]``), bending-shear (``C[1:3, 4:6]``) and bending-twist
     (``C[3, 4]``, ``C[3, 5]``) couplings of a composite section, e.g. of
     the circumferentially uniform stiffness (CUS) box of [2]_, can only be
-    given through ``C``. The shear parameters `\alpha_y` and `\alpha_z` of
-    the shape functions of :class:`.BeamC` are taken from the diagonal of
-    ``C``, `\alpha_y = -12 C_{44}/(C_{11} L^2)` and `\alpha_z = -12
-    C_{55}/(C_{22} L^2)`, which with the matrix above are `-12 E
-    I_{zz}/(G_{12} A L^2)` and `-12 E I_{yy}/(G_{13} A L^2)`, see the notes
-    of :class:`.BeamC` for the accuracy with couplings. The axial force of
+    given through ``C``. When the only coupling of ``C`` is ``C[0, 3]``,
+    the shear parameters `\alpha_y` and `\alpha_z` of the shape functions
+    of :class:`.BeamC` are taken from its diagonal, `\alpha_y = -12
+    C_{44}/(C_{11} L^2)` and `\alpha_z = -12 C_{55}/(C_{22} L^2)`, which
+    with the matrix above are `-12 E I_{zz}/(G_{12} A L^2)` and `-12 E
+    I_{yy}/(G_{13} A L^2)`; with any other coupling, including those of
+    ``Ay``, ``Az`` and ``Iyz``, its shape functions depend on all entries of
+    ``C``, which must then be positive definite, and the element remains
+    exact under nodal loads, see the notes of :class:`.BeamC`. The axial
+    force of
     the geometric stiffness is the first row of `\boldsymbol{C}
     \boldsymbol{\epsilon}`. :class:`.Truss` reads only ``C[0, 0]``, its
     `E A`, and ``C[3, 3]``, its `G J`. The mass integrals ``intrho``, etc.,
