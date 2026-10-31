@@ -34,18 +34,21 @@ on coarse meshes, one element across the depth of the beams, and the grade is
 their measure of the accuracy that can be expected there, see
 :func:`mh_grade`. The convergence with mesh refinement is checked separately.
 
-A limitation of the element shows up in two of these cases and is asserted
-here so that it is on record. With a single element across the width, a
-strip of Quad4 elements has almost no torsional stiffness, because of the
-zero-energy mode of the transverse shear documented in
-``test_quad4_spurious_shear_mode.py``, which is Mode 1 of Figure 10 of Hughes,
-Taylor and Kanoknukulchai (1977), the paper the integration scheme of the
-element comes from. The twist case of C2 and the out-of-plane case of
-C3 both load the strip in torsion and are therefore meaningless at the 6 by 1
-mesh that MacNeal and Harder specify, identically for both drilling models.
-Two elements across the width are enough to recover them. That mode lives
-entirely in the out-of-plane block and has nothing to do with the drilling
-rotation.
+A limitation of the element up to version 0.11 shows up in two of these
+cases and is asserted here, with ``shear_model = 0``, so that it is on
+record. With a single element across the width, a strip of Quad4 elements
+with the one-point transverse shear has almost no torsional stiffness,
+because of the zero-energy mode documented in
+``test_quad4_spurious_shear_mode.py``, which is Mode 1 of Figure 10 of
+Hughes, Taylor and Kanoknukulchai (1977), the paper the integration scheme of
+the element comes from. The twist case of C2 and the out-of-plane case of C3
+both load the strip in torsion and are therefore meaningless at the 6 by 1
+mesh that MacNeal and Harder specify, identically for both drilling models,
+and two elements across the width are enough to recover them. That mode
+lives entirely in the out-of-plane block and has nothing to do with the
+drilling rotation. The assumed transverse shear strains of the MITC4
+element, the default ``shear_model = 1`` since 0.12.0, give it stiffness,
+and the 6 by 1 meshes then get grade B in both cases.
 
 """
 import sys
@@ -60,7 +63,8 @@ from pyfe3d.shellprop_utils import isotropic_plate
 from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 
 
-def assemble(ncoords, conn, prop, drilling_model, K6ROT=100.):
+def assemble(ncoords, conn, prop, drilling_model, K6ROT=100.,
+             shear_model=1):
     ncoords = np.asarray(ncoords, dtype=float)
     N = DOF*ncoords.shape[0]
     ncf = ncoords.flatten()
@@ -78,6 +82,7 @@ def assemble(ncoords, conn, prop, drilling_model, K6ROT=100.):
         q.init_k_KC0 = k
         q.drilling_model = drilling_model
         q.K6ROT = K6ROT
+        q.shear_model = shear_model
         q.update_rotation_matrix(ncf)
         q.update_probe_xe(ncf)
         q.update_area()
@@ -239,7 +244,8 @@ MH_QUAD4_IN_PLANE_SHEAR = {'regular': 0.904, 'trapezoidal': 0.071,
                            'parallelogram': 0.080}
 
 
-def straight_cantilever(shape, load, drilling_model, nx=6, ny=1):
+def straight_cantilever(shape, load, drilling_model, nx=6, ny=1,
+                        shear_model=1):
     r"""MacNeal and Harder Fig. 4: L = 6, width 0.2, thickness 0.1
 
     The interior node lines are slanted at 45 degrees, which for a width of
@@ -268,7 +274,8 @@ def straight_cantilever(shape, load, drilling_model, nx=6, ny=1):
         Y[i, :] = ys
     ncoords, ids, conn = structured_quads(X, Y)
     prop = isotropic_plate(thickness=0.1, E=1.e7, nu=0.3)
-    K, N = assemble(ncoords, conn, prop, drilling_model)
+    K, N = assemble(ncoords, conn, prop, drilling_model,
+                    shear_model=shear_model)
     x = ncoords[:, 0]
     bk = np.zeros(N, dtype=bool)
     root = np.isclose(x, 0.)
@@ -302,8 +309,14 @@ def test_C2_macneal_harder_straight_cantilever():
         in-plane shear        trapezoidal     0.00291     0.08226
         in-plane shear        parallelogram   0.00369     0.09057
         out-of-plane shear    regular         0.42349     0.42349   0.4321
-        out-of-plane shear    trapezoidal     0.42410     0.42410
-        out-of-plane shear    parallelogram   0.42427     0.42427
+        out-of-plane shear    trapezoidal     0.41621     0.41621
+        out-of-plane shear    parallelogram   0.42257     0.42257
+
+    The out-of-plane values are those of the default ``shear_model = 1``;
+    with ``shear_model = 0``, the one-point transverse shear up to 0.11, they
+    were 0.42349, 0.42410 and 0.42427, within 1.9 % of the reference, and
+    are now within 3.7 %, grade B, against 0.986, 0.968 and 0.977 of the
+    reference for the QUAD4 of MacNeal and Harder (1985), Table 8, p. 15.
 
     In-plane shear is the drilling-sensitive case, and the one that motivates
     the enrichment. Normalised by the reference and graded with the rule of
@@ -337,7 +350,7 @@ def test_C2_macneal_harder_straight_cantilever():
         vp = straight_cantilever(shape, 'out-of-plane shear', 1)
         ve = straight_cantilever(shape, 'out-of-plane shear', 0)
         assert np.isclose(vp, ve, rtol=1.e-12)
-        assert abs(ve/MH_STRAIGHT_REF['out-of-plane shear'] - 1.) < 0.03
+        assert abs(ve/MH_STRAIGHT_REF['out-of-plane shear'] - 1.) < 0.04
 
         # in-plane shear, the drilling-sensitive case
         ref = MH_STRAIGHT_REF['in-plane shear']
@@ -363,47 +376,67 @@ def test_C2_macneal_harder_straight_cantilever():
     assert mh_grade(ves[-1], ref) == 'A'
 
 
-def test_C2_twist_needs_two_elements_across_the_width():
-    r"""The torsional response of a one-element-wide strip is unusable
+def test_C2_twist_of_the_strip():
+    r"""Twist of the 6 by ny strip, unit tip torque, both drilling models
 
-    Asserted as a limitation, not as an accuracy result, and it is identical
-    for both drilling models. See the module docstring and
-    ``test_quad4_spurious_shear_mode.py``.
+    Measured, regular mesh, reference 0.03208, Table 3, p. 10:
 
-        elements across width    twist          eigmin/eigmax
-        1                        12.106         2.0e-9
-        2                         0.03268       6.4e-9
-        4                         0.03398       1.5e-9
+        elements across   shear_model = 1     shear_model = 0     eigmin/eigmax
+        1                 0.030179 (B)        12.106 (F)          2.0e-9
+        2                 0.030179 (B)        0.03268 (A)         6.4e-9
+        4                 0.032516 (A)        0.03398 (B)         1.5e-9
 
-    The 1.9 % and 5.9 % from the reference 0.03208 with two and four
-    elements across are not mesh errors that refinement removes: the strip
-    converges to about 1.067 times 0.03208, 0.3 % above the Saint-Venant
-    twist, see the table of ``test_torsion_of_a_one_element_wide_strip`` in
+    (eigmin/eigmax with ``shear_model = 0``.) With the one-point transverse
+    shear of ``shear_model = 0`` the torsional response of a
+    one-element-wide strip is unusable, which is asserted as a limitation,
+    not as an accuracy result, and it is identical for both drilling
+    models, see the module docstring and
+    ``test_quad4_spurious_shear_mode.py``. The assumed transverse shear
+    strains of the MITC4 element of the default ``shear_model = 1`` give
+    0.941 of the reference with one element across, the value of the QUAD4
+    of MacNeal and Harder (1985), Table 8, p. 15, and the twist of Quad4R,
+    see ``test_torsion_of_a_one_element_wide_strip``.
+
+    The differences from the reference 0.03208 on these coarse meshes are
+    not mesh errors that refinement removes in full: the strip converges to
+    about 1.067 times 0.03208, 0.3 % above the Saint-Venant twist, see the
+    table of ``test_torsion_of_a_one_element_wide_strip`` in
     ``test_quad4_spurious_shear_mode.py``. Following the policy of the tests
     whose reference is not reached on the coarse mesh used, the twists are
-    compared with the values pre-determined by this same test on
-    2026-10-29, 0.032684006858721734 and 0.033975948654968564, with ``rtol =
-    1e-6`` for the round-off of the linear solution, whose condition
-    number is about 1e9 (eigmin/eigmax above; the same strip assembled in
-    ``test_quad4_spurious_shear_mode.py`` agrees within 1e-12), and with grade B of MacNeal and Harder (1985), p. 14, at most
-    10 %, against 0.03208 as a bound.
+    compared with the values pre-determined by this same test, on
+    2026-10-29 for ``shear_model = 0``, 0.032684006858721734 and
+    0.033975948654968564 with two and four elements across, and on
+    2026-10-30 for ``shear_model = 1``, with ``rtol = 1e-6`` for the
+    round-off of the linear solution, whose condition number is about 1e9
+    (eigmin/eigmax above; the same strip assembled in
+    ``test_quad4_spurious_shear_mode.py`` agrees within 1e-12), and with
+    grade B of MacNeal and Harder (1985), p. 14, at most 10 %, against
+    0.03208 as a bound.
 
     """
     ref = MH_STRAIGHT_REF['twist']
-    predetermined = {2: 0.032684006858721734, 4: 0.033975948654968564}
+    predetermined = {(0, 2): 0.032684006858721734,
+                     (0, 4): 0.033975948654968564,
+                     (1, 1): 0.030178871085683706,
+                     (1, 2): 0.030178995785733735,
+                     (1, 4): 0.032516470823351365}
     for drilling_model in (0, 1):
-        bad = straight_cantilever('regular', 'twist', drilling_model, ny=1)
+        bad = straight_cantilever('regular', 'twist', drilling_model, ny=1,
+                                  shear_model=0)
         assert bad > 100.*ref
     # the two models agree, so the defect is not in the drilling stiffness
-    assert np.isclose(straight_cantilever('regular', 'twist', 0, ny=1),
-                      straight_cantilever('regular', 'twist', 1, ny=1),
+    assert np.isclose(straight_cantilever('regular', 'twist', 0, ny=1,
+                                          shear_model=0),
+                      straight_cantilever('regular', 'twist', 1, ny=1,
+                                          shear_model=0),
                       rtol=1.e-10)
-    for ny in (2, 4):
+    for (sm, ny), value in predetermined.items():
         for drilling_model in (0, 1):
             good = straight_cantilever('regular', 'twist', drilling_model,
-                                       ny=ny)
-            print('ny=%d twist %.5f, reference %.5f' % (ny, good, ref))
-            assert np.isclose(good, predetermined[ny], rtol=1e-6)
+                                       ny=ny, shear_model=sm)
+            print('shear_model=%d ny=%d twist %.5f, reference %.5f'
+                  % (sm, ny, good, ref))
+            assert np.isclose(good, value, rtol=1e-6)
             assert abs(good/ref - 1.) <= 0.10
 
 
@@ -415,7 +448,7 @@ MH_CURVED_REF = {'in-plane': 0.08734, 'out-of-plane': 0.5022}
 MH_QUAD4_CURVED_IN_PLANE = 0.833
 
 
-def curved_beam(load, drilling_model, nx=6, ny=1):
+def curved_beam(load, drilling_model, nx=6, ny=1, shear_model=1):
     r"""MacNeal and Harder Fig. 5: 90 degree arc, radii 4.12 and 4.32"""
     ri, ro = 4.12, 4.32
     th = np.linspace(0., np.pi/2., nx + 1)
@@ -423,7 +456,8 @@ def curved_beam(load, drilling_model, nx=6, ny=1):
     T, R = np.meshgrid(th, rr, indexing='ij')
     ncoords, ids, conn = structured_quads(R*np.cos(T), R*np.sin(T))
     prop = isotropic_plate(thickness=0.1, E=1.e7, nu=0.25)
-    K, N = assemble(ncoords, conn, prop, drilling_model)
+    K, N = assemble(ncoords, conn, prop, drilling_model,
+                    shear_model=shear_model)
     bk = np.zeros(N, dtype=bool)
     root = np.isclose(ncoords[:, 1], 0., atol=1.e-9)
     for d in range(DOF):
@@ -446,8 +480,9 @@ def test_C3_macneal_harder_curved_beam():
         1                        in-plane       0.006414   0.079346
         2                        in-plane       0.006434   0.082802
         4                        in-plane       0.006440   0.083937
-        2                        out-of-plane   0.474      0.474
-        4                        out-of-plane   0.476      0.476
+        1                        out-of-plane   0.473      0.473
+        2                        out-of-plane   0.473      0.473
+        4                        out-of-plane   0.482      0.482
 
     In-plane is the drilling-sensitive case. On the benchmark mesh the
     penalty reaches 0.073 of the reference, grade F of MacNeal and Harder
@@ -462,9 +497,14 @@ def test_C3_macneal_harder_curved_beam():
     that is not resolved here, and the refinement in both directions is not
     asserted.
 
-    The out-of-plane case loads the strip in torsion, so it needs at least
-    two elements across the width for the reason given in the module
-    docstring, and it is then identical for both models.
+    The out-of-plane case loads the strip in torsion. It is identical for
+    both drilling models and, with the default ``shear_model = 1``, gives
+    0.942 of the reference with one element across, grade B, against 0.951
+    for the QUAD4 of MacNeal and Harder, Table 9. With the one-point
+    transverse shear of ``shear_model = 0`` it needs at least two elements
+    across the width for the reason given in the module docstring: 13.473
+    with one element, 26.8 times the reference, and 0.474 and 0.476 with two
+    and four.
 
     """
     ref = MH_CURVED_REF['in-plane']
@@ -480,10 +520,12 @@ def test_C3_macneal_harder_curved_beam():
     assert np.all(np.diff(ves) > 0)
     assert ves[-1] < ref
 
-    # out-of-plane, torsion dominated, unusable with one element across
+    # out-of-plane, torsion dominated, unusable with one element across with
+    # the one-point transverse shear of shear_model = 0
     for drilling_model in (0, 1):
-        assert curved_beam('out-of-plane', drilling_model, ny=1) > 10.
-    for ny in (2, 4):
+        assert curved_beam('out-of-plane', drilling_model, ny=1,
+                           shear_model=0) > 10.
+    for ny in (1, 2, 4):
         vp = curved_beam('out-of-plane', 1, ny=ny)
         ve = curved_beam('out-of-plane', 0, ny=ny)
         assert np.isclose(vp, ve, rtol=1.e-10)

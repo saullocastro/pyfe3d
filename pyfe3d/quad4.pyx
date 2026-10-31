@@ -36,9 +36,11 @@ whose model is selected with the ``drilling_model`` attribute of
 :class:`.Quad4`: the default ``0`` is physics-based, any other value gives
 the fictitious penalty of MSC Nastran and Autodesk Nastran controlled by the
 ``K6ROT`` attribute. The quadrature of the membrane terms depends on the
-drilling model, and the quadrature of the transverse shear terms on whether
-the thickness ``h`` of the :class:`pyfe3d.shellprop.ShellProp` is smaller
-than the square root of the element area.
+drilling model. The transverse shear terms use the assumed strains of the
+MITC4 element with the default ``shear_model = 1``; with ``shear_model =
+0`` they are integrated with one point when the thickness ``h`` of the
+:class:`pyfe3d.shellprop.ShellProp` is smaller than the square root of the
+element area.
 
 The transverse shear stiffnesses `A_{44}`, `A_{45}` and `A_{55}` are read
 from the :class:`pyfe3d.shellprop.ShellProp` object with the shear correction
@@ -94,27 +96,24 @@ paper of Hughes et al. [1]_, whose rotations `\theta_1` and `\theta_2`
 enter the transverse shear strains as `w_{,x} - \theta_1` and `w_{,y} -
 \theta_2`, their Eq. (7), such that `\theta_1 = -r_y` and `\theta_2 = r_x`.
 
-The integration scheme is:
+The bending energy terms are integrated with two-by-two quadrature. The
+transverse shear energy terms depend on the ``shear_model`` attribute of
+:class:`.Quad4`, with `\ell` the element characteristic length, here
+calculated as the square root of the element area `\ell =
+\sqrt{\text{area}}`:
 
-- For thin and moderately thick plates, when `h/\ell < 1`, where `\ell` is
-  the element characteristic length, here calculated as the square root of
-  the element area `\ell = \sqrt{\text{area}}`, the scheme of Hughes et al.
-  (1977)
+- With the default ``shear_model = 1``, since version 0.12.0, for every
+  thickness, the assumed transverse shear strains of the MITC4 element of
+  Dvorkin and Bathe [8]_, in the plate form of Bathe and Dvorkin [9]_, with
+  two-by-two quadrature: the covariant strain `\gamma_{\xi z}` is
+  interpolated linearly in `\eta` between its values at the mid-points of
+  the edges `\eta = \pm 1`, and `\gamma_{\eta z}` linearly in `\xi` between
+  its values at the mid-points of the edges `\xi = \pm 1`
 
--- two-by-two quadrature for the bending energy terms
-
--- one-point quadrature for the transverse shear energy terms
-
-- For very thick plates, when `h/\ell \ge 1`
-
--- two-by-two quadrature for the bending energy terms
-
--- the assumed transverse shear strains of the MITC4 element of Dvorkin
-and Bathe [8]_, in the plate form of Bathe and Dvorkin [9]_, with
-two-by-two quadrature: the covariant strain `\gamma_{\xi z}` is
-interpolated linearly in `\eta` between its values at the mid-points of the
-edges `\eta = \pm 1`, and `\gamma_{\eta z}` linearly in `\xi` between its
-values at the mid-points of the edges `\xi = \pm 1`
+- With ``shear_model = 0``, for thin and moderately thick plates, when
+  `h/\ell < 1`, the one-point quadrature of the scheme of Hughes et al.
+  (1977), the rule of pyfe3d up to version 0.11, and for very thick plates,
+  when `h/\ell \ge 1`, the MITC4 strains above
 
 For `h/\ell \ge 1`, Hughes et al. [1]_ propose instead the "modified
 one-point shear" element (pp. 1541-1542), which integrates the
@@ -129,9 +128,10 @@ square element, `(5/12)(\ell/h)^2` times its twist energy for an isotropic
 plate, 42 % at `h/\ell = 1`, and a mesh refined across `h/\ell = 1` became
 abruptly stiffer in torsion, e.g. by 21 % for the tip twist of a thin-walled
 I-beam, see ``tests/test_quad4_thick_twist.py``. The assumed strains are
-exact for pure twist and pure bending of a rectangle, and the elements with
-`h/\ell < 1` keep the one-point rule, such that their results are those of
-the earlier versions.
+exact for pure twist and pure bending of a rectangle. With ``shear_model =
+0`` the elements with `h/\ell < 1` keep the one-point rule, such that their
+results are those of the earlier versions; with the default they take the
+assumed strains as well, and no gate on the thickness remains.
 
 The membrane stiffness terms, which are not specified in the paper of Hughes
 et al. (1977), are integrated with a three-by-three quadrature when the
@@ -140,18 +140,62 @@ for the reason explained under the drilling stiffness below. The bending term
 always uses two-by-two, so that the drilling model does not change the
 bending response of the element.
 
+.. rubric:: Zero-energy modes of the one-point transverse shear
+
 With the one-point quadrature of the transverse shear terms, the element
 stiffness matrix has two zero-energy modes besides the rigid-body modes, as
-reported by Hughes et al. [1]_: the hourglass mode `w = (x - x_c)(y - y_c)`
-with zero rotations, and the in-plane twist `w = 0`, `r_x = x - x_c`,
-`r_y = y - y_c`, where `(x_c, y_c)` is the centroid. Their transverse shear
-strains vanish at the centroid. The assumed strains used for `h/\ell \ge
-1` give stiffness to both, such that the thick element has only the six
-rigid-body modes. For `h/\ell < 1`, the hourglass mode is the one that
-survives assembly. It is suppressed by any support that constrains
+reported by Hughes et al. [1]_, p. 1542 and Fig. 10, and by Hughes, Cohen
+and Haroun [11]_, Sec. 3.6, Fig. 6 and Table 1, element S1: the hourglass
+mode `w = (x - x_c)(y - y_c)` with zero rotations, and the in-plane twist `w
+= 0`, `r_x = x - x_c`, `r_y = y - y_c`, where `(x_c, y_c)` is the
+centroid, both bending modes of `w`, `r_x` and `r_y`, without membrane or
+drilling components. Their curvatures vanish, and their transverse shear
+strains vanish at the centroid. A single element then has eight zero
+eigenvalues instead of six. The hourglass mode is the one that survives
+assembly ([11]_, p. 214). It is suppressed by any support that constrains
 `w` along a boundary line, but a strip one element wide loaded in torsion,
-whose twist is the hourglass pattern, is much too flexible, e.g. the twist
-case of the straight cantilever of MacNeal and Harder [7]_.
+whose twist is the hourglass pattern, is much too flexible: 377 times the
+reference value in the twist case of the straight cantilever of MacNeal and
+Harder [7]_, 27 times in the out-of-plane case of their curved beam. Hughes
+et al. call the element "rank deficient" ([1]_, p. 1542), Hughes, Cohen and
+Haroun call rank deficiency its "single negative aspect" ([11]_, p. 221),
+and the remedy that removes both modes without locking is an assumed
+transverse shear field, that of Hughes and Tezduyar, which Bathe and
+Dvorkin [9]_, p. 367, list as closely related to theirs, or that of the
+MITC4 element, which has no spurious zero-energy mode and passes the patch
+test ([9]_, pp. 372-373). The MITC4 strains are therefore the default since
+version 0.12.0, and the element has only the six rigid-body modes.
+
+The two rules differ only in the transverse shear term. On a parallelogram,
+whose Jacobian is constant, the MITC4 strain at the centroid is the
+displacement-based one, and the two-by-two integral of the MITC4 shear
+energy is the one-point term of Hughes et al. plus the energy of the parts
+of the assumed strains linear in `\eta`, for `\gamma_{\xi z}`, and in
+`\xi`, for `\gamma_{\eta z}` (derived here): a matrix of rank two, the
+physical stabilisation of Belytschko and Leviathan [12]_, Eq. (4.13),
+p. 331, also used by :class:`.Quad4R`, which vanishes for every state of
+constant transverse shear and of constant curvature. On a parallelogram the
+element is thus that of Hughes et al., with the energy of the transverse
+shear that varies linearly over the element added, the energy that the
+one-point rule discards; the two zero-energy modes receive the eigenvalues
+0.019 and 0.168 times the largest one on a square with `h/\ell = 0.01`,
+and the 16 other non-zero eigenvalues change by up to 11 %. On other
+quadrilaterals the constant part differs as well: the displacement-based
+strain at the centroid does not vanish under a constant curvature, and the
+one-point rule fails the thin-plate bending patch test, as Belytschko and
+Leviathan [12]_, p. 337, Table 3, report for this element ("4-node SRI",
+0.92 to 1.15 times the exact deflection of the interior nodes), here 0.87
+to 1.22 times on their patch and an energy error of 580 % on the patch of
+MacNeal and Harder [7]_, Fig. 2, which the MITC4 strains pass to
+round-off. On the other problems of MacNeal and Harder, see the notebook of
+these problems, the normalised results of the default element differ from
+those of the one-point rule by at most 2.1 %, except on the coarsest mesh of
+the simply supported plates, 2 by 2 elements on a quarter, 0.977 instead of
+1.065 for `b/a = 1` and 0.971 instead of 0.826 for `b/a = 5`; the twist of
+the straight cantilever becomes 0.941, 0.884 and 0.849 on the regular,
+trapezoidal and parallelogram meshes instead of 377, 110 and 138, against
+0.941, 0.951 and 0.945 for their QUAD4 element. Setting ``shear_model =
+0`` reproduces the element of Hughes et al. for `h/\ell < 1`.
 
 .. rubric:: Geometric stiffness
 
@@ -160,9 +204,12 @@ The geometric stiffness matrix of :meth:`.Quad4.update_KG` and
 of :meth:`.Quad4.update_KCNL` and of the internal forces, integrate the
 membrane stress resultants with two-by-two quadrature and take the slopes
 `w_{,x}` and `w_{,y}` at the centroid, for `h/\ell < 1` and for `h/\ell \ge
-1`. The hourglass pattern of `w` has no gradient at the centroid, so it has
-no geometric stiffness, consistently with the one-point transverse shear of
-the elements with `h/\ell < 1`, which give it no stiffness either.
+1` and for both values of ``shear_model``. The hourglass pattern of `w` has
+no gradient at the centroid, so it has no geometric stiffness, consistently
+with the one-point transverse shear of the elements with `h/\ell < 1` and
+``shear_model = 0``, which give it no stiffness either; with the default
+``shear_model = 1`` it has the transverse shear stiffness of the MITC4
+strains.
 
 With the slopes at the two-by-two points, as up to version 0.11, the pattern
 had the geometric stiffness of the full quadrature. In a supported plate,
@@ -178,12 +225,14 @@ the isotropic value, the lowest buckling load was 49 % below the solution
 of Seide and Stowell [10]_ with 16 by 16 elements and 87 % below with 32 by
 32; with 1/1000, 71 % below with 8 by 8 elements. With the slopes at the
 centroid these cases converge to that solution from above, with the error
-decreasing as `\ell^2`: +0.81 %, +0.20 % and +2.19 %, see
+decreasing as `\ell^2`: +0.81 %, +0.20 % and +2.19 % with ``shear_model =
+0``, +0.83 %, +0.21 % and +2.70 % with the default, see
 ``tests/test_quad4_geometric_hourglass.py``. The elements with `h/\ell \ge
 1` were not affected, since the assumed strains of the MITC4 element give
 the pattern its transverse shear stiffness, but they take the slopes at the
 centroid as well, so that the geometric stiffness does not depend on that
-gate and ``update_KG_given_stress`` does not need the thickness.
+gate nor on ``shear_model``, and ``update_KG_given_stress`` does not need
+the thickness.
 
 The geometric stiffness of a smooth mode is then integrated less accurately
 on coarse meshes, whose buckling loads increase: a plate with 20 by 6
@@ -200,10 +249,12 @@ maximum allowed aspect ratio `\ell/h`, `10^5/8` for their plate element in
 the single precision of their computer, when this ratio is exceeded. This
 correction is not applied. In double precision, the central deflection of a
 simply supported square plate under a central point load, with eight by
-eight elements, changes by less than `10^{-5}` from `\ell/h = 1.25 \times
+eight elements, changes by `-1 \times 10^{-4}` from `\ell/h = 1.25 \times
 10^3` to `\ell/h = 1.25 \times 10^5`, see ``tests/test_quad4_thin_limit.py``,
-by `3 \times 10^{-4}` at `\ell/h = 1.25 \times 10^6`, and by `-32` % at
-`\ell/h = 1.25 \times 10^7`, where the round-off dominates.
+by `1.4 \times 10^{-3}` at `\ell/h = 1.25 \times 10^6`, and by `-33` % at
+`\ell/h = 1.25 \times 10^7`, where the round-off dominates; with the
+one-point transverse shear of ``shear_model = 0``, by `4 \times 10^{-6}`,
+`3 \times 10^{-4}` and `-32` %.
 
 .. rubric:: Transverse shear stiffness
 
@@ -411,6 +462,14 @@ References
 .. [10] Seide, P., and Stowell, E. Z., Elastic and plastic buckling of
    simply supported solid-core sandwich plates in compression, NACA Report
    967, 1950, Eq. (1), p. 2.
+.. [11] Hughes, T. J. R., Cohen, M., and Haroun, M., Reduced and selective
+   integration techniques in the finite element analysis of plates, Nuclear
+   Engineering and Design, 46(1), 203-222, 1978.
+   https://doi.org/10.1016/0029-5493(78)90184-X
+.. [12] Belytschko, T., and Leviathan, I., Physical stabilization of the
+   4-node shell element with one point quadrature, Computer Methods in
+   Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
+   https://doi.org/10.1016/0045-7825(94)90052-3
 
 """
 from libc.math cimport fabs
@@ -421,6 +480,148 @@ from .shellprop cimport ShellProp
 
 cdef int DOF = 6
 cdef int NUM_NODES = 4
+
+
+# NOTE rigid offsets of a warped element, see the attribute warp_offsets of
+#      the element class. The flat element lies in the mean plane of the
+#      nodes, the plane z = zm of the element coordinates, which is parallel
+#      to both diagonals, and node a is at the height z_a = xe[3*a + 2] - zm
+#      above its node. The degrees-of-freedom of the flat element are
+#      J ue: u_f = u - z_a r_y, v_f = v + z_a r_x, the others unchanged.
+#      With z_a = 0 every function below leaves its result unchanged, bit
+#      for bit
+cdef inline int _warp_z(double *xe, int warp_offsets, double *z) noexcept nogil:
+    r"""Heights ``z`` of the nodes above the flat element, returns 1 when
+    one of them is not zero and ``warp_offsets`` is not ``0``"""
+    cdef int a, warped
+    cdef double zm
+    warped = 0
+    for a in range(4):
+        z[a] = 0.
+    if warp_offsets == 0:
+        return 0
+    # NOTE exactly xe[2] when the four heights are equal
+    zm = 0.25*((xe[2] + xe[8]) + (xe[5] + xe[11]))
+    for a in range(4):
+        z[a] = xe[3*a + 2] - zm
+        if z[a] != 0.:
+            warped = 1
+    return warped
+
+
+cdef inline void _warp_ue(double *z, double *ue, double *uf) noexcept nogil:
+    r"""``uf = J ue``, the displacements of the flat element"""
+    cdef int i, a
+    for i in range(24):
+        uf[i] = ue[i]
+    for a in range(4):
+        uf[6*a + 0] = ue[6*a + 0] - z[a]*ue[6*a + 4]
+        uf[6*a + 1] = ue[6*a + 1] + z[a]*ue[6*a + 3]
+
+
+cdef inline void _warp_f(double *z, double *f) noexcept nogil:
+    r"""``f = J^T f`` in place, forces of the flat element to the nodes"""
+    cdef int a
+    for a in range(4):
+        f[6*a + 3] += z[a]*f[6*a + 1]
+        f[6*a + 4] -= z[a]*f[6*a + 0]
+
+
+cdef inline void _warp_K(double *z, double *K) noexcept nogil:
+    r"""``K = J^T K J`` in place, ``K`` of size 24x24 stored row by row"""
+    cdef int a, p
+    for a in range(4):
+        for p in range(24):
+            K[24*p + 6*a + 3] += z[a]*K[24*p + 6*a + 1]
+            K[24*p + 6*a + 4] -= z[a]*K[24*p + 6*a + 0]
+    for a in range(4):
+        for p in range(24):
+            K[24*(6*a + 3) + p] += z[a]*K[24*(6*a + 1) + p]
+            K[24*(6*a + 4) + p] -= z[a]*K[24*(6*a + 0) + p]
+
+
+cdef inline void _warp_dK(double *z, double *K, double *dK) noexcept nogil:
+    r"""``dK = J^T K J - K``, without forming ``J^T K J``, 24x24 row by
+    row: ``K J - K`` followed by the rows of ``J^T`` applied to ``K J``"""
+    cdef int a, p
+    for p in range(576):
+        dK[p] = 0.
+    for a in range(4):
+        for p in range(24):
+            dK[24*p + 6*a + 3] = z[a]*K[24*p + 6*a + 1]
+            dK[24*p + 6*a + 4] = -z[a]*K[24*p + 6*a + 0]
+    # NOTE the rows 6*a and 6*a + 1 of dK are not changed below
+    for a in range(4):
+        for p in range(24):
+            dK[24*(6*a + 3) + p] += z[a]*(K[24*(6*a + 1) + p]
+                                          + dK[24*(6*a + 1) + p])
+            dK[24*(6*a + 4) + p] -= z[a]*(K[24*(6*a + 0) + p]
+                                          + dK[24*(6*a + 0) + p])
+
+
+cdef inline void _rotate_add_24(double *dK, double *R, double *Kv) noexcept nogil:
+    r"""``Kv[24*I + J] += (T dK T^T)[I, J]``, with ``T`` block diagonal, the
+    3x3 matrix ``R[3*m + i]`` of ``r11, ..., r33`` on each block of three
+    degrees-of-freedom"""
+    cdef int bi, bj, m, n, i, j
+    cdef double s
+    for bi in range(8):
+        for bj in range(8):
+            for m in range(3):
+                for n in range(3):
+                    s = 0.
+                    for i in range(3):
+                        for j in range(3):
+                            s += R[3*m + i]*dK[24*(3*bi + i) + 3*bj + j]*R[3*n + j]
+                    Kv[24*(3*bi + m) + 3*bj + n] += s
+
+
+cdef inline void _warp_KE_sub(double *z, double *f, double *K) noexcept nogil:
+    r"""``K -= K_E`` in element coordinates, ``K`` of size 24x24 stored row
+    by row: the eccentricity geometric stiffness of :func:`_warp_KE`, before
+    its rotation to global coordinates, on the rotations of each node, from
+    the forces ``f`` of the nodes of the flat element in element
+    coordinates, see the Notes of ``update_KCNL``"""
+    cdef int a, p
+    for a in range(4):
+        # NOTE row r_x of node a, columns r_x, r_y, r_z of node a
+        p = 24*(6*a + 3) + 6*a + 3
+        K[p] -= z[a]*f[6*a + 2]
+        K[p + 2] += 0.5*z[a]*f[6*a + 0]
+        K[p + 24 + 1] -= z[a]*f[6*a + 2]
+        K[p + 24 + 2] += 0.5*z[a]*f[6*a + 1]
+        K[p + 48] += 0.5*z[a]*f[6*a + 0]
+        K[p + 48 + 1] += 0.5*z[a]*f[6*a + 1]
+
+
+cdef inline void _warp_KE(double *z, double *f, double *R, double *KE) noexcept nogil:
+    r"""Eccentricity geometric stiffness of the rotations of each node, in
+    global coordinates, ``KE[9*a + 3*m + n]``, from the forces ``f`` of the
+    nodes of the flat element in element coordinates: ``(n.r) I - (n r^T +
+    r n^T)/2`` with ``r = z_a e_3``, see the Notes of ``update_KG``"""
+    cdef int a, m, n, i, j
+    cdef double nx, ny, nz, s
+    cdef double L[9]
+    for a in range(4):
+        nx = f[6*a + 0]
+        ny = f[6*a + 1]
+        nz = f[6*a + 2]
+        L[0] = z[a]*nz
+        L[1] = 0.
+        L[2] = -0.5*z[a]*nx
+        L[3] = 0.
+        L[4] = z[a]*nz
+        L[5] = -0.5*z[a]*ny
+        L[6] = -0.5*z[a]*nx
+        L[7] = -0.5*z[a]*ny
+        L[8] = 0.
+        for m in range(3):
+            for n in range(3):
+                s = 0.
+                for i in range(3):
+                    for j in range(3):
+                        s += R[3*m + i]*L[3*i + j]*R[3*n + j]
+                KE[9*a + 3*m + n] = s
 
 
 #cdef int init_double(double* a, int size, double value) noexcept nogil:
@@ -718,7 +919,9 @@ cdef class Quad4Data:
         ``KCNL_SPARSE_SIZE = 576``
 
     KG_SPARSE_SIZE, : int
-        ``KG_SPARSE_SIZE = 144``
+        ``KG_SPARSE_SIZE = 180``: 144 entries of the translations and 36 of
+        the rotations of each node, the eccentricity geometric stiffness of
+        the rigid offsets of a warped element, see ``update_KG``
 
     M_SPARSE_SIZE, : int
         ``M_SPARSE_SIZE = 480``
@@ -744,7 +947,7 @@ cdef class Quad4Data:
     def __cinit__(Quad4Data self):
         self.KC0_SPARSE_SIZE = 576
         self.KCNL_SPARSE_SIZE = 576
-        self.KG_SPARSE_SIZE = 144
+        self.KG_SPARSE_SIZE = 180
         self.M_SPARSE_SIZE = 480
         self.KA_BETA_SPARSE_SIZE = 144
         self.KA_GAMMA_SPARSE_SIZE = 144
@@ -794,8 +997,10 @@ cdef class Quad4Probe:
     KC0ve, : array-like
         Local stiffness matrix stored as a 1D array of size
         ``(NUM_NODES*DOF)**2``.
-        Stored row by row. Updated by :meth:`.Quad4.update_KC0` and
-        :meth:`.Quad4.update_probe_finte`.
+        Stored row by row, with the rigid offsets of a warped element when
+        ``warp_offsets`` is ``1``, see :class:`.Quad4`. Updated by
+        :meth:`.Quad4.update_KC0`, :meth:`.Quad4.update_probe_finte` and, for
+        a warped element, :meth:`.Quad4.update_KG`.
     BLexx, BLeyy, BLgxy : array-like
         Arrays of size ``NUM_NODES*DOF=24`` containing the in-plane strain
         interpolation functions evaluated at a given natural coordinate point
@@ -880,7 +1085,7 @@ cdef class Quad4Probe:
         self.KCNLve = np.zeros((NUM_NODES*DOF)**2, dtype=np.float64)
 
     cpdef void update_BL(Quad4Probe self, double xi, double eta,
-                         int drilling_model=0):
+                         int drilling_model=0, int warp_offsets=1):
         r"""
         Update all components of the interpolation matrix `\boldsymbol{B}_L` at a
         given natural coordinate point `\xi`, `\eta`.
@@ -905,6 +1110,11 @@ cdef class Quad4Probe:
             matrix. The default ``0`` includes the Allman drilling enrichment
             in the membrane rows and in ``BLdrilling``; any other value gives
             the unenriched rows used by the ``K6ROT`` penalty model.
+        warp_offsets : int, optional
+            Must match the ``warp_offsets`` attribute of the finite element,
+            whose default is ``1``: the rows of a warped element are then
+            multiplied by the `\boldsymbol{J}` of the rigid offsets, see the
+            Notes. ``0`` gives the rows of the flat element.
 
         Notes
         -----
@@ -929,6 +1139,21 @@ cdef class Quad4Probe:
         S^v_{,x}`, giving the operator `\tilde{\boldsymbol{B}}_{r_z}` of the
         physics-based model.
 
+        The rows are those of the flat element, see the Notes of
+        :class:`.Quad4`, the coordinate `z` of ``xe`` being ignored, times
+        `\boldsymbol{J}` of the rigid offsets of a warped element when
+        ``warp_offsets`` is not ``0``, such that their products with ``ue``
+        are the strains of the displacements of the flat element,
+        `\boldsymbol{J} \boldsymbol{u}_e`, as in the internal forces of
+        :meth:`.Quad4.update_probe_finte`: the `r_x` and `r_y` columns of
+        node `a` of ``BLexx``, ``BLeyy``, ``BLgxy`` and ``BLdrilling``
+        receive `z_a` times the `v` column and `-z_a` times the `u` column,
+        `z_a` the height of the node above the flat element, ``xe[3*a + 2]``
+        minus the mean of the four. These columns are zero for a flat element
+        and with ``warp_offsets = 0``. The methods of :class:`.Quad4` that
+        overwrite the rows at their integration points write those of the
+        flat element.
+
         """
         cdef int i
         cdef double x1, x2, x3, x4, y1, y2, y3, y4
@@ -938,6 +1163,7 @@ cdef class Quad4Probe:
         cdef double S1_x, S2_x, S3_x, S4_x
         cdef double S1_y, S2_y, S3_y, S4_y
         cdef double denr[16]
+        cdef double zw[4]
 
         x1 = self.xe[0]
         y1 = self.xe[1]
@@ -1064,6 +1290,33 @@ cdef class Quad4Probe:
                 self.BLgxy[DOF*i + 5] = denr[4 + i] + denr[8 + i]
                 self.BLdrilling[DOF*i + 5] += 0.5*denr[4 + i] - 0.5*denr[8 + i]
 
+        # NOTE rigid offsets, here only, in the rows given to the user: the
+        #      rows times J change the r_x and r_y columns of the rows with
+        #      u and v entries, which are zero for the flat element. They are
+        #      always written, overwriting those of an earlier call with
+        #      other heights. The methods of Quad4 write rows of their own and
+        #      apply J to their matrices
+        if _warp_z(&self.xe[0], warp_offsets, zw):
+            for i in range(NUM_NODES):
+                self.BLexx[DOF*i + 3] = zw[i]*self.BLexx[DOF*i + 1]
+                self.BLexx[DOF*i + 4] = -zw[i]*self.BLexx[DOF*i + 0]
+                self.BLeyy[DOF*i + 3] = zw[i]*self.BLeyy[DOF*i + 1]
+                self.BLeyy[DOF*i + 4] = -zw[i]*self.BLeyy[DOF*i + 0]
+                self.BLgxy[DOF*i + 3] = zw[i]*self.BLgxy[DOF*i + 1]
+                self.BLgxy[DOF*i + 4] = -zw[i]*self.BLgxy[DOF*i + 0]
+                self.BLdrilling[DOF*i + 3] = zw[i]*self.BLdrilling[DOF*i + 1]
+                self.BLdrilling[DOF*i + 4] = -zw[i]*self.BLdrilling[DOF*i + 0]
+        else:
+            for i in range(NUM_NODES):
+                self.BLexx[DOF*i + 3] = 0.
+                self.BLexx[DOF*i + 4] = 0.
+                self.BLeyy[DOF*i + 3] = 0.
+                self.BLeyy[DOF*i + 4] = 0.
+                self.BLgxy[DOF*i + 3] = 0.
+                self.BLgxy[DOF*i + 4] = 0.
+                self.BLdrilling[DOF*i + 3] = 0.
+                self.BLdrilling[DOF*i + 4] = 0.
+
 
 cdef class Quad4:
     r"""
@@ -1134,6 +1387,28 @@ cdef class Quad4:
         a negative value, which means that `A_{66}` of the laminate
         extensional stiffness matrix is used.
         Dimension of force per unit length, as ``A66``.
+    warp_offsets, : int
+        Rigid offsets of a warped element, see the Notes. The default ``1``
+        links the flat element of the matrices, in the mean plane of the
+        nodes, to the warped nodes by rigid offsets along its normal, in
+        ``update_KC0``, ``update_M``, ``update_KG``,
+        ``update_KG_given_stress``, ``update_KCNL``, the internal forces of
+        ``update_probe_finte`` and ``update_fint``, also with
+        ``nonlinear``, and the rows of the strains of
+        ``Quad4Probe.update_BL``; ``0`` uses the flat element without them, as
+        before version 0.12.0. A flat element gives the same results, bit
+        for bit, with both values.
+    shear_model, : int
+        Transverse shear of the element, see the module documentation. The
+        default ``1``, since version 0.12.0, gives the assumed transverse
+        shear strains of the MITC4 element of Dvorkin and Bathe, integrated
+        with two-by-two points, for every thickness, and the element has only
+        the six rigid-body modes as zero-energy modes. ``0`` gives the
+        one-point transverse shear of Hughes et al. (1977) when `h/\ell < 1`,
+        with its two zero-energy modes, and the MITC4 strains otherwise:
+        setting ``elem.shear_model = 0`` before calling :meth:`.update_KC0`
+        is the way to reproduce the results of thin elements obtained before
+        0.12.0.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Entries `T_{ij}` of the transformation matrix `\boldsymbol{T}_{3\times 3}` from
         element to global coordinates, whose columns are the element axes.
@@ -1183,6 +1458,45 @@ cdef class Quad4:
     over-constrain `r_z = \theta_z`, and a zero value leaves the Allman
     enrichment rank-deficient by one.
 
+    Warped elements. The matrices are those of the flat projection of the
+    element, whose nodes are in the mean plane of the four nodes, the plane of
+    the element coordinates parallel to both diagonals: node `a` is at the
+    height `\tilde{z}_a` above it, with `\tilde{z}_1 = \tilde{z}_3 =
+    -\tilde{z}_2 = -\tilde{z}_4`, and the coordinate `z` of ``probe.xe`` is
+    otherwise ignored. The flat element alone does not represent the rigid
+    rotations of the warped nodes and is too stiff in warped meshes. With
+    ``warp_offsets = 1`` the flat element is linked to each node by the rigid
+    offset `\boldsymbol{r}_a = \tilde{z}_a \boldsymbol{e}_3`, the first order
+    of the offsets of :class:`pyfe3d.corotational.CorotationalShell` with
+    ``warping='offsets'`` (derived here), which gives, in element coordinates,
+
+    .. math::
+
+        u^f_a = u_a - \tilde{z}_a r_{y,a}, \qquad v^f_a = v_a + \tilde{z}_a
+        r_{x,a}
+
+    with `w` and the rotations unchanged, `\boldsymbol{u}^f = \boldsymbol{J}
+    \boldsymbol{u}_e`. The element matrices and forces are `\boldsymbol{J}^\top
+    \boldsymbol{K}_{C0} \boldsymbol{J}`, `\boldsymbol{J}^\top \boldsymbol{M}
+    \boldsymbol{J}` and `\boldsymbol{J}^\top \boldsymbol{f}`, with the flat
+    element evaluated at `\boldsymbol{J} \boldsymbol{u}_e`, applied in element
+    coordinates before the rotation to global coordinates, and the geometric
+    stiffness adds the eccentricity term of the offsets, see
+    :meth:`.update_KG`. ``KC0`` then annihilates the six rigid motions of the
+    warped nodes, is the tangent of ``CorotationalShell`` at the base
+    configuration and keeps the number of zero eigenvalues of the flat element
+    (six, eight with ``shear_model = 0``); for a warp ratio
+    ``max|z|/sqrt(A)`` of 0.022 its non-zero eigenvalues change by at most
+    0.07 %. Other corrections of warped flat
+    quadrilaterals balance the moment of the offset membrane forces with forces
+    normal to the element instead of nodal moments, MacNeal (1978) [4]_, p.
+    180, and Cook (1994) [5]_, p. 552, or add warping terms to the curvatures,
+    Belytschko et al. (1992) [6]_, Section 3.3, Eqs. (30b) and (37d-f). In the
+    twisted beam of MacNeal and Harder (1985) [7]_, Fig. 6, 12 by 2 elements
+    with a warp ratio of 0.024, the tip displacements of their Table 3 are
+    matched within 0.4 % with the offsets, and are 67 to 77 % too small without
+    them, see ``tests/test_quad_warp_offsets.py``.
+
     References
     ----------
     .. [1] Allman, D. J., A compatible triangular element including vertex
@@ -1195,6 +1509,21 @@ cdef class Quad4:
        quadrilateral membrane finite element with drilling degrees of
        freedom, International Journal for Numerical Methods in Engineering,
        30(3), 445-457, 1990. https://doi.org/10.1002/nme.1620300305
+    .. [4] MacNeal, R. H., A simple quadrilateral shell element, Computers
+       & Structures, 8(2), 175-183, 1978.
+       https://doi.org/10.1016/0045-7949(78)90020-2
+    .. [5] Cook, R. D., Four-node 'flat' shell element: drilling degrees of
+       freedom, membrane-bending coupling, warped geometry, and behavior,
+       Computers & Structures, 50(4), 549-555, 1994.
+       https://doi.org/10.1016/0045-7949(94)90025-6
+    .. [6] Belytschko, T., Wong, B. L., and Chiang, H.-Y., Advances in
+       one-point quadrature shell elements, Computer Methods in Applied
+       Mechanics and Engineering, 96(1), 93-107, 1992.
+       https://doi.org/10.1016/0045-7825(92)90100-X
+    .. [7] MacNeal, R. H., and Harder, R. L., A proposed standard set of
+       problems to test finite element accuracy, Finite Elements in Analysis
+       and Design, 1(1), 3-20, 1985.
+       https://doi.org/10.1016/0168-874X(85)90003-4
 
     """
     cdef public int eid, pid
@@ -1206,6 +1535,8 @@ cdef class Quad4:
     cdef public int drilling_model
     cdef public double K6ROT
     cdef public double gamma_rz
+    cdef public int warp_offsets
+    cdef public int shear_model
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public double m11, m12, m21, m22
     cdef public Quad4Probe probe
@@ -1233,6 +1564,8 @@ cdef class Quad4:
         self.drilling_model = 0 # NOTE Allman + Hughes-Brezzi, the default
         self.K6ROT = 100. # NOTE default value in MSC Nastran
         self.gamma_rz = -1. # NOTE negative means "use A66"
+        self.warp_offsets = 1 # NOTE rigid offsets of warped elements
+        self.shear_model = 1 # NOTE MITC4 transverse shear, the default
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.
         self.r31 = self.r32 = self.r33 = 0.
@@ -1579,10 +1912,12 @@ cdef class Quad4:
         - transverse shear, `\boldsymbol{\gamma}^\top \boldsymbol{A}_s \boldsymbol{\gamma}`, each strain
           being the sum of a gradient part, ``BLgyz_grad`` or
           ``BLgxz_grad``, and of a rotation part, ``BLgyz_rot`` or
-          ``BLgxz_rot``: with `\ell = \sqrt{\text{area}}` and the thickness
-          ``prop.h``, all the terms at the centroid, `\xi = \eta = 0` with
-          weight 4, when `h/\ell < 1`; otherwise the assumed strains of the
-          MITC4 element, from ``mitc4_shear_rows``, with two-by-two;
+          ``BLgxz_rot``: the assumed strains of the MITC4 element, from
+          ``mitc4_shear_rows``, with two-by-two, with the default
+          ``shear_model = 1``; with ``shear_model = 0``, `\ell =
+          \sqrt{\text{area}}` and the thickness ``prop.h``, all the terms
+          at the centroid, `\xi = \eta = 0` with weight 4, when `h/\ell <
+          1`, and the MITC4 strains otherwise;
         - drilling, `\gamma_{r_z} \boldsymbol{B}_{r_z}^\top \boldsymbol{B}_{r_z}` with the row
           ``BLdrilling``: for ``drilling_model = 0``, the enriched
           `\tilde{\boldsymbol{B}}_{r_z}` at the centroid, with `\gamma_{r_z}` equal to
@@ -1594,6 +1929,7 @@ cdef class Quad4:
         :mod:`pyfe3d.quad4`.
 
         """
+        cdef double zw[4]
         cdef int i, j, ke
         cdef double x1, x2, x3, x4, y1, y2, y3, y4
         cdef double Ae[9]
@@ -1915,13 +2251,16 @@ cdef class Quad4:
                               + kxy*D16*BLkxx[j] + kxy*D26*BLkyy[j] + kxy*D66*BLkxy[j]
                             )
 
-            # NOTE thick elements, h/l >= 1: assumed transverse shear strains
-            #      of the MITC4 element (Dvorkin and Bathe 1984, Bathe and
-            #      Dvorkin 1985) with the two-point rule, instead of the
-            #      modified one-point shear rule of Hughes et al. (1977),
-            #      which stores spurious shear energy in a state of pure
-            #      twist; see the module documentation
-            if prop.h/length >= 1.: # thick elements
+            # NOTE assumed transverse shear strains of the MITC4 element
+            #      (Dvorkin and Bathe 1984, Bathe and Dvorkin 1985) with the
+            #      two-point rule, for every thickness with the default
+            #      shear_model = 1, which leaves no zero-energy mode besides
+            #      the rigid-body modes; with shear_model = 0 only for thick
+            #      elements, h/l >= 1, instead of the modified one-point shear
+            #      rule of Hughes et al. (1977), which stores spurious shear
+            #      energy in a state of pure twist; see the module
+            #      documentation
+            if self.shear_model != 0 or prop.h/length >= 1.:
                 for pti in range(2):
                     xi = points[pti]
                     for ptj in range(2):
@@ -2093,10 +2432,10 @@ cdef class Quad4:
                         ke = 24*i + j
                         self.probe.KC0ve[ke] += wij*detJ*BLdrilling_i*BLdrilling[j]
 
-            # NOTE thin elements, h/l < 1: one-point transverse shear of
-            #      Hughes et al. (1977); the thick elements are
-            #      integrated above
-            if prop.h/length < 1.: # thin elements
+            # NOTE shear_model = 0 and thin elements, h/l < 1: one-point
+            #      transverse shear of Hughes et al. (1977), with its two
+            #      zero-energy modes; the other cases are integrated above
+            if self.shear_model == 0 and prop.h/length < 1.:
                 for i in range(24):
                     gyz_rot = BLgyz_rot[i]
                     gxz_rot = BLgxz_rot[i]
@@ -2120,6 +2459,11 @@ cdef class Quad4:
                           + gyz_rot*A44*BLgyz_rot[j] + gyz_rot*A45*BLgxz_rot[j]
                           + gxz_rot*A45*BLgyz_rot[j] + gxz_rot*A55*BLgxz_rot[j]
                         )
+
+        # NOTE rigid offsets of a warped element: KC0ve = J^T KC0ve J, see
+        #      the attribute warp_offsets of Quad4
+        if _warp_z(&self.probe.xe[0], self.warp_offsets, zw):
+            _warp_K(zw, &self.probe.KC0ve[0])
 
 
     cpdef void update_probe_finte(Quad4 self, ShellProp prop, int nonlinear=0):
@@ -2147,7 +2491,7 @@ cdef class Quad4:
             are read from.
         nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
-            value adds the geometrically nonlinear terms of the von Karman strains,
+            value adds the geometrically nonlinear terms of the von Kármán strains,
             whose tangent stiffness matrix is ``KC0 + KCNL + KG``, see
             :meth:`.update_KCNL`.
 
@@ -2160,6 +2504,13 @@ cdef class Quad4:
         :meth:`._update_probe_finte_nonlinear` are added, and ``KC0 + KCNL +
         KG`` is the exact Jacobian of the internal forces, see
         :meth:`.update_KCNL`.
+
+        With ``warp_offsets = 1`` and a warped element the internal forces
+        are those of the flat element at the displacements `\boldsymbol{J}
+        \boldsymbol{u}_e`, taken to the nodes with `\boldsymbol{J}^\top`,
+        see the Notes of :class:`.Quad4`: the linear ones `\boldsymbol{J}^\top
+        \boldsymbol{K}_e \boldsymbol{J} \boldsymbol{u}_e` and the terms of
+        ``nonlinear``, see :meth:`.update_KCNL`.
 
         """
         cdef int i, j, ke
@@ -2229,6 +2580,11 @@ cdef class Quad4:
         `\boldsymbol{T}_{3\times 3}` of the entries `T_{ij}` stored in ``r11, ..., r33``,
         whose columns are the element axes, applied to the translations and to
         the rotations of each node.
+
+        With ``warp_offsets = 1`` and a warped element the element matrix is
+        `\boldsymbol{J}^\top \boldsymbol{K}_e \boldsymbol{J}`, see the Notes of
+        :class:`.Quad4`, computed in place in ``KC0ve`` at the end of
+        :meth:`._update_probe_KC0ve`.
 
         """
         cdef int i, j, node_i, node_j, k, ke, m, n
@@ -2341,7 +2697,7 @@ cdef class Quad4:
             are read from.
         nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
-            value adds the geometrically nonlinear terms of the von Karman strains,
+            value adds the geometrically nonlinear terms of the von Kármán strains,
             whose tangent stiffness matrix is ``KC0 + KCNL + KG``, see
             :meth:`.update_KCNL`.
 
@@ -2352,6 +2708,13 @@ cdef class Quad4:
         ``r11, ..., r33``. With ``nonlinear``, ``KC0 + KCNL + KG`` is the
         exact Jacobian of the assembled internal forces, see
         :meth:`.update_probe_finte` and :meth:`.update_KCNL`.
+
+        With ``warp_offsets = 1`` and a warped element the internal forces
+        are those of the flat element at the displacements `\boldsymbol{J}
+        \boldsymbol{u}_e`, taken to the nodes with `\boldsymbol{J}^\top`,
+        see the Notes of :class:`.Quad4`: the linear ones `\boldsymbol{J}^\top
+        \boldsymbol{K}_e \boldsymbol{J} \boldsymbol{u}_e` and the terms of
+        ``nonlinear``, see :meth:`.update_KCNL`.
 
         """
         cdef double *finte
@@ -2561,7 +2924,8 @@ cdef class Quad4:
         return detJ
 
 
-    cdef void _update_probe_KCNLve(Quad4 self, ShellProp prop) noexcept nogil:
+    cdef void _update_probe_KCNLve(Quad4 self, ShellProp prop,
+                                   double *fw) noexcept nogil:
         r"""Update the probe values of the nonlinear stiffness matrix
 
         The attribute ``KCNLve`` of the :class:`.Quad4Probe` is updated with
@@ -2594,6 +2958,14 @@ cdef class Quad4:
 
         `\boldsymbol{A}` and `\boldsymbol{B}` are rotated with ``m11, m12, m21, m22``.
 
+        With ``warp_offsets = 1`` and a warped element, the matrix above is
+        that of the flat element at `\boldsymbol{J} \boldsymbol{u}_e`, and
+        ``KCNLve`` receives `\boldsymbol{J}^\top \boldsymbol{K}_{CNL}
+        \boldsymbol{J} - \boldsymbol{K}_E`, with `\boldsymbol{K}_E` from
+        the nodal forces ``fw`` of the flat element, in element
+        coordinates, see :meth:`.update_KCNL`; ``fw`` is not read
+        otherwise.
+
         """
         cdef int i, j, a
         cdef int pti, ptj
@@ -2607,6 +2979,9 @@ cdef class Quad4:
         cdef double ABL[72]
         cdef double BNL[72]
         cdef double ABNL[72]
+        cdef int warped
+        cdef double zw[4]
+        cdef double uw[24]
         cdef double *ue
         cdef double *KCNLve
         cdef double *BLexx
@@ -2619,6 +2994,11 @@ cdef class Quad4:
         cdef double *Sw_y
 
         ue = &self.probe.ue[0]
+        # NOTE rigid offsets: the flat element has the displacements J ue
+        warped = _warp_z(&self.probe.xe[0], self.warp_offsets, zw)
+        if warped:
+            _warp_ue(zw, ue, uw)
+            ue = uw
         KCNLve = &self.probe.KCNLve[0]
         BLexx = &self.probe.BLexx[0]
         BLeyy = &self.probe.BLeyy[0]
@@ -2681,13 +3061,19 @@ cdef class Quad4:
                             + Sw_y[i]*(NNL[2]*Sw_x[j] + NNL[1]*Sw_y[j])
                         )
 
+        if warped:
+            # NOTE J^T KCNL J of the flat element, minus the eccentricity
+            #      term that update_KG adds, see the Notes of update_KCNL
+            _warp_K(zw, KCNLve)
+            _warp_KE_sub(zw, fw, KCNLve)
+
 
     cdef void _update_probe_finte_nonlinear(Quad4 self,
                                             ShellProp prop) noexcept nogil:
         r"""Add the geometrically nonlinear terms to the probe internal forces
 
         The attribute ``finte`` of the :class:`.Quad4Probe` receives the terms
-        of the nonlinear part of the von Karman membrane strains, evaluated at
+        of the nonlinear part of the von Kármán membrane strains, evaluated at
         the displacements ``ue`` of the probe with a two-point Gauss-Legendre
         quadrature in each direction and the slopes of `w` at the centroid.
         See :meth:`.update_KCNL`.
@@ -2709,6 +3095,11 @@ cdef class Quad4:
             \sum w_{ij} \det J \left( \boldsymbol{B}_m^\top \boldsymbol{N}_{NL} + \boldsymbol{B}_b^\top \boldsymbol{M}_{NL}
                 + \boldsymbol{B}_{NL}^\top (\boldsymbol{N} + \boldsymbol{N}_{NL}) \right)
 
+        With ``warp_offsets = 1`` and a warped element, these terms are
+        evaluated at the displacements `\boldsymbol{J} \boldsymbol{u}_e` of
+        the flat element and multiplied by `\boldsymbol{J}^\top` before they
+        are added, see :meth:`.update_KCNL`.
+
         """
         cdef int i, a
         cdef int pti, ptj
@@ -2722,6 +3113,11 @@ cdef class Quad4:
         cdef double NNL[3]
         cdef double MNL[3]
         cdef double epsNL[3]
+        cdef int warped
+        cdef double zw[4]
+        cdef double uw[24]
+        cdef double fn[24]
+        cdef double *fout
         cdef double *ue
         cdef double *finte
         cdef double *BLexx
@@ -2735,6 +3131,17 @@ cdef class Quad4:
 
         ue = &self.probe.ue[0]
         finte = &self.probe.finte[0]
+        # NOTE rigid offsets: the flat element has the displacements J ue,
+        #      and its forces, accumulated in fn, are taken to the nodes
+        #      with J^T
+        fout = finte
+        warped = _warp_z(&self.probe.xe[0], self.warp_offsets, zw)
+        if warped:
+            _warp_ue(zw, ue, uw)
+            ue = uw
+            for i in range(24):
+                fn[i] = 0.
+            fout = fn
         BLexx = &self.probe.BLexx[0]
         BLeyy = &self.probe.BLeyy[0]
         BLgxy = &self.probe.BLgxy[0]
@@ -2788,7 +3195,7 @@ cdef class Quad4:
                     MNL[a] = B[3*a]*epsNL[0] + B[3*a + 1]*epsNL[1] + B[3*a + 2]*epsNL[2]
 
                 for i in range(24):
-                    finte[i] += wij*detJ*(
+                    fout[i] += wij*detJ*(
                         # Bm.T*NNL + Bb.T*MNL
                           BLexx[i]*NNL[0] + BLeyy[i]*NNL[1] + BLgxy[i]*NNL[2]
                         + BLkxx[i]*MNL[0] + BLkyy[i]*MNL[1] + BLkxy[i]*MNL[2]
@@ -2797,6 +3204,11 @@ cdef class Quad4:
                         + w_y*Sw_y[i]*(N[1] + NNL[1])
                         + (w_x*Sw_y[i] + w_y*Sw_x[i])*(N[2] + NNL[2])
                     )
+
+        if warped:
+            _warp_f(zw, fn)
+            for i in range(24):
+                finte[i] += fn[i]
 
 
     cpdef void update_KCNL(Quad4 self,
@@ -2809,7 +3221,7 @@ cdef class Quad4:
         r"""Update sparse vectors for the nonlinear stiffness matrix KCNL
 
         KCNL collects the terms of the tangent stiffness matrix of the
-        geometrically nonlinear analysis with the von Karman membrane strains
+        geometrically nonlinear analysis with the von Kármán membrane strains
         that are not in KC0 and in KG, evaluated at the displacements of the
         probe with the quadrature of :meth:`.update_KG`. The tangent stiffness
         matrix of the internal forces of :meth:`.update_fint` with
@@ -2851,8 +3263,19 @@ cdef class Quad4:
 
         Notes
         -----
-        Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, that is `\boldsymbol{K}_{CNL} + \boldsymbol{K}_{GNL}`, the book's nonlinear constitutive stiffness matrix `\boldsymbol{K}_{CNL}` of the terms of `\boldsymbol{B}_{NL}` plus the geometric `\boldsymbol{K}_{GNL}`, built from the von Karman
-        membrane strains
+        KCNL = KC0L + KCL0 + KCLL + KGNL, that is `\boldsymbol{K}_{CNL} +
+        \boldsymbol{K}_{GNL}`: the nonlinear constitutive stiffness matrix
+        `\boldsymbol{K}_{CNL}`, the terms of `\int (\boldsymbol{B}_L +
+        \boldsymbol{B}_{NL})^\top \boldsymbol{C} (\boldsymbol{B}_L +
+        \boldsymbol{B}_{NL}) d\Omega` that contain `\boldsymbol{B}_{NL}`, plus
+        the geometric stiffness matrix `\boldsymbol{K}_{GNL}` of the stress
+        resultants of the nonlinear strains. Crisfield [2]_, Section 8.1.5,
+        Eqs. (8.26)-(8.31), groups the same terms differently: his
+        `\boldsymbol{K}_{t1}` is `\boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}`,
+        and his initial-stress matrix `\boldsymbol{K}_{t\sigma}`, built with
+        the total membrane forces, is `\boldsymbol{K}_G +
+        \boldsymbol{K}_{GNL}`; the tangent stiffness matrix is the same. The
+        matrices are built from the von Kármán membrane strains
 
         .. math::
             \epsilon_{xx} = u_{,x} + \frac{1}{2} w_{,x}^2, \quad
@@ -2895,10 +3318,73 @@ cdef class Quad4:
         The element matrix is computed by :meth:`._update_probe_KCNLve` and
         rotated to global coordinates as in :meth:`.update_KC0`.
 
+        Warped elements, ``warp_offsets = 1``, see the Notes of
+        :class:`.Quad4`. The von Kármán strains are those of the flat element,
+        linked to the nodes by the first-order rigid offsets
+        `\boldsymbol{u}^f = \boldsymbol{J} \boldsymbol{u}_e` (derived
+        here): the strain energy is that of the flat element at
+        `\boldsymbol{J} \boldsymbol{u}_e`, the internal forces are
+        `\boldsymbol{J}^\top` times those of the flat element, and its exact
+        Jacobian is `\boldsymbol{J}^\top (\boldsymbol{K}_{C0} +
+        \boldsymbol{K}_{CNL} + \boldsymbol{K}_{GNL} + \boldsymbol{K}_G)
+        \boldsymbol{J}` of the flat element at `\boldsymbol{J}
+        \boldsymbol{u}_e`, where `\boldsymbol{J}^\top \boldsymbol{K}_G
+        \boldsymbol{J} = \boldsymbol{K}_G`. The link is kept to first order in the
+        rotations because the von Kármán strains themselves are: with the
+        ordering of Sanders (1963), p. 30, Eqs. (67)-(69), and p. 32, Eq.
+        (89), strains of order `\epsilon^2`, rotations about the in-plane
+        axes of order `\epsilon` and a smaller rotation about the normal,
+        the second-order terms of the offsets, `-\frac{1}{2}
+        \boldsymbol{\theta}_a \times (\boldsymbol{\theta}_a \times
+        \boldsymbol{r}_a)`, change the strains by terms of order
+        `(\tilde{z}/\ell) \epsilon^3`, beyond those kept (derived here).
+        Measured on the twisted beam of ``tests/test_quad_warp_offsets.py``
+        with 12 by 2 elements and rotations up to 0.3, the second-order link
+        gives tip displacements 4 to 7 % smaller than the first-order one,
+        whose results with Quad4 are within 0.6 % of the converged von
+        Kármán solution. The eccentricity
+        term `\boldsymbol{K}_E` that :meth:`.update_KG` adds for the linear
+        buckling analysis, the second derivative of the second-order terms,
+        is therefore subtracted here, with the same nodal forces, those of
+        :meth:`.update_probe_finte`, whose ``probe.finte`` is restored and ``probe.KC0ve`` overwritten,
+        such that KCNL is `\boldsymbol{J}^\top (\boldsymbol{K}_{CNL} +
+        \boldsymbol{K}_{GNL}) \boldsymbol{J} - \boldsymbol{K}_E`, rotated to
+        global coordinates, and ``KC0 + KCNL
+        + KG`` remains the exact Jacobian of the internal forces of
+        :meth:`.update_fint` with ``nonlinear=1``. A flat element and
+        ``warp_offsets = 0`` give the results of the flat element, bit for
+        bit.
+
+        References
+        ----------
+        .. [1] Sanders, J. L., Nonlinear theories for thin shells, Quarterly
+           of Applied Mathematics, 21(1), 21-36, 1963.
+           https://doi.org/10.1090/qam/147023
+        .. [2] Crisfield, M. A., Non-linear Finite Element Analysis of Solids
+           and Structures, Volume 1: Essentials, John Wiley & Sons,
+           Chichester, 1991.
+
         """
         cdef int i, j, node_i, node_j, k, ke, m, n
         cdef int c[4]
         cdef double r[6][6]
+        cdef int warped, iw
+        cdef double zw[4]
+        cdef double fsave[24]
+        cdef double fw[24]
+
+        # NOTE rigid offsets: the translations of the linear internal forces
+        #      of update_probe_finte are the nodal forces of the flat element
+        #      of the eccentricity term, as in update_KG; finte of the probe
+        #      is restored
+        warped = _warp_z(&self.probe.xe[0], self.warp_offsets, zw)
+        if warped:
+            for iw in range(24):
+                fsave[iw] = self.probe.finte[iw]
+            self.update_probe_finte(prop)
+            for iw in range(24):
+                fw[iw] = self.probe.finte[iw]
+                self.probe.finte[iw] = fsave[iw]
 
         with nogil:
             # local to global transformation
@@ -2943,7 +3429,7 @@ cdef class Quad4:
                                 KCNLr[k] = c[node_i] + m
                                 KCNLc[k] = c[node_j] + n
 
-            self._update_probe_KCNLve(prop)
+            self._update_probe_KCNLve(prop, fw)
 
             # NOTE from element to global coordinates:
             #
@@ -3037,12 +3523,13 @@ cdef class Quad4:
         of the pre-buckling state.
 
         The slopes are taken at the centroid, the single integration point of
-        the transverse shear of the elements with `h/\ell < 1`, whereas the
-        stress resultants are integrated with two points in each direction.
-        The hourglass pattern of `w`, `w = \xi \eta`, has no gradient at the
-        centroid, so it has no geometric stiffness, just as it has no
-        stiffness in KC0 when `h/\ell < 1`, see the zero-energy modes in the
-        Notes of :mod:`pyfe3d.quad4`. With the slopes at the two-point
+        the transverse shear of the elements with `h/\ell < 1` and
+        ``shear_model = 0``, whereas the stress resultants are integrated
+        with two points in each direction. The hourglass pattern of `w`, `w
+        = \xi \eta`, has no gradient at the centroid, so it has no geometric
+        stiffness, just as it has no stiffness in KC0 when `h/\ell < 1` and
+        ``shear_model = 0``, see the zero-energy modes in the Notes of
+        :mod:`pyfe3d.quad4`. With the slopes at the two-point
         quadrature points, as before version 0.12.0, that pattern had the
         geometric stiffness of the full quadrature, and a linear buckling
         analysis could return a spurious mode of `w` alternating in sign
@@ -3056,15 +3543,54 @@ cdef class Quad4:
         were protected only because the transverse shear energy of the smooth
         envelope of that pattern exceeded its geometric work. With the slopes
         at the centroid these cases converge to that solution, +0.81, +0.20
-        and +2.19 %, and the buckling loads of coarse meshes increase, e.g.
+        and +2.19 % with ``shear_model = 0``, +0.83, +0.21 and +2.70 % with
+        the default, and the buckling loads of coarse meshes increase, e.g.
         4.7 % instead of 2.2 % above the Kirchhoff solution for a plate with
         5 elements per half-wave along the load. The elements with `h/\ell
         \ge 1`, whose assumed transverse shear strains resist the pattern,
         take the slopes at the centroid as well, such that KG does not depend
-        on the gate `h/\ell = 1`. See
+        on the gate `h/\ell = 1` nor on ``shear_model``. See
         ``tests/test_quad4_geometric_hourglass.py``.
 
+        Warped elements, ``warp_offsets = 1``, see the Notes of
+        :class:`.Quad4`: the stress resultants are those of the displacements
+        `\boldsymbol{J} \boldsymbol{u}_e` of the flat element, and the matrix
+        above, which has no entries of the in-plane translations, is not
+        changed by `\boldsymbol{J}^\top \boldsymbol{K}_G \boldsymbol{J}`. The
+        rigid offsets add on the rotations of each node the eccentricity
+        geometric stiffness, which Felippa and Haugen (2005), Section 5.1,
+        p. 2304, name without giving it (see the references of
+        :class:`pyfe3d.corotational.CorotationalShell`),
+
+        .. math::
+
+            \boldsymbol{K}_{E,a} = (\boldsymbol{n}_a \cdot \boldsymbol{r}_a)
+            \boldsymbol{I} - \frac{1}{2} \left( \boldsymbol{n}_a
+            \boldsymbol{r}_a^\top + \boldsymbol{r}_a \boldsymbol{n}_a^\top
+            \right)
+
+        the second derivative, at zero rotation, of the work of the nodal
+        forces `\boldsymbol{n}_a` of the flat element on the displacement
+        `-(\boldsymbol{R}_a - \boldsymbol{I}) \boldsymbol{r}_a` of its node,
+        `\boldsymbol{R}_a` the rotation matrix of the node (derived here),
+        equal to ``dLambdaT_m(0, n x r) - Spin(n) Spin(r)`` of
+        :mod:`pyfe3d.corotational` and linear in the pre-buckling state. The
+        forces `\boldsymbol{n}_a` are the translations of the linear internal
+        forces of :meth:`.update_probe_finte`, which are those of the flat
+        element; ``probe.finte`` is restored and ``probe.KC0ve`` overwritten. :meth:`.update_KCNL` subtracts
+        `\boldsymbol{K}_E`, see its Notes, such that the tangent of the von
+        Kármán internal forces does not contain it.
+        The 36 entries of `\boldsymbol{K}_E` follow the 144 of the
+        translations, ``(r_x, r_y, r_z)`` of node 1 to node 4 row by row, and
+        are zero for a flat element and with ``warp_offsets = 0``.
+
         """
+        cdef int warped, iw, jw
+        cdef double zw[4]
+        cdef double uw[24]
+        cdef double fw[24]
+        cdef double KEw[36]
+        cdef double Rw[9]
         cdef double *ue
         cdef int c1, c2, c3, c4, i, j, k
         cdef double x1, x2, x3, x4
@@ -3084,6 +3610,20 @@ cdef class Quad4:
         cdef double Scx[4]
         cdef double Scy[4]
         cdef double Nxx, Nyy, Nxy
+
+        # NOTE rigid offsets: the flat element has the displacements J ue
+        #      and the linear internal forces of update_probe_finte,
+        #      whose translations are those of the flat element; finte
+        #      of the probe is restored
+        warped = _warp_z(&self.probe.xe[0], self.warp_offsets, zw)
+        if warped:
+            for iw in range(24):
+                uw[iw] = self.probe.finte[iw]
+            self.update_probe_finte(prop)
+            for iw in range(24):
+                fw[iw] = self.probe.finte[iw]
+                self.probe.finte[iw] = uw[iw]
+            _warp_ue(zw, &self.probe.ue[0], uw)
 
         with nogil:
             # NOTE constitutive matrices in the element coordinate system,
@@ -3122,6 +3662,8 @@ cdef class Quad4:
             # z4 = self.probe.xe[11]
 
             ue = &self.probe.ue[0]
+            if warped:
+                ue = uw
 
             # positions of nodes 1,2,3,4 in the global matrix
             c1 = self.c1
@@ -3561,6 +4103,29 @@ cdef class Quad4:
             k += 1
             KGr[k] = 2+c4
             KGc[k] = 2+c4
+            # NOTE rotations of each node, eccentricity geometric stiffness
+            #      of the rigid offsets, see the Notes
+            k = self.init_k_KG + 144
+            for iw in range(3):
+                for jw in range(3):
+                    KGr[k] = 3 + iw + c1
+                    KGc[k] = 3 + jw + c1
+                    k += 1
+            for iw in range(3):
+                for jw in range(3):
+                    KGr[k] = 3 + iw + c2
+                    KGc[k] = 3 + jw + c2
+                    k += 1
+            for iw in range(3):
+                for jw in range(3):
+                    KGr[k] = 3 + iw + c3
+                    KGc[k] = 3 + jw + c3
+                    k += 1
+            for iw in range(3):
+                for jw in range(3):
+                    KGr[k] = 3 + iw + c4
+                    KGc[k] = 3 + jw + c4
+                    k += 1
 
             # NOTE the slopes of w are taken at the centroid, see the Notes of
             #      update_KG
@@ -3921,6 +4486,21 @@ cdef class Quad4:
                     k += 1
                     KGv[k] += r33**2*(S4_x*(Nxx*S4_x*detJ*wij + Nxy*S4_y*detJ*wij) + S4_y*(Nxy*S4_x*detJ*wij + Nyy*S4_y*detJ*wij))
 
+            if warped:
+                # NOTE eccentricity geometric stiffness of the rigid offsets
+                Rw[0] = self.r11
+                Rw[1] = self.r12
+                Rw[2] = self.r13
+                Rw[3] = self.r21
+                Rw[4] = self.r22
+                Rw[5] = self.r23
+                Rw[6] = self.r31
+                Rw[7] = self.r32
+                Rw[8] = self.r33
+                _warp_KE(zw, fw, Rw, KEw)
+                for iw in range(36):
+                    KGv[self.init_k_KG + 144 + iw] += KEw[iw]
+
 
     cpdef void update_KG_given_stress(Quad4 self,
                                       double Nxx, double Nyy, double Nxy,
@@ -3972,7 +4552,43 @@ cdef class Quad4:
         the slopes at the centroid, it is the element area times the
         integrand at the centroid.
 
+        Warped elements, ``warp_offsets = 1``, see the Notes of
+        :class:`.Quad4`: the stress resultants are those of the displacements
+        `\boldsymbol{J} \boldsymbol{u}_e` of the flat element, and the matrix
+        above, which has no entries of the in-plane translations, is not
+        changed by `\boldsymbol{J}^\top \boldsymbol{K}_G \boldsymbol{J}`. The
+        rigid offsets add on the rotations of each node the eccentricity
+        geometric stiffness, which Felippa and Haugen (2005), Section 5.1,
+        p. 2304, name without giving it (see the references of
+        :class:`pyfe3d.corotational.CorotationalShell`),
+
+        .. math::
+
+            \boldsymbol{K}_{E,a} = (\boldsymbol{n}_a \cdot \boldsymbol{r}_a)
+            \boldsymbol{I} - \frac{1}{2} \left( \boldsymbol{n}_a
+            \boldsymbol{r}_a^\top + \boldsymbol{r}_a \boldsymbol{n}_a^\top
+            \right)
+
+        the second derivative, at zero rotation, of the work of the nodal
+        forces `\boldsymbol{n}_a` of the flat element on the displacement
+        `-(\boldsymbol{R}_a - \boldsymbol{I}) \boldsymbol{r}_a` of its node,
+        `\boldsymbol{R}_a` the rotation matrix of the node (derived here),
+        equal to ``dLambdaT_m(0, n x r) - Spin(n) Spin(r)`` of
+        :mod:`pyfe3d.corotational` and linear in the pre-buckling state. The
+        forces `\boldsymbol{n}_a` are those of the given stress resultants, the
+        area times `N_{xx} S_{a,x} + N_{xy} S_{a,y}` and `N_{xy} S_{a,x} +
+        N_{yy} S_{a,y}` with the slopes of the shape functions at the centroid,
+        which is their exact integral. The 36 entries of `\boldsymbol{K}_E`
+        follow the 144 of the translations, ``(r_x, r_y, r_z)`` of node 1 to
+        node 4 row by row, and are zero for a flat element and with
+        ``warp_offsets = 0``.
+
         """
+        cdef int warped, iw, jw, a
+        cdef double zw[4]
+        cdef double fw[24]
+        cdef double KEw[36]
+        cdef double Rw[9]
         cdef int c1, c2, c3, c4, i, j, k
         cdef double x1, x2, x3, x4
         cdef double y1, y2, y3, y4
@@ -4442,6 +5058,29 @@ cdef class Quad4:
             k += 1
             KGr[k] = 2+c4
             KGc[k] = 2+c4
+            # NOTE rotations of each node, eccentricity geometric stiffness
+            #      of the rigid offsets, see the Notes
+            k = self.init_k_KG + 144
+            for iw in range(3):
+                for jw in range(3):
+                    KGr[k] = 3 + iw + c1
+                    KGc[k] = 3 + jw + c1
+                    k += 1
+            for iw in range(3):
+                for jw in range(3):
+                    KGr[k] = 3 + iw + c2
+                    KGc[k] = 3 + jw + c2
+                    k += 1
+            for iw in range(3):
+                for jw in range(3):
+                    KGr[k] = 3 + iw + c3
+                    KGc[k] = 3 + jw + c3
+                    k += 1
+            for iw in range(3):
+                for jw in range(3):
+                    KGr[k] = 3 + iw + c4
+                    KGc[k] = 3 + jw + c4
+                    k += 1
 
             # NOTE the slopes of w are taken at the centroid, see the Notes of
             #      update_KG
@@ -4778,6 +5417,29 @@ cdef class Quad4:
                     k += 1
                     KGv[k] += r33**2*(S4_x*(Nxx*S4_x*detJ*wij + Nxy*S4_y*detJ*wij) + S4_y*(Nxy*S4_x*detJ*wij + Nyy*S4_y*detJ*wij))
 
+            # NOTE eccentricity geometric stiffness of the rigid offsets,
+            #      with the forces of the given stress resultants at the
+            #      nodes of the flat element, area times the slopes at the
+            #      centroid, the exact integral of the bilinear slopes
+            warped = _warp_z(&self.probe.xe[0], self.warp_offsets, zw)
+            if warped:
+                for a in range(4):
+                    fw[6*a + 0] = self.area*(Scx[a]*Nxx + Scy[a]*Nxy)
+                    fw[6*a + 1] = self.area*(Scx[a]*Nxy + Scy[a]*Nyy)
+                    fw[6*a + 2] = 0.
+                Rw[0] = self.r11
+                Rw[1] = self.r12
+                Rw[2] = self.r13
+                Rw[3] = self.r21
+                Rw[4] = self.r22
+                Rw[5] = self.r23
+                Rw[6] = self.r31
+                Rw[7] = self.r32
+                Rw[8] = self.r33
+                _warp_KE(zw, fw, Rw, KEw)
+                for iw in range(36):
+                    KGv[self.init_k_KG + 144 + iw] += KEw[iw]
+
 
     cpdef void update_M(Quad4 self,
                         long [::1] Mr,
@@ -4895,6 +5557,18 @@ cdef class Quad4:
         nodes: 3 times the exact value about the centroid of a
         parallelogram, an error that decreases with the size of the elements.
 
+        With ``warp_offsets = 1`` and a warped element the matrix is
+        `\boldsymbol{J}^\top \boldsymbol{M} \boldsymbol{J}`, see the Notes of
+        :class:`.Quad4`, which keeps the form above for each pair of nodes `i`
+        and `j` with ``intrhoz`` replaced by ``intrhoz - intrho*z_j`` in the
+        entries between the translations of `i` and the rotations of `j`, and
+        ``intrhoz2`` by ``intrhoz2 - intrhoz*(z_i + z_j) + intrho*z_i*z_j`` in
+        those between the rotations, `z_i` being the heights of the nodes above
+        the flat element (derived here, checked in
+        ``theory/deriving_equations/quad4r/verify_quad4r_warp_offsets.py``):
+        the moments of the mass about the warped nodes. The numbers of entries
+        do not change, and the lumped matrix remains block-diagonal per node.
+
         References
         ----------
         .. [1] Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
@@ -4902,6 +5576,9 @@ cdef class Quad4:
            2343-2356, 1987. https://doi.org/10.1002/nme.1620241208
 
         """
+        cdef double zw[4]
+        cdef double mz1, mz2, mz3, mz4
+        cdef double mzz11, mzz12, mzz13, mzz14, mzz22, mzz23, mzz24, mzz33, mzz34, mzz44
         cdef int c1, c2, c3, c4, i, j, k
         cdef double intrho, intrhoz, intrhoz2
         cdef double r11, r12, r13, r21, r22, r23, r31, r32, r33
@@ -4922,6 +5599,23 @@ cdef class Quad4:
             intrho = prop.intrho
             intrhoz = prop.intrhoz
             intrhoz2 = prop.intrhoz2
+
+            # NOTE rigid offsets of a warped element, J^T M J, see the Notes
+            _warp_z(&self.probe.xe[0], self.warp_offsets, zw)
+            mz1 = intrhoz - intrho*zw[0]
+            mz2 = intrhoz - intrho*zw[1]
+            mz3 = intrhoz - intrho*zw[2]
+            mz4 = intrhoz - intrho*zw[3]
+            mzz11 = intrhoz2 - intrhoz*(zw[0] + zw[0]) + intrho*zw[0]*zw[0]
+            mzz12 = intrhoz2 - intrhoz*(zw[0] + zw[1]) + intrho*zw[0]*zw[1]
+            mzz13 = intrhoz2 - intrhoz*(zw[0] + zw[2]) + intrho*zw[0]*zw[2]
+            mzz14 = intrhoz2 - intrhoz*(zw[0] + zw[3]) + intrho*zw[0]*zw[3]
+            mzz22 = intrhoz2 - intrhoz*(zw[1] + zw[1]) + intrho*zw[1]*zw[1]
+            mzz23 = intrhoz2 - intrhoz*(zw[1] + zw[2]) + intrho*zw[1]*zw[2]
+            mzz24 = intrhoz2 - intrhoz*(zw[1] + zw[3]) + intrho*zw[1]*zw[3]
+            mzz33 = intrhoz2 - intrhoz*(zw[2] + zw[2]) + intrho*zw[2]*zw[2]
+            mzz34 = intrhoz2 - intrhoz*(zw[2] + zw[3]) + intrho*zw[2]*zw[3]
+            mzz44 = intrhoz2 - intrhoz*(zw[3] + zw[3]) + intrho*zw[3]*zw[3]
 
             valH1 = 0.0625*self.area
 
@@ -6447,9 +7141,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h11*intrho*r11*r31 + h11*intrho*r12*r32 + h11*intrho*r13*r33
                 k += 1
-                Mv[k] += h11*intrhoz*r11*r22 - h11*intrhoz*r12*r21
+                Mv[k] += h11*mz1*r11*r22 - h11*mz1*r12*r21
                 k += 1
-                Mv[k] += h11*intrhoz*r11*r32 - h11*intrhoz*r12*r31
+                Mv[k] += h11*mz1*r11*r32 - h11*mz1*r12*r31
                 k += 1
                 Mv[k] += h12*intrho*r11**2 + h12*intrho*r12**2 + h12*intrho*r13**2
                 k += 1
@@ -6457,9 +7151,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h12*intrho*r11*r31 + h12*intrho*r12*r32 + h12*intrho*r13*r33
                 k += 1
-                Mv[k] += h12*intrhoz*r11*r22 - h12*intrhoz*r12*r21
+                Mv[k] += h12*mz2*r11*r22 - h12*mz2*r12*r21
                 k += 1
-                Mv[k] += h12*intrhoz*r11*r32 - h12*intrhoz*r12*r31
+                Mv[k] += h12*mz2*r11*r32 - h12*mz2*r12*r31
                 k += 1
                 Mv[k] += h13*intrho*r11**2 + h13*intrho*r12**2 + h13*intrho*r13**2
                 k += 1
@@ -6467,9 +7161,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h13*intrho*r11*r31 + h13*intrho*r12*r32 + h13*intrho*r13*r33
                 k += 1
-                Mv[k] += h13*intrhoz*r11*r22 - h13*intrhoz*r12*r21
+                Mv[k] += h13*mz3*r11*r22 - h13*mz3*r12*r21
                 k += 1
-                Mv[k] += h13*intrhoz*r11*r32 - h13*intrhoz*r12*r31
+                Mv[k] += h13*mz3*r11*r32 - h13*mz3*r12*r31
                 k += 1
                 Mv[k] += h14*intrho*r11**2 + h14*intrho*r12**2 + h14*intrho*r13**2
                 k += 1
@@ -6477,9 +7171,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h14*intrho*r11*r31 + h14*intrho*r12*r32 + h14*intrho*r13*r33
                 k += 1
-                Mv[k] += h14*intrhoz*r11*r22 - h14*intrhoz*r12*r21
+                Mv[k] += h14*mz4*r11*r22 - h14*mz4*r12*r21
                 k += 1
-                Mv[k] += h14*intrhoz*r11*r32 - h14*intrhoz*r12*r31
+                Mv[k] += h14*mz4*r11*r32 - h14*mz4*r12*r31
                 k += 1
                 Mv[k] += h11*intrho*r11*r21 + h11*intrho*r12*r22 + h11*intrho*r13*r23
                 k += 1
@@ -6487,9 +7181,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h11*intrho*r21*r31 + h11*intrho*r22*r32 + h11*intrho*r23*r33
                 k += 1
-                Mv[k] += -h11*intrhoz*r11*r22 + h11*intrhoz*r12*r21
+                Mv[k] += -h11*mz1*r11*r22 + h11*mz1*r12*r21
                 k += 1
-                Mv[k] += h11*intrhoz*r21*r32 - h11*intrhoz*r22*r31
+                Mv[k] += h11*mz1*r21*r32 - h11*mz1*r22*r31
                 k += 1
                 Mv[k] += h12*intrho*r11*r21 + h12*intrho*r12*r22 + h12*intrho*r13*r23
                 k += 1
@@ -6497,9 +7191,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h12*intrho*r21*r31 + h12*intrho*r22*r32 + h12*intrho*r23*r33
                 k += 1
-                Mv[k] += -h12*intrhoz*r11*r22 + h12*intrhoz*r12*r21
+                Mv[k] += -h12*mz2*r11*r22 + h12*mz2*r12*r21
                 k += 1
-                Mv[k] += h12*intrhoz*r21*r32 - h12*intrhoz*r22*r31
+                Mv[k] += h12*mz2*r21*r32 - h12*mz2*r22*r31
                 k += 1
                 Mv[k] += h13*intrho*r11*r21 + h13*intrho*r12*r22 + h13*intrho*r13*r23
                 k += 1
@@ -6507,9 +7201,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h13*intrho*r21*r31 + h13*intrho*r22*r32 + h13*intrho*r23*r33
                 k += 1
-                Mv[k] += -h13*intrhoz*r11*r22 + h13*intrhoz*r12*r21
+                Mv[k] += -h13*mz3*r11*r22 + h13*mz3*r12*r21
                 k += 1
-                Mv[k] += h13*intrhoz*r21*r32 - h13*intrhoz*r22*r31
+                Mv[k] += h13*mz3*r21*r32 - h13*mz3*r22*r31
                 k += 1
                 Mv[k] += h14*intrho*r11*r21 + h14*intrho*r12*r22 + h14*intrho*r13*r23
                 k += 1
@@ -6517,9 +7211,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h14*intrho*r21*r31 + h14*intrho*r22*r32 + h14*intrho*r23*r33
                 k += 1
-                Mv[k] += -h14*intrhoz*r11*r22 + h14*intrhoz*r12*r21
+                Mv[k] += -h14*mz4*r11*r22 + h14*mz4*r12*r21
                 k += 1
-                Mv[k] += h14*intrhoz*r21*r32 - h14*intrhoz*r22*r31
+                Mv[k] += h14*mz4*r21*r32 - h14*mz4*r22*r31
                 k += 1
                 Mv[k] += h11*intrho*r11*r31 + h11*intrho*r12*r32 + h11*intrho*r13*r33
                 k += 1
@@ -6527,9 +7221,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h11*intrho*r31**2 + h11*intrho*r32**2 + h11*intrho*r33**2
                 k += 1
-                Mv[k] += -h11*intrhoz*r11*r32 + h11*intrhoz*r12*r31
+                Mv[k] += -h11*mz1*r11*r32 + h11*mz1*r12*r31
                 k += 1
-                Mv[k] += -h11*intrhoz*r21*r32 + h11*intrhoz*r22*r31
+                Mv[k] += -h11*mz1*r21*r32 + h11*mz1*r22*r31
                 k += 1
                 Mv[k] += h12*intrho*r11*r31 + h12*intrho*r12*r32 + h12*intrho*r13*r33
                 k += 1
@@ -6537,9 +7231,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h12*intrho*r31**2 + h12*intrho*r32**2 + h12*intrho*r33**2
                 k += 1
-                Mv[k] += -h12*intrhoz*r11*r32 + h12*intrhoz*r12*r31
+                Mv[k] += -h12*mz2*r11*r32 + h12*mz2*r12*r31
                 k += 1
-                Mv[k] += -h12*intrhoz*r21*r32 + h12*intrhoz*r22*r31
+                Mv[k] += -h12*mz2*r21*r32 + h12*mz2*r22*r31
                 k += 1
                 Mv[k] += h13*intrho*r11*r31 + h13*intrho*r12*r32 + h13*intrho*r13*r33
                 k += 1
@@ -6547,9 +7241,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h13*intrho*r31**2 + h13*intrho*r32**2 + h13*intrho*r33**2
                 k += 1
-                Mv[k] += -h13*intrhoz*r11*r32 + h13*intrhoz*r12*r31
+                Mv[k] += -h13*mz3*r11*r32 + h13*mz3*r12*r31
                 k += 1
-                Mv[k] += -h13*intrhoz*r21*r32 + h13*intrhoz*r22*r31
+                Mv[k] += -h13*mz3*r21*r32 + h13*mz3*r22*r31
                 k += 1
                 Mv[k] += h14*intrho*r11*r31 + h14*intrho*r12*r32 + h14*intrho*r13*r33
                 k += 1
@@ -6557,129 +7251,129 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h14*intrho*r31**2 + h14*intrho*r32**2 + h14*intrho*r33**2
                 k += 1
-                Mv[k] += -h14*intrhoz*r11*r32 + h14*intrhoz*r12*r31
+                Mv[k] += -h14*mz4*r11*r32 + h14*mz4*r12*r31
                 k += 1
-                Mv[k] += -h14*intrhoz*r21*r32 + h14*intrhoz*r22*r31
+                Mv[k] += -h14*mz4*r21*r32 + h14*mz4*r22*r31
                 k += 1
-                Mv[k] += -h11*intrhoz*r11*r22 + h11*intrhoz*r12*r21
+                Mv[k] += -h11*mz1*r11*r22 + h11*mz1*r12*r21
                 k += 1
-                Mv[k] += -h11*intrhoz*r11*r32 + h11*intrhoz*r12*r31
+                Mv[k] += -h11*mz1*r11*r32 + h11*mz1*r12*r31
                 k += 1
-                Mv[k] += h11*intrhoz2*r11**2 + h11*intrhoz2*r12**2
+                Mv[k] += h11*mzz11*r11**2 + h11*mzz11*r12**2
                 k += 1
-                Mv[k] += h11*intrhoz2*r11*r21 + h11*intrhoz2*r12*r22
+                Mv[k] += h11*mzz11*r11*r21 + h11*mzz11*r12*r22
                 k += 1
-                Mv[k] += h11*intrhoz2*r11*r31 + h11*intrhoz2*r12*r32
+                Mv[k] += h11*mzz11*r11*r31 + h11*mzz11*r12*r32
                 k += 1
-                Mv[k] += -h12*intrhoz*r11*r22 + h12*intrhoz*r12*r21
+                Mv[k] += -h12*mz1*r11*r22 + h12*mz1*r12*r21
                 k += 1
-                Mv[k] += -h12*intrhoz*r11*r32 + h12*intrhoz*r12*r31
+                Mv[k] += -h12*mz1*r11*r32 + h12*mz1*r12*r31
                 k += 1
-                Mv[k] += h12*intrhoz2*r11**2 + h12*intrhoz2*r12**2
+                Mv[k] += h12*mzz12*r11**2 + h12*mzz12*r12**2
                 k += 1
-                Mv[k] += h12*intrhoz2*r11*r21 + h12*intrhoz2*r12*r22
+                Mv[k] += h12*mzz12*r11*r21 + h12*mzz12*r12*r22
                 k += 1
-                Mv[k] += h12*intrhoz2*r11*r31 + h12*intrhoz2*r12*r32
+                Mv[k] += h12*mzz12*r11*r31 + h12*mzz12*r12*r32
                 k += 1
-                Mv[k] += -h13*intrhoz*r11*r22 + h13*intrhoz*r12*r21
+                Mv[k] += -h13*mz1*r11*r22 + h13*mz1*r12*r21
                 k += 1
-                Mv[k] += -h13*intrhoz*r11*r32 + h13*intrhoz*r12*r31
+                Mv[k] += -h13*mz1*r11*r32 + h13*mz1*r12*r31
                 k += 1
-                Mv[k] += h13*intrhoz2*r11**2 + h13*intrhoz2*r12**2
+                Mv[k] += h13*mzz13*r11**2 + h13*mzz13*r12**2
                 k += 1
-                Mv[k] += h13*intrhoz2*r11*r21 + h13*intrhoz2*r12*r22
+                Mv[k] += h13*mzz13*r11*r21 + h13*mzz13*r12*r22
                 k += 1
-                Mv[k] += h13*intrhoz2*r11*r31 + h13*intrhoz2*r12*r32
+                Mv[k] += h13*mzz13*r11*r31 + h13*mzz13*r12*r32
                 k += 1
-                Mv[k] += -h14*intrhoz*r11*r22 + h14*intrhoz*r12*r21
+                Mv[k] += -h14*mz1*r11*r22 + h14*mz1*r12*r21
                 k += 1
-                Mv[k] += -h14*intrhoz*r11*r32 + h14*intrhoz*r12*r31
+                Mv[k] += -h14*mz1*r11*r32 + h14*mz1*r12*r31
                 k += 1
-                Mv[k] += h14*intrhoz2*r11**2 + h14*intrhoz2*r12**2
+                Mv[k] += h14*mzz14*r11**2 + h14*mzz14*r12**2
                 k += 1
-                Mv[k] += h14*intrhoz2*r11*r21 + h14*intrhoz2*r12*r22
+                Mv[k] += h14*mzz14*r11*r21 + h14*mzz14*r12*r22
                 k += 1
-                Mv[k] += h14*intrhoz2*r11*r31 + h14*intrhoz2*r12*r32
+                Mv[k] += h14*mzz14*r11*r31 + h14*mzz14*r12*r32
                 k += 1
-                Mv[k] += h11*intrhoz*r11*r22 - h11*intrhoz*r12*r21
+                Mv[k] += h11*mz1*r11*r22 - h11*mz1*r12*r21
                 k += 1
-                Mv[k] += -h11*intrhoz*r21*r32 + h11*intrhoz*r22*r31
+                Mv[k] += -h11*mz1*r21*r32 + h11*mz1*r22*r31
                 k += 1
-                Mv[k] += h11*intrhoz2*r11*r21 + h11*intrhoz2*r12*r22
+                Mv[k] += h11*mzz11*r11*r21 + h11*mzz11*r12*r22
                 k += 1
-                Mv[k] += h11*intrhoz2*r21**2 + h11*intrhoz2*r22**2
+                Mv[k] += h11*mzz11*r21**2 + h11*mzz11*r22**2
                 k += 1
-                Mv[k] += h11*intrhoz2*r21*r31 + h11*intrhoz2*r22*r32
+                Mv[k] += h11*mzz11*r21*r31 + h11*mzz11*r22*r32
                 k += 1
-                Mv[k] += h12*intrhoz*r11*r22 - h12*intrhoz*r12*r21
+                Mv[k] += h12*mz1*r11*r22 - h12*mz1*r12*r21
                 k += 1
-                Mv[k] += -h12*intrhoz*r21*r32 + h12*intrhoz*r22*r31
+                Mv[k] += -h12*mz1*r21*r32 + h12*mz1*r22*r31
                 k += 1
-                Mv[k] += h12*intrhoz2*r11*r21 + h12*intrhoz2*r12*r22
+                Mv[k] += h12*mzz12*r11*r21 + h12*mzz12*r12*r22
                 k += 1
-                Mv[k] += h12*intrhoz2*r21**2 + h12*intrhoz2*r22**2
+                Mv[k] += h12*mzz12*r21**2 + h12*mzz12*r22**2
                 k += 1
-                Mv[k] += h12*intrhoz2*r21*r31 + h12*intrhoz2*r22*r32
+                Mv[k] += h12*mzz12*r21*r31 + h12*mzz12*r22*r32
                 k += 1
-                Mv[k] += h13*intrhoz*r11*r22 - h13*intrhoz*r12*r21
+                Mv[k] += h13*mz1*r11*r22 - h13*mz1*r12*r21
                 k += 1
-                Mv[k] += -h13*intrhoz*r21*r32 + h13*intrhoz*r22*r31
+                Mv[k] += -h13*mz1*r21*r32 + h13*mz1*r22*r31
                 k += 1
-                Mv[k] += h13*intrhoz2*r11*r21 + h13*intrhoz2*r12*r22
+                Mv[k] += h13*mzz13*r11*r21 + h13*mzz13*r12*r22
                 k += 1
-                Mv[k] += h13*intrhoz2*r21**2 + h13*intrhoz2*r22**2
+                Mv[k] += h13*mzz13*r21**2 + h13*mzz13*r22**2
                 k += 1
-                Mv[k] += h13*intrhoz2*r21*r31 + h13*intrhoz2*r22*r32
+                Mv[k] += h13*mzz13*r21*r31 + h13*mzz13*r22*r32
                 k += 1
-                Mv[k] += h14*intrhoz*r11*r22 - h14*intrhoz*r12*r21
+                Mv[k] += h14*mz1*r11*r22 - h14*mz1*r12*r21
                 k += 1
-                Mv[k] += -h14*intrhoz*r21*r32 + h14*intrhoz*r22*r31
+                Mv[k] += -h14*mz1*r21*r32 + h14*mz1*r22*r31
                 k += 1
-                Mv[k] += h14*intrhoz2*r11*r21 + h14*intrhoz2*r12*r22
+                Mv[k] += h14*mzz14*r11*r21 + h14*mzz14*r12*r22
                 k += 1
-                Mv[k] += h14*intrhoz2*r21**2 + h14*intrhoz2*r22**2
+                Mv[k] += h14*mzz14*r21**2 + h14*mzz14*r22**2
                 k += 1
-                Mv[k] += h14*intrhoz2*r21*r31 + h14*intrhoz2*r22*r32
+                Mv[k] += h14*mzz14*r21*r31 + h14*mzz14*r22*r32
                 k += 1
-                Mv[k] += h11*intrhoz*r11*r32 - h11*intrhoz*r12*r31
+                Mv[k] += h11*mz1*r11*r32 - h11*mz1*r12*r31
                 k += 1
-                Mv[k] += h11*intrhoz*r21*r32 - h11*intrhoz*r22*r31
+                Mv[k] += h11*mz1*r21*r32 - h11*mz1*r22*r31
                 k += 1
-                Mv[k] += h11*intrhoz2*r11*r31 + h11*intrhoz2*r12*r32
+                Mv[k] += h11*mzz11*r11*r31 + h11*mzz11*r12*r32
                 k += 1
-                Mv[k] += h11*intrhoz2*r21*r31 + h11*intrhoz2*r22*r32
+                Mv[k] += h11*mzz11*r21*r31 + h11*mzz11*r22*r32
                 k += 1
-                Mv[k] += h11*intrhoz2*r31**2 + h11*intrhoz2*r32**2
+                Mv[k] += h11*mzz11*r31**2 + h11*mzz11*r32**2
                 k += 1
-                Mv[k] += h12*intrhoz*r11*r32 - h12*intrhoz*r12*r31
+                Mv[k] += h12*mz1*r11*r32 - h12*mz1*r12*r31
                 k += 1
-                Mv[k] += h12*intrhoz*r21*r32 - h12*intrhoz*r22*r31
+                Mv[k] += h12*mz1*r21*r32 - h12*mz1*r22*r31
                 k += 1
-                Mv[k] += h12*intrhoz2*r11*r31 + h12*intrhoz2*r12*r32
+                Mv[k] += h12*mzz12*r11*r31 + h12*mzz12*r12*r32
                 k += 1
-                Mv[k] += h12*intrhoz2*r21*r31 + h12*intrhoz2*r22*r32
+                Mv[k] += h12*mzz12*r21*r31 + h12*mzz12*r22*r32
                 k += 1
-                Mv[k] += h12*intrhoz2*r31**2 + h12*intrhoz2*r32**2
+                Mv[k] += h12*mzz12*r31**2 + h12*mzz12*r32**2
                 k += 1
-                Mv[k] += h13*intrhoz*r11*r32 - h13*intrhoz*r12*r31
+                Mv[k] += h13*mz1*r11*r32 - h13*mz1*r12*r31
                 k += 1
-                Mv[k] += h13*intrhoz*r21*r32 - h13*intrhoz*r22*r31
+                Mv[k] += h13*mz1*r21*r32 - h13*mz1*r22*r31
                 k += 1
-                Mv[k] += h13*intrhoz2*r11*r31 + h13*intrhoz2*r12*r32
+                Mv[k] += h13*mzz13*r11*r31 + h13*mzz13*r12*r32
                 k += 1
-                Mv[k] += h13*intrhoz2*r21*r31 + h13*intrhoz2*r22*r32
+                Mv[k] += h13*mzz13*r21*r31 + h13*mzz13*r22*r32
                 k += 1
-                Mv[k] += h13*intrhoz2*r31**2 + h13*intrhoz2*r32**2
+                Mv[k] += h13*mzz13*r31**2 + h13*mzz13*r32**2
                 k += 1
-                Mv[k] += h14*intrhoz*r11*r32 - h14*intrhoz*r12*r31
+                Mv[k] += h14*mz1*r11*r32 - h14*mz1*r12*r31
                 k += 1
-                Mv[k] += h14*intrhoz*r21*r32 - h14*intrhoz*r22*r31
+                Mv[k] += h14*mz1*r21*r32 - h14*mz1*r22*r31
                 k += 1
-                Mv[k] += h14*intrhoz2*r11*r31 + h14*intrhoz2*r12*r32
+                Mv[k] += h14*mzz14*r11*r31 + h14*mzz14*r12*r32
                 k += 1
-                Mv[k] += h14*intrhoz2*r21*r31 + h14*intrhoz2*r22*r32
+                Mv[k] += h14*mzz14*r21*r31 + h14*mzz14*r22*r32
                 k += 1
-                Mv[k] += h14*intrhoz2*r31**2 + h14*intrhoz2*r32**2
+                Mv[k] += h14*mzz14*r31**2 + h14*mzz14*r32**2
                 k += 1
                 Mv[k] += h12*intrho*r11**2 + h12*intrho*r12**2 + h12*intrho*r13**2
                 k += 1
@@ -6687,9 +7381,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h12*intrho*r11*r31 + h12*intrho*r12*r32 + h12*intrho*r13*r33
                 k += 1
-                Mv[k] += h12*intrhoz*r11*r22 - h12*intrhoz*r12*r21
+                Mv[k] += h12*mz1*r11*r22 - h12*mz1*r12*r21
                 k += 1
-                Mv[k] += h12*intrhoz*r11*r32 - h12*intrhoz*r12*r31
+                Mv[k] += h12*mz1*r11*r32 - h12*mz1*r12*r31
                 k += 1
                 Mv[k] += h22*intrho*r11**2 + h22*intrho*r12**2 + h22*intrho*r13**2
                 k += 1
@@ -6697,9 +7391,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h22*intrho*r11*r31 + h22*intrho*r12*r32 + h22*intrho*r13*r33
                 k += 1
-                Mv[k] += h22*intrhoz*r11*r22 - h22*intrhoz*r12*r21
+                Mv[k] += h22*mz2*r11*r22 - h22*mz2*r12*r21
                 k += 1
-                Mv[k] += h22*intrhoz*r11*r32 - h22*intrhoz*r12*r31
+                Mv[k] += h22*mz2*r11*r32 - h22*mz2*r12*r31
                 k += 1
                 Mv[k] += h23*intrho*r11**2 + h23*intrho*r12**2 + h23*intrho*r13**2
                 k += 1
@@ -6707,9 +7401,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h23*intrho*r11*r31 + h23*intrho*r12*r32 + h23*intrho*r13*r33
                 k += 1
-                Mv[k] += h23*intrhoz*r11*r22 - h23*intrhoz*r12*r21
+                Mv[k] += h23*mz3*r11*r22 - h23*mz3*r12*r21
                 k += 1
-                Mv[k] += h23*intrhoz*r11*r32 - h23*intrhoz*r12*r31
+                Mv[k] += h23*mz3*r11*r32 - h23*mz3*r12*r31
                 k += 1
                 Mv[k] += h24*intrho*r11**2 + h24*intrho*r12**2 + h24*intrho*r13**2
                 k += 1
@@ -6717,9 +7411,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h24*intrho*r11*r31 + h24*intrho*r12*r32 + h24*intrho*r13*r33
                 k += 1
-                Mv[k] += h24*intrhoz*r11*r22 - h24*intrhoz*r12*r21
+                Mv[k] += h24*mz4*r11*r22 - h24*mz4*r12*r21
                 k += 1
-                Mv[k] += h24*intrhoz*r11*r32 - h24*intrhoz*r12*r31
+                Mv[k] += h24*mz4*r11*r32 - h24*mz4*r12*r31
                 k += 1
                 Mv[k] += h12*intrho*r11*r21 + h12*intrho*r12*r22 + h12*intrho*r13*r23
                 k += 1
@@ -6727,9 +7421,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h12*intrho*r21*r31 + h12*intrho*r22*r32 + h12*intrho*r23*r33
                 k += 1
-                Mv[k] += -h12*intrhoz*r11*r22 + h12*intrhoz*r12*r21
+                Mv[k] += -h12*mz1*r11*r22 + h12*mz1*r12*r21
                 k += 1
-                Mv[k] += h12*intrhoz*r21*r32 - h12*intrhoz*r22*r31
+                Mv[k] += h12*mz1*r21*r32 - h12*mz1*r22*r31
                 k += 1
                 Mv[k] += h22*intrho*r11*r21 + h22*intrho*r12*r22 + h22*intrho*r13*r23
                 k += 1
@@ -6737,9 +7431,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h22*intrho*r21*r31 + h22*intrho*r22*r32 + h22*intrho*r23*r33
                 k += 1
-                Mv[k] += -h22*intrhoz*r11*r22 + h22*intrhoz*r12*r21
+                Mv[k] += -h22*mz2*r11*r22 + h22*mz2*r12*r21
                 k += 1
-                Mv[k] += h22*intrhoz*r21*r32 - h22*intrhoz*r22*r31
+                Mv[k] += h22*mz2*r21*r32 - h22*mz2*r22*r31
                 k += 1
                 Mv[k] += h23*intrho*r11*r21 + h23*intrho*r12*r22 + h23*intrho*r13*r23
                 k += 1
@@ -6747,9 +7441,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h23*intrho*r21*r31 + h23*intrho*r22*r32 + h23*intrho*r23*r33
                 k += 1
-                Mv[k] += -h23*intrhoz*r11*r22 + h23*intrhoz*r12*r21
+                Mv[k] += -h23*mz3*r11*r22 + h23*mz3*r12*r21
                 k += 1
-                Mv[k] += h23*intrhoz*r21*r32 - h23*intrhoz*r22*r31
+                Mv[k] += h23*mz3*r21*r32 - h23*mz3*r22*r31
                 k += 1
                 Mv[k] += h24*intrho*r11*r21 + h24*intrho*r12*r22 + h24*intrho*r13*r23
                 k += 1
@@ -6757,9 +7451,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h24*intrho*r21*r31 + h24*intrho*r22*r32 + h24*intrho*r23*r33
                 k += 1
-                Mv[k] += -h24*intrhoz*r11*r22 + h24*intrhoz*r12*r21
+                Mv[k] += -h24*mz4*r11*r22 + h24*mz4*r12*r21
                 k += 1
-                Mv[k] += h24*intrhoz*r21*r32 - h24*intrhoz*r22*r31
+                Mv[k] += h24*mz4*r21*r32 - h24*mz4*r22*r31
                 k += 1
                 Mv[k] += h12*intrho*r11*r31 + h12*intrho*r12*r32 + h12*intrho*r13*r33
                 k += 1
@@ -6767,9 +7461,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h12*intrho*r31**2 + h12*intrho*r32**2 + h12*intrho*r33**2
                 k += 1
-                Mv[k] += -h12*intrhoz*r11*r32 + h12*intrhoz*r12*r31
+                Mv[k] += -h12*mz1*r11*r32 + h12*mz1*r12*r31
                 k += 1
-                Mv[k] += -h12*intrhoz*r21*r32 + h12*intrhoz*r22*r31
+                Mv[k] += -h12*mz1*r21*r32 + h12*mz1*r22*r31
                 k += 1
                 Mv[k] += h22*intrho*r11*r31 + h22*intrho*r12*r32 + h22*intrho*r13*r33
                 k += 1
@@ -6777,9 +7471,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h22*intrho*r31**2 + h22*intrho*r32**2 + h22*intrho*r33**2
                 k += 1
-                Mv[k] += -h22*intrhoz*r11*r32 + h22*intrhoz*r12*r31
+                Mv[k] += -h22*mz2*r11*r32 + h22*mz2*r12*r31
                 k += 1
-                Mv[k] += -h22*intrhoz*r21*r32 + h22*intrhoz*r22*r31
+                Mv[k] += -h22*mz2*r21*r32 + h22*mz2*r22*r31
                 k += 1
                 Mv[k] += h23*intrho*r11*r31 + h23*intrho*r12*r32 + h23*intrho*r13*r33
                 k += 1
@@ -6787,9 +7481,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h23*intrho*r31**2 + h23*intrho*r32**2 + h23*intrho*r33**2
                 k += 1
-                Mv[k] += -h23*intrhoz*r11*r32 + h23*intrhoz*r12*r31
+                Mv[k] += -h23*mz3*r11*r32 + h23*mz3*r12*r31
                 k += 1
-                Mv[k] += -h23*intrhoz*r21*r32 + h23*intrhoz*r22*r31
+                Mv[k] += -h23*mz3*r21*r32 + h23*mz3*r22*r31
                 k += 1
                 Mv[k] += h24*intrho*r11*r31 + h24*intrho*r12*r32 + h24*intrho*r13*r33
                 k += 1
@@ -6797,129 +7491,129 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h24*intrho*r31**2 + h24*intrho*r32**2 + h24*intrho*r33**2
                 k += 1
-                Mv[k] += -h24*intrhoz*r11*r32 + h24*intrhoz*r12*r31
+                Mv[k] += -h24*mz4*r11*r32 + h24*mz4*r12*r31
                 k += 1
-                Mv[k] += -h24*intrhoz*r21*r32 + h24*intrhoz*r22*r31
+                Mv[k] += -h24*mz4*r21*r32 + h24*mz4*r22*r31
                 k += 1
-                Mv[k] += -h12*intrhoz*r11*r22 + h12*intrhoz*r12*r21
+                Mv[k] += -h12*mz2*r11*r22 + h12*mz2*r12*r21
                 k += 1
-                Mv[k] += -h12*intrhoz*r11*r32 + h12*intrhoz*r12*r31
+                Mv[k] += -h12*mz2*r11*r32 + h12*mz2*r12*r31
                 k += 1
-                Mv[k] += h12*intrhoz2*r11**2 + h12*intrhoz2*r12**2
+                Mv[k] += h12*mzz12*r11**2 + h12*mzz12*r12**2
                 k += 1
-                Mv[k] += h12*intrhoz2*r11*r21 + h12*intrhoz2*r12*r22
+                Mv[k] += h12*mzz12*r11*r21 + h12*mzz12*r12*r22
                 k += 1
-                Mv[k] += h12*intrhoz2*r11*r31 + h12*intrhoz2*r12*r32
+                Mv[k] += h12*mzz12*r11*r31 + h12*mzz12*r12*r32
                 k += 1
-                Mv[k] += -h22*intrhoz*r11*r22 + h22*intrhoz*r12*r21
+                Mv[k] += -h22*mz2*r11*r22 + h22*mz2*r12*r21
                 k += 1
-                Mv[k] += -h22*intrhoz*r11*r32 + h22*intrhoz*r12*r31
+                Mv[k] += -h22*mz2*r11*r32 + h22*mz2*r12*r31
                 k += 1
-                Mv[k] += h22*intrhoz2*r11**2 + h22*intrhoz2*r12**2
+                Mv[k] += h22*mzz22*r11**2 + h22*mzz22*r12**2
                 k += 1
-                Mv[k] += h22*intrhoz2*r11*r21 + h22*intrhoz2*r12*r22
+                Mv[k] += h22*mzz22*r11*r21 + h22*mzz22*r12*r22
                 k += 1
-                Mv[k] += h22*intrhoz2*r11*r31 + h22*intrhoz2*r12*r32
+                Mv[k] += h22*mzz22*r11*r31 + h22*mzz22*r12*r32
                 k += 1
-                Mv[k] += -h23*intrhoz*r11*r22 + h23*intrhoz*r12*r21
+                Mv[k] += -h23*mz2*r11*r22 + h23*mz2*r12*r21
                 k += 1
-                Mv[k] += -h23*intrhoz*r11*r32 + h23*intrhoz*r12*r31
+                Mv[k] += -h23*mz2*r11*r32 + h23*mz2*r12*r31
                 k += 1
-                Mv[k] += h23*intrhoz2*r11**2 + h23*intrhoz2*r12**2
+                Mv[k] += h23*mzz23*r11**2 + h23*mzz23*r12**2
                 k += 1
-                Mv[k] += h23*intrhoz2*r11*r21 + h23*intrhoz2*r12*r22
+                Mv[k] += h23*mzz23*r11*r21 + h23*mzz23*r12*r22
                 k += 1
-                Mv[k] += h23*intrhoz2*r11*r31 + h23*intrhoz2*r12*r32
+                Mv[k] += h23*mzz23*r11*r31 + h23*mzz23*r12*r32
                 k += 1
-                Mv[k] += -h24*intrhoz*r11*r22 + h24*intrhoz*r12*r21
+                Mv[k] += -h24*mz2*r11*r22 + h24*mz2*r12*r21
                 k += 1
-                Mv[k] += -h24*intrhoz*r11*r32 + h24*intrhoz*r12*r31
+                Mv[k] += -h24*mz2*r11*r32 + h24*mz2*r12*r31
                 k += 1
-                Mv[k] += h24*intrhoz2*r11**2 + h24*intrhoz2*r12**2
+                Mv[k] += h24*mzz24*r11**2 + h24*mzz24*r12**2
                 k += 1
-                Mv[k] += h24*intrhoz2*r11*r21 + h24*intrhoz2*r12*r22
+                Mv[k] += h24*mzz24*r11*r21 + h24*mzz24*r12*r22
                 k += 1
-                Mv[k] += h24*intrhoz2*r11*r31 + h24*intrhoz2*r12*r32
+                Mv[k] += h24*mzz24*r11*r31 + h24*mzz24*r12*r32
                 k += 1
-                Mv[k] += h12*intrhoz*r11*r22 - h12*intrhoz*r12*r21
+                Mv[k] += h12*mz2*r11*r22 - h12*mz2*r12*r21
                 k += 1
-                Mv[k] += -h12*intrhoz*r21*r32 + h12*intrhoz*r22*r31
+                Mv[k] += -h12*mz2*r21*r32 + h12*mz2*r22*r31
                 k += 1
-                Mv[k] += h12*intrhoz2*r11*r21 + h12*intrhoz2*r12*r22
+                Mv[k] += h12*mzz12*r11*r21 + h12*mzz12*r12*r22
                 k += 1
-                Mv[k] += h12*intrhoz2*r21**2 + h12*intrhoz2*r22**2
+                Mv[k] += h12*mzz12*r21**2 + h12*mzz12*r22**2
                 k += 1
-                Mv[k] += h12*intrhoz2*r21*r31 + h12*intrhoz2*r22*r32
+                Mv[k] += h12*mzz12*r21*r31 + h12*mzz12*r22*r32
                 k += 1
-                Mv[k] += h22*intrhoz*r11*r22 - h22*intrhoz*r12*r21
+                Mv[k] += h22*mz2*r11*r22 - h22*mz2*r12*r21
                 k += 1
-                Mv[k] += -h22*intrhoz*r21*r32 + h22*intrhoz*r22*r31
+                Mv[k] += -h22*mz2*r21*r32 + h22*mz2*r22*r31
                 k += 1
-                Mv[k] += h22*intrhoz2*r11*r21 + h22*intrhoz2*r12*r22
+                Mv[k] += h22*mzz22*r11*r21 + h22*mzz22*r12*r22
                 k += 1
-                Mv[k] += h22*intrhoz2*r21**2 + h22*intrhoz2*r22**2
+                Mv[k] += h22*mzz22*r21**2 + h22*mzz22*r22**2
                 k += 1
-                Mv[k] += h22*intrhoz2*r21*r31 + h22*intrhoz2*r22*r32
+                Mv[k] += h22*mzz22*r21*r31 + h22*mzz22*r22*r32
                 k += 1
-                Mv[k] += h23*intrhoz*r11*r22 - h23*intrhoz*r12*r21
+                Mv[k] += h23*mz2*r11*r22 - h23*mz2*r12*r21
                 k += 1
-                Mv[k] += -h23*intrhoz*r21*r32 + h23*intrhoz*r22*r31
+                Mv[k] += -h23*mz2*r21*r32 + h23*mz2*r22*r31
                 k += 1
-                Mv[k] += h23*intrhoz2*r11*r21 + h23*intrhoz2*r12*r22
+                Mv[k] += h23*mzz23*r11*r21 + h23*mzz23*r12*r22
                 k += 1
-                Mv[k] += h23*intrhoz2*r21**2 + h23*intrhoz2*r22**2
+                Mv[k] += h23*mzz23*r21**2 + h23*mzz23*r22**2
                 k += 1
-                Mv[k] += h23*intrhoz2*r21*r31 + h23*intrhoz2*r22*r32
+                Mv[k] += h23*mzz23*r21*r31 + h23*mzz23*r22*r32
                 k += 1
-                Mv[k] += h24*intrhoz*r11*r22 - h24*intrhoz*r12*r21
+                Mv[k] += h24*mz2*r11*r22 - h24*mz2*r12*r21
                 k += 1
-                Mv[k] += -h24*intrhoz*r21*r32 + h24*intrhoz*r22*r31
+                Mv[k] += -h24*mz2*r21*r32 + h24*mz2*r22*r31
                 k += 1
-                Mv[k] += h24*intrhoz2*r11*r21 + h24*intrhoz2*r12*r22
+                Mv[k] += h24*mzz24*r11*r21 + h24*mzz24*r12*r22
                 k += 1
-                Mv[k] += h24*intrhoz2*r21**2 + h24*intrhoz2*r22**2
+                Mv[k] += h24*mzz24*r21**2 + h24*mzz24*r22**2
                 k += 1
-                Mv[k] += h24*intrhoz2*r21*r31 + h24*intrhoz2*r22*r32
+                Mv[k] += h24*mzz24*r21*r31 + h24*mzz24*r22*r32
                 k += 1
-                Mv[k] += h12*intrhoz*r11*r32 - h12*intrhoz*r12*r31
+                Mv[k] += h12*mz2*r11*r32 - h12*mz2*r12*r31
                 k += 1
-                Mv[k] += h12*intrhoz*r21*r32 - h12*intrhoz*r22*r31
+                Mv[k] += h12*mz2*r21*r32 - h12*mz2*r22*r31
                 k += 1
-                Mv[k] += h12*intrhoz2*r11*r31 + h12*intrhoz2*r12*r32
+                Mv[k] += h12*mzz12*r11*r31 + h12*mzz12*r12*r32
                 k += 1
-                Mv[k] += h12*intrhoz2*r21*r31 + h12*intrhoz2*r22*r32
+                Mv[k] += h12*mzz12*r21*r31 + h12*mzz12*r22*r32
                 k += 1
-                Mv[k] += h12*intrhoz2*r31**2 + h12*intrhoz2*r32**2
+                Mv[k] += h12*mzz12*r31**2 + h12*mzz12*r32**2
                 k += 1
-                Mv[k] += h22*intrhoz*r11*r32 - h22*intrhoz*r12*r31
+                Mv[k] += h22*mz2*r11*r32 - h22*mz2*r12*r31
                 k += 1
-                Mv[k] += h22*intrhoz*r21*r32 - h22*intrhoz*r22*r31
+                Mv[k] += h22*mz2*r21*r32 - h22*mz2*r22*r31
                 k += 1
-                Mv[k] += h22*intrhoz2*r11*r31 + h22*intrhoz2*r12*r32
+                Mv[k] += h22*mzz22*r11*r31 + h22*mzz22*r12*r32
                 k += 1
-                Mv[k] += h22*intrhoz2*r21*r31 + h22*intrhoz2*r22*r32
+                Mv[k] += h22*mzz22*r21*r31 + h22*mzz22*r22*r32
                 k += 1
-                Mv[k] += h22*intrhoz2*r31**2 + h22*intrhoz2*r32**2
+                Mv[k] += h22*mzz22*r31**2 + h22*mzz22*r32**2
                 k += 1
-                Mv[k] += h23*intrhoz*r11*r32 - h23*intrhoz*r12*r31
+                Mv[k] += h23*mz2*r11*r32 - h23*mz2*r12*r31
                 k += 1
-                Mv[k] += h23*intrhoz*r21*r32 - h23*intrhoz*r22*r31
+                Mv[k] += h23*mz2*r21*r32 - h23*mz2*r22*r31
                 k += 1
-                Mv[k] += h23*intrhoz2*r11*r31 + h23*intrhoz2*r12*r32
+                Mv[k] += h23*mzz23*r11*r31 + h23*mzz23*r12*r32
                 k += 1
-                Mv[k] += h23*intrhoz2*r21*r31 + h23*intrhoz2*r22*r32
+                Mv[k] += h23*mzz23*r21*r31 + h23*mzz23*r22*r32
                 k += 1
-                Mv[k] += h23*intrhoz2*r31**2 + h23*intrhoz2*r32**2
+                Mv[k] += h23*mzz23*r31**2 + h23*mzz23*r32**2
                 k += 1
-                Mv[k] += h24*intrhoz*r11*r32 - h24*intrhoz*r12*r31
+                Mv[k] += h24*mz2*r11*r32 - h24*mz2*r12*r31
                 k += 1
-                Mv[k] += h24*intrhoz*r21*r32 - h24*intrhoz*r22*r31
+                Mv[k] += h24*mz2*r21*r32 - h24*mz2*r22*r31
                 k += 1
-                Mv[k] += h24*intrhoz2*r11*r31 + h24*intrhoz2*r12*r32
+                Mv[k] += h24*mzz24*r11*r31 + h24*mzz24*r12*r32
                 k += 1
-                Mv[k] += h24*intrhoz2*r21*r31 + h24*intrhoz2*r22*r32
+                Mv[k] += h24*mzz24*r21*r31 + h24*mzz24*r22*r32
                 k += 1
-                Mv[k] += h24*intrhoz2*r31**2 + h24*intrhoz2*r32**2
+                Mv[k] += h24*mzz24*r31**2 + h24*mzz24*r32**2
                 k += 1
                 Mv[k] += h13*intrho*r11**2 + h13*intrho*r12**2 + h13*intrho*r13**2
                 k += 1
@@ -6927,9 +7621,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h13*intrho*r11*r31 + h13*intrho*r12*r32 + h13*intrho*r13*r33
                 k += 1
-                Mv[k] += h13*intrhoz*r11*r22 - h13*intrhoz*r12*r21
+                Mv[k] += h13*mz1*r11*r22 - h13*mz1*r12*r21
                 k += 1
-                Mv[k] += h13*intrhoz*r11*r32 - h13*intrhoz*r12*r31
+                Mv[k] += h13*mz1*r11*r32 - h13*mz1*r12*r31
                 k += 1
                 Mv[k] += h23*intrho*r11**2 + h23*intrho*r12**2 + h23*intrho*r13**2
                 k += 1
@@ -6937,9 +7631,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h23*intrho*r11*r31 + h23*intrho*r12*r32 + h23*intrho*r13*r33
                 k += 1
-                Mv[k] += h23*intrhoz*r11*r22 - h23*intrhoz*r12*r21
+                Mv[k] += h23*mz2*r11*r22 - h23*mz2*r12*r21
                 k += 1
-                Mv[k] += h23*intrhoz*r11*r32 - h23*intrhoz*r12*r31
+                Mv[k] += h23*mz2*r11*r32 - h23*mz2*r12*r31
                 k += 1
                 Mv[k] += h33*intrho*r11**2 + h33*intrho*r12**2 + h33*intrho*r13**2
                 k += 1
@@ -6947,9 +7641,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h33*intrho*r11*r31 + h33*intrho*r12*r32 + h33*intrho*r13*r33
                 k += 1
-                Mv[k] += h33*intrhoz*r11*r22 - h33*intrhoz*r12*r21
+                Mv[k] += h33*mz3*r11*r22 - h33*mz3*r12*r21
                 k += 1
-                Mv[k] += h33*intrhoz*r11*r32 - h33*intrhoz*r12*r31
+                Mv[k] += h33*mz3*r11*r32 - h33*mz3*r12*r31
                 k += 1
                 Mv[k] += h34*intrho*r11**2 + h34*intrho*r12**2 + h34*intrho*r13**2
                 k += 1
@@ -6957,9 +7651,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h34*intrho*r11*r31 + h34*intrho*r12*r32 + h34*intrho*r13*r33
                 k += 1
-                Mv[k] += h34*intrhoz*r11*r22 - h34*intrhoz*r12*r21
+                Mv[k] += h34*mz4*r11*r22 - h34*mz4*r12*r21
                 k += 1
-                Mv[k] += h34*intrhoz*r11*r32 - h34*intrhoz*r12*r31
+                Mv[k] += h34*mz4*r11*r32 - h34*mz4*r12*r31
                 k += 1
                 Mv[k] += h13*intrho*r11*r21 + h13*intrho*r12*r22 + h13*intrho*r13*r23
                 k += 1
@@ -6967,9 +7661,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h13*intrho*r21*r31 + h13*intrho*r22*r32 + h13*intrho*r23*r33
                 k += 1
-                Mv[k] += -h13*intrhoz*r11*r22 + h13*intrhoz*r12*r21
+                Mv[k] += -h13*mz1*r11*r22 + h13*mz1*r12*r21
                 k += 1
-                Mv[k] += h13*intrhoz*r21*r32 - h13*intrhoz*r22*r31
+                Mv[k] += h13*mz1*r21*r32 - h13*mz1*r22*r31
                 k += 1
                 Mv[k] += h23*intrho*r11*r21 + h23*intrho*r12*r22 + h23*intrho*r13*r23
                 k += 1
@@ -6977,9 +7671,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h23*intrho*r21*r31 + h23*intrho*r22*r32 + h23*intrho*r23*r33
                 k += 1
-                Mv[k] += -h23*intrhoz*r11*r22 + h23*intrhoz*r12*r21
+                Mv[k] += -h23*mz2*r11*r22 + h23*mz2*r12*r21
                 k += 1
-                Mv[k] += h23*intrhoz*r21*r32 - h23*intrhoz*r22*r31
+                Mv[k] += h23*mz2*r21*r32 - h23*mz2*r22*r31
                 k += 1
                 Mv[k] += h33*intrho*r11*r21 + h33*intrho*r12*r22 + h33*intrho*r13*r23
                 k += 1
@@ -6987,9 +7681,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h33*intrho*r21*r31 + h33*intrho*r22*r32 + h33*intrho*r23*r33
                 k += 1
-                Mv[k] += -h33*intrhoz*r11*r22 + h33*intrhoz*r12*r21
+                Mv[k] += -h33*mz3*r11*r22 + h33*mz3*r12*r21
                 k += 1
-                Mv[k] += h33*intrhoz*r21*r32 - h33*intrhoz*r22*r31
+                Mv[k] += h33*mz3*r21*r32 - h33*mz3*r22*r31
                 k += 1
                 Mv[k] += h34*intrho*r11*r21 + h34*intrho*r12*r22 + h34*intrho*r13*r23
                 k += 1
@@ -6997,9 +7691,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h34*intrho*r21*r31 + h34*intrho*r22*r32 + h34*intrho*r23*r33
                 k += 1
-                Mv[k] += -h34*intrhoz*r11*r22 + h34*intrhoz*r12*r21
+                Mv[k] += -h34*mz4*r11*r22 + h34*mz4*r12*r21
                 k += 1
-                Mv[k] += h34*intrhoz*r21*r32 - h34*intrhoz*r22*r31
+                Mv[k] += h34*mz4*r21*r32 - h34*mz4*r22*r31
                 k += 1
                 Mv[k] += h13*intrho*r11*r31 + h13*intrho*r12*r32 + h13*intrho*r13*r33
                 k += 1
@@ -7007,9 +7701,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h13*intrho*r31**2 + h13*intrho*r32**2 + h13*intrho*r33**2
                 k += 1
-                Mv[k] += -h13*intrhoz*r11*r32 + h13*intrhoz*r12*r31
+                Mv[k] += -h13*mz1*r11*r32 + h13*mz1*r12*r31
                 k += 1
-                Mv[k] += -h13*intrhoz*r21*r32 + h13*intrhoz*r22*r31
+                Mv[k] += -h13*mz1*r21*r32 + h13*mz1*r22*r31
                 k += 1
                 Mv[k] += h23*intrho*r11*r31 + h23*intrho*r12*r32 + h23*intrho*r13*r33
                 k += 1
@@ -7017,9 +7711,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h23*intrho*r31**2 + h23*intrho*r32**2 + h23*intrho*r33**2
                 k += 1
-                Mv[k] += -h23*intrhoz*r11*r32 + h23*intrhoz*r12*r31
+                Mv[k] += -h23*mz2*r11*r32 + h23*mz2*r12*r31
                 k += 1
-                Mv[k] += -h23*intrhoz*r21*r32 + h23*intrhoz*r22*r31
+                Mv[k] += -h23*mz2*r21*r32 + h23*mz2*r22*r31
                 k += 1
                 Mv[k] += h33*intrho*r11*r31 + h33*intrho*r12*r32 + h33*intrho*r13*r33
                 k += 1
@@ -7027,9 +7721,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h33*intrho*r31**2 + h33*intrho*r32**2 + h33*intrho*r33**2
                 k += 1
-                Mv[k] += -h33*intrhoz*r11*r32 + h33*intrhoz*r12*r31
+                Mv[k] += -h33*mz3*r11*r32 + h33*mz3*r12*r31
                 k += 1
-                Mv[k] += -h33*intrhoz*r21*r32 + h33*intrhoz*r22*r31
+                Mv[k] += -h33*mz3*r21*r32 + h33*mz3*r22*r31
                 k += 1
                 Mv[k] += h34*intrho*r11*r31 + h34*intrho*r12*r32 + h34*intrho*r13*r33
                 k += 1
@@ -7037,129 +7731,129 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h34*intrho*r31**2 + h34*intrho*r32**2 + h34*intrho*r33**2
                 k += 1
-                Mv[k] += -h34*intrhoz*r11*r32 + h34*intrhoz*r12*r31
+                Mv[k] += -h34*mz4*r11*r32 + h34*mz4*r12*r31
                 k += 1
-                Mv[k] += -h34*intrhoz*r21*r32 + h34*intrhoz*r22*r31
+                Mv[k] += -h34*mz4*r21*r32 + h34*mz4*r22*r31
                 k += 1
-                Mv[k] += -h13*intrhoz*r11*r22 + h13*intrhoz*r12*r21
+                Mv[k] += -h13*mz3*r11*r22 + h13*mz3*r12*r21
                 k += 1
-                Mv[k] += -h13*intrhoz*r11*r32 + h13*intrhoz*r12*r31
+                Mv[k] += -h13*mz3*r11*r32 + h13*mz3*r12*r31
                 k += 1
-                Mv[k] += h13*intrhoz2*r11**2 + h13*intrhoz2*r12**2
+                Mv[k] += h13*mzz13*r11**2 + h13*mzz13*r12**2
                 k += 1
-                Mv[k] += h13*intrhoz2*r11*r21 + h13*intrhoz2*r12*r22
+                Mv[k] += h13*mzz13*r11*r21 + h13*mzz13*r12*r22
                 k += 1
-                Mv[k] += h13*intrhoz2*r11*r31 + h13*intrhoz2*r12*r32
+                Mv[k] += h13*mzz13*r11*r31 + h13*mzz13*r12*r32
                 k += 1
-                Mv[k] += -h23*intrhoz*r11*r22 + h23*intrhoz*r12*r21
+                Mv[k] += -h23*mz3*r11*r22 + h23*mz3*r12*r21
                 k += 1
-                Mv[k] += -h23*intrhoz*r11*r32 + h23*intrhoz*r12*r31
+                Mv[k] += -h23*mz3*r11*r32 + h23*mz3*r12*r31
                 k += 1
-                Mv[k] += h23*intrhoz2*r11**2 + h23*intrhoz2*r12**2
+                Mv[k] += h23*mzz23*r11**2 + h23*mzz23*r12**2
                 k += 1
-                Mv[k] += h23*intrhoz2*r11*r21 + h23*intrhoz2*r12*r22
+                Mv[k] += h23*mzz23*r11*r21 + h23*mzz23*r12*r22
                 k += 1
-                Mv[k] += h23*intrhoz2*r11*r31 + h23*intrhoz2*r12*r32
+                Mv[k] += h23*mzz23*r11*r31 + h23*mzz23*r12*r32
                 k += 1
-                Mv[k] += -h33*intrhoz*r11*r22 + h33*intrhoz*r12*r21
+                Mv[k] += -h33*mz3*r11*r22 + h33*mz3*r12*r21
                 k += 1
-                Mv[k] += -h33*intrhoz*r11*r32 + h33*intrhoz*r12*r31
+                Mv[k] += -h33*mz3*r11*r32 + h33*mz3*r12*r31
                 k += 1
-                Mv[k] += h33*intrhoz2*r11**2 + h33*intrhoz2*r12**2
+                Mv[k] += h33*mzz33*r11**2 + h33*mzz33*r12**2
                 k += 1
-                Mv[k] += h33*intrhoz2*r11*r21 + h33*intrhoz2*r12*r22
+                Mv[k] += h33*mzz33*r11*r21 + h33*mzz33*r12*r22
                 k += 1
-                Mv[k] += h33*intrhoz2*r11*r31 + h33*intrhoz2*r12*r32
+                Mv[k] += h33*mzz33*r11*r31 + h33*mzz33*r12*r32
                 k += 1
-                Mv[k] += -h34*intrhoz*r11*r22 + h34*intrhoz*r12*r21
+                Mv[k] += -h34*mz3*r11*r22 + h34*mz3*r12*r21
                 k += 1
-                Mv[k] += -h34*intrhoz*r11*r32 + h34*intrhoz*r12*r31
+                Mv[k] += -h34*mz3*r11*r32 + h34*mz3*r12*r31
                 k += 1
-                Mv[k] += h34*intrhoz2*r11**2 + h34*intrhoz2*r12**2
+                Mv[k] += h34*mzz34*r11**2 + h34*mzz34*r12**2
                 k += 1
-                Mv[k] += h34*intrhoz2*r11*r21 + h34*intrhoz2*r12*r22
+                Mv[k] += h34*mzz34*r11*r21 + h34*mzz34*r12*r22
                 k += 1
-                Mv[k] += h34*intrhoz2*r11*r31 + h34*intrhoz2*r12*r32
+                Mv[k] += h34*mzz34*r11*r31 + h34*mzz34*r12*r32
                 k += 1
-                Mv[k] += h13*intrhoz*r11*r22 - h13*intrhoz*r12*r21
+                Mv[k] += h13*mz3*r11*r22 - h13*mz3*r12*r21
                 k += 1
-                Mv[k] += -h13*intrhoz*r21*r32 + h13*intrhoz*r22*r31
+                Mv[k] += -h13*mz3*r21*r32 + h13*mz3*r22*r31
                 k += 1
-                Mv[k] += h13*intrhoz2*r11*r21 + h13*intrhoz2*r12*r22
+                Mv[k] += h13*mzz13*r11*r21 + h13*mzz13*r12*r22
                 k += 1
-                Mv[k] += h13*intrhoz2*r21**2 + h13*intrhoz2*r22**2
+                Mv[k] += h13*mzz13*r21**2 + h13*mzz13*r22**2
                 k += 1
-                Mv[k] += h13*intrhoz2*r21*r31 + h13*intrhoz2*r22*r32
+                Mv[k] += h13*mzz13*r21*r31 + h13*mzz13*r22*r32
                 k += 1
-                Mv[k] += h23*intrhoz*r11*r22 - h23*intrhoz*r12*r21
+                Mv[k] += h23*mz3*r11*r22 - h23*mz3*r12*r21
                 k += 1
-                Mv[k] += -h23*intrhoz*r21*r32 + h23*intrhoz*r22*r31
+                Mv[k] += -h23*mz3*r21*r32 + h23*mz3*r22*r31
                 k += 1
-                Mv[k] += h23*intrhoz2*r11*r21 + h23*intrhoz2*r12*r22
+                Mv[k] += h23*mzz23*r11*r21 + h23*mzz23*r12*r22
                 k += 1
-                Mv[k] += h23*intrhoz2*r21**2 + h23*intrhoz2*r22**2
+                Mv[k] += h23*mzz23*r21**2 + h23*mzz23*r22**2
                 k += 1
-                Mv[k] += h23*intrhoz2*r21*r31 + h23*intrhoz2*r22*r32
+                Mv[k] += h23*mzz23*r21*r31 + h23*mzz23*r22*r32
                 k += 1
-                Mv[k] += h33*intrhoz*r11*r22 - h33*intrhoz*r12*r21
+                Mv[k] += h33*mz3*r11*r22 - h33*mz3*r12*r21
                 k += 1
-                Mv[k] += -h33*intrhoz*r21*r32 + h33*intrhoz*r22*r31
+                Mv[k] += -h33*mz3*r21*r32 + h33*mz3*r22*r31
                 k += 1
-                Mv[k] += h33*intrhoz2*r11*r21 + h33*intrhoz2*r12*r22
+                Mv[k] += h33*mzz33*r11*r21 + h33*mzz33*r12*r22
                 k += 1
-                Mv[k] += h33*intrhoz2*r21**2 + h33*intrhoz2*r22**2
+                Mv[k] += h33*mzz33*r21**2 + h33*mzz33*r22**2
                 k += 1
-                Mv[k] += h33*intrhoz2*r21*r31 + h33*intrhoz2*r22*r32
+                Mv[k] += h33*mzz33*r21*r31 + h33*mzz33*r22*r32
                 k += 1
-                Mv[k] += h34*intrhoz*r11*r22 - h34*intrhoz*r12*r21
+                Mv[k] += h34*mz3*r11*r22 - h34*mz3*r12*r21
                 k += 1
-                Mv[k] += -h34*intrhoz*r21*r32 + h34*intrhoz*r22*r31
+                Mv[k] += -h34*mz3*r21*r32 + h34*mz3*r22*r31
                 k += 1
-                Mv[k] += h34*intrhoz2*r11*r21 + h34*intrhoz2*r12*r22
+                Mv[k] += h34*mzz34*r11*r21 + h34*mzz34*r12*r22
                 k += 1
-                Mv[k] += h34*intrhoz2*r21**2 + h34*intrhoz2*r22**2
+                Mv[k] += h34*mzz34*r21**2 + h34*mzz34*r22**2
                 k += 1
-                Mv[k] += h34*intrhoz2*r21*r31 + h34*intrhoz2*r22*r32
+                Mv[k] += h34*mzz34*r21*r31 + h34*mzz34*r22*r32
                 k += 1
-                Mv[k] += h13*intrhoz*r11*r32 - h13*intrhoz*r12*r31
+                Mv[k] += h13*mz3*r11*r32 - h13*mz3*r12*r31
                 k += 1
-                Mv[k] += h13*intrhoz*r21*r32 - h13*intrhoz*r22*r31
+                Mv[k] += h13*mz3*r21*r32 - h13*mz3*r22*r31
                 k += 1
-                Mv[k] += h13*intrhoz2*r11*r31 + h13*intrhoz2*r12*r32
+                Mv[k] += h13*mzz13*r11*r31 + h13*mzz13*r12*r32
                 k += 1
-                Mv[k] += h13*intrhoz2*r21*r31 + h13*intrhoz2*r22*r32
+                Mv[k] += h13*mzz13*r21*r31 + h13*mzz13*r22*r32
                 k += 1
-                Mv[k] += h13*intrhoz2*r31**2 + h13*intrhoz2*r32**2
+                Mv[k] += h13*mzz13*r31**2 + h13*mzz13*r32**2
                 k += 1
-                Mv[k] += h23*intrhoz*r11*r32 - h23*intrhoz*r12*r31
+                Mv[k] += h23*mz3*r11*r32 - h23*mz3*r12*r31
                 k += 1
-                Mv[k] += h23*intrhoz*r21*r32 - h23*intrhoz*r22*r31
+                Mv[k] += h23*mz3*r21*r32 - h23*mz3*r22*r31
                 k += 1
-                Mv[k] += h23*intrhoz2*r11*r31 + h23*intrhoz2*r12*r32
+                Mv[k] += h23*mzz23*r11*r31 + h23*mzz23*r12*r32
                 k += 1
-                Mv[k] += h23*intrhoz2*r21*r31 + h23*intrhoz2*r22*r32
+                Mv[k] += h23*mzz23*r21*r31 + h23*mzz23*r22*r32
                 k += 1
-                Mv[k] += h23*intrhoz2*r31**2 + h23*intrhoz2*r32**2
+                Mv[k] += h23*mzz23*r31**2 + h23*mzz23*r32**2
                 k += 1
-                Mv[k] += h33*intrhoz*r11*r32 - h33*intrhoz*r12*r31
+                Mv[k] += h33*mz3*r11*r32 - h33*mz3*r12*r31
                 k += 1
-                Mv[k] += h33*intrhoz*r21*r32 - h33*intrhoz*r22*r31
+                Mv[k] += h33*mz3*r21*r32 - h33*mz3*r22*r31
                 k += 1
-                Mv[k] += h33*intrhoz2*r11*r31 + h33*intrhoz2*r12*r32
+                Mv[k] += h33*mzz33*r11*r31 + h33*mzz33*r12*r32
                 k += 1
-                Mv[k] += h33*intrhoz2*r21*r31 + h33*intrhoz2*r22*r32
+                Mv[k] += h33*mzz33*r21*r31 + h33*mzz33*r22*r32
                 k += 1
-                Mv[k] += h33*intrhoz2*r31**2 + h33*intrhoz2*r32**2
+                Mv[k] += h33*mzz33*r31**2 + h33*mzz33*r32**2
                 k += 1
-                Mv[k] += h34*intrhoz*r11*r32 - h34*intrhoz*r12*r31
+                Mv[k] += h34*mz3*r11*r32 - h34*mz3*r12*r31
                 k += 1
-                Mv[k] += h34*intrhoz*r21*r32 - h34*intrhoz*r22*r31
+                Mv[k] += h34*mz3*r21*r32 - h34*mz3*r22*r31
                 k += 1
-                Mv[k] += h34*intrhoz2*r11*r31 + h34*intrhoz2*r12*r32
+                Mv[k] += h34*mzz34*r11*r31 + h34*mzz34*r12*r32
                 k += 1
-                Mv[k] += h34*intrhoz2*r21*r31 + h34*intrhoz2*r22*r32
+                Mv[k] += h34*mzz34*r21*r31 + h34*mzz34*r22*r32
                 k += 1
-                Mv[k] += h34*intrhoz2*r31**2 + h34*intrhoz2*r32**2
+                Mv[k] += h34*mzz34*r31**2 + h34*mzz34*r32**2
                 k += 1
                 Mv[k] += h14*intrho*r11**2 + h14*intrho*r12**2 + h14*intrho*r13**2
                 k += 1
@@ -7167,9 +7861,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h14*intrho*r11*r31 + h14*intrho*r12*r32 + h14*intrho*r13*r33
                 k += 1
-                Mv[k] += h14*intrhoz*r11*r22 - h14*intrhoz*r12*r21
+                Mv[k] += h14*mz1*r11*r22 - h14*mz1*r12*r21
                 k += 1
-                Mv[k] += h14*intrhoz*r11*r32 - h14*intrhoz*r12*r31
+                Mv[k] += h14*mz1*r11*r32 - h14*mz1*r12*r31
                 k += 1
                 Mv[k] += h24*intrho*r11**2 + h24*intrho*r12**2 + h24*intrho*r13**2
                 k += 1
@@ -7177,9 +7871,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h24*intrho*r11*r31 + h24*intrho*r12*r32 + h24*intrho*r13*r33
                 k += 1
-                Mv[k] += h24*intrhoz*r11*r22 - h24*intrhoz*r12*r21
+                Mv[k] += h24*mz2*r11*r22 - h24*mz2*r12*r21
                 k += 1
-                Mv[k] += h24*intrhoz*r11*r32 - h24*intrhoz*r12*r31
+                Mv[k] += h24*mz2*r11*r32 - h24*mz2*r12*r31
                 k += 1
                 Mv[k] += h34*intrho*r11**2 + h34*intrho*r12**2 + h34*intrho*r13**2
                 k += 1
@@ -7187,9 +7881,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h34*intrho*r11*r31 + h34*intrho*r12*r32 + h34*intrho*r13*r33
                 k += 1
-                Mv[k] += h34*intrhoz*r11*r22 - h34*intrhoz*r12*r21
+                Mv[k] += h34*mz3*r11*r22 - h34*mz3*r12*r21
                 k += 1
-                Mv[k] += h34*intrhoz*r11*r32 - h34*intrhoz*r12*r31
+                Mv[k] += h34*mz3*r11*r32 - h34*mz3*r12*r31
                 k += 1
                 Mv[k] += h44*intrho*r11**2 + h44*intrho*r12**2 + h44*intrho*r13**2
                 k += 1
@@ -7197,9 +7891,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h44*intrho*r11*r31 + h44*intrho*r12*r32 + h44*intrho*r13*r33
                 k += 1
-                Mv[k] += h44*intrhoz*r11*r22 - h44*intrhoz*r12*r21
+                Mv[k] += h44*mz4*r11*r22 - h44*mz4*r12*r21
                 k += 1
-                Mv[k] += h44*intrhoz*r11*r32 - h44*intrhoz*r12*r31
+                Mv[k] += h44*mz4*r11*r32 - h44*mz4*r12*r31
                 k += 1
                 Mv[k] += h14*intrho*r11*r21 + h14*intrho*r12*r22 + h14*intrho*r13*r23
                 k += 1
@@ -7207,9 +7901,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h14*intrho*r21*r31 + h14*intrho*r22*r32 + h14*intrho*r23*r33
                 k += 1
-                Mv[k] += -h14*intrhoz*r11*r22 + h14*intrhoz*r12*r21
+                Mv[k] += -h14*mz1*r11*r22 + h14*mz1*r12*r21
                 k += 1
-                Mv[k] += h14*intrhoz*r21*r32 - h14*intrhoz*r22*r31
+                Mv[k] += h14*mz1*r21*r32 - h14*mz1*r22*r31
                 k += 1
                 Mv[k] += h24*intrho*r11*r21 + h24*intrho*r12*r22 + h24*intrho*r13*r23
                 k += 1
@@ -7217,9 +7911,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h24*intrho*r21*r31 + h24*intrho*r22*r32 + h24*intrho*r23*r33
                 k += 1
-                Mv[k] += -h24*intrhoz*r11*r22 + h24*intrhoz*r12*r21
+                Mv[k] += -h24*mz2*r11*r22 + h24*mz2*r12*r21
                 k += 1
-                Mv[k] += h24*intrhoz*r21*r32 - h24*intrhoz*r22*r31
+                Mv[k] += h24*mz2*r21*r32 - h24*mz2*r22*r31
                 k += 1
                 Mv[k] += h34*intrho*r11*r21 + h34*intrho*r12*r22 + h34*intrho*r13*r23
                 k += 1
@@ -7227,9 +7921,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h34*intrho*r21*r31 + h34*intrho*r22*r32 + h34*intrho*r23*r33
                 k += 1
-                Mv[k] += -h34*intrhoz*r11*r22 + h34*intrhoz*r12*r21
+                Mv[k] += -h34*mz3*r11*r22 + h34*mz3*r12*r21
                 k += 1
-                Mv[k] += h34*intrhoz*r21*r32 - h34*intrhoz*r22*r31
+                Mv[k] += h34*mz3*r21*r32 - h34*mz3*r22*r31
                 k += 1
                 Mv[k] += h44*intrho*r11*r21 + h44*intrho*r12*r22 + h44*intrho*r13*r23
                 k += 1
@@ -7237,9 +7931,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h44*intrho*r21*r31 + h44*intrho*r22*r32 + h44*intrho*r23*r33
                 k += 1
-                Mv[k] += -h44*intrhoz*r11*r22 + h44*intrhoz*r12*r21
+                Mv[k] += -h44*mz4*r11*r22 + h44*mz4*r12*r21
                 k += 1
-                Mv[k] += h44*intrhoz*r21*r32 - h44*intrhoz*r22*r31
+                Mv[k] += h44*mz4*r21*r32 - h44*mz4*r22*r31
                 k += 1
                 Mv[k] += h14*intrho*r11*r31 + h14*intrho*r12*r32 + h14*intrho*r13*r33
                 k += 1
@@ -7247,9 +7941,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h14*intrho*r31**2 + h14*intrho*r32**2 + h14*intrho*r33**2
                 k += 1
-                Mv[k] += -h14*intrhoz*r11*r32 + h14*intrhoz*r12*r31
+                Mv[k] += -h14*mz1*r11*r32 + h14*mz1*r12*r31
                 k += 1
-                Mv[k] += -h14*intrhoz*r21*r32 + h14*intrhoz*r22*r31
+                Mv[k] += -h14*mz1*r21*r32 + h14*mz1*r22*r31
                 k += 1
                 Mv[k] += h24*intrho*r11*r31 + h24*intrho*r12*r32 + h24*intrho*r13*r33
                 k += 1
@@ -7257,9 +7951,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h24*intrho*r31**2 + h24*intrho*r32**2 + h24*intrho*r33**2
                 k += 1
-                Mv[k] += -h24*intrhoz*r11*r32 + h24*intrhoz*r12*r31
+                Mv[k] += -h24*mz2*r11*r32 + h24*mz2*r12*r31
                 k += 1
-                Mv[k] += -h24*intrhoz*r21*r32 + h24*intrhoz*r22*r31
+                Mv[k] += -h24*mz2*r21*r32 + h24*mz2*r22*r31
                 k += 1
                 Mv[k] += h34*intrho*r11*r31 + h34*intrho*r12*r32 + h34*intrho*r13*r33
                 k += 1
@@ -7267,9 +7961,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h34*intrho*r31**2 + h34*intrho*r32**2 + h34*intrho*r33**2
                 k += 1
-                Mv[k] += -h34*intrhoz*r11*r32 + h34*intrhoz*r12*r31
+                Mv[k] += -h34*mz3*r11*r32 + h34*mz3*r12*r31
                 k += 1
-                Mv[k] += -h34*intrhoz*r21*r32 + h34*intrhoz*r22*r31
+                Mv[k] += -h34*mz3*r21*r32 + h34*mz3*r22*r31
                 k += 1
                 Mv[k] += h44*intrho*r11*r31 + h44*intrho*r12*r32 + h44*intrho*r13*r33
                 k += 1
@@ -7277,129 +7971,129 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h44*intrho*r31**2 + h44*intrho*r32**2 + h44*intrho*r33**2
                 k += 1
-                Mv[k] += -h44*intrhoz*r11*r32 + h44*intrhoz*r12*r31
+                Mv[k] += -h44*mz4*r11*r32 + h44*mz4*r12*r31
                 k += 1
-                Mv[k] += -h44*intrhoz*r21*r32 + h44*intrhoz*r22*r31
+                Mv[k] += -h44*mz4*r21*r32 + h44*mz4*r22*r31
                 k += 1
-                Mv[k] += -h14*intrhoz*r11*r22 + h14*intrhoz*r12*r21
+                Mv[k] += -h14*mz4*r11*r22 + h14*mz4*r12*r21
                 k += 1
-                Mv[k] += -h14*intrhoz*r11*r32 + h14*intrhoz*r12*r31
+                Mv[k] += -h14*mz4*r11*r32 + h14*mz4*r12*r31
                 k += 1
-                Mv[k] += h14*intrhoz2*r11**2 + h14*intrhoz2*r12**2
+                Mv[k] += h14*mzz14*r11**2 + h14*mzz14*r12**2
                 k += 1
-                Mv[k] += h14*intrhoz2*r11*r21 + h14*intrhoz2*r12*r22
+                Mv[k] += h14*mzz14*r11*r21 + h14*mzz14*r12*r22
                 k += 1
-                Mv[k] += h14*intrhoz2*r11*r31 + h14*intrhoz2*r12*r32
+                Mv[k] += h14*mzz14*r11*r31 + h14*mzz14*r12*r32
                 k += 1
-                Mv[k] += -h24*intrhoz*r11*r22 + h24*intrhoz*r12*r21
+                Mv[k] += -h24*mz4*r11*r22 + h24*mz4*r12*r21
                 k += 1
-                Mv[k] += -h24*intrhoz*r11*r32 + h24*intrhoz*r12*r31
+                Mv[k] += -h24*mz4*r11*r32 + h24*mz4*r12*r31
                 k += 1
-                Mv[k] += h24*intrhoz2*r11**2 + h24*intrhoz2*r12**2
+                Mv[k] += h24*mzz24*r11**2 + h24*mzz24*r12**2
                 k += 1
-                Mv[k] += h24*intrhoz2*r11*r21 + h24*intrhoz2*r12*r22
+                Mv[k] += h24*mzz24*r11*r21 + h24*mzz24*r12*r22
                 k += 1
-                Mv[k] += h24*intrhoz2*r11*r31 + h24*intrhoz2*r12*r32
+                Mv[k] += h24*mzz24*r11*r31 + h24*mzz24*r12*r32
                 k += 1
-                Mv[k] += -h34*intrhoz*r11*r22 + h34*intrhoz*r12*r21
+                Mv[k] += -h34*mz4*r11*r22 + h34*mz4*r12*r21
                 k += 1
-                Mv[k] += -h34*intrhoz*r11*r32 + h34*intrhoz*r12*r31
+                Mv[k] += -h34*mz4*r11*r32 + h34*mz4*r12*r31
                 k += 1
-                Mv[k] += h34*intrhoz2*r11**2 + h34*intrhoz2*r12**2
+                Mv[k] += h34*mzz34*r11**2 + h34*mzz34*r12**2
                 k += 1
-                Mv[k] += h34*intrhoz2*r11*r21 + h34*intrhoz2*r12*r22
+                Mv[k] += h34*mzz34*r11*r21 + h34*mzz34*r12*r22
                 k += 1
-                Mv[k] += h34*intrhoz2*r11*r31 + h34*intrhoz2*r12*r32
+                Mv[k] += h34*mzz34*r11*r31 + h34*mzz34*r12*r32
                 k += 1
-                Mv[k] += -h44*intrhoz*r11*r22 + h44*intrhoz*r12*r21
+                Mv[k] += -h44*mz4*r11*r22 + h44*mz4*r12*r21
                 k += 1
-                Mv[k] += -h44*intrhoz*r11*r32 + h44*intrhoz*r12*r31
+                Mv[k] += -h44*mz4*r11*r32 + h44*mz4*r12*r31
                 k += 1
-                Mv[k] += h44*intrhoz2*r11**2 + h44*intrhoz2*r12**2
+                Mv[k] += h44*mzz44*r11**2 + h44*mzz44*r12**2
                 k += 1
-                Mv[k] += h44*intrhoz2*r11*r21 + h44*intrhoz2*r12*r22
+                Mv[k] += h44*mzz44*r11*r21 + h44*mzz44*r12*r22
                 k += 1
-                Mv[k] += h44*intrhoz2*r11*r31 + h44*intrhoz2*r12*r32
+                Mv[k] += h44*mzz44*r11*r31 + h44*mzz44*r12*r32
                 k += 1
-                Mv[k] += h14*intrhoz*r11*r22 - h14*intrhoz*r12*r21
+                Mv[k] += h14*mz4*r11*r22 - h14*mz4*r12*r21
                 k += 1
-                Mv[k] += -h14*intrhoz*r21*r32 + h14*intrhoz*r22*r31
+                Mv[k] += -h14*mz4*r21*r32 + h14*mz4*r22*r31
                 k += 1
-                Mv[k] += h14*intrhoz2*r11*r21 + h14*intrhoz2*r12*r22
+                Mv[k] += h14*mzz14*r11*r21 + h14*mzz14*r12*r22
                 k += 1
-                Mv[k] += h14*intrhoz2*r21**2 + h14*intrhoz2*r22**2
+                Mv[k] += h14*mzz14*r21**2 + h14*mzz14*r22**2
                 k += 1
-                Mv[k] += h14*intrhoz2*r21*r31 + h14*intrhoz2*r22*r32
+                Mv[k] += h14*mzz14*r21*r31 + h14*mzz14*r22*r32
                 k += 1
-                Mv[k] += h24*intrhoz*r11*r22 - h24*intrhoz*r12*r21
+                Mv[k] += h24*mz4*r11*r22 - h24*mz4*r12*r21
                 k += 1
-                Mv[k] += -h24*intrhoz*r21*r32 + h24*intrhoz*r22*r31
+                Mv[k] += -h24*mz4*r21*r32 + h24*mz4*r22*r31
                 k += 1
-                Mv[k] += h24*intrhoz2*r11*r21 + h24*intrhoz2*r12*r22
+                Mv[k] += h24*mzz24*r11*r21 + h24*mzz24*r12*r22
                 k += 1
-                Mv[k] += h24*intrhoz2*r21**2 + h24*intrhoz2*r22**2
+                Mv[k] += h24*mzz24*r21**2 + h24*mzz24*r22**2
                 k += 1
-                Mv[k] += h24*intrhoz2*r21*r31 + h24*intrhoz2*r22*r32
+                Mv[k] += h24*mzz24*r21*r31 + h24*mzz24*r22*r32
                 k += 1
-                Mv[k] += h34*intrhoz*r11*r22 - h34*intrhoz*r12*r21
+                Mv[k] += h34*mz4*r11*r22 - h34*mz4*r12*r21
                 k += 1
-                Mv[k] += -h34*intrhoz*r21*r32 + h34*intrhoz*r22*r31
+                Mv[k] += -h34*mz4*r21*r32 + h34*mz4*r22*r31
                 k += 1
-                Mv[k] += h34*intrhoz2*r11*r21 + h34*intrhoz2*r12*r22
+                Mv[k] += h34*mzz34*r11*r21 + h34*mzz34*r12*r22
                 k += 1
-                Mv[k] += h34*intrhoz2*r21**2 + h34*intrhoz2*r22**2
+                Mv[k] += h34*mzz34*r21**2 + h34*mzz34*r22**2
                 k += 1
-                Mv[k] += h34*intrhoz2*r21*r31 + h34*intrhoz2*r22*r32
+                Mv[k] += h34*mzz34*r21*r31 + h34*mzz34*r22*r32
                 k += 1
-                Mv[k] += h44*intrhoz*r11*r22 - h44*intrhoz*r12*r21
+                Mv[k] += h44*mz4*r11*r22 - h44*mz4*r12*r21
                 k += 1
-                Mv[k] += -h44*intrhoz*r21*r32 + h44*intrhoz*r22*r31
+                Mv[k] += -h44*mz4*r21*r32 + h44*mz4*r22*r31
                 k += 1
-                Mv[k] += h44*intrhoz2*r11*r21 + h44*intrhoz2*r12*r22
+                Mv[k] += h44*mzz44*r11*r21 + h44*mzz44*r12*r22
                 k += 1
-                Mv[k] += h44*intrhoz2*r21**2 + h44*intrhoz2*r22**2
+                Mv[k] += h44*mzz44*r21**2 + h44*mzz44*r22**2
                 k += 1
-                Mv[k] += h44*intrhoz2*r21*r31 + h44*intrhoz2*r22*r32
+                Mv[k] += h44*mzz44*r21*r31 + h44*mzz44*r22*r32
                 k += 1
-                Mv[k] += h14*intrhoz*r11*r32 - h14*intrhoz*r12*r31
+                Mv[k] += h14*mz4*r11*r32 - h14*mz4*r12*r31
                 k += 1
-                Mv[k] += h14*intrhoz*r21*r32 - h14*intrhoz*r22*r31
+                Mv[k] += h14*mz4*r21*r32 - h14*mz4*r22*r31
                 k += 1
-                Mv[k] += h14*intrhoz2*r11*r31 + h14*intrhoz2*r12*r32
+                Mv[k] += h14*mzz14*r11*r31 + h14*mzz14*r12*r32
                 k += 1
-                Mv[k] += h14*intrhoz2*r21*r31 + h14*intrhoz2*r22*r32
+                Mv[k] += h14*mzz14*r21*r31 + h14*mzz14*r22*r32
                 k += 1
-                Mv[k] += h14*intrhoz2*r31**2 + h14*intrhoz2*r32**2
+                Mv[k] += h14*mzz14*r31**2 + h14*mzz14*r32**2
                 k += 1
-                Mv[k] += h24*intrhoz*r11*r32 - h24*intrhoz*r12*r31
+                Mv[k] += h24*mz4*r11*r32 - h24*mz4*r12*r31
                 k += 1
-                Mv[k] += h24*intrhoz*r21*r32 - h24*intrhoz*r22*r31
+                Mv[k] += h24*mz4*r21*r32 - h24*mz4*r22*r31
                 k += 1
-                Mv[k] += h24*intrhoz2*r11*r31 + h24*intrhoz2*r12*r32
+                Mv[k] += h24*mzz24*r11*r31 + h24*mzz24*r12*r32
                 k += 1
-                Mv[k] += h24*intrhoz2*r21*r31 + h24*intrhoz2*r22*r32
+                Mv[k] += h24*mzz24*r21*r31 + h24*mzz24*r22*r32
                 k += 1
-                Mv[k] += h24*intrhoz2*r31**2 + h24*intrhoz2*r32**2
+                Mv[k] += h24*mzz24*r31**2 + h24*mzz24*r32**2
                 k += 1
-                Mv[k] += h34*intrhoz*r11*r32 - h34*intrhoz*r12*r31
+                Mv[k] += h34*mz4*r11*r32 - h34*mz4*r12*r31
                 k += 1
-                Mv[k] += h34*intrhoz*r21*r32 - h34*intrhoz*r22*r31
+                Mv[k] += h34*mz4*r21*r32 - h34*mz4*r22*r31
                 k += 1
-                Mv[k] += h34*intrhoz2*r11*r31 + h34*intrhoz2*r12*r32
+                Mv[k] += h34*mzz34*r11*r31 + h34*mzz34*r12*r32
                 k += 1
-                Mv[k] += h34*intrhoz2*r21*r31 + h34*intrhoz2*r22*r32
+                Mv[k] += h34*mzz34*r21*r31 + h34*mzz34*r22*r32
                 k += 1
-                Mv[k] += h34*intrhoz2*r31**2 + h34*intrhoz2*r32**2
+                Mv[k] += h34*mzz34*r31**2 + h34*mzz34*r32**2
                 k += 1
-                Mv[k] += h44*intrhoz*r11*r32 - h44*intrhoz*r12*r31
+                Mv[k] += h44*mz4*r11*r32 - h44*mz4*r12*r31
                 k += 1
-                Mv[k] += h44*intrhoz*r21*r32 - h44*intrhoz*r22*r31
+                Mv[k] += h44*mz4*r21*r32 - h44*mz4*r22*r31
                 k += 1
-                Mv[k] += h44*intrhoz2*r11*r31 + h44*intrhoz2*r12*r32
+                Mv[k] += h44*mzz44*r11*r31 + h44*mzz44*r12*r32
                 k += 1
-                Mv[k] += h44*intrhoz2*r21*r31 + h44*intrhoz2*r22*r32
+                Mv[k] += h44*mzz44*r21*r31 + h44*mzz44*r22*r32
                 k += 1
-                Mv[k] += h44*intrhoz2*r31**2 + h44*intrhoz2*r32**2
+                Mv[k] += h44*mzz44*r31**2 + h44*mzz44*r32**2
 
             elif mtype == 2: # M_red mass matrix purely by reduced integration
                 k = self.init_k_M
@@ -8850,19 +9544,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
+                Mv[k] += mz1*r11*r22*valH1 - mz1*r12*r21*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11**2*valH1 + intrho*r12**2*valH1 + intrho*r13**2*valH1
-                k += 1
-                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
-                k += 1
-                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
+                Mv[k] += mz1*r11*r32*valH1 - mz1*r12*r31*valH1
                 k += 1
                 Mv[k] += intrho*r11**2*valH1 + intrho*r12**2*valH1 + intrho*r13**2*valH1
                 k += 1
@@ -8870,9 +9554,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
+                Mv[k] += mz2*r11*r22*valH1 - mz2*r12*r21*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
+                Mv[k] += mz2*r11*r32*valH1 - mz2*r12*r31*valH1
                 k += 1
                 Mv[k] += intrho*r11**2*valH1 + intrho*r12**2*valH1 + intrho*r13**2*valH1
                 k += 1
@@ -8880,209 +9564,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
+                Mv[k] += mz3*r11*r22*valH1 - mz3*r12*r21*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
-                k += 1
-                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
-                k += 1
-                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
-                k += 1
-                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
-                k += 1
-                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11**2*valH1 + intrhoz2*r12**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11**2*valH1 + intrhoz2*r12**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11**2*valH1 + intrhoz2*r12**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11**2*valH1 + intrhoz2*r12**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21**2*valH1 + intrhoz2*r22**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21**2*valH1 + intrhoz2*r22**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21**2*valH1 + intrhoz2*r22**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21**2*valH1 + intrhoz2*r22**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
+                Mv[k] += mz3*r11*r32*valH1 - mz3*r12*r31*valH1
                 k += 1
                 Mv[k] += intrho*r11**2*valH1 + intrho*r12**2*valH1 + intrho*r13**2*valH1
                 k += 1
@@ -9090,9 +9574,209 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
+                Mv[k] += mz4*r11*r22*valH1 - mz4*r12*r21*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
+                Mv[k] += mz4*r11*r32*valH1 - mz4*r12*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
+                k += 1
+                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += -mz1*r11*r22*valH1 + mz1*r12*r21*valH1
+                k += 1
+                Mv[k] += mz1*r21*r32*valH1 - mz1*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
+                k += 1
+                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += -mz2*r11*r22*valH1 + mz2*r12*r21*valH1
+                k += 1
+                Mv[k] += mz2*r21*r32*valH1 - mz2*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
+                k += 1
+                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += -mz3*r11*r22*valH1 + mz3*r12*r21*valH1
+                k += 1
+                Mv[k] += mz3*r21*r32*valH1 - mz3*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
+                k += 1
+                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += -mz4*r11*r22*valH1 + mz4*r12*r21*valH1
+                k += 1
+                Mv[k] += mz4*r21*r32*valH1 - mz4*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
+                k += 1
+                Mv[k] += -mz1*r11*r32*valH1 + mz1*r12*r31*valH1
+                k += 1
+                Mv[k] += -mz1*r21*r32*valH1 + mz1*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
+                k += 1
+                Mv[k] += -mz2*r11*r32*valH1 + mz2*r12*r31*valH1
+                k += 1
+                Mv[k] += -mz2*r21*r32*valH1 + mz2*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
+                k += 1
+                Mv[k] += -mz3*r11*r32*valH1 + mz3*r12*r31*valH1
+                k += 1
+                Mv[k] += -mz3*r21*r32*valH1 + mz3*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
+                k += 1
+                Mv[k] += -mz4*r11*r32*valH1 + mz4*r12*r31*valH1
+                k += 1
+                Mv[k] += -mz4*r21*r32*valH1 + mz4*r22*r31*valH1
+                k += 1
+                Mv[k] += -mz1*r11*r22*valH1 + mz1*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz1*r11*r32*valH1 + mz1*r12*r31*valH1
+                k += 1
+                Mv[k] += mzz11*r11**2*valH1 + mzz11*r12**2*valH1
+                k += 1
+                Mv[k] += mzz11*r11*r21*valH1 + mzz11*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz11*r11*r31*valH1 + mzz11*r12*r32*valH1
+                k += 1
+                Mv[k] += -mz1*r11*r22*valH1 + mz1*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz1*r11*r32*valH1 + mz1*r12*r31*valH1
+                k += 1
+                Mv[k] += mzz12*r11**2*valH1 + mzz12*r12**2*valH1
+                k += 1
+                Mv[k] += mzz12*r11*r21*valH1 + mzz12*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz12*r11*r31*valH1 + mzz12*r12*r32*valH1
+                k += 1
+                Mv[k] += -mz1*r11*r22*valH1 + mz1*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz1*r11*r32*valH1 + mz1*r12*r31*valH1
+                k += 1
+                Mv[k] += mzz13*r11**2*valH1 + mzz13*r12**2*valH1
+                k += 1
+                Mv[k] += mzz13*r11*r21*valH1 + mzz13*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz13*r11*r31*valH1 + mzz13*r12*r32*valH1
+                k += 1
+                Mv[k] += -mz1*r11*r22*valH1 + mz1*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz1*r11*r32*valH1 + mz1*r12*r31*valH1
+                k += 1
+                Mv[k] += mzz14*r11**2*valH1 + mzz14*r12**2*valH1
+                k += 1
+                Mv[k] += mzz14*r11*r21*valH1 + mzz14*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz14*r11*r31*valH1 + mzz14*r12*r32*valH1
+                k += 1
+                Mv[k] += mz1*r11*r22*valH1 - mz1*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz1*r21*r32*valH1 + mz1*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz11*r11*r21*valH1 + mzz11*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz11*r21**2*valH1 + mzz11*r22**2*valH1
+                k += 1
+                Mv[k] += mzz11*r21*r31*valH1 + mzz11*r22*r32*valH1
+                k += 1
+                Mv[k] += mz1*r11*r22*valH1 - mz1*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz1*r21*r32*valH1 + mz1*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz12*r11*r21*valH1 + mzz12*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz12*r21**2*valH1 + mzz12*r22**2*valH1
+                k += 1
+                Mv[k] += mzz12*r21*r31*valH1 + mzz12*r22*r32*valH1
+                k += 1
+                Mv[k] += mz1*r11*r22*valH1 - mz1*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz1*r21*r32*valH1 + mz1*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz13*r11*r21*valH1 + mzz13*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz13*r21**2*valH1 + mzz13*r22**2*valH1
+                k += 1
+                Mv[k] += mzz13*r21*r31*valH1 + mzz13*r22*r32*valH1
+                k += 1
+                Mv[k] += mz1*r11*r22*valH1 - mz1*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz1*r21*r32*valH1 + mz1*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz14*r11*r21*valH1 + mzz14*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz14*r21**2*valH1 + mzz14*r22**2*valH1
+                k += 1
+                Mv[k] += mzz14*r21*r31*valH1 + mzz14*r22*r32*valH1
+                k += 1
+                Mv[k] += mz1*r11*r32*valH1 - mz1*r12*r31*valH1
+                k += 1
+                Mv[k] += mz1*r21*r32*valH1 - mz1*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz11*r11*r31*valH1 + mzz11*r12*r32*valH1
+                k += 1
+                Mv[k] += mzz11*r21*r31*valH1 + mzz11*r22*r32*valH1
+                k += 1
+                Mv[k] += mzz11*r31**2*valH1 + mzz11*r32**2*valH1
+                k += 1
+                Mv[k] += mz1*r11*r32*valH1 - mz1*r12*r31*valH1
+                k += 1
+                Mv[k] += mz1*r21*r32*valH1 - mz1*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz12*r11*r31*valH1 + mzz12*r12*r32*valH1
+                k += 1
+                Mv[k] += mzz12*r21*r31*valH1 + mzz12*r22*r32*valH1
+                k += 1
+                Mv[k] += mzz12*r31**2*valH1 + mzz12*r32**2*valH1
+                k += 1
+                Mv[k] += mz1*r11*r32*valH1 - mz1*r12*r31*valH1
+                k += 1
+                Mv[k] += mz1*r21*r32*valH1 - mz1*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz13*r11*r31*valH1 + mzz13*r12*r32*valH1
+                k += 1
+                Mv[k] += mzz13*r21*r31*valH1 + mzz13*r22*r32*valH1
+                k += 1
+                Mv[k] += mzz13*r31**2*valH1 + mzz13*r32**2*valH1
+                k += 1
+                Mv[k] += mz1*r11*r32*valH1 - mz1*r12*r31*valH1
+                k += 1
+                Mv[k] += mz1*r21*r32*valH1 - mz1*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz14*r11*r31*valH1 + mzz14*r12*r32*valH1
+                k += 1
+                Mv[k] += mzz14*r21*r31*valH1 + mzz14*r22*r32*valH1
+                k += 1
+                Mv[k] += mzz14*r31**2*valH1 + mzz14*r32**2*valH1
                 k += 1
                 Mv[k] += intrho*r11**2*valH1 + intrho*r12**2*valH1 + intrho*r13**2*valH1
                 k += 1
@@ -9100,19 +9784,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
+                Mv[k] += mz1*r11*r22*valH1 - mz1*r12*r21*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11**2*valH1 + intrho*r12**2*valH1 + intrho*r13**2*valH1
-                k += 1
-                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
-                k += 1
-                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
+                Mv[k] += mz1*r11*r32*valH1 - mz1*r12*r31*valH1
                 k += 1
                 Mv[k] += intrho*r11**2*valH1 + intrho*r12**2*valH1 + intrho*r13**2*valH1
                 k += 1
@@ -9120,209 +9794,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
+                Mv[k] += mz2*r11*r22*valH1 - mz2*r12*r21*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
-                k += 1
-                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
-                k += 1
-                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
-                k += 1
-                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
-                k += 1
-                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11**2*valH1 + intrhoz2*r12**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11**2*valH1 + intrhoz2*r12**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11**2*valH1 + intrhoz2*r12**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11**2*valH1 + intrhoz2*r12**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21**2*valH1 + intrhoz2*r22**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21**2*valH1 + intrhoz2*r22**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21**2*valH1 + intrhoz2*r22**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21**2*valH1 + intrhoz2*r22**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
+                Mv[k] += mz2*r11*r32*valH1 - mz2*r12*r31*valH1
                 k += 1
                 Mv[k] += intrho*r11**2*valH1 + intrho*r12**2*valH1 + intrho*r13**2*valH1
                 k += 1
@@ -9330,19 +9804,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
+                Mv[k] += mz3*r11*r22*valH1 - mz3*r12*r21*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11**2*valH1 + intrho*r12**2*valH1 + intrho*r13**2*valH1
-                k += 1
-                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
-                k += 1
-                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
+                Mv[k] += mz3*r11*r32*valH1 - mz3*r12*r31*valH1
                 k += 1
                 Mv[k] += intrho*r11**2*valH1 + intrho*r12**2*valH1 + intrho*r13**2*valH1
                 k += 1
@@ -9350,9 +9814,209 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
+                Mv[k] += mz4*r11*r22*valH1 - mz4*r12*r21*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
+                Mv[k] += mz4*r11*r32*valH1 - mz4*r12*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
+                k += 1
+                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += -mz1*r11*r22*valH1 + mz1*r12*r21*valH1
+                k += 1
+                Mv[k] += mz1*r21*r32*valH1 - mz1*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
+                k += 1
+                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += -mz2*r11*r22*valH1 + mz2*r12*r21*valH1
+                k += 1
+                Mv[k] += mz2*r21*r32*valH1 - mz2*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
+                k += 1
+                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += -mz3*r11*r22*valH1 + mz3*r12*r21*valH1
+                k += 1
+                Mv[k] += mz3*r21*r32*valH1 - mz3*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
+                k += 1
+                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += -mz4*r11*r22*valH1 + mz4*r12*r21*valH1
+                k += 1
+                Mv[k] += mz4*r21*r32*valH1 - mz4*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
+                k += 1
+                Mv[k] += -mz1*r11*r32*valH1 + mz1*r12*r31*valH1
+                k += 1
+                Mv[k] += -mz1*r21*r32*valH1 + mz1*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
+                k += 1
+                Mv[k] += -mz2*r11*r32*valH1 + mz2*r12*r31*valH1
+                k += 1
+                Mv[k] += -mz2*r21*r32*valH1 + mz2*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
+                k += 1
+                Mv[k] += -mz3*r11*r32*valH1 + mz3*r12*r31*valH1
+                k += 1
+                Mv[k] += -mz3*r21*r32*valH1 + mz3*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
+                k += 1
+                Mv[k] += -mz4*r11*r32*valH1 + mz4*r12*r31*valH1
+                k += 1
+                Mv[k] += -mz4*r21*r32*valH1 + mz4*r22*r31*valH1
+                k += 1
+                Mv[k] += -mz2*r11*r22*valH1 + mz2*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz2*r11*r32*valH1 + mz2*r12*r31*valH1
+                k += 1
+                Mv[k] += mzz12*r11**2*valH1 + mzz12*r12**2*valH1
+                k += 1
+                Mv[k] += mzz12*r11*r21*valH1 + mzz12*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz12*r11*r31*valH1 + mzz12*r12*r32*valH1
+                k += 1
+                Mv[k] += -mz2*r11*r22*valH1 + mz2*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz2*r11*r32*valH1 + mz2*r12*r31*valH1
+                k += 1
+                Mv[k] += mzz22*r11**2*valH1 + mzz22*r12**2*valH1
+                k += 1
+                Mv[k] += mzz22*r11*r21*valH1 + mzz22*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz22*r11*r31*valH1 + mzz22*r12*r32*valH1
+                k += 1
+                Mv[k] += -mz2*r11*r22*valH1 + mz2*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz2*r11*r32*valH1 + mz2*r12*r31*valH1
+                k += 1
+                Mv[k] += mzz23*r11**2*valH1 + mzz23*r12**2*valH1
+                k += 1
+                Mv[k] += mzz23*r11*r21*valH1 + mzz23*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz23*r11*r31*valH1 + mzz23*r12*r32*valH1
+                k += 1
+                Mv[k] += -mz2*r11*r22*valH1 + mz2*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz2*r11*r32*valH1 + mz2*r12*r31*valH1
+                k += 1
+                Mv[k] += mzz24*r11**2*valH1 + mzz24*r12**2*valH1
+                k += 1
+                Mv[k] += mzz24*r11*r21*valH1 + mzz24*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz24*r11*r31*valH1 + mzz24*r12*r32*valH1
+                k += 1
+                Mv[k] += mz2*r11*r22*valH1 - mz2*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz2*r21*r32*valH1 + mz2*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz12*r11*r21*valH1 + mzz12*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz12*r21**2*valH1 + mzz12*r22**2*valH1
+                k += 1
+                Mv[k] += mzz12*r21*r31*valH1 + mzz12*r22*r32*valH1
+                k += 1
+                Mv[k] += mz2*r11*r22*valH1 - mz2*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz2*r21*r32*valH1 + mz2*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz22*r11*r21*valH1 + mzz22*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz22*r21**2*valH1 + mzz22*r22**2*valH1
+                k += 1
+                Mv[k] += mzz22*r21*r31*valH1 + mzz22*r22*r32*valH1
+                k += 1
+                Mv[k] += mz2*r11*r22*valH1 - mz2*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz2*r21*r32*valH1 + mz2*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz23*r11*r21*valH1 + mzz23*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz23*r21**2*valH1 + mzz23*r22**2*valH1
+                k += 1
+                Mv[k] += mzz23*r21*r31*valH1 + mzz23*r22*r32*valH1
+                k += 1
+                Mv[k] += mz2*r11*r22*valH1 - mz2*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz2*r21*r32*valH1 + mz2*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz24*r11*r21*valH1 + mzz24*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz24*r21**2*valH1 + mzz24*r22**2*valH1
+                k += 1
+                Mv[k] += mzz24*r21*r31*valH1 + mzz24*r22*r32*valH1
+                k += 1
+                Mv[k] += mz2*r11*r32*valH1 - mz2*r12*r31*valH1
+                k += 1
+                Mv[k] += mz2*r21*r32*valH1 - mz2*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz12*r11*r31*valH1 + mzz12*r12*r32*valH1
+                k += 1
+                Mv[k] += mzz12*r21*r31*valH1 + mzz12*r22*r32*valH1
+                k += 1
+                Mv[k] += mzz12*r31**2*valH1 + mzz12*r32**2*valH1
+                k += 1
+                Mv[k] += mz2*r11*r32*valH1 - mz2*r12*r31*valH1
+                k += 1
+                Mv[k] += mz2*r21*r32*valH1 - mz2*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz22*r11*r31*valH1 + mzz22*r12*r32*valH1
+                k += 1
+                Mv[k] += mzz22*r21*r31*valH1 + mzz22*r22*r32*valH1
+                k += 1
+                Mv[k] += mzz22*r31**2*valH1 + mzz22*r32**2*valH1
+                k += 1
+                Mv[k] += mz2*r11*r32*valH1 - mz2*r12*r31*valH1
+                k += 1
+                Mv[k] += mz2*r21*r32*valH1 - mz2*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz23*r11*r31*valH1 + mzz23*r12*r32*valH1
+                k += 1
+                Mv[k] += mzz23*r21*r31*valH1 + mzz23*r22*r32*valH1
+                k += 1
+                Mv[k] += mzz23*r31**2*valH1 + mzz23*r32**2*valH1
+                k += 1
+                Mv[k] += mz2*r11*r32*valH1 - mz2*r12*r31*valH1
+                k += 1
+                Mv[k] += mz2*r21*r32*valH1 - mz2*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz24*r11*r31*valH1 + mzz24*r12*r32*valH1
+                k += 1
+                Mv[k] += mzz24*r21*r31*valH1 + mzz24*r22*r32*valH1
+                k += 1
+                Mv[k] += mzz24*r31**2*valH1 + mzz24*r32**2*valH1
                 k += 1
                 Mv[k] += intrho*r11**2*valH1 + intrho*r12**2*valH1 + intrho*r13**2*valH1
                 k += 1
@@ -9360,209 +10024,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
+                Mv[k] += mz1*r11*r22*valH1 - mz1*r12*r21*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
-                k += 1
-                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
-                k += 1
-                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
-                k += 1
-                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
-                k += 1
-                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11**2*valH1 + intrhoz2*r12**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11**2*valH1 + intrhoz2*r12**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11**2*valH1 + intrhoz2*r12**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11**2*valH1 + intrhoz2*r12**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21**2*valH1 + intrhoz2*r22**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21**2*valH1 + intrhoz2*r22**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21**2*valH1 + intrhoz2*r22**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21**2*valH1 + intrhoz2*r22**2*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
-                k += 1
-                Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
+                Mv[k] += mz1*r11*r32*valH1 - mz1*r12*r31*valH1
                 k += 1
                 Mv[k] += intrho*r11**2*valH1 + intrho*r12**2*valH1 + intrho*r13**2*valH1
                 k += 1
@@ -9570,19 +10034,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
+                Mv[k] += mz2*r11*r22*valH1 - mz2*r12*r21*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11**2*valH1 + intrho*r12**2*valH1 + intrho*r13**2*valH1
-                k += 1
-                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
-                k += 1
-                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
+                Mv[k] += mz2*r11*r32*valH1 - mz2*r12*r31*valH1
                 k += 1
                 Mv[k] += intrho*r11**2*valH1 + intrho*r12**2*valH1 + intrho*r13**2*valH1
                 k += 1
@@ -9590,9 +10044,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
+                Mv[k] += mz3*r11*r22*valH1 - mz3*r12*r21*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
+                Mv[k] += mz3*r11*r32*valH1 - mz3*r12*r31*valH1
                 k += 1
                 Mv[k] += intrho*r11**2*valH1 + intrho*r12**2*valH1 + intrho*r13**2*valH1
                 k += 1
@@ -9600,19 +10054,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
+                Mv[k] += mz4*r11*r22*valH1 - mz4*r12*r21*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
-                k += 1
-                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
+                Mv[k] += mz4*r11*r32*valH1 - mz4*r12*r31*valH1
                 k += 1
                 Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
                 k += 1
@@ -9620,19 +10064,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
                 k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
+                Mv[k] += -mz1*r11*r22*valH1 + mz1*r12*r21*valH1
                 k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
-                k += 1
-                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
-                k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
+                Mv[k] += mz1*r21*r32*valH1 - mz1*r22*r31*valH1
                 k += 1
                 Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
                 k += 1
@@ -9640,9 +10074,29 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
                 k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
+                Mv[k] += -mz2*r11*r22*valH1 + mz2*r12*r21*valH1
                 k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
+                Mv[k] += mz2*r21*r32*valH1 - mz2*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
+                k += 1
+                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += -mz3*r11*r22*valH1 + mz3*r12*r21*valH1
+                k += 1
+                Mv[k] += mz3*r21*r32*valH1 - mz3*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
+                k += 1
+                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += -mz4*r11*r22*valH1 + mz4*r12*r21*valH1
+                k += 1
+                Mv[k] += mz4*r21*r32*valH1 - mz4*r22*r31*valH1
                 k += 1
                 Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
                 k += 1
@@ -9650,19 +10104,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
                 k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
+                Mv[k] += -mz1*r11*r32*valH1 + mz1*r12*r31*valH1
                 k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
-                k += 1
-                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
-                k += 1
-                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
-                k += 1
-                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
-                k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
-                k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
+                Mv[k] += -mz1*r21*r32*valH1 + mz1*r22*r31*valH1
                 k += 1
                 Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
                 k += 1
@@ -9670,9 +10114,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
                 k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
+                Mv[k] += -mz2*r11*r32*valH1 + mz2*r12*r31*valH1
                 k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
+                Mv[k] += -mz2*r21*r32*valH1 + mz2*r22*r31*valH1
                 k += 1
                 Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
                 k += 1
@@ -9680,129 +10124,379 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
                 k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
+                Mv[k] += -mz3*r11*r32*valH1 + mz3*r12*r31*valH1
                 k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
+                Mv[k] += -mz3*r21*r32*valH1 + mz3*r22*r31*valH1
                 k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
+                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
                 k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11**2*valH1 + intrhoz2*r12**2*valH1
+                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
+                Mv[k] += -mz4*r11*r32*valH1 + mz4*r12*r31*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
+                Mv[k] += -mz4*r21*r32*valH1 + mz4*r22*r31*valH1
                 k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
+                Mv[k] += -mz3*r11*r22*valH1 + mz3*r12*r21*valH1
                 k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
+                Mv[k] += -mz3*r11*r32*valH1 + mz3*r12*r31*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11**2*valH1 + intrhoz2*r12**2*valH1
+                Mv[k] += mzz13*r11**2*valH1 + mzz13*r12**2*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
+                Mv[k] += mzz13*r11*r21*valH1 + mzz13*r12*r22*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
+                Mv[k] += mzz13*r11*r31*valH1 + mzz13*r12*r32*valH1
                 k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
+                Mv[k] += -mz3*r11*r22*valH1 + mz3*r12*r21*valH1
                 k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
+                Mv[k] += -mz3*r11*r32*valH1 + mz3*r12*r31*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11**2*valH1 + intrhoz2*r12**2*valH1
+                Mv[k] += mzz23*r11**2*valH1 + mzz23*r12**2*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
+                Mv[k] += mzz23*r11*r21*valH1 + mzz23*r12*r22*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
+                Mv[k] += mzz23*r11*r31*valH1 + mzz23*r12*r32*valH1
                 k += 1
-                Mv[k] += -intrhoz*r11*r22*valH1 + intrhoz*r12*r21*valH1
+                Mv[k] += -mz3*r11*r22*valH1 + mz3*r12*r21*valH1
                 k += 1
-                Mv[k] += -intrhoz*r11*r32*valH1 + intrhoz*r12*r31*valH1
+                Mv[k] += -mz3*r11*r32*valH1 + mz3*r12*r31*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11**2*valH1 + intrhoz2*r12**2*valH1
+                Mv[k] += mzz33*r11**2*valH1 + mzz33*r12**2*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
+                Mv[k] += mzz33*r11*r21*valH1 + mzz33*r12*r22*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
+                Mv[k] += mzz33*r11*r31*valH1 + mzz33*r12*r32*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
+                Mv[k] += -mz3*r11*r22*valH1 + mz3*r12*r21*valH1
                 k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
+                Mv[k] += -mz3*r11*r32*valH1 + mz3*r12*r31*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
+                Mv[k] += mzz34*r11**2*valH1 + mzz34*r12**2*valH1
                 k += 1
-                Mv[k] += intrhoz2*r21**2*valH1 + intrhoz2*r22**2*valH1
+                Mv[k] += mzz34*r11*r21*valH1 + mzz34*r12*r22*valH1
                 k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
+                Mv[k] += mzz34*r11*r31*valH1 + mzz34*r12*r32*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
+                Mv[k] += mz3*r11*r22*valH1 - mz3*r12*r21*valH1
                 k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
+                Mv[k] += -mz3*r21*r32*valH1 + mz3*r22*r31*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
+                Mv[k] += mzz13*r11*r21*valH1 + mzz13*r12*r22*valH1
                 k += 1
-                Mv[k] += intrhoz2*r21**2*valH1 + intrhoz2*r22**2*valH1
+                Mv[k] += mzz13*r21**2*valH1 + mzz13*r22**2*valH1
                 k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
+                Mv[k] += mzz13*r21*r31*valH1 + mzz13*r22*r32*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
+                Mv[k] += mz3*r11*r22*valH1 - mz3*r12*r21*valH1
                 k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
+                Mv[k] += -mz3*r21*r32*valH1 + mz3*r22*r31*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
+                Mv[k] += mzz23*r11*r21*valH1 + mzz23*r12*r22*valH1
                 k += 1
-                Mv[k] += intrhoz2*r21**2*valH1 + intrhoz2*r22**2*valH1
+                Mv[k] += mzz23*r21**2*valH1 + mzz23*r22**2*valH1
                 k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
+                Mv[k] += mzz23*r21*r31*valH1 + mzz23*r22*r32*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r22*valH1 - intrhoz*r12*r21*valH1
+                Mv[k] += mz3*r11*r22*valH1 - mz3*r12*r21*valH1
                 k += 1
-                Mv[k] += -intrhoz*r21*r32*valH1 + intrhoz*r22*r31*valH1
+                Mv[k] += -mz3*r21*r32*valH1 + mz3*r22*r31*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11*r21*valH1 + intrhoz2*r12*r22*valH1
+                Mv[k] += mzz33*r11*r21*valH1 + mzz33*r12*r22*valH1
                 k += 1
-                Mv[k] += intrhoz2*r21**2*valH1 + intrhoz2*r22**2*valH1
+                Mv[k] += mzz33*r21**2*valH1 + mzz33*r22**2*valH1
                 k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
+                Mv[k] += mzz33*r21*r31*valH1 + mzz33*r22*r32*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
+                Mv[k] += mz3*r11*r22*valH1 - mz3*r12*r21*valH1
                 k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
+                Mv[k] += -mz3*r21*r32*valH1 + mz3*r22*r31*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
+                Mv[k] += mzz34*r11*r21*valH1 + mzz34*r12*r22*valH1
                 k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
+                Mv[k] += mzz34*r21**2*valH1 + mzz34*r22**2*valH1
                 k += 1
-                Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
+                Mv[k] += mzz34*r21*r31*valH1 + mzz34*r22*r32*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
+                Mv[k] += mz3*r11*r32*valH1 - mz3*r12*r31*valH1
                 k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
+                Mv[k] += mz3*r21*r32*valH1 - mz3*r22*r31*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
+                Mv[k] += mzz13*r11*r31*valH1 + mzz13*r12*r32*valH1
                 k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
+                Mv[k] += mzz13*r21*r31*valH1 + mzz13*r22*r32*valH1
                 k += 1
-                Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
+                Mv[k] += mzz13*r31**2*valH1 + mzz13*r32**2*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
+                Mv[k] += mz3*r11*r32*valH1 - mz3*r12*r31*valH1
                 k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
+                Mv[k] += mz3*r21*r32*valH1 - mz3*r22*r31*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
+                Mv[k] += mzz23*r11*r31*valH1 + mzz23*r12*r32*valH1
                 k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
+                Mv[k] += mzz23*r21*r31*valH1 + mzz23*r22*r32*valH1
                 k += 1
-                Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
+                Mv[k] += mzz23*r31**2*valH1 + mzz23*r32**2*valH1
                 k += 1
-                Mv[k] += intrhoz*r11*r32*valH1 - intrhoz*r12*r31*valH1
+                Mv[k] += mz3*r11*r32*valH1 - mz3*r12*r31*valH1
                 k += 1
-                Mv[k] += intrhoz*r21*r32*valH1 - intrhoz*r22*r31*valH1
+                Mv[k] += mz3*r21*r32*valH1 - mz3*r22*r31*valH1
                 k += 1
-                Mv[k] += intrhoz2*r11*r31*valH1 + intrhoz2*r12*r32*valH1
+                Mv[k] += mzz33*r11*r31*valH1 + mzz33*r12*r32*valH1
                 k += 1
-                Mv[k] += intrhoz2*r21*r31*valH1 + intrhoz2*r22*r32*valH1
+                Mv[k] += mzz33*r21*r31*valH1 + mzz33*r22*r32*valH1
                 k += 1
-                Mv[k] += intrhoz2*r31**2*valH1 + intrhoz2*r32**2*valH1
+                Mv[k] += mzz33*r31**2*valH1 + mzz33*r32**2*valH1
+                k += 1
+                Mv[k] += mz3*r11*r32*valH1 - mz3*r12*r31*valH1
+                k += 1
+                Mv[k] += mz3*r21*r32*valH1 - mz3*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz34*r11*r31*valH1 + mzz34*r12*r32*valH1
+                k += 1
+                Mv[k] += mzz34*r21*r31*valH1 + mzz34*r22*r32*valH1
+                k += 1
+                Mv[k] += mzz34*r31**2*valH1 + mzz34*r32**2*valH1
+                k += 1
+                Mv[k] += intrho*r11**2*valH1 + intrho*r12**2*valH1 + intrho*r13**2*valH1
+                k += 1
+                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
+                k += 1
+                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
+                k += 1
+                Mv[k] += mz1*r11*r22*valH1 - mz1*r12*r21*valH1
+                k += 1
+                Mv[k] += mz1*r11*r32*valH1 - mz1*r12*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11**2*valH1 + intrho*r12**2*valH1 + intrho*r13**2*valH1
+                k += 1
+                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
+                k += 1
+                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
+                k += 1
+                Mv[k] += mz2*r11*r22*valH1 - mz2*r12*r21*valH1
+                k += 1
+                Mv[k] += mz2*r11*r32*valH1 - mz2*r12*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11**2*valH1 + intrho*r12**2*valH1 + intrho*r13**2*valH1
+                k += 1
+                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
+                k += 1
+                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
+                k += 1
+                Mv[k] += mz3*r11*r22*valH1 - mz3*r12*r21*valH1
+                k += 1
+                Mv[k] += mz3*r11*r32*valH1 - mz3*r12*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11**2*valH1 + intrho*r12**2*valH1 + intrho*r13**2*valH1
+                k += 1
+                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
+                k += 1
+                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
+                k += 1
+                Mv[k] += mz4*r11*r22*valH1 - mz4*r12*r21*valH1
+                k += 1
+                Mv[k] += mz4*r11*r32*valH1 - mz4*r12*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
+                k += 1
+                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += -mz1*r11*r22*valH1 + mz1*r12*r21*valH1
+                k += 1
+                Mv[k] += mz1*r21*r32*valH1 - mz1*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
+                k += 1
+                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += -mz2*r11*r22*valH1 + mz2*r12*r21*valH1
+                k += 1
+                Mv[k] += mz2*r21*r32*valH1 - mz2*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
+                k += 1
+                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += -mz3*r11*r22*valH1 + mz3*r12*r21*valH1
+                k += 1
+                Mv[k] += mz3*r21*r32*valH1 - mz3*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r21*valH1 + intrho*r12*r22*valH1 + intrho*r13*r23*valH1
+                k += 1
+                Mv[k] += intrho*r21**2*valH1 + intrho*r22**2*valH1 + intrho*r23**2*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += -mz4*r11*r22*valH1 + mz4*r12*r21*valH1
+                k += 1
+                Mv[k] += mz4*r21*r32*valH1 - mz4*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
+                k += 1
+                Mv[k] += -mz1*r11*r32*valH1 + mz1*r12*r31*valH1
+                k += 1
+                Mv[k] += -mz1*r21*r32*valH1 + mz1*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
+                k += 1
+                Mv[k] += -mz2*r11*r32*valH1 + mz2*r12*r31*valH1
+                k += 1
+                Mv[k] += -mz2*r21*r32*valH1 + mz2*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
+                k += 1
+                Mv[k] += -mz3*r11*r32*valH1 + mz3*r12*r31*valH1
+                k += 1
+                Mv[k] += -mz3*r21*r32*valH1 + mz3*r22*r31*valH1
+                k += 1
+                Mv[k] += intrho*r11*r31*valH1 + intrho*r12*r32*valH1 + intrho*r13*r33*valH1
+                k += 1
+                Mv[k] += intrho*r21*r31*valH1 + intrho*r22*r32*valH1 + intrho*r23*r33*valH1
+                k += 1
+                Mv[k] += intrho*r31**2*valH1 + intrho*r32**2*valH1 + intrho*r33**2*valH1
+                k += 1
+                Mv[k] += -mz4*r11*r32*valH1 + mz4*r12*r31*valH1
+                k += 1
+                Mv[k] += -mz4*r21*r32*valH1 + mz4*r22*r31*valH1
+                k += 1
+                Mv[k] += -mz4*r11*r22*valH1 + mz4*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz4*r11*r32*valH1 + mz4*r12*r31*valH1
+                k += 1
+                Mv[k] += mzz14*r11**2*valH1 + mzz14*r12**2*valH1
+                k += 1
+                Mv[k] += mzz14*r11*r21*valH1 + mzz14*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz14*r11*r31*valH1 + mzz14*r12*r32*valH1
+                k += 1
+                Mv[k] += -mz4*r11*r22*valH1 + mz4*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz4*r11*r32*valH1 + mz4*r12*r31*valH1
+                k += 1
+                Mv[k] += mzz24*r11**2*valH1 + mzz24*r12**2*valH1
+                k += 1
+                Mv[k] += mzz24*r11*r21*valH1 + mzz24*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz24*r11*r31*valH1 + mzz24*r12*r32*valH1
+                k += 1
+                Mv[k] += -mz4*r11*r22*valH1 + mz4*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz4*r11*r32*valH1 + mz4*r12*r31*valH1
+                k += 1
+                Mv[k] += mzz34*r11**2*valH1 + mzz34*r12**2*valH1
+                k += 1
+                Mv[k] += mzz34*r11*r21*valH1 + mzz34*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz34*r11*r31*valH1 + mzz34*r12*r32*valH1
+                k += 1
+                Mv[k] += -mz4*r11*r22*valH1 + mz4*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz4*r11*r32*valH1 + mz4*r12*r31*valH1
+                k += 1
+                Mv[k] += mzz44*r11**2*valH1 + mzz44*r12**2*valH1
+                k += 1
+                Mv[k] += mzz44*r11*r21*valH1 + mzz44*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz44*r11*r31*valH1 + mzz44*r12*r32*valH1
+                k += 1
+                Mv[k] += mz4*r11*r22*valH1 - mz4*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz4*r21*r32*valH1 + mz4*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz14*r11*r21*valH1 + mzz14*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz14*r21**2*valH1 + mzz14*r22**2*valH1
+                k += 1
+                Mv[k] += mzz14*r21*r31*valH1 + mzz14*r22*r32*valH1
+                k += 1
+                Mv[k] += mz4*r11*r22*valH1 - mz4*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz4*r21*r32*valH1 + mz4*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz24*r11*r21*valH1 + mzz24*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz24*r21**2*valH1 + mzz24*r22**2*valH1
+                k += 1
+                Mv[k] += mzz24*r21*r31*valH1 + mzz24*r22*r32*valH1
+                k += 1
+                Mv[k] += mz4*r11*r22*valH1 - mz4*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz4*r21*r32*valH1 + mz4*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz34*r11*r21*valH1 + mzz34*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz34*r21**2*valH1 + mzz34*r22**2*valH1
+                k += 1
+                Mv[k] += mzz34*r21*r31*valH1 + mzz34*r22*r32*valH1
+                k += 1
+                Mv[k] += mz4*r11*r22*valH1 - mz4*r12*r21*valH1
+                k += 1
+                Mv[k] += -mz4*r21*r32*valH1 + mz4*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz44*r11*r21*valH1 + mzz44*r12*r22*valH1
+                k += 1
+                Mv[k] += mzz44*r21**2*valH1 + mzz44*r22**2*valH1
+                k += 1
+                Mv[k] += mzz44*r21*r31*valH1 + mzz44*r22*r32*valH1
+                k += 1
+                Mv[k] += mz4*r11*r32*valH1 - mz4*r12*r31*valH1
+                k += 1
+                Mv[k] += mz4*r21*r32*valH1 - mz4*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz14*r11*r31*valH1 + mzz14*r12*r32*valH1
+                k += 1
+                Mv[k] += mzz14*r21*r31*valH1 + mzz14*r22*r32*valH1
+                k += 1
+                Mv[k] += mzz14*r31**2*valH1 + mzz14*r32**2*valH1
+                k += 1
+                Mv[k] += mz4*r11*r32*valH1 - mz4*r12*r31*valH1
+                k += 1
+                Mv[k] += mz4*r21*r32*valH1 - mz4*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz24*r11*r31*valH1 + mzz24*r12*r32*valH1
+                k += 1
+                Mv[k] += mzz24*r21*r31*valH1 + mzz24*r22*r32*valH1
+                k += 1
+                Mv[k] += mzz24*r31**2*valH1 + mzz24*r32**2*valH1
+                k += 1
+                Mv[k] += mz4*r11*r32*valH1 - mz4*r12*r31*valH1
+                k += 1
+                Mv[k] += mz4*r21*r32*valH1 - mz4*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz34*r11*r31*valH1 + mzz34*r12*r32*valH1
+                k += 1
+                Mv[k] += mzz34*r21*r31*valH1 + mzz34*r22*r32*valH1
+                k += 1
+                Mv[k] += mzz34*r31**2*valH1 + mzz34*r32**2*valH1
+                k += 1
+                Mv[k] += mz4*r11*r32*valH1 - mz4*r12*r31*valH1
+                k += 1
+                Mv[k] += mz4*r21*r32*valH1 - mz4*r22*r31*valH1
+                k += 1
+                Mv[k] += mzz44*r11*r31*valH1 + mzz44*r12*r32*valH1
+                k += 1
+                Mv[k] += mzz44*r21*r31*valH1 + mzz44*r22*r32*valH1
+                k += 1
+                Mv[k] += mzz44*r31**2*valH1 + mzz44*r32**2*valH1
 
             elif mtype == 1: # M_lump lumped mass matrix, two-point Gauss-Lobatto quadrature, see the Notes
                 k = self.init_k_M
@@ -10205,9 +10899,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h11*intrho*r11*r31 + h11*intrho*r12*r32 + h11*intrho*r13*r33
                 k += 1
-                Mv[k] += h11*intrhoz*r11*r22 - h11*intrhoz*r12*r21
+                Mv[k] += h11*mz1*r11*r22 - h11*mz1*r12*r21
                 k += 1
-                Mv[k] += h11*intrhoz*r11*r32 - h11*intrhoz*r12*r31
+                Mv[k] += h11*mz1*r11*r32 - h11*mz1*r12*r31
                 k += 1
                 Mv[k] += h11*intrho*r11*r21 + h11*intrho*r12*r22 + h11*intrho*r13*r23
                 k += 1
@@ -10215,9 +10909,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h11*intrho*r21*r31 + h11*intrho*r22*r32 + h11*intrho*r23*r33
                 k += 1
-                Mv[k] += -h11*intrhoz*r11*r22 + h11*intrhoz*r12*r21
+                Mv[k] += -h11*mz1*r11*r22 + h11*mz1*r12*r21
                 k += 1
-                Mv[k] += h11*intrhoz*r21*r32 - h11*intrhoz*r22*r31
+                Mv[k] += h11*mz1*r21*r32 - h11*mz1*r22*r31
                 k += 1
                 Mv[k] += h11*intrho*r11*r31 + h11*intrho*r12*r32 + h11*intrho*r13*r33
                 k += 1
@@ -10225,39 +10919,39 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h11*intrho*r31**2 + h11*intrho*r32**2 + h11*intrho*r33**2
                 k += 1
-                Mv[k] += -h11*intrhoz*r11*r32 + h11*intrhoz*r12*r31
+                Mv[k] += -h11*mz1*r11*r32 + h11*mz1*r12*r31
                 k += 1
-                Mv[k] += -h11*intrhoz*r21*r32 + h11*intrhoz*r22*r31
+                Mv[k] += -h11*mz1*r21*r32 + h11*mz1*r22*r31
                 k += 1
-                Mv[k] += -h11*intrhoz*r11*r22 + h11*intrhoz*r12*r21
+                Mv[k] += -h11*mz1*r11*r22 + h11*mz1*r12*r21
                 k += 1
-                Mv[k] += -h11*intrhoz*r11*r32 + h11*intrhoz*r12*r31
+                Mv[k] += -h11*mz1*r11*r32 + h11*mz1*r12*r31
                 k += 1
-                Mv[k] += h11*intrhoz2*r11**2 + h11*intrhoz2*r12**2
+                Mv[k] += h11*mzz11*r11**2 + h11*mzz11*r12**2
                 k += 1
-                Mv[k] += h11*intrhoz2*r11*r21 + h11*intrhoz2*r12*r22
+                Mv[k] += h11*mzz11*r11*r21 + h11*mzz11*r12*r22
                 k += 1
-                Mv[k] += h11*intrhoz2*r11*r31 + h11*intrhoz2*r12*r32
+                Mv[k] += h11*mzz11*r11*r31 + h11*mzz11*r12*r32
                 k += 1
-                Mv[k] += h11*intrhoz*r11*r22 - h11*intrhoz*r12*r21
+                Mv[k] += h11*mz1*r11*r22 - h11*mz1*r12*r21
                 k += 1
-                Mv[k] += -h11*intrhoz*r21*r32 + h11*intrhoz*r22*r31
+                Mv[k] += -h11*mz1*r21*r32 + h11*mz1*r22*r31
                 k += 1
-                Mv[k] += h11*intrhoz2*r11*r21 + h11*intrhoz2*r12*r22
+                Mv[k] += h11*mzz11*r11*r21 + h11*mzz11*r12*r22
                 k += 1
-                Mv[k] += h11*intrhoz2*r21**2 + h11*intrhoz2*r22**2
+                Mv[k] += h11*mzz11*r21**2 + h11*mzz11*r22**2
                 k += 1
-                Mv[k] += h11*intrhoz2*r21*r31 + h11*intrhoz2*r22*r32
+                Mv[k] += h11*mzz11*r21*r31 + h11*mzz11*r22*r32
                 k += 1
-                Mv[k] += h11*intrhoz*r11*r32 - h11*intrhoz*r12*r31
+                Mv[k] += h11*mz1*r11*r32 - h11*mz1*r12*r31
                 k += 1
-                Mv[k] += h11*intrhoz*r21*r32 - h11*intrhoz*r22*r31
+                Mv[k] += h11*mz1*r21*r32 - h11*mz1*r22*r31
                 k += 1
-                Mv[k] += h11*intrhoz2*r11*r31 + h11*intrhoz2*r12*r32
+                Mv[k] += h11*mzz11*r11*r31 + h11*mzz11*r12*r32
                 k += 1
-                Mv[k] += h11*intrhoz2*r21*r31 + h11*intrhoz2*r22*r32
+                Mv[k] += h11*mzz11*r21*r31 + h11*mzz11*r22*r32
                 k += 1
-                Mv[k] += h11*intrhoz2*r31**2 + h11*intrhoz2*r32**2
+                Mv[k] += h11*mzz11*r31**2 + h11*mzz11*r32**2
                 k += 1
                 Mv[k] += h22*intrho*r11**2 + h22*intrho*r12**2 + h22*intrho*r13**2
                 k += 1
@@ -10265,9 +10959,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h22*intrho*r11*r31 + h22*intrho*r12*r32 + h22*intrho*r13*r33
                 k += 1
-                Mv[k] += h22*intrhoz*r11*r22 - h22*intrhoz*r12*r21
+                Mv[k] += h22*mz2*r11*r22 - h22*mz2*r12*r21
                 k += 1
-                Mv[k] += h22*intrhoz*r11*r32 - h22*intrhoz*r12*r31
+                Mv[k] += h22*mz2*r11*r32 - h22*mz2*r12*r31
                 k += 1
                 Mv[k] += h22*intrho*r11*r21 + h22*intrho*r12*r22 + h22*intrho*r13*r23
                 k += 1
@@ -10275,9 +10969,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h22*intrho*r21*r31 + h22*intrho*r22*r32 + h22*intrho*r23*r33
                 k += 1
-                Mv[k] += -h22*intrhoz*r11*r22 + h22*intrhoz*r12*r21
+                Mv[k] += -h22*mz2*r11*r22 + h22*mz2*r12*r21
                 k += 1
-                Mv[k] += h22*intrhoz*r21*r32 - h22*intrhoz*r22*r31
+                Mv[k] += h22*mz2*r21*r32 - h22*mz2*r22*r31
                 k += 1
                 Mv[k] += h22*intrho*r11*r31 + h22*intrho*r12*r32 + h22*intrho*r13*r33
                 k += 1
@@ -10285,39 +10979,39 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h22*intrho*r31**2 + h22*intrho*r32**2 + h22*intrho*r33**2
                 k += 1
-                Mv[k] += -h22*intrhoz*r11*r32 + h22*intrhoz*r12*r31
+                Mv[k] += -h22*mz2*r11*r32 + h22*mz2*r12*r31
                 k += 1
-                Mv[k] += -h22*intrhoz*r21*r32 + h22*intrhoz*r22*r31
+                Mv[k] += -h22*mz2*r21*r32 + h22*mz2*r22*r31
                 k += 1
-                Mv[k] += -h22*intrhoz*r11*r22 + h22*intrhoz*r12*r21
+                Mv[k] += -h22*mz2*r11*r22 + h22*mz2*r12*r21
                 k += 1
-                Mv[k] += -h22*intrhoz*r11*r32 + h22*intrhoz*r12*r31
+                Mv[k] += -h22*mz2*r11*r32 + h22*mz2*r12*r31
                 k += 1
-                Mv[k] += h22*intrhoz2*r11**2 + h22*intrhoz2*r12**2
+                Mv[k] += h22*mzz22*r11**2 + h22*mzz22*r12**2
                 k += 1
-                Mv[k] += h22*intrhoz2*r11*r21 + h22*intrhoz2*r12*r22
+                Mv[k] += h22*mzz22*r11*r21 + h22*mzz22*r12*r22
                 k += 1
-                Mv[k] += h22*intrhoz2*r11*r31 + h22*intrhoz2*r12*r32
+                Mv[k] += h22*mzz22*r11*r31 + h22*mzz22*r12*r32
                 k += 1
-                Mv[k] += h22*intrhoz*r11*r22 - h22*intrhoz*r12*r21
+                Mv[k] += h22*mz2*r11*r22 - h22*mz2*r12*r21
                 k += 1
-                Mv[k] += -h22*intrhoz*r21*r32 + h22*intrhoz*r22*r31
+                Mv[k] += -h22*mz2*r21*r32 + h22*mz2*r22*r31
                 k += 1
-                Mv[k] += h22*intrhoz2*r11*r21 + h22*intrhoz2*r12*r22
+                Mv[k] += h22*mzz22*r11*r21 + h22*mzz22*r12*r22
                 k += 1
-                Mv[k] += h22*intrhoz2*r21**2 + h22*intrhoz2*r22**2
+                Mv[k] += h22*mzz22*r21**2 + h22*mzz22*r22**2
                 k += 1
-                Mv[k] += h22*intrhoz2*r21*r31 + h22*intrhoz2*r22*r32
+                Mv[k] += h22*mzz22*r21*r31 + h22*mzz22*r22*r32
                 k += 1
-                Mv[k] += h22*intrhoz*r11*r32 - h22*intrhoz*r12*r31
+                Mv[k] += h22*mz2*r11*r32 - h22*mz2*r12*r31
                 k += 1
-                Mv[k] += h22*intrhoz*r21*r32 - h22*intrhoz*r22*r31
+                Mv[k] += h22*mz2*r21*r32 - h22*mz2*r22*r31
                 k += 1
-                Mv[k] += h22*intrhoz2*r11*r31 + h22*intrhoz2*r12*r32
+                Mv[k] += h22*mzz22*r11*r31 + h22*mzz22*r12*r32
                 k += 1
-                Mv[k] += h22*intrhoz2*r21*r31 + h22*intrhoz2*r22*r32
+                Mv[k] += h22*mzz22*r21*r31 + h22*mzz22*r22*r32
                 k += 1
-                Mv[k] += h22*intrhoz2*r31**2 + h22*intrhoz2*r32**2
+                Mv[k] += h22*mzz22*r31**2 + h22*mzz22*r32**2
                 k += 1
                 Mv[k] += h33*intrho*r11**2 + h33*intrho*r12**2 + h33*intrho*r13**2
                 k += 1
@@ -10325,9 +11019,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h33*intrho*r11*r31 + h33*intrho*r12*r32 + h33*intrho*r13*r33
                 k += 1
-                Mv[k] += h33*intrhoz*r11*r22 - h33*intrhoz*r12*r21
+                Mv[k] += h33*mz3*r11*r22 - h33*mz3*r12*r21
                 k += 1
-                Mv[k] += h33*intrhoz*r11*r32 - h33*intrhoz*r12*r31
+                Mv[k] += h33*mz3*r11*r32 - h33*mz3*r12*r31
                 k += 1
                 Mv[k] += h33*intrho*r11*r21 + h33*intrho*r12*r22 + h33*intrho*r13*r23
                 k += 1
@@ -10335,9 +11029,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h33*intrho*r21*r31 + h33*intrho*r22*r32 + h33*intrho*r23*r33
                 k += 1
-                Mv[k] += -h33*intrhoz*r11*r22 + h33*intrhoz*r12*r21
+                Mv[k] += -h33*mz3*r11*r22 + h33*mz3*r12*r21
                 k += 1
-                Mv[k] += h33*intrhoz*r21*r32 - h33*intrhoz*r22*r31
+                Mv[k] += h33*mz3*r21*r32 - h33*mz3*r22*r31
                 k += 1
                 Mv[k] += h33*intrho*r11*r31 + h33*intrho*r12*r32 + h33*intrho*r13*r33
                 k += 1
@@ -10345,39 +11039,39 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h33*intrho*r31**2 + h33*intrho*r32**2 + h33*intrho*r33**2
                 k += 1
-                Mv[k] += -h33*intrhoz*r11*r32 + h33*intrhoz*r12*r31
+                Mv[k] += -h33*mz3*r11*r32 + h33*mz3*r12*r31
                 k += 1
-                Mv[k] += -h33*intrhoz*r21*r32 + h33*intrhoz*r22*r31
+                Mv[k] += -h33*mz3*r21*r32 + h33*mz3*r22*r31
                 k += 1
-                Mv[k] += -h33*intrhoz*r11*r22 + h33*intrhoz*r12*r21
+                Mv[k] += -h33*mz3*r11*r22 + h33*mz3*r12*r21
                 k += 1
-                Mv[k] += -h33*intrhoz*r11*r32 + h33*intrhoz*r12*r31
+                Mv[k] += -h33*mz3*r11*r32 + h33*mz3*r12*r31
                 k += 1
-                Mv[k] += h33*intrhoz2*r11**2 + h33*intrhoz2*r12**2
+                Mv[k] += h33*mzz33*r11**2 + h33*mzz33*r12**2
                 k += 1
-                Mv[k] += h33*intrhoz2*r11*r21 + h33*intrhoz2*r12*r22
+                Mv[k] += h33*mzz33*r11*r21 + h33*mzz33*r12*r22
                 k += 1
-                Mv[k] += h33*intrhoz2*r11*r31 + h33*intrhoz2*r12*r32
+                Mv[k] += h33*mzz33*r11*r31 + h33*mzz33*r12*r32
                 k += 1
-                Mv[k] += h33*intrhoz*r11*r22 - h33*intrhoz*r12*r21
+                Mv[k] += h33*mz3*r11*r22 - h33*mz3*r12*r21
                 k += 1
-                Mv[k] += -h33*intrhoz*r21*r32 + h33*intrhoz*r22*r31
+                Mv[k] += -h33*mz3*r21*r32 + h33*mz3*r22*r31
                 k += 1
-                Mv[k] += h33*intrhoz2*r11*r21 + h33*intrhoz2*r12*r22
+                Mv[k] += h33*mzz33*r11*r21 + h33*mzz33*r12*r22
                 k += 1
-                Mv[k] += h33*intrhoz2*r21**2 + h33*intrhoz2*r22**2
+                Mv[k] += h33*mzz33*r21**2 + h33*mzz33*r22**2
                 k += 1
-                Mv[k] += h33*intrhoz2*r21*r31 + h33*intrhoz2*r22*r32
+                Mv[k] += h33*mzz33*r21*r31 + h33*mzz33*r22*r32
                 k += 1
-                Mv[k] += h33*intrhoz*r11*r32 - h33*intrhoz*r12*r31
+                Mv[k] += h33*mz3*r11*r32 - h33*mz3*r12*r31
                 k += 1
-                Mv[k] += h33*intrhoz*r21*r32 - h33*intrhoz*r22*r31
+                Mv[k] += h33*mz3*r21*r32 - h33*mz3*r22*r31
                 k += 1
-                Mv[k] += h33*intrhoz2*r11*r31 + h33*intrhoz2*r12*r32
+                Mv[k] += h33*mzz33*r11*r31 + h33*mzz33*r12*r32
                 k += 1
-                Mv[k] += h33*intrhoz2*r21*r31 + h33*intrhoz2*r22*r32
+                Mv[k] += h33*mzz33*r21*r31 + h33*mzz33*r22*r32
                 k += 1
-                Mv[k] += h33*intrhoz2*r31**2 + h33*intrhoz2*r32**2
+                Mv[k] += h33*mzz33*r31**2 + h33*mzz33*r32**2
                 k += 1
                 Mv[k] += h44*intrho*r11**2 + h44*intrho*r12**2 + h44*intrho*r13**2
                 k += 1
@@ -10385,9 +11079,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h44*intrho*r11*r31 + h44*intrho*r12*r32 + h44*intrho*r13*r33
                 k += 1
-                Mv[k] += h44*intrhoz*r11*r22 - h44*intrhoz*r12*r21
+                Mv[k] += h44*mz4*r11*r22 - h44*mz4*r12*r21
                 k += 1
-                Mv[k] += h44*intrhoz*r11*r32 - h44*intrhoz*r12*r31
+                Mv[k] += h44*mz4*r11*r32 - h44*mz4*r12*r31
                 k += 1
                 Mv[k] += h44*intrho*r11*r21 + h44*intrho*r12*r22 + h44*intrho*r13*r23
                 k += 1
@@ -10395,9 +11089,9 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h44*intrho*r21*r31 + h44*intrho*r22*r32 + h44*intrho*r23*r33
                 k += 1
-                Mv[k] += -h44*intrhoz*r11*r22 + h44*intrhoz*r12*r21
+                Mv[k] += -h44*mz4*r11*r22 + h44*mz4*r12*r21
                 k += 1
-                Mv[k] += h44*intrhoz*r21*r32 - h44*intrhoz*r22*r31
+                Mv[k] += h44*mz4*r21*r32 - h44*mz4*r22*r31
                 k += 1
                 Mv[k] += h44*intrho*r11*r31 + h44*intrho*r12*r32 + h44*intrho*r13*r33
                 k += 1
@@ -10405,39 +11099,39 @@ cdef class Quad4:
                 k += 1
                 Mv[k] += h44*intrho*r31**2 + h44*intrho*r32**2 + h44*intrho*r33**2
                 k += 1
-                Mv[k] += -h44*intrhoz*r11*r32 + h44*intrhoz*r12*r31
+                Mv[k] += -h44*mz4*r11*r32 + h44*mz4*r12*r31
                 k += 1
-                Mv[k] += -h44*intrhoz*r21*r32 + h44*intrhoz*r22*r31
+                Mv[k] += -h44*mz4*r21*r32 + h44*mz4*r22*r31
                 k += 1
-                Mv[k] += -h44*intrhoz*r11*r22 + h44*intrhoz*r12*r21
+                Mv[k] += -h44*mz4*r11*r22 + h44*mz4*r12*r21
                 k += 1
-                Mv[k] += -h44*intrhoz*r11*r32 + h44*intrhoz*r12*r31
+                Mv[k] += -h44*mz4*r11*r32 + h44*mz4*r12*r31
                 k += 1
-                Mv[k] += h44*intrhoz2*r11**2 + h44*intrhoz2*r12**2
+                Mv[k] += h44*mzz44*r11**2 + h44*mzz44*r12**2
                 k += 1
-                Mv[k] += h44*intrhoz2*r11*r21 + h44*intrhoz2*r12*r22
+                Mv[k] += h44*mzz44*r11*r21 + h44*mzz44*r12*r22
                 k += 1
-                Mv[k] += h44*intrhoz2*r11*r31 + h44*intrhoz2*r12*r32
+                Mv[k] += h44*mzz44*r11*r31 + h44*mzz44*r12*r32
                 k += 1
-                Mv[k] += h44*intrhoz*r11*r22 - h44*intrhoz*r12*r21
+                Mv[k] += h44*mz4*r11*r22 - h44*mz4*r12*r21
                 k += 1
-                Mv[k] += -h44*intrhoz*r21*r32 + h44*intrhoz*r22*r31
+                Mv[k] += -h44*mz4*r21*r32 + h44*mz4*r22*r31
                 k += 1
-                Mv[k] += h44*intrhoz2*r11*r21 + h44*intrhoz2*r12*r22
+                Mv[k] += h44*mzz44*r11*r21 + h44*mzz44*r12*r22
                 k += 1
-                Mv[k] += h44*intrhoz2*r21**2 + h44*intrhoz2*r22**2
+                Mv[k] += h44*mzz44*r21**2 + h44*mzz44*r22**2
                 k += 1
-                Mv[k] += h44*intrhoz2*r21*r31 + h44*intrhoz2*r22*r32
+                Mv[k] += h44*mzz44*r21*r31 + h44*mzz44*r22*r32
                 k += 1
-                Mv[k] += h44*intrhoz*r11*r32 - h44*intrhoz*r12*r31
+                Mv[k] += h44*mz4*r11*r32 - h44*mz4*r12*r31
                 k += 1
-                Mv[k] += h44*intrhoz*r21*r32 - h44*intrhoz*r22*r31
+                Mv[k] += h44*mz4*r21*r32 - h44*mz4*r22*r31
                 k += 1
-                Mv[k] += h44*intrhoz2*r11*r31 + h44*intrhoz2*r12*r32
+                Mv[k] += h44*mzz44*r11*r31 + h44*mzz44*r12*r32
                 k += 1
-                Mv[k] += h44*intrhoz2*r21*r31 + h44*intrhoz2*r22*r32
+                Mv[k] += h44*mzz44*r21*r31 + h44*mzz44*r22*r32
                 k += 1
-                Mv[k] += h44*intrhoz2*r31**2 + h44*intrhoz2*r32**2
+                Mv[k] += h44*mzz44*r31**2 + h44*mzz44*r32**2
 
 
     cpdef void update_KA_beta(Quad4 self,

@@ -55,12 +55,15 @@ stiffness, see the Notes of :class:`.BeamLR`.
 
 The geometric stiffness matrices of :class:`.Quad4` and :class:`.Quad4R`
 integrate the membrane stress resultants with two-by-two quadrature and take
-the slopes of `w` at the centroid of the element, where the transverse shear
-of :class:`.Quad4R` and of the thin :class:`.Quad4` elements is sampled. The
+the slopes of `w` at the centroid of the element, where the constant part of
+the transverse shear of :class:`.Quad4R`, and the transverse shear of the
+thin :class:`.Quad4` elements with ``shear_model = 0``, are sampled. The
 hourglass pattern of `w`, alternating in sign from node to node with zero
 rotations, which the shear sampled there does not resist (:class:`.Quad4R`
-resists it with the stabilisation of its transverse shear), then has no
-geometric stiffness either; with the slopes at the two-by-two points, as up
+resists it with the stabilisation of its transverse shear, and
+:class:`.Quad4` by default with the assumed strains of the MITC4 element),
+then has no geometric stiffness either; with the slopes at the two-by-two
+points, as up
 to version 0.11, it could give a spurious buckling mode below the physical
 load when the transverse shear stiffness is low compared with the bending
 stiffness, e.g. in sandwich plates, and in thin laminated cylinders under
@@ -71,6 +74,20 @@ of that paper, Fig. 6(c), see
 ``tests/test_quad4_linear_buckling_cylinder_displ.py``. The buckling loads
 of coarse meshes are somewhat higher, see the Notes of
 :meth:`.Quad4.update_KG` and :meth:`.Quad4R.update_KG`.
+
+For a warped quadrilateral, the rigid offsets of ``warp_offsets = 1``, the
+default, enter ``KC0``, ``M`` and ``KG``, which adds the eccentricity
+geometric stiffness of the offsets on the rotations of each node, see
+:doc:`element_choice`. Without them, warped meshes are too stiff in
+buckling and vibration as well: in the twisted beam of MacNeal and Harder
+(1985), Fig. 6, `doi:10.1016/0168-874X(85)90003-4
+<https://doi.org/10.1016/0168-874X(85)90003-4>`_, under an axial tip load, against a 96x16 :class:`.Quad4` mesh with
+the offsets, the linear buckling load of 12x2, 24x4 and 48x8 elements is
++0.00, +0.01 and +0.01 % off with the offsets and +366, +102 and +26 %
+without them (:class:`.Quad4`), +1.2, +0.4 and +0.1 % against +329, +101
+and +27 % (:class:`.Quad4R`), and the first natural frequency of 12x2
+elements +0.07 and +0.13 % against +40 %, see :doc:`changelog`, version
+0.12.0.
 
 
 Natural frequencies

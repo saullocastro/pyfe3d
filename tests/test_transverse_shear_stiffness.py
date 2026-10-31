@@ -115,11 +115,15 @@ def legacy_tria3r(el):
     ``shear_model = 0`` with ``alpha_shear_locking = 0.7``, the former
     defaults. Since 0.12.0 Tria3R takes the discrete shear gap field of
     Tria3DSG by default, ``shear_model = 1``, see
-    ``tests/test_tria3r_shear_model_dsg.py``.
+    ``tests/test_tria3r_shear_model_dsg.py``. A Quad4 is given the one-point
+    transverse shear of before 0.12.0, ``shear_model = 0``; the default
+    since 0.12.0 is the MITC4 field, ``shear_model = 1``.
     """
     if isinstance(el, Tria3R):
         el.shear_model = 0
         el.alpha_shear_locking = 0.7
+    elif isinstance(el, Quad4):
+        el.shear_model = 0
 
 
 def shear_energy(cls, Data, Probe, L, h, triangle=False, legacy=False):
@@ -358,24 +362,28 @@ def test_shear_only_subspace_is_the_mechanism_the_stabilisation_opens():
     measured for a cylinder in
     ``test_quad4_linear_buckling_cylinder_displ.py``.
 
-    Quad4 is the reference, and Tria3R with ``shear_model = 0``, the
-    centroid-sampled shear of before 0.12.0 set explicitly, is softer by
+    Quad4 with ``shear_model = 0``, the one-point transverse shear of
+    before 0.12.0, is the reference, and Tria3R with ``shear_model = 0``,
+    the centroid-sampled shear of before 0.12.0 set explicitly, is softer by
     exactly its stabilisation factor. The default Tria3R since 0.12.0, the
     discrete shear gap field, carries no factor and is printed for
-    comparison. Quad4R is stiffer than Quad4 by the factor 1.0131887, the
-    same for the three thicknesses (measured on 2026-10-29): its transverse
-    shear, Belytschko and Leviathan (1994), adds the physical stabilisation
-    of the nonconstant part of the assumed shear strains, which this
-    subspace, with every rotation held at zero, activates in proportion to
-    the one-point shear energy. Until 0.12.0 the two quadrilaterals agreed
-    within 1e-5.
+    comparison. Quad4R is stiffer than the reference by the factor
+    1.0131887, the same for the three thicknesses (measured on 2026-10-29):
+    its transverse shear, Belytschko and Leviathan (1994), adds the physical
+    stabilisation of the nonconstant part of the assumed shear strains,
+    which this subspace, with every rotation held at zero, activates in
+    proportion to the one-point shear energy. Until 0.12.0 the two
+    quadrilaterals agreed within 1e-5. The default Quad4 since 0.12.0, the
+    assumed shear strains of the MITC4 element with two-by-two points,
+    equals Quad4R on these squares, within 1e-12 (measured on 2026-10-30).
 
     """
     n = 8
     L = 0.1
     for h in (0.01, 0.002, 0.0005):
         ref, el_len = shear_only_subspace(Quad4, Quad4Data, Quad4Probe, n, L,
-                                          h)
+                                          h, legacy=True)
+        q4, _ = shear_only_subspace(Quad4, Quad4Data, Quad4Probe, n, L, h)
         q4r, _ = shear_only_subspace(Quad4R, Quad4RData, Quad4RProbe, n, L,
                                      h)
         t3, _ = shear_only_subspace(Tria3R, Tria3RData, Tria3RProbe, n, L, h,
@@ -394,6 +402,7 @@ def test_shear_only_subspace_is_the_mechanism_the_stabilisation_opens():
         # NOTE value pre-determined on 2026-10-29, rtol for the round-off
         #      of the eigenvalue solver
         assert np.isclose(q4r/ref, 1.013188709965525, rtol=1e-6)
+        assert np.isclose(q4, q4r, rtol=1e-10)
         # NOTE and Tria3R is softened by its factor, to within the
         #      difference between a quadrilateral and two triangles
         assert np.isclose(t3/ref, expected, rtol=0.2), (h, t3/ref, expected)

@@ -67,14 +67,20 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     shared with other jobs::
 
         refinement  ntheta  elements     Pcr     time
-             1         40       440    -590.3      1 s
+             1         40       440    -590.0      1 s
              2         80      1920    -352.0     20 s
              4        160      8000    -297.0    145 s
              6        240     18240    -286.7    385 s
              8        320     32640    -283.2    942 s
         extrapolated                   -278.9
 
-    the extrapolation fitting ``a + c*ntheta**-p`` to the three finest
+    Row 1 is that of the default ``shear_model = 1`` of Quad4, the assumed
+    transverse shear strains of the MITC4 element, since 0.12.0 (measured on
+    2026-10-30); the other rows were measured with the one-point transverse
+    shear, ``shear_model = 0``, which gave -590.3 kN for row 1, 0.05 per
+    cent more.
+
+    The extrapolation fits ``a + c*ntheta**-p`` to the three finest
     meshes (p = 2.1). The load converges as the square of the element size,
     to 0.4 per cent below the lower end of the CLPT interval, which is where
     an FSDT value is expected, but that is no literature value to assert
@@ -269,7 +275,7 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     #      refinement, see the table of the docstring. The tolerance, rtol =
     #      1e-4, is for the round-off of other platforms and solvers only
     predetermined = {
-        1: -590271.80,
+        1: -590002.49,
     }
     if refinement in predetermined:
         assert np.isclose(Pcr, predetermined[refinement], rtol=1e-4)

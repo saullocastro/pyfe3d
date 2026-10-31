@@ -83,9 +83,9 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
 
         refinement ntheta elements  Z11, Nxy < 0      Z33, Nxy < 0     time
            0.5       40      480   26567.1 +58.1 %   17343.1 +88.5 %     1 s
-           1         80     1920   18773.5 +11.7 %   10788.3 +17.3 %    11 s
+           1         80     1920   18775.3 +11.8 %   10791.0 +17.3 %    11 s
            1.5      120     4560   17548.8  +4.5 %    9880.7  +7.4 %    34 s
-           2        160     8000   17162.0  +2.2 %    9543.3  +3.7 %    70 s
+           2        160     8000   17162.8  +2.2 %    9544.5  +3.7 %    70 s
            3        240    18240   16891.2  +0.5 %    9310.1  +1.2 %   216 s
         extrapolated               16684    -0.7 %    9136    -0.7 %
 
@@ -99,6 +99,13 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
            3        240    18240   15891.1  +0.6 %    9602.5  +1.1 %
         extrapolated               15697    -0.7 %    9454    -0.5 %
 
+    Rows 1 and 2 of the first table are those of the default ``shear_model
+    = 1`` of Quad4, the assumed transverse shear strains of the MITC4
+    element, since 0.12.0 (measured on 2026-10-30); the other rows, and the
+    second table, were measured with the one-point transverse shear,
+    ``shear_model = 0``, which gave 18773.5 and 10788.3 Nm with
+    ``refinement=1`` and 17162.0 and 9543.3 Nm with ``refinement=2``, 0.005
+    to 0.025 per cent less.
     The extrapolation fits ``a + c*ntheta**-p`` to the three finest meshes,
     giving p = 2.1 in every column. The element thus converges to within
     0.5 to 0.7 per cent of the semi-analytical prediction for both laminates
@@ -115,10 +122,10 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     element accuracy", Finite Elements in Analysis and Design, 1(1), 3-20,
     1985, p. 14, only from ``refinement=3``, too expensive for every run.
     The default ``refinement=1`` therefore compares ``-Tcr`` with the
-    values of the table pre-determined by this same test, 18773.5 and
-    10788.3 Nm, with a tolerance for the round-off of other platforms only,
+    values of the table pre-determined by this same test, 18775.3 and
+    10791.0 Nm, with a tolerance for the round-off of other platforms only,
     and with Fig. 13 within grade C, 20 per cent, as a sanity bound.
-    ``refinement=2`` compares with 17162.0 and 9543.3 Nm and grade B, 10 per
+    ``refinement=2`` compares with 17162.8 and 9544.5 Nm and grade B, 10 per
     cent, and ``refinement=3`` with grade A.
 
     """
@@ -144,8 +151,8 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     #      refinement, see the table of the docstring. The tolerance, rtol =
     #      1e-4, is for the round-off of other platforms and solvers only
     predetermined = {
-        1: {'Z11': 18773.467, 'Z33': 10788.295},
-        2: {'Z11': 17161.967, 'Z33': 9543.263},
+        1: {'Z11': 18775.330, 'Z33': 10790.961},
+        2: {'Z11': 17162.809, 'Z33': 9544.507},
     }
     # NOTE sanity bounds of the relative difference to Fig. 13 of Castro et
     #      al., the grades of MacNeal and Harder (1985), p. 14: C (20 %) with
@@ -390,13 +397,18 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
         refinement  ntheta  elements    Nxy_cr    ratio    time
            0.5         32       640    727275.0   1.2311     1 s
            0.75        48      1440    640334.5   1.0839     2 s
-           1           64      2560    613557.8   1.0386     6 s
+           1           64      2560    613634.3   1.0387     6 s
            1.5         96      5760    595441.7   1.0079    23 s
-           2          128     10240    589288.8   0.9975    54 s
+           2          128     10240    589342.8   0.9976    54 s
            3          192     23424    584942.2   0.9901   200 s
         extrapolated                              0.984
 
-    the extrapolation fitting ``a + c*ntheta**-p`` to the three finest meshes
+    Rows 1 and 2 are those of the default ``shear_model = 1`` of Quad4, the
+    assumed transverse shear strains of the MITC4 element, since 0.12.0
+    (measured on 2026-10-30); the other rows were measured with the
+    one-point transverse shear, ``shear_model = 0``, which gave 613557.8 and
+    589288.8 N/m for rows 1 and 2, 0.012 and 0.009 per cent less. The
+    extrapolation fits ``a + c*ntheta**-p`` to the three finest meshes
     (p = 2.0). The converged element is therefore 1.6 per cent below the
     formula, which is within the accuracy of the formula itself: it is a
     straight-line fit of Batdorf's Galerkin solution of a Donnell-type
@@ -541,8 +553,8 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     #      refinement, see the table of the docstring. The tolerance, rtol =
     #      1e-4, is for the round-off of other platforms and solvers only
     predetermined = {
-        1: 613557.81,
-        2: 589288.83,
+        1: 613634.33,
+        2: 589342.80,
     }
     if refinement in predetermined:
         assert isclose(Nxy_cr, predetermined[refinement], rtol=1e-4)

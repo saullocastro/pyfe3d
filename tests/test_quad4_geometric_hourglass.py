@@ -1,10 +1,11 @@
 r"""Quad4: slopes of `w` at the centroid in the geometric stiffness
 
-The elements of :class:`pyfe3d.Quad4` with `h/\ell < 1` integrate the
-transverse shear with one point at the centroid, after Hughes et al. (1977),
-such that the hourglass pattern of `w`, `w = \xi \eta` with zero rotations,
-has no stiffness in KC0, see ``tests/test_quad4_spurious_shear_mode.py``. Up
-to version 0.11, the geometric stiffness KG, and the geometrically nonlinear
+Up to version 0.11, and with ``shear_model = 0`` since 0.12.0, the elements
+of :class:`pyfe3d.Quad4` with `h/\ell < 1` integrate the transverse shear
+with one point at the centroid, after Hughes et al. (1977), such that the
+hourglass pattern of `w`, `w = \xi \eta` with zero rotations, has no
+stiffness in KC0, see ``tests/test_quad4_spurious_shear_mode.py``. Up to
+version 0.11, the geometric stiffness KG, and the geometrically nonlinear
 terms that share its quadrature, took the slopes `w_{,x}` and `w_{,y}` at the
 two-by-two Gauss-Legendre points, which gave that pattern the geometric
 stiffness of the full quadrature. In a supported plate the pattern then
@@ -26,16 +27,18 @@ value, lowest buckling load against Eq. (1) of Seide and Stowell (1950),
     r = \frac{\pi^2 D}{b^2 D_Q}
 
 with the transverse shear stiffness `D_Q = A_{55}`, `m = 1` for these
-plates, with the slopes at the two-by-two points (before) and at the
-centroid (after):
+plates, with the one-point transverse shear of ``shear_model = 0`` and the
+slopes at the two-by-two points (before) and at the centroid (after), and
+with the default ``shear_model = 1``, the assumed transverse shear strains
+of the MITC4 element, and the slopes at the centroid (default):
 
-    A44, A55     mesh     h/l     before      after
-    1/100        8x8      0.08    +1.98 %    +3.33 %
-                 16x16    0.16   -49.18 %    +0.81 %
-                 32x32    0.32   -87.08 %    +0.20 %
-    1/1000       8x8      0.08   -71.39 %    +2.19 %
-                 16x16    0.16   -92.37 %    +0.54 %
-                 32x32    0.32   -98.06 %    +0.13 %
+    A44, A55     mesh     h/l     before      after    default
+    1/100        8x8      0.08    +1.98 %    +3.33 %    +3.41 %
+                 16x16    0.16   -49.18 %    +0.81 %    +0.83 %
+                 32x32    0.32   -87.08 %    +0.20 %    +0.21 %
+    1/1000       8x8      0.08   -71.39 %    +2.19 %    +2.70 %
+                 16x16    0.16   -92.37 %    +0.54 %    +0.66 %
+                 32x32    0.32   -98.06 %    +0.13 %    +0.17 %
 
 The negative errors are the spurious mode: 0.70 to 0.79 of `w` in it is the
 pattern alternating in sign from node to node, and the rotations times the
@@ -44,8 +47,11 @@ centroid the pattern has no geometric stiffness, and the error is positive
 and decreases with the square of the element size: the ratio of the errors
 of two successive meshes is 4.36, 4.08 and 4.02 from 4x4 to 32x32 for 1/100,
 and 4.01 from 32x32 to 64x64, with +0.051 % at 64x64; 4.21, 4.05, 4.01 and
-4.00 for 1/1000, with +0.034 % at 64x64.
-:func:`test_low_transverse_shear_stiffness` asserts this convergence: the
+4.00 for 1/1000, with +0.034 % at 64x64. With the default the ratios are
+4.38, 4.09, 4.02 and 4.01 for 1/100, +0.052 % at 64x64, and 4.32, 4.08,
+4.02 and 4.00 for 1/1000, +0.041 % at 64x64 (measured on 2026-10-30).
+:func:`test_low_transverse_shear_stiffness` asserts this convergence, for
+both values of ``shear_model``: the
 error is positive on every mesh, the ratio of the errors of the 16x16 and
 32x32 meshes lies between 3.8 and 4.2, the order 2 of the element, and the
 32x32 mesh is within 0.5 % of the reference. The case 1/100 with 8x8
@@ -88,7 +94,8 @@ def square_mesh(n):
     return x, y, elements
 
 
-def assemble(x, y, elements, prop, Nxx=-1., given_stress=True):
+def assemble(x, y, elements, prop, Nxx=-1., given_stress=True,
+             shear_model=1):
     r"""KC0 and KG; with ``given_stress=False``, KG is computed by
     ``update_KG`` from the uniform pre-buckling state with `N_{xx} =` ``Nxx``
     and `N_{yy} = N_{xy} = 0`"""
@@ -109,6 +116,7 @@ def assemble(x, y, elements, prop, Nxx=-1., given_stress=True):
     u0[1::DOF] = -NU*eps*y
     for k, (n1, n2, n3, n4) in enumerate(elements):
         quad = Quad4(probe)
+        quad.shear_model = shear_model
         quad.n1, quad.n2, quad.n3, quad.n4 = n1, n2, n3, n4
         quad.c1, quad.c2, quad.c3, quad.c4 = DOF*n1, DOF*n2, DOF*n3, DOF*n4
         quad.init_k_KC0 = k*data.KC0_SPARSE_SIZE
@@ -137,7 +145,7 @@ def seide_stowell(a, b, D, DQ):
     return k.min()*np.pi**2*D/b**2
 
 
-def buckling_ss_plate(n, shear_factor, given_stress=True):
+def buckling_ss_plate(n, shear_factor, given_stress=True, shear_model=1):
     r"""Lowest buckling load of a hard simply supported square plate under
     uniaxial compression, relative to Seide and Stowell (1950), and the
     checkerboard content of `w` in its mode, between 0 and 1"""
@@ -145,7 +153,8 @@ def buckling_ss_plate(n, shear_factor, given_stress=True):
     prop.A44 *= shear_factor
     prop.A55 *= shear_factor
     x, y, elements = square_mesh(n)
-    KC0, KG = assemble(x, y, elements, prop, given_stress=given_stress)
+    KC0, KG = assemble(x, y, elements, prop, given_stress=given_stress,
+                       shear_model=shear_model)
     bk = np.zeros(KC0.shape[0], dtype=bool)
     edge = (isclose(x, 0.) | isclose(x, SIDE) | isclose(y, 0.)
             | isclose(y, SIDE))
@@ -169,19 +178,22 @@ def buckling_ss_plate(n, shear_factor, given_stress=True):
 @pytest.mark.slow
 def test_low_transverse_shear_stiffness():
     for shear_factor in (1e-2, 1e-3):
-        errs = []
-        for n in (9, 17, 33):
-            err, checkerboard = buckling_ss_plate(n, shear_factor)
-            print('A44 = A55 = %g of the isotropic value, %dx%d elements: '
-                  '%+.2f %%, checkerboard %.3f'
-                  % (shear_factor, n - 1, n - 1, 100*err, checkerboard))
-            # NOTE convergence from above, without the spurious mode
-            assert err > 0
-            assert checkerboard < 0.05
-            errs.append(err)
-        # NOTE second-order convergence to Seide and Stowell (1950)
-        assert 3.8 < errs[1]/errs[2] < 4.2
-        assert errs[2] < 0.005
+        for shear_model in (0, 1):
+            errs = []
+            for n in (9, 17, 33):
+                err, checkerboard = buckling_ss_plate(
+                    n, shear_factor, shear_model=shear_model)
+                print('A44 = A55 = %g of the isotropic value, shear_model '
+                      '%d, %dx%d elements: %+.2f %%, checkerboard %.3f'
+                      % (shear_factor, shear_model, n - 1, n - 1, 100*err,
+                         checkerboard))
+                # NOTE convergence from above, without the spurious mode
+                assert err > 0
+                assert checkerboard < 0.05
+                errs.append(err)
+            # NOTE second-order convergence to Seide and Stowell (1950)
+            assert 3.8 < errs[1]/errs[2] < 4.2
+            assert errs[2] < 0.005
 
 
 def test_KG_of_the_pre_buckling_state():
@@ -193,12 +205,13 @@ def test_KG_of_the_pre_buckling_state():
     assert checkerboard < 0.05
 
 
-def single_element(xy, h=0.01):
+def single_element(xy, h=0.01, shear_model=1):
     x, y = xy[:, 0], xy[:, 1]
     prop = isotropic_plate(E=E, nu=NU, thickness=h)
     data = Quad4Data()
     probe = Quad4Probe()
     quad = Quad4(probe)
+    quad.shear_model = shear_model
     quad.n1, quad.n2, quad.n3, quad.n4 = 0, 1, 2, 3
     quad.c1, quad.c2, quad.c3, quad.c4 = 0, DOF, 2*DOF, 3*DOF
     quad.init_k_KC0 = 0
@@ -265,35 +278,48 @@ def check_KG_is_one_point(h):
 
 def test_hourglass_pattern_has_no_nonlinear_terms():
     r"""In a distorted element with `h/\ell < 1`, the hourglass pattern of
-    `w` with zero rotations has no energy: neither linear internal forces, by
-    the one-point transverse shear, nor nonlinear membrane strains, by the
-    slopes at the centroid, such that the nonlinear internal forces and
-    KCNL vanish"""
+    `w` with zero rotations has no nonlinear membrane strains, by the slopes
+    at the centroid, such that its nonlinear internal forces and KCNL
+    vanish. With ``shear_model = 0``, the one-point transverse shear of
+    Hughes et al. (1977), it has no linear internal forces either, so no
+    energy at all; with the default ``shear_model = 1`` the assumed
+    transverse shear strains of the MITC4 element give it the linear forces
+    ``KC0 u``"""
     xy = np.array([[0., 0.], [2., 0.], [2.3, 1.4], [0.2, 1.1]])
-    quad, data, prop, coords = single_element(xy)
-    assert prop.h/quad.area**0.5 < 1
-    u = np.zeros(4*DOF)
-    u[2::DOF] = 0.1*np.array([1., -1., 1., -1.])
-    quad.update_probe_ue(u)
-    fint = np.zeros(4*DOF)
-    quad.update_fint(fint, prop, nonlinear=1)
-    KCNLr = np.zeros(data.KCNL_SPARSE_SIZE, dtype=INT)
-    KCNLc = np.zeros_like(KCNLr)
-    KCNLv = np.zeros(data.KCNL_SPARSE_SIZE, dtype=DOUBLE)
-    quad.update_KCNL(KCNLr, KCNLc, KCNLv, prop)
-    KC0r = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
-    KC0c = np.zeros_like(KC0r)
-    KC0v = np.zeros(data.KC0_SPARSE_SIZE, dtype=DOUBLE)
-    quad.update_KC0(KC0r, KC0c, KC0v, prop)
-    # NOTE scale of the internal forces of the same amplitude of a smooth w
-    #      pattern, w = x, which stretches the element
-    u_ref = np.zeros(4*DOF)
-    u_ref[2::DOF] = 0.1*xy[:, 0]
-    quad.update_probe_ue(u_ref)
-    fint_ref = np.zeros(4*DOF)
-    quad.update_fint(fint_ref, prop, nonlinear=1)
-    assert abs(fint).max() < 1e-12*abs(fint_ref).max()
-    assert abs(KCNLv).max() < 1e-12*abs(KC0v).max()
+    for shear_model in (0, 1):
+        quad, data, prop, coords = single_element(xy,
+                                                  shear_model=shear_model)
+        assert prop.h/quad.area**0.5 < 1
+        u = np.zeros(4*DOF)
+        u[2::DOF] = 0.1*np.array([1., -1., 1., -1.])
+        quad.update_probe_ue(u)
+        fint = np.zeros(4*DOF)
+        quad.update_fint(fint, prop, nonlinear=1)
+        fint_linear = np.zeros(4*DOF)
+        quad.update_fint(fint_linear, prop, nonlinear=0)
+        KCNLr = np.zeros(data.KCNL_SPARSE_SIZE, dtype=INT)
+        KCNLc = np.zeros_like(KCNLr)
+        KCNLv = np.zeros(data.KCNL_SPARSE_SIZE, dtype=DOUBLE)
+        quad.update_KCNL(KCNLr, KCNLc, KCNLv, prop)
+        KC0r = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+        KC0c = np.zeros_like(KC0r)
+        KC0v = np.zeros(data.KC0_SPARSE_SIZE, dtype=DOUBLE)
+        quad.update_KC0(KC0r, KC0c, KC0v, prop)
+        KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(4*DOF, 4*DOF))
+        # NOTE scale of the internal forces of the same amplitude of a
+        #      smooth w pattern, w = x, which stretches the element
+        u_ref = np.zeros(4*DOF)
+        u_ref[2::DOF] = 0.1*xy[:, 0]
+        quad.update_probe_ue(u_ref)
+        fint_ref = np.zeros(4*DOF)
+        quad.update_fint(fint_ref, prop, nonlinear=1)
+        assert abs(fint - fint_linear).max() < 1e-12*abs(fint_ref).max()
+        assert abs(KCNLv).max() < 1e-12*abs(KC0v).max()
+        assert abs(fint_linear - KC0 @ u).max() < 1e-12*abs(fint_ref).max()
+        if shear_model == 0:
+            assert abs(fint).max() < 1e-12*abs(fint_ref).max()
+        else:
+            assert abs(fint).max() > 1e-3*abs(fint_ref).max()
 
 
 def test_tangent_is_the_jacobian_of_the_internal_forces():

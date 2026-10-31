@@ -84,7 +84,7 @@ block per node and per translations or rotations, see :doc:`conventions`, and
     * - :class:`.Quad4`, :class:`.Quad4R`
       - 576
       - 576
-      - 144
+      - 180
       - 480
       - ``KA_BETA``, ``KA_GAMMA``, ``CA``: 144
     * - :class:`.Tria3DSG`
@@ -135,7 +135,11 @@ The matrices are:
   stiffness matrix of the geometrically non-linear analyses;
 - ``KG``, the geometric stiffness matrix `\boldsymbol{K}_G(\boldsymbol{u})`, from the stress
   resultants of the displacements in the probe, or, for the shells, of
-  given membrane stress resultants with ``update_KG_given_stress``;
+  given membrane stress resultants with ``update_KG_given_stress``; 36 of
+  the 180 entries of :class:`.Quad4` and :class:`.Quad4R` hold the
+  eccentricity term of the rigid offsets of a warped element, on the
+  rotations of each node, zero for a flat element, see
+  :doc:`element_choice`;
 - ``M``, the mass matrix, consistent, lumped or, for some shells, with
   reduced integration, ``mtype`` 0, 1 or 2 of ``update_M`` for every
   element, see :doc:`element_choice`;
@@ -182,7 +186,9 @@ steps:
    problems with :func:`.linear_buckling`, :func:`.natural_frequency` and
    :func:`.complex_frequency`,
    see :doc:`eigenvalue_analyses`; the non-linear analyses with
-   :class:`.Analysis`.
+   :class:`.Analysis`, see :doc:`nonlinear_analyses`, also with the
+   co-rotational elements of :class:`.CorotationalModel` for large
+   rotations.
 7. Post-processing: ``update_probe_ue(u)`` brings the displacements of an
    element to element coordinates, in ``probe.ue``; ``update_fint`` adds
    its internal forces, in global coordinates, to a global vector, whose
@@ -224,3 +230,9 @@ buckling analysis and `\boldsymbol{F}_{int}(\boldsymbol{u})` is the vector of ``
 nonlinear=1)``, whose exact derivative is `\boldsymbol{K}_T` for every element with
 ``update_KCNL`` (verified in ``tests/test_tangent_consistency.py``). The
 linear internal force vector, ``nonlinear=0``, is `\boldsymbol{K}_{C0} \boldsymbol{u}`.
+
+These are the von Kármán strains of the elements, for small to moderate
+rotations. For large rotations, :class:`.CorotationalModel` adds the
+elements with co-rotational kinematics and provides the callables of
+:class:`.Analysis`, with total rotation vectors as rotational dofs, see
+:doc:`nonlinear_analyses`.

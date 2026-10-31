@@ -135,15 +135,17 @@ def test_B1_rank_of_a_single_free_element():
                   % (drilling_model, nzf))
         # the enrichment must not add any zero mode of its own. The absolute
         # count is a property of the transverse shear of the underlying plate
-        # formulation: the square, h/l = 1, gets the assumed transverse shear
-        # strains of the MITC4 element, which leave only the six rigid-body
-        # modes (seven with the modified one-point shear rule used up to
-        # 0.11), and the distorted quadrilateral, h/l = 0.63, the one-point
-        # rule, which leaves eight. Those extra modes live entirely in the
-        # out-of-plane block, which the enrichment leaves untouched, so the
-        # meaningful assertion is that the two models agree
+        # formulation: the assumed transverse shear strains of the MITC4
+        # element, the default shear_model = 1 since 0.12.0, leave only the
+        # six rigid-body modes on both shapes. With shear_model = 0 the
+        # square, h/l = 1, gets them as well (seven zeros with the modified
+        # one-point shear rule used up to 0.11), and the distorted
+        # quadrilateral, h/l = 0.63, the one-point rule, which leaves eight.
+        # Those extra modes live entirely in the out-of-plane block, which
+        # the enrichment leaves untouched, so the meaningful assertion is
+        # that the two models agree
         assert counts[0] == counts[1], counts
-        assert counts[0] == (6 if ncoords is SQUARE else 8), counts
+        assert counts[0] == 6, counts
 
 
 def test_B2_spurious_allman_mode_is_removed():
