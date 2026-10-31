@@ -27,7 +27,7 @@ With the solvers of :mod:`pyfe3d.solver` you can run:
 
 * Linear static analyses of unsupported structures with inertia relief,
   balancing the loads with the inertia forces of the rigid-body
-  acceleration, with :func:`.inertia_relief`, see :doc:`inertia_relief`
+  acceleration, with :func:`.apply_inertia_relief`, see :doc:`inertia_relief`
 
 * Linear buckling analyses, `(\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}`, with
   :func:`.linear_buckling`

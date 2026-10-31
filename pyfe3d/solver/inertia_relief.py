@@ -5,10 +5,10 @@ Static analysis with inertia relief (:mod:`pyfe3d.solver.inertia_relief`)
 
 .. currentmodule:: pyfe3d.solver.inertia_relief
 
-:func:`inertia_relief` is the linear static analysis of a structure without
-supports, e.g. an aircraft or a spacecraft in flight, whose loads need not
-be balanced: the rigid-body accelerations are computed from the mass
-matrix, and the displacements relative to a statically determinate
+:func:`apply_inertia_relief` is the linear static analysis of a structure
+without supports, e.g. an aircraft or a spacecraft in flight, whose loads
+need not be balanced: the rigid-body accelerations are computed from the
+mass matrix, and the displacements relative to a statically determinate
 reference support from the loads plus the d'Alembert forces of these
 accelerations. The user guide is :doc:`inertia_relief`.
 
@@ -30,8 +30,9 @@ def _bool_dofs(b, N, name):
     return b
 
 
-def inertia_relief(KC0, M, fext, bref, bfix=None, return_reactions=False,
-                   rtol=1.e-6, pivot_rtol=1.e-13):
+def apply_inertia_relief(KC0, M, fext, bref, bfix=None,
+                         return_reactions=False, rtol=1.e-6,
+                         pivot_rtol=1.e-13):
     r"""Linear static analysis with inertia relief
 
     Solves the linear static problem of an unsupported structure, whose
@@ -225,12 +226,13 @@ def inertia_relief(KC0, M, fext, bref, bfix=None, return_reactions=False,
 
     >>> import numpy as np
     >>> from scipy.sparse import csc_matrix
-    >>> from pyfe3d.solver import inertia_relief
+    >>> from pyfe3d.solver import apply_inertia_relief
     >>> k1, k2, F = 2000., 500., 12.
     >>> KC0 = csc_matrix([[k1, -k1, 0.], [-k1, k1 + k2, -k2], [0., -k2, k2]])
     >>> M = csc_matrix(np.diag([1., 2., 3.]))
     >>> bref = np.array([True, False, False])
-    >>> u, acc, Phi = inertia_relief(KC0, M, np.array([0., 0., F]), bref)
+    >>> fext = np.array([0., 0., F])
+    >>> u, acc, Phi = apply_inertia_relief(KC0, M, fext, bref)
     >>> print(acc, u, Phi.ravel())
     [2.] [0.    0.001 0.013] [1. 1. 1.]
 

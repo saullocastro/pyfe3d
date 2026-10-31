@@ -13,7 +13,7 @@ steady loads it deforms elastically while it accelerates as a rigid body.
 Inertia relief balances the loads with the d'Alembert forces of this
 rigid-body acceleration and computes the displacements relative to a
 reference support. In pyfe3d this is done by
-:func:`.inertia_relief`, whose Notes give the equations and the
+:func:`.apply_inertia_relief`, whose Notes give the equations and the
 references.
 
 
@@ -37,9 +37,9 @@ Workflow
    ``bfix`` of these constraints.
 5. Solve::
 
-       from pyfe3d.solver import inertia_relief
-       u, acc, Phi, R = inertia_relief(KC0, M, fext, bref, bfix,
-                                       return_reactions=True)
+       from pyfe3d.solver import apply_inertia_relief
+       u, acc, Phi, R = apply_inertia_relief(KC0, M, fext, bref, bfix,
+                                             return_reactions=True)
 
    ``u`` are the displacements relative to the reference support, ``acc``
    the rigid-body accelerations of the reference dofs, ``Phi`` the
@@ -65,8 +65,8 @@ statically determinate: it suppresses every rigid-body mode without
 restraining any deformation, i.e. the rows of the rigid-body modes at the
 reference dofs form a non-singular square matrix. Typical choices are the
 six dofs of one node, or three translations of one node, two of a second
-node and one of a third node that are not aligned. :func:`.inertia_relief`
-checks the choice:
+node and one of a third node that are not aligned.
+:func:`.apply_inertia_relief` checks the choice:
 
 - with too few dofs, or dofs that leave a rigid-body mode free, e.g. two
   translations along the line joining their nodes, the stiffness matrix of
@@ -124,7 +124,12 @@ Worked examples
   under an end force, against closed-form solutions;
 - :doc:`tut-inertia-relief-aircraft-ha144a`: the stick model of an airplane
   in trimmed level flight, the MSC Nastran example HA144A, against the
-  published results.
+  published results. The published aerodynamic box forces, transferred to
+  the beams with Nastran's linear splines (SPLINE2), which carry the
+  moments of the forces through their rigid arms, reproduce the published
+  bar forces and displacements to the printed digits; an inverse-distance
+  load transfer and the loads of a vortex lattice method are compared as
+  well (see the references of the tutorial).
 
 
 References

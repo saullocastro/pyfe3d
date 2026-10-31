@@ -7,7 +7,7 @@ of the airplane with symmetry constraints, the weights (CONM2) of the wing
 attached to the elastic axis by rigid bars (RBAR), represented exactly by a
 transformation of the degrees of freedom, and the reference support (SUPORT)
 at GRID 90, vertical translation and pitch. The inertia relief is computed
-with :func:`pyfe3d.solver.inertia_relief` (Barnett et al. 1995).
+with :func:`pyfe3d.solver.apply_inertia_relief` (Barnett et al. 1995).
 
 The tests check, against the output of Listing 7-3 (pp. 198-205):
 
@@ -25,10 +25,21 @@ The tests check, against the output of Listing 7-3 (pp. 198-205):
   accelerations, `\boldsymbol{\Phi}^\top \boldsymbol{F}_{tot} =
   \boldsymbol{0}`, zero reactions at the reference support, and the forces of
   element 101, which carries only the weight of the 1500 lb mass at GRID 97:
-  bending moment -1.5e4 lb ft at end B and shear 1.5e3 lb.
+  bending moment -1.5e4 lb ft at end B and shear 1.5e3 lb;
+- the same box forces, applied as Nastran applies them, at the box centres
+  with their moments about the midchord (pp. 20 and 186), and transferred
+  with the linear splines SPLINE2 1501 and 1601 of the deck (emulated by
+  :func:`spline2_matrix` from Rodden and Johnson 1994, pp. 33-43, and the
+  Quick Reference Guide, pp. 3137-3138): the transfer conserves the
+  resultant force and moment, the canard spline is the lever rule between
+  GRID 98 and 99, and all published bar forces and displacements of
+  subcase 2 are reproduced to the printed digits.
 
 Rodden, W. P., Johnson, E. H., 1994, MSC/NASTRAN Aeroelastic Analysis User's
 Guide, Version 68, The MacNeal-Schwendler Corporation, Los Angeles.
+
+MSC Software, 2020, MSC Nastran 2020 Quick Reference Guide, Newport Beach,
+Bulk Data entry SPLINE2, pp. 3137-3138.
 
 Gryszka, M., Castro, S. G. P., 2026, Angled spar battery-wing system for large
 all-electric aircraft, preprint, https://engrxiv.org/preprint/view/7893/version/10171
@@ -49,7 +60,7 @@ from scipy.spatial import cKDTree
 
 from pyfe3d.beamprop import BeamProp
 from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
-from pyfe3d.solver import inertia_relief
+from pyfe3d.solver import apply_inertia_relief
 
 WTMASS = 0.031081 # PARAM WTMASS, s^2/ft
 G_ACC = 1/WTMASS  # ft/s^2
@@ -145,9 +156,11 @@ BOX_FORCES_SC2 = np.array([
     2.643184E+02, 1.236906E+02, 8.494805E+01, 5.304620E+01])
 
 
-def caero1_points(x1, y1, x12, x4, y4, x43, nspan, nchord):
-    r"""Quarter-chord points of the boxes of a CAERO1 panel, numbered
-    chordwise first, as the box identification numbers"""
+def caero1_points(x1, y1, x12, x4, y4, x43, nspan, nchord, frac=0.25):
+    r"""Points at the fraction ``frac`` of the box chord, midspan, of the
+    boxes of a CAERO1 panel, numbered chordwise first, as the box
+    identification numbers; ``frac=0.25`` gives the quarter-chord points,
+    ``frac=0.5`` the box centres"""
     pts = []
     for j in range(nspan):
         eta = (j + 0.5)/nspan
@@ -155,16 +168,18 @@ def caero1_points(x1, y1, x12, x4, y4, x43, nspan, nchord):
         c = x12 + eta*(x43 - x12)
         y = y1 + eta*(y4 - y1)
         for i in range(nchord):
-            pts.append((xle + (i + 0.25)/nchord*c, y, 0.))
+            pts.append((xle + (i + frac)/nchord*c, y, 0.))
     return np.array(pts)
 
 
-def box_points():
+def box_points(frac=0.25):
     r"""CAERO1 1000 (canard, 2 x 4 boxes) and 1100 (wing, 8 x 4 boxes),
     Listing 7-2, cards 8-11; the force of a doublet-lattice box acts at its
-    quarter chord (p. 186)"""
-    canard = caero1_points(10., 0., 10., 10., 5., 10., 2, 4)
-    wing = caero1_points(25., 0., 10., 13.45299, 20., 10., 8, 4)
+    quarter chord (p. 186), ``frac=0.25``; the aerodynamic grid point of a
+    box, where Nastran applies the force and the moment about the midchord,
+    is the box centre (pp. 20 and 186), ``frac=0.5``"""
+    canard = caero1_points(10., 0., 10., 10., 5., 10., 2, 4, frac)
+    wing = caero1_points(25., 0., 10., 13.45299, 20., 10., 8, 4, frac)
     return canard, wing
 
 
@@ -346,6 +361,174 @@ def transfer_loads(model, pts, forces, grids, npoints, moments=True):
     return f
 
 
+def cord2r(a, b, c):
+    r"""Origin and unit vectors `x`, `y`, `z` of a CORD2R entry given by the
+    origin A, a point B on the `z` axis and a point C in the `xz` plane"""
+    a, b, c = (np.asarray(v, dtype=float) for v in (a, b, c))
+    ez = (b - a)/np.linalg.norm(b - a)
+    ex = (c - a) - ((c - a) @ ez)*ez
+    ex /= np.linalg.norm(ex)
+    return a, ex, np.cross(ez, ex), ez
+
+
+# CORD2R 1 (canard spline, through the hinge line at the quarter chord) and
+# CORD2R 2 (wing spline, along the elastic axis), Listing 7-1, p. 192, and
+# Listing 7-2, cards 50-57
+CORD2R = {1: cord2r((12.5, 0., 0.), (12.5, 0., 10.), (20., 0., 0.)),
+          2: cord2r((30., 0., 0.), (30., 0., 10.), (38.66025, 5., 0.))}
+# SPLINE2 (Listing 7-2, cards 73-76): EID: (CAERO boxes, SET1 grids, DZ,
+# DTOR, CID, DTHX, DTHY); SET1 1000 and 1100, cards 69-70
+SPLINE2 = {1501: (slice(0, 8), [98, 99], 0., 1., 1, 1., -1.),
+           1601: (slice(8, 40), [99, 100, 111, 112, 121, 122], 0., 1., 2,
+                  -1., -1.)}
+
+
+def spline2_matrix(model, grids, cid, pts, dz=0., dtor=1., dthx=-1.,
+                   dthy=-1.):
+    r"""Interpolation matrix of the linear (beam) spline SPLINE2 of Nastran
+
+    The spline is a beam along the `y` axis of the coordinate system
+    ``cid`` (a key of ``CORD2R``), with bending flexibility `1/EI = 1` and
+    torsional flexibility `1/GJ` = ``dtor``, and rigid arms along its `x`
+    axis: a point at the spline coordinates `(x, y)` has the deflection `w =
+    w_b(y) - x \psi(y)` and the rotations `\varphi_x = w_b'(y)` (about the
+    spline `x` axis) and `\psi(y)` (about the spline `y` axis), with `w_b`
+    and `\psi` the bending deflection and the twist of the beam. The beam is
+    loaded at the structural grids by the forces `P_j`, and, where attached
+    (``dthx``, ``dthy`` `\geq 0`), by the couples `M_j` about the spline `x`
+    axis and the torques `T_j` about its `y` axis; the deflection is the
+    superposition of the fundamental solutions of the infinite beam plus
+    the rigid-body terms `a_0 + a_1 y - a_2 x`, and the loads are self
+    equilibrated, `\boldsymbol{R}^\top \boldsymbol{P} = \boldsymbol{0}`.
+    Requiring the spline to pass through the structural deflections, with the
+    attachment flexibilities ``dz``, ``dthx``, ``dthy`` added to the
+    diagonal, gives `\boldsymbol{a}` and `\boldsymbol{P}`, and the
+    deflections and rotations at the points ``pts``.
+
+    Returns ``G`` such that `(w, \varphi_x, \psi)` at the point `k` are
+    ``G[3*k:3*k + 3] @ u``, with ``u`` over all degrees of freedom of
+    ``model``; the structural degrees of freedom used are `u_z` and, where
+    attached, the components of the rotation along the spline `x` and `y`
+    axes. Loads at the points, normal forces and moments, give the
+    structural loads ``G.T @ Fk`` (Eq. 2-25 of Rodden and Johnson 1994).
+
+    Notes
+    -----
+    Rodden and Johnson (1994): interpolation and force transformation, Eqs.
+    2-22 to 2-25, pp. 33-35; theory of linear splines, Eqs. 2-44 to 2-54,
+    pp. 38-41; attachment flexibilities, Eqs. 2-55 to 2-59, p. 41; rigid
+    arms, p. 42; the matrices `\boldsymbol{R}_i` and `\boldsymbol{A}_{ij}`,
+    pp. 42-43; input, Section 3.3, pp. 106-108. The entry SPLINE2 is defined
+    in the MSC Nastran 2020 Quick Reference Guide, pp. 3137-3138: DZ is the
+    linear attachment flexibility, DTOR `= EI/GJ`, the spline axis is the
+    `y` axis of CID, and a negative DTHX or DTHY means no attachment
+    (Remark 3). The deflection kernel `|\Delta y|^3/(12 EI) - x_i x_j
+    |\Delta y|/(2 GJ)` is the one of p. 43; the kernels of the rotations
+    follow from the same fundamental solutions (derived here) and are
+    checked by the exact interpolation of the rigid-body motions.
+    """
+    idx, ncoords, N = model['idx'], model['ncoords'], model['N']
+    org, ex, ey = CORD2R[cid][:3]
+    EI, GJ = 1., 1./dtor
+    rows = [] # (grid, kind, attachment flexibility); kind 0 w, 1 phi_x, 2 psi
+    for g in grids:
+        rows.append((g, 0, dz))
+        if dthx >= 0:
+            rows.append((g, 1, dthx))
+        if dthy >= 0:
+            rows.append((g, 2, dthy))
+
+    def spline_xy(p):
+        r = np.asarray(p) - org
+        return r @ ex, r @ ey
+
+    def rigid(x, y, kind):
+        return ((1., y, -x), (0., 1., 0.), (0., 0., 1.))[kind]
+
+    def kernel(xi, yi, ki, xj, yj, kj):
+        # response of kind ki at i to a unit generalized load of kind kj at
+        # j: force, couple about x or torque about y; at the beam, a force
+        # at the arm xj adds the torque -xj
+        d = yi - yj
+        F, C, tau = ((1., 0., -xj), (0., 1., 0.), (0., 0., 1.))[kj]
+        wb = F*abs(d)**3/(12*EI) - C*d*abs(d)/(4*EI)
+        phi = F*d*abs(d)/(4*EI) - C*abs(d)/(2*EI)
+        psi = -tau*abs(d)/(2*GJ)
+        return (wb - xi*psi, phi, psi)[ki]
+
+    n = len(rows)
+    xy = [spline_xy(ncoords[idx[g]]) for g, _, _ in rows]
+    A = np.zeros((n, n))
+    R = np.zeros((n, 3))
+    Ug = np.zeros((n, N))
+    for i, (g, ki, flex) in enumerate(rows):
+        R[i] = rigid(*xy[i], ki)
+        for j, (_, kj, _) in enumerate(rows):
+            A[i, j] = kernel(*xy[i], ki, *xy[j], kj)
+        A[i, i] += flex
+        c = DOF*idx[g]
+        if ki == 0:
+            Ug[i, c + 2] = 1.
+        else:
+            Ug[i, c + 3:c + 6] = (ex, ey)[ki - 1]
+    S = np.block([[np.zeros((3, 3)), R.T], [R, A]])
+    # (a, P) from the structural displacements
+    Sinv = np.linalg.solve(S, np.vstack((np.zeros((3, n)), np.eye(n))))
+    G = np.zeros((3*len(pts), N))
+    for k, p in enumerate(pts):
+        xk, yk = spline_xy(p)
+        for kk in range(3):
+            row = np.concatenate((rigid(xk, yk, kk),
+                [kernel(xk, yk, kk, *xy[j], kj) for j, (_, kj, _) in
+                 enumerate(rows)]))
+            G[3*k + kk] = row @ Sinv @ Ug
+    return G
+
+
+def spline2_loads(model, pts, forces, moments=None):
+    r"""Normal forces ``forces`` (along `z`) and moments ``moments`` (3
+    components in the basic system, or ``None``) at the 40 points ``pts`` of
+    the boxes 1000-1007 and 1100-1131, transferred to the structure with the
+    splines SPLINE2 1501 and 1601 of HA144A, `\boldsymbol{F}_g =
+    \boldsymbol{G}_{kg}^\top \boldsymbol{F}_k`
+
+    The moments enter through the rotations of the rigid arms, by their
+    components along the spline axes `x` and `y`. Nastran applies the
+    doublet-lattice box forces at the box centres, with the moments of the
+    quarter-chord forces about them (pp. 20 and 186): ``pts`` from
+    ``box_points(0.5)``, ``moments`` from ``box_moments()``.
+    """
+    f = np.zeros(model['N'])
+    for eid, (boxes, grids, dz, dtor, cid, dthx, dthy) in SPLINE2.items():
+        ex, ey = CORD2R[cid][1:3]
+        G = spline2_matrix(model, grids, cid, pts[boxes], dz, dtor, dthx,
+                           dthy)
+        nk = len(pts[boxes])
+        Fk = np.zeros(3*nk)
+        Fk[0::3] = forces[boxes]
+        if moments is not None:
+            Fk[1::3] = moments[boxes] @ ex
+            Fk[2::3] = moments[boxes] @ ey
+        f += G.T @ Fk
+    return f
+
+
+def box_moments(pts_from, pts_to, Fz):
+    r"""Moments `(\boldsymbol{x}_j - \boldsymbol{x}_{0j}) \times
+    \boldsymbol{F}_j` of the normal forces ``Fz`` at ``pts_from`` about
+    ``pts_to``, which move the forces to ``pts_to`` without changing their
+    resultant force and moment"""
+    F3 = np.zeros((len(Fz), 3))
+    F3[:, 2] = Fz
+    return np.cross(pts_from - pts_to, F3)
+
+
+def resultant(model, f, ref):
+    r"""Resultant force and moment about ``ref`` of the nodal loads ``f``,
+    `\boldsymbol{\Phi}_{ref}^\top \boldsymbol{f}`"""
+    return rigid_body_modes(model, ref).T @ f
+
+
 def weight_loads(model):
     r"""Weights as nodal loads, the mass times the acceleration `-g` along
     `z`"""
@@ -359,15 +542,16 @@ def solve_inertia_relief(model, f):
     displacements of all grids recovered through the RBAR transformation
 
     Returns a dict with ``u``, ``acc``, ``Phi`` and ``R`` of
-    :func:`pyfe3d.solver.inertia_relief`, of the reduced model, ``ftot``,
+    :func:`pyfe3d.solver.apply_inertia_relief`, of the reduced model, ``ftot``,
     the reduced loads plus the d'Alembert forces, ``ufull``, the
     displacements of all the grids, and ``Rref``, the reactions of the
     reference support."""
     ind, T = model['ind'], model['T']
     fr = T.T @ f
     bref = model['bref'][ind]
-    u, acc, Phi, R = inertia_relief(model['K'], model['M'], fr, bref,
-                                    model['bfix'][ind], return_reactions=True)
+    u, acc, Phi, R = apply_inertia_relief(model['K'], model['M'], fr, bref,
+                                          model['bfix'][ind],
+                                          return_reactions=True)
     return dict(u=u, acc=acc, Phi=Phi, R=R,
                 ftot=fr - model['M'] @ (Phi @ acc), ufull=T @ u,
                 Rref=R[bref])
@@ -443,7 +627,81 @@ def test_published_box_forces_inertia_relief():
             assert not np.isclose(bf[101][2], 1.5e3, rtol=0.05)
 
 
+def test_spline2_transfer_resultant():
+    r"""SPLINE2 1501 and 1601 conserve the resultant normal force and its
+    moments: arbitrary normal forces and moments at arbitrary points of the
+    two panels give nodal loads with the same resultant about the centre of
+    gravity (derived here: the spline reproduces the rigid-body motions of
+    the grids, Rodden and Johnson 1994, `\boldsymbol{R}_i`, p. 43; by virtual
+    work, Eq. 2-25, p. 35, the resultant is conserved)"""
+    model = build_model()
+    rng = np.random.default_rng(1)
+    canard, wing = box_points()
+    pts = np.vstack((canard, wing))
+    pts[:, :2] += rng.uniform(-1., 1., (40, 2))
+    Fz = rng.uniform(-1e3, 1e3, 40)
+    M = np.zeros((40, 3))
+    M[:, :2] = rng.uniform(-1e3, 1e3, (40, 2))
+    f = spline2_loads(model, pts, Fz, M)
+    ref = np.array([15. + XCG_PUB, 0., 0.])
+    F3 = np.zeros((40, 3))
+    F3[:, 2] = Fz
+    expected = np.concatenate((F3.sum(axis=0),
+                               (np.cross(pts - ref, F3) + M).sum(axis=0)))
+    got = resultant(model, f, ref)
+    # out-of-plane force and the moments about x and y
+    assert np.allclose(got[[2, 3, 4]], expected[[2, 3, 4]], rtol=1e-12,
+                       atol=1e-9*abs(expected).max())
+    # in-plane force and moment are not transferred, as in Nastran
+    assert np.allclose(got[[0, 1, 5]], 0., atol=1e-9*abs(expected).max())
+
+
+def test_published_box_forces_spline2():
+    r"""The published box forces of subcase 2 (p. 201), at the box centres
+    with their moments about the midchord (pp. 20 and 186), transferred with
+    SPLINE2 1501 and 1601 (Listing 7-2, cards 50-57, 69-70 and 73-76):
+
+    - the canard spline is the lever rule between GRID 98 and 99;
+    - with the weights, the nodal loads of the independent degrees of
+      freedom are those in equilibrium with the published bar forces (p.
+      204), to the rounding of the box forces;
+    - the inertia relief gives zero accelerations and reactions, and all
+      the published bar forces (p. 204) and displacements (p. 203), in
+      particular element 103 and the tip of the elastic axis, GRID 120, to
+      the printed digits.
+    """
+    model = build_model()
+    idx = model['idx']
+    qc = np.vstack(box_points())
+    cen = np.vstack(box_points(0.5))
+    F = BOX_FORCES_SC2
+    fa = spline2_loads(model, cen, F, box_moments(qc, cen, F))
+    w99 = (qc[:8, 0] - 10.)/10.
+    assert np.isclose(fa[DOF*idx[98] + 2], ((1 - w99)*F[:8]).sum(),
+                      rtol=1e-12)
+    fw = weight_loads(model)
+    T, ind = model['T'], model['ind']
+    free = ~model['bfix'][ind]
+    fpub = loads_from_bar_forces(model, BAR_PUB[2])
+    dr = (T.T @ (fa + fw) - T.T @ fpub)[free]
+    assert abs(dr).max() < 1e-7*abs(T.T @ fpub).max()
+    out = solve_inertia_relief(model, fa + fw)
+    assert abs(out['acc']).max() < 1e-5*G_ACC
+    assert abs(out['Rref']).max() < 1e-9*8000
+    u = out['ufull']
+    upub = np.array([DISP_PUB[2][g] for g in DISP_PUB[2]])
+    ufe = np.array([u[DOF*idx[g] + np.array([2, 3, 4])] for g in DISP_PUB[2]])
+    assert abs(ufe - upub).max() < 2e-6*abs(upub).max()
+    assert np.isclose(u[DOF*idx[120] + 2], DISP_PUB[2][120][0], rtol=1e-6)
+    bf = bar_forces(model, u)
+    for eid, vals in BAR_PUB[2].items():
+        assert np.allclose(bf[eid], vals, rtol=0, atol=2e-6*6.2e4)
+    assert np.allclose(bf[103][:3], BAR_PUB[2][103][:3], rtol=1e-6)
+
+
 if __name__ == '__main__':
     test_mass_properties()
     test_displacements_from_published_bar_forces()
     test_published_box_forces_inertia_relief()
+    test_spline2_transfer_resultant()
+    test_published_box_forces_spline2()
