@@ -35,9 +35,11 @@ Iz = Iyy
 #      xy (v, rz) and G13 for exz of the plane xz (w, ry), and the torsional
 #      stiffness GJ given directly; see the shear block of D, checked in
 #      derive_beamc_KC0_sparse.py
-# alphay = -12*E*Iy/(G12*A*L**2), negative: see the Notes of pyfe3d.beamc.BeamC
-#     (Luo 2008 Eq. (17); Eq. (21) prints the sign wrongly)
-# alphaz = -12*E*Iz/(G13*A*L**2)
+# alphay = -12*C44/(C11*L**2), negative: see the Notes of pyfe3d.beamc.BeamC
+#     (Luo 2008 Eq. (17); Eq. (21) prints the sign wrongly), from the
+#     diagonal of the sectional stiffness matrix C defined below, which is
+#     -12*E*Iy/(G12*A*L**2) without the attribute C of BeamProp
+# alphaz = -12*C55/(C22*L**2), or -12*E*Iz/(G13*A*L**2) without C
 # betay = 1/(1 - alphay)
 # betaz = 1/(1 - alphaz)
 var('alphay, alphaz, betay, betaz', real=True)
@@ -97,13 +99,26 @@ Sw_x = simplify(Nw.diff(x))
 # BL = simplify(integrate(BL, (z, -hz/2+dz, +hz/2+dz)))
 
 # From Eqs. 12 in Luo, Y. 2008
-D = Matrix([
+D11 = Matrix([
     [ E*A,  E*Ay,  E*Az, 0, 0, 0],
     [E*Ay,  E*Iy, E*Iyz, 0, 0, 0],
     [E*Az, E*Iyz,  E*Iz, 0, 0, 0],
     [   0,     0,     0,   G12*A,      0, -G12*Az],
     [   0,     0,     0,       0,  G13*A,  G13*Ay],
     [   0,     0,     0, -G12*Az, G13*Ay,      GJ]])
+
+# NOTE sectional stiffness matrix C of pyfe3d.beamprop.BeamProp, symmetric,
+#      with the 21 independent entries Cij, i <= j, in the order of the
+#      strains {eps, gammay, gammaz, kx, ky, kz} of pyfe3d, see
+#      pyfe3d.vabs.yu_to_pyfe3d. D is C in the order {exx, ky, kz, gammay,
+#      gammaz, kx} of the rows of BL below
+C = Matrix(6, 6, lambda i, j: var('C%d%d' % (min(i, j), max(i, j)), real=True))
+PERM = [0, 4, 5, 1, 2, 3]
+D = C.extract(PERM, PERM)
+# NOTE without the attribute C, BeamProp builds C from its 11 stiffness
+#      attributes, such that D becomes D11 above
+C_FROM_11 = {D[i, j]: D11[i, j] for i in range(6) for j in range(i, 6)}
+assert D.subs(C_FROM_11) == D11
 # From Eq. 8 in Luo, Y. 2008
 # epsilon = u,x
 # kappay = -theta,x = -rz,x
@@ -122,7 +137,7 @@ BL = Matrix([
 
 
 # Geometric stiffness matrix using Donnell's type of geometric nonlinearity
-# (or van Karman nonlinear terms)
+# (or von Kármán nonlinear terms)
 # exx = u,x + 1/2 w,x^2 + 1/2 v,x^2 - z d2w/dx2 - y d2v/dx2
 # remembering that
 # ry = -dw/dx
@@ -134,17 +149,41 @@ BL = Matrix([
 ue = Matrix([symbols(r'ue[%d]' % i) for i in range(0, BL.shape[1])])
 Nmembrane = D*BL*ue
 
-# NOTE the axial force N = E*(A*u,x - Ay*rz,x + Az*ry,x) varies linearly
-#      along x when Ay != 0 or Az != 0, because rz,x and ry,x do. It is
-#      therefore represented exactly by its values Na and Nb at both ends
+# NOTE the axial force N = C00*u,x + C01*gammay + C02*gammaz + C03*rx,x
+#      + C04*ky + C05*kz, with ky = -rz,x and kz = ry,x, which is
+#      E*(A*u,x - Ay*rz,x + Az*ry,x) without the attribute C, varies
+#      linearly along x when C04 != 0 or C05 != 0, because rz,x and ry,x
+#      do, the other strains being constant. With the
+#      nonlinear axial strain replaced by its element mean, see
+#      derive_beamc_KC0L_KCL0_KCLL_KGLL_sparse.py and Crisfield (1991)
+#      vol. 1, Sec. 7.1.3, Eq. (7.31), the strain energy contains
+#      int_0^L N dx*eNLm = L*Nm*eNLm, such that the geometric stiffness
+#      consistent with update_fint(..., nonlinear=1) carries the element
+#      mean Nm = (Na + Nb)/2 of N (own derivation, asserted in
+#      derive_beamc_KC0L_KCL0_KCLL_KGLL_sparse.py). Nm is also the axial
+#      force of the nodal internal forces, -finte[0] = finte[6] = Nm. When
+#      C04 = C05 = 0, N is uniform and Nm = N
 N = Nmembrane[0]
 assert simplify(N.diff(x, 2)) == 0
-print('Na =', simplify(N.subs(x, 0)), flush=True)
-print('Nb =', simplify(N.subs(x, L)), flush=True)
-Na, Nb = var('Na, Nb', real=True)
-N = Na + (Nb - Na)*x/L
+Na = simplify(N.subs(x, 0))
+Nb = simplify(N.subs(x, L))
+Nm = simplify(integrate(N, (x, 0, L))/L)
+assert simplify(Nm - (Na + Nb)/2) == 0
+assert simplify(Nm.subs({C04: 0, C05: 0}) - N.subs({C04: 0, C05: 0})) == 0
+Nm11 = integrate((D11*BL*ue)[0], (x, 0, L))/L
+assert simplify(Nm.subs(C_FROM_11) - Nm11) == 0
+# NOTE printed as the first row of C times the mean strains, using
+#      betay*(1 - alphay) = betaz*(1 - alphaz) = 1
+Nm_print = ((C00*(ue[6] - ue[0]) + C03*(ue[9] - ue[3]) + C04*(ue[5] - ue[11])
+             + C05*(ue[10] - ue[4]))/L
+            + C01*alphay*betay*((ue[1] - ue[7])/L + (ue[5] + ue[11])/2)
+            + C02*alphaz*betaz*((ue[2] - ue[8])/L - (ue[4] + ue[10])/2))
+assert simplify((Nm - Nm_print).subs({betay: 1/(1 - alphay), betaz: 1/(1 - alphaz)})) == 0
+print('Nm =', Nm_print, flush=True)
+Nm = var('Nm', real=True)
+N = Nm
 
-# NOTE v,x and w,x enter the von Karman strain as two separate squares,
+# NOTE v,x and w,x enter the von Kármán strain as two separate squares,
 #      exx = u,x + (v,x**2 + w,x**2)/2, so the geometric stiffness is
 #      N*(Sv_x.T*Sv_x + Sw_x.T*Sw_x). Using the square of the sum,
 #      N*(Sv_x + Sw_x).T*(Sv_x + Sw_x), couples the two bending planes and

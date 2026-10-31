@@ -173,12 +173,16 @@ cdef class Truss:
         U = \frac{1}{2} \int_0^L \left( E A u_{,x}^2 + G J {r_x}_{,x}^2
             \right) dx
 
-    where `G J` is the torsional stiffness ``GJ`` of :class:`.BeamProp`, with
-    the axial displacement `u` and the twist rotation `r_x` interpolated
-    linearly between the nodes, in the element coordinate system, and `L` =
-    ``length``. The transverse translations `v`, `w` and the rotations `r_y`,
-    `r_z` have no stiffness and must be supported by other elements or by
-    boundary conditions; the element has no geometric stiffness matrix. The
+    where `E A` and `G J` are the entries ``C[0, 0]`` and ``C[3, 3]`` of
+    the sectional stiffness matrix ``C`` of :class:`.BeamProp`, i.e. ``E*A``
+    and the torsional stiffness ``GJ`` when ``C`` is not set; the other
+    entries of ``C``, e.g. the extension-twist coupling ``C[0, 3]``, are
+    not used. The axial displacement `u` and the twist rotation `r_x` are
+    interpolated linearly between the nodes, in the element coordinate
+    system, and `L` = ``length``. The transverse translations `v`, `w` and
+    the rotations `r_y`, `r_z` have no stiffness and must be supported by
+    other elements or by boundary conditions; the element has no geometric
+    stiffness matrix. The
     matrices and the internal forces are computed in element coordinates and
     transformed to global coordinates with the transformation matrix of the
     element, `\boldsymbol{K} = \boldsymbol{T} \boldsymbol{K}_e \boldsymbol{T}^\top`, where `\boldsymbol{T}` is block diagonal with four
@@ -441,8 +445,9 @@ cdef class Truss:
                   updated, accessible using ``.probe.finte``.
 
         The 12 values of ``finte`` are overwritten. They are computed from
-        ``length``, from the attributes ``A``, ``E`` and ``GJ`` of
-        ``prop`` and from the displacements ``probe.ue``, which must be
+        ``length``, from ``C[0, 0]`` and ``C[3, 3]`` of the sectional
+        stiffness matrix of ``prop``, see the notes of :class:`.Truss`, and
+        from the displacements ``probe.ue``, which must be
         updated before, see :meth:`.update_probe_xe` and
         :meth:`.update_probe_ue`. Only the axial forces and the torsion
         moments are not zero.
@@ -456,24 +461,27 @@ cdef class Truss:
         """
         cdef double *ue
         cdef double *finte
-        cdef double L, A, E, GJ
+        cdef double L, EA, GJ
+        cdef double C[36]
 
         with nogil:
             L = self.length
-            A = prop.A
-            E = prop.E
-            GJ = prop.get_GJ()
+            # NOTE only EA and GJ of the sectional stiffness matrix of the
+            #      property, see the notes of Truss
+            prop.get_C(C)
+            EA = C[0]
+            GJ = C[21]
 
             ue = &self.probe.ue[0]
             finte = &self.probe.finte[0]
 
-            finte[0] = 1.0*A*E*(ue[0] - ue[6])/L
+            finte[0] = 1.0*EA*(ue[0] - ue[6])/L
             finte[1] = 0.
             finte[2] = 0.
             finte[3] = 1.0*GJ*(ue[3] - ue[9])/L
             finte[4] = 0.
             finte[5] = 0.
-            finte[6] = 1.0*A*E*(-ue[0] + ue[6])/L
+            finte[6] = 1.0*EA*(-ue[0] + ue[6])/L
             finte[7] = 0.
             finte[8] = 0.
             finte[9] = 1.0*GJ*(-ue[3] + ue[9])/L
@@ -495,8 +503,9 @@ cdef class Truss:
         the row and column indices, built from ``c1`` and ``c2``, are stored
         in ``KC0r`` and ``KC0c``, and the values are added to those already
         in ``KC0v``. The matrix is computed from ``length``, the rotation
-        matrix and the attributes ``A``, ``E`` and ``GJ`` of ``prop``.
-        ``length`` and the rotation matrix must be updated before,
+        matrix and ``C[0, 0]`` and ``C[3, 3]`` of the sectional stiffness
+        matrix of ``prop``, see the notes of :class:`.Truss`. ``length``
+        and the rotation matrix must be updated before,
         see :meth:`.update_rotation_matrix` and :meth:`.update_probe_xe`.
 
         Parameters
@@ -528,14 +537,17 @@ cdef class Truss:
 
         """
         cdef int c1, c2, k
-        cdef double L, A, E, GJ
+        cdef double L, EA, GJ
+        cdef double C[36]
         cdef double r11, r21, r31
 
         with nogil:
             L = self.length
-            A = prop.A
-            E = prop.E
-            GJ = prop.get_GJ()
+            # NOTE only EA and GJ of the sectional stiffness matrix of the
+            #      property, see the notes of Truss
+            prop.get_C(C)
+            EA = C[0]
+            GJ = C[21]
 
             # local to global transformation
             r11 = self.r11
@@ -765,41 +777,41 @@ cdef class Truss:
                 KC0c[k] = 5+c2
 
             k = self.init_k_KC0
-            KC0v[k] += 1.0*A*E*r11**2/L
+            KC0v[k] += 1.0*EA*r11**2/L
             k += 1
-            KC0v[k] += 1.0*A*E*r11*r21/L
+            KC0v[k] += 1.0*EA*r11*r21/L
             k += 1
-            KC0v[k] += 1.0*A*E*r11*r31/L
+            KC0v[k] += 1.0*EA*r11*r31/L
             k += 1
-            KC0v[k] += -1.0*A*E*r11**2/L
+            KC0v[k] += -1.0*EA*r11**2/L
             k += 1
-            KC0v[k] += -1.0*A*E*r11*r21/L
+            KC0v[k] += -1.0*EA*r11*r21/L
             k += 1
-            KC0v[k] += -1.0*A*E*r11*r31/L
+            KC0v[k] += -1.0*EA*r11*r31/L
             k += 1
-            KC0v[k] += 1.0*A*E*r11*r21/L
+            KC0v[k] += 1.0*EA*r11*r21/L
             k += 1
-            KC0v[k] += 1.0*A*E*r21**2/L
+            KC0v[k] += 1.0*EA*r21**2/L
             k += 1
-            KC0v[k] += 1.0*A*E*r21*r31/L
+            KC0v[k] += 1.0*EA*r21*r31/L
             k += 1
-            KC0v[k] += -1.0*A*E*r11*r21/L
+            KC0v[k] += -1.0*EA*r11*r21/L
             k += 1
-            KC0v[k] += -1.0*A*E*r21**2/L
+            KC0v[k] += -1.0*EA*r21**2/L
             k += 1
-            KC0v[k] += -1.0*A*E*r21*r31/L
+            KC0v[k] += -1.0*EA*r21*r31/L
             k += 1
-            KC0v[k] += 1.0*A*E*r11*r31/L
+            KC0v[k] += 1.0*EA*r11*r31/L
             k += 1
-            KC0v[k] += 1.0*A*E*r21*r31/L
+            KC0v[k] += 1.0*EA*r21*r31/L
             k += 1
-            KC0v[k] += 1.0*A*E*r31**2/L
+            KC0v[k] += 1.0*EA*r31**2/L
             k += 1
-            KC0v[k] += -1.0*A*E*r11*r31/L
+            KC0v[k] += -1.0*EA*r11*r31/L
             k += 1
-            KC0v[k] += -1.0*A*E*r21*r31/L
+            KC0v[k] += -1.0*EA*r21*r31/L
             k += 1
-            KC0v[k] += -1.0*A*E*r31**2/L
+            KC0v[k] += -1.0*EA*r31**2/L
             k += 1
             KC0v[k] += 1.0*GJ*r11**2/L
             k += 1
@@ -837,41 +849,41 @@ cdef class Truss:
             k += 1
             KC0v[k] += -1.0*GJ*r31**2/L
             k += 1
-            KC0v[k] += -1.0*A*E*r11**2/L
+            KC0v[k] += -1.0*EA*r11**2/L
             k += 1
-            KC0v[k] += -1.0*A*E*r11*r21/L
+            KC0v[k] += -1.0*EA*r11*r21/L
             k += 1
-            KC0v[k] += -1.0*A*E*r11*r31/L
+            KC0v[k] += -1.0*EA*r11*r31/L
             k += 1
-            KC0v[k] += 1.0*A*E*r11**2/L
+            KC0v[k] += 1.0*EA*r11**2/L
             k += 1
-            KC0v[k] += 1.0*A*E*r11*r21/L
+            KC0v[k] += 1.0*EA*r11*r21/L
             k += 1
-            KC0v[k] += 1.0*A*E*r11*r31/L
+            KC0v[k] += 1.0*EA*r11*r31/L
             k += 1
-            KC0v[k] += -1.0*A*E*r11*r21/L
+            KC0v[k] += -1.0*EA*r11*r21/L
             k += 1
-            KC0v[k] += -1.0*A*E*r21**2/L
+            KC0v[k] += -1.0*EA*r21**2/L
             k += 1
-            KC0v[k] += -1.0*A*E*r21*r31/L
+            KC0v[k] += -1.0*EA*r21*r31/L
             k += 1
-            KC0v[k] += 1.0*A*E*r11*r21/L
+            KC0v[k] += 1.0*EA*r11*r21/L
             k += 1
-            KC0v[k] += 1.0*A*E*r21**2/L
+            KC0v[k] += 1.0*EA*r21**2/L
             k += 1
-            KC0v[k] += 1.0*A*E*r21*r31/L
+            KC0v[k] += 1.0*EA*r21*r31/L
             k += 1
-            KC0v[k] += -1.0*A*E*r11*r31/L
+            KC0v[k] += -1.0*EA*r11*r31/L
             k += 1
-            KC0v[k] += -1.0*A*E*r21*r31/L
+            KC0v[k] += -1.0*EA*r21*r31/L
             k += 1
-            KC0v[k] += -1.0*A*E*r31**2/L
+            KC0v[k] += -1.0*EA*r31**2/L
             k += 1
-            KC0v[k] += 1.0*A*E*r11*r31/L
+            KC0v[k] += 1.0*EA*r11*r31/L
             k += 1
-            KC0v[k] += 1.0*A*E*r21*r31/L
+            KC0v[k] += 1.0*EA*r21*r31/L
             k += 1
-            KC0v[k] += 1.0*A*E*r31**2/L
+            KC0v[k] += 1.0*EA*r31**2/L
             k += 1
             KC0v[k] += -1.0*GJ*r11**2/L
             k += 1

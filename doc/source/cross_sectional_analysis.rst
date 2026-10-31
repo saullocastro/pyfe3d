@@ -1,11 +1,12 @@
 Cross-sectional analysis of beams
 =================================
 
-The beam elements :class:`.BeamC` and :class:`.BeamLR` assume a rigid
-cross section: the section only enters through the integrals of a
-:class:`.BeamProp`, and the torsional stiffness ``GJ`` and the shear
-moduli ``G12`` and ``G13``, with their correction factors, must be given by
-the user, see :doc:`shell_properties`. The module :mod:`pyfe3d.vabs`
+The beam elements :class:`.BeamC` and :class:`.BeamLR` take the cross
+section through the sectional stiffness matrix ``C`` of a
+:class:`.BeamProp`, which by default is built from the integrals of a
+rigid cross section, with the torsional stiffness ``GJ`` and the shear
+moduli ``G12`` and ``G13``, and their correction factors, given by the
+user, see :doc:`shell_properties`. The module :mod:`pyfe3d.vabs`
 computes these stiffnesses, and the couplings between them, for an
 arbitrary cross section made of anisotropic and non-homogeneous materials,
 with the variational asymptotic beam sectional analysis (VABS) of Cesnik
@@ -50,8 +51,8 @@ Steps of an analysis
    matrix and the mass integrals of :class:`.BeamProp`.
 6. **Use in the beam elements.** :func:`.yu_to_pyfe3d` converts the
    matrices to the convention of pyfe3d, and :func:`.beamprop_from_vabs`
-   creates the :class:`.BeamProp`, when the matrix can be represented by
-   one, see below.
+   creates the :class:`.BeamProp` with the full `6 \times 6` matrix, see
+   below.
 7. **Generalized Vlasov model.** For thin-walled open sections,
    :meth:`.CrossSection.calc_vlasov` gives the `5 \times 5` stiffness
    ``Kv``, which adds the restrained warping, see below.
@@ -128,16 +129,60 @@ not by deleting rows and columns of the stiffness.
 From the sectional matrix to the beam elements
 ----------------------------------------------
 
-A :class:`.BeamProp` has 11 cross-section parameters, against the 21
-independent entries of a `6 \times 6` stiffness matrix: the elements of
-pyfe3d cannot represent the extension-shear, extension-twist,
-bending-shear and bending-twist couplings, and their shear centre is the
-tension centre. :func:`.beamprop_from_vabs` therefore converts a matrix
-only when it has the pattern of a :class:`.BeamProp`, e.g. for isotropic
-sections whose shear centre is the tension centre, and raises an error
-otherwise; the element code is not changed. For such sections the
-computed ``G12``, ``G13`` and ``GJ`` replace the shear correction factors
-and the torsion constant that the user would otherwise supply.
+The sectional stiffness matrix ``C`` of :class:`.BeamProp` has the 21
+independent entries of a symmetric `6 \times 6` matrix, in the order of
+pyfe3d, i.e. ``C = yu_to_pyfe3d(sec.Kt)``:
+
+.. list-table::
+   :header-rows: 1
+
+   * - Index of ``C``
+     - 0
+     - 1
+     - 2
+     - 3
+     - 4
+     - 5
+   * - Strain of pyfe3d
+     - `\bar{\varepsilon}`
+     - `\bar{\gamma}_y`
+     - `\bar{\gamma}_z`
+     - `\kappa_x`
+     - `\kappa_y`
+     - `\kappa_z`
+   * - Strain of ``Kt``, index
+     - `\gamma_{11}`, 0
+     - `2\gamma_{12}`, 1
+     - `2\gamma_{13}`, 2
+     - `\kappa_1`, 3
+     - `-\kappa_3`, 5
+     - `\kappa_2`, 4
+
+:func:`.beamprop_from_vabs` stores it in ``C``, with the extension-shear,
+extension-twist, shear-shear, bending-shear and bending-twist couplings of
+a composite section, and fills the 11 parameters of the rigid section,
+``A``, ``E``, ``G12``, ``G13``, ``GJ``, ``Ay``, ``Az``, ``Iyy``, ``Izz``
+and ``Iyz``, from the entries of ``C`` for information; once ``C`` is set,
+the elements read only ``C``. With these 11 parameters alone, i.e. after
+``del prop.C``, the shear centre is the tension centre and the couplings
+above are lost, see the notes of :class:`.BeamProp`. For isotropic
+sections, the computed ``G12``, ``G13`` and ``GJ`` replace the shear
+correction factors and the torsion constant that the user would otherwise
+supply.
+
+With couplings, :class:`.BeamLR`, whose linear interpolation does not
+depend on ``C``, converges as the square of the element length as for an
+uncoupled section. :class:`.BeamC` takes the parameters of its shape
+functions from the diagonal of ``C``, and is exact for nodal loads only
+when the only coupling is the extension-twist entry ``C[0, 3]``; with the
+other couplings it also converges as the square of the element length,
+but more slowly, see the notes of :class:`.BeamC`. For the box beam CUS
+of Yu et al. (2012), whose bending-shear couplings are strong, the tip
+displacements of a cantilever of length 10 in. under transverse tip loads
+or moments have errors of 4.2e-3 with 32 elements of :class:`.BeamC` and
+2.3e-4 with 32 elements of :class:`.BeamLR`, which is exact under the tip
+moments; the twist due to an axial load is exact with both elements and
+any mesh, see ``tests/test_beam_sectional_stiffness.py``.
 
 
 Generalized Vlasov model
@@ -340,6 +385,12 @@ published VABS results:
   couplings of the last two examples asserted explicitly, see above;
 - ``tests/test_vabs_elements.py``: integration rules, shape functions,
   material rotation and conventions.
+- ``tests/test_beam_sectional_stiffness.py``: cantilevers of
+  :class:`.BeamC` and :class:`.BeamLR` with a coupled sectional stiffness
+  matrix, among them the box beam CUS of Yu et al. (2012), against the
+  closed form obtained by integrating the strains `\boldsymbol{C}^{-1}
+  \boldsymbol{F}(x)`, and the tangent stiffness matrix against the
+  derivative of the internal forces.
 - ``tests/test_vabs_warping.py``: the torsional warping of an ellipse
   against the Saint-Venant solution, and the triangulation of every
   element type;

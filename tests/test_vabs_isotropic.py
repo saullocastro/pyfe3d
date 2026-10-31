@@ -251,7 +251,11 @@ def test_offset_reference_axis(d2, d3):
     Ccl = yu_to_pyfe3d(Kc)
     assert np.isclose(Ccl[0, 2], E*A*d2, atol=atol)
     assert np.isclose(Ccl[0, 3], E*A*d3, atol=atol)
-    prop = beamprop_from_vabs(Cs, E, rtol=1e-8, sec=sec)
+    prop = beamprop_from_vabs(Cs, E, sec=sec)
+    # NOTE the isotropic section has the pattern of the 11 attributes
+    C11 = prop.C
+    del prop.C
+    assert np.allclose(prop.C, C11, rtol=1e-8, atol=1e-8*np.abs(C11).max())
     assert np.isclose(prop.A, A)
     assert np.isclose(prop.Ay, A*d2, atol=1e-12)
     assert np.isclose(prop.Az, A*d3, atol=1e-12)

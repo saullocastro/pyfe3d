@@ -283,7 +283,7 @@ def test_triangles_under_refinement():
     Tria3DSG give the same deflections to round-off.
 
     The quadrilateral is the yardstick and not an analytical value, because
-    the von Karman solution of a plate with immovable edges has none in
+    the von Kármán solution of a plate with immovable edges has none in
     closed form. What the test asserts is therefore relative: one triangle
     approaches the quadrilateral and the other does not.
     """

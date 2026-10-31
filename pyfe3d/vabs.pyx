@@ -26,8 +26,8 @@ The functions
 :func:`.rotate_material` rotates them, :func:`.yu_to_pyfe3d` and
 :func:`.pyfe3d_to_yu` convert the stiffness matrices between the ordering
 and signs of this module and those of the beam elements of pyfe3d, and
-:func:`.beamprop_from_vabs` creates a :class:`.BeamProp` from them when
-possible. The methods :meth:`.CrossSection.warping` and
+:func:`.beamprop_from_vabs` creates a :class:`.BeamProp` with the full
+matrix. The methods :meth:`.CrossSection.warping` and
 :meth:`.CrossSection.triangles` give the warping displacements of the nodes
 and a triangulation of the mesh, to plot the warping with any plotting
 library.
@@ -609,8 +609,8 @@ cdef int _integrate(double [::1] x2, double [::1] x3, int [:, ::1] conn,
             \boldsymbol{I}_3 \\ \boldsymbol{0}_3 \end{bmatrix}
 
     with `\partial_\alpha = \partial/\partial x_\alpha`. The matrices are
-    those of Eqs. (76) and (89) of [1]_, named here as in the book of the
-    author, `\boldsymbol{D}_{hh} = \langle (\boldsymbol{\Gamma}_h
+    those of Eqs. (76) and (89) of [1]_, named here
+    `\boldsymbol{D}_{hh} = \langle (\boldsymbol{\Gamma}_h
     \boldsymbol{S})^\top \boldsymbol{D} \boldsymbol{\Gamma}_h \boldsymbol{S}
     \rangle` (`E` in [1]_), `\boldsymbol{D}_{h\epsilon} = \langle
     (\boldsymbol{\Gamma}_h \boldsymbol{S})^\top \boldsymbol{D}
@@ -2000,29 +2000,28 @@ def classical_from_timoshenko(Kt):
     return np.linalg.inv(F[np.ix_(idx, idx)])
 
 
-def beamprop_from_vabs(Cs, double E, double rtol=1.e-6, CrossSection sec=None):
+def beamprop_from_vabs(Cs, double E, CrossSection sec=None):
     r"""Create a :class:`.BeamProp` from a sectional stiffness matrix
 
-    The beam elements of pyfe3d read 11 cross-section parameters of a
-    :class:`.BeamProp`, which give a sectional stiffness matrix with a
-    fixed pattern, see the Notes. This function sets them from the entries
-    of ``Cs`` and checks that the matrix of the property reproduces ``Cs``.
-    The integrals of the cross section are modulus-weighted: ``A`` is
-    ``Cs[0, 0]/E``, ``Iyy`` is ``Cs[5, 5]/E``, etc., with ``G12``, ``G13``
-    and ``GJ`` read from the shear and torsion entries.
+    The sectional stiffness matrix ``C`` of the property, read by the beam
+    elements of pyfe3d, is set to ``Cs``, with all its 21 independent
+    entries, couplings included. The 11 stiffness attributes of the
+    property, which the elements do not read once ``C`` is set, are also
+    filled from the entries of ``Cs`` of the pattern given in the notes of
+    :class:`.BeamProp`, for information: the integrals of the cross section
+    are modulus-weighted, ``A`` is ``Cs[0, 0]/E``, ``Iyy`` is ``Cs[5,
+    5]/E``, etc., with ``G12``, ``G13`` and ``GJ`` read from the shear and
+    torsion entries.
 
     Parameters
     ----------
     Cs : array-like
         Generalized Timoshenko stiffness matrix in the convention of pyfe3d,
-        e.g. ``yu_to_pyfe3d(sec.Kt)``, shape ``(6, 6)``.
+        e.g. ``yu_to_pyfe3d(sec.Kt)``, shape ``(6, 6)``, symmetric, see
+        :class:`.BeamProp` for the order of the strains.
     E : float
-        Reference Young modulus stored in ``E`` of the property, force per
-        unit area.
-    rtol : float, optional
-        Largest admissible value, for every pair ``i``, ``j``, of the
-        difference between ``Cs`` and the matrix of the property divided by
-        ``sqrt(Cs[i, i]*Cs[j, j])``, dimensionless. Default ``1.e-6``.
+        Reference Young modulus stored in ``E`` of the property and used for
+        the modulus-weighted attributes, force per unit area.
     sec : :class:`.CrossSection`, optional
         When given, the mass integrals ``intrho``, ``intrhoy``, ``intrhoz``,
         ``intrhoy2``, ``intrhoz2`` and ``intrhoyz`` are copied from it, so
@@ -2032,50 +2031,44 @@ def beamprop_from_vabs(Cs, double E, double rtol=1.e-6, CrossSection sec=None):
     Returns
     -------
     prop : :class:`.BeamProp`
-        The property, with ``A``, ``E``, ``G12``, ``G13``, ``GJ``, ``Ay``,
-        ``Az``, ``Iyy``, ``Izz``, ``Iyz`` and, optionally, the mass
-        integrals set.
+        The property, with ``C`` equal to ``Cs``, the attributes ``A``,
+        ``E``, ``G12``, ``G13``, ``GJ``, ``Ay``, ``Az``, ``Iyy``, ``Izz`` and
+        ``Iyz`` and, optionally, the mass integrals set.
 
     Raises
     ------
     ValueError
-        If ``Cs`` does not have the shape ``(6, 6)``, if ``E`` or
-        ``Cs[0, 0]`` is not positive, or if ``Cs`` has couplings that a
-        :class:`.BeamProp` cannot represent, i.e. if the difference above
-        exceeds ``rtol``.
+        If ``Cs`` does not have the shape ``(6, 6)`` or is not symmetric,
+        or if ``E`` or ``Cs[0, 0]`` is not positive.
 
     Examples
     --------
     >>> import numpy as np
     >>> from pyfe3d.vabs import beamprop_from_vabs
     >>> Cs = np.diag([7e9, 2e9, 2e9, 1e6, 6e6, 6e6])
+    >>> Cs[0, 3] = Cs[3, 0] = 1e6
     >>> prop = beamprop_from_vabs(Cs, E=70e9)
     >>> prop.A
     0.1
+    >>> prop.C[0, 3]
+    1000000.0
 
     Notes
     -----
-    The strain energy of :class:`.BeamC` corresponds to the sectional
-    stiffness matrix, in the order `\{\bar{\varepsilon}, \bar{\gamma}_y,
-    \bar{\gamma}_z, \kappa_x, \kappa_y, \kappa_z\}`,
+    A composite section generally has couplings that the 11 attributes
+    cannot represent, e.g. the extension-twist coupling ``Cs[0, 3]`` and
+    the bending-shear couplings ``Cs[1, 5]`` and ``Cs[2, 4]`` of the CUS
+    box of Yu et al. [1]_, Table 2. They are kept in ``C``; ``del prop.C``
+    returns to the property of the 11 attributes, which drops them. The
+    accuracy of :class:`.BeamC` and :class:`.BeamLR` with a coupled matrix
+    is discussed in the notes of :class:`.BeamC`.
 
-    .. math::
-        \begin{bmatrix}
-            E A & 0 & 0 & 0 & E A_y & E A_z \\
-            0 & G_{12} A & 0 & -G_{12} A_z & 0 & 0 \\
-            0 & 0 & G_{13} A & G_{13} A_y & 0 & 0 \\
-            0 & -G_{12} A_z & G_{13} A_y & G J & 0 & 0 \\
-            E A_y & 0 & 0 & 0 & E I_{zz} & E I_{yz} \\
-            E A_z & 0 & 0 & 0 & E I_{yz} & E I_{yy}
-        \end{bmatrix}
-
-    with 11 parameters, against the 21 independent entries of a general
-    `6 \times 6` matrix: the extension-shear, extension-twist, bending-shear
-    and bending-twist couplings cannot be represented, and the shear-twist
-    couplings are tied to the extension-bending ones, i.e. the shear centre
-    of the property is its tension centre. This function does not change
-    the element code; a section whose matrix does not have this pattern
-    raises a ``ValueError``.
+    References
+    ----------
+    .. [1] Yu, W., Hodges, D. H., and Ho, J. C., "Variational asymptotic
+       beam sectional analysis -- An updated version", International
+       Journal of Engineering Science, 59, pp. 40--64, 2012.
+       https://doi.org/10.1016/j.ijengsci.2012.03.006
 
     """
     cdef BeamProp prop
@@ -2095,25 +2088,8 @@ def beamprop_from_vabs(Cs, double E, double rtol=1.e-6, CrossSection sec=None):
     prop.G12 = Cs[1, 1]/prop.A
     prop.G13 = Cs[2, 2]/prop.A
     prop.GJ = Cs[3, 3]
-    Cp = np.zeros((6, 6), dtype=DOUBLE)
-    Cp[0, 0] = E*prop.A
-    Cp[0, 4] = Cp[4, 0] = E*prop.Ay
-    Cp[0, 5] = Cp[5, 0] = E*prop.Az
-    Cp[1, 1] = prop.G12*prop.A
-    Cp[2, 2] = prop.G13*prop.A
-    Cp[1, 3] = Cp[3, 1] = -prop.G12*prop.Az
-    Cp[2, 3] = Cp[3, 2] = prop.G13*prop.Ay
-    Cp[3, 3] = prop.GJ
-    Cp[4, 4] = E*prop.Izz
-    Cp[4, 5] = Cp[5, 4] = E*prop.Iyz
-    Cp[5, 5] = E*prop.Iyy
-    d = np.sqrt(np.abs(np.diag(Cs)))
-    err = np.abs(Cs - Cp)/np.outer(d, d)
-    if err.max() > rtol:
-        i, j = np.unravel_index(np.argmax(err), err.shape)
-        raise ValueError('the entry (%d, %d) of Cs cannot be represented by '
-                         'a BeamProp, relative difference %g > rtol = %g'
-                         % (i, j, err.max(), rtol))
+    # NOTE the setter checks the symmetry and stores the symmetric part
+    prop.C = Cs
     if sec is not None:
         prop.intrho = sec.intrho
         prop.intrhoy = sec.intrhoy

@@ -179,9 +179,17 @@ the two planes, e.g. `5/6` for a rectangular section, are applied by the
 user to ``G12`` and ``G13``. Applied to ``G``, as in some of the examples,
 they also scale ``GJ``, unless ``GJ`` is set.
 
-The torsional and shear stiffnesses of an arbitrary, possibly composite,
-cross section, with the couplings that a :class:`.BeamProp` cannot
-represent, are computed by :mod:`pyfe3d.vabs`, see
+The elements read these attributes through the sectional stiffness
+matrix ``C`` of :class:`.BeamProp`, of the strains `\{\bar{\varepsilon},
+\bar{\gamma}_y, \bar{\gamma}_z, \kappa_x, \kappa_y, \kappa_z\}`,
+which is built from them until it is set. Setting ``C`` gives the 21
+independent entries of a general section, e.g. the extension-twist and
+bending-shear couplings of a composite box beam, which the 11 stiffness
+attributes cannot represent; the elements then read only ``C``, and the
+mass integrals remain those of the attributes. The torsional and shear
+stiffnesses and the couplings of an arbitrary, possibly composite, cross
+section are computed by :mod:`pyfe3d.vabs`, and
+:func:`.beamprop_from_vabs` sets ``C``, see
 :doc:`cross_sectional_analysis`.
 
 

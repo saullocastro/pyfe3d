@@ -131,7 +131,7 @@ def test_rotate_material(theta1, theta3):
 
 
 def test_conventions():
-    r"""`\boldsymbol{T}_s` of the book, `\kappa_1 = \kappa_x`, `\kappa_2 =
+    r"""The conversion `\boldsymbol{T}_s` to pyfe3d, `\kappa_1 = \kappa_x`, `\kappa_2 =
     \kappa_z`, `\kappa_3 = -\kappa_y`, and the scaling `\boldsymbol{H}`"""
     rng = np.random.default_rng(0)
     M = rng.normal(size=(6, 6))
@@ -169,12 +169,22 @@ def test_conventions():
 
 
 def test_beamprop_from_vabs_errors():
+    """The full matrix is kept in ``BeamProp.C``, couplings included, and
+    the 11 attributes are filled from its entries"""
     Cs = np.diag([7e9, 2e9, 2e9, 1e6, 6e6, 6e6])
     prop = beamprop_from_vabs(Cs, E=70e9)
     assert np.isclose(prop.A, 0.1) and np.isclose(prop.G12, 2e10)
     assert np.isclose(prop.GJ, 1e6) and np.isclose(prop.Izz, 6e6/70e9)
+    assert np.array_equal(prop.C, Cs)
+    # NOTE without C, the 11 attributes reproduce a matrix of their pattern
+    del prop.C
+    assert np.allclose(prop.C, Cs, rtol=1e-15, atol=0)
     Cs[0, 3] = Cs[3, 0] = 1e6
-    with pytest.raises(ValueError):
+    Cs[1, 5] = Cs[5, 1] = -2e6
+    prop = beamprop_from_vabs(Cs, E=70e9)
+    assert np.array_equal(prop.C, Cs)
+    Cs[1, 5] = 0
+    with pytest.raises(ValueError, match='symmetric'):
         beamprop_from_vabs(Cs, E=70e9)
     with pytest.raises(ValueError):
         beamprop_from_vabs(np.eye(4), E=1.)

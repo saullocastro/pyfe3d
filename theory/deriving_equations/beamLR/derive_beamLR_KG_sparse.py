@@ -76,13 +76,26 @@ Nrz = Matrix([[0, 0, 0, 0, 0, S1,
 #      G13 for gammaz of the plane xz (w, ry), and the torsional stiffness
 #      GJ given directly; the shear block of D is checked in
 #      derive_beamLR_KC0_sparse.py
-D = Matrix([
+D11 = Matrix([
     [ E*A, E*Ay, E*Az, 0, 0, 0],
     [E*Ay, E*Iy,  E*Iyz, 0, 0, 0],
     [E*Az,  E*Iyz, E*Iz, 0, 0, 0],
     [   0,     0,     0,   G12*A,      0, -G12*Az],
     [   0,     0,     0,       0,  G13*A,  G13*Ay],
     [   0,     0,     0, -G12*Az, G13*Ay,      GJ]])
+
+# NOTE sectional stiffness matrix C of pyfe3d.beamprop.BeamProp, symmetric,
+#      with the 21 independent entries Cij, i <= j, in the order of the
+#      strains {eps, gammay, gammaz, kx, ky, kz} of pyfe3d, see
+#      pyfe3d.vabs.yu_to_pyfe3d. D is C in the order {exx, ky, kz, gammay,
+#      gammaz, kx} of the rows of BL below
+C = Matrix(6, 6, lambda i, j: var('C%d%d' % (min(i, j), max(i, j)), real=True))
+PERM = [0, 4, 5, 1, 2, 3]
+D = C.extract(PERM, PERM)
+# NOTE without the attribute C, BeamProp builds C from its 11 stiffness
+#      attributes, such that D becomes D11 above
+C_FROM_11 = {D[i, j]: D11[i, j] for i in range(6) for j in range(i, 6)}
+assert D.subs(C_FROM_11) == D11
 #From Eq. 8 in Luo, Y. 2008
 #epsilon = u,x
 #kappay = -theta,x = -rz,x
@@ -100,7 +113,7 @@ BL = Matrix([
     2/L*Nrx.diff(xi)])
 
 # Geometric stiffness matrix using Donnell's type of geometric nonlinearity
-# (or van Karman nonlinear terms)
+# (or von Kármán nonlinear terms)
 # exx = u,x + 1/2 w,x^2 + 1/2 v,x^2 - z d2w/dx2 - y d2v/dx2
 # where the slopes v,x and w,x are those of the interpolations of v and w;
 # with shear deformation they differ from the rotations, v,x = rz + gammay
@@ -110,11 +123,28 @@ BL = Matrix([
 ue = Matrix([symbols(r'ue[%d]' % i) for i in range(0, BL.shape[1])])
 Nmembrane = D*BL*ue
 
-N = simplify(Nmembrane[0])
-assert N.diff(xi) == 0
-print('N =', N, flush=True)
-#NOTE N = E*(A*u,x - Ay*rz,x + Az*ry,x) is constant along x, because u,x,
-#     rz,x and ry,x are constant for linear shape functions
+#NOTE the axial force N = C00*u,x + C01*gammay + C02*gammaz + C03*rx,x
+#     + C04*ky + C05*kz is linear in xi when C01 != 0 or C02 != 0, through
+#     the rotations in gammay = v,x - rz and gammaz = w,x + ry, the other
+#     strains being constant for linear shape functions. The one-point
+#     integration of derive_beamLR_KC0_sparse.py evaluates the strain
+#     energy at the centre, xi = 0, hence the axial force of the geometric
+#     stiffness is N at xi = 0, which is also its element mean, such that
+#     KC0 + KCNL + KG is the exact Jacobian of fint, see
+#     derive_beamLR_KC0L_KCL0_KCLL_KGLL_sparse.py
+assert sympy.expand(Nmembrane[0].diff(xi, 2)) == 0
+N = simplify(Nmembrane[0].subs(xi, 0))
+assert sympy.expand(N - sympy.integrate(Nmembrane[0], (xi, -1, 1))/2) == 0
+# NOTE printed as the first row of C times the strains at the centre
+N_print = ((C00*(ue[6] - ue[0]) + C03*(ue[9] - ue[3]) + C04*(ue[5] - ue[11])
+            + C05*(ue[10] - ue[4]))/L
+           + C01*((ue[7] - ue[1])/L - (ue[5] + ue[11])/2)
+           + C02*((ue[8] - ue[2])/L + (ue[4] + ue[10])/2))
+assert sympy.expand(N - N_print) == 0
+print('N =', N_print, flush=True)
+#NOTE without the attribute C of BeamProp, N = E*(A*u,x - Ay*rz,x
+#     + Az*ry,x), constant along x
+assert sympy.expand(N.subs(C_FROM_11) - (D11*BL*ue)[0]) == 0
 N = var('N', real=True)
 
 # the slopes are taken from the interpolations of v and w
@@ -129,7 +159,7 @@ Sw_x = 2/L*Nw.diff(xi)
 #     1]] for v and for w, and the buckling load converges to Eq. (2-57) as
 #     the square of the element length; for slender columns its
 #     discretization error is about twice that of the former matrix
-#NOTE the slopes enter the von Karman strain as two separate squares,
+#NOTE the slopes enter the von Kármán strain as two separate squares,
 #     exx = u,x + (v,x**2 + w,x**2)/2, so the geometric stiffness is
 #     N*(Sv_x.T*Sv_x + Sw_x.T*Sw_x). Using the square of the sum,
 #     N*(Sv_x + Sw_x).T*(Sv_x + Sw_x), couples the two bending planes and
