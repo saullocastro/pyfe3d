@@ -40,7 +40,7 @@ default, the transverse shear field of this element, so the two triangles
 differ only in the membrane and drilling terms, see :mod:`pyfe3d.tria3r`.
 With its enriched membrane :class:`pyfe3d.tria3r.Tria3R` is the recommended
 triangle; this element is the better choice on a coarse mesh of a doubly
-curved shell, where it is the less stiff of the two. Geometrically nonlinear analyses with the von Karman membrane
+curved shell, where it is the less stiff of the two. Geometrically nonlinear analyses with the von Kármán membrane
 strains are supported by :meth:`.Tria3DSG.update_fint` with ``nonlinear=1``,
 :meth:`.Tria3DSG.update_KCNL` and :meth:`.Tria3DSG.update_KG`.
 
@@ -199,7 +199,7 @@ enrichment, integrates it with a single point at the centroid.
 
 .. rubric:: Geometrically nonlinear analysis
 
-The element carries the von Karman membrane strains,
+The element carries the von Kármán membrane strains,
 
 .. math::
 
@@ -222,7 +222,7 @@ being collected in `\boldsymbol{K}_{GNL}` instead, which
 :meth:`.Tria3DSG.update_KCNL` computes together with `\boldsymbol{K}_{CNL}`.
 
 Two things are simpler here than in the quadrilateral. First, the transverse
-shear strains of first-order shear deformation theory have no von Karman
+shear strains of first-order shear deformation theory have no von Kármán
 terms, so the discrete shear gap operator appears in `\boldsymbol{K}_{C0}` alone and
 the nonlinear methods never touch it. Second, every operator of this element
 is constant over the triangle, so `\boldsymbol{K}_{CNL} + \boldsymbol{K}_{GNL}`, its internal forces and
@@ -1462,13 +1462,13 @@ cdef class Tria3DSG:
         r"""Add the geometrically nonlinear terms to the probe internal forces
 
         The attribute ``finte`` of the :class:`.Tria3DSGProbe` receives the
-        terms of the von Karman membrane strains, evaluated at the
+        terms of the von Kármán membrane strains, evaluated at the
         displacements ``ue`` of the probe and added to the linear internal
         forces already in ``finte``. See :meth:`.update_KCNL`.
 
         Notes
         -----
-        With the von Karman membrane strain `\boldsymbol{\epsilon}_{NL} =
+        With the von Kármán membrane strain `\boldsymbol{\epsilon}_{NL} =
         \{w_{,x}^2/2, w_{,y}^2/2, w_{,x} w_{,y}\}^\top`, the linear stress
         resultants `\boldsymbol{N} = \boldsymbol{A} \boldsymbol{\epsilon} + \boldsymbol{B} \boldsymbol{\kappa}`, and
         `\boldsymbol{N}_{NL} = \boldsymbol{A} \boldsymbol{\epsilon}_{NL}`, `\boldsymbol{M}_{NL} =
@@ -1590,7 +1590,7 @@ cdef class Tria3DSG:
         nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``.
             Any other value adds the geometrically nonlinear terms of the
-            von Karman strains, see :meth:`._update_probe_finte_nonlinear`
+            von Kármán strains, see :meth:`._update_probe_finte_nonlinear`
             and :meth:`.update_KCNL`.
 
         Notes
@@ -1637,7 +1637,7 @@ cdef class Tria3DSG:
         nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``.
             Any other value adds the geometrically nonlinear terms of the
-            von Karman strains, see :meth:`.update_KCNL`.
+            von Kármán strains, see :meth:`.update_KCNL`.
 
         Notes
         -----
@@ -1784,7 +1784,7 @@ cdef class Tria3DSG:
         The nonlinear stiffness matrix KCNL is the part of the
         tangent stiffness matrix, besides :meth:`.update_KC0` and
         :meth:`.update_KG`, that depends on the displacements through the von
-        Karman membrane strains, evaluated at the displacements ``ue`` of the
+        Kármán membrane strains, evaluated at the displacements ``ue`` of the
         probe. The sum of the three is the tangent stiffness matrix of the
         internal forces of :meth:`.update_fint` with ``nonlinear=1``.
 
@@ -1818,8 +1818,19 @@ cdef class Tria3DSG:
 
         Notes
         -----
-        Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, that is `\boldsymbol{K}_{CNL} + \boldsymbol{K}_{GNL}`, the book's nonlinear constitutive stiffness matrix `\boldsymbol{K}_{CNL}` of the terms of `\boldsymbol{B}_{NL}` plus the geometric `\boldsymbol{K}_{GNL}`, built from the von
-        Karman membrane strains
+        KCNL = KC0L + KCL0 + KCLL + KGNL, that is `\boldsymbol{K}_{CNL} +
+        \boldsymbol{K}_{GNL}`: the nonlinear constitutive stiffness matrix
+        `\boldsymbol{K}_{CNL}`, the terms of `\int (\boldsymbol{B}_L +
+        \boldsymbol{B}_{NL})^\top \boldsymbol{C} (\boldsymbol{B}_L +
+        \boldsymbol{B}_{NL}) d\Omega` that contain `\boldsymbol{B}_{NL}`, plus
+        the geometric stiffness matrix `\boldsymbol{K}_{GNL}` of the stress
+        resultants of the nonlinear strains. Crisfield [1]_, Section 8.1.5,
+        Eqs. (8.26)-(8.31), groups the same terms differently: his
+        `\boldsymbol{K}_{t1}` is `\boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}`,
+        and his initial-stress matrix `\boldsymbol{K}_{t\sigma}`, built with
+        the total membrane forces, is `\boldsymbol{K}_G +
+        \boldsymbol{K}_{GNL}`; the tangent stiffness matrix is the same. The
+        matrices are built from the von Kármán membrane strains
 
         .. math::
             \epsilon_{xx} = u_{,x} + \frac{1}{2} w_{,x}^2, \quad
@@ -1855,7 +1866,7 @@ cdef class Tria3DSG:
         converges quadratically.
 
         .. note:: The transverse shear strains of first-order shear
-            deformation theory carry no von Karman terms, so the discrete
+            deformation theory carry no von Kármán terms, so the discrete
             shear gap operator of this element enters `\boldsymbol{K}_{C0}` alone and
             needs nothing here. The membrane rows have no `r_z` entries,
             this element having no Allman enrichment, so the drilling
@@ -1866,6 +1877,12 @@ cdef class Tria3DSG:
         Every operator is constant over the triangle, so each term is
         integrated exactly by a multiplication by the element area, see
         :meth:`._update_probe_KCNLve`.
+
+        References
+        ----------
+        .. [1] Crisfield, M. A., Non-linear Finite Element Analysis of Solids
+           and Structures, Volume 1: Essentials, John Wiley & Sons,
+           Chichester, 1991.
 
         """
         cdef int i, j, m, n, k, ke, node_i, node_j
@@ -2070,7 +2087,7 @@ cdef class Tria3DSG:
         using the same strain operators and the same membrane constitutive
         relation that :meth:`.update_fint` uses, and then handed to
         :meth:`.update_KG_given_stress`. Only the linear strains contribute;
-        the stress of the von Karman terms of the membrane strain is carried
+        the stress of the von Kármán terms of the membrane strain is carried
         by :meth:`.update_KCNL` instead.
 
         The values are added to ``KGv`` at the positions ``init_k_KG`` to

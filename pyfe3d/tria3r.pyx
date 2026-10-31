@@ -51,7 +51,7 @@ default, for which the nodal moments about the shell normal recovered in the
 internal force vector are physical and no user parameter is involved, and a
 fictitious penalty scaled by ``K6ROT``, the default before version 0.10.0,
 whose only purpose is to remove the singularity of the drilling
-degree-of-freedom. Geometrically nonlinear analyses with the von Karman
+degree-of-freedom. Geometrically nonlinear analyses with the von Kármán
 membrane strains are supported by :meth:`.Tria3R.update_fint` with
 ``nonlinear=1``, :meth:`.Tria3R.update_KCNL` and :meth:`.Tria3R.update_KG`.
 
@@ -1353,7 +1353,7 @@ cdef class Tria3R:
             are read from.
         nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
-            value adds the geometrically nonlinear terms of the von Karman strains,
+            value adds the geometrically nonlinear terms of the von Kármán strains,
             see :meth:`._update_probe_finte_nonlinear` and :meth:`.update_KCNL`.
 
         Notes
@@ -3886,7 +3886,7 @@ cdef class Tria3R:
             are read from.
         nonlinear : int, optional
             The default ``0`` gives the linear internal forces, ``KC0*u``. Any other
-            value adds the geometrically nonlinear terms of the von Karman strains,
+            value adds the geometrically nonlinear terms of the von Kármán strains,
             see :meth:`.update_KCNL`.
 
         Notes
@@ -4187,13 +4187,13 @@ cdef class Tria3R:
         r"""Add the geometrically nonlinear terms to the probe internal forces
 
         The attribute ``finte`` of the :class:`.Tria3RProbe` receives the terms
-        of the von Karman membrane strains, evaluated at the displacements
+        of the von Kármán membrane strains, evaluated at the displacements
         ``ue`` of the probe and added to the linear internal forces already in
         ``finte``. See :meth:`.update_KCNL`.
 
         Notes
         -----
-        With the von Karman membrane strain `\boldsymbol{\epsilon}_{NL} = \{w_{,x}^2/2,
+        With the von Kármán membrane strain `\boldsymbol{\epsilon}_{NL} = \{w_{,x}^2/2,
         w_{,y}^2/2, w_{,x} w_{,y}\}^\top`, the linear stress resultants `\boldsymbol{N} =
         \boldsymbol{A} \boldsymbol{\epsilon} + \boldsymbol{B} \boldsymbol{\kappa}`, and `\boldsymbol{N}_{NL} =
         \boldsymbol{A} \boldsymbol{\epsilon}_{NL}`, `\boldsymbol{M}_{NL} = \boldsymbol{B} \boldsymbol{\epsilon}_{NL}`, the terms
@@ -4305,7 +4305,7 @@ cdef class Tria3R:
         The nonlinear stiffness matrix KCNL is the part of the
         tangent stiffness matrix, besides :meth:`.update_KC0` and
         :meth:`.update_KG`, that depends on the displacements through the von
-        Karman membrane strains, evaluated at the displacements ``ue`` of the
+        Kármán membrane strains, evaluated at the displacements ``ue`` of the
         probe. The sum of the three is the tangent stiffness matrix of the
         internal forces of :meth:`.update_fint` with ``nonlinear=1``. With
         ``drilling_model = 0`` the membrane rows include the Allman
@@ -4347,8 +4347,19 @@ cdef class Tria3R:
 
         Notes
         -----
-        Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, that is `\boldsymbol{K}_{CNL} + \boldsymbol{K}_{GNL}`, the book's nonlinear constitutive stiffness matrix `\boldsymbol{K}_{CNL}` of the terms of `\boldsymbol{B}_{NL}` plus the geometric `\boldsymbol{K}_{GNL}`, built from the von Karman
-        membrane strains
+        KCNL = KC0L + KCL0 + KCLL + KGNL, that is `\boldsymbol{K}_{CNL} +
+        \boldsymbol{K}_{GNL}`: the nonlinear constitutive stiffness matrix
+        `\boldsymbol{K}_{CNL}`, the terms of `\int (\boldsymbol{B}_L +
+        \boldsymbol{B}_{NL})^\top \boldsymbol{C} (\boldsymbol{B}_L +
+        \boldsymbol{B}_{NL}) d\Omega` that contain `\boldsymbol{B}_{NL}`, plus
+        the geometric stiffness matrix `\boldsymbol{K}_{GNL}` of the stress
+        resultants of the nonlinear strains. Crisfield [1]_, Section 8.1.5,
+        Eqs. (8.26)-(8.31), groups the same terms differently: his
+        `\boldsymbol{K}_{t1}` is `\boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}`,
+        and his initial-stress matrix `\boldsymbol{K}_{t\sigma}`, built with
+        the total membrane forces, is `\boldsymbol{K}_G +
+        \boldsymbol{K}_{GNL}`; the tangent stiffness matrix is the same. The
+        matrices are built from the von Kármán membrane strains
 
         .. math::
             \epsilon_{xx} = u_{,x} + \frac{1}{2} w_{,x}^2, \quad
@@ -4381,6 +4392,12 @@ cdef class Tria3R:
         is the exact Jacobian of the internal forces of :meth:`.update_fint` with
         ``nonlinear=1``, and a Newton-Raphson iteration built on them converges
         quadratically. The quadrature of :meth:`.update_KG` is used.
+
+        References
+        ----------
+        .. [1] Crisfield, M. A., Non-linear Finite Element Analysis of Solids
+           and Structures, Volume 1: Essentials, John Wiley & Sons,
+           Chichester, 1991.
 
         """
         cdef int i, j, node_i, node_j, k, ke, m, n

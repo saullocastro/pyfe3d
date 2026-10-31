@@ -2040,7 +2040,7 @@ cdef class ShellProp:
             \begin{bmatrix} \cos\varphi & \sin\varphi \\ -\sin\varphi &
             \cos\varphi \end{bmatrix} \qquad \varphi = -\theta
 
-        in the ordering `\{\gamma_{yz}, \gamma_{xz}\}`, as in the book, with
+        in the ordering `\{\gamma_{yz}, \gamma_{xz}\}`, with
         `\varphi` the rotation of the element frame relative to the frame of
         ``A44``, ``A45``, ``A55``. The rotation is exact for the
         constant-strain stiffness.

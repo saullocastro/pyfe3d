@@ -557,7 +557,7 @@ def shape_function_gradients(ncoords):
 
 
 def test_nonlinear_internal_forces_of_an_imposed_slope():
-    r"""The von Karman terms, against virtual work on a state with a closed form
+    r"""The von Kármán terms, against virtual work on a state with a closed form
 
     The field `w = c x`, `r_y = -c`, with everything else zero, is the
     linearised rigid rotation about the `y` axis. Every linear strain of the
@@ -565,9 +565,9 @@ def test_nonlinear_internal_forces_of_an_imposed_slope():
     the discrete shear gap exactly, since
     `\Delta w_q = c(x_q - x_p) - c(x_q - x_p) = 0` edge by edge. So
     ``update_fint`` with ``nonlinear=0`` returns zero and everything left is
-    the von Karman contribution, which is what this test is after. That a
+    the von Kármán contribution, which is what this test is after. That a
     rotation is charged any energy at all is the known price of the von
-    Karman kinematics, not a defect of the element.
+    Kármán kinematics, not a defect of the element.
 
     The only nonlinear strain is `\epsilon_{NL} = \{c^2/2, 0, 0\}`, giving
     the uniform membrane stress `\boldsymbol{N} = \boldsymbol{A} \boldsymbol{\epsilon}_{NL}`, and the
@@ -580,7 +580,7 @@ def test_nonlinear_internal_forces_of_an_imposed_slope():
       c b`, work `N_{xx} c b A`
 
     The third one is the term that carries the factor `w_{,x}` and not
-    `w_{,x}/2`, the classic place to get the von Karman variation wrong.
+    `w_{,x}/2`, the classic place to get the von Kármán variation wrong.
 
     """
     h = 0.02
@@ -652,7 +652,7 @@ def test_transverse_shear_stays_out_of_the_nonlinear_terms():
     r"""The discrete shear gap enters KC0 alone
 
     First-order shear deformation theory gives the transverse shear strains
-    no von Karman terms, so scaling `A_{44}, A_{45}, A_{55}` must leave
+    no von Kármán terms, so scaling `A_{44}, A_{45}, A_{55}` must leave
     ``KCNL`` and ``KG`` untouched while it changes ``KC0``. If the shear
     operator ever leaked into the nonlinear tangent, the element would stop
     being the exact Jacobian of its own internal forces, which
