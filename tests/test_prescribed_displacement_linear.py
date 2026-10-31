@@ -10,6 +10,7 @@ solves the homogeneous equilibrium equations of the Timoshenko beam exactly,
 such that the nodal values agree to round-off.
 """
 import numpy as np
+import pytest
 from scipy.sparse import coo_matrix, csr_matrix
 
 from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
@@ -220,7 +221,7 @@ def test_closed_form_timoshenko_cantilever():
     r"""SymPy check of :func:`timoshenko_cantilever`: `EI \theta_{,x} = M =
     P (L - x)`, `k G A (w_{,x} - \theta) = P`, `w(0) = \theta(0) = 0`, and
     `w(L) = \delta` gives :func:`tip_force`"""
-    import sympy as sp
+    sp = pytest.importorskip('sympy')
     x, L, P, EI, kGA = sp.symbols('x L P EI kGA', positive=True)
     w = P/EI*(L*x**2/2 - x**3/6) + P*x/kGA
     theta = P/EI*(L*x - x**2/2)
