@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Linear buckling analysis of a column &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>Linear buckling analysis of a column &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
@@ -37,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -120,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -137,6 +138,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -161,13 +169,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -176,6 +177,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -364,6 +393,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -380,6 +416,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -591,13 +648,24 @@
 <p>A clamped-free column of <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> or <a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a> elements,
 along an arbitrary direction in space, under a compressive load at its free
 end. Each bending plane buckles at its own Euler load, <span class="math notranslate nohighlight">\(\pi^2 E I/(4
-L^2)\)</span>. The geometric stiffness matrix is assembled with <code class="docutils literal notranslate"><span class="pre">update_KG</span></code> from
+L^2)\)</span>, reduced by the shear deformation of the Timoshenko elements as in
+Timoshenko, S. P. and Gere, J. M., Theory of Elastic Stability, 2nd ed.,
+McGraw-Hill, 1961, Eqs. (2-4) and (2-57). The geometric stiffness matrix is assembled with <code class="docutils literal notranslate"><span class="pre">update_KG</span></code> from
 the linear static solution of a unit load, and the eigenvalue problem is
 solved here with <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.linalg.eigh()</span></code>, see <a class="reference internal" href="eigenvalue_analyses.html"><span class="doc">Linear buckling and natural frequencies</span></a>
 for <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">buckling_loads</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="n">vxy</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Two lowest buckling loads, and the Euler loads of both planes"""</span>
-    <span class="bp">cls</span><span class="p">,</span> <span class="n">probecls</span><span class="p">,</span> <span class="n">datacls</span><span class="p">,</span> <span class="n">num_elements</span> <span class="o">=</span> <span class="n">BEAMS</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">buckling_loads</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="n">vxy</span><span class="p">,</span> <span class="n">shear_ratio</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+                   <span class="n">num_elements</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">"""Two lowest buckling loads, the Euler loads of both planes, and the</span>
+<span class="sd">    shear stiffness ``kappa*G*A``</span>
+
+<span class="sd">    With ``shear_ratio`` the shear modulus is set such that the Euler load</span>
+<span class="sd">    of the weak plane divided by ``kappa*G*A`` equals ``shear_ratio``;</span>
+<span class="sd">    ``num_elements`` replaces the number of elements of ``BEAMS``.</span>
+<span class="sd">    """</span>
+    <span class="bp">cls</span><span class="p">,</span> <span class="n">probecls</span><span class="p">,</span> <span class="n">datacls</span><span class="p">,</span> <span class="n">default_num_elements</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">BEAMS</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+    <span class="k">if</span> <span class="n">num_elements</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">num_elements</span> <span class="o">=</span> <span class="n">default_num_elements</span>
     <span class="n">L</span> <span class="o">=</span> <span class="mf">3.</span>
     <span class="n">E</span> <span class="o">=</span> <span class="mf">203.e9</span>
     <span class="n">prop</span> <span class="o">=</span> <span class="n">BeamProp</span><span class="p">()</span>
@@ -607,6 +675,9 @@ for <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.li
     <span class="n">prop</span><span class="o">.</span><span class="n">Izz</span> <span class="o">=</span> <span class="n">b</span><span class="o">*</span><span class="n">h</span><span class="o">**</span><span class="mi">3</span><span class="o">/</span><span class="mi">12</span>
     <span class="n">prop</span><span class="o">.</span><span class="n">Iyy</span> <span class="o">=</span> <span class="n">b</span><span class="o">**</span><span class="mi">3</span><span class="o">*</span><span class="n">h</span><span class="o">/</span><span class="mi">12</span>
     <span class="n">prop</span><span class="o">.</span><span class="n">J</span> <span class="o">=</span> <span class="n">prop</span><span class="o">.</span><span class="n">Izz</span> <span class="o">+</span> <span class="n">prop</span><span class="o">.</span><span class="n">Iyy</span>
+    <span class="k">if</span> <span class="n">shear_ratio</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># NOTE Eq. (2-4) of Timoshenko and Gere (1961), weak plane</span>
+        <span class="n">prop</span><span class="o">.</span><span class="n">G</span> <span class="o">=</span> <span class="n">pi</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">E</span><span class="o">*</span><span class="nb">min</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">Izz</span><span class="p">,</span> <span class="n">prop</span><span class="o">.</span><span class="n">Iyy</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">L</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">shear_ratio</span><span class="o">*</span><span class="n">prop</span><span class="o">.</span><span class="n">A</span><span class="p">)</span>
 
     <span class="n">direction</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">direction</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span>
     <span class="n">direction</span> <span class="o">/=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">norm</span><span class="p">(</span><span class="n">direction</span><span class="p">)</span>
@@ -652,9 +723,11 @@ for <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.li
     <span class="c1"># KC0*phi = -lambda*KG*phi, solved as -KG*phi = mu*KC0*phi, lambda = 1/mu</span>
     <span class="n">mu</span> <span class="o">=</span> <span class="n">eigh</span><span class="p">(</span><span class="o">-</span><span class="n">KG</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">bu</span><span class="p">,</span> <span class="n">bu</span><span class="p">)],</span> <span class="n">KC0</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ix_</span><span class="p">(</span><span class="n">bu</span><span class="p">,</span> <span class="n">bu</span><span class="p">)],</span> <span class="n">eigvals_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="n">loads</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sort</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">mu</span><span class="p">[</span><span class="n">mu</span> <span class="o">&gt;</span> <span class="mf">1.e-12</span><span class="p">])</span>
+    <span class="c1"># NOTE Eq. (2-4) of Timoshenko and Gere (1961)</span>
     <span class="n">euler_z</span> <span class="o">=</span> <span class="n">pi</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">E</span><span class="o">*</span><span class="n">prop</span><span class="o">.</span><span class="n">Izz</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">L</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
     <span class="n">euler_y</span> <span class="o">=</span> <span class="n">pi</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">E</span><span class="o">*</span><span class="n">prop</span><span class="o">.</span><span class="n">Iyy</span><span class="o">/</span><span class="p">(</span><span class="mi">4</span><span class="o">*</span><span class="n">L</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">loads</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span> <span class="nb">min</span><span class="p">(</span><span class="n">euler_z</span><span class="p">,</span> <span class="n">euler_y</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">euler_z</span><span class="p">,</span> <span class="n">euler_y</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">loads</span><span class="p">[:</span><span class="mi">2</span><span class="p">],</span> <span class="nb">min</span><span class="p">(</span><span class="n">euler_z</span><span class="p">,</span> <span class="n">euler_y</span><span class="p">),</span> <span class="nb">max</span><span class="p">(</span><span class="n">euler_z</span><span class="p">,</span> <span class="n">euler_y</span><span class="p">),</span>
+            <span class="n">prop</span><span class="o">.</span><span class="n">G</span><span class="o">*</span><span class="n">prop</span><span class="o">.</span><span class="n">A</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">parametrize</span><span class="p">(</span><span class="s1">'name'</span><span class="p">,</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">BEAMS</span><span class="p">))</span>
@@ -662,14 +735,64 @@ for <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.li
 <span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">parametrize</span><span class="p">(</span><span class="s1">'direction, vxy'</span><span class="p">,</span> <span class="p">[((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">)),</span>
                                             <span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))])</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">test_column_buckles_at_the_euler_load</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span> <span class="n">vxy</span><span class="p">):</span>
-    <span class="n">loads</span><span class="p">,</span> <span class="n">euler_weak</span><span class="p">,</span> <span class="n">euler_strong</span> <span class="o">=</span> <span class="n">buckling_loads</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span> <span class="n">direction</span><span class="p">,</span>
-                                                     <span class="n">vxy</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">loads</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">euler_weak</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+    <span class="n">loads</span><span class="p">,</span> <span class="n">euler_weak</span><span class="p">,</span> <span class="n">euler_strong</span><span class="p">,</span> <span class="n">kGA</span> <span class="o">=</span> <span class="n">buckling_loads</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">b</span><span class="p">,</span> <span class="n">h</span><span class="p">,</span>
+                                                          <span class="n">direction</span><span class="p">,</span> <span class="n">vxy</span><span class="p">)</span>
+    <span class="n">rtol</span> <span class="o">=</span> <span class="n">BEAMS</span><span class="p">[</span><span class="n">name</span><span class="p">][</span><span class="mi">4</span><span class="p">]</span>
+    <span class="c1"># NOTE Eq. (2-57) of Timoshenko and Gere (1961), n/(A*G) = 1/(kappa*G*A)</span>
+    <span class="n">shear</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">Pe</span><span class="p">:</span> <span class="n">Pe</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">Pe</span><span class="o">/</span><span class="n">kGA</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">loads</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shear</span><span class="p">(</span><span class="n">euler_weak</span><span class="p">),</span> <span class="n">rtol</span><span class="o">=</span><span class="n">rtol</span><span class="p">)</span>
     <span class="c1"># square section: the second plane buckles at the same load; rectangular</span>
     <span class="c1"># section: the next load is the lower of the Euler load of the strong</span>
     <span class="c1"># plane and the second mode of the weak plane, at nine times its load</span>
     <span class="n">expected</span> <span class="o">=</span> <span class="n">euler_weak</span> <span class="k">if</span> <span class="n">b</span> <span class="o">==</span> <span class="n">h</span> <span class="k">else</span> <span class="nb">min</span><span class="p">(</span><span class="n">euler_strong</span><span class="p">,</span> <span class="mi">9</span><span class="o">*</span><span class="n">euler_weak</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">loads</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">expected</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">loads</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">shear</span><span class="p">(</span><span class="n">expected</span><span class="p">),</span> <span class="n">rtol</span><span class="o">=</span><span class="n">rtol</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>The same column with a low shear stiffness, <span class="math notranslate nohighlight">\(P_e/(\kappa G A)\)</span> of 0.2 and
+0.6, as in sandwich and composite columns, checks Eq. (2-57) where the shear
+deformation dominates. Both elements converge to it as the square of the
+element length; up to version 0.11 the geometric stiffness matrix of
+<a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a> took the slopes from the rotations and its buckling load
+converged to the Euler load instead, 20 % and 60 % above Eq. (2-57):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">parametrize</span><span class="p">(</span><span class="s1">'name, num_elements'</span><span class="p">,</span> <span class="p">[(</span><span class="s1">'BeamC'</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span>
+                                                <span class="p">(</span><span class="s1">'BeamLR'</span><span class="p">,</span> <span class="mi">40</span><span class="p">)])</span>
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">parametrize</span><span class="p">(</span><span class="s1">'shear_ratio'</span><span class="p">,</span> <span class="p">[</span><span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.6</span><span class="p">])</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_shear_flexible_column</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">num_elements</span><span class="p">,</span> <span class="n">shear_ratio</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Clamped-free column whose buckling load is governed by the shear</span>
+<span class="sd">    deformation, as in sandwich and composite columns</span>
+
+<span class="sd">    The shear modulus is set such that ``P_e/(A*G/n)`` is ``0.2`` or ``0.6``,</span>
+<span class="sd">    ``P_e`` being the Euler load of Eq. (2-4), so that Eq. (2-57) of</span>
+<span class="sd">    Timoshenko and Gere (1961), Sec. 2.17, p. 133, ``P_cr = P_e/(1 +</span>
+<span class="sd">    n*P_e/(A*G))``, lowers the load by 16.7 % and 37.5 %. The square</span>
+<span class="sd">    section along the direction ``(1, 2, 3)`` buckles at this load in both</span>
+<span class="sd">    planes. Measured errors, which fall as the square of the element length:</span>
+
+<span class="sd">    ======  ========  ===========  ===========</span>
+<span class="sd">    beam    elements  ratio 0.2    ratio 0.6</span>
+<span class="sd">    ======  ========  ===========  ===========</span>
+<span class="sd">    BeamC   10        +2.86e-4     +4.82e-4</span>
+<span class="sd">    BeamC   20        +7.14e-5     +1.21e-4</span>
+<span class="sd">    BeamC   40        +1.79e-5     +3.01e-5</span>
+<span class="sd">    BeamLR  20        +8.57e-4     +6.43e-4</span>
+<span class="sd">    BeamLR  40        +2.14e-4     +1.61e-4</span>
+<span class="sd">    BeamLR  80        +5.36e-5     +4.02e-5</span>
+<span class="sd">    BeamLR  160       +1.34e-5     +1.00e-5</span>
+<span class="sd">    ======  ========  ===========  ===========</span>
+
+<span class="sd">    The tolerance, 1e-3, is above these errors and two orders of magnitude</span>
+<span class="sd">    below the reduction due to shear deformation that the test checks. Up to</span>
+<span class="sd">    pyfe3d 0.11, BeamLR took the slopes of its geometric stiffness matrix</span>
+<span class="sd">    from the rotations and converged to ``P_e`` instead, 20 % and 60 % above</span>
+<span class="sd">    Eq. (2-57).</span>
+<span class="sd">    """</span>
+    <span class="n">loads</span><span class="p">,</span> <span class="n">euler</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">kGA</span> <span class="o">=</span> <span class="n">buckling_loads</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="mf">0.05</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>
+                                          <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">shear_ratio</span><span class="o">=</span><span class="n">shear_ratio</span><span class="p">,</span>
+                                          <span class="n">num_elements</span><span class="o">=</span><span class="n">num_elements</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">euler</span><span class="o">/</span><span class="n">kGA</span><span class="p">,</span> <span class="n">shear_ratio</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">)</span>
+    <span class="c1"># NOTE Eq. (2-57) of Timoshenko and Gere (1961), n/(A*G) = 1/(kappa*G*A)</span>
+    <span class="n">expected</span> <span class="o">=</span> <span class="n">euler</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">euler</span><span class="o">/</span><span class="n">kGA</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">loads</span><span class="p">,</span> <span class="n">expected</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

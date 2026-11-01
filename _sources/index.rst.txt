@@ -14,7 +14,10 @@ With ``pyfe3d`` you can build models of:
   isotropic properties, :class:`.ShellProp`
 
 * Beams, with the Timoshenko elements :class:`.BeamC` and :class:`.BeamLR`,
-  trusses, :class:`.Truss`, and springs, :class:`.Spring`
+  trusses, :class:`.Truss`, and springs, :class:`.Spring`, with the
+  sectional stiffness matrices of composite beams computed by the
+  cross-sectional analysis of :mod:`pyfe3d.vabs`, see
+  :doc:`cross_sectional_analysis`
 
 all with six degrees of freedom per node, whose element matrices are written
 into sparse arrays: the linear constitutive stiffness matrix, the
@@ -24,6 +27,10 @@ With the solvers of :mod:`pyfe3d.solver` you can run:
 
 * Linear static analyses, `\boldsymbol{K}_{C0} \boldsymbol{u} = \boldsymbol{f}`, with :func:`.solve` or
   :class:`.Analysis`
+
+* Linear static analyses of unsupported structures with inertia relief,
+  balancing the loads with the inertia forces of the rigid-body
+  acceleration, with :func:`.apply_inertia_relief`, see :doc:`inertia_relief`
 
 * Linear buckling analyses, `(\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}`, with
   :func:`.linear_buckling`
@@ -36,7 +43,9 @@ With the solvers of :mod:`pyfe3d.solver` you can run:
 * Geometrically non-linear static analyses with :class:`.Analysis`, using
   the Newton-Raphson method or the arc-length methods of Riks and of
   Crisfield, with Crisfield's convergence criterion, configuration-dependent
-  loads and prescribed displacements
+  loads and prescribed displacements, and with large rotations through the
+  element-independent co-rotational formulation of
+  :mod:`pyfe3d.corotational`
 
 The eigenvalue solvers verify their results and use a dense solver only as
 a last resort, see :doc:`eigenvalue_analyses`.
@@ -55,9 +64,13 @@ User guide
     :maxdepth: 1
 
     overview.rst
+    documentation_levels.rst
     conventions.rst
     element_choice.rst
     shell_properties.rst
+    cross_sectional_analysis.rst
+    linear_analyses.rst
+    inertia_relief.rst
     nonlinear_analyses.rst
     eigenvalue_analyses.rst
 
@@ -143,7 +156,7 @@ AUTHORS
 Citing this library
 -------------------
 
-Saullo G. P. Castro. (2026). General-purpose finite element solver based on Python and Cython (Version 0.11.3). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
+Saullo G. P. Castro. (2026). General-purpose finite element solver based on Python and Cython (Version 0.12.0). Zenodo. DOI: https://doi.org/10.5281/zenodo.6573489.
 
 The DOI represents all the versions and resolves to the latest one. The
 repository also has a ``CITATION.cff`` file with the same data.

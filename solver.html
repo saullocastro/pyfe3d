@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Solvers (pyfe3d.solver) &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>Solvers (pyfe3d.solver) &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
@@ -37,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -46,7 +47,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Linear static solution (pyfe3d.solver.static)" href="solver_static.html" />
-    <link rel="prev" title="Beam property module (pyfe3d.beamprop)" href="beamprop.html" />
+    <link rel="prev" title="Co-rotational kinematics, EICR (pyfe3d.corotational)" href="corotational.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
@@ -118,7 +119,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -135,6 +136,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -159,13 +167,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -174,6 +175,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -362,6 +391,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -378,6 +414,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -582,11 +639,36 @@
 
 <li class="toctree-l2"><a class="reference internal" href="beamprop.html">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
 
+<li class="toctree-l2"><a class="reference internal" href="vabs.html">Variational asymptotic sectional analysis (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.vabs</span></code>)</a></li>
+
+
+
+
+
+
+
+
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html">Co-rotational kinematics, EICR (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
 <li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_static.html">Linear static solution (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code>)</a></li>
 
+
+<li class="toctree-l1"><a class="reference internal" href="solver_inertia_relief.html">Static analysis with inertia relief (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.inertia_relief</span></code>)</a></li>
 
 <li class="toctree-l1"><a class="reference internal" href="solver_analysis.html">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</a></li>
 
@@ -638,6 +720,7 @@
 
 
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html">Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code>)</a></li>
+
 
 
 
@@ -730,6 +813,8 @@ assemble, all available from the <code class="docutils literal notranslate"><spa
 <ul class="simple">
 <li><p>linear static solution, <a class="reference internal" href="solver_static.html#module-pyfe3d.solver.static" title="pyfe3d.solver.static"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code></a>: <a class="reference internal" href="solver_static.html#pyfe3d.solver.static.solve" title="pyfe3d.solver.static.solve"><code class="xref py py-func docutils literal notranslate"><span class="pre">solve()</span></code></a> and
 <a class="reference internal" href="solver_static.html#pyfe3d.solver.static.linear_static" title="pyfe3d.solver.static.linear_static"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_static()</span></code></a>;</p></li>
+<li><p>linear static analysis of unsupported structures with inertia relief,
+<a class="reference internal" href="solver_inertia_relief.html#module-pyfe3d.solver.inertia_relief" title="pyfe3d.solver.inertia_relief"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.inertia_relief</span></code></a>: <a class="reference internal" href="solver_inertia_relief.html#pyfe3d.solver.inertia_relief.apply_inertia_relief" title="pyfe3d.solver.inertia_relief.apply_inertia_relief"><code class="xref py py-func docutils literal notranslate"><span class="pre">apply_inertia_relief()</span></code></a>;</p></li>
 <li><p>linear and non-linear static analyses of a model given by callables,
 <a class="reference internal" href="solver_analysis.html#module-pyfe3d.solver.analysis" title="pyfe3d.solver.analysis"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code></a>: <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis" title="pyfe3d.solver.analysis.Analysis"><code class="xref py py-class docutils literal notranslate"><span class="pre">Analysis</span></code></a>, with the Newton-Raphson
 method, full or modified and with an optional line search,
@@ -756,7 +841,13 @@ MKL versions, <a class="reference internal" href="solver_arpackutils.html#module
 e.g. <code class="docutils literal notranslate"><span class="pre">KC0uu</span> <span class="pre">=</span> <span class="pre">KC0[bu,</span> <span class="pre">:][:,</span> <span class="pre">bu]</span></code>: a null row or column of the stiffness
 matrix, a degree-of-freedom without stiffness, raises a
 <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.linalg.LinAlgError</span></code> naming the degrees-of-freedom, see
-<a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols" title="pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a>.</p>
+<a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols" title="pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a>. A symmetric stiffness matrix that is not
+positive definite, e.g. with insufficient boundary conditions, a mechanism
+or re-entrant elements, raises a <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.linalg.LinAlgError</span></code> that
+says so, with the likely causes, in <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a>,
+<a class="reference internal" href="solver_static.html#pyfe3d.solver.static.linear_static" title="pyfe3d.solver.static.linear_static"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_static()</span></code></a> and the linear <a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis.static" title="pyfe3d.solver.analysis.Analysis.static"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Analysis.static()</span></code></a>, and the
+<code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code> of <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> starts with that diagnosis
+when its solvers fail.</p>
 <p>The log messages of the non-linear static analyses are printed by
 <a class="reference internal" href="solver_logger.html#module-pyfe3d.solver.logger" title="pyfe3d.solver.logger"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.logger</span></code></a>, unless <code class="docutils literal notranslate"><span class="pre">silent=True</span></code>.</p>
 </section>
@@ -765,6 +856,8 @@ matrix, a degree-of-freedom without stiffness, raises a
 <li class="toctree-l1"><a class="reference internal" href="solver_static.html">Linear static solution (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_static.html#pyfe3d.solver.static.linear_static"><code class="docutils literal notranslate"><span class="pre">linear_static()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_static.html#pyfe3d.solver.static.solve"><code class="docutils literal notranslate"><span class="pre">solve()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="solver_inertia_relief.html">Static analysis with inertia relief (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.inertia_relief</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solver_inertia_relief.html#pyfe3d.solver.inertia_relief.apply_inertia_relief"><code class="docutils literal notranslate"><span class="pre">apply_inertia_relief()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_analysis.html">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis"><code class="docutils literal notranslate"><span class="pre">Analysis</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.FreeDofs"><code class="docutils literal notranslate"><span class="pre">FreeDofs</span></code></a></li>
@@ -827,6 +920,7 @@ matrix, a degree-of-freedom without stiffness, raises a
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.arpack_max_ncv"><code class="docutils literal notranslate"><span class="pre">arpack_max_ncv()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.arpack_ncv"><code class="docutils literal notranslate"><span class="pre">arpack_ncv()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.capped_eigsh"><code class="docutils literal notranslate"><span class="pre">capped_eigsh()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.deflated_eigsh"><code class="docutils literal notranslate"><span class="pre">deflated_eigsh()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.dsteqr_is_faulty"><code class="docutils literal notranslate"><span class="pre">dsteqr_is_faulty()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.lapack_is_mkl"><code class="docutils literal notranslate"><span class="pre">lapack_is_mkl()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.mkl_version"><code class="docutils literal notranslate"><span class="pre">mkl_version()</span></code></a></li>
@@ -854,12 +948,12 @@ matrix, a degree-of-freedom without stiffness, raises a
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="beamprop.html"
+       href="corotational.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</p>
+        <p class="prev-next-title">Co-rotational kinematics, EICR (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code>)</p>
       </div>
     </a>
     <a class="right-next"

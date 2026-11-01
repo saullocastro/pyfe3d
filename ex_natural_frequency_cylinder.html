@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Natural frequency analysis of a cylinder &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>Natural frequency analysis of a cylinder &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
@@ -37,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -118,7 +119,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -135,6 +136,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -159,13 +167,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -174,6 +175,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -362,6 +391,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -378,6 +414,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -586,65 +643,95 @@
                   
   <section id="natural-frequency-analysis-of-a-cylinder">
 <h1>Natural frequency analysis of a cylinder<a class="headerlink" href="#natural-frequency-analysis-of-a-cylinder" title="Link to this heading">#</a></h1>
-<p>The laminated cylinder Z11 of Castro et al. (2014),
-<a class="reference external" href="https://doi.org/10.1016/j.compstruct.2014.07.037">doi:10.1016/j.compstruct.2014.07.037</a>, with the boundary
-conditions CC2 of that paper and <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> elements. The figure shows
-the first vibration mode, plotted with PyVista using <code class="docutils literal notranslate"><span class="pre">refinement=2</span></code>:</p>
+<p>An isotropic circular cylindrical shell of <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> elements,
+supported at both ends by shear diaphragms, whose lowest frequencies are
+compared with the three-dimensional elasticity solution tabulated by
+Leissa, A. W., Vibration of Shells, NASA SP-288, 1973, Table 2.8. The
+figure shows the first vibration mode, plotted with PyVista using
+<code class="docutils literal notranslate"><span class="pre">refinement=2</span></code>:</p>
 <img alt="_images/ex_natural_frequency_cylinder.jpg" src="_images/ex_natural_frequency_cylinder.jpg" />
 <p>The mass matrix is assembled with <code class="docutils literal notranslate"><span class="pre">update_M</span></code> and the frequencies are
 computed with <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a>, see <a class="reference internal" href="eigenvalue_analyses.html"><span class="doc">Linear buckling and natural frequencies</span></a>.
-The paper gives the geometry, the material and the stacking sequence only:
-the asserted frequencies are a regression lock of this mesh, as explained
-in the comments of the test:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_linear_nat_freq_cylinder</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">plot_pyvista</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">refinement</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""Test case from reference</span>
+The docstring of the test gives the measured convergence to the tabulated
+values:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">slow</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_linear_nat_freq_cylinder</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">plot_pyvista</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">refinement</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Lowest natural frequencies of an isotropic circular cylindrical shell</span>
+<span class="sd">    supported at both ends by shear diaphragms</span>
 
-<span class="sd">        Saullo G. P. Castro, Christian Mittelstedt, Francisco A. C. Monteiro, Mariano</span>
-<span class="sd">        A. Arbelo, Gerhard Ziegmann, Richard Degenhardt. "Linear buckling predictions</span>
-<span class="sd">        of unstiffened laminated composite cylinders and cones under various loading</span>
-<span class="sd">        and boundary conditions using semi-analytical models". Composite Structures,</span>
-<span class="sd">        2014. 10.1016/j.compstruct.2014.07.037</span>
+<span class="sd">    The reference is Leissa, A. W., Vibration of Shells, NASA SP-288, 1973,</span>
+<span class="sd">    Sec. 2.3, Table 2.8, p. 55: lowest frequency parameters according to the</span>
+<span class="sd">    three-dimensional theory of elasticity, SD-SD supports, ``nu = 0.3``. For</span>
+<span class="sd">    ``R/h = 20`` and ``l/mR = 4`` the table gives</span>
 
-<span class="sd">        Cylinders Z11</span>
+<span class="sd">        n = 2    Omega = 0.121249</span>
+<span class="sd">        n = 3    Omega = 0.129881</span>
+
+<span class="sd">    and every other entry of that column is higher, ``n = 1`` being 0.257011</span>
+<span class="sd">    and ``n = 4`` 0.219098. The frequency parameter is defined by Eq. (2.26),</span>
+<span class="sd">    p. 38, ``Omega**2 = rho*(1 - nu**2)*R**2*omega**2/E``, and the shear</span>
+<span class="sd">    diaphragm supports by Eq. (2.33), p. 43, ``v = w = N_x = M_x = 0`` at both</span>
+<span class="sd">    ends. A cylinder of length ``L = 4*R`` vibrating with ``m = 1`` axial</span>
+<span class="sd">    half-wave therefore has the ``n = 2`` pair as its two lowest frequencies</span>
+<span class="sd">    and the ``n = 3`` pair as the next two.</span>
+
+<span class="sd">    The frequencies converge from above. Relative errors of the ``n = 2`` and</span>
+<span class="sd">    ``n = 3`` pairs against the table, for ``ntheta`` elements around the</span>
+<span class="sd">    circumference and nearly square elements::</span>
+
+<span class="sd">        ntheta    n = 2      n = 3</span>
+<span class="sd">           16    +3.68 %   +16.06 %</span>
+<span class="sd">           24    +1.65 %    +6.58 %</span>
+<span class="sd">           32    +0.87 %    +3.55 %</span>
+<span class="sd">           48    +0.36 %    +1.48 %</span>
+<span class="sd">           64    +0.18 %    +0.78 %</span>
+<span class="sd">           96    +0.05 %    +0.28 %</span>
+
+<span class="sd">    so the element converges to the three-dimensional solution: Table 2.6</span>
+<span class="sd">    (concluded), p. 53, of the same reference puts the Flugge shell theory</span>
+<span class="sd">    0.40 % above the elasticity value for ``n = 3`` at this geometry, and at</span>
+<span class="sd">    ``ntheta = 96`` the error is already below that.</span>
+
+<span class="sd">    From ``ntheta = 48``, the default ``refinement=1``, the errors are within</span>
+<span class="sd">    grade A, 2 per cent, of MacNeal, R. H., and Harder, R. L., "A proposed</span>
+<span class="sd">    standard set of problems to test finite element accuracy", Finite</span>
+<span class="sd">    Elements in Analysis and Design, 1(1), 3-20, 1985, p. 14, which the test</span>
+<span class="sd">    checks. It also compares Omega with the values pre-determined by this</span>
+<span class="sd">    same test, with a tolerance for the round-off of other platforms only;</span>
+<span class="sd">    wall times on a machine shared with other jobs::</span>
+
+<span class="sd">        refinement  ntheta  elements   n = 2       n = 3       time</span>
+<span class="sd">            1         48      1440    0.12169936  0.13185390    1 s</span>
+<span class="sd">            2         96      5760    0.12132261  0.13026712   11 s</span>
+
+<span class="sd">    with the default ``shear_model = 1`` of Quad4 since 0.12.0, the assumed</span>
+<span class="sd">    transverse shear strains of the MITC4 element (measured on 2026-10-30);</span>
+<span class="sd">    the one-point transverse shear of ``shear_model = 0`` gave 0.12168186,</span>
+<span class="sd">    0.13180857, 0.12131378 and 0.13024089, up to 0.034 per cent less</span>
 
 <span class="sd">    """</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">Quad4Data</span><span class="p">()</span>
     <span class="n">probe</span> <span class="o">=</span> <span class="n">Quad4Probe</span><span class="p">()</span>
 
-    <span class="n">L</span> <span class="o">=</span> <span class="mf">0.510</span> <span class="c1"># m</span>
+    <span class="c1"># NOTE geometry of Table 2.8 of Leissa (1973): R/h = 20 and l/mR = 4 with</span>
+    <span class="c1">#      m = 1. The frequency parameter Omega is dimensionless, so only</span>
+    <span class="c1">#      R/h, L/R and nu matter; E and rho are arbitrary</span>
     <span class="n">R</span> <span class="o">=</span> <span class="mf">0.250</span> <span class="c1"># m</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">R</span><span class="o">/</span><span class="mi">20</span> <span class="c1"># m</span>
+    <span class="n">L</span> <span class="o">=</span> <span class="mi">4</span><span class="o">*</span><span class="n">R</span> <span class="c1"># m</span>
     <span class="n">b</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="n">R</span> <span class="c1"># m</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="mf">70.e9</span> <span class="c1"># Pa</span>
+    <span class="n">nu</span> <span class="o">=</span> <span class="mf">0.3</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="mf">2.7e3</span> <span class="c1"># kg/m3</span>
 
-    <span class="n">ntheta</span> <span class="o">=</span> <span class="mi">40</span><span class="o">*</span><span class="n">refinement</span> <span class="c1"># circumferential</span>
-    <span class="n">nlength</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ntheta</span><span class="o">*</span><span class="n">L</span><span class="o">/</span><span class="n">b</span><span class="p">)</span>
+    <span class="n">ntheta</span> <span class="o">=</span> <span class="mi">48</span><span class="o">*</span><span class="n">refinement</span> <span class="c1"># circumferential</span>
+    <span class="n">nlength</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="nb">round</span><span class="p">(</span><span class="n">ntheta</span><span class="o">*</span><span class="n">L</span><span class="o">/</span><span class="n">b</span><span class="p">))</span>
     <span class="k">if</span> <span class="n">nlength</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
         <span class="n">nlength</span> <span class="o">+=</span> <span class="mi">1</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">'ntheta'</span><span class="p">,</span> <span class="n">ntheta</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">'nlength'</span><span class="p">,</span> <span class="n">nlength</span><span class="p">)</span>
 
-    <span class="c1"># NOTE material proporties from Table 3 in Castro et al.</span>
-    <span class="c1"># Actual values from reference can be found here https://github.com/saullocastro/compmech/blob/e7e5342bf212743e70da22c94cc0452911099db3/compmech/conecyl/conecylDB.py#L32C34-L32C76</span>
-    <span class="n">E11</span> <span class="o">=</span> <span class="mf">123.55e9</span>
-    <span class="n">E22</span> <span class="o">=</span> <span class="mf">8.7079e9</span>
-    <span class="n">nu12</span> <span class="o">=</span> <span class="mf">0.319</span>
-    <span class="n">G12</span> <span class="o">=</span> <span class="mf">5.696e9</span>
-    <span class="n">G13</span> <span class="o">=</span> <span class="mf">5.696e9</span>
-    <span class="n">G23</span> <span class="o">=</span> <span class="mf">3.400e9</span>
-    <span class="n">plyt</span> <span class="o">=</span> <span class="mf">0.125e-3</span>
-    <span class="n">rho</span> <span class="o">=</span> <span class="mf">1.78e3</span> <span class="c1"># kg/m3</span>
-    <span class="n">laminaprop</span> <span class="o">=</span> <span class="p">(</span><span class="n">E11</span><span class="p">,</span> <span class="n">E22</span><span class="p">,</span> <span class="n">nu12</span><span class="p">,</span> <span class="n">G12</span><span class="p">,</span> <span class="n">G13</span><span class="p">,</span> <span class="n">G23</span><span class="p">)</span>
-
-    <span class="c1"># NOTE cylinder Z11, Table 4 of Castro et al., Table 3 being the one</span>
-    <span class="c1">#      with the material properties</span>
-    <span class="c1"># NOTE the reference is the source of the geometry, the material and the</span>
-    <span class="c1">#      stacking sequence only. It is a linear buckling paper: it contains</span>
-    <span class="c1">#      no natural frequencies, and no density either, so the value of rho</span>
-    <span class="c1">#      above does not come from it. The frequencies asserted at the end</span>
-    <span class="c1">#      of this test are recorded pyfe3d output and are a regression lock,</span>
-    <span class="c1">#      not a comparison with the literature</span>
-    <span class="n">stack</span> <span class="o">=</span> <span class="p">[</span><span class="o">+</span><span class="mi">60</span><span class="p">,</span> <span class="o">-</span><span class="mi">60</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="o">+</span><span class="mi">68</span><span class="p">,</span> <span class="o">-</span><span class="mi">68</span><span class="p">,</span> <span class="o">+</span><span class="mi">52</span><span class="p">,</span> <span class="o">-</span><span class="mi">52</span><span class="p">,</span> <span class="o">+</span><span class="mi">37</span><span class="p">,</span> <span class="o">-</span><span class="mi">37</span><span class="p">]</span>
-    <span class="n">prop</span> <span class="o">=</span> <span class="n">laminated_plate</span><span class="p">(</span><span class="n">stack</span><span class="o">=</span><span class="n">stack</span><span class="p">,</span> <span class="n">plyt</span><span class="o">=</span><span class="n">plyt</span><span class="p">,</span> <span class="n">laminaprop</span><span class="o">=</span><span class="n">laminaprop</span><span class="p">,</span>
-                           <span class="n">rho</span><span class="o">=</span><span class="n">rho</span><span class="p">)</span>
+    <span class="n">prop</span> <span class="o">=</span> <span class="n">isotropic_plate</span><span class="p">(</span><span class="n">thickness</span><span class="o">=</span><span class="n">h</span><span class="p">,</span> <span class="n">E</span><span class="o">=</span><span class="n">E</span><span class="p">,</span> <span class="n">nu</span><span class="o">=</span><span class="n">nu</span><span class="p">,</span> <span class="n">rho</span><span class="o">=</span><span class="n">rho</span><span class="p">)</span>
 
     <span class="n">nids</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">nlength</span><span class="o">*</span><span class="p">(</span><span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">))</span>
     <span class="n">nids_mesh</span> <span class="o">=</span> <span class="n">nids</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nlength</span><span class="p">,</span> <span class="n">ntheta</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span>
@@ -699,7 +786,6 @@ in the comments of the test:</p>
         <span class="n">quad</span><span class="o">.</span><span class="n">c4</span> <span class="o">=</span> <span class="n">DOF</span><span class="o">*</span><span class="n">nid_pos</span><span class="p">[</span><span class="n">n4</span><span class="p">]</span>
         <span class="n">quad</span><span class="o">.</span><span class="n">init_k_KC0</span> <span class="o">=</span> <span class="n">init_k_KC0</span>
         <span class="n">quad</span><span class="o">.</span><span class="n">init_k_M</span> <span class="o">=</span> <span class="n">init_k_M</span>
-        <span class="n">quad</span><span class="o">.</span><span class="n">K6ROT</span> <span class="o">=</span> <span class="mf">100.</span>
         <span class="n">quad</span><span class="o">.</span><span class="n">update_rotation_matrix</span><span class="p">(</span><span class="n">ncoords_flatten</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">)</span>
         <span class="n">quad</span><span class="o">.</span><span class="n">update_probe_xe</span><span class="p">(</span><span class="n">ncoords_flatten</span><span class="p">)</span>
         <span class="n">quad</span><span class="o">.</span><span class="n">update_KC0</span><span class="p">(</span><span class="n">KC0r</span><span class="p">,</span> <span class="n">KC0c</span><span class="p">,</span> <span class="n">KC0v</span><span class="p">,</span> <span class="n">prop</span><span class="p">)</span>
@@ -717,21 +803,19 @@ in the comments of the test:</p>
 
     <span class="n">bk</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">N</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
 
-    <span class="c1"># NOTE cylinders with CC2 boundary condition as decribed in Table 1 of Castro et al.</span>
-    <span class="n">bottom_edge</span> <span class="o">=</span> <span class="n">isclose</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="n">bk</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="n">DOF</span><span class="p">][</span><span class="n">bottom_edge</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">bk</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="n">DOF</span><span class="p">][</span><span class="n">bottom_edge</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">bk</span><span class="p">[</span><span class="mi">3</span><span class="p">::</span><span class="n">DOF</span><span class="p">][</span><span class="n">bottom_edge</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">bk</span><span class="p">[</span><span class="mi">4</span><span class="p">::</span><span class="n">DOF</span><span class="p">][</span><span class="n">bottom_edge</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-
-    <span class="n">top_edge</span> <span class="o">=</span> <span class="n">isclose</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">L</span><span class="p">)</span>
-    <span class="n">bk</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="n">DOF</span><span class="p">][</span><span class="n">top_edge</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">bk</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="n">DOF</span><span class="p">][</span><span class="n">top_edge</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">bk</span><span class="p">[</span><span class="mi">3</span><span class="p">::</span><span class="n">DOF</span><span class="p">][</span><span class="n">top_edge</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="n">bk</span><span class="p">[</span><span class="mi">4</span><span class="p">::</span><span class="n">DOF</span><span class="p">][</span><span class="n">top_edge</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
-
-    <span class="n">middle</span> <span class="o">=</span> <span class="n">isclose</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">L</span><span class="o">/</span><span class="mi">2</span><span class="p">)</span>
-    <span class="n">bk</span><span class="p">[</span><span class="mi">2</span><span class="p">::</span><span class="n">DOF</span><span class="p">][</span><span class="n">middle</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="c1"># NOTE shear diaphragms, Eq. (2.33) of Leissa (1973): the radial and the</span>
+    <span class="c1">#      circumferential displacements vanish at both ends, which for a</span>
+    <span class="c1">#      cylinder along the global z axis are the global x and y</span>
+    <span class="c1">#      translations, while the axial displacement and the rotations are</span>
+    <span class="c1">#      left free (N_x = M_x = 0)</span>
+    <span class="n">edges</span> <span class="o">=</span> <span class="n">isclose</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="o">|</span> <span class="n">isclose</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">L</span><span class="p">)</span>
+    <span class="n">bk</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="n">DOF</span><span class="p">][</span><span class="n">edges</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="n">bk</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="n">DOF</span><span class="p">][</span><span class="n">edges</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+    <span class="c1"># NOTE removing the rigid axial translation by holding the axial</span>
+    <span class="c1">#      displacement of a single node at mid-length, where the axial</span>
+    <span class="c1">#      displacement of every mode with m = 1 vanishes, u ~ cos(pi*z/L)</span>
+    <span class="n">middle</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">isclose</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">L</span><span class="o">/</span><span class="mi">2</span><span class="p">))[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">bk</span><span class="p">[</span><span class="mi">2</span><span class="p">::</span><span class="n">DOF</span><span class="p">][</span><span class="n">middle</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span> <span class="o">=</span> <span class="kc">True</span>
 
     <span class="n">bu</span> <span class="o">=</span> <span class="o">~</span><span class="n">bk</span>
 
@@ -739,20 +823,48 @@ in the comments of the test:</p>
     <span class="n">Muu</span> <span class="o">=</span> <span class="n">M</span><span class="p">[</span><span class="n">bu</span><span class="p">,</span> <span class="p">:][:,</span> <span class="n">bu</span><span class="p">]</span>
 
     <span class="n">num_eig</span> <span class="o">=</span> <span class="nb">max</span><span class="p">(</span><span class="n">mode</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
-
     <span class="n">eigvecs</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">N</span><span class="p">,</span> <span class="n">num_eig</span><span class="p">))</span>
-
     <span class="c1"># NOTE pyfe3d.solver.natural_frequency equilibrates the diagonal</span>
     <span class="c1">#      before calling the eigensolver and returns the circular</span>
     <span class="c1">#      frequencies already sorted</span>
-    <span class="n">omegan</span><span class="p">,</span> <span class="n">eigvecsu</span> <span class="o">=</span> <span class="n">natural_frequency</span><span class="p">(</span><span class="n">KC0uu</span><span class="p">,</span> <span class="n">Muu</span><span class="p">,</span> <span class="n">num_eigvalues</span><span class="o">=</span><span class="n">num_eig</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
-
+    <span class="n">omegan</span><span class="p">,</span> <span class="n">eigvecsu</span> <span class="o">=</span> <span class="n">natural_frequency</span><span class="p">(</span><span class="n">KC0uu</span><span class="p">,</span> <span class="n">Muu</span><span class="p">,</span> <span class="n">num_eigvalues</span><span class="o">=</span><span class="n">num_eig</span><span class="p">,</span> <span class="n">tol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">)</span>
     <span class="n">eigvecs</span><span class="p">[</span><span class="n">bu</span><span class="p">]</span> <span class="o">=</span> <span class="n">eigvecsu</span>
 
-
     <span class="nb">print</span><span class="p">(</span><span class="s1">'natural frequency analysis OK'</span><span class="p">)</span>
-
     <span class="nb">print</span><span class="p">(</span><span class="s1">'omegan ='</span><span class="p">,</span> <span class="n">omegan</span><span class="p">)</span>
+
+    <span class="c1"># NOTE frequency parameter of Leissa (1973), Eq. (2.26)</span>
+    <span class="n">Omega</span> <span class="o">=</span> <span class="n">omegan</span><span class="o">*</span><span class="n">R</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">rho</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">nu</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">/</span><span class="n">E</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s1">'Omega ='</span><span class="p">,</span> <span class="n">Omega</span><span class="p">)</span>
+
+    <span class="c1"># NOTE Leissa (1973), Table 2.8, R/h = 20, l/mR = 4</span>
+    <span class="n">Omega_n2</span> <span class="o">=</span> <span class="mf">0.121249</span>
+    <span class="n">Omega_n3</span> <span class="o">=</span> <span class="mf">0.129881</span>
+
+    <span class="c1"># NOTE each circumferential wave number n &gt;= 1 gives a pair of modes,</span>
+    <span class="c1">#      cos(n*theta) and sin(n*theta), with the same frequency</span>
+    <span class="k">assert</span> <span class="n">isclose</span><span class="p">(</span><span class="n">Omega</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Omega</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">isclose</span><span class="p">(</span><span class="n">Omega</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">Omega</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-6</span><span class="p">)</span>
+
+    <span class="c1"># NOTE convergence is from above, and from ntheta = 48 the errors of</span>
+    <span class="c1">#      the docstring are within grade A of MacNeal and Harder (1985),</span>
+    <span class="c1">#      p. 14, 2 per cent</span>
+    <span class="k">assert</span> <span class="n">Omega</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">Omega_n2</span>
+    <span class="k">assert</span> <span class="n">Omega</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="n">Omega_n3</span>
+    <span class="k">assert</span> <span class="n">isclose</span><span class="p">(</span><span class="n">Omega</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">Omega_n2</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.02</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">isclose</span><span class="p">(</span><span class="n">Omega</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">Omega_n3</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.02</span><span class="p">)</span>
+
+    <span class="c1"># NOTE Omega of the n = 2 and n = 3 pairs pre-determined with this same</span>
+    <span class="c1">#      test at the same refinement, see the table of the docstring. The</span>
+    <span class="c1">#      tolerance, rtol = 1e-4, is for the round-off of other platforms</span>
+    <span class="c1">#      and solvers only</span>
+    <span class="n">predetermined</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="mi">1</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.12169936</span><span class="p">,</span> <span class="mf">0.13185390</span><span class="p">),</span>
+        <span class="mi">2</span><span class="p">:</span> <span class="p">(</span><span class="mf">0.12132261</span><span class="p">,</span> <span class="mf">0.13026712</span><span class="p">),</span>
+    <span class="p">}</span>
+    <span class="k">if</span> <span class="n">refinement</span> <span class="ow">in</span> <span class="n">predetermined</span><span class="p">:</span>
+        <span class="k">assert</span> <span class="n">isclose</span><span class="p">(</span><span class="n">Omega</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">predetermined</span><span class="p">[</span><span class="n">refinement</span><span class="p">][</span><span class="mi">0</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">isclose</span><span class="p">(</span><span class="n">Omega</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">predetermined</span><span class="p">[</span><span class="n">refinement</span><span class="p">][</span><span class="mi">1</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="n">plot_pyvista</span><span class="p">:</span>
         <span class="kn">import</span><span class="w"> </span><span class="nn">pyvista</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="nn">pv</span>
@@ -762,11 +874,6 @@ in the comments of the test:</p>
         <span class="n">contour_label</span> <span class="o">=</span> <span class="s1">'Radial displacement'</span>
         <span class="n">vector</span> <span class="o">=</span> <span class="n">eigvecs</span><span class="p">[:,</span> <span class="n">mode</span><span class="p">]</span>
         <span class="n">contour_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">vector</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="n">DOF</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span> <span class="o">+</span> <span class="n">vector</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="n">DOF</span><span class="p">]</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
-        <span class="n">displ_vec</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros_like</span><span class="p">(</span><span class="n">ncoords</span><span class="p">)</span>
-        <span class="n">displ_vec</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">vector</span><span class="p">[</span><span class="mi">0</span><span class="p">::</span><span class="n">DOF</span><span class="p">]</span><span class="o">*</span><span class="mi">10</span>
-        <span class="n">displ_vec</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">vector</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="n">DOF</span><span class="p">]</span><span class="o">*</span><span class="mi">10</span>
-        <span class="n">displ_vec</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="n">vector</span><span class="p">[</span><span class="mi">2</span><span class="p">::</span><span class="n">DOF</span><span class="p">]</span><span class="o">*</span><span class="mi">10</span>
-        <span class="n">intensitymode</span> <span class="o">=</span> <span class="s1">'vertex'</span>
 
         <span class="n">plotter</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">Plotter</span><span class="p">(</span><span class="n">off_screen</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
         <span class="n">faces_quad</span> <span class="o">=</span> <span class="p">[]</span>
@@ -774,19 +881,10 @@ in the comments of the test:</p>
             <span class="n">faces_quad</span><span class="o">.</span><span class="n">append</span><span class="p">([</span><span class="mi">4</span><span class="p">,</span> <span class="n">nid_pos</span><span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">n1</span><span class="p">],</span> <span class="n">nid_pos</span><span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">n2</span><span class="p">],</span> <span class="n">nid_pos</span><span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">n3</span><span class="p">],</span> <span class="n">nid_pos</span><span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">n4</span><span class="p">]])</span>
         <span class="n">faces_quad</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">faces_quad</span><span class="p">)</span>
         <span class="n">quad_plot</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">PolyData</span><span class="p">(</span><span class="n">ncoords</span><span class="p">,</span> <span class="n">faces_quad</span><span class="p">)</span>
-        <span class="k">if</span> <span class="n">contour_vec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">quad_plot</span><span class="p">[</span><span class="n">contour_label</span><span class="p">]</span> <span class="o">=</span> <span class="n">contour_vec</span>
-            <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">quad_plot</span><span class="p">,</span> <span class="n">scalars</span><span class="o">=</span><span class="n">contour_label</span><span class="p">,</span>
-                    <span class="n">cmap</span><span class="o">=</span><span class="n">contour_colorscale</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="s1">'black'</span><span class="p">,</span> <span class="n">show_edges</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                    <span class="n">line_width</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
-        <span class="k">else</span><span class="p">:</span>
-            <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">quad_plot</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="s1">'black'</span><span class="p">,</span> <span class="n">show_edges</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                    <span class="n">line_width</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
-        <span class="n">displ_vec</span> <span class="o">=</span> <span class="kc">None</span>
-        <span class="k">if</span> <span class="n">displ_vec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
-            <span class="n">quad_plot</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">PolyData</span><span class="p">(</span><span class="n">ncoords</span> <span class="o">+</span> <span class="n">displ_vec</span><span class="p">,</span> <span class="n">faces_quad</span><span class="p">)</span>
-            <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">quad_plot</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="s1">'red'</span><span class="p">,</span> <span class="n">show_edges</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                    <span class="n">line_width</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">opacity</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+        <span class="n">quad_plot</span><span class="p">[</span><span class="n">contour_label</span><span class="p">]</span> <span class="o">=</span> <span class="n">contour_vec</span>
+        <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">quad_plot</span><span class="p">,</span> <span class="n">scalars</span><span class="o">=</span><span class="n">contour_label</span><span class="p">,</span>
+                <span class="n">cmap</span><span class="o">=</span><span class="n">contour_colorscale</span><span class="p">,</span> <span class="n">edge_color</span><span class="o">=</span><span class="s1">'black'</span><span class="p">,</span> <span class="n">show_edges</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+                <span class="n">line_width</span><span class="o">=</span><span class="mf">1.</span><span class="p">)</span>
         <span class="c1">#NOTE plotting coordinate system</span>
         <span class="n">xaxis</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">Arrow</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">direction</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="n">R</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
         <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">xaxis</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'blue'</span><span class="p">)</span>
@@ -795,63 +893,9 @@ in the comments of the test:</p>
         <span class="n">zaxis</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">Arrow</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">direction</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">scale</span><span class="o">=</span><span class="n">R</span><span class="o">/</span><span class="mi">3</span><span class="p">)</span>
         <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">zaxis</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'green'</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="kc">False</span><span class="p">:</span>
-            <span class="k">for</span> <span class="n">q</span> <span class="ow">in</span> <span class="n">quads</span><span class="p">:</span>
-                <span class="n">pos1</span> <span class="o">=</span> <span class="n">nid_pos</span><span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">n1</span><span class="p">]</span>
-                <span class="n">pos2</span> <span class="o">=</span> <span class="n">nid_pos</span><span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">n2</span><span class="p">]</span>
-                <span class="n">pos3</span> <span class="o">=</span> <span class="n">nid_pos</span><span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">n3</span><span class="p">]</span>
-                <span class="n">pos4</span> <span class="o">=</span> <span class="n">nid_pos</span><span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">n4</span><span class="p">]</span>
-                <span class="n">centroid</span> <span class="o">=</span> <span class="p">(</span><span class="n">ncoords</span><span class="p">[</span><span class="n">pos1</span><span class="p">]</span> <span class="o">+</span> <span class="n">ncoords</span><span class="p">[</span><span class="n">pos2</span><span class="p">]</span> <span class="o">+</span> <span class="n">ncoords</span><span class="p">[</span><span class="n">pos3</span><span class="p">]</span> <span class="o">+</span> <span class="n">ncoords</span><span class="p">[</span><span class="n">pos4</span><span class="p">])</span><span class="o">/</span><span class="mi">4</span>
-                <span class="n">ze</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">])</span>
-                <span class="n">zg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">q</span><span class="o">.</span><span class="n">r11</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r12</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r13</span><span class="p">],</span>
-                               <span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">r21</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r22</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r23</span><span class="p">],</span>
-                               <span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">r31</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r32</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r33</span><span class="p">]])</span> <span class="o">@</span> <span class="n">ze</span>
-                <span class="n">normal</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">Arrow</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">centroid</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="n">zg</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">R</span><span class="o">/</span><span class="mi">6</span><span class="p">)</span>
-                <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">normal</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'green'</span><span class="p">)</span>
-
-                <span class="n">xe</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">])</span>
-                <span class="n">xg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">q</span><span class="o">.</span><span class="n">r11</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r12</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r13</span><span class="p">],</span>
-                               <span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">r21</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r22</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r23</span><span class="p">],</span>
-                               <span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">r31</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r32</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r33</span><span class="p">]])</span> <span class="o">@</span> <span class="n">xe</span>
-                <span class="n">x_axis</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">Arrow</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">centroid</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="n">xg</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">R</span><span class="o">/</span><span class="mi">6</span><span class="p">)</span>
-                <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">x_axis</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'blue'</span><span class="p">)</span>
-
-                <span class="n">ye</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">])</span>
-                <span class="n">yg</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">q</span><span class="o">.</span><span class="n">r11</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r12</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r13</span><span class="p">],</span>
-                               <span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">r21</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r22</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r23</span><span class="p">],</span>
-                               <span class="p">[</span><span class="n">q</span><span class="o">.</span><span class="n">r31</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r32</span><span class="p">,</span> <span class="n">q</span><span class="o">.</span><span class="n">r33</span><span class="p">]])</span> <span class="o">@</span> <span class="n">ye</span>
-                <span class="n">y_axis</span> <span class="o">=</span> <span class="n">pv</span><span class="o">.</span><span class="n">Arrow</span><span class="p">(</span><span class="n">start</span><span class="o">=</span><span class="n">centroid</span><span class="p">,</span> <span class="n">direction</span><span class="o">=</span><span class="n">yg</span><span class="p">,</span> <span class="n">scale</span><span class="o">=</span><span class="n">R</span><span class="o">/</span><span class="mi">6</span><span class="p">)</span>
-                <span class="n">plotter</span><span class="o">.</span><span class="n">add_mesh</span><span class="p">(</span><span class="n">y_axis</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s1">'yellow'</span><span class="p">)</span>
-
         <span class="n">plotter</span><span class="o">.</span><span class="n">set_background</span><span class="p">(</span><span class="n">background</span><span class="p">)</span>
-        <span class="n">plotter</span><span class="o">.</span><span class="n">parallel_projection</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="n">plotter</span><span class="o">.</span><span class="n">parallel_projection</span> <span class="o">=</span> <span class="kc">False</span>
         <span class="n">plotter</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
-
-    <span class="c1"># NOTE reference values updated after adopting the equilibrium-based</span>
-    <span class="c1">#      transverse shear stiffness of Rohwer (1988), evaluated in the element</span>
-    <span class="c1">#      frame, which changed them by about 1e-4</span>
-    <span class="c1"># NOTE reference values updated again in 0.10.0, when the physics-based</span>
-    <span class="c1">#      drilling stiffness of Allman, Hughes and Brezzi became the default.</span>
-    <span class="c1">#      Two changes contribute. First, the drilling penalty coefficient</span>
-    <span class="c1">#      K6ROT*1e-6*A66 was restored (it had been lost, leaving an effective</span>
-    <span class="c1">#      coefficient of 1), which by itself moves the frequencies from</span>
-    <span class="c1">#      [1932.79, 2105.30, 2114.87] to [1958.18, 2115.51, 2154.20].</span>
-    <span class="c1">#      Second, the new default raises them further to the values below.</span>
-    <span class="c1">#      Only non-coplanar models are affected: on a flat mesh the drilling</span>
-    <span class="c1">#      row is decoupled and its magnitude cannot change any displacement,</span>
-    <span class="c1">#      which is why the lost coefficient went unnoticed.</span>
-    <span class="c1"># NOTE the physics-based stiffness is stiffer than the penalty on this</span>
-    <span class="c1">#      coarse mesh, by 11.2%, 8.9% and 11.2%, because the constraint</span>
-    <span class="c1">#      r_z = theta_z does real work on a curved shell, where the drilling</span>
-    <span class="c1">#      rotation of one element projects onto the bending rotations of its</span>
-    <span class="c1">#      neighbours. The two models converge towards each other under</span>
-    <span class="c1">#      refinement, the gap on the first mode falling 11.2% -&gt; 6.0% -&gt;</span>
-    <span class="c1">#      3.1% for refinement 1 -&gt; 2 -&gt; 4, as the consistency of the</span>
-    <span class="c1">#      Hughes-Brezzi term requires. Running this case with</span>
-    <span class="c1">#      quad.drilling_model = 1 recovers the penalty values above.</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">omegan</span><span class="p">,</span> <span class="p">[</span><span class="mf">2176.65594707</span><span class="p">,</span> <span class="mf">2176.65594707</span><span class="p">,</span>
-                                <span class="mf">2303.51717602</span><span class="p">,</span> <span class="mf">2303.51717602</span><span class="p">,</span>
-                                <span class="mf">2396.44964069</span><span class="p">,</span> <span class="mf">2396.44964069</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
 </pre></div>
 </div>
 </section>

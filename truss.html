@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Truss - Linear truss 3D element with analytical integration (pyfe3d.truss) &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>Truss - Linear truss 3D element with analytical integration (pyfe3d.truss) &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
@@ -37,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -120,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -137,6 +138,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -161,13 +169,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -176,6 +177,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -364,6 +393,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -380,6 +416,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -584,11 +641,36 @@
 
 <li class="toctree-l2"><a class="reference internal" href="beamprop.html">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
 
+<li class="toctree-l2"><a class="reference internal" href="vabs.html">Variational asymptotic sectional analysis (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.vabs</span></code>)</a></li>
+
+
+
+
+
+
+
+
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html">Co-rotational kinematics, EICR (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
 <li class="toctree-l1"><a class="reference internal" href="solver.html">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_static.html">Linear static solution (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code>)</a></li>
 
+
+<li class="toctree-l1"><a class="reference internal" href="solver_inertia_relief.html">Static analysis with inertia relief (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.inertia_relief</span></code>)</a></li>
 
 <li class="toctree-l1"><a class="reference internal" href="solver_analysis.html">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</a></li>
 
@@ -640,6 +722,7 @@
 
 
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html">Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code>)</a></li>
+
 
 
 
@@ -841,12 +924,16 @@ matrices, where the entries of this element start, see
 <div class="math notranslate nohighlight">
 \[U = \frac{1}{2} \int_0^L \left( E A u_{,x}^2 + G J {r_x}_{,x}^2
     \right) dx\]</div>
-<p>where <span class="math notranslate nohighlight">\(G J\)</span> is the torsional stiffness <code class="docutils literal notranslate"><span class="pre">GJ</span></code> of <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>, with
-the axial displacement <span class="math notranslate nohighlight">\(u\)</span> and the twist rotation <span class="math notranslate nohighlight">\(r_x\)</span> interpolated
-linearly between the nodes, in the element coordinate system, and <span class="math notranslate nohighlight">\(L\)</span> =
-<code class="docutils literal notranslate"><span class="pre">length</span></code>. The transverse translations <span class="math notranslate nohighlight">\(v\)</span>, <span class="math notranslate nohighlight">\(w\)</span> and the rotations <span class="math notranslate nohighlight">\(r_y\)</span>,
-<span class="math notranslate nohighlight">\(r_z\)</span> have no stiffness and must be supported by other elements or by
-boundary conditions; the element has no geometric stiffness matrix. The
+<p>where <span class="math notranslate nohighlight">\(E A\)</span> and <span class="math notranslate nohighlight">\(G J\)</span> are the entries <code class="docutils literal notranslate"><span class="pre">C[0,</span> <span class="pre">0]</span></code> and <code class="docutils literal notranslate"><span class="pre">C[3,</span> <span class="pre">3]</span></code> of
+the sectional stiffness matrix <code class="docutils literal notranslate"><span class="pre">C</span></code> of <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>, i.e. <code class="docutils literal notranslate"><span class="pre">E*A</span></code>
+and the torsional stiffness <code class="docutils literal notranslate"><span class="pre">GJ</span></code> when <code class="docutils literal notranslate"><span class="pre">C</span></code> is not set; the other
+entries of <code class="docutils literal notranslate"><span class="pre">C</span></code>, e.g. the extension-twist coupling <code class="docutils literal notranslate"><span class="pre">C[0,</span> <span class="pre">3]</span></code>, are
+not used. The axial displacement <span class="math notranslate nohighlight">\(u\)</span> and the twist rotation <span class="math notranslate nohighlight">\(r_x\)</span> are
+interpolated linearly between the nodes, in the element coordinate
+system, and <span class="math notranslate nohighlight">\(L\)</span> = <code class="docutils literal notranslate"><span class="pre">length</span></code>. The transverse translations <span class="math notranslate nohighlight">\(v\)</span>, <span class="math notranslate nohighlight">\(w\)</span> and
+the rotations <span class="math notranslate nohighlight">\(r_y\)</span>, <span class="math notranslate nohighlight">\(r_z\)</span> have no stiffness and must be supported by
+other elements or by boundary conditions; the element has no geometric
+stiffness matrix. The
 matrices and the internal forces are computed in element coordinates and
 transformed to global coordinates with the transformation matrix of the
 element, <span class="math notranslate nohighlight">\(\boldsymbol{K} = \boldsymbol{T} \boldsymbol{K}_e \boldsymbol{T}^\top\)</span>, where <span class="math notranslate nohighlight">\(\boldsymbol{T}\)</span> is block diagonal with four
@@ -975,8 +1062,9 @@ are written at the positions <code class="docutils literal notranslate"><span cl
 the row and column indices, built from <code class="docutils literal notranslate"><span class="pre">c1</span></code> and <code class="docutils literal notranslate"><span class="pre">c2</span></code>, are stored
 in <code class="docutils literal notranslate"><span class="pre">KC0r</span></code> and <code class="docutils literal notranslate"><span class="pre">KC0c</span></code>, and the values are added to those already
 in <code class="docutils literal notranslate"><span class="pre">KC0v</span></code>. The matrix is computed from <code class="docutils literal notranslate"><span class="pre">length</span></code>, the rotation
-matrix and the attributes <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">E</span></code> and <code class="docutils literal notranslate"><span class="pre">GJ</span></code> of <code class="docutils literal notranslate"><span class="pre">prop</span></code>.
-<code class="docutils literal notranslate"><span class="pre">length</span></code> and the rotation matrix must be updated before,
+matrix and <code class="docutils literal notranslate"><span class="pre">C[0,</span> <span class="pre">0]</span></code> and <code class="docutils literal notranslate"><span class="pre">C[3,</span> <span class="pre">3]</span></code> of the sectional stiffness
+matrix of <code class="docutils literal notranslate"><span class="pre">prop</span></code>, see the notes of <a class="reference internal" href="#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a>. <code class="docutils literal notranslate"><span class="pre">length</span></code>
+and the rotation matrix must be updated before,
 see <a class="reference internal" href="#pyfe3d.truss.Truss.update_rotation_matrix" title="pyfe3d.truss.Truss.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a> and <a class="reference internal" href="#pyfe3d.truss.Truss.update_probe_xe" title="pyfe3d.truss.Truss.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a>.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1147,8 +1235,9 @@ the values from the last udpate.</p>
 updated, accessible using <code class="docutils literal notranslate"><span class="pre">.probe.finte</span></code>.</p>
 </div>
 <p>The 12 values of <code class="docutils literal notranslate"><span class="pre">finte</span></code> are overwritten. They are computed from
-<code class="docutils literal notranslate"><span class="pre">length</span></code>, from the attributes <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">E</span></code> and <code class="docutils literal notranslate"><span class="pre">GJ</span></code> of
-<code class="docutils literal notranslate"><span class="pre">prop</span></code> and from the displacements <code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>, which must be
+<code class="docutils literal notranslate"><span class="pre">length</span></code>, from <code class="docutils literal notranslate"><span class="pre">C[0,</span> <span class="pre">0]</span></code> and <code class="docutils literal notranslate"><span class="pre">C[3,</span> <span class="pre">3]</span></code> of the sectional
+stiffness matrix of <code class="docutils literal notranslate"><span class="pre">prop</span></code>, see the notes of <a class="reference internal" href="#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a>, and
+from the displacements <code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>, which must be
 updated before, see <a class="reference internal" href="#pyfe3d.truss.Truss.update_probe_xe" title="pyfe3d.truss.Truss.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a> and
 <a class="reference internal" href="#pyfe3d.truss.Truss.update_probe_ue" title="pyfe3d.truss.Truss.update_probe_ue"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_ue()</span></code></a>. Only the axial forces and the torsion
 moments are not zero.</p>

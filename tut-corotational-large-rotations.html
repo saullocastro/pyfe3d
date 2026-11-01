@@ -1,0 +1,1270 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tutorial: large rotations with the co-rotational kinematics &#8212; pyfe3d 0.12.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css?v=2aa19091" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tut-corotational-large-rotations';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tutorial: prescribed displacement at the tip of a cantilever" href="tut-prescribed-displacement-cantilever.html" />
+    <link rel="prev" title="Tutorial: geometrically non-linear benchmarks with pyfe3d.solver" href="tut-nonlinear-benchmarks.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="tut-opt-lightweight-smeared-deflection-GA.html">Tutorial: Ply tailoring using GA for a simply-supported plate under normal load</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-opt-lightweight-smeared-deflection-SLSQP.html">Tutorial: Ply tailoring using SLSPQ for a simply-supported plate under normal load</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-opt-topology.html">Tutorial: topology optimisation using pyfe3d</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-timoshenko-beam-benchmarks.html">Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-shell-lumped-mass.html">Tutorial: lumped mass matrices of the shells with an offset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-bench-macneal-harder.html">Benchmark: MacNeal-Harder standard problems for the shell elements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-bench-shell-obstacle-course.html">Benchmark: shell obstacle course</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-nonlinear-benchmarks.html">Tutorial: geometrically non-linear benchmarks with pyfe3d.solver</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Tutorial: large rotations with the co-rotational kinematics</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-prescribed-displacement-cantilever.html">Tutorial: prescribed displacement at the tip of a cantilever</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-prescribed-displacement-dome-riks.html">Tutorial: shells pressed down by a prescribed displacement, Riks’ method</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-nafems-cap-axisymmetric.html">Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations</a></li>
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-inertia-relief.html">Tutorial: static analysis with inertia relief</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-inertia-relief-aircraft-ha144a.html">Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="tutorials.html" class="nav-link">Tutorials</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Tutorial: large rotations with the co-rotational kinematics</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Tutorial:-large-rotations-with-the-co-rotational-kinematics">
+<h1>Tutorial: large rotations with the co-rotational kinematics<a class="headerlink" href="#Tutorial:-large-rotations-with-the-co-rotational-kinematics" title="Link to this heading">#</a></h1>
+<p>Date: 30 of October 2026</p>
+<p>Author: Saullo G. P. Castro</p>
+<p>The elements of pyfe3d use either their own von Kármán strains, valid for small strains and moderate rotations, or, through <code class="docutils literal notranslate"><span class="pre">pyfe3d.corotational.CorotationalModel</span></code>, the element-independent co-rotational (EICR) formulation, valid for large displacements and large rotations with small strains. This notebook compares the three non-linear kinematics of <code class="docutils literal notranslate"><span class="pre">CorotationalModel.add()</span></code> on three benchmarks of Sze, Liu and Lo [1]:</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p><code class="docutils literal notranslate"><span class="pre">kinematics</span></code></p></th>
+<th class="head"><p>strains of the element</p></th>
+<th class="head"><p>range of validity</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">'von_karman'</span></code></p></td>
+<td><p>von Kármán strains in the frame of the undeformed element</p></td>
+<td><p>small strains, moderate rotations</p></td>
+</tr>
+<tr class="row-odd"><td><p><code class="docutils literal notranslate"><span class="pre">'corotational'</span></code></p></td>
+<td><p>linear strains in the co-rotational (CR) frame of the element</p></td>
+<td><p>small strains, large rotations</p></td>
+</tr>
+<tr class="row-even"><td><p><code class="docutils literal notranslate"><span class="pre">'corotational_von_karman'</span></code></p></td>
+<td><p>von Kármán strains in the CR frame</p></td>
+<td><p>small strains, large rotations</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>In the CR frame the von Kármán terms of the shells (<code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> here) and of <code class="docutils literal notranslate"><span class="pre">BeamLR</span></code> vanish, and <code class="docutils literal notranslate"><span class="pre">'corotational_von_karman'</span></code> gives the results of <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code> for them, to round-off; it changes the results of <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> only, whose von Kármán axial strain is averaged over the element, see the Notes of <code class="docutils literal notranslate"><span class="pre">pyfe3d.corotational.CorotationalBeam</span></code> and Crisfield [4], Section 17.1.5, Eqs. (17.56a-b).</p>
+<p>The cases, with the figures and tables of [1] that give their data and reference values:</p>
+<ol class="arabic simple">
+<li><p>Section 3.1, Fig. 2a, Table 2a (p. 1556): cantilever under an end shear force, <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> and <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>, Newton-Raphson;</p></li>
+<li><p>Section 3.2, Fig. 3a, Table 3a (p. 1557): cantilever rolled up into a full circle by an end moment, <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> and <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>, against the exact circle, Newton-Raphson;</p></li>
+<li><p>Section 3.8, Fig. 9a, Table 9a (pp. 1564-1565): hinged cylindrical roof, 12.7 thick, under a central point load, <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>, Crisfield’s arc-length method.</p></li>
+</ol>
+<p>The models and the reference values are imported from <code class="docutils literal notranslate"><span class="pre">tests/test_corotational_benchmarks.py</span></code> and <code class="docutils literal notranslate"><span class="pre">tests/test_nonlinear_benchmarks_sze2004.py</span></code>, which run the same checks as tests, with the same tolerances; the convergence of the meshes used here is documented in the docstrings of those tests. The von Kármán kinematics of the elements alone, assembled without <code class="docutils literal notranslate"><span class="pre">CorotationalModel</span></code>, are compared with the same benchmarks in the notebook <em>Geometrically non-linear benchmarks</em>. The cells below run
+in less than half a minute.</p>
+<section id="References">
+<h2>References<a class="headerlink" href="#References" title="Link to this heading">#</a></h2>
+<p>[1] Sze, K. Y., Liu, X. H. and Lo, S. H., Popular benchmark problems for geometric nonlinear analysis of shells, <em>Finite Elements in Analysis and Design</em>, 40(11), 1551-1569, 2004, <a class="reference external" href="https://doi.org/10.1016/j.finel.2003.11.001">doi:10.1016/j.finel.2003.11.001</a>.</p>
+<p>[2] Felippa, C. A. and Haugen, B., A unified formulation of small-strain corotational finite elements: I. Theory, <em>Computer Methods in Applied Mechanics and Engineering</em>, 194(21-24), 2285-2335, 2005, <a class="reference external" href="https://doi.org/10.1016/j.cma.2004.07.035">doi:10.1016/j.cma.2004.07.035</a>.</p>
+<p>[3] Nour-Omid, B. and Rankin, C. C., Finite rotation analysis and consistent linearization using projectors, <em>Computer Methods in Applied Mechanics and Engineering</em>, 93(3), 353-384, 1991, <a class="reference external" href="https://doi.org/10.1016/0045-7825(91)90248-5">doi:10.1016/0045-7825(91)90248-5</a>.</p>
+<p>[4] Crisfield, M. A., <em>Non-linear Finite Element Analysis of Solids and Structures, Volume 2: Advanced Topics</em>, John Wiley &amp; Sons, Chichester,</p>
+<ol class="arabic simple" start="1997">
+<li></li>
+</ol>
+<p>[5] MacNeal, R. H. and Harder, R. L., A proposed standard set of problems to test finite element accuracy, <em>Finite Elements in Analysis and Design</em>, 1(1), 3-20, 1985, <a class="reference external" href="https://doi.org/10.1016/0168-874X(85)90003-4">doi:10.1016/0168-874X(85)90003-4</a>.</p>
+</section>
+<section id="Two-settings-of-the-co-rotational-models">
+<h2>Two settings of the co-rotational models<a class="headerlink" href="#Two-settings-of-the-co-rotational-models" title="Link to this heading">#</a></h2>
+<p><strong>Rotations below one revolution.</strong> The rotational degrees-of-freedom of the nodes of co-rotational elements are total rotation vectors <span class="math notranslate nohighlight">\(\boldsymbol{\psi}_a\)</span>, the nodal rotation matrix being <span class="math notranslate nohighlight">\(\boldsymbol{R}_a = \exp(\mathrm{Spin}(\boldsymbol{\psi}_a))\)</span>; no state is kept between the evaluations, and the solvers of <code class="docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code> add the rotation vectors like the translations. The map from the variation of <span class="math notranslate nohighlight">\(\boldsymbol{\psi}\)</span> to the spin,
+<span class="math notranslate nohighlight">\(\boldsymbol{\Lambda}(\boldsymbol{\psi})\)</span> (<code class="docutils literal notranslate"><span class="pre">pyfe3d.corotational.Lambda</span></code>), is singular at <span class="math notranslate nohighlight">\(|\boldsymbol{\psi}| = 2 k \pi\)</span>, <span class="math notranslate nohighlight">\(k \ge 1\)</span>: each nodal rotation must stay below one full revolution, <span class="math notranslate nohighlight">\(|\boldsymbol{\psi}_a| &lt; 2 \pi\)</span>. The cantilever of case 2 reaches this limit, its tip turning by <span class="math notranslate nohighlight">\(2 \pi\)</span> at the last load level, and cannot be continued beyond it.</p>
+<p><strong>Convergence criterion.</strong> The co-rotational kinematics take the nodal positions relative to the centroid of each element, so that the default convergence criterion of <code class="docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code> suffices, without <code class="docutils literal notranslate"><span class="pre">absTOL</span></code>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import os
+import sys
+import time
+sys.path.insert(0, os.path.join('..', '..', 'tests'))
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+import pyfe3d
+from pyfe3d import DOF
+from test_nonlinear_benchmarks_sze2004 import (CANTILEVER, TABLE_3A_EXACT,
+    TABLE_9A, elastica_tip, von_karman_tip, run_hinged_roof,
+    compare_with_table_9a, limit_points)
+from test_corotational_benchmarks import (CANTILEVER_SHEAR, TABLE_2A,
+    TABLE_3A_S4R, analysis, at_levels, cantilever,
+    tip_deflections, elastica_end_force, polygon_tip,
+    run_cantilever_end_shear, run_corotational_roof)
+
+print('pyfe3d', pyfe3d.__version__, 'from', os.path.dirname(pyfe3d.__file__))
+KINEMATICS = ['von_karman', 'corotational', 'corotational_von_karman']
+STYLE = {'von_karman': 'C0--', 'corotational': 'C1-',
+         'corotational_von_karman': 'C2:'}
+T_START = time.time()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+pyfe3d 0.12.0 from C:\Users\saullogiovanip\repos\pyfe3d\pyfe3d
+</pre></div></div>
+</div>
+</section>
+</section>
+<section id="1.-Cantilever-under-an-end-shear-force-(Section-3.1)">
+<h1>1. Cantilever under an end shear force (Section 3.1)<a class="headerlink" href="#1.-Cantilever-under-an-end-shear-force-(Section-3.1)" title="Link to this heading">#</a></h1>
+<p>Fig. 2a of [1]: length <span class="math notranslate nohighlight">\(L = 10\)</span>, width <span class="math notranslate nohighlight">\(b = 1\)</span>, thickness <span class="math notranslate nohighlight">\(h = 0.1\)</span>, <span class="math notranslate nohighlight">\(E = 1.2 \times 10^6\)</span>, <span class="math notranslate nohighlight">\(\nu = 0\)</span>, clamped at <span class="math notranslate nohighlight">\(X = 0\)</span>, under the end force <span class="math notranslate nohighlight">\(P_{max} = 4 E I/L^2 = 4\)</span> along <span class="math notranslate nohighlight">\(+Z\)</span>, of fixed direction. Table 2a of [1] lists <span class="math notranslate nohighlight">\(-U\)</span> and <span class="math notranslate nohighlight">\(W\)</span> at the tip at 20 load levels, computed with 16x1 S4R elements; the tip rotates by 64 degrees at <span class="math notranslate nohighlight">\(P_{max}\)</span>. The reference at <span class="math notranslate nohighlight">\(P_{max}\)</span> is also the inextensible elastica,
+<code class="docutils literal notranslate"><span class="pre">elastica_end_force()</span></code>, derived and verified in <code class="docutils literal notranslate"><span class="pre">tests/test_corotational_benchmarks.py</span></code>.</p>
+<p>The models: 16 <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> elements, and a strip of 16x1 <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> elements, whose bending stiffness per unit width times <span class="math notranslate nohighlight">\(b\)</span> is <span class="math notranslate nohighlight">\(EI\)</span> for <span class="math notranslate nohighlight">\(\nu = 0\)</span>, Newton-Raphson in 20 increments of <span class="math notranslate nohighlight">\(0.05 P_{max}\)</span>.</p>
+<p><strong>Tolerances</strong>, those of the tests: the co-rotational paths within 1 % of Table 2a plus 0.0005 for its rounding at the 20 levels, and within 0.2 % of the elastica at <span class="math notranslate nohighlight">\(P_{max}\)</span>. Without axial force the von Kármán cantilever bends as the linear one, <span class="math notranslate nohighlight">\(W = P L^3/(3 E I)\)</span>, with <span class="math notranslate nohighlight">\(u_{,x} = -w_{,x}^2/2\)</span>, which gives <span class="math notranslate nohighlight">\(U = -(P/(EI))^2 L^5/15\)</span> (derived in <code class="docutils literal notranslate"><span class="pre">test_cantilever_end_shear_von_karman</span></code>): the von Kármán paths are checked against these closed forms, within 0.2 % in <span class="math notranslate nohighlight">\(W\)</span>
+and 0.5 % in <span class="math notranslate nohighlight">\(U\)</span>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>L, b, h, E, Pmax = (CANTILEVER_SHEAR[k] for k in ('L', 'b', 'h', 'E', 'Pmax'))
+EI = E*b*h**3/12
+Ue, We = elastica_end_force(4.)
+print('elastica at P_max: -U %.4f, W %.4f; Table 2a: %.3f, %.3f'
+      % (L*Ue, L*We, TABLE_2A[-1, 1], TABLE_2A[-1, 2]))
+shear = {}
+for element in ['BeamC', 'Quad4R']:
+    for kin in KINEMATICS:
+        m, U, W, t = run_cantilever_end_shear(element, 16, kinematics=kin)
+        shear[element, kin] = m, U, W
+        idx = at_levels(m, TABLE_2A[:, 0])
+        print('%-7s %-24s %.1f s; at P_max -U %7.4f (%+7.2f %%), W %7.4f (%+6.2f %%) '
+              'from the elastica; largest |difference| from Table 2a %.4f, %.4f'
+              % (element, kin, t, U[-1], 100*(U[-1]/(L*Ue) - 1), W[-1],
+                 100*(W[-1]/(L*We) - 1), np.abs(U[idx] - TABLE_2A[:, 1]).max(),
+                 np.abs(W[idx] - TABLE_2A[:, 2]).max()))
+        assert np.isclose(m[-1], 1.)
+        if kin == 'von_karman':
+            P = m*Pmax
+            np.testing.assert_allclose(W, P*L**3/(3*EI), rtol=2e-3)
+            np.testing.assert_allclose(U, (P/EI)**2*L**5/15, rtol=5e-3)
+        else:
+            np.testing.assert_allclose(U[idx], TABLE_2A[:, 1], rtol=0.01, atol=0.0005)
+            np.testing.assert_allclose(W[idx], TABLE_2A[:, 2], rtol=0.01, atol=0.0005)
+            assert abs(U[-1]/(L*Ue) - 1) &lt;= 0.002
+            assert abs(W[-1]/(L*We) - 1) &lt;= 0.002
+for element in ['BeamC', 'Quad4R']:
+    m, U, W = shear[element, 'von_karman']
+    idx = at_levels(m, TABLE_2A[:, 0])
+    print('%s von_karman: W over Table 2a %.4f at 0.05 P_max, %.4f at 0.10 P_max, %.3f at P_max'
+          % (element, W[idx[0]]/TABLE_2A[0, 2], W[idx[1]]/TABLE_2A[1, 2], W[-1]/TABLE_2A[-1, 2]))
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4), sharey=True)
+for ax, element in zip(axes, ['BeamC', 'Quad4R']):
+    for kin in KINEMATICS:
+        m, U, W = shear[element, kin]
+        ax.plot(np.r_[0, U], np.r_[0, m], STYLE[kin], lw=1.5, label='-U, %s' % kin)
+        ax.plot(np.r_[0, W], np.r_[0, m], STYLE[kin], lw=1.5, alpha=0.6, label='W, %s' % kin)
+    ax.plot(TABLE_2A[:, 1], TABLE_2A[:, 0], 'ks', mfc='none', ms=5, label='-U, Table 2a')
+    ax.plot(TABLE_2A[:, 2], TABLE_2A[:, 0], 'ko', mfc='none', ms=5, label='W, Table 2a')
+    ax.set_title('16 %s' % element if element == 'BeamC' else '16x1 Quad4R')
+    ax.set_xlim(0, 10)
+    ax.set_xlabel('tip displacement')
+    ax.grid(True, alpha=0.3)
+axes[0].set_ylabel('$P/P_{max}$')
+axes[1].legend(fontsize=7, loc='lower right')
+plt.tight_layout()
+plt.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+elastica at P_max: -U 3.2894, W 6.6996; Table 2a: 3.286, 6.698
+BeamC   von_karman               0.0 s; at P_max -U 10.6676 (+224.30 %), W 13.3340 (+99.03 %) from the elastica; largest |difference| from Table 2a 7.3816, 6.6360
+BeamC   corotational             0.1 s; at P_max -U  3.2889 (  -0.02 %), W  6.7027 ( +0.05 %) from the elastica; largest |difference| from Table 2a 0.0029, 0.0047
+BeamC   corotational_von_karman  0.2 s; at P_max -U  3.2895 (  +0.00 %), W  6.7001 ( +0.01 %) from the elastica; largest |difference| from Table 2a 0.0035, 0.0029
+Quad4R  von_karman               0.0 s; at P_max -U 10.6417 (+223.51 %), W 13.3211 (+98.83 %) from the elastica; largest |difference| from Table 2a 7.3557, 6.6231
+Quad4R  corotational             0.2 s; at P_max -U  3.2862 (  -0.10 %), W  6.6984 ( -0.02 %) from the elastica; largest |difference| from Table 2a 0.0005, 0.0006
+Quad4R  corotational_von_karman  0.5 s; at P_max -U  3.2862 (  -0.10 %), W  6.6984 ( -0.02 %) from the elastica; largest |difference| from Table 2a 0.0005, 0.0006
+BeamC von_karman: W over Table 2a 1.0056 at 0.05 P_max, 1.0186 at 0.10 P_max, 1.991 at P_max
+Quad4R von_karman: W over Table 2a 1.0046 at 0.05 P_max, 1.0177 at 0.10 P_max, 1.989 at P_max
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/tut-corotational-large-rotations_4_1.png" src="_images/tut-corotational-large-rotations_4_1.png" />
+</div>
+</div>
+<p>The two co-rotational kinematics follow Table 2a at all 20 levels with both elements, within its rounding with <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>; at <span class="math notranslate nohighlight">\(P_{max}\)</span> they are within 0.1 % of the elastica, whose difference from Table 2a is of the same order. The von Kármán path leaves Table 2a at once: its deflection is already 1.8 % too large at <span class="math notranslate nohighlight">\(0.1 P_{max}\)</span>, a tip rotation of 0.2 rad, and it ends at twice the deflection of Table 2a, its tip moving back by <span class="math notranslate nohighlight">\(-U = 10.7\)</span>, more than the length of the
+cantilever. These are the closed forms above, the expected result of the von Kármán strains, not an error of the elements.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>, <code class="docutils literal notranslate"><span class="pre">'corotational_von_karman'</span></code> gives the path of <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code>, since the von Kármán terms of the shell vanish in its CR frame. With <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> it changes the path slightly, and moves it towards the elastica: the element-averaged von Kármán axial strain adds in the CR frame the local higher-order terms of [4], Eq. (17.56a), which make coarse meshes more accurate, see the table of <code class="docutils literal notranslate"><span class="pre">test_cantilever_end_shear_corotational_von_karman</span></code> (with 4 elements, -0.24 % and +0.68 % from
+the elastica with <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code>, -0.013 % and -0.010 % with <code class="docutils literal notranslate"><span class="pre">'corotational_von_karman'</span></code>).</p>
+</section>
+<section id="2.-Cantilever-rolled-up-into-a-circle-(Section-3.2)">
+<h1>2. Cantilever rolled up into a circle (Section 3.2)<a class="headerlink" href="#2.-Cantilever-rolled-up-into-a-circle-(Section-3.2)" title="Link to this heading">#</a></h1>
+<p>Fig. 3a of [1]: <span class="math notranslate nohighlight">\(L = 12\)</span>, <span class="math notranslate nohighlight">\(b = 1\)</span>, <span class="math notranslate nohighlight">\(h = 0.1\)</span>, <span class="math notranslate nohighlight">\(E = 1.2 \times 10^6\)</span>, <span class="math notranslate nohighlight">\(\nu = 0\)</span>, clamped at <span class="math notranslate nohighlight">\(X = 0\)</span>, under the end moment <span class="math notranslate nohighlight">\(M_{max} = 2 \pi E I/L\)</span> about <span class="math notranslate nohighlight">\(-Y\)</span>, which bends the cantilever into a full circle of radius <span class="math notranslate nohighlight">\(L/(2\pi)\)</span>, the tip returning to the root after turning by <span class="math notranslate nohighlight">\(2 \pi\)</span>. The exact tip deflections, <span class="math notranslate nohighlight">\(U/L = \sin\varphi/\varphi - 1\)</span> and <span class="math notranslate nohighlight">\(W/L = (1 - \cos\varphi)/\varphi\)</span> with <span class="math notranslate nohighlight">\(\varphi = M L/(EI)\)</span>, are listed in
+Table 3a of [1] (<code class="docutils literal notranslate"><span class="pre">elastica_tip()</span></code>, checked against Table 3a in <code class="docutils literal notranslate"><span class="pre">tests/test_nonlinear_benchmarks_sze2004.py</span></code>).</p>
+<p>The models: 16 <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> elements and 16x1 <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>, Newton-Raphson in increments of <span class="math notranslate nohighlight">\(0.05 M_{max}\)</span> (<code class="docutils literal notranslate"><span class="pre">BeamC</span></code>) and <span class="math notranslate nohighlight">\(0.025 M_{max}\)</span> (<code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>; with 0.05, Newton-Raphson cuts back three increments and misses the levels of Table 3a). The moment is applied with <code class="docutils literal notranslate"><span class="pre">add_moment()</span></code> for the co-rotational models, conjugate to the rotation vector, which is here the moment about the fixed axis <span class="math notranslate nohighlight">\(-Y\)</span>, since <span class="math notranslate nohighlight">\(\boldsymbol{\Lambda}^T
+\boldsymbol{n} = \boldsymbol{n}\)</span> for <span class="math notranslate nohighlight">\(\boldsymbol{\psi} \parallel
+\boldsymbol{n}\)</span>; for the von Kármán model it is the constant nodal moment of <code class="docutils literal notranslate"><span class="pre">fext</span></code>. The out-of-plane rotations <span class="math notranslate nohighlight">\(\psi_X\)</span> and <span class="math notranslate nohighlight">\(\psi_Z\)</span> are restrained at all the nodes, exact for this plane problem.</p>
+<p>With 16 elements of equal length and no axial or shear force, the discrete solution is the polygon of 16 equal chords inscribed in the exact circle (<code class="docutils literal notranslate"><span class="pre">polygon_tip()</span></code>, derived in <code class="docutils literal notranslate"><span class="pre">tests/test_corotational_benchmarks.py</span></code>), which differs from the exact circle by at most <span class="math notranslate nohighlight">\(0.0011 L\)</span>; the S4R columns of Table 3a, also 16x1, lie on that polygon within 0.0005.</p>
+<p><strong>Tolerances</strong>, those of the tests: <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code> on the polygon within <span class="math notranslate nohighlight">\(10^{-7} L\)</span> and within 0.001 of the S4R columns of Table 3a; the von Kármán paths on the von Kármán solution, <span class="math notranslate nohighlight">\(W/L = \varphi/2\)</span> and <span class="math notranslate nohighlight">\(U/L = -\varphi^2/6\)</span> (<code class="docutils literal notranslate"><span class="pre">von_karman_tip()</span></code>), to <span class="math notranslate nohighlight">\(10^{-6}\)</span> in <span class="math notranslate nohighlight">\(W\)</span> and 0.2 % in <span class="math notranslate nohighlight">\(U\)</span>, the tolerances of <code class="docutils literal notranslate"><span class="pre">test_cantilever_end_moment_quad4r</span></code>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def run_end_moment(element, kinematics, inc, num_elements=16):
+    L, b, h, E = (CANTILEVER[k] for k in ('L', 'b', 'h', 'E'))
+    Mmax = 2*np.pi*E*b*h**3/12/L
+    model, bu, tip = cantilever(element, num_elements, L, b, h, E,
+                                kinematics=kinematics)
+    for n in tip:
+        if kinematics == 'von_karman':
+            model.fext[DOF*n + 4] = -Mmax/len(tip)
+        else:
+            model.add_moment(n, [0., -Mmax/len(tip), 0.])
+    # NOTE plane problem: out-of-plane rotations restrained
+    bu[3::DOF] = False
+    bu[5::DOF] = False
+    m, cs, t = analysis(model, bu, inc)
+    U, W = tip_deflections(cs, tip)
+    return dict(m=m, U=U/L, W=W/L, cs=cs, model=model, tip=tip, t=t)
+
+
+L = CANTILEVER['L']
+mt = TABLE_3A_EXACT[:, 0]
+U_ex, W_ex = elastica_tip(mt)
+U_pol, W_pol = polygon_tip(mt, 16)
+U_vk, W_vk = von_karman_tip(mt)
+print('polygon of 16 chords against the exact circle: largest |difference| %.5f L, %.5f L'
+      % (np.abs(U_pol - U_ex).max(), np.abs(W_pol - W_ex).max()))
+moment = {}
+for element, inc in [('BeamC', 0.05), ('Quad4R', 0.025)]:
+    for kin in KINEMATICS:
+        r = run_end_moment(element, kin, inc)
+        moment[element, kin] = r
+        idx = at_levels(r['m'], mt)
+        U, W = r['U'][idx], r['W'][idx]
+        rot = np.mean([r['cs'][-1][DOF*n + 4] for n in r['tip']])
+        assert np.isclose(r['m'][-1], 1.)
+        print('%-7s %-24s %.1f s; at M_max -U/L %.5f, W/L %.5f, tip rotation %.6f pi'
+              % (element, kin, r['t'], r['U'][-1], r['W'][-1], rot/np.pi))
+        if kin == 'von_karman':
+            print('    largest |W/L - von Kármán| %.1e, |U/U_vk - 1| %.1e'
+                  % (np.abs(W - W_vk).max(), np.abs(U/U_vk - 1).max()))
+            np.testing.assert_allclose(W, W_vk, rtol=1e-6)
+            np.testing.assert_allclose(U, U_vk, rtol=2e-3)
+        else:
+            print('    largest |difference| from the polygon %.1e, %.1e; from the exact '
+                  'circle %.1e, %.1e; from the S4R columns of Table 3a %.4f, %.4f'
+                  % (np.abs(U - U_pol).max(), np.abs(W - W_pol).max(),
+                     np.abs(U - U_ex).max(), np.abs(W - W_ex).max(),
+                     np.abs(L*U - TABLE_3A_S4R[:, 1]).max(),
+                     np.abs(L*W - TABLE_3A_S4R[:, 2]).max()))
+            assert np.isclose(rot, -2*np.pi, rtol=1e-8)
+            if element == 'BeamC' and kin == 'corotational_von_karman':
+                # NOTE on the exact circle, see the text below
+                np.testing.assert_allclose(U, U_ex, rtol=0, atol=2e-6)
+                np.testing.assert_allclose(W, W_ex, rtol=0, atol=2e-6)
+            else:
+                np.testing.assert_allclose(U, U_pol, rtol=0, atol=1e-7)
+                np.testing.assert_allclose(W, W_pol, rtol=0, atol=1e-7)
+                np.testing.assert_allclose(L*U, TABLE_3A_S4R[:, 1], rtol=0, atol=0.001)
+                np.testing.assert_allclose(L*W, TABLE_3A_S4R[:, 2], rtol=0, atol=0.001)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+polygon of 16 chords against the exact circle: largest |difference| 0.00078 L, 0.00111 L
+BeamC   von_karman               0.0 s; at M_max -U/L 6.57974, W/L 3.14159, tip rotation -2.000000 pi
+    largest |W/L - von Kármán| 7.3e-12, |U/U_vk - 1| 4.5e-12
+BeamC   corotational             0.2 s; at M_max -U/L 1.00000, W/L -0.00000, tip rotation -2.000000 pi
+    largest |difference| from the polygon 7.8e-16, 9.7e-16; from the exact circle 7.8e-04, 1.1e-03; from the S4R columns of Table 3a 0.0005, 0.0005
+BeamC   corotational_von_karman  0.4 s; at M_max -U/L 1.00000, W/L 0.00000, tip rotation -2.000000 pi
+    largest |difference| from the polygon 7.8e-04, 1.1e-03; from the exact circle 9.8e-07, 8.9e-07; from the S4R columns of Table 3a 0.0095, 0.0137
+Quad4R  von_karman               0.1 s; at M_max -U/L 6.57331, W/L 3.14159, tip rotation -2.000000 pi
+    largest |W/L - von Kármán| 6.0e-10, |U/U_vk - 1| 9.8e-04
+Quad4R  corotational             0.6 s; at M_max -U/L 1.00000, W/L -0.00000, tip rotation -2.000000 pi
+    largest |difference| from the polygon 3.3e-15, 4.2e-15; from the exact circle 7.8e-04, 1.1e-03; from the S4R columns of Table 3a 0.0005, 0.0005
+Quad4R  corotational_von_karman  1.1 s; at M_max -U/L 1.00000, W/L -0.00000, tip rotation -2.000000 pi
+    largest |difference| from the polygon 3.8e-15, 3.7e-15; from the exact circle 7.8e-04, 1.1e-03; from the S4R columns of Table 3a 0.0005, 0.0005
+</pre></div></div>
+</div>
+<p>Both elements with <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code> lie on the polygon of 16 chords to round-off at the 20 levels, and their tips turn by exactly <span class="math notranslate nohighlight">\(2 \pi\)</span> at <span class="math notranslate nohighlight">\(M_{max}\)</span>, back at the root: the full circle. The von Kármán models follow the von Kármán solution, which agrees with the exact one only for small rotations, and end at <span class="math notranslate nohighlight">\(W = \pi L\)</span>, <span class="math notranslate nohighlight">\(-U = 6.6 L\)</span>, far from the root.</p>
+<p><code class="docutils literal notranslate"><span class="pre">BeamC</span></code> with <code class="docutils literal notranslate"><span class="pre">'corotational_von_karman'</span></code> does better than the polygon: its tip lies on the exact circle within <span class="math notranslate nohighlight">\(10^{-6} L\)</span>, because the averaged von Kármán axial strain in the CR frame accounts for the arc of each element against its chord. Measured separately on 2026-10-30, its largest distance from the exact tip over the 20 levels is <span class="math notranslate nohighlight">\(5 \times 10^{-3} L\)</span>, <span class="math notranslate nohighlight">\(2.7 \times 10^{-4} L\)</span> and <span class="math notranslate nohighlight">\(1.0 \times 10^{-6} L\)</span> with 2, 4 and 16 elements, decreasing about as <span class="math notranslate nohighlight">\(n^{-4}\)</span>.
+With <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> the two co-rotational kinematics coincide.</p>
+<p>The deformed cantilevers at four levels of Table 3a, without amplification, with the exact circles:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig, axes = plt.subplots(1, 2, figsize=(11, 4.5))
+s = np.linspace(0, L, 200)
+for frac, color in [(0.25, 'C0'), (0.5, 'C1'), (0.75, 'C2'), (1.0, 'C3')]:
+    radius = L/(2*np.pi*frac)
+    axes[0].plot(radius*np.sin(s/radius), radius*(1 - np.cos(s/radius)), '-',
+                 color=color, lw=1, label='exact, M = %.2f Mmax' % frac)
+    r = moment['BeamC', 'corotational']
+    i = int(np.argmin(np.abs(r['m'] - frac)))
+    x = r['model'].x.reshape(-1, 3)
+    u = r['cs'][i].reshape(-1, DOF)
+    axes[0].plot(x[:, 0] + u[:, 0], x[:, 2] + u[:, 2], 'o', color=color, ms=3,
+                 label='16 BeamC, corotational')
+    r = moment['Quad4R', 'von_karman']
+    i = int(np.argmin(np.abs(r['m'] - frac)))
+    x = r['model'].x.reshape(-1, 3)
+    u = r['cs'][i].reshape(-1, DOF)
+    edge = np.isclose(x[:, 1], 0.)
+    axes[0].plot(x[edge, 0] + u[edge, 0], x[edge, 2] + u[edge, 2], '--',
+                 color=color, lw=1, label='16x1 Quad4R, von_karman')
+axes[0].set_aspect('equal')
+axes[0].set_xlim(-70, 15)
+axes[0].set_xlabel('X')
+axes[0].set_ylabel('Z')
+axes[0].grid(True, alpha=0.3)
+axes[0].legend(fontsize=6, ncol=2, loc='upper left')
+mm = np.linspace(0, 1, 201)
+Uc, Wc = elastica_tip(mm)
+axes[1].plot(Uc, mm, 'k-', lw=1, label='-U/L, exact')
+axes[1].plot(Wc, mm, 'k-', lw=1, alpha=0.5, label='W/L, exact')
+for kin in KINEMATICS:
+    r = moment['Quad4R', kin]
+    axes[1].plot(np.r_[0, r['U']], np.r_[0, r['m']], STYLE[kin], lw=1.5,
+                 label='-U/L, 16x1 Quad4R, %s' % kin)
+    axes[1].plot(np.r_[0, r['W']], np.r_[0, r['m']], STYLE[kin], lw=1.5,
+                 alpha=0.5, label='W/L, 16x1 Quad4R, %s' % kin)
+axes[1].plot(TABLE_3A_EXACT[:, 1]/L, mt, 'ks', mfc='none', ms=4, label='Table 3a')
+axes[1].plot(TABLE_3A_EXACT[:, 2]/L, mt, 'ko', mfc='none', ms=4)
+axes[1].set_xlim(0, 1.6)
+axes[1].set_xlabel('tip displacement / L')
+axes[1].set_ylabel('$M/M_{max}$')
+axes[1].grid(True, alpha=0.3)
+axes[1].legend(fontsize=6, loc='lower right')
+plt.tight_layout()
+plt.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/tut-corotational-large-rotations_9_0.png" src="_images/tut-corotational-large-rotations_9_0.png" />
+</div>
+</div>
+</section>
+<section id="3.-Hinged-cylindrical-roof,-12.7-thick-(Section-3.8)">
+<h1>3. Hinged cylindrical roof, 12.7 thick (Section 3.8)<a class="headerlink" href="#3.-Hinged-cylindrical-roof,-12.7-thick-(Section-3.8)" title="Link to this heading">#</a></h1>
+<p>Fig. 9a of [1]: cylindrical roof of radius <span class="math notranslate nohighlight">\(R = 2540\)</span>, length <span class="math notranslate nohighlight">\(2L\)</span> with <span class="math notranslate nohighlight">\(L = 254\)</span>, opening <span class="math notranslate nohighlight">\(2\theta\)</span> with <span class="math notranslate nohighlight">\(\theta = 0.1\)</span> rad, thickness <span class="math notranslate nohighlight">\(h = 12.7\)</span>, <span class="math notranslate nohighlight">\(E = 3102.75\)</span>, <span class="math notranslate nohighlight">\(\nu = 0.3\)</span>, straight edges hinged with all the translations restrained, curved edges free, central point load <span class="math notranslate nohighlight">\(P\)</span> with <span class="math notranslate nohighlight">\(P_{max} = 3000\)</span>. One quarter is meshed with 8x8 <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> elements and their default stabilisation, and the snap-through is traced with Crisfield’s
+arc-length method up to <span class="math notranslate nohighlight">\(1.2 P_{max}\)</span>, with increments of <code class="docutils literal notranslate"><span class="pre">initialInc</span> <span class="pre">=</span> <span class="pre">maxInc</span> <span class="pre">=</span> <span class="pre">0.05</span></code>, for the three kinematics (<code class="docutils literal notranslate"><span class="pre">hinged_roof()</span></code>, <code class="docutils literal notranslate"><span class="pre">run_hinged_roof()</span></code> and <code class="docutils literal notranslate"><span class="pre">run_corotational_roof()</span></code> of the tests). Table 9a of [1] lists the path of 16x16 S4R elements.</p>
+<p><strong>Tolerances</strong>, those of the tests, which follow the grades of [5], p. 14: the upper limit load within 2 % of Table 9a (grade A) and the lower one within 10 % (grade B), the 8x8 mesh being coarser than that of Table 9a; <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code> and <code class="docutils literal notranslate"><span class="pre">'von_karman'</span></code> within 0.001 <span class="math notranslate nohighlight">\(P_{max}\)</span> of each other up to the upper limit point, and within 0.03 <span class="math notranslate nohighlight">\(P_{max}\)</span> along the whole path; <code class="docutils literal notranslate"><span class="pre">'corotational_von_karman'</span></code> on the path of <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code> to <span class="math notranslate nohighlight">\(10^{-9} P_{max}\)</span>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>roof = {}
+for kin in KINEMATICS:
+    t0 = time.time()
+    if kin == 'von_karman':
+        P, W = run_hinged_roof(n=8)
+    else:
+        P, W, _ = run_corotational_roof(n=8, kinematics=kin)
+    roof[kin] = P, W
+    print('%-24s %d increments, %.1f s' % (kin, P.size - 1, time.time() - t0))
+(Pu_ref, _), (Pl_ref, _) = limit_points(TABLE_9A[:, 0], TABLE_9A[:, 1], 15.)
+calc = {}
+for kin, (P, W) in roof.items():
+    (Pu, Wu), (Pl, Wl) = limit_points(P, W, 15.)
+    calc[kin] = compare_with_table_9a(P, W)
+    print('%-24s upper limit %.5f (%+.2f %%), lower limit %.5f (%+.2f %%), at -W_C = 29.374: %.4f'
+          % (kin, Pu, 100*(Pu/Pu_ref - 1), Pl, 100*(Pl/Pl_ref - 1), calc[kin][-1]))
+    assert abs(Pu/Pu_ref - 1) &lt;= 0.02
+    assert abs(Pl/Pl_ref - 1) &lt;= 0.10
+print('Table 9a: upper limit %.4f, lower limit %.4f, at -W_C = 29.374: %.4f'
+      % (Pu_ref, Pl_ref, TABLE_9A[-1, 0]))
+before = TABLE_9A[:, 1] &lt;= 11.3
+diff = np.abs(calc['corotational'] - calc['von_karman'])
+print('|corotational - von_karman| at the points of Table 9a: %.4f up to the upper '
+      'limit point, %.4f along the path' % (diff[before].max(), diff.max()))
+assert diff[before].max() &lt;= 0.001
+assert diff.max() &lt;= 0.03
+P, W = roof['corotational_von_karman']
+Pc, Wc = roof['corotational']
+assert P.size == Pc.size
+print('corotational_von_karman - corotational: %.1e in P/P_max' % np.abs(P - Pc).max())
+assert np.abs(P - Pc).max() &lt;= 1e-9
+
+fig, ax = plt.subplots(figsize=(7, 5))
+for kin in KINEMATICS:
+    ax.plot(roof[kin][1], roof[kin][0], STYLE[kin], lw=1.5, label='8x8 Quad4R, %s' % kin)
+ax.plot(TABLE_9A[:, 1], TABLE_9A[:, 0], 'ko', mfc='none', ms=4,
+        label='Table 9a, 16x16 S4R')
+ax.set_xlabel('$-W_C$')
+ax.set_ylabel('$P/P_{max}$')
+ax.set_xlim(0, 32)
+ax.grid(True, alpha=0.3)
+ax.legend(fontsize=8)
+plt.show()
+print('total time of the notebook %.0f s' % (time.time() - T_START))
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+von_karman               83 increments, 2.5 s
+corotational             82 increments, 3.0 s
+corotational_von_karman  82 increments, 6.0 s
+von_karman               upper limit 0.74293 (+0.11 %), lower limit 0.17183 (-0.62 %), at -W_C = 29.374: 1.0800
+corotational             upper limit 0.74211 (+0.00 %), lower limit 0.17306 (+0.09 %), at -W_C = 29.374: 1.1003
+corotational_von_karman  upper limit 0.74211 (+0.00 %), lower limit 0.17306 (+0.09 %), at -W_C = 29.374: 1.1003
+Table 9a: upper limit 0.7421, lower limit 0.1729, at -W_C = 29.374: 1.0835
+|corotational - von_karman| at the points of Table 9a: 0.0009 up to the upper limit point, 0.0203 along the path
+corotational_von_karman - corotational: 6.6e-15 in P/P_max
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/tut-corotational-large-rotations_11_1.png" src="_images/tut-corotational-large-rotations_11_1.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+total time of the notebook 16 s
+</pre></div></div>
+</div>
+<p>The rotations of the roof stay small, and the two kinematics agree within 0.001 <span class="math notranslate nohighlight">\(P_{max}\)</span> up to the upper limit point, <span class="math notranslate nohighlight">\(-W_C \approx 11\)</span>; they then part, by up to 0.02 <span class="math notranslate nohighlight">\(P_{max}\)</span> at the end of Table 9a, <span class="math notranslate nohighlight">\(-W_C = 29.4\)</span>, where the deflection is about two thicknesses. On this 8x8 mesh the co-rotational path is 1.5 % above Table 9a at its last point and the von Kármán one 0.3 % below. Measured in <code class="docutils literal notranslate"><span class="pre">test_hinged_roof_thick_corotational</span></code> with the 16x16 mesh of Table 9a: 0.4 %
+above and 1.4 % below, i.e. S4R, whose kinematics are those of finite rotations, follows the co-rotational path when the meshes are the same. <code class="docutils literal notranslate"><span class="pre">'corotational_von_karman'</span></code> gives the path of <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code> to round-off, as expected for <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>.</p>
+<section id="Summary">
+<h2>Summary<a class="headerlink" href="#Summary" title="Link to this heading">#</a></h2>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>case</p></th>
+<th class="head"><p>reference</p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">'von_karman'</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">'corotational'</span></code></p></th>
+<th class="head"><p><code class="docutils literal notranslate"><span class="pre">'corotational_von_karman'</span></code></p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>3.1, end shear, 64 degrees</p></td>
+<td><p>Table 2a, elastica</p></td>
+<td><p>linear deflection, twice Table 2a at <span class="math notranslate nohighlight">\(P_{max}\)</span></p></td>
+<td><p>within the tolerance of Table 2a, 0.1 % of the elastica</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>: as <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code>; <code class="docutils literal notranslate"><span class="pre">BeamC</span></code>: closer to the elastica</p></td>
+</tr>
+<tr class="row-odd"><td><p>3.2, end moment, <span class="math notranslate nohighlight">\(2 \pi\)</span></p></td>
+<td><p>exact circle, Table 3a</p></td>
+<td><p>never rolls up, <span class="math notranslate nohighlight">\(W = \pi L\)</span> at <span class="math notranslate nohighlight">\(M_{max}\)</span></p></td>
+<td><p>the inscribed polygon to round-off, full circle</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>: as <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code>; <code class="docutils literal notranslate"><span class="pre">BeamC</span></code>: the exact circle within <span class="math notranslate nohighlight">\(10^{-6} L\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p>3.8, roof, snap-through</p></td>
+<td><p>Table 9a</p></td>
+<td><p>limit loads grade A and B</p></td>
+<td><p>limit loads grade A and B, closer to S4R at large deflections</p></td>
+<td><p>as <code class="docutils literal notranslate"><span class="pre">'corotational'</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>The slit annular plate (Section 3.3) and the hemispherical shell (Section 3.4) of [1], with large rotations of shells, take about 10 s each with the meshes of the tests, and are run in <code class="docutils literal notranslate"><span class="pre">tests/test_corotational_benchmarks.py</span></code> only.</p>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="tut-nonlinear-benchmarks.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tutorial: geometrically non-linear benchmarks with pyfe3d.solver</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="tut-prescribed-displacement-cantilever.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tutorial: prescribed displacement at the tip of a cantilever</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#">Tutorial: large rotations with the co-rotational kinematics</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#References">References</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Two-settings-of-the-co-rotational-models">Two settings of the co-rotational models</a></li>
+</ul>
+</li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#1.-Cantilever-under-an-end-shear-force-(Section-3.1)">1. Cantilever under an end shear force (Section 3.1)</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#2.-Cantilever-rolled-up-into-a-circle-(Section-3.2)">2. Cantilever rolled up into a circle (Section 3.2)</a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#3.-Hinged-cylindrical-roof,-12.7-thick-(Section-3.8)">3. Hinged cylindrical roof, 12.7 thick (Section 3.8)</a><ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Summary">Summary</a></li>
+</ul>
+</li>
+</ul>
+
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/tut-corotational-large-rotations.ipynb.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

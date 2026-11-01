@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>BeamC - Consistent Timoshenko 3D beam element (pyfe3d.beamc) &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>BeamC - Consistent Timoshenko 3D beam element (pyfe3d.beamc) &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
@@ -37,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -120,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -137,6 +138,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -161,13 +169,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -176,6 +177,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -364,6 +393,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -380,6 +416,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -584,11 +641,36 @@
 
 <li class="toctree-l2"><a class="reference internal" href="beamprop.html">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
 
+<li class="toctree-l2"><a class="reference internal" href="vabs.html">Variational asymptotic sectional analysis (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.vabs</span></code>)</a></li>
+
+
+
+
+
+
+
+
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html">Co-rotational kinematics, EICR (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
 <li class="toctree-l1"><a class="reference internal" href="solver.html">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_static.html">Linear static solution (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code>)</a></li>
 
+
+<li class="toctree-l1"><a class="reference internal" href="solver_inertia_relief.html">Static analysis with inertia relief (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.inertia_relief</span></code>)</a></li>
 
 <li class="toctree-l1"><a class="reference internal" href="solver_analysis.html">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</a></li>
 
@@ -640,6 +722,7 @@
 
 
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html">Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code>)</a></li>
+
 
 
 
@@ -852,8 +935,18 @@ transverse shear strains of the beam axis are</p>
 \[\epsilon_{xx} = u_{,x} + y \kappa_y + z \kappa_z, \qquad
 \kappa_y = -{r_z}_{,x}, \qquad \kappa_z = {r_y}_{,x}, \qquad
 \gamma_{xy} = v_{,x} - r_z, \qquad \gamma_{xz} = w_{,x} + r_y\]</div>
-<p>and, with the cross-section integrals of <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>, the linear
-strain energy is</p>
+<p>and, with the twist <span class="math notranslate nohighlight">\(\kappa_x = {r_x}_{,x}\)</span>, the linear strain energy is</p>
+<div class="math notranslate nohighlight">
+\[U = \frac{1}{2} \int_0^L \boldsymbol{\epsilon}^\top \boldsymbol{C}
+    \boldsymbol{\epsilon} \, dx, \qquad
+\boldsymbol{\epsilon} = \{u_{,x}, \gamma_{xy}, \gamma_{xz},
+    \kappa_x, \kappa_y, \kappa_z\}^\top\]</div>
+<p>where <span class="math notranslate nohighlight">\(L\)</span> is <code class="docutils literal notranslate"><span class="pre">length</span></code> and <span class="math notranslate nohighlight">\(\boldsymbol{C}\)</span> is the sectional stiffness
+matrix <code class="docutils literal notranslate"><span class="pre">C</span></code> of <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>, of entries <span class="math notranslate nohighlight">\(C_{ij}\)</span>, <span class="math notranslate nohighlight">\(i, j = 0,
+\ldots, 5\)</span>, in the order of <span class="math notranslate nohighlight">\(\boldsymbol{\epsilon}\)</span>, symmetric, with 21
+independent entries; see <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a> for its relation to the
+stiffness matrices of <a class="reference internal" href="vabs.html#module-pyfe3d.vabs" title="pyfe3d.vabs"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.vabs</span></code></a>. When <code class="docutils literal notranslate"><span class="pre">C</span></code> is not set, it is
+built from the cross-section integrals of <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>, and</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}U = \frac{1}{2} \int_0^L \Big[
     E \left( A u_{,x}^2 + I_{zz} \kappa_y^2 + I_{yy} \kappa_z^2
@@ -864,23 +957,32 @@ strain energy is</p>
     + G_{13} \left( A \gamma_{xz}^2 + 2 A_y \gamma_{xz} {r_x}_{,x}
     \right)
     + G J {r_x}_{,x}^2 \Big] dx\end{split}\]</div>
-<p>where <span class="math notranslate nohighlight">\(L\)</span> is <code class="docutils literal notranslate"><span class="pre">length</span></code>, <span class="math notranslate nohighlight">\(G_{12}\)</span> = <code class="docutils literal notranslate"><span class="pre">G12</span></code> and <span class="math notranslate nohighlight">\(G_{13}\)</span> = <code class="docutils literal notranslate"><span class="pre">G13</span></code> are
-the transverse shear moduli of the planes <span class="math notranslate nohighlight">\(xy\)</span> and <span class="math notranslate nohighlight">\(xz\)</span>, and <span class="math notranslate nohighlight">\(G J\)</span> =
-<code class="docutils literal notranslate"><span class="pre">GJ</span></code> is the torsional stiffness, see <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>. The torsion
-is of Saint-Venant type, without warping, with <code class="docutils literal notranslate"><span class="pre">GJ</span></code> in place of the
+<p>where <span class="math notranslate nohighlight">\(G_{12}\)</span> = <code class="docutils literal notranslate"><span class="pre">G12</span></code> and <span class="math notranslate nohighlight">\(G_{13}\)</span> = <code class="docutils literal notranslate"><span class="pre">G13</span></code> are the transverse
+shear moduli of the planes <span class="math notranslate nohighlight">\(xy\)</span> and <span class="math notranslate nohighlight">\(xz\)</span>, and <span class="math notranslate nohighlight">\(G J\)</span> = <code class="docutils literal notranslate"><span class="pre">GJ</span></code> is the
+torsional stiffness, see <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>. The torsion is of
+Saint-Venant type, without warping, with <code class="docutils literal notranslate"><span class="pre">GJ</span></code> in place of the
 torsional stiffness <span class="math notranslate nohighlight">\(G_{12} I_{yy} + G_{13} I_{zz}\)</span> of the rigid cross
 section, and no shear correction factor is applied. The axial force is
-<span class="math notranslate nohighlight">\(N = E (A u_{,x} + A_y \kappa_y + A_z \kappa_z)\)</span>.</p>
-<p><span class="math notranslate nohighlight">\(u\)</span> and <span class="math notranslate nohighlight">\(r_x\)</span> are interpolated linearly between the nodes. <span class="math notranslate nohighlight">\(v\)</span> and <span class="math notranslate nohighlight">\(r_z\)</span>
+the first entry of <span class="math notranslate nohighlight">\(\boldsymbol{C} \boldsymbol{\epsilon}\)</span>, <span class="math notranslate nohighlight">\(N = C_{00}
+u_{,x} + C_{01} \gamma_{xy} + C_{02} \gamma_{xz} + C_{03} \kappa_x +
+C_{04} \kappa_y + C_{05} \kappa_z\)</span>, i.e. <span class="math notranslate nohighlight">\(N = E (A u_{,x} + A_y
+\kappa_y + A_z \kappa_z)\)</span> without <code class="docutils literal notranslate"><span class="pre">C</span></code>.</p>
+<p>When the only non-zero off-diagonal entry of <span class="math notranslate nohighlight">\(\boldsymbol{C}\)</span> is the
+extension-twist coupling <span class="math notranslate nohighlight">\(C_{03}\)</span>, e.g. without <code class="docutils literal notranslate"><span class="pre">C</span></code> and with <code class="docutils literal notranslate"><span class="pre">Ay</span></code>,
+<code class="docutils literal notranslate"><span class="pre">Az</span></code> and <code class="docutils literal notranslate"><span class="pre">Iyz</span></code> equal to zero, <span class="math notranslate nohighlight">\(u\)</span> and <span class="math notranslate nohighlight">\(r_x\)</span> are interpolated
+linearly between the nodes, and <span class="math notranslate nohighlight">\(v\)</span> and <span class="math notranslate nohighlight">\(r_z\)</span>
 are interpolated with the consistent shape functions of <a class="reference internal" href="#r1cb8794356fe-1" id="id2">[1]</a>, cubic for
 <span class="math notranslate nohighlight">\(v\)</span> and quadratic for <span class="math notranslate nohighlight">\(r_z\)</span>, which depend on the parameters</p>
 <div class="math notranslate nohighlight">
-\[\alpha_y = -\frac{12 E I_{zz}}{G_{12} A L^2}, \qquad
-\alpha_z = -\frac{12 E I_{yy}}{G_{13} A L^2}, \qquad
+\[\alpha_y = -\frac{12 C_{44}}{C_{11} L^2}, \qquad
+\alpha_z = -\frac{12 C_{55}}{C_{22} L^2}, \qquad
 \beta_y = \frac{1}{1 - \alpha_y}, \qquad
 \beta_z = \frac{1}{1 - \alpha_z}\]</div>
-<p>named <code class="docutils literal notranslate"><span class="pre">alphay</span></code>, <code class="docutils literal notranslate"><span class="pre">alphaz</span></code>, <code class="docutils literal notranslate"><span class="pre">betay</span></code> and <code class="docutils literal notranslate"><span class="pre">betaz</span></code> in the code. With
-<span class="math notranslate nohighlight">\(\xi = x/L\)</span> and the nodal values <span class="math notranslate nohighlight">\(v_1, {r_z}_1, v_2, {r_z}_2\)</span>:</p>
+<p>named <code class="docutils literal notranslate"><span class="pre">alphay</span></code>, <code class="docutils literal notranslate"><span class="pre">alphaz</span></code>, <code class="docutils literal notranslate"><span class="pre">betay</span></code> and <code class="docutils literal notranslate"><span class="pre">betaz</span></code> in the code,
+taken from the diagonal of <span class="math notranslate nohighlight">\(\boldsymbol{C}\)</span>; without <code class="docutils literal notranslate"><span class="pre">C</span></code>, <span class="math notranslate nohighlight">\(\alpha_y =
+-12 E I_{zz}/(G_{12} A L^2)\)</span> and <span class="math notranslate nohighlight">\(\alpha_z = -12 E I_{yy}/(G_{13} A
+L^2)\)</span>. With <span class="math notranslate nohighlight">\(\xi = x/L\)</span> and the nodal values <span class="math notranslate nohighlight">\(v_1, {r_z}_1, v_2,
+{r_z}_2\)</span>:</p>
 <div class="math notranslate nohighlight">
 \[\begin{split}v = \left[1 + \beta_y (2\xi^3 - 3\xi^2 + \alpha_y \xi)\right] v_1
     + L \beta_y \left(\xi^3 + \frac{\alpha_y - 4}{2} \xi^2
@@ -900,38 +1002,126 @@ transverse shear strains are then constant along the element, e.g.
 infinite <code class="docutils literal notranslate"><span class="pre">G12</span></code>, where the interpolation of <span class="math notranslate nohighlight">\(v\)</span> becomes the cubic
 Hermite interpolation of the Euler-Bernoulli beam.</p>
 <p>The parameters <span class="math notranslate nohighlight">\(\alpha_y\)</span> and <span class="math notranslate nohighlight">\(\alpha_z\)</span> are negative. With <span class="math notranslate nohighlight">\(\phi_y =
-12 E I_{zz}/(G_{12} A L^2)\)</span>, <span class="math notranslate nohighlight">\(\beta_y = 1/(1 + \phi_y)\)</span> and the
-functions above are the general solution of the homogeneous equilibrium
-equations of the strain energy above, <span class="math notranslate nohighlight">\((G_{12} A \gamma_{xy})_{,x} = 0\)</span>
-and <span class="math notranslate nohighlight">\(G_{12} A \gamma_{xy} = E I_{zz} {\kappa_y}_{,x}\)</span> (and likewise for
-<span class="math notranslate nohighlight">\(w\)</span>, <span class="math notranslate nohighlight">\(r_y\)</span>, with <span class="math notranslate nohighlight">\(G_{13}\)</span> and <span class="math notranslate nohighlight">\(I_{yy}\)</span>), which these functions satisfy
-for any nodal values only with this sign. The same solution is Eq. (17)
-of <a class="reference internal" href="#r1cb8794356fe-1" id="id3">[1]</a> and Eq. (3.236) of <a class="reference internal" href="#r1cb8794356fe-2" id="id4">[2]</a>, whose denominator <span class="math notranslate nohighlight">\(1 + 3\beta\)</span>, with
-<span class="math notranslate nohighlight">\(\beta = E I/(\kappa A G a^2)\)</span>, where <span class="math notranslate nohighlight">\(\kappa G\)</span> is <span class="math notranslate nohighlight">\(G_{12}\)</span>, and <span class="math notranslate nohighlight">\(a =
-L/2\)</span>, is <span class="math notranslate nohighlight">\(1 + \phi_y\)</span>; Eq. (21) of <a class="reference internal" href="#r1cb8794356fe-1" id="id5">[1]</a> gives <span class="math notranslate nohighlight">\(\alpha_y\)</span> and <span class="math notranslate nohighlight">\(\alpha_z\)</span>
-with the positive sign, inconsistent with its Eqs. (17) and (20), and
-its Eq. (20) prints the functions of <span class="math notranslate nohighlight">\(w\)</span> and <span class="math notranslate nohighlight">\(r_y\)</span> with the signs of
-those of <span class="math notranslate nohighlight">\(v\)</span> and <span class="math notranslate nohighlight">\(r_z\)</span>, which, with <span class="math notranslate nohighlight">\(\alpha_z = 0\)</span>, give
-<span class="math notranslate nohighlight">\(r_y = w_{,x}\)</span> instead of the <span class="math notranslate nohighlight">\(r_y = -w_{,x}\)</span> of the kinematics above.
-Hence
-the element is exact for a prismatic beam loaded at the nodes, and
-<span class="math notranslate nohighlight">\(\beta_y\)</span>, <span class="math notranslate nohighlight">\(\beta_z\)</span> are finite for any length. The mass and geometric
-stiffness matrices use the same shape functions.</p>
+12 C_{44}/(C_{11} L^2)\)</span>, <span class="math notranslate nohighlight">\(\beta_y = 1/(1 + \phi_y)\)</span> and the functions
+above are the general solution of the homogeneous equilibrium equations
+of the strain energy above with a diagonal <span class="math notranslate nohighlight">\(\boldsymbol{C}\)</span>, <span class="math notranslate nohighlight">\((C_{11}
+\gamma_{xy})_{,x} = 0\)</span> and <span class="math notranslate nohighlight">\(C_{11} \gamma_{xy} = C_{44}
+{\kappa_y}_{,x}\)</span>, i.e. <span class="math notranslate nohighlight">\(G_{12} A \gamma_{xy} = E I_{zz}
+{\kappa_y}_{,x}\)</span> (and likewise for <span class="math notranslate nohighlight">\(w\)</span>, <span class="math notranslate nohighlight">\(r_y\)</span>, with <span class="math notranslate nohighlight">\(C_{22}\)</span> and
+<span class="math notranslate nohighlight">\(C_{55}\)</span>), which these functions satisfy for any nodal values only with
+this sign. The same solution is Eq. (17) of <a class="reference internal" href="#r1cb8794356fe-1" id="id3">[1]</a> and Eq. (3.236) of
+<a class="reference internal" href="#r1cb8794356fe-2" id="id4">[2]</a>, whose denominator <span class="math notranslate nohighlight">\(1 + 3\beta\)</span>, with <span class="math notranslate nohighlight">\(\beta = E I/(\kappa A G
+a^2)\)</span>, where <span class="math notranslate nohighlight">\(\kappa G\)</span> is <span class="math notranslate nohighlight">\(G_{12}\)</span>, and <span class="math notranslate nohighlight">\(a = L/2\)</span>, is <span class="math notranslate nohighlight">\(1 + \phi_y\)</span>;
+Eq. (21) of <a class="reference internal" href="#r1cb8794356fe-1" id="id5">[1]</a> gives <span class="math notranslate nohighlight">\(\alpha_y\)</span> and <span class="math notranslate nohighlight">\(\alpha_z\)</span> with the positive
+sign, inconsistent with its Eqs. (17) and (20), and its Eq. (20) prints
+the functions of <span class="math notranslate nohighlight">\(w\)</span> and <span class="math notranslate nohighlight">\(r_y\)</span> with the signs of those of <span class="math notranslate nohighlight">\(v\)</span> and
+<span class="math notranslate nohighlight">\(r_z\)</span>, which, with <span class="math notranslate nohighlight">\(\alpha_z = 0\)</span>, give <span class="math notranslate nohighlight">\(r_y = w_{,x}\)</span> instead of the
+<span class="math notranslate nohighlight">\(r_y = -w_{,x}\)</span> of the kinematics above. <span class="math notranslate nohighlight">\(\beta_y\)</span>, <span class="math notranslate nohighlight">\(\beta_z\)</span> are
+finite for any length. The mass and geometric stiffness matrices use
+the same shape functions.</p>
+<p><strong>Shape functions with couplings</strong> (derived here). The functions above
+solve the equilibrium equations for any nodal values only when the
+only coupling is <span class="math notranslate nohighlight">\(C_{03}\)</span>, with which <span class="math notranslate nohighlight">\(u_{,x}\)</span> and <span class="math notranslate nohighlight">\(\kappa_x\)</span> are
+constant. With any other coupling, including those of <code class="docutils literal notranslate"><span class="pre">Ay</span></code>, <code class="docutils literal notranslate"><span class="pre">Az</span></code>
+and <code class="docutils literal notranslate"><span class="pre">Iyz</span></code> when <code class="docutils literal notranslate"><span class="pre">C</span></code> is not set, the shape functions are derived from
+the same equations with the full <span class="math notranslate nohighlight">\(\boldsymbol{C}\)</span>. For a prismatic
+element loaded only at its nodes, the virtual work of the strain energy
+above gives the equilibrium <span class="math notranslate nohighlight">\(N_{,x} = {V_y}_{,x} = {V_z}_{,x} =
+{M_x}_{,x} = 0\)</span>, <span class="math notranslate nohighlight">\({M_4}_{,x} = V_y\)</span>, <span class="math notranslate nohighlight">\({M_5}_{,x} = V_z\)</span> of the
+sectional forces <span class="math notranslate nohighlight">\(\boldsymbol{C} \boldsymbol{\epsilon} = \{N, V_y,
+V_z, M_x, M_4, M_5\}^\top\)</span>, hence</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{C} \boldsymbol{\epsilon} = (\boldsymbol{I} + x
+\boldsymbol{Z}) \boldsymbol{q}, \qquad
+\boldsymbol{\epsilon} = \boldsymbol{S} (\boldsymbol{I} + x
+\boldsymbol{Z}) \boldsymbol{q}, \qquad
+\boldsymbol{q} = \{N, V_y, V_z, M_x, M_4(0), M_5(0)\}^\top\]</div>
+<p>with <span class="math notranslate nohighlight">\(\boldsymbol{S} = \boldsymbol{C}^{-1}\)</span> and the only non-zero
+entries <span class="math notranslate nohighlight">\(Z_{41} = Z_{52} = 1\)</span>. Integrating the kinematic relations from
+node 1, <span class="math notranslate nohighlight">\(u = \int \epsilon_0 dx\)</span>, <span class="math notranslate nohighlight">\(r_x = \int \epsilon_3 dx\)</span>, <span class="math notranslate nohighlight">\(r_z =
+-\int \epsilon_4 dx\)</span>, <span class="math notranslate nohighlight">\(r_y = \int \epsilon_5 dx\)</span>, <span class="math notranslate nohighlight">\(v = \int (\epsilon_1
++ r_z) dx\)</span> and <span class="math notranslate nohighlight">\(w = \int (\epsilon_2 - r_y) dx\)</span>, and adding the
+rigid-body motion of node 1 gives <span class="math notranslate nohighlight">\(\boldsymbol{d} = \boldsymbol{R}(x)
+\boldsymbol{u}_1 + \boldsymbol{P}(x) \boldsymbol{q}\)</span>, with
+<span class="math notranslate nohighlight">\(\boldsymbol{d} = \{u, v, w, r_x, r_y, r_z\}^\top\)</span>, quadratic in <span class="math notranslate nohighlight">\(x\)</span>
+for <span class="math notranslate nohighlight">\(u, r_x, r_y, r_z\)</span> and cubic for <span class="math notranslate nohighlight">\(v, w\)</span>, with coefficients that
+depend on all entries of <span class="math notranslate nohighlight">\(\boldsymbol{S}\)</span>. The statics of the element
+clamped at node 1 give <span class="math notranslate nohighlight">\(\boldsymbol{q} = \boldsymbol{T}
+\boldsymbol{P}_2\)</span> for the loads <span class="math notranslate nohighlight">\(\boldsymbol{P}_2\)</span> at node 2, and
+<span class="math notranslate nohighlight">\(\boldsymbol{F}_c = \boldsymbol{P}(L) \boldsymbol{T}\)</span> is the
+flexibility of this cantilever, symmetric and positive definite. With
+<span class="math notranslate nohighlight">\(\boldsymbol{u}_2 = \boldsymbol{R}(L) \boldsymbol{u}_1 +
+\boldsymbol{P}(L) \boldsymbol{q}\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{q} = \boldsymbol{H}_f \boldsymbol{u}_e, \qquad
+\boldsymbol{H}_f = \boldsymbol{T} \boldsymbol{F}_c^{-1}
+\boldsymbol{G}, \qquad
+\boldsymbol{d} = \left( [\boldsymbol{R}(x), \boldsymbol{0}] +
+\boldsymbol{P}(x) \boldsymbol{H}_f \right) \boldsymbol{u}_e, \qquad
+\boldsymbol{K}_{C0_e} = \boldsymbol{G}^\top \boldsymbol{F}_c^{-1}
+\boldsymbol{G}\]</div>
+<p>where <span class="math notranslate nohighlight">\(\boldsymbol{G} = [-\boldsymbol{R}(L), \boldsymbol{I}]\)</span>.
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0_e}\)</span> is the Hessian of the strain energy with these
+shape functions, the axial force <span class="math notranslate nohighlight">\(N = q_0\)</span> is uniform along the
+element, and the mass, geometric and nonlinear matrices are integrated
+analytically with the same polynomial shape functions. With <span class="math notranslate nohighlight">\(C_{03}\)</span>
+as the only coupling they are the functions of <a class="reference internal" href="#r1cb8794356fe-1" id="id6">[1]</a> above, asserted
+symbolically in
+<code class="docutils literal notranslate"><span class="pre">theory/deriving_equations/beamc/derive_beamc_coupled_shape_functions.py</span></code>,
+whose closed-form expressions are then used, unchanged. Otherwise
+<span class="math notranslate nohighlight">\(\boldsymbol{S}\)</span>, <span class="math notranslate nohighlight">\(\boldsymbol{F}_c^{-1}\)</span>, <span class="math notranslate nohighlight">\(\boldsymbol{H}_f\)</span> and the
+coefficients of the shape functions are evaluated numerically for each
+element and call, from <code class="docutils literal notranslate"><span class="pre">C</span></code>, which must then be positive definite,
+otherwise a <code class="docutils literal notranslate"><span class="pre">ValueError</span></code> is raised. This evaluation reproduces the
+arrays of the closed-form expressions to 1.3e-14 of their largest
+entries, see <code class="docutils literal notranslate"><span class="pre">tests/test_beam_sectional_stiffness.py</span></code>, and costs
+about 4 to 7 µs more per element and call than the 1.5 to 2 µs of
+<code class="docutils literal notranslate"><span class="pre">update_KC0</span></code>, <code class="docutils literal notranslate"><span class="pre">update_M</span></code>, <code class="docutils literal notranslate"><span class="pre">update_KG</span></code> and <code class="docutils literal notranslate"><span class="pre">update_fint</span></code> with
+the closed-form expressions (measured on 2026-10-31, Windows, calls
+from Python).</p>
+<p>The element is therefore exact under nodal loads for any <span class="math notranslate nohighlight">\(\boldsymbol{C}\)</span>:
+one element gives the tip displacements of a cantilever under any tip
+load, measured in <code class="docutils literal notranslate"><span class="pre">tests/test_beam_sectional_stiffness.py</span></code> to 2.7e-15
+of the largest for each single coupling <span class="math notranslate nohighlight">\(C_{ij} = 0.3 \sqrt{C_{ii}
+C_{jj}}\)</span> of a rectangular section, 50 mm by 30 mm, 0.5 m long, to
+2.0e-15 for a <span class="math notranslate nohighlight">\(\boldsymbol{C}\)</span> with 21 non-zero entries and to 5.4e-16
+for a composite box beam with extension-twist and bending-shear
+couplings, against up to 8.9e-2 and 0.42 with the functions of <a class="reference internal" href="#r1cb8794356fe-1" id="id7">[1]</a>
+taken from the diagonal of <span class="math notranslate nohighlight">\(\boldsymbol{C}\)</span>. <a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a>, whose
+interpolation does not depend on <span class="math notranslate nohighlight">\(\boldsymbol{C}\)</span>, converges as the
+square of the element length, e.g. 8.3e-2, 5.2e-3 and 3.3e-4 with 1, 4
+and 16 elements for the coupling <span class="math notranslate nohighlight">\(C_{15}\)</span> under a transverse tip
+load.</p>
 <p>The sign is verified against the literature in
 <code class="docutils literal notranslate"><span class="pre">tests/test_timoshenko_beam_literature.py</span></code>: one element reproduces
 the cantilever tip deflection <span class="math notranslate nohighlight">\(P L^3/(3 E I_{zz}) + P L/(G A)\)</span> of Eq.
-(1.2) of <a class="reference internal" href="#r1cb8794356fe-3" id="id6">[3]</a> (<code class="docutils literal notranslate"><span class="pre">0.053</span> <span class="pre">cm</span></code>) and, for a cantilever as long as deep, the
+(1.2) of <a class="reference internal" href="#r1cb8794356fe-3" id="id8">[3]</a> (<code class="docutils literal notranslate"><span class="pre">0.053</span> <span class="pre">cm</span></code>) and, for a cantilever as long as deep, the
 same formula, where the shear deflection is larger than the bending
 one; one element reproduces the frequency coefficients <code class="docutils literal notranslate"><span class="pre">3.322</span></code> and
-<code class="docutils literal notranslate"><span class="pre">26.569</span></code> of Example 3.10 of <a class="reference internal" href="#r1cb8794356fe-2" id="id7">[2]</a>, which has the same shape functions
+<code class="docutils literal notranslate"><span class="pre">26.569</span></code> of Example 3.10 of <a class="reference internal" href="#r1cb8794356fe-2" id="id9">[2]</a>, which has the same shape functions
 and consistent mass matrix with rotary inertia, three elements the
-errors of Table 3.6 of <a class="reference internal" href="#r1cb8794356fe-2" id="id8">[2]</a>, and refined meshes its exact frequencies.
+errors of Table 3.6 of <a class="reference internal" href="#r1cb8794356fe-2" id="id10">[2]</a>, and refined meshes its exact frequencies.
 With the positive sign these tests fail, e.g. by -44 % for the deep
 cantilever and with <code class="docutils literal notranslate"><span class="pre">3.952</span></code> instead of <code class="docutils literal notranslate"><span class="pre">3.322</span></code>. In
 <code class="docutils literal notranslate"><span class="pre">tests/test_beam_shear_moduli.py</span></code>, with different <code class="docutils literal notranslate"><span class="pre">G12</span></code> and
 <code class="docutils literal notranslate"><span class="pre">G13</span></code>, the same tip deflection and frequencies are obtained in each
 plane with its own modulus, <span class="math notranslate nohighlight">\(G = G_{12}\)</span> with <span class="math notranslate nohighlight">\(I_{zz}\)</span> for <span class="math notranslate nohighlight">\(v\)</span> and <span class="math notranslate nohighlight">\(G =
 G_{13}\)</span> with <span class="math notranslate nohighlight">\(I_{yy}\)</span> for <span class="math notranslate nohighlight">\(w\)</span>.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">nonlinear=1</span></code> in <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_fint" title="pyfe3d.beamc.BeamC.update_fint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_fint()</span></code></a>, the geometric
+nonlinearity is that of the von Kármán axial strain, with its nonlinear
+part <span class="math notranslate nohighlight">\((v_{,x}^2 + w_{,x}^2)/2\)</span> replaced by its element mean, Crisfield
+<a class="reference internal" href="#r1cb8794356fe-4" id="id11">[4]</a>, Section 7.1.3, Eqs. (7.31)-(7.32), and Crisfield <a class="reference internal" href="#r1cb8794356fe-5" id="id12">[5]</a>, Section
+17.1.5, Eqs. (17.56a)-(17.56b):</p>
+<div class="math notranslate nohighlight">
+\[\epsilon_{xx} = u_{,x} + \bar{\epsilon}_{NL} + y \kappa_y + z
+\kappa_z, \qquad \bar{\epsilon}_{NL} = \frac{1}{L} \int_0^L
+\frac{1}{2} \left( v_{,x}^2 + w_{,x}^2 \right) dx\]</div>
+<p>since the constant <span class="math notranslate nohighlight">\(u_{,x}\)</span> of the linear <span class="math notranslate nohighlight">\(u\)</span> cannot balance the
+pointwise value, of degree four in <span class="math notranslate nohighlight">\(x\)</span> with the cubic <span class="math notranslate nohighlight">\(v\)</span> and <span class="math notranslate nohighlight">\(w\)</span>, which
+gives membrane locking <a class="reference internal" href="#r1cb8794356fe-4" id="id13">[4]</a>. The tangent stiffness matrix <code class="docutils literal notranslate"><span class="pre">KC0</span> <span class="pre">+</span> <span class="pre">KCNL</span> <span class="pre">+</span>
+<span class="pre">KG</span></code> is the exact Jacobian of the internal forces, see
+<a class="reference internal" href="#pyfe3d.beamc.BeamC.update_KCNL" title="pyfe3d.beamc.BeamC.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a> and <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_KG" title="pyfe3d.beamc.BeamC.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG()</span></code></a>, whose axial force is the
+element mean of <span class="math notranslate nohighlight">\(N\)</span>.</p>
 <p>The matrices and the internal forces are computed in element coordinates
 and transformed to global coordinates with the transformation matrix of the
 element, e.g. <span class="math notranslate nohighlight">\(\boldsymbol{K} = \boldsymbol{T} \boldsymbol{K}_e \boldsymbol{T}^\top\)</span>, where <span class="math notranslate nohighlight">\(\boldsymbol{T}\)</span> is block diagonal with
@@ -943,23 +1133,36 @@ system is not updated with the displacements.</p>
 <div role="list" class="citation-list">
 <div class="citation" id="r1cb8794356fe-1" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id2">2</a>,<a role="doc-backlink" href="#id3">3</a>,<a role="doc-backlink" href="#id5">4</a>)</span>
+<span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id2">2</a>,<a role="doc-backlink" href="#id3">3</a>,<a role="doc-backlink" href="#id5">4</a>,<a role="doc-backlink" href="#id6">5</a>,<a role="doc-backlink" href="#id7">6</a>)</span>
 <p>Luo, Y., 2008, “An Efficient 3D Timoshenko Beam Element with
 Consistent Shape Functions,” Adv. Theor. Appl. Mech., 1(3),
 pp. 95–106.</p>
 </div>
 <div class="citation" id="r1cb8794356fe-2" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id4">1</a>,<a role="doc-backlink" href="#id7">2</a>,<a role="doc-backlink" href="#id8">3</a>)</span>
+<span class="backrefs">(<a role="doc-backlink" href="#id4">1</a>,<a role="doc-backlink" href="#id9">2</a>,<a role="doc-backlink" href="#id10">3</a>)</span>
 <p>Petyt, M., 2010, Introduction to Finite Element Vibration
 Analysis, 2nd ed., Cambridge University Press, Section 3.9.
 <a class="reference external" href="https://doi.org/10.1017/CBO9780511761195">https://doi.org/10.1017/CBO9780511761195</a></p>
 </div>
 <div class="citation" id="r1cb8794356fe-3" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id6">3</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id8">3</a><span class="fn-bracket">]</span></span>
 <p>Bathe, K. J., 2014, Finite Element Procedures, 2nd ed., K. J.
 Bathe, Watertown, MA, ISBN 978-0-9790049-5-7, Section 1.2, p. 5,
 Eq. (1.2), Fig. 1.2(b).</p>
+</div>
+<div class="citation" id="r1cb8794356fe-4" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>4<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id11">1</a>,<a role="doc-backlink" href="#id13">2</a>)</span>
+<p>Crisfield, M. A., Non-linear Finite Element Analysis of Solids
+and Structures, Volume 1: Essentials, John Wiley &amp; Sons, Chichester,
+1991.</p>
+</div>
+<div class="citation" id="r1cb8794356fe-5" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id12">5</a><span class="fn-bracket">]</span></span>
+<p>Crisfield, M. A., Non-linear Finite Element Analysis of Solids
+and Structures, Volume 2: Advanced Topics, John Wiley &amp; Sons,
+Chichester, 1997.</p>
 </div>
 </div>
 <dl class="py attribute">
@@ -1097,9 +1300,8 @@ are written at the positions <code class="docutils literal notranslate"><span cl
 the row and column indices, built from <code class="docutils literal notranslate"><span class="pre">c1</span></code> and <code class="docutils literal notranslate"><span class="pre">c2</span></code>, are stored
 in <code class="docutils literal notranslate"><span class="pre">KC0r</span></code> and <code class="docutils literal notranslate"><span class="pre">KC0c</span></code>, and the values are added to those already
 in <code class="docutils literal notranslate"><span class="pre">KC0v</span></code>. The matrix is computed from <code class="docutils literal notranslate"><span class="pre">length</span></code>, the rotation
-matrix and the attributes <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">E</span></code>, <code class="docutils literal notranslate"><span class="pre">G12</span></code>, <code class="docutils literal notranslate"><span class="pre">G13</span></code>, <code class="docutils literal notranslate"><span class="pre">GJ</span></code>,
-<code class="docutils literal notranslate"><span class="pre">Ay</span></code>, <code class="docutils literal notranslate"><span class="pre">Az</span></code>, <code class="docutils literal notranslate"><span class="pre">Iyy</span></code>, <code class="docutils literal notranslate"><span class="pre">Izz</span></code> and <code class="docutils literal notranslate"><span class="pre">Iyz</span></code> of <code class="docutils literal notranslate"><span class="pre">prop</span></code>. <code class="docutils literal notranslate"><span class="pre">length</span></code>
-and the
+matrix and the sectional stiffness matrix <code class="docutils literal notranslate"><span class="pre">C</span></code> of <code class="docutils literal notranslate"><span class="pre">prop</span></code>, see
+<a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>. <code class="docutils literal notranslate"><span class="pre">length</span></code> and the
 rotation matrix must be updated before, see
 <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_rotation_matrix" title="pyfe3d.beamc.BeamC.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a> and <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_probe_xe" title="pyfe3d.beamc.BeamC.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a>.</p>
 <dl class="field-list">
@@ -1130,7 +1332,12 @@ update the stiffness matrix values <code class="docutils literal notranslate"><s
 <code class="docutils literal notranslate"><span class="pre">ue</span></code>, of the linear strain energy given in the notes of
 <a class="reference internal" href="#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>, integrated analytically along the element with the
 consistent shape functions, and transformed to global coordinates as
-described there.</p>
+described there. With couplings in <code class="docutils literal notranslate"><span class="pre">C</span></code> other than <code class="docutils literal notranslate"><span class="pre">C[0,</span> <span class="pre">3]</span></code> it is
+<span class="math notranslate nohighlight">\(\boldsymbol{G}^\top \boldsymbol{F}_c^{-1} \boldsymbol{G}\)</span>, from the
+flexibility of the element clamped at node 1, evaluated numerically,
+see “Shape functions with couplings” in the notes of
+<a class="reference internal" href="#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>; <code class="docutils literal notranslate"><span class="pre">C</span></code> must then be positive definite, otherwise a
+<code class="docutils literal notranslate"><span class="pre">ValueError</span></code> is raised.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1176,39 +1383,83 @@ stiffness matrix values <code class="docutils literal notranslate"><span class="
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, that is <span class="math notranslate nohighlight">\(\boldsymbol{K}_{CNL} + \boldsymbol{K}_{GNL}\)</span>, the book’s nonlinear constitutive stiffness matrix <span class="math notranslate nohighlight">\(\boldsymbol{K}_{CNL}\)</span> of the terms of <span class="math notranslate nohighlight">\(\boldsymbol{B}_{NL}\)</span> plus the geometric <span class="math notranslate nohighlight">\(\boldsymbol{K}_{GNL}\)</span>, built from the von Karman
-axial strain</p>
+<p>KCNL = KC0L + KCL0 + KCLL + KGNL, that is <span class="math notranslate nohighlight">\(\boldsymbol{K}_{CNL} +
+\boldsymbol{K}_{GNL}\)</span>, the nonlinear constitutive stiffness matrix
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_{CNL}\)</span> of the terms of the nonlinear axial strain
+plus the geometric <span class="math notranslate nohighlight">\(\boldsymbol{K}_{GNL}\)</span> of the axial force of the
+nonlinear axial strain. Crisfield <a class="reference internal" href="#rd9d95090c987-1" id="id19">[1]</a>, Section 7.1.1, Eq. (7.24),
+keeps that axial force in the initial-stress matrix instead, that is
+in <span class="math notranslate nohighlight">\(\boldsymbol{K}_G + \boldsymbol{K}_{GNL}\)</span>; the tangent stiffness
+matrix is the same. The axial strain is that of
+von Kármán with its nonlinear part replaced by the element mean,
+Crisfield <a class="reference internal" href="#rd9d95090c987-1" id="id20">[1]</a>, Section 7.1.3, Eqs. (7.31)-(7.32), and Crisfield
+<a class="reference internal" href="#rd9d95090c987-2" id="id21">[2]</a>, Section 17.1.5, Eqs. (17.56a)-(17.56b):</p>
 <div class="math notranslate nohighlight">
-\[\epsilon_{xx} = u_{,x} + \frac{1}{2} \left( v_{,x}^2 + w_{,x}^2 \right)\]</div>
-<p>whose nonlinear part is <span class="math notranslate nohighlight">\(\epsilon_{NL} = \frac{1}{2} \boldsymbol{B}_{NL} \boldsymbol{u}_e\)</span>, with
-<span class="math notranslate nohighlight">\(\boldsymbol{B}_{NL} = v_{,x} \frac{\partial \boldsymbol{S}^v}{\partial x} + w_{,x} \frac{\partial \boldsymbol{S}^w}{\partial x}\)</span> its variation. With
-<span class="math notranslate nohighlight">\(\boldsymbol{B}_L\)</span> the linear strain-displacement matrix, <span class="math notranslate nohighlight">\(\boldsymbol{C}_{sec}\)</span> the sectional
-constitutive matrix, whose first column couples the axial strain with <span class="math notranslate nohighlight">\(E A\)</span>, <span class="math notranslate nohighlight">\(E A_y\)</span>
-and <span class="math notranslate nohighlight">\(E A_z\)</span>, and <span class="math notranslate nohighlight">\(N_{NL} = E A \epsilon_{NL}\)</span>:</p>
+\[\epsilon_{xx} = u_{,x} + \bar{\epsilon}_{NL}, \qquad
+\bar{\epsilon}_{NL} = \frac{1}{L} \int_0^L \frac{1}{2} \left(
+v_{,x}^2 + w_{,x}^2 \right) dx = \frac{1}{2}
+\boldsymbol{u}_e^\top \boldsymbol{H}_m \boldsymbol{u}_e\]</div>
+<p>with <span class="math notranslate nohighlight">\(\boldsymbol{H}_m\)</span>, the gradient <span class="math notranslate nohighlight">\(\bar{\boldsymbol{B}}_{NL} =
+\boldsymbol{u}_e^\top \boldsymbol{H}_m\)</span> and the row
+<span class="math notranslate nohighlight">\(\overline{\boldsymbol{EB}}_L\)</span> of the mean axial force of the linear
+strains given in <code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_means()</span></code>. With <span class="math notranslate nohighlight">\(\bar{N}_{NL} = C_{00}
+\bar{\epsilon}_{NL}\)</span>, <span class="math notranslate nohighlight">\(C_{00}\)</span> = <code class="docutils literal notranslate"><span class="pre">C[0,</span> <span class="pre">0]</span></code> of <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>,
+<span class="math notranslate nohighlight">\(E A\)</span> when <code class="docutils literal notranslate"><span class="pre">C</span></code> is not set (own derivation, asserted in
+<code class="docutils literal notranslate"><span class="pre">theory/deriving_equations/beamc/derive_beamc_KC0L_KCL0_KCLL_KGLL_sparse.py</span></code>):</p>
 <ul class="simple">
-<li><p>KC0L = <span class="math notranslate nohighlight">\(\boldsymbol{B}_L^\top \boldsymbol{C}_{sec} \boldsymbol{B}_{NL}\)</span></p></li>
+<li><p>KC0L = <span class="math notranslate nohighlight">\(L \, \overline{\boldsymbol{EB}}_L^\top \bar{\boldsymbol{B}}_{NL}\)</span></p></li>
 <li><p>KCL0 = KC0L`^top`</p></li>
-<li><p>KCLL = <span class="math notranslate nohighlight">\(\boldsymbol{B}_{NL}^\top \boldsymbol{C}_{sec} \boldsymbol{B}_{NL}\)</span></p></li>
-<li><p>KGNL = <span class="math notranslate nohighlight">\(N_{NL} \left( \left(\frac{\partial \boldsymbol{S}^v}{\partial x}\right)^\top \frac{\partial \boldsymbol{S}^v}{\partial x}
-+ \left(\frac{\partial \boldsymbol{S}^w}{\partial x}\right)^\top \frac{\partial \boldsymbol{S}^w}{\partial x} \right)\)</span></p></li>
+<li><p>KCLL = <span class="math notranslate nohighlight">\(L \, C_{00} \, \bar{\boldsymbol{B}}_{NL}^\top \bar{\boldsymbol{B}}_{NL}\)</span></p></li>
+<li><p>KGNL = <span class="math notranslate nohighlight">\(L \, \bar{N}_{NL} \boldsymbol{H}_m\)</span></p></li>
 </ul>
-<p>The first three groups are the constitutive terms coupling the linear and
-the nonlinear parts of the axial strain. KGNL is geometric, carrying the
-axial force of the nonlinear axial strain. It is collected here so that
-<a class="reference internal" href="#pyfe3d.beamc.BeamC.update_KG" title="pyfe3d.beamc.BeamC.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG()</span></code></a> stays homogeneous of degree one in the displacements,
-which is what a linear buckling analysis needs. With it here,</p>
+<p>The first three groups are the constitutive terms coupling the linear
+and the nonlinear parts of the axial strain. KGNL is geometric,
+carrying the axial force of the nonlinear axial strain. It is
+collected here so that <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_KG" title="pyfe3d.beamc.BeamC.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG()</span></code></a> stays homogeneous of degree
+one in the displacements, which is what a linear buckling analysis
+needs. With it here,</p>
 <div class="math notranslate nohighlight">
 \[\boldsymbol{K}_T = \boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}(\boldsymbol{u}) + \boldsymbol{K}_{GNL}(\boldsymbol{u}) + \boldsymbol{K}_G(\boldsymbol{u})\]</div>
-<p>is the exact Jacobian of the internal forces of <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_fint" title="pyfe3d.beamc.BeamC.update_fint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_fint()</span></code></a> with
-<code class="docutils literal notranslate"><span class="pre">nonlinear=1</span></code>, and a Newton-Raphson iteration built on them converges
-quadratically.</p>
-<p>The integration is made by <code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_probe_KCNLve()</span></code> with the
-5-point Gauss-Legendre quadrature, exact for the consistent shape
-functions. The von Karman axial strain is valid for small strains and
-moderate rotations: the nonlinear axial strain <span class="math notranslate nohighlight">\(\epsilon_{NL}\)</span> is
-uniform over the cross section, the curvatures and the transverse
-shear strains are linear in the displacements, and the element
-coordinate system is not updated with the displacements.</p>
+<p>is the exact, symmetric Jacobian of the internal forces of
+<a class="reference internal" href="#pyfe3d.beamc.BeamC.update_fint" title="pyfe3d.beamc.BeamC.update_fint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_fint()</span></code></a> with <code class="docutils literal notranslate"><span class="pre">nonlinear=1</span></code>, and a Newton-Raphson
+iteration built on them converges quadratically.</p>
+<p>With <span class="math notranslate nohighlight">\(u\)</span> linear and <span class="math notranslate nohighlight">\(v\)</span>, <span class="math notranslate nohighlight">\(w\)</span> cubic, the pointwise <span class="math notranslate nohighlight">\((v_{,x}^2 +
+w_{,x}^2)/2\)</span> is a polynomial of degree four in <span class="math notranslate nohighlight">\(x\)</span> that the constant
+<span class="math notranslate nohighlight">\(u_{,x}\)</span> cannot balance, so that the axial strain cannot vanish in
+inextensional bending and coarse meshes are too stiff (membrane
+locking, <a class="reference internal" href="#rd9d95090c987-1" id="id22">[1]</a>, Section 7.1.3). The element mean removes it; <a class="reference internal" href="#rd9d95090c987-1" id="id23">[1]</a>
+justifies it with the Hu-Washizu principle and a constant membrane
+strain. With zero transverse nodal displacements, as in the local
+frame of a co-rotational element, and an infinite transverse shear
+stiffness, <span class="math notranslate nohighlight">\(\bar{\epsilon}_{NL}\)</span> is the term
+<span class="math notranslate nohighlight">\(\boldsymbol{\theta}_l^\top \boldsymbol{X} \boldsymbol{\theta}_l/60\)</span>
+of <a class="reference internal" href="#rd9d95090c987-2" id="id24">[2]</a>, Eq. (17.56a). The slopes <span class="math notranslate nohighlight">\(v_{,x}\)</span> and <span class="math notranslate nohighlight">\(w_{,x}\)</span> include the
+transverse shear strains, so that <span class="math notranslate nohighlight">\(\alpha_y\)</span>, <span class="math notranslate nohighlight">\(\beta_y\)</span>, <span class="math notranslate nohighlight">\(\alpha_z\)</span>
+and <span class="math notranslate nohighlight">\(\beta_z\)</span> enter <span class="math notranslate nohighlight">\(\boldsymbol{H}_m\)</span>, or, with couplings in <code class="docutils literal notranslate"><span class="pre">C</span></code>
+other than <code class="docutils literal notranslate"><span class="pre">C[0,</span> <span class="pre">3]</span></code>, all entries of <span class="math notranslate nohighlight">\(\boldsymbol{C}^{-1}\)</span>, see
+<code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_means()</span></code>. The von Kármán axial strain is
+valid for small strains and moderate rotations: the nonlinear axial
+strain is uniform over the cross section and along the element, the
+curvatures and the transverse shear strains are linear in the
+displacements, and the element coordinate system is not updated with
+the displacements.</p>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="rd9d95090c987-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id19">1</a>,<a role="doc-backlink" href="#id20">2</a>,<a role="doc-backlink" href="#id22">3</a>,<a role="doc-backlink" href="#id23">4</a>)</span>
+<p>Crisfield, M. A., Non-linear Finite Element Analysis of Solids
+and Structures, Volume 1: Essentials, John Wiley &amp; Sons,
+Chichester, 1991.</p>
+</div>
+<div class="citation" id="rd9d95090c987-2" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id21">1</a>,<a role="doc-backlink" href="#id24">2</a>)</span>
+<p>Crisfield, M. A., Non-linear Finite Element Analysis of Solids
+and Structures, Volume 2: Advanced Topics, John Wiley &amp; Sons,
+Chichester, 1997.</p>
+</div>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -1220,9 +1471,11 @@ are written at the positions <code class="docutils literal notranslate"><span cl
 the row and column indices, built from <code class="docutils literal notranslate"><span class="pre">c1</span></code> and <code class="docutils literal notranslate"><span class="pre">c2</span></code>, are stored
 in <code class="docutils literal notranslate"><span class="pre">KGr</span></code> and <code class="docutils literal notranslate"><span class="pre">KGc</span></code>, and the values are added to those already in
 <code class="docutils literal notranslate"><span class="pre">KGv</span></code>. The matrix depends on the axial force computed from the
-displacements <code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>, from <code class="docutils literal notranslate"><span class="pre">length</span></code> and from the attributes
-<code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">E</span></code>, <code class="docutils literal notranslate"><span class="pre">G12</span></code>, <code class="docutils literal notranslate"><span class="pre">G13</span></code>, <code class="docutils literal notranslate"><span class="pre">Ay</span></code>, <code class="docutils literal notranslate"><span class="pre">Az</span></code>, <code class="docutils literal notranslate"><span class="pre">Iyy</span></code> and <code class="docutils literal notranslate"><span class="pre">Izz</span></code>
-of <code class="docutils literal notranslate"><span class="pre">prop</span></code>. <code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>, <code class="docutils literal notranslate"><span class="pre">length</span></code> and the rotation matrix must be
+displacements <code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>, from <code class="docutils literal notranslate"><span class="pre">length</span></code> and from the sectional
+stiffness matrix <code class="docutils literal notranslate"><span class="pre">C</span></code> of <code class="docutils literal notranslate"><span class="pre">prop</span></code>, see <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>: its
+entries <code class="docutils literal notranslate"><span class="pre">C[0,</span> <span class="pre">0]</span></code>, <code class="docutils literal notranslate"><span class="pre">C[0,</span> <span class="pre">3]</span></code>, <code class="docutils literal notranslate"><span class="pre">C[1,</span> <span class="pre">1]</span></code>, <code class="docutils literal notranslate"><span class="pre">C[2,</span> <span class="pre">2]</span></code>, <code class="docutils literal notranslate"><span class="pre">C[4,</span>
+<span class="pre">4]</span></code> and <code class="docutils literal notranslate"><span class="pre">C[5,</span> <span class="pre">5]</span></code> without other couplings, all of them otherwise.
+<code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>, <code class="docutils literal notranslate"><span class="pre">length</span></code> and the rotation matrix must be
 updated before, see <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_probe_ue" title="pyfe3d.beamc.BeamC.update_probe_ue"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_ue()</span></code></a> and
 <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_probe_xe" title="pyfe3d.beamc.BeamC.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a>.</p>
 <dl class="field-list">
@@ -1251,24 +1504,52 @@ stiffness matrix values <code class="docutils literal notranslate"><span class="
 <p class="rubric">Notes</p>
 <p>The geometric stiffness matrix is</p>
 <div class="math notranslate nohighlight">
-\[\boldsymbol{K}_G = \int_0^L N \left[ \left(\frac{\partial \boldsymbol{S}^v}{\partial x}\right)^\top \frac{\partial \boldsymbol{S}^v}{\partial x}
-+ \left(\frac{\partial \boldsymbol{S}^w}{\partial x}\right)^\top \frac{\partial \boldsymbol{S}^w}{\partial x} \right] dx\]</div>
-<p>the Hessian of <span class="math notranslate nohighlight">\(\frac{1}{2} \int_0^L N (v_{,x}^2 + w_{,x}^2) dx\)</span> at a
-constant axial force <span class="math notranslate nohighlight">\(N\)</span>, where <span class="math notranslate nohighlight">\(\partial \boldsymbol{S}^v /
-\partial x\)</span> and <span class="math notranslate nohighlight">\(\partial \boldsymbol{S}^w / \partial x\)</span> are the rows
-<code class="docutils literal notranslate"><span class="pre">Sv_x</span></code> and <code class="docutils literal notranslate"><span class="pre">Sw_x</span></code> of <code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_probe_BL_G()</span></code>, giving the slopes
-<span class="math notranslate nohighlight">\(v_{,x}\)</span> and <span class="math notranslate nohighlight">\(w_{,x}\)</span> with the consistent shape functions, and <span class="math notranslate nohighlight">\(N = E
-(A u_{,x} + A_y \kappa_y + A_z \kappa_z)\)</span> is the axial force of the
-linear strains at <code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>, see the notes of <a class="reference internal" href="#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>.
-<span class="math notranslate nohighlight">\(N\)</span> varies linearly along the element, from <code class="docutils literal notranslate"><span class="pre">Na</span></code> at node 1 to
-<code class="docutils literal notranslate"><span class="pre">Nb</span></code> at node 2 in the code, and the integral is computed
-analytically.</p>
+\[\boldsymbol{K}_G = N_m \int_0^L \left[ \left(\frac{\partial \boldsymbol{S}^v}{\partial x}\right)^\top \frac{\partial \boldsymbol{S}^v}{\partial x}
++ \left(\frac{\partial \boldsymbol{S}^w}{\partial x}\right)^\top \frac{\partial \boldsymbol{S}^w}{\partial x} \right] dx
+= L N_m \boldsymbol{H}_m\]</div>
+<p>the Hessian of <span class="math notranslate nohighlight">\(L N_m \bar{\epsilon}_{NL}\)</span> at a constant <span class="math notranslate nohighlight">\(N_m\)</span>, where
+<span class="math notranslate nohighlight">\(\partial \boldsymbol{S}^v / \partial x\)</span> and <span class="math notranslate nohighlight">\(\partial
+\boldsymbol{S}^w / \partial x\)</span> give the slopes <span class="math notranslate nohighlight">\(v_{,x}\)</span> and <span class="math notranslate nohighlight">\(w_{,x}\)</span>
+with the consistent shape functions, <span class="math notranslate nohighlight">\(\bar{\epsilon}_{NL}\)</span> and
+<span class="math notranslate nohighlight">\(\boldsymbol{H}_m\)</span> are those of <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_KCNL" title="pyfe3d.beamc.BeamC.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a> and</p>
+<div class="math notranslate nohighlight">
+\[N_m = \frac{1}{L} \int_0^L N dx\]</div>
+<p>is the element mean of the axial force of the linear strains, <span class="math notranslate nohighlight">\(N =
+\boldsymbol{C}_{0,:} \boldsymbol{\epsilon}\)</span>, at <code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>, with
+the first row of the sectional stiffness matrix, see the notes of
+<a class="reference internal" href="#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>. Without couplings in <code class="docutils literal notranslate"><span class="pre">C</span></code> other than <code class="docutils literal notranslate"><span class="pre">C[0,</span> <span class="pre">3]</span></code>,
+<span class="math notranslate nohighlight">\(N_m = (C_{00} (u_2 - u_1) + C_{03} ({r_x}_2 - {r_x}_1))/L\)</span>, i.e. <span class="math notranslate nohighlight">\(E
+A (u_2 - u_1)/L\)</span> when <code class="docutils literal notranslate"><span class="pre">C</span></code> is not set and <code class="docutils literal notranslate"><span class="pre">Ay</span></code>, <code class="docutils literal notranslate"><span class="pre">Az</span></code> and <code class="docutils literal notranslate"><span class="pre">Iyz</span></code>
+are zero; with other couplings, <span class="math notranslate nohighlight">\(N_m = q_0\)</span>, the first entry of
+<span class="math notranslate nohighlight">\(\boldsymbol{q} = \boldsymbol{H}_f \boldsymbol{u}_e\)</span>, see “Shape
+functions with couplings” in the notes of <a class="reference internal" href="#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>. The mean
+follows from the mean nonlinear
+axial strain of <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_KCNL" title="pyfe3d.beamc.BeamC.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>, with which the energy of the
+axial strain contains <span class="math notranslate nohighlight">\(\int_0^L N dx \, \bar{\epsilon}_{NL}\)</span>, such
+that <code class="docutils literal notranslate"><span class="pre">KC0</span> <span class="pre">+</span> <span class="pre">KCNL</span> <span class="pre">+</span> <span class="pre">KG</span></code> is the exact Jacobian of the internal forces
+of <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_fint" title="pyfe3d.beamc.BeamC.update_fint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_fint()</span></code></a> with <code class="docutils literal notranslate"><span class="pre">nonlinear=1</span></code> (own derivation, asserted
+in
+<code class="docutils literal notranslate"><span class="pre">theory/deriving_equations/beamc/derive_beamc_KC0L_KCL0_KCLL_KGLL_sparse.py</span></code>);
+the geometric matrix of Crisfield <a class="reference internal" href="#rf123981d2a05-1" id="id27">[1]</a>, Eq. (7.95), also carries an
+axial force constant along the element. <span class="math notranslate nohighlight">\(N_m\)</span> is the axial force of
+the nodal internal forces, <code class="docutils literal notranslate"><span class="pre">-finte[0]</span> <span class="pre">=</span> <span class="pre">finte[6]</span></code>. Since the shape
+functions solve the equilibrium equations, <span class="math notranslate nohighlight">\(N\)</span> is uniform along the
+element for any <code class="docutils literal notranslate"><span class="pre">C</span></code> and <span class="math notranslate nohighlight">\(N_m = N\)</span>.</p>
 <p><span class="math notranslate nohighlight">\(\boldsymbol{K}_G\)</span> is homogeneous of degree one in <code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>. With <code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>
 from the linear static solution of a reference load, the critical
 load multipliers <span class="math notranslate nohighlight">\(\lambda\)</span> of the linear buckling analysis solve
 <span class="math notranslate nohighlight">\((\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}\)</span>, see
 <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a>. The geometric term of the
 nonlinear axial strain is in <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_KCNL" title="pyfe3d.beamc.BeamC.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>.</p>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="rf123981d2a05-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id27">1</a><span class="fn-bracket">]</span></span>
+<p>Crisfield, M. A., Non-linear Finite Element Analysis of Solids
+and Structures, Volume 1: Essentials, John Wiley &amp; Sons,
+Chichester, 1991.</p>
+</div>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -1282,8 +1563,10 @@ indices, built from <code class="docutils literal notranslate"><span class="pre"
 <code class="docutils literal notranslate"><span class="pre">Mc</span></code>, and the values are added to those already in <code class="docutils literal notranslate"><span class="pre">Mv</span></code>. The
 matrix is computed from <code class="docutils literal notranslate"><span class="pre">length</span></code>, the rotation matrix and the attributes
 <code class="docutils literal notranslate"><span class="pre">intrho</span></code>, <code class="docutils literal notranslate"><span class="pre">intrhoy</span></code>, <code class="docutils literal notranslate"><span class="pre">intrhoz</span></code>, <code class="docutils literal notranslate"><span class="pre">intrhoy2</span></code>, <code class="docutils literal notranslate"><span class="pre">intrhoz2</span></code> and
-<code class="docutils literal notranslate"><span class="pre">intrhoyz</span></code>, and <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">E</span></code>, <code class="docutils literal notranslate"><span class="pre">G12</span></code>, <code class="docutils literal notranslate"><span class="pre">G13</span></code>, <code class="docutils literal notranslate"><span class="pre">Iyy</span></code> and
-<code class="docutils literal notranslate"><span class="pre">Izz</span></code> of <code class="docutils literal notranslate"><span class="pre">prop</span></code>. <code class="docutils literal notranslate"><span class="pre">length</span></code> and the rotation matrix must be updated before, see <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_rotation_matrix" title="pyfe3d.beamc.BeamC.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a> and
+<code class="docutils literal notranslate"><span class="pre">intrhoyz</span></code>, and the diagonal entries <code class="docutils literal notranslate"><span class="pre">C[1,</span> <span class="pre">1]</span></code>, <code class="docutils literal notranslate"><span class="pre">C[2,</span> <span class="pre">2]</span></code>,
+<code class="docutils literal notranslate"><span class="pre">C[4,</span> <span class="pre">4]</span></code> and <code class="docutils literal notranslate"><span class="pre">C[5,</span> <span class="pre">5]</span></code> of the sectional stiffness matrix of
+<code class="docutils literal notranslate"><span class="pre">prop</span></code>, or all its entries with couplings other than <code class="docutils literal notranslate"><span class="pre">C[0,</span> <span class="pre">3]</span></code>
+and <code class="docutils literal notranslate"><span class="pre">mtype=0</span></code>. <code class="docutils literal notranslate"><span class="pre">length</span></code> and the rotation matrix must be updated before, see <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_rotation_matrix" title="pyfe3d.beamc.BeamC.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a> and
 <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_probe_xe" title="pyfe3d.beamc.BeamC.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a>.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
@@ -1308,7 +1591,10 @@ size as <code class="docutils literal notranslate"><span class="pre">Mr</span></
 </dd>
 <dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><dl class="simple">
-<dt>ValueError</dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">mtype</span></code> is not 0 or 1.</p>
+<dt>ValueError</dt><dd><p>If <code class="docutils literal notranslate"><span class="pre">mtype</span></code> is not 0 or 1, if <code class="docutils literal notranslate"><span class="pre">C</span></code> is not positive
+semi-definite, see <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>, or if, with <code class="docutils literal notranslate"><span class="pre">mtype=0</span></code>,
+<code class="docutils literal notranslate"><span class="pre">C</span></code> has couplings other than <code class="docutils literal notranslate"><span class="pre">C[0,</span> <span class="pre">3]</span></code> and is not positive
+definite.</p>
 </dd>
 </dl>
 </dd>
@@ -1330,8 +1616,12 @@ section with the inertial attributes of <a class="reference internal" href="beam
 <p><code class="docutils literal notranslate"><span class="pre">mtype=0</span></code> gives the consistent mass matrix, the Hessian of <span class="math notranslate nohighlight">\(T\)</span> with
 respect to the nodal velocities, interpolated with the consistent
 shape functions of <a class="reference internal" href="#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>, which depend on <code class="docutils literal notranslate"><span class="pre">alphay</span></code> and
-<code class="docutils literal notranslate"><span class="pre">alphaz</span></code> and hence on <code class="docutils literal notranslate"><span class="pre">E</span></code>, <code class="docutils literal notranslate"><span class="pre">G12</span></code>, <code class="docutils literal notranslate"><span class="pre">G13</span></code>, <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">Iyy</span></code> and
-<code class="docutils literal notranslate"><span class="pre">Izz</span></code>. The
+<code class="docutils literal notranslate"><span class="pre">alphaz</span></code> and hence on <code class="docutils literal notranslate"><span class="pre">C[1,</span> <span class="pre">1]</span></code>, <code class="docutils literal notranslate"><span class="pre">C[2,</span> <span class="pre">2]</span></code>, <code class="docutils literal notranslate"><span class="pre">C[4,</span> <span class="pre">4]</span></code> and
+<code class="docutils literal notranslate"><span class="pre">C[5,</span> <span class="pre">5]</span></code>, i.e. on <code class="docutils literal notranslate"><span class="pre">E</span></code>, <code class="docutils literal notranslate"><span class="pre">G12</span></code>, <code class="docutils literal notranslate"><span class="pre">G13</span></code>, <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">Iyy</span></code> and
+<code class="docutils literal notranslate"><span class="pre">Izz</span></code> when <code class="docutils literal notranslate"><span class="pre">C</span></code> is not set. With couplings in <code class="docutils literal notranslate"><span class="pre">C</span></code> other than
+<code class="docutils literal notranslate"><span class="pre">C[0,</span> <span class="pre">3]</span></code>, the shape functions depend on all entries of <code class="docutils literal notranslate"><span class="pre">C</span></code>, see
+“Shape functions with couplings” in the notes of <a class="reference internal" href="#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>,
+and <code class="docutils literal notranslate"><span class="pre">C</span></code> must be positive definite. The
 integral along the element is computed analytically (exactly), and
 the rotary inertia is included.</p>
 <p><code class="docutils literal notranslate"><span class="pre">mtype=1</span></code> gives the lumped mass matrix, diagonal in element
@@ -1341,11 +1631,11 @@ m_{yy}/2\)</span> for <span class="math notranslate nohighlight">\(r_z\)</span>.
 quadrature of <span class="math notranslate nohighlight">\(T\)</span>, whose points are the nodes, without the coupling
 terms of <span class="math notranslate nohighlight">\(m_y\)</span>, <span class="math notranslate nohighlight">\(m_z\)</span> and <span class="math notranslate nohighlight">\(m_{yz}\)</span>, which are not included.</p>
 <p>The lumped mass matrix follows the lumped mass matrix by Lobatto
-integration of Brockman (1987) <a class="reference internal" href="#re0cf59bff0c2-1" id="id12">[1]</a>, p. 2348, adapted to the beam:
+integration of Brockman (1987) <a class="reference internal" href="#re0cf59bff0c2-1" id="id29">[1]</a>, p. 2348, adapted to the beam:
 the two-point Gauss-Lobatto quadrature of <span class="math notranslate nohighlight">\(T\)</span>, whose points are the
 nodes, gives a diagonal matrix only without the first moments of the
 density, which are therefore dropped. The consistent mass matrix is
-the classical one, see Petyt (2010) <a class="reference internal" href="#re0cf59bff0c2-2" id="id13">[2]</a>: Sec. 3.3, Eq. (3.59), for
+the classical one, see Petyt (2010) <a class="reference internal" href="#re0cf59bff0c2-2" id="id30">[2]</a>: Sec. 3.3, Eq. (3.59), for
 the axial terms, Sec. 3.4, Eq. (3.102), with <span class="math notranslate nohighlight">\(m_{yy} + m_{zz}\)</span> in
 place of <span class="math notranslate nohighlight">\(\rho I_x\)</span>, for the torsional terms, and Sec. 3.9, Eqs.
 (3.234) and (3.237), for the bending terms with the shape functions
@@ -1355,13 +1645,13 @@ and <span class="math notranslate nohighlight">\(m_{yz}\)</span> are zero.</p>
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="re0cf59bff0c2-1" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id12">1</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id29">1</a><span class="fn-bracket">]</span></span>
 <p>Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
 Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
 <a class="reference external" href="https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208">https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208</a></p>
 </div>
 <div class="citation" id="re0cf59bff0c2-2" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id13">2</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id30">2</a><span class="fn-bracket">]</span></span>
 <p>Petyt, M., 2010, Introduction to Finite Element Vibration
 Analysis, 2nd ed., Cambridge University Press, Cambridge.
 <a class="reference external" href="https://doi.org/10.1017/CBO9780511761195">https://doi.org/10.1017/CBO9780511761195</a></p>
@@ -1400,7 +1690,7 @@ stiffness matrix of the internal forces is <code class="docutils literal notrans
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>The nonlinear terms are those of the von Karman strains, for which the
+<p>The nonlinear terms are those of the von Kármán strains, for which the
 exact Jacobian of the internal forces is <code class="docutils literal notranslate"><span class="pre">KC0</span> <span class="pre">+</span> <span class="pre">KCNL</span> <span class="pre">+</span> <span class="pre">KG</span></code>, see
 <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_probe_finte" title="pyfe3d.beamc.BeamC.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_finte()</span></code></a> and <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_KCNL" title="pyfe3d.beamc.BeamC.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>.</p>
 </dd></dl>
@@ -1449,10 +1739,11 @@ stiffness matrix of the internal forces is <code class="docutils literal notrans
 <p class="rubric">Notes</p>
 <p>The linear internal forces are <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0_e} \boldsymbol{u}_e\)</span>, with the matrix
 <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0_e}\)</span> of <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_KC0" title="pyfe3d.beamc.BeamC.update_KC0"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KC0()</span></code></a> in element coordinates. With
-<code class="docutils literal notranslate"><span class="pre">nonlinear</span></code> different from <code class="docutils literal notranslate"><span class="pre">0</span></code>, the terms of the von Karman strains
+<code class="docutils literal notranslate"><span class="pre">nonlinear</span></code> different from <code class="docutils literal notranslate"><span class="pre">0</span></code>, the terms of the von Kármán strains
 are added, see <code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_probe_finte_nonlinear()</span></code>, such that
-<code class="docutils literal notranslate"><span class="pre">finte</span></code> is the gradient of the strain energy with the von Karman
-axial strain, for which the exact Jacobian of the internal forces is
+<code class="docutils literal notranslate"><span class="pre">finte</span></code> is the gradient of the strain energy with the von Kármán
+axial strain averaged over the element, see <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_KCNL" title="pyfe3d.beamc.BeamC.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>,
+for which the exact Jacobian of the internal forces is
 <code class="docutils literal notranslate"><span class="pre">KC0</span> <span class="pre">+</span> <span class="pre">KCNL</span> <span class="pre">+</span> <span class="pre">KG</span></code>, see <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_KCNL" title="pyfe3d.beamc.BeamC.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>.</p>
 </dd></dl>
 
@@ -1643,24 +1934,14 @@ in the element coordinate system, in the following order <span class="math notra
 Updated by <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_probe_xe" title="pyfe3d.beamc.BeamC.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">BeamC.update_probe_xe()</span></code></a>.</p>
 </dd>
 <dt><strong>ue,</strong><span class="classifier">array-like</span></dt><dd><p>Array of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF=12</span></code> containing the element displacements
-in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
-{{r_y}_e}_1, {{r_z}_e}_1, {u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
-{{r_y}_e}_2, {{r_z}_e}_2\)</span>. Translations of dimension length and
+in the following order <span class="math notranslate nohighlight">\(u_{e_1}, v_{e_1}, w_{e_1}, {r_x}_{e_1},
+{r_y}_{e_1}, {r_z}_{e_1}, u_{e_2}, v_{e_2}, w_{e_2}, {r_x}_{e_2},
+{r_y}_{e_2}, {r_z}_{e_2}\)</span>. Translations of dimension length and
 rotations. Updated by <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_probe_ue" title="pyfe3d.beamc.BeamC.update_probe_ue"><code class="xref py py-meth docutils literal notranslate"><span class="pre">BeamC.update_probe_ue()</span></code></a>.</p>
 </dd>
 <dt><strong>finte,</strong><span class="classifier">array-like</span></dt><dd><p>Array of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF=12</span></code> containing the element internal
 forces corresponding to the degrees-of-freedom described by <code class="docutils literal notranslate"><span class="pre">ue</span></code>,
 forces and moments. Updated by <a class="reference internal" href="#pyfe3d.beamc.BeamC.update_probe_finte" title="pyfe3d.beamc.BeamC.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">BeamC.update_probe_finte()</span></code></a>.</p>
-</dd>
-<dt><strong>BLexx, BLky, BLkz</strong><span class="classifier">array-like</span></dt><dd><p>Arrays of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF=12</span></code> with the rows of the linear
-strain-displacement matrix for the axial strain and the two
-curvatures, at the last evaluated integration point.</p>
-</dd>
-<dt><strong>Sv_x, Sw_x</strong><span class="classifier">array-like</span></dt><dd><p>Arrays of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF=12</span></code> with the rows giving the slopes
-<span class="math notranslate nohighlight">\(v_{,x}\)</span> and <span class="math notranslate nohighlight">\(w_{,x}\)</span>, at the last evaluated integration point.
-<code class="docutils literal notranslate"><span class="pre">Sv_x</span></code> holds <span class="math notranslate nohighlight">\(\partial \boldsymbol{S}^v/\partial x\)</span> and <code class="docutils literal notranslate"><span class="pre">Sw_x</span></code>
-holds <span class="math notranslate nohighlight">\(\partial \boldsymbol{S}^w/\partial x\)</span>, the underscore denoting
-the partial derivative.</p>
 </dd>
 <dt><a class="reference internal" href="#pyfe3d.beamc.BeamCProbe.KCNLve" title="pyfe3d.beamc.BeamCProbe.KCNLve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">KCNLve</span></code></a><span class="classifier">array-like</span></dt><dd><p>KCNLve: ‘double[::1]’</p>
 </dd>
@@ -1668,39 +1949,9 @@ the partial derivative.</p>
 </dd>
 </dl>
 <dl class="py attribute">
-<dt class="sig sig-object py" id="pyfe3d.beamc.BeamCProbe.BLexx">
-<span class="sig-name descname"><span class="pre">BLexx</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCProbe.BLexx" title="Link to this definition">#</a></dt>
-<dd><p>BLexx: ‘double[::1]’</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pyfe3d.beamc.BeamCProbe.BLky">
-<span class="sig-name descname"><span class="pre">BLky</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCProbe.BLky" title="Link to this definition">#</a></dt>
-<dd><p>BLky: ‘double[::1]’</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pyfe3d.beamc.BeamCProbe.BLkz">
-<span class="sig-name descname"><span class="pre">BLkz</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCProbe.BLkz" title="Link to this definition">#</a></dt>
-<dd><p>BLkz: ‘double[::1]’</p>
-</dd></dl>
-
-<dl class="py attribute">
 <dt class="sig sig-object py" id="pyfe3d.beamc.BeamCProbe.KCNLve">
 <span class="sig-name descname"><span class="pre">KCNLve</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCProbe.KCNLve" title="Link to this definition">#</a></dt>
 <dd><p>KCNLve: ‘double[::1]’</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pyfe3d.beamc.BeamCProbe.Sv_x">
-<span class="sig-name descname"><span class="pre">Sv_x</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCProbe.Sv_x" title="Link to this definition">#</a></dt>
-<dd><p>Sv_x: ‘double[::1]’</p>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="pyfe3d.beamc.BeamCProbe.Sw_x">
-<span class="sig-name descname"><span class="pre">Sw_x</span></span><a class="headerlink" href="#pyfe3d.beamc.BeamCProbe.Sw_x" title="Link to this definition">#</a></dt>
-<dd><p>Sw_x: ‘double[::1]’</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1817,12 +2068,7 @@ the partial derivative.</p>
 </ul>
 </li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamCProbe"><code class="docutils literal notranslate"><span class="pre">BeamCProbe</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamCProbe.BLexx"><code class="docutils literal notranslate"><span class="pre">BeamCProbe.BLexx</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamCProbe.BLky"><code class="docutils literal notranslate"><span class="pre">BeamCProbe.BLky</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamCProbe.BLkz"><code class="docutils literal notranslate"><span class="pre">BeamCProbe.BLkz</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamCProbe.KCNLve"><code class="docutils literal notranslate"><span class="pre">BeamCProbe.KCNLve</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamCProbe.Sv_x"><code class="docutils literal notranslate"><span class="pre">BeamCProbe.Sv_x</span></code></a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamCProbe.Sw_x"><code class="docutils literal notranslate"><span class="pre">BeamCProbe.Sw_x</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamCProbe.finte"><code class="docutils literal notranslate"><span class="pre">BeamCProbe.finte</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamCProbe.ue"><code class="docutils literal notranslate"><span class="pre">BeamCProbe.ue</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamc.BeamCProbe.xe"><code class="docutils literal notranslate"><span class="pre">BeamCProbe.xe</span></code></a></li>

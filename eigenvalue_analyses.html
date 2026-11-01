@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Linear buckling and natural frequencies &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>Linear buckling and natural frequencies &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
@@ -37,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -120,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -137,6 +138,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -161,13 +169,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -176,6 +177,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" current active">
   <a class="nav-link dropdown-item nav-internal" href="#" aria-current="page">
     Linear buckling and natural frequencies
@@ -364,6 +393,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -380,6 +416,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -625,7 +682,51 @@ which is also how the critical value of one load component is found under
 the other components kept constant.</p>
 <p>The beams have <code class="docutils literal notranslate"><span class="pre">update_KG</span></code> for the axial force of the prestress, see
 <code class="docutils literal notranslate"><span class="pre">tests/test_beam_linear_buckling_3D_column.py</span></code>; <a class="reference internal" href="truss.html#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a> and
-<a class="reference internal" href="spring.html#pyfe3d.spring.Spring" title="pyfe3d.spring.Spring"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spring</span></code></a> have no geometric stiffness matrix.</p>
+<a class="reference internal" href="spring.html#pyfe3d.spring.Spring" title="pyfe3d.spring.Spring"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spring</span></code></a> have no geometric stiffness matrix. Both beams take the
+slopes <span class="math notranslate nohighlight">\(v_{,x}\)</span> and <span class="math notranslate nohighlight">\(w_{,x}\)</span> of their geometric stiffness matrices from the
+interpolations of <span class="math notranslate nohighlight">\(v\)</span> and <span class="math notranslate nohighlight">\(w\)</span>, such that the buckling load includes the
+reduction due to shear deformation, Eq. (2-57) of Timoshenko, S. P. and
+Gere, J. M., Theory of Elastic Stability, 2nd ed., McGraw-Hill, 1961, Sec.
+2.17, p. 133; up to version 0.11 <a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a> took them from the rotations
+and its buckling load converged to the Euler load whatever the shear
+stiffness, see the Notes of <a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a>.</p>
+<p>The geometric stiffness matrices of <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> and <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>
+integrate the membrane stress resultants with two-by-two quadrature.
+<a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>, and <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> with <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code> or
+<code class="docutils literal notranslate"><span class="pre">centroid_slopes</span> <span class="pre">=</span> <span class="pre">1</span></code>, take the slopes of <span class="math notranslate nohighlight">\(w\)</span> at the centroid of the
+element, where the constant part of the transverse shear of
+<a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>, and the transverse shear of the thin <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a>
+elements with <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code>, are sampled. The hourglass pattern of
+<span class="math notranslate nohighlight">\(w\)</span>, alternating in sign from node to node with zero rotations, which the
+shear sampled there does not resist, then has no geometric stiffness
+either. With the one-point transverse shear and the slopes at the
+two-by-two points, as up to version 0.11, that pattern could give a
+spurious buckling mode below the physical load when the transverse shear
+stiffness is low compared with the bending stiffness, e.g. in sandwich
+plates, and in thin laminated cylinders under axial compression once the
+mesh is fine: the buckling load of the cylinder Z22 of Castro et al. (2014)
+fell to a sixth of its value with 480 elements around the circumference.
+The default <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a>, whose assumed transverse shear strains of the
+MITC4 element resist the pattern, takes the slopes at the two-by-two
+points, which integrate the geometric stiffness of smooth modes more
+accurately, without that spurious mode: the cylinder Z22 converges to
+within 0.3 % of the 35.27 kN of that paper, Fig. 6(c), with both rules,
+see <code class="docutils literal notranslate"><span class="pre">tests/test_quad4_linear_buckling_cylinder_displ.py</span></code>, and a plate
+with 5 elements per half-wave buckles 4.3 % above the exact load with the
+default and 6.8 % with the slopes at the centroid. See the Notes of
+<a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4.update_KG" title="pyfe3d.quad4.Quad4.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4.update_KG()</span></code></a> and <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R.update_KG" title="pyfe3d.quad4r.Quad4R.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4R.update_KG()</span></code></a>.</p>
+<p>For a warped quadrilateral, the rigid offsets of <code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">1</span></code>, the
+default, enter <code class="docutils literal notranslate"><span class="pre">KC0</span></code>, <code class="docutils literal notranslate"><span class="pre">M</span></code> and <code class="docutils literal notranslate"><span class="pre">KG</span></code>, which adds the eccentricity
+geometric stiffness of the offsets on the rotations of each node, see
+<a class="reference internal" href="element_choice.html"><span class="doc">Choosing an element</span></a>. Without them, warped meshes are too stiff in
+buckling and vibration as well: in the twisted beam of MacNeal and Harder
+(1985), Fig. 6, <a class="reference external" href="https://doi.org/10.1016/0168-874X(85)90003-4">doi:10.1016/0168-874X(85)90003-4</a>, under an axial tip load, against a 96x16 <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> mesh with
+the offsets, the linear buckling load of 12x2, 24x4 and 48x8 elements is
++0.00, +0.01 and +0.01 % off with the offsets and +366, +102 and +26 %
+without them (<a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a>), +1.2, +0.4 and +0.1 % against +329, +101
+and +27 % (<a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>), and the first natural frequency of 12x2
+elements +0.07 and +0.13 % against +40 %, see <a class="reference internal" href="changelog.html"><span class="doc">Changelog</span></a>, version
+0.12.0.</p>
 </section>
 <section id="natural-frequencies">
 <h2>Natural frequencies<a class="headerlink" href="#natural-frequencies" title="Link to this heading">#</a></h2>
@@ -699,6 +800,19 @@ pre-stressed close to buckling, see
 <code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen._backward_errors()</span></code>;
 for the complex eigenvalues of <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.complex_frequency" title="pyfe3d.solver.eigen.complex_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">complex_frequency()</span></code></a> no such count
 is implemented, and only the residuals are verified;</p></li>
+<li><p>when that count finds eigenvalues missing below the highest one returned
+by a sparse solver of symmetric matrices, they are computed by deflated
+passes before the next solver, after each of the two calls of
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> of <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> and after
+the single one of <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a>, such that no accurate
+result with missing copies reaches the dense fallback or the <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code>
+without a completion attempt, see
+<code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen._complete_repeated()</span></code>: the Lanczos process of
+ARPACK may return only one copy of a repeated eigenvalue, e.g. of the
+pairs of modes <span class="math notranslate nohighlight">\(\cos n\theta\)</span> and <span class="math notranslate nohighlight">\(\sin n\theta\)</span> of a cylinder, equal up
+to the round-off with a rotationally symmetric mesh, and each pass
+computes the missing ones with the eigenvectors already found deflated
+and another starting vector, see <a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.deflated_eigsh" title="pyfe3d.solver.arpackutils.deflated_eigsh"><code class="xref py py-func docutils literal notranslate"><span class="pre">deflated_eigsh()</span></code></a>;</p></li>
 <li><p>when the sparse solvers fail, a dense solver of SciPy is used as a last
 resort, when the dense problem has at most <code class="docutils literal notranslate"><span class="pre">max_dense_size</span></code> dofs, with a
 <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.DenseFallbackWarning" title="pyfe3d.solver.eigen.DenseFallbackWarning"><code class="xref py py-class docutils literal notranslate"><span class="pre">DenseFallbackWarning</span></code></a> giving the reasons; otherwise a
@@ -713,6 +827,20 @@ returning all the eigenvalues, as a reference for validations.</p></li>
 <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">'error'</span><span class="p">,</span> <span class="n">DenseFallbackWarning</span><span class="p">)</span>
 </pre></div>
 </div>
+<p>For symmetric matrices, <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> requires a positive
+definite <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span>, the matrix of its Cayley mode and of its count of the
+missing load multipliers: with <code class="docutils literal notranslate"><span class="pre">check=True</span></code>, the default, a <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span>
+whose factorization has a negative or a zero pivot raises a
+<code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.linalg.LinAlgError</span></code> that says so, with the likely causes:
+insufficient boundary conditions, a mechanism, distorted elements, e.g.
+re-entrant quadrilaterals, or a preload beyond the buckling load included
+in <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span>; so do <a class="reference internal" href="solver_static.html#pyfe3d.solver.static.linear_static" title="pyfe3d.solver.static.linear_static"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_static()</span></code></a> and the linear
+<a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis.static" title="pyfe3d.solver.analysis.Analysis.static"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Analysis.static()</span></code></a>. <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> accepts an indefinite
+<span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span>, whose negative <span class="math notranslate nohighlight">\(\omega_n^2\)</span> give null frequencies, e.g. with a
+preload beyond the buckling load, and the unconstrained rigid-body modes
+of a singular <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span>; when its solvers fail and <span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span> is not positive
+definite, its <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code> starts with the same diagnosis. A singular
+<span class="math notranslate nohighlight">\(\boldsymbol{K}\)</span> whose round-off pivots all come out positive is not detected.</p>
 <p>With Intel MKL 2024.2.0 to 2025.0.0, the symmetric solver of ARPACK
 returns wrong eigenpairs when its number of Lanczos vectors exceeds 32;
 these versions are detected and the number is capped, see

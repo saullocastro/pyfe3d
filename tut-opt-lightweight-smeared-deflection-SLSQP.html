@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Tutorial: Ply tailoring using SLSPQ for a simply-supported plate under normal load &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>Tutorial: Ply tailoring using SLSPQ for a simply-supported plate under normal load &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +122,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -138,6 +139,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -162,13 +170,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -177,6 +178,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -365,6 +394,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -381,6 +417,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -540,6 +597,23 @@
 <li class="toctree-l1"><a class="reference internal" href="tut-bench-macneal-harder.html">Benchmark: MacNeal-Harder standard problems for the shell elements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tut-bench-shell-obstacle-course.html">Benchmark: shell obstacle course</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tut-nonlinear-benchmarks.html">Tutorial: geometrically non-linear benchmarks with pyfe3d.solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-corotational-large-rotations.html">Tutorial: large rotations with the co-rotational kinematics</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-prescribed-displacement-cantilever.html">Tutorial: prescribed displacement at the tip of a cantilever</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-prescribed-displacement-dome-riks.html">Tutorial: shells pressed down by a prescribed displacement, Riks’ method</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-nafems-cap-axisymmetric.html">Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations</a></li>
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-inertia-relief.html">Tutorial: static analysis with inertia relief</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-inertia-relief-aircraft-ha144a.html">Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A</a></li>
 </ul>
 </div>
 </nav></div>
@@ -608,7 +682,7 @@
 <p>Saullo G. P. Castro. (2026). General-purpose finite element solver based on Python and Cython (Version 0.7.0). Zenodo. DOI: <a class="reference external" href="https://doi.org/10.5281/zenodo.6573489">https://doi.org/10.5281/zenodo.6573489</a>.</p>
 <section id="Installing-required-modules">
 <h2>Installing required modules<a class="headerlink" href="#Installing-required-modules" title="Link to this heading">#</a></h2>
-<div class="nbinput docutils container">
+<div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
 </div>
@@ -616,17 +690,7 @@
 </pre></div>
 </div>
 </div>
-<div class="nboutput nblast docutils container">
-<div class="prompt empty docutils container">
-</div>
-<div class="output_area docutils container">
-<div class="highlight"><pre>
-<span class="ansi-yellow-fg">DEPRECATION: Loading egg at /Users/saullogiovanip/miniconda3/lib/python3.13/site-packages/panels-0.5.0-py3.13-macosx-11.1-arm64.egg is deprecated. pip 25.1 will enforce this behaviour change. A possible replacement is to use pip for package installation. Discussion can be found at https://github.com/pypa/pip/issues/12330</span><span class="ansi-yellow-fg">
-</span><span class="ansi-yellow-fg">DEPRECATION: Loading egg at /Users/saullogiovanip/miniconda3/lib/python3.13/site-packages/tuduam-2026.3-py3.13.egg is deprecated. pip 25.1 will enforce this behaviour change. A possible replacement is to use pip for package installation. Discussion can be found at https://github.com/pypa/pip/issues/12330</span><span class="ansi-yellow-fg">
-</span>
-</pre></div></div>
-</div>
-<div class="nbinput nblast docutils container">
+<div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
 </pre></div>
 </div>
@@ -829,7 +893,9 @@ class SmearedPlateOptimization(ElementwiseProblem):
         y = self.ncoords[:, 1]
         z = self.ncoords[:, 2]
 
-        # removing in-plane motion
+        # removing in-plane motion; this also satisfies the symmetry
+        # conditions u = 0 at x = a/2 and v = 0 at y = b/2, and the bending
+        # problem is uncoupled from the membrane one (B = 0)
         bk[0::DOF] = True #NOTE u displacements
         bk[1::DOF] = True #NOTE v displacements
 
@@ -837,16 +903,20 @@ class SmearedPlateOptimization(ElementwiseProblem):
         bk[2::DOF][at_edges] = True #NOTE w displacements
 
         at_sym_along_x = np.isclose(x, self.a/2)
-        bk[5::DOF][at_sym_along_x] = True
+        # NOTE symmetry about x = a/2: rotation about y (ry) restrained
+        bk[4::DOF][at_sym_along_x] = True
 
         at_sym_along_y = np.isclose(y, self.b/2)
-        bk[4::DOF][at_sym_along_y] = True
+        # NOTE symmetry about y = b/2: rotation about x (rx) restrained
+        bk[3::DOF][at_sym_along_y] = True
 
         bu = ~bk
 
         # point load at center node
         fext = np.zeros(self.N)
-        fmid = self.load_val
+        # NOTE the central node lies on both symmetry lines: the quarter
+        #      model carries one quarter of the load of the full plate
+        fmid = self.load_val/4
         check = np.isclose(x, self.a/2) &amp; np.isclose(y, self.b/2)
         fext[2::DOF][check] = fmid
 
@@ -889,6 +959,15 @@ def constraint_function(x, problem):
     return -out["G"]
 <br/></pre></div>
 </div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area stderr docutils container">
+<div class="highlight"><pre>
+C:\Users\saullogiovanip\miniconda3\Lib\site-packages\tqdm\auto.py:21: TqdmWarning: IProgress not found. Please update jupyter and ipywidgets. See https://ipywidgets.readthedocs.io/en/stable/user_install.html
+  from .autonotebook import tqdm as notebook_tqdm
+</pre></div></div>
 </div>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
@@ -934,7 +1013,7 @@ def constraint_function(x, problem):
     def print_callback(xk):
         global iteration
         iteration += 1
-        # Re-eval to get current Mass (optional, slows down slightly but gives info)
+        # Re-eval to get current volume (optional, slows down slightly but gives info)
         out = {}; problem._evaluate(xk, out)
         print(f"Iter {iteration}: Volume = {out['F']:.4f} m^3, Constraint G = {out['G']:.4e}")
 
@@ -955,7 +1034,7 @@ def constraint_function(x, problem):
 
     out_final = {}
     problem._evaluate(res.x, out_final)
-    print(f"Final Mass: {out_final['F']:.4f} kg")
+    print(f"Final volume of the full plate: {out_final['F']:.4f} m^3")
     print(f"Final Constraint Violation: {out_final['G']:.4e}")
 </pre></div>
 </div>
@@ -966,81 +1045,84 @@ def constraint_function(x, problem):
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 Starting SLSQP Optimization with Scipy...
-Iter 1: Volume = 0.0080 m^3, Constraint G = 6.1859e+00
-Iter 2: Volume = 0.0077 m^3, Constraint G = 4.5228e+00
-Iter 3: Volume = 0.0073 m^3, Constraint G = 4.2768e+00
-Iter 4: Volume = 0.0071 m^3, Constraint G = 5.5381e+00
-Iter 5: Volume = 0.0070 m^3, Constraint G = 7.4929e+00
-Iter 6: Volume = 0.0070 m^3, Constraint G = 6.4033e+00
-Iter 7: Volume = 0.0071 m^3, Constraint G = 6.5783e+00
-Iter 8: Volume = 0.0072 m^3, Constraint G = 7.7092e-01
-Iter 9: Volume = 0.0071 m^3, Constraint G = 4.8109e-01
-Iter 10: Volume = 0.0057 m^3, Constraint G = 3.0794e+00
-Iter 11: Volume = 0.0059 m^3, Constraint G = 2.0017e+00
-Iter 12: Volume = 0.0064 m^3, Constraint G = 3.6107e+00
-Iter 13: Volume = 0.0064 m^3, Constraint G = 4.5622e+00
-Iter 14: Volume = 0.0062 m^3, Constraint G = 1.2662e+00
-Iter 15: Volume = 0.0063 m^3, Constraint G = 9.3601e-01
-Iter 16: Volume = 0.0063 m^3, Constraint G = 3.9440e-01
-Iter 17: Volume = 0.0061 m^3, Constraint G = 3.7923e+00
-Iter 18: Volume = 0.0061 m^3, Constraint G = 3.5121e-01
-Iter 19: Volume = 0.0058 m^3, Constraint G = 9.7269e-01
-Iter 20: Volume = 0.0058 m^3, Constraint G = 5.0256e+00
-Iter 21: Volume = 0.0060 m^3, Constraint G = 1.6289e+00
-Iter 22: Volume = 0.0060 m^3, Constraint G = 2.9622e-01
-Iter 23: Volume = 0.0061 m^3, Constraint G = 2.5019e-01
-Iter 24: Volume = 0.0060 m^3, Constraint G = 9.2076e-01
-Iter 25: Volume = 0.0061 m^3, Constraint G = 2.5075e-01
-Iter 26: Volume = 0.0061 m^3, Constraint G = 1.2440e-01
-Iter 27: Volume = 0.0061 m^3, Constraint G = 1.9195e-01
-Iter 28: Volume = 0.0062 m^3, Constraint G = 6.9717e-02
-Iter 29: Volume = 0.0061 m^3, Constraint G = 1.3439e-01
-Iter 30: Volume = 0.0061 m^3, Constraint G = 1.6420e-02
-Iter 31: Volume = 0.0060 m^3, Constraint G = 5.1987e-02
-Iter 32: Volume = 0.0060 m^3, Constraint G = 1.2779e-01
-Iter 33: Volume = 0.0060 m^3, Constraint G = 6.3469e-02
-Iter 34: Volume = 0.0061 m^3, Constraint G = 3.9015e-02
-Iter 35: Volume = 0.0061 m^3, Constraint G = 8.0123e-03
-Iter 36: Volume = 0.0060 m^3, Constraint G = 1.5622e-02
-Iter 37: Volume = 0.0060 m^3, Constraint G = 2.7552e-02
-Iter 38: Volume = 0.0060 m^3, Constraint G = 6.2302e-03
-Iter 39: Volume = 0.0060 m^3, Constraint G = 9.6621e-03
-Iter 40: Volume = 0.0060 m^3, Constraint G = 7.1673e-03
-Iter 41: Volume = 0.0060 m^3, Constraint G = 2.0303e-03
-Iter 42: Volume = 0.0060 m^3, Constraint G = 1.0088e-03
-Iter 43: Volume = 0.0060 m^3, Constraint G = 4.6938e-03
-Iter 44: Volume = 0.0060 m^3, Constraint G = 1.0336e-03
-Iter 45: Volume = 0.0060 m^3, Constraint G = 2.5959e-03
-Iter 46: Volume = 0.0060 m^3, Constraint G = 1.8150e-03
-Iter 47: Volume = 0.0060 m^3, Constraint G = 3.7344e-03
-Iter 48: Volume = 0.0060 m^3, Constraint G = 1.4458e-03
-Iter 49: Volume = 0.0060 m^3, Constraint G = 6.4185e-04
-Iter 50: Volume = 0.0060 m^3, Constraint G = 1.5126e-04
-Iter 51: Volume = 0.0060 m^3, Constraint G = 2.8264e-05
-Iter 52: Volume = 0.0060 m^3, Constraint G = 7.6651e-06
-Iter 53: Volume = 0.0060 m^3, Constraint G = 5.4604e-06
-Iter 54: Volume = 0.0060 m^3, Constraint G = 3.1354e-06
-Iter 55: Volume = 0.0060 m^3, Constraint G = 3.0855e-06
-Iter 56: Volume = 0.0060 m^3, Constraint G = 4.7731e-06
-Iter 57: Volume = 0.0060 m^3, Constraint G = 2.6181e-05
-Iter 58: Volume = 0.0060 m^3, Constraint G = 4.1612e-06
-Iter 59: Volume = 0.0060 m^3, Constraint G = 7.3472e-04
-Iter 60: Volume = 0.0060 m^3, Constraint G = 1.3429e-05
-Iter 61: Volume = 0.0060 m^3, Constraint G = 3.8622e-05
-Iter 62: Volume = 0.0060 m^3, Constraint G = 2.1581e-06
-Iter 63: Volume = 0.0060 m^3, Constraint G = 4.2020e-06
-Iter 64: Volume = 0.0060 m^3, Constraint G = 2.6459e-07
+Iter 1: Volume = 0.0037 m^3, Constraint G = 2.9720e+02
+Iter 2: Volume = 0.0041 m^3, Constraint G = 1.1630e+02
+Iter 3: Volume = 0.0044 m^3, Constraint G = 2.0174e+01
+Iter 4: Volume = 0.0046 m^3, Constraint G = 1.4751e+01
+Iter 5: Volume = 0.0048 m^3, Constraint G = 3.7726e-01
+Iter 6: Volume = 0.0050 m^3, Constraint G = 1.1815e-01
+Iter 7: Volume = 0.0044 m^3, Constraint G = 8.0220e-01
+Iter 8: Volume = 0.0036 m^3, Constraint G = 4.4691e+00
+Iter 9: Volume = 0.0040 m^3, Constraint G = 4.4324e-01
+Iter 10: Volume = 0.0042 m^3, Constraint G = 1.3827e-01
+Iter 11: Volume = 0.0039 m^3, Constraint G = 1.7985e-01
+Iter 12: Volume = 0.0041 m^3, Constraint G = 6.1287e-02
+Iter 13: Volume = 0.0044 m^3, Constraint G = 9.8073e-02
+Iter 14: Volume = 0.0044 m^3, Constraint G = 1.3148e-01
+Iter 15: Volume = 0.0044 m^3, Constraint G = 9.7985e-02
+Iter 16: Volume = 0.0044 m^3, Constraint G = 9.5571e-02
+Iter 17: Volume = 0.0044 m^3, Constraint G = 9.0423e-02
+Iter 18: Volume = 0.0041 m^3, Constraint G = 9.1151e-02
+Iter 19: Volume = 0.0041 m^3, Constraint G = 6.5086e-02
+Iter 20: Volume = 0.0040 m^3, Constraint G = 6.8942e-02
+Iter 21: Volume = 0.0040 m^3, Constraint G = 6.8942e-02
+Iter 22: Volume = 0.0047 m^3, Constraint G = 9.3678e-02
+Iter 23: Volume = 0.0044 m^3, Constraint G = 1.5678e-02
+Iter 24: Volume = 0.0042 m^3, Constraint G = 3.2350e-02
+Iter 25: Volume = 0.0047 m^3, Constraint G = 2.2676e-01
+Iter 26: Volume = 0.0047 m^3, Constraint G = 2.2410e-01
+Iter 27: Volume = 0.0046 m^3, Constraint G = 2.3025e-01
+Iter 28: Volume = 0.0046 m^3, Constraint G = 2.3071e-01
+Iter 29: Volume = 0.0043 m^3, Constraint G = 1.9906e-02
+Iter 30: Volume = 0.0047 m^3, Constraint G = 2.1420e-01
+Iter 31: Volume = 0.0042 m^3, Constraint G = 3.4658e-02
+Iter 32: Volume = 0.0045 m^3, Constraint G = 7.6466e-02
+Iter 33: Volume = 0.0046 m^3, Constraint G = 1.2817e-01
+Iter 34: Volume = 0.0046 m^3, Constraint G = 1.2753e-01
+Iter 35: Volume = 0.0046 m^3, Constraint G = 1.2754e-01
+Iter 36: Volume = 0.0045 m^3, Constraint G = 1.4923e-01
+Iter 37: Volume = 0.0044 m^3, Constraint G = 2.1440e-02
+Iter 38: Volume = 0.0044 m^3, Constraint G = 3.8145e-02
+Iter 39: Volume = 0.0046 m^3, Constraint G = 7.0377e-02
+Iter 40: Volume = 0.0045 m^3, Constraint G = 1.8410e-01
+Iter 41: Volume = 0.0046 m^3, Constraint G = 1.2821e-01
+Iter 42: Volume = 0.0046 m^3, Constraint G = 9.8721e-02
+Iter 43: Volume = 0.0046 m^3, Constraint G = 9.8251e-02
+Iter 44: Volume = 0.0046 m^3, Constraint G = 9.7712e-02
+Iter 45: Volume = 0.0046 m^3, Constraint G = 9.4404e-02
+Iter 46: Volume = 0.0046 m^3, Constraint G = 8.5277e-02
+Iter 47: Volume = 0.0046 m^3, Constraint G = 8.5112e-02
+Iter 48: Volume = 0.0046 m^3, Constraint G = 5.7256e-02
+Iter 49: Volume = 0.0048 m^3, Constraint G = -6.8334e-02
+Iter 50: Volume = 0.0038 m^3, Constraint G = 2.0640e+01
+Iter 51: Volume = 0.0040 m^3, Constraint G = 1.9598e+01
+Iter 52: Volume = 0.0040 m^3, Constraint G = 6.2635e+00
+Iter 53: Volume = 0.0040 m^3, Constraint G = 1.9608e+01
+Iter 54: Volume = 0.0038 m^3, Constraint G = 1.9855e+01
+Iter 55: Volume = 0.0042 m^3, Constraint G = 9.4665e-03
+Iter 56: Volume = 0.0042 m^3, Constraint G = 4.6651e-02
+Iter 57: Volume = 0.0041 m^3, Constraint G = 1.0598e-01
+Iter 58: Volume = 0.0041 m^3, Constraint G = 8.4343e-02
+Iter 59: Volume = 0.0041 m^3, Constraint G = 1.0900e-01
+Iter 60: Volume = 0.0042 m^3, Constraint G = 2.2419e-03
+Iter 61: Volume = 0.0042 m^3, Constraint G = 1.0756e-03
+Iter 62: Volume = 0.0042 m^3, Constraint G = 3.1999e-03
+Iter 63: Volume = 0.0042 m^3, Constraint G = 1.7394e-03
+Iter 64: Volume = 0.0042 m^3, Constraint G = 3.3875e-03
+Iter 65: Volume = 0.0042 m^3, Constraint G = 1.5132e-03
+Iter 66: Volume = 0.0041 m^3, Constraint G = -3.8710e-04
+Iter 67: Volume = 0.0041 m^3, Constraint G = 2.3077e-01
 Optimization terminated successfully    (Exit mode 0)
-            Current function value: 0.006011618725932827
-            Iterations: 64
-            Function evaluations: 13928
-            Gradient evaluations: 64
+            Current function value: 0.004146211373288387
+            Iterations: 70
+            Function evaluations: 14778
+            Gradient evaluations: 67
 
 Optimization Complete.
 Success: True
 Message: Optimization terminated successfully
-Final Mass: 0.0060 kg
-Final Constraint Violation: 2.6459e-07
+Final volume of the full plate: 0.0041 m^3
+Final Constraint Violation: -1.6766e-04
 </pre></div></div>
 </div>
 <div class="nbinput docutils container">
@@ -1128,12 +1210,9 @@ plot_results(problem, res.x)
 </div>
 <div class="output_area stderr docutils container">
 <div class="highlight"><pre>
-/Users/saullogiovanip/miniconda3/lib/python3.13/site-packages/pyvista/jupyter/notebook.py:56: UserWarning: Failed to use notebook backend:
-
-cannot import name &#39;vtk&#39; from &#39;trame.widgets&#39; (/Users/saullogiovanip/miniconda3/lib/python3.13/site-packages/trame/widgets/__init__.py)
-
-Falling back to a static output.
-  warnings.warn(
+C:\Users\saullogiovanip\AppData\Local\Temp\ipykernel_5860\1386654469.py:70: UserWarning: Using static image for notebook display.
+Install trame for interactive backends: pip install &#34;pyvista[jupyter]&#34;
+  plotter.show(title=&#34;Optimized Thickness Distribution per Orientation&#34;)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">

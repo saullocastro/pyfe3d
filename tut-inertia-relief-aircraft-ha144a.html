@@ -1,0 +1,1753 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A &#8212; pyfe3d 0.12.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css?v=2aa19091" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tut-inertia-relief-aircraft-ha144a';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="API reference" href="api.html" />
+    <link rel="prev" title="Tutorial: static analysis with inertia relief" href="tut-inertia-relief.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="tut-opt-lightweight-smeared-deflection-GA.html">Tutorial: Ply tailoring using GA for a simply-supported plate under normal load</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-opt-lightweight-smeared-deflection-SLSQP.html">Tutorial: Ply tailoring using SLSPQ for a simply-supported plate under normal load</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-opt-topology.html">Tutorial: topology optimisation using pyfe3d</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-timoshenko-beam-benchmarks.html">Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-shell-lumped-mass.html">Tutorial: lumped mass matrices of the shells with an offset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-bench-macneal-harder.html">Benchmark: MacNeal-Harder standard problems for the shell elements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-bench-shell-obstacle-course.html">Benchmark: shell obstacle course</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-nonlinear-benchmarks.html">Tutorial: geometrically non-linear benchmarks with pyfe3d.solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-corotational-large-rotations.html">Tutorial: large rotations with the co-rotational kinematics</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-prescribed-displacement-cantilever.html">Tutorial: prescribed displacement at the tip of a cantilever</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-prescribed-displacement-dome-riks.html">Tutorial: shells pressed down by a prescribed displacement, Riks’ method</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-nafems-cap-axisymmetric.html">Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations</a></li>
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-inertia-relief.html">Tutorial: static analysis with inertia relief</a></li>
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="tutorials.html" class="nav-link">Tutorials</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Tutorial:-inertia-relief-of-a-stick-aircraft-model,-MSC-Nastran-example-HA144A">
+<h1>Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A<a class="headerlink" href="#Tutorial:-inertia-relief-of-a-stick-aircraft-model,-MSC-Nastran-example-HA144A" title="Link to this heading">#</a></h1>
+<p>The forward-swept-wing (FSW) airplane with canard of the MSC Nastran example HA144A, “FSW Airplane in Level Flight” (Rodden and Johnson 1994, pp. 181-205), is a half model of beams and concentrated masses in trimmed 1 g level flight. The airplane is free: the aerodynamic loads are balanced by the inertia of the rigid-body motion, and Nastran reports the displacements relative to the reference support (SUPORT) at GRID 90, in heave and pitch. This is a static analysis with inertia relief, and this
+notebook repeats it with pyfe3d:</p>
+<ol class="arabic simple">
+<li><p>the structure is built with <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> elements exactly from the bulk data, with the rigid bars (RBAR) of the wing masses as a transformation of the degrees of freedom;</p></li>
+<li><p>the mass properties are checked against the grid point weight generator, and the stiffness model against the published displacements, using the nodal loads that are in equilibrium with the published bar forces;</p></li>
+<li><p>the published doublet-lattice box forces are transferred to the beam nodes with Nastran’s beam splines (SPLINE2), implemented here, and, as an alternative, with the coupling of Gryszka and Castro (2026); the inertia relief of <code class="docutils literal notranslate"><span class="pre">pyfe3d.solver.apply_inertia_relief</span></code> (Barnett et al. 1995), verified in <code class="docutils literal notranslate"><span class="pre">tut-inertia-relief.ipynb</span></code>, is compared with the published results;</p></li>
+<li><p>the aerodynamic loads are computed with the vortex lattice method of AeroSandbox (Sharpe 2021), trimmed for level flight at the conditions of subcases 1 and 2 of the example, transferred with the same splines, and the inertia relief is compared again.</p></li>
+</ol>
+<p>What is exactly reproducible is asserted to the printed precision of the listing: the mass properties, the displacements given the bar forces, the global equilibrium, <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top \boldsymbol{F}_{tot} =
+\boldsymbol{0}\)</span> with zero reactions at the reference support, and, with the published box forces and the splines of Nastran, all the published bar forces and displacements. The results with the alternative load transfer and with the AeroSandbox loads are compared with the level of agreement stated in each section.</p>
+<p>References:</p>
+<ul class="simple">
+<li><p>Rodden, W. P., Johnson, E. H., <em>MSC/NASTRAN Aeroelastic Analysis User’s Guide, Version 68</em>, The MacNeal-Schwendler Corporation, Los Angeles, 1994. Splines: Eqs. 2-22 to 2-25 (pp. 33-35) and 2-44 to 2-59 (pp. 38-43), Section 3.3 (pp. 106-108). Example HA144A: description pp. 181-188, input Listing 7-1 (pp. 189-195), sorted bulk data Listing 7-2 (pp. 196-197), output Listing 7-3 (pp. 198-205).</p></li>
+<li><p>MSC Software, <em>MSC Nastran 2020 Quick Reference Guide</em>, Newport Beach,</p>
+<ol class="arabic simple" start="2020">
+<li><p>Bulk Data entry SPLINE2, pp. 3137-3138.</p></li>
+</ol>
+</li>
+<li><p>Gryszka, M., Castro, S. G. P., <em>Angled spar battery-wing system for large all-electric aircraft</em>, engrXiv preprint, 2026, <a class="reference external" href="https://engrxiv.org/preprint/view/7893/version/10171">https://engrxiv.org/preprint/view/7893/version/10171</a></p></li>
+<li><p>Barnett, A. R., Widrick, T. W., Ludwiczak, D. R., <em>Closed-Form Static Analysis with Inertia Relief and Displacement-Dependent Loads Using a MSC/NASTRAN DMAP Alter</em>, NASA TM-106836, 1995, <a class="reference external" href="https://ntrs.nasa.gov/citations/19950013233">https://ntrs.nasa.gov/citations/19950013233</a></p></li>
+<li><p>Sharpe, P. D., <em>AeroSandbox: A Differentiable Framework for Aircraft Design Optimization</em>, Master’s thesis, Massachusetts Institute of Technology, 2021, <a class="reference external" href="https://dspace.mit.edu/handle/1721.1/140023">https://dspace.mit.edu/handle/1721.1/140023</a></p></li>
+</ul>
+<p>This notebook needs <code class="docutils literal notranslate"><span class="pre">aerosandbox</span></code> (version 4.2.10 was used) for the last part. The structural parts are also checked by <code class="docutils literal notranslate"><span class="pre">tests/test_inertia_relief_ha144a.py</span></code>, whose model and data this notebook imports.</p>
+<section id="Units,-axes-and-published-data">
+<h2>Units, axes and published data<a class="headerlink" href="#Units,-axes-and-published-data" title="Link to this heading">#</a></h2>
+<p>The example uses the lb-ft-s system: the CONM2 entries are weights in lb, converted to masses in slug by <code class="docutils literal notranslate"><span class="pre">PARAM,WTMASS,0.031081</span></code> <span class="math notranslate nohighlight">\(= 1/g\)</span> (p. 192), with <span class="math notranslate nohighlight">\(g = 32.174\)</span> ft/s<span class="math notranslate nohighlight">\(^2\)</span>. The basic coordinate system has <span class="math notranslate nohighlight">\(x\)</span> aft, <span class="math notranslate nohighlight">\(y\)</span> to the right wing and <span class="math notranslate nohighlight">\(z\)</span> up; GRID 97 is the nose at <span class="math notranslate nohighlight">\(x = 0\)</span>, GRID 90 the reference point at <span class="math notranslate nohighlight">\(x = 15\)</span> ft (Figure 7-1, p. 181, and Listing 7-2).</p>
+<p>The published values used below were read from the page images of the listing, since a text extraction shifts some rows of the tables against the grid and element numbers. They are stored in <code class="docutils literal notranslate"><span class="pre">tests/test_inertia_relief_ha144a.py</span></code>, except those of subcase 1, which only this notebook uses. The box forces are checked here for consistency: each force equals the pressure times the box area, 6.25 ft<span class="math notranslate nohighlight">\(^2\)</span> (checked while transcribing), the forces sum to the weight of the half model, 8000 lb, and
+their moment about the centre of gravity vanishes (the trim).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import os
+import sys
+sys.path.insert(0, os.path.join('..', '..', 'tests'))
+
+import numpy as np
+import matplotlib.pyplot as plt
+
+from pyfe3d import DOF
+from test_inertia_relief_ha144a import (
+    WTMASS, G_ACC, GRIDS, CBARS, PBARS, CONM2, RBARS, MO_PUB, IS_PUB,
+    XCG_PUB, BAR_PUB, DISP_PUB, BOX_FORCES_SC2, box_points, build_model,
+    weight_generator, bar_forces, loads_from_bar_forces, transfer_loads,
+    weight_loads, solve_inertia_relief, SPLINE2, CORD2R, spline2_loads,
+    box_moments, resultant)
+
+# subcase 1, Mach 0.9, q = 40 psf, the quasi-rigid airplane
+# box normal forces, Listing 7-3, pp. 199-200, boxes 1000-1007 and 1100-1131
+BOX_FORCES_SC1 = np.array([
+    1.196130E+03, 2.175811E+02, 8.883241E+01, 7.096516E+01,
+    9.470382E+02, 1.563349E+02, 6.773703E+01, 6.250663E+01,
+    -3.000173E+02, -1.329865E+01, 8.216619E+00, 5.635094E+00,
+    -1.869569E+00, -4.253911E-01, 1.135240E+01, 7.515286E+00,
+    1.049276E+03, 1.124095E+02, 3.016934E+01, 1.173226E+01,
+    7.831523E+02, 2.530540E+02, 7.268033E+01, 2.304776E+01,
+    6.081699E+02, 2.663550E+02, 1.161488E+02, 4.008963E+01,
+    4.804525E+02, 2.304277E+02, 1.301754E+02, 5.613909E+01,
+    3.667927E+02, 1.795658E+02, 1.164818E+02, 6.184264E+01,
+    2.404014E+02, 1.152592E+02, 8.074072E+01, 5.120200E+01])
+# displacements relative to GRID 90, p. 203: GRID: (T3, R1, R2)
+DISP_PUB[1] = {
+    97: (-6.176795E-03, 0., -6.320098E-04), 98: (-8.566984E-04, 0., -3.320095E-04),
+    99: (-9.633963E-04, 0., 3.960283E-04), 100: (-1.065960E-02, 0., 1.688768E-03),
+    110: (-2.420829E-03, 7.440053E-04, 2.557247E-03),
+    111: (3.972288E-03, 7.440053E-04, 2.557247E-03),
+    112: (-8.813946E-03, 7.440053E-04, 2.557247E-03),
+    120: (2.554698E-02, 1.262856E-03, 3.255694E-03),
+    121: (3.368622E-02, 1.262856E-03, 3.255694E-03),
+    122: (1.740775E-02, 1.262856E-03, 3.255694E-03)}
+# bar forces, p. 204; the torques of elements 110 and 120 are printed
+# truncated in subcase 1 ("45978E+04", "479167E+03") and are not used (nan)
+BAR_PUB[1] = {
+    100: (-1.820093E+04, -2.140187E+04, 6.401870E+02, 0.),
+    101: (-9.094947E-13, -1.500000E+04, 1.500000E+03, 0.),
+    102: (-1.500000E+04, -1.820094E+04, 6.401870E+02, 0.),
+    103: (-2.140187E+04, -4.323508E+04, 2.183321E+03, 0.),
+    110: (5.796102E+04, 3.544555E+04, 3.899794E+03, np.nan),
+    120: (3.026060E+04, 4.318098E+03, 2.246687E+03, np.nan)}
+BOX_FORCES = {1: BOX_FORCES_SC1, 2: BOX_FORCES_SC2}
+Q_SC = {1: 40., 2: 1200.}     # dynamic pressures, psf, TRIM 1 and 2
+MACH = 0.9
+W = 8000.                     # lb, weight of the half model
+
+canard_pts, wing_pts = box_points()
+box_pts = np.vstack((canard_pts, wing_pts))
+xcg = 15. + XCG_PUB
+for sc, F in BOX_FORCES.items():
+    Mcg = (F*(xcg - box_pts[:, 0])).sum()
+    print('subcase %d: sum of box forces %.4f lb, canard %.1f lb, '
+          'moment about the c.g. %.1e lb ft' % (sc, F.sum(), F[:8].sum(), Mcg))
+    assert np.isclose(F.sum(), W, rtol=1e-7)
+    assert abs(Mcg) &lt; 1e-2
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+subcase 1: sum of box forces 7999.9997 lb, canard 2807.1 lb, moment about the c.g. -7.6e-03 lb ft
+subcase 2: sum of box forces 8000.0000 lb, canard 2662.7 lb, moment about the c.g. 1.8e-04 lb ft
+</pre></div></div>
+</div>
+</section>
+<section id="The-structural-model">
+<h2>The structural model<a class="headerlink" href="#The-structural-model" title="Link to this heading">#</a></h2>
+<p>The bulk data of Listing 7-2 (pp. 196-197) translate into pyfe3d as follows (<code class="docutils literal notranslate"><span class="pre">build_model()</span></code> in the test module):</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Bulk data</p></th>
+<th class="head"><p>Content</p></th>
+<th class="head"><p>pyfe3d</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>GRID 90-100</p></td>
+<td><p>fuselage, <span class="math notranslate nohighlight">\(x\)</span> = 0 to 30 ft</p></td>
+<td><p>nodes</p></td>
+</tr>
+<tr class="row-odd"><td><p>GRID 110, 120</p></td>
+<td><p>wing elastic axis at 50% chord, 30 deg forward sweep</p></td>
+<td><p>nodes</p></td>
+</tr>
+<tr class="row-even"><td><p>GRID 111, 112, 121, 122</p></td>
+<td><p>wing masses, 2.5 ft forward and aft of the axis</p></td>
+<td><p>nodes, dependent through RBAR</p></td>
+</tr>
+<tr class="row-odd"><td><p>CBAR 100-103 (PBAR 100)</p></td>
+<td><p>fuselage, <span class="math notranslate nohighlight">\(A\)</span> = 2.0, <span class="math notranslate nohighlight">\(I_1\)</span> = 0.173611, <span class="math notranslate nohighlight">\(I_2\)</span> = 0.15, <span class="math notranslate nohighlight">\(J\)</span> = 0.5 ft<span class="math notranslate nohighlight">\(^2\)</span>, ft<span class="math notranslate nohighlight">\(^4\)</span></p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BeamC</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>CBAR 110, 120 (PBAR 101)</p></td>
+<td><p>wing, <span class="math notranslate nohighlight">\(A\)</span> = 1.5, <span class="math notranslate nohighlight">\(I_1\)</span> = 0.173611, <span class="math notranslate nohighlight">\(I_2\)</span> = 2.0, <span class="math notranslate nohighlight">\(J\)</span> = 0.462963</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BeamC</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>MAT1 1</p></td>
+<td><p><span class="math notranslate nohighlight">\(E\)</span> = 1.44e9 psf, <span class="math notranslate nohighlight">\(G\)</span> = 5.40e8 psf</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BeamProp.E</span></code>, <code class="docutils literal notranslate"><span class="pre">G</span></code></p></td>
+</tr>
+<tr class="row-even"><td><p>CONM2</p></td>
+<td><p>1500 lb at GRID 97-100, 600 lb (forward) and 400 lb (aft) at 111, 121 and 112, 122</p></td>
+<td><p>diagonal mass matrix, translations</p></td>
+</tr>
+<tr class="row-odd"><td><p>RBAR 111-122</p></td>
+<td><p>rigid bars from GRID 110 and 120, all six components dependent</p></td>
+<td><p>transformation <span class="math notranslate nohighlight">\(\boldsymbol{T}\)</span></p></td>
+</tr>
+<tr class="row-even"><td><p>SPC1 1</p></td>
+<td><p>symmetry: <span class="math notranslate nohighlight">\(v\)</span>, <span class="math notranslate nohighlight">\(r_x\)</span>, <span class="math notranslate nohighlight">\(r_z\)</span> of the fuselage grids, and <span class="math notranslate nohighlight">\(u\)</span> of GRID 90</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bfix</span></code></p></td>
+</tr>
+<tr class="row-odd"><td><p>SUPORT 90 35</p></td>
+<td><p>reference support: <span class="math notranslate nohighlight">\(w\)</span> and <span class="math notranslate nohighlight">\(r_y\)</span> of GRID 90</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">bref</span></code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>Choices:</p>
+<ul class="simple">
+<li><p><em>Element orientation.</em> The CBAR orientation vector <span class="math notranslate nohighlight">\((0, 0, 1)\)</span> makes plane 1 vertical; in <code class="docutils literal notranslate"><span class="pre">BeamC</span></code>, a vector in the element plane <span class="math notranslate nohighlight">\(xy\)</span> normal to <span class="math notranslate nohighlight">\(z\)</span> makes the element <span class="math notranslate nohighlight">\(z\)</span> axis vertical, so that <span class="math notranslate nohighlight">\(I_1\)</span> = <code class="docutils literal notranslate"><span class="pre">Iyy</span></code>, <span class="math notranslate nohighlight">\(I_2\)</span> = <code class="docutils literal notranslate"><span class="pre">Izz</span></code>.</p></li>
+<li><p><em>Shear.</em> The PBAR entries have no shear factors <span class="math notranslate nohighlight">\(K_1\)</span>, <span class="math notranslate nohighlight">\(K_2\)</span>, i.e. the bars are rigid in shear; <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> is a Timoshenko element, so <code class="docutils literal notranslate"><span class="pre">G12</span></code> and <code class="docutils literal notranslate"><span class="pre">G13</span></code> are set to <span class="math notranslate nohighlight">\(10^6 E\)</span>, while the torsional stiffness stays <code class="docutils literal notranslate"><span class="pre">G*J</span></code>.</p></li>
+<li><p><em>Rigid bars.</em> The dependent degrees of freedom of a rigid bar from <span class="math notranslate nohighlight">\(A\)</span> to <span class="math notranslate nohighlight">\(B\)</span>, <span class="math notranslate nohighlight">\(\boldsymbol{r} = \boldsymbol{x}_B - \boldsymbol{x}_A\)</span>, are <span class="math notranslate nohighlight">\(\boldsymbol{u}_B = \boldsymbol{u}_A + \boldsymbol{\theta}_A \times
+\boldsymbol{r}\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{\theta}_B = \boldsymbol{\theta}_A\)</span>, i.e. <span class="math notranslate nohighlight">\(\boldsymbol{u} = \boldsymbol{T} \boldsymbol{u}_{ind}\)</span> over all degrees of freedom. The reduced matrices <span class="math notranslate nohighlight">\(\boldsymbol{T}^\top \boldsymbol{K}_{C0}
+\boldsymbol{T}\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{T}^\top \boldsymbol{M} \boldsymbol{T}\)</span> and loads <span class="math notranslate nohighlight">\(\boldsymbol{T}^\top \boldsymbol{F}\)</span> are those of the RBAR, exactly: the masses at the offset grids give the coupled translational and rotational inertia at GRID 110 and 120, and a load at an offset grid acts on the elastic axis with its moment. Stiff beams instead of the rigid bars would only approximate this, with an ill-conditioned stiffness matrix. Displacements at the dependent grids are
+recovered with <span class="math notranslate nohighlight">\(\boldsymbol{T}\)</span>.</p></li>
+<li><p><em>Constraints.</em> Fuselage and wing lie in the plane <span class="math notranslate nohighlight">\(z = 0\)</span>; the symmetry constraints leave two rigid-body modes, heave and pitch, which the reference support at GRID 90 removes. The beams have no mass (no density on MAT1, no NSM on PBAR).</p></li>
+</ul>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>model = build_model()
+idx, ncoords = model['idx'], model['ncoords']
+print('degrees of freedom: %d in total, %d independent, %d constrained (SPC1), '
+      '%d reference (SUPORT)' % (model['N'], model['ind'].sum(),
+                                 model['bfix'].sum(), model['bref'].sum()))
+
+fig, ax = plt.subplots(figsize=(6, 6.5))
+for i, p in enumerate(box_pts):
+    ax.plot(p[1], p[0], '.', color='0.6', ms=4)
+# box outlines of the two CAERO1 panels
+for (x1, x12, x4, y4, ns, nc) in ((10., 10., 10., 5., 2, 4),
+                                   (25., 10., 13.45299, 20., 8, 4)):
+    for j in range(ns + 1):
+        eta = j/ns
+        ax.plot([eta*y4]*2, [x1 + eta*(x4 - x1), x1 + eta*(x4 - x1) + x12],
+                color='0.8', lw=0.6)
+    for i in range(nc + 1):
+        ax.plot([0, y4], [x1 + i/nc*x12, x4 + i/nc*x12], color='0.8', lw=0.6)
+for eid, (pid, ga, gb) in CBARS.items():
+    a, b = ncoords[idx[ga]], ncoords[idx[gb]]
+    ax.plot([a[1], b[1]], [a[0], b[0]], 'k-', lw=2)
+for gb, ga in RBARS.items():
+    a, b = ncoords[idx[ga]], ncoords[idx[gb]]
+    ax.plot([a[1], b[1]], [a[0], b[0]], 'b-', lw=1)
+for g, w in CONM2.items():
+    p = ncoords[idx[g]]
+    ax.plot(p[1], p[0], 'o', ms=4 + w/300, mfc='w', mec='b')
+for g in GRIDS:
+    p = ncoords[idx[g]]
+    ax.annotate(str(g), (p[1], p[0]), xytext=(4, -10), textcoords='offset points',
+                fontsize=8)
+ax.plot(2.5, xcg, 'r+', ms=12, mew=2, label='centre of gravity')
+ax.invert_yaxis()
+ax.set_aspect('equal')
+ax.set_xlabel('$y$ [ft]')
+ax.set_ylabel('$x$ [ft], aft')
+ax.set_title('HA144A: beams (black), rigid bars (blue), masses,\n'
+             'aerodynamic boxes (grey) with their quarter-chord points')
+ax.legend(loc='lower right')
+plt.tight_layout()
+plt.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+degrees of freedom: 66 in total, 42 independent, 16 constrained (SPC1), 2 reference (SUPORT)
+</pre></div></div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/tut-inertia-relief-aircraft-ha144a_4_1.png" src="_images/tut-inertia-relief-aircraft-ha144a_4_1.png" />
+</div>
+</div>
+</section>
+<section id="Check-1:-mass-properties">
+<h2>Check 1: mass properties<a class="headerlink" href="#Check-1:-mass-properties" title="Link to this heading">#</a></h2>
+<p>The grid point weight generator (p. 198) prints the rigid-body mass matrix about GRID 90, <span class="math notranslate nohighlight">\(\boldsymbol{M}_O = \boldsymbol{\Phi}_O^\top \boldsymbol{M}
+\boldsymbol{\Phi}_O\)</span> in weight units, with <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}_O\)</span> the six geometric rigid-body modes about GRID 90 (translations and rotations), the centre of gravity and the inertia about it, I(S). The weights are <span class="math notranslate nohighlight">\(4 \times
+1500 + 2 \times (600 + 400) = 8000\)</span> lb; the centre of gravity, from the static moments, is at <span class="math notranslate nohighlight">\(\bar{x} = (1500 (0 + 10 + 20 + 30) + 600 (24.61325 +
+18.83975) + 400 (29.61325 + 23.83975))/8000 = 17.181625\)</span> ft, i.e. 2.181625 ft aft of GRID 90, and the pitch inertia about it is <span class="math notranslate nohighlight">\(I_{yy} = \sum_i w_i (x_i -
+\bar{x})^2 = 8.928944 \times 10^5\)</span> lb ft<span class="math notranslate nohighlight">\(^2\)</span>. The text of the example rounds these to 2.182 ft and 892,894 lb ft<span class="math notranslate nohighlight">\(^2\)</span> (p. 184).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>MO, m, xcg_rel, IS = weight_generator(model)
+np.set_printoptions(linewidth=120)
+print('MO about GRID 90 [lb, lb ft, lb ft^2]:\n', np.array2string(MO, precision=6))
+print('weight %.6f lb, c.g. %.6f ft aft of and %.6f ft outboard of GRID 90'
+      % (m, xcg_rel[0], xcg_rel[1]))
+print('I(S) [lb ft^2]:\n', np.array2string(IS, precision=4))
+print('pitch inertia about the c.g.: %.6e lb ft^2 (published 8.928944e+05)' % IS[1, 1])
+xbar = (1500*(0 + 10 + 20 + 30) + 600*(24.61325 + 18.83975)
+        + 400*(29.61325 + 23.83975))/8000
+assert np.isclose(xbar - 15, XCG_PUB, rtol=1e-12)
+assert np.allclose(MO, MO_PUB, rtol=0, atol=1e-6*abs(MO_PUB).max())
+assert np.isclose(m, 8000., rtol=1e-14)
+assert np.isclose(xcg_rel[0], 2.181625, rtol=1e-12)
+assert np.isclose(IS[1, 1], 8.928944e5, rtol=1e-6)
+assert np.allclose(IS, IS_PUB, rtol=0, atol=1e-6*abs(IS_PUB).max())
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+MO about GRID 90 [lb, lb ft, lb ft^2]:
+ [[   8000.             0.             0.             0.             0.        -20000.      ]
+ [      0.          8000.             0.             0.             0.         17453.      ]
+ [      0.             0.          8000.         20000.        -17453.             0.      ]
+ [      0.             0.         20000.        250000.       -145662.5            0.      ]
+ [      0.             0.        -17453.       -145662.5       930970.255625       0.      ]
+ [ -20000.         17453.             0.             0.             0.       1180970.255625]]
+weight 8000.000000 lb, c.g. 2.181625 ft aft of and 2.500000 ft outboard of GRID 90
+I(S) [lb ft^2]:
+ [[ 200000.      102030.          -0.    ]
+ [ 102030.      892894.3545      -0.    ]
+ [     -0.          -0.     1092894.3545]]
+pitch inertia about the c.g.: 8.928944e+05 lb ft^2 (published 8.928944e+05)
+</pre></div></div>
+</div>
+</section>
+<section id="Check-2:-the-stiffness-model-against-the-published-displacements">
+<h2>Check 2: the stiffness model against the published displacements<a class="headerlink" href="#Check-2:-the-stiffness-model-against-the-published-displacements" title="Link to this heading">#</a></h2>
+<p>Fuselage and wing form a tree: given the loads, the bar forces follow from statics alone. Conversely, the nodal loads that are in equilibrium with the published bar forces (p. 204) are the assembled element end forces, and applied to the model they must give the published displacements relative to GRID 90 (pp. 203-204), if the stiffness, the geometry and the rigid bars are those of Nastran. These nodal loads contain the aerodynamic loads as Nastran’s splines distribute them and the inertia
+loads, and are balanced.</p>
+<p>Nastran’s CBAR forces are the bending moments of plane 1 at the ends A and B, <span class="math notranslate nohighlight">\(M_{1A}\)</span> and <span class="math notranslate nohighlight">\(M_{1B}\)</span>, the shear <span class="math notranslate nohighlight">\(V_1 = -d M_1/d x\)</span> and the torque <span class="math notranslate nohighlight">\(T\)</span>. With the element <span class="math notranslate nohighlight">\(z\)</span> axis vertical, they are, from the internal forces <code class="docutils literal notranslate"><span class="pre">finte</span></code> of <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> (<code class="docutils literal notranslate"><span class="pre">bar_forces()</span></code>): <span class="math notranslate nohighlight">\(M_{1A}\)</span> = <code class="docutils literal notranslate"><span class="pre">finte[4]</span></code>, <span class="math notranslate nohighlight">\(M_{1B}\)</span> = <code class="docutils literal notranslate"><span class="pre">-finte[10]</span></code>, <span class="math notranslate nohighlight">\(V_1\)</span> = <code class="docutils literal notranslate"><span class="pre">finte[8]</span></code> and <span class="math notranslate nohighlight">\(T\)</span> = <code class="docutils literal notranslate"><span class="pre">finte[9]</span></code>. <span class="math notranslate nohighlight">\(M_1\)</span> is positive when the top fibre is in compression: element 101 has
+<span class="math notranslate nohighlight">\(M_{1B} = -1.5 \times
+10^4\)</span> lb ft and the stress <span class="math notranslate nohighlight">\(+8.64 \times 10^4\)</span> psf at the top point C, <span class="math notranslate nohighlight">\(y = z =
+1\)</span> ft (p. 205).</p>
+<p>Subcases 2 (Mach 0.9, <span class="math notranslate nohighlight">\(q\)</span> = 1200 psf) and 3 (Mach 1.3, <span class="math notranslate nohighlight">\(q\)</span> = 1151 psf) are used; subcase 1 is not, since its wing torques are printed truncated.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>for sc in (2, 3):
+    f = loads_from_bar_forces(model, BAR_PUB[sc])
+    out = solve_inertia_relief(model, f)
+    u = out['ufull']
+    upub = np.array([DISP_PUB[sc][g] for g in DISP_PUB[sc]])
+    ufe = np.array([u[DOF*idx[g] + np.array([2, 3, 4])] for g in DISP_PUB[sc]])
+    err = abs(ufe - upub).max()/abs(upub).max()
+    bf = bar_forces(model, u)
+    errf = max(abs(bf[e] - BAR_PUB[sc][e]).max() for e in bf)
+    print('subcase %d: rigid-body accelerations %s, reactions at GRID 90 %s'
+          % (sc, np.array2string(out['acc'], precision=1),
+             np.array2string(out['Rref'], precision=1)))
+    print('  max |u - u_pub|/max |u_pub| = %.1e, max |bar force - published| = %.1e'
+          % (err, errf))
+    if sc == 2:
+        print('  %5s %14s %14s %14s %14s' % ('GRID', 'w pyfe3d', 'w Nastran',
+                                             'r_y pyfe3d', 'r_y Nastran'))
+        for g, (w_, rx_, ry_) in DISP_PUB[sc].items():
+            print('  %5d %14.6e %14.6e %14.6e %14.6e' % (
+                g, u[DOF*idx[g] + 2], w_, u[DOF*idx[g] + 4], ry_))
+        print('  nodal loads [lb] in equilibrium with the published bar forces:')
+        for g in (97, 98, 99, 100, 110, 120):
+            print('    GRID %d: F_z = %9.2f, net of the weight %9.2f' % (
+                g, f[DOF*idx[g] + 2], f[DOF*idx[g] + 2] + {110: 1000., 120: 1000.}.get(g, 1500.)))
+    assert abs(out['acc']).max() &lt; 1e-6
+    assert err &lt; 2e-6
+    assert errf &lt; 2e-6*6.2e4
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+subcase 2: rigid-body accelerations [-4.6e-07 -2.1e-07], reactions at GRID 90 [-7.3e-12  1.0e-10]
+  max |u - u_pub|/max |u_pub| = 1.3e-07, max |bar force - published| = 5.9e-03
+   GRID       w pyfe3d      w Nastran     r_y pyfe3d    r_y Nastran
+     97  -6.264163e-03  -6.264164e-03  -6.385623e-04  -6.385624e-04
+     98  -8.785403e-04  -8.785404e-04  -3.385621e-04  -3.385622e-04
+     99  -1.007080e-03  -1.007080e-03   4.156861e-04   4.156862e-04
+    100  -1.125761e-02  -1.125761e-02   1.789539e-03   1.789539e-03
+    110  -2.503216e-03  -2.503219e-03   2.716038e-03   2.716038e-03
+    111   4.286879e-03   4.286876e-03   2.716038e-03   2.716038e-03
+    112  -9.293311e-03  -9.293314e-03   2.716038e-03   2.716038e-03
+    120   2.737436e-02   2.737436e-02   3.470037e-03   3.470037e-03
+    121   3.604945e-02   3.604945e-02   3.470037e-03   3.470037e-03
+    122   1.869926e-02   1.869926e-02   3.470037e-03   3.470037e-03
+  nodal loads [lb] in equilibrium with the published bar forces:
+    GRID 97: F_z =  -1500.00, net of the weight      0.00
+    GRID 98: F_z =    728.76, net of the weight   2228.76
+    GRID 99: F_z =  -1555.54, net of the weight    -55.54
+    GRID 100: F_z =  -1734.30, net of the weight   -234.30
+    GRID 110: F_z =   1628.47, net of the weight   2628.47
+    GRID 120: F_z =   2432.61, net of the weight   3432.61
+subcase 3: rigid-body accelerations [-1.1e-07 -5.1e-08], reactions at GRID 90 [0.0e+00 4.4e-11]
+  max |u - u_pub|/max |u_pub| = 4.6e-08, max |bar force - published| = 4.3e-03
+</pre></div></div>
+</div>
+<p>The model reproduces the published displacements to the 7 printed digits, and the bar forces back. The nodal loads net of the weights show how Nastran’s splines (SPLINE2, p. 182) distribute the aerodynamic loads in subcase 2: the canard, 2662.7 lb, goes to GRID 98 and 99 only, 2228.8 lb and 434.0 lb (the lever rule, see below); the wing, 5337.3 lb, then puts <span class="math notranslate nohighlight">\(-55.5 - 434.0 = -489.5\)</span> lb on GRID 99 and <span class="math notranslate nohighlight">\(-234.3\)</span> lb on GRID 100, and the rest on the wing grids. A different load transfer
+gives different bar forces in the fuselage aft of GRID 90 and in the wing, as shown below.</p>
+</section>
+<section id="Inertia-relief-with-the-published-aerodynamic-loads">
+<h2>Inertia relief with the published aerodynamic loads<a class="headerlink" href="#Inertia-relief-with-the-published-aerodynamic-loads" title="Link to this heading">#</a></h2>
+<p>The inertia relief is computed with <code class="docutils literal notranslate"><span class="pre">pyfe3d.solver.apply_inertia_relief</span></code>, through <code class="docutils literal notranslate"><span class="pre">solve_inertia_relief()</span></code> of the test, which applies the transformation of the rigid bars, see also <code class="docutils literal notranslate"><span class="pre">tut-inertia-relief.ipynb</span></code> and the user guide page <a class="reference internal" href="inertia_relief.html"><span class="doc">Inertia relief</span></a>: with the reference support <code class="docutils literal notranslate"><span class="pre">bref</span></code> (here <span class="math notranslate nohighlight">\(w\)</span> and <span class="math notranslate nohighlight">\(r_y\)</span> of GRID 90), the rigid-body modes <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}\)</span> follow from the stiffness matrix (Barnett et al. 1995, Eq. (19)), the rigid-body
+accelerations from <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top \boldsymbol{M} \boldsymbol{\Phi}
+\ddot{\boldsymbol{\alpha}} = \boldsymbol{\Phi}^\top \boldsymbol{F}_{ext}\)</span> (Eqs. (21)-(22)), and the displacements relative to the reference support from the loads plus the d’Alembert forces (Eqs. (23)-(24)). The external loads are the aerodynamic loads and the weights, <span class="math notranslate nohighlight">\(-m g\)</span> along <span class="math notranslate nohighlight">\(z\)</span> at each mass; for a trimmed airplane they are balanced and <span class="math notranslate nohighlight">\(\ddot{\boldsymbol{\alpha}}
+= \boldsymbol{0}\)</span>. Nastran’s trim with <code class="docutils literal notranslate"><span class="pre">URDD3</span></code> <span class="math notranslate nohighlight">\(= -1\)</span> (1 g) and <code class="docutils literal notranslate"><span class="pre">URDD5</span></code> <span class="math notranslate nohighlight">\(= 0\)</span> (p. 183) is the same balance: the inertia forces of the 1 g vertical acceleration equal the weights.</p>
+<p><strong>Load transfer: the beam splines of Nastran.</strong> Nastran interpolates the deflections of the aerodynamic grid points from those of the structural grids, <span class="math notranslate nohighlight">\(\boldsymbol{u}_k = \boldsymbol{G}_{kg} \boldsymbol{u}_g\)</span>, and transfers the aerodynamic loads with the transpose, <span class="math notranslate nohighlight">\(\boldsymbol{F}_g =
+\boldsymbol{G}_{kg}^\top \boldsymbol{F}_k\)</span>, which does the same virtual work (Rodden and Johnson 1994, Eqs. 2-22 to 2-25, pp. 33-35). HA144A uses linear splines, SPLINE2 (Quick Reference Guide, pp. 3137-3138; theory in Rodden and Johnson 1994, pp. 38-43): a beam along the <span class="math notranslate nohighlight">\(y\)</span> axis of a coordinate system, with bending and torsion and the flexibility ratio DTOR <span class="math notranslate nohighlight">\(= EI/GJ\)</span>, which passes through the deflections of the structural grids, and rigid arms along its <span class="math notranslate nohighlight">\(x\)</span> axis, i.e. a rigid
+chord perpendicular to the elastic axis (p. 42). A point at the spline coordinates <span class="math notranslate nohighlight">\((x, y)\)</span> deflects by <span class="math notranslate nohighlight">\(w = w_b(y) - x
+\psi(y)\)</span> and rotates by <span class="math notranslate nohighlight">\(\varphi_x = w_b'(y)\)</span> and <span class="math notranslate nohighlight">\(\psi(y)\)</span>, with <span class="math notranslate nohighlight">\(w_b\)</span> and <span class="math notranslate nohighlight">\(\psi\)</span> the bending deflection and the twist of the spline. <code class="docutils literal notranslate"><span class="pre">spline2_matrix()</span></code> of the test module builds <span class="math notranslate nohighlight">\(\boldsymbol{G}_{kg}\)</span> from the fundamental solutions of the infinite beam, the rigid-body terms and the attachment flexibilities (Eqs. 2-44 to 2-59); its deflection kernel is that of p. 43, and the kernels of the rotations follow from the same solutions (derived here, checked by the
+exact transfer of the resultants below). The bulk data (Listing 7-1, pp. 192-193; Listing 7-2, cards 50-57, 69-70, 73-76):</p>
+<div class="pst-scrollable-table-container"><table class="table">
+<thead>
+<tr class="row-odd"><th class="head"><p>Spline</p></th>
+<th class="head"><p>Boxes</p></th>
+<th class="head"><p>SET1 grids</p></th>
+<th class="head"><p>Axis</p></th>
+<th class="head"><p>DZ</p></th>
+<th class="head"><p>DTOR</p></th>
+<th class="head"><p>DTHX</p></th>
+<th class="head"><p>DTHY</p></th>
+</tr>
+</thead>
+<tbody>
+<tr class="row-even"><td><p>SPLINE2 1501, canard</p></td>
+<td><p>1000-1007</p></td>
+<td><p>98, 99</p></td>
+<td><p>CORD2R 1: hinge line, <span class="math notranslate nohighlight">\(x\)</span> = 12.5 ft, along <span class="math notranslate nohighlight">\(y\)</span></p></td>
+<td><p>0</p></td>
+<td><p>1</p></td>
+<td><p>1</p></td>
+<td><p>-1</p></td>
+</tr>
+<tr class="row-odd"><td><p>SPLINE2 1601, wing</p></td>
+<td><p>1100-1131</p></td>
+<td><p>99, 100, 111, 112, 121, 122</p></td>
+<td><p>CORD2R 2: elastic axis from GRID 100, 30 deg forward sweep</p></td>
+<td><p>0</p></td>
+<td><p>1</p></td>
+<td><p>-1</p></td>
+<td><p>-1</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>DZ <span class="math notranslate nohighlight">\(= 0\)</span> makes the spline pass through the deflections of the grids; a negative DTHX or DTHY disconnects the slope or the twist (Remark 3, p. 3138), so the wing spline uses the deflections <span class="math notranslate nohighlight">\(w\)</span> of its six grids only, and the canard spline the deflections of GRID 98 and 99 and, through a flexible attachment, their roll (pp. 182-183).</p>
+<p><strong>Moments.</strong> The aerodynamic grid point of a doublet-lattice box is its centre (p. 20), and Nastran applies there the normal force and the moment of the force, which acts at the quarter chord, about the midchord (p. 186). The box forces are moved to the box centres with their moments, <span class="math notranslate nohighlight">\((\boldsymbol{x}_j - \boldsymbol{x}_{0j}) \times \boldsymbol{F}_j\)</span> (<code class="docutils literal notranslate"><span class="pre">box_moments()</span></code>), and the spline carries both to the structure through its rigid arms. Since the spline reproduces the rigid-body motions
+of the grids exactly (the terms <span class="math notranslate nohighlight">\(a_0 + a_1 y - a_2 x\)</span>), the transfer conserves the resultant normal force and its moments about the in-plane axes, by virtual work (derived here, checked below). The in-plane forces are not transferred, as in Nastran, whose splines interpolate the normal deflections (Section 3.3, p. 106).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fw = weight_loads(model)
+c_ref = 10.                               # ft, reference chord
+xcg_pt = np.array([xcg, 0., 0.])
+qc_pts = box_pts                          # quarter-chord points
+cen_pts = np.vstack(box_points(0.5))      # box centres, aerodynamic grid points
+
+
+def aero_loads_spline(Fz, pts=qc_pts):
+    r'''Normal forces at the points pts, moved to the box centres with their
+    moments and transferred with SPLINE2 1501 and 1601'''
+    return spline2_loads(model, cen_pts, Fz, box_moments(pts, cen_pts, Fz))
+
+
+def resultant_aero(Fz, pts):
+    F3 = np.zeros((len(Fz), 3))
+    F3[:, 2] = Fz
+    return np.concatenate((F3.sum(axis=0), np.cross(pts - xcg_pt, F3).sum(axis=0)))
+
+
+resA = {}
+for sc in (1, 2):
+    F = BOX_FORCES[sc]
+    fa = aero_loads_spline(F)
+    # resultant force and moment about the c.g. conserved by the transfer
+    dres = abs(resultant(model, fa, xcg_pt) - resultant_aero(F, qc_pts)).max()
+    out = solve_inertia_relief(model, fa + fw)
+    u, bf = out['ufull'], bar_forces(model, out['ufull'])
+    errf = max(np.nanmax(abs(bf[e] - BAR_PUB[sc][e])) for e in bf)
+    upub = np.array([DISP_PUB[sc][g] for g in DISP_PUB[sc]])
+    ufe = np.array([u[DOF*idx[g] + np.array([2, 3, 4])] for g in DISP_PUB[sc]])
+    erru = abs(ufe - upub).max()/abs(upub).max()
+    print('subcase %d: |resultant transferred - resultant of the box forces| = %.1e, '
+          'accelerations %s' % (sc, dres, np.array2string(out['acc'], precision=1)))
+    print('  max |bar force - published| = %.1e, max |u - u_pub|/max |u_pub| = %.1e'
+          % (errf, erru))
+    print('  element 103: M1A %.6e M1B %.6e V1 %.6e | published %.6e %.6e %.6e'
+          % (tuple(bf[103][:3]) + tuple(BAR_PUB[sc][103][:3])))
+    print('  w of GRID 120 (tip of the elastic axis) %.6e | published %.6e'
+          % (u[DOF*idx[120] + 2], DISP_PUB[sc][120][0]))
+    # the canard spline is the lever rule between GRID 98 and 99
+    w99 = (canard_pts[:, 0] - 10.)/10.
+    assert np.isclose(fa[DOF*idx[98] + 2], ((1 - w99)*F[:8]).sum(), rtol=1e-12)
+    Fc = np.r_[F[:8], np.zeros(32)]
+    assert np.isclose(aero_loads_spline(Fc)[DOF*idx[99] + 2], (w99*F[:8]).sum(),
+                      rtol=1e-12)
+    assert dres &lt; 1e-10*W*c_ref
+    assert abs(out['acc']).max() &lt; 1e-5*G_ACC
+    assert abs(out['Rref']).max() &lt; 1e-9*W
+    # all published bar forces and displacements, to the printed digits
+    assert errf &lt; 2e-6*6.2e4
+    assert erru &lt; 2e-6
+    resA[sc] = out
+    # forces applied at the quarter chord, without the moments about the box centres
+    oq = solve_inertia_relief(model, spline2_loads(model, qc_pts, F) + fw)
+    bq = bar_forces(model, oq['ufull'])
+    print('  forces at the quarter chord instead: element 103 M1B %+.2e, V1 %+.2e, '
+          'w of GRID 120 %+.2e (relative to Nastran)'
+          % (bq[103][1]/BAR_PUB[sc][103][1] - 1, bq[103][2]/BAR_PUB[sc][103][2] - 1,
+             oq['ufull'][DOF*idx[120] + 2]/DISP_PUB[sc][120][0] - 1))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+subcase 1: |resultant transferred - resultant of the box forces| = 4.5e-11, accelerations [-1.8e-06 -2.7e-07]
+  max |bar force - published| = 7.6e-03, max |u - u_pub|/max |u_pub| = 1.1e-07
+  element 103: M1A -2.140187e+04 M1B -4.323508e+04 V1 2.183321e+03 | published -2.140187e+04 -4.323508e+04 2.183321e+03
+  w of GRID 120 (tip of the elastic axis) 2.554698e-02 | published 2.554698e-02
+  forces at the quarter chord instead: element 103 M1B -8.78e-04, V1 -1.74e-03, w of GRID 120 -2.89e-04 (relative to Nastran)
+subcase 2: |resultant transferred - resultant of the box forces| = 8.0e-11, accelerations [1.6e-07 6.5e-09]
+  max |bar force - published| = 6.4e-03, max |u - u_pub|/max |u_pub| = 1.2e-07
+  element 103: M1A -2.271239e+04 M1B -4.598023e+04 V1 2.326783e+03 | published -2.271239e+04 -4.598023e+04 2.326784e+03
+  w of GRID 120 (tip of the elastic axis) 2.737436e-02 | published 2.737436e-02
+  forces at the quarter chord instead: element 103 M1B -3.97e-05, V1 -7.85e-05, w of GRID 120 -1.93e-05 (relative to Nastran)
+</pre></div></div>
+</div>
+<p>With the splines of the deck, the published box forces reproduce all the published bar forces and displacements to the printed digits, in both subcases: the remaining differences, below <span class="math notranslate nohighlight">\(2 \times 10^{-6}\)</span> of the largest values, are those of the 7 printed digits of the box forces. The transferred loads have the resultant force and moment of the box forces to round-off, the airplane is in trim (accelerations at the level of the rounding), and the reactions at GRID 90 vanish. The canard
+spline reduces to the lever rule between GRID 98 and 99, <span class="math notranslate nohighlight">\(F_{99} = \sum_j F_j (x_j - 10)/10\)</span> and <span class="math notranslate nohighlight">\(F_{98} = \sum_j F_j - F_{99}\)</span>, as both grids lie on the canard root at the same spline coordinate <span class="math notranslate nohighlight">\(y = 0\)</span> and the roll goes to the symmetry constraints.</p>
+<p>Two details matter at this precision. First, the forces must be applied as Nastran does, at the box centres with their moments: applying them at the quarter chord through the spline conserves the resultant as well, but the rigid arms, perpendicular to the swept elastic axis, are not along the flow, and element 103 changes by up to <span class="math notranslate nohighlight">\(2 \times 10^{-3}\)</span>. Second, the ratio DTOR changes the transfer when the grids lie off the spline axis: with DTOR <span class="math notranslate nohighlight">\(= 0.5\)</span> or <span class="math notranslate nohighlight">\(2\)</span> instead of
+<span class="math notranslate nohighlight">\(1\)</span>, the shear of element 103 in subcase 2 changes by about <span class="math notranslate nohighlight">\(\pm 5\)</span>%, although the guide states that DTOR has no effect with zero attachment flexibility (p. 108).</p>
+</section>
+<section id="The-alternative:-the-transfer-of-Gryszka-and-Castro-(2026)">
+<h2>The alternative: the transfer of Gryszka and Castro (2026)<a class="headerlink" href="#The-alternative:-the-transfer-of-Gryszka-and-Castro-(2026)" title="Link to this heading">#</a></h2>
+<p>Section 2.3.5 (p. 8) of Gryszka and Castro (2026) transfers the forces of the aerodynamic mesh to the structural nodes with the inverse-distance weights of their Eq. (5),</p>
+<div class="math notranslate nohighlight">
+\[w_{ij} = \frac{1/d_{ij}^2}{\sum_{k=1}^{n_{points}} 1/d_{kj}^2}\]</div>
+<p>over the <span class="math notranslate nohighlight">\(n_{points}\)</span> nearest nodes <span class="math notranslate nohighlight">\(i\)</span> of each aerodynamic point <span class="math notranslate nohighlight">\(j\)</span>, found with <code class="docutils literal notranslate"><span class="pre">scipy.spatial.cKDTree</span></code>, applied to the translational degrees of freedom only. The weights sum to one, which conserves the resultant force, but not its moment. In the wingbox model of the paper the nodes surround the aerodynamic points; in a stick model all nodes lie on the beam axes or on the rigid bars, and the moment of each force about its nodes is lost. Here the moment of the offset,
+<span class="math notranslate nohighlight">\(w_{ij} (\boldsymbol{x}_j - \boldsymbol{x}_i) \times
+\boldsymbol{F}_j\)</span>, is added to the rotational degrees of freedom of node <span class="math notranslate nohighlight">\(i\)</span> (<code class="docutils literal notranslate"><span class="pre">moments=True</span></code> of <code class="docutils literal notranslate"><span class="pre">transfer_loads()</span></code>), which conserves force and moment for any weights; this term is an addition of this notebook. The forces are applied at the quarter-chord points, the canard boxes are transferred to GRID 98 and 99 (<span class="math notranslate nohighlight">\(n_{points} = 2\)</span>), and the wing boxes to GRID 99, 100, 111, 112, 121 and 122 (<span class="math notranslate nohighlight">\(n_{points} = 3\)</span>), the grids of the splines; the loads at the offset grids reach the
+elastic axis through the rigid bars.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>WING_GRIDS = [99, 100, 111, 112, 121, 122]
+
+
+def aero_loads_idw(Fz, pts=qc_pts, moments=True, npw=3):
+    F3 = np.zeros((len(Fz), 3))
+    F3[:, 2] = Fz
+    can = (pts[:, 0] &lt; 21.) &amp; (pts[:, 1] &lt; 5.)
+    return (transfer_loads(model, pts[can], F3[can], [98, 99], 2, moments)
+            + transfer_loads(model, pts[~can], F3[~can], WING_GRIDS, npw, moments))
+
+
+resC = {}
+for sc in (1, 2):
+    for moments in (False, True):
+        fa = aero_loads_idw(BOX_FORCES[sc], moments=moments)
+        out = solve_inertia_relief(model, fa + fw)
+        bf = bar_forces(model, out['ufull'])
+        print('subcase %d, %-18s: accelerations w_dd = %+.2e ft/s^2, '
+              'r_y_dd = %+.2e rad/s^2; element 101 V1 = %.2f lb, M1B = %.1f lb ft'
+              % (sc, 'forces and moments' if moments else 'forces only',
+                 out['acc'][0], out['acc'][1], bf[101][2], bf[101][1]))
+        # equilibrium and reference support, both variants
+        assert abs(out['Phi'].T @ out['ftot']).max() &lt; 1e-9*W
+        assert abs(out['Rref']).max() &lt; 1e-9*W
+        if moments:
+            resC[sc] = out
+            assert abs(resultant(model, fa, xcg_pt)
+                       - resultant_aero(BOX_FORCES[sc], qc_pts)).max() &lt; 1e-9*W*c_ref
+            assert abs(out['acc']).max() &lt; 1e-5*G_ACC
+            assert np.allclose(bf[101], [0., -1.5e4, 1.5e3, 0.], rtol=0, atol=1e-6*1.5e4)
+        else:
+            assert abs(out['acc'][1]) &gt; 0.1
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+subcase 1, forces only       : accelerations w_dd = -7.36e-01 ft/s^2, r_y_dd = -3.37e-01 rad/s^2; element 101 V1 = 1229.69 lb, M1B = -12296.9 lb ft
+subcase 1, forces and moments: accelerations w_dd = -1.85e-06 ft/s^2, r_y_dd = -2.74e-07 rad/s^2; element 101 V1 = 1500.00 lb, M1B = -15000.0 lb ft
+subcase 2, forces only       : accelerations w_dd = -7.81e-01 ft/s^2, r_y_dd = -3.58e-01 rad/s^2; element 101 V1 = 1213.25 lb, M1B = -12132.5 lb ft
+subcase 2, forces and moments: accelerations w_dd = +1.63e-07 ft/s^2, r_y_dd = +6.54e-09 rad/s^2; element 101 V1 = 1500.00 lb, M1B = -15000.0 lb ft
+</pre></div></div>
+</div>
+<p>With the forces only, the transferred loads have a pitching moment about the centre of gravity that the aerodynamic loads do not have, and the airplane accelerates in pitch (about <span class="math notranslate nohighlight">\(-0.3\)</span> rad/s<span class="math notranslate nohighlight">\(^2\)</span>): the inertia forces change the bar forces, e.g. the shear of element 101 is no longer the weight of GRID 97. With the moments of the offsets, the accelerations vanish to the rounding of the published box forces, the reactions at GRID 90 vanish, and element 101 carries <span class="math notranslate nohighlight">\(V_1 = 1500\)</span>
+lb and <span class="math notranslate nohighlight">\(M_{1B} = -1.5 \times 10^4\)</span> lb ft, as published. The rest of the structure differs from Nastran by the distribution of the loads, by 0.1-25% (column C of the comparison below): the inverse-distance weights put positive loads on GRID 99 and 100, where the wing spline puts negative ones (Check 2), and a part of the canard load on GRID 99 with a nodal moment at GRID 98.</p>
+<p>Neither transfer drops the moments of the forces: SPLINE2 carries them through its rigid arms, Eq. (5) needs the added offset term. Eq. (5) itself weights the forces only (p. 8, “this weight needs to be added to three entries … corresponding to the first three degrees of freedom”).</p>
+</section>
+<section id="The-vortex-lattice-method-of-AeroSandbox">
+<h2>The vortex lattice method of AeroSandbox<a class="headerlink" href="#The-vortex-lattice-method-of-AeroSandbox" title="Link to this heading">#</a></h2>
+<p>Following Gryszka and Castro (2026, Section 2.3.4, pp. 7-8), the aerodynamic loads are computed with the vortex lattice method of AeroSandbox, with a Prandtl-Glauert correction applied directly to the forces, <span class="math notranslate nohighlight">\(\boldsymbol{F} = \boldsymbol{F}_{inc}/\sqrt{1 - M^2}\)</span>. The output of <code class="docutils literal notranslate"><span class="pre">VortexLatticeMethod</span></code> per panel is a force, <span class="math notranslate nohighlight">\(\boldsymbol{F} = \rho
+(\boldsymbol{V} \times \boldsymbol{l}) \Gamma\)</span> at the midpoint of the bound vortex, <code class="docutils literal notranslate"><span class="pre">vortex_centers</span></code>, at the quarter chord of the panel, and no couple: <code class="docutils literal notranslate"><span class="pre">moments_geometry</span></code> is only the moment of these forces about <code class="docutils literal notranslate"><span class="pre">xyz_ref</span></code> (<code class="docutils literal notranslate"><span class="pre">aerosandbox/aerodynamics/aero_3D/vortex_lattice_method.py</span></code>, version 4.2.10, lines 227-229 and 327-336). Its transfer must therefore carry the moments <span class="math notranslate nohighlight">\(\boldsymbol{r} \times \boldsymbol{F}\)</span> of the forces: they are moved to the box centres with their moments and
+transferred with SPLINE2 1501 and 1601, exactly as the published box forces, so that the comparison isolates the aerodynamic model. Only the normal force, along <span class="math notranslate nohighlight">\(z\)</span>, is transferred, as in Nastran; the in-plane components, the induced drag, are not. The geometry is that of p. 181 and of the CAERO1 entries:</p>
+<ul class="simple">
+<li><p>wing: chord 10 ft, half span 20 ft, leading edge from <span class="math notranslate nohighlight">\((25, 0)\)</span> to <span class="math notranslate nohighlight">\((13.45299, 20)\)</span> ft (30 deg forward sweep), incidence 0.1 deg (in Nastran, the downwash W2GJ = 0.001745 rad of the wing boxes, p. 182), modelled as the twist of its sections;</p></li>
+<li><p>canard: chord 10 ft, half span 5 ft, leading edge at <span class="math notranslate nohighlight">\(x = 10\)</span> ft, no sweep, all-moving about its quarter chord, <span class="math notranslate nohighlight">\(x = 12.5\)</span> ft, by the angle <span class="math notranslate nohighlight">\(\delta\)</span> (ELEV), modelled as the twist of its sections (AeroSandbox twists about the leading edge, so the leading edge is placed on the circle about the quarter chord);</p></li>
+<li><p>flat plates (the camber line of a symmetric airfoil), coplanar at <span class="math notranslate nohighlight">\(z = 0\)</span>, mirrored about <span class="math notranslate nohighlight">\(y = 0\)</span>; the panels are exactly the boxes of CAERO1: 8 x 4 on the wing and 2 x 4 on the canard, uniform spacing, with the vortex centres at the box quarter chords;</p></li>
+<li><p>fuselage aerodynamics neglected, as in the example (p. 181).</p></li>
+</ul>
+<p>The vortex lattice method is linear, as the doublet lattice: the loads of the right half are <span class="math notranslate nohighlight">\(\boldsymbol{F}(\alpha, \delta) = \boldsymbol{F}_0 +
+\alpha \boldsymbol{F}_\alpha + \delta \boldsymbol{F}_\delta\)</span>, from three runs. The velocity of the runs only sets a reference dynamic pressure, by which the forces are scaled to <span class="math notranslate nohighlight">\(q\)</span> of the subcase. The trim of level flight solves for <span class="math notranslate nohighlight">\(\alpha\)</span> and <span class="math notranslate nohighlight">\(\delta\)</span> such that the lift equals the weight, 8000 lb, and the pitching moment about the centre of gravity vanishes. A uniform factor on the forces, as the Prandtl-Glauert correction, changes the trim angles but not the trimmed loads.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import aerosandbox as asb
+
+flat = asb.Airfoil('naca0010')       # symmetric: flat camber line
+
+
+def make_airplane(delta_deg):
+    ys = np.linspace(0., 20., 9)
+    wing = asb.Wing(name='wing', symmetric=True, xsecs=[
+        asb.WingXSec(xyz_le=[25. + (13.45299 - 25.)*y/20., y, 0.], chord=10.,
+                     twist=0.1, airfoil=flat) for y in ys])
+    d = np.deg2rad(delta_deg)
+    canard = asb.Wing(name='canard', symmetric=True, xsecs=[
+        asb.WingXSec(xyz_le=[12.5 - 2.5*np.cos(d), y, 2.5*np.sin(d)], chord=10.,
+                     twist=delta_deg, airfoil=flat) for y in (0., 2.5, 5.)])
+    return asb.Airplane(name='HA144A', xyz_ref=[xcg, 0., 0.], wings=[wing, canard])
+
+
+def vlm_forces(alpha_deg, delta_deg):
+    r"""Vortex centres and forces of the right half, ordered as the boxes
+    1000-1007 and 1100-1131, Prandtl-Glauert corrected, per unit dynamic
+    pressure"""
+    op = asb.OperatingPoint(velocity=100., alpha=alpha_deg)
+    vlm = asb.VortexLatticeMethod(make_airplane(delta_deg), op,
+                                  spanwise_resolution=1, chordwise_resolution=4,
+                                  spanwise_spacing_function=np.linspace,
+                                  chordwise_spacing_function=np.linspace)
+    vlm.run()
+    pts, F = vlm.vortex_centers, vlm.forces_geometry
+    # match each box quarter-chord point to its vortex centre
+    order = [np.argmin(((pts[:, :2] - p[:2])**2).sum(axis=1)) for p in box_pts]
+    return pts[order], F[order]/op.dynamic_pressure()/np.sqrt(1 - MACH**2)
+
+
+p0, F0 = vlm_forces(0., 0.)
+pa, Fa = vlm_forces(1., 0.)
+pd, Fd = vlm_forces(0., 1.)
+print('max distance vortex centre - box quarter-chord point: %.1e ft (x, y), '
+      '%.1e ft (z, the incidence of 0.1 deg)'
+      % (abs(p0[:, :2] - box_pts[:, :2]).max(), abs(p0[:, 2]).max()))
+assert abs(p0[:, :2] - box_pts[:, :2]).max() &lt; 1e-3
+f0, fa_, fd_ = F0[:, 2], (Fa - F0)[:, 2]*180/np.pi, (Fd - F0)[:, 2]*180/np.pi
+
+S, c = 200., 10.
+
+
+def coeffs(fz):
+    r"""Lift coefficient and pitching moment coefficient about GRID 90 (nose
+    up positive), per unit dynamic pressure"""
+    return fz.sum()/S, (fz*(15. - box_pts[:, 0])).sum()/(S*c)
+
+
+# rigid derivatives of the listing, Mach 0.9, p. 198-199 (NACA axes, C_L = -C_Z)
+nastran = {'0': (8.420787E-03, -6.008128E-03), 'alpha': (5.070976, -2.870932),
+           'delta': (2.461395E-01, 5.715300E-01)}
+beta = np.sqrt(1 - MACH**2)
+print('%-6s %9s %13s %12s %11s %16s %15s' % ('', 'C_L VLM', 'C_L VLM*beta', 'C_L Nastran',
+                                           'C_m,90 VLM', 'C_m,90 VLM*beta', 'C_m,90 Nastran'))
+for key, fz in (('0', f0), ('alpha', fa_), ('delta', fd_)):
+    CL, Cm = coeffs(fz)
+    print('%-6s %9.5f %13.5f %12.5f %11.5f %16.5f %15.5f' % (
+        key, CL, CL*beta, nastran[key][0], Cm, Cm*beta, nastran[key][1]))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+max distance vortex centre - box quarter-chord point: 1.2e-05 ft (x, y), 1.4e-02 ft (z, the incidence of 0.1 deg)
+         C_L VLM  C_L VLM*beta  C_L Nastran  C_m,90 VLM  C_m,90 VLM*beta  C_m,90 Nastran
+0        0.01444       0.00629      0.00842    -0.00975         -0.00425        -0.00601
+alpha    8.86343       3.86348      5.07098    -4.62481         -2.01591        -2.87093
+delta    0.59639       0.25996      0.24614     0.96478          0.42054         0.57153
+</pre></div></div>
+</div>
+<p>The rigid derivatives (per rad) of the doublet-lattice model are those printed for the rigid, splined airplane (pp. 198-199). The Prandtl-Glauert factor <span class="math notranslate nohighlight">\(1/\sqrt{1 - 0.81} = 2.29\)</span> applied to all forces overestimates the lift-curve slope at Mach 0.9 for this low-aspect-ratio configuration, by about 75% for <span class="math notranslate nohighlight">\(C_{L_\alpha}\)</span> and 140% for the canard of aspect ratio 1, whose effectiveness hardly changes with Mach number; the incompressible values (columns “VLM*beta”) are 24% below and 6%
+above the doublet lattice. As stated above, this factor changes the trim angles but not the trimmed loads.</p>
+<p><strong>Trim.</strong> For each subcase, <span class="math notranslate nohighlight">\(q (\boldsymbol{f}_0 + \alpha
+\boldsymbol{f}_\alpha + \delta \boldsymbol{f}_\delta)\)</span> is trimmed such that <span class="math notranslate nohighlight">\(\sum F_z = W\)</span> and <span class="math notranslate nohighlight">\(\sum F_z (\bar{x} - x) = 0\)</span>. The trim angles of Nastran’s rigid airplane follow from its rigid derivatives, with the moment about the centre of gravity <span class="math notranslate nohighlight">\(C_{m,cg} = C_{m,90} + C_L (\bar{x} - 15)/c\)</span>; the published elastic trim is ANGLEA and ELEV of the listing (pp. 199, 201).</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[8]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def trim(fz0, fza, fzd, q):
+    # moments of the forces at the vortex centres p0
+    A = q*np.array([[fza.sum(), fzd.sum()],
+                    [(fza*(xcg - p0[:, 0])).sum(), (fzd*(xcg - p0[:, 0])).sum()]])
+    b = np.array([W - q*fz0.sum(), -q*(fz0*(xcg - p0[:, 0])).sum()])
+    return np.linalg.solve(A, b)
+
+
+def trim_nastran_rigid(q):
+    CLreq = W/(q*S)
+    A = np.array([[nastran['alpha'][0], nastran['delta'][0]],
+                  [nastran['alpha'][1], nastran['delta'][1]]])
+    b = np.array([CLreq - nastran['0'][0],
+                  -CLreq*XCG_PUB/c - nastran['0'][1]])
+    return np.linalg.solve(A, b)
+
+
+elastic = {1: (1.691910E-01, 4.924567E-01), 2: (1.373013E-03, 1.932495E-02)}
+FB = {}
+for sc, q in Q_SC.items():
+    al, de = trim(f0, fa_, fd_, q)
+    FB[sc] = q*(f0 + al*fa_ + de*fd_)
+    assert np.isclose(FB[sc].sum(), W, rtol=1e-12)
+    assert abs((FB[sc]*(xcg - p0[:, 0])).sum()) &lt; 1e-9*W*c
+    alr, der = trim_nastran_rigid(q)
+    print('subcase %d, q = %4.0f psf: alpha, delta [deg] VLM %7.3f %7.3f | '
+          'Nastran rigid %7.3f %7.3f | Nastran elastic %7.3f %7.3f'
+          % (sc, q, np.rad2deg(al), np.rad2deg(de), np.rad2deg(alr), np.rad2deg(der),
+             *np.rad2deg(elastic[sc])))
+    print('    canard load: VLM %.1f lb, Nastran %.1f lb' % (FB[sc][:8].sum(),
+                                                          BOX_FORCES[sc][:8].sum()))
+
+# check of the linearity, subcase 2: a direct run at the trim angles
+al, de = trim(f0, fa_, fd_, Q_SC[2])
+pt, Ft = vlm_forces(np.rad2deg(al), np.rad2deg(de))
+dev = abs(Q_SC[2]*Ft[:, 2] - FB[2]).max()/abs(FB[2]).max()
+print('subcase 2, direct run at the trim angles: max deviation %.1e of the max box force' % dev)
+assert dev &lt; 5e-3
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+subcase 1, q =   40 psf: alpha, delta [deg] VLM   5.447  13.733 | Nastran rigid   9.837  28.147 | Nastran elastic   9.694  28.216
+    canard load: VLM 3037.9 lb, Nastran 2807.1 lb
+subcase 2, q = 1200 psf: alpha, delta [deg] VLM   0.085   0.554 | Nastran rigid   0.231   1.035 | Nastran elastic   0.079   1.107
+    canard load: VLM 3038.4 lb, Nastran 2662.7 lb
+subcase 2, direct run at the trim angles: max deviation 2.0e-03 of the max box force
+</pre></div></div>
+</div>
+<p>At low dynamic pressure (subcase 1, quasi-rigid), the published elastic trim is close to the rigid trim from the derivatives. The trim angles of the vortex lattice model differ from Nastran’s by the factor of the lift slopes, mainly the Prandtl-Glauert factor. The trimmed load distributions can be compared directly, strip by strip.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[9]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>yw = 1.25 + 2.5*np.arange(8)
+fig, axes = plt.subplots(1, 2, figsize=(10, 3.8))
+for ax, sc in zip(axes, (1, 2)):
+    strips_dlm = BOX_FORCES[sc][8:].reshape(8, 4).sum(axis=1)/2.5
+    strips_vlm = FB[sc][8:].reshape(8, 4).sum(axis=1)/2.5
+    ax.plot(yw, strips_dlm, 'ko-', label='wing, doublet lattice (Nastran)')
+    ax.plot(yw, strips_vlm, 'bs--', label='wing, vortex lattice (AeroSandbox)')
+    ax.plot(yw[:2], BOX_FORCES[sc][:8].reshape(2, 4).sum(axis=1)/2.5, 'k^-',
+            label='canard, doublet lattice')
+    ax.plot(yw[:2], FB[sc][:8].reshape(2, 4).sum(axis=1)/2.5, 'bv--',
+            label='canard, vortex lattice')
+    ax.set_title('subcase %d, $q$ = %.0f psf, trimmed' % (sc, Q_SC[sc]))
+    ax.set_xlabel('$y$ [ft]')
+    ax.set_ylabel('lift per unit span [lb/ft]')
+    ax.grid(True, alpha=0.3)
+axes[0].legend(fontsize=8)
+plt.tight_layout()
+plt.show()
+for sc in (1, 2):
+    print('subcase %d, wing strip loads [lb]:\n  DLM %s\n  VLM %s' % (
+        sc, np.array2string(BOX_FORCES[sc][8:].reshape(8, 4).sum(axis=1), precision=0),
+        np.array2string(FB[sc][8:].reshape(8, 4).sum(axis=1), precision=0)))
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/tut-inertia-relief-aircraft-ha144a_19_0.png" src="_images/tut-inertia-relief-aircraft-ha144a_19_0.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+subcase 1, wing strip loads [lb]:
+  DLM [-299.   17. 1204. 1132. 1031.  897.  725.  488.]
+  VLM [-357.  -50. 1222. 1117.  994.  857.  698.  482.]
+subcase 2, wing strip loads [lb]:
+  DLM [-317.    3. 1173. 1156. 1074.  948.  775.  526.]
+  VLM [-357.  -50. 1221. 1117.  994.  857.  698.  482.]
+</pre></div></div>
+</div>
+<p>In subcase 1, the rigid vortex lattice and the doublet lattice agree on the shape of the span loading, including the negative lift of the wing root in the downwash of the canard; the vortex lattice puts 8% more load on the canard (3038 lb against 2807 lb), and correspondingly less on the wing. In subcase 2, the doublet-lattice loads include the elastic deformation of the forward-swept wing, which twists the tip nose-up (wash-in) and moves lift outboard, unloading the canard (2663 lb); the
+one-way analysis here is rigid and cannot show this: its trimmed loads are nearly the same in both subcases.</p>
+</section>
+<section id="Inertia-relief-with-the-AeroSandbox-loads">
+<h2>Inertia relief with the AeroSandbox loads<a class="headerlink" href="#Inertia-relief-with-the-AeroSandbox-loads" title="Link to this heading">#</a></h2>
+<p>The trimmed vortex-lattice forces, at the vortex centres, are moved to the box centres with their moments and transferred with SPLINE2 1501 and 1601, as the published ones, and the inertia relief is solved with the support at GRID 90. The transferred loads have the resultant force and moment of the vortex-lattice forces to round-off, and they are balanced by the trim: the accelerations, <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top \boldsymbol{F}_{tot}\)</span> and the reactions vanish to round-off, and element 101
+carries the weight of GRID 97 only.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>resB = {}
+for sc in (1, 2):
+    # the forces act at the vortex centres p0, moved to the box centres
+    fa = aero_loads_spline(FB[sc], pts=p0)
+    dres = abs(resultant(model, fa, xcg_pt) - resultant_aero(FB[sc], p0)).max()
+    out = solve_inertia_relief(model, fa + fw)
+    bf = bar_forces(model, out['ufull'])
+    print('subcase %d: accelerations %s, |Phi^T F_tot| = %.1e lb, reactions at GRID 90 %s'
+          % (sc, np.array2string(out['acc'], precision=1),
+             abs(out['Phi'].T @ out['ftot']).max(), np.array2string(out['Rref'], precision=1)))
+    print('  element 101: M1A = %.2e, M1B = %.6e lb ft, V1 = %.6e lb'
+          % tuple(bf[101][:3]))
+    print('  |resultant transferred - resultant of the VLM forces| = %.1e' % dres)
+    assert dres &lt; 1e-10*W*c_ref
+    assert abs(out['acc']).max() &lt; 1e-10*G_ACC
+    assert abs(out['Phi'].T @ out['ftot']).max() &lt; 1e-9*W
+    assert abs(out['Rref']).max() &lt; 1e-9*W
+    assert np.allclose(bf[101], [0., -1.5e4, 1.5e3, 0.], rtol=0, atol=1e-9*1.5e4)
+    resB[sc] = out
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+subcase 1: accelerations [ 4.3e-15 -1.4e-14], |Phi^T F_tot| = 2.7e-12 lb, reactions at GRID 90 [-3.6e-12  7.3e-11]
+  element 101: M1A = 3.64e-12, M1B = -1.500000e+04 lb ft, V1 = 1.500000e+03 lb
+  |resultant transferred - resultant of the VLM forces| = 5.4e-11
+subcase 2: accelerations [ 1.4e-14 -1.4e-14], |Phi^T F_tot| = 4.5e-12 lb, reactions at GRID 90 [0.0e+00 6.5e-11]
+  element 101: M1A = 1.46e-11, M1B = -1.500000e+04 lb ft, V1 = 1.500000e+03 lb
+  |resultant transferred - resultant of the VLM forces| = 7.3e-11
+</pre></div></div>
+</div>
+</section>
+<section id="Comparison-with-the-published-results">
+<h2>Comparison with the published results<a class="headerlink" href="#Comparison-with-the-published-results" title="Link to this heading">#</a></h2>
+<p>Displacements relative to GRID 90 (p. 203) and bar forces (p. 204), for the two subcases: Nastran; A, the published doublet-lattice box forces transferred with SPLINE2 (relative difference to Nastran, asserted below <span class="math notranslate nohighlight">\(10^{-5}\)</span>); C, the same forces transferred with Eq. (5) plus the moments of the offsets; B, the trimmed vortex-lattice loads transferred with SPLINE2. Measured agreement:</p>
+<ul class="simple">
+<li><p>A agrees with Nastran to the printed digits, within <span class="math notranslate nohighlight">\(10^{-6}\)</span>;</p></li>
+<li><p>C differs from Nastran only by the load transfer: about 10% at the nose, up to about 25% for the shear of element 103, the torque of element 110 and the small deflection of GRID 110;</p></li>
+<li><p>B differs from Nastran only by the aerodynamic model: in subcase 1 (quasi-rigid), the vortex and doublet lattices differ by the canard share above, and B is within about 11% of Nastran; in subcase 2, the rigid vortex lattice also misses the aeroelastic redistribution, and B is up to about 16% below Nastran for the wing.</p></li>
+</ul>
+<p>The values of B and C are shown, not asserted: they measure the aerodynamic model and the load transfer, not the structural model, which Checks 1 and 2 and A verify.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>rows = [('w 97', 97, 0), ('r_y 97', 97, 2), ('w 100', 100, 0), ('r_y 100', 100, 2),
+        ('w 110', 110, 0), ('w 120', 120, 0), ('r_x 120', 120, 1), ('r_y 120', 120, 2),
+        ('w 121', 121, 0)]
+frows = [('103 M1A', 103, 0), ('103 M1B', 103, 1), ('103 V1', 103, 2),
+         ('110 M1A', 110, 0), ('110 V1', 110, 2), ('110 T', 110, 3),
+         ('120 M1A', 120, 0), ('120 V1', 120, 2), ('120 T', 120, 3)]
+for sc in (1, 2):
+    print('subcase %d, q = %.0f psf' % (sc, Q_SC[sc]))
+    print('  %-9s %12s %12s %9s %8s %8s' % ('', 'Nastran', 'A', 'A/N-1', 'C/N-1', 'B/N-1'))
+    uA, uB, uC = resA[sc]['ufull'], resB[sc]['ufull'], resC[sc]['ufull']
+    for lab, g, k in rows:
+        n = DISP_PUB[sc][g][k]
+        a, b, cc = (u_[DOF*idx[g] + 2 + k] for u_ in (uA, uB, uC))
+        print('  %-9s %12.4e %12.4e %+8.0e %+7.1f%% %+7.1f%%' % (
+            lab, n, a, a/n - 1, 100*(cc/n - 1), 100*(b/n - 1)))
+        assert abs(a/n - 1) &lt; 1e-5
+    bA, bB, bC = (bar_forces(model, u_) for u_ in (uA, uB, uC))
+    for lab, e, k in frows:
+        n = BAR_PUB[sc][e][k]
+        if np.isnan(n):
+            continue
+        a, b, cc = bA[e][k], bB[e][k], bC[e][k]
+        print('  %-9s %12.4e %12.4e %+8.0e %+7.1f%% %+7.1f%%' % (
+            lab, n, a, a/n - 1, 100*(cc/n - 1), 100*(b/n - 1)))
+        assert abs(a/n - 1) &lt; 1e-5
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+subcase 1, q = 40 psf
+                 Nastran            A     A/N-1    C/N-1    B/N-1
+  w 97       -6.1768e-03  -6.1768e-03   -1e-07   +10.6%    -0.6%
+  r_y 97     -6.3201e-04  -6.3201e-04   -2e-07    +8.3%    -0.5%
+  w 100      -1.0660e-02  -1.0660e-02   +3e-07    +2.4%    -3.6%
+  r_y 100     1.6888e-03   1.6888e-03   +4e-08    -3.8%    -4.7%
+  w 110      -2.4208e-03  -2.4208e-03   -9e-07   +23.6%    +1.1%
+  w 120       2.5547e-02   2.5547e-02   +1e-07    -9.5%    -5.6%
+  r_x 120     1.2629e-03   1.2629e-03   -2e-07   -13.3%    -4.3%
+  r_y 120     3.2557e-03   3.2557e-03   -1e-07    -7.9%    -5.5%
+  w 121       3.3686e-02   3.3686e-02   -7e-08    -9.1%    -5.6%
+  103 M1A    -2.1402e+04  -2.1402e+04   -1e-07    -0.4%    -2.8%
+  103 M1B    -4.3235e+04  -4.3235e+04   +3e-08   -13.2%    -6.8%
+  103 V1      2.1833e+03   2.1833e+03   +2e-07   -25.9%   -10.7%
+  110 M1A     5.7961e+04   5.7961e+04   -3e-08    -5.8%    -5.3%
+  110 V1      3.8998e+03   3.8998e+03   +9e-08   -18.3%    -4.5%
+  120 M1A     3.0261e+04   3.0261e+04   -2e-07   -11.7%    -4.5%
+  120 V1      2.2467e+03   2.2467e+03   -2e-07    +8.0%    -4.3%
+subcase 2, q = 1200 psf
+                 Nastran            A     A/N-1    C/N-1    B/N-1
+  w 97       -6.2642e-03  -6.2642e-03   -8e-08   +10.0%    -2.0%
+  r_y 97     -6.3856e-04  -6.3856e-04   -4e-08    +7.8%    -1.5%
+  w 100      -1.1258e-02  -1.1258e-02   +3e-07    +2.0%    -8.7%
+  r_y 100     1.7895e-03   1.7895e-03   +2e-07    -3.7%   -10.1%
+  w 110      -2.5032e-03  -2.5032e-03   -9e-07   +22.0%    -2.2%
+  w 120       2.7374e-02   2.7374e-02   -2e-07    -8.9%   -11.9%
+  r_x 120     1.3580e-03   1.3580e-03   -2e-07   -12.6%   -11.0%
+  r_y 120     3.4700e-03   3.4700e-03   -1e-07    -7.6%   -11.3%
+  w 121       3.6049e-02   3.6049e-02   -8e-08    -8.6%   -11.8%
+  103 M1A    -2.2712e+04  -2.2712e+04   +9e-08    -0.1%    -8.4%
+  103 M1B    -4.5980e+04  -4.5980e+04   -1e-07   -12.6%   -12.3%
+  103 V1      2.3268e+03   2.3268e+03   -3e-07   -24.7%   -16.2%
+  110 M1A     6.1642e+04   6.1642e+04   -9e-08    -5.4%   -11.0%
+  110 V1      4.0611e+03   4.0611e+03   -9e-08   -17.5%    -8.3%
+  110 T       1.7504e+04   1.7504e+04   -4e-07   -24.4%   -15.2%
+  120 M1A     3.2741e+04   3.2741e+04   +3e-08   -11.1%   -11.8%
+  120 V1      2.4326e+03   2.4326e+03   +2e-08    +7.5%   -11.6%
+  120 T       8.0559e+03   8.0559e+03   -3e-07    +3.7%   -12.7%
+</pre></div></div>
+</div>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[12]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>fig, axes = plt.subplots(1, 2, figsize=(10, 3.8))
+fus = [97, 98, 90, 99, 100]
+xf = [GRIDS[g][0] for g in fus]
+wingg = [100, 110, 120]
+yw_ = [GRIDS[g][1] for g in wingg]
+for sc, ls in ((1, '--'), (2, '-')):
+    pub = [0. if g == 90 else DISP_PUB[sc][g][0] for g in fus]
+    axes[0].plot(xf, 1e3*np.array(pub), 'k' + ls + 'o', label='Nastran, subcase %d' % sc)
+    axes[1].plot(yw_, 1e3*np.array([DISP_PUB[sc][g][0] for g in wingg]), 'k' + ls + 'o',
+                 label='Nastran, subcase %d' % sc)
+    for res, col, lab in ((resA, 'g', 'A'), (resC, 'm', 'C'), (resB, 'b', 'B')):
+        u = res[sc]['ufull']
+        axes[0].plot(xf, 1e3*u[[DOF*idx[g] + 2 for g in fus]], col + ls + 's', ms=4,
+                     label='%s, subcase %d' % (lab, sc))
+        axes[1].plot(yw_, 1e3*u[[DOF*idx[g] + 2 for g in wingg]], col + ls + 's', ms=4,
+                     label='%s, subcase %d' % (lab, sc))
+axes[0].set_xlabel('$x$ [ft], fuselage GRID 97, 98, 90, 99, 100')
+axes[1].set_xlabel('$y$ [ft], elastic axis GRID 100, 110, 120')
+for ax in axes:
+    ax.set_ylabel('$w$ relative to GRID 90 [10$^{-3}$ ft]')
+    ax.grid(True, alpha=0.3)
+axes[1].legend(fontsize=7, ncol=2)
+plt.tight_layout()
+plt.show()
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/tut-inertia-relief-aircraft-ha144a_24_0.png" src="_images/tut-inertia-relief-aircraft-ha144a_24_0.png" />
+</div>
+</div>
+</section>
+<section id="Summary">
+<h2>Summary<a class="headerlink" href="#Summary" title="Link to this heading">#</a></h2>
+<ul class="simple">
+<li><p>The <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> model built from the bulk data of HA144A, with the rigid bars as a transformation of the degrees of freedom and shear-rigid beams, reproduces the grid point weight generator (weight 8000 lb, centre of gravity 2.181625 ft aft of GRID 90, pitch inertia 8.928944e5 lb ft<span class="math notranslate nohighlight">\(^2\)</span> about it, the whole matrix MO) and, loaded by the nodal loads in equilibrium with the published bar forces, the published displacements relative to GRID 90 to the 7 printed digits (subcases 2 and 3).</p></li>
+<li><p>Inertia relief with the reference support at GRID 90 (SUPORT 90 35) and the function <code class="docutils literal notranslate"><span class="pre">pyfe3d.solver.apply_inertia_relief</span></code> gives, for every trimmed load set, vanishing rigid-body accelerations, <span class="math notranslate nohighlight">\(\boldsymbol{\Phi}^\top
+\boldsymbol{F}_{tot} = \boldsymbol{0}\)</span>, zero reactions, and the forces of element 101, <span class="math notranslate nohighlight">\(M_{1B} = -1.5 \times 10^4\)</span> lb ft and <span class="math notranslate nohighlight">\(V_1 = 1500\)</span> lb.</p></li>
+<li><p>The linear splines of the deck, SPLINE2 1501 and 1601, implemented from their theory (Rodden and Johnson 1994, pp. 33-43) and entry (Quick Reference Guide, pp. 3137-3138), transfer the published doublet-lattice box forces, applied as Nastran applies them at the box centres with their moments about the midchord, such that all published bar forces and displacements are reproduced to the printed digits (relative differences below <span class="math notranslate nohighlight">\(10^{-6}\)</span>), in both subcases. The transfer conserves the
+resultant force and moment through the rigid arms of the spline; the forces at the quarter chord instead change element 103 by up to <span class="math notranslate nohighlight">\(2 \times 10^{-3}\)</span>, and the ratio DTOR changes the transfer, contrary to p. 108 of the guide.</p></li>
+<li><p>The inverse-distance load transfer of Gryszka and Castro (2026), Eq. (5), conserves the force; for a stick model the moments of the offsets must be added to conserve the pitching moment, otherwise the load set is no longer trimmed and the airplane accelerates in pitch. With the moments, the results differ from Nastran’s by up to about 25%, through the distribution of the loads alone.</p></li>
+<li><p>The vortex lattice method of AeroSandbox gives forces at the bound-vortex midpoints and no panel moments; their moments are transported to the box centres and through the splines, with the resultant conserved to round-off. The trim angles differ from Nastran’s mainly through the uniform Prandtl-Glauert factor, which does not change the trimmed loads. In the quasi-rigid subcase 1, the span loadings agree in shape and the structural results are within about 11% of Nastran’s; in subcase 2, the
+one-way rigid analysis misses the aeroelastic wash-in of the forward-swept wing, and the wing deflections and loads are up to about 16% lower than Nastran’s elastic trim.</p></li>
+</ul>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="tut-inertia-relief.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tutorial: static analysis with inertia relief</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="api.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">API reference</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Units,-axes-and-published-data">Units, axes and published data</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#The-structural-model">The structural model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Check-1:-mass-properties">Check 1: mass properties</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Check-2:-the-stiffness-model-against-the-published-displacements">Check 2: the stiffness model against the published displacements</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Inertia-relief-with-the-published-aerodynamic-loads">Inertia relief with the published aerodynamic loads</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#The-alternative:-the-transfer-of-Gryszka-and-Castro-(2026)">The alternative: the transfer of Gryszka and Castro (2026)</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#The-vortex-lattice-method-of-AeroSandbox">The vortex lattice method of AeroSandbox</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Inertia-relief-with-the-AeroSandbox-loads">Inertia relief with the AeroSandbox loads</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Comparison-with-the-published-results">Comparison with the published results</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Summary">Summary</a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/tut-inertia-relief-aircraft-ha144a.ipynb.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

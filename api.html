@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>API reference &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>API reference &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
@@ -37,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -46,7 +47,7 @@
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
     <link rel="next" title="Finite elements" href="fe_overview.html" />
-    <link rel="prev" title="Tutorial: geometrically non-linear benchmarks with pyfe3d.solver" href="tut-nonlinear-benchmarks.html" />
+    <link rel="prev" title="Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A" href="tut-inertia-relief-aircraft-ha144a.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
   <meta name="docsearch:language" content="en"/>
@@ -118,7 +119,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -135,6 +136,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -159,13 +167,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -174,6 +175,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -362,6 +391,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -378,6 +414,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -582,11 +639,36 @@
 
 <li class="toctree-l2"><a class="reference internal" href="beamprop.html">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
 
+<li class="toctree-l2"><a class="reference internal" href="vabs.html">Variational asymptotic sectional analysis (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.vabs</span></code>)</a></li>
+
+
+
+
+
+
+
+
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html">Co-rotational kinematics, EICR (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
 <li class="toctree-l1"><a class="reference internal" href="solver.html">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_static.html">Linear static solution (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code>)</a></li>
 
+
+<li class="toctree-l1"><a class="reference internal" href="solver_inertia_relief.html">Static analysis with inertia relief (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.inertia_relief</span></code>)</a></li>
 
 <li class="toctree-l1"><a class="reference internal" href="solver_analysis.html">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</a></li>
 
@@ -638,6 +720,7 @@
 
 
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html">Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code>)</a></li>
+
 
 
 
@@ -722,16 +805,26 @@
                   
   <section id="api-reference">
 <h1>API reference<a class="headerlink" href="#api-reference" title="Link to this heading">#</a></h1>
-<p>The element classes, their <code class="docutils literal notranslate"><span class="pre">Data</span></code> and <code class="docutils literal notranslate"><span class="pre">Probe</span></code> classes and the constants
-<code class="docutils literal notranslate"><span class="pre">DOF</span></code>, <code class="docutils literal notranslate"><span class="pre">INT</span></code> and <code class="docutils literal notranslate"><span class="pre">DOUBLE</span></code> are available directly from the <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code>
-namespace, and the solvers from <code class="docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>:</p>
+<p>The element classes, their <code class="docutils literal notranslate"><span class="pre">Data</span></code> and <code class="docutils literal notranslate"><span class="pre">Probe</span></code> classes, the classes of
+the co-rotational layer for large rotations, e.g. <code class="docutils literal notranslate"><span class="pre">CorotationalModel</span></code>,
+and the constants <code class="docutils literal notranslate"><span class="pre">DOF</span></code>, <code class="docutils literal notranslate"><span class="pre">INT</span></code> and <code class="docutils literal notranslate"><span class="pre">DOUBLE</span></code> are available directly
+from the <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code> namespace, and the solvers from <code class="docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>; the
+finite-rotation utilities of the co-rotational layer, e.g. <code class="docutils literal notranslate"><span class="pre">expso3</span></code>, are
+imported from <code class="docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code>, as are its classes:</p>
 <section id="finite-elements-for-3d-problems-in-python-cython">
 <span id="module-pyfe3d"></span><h2>Finite elements for 3D problems in Python/Cython<a class="headerlink" href="#finite-elements-for-3d-problems-in-python-cython" title="Link to this heading">#</a></h2>
 <p>The <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code> namespace gives the element classes <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a>,
 <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>, <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3R</span></code></a>, <a class="reference internal" href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a>, <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>,
 <a class="reference internal" href="beamlr.html#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a>, <a class="reference internal" href="truss.html#pyfe3d.truss.Truss" title="pyfe3d.truss.Truss"><code class="xref py py-class docutils literal notranslate"><span class="pre">Truss</span></code></a> and <a class="reference internal" href="spring.html#pyfe3d.spring.Spring" title="pyfe3d.spring.Spring"><code class="xref py py-class docutils literal notranslate"><span class="pre">Spring</span></code></a>, each with its
 <code class="docutils literal notranslate"><span class="pre">Data</span></code> and <code class="docutils literal notranslate"><span class="pre">Probe</span></code> classes (e.g. <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamCData" title="pyfe3d.beamc.BeamCData"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamCData</span></code></a> and
-<a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamCProbe" title="pyfe3d.beamc.BeamCProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamCProbe</span></code></a>), and the module <a class="reference internal" href="solver.html#module-pyfe3d.solver" title="pyfe3d.solver"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code></a>. It also defines:</p>
+<a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamCProbe" title="pyfe3d.beamc.BeamCProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamCProbe</span></code></a>), the classes of the element-independent co-rotational
+(EICR) layer for large rotations of <a class="reference internal" href="corotational.html#module-pyfe3d.corotational" title="pyfe3d.corotational"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code></a>,
+<a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel" title="pyfe3d.corotational.CorotationalModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalModel</span></code></a>, which assembles a model, and the wrappers of
+one element each, <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalShell" title="pyfe3d.corotational.CorotationalShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalShell</span></code></a>, <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalBeam" title="pyfe3d.corotational.CorotationalBeam"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalBeam</span></code></a>,
+<a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalTruss" title="pyfe3d.corotational.CorotationalTruss"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalTruss</span></code></a> and <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalSpring" title="pyfe3d.corotational.CorotationalSpring"><code class="xref py py-class docutils literal notranslate"><span class="pre">CorotationalSpring</span></code></a>, and the
+module <a class="reference internal" href="solver.html#module-pyfe3d.solver" title="pyfe3d.solver"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code></a>. The finite-rotation utilities of the
+co-rotational layer, e.g. <a class="reference internal" href="corotational.html#pyfe3d.corotational.expso3" title="pyfe3d.corotational.expso3"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyfe3d.corotational.expso3()</span></code></a>, are imported
+from <a class="reference internal" href="corotational.html#module-pyfe3d.corotational" title="pyfe3d.corotational"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code></a>. It also defines:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">DOF</span> <span class="pre">=</span> <span class="pre">6</span></code>: number of degrees of freedom per node;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">INT</span></code>: NumPy integer type of the C <code class="docutils literal notranslate"><span class="pre">long</span></code> of the platform,
@@ -796,12 +889,76 @@ methods of the elements;</p></li>
 <li class="toctree-l2"><a class="reference internal" href="shellprop_utils.html#pyfe3d.shellprop_utils.read_laminaprop"><code class="docutils literal notranslate"><span class="pre">read_laminaprop()</span></code></a></li>
 <li class="toctree-l2"><a class="reference internal" href="beamprop.html">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
 <li class="toctree-l2"><a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp"><code class="docutils literal notranslate"><span class="pre">BeamProp</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="vabs.html">Variational asymptotic sectional analysis (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.vabs</span></code>)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vabs.html#pyfe3d.vabs.CrossSection"><code class="docutils literal notranslate"><span class="pre">CrossSection</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="vabs.html#pyfe3d.vabs.beamprop_from_vabs"><code class="docutils literal notranslate"><span class="pre">beamprop_from_vabs()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="vabs.html#pyfe3d.vabs.classical_from_timoshenko"><code class="docutils literal notranslate"><span class="pre">classical_from_timoshenko()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="vabs.html#pyfe3d.vabs.isotropic"><code class="docutils literal notranslate"><span class="pre">isotropic()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="vabs.html#pyfe3d.vabs.orthotropic"><code class="docutils literal notranslate"><span class="pre">orthotropic()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="vabs.html#pyfe3d.vabs.pyfe3d_to_yu"><code class="docutils literal notranslate"><span class="pre">pyfe3d_to_yu()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="vabs.html#pyfe3d.vabs.rotate_material"><code class="docutils literal notranslate"><span class="pre">rotate_material()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="vabs.html#pyfe3d.vabs.yu_to_pyfe3d"><code class="docutils literal notranslate"><span class="pre">yu_to_pyfe3d()</span></code></a></li>
 </ul>
 </li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html">Co-rotational kinematics, EICR (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code>)</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.SERIES_ANGLE"><code class="docutils literal notranslate"><span class="pre">SERIES_ANGLE</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.SERIES_ANGLE_ETA_MU"><code class="docutils literal notranslate"><span class="pre">SERIES_ANGLE_ETA_MU</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.WARP_RATIO_WARNING"><code class="docutils literal notranslate"><span class="pre">WARP_RATIO_WARNING</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.WARP_RATIO_WARNING_OFFSETS"><code class="docutils literal notranslate"><span class="pre">WARP_RATIO_WARNING_OFFSETS</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#notes">Notes</a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalBeam"><code class="docutils literal notranslate"><span class="pre">CorotationalBeam</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalBeam.evaluate"><code class="docutils literal notranslate"><span class="pre">CorotationalBeam.evaluate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalBeam.kinematics"><code class="docutils literal notranslate"><span class="pre">CorotationalBeam.kinematics()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalBeam.update_probe"><code class="docutils literal notranslate"><span class="pre">CorotationalBeam.update_probe()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel"><code class="docutils literal notranslate"><span class="pre">CorotationalModel</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel.KC0"><code class="docutils literal notranslate"><span class="pre">CorotationalModel.KC0</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel.add"><code class="docutils literal notranslate"><span class="pre">CorotationalModel.add()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel.add_moment"><code class="docutils literal notranslate"><span class="pre">CorotationalModel.add_moment()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel.calc_fext"><code class="docutils literal notranslate"><span class="pre">CorotationalModel.calc_fext</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel.calc_fint"><code class="docutils literal notranslate"><span class="pre">CorotationalModel.calc_fint()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel.calc_kC"><code class="docutils literal notranslate"><span class="pre">CorotationalModel.calc_kC()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel.calc_kG"><code class="docutils literal notranslate"><span class="pre">CorotationalModel.calc_kG()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel.deformational_displacements"><code class="docutils literal notranslate"><span class="pre">CorotationalModel.deformational_displacements()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalModel.nodal_rotations"><code class="docutils literal notranslate"><span class="pre">CorotationalModel.nodal_rotations()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalShell"><code class="docutils literal notranslate"><span class="pre">CorotationalShell</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalShell.evaluate"><code class="docutils literal notranslate"><span class="pre">CorotationalShell.evaluate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalShell.kinematics"><code class="docutils literal notranslate"><span class="pre">CorotationalShell.kinematics()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalShell.update_probe"><code class="docutils literal notranslate"><span class="pre">CorotationalShell.update_probe()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalSpring"><code class="docutils literal notranslate"><span class="pre">CorotationalSpring</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalSpring.evaluate"><code class="docutils literal notranslate"><span class="pre">CorotationalSpring.evaluate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalSpring.kinematics"><code class="docutils literal notranslate"><span class="pre">CorotationalSpring.kinematics()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalSpring.update_probe"><code class="docutils literal notranslate"><span class="pre">CorotationalSpring.update_probe()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalTruss"><code class="docutils literal notranslate"><span class="pre">CorotationalTruss</span></code></a><ul>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalTruss.evaluate"><code class="docutils literal notranslate"><span class="pre">CorotationalTruss.evaluate()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalTruss.kinematics"><code class="docutils literal notranslate"><span class="pre">CorotationalTruss.kinematics()</span></code></a></li>
+<li class="toctree-l2"><a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalTruss.update_probe"><code class="docutils literal notranslate"><span class="pre">CorotationalTruss.update_probe()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html#pyfe3d.corotational.Hmat"><code class="docutils literal notranslate"><span class="pre">Hmat()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html#pyfe3d.corotational.Lambda"><code class="docutils literal notranslate"><span class="pre">Lambda()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html#pyfe3d.corotational.Lmat"><code class="docutils literal notranslate"><span class="pre">Lmat()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html#pyfe3d.corotational.axial"><code class="docutils literal notranslate"><span class="pre">axial()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html#pyfe3d.corotational.dLambdaT_m"><code class="docutils literal notranslate"><span class="pre">dLambdaT_m()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html#pyfe3d.corotational.expso3"><code class="docutils literal notranslate"><span class="pre">expso3()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html#pyfe3d.corotational.logso3"><code class="docutils literal notranslate"><span class="pre">logso3()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html#pyfe3d.corotational.spin"><code class="docutils literal notranslate"><span class="pre">spin()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver.html">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_static.html">Linear static solution (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_static.html#pyfe3d.solver.static.linear_static"><code class="docutils literal notranslate"><span class="pre">linear_static()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_static.html#pyfe3d.solver.static.solve"><code class="docutils literal notranslate"><span class="pre">solve()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="solver_inertia_relief.html">Static analysis with inertia relief (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.inertia_relief</span></code>)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="solver_inertia_relief.html#pyfe3d.solver.inertia_relief.apply_inertia_relief"><code class="docutils literal notranslate"><span class="pre">apply_inertia_relief()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_analysis.html">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis"><code class="docutils literal notranslate"><span class="pre">Analysis</span></code></a><ul>
 <li class="toctree-l2"><a class="reference internal" href="solver_analysis.html#pyfe3d.solver.analysis.Analysis.static"><code class="docutils literal notranslate"><span class="pre">Analysis.static()</span></code></a></li>
@@ -888,6 +1045,7 @@ methods of the elements;</p></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.arpack_max_ncv"><code class="docutils literal notranslate"><span class="pre">arpack_max_ncv()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.arpack_ncv"><code class="docutils literal notranslate"><span class="pre">arpack_ncv()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.capped_eigsh"><code class="docutils literal notranslate"><span class="pre">capped_eigsh()</span></code></a></li>
+<li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.deflated_eigsh"><code class="docutils literal notranslate"><span class="pre">deflated_eigsh()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.dsteqr_is_faulty"><code class="docutils literal notranslate"><span class="pre">dsteqr_is_faulty()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.lapack_is_mkl"><code class="docutils literal notranslate"><span class="pre">lapack_is_mkl()</span></code></a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html#pyfe3d.solver.arpackutils.mkl_version"><code class="docutils literal notranslate"><span class="pre">mkl_version()</span></code></a></li>
@@ -916,12 +1074,12 @@ methods of the elements;</p></li>
                   
 <div class="prev-next-area">
     <a class="left-prev"
-       href="tut-nonlinear-benchmarks.html"
+       href="tut-inertia-relief-aircraft-ha144a.html"
        title="previous page">
       <i class="fa-solid fa-angle-left"></i>
       <div class="prev-next-info">
         <p class="prev-next-subtitle">previous</p>
-        <p class="prev-next-title">Tutorial: geometrically non-linear benchmarks with pyfe3d.solver</p>
+        <p class="prev-next-title">Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A</p>
       </div>
     </a>
     <a class="right-next"

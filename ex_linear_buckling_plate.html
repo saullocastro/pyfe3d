@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Linear buckling analysis of a plate &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>Linear buckling analysis of a plate &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
@@ -37,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -118,7 +119,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -135,6 +136,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -159,13 +167,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -174,6 +175,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -362,6 +391,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -378,6 +414,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -587,14 +644,31 @@
   <section id="linear-buckling-analysis-of-a-plate">
 <h1>Linear buckling analysis of a plate<a class="headerlink" href="#linear-buckling-analysis-of-a-plate" title="Link to this heading">#</a></h1>
 <p>A simply supported plate under uniaxial compression, with <a class="reference internal" href="quad4r.html#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>
-elements. The first four buckling modes, computed with <code class="docutils literal notranslate"><span class="pre">refinement=3</span></code>:</p>
+elements. The first four buckling modes, computed with <code class="docutils literal notranslate"><span class="pre">refinement=3</span></code>,
+the default of the test:</p>
 <img alt="_images/ex_linear_buckling_plate.jpg" src="_images/ex_linear_buckling_plate.jpg" />
 <p>The geometric stiffness matrix comes from the linear static solution of
 the reference load, through <code class="docutils literal notranslate"><span class="pre">update_probe_ue</span></code> and <code class="docutils literal notranslate"><span class="pre">update_KG</span></code>, and the
 eigenvalue problem is solved with <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a>, see
-<a class="reference internal" href="eigenvalue_analyses.html"><span class="doc">Linear buckling and natural frequencies</span></a>. The critical load is compared with the
-classical buckling coefficient of the simply supported plate:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_linear_buckling_plate</span><span class="p">(</span><span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">refinement</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+<a class="reference internal" href="eigenvalue_analyses.html"><span class="doc">Linear buckling and natural frequencies</span></a>. The critical load is compared with the exact
+buckling load of the simply supported plate of Leissa, A. W., Vibration of
+Plates, NASA SP-160, 1969, Eq. (10.46), within the discretisation error
+stated in the docstring:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_linear_buckling_plate</span><span class="p">(</span><span class="n">plot</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">refinement</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Linear buckling of a simply supported plate, ``a/b = 4``, under a</span>
+<span class="sd">    uniform compression ``N_xx``</span>
+
+<span class="sd">    The reference is the exact solution of Leissa, A. W., Vibration of Plates,</span>
+<span class="sd">    NASA SP-160, 1969, Sec. 10.2.1, p. 277, Eq. (10.46), the buckling load for</span>
+<span class="sd">    which the frequency of Eq. (10.44) vanishes, minimised over the number</span>
+<span class="sd">    ``m`` of half-waves along ``x``: ``N_xx,cr = -k_c*pi**2*D/b**2``, ``k_c =</span>
+<span class="sd">    (m*b/a + a/(m*b))**2``. With 92x44 elements the buckling load is above the</span>
+<span class="sd">    reference by 0.05 %, with 62x30 elements 0.25 %, with 30x14 elements</span>
+<span class="sd">    1.45 %, measured on 2026-10-29 with the physical stabilisation of the</span>
+<span class="sd">    bending and of the transverse shear of Belytschko and Leviathan (1994) that</span>
+<span class="sd">    Quad4R uses since 0.12.0, see :mod:`pyfe3d.quad4r`; up to 0.11, with the</span>
+<span class="sd">    hourglass stiffnesses of Brockman (1987), 0.27, 0.99 and 5.6 %.</span>
+<span class="sd">    """</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">Quad4RData</span><span class="p">()</span>
     <span class="n">probe</span> <span class="o">=</span> <span class="n">Quad4RProbe</span><span class="p">()</span>
     <span class="n">nx</span> <span class="o">=</span> <span class="n">refinement</span><span class="o">*</span><span class="mi">31</span>
@@ -801,29 +875,29 @@ classical buckling coefficient of the simply supported plate:</p>
                            <span class="n">levels</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><span class="s1">'coolwarm'</span><span class="p">)</span>
         <span class="n">plt</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
 
-    <span class="k">assert</span> <span class="n">isclose</span><span class="p">(</span><span class="n">P_cr_theory</span><span class="p">,</span> <span class="n">P_cr_calc</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">isclose</span><span class="p">(</span><span class="n">P_cr_theory</span><span class="p">,</span> <span class="n">P_cr_calc</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>The same plate with <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> elements and a constant membrane
 stress state given directly with <code class="docutils literal notranslate"><span class="pre">update_KG_given_stress</span></code>:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">plate_matrices</span><span class="p">(</span><span class="n">Nxx</span><span class="o">=-</span><span class="mf">1.</span><span class="p">,</span> <span class="n">with_mass</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">plate_matrices</span><span class="p">(</span><span class="n">Nxx</span><span class="o">=-</span><span class="mf">1.</span><span class="p">,</span> <span class="n">with_mass</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="n">NX</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="n">NY</span><span class="p">):</span>
 <span class="w">    </span><span class="sa">r</span><span class="sd">"""Assemble the simply supported plate and return ``KC0uu``, ``KGuu``,</span>
-<span class="sd">    optionally ``Muu``, and the free-dof mask"""</span>
+<span class="sd">    and optionally ``Muu``, with ``nx`` by ``ny`` nodes"""</span>
     <span class="n">prop</span> <span class="o">=</span> <span class="n">isotropic_plate</span><span class="p">(</span><span class="n">E</span><span class="o">=</span><span class="n">E_PLATE</span><span class="p">,</span> <span class="n">nu</span><span class="o">=</span><span class="n">NU_PLATE</span><span class="p">,</span> <span class="n">thickness</span><span class="o">=</span><span class="n">H_PLATE</span><span class="p">,</span>
                            <span class="n">rho</span><span class="o">=</span><span class="n">RHO_PLATE</span><span class="p">)</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">Quad4Data</span><span class="p">()</span>
     <span class="n">probe</span> <span class="o">=</span> <span class="n">Quad4Probe</span><span class="p">()</span>
-    <span class="n">xtmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">A_PLATE</span><span class="p">,</span> <span class="n">NX</span><span class="p">)</span>
-    <span class="n">ytmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">B_PLATE</span><span class="p">,</span> <span class="n">NY</span><span class="p">)</span>
+    <span class="n">xtmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">A_PLATE</span><span class="p">,</span> <span class="n">nx</span><span class="p">)</span>
+    <span class="n">ytmp</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">B_PLATE</span><span class="p">,</span> <span class="n">ny</span><span class="p">)</span>
     <span class="n">xmesh</span><span class="p">,</span> <span class="n">ymesh</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="n">xtmp</span><span class="p">,</span> <span class="n">ytmp</span><span class="p">)</span>
     <span class="n">ncoords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">xmesh</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span> <span class="n">ymesh</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">flatten</span><span class="p">(),</span>
-                         <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">NX</span><span class="o">*</span><span class="n">NY</span><span class="p">)))</span><span class="o">.</span><span class="n">T</span>
+                         <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">nx</span><span class="o">*</span><span class="n">ny</span><span class="p">)))</span><span class="o">.</span><span class="n">T</span>
     <span class="n">x</span> <span class="o">=</span> <span class="n">ncoords</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span>
     <span class="n">y</span> <span class="o">=</span> <span class="n">ncoords</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span>
     <span class="n">ncoords_flatten</span> <span class="o">=</span> <span class="n">ncoords</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
     <span class="n">nids</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">ncoords</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="n">nid_pos</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">nids</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">nids</span><span class="p">))))</span>
-    <span class="n">nids_mesh</span> <span class="o">=</span> <span class="n">nids</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">NX</span><span class="p">,</span> <span class="n">NY</span><span class="p">)</span>
+    <span class="n">nids_mesh</span> <span class="o">=</span> <span class="n">nids</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">nx</span><span class="p">,</span> <span class="n">ny</span><span class="p">)</span>
     <span class="n">n1s</span> <span class="o">=</span> <span class="n">nids_mesh</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
     <span class="n">n2s</span> <span class="o">=</span> <span class="n">nids_mesh</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
     <span class="n">n3s</span> <span class="o">=</span> <span class="n">nids_mesh</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">flatten</span><span class="p">()</span>
@@ -877,11 +951,23 @@ stress state given directly with <code class="docutils literal notranslate"><spa
     <span class="k">return</span> <span class="n">out</span>
 </pre></div>
 </div>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_linear_buckling_plate</span><span class="p">():</span>
-<span class="w">    </span><span class="sa">r</span><span class="sd">"""End-to-end against the classical buckling coefficient, and against</span>
-<span class="sd">    the hand-rolled recipe used elsewhere in this suite"""</span>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">slow</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_linear_buckling_plate</span><span class="p">():</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""End-to-end against the buckling load of Leissa (1969), Eq. (10.46),</span>
+<span class="sd">    see the module documentation, and against the hand-rolled recipe used</span>
+<span class="sd">    elsewhere in this suite</span>
+
+<span class="sd">    With ``b/h = 250`` the Mindlin plate buckles 0.01 % below the reference.</span>
+<span class="sd">    With the default Quad4, the MITC4 transverse shear and the slopes of</span>
+<span class="sd">    `w` of KG at the two-by-two points, the buckling load is 0.44 % above</span>
+<span class="sd">    it with 60x18 elements, 4.31 % with 20x6 elements, 1.03 % with 40x12</span>
+<span class="sd">    elements and 0.23 % with 80x24 elements; with the slopes at the</span>
+<span class="sd">    centroid, 0.69 %, 6.81 %, 1.61 % and 0.37 % with ``centroid_slopes =</span>
+<span class="sd">    1``, and 0.41 %, 4.67 %, 1.09 % and 0.16 % with ``shear_model = 0``</span>
+<span class="sd">    (measured on 2026-11-01).</span>
+<span class="sd">    """</span>
     <span class="n">Nxx</span> <span class="o">=</span> <span class="o">-</span><span class="mf">1.</span>
-    <span class="n">KC0uu</span><span class="p">,</span> <span class="n">KGuu</span> <span class="o">=</span> <span class="n">plate_matrices</span><span class="p">(</span><span class="n">Nxx</span><span class="o">=</span><span class="n">Nxx</span><span class="p">)</span>
+    <span class="n">KC0uu</span><span class="p">,</span> <span class="n">KGuu</span> <span class="o">=</span> <span class="n">plate_matrices</span><span class="p">(</span><span class="n">Nxx</span><span class="o">=</span><span class="n">Nxx</span><span class="p">,</span> <span class="n">nx</span><span class="o">=</span><span class="mi">61</span><span class="p">,</span> <span class="n">ny</span><span class="o">=</span><span class="mi">19</span><span class="p">)</span>
     <span class="n">eigvals</span><span class="p">,</span> <span class="n">eigvecs</span> <span class="o">=</span> <span class="n">linear_buckling</span><span class="p">(</span><span class="n">KC0uu</span><span class="p">,</span> <span class="n">KGuu</span><span class="p">,</span> <span class="n">num_eigvalues</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
     <span class="n">P_cr_calc</span> <span class="o">=</span> <span class="n">eigvals</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">Nxx</span><span class="o">*</span><span class="n">B_PLATE</span>
 
@@ -893,7 +979,7 @@ stress state given directly with <code class="docutils literal notranslate"><spa
         <span class="n">H_PLATE</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">B_PLATE</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
     <span class="n">P_cr_theory</span> <span class="o">=</span> <span class="n">sigma_cr</span><span class="o">*</span><span class="n">H_PLATE</span><span class="o">*</span><span class="n">B_PLATE</span>
     <span class="nb">print</span><span class="p">(</span><span class="s1">'P_cr_calc </span><span class="si">%.4f</span><span class="s1">  P_cr_theory </span><span class="si">%.4f</span><span class="s1">'</span> <span class="o">%</span> <span class="p">(</span><span class="n">P_cr_calc</span><span class="p">,</span> <span class="n">P_cr_theory</span><span class="p">))</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">P_cr_theory</span><span class="p">,</span> <span class="n">P_cr_calc</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.03</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">P_cr_theory</span><span class="p">,</span> <span class="n">P_cr_calc</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">0.01</span><span class="p">)</span>
 
     <span class="c1"># NOTE the same answer as the recipe spelled out in the other tests of</span>
     <span class="c1">#      this suite. The two are not bit-identical because the shift</span>

@@ -6,7 +6,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Index &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>Index &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -29,6 +29,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
@@ -36,7 +37,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -115,7 +116,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -132,6 +133,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -156,13 +164,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -171,6 +172,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -357,6 +386,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -373,6 +409,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -567,6 +624,7 @@
  | <a href="#V"><strong>V</strong></a>
  | <a href="#W"><strong>W</strong></a>
  | <a href="#X"><strong>X</strong></a>
+ | <a href="#Y"><strong>Y</strong></a>
  
 </div>
 <h2 id="_">_</h2>
@@ -613,6 +671,8 @@
       <ul>
         <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.A">(pyfe3d.shellprop.ShellProp attribute)</a>
 </li>
+        <li><a href="vabs.html#pyfe3d.vabs.CrossSection.A">(pyfe3d.vabs.CrossSection attribute)</a>
+</li>
       </ul></li>
       <li><a href="shellprop.html#pyfe3d.shellprop.MatLamina.a1">a1 (pyfe3d.shellprop.MatLamina attribute)</a>
 </li>
@@ -646,12 +706,12 @@
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.Abar_ts">Abar_ts (pyfe3d.shellprop.ShellProp attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.Abarbar44">Abarbar44 (pyfe3d.shellprop.ShellProp attribute)</a>
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.Abarbar45">Abarbar45 (pyfe3d.shellprop.ShellProp attribute)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.Abarbar55">Abarbar55 (pyfe3d.shellprop.ShellProp attribute)</a>
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.Abarbar_ts">Abarbar_ts (pyfe3d.shellprop.ShellProp attribute)</a>
@@ -660,6 +720,10 @@
 </li>
       <li><a href="solver_callbacks.html#pyfe3d.solver.callbacks.accepts_kwarg">accepts_kwarg() (in module pyfe3d.solver.callbacks)</a>
 </li>
+      <li><a href="corotational.html#pyfe3d.corotational.CorotationalModel.add">add() (pyfe3d.corotational.CorotationalModel method)</a>
+</li>
+      <li><a href="corotational.html#pyfe3d.corotational.CorotationalModel.add_moment">add_moment() (pyfe3d.corotational.CorotationalModel method)</a>
+</li>
       <li><a href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSG.alpha_shear_locking">alpha_shear_locking (pyfe3d.tria3dsg.Tria3DSG attribute)</a>
 
       <ul>
@@ -667,6 +731,8 @@
 </li>
       </ul></li>
       <li><a href="solver_analysis.html#pyfe3d.solver.analysis.Analysis">Analysis (class in pyfe3d.solver.analysis)</a>
+</li>
+      <li><a href="solver_inertia_relief.html#pyfe3d.solver.inertia_relief.apply_inertia_relief">apply_inertia_relief() (in module pyfe3d.solver.inertia_relief)</a>
 </li>
       <li><a href="quad4.html#pyfe3d.quad4.Quad4.area">area (pyfe3d.quad4.Quad4 attribute)</a>
 
@@ -677,6 +743,8 @@
 </li>
         <li><a href="tria3r.html#pyfe3d.tria3r.Tria3R.area">(pyfe3d.tria3r.Tria3R attribute)</a>
 </li>
+        <li><a href="vabs.html#pyfe3d.vabs.CrossSection.area">(pyfe3d.vabs.CrossSection attribute)</a>
+</li>
       </ul></li>
       <li><a href="solver_arpackutils.html#pyfe3d.solver.arpackutils.ARPACK_MAX_NCV">ARPACK_MAX_NCV (in module pyfe3d.solver.arpackutils)</a>
 </li>
@@ -685,6 +753,8 @@
       <li><a href="solver_arpackutils.html#pyfe3d.solver.arpackutils.arpack_ncv">arpack_ncv() (in module pyfe3d.solver.arpackutils)</a>
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.Ats">Ats (pyfe3d.shellprop.ShellProp attribute)</a>
+</li>
+      <li><a href="corotational.html#pyfe3d.corotational.axial">axial() (in module pyfe3d.corotational)</a>
 </li>
       <li><a href="beamprop.html#pyfe3d.beamprop.BeamProp.Ay">Ay (pyfe3d.beamprop.BeamProp attribute)</a>
 </li>
@@ -697,7 +767,11 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.B">B (pyfe3d.shellprop.ShellProp attribute)</a>
+
+      <ul>
+        <li><a href="vabs.html#pyfe3d.vabs.CrossSection.B">(pyfe3d.vabs.CrossSection attribute)</a>
 </li>
+      </ul></li>
       <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.B11">B11 (pyfe3d.shellprop.ShellProp attribute)</a>
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.B12">B12 (pyfe3d.shellprop.ShellProp attribute)</a>
@@ -724,17 +798,17 @@
 </li>
       <li><a href="beamprop.html#pyfe3d.beamprop.BeamProp">BeamProp (class in pyfe3d.beamprop)</a>
 </li>
+      <li><a href="vabs.html#pyfe3d.vabs.beamprop_from_vabs">beamprop_from_vabs() (in module pyfe3d.vabs)</a>
+</li>
       <li><a href="quad4.html#pyfe3d.quad4.Quad4Probe.BLdrilling">BLdrilling (pyfe3d.quad4.Quad4Probe attribute)</a>
 
       <ul>
         <li><a href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSGProbe.BLdrilling">(pyfe3d.tria3dsg.Tria3DSGProbe attribute)</a>
 </li>
       </ul></li>
-      <li><a href="beamc.html#pyfe3d.beamc.BeamCProbe.BLexx">BLexx (pyfe3d.beamc.BeamCProbe attribute)</a>
+      <li><a href="beamlr.html#pyfe3d.beamlr.BeamLRProbe.BLexx">BLexx (pyfe3d.beamlr.BeamLRProbe attribute)</a>
 
       <ul>
-        <li><a href="beamlr.html#pyfe3d.beamlr.BeamLRProbe.BLexx">(pyfe3d.beamlr.BeamLRProbe attribute)</a>
-</li>
         <li><a href="quad4.html#pyfe3d.quad4.Quad4Probe.BLexx">(pyfe3d.quad4.Quad4Probe attribute)</a>
 </li>
         <li><a href="quad4r.html#pyfe3d.quad4r.Quad4RProbe.BLexx">(pyfe3d.quad4r.Quad4RProbe attribute)</a>
@@ -756,6 +830,10 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="beamlr.html#pyfe3d.beamlr.BeamLRProbe.BLgammay">BLgammay (pyfe3d.beamlr.BeamLRProbe attribute)</a>
+</li>
+      <li><a href="beamlr.html#pyfe3d.beamlr.BeamLRProbe.BLgammaz">BLgammaz (pyfe3d.beamlr.BeamLRProbe attribute)</a>
+</li>
       <li><a href="quad4.html#pyfe3d.quad4.Quad4Probe.BLgxy">BLgxy (pyfe3d.quad4.Quad4Probe attribute)</a>
 
       <ul>
@@ -778,6 +856,8 @@
 </li>
       <li><a href="quad4.html#pyfe3d.quad4.Quad4Probe.BLgyz_rot">BLgyz_rot (pyfe3d.quad4.Quad4Probe attribute)</a>
 </li>
+      <li><a href="beamlr.html#pyfe3d.beamlr.BeamLRProbe.BLkx">BLkx (pyfe3d.beamlr.BeamLRProbe attribute)</a>
+</li>
       <li><a href="quad4.html#pyfe3d.quad4.Quad4Probe.BLkxx">BLkxx (pyfe3d.quad4.Quad4Probe attribute)</a>
 
       <ul>
@@ -798,12 +878,8 @@
         <li><a href="tria3r.html#pyfe3d.tria3r.Tria3RProbe.BLkxy">(pyfe3d.tria3r.Tria3RProbe attribute)</a>
 </li>
       </ul></li>
-      <li><a href="beamc.html#pyfe3d.beamc.BeamCProbe.BLky">BLky (pyfe3d.beamc.BeamCProbe attribute)</a>
-
-      <ul>
-        <li><a href="beamlr.html#pyfe3d.beamlr.BeamLRProbe.BLky">(pyfe3d.beamlr.BeamLRProbe attribute)</a>
+      <li><a href="beamlr.html#pyfe3d.beamlr.BeamLRProbe.BLky">BLky (pyfe3d.beamlr.BeamLRProbe attribute)</a>
 </li>
-      </ul></li>
       <li><a href="quad4.html#pyfe3d.quad4.Quad4Probe.BLkyy">BLkyy (pyfe3d.quad4.Quad4Probe attribute)</a>
 
       <ul>
@@ -814,18 +890,16 @@
         <li><a href="tria3r.html#pyfe3d.tria3r.Tria3RProbe.BLkyy">(pyfe3d.tria3r.Tria3RProbe attribute)</a>
 </li>
       </ul></li>
-      <li><a href="beamc.html#pyfe3d.beamc.BeamCProbe.BLkz">BLkz (pyfe3d.beamc.BeamCProbe attribute)</a>
-
-      <ul>
-        <li><a href="beamlr.html#pyfe3d.beamlr.BeamLRProbe.BLkz">(pyfe3d.beamlr.BeamLRProbe attribute)</a>
+      <li><a href="beamlr.html#pyfe3d.beamlr.BeamLRProbe.BLkz">BLkz (pyfe3d.beamlr.BeamLRProbe attribute)</a>
 </li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.C">C (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
       <li><a href="beamc.html#pyfe3d.beamc.BeamC.c1">c1 (pyfe3d.beamc.BeamC attribute)</a>
 
       <ul>
@@ -894,8 +968,6 @@
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.MatLamina.c55">c55 (pyfe3d.shellprop.MatLamina attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="shellprop.html#pyfe3d.shellprop.MatLamina.c66">c66 (pyfe3d.shellprop.MatLamina attribute)</a>
 </li>
       <li><a href="quad4.html#pyfe3d.quad4.Quad4Data.CA_SPARSE_SIZE">CA_SPARSE_SIZE (pyfe3d.quad4.Quad4Data attribute)</a>
@@ -916,16 +988,30 @@
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.calc_equivalent_properties">calc_equivalent_properties() (pyfe3d.shellprop.ShellProp method)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="corotational.html#pyfe3d.corotational.CorotationalModel.calc_fext">calc_fext (pyfe3d.corotational.CorotationalModel property)</a>
+</li>
       <li><a href="solver_callbacks.html#pyfe3d.solver.callbacks.calc_fint">calc_fint() (in module pyfe3d.solver.callbacks)</a>
 
       <ul>
+        <li><a href="corotational.html#pyfe3d.corotational.CorotationalModel.calc_fint">(pyfe3d.corotational.CorotationalModel method)</a>
+</li>
         <li><a href="solver_analysis.html#pyfe3d.solver.analysis.FreeDofs.calc_fint">(pyfe3d.solver.analysis.FreeDofs method)</a>
 </li>
       </ul></li>
-      <li><a href="solver_analysis.html#pyfe3d.solver.analysis.FreeDofs.calc_kC">calc_kC() (pyfe3d.solver.analysis.FreeDofs method)</a>
+      <li><a href="corotational.html#pyfe3d.corotational.CorotationalModel.calc_kC">calc_kC() (pyfe3d.corotational.CorotationalModel method)</a>
+
+      <ul>
+        <li><a href="solver_analysis.html#pyfe3d.solver.analysis.FreeDofs.calc_kC">(pyfe3d.solver.analysis.FreeDofs method)</a>
 </li>
-      <li><a href="solver_analysis.html#pyfe3d.solver.analysis.FreeDofs.calc_kG">calc_kG() (pyfe3d.solver.analysis.FreeDofs method)</a>
+      </ul></li>
+      <li><a href="corotational.html#pyfe3d.corotational.CorotationalModel.calc_kG">calc_kG() (pyfe3d.corotational.CorotationalModel method)</a>
+
+      <ul>
+        <li><a href="solver_analysis.html#pyfe3d.solver.analysis.FreeDofs.calc_kG">(pyfe3d.solver.analysis.FreeDofs method)</a>
 </li>
+      </ul></li>
       <li><a href="solver_callbacks.html#pyfe3d.solver.callbacks.calc_kT">calc_kT() (in module pyfe3d.solver.callbacks)</a>
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.calc_lamination_parameters">calc_lamination_parameters() (pyfe3d.shellprop.ShellProp method)</a>
@@ -934,11 +1020,21 @@
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.GradABD.calc_LP_grad">calc_LP_grad() (pyfe3d.shellprop.GradABD method)</a>
 </li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.calc_mass">calc_mass() (pyfe3d.vabs.CrossSection method)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.calc_stiffness">calc_stiffness() (pyfe3d.vabs.CrossSection method)</a>
+</li>
       <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness">calc_transverse_shear_stiffness() (pyfe3d.shellprop.ShellProp method)</a>
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.calc_transverse_shear_stress">calc_transverse_shear_stress() (pyfe3d.shellprop.ShellProp method)</a>
 </li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.calc_vlasov">calc_vlasov() (pyfe3d.vabs.CrossSection method)</a>
+</li>
       <li><a href="solver_arpackutils.html#pyfe3d.solver.arpackutils.capped_eigsh">capped_eigsh() (in module pyfe3d.solver.arpackutils)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.centroid">centroid (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
+      <li><a href="quad4.html#pyfe3d.quad4.Quad4.centroid_slopes">centroid_slopes (pyfe3d.quad4.Quad4 attribute)</a>
 </li>
       <li><a href="solver_convergence.html#pyfe3d.solver.convergence.check_convergence">check_convergence() (in module pyfe3d.solver.convergence)</a>
 </li>
@@ -946,9 +1042,25 @@
 </li>
       <li><a href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols">check_null_rows_cols() (in module pyfe3d.solver.sparseutils)</a>
 </li>
+      <li><a href="vabs.html#pyfe3d.vabs.classical_from_timoshenko">classical_from_timoshenko() (in module pyfe3d.vabs)</a>
+</li>
       <li><a href="solver_eigen.html#pyfe3d.solver.eigen.complex_frequency">complex_frequency() (in module pyfe3d.solver.eigen)</a>
 </li>
       <li><a href="solver_analysis.html#pyfe3d.solver.analysis.FreeDofs.config_dependent">config_dependent (pyfe3d.solver.analysis.FreeDofs attribute)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.conn">conn (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.constraint">constraint (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
+      <li><a href="corotational.html#pyfe3d.corotational.CorotationalBeam">CorotationalBeam (class in pyfe3d.corotational)</a>
+</li>
+      <li><a href="corotational.html#pyfe3d.corotational.CorotationalModel">CorotationalModel (class in pyfe3d.corotational)</a>
+</li>
+      <li><a href="corotational.html#pyfe3d.corotational.CorotationalShell">CorotationalShell (class in pyfe3d.corotational)</a>
+</li>
+      <li><a href="corotational.html#pyfe3d.corotational.CorotationalSpring">CorotationalSpring (class in pyfe3d.corotational)</a>
+</li>
+      <li><a href="corotational.html#pyfe3d.corotational.CorotationalTruss">CorotationalTruss (class in pyfe3d.corotational)</a>
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.Lamina.cos2t">cos2t (pyfe3d.shellprop.Lamina attribute)</a>
 </li>
@@ -961,6 +1073,8 @@
       <li><a href="solver_convergence.html#pyfe3d.solver.convergence.crisfield_zeta">crisfield_zeta() (in module pyfe3d.solver.convergence)</a>
 </li>
       <li><a href="solver_convergence.html#pyfe3d.solver.convergence.CRITERIA">CRITERIA (in module pyfe3d.solver.convergence)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection">CrossSection (class in pyfe3d.vabs)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -982,15 +1096,25 @@
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.D66">D66 (pyfe3d.shellprop.ShellProp attribute)</a>
 </li>
+      <li><a href="solver_arpackutils.html#pyfe3d.solver.arpackutils.deflated_eigsh">deflated_eigsh() (in module pyfe3d.solver.arpackutils)</a>
+</li>
+      <li><a href="corotational.html#pyfe3d.corotational.CorotationalModel.deformational_displacements">deformational_displacements() (pyfe3d.corotational.CorotationalModel method)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.Del">Del (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
       <li><a href="solver_eigen.html#pyfe3d.solver.eigen.DenseFallbackWarning">DenseFallbackWarning</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.densities">densities (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
       <li><a href="solver_arc_length.html#pyfe3d.solver.arc_length.DESIRED_NUM_ITER">DESIRED_NUM_ITER (in module pyfe3d.solver.arc_length)</a>
 </li>
       <li><a href="solver_eigen.html#pyfe3d.solver.eigen.diagonal_preconditioner">diagonal_preconditioner() (in module pyfe3d.solver.eigen)</a>
 </li>
       <li><a href="solver_newton_raphson.html#pyfe3d.solver.newton_raphson.DIVERGENCE_FACTOR">DIVERGENCE_FACTOR (in module pyfe3d.solver.newton_raphson)</a>
+</li>
+      <li><a href="corotational.html#pyfe3d.corotational.dLambdaT_m">dLambdaT_m() (in module pyfe3d.corotational)</a>
 </li>
       <li><a href="quad4.html#pyfe3d.quad4.Quad4.drilling_model">drilling_model (pyfe3d.quad4.Quad4 attribute)</a>
 
@@ -1050,12 +1174,26 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="solver_eigen.html#pyfe3d.solver.eigen.estimate_cayley_sigma">estimate_cayley_sigma() (in module pyfe3d.solver.eigen)</a>
 </li>
+      <li><a href="corotational.html#pyfe3d.corotational.CorotationalBeam.evaluate">evaluate() (pyfe3d.corotational.CorotationalBeam method)</a>
+
+      <ul>
+        <li><a href="corotational.html#pyfe3d.corotational.CorotationalShell.evaluate">(pyfe3d.corotational.CorotationalShell method)</a>
+</li>
+        <li><a href="corotational.html#pyfe3d.corotational.CorotationalSpring.evaluate">(pyfe3d.corotational.CorotationalSpring method)</a>
+</li>
+        <li><a href="corotational.html#pyfe3d.corotational.CorotationalTruss.evaluate">(pyfe3d.corotational.CorotationalTruss method)</a>
+</li>
+      </ul></li>
+      <li><a href="corotational.html#pyfe3d.corotational.expso3">expso3() (in module pyfe3d.corotational)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="F">F</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.Fc">Fc (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
       <li><a href="beamc.html#pyfe3d.beamc.BeamCProbe.finte">finte (pyfe3d.beamc.BeamCProbe attribute)</a>
 
       <ul>
@@ -1078,7 +1216,11 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="solver_analysis.html#pyfe3d.solver.analysis.FreeDofs">FreeDofs (class in pyfe3d.solver.analysis)</a>
 </li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.Ft">Ft (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
       <li><a href="solver_analysis.html#pyfe3d.solver.analysis.FreeDofs.full">full() (pyfe3d.solver.analysis.FreeDofs method)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.Fv">Fv (pyfe3d.vabs.CrossSection attribute)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1146,6 +1288,10 @@
         <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.h">(pyfe3d.shellprop.ShellProp attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="corotational.html#pyfe3d.corotational.Hmat">Hmat() (in module pyfe3d.corotational)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -1222,8 +1368,6 @@
         <li><a href="tria3r.html#pyfe3d.tria3r.Tria3R.init_k_KG">(pyfe3d.tria3r.Tria3R attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="beamc.html#pyfe3d.beamc.BeamC.init_k_M">init_k_M (pyfe3d.beamc.BeamC attribute)</a>
 
       <ul>
@@ -1242,28 +1386,48 @@
         <li><a href="truss.html#pyfe3d.truss.Truss.init_k_M">(pyfe3d.truss.Truss attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="beamprop.html#pyfe3d.beamprop.BeamProp.intrho">intrho (pyfe3d.beamprop.BeamProp attribute)</a>
 
       <ul>
         <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.intrho">(pyfe3d.shellprop.ShellProp attribute)</a>
 </li>
+        <li><a href="vabs.html#pyfe3d.vabs.CrossSection.intrho">(pyfe3d.vabs.CrossSection attribute)</a>
+</li>
       </ul></li>
       <li><a href="beamprop.html#pyfe3d.beamprop.BeamProp.intrhoy">intrhoy (pyfe3d.beamprop.BeamProp attribute)</a>
+
+      <ul>
+        <li><a href="vabs.html#pyfe3d.vabs.CrossSection.intrhoy">(pyfe3d.vabs.CrossSection attribute)</a>
 </li>
+      </ul></li>
       <li><a href="beamprop.html#pyfe3d.beamprop.BeamProp.intrhoy2">intrhoy2 (pyfe3d.beamprop.BeamProp attribute)</a>
+
+      <ul>
+        <li><a href="vabs.html#pyfe3d.vabs.CrossSection.intrhoy2">(pyfe3d.vabs.CrossSection attribute)</a>
 </li>
+      </ul></li>
       <li><a href="beamprop.html#pyfe3d.beamprop.BeamProp.intrhoyz">intrhoyz (pyfe3d.beamprop.BeamProp attribute)</a>
+
+      <ul>
+        <li><a href="vabs.html#pyfe3d.vabs.CrossSection.intrhoyz">(pyfe3d.vabs.CrossSection attribute)</a>
 </li>
+      </ul></li>
       <li><a href="beamprop.html#pyfe3d.beamprop.BeamProp.intrhoz">intrhoz (pyfe3d.beamprop.BeamProp attribute)</a>
 
       <ul>
         <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.intrhoz">(pyfe3d.shellprop.ShellProp attribute)</a>
+</li>
+        <li><a href="vabs.html#pyfe3d.vabs.CrossSection.intrhoz">(pyfe3d.vabs.CrossSection attribute)</a>
 </li>
       </ul></li>
       <li><a href="beamprop.html#pyfe3d.beamprop.BeamProp.intrhoz2">intrhoz2 (pyfe3d.beamprop.BeamProp attribute)</a>
 
       <ul>
         <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.intrhoz2">(pyfe3d.shellprop.ShellProp attribute)</a>
+</li>
+        <li><a href="vabs.html#pyfe3d.vabs.CrossSection.intrhoz2">(pyfe3d.vabs.CrossSection attribute)</a>
 </li>
       </ul></li>
       <li><a href="solver_callbacks.html#pyfe3d.solver.callbacks.is_load_configuration_dependent">is_load_configuration_dependent() (in module pyfe3d.solver.callbacks)</a>
@@ -1273,6 +1437,8 @@
       <li><a href="solver_eigen.html#pyfe3d.solver.eigen.is_positive_definite">is_positive_definite() (in module pyfe3d.solver.eigen)</a>
 </li>
       <li><a href="solver_sparseutils.html#pyfe3d.solver.sparseutils.is_symmetric">is_symmetric() (in module pyfe3d.solver.sparseutils)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.isotropic">isotropic() (in module pyfe3d.vabs)</a>
 </li>
       <li><a href="shellprop_utils.html#pyfe3d.shellprop_utils.isotropic_plate">isotropic_plate() (in module pyfe3d.shellprop_utils)</a>
 </li>
@@ -1318,6 +1484,10 @@
         <li><a href="quad4r.html#pyfe3d.quad4r.Quad4RData.KA_GAMMA_SPARSE_SIZE">(pyfe3d.quad4r.Quad4RData attribute)</a>
 </li>
       </ul></li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.Kc">Kc (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
+      <li><a href="corotational.html#pyfe3d.corotational.CorotationalModel.KC0">KC0 (pyfe3d.corotational.CorotationalModel property)</a>
+</li>
       <li><a href="beamc.html#pyfe3d.beamc.BeamCData.KC0_SPARSE_SIZE">KC0_SPARSE_SIZE (pyfe3d.beamc.BeamCData attribute)</a>
 
       <ul>
@@ -1388,11 +1558,25 @@
         <li><a href="tria3r.html#pyfe3d.tria3r.Tria3RData.KG_SPARSE_SIZE">(pyfe3d.tria3r.Tria3RData attribute)</a>
 </li>
       </ul></li>
+      <li><a href="corotational.html#pyfe3d.corotational.CorotationalBeam.kinematics">kinematics() (pyfe3d.corotational.CorotationalBeam method)</a>
+
+      <ul>
+        <li><a href="corotational.html#pyfe3d.corotational.CorotationalShell.kinematics">(pyfe3d.corotational.CorotationalShell method)</a>
+</li>
+        <li><a href="corotational.html#pyfe3d.corotational.CorotationalSpring.kinematics">(pyfe3d.corotational.CorotationalSpring method)</a>
+</li>
+        <li><a href="corotational.html#pyfe3d.corotational.CorotationalTruss.kinematics">(pyfe3d.corotational.CorotationalTruss method)</a>
+</li>
+      </ul></li>
       <li><a href="spring.html#pyfe3d.spring.Spring.krxe">krxe (pyfe3d.spring.Spring attribute)</a>
 </li>
       <li><a href="spring.html#pyfe3d.spring.Spring.krye">krye (pyfe3d.spring.Spring attribute)</a>
 </li>
       <li><a href="spring.html#pyfe3d.spring.Spring.krze">krze (pyfe3d.spring.Spring attribute)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.Kt">Kt (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.Kv">Kv (pyfe3d.vabs.CrossSection attribute)</a>
 </li>
       <li><a href="spring.html#pyfe3d.spring.Spring.kxe">kxe (pyfe3d.spring.Spring attribute)</a>
 </li>
@@ -1406,6 +1590,8 @@
 <h2 id="L">L</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="corotational.html#pyfe3d.corotational.Lambda">Lambda() (in module pyfe3d.corotational)</a>
+</li>
       <li><a href="shellprop.html#pyfe3d.shellprop.Lamina">Lamina (class in pyfe3d.shellprop)</a>
 </li>
       <li><a href="shellprop_utils.html#pyfe3d.shellprop_utils.laminated_plate">laminated_plate() (in module pyfe3d.shellprop_utils)</a>
@@ -1431,6 +1617,10 @@
       <li><a href="solver_analysis.html#pyfe3d.solver.analysis.FreeDofs.linear_fext">linear_fext() (pyfe3d.solver.analysis.FreeDofs method)</a>
 </li>
       <li><a href="solver_static.html#pyfe3d.solver.static.linear_static">linear_static() (in module pyfe3d.solver.static)</a>
+</li>
+      <li><a href="corotational.html#pyfe3d.corotational.Lmat">Lmat() (in module pyfe3d.corotational)</a>
+</li>
+      <li><a href="corotational.html#pyfe3d.corotational.logso3">logso3() (in module pyfe3d.corotational)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1510,10 +1700,20 @@
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.make_symmetric_LP">make_symmetric_LP() (in module pyfe3d.shellprop)</a>
 </li>
-      <li><a href="shellprop.html#pyfe3d.shellprop.MatLamina">MatLamina (class in pyfe3d.shellprop)</a>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.mass_centre">mass_centre (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.mass_matrix">mass_matrix (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.mass_per_length">mass_per_length (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.mat_ids">mat_ids (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.materials">materials (pyfe3d.vabs.CrossSection attribute)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="shellprop.html#pyfe3d.shellprop.MatLamina">MatLamina (class in pyfe3d.shellprop)</a>
+</li>
       <li><a href="shellprop.html#pyfe3d.shellprop.Lamina.matlamina">matlamina (pyfe3d.shellprop.Lamina attribute)</a>
 </li>
       <li><a href="solver_arc_length.html#pyfe3d.solver.arc_length.MAX_GROWTH_FACTOR">MAX_GROWTH_FACTOR (in module pyfe3d.solver.arc_length)</a>
@@ -1540,6 +1740,8 @@
 </li>
         <li><a href="beamprop.html#module-pyfe3d.beamprop">pyfe3d.beamprop</a>
 </li>
+        <li><a href="corotational.html#module-pyfe3d.corotational">pyfe3d.corotational</a>
+</li>
         <li><a href="quad4.html#module-pyfe3d.quad4">pyfe3d.quad4</a>
 </li>
         <li><a href="quad4r.html#module-pyfe3d.quad4r">pyfe3d.quad4r</a>
@@ -1562,6 +1764,8 @@
 </li>
         <li><a href="solver_eigen.html#module-pyfe3d.solver.eigen">pyfe3d.solver.eigen</a>
 </li>
+        <li><a href="solver_inertia_relief.html#module-pyfe3d.solver.inertia_relief">pyfe3d.solver.inertia_relief</a>
+</li>
         <li><a href="solver_logger.html#module-pyfe3d.solver.logger">pyfe3d.solver.logger</a>
 </li>
         <li><a href="solver_newton_raphson.html#module-pyfe3d.solver.newton_raphson">pyfe3d.solver.newton_raphson</a>
@@ -1577,6 +1781,8 @@
         <li><a href="tria3r.html#module-pyfe3d.tria3r">pyfe3d.tria3r</a>
 </li>
         <li><a href="truss.html#module-pyfe3d.truss">pyfe3d.truss</a>
+</li>
+        <li><a href="vabs.html#module-pyfe3d.vabs">pyfe3d.vabs</a>
 </li>
       </ul></li>
       <li><a href="solver_logger.html#pyfe3d.solver.logger.msg">msg() (in module pyfe3d.solver.logger)</a>
@@ -1623,8 +1829,6 @@
         <li><a href="truss.html#pyfe3d.truss.Truss.n2">(pyfe3d.truss.Truss attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="quad4.html#pyfe3d.quad4.Quad4.n3">n3 (pyfe3d.quad4.Quad4 attribute)</a>
 
       <ul>
@@ -1635,6 +1839,8 @@
         <li><a href="tria3r.html#pyfe3d.tria3r.Tria3R.n3">(pyfe3d.tria3r.Tria3R attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="quad4.html#pyfe3d.quad4.Quad4.n4">n4 (pyfe3d.quad4.Quad4 attribute)</a>
 
       <ul>
@@ -1642,6 +1848,12 @@
 </li>
       </ul></li>
       <li><a href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency">natural_frequency() (in module pyfe3d.solver.eigen)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.ndof">ndof (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.nen">nen (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
+      <li><a href="corotational.html#pyfe3d.corotational.CorotationalModel.nodal_rotations">nodal_rotations() (pyfe3d.corotational.CorotationalModel method)</a>
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.MatLamina.nu12">nu12 (pyfe3d.shellprop.MatLamina attribute)</a>
 
@@ -1674,6 +1886,10 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.offset">offset (pyfe3d.shellprop.ShellProp attribute)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="vabs.html#pyfe3d.vabs.orthotropic">orthotropic() (in module pyfe3d.vabs)</a>
 </li>
   </ul></td>
 </tr></table>
@@ -1750,6 +1966,13 @@
 </li>
       </ul></li>
       <li>
+    pyfe3d.corotational
+
+      <ul>
+        <li><a href="corotational.html#module-pyfe3d.corotational">module</a>
+</li>
+      </ul></li>
+      <li>
     pyfe3d.quad4
 
       <ul>
@@ -1770,8 +1993,6 @@
         <li><a href="shellprop.html#module-pyfe3d.shellprop">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     pyfe3d.shellprop_utils
 
@@ -1779,6 +2000,8 @@
         <li><a href="shellprop_utils.html#module-pyfe3d.shellprop_utils">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     pyfe3d.solver
 
@@ -1826,6 +2049,13 @@
 
       <ul>
         <li><a href="solver_eigen.html#module-pyfe3d.solver.eigen">module</a>
+</li>
+      </ul></li>
+      <li>
+    pyfe3d.solver.inertia_relief
+
+      <ul>
+        <li><a href="solver_inertia_relief.html#module-pyfe3d.solver.inertia_relief">module</a>
 </li>
       </ul></li>
       <li>
@@ -1884,6 +2114,15 @@
         <li><a href="truss.html#module-pyfe3d.truss">module</a>
 </li>
       </ul></li>
+      <li>
+    pyfe3d.vabs
+
+      <ul>
+        <li><a href="vabs.html#module-pyfe3d.vabs">module</a>
+</li>
+      </ul></li>
+      <li><a href="vabs.html#pyfe3d.vabs.pyfe3d_to_yu">pyfe3d_to_yu() (in module pyfe3d.vabs)</a>
+</li>
   </ul></td>
 </tr></table>
 
@@ -2128,6 +2367,8 @@
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.MatLamina.rho">rho (pyfe3d.shellprop.MatLamina attribute)</a>
 </li>
+      <li><a href="vabs.html#pyfe3d.vabs.rotate_material">rotate_material() (in module pyfe3d.vabs)</a>
+</li>
       <li><a href="solver_convergence.html#pyfe3d.solver.convergence.ROUNDOFF_FACTOR">ROUNDOFF_FACTOR (in module pyfe3d.solver.convergence)</a>
 </li>
       <li><a href="solver_convergence.html#pyfe3d.solver.convergence.roundoff_floor">roundoff_floor() (in module pyfe3d.solver.convergence)</a>
@@ -2148,8 +2389,20 @@
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.scf_k23">scf_k23 (pyfe3d.shellprop.ShellProp attribute)</a>
 </li>
+      <li><a href="corotational.html#pyfe3d.corotational.SERIES_ANGLE">SERIES_ANGLE (in module pyfe3d.corotational)</a>
+</li>
+      <li><a href="corotational.html#pyfe3d.corotational.SERIES_ANGLE_ETA_MU">SERIES_ANGLE_ETA_MU (in module pyfe3d.corotational)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.shear_centre">shear_centre (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
       <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp.shear_correction">shear_correction (pyfe3d.shellprop.ShellProp attribute)</a>
 </li>
+      <li><a href="quad4.html#pyfe3d.quad4.Quad4.shear_model">shear_model (pyfe3d.quad4.Quad4 attribute)</a>
+
+      <ul>
+        <li><a href="tria3r.html#pyfe3d.tria3r.Tria3R.shear_model">(pyfe3d.tria3r.Tria3R attribute)</a>
+</li>
+      </ul></li>
       <li><a href="shellprop.html#pyfe3d.shellprop.ShellProp">ShellProp (class in pyfe3d.shellprop)</a>
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.shellprop_from_lamination_parameters">shellprop_from_lamination_parameters() (in module pyfe3d.shellprop)</a>
@@ -2164,6 +2417,10 @@
 </li>
       <li><a href="solver_static.html#pyfe3d.solver.static.solve">solve() (in module pyfe3d.solver.static)</a>
 </li>
+      <li><a href="corotational.html#pyfe3d.corotational.spin">spin() (in module pyfe3d.corotational)</a>
+</li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="spring.html#pyfe3d.spring.Spring">Spring (class in pyfe3d.spring)</a>
 </li>
       <li><a href="spring.html#pyfe3d.spring.SpringData">SpringData (class in pyfe3d.spring)</a>
@@ -2172,8 +2429,6 @@
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.MatLamina.ss12">ss12 (pyfe3d.shellprop.MatLamina attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="shellprop.html#pyfe3d.shellprop.MatLamina.st1">st1 (pyfe3d.shellprop.MatLamina attribute)</a>
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.MatLamina.st2">st2 (pyfe3d.shellprop.MatLamina attribute)</a>
@@ -2186,17 +2441,11 @@
 </li>
       <li><a href="solver_analysis.html#pyfe3d.solver.analysis.Analysis.static">static() (pyfe3d.solver.analysis.Analysis method)</a>
 </li>
-      <li><a href="beamc.html#pyfe3d.beamc.BeamCProbe.Sv_x">Sv_x (pyfe3d.beamc.BeamCProbe attribute)</a>
+      <li><a href="beamlr.html#pyfe3d.beamlr.BeamLRProbe.Sv_x">Sv_x (pyfe3d.beamlr.BeamLRProbe attribute)</a>
+</li>
+      <li><a href="beamlr.html#pyfe3d.beamlr.BeamLRProbe.Sw_x">Sw_x (pyfe3d.beamlr.BeamLRProbe attribute)</a>
 
       <ul>
-        <li><a href="beamlr.html#pyfe3d.beamlr.BeamLRProbe.Sv_x">(pyfe3d.beamlr.BeamLRProbe attribute)</a>
-</li>
-      </ul></li>
-      <li><a href="beamc.html#pyfe3d.beamc.BeamCProbe.Sw_x">Sw_x (pyfe3d.beamc.BeamCProbe attribute)</a>
-
-      <ul>
-        <li><a href="beamlr.html#pyfe3d.beamlr.BeamLRProbe.Sw_x">(pyfe3d.beamlr.BeamLRProbe attribute)</a>
-</li>
         <li><a href="quad4.html#pyfe3d.quad4.Quad4Probe.Sw_x">(pyfe3d.quad4.Quad4Probe attribute)</a>
 </li>
         <li><a href="quad4r.html#pyfe3d.quad4r.Quad4RProbe.Sw_x">(pyfe3d.quad4r.Quad4RProbe attribute)</a>
@@ -2222,20 +2471,28 @@
 <h2 id="T">T</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.tension_centre">tension_centre (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.theta1">theta1 (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.theta3">theta3 (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
       <li><a href="shellprop.html#pyfe3d.shellprop.Lamina.thetadeg">thetadeg (pyfe3d.shellprop.Lamina attribute)</a>
 </li>
       <li><a href="solver_newton_raphson.html#pyfe3d.solver.newton_raphson.TOO_SLOW_WINDOW">TOO_SLOW_WINDOW (in module pyfe3d.solver.newton_raphson)</a>
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.MatLamina.trace_normalize_plane_stress">trace_normalize_plane_stress() (pyfe3d.shellprop.MatLamina method)</a>
 </li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.translated">translated() (pyfe3d.vabs.CrossSection method)</a>
+</li>
       <li><a href="shellprop.html#pyfe3d.shellprop.MatLamina.tref">tref (pyfe3d.shellprop.MatLamina attribute)</a>
 </li>
       <li><a href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSG">Tria3DSG (class in pyfe3d.tria3dsg)</a>
 </li>
-      <li><a href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSGData">Tria3DSGData (class in pyfe3d.tria3dsg)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSGData">Tria3DSGData (class in pyfe3d.tria3dsg)</a>
+</li>
       <li><a href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSGProbe">Tria3DSGProbe (class in pyfe3d.tria3dsg)</a>
 </li>
       <li><a href="tria3r.html#pyfe3d.tria3r.Tria3R">Tria3R (class in pyfe3d.tria3r)</a>
@@ -2243,6 +2500,8 @@
       <li><a href="tria3r.html#pyfe3d.tria3r.Tria3RData">Tria3RData (class in pyfe3d.tria3r)</a>
 </li>
       <li><a href="tria3r.html#pyfe3d.tria3r.Tria3RProbe">Tria3RProbe (class in pyfe3d.tria3r)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.triangles">triangles() (pyfe3d.vabs.CrossSection method)</a>
 </li>
       <li><a href="truss.html#pyfe3d.truss.Truss">Truss (class in pyfe3d.truss)</a>
 </li>
@@ -2418,6 +2677,16 @@
         <li><a href="truss.html#pyfe3d.truss.Truss.update_M">(pyfe3d.truss.Truss method)</a>
 </li>
       </ul></li>
+      <li><a href="corotational.html#pyfe3d.corotational.CorotationalBeam.update_probe">update_probe() (pyfe3d.corotational.CorotationalBeam method)</a>
+
+      <ul>
+        <li><a href="corotational.html#pyfe3d.corotational.CorotationalShell.update_probe">(pyfe3d.corotational.CorotationalShell method)</a>
+</li>
+        <li><a href="corotational.html#pyfe3d.corotational.CorotationalSpring.update_probe">(pyfe3d.corotational.CorotationalSpring method)</a>
+</li>
+        <li><a href="corotational.html#pyfe3d.corotational.CorotationalTruss.update_probe">(pyfe3d.corotational.CorotationalTruss method)</a>
+</li>
+      </ul></li>
       <li><a href="beamc.html#pyfe3d.beamc.BeamC.update_probe_finte">update_probe_finte() (pyfe3d.beamc.BeamC method)</a>
 
       <ul>
@@ -2494,6 +2763,12 @@
 <h2 id="V">V</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.V0">V0 (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.V1S">V1S (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.vlasov_section">vlasov_section (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
       <li><a href="beamc.html#pyfe3d.beamc.BeamC.vxyi">vxyi (pyfe3d.beamc.BeamC attribute)</a>
 
       <ul>
@@ -2502,6 +2777,8 @@
         <li><a href="spring.html#pyfe3d.spring.Spring.vxyi">(pyfe3d.spring.Spring attribute)</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="beamc.html#pyfe3d.beamc.BeamC.vxyj">vxyj (pyfe3d.beamc.BeamC attribute)</a>
 
       <ul>
@@ -2510,8 +2787,6 @@
         <li><a href="spring.html#pyfe3d.spring.Spring.vxyj">(pyfe3d.spring.Spring attribute)</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="beamc.html#pyfe3d.beamc.BeamC.vxyk">vxyk (pyfe3d.beamc.BeamC attribute)</a>
 
       <ul>
@@ -2528,12 +2803,30 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="solver_logger.html#pyfe3d.solver.logger.warn">warn() (in module pyfe3d.solver.logger)</a>
 </li>
+      <li><a href="quad4.html#pyfe3d.quad4.Quad4.warp_offsets">warp_offsets (pyfe3d.quad4.Quad4 attribute)</a>
+
+      <ul>
+        <li><a href="quad4r.html#pyfe3d.quad4r.Quad4R.warp_offsets">(pyfe3d.quad4r.Quad4R attribute)</a>
+</li>
+      </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="corotational.html#pyfe3d.corotational.WARP_RATIO_WARNING">WARP_RATIO_WARNING (in module pyfe3d.corotational)</a>
+</li>
+      <li><a href="corotational.html#pyfe3d.corotational.WARP_RATIO_WARNING_OFFSETS">WARP_RATIO_WARNING_OFFSETS (in module pyfe3d.corotational)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.warping">warping() (pyfe3d.vabs.CrossSection method)</a>
+</li>
   </ul></td>
 </tr></table>
 
 <h2 id="X">X</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.x2">x2 (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
+      <li><a href="vabs.html#pyfe3d.vabs.CrossSection.x3">x3 (pyfe3d.vabs.CrossSection attribute)</a>
+</li>
       <li><a href="beamc.html#pyfe3d.beamc.BeamCProbe.xe">xe (pyfe3d.beamc.BeamCProbe attribute)</a>
 
       <ul>
@@ -2556,10 +2849,10 @@
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.LaminationParameters.xiA2">xiA2 (pyfe3d.shellprop.LaminationParameters attribute)</a>
 </li>
-      <li><a href="shellprop.html#pyfe3d.shellprop.LaminationParameters.xiA3">xiA3 (pyfe3d.shellprop.LaminationParameters attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="shellprop.html#pyfe3d.shellprop.LaminationParameters.xiA3">xiA3 (pyfe3d.shellprop.LaminationParameters attribute)</a>
+</li>
       <li><a href="shellprop.html#pyfe3d.shellprop.LaminationParameters.xiA4">xiA4 (pyfe3d.shellprop.LaminationParameters attribute)</a>
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.LaminationParameters.xiAts1">xiAts1 (pyfe3d.shellprop.LaminationParameters attribute)</a>
@@ -2581,6 +2874,14 @@
       <li><a href="shellprop.html#pyfe3d.shellprop.LaminationParameters.xiD3">xiD3 (pyfe3d.shellprop.LaminationParameters attribute)</a>
 </li>
       <li><a href="shellprop.html#pyfe3d.shellprop.LaminationParameters.xiD4">xiD4 (pyfe3d.shellprop.LaminationParameters attribute)</a>
+</li>
+  </ul></td>
+</tr></table>
+
+<h2 id="Y">Y</h2>
+<table style="width: 100%" class="indextable genindextable"><tr>
+  <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="vabs.html#pyfe3d.vabs.yu_to_pyfe3d">yu_to_pyfe3d() (in module pyfe3d.vabs)</a>
 </li>
   </ul></td>
 </tr></table>

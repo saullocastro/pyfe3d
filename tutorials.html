@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Tutorials &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>Tutorials &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
@@ -37,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -118,7 +119,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -135,6 +136,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -159,13 +167,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -174,6 +175,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -362,6 +391,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -378,6 +414,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -537,6 +594,23 @@
 <li class="toctree-l1"><a class="reference internal" href="tut-bench-macneal-harder.html">Benchmark: MacNeal-Harder standard problems for the shell elements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tut-bench-shell-obstacle-course.html">Benchmark: shell obstacle course</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tut-nonlinear-benchmarks.html">Tutorial: geometrically non-linear benchmarks with pyfe3d.solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-corotational-large-rotations.html">Tutorial: large rotations with the co-rotational kinematics</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-prescribed-displacement-cantilever.html">Tutorial: prescribed displacement at the tip of a cantilever</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-prescribed-displacement-dome-riks.html">Tutorial: shells pressed down by a prescribed displacement, Riks’ method</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-nafems-cap-axisymmetric.html">Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations</a></li>
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-inertia-relief.html">Tutorial: static analysis with inertia relief</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-inertia-relief-aircraft-ha144a.html">Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A</a></li>
 </ul>
 </div>
 </nav></div>
@@ -606,6 +680,23 @@
 <li class="toctree-l1"><a class="reference internal" href="tut-bench-macneal-harder.html">Benchmark: MacNeal-Harder standard problems for the shell elements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tut-bench-shell-obstacle-course.html">Benchmark: shell obstacle course</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tut-nonlinear-benchmarks.html">Tutorial: geometrically non-linear benchmarks with pyfe3d.solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-corotational-large-rotations.html">Tutorial: large rotations with the co-rotational kinematics</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-corotational-large-rotations.html#1.-Cantilever-under-an-end-shear-force-(Section-3.1)">1. Cantilever under an end shear force (Section 3.1)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-corotational-large-rotations.html#2.-Cantilever-rolled-up-into-a-circle-(Section-3.2)">2. Cantilever rolled up into a circle (Section 3.2)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-corotational-large-rotations.html#3.-Hinged-cylindrical-roof,-12.7-thick-(Section-3.8)">3. Hinged cylindrical roof, 12.7 thick (Section 3.8)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-prescribed-displacement-cantilever.html">Tutorial: prescribed displacement at the tip of a cantilever</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-prescribed-displacement-dome-riks.html">Tutorial: shells pressed down by a prescribed displacement, Riks’ method</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-prescribed-displacement-dome-riks.html#1.-The-clamped-spherical-cap-(NAFEMS)">1. The clamped spherical cap (NAFEMS)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-prescribed-displacement-dome-riks.html#2.-The-hinged-shallow-spherical-shell-(Leicester)">2. The hinged shallow spherical shell (Leicester)</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-nafems-cap-axisymmetric.html">Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-nafems-cap-axisymmetric.html#The-benchmark">The benchmark</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-nafems-cap-axisymmetric.html#The-polar-mesh">The polar mesh</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-nafems-cap-axisymmetric.html#The-restriction-to-axisymmetric-deformations">The restriction to axisymmetric deformations</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-nafems-cap-axisymmetric.html#The-path,-the-mesh-and-the-radius">The path, the mesh and the radius</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-nafems-cap-axisymmetric.html#Comparison-with-COMSOL-and-with-an-independent-axisymmetric-shell">Comparison with COMSOL and with an independent axisymmetric shell</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-nafems-cap-axisymmetric.html#The-unrestricted-quarter-model">The unrestricted quarter model</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-inertia-relief.html">Tutorial: static analysis with inertia relief</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-inertia-relief-aircraft-ha144a.html">Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A</a></li>
 </ul>
 </div>
 </section>

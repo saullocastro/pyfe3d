@@ -4,6 +4,7 @@
     :maxdepth: 1
 
     solver_static.rst
+    solver_inertia_relief.rst
     solver_analysis.rst
     solver_convergence.rst
     solver_newton_raphson.rst

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Shell property utils module (pyfe3d.shellprop_utils) &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>Shell property utils module (pyfe3d.shellprop_utils) &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
@@ -37,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -120,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -137,6 +138,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -161,13 +169,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -176,6 +177,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -364,6 +393,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -380,6 +416,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -584,11 +641,36 @@
 
 <li class="toctree-l2"><a class="reference internal" href="beamprop.html">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
 
+<li class="toctree-l2"><a class="reference internal" href="vabs.html">Variational asymptotic sectional analysis (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.vabs</span></code>)</a></li>
+
+
+
+
+
+
+
+
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html">Co-rotational kinematics, EICR (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
 <li class="toctree-l1"><a class="reference internal" href="solver.html">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_static.html">Linear static solution (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code>)</a></li>
 
+
+<li class="toctree-l1"><a class="reference internal" href="solver_inertia_relief.html">Static analysis with inertia relief (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.inertia_relief</span></code>)</a></li>
 
 <li class="toctree-l1"><a class="reference internal" href="solver_analysis.html">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</a></li>
 
@@ -640,6 +722,7 @@
 
 
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html">Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code>)</a></li>
+
 
 
 
@@ -849,7 +932,12 @@ computed.</p>
 <dt>ValueError</dt><dd><p>If neither <code class="docutils literal notranslate"><span class="pre">plyt</span></code> nor <code class="docutils literal notranslate"><span class="pre">plyts</span></code> is supplied, or if neither
 <code class="docutils literal notranslate"><span class="pre">laminaprop</span></code> nor <code class="docutils literal notranslate"><span class="pre">laminaprops</span></code> is supplied. Also if <code class="docutils literal notranslate"><span class="pre">stack</span></code>,
 <code class="docutils literal notranslate"><span class="pre">plyts</span></code>, <code class="docutils literal notranslate"><span class="pre">laminaprops</span></code> and <code class="docutils literal notranslate"><span class="pre">rhos</span></code> do not have the same
-length.</p>
+length. Also, see <a class="reference internal" href="#pyfe3d.shellprop_utils.read_laminaprop" title="pyfe3d.shellprop_utils.read_laminaprop"><code class="xref py py-func docutils literal notranslate"><span class="pre">read_laminaprop()</span></code></a>, if a <code class="docutils literal notranslate"><span class="pre">laminaprop</span></code> has
+a zero Young modulus and an inadmissible Poisson’s ratio, and, see
+<a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp.calc_equivalent_properties" title="pyfe3d.shellprop.ShellProp.calc_equivalent_properties"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ShellProp.calc_equivalent_properties()</span></code></a> and
+<a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness" title="pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ShellProp.calc_transverse_shear_stiffness()</span></code></a>, if the laminate
+has no in-plane or bending stiffness, e.g. when all plies are
+antiplane cores.</p>
 </dd>
 </dl>
 </dd>
@@ -863,7 +951,8 @@ length.</p>
 <p>The entries of <code class="docutils literal notranslate"><span class="pre">laminaprop</span></code> and <code class="docutils literal notranslate"><span class="pre">rho</span></code> are stored in a new
 <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.MatLamina" title="pyfe3d.shellprop.MatLamina"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatLamina</span></code></a> object, the Poisson’s ratios <code class="docutils literal notranslate"><span class="pre">nu21</span></code>, <code class="docutils literal notranslate"><span class="pre">nu31</span></code> and
 <code class="docutils literal notranslate"><span class="pre">nu32</span></code> are computed from <code class="docutils literal notranslate"><span class="pre">nu12</span></code>, <code class="docutils literal notranslate"><span class="pre">nu13</span></code>, <code class="docutils literal notranslate"><span class="pre">nu23</span></code> and the Young
-moduli, and <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.MatLamina.rebuild" title="pyfe3d.shellprop.MatLamina.rebuild"><code class="xref py py-meth docutils literal notranslate"><span class="pre">MatLamina.rebuild()</span></code></a> is called. With 2 entries, <code class="docutils literal notranslate"><span class="pre">g12</span> <span class="pre">=</span>
+moduli, and <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.MatLamina.rebuild" title="pyfe3d.shellprop.MatLamina.rebuild"><code class="xref py py-meth docutils literal notranslate"><span class="pre">MatLamina.rebuild()</span></code></a> is called with its default
+<code class="docutils literal notranslate"><span class="pre">plane_stress=True</span></code>. With 2 entries, <code class="docutils literal notranslate"><span class="pre">g12</span> <span class="pre">=</span>
 <span class="pre">g13</span> <span class="pre">=</span> <span class="pre">g23</span> <span class="pre">=</span> <span class="pre">e/(2*(1+nu))</span></code>; with 2 or 6 entries, <code class="docutils literal notranslate"><span class="pre">e3</span></code>, <code class="docutils literal notranslate"><span class="pre">nu13</span></code> and
 <code class="docutils literal notranslate"><span class="pre">nu23</span></code> are zero. Another number of entries fails an <code class="docutils literal notranslate"><span class="pre">assert</span></code>
 statement.</p>
@@ -941,6 +1030,14 @@ the Poisson’s ratios are dimensionless.</p>
 </dd>
 </dl>
 </dd>
+<dt class="field-odd">Raises<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt>ValueError</dt><dd><p>If a Young modulus <code class="docutils literal notranslate"><span class="pre">ei</span></code> is zero while <code class="docutils literal notranslate"><span class="pre">ej</span></code> and <code class="docutils literal notranslate"><span class="pre">nuij</span></code> are not,
+for <code class="docutils literal notranslate"><span class="pre">ij</span></code> = <code class="docutils literal notranslate"><span class="pre">12</span></code>, <code class="docutils literal notranslate"><span class="pre">13</span></code> or <code class="docutils literal notranslate"><span class="pre">23</span></code>, since the Poisson’s ratio
+<code class="docutils literal notranslate"><span class="pre">nuji</span></code> is then undefined, see the Notes.</p>
+</dd>
+</dl>
+</dd>
 </dl>
 <p class="rubric">Notes</p>
 <p>The Poisson’s ratios not given follow from the reciprocity relations of
@@ -950,9 +1047,27 @@ compliance matrix symmetric <a class="reference internal" href="#rf379a62cdfb7-1
 \[\nu_{21} = \nu_{12} \frac{E_2}{E_1}, \quad
 \nu_{31} = \nu_{13} \frac{E_3}{E_1}, \quad
 \nu_{32} = \nu_{23} \frac{E_3}{E_2}\]</div>
-<p>and for an isotropic material <span class="math notranslate nohighlight">\(G = E/(2(1 + \nu))\)</span>. With 2 or 6 entries,
-<code class="docutils literal notranslate"><span class="pre">e3</span> <span class="pre">=</span> <span class="pre">0</span></code> makes the constitutive constants of <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.MatLamina.rebuild" title="pyfe3d.shellprop.MatLamina.rebuild"><code class="xref py py-meth docutils literal notranslate"><span class="pre">MatLamina.rebuild()</span></code></a>
-the plane-stress reduced stiffnesses.</p>
+<p>and for an isotropic material <span class="math notranslate nohighlight">\(G = E/(2(1 + \nu))\)</span>.</p>
+<p>A Young modulus may be zero, e.g. <code class="docutils literal notranslate"><span class="pre">e1</span> <span class="pre">=</span> <span class="pre">e2</span> <span class="pre">=</span> <span class="pre">0</span></code> and <code class="docutils literal notranslate"><span class="pre">g12</span> <span class="pre">=</span> <span class="pre">0</span></code> with
+finite <code class="docutils literal notranslate"><span class="pre">g13</span></code> and <code class="docutils literal notranslate"><span class="pre">g23</span></code> for an antiplane core, “an idealized core in
+which the modulus of elasticity in planes parallel with the faces is
+zero but the shear modulus in planes perpendicular to the faces is
+finite” (Allen <a class="reference internal" href="#rf379a62cdfb7-2" id="id2">[2]</a>, p. 14). With <span class="math notranslate nohighlight">\(E_i = 0\)</span>, the reciprocity leaves
+<span class="math notranslate nohighlight">\(\nu_{ji}\)</span> undefined, but the stiffnesses do not depend on it: the
+bound <span class="math notranslate nohighlight">\(|\nu_{ij}| &lt; (E_i/E_j)^{1/2}\)</span> of a positive-definite material
+(Jones <a class="reference internal" href="#rf379a62cdfb7-3" id="id3">[3]</a>, Eq. (2.51), p. 69) requires <span class="math notranslate nohighlight">\(\nu_{ij} = 0\)</span> when <span class="math notranslate nohighlight">\(E_j &gt; 0\)</span>,
+such that <span class="math notranslate nohighlight">\(\nu_{ji} E_i = \nu_{ij} E_j = 0\)</span>, and <span class="math notranslate nohighlight">\(\nu_{ji} = 0\)</span> is
+stored. A non-zero <span class="math notranslate nohighlight">\(\nu_{ij}\)</span> with <span class="math notranslate nohighlight">\(E_i = 0\)</span> and <span class="math notranslate nohighlight">\(E_j \ne 0\)</span> raises
+<code class="docutils literal notranslate"><span class="pre">ValueError</span></code>; with <span class="math notranslate nohighlight">\(E_i = E_j = 0\)</span> any <span class="math notranslate nohighlight">\(\nu_{ij}\)</span> is accepted, and
+the stiffnesses that involve it vanish.</p>
+<p>The constitutive
+constants and the invariants computed by <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.MatLamina.rebuild" title="pyfe3d.shellprop.MatLamina.rebuild"><code class="xref py py-meth docutils literal notranslate"><span class="pre">MatLamina.rebuild()</span></code></a>,
+called with its default <code class="docutils literal notranslate"><span class="pre">plane_stress=True</span></code>, are those of plane
+stress for 2, 6 or 9 entries, i.e. <code class="docutils literal notranslate"><span class="pre">e3</span></code>, <code class="docutils literal notranslate"><span class="pre">nu13</span></code> and <code class="docutils literal notranslate"><span class="pre">nu23</span></code> do not
+change them; <code class="docutils literal notranslate"><span class="pre">matlam.rebuild(plane_stress=False)</span></code> gives the
+three-dimensional ones. The stiffness constants <code class="docutils literal notranslate"><span class="pre">c11</span></code> to <code class="docutils literal notranslate"><span class="pre">c66</span></code> are
+three-dimensional, with <code class="docutils literal notranslate"><span class="pre">c13</span> <span class="pre">=</span> <span class="pre">c23</span> <span class="pre">=</span> <span class="pre">c33</span> <span class="pre">=</span> <span class="pre">0</span></code> for 2 or 6 entries,
+where <code class="docutils literal notranslate"><span class="pre">e3</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p>
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="rf379a62cdfb7-1" role="doc-biblioentry">
@@ -960,6 +1075,17 @@ the plane-stress reduced stiffnesses.</p>
 <p>Reddy, J. N., Mechanics of Laminated Composite Plates and Shells:
 Theory and Analysis, Second Edition, CRC Press, 2003.
 <a class="reference external" href="https://doi.org/10.1201/b12409">https://doi.org/10.1201/b12409</a></p>
+</div>
+<div class="citation" id="rf379a62cdfb7-2" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">2</a><span class="fn-bracket">]</span></span>
+<p>Allen, H. G., Analysis and Design of Structural Sandwich Panels,
+Pergamon Press, Oxford, 1969, Chap. 2.
+<a class="reference external" href="https://doi.org/10.1016/B978-0-08-012870-2.50006-7">https://doi.org/10.1016/B978-0-08-012870-2.50006-7</a></p>
+</div>
+<div class="citation" id="rf379a62cdfb7-3" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">3</a><span class="fn-bracket">]</span></span>
+<p>Jones, R. M., Mechanics of Composite Materials, Second Edition,
+Taylor &amp; Francis, Philadelphia, 1999.</p>
 </div>
 </div>
 </dd></dl>

@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Shell and beam properties &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>Shell and beam properties &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
@@ -37,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -47,7 +48,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="Non-linear static analyses" href="nonlinear_analyses.html" />
+    <link rel="next" title="Cross-sectional analysis of beams" href="cross_sectional_analysis.html" />
     <link rel="prev" title="Choosing an element" href="element_choice.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
@@ -120,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -137,6 +138,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -161,13 +169,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -176,6 +177,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -364,6 +393,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -380,6 +416,27 @@
 <li class="nav-item current active">
   <a class="nav-link nav-internal" href="#" aria-current="page">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -615,7 +672,82 @@ angles in degrees from the bottom to the top ply, the ply thickness
 gradients are given by <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.GradABD" title="pyfe3d.shellprop.GradABD"><code class="xref py py-class docutils literal notranslate"><span class="pre">GradABD</span></code></a>, e.g. for the optimisation of
 the stiffness distribution, see the tutorials.</p></li>
 </ul>
-<p>The ply stiffnesses are those of plane stress, see <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.Lamina.rebuild" title="pyfe3d.shellprop.Lamina.rebuild"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Lamina.rebuild()</span></code></a>.
+<p>The ply stiffnesses are those of plane stress, <span class="math notranslate nohighlight">\(\sigma_{33} = 0\)</span>, see
+<a class="reference internal" href="shellprop.html#pyfe3d.shellprop.Lamina.rebuild" title="pyfe3d.shellprop.Lamina.rebuild"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Lamina.rebuild()</span></code></a>, which depend on <code class="docutils literal notranslate"><span class="pre">E11</span></code>, <code class="docutils literal notranslate"><span class="pre">E22</span></code>, <code class="docutils literal notranslate"><span class="pre">nu12</span></code>,
+<code class="docutils literal notranslate"><span class="pre">G12</span></code>, <code class="docutils literal notranslate"><span class="pre">G13</span></code> and <code class="docutils literal notranslate"><span class="pre">G23</span></code> only, also when <code class="docutils literal notranslate"><span class="pre">laminaprop</span></code> gives <code class="docutils literal notranslate"><span class="pre">E33</span></code>,
+<code class="docutils literal notranslate"><span class="pre">nu13</span></code> and <code class="docutils literal notranslate"><span class="pre">nu23</span></code>. The invariants of <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.MatLamina" title="pyfe3d.shellprop.MatLamina"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatLamina</span></code></a>, used by
+<a class="reference internal" href="shellprop.html#pyfe3d.shellprop.shellprop_from_LaminationParameters" title="pyfe3d.shellprop.shellprop_from_LaminationParameters"><code class="xref py py-func docutils literal notranslate"><span class="pre">shellprop_from_LaminationParameters()</span></code></a> and <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.GradABD" title="pyfe3d.shellprop.GradABD"><code class="xref py py-class docutils literal notranslate"><span class="pre">GradABD</span></code></a>, are by
+default those of the same plane-stress stiffnesses, see
+<a class="reference internal" href="shellprop.html#pyfe3d.shellprop.MatLamina.rebuild" title="pyfe3d.shellprop.MatLamina.rebuild"><code class="xref py py-meth docutils literal notranslate"><span class="pre">MatLamina.rebuild()</span></code></a>, such that the lamination parameters of
+<a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp.calc_lamination_parameters" title="pyfe3d.shellprop.ShellProp.calc_lamination_parameters"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ShellProp.calc_lamination_parameters()</span></code></a> give back the stiffnesses of
+<a class="reference internal" href="shellprop_utils.html#pyfe3d.shellprop_utils.laminated_plate" title="pyfe3d.shellprop_utils.laminated_plate"><code class="xref py py-func docutils literal notranslate"><span class="pre">laminated_plate()</span></code></a>, for any <code class="docutils literal notranslate"><span class="pre">laminaprop</span></code>:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">parametrize</span><span class="p">(</span><span class="s1">'layup'</span><span class="p">,</span> <span class="n">LAYUPS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">parametrize</span><span class="p">(</span><span class="s1">'material'</span><span class="p">,</span> <span class="n">LAMINAPROPS_9</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_lamination_parameters_three_dimensional_constants</span><span class="p">(</span><span class="n">material</span><span class="p">,</span> <span class="n">layup</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Both routes give the plane-stress stiffnesses when e3 is given</span>
+
+<span class="sd">    The shell elements are plane stress, `\sigma_{33} = 0`: the reduced</span>
+<span class="sd">    stiffnesses depend on E1, E2, nu12, G12, G13 and G23 only (Reddy, 2003,</span>
+<span class="sd">    Eq. (2.4.4), p. 101; Jones, 1999, Eqs. (2.64) and (2.66), p. 72), and the</span>
+<span class="sd">    invariants of Tsai and Pagano are those of the reduced stiffnesses</span>
+<span class="sd">    (Jones, 1999, Eq. (2.99), p. 86). :func:`.laminated_plate` and</span>
+<span class="sd">    :func:`.shellprop_from_LaminationParameters`, with the lamination</span>
+<span class="sd">    parameters of the same layup, must give A, B and D of the classical</span>
+<span class="sd">    lamination theory, ``clt_abd``, and the constant-strain transverse shear</span>
+<span class="sd">    stiffness ``abar_ts``, to round-off, also for e3 != 0, and the same</span>
+<span class="sd">    values as for the six-entry ``laminaprop`` without e3, nu13 and nu23.</span>
+<span class="sd">    """</span>
+    <span class="n">lamprop</span> <span class="o">=</span> <span class="n">LAMINAPROPS_9</span><span class="p">[</span><span class="n">material</span><span class="p">]</span>
+    <span class="n">stack</span><span class="p">,</span> <span class="n">plyts</span> <span class="o">=</span> <span class="n">LAYUPS</span><span class="p">[</span><span class="n">layup</span><span class="p">]</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">plyts</span><span class="p">)</span>
+    <span class="c1"># NOTE no shear correction, such that Ats = Abar_ts in both routes</span>
+    <span class="n">prop</span> <span class="o">=</span> <span class="n">laminated_plate</span><span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">plyts</span><span class="o">=</span><span class="n">plyts</span><span class="p">,</span> <span class="n">laminaprop</span><span class="o">=</span><span class="n">lamprop</span><span class="p">,</span>
+                           <span class="n">shear_correction</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">mat</span> <span class="o">=</span> <span class="n">read_laminaprop</span><span class="p">(</span><span class="n">lamprop</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">mat</span><span class="o">.</span><span class="n">e3</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">mat</span><span class="o">.</span><span class="n">plane_stress</span>
+    <span class="n">lp</span> <span class="o">=</span> <span class="n">prop</span><span class="o">.</span><span class="n">calc_lamination_parameters</span><span class="p">()</span>
+    <span class="n">prop_lp</span> <span class="o">=</span> <span class="n">shellprop_from_LaminationParameters</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="n">mat</span><span class="p">,</span> <span class="n">lp</span><span class="p">)</span>
+
+    <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">clt_abd</span><span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">plyts</span><span class="p">,</span> <span class="p">[</span><span class="n">lamprop</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">stack</span><span class="p">))</span>
+    <span class="n">Abar</span> <span class="o">=</span> <span class="n">abar_ts</span><span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">plyts</span><span class="p">,</span> <span class="n">lamprop</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">lamprop</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">prop_lp</span><span class="p">):</span>
+        <span class="n">assert_abd</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">A</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">B</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">D</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">Abar_ts</span><span class="p">,</span> <span class="n">Abar</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+                           <span class="n">atol</span><span class="o">=</span><span class="mf">1e-14</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Abar</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">prop_lp</span><span class="o">.</span><span class="n">Ats</span><span class="p">,</span> <span class="n">prop</span><span class="o">.</span><span class="n">Ats</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+                       <span class="n">atol</span><span class="o">=</span><span class="mf">1e-14</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Abar</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+
+    <span class="c1"># NOTE e3, nu13 and nu23 do not change the plane-stress invariants</span>
+    <span class="n">mat6</span> <span class="o">=</span> <span class="n">read_laminaprop</span><span class="p">(</span><span class="n">lamprop</span><span class="p">[:</span><span class="mi">6</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">(</span><span class="s1">'q11'</span><span class="p">,</span> <span class="s1">'q12'</span><span class="p">,</span> <span class="s1">'q21'</span><span class="p">,</span> <span class="s1">'q22'</span><span class="p">,</span> <span class="s1">'q44'</span><span class="p">,</span> <span class="s1">'q55'</span><span class="p">,</span> <span class="s1">'q66'</span><span class="p">,</span> <span class="s1">'u1'</span><span class="p">,</span> <span class="s1">'u2'</span><span class="p">,</span>
+                 <span class="s1">'u3'</span><span class="p">,</span> <span class="s1">'u4'</span><span class="p">,</span> <span class="s1">'u5'</span><span class="p">,</span> <span class="s1">'u6'</span><span class="p">,</span> <span class="s1">'u7'</span><span class="p">):</span>
+        <span class="k">assert</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mat</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="o">==</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">mat6</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span> <span class="n">name</span>
+
+    <span class="c1"># NOTE the gradients use the same invariants: at constant lamination</span>
+    <span class="c1">#      parameters A is linear in h and D cubic, dA/dh = A/h and dD/dh =</span>
+    <span class="c1">#      3 D/h</span>
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">GradABD</span><span class="p">()</span>
+    <span class="n">grad</span><span class="o">.</span><span class="n">calc_LP_grad</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="n">mat</span><span class="p">,</span> <span class="n">lp</span><span class="p">)</span>
+    <span class="n">ij</span> <span class="o">=</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">))</span>
+    <span class="n">gradA</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">ij</span><span class="p">])</span><span class="o">/</span><span class="n">h</span>
+    <span class="n">gradD</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">D</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="n">ij</span><span class="p">])</span><span class="o">*</span><span class="mi">3</span><span class="o">/</span><span class="n">h</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">grad</span><span class="o">.</span><span class="n">gradAij</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">gradA</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+                       <span class="n">atol</span><span class="o">=</span><span class="mf">1e-14</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">gradA</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">grad</span><span class="o">.</span><span class="n">gradDij</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">gradD</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+                       <span class="n">atol</span><span class="o">=</span><span class="mf">1e-14</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">gradD</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+
+    <span class="c1"># NOTE three-dimensional option: stiffer than plane stress, the</span>
+    <span class="c1">#      lamination-parameter route then no longer gives the stiffnesses of</span>
+    <span class="c1">#      the shell elements</span>
+    <span class="n">mat</span><span class="o">.</span><span class="n">rebuild</span><span class="p">(</span><span class="n">plane_stress</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">prop_3d</span> <span class="o">=</span> <span class="n">shellprop_from_LaminationParameters</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="n">mat</span><span class="p">,</span> <span class="n">lp</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">prop_3d</span><span class="o">.</span><span class="n">A11</span> <span class="o">&gt;</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mf">1e-3</span><span class="p">)</span><span class="o">*</span><span class="n">prop</span><span class="o">.</span><span class="n">A11</span>
+    <span class="k">assert</span> <span class="n">prop_3d</span><span class="o">.</span><span class="n">A22</span> <span class="o">&gt;</span> <span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="mf">1e-3</span><span class="p">)</span><span class="o">*</span><span class="n">prop</span><span class="o">.</span><span class="n">A22</span>
+</pre></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">MatLamina.rebuild(plane_stress=False)</span></code> gives the three-dimensional
+stiffnesses and invariants instead, e.g. for continuum shell elements of
+other codes; the shell elements of pyfe3d do not use them.
 Plane strain and thermal expansion are not modelled: the thermal expansion
 coefficients and the reference temperature of <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.MatLamina" title="pyfe3d.shellprop.MatLamina"><code class="xref py py-class docutils literal notranslate"><span class="pre">MatLamina</span></code></a> are not
 used.</p>
@@ -641,6 +773,82 @@ integrals give</p>
 models e.g. a skin whose nodes are on its inner surface, shared with the
 beams of a stiffener. The mass integrals <code class="docutils literal notranslate"><span class="pre">intrho</span></code>, <code class="docutils literal notranslate"><span class="pre">intrhoz</span></code> and
 <code class="docutils literal notranslate"><span class="pre">intrhoz2</span></code> enter the mass matrices of the shells.</p>
+<p>For any laminate, <span class="math notranslate nohighlight">\(\boldsymbol{B} = \boldsymbol{B}_{e=0} + e
+\boldsymbol{A}\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{D} = \boldsymbol{D}_{e=0} + 2 e
+\boldsymbol{B}_{e=0} + e^2 \boldsymbol{A}\)</span>, the shift of the stiffness
+integrals to another reference plane (Vasiliev and Morozov, Mechanics and
+Analysis of Composite Materials, Elsevier, 2001, Eq. (5.28), p. 235), while
+<span class="math notranslate nohighlight">\(\boldsymbol{A}\)</span> and the transverse shear stiffnesses do not change. The
+lamination parameters of <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp.calc_lamination_parameters" title="pyfe3d.shellprop.ShellProp.calc_lamination_parameters"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ShellProp.calc_lamination_parameters()</span></code></a> are
+integrated about the reference surface, i.e. they include the offset, and
+<a class="reference internal" href="shellprop.html#pyfe3d.shellprop.shellprop_from_LaminationParameters" title="pyfe3d.shellprop.shellprop_from_LaminationParameters"><code class="xref py py-func docutils literal notranslate"><span class="pre">shellprop_from_LaminationParameters()</span></code></a> needs the same <code class="docutils literal notranslate"><span class="pre">offset</span></code> to
+give back the stiffnesses:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">parametrize</span><span class="p">(</span><span class="s1">'offset'</span><span class="p">,</span> <span class="p">[</span><span class="s1">'+0.2 mm'</span><span class="p">,</span> <span class="s1">'-0.2 mm'</span><span class="p">,</span> <span class="s1">'one ply'</span><span class="p">])</span>
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">parametrize</span><span class="p">(</span><span class="s1">'layup'</span><span class="p">,</span> <span class="n">LAYUPS</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="nd">@pytest</span><span class="o">.</span><span class="n">mark</span><span class="o">.</span><span class="n">parametrize</span><span class="p">(</span><span class="s1">'material'</span><span class="p">,</span> <span class="n">LAMINAPROPS_9</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="k">def</span><span class="w"> </span><span class="nf">test_lamination_parameters_offset</span><span class="p">(</span><span class="n">material</span><span class="p">,</span> <span class="n">layup</span><span class="p">,</span> <span class="n">offset</span><span class="p">):</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Lamination parameters of a laminate with an offset</span>
+
+<span class="sd">    With ``offset`` `= e`, the laminate occupies `-h/2 + e \le z \le h/2 +</span>
+<span class="sd">    e`, and :meth:`.ShellProp.calc_lamination_parameters` integrates about</span>
+<span class="sd">    the reference surface. :func:`.shellprop_from_LaminationParameters`</span>
+<span class="sd">    given the same offset must give the A, B and D of ``clt_abd`` with the</span>
+<span class="sd">    offset, which also satisfy the shift of the stiffness integrals to</span>
+<span class="sd">    another reference plane, `B = B^0 + e A` and `D = D^0 + 2 e B^0 + e^2</span>
+<span class="sd">    A`, with `B^0`, `D^0` about the mid-surface (Vasiliev and Morozov,</span>
+<span class="sd">    Mechanics and Analysis of Composite Materials, Elsevier, 2001, Eq.</span>
+<span class="sd">    (5.28), p. 235). The constant-strain transverse shear stiffness does not</span>
+<span class="sd">    depend on the offset. The derivatives of GradABD with respect to the</span>
+<span class="sd">    thickness, at constant lamination parameters and offset, are compared</span>
+<span class="sd">    with central differences of the stiffnesses, polynomials of degree 3 in</span>
+<span class="sd">    h, whose truncation error is `(\Delta h/h)^2 = 10^{-12}` and whose</span>
+<span class="sd">    round-off error is about `10^{-16} h/\Delta h = 10^{-10}`, relative.</span>
+<span class="sd">    """</span>
+    <span class="n">lamprop</span> <span class="o">=</span> <span class="n">LAMINAPROPS_9</span><span class="p">[</span><span class="n">material</span><span class="p">]</span>
+    <span class="n">stack</span><span class="p">,</span> <span class="n">plyts</span> <span class="o">=</span> <span class="n">LAYUPS</span><span class="p">[</span><span class="n">layup</span><span class="p">]</span>
+    <span class="n">e</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'+0.2 mm'</span><span class="p">:</span> <span class="mf">0.2e-3</span><span class="p">,</span> <span class="s1">'-0.2 mm'</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.2e-3</span><span class="p">,</span> <span class="s1">'one ply'</span><span class="p">:</span> <span class="n">plyts</span><span class="p">[</span><span class="mi">0</span><span class="p">]}[</span><span class="n">offset</span><span class="p">]</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="nb">sum</span><span class="p">(</span><span class="n">plyts</span><span class="p">)</span>
+    <span class="n">lam</span> <span class="o">=</span> <span class="n">laminated_plate</span><span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">plyts</span><span class="o">=</span><span class="n">plyts</span><span class="p">,</span> <span class="n">laminaprop</span><span class="o">=</span><span class="n">lamprop</span><span class="p">,</span> <span class="n">offset</span><span class="o">=</span><span class="n">e</span><span class="p">,</span>
+                          <span class="n">shear_correction</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">mat</span> <span class="o">=</span> <span class="n">read_laminaprop</span><span class="p">(</span><span class="n">lamprop</span><span class="p">)</span>
+    <span class="n">lp</span> <span class="o">=</span> <span class="n">lam</span><span class="o">.</span><span class="n">calc_lamination_parameters</span><span class="p">()</span>
+    <span class="n">lam_lp</span> <span class="o">=</span> <span class="n">shellprop_from_LaminationParameters</span><span class="p">(</span><span class="n">lam</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="n">mat</span><span class="p">,</span> <span class="n">lp</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">lam_lp</span><span class="o">.</span><span class="n">offset</span> <span class="o">==</span> <span class="n">e</span>
+
+    <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">D</span> <span class="o">=</span> <span class="n">clt_abd</span><span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">plyts</span><span class="p">,</span> <span class="p">[</span><span class="n">lamprop</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">stack</span><span class="p">),</span> <span class="n">offset</span><span class="o">=</span><span class="n">e</span><span class="p">)</span>
+    <span class="n">A0</span><span class="p">,</span> <span class="n">B0</span><span class="p">,</span> <span class="n">D0</span> <span class="o">=</span> <span class="n">clt_abd</span><span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">plyts</span><span class="p">,</span> <span class="p">[</span><span class="n">lamprop</span><span class="p">]</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">stack</span><span class="p">))</span>
+    <span class="n">assert_abd</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">A0</span><span class="p">,</span> <span class="n">B0</span> <span class="o">+</span> <span class="n">e</span><span class="o">*</span><span class="n">A0</span><span class="p">,</span> <span class="n">D0</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">e</span><span class="o">*</span><span class="n">B0</span> <span class="o">+</span> <span class="n">e</span><span class="o">**</span><span class="mi">2</span><span class="o">*</span><span class="n">A0</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+    <span class="n">Abar</span> <span class="o">=</span> <span class="n">abar_ts</span><span class="p">(</span><span class="n">stack</span><span class="p">,</span> <span class="n">plyts</span><span class="p">,</span> <span class="n">lamprop</span><span class="p">[</span><span class="mi">4</span><span class="p">],</span> <span class="n">lamprop</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="p">(</span><span class="n">lam</span><span class="p">,</span> <span class="n">lam_lp</span><span class="p">):</span>
+        <span class="n">assert_abd</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">A</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">B</span><span class="p">,</span> <span class="n">p</span><span class="o">.</span><span class="n">D</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">p</span><span class="o">.</span><span class="n">Abar_ts</span><span class="p">,</span> <span class="n">Abar</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+                           <span class="n">atol</span><span class="o">=</span><span class="mf">1e-14</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Abar</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">lam_lp</span><span class="o">.</span><span class="n">Ats</span><span class="p">,</span> <span class="n">lam</span><span class="o">.</span><span class="n">Ats</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+                       <span class="n">atol</span><span class="o">=</span><span class="mf">1e-14</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">Abar</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+
+    <span class="c1"># NOTE the same through the function with the lamination parameters as</span>
+    <span class="c1">#      arguments</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="p">[</span><span class="s1">'xi</span><span class="si">%s%d</span><span class="s1">'</span> <span class="o">%</span> <span class="p">(</span><span class="n">m</span><span class="p">,</span> <span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="s1">'ABD'</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">)]</span>
+    <span class="n">lam_lp2</span> <span class="o">=</span> <span class="n">shellprop_from_lamination_parameters</span><span class="p">(</span><span class="n">lam</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="n">mat</span><span class="p">,</span>
+            <span class="o">*</span><span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="n">lp</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span> <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">names</span><span class="p">],</span> <span class="n">lp</span><span class="o">.</span><span class="n">xiAts1</span><span class="p">,</span> <span class="n">lp</span><span class="o">.</span><span class="n">xiAts2</span><span class="p">,</span>
+            <span class="n">offset</span><span class="o">=</span><span class="n">e</span><span class="p">)</span>
+    <span class="n">assert_abd</span><span class="p">(</span><span class="n">lam_lp2</span><span class="o">.</span><span class="n">A</span><span class="p">,</span> <span class="n">lam_lp2</span><span class="o">.</span><span class="n">B</span><span class="p">,</span> <span class="n">lam_lp2</span><span class="o">.</span><span class="n">D</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+
+    <span class="n">grad</span> <span class="o">=</span> <span class="n">GradABD</span><span class="p">()</span>
+    <span class="n">grad</span><span class="o">.</span><span class="n">calc_LP_grad</span><span class="p">(</span><span class="n">lam</span><span class="o">.</span><span class="n">h</span><span class="p">,</span> <span class="n">mat</span><span class="p">,</span> <span class="n">lp</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+    <span class="n">ij</span> <span class="o">=</span> <span class="p">(</span><span class="s1">'11'</span><span class="p">,</span> <span class="s1">'12'</span><span class="p">,</span> <span class="s1">'16'</span><span class="p">,</span> <span class="s1">'22'</span><span class="p">,</span> <span class="s1">'26'</span><span class="p">,</span> <span class="s1">'66'</span><span class="p">)</span>
+    <span class="k">def</span><span class="w"> </span><span class="nf">stiffnesses</span><span class="p">(</span><span class="n">hh</span><span class="p">):</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">shellprop_from_LaminationParameters</span><span class="p">(</span><span class="n">hh</span><span class="p">,</span> <span class="n">mat</span><span class="p">,</span> <span class="n">lp</span><span class="p">,</span> <span class="n">e</span><span class="p">)</span>
+        <span class="k">return</span> <span class="p">{</span><span class="n">m</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="nb">getattr</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="n">m</span> <span class="o">+</span> <span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">ij</span><span class="p">])</span> <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="s1">'ABD'</span><span class="p">}</span>
+    <span class="n">dh</span> <span class="o">=</span> <span class="mf">1e-6</span><span class="o">*</span><span class="n">h</span>
+    <span class="n">plus</span><span class="p">,</span> <span class="n">minus</span> <span class="o">=</span> <span class="n">stiffnesses</span><span class="p">(</span><span class="n">h</span> <span class="o">+</span> <span class="n">dh</span><span class="p">),</span> <span class="n">stiffnesses</span><span class="p">(</span><span class="n">h</span> <span class="o">-</span> <span class="n">dh</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">m</span><span class="p">,</span> <span class="n">g</span> <span class="ow">in</span> <span class="p">((</span><span class="s1">'A'</span><span class="p">,</span> <span class="n">grad</span><span class="o">.</span><span class="n">gradAij</span><span class="p">),</span> <span class="p">(</span><span class="s1">'B'</span><span class="p">,</span> <span class="n">grad</span><span class="o">.</span><span class="n">gradBij</span><span class="p">),</span>
+                 <span class="p">(</span><span class="s1">'D'</span><span class="p">,</span> <span class="n">grad</span><span class="o">.</span><span class="n">gradDij</span><span class="p">)):</span>
+        <span class="n">fd</span> <span class="o">=</span> <span class="p">(</span><span class="n">plus</span><span class="p">[</span><span class="n">m</span><span class="p">]</span> <span class="o">-</span> <span class="n">minus</span><span class="p">[</span><span class="n">m</span><span class="p">])</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">dh</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">g</span><span class="p">)[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">fd</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-8</span><span class="p">,</span>
+                           <span class="n">atol</span><span class="o">=</span><span class="mf">1e-8</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">fd</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()),</span> <span class="n">m</span>
+</pre></div>
+</div>
 </section>
 <section id="transverse-shear-correction">
 <h2>Transverse shear correction<a class="headerlink" href="#transverse-shear-correction" title="Link to this heading">#</a></h2>
@@ -751,6 +959,18 @@ with <code class="docutils literal notranslate"><span class="pre">G</span></code
 the two planes, e.g. <span class="math notranslate nohighlight">\(5/6\)</span> for a rectangular section, are applied by the
 user to <code class="docutils literal notranslate"><span class="pre">G12</span></code> and <code class="docutils literal notranslate"><span class="pre">G13</span></code>. Applied to <code class="docutils literal notranslate"><span class="pre">G</span></code>, as in some of the examples,
 they also scale <code class="docutils literal notranslate"><span class="pre">GJ</span></code>, unless <code class="docutils literal notranslate"><span class="pre">GJ</span></code> is set.</p>
+<p>The elements read these attributes through the sectional stiffness
+matrix <code class="docutils literal notranslate"><span class="pre">C</span></code> of <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>, of the strains <span class="math notranslate nohighlight">\(\{\bar{\varepsilon},
+\bar{\gamma}_y, \bar{\gamma}_z, \kappa_x, \kappa_y, \kappa_z\}\)</span>,
+which is built from them until it is set. Setting <code class="docutils literal notranslate"><span class="pre">C</span></code> gives the 21
+independent entries of a general section, e.g. the extension-twist and
+bending-shear couplings of a composite box beam, which the 11 stiffness
+attributes cannot represent; the elements then read only <code class="docutils literal notranslate"><span class="pre">C</span></code>, and the
+mass integrals remain those of the attributes. The torsional and shear
+stiffnesses and the couplings of an arbitrary, possibly composite, cross
+section are computed by <a class="reference internal" href="vabs.html#module-pyfe3d.vabs" title="pyfe3d.vabs"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.vabs</span></code></a>, and
+<a class="reference internal" href="vabs.html#pyfe3d.vabs.beamprop_from_vabs" title="pyfe3d.vabs.beamprop_from_vabs"><code class="xref py py-func docutils literal notranslate"><span class="pre">beamprop_from_vabs()</span></code></a> sets <code class="docutils literal notranslate"><span class="pre">C</span></code>, see
+<a class="reference internal" href="cross_sectional_analysis.html"><span class="doc">Cross-sectional analysis of beams</span></a>.</p>
 </section>
 <section id="examples">
 <h2>Examples<a class="headerlink" href="#examples" title="Link to this heading">#</a></h2>
@@ -758,19 +978,28 @@ they also scale <code class="docutils literal notranslate"><span class="pre">GJ<
 with an offset:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_isotropic_plate</span><span class="p">():</span>
     <span class="n">prop</span> <span class="o">=</span> <span class="n">helper_isotropic_plate</span><span class="p">()</span>
-    <span class="n">A</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">9629991.31944444</span><span class="p">,</span> <span class="mf">2696397.56944444</span><span class="p">,</span>       <span class="mf">0.</span>   <span class="p">],</span>
-                  <span class="p">[</span><span class="mf">2696397.56944444</span><span class="p">,</span> <span class="mf">9629991.31944444</span><span class="p">,</span>       <span class="mf">0.</span>   <span class="p">],</span>
-                  <span class="p">[</span>      <span class="mf">0.</span>        <span class="p">,</span>       <span class="mf">0.</span>        <span class="p">,</span> <span class="mf">3466796.875</span><span class="p">]])</span>
-    <span class="n">D</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">0.01253905</span><span class="p">,</span> <span class="mf">0.00351093</span><span class="p">,</span> <span class="mf">0.</span>        <span class="p">],</span>
-                  <span class="p">[</span><span class="mf">0.00351093</span><span class="p">,</span> <span class="mf">0.01253905</span><span class="p">,</span> <span class="mf">0.</span>        <span class="p">],</span>
-                  <span class="p">[</span><span class="mf">0.</span>        <span class="p">,</span> <span class="mf">0.</span>        <span class="p">,</span> <span class="mf">0.00451406</span><span class="p">]])</span>
-    <span class="n">Abar_ts</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">3466796.875</span><span class="p">,</span>       <span class="mf">0.</span>   <span class="p">],</span>
-                  <span class="p">[</span>      <span class="mf">0.</span>   <span class="p">,</span> <span class="mf">3466796.875</span><span class="p">]])</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">A</span><span class="p">,</span> <span class="n">A</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">B</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">D</span><span class="p">,</span> <span class="n">D</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">Abar_ts</span><span class="p">,</span> <span class="n">Abar_ts</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">Ats</span><span class="p">,</span> <span class="mi">5</span><span class="o">/</span><span class="mi">6</span><span class="o">*</span><span class="n">Abar_ts</span><span class="p">)</span>
+    <span class="n">E</span> <span class="o">=</span> <span class="mf">71e9</span>
+    <span class="n">nu</span> <span class="o">=</span> <span class="mf">0.28</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="mf">0.000125</span>
+    <span class="n">G</span> <span class="o">=</span> <span class="n">E</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">nu</span><span class="p">))</span>
+    <span class="c1"># NOTE A = E h/(1 - nu^2) [[1, nu, 0], [nu, 1, 0], [0, 0, (1 - nu)/2]],</span>
+    <span class="c1">#      B = 0 and D = E h^3/(12 (1 - nu^2)) [...]</span>
+    <span class="n">Q</span> <span class="o">=</span> <span class="n">E</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">nu</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mf">1.</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span>
+                                <span class="p">[</span><span class="n">nu</span><span class="p">,</span> <span class="mf">1.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">],</span>
+                                <span class="p">[</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="p">(</span><span class="mi">1</span> <span class="o">-</span> <span class="n">nu</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span><span class="p">]])</span>
+    <span class="n">A</span> <span class="o">=</span> <span class="n">h</span><span class="o">*</span><span class="n">Q</span>
+    <span class="n">B</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">))</span>
+    <span class="n">D</span> <span class="o">=</span> <span class="n">h</span><span class="o">**</span><span class="mi">3</span><span class="o">/</span><span class="mi">12</span><span class="o">*</span><span class="n">Q</span>
+    <span class="n">Abar_ts</span> <span class="o">=</span> <span class="n">G</span><span class="o">*</span><span class="n">h</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">assert_abd</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">A</span><span class="p">,</span> <span class="n">prop</span><span class="o">.</span><span class="n">B</span><span class="p">,</span> <span class="n">prop</span><span class="o">.</span><span class="n">D</span><span class="p">,</span> <span class="n">A</span><span class="p">,</span> <span class="n">B</span><span class="p">,</span> <span class="n">D</span><span class="p">,</span> <span class="n">h</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">Abar_ts</span><span class="p">,</span> <span class="n">Abar_ts</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-14</span><span class="o">*</span><span class="n">G</span><span class="o">*</span><span class="n">h</span><span class="p">)</span>
+    <span class="c1"># NOTE Rohwer (1988), DFVLR-FB 88-32, Sec. 4.1, p. 17: for a homogeneous</span>
+    <span class="c1">#      isotropic plate the improved stiffness is 5/6 of the simple ones,</span>
+    <span class="c1">#      "independent of the Poisson's ratio or the position of the</span>
+    <span class="c1">#      reference surface"</span>
+    <span class="k">assert</span> <span class="n">prop</span><span class="o">.</span><span class="n">shear_correction</span> <span class="o">==</span> <span class="s1">'rohwer'</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">Ats</span><span class="p">,</span> <span class="mi">5</span><span class="o">/</span><span class="mi">6</span><span class="o">*</span><span class="n">G</span><span class="o">*</span><span class="n">h</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+                       <span class="n">atol</span><span class="o">=</span><span class="mf">1e-14</span><span class="o">*</span><span class="n">G</span><span class="o">*</span><span class="n">h</span><span class="p">)</span>
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_offset_isotropic_plate</span><span class="p">():</span>
@@ -817,21 +1046,162 @@ cross-ply laminate given by Rohwer (1988):</p>
 </pre></div>
 </div>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_rohwer_cross_ply_reference_values</span><span class="p">():</span>
-    <span class="c1"># NOTE Rohwer (1988), and Table plate-shear-rotation of the theory</span>
+    <span class="c1"># NOTE Rohwer (1988), [0,90]s of Table 2, p. 19</span>
+    <span class="n">ref</span> <span class="o">=</span> <span class="n">ROHWER_1988_TABLE_2</span>
     <span class="n">prop</span> <span class="o">=</span> <span class="n">laminated_plate</span><span class="p">(</span><span class="n">stack</span><span class="o">=</span><span class="n">CROSS_PLY</span><span class="p">,</span> <span class="n">plyt</span><span class="o">=</span><span class="n">PLYT</span><span class="p">,</span> <span class="n">laminaprop</span><span class="o">=</span><span class="n">CFRP</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">Abar44</span><span class="p">,</span> <span class="mf">3.450</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">Abar55</span><span class="p">,</span> <span class="mf">3.450</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">Abarbar44</span><span class="p">,</span> <span class="mf">3.067</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">Abarbar55</span><span class="p">,</span> <span class="mf">3.067</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-3</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">A44</span><span class="p">,</span> <span class="mf">2.5252</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">A55</span><span class="p">,</span> <span class="mf">2.3131</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-4</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">A45</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">scf_k13</span><span class="p">,</span> <span class="n">prop</span><span class="o">.</span><span class="n">A55</span><span class="o">/</span><span class="n">prop</span><span class="o">.</span><span class="n">Abar55</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">scf_k23</span><span class="p">,</span> <span class="n">prop</span><span class="o">.</span><span class="n">A44</span><span class="o">/</span><span class="n">prop</span><span class="o">.</span><span class="n">Abar44</span><span class="p">)</span>
+    <span class="n">G12</span><span class="p">,</span> <span class="n">G13</span><span class="p">,</span> <span class="n">G23</span> <span class="o">=</span> <span class="n">CFRP</span><span class="p">[</span><span class="mi">3</span><span class="p">:]</span>
+    <span class="n">h</span> <span class="o">=</span> <span class="n">PLYT</span><span class="o">*</span><span class="nb">len</span><span class="p">(</span><span class="n">CROSS_PLY</span><span class="p">)</span>
+    <span class="c1"># NOTE simple stiffnesses, constant strain sum_k G_k h_k and constant</span>
+    <span class="c1">#      stress h^2/sum_k (h_k/G_k): in the yz plane G23 for the 0 plies</span>
+    <span class="c1">#      and G13 for the 90 plies, the reverse in the xz plane</span>
+    <span class="n">Abar</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">PLYT</span><span class="o">*</span><span class="n">G23</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">PLYT</span><span class="o">*</span><span class="n">G13</span>
+    <span class="n">Abarbar</span> <span class="o">=</span> <span class="n">h</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="n">PLYT</span><span class="o">/</span><span class="n">G23</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">PLYT</span><span class="o">/</span><span class="n">G13</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'Abar44'</span><span class="p">,</span> <span class="s1">'Abar55'</span><span class="p">]:</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span> <span class="n">Abar</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-14</span><span class="p">)</span>
+        <span class="n">assert_printed</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span> <span class="n">ref</span><span class="p">[</span><span class="s1">'Abar'</span><span class="p">])</span>
+    <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'Abarbar44'</span><span class="p">,</span> <span class="s1">'Abarbar55'</span><span class="p">]:</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span> <span class="n">Abarbar</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-14</span><span class="p">)</span>
+        <span class="n">assert_printed</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">prop</span><span class="p">,</span> <span class="n">name</span><span class="p">),</span> <span class="n">ref</span><span class="p">[</span><span class="s1">'Abarbar'</span><span class="p">])</span>
+    <span class="c1"># NOTE improved stiffness, Eq. (43), written out in rohwer_stiffness</span>
+    <span class="n">Ats</span><span class="p">,</span> <span class="n">top</span> <span class="o">=</span> <span class="n">rohwer_stiffness</span><span class="p">(</span><span class="n">CROSS_PLY</span><span class="p">,</span> <span class="p">[</span><span class="n">PLYT</span><span class="p">]</span><span class="o">*</span><span class="mi">4</span><span class="p">,</span> <span class="p">[</span><span class="n">CFRP</span><span class="p">]</span><span class="o">*</span><span class="mi">4</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">top</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-14</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">Ats</span><span class="p">,</span> <span class="n">Ats</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span> <span class="n">atol</span><span class="o">=</span><span class="mf">1e-14</span><span class="o">*</span><span class="n">Ats</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
+    <span class="n">assert_printed</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">A55</span><span class="p">,</span> <span class="n">ref</span><span class="p">[</span><span class="s1">'A55'</span><span class="p">])</span>
+    <span class="c1"># NOTE A44 = 2.52525, and the independent rohwer_stiffness gives the same,</span>
+    <span class="c1">#      which Rohwer prints as H22 = 2.521; the other three values round</span>
+    <span class="c1">#      correctly. Both 2.52525/3.067 and 2.521/3.067 round to the</span>
+    <span class="c1">#      reduction 0.82 given for the y-direction on p. 18-19</span>
+    <span class="n">assert_printed</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">A44</span><span class="p">,</span> <span class="n">ref</span><span class="p">[</span><span class="s1">'A44'</span><span class="p">],</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1.7e-3</span><span class="p">)</span>
+    <span class="c1"># NOTE "Coupling terms are zero", p. 18</span>
+    <span class="k">assert</span> <span class="nb">abs</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">A45</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">1e-14</span><span class="o">*</span><span class="n">prop</span><span class="o">.</span><span class="n">A44</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">scf_k13</span><span class="p">,</span> <span class="n">prop</span><span class="o">.</span><span class="n">A55</span><span class="o">/</span><span class="n">prop</span><span class="o">.</span><span class="n">Abar55</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-14</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">scf_k23</span><span class="p">,</span> <span class="n">prop</span><span class="o">.</span><span class="n">A44</span><span class="o">/</span><span class="n">prop</span><span class="o">.</span><span class="n">Abar44</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-14</span><span class="p">)</span>
 </pre></div>
 </div>
 <p>Rohwer, K., Improved transverse shear stiffness for layered finite elements,
 DFVLR-FB 88-32, 1988.</p>
+<p>For a sandwich, stiff faces on a soft core, the factor <span class="math notranslate nohighlight">\(5/6\)</span> is badly wrong:
+<code class="docutils literal notranslate"><span class="pre">'rohwer'</span></code> and <code class="docutils literal notranslate"><span class="pre">'vlachoutsis'</span></code> reproduce the factors tabulated by
+Vlachoutsis (1992), Tables I and II, down to <span class="math notranslate nohighlight">\(K = 0.01964\)</span>, for which <span class="math notranslate nohighlight">\(5/6\)</span>
+overestimates the shear stiffness 42 times, and, for an antiplane core, the
+shear stiffness <span class="math notranslate nohighlight">\(G_c d^2/c\)</span> of Allen (1969), Eq. (2.15b), with <span class="math notranslate nohighlight">\(d\)</span> the
+distance between the centroids of the faces, within the bounds given by the
+local bending and the shear strains of the faces that Allen neglects. The
+antiplane core, with zero moduli in the plane of the faces and finite
+transverse shear moduli (Allen, 1969, p. 14), is given by <code class="docutils literal notranslate"><span class="pre">laminaprop</span> <span class="pre">=</span>
+<span class="pre">(0,</span> <span class="pre">0,</span> <span class="pre">nu12,</span> <span class="pre">0,</span> <span class="pre">G13,</span> <span class="pre">G23)</span></code>, or with nine entries <code class="docutils literal notranslate"><span class="pre">(0,</span> <span class="pre">0,</span> <span class="pre">nu12,</span> <span class="pre">0,</span> <span class="pre">G13,</span>
+<span class="pre">G23,</span> <span class="pre">E33,</span> <span class="pre">0,</span> <span class="pre">0)</span></code>, see <a class="reference internal" href="shellprop_utils.html#pyfe3d.shellprop_utils.read_laminaprop" title="pyfe3d.shellprop_utils.read_laminaprop"><code class="xref py py-func docutils literal notranslate"><span class="pre">read_laminaprop()</span></code></a>; it adds only transverse
+shear stiffness:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span><span class="w"> </span><span class="nf">test_sandwich_antiplane_core_converges_to_allen_1969</span><span class="p">():</span>
+<span class="w">    </span><span class="sa">r</span><span class="sd">"""Antiplane core: closed form and convergence to Allen (1969)</span>
+
+<span class="sd">    Allen, H. G., "Analysis and Design of Structural Sandwich Panels",</span>
+<span class="sd">    Pergamon Press, 1969, Chap. 2, pp. 8-47,</span>
+<span class="sd">    https://doi.org/10.1016/B978-0-08-012870-2.50006-7. An antiplane core is</span>
+<span class="sd">    "an idealized core in which the modulus of elasticity in planes parallel</span>
+<span class="sd">    with the faces is zero but the shear modulus in planes perpendicular to</span>
+<span class="sd">    the faces is finite", ``E_c = 0``, p. 14, given here as ``laminaprop =</span>
+<span class="sd">    (0, 0, nu, 0, G_c, G_c)``, see :func:`.read_laminaprop`. Then</span>
+<span class="sd">    the shear stress is constant in the core, Eq. (2.12), p. 13, ``tau_c = Q</span>
+<span class="sd">    E_f t d/(2 D)``, with ``D = E_f (t^3/6 + t d^2/2)``, Eq. (2.2), p. 9,</span>
+<span class="sd">    i.e. ``tau_c = Q/(d phi)``, ``phi = 1 + t^2/(3 d^2)``, and parabolic in</span>
+<span class="sd">    the faces, Eq. (2.9), p. 11, ``tau_f = Q E_f (h^2/4 - z^2)/(2 D)``. The</span>
+<span class="sd">    complementary energy, Rohwer (1988), Eq. (43), gives::</span>
+
+<span class="sd">        A = (G_c d^2/c) phi^2/(1 + eps),</span>
+<span class="sd">        eps = (G_c/G_f) 2 t (h^2/3 - h t/2 + t^2/5)/(c d^2)</span>
+
+<span class="sd">    with eps the ratio of the face to the core shear energy. This is Eq. (45)</span>
+<span class="sd">    of Vlachoutsis (1992), p. 1545, ``A = K_ant sum_i G_i h_i``, verified</span>
+<span class="sd">    here to round-off. Allen's shear stiffness ``G_c d^2/c``, Eq. (2.15b),</span>
+<span class="sd">    p. 17, neglects the local bending stiffness of the faces, the first term</span>
+<span class="sd">    of Eq. (2.2), "less than 1%" of the second when ``3 (d/t)^2 &gt; 100``, Eq.</span>
+<span class="sd">    (2.4), p. 10, i.e. when ``phi - 1 &lt; 0.01``, and the shear strains of the</span>
+<span class="sd">    faces, footnote of p. 17, i.e. eps. Hence the derived bounds, which tend</span>
+<span class="sd">    to zero as ``d/t`` and ``G_f/G_c`` grow::</span>
+
+<span class="sd">        -eps &lt;= A/(G_c d^2/c) - 1 &lt;= phi^2 - 1</span>
+
+<span class="sd">    The family below has ``t/c = 10^-k/2`` and ``G_c/G_f = 10^-k/10``, i.e. a</span>
+<span class="sd">    constant share of the core in ``Abar = sum_i G_i h_i``. Measured, with</span>
+<span class="sd">    ``E_f = 70 GPa``, ``nu = 0.3``, ``c = 10 mm``:</span>
+
+<span class="sd">    ===  =======  =========  =============  ===========  ======</span>
+<span class="sd">     k    eps      phi^2-1    A/A_Allen - 1  pyfe3d vs    K</span>
+<span class="sd">                                             Eq. (45)</span>
+<span class="sd">    ===  =======  =========  =============  ===========  ======</span>
+<span class="sd">     1    3.4e-4   1.51e-3    1.17e-3        7e-16        0.1003</span>
+<span class="sd">     2    3.3e-6   1.65e-5    1.32e-5        1e-14        0.0918</span>
+<span class="sd">     3    3.3e-8   1.67e-7    1.33e-7        7e-14        0.0910</span>
+<span class="sd">    ===  =======  =========  =============  ===========  ======</span>
+
+<span class="sd">    The deviation from Allen decreases by a factor 100 per step, as both</span>
+<span class="sd">    bounds, while K tends to 1/11, such that the constant 5/6 overestimates</span>
+<span class="sd">    the shear stiffness 9.2 times. The column "pyfe3d vs Eq. (45)" is the</span>
+<span class="sd">    largest relative difference of ``A44`` and ``A55`` of ``'rohwer'`` and</span>
+<span class="sd">    ``'vlachoutsis'`` and of the independent ``rohwer_stiffness`` from</span>
+<span class="sd">    ``K_ant sum_i G_i h_i``. With ``E_c = 0``, Eq. (44) of Vlachoutsis</span>
+<span class="sd">    reduces to Eq. (45), ``K = K_ant``, checked exactly, and the only</span>
+<span class="sd">    allowance added to the derived bounds is 1e-12 for round-off, also the</span>
+<span class="sd">    tolerance against Eq. (45).</span>
+<span class="sd">    """</span>
+    <span class="n">Ef</span> <span class="o">=</span> <span class="mf">70e3</span>
+    <span class="n">nu</span> <span class="o">=</span> <span class="mf">0.3</span>
+    <span class="n">Gf</span> <span class="o">=</span> <span class="n">Ef</span><span class="o">/</span><span class="p">(</span><span class="mi">2</span><span class="o">*</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">nu</span><span class="p">))</span>
+    <span class="n">c</span> <span class="o">=</span> <span class="mf">10.</span>
+    <span class="n">lf</span> <span class="o">=</span> <span class="p">(</span><span class="n">Ef</span><span class="p">,</span> <span class="n">Ef</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="n">Gf</span><span class="p">,</span> <span class="n">Gf</span><span class="p">,</span> <span class="n">Gf</span><span class="p">)</span>
+    <span class="n">devs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">k</span> <span class="ow">in</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]:</span>
+        <span class="n">t</span> <span class="o">=</span> <span class="n">c</span><span class="o">*</span><span class="mf">10.</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">k</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+        <span class="n">Gc</span> <span class="o">=</span> <span class="n">Gf</span><span class="o">*</span><span class="mf">10.</span><span class="o">**</span><span class="p">(</span><span class="o">-</span><span class="n">k</span><span class="p">)</span><span class="o">/</span><span class="mi">10</span>
+        <span class="c1"># NOTE antiplane core, E_c = 0 in the plane of the faces</span>
+        <span class="n">lc</span> <span class="o">=</span> <span class="p">(</span><span class="mf">0.</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">nu</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">Gc</span><span class="p">,</span> <span class="n">Gc</span><span class="p">)</span>
+        <span class="n">plyts</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="p">,</span> <span class="n">c</span><span class="p">,</span> <span class="n">t</span><span class="p">]</span>
+        <span class="n">h</span> <span class="o">=</span> <span class="n">c</span> <span class="o">+</span> <span class="mi">2</span><span class="o">*</span><span class="n">t</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="n">c</span><span class="o">/</span><span class="n">h</span>
+        <span class="n">d</span> <span class="o">=</span> <span class="p">(</span><span class="n">h</span> <span class="o">+</span> <span class="n">c</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+        <span class="n">phi</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">t</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">3</span><span class="o">*</span><span class="n">d</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">eps</span> <span class="o">=</span> <span class="n">Gc</span><span class="o">/</span><span class="n">Gf</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">t</span><span class="o">*</span><span class="p">(</span><span class="n">h</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">3</span> <span class="o">-</span> <span class="n">h</span><span class="o">*</span><span class="n">t</span><span class="o">/</span><span class="mi">2</span> <span class="o">+</span> <span class="n">t</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="mi">5</span><span class="p">)</span><span class="o">/</span><span class="p">(</span><span class="n">c</span><span class="o">*</span><span class="n">d</span><span class="o">**</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">A_allen</span> <span class="o">=</span> <span class="n">Gc</span><span class="o">*</span><span class="n">d</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="n">c</span>
+        <span class="n">Abar</span> <span class="o">=</span> <span class="mi">2</span><span class="o">*</span><span class="n">t</span><span class="o">*</span><span class="n">Gf</span> <span class="o">+</span> <span class="n">c</span><span class="o">*</span><span class="n">Gc</span>
+        <span class="n">K</span><span class="p">,</span> <span class="n">K_ant</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">vlachoutsis_sandwich_K</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="mf">0.</span><span class="p">,</span> <span class="n">Gc</span><span class="o">/</span><span class="n">Gf</span><span class="p">)</span>
+        <span class="c1"># NOTE the closed form above is Eq. (45) of Vlachoutsis (1992), and</span>
+        <span class="c1">#      Eq. (44) reduces to it for Dc/Df = 0</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">A_allen</span><span class="o">*</span><span class="n">phi</span><span class="o">**</span><span class="mi">2</span><span class="o">/</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">eps</span><span class="p">),</span> <span class="n">K_ant</span><span class="o">*</span><span class="n">Abar</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-13</span><span class="p">)</span>
+        <span class="k">assert</span> <span class="n">K</span> <span class="o">==</span> <span class="n">K_ant</span>
+        <span class="n">slack</span> <span class="o">=</span> <span class="mf">1e-12</span>
+        <span class="k">for</span> <span class="n">mode</span> <span class="ow">in</span> <span class="p">[</span><span class="s1">'rohwer'</span><span class="p">,</span> <span class="s1">'vlachoutsis'</span><span class="p">]:</span>
+            <span class="n">prop</span> <span class="o">=</span> <span class="n">laminated_plate</span><span class="p">(</span><span class="n">stack</span><span class="o">=</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">plyts</span><span class="o">=</span><span class="n">plyts</span><span class="p">,</span>
+                                   <span class="n">laminaprops</span><span class="o">=</span><span class="p">[</span><span class="n">lf</span><span class="p">,</span> <span class="n">lc</span><span class="p">,</span> <span class="n">lf</span><span class="p">],</span>
+                                   <span class="n">shear_correction</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">A55</span><span class="p">,</span> <span class="n">K</span><span class="o">*</span><span class="n">Abar</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">)</span>
+            <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">isclose</span><span class="p">(</span><span class="n">prop</span><span class="o">.</span><span class="n">A44</span><span class="p">,</span> <span class="n">K</span><span class="o">*</span><span class="n">Abar</span><span class="p">,</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">)</span>
+        <span class="n">Ats</span><span class="p">,</span> <span class="n">top</span> <span class="o">=</span> <span class="n">rohwer_stiffness</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">plyts</span><span class="p">,</span> <span class="p">[</span><span class="n">lf</span><span class="p">,</span> <span class="n">lc</span><span class="p">,</span> <span class="n">lf</span><span class="p">])</span>
+        <span class="k">assert</span> <span class="n">np</span><span class="o">.</span><span class="n">allclose</span><span class="p">(</span><span class="n">Ats</span><span class="p">,</span> <span class="n">K</span><span class="o">*</span><span class="n">Abar</span><span class="o">*</span><span class="n">np</span><span class="o">.</span><span class="n">eye</span><span class="p">(</span><span class="mi">2</span><span class="p">),</span> <span class="n">rtol</span><span class="o">=</span><span class="mf">1e-12</span><span class="p">,</span>
+                           <span class="n">atol</span><span class="o">=</span><span class="mf">1e-12</span><span class="o">*</span><span class="n">K</span><span class="o">*</span><span class="n">Abar</span><span class="p">)</span>
+        <span class="n">dev</span> <span class="o">=</span> <span class="n">prop</span><span class="o">.</span><span class="n">A55</span><span class="o">/</span><span class="n">A_allen</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="k">assert</span> <span class="o">-</span><span class="n">eps</span> <span class="o">-</span> <span class="n">slack</span> <span class="o">&lt;=</span> <span class="n">dev</span> <span class="o">&lt;=</span> <span class="n">phi</span><span class="o">**</span><span class="mi">2</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">+</span> <span class="n">slack</span>
+        <span class="n">devs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">dev</span><span class="p">)</span>
+        <span class="c1"># NOTE Allen's condition (2.4) holds</span>
+        <span class="k">assert</span> <span class="mi">3</span><span class="o">*</span><span class="p">(</span><span class="n">d</span><span class="o">/</span><span class="n">t</span><span class="p">)</span><span class="o">**</span><span class="mi">2</span> <span class="o">&gt;</span> <span class="mi">100</span>
+        <span class="k">assert</span> <span class="p">(</span><span class="mi">5</span><span class="o">/</span><span class="mi">6</span><span class="p">)</span><span class="o">/</span><span class="n">K</span> <span class="o">&gt;</span> <span class="mi">8</span>
+    <span class="c1"># NOTE convergence: the deviation from Allen decreases with k, as the</span>
+    <span class="c1">#      bounds, by a factor 100 per step</span>
+    <span class="k">assert</span> <span class="n">devs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">50</span><span class="o">*</span><span class="n">devs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">devs</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">50</span><span class="o">*</span><span class="n">devs</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">&gt;</span> <span class="mi">0</span>
+    <span class="k">assert</span> <span class="n">devs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mf">2e-7</span>
+</pre></div>
+</div>
+<p>Rohwer (1988), Sec. 4.3, also gives the stiffnesses of a sandwich panel,
+Table 4, p. 23, which are not used as a test: its transverse shear
+stiffnesses are reproduced only with a foam shear modulus of 0.04 kN/mm<sup>2</sup>,
+i.e. <span class="math notranslate nohighlight">\(\nu = 0.25\)</span> instead of the stated 0.3, and its bending stiffnesses
+contradict the stated lay-up, since the ratio <span class="math notranslate nohighlight">\((D_{11} - D_{22})/D_{16}\)</span>,
+which depends on the positions of the layers alone, is 4.216 for the lay-up
+of his Fig. 9 against 4.71 from the printed values. The details are in the
+comments of <code class="docutils literal notranslate"><span class="pre">tests/test_shellprop_transverse_shear.py</span></code>.</p>
+<p>Allen, H. G., Analysis and Design of Structural Sandwich Panels, Pergamon
+Press, 1969, Chap. 2,
+<a class="reference external" href="https://doi.org/10.1016/B978-0-08-012870-2.50006-7">doi:10.1016/B978-0-08-012870-2.50006-7</a>.</p>
 </section>
 </section>
 
@@ -855,11 +1225,11 @@ DFVLR-FB 88-32, 1988.</p>
       </div>
     </a>
     <a class="right-next"
-       href="nonlinear_analyses.html"
+       href="cross_sectional_analysis.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">Non-linear static analyses</p>
+        <p class="prev-next-title">Cross-sectional analysis of beams</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>

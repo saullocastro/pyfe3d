@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Benchmark: MacNeal-Harder standard problems for the shell elements &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>Benchmark: MacNeal-Harder standard problems for the shell elements &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +122,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -138,6 +139,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -162,13 +170,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -177,6 +178,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -365,6 +394,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -381,6 +417,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -540,6 +597,23 @@
 <li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Benchmark: MacNeal-Harder standard problems for the shell elements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tut-bench-shell-obstacle-course.html">Benchmark: shell obstacle course</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tut-nonlinear-benchmarks.html">Tutorial: geometrically non-linear benchmarks with pyfe3d.solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-corotational-large-rotations.html">Tutorial: large rotations with the co-rotational kinematics</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-prescribed-displacement-cantilever.html">Tutorial: prescribed displacement at the tip of a cantilever</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-prescribed-displacement-dome-riks.html">Tutorial: shells pressed down by a prescribed displacement, Riks’ method</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-nafems-cap-axisymmetric.html">Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations</a></li>
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-inertia-relief.html">Tutorial: static analysis with inertia relief</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-inertia-relief-aircraft-ha144a.html">Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A</a></li>
 </ul>
 </div>
 </nav></div>
@@ -648,7 +722,7 @@ of the MSC/NASTRAN QUAD4 element tabulated there.</p>
 <p>The triangular meshes are obtained by cutting every quadrilateral of the mesh of [1] along its diagonal 1-3, as the paper suggests for triangles (p. 7). Unless said otherwise, a displacement is normalised by the theoretical value of [1], and the letter grades follow the rule of [1], p. 14: A for an error of at most 2%, B up to 10%, C up to 20%, D up to 50% and F above, the absolute errors being averaged when several cases contribute to one grade.</p>
 <section id="Common-code">
 <h2>Common code<a class="headerlink" href="#Common-code" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">stiffness()</span></code> assembles the linear stiffness matrix <code class="docutils literal notranslate"><span class="pre">KC0</span></code> of a mesh of quadrilaterals for one of the four elements, <code class="docutils literal notranslate"><span class="pre">solve()</span></code> solves the static problem with prescribed degrees-of-freedom, <code class="docutils literal notranslate"><span class="pre">tip_forces()</span></code> distributes a unit end load as in Fig. 11(a) of [1], half of the load of each element edge going to each of its two nodes.</p>
+<p><code class="docutils literal notranslate"><span class="pre">stiffness()</span></code> assembles the linear stiffness matrix <code class="docutils literal notranslate"><span class="pre">KC0</span></code> of a mesh of quadrilaterals for one of the four elements, the quadrilaterals with their default <code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">1</span></code> unless said otherwise, <code class="docutils literal notranslate"><span class="pre">solve()</span></code> solves the static problem with prescribed degrees-of-freedom, <code class="docutils literal notranslate"><span class="pre">tip_forces()</span></code> distributes a unit end load as in Fig. 11(a) of [1], half of the load of each element edge going to each of its two nodes.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -675,7 +749,7 @@ def split(quads):
     return [t for (n1, n2, n3, n4) in quads for t in ((n1, n2, n3), (n1, n3, n4))]
 
 
-def stiffness(ncoords, quads, name, prop):
+def stiffness(ncoords, quads, name, prop, warp_offsets=1):
     Elem, Data, Probe = ELEMENTS[name]
     conn = split(quads) if name.startswith('Tria') else quads
     data, probe = Data(), Probe()
@@ -692,6 +766,8 @@ def stiffness(ncoords, quads, name, prop):
             setattr(e, 'n%d' % (i + 1), n)
             setattr(e, 'c%d' % (i + 1), DOF*n)
         e.init_k_KC0 = k*data.KC0_SPARSE_SIZE
+        if not name.startswith('Tria'):
+            e.warp_offsets = warp_offsets   # 1 is the default
         e.update_rotation_matrix(ncf)
         e.update_probe_xe(ncf)
         e.update_area()
@@ -823,18 +899,20 @@ for name in ELEMENTS:
 <div class="highlight"><pre>
 element    test       interior displ. error  energy error   check
 Quad4      membrane               2.82e-16      -1.11e-16   PASS
-Quad4      bending                7.39e-01       5.80e+00   FAIL
+Quad4      bending                1.77e-12       7.83e-12   PASS
 Quad4R     membrane               4.52e-16      -1.11e-16   PASS
-Quad4R     bending                7.24e-01       1.34e+01   FAIL
+Quad4R     bending                6.80e-12       2.78e-11   PASS
 Tria3R     membrane               6.78e-16      -4.44e-16   PASS
-Tria3R     bending                8.41e-02       2.43e-01   FAIL
+Tria3R     bending                7.90e-14      -2.57e-11   PASS
 Tria3DSG   membrane               1.08e-15      -1.11e-16   PASS
 Tria3DSG   bending                3.82e-14      -2.38e-11   PASS
 </pre></div></div>
 </div>
-<p>All four elements pass the membrane patch test. Only <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> passes the bending patch test. [1] reports 0.0% for the QUAD4 of MSC/NASTRAN in both tests (Table 7).</p>
-<p>The failure of <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> and <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> in bending is in the transverse shear. The exact transverse displacement is quadratic and both quadrilaterals interpolate it bilinearly, with the transverse shear sampled at the centroid; on these distorted elements the gradient of the bilinear interpolant at the centroid differs from the prescribed rotation there, on every element of the patch, which leaves a transverse shear strain and, with <span class="math notranslate nohighlight">\(\ell/t \approx 100\)</span>, a large parasitic shear energy.
-<code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> takes its transverse shear at the centroid as well, softened by its <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span></code> factor. The discrete shear gap of <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> makes the shear strain of a state of constant curvature vanish exactly, which is the property this test checks.</p>
+<p>All four elements pass both patch tests. [1] reports 0.0% for the QUAD4 of MSC/NASTRAN in both tests (Table 7).</p>
+<p>Up to version 0.11, and with <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code> since then, <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> failed the bending test, with an interior displacement error of 74% and an energy error of 580%, as did <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> up to version 0.11. The failure is in the transverse shear. The exact transverse displacement is quadratic and the quadrilateral interpolates it bilinearly, with the transverse shear sampled at the centroid by the one-point rule of Hughes et al. [3]; on these distorted elements the gradient of the bilinear
+interpolant at the centroid differs from the prescribed rotation there, on every element of the patch, which leaves a transverse shear strain and, with <span class="math notranslate nohighlight">\(\ell/t \approx 100\)</span>, a large parasitic shear energy. The default <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">1</span></code> of <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> since version 0.12.0 takes the assumed shear strains of Dvorkin and Bathe instead, which vanish under a constant curvature. The discrete shear gap of <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code>, which <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> also uses by default since version 0.12.0
+(<code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">1</span></code>), makes the shear strain of a state of constant curvature vanish exactly, which is the property this test checks; so do the assumed shear strains of Dvorkin and Bathe that <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> takes since version 0.12.0, with the physical stabilisation of Belytschko and Leviathan (1994). With the centroid-sampled transverse shear that <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> used up to version 0.11 (<code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code> with <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span> <span class="pre">=</span> <span class="pre">0.7</span></code>) the interior displacement error was 8.4% and the energy
+error 24%, grade D.</p>
 </section>
 <section id="Straight-cantilever-beam">
 <h2>Straight cantilever beam<a class="headerlink" href="#Straight-cantilever-beam" title="Link to this heading">#</a></h2>
@@ -906,26 +984,27 @@ normalised tip displacement
 mesh           load                    Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
 regular        extension               0.999     0.998     0.992     0.992     0.995
 regular        in-plane shear          0.904     0.119     0.145     0.027     0.904
-regular        out-of-plane shear      0.980     0.973     0.876     0.971     0.986
-regular        twist                 377.368     4.780     1.669     0.675     0.941
+regular        out-of-plane shear      0.980     0.980     0.971     0.971     0.986
+regular        twist                   0.941     0.941     0.675     0.675     0.941
 trapezoidal    extension               0.998     0.999     0.992     0.991     0.996
 trapezoidal    in-plane shear          0.761     0.033     0.149     0.013     0.071
-trapezoidal    out-of-plane shear      0.981     0.233     0.589     0.959     0.968
-trapezoidal    twist                 109.715     4.907     3.244     0.658     0.951
+trapezoidal    out-of-plane shear      0.963     0.964     0.959     0.959     0.968
+trapezoidal    twist                   0.884     0.924     0.658     0.658     0.951
 parallelogram  extension               0.998     0.999     0.992     0.991     0.996
 parallelogram  in-plane shear          0.838     0.068     0.102     0.010     0.080
-parallelogram  out-of-plane shear      0.982     0.772     0.831     0.958     0.977
-parallelogram  twist                 137.968     5.258     2.709     0.638     0.945
+parallelogram  out-of-plane shear      0.978     0.978     0.958     0.958     0.977
+parallelogram  twist                   0.849     0.853     0.638     0.638     0.945
 </pre></div></div>
 </div>
 <p>Extension is reproduced by every element on every mesh. The other cases show the following failures:</p>
 <ul class="simple">
-<li><p><strong>Twist of ``Quad4``.</strong> The one-point transverse shear of <code class="docutils literal notranslate"><span class="pre">Quad4</span></code>, from Hughes et al. [3], leaves the hourglass mode <span class="math notranslate nohighlight">\(w = (x - x_c)(y - y_c)\)</span> without stiffness, and a strip one element wide loaded in torsion deforms in that mode, so the twist is two orders of magnitude too large. <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> controls that mode with its hourglass stiffness, and the result depends on the amount of it, here about five times too flexible. Both are documented in the Notes of the two modules, and the tests
-<code class="docutils literal notranslate"><span class="pre">test_quad4_spurious_shear_mode.py</span></code> and <code class="docutils literal notranslate"><span class="pre">test_drilling_benchmarks.py</span></code> show that two elements across the width recover the twist with <code class="docutils literal notranslate"><span class="pre">Quad4</span></code>.</p></li>
+<li><p><strong>Twist.</strong> Up to version 0.11, and with <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code> since then, the one-point transverse shear of <code class="docutils literal notranslate"><span class="pre">Quad4</span></code>, from Hughes et al. [3], leaves the hourglass mode <span class="math notranslate nohighlight">\(w = (x - x_c)(y - y_c)\)</span> without stiffness, and a strip one element wide loaded in torsion deforms in that mode, so the twist was two orders of magnitude too large: 377, 110 and 138 times the reference on the three meshes. With the assumed transverse shear strains of the MITC4 element, the default since version 0.12.0,
+<code class="docutils literal notranslate"><span class="pre">Quad4</span></code> gives 0.941 on the regular mesh, the twist of the QUAD4 of [1], and 0.88 and 0.85 on the distorted ones. <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> controls that mode with the physical stabilisation of its bending and transverse shear, which leaves a uniform twist free of artificial stiffness, and gives the same 0.941 on the regular mesh, where the two elements have the same out-of-plane stiffness, and 0.92 and 0.85 on the distorted ones; up to version 0.11 it controlled the mode with Brockman’s hourglass stiffness
+of <code class="docutils literal notranslate"><span class="pre">w</span></code> and was about five times too flexible. Both are documented in the Notes of the two modules, see also the tests <code class="docutils literal notranslate"><span class="pre">test_quad4_spurious_shear_mode.py</span></code> and <code class="docutils literal notranslate"><span class="pre">test_drilling_benchmarks.py</span></code>.</p></li>
 <li><p><strong>In-plane shear, i.e. in-plane bending.</strong> <code class="docutils literal notranslate"><span class="pre">Quad4</span></code>, with the drilling enrichment of Allman [2], reaches 90% of the reference on the regular mesh, like the QUAD4 of [1], and keeps 76% to 84% on the distorted meshes, where the QUAD4 of [1] locks (7% to 8%). <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> locks on all three meshes: its one-point membrane gives no strain to the in-plane bending pattern of the bilinear element, which is resisted only by its hourglass stabilisation and by its drilling term, and on this
 one-element-deep strip these make it far too stiff. The triangles lock too: <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> has the constant-strain membrane of the linear triangle, and <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code>, which carries the Allman enrichment, reaches 10% to 15%.</p></li>
-<li><p><strong>Out-of-plane shear on distorted meshes.</strong> <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> drops to 23% on the trapezoidal mesh and <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> to 59%.</p></li>
-<li><p><strong>Twist of the triangles.</strong> <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> is 1.7 to 3.2 times too flexible and <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> 32% to 36% too stiff.</p></li>
+<li><p><strong>Out-of-plane shear on distorted meshes.</strong> <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> and <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> keep 96%, <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> against 23% on the trapezoidal mesh up to version 0.11, and <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> against 98% with its former one-point transverse shear. The two triangles, with the same transverse shear field, keep 96%; <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> dropped to 59% with its former centroid-sampled shear.</p></li>
+<li><p><strong>Twist of the triangles.</strong> Both are 32% to 36% too stiff, with six pairs of triangles along the length; <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> was 1.7 to 3.2 times too flexible with its former centroid-sampled shear.</p></li>
 </ul>
 </section>
 <section id="Curved-beam">
@@ -978,15 +1057,21 @@ for load, ref in CURVED_REF.items():
 normalised tip displacement
 load               Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
 in-plane           0.908     0.103     0.119     0.022     0.833
-out-of-plane      26.828     1.587     1.100     0.760     0.951
+out-of-plane       0.942     0.943     0.760     0.760     0.951
 </pre></div></div>
 </div>
-<p>The in-plane case repeats the in-plane bending result of the straight beam: <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> reaches 91%, better than the 83% of the QUAD4 of [1], and the other three elements lock. The out-of-plane load twists the strip, and <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> is again far too flexible through the hourglass mode of its transverse shear.</p>
+<p>The in-plane case repeats the in-plane bending result of the straight beam: <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> reaches 91%, better than the 83% of the QUAD4 of [1], and the other three elements lock. The out-of-plane load twists the strip: <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> and <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> give 94%, close to the 95% of the QUAD4 of [1], while the two triangles, with the same transverse shear field, are 24% too stiff. With its former one-point transverse shear, <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> was 27 times too flexible, through the hourglass mode
+of its transverse shear.</p>
 </section>
 <section id="Twisted-beam">
 <h2>Twisted beam<a class="headerlink" href="#Twisted-beam" title="Link to this heading">#</a></h2>
 <p>Fig. 6 of [1]: length 12.0, width 1.1, thickness 0.32, twisted by 90 degrees from root to tip, <span class="math notranslate nohighlight">\(E = 29 \times 10^6\)</span>, <span class="math notranslate nohighlight">\(\nu = 0.22\)</span>, a 12 by 2 mesh clamped at the root, with unit forces at the tip. The reference surface is a helicoid, so every quadrilateral is warped, by 7.5 degrees according to [1] (p. 11). At the tip the width lies along <span class="math notranslate nohighlight">\(z\)</span>: the in-plane load is along <span class="math notranslate nohighlight">\(z\)</span> and the out-of-plane load along <span class="math notranslate nohighlight">\(y\)</span>.</p>
-<p>The quadrilaterals of <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code> take their normal from the cross product of the two diagonals and work with the coordinates of the nodes in that frame (<code class="docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code> and <code class="docutils literal notranslate"><span class="pre">update_probe_xe()</span></code>), with no correction for warping; a triangle is flat by construction. The mesh is refined beyond the one of [1] to show the effect.</p>
+<p>The quadrilaterals of <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code> take their normal from the cross product of the two diagonals, and their matrices are those of the projected facet, the flat element whose nodes are the projections of the four nodes onto the mean plane, parallel to both diagonals (<code class="docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code> and <code class="docutils literal notranslate"><span class="pre">update_probe_xe()</span></code>). The nodes lie at the offsets <span class="math notranslate nohighlight">\(\tilde{z}_1 = -\tilde{z}_2 = \tilde{z}_3 = -\tilde{z}_4 = d_w\)</span> above and below the mean plane, and the warping is measured by
+<span class="math notranslate nohighlight">\(d_w/\ell\)</span>, with <span class="math notranslate nohighlight">\(\ell = \sqrt{A_e}\)</span> and <span class="math notranslate nohighlight">\(A_e\)</span> the area of the projected facet. Alone, the projected facet does not represent the rigid rotations of the warped nodes and is too stiff. With the attribute <code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">1</span></code> of <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> and <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>, the default since version 0.12.0, the projected facet is linked to each node by the rigid offset <span class="math notranslate nohighlight">\(\tilde{z}_a\)</span> along the normal: in element coordinates <span class="math notranslate nohighlight">\(u^f_a = u_a - \tilde{z}_a r_{y,a}\)</span> and
+<span class="math notranslate nohighlight">\(v^f_a = v_a + \tilde{z}_a r_{x,a}\)</span>, and the element matrices become <span class="math notranslate nohighlight">\(\boldsymbol{J}^\top \boldsymbol{K}_{C0} \boldsymbol{J}\)</span> (see the Notes of <code class="docutils literal notranslate"><span class="pre">pyfe3d.quad4.Quad4</span></code>). With <code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">0</span></code> the projected facet is used alone, as in the versions up to 0.11. MacNeal [4], one of the two references given for the QUAD4 in Table 6 of [1], corrects the warped element differently: the moment of the in-plane forces transferred over the offsets is balanced by forces normal to the element
+(p. 180), not by nodal moments. A triangle is flat by construction.</p>
+<p>Both settings are run below, <code class="docutils literal notranslate"><span class="pre">twisted_beam()</span></code> returning the tip displacement along the load and <span class="math notranslate nohighlight">\(d_w/\ell\)</span>, which is the same for every element of a mesh of the helicoid. The mesh is refined beyond the one of [1] to show the convergence of the projected facet alone, whose warping decreases with the element size. The tolerances asserted on the mesh of [1] are those of <code class="docutils literal notranslate"><span class="pre">tests/test_quad_warp_offsets.py</span></code>: 0.3 % for <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> and 7.5 % for <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> with offsets; without them both are
+below 35 % of the reference.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
@@ -995,7 +1080,26 @@ out-of-plane      26.828     1.587     1.100     0.760     0.951
 MH_QUAD4_TWISTED = {'in-plane': 0.993, 'out-of-plane': 0.985}     # Table 10 of [1]
 
 
-def twisted_beam(name, load, nx=12, ny=2):
+def warp_ratio(ncoords, quads):
+    # d_w/ell of each quadrilateral: offsets of the nodes from the mean plane
+    # over the square root of the area of the projected facet
+    probe = Quad4Probe()
+    ncf = np.ascontiguousarray(ncoords, dtype=DOUBLE).flatten()
+    out = []
+    for nodes in quads:
+        e = Quad4(probe)
+        for i, n in enumerate(nodes):
+            setattr(e, 'n%d' % (i + 1), n)
+            setattr(e, 'c%d' % (i + 1), DOF*n)
+        e.update_rotation_matrix(ncf)
+        e.update_probe_xe(ncf)
+        e.update_area()
+        z = np.asarray(probe.xe)[2::3]
+        out.append(np.abs(z - z.mean()).max()/np.sqrt(e.area))
+    return np.array(out)
+
+
+def twisted_beam(name, load, nx=12, ny=2, warp_offsets=1):
     L, w = 12., 1.1
     X, S = np.meshgrid(np.linspace(0., L, nx + 1), np.linspace(-w/2, w/2, ny + 1),
                        indexing='ij')
@@ -1004,7 +1108,7 @@ def twisted_beam(name, load, nx=12, ny=2):
                                (S*np.sin(beta)).ravel()))
     ids, quads = grid(nx, ny)
     prop = isotropic_plate(thickness=0.32, E=29.e6, nu=0.22)
-    K, conn, areas = stiffness(ncoords, quads, name, prop)
+    K, conn, areas = stiffness(ncoords, quads, name, prop, warp_offsets)
     N = K.shape[0]
     bk = np.zeros(N, dtype=bool)
     for d in range(DOF):
@@ -1012,19 +1116,33 @@ def twisted_beam(name, load, nx=12, ny=2):
     tip = ids[-1, :]
     comp = 2 if load == 'in-plane' else 1
     u = solve(K, bk, tip_forces(N, tip, comp))
-    return u[DOF*tip + comp].mean()
+    return u[DOF*tip + comp].mean(), warp_ratio(ncoords, quads).max()
 
 
-twisted = {}
-print('normalised tip displacement')
-print('%-9s %-14s' % ('mesh', 'load') + ''.join('%10s' % n for n in ELEMENTS) + '  MH QUAD4')
+COLUMNS = [('Quad4', 1), ('Quad4', 0), ('Quad4R', 1), ('Quad4R', 0),
+           ('Tria3R', 1), ('Tria3DSG', 1)]
+twisted = {}       # default attributes, used in the summary
+twisted_off = {}   # Quad4 and Quad4R with warp_offsets = 0
+print('normalised tip displacement; "w/o" is warp_offsets = 0')
+print('%-9s %7s %-14s' % ('mesh', 'd_w/l', 'load')
+      + ''.join('%11s' % (n if w else n + ' w/o') for n, w in COLUMNS) + '   MH QUAD4')
 for nx, ny in ((12, 2), (48, 4), (192, 8), (768, 16)):
     for load, ref in TWISTED_REF.items():
-        for name in ELEMENTS:
-            twisted[name, nx, load] = twisted_beam(name, load, nx, ny)/ref
-        print('%-9s %-14s' % ('%dx%d' % (nx, ny), load)
-              + ''.join('%10.3f' % twisted[name, nx, load] for name in ELEMENTS)
-              + ('%10.3f' % MH_QUAD4_TWISTED[load] if nx == 12 else ''))
+        row = []
+        for name, w in COLUMNS:
+            u, dw = twisted_beam(name, load, nx, ny, w)
+            (twisted if w else twisted_off)[name, nx, load] = u/ref
+            row.append(u/ref)
+        print('%-9s %7.4f %-14s' % ('%dx%d' % (nx, ny), dw, load)
+              + ''.join('%11.3f' % r for r in row)
+              + ('%11.3f' % MH_QUAD4_TWISTED[load] if nx == 12 else ''))
+
+# mesh of [1], tolerances of tests/test_quad_warp_offsets.py
+for load in TWISTED_REF:
+    assert abs(twisted['Quad4', 12, load] - 1) &lt; 0.004
+    assert abs(twisted['Quad4R', 12, load] - 1) &lt; 0.075
+    assert twisted_off['Quad4', 12, load] &lt; 0.35
+    assert twisted_off['Quad4R', 12, load] &lt; 0.35
 </pre></div>
 </div>
 </div>
@@ -1033,20 +1151,21 @@ for nx, ny in ((12, 2), (48, 4), (192, 8), (768, 16)):
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-normalised tip displacement
-mesh      load               Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
-12x2      in-plane           0.252     0.234     0.910     0.969     0.993
-12x2      out-of-plane       0.332     0.325     0.884     0.817     0.985
-48x4      in-plane           0.659     0.691     0.967     0.994
-48x4      out-of-plane       0.711     0.743     0.965     0.954
-192x8     in-plane           0.899     0.946     0.994     0.998
-192x8     out-of-plane       0.917     0.957     0.994     0.990
-768x16    in-plane           0.973     0.992     0.998     0.999
-768x16    out-of-plane       0.978     0.994     0.998     0.997
+normalised tip displacement; &#34;w/o&#34; is warp_offsets = 0
+mesh        d_w/l load                Quad4  Quad4 w/o     Quad4R Quad4R w/o     Tria3R   Tria3DSG   MH QUAD4
+12x2       0.0243 in-plane            0.996      0.252      0.991      0.235      0.984      0.969      0.993
+12x2       0.0243 out-of-plane        0.997      0.331      0.929      0.325      0.933      0.817      0.985
+48x4       0.0086 in-plane            0.998      0.660      0.998      0.692      0.997      0.994
+48x4       0.0086 out-of-plane        0.998      0.711      0.996      0.743      0.988      0.954
+192x8      0.0030 in-plane            0.999      0.899      0.999      0.946      0.998      0.998
+192x8      0.0030 out-of-plane        0.999      0.917      1.001      0.957      0.997      0.990
+768x16     0.0011 in-plane            0.999      0.973      0.999      0.992      0.999      0.999
+768x16     0.0011 out-of-plane        0.999      0.978      1.000      0.994      0.999      0.997
 </pre></div></div>
 </div>
-<p>On the mesh of [1] the two quadrilaterals are three to four times too stiff, while the QUAD4 of [1] is within 2%. The triangles, which are flat by construction, are within 20%. The error of the quadrilaterals decreases as the warping of each element decreases with the refinement, and all four elements approach the reference of [1] on the finest mesh. MacNeal [4], one of the two references given for the QUAD4 in Table 6 of [1], modifies the matrices of the plane element for warped quadrilaterals;
-nothing equivalent is implemented in the quadrilaterals of <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code>.</p>
+<p>On the mesh of [1], where <span class="math notranslate nohighlight">\(d_w/\ell = 0.024\)</span>, the projected facet alone (<code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">0</span></code>) is three to four times too stiff, at 25 % of the in-plane and 33 % of the out-of-plane reference for <code class="docutils literal notranslate"><span class="pre">Quad4</span></code>, while the QUAD4 of [1] is within 2 %. With the rigid offsets, the default, <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> is within 0.4 % of the reference in both directions, closer than the QUAD4 of [1], and <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> is within 1 % in-plane and 7 % out-of-plane. The remaining error of <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> does not come from the
+warping: its one-point membrane with the hourglass stiffness of Brockman bends stiffly in its plane with one element across the width, see the straight and curved beams above, and it disappears with the refinement, <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> being within 0.4 % on the 48x4 mesh. The triangles, which are flat by construction, are within 20 %, <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> within 7 % thanks to the drilling enrichment of its membrane.</p>
+<p>Without the offsets the error of the quadrilaterals decreases only as the warping of each element decreases with the refinement, and on the finest mesh, <span class="math notranslate nohighlight">\(d_w/\ell = 0.001\)</span>, it is still 2 to 3 % for <code class="docutils literal notranslate"><span class="pre">Quad4</span></code>. With the offsets both quadrilaterals are within 0.4 % from the 48x4 mesh onwards.</p>
 </section>
 <section id="Rectangular-plate">
 <h2>Rectangular plate<a class="headerlink" href="#Rectangular-plate" title="Link to this heading">#</a></h2>
@@ -1118,38 +1237,39 @@ for (support, ratio), ref in PLATE_REF.items():
 <div class="highlight"><pre>
 simple supports, uniform load, b/a = 1, normalised deflection at the centre
 N        Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
-2        1.065     0.781     1.410     0.883     0.981
-4        1.016     0.930     1.069     0.989     1.004
-6        1.007     0.967     0.995     1.009     1.003
-8        1.004     0.981     0.965     1.017     1.002
+2        0.977     0.977     0.883     0.883     0.981
+4        0.995     0.995     0.989     0.989     1.004
+6        0.998     0.998     1.009     1.009     1.003
+8        0.999     0.999     1.017     1.017     1.002
 
 simple supports, uniform load, b/a = 5, normalised deflection at the centre
 N        Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
-2        0.826     0.875     4.583     0.922     1.052
-4        0.978     0.974     1.868     1.115     0.991
-6        0.991     0.988     1.391     1.155     0.997
-8        0.995     0.993     1.225     1.170     0.998
+2        0.971     0.971     0.922     0.922     1.052
+4        0.978     0.978     1.115     1.115     0.991
+6        0.991     0.991     1.155     1.155     0.997
+8        0.995     0.995     1.170     1.170     0.998
 
 clamped supports, central load, b/a = 1, normalised deflection at the centre
 N        Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
-2        0.865     0.533     2.286     0.000     0.934
-4        0.965     0.819     1.401     0.000     1.010
-6        0.985     0.907     1.170     0.002     1.012
-8        0.992     0.944     1.074     0.009     1.010
+2        0.865     0.865     0.000     0.000     0.934
+4        0.965     0.965     0.000     0.000     1.010
+6        0.985     0.985     0.002     0.002     1.012
+8        0.992     0.992     0.009     0.009     1.010
 
 clamped supports, central load, b/a = 5, normalised deflection at the centre
 N        Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
-2        0.318     0.287     8.366     0.000     0.519
-4        0.825     0.666     3.942     0.000     0.863
-6        0.911     0.799     2.591     0.001     0.940
-8        0.946     0.867     1.994     0.003     0.972
+2        0.318     0.318     0.000     0.000     0.519
+4        0.825     0.825     0.000     0.000     0.863
+6        0.911     0.911     0.001     0.001     0.940
+8        0.946     0.946     0.003     0.003     0.972
 
 </pre></div></div>
 </div>
-<p><code class="docutils literal notranslate"><span class="pre">Quad4</span></code> converges in all four cases, more slowly than the QUAD4 of [1] for the clamped plate with <span class="math notranslate nohighlight">\(b/a = 5\)</span>. <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> converges from below, more slowly. The two triangles are the interesting cases at this thickness, <span class="math notranslate nohighlight">\(\ell/t\)</span> between 1250 and 25000:</p>
+<p><code class="docutils literal notranslate"><span class="pre">Quad4</span></code> converges in all four cases, more slowly than the QUAD4 of [1] for the clamped plate with <span class="math notranslate nohighlight">\(b/a = 5\)</span>. <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> converges from below as fast as <code class="docutils literal notranslate"><span class="pre">Quad4</span></code>, with the same results on these rectangular meshes, since the assumed transverse shear strains that <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> takes by default since version 0.12.0 make the out-of-plane stiffness of the two elements equal on a rectangle; with the one-point transverse shear of <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code>, <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> gave 1.065 and 0.826 under the uniform
+load with <span class="math notranslate nohighlight">\(N = 2\)</span>, for <span class="math notranslate nohighlight">\(b/a = 1\)</span> and <span class="math notranslate nohighlight">\(5\)</span>. Up to version 0.11, with Brockman’s hourglass stiffnesses of the rotations, <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> converged more slowly. The two triangles are the interesting cases at this thickness, <span class="math notranslate nohighlight">\(\ell/t\)</span> between 1250 and 25000:</p>
 <ul class="simple">
-<li><p><code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> is too flexible on the coarse meshes, up to eight times on the elongated elements of <span class="math notranslate nohighlight">\(b/a = 5\)</span>, and is not converged at <span class="math notranslate nohighlight">\(N = 8\)</span>. This is the transverse shear stiffness divided by <span class="math notranslate nohighlight">\(1 + \alpha \ell^2/t^2\)</span> with the default <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span> <span class="pre">=</span> <span class="pre">0.7</span></code>, whose error behaves as <span class="math notranslate nohighlight">\(O(1/N^2)\)</span> (Notes of <code class="docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>).</p></li>
-<li><p><code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> locks with clamped supports and the central load, at less than 1% of the reference up to <span class="math notranslate nohighlight">\(N = 8\)</span>, and with simple supports and the uniform load it is too flexible on the elongated elements of <span class="math notranslate nohighlight">\(b/a = 5\)</span>, by 17% at <span class="math notranslate nohighlight">\(N = 8\)</span>. Both converge under further refinement, computed below, but slowly.</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code>, and <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code>, which takes the same transverse shear field by default since version 0.12.0 and gives the same results on a flat plate in bending, lock with clamped supports and the central load, at less than 1% of the reference up to <span class="math notranslate nohighlight">\(N = 8\)</span>, and with simple supports and the uniform load they are too flexible on the elongated elements of <span class="math notranslate nohighlight">\(b/a = 5\)</span>, by 17% at <span class="math notranslate nohighlight">\(N = 8\)</span>. Both cases converge under further refinement, computed below, but slowly.</p></li>
+<li><p>With its centroid-sampled transverse shear of the versions up to 0.11 (<code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code> with <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span> <span class="pre">=</span> <span class="pre">0.7</span></code>), <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> was too flexible on these coarse meshes, up to eight times on the elongated elements of <span class="math notranslate nohighlight">\(b/a = 5\)</span>, and does not converge on thin plates (Notes of <code class="docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>).</p></li>
 </ul>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
@@ -1262,22 +1382,24 @@ grading of the QUAD4 results of [1] reproduces their Table 16: PASS
 
 test                                             Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
 (1) Patch test, membrane                             A         A         A         A         A
-(2) Patch test, bending                              F         F         D         A         A
+(2) Patch test, bending                              A         A         A         A         A
 (3) Straight beam, extension                         A         A         A         A         A
 (4) Straight beam, in-plane, regular                 B         F         F         F         B
 (5) Straight beam, in-plane, irregular               D         F         F         F         F
-(6) Straight beam, out-of-plane, regular             A         B         C         B         A
-(7) Straight beam, out-of-plane, irregular           A         D         D         B         B
-(8) Straight beam, twist                             F         F         F         D         B
+(6) Straight beam, out-of-plane, regular             A         A         B         B         A
+(7) Straight beam, out-of-plane, irregular           B         B         B         B         B
+(8) Straight beam, twist                             C         B         D         D         B
 (9) Curved beam, in-plane                            B         F         F         F         C
-(10) Curved beam, out-of-plane                       F         F         B         D         B
-(11) Twisted beam                                    F         F         C         C         A
-(12) Rectangular plate (N = 4)                       B         C         F         F         B
-failed tests (D and F)                               5         8         7         6         1
+(10) Curved beam, out-of-plane                       B         B         D         D         B
+(11) Twisted beam                                    A         B         B         C         A
+(12) Rectangular plate (N = 4)                       B         B         F         F         B
+failed tests (D and F)                               1         3         6         6         1
 </pre></div></div>
 </div>
-<p>With their default attributes, the four elements of <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code> fail between five and eight of these twelve tests, against one for the QUAD4 of [1]. The failures of <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> are the bending patch test, the in-plane bending of the distorted straight beam (D, where the QUAD4 of [1] gets an F), the two tests that twist a strip one element wide, and the warped elements of the twisted beam. <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> and the two triangles lock in in-plane bending on these one-element-deep meshes, and <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> is
-the only element that passes both patch tests. Several failures are confined to the coarse meshes that [1] prescribes on purpose: the refinements above show the twisted beam converging for every element and the locked plates of <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> recovering.</p>
+<p>With their default attributes, the four elements of <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code> fail between one and six of these twelve tests, against one for the QUAD4 of [1]; <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> failed seven with the centroid-sampled transverse shear of the versions up to 0.11. <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> fails three tests since version 0.12.0, against eight up to version 0.11: the in-plane bending of the straight and curved beams. The only failure of <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> since version 0.12.0 is the in-plane bending of the distorted straight beam (D, where the
+QUAD4 of [1] gets an F); with the one-point transverse shear of <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code> it also failed the bending patch test and the two tests that twist a strip one element wide, four failures, and got an A instead of a B for the out-of-plane shear of the distorted straight beam. With the rigid offsets of the warped quadrilaterals, the default since version 0.12.0, the twisted beam gets an A with <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> and a B with <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>; with <code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">0</span></code>, the projected facet alone, both get an
+F. <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> and the two triangles lock in in-plane bending on these one-element-deep meshes, and the four elements pass both patch tests. With the same transverse shear field, <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> differs from <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> by the drilling enrichment of its membrane, which gives it the better grades on the twisted beam and is one of the reasons it is the recommended triangle of <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code>. Several failures are confined to the coarse meshes that [1] prescribes on purpose: the refinements above show the
+twisted beam converging for every element, also without the offsets, and the locked plates of the triangles recovering.</p>
 <p>The Scordelis-Lo roof and the spherical shell of [1] are run, with Tables 13 and 14 of [1], in the notebook of the shell obstacle course.</p>
 </section>
 <section id="References">

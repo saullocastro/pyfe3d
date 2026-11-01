@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>BeamLR - Linear Timoshenko 3D beam element with reduced integration (pyfe3d.beamlr) &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>BeamLR - Linear Timoshenko 3D beam element with reduced integration (pyfe3d.beamlr) &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
@@ -37,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -120,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -137,6 +138,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -161,13 +169,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -176,6 +177,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -364,6 +393,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -380,6 +416,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -584,11 +641,36 @@
 
 <li class="toctree-l2"><a class="reference internal" href="beamprop.html">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
 
+<li class="toctree-l2"><a class="reference internal" href="vabs.html">Variational asymptotic sectional analysis (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.vabs</span></code>)</a></li>
+
+
+
+
+
+
+
+
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html">Co-rotational kinematics, EICR (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
 <li class="toctree-l1"><a class="reference internal" href="solver.html">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_static.html">Linear static solution (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code>)</a></li>
 
+
+<li class="toctree-l1"><a class="reference internal" href="solver_inertia_relief.html">Static analysis with inertia relief (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.inertia_relief</span></code>)</a></li>
 
 <li class="toctree-l1"><a class="reference internal" href="solver_analysis.html">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</a></li>
 
@@ -640,6 +722,7 @@
 
 
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html">Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code>)</a></li>
+
 
 
 
@@ -842,19 +925,28 @@ functions by linear functions and performing numerical integration with
 just 1 point at the beam center.</p>
 <p>The displacements of the cross section, the strains and the linear
 strain energy are those given in the notes of <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>, with the
-transverse shear moduli <code class="docutils literal notranslate"><span class="pre">G12</span></code> and <code class="docutils literal notranslate"><span class="pre">G13</span></code> of the planes <span class="math notranslate nohighlight">\(xy\)</span> and <span class="math notranslate nohighlight">\(xz\)</span>
-and the torsional stiffness <code class="docutils literal notranslate"><span class="pre">GJ</span></code> of <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>. The six
-displacements <span class="math notranslate nohighlight">\(u, v, w, r_x, r_y, r_z\)</span> of the beam axis are interpolated
-linearly between the two nodes, such that the axial strain <span class="math notranslate nohighlight">\(u_{,x}\)</span>, the
-curvatures <span class="math notranslate nohighlight">\(\kappa_y = -{r_z}_{,x}\)</span>, <span class="math notranslate nohighlight">\(\kappa_z = {r_y}_{,x}\)</span> and the
-twist <span class="math notranslate nohighlight">\({r_x}_{,x}\)</span> are constant along the element and integrated
-exactly. The terms of the transverse shear strains <span class="math notranslate nohighlight">\(\gamma_{xy} = v_{,x}
-- r_z\)</span> and <span class="math notranslate nohighlight">\(\gamma_{xz} = w_{,x} + r_y\)</span>, including their coupling with
-the twist through <code class="docutils literal notranslate"><span class="pre">Ay</span></code> and <code class="docutils literal notranslate"><span class="pre">Az</span></code>, are evaluated at the center of the
-element, i.e. with a reduced one-point integration, which avoids the
-shear locking of the linear interpolation in slender elements. Since the
-curvature is constant in each element, more elements are needed than
-with <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> for the same accuracy in bending.</p>
+sectional stiffness matrix <code class="docutils literal notranslate"><span class="pre">C</span></code> of <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>, which is built
+from the transverse shear moduli <code class="docutils literal notranslate"><span class="pre">G12</span></code> and <code class="docutils literal notranslate"><span class="pre">G13</span></code> of the planes <span class="math notranslate nohighlight">\(xy\)</span>
+and <span class="math notranslate nohighlight">\(xz\)</span>, the torsional stiffness <code class="docutils literal notranslate"><span class="pre">GJ</span></code> and the other attributes when
+it is not set; it must be positive semi-definite, see
+<a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>. The six displacements <span class="math notranslate nohighlight">\(u, v, w, r_x, r_y, r_z\)</span> of the
+beam axis are interpolated linearly between the two nodes, such that
+the axial strain <span class="math notranslate nohighlight">\(u_{,x}\)</span>, the curvatures <span class="math notranslate nohighlight">\(\kappa_y = -{r_z}_{,x}\)</span>,
+<span class="math notranslate nohighlight">\(\kappa_z = {r_y}_{,x}\)</span> and the twist <span class="math notranslate nohighlight">\({r_x}_{,x}\)</span> are constant along
+the element, while the transverse shear strains <span class="math notranslate nohighlight">\(\gamma_{xy} = v_{,x} -
+r_z\)</span> and <span class="math notranslate nohighlight">\(\gamma_{xz} = w_{,x} + r_y\)</span> are linear. The strain energy is
+evaluated at the center of the element, i.e. with a reduced one-point
+integration, <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0} = L \boldsymbol{B}_L^\top
+\boldsymbol{C} \boldsymbol{B}_L\)</span> with the strain-displacement matrix
+<span class="math notranslate nohighlight">\(\boldsymbol{B}_L\)</span> at the center, which is exact for the terms of the
+constant strains and avoids the shear locking of the linear
+interpolation in slender elements. The interpolation does not depend on
+<code class="docutils literal notranslate"><span class="pre">C</span></code>, and every coupling of <code class="docutils literal notranslate"><span class="pre">C</span></code>, e.g. the bending-shear couplings of
+a composite section, is represented with the same convergence as the
+square of the element length as an uncoupled section, see the notes of
+<a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> and <code class="docutils literal notranslate"><span class="pre">tests/test_beam_sectional_stiffness.py</span></code>. Since
+the curvature is constant in each element, more elements are needed
+than with <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> for the same accuracy in bending.</p>
 <p>The element does not use the shear parameters <span class="math notranslate nohighlight">\(\alpha_y\)</span>, <span class="math notranslate nohighlight">\(\alpha_z\)</span> of
 <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>, and is therefore an independent check of their sign:
 in <code class="docutils literal notranslate"><span class="pre">tests/test_timoshenko_beam_literature.py</span></code> refined meshes of
@@ -863,6 +955,33 @@ L^3/(3 E I_{zz}) + P L/(G A)\)</span>, Eq. (1.2) of <a class="reference internal
 <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>, and to the same exact frequencies of a deep cantilever,
 Table 3.6 of <a class="reference internal" href="#r81ce1a677b5a-3" id="id3">[3]</a>; in <code class="docutils literal notranslate"><span class="pre">tests/test_beam_shear_moduli.py</span></code> they do so in
 each plane with its own modulus when <code class="docutils literal notranslate"><span class="pre">G12</span></code> and <code class="docutils literal notranslate"><span class="pre">G13</span></code> differ.</p>
+<p>The geometric stiffness matrix of <a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_KG" title="pyfe3d.beamlr.BeamLR.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG()</span></code></a>, the nonlinear
+matrix of <a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_KCNL" title="pyfe3d.beamlr.BeamLR.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a> and the nonlinear internal forces of
+<a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_probe_finte" title="pyfe3d.beamlr.BeamLR.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_finte()</span></code></a> come from the von Kármán axial strain
+<span class="math notranslate nohighlight">\(\epsilon_{xx} = u_{,x} + (v_{,x}^2 + w_{,x}^2)/2\)</span>, whose slopes
+<span class="math notranslate nohighlight">\(v_{,x}\)</span> and <span class="math notranslate nohighlight">\(w_{,x}\)</span> are taken, since version 0.12.0, from the linear
+interpolations of <span class="math notranslate nohighlight">\(v\)</span> and <span class="math notranslate nohighlight">\(w\)</span>, as the axial strain requires and as in
+<a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>. They are constant along the element, and the geometric
+stiffness matrix is that of a string, <span class="math notranslate nohighlight">\(N/L\)</span> times <code class="docutils literal notranslate"><span class="pre">[[1,</span> <span class="pre">-1],</span> <span class="pre">[-1,</span>
+<span class="pre">1]]</span></code> for <span class="math notranslate nohighlight">\(v\)</span> and for <span class="math notranslate nohighlight">\(w\)</span>. Up to version 0.11 the slopes were taken from
+the rotations, <span class="math notranslate nohighlight">\(v_{,x} = r_z\)</span> and <span class="math notranslate nohighlight">\(w_{,x} = -r_y\)</span>, which holds only
+without shear deformation: the buckling mode could then deflect with
+vanishing shear strains, and the buckling load converged to the Euler
+load <span class="math notranslate nohighlight">\(P_e\)</span> whatever the shear stiffness <span class="math notranslate nohighlight">\(\kappa G A\)</span>, instead of <span class="math notranslate nohighlight">\(P_e/(1
++ P_e/(\kappa G A))\)</span>, Eq. (2-57) of <a class="reference internal" href="#r81ce1a677b5a-4" id="id4">[4]</a>. For a clamped-free column with
+<span class="math notranslate nohighlight">\(P_e/(\kappa G A)\)</span> = 0.0002, 0.018, 0.18 and 0.59, <span class="math notranslate nohighlight">\(P_{cr}/P_e\)</span> was
+1.0000 with 100 and with 800 elements, against 0.9998, 0.9825, 0.8488
+and 0.6274 from Eq. (2-57), i.e. 0.02 % to 59 % unconservative. It is
+now 0.9998, 0.9825, 0.8488 and 0.6274 with 160 elements, converging to
+Eq. (2-57) as the square of the element length, see
+<code class="docutils literal notranslate"><span class="pre">tests/test_beam_linear_buckling_3D_column.py</span></code>. For slender columns
+the discretization error is about twice that of the former matrix: for
+<span class="math notranslate nohighlight">\(P_e/(\kappa G A) = 0.0002\)</span>, the load is 4.1e-3 and 1.0e-3 above Eq.
+(2-57) with 10 and 20 elements, where it was 2.1e-3 and 5.1e-4 above
+<span class="math notranslate nohighlight">\(P_e\)</span>. With constant slopes the axial strain <span class="math notranslate nohighlight">\(u_{,x} + w_{,x}^2/2\)</span> can
+vanish in each element, so BeamLR is free of membrane locking; BeamC
+avoids it with the element-averaged axial strain described in its
+notes, see <code class="docutils literal notranslate"><span class="pre">tests/test_nonlinear_benchmarks_sze2004.py</span></code>.</p>
 <p>The matrices and the internal forces are computed in element
 coordinates and transformed to global coordinates with the rotation
 matrix of the element, as described in the notes of <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>.</p>
@@ -885,6 +1004,11 @@ Eq. (1.2), Fig. 1.2(b).</p>
 <p>Petyt, M., 2010, Introduction to Finite Element Vibration
 Analysis, 2nd ed., Cambridge University Press, Section 3.9.
 <a class="reference external" href="https://doi.org/10.1017/CBO9780511761195">https://doi.org/10.1017/CBO9780511761195</a></p>
+</div>
+<div class="citation" id="r81ce1a677b5a-4" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id4">4</a><span class="fn-bracket">]</span></span>
+<p>Timoshenko, S. P., Gere, J. M., 1961, Theory of Elastic
+Stability, 2nd ed., McGraw-Hill, Section 2.17, p. 133, Eq. (2-57).</p>
 </div>
 </div>
 <dl class="py attribute">
@@ -1022,9 +1146,8 @@ are written at the positions <code class="docutils literal notranslate"><span cl
 the row and column indices, built from <code class="docutils literal notranslate"><span class="pre">c1</span></code> and <code class="docutils literal notranslate"><span class="pre">c2</span></code>, are stored
 in <code class="docutils literal notranslate"><span class="pre">KC0r</span></code> and <code class="docutils literal notranslate"><span class="pre">KC0c</span></code>, and the values are added to those already
 in <code class="docutils literal notranslate"><span class="pre">KC0v</span></code>. The matrix is computed from <code class="docutils literal notranslate"><span class="pre">length</span></code>, the rotation
-matrix and the attributes <code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">E</span></code>, <code class="docutils literal notranslate"><span class="pre">G12</span></code>, <code class="docutils literal notranslate"><span class="pre">G13</span></code>, <code class="docutils literal notranslate"><span class="pre">GJ</span></code>,
-<code class="docutils literal notranslate"><span class="pre">Ay</span></code>, <code class="docutils literal notranslate"><span class="pre">Az</span></code>, <code class="docutils literal notranslate"><span class="pre">Iyy</span></code>, <code class="docutils literal notranslate"><span class="pre">Izz</span></code> and <code class="docutils literal notranslate"><span class="pre">Iyz</span></code> of <code class="docutils literal notranslate"><span class="pre">prop</span></code>. <code class="docutils literal notranslate"><span class="pre">length</span></code>
-and the
+matrix and the sectional stiffness matrix <code class="docutils literal notranslate"><span class="pre">C</span></code> of <code class="docutils literal notranslate"><span class="pre">prop</span></code>, see
+<a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>. <code class="docutils literal notranslate"><span class="pre">length</span></code> and the
 rotation matrix must be updated before, see
 <a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_rotation_matrix" title="pyfe3d.beamlr.BeamLR.update_rotation_matrix"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_rotation_matrix()</span></code></a> and <a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_probe_xe" title="pyfe3d.beamlr.BeamLR.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a>.</p>
 <dl class="field-list">
@@ -1101,20 +1224,30 @@ stiffness matrix values <code class="docutils literal notranslate"><span class="
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, that is <span class="math notranslate nohighlight">\(\boldsymbol{K}_{CNL} + \boldsymbol{K}_{GNL}\)</span>, the book’s nonlinear constitutive stiffness matrix <span class="math notranslate nohighlight">\(\boldsymbol{K}_{CNL}\)</span> of the terms of <span class="math notranslate nohighlight">\(\boldsymbol{B}_{NL}\)</span> plus the geometric <span class="math notranslate nohighlight">\(\boldsymbol{K}_{GNL}\)</span>, built from the von Karman
+<p>KCNL = KC0L + KCL0 + KCLL + KGNL, that is <span class="math notranslate nohighlight">\(\boldsymbol{K}_{CNL} +
+\boldsymbol{K}_{GNL}\)</span>: the nonlinear constitutive stiffness matrix
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_{CNL}\)</span>, the terms of <span class="math notranslate nohighlight">\(\int_0^L (\boldsymbol{B}_L +
+\boldsymbol{B}_{NL})^\top \boldsymbol{C}_{sec} (\boldsymbol{B}_L +
+\boldsymbol{B}_{NL}) dx\)</span> that contain <span class="math notranslate nohighlight">\(\boldsymbol{B}_{NL}\)</span>, plus the
+geometric stiffness matrix <span class="math notranslate nohighlight">\(\boldsymbol{K}_{GNL}\)</span> of the axial force
+of the nonlinear axial strain. Crisfield <a class="reference internal" href="#rf3aeff57616d-1" id="id9">[1]</a>, Section 7.1.1, Eq.
+(7.24), keeps that axial force in the initial-stress matrix instead,
+whose axial force is the total one of Eq. (7.18), that is
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_G + \boldsymbol{K}_{GNL}\)</span>; the tangent stiffness
+matrix is the same. The matrices are built from the von Kármán
 axial strain</p>
 <div class="math notranslate nohighlight">
 \[\epsilon_{xx} = u_{,x} + \frac{1}{2} \left( v_{,x}^2 + w_{,x}^2 \right)\]</div>
 <p>whose nonlinear part is <span class="math notranslate nohighlight">\(\epsilon_{NL} = \frac{1}{2} \boldsymbol{B}_{NL} \boldsymbol{u}_e\)</span>, with
-<span class="math notranslate nohighlight">\(\boldsymbol{B}_{NL} = v_{,x} \boldsymbol{S}^{r_z} - w_{,x} \boldsymbol{S}^{r_y}\)</span> its variation, where the slopes are taken from the rotations as <span class="math notranslate nohighlight">\(v_{,x} = r_z\)</span> and <span class="math notranslate nohighlight">\(w_{,x} = -r_y\)</span>, <span class="math notranslate nohighlight">\(\boldsymbol{S}^{r_z}\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{S}^{r_y}\)</span> being the linear interpolations of the rotations. With
+<span class="math notranslate nohighlight">\(\boldsymbol{B}_{NL} = v_{,x} \frac{\partial \boldsymbol{S}^v}{\partial x} + w_{,x} \frac{\partial \boldsymbol{S}^w}{\partial x}\)</span> its variation, <span class="math notranslate nohighlight">\(\boldsymbol{S}^v\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{S}^w\)</span> being the linear interpolations of <span class="math notranslate nohighlight">\(v\)</span> and <span class="math notranslate nohighlight">\(w\)</span>, whose derivatives, the rows <code class="docutils literal notranslate"><span class="pre">Sv_x</span></code> and <code class="docutils literal notranslate"><span class="pre">Sw_x</span></code> of <code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_probe_BL_G()</span></code>, are constant along the element. Up to version 0.11 the slopes were taken from the rotations, <span class="math notranslate nohighlight">\(v_{,x} = r_z\)</span> and <span class="math notranslate nohighlight">\(w_{,x} = -r_y\)</span>, see the notes of <a class="reference internal" href="#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a>. With
 <span class="math notranslate nohighlight">\(\boldsymbol{B}_L\)</span> the linear strain-displacement matrix, <span class="math notranslate nohighlight">\(\boldsymbol{C}_{sec}\)</span> the sectional
-constitutive matrix, whose first column couples the axial strain with <span class="math notranslate nohighlight">\(E A\)</span>, <span class="math notranslate nohighlight">\(E A_y\)</span>
-and <span class="math notranslate nohighlight">\(E A_z\)</span>, and <span class="math notranslate nohighlight">\(N_{NL} = E A \epsilon_{NL}\)</span>:</p>
+stiffness matrix <code class="docutils literal notranslate"><span class="pre">C</span></code> of <a class="reference internal" href="beamprop.html#pyfe3d.beamprop.BeamProp" title="pyfe3d.beamprop.BeamProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamProp</span></code></a>, whose first row couples the axial strain with
+the other strains, e.g. through <span class="math notranslate nohighlight">\(E A_y\)</span> and <span class="math notranslate nohighlight">\(E A_z\)</span>, and <span class="math notranslate nohighlight">\(N_{NL} = C_{00} \epsilon_{NL}\)</span>, <span class="math notranslate nohighlight">\(C_{00} = E A\)</span> when <code class="docutils literal notranslate"><span class="pre">C</span></code> is not set:</p>
 <ul class="simple">
 <li><p>KC0L = <span class="math notranslate nohighlight">\(\boldsymbol{B}_L^\top \boldsymbol{C}_{sec} \boldsymbol{B}_{NL}\)</span></p></li>
 <li><p>KCL0 = KC0L`^top`</p></li>
 <li><p>KCLL = <span class="math notranslate nohighlight">\(\boldsymbol{B}_{NL}^\top \boldsymbol{C}_{sec} \boldsymbol{B}_{NL}\)</span></p></li>
-<li><p>KGNL = <span class="math notranslate nohighlight">\(N_{NL} \left( (\boldsymbol{S}^{r_z})^\top \boldsymbol{S}^{r_z} + (\boldsymbol{S}^{r_y})^\top \boldsymbol{S}^{r_y} \right)\)</span></p></li>
+<li><p>KGNL = <span class="math notranslate nohighlight">\(N_{NL} \left( \frac{\partial \boldsymbol{S}^v}{\partial x}^\top \frac{\partial \boldsymbol{S}^v}{\partial x} + \frac{\partial \boldsymbol{S}^w}{\partial x}^\top \frac{\partial \boldsymbol{S}^w}{\partial x} \right)\)</span></p></li>
 </ul>
 <p>The first three groups are the constitutive terms coupling the linear and
 the nonlinear parts of the axial strain. KGNL is geometric, carrying the
@@ -1126,13 +1259,21 @@ which is what a linear buckling analysis needs. With it here,</p>
 <p>is the exact Jacobian of the internal forces of <a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_fint" title="pyfe3d.beamlr.BeamLR.update_fint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_fint()</span></code></a> with
 <code class="docutils literal notranslate"><span class="pre">nonlinear=1</span></code>, and a Newton-Raphson iteration built on them converges
 quadratically.</p>
-<p>The integration is made by <code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_probe_KCNLve()</span></code> with the
-3-point Gauss-Legendre quadrature, exact for the linear shape
-functions. The von Karman axial strain is valid for small strains and
+<p>The integration is made by <code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_probe_KCNLve()</span></code>, exactly,
+since the integrands are constant along the element. The von Kármán axial strain is valid for small strains and
 moderate rotations: the nonlinear axial strain <span class="math notranslate nohighlight">\(\epsilon_{NL}\)</span> is
 uniform over the cross section, the curvatures and the transverse
 shear strains are linear in the displacements, and the element
 coordinate system is not updated with the displacements.</p>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="rf3aeff57616d-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id9">1</a><span class="fn-bracket">]</span></span>
+<p>Crisfield, M. A., Non-linear Finite Element Analysis of Solids
+and Structures, Volume 1: Essentials, John Wiley &amp; Sons,
+Chichester, 1991.</p>
+</div>
+</div>
 </dd></dl>
 
 <dl class="py method">
@@ -1144,11 +1285,13 @@ are written at the positions <code class="docutils literal notranslate"><span cl
 the row and column indices, built from <code class="docutils literal notranslate"><span class="pre">c1</span></code> and <code class="docutils literal notranslate"><span class="pre">c2</span></code>, are stored
 in <code class="docutils literal notranslate"><span class="pre">KGr</span></code> and <code class="docutils literal notranslate"><span class="pre">KGc</span></code>, and the values are added to those already in
 <code class="docutils literal notranslate"><span class="pre">KGv</span></code>. The matrix depends on the axial force computed from the
-displacements <code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>, from <code class="docutils literal notranslate"><span class="pre">length</span></code> and from the attributes
-<code class="docutils literal notranslate"><span class="pre">A</span></code>, <code class="docutils literal notranslate"><span class="pre">E</span></code>, <code class="docutils literal notranslate"><span class="pre">Ay</span></code> and <code class="docutils literal notranslate"><span class="pre">Az</span></code> of <code class="docutils literal notranslate"><span class="pre">prop</span></code>. <code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>,
-<code class="docutils literal notranslate"><span class="pre">length</span></code> and the rotation matrix must be updated before, see
+displacements <code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>, from <code class="docutils literal notranslate"><span class="pre">length</span></code> and from the first row
+<code class="docutils literal notranslate"><span class="pre">C[0,</span> <span class="pre">:]</span></code> of the sectional stiffness matrix of <code class="docutils literal notranslate"><span class="pre">prop</span></code>.
+<code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>, <code class="docutils literal notranslate"><span class="pre">length</span></code> and the rotation matrix must be updated
+before, see
 <a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_probe_ue" title="pyfe3d.beamlr.BeamLR.update_probe_ue"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_ue()</span></code></a> and <a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_probe_xe" title="pyfe3d.beamlr.BeamLR.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a>. The rows and
-columns of the entries are those of the rotations of the two nodes.</p>
+columns of the entries are those of the translations of the two
+nodes; up to version 0.11 they were those of the rotations.</p>
 <dl class="field-list">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><dl>
@@ -1175,15 +1318,24 @@ stiffness matrix values <code class="docutils literal notranslate"><span class="
 <p class="rubric">Notes</p>
 <p>The geometric stiffness matrix is</p>
 <div class="math notranslate nohighlight">
-\[\boldsymbol{K}_G = \int_0^L N \left[ (\boldsymbol{S}^{r_z})^\top \boldsymbol{S}^{r_z} + (\boldsymbol{S}^{r_y})^\top \boldsymbol{S}^{r_y} \right] dx\]</div>
+\[\boldsymbol{K}_G = \int_0^L N \left( \frac{\partial \boldsymbol{S}^v}{\partial x}^\top \frac{\partial \boldsymbol{S}^v}{\partial x} + \frac{\partial \boldsymbol{S}^w}{\partial x}^\top \frac{\partial \boldsymbol{S}^w}{\partial x} \right) dx\]</div>
 <p>the Hessian of <span class="math notranslate nohighlight">\(\frac{1}{2} \int_0^L N (v_{,x}^2 + w_{,x}^2) dx\)</span> at a
-constant axial force <span class="math notranslate nohighlight">\(N\)</span>, where the slopes are taken from the
-rotations, <span class="math notranslate nohighlight">\(v_{,x} = r_z\)</span> and <span class="math notranslate nohighlight">\(w_{,x} = -r_y\)</span>, interpolated linearly,
-see <code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_probe_BL_G()</span></code>, and <span class="math notranslate nohighlight">\(N = E (A u_{,x} + A_y \kappa_y
-+ A_z \kappa_z)\)</span> is the axial force of the linear strains at
-<code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>, constant along the element, see the notes of
-<a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>. The integral is computed exactly, hence the matrix
-involves only the rotations.</p>
+constant axial force <span class="math notranslate nohighlight">\(N\)</span>, where the slopes are those of the linear
+interpolations <span class="math notranslate nohighlight">\(\boldsymbol{S}^v\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{S}^w\)</span> of <span class="math notranslate nohighlight">\(v\)</span> and
+<span class="math notranslate nohighlight">\(w\)</span>, see <code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_probe_BL_G()</span></code>, and <span class="math notranslate nohighlight">\(N =
+\boldsymbol{C}_{0,:} \boldsymbol{\epsilon}\)</span> is the axial force of the
+linear strains at <code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>, at the center of the element, where
+<a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_KC0" title="pyfe3d.beamlr.BeamLR.update_KC0"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KC0()</span></code></a> evaluates the strain energy, see the notes of
+<a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a>; when <code class="docutils literal notranslate"><span class="pre">C</span></code> is not set, <span class="math notranslate nohighlight">\(N = E (A u_{,x} + A_y
+\kappa_y + A_z \kappa_z)\)</span>, constant along the element. <span class="math notranslate nohighlight">\(N\)</span> is also
+the axial force of the nodal internal forces, <code class="docutils literal notranslate"><span class="pre">-finte[0]</span> <span class="pre">=</span>
+<span class="pre">finte[6]</span></code>. In element coordinates the matrix is <span class="math notranslate nohighlight">\(N/L\)</span> times
+<code class="docutils literal notranslate"><span class="pre">[[1,</span> <span class="pre">-1],</span> <span class="pre">[-1,</span> <span class="pre">1]]</span></code> for the <span class="math notranslate nohighlight">\(v\)</span> and for the <span class="math notranslate nohighlight">\(w\)</span> of the two nodes.</p>
+<p>The slopes are those that enter the axial strain: up to version 0.11
+they were taken from the rotations, <span class="math notranslate nohighlight">\(v_{,x} = r_z\)</span> and <span class="math notranslate nohighlight">\(w_{,x} =
+-r_y\)</span>, which neglects the shear deformation in buckling, so that the
+buckling load converged to the Euler load instead of Eq. (2-57) of
+Timoshenko and Gere (1961), see the notes of <a class="reference internal" href="#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a>.</p>
 <p><span class="math notranslate nohighlight">\(\boldsymbol{K}_G\)</span> is homogeneous of degree one in <code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>. With <code class="docutils literal notranslate"><span class="pre">probe.ue</span></code>
 from the linear static solution of a reference load, the critical
 load multipliers <span class="math notranslate nohighlight">\(\lambda\)</span> of the linear buckling analysis solve
@@ -1260,24 +1412,24 @@ m_{yy}/2\)</span> for <span class="math notranslate nohighlight">\(r_z\)</span>.
 quadrature of <span class="math notranslate nohighlight">\(T\)</span>, whose points are the nodes, without the coupling
 terms of <span class="math notranslate nohighlight">\(m_y\)</span>, <span class="math notranslate nohighlight">\(m_z\)</span> and <span class="math notranslate nohighlight">\(m_{yz}\)</span>, which are not included.</p>
 <p>The lumped mass matrix follows the lumped mass matrix by Lobatto
-integration of Brockman (1987) <a class="reference internal" href="#r14e0a99280d3-1" id="id7">[1]</a>, p. 2348, adapted to the beam:
+integration of Brockman (1987) <a class="reference internal" href="#r14e0a99280d3-1" id="id11">[1]</a>, p. 2348, adapted to the beam:
 the two-point Gauss-Lobatto quadrature of <span class="math notranslate nohighlight">\(T\)</span>, whose points are the
 nodes, gives a diagonal matrix only without the first moments of the
 density, which are therefore dropped. The consistent mass matrix is
-the integral of Petyt (2010) <a class="reference internal" href="#r14e0a99280d3-2" id="id8">[2]</a>, Sec. 3.3, Eqs. (3.58) and (3.59),
+the integral of Petyt (2010) <a class="reference internal" href="#r14e0a99280d3-2" id="id12">[2]</a>, Sec. 3.3, Eqs. (3.58) and (3.59),
 for each linearly interpolated field, e.g. <span class="math notranslate nohighlight">\(L m/6\)</span> times <span class="math notranslate nohighlight">\([2, 1; 1,
 2]\)</span> for each translation, and Sec. 3.4, Eq. (3.102), with <span class="math notranslate nohighlight">\(m_{yy} +
 m_{zz}\)</span> in place of <span class="math notranslate nohighlight">\(\rho I_x\)</span>, for the twist <span class="math notranslate nohighlight">\(r_x\)</span>.</p>
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="r14e0a99280d3-1" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id7">1</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id11">1</a><span class="fn-bracket">]</span></span>
 <p>Brockman, R. A., 1987, “Dynamics of the Bilinear Mindlin Plate
 Element,” Int. J. Numer. Methods Eng., 24(12), pp. 2343–2356.
 <a class="reference external" href="https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208">https://onlinelibrary.wiley.com/doi/pdf/10.1002/nme.1620241208</a></p>
 </div>
 <div class="citation" id="r14e0a99280d3-2" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id8">2</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id12">2</a><span class="fn-bracket">]</span></span>
 <p>Petyt, M., 2010, Introduction to Finite Element Vibration
 Analysis, 2nd ed., Cambridge University Press, Cambridge.
 <a class="reference external" href="https://doi.org/10.1017/CBO9780511761195">https://doi.org/10.1017/CBO9780511761195</a></p>
@@ -1316,7 +1468,7 @@ stiffness matrix of the internal forces is <code class="docutils literal notrans
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>The nonlinear terms are those of the von Karman strains, for which the
+<p>The nonlinear terms are those of the von Kármán strains, for which the
 exact Jacobian of the internal forces is <code class="docutils literal notranslate"><span class="pre">KC0</span> <span class="pre">+</span> <span class="pre">KCNL</span> <span class="pre">+</span> <span class="pre">KG</span></code>, see
 <a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_probe_finte" title="pyfe3d.beamlr.BeamLR.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_finte()</span></code></a> and <a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_KCNL" title="pyfe3d.beamlr.BeamLR.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>.</p>
 </dd></dl>
@@ -1365,9 +1517,9 @@ stiffness matrix of the internal forces is <code class="docutils literal notrans
 <p class="rubric">Notes</p>
 <p>The linear internal forces are <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0_e} \boldsymbol{u}_e\)</span>, with the matrix
 <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0_e}\)</span> of <a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_KC0" title="pyfe3d.beamlr.BeamLR.update_KC0"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KC0()</span></code></a> in element coordinates. With
-<code class="docutils literal notranslate"><span class="pre">nonlinear</span></code> different from <code class="docutils literal notranslate"><span class="pre">0</span></code>, the terms of the von Karman strains
+<code class="docutils literal notranslate"><span class="pre">nonlinear</span></code> different from <code class="docutils literal notranslate"><span class="pre">0</span></code>, the terms of the von Kármán strains
 are added, see <code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_probe_finte_nonlinear()</span></code>, such that
-<code class="docutils literal notranslate"><span class="pre">finte</span></code> is the gradient of the strain energy with the von Karman
+<code class="docutils literal notranslate"><span class="pre">finte</span></code> is the gradient of the strain energy with the von Kármán
 axial strain, for which the exact Jacobian of the internal forces is
 <code class="docutils literal notranslate"><span class="pre">KC0</span> <span class="pre">+</span> <span class="pre">KCNL</span> <span class="pre">+</span> <span class="pre">KG</span></code>, see <a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_KCNL" title="pyfe3d.beamlr.BeamLR.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>.</p>
 </dd></dl>
@@ -1559,9 +1711,9 @@ in the element coordinate system, in the following order <span class="math notra
 Updated by <a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_probe_xe" title="pyfe3d.beamlr.BeamLR.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">BeamLR.update_probe_xe()</span></code></a>.</p>
 </dd>
 <dt><strong>ue,</strong><span class="classifier">array-like</span></dt><dd><p>Array of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF=12</span></code> containing the element displacements
-in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
-{{r_y}_e}_1, {{r_z}_e}_1, {u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
-{{r_y}_e}_2, {{r_z}_e}_2\)</span>. Translations of dimension length and
+in the following order <span class="math notranslate nohighlight">\(u_{e_1}, v_{e_1}, w_{e_1}, {r_x}_{e_1},
+{r_y}_{e_1}, {r_z}_{e_1}, u_{e_2}, v_{e_2}, w_{e_2}, {r_x}_{e_2},
+{r_y}_{e_2}, {r_z}_{e_2}\)</span>. Translations of dimension length and
 rotations. Updated by <a class="reference internal" href="#pyfe3d.beamlr.BeamLR.update_probe_ue" title="pyfe3d.beamlr.BeamLR.update_probe_ue"><code class="xref py py-meth docutils literal notranslate"><span class="pre">BeamLR.update_probe_ue()</span></code></a>.</p>
 </dd>
 <dt><strong>finte,</strong><span class="classifier">array-like</span></dt><dd><p>Array of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF=12</span></code> containing the element internal
@@ -1572,12 +1724,17 @@ forces and moments. Updated by <a class="reference internal" href="#pyfe3d.beaml
 strain-displacement matrix for the axial strain and the two
 curvatures, at the last evaluated integration point.</p>
 </dd>
+<dt><strong>BLgammay, BLgammaz, BLkx</strong><span class="classifier">array-like</span></dt><dd><p>Arrays of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF=12</span></code> with the rows of the linear
+strain-displacement matrix for the two transverse shear strains and
+the twist, at the last evaluated integration point, read with the
+three rows above for the axial force of a sectional stiffness matrix
+with couplings, see <code class="xref py py-meth docutils literal notranslate"><span class="pre">BeamLR._update_probe_BL_G()</span></code>.</p>
+</dd>
 <dt><strong>Sv_x, Sw_x</strong><span class="classifier">array-like</span></dt><dd><p>Arrays of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF=12</span></code> with the rows giving the slopes
-<span class="math notranslate nohighlight">\(v_{,x}\)</span> and <span class="math notranslate nohighlight">\(w_{,x}\)</span>, at the last evaluated integration point.
-The names are those of <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamCProbe" title="pyfe3d.beamc.BeamCProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamCProbe</span></code></a>, the same API, but here
-the rows hold the interpolations of the rotations, the slopes being
-<span class="math notranslate nohighlight">\(v_{,x} = r_z\)</span> and <span class="math notranslate nohighlight">\(w_{,x} = -r_y\)</span>: <code class="docutils literal notranslate"><span class="pre">Sv_x</span></code> holds
-<span class="math notranslate nohighlight">\(\boldsymbol{S}^{r_z}\)</span> and <code class="docutils literal notranslate"><span class="pre">Sw_x</span></code> holds <span class="math notranslate nohighlight">\(-\boldsymbol{S}^{r_y}\)</span>.</p>
+<span class="math notranslate nohighlight">\(v_{,x}\)</span> and <span class="math notranslate nohighlight">\(w_{,x}\)</span> of the linear interpolations of <span class="math notranslate nohighlight">\(v\)</span> and <span class="math notranslate nohighlight">\(w\)</span>,
+constant along the element, as in <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamCProbe" title="pyfe3d.beamc.BeamCProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamCProbe</span></code></a>. Up to
+version 0.11 they held the interpolations of the rotations, <span class="math notranslate nohighlight">\(r_z\)</span>
+and <span class="math notranslate nohighlight">\(-r_y\)</span>, see the notes of <a class="reference internal" href="#pyfe3d.beamlr.BeamLR" title="pyfe3d.beamlr.BeamLR"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamLR</span></code></a>.</p>
 </dd>
 <dt><a class="reference internal" href="#pyfe3d.beamlr.BeamLRProbe.KCNLve" title="pyfe3d.beamlr.BeamLRProbe.KCNLve"><code class="xref py py-obj docutils literal notranslate"><span class="pre">KCNLve</span></code></a><span class="classifier">array-like</span></dt><dd><p>KCNLve: ‘double[::1]’</p>
 </dd>
@@ -1588,6 +1745,24 @@ the rows hold the interpolations of the rotations, the slopes being
 <dt class="sig sig-object py" id="pyfe3d.beamlr.BeamLRProbe.BLexx">
 <span class="sig-name descname"><span class="pre">BLexx</span></span><a class="headerlink" href="#pyfe3d.beamlr.BeamLRProbe.BLexx" title="Link to this definition">#</a></dt>
 <dd><p>BLexx: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.beamlr.BeamLRProbe.BLgammay">
+<span class="sig-name descname"><span class="pre">BLgammay</span></span><a class="headerlink" href="#pyfe3d.beamlr.BeamLRProbe.BLgammay" title="Link to this definition">#</a></dt>
+<dd><p>BLgammay: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.beamlr.BeamLRProbe.BLgammaz">
+<span class="sig-name descname"><span class="pre">BLgammaz</span></span><a class="headerlink" href="#pyfe3d.beamlr.BeamLRProbe.BLgammaz" title="Link to this definition">#</a></dt>
+<dd><p>BLgammaz: ‘double[::1]’</p>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.beamlr.BeamLRProbe.BLkx">
+<span class="sig-name descname"><span class="pre">BLkx</span></span><a class="headerlink" href="#pyfe3d.beamlr.BeamLRProbe.BLkx" title="Link to this definition">#</a></dt>
+<dd><p>BLkx: ‘double[::1]’</p>
 </dd></dl>
 
 <dl class="py attribute">
@@ -1735,6 +1910,9 @@ the rows hold the interpolations of the rotations, the slopes being
 </li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamlr.BeamLRProbe"><code class="docutils literal notranslate"><span class="pre">BeamLRProbe</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamlr.BeamLRProbe.BLexx"><code class="docutils literal notranslate"><span class="pre">BeamLRProbe.BLexx</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamlr.BeamLRProbe.BLgammay"><code class="docutils literal notranslate"><span class="pre">BeamLRProbe.BLgammay</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamlr.BeamLRProbe.BLgammaz"><code class="docutils literal notranslate"><span class="pre">BeamLRProbe.BLgammaz</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamlr.BeamLRProbe.BLkx"><code class="docutils literal notranslate"><span class="pre">BeamLRProbe.BLkx</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamlr.BeamLRProbe.BLky"><code class="docutils literal notranslate"><span class="pre">BeamLRProbe.BLky</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamlr.BeamLRProbe.BLkz"><code class="docutils literal notranslate"><span class="pre">BeamLRProbe.BLkz</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.beamlr.BeamLRProbe.KCNLve"><code class="docutils literal notranslate"><span class="pre">BeamLRProbe.KCNLve</span></code></a></li>

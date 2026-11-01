@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Convergence criteria of the non-linear solvers (pyfe3d.solver.convergence) &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>Convergence criteria of the non-linear solvers (pyfe3d.solver.convergence) &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
@@ -37,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -120,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -137,6 +138,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -161,13 +169,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -176,6 +177,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -364,6 +393,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -380,6 +416,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -584,11 +641,36 @@
 
 <li class="toctree-l2"><a class="reference internal" href="beamprop.html">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
 
+<li class="toctree-l2"><a class="reference internal" href="vabs.html">Variational asymptotic sectional analysis (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.vabs</span></code>)</a></li>
+
+
+
+
+
+
+
+
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html">Co-rotational kinematics, EICR (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
 <li class="toctree-l1"><a class="reference internal" href="solver.html">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_static.html">Linear static solution (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code>)</a></li>
 
+
+<li class="toctree-l1"><a class="reference internal" href="solver_inertia_relief.html">Static analysis with inertia relief (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.inertia_relief</span></code>)</a></li>
 
 <li class="toctree-l1"><a class="reference internal" href="solver_analysis.html">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</a></li>
 
@@ -640,6 +722,7 @@
 
 
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html">Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code>)</a></li>
+
 
 
 
@@ -853,6 +936,26 @@ round-off floor. With prescribed displacements, <code class="docutils literal no
 <span class="math notranslate nohighlight">\(|K_{ff}| \, |u_f|\)</span> omitting the contribution of the prescribed
 displacements, <span class="math notranslate nohighlight">\(|K_{fp}| \, |u_p|\)</span>: the floor is then lower, i.e.
 conservative.</p>
+<p>The floor assumes that <code class="docutils literal notranslate"><span class="pre">calc_fint</span></code> computes the internal force from the
+displacements <span class="math notranslate nohighlight">\(\boldsymbol{c}\)</span>, whose round-off is then of the order of
+<span class="math notranslate nohighlight">\(\varepsilon |\boldsymbol{K}_{C0}| |\boldsymbol{c}|\)</span>. It cannot cover a
+round-off that depends on the nodal coordinates <span class="math notranslate nohighlight">\(\boldsymbol{X}\)</span>, e.g. of
+current positions computed as <span class="math notranslate nohighlight">\(\boldsymbol{X} + \boldsymbol{u}\)</span>: a
+translation of the origin changes <span class="math notranslate nohighlight">\(|\boldsymbol{X}|\)</span> but none of the
+quantities the criterion receives, <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span>, <span class="math notranslate nohighlight">\(\boldsymbol{c}\)</span>,
+<span class="math notranslate nohighlight">\(\boldsymbol{F}_{int}\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{F}_{ext}\)</span>. Measured on 2026-10-30
+on the cantilever of Sze et al. under an end shear force with 64
+co-rotational <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> elements, positions computed as
+<span class="math notranslate nohighlight">\(\boldsymbol{X} + \boldsymbol{u}\)</span>: with the root at <span class="math notranslate nohighlight">\(X = 0\)</span>, 100 and 1000,
+the iterations of the first increment stagnated at <span class="math notranslate nohighlight">\(\zeta\)</span> of about
+<span class="math notranslate nohighlight">\(10^{-8}\)</span>, <span class="math notranslate nohighlight">\(10^{-7}\)</span> and <span class="math notranslate nohighlight">\(10^{-6}\)</span>, at 0.12 to 0.19 times <span class="math notranslate nohighlight">\(\varepsilon \|
+|\boldsymbol{K}_{C0}| |\boldsymbol{X}| \|_{\boldsymbol{d}}\)</span>, whereas
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span>, the iterates and the floor were the same, see
+<code class="docutils literal notranslate"><span class="pre">test_cantilever_end_shear_translated</span></code> in
+<code class="docutils literal notranslate"><span class="pre">tests/test_corotational_benchmarks.py</span></code>. Such a
+model should compute the positions relative to a nearby point, as
+<a class="reference internal" href="corotational.html#module-pyfe3d.corotational" title="pyfe3d.corotational"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code></a> does with the base centroid of each element,
+or else set <code class="docutils literal notranslate"><span class="pre">absTOL</span></code>.</p>
 <p>Measured on the low sinusoidal arch of Fung and Kaplan <a class="reference internal" href="#r4134a01e5a1b-4" id="id7">[4]</a>, hinged at both
 ends under a sinusoidal load, <span class="math notranslate nohighlight">\(\lambda_1 = 2.2\)</span>, modelled with 40
 <a class="reference internal" href="beamc.html#pyfe3d.beamc.BeamC" title="pyfe3d.beamc.BeamC"><code class="xref py py-class docutils literal notranslate"><span class="pre">BeamC</span></code></a> elements, traced with both arc-length methods and both

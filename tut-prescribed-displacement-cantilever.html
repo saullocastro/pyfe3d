@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+
+
+<html lang="en" data-content_root="./" >
+
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <title>Tutorial: prescribed displacement at the tip of a cantilever &#8212; pyfe3d 0.12.0 documentation</title>
+  
+  
+  
+  <script data-cfasync="false">
+    document.documentElement.dataset.mode = localStorage.getItem("mode") || "";
+    document.documentElement.dataset.theme = localStorage.getItem("theme") || "";
+  </script>
+  <!--
+    this give us a css class that will be invisible only if js is disabled
+  -->
+  <noscript>
+    <style>
+      .pst-js-only { display: none !important; }
+
+    </style>
+  </noscript>
+  
+  <!-- Loaded before other Sphinx assets -->
+  <link href="_static/styles/theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+<link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
+
+    <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
+    <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css?v=2aa19091" />
+  
+  <!-- So that users can add custom icons -->
+  <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
+  <!-- Pre-loaded scripts that we'll load fully later -->
+  <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
+<link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
+
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
+    <script src="_static/doctools.js?v=fd6eb6e6"></script>
+    <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
+    <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
+    <script>window.MathJax = {"tex": {"inlineMath": [["$", "$"], ["\\(", "\\)"]], "processEscapes": true}, "options": {"ignoreHtmlClass": "tex2jax_ignore|mathjax_ignore|document", "processHtmlClass": "tex2jax_process|mathjax_process|math|output_area"}}</script>
+    <script defer="defer" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-mml-chtml.js"></script>
+    <script>DOCUMENTATION_OPTIONS.pagename = 'tut-prescribed-displacement-cantilever';</script>
+    <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Tutorial: shells pressed down by a prescribed displacement, Riks’ method" href="tut-prescribed-displacement-dome-riks.html" />
+    <link rel="prev" title="Tutorial: large rotations with the co-rotational kinematics" href="tut-corotational-large-rotations.html" />
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <meta name="color-scheme" content="light dark"/>
+  <meta name="docsearch:language" content="en"/>
+  <meta name="docsearch:version" content="" />
+  
+    
+    <script src="_static/searchtools.js"></script>
+    <script src="_static/language_data.js"></script>
+    <script src="searchindex.js"></script>
+  
+  </head>
+  <body data-default-mode="">
+  
+  
+  <div id="pst-skip-link" class="skip-link d-print-none"><a href="#main-content">Skip to main content</a></div>
+
+  
+  <div id="pst-scroll-pixel-helper"></div>
+  
+  <button type="button" class="btn rounded-pill" id="pst-back-to-top">
+    <i class="fa-solid fa-arrow-up"></i>Back to top</button>
+  
+  
+  
+  
+  <dialog id="pst-search-dialog">
+    
+<form class="bd-search d-flex align-items-center"
+      action="search.html"
+      method="get">
+  <i class="fa-solid fa-magnifying-glass"></i>
+  <input type="search"
+         class="form-control"
+         name="q"
+         placeholder="Search the docs ..."
+         aria-label="Search the docs ..."
+         autocomplete="off"
+         autocorrect="off"
+         autocapitalize="off"
+         spellcheck="false"/>
+  <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd>K</kbd></span>
+</form>
+  </dialog>
+
+  <div class="pst-async-banner-revealer d-none">
+  <aside id="bd-header-version-warning" class="d-none d-print-none" aria-label="Version warning"></aside>
+</div>
+
+  
+    <header id="pst-header" class="bd-header navbar navbar-expand-lg bd-navbar d-print-none">
+<div class="bd-header__inner bd-page-width">
+  <button type="button" class="pst-navbar-icon sidebar-toggle primary-toggle" aria-label="Site navigation">
+    <span class="fa-solid fa-bars"></span>
+  </button>
+  
+  
+  <div class="col-lg-3 navbar-header-items__start">
+    
+      <div class="navbar-item">
+
+  
+    
+  
+
+<a class="navbar-brand logo" href="index.html">
+  
+  
+  
+  
+  
+  
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
+  
+</a></div>
+    
+  </div>
+  
+  <div class="col-lg-9 navbar-header-items">
+    
+    <div class="me-auto navbar-header-items__center">
+      
+        <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+            <li class="nav-item dropdown">
+                <button class="btn dropdown-toggle nav-item" type="button"
+                data-bs-toggle="dropdown" aria-expanded="false"
+                aria-controls="pst-nav-more-links">
+                    More
+                </button>
+                <ul id="pst-nav-more-links" class="dropdown-menu">
+                    
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class=" current active">
+  <a class="nav-link dropdown-item nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+                </ul>
+            </li>
+            
+  </ul>
+</nav></div>
+      
+    </div>
+    
+    
+    <div class="navbar-header-items__end">
+      
+        <div class="navbar-item navbar-persistent--container">
+          
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+        </div>
+      
+      
+        <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+      
+    </div>
+    
+  </div>
+  
+  
+    <div class="navbar-persistent--mobile">
+
+<button type="button" class="btn search-button-field search-button__button pst-js-only" title="Search" aria-label="Search" data-bs-placement="bottom" data-bs-toggle="tooltip">
+ <i class="fa-solid fa-magnifying-glass"></i>
+ <span class="search-button__default-text">Search</span>
+ <span class="search-button__kbd-shortcut"><kbd class="kbd-shortcut__modifier">Ctrl</kbd>+<kbd class="kbd-shortcut__modifier">K</kbd></span>
+</button>
+    </div>
+  
+
+  
+    <button type="button" class="pst-navbar-icon sidebar-toggle secondary-toggle" aria-label="On this page">
+      <span class="fa-solid fa-outdent"></span>
+    </button>
+  
+</div>
+
+    </header>
+  
+
+  <div class="bd-container">
+    <div class="bd-container__inner bd-page-width">
+      
+      
+      
+      <dialog id="pst-primary-sidebar-modal"></dialog>
+      <div id="pst-primary-sidebar" class="bd-sidebar-primary bd-sidebar">
+        
+
+  
+  <div class="sidebar-header-items sidebar-primary__section">
+    
+    
+      <div class="sidebar-header-items__center">
+        
+          
+          
+            <div class="navbar-item">
+<nav>
+  <ul class="bd-navbar-elements navbar-nav">
+    
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="overview.html">
+    Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="conventions.html">
+    Conventions
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="element_choice.html">
+    Choosing an element
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="shell_properties.html">
+    Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="eigenvalue_analyses.html">
+    Linear buckling and natural frequencies
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_static.html">
+    Linear static analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_beam_frame.html">
+    Linear static analysis of beams and frames
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_plate.html">
+    Linear buckling analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_column.html">
+    Linear buckling analysis of a column
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_linear_buckling_cylinder_torsion.html">
+    Linear buckling analysis of a cylinder under torsion
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_plate.html">
+    Natural frequency analysis of a plate
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_natural_frequency_cylinder.html">
+    Natural frequency analysis of a cylinder
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="ex_nonlinear_static.html">
+    Non-linear static analysis with pyfe3d.solver
+  </a>
+</li>
+
+
+<li class="nav-item current active">
+  <a class="nav-link nav-internal" href="tutorials.html">
+    Tutorials
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="api.html">
+    API reference
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="installation.html">
+    Installation and building
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="repository_structure.html">
+    Repository structure
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="changelog.html">
+    Changelog
+  </a>
+</li>
+
+  </ul>
+</nav></div>
+          
+        
+      </div>
+    
+    
+    
+      <div class="sidebar-header-items__end">
+        
+          <div class="navbar-item">
+
+<div class="theme-switch-container dropdown pst-js-only" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Color mode">
+  <button type="button" class="btn btn-sm nav-link pst-navbar-icon theme-switch-button dropdown-toggle" aria-label="Color mode" data-bs-toggle="dropdown">
+    <i class="theme-switch fa-solid fa-sun fa-lg fa-fw" data-mode="light" title="Light"></i>
+    <i class="theme-switch fa-solid fa-moon fa-lg fa-fw" data-mode="dark" title="Dark"></i>
+    <i class="theme-switch fa-solid fa-circle-half-stroke fa-lg fa-fw" data-mode="auto" title="System Settings"></i>
+  </button>
+  <ul class="dropdown-menu dropdown-menu-end">
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="auto"><i class="fa-solid fa-circle-half-stroke fa-lg fa-fw me-1"></i>System Settings</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="light"><i class="fa-solid fa-sun fa-lg fa-fw me-1"></i>Light</button></li>
+    <li><button type="button" class="dropdown-item d-flex align-items-center theme-change-button" data-mode="dark"><i class="fa-solid fa-moon fa-lg fa-fw me-1"></i>Dark</button></li>
+  </ul>
+</div></div>
+        
+      </div>
+    
+  </div>
+  
+    <div class="sidebar-primary-items__start sidebar-primary__section">
+        <div class="sidebar-primary-item pst-sidebar-collapse"><button type="button" id="pst-collapse-sidebar-button" aria-expanded="true" aria-controls="pst-primary-sidebar">
+  <svg class="pst-icon" role="img" aria-hidden="true" focusable="false" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+    <path fill="currentColor" d="M3 15.5C2.36232 15.5 1.74874 15.2564 1.28478 14.8189C0.820828 14.3815 0.541576 13.7832 0.504167 13.1467L0.5 13L0.5 3C0.499965 2.36232 0.743605 1.74874 1.18107 1.28478C1.61854 0.820828 2.21676 0.541576 2.85333 0.504167L3 0.5L13 0.5C13.6377 0.499965 14.2513 0.743605 14.7152 1.18107C15.1792 1.61854 15.4584 2.21676 15.4958 2.85333L15.5 3L15.5 13C15.5 13.6377 15.2564 14.2513 14.8189 14.7152C14.3815 15.1792 13.7832 15.4584 13.1467 15.4958L13 15.5L3 15.5ZM3 13.8333L10.5 13.8333L10.5 2.16667L3 2.16667C2.79589 2.16669 2.59889 2.24163 2.44636 2.37726C2.29383 2.5129 2.19638 2.69979 2.1725 2.9025L2.16667 3L2.16667 13C2.16669 13.2041 2.24163 13.4011 2.37726 13.5536C2.5129 13.7062 2.69979 13.8036 2.9025 13.8275L3 13.8333ZM6.65583 10.325L6.5775 10.2558L4.91083 8.58917C4.76735 8.44567 4.68116 8.25476 4.66843 8.05223C4.65569 7.84971 4.71729 7.6495 4.84167 7.48917L4.91083 7.41083L6.5775 5.74417C6.72747 5.59471 6.9287 5.50794 7.14032 5.50148C7.35194 5.49502 7.55809 5.56935 7.7169 5.70937C7.8757 5.8494 7.97525 6.04463 7.99533 6.25539C8.01541 6.46616 7.95451 6.67667 7.825 6.84417L7.75583 6.9225L6.67917 8L7.75583 9.0775C7.89931 9.22099 7.98551 9.41191 7.99824 9.61443C8.01097 9.81695 7.94938 10.0172 7.825 10.1775L7.75583 10.2558C7.61234 10.3993 7.42142 10.4855 7.2189 10.4982C7.01638 10.511 6.81617 10.4494 6.65583 10.325Z"/>
+  </svg>
+  <span class="pst-collapse-sidebar-label">Collapse Sidebar</span>
+  <span class="pst-expand-sidebar-label">Expand Sidebar</span>
+</button></div>
+        <div class="sidebar-primary-item">
+
+<nav class="bd-docs-nav bd-links"
+     aria-label="Section Navigation">
+  <p class="bd-links__title" role="heading" aria-level="1">Section Navigation</p>
+  <div class="bd-toc-item navbar-nav"><ul class="current nav bd-sidenav">
+<li class="toctree-l1"><a class="reference internal" href="tut-opt-lightweight-smeared-deflection-GA.html">Tutorial: Ply tailoring using GA for a simply-supported plate under normal load</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-opt-lightweight-smeared-deflection-SLSQP.html">Tutorial: Ply tailoring using SLSPQ for a simply-supported plate under normal load</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-opt-topology.html">Tutorial: topology optimisation using pyfe3d</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-timoshenko-beam-benchmarks.html">Tutorial: Timoshenko beam benchmarks with BeamC and BeamLR</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-shell-lumped-mass.html">Tutorial: lumped mass matrices of the shells with an offset</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-bench-macneal-harder.html">Benchmark: MacNeal-Harder standard problems for the shell elements</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-bench-shell-obstacle-course.html">Benchmark: shell obstacle course</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-nonlinear-benchmarks.html">Tutorial: geometrically non-linear benchmarks with pyfe3d.solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-corotational-large-rotations.html">Tutorial: large rotations with the co-rotational kinematics</a></li>
+
+
+
+<li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Tutorial: prescribed displacement at the tip of a cantilever</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-prescribed-displacement-dome-riks.html">Tutorial: shells pressed down by a prescribed displacement, Riks’ method</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-nafems-cap-axisymmetric.html">Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations</a></li>
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-inertia-relief.html">Tutorial: static analysis with inertia relief</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-inertia-relief-aircraft-ha144a.html">Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A</a></li>
+</ul>
+</div>
+</nav></div>
+    </div>
+  
+  
+  <div class="sidebar-primary-items__end sidebar-primary__section">
+      <div class="sidebar-primary-item">
+<div id="ethical-ad-placement"
+      class="flat"
+      data-ea-publisher="readthedocs"
+      data-ea-type="readthedocs-sidebar"
+      data-ea-manual="true">
+</div></div>
+  </div>
+
+
+      </div>
+      
+      <main id="main-content" class="bd-main" role="main">
+        
+        
+          <div class="bd-content">
+            <div class="bd-article-container">
+              
+              <div class="bd-header-article d-print-none">
+<div class="header-article-items header-article__inner">
+  
+    <div class="header-article-items__start">
+      
+        <div class="header-article-item">
+
+<nav aria-label="Breadcrumb" class="d-print-none">
+  <ul class="bd-breadcrumbs">
+    
+    <li class="breadcrumb-item breadcrumb-home">
+      <a href="index.html" class="nav-link" aria-label="Home">
+        <i class="fa-solid fa-home"></i>
+      </a>
+    </li>
+    
+    <li class="breadcrumb-item"><a href="tutorials.html" class="nav-link">Tutorials</a></li>
+    
+    <li class="breadcrumb-item active" aria-current="page"><span class="ellipsis">Tutorial: prescribed displacement at the tip of a cantilever</span></li>
+  </ul>
+</nav>
+</div>
+      
+    </div>
+  
+  
+</div>
+</div>
+              
+              
+              
+                
+<div id="searchbox"></div>
+                <article class="bd-article">
+                  
+  <section id="Tutorial:-prescribed-displacement-at-the-tip-of-a-cantilever">
+<h1>Tutorial: prescribed displacement at the tip of a cantilever<a class="headerlink" href="#Tutorial:-prescribed-displacement-at-the-tip-of-a-cantilever" title="Link to this heading">#</a></h1>
+<p>A cantilever of 10 <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> elements, clamped at <span class="math notranslate nohighlight">\(x = 0\)</span>, whose free end is given the transverse deflection <span class="math notranslate nohighlight">\(\delta\)</span> with no applied load. The prescribed deflection is imposed by partitioning the degrees of freedom (dofs) into the free ones, <code class="docutils literal notranslate"><span class="pre">bu</span></code>, and the known ones, <code class="docutils literal notranslate"><span class="pre">bk</span></code>, with the prescribed values <code class="docutils literal notranslate"><span class="pre">uk</span></code>, see the user guide page <em>Linear static analyses</em>. The deflected shape and the reactions, at the tip where the deflection is prescribed and at the clamp, are compared with the
+closed form of the Timoshenko beam.</p>
+<p>The problem is solved in two ways: by the partition written by hand with SciPy, and with <code class="docutils literal notranslate"><span class="pre">Analysis(...,</span> <span class="pre">bu=bu,</span> <span class="pre">uk=uk)</span></code> in a single linear step.</p>
+<p>Reference:</p>
+<ul class="simple">
+<li><p>Bathe, K. J., <em>Finite Element Procedures</em>, 2nd ed., K. J. Bathe, Watertown, MA, 2014: Sec. 4.2.2, Eqs. (4.42), (4.43) and (4.45), the partition of the prescribed displacements; Sec. 1.2, Eq. (1.2), the tip deflection of a cantilever with shear deformation.</p></li>
+</ul>
+<p>The model and the checks are those of <code class="docutils literal notranslate"><span class="pre">tests/test_prescribed_displacement_linear.py</span></code>, imported below.</p>
+<div class="nbinput nblast docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>import os
+import sys
+sys.path.insert(0, os.path.join('..', '..', 'tests'))
+
+import numpy as np
+import matplotlib.pyplot as plt
+from scipy.sparse import csr_matrix
+
+from pyfe3d import DOF
+from pyfe3d.solver import solve, Analysis
+from test_prescribed_displacement_linear import (cantilever_prop, cantilever,
+    boundary_conditions, timoshenko_cantilever, tip_force, internal_forces,
+    check_reactions)
+import test_prescribed_displacement_linear as tpd
+</pre></div>
+</div>
+</div>
+<section id="Model">
+<h2>Model<a class="headerlink" href="#Model" title="Link to this heading">#</a></h2>
+<p>Rectangular aluminium cross section, width <span class="math notranslate nohighlight">\(b = 0.1\)</span> m along <span class="math notranslate nohighlight">\(y\)</span>, height <span class="math notranslate nohighlight">\(h = 0.2\)</span> m along <span class="math notranslate nohighlight">\(z\)</span>, length <span class="math notranslate nohighlight">\(L = 1\)</span> m (<span class="math notranslate nohighlight">\(L/h = 5\)</span>), <span class="math notranslate nohighlight">\(E = 70\)</span> GPa, <span class="math notranslate nohighlight">\(\nu = 0.3\)</span>, prescribed tip deflection <span class="math notranslate nohighlight">\(\delta = 10\)</span> mm along <span class="math notranslate nohighlight">\(Z\)</span>. <code class="docutils literal notranslate"><span class="pre">BeamProp</span></code> applies no shear correction factor, so the factor <span class="math notranslate nohighlight">\(k = 5/6\)</span> of the rectangle is put in the transverse shear modulus of the bending plane <span class="math notranslate nohighlight">\(xz\)</span>, <code class="docutils literal notranslate"><span class="pre">prop.G13</span></code> <span class="math notranslate nohighlight">\(= k G\)</span>. <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> uses it as <span class="math notranslate nohighlight">\(k G A\)</span> =
+<code class="docutils literal notranslate"><span class="pre">G13*A</span></code>, in its shear stiffness and in the shear parameter <span class="math notranslate nohighlight">\(\alpha_z = -12 E I_{yy}/(G_{13} A
+L_e^2)\)</span> of its shape functions, with <span class="math notranslate nohighlight">\(L_e\)</span> the element length. The bending stiffness of the deflection <span class="math notranslate nohighlight">\(w\)</span> is <span class="math notranslate nohighlight">\(E I_{yy}\)</span>, with <span class="math notranslate nohighlight">\(I_{yy} = b h^3/12\)</span>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>prop, L, delta = cantilever_prop()
+print('A = %g m2, Iyy = %g m4, E = %g Pa, G13 = k G = %g Pa'
+      % (prop.A, prop.Iyy, prop.E, prop.G13))
+nodes, ncoords, elements, KC0 = cantilever(prop, L, num_elements=10)
+N = KC0.shape[0]
+bk, bu, uk, tip_w = boundary_conditions(N, delta)
+f = np.zeros(N) # no applied load
+print('N = %d dofs, %d free, %d known; uk[tip_w] = %g m'
+      % (N, bu.sum(), bk.sum(), uk[tip_w]))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+A = 0.02 m2, Iyy = 6.66667e-05 m4, E = 7e+10 Pa, G13 = k G = 2.24359e+10 Pa
+N = 66 dofs, 59 free, 7 known; uk[tip_w] = 0.01 m
+</pre></div></div>
+</div>
+</section>
+<section id="Closed-form">
+<h2>Closed form<a class="headerlink" href="#Closed-form" title="Link to this heading">#</a></h2>
+<p>For a Timoshenko cantilever loaded by a tip force <span class="math notranslate nohighlight">\(P\)</span>, the bending moment is <span class="math notranslate nohighlight">\(M(x) = P (L - x)\)</span> and the shear force <span class="math notranslate nohighlight">\(Q = P\)</span>. With the rotation of the cross section <span class="math notranslate nohighlight">\(\theta\)</span>, <span class="math notranslate nohighlight">\(E I \theta_{,x} = M\)</span>, and the shear strain is <span class="math notranslate nohighlight">\(\gamma = w_{,x} - \theta = P/(k G A)\)</span>. Integrating with the clamp conditions <span class="math notranslate nohighlight">\(w(0) = \theta(0) = 0\)</span>:</p>
+<div class="math notranslate nohighlight">
+\[\theta(x) = \frac{P}{E I}\left(L x - \frac{x^2}{2}\right), \qquad
+w(x) = \frac{P}{E I}\left(\frac{L x^2}{2} - \frac{x^3}{6}\right)
+     + \frac{P x}{k G A}\]</div>
+<p>At <span class="math notranslate nohighlight">\(x = L\)</span>, <span class="math notranslate nohighlight">\(w(L) = P \left(\frac{L^3}{3EI} + \frac{L}{kGA}\right)\)</span>, which is Eq. (1.2) of Bathe (2014). Prescribing <span class="math notranslate nohighlight">\(w(L) = \delta\)</span> gives the tip reaction</p>
+<div class="math notranslate nohighlight">
+\[P = \frac{\delta}{\dfrac{L^3}{3 E I} + \dfrac{L}{k G A}}
+\quad \xrightarrow{k G A \to \infty} \quad
+P_{EB} = \frac{3 E I \delta}{L^3}\]</div>
+<p>the Euler-Bernoulli value. The clamp reactions balance it: the force <span class="math notranslate nohighlight">\(-P\)</span> along <span class="math notranslate nohighlight">\(Z\)</span> and the moment <span class="math notranslate nohighlight">\(M_Y = P L\)</span>, from the moment equilibrium about the clamp, <span class="math notranslate nohighlight">\(M_Y \boldsymbol{e}_Y + (L, 0, 0) \times (0, 0, P) = \boldsymbol{0}\)</span>. In pyfe3d the rotation about <span class="math notranslate nohighlight">\(Y\)</span> is <span class="math notranslate nohighlight">\(r_y = -\theta\)</span>, since the axial displacement of a point at the height <span class="math notranslate nohighlight">\(z\)</span> is <span class="math notranslate nohighlight">\(u + z r_y\)</span> (<em>Conventions</em>, sign conventions). The derivation is verified with SymPy by
+<code class="docutils literal notranslate"><span class="pre">test_closed_form_timoshenko_cantilever</span></code> of the test file, run here:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>tpd.test_closed_form_timoshenko_cantilever()
+P, P_EB = tip_force(delta, prop, L)
+print('Timoshenko      P    = %.6e N' % P)
+print('Euler-Bernoulli P_EB = %.6e N, %.2f %% larger'
+      % (P_EB, 100*(P_EB/P - 1)))
+print('shear/bending flexibility 3EI/(L^2 kGA) = %.4f'
+      % (3*prop.E*prop.Iyy/(L**2*prop.G13*prop.A)))
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+Timoshenko      P    = 1.357642e+05 N
+Euler-Bernoulli P_EB = 1.400000e+05 N, 3.12 % larger
+shear/bending flexibility 3EI/(L^2 kGA) = 0.0312
+</pre></div></div>
+</div>
+<p>The shear flexibility of this beam is 3.1 % of its bending flexibility, <span class="math notranslate nohighlight">\(3 E I/(L^2 k G A) = \frac{E}{4 k G}(h/L)^2\)</span> for the rectangle: the Euler-Bernoulli tip force is 3.1 % larger than the Timoshenko one, a difference that is visible below but small.</p>
+</section>
+<section id="1.-Partition-by-hand-with-SciPy">
+<h2>1. Partition by hand with SciPy<a class="headerlink" href="#1.-Partition-by-hand-with-SciPy" title="Link to this heading">#</a></h2>
+<p>The dofs need not be reordered: the Boolean arrays select the blocks. The free dofs solve</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{K}_{{C0}_{uu}} \boldsymbol{u}_u = \boldsymbol{f}_u - \boldsymbol{K}_{{C0}_{uk}} \boldsymbol{u}_k\]</div>
+<p>and the reactions follow from the second row of the partition, <span class="math notranslate nohighlight">\(\boldsymbol{K}_{{C0}_{ku}} \boldsymbol{u}_u + \boldsymbol{K}_{{C0}_{kk}} \boldsymbol{u}_k - \boldsymbol{f}_k\)</span>, equal to the internal forces of <code class="docutils literal notranslate"><span class="pre">update_fint</span></code> at the known dofs minus the loads applied there, <span class="math notranslate nohighlight">\(\boldsymbol{F}_{{int}_k} - \boldsymbol{f}_k\)</span>. These are Eqs. (4.43) and (4.45) of Bathe (2014), with the known set written <span class="math notranslate nohighlight">\(k\)</span>, as in pyfe3d.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[4]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>KC0uu = KC0[bu, :][:, bu]
+KC0uk = KC0[bu, :][:, bk]
+KC0ku = KC0[bk, :][:, bu]
+KC0kk = KC0[bk, :][:, bk]
+
+u = np.zeros(N)
+u[bk] = uk[bk]
+u[bu] = solve(KC0uu, f[bu] - KC0uk @ uk[bk])
+
+R_partition = KC0ku @ u[bu] + KC0kk @ uk[bk] - f[bk]
+R = internal_forces(elements, prop, u, ncoords) - f
+assert np.allclose(R[bk], R_partition, rtol=1e-12, atol=1e-12*P*L)
+
+print('tip reaction  FE %.10e N, closed form %.10e N, rel. diff. %.1e'
+      % (R[tip_w], P, abs(R[tip_w]/P - 1)))
+print('clamp forces  [N]   ', R[0:3])
+print('clamp moments [N m] ', R[3:6], ' P L =', P*L)
+check_reactions(R, nodes, L, P, rtol=1e-9)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+tip reaction  FE 1.3576415826e+05 N, closed form 1.3576415826e+05 N, rel. diff. 1.4e-14
+clamp forces  [N]    [      0.               0.         -135764.15826221]
+clamp moments [N m]  [     0.         135764.15826222      0.        ]  P L = 135764.1582622188
+</pre></div></div>
+</div>
+<p><code class="docutils literal notranslate"><span class="pre">check_reactions</span></code> asserts, with a relative tolerance of <span class="math notranslate nohighlight">\(10^{-9}\)</span>, the tip reaction <span class="math notranslate nohighlight">\(P\)</span>, the clamp force <span class="math notranslate nohighlight">\((0, 0, -P)\)</span>, the clamp moment <span class="math notranslate nohighlight">\(M_Y = P L\)</span> with the moment equilibrium of all the reactions about the origin, and zero forces at the free dofs. <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> solves the homogeneous equations of the Timoshenko beam exactly, so the agreement is to round-off.</p>
+<p>The deflected shape: the nodal deflections and rotations against the closed form, with the tolerance <span class="math notranslate nohighlight">\(10^{-10} \delta\)</span>, and <span class="math notranslate nohighlight">\(w(x)\)</span> plotted with the Euler-Bernoulli shape of the same tip deflection, <span class="math notranslate nohighlight">\(w_{EB}(x) = \delta \left(\frac{3 x^2}{2 L^2} - \frac{x^3}{2 L^3}\right)\)</span>.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>w_ref, theta_ref = timoshenko_cantilever(nodes, P, prop, L)
+w_fe = u[2::DOF]
+ry_fe = u[4::DOF]
+print('max |w_FE - w| / delta          = %.1e' % (abs(w_fe - w_ref).max()/delta))
+print('max |r_y,FE + theta| / theta(L) = %.1e'
+      % (abs(ry_fe + theta_ref).max()/theta_ref[-1]))
+assert np.allclose(w_fe, w_ref, rtol=0, atol=1e-10*delta)
+assert np.allclose(ry_fe, -theta_ref, rtol=0, atol=1e-10*theta_ref[-1])
+
+xs = np.linspace(0, L, 201)
+w_cf, _ = timoshenko_cantilever(xs, P, prop, L)
+w_eb = delta*(3*xs**2/(2*L**2) - xs**3/(2*L**3))
+fig, ax = plt.subplots(figsize=(6, 4))
+ax.plot(xs, 1e3*w_cf, 'k-', label='Timoshenko, closed form')
+ax.plot(xs, 1e3*w_eb, 'k--', lw=1, label='Euler-Bernoulli, same $\\delta$')
+ax.plot(nodes, 1e3*w_fe, 'o', mfc='none', label='BeamC, 10 elements')
+ax.set_xlabel('$x$ [m]')
+ax.set_ylabel('$w$ [mm]')
+ax.grid(True, alpha=0.3)
+ax.legend()
+plt.tight_layout()
+plt.show()
+
+i = np.argmax(abs(w_cf - w_eb))
+print('largest difference Timoshenko - Euler-Bernoulli: %.3f mm at x = %.2f m'
+      % (1e3*(w_cf - w_eb)[i], xs[i]))
+</pre></div>
+</div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+max |w_FE - w| / delta          = 2.2e-15
+max |r_y,FE + theta| / theta(L) = 7.4e-15
+</pre></div></div>
+</div>
+<div class="nboutput docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<img alt="_images/tut-prescribed-displacement-cantilever_9_1.png" src="_images/tut-prescribed-displacement-cantilever_9_1.png" />
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+largest difference Timoshenko - Euler-Bernoulli: 0.058 mm at x = 0.42 m
+</pre></div></div>
+</div>
+</section>
+<section id="2.-Analysis-with-bu-and-uk">
+<h2>2. <code class="docutils literal notranslate"><span class="pre">Analysis</span></code> with <code class="docutils literal notranslate"><span class="pre">bu</span></code> and <code class="docutils literal notranslate"><span class="pre">uk</span></code><a class="headerlink" href="#2.-Analysis-with-bu-and-uk" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Analysis</span></code> receives the callables of the full model and the partition: the known dofs are those of <code class="docutils literal notranslate"><span class="pre">~bu</span></code>, with the prescribed values <code class="docutils literal notranslate"><span class="pre">uk[~bu]</span></code>, imposed exactly. The linear analysis, <code class="docutils literal notranslate"><span class="pre">static(NLgeom=False)</span></code>, solves the same system <span class="math notranslate nohighlight">\(\boldsymbol{K}_{{C0}_{uu}} \boldsymbol{u}_u = \boldsymbol{f}_u - \boldsymbol{K}_{{C0}_{uk}} \boldsymbol{u}_k\)</span> in a single step and returns <code class="docutils literal notranslate"><span class="pre">cs[0]</span></code> of size <code class="docutils literal notranslate"><span class="pre">N</span></code>, with the prescribed values at the known dofs. <code class="docutils literal notranslate"><span class="pre">calc_fext</span></code> returns zeros: the analysis is
+displacement controlled. The reactions are <code class="docutils literal notranslate"><span class="pre">calc_fint(u)</span> <span class="pre">-</span> <span class="pre">calc_fext()</span></code> at the known dofs.</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[6]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>def calc_fext(inc=1., silent=True):
+    return np.zeros(N)
+
+def calc_kC(c=None, NLgeom=False, silent=True):
+    return KC0
+
+def calc_fint(c, silent=True):
+    return internal_forces(elements, prop, c, ncoords)
+
+def calc_kG(c=None, NLgeom=False, silent=True):
+    return csr_matrix((N, N)) # not used by the linear analysis
+
+an = Analysis(calc_fext, calc_fint, calc_kC, calc_kG, bu=bu, uk=uk)
+increments, cs = an.static(NLgeom=False, silent=True)
+u_an = cs[0]
+print('increments', increments, ', u[tip_w] =', u_an[tip_w])
+print('max |u_Analysis - u_partition| / delta = %.1e'
+      % (abs(u_an - u).max()/delta))
+assert np.allclose(u_an, u, rtol=1e-12, atol=1e-14*delta)
+R_an = calc_fint(u_an) - calc_fext()
+print('tip reaction %.10e N' % R_an[tip_w])
+check_reactions(R_an, nodes, L, P, rtol=1e-9)
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+increments [1.0] , u[tip_w] = 0.01
+max |u_Analysis - u_partition| / delta = 8.7e-15
+tip reaction 1.3576415826e+05 N
+</pre></div></div>
+</div>
+<p>Both ways give the closed form to round-off. The same <code class="docutils literal notranslate"><span class="pre">bu</span></code> and <code class="docutils literal notranslate"><span class="pre">uk</span></code> serve the geometrically non-linear analyses, <code class="docutils literal notranslate"><span class="pre">static(NLgeom=True)</span></code>, where the prescribed displacements grow with the load factor, <span class="math notranslate nohighlight">\(\lambda \boldsymbol{u}_k\)</span>, see <em>Non-linear static analyses</em>.</p>
+<p>The checks are also run as tests:</p>
+<div class="nbinput docutils container">
+<div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
+</pre></div>
+</div>
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>tpd.test_partition_by_hand()
+tpd.test_analysis_bu_uk()
+print('tests passed')
+</pre></div>
+</div>
+</div>
+<div class="nboutput nblast docutils container">
+<div class="prompt empty docutils container">
+</div>
+<div class="output_area docutils container">
+<div class="highlight"><pre>
+P = 1.3576415826e+05, FE 1.3576415826e+05, Euler-Bernoulli 1.4000000000e+05
+tests passed
+</pre></div></div>
+</div>
+</section>
+</section>
+
+
+                </article>
+              
+              
+              
+              
+              
+                <footer class="prev-next-footer d-print-none">
+                  
+<div class="prev-next-area">
+    <a class="left-prev"
+       href="tut-corotational-large-rotations.html"
+       title="previous page">
+      <i class="fa-solid fa-angle-left"></i>
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">previous</p>
+        <p class="prev-next-title">Tutorial: large rotations with the co-rotational kinematics</p>
+      </div>
+    </a>
+    <a class="right-next"
+       href="tut-prescribed-displacement-dome-riks.html"
+       title="next page">
+      <div class="prev-next-info">
+        <p class="prev-next-subtitle">next</p>
+        <p class="prev-next-title">Tutorial: shells pressed down by a prescribed displacement, Riks’ method</p>
+      </div>
+      <i class="fa-solid fa-angle-right"></i>
+    </a>
+</div>
+                </footer>
+              
+            </div>
+            
+            
+              
+                <dialog id="pst-secondary-sidebar-modal"></dialog>
+                <div id="pst-secondary-sidebar" class="bd-sidebar-secondary bd-toc"><div class="sidebar-secondary-items sidebar-secondary__inner">
+
+
+  <div class="sidebar-secondary-item">
+<div
+    id="pst-page-navigation-heading-2"
+    class="page-toc tocsection onthispage">
+    <i class="fa-solid fa-list"></i> On this page
+  </div>
+  <nav id="pst-page-toc-nav" class="page-toc" aria-labelledby="pst-page-navigation-heading-2">
+    <ul class="pst-show_toc_level nav section-nav flex-column">
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Model">Model</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Closed-form">Closed form</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#1.-Partition-by-hand-with-SciPy">1. Partition by hand with SciPy</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#2.-Analysis-with-bu-and-uk">2. <code class="docutils literal notranslate"><span class="pre">Analysis</span></code> with <code class="docutils literal notranslate"><span class="pre">bu</span></code> and <code class="docutils literal notranslate"><span class="pre">uk</span></code></a></li>
+</ul>
+  </nav></div>
+
+  <div class="sidebar-secondary-item">
+
+  <div class="tocsection sourcelink">
+    <a href="_sources/tut-prescribed-displacement-cantilever.ipynb.txt">
+      <i class="fa-solid fa-file-lines"></i> Show Source
+    </a>
+  </div>
+</div>
+
+</div></div>
+              
+            
+          </div>
+          <footer class="bd-footer-content">
+            
+          </footer>
+        
+      </main>
+    </div>
+  </div>
+  
+  <!-- Scripts loaded after <body> so the DOM is not blocked -->
+  <script defer src="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be"></script>
+<script defer src="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be"></script>
+
+  <footer class="bd-footer">
+<div class="bd-footer__inner bd-page-width">
+  
+    <div class="footer-items__start">
+      
+        <div class="footer-item">
+
+  <p class="copyright">
+    
+      © Copyright 2021-2026, Saullo G. P. Castro.
+      <br/>
+    
+  </p>
+</div>
+      
+        <div class="footer-item">
+
+  <p class="sphinx-version">
+    Created using <a href="https://www.sphinx-doc.org/">Sphinx</a> 9.0.4.
+  </p>
+</div>
+      
+    </div>
+  
+  
+  
+    <div class="footer-items__end">
+      
+        <div class="footer-item">
+<p class="theme-version">
+  <!-- # L10n: Setting the PST URL as an argument as this does not need to be localized -->
+  Built with the <a href="https://pydata-sphinx-theme.readthedocs.io/en/stable/index.html">PyData Sphinx Theme</a> 0.23.0.
+</p></div>
+      
+    </div>
+  
+</div>
+
+  </footer>
+  </body>
+</html>

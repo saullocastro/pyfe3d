@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r) &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>Quad4R - Quadrilateral element with reduced integration (pyfe3d.quad4r) &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
@@ -37,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -120,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -137,6 +138,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -161,13 +169,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -176,6 +177,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -364,6 +393,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -380,6 +416,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -584,11 +641,36 @@
 
 <li class="toctree-l2"><a class="reference internal" href="beamprop.html">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
 
+<li class="toctree-l2"><a class="reference internal" href="vabs.html">Variational asymptotic sectional analysis (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.vabs</span></code>)</a></li>
+
+
+
+
+
+
+
+
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html">Co-rotational kinematics, EICR (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
 <li class="toctree-l1"><a class="reference internal" href="solver.html">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_static.html">Linear static solution (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code>)</a></li>
 
+
+<li class="toctree-l1"><a class="reference internal" href="solver_inertia_relief.html">Static analysis with inertia relief (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.inertia_relief</span></code>)</a></li>
 
 <li class="toctree-l1"><a class="reference internal" href="solver_analysis.html">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</a></li>
 
@@ -640,6 +722,7 @@
 
 
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html">Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code>)</a></li>
+
 
 
 
@@ -743,10 +826,13 @@ internal force vector.</p>
 integration scheme for the <a class="reference internal" href="#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a> element, with a single point at
 the centroid, making it very efficient concerning the time needed to
 calculate the internal forces and stiffness matrices, in comparison with the
-<a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> element. An hourglass control adds an artificial
-stiffness to <span class="math notranslate nohighlight">\(u\)</span>, <span class="math notranslate nohighlight">\(v\)</span>, <span class="math notranslate nohighlight">\(w\)</span>, <span class="math notranslate nohighlight">\(r_x\)</span> and <span class="math notranslate nohighlight">\(r_y\)</span>, whose magnitude can be scaled
-with the <code class="docutils literal notranslate"><span class="pre">hgfactor_*</span></code> parameters of <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KC0" title="pyfe3d.quad4r.Quad4R.update_KC0"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4R.update_KC0()</span></code></a>,
-<a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_probe_finte" title="pyfe3d.quad4r.Quad4R.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4R.update_probe_finte()</span></code></a> and <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_fint" title="pyfe3d.quad4r.Quad4R.update_fint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4R.update_fint()</span></code></a>.</p>
+<a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> element. The hourglass modes of the bending and of the
+transverse shear, of <span class="math notranslate nohighlight">\(w\)</span>, <span class="math notranslate nohighlight">\(r_x\)</span> and <span class="math notranslate nohighlight">\(r_y\)</span>, are controlled by the physical
+stabilisation of Belytschko and Leviathan (1994), which has no parameter,
+and those of the membrane, of <span class="math notranslate nohighlight">\(u\)</span> and <span class="math notranslate nohighlight">\(v\)</span>, by the artificial stiffness of
+Brockman (1987); <code class="docutils literal notranslate"><span class="pre">hgfactor_physical</span></code> and <code class="docutils literal notranslate"><span class="pre">hgfactor_membrane</span></code> of
+<a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KC0" title="pyfe3d.quad4r.Quad4R.update_KC0"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4R.update_KC0()</span></code></a>, <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_probe_finte" title="pyfe3d.quad4r.Quad4R.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4R.update_probe_finte()</span></code></a> and
+<a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_fint" title="pyfe3d.quad4r.Quad4R.update_fint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4R.update_fint()</span></code></a> multiply them.</p>
 <p>The drilling rotation <span class="math notranslate nohighlight">\(r_z\)</span> is tied to the in-plane rotation of the membrane
 field by a term integrated with two points per direction, whose coefficient
 is selected with the <code class="docutils literal notranslate"><span class="pre">drilling_model</span></code> attribute of <a class="reference internal" href="#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>: the
@@ -791,130 +877,146 @@ interpolated bi-linearly between the nodes, such that any of the DOF
 gradients can be constant over the element when the element is rectangular.</p>
 <p class="rubric">Integration scheme and hourglass control</p>
 <p>In the reduced integration scheme used, a single point at the centroid
-(<span class="math notranslate nohighlight">\(\xi=\eta=0\)</span>) and weight <span class="math notranslate nohighlight">\(w_{ij}=4\)</span>, preventing shear locking.
-The hourglass control is used according to Brockman 1987 <a class="reference internal" href="#r1bca8bcc39c0-1" id="id1">[1]</a>, with the
-orthogonalised hourglass operator of his Eq. (14), which he quotes from
-Belytschko and Tsay 1983 <a class="reference internal" href="#r1bca8bcc39c0-2" id="id2">[2]</a>. Brockman considers only isotropic plates,
-and his generalized stiffnesses contain the Young’s modulus <span class="math notranslate nohighlight">\(E\)</span>, times <span class="math notranslate nohighlight">\(t\)</span>
-for the in-plane translations <span class="math notranslate nohighlight">\(u\)</span>, <span class="math notranslate nohighlight">\(v\)</span> and times <span class="math notranslate nohighlight">\(t^3\)</span> for <span class="math notranslate nohighlight">\(w\)</span> and the
-rotations. For a laminate, <span class="math notranslate nohighlight">\(E\)</span> is replaced by equivalent moduli in the
-element coordinate system, see <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KC0" title="pyfe3d.quad4r.Quad4R.update_KC0"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4R.update_KC0()</span></code></a>: the membrane
-moduli <span class="math notranslate nohighlight">\(E_{1eq}\)</span> and <span class="math notranslate nohighlight">\(E_{2eq}\)</span> of the extensional compliance <span class="math notranslate nohighlight">\(\boldsymbol{A}^{-1}\)</span> for
-<span class="math notranslate nohighlight">\(u\)</span> and <span class="math notranslate nohighlight">\(v\)</span>, and the bending moduli <span class="math notranslate nohighlight">\(E_{1b}\)</span> and <span class="math notranslate nohighlight">\(E_{2b}\)</span> of the bending
-compliance, the lower-right block of <span class="math notranslate nohighlight">\([[A, B], [B, D]]^{-1}\)</span>, for <span class="math notranslate nohighlight">\(w\)</span>,
-<span class="math notranslate nohighlight">\(r_x\)</span> and <span class="math notranslate nohighlight">\(r_y\)</span>. Each is the modulus of the homogeneous plate that has the
-compliance of the laminate in that direction, so both pairs reduce to <span class="math notranslate nohighlight">\(E\)</span>
-for an isotropic plate, and they differ for a laminate whose bending
-stiffness is not <span class="math notranslate nohighlight">\(t^2/12\)</span> times its extensional stiffness, e.g. a cross-ply
-or a sandwich. Brockman calibrated the coefficients of his Eq. (16) on
-isotropic plates, and this generalisation does not recalibrate them for
-laminates; <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a>, with its mixed quadrature, needs no hourglass
-control. With the bending moduli, the artificial stiffness of the rotations
-is the same fraction of the bending stiffness of the plate for every
-laminate as for an isotropic plate. On simply supported plates under
-uniform pressure, with 8 by 8 elements, the centre deflection of an
-unsymmetric <span class="math notranslate nohighlight">\([0/90]\)</span> cross-ply, whose <span class="math notranslate nohighlight">\(\boldsymbol{B}\)</span> gives <span class="math notranslate nohighlight">\(E_{1b} = 0.36
-E_{1eq}\)</span>, is 15 % smaller than the Navier solution of the FSDT, against
-32 % with the membrane moduli for the rotations, used before 0.11.0, which
-over-stabilised it; that of a sandwich with thin faces, <span class="math notranslate nohighlight">\(E_{1b} = 2.7
-E_{1eq}\)</span>, is 14 % smaller, against 6 %, the membrane moduli having
-under-stabilised it; see <code class="docutils literal notranslate"><span class="pre">test_laminated_plates_against_navier</span></code> in
-<code class="docutils literal notranslate"><span class="pre">test_quad4r_hourglass_control.py</span></code>.</p>
-<p class="rubric">Dimensional homogeneity of the hourglass stiffnesses</p>
-<p>The generalized stiffnesses of Brockman’s Eqs. (16a) and (16b),</p>
+(<span class="math notranslate nohighlight">\(\xi=\eta=0\)</span>) and weight <span class="math notranslate nohighlight">\(w_{ij}=4\)</span>, the membrane, bending and transverse
+shear terms leave hourglass modes without stiffness. Those of the bending
+and of the transverse shear are controlled with the physical stabilisation
+of Belytschko and Leviathan (1994) <a class="reference internal" href="#r1bca8bcc39c0-9" id="id1">[9]</a>, described below, and those of the
+membrane with the artificial stiffness of Brockman 1987 <a class="reference internal" href="#r1bca8bcc39c0-1" id="id2">[1]</a>.</p>
+<p class="rubric">Physical stabilisation of the bending and of the transverse shear</p>
+<p>The transverse shear is that of Belytschko and Leviathan (1994) <a class="reference internal" href="#r1bca8bcc39c0-9" id="id3">[9]</a>: the
+assumed covariant shear strains of Dvorkin and Bathe (1984) <a class="reference internal" href="#r1bca8bcc39c0-10" id="id4">[10]</a>, tied at
+the mid-sides, <span class="math notranslate nohighlight">\(e_{\xi z}\)</span> at <span class="math notranslate nohighlight">\((0, \pm 1)\)</span> and <span class="math notranslate nohighlight">\(e_{\eta z}\)</span> at
+<span class="math notranslate nohighlight">\((\pm 1, 0)\)</span>, from <span class="math notranslate nohighlight">\(\gamma_{xz} = w_{,x} + r_y\)</span> and <span class="math notranslate nohighlight">\(\gamma_{yz} = w_{,y} -
+r_x\)</span>, split into a constant part and a nonconstant part, linear in <span class="math notranslate nohighlight">\(\eta\)</span>
+for <span class="math notranslate nohighlight">\(\gamma_{xz}\)</span> and in <span class="math notranslate nohighlight">\(\xi\)</span> for <span class="math notranslate nohighlight">\(\gamma_{yz}\)</span>, both mapped to Cartesian
+components with the Jacobian at the centroid, their Eqs. (3.35)-(3.42),
+pp. 328-329. The constant part is integrated at the centroid, their
+Eq. (4.12), p. 330, and the nonconstant part gives the stabilisation of
+their Eq. (4.13), p. 331, integrated exactly with <span class="math notranslate nohighlight">\(\int \xi^2 dA = \int
+\eta^2 dA = A/3\)</span> and <span class="math notranslate nohighlight">\(\int \xi \eta \, dA = 0\)</span>, their Eqs. (4.15) and
+(4.10), with the transverse shear stiffness <span class="math notranslate nohighlight">\(A_{44}\)</span>, <span class="math notranslate nohighlight">\(A_{45}\)</span> and
+<span class="math notranslate nohighlight">\(A_{55}\)</span>.</p>
+<p>The bending is stabilised in the same way: with the bilinear shape
+functions written as <span class="math notranslate nohighlight">\(N_I = \Delta_I + x b_{xI} + y b_{yI} + h \gamma_I\)</span>,
+their Eq. (3.23), <span class="math notranslate nohighlight">\(h = \xi \eta\)</span> and <span class="math notranslate nohighlight">\(\gamma_I = (h_I - (\boldsymbol{h}^\top
+\boldsymbol{x}) b_{xI} - (\boldsymbol{h}^\top \boldsymbol{y}) b_{yI})/4\)</span>,
+Eq. (3.24), the derivatives are <span class="math notranslate nohighlight">\(N_{I,x} = b_{xI} + h_{,x} \gamma_I\)</span>,
+Eq. (3.25), and the nonconstant part of the curvatures, <span class="math notranslate nohighlight">\(\kappa_{xx} =
+h_{,x} q_y\)</span>, <span class="math notranslate nohighlight">\(\kappa_{yy} = -h_{,y} q_x\)</span> and <span class="math notranslate nohighlight">\(\kappa_{xy} = h_{,y} q_y -
+h_{,x} q_x\)</span> with <span class="math notranslate nohighlight">\(q_x = \boldsymbol{\gamma}^\top \boldsymbol{r}_x\)</span> and <span class="math notranslate nohighlight">\(q_y =
+\boldsymbol{\gamma}^\top \boldsymbol{r}_y\)</span>, Eq. (3.28), p. 327, gives the
+stabilisation of Eqs. (4.13), (B.17) and (B.18), pp. 331 and 349, with
+the integrals <span class="math notranslate nohighlight">\(H_{xx}\)</span>, <span class="math notranslate nohighlight">\(H_{yy}\)</span> and <span class="math notranslate nohighlight">\(H_{xy}\)</span> of <span class="math notranslate nohighlight">\(h_{,x}^2\)</span>, <span class="math notranslate nohighlight">\(h_{,y}^2\)</span>
+and <span class="math notranslate nohighlight">\(h_{,x} h_{,y}\)</span> of their Eq. (4.14), here integrated with two by two
+Gauss points, and the bending stiffness <span class="math notranslate nohighlight">\(\boldsymbol{D} - \boldsymbol{B}
+\boldsymbol{A}^{-1} \boldsymbol{B}\)</span> of the laminate in the element
+coordinate system, which is <span class="math notranslate nohighlight">\(\boldsymbol{D}\)</span> for a symmetric laminate,
+<span class="math notranslate nohighlight">\(E t^3/12\)</span> times <span class="math notranslate nohighlight">\(\hat{\boldsymbol{C}}_b\)</span> of Eq. (B.18) for an isotropic
+plate, and does not depend on the reference surface set by
+<code class="docutils literal notranslate"><span class="pre">prop.offset</span></code>. For a parallelogram the one-point bending plus this
+stabilisation is the bending integrated with two by two points.</p>
+<p>Neither stabilisation has a parameter; <code class="docutils literal notranslate"><span class="pre">hgfactor_physical</span></code> multiplies
+both, <code class="docutils literal notranslate"><span class="pre">1</span></code> being the formulation of the paper, other values serving
+verification and sensitivity studies. The rigid-body motions and every
+state of constant strain, of constant curvature, including a uniform twist
+<span class="math notranslate nohighlight">\(w = kxy\)</span>, <span class="math notranslate nohighlight">\(r_x = kx\)</span>, <span class="math notranslate nohighlight">\(r_y = -ky\)</span>, and of constant transverse shear have
+no nonconstant strain, on any quadrilateral, and the assumed shear strains
+of constant curvature vanish there too: the element passes the
+constant-twist patch test and the thin-plate bending patch test of
+Belytschko and Leviathan, their Section 6.1, Fig. 3 and Tables 2 and 3,
+pp. 336-337, for any thickness, length unit and <code class="docutils literal notranslate"><span class="pre">hgfactor_physical</span></code>, see
+<code class="docutils literal notranslate"><span class="pre">test_constant_twist_patch_test</span></code> and
+<code class="docutils literal notranslate"><span class="pre">test_bending_patch_test_belytschko_leviathan</span></code> in
+<code class="docutils literal notranslate"><span class="pre">test_quad4r_hourglass_control.py</span></code>. The hourglass modes of <span class="math notranslate nohighlight">\(w\)</span>, <span class="math notranslate nohighlight">\(r_x\)</span>
+and <span class="math notranslate nohighlight">\(r_y\)</span> and the twisting mode of Brockman’s Eq. (13) have nonconstant
+strains, so a single element is singular only in its six rigid-body
+motions. Both stiffnesses scale with the length unit as the physical ones
+do, so the response of a model is independent of the unit of length.</p>
+<p class="rubric">Hourglass control of the membrane</p>
+<p>The hourglass modes of <span class="math notranslate nohighlight">\(u\)</span> and <span class="math notranslate nohighlight">\(v\)</span> have the artificial stiffness of
+Brockman 1987 <a class="reference internal" href="#r1bca8bcc39c0-1" id="id5">[1]</a>, with the orthogonalised hourglass operator of his
+Eq. (14), which he quotes from Belytschko and Tsay 1983 <a class="reference internal" href="#r1bca8bcc39c0-2" id="id6">[2]</a>. Brockman
+considers only isotropic plates, and his generalized stiffnesses contain
+the Young’s modulus <span class="math notranslate nohighlight">\(E\)</span> times <span class="math notranslate nohighlight">\(t\)</span>; for a laminate, <span class="math notranslate nohighlight">\(E\)</span> is replaced by the
+membrane moduli <span class="math notranslate nohighlight">\(E_{1eq}\)</span> and <span class="math notranslate nohighlight">\(E_{2eq}\)</span> of the extensional compliance
+<span class="math notranslate nohighlight">\(\boldsymbol{A}^{-1}\)</span> in the element coordinate system, see
+<a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KC0" title="pyfe3d.quad4r.Quad4R.update_KC0"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4R.update_KC0()</span></code></a>, which reduce to <span class="math notranslate nohighlight">\(E\)</span> for an isotropic plate.
+The generalized stiffnesses of Brockman’s Eq. (16a),</p>
 <div class="math notranslate nohighlight">
-\[E^{(h)}_u = E^{(h)}_v = \frac{0.10 E t}{1 + 1/A}
+\[E^{(h)}_u = E^{(h)}_v = \frac{0.10 E t}{1 + 1/A}\]</div>
+<p>are not dimensionally homogeneous, <span class="math notranslate nohighlight">\(1/A\)</span> being an inverse area. The
+hourglass term enters the element matrix as <span class="math notranslate nohighlight">\(K_{ij} = A E^{(h)} \gamma_i
+\gamma_j\)</span>, with <span class="math notranslate nohighlight">\(\gamma = \partial^2 \boldsymbol{S}/\partial x \partial y\)</span>
+at the centroid, of dimension <span class="math notranslate nohighlight">\(1/L^2\)</span>, so <span class="math notranslate nohighlight">\(E^{(h)}\)</span> must be a force times a
+length; Brockman’s factor <span class="math notranslate nohighlight">\(1/(1 + 1/A)\)</span> tends to <span class="math notranslate nohighlight">\(A\)</span> only for <span class="math notranslate nohighlight">\(A \ll 1\)</span>,
+the regime in which he calibrated it, “over a range of six orders of
+magnitude in the planform dimension”. This element uses the area itself,</p>
+<div class="math notranslate nohighlight">
+\[E^{(h)}_u = 0.10 \, f_m E_{1eq} t A
 \qquad
-E^{(h)}_w = E^{(h)}_{\theta_x} = E^{(h)}_{\theta_y}
-          = \frac{0.10 E t^3}{1 + 1/A}\]</div>
-<p>are not dimensionally homogeneous, <span class="math notranslate nohighlight">\(1/A\)</span> being an inverse area, so the
-artificial stiffness depends on the unit of length the model is written in.
-The hourglass term enters the element matrix as</p>
-<div class="math notranslate nohighlight">
-\[K_{ij} = A E^{(h)} \gamma_i \gamma_j\]</div>
-<p>with <span class="math notranslate nohighlight">\(\gamma = \partial^2 \boldsymbol{S}/\partial x \partial y\)</span> evaluated at the
-centroid, of dimension <span class="math notranslate nohighlight">\(1/L^2\)</span>. The hourglass amplitude of a translation is
-<span class="math notranslate nohighlight">\(\gamma^\top u\)</span>, of dimension <span class="math notranslate nohighlight">\(1/L\)</span>, and of a rotation is <span class="math notranslate nohighlight">\(\gamma^\top \theta\)</span>, of
-dimension <span class="math notranslate nohighlight">\(1/L^2\)</span>. Requiring <span class="math notranslate nohighlight">\(K_{ij}\)</span> to be a force per unit displacement
-for the translations and a moment per unit rotation for the rotations gives</p>
-<div class="math notranslate nohighlight">
-\[\boldsymbol{E}^{(h)} = F L \quad \text{for } u, v, w
-\qquad
-\boldsymbol{E}^{(h)} = F L^3 \quad \text{for } \theta_x, \theta_y\]</div>
-<p>Since <span class="math notranslate nohighlight">\(1/(1 + 1/A) \rightarrow A\)</span> for <span class="math notranslate nohighlight">\(A \ll 1\)</span> and <span class="math notranslate nohighlight">\(\rightarrow 1\)</span> for
-<span class="math notranslate nohighlight">\(A \gg 1\)</span>, Brockman’s factor supplies the area that Eq. (16a) is missing
-only in a unit of length that makes the element areas small, and stops
-supplying it in a unit that makes them large. The switch happens at
-<span class="math notranslate nohighlight">\(A = 1\)</span> in whatever unit is used. He introduces the factor knowingly, as
-“motivated by locking problems observed in elements with extremely small
-dimensions”, and reports good behaviour “over a range of six orders of
-magnitude in the planform dimension”.</p>
-<p>This element replaces the factor by the area itself wherever doing so costs
-nothing, which is four of the five coefficients:</p>
-<div class="math notranslate nohighlight">
-\[E^{(h)}_u = 0.10 E_{1eq} t A
-\qquad
-E^{(h)}_v = 0.10 E_{2eq} t A\]</div>
-<div class="math notranslate nohighlight">
-\[E^{(h)}_{\theta_x} = 0.10 E_{2b} t^3 A
-\qquad
-E^{(h)}_{\theta_y} = 0.10 E_{1b} t^3 A\]</div>
-<p>Each of these scales under a change of length unit exactly as the physical
-stiffness it stabilises, <span class="math notranslate nohighlight">\(Et\)</span> for the in-plane translations and <span class="math notranslate nohighlight">\(Et^3\)</span> for
-the rotations, so the ratio of artificial to physical stiffness is the same
-number in every unit. In the small-area limit they coincide with
-Eqs. (16a) and (16b), so no benchmark of this element moves: the change is
-a reinterpretation of Brockman’s factor as the area it tends to, not a
-different magnitude of stabilisation. Cook’s in-plane bending problem,
-whose response legitimately contains hourglass components, is reproduced to
-twelve significant figures over nine orders of magnitude of length unit,
-where before it drifted at the metre and collapsed at the kilometre.</p>
-<p>The transverse coefficient <span class="math notranslate nohighlight">\(E^{(h)}_w\)</span> keeps Brockman’s factor, and this is
-a deliberate limitation rather than an oversight. The hourglass operator
-cannot distinguish the spurious pattern <span class="math notranslate nohighlight">\(w = xy\)</span> with
-<span class="math notranslate nohighlight">\(\theta_x = \theta_y = 0\)</span> from a legitimate twist curvature, since both
-give <span class="math notranslate nohighlight">\(\gamma^\top w = \partial^2 w/\partial x \partial y\)</span>. The stabilisation
-therefore also stiffens real twist, by the ratio
-<span class="math notranslate nohighlight">\(3 E^{(h)}_w/(E t^3)\)</span>, and the amount that is acceptable is a property of
-the problem rather than of the element. Measured on this element’s own
-benchmarks, the thin plates want a coefficient near <span class="math notranslate nohighlight">\(2 \times 10^{-4}\)</span> of
-<span class="math notranslate nohighlight">\(E t^3\)</span>, above which their buckling loads stiffen past their tolerances,
-while the one-element-wide torsion strip of MacNeal and Harder (1985) <a class="reference internal" href="#r1bca8bcc39c0-7" id="id3">[7]</a>,
-for which the twist <em>is</em> the hourglass pattern, wants near
-<span class="math notranslate nohighlight">\(2 \times 10^{-2}\)</span>, below which it becomes several times too flexible.
-Those are two orders of magnitude apart and no single dimensionless
-constant serves both. Brockman’s factor does serve both, because it grows
-with the element area, which in SI units happens to correlate with which of
-the two regimes a given problem is in.</p>
-<p>So the residual unit dependence of this element’s hourglass control is
-confined to <span class="math notranslate nohighlight">\(E^{(h)}_w\)</span>, it is documented, and it is measured in
-<code class="docutils literal notranslate"><span class="pre">test_quad4r_hourglass_control.py</span></code>. Removing it properly needs an
-operator that separates the spurious transverse pattern from genuine twist,
-which is what an assumed-strain formulation such as MITC4 provides, rather
-than a better choice of coefficient.</p>
-<p>The hinged cylindrical roof of Sze et al. (2004) <a class="reference internal" href="#r1bca8bcc39c0-8" id="id4">[8]</a> shows this dependence
-on the problem. Its elements have areas of 16 to 1008 in the unit of length
-of the model, the default <span class="math notranslate nohighlight">\(E^{(h)}_w\)</span> is then <span class="math notranslate nohighlight">\(0.94\)</span> to <span class="math notranslate nohighlight">\(1.0\)</span> times
-<span class="math notranslate nohighlight">\(0.1 E t^3\)</span>, and the linear deflection under the central point load is
-6 to 7 % smaller than with <a class="reference internal" href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a>, which has no hourglass
-control, and, with the transverse shear stiffness multiplied by 100, than
-with a shallow-shell Kirchhoff solution. Smaller values of <code class="docutils literal notranslate"><span class="pre">hgfactor_w</span></code>
-approach both.
-These measurements show the sensitivity of one problem and do not recommend
-another value: the default follows the references above, and a different
-default would need further studies.</p>
-<p>The coefficients and the operator, as computed, are given in the Notes of
+E^{(h)}_v = 0.10 \, f_m E_{2eq} t A\]</div>
+<p>with <span class="math notranslate nohighlight">\(f_m\)</span> = <code class="docutils literal notranslate"><span class="pre">hgfactor_membrane</span></code>, which scales with the length unit as
+the extensional stiffness <span class="math notranslate nohighlight">\(E t\)</span> does: Cook’s in-plane bending problem is
+reproduced to twelve significant figures over nine orders of magnitude of
+length unit, see <code class="docutils literal notranslate"><span class="pre">test_hourglass_stiffness_is_independent_of_the_length_unit</span></code>.</p>
+<p>Belytschko and Leviathan stabilise the membrane physically too, with the
+nonconstant part of the membrane strains, their Eqs. (3.27) and (B.13),
+which on a flat element is the bilinear membrane integrated with two by two
+points and locks in in-plane bending. Measured on 2026-10-29 with that
+stabilisation, integrated with two by two points, in place of Brockman’s:
+the in-plane tip load of the straight cantilever of MacNeal and Harder
+(1985) <a class="reference internal" href="#r1bca8bcc39c0-7" id="id7">[7]</a>, 6 by 1 elements, gives 0.076, 0.024 and 0.028 times the
+reference on the regular, trapezoidal and parallelogram meshes, against
+0.119, 0.033 and 0.064 with Brockman’s; Cook’s membrane gives 11.32, 18.14,
+22.44 and 24.18 with 2x2 to 16x16 elements, against 13.95, 20.28, 23.41 and
+24.54 (reference 23.96). Neither is free of locking on the one-element-deep
+strips, and the physical form is the stiffer, so the membrane keeps
+Brockman’s stabilisation. <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a>, with its drilling enrichment,
+does not lock in in-plane bending.</p>
+<p>Up to 0.11 the hourglass modes of <span class="math notranslate nohighlight">\(w\)</span>, <span class="math notranslate nohighlight">\(r_x\)</span> and <span class="math notranslate nohighlight">\(r_y\)</span> also had Brockman’s
+artificial stiffnesses, <span class="math notranslate nohighlight">\(0.1 E t^3/(1 + 1/A)\)</span> for <span class="math notranslate nohighlight">\(w\)</span> and <span class="math notranslate nohighlight">\(0.1 E_{b} t^3
+A\)</span> for the rotations, with the bending moduli, and the transverse shear was
+the displacement-based one at the centroid. The operator <span class="math notranslate nohighlight">\(\gamma^\top w\)</span>
+is <span class="math notranslate nohighlight">\(w_{,xy}\)</span>, <span class="math notranslate nohighlight">\(k\)</span> for a uniform twist, and added the fraction <span class="math notranslate nohighlight">\(0.6 (1 +
+\nu)/(1 + 1/A)\)</span> to its energy, 0.78 for <span class="math notranslate nohighlight">\(\nu = 0.3\)</span> and <span class="math notranslate nohighlight">\(A \gg 1\)</span>, a
+failure of the constant-twist patch test that refinement did not remove
+where the element areas were large in the unit of length of the model; the
+parameters were <code class="docutils literal notranslate"><span class="pre">hgfactor_u</span></code>, <code class="docutils literal notranslate"><span class="pre">hgfactor_v</span></code>, <code class="docutils literal notranslate"><span class="pre">hgfactor_w</span></code>,
+<code class="docutils literal notranslate"><span class="pre">hgfactor_rx</span></code> and <code class="docutils literal notranslate"><span class="pre">hgfactor_ry</span></code>. The consequences, measured on
+2026-10-29, before and after:</p>
+<ul class="simple">
+<li><p>the one-element-wide torsion strip of MacNeal and Harder (1985) <a class="reference internal" href="#r1bca8bcc39c0-7" id="id8">[7]</a>:
+4.78 times the reference twist, grade F, against 0.941, grade B, the
+value of their QUAD4, see <code class="docutils literal notranslate"><span class="pre">test_one_element_wide_strip_in_torsion</span></code>;</p></li>
+<li><p>the hinged cylindrical roof of Sze et al. (2004) <a class="reference internal" href="#r1bca8bcc39c0-8" id="id9">[8]</a>, <span class="math notranslate nohighlight">\(t = 6.35\)</span>: the
+lower limit load converged to -0.1435 to -0.1440 <span class="math notranslate nohighlight">\(P_{max}\)</span>, 11 % below
+the -0.1288 of their Table 9d, against 0.2 % with 32x32 elements on the
+quarter, see <code class="docutils literal notranslate"><span class="pre">test_hinged_roof_thin_snap_back</span></code>; with <span class="math notranslate nohighlight">\(t = 12.7\)</span> the
+linear deflection was 6 to 7 % smaller than with <a class="reference internal" href="tria3dsg.html#pyfe3d.tria3dsg.Tria3DSG" title="pyfe3d.tria3dsg.Tria3DSG"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3DSG</span></code></a>;</p></li>
+<li><p>the thin-plate bending patch test above: the interior deflections were
+0.88 to 1.21 times the exact ones;</p></li>
+<li><p>simply supported laminated plates under uniform pressure, 8x8 elements:
+the centre deflection was 8 to 15 % below the Navier solution, against
+0.5 to 3 %, see <code class="docutils literal notranslate"><span class="pre">test_laminated_plates_against_navier</span></code>;</p></li>
+<li><p>the thin plates of <code class="docutils literal notranslate"><span class="pre">test_quad4r_linear_buckling_plate.py</span></code>: the
+buckling load was 0.27 % above Leissa’s with 92x44 elements, against
+0.05 %; the thick plate of
+<code class="docutils literal notranslate"><span class="pre">test_quad4r_linear_buckling_plate_rotated_thick_elements.py</span></code>, 30x14
+elements: 10.7 % above the reference with tuned hourglass factors,
+against 1.4 % with the default.</p></li>
+</ul>
+<p>The operators and the coefficients, as computed, are given in the Notes of
 <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KC0" title="pyfe3d.quad4r.Quad4R.update_KC0"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4R.update_KC0()</span></code></a>.</p>
 <p class="rubric">Transverse shear stiffness</p>
 <p>When a material direction is defined,
 <a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp.calc_Ats_element" title="pyfe3d.shellprop.ShellProp.calc_Ats_element"><code class="xref py py-meth docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp.calc_Ats_element()</span></code></a> re-evaluates the
-equilibrium-based stiffness of Rohwer (1988) <a class="reference internal" href="#r1bca8bcc39c0-6" id="id5">[6]</a> with the plies rotated to
+equilibrium-based stiffness of Rohwer (1988) <a class="reference internal" href="#r1bca8bcc39c0-6" id="id10">[6]</a> with the plies rotated to
 the element coordinate system, such that the assumed cylindrical bending
 states are posed along the element axes.</p>
 <p class="rubric">Drilling stiffness</p>
 <p>Two drilling models are available, selected with the <code class="docutils literal notranslate"><span class="pre">drilling_model</span></code>
-attribute, whose default is <code class="docutils literal notranslate"><span class="pre">0</span></code>, see Hughes and Brezzi <a class="reference internal" href="#r1bca8bcc39c0-3" id="id6">[3]</a> and
-Allman <a class="reference internal" href="#r1bca8bcc39c0-4" id="id7">[4]</a>.</p>
+attribute, whose default is <code class="docutils literal notranslate"><span class="pre">0</span></code>, see Hughes and Brezzi <a class="reference internal" href="#r1bca8bcc39c0-3" id="id11">[3]</a> and
+Allman <a class="reference internal" href="#r1bca8bcc39c0-4" id="id12">[4]</a>.</p>
 <p>Both use the same operator, the regularised one of Hughes and
 Brezzi (1989) that ties the drilling rotation <span class="math notranslate nohighlight">\(r_z\)</span> to the in-plane rotation
 <span class="math notranslate nohighlight">\(\theta_z = (v_{,x} - u_{,y})/2\)</span>, integrated with two points per direction,
@@ -922,7 +1024,8 @@ and they differ only in the coefficient <span class="math notranslate nohighligh
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">drilling_model</span> <span class="pre">=</span> <span class="pre">0</span></code>, the default, uses the physics-based value
 <span class="math notranslate nohighlight">\(\gamma_{r_z} = A_{66}\)</span> identified by Hughes and Brezzi, which is a
-modulus of the laminate and not an adjustable parameter;</p></li>
+stiffness per unit length taken from the laminate and not an adjustable
+parameter;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">drilling_model</span> <span class="pre">=</span> <span class="pre">1</span></code> uses the fictitious value <span class="math notranslate nohighlight">\(\gamma_{r_z} = K6ROT
 \cdot 10^{-6} A_{66}\)</span> of MSC Nastran and Autodesk Nastran, derived below.</p></li>
 </ul>
@@ -1029,59 +1132,75 @@ the drilling degree-of-freedom in element’s coordinates, whereas <span class="
 <div class="math notranslate nohighlight">
 \[B_{r_z} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}\]</div>
 <p>Note that <span class="math notranslate nohighlight">\(A_{66}\)</span> is assumed constant over the element, which here has no difference given that a reduced integration approach is used.
-The approach herein presented is very similar to the one presented in Eq. 2.20 of Adam et al. <a class="reference internal" href="#r1bca8bcc39c0-5" id="id8">[5]</a>.</p>
+The approach herein presented is very similar to the one presented in Eq. 2.20 of Adam et al. <a class="reference internal" href="#r1bca8bcc39c0-5" id="id13">[5]</a>.</p>
 </section>
 <section id="references">
 <h2>References<a class="headerlink" href="#references" title="Link to this heading">#</a></h2>
 <div role="list" class="citation-list">
 <div class="citation" id="r1bca8bcc39c0-1" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id2">1</a>,<a role="doc-backlink" href="#id5">2</a>)</span>
 <p>Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
 International Journal for Numerical Methods in Engineering, 24(12),
 2343-2356, 1987. <a class="reference external" href="https://doi.org/10.1002/nme.1620241208">https://doi.org/10.1002/nme.1620241208</a></p>
 </div>
 <div class="citation" id="r1bca8bcc39c0-2" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">2</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id6">2</a><span class="fn-bracket">]</span></span>
 <p>Belytschko, T., and Tsay, C. S., A stabilization procedure for the
 quadrilateral plate element with one-point quadrature, International
 Journal for Numerical Methods in Engineering, 19(3), 405-419, 1983.
 <a class="reference external" href="https://doi.org/10.1002/nme.1620190308">https://doi.org/10.1002/nme.1620190308</a></p>
 </div>
 <div class="citation" id="r1bca8bcc39c0-3" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id6">3</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id11">3</a><span class="fn-bracket">]</span></span>
 <p>Hughes, T. J. R., and Brezzi, F., On drilling degrees of freedom,
 Computer Methods in Applied Mechanics and Engineering, 72(1), 105-121,
 1989. <a class="reference external" href="https://doi.org/10.1016/0045-7825(89)90124-2">https://doi.org/10.1016/0045-7825(89)90124-2</a></p>
 </div>
 <div class="citation" id="r1bca8bcc39c0-4" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id7">4</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id12">4</a><span class="fn-bracket">]</span></span>
 <p>Allman, D. J., A compatible triangular element including vertex
 rotations for plane elasticity analysis, Computers &amp; Structures,
 19(1-2), 1-8, 1984. <a class="reference external" href="https://doi.org/10.1016/0045-7949(84)90197-4">https://doi.org/10.1016/0045-7949(84)90197-4</a></p>
 </div>
 <div class="citation" id="r1bca8bcc39c0-5" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id8">5</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id13">5</a><span class="fn-bracket">]</span></span>
 <p>Adam, F. M., Mohamed, A. E., and Hassaballa, A. E., Degenerated Four
 Nodes Shell Element with Drilling Degree of Freedom, IOSR Journal of
 Engineering, 3(8), 10-20, 2013.</p>
 </div>
 <div class="citation" id="r1bca8bcc39c0-6" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id5">6</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id10">6</a><span class="fn-bracket">]</span></span>
 <p>Rohwer, K., Improved transverse shear stiffness for layered finite
 elements, DFVLR-FB 88-32, 1988.</p>
 </div>
 <div class="citation" id="r1bca8bcc39c0-7" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id3">7</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span>7<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id7">1</a>,<a role="doc-backlink" href="#id8">2</a>)</span>
 <p>MacNeal, R. H., and Harder, R. L., A proposed standard set of problems
 to test finite element accuracy, Finite Elements in Analysis and Design,
 1(1), 3-20, 1985. <a class="reference external" href="https://doi.org/10.1016/0168-874X(85)90003-4">https://doi.org/10.1016/0168-874X(85)90003-4</a></p>
 </div>
 <div class="citation" id="r1bca8bcc39c0-8" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id4">8</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id9">8</a><span class="fn-bracket">]</span></span>
 <p>Sze, K. Y., Liu, X. H., and Lo, S. H., Popular benchmark problems
 for geometric nonlinear analysis of shells, Finite Elements in Analysis
 and Design, 40(11), 1551-1569, 2004.
 <a class="reference external" href="https://doi.org/10.1016/j.finel.2003.11.001">https://doi.org/10.1016/j.finel.2003.11.001</a></p>
+</div>
+<div class="citation" id="r1bca8bcc39c0-9" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>9<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id3">2</a>)</span>
+<p>Belytschko, T., and Leviathan, I., Physical stabilization of the
+4-node shell element with one point quadrature, Computer Methods in
+Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
+<a class="reference external" href="https://doi.org/10.1016/0045-7825(94)90052-3">https://doi.org/10.1016/0045-7825(94)90052-3</a></p>
+</div>
+<div class="citation" id="r1bca8bcc39c0-10" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id4">10</a><span class="fn-bracket">]</span></span>
+<p>Dvorkin, E. N., and Bathe, K. J., A continuum mechanics based
+four-node shell element for general non-linear analysis, Engineering
+Computations, 1(1), 77-88, 1984. <a class="reference external" href="https://doi.org/10.1108/eb023562">https://doi.org/10.1108/eb023562</a></p>
 </div>
 </div>
 </section>
@@ -1147,6 +1266,16 @@ value, which means that <span class="math notranslate nohighlight">\(A_{66}\)</s
 stiffness matrix is used.
 A non-negative value is ignored when <code class="docutils literal notranslate"><span class="pre">A66</span></code> is zero. Dimension of
 force per unit length, as <code class="docutils literal notranslate"><span class="pre">A66</span></code>.</p>
+</dd>
+<dt><strong>warp_offsets,</strong><span class="classifier">int</span></dt><dd><p>Rigid offsets of a warped element, see the Notes. The default <code class="docutils literal notranslate"><span class="pre">1</span></code>
+links the flat element of the matrices, in the mean plane of the
+nodes, to the warped nodes by rigid offsets along its normal, in
+<code class="docutils literal notranslate"><span class="pre">update_KC0</span></code>, <code class="docutils literal notranslate"><span class="pre">update_M</span></code>, <code class="docutils literal notranslate"><span class="pre">update_KG</span></code>,
+<code class="docutils literal notranslate"><span class="pre">update_KG_given_stress</span></code>, <code class="docutils literal notranslate"><span class="pre">update_KCNL</span></code> and the internal forces
+of <code class="docutils literal notranslate"><span class="pre">update_probe_finte</span></code> and <code class="docutils literal notranslate"><span class="pre">update_fint</span></code>, also with
+<code class="docutils literal notranslate"><span class="pre">nonlinear</span></code>; <code class="docutils literal notranslate"><span class="pre">0</span></code> uses the flat element without them, as before
+version 0.12.0. A flat element gives the same results, bit for bit,
+with both values.</p>
 </dd>
 <dt><strong>r11, r12, r13, r21, r22, r23, r31, r32, r33</strong><span class="classifier">double</span></dt><dd><p>Entries <span class="math notranslate nohighlight">\(T_{ij}\)</span> of the transformation matrix <span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3}\)</span> from
 element to global coordinates, whose columns are the element axes.</p>
@@ -1221,7 +1350,7 @@ matrices based on the Piston theory.</p>
 </div>
 <p class="rubric">Notes</p>
 <p>The physics-based coefficient of <code class="docutils literal notranslate"><span class="pre">drilling_model</span> <span class="pre">=</span> <span class="pre">0</span></code> is
-<span class="math notranslate nohighlight">\(\gamma_{r_z} = A_{66}\)</span> of Hughes and Brezzi (1989) <a class="reference internal" href="#r8b55b1837dc0-1" id="id9">[1]</a>, and the
+<span class="math notranslate nohighlight">\(\gamma_{r_z} = A_{66}\)</span> of Hughes and Brezzi (1989) <a class="reference internal" href="#r8b55b1837dc0-1" id="id14">[1]</a>, and the
 fictitious penalty of the other values of <code class="docutils literal notranslate"><span class="pre">drilling_model</span></code> corresponds
 to <span class="math notranslate nohighlight">\(\gamma_{r_z} = K6ROT \cdot 10^{-6} A_{66}\)</span>. Both apply the same
 operator with the same quadrature, so switching between them changes
@@ -1229,7 +1358,7 @@ only the magnitude of the drilling stiffness, by four orders of
 magnitude for the recommended <code class="docutils literal notranslate"><span class="pre">K6ROT</span> <span class="pre">=</span> <span class="pre">100.</span></code>. Both models are
 described in the Notes of <a class="reference internal" href="#module-pyfe3d.quad4r" title="pyfe3d.quad4r"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code></a>.</p>
 <p>This element does not implement the in-plane enrichment of Allman (1984)
-<a class="reference internal" href="#r8b55b1837dc0-2" id="id10">[2]</a> that <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> and <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3R</span></code></a> apply together
+<a class="reference internal" href="#r8b55b1837dc0-2" id="id15">[2]</a> that <a class="reference internal" href="quad4.html#pyfe3d.quad4.Quad4" title="pyfe3d.quad4.Quad4"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4</span></code></a> and <a class="reference internal" href="tria3r.html#pyfe3d.tria3r.Tria3R" title="pyfe3d.tria3r.Tria3R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tria3R</span></code></a> apply together
 with the Hughes-Brezzi term, because its reduced integration already
 achieves what the enrichment achieves there.</p>
 <p>For <code class="docutils literal notranslate"><span class="pre">K6ROT</span></code>, AUTODESK NASTRAN’s quick reference guide recommends
@@ -1238,21 +1367,86 @@ achieves what the enrichment achieves there.</p>
 that <code class="docutils literal notranslate"><span class="pre">K6ROT</span> <span class="pre">&gt;</span> <span class="pre">100.</span></code> should not be used, but this is contradicting
 AUTODESK NASTRAN.</p>
 <p>The default <code class="docutils literal notranslate"><span class="pre">gamma_rz</span></code>, <span class="math notranslate nohighlight">\(A_{66}\)</span>, is the value identified by Hughes
-and Brezzi (1989) <a class="reference internal" href="#r8b55b1837dc0-1" id="id11">[1]</a>.</p>
+and Brezzi (1989) <a class="reference internal" href="#r8b55b1837dc0-1" id="id16">[1]</a>.</p>
+<p>Warped elements. The matrices are those of the flat projection of the
+element, whose nodes are in the mean plane of the four nodes, the plane of
+the element coordinates parallel to both diagonals: node <span class="math notranslate nohighlight">\(a\)</span> is at the
+height <span class="math notranslate nohighlight">\(\tilde{z}_a\)</span> above it, with <span class="math notranslate nohighlight">\(\tilde{z}_1 = \tilde{z}_3 =
+-\tilde{z}_2 = -\tilde{z}_4\)</span>, and the coordinate <span class="math notranslate nohighlight">\(z\)</span> of <code class="docutils literal notranslate"><span class="pre">probe.xe</span></code> is
+otherwise ignored. The flat element alone does not represent the rigid
+rotations of the warped nodes and is too stiff in warped meshes. With
+<code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">1</span></code> the flat element is linked to each node by the rigid
+offset <span class="math notranslate nohighlight">\(\boldsymbol{r}_a = \tilde{z}_a \boldsymbol{e}_3\)</span>, the first order
+of the offsets of <a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalShell" title="pyfe3d.corotational.CorotationalShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.corotational.CorotationalShell</span></code></a> with
+<code class="docutils literal notranslate"><span class="pre">warping='offsets'</span></code> (derived here), which gives, in element coordinates,</p>
+<div class="math notranslate nohighlight">
+\[u^f_a = u_a - \tilde{z}_a r_{y,a}, \qquad v^f_a = v_a + \tilde{z}_a
+r_{x,a}\]</div>
+<p>with <span class="math notranslate nohighlight">\(w\)</span> and the rotations unchanged, <span class="math notranslate nohighlight">\(\boldsymbol{u}^f = \boldsymbol{J}
+\boldsymbol{u}_e\)</span>. The element matrices and forces are <span class="math notranslate nohighlight">\(\boldsymbol{J}^\top
+\boldsymbol{K}_{C0} \boldsymbol{J}\)</span>, <span class="math notranslate nohighlight">\(\boldsymbol{J}^\top \boldsymbol{M}
+\boldsymbol{J}\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{J}^\top \boldsymbol{f}\)</span>, with the flat
+element evaluated at <span class="math notranslate nohighlight">\(\boldsymbol{J} \boldsymbol{u}_e\)</span>, applied in element
+coordinates before the rotation to global coordinates, and the geometric
+stiffness adds the eccentricity term of the offsets, see
+<a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KG" title="pyfe3d.quad4r.Quad4R.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG()</span></code></a>. <code class="docutils literal notranslate"><span class="pre">KC0</span></code> then annihilates the six rigid motions of the
+warped nodes, is the tangent of <code class="docutils literal notranslate"><span class="pre">CorotationalShell</span></code> at the base
+configuration and keeps the number of zero eigenvalues of the flat element;
+for a warp ratio <code class="docutils literal notranslate"><span class="pre">max|z|/sqrt(A)</span></code> of 0.022 its non-zero eigenvalues
+change by at most 0.07 %. Other corrections of warped flat quadrilaterals
+balance the moment of the offset membrane forces with forces normal to the
+element instead of nodal moments, MacNeal (1978) <a class="reference internal" href="#r8b55b1837dc0-3" id="id17">[3]</a>, p. 180, and Cook
+(1994) <a class="reference internal" href="#r8b55b1837dc0-4" id="id18">[4]</a>, p. 552, or add warping terms to the curvatures, Belytschko et
+al. (1992) <a class="reference internal" href="#r8b55b1837dc0-5" id="id19">[5]</a>, Section 3.3, Eqs. (30b) and (37d-f). In the twisted beam
+of MacNeal and Harder (1985) <a class="reference internal" href="#r8b55b1837dc0-6" id="id20">[6]</a>, Fig. 6, 12 by 2 elements with a warp
+ratio of 0.024, the tip displacements of their Table 3 are matched within 1
+% for the load along the width at the tip and 7 % for the other one with
+the offsets, and are 67 to 77 % too small without them, see
+<code class="docutils literal notranslate"><span class="pre">tests/test_quad_warp_offsets.py</span></code>. Quad4R bends in its plane stiffly with
+one element across the width, which limits the accuracy of the load along
+the width at the root, 0.40 of the beam solution of the untwisted strip
+with 6 by 1 elements and 0.72 with 12 by 2.</p>
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="r8b55b1837dc0-1" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id9">1</a>,<a role="doc-backlink" href="#id11">2</a>)</span>
+<span class="backrefs">(<a role="doc-backlink" href="#id14">1</a>,<a role="doc-backlink" href="#id16">2</a>)</span>
 <p>Hughes, T. J. R., and Brezzi, F., On drilling degrees of freedom,
 Computer Methods in Applied Mechanics and Engineering, 72(1), 105-121,
 1989. <a class="reference external" href="https://doi.org/10.1016/0045-7825(89)90124-2">https://doi.org/10.1016/0045-7825(89)90124-2</a></p>
 </div>
 <div class="citation" id="r8b55b1837dc0-2" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id10">2</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id15">2</a><span class="fn-bracket">]</span></span>
 <p>Allman, D. J., A compatible triangular element including vertex
 rotations for plane elasticity analysis, Computers &amp; Structures,
 19(1-2), 1-8, 1984. <a class="reference external" href="https://doi.org/10.1016/0045-7949(84)90197-4">https://doi.org/10.1016/0045-7949(84)90197-4</a></p>
+</div>
+<div class="citation" id="r8b55b1837dc0-3" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id17">3</a><span class="fn-bracket">]</span></span>
+<p>MacNeal, R. H., A simple quadrilateral shell element, Computers
+&amp; Structures, 8(2), 175-183, 1978.
+<a class="reference external" href="https://doi.org/10.1016/0045-7949(78)90020-2">https://doi.org/10.1016/0045-7949(78)90020-2</a></p>
+</div>
+<div class="citation" id="r8b55b1837dc0-4" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id18">4</a><span class="fn-bracket">]</span></span>
+<p>Cook, R. D., Four-node ‘flat’ shell element: drilling degrees of
+freedom, membrane-bending coupling, warped geometry, and behavior,
+Computers &amp; Structures, 50(4), 549-555, 1994.
+<a class="reference external" href="https://doi.org/10.1016/0045-7949(94)90025-6">https://doi.org/10.1016/0045-7949(94)90025-6</a></p>
+</div>
+<div class="citation" id="r8b55b1837dc0-5" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id19">5</a><span class="fn-bracket">]</span></span>
+<p>Belytschko, T., Wong, B. L., and Chiang, H.-Y., Advances in
+one-point quadrature shell elements, Computer Methods in Applied
+Mechanics and Engineering, 96(1), 93-107, 1992.
+<a class="reference external" href="https://doi.org/10.1016/0045-7825(92)90100-X">https://doi.org/10.1016/0045-7825(92)90100-X</a></p>
+</div>
+<div class="citation" id="r8b55b1837dc0-6" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id20">6</a><span class="fn-bracket">]</span></span>
+<p>MacNeal, R. H., and Harder, R. L., A proposed standard set of
+problems to test finite element accuracy, Finite Elements in Analysis
+and Design, 1(1), 3-20, 1985.
+<a class="reference external" href="https://doi.org/10.1016/0168-874X(85)90003-4">https://doi.org/10.1016/0168-874X(85)90003-4</a></p>
 </div>
 </div>
 <dl class="py attribute">
@@ -1561,7 +1755,7 @@ the element.</p>
 and <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_CA" title="pyfe3d.quad4r.Quad4R.update_CA"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_CA()</span></code></a> are the matrices of the aerodynamic load
 along the element normal of a supersonic flow along the global <span class="math notranslate nohighlight">\(X\)</span>
 axis, flowing towards the positive <span class="math notranslate nohighlight">\(X\)</span>. The linear piston theory, with
-Krumhaar’s correction for a cylinder <a class="reference internal" href="#rc264b83a5b09-1" id="id14">[1]</a>, gives the pressure on the
+Krumhaar’s correction for a cylinder <a class="reference internal" href="#rc264b83a5b09-1" id="id27">[1]</a>, gives the pressure on the
 side of the flow <span class="math notranslate nohighlight">\(p = \beta w_{,X} + \mu \dot{w} - \gamma w\)</span>, with
 <span class="math notranslate nohighlight">\(w\)</span> the displacement towards the flow, and hence the
 load per unit area along the normal</p>
@@ -1585,7 +1779,7 @@ panel. The positive <span class="math notranslate nohighlight">\(\mu\)</span> da
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="rc264b83a5b09-1" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id14">1</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id27">1</a><span class="fn-bracket">]</span></span>
 <p>Krumhaar, H., “The accuracy of linear piston theory when
 applied to cylindrical shells”, AIAA Journal, 1(6), 1448-1449,
 1963.</p>
@@ -1641,7 +1835,7 @@ enters the stiffness of the equations of motion as <span class="math notranslate
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.update_KC0">
-<span class="sig-name descname"><span class="pre">update_KC0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KC0r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KC0c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KC0v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KC0v_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_u</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_rx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_ry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_KC0" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_KC0</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KC0r</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KC0c</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KC0v</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KC0v_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_membrane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_physical</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_KC0" title="Link to this definition">#</a></dt>
 <dd><p>Update sparse vectors for linear constitutive stiffness matrix KC0</p>
 <p>The element matrix is computed from the coordinates <code class="docutils literal notranslate"><span class="pre">probe.xe</span></code>, the
 <code class="docutils literal notranslate"><span class="pre">area</span></code> and the constitutive matrices of <code class="docutils literal notranslate"><span class="pre">prop</span></code> rotated with
@@ -1676,10 +1870,16 @@ are read from.</p>
 and <code class="docutils literal notranslate"><span class="pre">KC0c</span></code> should also be updated. Any other value will only
 update the stiffness matrix values <code class="docutils literal notranslate"><span class="pre">KC0v</span></code>.</p>
 </dd>
-<dt><strong>hgfactor_u, hgfactor_v, hgfactor_w, hgfactor_rx, hgfactor_ry</strong><span class="classifier">double</span></dt><dd><p>These offer the possibility to change the default hourglass
-stiffnesses for each degree-of-freedom.
-Dimensionless multipliers of the hourglass stiffnesses of <code class="docutils literal notranslate"><span class="pre">u</span></code>,
-<code class="docutils literal notranslate"><span class="pre">v</span></code>, <code class="docutils literal notranslate"><span class="pre">w</span></code>, <code class="docutils literal notranslate"><span class="pre">r_x</span></code> and <code class="docutils literal notranslate"><span class="pre">r_y</span></code>. Default <code class="docutils literal notranslate"><span class="pre">1.</span></code>.</p>
+<dt><strong>hgfactor_membrane</strong><span class="classifier">double, optional</span></dt><dd><p>Dimensionless multiplier of the artificial hourglass stiffness
+of the in-plane displacements <code class="docutils literal notranslate"><span class="pre">u</span></code> and <code class="docutils literal notranslate"><span class="pre">v</span></code>, of Brockman
+(1987). Default <code class="docutils literal notranslate"><span class="pre">1.</span></code>.</p>
+</dd>
+<dt><strong>hgfactor_physical</strong><span class="classifier">double, optional</span></dt><dd><p>Dimensionless multiplier of the physical stabilisation of the
+bending and of the transverse shear of Belytschko and Leviathan
+(1994), which controls the hourglass modes of <code class="docutils literal notranslate"><span class="pre">w</span></code>, <code class="docutils literal notranslate"><span class="pre">r_x</span></code> and
+<code class="docutils literal notranslate"><span class="pre">r_y</span></code>; the default <code class="docutils literal notranslate"><span class="pre">1.</span></code> is the formulation of the paper,
+which has no parameter, and other values serve verification and
+sensitivity studies. See the Notes of <a class="reference internal" href="#module-pyfe3d.quad4r" title="pyfe3d.quad4r"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code></a>.</p>
 </dd>
 </dl>
 </dd>
@@ -1692,8 +1892,39 @@ constitutive matrices <span class="math notranslate nohighlight">\(\boldsymbol{C
 <code class="xref py py-meth docutils literal notranslate"><span class="pre">pyfe3d.shellprop.ShellProp.get_constitutive_element()</span></code> rotated
 with <code class="docutils literal notranslate"><span class="pre">m11,</span> <span class="pre">m12,</span> <span class="pre">m21,</span> <span class="pre">m22</span></code>, are evaluated at the centroid,
 <span class="math notranslate nohighlight">\(\xi = \eta = 0\)</span>, with weight <span class="math notranslate nohighlight">\(w_{ij} = 4\)</span>, <span class="math notranslate nohighlight">\(4 \det J\)</span> being the
-element area <span class="math notranslate nohighlight">\(A\)</span>. The hourglass term adds, for each of <span class="math notranslate nohighlight">\(u\)</span>, <span class="math notranslate nohighlight">\(v\)</span>, <span class="math notranslate nohighlight">\(w\)</span>,
-<span class="math notranslate nohighlight">\(r_x\)</span> and <span class="math notranslate nohighlight">\(r_y\)</span>,</p>
+element area <span class="math notranslate nohighlight">\(A\)</span>. The transverse shear strains are those of
+Belytschko and Leviathan (1994): the constant part of the assumed
+strains of Dvorkin and Bathe at the centroid, and the stabilisation
+of their nonconstant part,</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{K}^s_{stab} = f_p \frac{A}{3} \left(
+\boldsymbol{D}_1^\top \boldsymbol{A}_s \boldsymbol{D}_1
++ \boldsymbol{D}_2^\top \boldsymbol{A}_s \boldsymbol{D}_2 \right)\]</div>
+<p>with <span class="math notranslate nohighlight">\(\boldsymbol{D}_1 = \boldsymbol{J}_0^{-1} \{(e^D_{\xi z} - e^B_{\xi
+z})/2, 0\}^\top\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{D}_2 = \boldsymbol{J}_0^{-1} \{0, (e^C_{\eta
+z} - e^A_{\eta z})/2\}^\top\)</span>, the rows of the covariant shear strains
+at the tying points <span class="math notranslate nohighlight">\(A (-1, 0)\)</span>, <span class="math notranslate nohighlight">\(B (0, -1)\)</span>, <span class="math notranslate nohighlight">\(C (1, 0)\)</span> and <span class="math notranslate nohighlight">\(D (0,
+1)\)</span>, <span class="math notranslate nohighlight">\(\boldsymbol{J}_0\)</span> the Jacobian at the centroid and <span class="math notranslate nohighlight">\(\boldsymbol{A}_s\)</span> the
+matrix of <span class="math notranslate nohighlight">\(A_{55}\)</span>, <span class="math notranslate nohighlight">\(A_{45}\)</span> and <span class="math notranslate nohighlight">\(A_{44}\)</span> for <span class="math notranslate nohighlight">\(\gamma_{xz}\)</span> and
+<span class="math notranslate nohighlight">\(\gamma_{yz}\)</span>. The bending has the stabilisation of their Eq. (B.18),</p>
+<div class="math notranslate nohighlight">
+\[K^b_{r_{xI} r_{xJ}} = f_p Q_{xx} \gamma_I \gamma_J, \quad
+K^b_{r_{yI} r_{yJ}} = f_p Q_{yy} \gamma_I \gamma_J, \quad
+K^b_{r_{xI} r_{yJ}} = f_p Q_{xy} \gamma_I \gamma_J\]</div>
+<div class="math notranslate nohighlight">
+\[Q_{xx} = H_{xx} D_{66} + H_{yy} D_{22} + 2 H_{xy} D_{26}, \quad
+Q_{yy} = H_{xx} D_{11} + H_{yy} D_{66} + 2 H_{xy} D_{16}\]</div>
+<div class="math notranslate nohighlight">
+\[Q_{xy} = -H_{xx} D_{16} - H_{yy} D_{26} - H_{xy} (D_{12} + D_{66})\]</div>
+<p>with <span class="math notranslate nohighlight">\(\gamma_I = (h_I - (\boldsymbol{h}^\top \boldsymbol{x}) S_{I,x} -
+(\boldsymbol{h}^\top \boldsymbol{y}) S_{I,y})/4\)</span>, their Eq. (3.24),
+<span class="math notranslate nohighlight">\(H_{xx}\)</span>, <span class="math notranslate nohighlight">\(H_{yy}\)</span> and <span class="math notranslate nohighlight">\(H_{xy}\)</span> the integrals over the element of
+<span class="math notranslate nohighlight">\(h_{,x}^2\)</span>, <span class="math notranslate nohighlight">\(h_{,y}^2\)</span> and <span class="math notranslate nohighlight">\(h_{,x} h_{,y}\)</span>, <span class="math notranslate nohighlight">\(h = \xi \eta\)</span>, evaluated
+with two by two Gauss points, and <span class="math notranslate nohighlight">\(D_{ij}\)</span> the entries of <span class="math notranslate nohighlight">\(\boldsymbol{D} -
+\boldsymbol{B} \boldsymbol{A}^{-1} \boldsymbol{B}\)</span>, which do not change
+when the reference surface is moved with <code class="docutils literal notranslate"><span class="pre">prop.offset</span></code>; <span class="math notranslate nohighlight">\(f_p\)</span> is
+<code class="docutils literal notranslate"><span class="pre">hgfactor_physical</span></code>. The membrane hourglass term adds, for <span class="math notranslate nohighlight">\(u\)</span> and
+<span class="math notranslate nohighlight">\(v\)</span>,</p>
 <div class="math notranslate nohighlight">
 \[K_{ij} = A E^{(h)} \gamma_i \gamma_j, \qquad
 \gamma_i = S_{1,xy} \left( h_i - hgx \, S_{i,x} - hgy \, S_{i,y}
@@ -1701,48 +1932,28 @@ element area <span class="math notranslate nohighlight">\(A\)</span>. The hourgl
 <p>with <span class="math notranslate nohighlight">\(\boldsymbol{h} = [1, -1, 1, -1]\)</span>, <code class="docutils literal notranslate"><span class="pre">hgx</span> <span class="pre">=</span> <span class="pre">x1</span> <span class="pre">-</span> <span class="pre">x2</span> <span class="pre">+</span> <span class="pre">x3</span> <span class="pre">-</span> <span class="pre">x4</span></code>, <code class="docutils literal notranslate"><span class="pre">hgy</span> <span class="pre">=</span>
 <span class="pre">y1</span> <span class="pre">-</span> <span class="pre">y2</span> <span class="pre">+</span> <span class="pre">y3</span> <span class="pre">-</span> <span class="pre">y4</span></code> and the derivatives <span class="math notranslate nohighlight">\(S_{i,x}\)</span>, <span class="math notranslate nohighlight">\(S_{i,y}\)</span> and
 <span class="math notranslate nohighlight">\(S_{1,xy}\)</span> of the bilinear shape functions at the centroid. This is
-the orthogonalised operator of Eq. (14) of Brockman 1987 <a class="reference internal" href="#r9469044cd94a-1" id="id16">[1]</a>,
+the orthogonalised operator of Eq. (14) of Brockman 1987 <a class="reference internal" href="#r9469044cd94a-1" id="id29">[1]</a>,
 normalised as in his Eq. (15), <span class="math notranslate nohighlight">\(\gamma = \partial^2 \boldsymbol{S}/\partial x
 \partial y\)</span> at the centroid, so that the generalized stiffnesses of
 his Eq. (16) keep their calibration. The correction terms of <code class="docutils literal notranslate"><span class="pre">hgx</span></code>
 and <code class="docutils literal notranslate"><span class="pre">hgy</span></code> vanish for a parallelogram. With the thickness <span class="math notranslate nohighlight">\(t\)</span> of
 <code class="docutils literal notranslate"><span class="pre">prop.h</span></code>, the generalized stiffnesses are</p>
 <div class="math notranslate nohighlight">
-\[E^{(h)}_u = 0.1 \, f_u E_{1eq} t A, \qquad
-E^{(h)}_v = 0.1 \, f_v E_{2eq} t A\]</div>
-<div class="math notranslate nohighlight">
-\[E^{(h)}_{r_x} = 0.1 \, f_{r_x} E_{2b} t^3 A, \qquad
-E^{(h)}_{r_y} = 0.1 \, f_{r_y} E_{1b} t^3 A\]</div>
-<div class="math notranslate nohighlight">
-\[E^{(h)}_w = \frac{0.05 \, f_w (E_{1b} + E_{2b}) t^3}{1 + 1/A}\]</div>
-<p>where <span class="math notranslate nohighlight">\(f_u, f_v, f_w, f_{r_x}, f_{r_y}\)</span> are the <code class="docutils literal notranslate"><span class="pre">hgfactor_*</span></code>
-parameters. The reasons for the area factors are given in the Notes
-of <a class="reference internal" href="#module-pyfe3d.quad4r" title="pyfe3d.quad4r"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code></a>. The equivalent moduli, all in the element
-coordinate system, are</p>
+\[E^{(h)}_u = 0.1 \, f_m E_{1eq} t A, \qquad
+E^{(h)}_v = 0.1 \, f_m E_{2eq} t A\]</div>
+<p>where <span class="math notranslate nohighlight">\(f_m\)</span> is <code class="docutils literal notranslate"><span class="pre">hgfactor_membrane</span></code>. The reason for the area factor
+is given in the Notes of <a class="reference internal" href="#module-pyfe3d.quad4r" title="pyfe3d.quad4r"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code></a>. The equivalent moduli,
+in the element coordinate system, are</p>
 <div class="math notranslate nohighlight">
 \[E_{1eq} = \frac{1}{t a_{11}}, \quad
-E_{2eq} = \frac{1}{t a_{22}}, \quad
-E_{1b} = \frac{12}{t^3 d_{11}}, \quad
-E_{2b} = \frac{12}{t^3 d_{22}}\]</div>
-<p>with <span class="math notranslate nohighlight">\([a] = \boldsymbol{A}^{-1}\)</span>, the coupling matrix <span class="math notranslate nohighlight">\(\boldsymbol{B}\)</span> being neglected,
-and <span class="math notranslate nohighlight">\([d] = (\boldsymbol{D} - \boldsymbol{B} \boldsymbol{A}^{-1} \boldsymbol{B})^{-1}\)</span> the lower-right block of
-<span class="math notranslate nohighlight">\([[A, B], [B, D]]^{-1}\)</span>. A homogeneous plate of modulus <span class="math notranslate nohighlight">\(E\)</span> has
-<span class="math notranslate nohighlight">\(a_{11} = 1/(E t)\)</span> and <span class="math notranslate nohighlight">\(d_{11} = 12/(E t^3)\)</span>, so <span class="math notranslate nohighlight">\(E_{1eq}\)</span> is the
-modulus of the homogeneous plate that stretches as the laminate under
-<span class="math notranslate nohighlight">\(N_{xx}\)</span> alone with the curvatures restrained, and <span class="math notranslate nohighlight">\(E_{1b}\)</span> that of
-the homogeneous plate that bends as the laminate under <span class="math notranslate nohighlight">\(M_{xx}\)</span>
-alone with the membrane forces zero; analogously in <span class="math notranslate nohighlight">\(y\)</span>. Both pairs
-reduce to <span class="math notranslate nohighlight">\(E\)</span> for an isotropic plate, as in Eq. (16) of Brockman,
-whereas <span class="math notranslate nohighlight">\(12 D_{11}/t^3\)</span> would give <span class="math notranslate nohighlight">\(E/(1 - \nu^2)\)</span>. <span class="math notranslate nohighlight">\(\boldsymbol{D} -
-\boldsymbol{B} \boldsymbol{A}^{-1} \boldsymbol{B}\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{A}\)</span> do not change when the reference surface
-is moved with <code class="docutils literal notranslate"><span class="pre">prop.offset</span></code>, while <span class="math notranslate nohighlight">\(\boldsymbol{D}\)</span> does, so neither pair
-depends on the offset. <span class="math notranslate nohighlight">\(r_x\)</span> enters the curvature <span class="math notranslate nohighlight">\(\kappa_{yy} =
--r_{x,y}\)</span> and <span class="math notranslate nohighlight">\(r_y\)</span> the curvature <span class="math notranslate nohighlight">\(\kappa_{xx} = r_{y,x}\)</span>, hence
-<span class="math notranslate nohighlight">\(E_{2b}\)</span> in <span class="math notranslate nohighlight">\(E^{(h)}_{r_x}\)</span> and <span class="math notranslate nohighlight">\(E_{1b}\)</span> in <span class="math notranslate nohighlight">\(E^{(h)}_{r_y}\)</span>. The
-hourglass pattern of <span class="math notranslate nohighlight">\(w\)</span>, <span class="math notranslate nohighlight">\(w = xy\)</span> on a rectangle, is a twist, and
-the mean of the two bending moduli in <span class="math notranslate nohighlight">\(E^{(h)}_w\)</span> generalises
-Eq. (16b) of Brockman to laminates and reduces to it for an
-isotropic plate.</p>
+E_{2eq} = \frac{1}{t a_{22}}\]</div>
+<p>with <span class="math notranslate nohighlight">\([a] = \boldsymbol{A}^{-1}\)</span>, the coupling matrix <span class="math notranslate nohighlight">\(\boldsymbol{B}\)</span> being
+neglected. A homogeneous plate of modulus <span class="math notranslate nohighlight">\(E\)</span> has <span class="math notranslate nohighlight">\(a_{11} = 1/(E
+t)\)</span>, so <span class="math notranslate nohighlight">\(E_{1eq}\)</span> is the modulus of the homogeneous plate that
+stretches as the laminate under <span class="math notranslate nohighlight">\(N_{xx}\)</span> alone with the curvatures
+restrained; analogously in <span class="math notranslate nohighlight">\(y\)</span>. Both reduce to <span class="math notranslate nohighlight">\(E\)</span> for an isotropic
+plate, as in Eq. (16) of Brockman, whereas <span class="math notranslate nohighlight">\(A_{11}/t\)</span> would give <span class="math notranslate nohighlight">\(E/(1
+- \nu^2)\)</span>, and neither depends on the offset.</p>
 <p>The drilling term, <span class="math notranslate nohighlight">\(\gamma_{r_z} \boldsymbol{B}_{r_z}^\top \boldsymbol{B}_{r_z}\)</span> with
 <span class="math notranslate nohighlight">\(B_{r_z} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}\)</span>, is integrated
 with a two-point Gauss-Legendre quadrature in each direction. For
@@ -1754,10 +1965,15 @@ other values, <span class="math notranslate nohighlight">\(\gamma_{r_z} = K6ROT 
 <span class="math notranslate nohighlight">\(\boldsymbol{T}_{3\times 3}\)</span> of the entries <span class="math notranslate nohighlight">\(T_{ij}\)</span> stored in <code class="docutils literal notranslate"><span class="pre">r11,</span> <span class="pre">...,</span> <span class="pre">r33</span></code>,
 whose columns are the element axes, applied to the translations and to
 the rotations of each node.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">1</span></code> and a warped element the element matrix is
+<span class="math notranslate nohighlight">\(\boldsymbol{J}^\top \boldsymbol{K}_e \boldsymbol{J}\)</span>, see the Notes of
+<a class="reference internal" href="#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>, computed as <span class="math notranslate nohighlight">\(\boldsymbol{J}^\top \boldsymbol{K}_e
+\boldsymbol{J} - \boldsymbol{K}_e\)</span> and added to the entries above once
+rotated to global coordinates.</p>
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="r9469044cd94a-1" role="doc-biblioentry">
-<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id16">1</a><span class="fn-bracket">]</span></span>
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id29">1</a><span class="fn-bracket">]</span></span>
 <p>Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
 International Journal for Numerical Methods in Engineering, 24(12),
 2343-2356, 1987. <a class="reference external" href="https://doi.org/10.1002/nme.1620241208">https://doi.org/10.1002/nme.1620241208</a></p>
@@ -1767,10 +1983,10 @@ International Journal for Numerical Methods in Engineering, 24(12),
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.update_KCNL">
-<span class="sig-name descname"><span class="pre">update_KCNL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KCNLr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KCNLc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KCNLv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KCNLv_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_KCNL" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_KCNL</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KCNLr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KCNLc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KCNLv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KCNLv_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_membrane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_physical</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_KCNL" title="Link to this definition">#</a></dt>
 <dd><p>Update sparse vectors for the nonlinear stiffness matrix KCNL</p>
 <p>KCNL collects the terms of the tangent stiffness matrix of the
-geometrically nonlinear analysis with the von Karman membrane strains
+geometrically nonlinear analysis with the von Kármán membrane strains
 that are not in KC0 and in KG, evaluated at the displacements of the
 probe with the quadrature of <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KG" title="pyfe3d.quad4r.Quad4R.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG()</span></code></a>. The tangent stiffness
 matrix of the internal forces of <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_fint" title="pyfe3d.quad4r.Quad4R.update_fint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_fint()</span></code></a> with
@@ -1807,12 +2023,28 @@ read from.</p>
 <code class="docutils literal notranslate"><span class="pre">KCNLc</span></code> should also be updated. Any other value will only update the
 stiffness matrix values <code class="docutils literal notranslate"><span class="pre">KCNLv</span></code>.</p>
 </dd>
+<dt><strong>hgfactor_membrane, hgfactor_physical</strong><span class="classifier">double, optional</span></dt><dd><p>Read only with <code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">1</span></code> and a warped element, for the
+nodal forces of the eccentricity term of the rigid offsets, which
+KCNL subtracts, see the Notes; they must be those passed to
+<a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KG" title="pyfe3d.quad4r.Quad4R.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG()</span></code></a>, see its parameters. Default <code class="docutils literal notranslate"><span class="pre">1.</span></code>.</p>
+</dd>
 </dl>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>Assuming that KCNL = KC0L + KCL0 + KCLL + KGNL, that is <span class="math notranslate nohighlight">\(\boldsymbol{K}_{CNL} + \boldsymbol{K}_{GNL}\)</span>, the book’s nonlinear constitutive stiffness matrix <span class="math notranslate nohighlight">\(\boldsymbol{K}_{CNL}\)</span> of the terms of <span class="math notranslate nohighlight">\(\boldsymbol{B}_{NL}\)</span> plus the geometric <span class="math notranslate nohighlight">\(\boldsymbol{K}_{GNL}\)</span>, built from the von Karman
-membrane strains</p>
+<p>KCNL = KC0L + KCL0 + KCLL + KGNL, that is <span class="math notranslate nohighlight">\(\boldsymbol{K}_{CNL} +
+\boldsymbol{K}_{GNL}\)</span>: the nonlinear constitutive stiffness matrix
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_{CNL}\)</span>, the terms of <span class="math notranslate nohighlight">\(\int (\boldsymbol{B}_L +
+\boldsymbol{B}_{NL})^\top \boldsymbol{C} (\boldsymbol{B}_L +
+\boldsymbol{B}_{NL}) d\Omega\)</span> that contain <span class="math notranslate nohighlight">\(\boldsymbol{B}_{NL}\)</span>, plus
+the geometric stiffness matrix <span class="math notranslate nohighlight">\(\boldsymbol{K}_{GNL}\)</span> of the stress
+resultants of the nonlinear strains. Crisfield <a class="reference internal" href="#ra429de927f50-2" id="id31">[2]</a>, Section 8.1.5,
+Eqs. (8.26)-(8.31), groups the same terms differently: his
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_{t1}\)</span> is <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0} + \boldsymbol{K}_{CNL}\)</span>,
+and his initial-stress matrix <span class="math notranslate nohighlight">\(\boldsymbol{K}_{t\sigma}\)</span>, built with
+the total membrane forces, is <span class="math notranslate nohighlight">\(\boldsymbol{K}_G +
+\boldsymbol{K}_{GNL}\)</span>; the tangent stiffness matrix is the same. The
+matrices are built from the von Kármán membrane strains</p>
 <div class="math notranslate nohighlight">
 \[\epsilon_{xx} = u_{,x} + \frac{1}{2} w_{,x}^2, \quad
 \epsilon_{yy} = v_{,y} + \frac{1}{2} w_{,y}^2, \quad
@@ -1844,17 +2076,77 @@ quadratically. The quadrature of <a class="reference internal" href="#pyfe3d.qua
 <p>The linear part of the internal forces, <code class="docutils literal notranslate"><span class="pre">KC0*u</span></code>, keeps the
 quadratures of KC0, whereas the nonlinear terms of
 <code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_probe_finte_nonlinear()</span></code>, KCNL and KG use the
-two-by-two quadrature; each part of the strain energy is
-differentiated with its own quadrature, so the Jacobian remains exact.
+two-by-two quadrature, with the slopes of <span class="math notranslate nohighlight">\(w\)</span> at the centroid, see
+<a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KG" title="pyfe3d.quad4r.Quad4R.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG()</span></code></a>; each part of the strain energy is differentiated
+with its own quadrature, so the Jacobian remains exact.
 The element matrix is computed by <code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_probe_KCNLve()</span></code> and
 rotated to global coordinates as in <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KC0" title="pyfe3d.quad4r.Quad4R.update_KC0"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KC0()</span></code></a>.</p>
+<p>Warped elements, <code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">1</span></code>, see the Notes of
+<a class="reference internal" href="#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>. The von Kármán strains are those of the flat element,
+linked to the nodes by the first-order rigid offsets
+<span class="math notranslate nohighlight">\(\boldsymbol{u}^f = \boldsymbol{J} \boldsymbol{u}_e\)</span> (derived
+here): the strain energy is that of the flat element at
+<span class="math notranslate nohighlight">\(\boldsymbol{J} \boldsymbol{u}_e\)</span>, the internal forces are
+<span class="math notranslate nohighlight">\(\boldsymbol{J}^\top\)</span> times those of the flat element, and its exact
+Jacobian is <span class="math notranslate nohighlight">\(\boldsymbol{J}^\top (\boldsymbol{K}_{C0} +
+\boldsymbol{K}_{CNL} + \boldsymbol{K}_{GNL} + \boldsymbol{K}_G)
+\boldsymbol{J}\)</span> of the flat element at <span class="math notranslate nohighlight">\(\boldsymbol{J}
+\boldsymbol{u}_e\)</span>, where <span class="math notranslate nohighlight">\(\boldsymbol{J}^\top \boldsymbol{K}_G
+\boldsymbol{J} = \boldsymbol{K}_G\)</span>. The link is kept to first order in the
+rotations because the von Kármán strains themselves are: with the
+ordering of Sanders (1963), p. 30, Eqs. (67)-(69), and p. 32, Eq.
+(89), strains of order <span class="math notranslate nohighlight">\(\epsilon^2\)</span>, rotations about the in-plane
+axes of order <span class="math notranslate nohighlight">\(\epsilon\)</span> and a smaller rotation about the normal,
+the second-order terms of the offsets, <span class="math notranslate nohighlight">\(-\frac{1}{2}
+\boldsymbol{\theta}_a \times (\boldsymbol{\theta}_a \times
+\boldsymbol{r}_a)\)</span>, change the strains by terms of order
+<span class="math notranslate nohighlight">\((\tilde{z}/\ell) \epsilon^3\)</span>, beyond those kept (derived here).
+Measured on 2026-11-01 on the twisted beam of
+<code class="docutils literal notranslate"><span class="pre">tests/test_quad_warp_offsets.py</span></code> with 12 by 2 Quad4 elements, the
+default <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">1</span></code> and <code class="docutils literal notranslate"><span class="pre">centroid_slopes</span> <span class="pre">=</span> <span class="pre">0</span></code>, and tip
+loads of 500 along <span class="math notranslate nohighlight">\(z\)</span> and 1100 along <span class="math notranslate nohighlight">\(y\)</span>, rotations up to 0.32, the
+second-order link, evaluated with a numpy prototype that reproduces
+the first-order link of the element to round-off, gives tip
+displacements 6.7 and 7.2 % smaller than the first-order one, whose
+results are 2.8 and 3.1 % below the von Kármán solution of a 96 by
+16 mesh of the same element, the discretisation error of the coarse
+mesh (7.3 and 7.1 % smaller, and 2.3 % below, with
+<code class="docutils literal notranslate"><span class="pre">centroid_slopes</span> <span class="pre">=</span> <span class="pre">1</span></code>). The eccentricity
+term <span class="math notranslate nohighlight">\(\boldsymbol{K}_E\)</span> that <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KG" title="pyfe3d.quad4r.Quad4R.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG()</span></code></a> adds for the linear
+buckling analysis, the second derivative of the second-order terms,
+is therefore subtracted here, with the same nodal forces, those of
+<a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_probe_finte" title="pyfe3d.quad4r.Quad4R.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_finte()</span></code></a>, whose <code class="docutils literal notranslate"><span class="pre">probe.finte</span></code> is restored,
+such that KCNL is <span class="math notranslate nohighlight">\(\boldsymbol{J}^\top (\boldsymbol{K}_{CNL} +
+\boldsymbol{K}_{GNL}) \boldsymbol{J} - \boldsymbol{K}_E\)</span>, rotated to
+global coordinates, and <code class="docutils literal notranslate"><span class="pre">KC0</span> <span class="pre">+</span> <span class="pre">KCNL</span>
+<span class="pre">+</span> <span class="pre">KG</span></code> remains the exact Jacobian of the internal forces of
+<a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_fint" title="pyfe3d.quad4r.Quad4R.update_fint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_fint()</span></code></a> with <code class="docutils literal notranslate"><span class="pre">nonlinear=1</span></code>. A flat element and
+<code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">0</span></code> give the results of the flat element, bit for
+bit.</p>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="ra429de927f50-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<p>Sanders, J. L., Nonlinear theories for thin shells, Quarterly
+of Applied Mathematics, 21(1), 21-36, 1963.
+<a class="reference external" href="https://doi.org/10.1090/qam/147023">https://doi.org/10.1090/qam/147023</a></p>
+</div>
+<div class="citation" id="ra429de927f50-2" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id31">2</a><span class="fn-bracket">]</span></span>
+<p>Crisfield, M. A., Non-linear Finite Element Analysis of Solids
+and Structures, Volume 1: Essentials, John Wiley &amp; Sons,
+Chichester, 1991.</p>
+</div>
+</div>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.update_KG">
-<span class="sig-name descname"><span class="pre">update_KG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KGr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KGc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KGv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KGv_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_KG" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_KG</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KGr</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">long[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KGc</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">KGv</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">update_KGv_only</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_membrane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_physical</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_KG" title="Link to this definition">#</a></dt>
 <dd><p>Update sparse vectors for geometric stiffness matrix KG</p>
-<p>Two-point Gauss-Legendre quadrature is used.</p>
+<p>The stress resultants are integrated with a two-point Gauss-Legendre
+quadrature in each direction and the slopes of <span class="math notranslate nohighlight">\(w\)</span> are taken at the
+centroid, see the Notes.</p>
 <p>Before this function is called, the probe <a class="reference internal" href="#pyfe3d.quad4r.Quad4RProbe" title="pyfe3d.quad4r.Quad4RProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4RProbe</span></code></a>
 attribute of the <a class="reference internal" href="#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a> object must be updated using
 <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_probe_ue" title="pyfe3d.quad4r.Quad4R.update_probe_ue"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_ue()</span></code></a> with the correct pre-buckling displacements;
@@ -1890,26 +2182,84 @@ are read from.</p>
 and <code class="docutils literal notranslate"><span class="pre">KGc</span></code> are also updated. Any other value will only update the
 values <code class="docutils literal notranslate"><span class="pre">KGv</span></code>.</p>
 </dd>
+<dt><strong>hgfactor_membrane, hgfactor_physical</strong><span class="classifier">double, optional</span></dt><dd><p>Read only with <code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">1</span></code> and a warped element: the
+factors of <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_probe_finte" title="pyfe3d.quad4r.Quad4R.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_finte()</span></code></a> for the nodal forces of the
+eccentricity term, see the Notes, which should be those of
+<a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KC0" title="pyfe3d.quad4r.Quad4R.update_KC0"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KC0()</span></code></a> and <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_fint" title="pyfe3d.quad4r.Quad4R.update_fint"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_fint()</span></code></a>. The same values must
+be passed to <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KCNL" title="pyfe3d.quad4r.Quad4R.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a> for the exact tangent of the
+von Kármán internal forces. Default <code class="docutils literal notranslate"><span class="pre">1.</span></code>.</p>
+</dd>
 </dl>
 </dd>
 </dl>
 <p class="rubric">Notes</p>
-<p>The two-point quadrature showed more accuracy for linear buckling load
-predictions. The matrix is</p>
+<p>The matrix is</p>
 <div class="math notranslate nohighlight">
 \[\boldsymbol{K}_G = \sum w_{ij} \det J \left( N_{xx} \boldsymbol{G}_x^\top
 \boldsymbol{G}_x + N_{yy} \boldsymbol{G}_y^\top \boldsymbol{G}_y
 + N_{xy} (\boldsymbol{G}_x^\top \boldsymbol{G}_y
 + \boldsymbol{G}_y^\top \boldsymbol{G}_x) \right)\]</div>
 <p>with <span class="math notranslate nohighlight">\(\boldsymbol{G}_x\)</span> and <span class="math notranslate nohighlight">\(\boldsymbol{G}_y\)</span> the rows of <span class="math notranslate nohighlight">\(w_{,x}\)</span>
-and <span class="math notranslate nohighlight">\(w_{,y}\)</span> of
-<code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_probe_BL_G()</span></code>, <span class="math notranslate nohighlight">\(w\)</span> being the displacement along the
+and <span class="math notranslate nohighlight">\(w_{,y}\)</span> at the centroid, see <code class="xref py py-meth docutils literal notranslate"><span class="pre">_update_probe_BL_G()</span></code>, <span class="math notranslate nohighlight">\(w\)</span> being the displacement along the
 element normal, i.e. the combination of the global translations with
 <code class="docutils literal notranslate"><span class="pre">r13,</span> <span class="pre">r23,</span> <span class="pre">r33</span></code>, and <span class="math notranslate nohighlight">\(\{N_{xx}, N_{yy}, N_{xy}\}^\top = \boldsymbol{A} \boldsymbol{\epsilon}
 + \boldsymbol{B} \boldsymbol{\kappa}\)</span> the stress resultants of the linear strains of the
 Notes of <a class="reference internal" href="#module-pyfe3d.quad4r" title="pyfe3d.quad4r"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code></a>. KG is linear in the displacements
 <code class="docutils literal notranslate"><span class="pre">ue</span></code>, such that <code class="docutils literal notranslate"><span class="pre">KC0</span> <span class="pre">+</span> <span class="pre">lambda*KG</span></code> gives the linear buckling problem
 for the load multiplier <code class="docutils literal notranslate"><span class="pre">lambda</span></code> of the pre-buckling state.</p>
+<p>The slopes are taken at the centroid, the single integration point of
+the transverse shear and of the curvatures in KC0, whereas the stress
+resultants are integrated with two points in each direction. The
+hourglass pattern of <span class="math notranslate nohighlight">\(w\)</span>, <span class="math notranslate nohighlight">\(w = \xi \eta\)</span>, has no gradient at the
+centroid, so it has no geometric stiffness, just as it has no
+stiffness in KC0 besides the stabilisation of the transverse shear,
+see <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KC0" title="pyfe3d.quad4r.Quad4R.update_KC0"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KC0()</span></code></a>. With the slopes at the two-point quadrature
+points, as before version 0.12.0, that pattern had the geometric
+stiffness of the full quadrature, and a linear buckling analysis could
+return a spurious mode of <span class="math notranslate nohighlight">\(w\)</span> alternating in sign from node to node,
+below the physical buckling load. On a simply supported square plate
+with <span class="math notranslate nohighlight">\(b/h = 10\)</span> under uniaxial compression, the lowest buckling load
+was 41 % below the Mindlin solution with 16 by 16 elements, <span class="math notranslate nohighlight">\(h/\ell =
+1.6\)</span>, and 86 % below with 48 by 48 elements; with <span class="math notranslate nohighlight">\(b/h = 100\)</span> and the
+transverse shear stiffness reduced to 1/1000 of the isotropic one, as
+in a sandwich, it was 60 % below with 8 by 8 elements, <span class="math notranslate nohighlight">\(h/\ell =
+0.08\)</span>. The thin elements of the isotropic plate were protected only
+because the transverse shear energy of the smooth envelope of that
+pattern exceeded its geometric work. With the slopes at the centroid
+these cases converge to the Mindlin solution, and the buckling loads
+of coarse meshes of thin plates increase slightly, e.g. 11.4 % instead
+of 10.0 % above the Mindlin solution with 8 by 8 elements, <span class="math notranslate nohighlight">\(b/h =
+100\)</span> and hard simple supports. See
+<code class="docutils literal notranslate"><span class="pre">tests/test_quad4r_geometric_hourglass.py</span></code>.</p>
+<p>Warped elements, <code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">1</span></code>, see the Notes of
+<a class="reference internal" href="#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>: the stress resultants are those of the displacements
+<span class="math notranslate nohighlight">\(\boldsymbol{J} \boldsymbol{u}_e\)</span> of the flat element, and the matrix
+above, which has no entries of the in-plane translations, is not
+changed by <span class="math notranslate nohighlight">\(\boldsymbol{J}^\top \boldsymbol{K}_G \boldsymbol{J}\)</span>. The
+rigid offsets add on the rotations of each node the eccentricity
+geometric stiffness, which Felippa and Haugen (2005), Section 5.1,
+p. 2304, name without giving it (see the references of
+<a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalShell" title="pyfe3d.corotational.CorotationalShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.corotational.CorotationalShell</span></code></a>),</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{K}_{E,a} = (\boldsymbol{n}_a \cdot \boldsymbol{r}_a)
+\boldsymbol{I} - \frac{1}{2} \left( \boldsymbol{n}_a
+\boldsymbol{r}_a^\top + \boldsymbol{r}_a \boldsymbol{n}_a^\top
+\right)\]</div>
+<p>the second derivative, at zero rotation, of the work of the nodal
+forces <span class="math notranslate nohighlight">\(\boldsymbol{n}_a\)</span> of the flat element on the displacement
+<span class="math notranslate nohighlight">\(-(\boldsymbol{R}_a - \boldsymbol{I}) \boldsymbol{r}_a\)</span> of its node,
+<span class="math notranslate nohighlight">\(\boldsymbol{R}_a\)</span> the rotation matrix of the node (derived here),
+equal to <code class="docutils literal notranslate"><span class="pre">dLambdaT_m(0,</span> <span class="pre">n</span> <span class="pre">x</span> <span class="pre">r)</span> <span class="pre">-</span> <span class="pre">Spin(n)</span> <span class="pre">Spin(r)</span></code> of
+<a class="reference internal" href="corotational.html#module-pyfe3d.corotational" title="pyfe3d.corotational"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code></a> and linear in the pre-buckling state. The
+forces <span class="math notranslate nohighlight">\(\boldsymbol{n}_a\)</span> are the translations of the linear internal
+forces of <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_probe_finte" title="pyfe3d.quad4r.Quad4R.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_finte()</span></code></a> with <code class="docutils literal notranslate"><span class="pre">hgfactor_membrane</span></code> and
+<code class="docutils literal notranslate"><span class="pre">hgfactor_physical</span></code>, which are those of the flat element;
+<code class="docutils literal notranslate"><span class="pre">probe.finte</span></code> is restored. <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KCNL" title="pyfe3d.quad4r.Quad4R.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a> subtracts
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_E\)</span>, see its Notes, such that the tangent of the von
+Kármán internal forces does not contain it. The 36 entries of
+<span class="math notranslate nohighlight">\(\boldsymbol{K}_E\)</span> follow the 144 of the translations, <code class="docutils literal notranslate"><span class="pre">(r_x,</span> <span class="pre">r_y,</span>
+<span class="pre">r_z)</span></code> of node 1 to node 4 row by row, and are zero for a flat element
+and with <code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -1921,7 +2271,8 @@ for the load multiplier <code class="docutils literal notranslate"><span class="
 <p>A constant stress state is assumed within the element,
 according to the given values of <span class="math notranslate nohighlight">\(N_{xx}, N_{yy}, N_{xy}\)</span>.</p>
 </div>
-<p>Two-point Gauss-Legendre quadrature is used.</p>
+<p>The slopes of <span class="math notranslate nohighlight">\(w\)</span> are taken at the centroid, see the Notes of
+<a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KG" title="pyfe3d.quad4r.Quad4R.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG()</span></code></a>.</p>
 <p>Before this function is called, the probe <a class="reference internal" href="#pyfe3d.quad4r.Quad4RProbe" title="pyfe3d.quad4r.Quad4RProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4RProbe</span></code></a>
 attribute of the <a class="reference internal" href="#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a> object must be updated using
 <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_probe_xe" title="pyfe3d.quad4r.Quad4R.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_xe()</span></code></a> with the node coordinates.</p>
@@ -1959,8 +2310,36 @@ values <code class="docutils literal notranslate"><span class="pre">KGv</span></
 <p class="rubric">Notes</p>
 <p>The matrix is the one of <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KG" title="pyfe3d.quad4r.Quad4R.update_KG"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KG()</span></code></a>, with the given constant
 stress resultants <code class="docutils literal notranslate"><span class="pre">Nxx,</span> <span class="pre">Nyy,</span> <span class="pre">Nxy</span></code> instead of the ones computed from
-the displacements of the probe. The two-point quadrature showed more
-accuracy for linear buckling load predictions.</p>
+the displacements of the probe. With constant stress resultants and
+the slopes at the centroid, it is the element area times the
+integrand at the centroid.</p>
+<p>Warped elements, <code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">1</span></code>, see the Notes of
+<a class="reference internal" href="#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>: the stress resultants are those of the displacements
+<span class="math notranslate nohighlight">\(\boldsymbol{J} \boldsymbol{u}_e\)</span> of the flat element, and the matrix
+above, which has no entries of the in-plane translations, is not
+changed by <span class="math notranslate nohighlight">\(\boldsymbol{J}^\top \boldsymbol{K}_G \boldsymbol{J}\)</span>. The
+rigid offsets add on the rotations of each node the eccentricity
+geometric stiffness, which Felippa and Haugen (2005), Section 5.1,
+p. 2304, name without giving it (see the references of
+<a class="reference internal" href="corotational.html#pyfe3d.corotational.CorotationalShell" title="pyfe3d.corotational.CorotationalShell"><code class="xref py py-class docutils literal notranslate"><span class="pre">pyfe3d.corotational.CorotationalShell</span></code></a>),</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{K}_{E,a} = (\boldsymbol{n}_a \cdot \boldsymbol{r}_a)
+\boldsymbol{I} - \frac{1}{2} \left( \boldsymbol{n}_a
+\boldsymbol{r}_a^\top + \boldsymbol{r}_a \boldsymbol{n}_a^\top
+\right)\]</div>
+<p>the second derivative, at zero rotation, of the work of the nodal
+forces <span class="math notranslate nohighlight">\(\boldsymbol{n}_a\)</span> of the flat element on the displacement
+<span class="math notranslate nohighlight">\(-(\boldsymbol{R}_a - \boldsymbol{I}) \boldsymbol{r}_a\)</span> of its node,
+<span class="math notranslate nohighlight">\(\boldsymbol{R}_a\)</span> the rotation matrix of the node (derived here),
+equal to <code class="docutils literal notranslate"><span class="pre">dLambdaT_m(0,</span> <span class="pre">n</span> <span class="pre">x</span> <span class="pre">r)</span> <span class="pre">-</span> <span class="pre">Spin(n)</span> <span class="pre">Spin(r)</span></code> of
+<a class="reference internal" href="corotational.html#module-pyfe3d.corotational" title="pyfe3d.corotational"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code></a> and linear in the pre-buckling state. The
+forces <span class="math notranslate nohighlight">\(\boldsymbol{n}_a\)</span> are those of the given stress resultants, the
+area times <span class="math notranslate nohighlight">\(N_{xx} S_{a,x} + N_{xy} S_{a,y}\)</span> and <span class="math notranslate nohighlight">\(N_{xy} S_{a,x} +
+N_{yy} S_{a,y}\)</span> with the slopes of the shape functions at the centroid,
+which is their exact integral. The 36 entries of <span class="math notranslate nohighlight">\(\boldsymbol{K}_E\)</span>
+follow the 144 of the translations, <code class="docutils literal notranslate"><span class="pre">(r_x,</span> <span class="pre">r_y,</span> <span class="pre">r_z)</span></code> of node 1 to
+node 4 row by row, and are zero for a flat element and with
+<code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">0</span></code>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2013,7 +2392,7 @@ Default <code class="docutils literal notranslate"><span class="pre">0</span></c
 </dl>
 <p class="rubric">Notes</p>
 <p>The three mass matrices follow from the kinetic energy of Brockman
-1987 <a class="reference internal" href="#r91142ed12c0d-1" id="id18">[1]</a>, Eq. (20), and have the form of its Eq. (21). With the
+1987 <a class="reference internal" href="#r91142ed12c0d-1" id="id34">[1]</a>, Eq. (20), and have the form of its Eq. (21). With the
 displacements <span class="math notranslate nohighlight">\(u + z r_y\)</span>, <span class="math notranslate nohighlight">\(v - z r_x\)</span> and <span class="math notranslate nohighlight">\(w\)</span> of the Notes of
 <a class="reference internal" href="#module-pyfe3d.quad4r" title="pyfe3d.quad4r"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code></a>, the kinetic energy integrated through the
 thickness,</p>
@@ -2039,7 +2418,7 @@ no inertia. The matrix is rotated to global coordinates as in
 <li><p><code class="docutils literal notranslate"><span class="pre">mtype=0</span></code>: two-point Gauss-Legendre quadrature in each direction;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">mtype=1</span></code>: two-point Gauss-Lobatto quadrature in each direction,
 whose points are the nodes, the lumped mass matrix of Brockman
-<a class="reference internal" href="#r91142ed12c0d-1" id="id19">[1]</a>, giving <span class="math notranslate nohighlight">\(h_{ii}\)</span> equal to the Jacobian determinant at node <span class="math notranslate nohighlight">\(i\)</span>
+<a class="reference internal" href="#r91142ed12c0d-1" id="id35">[1]</a>, giving <span class="math notranslate nohighlight">\(h_{ii}\)</span> equal to the Jacobian determinant at node <span class="math notranslate nohighlight">\(i\)</span>
 and <span class="math notranslate nohighlight">\(h_{ij} = 0\)</span> for <span class="math notranslate nohighlight">\(i \neq j\)</span>;</p></li>
 <li><p><code class="docutils literal notranslate"><span class="pre">mtype=2</span></code>: a single point at the centroid, where every <span class="math notranslate nohighlight">\(S_i =
 1/4\)</span>, giving <span class="math notranslate nohighlight">\(h_{ij} = A/16\)</span> for all <span class="math notranslate nohighlight">\(i, j\)</span>.</p></li>
@@ -2053,7 +2432,7 @@ to the whole integrand of <span class="math notranslate nohighlight">\(T\)</span
 at the other nodes, it couples no different nodes and gives for node
 <span class="math notranslate nohighlight">\(i\)</span> the block <span class="math notranslate nohighlight">\(M_{ii}\)</span> above with <span class="math notranslate nohighlight">\(h_{ii}\)</span>, the coupling through
 <code class="docutils literal notranslate"><span class="pre">intrhoz</span></code> included: the matrix is block-diagonal per node and, as
-Brockman <a class="reference internal" href="#r91142ed12c0d-1" id="id20">[1]</a> writes, diagonal only when <code class="docutils literal notranslate"><span class="pre">intrhoz</span></code> is zero. The
+Brockman <a class="reference internal" href="#r91142ed12c0d-1" id="id36">[1]</a> writes, diagonal only when <code class="docutils literal notranslate"><span class="pre">intrhoz</span></code> is zero. The
 weights <span class="math notranslate nohighlight">\(h_{ii}\)</span> sum to the area <span class="math notranslate nohighlight">\(A\)</span>, so the lumped matrix has the
 exact mass and the exact first moment of the mass through the
 thickness, <code class="docutils literal notranslate"><span class="pre">intrhoz</span></code> <span class="math notranslate nohighlight">\(A\)</span>, which places the centre of mass at the
@@ -2066,11 +2445,22 @@ the element is exact, while the part from the distribution of
 <code class="docutils literal notranslate"><span class="pre">intrho</span></code> over the area, about any axis, is concentrated at the
 nodes: 3 times the exact value about the centroid of a
 parallelogram, an error that decreases with the size of the elements.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">1</span></code> and a warped element the matrix is
+<span class="math notranslate nohighlight">\(\boldsymbol{J}^\top \boldsymbol{M} \boldsymbol{J}\)</span>, see the Notes of
+<a class="reference internal" href="#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>, which keeps the form above for each pair of nodes <span class="math notranslate nohighlight">\(i\)</span>
+and <span class="math notranslate nohighlight">\(j\)</span> with <code class="docutils literal notranslate"><span class="pre">intrhoz</span></code> replaced by <code class="docutils literal notranslate"><span class="pre">intrhoz</span> <span class="pre">-</span> <span class="pre">intrho*z_j</span></code> in the
+entries between the translations of <span class="math notranslate nohighlight">\(i\)</span> and the rotations of <span class="math notranslate nohighlight">\(j\)</span>, and
+<code class="docutils literal notranslate"><span class="pre">intrhoz2</span></code> by <code class="docutils literal notranslate"><span class="pre">intrhoz2</span> <span class="pre">-</span> <span class="pre">intrhoz*(z_i</span> <span class="pre">+</span> <span class="pre">z_j)</span> <span class="pre">+</span> <span class="pre">intrho*z_i*z_j</span></code> in
+those between the rotations, <span class="math notranslate nohighlight">\(z_i\)</span> being the heights of the nodes above
+the flat element (derived here, checked in
+<code class="docutils literal notranslate"><span class="pre">theory/deriving_equations/quad4r/verify_quad4r_warp_offsets.py</span></code>):
+the moments of the mass about the warped nodes. The numbers of entries
+do not change, and the lumped matrix remains block-diagonal per node.</p>
 <p class="rubric">References</p>
 <div role="list" class="citation-list">
 <div class="citation" id="r91142ed12c0d-1" role="doc-biblioentry">
 <span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
-<span class="backrefs">(<a role="doc-backlink" href="#id18">1</a>,<a role="doc-backlink" href="#id19">2</a>,<a role="doc-backlink" href="#id20">3</a>)</span>
+<span class="backrefs">(<a role="doc-backlink" href="#id34">1</a>,<a role="doc-backlink" href="#id35">2</a>,<a role="doc-backlink" href="#id36">3</a>)</span>
 <p>Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
 International Journal for Numerical Methods in Engineering, 24(12),
 2343-2356, 1987. <a class="reference external" href="https://doi.org/10.1002/nme.1620241208">https://doi.org/10.1002/nme.1620241208</a></p>
@@ -2089,7 +2479,7 @@ coordinates. Called by <a class="reference internal" href="#pyfe3d.quad4r.Quad4R
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.update_fint">
-<span class="sig-name descname"><span class="pre">update_fint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">fint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_u</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_rx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_ry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">nonlinear</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_fint" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_fint</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double[</span></span><span class="p"><span class="pre">:</span></span><span class="w"> </span><span class="n"><span class="pre">:1]</span> <span class="pre">fint</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_membrane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_physical</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">nonlinear</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_fint" title="Link to this definition">#</a></dt>
 <dd><p>Update the internal force vector</p>
 <p>The element internal forces, computed in element coordinates with
 <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_probe_finte" title="pyfe3d.quad4r.Quad4R.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_finte()</span></code></a>, are rotated to global coordinates and
@@ -2111,13 +2501,19 @@ moments (force times length) for the rotations.</p>
 <dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object</span></dt><dd><p>Shell property object from where the stiffness and mass attributes
 are read from.</p>
 </dd>
-<dt><strong>hgfactor_u, hgfactor_v, hgfactor_w, hgfactor_rx, hgfactor_ry</strong><span class="classifier">double</span></dt><dd><p>These offer the possibility to change the default hourglass
-stiffnesses for each degree-of-freedom.
-Dimensionless multipliers of the hourglass stiffnesses of <code class="docutils literal notranslate"><span class="pre">u</span></code>,
-<code class="docutils literal notranslate"><span class="pre">v</span></code>, <code class="docutils literal notranslate"><span class="pre">w</span></code>, <code class="docutils literal notranslate"><span class="pre">r_x</span></code> and <code class="docutils literal notranslate"><span class="pre">r_y</span></code>. Default <code class="docutils literal notranslate"><span class="pre">1.</span></code>.</p>
+<dt><strong>hgfactor_membrane</strong><span class="classifier">double, optional</span></dt><dd><p>Dimensionless multiplier of the artificial hourglass stiffness
+of the in-plane displacements <code class="docutils literal notranslate"><span class="pre">u</span></code> and <code class="docutils literal notranslate"><span class="pre">v</span></code>, of Brockman
+(1987). Default <code class="docutils literal notranslate"><span class="pre">1.</span></code>.</p>
+</dd>
+<dt><strong>hgfactor_physical</strong><span class="classifier">double, optional</span></dt><dd><p>Dimensionless multiplier of the physical stabilisation of the
+bending and of the transverse shear of Belytschko and Leviathan
+(1994), which controls the hourglass modes of <code class="docutils literal notranslate"><span class="pre">w</span></code>, <code class="docutils literal notranslate"><span class="pre">r_x</span></code> and
+<code class="docutils literal notranslate"><span class="pre">r_y</span></code>; the default <code class="docutils literal notranslate"><span class="pre">1.</span></code> is the formulation of the paper,
+which has no parameter, and other values serve verification and
+sensitivity studies. See the Notes of <a class="reference internal" href="#module-pyfe3d.quad4r" title="pyfe3d.quad4r"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code></a>.</p>
 </dd>
 <dt><strong>nonlinear</strong><span class="classifier">int, optional</span></dt><dd><p>The default <code class="docutils literal notranslate"><span class="pre">0</span></code> gives the linear internal forces, <code class="docutils literal notranslate"><span class="pre">KC0*u</span></code>. Any other
-value adds the geometrically nonlinear terms of the von Karman strains,
+value adds the geometrically nonlinear terms of the von Kármán strains,
 whose tangent stiffness matrix is <code class="docutils literal notranslate"><span class="pre">KC0</span> <span class="pre">+</span> <span class="pre">KCNL</span> <span class="pre">+</span> <span class="pre">KG</span></code>, see
 <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KCNL" title="pyfe3d.quad4r.Quad4R.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>.</p>
 </dd>
@@ -2130,11 +2526,17 @@ from the element to the global coordinates with the rotation matrix
 <code class="docutils literal notranslate"><span class="pre">r11,</span> <span class="pre">...,</span> <span class="pre">r33</span></code>. With <code class="docutils literal notranslate"><span class="pre">nonlinear</span></code>, <code class="docutils literal notranslate"><span class="pre">KC0</span> <span class="pre">+</span> <span class="pre">KCNL</span> <span class="pre">+</span> <span class="pre">KG</span></code> is the
 exact Jacobian of the assembled internal forces, see
 <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_probe_finte" title="pyfe3d.quad4r.Quad4R.update_probe_finte"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_probe_finte()</span></code></a> and <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KCNL" title="pyfe3d.quad4r.Quad4R.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">1</span></code> and a warped element the internal forces
+are those of the flat element at the displacements <span class="math notranslate nohighlight">\(\boldsymbol{J}
+\boldsymbol{u}_e\)</span>, taken to the nodes with <span class="math notranslate nohighlight">\(\boldsymbol{J}^\top\)</span>,
+see the Notes of <a class="reference internal" href="#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>: the linear ones <span class="math notranslate nohighlight">\(\boldsymbol{J}^\top
+\boldsymbol{K}_e \boldsymbol{J} \boldsymbol{u}_e\)</span> and the terms of
+<code class="docutils literal notranslate"><span class="pre">nonlinear</span></code>, see <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KCNL" title="pyfe3d.quad4r.Quad4R.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py method">
 <dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.update_probe_finte">
-<span class="sig-name descname"><span class="pre">update_probe_finte</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_u</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_v</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_w</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_rx</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_ry</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">nonlinear</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_probe_finte" title="Link to this definition">#</a></dt>
+<span class="sig-name descname"><span class="pre">update_probe_finte</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">self</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ShellProp</span> <span class="pre">prop</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_membrane</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">double</span> <span class="pre">hgfactor_physical</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">1.</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">int</span> <span class="pre">nonlinear</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em><span class="sig-paren">)</span> <span class="sig-return"><span class="sig-return-icon">&#x2192;</span> <span class="sig-return-typehint"><span class="pre">void</span></span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.update_probe_finte" title="Link to this definition">#</a></dt>
 <dd><p>Update the internal force vector of the probe</p>
 <p>The attribute <code class="docutils literal notranslate"><span class="pre">finte</span></code> of the object <a class="reference internal" href="#pyfe3d.quad4r.Quad4RProbe" title="pyfe3d.quad4r.Quad4RProbe"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4RProbe</span></code></a> is updated,
 which corresponds to the internal forces in local coordinates. While
@@ -2157,13 +2559,19 @@ updated, accessible using <code class="docutils literal notranslate"><span class
 <dt><strong>prop</strong><span class="classifier"><a class="reference internal" href="shellprop.html#pyfe3d.shellprop.ShellProp" title="pyfe3d.shellprop.ShellProp"><code class="xref py py-class docutils literal notranslate"><span class="pre">ShellProp</span></code></a> object</span></dt><dd><p>Shell property object from where the stiffness and mass attributes
 are read from.</p>
 </dd>
-<dt><strong>hgfactor_u, hgfactor_v, hgfactor_w, hgfactor_rx, hgfactor_ry</strong><span class="classifier">double</span></dt><dd><p>These offer the possibility to change the default hourglass
-stiffnesses for each degree-of-freedom.
-Dimensionless multipliers of the hourglass stiffnesses of <code class="docutils literal notranslate"><span class="pre">u</span></code>,
-<code class="docutils literal notranslate"><span class="pre">v</span></code>, <code class="docutils literal notranslate"><span class="pre">w</span></code>, <code class="docutils literal notranslate"><span class="pre">r_x</span></code> and <code class="docutils literal notranslate"><span class="pre">r_y</span></code>. Default <code class="docutils literal notranslate"><span class="pre">1.</span></code>.</p>
+<dt><strong>hgfactor_membrane</strong><span class="classifier">double, optional</span></dt><dd><p>Dimensionless multiplier of the artificial hourglass stiffness
+of the in-plane displacements <code class="docutils literal notranslate"><span class="pre">u</span></code> and <code class="docutils literal notranslate"><span class="pre">v</span></code>, of Brockman
+(1987). Default <code class="docutils literal notranslate"><span class="pre">1.</span></code>.</p>
+</dd>
+<dt><strong>hgfactor_physical</strong><span class="classifier">double, optional</span></dt><dd><p>Dimensionless multiplier of the physical stabilisation of the
+bending and of the transverse shear of Belytschko and Leviathan
+(1994), which controls the hourglass modes of <code class="docutils literal notranslate"><span class="pre">w</span></code>, <code class="docutils literal notranslate"><span class="pre">r_x</span></code> and
+<code class="docutils literal notranslate"><span class="pre">r_y</span></code>; the default <code class="docutils literal notranslate"><span class="pre">1.</span></code> is the formulation of the paper,
+which has no parameter, and other values serve verification and
+sensitivity studies. See the Notes of <a class="reference internal" href="#module-pyfe3d.quad4r" title="pyfe3d.quad4r"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code></a>.</p>
 </dd>
 <dt><strong>nonlinear</strong><span class="classifier">int, optional</span></dt><dd><p>The default <code class="docutils literal notranslate"><span class="pre">0</span></code> gives the linear internal forces, <code class="docutils literal notranslate"><span class="pre">KC0*u</span></code>. Any other
-value adds the geometrically nonlinear terms of the von Karman strains,
+value adds the geometrically nonlinear terms of the von Kármán strains,
 whose tangent stiffness matrix is <code class="docutils literal notranslate"><span class="pre">KC0</span> <span class="pre">+</span> <span class="pre">KCNL</span> <span class="pre">+</span> <span class="pre">KG</span></code>, see
 <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KCNL" title="pyfe3d.quad4r.Quad4R.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>.</p>
 </dd>
@@ -2180,6 +2588,12 @@ terms. With <code class="docutils literal notranslate"><span class="pre">nonline
 <span class="pre">KG</span></code> is the exact Jacobian of the internal forces, see
 <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KCNL" title="pyfe3d.quad4r.Quad4R.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>, when KC0 is computed with the same
 <code class="docutils literal notranslate"><span class="pre">hgfactor_*</span></code>.</p>
+<p>With <code class="docutils literal notranslate"><span class="pre">warp_offsets</span> <span class="pre">=</span> <span class="pre">1</span></code> and a warped element the internal forces
+are those of the flat element at the displacements <span class="math notranslate nohighlight">\(\boldsymbol{J}
+\boldsymbol{u}_e\)</span>, taken to the nodes with <span class="math notranslate nohighlight">\(\boldsymbol{J}^\top\)</span>,
+see the Notes of <a class="reference internal" href="#pyfe3d.quad4r.Quad4R" title="pyfe3d.quad4r.Quad4R"><code class="xref py py-class docutils literal notranslate"><span class="pre">Quad4R</span></code></a>: the linear ones <span class="math notranslate nohighlight">\(\boldsymbol{J}^\top
+\boldsymbol{K}_e \boldsymbol{J} \boldsymbol{u}_e\)</span> and the terms of
+<code class="docutils literal notranslate"><span class="pre">nonlinear</span></code>, see <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_KCNL" title="pyfe3d.quad4r.Quad4R.update_KCNL"><code class="xref py py-meth docutils literal notranslate"><span class="pre">update_KCNL()</span></code></a>.</p>
 </dd></dl>
 
 <dl class="py method">
@@ -2279,6 +2693,12 @@ zero vector, which leaves <code class="docutils literal notranslate"><span class
 </dl>
 </dd></dl>
 
+<dl class="py attribute">
+<dt class="sig sig-object py" id="pyfe3d.quad4r.Quad4R.warp_offsets">
+<span class="sig-name descname"><span class="pre">warp_offsets</span></span><a class="headerlink" href="#pyfe3d.quad4r.Quad4R.warp_offsets" title="Link to this definition">#</a></dt>
+<dd><p>warp_offsets: ‘int’</p>
+</dd></dl>
+
 </dd></dl>
 
 <dl class="py class">
@@ -2297,7 +2717,9 @@ The constructor takes no parameters.</p>
 </dd>
 <dt><strong>KCNL_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KCNL_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">576</span></code></p>
 </dd>
-<dt><strong>KG_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KG_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">144</span></code></p>
+<dt><strong>KG_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">KG_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">180</span></code>: 144 entries of the translations and 36 of
+the rotations of each node, the eccentricity geometric stiffness of
+the rigid offsets of a warped element, see <code class="docutils literal notranslate"><span class="pre">update_KG</span></code></p>
 </dd>
 <dt><strong>M_SPARSE_SIZE,</strong><span class="classifier">int</span></dt><dd><p><code class="docutils literal notranslate"><span class="pre">M_SPARSE_SIZE</span> <span class="pre">=</span> <span class="pre">480</span></code></p>
 </dd>
@@ -2381,11 +2803,11 @@ in the element coordinate system, in the following order <span class="math notra
 Dimension of length. Updated by <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_probe_xe" title="pyfe3d.quad4r.Quad4R.update_probe_xe"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4R.update_probe_xe()</span></code></a>.</p>
 </dd>
 <dt><strong>ue,</strong><span class="classifier">array-like</span></dt><dd><p>Array of size <code class="docutils literal notranslate"><span class="pre">NUM_NODES*DOF=24</span></code> containing the element displacements
-in the following order <span class="math notranslate nohighlight">\({u_e}_1, {v_e}_1, {w_e}_1, {{r_x}_e}_1,
-{{r_y}_e}_1, {{r_z}_e}_1\)</span>, <span class="math notranslate nohighlight">\({u_e}_2, {v_e}_2, {w_e}_2, {{r_x}_e}_2,
-{{r_y}_e}_2, {{r_z}_e}_2\)</span>, <span class="math notranslate nohighlight">\({u_e}_3, {v_e}_3, {w_e}_3, {{r_x}_e}_3,
-{{r_y}_e}_3, {{r_z}_e}_3\)</span>, <span class="math notranslate nohighlight">\({u_e}_4, {v_e}_4, {w_e}_4, {{r_x}_e}_4,
-{{r_y}_e}_4, {{r_z}_e}_4\)</span>.
+in the following order <span class="math notranslate nohighlight">\(u_{e_1}, v_{e_1}, w_{e_1}, {r_x}_{e_1},
+{r_y}_{e_1}, {r_z}_{e_1}\)</span>, <span class="math notranslate nohighlight">\(u_{e_2}, v_{e_2}, w_{e_2}, {r_x}_{e_2},
+{r_y}_{e_2}, {r_z}_{e_2}\)</span>, <span class="math notranslate nohighlight">\(u_{e_3}, v_{e_3}, w_{e_3}, {r_x}_{e_3},
+{r_y}_{e_3}, {r_z}_{e_3}\)</span>, <span class="math notranslate nohighlight">\(u_{e_4}, v_{e_4}, w_{e_4}, {r_x}_{e_4},
+{r_y}_{e_4}, {r_z}_{e_4}\)</span>.
 Translations with dimension of length, rotations dimensionless.
 Updated by <a class="reference internal" href="#pyfe3d.quad4r.Quad4R.update_probe_ue" title="pyfe3d.quad4r.Quad4R.update_probe_ue"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Quad4R.update_probe_ue()</span></code></a>.</p>
 </dd>
@@ -2589,6 +3011,7 @@ Their products with <code class="docutils literal notranslate"><span class="pre"
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.update_probe_ue"><code class="docutils literal notranslate"><span class="pre">Quad4R.update_probe_ue()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.update_probe_xe"><code class="docutils literal notranslate"><span class="pre">Quad4R.update_probe_xe()</span></code></a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.update_rotation_matrix"><code class="docutils literal notranslate"><span class="pre">Quad4R.update_rotation_matrix()</span></code></a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4R.warp_offsets"><code class="docutils literal notranslate"><span class="pre">Quad4R.warp_offsets</span></code></a></li>
 </ul>
 </li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.quad4r.Quad4RData"><code class="docutils literal notranslate"><span class="pre">Quad4RData</span></code></a><ul class="pst-show_toc_level nav section-nav flex-column">

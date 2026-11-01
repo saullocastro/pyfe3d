@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Utilities for ARPACK, against the Intel MKL bug of dsteqr (pyfe3d.solver.arpackutils) &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>Utilities for ARPACK, against the Intel MKL bug of dsteqr (pyfe3d.solver.arpackutils) &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
@@ -37,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -120,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -137,6 +138,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -161,13 +169,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -176,6 +177,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -364,6 +393,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -380,6 +416,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -584,11 +641,36 @@
 
 <li class="toctree-l2"><a class="reference internal" href="beamprop.html">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
 
+<li class="toctree-l2"><a class="reference internal" href="vabs.html">Variational asymptotic sectional analysis (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.vabs</span></code>)</a></li>
+
+
+
+
+
+
+
+
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html">Co-rotational kinematics, EICR (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
 <li class="toctree-l1"><a class="reference internal" href="solver.html">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_static.html">Linear static solution (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code>)</a></li>
 
+
+<li class="toctree-l1"><a class="reference internal" href="solver_inertia_relief.html">Static analysis with inertia relief (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.inertia_relief</span></code>)</a></li>
 
 <li class="toctree-l1"><a class="reference internal" href="solver_analysis.html">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</a></li>
 
@@ -640,6 +722,7 @@
 
 
 <li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code>)</a></li>
+
 
 
 
@@ -741,7 +824,9 @@ computing more than 15 eigenpairs in several calls with a deflation of the
 eigenvectors already found, which are combined with a Rayleigh-Ritz
 projection such that they are orthonormal also across the calls. It is used
 by <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> and <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> for symmetric
-matrices.</p>
+matrices. <a class="reference internal" href="#pyfe3d.solver.arpackutils.deflated_eigsh" title="pyfe3d.solver.arpackutils.deflated_eigsh"><code class="xref py py-func docutils literal notranslate"><span class="pre">deflated_eigsh()</span></code></a>, the call with the eigenvectors already
+found deflated, also completes the eigenpairs of repeated eigenvalues in
+these two analyses.</p>
 <p>The cap is decided by <a class="reference internal" href="#pyfe3d.solver.arpackutils.arpack_max_ncv" title="pyfe3d.solver.arpackutils.arpack_max_ncv"><code class="xref py py-func docutils literal notranslate"><span class="pre">arpack_max_ncv()</span></code></a> and can be overridden with
 the module attribute <a class="reference internal" href="#pyfe3d.solver.arpackutils.ARPACK_MAX_NCV" title="pyfe3d.solver.arpackutils.ARPACK_MAX_NCV"><code class="xref py py-data docutils literal notranslate"><span class="pre">ARPACK_MAX_NCV</span></code></a> or the environment variable
 <code class="docutils literal notranslate"><span class="pre">PYFE3D_ARPACK_MAX_NCV</span></code>, e.g. to lift it with a fixed MKL that cannot be
@@ -1045,6 +1130,86 @@ Restarted Arnoldi Methods, SIAM, Philadelphia, 1998.
 </dd></dl>
 
 <dl class="py function">
+<dt class="sig sig-object py" id="pyfe3d.solver.arpackutils.deflated_eigsh">
+<span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">deflated_eigsh</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">A</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">k</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">M</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">sigma</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">V</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">tol</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">0</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">ncv</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">lu</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">v0</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.arpackutils.deflated_eigsh" title="Link to this definition">#</a></dt>
+<dd><p><code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> in shift-invert mode with the
+eigenvectors <code class="docutils literal notranslate"><span class="pre">V</span></code> deflated from the operator</p>
+<p>Returns the <code class="docutils literal notranslate"><span class="pre">k</span></code> eigenpairs of <span class="math notranslate nohighlight">\(\boldsymbol{A} \boldsymbol{x} = w \boldsymbol{M} \boldsymbol{x}\)</span> nearest the
+shift <code class="docutils literal notranslate"><span class="pre">sigma</span></code> among those whose eigenvectors are <span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span>-orthogonal to
+the columns of <code class="docutils literal notranslate"><span class="pre">V</span></code>, i.e. the eigenpairs nearest the shift that were
+not found yet. Used for the passes of <a class="reference internal" href="#pyfe3d.solver.arpackutils.capped_eigsh" title="pyfe3d.solver.arpackutils.capped_eigsh"><code class="xref py py-func docutils literal notranslate"><span class="pre">capped_eigsh()</span></code></a> and for the
+completion of the eigenpairs of repeated eigenvalues by
+<a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> and <a class="reference internal" href="solver_eigen.html#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a>. The call starts
+from <a class="reference internal" href="#pyfe3d.solver.arpackutils.start_kwargs" title="pyfe3d.solver.arpackutils.start_kwargs"><code class="xref py py-func docutils literal notranslate"><span class="pre">start_kwargs()</span></code></a>, with the starting vector <code class="docutils literal notranslate"><span class="pre">v0</span></code> when given.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><dl class="simple">
+<dt><strong>A</strong><span class="classifier">sparse matrix</span></dt><dd><p>Symmetric matrix of the left-hand side, of size <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">x</span> <span class="pre">n</span></code>.</p>
+</dd>
+<dt><strong>k</strong><span class="classifier">int</span></dt><dd><p>Number of eigenpairs, at most <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">-</span> <span class="pre">V.shape[1]</span> <span class="pre">-</span> <span class="pre">2</span></code>.</p>
+</dd>
+<dt><strong>M</strong><span class="classifier">sparse matrix</span></dt><dd><p>Positive definite matrix of the right-hand side, of size <code class="docutils literal notranslate"><span class="pre">n</span> <span class="pre">x</span> <span class="pre">n</span></code>.</p>
+</dd>
+<dt><strong>sigma</strong><span class="classifier">float</span></dt><dd><p>Shift, in the units of <span class="math notranslate nohighlight">\(w\)</span>; <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">-</span> <span class="pre">sigma*M</span></code> must not be singular.</p>
+</dd>
+<dt><strong>V</strong><span class="classifier">ndarray</span></dt><dd><p><span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span>-orthonormal eigenvectors already found, shape <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">p)</span></code>.</p>
+</dd>
+<dt><strong>tol</strong><span class="classifier">float, optional</span></dt><dd><p>Relative accuracy of the eigenvalues, passed to
+<code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code>; <code class="docutils literal notranslate"><span class="pre">0</span></code> (default) means the machine
+precision.</p>
+</dd>
+<dt><strong>ncv</strong><span class="classifier">int or None, optional</span></dt><dd><p>Number of Lanczos vectors; <code class="docutils literal notranslate"><span class="pre">None</span></code> uses <a class="reference internal" href="#pyfe3d.solver.arpackutils.arpack_ncv" title="pyfe3d.solver.arpackutils.arpack_ncv"><code class="xref py py-func docutils literal notranslate"><span class="pre">arpack_ncv()</span></code></a>.
+Default <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt><strong>lu</strong><span class="classifier">SuperLU or None, optional</span></dt><dd><p>Factorization of <code class="docutils literal notranslate"><span class="pre">A</span> <span class="pre">-</span> <span class="pre">sigma*M</span></code> with <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.splu()</span></code>,
+e.g. to reuse it for several passes; <code class="docutils literal notranslate"><span class="pre">None</span></code> computes it. Default
+<code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+<dt><strong>v0</strong><span class="classifier">ndarray or None, optional</span></dt><dd><p>Starting vector, 1-D array of size <code class="docutils literal notranslate"><span class="pre">n</span></code>; <code class="docutils literal notranslate"><span class="pre">None</span></code> uses
+<a class="reference internal" href="#pyfe3d.solver.arpackutils.start_vector" title="pyfe3d.solver.arpackutils.start_vector"><code class="xref py py-func docutils literal notranslate"><span class="pre">start_vector()</span></code></a>. Default <code class="docutils literal notranslate"><span class="pre">None</span></code>.</p>
+</dd>
+</dl>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><dl class="simple">
+<dt><strong>w, x</strong><span class="classifier">ndarray</span></dt><dd><p>The eigenvalues, 1-D array of size <code class="docutils literal notranslate"><span class="pre">k</span></code>, and the
+<span class="math notranslate nohighlight">\(\boldsymbol{M}\)</span>-orthonormal eigenvectors, shape <code class="docutils literal notranslate"><span class="pre">(n,</span> <span class="pre">k)</span></code>.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>The operator of the shift-invert mode, with the eigenvectors <span class="math notranslate nohighlight">\(\boldsymbol{V}\)</span>
+deflated, is</p>
+<div class="math notranslate nohighlight">
+\[\boldsymbol{y} = (\boldsymbol{I} - \boldsymbol{V} \boldsymbol{V}^\top \boldsymbol{M})(\boldsymbol{A} - \sigma \boldsymbol{M})^{-1} \boldsymbol{x}\]</div>
+<p>such that the eigenvalues of <span class="math notranslate nohighlight">\(\boldsymbol{V}\)</span> become null and are not found
+again, see <a class="reference internal" href="#pyfe3d.solver.arpackutils.capped_eigsh" title="pyfe3d.solver.arpackutils.capped_eigsh"><code class="xref py py-func docutils literal notranslate"><span class="pre">capped_eigsh()</span></code></a>. A Krylov subspace generated from a
+single starting vector contains at most one direction of each
+eigenspace, so that in exact arithmetic the Lanczos process “must
+[…] fail to detect the multiplicity of any eigenvalue” it finds, the
+other copies appearing only through the rounding errors (<a class="reference internal" href="#r7110e8afa102-1" id="id5">[1]</a>,
+Section 12.2.1, “A Theoretical Limitation”, pp. 263-264); even with
+full reorthogonalization it “cannot detect the multiplicity of the
+eigenvalues which it computes” (<a class="reference internal" href="#r7110e8afa102-1" id="id6">[1]</a>, Section 13.10, p. 316): the
+direction found within an eigenspace is that of the component of the
+starting vector. With the eigenvectors found deflated and another
+starting vector <code class="docutils literal notranslate"><span class="pre">v0</span></code>, whose component within the eigenspace has, in
+general, a part orthogonal to the direction already found, the
+remaining directions are found as the eigenvalues nearest the shift
+that were not found yet.</p>
+<p class="rubric">References</p>
+<div role="list" class="citation-list">
+<div class="citation" id="r7110e8afa102-1" role="doc-biblioentry">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id5">1</a>,<a role="doc-backlink" href="#id6">2</a>)</span>
+<p>Parlett, B. N., The Symmetric Eigenvalue Problem, SIAM,
+Philadelphia, 1998. <a class="reference external" href="https://doi.org/10.1137/1.9781611971163">https://doi.org/10.1137/1.9781611971163</a></p>
+</div>
+</div>
+</dd></dl>
+
+<dl class="py function">
 <dt class="sig sig-object py" id="pyfe3d.solver.arpackutils.dsteqr_is_faulty">
 <span class="sig-prename descclassname"><span class="pre">pyfe3d.solver.arpackutils.</span></span><span class="sig-name descname"><span class="pre">dsteqr_is_faulty</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#pyfe3d.solver.arpackutils.dsteqr_is_faulty" title="Link to this definition">#</a></dt>
 <dd><p>Tell whether the LAPACK <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> of SciPy returns wrong eigenvectors</p>
@@ -1237,6 +1402,7 @@ drawn when ARPACK restarts.</p>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils.arpack_max_ncv"><code class="docutils literal notranslate"><span class="pre">arpack_max_ncv()</span></code></a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils.arpack_ncv"><code class="docutils literal notranslate"><span class="pre">arpack_ncv()</span></code></a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils.capped_eigsh"><code class="docutils literal notranslate"><span class="pre">capped_eigsh()</span></code></a></li>
+<li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils.deflated_eigsh"><code class="docutils literal notranslate"><span class="pre">deflated_eigsh()</span></code></a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils.dsteqr_is_faulty"><code class="docutils literal notranslate"><span class="pre">dsteqr_is_faulty()</span></code></a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils.lapack_is_mkl"><code class="docutils literal notranslate"><span class="pre">lapack_is_mkl()</span></code></a></li>
 <li class="toc-h1 nav-item toc-entry"><a class="reference internal nav-link" href="#pyfe3d.solver.arpackutils.mkl_version"><code class="docutils literal notranslate"><span class="pre">mkl_version()</span></code></a></li>

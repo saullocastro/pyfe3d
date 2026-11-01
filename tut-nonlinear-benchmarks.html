@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Tutorial: geometrically non-linear benchmarks with pyfe3d.solver &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>Tutorial: geometrically non-linear benchmarks with pyfe3d.solver &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -48,7 +49,7 @@
     <script>DOCUMENTATION_OPTIONS.search_as_you_type = false;</script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
-    <link rel="next" title="API reference" href="api.html" />
+    <link rel="next" title="Tutorial: large rotations with the co-rotational kinematics" href="tut-corotational-large-rotations.html" />
     <link rel="prev" title="Benchmark: shell obstacle course" href="tut-bench-shell-obstacle-course.html" />
   <meta name="viewport" content="width=device-width, initial-scale=1"/>
   <meta name="color-scheme" content="light dark"/>
@@ -121,7 +122,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -138,6 +139,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -162,13 +170,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -177,6 +178,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -365,6 +394,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -381,6 +417,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -540,6 +597,23 @@
 <li class="toctree-l1"><a class="reference internal" href="tut-bench-macneal-harder.html">Benchmark: MacNeal-Harder standard problems for the shell elements</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tut-bench-shell-obstacle-course.html">Benchmark: shell obstacle course</a></li>
 <li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Tutorial: geometrically non-linear benchmarks with pyfe3d.solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-corotational-large-rotations.html">Tutorial: large rotations with the co-rotational kinematics</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-prescribed-displacement-cantilever.html">Tutorial: prescribed displacement at the tip of a cantilever</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-prescribed-displacement-dome-riks.html">Tutorial: shells pressed down by a prescribed displacement, Riks’ method</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-nafems-cap-axisymmetric.html">Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations</a></li>
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-inertia-relief.html">Tutorial: static analysis with inertia relief</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-inertia-relief-aircraft-ha144a.html">Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A</a></li>
 </ul>
 </div>
 </nav></div>
@@ -607,9 +681,9 @@
 <li><p>cantilever under an end moment (Section 3.2, Fig. 3, Table 3), with the Newton-Raphson method;</p></li>
 <li><p>hinged cylindrical roof under a central point load (Section 3.8, Fig. 9, Tables 9a and 9d), whose snap-through, and snap-back for the thinner roof, are traced with the arc-length methods.</p></li>
 </ul>
-<p>Sze et al. (2004) computed their reference values with ABAQUS’s S4R element, a finite-strain shell element with an updated Lagrangian formulation (their Table 1). The elements of pyfe3d use the von Karman strains, valid for small strains and moderate rotations, in a total Lagrangian formulation whose element coordinate systems are not updated. The convergence of every increment is checked with Crisfield’s criterion, the default of <code class="docutils literal notranslate"><span class="pre">Analysis</span></code> (<code class="docutils literal notranslate"><span class="pre">convergence='crisfield'</span></code>, <code class="docutils literal notranslate"><span class="pre">relTOL=1e-9</span></code>).</p>
-<p>The models are those of <code class="docutils literal notranslate"><span class="pre">tests/test_nonlinear_benchmarks_sze2004.py</span></code>, whose <code class="docutils literal notranslate"><span class="pre">Model</span></code> class, from <code class="docutils literal notranslate"><span class="pre">tests/test_solver_nonlinear_static.py</span></code>, provides the callables <code class="docutils literal notranslate"><span class="pre">calc_fext</span></code>, <code class="docutils literal notranslate"><span class="pre">calc_fint</span></code>, <code class="docutils literal notranslate"><span class="pre">calc_kC</span></code> and <code class="docutils literal notranslate"><span class="pre">calc_kG</span></code> of <code class="docutils literal notranslate"><span class="pre">Analysis</span></code> for a list of pyfe3d elements. A further section measures the sensitivity of the roof to the transverse hourglass stiffness of <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>, and a last one traces the snap-through of Williams’ toggle frame with <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> elements. The cells below run in about
-five minutes.</p>
+<p>Sze et al. (2004) computed their reference values with ABAQUS’s S4R element, a finite-strain shell element with an updated Lagrangian formulation (their Table 1). The elements of pyfe3d use the von Kármán strains, valid for small strains and moderate rotations, in a total Lagrangian formulation whose element coordinate systems are not updated. The convergence of every increment is checked with Crisfield’s criterion, the default of <code class="docutils literal notranslate"><span class="pre">Analysis</span></code> (<code class="docutils literal notranslate"><span class="pre">convergence='crisfield'</span></code>, <code class="docutils literal notranslate"><span class="pre">relTOL=1e-9</span></code>).</p>
+<p>The models are those of <code class="docutils literal notranslate"><span class="pre">tests/test_nonlinear_benchmarks_sze2004.py</span></code>, whose <code class="docutils literal notranslate"><span class="pre">Model</span></code> class, from <code class="docutils literal notranslate"><span class="pre">tests/test_solver_nonlinear_static.py</span></code>, provides the callables <code class="docutils literal notranslate"><span class="pre">calc_fext</span></code>, <code class="docutils literal notranslate"><span class="pre">calc_fint</span></code>, <code class="docutils literal notranslate"><span class="pre">calc_kC</span></code> and <code class="docutils literal notranslate"><span class="pre">calc_kG</span></code> of <code class="docutils literal notranslate"><span class="pre">Analysis</span></code> for a list of pyfe3d elements. A further section measures the sensitivity of the roof to the physical stabilisation of <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>, and a last one traces the snap-through of Williams’ toggle frame with <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> elements. The cells below run in about six
+minutes.</p>
 <div class="nbinput nblast docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[1]:
 </pre></div>
@@ -636,11 +710,11 @@ from test_nonlinear_benchmarks_sze2004 import (
 \[\frac{U}{L} = \frac{M_o}{M} \sin\frac{M}{M_o} - 1, \qquad
 \frac{W}{L} = \frac{M_o}{M} \left(1 - \cos\frac{M}{M_o}\right)\]</div>
 <p>such that at <span class="math notranslate nohighlight">\(M_{max}\)</span> the cantilever is a full circle and the tip is back at the root. The text of Section 3.2 gives <span class="math notranslate nohighlight">\(M_{max} = \pi M_o\)</span>; Fig. 3a and the exact values of Table 3a, e.g. <span class="math notranslate nohighlight">\(-U = 12\)</span>, <span class="math notranslate nohighlight">\(W = 0\)</span> at <span class="math notranslate nohighlight">\(M/M_{max} = 1\)</span>, correspond to <span class="math notranslate nohighlight">\(M_{max} = 2 \pi M_o\)</span>, used here.</p>
-<p>With the von Karman axial strain <span class="math notranslate nohighlight">\(\epsilon_{xx} = u_{,x} + w_{,x}^2/2\)</span> the free end gives a null axial force, the bending equation is that of the linear theory and</p>
+<p>With the von Kármán axial strain <span class="math notranslate nohighlight">\(\epsilon_{xx} = u_{,x} + w_{,x}^2/2\)</span> the free end gives a null axial force, the bending equation is that of the linear theory and</p>
 <div class="math notranslate nohighlight">
 \[\frac{W}{L} = \frac{\varphi}{2}, \qquad \frac{U}{L} = -\frac{\varphi^2}{6},
 \qquad \varphi = \frac{M L}{E I}\]</div>
-<p>the first terms of the expansion of the exact solution in the tip rotation <span class="math notranslate nohighlight">\(\varphi\)</span>. The von Karman cantilever never rolls up into a circle.</p>
+<p>the first terms of the expansion of the exact solution in the tip rotation <span class="math notranslate nohighlight">\(\varphi\)</span>. The von Kármán cantilever never rolls up into a circle.</p>
 <p>The cantilever is modelled with a strip of <span class="math notranslate nohighlight">\(16 \times 1\)</span> <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> elements, as the <span class="math notranslate nohighlight">\(16 \times 1\)</span> S4R mesh of Table 3a, and loaded in 20 equal increments of the Newton-Raphson method, <code class="docutils literal notranslate"><span class="pre">initialInc</span> <span class="pre">=</span> <span class="pre">maxInc</span> <span class="pre">=</span> <span class="pre">0.05</span></code>.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[2]:
@@ -662,7 +736,7 @@ for (mr, Ur, Wr), mi, Ui, Wi, Uv, Wv in zip(TABLE_3A_EXACT, m, U, W, U_vk,
     print('%7.2f | %8.3f %8.3f %8.3f | %8.3f %8.3f %8.3f'
           % (mr, Ur, L*Uv, L*Ui, Wr, L*Wv, L*Wi))
 print()
-print('check: Quad4R against the von Karman solution, max relative '
+print('check: Quad4R against the von Kármán solution, max relative '
       'difference W %.1e, U %.1e' % (np.abs(W/W_vk - 1).max(),
                                      np.abs(U/U_vk - 1).max()))
 print('check: Quad4R against Table 3a (exact) at M/Mmax = 0.05: '
@@ -702,11 +776,11 @@ Newton-Raphson, 16x1 Quad4R: 20 increments
    0.95 |   12.621   71.259   71.189 |    0.098   35.814   35.814
    1.00 |   12.000   78.957   78.880 |    0.000   37.699   37.699
 
-check: Quad4R against the von Karman solution, max relative difference W 1.1e-10, U 9.8e-04
+check: Quad4R against the von Kármán solution, max relative difference W 3.7e-10, U 9.8e-04
 check: Quad4R against Table 3a (exact) at M/Mmax = 0.05: W +0.80 %, -U +0.61 %
 </pre></div></div>
 </div>
-<p>The <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> strip reproduces the von Karman solution: the deflection exactly, the axial displacement within 0.1 %, converging with the mesh. It agrees with the exact values of Table 3a only for small tip rotations, within 1 % at <span class="math notranslate nohighlight">\(M = 0.05 M_{max}\)</span> (tip rotation of 0.31 rad), and departs from them beyond. The same analysis with 16 <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> elements is plotted below.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> strip reproduces the von Kármán solution: the deflection exactly, the axial displacement within 0.1 %, converging with the mesh. It agrees with the exact values of Table 3a only for small tip rotations, within 1 % at <span class="math notranslate nohighlight">\(M = 0.05 M_{max}\)</span> (tip rotation of 0.31 rad), and departs from them beyond. The same analysis with 16 <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> elements is plotted below; it follows the von Kármán solution as well, see below.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[3]:
 </pre></div>
@@ -722,7 +796,7 @@ for ax, label, exact, vk, quad, beam, table in [
     ax.plot(exact, mm, 'k-', lw=1.5, label='exact')
     ax.plot(table, TABLE_3A_EXACT[:, 0], 'ko', mfc='none',
             label='Table 3a, Sze et al. (2004)')
-    ax.plot(vk, mm, 'C0--', lw=1.5, label='von Karman')
+    ax.plot(vk, mm, 'C0--', lw=1.5, label='von Kármán')
     ax.plot(quad, m, 'C0s', ms=5, label='16x1 Quad4R')
     ax.plot(beam, mb, 'C1^-', ms=5, label='16 BeamC')
     ax.set_xlabel(label)
@@ -780,13 +854,16 @@ plt.show()
 <img alt="_images/tut-nonlinear-benchmarks_7_0.png" src="_images/tut-nonlinear-benchmarks_7_0.png" />
 </div>
 </div>
-<p>The beam elements <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> and <code class="docutils literal notranslate"><span class="pre">BeamLR</span></code> interpolate the axial displacement linearly and integrate the von Karman axial strain with Gauss points along the element, where <span class="math notranslate nohighlight">\(w_{,x}^2\)</span> is not constant: the axial strain cannot vanish in the element and the cantilever is too stiff (membrane locking). The stiffening grows with the moment and decreases with the number of elements; at <span class="math notranslate nohighlight">\(M = 0.05 M_{max}\)</span>:</p>
+<p>Both beam elements interpolate the axial displacement linearly, so that <span class="math notranslate nohighlight">\(u_{,x}\)</span> is constant in the element, whereas the slope <span class="math notranslate nohighlight">\(w_{,x}\)</span> of the cubic deflection of <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> is not: with the pointwise von Kármán axial strain <span class="math notranslate nohighlight">\(u_{,x} + w_{,x}^2/2\)</span>, integrated with Gauss points, the axial strain could not vanish in the element and the cantilever was too stiff (membrane locking), as in <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> up to version 0.11. Since version 0.12.0, <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> replaces <span class="math notranslate nohighlight">\(w_{,x}^2/2\)</span> by its
+mean over the element, constant as <span class="math notranslate nohighlight">\(u_{,x}\)</span> (Crisfield, M. A., <em>Non-linear Finite Element Analysis of Solids and Structures</em>, Vol. 1, Wiley, 1991, Section 7.1.3, Eqs. (7.31)-(7.32)), and its geometric stiffness takes the mean axial force: the axial strain vanishes in each element, and the tip deflections <span class="math notranslate nohighlight">\(W\)</span> and <span class="math notranslate nohighlight">\(U\)</span> are those of the von Kármán solution with any number of elements, within <span class="math notranslate nohighlight">\(10^{-8}\)</span>, see <code class="docutils literal notranslate"><span class="pre">test_cantilever_end_moment_beamc_no_membrane_locking</span></code>. Up to
+version 0.11 the error of <span class="math notranslate nohighlight">\(W\)</span> at <span class="math notranslate nohighlight">\(M = 0.05 M_{max}\)</span> was -43.6, -12.6 and -1.2 % with 16, 64 and 256 elements. <code class="docutils literal notranslate"><span class="pre">BeamLR</span></code> takes <span class="math notranslate nohighlight">\(w_{,x}\)</span> from its linear interpolation of <span class="math notranslate nohighlight">\(w\)</span>, also constant in the element: the tip deflection <span class="math notranslate nohighlight">\(W\)</span> is that of the von Kármán solution with any number of elements, and only the axial displacement <span class="math notranslate nohighlight">\(U\)</span> has an error, <span class="math notranslate nohighlight">\(U/U_{vk} - 1 = -1/(4 n^2)\)</span> with <span class="math notranslate nohighlight">\(n\)</span> elements, see <code class="docutils literal notranslate"><span class="pre">test_cantilever_end_moment_beamlr_no_membrane_locking</span></code>
+(up to version 0.11 <code class="docutils literal notranslate"><span class="pre">BeamLR</span></code> took the slopes from the rotations and locked as <code class="docutils literal notranslate"><span class="pre">BeamC</span></code>). At <span class="math notranslate nohighlight">\(M = 0.05 M_{max}\)</span>:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[5]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>print('%-7s %9s %10s %12s %10s' % ('element', 'elements', 'W_tip',
-                                   'von Karman', 'error %'))
+                                   'von Kármán', 'error %'))
 for name in ['BeamC', 'BeamLR']:
     for n in [16, 64, 256]:
         mi, Ui, Wi = run_cantilever_end_moment(name, n, inc=0.25, m_max=0.05)
@@ -802,13 +879,13 @@ print('Table 3a (exact) at M/Mmax = 0.05: W_tip %.3f' % TABLE_3A_EXACT[0, 2])
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-element  elements      W_tip   von Karman    error %
-BeamC          16     1.0636       1.8850     -43.57
-BeamC          64     1.6477       1.8850     -12.59
-BeamC         256     1.8621       1.8850      -1.21
-BeamLR         16     1.0637       1.8850     -43.57
-BeamLR         64     1.6477       1.8850     -12.59
-BeamLR        256     1.8621       1.8850      -1.21
+element  elements      W_tip   von Kármán    error %
+BeamC          16     1.8850       1.8850      -0.00
+BeamC          64     1.8850       1.8850       0.00
+BeamC         256     1.8850       1.8850      -0.00
+BeamLR         16     1.8850       1.8850      -0.00
+BeamLR         64     1.8850       1.8850      -0.00
+BeamLR        256     1.8850       1.8850      -0.00
 Table 3a (exact) at M/Mmax = 0.05: W_tip 1.870
 </pre></div></div>
 </div>
@@ -859,58 +936,58 @@ print("check: Riks' and Crisfield's methods, max difference of P/Pmax at the "
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Crisfield&#39;s arc-length method: 84 increments, P/Pmax 1.200 at -W_C 29.800
-Riks&#39; arc-length method: 84 increments, P/Pmax 1.200 at -W_C 29.800
-Newton-Raphson: 20 increments, stops at P/Pmax 0.7459, -W_C 10.033
+Crisfield&#39;s arc-length method: 83 increments, P/Pmax 1.200 at -W_C 30.110
+Riks&#39; arc-length method: 83 increments, P/Pmax 1.200 at -W_C 30.110
+Newton-Raphson: 20 increments, stops at P/Pmax 0.7420, -W_C 10.793
 
     -W_C   Table 9a     pyfe3d       diff     diff %
-   0.693     0.0877     0.0941    +0.0064      +7.33
-   1.638     0.1980     0.2126    +0.0146      +7.39
-   3.087     0.3473     0.3718    +0.0245      +7.06
-   4.477     0.4686     0.4991    +0.0305      +6.50
-   5.802     0.5647     0.5971    +0.0324      +5.74
-   7.057     0.6381     0.6686    +0.0305      +4.78
-   8.237     0.6908     0.7158    +0.0250      +3.62
-   9.339     0.7246     0.7407    +0.0161      +2.22
-  10.358     0.7412     0.7449    +0.0037      +0.50
-  11.293     0.7421     0.7315    -0.0106      -1.43
-  12.141     0.7286     0.7027    -0.0259      -3.56
-  12.903     0.7023     0.6618    -0.0405      -5.76
-  13.583     0.6649     0.6132    -0.0517      -7.78
-  14.188     0.6182     0.5600    -0.0582      -9.42
-  14.728     0.5643     0.5064    -0.0579     -10.27
-  15.217     0.5055     0.4545    -0.0510     -10.10
-  15.676     0.4442     0.4050    -0.0392      -8.83
-  16.125     0.3830     0.3580    -0.0250      -6.53
-  16.590     0.3245     0.3129    -0.0116      -3.56
-  17.094     0.2717     0.2701    -0.0016      -0.60
-  17.657     0.2272     0.2313    +0.0041      +1.78
-  18.299     0.1940     0.1991    +0.0051      +2.63
-  19.028     0.1750     0.1776    +0.0026      +1.50
-  19.852     0.1729     0.1719    -0.0010      -0.56
-  20.771     0.1905     0.1857    -0.0048      -2.51
-  21.780     0.2303     0.2235    -0.0068      -2.95
-  22.875     0.2950     0.2879    -0.0071      -2.41
-  24.049     0.3871     0.3827    -0.0044      -1.13
-  24.663     0.4443     0.4426    -0.0017      -0.39
-  25.293     0.5093     0.5105    +0.0012      +0.24
-  25.940     0.5826     0.5879    +0.0053      +0.92
-  26.601     0.6644     0.6741    +0.0097      +1.46
-  27.276     0.7551     0.7704    +0.0153      +2.03
-  27.964     0.8549     0.8766    +0.0217      +2.54
-  28.663     0.9643     0.9928    +0.0285      +2.96
-  29.374     1.0835     1.1199    +0.0364      +3.36
+   0.693     0.0877     0.0876    -0.0001      -0.16
+   1.638     0.1980     0.1980    +0.0000      +0.02
+   3.087     0.3473     0.3473    -0.0000      -0.01
+   4.477     0.4686     0.4684    -0.0002      -0.04
+   5.802     0.5647     0.5642    -0.0005      -0.08
+   7.057     0.6381     0.6371    -0.0010      -0.16
+   8.237     0.6908     0.6896    -0.0012      -0.18
+   9.339     0.7246     0.7231    -0.0015      -0.21
+  10.358     0.7412     0.7395    -0.0017      -0.23
+  11.293     0.7421     0.7405    -0.0016      -0.21
+  12.141     0.7286     0.7269    -0.0017      -0.24
+  12.903     0.7023     0.7010    -0.0013      -0.19
+  13.583     0.6649     0.6640    -0.0009      -0.14
+  14.188     0.6182     0.6178    -0.0004      -0.06
+  14.728     0.5643     0.5648    +0.0005      +0.09
+  15.217     0.5055     0.5068    +0.0013      +0.25
+  15.676     0.4442     0.4461    +0.0019      +0.43
+  16.125     0.3830     0.3853    +0.0023      +0.59
+  16.590     0.3245     0.3264    +0.0019      +0.57
+  17.094     0.2717     0.2729    +0.0012      +0.45
+  17.657     0.2272     0.2272    +0.0000      +0.01
+  18.299     0.1940     0.1931    -0.0009      -0.49
+  19.028     0.1750     0.1726    -0.0024      -1.38
+  19.852     0.1729     0.1691    -0.0038      -2.22
+  20.771     0.1905     0.1852    -0.0053      -2.79
+  21.780     0.2303     0.2230    -0.0073      -3.16
+  22.875     0.2950     0.2863    -0.0087      -2.97
+  24.049     0.3871     0.3765    -0.0106      -2.73
+  24.663     0.4443     0.4330    -0.0113      -2.54
+  25.293     0.5093     0.4968    -0.0125      -2.46
+  25.940     0.5826     0.5697    -0.0129      -2.21
+  26.601     0.6644     0.6504    -0.0140      -2.11
+  27.276     0.7551     0.7408    -0.0143      -1.90
+  27.964     0.8549     0.8401    -0.0148      -1.74
+  28.663     0.9643     0.9487    -0.0156      -1.62
+  29.374     1.0835     1.0679    -0.0156      -1.44
 
                            Table 9a           pyfe3d
-upper limit point   0.7421 at 11.29  0.7459 at 10.16  +0.51 %
-lower limit point   0.1729 at 19.85  0.1713 at 19.74  -0.92 %
+upper limit point   0.7421 at 11.29  0.7421 at 10.90  -0.01 %
+lower limit point   0.1729 at 19.85  0.1683 at 19.42  -2.65 %
 
-check: Riks&#39; and Crisfield&#39;s methods, max difference of P/Pmax at the deflections of Table 9a 1.3e-09
+check: Riks&#39; and Crisfield&#39;s methods, max difference of P/Pmax at the deflections of Table 9a 1.8e-09
 </pre></div></div>
 </div>
 <p>The pyfe3d values are interpolated linearly along the computed path at the deflections of Table 9a, and the limit points of Table 9a are its largest and smallest tabulated loads (the table samples the path, the limit points may lie between its points). Both arc-length methods trace the same path, and the Newton-Raphson method stops at the upper limit point.</p>
-<p>The limit loads agree within about 1 % with Table 9a. Along the path the differences are larger: pyfe3d is about 7 % stiffer at the start of the path and the descending branch lies below the reference values by up to about 0.06 <span class="math notranslate nohighlight">\(P_{max}\)</span>. Most of the stiffening at the start of the path comes from the transverse hourglass stiffness of <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>, see the <a class="reference internal" href="#Sensitivity-to-the-transverse-hourglass-stiffness-of-Quad4R"><span class="std std-ref">last section</span></a>. The mesh convergence of the pyfe3d path is shown below,
-comparing <span class="math notranslate nohighlight">\(8 \times 8\)</span>, <span class="math notranslate nohighlight">\(16 \times 16\)</span> and <span class="math notranslate nohighlight">\(32 \times 32\)</span> meshes, the last one with a larger arc-length increment.</p>
+<p>The upper limit load agrees with Table 9a within 0.1 %, and the path within 0.016 <span class="math notranslate nohighlight">\(P_{max}\)</span>, -0.2 % at its first point; the lower limit load is 2.7 % below Table 9a, and moves away from it with the mesh, as with <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code>, Table 9a being itself a <span class="math notranslate nohighlight">\(16 \times 16\)</span> S4R result, see <code class="docutils literal notranslate"><span class="pre">test_hinged_roof_thick</span></code>. Up to version 0.11, before the physical stabilisation of the bending and of the transverse shear of Belytschko and Leviathan (1994) that <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> uses since 0.12.0, pyfe3d was
+about 7 % stiffer at the start of the path, see the <a class="reference internal" href="#Sensitivity-to-the-physical-stabilisation-of-Quad4R"><span class="std std-ref">last section</span></a>. The mesh convergence of the pyfe3d path is shown below, comparing <span class="math notranslate nohighlight">\(8 \times 8\)</span>, <span class="math notranslate nohighlight">\(16 \times 16\)</span> and <span class="math notranslate nohighlight">\(32 \times 32\)</span> meshes, the last one with a larger arc-length increment.</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[7]:
 </pre></div>
@@ -947,9 +1024,9 @@ plt.show()
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
- 8x8  Quad4R: limit loads 0.7467, 0.1753; P/Pmax at -W_C = 0.693: 0.0957 (Table 9a 0.0877)
-16x16 Quad4R: limit loads 0.7459, 0.1713; P/Pmax at -W_C = 0.693: 0.0941 (Table 9a 0.0877)
-32x32 Quad4R: limit loads 0.7446, 0.1704; P/Pmax at -W_C = 0.693: 0.0931 (Table 9a 0.0877)
+ 8x8  Quad4R: limit loads 0.7429, 0.1718; P/Pmax at -W_C = 0.693: 0.0884 (Table 9a 0.0877)
+16x16 Quad4R: limit loads 0.7421, 0.1683; P/Pmax at -W_C = 0.693: 0.0876 (Table 9a 0.0877)
+32x32 Quad4R: limit loads 0.7406, 0.1670; P/Pmax at -W_C = 0.693: 0.0864 (Table 9a 0.0877)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1005,12 +1082,12 @@ plt.show()
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-Crisfield&#39;s arc-length method: 117 increments, P/Pmax 1.100 at -W_C 38.648
-turning points of -W_C (snap-back): P/Pmax -0.0139 at -W_C 17.186, P/Pmax -0.1336 at -W_C 14.850
+Crisfield&#39;s arc-length method: 116 increments, P/Pmax 1.100 at -W_C 38.971
+turning points of -W_C (snap-back): P/Pmax 0.0114 at -W_C 17.076, P/Pmax -0.1116 at -W_C 14.556
 
                            Table 9d           pyfe3d
-upper limit point   0.1953 at 12.89  0.1944 at 12.02  -0.47 %
-lower limit point  -0.1288 at 15.78 -0.1436 at 16.24 +11.53 %
+upper limit point   0.1953 at 12.89  0.1954 at 13.34  +0.06 %
+lower limit point  -0.1288 at 15.78 -0.1292 at 16.21  +0.33 %
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1020,16 +1097,14 @@ lower limit point  -0.1288 at 15.78 -0.1436 at 16.24 +11.53 %
 <img alt="_images/tut-nonlinear-benchmarks_15_1.png" src="_images/tut-nonlinear-benchmarks_15_1.png" />
 </div>
 </div>
-<p>The upper limit load agrees with the largest load of Table 9d within 0.5 %; the lower limit load of pyfe3d, negative, is lower than the smallest load of Table 9d, by about 0.015 <span class="math notranslate nohighlight">\(P_{max}\)</span>.</p>
+<p>The upper limit load agrees with the largest load of Table 9d within 0.1 % and the lower limit load, negative, with the smallest load of Table 9d within 0.4 %, 0.0004 <span class="math notranslate nohighlight">\(P_{max}\)</span>; the convergence of both with the mesh is in <code class="docutils literal notranslate"><span class="pre">test_hinged_roof_thin_snap_back</span></code>. Up to version 0.11 the lower limit load was 0.015 <span class="math notranslate nohighlight">\(P_{max}\)</span> lower, 11.8 %, whatever the mesh.</p>
 </section>
-<section id="Sensitivity-to-the-transverse-hourglass-stiffness-of-Quad4R">
-<h2>Sensitivity to the transverse hourglass stiffness of Quad4R<a class="headerlink" href="#Sensitivity-to-the-transverse-hourglass-stiffness-of-Quad4R" title="Link to this heading">#</a></h2>
-<p><code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> integrates its stiffness with one point at the centroid and controls the hourglass modes with the artificial stiffnesses of Brockman, R. A., Dynamics of the bilinear Mindlin plate element, <em>International Journal for Numerical Methods in Engineering</em>, 24(12), 2343-2356, 1987, <a class="reference external" href="https://doi.org/10.1002/nme.1620241208">doi:10.1002/nme.1620241208</a>, see the Notes of <code class="docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>. The transverse one keeps Brockman’s factor <span class="math notranslate nohighlight">\(1/(1 + 1/A)\)</span>, <span class="math notranslate nohighlight">\(A\)</span> being the element area,</p>
-<div class="math notranslate nohighlight">
-\[E^{(h)}_w = \frac{0.05 \, f_w (E_{1eq} + E_{2eq}) h^3}{1 + 1/A}
-= \frac{0.1 \, f_w E h^3}{1 + 1/A} \quad \text{(isotropic)}\]</div>
-<p>with <span class="math notranslate nohighlight">\(f_w\)</span> = <code class="docutils literal notranslate"><span class="pre">hgfactor_w</span></code>, <code class="docutils literal notranslate"><span class="pre">1</span></code> by default. The elements of the quarter of the roof have areas from 16 (<span class="math notranslate nohighlight">\(64 \times 64\)</span>) to 1008 (<span class="math notranslate nohighlight">\(8 \times 8\)</span>) in the unit of length of the model, so that the default <span class="math notranslate nohighlight">\(E^{(h)}_w\)</span> is 0.94 to 1.0 times <span class="math notranslate nohighlight">\(0.1 E h^3\)</span>. The hourglass operator cannot distinguish the spurious pattern <span class="math notranslate nohighlight">\(w = x y\)</span> from a twist curvature, and this stiffness also stiffens the twist, by the ratio <span class="math notranslate nohighlight">\(3 E^{(h)}_w/(E h^3)\)</span>, about 30 % here. As documented in
-<code class="docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>, the amount of hourglass stiffness that is acceptable depends on the problem. The default follows the references documented there and is used in all the comparisons with Sze et al. (2004) above. The values of <code class="docutils literal notranslate"><span class="pre">hgfactor_w</span></code> below measure the sensitivity of this problem only: none of them is a recommendation, and new default values would require more studies.</p>
+<section id="Sensitivity-to-the-physical-stabilisation-of-Quad4R">
+<h2>Sensitivity to the physical stabilisation of Quad4R<a class="headerlink" href="#Sensitivity-to-the-physical-stabilisation-of-Quad4R" title="Link to this heading">#</a></h2>
+<p><code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> integrates its stiffness with one point at the centroid. Since version 0.12.0 its bending and its transverse shear, the assumed shear strains of Dvorkin and Bathe, have the physical stabilisation of Belytschko, T. and Leviathan, I., Physical stabilization of the 4-node shell element with one point quadrature, <em>Computer Methods in Applied Mechanics and Engineering</em>, 113(3-4), 321-350, 1994, <a class="reference external" href="https://doi.org/10.1016/0045-7825(94)90052-3">doi:10.1016/0045-7825(94)90052-3</a>, the
+nonconstant parts of their strains integrated with the stiffness of the shell, without parameter, which controls the hourglass modes of <span class="math notranslate nohighlight">\(w\)</span>, <span class="math notranslate nohighlight">\(r_x\)</span> and <span class="math notranslate nohighlight">\(r_y\)</span>; <code class="docutils literal notranslate"><span class="pre">hgfactor_physical</span></code> multiplies it, <code class="docutils literal notranslate"><span class="pre">1</span></code> by default, see the Notes of <code class="docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>. A uniform twist has no nonconstant strain, so the stabilisation leaves it free, which the constant-twist patch test checks (<code class="docutils literal notranslate"><span class="pre">test_constant_twist_patch_test</span></code> in <code class="docutils literal notranslate"><span class="pre">tests/test_quad4r_hourglass_control.py</span></code>). Up to version 0.11 these
+hourglass modes had the artificial stiffnesses of Brockman, R. A., Dynamics of the bilinear Mindlin plate element, <em>International Journal for Numerical Methods in Engineering</em>, 24(12), 2343-2356, 1987, <a class="reference external" href="https://doi.org/10.1002/nme.1620241208">doi:10.1002/nme.1620241208</a>, that of <span class="math notranslate nohighlight">\(w\)</span>, <span class="math notranslate nohighlight">\(0.1 E h^3/(1 + 1/A)\)</span>, adding 73 to 78 % to the energy of a uniform twist of this roof whatever the mesh, a failure of that patch test, set with <code class="docutils literal notranslate"><span class="pre">hgfactor_w</span></code>, <code class="docutils literal notranslate"><span class="pre">hgfactor_rx</span></code> and <code class="docutils literal notranslate"><span class="pre">hgfactor_ry</span></code>.
+The values of <code class="docutils literal notranslate"><span class="pre">hgfactor_physical</span></code> below measure the sensitivity of this problem only: none of them is a recommendation.</p>
 <p>Two references without hourglass control are used:</p>
 <ul class="simple">
 <li><p><code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code>, with the same meshes split into two triangles per quadrilateral;</p></li>
@@ -1047,7 +1122,7 @@ W_ritz = {m: ritz_roof_WC(m) for m in (20, 30)}
 print('shallow-shell Kirchhoff Ritz solution: -W_C %.4f (m = 20), %.4f '
       '(m = 30)' % (W_ritz[20], W_ritz[30]))
 rows = [('Tria3DSG', dict(element='Tria3DSG'))] + [
-    ('Quad4R, hgfactor_w = %g' % hg, dict(hgfactor_w=hg)) for hg in HGFACTORS]
+    ('Quad4R, hgfactor_physical = %g' % hg, dict(hgfactor_physical=hg)) for hg in HGFACTORS]
 for shear_factor, ref_name in [(1., 'Tria3DSG'), (100., 'Ritz')]:
     W_lin = {name: [linear_roof_WC(n, shear_factor=shear_factor, **kw)
                     for n in MESHES] for name, kw in rows}
@@ -1056,11 +1131,11 @@ for shear_factor, ref_name in [(1., 'Tria3DSG'), (100., 'Ritz')]:
     print()
     print('linear -W_C under P_max, h = 12.7, transverse shear stiffness '
           'x%g' % shear_factor)
-    print('%-28s' % '' + ''.join('%9s' % ('%dx%d' % (n, n)) for n in MESHES)
+    print('%-36s' % '' + ''.join('%9s' % ('%dx%d' % (n, n)) for n in MESHES)
           + '   64x64 vs %s' % ref_name)
     for name, _ in rows:
         Wn = W_lin[name]
-        print('%-28s' % name + ''.join('%9.4f' % Wi for Wi in Wn)
+        print('%-36s' % name + ''.join('%9.4f' % Wi for Wi in Wn)
               + '   %+8.2f %%' % (100*(Wn[-1]/ref - 1)))
 </pre></div>
 </div>
@@ -1073,38 +1148,38 @@ for shear_factor, ref_name in [(1., 'Tria3DSG'), (100., 'Ritz')]:
 shallow-shell Kirchhoff Ritz solution: -W_C 7.4798 (m = 20), 7.4801 (m = 30)
 
 linear -W_C under P_max, h = 12.7, transverse shear stiffness x1
-                                16x16    32x32    64x64   64x64 vs Tria3DSG
-Tria3DSG                       7.5480   7.6295   7.6733      +0.00 %
-Quad4R, hgfactor_w = 1         7.0949   7.1372   7.1668      -6.60 %
-Quad4R, hgfactor_w = 0.1       7.5543   7.6061   7.6255      -0.62 %
-Quad4R, hgfactor_w = 0.03      7.6170   7.6698   7.6882      +0.19 %
-Quad4R, hgfactor_w = 0.01      7.6494   7.7026   7.7206      +0.62 %
-Quad4R, hgfactor_w = 0.002     7.6825   7.7378   7.7557      +1.07 %
-Quad4R, hgfactor_w = 0.0002    7.7031   7.7816   7.8003      +1.65 %
+                                        16x16    32x32    64x64   64x64 vs Tria3DSG
+Tria3DSG                               7.5480   7.6295   7.6733      +0.00 %
+Quad4R, hgfactor_physical = 1          7.6272   7.6686   7.6995      +0.34 %
+Quad4R, hgfactor_physical = 0.1        7.6831   7.7162   7.7443      +0.92 %
+Quad4R, hgfactor_physical = 0.03       7.7072   7.7394   7.7672      +1.22 %
+Quad4R, hgfactor_physical = 0.01       7.7284   7.7603   7.7880      +1.49 %
+Quad4R, hgfactor_physical = 0.002      7.7564   7.7906   7.8184      +1.89 %
+Quad4R, hgfactor_physical = 0.0002     7.7741   7.8242   7.8607      +2.44 %
 
 linear -W_C under P_max, h = 12.7, transverse shear stiffness x100
-                                16x16    32x32    64x64   64x64 vs Ritz
-Tria3DSG                       7.3996   7.4626   7.4795      -0.01 %
-Quad4R, hgfactor_w = 1         6.9602   7.0050   7.0348      -5.95 %
-Quad4R, hgfactor_w = 0.1       7.3562   7.4083   7.4272      -0.71 %
-Quad4R, hgfactor_w = 0.03      7.3940   7.4469   7.4646      -0.21 %
-Quad4R, hgfactor_w = 0.01      7.4050   7.4583   7.4756      -0.06 %
-Quad4R, hgfactor_w = 0.002     7.4095   7.4630   7.4802      +0.00 %
-Quad4R, hgfactor_w = 0.0002    7.4105   7.4641   7.4815      +0.02 %
+                                        16x16    32x32    64x64   64x64 vs Ritz
+Tria3DSG                               7.3996   7.4626   7.4795      -0.01 %
+Quad4R, hgfactor_physical = 1          7.4675   7.4807   7.4848      +0.06 %
+Quad4R, hgfactor_physical = 0.1        7.4773   7.4843   7.4866      +0.09 %
+Quad4R, hgfactor_physical = 0.03       7.4787   7.4851   7.4871      +0.09 %
+Quad4R, hgfactor_physical = 0.01       7.4796   7.4856   7.4875      +0.10 %
+Quad4R, hgfactor_physical = 0.002      7.4804   7.4861   7.4878      +0.10 %
+Quad4R, hgfactor_physical = 0.0002     7.4809   7.4865   7.4883      +0.11 %
 </pre></div></div>
 </div>
-<p>With the actual transverse shear stiffness the default <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> meshes are 6.0 to 6.6 % stiffer than the <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> meshes of the same size, and decreasing <code class="docutils literal notranslate"><span class="pre">hgfactor_w</span></code> increases <span class="math notranslate nohighlight">\(-W_C\)</span> monotonically. From <code class="docutils literal notranslate"><span class="pre">hgfactor_w</span> <span class="pre">=</span> <span class="pre">0.03</span></code> down the <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> meshes are more flexible than <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code>, whose deflection still grows with the mesh, by 1.1 % and 0.6 % for each refinement, so that this comparison has no converged reference.</p>
-<p>With the transverse shear stiffnesses multiplied by 100 the comparison has one: the Ritz solution converges to <span class="math notranslate nohighlight">\(-W_C = 7.480\)</span> and the <span class="math notranslate nohighlight">\(64 \times 64\)</span> <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> mesh agrees with it within 0.01 %. The default <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> mesh is 6.0 % stiffer, and the deflection approaches the Ritz solution monotonically as <code class="docutils literal notranslate"><span class="pre">hgfactor_w</span></code> decreases, within 0.7 % with 0.1 and 0.06 % with 0.01.</p>
+<p>With the actual transverse shear stiffness the default <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> meshes are 1.05, 0.51 and 0.34 % more flexible than the <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> meshes of the same size, and decreasing <code class="docutils literal notranslate"><span class="pre">hgfactor_physical</span></code> increases <span class="math notranslate nohighlight">\(-W_C\)</span> monotonically, by 2.1 % from 1 to 0.0002 on the <span class="math notranslate nohighlight">\(64 \times 64\)</span> mesh; <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> still grows with the mesh, by 1.1 % and 0.6 % for each refinement, so that this comparison has no converged reference.</p>
+<p>With the transverse shear stiffnesses multiplied by 100 the comparison has one: the Ritz solution converges to <span class="math notranslate nohighlight">\(-W_C = 7.480\)</span>, and the <span class="math notranslate nohighlight">\(64 \times 64\)</span> meshes of <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> and of <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> with every value of <code class="docutils literal notranslate"><span class="pre">hgfactor_physical</span></code> agree with it within 0.11 %, the remaining difference being the transverse shear flexibility of the stiffnesses x100. Up to version 0.11 the default <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> mesh was 6.0 % stiffer than the Ritz solution and 6.6 % stiffer than <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code>.</p>
 <p>The limit loads of the non-linear paths, with <span class="math notranslate nohighlight">\(16 \times 16\)</span> meshes, the arc-length increments of <code class="docutils literal notranslate"><span class="pre">test_hinged_roof_thick</span></code> (0.05) for both thicknesses and the load at the first point of Tables 9a and 9d, interpolated along the rising part of the path:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[10]:
 </pre></div>
 </div>
-<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cases = [('Quad4R, hgfactor_w = %g' % hg, dict(hgfactor_w=hg))
+<div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>cases = [('Quad4R, hgfactor_physical = %g' % hg, dict(hgfactor_physical=hg))
          for hg in HGFACTORS] + [('Tria3DSG', dict(element='Tria3DSG'))]
 paths_thick, paths_thin = {}, {}
 for name, kw in cases:
-    if kw.get('hgfactor_w') == 1.:
+    if kw.get('hgfactor_physical') == 1.:
         # NOTE the path of the 12.7 thick roof with the default, see above
         paths_thick[name] = (P16, W16)
     else:
@@ -1121,22 +1196,22 @@ def first_point(P, W, table):
 (Pa_r, _), (Pb_r, _) = limit_points(TABLE_9A[:, 0], TABLE_9A[:, 1], 15.)
 print('h = 12.7, 16x16, P/Pmax: upper and lower limit loads, load at the '
       'first point of Table 9a')
-print('%-28s %9s %9s %9s' % ('', 'upper', 'lower', 'first'))
-print('%-28s %9.4f %9.4f %9.4f' % ('Table 9a', Pa_r, Pb_r, TABLE_9A[0, 0]))
+print('%-36s %9s %9s %9s' % ('', 'upper', 'lower', 'first'))
+print('%-36s %9.4f %9.4f %9.4f' % ('Table 9a', Pa_r, Pb_r, TABLE_9A[0, 0]))
 for name, (P_, W_) in paths_thick.items():
     (Pa, _), (Pb, _) = limit_points(P_, W_, 15.)
-    print('%-28s %9.4f %9.4f %9.4f' % (name, Pa, Pb,
+    print('%-36s %9.4f %9.4f %9.4f' % (name, Pa, Pb,
                                        first_point(P_, W_, TABLE_9A)))
 (Pa_r, _), _ = limit_points(TABLE_9D[:, 0], TABLE_9D[:, 1], 13.5)
 print()
 print('h = 6.35, 16x16, P/Pmax: upper and lower limit loads, load at the '
       'first point of Table 9d')
-print('%-28s %9s %9s %9s' % ('', 'upper', 'lower', 'first'))
-print('%-28s %9.4f %9.4f %9.4f' % ('Table 9d', Pa_r, TABLE_9D[:, 0].min(),
+print('%-36s %9s %9s %9s' % ('', 'upper', 'lower', 'first'))
+print('%-36s %9.4f %9.4f %9.4f' % ('Table 9d', Pa_r, TABLE_9D[:, 0].min(),
                                    TABLE_9D[0, 0]))
 for name, (P_, W_) in paths_thin.items():
     (Pa, _), _ = limit_points(P_, W_, 13.5)
-    print('%-28s %9.4f %9.4f %9.4f' % (name, Pa, P_.min(),
+    print('%-36s %9.4f %9.4f %9.4f' % (name, Pa, P_.min(),
                                        first_point(P_, W_, TABLE_9D)))
 
 fig, ax = plt.subplots(figsize=(7, 5))
@@ -1164,26 +1239,26 @@ plt.show()
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 h = 12.7, 16x16, P/Pmax: upper and lower limit loads, load at the first point of Table 9a
-                                 upper     lower     first
-Table 9a                        0.7421    0.1729    0.0877
-Quad4R, hgfactor_w = 1          0.7459    0.1713    0.0941
-Quad4R, hgfactor_w = 0.1        0.7427    0.1684    0.0884
-Quad4R, hgfactor_w = 0.03       0.7422    0.1682    0.0877
-Quad4R, hgfactor_w = 0.01       0.7420    0.1681    0.0873
-Quad4R, hgfactor_w = 0.002      0.7413    0.1681    0.0869
-Quad4R, hgfactor_w = 0.0002     0.7379    0.1690    0.0867
-Tria3DSG                        0.7420    0.1679    0.0884
+                                         upper     lower     first
+Table 9a                                0.7421    0.1729    0.0877
+Quad4R, hgfactor_physical = 1           0.7421    0.1683    0.0876
+Quad4R, hgfactor_physical = 0.1         0.7420    0.1681    0.0870
+Quad4R, hgfactor_physical = 0.03        0.7420    0.1680    0.0867
+Quad4R, hgfactor_physical = 0.01        0.7420    0.1680    0.0865
+Quad4R, hgfactor_physical = 0.002       0.7420    0.1680    0.0862
+Quad4R, hgfactor_physical = 0.0002      0.7420    0.1680    0.0860
+Tria3DSG                                0.7420    0.1679    0.0884
 
 h = 6.35, 16x16, P/Pmax: upper and lower limit loads, load at the first point of Table 9d
-                                 upper     lower     first
-Table 9d                        0.1953   -0.1288    0.0517
-Quad4R, hgfactor_w = 1          0.1944   -0.1435    0.0558
-Quad4R, hgfactor_w = 0.1        0.1954   -0.1299    0.0526
-Quad4R, hgfactor_w = 0.03       0.1954   -0.1286    0.0523
-Quad4R, hgfactor_w = 0.01       0.1954   -0.1282    0.0521
-Quad4R, hgfactor_w = 0.002      0.1953   -0.1274    0.0520
-Quad4R, hgfactor_w = 0.0002     0.1952   -0.1243    0.0520
-Tria3DSG                        0.1956   -0.1287    0.0524
+                                         upper     lower     first
+Table 9d                                0.1953   -0.1288    0.0517
+Quad4R, hgfactor_physical = 1           0.1960   -0.1294    0.0518
+Quad4R, hgfactor_physical = 0.1         0.1960   -0.1291    0.0516
+Quad4R, hgfactor_physical = 0.03        0.1960   -0.1290    0.0515
+Quad4R, hgfactor_physical = 0.01        0.1960   -0.1290    0.0515
+Quad4R, hgfactor_physical = 0.002       0.1960   -0.1289    0.0514
+Quad4R, hgfactor_physical = 0.0002      0.1960   -0.1289    0.0514
+Tria3DSG                                0.1956   -0.1287    0.0524
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1193,26 +1268,26 @@ Tria3DSG                        0.1956   -0.1287    0.0524
 <img alt="_images/tut-nonlinear-benchmarks_20_1.png" src="_images/tut-nonlinear-benchmarks_20_1.png" />
 </div>
 </div>
-<p>For both thicknesses the default makes the start of the path stiffer, by 7 % (<span class="math notranslate nohighlight">\(h = 12.7\)</span>) and 8 % (<span class="math notranslate nohighlight">\(h = 6.35\)</span>) at the first point of the tables, whereas the reduced values of <code class="docutils literal notranslate"><span class="pre">hgfactor_w</span></code> and <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> are within 1.8 % of it. The upper limit loads agree within 0.6 % with the tables for all the values of <code class="docutils literal notranslate"><span class="pre">hgfactor_w</span></code>. The lower limit loads behave differently: for <span class="math notranslate nohighlight">\(h = 12.7\)</span> the default is the closest to Table 9a (-0.9 %), the reduced values and <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> being 2.3 to
-2.9 % below it; for <span class="math notranslate nohighlight">\(h = 6.35\)</span> the default is 0.015 <span class="math notranslate nohighlight">\(P_{max}\)</span> below Table 9d, while the values of <code class="docutils literal notranslate"><span class="pre">hgfactor_w</span></code> from 0.1 to 0.002 and <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> are within 0.0014 <span class="math notranslate nohighlight">\(P_{max}\)</span>, and 0.0002 is 0.0045 <span class="math notranslate nohighlight">\(P_{max}\)</span> above it.</p>
-<p>The smaller values of <code class="docutils literal notranslate"><span class="pre">hgfactor_w</span></code> leave the hourglass pattern of <span class="math notranslate nohighlight">\(w\)</span> with little stiffness, and the path then depends more on the mesh and on the increments: with the <span class="math notranslate nohighlight">\(24 \times 24\)</span> mesh and the arc-length increment of 0.02 used above for Table 9d, <code class="docutils literal notranslate"><span class="pre">hgfactor_w</span> <span class="pre">=</span> <span class="pre">0.002</span></code> gives another path after the upper limit point:</p>
+<p>With the default the load at the first point of the tables is within 0.2 % of them for both thicknesses, and the reduced values of <code class="docutils literal notranslate"><span class="pre">hgfactor_physical</span></code> and <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> are within 1.8 % of the default. The upper limit loads agree within 0.4 % with the tables for all the values of <code class="docutils literal notranslate"><span class="pre">hgfactor_physical</span></code>. The lower limit loads of <span class="math notranslate nohighlight">\(h = 12.7\)</span> are 2.7 to 2.9 % below Table 9a for all of them and for <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code>; those of <span class="math notranslate nohighlight">\(h = 6.35\)</span> are within 0.0006 <span class="math notranslate nohighlight">\(P_{max}\)</span> of Table 9d. Up to
+version 0.11 the default was 7 % and 8 % stiffer at the first point, and its lower limit load of <span class="math notranslate nohighlight">\(h = 6.35\)</span> was 0.015 <span class="math notranslate nohighlight">\(P_{max}\)</span> below Table 9d.</p>
+<p>With the <span class="math notranslate nohighlight">\(24 \times 24\)</span> mesh and the arc-length increment of 0.02 used above for Table 9d, <code class="docutils literal notranslate"><span class="pre">hgfactor_physical</span> <span class="pre">=</span> <span class="pre">0.002</span></code> gives, after the upper limit point, the path of Table 9d, as the default does:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[11]:
 </pre></div>
 </div>
 <div class="input_area highlight-ipython3 notranslate"><div class="highlight"><pre><span></span>P24_002, W24_002 = run_hinged_roof(n=24, h=6.35, load_factor=1.1,
                                    initialInc=0.02, maxInc=0.02,
-                                   hgfactor_w=0.002)
+                                   hgfactor_physical=0.002)
 (Pa, _), _ = limit_points(P24_002, W24_002, 13.5)
-print('24x24 Quad4R, hgfactor_w = 0.002: upper and lower limit loads %.4f, '
+print('24x24 Quad4R, hgfactor_physical = 0.002: upper and lower limit loads %.4f, '
       '%.4f; Table 9d: %.4f, %.4f' % (Pa, P24_002.min(), Pa_r,
                                       TABLE_9D[:, 0].min()))
-for name, (P_, W_) in [('hgfactor_w = 1, above', (P, W)),
-                       ('hgfactor_w = 0.002', (P24_002, W24_002)),
+for name, (P_, W_) in [('hgfactor_physical = 1, above', (P, W)),
+                       ('hgfactor_physical = 0.002', (P24_002, W24_002)),
                        ('Table 9d', (TABLE_9D[:, 0], TABLE_9D[:, 1]))]:
     dW = np.diff(W_)
     turns = np.flatnonzero(np.sign(dW[1:]) != np.sign(dW[:-1])) + 1
-    print('%-22s turning points of -W_C: %s' % (name, ', '.join(
+    print('%-28s turning points of -W_C: %s' % (name, ', '.join(
         'P/Pmax %.4f at -W_C %.3f' % (P_[i], W_[i]) for i in turns)))
 </pre></div>
 </div>
@@ -1222,14 +1297,15 @@ for name, (P_, W_) in [('hgfactor_w = 1, above', (P, W)),
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-24x24 Quad4R, hgfactor_w = 0.002: upper and lower limit loads 0.1948, -0.1112; Table 9d: 0.1953, -0.1288
-hgfactor_w = 1, above  turning points of -W_C: P/Pmax -0.0139 at -W_C 17.186, P/Pmax -0.1336 at -W_C 14.850
-hgfactor_w = 0.002     turning points of -W_C: P/Pmax 0.0478 at -W_C 16.778, P/Pmax -0.0343 at -W_C 13.970
-Table 9d               turning points of -W_C: P/Pmax 0.0083 at -W_C 17.008, P/Pmax -0.1142 at -W_C 14.451
+24x24 Quad4R, hgfactor_physical = 0.002: upper and lower limit loads 0.1954, -0.1289; Table 9d: 0.1953, -0.1288
+hgfactor_physical = 1, above turning points of -W_C: P/Pmax 0.0114 at -W_C 17.076, P/Pmax -0.1116 at -W_C 14.556
+hgfactor_physical = 0.002    turning points of -W_C: P/Pmax 0.0114 at -W_C 17.079, P/Pmax -0.1111 at -W_C 14.541
+Table 9d                     turning points of -W_C: P/Pmax 0.0083 at -W_C 17.008, P/Pmax -0.1142 at -W_C 14.451
 </pre></div></div>
 </div>
-<p>This path turns back in <span class="math notranslate nohighlight">\(-W_C\)</span> for the first time at 0.0478 <span class="math notranslate nohighlight">\(P_{max}\)</span>, against 0.0083 <span class="math notranslate nohighlight">\(P_{max}\)</span> in Table 9d and -0.0139 <span class="math notranslate nohighlight">\(P_{max}\)</span> with the default, and its lower limit load is 0.018 <span class="math notranslate nohighlight">\(P_{max}\)</span> above the smallest load of Table 9d, whereas with the <span class="math notranslate nohighlight">\(16 \times 16\)</span> mesh and the increment of 0.05 the same <code class="docutils literal notranslate"><span class="pre">hgfactor_w</span></code> was within 0.0014 <span class="math notranslate nohighlight">\(P_{max}\)</span>.</p>
-<p>The sensitivity is therefore not a single trend: reducing <code class="docutils literal notranslate"><span class="pre">hgfactor_w</span></code> removes the excess stiffness of the linear response and of the start of the non-linear path, and, in the Kirchhoff limit, converges to the independent solution, but it does not improve every result of the non-linear paths and it makes them depend more on the mesh and on the increments. The assertions of the linear trend are in <code class="docutils literal notranslate"><span class="pre">test_hinged_roof_hourglass_sensitivity</span></code>.</p>
+<p>Its lower limit load is within 0.0001 <span class="math notranslate nohighlight">\(P_{max}\)</span> of the smallest load of Table 9d, and the path turns back in <span class="math notranslate nohighlight">\(-W_C\)</span> at 0.0114 and -0.1111 <span class="math notranslate nohighlight">\(P_{max}\)</span>, against 0.0083 and -0.1142 <span class="math notranslate nohighlight">\(P_{max}\)</span> in Table 9d and 0.0114 and -0.1116 <span class="math notranslate nohighlight">\(P_{max}\)</span> with the default; up to version 0.11 the default turned back at -0.0139 and -0.1340 <span class="math notranslate nohighlight">\(P_{max}\)</span>.</p>
+<p>The physical stabilisation of <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> therefore leaves the linear response, the start of the non-linear paths and the lower limit load of the thinner roof close to the references, and close to the results with much smaller values of <code class="docutils literal notranslate"><span class="pre">hgfactor_physical</span></code>; the lower limit load of the thinner roof converges to Table 9d with the mesh, see <code class="docutils literal notranslate"><span class="pre">test_hinged_roof_thin_snap_back</span></code> and <code class="docutils literal notranslate"><span class="pre">test_hinged_roof_thin_lower_limit_load</span></code>. The assertions of the linear trend are in
+<code class="docutils literal notranslate"><span class="pre">test_hinged_roof_hourglass_sensitivity</span></code>.</p>
 </section>
 <section id="Williams'-toggle-frame">
 <h2>Williams’ toggle frame<a class="headerlink" href="#Williams'-toggle-frame" title="Link to this heading">#</a></h2>
@@ -1327,13 +1403,17 @@ for method in ['arc_length_riks', 'arc_length_crisfield']:
 print('Fig. 7, read: upper limit %.1f at w ~0.24, lower limit %.1f at w '
       '~0.40' % (FIG7_UPPER, FIG7_LOWER))
 P, w = paths['arc_length_riks']
-Pc = paths['arc_length_crisfield'][0]
-print("check: Riks' and Crisfield's methods, max difference of P %.1e"
-      % np.abs(P - Pc).max())
+Pc, wc = paths['arc_length_crisfield']
+assert P.size == Pc.size
+dw = np.abs(w - wc).max()
+dP = np.abs(P - Pc).max()
+print("check: Riks' and Crisfield's methods, max|dw| %.1e, max|dP| %.1e "
+      "(at P = %.1f)" % (dw, dP, P[np.argmax(np.abs(P - Pc))]))
+assert dw &lt; 1e-6 and dP &lt; 5e-4
 
 fig, ax = plt.subplots(figsize=(7, 5))
 ax.plot(w, P, 'C0-', lw=1.5, label="16 BeamC/member, Riks")
-ax.plot(paths['arc_length_crisfield'][1], Pc, 'C1x', ms=4,
+ax.plot(wc, Pc, 'C1x', ms=4,
         label="16 BeamC/member, Crisfield")
 ax.plot(FIG7_W_P[:, 0], FIG7_W_P[:, 1], 'ko', mfc='none',
         label='Fig. 7, Karamanlidis et al. (1981), digitised')
@@ -1353,10 +1433,10 @@ plt.show()
 </div>
 <div class="output_area docutils container">
 <div class="highlight"><pre>
-arc_length_riks       16 BeamC/member: 129 increments, P 70.00 at w 0.6516; upper limit 33.957 at w 0.236, lower limit 31.717 at w 0.389
-arc_length_crisfield  16 BeamC/member: 129 increments, P 70.00 at w 0.6516; upper limit 33.957 at w 0.236, lower limit 31.717 at w 0.389
+arc_length_riks       16 BeamC/member: 130 increments, P 70.00 at w 0.6560; upper limit 33.844 at w 0.231, lower limit 31.228 at w 0.394
+arc_length_crisfield  16 BeamC/member: 130 increments, P 70.00 at w 0.6560; upper limit 33.844 at w 0.231, lower limit 31.228 at w 0.394
 Fig. 7, read: upper limit 34.4 at w ~0.24, lower limit 32.2 at w ~0.40
-check: Riks&#39; and Crisfield&#39;s methods, max difference of P 7.6e-08
+check: Riks&#39; and Crisfield&#39;s methods, max|dw| 7.9e-08, max|dP| 2.0e-05 (at P = 68.9)
 </pre></div></div>
 </div>
 <div class="nboutput nblast docutils container">
@@ -1366,7 +1446,8 @@ check: Riks&#39; and Crisfield&#39;s methods, max difference of P 7.6e-08
 <img alt="_images/tut-nonlinear-benchmarks_25_1.png" src="_images/tut-nonlinear-benchmarks_25_1.png" />
 </div>
 </div>
-<p>Both arc-length methods trace the same path, through the upper limit point, the snap-through and the lower limit point, to the load factor 1.0. The limit loads with 8 to 64 elements per member, compared with those read from Fig. 7:</p>
+<p>Both arc-length methods trace the same path, through the upper limit point, the snap-through and the lower limit point, to the load factor 1.0: they converge to it within <code class="docutils literal notranslate"><span class="pre">relTOL</span></code>, the apex deflections of the two methods differing by at most <span class="math notranslate nohighlight">\(7.9 \times 10^{-8}\)</span> and the loads by <span class="math notranslate nohighlight">\(2.0 \times 10^{-5}\)</span>. A point accepted one correction earlier by one of the methods shifts all the following points along the path by <span class="math notranslate nohighlight">\(\Delta w \approx 8 \times 10^{-8}\)</span>, and <span class="math notranslate nohighlight">\(P\)</span> by
+<span class="math notranslate nohighlight">\((\mathrm{d}P/\mathrm{d}w) \, \Delta w\)</span>, up to <span class="math notranslate nohighlight">\(2.0 \times 10^{-5}\)</span> near <span class="math notranslate nohighlight">\(P = 69\)</span>, where the path is steepest. The limit loads with 8 to 64 elements per member, compared with those read from Fig. 7:</p>
 <div class="nbinput docutils container">
 <div class="prompt highlight-none notranslate"><div class="highlight"><pre><span></span>[13]:
 </pre></div>
@@ -1391,14 +1472,15 @@ print('%-14s %7.1f at %5s %7.1f at %5s' % ('Fig. 7', FIG7_UPPER, '~0.24',
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 BeamC/member        upper limit      lower limit   upper %   lower %
-8               34.308 at 0.241  33.007 at 0.367     -0.27     +2.51
-16              33.957 at 0.236  31.717 at 0.389     -1.29     -1.50
-32              33.871 at 0.231  31.354 at 0.389     -1.54     -2.63
-64              33.851 at 0.231  31.260 at 0.394     -1.60     -2.92
+8               33.846 at 0.231  31.229 at 0.394     -1.61     -3.02
+16              33.844 at 0.231  31.228 at 0.394     -1.62     -3.02
+32              33.844 at 0.231  31.228 at 0.394     -1.62     -3.02
+64              33.844 at 0.231  31.228 at 0.394     -1.62     -3.02
 Fig. 7            34.4 at ~0.24    32.2 at ~0.40
 </pre></div></div>
 </div>
-<p>The limit loads converge with the number of elements, the differences between successive meshes decreasing about four times at each refinement, to about 33.85 and 31.26 with 64 elements per member: 1.6 % and 2.9 % below the values read from Fig. 7, more than the reading uncertainty. Coarse meshes are too stiff, as in the cantilever above; with 4 elements per member the path has no limit point at all. The deflections of the limit points agree with Fig. 7 within the reading uncertainty.</p>
+<p>With the element-averaged axial strain of <code class="docutils literal notranslate"><span class="pre">BeamC</span></code>, the limit loads hardly change with the mesh: 33.85 and 31.23 from 8 elements per member, 1.6 % and 3.0 % below the values read from Fig. 7, more than the reading uncertainty; measured separately on 2026-10-30, 4 elements per member give 33.87 and 31.24, and 2 elements 34.21 and 31.34. Up to version 0.11 the pointwise axial strain of <code class="docutils literal notranslate"><span class="pre">BeamC</span></code> locked in membrane: the limit loads converged from 34.31 and 33.01 with 8 elements per member to 33.85
+and 31.26 with 64, and with 4 elements per member the path had no limit point at all. The deflections of the limit points agree with Fig. 7 within the reading uncertainty.</p>
 </section>
 <section id="Summary">
 <h2>Summary<a class="headerlink" href="#Summary" title="Link to this heading">#</a></h2>
@@ -1412,25 +1494,25 @@ Fig. 7            34.4 at ~0.24    32.2 at ~0.40
 <tbody>
 <tr class="row-even"><td><p>cantilever under end moment</p></td>
 <td><p>Table 3a, exact, rolls up into a circle</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>: the von Karman solution, within 1 % of Table 3a at <span class="math notranslate nohighlight">\(M = 0.05 M_{max}\)</span>, no roll-up; <code class="docutils literal notranslate"><span class="pre">BeamC</span></code>, <code class="docutils literal notranslate"><span class="pre">BeamLR</span></code>: membrane locking, converging to the von
-Karman solution with the number of elements</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>: the von Kármán solution, within 1 % of Table 3a at <span class="math notranslate nohighlight">\(M = 0.05 M_{max}\)</span>, no roll-up; <code class="docutils literal notranslate"><span class="pre">BeamC</span></code>: no membrane locking since version 0.12.0, the von
+Kármán solution with any number of elements; <code class="docutils literal notranslate"><span class="pre">BeamLR</span></code>: no membrane locking, the von Kármán deflection with any number of elements</p></td>
 </tr>
 <tr class="row-odd"><td><p>hinged roof, <span class="math notranslate nohighlight">\(h = 12.7\)</span></p></td>
 <td><p>Table 9a</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> with the default hourglass stiffness: limit loads within about 1 %; 7 % stiffer at the start, up to 0.06 <span class="math notranslate nohighlight">\(P_{max}\)</span> lower on the descending branch</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> with its default stabilisation: upper limit load within 0.1 %, path within 0.02 <span class="math notranslate nohighlight">\(P_{max}\)</span>; lower limit load 2.7 % lower, as with <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code></p></td>
 </tr>
 <tr class="row-even"><td><p>hinged roof, <span class="math notranslate nohighlight">\(h = 6.35\)</span></p></td>
 <td><p>Table 9d</p></td>
-<td><p>snap-through and snap-back traced; <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> with the default hourglass stiffness: upper limit load within 0.5 %, lower limit load 0.015 <span class="math notranslate nohighlight">\(P_{max}\)</span> lower</p></td>
+<td><p>snap-through and snap-back traced; <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> with its default stabilisation: upper limit load within 0.1 %, lower limit load within 0.4 %</p></td>
 </tr>
 <tr class="row-odd"><td><p>Williams’ toggle frame</p></td>
 <td><p>Fig. 7 of Karamanlidis et al. (1981), digitised</p></td>
-<td><p><code class="docutils literal notranslate"><span class="pre">BeamC</span></code>, both arc-length methods: the same path, limit loads converging to 1.6 % (upper) and 2.9 % (lower) below those read from the figure</p></td>
+<td><p><code class="docutils literal notranslate"><span class="pre">BeamC</span></code>, both arc-length methods: the same path, limit loads 1.6 % (upper) and 3.0 % (lower) below those read from the figure, from 8 elements per member</p></td>
 </tr>
-<tr class="row-even"><td><p>sensitivity to <code class="docutils literal notranslate"><span class="pre">hgfactor_w</span></code></p></td>
+<tr class="row-even"><td><p>sensitivity to <code class="docutils literal notranslate"><span class="pre">hgfactor_physical</span></code></p></td>
 <td><p>Tables 9a and 9d, <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code>, shallow-shell Kirchhoff Ritz solution</p></td>
-<td><p>the default <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> is 6 to 7 % stiffer in the linear range; smaller values approach the references there, with mixed effects on the limit loads; the default is
-kept</p></td>
+<td><p>the default <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code> is within 1.1 % of <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> in the linear range and converges to the Ritz solution; smaller values change the results by at most 2.1 %
+(up to version 0.11 the default was 6 to 7 % stiffer)</p></td>
 </tr>
 </tbody>
 </table>
@@ -1459,11 +1541,11 @@ kept</p></td>
       </div>
     </a>
     <a class="right-next"
-       href="api.html"
+       href="tut-corotational-large-rotations.html"
        title="next page">
       <div class="prev-next-info">
         <p class="prev-next-subtitle">next</p>
-        <p class="prev-next-title">API reference</p>
+        <p class="prev-next-title">Tutorial: large rotations with the co-rotational kinematics</p>
       </div>
       <i class="fa-solid fa-angle-right"></i>
     </a>
@@ -1489,7 +1571,7 @@ kept</p></td>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Cantilever-under-an-end-moment">Cantilever under an end moment</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Hinged-cylindrical-roof,-12.7-thick">Hinged cylindrical roof, 12.7 thick</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Hinged-cylindrical-roof,-6.35-thick">Hinged cylindrical roof, 6.35 thick</a></li>
-<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Sensitivity-to-the-transverse-hourglass-stiffness-of-Quad4R">Sensitivity to the transverse hourglass stiffness of Quad4R</a></li>
+<li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Sensitivity-to-the-physical-stabilisation-of-Quad4R">Sensitivity to the physical stabilisation of Quad4R</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Williams'-toggle-frame">Williams’ toggle frame</a></li>
 <li class="toc-h2 nav-item toc-entry"><a class="reference internal nav-link" href="#Summary">Summary</a></li>
 </ul>

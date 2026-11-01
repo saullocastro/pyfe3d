@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Benchmark: shell obstacle course &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>Benchmark: shell obstacle course &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
     <link rel="stylesheet" type="text/css" href="_static/nbsphinx-code-cells.css?v=2aa19091" />
   
   <!-- So that users can add custom icons -->
@@ -38,7 +39,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -121,7 +122,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -138,6 +139,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -162,13 +170,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -177,6 +178,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -365,6 +394,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -381,6 +417,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -540,6 +597,23 @@
 <li class="toctree-l1"><a class="reference internal" href="tut-bench-macneal-harder.html">Benchmark: MacNeal-Harder standard problems for the shell elements</a></li>
 <li class="toctree-l1 current active"><a aria-current="page" class="current reference internal" href="#">Benchmark: shell obstacle course</a></li>
 <li class="toctree-l1"><a class="reference internal" href="tut-nonlinear-benchmarks.html">Tutorial: geometrically non-linear benchmarks with pyfe3d.solver</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-corotational-large-rotations.html">Tutorial: large rotations with the co-rotational kinematics</a></li>
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-prescribed-displacement-cantilever.html">Tutorial: prescribed displacement at the tip of a cantilever</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-prescribed-displacement-dome-riks.html">Tutorial: shells pressed down by a prescribed displacement, Riks’ method</a></li>
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-nafems-cap-axisymmetric.html">Tutorial: NAFEMS spherical cap restricted to axisymmetric deformations</a></li>
+
+
+
+
+
+
+<li class="toctree-l1"><a class="reference internal" href="tut-inertia-relief.html">Tutorial: static analysis with inertia relief</a></li>
+<li class="toctree-l1"><a class="reference internal" href="tut-inertia-relief-aircraft-ha144a.html">Tutorial: inertia relief of a stick aircraft model, MSC Nastran example HA144A</a></li>
 </ul>
 </div>
 </nav></div>
@@ -870,42 +944,42 @@ for problem, (func, ref) in PROBLEMS.items():
 <div class="highlight"><pre>
 Scordelis-Lo roof, normalised displacement
 N        Quad4    Quad4R    Tria3R  Tria3DSG
-2        1.416     0.858     1.544     0.665
-4        1.059     0.779     0.929     0.675
-6        1.022     0.809     0.892     0.783
-8        1.010     0.830     0.882     0.853
-10       1.006     0.845     0.877     0.895
-12       1.003     0.859     0.874     0.922
-16       1.001     0.882     0.872     0.951
-24       1.000     0.917     0.871     0.975
-32       0.999     0.941     0.873     0.984
-48       0.999     0.967     0.882     0.991
+2        1.373     1.176     0.896     0.665
+4        1.047     0.944     0.926     0.675
+6        1.015     0.961     0.964     0.783
+8        1.005     0.973     0.975     0.853
+10       1.001     0.980     0.982     0.895
+12       0.999     0.985     0.985     0.922
+16       0.998     0.989     0.989     0.951
+24       0.997     0.993     0.993     0.975
+32       0.997     0.994     0.994     0.984
+48       0.997     0.996     0.995     0.991
 
 Pinched cylinder, normalised displacement
 N        Quad4    Quad4R    Tria3R  Tria3DSG
-2        0.035     0.034     0.082     0.022
-4        0.370     0.339     0.854     0.142
-6        0.604     0.545     1.194     0.357
-8        0.743     0.666     1.271     0.545
-10       0.827     0.740     1.300     0.667
-12       0.879     0.789     1.303     0.747
-16       0.935     0.848     1.267     0.843
-24       0.980     0.899     1.169     0.925
-32       0.998     0.921     1.105     0.958
-48       1.012     0.940     1.045     0.985
+2        0.034     0.033     0.024     0.022
+4        0.367     0.370     0.155     0.142
+6        0.600     0.601     0.377     0.357
+8        0.738     0.738     0.564     0.545
+10       0.821     0.820     0.682     0.667
+12       0.873     0.872     0.760     0.747
+16       0.929     0.928     0.852     0.843
+24       0.972     0.972     0.930     0.925
+32       0.989     0.988     0.961     0.958
+48       1.002     1.001     0.986     0.985
 
 Hemispherical shell, normalised displacement
 N        Quad4    Quad4R    Tria3R  Tria3DSG
-2        0.021     0.021     0.228     0.004
-4        0.106     0.118     0.069     0.049
-6        0.356     0.345     0.188     0.206
-8        0.633     0.549     0.364     0.451
-10       0.811     0.675     0.533     0.666
-12       0.903     0.749     0.653     0.803
-16       0.975     0.832     0.770     0.926
-24       1.005     0.911     0.821     0.985
-32       1.011     0.948     0.826     0.998
-48       1.013     0.982     0.825     1.006
+2        0.069     0.076     0.003     0.004
+4        0.112     0.137     0.029     0.049
+6        0.363     0.413     0.119     0.206
+8        0.637     0.682     0.288     0.451
+10       0.812     0.839     0.491     0.666
+12       0.903     0.917     0.664     0.803
+16       0.973     0.976     0.862     0.926
+24       1.003     1.002     0.974     0.985
+32       1.009     1.008     0.998     0.998
+48       1.011     1.011     1.008     1.006
 
 </pre></div></div>
 </div>
@@ -966,17 +1040,17 @@ for problem in PROBLEMS:
 <div class="output_area docutils container">
 <div class="highlight"><pre>
 problem                element        N = 48    converged   coarse N    grade [2]
-Scordelis-Lo roof      Quad4          0.9991         PASS          4            B
-Scordelis-Lo roof      Quad4R         0.9672         FAIL          4            D
-Scordelis-Lo roof      Tria3R         0.8825         FAIL          4            B
+Scordelis-Lo roof      Quad4          0.9969         PASS          4            B
+Scordelis-Lo roof      Quad4R         0.9960         PASS          4            B
+Scordelis-Lo roof      Tria3R         0.9955         PASS          4            B
 Scordelis-Lo roof      Tria3DSG       0.9910         PASS          4            D
-Pinched cylinder       Quad4          1.0120         PASS         16            B
-Pinched cylinder       Quad4R         0.9402         FAIL         16            C
-Pinched cylinder       Tria3R         1.0447         FAIL         16            D
+Pinched cylinder       Quad4          1.0015         PASS         16            B
+Pinched cylinder       Quad4R         1.0014         PASS         16            B
+Pinched cylinder       Tria3R         0.9862         PASS         16            C
 Pinched cylinder       Tria3DSG       0.9848         PASS         16            C
-Hemispherical shell    Quad4          1.0134         PASS          8            D
-Hemispherical shell    Quad4R         0.9817         PASS          8            D
-Hemispherical shell    Tria3R         0.8250         FAIL          8            F
+Hemispherical shell    Quad4          1.0115         PASS          8            D
+Hemispherical shell    Quad4R         1.0108         PASS          8            D
+Hemispherical shell    Tria3R         1.0081         PASS          8            F
 Hemispherical shell    Tria3DSG       1.0061         PASS          8            F
 </pre></div></div>
 </div>
@@ -1009,33 +1083,37 @@ for problem, (ref_mh, table) in MH_QUAD4.items():
 <div class="highlight"><pre>
 Scordelis-Lo roof, displacement normalised by 0.3024
 N        Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
-2        1.416     0.858     1.544     0.665     1.376
-4        1.059     0.779     0.929     0.675     1.050
-6        1.022     0.809     0.892     0.783     1.018
-8        1.010     0.830     0.882     0.853     1.008
-10       1.006     0.845     0.877     0.895     1.004
+2        1.373     1.176     0.896     0.665     1.376
+4        1.047     0.944     0.926     0.675     1.050
+6        1.015     0.961     0.964     0.783     1.018
+8        1.005     0.973     0.975     0.853     1.008
+10       1.001     0.980     0.982     0.895     1.004
 
 Hemispherical shell, displacement normalised by 0.094
 N        Quad4    Quad4R    Tria3R  Tria3DSG  MH QUAD4
-2        0.021     0.021     0.225     0.004     0.972
-4        0.104     0.116     0.068     0.049     1.024
-6        0.350     0.339     0.184     0.202     1.013
-8        0.622     0.540     0.358     0.443     1.005
-10       0.797     0.663     0.524     0.654     1.001
-12       0.888     0.736     0.642     0.789     0.998
+2        0.068     0.074     0.003     0.004     0.972
+4        0.110     0.135     0.029     0.049     1.024
+6        0.357     0.406     0.117     0.202     1.013
+8        0.626     0.670     0.284     0.443     1.005
+10       0.798     0.825     0.483     0.654     1.001
+12       0.888     0.902     0.653     0.789     0.998
 
 </pre></div></div>
 </div>
 </section>
 <section id="Discussion">
 <h2>Discussion<a class="headerlink" href="#Discussion" title="Link to this heading">#</a></h2>
-<p>The output above is the result of the default elements, with no parameter adjusted to these problems.</p>
+<p>The output above is the result of the default elements, with no parameter adjusted to these problems. The quadrilaterals of the three meshes are flat: the grids in the axial and circumferential coordinates of the cylinders, and in the colatitude and azimuth of the hemisphere, give rectangles and isosceles trapezoids, whose nodal offsets from the mean plane are zero to round-off (<span class="math notranslate nohighlight">\(d_w/\ell\)</span> of order <span class="math notranslate nohighlight">\(10^{-15}\)</span>, measured on 2026-10-30). The rigid offsets of warped quadrilaterals, the
+attribute <code class="docutils literal notranslate"><span class="pre">warp_offsets</span></code> of <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> and <code class="docutils literal notranslate"><span class="pre">Quad4R</span></code>, default since version 0.12.0, therefore do not change these results, see the twisted beam in the notebook of the MacNeal-Harder problems for a warped mesh.</p>
 <ul class="simple">
-<li><p><strong>``Quad4``</strong> is within 2% of the three references at <span class="math notranslate nohighlight">\(N = 48\)</span>. On the roof it behaves like the QUAD4 of [2] on every mesh, over-flexible on the coarsest. On the pinched cylinder it converges from below, with an error of 6.5% at 17 nodes per side, close to the 5% that [1] (p. 242) reports for their 4-node element with selective reduced integration on that mesh, and ends 1.2% above the reference. The hemisphere is where it differs most from the QUAD4 of [2]: far too stiff on the coarse
-meshes, 10% of the displacement at <span class="math notranslate nohighlight">\(N = 4\)</span> against 102% for the QUAD4, and within 3% of the reference of [1] only from <span class="math notranslate nohighlight">\(N = 16\)</span>.</p></li>
-<li><p><strong>``Quad4R``</strong> converges from below on the three problems, more slowly than <code class="docutils literal notranslate"><span class="pre">Quad4</span></code>, and is still 3% and 6% too stiff on the roof and on the cylinder at <span class="math notranslate nohighlight">\(N = 48\)</span>.</p></li>
-<li><p><strong>``Tria3R``</strong> does not converge to the references within <span class="math notranslate nohighlight">\(N = 48\)</span>: it settles 12% below the reference on the roof and 18% below on the hemisphere, and on the cylinder it overshoots by up to 30% before coming down to 4.5% above. Its transverse shear stiffness is divided by <span class="math notranslate nohighlight">\(1 + \alpha \ell^2/t^2\)</span> with the default <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span> <span class="pre">=</span> <span class="pre">0.7</span></code>, and the Notes of <code class="docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code> explain why no single value of <span class="math notranslate nohighlight">\(\alpha\)</span> serves every problem class; this notebook records the
-default.</p></li>
+<li><p><strong>``Quad4``</strong> is within 2% of the three references at <span class="math notranslate nohighlight">\(N = 48\)</span>. On the roof it behaves like the QUAD4 of [2] on every mesh, over-flexible on the coarsest. On the pinched cylinder it converges from below, with an error of 7.1% at 17 nodes per side, and ends 0.2% above the reference. The hemisphere is where it differs most from the QUAD4 of [2]: far too stiff on the coarse meshes, 11% of the displacement at <span class="math notranslate nohighlight">\(N = 4\)</span> against 102% for the QUAD4, and within 3% of the reference of [1]
+only from <span class="math notranslate nohighlight">\(N = 16\)</span>. These are the results of its default transverse shear since version 0.12.0, the assumed strains of the MITC4 element; with the one-point transverse shear of the versions up to 0.11, <code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code>, the selective reduced integration of Hughes et al. [3], the error on the pinched cylinder at 17 nodes per side was 6.5%, close to the 5% that [1] (p. 242) reports for their 4-node element with selective reduced integration on that mesh, the cylinder ended 1.2% above
+the reference, the roof with <span class="math notranslate nohighlight">\(N = 2\)</span> was 1.416 instead of 1.373 times the reference and the hemisphere 0.021 instead of 0.069; the other results differed by at most 6%, and by at most 1% from <span class="math notranslate nohighlight">\(N = 8\)</span>.</p></li>
+<li><p><strong>``Quad4R``</strong> is within 1.1% of the three references at <span class="math notranslate nohighlight">\(N = 48\)</span> and grade B on the coarse meshes of the roof and the cylinder, converging from below, and overshooting by 1.1% on the hemisphere, where it is the most flexible element on the coarse meshes. Since version 0.12.0 its bending and transverse shear have the physical stabilisation of Belytschko and Leviathan (1994), see the Notes of <code class="docutils literal notranslate"><span class="pre">pyfe3d.quad4r</span></code>; up to version 0.11, with Brockman’s hourglass stiffnesses, it converged more
+slowly and was still 3% and 6% too stiff on the roof and on the cylinder at <span class="math notranslate nohighlight">\(N = 48\)</span>.</p></li>
+<li><p><strong>``Tria3R``</strong> is within 2% of the three references at <span class="math notranslate nohighlight">\(N = 48\)</span>. Since version 0.12.0 it takes by default the transverse shear field of <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code>, and the drilling enrichment of its membrane makes it the more accurate triangle on the roof, within 4% from <span class="math notranslate nohighlight">\(N = 6\)</span> where <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> needs <span class="math notranslate nohighlight">\(N = 24\)</span>, and slightly better on the cylinder. On the coarse meshes of the hemisphere it is stiffer than <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code>, 0.288 against 0.451 at <span class="math notranslate nohighlight">\(N = 8\)</span>, because on a doubly curved
+surface the drilling rotations of the Allman field pick up the bending rotations of the neighbouring facets; the two agree from <span class="math notranslate nohighlight">\(N = 32\)</span>. This is why <code class="docutils literal notranslate"><span class="pre">Tria3R</span></code> is the recommended triangle of <code class="docutils literal notranslate"><span class="pre">pyfe3d</span></code>, and <code class="docutils literal notranslate"><span class="pre">Tria3DSG</span></code> the better choice on coarse meshes of doubly curved shells. With the centroid-sampled transverse shear of the versions up to 0.11 (<code class="docutils literal notranslate"><span class="pre">shear_model</span> <span class="pre">=</span> <span class="pre">0</span></code> with <code class="docutils literal notranslate"><span class="pre">alpha_shear_locking</span> <span class="pre">=</span> <span class="pre">0.7</span></code>) it did not converge within <span class="math notranslate nohighlight">\(N = 48\)</span>: it settled 12% below the reference on the
+roof and 18% below on the hemisphere, see the Notes of <code class="docutils literal notranslate"><span class="pre">pyfe3d.tria3r</span></code>.</p></li>
 <li><p><strong>``Tria3DSG``</strong> is within 2% of the three references at <span class="math notranslate nohighlight">\(N = 48\)</span>, converging from below and more slowly than <code class="docutils literal notranslate"><span class="pre">Quad4</span></code> on the coarse meshes, with no parameter to set.</p></li>
 </ul>
 </section>
@@ -1043,6 +1121,7 @@ default.</p></li>
 <h2>References<a class="headerlink" href="#References" title="Link to this heading">#</a></h2>
 <p>[1] Belytschko, T., Stolarski, H., Liu, W. K., Carpenter, N., and Ong, J. S.-J., Stress projection for membrane and shear locking in shell finite elements, Computer Methods in Applied Mechanics and Engineering, 51(1-3), 221-258, 1985. <a class="reference external" href="https://doi.org/10.1016/0045-7825(85)90035-0">https://doi.org/10.1016/0045-7825(85)90035-0</a></p>
 <p>[2] MacNeal, R. H., and Harder, R. L., A proposed standard set of problems to test finite element accuracy, Finite Elements in Analysis and Design, 1(1), 3-20, 1985. <a class="reference external" href="https://doi.org/10.1016/0168-874X(85)90003-4">https://doi.org/10.1016/0168-874X(85)90003-4</a></p>
+<p>[3] Hughes, T. J. R., Taylor, R. L., and Kanoknukulchai, W., A simple and efficient finite element for plate bending, International Journal for Numerical Methods in Engineering, 11(10), 1529-1543, 1977. <a class="reference external" href="https://doi.org/10.1002/nme.1620111005">https://doi.org/10.1002/nme.1620111005</a></p>
 </section>
 </section>
 

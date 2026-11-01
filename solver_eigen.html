@@ -7,7 +7,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
-    <title>Eigenvalue analyses (pyfe3d.solver.eigen) &#8212; pyfe3d 0.11.3 documentation</title>
+    <title>Eigenvalue analyses (pyfe3d.solver.eigen) &#8212; pyfe3d 0.12.0 documentation</title>
   
   
   
@@ -30,6 +30,7 @@
 <link href="_static/styles/pydata-sphinx-theme.css?digest=18bd87630a240e9c25be" rel="stylesheet" />
 
     <link rel="stylesheet" type="text/css" href="_static/pygments.css?v=8f2a1f02" />
+    <link rel="stylesheet" type="text/css" href="_static/plot_directive.css" />
   
   <!-- So that users can add custom icons -->
   <script defer src="_static/scripts/fontawesome.js?digest=18bd87630a240e9c25be"></script>
@@ -37,7 +38,7 @@
   <link rel="preload" as="script" href="_static/scripts/bootstrap.js?digest=18bd87630a240e9c25be" />
 <link rel="preload" as="script" href="_static/scripts/pydata-sphinx-theme.js?digest=18bd87630a240e9c25be" />
 
-    <script src="_static/documentation_options.js?v=c44be570"></script>
+    <script src="_static/documentation_options.js?v=61ccb1f1"></script>
     <script src="_static/doctools.js?v=fd6eb6e6"></script>
     <script src="_static/sphinx_highlight.js?v=6ffebe34"></script>
     <script crossorigin="anonymous" integrity="sha256-Ae2Vz/4ePdIu6ZyI/5ZGsYnb+m0JlOmKPjt6XZ9JJkA=" src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.4/require.min.js"></script>
@@ -120,7 +121,7 @@
   
   
   
-    <p class="title logo__title">pyfe3d 0.11.3 documentation</p>
+    <p class="title logo__title">pyfe3d 0.12.0 documentation</p>
   
 </a></div>
     
@@ -137,6 +138,13 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="overview.html">
     Overview and workflow
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
   </a>
 </li>
 
@@ -161,13 +169,6 @@
   </a>
 </li>
 
-
-<li class="nav-item ">
-  <a class="nav-link nav-internal" href="nonlinear_analyses.html">
-    Non-linear static analyses
-  </a>
-</li>
-
             <li class="nav-item dropdown">
                 <button class="btn dropdown-toggle nav-item" type="button"
                 data-bs-toggle="dropdown" aria-expanded="false"
@@ -176,6 +177,34 @@
                 </button>
                 <ul id="pst-nav-more-links" class="dropdown-menu">
                     
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="inertia_relief.html">
+    Inertia relief
+  </a>
+</li>
+
+
+<li class=" ">
+  <a class="nav-link dropdown-item nav-internal" href="nonlinear_analyses.html">
+    Non-linear static analyses
+  </a>
+</li>
+
+
 <li class=" ">
   <a class="nav-link dropdown-item nav-internal" href="eigenvalue_analyses.html">
     Linear buckling and natural frequencies
@@ -364,6 +393,13 @@
 
 
 <li class="nav-item ">
+  <a class="nav-link nav-internal" href="documentation_levels.html">
+    How the documentation is organised
+  </a>
+</li>
+
+
+<li class="nav-item ">
   <a class="nav-link nav-internal" href="conventions.html">
     Conventions
   </a>
@@ -380,6 +416,27 @@
 <li class="nav-item ">
   <a class="nav-link nav-internal" href="shell_properties.html">
     Shell and beam properties
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="cross_sectional_analysis.html">
+    Cross-sectional analysis of beams
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="linear_analyses.html">
+    Linear static analyses
+  </a>
+</li>
+
+
+<li class="nav-item ">
+  <a class="nav-link nav-internal" href="inertia_relief.html">
+    Inertia relief
   </a>
 </li>
 
@@ -584,11 +641,36 @@
 
 <li class="toctree-l2"><a class="reference internal" href="beamprop.html">Beam property module (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.beamprop</span></code>)</a></li>
 
+<li class="toctree-l2"><a class="reference internal" href="vabs.html">Variational asymptotic sectional analysis (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.vabs</span></code>)</a></li>
+
+
+
+
+
+
+
+
 </ul>
 </details></li>
+<li class="toctree-l1"><a class="reference internal" href="corotational.html">Co-rotational kinematics, EICR (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.corotational</span></code>)</a></li>
+
+
+
+
+
+
+
+
+
+
+
+
+
 <li class="toctree-l1"><a class="reference internal" href="solver.html">Solvers (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver</span></code>)</a></li>
 <li class="toctree-l1"><a class="reference internal" href="solver_static.html">Linear static solution (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.static</span></code>)</a></li>
 
+
+<li class="toctree-l1"><a class="reference internal" href="solver_inertia_relief.html">Static analysis with inertia relief (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.inertia_relief</span></code>)</a></li>
 
 <li class="toctree-l1"><a class="reference internal" href="solver_analysis.html">Static analyses of a model given by callables (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.analysis</span></code>)</a></li>
 
@@ -640,6 +722,7 @@
 
 
 <li class="toctree-l1"><a class="reference internal" href="solver_arpackutils.html">Utilities for ARPACK, against the Intel MKL bug of <code class="docutils literal notranslate"><span class="pre">dsteqr</span></code> (<code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.arpackutils</span></code>)</a></li>
+
 
 
 
@@ -801,13 +884,29 @@ only cheap way to know that no mode was skipped, and it is what distinguishes
 a converged answer from a plausible-looking one.</p>
 <p class="rubric">Solver policy</p>
 <p>With <code class="docutils literal notranslate"><span class="pre">sparse_solver=True</span></code> the sparse solvers run first for every problem
-size, and each result must pass the verification. Only when all of them
-failed, e.g. a failed verification, an ARPACK error or a singular
+size, and each result must pass the verification. For symmetric matrices,
+when the inertia check finds eigenvalues missing below the highest one
+returned by a sparse solver, e.g. copies of repeated eigenvalues, which
+the Lanczos process may miss, they are computed by deflated passes before
+the next solver, see <code class="xref py py-func docutils literal notranslate"><span class="pre">_complete_repeated()</span></code>: for <a class="reference internal" href="#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a>
+after each of its two calls of <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code>, for
+<a class="reference internal" href="#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> after its single one. Only when all of
+them failed, e.g. a failed verification, an ARPACK error or a singular
 factorization, a dense solver is used, if the dense problem has at most
 <code class="docutils literal notranslate"><span class="pre">max_dense_size</span></code> degrees-of-freedom, with a <a class="reference internal" href="#pyfe3d.solver.eigen.DenseFallbackWarning" title="pyfe3d.solver.eigen.DenseFallbackWarning"><code class="xref py py-class docutils literal notranslate"><span class="pre">DenseFallbackWarning</span></code></a>
 giving the reasons of the failures; its result is verified as well. A
 <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code> listing every attempted solver is raised otherwise. See
 <code class="xref py py-func docutils literal notranslate"><span class="pre">_sparse_first()</span></code>.</p>
+<p class="rubric">Positive definite stiffness matrix</p>
+<p>The Cayley mode of <a class="reference internal" href="#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> and its inertia check require a
+positive definite <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> for symmetric matrices: with <code class="docutils literal notranslate"><span class="pre">check=True</span></code>
+a <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> that is not raises a <code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.linalg.LinAlgError</span></code> that
+says so, with its likely causes, see
+<code class="xref py py-func docutils literal notranslate"><span class="pre">sparseutils._not_positive_definite_message()</span></code>.
+<a class="reference internal" href="#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a> accepts an indefinite <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span>, e.g. with a
+preload beyond the buckling load, and a singular one, with unconstrained
+rigid-body modes; when its solvers fail and <span class="math notranslate nohighlight">\(\boldsymbol{K}_{C0}\)</span> is not positive
+definite, its <code class="docutils literal notranslate"><span class="pre">RuntimeError</span></code> starts with the same diagnosis.</p>
 <p class="rubric">Order of the load multipliers</p>
 <p><a class="reference internal" href="#pyfe3d.solver.eigen.linear_buckling" title="pyfe3d.solver.eigen.linear_buckling"><code class="xref py py-func docutils literal notranslate"><span class="pre">linear_buckling()</span></code></a> returns the positive load multipliers first, in
 increasing order, followed by the negative ones closest to zero, i.e. the
@@ -1300,11 +1399,15 @@ multipliers being sought. <code class="docutils literal notranslate"><span class
 <a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols" title="pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a>, whereas <code class="docutils literal notranslate"><span class="pre">KG</span></code> may have null rows and
 columns. <code class="docutils literal notranslate"><span class="pre">K</span></code> and <code class="docutils literal notranslate"><span class="pre">KG</span></code> are symmetric when <code class="docutils literal notranslate"><span class="pre">symmetric=None</span></code> finds
 them so, see <a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.is_symmetric" title="pyfe3d.solver.sparseutils.is_symmetric"><code class="xref py py-func docutils literal notranslate"><span class="pre">is_symmetric()</span></code></a>.</p>
-<p><strong>Symmetric matrices.</strong> The sparse solvers are
+<p><strong>Symmetric matrices.</strong> <code class="docutils literal notranslate"><span class="pre">K</span></code> must be positive definite, which is
+checked with <code class="docutils literal notranslate"><span class="pre">check=True</span></code>. The sparse solvers are
 <code class="xref py py-func docutils literal notranslate"><span class="pre">scipy.sparse.linalg.eigsh()</span></code> in Cayley mode, using the shift of
 <a class="reference internal" href="#pyfe3d.solver.eigen.estimate_cayley_sigma" title="pyfe3d.solver.eigen.estimate_cayley_sigma"><code class="xref py py-func docutils literal notranslate"><span class="pre">estimate_cayley_sigma()</span></code></a>, or <code class="docutils literal notranslate"><span class="pre">sigma</span></code> when given, and then the
-same with a 10 times larger shift. Each one computes the lowest positive
-load multipliers and, when fewer than <code class="docutils literal notranslate"><span class="pre">num_eigvalues</span></code> exist, the
+same with a 10 times larger shift; when the accurate eigenpairs of
+either one miss load multipliers below the highest one, e.g. copies of
+repeated ones, they are completed by deflated passes before the next
+solver, see <code class="xref py py-func docutils literal notranslate"><span class="pre">_complete_both_signs()</span></code>. Each one computes the lowest
+positive load multipliers and, when fewer than <code class="docutils literal notranslate"><span class="pre">num_eigvalues</span></code> exist, the
 negative ones closest to zero, i.e. the critical load multipliers of the
 reversed load, with <code class="docutils literal notranslate"><span class="pre">-KG</span></code>, see <code class="xref py py-func docutils literal notranslate"><span class="pre">_eigsh_both_signs()</span></code>. The
 eigenpairs are verified with the residual and inertia checks of
@@ -1351,7 +1454,8 @@ use. Default <code class="docutils literal notranslate"><span class="pre">None</
 <a class="reference internal" href="#pyfe3d.solver.eigen.diagonal_preconditioner" title="pyfe3d.solver.eigen.diagonal_preconditioner"><code class="xref py py-func docutils literal notranslate"><span class="pre">diagonal_preconditioner()</span></code></a>. This does not change the
 eigenvalues. Default <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
 </dd>
-<dt><strong>check</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to verify the eigenpairs of the sparse solvers. With
+<dt><strong>check</strong><span class="classifier">bool, optional</span></dt><dd><p>Whether to verify the eigenpairs of the sparse solvers, and, for
+symmetric matrices, that <code class="docutils literal notranslate"><span class="pre">K</span></code> is positive definite. With
 <code class="docutils literal notranslate"><span class="pre">False</span></code>, the first sparse solver is returned without verification
 and without dense fallback. Default <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
 </dd>
@@ -1397,7 +1501,13 @@ are returned.</p>
 <dt class="field-odd">Raises<span class="colon">:</span></dt>
 <dd class="field-odd"><dl class="simple">
 <dt>numpy.linalg.LinAlgError</dt><dd><p>When <code class="docutils literal notranslate"><span class="pre">K</span></code> has a null row or column, with the indices of these
-degrees-of-freedom, see <a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols" title="pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a>.</p>
+degrees-of-freedom, see <a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols" title="pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a>; for symmetric
+matrices, when <code class="docutils literal notranslate"><span class="pre">check=True</span></code> or <code class="docutils literal notranslate"><span class="pre">sparse_solver=False</span></code> and <code class="docutils literal notranslate"><span class="pre">K</span></code> is
+not positive definite, i.e. its factorization has a negative or a
+zero pivot, with the likely causes: insufficient boundary
+conditions, a mechanism, distorted elements, e.g. re-entrant
+quadrilaterals, or a preload beyond the buckling load included in
+<code class="docutils literal notranslate"><span class="pre">K</span></code>, see <code class="xref py py-func docutils literal notranslate"><span class="pre">sparseutils._not_positive_definite_message()</span></code>.</p>
 </dd>
 <dt>RuntimeError</dt><dd><p>When <code class="docutils literal notranslate"><span class="pre">check=True</span></code> and no eigenvalue solver passed the
 verification, with the list of the attempted solvers and their
@@ -1433,10 +1543,14 @@ instead of being removed, unlike in structsolve, see
 <a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols" title="pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a>. A null row of <span class="math notranslate nohighlight">\(\boldsymbol{K}_G\)</span>, at a
 degree-of-freedom that the load does not destabilize, only gives an
 infinite load multiplier.</p>
-<p>A failure of the verification usually means that the mesh, and not the
-solver, needs attention: a spectrum with many nearly coincident
-eigenvalues, as in the buckling of a cylindrical shell, is the typical
-case.</p>
+<p>The load multipliers of a cylindrical shell with a rotationally
+symmetric mesh and load, e.g. torsion, come in pairs equal up to the
+round-off, of which the Lanczos process of ARPACK may return one
+copy only; the missing copies, detected by the inertia check, are
+computed by deflated passes, see <code class="xref py py-func docutils literal notranslate"><span class="pre">_complete_repeated()</span></code>. A
+failure of the verification that remains usually means that the mesh,
+and not the solver, needs attention, e.g. a spectrum with many nearly
+coincident eigenvalues.</p>
 <p>Non-conservative systems, e.g. under follower loads, may lose stability
 by flutter, which this static criterion does not detect, see
 <a class="reference internal" href="#pyfe3d.solver.eigen.natural_frequency" title="pyfe3d.solver.eigen.natural_frequency"><code class="xref py py-func docutils literal notranslate"><span class="pre">natural_frequency()</span></code></a>. When no returned load multiplier is positive
@@ -1462,7 +1576,10 @@ of computed frequencies is <code class="docutils literal notranslate"><span clas
 residual of each eigenpair must not be larger than <code class="docutils literal notranslate"><span class="pre">check_rtol</span></code>,
 unless its backward error is at the round-off, and, for symmetric
 matrices, no eigenvalue lower than the highest one returned may be
-missing. When the verification fails or the sparse
+missing. For symmetric matrices with a <code class="docutils literal notranslate"><span class="pre">K</span></code> without negative pivots,
+accurate eigenpairs that miss eigenvalues, e.g. copies of repeated
+ones, are completed by deflated passes, see <code class="xref py py-func docutils literal notranslate"><span class="pre">_complete_repeated()</span></code>.
+When the verification still fails or the sparse
 solver raises an error, the dense solver of <code class="xref py py-func docutils literal notranslate"><span class="pre">_dense_freq()</span></code> is used
 as a last resort, with a <a class="reference internal" href="#pyfe3d.solver.eigen.DenseFallbackWarning" title="pyfe3d.solver.eigen.DenseFallbackWarning"><code class="xref py py-class docutils literal notranslate"><span class="pre">DenseFallbackWarning</span></code></a>, see the solver
 policy of <a class="reference internal" href="#module-pyfe3d.solver.eigen" title="pyfe3d.solver.eigen"><code class="xref py py-mod docutils literal notranslate"><span class="pre">pyfe3d.solver.eigen</span></code></a>.</p>
@@ -1528,7 +1645,13 @@ increasing imaginary part.</p>
 degrees-of-freedom, see <a class="reference internal" href="solver_sparseutils.html#pyfe3d.solver.sparseutils.check_null_rows_cols" title="pyfe3d.solver.sparseutils.check_null_rows_cols"><code class="xref py py-func docutils literal notranslate"><span class="pre">check_null_rows_cols()</span></code></a>.</p>
 </dd>
 <dt>RuntimeError</dt><dd><p>When <code class="docutils literal notranslate"><span class="pre">check=True</span></code> and no eigenvalue solver passed the
-verification.</p>
+verification. For symmetric matrices with a <code class="docutils literal notranslate"><span class="pre">K</span></code> that is not
+positive definite, the message starts with that diagnosis and its
+likely causes, see
+<code class="xref py py-func docutils literal notranslate"><span class="pre">sparseutils._not_positive_definite_message()</span></code>: an indefinite
+<code class="docutils literal notranslate"><span class="pre">K</span></code> is accepted, e.g. with a preload beyond the buckling load,
+but its negative eigenvalues may be far below the shift and missed
+by the sparse solver.</p>
 </dd>
 </dl>
 </dd>
