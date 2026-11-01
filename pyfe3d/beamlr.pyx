@@ -222,7 +222,8 @@ cdef class BeamLR:
     sectional stiffness matrix ``C`` of :class:`.BeamProp`, which is built
     from the transverse shear moduli ``G12`` and ``G13`` of the planes `xy`
     and `xz`, the torsional stiffness ``GJ`` and the other attributes when
-    it is not set. The six displacements `u, v, w, r_x, r_y, r_z` of the
+    it is not set; it must be positive semi-definite, see
+    :class:`.BeamProp`. The six displacements `u, v, w, r_x, r_y, r_z` of the
     beam axis are interpolated linearly between the two nodes, such that
     the axial strain `u_{,x}`, the curvatures `\kappa_y = -{r_z}_{,x}`,
     `\kappa_z = {r_y}_{,x}` and the twist `{r_x}_{,x}` are constant along
@@ -611,6 +612,8 @@ cdef class BeamLR:
         cdef double KC0e0710, KC0e0711, KC0e0808, KC0e0809, KC0e0810, KC0e0811
         cdef double KC0e0909, KC0e0910, KC0e0911, KC0e1010, KC0e1011, KC0e1111
 
+        # NOTE raises if C is not positive semi-definite, see BeamProp
+        prop.check_C('BeamLR')
         with nogil:
             L = self.length
             prop.get_C(C)
@@ -804,6 +807,8 @@ cdef class BeamLR:
         cdef double KC0e0710, KC0e0711, KC0e0808, KC0e0809, KC0e0810, KC0e0811
         cdef double KC0e0909, KC0e0910, KC0e0911, KC0e1010, KC0e1011, KC0e1111
 
+        # NOTE raises if C is not positive semi-definite, see BeamProp
+        prop.check_C('BeamLR')
         with nogil:
             L = self.length
             prop.get_C(C)
@@ -2098,6 +2103,8 @@ cdef class BeamLR:
         cdef int c[2]
         cdef double r[6][6]
 
+        # NOTE raises if C is not positive semi-definite, see BeamProp
+        prop.check_C('BeamLR')
         with nogil:
             # local to global transformation
             # translation DOFs
@@ -2244,6 +2251,8 @@ cdef class BeamLR:
         cdef double C[36]
         cdef double C00, C01, C02, C03, C04, C05
 
+        # NOTE raises if C is not positive semi-definite, see BeamProp
+        prop.check_C('BeamLR')
         with nogil:
             L = self.length
             prop.get_C(C)

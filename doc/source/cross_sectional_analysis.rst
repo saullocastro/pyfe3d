@@ -163,7 +163,8 @@ extension-twist, shear-shear, bending-shear and bending-twist couplings of
 a composite section, and fills the 11 parameters of the rigid section,
 ``A``, ``E``, ``G12``, ``G13``, ``GJ``, ``Ay``, ``Az``, ``Iyy``, ``Izz``
 and ``Iyz``, from the entries of ``C`` for information; once ``C`` is set,
-the elements read only ``C``. With these 11 parameters alone, i.e. after
+the elements read only ``C``, which must be positive semi-definite, see
+:class:`.BeamProp`. With these 11 parameters alone, i.e. after
 ``del prop.C``, the shear centre is the tension centre and the couplings
 above are lost, see the notes of :class:`.BeamProp`. For isotropic
 sections, the computed ``G12``, ``G13`` and ``GJ`` replace the shear

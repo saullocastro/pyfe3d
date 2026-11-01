@@ -527,6 +527,15 @@
   shear-shear, bending-shear and bending-twist couplings of composite
   sections, which the 11 attributes cannot represent, are now taken into
   account. `Truss` reads `C[0, 0]` and `C[3, 3]`.
+- `BeamC` and `BeamLR` raise `ValueError` when `C`, set or built from the
+  11 attributes, is not positive semi-definite, i.e. when the strain energy
+  can be negative: a negative diagonal entry, a zero diagonal entry with a
+  non-zero entry in its row, or a failed Cholesky factorization with
+  diagonal pivoting of `C` scaled to a unit diagonal, to a tolerance of
+  1e-10 (new `BeamProp.check_C`, a `cdef` method). Every method that reads
+  `C` checks it, including the mass matrices of `BeamC`; zero stiffnesses
+  remain allowed, e.g. `GJ = 0` and `Iyy = 0` in planar models. `Truss` is
+  not checked.
 - `BeamC` and `BeamLR`: `KC0`, the internal forces, `KG`, `KCNL` and the
   nonlinear internal forces were regenerated with a symbolic `C` by the
   scripts of `theory/deriving_equations/beamc` and `beamLR`, which assert

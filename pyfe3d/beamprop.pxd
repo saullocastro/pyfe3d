@@ -9,3 +9,4 @@ cdef class BeamProp:
     cdef double get_G13(BeamProp self) noexcept nogil
     cdef double get_GJ(BeamProp self) noexcept nogil
     cdef void get_C(BeamProp self, double *C) noexcept nogil
+    cdef int check_C(BeamProp self, str element) except -1

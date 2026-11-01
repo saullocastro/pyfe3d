@@ -924,8 +924,11 @@ cdef class BeamC:
         # NOTE 0 when C has no coupling other than C[0, 3], for which the
         #      generated expressions of the shape functions of Luo (2008) are
         #      used; otherwise 1, with the exact fields of _coupled_fields
-        #      written to K22, Hf and Nf, see the notes of BeamC
+        #      written to K22, Hf and Nf, see the notes of BeamC; raises if C
+        #      is not positive semi-definite, see BeamProp, or, with these
+        #      couplings, not positive definite
         cdef double C[36]
+        prop.check_C('BeamC')
         prop.get_C(C)
         if _uncoupled(C):
             return 0
@@ -2578,8 +2581,8 @@ cdef class BeamC:
         cdef double Hf[72]
         cdef double Nf[288]
 
-        # NOTE raises if C is not positive definite when it has couplings
-        #      other than C[0, 3]
+        # NOTE raises if C is not positive semi-definite, see BeamProp, or
+        #      not positive definite with couplings other than C[0, 3]
         self._coupled(prop, K22, Hf, Nf)
 
         with nogil:
@@ -3579,7 +3582,10 @@ cdef class BeamC:
         Raises
         ------
         ValueError
-            If ``mtype`` is not 0 or 1.
+            If ``mtype`` is not 0 or 1, if ``C`` is not positive
+            semi-definite, see :class:`.BeamProp`, or if, with ``mtype=0``,
+            ``C`` has couplings other than ``C[0, 3]`` and is not positive
+            definite.
 
         Notes
         -----
@@ -3666,6 +3672,9 @@ cdef class BeamC:
                              'no reduced-integration mass matrix (2)'
                              % mtype)
 
+        # NOTE raises if C is not positive semi-definite, see BeamProp; the
+        #      lumped matrix also reads C, through the shear parameters
+        prop.check_C('BeamC')
         if mtype == 0 and self._coupled(prop, K22, Hf, Nf):
             with nogil:
                 # NOTE shape functions of the coupled sectional equations,

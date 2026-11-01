@@ -512,23 +512,73 @@ def test_general_shape_functions_uncoupled(base):
         assert err < 1e-13, (key, err)
 
 
-def test_coupled_C_not_positive_definite():
-    """With couplings other than ``C[0, 3]`` the shape functions need
-    ``inv(C)``: a ``C`` that is not positive definite raises"""
-    elem, data, prop, x = make_coupled_element('BeamC')
-    C = prop.C
-    C[3, 3] = 0.
-    prop.C = C
+def update_calls(name, elem, data, prop):
+    """The methods of ``elem`` that read ``C``: every method of BeamC, and
+    all but ``update_M`` for BeamLR"""
     size = data.KC0_SPARSE_SIZE
     r = np.zeros(size, dtype=INT)
     c = np.zeros(size, dtype=INT)
     v = np.zeros(size, dtype=DOUBLE)
-    for call in [lambda: elem.update_KC0(r, c, v, prop),
-                 lambda: elem.update_KG(r, c, v, prop),
-                 lambda: elem.update_KCNL(r, c, v, prop),
-                 lambda: elem.update_M(r, c, v, prop, 0),
-                 lambda: elem.update_fint(np.zeros(2*DOF), prop, 1)]:
-        with pytest.raises(ValueError, match='positive definite'):
+    calls = [lambda: elem.update_KC0(r, c, v, prop),
+             lambda: elem.update_KG(r, c, v, prop),
+             lambda: elem.update_KCNL(r, c, v, prop),
+             lambda: elem.update_fint(np.zeros(2*DOF), prop, 1)]
+    if name == 'BeamC':
+        calls += [lambda: elem.update_M(r, c, v, prop, 0),
+                  lambda: elem.update_M(r, c, v, prop, 1)]
+    return calls
+
+
+@pytest.mark.parametrize('name', ['BeamC', 'BeamLR'])
+def test_C_not_positive_semidefinite(name):
+    """``C`` must be positive semi-definite, see
+    :class:`pyfe3d.beamprop.BeamProp`: an indefinite ``C``, a negative
+    diagonal entry and a zero diagonal entry with a coupling raise in every
+    method that reads ``C``, whether ``C`` is set or built from the 11
+    attributes; a planar property with ``GJ = 0`` and ``Iyy = 0`` does not
+    raise"""
+    elem, data, prop, x = make_coupled_element(name)
+    calls = update_calls(name, elem, data, prop)
+    C0 = rectangle_C()
+    negative = C0.copy()
+    negative[3, 3] = -negative[3, 3]
+    zero = C0.copy()
+    zero[3, 3] = 0.
+    zero[1, 3] = zero[3, 1] = 1e-3*C0[1, 1]
+    for C in [coupled(C0, 1, 5, ratio=1.5), negative, zero]:
+        prop.C = C
+        for call in calls:
+            with pytest.raises(ValueError, match='positive semi-definite'):
+                call()
+    del prop.C
+    prop.A, prop.E, prop.G, prop.Izz = 1e-3, 70e9, 26e9, 1e-7
+    prop.GJ = -1.
+    for call in calls:
+        with pytest.raises(ValueError, match='positive semi-definite'):
+            call()
+    del prop.GJ
+    assert prop.GJ == 0 and prop.Iyy == 0
+    for call in calls:
+        call()
+
+
+@pytest.mark.parametrize('name', ['BeamC', 'BeamLR'])
+def test_coupled_C_singular(name):
+    """A positive semi-definite but singular ``C``, here with ``C[1, 5] =
+    sqrt(C[1, 1]*C[5, 5])``, is accepted by BeamLR; BeamC, whose shape
+    functions with couplings other than ``C[0, 3]`` need ``inv(C)``,
+    raises, except in its lumped mass matrix, which does not use them"""
+    elem, data, prop, x = make_coupled_element(name)
+    prop.C = coupled(rectangle_C(), 1, 5, ratio=1.)
+    calls = update_calls(name, elem, data, prop)
+    if name == 'BeamC':
+        calls.pop()()
+    for call in calls:
+        if name == 'BeamC':
+            with pytest.raises(ValueError, match='must be positive definite '
+                               'when it has couplings'):
+                call()
+        else:
             call()
 
 

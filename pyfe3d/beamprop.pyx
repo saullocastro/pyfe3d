@@ -18,6 +18,69 @@ by the elements :class:`.BeamC`, :class:`.BeamLR` and :class:`.Truss`.
 
 """
 import numpy as np
+from libc.math cimport fabs, sqrt
+
+#: tolerance of the positive semi-definite check of ``C``, relative to its
+#: diagonal, see :meth:`BeamProp.check_C`
+cdef double PSD_TOL = 1e-10
+
+
+cdef int _positive_semidefinite6(double *A) noexcept nogil:
+    # NOTE 1 when the symmetric 6x6 matrix A, stored row by row, is positive
+    #      semi-definite, 0 otherwise. A row with a zero diagonal entry must
+    #      be zero, since the 2x2 minor [[0, a], [a, d]] is negative for any
+    #      a != 0. The other rows and columns are scaled to a unit diagonal
+    #      and factorized by the Cholesky factorization with diagonal
+    #      pivoting, which stops when the largest remaining pivot is at most
+    #      PSD_TOL; the remaining Schur complement must then be zero to
+    #      PSD_TOL
+    cdef int i, j, k, n, p
+    cdef int idx[6]
+    cdef double d, s
+    cdef double B[36]
+    n = 0
+    for i in range(6):
+        d = A[6*i + i]
+        if d < 0:
+            return 0
+        if d == 0:
+            for j in range(6):
+                if A[6*i + j] != 0:
+                    return 0
+        else:
+            idx[n] = i
+            n += 1
+    for i in range(n):
+        for j in range(n):
+            B[6*i + j] = A[6*idx[i] + idx[j]]/sqrt(A[6*idx[i] + idx[i]]
+                                                   *A[6*idx[j] + idx[j]])
+    for k in range(n):
+        p = k
+        for i in range(k + 1, n):
+            if B[6*i + i] > B[6*p + p]:
+                p = i
+        if not B[6*p + p] > PSD_TOL:
+            for i in range(k, n):
+                for j in range(k, n):
+                    if not fabs(B[6*i + j]) <= PSD_TOL:
+                        return 0
+            return 1
+        if p != k:
+            # NOTE symmetric exchange of the rows and columns k and p
+            for j in range(n):
+                s = B[6*k + j]
+                B[6*k + j] = B[6*p + j]
+                B[6*p + j] = s
+            for i in range(n):
+                s = B[6*i + k]
+                B[6*i + k] = B[6*i + p]
+                B[6*i + p] = s
+        # NOTE Schur complement of the pivot
+        for i in range(k + 1, n):
+            for j in range(k + 1, n):
+                B[6*i + j] -= B[6*i + k]*B[6*k + j]/B[6*k + k]
+    return 1
+
 
 cdef class BeamProp:
     r"""
@@ -53,6 +116,20 @@ cdef class BeamProp:
     until it is deleted, ``del prop.C``. A property that does not set ``C``
     gives the same matrices as the versions of pyfe3d without ``C``, to
     round-off.
+
+    ``C`` must be positive semi-definite: the strain energy per unit length
+    `\frac{1}{2} \boldsymbol{\epsilon}^\top \boldsymbol{C}
+    \boldsymbol{\epsilon}`, see the Notes, must not be negative for any
+    strains. :class:`.BeamC` and :class:`.BeamLR` check it each time one of
+    their ``update_*`` methods reads ``C``, set or built from the 11
+    attributes, and raise ``ValueError`` for a negative diagonal entry, a
+    zero diagonal entry with a non-zero entry in its row, or a ``C`` whose
+    Cholesky factorization with diagonal pivoting, after scaling to a unit
+    diagonal, fails to a tolerance of ``1e-10``. Zero stiffnesses are
+    allowed, e.g. ``GJ = 0`` and ``Iyy = 0`` in a planar model whose
+    out-of-plane degrees of freedom are constrained. With couplings other
+    than ``C[0, 3]``, :class:`.BeamC` needs ``C`` positive definite, see the
+    Notes. :class:`.Truss` does not check ``C``.
 
 
     Attributes
@@ -121,7 +198,8 @@ cdef class BeamProp:
         can be set with any array-like of shape ``(6, 6)``, e.g.
         ``yu_to_pyfe3d(sec.Kt)`` of :mod:`pyfe3d.vabs`, whose asymmetry, if
         any, must not exceed ``1e-10`` times its largest entry; the
-        symmetric part is stored.
+        symmetric part is stored. It must be positive semi-definite, see
+        above.
 
     Notes
     -----
@@ -333,6 +411,19 @@ cdef class BeamProp:
         C[4*6 + 5] = self.E*self.Iyz
         C[5*6 + 4] = C[4*6 + 5]
         C[5*6 + 5] = self.E*self.Iyy
+
+    cdef int check_C(BeamProp self, str element) except -1:
+        # NOTE raises ValueError if the matrix read by the elements, see the
+        #      attribute C, is not positive semi-definite; called by BeamC and
+        #      BeamLR each time an update method reads C
+        cdef double C[36]
+        self.get_C(C)
+        if not _positive_semidefinite6(C):
+            raise ValueError('%s: the sectional stiffness matrix C of the '
+                    'property must be positive semi-definite; when C is not '
+                    'set, it is built from A, E, G12, G13, GJ, Ay, Az, Iyy, '
+                    'Izz and Iyz, see BeamProp' % element)
+        return 0
 
     # NOTE the properties have no docstring, they are documented in the
     #      Attributes of the class, as the public attributes
