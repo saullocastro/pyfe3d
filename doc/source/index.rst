@@ -14,7 +14,10 @@ With ``pyfe3d`` you can build models of:
   isotropic properties, :class:`.ShellProp`
 
 * Beams, with the Timoshenko elements :class:`.BeamC` and :class:`.BeamLR`,
-  trusses, :class:`.Truss`, and springs, :class:`.Spring`
+  trusses, :class:`.Truss`, and springs, :class:`.Spring`, with the
+  sectional stiffness matrices of composite beams computed by the
+  cross-sectional analysis of :mod:`pyfe3d.vabs`, see
+  :doc:`cross_sectional_analysis`
 
 all with six degrees of freedom per node, whose element matrices are written
 into sparse arrays: the linear constitutive stiffness matrix, the
@@ -40,7 +43,9 @@ With the solvers of :mod:`pyfe3d.solver` you can run:
 * Geometrically non-linear static analyses with :class:`.Analysis`, using
   the Newton-Raphson method or the arc-length methods of Riks and of
   Crisfield, with Crisfield's convergence criterion, configuration-dependent
-  loads and prescribed displacements
+  loads and prescribed displacements, and with large rotations through the
+  element-independent co-rotational formulation of
+  :mod:`pyfe3d.corotational`
 
 The eigenvalue solvers verify their results and use a dense solver only as
 a last resort, see :doc:`eigenvalue_analyses`.

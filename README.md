@@ -36,12 +36,26 @@ Important features of this library
 - efficient and simple for linear and nonlinear analyses
 - importable and cimportable code
 - 6 degrees-of-freedom per node
+- linear static analyses, also of unsupported structures with inertia
+  relief, balancing the loads with the inertia forces of the rigid-body
+  accelerations (`pyfe3d.solver.apply_inertia_relief`)
+- linear buckling, natural frequency and damped (complex) frequency
+  analyses, with verified eigenvalues
+- geometrically non-linear static analyses with the Newton-Raphson method
+  and the arc-length methods of Riks and Crisfield, configuration-dependent
+  loads and prescribed displacements
+- large rotations with the element-independent co-rotational formulation
+  of `pyfe3d.corotational`, for every element
+- cross-sectional analysis of composite beams with `pyfe3d.vabs`, whose
+  6x6 sectional stiffness matrix, with all its couplings, is taken by the
+  beam elements
 
 
 Available finite elements
 -------------------------
 - 'Quad4' - 4-node plate with linear interpolation, equivalent to Nastran's
-  CQUAD4. The recommended quadrilateral plate element.
+  CQUAD4, with the MITC4 transverse shear of Dvorkin and Bathe (1984) by
+  default. The recommended quadrilateral plate element.
 
 - 'Quad4R' - 4-node plate with linear interpolation and one integration point,
   with the physical stabilisation of Belytschko and Leviathan (1994) for the
@@ -64,7 +78,8 @@ Available finite elements
   plates and shells, see the element documentation.
 
 - 'BeamC' - 2-node Timoshenko beam element with consistent shape functions and
-analytical integration. The recommended beam element.
+analytical integration, exact under nodal loads for any sectional stiffness
+matrix. The recommended beam element.
 
 - 'BeamLR' - 2-node Timoshenko beam element with linear interpolation and
 reduced integration. 
@@ -83,7 +98,7 @@ See [CHANGELOG.md](CHANGELOG.md) for the details of each version.
 
 | Main versions | Changes |
 | - | - |
-| 0.12.0 | New module `pyfe3d.vabs`: variational asymptotic cross-sectional analysis (VABS) of prismatic beams with arbitrary cross sections and anisotropic materials, giving the classical 4x4 and the generalized Timoshenko 6x6 stiffness matrices, the tension and shear centres and the mass properties, with the conversion to the convention of pyfe3d and to a `BeamProp`. |
+| 0.12.0 | New module `pyfe3d.vabs`: variational asymptotic cross-sectional analysis (VABS) of prismatic beams with arbitrary cross sections and anisotropic materials, giving the classical 4x4 and the generalized Timoshenko 6x6 stiffness matrices, the tension and shear centres and the mass properties, with the conversion to the convention of pyfe3d and to a `BeamProp`; general 6x6 sectional stiffness matrix `BeamProp.C` of the beams, with BeamC exact under nodal loads for any coupling; new module `pyfe3d.corotational`, an element-independent co-rotational formulation for large rotations; inertia relief with `apply_inertia_relief()`; MITC4 transverse shear of Quad4 by default; physical hourglass stabilisation of Quad4R; discrete shear gap transverse shear of Tria3R by default; rigid offsets of warped quadrilaterals; eigenvalue solvers that complete missing eigenvalues. |
 | 0.11.0 | Non-linear static solvers in `pyfe3d.solver` (Newton-Raphson, arc-length methods of Riks and Crisfield, Crisfield's convergence criterion as the default, with a round-off floor of the residual); damped (quadratic) eigenvalue solver `complex_frequency()`; fixed sign of the shear parameters of BeamC; fixed piston-theory slope of Quad4 and Quad4R; fixed `MatLamina` `c11` and `q31` and the 66 row of `GradABD.calc_LP_grad`; `pyfe3d.shellprop` mirrors `composites.Laminate` (breaking: `force_*` renamed `make_*`, `get_transf_matrix_displ_to_lamina`; new shear corrections, `make_smeared`, a posteriori transverse shear); derivation scripts in `theory/`. |
 | 0.10.0 | New Tria3DSG element with discrete shear gap transverse shear, the recommended triangle; physics-based drilling stiffness (Allman, Hughes-Brezzi) as the default, with the K6ROT penalty kept through `drilling_model`; fixed lost K6ROT coefficient; new `pyfe3d.solver` module for linear buckling and natural frequencies; speedup with Cython and compiler flags. |
 | 0.9.0 | Shear correction factors as per Rohwer and Vlachoutsis. |
