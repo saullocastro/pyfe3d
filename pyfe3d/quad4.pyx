@@ -202,44 +202,77 @@ trapezoidal and parallelogram meshes instead of 377, 110 and 138, against
 The geometric stiffness matrix of :meth:`.Quad4.update_KG` and
 :meth:`.Quad4.update_KG_given_stress`, and the geometrically nonlinear terms
 of :meth:`.Quad4.update_KCNL` and of the internal forces, integrate the
-membrane stress resultants with two-by-two quadrature and take the slopes
-`w_{,x}` and `w_{,y}` at the centroid, for `h/\ell < 1` and for `h/\ell \ge
-1` and for both values of ``shear_model``. The hourglass pattern of `w` has
-no gradient at the centroid, so it has no geometric stiffness, consistently
-with the one-point transverse shear of the elements with `h/\ell < 1` and
-``shear_model = 0``, which give it no stiffness either; with the default
-``shear_model = 1`` it has the transverse shear stiffness of the MITC4
-strains.
+membrane stress resultants with two-by-two quadrature. The slopes `w_{,x}`
+and `w_{,y}` depend on ``shear_model``:
 
-With the slopes at the two-by-two points, as up to version 0.11, the pattern
-had the geometric stiffness of the full quadrature. In a supported plate,
-the pattern modulated by a smooth envelope then costs only the transverse
-shear energy of the envelope, independent of the element size `\ell`,
-whereas its geometric work grows as `1/\ell^2`, and a linear buckling
-analysis could return a spurious mode of `w` alternating in sign from node
-to node, with nearly zero rotations, below the physical buckling load, once
-the transverse shear stiffness is low compared with the bending stiffness,
-as in a sandwich plate. On a hard simply supported square plate with `b/h =
-100` under uniaxial compression and `A_{44}`, `A_{55}` reduced to 1/100 of
-the isotropic value, the lowest buckling load was 49 % below the solution
-of Seide and Stowell [10]_ with 16 by 16 elements and 87 % below with 32 by
-32; with 1/1000, 71 % below with 8 by 8 elements. With the slopes at the
-centroid these cases converge to that solution from above, with the error
-decreasing as `\ell^2`: +0.81 %, +0.20 % and +2.19 % with ``shear_model =
-0``, +0.83 %, +0.21 % and +2.70 % with the default, see
-``tests/test_quad4_geometric_hourglass.py``. The elements with `h/\ell \ge
-1` were not affected, since the assumed strains of the MITC4 element give
-the pattern its transverse shear stiffness, but they take the slopes at the
-centroid as well, so that the geometric stiffness does not depend on that
-gate nor on ``shear_model``, and ``update_KG_given_stress`` does not need
-the thickness.
+- with the default ``shear_model = 1``, the MITC4 transverse shear, they
+  are taken at the two-by-two points, the full quadrature of the geometric
+  stiffness, as up to version 0.11;
+- with ``shear_model = 0`` they are taken at the centroid, for `h/\ell < 1`
+  and for `h/\ell \ge 1`.
 
-The geometric stiffness of a smooth mode is then integrated less accurately
-on coarse meshes, whose buckling loads increase: a plate with 20 by 6
-elements, 5 elements per half-wave along the load, gives 4.7 % instead of
-2.2 % above the Kirchhoff solution, 1.1 % instead of 0.5 % with 40 by 12
-elements; the square plate with `b/h = 10` and 12 by 12 elements, `h/\ell =
-1.2`, gives 1.49 % instead of 0.91 % above the Mindlin solution.
+The attribute ``centroid_slopes = 1`` of :class:`.Quad4` takes them at the
+centroid with both values; :class:`pyfe3d.corotational.CorotationalShell`
+sets it with ``local='von_karman'``, see below. :class:`.Quad4R`, whose
+transverse shear and bending are integrated at the centroid, takes them at
+the centroid as well, see :meth:`.Quad4R.update_KG`. The same slopes enter
+``update_KG``, ``update_KCNL`` and the nonlinear internal forces, such that
+``KC0 + KCNL + KG`` remains the exact Jacobian of the internal forces with
+every rule.
+
+The rule depends on ``shear_model`` because of the hourglass pattern of
+`w`, `w = \xi \eta` with zero rotations. The one-point transverse shear of
+``shear_model = 0`` gives it no stiffness in ``KC0``, see the zero-energy
+modes above. With the slopes at the two-by-two points, as up to version
+0.11, the pattern had the geometric stiffness of the full quadrature. In a
+supported plate, the pattern modulated by a smooth envelope then costs only
+the transverse shear energy of the envelope, independent of the element size
+`\ell`, whereas its geometric work grows as `1/\ell^2`, and a linear
+buckling analysis could return a spurious mode of `w` alternating in sign
+from node to node, with nearly zero rotations, below the physical buckling
+load, once the transverse shear stiffness is low compared with the bending
+stiffness, as in a sandwich plate. On a hard simply supported square plate
+with `b/h = 100` under uniaxial compression and `A_{44}`, `A_{55}` reduced
+to 1/100 of the isotropic value, the lowest buckling load was 49 % below the
+solution of Seide and Stowell [10]_ with 16 by 16 elements and 87 % below
+with 32 by 32; with 1/1000, 71 % below with 8 by 8 elements. At the
+centroid the pattern has no slope and no geometric stiffness, consistently
+with ``KC0``, and these cases converge to that solution from above, with the
+error decreasing as `\ell^2`: +0.81 %, +0.20 % and +2.19 % with ``shear_model
+= 0``. The MITC4 strains of the default give the pattern its transverse
+shear stiffness at every element size, and with the slopes at the
+two-by-two points no spurious mode remains: +0.51 %, +0.13 % and +1.36 %,
+against +0.83 %, +0.21 % and +2.70 % with ``centroid_slopes = 1``, see
+``tests/test_quad4_geometric_hourglass.py`` (measured on 2026-11-01). With
+``shear_model = 0`` the elements with `h/\ell \ge 1`, which have the MITC4
+strains, take the slopes at the centroid as well, such that the geometric
+stiffness does not depend on that gate and ``update_KG_given_stress`` does
+not need the thickness.
+
+The slopes at the two-by-two points integrate the geometric stiffness of a
+smooth mode more accurately, and the slopes at the centroid give higher
+buckling loads on coarse meshes. Measured on 2026-11-01, above the exact
+solutions, with the default, ``centroid_slopes = 1`` and ``shear_model =
+0``: a simply supported plate with 20 by 6 elements, 5 elements per
+half-wave along the load, +4.31 %, +6.81 % and +4.67 % above the Kirchhoff
+solution, and +1.03 %, +1.61 % and +1.09 % with 40 by 12 elements, see
+``tests/test_solver.py``; the square plate with `b/h = 10` and 12 by 12
+elements, `h/\ell = 1.2`, +0.91 %, +1.49 % and +1.49 % above the Mindlin
+solution, see ``tests/test_quad4_geometric_hourglass.py``. The laminated
+cylinder of ``tests/test_quad4_linear_buckling_cylinder_displ.py``, with
+440 elements, gives -494.8 kN with the default and -590.0 kN with
+``centroid_slopes = 1``, both converging to about -279 kN.
+
+In the co-rotational frame of
+:class:`pyfe3d.corotational.CorotationalShell` the transverse translations
+of a warped element are the hourglass pattern `\pm \bar{z}` of its warp,
+not a deflection, and the wrapper with ``local='von_karman'`` sets
+``centroid_slopes = 1`` while it calls the element, and restores it: the
+von Kármán terms then vanish there, and
+``kinematics='corotational_von_karman'`` gives the internal force and the
+tangent of ``'corotational'`` to round-off, for both values of
+``shear_model``, see ``tests/test_corotational_core.py``. A Quad4 used
+outside the wrapper keeps its own rule.
 
 Hughes et al. [1]_ note that the transverse shear stiffness is of the order
 of `(\ell/h)^2` times the bending stiffness, such that, with a finite word
@@ -1408,7 +1441,22 @@ cdef class Quad4:
         with its two zero-energy modes, and the MITC4 strains otherwise:
         setting ``elem.shear_model = 0`` before calling :meth:`.update_KC0`
         is the way to reproduce the results of thin elements obtained before
-        0.12.0.
+        0.12.0. It also selects where the slopes of `w` of the geometric
+        terms are taken, see ``centroid_slopes``.
+    centroid_slopes, : int
+        Slopes `w_{,x}` and `w_{,y}` of the geometric stiffness of
+        :meth:`.update_KG` and :meth:`.update_KG_given_stress`, of
+        :meth:`.update_KCNL` and of the von Kármán terms of the internal
+        forces, see the Notes of :meth:`.update_KG`. The default ``0`` takes
+        them at the two-by-two integration points with ``shear_model != 0``
+        and at the centroid with ``shear_model = 0``; any other value takes
+        them at the centroid with every ``shear_model``, as
+        :class:`.Quad4R` does. :class:`pyfe3d.corotational.CorotationalShell`
+        with ``local='von_karman'`` sets it to ``1`` while it calls the
+        element, and restores it; with ``kinematics='von_karman'`` of
+        :class:`pyfe3d.corotational.CorotationalModel`, and in any other
+        use, the element keeps its own rule, since the slopes of `w` are
+        then those of real deflections.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Entries `T_{ij}` of the transformation matrix `\boldsymbol{T}_{3\times 3}` from
         element to global coordinates, whose columns are the element axes.
@@ -1537,6 +1585,7 @@ cdef class Quad4:
     cdef public double gamma_rz
     cdef public int warp_offsets
     cdef public int shear_model
+    cdef public int centroid_slopes
     cdef public double r11, r12, r13, r21, r22, r23, r31, r32, r33
     cdef public double m11, m12, m21, m22
     cdef public Quad4Probe probe
@@ -1566,6 +1615,7 @@ cdef class Quad4:
         self.gamma_rz = -1. # NOTE negative means "use A66"
         self.warp_offsets = 1 # NOTE rigid offsets of warped elements
         self.shear_model = 1 # NOTE MITC4 transverse shear, the default
+        self.centroid_slopes = 0 # NOTE slopes of w by shear_model, see update_KG
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.
         self.r31 = self.r32 = self.r33 = 0.
@@ -1573,6 +1623,14 @@ cdef class Quad4:
         self.m12 = 0.
         self.m21 = 0.
         self.m22 = 1.
+
+
+    cdef inline int _slopes_at_centroid(Quad4 self) noexcept nogil:
+        r"""Whether the slopes of `w` of the geometric terms are taken at the
+        centroid, with ``shear_model = 0`` or ``centroid_slopes != 0``, or at
+        the two-by-two integration points, see the Notes of
+        :meth:`.update_KG`"""
+        return self.shear_model == 0 or self.centroid_slopes != 0
 
 
     cpdef void update_rotation_matrix(Quad4 self, double [::1] x,
@@ -2761,7 +2819,8 @@ cdef class Quad4:
         - ``BLkxx, BLkyy, BLkxy``: curvatures `\kappa_{xx}, \kappa_{yy},
           \kappa_{xy}`
         - ``Sw_x, Sw_y``: `\boldsymbol{G}_x` and `\boldsymbol{G}_y`, the rows of `w_{,x}` and `w_{,y}`,
-          at the centroid for every ``xi, eta``
+          at ``xi, eta`` with ``shear_model != 0``, at the centroid for every
+          ``xi, eta`` with ``shear_model = 0`` or ``centroid_slopes != 0``
 
         Returns
         -------
@@ -2773,8 +2832,8 @@ cdef class Quad4:
         The rows are the ones of :meth:`.Quad4Probe.update_BL` for the strains
         of the Notes of :mod:`pyfe3d.quad4`, and ``Sw_x``, ``Sw_y`` hold the
         Cartesian derivatives `S_{i,x}`, `S_{i,y}` of the bilinear shape
-        functions at the `w` columns, evaluated at the centroid, see the
-        Notes of :meth:`.update_KG`. For ``drilling_model = 0`` the `r_z`
+        functions at the `w` columns, evaluated at ``xi, eta`` or at the
+        centroid, see the Notes of :meth:`.update_KG`. For ``drilling_model = 0`` the `r_z`
         columns of the membrane rows carry the edge modes of
         :func:`allman_enrichment`, which keeps the nonlinear tangent of
         :meth:`.update_KCNL` consistent with the enriched ``KC0``; the
@@ -2894,9 +2953,21 @@ cdef class Quad4:
         BLkxy[16] = S3_y
         BLkxy[22] = S4_y
 
-        # NOTE the slopes of w are taken at the centroid at every integration
-        #      point, see the Notes of update_KG
-        _centroid_slopes(x1, x2, x3, x4, y1, y2, y3, y4, Scx, Scy)
+        # NOTE the slopes of w are taken at the integration point with the
+        #      MITC4 transverse shear, shear_model != 0, and at the centroid
+        #      with shear_model = 0 or centroid_slopes != 0, see the Notes of
+        #      update_KG
+        if self._slopes_at_centroid():
+            _centroid_slopes(x1, x2, x3, x4, y1, y2, y3, y4, Scx, Scy)
+        else:
+            Scx[0] = S1_x
+            Scx[1] = S2_x
+            Scx[2] = S3_x
+            Scx[3] = S4_x
+            Scy[0] = S1_y
+            Scy[1] = S2_y
+            Scy[2] = S3_y
+            Scy[3] = S4_y
 
         # w,x
         Sw_x[2] = Scx[0]
@@ -2931,7 +3002,8 @@ cdef class Quad4:
         The attribute ``KCNLve`` of the :class:`.Quad4Probe` is updated with
         KCNL in element coordinates, stored row by row and evaluated at the
         displacements ``ue`` of the probe, with a two-point Gauss-Legendre
-        quadrature in each direction and the slopes of `w` at the centroid.
+        quadrature in each direction and the slopes of `w` of
+        :meth:`.update_KG`, at the integration points or at the centroid.
         See :meth:`.update_KCNL`.
 
         Notes
@@ -3075,7 +3147,8 @@ cdef class Quad4:
         The attribute ``finte`` of the :class:`.Quad4Probe` receives the terms
         of the nonlinear part of the von Kármán membrane strains, evaluated at
         the displacements ``ue`` of the probe with a two-point Gauss-Legendre
-        quadrature in each direction and the slopes of `w` at the centroid.
+        quadrature in each direction and the slopes of `w` of
+        :meth:`.update_KG`, at the integration points or at the centroid.
         See :meth:`.update_KCNL`.
 
         Notes
@@ -3312,9 +3385,12 @@ cdef class Quad4:
         The linear part of the internal forces, ``KC0*u``, keeps the
         quadratures of KC0, whereas the nonlinear terms of
         :meth:`._update_probe_finte_nonlinear`, KCNL and KG use the
-        two-by-two quadrature, with the slopes of `w` at the centroid, see
+        two-by-two quadrature, with the same slopes of `w`, at the two-by-two
+        points with ``shear_model != 0`` and at the centroid with
+        ``shear_model = 0`` or ``centroid_slopes != 0``, see
         :meth:`.update_KG`; each part of the strain energy is differentiated
-        with its own quadrature, so the Jacobian remains exact.
+        with its own quadrature, so the Jacobian remains exact for every
+        rule of the slopes.
         The element matrix is computed by :meth:`._update_probe_KCNLve` and
         rotated to global coordinates as in :meth:`.update_KC0`.
 
@@ -3338,11 +3414,17 @@ cdef class Quad4:
         \boldsymbol{\theta}_a \times (\boldsymbol{\theta}_a \times
         \boldsymbol{r}_a)`, change the strains by terms of order
         `(\tilde{z}/\ell) \epsilon^3`, beyond those kept (derived here).
-        Measured on the twisted beam of ``tests/test_quad_warp_offsets.py``
-        with 12 by 2 elements and rotations up to 0.3, the second-order link
-        gives tip displacements 4 to 7 % smaller than the first-order one,
-        whose results with Quad4 are within 0.6 % of the converged von
-        Kármán solution. The eccentricity
+        Measured on 2026-11-01 on the twisted beam of
+        ``tests/test_quad_warp_offsets.py`` with 12 by 2 Quad4 elements, the
+        default ``shear_model = 1`` and ``centroid_slopes = 0``, and tip
+        loads of 500 along `z` and 1100 along `y`, rotations up to 0.32, the
+        second-order link, evaluated with a numpy prototype that reproduces
+        the first-order link of the element to round-off, gives tip
+        displacements 6.7 and 7.2 % smaller than the first-order one, whose
+        results are 2.8 and 3.1 % below the von Kármán solution of a 96 by
+        16 mesh of the same element, the discretisation error of the coarse
+        mesh (7.3 and 7.1 % smaller, and 2.3 % below, with
+        ``centroid_slopes = 1``). The eccentricity
         term `\boldsymbol{K}_E` that :meth:`.update_KG` adds for the linear
         buckling analysis, the second derivative of the second-order terms,
         is therefore subtracted here, with the same nodal forces, those of
@@ -3459,8 +3541,10 @@ cdef class Quad4:
         r"""Update sparse vectors for geometric stiffness matrix KG
 
         The stress resultants are integrated with a two-point Gauss-Legendre
-        quadrature in each direction and the slopes of `w` are taken at the
-        centroid, see the Notes.
+        quadrature in each direction, and the slopes of `w` are taken at the
+        same points with ``shear_model != 0``, the default, and at the
+        centroid with ``shear_model = 0`` or ``centroid_slopes != 0``, see
+        the Notes.
 
         Before this function is called, the probe :class:`.Quad4Probe`
         attribute of the :class:`.Quad4` object must be updated using
@@ -3509,7 +3593,8 @@ cdef class Quad4:
             + \boldsymbol{G}_y^\top \boldsymbol{G}_x) \right)
 
         with `\boldsymbol{G}_x` and `\boldsymbol{G}_y` the rows of `w_{,x}`
-        and `w_{,y}` at the centroid, see :meth:`._update_probe_BL_G`, `w`
+        and `w_{,y}`, at the integration point or at the centroid, see
+        :meth:`._update_probe_BL_G`, `w`
         being the displacement along the
         element normal, i.e. the combination of the global translations with
         ``r13, r23, r33``, and `\{N_{xx}, N_{yy}, N_{xy}\}^\top = \boldsymbol{A} \boldsymbol{\epsilon}
@@ -3522,35 +3607,39 @@ cdef class Quad4:
         gives the linear buckling problem for the load multiplier ``lambda``
         of the pre-buckling state.
 
-        The slopes are taken at the centroid, the single integration point of
-        the transverse shear of the elements with `h/\ell < 1` and
-        ``shear_model = 0``, whereas the stress resultants are integrated
-        with two points in each direction. The hourglass pattern of `w`, `w
-        = \xi \eta`, has no gradient at the centroid, so it has no geometric
-        stiffness, just as it has no stiffness in KC0 when `h/\ell < 1` and
-        ``shear_model = 0``, see the zero-energy modes in the Notes of
-        :mod:`pyfe3d.quad4`. With the slopes at the two-point
-        quadrature points, as before version 0.12.0, that pattern had the
-        geometric stiffness of the full quadrature, and a linear buckling
-        analysis could return a spurious mode of `w` alternating in sign
-        from node to node, with nearly zero rotations, below the physical
-        buckling load. On a hard simply supported square plate with `b/h =
-        100` under uniaxial compression and the transverse shear stiffness
-        reduced to 1/100 of the isotropic one, as in a sandwich, the lowest
-        buckling load was 49 % below the solution of Seide and Stowell (1950)
-        with 16 by 16 elements and 87 % below with 32 by 32; with 1/1000, 71 %
-        below with 8 by 8 elements. The thin elements of the isotropic plate
-        were protected only because the transverse shear energy of the smooth
-        envelope of that pattern exceeded its geometric work. With the slopes
-        at the centroid these cases converge to that solution, +0.81, +0.20
-        and +2.19 % with ``shear_model = 0``, +0.83, +0.21 and +2.70 % with
-        the default, and the buckling loads of coarse meshes increase, e.g.
-        4.7 % instead of 2.2 % above the Kirchhoff solution for a plate with
-        5 elements per half-wave along the load. The elements with `h/\ell
-        \ge 1`, whose assumed transverse shear strains resist the pattern,
-        take the slopes at the centroid as well, such that KG does not depend
-        on the gate `h/\ell = 1` nor on ``shear_model``. See
-        ``tests/test_quad4_geometric_hourglass.py``.
+        The slopes are taken at the two-by-two points with ``shear_model !=
+        0``, the default, and at the centroid with ``shear_model = 0``, for
+        every `h/\ell`, or with ``centroid_slopes != 0``, see the Notes of
+        :mod:`pyfe3d.quad4`. The rule depends on ``shear_model`` because of
+        the hourglass pattern of `w`, `w = \xi \eta`, which has no gradient
+        at the centroid: the one-point transverse shear of the elements with
+        `h/\ell < 1` and ``shear_model = 0`` gives it no stiffness in KC0,
+        and with the slopes at the two-by-two points, as up to version 0.11,
+        it had the geometric stiffness of the full quadrature, and a linear
+        buckling analysis could return a spurious mode of `w` alternating in
+        sign from node to node, with nearly zero rotations, below the
+        physical buckling load. On a hard simply supported square plate with
+        `b/h = 100` under uniaxial compression and the transverse shear
+        stiffness reduced to 1/100 of the isotropic one, as in a sandwich,
+        the lowest buckling load was 49 % below the solution of Seide and
+        Stowell (1950) with 16 by 16 elements and 87 % below with 32 by 32;
+        with 1/1000, 71 % below with 8 by 8 elements. With the slopes at the
+        centroid these cases converge to that solution, +0.81, +0.20 and
+        +2.19 % with ``shear_model = 0``. The assumed transverse shear
+        strains of the MITC4 element of the default give the pattern its
+        transverse shear stiffness, and with the slopes at the two-by-two
+        points no spurious mode remains: +0.51, +0.13 and +1.36 %, against
+        +0.83, +0.21 and +2.70 % with ``centroid_slopes = 1``. The slopes at
+        the two-by-two points integrate the geometric stiffness of a smooth
+        mode more accurately: a plate with 5 elements per half-wave along the
+        load buckles 4.31 % above the Kirchhoff solution with them, 6.81 %
+        with ``centroid_slopes = 1`` and 4.67 % with ``shear_model = 0``
+        (measured on 2026-11-01). See
+        ``tests/test_quad4_geometric_hourglass.py``. :class:`.Quad4R` takes
+        the slopes at the centroid. In the co-rotational frame of
+        :class:`pyfe3d.corotational.CorotationalShell` with
+        ``local='von_karman'`` they are taken at the centroid, see the Notes
+        of that class.
 
         Warped elements, ``warp_offsets = 1``, see the Notes of
         :class:`.Quad4`: the stress resultants are those of the displacements
@@ -3609,6 +3698,7 @@ cdef class Quad4:
         cdef double S1_x, S2_x, S3_x, S4_x, S1_y, S2_y, S3_y, S4_y
         cdef double Scx[4]
         cdef double Scy[4]
+        cdef int at_centroid
         cdef double Nxx, Nyy, Nxy
 
         # NOTE rigid offsets: the flat element has the displacements J ue
@@ -4127,8 +4217,10 @@ cdef class Quad4:
                     KGc[k] = 3 + jw + c4
                     k += 1
 
-            # NOTE the slopes of w are taken at the centroid, see the Notes of
-            #      update_KG
+            # NOTE the slopes of w are taken at the integration points with
+            #      shear_model != 0 and at the centroid with shear_model = 0
+            #      or centroid_slopes != 0, see the Notes of update_KG
+            at_centroid = self._slopes_at_centroid()
             _centroid_slopes(x1, x2, x3, x4, y1, y2, y3, y4, Scx, Scy)
 
             # NOTE two-point Gauss-Legendre quadrature for the stress resultants
@@ -4187,15 +4279,18 @@ cdef class Quad4:
                         Nyy += A12*dexx + A22*deyy + A26*dgxy
                         Nxy += A16*dexx + A26*deyy + A66*dgxy
 
-                    # NOTE slopes of w at the centroid
-                    S1_x = Scx[0]
-                    S2_x = Scx[1]
-                    S3_x = Scx[2]
-                    S4_x = Scx[3]
-                    S1_y = Scy[0]
-                    S2_y = Scy[1]
-                    S3_y = Scy[2]
-                    S4_y = Scy[3]
+                    # NOTE slopes of w at the centroid with shear_model = 0
+                    #      or centroid_slopes != 0; otherwise those of the
+                    #      integration point above
+                    if at_centroid:
+                        S1_x = Scx[0]
+                        S2_x = Scx[1]
+                        S3_x = Scx[2]
+                        S4_x = Scx[3]
+                        S1_y = Scy[0]
+                        S2_y = Scy[1]
+                        S3_y = Scy[2]
+                        S4_y = Scy[3]
 
                     k = self.init_k_KG
                     KGv[k] += r13**2*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))
@@ -4513,8 +4608,9 @@ cdef class Quad4:
         .. note:: A constant stress state is assumed within the element,
                   according to the given values of `N_{xx}, N_{yy}, N_{xy}`.
 
-        The slopes of `w` are taken at the centroid, see the Notes of
-        :meth:`.update_KG`.
+        The slopes of `w` are taken at the two-by-two points with
+        ``shear_model != 0`` and at the centroid with ``shear_model = 0`` or
+        ``centroid_slopes != 0``, see the Notes of :meth:`.update_KG`.
 
         Before this function is called, the probe :class:`.Quad4Probe`
         attribute of the :class:`.Quad4` object must be updated using
@@ -4550,7 +4646,8 @@ cdef class Quad4:
         stress resultants ``Nxx, Nyy, Nxy`` instead of the ones computed from
         the displacements of the probe. With constant stress resultants and
         the slopes at the centroid, it is the element area times the
-        integrand at the centroid.
+        integrand at the centroid; with the slopes at the two-by-two points,
+        the two-by-two quadrature of the integrand.
 
         Warped elements, ``warp_offsets = 1``, see the Notes of
         :class:`.Quad4`: the stress resultants are those of the displacements
@@ -4599,6 +4696,7 @@ cdef class Quad4:
         cdef double S1_x, S2_x, S3_x, S4_x, S1_y, S2_y, S3_y, S4_y
         cdef double Scx[4]
         cdef double Scy[4]
+        cdef int at_centroid
 
         with nogil:
             # local to global transformation
@@ -5082,8 +5180,10 @@ cdef class Quad4:
                     KGc[k] = 3 + jw + c4
                     k += 1
 
-            # NOTE the slopes of w are taken at the centroid, see the Notes of
-            #      update_KG
+            # NOTE the slopes of w are taken at the integration points with
+            #      shear_model != 0 and at the centroid with shear_model = 0
+            #      or centroid_slopes != 0, see the Notes of update_KG
+            at_centroid = self._slopes_at_centroid()
             _centroid_slopes(x1, x2, x3, x4, y1, y2, y3, y4, Scx, Scy)
 
             # NOTE two-point Gauss-Legendre quadrature for the stress resultants
@@ -5118,15 +5218,18 @@ cdef class Quad4:
                     S3_y = 0.25*j21*(eta + 1) + 0.25*j22*(xi + 1)
                     S4_y = -0.25*eta*j21 - 0.25*j21 - 0.25*j22*xi + 0.25*j22
 
-                    # NOTE slopes of w at the centroid
-                    S1_x = Scx[0]
-                    S2_x = Scx[1]
-                    S3_x = Scx[2]
-                    S4_x = Scx[3]
-                    S1_y = Scy[0]
-                    S2_y = Scy[1]
-                    S3_y = Scy[2]
-                    S4_y = Scy[3]
+                    # NOTE slopes of w at the centroid with shear_model = 0
+                    #      or centroid_slopes != 0; otherwise those of the
+                    #      integration point above
+                    if at_centroid:
+                        S1_x = Scx[0]
+                        S2_x = Scx[1]
+                        S3_x = Scx[2]
+                        S4_x = Scx[3]
+                        S1_y = Scy[0]
+                        S2_y = Scy[1]
+                        S3_y = Scy[2]
+                        S4_y = Scy[3]
 
                     k = self.init_k_KG
                     KGv[k] += r13**2*(S1_x*(Nxx*S1_x*detJ*wij + Nxy*S1_y*detJ*wij) + S1_y*(Nxy*S1_x*detJ*wij + Nyy*S1_y*detJ*wij))

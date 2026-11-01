@@ -336,40 +336,67 @@
 
 - The slopes of `w` in the geometric stiffness `KG`, of `update_KG` and
   `update_KG_given_stress`, and in the geometrically nonlinear terms of
-  `update_KCNL` and of the internal forces are taken at the centroid,
-  instead of at the two-by-two quadrature points, as for `Quad4R`; the
-  stress resultants keep the two-by-two quadrature. The elements with
-  `h/l < 1` integrate the transverse shear at the centroid, so the
-  hourglass pattern of `w`, with zero rotations, has no stiffness in `KC0`,
-  and it now has no geometric stiffness either. With the slopes at the
-  two-by-two points it had the geometric stiffness of the full quadrature,
-  and a linear buckling analysis could return a spurious mode of `w`
-  alternating in sign from node to node, with nearly zero rotations, below
-  the physical buckling load, once the transverse shear stiffness is low
-  compared with the bending stiffness: on a hard simply supported square
-  plate with `b/h = 100` and the transverse shear stiffness reduced to
-  1/100, as in a sandwich, 49.2 per cent below the solution of Seide and
-  Stowell (1950), NACA Report 967, Eq. (1), with 16 x 16 elements, `h/l =
-  0.16`, and 87.1 per cent below with 32 x 32; with 1/1000, 71.4, 92.4 and
-  98.1 per cent below with 8 x 8, 16 x 16 and 32 x 32 elements. These
-  cases now converge to that solution from above, as the square of the
-  element size: +0.81, +0.20, +2.19, +0.54 and +0.13 per cent. The
-  elements with `h/l >= 1`, whose MITC4 transverse shear resists the
-  pattern, did not have the spurious mode; they take the slopes at the
-  centroid as well, such that `KG` does not depend on the thickness. The
-  buckling loads of coarse meshes increase: from 2.2 to 4.7 per cent above
-  the Kirchhoff solution for the plate with 20 x 6 elements of
-  `tests/test_quad4_linear_buckling_plate_rotated.py`, from 0.5 to 1.1 per
-  cent with 40 x 12 elements; from 2.0 to 3.3 per cent above the Mindlin
-  solution for the plate with `b/h = 10` and 8 x 8 elements, `h/l = 0.8`,
-  of the entry above, and from 0.91 to 1.49 per cent with 12 x 12
-  elements, `h/l = 1.2`. The laminated cylinder Z11 of Castro et al.
-  (2014) under an end shortening, whose buckling load fell under mesh
-  refinement through such a mode, to -81.6 kN with 160 elements around the
-  circumference, now converges, -297.0 kN. The torsional buckling loads are
-  unchanged: with a pure shear prestress the two-by-two and the centroid
-  `KG` coincide on rectangles. `KC0 + KCNL + KG` remains the exact Jacobian
-  of the internal forces.
+  `update_KCNL` and of the internal forces depend on `shear_model`; the
+  stress resultants keep the two-by-two quadrature. With the default
+  `shear_model = 1`, the MITC4 transverse shear, they are taken at the
+  two-by-two points, as up to 0.11. With `shear_model = 0` they are taken
+  at the centroid, for every `h/l`, as in `Quad4R`. New attribute
+  `centroid_slopes` of `Quad4`, default `0`: any other value takes them at
+  the centroid with both values of `shear_model`. `KC0 + KCNL + KG`
+  remains the exact Jacobian of the internal forces with every rule.
+- Why. The one-point transverse shear of `shear_model = 0` gives the
+  hourglass pattern of `w`, with zero rotations, no stiffness in `KC0`.
+  With the slopes at the two-by-two points, as up to 0.11, it had the
+  geometric stiffness of the full quadrature, and a linear buckling
+  analysis could return a spurious mode of `w` alternating in sign from
+  node to node, with nearly zero rotations, below the physical buckling
+  load, once the transverse shear stiffness is low compared with the
+  bending stiffness: on a hard simply supported square plate with `b/h =
+  100` and the transverse shear stiffness reduced to 1/100, as in a
+  sandwich, 49.2 per cent below the solution of Seide and Stowell (1950),
+  NACA Report 967, Eq. (1), with 16 x 16 elements, `h/l = 0.16`, and 87.1
+  per cent below with 32 x 32; with 1/1000, 71.4, 92.4 and 98.1 per cent
+  below with 8 x 8, 16 x 16 and 32 x 32 elements. With `shear_model = 0`
+  the pattern has no slope at the centroid, and these cases converge to
+  that solution from above, as the square of the element size: +0.81,
+  +0.20, +2.19, +0.54 and +0.13 per cent. The MITC4 strains of the default
+  give the pattern its transverse shear stiffness, and with the slopes at
+  the two-by-two points no spurious mode remains: +0.51, +0.13, +1.36,
+  +0.34 and +0.08 per cent, against +0.83, +0.21, +2.70, +0.66 and +0.17
+  with `centroid_slopes = 1`, see `tests/test_quad4_geometric_hourglass.py`.
+- Accuracy, measured on 2026-11-01, default against `centroid_slopes = 1`
+  and `shear_model = 0`, above the exact loads: plate with 20 x 6 elements
+  of `tests/test_quad4_linear_buckling_plate_rotated.py`, +4.31, +6.81 and
+  +4.67 per cent, and +1.03, +1.61 and +1.09 with 40 x 12 elements; square
+  plate with `b/h = 10`, +2.06, +3.41 and +3.33 per cent with 8 x 8
+  elements, `h/l = 0.8`, and +0.91, +1.49 and +1.49 with 12 x 12, `h/l =
+  1.2`. Up to 0.11, with the one-point transverse shear and the slopes at
+  the two-by-two points, the 20 x 6 plate gave +2.2 per cent and the 8 x 8
+  plate +2.0 per cent. The laminated cylinder Z11 of Castro et al. (2014)
+  under an end shortening, `tests/test_quad4_linear_buckling_cylinder_displ.py`,
+  with 40, 80, 160 and 240 elements around the circumference: -494.8,
+  -330.0, -291.5 and -284.4 kN with the default, -590.0, -352.0, -297.0
+  and -286.7 kN with the slopes at the centroid, both converging to about
+  -278.8 kN; up to 0.11 the load fell through the spurious mode, to -81.6
+  kN with 160 elements. The torsional buckling loads of
+  `tests/test_quad4_linear_buckling_cylinder_Nxy.py` do not depend on the
+  rule: with a pure shear prestress the two rules give the same `KG` on
+  rectangles.
+- `CorotationalShell` with `local='von_karman'`
+  (`kinematics='corotational_von_karman'`) sets `centroid_slopes = 1` of a
+  `Quad4` while it calls the element, and restores it, as it does for
+  `warp_offsets`: in the co-rotational frame the transverse translations of
+  a warped element are the hourglass pattern of its warp, without slope at
+  the centroid, and `'corotational_von_karman'` gives the internal force
+  and the tangent of `'corotational'` to round-off for both values of
+  `shear_model`; with the slopes at the two-by-two points the element alone
+  would give von Kármán forces of 1.4 per cent of the linear ones there,
+  see `tests/test_corotational_core.py`. With `kinematics='von_karman'`
+  the tip displacements of the non-linear twisted beam with 12 x 2 `Quad4`
+  elements of `tests/test_quad_warp_offsets.py` change from 0.540811 to
+  0.540710 (load along `z`) and from 0.524690 to 0.524468 (along `y`).
+  `Quad4R` takes the slopes at the centroid, and is the element for
+  results with that rule.
 
 ### Behaviour change: rigid offsets of warped `Quad4` and `Quad4R`
 
@@ -402,10 +429,12 @@
   forces again (relative error 7e-12; 6e-5 when only the linear terms used
   the offsets). The second-order link, whose Hessian is the eccentricity
   term, is not used: it is beyond the order of the von Kármán strains,
-  with the ordering of Sanders (1963), and, measured on the twisted beam
-  with 12 x 2 elements and rotations up to 0.3, gives tip displacements 4
-  to 7 per cent smaller than the first-order link, whose `Quad4` results
-  are within 0.6 per cent of the converged von Kármán solution. With the
+  with the ordering of Sanders (1963), and, measured on 2026-11-01 on the
+  twisted beam with 12 x 2 `Quad4` elements and tip loads of 500 along z
+  and 1100 along y, rotations up to 0.32, gives tip displacements 6.7 and
+  7.2 per cent smaller than the first-order link, whose results are 2.8
+  and 3.1 per cent below the von Kármán solution of a 96 x 16 mesh, the
+  discretisation error of the coarse mesh. With the
   linear terms alone on the offsets, Newton-Raphson on that beam diverged
   above a tip load of about 60 along z, against a linear tip displacement
   of 0.33 (measured with a numpy prototype of that state).

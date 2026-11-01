@@ -54,25 +54,29 @@ and its buckling load converged to the Euler load whatever the shear
 stiffness, see the Notes of :class:`.BeamLR`.
 
 The geometric stiffness matrices of :class:`.Quad4` and :class:`.Quad4R`
-integrate the membrane stress resultants with two-by-two quadrature and take
-the slopes of `w` at the centroid of the element, where the constant part of
-the transverse shear of :class:`.Quad4R`, and the transverse shear of the
-thin :class:`.Quad4` elements with ``shear_model = 0``, are sampled. The
-hourglass pattern of `w`, alternating in sign from node to node with zero
-rotations, which the shear sampled there does not resist (:class:`.Quad4R`
-resists it with the stabilisation of its transverse shear, and
-:class:`.Quad4` by default with the assumed strains of the MITC4 element),
-then has no geometric stiffness either; with the slopes at the two-by-two
-points, as up
-to version 0.11, it could give a spurious buckling mode below the physical
-load when the transverse shear stiffness is low compared with the bending
-stiffness, e.g. in sandwich plates, and in thin laminated cylinders under
-axial compression once the mesh is fine: the buckling load of the cylinder
-Z22 of Castro et al. (2014) fell to a sixth of its value with 480 elements
-around the circumference, and now converges to within 0.3 % of the 35.27 kN
-of that paper, Fig. 6(c), see
-``tests/test_quad4_linear_buckling_cylinder_displ.py``. The buckling loads
-of coarse meshes are somewhat higher, see the Notes of
+integrate the membrane stress resultants with two-by-two quadrature.
+:class:`.Quad4R`, and :class:`.Quad4` with ``shear_model = 0`` or
+``centroid_slopes = 1``, take the slopes of `w` at the centroid of the
+element, where the constant part of the transverse shear of
+:class:`.Quad4R`, and the transverse shear of the thin :class:`.Quad4`
+elements with ``shear_model = 0``, are sampled. The hourglass pattern of
+`w`, alternating in sign from node to node with zero rotations, which the
+shear sampled there does not resist, then has no geometric stiffness
+either. With the one-point transverse shear and the slopes at the
+two-by-two points, as up to version 0.11, that pattern could give a
+spurious buckling mode below the physical load when the transverse shear
+stiffness is low compared with the bending stiffness, e.g. in sandwich
+plates, and in thin laminated cylinders under axial compression once the
+mesh is fine: the buckling load of the cylinder Z22 of Castro et al. (2014)
+fell to a sixth of its value with 480 elements around the circumference.
+The default :class:`.Quad4`, whose assumed transverse shear strains of the
+MITC4 element resist the pattern, takes the slopes at the two-by-two
+points, which integrate the geometric stiffness of smooth modes more
+accurately, without that spurious mode: the cylinder Z22 converges to
+within 0.3 % of the 35.27 kN of that paper, Fig. 6(c), with both rules,
+see ``tests/test_quad4_linear_buckling_cylinder_displ.py``, and a plate
+with 5 elements per half-wave buckles 4.3 % above the exact load with the
+default and 6.8 % with the slopes at the centroid. See the Notes of
 :meth:`.Quad4.update_KG` and :meth:`.Quad4R.update_KG`.
 
 For a warped quadrilateral, the rigid offsets of ``warp_offsets = 1``, the

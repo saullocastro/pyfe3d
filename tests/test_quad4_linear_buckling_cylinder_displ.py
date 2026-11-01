@@ -63,35 +63,41 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     static analysis, not uniform near the edges, its kinematics is FSDT,
     lower than CLPT by 2.0 per cent with SS2 in Table 6, and its shear
     correction is not forced to the 5/6 of the paper (Sec. 6, p. 307).
-    Measured with this test, ``Pcr`` in kN, with the wall time on a machine
-    shared with other jobs::
+    Measured with this test, ``Pcr`` in kN, with the default Quad4, the
+    assumed transverse shear strains of the MITC4 element and the slopes of
+    `w` of the geometric stiffness at the two-by-two points (measured on
+    2026-11-01), and with the slopes at the centroid, the one-point
+    transverse shear of ``shear_model = 0`` except in row 1, measured with
+    ``shear_model = 1`` and ``centroid_slopes = 1`` on 2026-10-30, with the
+    wall time of the latter on a machine shared with other jobs::
 
-        refinement  ntheta  elements     Pcr     time
-             1         40       440    -590.0      1 s
-             2         80      1920    -352.0     20 s
-             4        160      8000    -297.0    145 s
-             6        240     18240    -286.7    385 s
-             8        320     32640    -283.2    942 s
-        extrapolated                   -278.9
+        refinement  ntheta  elements   default   centroid    time
+             1         40       440     -494.8     -590.0      1 s
+             2         80      1920     -330.0     -352.0     20 s
+             4        160      8000     -291.5     -297.0    145 s
+             6        240     18240     -284.4     -286.7    385 s
+             8        320     32640               -283.2    942 s
+        extrapolated                    -278.8     -278.9
 
-    Row 1 is that of the default ``shear_model = 1`` of Quad4, the assumed
-    transverse shear strains of the MITC4 element, since 0.12.0 (measured on
-    2026-10-30); the other rows were measured with the one-point transverse
-    shear, ``shear_model = 0``, which gave -590.3 kN for row 1, 0.05 per
-    cent more.
+    With ``shear_model = 0`` row 1 is -590.3 kN, 0.05 per cent more than
+    with ``centroid_slopes = 1``.
 
     The extrapolation fits ``a + c*ntheta**-p`` to the three finest
-    meshes (p = 2.1). The load converges as the square of the element size,
+    meshes, p = 2.0 for the default and p = 2.1 with the slopes at the
+    centroid. The load converges as the square of the element size,
     to 0.4 per cent below the lower end of the CLPT interval, which is where
     an FSDT value is expected, but that is no literature value to assert
     against. The default ``refinement=1`` therefore also compares ``Pcr``
     with the value of the table pre-determined by this same test, with a
-    tolerance for the round-off of other platforms only. Before the
-    geometric stiffness of :class:`.Quad4` took the slopes of `w` at the
-    centroid, in version 0.12.0, the loads with refinements 1, 2 and 4 were
-    -494.9, -330.0 and -81.6 kN: the hourglass pattern of `w` had the
-    geometric stiffness of the two-by-two quadrature and the load of a
-    mesh-scale mode kept falling under refinement.
+    tolerance for the round-off of other platforms only. Up to version
+    0.11, with the one-point transverse shear of the thin elements and the
+    slopes at the two-by-two points, the loads with refinements 1, 2 and 4
+    were -494.9, -330.0 and -81.6 kN: the hourglass pattern of `w` had the
+    geometric stiffness of the two-by-two quadrature and no transverse
+    shear stiffness, and the load of a mesh-scale mode kept falling under
+    refinement. The MITC4 strains of the default give that pattern its
+    transverse shear stiffness, and the same slopes now converge from
+    above.
 
     """
     data = Quad4Data()
@@ -275,7 +281,7 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     #      refinement, see the table of the docstring. The tolerance, rtol =
     #      1e-4, is for the round-off of other platforms and solvers only
     predetermined = {
-        1: -590002.49,
+        1: -494816.25,
     }
     if refinement in predetermined:
         assert np.isclose(Pcr, predetermined[refinement], rtol=1e-4)
@@ -285,8 +291,9 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     #      p. 307), under the uniform membrane prestress of Eq. (13) applied
     #      through update_KG_given_stress, with SS2 of Table 1, over both
     #      quadrilaterals and both drilling models. It is kept because it
-    #      shows what version 0.12.0, in which Quad4 and Quad4R take the
-    #      slopes of w at the centroid in the geometric stiffness, changed.
+    #      shows what version 0.12.0, in which Quad4 with shear_model = 0
+    #      and Quad4R take the slopes of w at the centroid in the geometric
+    #      stiffness and Quad4 has the MITC4 transverse shear, changed.
     #      The reference of the ratios is Pcr = -35858 N, from
     #      bfsccylinder/tests/test_linear_buckling_Z22_constant_stress.py,
     #      which uses a C1 cubic element and CLPT with ny = 60. Table 6 of
@@ -323,6 +330,22 @@ def test_linear_buckling_cylinder(mode=0, plot_pyvista=False, refinement=1):
     #         Quad4R      1      120    4560   -42684.2   1.190   0    1.178  120.0
     #         Quad4R      1      240   18240   -37157.8   1.036   0    0.580    2.0
     #         Quad4R      1      480   73920   -35694.9   0.995   0    0.143    2.0
+    #
+    #      The Quad4 rows of the 0.12.0 columns were measured with
+    #      shear_model = 0 and the slopes of w at the centroid. With the
+    #      default Quad4 of 0.12.0, the MITC4 transverse shear and the slopes
+    #      of w at the two-by-two points, drilling_model = 0, measured on
+    #      2026-11-01 with a script that reproduces the row ntheta = 60 of
+    #      shear_model = 0 to the 0.1 N: -88117.6, -51925.4, -38811.0 and
+    #      -36093.6 N with ntheta = 60, 120, 240 and 480, 2.457, 1.448, 1.082
+    #      and 1.007 of the reference, and -93751.2 N with ntheta = 60 and
+    #      centroid_slopes = 1. No mesh-scale mode appears: the MITC4
+    #      strains give the hourglass pattern of w its transverse shear
+    #      stiffness. From ntheta = 240 the critical modes are axisymmetric,
+    #      whose slopes of w are constant along each element, so that the two
+    #      rules give the same load. Fitting a + c*ntheta**-p to the three
+    #      finest meshes gives -35383 N (p = 2.3), +0.3 per cent of the
+    #      35.27 kN of Fig. 6(c).
     #
     #      Quad4 with drilling_model = 1 at ntheta = 240 has an axisymmetric
     #      mode 0.01 per cent above the n = 1 pair. With 0.12.0 every element

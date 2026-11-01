@@ -31,9 +31,14 @@ geometrically non-linear analyses.
         elements with `h/\ell < 1` was integrated with one point, after
         Hughes et al. (1977), whose two zero-energy modes made a strip one
         element wide too flexible in torsion, see the zero-energy modes in
-        the Notes of :mod:`.quad4`; the geometric stiffness takes the
-        slopes of `w` at the centroid, such that the hourglass mode of `w`
-        is not a spurious buckling mode, see :meth:`.Quad4.update_KG`.
+        the Notes of :mod:`.quad4`. The geometric stiffness takes the
+        slopes of `w` at the two-by-two points by default, and at the
+        centroid with ``shear_model = 0`` or ``centroid_slopes = 1``, such
+        that the hourglass mode of `w` is not a spurious buckling mode with
+        either transverse shear, see :meth:`.Quad4.update_KG`; the default
+        gives the more accurate buckling loads on coarse meshes, e.g. 4.3 %
+        instead of 6.8 % above the exact load of a plate with 5 elements
+        per half-wave.
     * - :class:`.Quad4R`
       - 4
       - One integration point, cheaper than :class:`.Quad4` for the

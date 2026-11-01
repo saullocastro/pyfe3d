@@ -111,11 +111,11 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     0.5 to 0.7 per cent of the semi-analytical prediction for both laminates
     and both senses of the torque, which is the precision with which the
     figure can be read. Quad4R converges to the same values, 16684 and 9136
-    Nm, see tests/test_quad4r_linear_buckling_cylinder_Nxy.py. The
-    geometric stiffness taking the slopes of `w` at the centroid, in
-    version 0.12.0, changed none of these values: under a pure shear
-    prestress it coincides with that of the two-by-two quadrature on
-    rectangles.
+    Nm, see tests/test_quad4r_linear_buckling_cylinder_Nxy.py. The rule
+    of the slopes of `w` in the geometric stiffness, at the two-by-two
+    points by default or at the centroid with ``shear_model = 0`` or
+    ``centroid_slopes = 1``, changes none of these values: under a pure
+    shear prestress the two coincide on rectangles.
 
     The figure is matched within grade A, 2 per cent, of MacNeal, R. H.,
     and Harder, R. L., "A proposed standard set of problems to test finite

@@ -835,10 +835,13 @@ def twisted_tip_nonlinear(name, kinematics, comp, loads, nx=12, ny=2):
 #: tip displacements of the non-linear twisted beam with 12x2 elements, von
 #: Kármán strains with offsets and co-rotational with exact offsets,
 #: pre-determined by test_twisted_beam_von_karman; Quad4 with the default
-#: shear_model = 1 since 0.12.0, (0.541658, 0.539894) and (0.525850,
-#: 0.525783) with the one-point transverse shear of shear_model = 0
-TW_VK = {('Quad4', 2): (0.540811, 0.539268),
-         ('Quad4', 1): (0.524690, 0.525317),
+#: shear_model = 1 since 0.12.0, whose von Kármán terms take the slopes of
+#: w at the two-by-two points, 0.540811 and 0.524690 with the slopes at the
+#: centroid (measured on 2026-11-01); (0.541658, 0.539894) and (0.525850,
+#: 0.525783) with the one-point transverse shear of shear_model = 0 and the
+#: slopes at the centroid
+TW_VK = {('Quad4', 2): (0.540710, 0.539268),
+         ('Quad4', 1): (0.524468, 0.525317),
          ('Quad4R', 2): (0.537782, 0.536316),
          ('Quad4R', 1): (0.489198, 0.490039)}
 

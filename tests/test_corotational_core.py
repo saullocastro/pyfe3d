@@ -1289,6 +1289,64 @@ def test_cr_von_karman_against_linear(name):
         assert df < 1e-12 and dK < 1e-12
 
 
+@pytest.mark.parametrize('shear_model', [0, 1])
+def test_cr_von_karman_quad4_centroid_slopes(shear_model):
+    r"""Quad4 with ``local='von_karman'`` takes the slopes of `w` at the
+    centroid in its CR frame, ``centroid_slopes = 1`` set by the wrapper
+    during its calls of the element only, see the Notes of
+    :class:`CorotationalShell`: for both values of ``shear_model``, the
+    force and the tangent equal those of ``local='linear'`` to round-off at
+    a large deformed configuration of a warped element, and the attribute
+    of the element is left at its value. The element itself, at the
+    deformational displacements ``d`` of the wrapper and with the default
+    ``centroid_slopes = 0``, gives von Kármán terms with ``shear_model =
+    1``, the slopes at the two-by-two points, under which the hourglass
+    pattern of the transverse translations of ``d`` has a slope, and none
+    with ``shear_model = 0`` (derived here)"""
+    base = single('Quad4')
+    elem = base.elem
+    elem.shear_model = shear_model
+    x = base.X0.ravel()
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', RuntimeWarning)
+        wv = CorotationalShell(elem, base.prop, x, local='von_karman')
+        wl = CorotationalShell(elem, base.prop, x, local='linear')
+    assert elem.centroid_slopes == 0
+    rng = np.random.default_rng(34)
+    u = rigid_motion(wv, np.array([0.7, -1.9, 2.4]), np.array([0.3, -2., 1.]))
+    u += 0.05*rng.standard_normal(wv.dofs.size)
+    fv, KMv, KGv = wv.evaluate(u)
+    assert elem.centroid_slopes == 0
+    fl, KMl, KGl = wl.evaluate(u)
+    df = np.abs(fv - fl).max()/np.abs(fl).max()
+    dK = np.abs(KMv + KGv - KMl - KGl).max()/np.abs(KMl + KGl).max()
+    print('shear_model %d: von Kármán minus linear local strains, force '
+          '%.1e, tangent %.1e' % (shear_model, df, dK))
+    assert df < 1e-12 and dK < 1e-12
+    # NOTE the element alone at d, in the CR frame as in the wrapper, but
+    #      with its own rule, centroid_slopes = 0
+    d = wv.kinematics(u)[1]
+    hourglass = np.array([1., -1., 1., -1.])
+    assert abs(hourglass @ d[2::DOF]) > 1e-3*np.abs(d).max()
+
+    def element_alone(e, p):
+        e.centroid_slopes = 0
+        e.update_probe_finte(wv.prop, nonlinear=1)
+        fvk = np.array(p.finte, copy=True)
+        e.update_probe_finte(wv.prop)
+        return fvk, np.array(p.finte, copy=True)
+
+    fvk, flin = wv._in_local_frame(element_alone, ue=d)
+    assert elem.centroid_slopes == 0
+    dvk = np.abs(fvk - flin).max()/np.abs(flin).max()
+    print('shear_model %d: element alone at d, von Kármán minus linear '
+          'force %.1e' % (shear_model, dvk))
+    if shear_model == 0:
+        assert dvk < 1e-12
+    else:
+        assert dvk > 1e-6
+
+
 def test_cr_von_karman_beamc_crisfield():
     r"""BeamC with ``local='von_karman'`` and an infinite transverse shear
     stiffness: the local axial force is that of the length-averaged strain

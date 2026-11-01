@@ -7070,11 +7070,17 @@ cdef class Quad4R:
         \boldsymbol{\theta}_a \times (\boldsymbol{\theta}_a \times
         \boldsymbol{r}_a)`, change the strains by terms of order
         `(\tilde{z}/\ell) \epsilon^3`, beyond those kept (derived here).
-        Measured on the twisted beam of ``tests/test_quad_warp_offsets.py``
-        with 12 by 2 elements and rotations up to 0.3, the second-order link
-        gives tip displacements 4 to 7 % smaller than the first-order one,
-        whose results with Quad4 are within 0.6 % of the converged von
-        Kármán solution. The eccentricity
+        Measured on 2026-11-01 on the twisted beam of
+        ``tests/test_quad_warp_offsets.py`` with 12 by 2 Quad4 elements, the
+        default ``shear_model = 1`` and ``centroid_slopes = 0``, and tip
+        loads of 500 along `z` and 1100 along `y`, rotations up to 0.32, the
+        second-order link, evaluated with a numpy prototype that reproduces
+        the first-order link of the element to round-off, gives tip
+        displacements 6.7 and 7.2 % smaller than the first-order one, whose
+        results are 2.8 and 3.1 % below the von Kármán solution of a 96 by
+        16 mesh of the same element, the discretisation error of the coarse
+        mesh (7.3 and 7.1 % smaller, and 2.3 % below, with
+        ``centroid_slopes = 1``). The eccentricity
         term `\boldsymbol{K}_E` that :meth:`.update_KG` adds for the linear
         buckling analysis, the second derivative of the second-order terms,
         is therefore subtracted here, with the same nodal forces, those of

@@ -1726,10 +1726,10 @@ class _CorotationalElement(object):
         r"""Call ``func(elem, probe)`` with the element in its local frame:
         rotation matrix set to the identity, node positions set to ``0, 6,
         12, 18``, ``init_k_*`` and the ``warp_offsets`` of Quad4 and Quad4R
-        set to zero, probe coordinates set to the base local coordinates
-        and, with ``ue``, probe displacements set to ``ue``; the attributes
-        changed on the element and its probe are restored, also when
-        ``func`` raises"""
+        set to zero, ``centroid_slopes`` of Quad4 set to one, probe
+        coordinates set to the base local coordinates and, with ``ue``,
+        probe displacements set to ``ue``; the attributes changed on the
+        element and its probe are restored, also when ``func`` raises"""
         e = self.elem
         p = e.probe
         # NOTE the Spring has no coordinates, no size and no property
@@ -1745,6 +1745,13 @@ class _CorotationalElement(object):
         saved_c = [getattr(e, 'c%d' % (i + 1)) for i in range(self.nn)]
         saved_r = [getattr(e, n) for n in _R_NAMES]
         saved_k = [getattr(e, n) for n in init_k]
+        # NOTE the von Kármán terms of a Quad4 take the slopes of w at the
+        #      centroid in the CR frame, where the transverse translations
+        #      are the hourglass pattern of the warped element, see the
+        #      Notes of CorotationalShell; set here only, and restored, such
+        #      that the element keeps its own rule outside the wrapper
+        ones = [n for n in ('centroid_slopes',) if hasattr(e, n)]
+        saved_ones = [getattr(e, n) for n in ones]
         saved_xe = np.array(p.xe, copy=True)
         saved_ue = np.array(p.ue, copy=True)
         saved_size = None if is_spring else getattr(e, size_name)
@@ -1753,6 +1760,8 @@ class _CorotationalElement(object):
                 setattr(e, 'c%d' % (i + 1), DOF*i)
             for n in init_k:
                 setattr(e, n, 0)
+            for n in ones:
+                setattr(e, n, 1)
             for n, v in zip(_R_NAMES, _I3.ravel()):
                 setattr(e, n, v)
             if not is_spring:
@@ -1767,6 +1776,8 @@ class _CorotationalElement(object):
             for n, val in zip(_R_NAMES, saved_r):
                 setattr(e, n, val)
             for n, val in zip(init_k, saved_k):
+                setattr(e, n, val)
+            for n, val in zip(ones, saved_ones):
                 setattr(e, n, val)
             p.xe[:] = saved_xe
             p.ue[:] = saved_ue
@@ -2318,13 +2329,24 @@ class CorotationalShell(_CorotationalElement):
     `\boldsymbol{d}` are zero (triangles, whose frame contains the three
     nodes) or the hourglass pattern `\pm \bar{z}` (quadrilaterals, whose
     `x y` plane is parallel to both diagonals and contains the mean of the
-    nodes), and the von Kármán terms of Tria3R, Tria3DSG, Quad4 and Quad4R
-    take the slopes of `w` from the nodal translations only, at the
-    centroid for the quadrilaterals, where the hourglass pattern has no
-    slope. These terms therefore vanish, and ``local='von_karman'`` gives
-    the internal force and the tangent of ``'linear'`` to round-off
-    (derived here, checked in ``tests/test_corotational_core.py``); the
-    same holds for BeamLR, see :class:`CorotationalBeam`.
+    nodes), the warp of the element and not a deflection, and the von
+    Kármán terms of Tria3R, Tria3DSG, Quad4 and Quad4R take the slopes of
+    `w` from the nodal translations only, at the centroid for the
+    quadrilaterals, where the hourglass pattern has no slope. Quad4R takes
+    them there by construction. Quad4 takes them at the two-by-two points
+    with its default ``shear_model = 1``, see the Notes of
+    :meth:`.Quad4.update_KG`, where the pattern has a slope; the wrapper
+    therefore sets the attribute ``centroid_slopes`` of a Quad4 to ``1``
+    while it calls the element, in the same way as it sets
+    ``warp_offsets`` to ``0``, and restores it afterwards, also when the
+    call raises, such that an element used outside the wrapper keeps its
+    own rule. These terms therefore vanish, and ``local='von_karman'``
+    gives the internal force and the tangent of ``'linear'`` to round-off,
+    for both values of ``shear_model`` of Quad4 (derived here, checked in
+    ``tests/test_corotational_core.py``, where the element alone at the
+    same `\boldsymbol{d}` with the slopes at the two-by-two points gives
+    von Kármán forces of 1.4 % of the linear ones); the same holds for
+    BeamLR, see :class:`CorotationalBeam`.
 
     References
     ----------

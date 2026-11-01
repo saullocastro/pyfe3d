@@ -274,7 +274,10 @@ added with one of four kinematics, and provides the four callables of
       - as ``'corotational'``; it differs only for :class:`.BeamC`
 
 The von Kármán terms of the shells and of :class:`.BeamLR` vanish in their
-co-rotational frames, so ``'corotational_von_karman'`` gives the results of
+co-rotational frames, where the transverse translations of a warped
+quadrilateral are the hourglass pattern of its warp and :class:`.Quad4`
+takes the slopes of `w` at the centroid, see :class:`.CorotationalShell`,
+so ``'corotational_von_karman'`` gives the results of
 ``'corotational'`` for them, to round-off; :class:`.Truss` and
 :class:`.Spring`, which have no von Kármán strains, take it as
 ``'corotational'``. For :class:`.BeamC` it adds the higher-order terms of
