@@ -10,6 +10,8 @@ beam*.cpp
 spring*.cpp
 truss*.cpp
 shell*.cpp
+vabs*.cpp
+corotational.cpp
 build
 dist
 .coverage
@@ -30,3 +32,6 @@ temp*.*
 
 shellprop.cpp 
 derive_*.txt 
+
+# Documentation, files written during the build
+doc/source/_generated/

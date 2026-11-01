@@ -14,7 +14,35 @@ Until they are set they follow ``G``: ``G12 = G13 = G`` and ``GJ = G*J``.
    differently, e.g. ``G12``, ``G13`` and ``GJ`` multiply separate terms of
    the torsional rows, where ``G`` was a common factor. On other platforms
    the compiler may contract products and sums differently, hence a
-   tolerance of round-off.
+   tolerance of round-off. The geometric and nonlinear arrays of BeamLR,
+   ``BeamLR_KGv``, ``BeamLR_KCNLv``, ``BeamLR_finte1`` and
+   ``BeamLR_fint1``, which do not depend on the shear moduli, were
+   rewritten with pyfe3d 0.12.0, whose BeamLR takes the slopes `v_{,x}`
+   and `w_{,x}` of these terms from the displacements instead of the
+   rotations. The arrays ``BeamC_KGv``, ``BeamC_KCNLv``, ``BeamC_finte1``
+   and ``BeamC_fint1`` were also rewritten with pyfe3d 0.12.0, whose
+   BeamC averages the nonlinear axial strain over the element and builds
+   its geometric stiffness matrix with the element mean of the axial
+   force; the new arrays agree with a prototype of that formulation to
+   4.4e-16 of their largest entries. Since pyfe3d 0.12.0, BeamC and BeamLR
+   read the stiffness through the sectional stiffness matrix
+   ``BeamProp.C``, here built from the 11 attributes, whose entries, e.g.
+   ``E*Izz`` and ``G12*A``, are formed before they multiply the terms of
+   the shape functions, in the lines regenerated with a symbolic ``C`` by
+   the scripts of ``theory/deriving_equations/beamc`` and
+   ``theory/deriving_equations/beamLR``. The products are grouped
+   differently, and the arrays of the two beams agree with the reference
+   to 2.0e-16 of their largest entries (measured on Windows), i.e. to
+   round-off; on Windows, the mass matrices and the arrays of Truss, which
+   reads only ``C[0, 0]`` and ``C[3, 3]``, are still reproduced bit by
+   bit. The arrays of BeamC, except the lumped mass matrix ``BeamC_M1v``,
+   were rewritten again with pyfe3d 0.12.0, whose BeamC derives its shape
+   functions from the coupled sectional equations when ``C`` has couplings
+   other than ``C[0, 3]``, here those of ``Ay``, ``Az`` and ``Iyz``, see
+   the notes of :class:`pyfe3d.beamc.BeamC`. They changed by up to 1.0e-4
+   (``BeamC_KC0v``) and 4.3e-3 (``BeamC_M0v``) of their largest entries,
+   and agree with an independent NumPy prototype of that formulation to
+   2.2e-14 of their largest entries.
 2. One element of BeamC gives the exact tip deflection of a cantilever with
    shear deformation, ``P*L**3/(3*E*I) + P*L/(G*A)``, Eq. (1.2) of Bathe,
    K. J., Finite Element Procedures, 2nd ed., 2014, Section 1.2, p. 5, in
@@ -128,7 +156,12 @@ def reference_arrays(prop):
     """Inputs and arrays of the three elements
 
     ``tests/data/beam_single_G_reference.npz`` was written with pyfe3d
-    0.10.x as ``np.savez(REFERENCE, **reference_arrays(general_prop()))``.
+    0.10.x as ``np.savez(REFERENCE, **reference_arrays(general_prop()))``;
+    its arrays ``BeamLR_KGv``, ``BeamLR_KCNLv``, ``BeamLR_finte1`` and
+    ``BeamLR_fint1``, and ``BeamC_KGv``, ``BeamC_KCNLv``, ``BeamC_finte1``
+    and ``BeamC_fint1``, were replaced by those of pyfe3d 0.12.0, and then
+    all arrays of BeamC except ``BeamC_M1v``, see the docstring of the
+    module.
     """
     ncoords = np.array([0.1, -0.2, 0.05, 0.9, 0.35, -0.4])
     u = np.array([1.2e-3, -0.7e-3, 2.1e-3, 0.03, -0.02, 0.025,
@@ -151,7 +184,11 @@ def test_single_G_reference(explicit):
     arrays = reference_arrays(prop)
     assert sorted(arrays) == sorted(ref.files)
     for key, value in arrays.items():
-        exact = sys.platform == 'win32' and not key.startswith('BeamLR_fint')
+        # NOTE bit by bit only for the arrays that do not depend on how
+        #      the products of the stiffness entries are grouped, see the
+        #      docstring of the module
+        exact = sys.platform == 'win32' and (key.startswith('Truss_')
+                                             or key.endswith(('_M0v', '_M1v')))
         rtol = 0. if exact else 1e-13
         expected = ref[key]
         atol = rtol*abs(expected).max()

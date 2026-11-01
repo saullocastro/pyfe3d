@@ -2,28 +2,112 @@ import sys
 sys.path.append('..')
 
 import numpy as np
+from scipy.linalg import expm
+from scipy.optimize import brentq
 from scipy.sparse import coo_matrix
 
 from pyfe3d.beamprop import BeamProp
 from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
 from pyfe3d.solver import natural_frequency
 
+
+def euler_bernoulli_cantilever(num):
+    r"""Frequency coefficients ``omega*sqrt(rho*A*L**4/(E*I)) = (beta*L)**2``
+    of an Euler-Bernoulli cantilever, ``beta*L`` being the roots of
+    ``cos(beta*L)*cosh(beta*L) + 1 = 0``, one in each interval
+    ``((k - 1)*pi, k*pi)``"""
+    f = lambda x: np.cos(x)*np.cosh(x) + 1
+    return np.array([brentq(f, (k - 1)*np.pi, k*np.pi, xtol=1e-14)**2
+                     for k in range(1, num + 1)])
+
+
+def timoshenko_cantilever(S, r2, num):
+    r"""Frequency coefficients ``omega*sqrt(rho*A*L**4/(E*I))`` of a
+    Timoshenko cantilever, ``S = kappa*G*A*L**2/(E*I)``, ``r2 = I/(A*L**2)``
+
+    Exact solution of Eqs. (3.241) of Petyt (2010) with the boundary
+    conditions (3.242), written for ``y = [v/L, theta, M*L/(E*I),
+    Q*L**2/(E*I)]``, ``Q = kappa*A*G*(v' - theta)``, as ``y' = C*y`` along
+    ``x/L``: ``y(1) = expm(C)*y(0)`` with ``v = theta = 0`` at the clamp and
+    ``M = Q = 0`` at the free end gives a 2x2 characteristic determinant,
+    whose roots are bracketed by its changes of sign.
+    """
+    def det(Omega):
+        C = np.array([[0, 1, 0, 1/S],
+                      [0, 0, 1, 0],
+                      [0, -Omega**2*r2, 0, -1],
+                      [-Omega**2, 0, 0, 0]])
+        T = expm(C)
+        return T[2, 2]*T[3, 3] - T[2, 3]*T[3, 2]
+    grid = np.linspace(0.1, 1.2*((num - 0.5)*np.pi)**2, 200)
+    vals = [det(Omega) for Omega in grid]
+    roots = [brentq(det, grid[i], grid[i + 1], xtol=1e-13)
+             for i in range(len(grid) - 1) if vals[i]*vals[i + 1] < 0]
+    return np.array(roots[:num])
+
+
 def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
+    r"""First three bending frequencies of a cantilever, in both planes of
+    its square cross section
+
+    The expected frequencies are the exact ones of a Timoshenko beam, with
+    shear deformation and rotary inertia, as BeamC: the frequency
+    coefficients ``omega*sqrt(rho*A*L**4/(E*I))`` of
+    :func:`timoshenko_cantilever`, from Eqs. (3.241) and (3.242) of Petyt,
+    M., Introduction to Finite Element Vibration Analysis, 2nd ed.,
+    Cambridge University Press, 2010, Sec. 3.9, Example 3.10, p. 99. The
+    function reproduces the exact coefficients of Petyt's Table 3.6, p. 100,
+    to 0.008 %.
+
+    The Euler-Bernoulli frequencies, Eq. (3.31) of Petyt (2010), p. 52,
+    ``omega_r = (beta_r*L)**2*sqrt(E*I/(rho*A*L**4))``, are those of the
+    roots ``beta_r*L = 1.87510, 4.69409, 7.85476`` of ``cos(beta*L)*cosh(
+    beta*L) = -1``, Table 5.1, No. 3, p. 201, of Abramovich, H.,
+    Vibration of composite columns and plates, in: Abramovich, H. (ed.),
+    Stability and Vibrations of Thin-Walled Composite Structures, Elsevier,
+    2017, pp. 191-222, https://doi.org/10.1016/B978-0-08-100410-4.00005-3,
+    where the third root is misprinted as 7.85340; the coefficients
+    ``(beta_r*L)**2 = 3.516, 22.034, 61.697`` are the exact solution of
+    Petyt's Table 10.2, p. 303. For this beam, ``L/r = 208``, shear
+    deformation and rotary inertia lower the three frequencies by 0.022,
+    0.154 and 0.366 % with respect to the Euler-Bernoulli ones.
+
+    With 49 elements the frequencies of the consistent mass matrix are at
+    most 0.0005 % above the Timoshenko reference, with 20 elements 0.0044 %,
+    with 10 elements 0.036 %; the frequencies of the lumped mass matrix are
+    0.019, 0.066 and 0.109 % below with 49 elements, 0.11 to 0.65 % below
+    with 20 elements.
+    """
+    L = 3
+    E = 203.e9 # Pa
+    rho = 7.83e3 # kg/m3
+    b = 0.05 # m
+    h = 0.05 # m
+    A = h*b
+    Izz = b*h**3/12
+    Iyy = b**3*h/12
+    scf = 5/6.
+    G = scf*E/2/(1+0.3)
+
+    # NOTE exact coefficients of Table 10.2 of Petyt (2010)
+    coeff_eb = euler_bernoulli_cantilever(3)
+    assert np.allclose(coeff_eb, [3.516, 22.034, 61.697], atol=5e-4)
+    # NOTE exact coefficients of Table 3.6 of Petyt (2010), kappa = 2/3,
+    #      E/G = 8/3, r_z/L = 0.08 and 0.02
+    for rL, coeffs in [(0.08, [3.284, 15.488, 34.301]),
+                       (0.02, [3.500, 21.353, 57.474])]:
+        assert np.allclose(timoshenko_cantilever(2/3/(8/3)/rL**2, rL**2, 3),
+                           coeffs, rtol=1e-4)
+    scale = np.sqrt(E*Izz/(rho*A*L**4))
+    omega123_eb = coeff_eb*scale
+    omega123 = timoshenko_cantilever(G*A*L**2/(E*Izz), Izz/(A*L**2), 3)*scale
+
     for mtype in mtypes:
         print('mtype', mtype)
         n = 50*refinement
-        L = 3
-
-        E = 203.e9 # Pa
-        rho = 7.83e3 # kg/m3
 
         x = np.linspace(0, L, n)
         y = np.ones_like(x)
-        b = 0.05 # m
-        h = 0.05 # m
-        A = h*b
-        Izz = b*h**3/12
-        Iyy = b**3*h/12
 
         ncoords = np.vstack((x, y, np.zeros_like(x))).T
         nids = 1 + np.arange(ncoords.shape[0])
@@ -50,8 +134,7 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         prop = BeamProp()
         prop.A = A
         prop.E = E
-        scf = 5/6.
-        prop.G = scf*E/2/(1+0.3)
+        prop.G = G
         prop.Izz = Izz
         prop.Iyy = Iyy
         prop.intrho = rho*A
@@ -109,14 +192,14 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
         #      frequencies already sorted
         omegan, eigvecsu = natural_frequency(Kuu, Muu, num_eigvalues=num_eigenvalues, tol=1e-4)
 
-        alpha123 = np.array([1.875, 4.694, 7.885])
-        omega123 = alpha123**2*np.sqrt(E*Izz/(rho*A*L**4))
-        print('Theoretical omega123', omega123)
+        print('Euler-Bernoulli omega123', omega123_eb)
+        print('Timoshenko omega123', omega123)
         print('Numerical omega123', omegan)
         print()
-        assert np.allclose(np.repeat(omega123, 2), omegan, rtol=0.015)
+        # NOTE both bending planes, square cross section
+        rtol = {0: 1e-4, 1: 2e-3}[mtype]
+        assert np.allclose(np.repeat(omega123, 2), omegan, rtol=rtol)
 
 
 if __name__ == '__main__':
     test_nat_freq_cantilever(refinement=1)
-

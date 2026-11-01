@@ -18,6 +18,9 @@
 # -- Project information -----------------------------------------------------
 
 # The full version, including alpha/beta/rc tags
+import os
+import runpy
+
 from pyfe3d.version import __version__, __year__
 release = __version__
 
@@ -36,7 +39,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'numpydoc',
     'sphinx.ext.mathjax',
-    #'matplotlib.sphinxext.plot_directive',
+    'matplotlib.sphinxext.plot_directive',
     'nbsphinx',
 ]
 
@@ -54,6 +57,12 @@ default_role = 'math'
 #      entries would require a page for each method
 numpydoc_class_members_toctree = False
 
+# NOTE figures of the plot directive, cross_sectional_analysis.rst
+plot_include_source = True
+plot_html_show_source_link = False
+plot_html_show_formats = False
+plot_formats = [('png', 150)]
+
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -66,3 +75,14 @@ html_theme = 'pydata_sphinx_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 #html_static_path = ['_static']
+
+
+def _write_generated(app):
+    # NOTE the interactive 3D figure of cross_sectional_analysis.rst is
+    #      written by a script into _generated, which is not tracked
+    runpy.run_path(os.path.join(app.srcdir, '_scripts',
+                                'vabs_warping_3d.py'))
+
+
+def setup(app):
+    app.connect('builder-inited', _write_generated)

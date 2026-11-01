@@ -11,10 +11,51 @@ from pyfe3d.solver import natural_frequency
 
 
 def test_nat_freq_plate(plot=False, mode=0):
+    r"""Fundamental frequency of a simply supported plate, ``a = 0.3``,
+    ``b = 0.5``, ``h = 0.01``, with a distorted mesh and the reduced mass
+    matrix
+
+    The inner nodes are moved along ``x`` and ``y`` by independent random
+    fractions, up to 0.25, of the element size, which keeps every element
+    convex, as asserted at its four corners. Before, the coordinates passed
+    to the elements were copied before the distortion, so that the regular
+    mesh was analysed, and the distortion moved the nodes by the same
+    fraction, up to 0.4, along ``x`` and ``y``, which made up to 7 % of the
+    elements re-entrant.
+
+    The reference is the exact solution of Leissa, A. W., Vibration of
+    Plates, NASA SP-160, 1969, Sec. 4.1, p. 44, Eq. (4.20),
+    ``omega = sqrt(D/rho)*((m*pi/a)**2 + (n*pi/b)**2)``, with ``m = n = 1``
+    and Leissa's ``rho`` the mass per unit area, here ``rho*h``.
+
+    The reference is that of the Kirchhoff plate. The edges are hard simply
+    supported, ``w = 0`` and the rotation about the axis of the edge equal to
+    zero, for which the Navier mode is also exact for the Mindlin plate: with
+    ``a/h = 30``, the rotary inertia and ``A44 = A55 = 5/6 G h``, its
+    frequency is 0.28 % below the reference, from the characteristic equation
+    (76) of Wittrick, W. H., Analytical, three-dimensional elasticity
+    solutions to some plate problems, and some observations on Mindlin's
+    plate theory, International Journal of Solids and Structures, 23(4),
+    441-464, 1987, Sec. 3.2, p. 457, and the elements converge to that
+    value. With the soft simple support used before, rotations free, they
+    converge to about 1 % below the reference, through the boundary layer
+    of the Mindlin plate along the edges.
+
+    With 32x40 elements the frequency is 0.10 % below the reference, measured
+    on 2026-10-29 with the physical stabilisation of the bending and of the
+    transverse shear of Belytschko and Leviathan (1994) that Quad4R uses since
+    0.12.0, see :mod:`pyfe3d.quad4r`; up to 0.11, with the hourglass
+    stiffnesses of Brockman (1987), it was 0.43 % above it, and with 8x10,
+    16x20 and 24x30 elements 9.64, 2.16 and 1.00 %, with 40x50 and 48x60
+    elements 0.14 and 0.05 %. With the re-entrant elements of the former
+    distortion, the stiffness matrix of the 40x50 and 48x60 meshes had negative
+    eigenvalues, local membrane modes of single elements, which
+    :func:`pyfe3d.solver.natural_frequency` detected.
+    """
     data = Quad4RData()
     probe = Quad4RProbe()
-    nx = 9
-    ny = 11
+    nx = 33
+    ny = 41
 
     a = 0.3
     b = 0.5
@@ -40,12 +81,15 @@ def test_nat_freq_plate(plot=False, mode=0):
     ncoords_flatten = ncoords.flatten()
 
     inner = np.logical_not(isclose(x, 0) | isclose(x, a) | isclose(y, 0) | isclose(y, b))
+    # NOTE independent random fractions along x and y, up to 0.25 of the
+    #      element size, which keep every element convex
     np.random.seed(20)
-    rdm = (-1 + 2*np.random.rand(x[inner].shape[0]))
-    np.random.seed(20)
-    rdm = (-1 + 2*np.random.rand(y[inner].shape[0]))
-    x[inner] += dx*rdm*0.4
-    y[inner] += dy*rdm*0.4
+    rdmx = -1 + 2*np.random.rand(x[inner].shape[0])
+    rdmy = -1 + 2*np.random.rand(y[inner].shape[0])
+    x[inner] += dx*rdmx*0.25
+    y[inner] += dy*rdmy*0.25
+    # NOTE the coordinates passed to the elements, after the distortion
+    ncoords_flatten = ncoords.flatten()
 
     nids = 1 + np.arange(ncoords.shape[0])
     nid_pos = dict(zip(nids, np.arange(len(nids))))
@@ -79,8 +123,10 @@ def test_nat_freq_plate(plot=False, mode=0):
         r1 = ncoords[pos1]
         r2 = ncoords[pos2]
         r3 = ncoords[pos3]
-        normal = np.cross(r2 - r1, r3 - r2)[2]
-        assert normal > 0
+        r4 = ncoords[pos4]
+        # NOTE convex element: positive cross products at the four corners
+        for ra, rb, rc in ((r4, r1, r2), (r1, r2, r3), (r2, r3, r4), (r3, r4, r1)):
+            assert np.cross(rb - ra, rc - rb)[2] > 0
         quad = Quad4R(probe)
         quad.n1 = n1
         quad.n2 = n2
@@ -113,6 +159,10 @@ def test_nat_freq_plate(plot=False, mode=0):
     bk[0::DOF] = check
     bk[1::DOF] = check
     bk[2::DOF] = check
+    # NOTE hard simple support: rotation about the x axis on the edges
+    #      x = 0, a and about the y axis on the edges y = 0, b
+    bk[3::DOF] = np.isclose(x, 0.) | np.isclose(x, a)
+    bk[4::DOF] = np.isclose(y, 0.) | np.isclose(y, b)
 
     bu = ~bk
 
@@ -138,11 +188,11 @@ def test_nat_freq_plate(plot=False, mode=0):
     u = np.zeros(N)
     u[bu] = eigvecsu[:, mode]
 
-    # theoretical reference
+    # NOTE Leissa (1969), Eq. (4.20), with rho*h the mass per unit area
     m = 1
     n = 1
-    D = 2*h**3*E/(3*(1 - nu**2))
-    wmn = (m**2/a**2 + n**2/b**2)*np.sqrt(D*np.pi**4/(2*rho*h))/2
+    D = E*h**3/(12*(1 - nu**2))
+    wmn = np.sqrt(D/(rho*h))*((m*np.pi/a)**2 + (n*np.pi/b)**2)
 
     print('Theoretical omega123', wmn)
     wmn_ref = wmn
@@ -168,7 +218,7 @@ def test_nat_freq_plate(plot=False, mode=0):
         plt.contourf(xmesh, ymesh, u[2::DOF].reshape(nx, ny).T)
         plt.show()
 
-    assert np.isclose(wmn_ref, omegan[0], rtol=0.05)
+    assert np.isclose(wmn_ref, omegan[0], rtol=0.01)
 
 
 

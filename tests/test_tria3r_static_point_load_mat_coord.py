@@ -84,7 +84,6 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
             tria.c1 = DOF*nid_pos[n1]
             tria.c2 = DOF*nid_pos[n2]
             tria.c3 = DOF*nid_pos[n3]
-            tria.alpha_shear_locking = 0.7
             tria.init_k_KC0 = init_k_KC0
             tria.update_rotation_matrix(ncoords_flatten, matx[0], matx[1], matx[2])
             tria.update_probe_xe(ncoords_flatten)
@@ -102,7 +101,6 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
             tria.c1 = DOF*nid_pos[n1]
             tria.c2 = DOF*nid_pos[n3]
             tria.c3 = DOF*nid_pos[n4]
-            tria.alpha_shear_locking = 0.7
             tria.init_k_KC0 = init_k_KC0
             tria.update_rotation_matrix(ncoords_flatten, matx[0], matx[1], matx[2])
             tria.update_probe_xe(ncoords_flatten)

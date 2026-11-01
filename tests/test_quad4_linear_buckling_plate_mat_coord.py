@@ -2,6 +2,7 @@ import sys
 sys.path.append('..')
 
 import numpy as np
+import pytest
 from numpy import isclose
 from scipy.sparse.linalg import cg
 from scipy.sparse import coo_matrix, diags as sp_diags
@@ -11,6 +12,7 @@ from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 from pyfe3d.solver import linear_buckling
 
 
+@pytest.mark.slow
 def test_linear_buckling_plate(plot=False, mode=0):
     # NOTE keep thetadeg = 0 as first, to work as reference wmax_ref
     thetadegs = [0, -90, -60, -30, 30, 60, 90]

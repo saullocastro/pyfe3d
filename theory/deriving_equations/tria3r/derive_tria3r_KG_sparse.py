@@ -77,7 +77,7 @@ print()
 print()
 
 # Geometric stiffness matrix using Donnell's type of geometric nonlinearity
-# (or van Karman shell nonlinear terms)
+# (or von Kármán shell nonlinear terms)
 # displacements in global coordinates corresponding to one finite element
 ue = Matrix([symbols(r'ue[%d]' % i) for i in range(0, Bb.shape[1])])
 Nmembrane = A*Bm*ue + B*Bb*ue

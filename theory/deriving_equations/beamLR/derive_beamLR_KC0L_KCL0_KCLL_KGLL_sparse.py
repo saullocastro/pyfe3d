@@ -1,17 +1,18 @@
 """
 Nonlinear stiffness matrix KCNL, K_CNL + K_GNL, for the BeamLR element
 
-KCNL = KC0L + KCL0 + KCLL + KGLL, built from the von Karman axial strain
+KCNL = KC0L + KCL0 + KCLL + KGLL, built from the von Kármán axial strain
 
     exx = u,x + eNL,    eNL = (v,x**2 + w,x**2)/2
 
-with the slopes taken from the rotations, v,x = rz and w,x = -ry, as in
-derive_beamLR_KG_sparse.py
+with the slopes v,x and w,x of the linear interpolations of v and w, as in
+derive_beamLR_KG_sparse.py; up to pyfe3d 0.11 they were taken from the
+rotations, v,x = rz and w,x = -ry, which neglects the shear deformation
 
 - KC0L = BL.T*D*BNL
 - KCL0 = BNL.T*D*BL = KC0L.T
 - KCLL = BNL.T*D*BNL
-- KGLL = NNL*(Sv_x.T*Sv_x + Sw_x.T*Sw_x), with NNL = E*A*eNL
+- KGLL = NNL*(Sv_x.T*Sv_x + Sw_x.T*Sw_x), with NNL = C00*eNL
 
 where BNL = d(eNL)/d(ue) = v,x*Sv_x + w,x*Sw_x acts on the axial strain only,
 such that eNL = BNL*ue/2 and not BNL*ue.
@@ -34,8 +35,9 @@ from sympy import simplify, expand, Matrix, var, symbols, Poly
 
 DOF = 6
 NUM_NODES = 2
-# NOTE number of Gauss-Legendre points used in beamlr.pyx
-NUM_GAUSS_POINTS = 3
+# NOTE number of Gauss-Legendre points used in beamlr.pyx: the integrands are
+#      constant along the element and one point at the center is exact
+NUM_GAUSS_POINTS = 1
 
 var('xi', real=True)
 var('L, E, Iyy, Izz, Iyz, G12, G13, GJ, A, Ay, Az', real=True)
@@ -71,13 +73,26 @@ Nrz = Matrix([[0, 0, 0, 0, 0, S1,
 #      G13 for gammaz of the plane xz (w, ry), and the torsional stiffness
 #      GJ given directly; the shear block of D is checked in
 #      derive_beamLR_KC0_sparse.py
-D = Matrix([
+D11 = Matrix([
     [ E*A,  E*Ay,  E*Az, 0, 0, 0],
     [E*Ay,  E*Iy, E*Iyz, 0, 0, 0],
     [E*Az, E*Iyz,  E*Iz, 0, 0, 0],
     [   0,     0,     0,   G12*A,      0, -G12*Az],
     [   0,     0,     0,       0,  G13*A,  G13*Ay],
     [   0,     0,     0, -G12*Az, G13*Ay,      GJ]])
+
+# NOTE sectional stiffness matrix C of pyfe3d.beamprop.BeamProp, symmetric,
+#      with the 21 independent entries Cij, i <= j, in the order of the
+#      strains {eps, gammay, gammaz, kx, ky, kz} of pyfe3d, see
+#      pyfe3d.vabs.yu_to_pyfe3d. D is C in the order {exx, ky, kz, gammay,
+#      gammaz, kx} of the rows of BL below
+C = Matrix(6, 6, lambda i, j: var('C%d%d' % (min(i, j), max(i, j)), real=True))
+PERM = [0, 4, 5, 1, 2, 3]
+D = C.extract(PERM, PERM)
+# NOTE without the attribute C, BeamProp builds C from its 11 stiffness
+#      attributes, such that D becomes D11 above
+C_FROM_11 = {D[i, j]: D11[i, j] for i in range(6) for j in range(i, 6)}
+assert D.subs(C_FROM_11) == D11
 
 # From Eq. 8 in Luo, Y. 2008
 # {exx, ky, kz, gammay, gammaz, kx}
@@ -92,9 +107,9 @@ BL = Matrix([
     2/L*Nw.diff(xi) + Nry,
     2/L*Nrx.diff(xi)])
 
-# slopes taken from the rotations, v,x = rz and w,x = -ry
-Sv_x = Nrz
-Sw_x = -Nry
+# slopes of the interpolations of v and w
+Sv_x = 2/L*Nv.diff(xi)
+Sw_x = 2/L*Nw.diff(xi)
 
 ue = Matrix([symbols(r'ue[%d]' % i) for i in range(NUM_NODES*DOF)])
 v_x = (Sv_x*ue)[0]
@@ -118,6 +133,9 @@ KCLLe = BNLfull.T*D*BNLfull
 KGLLe = NNL*(Sv_x.T*Sv_x + Sw_x.T*Sw_x)
 KCNLe = KC0Le + KCL0e + KCLLe + KGLLe
 
+# NOTE the identity below holds at every xi, in particular at the centre,
+#      xi = 0, where BeamLR evaluates the strain energy with its one-point
+#      integration, see derive_beamLR_KC0_sparse.py
 print('checking that KC0 + KCNL + KG is the Hessian of the strain energy', flush=True)
 N = (D*BL*ue)[0]
 KC0e = BL.T*D*BL
@@ -149,8 +167,12 @@ print('printing code for _update_probe_BL_G')
 print('_______________________________________')
 print()
 print()
+BLgammay = 2/L*Nv.diff(xi) - Nrz
+BLgammaz = 2/L*Nw.diff(xi) + Nry
+BLkx = 2/L*Nrx.diff(xi)
 for name, row in [('BLexx', BLexx), ('BLky', BLky), ('BLkz', BLkz),
-                  ('Sv_x', Sv_x), ('Sw_x', Sw_x)]:
+                  ('BLgammay', BLgammay), ('BLgammaz', BLgammaz),
+                  ('BLkx', BLkx), ('Sv_x', Sv_x), ('Sw_x', Sw_x)]:
     for i, val in enumerate(row):
         if val == 0:
             continue
@@ -166,8 +188,11 @@ print()
 print()
 # row of D*BL giving the axial force, N = EBL*ue
 EBL = (D*BL)[0, :]
-assert expand(EBL - E*(A*BLexx + Ay*BLky + Az*BLkz)) == sympy.zeros(1, NUM_NODES*DOF)
-print('            # EBL = E*(A*BLexx + Ay*BLky + Az*BLkz)')
+assert expand(EBL - (C00*BLexx + C04*BLky + C05*BLkz + C01*BLgammay
+                     + C02*BLgammaz + C03*BLkx)) == sympy.zeros(1, NUM_NODES*DOF)
+# NOTE without the attribute C of BeamProp, EBL = E*(A*BLexx + Ay*BLky + Az*BLkz)
+assert expand(EBL.subs(C_FROM_11) - E*(A*BLexx + Ay*BLky + Az*BLkz)) == sympy.zeros(1, NUM_NODES*DOF)
+print('            # EBL = C00*BLexx + C04*BLky + C05*BLkz + C01*BLgammay + C02*BLgammaz + C03*BLkx')
 print('            # BNL = v_x*Sv_x + w_x*Sw_x')
 print('            # NNL =', NNL.subs(eNL, var('eNL')), 'with eNL = (v_x**2 + w_x**2)/2')
 print()
@@ -182,9 +207,13 @@ sBLky = row('BLky', BLky)
 sBLkz = row('BLkz', BLkz)
 sSv_x = row('Sv_x', Sv_x)
 sSw_x = row('Sw_x', Sw_x)
-sEBL = E*(A*sBLexx + Ay*sBLky + Az*sBLkz)
+sBLgammay = row('BLgammay', BLgammay)
+sBLgammaz = row('BLgammaz', BLgammaz)
+sBLkx = row('BLkx', BLkx)
+sEBL = (C00*sBLexx + C04*sBLky + C05*sBLkz + C01*sBLgammay + C02*sBLgammaz
+        + C03*sBLkx)
 sBNL = v_x*sSv_x + w_x*sSw_x
-sKCNLe = weight*(sEBL.T*sBNL + sBNL.T*sEBL + E*A*sBNL.T*sBNL
+sKCNLe = weight*(sEBL.T*sBNL + sBNL.T*sEBL + C00*sBNL.T*sBNL
                  + NNL*(sSv_x.T*sSv_x + sSw_x.T*sSw_x))
 for ind, val in np.ndenumerate(sKCNLe):
     if val == 0:

@@ -2,7 +2,9 @@ Linear static analysis of a plate
 =================================
 
 A simply supported plate of :class:`.Quad4` elements under a central point
-load. The figure shows the normal displacement `w`.
+load. The figure shows the normal displacement `w`, whose maximum is
+compared with the series solution of Timoshenko, S. and Woinowsky-Krieger,
+S., Theory of Plates and Shells, 2nd ed., McGraw-Hill, 1959, Art. 34.
 
 .. image:: ./ex_linear_static.jpg
 

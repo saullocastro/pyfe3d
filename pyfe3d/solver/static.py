@@ -17,7 +17,8 @@ from numpy.linalg import LinAlgError
 from scipy.sparse import csc_matrix
 from scipy.sparse.linalg import splu
 
-from .sparseutils import check_null_rows_cols
+from .sparseutils import (check_null_rows_cols, is_symmetric,
+                          _not_positive_definite_message)
 
 
 def solve(A, b, **kwargs):
@@ -140,12 +141,70 @@ def _factorize(kT):
     return solve_kT
 
 
+def _solve_linear_static(K, fext, analysis='Linear static analysis'):
+    r"""Solution of a linear static analysis: :func:`solve`, with a check
+    that a symmetric ``K`` is positive definite
+
+    Parameters
+    ----------
+    K : sparse_matrix or np.ndarray
+        Stiffness matrix, shape ``(n, n)``.
+    fext : np.ndarray
+        External force vector, 1-D array of size ``n``.
+    analysis : str, optional
+        Name of the analysis in the message of the error. Default
+        ``'Linear static analysis'``.
+
+    Returns
+    -------
+    u : np.ndarray
+        Solution, 1-D array of size ``n``.
+
+    Raises
+    ------
+    numpy.linalg.LinAlgError
+        As :func:`solve`, and when ``K`` is symmetric, see
+        :func:`.is_symmetric`, and not positive definite, with the likely
+        causes, see :func:`.sparseutils._not_positive_definite_message`.
+
+    Notes
+    -----
+    A symmetric ``K`` is factorized once, with
+    :func:`.eigen._symmetric_lu`, a symmetric permutation without row
+    interchanges, whose number of negative pivots is its number of negative
+    eigenvalues by Sylvester's law of inertia, see
+    :func:`.eigen._negative_pivots`; when they are all positive, i.e. ``K``
+    is positive definite, this factorization, which is then that of
+    Cholesky up to the scaling of the rows, gives the solution. An
+    unsymmetric ``K``, e.g. with the load stiffness of a follower load, is
+    solved with :func:`solve` without this check.
+
+    """
+    from .eigen import _symmetric_lu
+    if not is_symmetric(K):
+        return solve(K, fext)
+    K = csc_matrix(K)
+    check_null_rows_cols(K, 'A')
+    lu, count = _symmetric_lu(K)
+    if count != 0:
+        raise LinAlgError(_not_positive_definite_message(analysis, 'K',
+                                                         count))
+    b = np.asarray(fext)
+    if np.iscomplexobj(b) and not np.iscomplexobj(K.data):
+        return (lu.solve(np.ascontiguousarray(b.real, dtype=float))
+                + 1j*lu.solve(np.ascontiguousarray(b.imag, dtype=float)))
+    return lu.solve(np.ascontiguousarray(b, dtype=np.result_type(K.dtype,
+                                                                  b.dtype,
+                                                                  float)))
+
+
 def linear_static(K, fext):
     r"""Linear static analysis
 
     Solves ``K @ u = fext`` with :func:`solve` and returns the solution with
     the outputs of :meth:`.Analysis.static`, a single increment of load
-    factor ``1.``.
+    factor ``1.``. A symmetric ``K`` must be positive definite, which is
+    checked with its factorization, see :func:`_solve_linear_static`.
 
     Parameters
     ----------
@@ -169,7 +228,11 @@ def linear_static(K, fext):
     Raises
     ------
     numpy.linalg.LinAlgError
-        When ``K`` is singular, see :func:`solve`.
+        When ``K`` is singular, see :func:`solve`, or when it is symmetric
+        and not positive definite, with the likely causes: insufficient
+        boundary conditions, a mechanism, distorted elements, e.g.
+        re-entrant quadrilaterals, or a preload beyond the buckling load in
+        ``K``, see :func:`_solve_linear_static`.
 
     Notes
     -----
@@ -181,4 +244,4 @@ def linear_static(K, fext):
     \boldsymbol{K}_F) \boldsymbol{u} = \boldsymbol{F}_0`.
 
     """
-    return [1.], [solve(K, fext)]
+    return [1.], [_solve_linear_static(K, fext)]

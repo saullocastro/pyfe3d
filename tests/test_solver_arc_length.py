@@ -17,6 +17,44 @@ METHODS = ['arc_length_riks', 'arc_length_crisfield']
 
 #: apex deflection at the limit point of the von Mises truss
 W_LIMIT = 1 - 1/np.sqrt(3)
+#: limit load of the von Mises truss, see :func:`von_mises_truss`
+F_LIMIT = 2/(3*np.sqrt(3))
+
+
+def check_limit_points(p, frac, which=(0, 1), rtol=1e-5):
+    r"""The load factors sampled around the two limit points of the von
+    Mises truss of :func:`von_mises_truss`, of exact values ``1/frac`` at
+    ``w = 1 - 1/sqrt(3)`` and ``-1/frac`` at ``w = 1 + 1/sqrt(3)``
+
+    The arc-length method samples the path at discrete points, and the
+    largest (smallest) sampled load factor is below (above) the limit load
+    factor by an amount that depends on the step. Along the equilibrium path
+    ``lambda = F(w)/P``, ``P = frac*F_LIMIT`` and ``F(w) = w**3 - 3*w**2 +
+    2*w``. With ``w_k <= w_lim <= w_k+1`` the samples bracketing the limit
+    point, one of them is within ``dw/2 = (w_k+1 - w_k)/2`` of ``w_lim``,
+    and Taylor's theorem with ``dF/dw(w_lim) = 0`` and ``|d2F/dw2| = 6*|w -
+    1| <= 6*m`` in the bracket, ``m = max(|w_k - 1|, |w_k+1 - 1|)``, bounds
+    the gap:
+    ``|lambda_lim| - max(|lambda_k|, |lambda_k+1|) <= 3*m*dw**2/(4*P)``.
+    ``rtol`` is the tolerance of :func:`check_equilibrium`. The apex
+    deflection must increase along the path.
+    """
+    P = frac*F_LIMIT
+    inc = np.asarray(p.an.increments)
+    w = np.array([c[0] for c in p.an.cs])
+    assert np.all(np.diff(w) > 0)
+    limits = ((W_LIMIT, 1/frac), (1 + 1/np.sqrt(3), -1/frac))
+    for i in which:
+        w_lim, lbd_lim = limits[i]
+        k = np.searchsorted(w, w_lim)
+        assert 0 < k < len(w)
+        dw = w[k] - w[k-1]
+        m = max(abs(w[k] - 1), abs(w[k-1] - 1))
+        bound = 3*m*dw**2/(4*P)
+        gap = abs(lbd_lim) - np.abs(inc[k-1:k+1]).max()
+        assert np.sign(inc[k-1:k+1]).tolist() == [np.sign(lbd_lim)]*2
+        assert -rtol*abs(lbd_lim) <= gap <= bound + rtol*abs(lbd_lim), (
+            i, gap, bound)
 
 
 def check_equilibrium(p, rtol=1e-5):
@@ -103,8 +141,8 @@ def test_arc_length_snap_through(method):
     assert inc[-1] == 1.0
     # limit load factor is 1/1.5, the minimum along the path is -1/1.5
     assert inc[inc < 1.].max() < 1/1.5 + 1e-6
-    assert inc[inc < 1.].max() > 0.6
-    assert inc.min() < -0.5
+    check_limit_points(p, frac=1.5)
+    assert inc.min() < 0
     assert np.all(inc[:-1] < 1.)
     # continuous path along the apex deflection, without jumps
     assert np.all(np.diff(w) > 0)
@@ -134,7 +172,10 @@ def test_arc_length_snap_back(method, convergence, relTOL):
     inc = np.asarray(p.an.increments)
     cs = np.asarray(p.an.cs)
     assert inc[-1] == 1.0
-    assert inc.min() < -0.5
+    assert inc.min() < 0
+    # NOTE the loaded point snaps back, the apex deflection does not, and
+    #      the load factor at the apex deflection is that of the truss alone
+    check_limit_points(p, frac=1.5)
     assert np.any(np.diff(cs[:, 1]) < 0)
     assert np.all(np.diff(cs[:, 0]) > 0)
     assert cs[-1, 0] > 2.

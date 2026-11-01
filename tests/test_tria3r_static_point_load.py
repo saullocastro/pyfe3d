@@ -10,6 +10,41 @@ from pyfe3d import Tria3R, Tria3RData, Tria3RProbe, INT, DOUBLE, DOF
 
 
 def test_tria3r_static_point_load(plot=False, refinement=1):
+    r"""Simply supported rectangular plate, ``a = 3``, ``b = 7``,
+    ``h = 0.005``, under a point load at its centre
+
+    The exact deflection at the centre of the Kirchhoff plate is
+    ``6.5986e-5``, from the Navier solution of Timoshenko, S., and
+    Woinowsky-Krieger, S., Theory of Plates and Shells, 2nd ed., McGraw-Hill,
+    1959, Art. 29, p. 111, Eq. (133), summed in Art. 34, p. 143, Eq. (147),
+    see :func:`test_quad4r_static_point_load.test_static_plate_quad_point_load`,
+    where the transverse shear deflection of the Mindlin plate is shown to be
+    negligible here.
+
+    With the default transverse shear since 0.12.0, the discrete shear gap
+    field of ``shear_model = 1``, the deflection converges to that
+    reference from below, measured with this test (``b/h = 1400``,
+    quadrilaterals split in two triangles, time on one thread):
+
+        refinement   mesh      w_max          error    time
+        1            6x10      3.8417e-05    -41.78 %   0.0 s
+        2            14x22     6.0875e-05     -7.75 %   0.0 s
+        3            20x32     6.4079e-05     -2.89 %   0.1 s
+        4            28x44     6.5155e-05     -1.26 %   0.3 s
+        6            42x66     6.5670e-05     -0.48 %   0.9 s
+        8            56x88     6.5821e-05     -0.25 %   3.4 s
+
+    The coarse mesh is stiff because the elements are 100 times longer
+    than they are thick. Following the coarse-mesh policy of the tests,
+    ``refinement=1`` is compared with the value pre-determined by this test,
+    with ``rtol=1e-6`` for the round-off of the direct solution, and with
+    grade D of MacNeal and Harder (1985), p. 14, as the bound against the
+    reference; finer meshes are graded against the reference alone, B from
+    ``refinement=2`` and A from ``refinement=4``. Before 0.12.0, with the
+    centroid-sampled shear and ``alpha_shear_locking = 0.7``, the deflection
+    was 26.2 % above the reference with 6x10 elements and settled 9.6 %
+    below it with 112x176, see :mod:`pyfe3d.tria3r`.
+    """
     data = Tria3RData()
     probe = Tria3RProbe()
     nx = 7*refinement
@@ -76,7 +111,6 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
         tria.c1 = DOF*nid_pos[n1]
         tria.c2 = DOF*nid_pos[n2]
         tria.c3 = DOF*nid_pos[n3]
-        tria.alpha_shear_locking = 0.7
         tria.init_k_KC0 = init_k_KC0
         tria.update_rotation_matrix(ncoords_flatten)
         tria.update_probe_xe(ncoords_flatten)
@@ -94,7 +128,6 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
         tria.c1 = DOF*nid_pos[n1]
         tria.c2 = DOF*nid_pos[n3]
         tria.c3 = DOF*nid_pos[n4]
-        tria.alpha_shear_locking = 0.7
         tria.init_k_KC0 = init_k_KC0
         tria.update_rotation_matrix(ncoords_flatten)
         tria.update_probe_xe(ncoords_flatten)
@@ -132,13 +165,25 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
 
     w = u[2::DOF].reshape(nx, ny).T
 
-    # obtained with bfsplate2d element, nx=ny=29
-    wmax_ref = 6.594931610258557e-05
-    # obtained with Tria3R nx=7, ny=11
-    wmax_ref = 8.324614783831663e-05
+    # NOTE Timoshenko and Woinowsky-Krieger (1959), Eq. (147), b/a = 7/3
+    D = E*h**3/(12*(1 - nu**2))
+    wmax_ref = 0.
+    for m in range(1, 200, 2):
+        am = m*np.pi*b/(2*a)
+        wmax_ref += (np.tanh(am) - (am/np.cosh(am)**2 if am < 300 else 0.))/m**3
+    wmax_ref *= fmid*a**2/(2*np.pi**3*D)
     print('w.max()', w.max())
+    print('wmax_ref', wmax_ref, 'error', w.max()/wmax_ref - 1)
 
-    assert np.isclose(wmax_ref, w.max(), rtol=0.02)
+    error = abs(w.max()/wmax_ref - 1)
+    if refinement == 1:
+        # NOTE pre-determined by this test with refinement=1 on 2026-10-29
+        assert np.isclose(w.max(), 3.8417365230339226e-05, rtol=1e-6)
+        assert error <= 0.50
+    elif refinement < 4:
+        assert error <= 0.10
+    else:
+        assert error <= 0.02
 
     fint = np.zeros(N)
     for tria in trias:

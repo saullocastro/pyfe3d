@@ -7,7 +7,14 @@ The ``pyfe3d`` namespace gives the element classes :class:`.Quad4`,
 :class:`.Quad4R`, :class:`.Tria3R`, :class:`.Tria3DSG`, :class:`.BeamC`,
 :class:`.BeamLR`, :class:`.Truss` and :class:`.Spring`, each with its
 ``Data`` and ``Probe`` classes (e.g. :class:`.BeamCData` and
-:class:`.BeamCProbe`), and the module :mod:`pyfe3d.solver`. It also defines:
+:class:`.BeamCProbe`), the classes of the element-independent co-rotational
+(EICR) layer for large rotations of :mod:`pyfe3d.corotational`,
+:class:`.CorotationalModel`, which assembles a model, and the wrappers of
+one element each, :class:`.CorotationalShell`, :class:`.CorotationalBeam`,
+:class:`.CorotationalTruss` and :class:`.CorotationalSpring`, and the
+module :mod:`pyfe3d.solver`. The finite-rotation utilities of the
+co-rotational layer, e.g. :func:`pyfe3d.corotational.expso3`, are imported
+from :mod:`pyfe3d.corotational`. It also defines:
 
 - ``DOF = 6``: number of degrees of freedom per node;
 - ``INT``: NumPy integer type of the C ``long`` of the platform,
@@ -30,6 +37,9 @@ from .beamc import BeamC, BeamCData, BeamCProbe
 from .beamlr import BeamLR, BeamLRData, BeamLRProbe
 from .truss import Truss, TrussData, TrussProbe
 from .spring import Spring, SpringData, SpringProbe
+from .corotational import (CorotationalModel, CorotationalShell,
+                           CorotationalBeam, CorotationalTruss,
+                           CorotationalSpring)
 from . import solver
 
 DOF = 6

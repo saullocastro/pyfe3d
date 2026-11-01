@@ -81,6 +81,57 @@ def check_null_rows_cols(A, name='A'):
         'boundary conditions' % (name, dofs.size, listed))
 
 
+def _not_positive_definite_message(analysis, name, count):
+    r"""Message of the error raised when a stiffness matrix is not positive
+    definite
+
+    Parameters
+    ----------
+    analysis : str
+        Name of the analysis, e.g. ``'Linear buckling analysis'``.
+    name : str
+        Name of the matrix, e.g. ``'K'``.
+    count : int or None
+        Number of negative pivots of its factorization, see
+        :func:`.eigen._negative_pivots`, ``None`` when the factorization met
+        a zero pivot or failed.
+
+    Returns
+    -------
+    message : str
+        The message, in plain words, with the likely causes.
+
+    Notes
+    -----
+    By Sylvester's law of inertia, the number of negative pivots of the
+    factorization `\boldsymbol{K} = \boldsymbol{L} \boldsymbol{D} \boldsymbol{L}^\top` is the number of negative
+    eigenvalues of `\boldsymbol{K}`, i.e. of the deformation modes with a negative
+    strain energy `\frac{1}{2}\boldsymbol{u}^\top \boldsymbol{K} \boldsymbol{u}`. A singular `\boldsymbol{K}`, e.g.
+    with an unrestrained rigid-body mode, has null eigenvalues, which the
+    round-off turns into pivots that are null, or tiny and of either sign:
+    the count then includes them, and a singular matrix whose pivots all
+    come out positive is not detected.
+
+    """
+    if count is None:
+        what = ('its factorization met a zero pivot, i.e. %s is singular or '
+                'indefinite' % name)
+    else:
+        what = ('its factorization has %d negative pivot(s), i.e. %s has %d '
+                'eigenvalue(s) that are negative, or null up to the '
+                'round-off: %d deformation mode(s) without a positive strain '
+                'energy' % (count, name, count, count))
+    return ('%s: the stiffness matrix %s is not positive definite, %s. '
+            'Likely causes: insufficient boundary conditions, which leave a '
+            'rigid-body motion of the model or of a part of it unrestrained; '
+            'a mechanism, i.e. parts that can move without deforming; '
+            'distorted elements, e.g. re-entrant (non-convex) '
+            'quadrilaterals, which can make it indefinite; or, when %s '
+            'includes the '
+            'geometric stiffness of a preload, a preload beyond the buckling '
+            'load' % (analysis, name, what, name))
+
+
 def is_symmetric(A, rtol=1.e-10):
     r"""Tell whether a square matrix is symmetric, in the Frobenius norm
 

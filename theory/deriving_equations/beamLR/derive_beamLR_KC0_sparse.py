@@ -78,13 +78,26 @@ Nrz = Matrix([[0, 0, 0, 0, 0, S1,
 #      pyfe3d.beamprop.BeamProp: G12 for gammay of the plane xy (v, rz) and
 #      G13 for gammaz of the plane xz (w, ry), and the torsional stiffness
 #      GJ given directly; the shear block of D is checked below
-D = Matrix([
+D11 = Matrix([
     [ E*A, E*Ay, E*Az, 0, 0, 0],
     [E*Ay, E*Iy,  E*Iyz, 0, 0, 0],
     [E*Az,  E*Iyz, E*Iz, 0, 0, 0],
     [   0,     0,     0,   G12*A,      0, -G12*Az],
     [   0,     0,     0,       0,  G13*A,  G13*Ay],
     [   0,     0,     0, -G12*Az, G13*Ay,      GJ]])
+
+# NOTE sectional stiffness matrix C of pyfe3d.beamprop.BeamProp, symmetric,
+#      with the 21 independent entries Cij, i <= j, in the order of the
+#      strains {eps, gammay, gammaz, kx, ky, kz} of pyfe3d, see
+#      pyfe3d.vabs.yu_to_pyfe3d. D is C in the order {exx, ky, kz, gammay,
+#      gammaz, kx} of the rows of BL below
+C = Matrix(6, 6, lambda i, j: var('C%d%d' % (min(i, j), max(i, j)), real=True))
+PERM = [0, 4, 5, 1, 2, 3]
+D = C.extract(PERM, PERM)
+# NOTE without the attribute C, BeamProp builds C from its 11 stiffness
+#      attributes, such that D becomes D11 above
+C_FROM_11 = {D[i, j]: D11[i, j] for i in range(6) for j in range(i, 6)}
+assert D.subs(C_FROM_11) == D11
 
 # NOTE check of the shear block of D. With the rigid cross section the
 #      shear strains at the point (y, z) are exy = gammay - kx*z and
@@ -99,7 +112,7 @@ section = {(0, 0): A, (1, 0): Ay, (0, 1): Az, (2, 0): Izz, (0, 2): Iyy,
            (1, 1): Iyz}
 Ushear = sum(coeff*section[monom] for monom, coeff in Ushear.terms())
 Dshear = sympy.hessian(Ushear, (gammay, gammaz, kx))
-assert sympy.expand(Dshear - D[3:, 3:].subs(GJ, G12*Iyy + G13*Izz)) == sympy.zeros(3, 3)
+assert sympy.expand(Dshear - D11[3:, 3:].subs(GJ, G12*Iyy + G13*Izz)) == sympy.zeros(3, 3)
 #From Eq. 8 in Luo, Y. 2008
 #epsilon = u,x
 #kappay = -theta,x = -rz,x
@@ -117,11 +130,44 @@ BL = Matrix([
     2/L*Nw.diff(xi) + Nry,
     2/L*Nrx.diff(xi)])
 
-KC0e = BL.T*D*BL
-KC0e = KC0e.expand()
-KC0e = KC0e.subs({xi: 0})
-wi = 2
-KC0e = wi*L/2.*simplify(KC0e) # numerically integrating with 1 integration point
+# NOTE one integration point at the centre, xi = 0, with weight 2, such
+#      that KC0e = L*BL0.T*D*BL0 with BL0 = BL at xi = 0: exact for the
+#      axial, bending and torsion strains, constant along the element, and
+#      reduced for the transverse shear strains, linear in xi through the
+#      rotations, which avoids shear locking
+BL0 = BL.subs(xi, 0)
+KC0e = L*BL0.T*D*BL0
+
+print('checking that KC0e reduces to that of the 11 attributes', flush=True)
+KC0e11 = L*BL0.T*D11*BL0
+assert sympy.expand(KC0e.subs(C_FROM_11) - KC0e11) == sympy.zeros(num_nodes*DOF, num_nodes*DOF)
+print('    OK', flush=True)
+
+nonzero = set()
+for ind, val in np.ndenumerate(KC0e):
+    if sympy.expand(val) == 0:
+        continue
+    i, j = ind
+    if i > j:
+        continue # NOTE ignoring symmetric part
+    name = 'KC0e%02d%02d' % (i, j)
+    nonzero.add(name)
+    print('%s = %s' % (name, simplify(val)))
+
+rows = []
+for i in range(num_nodes*DOF):
+    cols = []
+    for j in range(num_nodes*DOF):
+        if j >= i:
+            name = 'KC0e%02d%02d' % (i, j)
+        else:
+            name = 'KC0e%02d%02d' % (j, i)
+        if name in nonzero:
+            cols.append(var(name))
+        else:
+            cols.append(0)
+    rows.append(cols)
+KC0e = Matrix(rows)
 
 print('transformation local to global')
 var('r11, r12, r13, r21, r22, r23, r31, r32, r33')

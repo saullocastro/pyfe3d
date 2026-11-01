@@ -138,6 +138,16 @@ extensions = [
             './pyfe3d/quad4r.pyx',
             ],
         **extension_kwargs),
+    Extension('pyfe3d.vabs',
+        sources=[
+            './pyfe3d/vabs.pyx',
+            ],
+        **extension_kwargs),
+    Extension('pyfe3d.corotational',
+        sources=[
+            './pyfe3d/corotational.pyx',
+            ],
+        **extension_kwargs),
 
     ]
 

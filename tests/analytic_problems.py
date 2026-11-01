@@ -82,6 +82,18 @@ def von_mises_truss(frac=0.99, ks=10.):
     a limit point at ``w = 1 - 1/sqrt(3)``; the load is ``frac`` of the
     limit load.
 
+    The internal force of the two bars is the "shallow truss theory" of
+    Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
+    Structures, Vol. 1, Wiley, 1991, Sec. 1.2, Eq. (1.7), p. 4, ``W =
+    EA/l**3*(z**2*w + 3/2*z*w**2 + 1/2*w**3)`` for one bar, with ``w``
+    positive towards the base (``w -> -w``, ``W -> -W``), two bars,
+    ``EA/l**3 = 1`` and the rise ``z = 1``: ``F(w) = w**3 - 3*w**2 + 2*w``.
+    The spring in series carries the same force, so that at equilibrium
+    ``F(w) = lambda*fext[1]`` for any ``ks``: the load factor has the
+    maximum ``1/frac`` at ``w = 1 - 1/sqrt(3)`` and the minimum ``-1/frac``
+    at ``w = 1 + 1/sqrt(3)``, ``dF/dw = 3*w**2 - 6*w + 2 = 0``, and ``F =
+    0`` again at ``w = 2``, the inverted configuration.
+
     """
     Flim = 2/(3*np.sqrt(3))
     fext = np.array([0., frac*Flim])

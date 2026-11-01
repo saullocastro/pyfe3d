@@ -30,10 +30,22 @@ from pyfe3d import (Quad4, Quad4Data, Quad4Probe, Quad4R, Quad4RData,
                     Quad4RProbe, Tria3R, Tria3RData, Tria3RProbe,
                     INT, DOUBLE, DOF)
 
+from test_shellprop_transverse_shear import rohwer_stiffness
+
 E_ISO = 210.e9
 NU_ISO = 0.3
-# NOTE laminate of cylinder Z22, Table 4 of Castro et al. (2014)
-LAMINAPROP = (123.55e9, 8.708e9, 0.319, 5.595e9, 5.595e9, 5.595e9)
+# NOTE stacking of cylinder Z22, [+-49/+-36/0_2], and material Geier1997 of
+#      Castro, S. G. P., Mittelstedt, C., Monteiro, F. A. C., Arbelo, M. A.,
+#      Ziegmann, G. and Degenhardt, R., "Linear buckling predictions of
+#      unstiffened laminated composite cylinders and cones under various
+#      loading and boundary conditions using semi-analytical models",
+#      Composite Structures, 118, 303-315, 2014,
+#      https://doi.org/10.1016/j.compstruct.2014.07.037, Tables 3 and 4,
+#      p. 307, except G23, which is set equal to G12 = G13 = 5.695 GPa
+#      instead of 3.400 GPa, such that G h is the transverse shear stiffness
+#      without correction in
+#      test_rohwer_differs_from_the_constant_factor_on_a_real_laminate
+LAMINAPROP = (123.55e9, 8.708e9, 0.319, 5.695e9, 5.695e9, 5.695e9)
 STACK = [49, -49, 36, -36, 0, 0]
 PLYT = 0.125e-3
 
@@ -97,7 +109,24 @@ def test_stiffness_is_invariant_to_the_offset():
         assert np.isclose(prop.A55, base.A55, rtol=1e-12)
 
 
-def shear_energy(cls, Data, Probe, L, h, triangle=False):
+def legacy_tria3r(el):
+    r"""Give a Tria3R the centroid-sampled transverse shear of before 0.12.0
+
+    ``shear_model = 0`` with ``alpha_shear_locking = 0.7``, the former
+    defaults. Since 0.12.0 Tria3R takes the discrete shear gap field of
+    Tria3DSG by default, ``shear_model = 1``, see
+    ``tests/test_tria3r_shear_model_dsg.py``. A Quad4 is given the one-point
+    transverse shear of before 0.12.0, ``shear_model = 0``; the default
+    since 0.12.0 is the MITC4 field, ``shear_model = 1``.
+    """
+    if isinstance(el, Tria3R):
+        el.shear_model = 0
+        el.alpha_shear_locking = 0.7
+    elif isinstance(el, Quad4):
+        el.shear_model = 0
+
+
+def shear_energy(cls, Data, Probe, L, h, triangle=False, legacy=False):
     r"""Energy of `w = cx` with every rotation and in-plane DOF at zero
 
     That is a state of constant transverse shear, `\gamma_{xz} = c` and
@@ -120,6 +149,8 @@ def shear_energy(cls, Data, Probe, L, h, triangle=False):
     flat = ncoords.flatten()
     data = Data()
     el = cls(Probe())
+    if legacy:
+        legacy_tria3r(el)
     for k in range(nn):
         setattr(el, 'n%d' % (k + 1), k + 1)
         setattr(el, 'c%d' % (k + 1), DOF*k)
@@ -163,9 +194,11 @@ def test_quads_reproduce_a_constant_transverse_shear_state():
 
 
 def test_tria3r_scales_the_shear_stiffness_with_the_element_size():
-    r"""Tria3R does not reproduce the state, by construction
+    r"""Tria3R with ``shear_model = 0`` does not reproduce the state
 
-    Its ``alpha_shear_locking`` stabilisation divides `A_{44}`, `A_{45}` and
+    That is the centroid-sampled transverse shear, the default before
+    0.12.0, set explicitly here. Its ``alpha_shear_locking`` stabilisation
+    divides `A_{44}`, `A_{45}` and
     `A_{55}` by `1 + \alpha \ell^2/h^2` with `\ell` the longest edge, so the
     energy of a constant transverse shear state comes out too small by
     exactly that factor. The stabilisation is the factor of Lyly, Stenberg
@@ -177,14 +210,30 @@ def test_tria3r_scales_the_shear_stiffness_with_the_element_size():
     ``test_quad4_linear_buckling_cylinder_displ.py``.
 
     This test pins the factor down so that any future change to the
-    stabilisation is visible, and it is the reason Tria3R is excluded from
-    :func:`test_quads_reproduce_a_constant_transverse_shear_state`.
+    stabilisation is visible. The default Tria3R since 0.12.0, the discrete
+    shear gap field of ``shear_model = 1`` with ``alpha_shear_locking = 0``,
+    reproduces the state to round-off, ``rtol=1e-12`` as for the
+    quadrilaterals, which is checked here as well.
+
+    It is a check of the specification of Tria3R, not of a published value:
+    the form of the factor is Eq. (3.12) of Lyly, Stenberg and Vihinen
+    (1993), "A stable bilinear element for the Reissner-Mindlin plate model",
+    Computer Methods in Applied Mechanics and Engineering, 110, 343-357,
+    p. 347, https://doi.org/10.1016/0045-7825(93)90214-I, where the shear
+    energy coefficient `G\kappa t/2` becomes `G\kappa t^3/(2(t^2 + \alpha
+    h_K^2))`, i.e. it is divided by `1 + \alpha h_K^2/t^2`, with `h_K` "the
+    longest of the edges of the element" and `\alpha` "a fixed positive
+    constant". Lyly et al. choose `\alpha = 0.1` (p. 349), while
+    `\alpha = 0.7` was the default of pyfe3d before 0.12.0.
 
     """
     alpha = 0.7
     for L, h in SIZES:
         ratio = shear_energy(Tria3R, Tria3RData, Tria3RProbe, L, h,
-                             triangle=True)
+                             triangle=True, legacy=True)
+        default = shear_energy(Tria3R, Tria3RData, Tria3RProbe, L, h,
+                               triangle=True)
+        assert np.isclose(default, 1., rtol=1e-12), (L, h, default)
         # NOTE the right triangle with legs L has its longest edge on the
         #      diagonal, so maxl = L*sqrt(2)
         maxl = L*2.**0.5
@@ -198,10 +247,13 @@ def test_rohwer_differs_from_the_constant_factor_on_a_real_laminate():
     r"""What the equilibrium approach buys over `k = 5/6`
 
     On the laminate of cylinder Z22 the equilibrium approach gives
-    `k_{13} = 0.721` and `k_{23} = 0.726`, so it is noticeably more
-    compliant than `5/6`, and it produces a non-zero `A_{45}` that neither
-    the constant factor nor the Vlachoutsis factors can represent, both of
-    them leaving `A_{45} = 0` because `\bar{A}_{45} = 0` for this stacking.
+    `A_{44}/\bar{A}_{44} = 0.726` and `A_{55}/\bar{A}_{55} = 0.721`, so
+    it is noticeably more compliant than `5/6`, and it produces a non-zero
+    `A_{45}` that neither the constant factor nor the Vlachoutsis factors can
+    represent, both of them leaving `A_{45} = 0` because `\bar{A}_{45} = 0`
+    for this stacking. No published value is known for this laminate, the
+    reference is Eq. (43) of Rohwer (1988) written out independently in
+    :func:`test_shellprop_transverse_shear.rohwer_stiffness`.
 
     """
     got = {}
@@ -211,8 +263,19 @@ def test_rohwer_differs_from_the_constant_factor_on_a_real_laminate():
         got[mode] = (prop.A44, prop.A45, prop.A55)
         print('%-12s A44 %.6e  A45 %+.6e  A55 %.6e'
               % (mode, prop.A44, prop.A45, prop.A55))
-    assert np.isclose(got['rohwer'][0]/got[None][0], 0.7262, rtol=1e-3)
-    assert np.isclose(got['rohwer'][2]/got[None][2], 0.7208, rtol=1e-3)
+    # NOTE G12 = G13 = G23 = G, constant strain stiffness G h, no correction
+    G = LAMINAPROP[4]
+    h = PLYT*len(STACK)
+    assert np.allclose([got[None][0], got[None][2]], G*h, rtol=1e-14)
+    assert abs(got[None][1]) < 1e-14*G*h
+    Ats, top = rohwer_stiffness(STACK, [PLYT]*len(STACK),
+                                [LAMINAPROP]*len(STACK))
+    assert np.allclose(top, 0., atol=1e-12*G*h)
+    assert np.allclose(got['rohwer'], (Ats[0, 0], Ats[0, 1], Ats[1, 1]),
+                       rtol=1e-12, atol=1e-12*Ats.max())
+    # NOTE noticeably more compliant than 5/6
+    assert got['rohwer'][0]/(G*h) < 0.75
+    assert got['rohwer'][2]/(G*h) < 0.75
     # NOTE only the equilibrium approach couples the two directions here
     assert abs(got['rohwer'][1]) > 1.e-4*got['rohwer'][0]
     assert got['vlachoutsis'][1] == 0.
@@ -223,7 +286,8 @@ def test_rohwer_differs_from_the_constant_factor_on_a_real_laminate():
 
 
 
-def patch_stiffness(cls, Data, Probe, n, L, h, triangles=False):
+def patch_stiffness(cls, Data, Probe, n, L, h, triangles=False,
+                    legacy=False):
     r"""Assembled `\boldsymbol{K}_{C0}` of an `n` by `n` patch of side `L`"""
     prop = isotropic_plate(thickness=h, E=E_ISO, nu=NU_ISO)
     xs = np.linspace(0., L, n + 1)
@@ -251,6 +315,8 @@ def patch_stiffness(cls, Data, Probe, n, L, h, triangles=False):
     init_k_KC0 = 0
     for e in cells:
         el = cls(probe)
+        if legacy:
+            legacy_tria3r(el)
         for a in range(len(e)):
             setattr(el, 'n%d' % (a + 1), e[a] + 1)
             setattr(el, 'c%d' % (a + 1), DOF*e[a])
@@ -264,7 +330,8 @@ def patch_stiffness(cls, Data, Probe, n, L, h, triangles=False):
     return K, X, Y, L/n
 
 
-def shear_only_subspace(cls, Data, Probe, n, L, h, triangles=False):
+def shear_only_subspace(cls, Data, Probe, n, L, h, triangles=False,
+                        legacy=False):
     r"""Smallest `u^\top K u/u^\top u` with only the interior `w` free
 
     With every rotation and in-plane degree-of-freedom held at zero the
@@ -273,7 +340,8 @@ def shear_only_subspace(cls, Data, Probe, n, L, h, triangles=False):
     transverse shear alone.
 
     """
-    K, X, Y, el_len = patch_stiffness(cls, Data, Probe, n, L, h, triangles)
+    K, X, Y, el_len = patch_stiffness(cls, Data, Probe, n, L, h, triangles,
+                                      legacy)
     N = K.shape[0]
     free = np.zeros(N, dtype=bool)
     free[2::DOF] = True
@@ -294,32 +362,54 @@ def test_shear_only_subspace_is_the_mechanism_the_stabilisation_opens():
     measured for a cylinder in
     ``test_quad4_linear_buckling_cylinder_displ.py``.
 
-    Quad4 and Quad4R agree with each other here, and Tria3R is softer by
-    exactly its stabilisation factor.
+    Quad4 with ``shear_model = 0``, the one-point transverse shear of
+    before 0.12.0, is the reference, and Tria3R with ``shear_model = 0``,
+    the centroid-sampled shear of before 0.12.0 set explicitly, is softer by
+    exactly its stabilisation factor. The default Tria3R since 0.12.0, the
+    discrete shear gap field, carries no factor and is printed for
+    comparison. Quad4R is stiffer than the reference by the factor
+    1.0131887, the same for the three thicknesses (measured on 2026-10-29):
+    its transverse shear, Belytschko and Leviathan (1994), adds the physical
+    stabilisation of the nonconstant part of the assumed shear strains,
+    which this subspace, with every rotation held at zero, activates in
+    proportion to the one-point shear energy. Until 0.12.0 the two
+    quadrilaterals agreed within 1e-5. The default Quad4 since 0.12.0, the
+    assumed shear strains of the MITC4 element with two-by-two points,
+    equals Quad4R on these squares, within 1e-12 (measured on 2026-10-30).
 
     """
     n = 8
     L = 0.1
     for h in (0.01, 0.002, 0.0005):
-        ref, el_len = shear_only_subspace(Quad4R, Quad4RData, Quad4RProbe,
-                                          n, L, h)
+        ref, el_len = shear_only_subspace(Quad4, Quad4Data, Quad4Probe, n, L,
+                                          h, legacy=True)
         q4, _ = shear_only_subspace(Quad4, Quad4Data, Quad4Probe, n, L, h)
+        q4r, _ = shear_only_subspace(Quad4R, Quad4RData, Quad4RProbe, n, L,
+                                     h)
         t3, _ = shear_only_subspace(Tria3R, Tria3RData, Tria3RProbe, n, L, h,
-                                    triangles=True)
+                                    triangles=True, legacy=True)
+        t3d, _ = shear_only_subspace(Tria3R, Tria3RData, Tria3RProbe, n, L,
+                                     h, triangles=True)
+        print('default Tria3R/Quad4 %.4f' % (t3d/ref))
+        # NOTE measured 1.0396 at the three thicknesses: no factor, only
+        #      the difference between a quadrilateral and two triangles
+        assert np.isclose(t3d/ref, 1., rtol=0.2), (h, t3d/ref)
         maxl = el_len*2.**0.5
         expected = 1./(1. + 0.7*maxl**2/h**2)
-        print('l/h = %-7.4g Quad4R %.6e  Quad4/Quad4R %.6f  '
-              'Tria3R/Quad4R %.4e  1/(1+factor) %.4e'
-              % (el_len/h, ref, q4/ref, t3/ref, expected))
-        # NOTE the two quadrilaterals use Ats as given, so they agree
-        assert np.isclose(q4, ref, rtol=1e-5)
+        print('l/h = %-7.4g Quad4 %.6e  Quad4R/Quad4 %.6f  '
+              'Tria3R/Quad4 %.4e  1/(1+factor) %.4e'
+              % (el_len/h, ref, q4r/ref, t3/ref, expected))
+        # NOTE value pre-determined on 2026-10-29, rtol for the round-off
+        #      of the eigenvalue solver
+        assert np.isclose(q4r/ref, 1.013188709965525, rtol=1e-6)
+        assert np.isclose(q4, q4r, rtol=1e-10)
         # NOTE and Tria3R is softened by its factor, to within the
         #      difference between a quadrilateral and two triangles
         assert np.isclose(t3/ref, expected, rtol=0.2), (h, t3/ref, expected)
 
 
 def cylindrical_bending_strip(cls, Data, Probe, L, b, h, nx, ny,
-                              triangles=False, alpha=None):
+                              triangles=False, alpha=None, legacy=False):
     r"""Tip deflection of a strip constrained to cylindrical bending
 
     `v = r_x = r_z = u = 0` at every node and a unit transverse force spread
@@ -359,6 +449,8 @@ def cylindrical_bending_strip(cls, Data, Probe, L, b, h, nx, ny,
     init_k_KC0 = 0
     for e in cells:
         el = cls(probe)
+        if legacy:
+            legacy_tria3r(el)
         for a in range(len(e)):
             setattr(el, 'n%d' % (a + 1), e[a] + 1)
             setattr(el, 'c%d' % (a + 1), DOF*e[a])
@@ -399,6 +491,13 @@ def test_the_stabilisation_error_is_a_discretisation_error():
     that product over three decades of slenderness and shows it depends on
     `n` alone, falling as `1/n^2`.
 
+    The product is only the softening of the physical shear. It is not the
+    error of Tria3R with ``shear_model = 0``, the default before 0.12.0,
+    whose centroid-sampled shear field still locks under the factor: on a simply supported square plate with `a/h = 1000` under
+    a uniform pressure the error of its centre deflection stalls at -14 per
+    cent from 32x32 to 128x128 squares cut in two, see the Notes of
+    :mod:`pyfe3d.tria3r`.
+
     """
     h = 0.01
     alpha = 0.7
@@ -435,11 +534,13 @@ def test_small_alpha_makes_tria3r_lock():
     In Lyly et al. (1993), Bischoff and Bletzinger (2004) and Castro et al.
     (2019) the factor is applied on top of an assumed-strain or discrete
     shear gap field, whose operator already contains the cure of the shear
-    locking, and `\alpha` is near `0.1`. This
-    element has no such formulation, its transverse shear coming from a
-    single point at the centroid, so reducing `\alpha` towards the
-    literature value makes it lock. Measured here on the constrained strip,
-    whose exact answer is elementary.
+    locking, and `\alpha` is near `0.1`. Tria3R with ``shear_model = 0``,
+    the default before 0.12.0 and set explicitly here, has no such
+    formulation, its transverse shear coming from a single point at the
+    centroid, so reducing `\alpha` towards the literature value makes it
+    lock. Measured here on the constrained strip, whose exact answer is
+    elementary. The default Tria3R since 0.12.0, the discrete shear gap
+    field with `\alpha = 0`, is printed for comparison.
 
     """
     h = 0.01
@@ -450,15 +551,21 @@ def test_small_alpha_makes_tria3r_lock():
     for alpha in (0.7, 0.1, 0.01):
         d, eb, es = cylindrical_bending_strip(Tria3R, Tria3RData,
                                              Tria3RProbe, L, b, h, nx, 1,
-                                             triangles=True, alpha=alpha)
+                                             triangles=True, alpha=alpha,
+                                             legacy=True)
         ratios.append(d/(eb + es))
         print('alpha = %-6g Tria3R tip deflection / exact = %.6f'
               % (alpha, d/(eb + es)))
+    dsg, eb, es = cylindrical_bending_strip(Tria3R, Tria3RData, Tria3RProbe,
+                                            L, b, h, nx, 1, triangles=True)
+    print('default Tria3R tip deflection / exact = %.6f' % (dsg/(eb + es)))
     quad, eb, es = cylindrical_bending_strip(Quad4, Quad4Data, Quad4Probe,
                                              L, b, h, nx, 1)
     print('Quad4 tip deflection / exact = %.6f' % (quad/(eb + es)))
     # NOTE monotonically stiffer as alpha falls, which is shear locking
     assert ratios[0] > ratios[1] > ratios[2]
+    # NOTE the default Tria3R, measured 0.999, needs no stabilisation either
+    assert abs(dsg/(eb + es) - 1.) < 0.01
     # NOTE and the quadrilateral, which needs no stabilisation, is close
     assert abs(quad/(eb + es) - 1.) < 0.01
 

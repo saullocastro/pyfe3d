@@ -32,7 +32,22 @@ stiffnesses times `1`, `z` and `z^2`, and `\boldsymbol{A}_{ts}` = ``[[A44, A45],
   gradients are given by :class:`.GradABD`, e.g. for the optimisation of
   the stiffness distribution, see the tutorials.
 
-The ply stiffnesses are those of plane stress, see :meth:`.Lamina.rebuild`.
+The ply stiffnesses are those of plane stress, `\sigma_{33} = 0`, see
+:meth:`.Lamina.rebuild`, which depend on ``E11``, ``E22``, ``nu12``,
+``G12``, ``G13`` and ``G23`` only, also when ``laminaprop`` gives ``E33``,
+``nu13`` and ``nu23``. The invariants of :class:`.MatLamina`, used by
+:func:`.shellprop_from_LaminationParameters` and :class:`.GradABD`, are by
+default those of the same plane-stress stiffnesses, see
+:meth:`.MatLamina.rebuild`, such that the lamination parameters of
+:meth:`.ShellProp.calc_lamination_parameters` give back the stiffnesses of
+:func:`.laminated_plate`, for any ``laminaprop``:
+
+.. literalinclude:: ../../tests/test_shellprop.py
+    :pyobject: test_lamination_parameters_three_dimensional_constants
+
+``MatLamina.rebuild(plane_stress=False)`` gives the three-dimensional
+stiffnesses and invariants instead, e.g. for continuum shell elements of
+other codes; the shell elements of pyfe3d do not use them.
 Plane strain and thermal expansion are not modelled: the thermal expansion
 coefficients and the reference temperature of :class:`.MatLamina` are not
 used.
@@ -64,6 +79,20 @@ such that an offset couples the membrane and bending responses. It
 models e.g. a skin whose nodes are on its inner surface, shared with the
 beams of a stiffener. The mass integrals ``intrho``, ``intrhoz`` and
 ``intrhoz2`` enter the mass matrices of the shells.
+
+For any laminate, `\boldsymbol{B} = \boldsymbol{B}_{e=0} + e
+\boldsymbol{A}` and `\boldsymbol{D} = \boldsymbol{D}_{e=0} + 2 e
+\boldsymbol{B}_{e=0} + e^2 \boldsymbol{A}`, the shift of the stiffness
+integrals to another reference plane (Vasiliev and Morozov, Mechanics and
+Analysis of Composite Materials, Elsevier, 2001, Eq. (5.28), p. 235), while
+`\boldsymbol{A}` and the transverse shear stiffnesses do not change. The
+lamination parameters of :meth:`.ShellProp.calc_lamination_parameters` are
+integrated about the reference surface, i.e. they include the offset, and
+:func:`.shellprop_from_LaminationParameters` needs the same ``offset`` to
+give back the stiffnesses:
+
+.. literalinclude:: ../../tests/test_shellprop.py
+    :pyobject: test_lamination_parameters_offset
 
 
 Transverse shear correction
@@ -150,6 +179,19 @@ the two planes, e.g. `5/6` for a rectangular section, are applied by the
 user to ``G12`` and ``G13``. Applied to ``G``, as in some of the examples,
 they also scale ``GJ``, unless ``GJ`` is set.
 
+The elements read these attributes through the sectional stiffness
+matrix ``C`` of :class:`.BeamProp`, of the strains `\{\bar{\varepsilon},
+\bar{\gamma}_y, \bar{\gamma}_z, \kappa_x, \kappa_y, \kappa_z\}`,
+which is built from them until it is set. Setting ``C`` gives the 21
+independent entries of a general section, e.g. the extension-twist and
+bending-shear couplings of a composite box beam, which the 11 stiffness
+attributes cannot represent; the elements then read only ``C``, and the
+mass integrals remain those of the attributes. The torsional and shear
+stiffnesses and the couplings of an arbitrary, possibly composite, cross
+section are computed by :mod:`pyfe3d.vabs`, and
+:func:`.beamprop_from_vabs` sets ``C``, see
+:doc:`cross_sectional_analysis`.
+
 
 Examples
 --------
@@ -174,3 +216,33 @@ cross-ply laminate given by Rohwer (1988):
 
 Rohwer, K., Improved transverse shear stiffness for layered finite elements,
 DFVLR-FB 88-32, 1988.
+
+For a sandwich, stiff faces on a soft core, the factor `5/6` is badly wrong:
+``'rohwer'`` and ``'vlachoutsis'`` reproduce the factors tabulated by
+Vlachoutsis (1992), Tables I and II, down to `K = 0.01964`, for which `5/6`
+overestimates the shear stiffness 42 times, and, for an antiplane core, the
+shear stiffness `G_c d^2/c` of Allen (1969), Eq. (2.15b), with `d` the
+distance between the centroids of the faces, within the bounds given by the
+local bending and the shear strains of the faces that Allen neglects. The
+antiplane core, with zero moduli in the plane of the faces and finite
+transverse shear moduli (Allen, 1969, p. 14), is given by ``laminaprop =
+(0, 0, nu12, 0, G13, G23)``, or with nine entries ``(0, 0, nu12, 0, G13,
+G23, E33, 0, 0)``, see :func:`.read_laminaprop`; it adds only transverse
+shear stiffness:
+
+.. literalinclude:: ../../tests/test_shellprop_transverse_shear.py
+    :pyobject: test_sandwich_antiplane_core_converges_to_allen_1969
+
+Rohwer (1988), Sec. 4.3, also gives the stiffnesses of a sandwich panel,
+Table 4, p. 23, which are not used as a test: its transverse shear
+stiffnesses are reproduced only with a foam shear modulus of 0.04 kN/mm\ :sup:`2`,
+i.e. `\nu = 0.25` instead of the stated 0.3, and its bending stiffnesses
+contradict the stated lay-up, since the ratio `(D_{11} - D_{22})/D_{16}`,
+which depends on the positions of the layers alone, is 4.216 for the lay-up
+of his Fig. 9 against 4.71 from the printed values. The details are in the
+comments of ``tests/test_shellprop_transverse_shear.py``.
+
+Allen, H. G., Analysis and Design of Structural Sandwich Panels, Pergamon
+Press, 1969, Chap. 2,
+`doi:10.1016/B978-0-08-012870-2.50006-7
+<https://doi.org/10.1016/B978-0-08-012870-2.50006-7>`_.

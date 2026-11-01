@@ -2,8 +2,14 @@ r"""The two zero-energy modes of the selectively underintegrated element
 
 These tests record a known and documented property of the element that
 :class:`pyfe3d.Quad4` is built on, they do not report an implementation
-error. The two modes are the ones of Figure 10 of the paper the integration
-scheme comes from:
+error. Since 0.12.0 it is the element of ``shear_model = 0``, the one-point
+transverse shear of the versions up to 0.11, and the default ``shear_model =
+1`` takes the assumed transverse shear strains of the MITC4 element for
+every thickness, which removes both modes, see
+``test_the_default_has_no_zero_energy_mode``. Unless said otherwise, every
+Quad4 below is given ``shear_model = 0`` by :func:`set_legacy_shear`. The
+two modes are the ones of Figure 10 of the paper the integration scheme
+comes from:
 
     Hughes, T. J. R., Taylor, R. L. and Kanoknukulchai, W., 1977, "A simple
     and efficient finite element for plate bending", IJNME, 11(10), pp.
@@ -38,12 +44,17 @@ shear energy of their Eq. 7. Against the convention of pyfe3d, where
 Both therefore cost no energy when the rotation part of the shear is sampled
 at the centroid alone.
 
-The paper also gives the remedy for Mode 1, the "modified one-point shear"
+The paper also gives a remedy for Mode 1, the "modified one-point shear"
 element, which moves the `(\partial w/\partial x_\alpha)^2` contributions to a
 two-by-two rule and leaves the rest at one point, and recommends it "when the
-t/h ratio exceeds unity". :class:`pyfe3d.Quad4` implements exactly that, gated
-at `h/\ell \ge 1`, and the gate is measured below: Mode 1 costs nothing at
-`h/\ell < 1` and 0.1496 of the largest eigenvalue at `h/\ell \ge 1`.
+t/h ratio exceeds unity". :class:`pyfe3d.Quad4` applied it, gated at
+`h/\ell \ge 1`, up to version 0.11, but the modified rule stores spurious shear
+energy in a state of pure twist, see ``tests/test_quad4_thick_twist.py``, and
+since 0.12.0 the elements with `h/\ell \ge 1` use the assumed transverse shear
+strains of Dvorkin and Bathe given at the end of this docstring, which remove
+both modes. The gate is measured below: Modes 1 and 2 cost nothing at `h/\ell
+< 1`, and at `h/\ell \ge 1` exactly the energies of their transverse shear
+strains interpolated as in Eqs. (6) and (7) of Bathe and Dvorkin (1985).
 
 What the paper says about each mode is also confirmed here. Mode 2 "cannot
 persist" in an assembled mesh once the rigid-body modes are removed, and it
@@ -55,12 +66,21 @@ boundary line, which is why it is invisible in the rest of this test suite.
 Where it does bite is a strip one element wide loaded in torsion, because the
 twist of such a strip *is* the hourglass pattern `w \propto xy`, so the
 element has no stiffness against precisely the deformation being asked for.
-On the twist case of the MacNeal and Harder straight cantilever, at their 6 by
-1 mesh, the ratio to the reference value is 377 for Quad4, 4.9 for Quad4R and
-1.7 for Tria3R, the last two being helped by the hourglass control of
-Brockman (1987) and by the transverse shear stabilisation of Bischoff and
-Bletzinger (2004) respectively. Two elements across the width bring Quad4 to
-1.02 and Quad4R to 0.92.
+On the twist case of the straight cantilever of MacNeal and Harder (1985),
+see ``test_torsion_of_a_one_element_wide_strip``, at their 6 by 1 mesh, the
+ratio to the reference value is 377 for Quad4, 4.8 for Quad4R and 1.7 for
+Tria3R with ``shear_model = 0``, the last two being helped by the hourglass
+control of Brockman (1987) and by the transverse shear stabilisation of
+Bischoff and Bletzinger (2004) respectively. Two elements across the width
+bring Quad4 to 1.02 and Quad4R to 0.92.
+
+``shear_model = 0`` is also the centroid-sampled transverse shear that
+Tria3R used by default up to 0.11, and it is the one these tests are about,
+so every Tria3R built here is given it, with ``alpha_shear_locking = 0.7``,
+by :func:`set_legacy_shear`, except in the torsion of the strip, which also
+measures the defaults since 0.12.0, the discrete shear gap field of
+``shear_model = 1`` of Tria3R and the MITC4 strains of ``shear_model = 1``
+of Quad4.
 
 Neither of the two obvious remedies works for a thin plate, which is measured
 in ``test_no_cheap_quadrature_fix_exists``. Integrating the whole shear term
@@ -71,7 +91,11 @@ slenderness of 10 and 0.04% at 1000, which is the very failure the paper was
 written to avoid, and which its Tables I and II report for the beam.
 Ungating the paper's own modified scheme is worse still, locking the plate to
 the same degree while also making the strip 33 times too stiff. The remedy
-that removes the modes without locking is an assumed transverse shear field:
+that removes the modes without locking is an assumed transverse shear field,
+which :class:`pyfe3d.Quad4` uses for `h/\ell \ge 1` since 0.12.0, and for
+every thickness with the default ``shear_model = 1``, whereas with
+``shear_model = 0`` the thin elements keep the one-point rule and the two
+modes:
 
     Dvorkin, E. N. and Bathe, K. J., 1984, "A continuum mechanics based
     four-node shell element for general nonlinear analysis", Engineering
@@ -101,12 +125,29 @@ TRIANGLE = np.array([[0., 0., 0.], [2., 0., 0.], [0.3, 1.2, 0.]])
 GAUSS2 = (-0.5773502691896257, 0.5773502691896257)
 
 
-def element_K(cls, Data, Probe, ncoords, h, drilling_model=0):
+def set_legacy_shear(el):
+    r"""Give a Tria3R or a Quad4 the transverse shear of before 0.12.0
+
+    For Tria3R the centroid-sampled field, ``shear_model = 0`` with
+    ``alpha_shear_locking = 0.7``, the former defaults; for Quad4 the
+    one-point rule of Hughes et al. (1977) for `h/\ell < 1`, ``shear_model
+    = 0``. Any other element is left alone.
+    """
+    if isinstance(el, Tria3R):
+        el.shear_model = 0
+        el.alpha_shear_locking = 0.7
+    elif isinstance(el, Quad4):
+        el.shear_model = 0
+
+
+def element_K(cls, Data, Probe, ncoords, h, drilling_model=0, legacy=True):
     prop = isotropic_plate(thickness=h, E=1., nu=0.3)
     num_nodes = ncoords.shape[0]
     data = Data()
     probe = Probe()
     el = cls(probe)
+    if legacy:
+        set_legacy_shear(el)
     ncoords_flatten = ncoords.flatten()
     for i in range(num_nodes):
         setattr(el, 'n%d' % (i + 1), i + 1)
@@ -151,17 +192,40 @@ def test_figure_10_modes_of_hughes_taylor_kanoknukulchai():
     element matrix:
 
         h/l      Mode 2 in-plane twist   Mode 1 hourglass
-        0.01            1.2e-18              0.0
-        0.1             5.3e-18              0.0
-        0.5            -1.0e-18              0.0
-        1.0            -1.9e-18              0.1496
-        2.0            -8.3e-18              0.1496
+        0.01            5.0e-19              0.0
+        0.1             4.6e-18              0.0
+        0.5             1.3e-18              0.0
+        1.0             0.0187               0.1496
+        2.0             0.0187               0.1496
 
-    The step in Mode 1 is the switch to the modified one-point shear rule of
-    the paper, which the paper recommends for `t/h > 1` and which
-    :class:`.Quad4` applies at `h/\ell \ge 1`. Mode 2 is not touched by it,
-    consistently with the paper, which offers no remedy for it and argues
-    instead that it cannot persist in a mesh.
+    The step is the switch to the assumed transverse shear strains of the
+    MITC4 element, which :class:`.Quad4` applies at `h/\ell \ge 1` since
+    0.12.0. The modified one-point shear rule of the paper, applied up to
+    0.11, gave the same 0.1496 to Mode 1 but left Mode 2 free, consistently
+    with the paper, which offers no remedy for it and argues instead that it
+    cannot persist in a mesh.
+
+    Above the gate the energies follow in closed form from the assumed
+    shear strains of Bathe and Dvorkin (1985), p. 370, Eq. (6): on a
+    rectangle `\gamma_{xz}` is interpolated linearly in `y` between its
+    values at the mid-points of the edges `y = \pm \ell/2`, Eq. (7a),
+    `\gamma_{yz}` linearly in `x`, Eq. (7b), and these edge values are
+    exact for the bilinear fields of both modes. On the unit square, with
+    the modes normalised to unit length:
+
+    - Mode 1, nodal `w = \pm 1/2`, is `w = 2 X Y`: `\gamma_{xz} = 2 Y`,
+      `\gamma_{yz} = 2 X`, no curvature, `u^T K u = 2 U = A_{55}
+      \int (4 Y^2 + 4 X^2) dA = 2 A_{55}/3`;
+    - Mode 2, `r_x = X/\sqrt{2}`, `r_y = Y/\sqrt{2}`: `\gamma_{xz} =
+      Y/\sqrt{2}`, `\gamma_{yz} = -X/\sqrt{2}`, no curvature and no
+      drilling, `u^T K u = A_{55}/12`;
+
+    `A_{44} = A_{55} = k G h`, `k = 5/6`. The ratios of the table follow
+    with the largest eigenvalue, the equal biaxial stretching of the
+    membrane, `E h/(1 - \nu)` for these `h`: `(5/9)(1 - \nu) G/E = 0.1496`
+    and `(5/72)(1 - \nu) G/E = 0.0187`. The energies, not the ratios, are
+    asserted, the largest eigenvalue depending on the membrane and drilling
+    parts of the element.
 
     """
     for drilling_model in (0, 1):
@@ -176,18 +240,19 @@ def test_figure_10_modes_of_hughes_taylor_kanoknukulchai():
             assert abs(U1) < 1.e-14, (h, U1)
             assert abs(U2) < 1.e-14, (h, U2)
 
-        # above the gate the modified rule of the paper removes Mode 1 and
-        # leaves Mode 2 alone
+        # above the gate the assumed strains remove both modes
         for h in (1., 2.):
             K, xe = element_K(Quad4, Quad4Data, Quad4Probe, SQUARE, h,
                               drilling_model)
             mode1, mode2 = htk_modes(xe, 4)
             emax = np.linalg.eigvalsh(K).max()
-            U1 = mode1.dot(K.dot(mode1))/emax
-            U2 = mode2.dot(K.dot(mode2))/emax
-            print('h/l=%g: mode1 %.4f mode2 %.3e' % (h, U1, U2))
-            assert abs(U1 - 0.1496) < 1.e-3, (h, U1)
-            assert abs(U2) < 1.e-14, (h, U2)
+            U1 = mode1.dot(K.dot(mode1))
+            U2 = mode2.dot(K.dot(mode2))
+            A55 = isotropic_plate(thickness=h, E=1., nu=0.3).A55
+            print('h/l=%g: mode1 %.4f mode2 %.4f of the largest eigenvalue'
+                  % (h, U1/emax, U2/emax))
+            assert np.isclose(U1, 2*A55/3, rtol=1.e-10), (h, U1)
+            assert np.isclose(U2, A55/12, rtol=1.e-10), (h, U2)
 
 
 def test_mode_2_is_shared_by_the_three_shell_elements():
@@ -196,10 +261,23 @@ def test_mode_2_is_shared_by_the_three_shell_elements():
     Exactly free on a regular shape, and of order `(h/\ell)^2` on a distorted
     one, so still a mechanism for any thin element.
 
+    Quad4R shared it up to 0.11. Since 0.12.0 its transverse shear is that
+    of Belytschko and Leviathan (1994), whose stabilisation of the
+    nonconstant part of the assumed shear strains gives Mode 2 the energy
+    0.018697 times the largest eigenvalue on the square, at both
+    thicknesses (measured on 2026-10-29), see
+    ``test_twisting_mode_is_stabilised`` in
+    ``test_quad4r_hourglass_control.py``.
+
     """
+    for h in (0.01, 0.1):
+        K, xe = element_K(Quad4R, Quad4RData, Quad4RProbe, SQUARE, h)
+        _, mode2 = htk_modes(xe, 4)
+        U = mode2.dot(K.dot(mode2))/np.linalg.eigvalsh(K).max()
+        print('Quad4R h/l=%g: %.6f' % (h, U))
+        assert np.isclose(U, 0.01869658119658119, rtol=1e-6), (h, U)
     for name, cls, Data, Probe, ncoords, num_nodes in [
             ('Quad4', Quad4, Quad4Data, Quad4Probe, SQUARE, 4),
-            ('Quad4R', Quad4R, Quad4RData, Quad4RProbe, SQUARE, 4),
             ('Tria3R', Tria3R, Tria3RData, Tria3RProbe, TRIANGLE, 3)]:
         for h in (0.01, 0.1):
             K, xe = element_K(cls, Data, Probe, ncoords, h)
@@ -220,7 +298,8 @@ def test_mode_2_is_shared_by_the_three_shell_elements():
         previous = U
 
 
-def plate_K(cls, Data, Probe, nx, ny, Lx, Ly, h, E, nu, triangles=False):
+def plate_K(cls, Data, Probe, nx, ny, Lx, Ly, h, E, nu, triangles=False,
+            legacy=True):
     prop = isotropic_plate(thickness=h, E=E, nu=nu)
     xs = np.linspace(0., Lx, nx + 1)
     ys = np.linspace(0., Ly, ny + 1)
@@ -247,6 +326,8 @@ def plate_K(cls, Data, Probe, nx, ny, Lx, Ly, h, E, nu, triangles=False):
     k = 0
     for el_nodes in conn:
         el = cls(probe)
+        if legacy:
+            set_legacy_shear(el)
         for t, nid in enumerate(el_nodes):
             setattr(el, 'n%d' % (t + 1), nid + 1)
             setattr(el, 'c%d' % (t + 1), DOF*nid)
@@ -265,6 +346,144 @@ def num_zeros(K, free=None, tol=1.e-9):
         K = K[np.ix_(free, free)]
     ev = np.linalg.eigvalsh(K)
     return int((ev < tol*ev.max()).sum())
+
+
+def element_KC0ve(xy, h, shear_model):
+    r"""``KC0ve`` of the probe, element coordinates, isotropic, `E = 1`,
+    `\nu = 0.3`, with the node coordinates of ``xy`` in the element plane"""
+    prop = isotropic_plate(thickness=h, E=1., nu=0.3)
+    ncoords = np.column_stack((xy, np.zeros(4))).flatten()
+    probe = Quad4Probe()
+    el = Quad4(probe)
+    el.shear_model = shear_model
+    el.n1, el.n2, el.n3, el.n4 = 1, 2, 3, 4
+    el.c1, el.c2, el.c3, el.c4 = 0, DOF, 2*DOF, 3*DOF
+    el.update_rotation_matrix(ncoords)
+    el.update_probe_xe(ncoords)
+    el.update_area()
+    data = Quad4Data()
+    r = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    c = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    v = np.zeros(data.KC0_SPARSE_SIZE, dtype=DOUBLE)
+    el.update_KC0(r, c, v, prop)
+    K = np.asarray(probe.KC0ve).reshape(24, 24)
+    return 0.5*(K + K.T), np.asarray(probe.xe).reshape(4, 3)[:, :2], prop
+
+
+def bl94_stabilisation(xy, prop):
+    r"""Stabilisation of the transverse shear of Belytschko and Leviathan
+    (1994), Eq. (4.13), p. 331, on the 24 degrees-of-freedom
+
+    The covariant shear strains `e_\xi = w_{,\xi} + x_{,\xi} r_y - y_{,\xi}
+    r_x` at the mid-points B `(0, -1)` and D `(0, 1)`, and `e_\eta` at A
+    `(-1, 0)` and C `(1, 0)`, their Eqs. (3.35)-(3.39); the nonconstant
+    parts `\eta (e_D - e_B)/2` and `\xi (e_C - e_A)/2` mapped with the
+    inverse Jacobian at the centroid and integrated with `\int \xi^2 dA =
+    \int \eta^2 dA = A/3`, Eqs. (4.10) and (4.15).
+
+        Belytschko, T. and Leviathan, I., 1994, "Physical stabilization of
+        the 4-node shell element with one point quadrature", Computer
+        Methods in Applied Mechanics and Engineering, 113(3-4), pp. 321-350.
+        doi:10.1016/0045-7825(94)90052-3
+
+    """
+    XI = np.array([-1., 1., 1., -1.])
+    ETA = np.array([-1., -1., 1., 1.])
+
+    def cov(xi, eta, comp):
+        N = 0.25*(1 + XI*xi)*(1 + ETA*eta)
+        dN = (0.25*XI*(1 + ETA*eta), 0.25*ETA*(1 + XI*xi))[comp]
+        dx, dy = dN @ xy[:, 0], dN @ xy[:, 1]
+        e = np.zeros(24)
+        e[2::DOF] = dN
+        e[3::DOF] = -dy*N
+        e[4::DOF] = dx*N
+        return e
+
+    J0 = np.array([[0.25*XI @ xy[:, 0], 0.25*XI @ xy[:, 1]],
+                   [0.25*ETA @ xy[:, 0], 0.25*ETA @ xy[:, 1]]])
+    J0inv = np.linalg.inv(J0)
+    area = 4*np.linalg.det(J0)
+    zero = np.zeros(24)
+    # NOTE rows of (gamma_xz, gamma_yz)
+    D1 = J0inv @ np.array([0.5*(cov(0., 1., 0) - cov(0., -1., 0)), zero])
+    D2 = J0inv @ np.array([zero, 0.5*(cov(1., 0., 1) - cov(-1., 0., 1))])
+    Cs = np.array([[prop.A55, prop.A45], [prop.A45, prop.A44]])
+    return area/3.*(D1.T @ Cs @ D1 + D2.T @ Cs @ D2)
+
+
+def test_the_default_has_no_zero_energy_mode():
+    r"""``shear_model = 1``, the default since 0.12.0: six zero eigenvalues,
+    and on a parallelogram the element of Hughes et al. (1977) plus the
+    stabilisation of Belytschko and Leviathan (1994)
+
+    The assumed transverse shear strains of the MITC4 element, see
+    ``test_figure_10_modes_of_hughes_taylor_kanoknukulchai``, give Modes 1
+    and 2 the energies `2 A_{55}/3` and `A_{55}/12` on the unit square at
+    any thickness, and leave six zero eigenvalues on a single element, on
+    the distorted one and on a free-free mesh. Bathe and Dvorkin (1985),
+    pp. 372-373, state that their element has no spurious zero-energy mode.
+
+    On a parallelogram the Jacobian is constant, the MITC4 strain at the
+    centroid is the displacement-based one, and the two-by-two integral of
+    the MITC4 shear energy is the one-point term plus the energy of the
+    parts of the assumed strains linear in `\eta` and `\xi` (derived here):
+    ``KC0`` of the default minus that of ``shear_model = 0`` is the
+    stabilisation of Belytschko and Leviathan (1994), Eq. (4.13), p. 331,
+    see :func:`bl94_stabilisation`, a matrix of rank two whose energy
+    vanishes for every state of constant transverse shear and of constant
+    curvature. On the distorted element the difference also changes the
+    constant part, and it is not that matrix: the displacement-based
+    centroid strain of the one-point rule does not vanish under constant
+    curvature there, which is why that rule fails the bending patch test,
+    Belytschko and Leviathan (1994), p. 337, Table 3.
+
+    """
+    for drilling_model in (0, 1):
+        for h in (0.01, 0.1, 0.5, 1., 2.):
+            K, xe = element_K(Quad4, Quad4Data, Quad4Probe, SQUARE, h,
+                              drilling_model, legacy=False)
+            ev = np.linalg.eigvalsh(K)
+            assert int((np.abs(ev) < 1.e-10*ev.max()).sum()) == 6, h
+            mode1, mode2 = htk_modes(xe, 4)
+            A55 = isotropic_plate(thickness=h, E=1., nu=0.3).A55
+            assert np.isclose(mode1 @ K @ mode1, 2*A55/3, rtol=1.e-10), h
+            assert np.isclose(mode2 @ K @ mode2, A55/12, rtol=1.e-10), h
+            K, xe = element_K(Quad4, Quad4Data, Quad4Probe, DISTORTED, h,
+                              drilling_model, legacy=False)
+            ev = np.linalg.eigvalsh(K)
+            assert int((np.abs(ev) < 1.e-10*ev.max()).sum()) == 6, h
+    for n in (2, 4):
+        K = plate_K(Quad4, Quad4Data, Quad4Probe, n, n, 1., 1., 0.01, 1.,
+                    0.3, legacy=False)[0]
+        assert num_zeros(K) == 6, n
+
+    parallelogram = np.array([[0., 0.], [2., 0.], [2.6, 1.], [0.6, 1.]])
+    for name, xy in (('square', SQUARE[:, :2]),
+                     ('parallelogram', parallelogram),
+                     ('distorted', DISTORTED[:, :2])):
+        for h in (0.01, 0.5):
+            K1, xe, prop = element_KC0ve(xy, h, 1)
+            K0, _, _ = element_KC0ve(xy, h, 0)
+            Ks = bl94_stabilisation(xe, prop)
+            assert np.linalg.matrix_rank(Ks, 1.e-10*np.abs(Ks).max()) == 2
+            diff = np.abs(K1 - K0 - Ks).max()/np.abs(Ks).max()
+            print('%s, h = %g: |K1 - K0 - Ks|/|Ks| = %.1e' % (name, h, diff))
+            if name == 'distorted':
+                assert diff > 0.1
+            else:
+                assert diff < 1.e-12
+            # NOTE states of constant transverse shear and curvature
+            xc = xe - xe.mean(axis=0)
+            x, y = xc[:, 0], xc[:, 1]
+            for w, rx, ry in ((0*x, 0*x, 1 + 0*x), (0*x, 1 + 0*x, 0*x),
+                              (-x**2/2, 0*x, x), (-y**2/2, -y, 0*x),
+                              (x*y, x, -y)):
+                u = np.zeros(24)
+                u[2::DOF], u[3::DOF], u[4::DOF] = w, rx, ry
+                U = u @ Ks @ u/(u @ u)/np.abs(Ks).max()
+                if name != 'distorted':
+                    assert abs(U) < 1.e-14, U
 
 
 def test_mode_2_does_not_persist_in_a_mesh_but_mode_1_does():
@@ -323,7 +542,7 @@ def test_mode_2_does_not_persist_in_a_mesh_but_mode_1_does():
                                  1., 1., 0.01, 1., 0.3,
                                  triangles=True)[0]) == 6, n
 
-    # above the thickness gate the modified rule removes it here too
+    # above the thickness gate the assumed strains remove it here too
     assert num_zeros(plate_K(Quad4, Quad4Data, Quad4Probe, 4, 4,
                              1., 1., 1., 1., 0.3)[0]) == 6
 
@@ -365,10 +584,11 @@ def test_a_supported_boundary_suppresses_mode_1():
         assert num_zeros(K, ~bk) == 6, n
 
 
-def strip_twist(cls, Data, Probe, ny, triangles=False):
-    r"""Twist of the MacNeal and Harder 6 by ny strip, reference 0.03208"""
+def strip_twist(cls, Data, Probe, ny, triangles=False, legacy=True):
+    r"""Tip twist under a unit torque of the 6 by ny strip of the straight
+    cantilever of MacNeal and Harder (1985), reference 0.03208"""
     K, ncoords, ids, N = plate_K(cls, Data, Probe, 6, ny, 6., 0.2, 0.1,
-                                 1.e7, 0.3, triangles)
+                                 1.e7, 0.3, triangles, legacy)
     bk = np.zeros(N, dtype=bool)
     root = np.isclose(ncoords[:, 0], 0.)
     for d in range(DOF):
@@ -386,29 +606,125 @@ def strip_twist(cls, Data, Probe, ny, triangles=False):
 def test_torsion_of_a_one_element_wide_strip():
     r"""The twist of such a strip is the hourglass pattern itself
 
-    Ratio to the reference value of 0.03208:
+    Straight cantilever of
 
-        element      ny=1    ny=2    ny=4
-        Quad4       377.4    1.019   1.059
-        Quad4R        4.85   0.923   1.002
-        Tria3R        1.67   1.649   1.645
+        MacNeal, R. H. and Harder, R. L., 1985, "A proposed standard set of
+        problems to test finite element accuracy", Finite Elements in
+        Analysis and Design, 1(1), pp. 3-20. doi:10.1016/0168-874X(85)90003-4
 
-    Quad4 has no stiffness against the deformation being asked for. Quad4R
-    and Tria3R are helped by their stabilisations but are still wrong at
-    ny=1, so the practical rule is at least two elements across the width for
-    any strip that carries torsion.
+    Fig. 4, p. 7: length 6, width 0.2, thickness 0.1, `E = 10^7`, `\nu =
+    0.3`, 6 by 1 mesh, clamped root; twist under a unit tip torque, here a
+    couple of normal forces at the two tip corners, theoretical value
+    0.03208, Table 3, p. 10. Ratio to it, measured:
+
+        element                 ny=1    ny=2    ny=4
+        Quad4                  377.4    1.019   1.059
+        Quad4, default           0.941  0.941   1.014
+        Quad4R                   0.941  0.941   1.014
+        Tria3R, shear_model=0    1.67   1.649   1.645
+        Tria3R, default          0.675  0.674   0.674
+
+    (Quad4R up to 0.11: 4.78, 0.923 and 1.001.) "Quad4, default" is
+    ``shear_model = 1``, the assumed transverse shear strains of the MITC4
+    element, whose twists agree with those of Quad4R within 1e-12: on a
+    rectangle the two elements have the same out-of-plane stiffness, the
+    bending stabilisation of Quad4R making its one-point bending equal to
+    the two-by-two bending of Quad4, and the transverse shear of Belytschko
+    and Leviathan (1994) of Quad4R being equal to the MITC4 shear with
+    two-by-two points, see ``test_the_default_has_no_zero_energy_mode``.
+
+    The grades of MacNeal and Harder (1985), p. 14, are used as the
+    thresholds: A for an error of at most 2 %, B at most 10 %, C at most
+    20 %, D at most 50 %, F above. Quad4 has no stiffness against the
+    deformation being asked for, more than 100 times the reference. Tria3R
+    with ``shear_model = 0`` is helped by its stabilisation but still fails
+    at ny=1, grade F, as Quad4R did up to 0.11, so the practical rule for
+    these elements is at least two elements across the width for any strip
+    that carries torsion; with two and four Quad4 gets grade B or better.
+    Since 0.12.0 Quad4R, with the physical stabilisation of the bending
+    and of the transverse shear of Belytschko and Leviathan (1994), gets
+    grade B with one and two and A with four. Tria3R with
+    ``shear_model = 0`` stays at 1.65 with 6 elements along the length,
+    still grade F, and is not asserted at ny > 1. The default Tria3R since
+    0.12.0, the discrete shear gap field of ``shear_model = 1``, is 33 per
+    cent too stiff on every one of the three meshes, grade D, the same as
+    :class:`pyfe3d.Tria3DSG`, with six pairs of triangles along the length;
+    it is asserted at ny=1 only.
+
+    The theoretical value of the table is 0.94 times the Saint-Venant twist
+    `T L/(G J)` of the 0.2 x 0.1 rectangle, 0.03411, `J = 0.2287 b h^3`
+    from the series of Timoshenko, S. P. and Goodier, J. N., Theory of
+    Elasticity, 2nd ed., McGraw-Hill, 1951, p. 278, Eq. (160), whose table
+    on p. 277 gives `k_1 = 0.229` for `b/a = 2`, see
+    ``tests/test_quad4_thick_twist.py``; Quad4R meshes of 24x4, 48x8 and
+    96x16 elements, the torque applied as normal forces proportional to the
+    distance from the axis, give 1.049, 1.063 and 1.067 times 0.03208. The
+    ratios above are kept against the value of MacNeal and Harder, whose
+    grades refer to it.
+
+    The 6 % between Quad4 with 6x4 elements and 0.03208 is not a mesh error
+    that refinement removes: Quad4 and Quad4R converge to the same twist,
+    about 1.067 times 0.03208, measured on 2026-10-29 with the distributed
+    torque above (ratio to 0.03208):
+
+    ========  ======  ======  ======  ======  ======  ======  =======
+    element   6x2     6x4     12x4    24x8    48x8    96x16   192x32
+    ========  ======  ======  ======  ======  ======  ======  =======
+    Quad4     1.0188  1.0583  1.0651  1.0499  1.0518  1.0622  1.0655
+    Quad4R    0.9407  1.0135  1.0182  1.0499  1.0518  1.0622  1.0655
+    ========  ======  ======  ======  ======  ======  ======  =======
+
+    and with the corner forces of this test, whose deflection is singular,
+    1.0700 for both with 192x32 elements. The converged value, 0.0342, is
+    0.3 % above the Saint-Venant twist; the difference to 0.03208 is one of
+    the reference, whose derivation is not given in MacNeal and Harder, and
+    no mesh is graded A against it. Following the policy of the tests whose
+    reference is not reached on the coarse mesh used, the 6x2 and 6x4 meshes,
+    and the 6x1 mesh of Quad4R, are compared with the values pre-determined
+    by this same test, with ``rtol = 1e-6`` for the round-off of the dense linear solution, whose
+    condition number is about 1e9 (``test_drilling_benchmarks.py``), and with
+    grade B against 0.03208 as a bound.
 
     """
     ref = 0.03208
+    # NOTE values pre-determined by strip_twist on 2026-10-29, and on
+    #      2026-10-30 for the default Quad4, 'Quad4, default'
+    predetermined = {('Quad4, default', 1): 0.030178871085683706,
+                     ('Quad4, default', 2): 0.030178995785733735,
+                     ('Quad4, default', 4): 0.032516470823351365,
+                     (Quad4, 2): 0.03268400685870222,
+                     (Quad4, 4): 0.03397594865499767,
+                     (Quad4R, 1): 0.030178871085670064,
+                     (Quad4R, 2): 0.030178995785714476,
+                     (Quad4R, 4): 0.03251647082333005}
     assert strip_twist(Quad4, Quad4Data, Quad4Probe, 1)/ref > 100.
-    assert 3. < strip_twist(Quad4R, Quad4RData, Quad4RProbe, 1)/ref < 8.
-    assert 1.4 < strip_twist(Tria3R, Tria3RData, Tria3RProbe, 1,
-                             triangles=True)/ref < 2.
+    twist = strip_twist(Quad4R, Quad4RData, Quad4RProbe, 1)
+    assert np.isclose(twist, predetermined[Quad4R, 1], rtol=1e-6)
+    # NOTE grade B of MacNeal and Harder (1985), error at most 10 %
+    assert abs(twist/ref - 1.) <= 0.10
+    # NOTE grade F of MacNeal and Harder (1985), error above 50 %
+    assert strip_twist(Tria3R, Tria3RData, Tria3RProbe, 1,
+                       triangles=True)/ref - 1 > 0.5
+    # NOTE grade D, error between 20 and 50 %, for the default Tria3R
+    twist = strip_twist(Tria3R, Tria3RData, Tria3RProbe, 1, triangles=True,
+                        legacy=False)
+    assert 0.2 < abs(twist/ref - 1.) <= 0.5, twist/ref
+    # NOTE the default Quad4: grade B with one and two elements across
+    for ny in (1, 2, 4):
+        twist = strip_twist(Quad4, Quad4Data, Quad4Probe, ny, legacy=False)
+        print('Quad4, default, ny=%d: %.6f of the reference' % (ny, twist/ref))
+        assert np.isclose(twist, predetermined['Quad4, default', ny],
+                          rtol=1e-6), ny
+        assert np.isclose(twist, strip_twist(Quad4R, Quad4RData, Quad4RProbe,
+                                             ny), rtol=1e-10), ny
+        assert abs(twist/ref - 1.) <= 0.10, ny
     for ny in (2, 4):
-        assert abs(strip_twist(Quad4, Quad4Data, Quad4Probe, ny)/ref
-                   - 1.) < 0.07, ny
-        assert abs(strip_twist(Quad4R, Quad4RData, Quad4RProbe, ny)/ref
-                   - 1.) < 0.09, ny
+        for cls, Data, Probe in ((Quad4, Quad4Data, Quad4Probe),
+                                 (Quad4R, Quad4RData, Quad4RProbe)):
+            twist = strip_twist(cls, Data, Probe, ny)
+            assert np.isclose(twist, predetermined[cls, ny], rtol=1e-6), ny
+            # NOTE grade B or better, error at most 10 %
+            assert abs(twist/ref - 1.) <= 0.10, ny
 
 
 def reference_K(nx, ny, Lx, Ly, h, E, nu, scheme):
@@ -420,8 +736,9 @@ def reference_K(nx, ny, Lx, Ly, h, E, nu, scheme):
     - ``pure1``: the whole term at the centroid, which is what Quad4 uses
       below the thickness gate
     - ``modified``: two-by-two on the gradient-gradient part and one point on
-      the rest, the modified rule of the paper, which Quad4 uses above the
-      gate
+      the rest, the modified rule of the paper, which Quad4 used above the
+      gate up to 0.11; since 0.12.0 Quad4 uses there the assumed strains of
+      the MITC4 element, not rebuilt here
     - ``full2x2``: the whole term at two-by-two
 
     """
@@ -525,7 +842,9 @@ def test_no_cheap_quadrature_fix_exists():
     The two-by-two rule gets the strip right and locks the plate. The
     modified rule of the paper, applied without its thickness gate, locks the
     plate just as badly and makes the strip thirty times too stiff as well,
-    so the gate that :class:`.Quad4` applies is the right one.
+    so it could only be used behind the thickness gate, where :class:`.Quad4`
+    applied it up to 0.11 and has applied the MITC4 assumed strains since
+    0.12.0.
 
     """
     # (a) the strip
@@ -588,6 +907,7 @@ def test_no_cheap_quadrature_fix_exists():
 if __name__ == '__main__':
     test_figure_10_modes_of_hughes_taylor_kanoknukulchai()
     test_mode_2_is_shared_by_the_three_shell_elements()
+    test_the_default_has_no_zero_energy_mode()
     test_mode_2_does_not_persist_in_a_mesh_but_mode_1_does()
     test_a_supported_boundary_suppresses_mode_1()
     test_torsion_of_a_one_element_wide_strip()

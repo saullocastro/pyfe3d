@@ -2,6 +2,7 @@ import sys
 sys.path.append('..')
 
 import numpy as np
+import pytest
 from numpy import isclose
 from scipy.sparse import coo_matrix
 
@@ -10,9 +11,21 @@ from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
 from pyfe3d.solver import linear_buckling
 
 
+@pytest.mark.slow
 def test_linear_buckling_plate(plot=False, mode=0):
-    #
+    r"""Linear buckling of the simply supported plate of
+    :func:`test_quad4r_linear_buckling_plate_given_stress.test_linear_buckling`
+    with 30x14 elements, rotated by 25 combinations of pitch and yaw
+
+    The buckling load must not depend on the orientation of the plate. With
+    this mesh it is 1.5 % above the exact solution of Leissa, A. W.,
+    Vibration of Plates, NASA SP-160, 1969, Sec. 10.2.1, p. 277, Eq.
+    (10.46); the convergence to that solution with the mesh is verified by
+    the flat plate of
+    :func:`test_quad4r_linear_buckling_plate_given_stress.test_linear_buckling`.
+    """
     thetas = np.linspace(-np.pi, np.pi, 5)
+    P_cr_calcs = []
 
     nx = 31
     ny = 15
@@ -134,6 +147,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
             P_cr_calc = load_mult*Nxx*b
             print('linear buckling load_mult =', load_mult)
             print('linear buckling P_cr_calc =', P_cr_calc)
+            P_cr_calcs.append(P_cr_calc)
 
             kcmin = 1e6
             mmin = 0
@@ -145,7 +159,8 @@ def test_linear_buckling_plate(plot=False, mode=0):
             sigma_cr = -kcmin*np.pi**2*E/(12*(1-nu**2))*h**2/b**2
             P_cr_theory = sigma_cr*h*b
             print('Theoretical P_cr_theory', P_cr_theory)
-            assert isclose(P_cr_theory, P_cr_calc, rtol=0.05)
+
+    assert np.allclose(P_cr_calcs, P_cr_calcs[0], rtol=1e-6)
 
     if plot:
         import matplotlib.pyplot as plt

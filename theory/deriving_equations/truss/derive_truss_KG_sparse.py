@@ -66,7 +66,7 @@ BL = Matrix([
     2/L*Nrx.diff(xi)])
 
 # Geometric stiffness matrix using Donnell's type of geometric nonlinearity
-# (or van Karman nonlinear terms)
+# (or von Kármán nonlinear terms)
 # exx = u,x + 1/2 w,x^2 + 1/2 v,x^2 - z d2w/dx2 - y d2v/dx2
 # remembering that
 # ry = -dw/dx
@@ -83,7 +83,7 @@ print('N =', N, flush=True)
 #NOTE for constant properties, N will be constant along x
 N = var('N', real=True)
 
-#NOTE v,x and w,x enter the von Karman strain as two separate squares,
+#NOTE v,x and w,x enter the von Kármán strain as two separate squares,
 #     exx = u,x + (v,x**2 + w,x**2)/2, so the geometric stiffness is
 #     N*(Sv_x.T*Sv_x + Sw_x.T*Sw_x), without coupling between v and w
 KGe = L/2.*simplify(integrate((Sv_x.T*Sv_x + Sw_x.T*Sw_x)*N, (xi, -1, +1)))

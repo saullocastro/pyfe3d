@@ -9,6 +9,19 @@ from pyfe3d import Truss, TrussData, TrussProbe, DOF, INT, DOUBLE
 from pyfe3d.solver import natural_frequency
 
 def test_truss_natural_freq(refinement=1, mtypes=range(2)):
+    r"""First five axial frequencies of a clamped-free rod
+
+    The reference is the exact solution of Example 3.1, Eq. (3.26), p. 49,
+    of Petyt, M., Introduction to Finite Element Vibration Analysis, 2nd
+    ed., Cambridge University Press, 2010:
+    ``omega_r = (2*r - 1)*pi/2*sqrt(E/(rho*L**2))``.
+
+    The linear elements converge quadratically, from above with the
+    consistent mass matrix and from below with the lumped one, with nearly
+    the same errors: 0.001, 0.009, 0.026, 0.050 and 0.083 % with 100
+    elements, 0.004 to 0.33 % with 50 elements, 0.017 to 1.34 % with 25
+    elements.
+    """
     for mtype in mtypes:
         print('mtype', mtype)
         n = 101*refinement
@@ -86,7 +99,7 @@ def test_truss_natural_freq(refinement=1, mtypes=range(2)):
 
         # applying boundary conditions
         bk = np.zeros(N, dtype=bool)
-        # simply-supported with right-end free to move horizontally
+        # axial displacement fixed at x = 0, right end free
         check = np.isclose(x, 0.)
         bk[0::DOF] = check # u
         check = np.isclose(x, L)
@@ -113,7 +126,7 @@ def test_truss_natural_freq(refinement=1, mtypes=range(2)):
         print('Theoretical omegan', omegan_theoretical)
         print('Numerical omegan', omegan)
         print()
-        assert np.allclose(omegan_theoretical, omegan, rtol=0.01)
+        assert np.allclose(omegan_theoretical, omegan, rtol=0.002)
 
 if __name__ == '__main__':
     test_truss_natural_freq(refinement=1)

@@ -11,12 +11,31 @@ from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
 from pyfe3d.solver import natural_frequency
 
 
-def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
+def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=2):
+    r"""Fundamental frequency of a simply supported plate under a uniform
+    compression ``N_xx`` equal to half of its buckling load
+
+    The reference is the exact solution of Leissa, A. W., Vibration of Plates,
+    NASA SP-160, 1969, Sec. 10.2.1, p. 277: the frequency equation (10.44),
+    ``rho*h*omega_mn**2 = D*((m*pi/a)**2 + (n*pi/b)**2)**2 + N_xx*(m*pi/a)**2``,
+    minimised over ``m`` and ``n``, and the buckling load (10.46).
+
+    With 42x26 elements the frequencies of the three mass matrices are 0.03 to
+    0.29 % above the reference, with 20x12 elements 0.21 to 1.39 %, measured on
+    2026-10-29 with the physical stabilisation of the bending and of the
+    transverse shear of Belytschko and Leviathan (1994) that Quad4R uses since
+    0.12.0, see :mod:`pyfe3d.quad4r`; up to 0.11, with the hourglass
+    stiffnesses of Brockman (1987), 0.14 to 0.39 % and 0.77 to 1.95 %.
+    """
     data = Quad4RData()
     probe = Quad4RProbe()
     for mtype in mtypes:
         nx = refinement*21
         ny = refinement*13
+        if (nx % 2) == 0:
+            nx += 1
+        if (ny % 2) == 0:
+            ny += 1
 
         a = 1.5
         b = 0.5
@@ -90,10 +109,7 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
             quad.K6ROT = 100.
             quad.update_rotation_matrix(ncoords_flatten)
             quad.update_probe_xe(ncoords_flatten)
-            factor = 1.
-            quad.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_u=factor,
-                            hgfactor_v=factor, hgfactor_w=factor,
-                            hgfactor_rx=factor, hgfactor_ry=factor)
+            quad.update_KC0(KC0r, KC0c, KC0v, prop)
             quad.update_M(Mr, Mc, Mv, prop, mtype=mtype)
             quads.append(quad)
             init_k_KC0 += data.KC0_SPARSE_SIZE
@@ -123,10 +139,16 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
 
         bu = ~bk
 
+        # NOTE buckling load of Leissa (1969), Eq. (10.46), with N_yy = 0
+        D = E*h**3/(12*(1 - nu**2))
+        Nxx_cr = max(-D*(a/(m*np.pi))**2*((m*np.pi/a)**2 + (np.pi/b)**2)**2
+                     for m in range(1, 21))
+        Nxx = 0.5*Nxx_cr
+
         # applying load along u at x=a
         # nodes at vertices get 1/2 of the force
         fext = np.zeros(N)
-        ftotal = -12500.
+        ftotal = Nxx*b
         print('ftotal', ftotal)
         # at x=0
         check = (isclose(x, 0) & ~isclose(y, 0) & ~isclose(y, b))
@@ -205,16 +227,14 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
         u = np.zeros(N)
         u[bu] = eigvecsu[:, mode]
 
-        # theoretical reference
-        m = 1
-        n = 1
-        D = 2*h**3*E/(3*(1 - nu**2))
-        wmn = (m**2/a**2 + n**2/b**2)*np.sqrt(D*np.pi**4/(2*rho*h))/2
+        # NOTE frequency equation of Leissa (1969), Eq. (10.44), with N_yy = 0
+        omega_theory = min(np.sqrt((D*((m*np.pi/a)**2 + (n*np.pi/b)**2)**2
+                                    + Nxx*(m*np.pi/a)**2)/(rho*h))
+                           for m in range(1, 21) for n in range(1, 6))
 
-        print('Theoretical omega123', wmn)
-        print('Numerical omega123', omegan[0:10])
-        wmn_at_buckling = 39.1 # approximately from my tryouts, with coarse mesh
-        assert isclose(wmn_at_buckling, omegan[0], rtol=0.05)
+        print('Theoretical omega', omega_theory)
+        print('Numerical omega', omegan[0:10])
+        assert isclose(omega_theory, omegan[0], rtol=0.01)
 
     if plot:
         import matplotlib.pyplot as plt
@@ -225,5 +245,5 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=1):
 
 
 if __name__ == '__main__':
-    test_nat_freq_pre_stress(plot=True, mode=0, mtypes=[0], refinement=1)
+    test_nat_freq_pre_stress(plot=True, mode=0, mtypes=[0], refinement=2)
 

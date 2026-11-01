@@ -84,7 +84,7 @@ block per node and per translations or rotations, see :doc:`conventions`, and
     * - :class:`.Quad4`, :class:`.Quad4R`
       - 576
       - 576
-      - 144
+      - 180
       - 480
       - ``KA_BETA``, ``KA_GAMMA``, ``CA``: 144
     * - :class:`.Tria3DSG`
@@ -135,7 +135,11 @@ The matrices are:
   stiffness matrix of the geometrically non-linear analyses;
 - ``KG``, the geometric stiffness matrix `\boldsymbol{K}_G(\boldsymbol{u})`, from the stress
   resultants of the displacements in the probe, or, for the shells, of
-  given membrane stress resultants with ``update_KG_given_stress``;
+  given membrane stress resultants with ``update_KG_given_stress``; 36 of
+  the 180 entries of :class:`.Quad4` and :class:`.Quad4R` hold the
+  eccentricity term of the rigid offsets of a warped element, on the
+  rotations of each node, zero for a flat element, see
+  :doc:`element_choice`;
 - ``M``, the mass matrix, consistent, lumped or, for some shells, with
   reduced integration, ``mtype`` 0, 1 or 2 of ``update_M`` for every
   element, see :doc:`element_choice`;
@@ -165,26 +169,33 @@ steps:
 4. Assembly: ``KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).tocsc()``.
 5. Boundary conditions: a Boolean array ``bk`` of the constrained dofs,
    e.g. ``bk[2::DOF] = edge`` for `w = 0` at the nodes of an edge, and
-   ``bu = ~bk`` for the free ones. The matrices are partitioned,
-   ``KC0uu = KC0[bu, :][:, bu]``, and the solution is expanded,
-   ``u[bu] = uu``. With :class:`.Analysis`, ``bu`` is passed instead and the
-   partition is done by the solver, see :doc:`nonlinear_analyses`. The
-   solvers of :mod:`pyfe3d.solver` do not remove null rows and columns: a
-   dof left without stiffness, e.g. an unattached node, an unstiffened
-   drilling rotation or a missing boundary condition, raises a
-   :class:`numpy.linalg.LinAlgError` naming the dofs, see
-   :func:`.check_null_rows_cols`.
-6. Solution: the linear static system `\boldsymbol{K}_{{C0}_{uu}} \boldsymbol{u}_u = \boldsymbol{f}_u`, with
-   :func:`.solve` or :func:`scipy.sparse.linalg.spsolve`; the eigenvalue
+   ``bu = ~bk`` for the free ones, with the prescribed displacements
+   ``uk[bk]``, zero at a fixed support. The matrices are partitioned,
+   ``KC0uu = KC0[bu, :][:, bu]`` and, for non-zero prescribed
+   displacements, ``KC0uk = KC0[bu, :][:, bk]``, and the solution is
+   expanded, ``u[bu] = uu`` and ``u[bk] = uk[bk]``, see
+   :doc:`linear_analyses`. With :class:`.Analysis`, ``bu`` and ``uk`` are
+   passed instead and the partition is done by the solver, see
+   :doc:`nonlinear_analyses`. A dof without stiffness or a missing support
+   raises an error, see :doc:`linear_analyses`. A structure without
+   supports is solved with inertia relief, see :doc:`inertia_relief`.
+6. Solution: the linear static system `\boldsymbol{K}_{{C0}_{uu}} \boldsymbol{u}_u =
+   \boldsymbol{f}_u - \boldsymbol{K}_{{C0}_{uk}} \boldsymbol{u}_k`, with :func:`.solve`,
+   :func:`.linear_static` or :meth:`.Analysis.static`, see
+   :doc:`linear_analyses`; the eigenvalue
    problems with :func:`.linear_buckling`, :func:`.natural_frequency` and
    :func:`.complex_frequency`,
    see :doc:`eigenvalue_analyses`; the non-linear analyses with
-   :class:`.Analysis`.
+   :class:`.Analysis`, see :doc:`nonlinear_analyses`, also with the
+   co-rotational elements of :class:`.CorotationalModel` for large
+   rotations.
 7. Post-processing: ``update_probe_ue(u)`` brings the displacements of an
    element to element coordinates, in ``probe.ue``; ``update_fint`` adds
    its internal forces, in global coordinates, to a global vector, whose
    values at the constrained dofs are the reactions, `\boldsymbol{F}_{{int}_k} -
-   \boldsymbol{f}_k`; and the strains of :class:`.Quad4` are recovered with
+   \boldsymbol{f}_k`, equal to `\boldsymbol{K}_{{C0}_{ku}} \boldsymbol{u}_u +
+   \boldsymbol{K}_{{C0}_{kk}} \boldsymbol{u}_k - \boldsymbol{f}_k` in a linear analysis,
+   with or without prescribed displacements; and the strains of :class:`.Quad4` are recovered with
    :meth:`.Quad4Probe.update_BL`.
 
 Since the probe is shared, ``update_probe_xe`` and ``update_probe_ue``
@@ -219,3 +230,9 @@ buckling analysis and `\boldsymbol{F}_{int}(\boldsymbol{u})` is the vector of ``
 nonlinear=1)``, whose exact derivative is `\boldsymbol{K}_T` for every element with
 ``update_KCNL`` (verified in ``tests/test_tangent_consistency.py``). The
 linear internal force vector, ``nonlinear=0``, is `\boldsymbol{K}_{C0} \boldsymbol{u}`.
+
+These are the von Kármán strains of the elements, for small to moderate
+rotations. For large rotations, :class:`.CorotationalModel` adds the
+elements with co-rotational kinematics and provides the callables of
+:class:`.Analysis`, with total rotation vectors as rotational dofs, see
+:doc:`nonlinear_analyses`.

@@ -30,8 +30,6 @@ def test_static_plate_quad_point_load(plot=False):
         nu12 = 0.3
         G12 = 8e9
 
-        hgfactor = 0.1 # NOTE hour-glass factor
-
         xtmp = np.linspace(0, a, nx)
         ytmp = np.linspace(0, b, ny)
         xmesh, ymesh = np.meshgrid(xtmp, ytmp)
@@ -83,9 +81,7 @@ def test_static_plate_quad_point_load(plot=False):
             quad.K6ROT = 100.
             quad.update_rotation_matrix(ncoords_flatten, matx[0], matx[1], matx[2])
             quad.update_probe_xe(ncoords_flatten)
-            quad.update_KC0(KC0r, KC0c, KC0v, prop, hgfactor_u=hgfactor,
-                            hgfactor_v=hgfactor, hgfactor_w=hgfactor,
-                            hgfactor_rx=hgfactor, hgfactor_ry=hgfactor)
+            quad.update_KC0(KC0r, KC0c, KC0v, prop)
             quads.append(quad)
             init_k_KC0 += data.KC0_SPARSE_SIZE
 
@@ -129,9 +125,7 @@ def test_static_plate_quad_point_load(plot=False):
         for quad in quads:
             quad.update_probe_xe(ncoords_flatten)
             quad.update_probe_ue(u)
-            quad.update_fint(fint, prop, hgfactor_u=hgfactor,
-                            hgfactor_v=hgfactor, hgfactor_w=hgfactor,
-                            hgfactor_rx=hgfactor, hgfactor_ry=hgfactor)
+            quad.update_fint(fint, prop)
         # NOTE adding reaction forces to external force vector
         Kku = KC0[bk, :][:, bu]
         fext[bk] = Kku @ u[bu]
