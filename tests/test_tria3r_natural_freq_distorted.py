@@ -27,11 +27,7 @@ def test_tria3r_nat_freq_distorted(plot=False, mode=0, refinement=1):
 
     The inner nodes are moved along ``x`` and ``y`` by independent random
     fractions, up to 0.25, of the element size, which keeps every element
-    convex, as asserted at its four corners. Before, the coordinates passed
-    to the elements were copied before the distortion, so that the regular
-    mesh was analysed, and the distortion moved the nodes by the same
-    fraction, up to 0.4, along ``x`` and ``y``, which made up to 7 % of the
-    elements re-entrant.
+    convex, as asserted at its four corners.
 
     The frequency is compared with the exact solution of Leissa (1969),
     Eq. (4.20), and, for ``refinement=1``, with a value pre-determined by

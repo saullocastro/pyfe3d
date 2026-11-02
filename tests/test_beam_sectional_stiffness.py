@@ -359,8 +359,9 @@ def test_BeamC_exact_with_any_coupling():
     error is 2.7e-15 of the largest tip displacement for the single
     couplings, 2.0e-15 for the 21 entries and 5.4e-16 for the CUS box,
     against 7.5e-3 to 8.9e-2 (single couplings other than ``C[0, 3]``) and
-    0.42 (CUS box) with the shape functions of Luo (2008), which BeamC used
-    for any ``C`` before"""
+    0.42 (CUS box) with the closed-form shape functions of Luo (2008),
+    which BeamC uses only without couplings other than ``C[0, 3]``, see
+    :func:`test_general_shape_functions_uncoupled`"""
     C0 = rectangle_C()
     for i in range(6):
         for j in range(i + 1, 6):

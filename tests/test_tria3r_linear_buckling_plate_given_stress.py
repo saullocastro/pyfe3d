@@ -31,9 +31,8 @@ def test_tria3r_linear_buckling_plate_given_stress(mode=0, refinement=1):
     The resultants given to ``update_KG_given_stress`` are in the element
     coordinate system, so the global ``N_xx`` is rotated to the axes of each
     triangle, whose x axis is along the diagonal for one triangle out of
-    two. Before 0.12.0 it was passed unrotated, which applies a different
-    load to those triangles; with the default element below, the unrotated
-    load gives a buckling load 1.96 % under the reference with 248x120
+    two. Passed unrotated, it would apply a different load to those
+    triangles: with the default element below, the unrotated load gives a buckling load 1.96 % under the reference with 248x120
     elements, and not approaching it.
 
     Notes

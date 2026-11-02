@@ -1,18 +1,17 @@
 r"""Verification of Tria3DSG, the discrete shear gap triangle
 
 The element is described in :mod:`pyfe3d.tria3dsg` and follows Bletzinger,
-Bischoff and Ramm (2000). It was written because :class:`pyfe3d.tria3r.Tria3R`, up to 0.11, cured
-its shear locking by dividing the transverse shear stiffnesses of a
-centroid-sampled shear field by `1 + \alpha \ell^2/h^2`, which leaves it
-unable to reproduce a constant transverse shear state and makes it converge
-to the wrong answer on bending problems. The tests below check the
-properties the DSG buys and contrast them with that field throughout, so the
-comparison is part of the record rather than a claim. Since 0.12.0 the
-default of Tria3R is this element's DSG field, ``shear_model = 1``, see
-``tests/test_tria3r_shear_model_dsg.py``; the centroid-sampled field remains
-available with ``shear_model = 0``, and every Tria3R built in this module is
-given that field and ``alpha_shear_locking = 0.7`` explicitly by
-:func:`legacy_tria3r`, unless a test sets ``alpha_shear_locking`` itself.
+Bischoff and Ramm (2000). The tests below check the properties the DSG
+field gives and contrast them throughout with the centroid-sampled shear
+field of :class:`pyfe3d.tria3r.Tria3R` with ``shear_model = 0``, whose
+transverse shear stiffnesses are divided by `1 + \alpha \ell^2/h^2` against
+the shear locking, which leaves it unable to reproduce a constant
+transverse shear state and makes it converge to the wrong answer on bending
+problems. The default of Tria3R is this element's DSG field, ``shear_model =
+1``, see ``tests/test_tria3r_shear_model_dsg.py``; every Tria3R built in
+this module is given the centroid-sampled field and ``alpha_shear_locking =
+0.7`` explicitly by :func:`legacy_tria3r`, unless a test sets
+``alpha_shear_locking`` itself.
 
 The tests check the element against exact states with closed-form energies
 (rigid-body modes, constant transverse shear, Kirchhoff curvatures,
@@ -64,10 +63,10 @@ from pyfe3d import (Tria3DSG, Tria3DSGData, Tria3DSGProbe,
 E_ISO = 210.e9
 NU_ISO = 0.3
 def legacy_tria3r(el):
-    r"""Give a Tria3R the centroid-sampled transverse shear of before 0.12.0
+    r"""Give a Tria3R the centroid-sampled transverse shear
 
-    ``shear_model = 0`` with ``alpha_shear_locking = 0.7``, the former
-    defaults, which the contrasts of this module are about. Any other
+    ``shear_model = 0`` with ``alpha_shear_locking = 0.7``, which the
+    contrasts of this module are about. Any other
     element is left alone.
     """
     if isinstance(el, Tria3R):
