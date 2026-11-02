@@ -76,6 +76,9 @@ def count(monkeypatch, module, name):
                                     'arc_length_crisfield'])
 @pytest.mark.parametrize('modified_NR', [False, True])
 def test_load_vector_evaluated_with_the_tangent(method, modified_NR):
+    r"""`-\partial \boldsymbol{R}/\partial \lambda` is evaluated right after the
+    tangent stiffness matrix at the same configuration, at most once per
+    tangent, and the solution is the dense reference of the springs"""
     pb = Recorder(d0=-0.3, d1=0.6, F=40.)
     an = pb.analysis(NL_method=method, initialInc=0.2, relTOL=1e-11,
                      modified_NR=modified_NR)
@@ -93,6 +96,8 @@ def test_load_vector_evaluated_with_the_tangent(method, modified_NR):
 
 
 def test_newton_raphson_one_factorization_per_tangent(monkeypatch):
+    """One factorization per tangent stiffness matrix, with full and with
+    modified Newton-Raphson, the latter reusing it between the updates"""
     factorizations = count(monkeypatch, newton_raphson, '_factorize')
     for modified_NR in (False, True):
         del factorizations[:]
@@ -129,6 +134,15 @@ def test_newton_raphson_singular_tangent_cuts_the_step():
 
 
 def test_linear_static_follower_factorizes_K0_once(monkeypatch):
+    """The load correction iterations of the linear static analysis with a
+    configuration-dependent load factorize ``K0`` once and converge to the
+    exact solution
+
+    Notes
+    -----
+    With ``K0 c = F0 + B c``, the exact solution is ``c = (K0 - B)^{-1}
+    F0``.
+    """
     factorizations = count(monkeypatch, analysis, '_factorize')
     K0 = csr_matrix(np.array([[4., -1., 0.], [-1., 4., -1.], [0., -1., 3.]]))
     F0 = np.array([1., 0., 2.])

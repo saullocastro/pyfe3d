@@ -1,7 +1,10 @@
 r"""Tests for :mod:`pyfe3d.solver.arpackutils`: ``ncv <= 32`` against the
 ``dsteqr`` bug of Intel MKL 2024.2.0 to 2025.0.0
 
-With the Quad4 plate of ``test_solver.py``.
+The detection of the LAPACK library, of the MKL version and of a faulty
+``dsteqr`` is checked with mocked inputs; the capped ARPACK calls are checked
+on the Quad4 plate of ``test_solver.py`` against the eigenpairs of the dense
+solver, and the reproducibility of the restarts on a nilpotent operator.
 """
 import inspect
 import sys
@@ -121,6 +124,8 @@ def test_lapack_name_from_config():
 
 
 def test_parse_mkl_version():
+    """The version tuple parsed from the version strings of MKL, ``None``
+    when there is none"""
     parse = arpackutils._parse_mkl_version
     assert parse('2025.0-Product') == (2025, 0, 0)
     assert parse('Version 2024.2.2-Product Build 20240823') == (2024, 2, 2)

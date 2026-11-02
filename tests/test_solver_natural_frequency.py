@@ -2,26 +2,35 @@ r"""Tests for :func:`pyfe3d.solver.natural_frequency`: verification, dense
 fallback, rigid-body modes and unsymmetric matrices
 
 With analytic matrices and the Quad4 plate of ``test_solver.py``;
-:func:`pyfe3d.solver.natural_frequency` returns `\omega_n`.
+:func:`pyfe3d.solver.natural_frequency` returns `\omega_n`. The unsymmetric
+matrices are those of Ziegler's double pendulum under a follower force,
+Ziegler (1952), whose flutter load ``P_f`` and frequencies below it are
+checked against their analytical values.
 
-Ziegler's double pendulum: two rigid bars of length ``l``, rotational springs
-``k`` at the base and at the middle hinge, masses ``2m`` at the middle hinge
-and ``m`` at the tip, and a follower force ``P`` at the tip, tangential to
-the upper bar. With the absolute rotations of the bars as
+Notes
+-----
+Ziegler's double pendulum [1]_: two rigid bars of length ``l``, rotational
+springs ``k`` at the base and at the middle hinge, masses ``2m`` at the
+middle hinge and ``m`` at the tip, and a follower force ``P`` at the tip,
+tangential to the upper bar. With the absolute rotations of the bars as
 degrees-of-freedom:
 
 .. math::
 
-    \boldsymbol{M} = m l^2 \begin{bmatrix} 3 & 1 \\ 1 & 1 \end{bmatrix}, \qquad
-    \boldsymbol{K}(P) = \begin{bmatrix} 2k - P l & -k + P l \\ -k & k \end{bmatrix}
+    \boldsymbol{M} = m l^2 \begin{bmatrix} 3 & 1 \ 1 & 1 \end{bmatrix}, \qquad
+    \boldsymbol{K}(P) = \begin{bmatrix} 2k - P l & -k + P l \ -k & k \end{bmatrix}
 
 The stiffness matrix is unsymmetric and never singular, ``det K = k**2``,
 and the system loses stability by flutter at ``P_f = (7/2 - sqrt(2)) k/l``,
 the smallest root of the discriminant of ``det(K - omega**2 M) = 0`` in
 ``omega**2``, where two natural frequencies coalesce.
 
-Reference: H. Ziegler. "Die Stabilitätskriterien der Elastomechanik".
-Ingenieur-Archiv, 20(1), 49-56, 1952. https://doi.org/10.1007/BF00536796
+References
+----------
+.. [1] Ziegler, H., Die Stabilitätskriterien der Elastomechanik,
+   Ingenieur-Archiv, 20(1), 49-56, 1952.
+   https://doi.org/10.1007/BF00536796
+
 """
 import sys
 sys.path.append('..')
@@ -286,13 +295,14 @@ def test_near_buckling(symmetric, precondition):
                                             precondition=precondition,
                                             max_dense_size=0)
     w2 = np.real(omegan)**2
-    # NOTE M u = (1/omega**2) K u, accurate for the lowest omega**2
+    # NOTE reference from the problem with M and K swapped, of eigenvalues
+    #      1/omega**2, accurate for the lowest omega**2
     mu = eigh(M.toarray(), K.toarray(), eigvals_only=True)
     w2_ref = np.sort(1/mu[mu > 0])[:3]
     np.testing.assert_allclose(w2, w2_ref, rtol=1e-4)
     assert np.all(w2[:2] < 1e-5*w2[2])
-    # NOTE ||K u|| + omega**2 ||M u|| is about 5000 eps times the
-    #      matrix-norm scale, which amplifies the relative residual
+    # NOTE the sum of the norms of K u and omega**2 M u is about 5000 eps
+    #      times the matrix-norm scale, which amplifies the relative residual
     u = np.real(eigvecs[:, :2])
     d = (np.linalg.norm(K @ u, axis=0)
          + w2[:2]*np.linalg.norm(M @ u, axis=0))
@@ -338,7 +348,8 @@ def test_check_freq_backward_error():
                                'blade_stiffened_penalty_KG.npz')).tocsr()
     mu, u = eigen._eigh_condensed(K, KG, 4)
     lam = -1/mu
-    # NOTE (K + lam KG) u = 0 checked as (K - omega**2 M) u = 0
+    # NOTE buckling eigenpairs checked as frequency eigenpairs, with -KG as
+    #      the mass matrix and lam as omega**2
     assert eigen._check_freq(K, -KG, lam, u, 1e-6, False) is None
     lam = lam*(1 - 1e-3)
     res = eigen._relative_residuals(K, KG, lam, u)

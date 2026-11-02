@@ -1,23 +1,30 @@
-r"""Configuration-dependent (follower) loads in the static analyses
+r"""Configuration-dependent (follower) loads in the static analyses, against the residual of an analytic problem
 
 The analytic problem has the internal force of hardening springs and a load
 that depends on the configuration, with the unsymmetric load stiffness
-matrix `\boldsymbol{K}_F = -\partial \boldsymbol{F}/\partial \boldsymbol{c} = \lambda \boldsymbol{K}_{F_{ref}}`:
+matrix `\boldsymbol{K}_F = -\partial \boldsymbol{F}/\partial \boldsymbol{c} = \lambda \boldsymbol{K}_{F_{ref}}`,
+with `\boldsymbol{K}_{F_{ref}}` given as ``-Q`` in the code, passed to
+:class:`pyfe3d.solver.Analysis` as described in
+:mod:`pyfe3d.solver.callbacks`: ``calc_fint(c, inc)`` contains
+`\boldsymbol{K}_F \boldsymbol{c}`, i.e. ``-inc Q c``,
+``calc_kC(c, NLgeom, inc)`` contains `\boldsymbol{K}_F`, i.e. ``-inc Q``,
+and ``calc_fext(inc, c)`` is the load of the configuration ``c``. The
+equilibrium of every increment is checked against the residual of the
+analytic problem, and the convergence order of the iterations. A
+geometrically linear structure under
+a load affine in the configuration is solved by the load correction
+iterations of the linear static analysis, checked against the solution of
+the linear system.
+
+Notes
+-----
+The internal force and the load of the analytic problem are
 
 .. math::
 
     \boldsymbol{F}_{int}(\boldsymbol{c}) = \boldsymbol{K} \boldsymbol{c} + \{a c^3\}, \qquad
     \boldsymbol{F}(\boldsymbol{c}, \lambda) = \lambda (\boldsymbol{q}_0 - \boldsymbol{K}_{F_{ref}} \boldsymbol{c})
 
-with `\boldsymbol{K}_{F_{ref}}` given as ``-Q`` in the code, passed to
-:class:`pyfe3d.solver.Analysis` as described in
-:mod:`pyfe3d.solver.callbacks`: ``calc_fint(c, inc)`` contains
-`\boldsymbol{K}_F \boldsymbol{c}`, i.e. ``-inc Q c``,
-``calc_kC(c, NLgeom, inc)`` contains `\boldsymbol{K}_F`, i.e. ``-inc Q``,
-and ``calc_fext(inc, c)`` is the load of the configuration ``c``. A
-geometrically linear structure under
-a load affine in the configuration is solved by the load correction
-iterations of the linear static analysis.
 """
 import numpy as np
 import pytest
@@ -91,6 +98,8 @@ def make_problem(with_c=True):
 
 
 def test_accepts_kwarg():
+    """A keyword argument is accepted only when named in the signature, not
+    through ``**kwargs``"""
     def f(c, inc=1., silent=True):
         pass
     def g(c, silent=True, **kwargs):
@@ -107,6 +116,8 @@ def test_accepts_kwarg():
 
 
 def test_callables_without_inc_are_called_as_before():
+    """Callables without ``inc`` are called as before, giving the solution
+    of the linear system with Newton-Raphson and with Riks' method"""
     calls = []
     def calc_fint(c, silent=True):
         calls.append('fint')
@@ -131,6 +142,9 @@ def test_callables_without_inc_are_called_as_before():
 @pytest.mark.parametrize('method', ['NR', 'arc_length_riks',
                                     'arc_length_crisfield'])
 def test_equilibrium_with_follower_load(method):
+    """Every converged increment satisfies the equilibrium of the analytic
+    problem with the follower load, whose solution differs from the one of
+    the dead load"""
     pb = make_problem()
     an = pb.analysis(NL_method=method, initialInc=0.2, relTOL=1e-10)
     an.static(NLgeom=True, silent=True)
@@ -154,6 +168,14 @@ def orders(errors, floor=1e-12):
 
 
 def test_newton_raphson_quadratic_with_follower_load():
+    """Newton-Raphson converges quadratically with the follower load, the
+    measured order being larger than 1.7
+
+    Notes
+    -----
+    The tangent ``calc_kC`` is the exact Jacobian of the residual, load
+    stiffness included, therefore the expected order is 2.
+    """
     pb = make_problem()
     an = pb.analysis(initialInc=1., relTOL=1e-14)
     an.static(NLgeom=True, silent=True)
@@ -226,6 +248,14 @@ def linear_follower_problem(with_c=True, factor=0.3):
 
 
 def test_analysis_linear_static_with_configuration_dependent_load():
+    """The load correction iterations converge to the solution of the linear
+    system with the load of the deformed configuration; without ``c`` the
+    reference load is used
+
+    Notes
+    -----
+    With ``K0 c = F0 + Q c``, the reference is ``c = (K0 - Q)^{-1} F0``.
+    """
     pb = linear_follower_problem()
     an = pb.analysis()
     an.relTOL = 1e-12
