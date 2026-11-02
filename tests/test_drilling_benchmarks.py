@@ -187,9 +187,11 @@ def cook(n, drilling_model):
 def test_C1_cook_skew_membrane():
     r"""Tip displacement at (48, 52), reference 23.91
 
+    Notes
+    -----
     Measured, against Table III of Ibrahimbegovic et al. (1990), p. 454, with
     the grade of MacNeal and Harder (1985), p. 14, against ``COOK_REF`` =
-    23.91 in brackets:
+    23.91 in brackets::
 
         mesh    penalty      enriched     ITW D-type
         1x1      5.9685 (F)  13.6808 (D)  14.065 (D)
@@ -311,6 +313,8 @@ def straight_cantilever(shape, load, drilling_model, nx=6, ny=1,
 def test_C2_macneal_harder_straight_cantilever():
     r"""Tip displacement of the 6 by 1 cantilever, three element shapes
 
+    Notes
+    -----
     Measured, with the references of Table 3, p. 10, in brackets:
 
         load                  mesh            penalty    enriched     ref
@@ -391,6 +395,8 @@ def test_C2_macneal_harder_straight_cantilever():
 def test_C2_twist_of_the_strip():
     r"""Twist of the 6 by ny strip, unit tip torque, both drilling models
 
+    Notes
+    -----
     Measured, regular mesh, reference 0.03208, Table 3, p. 10:
 
         elements across   shear_model = 1     shear_model = 0     eigmin/eigmax
@@ -485,6 +491,8 @@ def curved_beam(load, drilling_model, nx=6, ny=1, shear_model=1):
 def test_C3_macneal_harder_curved_beam():
     r"""Tip displacement of the 6 by 1 curved cantilever
 
+    Notes
+    -----
     Measured, references 0.08734 in-plane and 0.5022 out-of-plane, Table 3,
     p. 10, of MacNeal and Harder (1985):
 
@@ -604,8 +612,10 @@ def allman_cantilever(nx, ny, drilling_model):
 def test_C4_allman_cantilever():
     r"""Tip deflection of Allman's cantilever, reference 0.3558
 
+    Notes
+    -----
     Measured, with Allman's own triangular element from his Table 3 and the
-    displacement-type element of Ibrahimbegovic et al. Table II:
+    displacement-type element of Ibrahimbegovic et al. Table II::
 
         mesh    penalty   enriched   Allman tri   ITW D-type
         4x1     0.24242    0.32812     0.2696       0.3445

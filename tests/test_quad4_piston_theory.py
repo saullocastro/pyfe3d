@@ -1,3 +1,11 @@
+r"""Panel flutter of a simply supported plate modelled with Quad4
+
+The aerodynamic damping matrix of the piston theory is compared with the
+mass matrix, the damped eigenvalues of :func:`.complex_frequency` with those
+derived from the undamped ones at each Mach number, and the flutter onset
+with the aerodynamic damping must come at or after the coalescence of the
+undamped analysis.
+"""
 import sys
 sys.path.append('..')
 
@@ -16,6 +24,13 @@ def test_quad4_piston_theory(plot=False, refinement=1):
     along `X`, with the piston theory, see ``update_KA_beta`` of
     :class:`.Quad4`, and the aerodynamic damping
 
+    The damping matrix must be proportional to the mass matrix on `w`, the
+    damped eigenvalues must equal those derived from the undamped ones
+    (``rtol = 1e-4``), and the onset with damping must not precede the
+    coalescence; ``plot`` plots the frequencies against the Mach number.
+
+    Notes
+    -----
     The equations of motion are `\boldsymbol{M} \ddot{\boldsymbol{u}} + \boldsymbol{C} \dot{\boldsymbol{u}} +
     \boldsymbol{K} \boldsymbol{u} = \boldsymbol{0}`, with `\boldsymbol{K} = \boldsymbol{K}_{C0} - \beta \boldsymbol{K}_{A_\beta} - \gamma
     \boldsymbol{K}_{A_\gamma}` and the damping matrix `\boldsymbol{C} = -\mu \boldsymbol{C}_A`. For this plate
@@ -210,7 +225,7 @@ def test_quad4_piston_theory(plot=False, refinement=1):
     assert abs(CAuu[~wu, :]).sum() == 0
 
     def matrices(Mach_):
-        """K and C at the Mach number Mach_, and a = mu/(rho*h)"""
+        """K and C at the Mach number ``Mach_``, and ``a = mu/(rho*h)``"""
         v = Mach_*v_sound
         beta = rho_air*v**2/np.sqrt(Mach_**2 - 1)
         gamma = beta/(2*radius*np.sqrt(Mach_**2 - 1))

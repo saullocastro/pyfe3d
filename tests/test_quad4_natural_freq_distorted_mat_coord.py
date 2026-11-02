@@ -1,3 +1,10 @@
+r"""Natural frequency of an orthotropic plate on a distorted Quad4 mesh, with
+the material axes given by ``matx``
+
+The fundamental frequency of the plate, with the material direction ``matx``
+at angles from -90 to 90 degrees and the lamination angle following it,
+must equal that of ``thetadeg = 0`` to ``rtol = 1e-5``.
+"""
 import sys
 sys.path.append('..')
 
@@ -11,6 +18,9 @@ from pyfe3d.solver import natural_frequency
 
 
 def test_nat_freq_plate(plot=False, mode=0):
+    """Fundamental frequency for each material direction ``matx`` on a
+    randomly distorted mesh of convex elements, compared with that of
+    ``thetadeg = 0``; ``plot`` plots the mode ``mode``"""
     # NOTE keep thetadeg = 0 as first, to work as reference wmax_ref
     thetadegs = [0, -90, -60, -30, 30, 60, 90]
     for thetadeg in thetadegs:
