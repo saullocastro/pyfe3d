@@ -28,7 +28,13 @@ NODES = {
 
 @pytest.mark.parametrize('nen, degree', [(3, 2), (6, 4)])
 def test_triangle_rules(nen, degree):
-    r"""`\int_T \xi^p \eta^q = p! q!/(p + q + 2)!` on the unit triangle"""
+    r"""The triangle rules integrate the monomials of their degree exactly
+
+    Notes
+    -----
+    On the unit triangle `T`, `\int_T \xi^p \eta^q \, dT = p! q!/(p + q +
+    2)!`.
+    """
     xi, eta, w = _quadrature(nen)
     for p in range(degree + 1):
         for q in range(degree + 1 - p):
@@ -38,6 +44,14 @@ def test_triangle_rules(nen, degree):
 
 @pytest.mark.parametrize('nen, degree', [(4, 3), (8, 5), (9, 5)])
 def test_quadrilateral_rules(nen, degree):
+    r"""The quadrilateral rules integrate the monomials of their degree
+    exactly
+
+    Notes
+    -----
+    On `[-1, 1]^2`, `\int \xi^p \eta^q` is the product of `2/(p + 1)`
+    and `2/(q + 1)`, each zero for an odd exponent.
+    """
     xi, eta, w = _quadrature(nen)
     for p in range(degree + 1):
         for q in range(degree + 1):
@@ -48,6 +62,9 @@ def test_quadrilateral_rules(nen, degree):
 
 @pytest.mark.parametrize('nen', [3, 4, 6, 8, 9])
 def test_shape_functions(nen):
+    r"""Shape functions: Kronecker property at the nodes, partition of
+    unity, linear fields reproduced, and derivatives against finite
+    differences"""
     nodes = NODES[nen]
     for a, (xa, ea) in enumerate(nodes):
         N, _, _ = _shape_functions(nen, xa, ea)
@@ -76,6 +93,9 @@ def test_shape_functions(nen):
 
 
 def test_materials():
+    r"""Isotropic matrix against the Lame constants and invariant under
+    rotation, and the moduli and Poisson ratios of the orthotropic
+    matrix recovered from its inverse"""
     E, nu = 70e9, 0.3
     D = isotropic(E, nu)
     G = E/(2*(1 + nu))
@@ -193,6 +213,8 @@ def test_beamprop_from_vabs_errors():
 
 
 def test_input_errors():
+    r"""Wrong input to the materials and to ``CrossSection``, clockwise
+    elements, disconnected meshes and singular materials raise"""
     D = isotropic(1., 0.3)
     x2 = np.array([0., 1., 1., 0.])
     x3 = np.array([0., 0., 1., 1.])

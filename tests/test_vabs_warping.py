@@ -1,12 +1,23 @@
 r"""Warping displacements and triangulation of :mod:`pyfe3d.vabs`
 
 Checks of :meth:`pyfe3d.vabs.CrossSection.warping` and
-:meth:`pyfe3d.vabs.CrossSection.triangles`: the torsional warping of an
-elliptical section against the Saint-Venant solution, `w_1 = -\kappa_1
-\frac{a^2 - b^2}{a^2 + b^2} x_2 x_3` for the semi-axes `a` along `x_2` and
-`b` along `x_3` (Timoshenko and Goodier, Theory of Elasticity, 3rd ed.,
-Sec. 105, with `\psi = \kappa_1 \phi`), linearity, the conversion from the
-strains of pyfe3d, and the triangles of every element type.
+:meth:`pyfe3d.vabs.CrossSection.triangles`: the torsional warping `w_1`
+of an elliptical section against the Saint-Venant solution of Timoshenko
+and Goodier (1970), linearity, the conversion from the strains of pyfe3d,
+the input errors, and the triangles of every element type, which cover
+the area of the section.
+
+Notes
+-----
+The Saint-Venant warping of the ellipse with the semi-axes `a` along `x_2`
+and `b` along `x_3` is `w_1 = -\kappa_1 \frac{a^2 - b^2}{a^2 + b^2} x_2
+x_3`, [1]_, Sec. 105, with `\psi = \kappa_1 \phi`.
+
+References
+----------
+.. [1] Timoshenko, S. P., and Goodier, J. N., Theory of Elasticity, 3rd
+   ed., McGraw-Hill, 1970.
+
 """
 import sys
 import os
@@ -29,6 +40,21 @@ def section(x2, x3, els, nu=0.3):
 @pytest.mark.parametrize('etype, rtol', [(3, 2e-2), (4, 2e-2), (6, 3e-3),
                                          (8, 1e-3), (9, 1e-3)])
 def test_ellipse_torsion(etype, rtol):
+    r"""Torsional warping of an ellipse, every element type, against the
+    Saint-Venant solution, and no in-plane warping
+
+    Notes
+    -----
+    The reference is `w_1 = -\kappa_1 \frac{a^2 - b^2}{a^2 + b^2} x_2 x_3`
+    for the semi-axes `a = 2` along `x_2` and `b = 1` along `x_3`, [1]_,
+    Sec. 105, with `\psi = \kappa_1 \phi`.
+
+    References
+    ----------
+    .. [1] Timoshenko, S. P., and Goodier, J. N., Theory of Elasticity, 3rd
+       ed., McGraw-Hill, 1970.
+
+    """
     a, b = 2., 1.
     x2, x3, els = vm.circle(1., 6, etype)
     sec = section(a*x2, b*x3, els)
@@ -41,6 +67,8 @@ def test_ellipse_torsion(etype, rtol):
 
 
 def test_linearity_and_conventions():
+    r"""``warping`` is linear in the strains and their derivatives, and
+    ``convention='pyfe3d'`` converts the strains of pyfe3d"""
     x2, x3, els = vm.box(2., 1., 0.1, 4, 2, 1, 8)[:3]
     sec = section(x2, x3, els)
     rng = np.random.default_rng(0)
@@ -61,6 +89,7 @@ def test_linearity_and_conventions():
 
 
 def test_warping_errors():
+    r"""``warping`` before ``calc_stiffness`` and with wrong input raises"""
     x2, x3, els = vm.rectangle(1., 1., 2, 2, 4)
     sec = CrossSection(x2, x3, els, [isotropic(1., 0.3)], [0]*len(els))
     with pytest.raises(RuntimeError):
@@ -77,6 +106,8 @@ def test_warping_errors():
 @pytest.mark.parametrize('etype, ntri', [(3, 1), (4, 2), (6, 4), (8, 6),
                                          (9, 8)])
 def test_triangles(etype, ntri):
+    r"""``triangles`` of every element type: positive areas summing to
+    the area of the section, every node used"""
     # NOTE straight-sided elements: the triangles cover the area exactly
     x2, x3, els = vm.rectangle(2., 1., 3, 2, etype, x0=0.3, y0=-0.2)
     sec = CrossSection(x2, x3, els, [isotropic(1., 0.3)], [0]*len(els))
@@ -92,6 +123,7 @@ def test_triangles(etype, ntri):
 
 
 def test_triangles_mixed():
+    r"""``triangles`` of a mesh of a quadrilateral and two triangles"""
     # NOTE a 9-node quadrilateral on [0, 1]^2 and two 6-node triangles on
     #      its right, sharing complete edges; area 2
     x2 = [0., 1., 1., 0., 0.5, 1., 0.5, 0., 0.5, 2., 1.5, 1.5, 2., 2., 1.5]
