@@ -1,3 +1,77 @@
+r"""Verify the laminate stiffnesses, materials and lamination parameters.
+
+The `A`, `B`, `D` and constant-strain transverse shear stiffnesses of
+:func:`pyfe3d.shellprop_utils.laminated_plate`,
+:func:`pyfe3d.shellprop_utils.isotropic_plate` and of the lamination-parameter
+route, :func:`pyfe3d.shellprop.shellprop_from_LaminationParameters`, are
+compared against the classical lamination theory evaluated independently in
+this module (``qbar``, ``clt_abd``, ``abar_ts``), for isotropic, orthotropic
+and antiplane-core materials, with and without offset. The materials are
+checked against the plane-stress reduced stiffnesses of Jones (1999), the
+trace normalization against the materials of Melo et al. (2017), Table 1,
+and the gradients of :class:`pyfe3d.shellprop.GradABD` against central
+finite differences. The remaining tests check the conditioning checks, the
+error messages, the transformation matrices of :class:`pyfe3d.shellprop.Lamina`
+and the methods that make a laminate symmetric, balanced, orthotropic or
+smeared.
+
+Notes
+-----
+The reference stiffnesses of the classical lamination theory are computed in
+the tests, independently of pyfe3d, with Reddy et al. [2]_, Part 1, Eq. (12),
+p. 8:
+
+.. math::
+
+    (A_{ij}, B_{ij}, D_{ij}) = \sum_k \int_{z_{k-1}}^{z_k}
+    \bar{Q}_{ij}^{(k)} (1, z, z^2) \, dz
+
+where `\bar{Q}^{(k)}` is the plane-stress reduced stiffness of ply `k` in
+the laminate axes, see ``qbar``. The homogeneous plate is the special case of
+one ply: `A = h Q`, `B = 0`, `D = h^3/12\, Q`. The constant-strain
+transverse shear stiffness ``abar_ts`` follows Reddy [6]_, Eq. (3.4.17b),
+p. 137, with `Q_{44} = G_{23}` and `Q_{55} = G_{13}`, Eq. (2.4.4b), p. 101.
+The isotropic plane-stress reduced stiffness is
+`Q = E/(1 - \nu^2) [[1, \nu, 0], [\nu, 1, 0], [0, 0, (1 - \nu)/2]]`,
+Jones [5]_, Eq. (2.71), p. 73.
+
+``data`` holds the materials of Melo et al. [1]_, Table 1, p. 45: `E_x`,
+`E_y`, `\nu_x`, `E_s` and the trace `Tr` of their Eq. (1), p. 45, of the
+plane-stress stiffness matrix, given in GPa and printed as integers.
+
+The antiplane cores are "an idealized core in which the modulus of
+elasticity in planes parallel with the faces is zero but the shear modulus
+in planes perpendicular to the faces is finite", Allen [3]_, p. 14.
+
+For a homogeneous isotropic plate the improved transverse shear stiffness
+of Rohwer [4]_, Sec. 4.1, p. 17, is 5/6 of the simple ones, "independent of
+the Poisson's ratio or the position of the reference surface".
+
+The shift of the stiffness integrals to another reference plane, `B = B^0 +
+e A` and `D = D^0 + 2 e B^0 + e^2 A`, with `B^0`, `D^0` about the
+mid-surface, is Eq. (5.28), p. 235, of Vasiliev and Morozov [7]_.
+
+References
+----------
+.. [1] Melo, J. D. D., Bi, J., and Tsai, S. W., A Novel Invariant-Based
+   Design Approach to Carbon Fiber Reinforced Laminates, Composite
+   Structures, 159, 44-52, 2017.
+   https://doi.org/10.1016/j.compstruct.2016.09.055
+.. [2] Reddy, J. N., Chandrashekhara, K. and Chao, W. C., Geometrically
+   nonlinear analysis of laminated elastic structures, NASA CR-191055, 1993.
+.. [3] Allen, H. G., Analysis and Design of Structural Sandwich Panels,
+   Pergamon Press, Oxford, 1969.
+.. [4] Rohwer, K., 1988, Improved transverse shear stiffness for layered
+   finite elements, DFVLR-FB 88-32.
+.. [5] Jones, R. M., Mechanics of Composite Materials, Second Edition,
+   Taylor & Francis, Philadelphia, 1999.
+.. [6] Reddy, J. N., Mechanics of Laminated Composite Plates and Shells:
+   Theory and Analysis, Second Edition, CRC Press, 2003.
+   https://doi.org/10.1201/b12409
+.. [7] Vasiliev, V. V. and Morozov, E. V., Mechanics and Analysis of
+   Composite Materials, Elsevier, Oxford, 2001.
+
+"""
 import sys
 sys.path.append('..')
 
@@ -14,11 +88,8 @@ from pyfe3d.shellprop import (Lamina, shellprop_from_LaminationParameters,
 from pyfe3d.shellprop_utils import (read_laminaprop, laminated_plate,
         isotropic_plate)
 
-# Melo, J. D. D., Bi, J. and Tsai, S. W., "A novel invariant-based design
-# approach to carbon fiber reinforced laminates", Composite Structures, 159,
-# 44-52, 2017, https://doi.org/10.1016/j.compstruct.2016.09.055, Table 1,
-# p. 45: Ex, Ey, nux, Es and the trace Tr of Eq. (1), p. 45, of the
-# plane-stress stiffness matrix, in GPa, printed as integers
+# reference materials for the trace normalization: Ex, Ey, nux, Es and the
+# trace of the plane-stress stiffness matrix, see the module Notes
 data = {
 'IM6/epoxy': dict(Ex=203e9, Ey=11.20e9, vx=0.32, Es=8.40e9, tr=232e9),
 'IM7/977-3': dict(Ex=191e9, Ey=9.94e9, vx=0.35, Es=7.79e9, tr=218e9),
@@ -29,15 +100,8 @@ data = {
 # Classical lamination theory
 # ---------------------------
 #
-# Reference stiffnesses computed in the tests, independently of pyfe3d, with
-#
-#     (A_ij, B_ij, D_ij) = sum_k int_{z_{k-1}}^{z_k} Qbar_ij^(k) (1, z, z^2) dz
-#
-# Reddy, J. N., Chandrashekhara, K. and Chao, W. C., "Geometrically nonlinear
-# analysis of laminated elastic structures", NASA CR-191055, 1993, Part 1,
-# Eq. (12), p. 8, where Qbar^(k) is the plane-stress reduced stiffness of ply
-# k in the laminate axes, see ``qbar``. The homogeneous plate is the special
-# case of one ply: A = h Q, B = 0, D = h^3/12 Q.
+# Reference stiffnesses computed in the tests, independently of pyfe3d, see
+# the module Notes
 
 def qbar(E1, E2, nu12, G12, thetadeg):
     r"""Plane-stress reduced stiffness of a ply in the laminate axes
@@ -95,6 +159,29 @@ def assert_abd(A, B, D, A_ref, B_ref, D_ref, h):
     assert np.allclose(D, D_ref, rtol=1e-12, atol=1e-14*scale*h**2)
 
 def test_lampar_tri_axial():
+    r"""Lamination-parameter route of an isotropic material given with e3
+
+    The `A`, `B`, `D` and constant-strain transverse shear stiffnesses are
+    compared against the closed forms of the homogeneous isotropic plate,
+    with the plane-stress invariants by default and with the
+    three-dimensional invariants after ``rebuild(plane_stress=False)``.
+
+    Notes
+    -----
+    With e3 given, the invariants are by default those of the plane-stress
+    reduced stiffnesses, see ``MatLamina.rebuild``, as in
+    ``test_lampar_plane_stress``: `Q = E/(1 - \nu^2) [[1, \nu, 0], [\nu, 1,
+    0], [0, 0, (1 - \nu)/2]]`, Jones (1999), Eq. (2.71), p. 73. For an
+    isotropic material `u_2 = u_3 = u_7 = 0`, such that the lamination
+    parameters have no effect: `A = h Q`, `B = 0`, `D = h^3/12\, Q`, and
+    `\bar{A}_{ts} = G h I`.
+
+    With the three-dimensional option the invariants are those of the
+    three-dimensional stiffness, which for an isotropic material are given
+    by the Lame constants: `C_{11} = \lambda + 2 \mu`, `C_{12} = \lambda`,
+    `C_{66} = \mu`, and `A = h C`, `B = 0`, `D = h^3/12\, C`.
+
+    """
     E = 71e9
     nu = 0.33
     G = E/(2*(1+nu))
@@ -120,10 +207,8 @@ def test_lampar_tri_axial():
         0.5, 0.4)
     # NOTE with e3 given, the invariants are by default those of the
     #      plane-stress reduced stiffnesses, see MatLamina.rebuild, as in
-    #      test_lampar_plane_stress: Q = E/(1 - nu^2) [[1, nu, 0], [nu, 1,
-    #      0], [0, 0, (1 - nu)/2]], Jones (1999), Eq. (2.71), p. 73. For an
-    #      isotropic material u2 = u3 = u7 = 0, such that the lamination
-    #      parameters have no effect: A = h Q, B = 0, D = h^3/12 Q
+    #      test_lampar_plane_stress; the lamination parameters have no effect
+    #      for an isotropic material, see the Notes
     assert matlamina.plane_stress
     Q = E/(1 - nu**2)*np.array([[1., nu, 0.],
                                 [nu, 1., 0.],
@@ -135,8 +220,8 @@ def test_lampar_tri_axial():
                        atol=1e-14*G*thickness)
 
     # NOTE three-dimensional option: the invariants are those of the
-    #      three-dimensional stiffness, which for an isotropic material are
-    #      the Lame constants: C11 = lambda + 2 mu, C12 = lambda, C66 = mu
+    #      three-dimensional stiffness, given by the Lame constants, see the
+    #      Notes
     matlamina.rebuild(plane_stress=False)
     assert not matlamina.plane_stress
     prop = shellprop_from_lamination_parameters(thickness, matlamina,
@@ -161,6 +246,19 @@ def test_lampar_tri_axial():
 
 
 def test_lampar_plane_stress():
+    r"""Lamination-parameter route of an isotropic plane-stress material
+
+    The `A`, `B`, `D` and constant-strain transverse shear stiffnesses are
+    compared against the closed forms of the homogeneous isotropic plate.
+
+    Notes
+    -----
+    For isotropic plane stress `u_2 = u_3 = u_7 = 0`, such that the
+    lamination parameters have no effect: `A = E h/(1 - \nu^2) [[1, \nu, 0],
+    [\nu, 1, 0], [0, 0, (1 - \nu)/2]]`, `B = 0`, `D = h^2/12\, A` and
+    `\bar{A}_{ts} = G h I`.
+
+    """
     E = 71e9
     nu = 0.33
     lamprop = (E, nu)
@@ -183,9 +281,8 @@ def test_lampar_plane_stress():
         0.5, 0.4, -0.3, -0.6,
         0.5, 0.4, -0.3, -0.6,
         0.5, 0.4)
-    # NOTE isotropic plane stress, u2 = u3 = u7 = 0 such that the lamination
-    #      parameters have no effect: A = E h/(1 - nu^2) [[1, nu, 0], [nu,
-    #      1, 0], [0, 0, (1 - nu)/2]], D = h^2/12 A, Abar_ts = G h I
+    # NOTE isotropic plane stress, the lamination parameters have no effect,
+    #      see the Notes
     G = E/(2*(1 + nu))
     Q = E/(1 - nu**2)*np.array([[1., nu, 0.],
                                 [nu, 1., 0.],
@@ -204,6 +301,19 @@ def test_lampar_plane_stress():
 
 
 def test_laminated_plate_tri_axial():
+    r"""Laminated plate with e3 given against the classical lamination theory
+
+    The `A`, `B` and `D` of :func:`.laminated_plate` are compared against
+    ``clt_abd`` and the constant-strain transverse shear stiffness against
+    its closed form.
+
+    Notes
+    -----
+    The reference `A`, `B`, `D` are those of the classical lamination theory,
+    see the module Notes. With `G_{13} = G_{23} = G` the constant-strain
+    transverse shear stiffness is `G h I`.
+
+    """
     lamprop = (71e9, 7e9, 0.28, 7e9, 7e9, 7e9, 7e9, 0.28, 0.28)
     stack = [0, 45, 90]
     plyt = 0.000125
@@ -212,7 +322,7 @@ def test_laminated_plate_tri_axial():
     #      nu12 and G12 whether or not e3 is given, see Lamina.rebuild, such
     #      that the result is the same as in the plane-stress test below
     A, B, D = clt_abd(stack, [plyt]*3, [lamprop]*3)
-    # NOTE G13 = G23 = G, constant-strain transverse shear stiffness G h
+    # NOTE equal G13 and G23, see the Notes
     Abar_ts = 7e9*3*plyt*np.eye(2)
     assert_abd(prop.A, prop.B, prop.D, A, B, D, prop.h)
     assert np.allclose(prop.Abar_ts, Abar_ts, rtol=1e-12,
@@ -220,6 +330,20 @@ def test_laminated_plate_tri_axial():
 
 
 def test_laminated_plate_plane_stress():
+    r"""Laminated plate against the lamination theory and lamination parameters
+
+    The `A`, `B` and `D` of :func:`.laminated_plate` are compared against
+    ``clt_abd``, and the stiffnesses of the lamination-parameter route
+    against those of :func:`.laminated_plate`, also after making both
+    balanced, orthotropic or symmetric.
+
+    Notes
+    -----
+    The reference `A`, `B`, `D` are those of the classical lamination theory,
+    see the module Notes. With `G_{13} = G_{23} = G` the constant-strain
+    transverse shear stiffness is `G h I`.
+
+    """
     lamprop = (71e9, 7e9, 0.28, 7e9, 7e9, 7e9)
     stack = [0, 45, 90]
     plyt = 0.000125
@@ -313,6 +437,15 @@ def test_lamination_parameters_three_dimensional_constants(material, layup):
     lamination theory, ``clt_abd``, and the constant-strain transverse shear
     stiffness ``abar_ts``, to round-off, also for e3 != 0, and the same
     values as for the six-entry ``laminaprop`` without e3, nu13 and nu23.
+    The thickness gradients of GradABD are compared against the thickness
+    scaling of `A` and `D`.
+
+    Notes
+    -----
+    At constant lamination parameters `A` is linear in `h` and `D` cubic,
+    such that `\partial A/\partial h = A/h` and `\partial D/\partial h = 3
+    D/h`.
+
     """
     lamprop = LAMINAPROPS_9[material]
     stack, plyts = LAYUPS[layup]
@@ -340,9 +473,8 @@ def test_lamination_parameters_three_dimensional_constants(material, layup):
                  'u3', 'u4', 'u5', 'u6', 'u7'):
         assert getattr(mat, name) == getattr(mat6, name), name
 
-    # NOTE the gradients use the same invariants: at constant lamination
-    #      parameters A is linear in h and D cubic, dA/dh = A/h and dD/dh =
-    #      3 D/h
+    # NOTE the gradients use the same invariants, checked against the
+    #      thickness scaling of A and D, see the Notes
     grad = GradABD()
     grad.calc_LP_grad(prop.h, mat, lp)
     ij = ((0, 0), (0, 1), (0, 2), (1, 1), (1, 2), (2, 2))
@@ -373,15 +505,21 @@ def test_lamination_parameters_offset(material, layup, offset):
     the reference surface. :func:`.shellprop_from_LaminationParameters`
     given the same offset must give the A, B and D of ``clt_abd`` with the
     offset, which also satisfy the shift of the stiffness integrals to
-    another reference plane, `B = B^0 + e A` and `D = D^0 + 2 e B^0 + e^2
-    A`, with `B^0`, `D^0` about the mid-surface (Vasiliev and Morozov,
-    Mechanics and Analysis of Composite Materials, Elsevier, 2001, Eq.
-    (5.28), p. 235). The constant-strain transverse shear stiffness does not
-    depend on the offset. The derivatives of GradABD with respect to the
-    thickness, at constant lamination parameters and offset, are compared
-    with central differences of the stiffnesses, polynomials of degree 3 in
-    h, whose truncation error is `(\Delta h/h)^2 = 10^{-12}` and whose
-    round-off error is about `10^{-16} h/\Delta h = 10^{-10}`, relative.
+    another reference plane of Vasiliev and Morozov (2001), Eq. (5.28),
+    p. 235. The constant-strain transverse shear stiffness does not depend
+    on the offset. The derivatives of GradABD with respect to the thickness,
+    at constant lamination parameters and offset, are compared with central
+    differences of the stiffnesses.
+
+    Notes
+    -----
+    The shift to another reference plane is `B = B^0 + e A` and `D = D^0 +
+    2 e B^0 + e^2 A`, with `B^0`, `D^0` about the mid-surface, see the
+    module Notes. The stiffnesses are polynomials of degree 3 in `h`, such
+    that the central differences have a truncation error `(\Delta h/h)^2 =
+    10^{-12}` and a round-off error of about `10^{-16} h/\Delta h =
+    10^{-10}`, relative, both below the tolerance ``rtol=1e-8``.
+
     """
     lamprop = LAMINAPROPS_9[material]
     stack, plyts = LAYUPS[layup]
@@ -432,14 +570,21 @@ def test_lamination_parameters_offset(material, layup, offset):
 def test_trace_normalized_three_dimensional_constants(material):
     r"""Trace normalization with e3 given
 
-    The trace of Melo et al. (2017), Eq. (1), p. 45, is that of the
-    plane-stress stiffness matrix, ``tr = Q11 + Q22 + 2 Q66`` with ``Q11 =
-    E1/(1 - nu12 nu21)``, ``Q22 = E2/(1 - nu12 nu21)``, ``Q66 = G12`` (Jones,
-    1999, Eq. (2.66), p. 72), independent of e3. The stiffnesses of the
-    lamination-parameter route are linear in the invariants, such that with
-    the trace-normalized invariants they are those of laminated_plate
-    divided by tr. After ``rebuild(plane_stress=False)`` the trace
-    normalization is refused.
+    The trace of the plane-stress stiffness matrix, Melo et al. (2017),
+    Eq. (1), p. 45, is checked against its closed form, independent of e3,
+    and the stiffnesses of the lamination-parameter route with the
+    trace-normalized invariants against those of laminated_plate divided by
+    the trace. After ``rebuild(plane_stress=False)`` the trace normalization
+    is refused.
+
+    Notes
+    -----
+    The trace is ``tr = Q11 + Q22 + 2 Q66`` with ``Q11 = E1/(1 - nu12
+    nu21)``, ``Q22 = E2/(1 - nu12 nu21)``, ``Q66 = G12`` (Jones, 1999, Eq.
+    (2.66), p. 72). The stiffnesses of the lamination-parameter route are
+    linear in the invariants, such that with the trace-normalized invariants
+    they are those of laminated_plate divided by tr.
+
     """
     lamprop = LAMINAPROPS_9[material]
     E1, E2, nu12, G12 = lamprop[:4]
@@ -465,12 +610,9 @@ def test_trace_normalized_three_dimensional_constants(material):
         m3d.trace_normalize_plane_stress()
 
 
-# Antiplane cores: "an idealized core in which the modulus of elasticity in
-# planes parallel with the faces is zero but the shear modulus in planes
-# perpendicular to the faces is finite" (Allen, H. G., Analysis and Design of
-# Structural Sandwich Panels, Pergamon Press, 1969, p. 14), with G13 != G23,
-# given with 6 and with 9 entries, the latter with a through-thickness
-# modulus E3, as a honeycomb
+# Antiplane cores, see the module Notes, with G13 != G23, given with 6 and
+# with 9 entries, the latter with a through-thickness modulus E3, as a
+# honeycomb
 G13_CORE, G23_CORE = 50e6, 30e6
 ANTIPLANE_CORES = {
     '6 entries': (0., 0., 0.3, 0., G13_CORE, G23_CORE),
@@ -482,14 +624,21 @@ ANTIPLANE_CORES = {
 def test_antiplane_core_matlamina(core):
     r"""MatLamina of an antiplane core, e1 = e2 = g12 = 0
 
+    The reduced stiffnesses, the invariants and the three-dimensional
+    stiffness matrix are compared against their closed forms for the
+    antiplane core, the latter also against the limit of a positive-definite
+    material. The reciprocal Poisson's ratios are stored as zero, and the
+    trace of Melo et al. (2017), Eq. (1), being zero, the trace
+    normalization is refused.
+
+    Notes
+    -----
     The plane-stress reduced stiffnesses of Jones (1999), Eq. (2.66), p. 72,
     vanish, Q11 = Q12 = Q22 = Q66 = 0, and Q44 = G23, Q55 = G13, such that
     u1 to u5 vanish and u6 = (G23 + G13)/2, u7 = (G23 - G13)/2. The
     three-dimensional stiffness matrix, the limit e1, e2 -> 0 of the inverse
     compliance, has C33 = E3, C44 = G23, C55 = G13 and all other terms zero.
-    The reciprocal Poisson's ratios are stored as zero, and the trace of
-    Melo et al. (2017), Eq. (1), being zero, the trace normalization is
-    refused.
+
     """
     lamprop = ANTIPLANE_CORES[core]
     e3 = lamprop[6] if len(lamprop) == 9 else 0.
@@ -527,15 +676,22 @@ def test_antiplane_core_matlamina(core):
 def test_not_positive_definite_rejected():
     r"""Material constants that are not positive definite
 
-    Jones, R. M., Mechanics of Composite Materials, 2nd ed., 1999, Sec.
-    2.4.2, pp. 68-69: ``E_i, G_ij >= 0``, Eq. (2.45) with the zero limits
-    of an antiplane core or of a singular transverse shear stiffness,
-    ``|nu_ij| < (E_i/E_j)**0.5``, Eq. (2.51), and ``1 - nu12 nu21 - nu23
-    nu32 - nu31 nu13 - 2 nu21 nu32 nu13 > 0``, Eq. (2.48). The message
-    names the violated conditions with their values. With 2 or 6 entries
-    only the in-plane conditions apply, e.g. an isotropic ``nu = 0.5`` is
-    accepted in plane stress and rejected with 9 entries, whose determinant
-    ``1 - 3 nu^2 - 2 nu^3`` vanishes.
+    ``read_laminaprop`` must reject the constants that violate the
+    restrictions of Jones (1999), Sec. 2.4.2, pp. 68-69, Eqs. (2.45),
+    (2.48) and (2.51), with a message that names the violated conditions
+    with their values. With 2 or 6 entries only the in-plane conditions
+    apply, e.g. an isotropic ``nu = 0.5`` is accepted in plane stress and
+    rejected with 9 entries.
+
+    Notes
+    -----
+    The restrictions of Jones (1999) are ``E_i, G_ij >= 0``, Eq. (2.45), with
+    the zero limits of an antiplane core or of a singular transverse shear
+    stiffness, ``|nu_ij| < (E_i/E_j)**0.5``, Eq. (2.51), and ``1 - nu12 nu21
+    - nu23 nu32 - nu31 nu13 - 2 nu21 nu32 nu13 > 0``, Eq. (2.48). For an
+    isotropic material with 9 entries the determinant of Eq. (2.48) is ``1 -
+    3 nu^2 - 2 nu^3``, which vanishes at ``nu = 0.5``.
+
     """
     E = 8.7e9
     # NOTE e2 = e3 with nu23 = 1 would give a negative c22
@@ -806,14 +962,30 @@ def helper_isotropic_plate():
 
 
 def test_isotropic_plate():
+    r"""Isotropic plate against the closed-form stiffnesses
+
+    The `A`, `B`, `D` and constant-strain transverse shear stiffnesses of
+    :func:`.isotropic_plate` are compared against their closed forms, and the
+    default transverse shear stiffness against the improved stiffness of
+    Rohwer (1988).
+
+    Notes
+    -----
+    `A = E h/(1 - \nu^2) [[1, \nu, 0], [\nu, 1, 0], [0, 0, (1 - \nu)/2]]`,
+    `B = 0`, `D = E h^3/(12 (1 - \nu^2)) [\ldots]` and `\bar{A}_{ts} = G h
+    I`. For a homogeneous isotropic plate the improved stiffness of Rohwer
+    (1988), DFVLR-FB 88-32, Sec. 4.1, p. 17, is 5/6 of the simple ones,
+    "independent of the Poisson's ratio or the position of the reference
+    surface", see the module Notes.
+
+    """
     prop = helper_isotropic_plate()
     E = 71e9
     nu = 0.28
     h = 0.000125
     G = E/(2*(1 + nu))
-    # NOTE A = E h/(1 - nu^2) [[1, nu, 0], [nu, 1, 0], [0, 0, (1 - nu)/2]],
-    #      B = 0 and D = E h^3/(12 (1 - nu^2)) [...]
-    Q = E/(1 - nu**2)*np.array([[1., nu, 0.],
+    # NOTE closed-form A, B and D of the homogeneous plate, see the Notes
+    Q =E/(1 - nu**2)*np.array([[1., nu, 0.],
                                 [nu, 1., 0.],
                                 [0., 0., (1 - nu)/2]])
     A = h*Q
@@ -822,20 +994,27 @@ def test_isotropic_plate():
     Abar_ts = G*h*np.eye(2)
     assert_abd(prop.A, prop.B, prop.D, A, B, D, h)
     assert np.allclose(prop.Abar_ts, Abar_ts, rtol=1e-12, atol=1e-14*G*h)
-    # NOTE Rohwer (1988), DFVLR-FB 88-32, Sec. 4.1, p. 17: for a homogeneous
-    #      isotropic plate the improved stiffness is 5/6 of the simple ones,
-    #      "independent of the Poisson's ratio or the position of the
-    #      reference surface"
+    # NOTE improved transverse shear stiffness of the homogeneous isotropic
+    #      plate, see the Notes
     assert prop.shear_correction == 'rohwer'
     assert np.allclose(prop.Ats, 5/6*G*h*np.eye(2), rtol=1e-12,
                        atol=1e-14*G*h)
 
 
 def test_offset_isotropic_plate():
-    r"""With the offset `e`, the plate occupies `-h/2 + e \le z \le h/2 + e`
-    and the thickness integrals give `B = e A`, `D = D_0 + e^2 A`,
-    ``intrhoz`` `= \rho h e` and ``intrhoz2`` `= \rho (h^3/12 + h e^2)`; the
-    transverse shear stiffness does not change"""
+    r"""Isotropic plate with an offset against the shifted thickness integrals
+
+    The stiffnesses and the mass integrals of :func:`.isotropic_plate` with
+    the offset `e` are compared against those without offset shifted to the
+    reference surface; the transverse shear stiffness does not change.
+
+    Notes
+    -----
+    With the offset `e`, the plate occupies `-h/2 + e \le z \le h/2 + e` and
+    the thickness integrals give `B = e A`, `D = D_0 + e^2 A`, ``intrhoz``
+    `= \rho h e` and ``intrhoz2`` `= \rho (h^3/12 + h e^2)`.
+
+    """
     E = 71e9
     nu = 0.28
     rho = 2700.
@@ -869,20 +1048,39 @@ def test_errors():
 
 
 def test_trace_normalized():
-    r"""
-    Reference:
+    r"""Trace normalization against the materials of Melo et al. (2017)
 
-        Melo, J. D. D., Bi, J., and Tsai, S. W., 2017, “A Novel Invariant-Based
-        Design Approach to Carbon Fiber Reinforced Laminates,” Compos. Struct.,
-        159, pp. 44–52. https://doi.org/10.1016/j.compstruct.2016.09.055
+    For the materials of Melo et al. (2017), Table 1, p. 45, see ``data``,
+    the trace of the plane-stress stiffnesses is compared against the
+    printed trace, the transverse shear invariants against the rotation of
+    the transverse shear moduli of a ply, and the trace-normalized
+    invariants and stiffnesses of the MatLamina against their closed forms
+    divided by the trace. ``data`` has G12 only; G13 and G23 are arbitrary
+    and distinct, such that Q44, Q55 and Q66 cannot be interchanged
+    unnoticed.
 
-    The trace is ``tr = Q11 + Q22 + 2 Q66``, Eq. (1), p. 45, of the
-    plane-stress stiffnesses, with the materials of Table 1, p. 45, see
-    ``data``; the in-plane invariants are
+    Notes
+    -----
+    The trace is ``tr = Q11 + Q22 + 2 Q66``, Eq. (1), p. 45, of Melo et
+    al. [1]_, of the plane-stress stiffnesses; the in-plane invariants are
     written with Q66 = G12, and the transverse shear invariants with Q44 =
-    G23 and Q55 = G13, checked below against the rotation of the transverse
-    shear moduli. ``data`` has G12 only; G13 and G23 are arbitrary and
-    distinct, such that Q44, Q55 and Q66 cannot be interchanged unnoticed.
+    G23 and Q55 = G13. For the transverse shear stresses `\tau_{yz}` and
+    `\tau_{xz}` of a ply at `\theta`: `G_{yz} = G_{23} c^2 + G_{13} s^2 =
+    u_6 + u_7 \cos 2\theta`, `G_{xz} = G_{13} c^2 + G_{23} s^2 = u_6 - u_7
+    \cos 2\theta` and `G_{yz,xz} = (G_{13} - G_{23}) c s = -u_7 \sin
+    2\theta`.
+
+    The trace `Tr` of Table 1, p. 45, is printed as an integer in GPa: the
+    traces of Eq. (1) computed from `E_x`, `E_y`, `\nu_x` and `E_s` differ
+    from it by +0.09 %, -0.09 % and +0.17 %, within half a unit of the last
+    printed digit, hence the absolute tolerance of 0.5 GPa.
+
+    References
+    ----------
+    .. [1] Melo, J. D. D., Bi, J., and Tsai, S. W., A Novel Invariant-Based
+       Design Approach to Carbon Fiber Reinforced Laminates, Composite
+       Structures, 159, 44-52, 2017.
+       https://doi.org/10.1016/j.compstruct.2016.09.055
 
     """
     for material, d in data.items():
@@ -901,10 +1099,8 @@ def test_trace_normalized():
         Q66 = G12
         tr = Q11 + Q22 + 2*Q66
         assert np.isclose(m.q11 + m.q22 + 2*m.q66, tr, rtol=1e-14)
-        # NOTE Tr of Melo et al. (2017), Table 1, p. 45, is printed as an
-        #      integer in GPa: the traces of Eq. (1) computed from Ex, Ey,
-        #      nux and Es differ from it by +0.09 %, -0.09 % and +0.17 %,
-        #      within half a unit of the last printed digit
+        # NOTE the printed trace is rounded to an integer in GPa, see the
+        #      Notes
         assert np.isclose(tr, d['tr'], atol=0.5e9, rtol=0)
         u1 = (3*Q11 + 3*Q22 + 2*Q12 + 4*Q66) / 8.
         u2 = (Q11 - Q22) / 2.
@@ -913,9 +1109,8 @@ def test_trace_normalized():
         u5 = (u1 - u4) / 2.
         u6 = (Q44 + Q55) / 2.
         u7 = (Q44 - Q55) / 2.
-        # NOTE tau_yz and tau_xz of a ply at theta: G_yz = G23 c^2 + G13 s^2
-        #      = u6 + u7 cos 2 theta, G_xz = G13 c^2 + G23 s^2 = u6 - u7 cos 2
-        #      theta, G_yz,xz = (G13 - G23) c s = -u7 sin 2 theta
+        # NOTE transverse shear moduli of a ply at 30 degrees in terms of the
+        #      invariants, see the Notes
         ply = Lamina()
         ply.thetadeg = 30.
         ply.h = 1.
