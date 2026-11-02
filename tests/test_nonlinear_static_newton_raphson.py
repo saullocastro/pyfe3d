@@ -1,14 +1,24 @@
 """Geometrically nonlinear static analyses with a full Newton-Raphson method
 
-Since KT = KC0 + KCNL(u) + KG(u) is the exact Jacobian of the internal forces
-given by ``update_fint(..., nonlinear=1)``, the Newton-Raphson iteration
-converges quadratically. Two classical problems where the membrane action
-stiffens the structure are verified:
+The residuals of the Newton-Raphson iterations must show quadratic
+convergence, the nonlinear deflection must be below 0.7 times the linear one
+(membrane stiffening), and the different elements must agree within 5 %, in
+two classical problems where the membrane action stiffens the structure:
 
 - simply supported square plate with immovable edges under uniform pressure,
   with the Quad4, Quad4R, Tria3R and Tria3DSG elements
 - beam clamped at both ends under a central transverse load, arbitrarily
   oriented in space, with the BeamC and BeamLR elements
+
+The triangles are also compared with Quad4R under mesh refinement.
+
+Notes
+-----
+Since KT = KC0 + KCNL(u) + KG(u) is the exact Jacobian of the internal forces
+given by ``update_fint(..., nonlinear=1)``, the Newton-Raphson iteration
+converges quadratically: in the asymptotic range the number of correct
+digits doubles at each iteration, checked as ``r1 < r0**1.6`` until the
+round-off floor.
 """
 import sys
 sys.path.append('..')

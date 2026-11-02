@@ -3,11 +3,14 @@ r"""Linear static analysis with a prescribed displacement: a cantilever of
 `\delta` prescribed at the free end and no applied load.
 
 The tip reaction, the clamp reactions and the deflected shape are compared
-with the closed form of the Timoshenko beam, derived in
-``doc/source/tut-prescribed-displacement-cantilever.ipynb`` and checked with
-SymPy in :func:`test_closed_form_timoshenko_cantilever`. :class:`.BeamC`
-solves the homogeneous equilibrium equations of the Timoshenko beam exactly,
-such that the nodal values agree to round-off.
+with the closed form of the Timoshenko beam of :func:`timoshenko_cantilever`,
+checked with SymPy in :func:`test_closed_form_timoshenko_cantilever`, by a
+partition of the system by hand and by :class:`pyfe3d.solver.Analysis`.
+
+Notes
+-----
+:class:`.BeamC` solves the homogeneous equilibrium equations of the
+Timoshenko beam exactly, such that the nodal values agree to round-off.
 """
 import numpy as np
 import pytest
@@ -89,11 +92,17 @@ def boundary_conditions(N, delta):
 def timoshenko_cantilever(x, P, prop, L):
     r"""Closed form of a Timoshenko cantilever with a tip force `P`
 
-    Returns the deflection `w(x) = \frac{P}{EI}\left(\frac{L x^2}{2} -
+    Returns the deflection `w` and the rotation of the cross section
+    `\theta` at the positions ``x``.
+
+    Notes
+    -----
+    The deflection is `w(x) = \frac{P}{EI}\left(\frac{L x^2}{2} -
     \frac{x^3}{6}\right) + \frac{P x}{k G A}` and the rotation of the cross
     section `\theta(x) = \frac{P}{EI}\left(L x - \frac{x^2}{2}\right)`, with
     `w_{,x} = \theta + \gamma`, `\gamma = P/(k G A)`, `EI` = ``E*Iyy`` and
-    `kG` = ``G13``. In pyfe3d, `r_y = -\theta`, see :doc:`conventions`.
+    `kG` = ``G13``. In pyfe3d, `r_y = -\theta` (right-hand rule about
+    `y` with `w` along `z`).
     """
     EI = prop.E*prop.Iyy
     kGA = prop.G13*prop.A

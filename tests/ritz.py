@@ -4,10 +4,19 @@ The Legendre-based approximation functions of Castro and Donadon (2017) and
 the bending and transverse shear stiffnesses of an isotropic plate, used by
 the Ritz models of the tests of the solvers. They depend only on NumPy.
 
-Reference: Saullo G. P. Castro, Maurício V. Donadon. "Assembly of
-Semi-Analytical models to Address Linear Buckling and Vibration of Stiffened
-Composite Panels with Debonding Defect". Composite Structures, 2017.
-https://doi.org/10.1016/j.compstruct.2016.10.026
+Notes
+-----
+The approximation functions are those of Castro and Donadon (2017): four
+cubic Hermite functions, whose displacement and rotation at each extremity
+are controlled by flags, followed by the Legendre polynomials integrated
+twice, which vanish with their first derivative at both extremities.
+
+References
+----------
+Castro, S. G. P., Donadon, M. V., Assembly of semi-analytical models to
+address linear buckling and vibration of stiffened composite panels with
+debonding defect, Composite Structures, 160, 2017, pp. 232-247,
+https://doi.org/10.1016/j.compstruct.2016.10.026.
 
 """
 from functools import lru_cache
@@ -43,11 +52,17 @@ def _coefficients(n, d1t, d1r, d2t, d2r, der):
 def vecf(n, xi, d1t, d1r, d2t, d2r):
     r"""Hierarchical functions of Bardell at the natural coordinate ``xi``
 
+    Returns the ``n`` functions; the flags ``d1t``, ``d1r``, ``d2t`` and
+    ``d2r`` control the displacement and the rotation at `\xi=-1` and
+    `\xi=+1`.
+
+    Notes
+    -----
     The first four are cubic Hermite functions, whose displacement and
     rotation at `\xi=-1` and `\xi=+1` are controlled by the flags ``d1t``,
     ``d1r``, ``d2t`` and ``d2r``. The following ones are the Legendre
     polynomials `P_{i-2}` integrated twice from `-1`, which vanish with
-    their first derivative at both extremities.
+    their first derivative at both extremities (Castro and Donadon, 2017).
 
     """
     return legendre.legval(xi, _coefficients(n, d1t, d1r, d2t, d2r, 0))
