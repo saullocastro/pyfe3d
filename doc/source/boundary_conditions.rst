@@ -135,9 +135,12 @@ given by the ``calc_fint`` of the full model, which reduces to
 of :meth:`.Analysis.static` have size ``N``, with `\lambda
 \bar{\boldsymbol{u}}_k` at the known dofs. A model without load,
 ``calc_fext`` returning zeros, and with a prescribed displacement is
-displacement controlled; with the arc-length methods, the load factor then
-measures the prescribed displacement, which can pass a limit point of the
-reaction, see ``tests/test_dome_prescribed_displacement.py``.
+displacement controlled: the load factor then measures the prescribed
+displacement, and the reaction follows from :eq:`bc-reactions-nl`; with
+the arc-length methods, the load factor, here the prescribed displacement,
+may also decrease along the path. ``tests/test_dome_prescribed_displacement.py``
+traces with Riks' method the reaction of two shells pressed down by a
+deflection prescribed at their crown.
 
 The same reduction applies to any linear constraint `\boldsymbol{u} =
 \boldsymbol{Z} \boldsymbol{c} + \boldsymbol{u}_{0} + \lambda \boldsymbol{u}_{1}`, e.g.
