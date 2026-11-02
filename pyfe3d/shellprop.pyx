@@ -1000,7 +1000,16 @@ cdef int PLYDATA_SIZE = 10
 
 
 cdef inline void _congruence3(double *T, double *M, double *out) noexcept nogil:
-    r"""Symmetric 3x3 congruence `out = T M T^\top`, all stored row by row"""
+    r"""Symmetric 3x3 congruence of ``M`` by ``T``, written in ``out``
+
+    ``T``, ``M`` and ``out`` are 3x3 matrices stored row by row; ``M`` is
+    symmetric and only its upper triangle is computed, then mirrored.
+
+    Notes
+    -----
+    `\mathrm{out} = T M T^\top`.
+
+    """
     cdef int i, j
     cdef double TM[9]
     for i in range(3):
@@ -1648,6 +1657,28 @@ cdef class ShellProp:
        Theory and Analysis, Second Edition, CRC Press, 2003.
        https://doi.org/10.1201/b12409
 
+    Examples
+    --------
+    A cross-ply laminate built ply by ply; :func:`.laminated_plate` does the
+    same from the stacking sequence:
+
+    >>> from pyfe3d.shellprop import ShellProp, Lamina
+    >>> from pyfe3d.shellprop_utils import read_laminaprop
+    >>> mat = read_laminaprop((142.5e9, 8.7e9, 0.28, 5.1e9, 5.1e9, 3.4e9))
+    >>> prop = ShellProp()
+    >>> for thetadeg in [0, 90, 90, 0]:
+    ...     ply = Lamina()
+    ...     ply.thetadeg = thetadeg
+    ...     ply.h = 0.125e-3
+    ...     ply.matlamina = mat
+    ...     ply.rebuild()
+    ...     prop.plies.append(ply)
+    >>> prop.calc_constitutive_matrix()
+    >>> print(prop.h, prop.ABD.shape)
+    0.0005 (6, 6)
+    >>> print(round(prop.A11/1e6, 2), round(prop.D11, 3))
+    37.98 1.316
+
     """
     def __init__(ShellProp self):
         self.h = 0.
@@ -1759,16 +1790,21 @@ cdef class ShellProp:
     def Ats(self):
         r"""Transverse shear stiffness matrix ``[[A44, A45], [A45, A55]]``
 
-        Index 4 corresponds to `yz` and index 5 to `xz`, such that `\{Q_y,
-        Q_x\}^\top = A_{ts} \{\gamma_{yz}, \gamma_{xz}\}^\top`. The shear correction
-        is already applied, see :meth:`.calc_transverse_shear_stiffness`.
-        A new array is returned at each access, such that changing it does not
-        change the attributes.
+        Index 4 corresponds to `yz` and index 5 to `xz`, see the Notes. The
+        shear correction is already applied, see
+        :meth:`.calc_transverse_shear_stiffness`. A new array is returned at
+        each access, such that changing it does not change the attributes.
 
         Returns
         -------
         Ats : ndarray
             Array of shape ``(2, 2)``, force per unit length.
+
+        Notes
+        -----
+        The matrix relates the transverse shear forces to the transverse
+        shear strains, `\{Q_y, Q_x\}^\top = A_{ts} \{\gamma_{yz},
+        \gamma_{xz}\}^\top`, see the Notes of :class:`.ShellProp`.
 
         """
         return np.asarray(self.get_Ats())
@@ -1928,7 +1964,8 @@ cdef class ShellProp:
             Ats[3] = S[0]/detS
             return
 
-        # NOTE tensor rotation A_e = T_gamma^T A T_gamma, T_gamma = [[m22, m12], [m21, m11]]
+        # NOTE tensor rotation of the transverse shear stiffness, as in
+        #      _rotate_ply
         t44 = self.A44
         t45 = self.A45
         t55 = self.A55
@@ -1943,9 +1980,7 @@ cdef class ShellProp:
 
         The element coordinate system is such that the material direction
         makes an angle `\theta` with the element `x` axis, measured towards
-        the element `y` axis, as used by the shell elements, with `m_{11} =
-        \cos\theta`, `m_{12} = -\sin\theta`, `m_{21} = \sin\theta` and `m_{22}
-        = \cos\theta`.
+        the element `y` axis, as used by the shell elements, see the Notes.
 
         Parameters
         ----------
@@ -1957,6 +1992,14 @@ cdef class ShellProp:
         A, B, D, Ats : tuple of np.ndarray
             The 3x3 matrices ``A``, ``B``, ``D`` and the 2x2 matrix ``Ats`` in
             the element coordinate system. See :meth:`.calc_Ats_element`.
+
+        Notes
+        -----
+        The matrices are those of :meth:`.get_constitutive_element` with the
+        in-plane rotation from the material to the element frame `m_{11} =
+        \cos\theta`, `m_{12} = -\sin\theta`, `m_{21} = \sin\theta` and
+        `m_{22} = \cos\theta`, the rotation that the shell elements compute
+        in ``update_rotation_matrix`` from a material direction.
 
         """
         cdef double thetarad, c, s
@@ -3647,9 +3690,8 @@ cpdef ShellProp shellprop_from_LaminationParameters(double thickness, MatLamina
     lam = ShellProp()
     lam.h = thickness
     lam.offset = offset
-    # NOTE int z dz and int z^2 dz of the constant terms with z measured from
-    #      the reference surface: h^2/4 fB = h offset and h^3/12 fD = h^3/12
-    #      + h offset^2
+    # NOTE factors of the constant terms of B and D with z measured from
+    #      the reference surface, see the Notes
     fB = 4*offset/thickness
     fD = 1 + 12*(offset/thickness)**2
 
@@ -3774,8 +3816,7 @@ cdef class GradABD:
     :meth:`calc_LP_grad`. The object can be pickled.
 
     Attributes
-    ==========
-
+    ----------
     gradAij, gradBij, gradDij, gradAtsij : double[:, ::1]
         The shapes of these gradient matrices are:
 

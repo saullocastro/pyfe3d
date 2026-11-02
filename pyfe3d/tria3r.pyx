@@ -432,7 +432,7 @@ cdef void allman_enrichment(double *S_x, double *S_y, double *xe,
     ej[2] = 0
 
     for k in range(3):
-        # NOTE (l_k/8)*n_k = (1/8)*{y_i - y_j, x_j - x_i}
+        # NOTE edge factors cu_k and cv_k of each edge mode, see the Notes
         cu[k] = 0.125*(xe[3*ei[k] + 1] - xe[3*ej[k] + 1])
         cv[k] = 0.125*(xe[3*ej[k] + 0] - xe[3*ei[k] + 0])
         Sb_x[k] = 4.*(S_x[ei[k]]*S[ej[k]] + S[ei[k]]*S_x[ej[k]])
@@ -520,7 +520,9 @@ cdef void allman_delta_Ke(double *S_x, double *S_y, double *xe, double area,
         S}^u_{,y} - \frac{1}{2}\tilde{\boldsymbol{S}}^v_{,x}
 
     evaluated at the centroid, where `\boldsymbol{S}^{r_z} = 1/3` at each node,
-    with `A_e` given by ``area``.
+    with `A_e` given by ``area``. The three-point rule, of degree of precision
+    2, is the first row of Table I of Cowper [3]_, the same one used for the
+    drilling terms of the unenriched element.
 
     References
     ----------
@@ -530,6 +532,9 @@ cdef void allman_delta_Ke(double *S_x, double *S_y, double *xe, double area,
     .. [2] Hughes, T. J. R., and Brezzi, F., On drilling degrees of freedom,
        Computer Methods in Applied Mechanics and Engineering, 72(1), 105-121,
        1989. https://doi.org/10.1016/0045-7825(89)90124-2
+    .. [3] Cowper, G. R., Gaussian quadrature formulas for triangles,
+       International Journal for Numerical Methods in Engineering, 7(3),
+       405-408, 1973. https://doi.org/10.1002/nme.1620070316
 
     """
     cdef int i, j, a, n
@@ -562,9 +567,7 @@ cdef void allman_delta_Ke(double *S_x, double *S_y, double *xe, double area,
         Bb[2*18 + 6*i + 3] = -S_x[i]         # kxy = ry,y - rx,x
         Bb[2*18 + 6*i + 4] = S_y[i]
 
-    # NOTE three-point rule of degree of precision 2, first row of Table I
-    #      in Cowper (1973), the same one already used for the drilling
-    #      terms of the unenriched element
+    # NOTE three-point rule of degree of precision 2, see the Notes
     points[0] = 0.66666666666666666666666666666666666666666667
     points[1] = 0.16666666666666666666666666666666666666666667
     points[2] = 0.16666666666666666666666666666666666666666667
@@ -642,9 +645,8 @@ cdef void dsg_shear_Ke(double *S_x, double *S_y, double *xe, double area,
     r"""Add the discrete shear gap transverse shear stiffness, triangle
 
     Adds to the 18 by 18 buffer ``Ke``, stored row by row, the transverse
-    shear stiffness `A_e \boldsymbol{B}_s^\top \boldsymbol{A}_{ts}
-    \boldsymbol{B}_s` of the discrete shear gap (DSG) field of Bletzinger,
-    Bischoff and Ramm (2000) [1]_, averaged over the three choices of the
+    shear stiffness of the discrete shear gap (DSG) field of Bletzinger,
+    Bischoff and Ramm (2000), averaged over the three choices of the
     starting node, identical to the operator of
     :class:`pyfe3d.tria3dsg.Tria3DSG`. Used by :class:`.Tria3R` when
     ``shear_model = 1``, the default since 0.12.0, see the attribute.
@@ -659,10 +661,31 @@ cdef void dsg_shear_Ke(double *S_x, double *S_y, double *xe, double area,
         Element area.
     A44, A45, A55 : double
         Transverse shear stiffnesses in the element coordinate system, `A_{44}`
-        pairing with `\gamma_{yz} = w_{,y} - r_x` and `A_{55}` with
-        `\gamma_{xz} = w_{,x} + r_y`.
+        pairing with `\gamma_{yz}` and `A_{55}` with `\gamma_{xz}`. Force per
+        unit length.
     Ke : double pointer
         Buffer of 324 positions, added to in place.
+
+    Notes
+    -----
+    The stiffness is `A_e \boldsymbol{B}_s^\top \boldsymbol{A}_{ts}
+    \boldsymbol{B}_s`, with `A_e` the area, `\boldsymbol{A}_{ts}` the matrix
+    of `A_{44}`, `A_{45}`, `A_{55}` and `\boldsymbol{B}_s` the rows of
+    `\gamma_{yz} = w_{,y} - r_x` and `\gamma_{xz} = w_{,x} + r_y` of the DSG
+    field [1]_. With `p` the starting node and `q` either of the other two,
+    `\Delta x = x_q - x_p` and `\Delta y = y_q - y_p`, the shear gap of node
+    `q` is
+
+    .. math::
+
+        \Delta w_q = (w_q - w_p) + (r_{y,p} + r_{y,q}) \frac{\Delta x}{2} -
+        (r_{x,p} + r_{x,q}) \frac{\Delta y}{2}
+
+    with `\Delta w_p = 0`, the gaps are interpolated with the area
+    coordinates `S_q`, `\gamma_{xz} = \sum_q \Delta w_q S_{q,x}` and
+    `\gamma_{yz} = \sum_q \Delta w_q S_{q,y}`, and the rows are averaged
+    over the three choices of `p`, the operator of
+    :meth:`pyfe3d.tria3dsg.Tria3DSG._update_probe_BL_G`.
 
     References
     ----------
@@ -680,8 +703,7 @@ cdef void dsg_shear_Ke(double *S_x, double *S_y, double *xe, double area,
         Bxz[i] = 0.
         Byz[i] = 0.
     # NOTE same operator as Tria3DSG._update_probe_BL, with p the starting
-    #      node and q either of the other two:
-    #      dw_q = (w_q - w_p) + (ry_p + ry_q) dx/2 - (rx_p + rx_q) dy/2
+    #      node and q either of the other two, see the Notes
     for ip in range(3):
         for kk in range(1, 3):
             iq = (ip + kk) % 3
@@ -753,9 +775,9 @@ cdef class Tria3RProbe:
     probe can be shared amongst many finite elements, with the information
     being updated and retrieved on demand.
 
-    .. note:: The probe can be shared amongst more than one finite element, 
+    .. note:: The probe can be shared amongst more than one finite element,
               depending on how you defined them. Mind that the probe will
-              always safe the values from the last udpate.
+              always save the values from the last update.
 
 
     The constructor takes no parameters and allocates every array filled with
@@ -766,7 +788,7 @@ cdef class Tria3RProbe:
     xe, : array-like
         Array of size ``NUM_NODES*DOF//2=9`` containing the nodal coordinates
         in the element coordinate system, in the following order
-        `{x_e}_1, {y_e}_1, {z_e}_1, `{x_e}_2, {y_e}_2, {z_e}_2`, `{x_e}_3,
+        `{x_e}_1, {y_e}_1, {z_e}_1`, `{x_e}_2, {y_e}_2, {z_e}_2`, `{x_e}_3,
         {y_e}_3, {z_e}_3`.
         Dimension of length. Updated by :meth:`.Tria3R.update_probe_xe`.
     ue, : array-like
@@ -790,16 +812,22 @@ cdef class Tria3RProbe:
         and the curvatures, with dimension of one over length.
     Sw_x, Sw_y : array-like
         Arrays of size ``NUM_NODES*DOF=18`` with the rows giving `w_{,x}` and
-        `w_{,y}`, at the last evaluated integration point.
-        ``Sw_x`` holds `\boldsymbol{G}_x = \partial \boldsymbol{S}^w/\partial x`
-        and ``Sw_y`` holds `\boldsymbol{G}_y = \partial \boldsymbol{S}^w/\partial
-        y`, the underscore denoting the partial derivative.
+        `w_{,y}`, at the last evaluated integration point, the rows
+        `\boldsymbol{G}_x` and `\boldsymbol{G}_y` of the Notes.
         Their products with ``ue`` are dimensionless.
     KCNLve : array-like
         Array of size ``(NUM_NODES*DOF)**2=324`` with the nonlinear
         constitutive stiffness matrix KCNL in element coordinates, stored row
         by row.
         Updated by :meth:`.Tria3R.update_KCNL`.
+
+    Notes
+    -----
+    With the row `\boldsymbol{S}^w` that interpolates `w` from ``ue``,
+    `\boldsymbol{G}_x = \partial \boldsymbol{S}^w/\partial x` and
+    `\boldsymbol{G}_y = \partial \boldsymbol{S}^w/\partial y`, such that
+    `w_{,x} = \boldsymbol{G}_x \boldsymbol{u}_e` and `w_{,y} =
+    \boldsymbol{G}_y \boldsymbol{u}_e`.
 
     """
     cdef public double [::1] xe
@@ -1103,6 +1131,34 @@ cdef class Tria3R:
             Only the direction of the vector is used. Default ``0.``, the
             zero vector, which leaves ``m11, m12, m21, m22`` unchanged.
 
+        Notes
+        -----
+        With `\boldsymbol{v}_{12} = \boldsymbol{x}_2 - \boldsymbol{x}_1` and
+        `\boldsymbol{v}_{13} = \boldsymbol{x}_3 - \boldsymbol{x}_1`, the element
+        axes are
+
+        .. math::
+
+            \boldsymbol{e}_x = \frac{\boldsymbol{v}_{12}}{\|\boldsymbol{v}_{12}\|},
+            \qquad
+            \boldsymbol{e}_z = \frac{\boldsymbol{v}_{12} \times
+            \boldsymbol{v}_{13}}{\|\boldsymbol{v}_{12} \times
+            \boldsymbol{v}_{13}\|}, \qquad
+            \boldsymbol{e}_y = \boldsymbol{e}_z \times \boldsymbol{e}_x
+
+        and `\boldsymbol{T}_{3\times 3} = [\boldsymbol{e}_x, \boldsymbol{e}_y,
+        \boldsymbol{e}_z]`. The material direction `\boldsymbol{x}_m` is
+        projected onto the element plane as `\boldsymbol{x}_m' =
+        (\boldsymbol{e}_z \times \boldsymbol{x}_m) \times \boldsymbol{e}_z`,
+        normalized, and with `\theta` the angle from `\boldsymbol{e}_x` to
+        `\boldsymbol{x}_m'`, positive towards `\boldsymbol{e}_y`, `m_{11} =
+        m_{22} = \cos\theta = \boldsymbol{x}_m' \cdot \boldsymbol{e}_x`,
+        `m_{21} = -m_{12} = \sin\theta`, the sign of `\sin\theta` being that
+        of `\boldsymbol{x}_m \cdot \boldsymbol{e}_y`. The material direction
+        is ignored when its norm, or the norm of `\boldsymbol{e}_z \times
+        \boldsymbol{x}_m` after its normalization, is not larger than
+        `10^{-10} \|\boldsymbol{v}_{12} \times \boldsymbol{v}_{13}\|`.
+
         """
         cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk
         cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k
@@ -1231,6 +1287,14 @@ cdef class Tria3R:
             1-D array of size ``DOF*M``, translations with dimension of
             length and rotations dimensionless.
 
+        Notes
+        -----
+        For each node, `\{u, v, w\}_e^\top = \boldsymbol{T}_{3\times 3}^\top
+        \{u, v, w\}^\top` and `\{r_x, r_y, r_z\}_e^\top =
+        \boldsymbol{T}_{3\times 3}^\top \{r_x, r_y, r_z\}^\top`, with
+        `\boldsymbol{T}_{3\times 3}` of :meth:`.update_rotation_matrix`,
+        whose columns are the element axes in global coordinates.
+
         """
         cdef int i, j
         cdef int c[3]
@@ -1292,6 +1356,13 @@ cdef class Tria3R:
             y_2, z_2, ..., x_M, y_M, z_M`.
             1-D array of size ``3*M``, dimension of length.
 
+        Notes
+        -----
+        For each node, `\{x, y, z\}_e^\top = \boldsymbol{T}_{3\times 3}^\top
+        \{x, y, z\}^\top`, with `\boldsymbol{T}_{3\times 3}` of
+        :meth:`.update_rotation_matrix`, whose columns are the element axes in
+        global coordinates.
+
         """
         cdef int i, j
         cdef int c[3]
@@ -1335,6 +1406,15 @@ cdef class Tria3R:
         The ``area`` attribute is updated with the area of the triangle given
         by the element coordinates ``probe.xe``, ignoring the ``z``
         coordinates. Called by :meth:`.update_probe_xe`.
+
+        Notes
+        -----
+        With the vertices `(x_i, y_i)` of nodes 1 to 3 in element coordinates,
+
+        .. math::
+
+            A = \frac{1}{2} \left| (x_2 - x_1)(y_3 - y_1) - (x_3 - x_1)(y_2 -
+            y_1) \right|
 
         """
         cdef double x1, x2, x3, y1, y2, y3
@@ -1495,8 +1575,8 @@ cdef class Tria3R:
             if l31 > maxl:
                 maxl = l31
 
-            # NOTE factor of Lyly et al. (1993), alpha_shear_locking = 0. by
-            #      default, see the module documentation
+            # NOTE shear-locking factor, alpha_shear_locking = 0. by
+            #      default, see the Notes of update_KC0
             factor = self.alpha_shear_locking*maxl**2/prop.h**2
             A44 = 1 / (1 + factor) * A44
             A45 = 1 / (1 + factor) * A45
@@ -1662,11 +1742,8 @@ cdef class Tria3R:
             KC0e1317 = 0
             KC0e1717 = 0
 
-            # NOTE three-point rule of degree of precision 2, first row of Table I
-            #      in Cowper, G. R., Gaussian quadrature formulas for triangles,
-            #      IJNME 7(3), 405-408, 1973, doi:10.1002/nme.1620070316: area
-            #      coordinates (2/3, 1/6, 1/6) and their permutations, weight 1/6
-            #      times detJ = 2*area, i.e. area/3
+            # NOTE three-point rule of degree of precision 2, weight 1/6 times
+            #      detJ = 2*area, i.e. area/3, see the Notes of update_KC0
             wij = 0.5*0.333333333333333333333333333333333333333333333
             points[0] = 0.66666666666666666666666666666666666666666667
             points[1] = 0.16666666666666666666666666666666666666666667
@@ -1831,9 +1908,9 @@ cdef class Tria3R:
         integrated with a single point at the centroid, with the weight
         ``0.5`` times ``detJ = 2*area``. The transverse shear stiffnesses
         `A_{44}`, `A_{45}`, `A_{55}` are divided by `1 + \alpha
-        \ell^2/h^2`, with `\alpha` given by ``alpha_shear_locking``, ``0.``
-        by default, `\ell` the longest edge and `h` the total thickness
-        ``prop.h``. With the default ``shear_model = 1`` they enter the
+        \ell^2/h^2`, the factor of Lyly et al. [2]_, with `\alpha` given by
+        ``alpha_shear_locking``, ``0.`` by default, `\ell` the longest edge
+        and `h` the total thickness ``prop.h``. With the default ``shear_model = 1`` they enter the
         discrete shear gap field of :func:`.dsg_shear_Ke`, added with the
         Allman block below; with ``shear_model = 0`` the transverse shear
         strains are sampled at the centroid by the generated terms, see the
@@ -1860,6 +1937,10 @@ cdef class Tria3R:
         .. [1] Cowper, G. R., Gaussian quadrature formulas for triangles,
            International Journal for Numerical Methods in Engineering,
            7(3), 405-408, 1973. https://doi.org/10.1002/nme.1620070316
+        .. [2] Lyly, M., Stenberg, R., and Vihinen, T., A stable bilinear
+           element for the Reissner-Mindlin plate model, Computer Methods in
+           Applied Mechanics and Engineering, 110(3-4), 343-357, 1993.
+           https://doi.org/10.1016/0045-7825(93)90214-I
 
         """
         cdef int c1, c2, c3, i, k
@@ -1957,8 +2038,8 @@ cdef class Tria3R:
             if l31 > maxl:
                 maxl = l31
 
-            # NOTE factor of Lyly et al. (1993), alpha_shear_locking = 0. by
-            #      default, see the module documentation
+            # NOTE shear-locking factor, alpha_shear_locking = 0. by
+            #      default, see the Notes of update_KC0
             factor = self.alpha_shear_locking*maxl**2/prop.h**2
             A44 = 1 / (1 + factor) * A44
             A45 = 1 / (1 + factor) * A45
@@ -3115,11 +3196,8 @@ cdef class Tria3R:
             KC0e1317 = 0
             KC0e1717 = 0
 
-            # NOTE three-point rule of degree of precision 2, first row of Table I
-            #      in Cowper, G. R., Gaussian quadrature formulas for triangles,
-            #      IJNME 7(3), 405-408, 1973, doi:10.1002/nme.1620070316: area
-            #      coordinates (2/3, 1/6, 1/6) and their permutations, weight 1/6
-            #      times detJ = 2*area, i.e. area/3
+            # NOTE three-point rule of degree of precision 2, weight 1/6 times
+            #      detJ = 2*area, i.e. area/3, see the Notes of update_KC0
             wij = 0.5*0.333333333333333333333333333333333333333333333
             points[0] = 0.66666666666666666666666666666666666666666667
             points[1] = 0.16666666666666666666666666666666666666666667
@@ -5755,7 +5833,7 @@ cdef class Tria3R:
             c2 = self.c2
             c3 = self.c3
 
-            if mtype == 0: # M_cons consistent mass matrix, three-point rule of Cowper (1973), see below
+            if mtype == 0: # M_cons consistent mass matrix, three-point rule, see the Notes
                 k = self.init_k_M
                 Mr[k] = 0+c1
                 Mc[k] = 0+c1
@@ -6567,11 +6645,8 @@ cdef class Tria3R:
                 Mr[k] = 5+c3
                 Mc[k] = 5+c3
 
-                # NOTE three-point rule of degree of precision 2, first row of Table I
-                #      in Cowper, G. R., Gaussian quadrature formulas for triangles,
-                #      IJNME 7(3), 405-408, 1973, doi:10.1002/nme.1620070316: area
-                #      coordinates (2/3, 1/6, 1/6) and their permutations, weight 1/6
-                #      times detJ = 2*area, i.e. area/3
+                # NOTE three-point rule of degree of precision 2, weight 1/6
+                #      times detJ = 2*area, i.e. area/3, see the Notes
                 wij = 0.5*0.333333333333333333333333333333333333333333333
                 points[0] = 0.66666666666666666666666666666666666666666667
                 points[1] = 0.16666666666666666666666666666666666666666667

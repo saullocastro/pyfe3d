@@ -653,12 +653,25 @@ cdef inline void _warp_KE(double *z, double *f, double *R, double *KE) noexcept 
 
 cdef inline void _reduced_bending_stiffness(double *Ae, double *Be,
         double *De, double *Ds) noexcept nogil:
-    r"""Bending stiffness with zero membrane forces, ``Ds = D - B A^-1 B``
+    r"""Bending stiffness ``Ds`` with zero membrane forces
 
     From the row-major 3x3 matrices ``Ae``, ``Be`` and ``De`` in the element
-    coordinate system. It is ``D`` itself when ``B`` is zero and does not
-    depend on the reference surface set by ``ShellProp.offset``. Used by the
-    physical stabilisation of the bending, see :func:`_bending_bl94`.
+    coordinate system, written in the row-major 3x3 ``Ds``. It is ``D``
+    itself when ``B`` is zero and does not depend on the reference surface
+    set by ``ShellProp.offset``. Used by the physical stabilisation of the
+    bending, see :func:`_bending_bl94`.
+
+    Notes
+    -----
+    With `N = A \varepsilon^{(0)} + B \kappa = 0`, `\varepsilon^{(0)} =
+    -A^{-1} B \kappa` and `M = B \varepsilon^{(0)} + D \kappa = D_s \kappa`,
+    with
+
+    .. math::
+
+        D_s = D - B A^{-1} B
+
+    where `A^{-1}` is computed by cofactors.
 
     """
     cdef int i, j, k
@@ -693,23 +706,65 @@ cdef inline void _reduced_bending_stiffness(double *Ae, double *Be,
 cdef inline void _bending_bl94(double x1, double x2, double x3, double x4,
         double y1, double y2, double y3, double y4, double *Ds, double fH,
         double *K) noexcept nogil:
-    r"""Physical stabilisation of the bending of Belytschko and Leviathan
-    (1994), added to ``K``
+    r"""Physical stabilisation of the bending of Belytschko and Leviathan,
+    added to ``K``
 
     ``K`` is the 12 x 12 row-major matrix of :func:`_shear_bl94`, on ``w,
     r_x, r_y`` of nodes 1 to 4 in element coordinates, to which this adds
-    the rows and columns of ``r_x`` and ``r_y``. The bilinear shape
-    functions are written as in their Eq. (3.23), ``N_I = Delta_I + x b_xI +
-    y b_yI + h gamma_I``, with ``h = xi*eta`` and ``gamma_I = (h_I - (h.x)
-    b_xI - (h.y) b_yI)/4``, Eq. (3.24d), so that ``N_I,x = b_xI + h,x
-    gamma_I``, Eq. (3.25). The nonconstant part of the curvatures,
-    ``kappa_xx = h,x q_y``, ``kappa_yy = -h,y q_x`` and ``kappa_xy = h,y q_y
-    - h,x q_x`` with ``q_x = gamma^T r_x`` and ``q_y = gamma^T r_y``, Eq.
-    (3.28), gives the stiffness of their Eqs. (4.13), (B.17) and (B.18),
-    with ``H_xx``, ``H_yy`` and ``H_xy`` of Eq. (4.14) integrated with two
-    by two Gauss points and the bending stiffness ``Ds`` of the laminate,
-    which reduces to ``a**2/12*C_b*a`` of Eq. (B.18) for an isotropic plate;
-    multiplied by ``fH``.
+    the rows and columns of ``r_x`` and ``r_y``, from the nodal coordinates
+    ``x1`` to ``y4`` in element coordinates, the bending stiffness ``Ds`` of
+    :func:`_reduced_bending_stiffness` and the factor ``fH``.
+
+    Notes
+    -----
+    The bilinear shape functions are written as in Belytschko and Leviathan
+    [1]_, Eq. (3.23),
+
+    .. math::
+
+        N_I = \Delta_I + x b_{xI} + y b_{yI} + h \gamma_I, \qquad
+        h = \xi \eta, \qquad
+        \gamma_I = \frac{1}{4} \left( h_I - (\boldsymbol{h} \cdot
+        \boldsymbol{x}) b_{xI} - (\boldsymbol{h} \cdot \boldsymbol{y})
+        b_{yI} \right)
+
+    Eq. (3.24d), with `b_{xI}`, `b_{yI}` the derivatives at the centroid,
+    so that `N_{I,x} = b_{xI} + h_{,x} \gamma_I`, Eq. (3.25), with
+    `\{h_{,x}, h_{,y}\}^\top = J^{-1} \{h_{,\xi}, h_{,\eta}\}^\top = J^{-1}
+    \{\eta, \xi\}^\top`. The nonconstant part of the curvatures, Eq.
+    (3.28),
+
+    .. math::
+
+        \kappa_{xx} = h_{,x} q_y, \quad
+        \kappa_{yy} = -h_{,y} q_x, \quad
+        \kappa_{xy} = h_{,y} q_y - h_{,x} q_x, \qquad
+        q_x = \boldsymbol{\gamma}^\top \boldsymbol{r}_x, \quad
+        q_y = \boldsymbol{\gamma}^\top \boldsymbol{r}_y
+
+    i.e. `\kappa = h_{,x} \boldsymbol{a} + h_{,y} \boldsymbol{c}` with
+    `\boldsymbol{a} = \{q_y, 0, -q_x\}^\top` and `\boldsymbol{c} = \{0,
+    -q_x, q_y\}^\top`, gives the energy
+
+    .. math::
+
+        \frac{f_H}{2} \left( H_{xx} \boldsymbol{a}^\top D_s \boldsymbol{a} +
+        2 H_{xy} \boldsymbol{a}^\top D_s \boldsymbol{c} + H_{yy}
+        \boldsymbol{c}^\top D_s \boldsymbol{c} \right)
+
+    and the stiffness of their Eqs. (4.13), (B.17) and (B.18), with `H_{xx}
+    = \int h_{,x}^2 dA`, `H_{yy} = \int h_{,y}^2 dA` and `H_{xy} = \int
+    h_{,x} h_{,y} dA` of Eq. (4.14), per unit thickness, integrated with two
+    by two Gauss points, and the bending stiffness `D_s` of the laminate,
+    which reduces to `a^2/12\, C_b\, a` of their Eq. (B.18) for an
+    isotropic plate.
+
+    References
+    ----------
+    .. [1] Belytschko, T., and Leviathan, I., Physical stabilization of the
+       4-node shell element with one point quadrature, Computer Methods in
+       Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
+       https://doi.org/10.1016/0045-7825(94)90052-3
 
     """
     cdef int I, J, p, q
@@ -733,7 +788,7 @@ cdef inline void _bending_bl94(double x1, double x2, double x3, double x4,
     D11 = Ds[0]; D12 = Ds[1]; D16 = Ds[2]
     D22 = Ds[4]; D26 = Ds[5]; D66 = Ds[8]
     # NOTE centroidal derivatives b_x, b_y and the projected hourglass
-    #      vector gamma of Eqs. (3.24)
+    #      vector gamma, see the Notes
     xxi = 0.; yxi = 0.; xeta = 0.; yeta = 0.
     for I in range(4):
         xxi += 0.25*XI[I]*xs[I]
@@ -751,8 +806,8 @@ cdef inline void _bending_bl94(double x1, double x2, double x3, double x4,
         hdoty += h[I]*ys[I]
     for I in range(4):
         gam[I] = 0.25*(h[I] - hdotx*bx[I] - hdoty*by[I])
-    # NOTE H_xx, H_yy, H_xy of Eq. (4.14), per unit thickness, with h,x
-    #      and h,y the Cartesian derivatives of h = xi*eta
+    # NOTE H_xx, H_yy, H_xy per unit thickness, with h,x and h,y the
+    #      Cartesian derivatives of h, see the Notes
     pts[0] = -0.5773502691896257645092
     pts[1] = +0.5773502691896257645092
     Hxx = 0.; Hyy = 0.; Hxy = 0.
@@ -767,14 +822,13 @@ cdef inline void _bending_bl94(double x1, double x2, double x3, double x4,
                 xeta += 0.25*ETA[I]*(1 + XI[I]*xi)*xs[I]
                 yeta += 0.25*ETA[I]*(1 + XI[I]*xi)*ys[I]
             detJ = xxi*yeta - yxi*xeta
-            # NOTE [h,x, h,y] = J^-1 [h,xi, h,eta] = J^-1 [eta, xi]
+            # NOTE Cartesian derivatives of h
             hx = (yeta*eta - yxi*xi)/detJ
             hy = (-xeta*eta + xxi*xi)/detJ
             Hxx += detJ*hx*hx
             Hyy += detJ*hy*hy
             Hxy += detJ*hx*hy
-    # NOTE energy H_xx a^T Ds a + 2 H_xy a^T Ds c + H_yy c^T Ds c with
-    #      a = [q_y, 0, -q_x] and c = [0, -q_x, q_y], over 2
+    # NOTE stiffness of the energy of the Notes
     Qxx = Hxx*D66 + Hyy*D22 + 2*Hxy*D26
     Qyy = Hxx*D11 + Hyy*D66 + 2*Hxy*D16
     Qxy = -Hxx*D16 - Hyy*D26 - Hxy*(D12 + D66)
@@ -789,26 +843,51 @@ cdef inline void _bending_bl94(double x1, double x2, double x3, double x4,
 cdef inline void _shear_bl94(double x1, double x2, double x3, double x4,
         double y1, double y2, double y3, double y4, double A44, double A45,
         double A55, double fH, double *K) noexcept nogil:
-    r"""Transverse shear of Belytschko and Leviathan (1994) minus the
-    one-point displacement-based transverse shear
+    r"""Transverse shear of Belytschko and Leviathan minus the one-point
+    displacement-based transverse shear
 
     Writes in ``K`` the 12 x 12 row-major matrix, on the degrees-of-freedom
     ``w, r_x, r_y`` of nodes 1 to 4 in element coordinates, to be added to
-    the stiffness matrix whose transverse shear is
-    ``A*B0^T*C_s*B0``, ``B0`` the displacement-based shear strains
-    ``gamma_xz = w_x + r_y`` and ``gamma_yz = w_y - r_x`` at the centroid.
+    the stiffness matrix whose transverse shear is the one-point
+    displacement-based one, from the nodal coordinates ``x1`` to ``y4`` in
+    element coordinates, the transverse shear stiffnesses ``A44``, ``A45``,
+    ``A55`` in element coordinates and the factor ``fH`` of the
+    nonconstant part.
 
-    The assumed covariant shear strains of Dvorkin and Bathe (1984), as in
-    Belytschko and Leviathan (1994), Eqs. (3.35)-(3.39), are interpolated
-    from the tying points ``B (0, -1)``, ``D (0, 1)``, ``A (-1, 0)`` and
-    ``C (1, 0)``: ``e_xi = (eB + eD)/2 + eta*(eD - eB)/2`` and
-    ``e_eta = (eA + eC)/2 + xi*(eC - eA)/2``, mapped to Cartesian components
-    with the Jacobian ``J0`` at the centroid. The constant part replaces the
-    displacement-based centroid value, Eq. (4.12), and the nonconstant part
-    gives the stabilisation of Eq. (4.13), integrated with
-    ``int eta**2 dA = int xi**2 dA = A/3`` and ``int xi*eta dA = 0``, Eqs.
-    (4.15) and (4.10), multiplied by ``fH``; the coupling of the constant
-    and nonconstant parts is omitted, as in that paper.
+    Notes
+    -----
+    The one-point displacement-based transverse shear is `A
+    \boldsymbol{B}_0^\top C_s \boldsymbol{B}_0`, with `\boldsymbol{B}_0` the
+    rows of `\gamma_{xz} = w_{,x} + r_y` and `\gamma_{yz} = w_{,y} - r_x` at
+    the centroid and `A` the area. The assumed covariant shear strains of
+    Dvorkin and Bathe [2]_, as in Belytschko and Leviathan [1]_, Eqs.
+    (3.35)-(3.39), are interpolated from the tying points `B\,(0, -1)`,
+    `D\,(0, 1)`, `A\,(-1, 0)` and `C\,(1, 0)`,
+
+    .. math::
+
+        e_\xi = \frac{e_B + e_D}{2} + \eta \frac{e_D - e_B}{2}, \qquad
+        e_\eta = \frac{e_A + e_C}{2} + \xi \frac{e_C - e_A}{2}
+
+    with `e_\xi = w_{,\xi} + x_{,\xi} r_y - y_{,\xi} r_x` at `B` and `D` and
+    `e_\eta = w_{,\eta} + x_{,\eta} r_y - y_{,\eta} r_x` at `A` and `C`, and
+    mapped to Cartesian components with the Jacobian `J_0` at the centroid,
+    `\boldsymbol{\gamma} = J_0^{-1} \{e_\xi, e_\eta\}^\top`. The constant
+    part replaces the displacement-based centroid value, Eq. (4.12), and the
+    nonconstant part gives the stabilisation of Eq. (4.13), integrated with
+    `\int \eta^2 dA = \int \xi^2 dA = A/3` and `\int \xi \eta \, dA = 0`,
+    Eqs. (4.15) and (4.10), multiplied by `f_H`; the coupling of the
+    constant and nonconstant parts is omitted, as in that paper.
+
+    References
+    ----------
+    .. [1] Belytschko, T., and Leviathan, I., Physical stabilization of the
+       4-node shell element with one point quadrature, Computer Methods in
+       Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
+       https://doi.org/10.1016/0045-7825(94)90052-3
+    .. [2] Dvorkin, E. N., and Bathe, K. J., A continuum mechanics based
+       four-node shell element for general non-linear analysis, Engineering
+       Computations, 1(1), 77-88, 1984. https://doi.org/10.1108/eb023562
 
     """
     cdef int i, j, k, I
@@ -843,9 +922,8 @@ cdef inline void _shear_bl94(double x1, double x2, double x3, double x4,
     tie_xi[2] = -1.; tie_eta[2] = 0.
     tie_xi[3] = 1.; tie_eta[3] = 0.
     Cs[0] = A55; Cs[1] = A45; Cs[2] = A45; Cs[3] = A44
-    # NOTE covariant shear at each tying point, e_xi = w_xi + x_xi*r_y -
-    #      y_xi*r_x for B and D, and e_eta = w_eta + x_eta*r_y - y_eta*r_x
-    #      for A and C, from gamma_xz = w_x + r_y and gamma_yz = w_y - r_x
+    # NOTE covariant shear at each tying point, e_xi for B and D and e_eta
+    #      for A and C, see the Notes
     for k in range(5):
         if k < 4:
             for I in range(4):
@@ -889,7 +967,7 @@ cdef inline void _shear_bl94(double x1, double x2, double x3, double x4,
     J0inv[1] = -J0[1]/detJ0
     J0inv[2] = -J0[2]/detJ0
     J0inv[3] = J0[0]/detJ0
-    # NOTE Cartesian strains gamma = J0^-1 [e_xi, e_eta]
+    # NOTE Cartesian strains, see the Notes
     for j in range(12):
         # MITC4 constant part
         G0m[0][j] = J0inv[0]*0.5*(e[0][j] + e[1][j]) + J0inv[1]*0.5*(e[2][j] + e[3][j])
@@ -924,6 +1002,20 @@ cdef inline void _centroid_slopes(double x1, double x2, double x3, double x4,
 
     They are the rows of the slopes `w_{,x}` and `w_{,y}` of the geometrically
     nonlinear terms, see the Notes of :meth:`.Quad4R.update_KG`.
+
+    Notes
+    -----
+    At the centroid `S_{i,\xi} = \xi_i/4` and `S_{i,\eta} = \eta_i/4`, with
+    `(\xi_i, \eta_i)` the natural coordinates of node `i`, and
+
+    .. math::
+
+        \begin{Bmatrix} S_{i,x} \\ S_{i,y} \end{Bmatrix} = J^{-1}
+        \begin{Bmatrix} S_{i,\xi} \\ S_{i,\eta} \end{Bmatrix}, \qquad
+        J = \begin{bmatrix} x_{,\xi} & y_{,\xi} \\ x_{,\eta} & y_{,\eta}
+        \end{bmatrix}
+
+    with the Jacobian `J` at the centroid.
 
     """
     cdef double J11, J12, J21, J22, detJ
@@ -1012,9 +1104,9 @@ cdef class Quad4RProbe:
     probe can be shared amongst many finite elements, with the information
     being updated and retrieved on demand.
 
-    .. note:: The probe can be shared amongst more than one finite element, 
+    .. note:: The probe can be shared amongst more than one finite element,
               depending on how you defined them. Mind that the probe will
-              always safe the values from the last udpate.
+              always save the values from the last update.
 
 
     The constructor takes no parameters and allocates every array filled with
@@ -1025,7 +1117,7 @@ cdef class Quad4RProbe:
     xe, : array-like
         Array of size ``NUM_NODES*DOF//2=12`` containing the nodal coordinates
         in the element coordinate system, in the following order `{x_e}_1,
-        {y_e}_1, {z_e}_1, `{x_e}_2, {y_e}_2, {z_e}_2`, `{x_e}_3, {y_e}_3,
+        {y_e}_1, {z_e}_1`, `{x_e}_2, {y_e}_2, {z_e}_2`, `{x_e}_3, {y_e}_3,
         {z_e}_3`, `{x_e}_4, {y_e}_4, {z_e}_4`.
         Dimension of length. Updated by :meth:`.Quad4R.update_probe_xe`.
     ue, : array-like
@@ -1050,16 +1142,22 @@ cdef class Quad4RProbe:
         and the curvatures, with dimension of one over length.
     Sw_x, Sw_y : array-like
         Arrays of size ``NUM_NODES*DOF=24`` with the rows giving `w_{,x}` and
-        `w_{,y}`, at the last evaluated integration point.
-        ``Sw_x`` holds `\boldsymbol{G}_x = \partial \boldsymbol{S}^w/\partial x`
-        and ``Sw_y`` holds `\boldsymbol{G}_y = \partial \boldsymbol{S}^w/\partial
-        y`, the underscore denoting the partial derivative.
+        `w_{,y}`, at the last evaluated integration point, the rows
+        `\boldsymbol{G}_x` and `\boldsymbol{G}_y` of the Notes.
         Their products with ``ue`` are dimensionless.
     KCNLve : array-like
         Array of size ``(NUM_NODES*DOF)**2=576`` with the nonlinear
         constitutive stiffness matrix KCNL in element coordinates, stored row
         by row.
         Updated by :meth:`.Quad4R.update_KCNL`.
+
+    Notes
+    -----
+    With the row `\boldsymbol{S}^w` that interpolates `w` from ``ue``,
+    `\boldsymbol{G}_x = \partial \boldsymbol{S}^w/\partial x` and
+    `\boldsymbol{G}_y = \partial \boldsymbol{S}^w/\partial y`, such that
+    `w_{,x} = \boldsymbol{G}_x \boldsymbol{u}_e` and `w_{,y} =
+    \boldsymbol{G}_y \boldsymbol{u}_e`.
 
     """
     cdef public double [::1] xe
@@ -1337,8 +1435,8 @@ cdef class Quad4R:
         self.init_k_KA_gamma = 0
         self.init_k_CA = 0
         self.area = 0
-        # NOTE the physics-based coefficient of Hughes and Brezzi (1989),
-        #      gamma_rz = A66, is the default, as in Quad4 and Tria3R, so
+        # NOTE the physics-based coefficient, gamma_rz = A66, is the
+        #      default, as in Quad4 and Tria3R, so
         #      that K6ROT is not read unless it is asked for. The operator
         #      and its quadrature are the same for both models, only the
         #      coefficient differing, see the module documentation
@@ -1878,9 +1976,9 @@ cdef class Quad4R:
             _reduced_bending_stiffness(Ae, Be, De, Ds)
 
 
-            # NOTE both drilling models use the same operator, the one of
-            #      Hughes and Brezzi (1989) integrated with two points per
-            #      direction below, and differ only in the coefficient that
+            # NOTE both drilling models use the same operator, integrated
+            #      with two points per direction below, see the Notes of
+            #      update_KC0, and differ only in the coefficient that
             #      multiplies it. The generated block carries the factor
             #      K6ROT*1e-6*A66, so the physics-based value gamma_rz =
             #      A66 is obtained with K6ROT = 1e6, and no generated
@@ -1952,24 +2050,8 @@ cdef class Quad4R:
             S3_xy = 0.25*j11*j22 + 0.25*j12*j21
             S4_xy = -0.25*j11*j22 - 0.25*j12*j21
 
-            # NOTE hourglass operator of Eq. (14) of Brockman 1987, quoted
-            #      there from Belytschko and Tsay 1983,
-            #
-            #          gamma = h - (h.x)*b1 - (h.y)*b2
-            #
-            #      with h = [1, -1, 1, -1], b1 and b2 the centroidal
-            #      derivatives N,x and N,y, scaled by the normalisation of
-            #      Brockman's own Eq. (15), gamma = d2N/dxdy at the centroid,
-            #      so that the generalized stiffnesses of his Eq. (16) keep
-            #      their calibration. The two correction terms are, in his
-            #      words, "important for irregular elements, if the hourglass
-            #      strains are to vanish in the presence of rigid-body motion
-            #      and uniform strain". They vanish identically whenever the
-            #      element is a parallelogram, h.x and h.y being zero there,
-            #      so this leaves every regular mesh bit-identical, and they
-            #      do not change the hourglass energy of the h patterns on
-            #      any shape either, because the centroidal sum h.b1 = h.b2
-            #      is zero. See tests/test_quad4r_hourglass_control.py
+            # NOTE orthogonalised hourglass operator, see the Notes of
+            #      update_KC0 and tests/test_quad4r_hourglass_control.py
             hgx = x1 - x2 + x3 - x4
             hgy = y1 - y2 + y3 - y4
             gamma1 = S1_xy*(1. - hgx*S1_x - hgy*S1_y)
@@ -2155,15 +2237,14 @@ cdef class Quad4R:
             KC0e2121 = detJ*wij*(A44*S4**2 + S4_x*(D26*S4_y + D66*S4_x) + S4_y*(D22*S4_y + D26*S4_x))
             KC0e2122 = -detJ*wij*(A45*S4**2 + S4_x*(D12*S4_y + D16*S4_x) + S4_y*(D26*S4_y + D66*S4_x))
             KC0e2222 = detJ*wij*(A55*S4**2 + S4_x*(D11*S4_x + D16*S4_y) + S4_y*(D16*S4_x + D66*S4_y))
-            # NOTE transverse shear of Belytschko and Leviathan (1994), the
-            #      constant part of the assumed strains of Dvorkin and Bathe
-            #      (1984) instead of the displacement-based centroid value, and
-            #      the physical stabilisation of their nonconstant part,
-            #      multiplied by hgfactor_physical, see the module documentation
+            # NOTE transverse shear: the constant part of the assumed strains
+            #      instead of the displacement-based centroid value, and the
+            #      physical stabilisation of their nonconstant part,
+            #      multiplied by hgfactor_physical, see the Notes of
+            #      update_KC0
             _shear_bl94(x1, x2, x3, x4, y1, y2, y3, y4, A44, A45, A55,
                         hgfactor_physical, Kws)
-            # NOTE physical stabilisation of the bending of Belytschko and
-            #      Leviathan (1994), Eq. (B.18), multiplied by
+            # NOTE physical stabilisation of the bending, multiplied by
             #      hgfactor_physical
             _bending_bl94(x1, x2, x3, x4, y1, y2, y3, y4, Ds,
                           hgfactor_physical, Kws)
@@ -2558,9 +2639,18 @@ cdef class Quad4R:
         the orthogonalised operator of Eq. (14) of Brockman 1987 [1]_,
         normalised as in his Eq. (15), `\gamma = \partial^2 \boldsymbol{S}/\partial x
         \partial y` at the centroid, so that the generalized stiffnesses of
-        his Eq. (16) keep their calibration. The correction terms of ``hgx``
-        and ``hgy`` vanish for a parallelogram. With the thickness `t` of
-        ``prop.h``, the generalized stiffnesses are
+        his Eq. (16) keep their calibration; Brockman quotes the operator
+        from Belytschko and Tsay [2]_. The correction terms of ``hgx`` and
+        ``hgy`` are, in his words, "important for irregular elements, if the
+        hourglass strains are to vanish in the presence of rigid-body motion
+        and uniform strain". They vanish for a parallelogram, where
+        `\boldsymbol{h}^\top \boldsymbol{x} = \boldsymbol{h}^\top
+        \boldsymbol{y} = 0`, so that a regular mesh is unchanged bit for bit,
+        and they do not change the hourglass energy of the `\boldsymbol{h}`
+        patterns on any shape, because the centroidal sums `\boldsymbol{h}^\top
+        \boldsymbol{S}_{,x}` and `\boldsymbol{h}^\top \boldsymbol{S}_{,y}`
+        are zero. With the thickness `t` of ``prop.h``, the generalized
+        stiffnesses are
 
         .. math::
 
@@ -2586,7 +2676,9 @@ cdef class Quad4R:
 
         The drilling term, `\gamma_{r_z} \boldsymbol{B}_{r_z}^\top \boldsymbol{B}_{r_z}` with
         `B_{r_z} = S^{r_z} + 1/2 S^u_{,y} - 1/2 S^v_{,x}`, is integrated
-        with a two-point Gauss-Legendre quadrature in each direction. For
+        with a two-point Gauss-Legendre quadrature in each direction; both
+        drilling models use this operator, the one of Hughes and Brezzi [3]_,
+        and differ only in the coefficient. For
         ``drilling_model = 0``, `\gamma_{r_z}` is ``gamma_rz`` when it is not
         negative and `A_{66}` is not zero, and `A_{66}` otherwise; for the
         other values, `\gamma_{r_z} = K6ROT \cdot 10^{-6} A_{66}`.
@@ -2608,6 +2700,13 @@ cdef class Quad4R:
         .. [1] Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
            International Journal for Numerical Methods in Engineering, 24(12),
            2343-2356, 1987. https://doi.org/10.1002/nme.1620241208
+        .. [2] Belytschko, T., and Tsay, C. S., A stabilization procedure for
+           the quadrilateral plate element with one-point quadrature,
+           International Journal for Numerical Methods in Engineering, 19(3),
+           405-419, 1983. https://doi.org/10.1002/nme.1620190308
+        .. [3] Hughes, T. J. R., and Brezzi, F., On drilling degrees of
+           freedom, Computer Methods in Applied Mechanics and Engineering,
+           72(1), 105-121, 1989. https://doi.org/10.1016/0045-7825(89)90124-2
 
         """
         cdef int warped, iw
@@ -2709,9 +2808,9 @@ cdef class Quad4R:
             _reduced_bending_stiffness(Ae, Be, De, Ds)
 
 
-            # NOTE both drilling models use the same operator, the one of
-            #      Hughes and Brezzi (1989) integrated with two points per
-            #      direction below, and differ only in the coefficient that
+            # NOTE both drilling models use the same operator, integrated
+            #      with two points per direction below, see the Notes of
+            #      update_KC0, and differ only in the coefficient that
             #      multiplies it. The generated block carries the factor
             #      K6ROT*1e-6*A66, so the physics-based value gamma_rz =
             #      A66 is obtained with K6ROT = 1e6, and no generated
@@ -4530,24 +4629,8 @@ cdef class Quad4R:
             S3_xy = 0.25*j11*j22 + 0.25*j12*j21
             S4_xy = -0.25*j11*j22 - 0.25*j12*j21
 
-            # NOTE hourglass operator of Eq. (14) of Brockman 1987, quoted
-            #      there from Belytschko and Tsay 1983,
-            #
-            #          gamma = h - (h.x)*b1 - (h.y)*b2
-            #
-            #      with h = [1, -1, 1, -1], b1 and b2 the centroidal
-            #      derivatives N,x and N,y, scaled by the normalisation of
-            #      Brockman's own Eq. (15), gamma = d2N/dxdy at the centroid,
-            #      so that the generalized stiffnesses of his Eq. (16) keep
-            #      their calibration. The two correction terms are, in his
-            #      words, "important for irregular elements, if the hourglass
-            #      strains are to vanish in the presence of rigid-body motion
-            #      and uniform strain". They vanish identically whenever the
-            #      element is a parallelogram, h.x and h.y being zero there,
-            #      so this leaves every regular mesh bit-identical, and they
-            #      do not change the hourglass energy of the h patterns on
-            #      any shape either, because the centroidal sum h.b1 = h.b2
-            #      is zero. See tests/test_quad4r_hourglass_control.py
+            # NOTE orthogonalised hourglass operator, see the Notes of
+            #      update_KC0 and tests/test_quad4r_hourglass_control.py
             hgx = x1 - x2 + x3 - x4
             hgy = y1 - y2 + y3 - y4
             gamma1 = S1_xy*(1. - hgx*S1_x - hgy*S1_y)
@@ -4733,15 +4816,14 @@ cdef class Quad4R:
             KC0e2121 = detJ*wij*(A44*S4**2 + S4_x*(D26*S4_y + D66*S4_x) + S4_y*(D22*S4_y + D26*S4_x))
             KC0e2122 = -detJ*wij*(A45*S4**2 + S4_x*(D12*S4_y + D16*S4_x) + S4_y*(D26*S4_y + D66*S4_x))
             KC0e2222 = detJ*wij*(A55*S4**2 + S4_x*(D11*S4_x + D16*S4_y) + S4_y*(D16*S4_x + D66*S4_y))
-            # NOTE transverse shear of Belytschko and Leviathan (1994), the
-            #      constant part of the assumed strains of Dvorkin and Bathe
-            #      (1984) instead of the displacement-based centroid value, and
-            #      the physical stabilisation of their nonconstant part,
-            #      multiplied by hgfactor_physical, see the module documentation
+            # NOTE transverse shear: the constant part of the assumed strains
+            #      instead of the displacement-based centroid value, and the
+            #      physical stabilisation of their nonconstant part,
+            #      multiplied by hgfactor_physical, see the Notes of
+            #      update_KC0
             _shear_bl94(x1, x2, x3, x4, y1, y2, y3, y4, A44, A45, A55,
                         hgfactor_physical, Kws)
-            # NOTE physical stabilisation of the bending of Belytschko and
-            #      Leviathan (1994), Eq. (B.18), multiplied by
+            # NOTE physical stabilisation of the bending, multiplied by
             #      hgfactor_physical
             _bending_bl94(x1, x2, x3, x4, y1, y2, y3, y4, Ds,
                           hgfactor_physical, Kws)
@@ -9462,9 +9544,7 @@ cdef class Quad4R:
         entries between the translations of `i` and the rotations of `j`, and
         ``intrhoz2`` by ``intrhoz2 - intrhoz*(z_i + z_j) + intrho*z_i*z_j`` in
         those between the rotations, `z_i` being the heights of the nodes above
-        the flat element (derived here, checked in
-        ``theory/deriving_equations/quad4r/verify_quad4r_warp_offsets.py``):
-        the moments of the mass about the warped nodes. The numbers of entries
+        the flat element (derived here): the moments of the mass about the warped nodes. The numbers of entries
         do not change, and the lumped matrix remains block-diagonal per node.
 
         References

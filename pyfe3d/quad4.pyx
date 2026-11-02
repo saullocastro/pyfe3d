@@ -5932,9 +5932,7 @@ cdef class Quad4:
         entries between the translations of `i` and the rotations of `j`, and
         ``intrhoz2`` by ``intrhoz2 - intrhoz*(z_i + z_j) + intrho*z_i*z_j`` in
         those between the rotations, `z_i` being the heights of the nodes above
-        the flat element (derived here, checked in
-        ``theory/deriving_equations/quad4r/verify_quad4r_warp_offsets.py``):
-        the moments of the mass about the warped nodes. The numbers of entries
+        the flat element (derived here): the moments of the mass about the warped nodes. The numbers of entries
         do not change, and the lumped matrix remains block-diagonal per node.
 
         References

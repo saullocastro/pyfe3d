@@ -17,10 +17,25 @@ from .shellprop import Lamina, MatLamina, ShellProp
 
 
 def _reciprocal_poisson(nuij, ei, ej, ij):
-    r"""Return ``nuji = nuij*ej/ei``, see :func:`.read_laminaprop`
+    r"""Return the reciprocal Poisson's ratio ``nuji`` of ``nuij``, see
+    :func:`.read_laminaprop`
 
-    With ``ei = 0``, ``nuji`` is undefined and ``0`` is returned when
-    ``nuij*ej = 0``, which a positive-definite material requires.
+    ``ei`` and ``ej`` are the Young moduli, ``ij`` the string ``'12'``,
+    ``'13'`` or ``'23'`` used in the error message. With ``ei = 0``,
+    ``0`` is returned when ``nuij`` or ``ej`` is zero.
+
+    Raises
+    ------
+    ValueError
+        If ``ei = 0`` while ``ej`` and ``nuij`` are not zero.
+
+    Notes
+    -----
+    `\nu_{ji} = \nu_{ij} E_j/E_i`, from the reciprocity of an orthotropic
+    material, see the Notes of :func:`.read_laminaprop`. With `E_i = 0`,
+    `\nu_{ji}` is undefined, and `\nu_{ji} = 0` is returned when `\nu_{ij}
+    E_j = 0`, which a positive-definite material requires.
+
     """
     if ei != 0:
         return nuij*ej/ei
@@ -258,6 +273,36 @@ def laminated_plate(stack, plyt=None, laminaprop=None, rho=0., plyts=None,
         has no in-plane or bending stiffness, e.g. when all plies are
         antiplane cores.
 
+    Notes
+    -----
+    The plies are stacked in the order of ``stack``, ply `k` occupying `z_k
+    \le z \le z_{k+1}` with `z_1 = -h/2 + e` and `z_{N+1} = h/2 + e`, `h`
+    the sum of the ply thicknesses and `e` = ``offset``. The stiffnesses are
+    those of the first-order shear deformation theory of
+    :meth:`.ShellProp.calc_constitutive_matrix`,
+
+    .. math::
+
+        (A_{ij}, B_{ij}, D_{ij}) = \sum_k \int_{z_k}^{z_{k+1}}
+        q_{ijL}^{(k)} (1, z, z^2) dz, \quad ij = 11, 12, 16, 22, 26, 66
+
+    with the plane-stress stiffnesses `q_{ijL}^{(k)}` of each ply rotated to
+    the laminate axes by :meth:`.Lamina.rebuild`, and the transverse shear
+    stiffnesses `A_{44}`, `A_{45}`, `A_{55}` of
+    :meth:`.ShellProp.calc_transverse_shear_stiffness`, with the correction
+    selected by ``shear_correction``.
+
+    Examples
+    --------
+    A symmetric quasi-isotropic laminate of eight carbon-epoxy plies:
+
+    >>> from pyfe3d.shellprop_utils import laminated_plate
+    >>> laminaprop = (142.5e9, 8.7e9, 0.28, 5.1e9, 5.1e9, 3.4e9)
+    >>> lam = laminated_plate(stack=[0, 45, -45, 90, 90, -45, 45, 0],
+    ...                       plyt=0.125e-3, laminaprop=laminaprop, rho=1600.)
+    >>> print(lam.h, round(lam.A11/1e6, 2), round(lam.D11, 3), round(lam.D16, 3))
+    0.001 60.13 8.41 0.525
+
     """
     prop = ShellProp()
     prop.offset = offset
@@ -325,9 +370,9 @@ def isotropic_plate(thickness, E, nu, offset=0., rho=0.,
     shear_correction : str or None, optional
         See :func:`.laminated_plate`. For an isotropic plate ``'rohwer'``,
         ``'vlachoutsis'``, ``'whitney'``, ``'chow'`` and ``'constant'`` give
-        ``A44 = A55 = 5/6 G h``, ``'birman_bert'`` gives ``G h`` and
-        ``'thickness_shear'`` gives ``pi^2/12 G h``, the latter requiring
-        ``rho > 0``. Default ``'rohwer'``.
+        the same transverse shear stiffnesses, ``'birman_bert'`` and
+        ``'thickness_shear'`` other ones, see the Notes; ``'thickness_shear'``
+        requires ``rho > 0``. Default ``'rohwer'``.
 
     Returns
     -------
@@ -337,6 +382,34 @@ def isotropic_plate(thickness, E, nu, offset=0., rho=0.,
     See Also
     --------
     laminated_plate
+
+    Notes
+    -----
+    With `G = E/(2(1 + \nu))` and `e` = ``offset``, the single ply gives
+
+    .. math::
+
+        A_{11} = A_{22} = \frac{E h}{1 - \nu^2}, \quad
+        A_{12} = \nu A_{11}, \quad A_{66} = G h, \quad
+        A_{16} = A_{26} = 0, \qquad
+        B_{ij} = e A_{ij}, \quad
+        D_{ij} = \left( \frac{h^2}{12} + e^2 \right) A_{ij}
+
+    and `A_{44} = A_{55} = k G h`, `A_{45} = 0`, with `k = 5/6` for
+    ``'rohwer'``, ``'vlachoutsis'``, ``'whitney'``, ``'chow'`` and
+    ``'constant'``, `k = 1` for ``'birman_bert'`` and `k = \pi^2/12` for
+    ``'thickness_shear'``.
+
+    Examples
+    --------
+    An aluminium plate:
+
+    >>> from pyfe3d.shellprop_utils import isotropic_plate
+    >>> prop = isotropic_plate(thickness=0.002, E=70e9, nu=0.33, rho=2700.)
+    >>> print(round(prop.A11/1e6, 3), round(prop.D11, 3), round(prop.A44/1e6, 3))
+    157.109 52.37 43.86
+    >>> print(prop.intrho)
+    5.4
 
     """
     return laminated_plate(plyt=thickness, stack=[0], laminaprop=(E, nu),
