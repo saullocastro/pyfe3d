@@ -12,7 +12,12 @@ Shells
 The shell elements are flat, with first-order shear deformation theory
 (FSDT) kinematics, the constitutive matrices of a :class:`.ShellProp`, see
 :doc:`shell_properties`, and the von Kármán membrane strains in the
-geometrically non-linear analyses.
+geometrically non-linear analyses, see :doc:`shell_formulation`. They
+differ in how they avoid shear locking and spurious modes, in their
+membrane and in their cost; the theory of each one is in
+:doc:`shell_quad4`, :doc:`shell_quad4r`, :doc:`shell_tria3dsg` and
+:doc:`shell_tria3r`, and that of the drilling rotation in
+:doc:`shell_drilling`.
 
 .. list-table::
     :header-rows: 1
@@ -350,35 +355,16 @@ the element is integrated, with the same values for every element:
 Any other value, and ``2`` for an element without a reduced-integration
 mass matrix, raises a ``ValueError``. Each matrix is the integral over
 the element of the inertia of the section between the interpolated
-velocities: for the shells, `I_\rho`, `I_{\rho z}` and `I_{\rho z^2}`, the
-``intrho``, ``intrhoz`` and ``intrhoz2`` of the :class:`.ShellProp`, which
-include the offset, see :doc:`shell_properties`; for the beams, the
-integrals of the :class:`.BeamProp`. The consistent matrices integrate it
-exactly. The lumped matrices integrate it with the points at the nodes,
-where each shape function is 1 at its own node and 0 at the others, such
-that, for the shells, node `i` carries the weight `w_i` times
-
-.. math::
-
-    \begin{bmatrix}
-        I_\rho & 0 & 0 & 0 & I_{\rho z} & 0 \\
-        0 & I_\rho & 0 & -I_{\rho z} & 0 & 0 \\
-        0 & 0 & I_\rho & 0 & 0 & 0 \\
-        0 & -I_{\rho z} & 0 & I_{\rho z^2} & 0 & 0 \\
-        I_{\rho z} & 0 & 0 & 0 & I_{\rho z^2} & 0 \\
-        0 & 0 & 0 & 0 & 0 & 0
-    \end{bmatrix}
-
-in element coordinates, for `u, v, w, r_x, r_y, r_z`, with `w_i = A/3` for
-the triangles and the Jacobian determinant at the node for the
-quadrilaterals, and no coupling between nodes. A lumped shell matrix is
-diagonal only without offset, when `I_{\rho z} = 0`; with an offset, the
-coupling keeps the centre of mass of the element at the offset. A warped
-quadrilateral adds the coupling of its rigid offsets, see `Warped
-quadrilaterals`_. The mass,
-first moment and rotary inertia given by each scheme are discussed in the
-Notes of ``update_M``, e.g. :meth:`.Tria3R.update_M` and
-:meth:`.Quad4R.update_M`. The lumped beam matrices are diagonal, without
+velocities: for the shells, the integrals ``intrho``, ``intrhoz`` and
+``intrhoz2`` of the :class:`.ShellProp`, which include the offset; for the
+beams, the integrals of the :class:`.BeamProp`. The consistent matrices
+integrate it exactly, and the lumped matrices with the points at the
+nodes, such that they couple no different nodes. A lumped shell matrix is
+block-diagonal per node, diagonal only when ``intrhoz`` is zero, and keeps
+the centre of mass of the element at the offset; the mass, first moment
+and rotary inertia of each scheme are derived in :doc:`shell_mass`, and a
+warped quadrilateral adds the coupling of its rigid offsets, see `Warped
+quadrilaterals`_. The lumped beam matrices are diagonal, without
 the first moments ``intrhoy``, ``intrhoz`` and the product ``intrhoyz`` of
 the section, see :meth:`.BeamC.update_M`.
 

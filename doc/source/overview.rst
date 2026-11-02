@@ -24,7 +24,7 @@ The pieces of a model
       - :class:`.ShellProp` for the shells, created by
         :func:`.isotropic_plate` or :func:`.laminated_plate`, see
         :doc:`shell_properties`; :class:`.BeamProp` for the beams and the
-        truss; the stiffnesses of a :class:`.Spring` are attributes of the
+        truss, see :doc:`beam_properties`; the stiffnesses of a :class:`.Spring` are attributes of the
         element
     * - ``*Data``
       - e.g. :class:`.Quad4Data`: the number of sparse entries that one
