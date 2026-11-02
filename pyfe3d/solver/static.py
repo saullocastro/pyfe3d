@@ -243,5 +243,21 @@ def linear_static(K, fext):
     = \boldsymbol{F}_0 - \boldsymbol{K}_F \boldsymbol{u}`, the linear solution is that of `(\boldsymbol{K}_{C0} +
     \boldsymbol{K}_F) \boldsymbol{u} = \boldsymbol{F}_0`.
 
+    Examples
+    --------
+    Two springs in series along `x`, fixed at the first node, with the force
+    ``10.`` at the last one:
+
+    >>> import numpy as np
+    >>> from scipy.sparse import csr_matrix
+    >>> from pyfe3d.solver import linear_static
+    >>> k = 1000.
+    >>> KC0 = csr_matrix([[k, -k, 0.], [-k, 2*k, -k], [0., -k, k]])
+    >>> fext = np.array([0., 0., 10.])
+    >>> bu = np.array([False, True, True])
+    >>> increments, cs = linear_static(KC0[bu, :][:, bu], fext[bu])
+    >>> print(increments, cs[0])
+    [1.0] [0.01 0.02]
+
     """
     return [1.], [_solve_linear_static(K, fext)]
