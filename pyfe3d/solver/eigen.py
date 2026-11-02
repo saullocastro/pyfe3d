@@ -264,12 +264,6 @@ def diagonal_preconditioner(K, floor=1.e-30):
     entries, which usually reduces the condition number, see the notes of
     :mod:`pyfe3d.solver.eigen`.
 
-    Examples
-    --------
-    >>> P = diagonal_preconditioner(Kuu)                  # doctest: +SKIP
-    >>> eigvals, eigvecs = eigsh(A=P@KGuu@P, M=P@Kuu@P)   # doctest: +SKIP
-    >>> eigvecs = P @ eigvecs                             # doctest: +SKIP
-
     """
     d = np.abs(np.asarray(K.diagonal(), dtype=float))
     return diags(1.0/np.sqrt(np.maximum(d, floor)))
