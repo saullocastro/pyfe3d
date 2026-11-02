@@ -27,7 +27,7 @@ def read_version():
         return tomllib.load(f)['project']['version']
 
 
-# NOTE the year of the copyright of the documentation, see doc/source/conf.py
+# NOTE the year of the copyright of the documentation, read by its configuration
 year = '2026'
 
 
