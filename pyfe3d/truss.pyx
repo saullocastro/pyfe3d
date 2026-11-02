@@ -422,7 +422,7 @@ cdef class Truss:
         """
         cdef double x1, x2, y1, y2, z1, z2
         with nogil:
-            # NOTE ignoring z in local coordinates
+            # NOTE distance between the two nodes in element coordinates
             x1 = self.probe.xe[0]
             y1 = self.probe.xe[1]
             z1 = self.probe.xe[2]

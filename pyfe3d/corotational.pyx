@@ -172,8 +172,9 @@ cdef enum:
     FRAME_SPRING_TRIAD = 3  # Spring 'triad'
     FRAME_CHORD = 4         # Truss 'chord'
 
-# NOTE projection geometric stiffness: F&H Eq. (47), or the exact ones of
-#      CorotationalBeam and of CorotationalSpring with frame='triad'
+# NOTE projection geometric stiffness: the general one of _KGP_FH_c, or the
+#      exact ones of CorotationalBeam and of CorotationalSpring with
+#      frame='triad'
 cdef enum:
     KGP_FH = 0
     KGP_BEAM = 1
@@ -255,7 +256,14 @@ cdef inline void _mtv3(const double *M, const double *v,
 
 
 cdef void _coefficients_c(double t, double *c) noexcept nogil:
-    r"""``sinc, a, b, a'/t, b'/t`` of :func:`_coefficients` in ``c[0:5]``"""
+    r"""``sinc, a, b, a'/t, b'/t`` of :func:`_coefficients` in ``c[0:5]``
+
+    Notes
+    -----
+    The closed forms and the Taylor series up to `t^8` given in the Notes
+    of :func:`_coefficients`, with `\mathrm{sinc}\, t = \sin t/t`.
+
+    """
     cdef double t2, s, co
     if t < _SERIES_ANGLE:
         t2 = t*t
@@ -279,7 +287,15 @@ cdef void _coefficients_c(double t, double *c) noexcept nogil:
 
 
 cdef void _eta_mu_c(double t, double *eta, double *mu) noexcept nogil:
-    r"""`\eta` and `\mu` of :func:`_eta_mu`"""
+    r"""`\eta` and `\mu` of :func:`_eta_mu`, written to ``eta[0]`` and
+    ``mu[0]``
+
+    Notes
+    -----
+    The closed forms of Felippa and Haugen, Eqs. (101) and (103), and their
+    Taylor series up to `t^{14}`, given in the Notes of :func:`_eta_mu`.
+
+    """
     cdef double t2
     if t < _SERIES_ANGLE_ETA_MU:
         t2 = t*t
@@ -297,7 +313,14 @@ cdef void _eta_mu_c(double t, double *eta, double *mu) noexcept nogil:
 
 
 cdef void _expso3_c(const double *psi, double *R) noexcept nogil:
-    r"""Rotation matrix of :func:`expso3`"""
+    r"""Rotation matrix of :func:`expso3`, written row-major to ``R``
+
+    Notes
+    -----
+    Rodrigues' formula of the Notes of :func:`expso3`, with the
+    coefficients of :func:`_coefficients`.
+
+    """
     cdef double c[5]
     cdef double S[9]
     cdef double SS[9]
@@ -313,7 +336,17 @@ cdef void _expso3_c(const double *psi, double *R) noexcept nogil:
 
 
 cdef void _logso3_c(const double *R, double *theta) noexcept nogil:
-    r"""Rotation vector of :func:`logso3`, Spurrier's algorithm"""
+    r"""Rotation vector of :func:`logso3`, written to ``theta``
+
+    Notes
+    -----
+    Spurrier's algorithm, see the Notes of :func:`logso3`: the quaternion
+    `(q_0, \boldsymbol{q})` is extracted from the largest of the trace and
+    the diagonal entries, taken with `q_0 \ge 0`, and `\boldsymbol{\theta} =
+    2 \arctan(|\boldsymbol{q}|/q_0) \boldsymbol{q}/|\boldsymbol{q}|`, or
+    `2 \boldsymbol{q}/q_0` for `|\boldsymbol{q}| < 10^{-14}`.
+
+    """
     cdef double q[4]
     cdef double tr, f, qi, s, Rii, fac
     cdef int i, j, k
@@ -354,7 +387,15 @@ cdef void _logso3_c(const double *R, double *theta) noexcept nogil:
 
 
 cdef void _Lambda_c(const double *psi, double *L) noexcept nogil:
-    r"""`\boldsymbol{\Lambda}` of :func:`Lambda`"""
+    r"""`\boldsymbol{\Lambda}` of :func:`Lambda`, written row-major to ``L``
+
+    Notes
+    -----
+    `\boldsymbol{\Lambda} = \boldsymbol{I} + a \, \mathrm{Spin}(\boldsymbol{\psi})
+    + b \, \mathrm{Spin}(\boldsymbol{\psi})^2`, with `a` and `b` of
+    :func:`_coefficients`, see the Notes of :func:`Lambda`.
+
+    """
     cdef double c[5]
     cdef double S[9]
     cdef double SS[9]
@@ -371,7 +412,15 @@ cdef void _Lambda_c(const double *psi, double *L) noexcept nogil:
 
 cdef void _dLambdaT_m_c(const double *psi, const double *m,
                         double *K) noexcept nogil:
-    r"""Derivative of :func:`dLambdaT_m`"""
+    r"""Derivative of :func:`dLambdaT_m`, written row-major to ``K``
+
+    Notes
+    -----
+    The derivative of `\boldsymbol{\Lambda}^T \boldsymbol{m}` given in the
+    Notes of :func:`dLambdaT_m`, entry by entry, with `a`, `b`, `a'/\psi`
+    and `b'/\psi` of :func:`_coefficients`.
+
+    """
     cdef double c[5]
     cdef double Sm[9]
     cdef double pxm[3]
@@ -392,7 +441,16 @@ cdef void _dLambdaT_m_c(const double *psi, const double *m,
 
 
 cdef void _Hmat_c(const double *theta, double *H) noexcept nogil:
-    r"""`\boldsymbol{H}` of :func:`Hmat`"""
+    r"""`\boldsymbol{H}` of :func:`Hmat`, written row-major to ``H``
+
+    Notes
+    -----
+    `\boldsymbol{H} = \boldsymbol{I} - \frac{1}{2}
+    \mathrm{Spin}(\boldsymbol{\theta}) + \eta \,
+    \mathrm{Spin}(\boldsymbol{\theta})^2`, Felippa and Haugen, Eq. (101),
+    with `\eta` of :func:`_eta_mu`, see the Notes of :func:`Hmat`.
+
+    """
     cdef double eta, mu
     cdef double S[9]
     cdef double SS[9]
@@ -409,7 +467,17 @@ cdef void _Hmat_c(const double *theta, double *H) noexcept nogil:
 
 cdef void _Lmat_c(const double *theta, const double *m,
                   double *L) noexcept nogil:
-    r"""`\boldsymbol{L}` of :func:`Lmat`"""
+    r"""`\boldsymbol{L}` of :func:`Lmat`, written row-major to ``L``
+
+    Notes
+    -----
+    `\boldsymbol{L} = \partial (\boldsymbol{H}^T \boldsymbol{m})/\partial
+    \boldsymbol{\theta} \, \boldsymbol{H}`, Felippa and Haugen,
+    Eqs. (102)-(103): the derivative given in the Notes of :func:`Lmat` is
+    built entry by entry, with `\eta` and `\mu` of :func:`_eta_mu`, and
+    multiplied by `\boldsymbol{H}` of :func:`Hmat`.
+
+    """
     cdef double eta, mu, tm
     cdef double S[9]
     cdef double SS[9]
@@ -499,7 +567,36 @@ cdef int _frame_c(int kind, const double *XD, const double *Rs,
     ``aux``: `\bar{\boldsymbol{q}}_i` (FRAME_MEAN_TRIAD) or
     `\bar{\boldsymbol{p}}_i, \bar{\boldsymbol{q}}_i` (FRAME_SPRING_TRIAD),
     rows. Returns 1 when the frame is undefined, with the values of the
-    warning in ``val``, 0 otherwise."""
+    warning in ``val``, 0 otherwise.
+
+    Notes
+    -----
+    The frame rules, with the columns of `\boldsymbol{T}_R` the element
+    axes `\boldsymbol{e}_1, \boldsymbol{e}_2 = \boldsymbol{e}_3 \times
+    \boldsymbol{e}_1, \boldsymbol{e}_3`:
+
+    - FRAME_TRIA: `\boldsymbol{e}_1` along the side 1-2 and
+      `\boldsymbol{e}_3` normal to the plane of the three nodes, as
+      :meth:`.Tria3R.update_rotation_matrix`;
+    - FRAME_QUAD: `\boldsymbol{e}_3` along `\boldsymbol{v}_{42} \times
+      \boldsymbol{v}_{13}` and `\boldsymbol{e}_1` along
+      `(\boldsymbol{v}_{13} + \boldsymbol{v}_{42})/2`, as
+      :meth:`.Quad4R.update_rotation_matrix`;
+    - FRAME_MEAN_TRIAD: `\boldsymbol{e}_1` along the axis and
+      `\boldsymbol{e}_3` along `\boldsymbol{e}_1 \times \boldsymbol{q}`,
+      with `\boldsymbol{q}` the mean of the base vector `\boldsymbol{q}_0`
+      rotated by the two nodal rotations, see :class:`CorotationalBeam`;
+      undefined when `|\boldsymbol{e}_1 \times \boldsymbol{q}|` is below
+      ``q2_min``;
+    - FRAME_SPRING_TRIAD: `\boldsymbol{e}_1` along the mean of the rotated
+      base vectors `\boldsymbol{p}_0` and `\boldsymbol{e}_3` along
+      `\boldsymbol{e}_1 \times \boldsymbol{q}` as above, see
+      :class:`CorotationalSpring`;
+    - FRAME_CHORD: the base frame turned by the rotation of the smallest
+      angle that aligns its first axis with the chord, used for the
+      post-processing only, see :class:`CorotationalTruss`.
+
+    """
     cdef double d1[3]
     cdef double d2[3]
     cdef double n[3]
@@ -612,7 +709,37 @@ cdef int _kinematics_c(int kind, int nn, const double *X0c,
     r"""Steps of :meth:`_CorotationalElement._kinematics`: nodal rotations
     ``Rs``, CR frame ``TR``, current local coordinates ``xl`` and
     deformational displacements ``d``; ``e`` is NULL without rigid
-    offsets. Returns 1 when the frame is undefined."""
+    offsets. Returns 1 when the frame is undefined.
+
+    Notes
+    -----
+    With the nodal rotations `\boldsymbol{R}_a = \exp(\mathrm{Spin}(
+    \boldsymbol{\psi}_a))`, the current positions, less the rotated
+    offsets `\boldsymbol{R}_a \boldsymbol{e}_a` when given, define the CR
+    frame `\boldsymbol{T}_R` of :func:`_frame_c`. The current local
+    coordinates are `\boldsymbol{x}_a = \boldsymbol{T}_R^T
+    (\boldsymbol{X}_a - \bar{\boldsymbol{X}})`, relative to the mean of the
+    nodes, the deformational translations are `\boldsymbol{x}_a` less the
+    local base coordinates ``xt``, and the deformational rotations are
+
+    .. math::
+
+        \boldsymbol{\theta}_a = \mathrm{log}(\boldsymbol{T}_R^T
+        \boldsymbol{R}_a \boldsymbol{T}_0)
+
+    Felippa and Haugen [1]_, Eq. (26), written with column frames;
+    Nour-Omid and Rankin [2]_, Eq. (14); see :func:`logso3`. With
+    FRAME_CHORD the deformational rotations are set to zero, since the
+    chord does not define the rotations about it.
+
+    References
+    ----------
+    .. [1] Felippa, C. A. and Haugen, B., CMAME 194, 2285-2335, 2005,
+       https://doi.org/10.1016/j.cma.2004.07.035.
+    .. [2] Nour-Omid, B. and Rankin, C. C., CMAME 93, 353-384, 1991,
+       https://doi.org/10.1016/0045-7825(91)90248-5.
+
+    """
     cdef double XD[3*MAX_NN]
     cdef double mean[3]
     cdef double r[3]
@@ -646,7 +773,7 @@ cdef int _kinematics_c(int kind, int nn, const double *X0c,
         _mtv3(TR, r, &xl[3*a])
         for i in range(3):
             d[6*a + i] = xl[3*a + i] - xt[3*a + i]
-        # NOTE F&H Eq. (26) written with column frames; N-O&R Eq. (14)
+        # NOTE deformational rotation, see the Notes
         _mtm(TR, &Rs[9*a], M1, 3, 3, 3)
         _mm(M1, T0, M2, 3, 3, 3)
         _logso3_c(M2, &d[6*a + 3])
@@ -661,7 +788,19 @@ cdef int _kinematics_c(int kind, int nn, const double *X0c,
 cdef void _G_c(int kind, int nn, const double *xl, const double *aux,
                double *G) noexcept nogil:
     r"""Spin-fitter matrix ``G``, shape ``(3, 6*nn)``, see the Notes of the
-    wrappers"""
+    wrappers
+
+    Notes
+    -----
+    `\delta \boldsymbol{\omega}_R = \boldsymbol{G} \delta
+    \bar{\boldsymbol{v}}` for the frame rule ``kind``, at the current local
+    coordinates ``xl``: the closed forms of the triangle and of the
+    quadrilateral given in the Notes of :class:`CorotationalShell`, and
+    those of the mean nodal triad and of the spring triad, built from the
+    auxiliary vectors ``aux`` of :func:`_frame_c`, given in the Notes of
+    :class:`CorotationalBeam` and :class:`CorotationalSpring`.
+
+    """
     cdef int n6 = 6*nn
     cdef int i, j
     cdef double a1, a2, b1, b2, n, c, l, q1, q2, A, B1, B2
@@ -745,7 +884,23 @@ cdef void _G_c(int kind, int nn, const double *xl, const double *aux,
 cdef void _KGP_FH_c(int nn, const double *G, const double *P,
                     const double *pv, double *KGP) noexcept nogil:
     r"""``-G.T @ (Fn.T @ P)``, with `\boldsymbol{F}_n` of the forces of
-    ``pv``, F&H Eq. (47)"""
+    ``pv``, written row-major to ``KGP``
+
+    Notes
+    -----
+    The equilibrium-projection geometric stiffness `-\boldsymbol{G}^T
+    \boldsymbol{F}_n^T \boldsymbol{P}` of Felippa and Haugen [1]_,
+    Eq. (47), with `\boldsymbol{F}_n` the column of the spins
+    `\mathrm{Spin}(\boldsymbol{n}_a)` of the nodal forces of ``pv`` (zero
+    blocks for the moments). It is exact when `\boldsymbol{G}` satisfies
+    the condition (37) of [1]_, see :class:`CorotationalShell`.
+
+    References
+    ----------
+    .. [1] Felippa, C. A. and Haugen, B., CMAME 194, 2285-2335, 2005,
+       https://doi.org/10.1016/j.cma.2004.07.035.
+
+    """
     cdef int n6 = 6*nn
     cdef double Fn[3*MAX_N6]
     cdef double FnTP[3*MAX_N6]
@@ -763,8 +918,24 @@ cdef void _KGP_FH_c(int nn, const double *G, const double *P,
 cdef void _KGP_beam_c(const double *G, const double *P, const double *p,
                       const double *z, const double *xl, const double *aux,
                       double *KGP) noexcept nogil:
-    r"""Exact projection geometric stiffness of :class:`CorotationalBeam`
-    (derived here)"""
+    r"""Exact projection geometric stiffness of :class:`CorotationalBeam`,
+    written row-major to ``KGP``
+
+    Notes
+    -----
+    `\boldsymbol{K}_{GP} = -\partial (\boldsymbol{G}^T
+    \boldsymbol{z})/\partial \bar{\boldsymbol{v}} - \boldsymbol{G}^T
+    \boldsymbol{F}_n(\boldsymbol{p})^T \boldsymbol{P}`, with `\boldsymbol{z}
+    = \boldsymbol{S}^T \boldsymbol{p}`, derived here and given in the Notes
+    of :class:`CorotationalBeam`: the variations of the arguments `l`,
+    `q_1`, `q_2` and `\bar{\boldsymbol{q}}_i` of `\boldsymbol{G}`, `\delta
+    l = \delta \bar{u}_2 - \delta \bar{u}_1` and `\delta
+    \bar{\boldsymbol{q}}_i = \mathrm{Spin}(\bar{\boldsymbol{q}}_i)
+    (\boldsymbol{G} \delta \bar{\boldsymbol{v}} - \delta
+    \bar{\boldsymbol{\omega}}_i)`, give the first term, and
+    :func:`_KGP_FH_c` the second.
+
+    """
     cdef const double *qb = aux
     cdef double GE[36]
     cdef double Sq[9]
@@ -779,7 +950,7 @@ cdef void _KGP_beam_c(const double *G, const double *P, const double *p,
     q1 = 0.5*(qb[0] + qb[3])
     q2 = 0.5*(qb[1] + qb[4])
     r = q1/q2
-    # NOTE variations of the arguments of G (derived here)
+    # NOTE variations of the arguments of G, see the Notes
     for i in range(2):
         for k in range(36):
             GE[k] = G[k]
@@ -816,7 +987,22 @@ cdef void _KGP_spring_c(const double *G, const double *P, const double *p,
                         const double *z, const double *aux,
                         double *KGP) noexcept nogil:
     r"""Exact projection geometric stiffness of :class:`CorotationalSpring`
-    with ``frame='triad'`` (derived here)"""
+    with ``frame='triad'``, written row-major to ``KGP``
+
+    Notes
+    -----
+    The projection geometric stiffness of :func:`_KGP_beam_c` for the
+    spin-fitter matrix of the ``'triad'`` frame, derived here and given in
+    the Notes of :class:`CorotationalSpring`: `\partial (\boldsymbol{G}^T
+    \boldsymbol{z})/\partial \bar{\boldsymbol{v}}` follows from `\delta
+    \bar{\boldsymbol{p}}_i = \mathrm{Spin}(\bar{\boldsymbol{p}}_i)
+    (\boldsymbol{G} \delta \bar{\boldsymbol{v}} - \delta
+    \bar{\boldsymbol{\omega}}_i)` and the same for
+    `\bar{\boldsymbol{q}}_i`, through the means `A`, `B_1`, `B_2` and the
+    rows of `\mathrm{Spin}(\bar{\boldsymbol{p}}_i)` and
+    `\mathrm{Spin}(\bar{\boldsymbol{q}}_i)` that enter `\boldsymbol{G}`.
+
+    """
     cdef const double *pb = aux
     cdef const double *qb = &aux[6]
     cdef double GE[36]
@@ -843,7 +1029,7 @@ cdef void _KGP_spring_c(const double *G, const double *P, const double *p,
     A = 0.5*(pb[0] + pb[3])
     B1 = 0.5*(qb[0] + qb[3])
     B2 = 0.5*(qb[1] + qb[4])
-    # NOTE exact variation of G^T z (derived here), see the Notes
+    # NOTE exact variation of G^T z, see the Notes
     alpha = z[1] + z[0]*B1/B2
     dalpha[0] = z[0]*(0.5*1./B2 - 0.5*B1*0./B2**2)
     dalpha[1] = z[0]*(0.5*0./B2 - 0.5*B1*1./B2**2)
@@ -901,7 +1087,18 @@ cdef void _KGP_spring_c(const double *G, const double *P, const double *p,
 cdef void _btkb_c(int nn, const double *TR, const double *BR,
                   const double *K, double *out) noexcept nogil:
     r"""``out = B.T @ K @ B`` with ``B = blockdiag(TR.T, BR_a)`` of 3x3
-    blocks, ``BR_a = TR.T @ Lambda_a``"""
+    blocks, ``BR_a = TR.T @ Lambda_a``
+
+    Notes
+    -----
+    The congruent transformation of a stiffness matrix of the CR frame to
+    global components and to the additive rotation vectors, `\boldsymbol{B}
+    = \mathrm{diag}(\boldsymbol{T}_R^T, \boldsymbol{T}_R^T
+    \boldsymbol{\Lambda}(\boldsymbol{\psi}_a))` by blocks of `3 \times 3`,
+    i.e. `\boldsymbol{\mathcal{T}}^T \hat{\boldsymbol{\Lambda}}` of the
+    Notes of :class:`CorotationalShell`, Crisfield, Eqs. (17.176)-(17.177).
+
+    """
     cdef int n6 = 6*nn
     cdef int nb = 2*nn
     cdef int kb, lb, i, j, m
@@ -945,9 +1142,62 @@ cdef void _force_tangent_c(int nn, int kgp, int tangent,
                            double *KGpsi) noexcept nogil:
     r"""Steps of :meth:`_CorotationalElement.evaluate` after the local
     internal force ``fbar`` and the local tangents ``KCl``, ``KGl`` (NULL
-    when absent): CSE force and tangent of F&H Section 6.3, transformed to
-    the additive rotation vectors and, with ``e`` not NULL, by the rigid
-    offsets"""
+    when absent): internal force ``f`` and, with ``tangent``, the material
+    and geometric parts ``KMpsi`` and ``KGpsi`` of the tangent stiffness
+    matrix, in the additive degrees-of-freedom of the model and, with ``e``
+    not NULL, transformed by the rigid offsets
+
+    Notes
+    -----
+    The consistent symmetrizable equilibrated (CSE) formulation of Felippa
+    and Haugen [1]_, Section 6.3, given in the Notes of
+    :class:`CorotationalShell`, in the order of the code:
+
+    1. `\boldsymbol{p} = \bar{\boldsymbol{H}}^T \bar{\boldsymbol{f}}`, with
+       `\boldsymbol{H}(\bar{\boldsymbol{\theta}}_{d,a})` of :func:`Hmat`;
+    2. the rigid-rotation matrix `\boldsymbol{S}`, [1]_ Eq. (12), and the
+       projector `\boldsymbol{P} = \boldsymbol{P}_u - \boldsymbol{S}
+       \boldsymbol{G}`;
+    3. the projected force `\bar{\boldsymbol{p}} = \boldsymbol{P}^T
+       \boldsymbol{p}`, [1]_ Eqs. (31)-(33), computed as
+       `\boldsymbol{P}_u^T \boldsymbol{p} - \boldsymbol{G}^T
+       \boldsymbol{z}` with `\boldsymbol{z} = \boldsymbol{S}^T
+       \boldsymbol{p}`;
+    4. the force in the additive degrees-of-freedom, `\boldsymbol{f} =
+       \boldsymbol{B}^T \bar{\boldsymbol{p}}` with `\boldsymbol{B}` of
+       :func:`_btkb_c`, Crisfield [2]_, Eqs. (17.176)-(17.177), and with
+       rigid offsets `\boldsymbol{f} = \boldsymbol{J}^T \boldsymbol{f}^f`;
+    5. the material stiffness `(\bar{\boldsymbol{H}} \boldsymbol{P})^T
+       \boldsymbol{K}_l \bar{\boldsymbol{H}} \boldsymbol{P}`, [1]_
+       Eqs. (41)-(43), with the local tangent `\boldsymbol{K}_l` = ``KCl``,
+       `\boldsymbol{K}_e` or `\boldsymbol{K}_e + \boldsymbol{K}_{CNL}` of
+       the von Kármán strains;
+    6. with ``KGl``, the local geometric stiffness of the von Kármán
+       strains, transformed as the material stiffness (derived here);
+    7. the moment-correction geometric stiffness `\boldsymbol{P}^T
+       \bar{\boldsymbol{L}} \boldsymbol{P}`, [1]_ Eqs. (46) and (102), with
+       :func:`Lmat` of the local moments of `\bar{\boldsymbol{f}}`;
+    8. the rotational geometric stiffness `-\boldsymbol{F}_{nm}
+       \boldsymbol{G}`, [1]_ Eqs. (44)-(45), with the spins of the forces
+       and moments of `\bar{\boldsymbol{p}}`;
+    9. the equilibrium-projection geometric stiffness of ``kgp``:
+       :func:`_KGP_FH_c`, [1]_ Eq. (47), :func:`_KGP_beam_c` or
+       :func:`_KGP_spring_c`;
+    10. the congruent transformation of :func:`_btkb_c` and the extra term
+        of the additive rotation vectors, :func:`dLambdaT_m` at the global
+        moments of `\bar{\boldsymbol{p}}`, [2]_ Eq. (17.177);
+    11. with rigid offsets, `\boldsymbol{J}^T \boldsymbol{K}
+        \boldsymbol{J}` and the eccentricity geometric stiffness given in
+        the Notes of :class:`CorotationalShell`.
+
+    References
+    ----------
+    .. [1] Felippa, C. A. and Haugen, B., CMAME 194, 2285-2335, 2005,
+       https://doi.org/10.1016/j.cma.2004.07.035.
+    .. [2] Crisfield, M. A., Non-linear Finite Element Analysis of Solids
+       and Structures, Volume 2: Advanced Topics, Wiley, 1997.
+
+    """
     cdef int n6 = 6*nn
     cdef double Hs[9*MAX_NN]
     cdef double Lams[9*MAX_NN]
@@ -984,7 +1234,7 @@ cdef void _force_tangent_c(int nn, int kgp, int tangent,
         p[i] = fbar[i]
     for a in range(nn):
         _mtv3(&Hs[9*a], &fbar[6*a + 3], &p[6*a + 3])
-    # NOTE rigid-rotation matrix S, F&H Eq. (12)
+    # NOTE rigid-rotation matrix S and projector P, step 2 of the Notes
     for i in range(3*n6):
         S[i] = 0.
     for a in range(nn):
@@ -996,14 +1246,13 @@ cdef void _force_tangent_c(int nn, int kgp, int tangent,
     _mm(S, G, SG, n6, 3, n6)
     for i in range(n6*n6):
         P[i] = Pu[i] - SG[i]
-    # NOTE projected force, F&H Eqs. (31)-(33)
+    # NOTE projected force, step 3 of the Notes
     _mtm(S, p, z, 3, n6, 1)
     _mtm(Pu, p, pbar, n6, n6, 1)
     _mtm(G, z, T3n, n6, 3, 1)
     for i in range(n6):
         pbar[i] = pbar[i] - T3n[i]
-    # NOTE B = blockdiag(T_R^T, T_R^T Lambda_a): f_psi = B^T pbar and
-    #      K_psi = B^T K_R B, Cr2 Eqs. (17.176)-(17.177)
+    # NOTE force in the additive degrees-of-freedom, step 4 of the Notes
     for a in range(nn):
         _Lambda_c(&psie[3*a], &Lams[9*a])
         _mtm(TR, &Lams[9*a], &BR[9*a], 3, 3, 3)
@@ -1023,8 +1272,7 @@ cdef void _force_tangent_c(int nn, int kgp, int tangent,
                 f[6*a + 3 + i] = f_flat[6*a + 3 + i] + v3[i]
     if not tangent:
         return
-    # NOTE material stiffness, F&H Eqs. (41)-(43), with the local
-    #      tangent K_e + KCNL(d) of the von Kármán strains
+    # NOTE material stiffness, step 5 of the Notes
     for i in range(n6*n6):
         HP[i] = P[i]
     for a in range(nn):
@@ -1034,13 +1282,13 @@ cdef void _force_tangent_c(int nn, int kgp, int tangent,
     for i in range(n6*n6):
         KG[i] = 0.
     if KGl != NULL:
-        # NOTE local geometric stiffness KG(d) of the von Kármán strains,
-        #      transformed as the material stiffness (derived here)
+        # NOTE local geometric stiffness of the von Kármán strains, step 6
+        #      of the Notes
         _mm(KGl, HP, T, n6, n6, n6)
         _mtm(HP, T, SG, n6, n6, n6)
         for i in range(n6*n6):
             KG[i] += SG[i]
-    # NOTE moment-correction geometric stiffness, F&H Eqs. (46), (102)
+    # NOTE moment-correction geometric stiffness, step 7 of the Notes
     for a in range(nn):
         r0 = n6*(6*a + 3)
         _Lmat_c(&d[6*a + 3], &fbar[6*a + 3], Lm)
@@ -1048,14 +1296,14 @@ cdef void _force_tangent_c(int nn, int kgp, int tangent,
         _mm(T3n, &P[r0], SG, n6, 3, n6)
         for i in range(n6*n6):
             KG[i] += SG[i]
-    # NOTE rotational geometric stiffness, F&H Eqs. (44)-(45)
+    # NOTE rotational geometric stiffness, step 8 of the Notes
     for a in range(nn):
         _spin3(&pbar[6*a], &Fnm[18*a])
         _spin3(&pbar[6*a + 3], &Fnm[18*a + 9])
     _mm(Fnm, G, SG, n6, 3, n6)
     for i in range(n6*n6):
         KG[i] -= SG[i]
-    # NOTE equilibrium-projection geometric stiffness
+    # NOTE equilibrium-projection geometric stiffness, step 9 of the Notes
     if kgp == KGP_BEAM:
         _KGP_beam_c(G, P, p, z, xl, aux, SG)
     elif kgp == KGP_SPRING:
@@ -1066,7 +1314,7 @@ cdef void _force_tangent_c(int nn, int kgp, int tangent,
         KG[i] += SG[i]
     _btkb_c(nn, TR, BR, KM, KMpsi)
     _btkb_c(nn, TR, BR, KG, KGpsi)
-    # NOTE extra term of the additive rotation vectors, Cr2 Eq. (17.177)
+    # NOTE extra term of the additive rotation vectors, step 10 of the Notes
     for a in range(nn):
         _mv3(TR, &pbar[6*a + 3], v3)
         _dLambdaT_m_c(&psie[3*a], v3, K3)
@@ -1207,6 +1455,9 @@ def _cross(a, b):
 def spin(v):
     r"""Skew-symmetric (spin) matrix of a 3-vector
 
+    Returns the matrix whose product with a vector is the cross product of
+    ``v`` with that vector; :func:`axial` is its inverse.
+
     Parameters
     ----------
     v : array_like
@@ -1227,6 +1478,9 @@ def axial(W):
     r"""Axial vector of a skew-symmetric 3x3 matrix, the inverse of
     :func:`spin`
 
+    Returns the vector ``v`` such that ``spin(v)`` is the skew-symmetric
+    part of ``W``; a symmetric part of ``W`` is ignored.
+
     Parameters
     ----------
     W : np.ndarray
@@ -1245,9 +1499,25 @@ def axial(W):
 def _coefficients(t):
     r"""Coefficients of the rotation matrices of the angle ``t >= 0``
 
-    Returns ``sin t/t``, ``a = (1 - cos t)/t**2``, ``b = (t - sin t)/t**3``,
-    ``a'/t`` and ``b'/t``, with their Taylor series up to ``t**8`` below
-    :data:`SERIES_ANGLE` (series derived here with sympy)."""
+    Returns the tuple ``(sin t/t, a, b, a'/t, b'/t)`` of the coefficients
+    used by :func:`expso3`, :func:`Lambda` and :func:`dLambdaT_m`, see the
+    Notes; below :data:`SERIES_ANGLE` they are evaluated with their Taylor
+    series.
+
+    Notes
+    -----
+    With `t` the rotation angle:
+
+    .. math::
+
+        a = \frac{1 - \cos t}{t^2}, \qquad b = \frac{t - \sin t}{t^3},
+        \qquad \frac{a'}{t} = \frac{t \sin t - 2 (1 - \cos t)}{t^4},
+        \qquad \frac{b'}{t} = \frac{3 \sin t - 2 t - t \cos t}{t^5}
+
+    The Taylor series, up to `t^8`, were derived with sympy; they avoid the
+    cancellation of the closed forms for small `t`.
+
+    """
     cdef double c[5]
     _coefficients_c(t, c)
     return c[0], c[1], c[2], c[3], c[4]
@@ -1255,6 +1525,10 @@ def _coefficients(t):
 
 def expso3(psi):
     r"""Rotation matrix of a rotation vector, the exponential map
+
+    Returns the nodal rotation matrix of the total rotation vector of a
+    node, the rotational degrees-of-freedom of the co-rotational models;
+    :func:`logso3` is its inverse for angles up to `\pi`.
 
     Parameters
     ----------
@@ -1300,6 +1574,9 @@ def expso3(psi):
 def logso3(R):
     r"""Rotation vector of a rotation matrix, the logarithmic map
 
+    Returns the rotation vector of the smallest angle, at most `\pi`, whose
+    :func:`expso3` is ``R``.
+
     Parameters
     ----------
     R : np.ndarray
@@ -1310,6 +1587,11 @@ def logso3(R):
     theta : np.ndarray
         Rotation vector of size 3 with `|\boldsymbol{\theta}| \le \pi`,
         such that ``expso3(theta)`` is ``R``.
+
+    Raises
+    ------
+    ValueError
+        If ``R`` does not have shape ``(3, 3)``.
 
     Notes
     -----
@@ -1343,6 +1625,10 @@ def logso3(R):
 def Lambda(psi):
     r"""Matrix that maps the variation of a rotation vector to the spatial
     spin
+
+    Used to transform the internal forces and the tangent stiffness matrix
+    from the spins of the nodes to the variations of their total rotation
+    vectors, the rotational degrees-of-freedom of the co-rotational models.
 
     Parameters
     ----------
@@ -1393,6 +1679,10 @@ def dLambdaT_m(psi, m):
     r"""Derivative of `\boldsymbol{\Lambda}(\boldsymbol{\psi})^T
     \boldsymbol{m}` with respect to the rotation vector, for a fixed
     vector `\boldsymbol{m}`
+
+    Used for the term of the tangent stiffness matrix that comes from the
+    nodal moments when the rotational degrees-of-freedom are total rotation
+    vectors.
 
     Parameters
     ----------
@@ -1448,10 +1738,31 @@ def dLambdaT_m(psi, m):
 
 
 def _eta_mu(t):
-    r"""Coefficients `\eta` and `\mu` of [F&H] Eqs. (101) and (103), with
-    their Taylor series up to ``t**14`` below :data:`SERIES_ANGLE_ETA_MU`
-    (series derived here with sympy, in agreement with the terms up to
-    ``t**6`` of F&H); the numerator of `\mu` cancels as ``t**6``"""
+    r"""Coefficients `\eta` and `\mu` of :func:`Hmat` and :func:`Lmat` for
+    the angle ``t >= 0``
+
+    Returns the tuple ``(eta, mu)``; below :data:`SERIES_ANGLE_ETA_MU` they
+    are evaluated with their Taylor series.
+
+    Notes
+    -----
+    Felippa and Haugen [1]_, Eqs. (101) and (103):
+
+    .. math::
+
+        \eta = \frac{1 - (t/2) \cot(t/2)}{t^2}, \qquad
+        \mu = \frac{t^2 + 4 \cos t + t \sin t - 4}{4 t^4 \sin^2(t/2)}
+
+    The numerator of `\mu` cancels as `t^6`, hence the Taylor series up to
+    `t^{14}` below :data:`SERIES_ANGLE_ETA_MU`, derived with sympy, in
+    agreement with the terms up to `t^6` of [1]_.
+
+    References
+    ----------
+    .. [1] Felippa, C. A. and Haugen, B., CMAME 194, 2285-2335, 2005,
+       https://doi.org/10.1016/j.cma.2004.07.035.
+
+    """
     cdef double eta, mu
     _eta_mu_c(t, &eta, &mu)
     return eta, mu
@@ -1459,6 +1770,10 @@ def _eta_mu(t):
 
 def Hmat(theta):
     r"""Jacobian of the rotation vector with respect to the spin
+
+    Used for the deformational rotations of the nodes in the co-rotational
+    frame, to transform the local internal forces and stiffness matrix from
+    the rotation vectors to the spins.
 
     Parameters
     ----------
@@ -1509,6 +1824,9 @@ def Hmat(theta):
 def Lmat(theta, m):
     r"""Derivative of `\boldsymbol{H}(\boldsymbol{\theta})^T \boldsymbol{m}`
     with respect to the spin, for a fixed vector `\boldsymbol{m}`
+
+    Used for the geometric stiffness term of the local nodal moments of an
+    element, see :func:`Hmat`.
 
     Parameters
     ----------
@@ -1649,8 +1967,10 @@ class _CorotationalElement(object):
         raise NotImplementedError
 
     def _kgp_kind(self):
-        r"""Projection geometric stiffness of the C kernels: ``KGP_FH``, F&H
-        Eq. (47), or the exact ones ``KGP_BEAM`` and ``KGP_SPRING``"""
+        r"""Projection geometric stiffness of the C kernels: ``KGP_FH``, the
+        general one of :func:`_KGP_FH_c`, or the exact ones ``KGP_BEAM``
+        and ``KGP_SPRING``, see :func:`_KGP_beam_c` and
+        :func:`_KGP_spring_c`"""
         return KGP_FH
 
     def _warn_undefined(self, kind, v0, v1):
@@ -1672,7 +1992,15 @@ class _CorotationalElement(object):
         r"""CR frame `\boldsymbol{T}_R` and auxiliary vectors at the nodal
         positions ``XD``, shape ``(nn, 3)``, and the nodal rotation matrices
         ``Rs`` (``None`` for the identities), by the frame rule of the
-        wrapper; ``(None, None)`` when the frame is undefined"""
+        wrapper; ``(None, None)`` when the frame is undefined
+
+        Notes
+        -----
+        The frame rules of :func:`_frame_c`, given in the Notes of
+        :class:`CorotationalShell`, :class:`CorotationalBeam`,
+        :class:`CorotationalTruss` and :class:`CorotationalSpring`.
+
+        """
         cdef int kind = self._frame_kind()
         cdef int n = self.nn
         cdef int a, i
@@ -1710,7 +2038,17 @@ class _CorotationalElement(object):
     def _G(self, xl, aux):
         r"""Spin-fitter matrix `\boldsymbol{G}`, shape ``(3, 6*nn)``, at the
         current local coordinates ``xl`` and the auxiliary vectors ``aux`` of
-        :meth:`_frame`, see the Notes of the wrappers"""
+        :meth:`_frame`
+
+        Notes
+        -----
+        `\delta \boldsymbol{\omega}_R = \boldsymbol{G} \delta
+        \bar{\boldsymbol{v}}`, the spin of the CR frame due to a variation
+        of the local degrees-of-freedom, computed by :func:`_G_c`; the
+        closed forms of each frame rule are given in the Notes of the
+        wrappers.
+
+        """
         cdef int kind = self._frame_kind()
         cdef double[:, ::1] x = np.ascontiguousarray(xl, dtype=np.float64)
         cdef double a[12]
@@ -1802,7 +2140,18 @@ class _CorotationalElement(object):
         trick: ``update_KC0`` with the rotation matrix set to the identity,
         the probe coordinates set to the base local coordinates and the
         node positions set to ``0, 6, 12, 18``; the attributes changed on
-        the element and its probe are restored"""
+        the element and its probe are restored
+
+        Notes
+        -----
+        With the rotation matrix of the element set to the identity, its
+        ``update_KC0`` gives the stiffness matrix in the element axes of
+        the base configuration, the `\boldsymbol{K}_e` of the Notes of
+        :class:`CorotationalShell`, computed once and kept: the local
+        response of the pure EICR is linear in the deformational
+        displacements.
+
+        """
         def func(e, p):
             if type(e) in _SPRINGS:
                 return self._dense('KC0', lambda r, c, v: e.update_KC0(
@@ -1819,7 +2168,23 @@ class _CorotationalElement(object):
         Returns ``fbar`` and, with ``tangent``, ``KC`` and ``KG``: the
         ``update_probe_finte(prop, nonlinear=1)`` of the element, its
         ``K_e + KCNL`` and its ``KG``, with ``ue = d``, in the element
-        axes."""
+        axes.
+
+        Notes
+        -----
+        The local element computation of step 8 of the procedure of
+        Crisfield [1]_, Section 17.1.5, with the element's own routines:
+        `\bar{\boldsymbol{f}}(\boldsymbol{d})` and the local tangent
+        `\boldsymbol{K}_e + \boldsymbol{K}_{CNL}(\boldsymbol{d}) +
+        \boldsymbol{K}_G(\boldsymbol{d})`, the exact Jacobian of
+        `\bar{\boldsymbol{f}}`, see the Notes of :class:`CorotationalShell`.
+
+        References
+        ----------
+        .. [1] Crisfield, M. A., Non-linear Finite Element Analysis of
+           Solids and Structures, Volume 2: Advanced Topics, Wiley, 1997.
+
+        """
         def func(e, p):
             e.update_probe_finte(self.prop, nonlinear=1, **self.elem_kwargs)
             fbar = np.array(p.finte, copy=True)
@@ -1833,9 +2198,22 @@ class _CorotationalElement(object):
         return self._in_local_frame(func, ue=d)
 
     def _S(self, xl):
-        r"""Rigid-rotation matrix `\boldsymbol{S}`, node blocks
-        `[-\mathrm{Spin}(\bar{\boldsymbol{x}}_a); \boldsymbol{I}]`, F&H
-        Eq. (12)"""
+        r"""Rigid-rotation matrix `\boldsymbol{S}`, shape ``(6*nn, 3)``, at
+        the current local coordinates ``xl``
+
+        Notes
+        -----
+        Felippa and Haugen [1]_, Eq. (12): the node blocks are
+        `[-\mathrm{Spin}(\bar{\boldsymbol{x}}_a); \boldsymbol{I}]`, the
+        local nodal displacements and rotations of a rigid rotation of the
+        element about the mean of its nodes.
+
+        References
+        ----------
+        .. [1] Felippa, C. A. and Haugen, B., CMAME 194, 2285-2335, 2005,
+           https://doi.org/10.1016/j.cma.2004.07.035.
+
+        """
         S = np.zeros((DOF*self.nn, 3))
         for a in range(self.nn):
             S[DOF*a:DOF*a + 3] = -spin(xl[a])
@@ -1870,6 +2248,12 @@ class _CorotationalElement(object):
             per node, size ``6*nn``, in the order of the degrees-of-freedom
             of the element.
 
+        Notes
+        -----
+        The deformational displacements `\bar{\boldsymbol{u}}_{d,a}` and
+        rotations `\bar{\boldsymbol{\theta}}_{d,a}` of the Notes of
+        :class:`CorotationalShell`, computed by :meth:`_kinematics`.
+
         """
         out = self._kinematics(*self._split(u))
         if out is None:
@@ -1877,9 +2261,27 @@ class _CorotationalElement(object):
         return out[0], out[2]
 
     def _kinematics(self, ue, psie):
-        r"""F&H Section 3.8, Eq. (22) and Table 3, steps 2-3; N-O&R Eqs.
-        (11), (14), (19); returns ``(TR, xl, d, aux)``, ``aux`` as in
-        :meth:`_frame`, or ``None`` when the frame is undefined"""
+        r"""CR frame, current local coordinates and deformational
+        displacements at the nodal translations ``ue`` and rotation vectors
+        ``psie``, shapes ``(nn, 3)``
+
+        Returns ``(TR, xl, d, aux)``, ``aux`` as in :meth:`_frame`, or
+        ``None`` when the frame is undefined.
+
+        Notes
+        -----
+        Felippa and Haugen [1]_, Section 3.8, Eq. (22) and Table 3, steps
+        2-3; Nour-Omid and Rankin [2]_, Eqs. (11), (14), (19), computed by
+        :func:`_kinematics_c`, see the Notes of :class:`CorotationalShell`.
+
+        References
+        ----------
+        .. [1] Felippa, C. A. and Haugen, B., CMAME 194, 2285-2335, 2005,
+           https://doi.org/10.1016/j.cma.2004.07.035.
+        .. [2] Nour-Omid, B. and Rankin, C. C., CMAME 93, 353-384, 1991,
+           https://doi.org/10.1016/0045-7825(91)90248-5.
+
+        """
         cdef int n = self.nn
         cdef int kind = self._frame_kind()
         cdef int a, i
@@ -1930,6 +2332,23 @@ class _CorotationalElement(object):
         All the arrays are filled with NaN when the CR frame is undefined,
         see :class:`CorotationalBeam`.
 
+        Notes
+        -----
+        The local internal force is `\bar{\boldsymbol{f}} =
+        \boldsymbol{K}_e \boldsymbol{d}`, Felippa and Haugen [1]_,
+        Eq. (53), or with ``local='von_karman'`` that of
+        :meth:`_local_von_karman`, step 8 of the procedure of Crisfield
+        [2]_, Section 17.1.5; it is then projected and transformed to the
+        additive degrees-of-freedom by :func:`_force_tangent_c`, see the
+        Notes of :class:`CorotationalShell`.
+
+        References
+        ----------
+        .. [1] Felippa, C. A. and Haugen, B., CMAME 194, 2285-2335, 2005,
+           https://doi.org/10.1016/j.cma.2004.07.035.
+        .. [2] Crisfield, M. A., Non-linear Finite Element Analysis of
+           Solids and Structures, Volume 2: Advanced Topics, Wiley, 1997.
+
         """
         cdef int n = self.nn
         cdef int n6 = _DOF*n
@@ -1969,8 +2388,7 @@ class _CorotationalElement(object):
             return nan, np.full((n6, n6), np.nan), np.full((n6, n6), np.nan)
         if self.local == 'von_karman':
             # NOTE local internal force and tangent of the von Kármán strains
-            #      of the element, Cr2 Section 17.1.5, step 8, see
-            #      CorotationalShell
+            #      of the element, see the Notes
             out = self._local_von_karman(np.array(<double[:n6]> &d[0]), tangent)
             fbar_vk, KC_vk, KG_vk = out if tangent else (out, None, None)
             fbv = np.ascontiguousarray(fbar_vk, dtype=np.float64)
@@ -1981,7 +2399,7 @@ class _CorotationalElement(object):
                 KGl = np.ascontiguousarray(KG_vk, dtype=np.float64)
                 KGlp = &KGl[0, 0]
         else:
-            # NOTE local internal force of the linear element, F&H Eq. (53)
+            # NOTE local internal force of the linear element, see the Notes
             _mm(&Ke[0, 0], d, fbar, n6, n6, 1)
         if self._e is not None:
             e = self._e
@@ -2022,6 +2440,13 @@ class _CorotationalElement(object):
         ------
         ValueError
             When the CR frame is undefined at ``u``.
+
+        Notes
+        -----
+        The element in its CR frame carries the small deformational
+        displacements only, so its linear stress recovery applies to
+        ``d``; the rigid motion removed by the frame is not seen by the
+        element.
 
         """
         TR, d = self.kinematics(u)
@@ -2069,7 +2494,7 @@ class CorotationalShell(_CorotationalElement):
         linear stiffness matrix `\boldsymbol{K}_e` (pure EICR), or
         ``'von_karman'``, the von Kármán strains of the element, see the
         Notes. Default ``'linear'``.
-    **elem_kwargs
+    **elem_kwargs : dict, optional
         Passed to ``update_KC0`` of the element, e.g. the ``hgfactor_*`` of
         :class:`.Quad4R`, and with ``local='von_karman'`` to its
         ``update_probe_finte``.
@@ -2448,7 +2873,7 @@ class CorotationalBeam(_CorotationalElement):
     local : str, optional
         ``'linear'`` or ``'von_karman'``, see :class:`CorotationalShell`
         and the Notes. Default ``'linear'``.
-    **elem_kwargs
+    **elem_kwargs : dict, optional
         Passed to ``update_KC0`` of the element.
 
     Attributes
@@ -2616,7 +3041,7 @@ class CorotationalTruss(CorotationalBeam):
         Default ``'auto'``.
     q2_min, exact_KGP : optional
         See :class:`CorotationalBeam`, used with ``frame='mean_triad'``.
-    **elem_kwargs
+    **elem_kwargs : dict, optional
         Passed to ``update_KC0`` of the element.
 
     Attributes
@@ -2705,11 +3130,45 @@ class CorotationalTruss(CorotationalBeam):
 
     def evaluate(self, u, tangent=True):
         r"""Internal force vector and tangent stiffness matrix, see
-        :meth:`CorotationalShell.evaluate`"""
+        :meth:`CorotationalShell.evaluate`
+
+        With ``frame='mean_triad'`` the evaluation is that of
+        :class:`CorotationalBeam`. With ``frame='chord'`` only the
+        translations receive a force and a stiffness, from the axial force
+        along the current axis; the rotation vectors of ``u`` are ignored.
+
+        Parameters
+        ----------
+        u : np.ndarray
+            Vector of all the degrees-of-freedom of the model, size ``N``.
+        tangent : bool, optional
+            Whether the tangent stiffness matrix is computed. Default
+            ``True``.
+
+        Returns
+        -------
+        f : np.ndarray
+            Internal force vector of the element, size ``12``, at the
+            degrees-of-freedom ``dofs``.
+        KM, KG : np.ndarray
+            Only with ``tangent=True``. Material and geometric parts of the
+            tangent stiffness matrix, shape ``(12, 12)``.
+
+        Notes
+        -----
+        With ``frame='chord'``, the co-rotational truss of Crisfield [1]_,
+        Section 3.6, Eqs. (3.123)-(3.124), (3.131) and (3.138), written for
+        the space truss of Section 3.7, see the Notes of the class.
+
+        References
+        ----------
+        .. [1] Crisfield, M. A., Non-linear Finite Element Analysis of
+           Solids and Structures, Volume 1: Essentials, Wiley, 1991.
+
+        """
         if self.frame == 'mean_triad':
             return CorotationalBeam.evaluate(self, u, tangent=tangent)
-        # NOTE Crisfield vol. 1, Section 3.6, Eqs. (3.123)-(3.124), (3.131),
-        #      (3.138), space truss of Section 3.7
+        # NOTE axial force along the current axis, see the Notes
         ue, _ = self._split(u)
         # NOTE relative to the base centroid, see _kinematics
         XD = (self.X0 - self.xC0) + ue
@@ -2767,7 +3226,7 @@ class CorotationalSpring(CorotationalBeam):
         Smallest value of `|\boldsymbol{a}|` and `\bar{b}_2` (``'triad'``)
         or of `\bar{q}_2` (``'axis'``), below which the CR frame is taken
         as undefined, see :class:`CorotationalBeam`. Default ``1.e-2``.
-    **elem_kwargs
+    **elem_kwargs : dict, optional
         Passed to ``update_KC0`` of the element.
 
     Attributes
@@ -3074,6 +3533,11 @@ class CorotationalModel(object):
     def add(self, elem, prop, kinematics='corotational', **elem_kwargs):
         r"""Add an element to the model
 
+        Stores the element with its kinematics, wraps it with
+        ``'corotational'`` and ``'corotational_von_karman'``, and adds its
+        linear stiffness matrix to :attr:`KC0`; the cached evaluations of
+        the model are reset.
+
         Parameters
         ----------
         elem : Tria3R, Quad4, Quad4R, BeamC, Tria3DSG, BeamLR, Spring or Truss
@@ -3093,7 +3557,7 @@ class CorotationalModel(object):
             Kármán internal force vector of their own, do not accept
             ``'von_karman'``, and ``'corotational_von_karman'`` is treated
             as ``'corotational'`` for them, without warning.
-        **elem_kwargs
+        **elem_kwargs : dict, optional
             Passed to ``update_KC0`` and, with ``'von_karman'`` and
             ``'corotational_von_karman'``, to ``update_fint`` or
             ``update_probe_finte`` of the element, e.g. the ``hgfactor_*``
@@ -3190,6 +3654,10 @@ class CorotationalModel(object):
 
     def add_moment(self, node, M, kind='rotation_vector'):
         r"""Apply a concentrated moment at a node
+
+        A constant moment conjugate to the rotation vector is added to
+        ``fext``; the configuration-dependent moments are stored and enter
+        :meth:`calc_fext`, :meth:`calc_fint` and :meth:`calc_kG`.
 
         Parameters
         ----------
@@ -3292,8 +3760,18 @@ class CorotationalModel(object):
 
     @property
     def KC0(self):
-        r"""Linear stiffness matrix of all the elements, sparse, shape ``(N,
-        N)``, from their ``update_KC0``"""
+        r"""Linear stiffness matrix of all the elements
+
+        Assembled from the ``update_KC0`` of the elements of every
+        kinematics, in global coordinates at the base configuration, and
+        cached until an element is added.
+
+        Returns
+        -------
+        KC0 : csr_matrix
+            Shape ``(N, N)``.
+
+        """
         return self._KC0_of(*_KINEMATICS)
 
     # NOTE evaluations
@@ -3433,21 +3911,21 @@ class CorotationalModel(object):
         r"""External load vector, the ``calc_fext`` of
         :class:`pyfe3d.solver.Analysis`
 
-        A callable ``calc_fext(inc=1., silent=True, c=None)``, with:
-
-        inc : float, optional
-            Load factor that multiplies the returned vector, dimensionless.
-            Default ``1.``.
-        silent : bool, optional
-            Unused, for the signature of :class:`pyfe3d.solver.Analysis`.
-        c : np.ndarray or None, optional
-            Configuration of all the ``N`` degrees-of-freedom, for the
-            configuration-dependent moments of :meth:`add_moment`. ``None``
-            gives the reference vector, with these moments at the base
-            configuration. Default ``None``.
-
-        It returns ``inc*(fext + sum_k F_k(c))``, size ``N``, see
+        A callable ``calc_fext(inc=1., silent=True, c=None)`` that returns
+        ``inc*(fext + sum_k F_k(c))``, size ``N``, with ``F_k`` the
+        configuration-dependent moments of :meth:`add_moment`, see
         :class:`CorotationalModel`.
+
+        Returns
+        -------
+        calc_fext : callable
+            With the arguments ``inc``, the load factor that multiplies the
+            returned vector, dimensionless, default ``1.``; ``silent``,
+            unused, for the signature of :class:`pyfe3d.solver.Analysis`;
+            and ``c``, the configuration of all the ``N``
+            degrees-of-freedom for the configuration-dependent moments,
+            ``None`` (default) giving the reference vector, with these
+            moments at the base configuration.
 
         Notes
         -----
@@ -3484,6 +3962,10 @@ class CorotationalModel(object):
     def calc_fint(self, c, inc=1., silent=True):
         r"""Internal force vector
 
+        Sums ``KC0 c`` of the linear elements, the von Kármán internal
+        forces and the co-rotational internal forces, less the
+        configuration-dependent part of the moments.
+
         Parameters
         ----------
         c : np.ndarray
@@ -3503,6 +3985,13 @@ class CorotationalModel(object):
             ``inc`` times the configuration-dependent part of the moments,
             see :class:`CorotationalModel`.
 
+        Notes
+        -----
+        `\boldsymbol{F}_{int}(\boldsymbol{c}) - \lambda \sum_k
+        (\boldsymbol{F}_k(\boldsymbol{c}) - \boldsymbol{F}_k(\boldsymbol{0}))`
+        with `\lambda` = ``inc``, such that the residual of the Notes of
+        :class:`CorotationalModel` is ``calc_fint(c, inc) - inc*calc_fext()``.
+
         """
         u = np.asarray(c, dtype=float)
         f = self._KC0_of('linear') @ u
@@ -3517,6 +4006,9 @@ class CorotationalModel(object):
 
     def calc_kC(self, c=None, NLgeom=False, silent=True):
         r"""Constitutive (material) stiffness matrix
+
+        :attr:`KC0` without a configuration, or the material part of the
+        tangent stiffness matrix of all the elements at ``c``.
 
         Parameters
         ----------
@@ -3552,6 +4044,10 @@ class CorotationalModel(object):
     def calc_kG(self, c=None, NLgeom=False, inc=1., silent=True):
         r"""Geometric stiffness matrix, including the load stiffness
 
+        A null matrix without a configuration, or the geometric part of
+        the tangent stiffness matrix of all the elements at ``c`` with the
+        load stiffness of the configuration-dependent moments.
+
         Parameters
         ----------
         c : np.ndarray or None, optional
@@ -3574,6 +4070,12 @@ class CorotationalModel(object):
             configuration-dependent moments. With :meth:`calc_kC` it is
             the exact Jacobian of :meth:`calc_fint`.
 
+        Notes
+        -----
+        The load stiffness is `-\lambda \sum_k \partial
+        \boldsymbol{F}_k/\partial \boldsymbol{c}` with `\lambda` =
+        ``inc``, see :meth:`add_moment` and :func:`dLambdaT_m`.
+
         """
         if c is None or not NLgeom:
             return csr_matrix((self.N, self.N))
@@ -3593,6 +4095,9 @@ class CorotationalModel(object):
     def nodal_rotations(self, c):
         r"""Rotation matrices of the nodes
 
+        Computed from the rotation vectors of ``c``, for the
+        post-processing.
+
         Parameters
         ----------
         c : np.ndarray
@@ -3611,6 +4116,10 @@ class CorotationalModel(object):
 
     def deformational_displacements(self, c):
         r"""Deformational displacements of the co-rotational elements
+
+        Computed with :meth:`CorotationalShell.kinematics` of each wrapper,
+        for the post-processing, e.g. the stress recovery with
+        :meth:`CorotationalShell.update_probe`.
 
         Parameters
         ----------
