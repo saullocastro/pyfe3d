@@ -1,3 +1,10 @@
+r"""Linear buckling of an orthotropic plate modelled with Quad4, with the
+material axes given by ``matx``
+
+The plate is modelled with the material direction ``matx`` at angles from
+-90 to 90 degrees in its plane; the buckling load must equal that of
+``thetadeg = 0`` to ``rtol = 1e-5``.
+"""
 import sys
 sys.path.append('..')
 
@@ -14,6 +21,9 @@ from pyfe3d.solver import linear_buckling
 
 @pytest.mark.slow
 def test_linear_buckling_plate(plot=False, mode=0):
+    """Buckling load of the plate for each material direction ``matx``,
+    compared with that of ``thetadeg = 0``; ``plot`` plots the mode
+    ``mode``"""
     # NOTE keep thetadeg = 0 as first, to work as reference wmax_ref
     thetadegs = [0, -90, -60, -30, 30, 60, 90]
     for thetadeg in thetadegs:

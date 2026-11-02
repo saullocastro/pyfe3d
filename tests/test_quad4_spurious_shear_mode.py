@@ -8,15 +8,18 @@ transverse shear of the versions up to 0.11, and the default ``shear_model =
 every thickness, which removes both modes, see
 ``test_the_default_has_no_zero_energy_mode``. Unless said otherwise, every
 Quad4 below is given ``shear_model = 0`` by :func:`set_legacy_shear`. The
-two modes are the ones of Figure 10 of the paper the integration scheme
-comes from:
+two modes are the ones of Figure 10 of Hughes, Taylor and Kanoknukulchai
+(1977), the paper the integration scheme comes from. The tests count the
+zero eigenvalues of single elements and meshes, compare the energies of the
+modes with those of the transverse shear strains of Bathe and Dvorkin
+(1985), Eqs. (6) and (7), and the torsion of a strip one element wide with
+the reference of MacNeal and Harder (1985), and with values pre-determined
+by these tests.
 
-    Hughes, T. J. R., Taylor, R. L. and Kanoknukulchai, W., 1977, "A simple
-    and efficient finite element for plate bending", IJNME, 11(10), pp.
-    1529-1543. doi:10.1002/nme.1620111005
-
-whose Section "Application to thick plates" states plainly that "a spectral
-analysis of the element stiffness, when one-point Gaussian quadrature is
+Notes
+-----
+The Section "Application to thick plates" of the paper states plainly that
+"a spectral analysis of the element stiffness, when one-point Gaussian quadrature is
 employed on the shear term, reveals that there are five zero eigenvalues, two
 more than the usual three rigid body modes. Thus the element by itself is
 rank deficient". The tests exist so that the extent of it is measured rather
@@ -95,16 +98,33 @@ that removes the modes without locking is an assumed transverse shear field,
 which :class:`pyfe3d.Quad4` uses for `h/\ell \ge 1` since 0.12.0, and for
 every thickness with the default ``shear_model = 1``, whereas with
 ``shear_model = 0`` the thin elements keep the one-point rule and the two
-modes:
+modes, see Dvorkin and Bathe (1984) and Bathe and Dvorkin (1985).
 
-    Dvorkin, E. N. and Bathe, K. J., 1984, "A continuum mechanics based
-    four-node shell element for general nonlinear analysis", Engineering
-    Computations, 1(1), pp. 77-88. doi:10.1108/eb023562
+References
+----------
+Hughes, T. J. R., Taylor, R. L. and Kanoknukulchai, W., 1977, "A simple
+and efficient finite element for plate bending", IJNME, 11(10), pp.
+1529-1543. doi:10.1002/nme.1620111005
 
-    Bathe, K. J. and Dvorkin, E. N., 1985, "A four-node plate bending element
-    based on Mindlin/Reissner plate theory and a mixed interpolation", IJNME,
-    21(2), pp. 367-383. doi:10.1002/nme.1620210213
+Dvorkin, E. N. and Bathe, K. J., 1984, "A continuum mechanics based
+four-node shell element for general nonlinear analysis", Engineering
+Computations, 1(1), pp. 77-88. doi:10.1108/eb023562
 
+Bathe, K. J. and Dvorkin, E. N., 1985, "A four-node plate bending element
+based on Mindlin/Reissner plate theory and a mixed interpolation", IJNME,
+21(2), pp. 367-383. doi:10.1002/nme.1620210213
+
+MacNeal, R. H. and Harder, R. L., 1985, "A proposed standard set of
+problems to test finite element accuracy", Finite Elements in Analysis and
+Design, 1(1), pp. 3-20. doi:10.1016/0168-874X(85)90003-4
+
+Brockman, R. A., 1987, "Dynamics of the bilinear Mindlin plate element",
+IJNME, 24(12), pp. 2343-2356. doi:10.1002/nme.1620241208
+
+Bischoff, M. and Bletzinger, K.-U., 2004, "Improving stability and accuracy
+of Reissner-Mindlin plate finite elements via algebraic subgrid scale
+stabilization", CMAME, 193(15-16), pp. 1517-1528.
+doi:10.1016/j.cma.2003.12.036
 """
 import sys
 sys.path.append('..')
@@ -374,6 +394,8 @@ def bl94_stabilisation(xy, prop):
     r"""Stabilisation of the transverse shear of Belytschko and Leviathan
     (1994), Eq. (4.13), p. 331, on the 24 degrees-of-freedom
 
+    Notes
+    -----
     The covariant shear strains `e_\xi = w_{,\xi} + x_{,\xi} r_y - y_{,\xi}
     r_x` at the mid-points B `(0, -1)` and D `(0, 1)`, and `e_\eta` at A
     `(-1, 0)` and C `(1, 0)`, their Eqs. (3.35)-(3.39); the nonconstant
@@ -606,13 +628,14 @@ def strip_twist(cls, Data, Probe, ny, triangles=False, legacy=True):
 def test_torsion_of_a_one_element_wide_strip():
     r"""The twist of such a strip is the hourglass pattern itself
 
-    Straight cantilever of
+    The tip twist of the straight cantilever of MacNeal and Harder (1985)
+    under a unit tip torque, with one and more elements across the width, is
+    compared with their theoretical value and with values pre-determined by
+    this test, for Quad4, Quad4R and Tria3R.
 
-        MacNeal, R. H. and Harder, R. L., 1985, "A proposed standard set of
-        problems to test finite element accuracy", Finite Elements in
-        Analysis and Design, 1(1), pp. 3-20. doi:10.1016/0168-874X(85)90003-4
-
-    Fig. 4, p. 7: length 6, width 0.2, thickness 0.1, `E = 10^7`, `\nu =
+    Notes
+    -----
+    Straight cantilever of MacNeal and Harder (1985), Fig. 4, p. 7: length 6, width 0.2, thickness 0.1, `E = 10^7`, `\nu =
     0.3`, 6 by 1 mesh, clamped root; twist under a unit tip torque, here a
     couple of normal forces at the two tip corners, theoretical value
     0.03208, Table 3, p. 10. Ratio to it, measured:
@@ -700,9 +723,9 @@ def test_torsion_of_a_one_element_wide_strip():
     assert strip_twist(Quad4, Quad4Data, Quad4Probe, 1)/ref > 100.
     twist = strip_twist(Quad4R, Quad4RData, Quad4RProbe, 1)
     assert np.isclose(twist, predetermined[Quad4R, 1], rtol=1e-6)
-    # NOTE grade B of MacNeal and Harder (1985), error at most 10 %
+    # NOTE grade B, error at most 10 %
     assert abs(twist/ref - 1.) <= 0.10
-    # NOTE grade F of MacNeal and Harder (1985), error above 50 %
+    # NOTE grade F, error above 50 %
     assert strip_twist(Tria3R, Tria3RData, Tria3RProbe, 1,
                        triangles=True)/ref - 1 > 0.5
     # NOTE grade D, error between 20 and 50 %, for the default Tria3R
