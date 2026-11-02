@@ -67,6 +67,13 @@ User guide
     conventions.rst
     element_choice.rst
     shell_properties.rst
+    shell_formulation.rst
+    shell_quad4.rst
+    shell_quad4r.rst
+    shell_tria3dsg.rst
+    shell_tria3r.rst
+    shell_drilling.rst
+    shell_mass.rst
     cross_sectional_analysis.rst
     linear_analyses.rst
     inertia_relief.rst
