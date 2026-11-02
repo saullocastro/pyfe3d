@@ -78,33 +78,33 @@ User guide
     :maxdepth: 1
     :caption: Usage examples
 
-    notebooks/ex_linear_static
-    notebooks/ex_beam_frame
-    notebooks/ex_linear_buckling_plate
-    notebooks/ex_linear_buckling_column
-    notebooks/ex_linear_buckling_cylinder_torsion
-    notebooks/ex_natural_frequency_plate
-    notebooks/ex_natural_frequency_cylinder
-    notebooks/ex_nonlinear_static
+    notebooks/ex_linear_static.nblink
+    notebooks/ex_beam_frame.nblink
+    notebooks/ex_linear_buckling_plate.nblink
+    notebooks/ex_linear_buckling_column.nblink
+    notebooks/ex_linear_buckling_cylinder_torsion.nblink
+    notebooks/ex_natural_frequency_plate.nblink
+    notebooks/ex_natural_frequency_cylinder.nblink
+    notebooks/ex_nonlinear_static.nblink
 
 .. toctree::
     :maxdepth: 1
     :caption: Tutorials
 
-    notebooks/tut-opt-lightweight-smeared-deflection-GA
-    notebooks/tut-opt-lightweight-smeared-deflection-SLSQP
-    notebooks/tut-opt-topology
-    notebooks/tut-timoshenko-beam-benchmarks
-    notebooks/tut-shell-lumped-mass
-    notebooks/tut-bench-macneal-harder
-    notebooks/tut-bench-shell-obstacle-course
-    notebooks/tut-nonlinear-benchmarks
-    notebooks/tut-corotational-large-rotations
-    notebooks/tut-prescribed-displacement-cantilever
-    notebooks/tut-prescribed-displacement-dome-riks
-    notebooks/tut-nafems-cap-axisymmetric
-    notebooks/tut-inertia-relief
-    notebooks/tut-inertia-relief-aircraft-ha144a
+    notebooks/tut-opt-lightweight-smeared-deflection-GA.nblink
+    notebooks/tut-opt-lightweight-smeared-deflection-SLSQP.nblink
+    notebooks/tut-opt-topology.nblink
+    notebooks/tut-timoshenko-beam-benchmarks.nblink
+    notebooks/tut-shell-lumped-mass.nblink
+    notebooks/tut-bench-macneal-harder.nblink
+    notebooks/tut-bench-shell-obstacle-course.nblink
+    notebooks/tut-nonlinear-benchmarks.nblink
+    notebooks/tut-corotational-large-rotations.nblink
+    notebooks/tut-prescribed-displacement-cantilever.nblink
+    notebooks/tut-prescribed-displacement-dome-riks.nblink
+    notebooks/tut-nafems-cap-axisymmetric.nblink
+    notebooks/tut-inertia-relief.nblink
+    notebooks/tut-inertia-relief-aircraft-ha144a.nblink
 
 
 pyfe3d API
