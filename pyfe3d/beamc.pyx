@@ -477,6 +477,34 @@ cdef class BeamC:
     probe, : :class:`.BeamCProbe` object
         Pointer to the probe.
 
+    Examples
+    --------
+    Linear stiffness matrix of one element of length ``2`` along `x`:
+
+    >>> import numpy as np
+    >>> from scipy.sparse import coo_matrix
+    >>> from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
+    >>> from pyfe3d.beamprop import BeamProp
+    >>> prop = BeamProp()
+    >>> prop.A, prop.E, prop.G = 0.0025, 203e9, 78e9
+    >>> prop.Iyy = prop.Izz = 0.05**4/12
+    >>> prop.J = prop.Iyy + prop.Izz
+    >>> x = np.array([0., 0., 0., 2., 0., 0.])
+    >>> data, probe = BeamCData(), BeamCProbe()
+    >>> beam = BeamC(probe)
+    >>> beam.c1, beam.c2 = 0, DOF
+    >>> beam.update_rotation_matrix(0., 1., 0., x)
+    >>> beam.update_probe_xe(x)
+    >>> KC0r = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0c = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0v = np.zeros(data.KC0_SPARSE_SIZE, dtype=DOUBLE)
+    >>> beam.update_KC0(KC0r, KC0c, KC0v, prop)
+    >>> KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(2*DOF, 2*DOF)).toarray()
+    >>> KC0.shape
+    (12, 12)
+    >>> float(KC0[0, 0])
+    253750000.0
+
     Notes
     -----
     Formulation based on reference [1]_.

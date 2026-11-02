@@ -165,6 +165,30 @@ cdef class Truss:
     probe, : :class:`.TrussProbe` object
         Pointer to the probe.
 
+    Examples
+    --------
+    Linear stiffness matrix of one element of length ``2`` along `x`:
+
+    >>> import numpy as np
+    >>> from scipy.sparse import coo_matrix
+    >>> from pyfe3d import Truss, TrussData, TrussProbe, DOF, INT, DOUBLE
+    >>> from pyfe3d.beamprop import BeamProp
+    >>> prop = BeamProp()
+    >>> prop.A, prop.E = 0.0025, 203e9
+    >>> x = np.array([0., 0., 0., 2., 0., 0.])
+    >>> data, probe = TrussData(), TrussProbe()
+    >>> truss = Truss(probe)
+    >>> truss.c1, truss.c2 = 0, DOF
+    >>> truss.update_rotation_matrix(x)
+    >>> truss.update_probe_xe(x)
+    >>> KC0r = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0c = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0v = np.zeros(data.KC0_SPARSE_SIZE, dtype=DOUBLE)
+    >>> truss.update_KC0(KC0r, KC0c, KC0v, prop)
+    >>> KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(2*DOF, 2*DOF)).toarray()
+    >>> float(KC0[0, 0]), float(KC0[0, 6])
+    (253750000.0, -253750000.0)
+
     Notes
     -----
     The strain energy of the element is
@@ -457,6 +481,14 @@ cdef class Truss:
         prop : :class:`.BeamProp` object
             Beam property object from where the stiffness and mass attributes
             are read from.
+
+        Notes
+        -----
+        The gradient of the strain energy of the notes of :class:`.Truss`
+        with the linear interpolation: `E A (u_1 - u_2)/L` and `E A (u_2 -
+        u_1)/L` for the axial forces, and `G J ({r_x}_1 - {r_x}_2)/L` and
+        `G J ({r_x}_2 - {r_x}_1)/L` for the torsion moments, in element
+        coordinates.
 
         """
         cdef double *ue
@@ -943,6 +975,13 @@ cdef class Truss:
         prop : :class:`.BeamProp` object
             Beam property object from where the stiffness and mass attributes
             are read from.
+
+        Notes
+        -----
+        The internal forces of :meth:`.update_probe_finte` transformed to
+        global coordinates, `\boldsymbol{f} = \boldsymbol{T}
+        \boldsymbol{f}_e`, with `\boldsymbol{T}` of the notes of
+        :class:`.Truss`.
 
         """
         cdef double *finte

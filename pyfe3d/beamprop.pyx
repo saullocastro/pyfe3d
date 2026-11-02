@@ -199,6 +199,23 @@ cdef class BeamProp:
         symmetric part is stored. It must be positive semi-definite, see
         above.
 
+    Examples
+    --------
+    A steel square section of side ``0.05``, in SI units:
+
+    >>> from pyfe3d.beamprop import BeamProp
+    >>> prop = BeamProp()
+    >>> prop.A = 0.05*0.05
+    >>> prop.E = 203e9
+    >>> prop.G = 78e9
+    >>> prop.Iyy = prop.Izz = 0.05**4/12
+    >>> prop.J = prop.Iyy + prop.Izz
+    >>> prop.intrho = 7830*prop.A
+    >>> prop.C.shape
+    (6, 6)
+    >>> float(prop.G12)
+    78000000000.0
+
     Notes
     -----
     The attributes are the following integrals over the cross section, where

@@ -3445,6 +3445,34 @@ class CorotationalModel(object):
     pyfe3d.solver.analysis.Analysis : the non-linear static solvers, which
         take the callables of the model.
 
+    Examples
+    --------
+    One co-rotational beam element; a rigid rotation of 90 degrees about `z`
+    gives no internal forces:
+
+    >>> import numpy as np
+    >>> from pyfe3d import BeamLR, BeamLRProbe, CorotationalModel, DOF
+    >>> from pyfe3d.beamprop import BeamProp
+    >>> prop = BeamProp()
+    >>> prop.A, prop.E, prop.G = 0.0025, 203e9, 78e9
+    >>> prop.Iyy = prop.Izz = 0.05**4/12
+    >>> prop.J = prop.Iyy + prop.Izz
+    >>> x = np.array([0., 0., 0., 2., 0., 0.])
+    >>> beam = BeamLR(BeamLRProbe())
+    >>> beam.c1, beam.c2 = 0, DOF
+    >>> beam.update_rotation_matrix(0., 1., 0., x)
+    >>> beam.update_probe_xe(x)
+    >>> model = CorotationalModel(x)
+    >>> wrapper = model.add(beam, prop, kinematics='corotational')
+    >>> model.KC0.shape
+    (12, 12)
+    >>> u = np.zeros(model.N)
+    >>> u[DOF:DOF + 2] = [-2., 2.]
+    >>> u[5::DOF] = 0.5*np.pi
+    >>> fint = model.calc_fint(u)
+    >>> bool(np.allclose(fint, 0., atol=1e-6))
+    True
+
     Notes
     -----
     The residual seen by the solvers is
