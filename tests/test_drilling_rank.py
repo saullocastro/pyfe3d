@@ -1,16 +1,16 @@
 r"""Rank and conditioning of the element with the physics-based drilling stiffness
 
-    Allman, D. J., 1984, "A compatible triangular element including vertex
-    rotations for plane elasticity analysis", Computers & Structures, 19(1-2),
-    pp. 1-8. doi:10.1016/0045-7949(84)90197-4
+The number of zero eigenvalues of the in-plane subspace `\{u, v, r_z\}` of
+single free elements and meshes is counted with the drilling enrichment of
+Allman (1984) and the regularisation of Hughes and Brezzi (1989), as in
+Ibrahimbegovic, Taylor and Wilson (1990), and compared with the count of
+the rigid-body modes, the spurious Allman mode being removed by the
+regularisation; the full element matrix is compared with the zero-energy
+modes of Hughes, Taylor and Kanoknukulchai (1977), Figure 10, and the two
+drilling models are compared with each other.
 
-    Hughes, T. J. R. and Brezzi, F., 1989, "On drilling degrees of freedom",
-    CMAME, 72(1), pp. 105-121. doi:10.1016/0045-7825(89)90124-2
-
-    Ibrahimbegovic, A., Taylor, R. L. and Wilson, E. L., 1990, "A robust
-    quadrilateral membrane finite element with drilling degrees of freedom",
-    IJNME, 30(3), pp. 445-457. doi:10.1002/nme.1620300305
-
+Notes
+-----
 Allman's enrichment on its own is rank-deficient by one. Setting `u_i = v_i =
 0` and `{r_z}_i = \omega_0` makes every edge amplitude `a_k =
 (\ell_k/8)({r_z}_i - {r_z}_j)` vanish, so the in-plane displacement field
@@ -43,6 +43,23 @@ transverse shear of the plate formulation, measured in
 ``test_quad4_spurious_shear_mode.py``. They predate the drilling work and are
 unrelated to it, which is why the assertion below compares the two drilling
 models against each other, besides checking the absolute count.
+
+References
+----------
+Allman, D. J., 1984, "A compatible triangular element including vertex
+rotations for plane elasticity analysis", Computers & Structures, 19(1-2),
+pp. 1-8. doi:10.1016/0045-7949(84)90197-4
+
+Hughes, T. J. R. and Brezzi, F., 1989, "On drilling degrees of freedom",
+CMAME, 72(1), pp. 105-121. doi:10.1016/0045-7825(89)90124-2
+
+Ibrahimbegovic, A., Taylor, R. L. and Wilson, E. L., 1990, "A robust
+quadrilateral membrane finite element with drilling degrees of freedom",
+IJNME, 30(3), pp. 445-457. doi:10.1002/nme.1620300305
+
+Hughes, T. J. R., Taylor, R. L. and Kanoknukulchai, W., 1977, "A simple and
+efficient finite element for plate bending", IJNME, 11(10), pp. 1529-1543.
+doi:10.1002/nme.1620111005
 
 """
 import sys

@@ -1,36 +1,42 @@
 r"""Consistency and patch tests for the physics-based drilling stiffness.
 
 The default drilling stiffness of the shell elements combines the enrichment
-of the in-plane displacement field of Allman, so that `r_z` produces membrane
-strain energy, with the regularisation of Hughes and Brezzi, which restores
-the rank of the enriched element and gives the added term a consistent,
-parameter-free meaning:
+of the in-plane displacement field of Allman (1984) with the regularisation
+of Hughes and Brezzi (1989), as in Ibrahimbegovic, Taylor and Wilson (1990).
+Three properties that the enrichment must not break are checked, on the
+irregular patch of MacNeal and Harder (1985), Fig. 2 and Table 2: rigid-body
+motions give no strain, states of constant strain are reproduced exactly
+(patch test), and the drilling term contributes no energy in those states.
 
-    Allman, D. J., 1984, "A compatible triangular element including vertex
-    rotations for plane elasticity analysis", Computers & Structures, 19(1-2),
-    pp. 1-8. doi:10.1016/0045-7949(84)90197-4
+Notes
+-----
+In the enrichment of Allman `r_z` produces membrane strain energy; the
+regularisation of Hughes and Brezzi restores the rank of the enriched element
+and gives the added term a consistent, parameter-free meaning. A rigid-body
+motion and any state of constant strain make every edge amplitude `a_k =
+(\ell_k/8)({r_z}_i - {r_z}_j)` vanish, because the drilling rotations are then
+all equal, so the enriched field collapses onto its bilinear part and
+reproduces the prescribed field exactly. The drilling term contributes no
+energy in those states either, for any value of the regularisation
+parameter, which is the qualitative difference from the K6ROT penalty, whose
+added energy is non-zero and merely kept small.
 
-    Hughes, T. J. R. and Brezzi, F., 1989, "On drilling degrees of freedom",
-    CMAME, 72(1), pp. 105-121. doi:10.1016/0045-7825(89)90124-2
+References
+----------
+Allman, D. J., 1984, "A compatible triangular element including vertex
+rotations for plane elasticity analysis", Computers & Structures, 19(1-2),
+pp. 1-8. doi:10.1016/0045-7949(84)90197-4
 
-    Ibrahimbegovic, A., Taylor, R. L. and Wilson, E. L., 1990, "A robust
-    quadrilateral membrane finite element with drilling degrees of freedom",
-    IJNME, 30(3), pp. 445-457. doi:10.1002/nme.1620300305
+Hughes, T. J. R. and Brezzi, F., 1989, "On drilling degrees of freedom",
+CMAME, 72(1), pp. 105-121. doi:10.1016/0045-7825(89)90124-2
 
-The irregular patch is the one proposed for plates in Fig. 2 and Table 2 of:
+Ibrahimbegovic, A., Taylor, R. L. and Wilson, E. L., 1990, "A robust
+quadrilateral membrane finite element with drilling degrees of freedom",
+IJNME, 30(3), pp. 445-457. doi:10.1002/nme.1620300305
 
-    MacNeal, R. H. and Harder, R. L., 1985, "A proposed standard set of
-    problems to test finite element accuracy", Finite Elements in Analysis and
-    Design, 1(1), pp. 3-20. doi:10.1016/0168-874X(85)90003-4
-
-The three properties checked here are the ones that the enrichment must not
-break. A rigid-body motion and any state of constant strain make every edge
-amplitude `a_k = (\ell_k/8)({r_z}_i - {r_z}_j)` vanish, because the drilling
-rotations are then all equal, so the enriched field collapses onto its
-bilinear part and reproduces the prescribed field exactly. The drilling term
-contributes no energy in those states either, for any value of the
-regularisation parameter, which is the qualitative difference from the K6ROT
-penalty, whose added energy is non-zero and merely kept small.
+MacNeal, R. H. and Harder, R. L., 1985, "A proposed standard set of
+problems to test finite element accuracy", Finite Elements in Analysis and
+Design, 1(1), pp. 3-20. doi:10.1016/0168-874X(85)90003-4
 
 """
 import sys
