@@ -3,7 +3,10 @@ Finite elements
 
 The modules of the elements, each with the element class, its ``Data``
 class with the sizes of the sparse arrays and its ``Probe`` class with the
-buffers in element coordinates. :doc:`element_choice` compares them.
+buffers in element coordinates. :doc:`element_choice` compares them. The
+theory of the shell elements is in :doc:`shell_formulation` and in the
+pages of each element, :doc:`shell_quad4`, :doc:`shell_quad4r`,
+:doc:`shell_tria3dsg` and :doc:`shell_tria3r`.
 
 .. toctree::
     :titlesonly:
