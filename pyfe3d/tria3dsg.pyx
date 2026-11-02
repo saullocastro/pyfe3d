@@ -592,6 +592,32 @@ cdef class Tria3DSG:
        Structures, 209, 67-78, 2019.
        https://doi.org/10.1016/j.compstruct.2018.10.058
 
+    Examples
+    --------
+    The constitutive stiffness matrix of one triangular element of an
+    isotropic plate:
+
+    >>> import numpy as np
+    >>> from scipy.sparse import coo_matrix
+    >>> from pyfe3d import Tria3DSG, Tria3DSGData, Tria3DSGProbe, DOF, INT, DOUBLE
+    >>> from pyfe3d.shellprop_utils import isotropic_plate
+    >>> x = np.array([0., 0., 0., 1., 0., 0., 1., 1., 0.])
+    >>> prop = isotropic_plate(thickness=0.01, E=70e9, nu=0.3)
+    >>> data = Tria3DSGData()
+    >>> elem = Tria3DSG(Tria3DSGProbe())
+    >>> elem.n1, elem.n2, elem.n3 = 1, 2, 3
+    >>> elem.c1, elem.c2, elem.c3 = 0, 6, 12
+    >>> elem.update_rotation_matrix(x)
+    >>> elem.update_probe_xe(x)
+    >>> KC0r = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0c = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0v = np.zeros(data.KC0_SPARSE_SIZE, dtype=DOUBLE)
+    >>> elem.update_KC0(KC0r, KC0c, KC0v, prop)
+    >>> N = 3*DOF
+    >>> KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).toarray()
+    >>> print(KC0.shape, elem.area, np.allclose(KC0, KC0.T))
+    (18, 18) 0.5 True
+
     """
     cdef public int eid, pid
     cdef public int n1, n2, n3
@@ -660,6 +686,60 @@ cdef class Tria3DSG:
             directions coincide.
             Only the direction of the vector is used. Default ``0.``.
 
+        Notes
+        -----
+        With `\boldsymbol{v}_{12} = \boldsymbol{x}_2 - \boldsymbol{x}_1` and
+        `\boldsymbol{v}_{13} = \boldsymbol{x}_3 - \boldsymbol{x}_1`, the element
+        axes are
+
+        .. math::
+
+            \boldsymbol{e}_x = \frac{\boldsymbol{v}_{12}}{\|\boldsymbol{v}_{12}\|},
+            \qquad
+            \boldsymbol{e}_z = \frac{\boldsymbol{v}_{12} \times
+            \boldsymbol{v}_{13}}{\|\boldsymbol{v}_{12} \times
+            \boldsymbol{v}_{13}\|}, \qquad
+            \boldsymbol{e}_y = \boldsymbol{e}_z \times \boldsymbol{e}_x
+
+        and `\boldsymbol{T}_{3\times 3} = [\boldsymbol{e}_x, \boldsymbol{e}_y,
+        \boldsymbol{e}_z]`. The material direction `\boldsymbol{x}_m` is
+        projected onto the element plane as `\boldsymbol{x}_m' =
+        (\boldsymbol{e}_z \times \boldsymbol{x}_m) \times \boldsymbol{e}_z`,
+        normalized, and with `\theta` the angle from `\boldsymbol{e}_x` to
+        `\boldsymbol{x}_m'`, positive towards `\boldsymbol{e}_y`, `m_{11} =
+        m_{22} = \cos\theta = \boldsymbol{x}_m' \cdot \boldsymbol{e}_x`,
+        `m_{21} = -m_{12} = \sin\theta`, the sign of `\sin\theta` being that
+        of `\boldsymbol{x}_m \cdot \boldsymbol{e}_y`. The material direction
+        is ignored, and `m` left at the identity, when its norm, or the norm of
+        `\boldsymbol{e}_z \times \boldsymbol{x}_m` after its normalization, is
+        not larger than `10^{-10} \|\boldsymbol{v}_{12} \times
+        \boldsymbol{v}_{13}\|`.
+
+        Three details of this construction, shared with
+        :class:`pyfe3d.quad4.Quad4` and :class:`pyfe3d.tria3r.Tria3R`,
+        matter; getting them wrong shows up as a mesh-independent error in
+        the strain energy of a laminate with `B \ne 0`, invisible for an
+        isotropic plate:
+
+        - the material direction is *projected* onto the element plane and
+          renormalized before the angle is taken. The raw dot product
+          `\boldsymbol{x}_m \cdot \boldsymbol{e}_x` is the cosine scaled by
+          the in-plane part of `\boldsymbol{x}_m`, so `m` would not be a
+          rotation matrix whenever `\boldsymbol{x}_m` has a component along
+          the element normal;
+        - `\boldsymbol{x}_m \cdot \boldsymbol{e}_y > 0` gives a *negative*
+          `m_{12}`, the rotation being from the material to the element
+          coordinate system. The opposite convention silently mirrors every
+          angle ply;
+        - when `\boldsymbol{x}_m` is parallel to the element normal the
+          projection is empty, and `m` is left at the identity, i.e. material
+          and element directions coincide. This is the case of the normal of
+          a flat mesh passed as the material direction, and it matters for
+          triangles in particular, because the two triangles of a diagonally
+          split cell have element frames 45 degrees apart, so a fallback that
+          depends on the element frame would orient the laminate differently
+          in each of them.
+
         """
         cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk
         cdef double x1i, x1j, x1k, x2i, x2j, x2k, x3i, x3j, x3k
@@ -720,32 +800,8 @@ cdef class Tria3DSG:
             self.r33 = zk
 
             # NOTE same construction as Quad4 and Tria3R, which agree with
-            #      each other line by line. Three things in it matter and an
-            #      earlier hand-written version of this method got all three
-            #      wrong, which showed up as a mesh-independent error in the
-            #      strain energy of a laminate with B != 0, invisible for an
-            #      isotropic plate:
-            #
-            #      - the material direction must be *projected* onto the
-            #        element plane and renormalised before the angle is
-            #        taken. The raw dot product xmat.x_elem is the cosine
-            #        scaled by the in-plane part of xmat, so m would not be
-            #        a rotation matrix whenever xmat has a component along
-            #        the element normal;
-            #      - the sign of the sine follows xmat.y_elem > 0 giving a
-            #        *negative* m12, the rotation being from the material to
-            #        the element coordinate system. The opposite convention
-            #        silently mirrors every angle ply;
-            #      - when xmat is parallel to the element normal the
-            #        projection is empty, and m must then be left at the
-            #        identity set in __cinit__, i.e. material and element
-            #        directions coincide. This is the case a caller hits by
-            #        passing the normal of a flat mesh as the material
-            #        direction, and it matters for triangles in particular,
-            #        because the two triangles of a diagonally split cell
-            #        have element frames 45 degrees apart, so a fallback
-            #        that depends on the element frame orients the laminate
-            #        differently in each of them.
+            #      each other line by line; the three details that matter are
+            #      in the Notes
             self.m11 = 1.
             self.m12 = 0.
             self.m21 = 0.
@@ -800,6 +856,13 @@ cdef class Tria3DSG:
             1-D array of size ``3*M``, for ``M`` nodes, arranged as ``x_1,
             y_1, z_1, ..., x_M, y_M, z_M``, dimension of length.
 
+        Notes
+        -----
+        For each node, `\{x, y, z\}_e^\top = \boldsymbol{T}_{3\times 3}^\top
+        \{x, y, z\}^\top`, with `\boldsymbol{T}_{3\times 3}` of
+        :meth:`.update_rotation_matrix`, whose columns are the element axes in
+        global coordinates.
+
         """
         cdef int i, j
         cdef int c[3]
@@ -849,6 +912,14 @@ cdef class Tria3DSG:
             degrees-of-freedom of each node in sequence; translations with
             dimension of length and rotations dimensionless.
 
+        Notes
+        -----
+        For each node, `\{u, v, w\}_e^\top = \boldsymbol{T}_{3\times 3}^\top
+        \{u, v, w\}^\top` and `\{r_x, r_y, r_z\}_e^\top =
+        \boldsymbol{T}_{3\times 3}^\top \{r_x, r_y, r_z\}^\top`, with
+        `\boldsymbol{T}_{3\times 3}` of :meth:`.update_rotation_matrix`,
+        whose columns are the element axes in global coordinates.
+
         """
         cdef int i, j, k
         cdef int c[3]
@@ -890,6 +961,15 @@ cdef class Tria3DSG:
         coordinates. The methods that compute stiffness matrices, internal
         forces or the mass matrix compute the area themselves and also store
         it in ``area``, so they do not depend on this method.
+
+        Notes
+        -----
+        With the vertices `(x_i, y_i)` of nodes 1 to 3 in element coordinates,
+
+        .. math::
+
+            A = \frac{1}{2} \left| (x_2 - x_1)(y_3 - y_1) - (x_3 - x_1)(y_2 -
+            y_1) \right|
 
         """
         cdef double x1, x2, x3, y1, y2, y3
@@ -963,7 +1043,14 @@ cdef class Tria3DSG:
         modes, for a state of constant transverse shear and for every
         Kirchhoff curvature state, and those properties are linear in the
         operator, so the mean inherits them, while it removes the dependence
-        on the node numbering of a single operator.
+        on the node numbering of a single operator. The gap is obtained by
+        integrating the rotations along the edges away from one node, which
+        makes a single operator depend on which node that is: measured on an
+        irregular triangle, the element matrix moves by 14 and 17 per cent
+        for the two cyclic relabellings, while :class:`pyfe3d.tria3r.Tria3R`
+        with ``shear_model = 0``, whose shear comes from a symmetric centroid
+        evaluation, moves by `3 \times 10^{-16}`. A mesh generator is free to
+        order the nodes of a triangle in any way, hence the average.
 
         ``BLdrilling`` is the residual `r_z - \theta_z` of the drilling
         regularisation, with `\theta_z = (v_{,x} - u_{,y})/2`. Only its `r_z`
@@ -1065,8 +1152,7 @@ cdef class Tria3DSG:
         BLgxy[7] = S2_x
         BLgxy[13] = S3_x
 
-        # curvature, same convention as Quad4 and Tria3R:
-        #     kxx = dry/dx,  kyy = -drx/dy,  kxy = -drx/dx + dry/dy
+        # curvature, same convention as Quad4 and Tria3R, see the Notes
         BLkxx[4] = S1_x
         BLkxx[10] = S2_x
         BLkxx[16] = S3_x
@@ -1088,35 +1174,9 @@ cdef class Tria3DSG:
         Sw_y[8] = S2_y
         Sw_y[14] = S3_y
 
-        # NOTE transverse shear, the discrete shear gap of Bletzinger,
-        #      Bischoff and Ramm (2000), symmetrised over the three
-        #      choices of starting node.
-        #
-        #      The gap is obtained by integrating the rotations along
-        #      the edges away from one node, which makes the plain
-        #      operator depend on which node that is: measured on an
-        #      irregular triangle, the element matrix moves by 14 and
-        #      17 per cent for the two cyclic relabellings, while
-        #      Tria3R with shear_model = 0, whose shear comes from a
-        #      symmetric centroid evaluation, moves by 3e-16. A mesh generator is free to
-        #      order the nodes of a triangle any way it likes, so that
-        #      is not acceptable, and the three operators are averaged.
-        #
-        #      Averaging costs nothing in accuracy. Each of the three is
-        #      separately exact for the rigid-body modes, for a state of
-        #      constant transverse shear and for every Kirchhoff
-        #      curvature state, and those properties are linear in the
-        #      operator, so the mean inherits all of them. See
-        #      tests/test_tria3dsg.py.
-        #
-        #      With p the starting node and q either of the other two,
-        #      the gap is
-        #
-        #          dw_q = (w_q - w_p) + (ry_p + ry_q) dx/2
-        #                             - (rx_p + rx_q) dy/2
-        #
-        #      and the assumed strain is the gradient of the
-        #      interpolated gap, sum_q dw_q grad(N_q), with dw_p = 0.
+        # NOTE transverse shear, the discrete shear gap symmetrised over the
+        #      three choices of starting node p, q being either of the other
+        #      two, see the Notes and tests/test_tria3dsg.py
         S_x[0] = S1_x
         S_x[1] = S2_x
         S_x[2] = S3_x
@@ -1150,12 +1210,11 @@ cdef class Tria3DSG:
                 BLgyz[DOF*ip + 3] -= cy*0.5*dy
                 BLgyz[DOF*iq + 3] -= cy*0.5*dy
 
-        # NOTE drilling constraint of Hughes and Brezzi, r_z - theta_z with
-        #      theta_z = (v_,x - u_,y)/2. Only the r_z part varies over the
-        #      element; the entries written here are its centroid values,
-        #      S_i = 1/3, which is what a caller reading the operator back
-        #      expects. _update_probe_KC0ve() overwrites them with the
-        #      three-point rule, which is what the stiffness matrix needs
+        # NOTE drilling constraint, r_z - theta_z, see the Notes. The
+        #      entries written here are its centroid values, which is what
+        #      a caller reading the operator back expects.
+        #      _update_probe_KC0ve() overwrites them with the three-point
+        #      rule, which is what the stiffness matrix needs
         BLdrilling[0] = S1_y/2.
         BLdrilling[6] = S2_y/2.
         BLdrilling[12] = S3_y/2.
@@ -1196,7 +1255,12 @@ cdef class Tria3DSG:
 
         with `A_{ts}` divided by `1 + \alpha \ell^2/h^2` when
         ``alpha_shear_locking`` `= \alpha \neq 0`, `\ell` being the longest
-        edge and `h` the total thickness ``prop.h``.
+        edge and `h` the total thickness ``prop.h``. This optional algebraic
+        stabilisation is off by default: the discrete shear gap is already
+        locking-free, and it is there only to reproduce the element of
+        Bischoff and Bletzinger [1]_ and Castro et al. [2]_, where the same
+        factor is applied on top of a discrete shear gap field with `\alpha`
+        near 0.1.
 
         The drilling term `\gamma_{r_z} \int_A B_{r_z}^\top B_{r_z} dA`,
         with `B_{r_z}` the row ``BLdrilling`` and `\gamma_{r_z}` given by
@@ -1209,6 +1273,18 @@ cdef class Tria3DSG:
         integrand is quadratic in the shape functions, so the three-point
         interior rule, with the barycentric coordinates `(2/3, 1/6, 1/6)` and
         their permutations, each with the weight ``area/3``, is exact.
+
+        References
+        ----------
+        .. [1] Bischoff, M., and Bletzinger, K.-U., Improving stability and
+           accuracy of Reissner-Mindlin plate finite elements via algebraic
+           subgrid scale stabilization, Computer Methods in Applied
+           Mechanics and Engineering, 193(15-16), 1517-1528, 2004.
+           https://doi.org/10.1016/j.cma.2003.12.036
+        .. [2] Castro, S. G. P., Donadon, M. V., and Guimaraes, T. A. M.,
+           ES-PIM applied to buckling of variable angle tow laminates,
+           Composite Structures, 209, 67-78, 2019.
+           https://doi.org/10.1016/j.compstruct.2018.10.058
 
         """
         cdef int i, j, m, n, ip
@@ -1261,11 +1337,8 @@ cdef class Tria3DSG:
         A44 = Atse[0]; A45 = Atse[1]; A55 = Atse[3]
 
         # NOTE optional algebraic stabilisation of the transverse shear,
-        #      off by default. The discrete shear gap above is already
-        #      locking-free, so this is here only to reproduce the element
-        #      of Bischoff and Bletzinger (2004) and Castro et al. (2019),
-        #      where the same factor is applied on top of a DSG field with
-        #      alpha near 0.1. See the alpha_shear_locking attribute.
+        #      off by default, see the Notes and the alpha_shear_locking
+        #      attribute
         if self.alpha_shear_locking != 0.:
             x1 = self.probe.xe[0]; y1 = self.probe.xe[1]
             x2 = self.probe.xe[3]; y2 = self.probe.xe[4]

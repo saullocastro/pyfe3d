@@ -70,8 +70,23 @@ cdef class LaminationParameters:
 
 cdef inline bint _poisson_admissible(double nuij, double ei,
                                      double ej) noexcept nogil:
-    # NOTE |nu_ij| < (e_i/e_j)**0.5, Jones (1999), Eq. (2.51), and its limit
-    #      nu_ij = 0 for e_i = 0 < e_j; no bound for e_j = 0
+    r"""Whether the Poisson's ratio ``nuij`` is admissible with the Young
+    moduli ``ei`` and ``ej``
+
+    Used by :meth:`.MatLamina.rebuild`; always ``True`` for ``ej <= 0``.
+
+    Notes
+    -----
+    The bound of a positive-definite orthotropic material, `|\nu_{ij}| <
+    (e_i/e_j)^{1/2}` for `e_j > 0` (Jones [1]_, Eq. (2.51)), with its limit
+    `\nu_{ij} = 0` for `e_i = 0 < e_j`; no bound is imposed for `e_j = 0`.
+
+    References
+    ----------
+    .. [1] Jones, R. M., Mechanics of Composite Materials, Second Edition,
+       Taylor & Francis, Philadelphia, 1999.
+
+    """
     if ej > 0:
         if ei > 0:
             return nuij*nuij*ej < ei
@@ -105,11 +120,22 @@ def _not_positive_definite(MatLamina mat, double det):
 
 
 cdef double _scaled_cond1(double *M) noexcept nogil:
-    # NOTE condition number in the 1-norm of the symmetric 6x6 matrix M
-    #      scaled by its diagonal, S M S with S = diag(M)^(-1/2), inverted by
-    #      Gauss-Jordan elimination with partial pivoting; INFINITY for a
-    #      non-positive diagonal term, inf or nan for a vanishing pivot,
-    #      divided by with cdivision, nan propagated; M is overwritten
+    r"""Condition number in the 1-norm of the symmetric 6x6 matrix ``M``
+    scaled by its diagonal
+
+    ``M`` is stored row by row and is overwritten by the scaled matrix.
+    Returns ``INFINITY`` for a non-positive diagonal term, and ``inf`` or
+    ``nan`` for a vanishing pivot (division with ``cdivision``, ``nan``
+    propagated).
+
+    Notes
+    -----
+    With `S = \mathrm{diag}(M)^{-1/2}`, the scaled matrix `\bar{M} = S M S`
+    has a unit diagonal and its condition number `\|\bar{M}\|_1
+    \|\bar{M}^{-1}\|_1` is returned, with the inverse computed by
+    Gauss-Jordan elimination with partial pivoting.
+
+    """
     cdef int i, j, k, p
     cdef double n1, n2, col, piv, f, tmp
     cdef double sq[6]
@@ -342,7 +368,9 @@ cdef class MatLamina:
         \nu_{13}\nu_{31} - \nu_{23}\nu_{32} - \nu_{12}\nu_{23}\nu_{31} -
         \nu_{13}\nu_{21}\nu_{32}`, the constitutive constants are the
         three-dimensional stiffnesses of the orthotropic material in its
-        principal axes [2]_:
+        principal axes [2]_ (also Hansen and Hvejsen, 2007, p. 43;
+        TODO(author): full reference of Hansen and Hvejsen 2007, cited only
+        by its key ``hansen_hvejsen_2007`` in a former code comment):
 
         .. math::
 
@@ -470,8 +498,8 @@ cdef class MatLamina:
         nu31 = self.nu31
         nu23 = self.nu23
         nu32 = self.nu32
-        # NOTE positive-definite material (Jones, 1999, Sec. 2.4.2), with
-        #      zero moduli as its limit, see the Notes
+        # NOTE positive-definite material, with zero moduli as its limit,
+        #      see the Notes
         det = 1-nu12*nu21-nu23*nu32-nu31*nu13-2*nu21*nu32*nu13
         if not (e1 >= 0 and e2 >= 0 and e3 >= 0 and self.g12 >= 0
                 and self.g13 >= 0 and self.g23 >= 0 and det > 0
@@ -489,8 +517,7 @@ cdef class MatLamina:
             self.c33 = e3*(1    - nu12*nu21)/(delta*e1*e2)
         else:
             # NOTE zero e1 or e2, e.g. an antiplane core: the same constants
-            #      with delta e1 e2 = 1 - nu12 nu21 - ..., without dividing by
-            #      the moduli, see the Notes
+            #      without dividing by the moduli, see the Notes
             self.c11 = e1*(1    - nu23*nu32)/det
             self.c12 = e1*(nu21 + nu31*nu23)/det
             self.c13 = e1*(nu31 + nu21*nu32)/det
@@ -503,9 +530,9 @@ cdef class MatLamina:
 
         self.plane_stress = plane_stress
         if plane_stress:
-            # NOTE plane-stress reduced stiffnesses, sigma_33 = 0, Jones
-            #      (1999), Eq. (2.66), the same as in Lamina.rebuild; with
-            #      e3 = 0 the same operations as the three-dimensional branch
+            # NOTE plane-stress reduced stiffnesses, the same as in
+            #      Lamina.rebuild, see the Notes; with e3 = 0 the same
+            #      operations as the three-dimensional branch
             den = 1 - self.nu12 * self.nu21
             self.q11 = self.e1 / den
             self.q12 = self.e1*self.nu21 / den
@@ -517,12 +544,7 @@ cdef class MatLamina:
             self.q32 = 0.
             self.q33 = 0.
         else:
-            # from references:
-            #   hansen_hvejsen_2007 page 43
-            #
-            #   Guerdal Z., R. T. Haftka and P. Hajela (1999), Design and
-            #   Optimization of Laminated Composite Materials,
-            #   Wiley-Interscience.
+            # NOTE three-dimensional stiffnesses, see the Notes
             den = (1 - self.nu12 * self.nu21
                      - self.nu13 * self.nu31
                      - self.nu23 * self.nu32
@@ -540,16 +562,8 @@ cdef class MatLamina:
         self.q66 = self.g12
         self.q44 = self.g23
         self.q55 = self.g13
-        #
-        # from reference:
-        #   Jones R. M. (1999), Mechanics of Composite Materials, second edn,
-        #   Taylor & Francis, Inc., 325 Chestnut Street, Philadelphia,
-        #   PA 19106. ISBN 1-56032-712-X
-        # slightly changed to include the transverse shear terms u6 and u7,
-        #   taken from ABAQUS Example Problems Manual, vol1, example 1.2.2
-        #   Laminated composite shell: buckling of a
-        #   cylindrical panel with a circular hole
-        #
+        # NOTE invariants, including the transverse shear terms u6 and u7,
+        #      see the Notes
         self.u1 = (3*self.q11 + 3*self.q22 + 2*self.q12 + 4*self.q66) / 8.
         self.u2 = (self.q11 - self.q22) / 2.
         self.u3 = (self.q11 + self.q22 - 2*self.q12 - 4*self.q66) / 8.
@@ -986,7 +1000,16 @@ cdef int PLYDATA_SIZE = 10
 
 
 cdef inline void _congruence3(double *T, double *M, double *out) noexcept nogil:
-    r"""Symmetric 3x3 congruence `out = T M T^\top`, all stored row by row"""
+    r"""Symmetric 3x3 congruence of ``M`` by ``T``, written in ``out``
+
+    ``T``, ``M`` and ``out`` are 3x3 matrices stored row by row; ``M`` is
+    symmetric and only its upper triangle is computed, then mirrored.
+
+    Notes
+    -----
+    `\mathrm{out} = T M T^\top`.
+
+    """
     cdef int i, j
     cdef double TM[9]
     for i in range(3):
@@ -1634,6 +1657,28 @@ cdef class ShellProp:
        Theory and Analysis, Second Edition, CRC Press, 2003.
        https://doi.org/10.1201/b12409
 
+    Examples
+    --------
+    A cross-ply laminate built ply by ply; :func:`.laminated_plate` does the
+    same from the stacking sequence:
+
+    >>> from pyfe3d.shellprop import ShellProp, Lamina
+    >>> from pyfe3d.shellprop_utils import read_laminaprop
+    >>> mat = read_laminaprop((142.5e9, 8.7e9, 0.28, 5.1e9, 5.1e9, 3.4e9))
+    >>> prop = ShellProp()
+    >>> for thetadeg in [0, 90, 90, 0]:
+    ...     ply = Lamina()
+    ...     ply.thetadeg = thetadeg
+    ...     ply.h = 0.125e-3
+    ...     ply.matlamina = mat
+    ...     ply.rebuild()
+    ...     prop.plies.append(ply)
+    >>> prop.calc_constitutive_matrix()
+    >>> print(prop.h, prop.ABD.shape)
+    0.0005 (6, 6)
+    >>> print(round(prop.A11/1e6, 2), round(prop.D11, 3))
+    37.98 1.316
+
     """
     def __init__(ShellProp self):
         self.h = 0.
@@ -1745,16 +1790,21 @@ cdef class ShellProp:
     def Ats(self):
         r"""Transverse shear stiffness matrix ``[[A44, A45], [A45, A55]]``
 
-        Index 4 corresponds to `yz` and index 5 to `xz`, such that `\{Q_y,
-        Q_x\}^\top = A_{ts} \{\gamma_{yz}, \gamma_{xz}\}^\top`. The shear correction
-        is already applied, see :meth:`.calc_transverse_shear_stiffness`.
-        A new array is returned at each access, such that changing it does not
-        change the attributes.
+        Index 4 corresponds to `yz` and index 5 to `xz`, see the Notes. The
+        shear correction is already applied, see
+        :meth:`.calc_transverse_shear_stiffness`. A new array is returned at
+        each access, such that changing it does not change the attributes.
 
         Returns
         -------
         Ats : ndarray
             Array of shape ``(2, 2)``, force per unit length.
+
+        Notes
+        -----
+        The matrix relates the transverse shear forces to the transverse
+        shear strains, `\{Q_y, Q_x\}^\top = A_{ts} \{\gamma_{yz},
+        \gamma_{xz}\}^\top`, see the Notes of :class:`.ShellProp`.
 
         """
         return np.asarray(self.get_Ats())
@@ -1914,7 +1964,8 @@ cdef class ShellProp:
             Ats[3] = S[0]/detS
             return
 
-        # NOTE tensor rotation A_e = T_gamma^T A T_gamma, T_gamma = [[m22, m12], [m21, m11]]
+        # NOTE tensor rotation of the transverse shear stiffness, as in
+        #      _rotate_ply
         t44 = self.A44
         t45 = self.A45
         t55 = self.A55
@@ -1929,9 +1980,7 @@ cdef class ShellProp:
 
         The element coordinate system is such that the material direction
         makes an angle `\theta` with the element `x` axis, measured towards
-        the element `y` axis, as used by the shell elements, with `m_{11} =
-        \cos\theta`, `m_{12} = -\sin\theta`, `m_{21} = \sin\theta` and `m_{22}
-        = \cos\theta`.
+        the element `y` axis, as used by the shell elements, see the Notes.
 
         Parameters
         ----------
@@ -1943,6 +1992,14 @@ cdef class ShellProp:
         A, B, D, Ats : tuple of np.ndarray
             The 3x3 matrices ``A``, ``B``, ``D`` and the 2x2 matrix ``Ats`` in
             the element coordinate system. See :meth:`.calc_Ats_element`.
+
+        Notes
+        -----
+        The matrices are those of :meth:`.get_constitutive_element` with the
+        in-plane rotation from the material to the element frame `m_{11} =
+        \cos\theta`, `m_{12} = -\sin\theta`, `m_{21} = \sin\theta` and
+        `m_{22} = \cos\theta`, the rotation that the shell elements compute
+        in ``update_rotation_matrix`` from a material direction.
 
         """
         cdef double thetarad, c, s
@@ -3633,9 +3690,8 @@ cpdef ShellProp shellprop_from_LaminationParameters(double thickness, MatLamina
     lam = ShellProp()
     lam.h = thickness
     lam.offset = offset
-    # NOTE int z dz and int z^2 dz of the constant terms with z measured from
-    #      the reference surface: h^2/4 fB = h offset and h^3/12 fD = h^3/12
-    #      + h offset^2
+    # NOTE factors of the constant terms of B and D with z measured from
+    #      the reference surface, see the Notes
     fB = 4*offset/thickness
     fD = 1 + 12*(offset/thickness)**2
 
@@ -3760,8 +3816,7 @@ cdef class GradABD:
     :meth:`calc_LP_grad`. The object can be pickled.
 
     Attributes
-    ==========
-
+    ----------
     gradAij, gradBij, gradDij, gradAtsij : double[:, ::1]
         The shapes of these gradient matrices are:
 
