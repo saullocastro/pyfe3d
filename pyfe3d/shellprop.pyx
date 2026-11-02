@@ -368,9 +368,7 @@ cdef class MatLamina:
         \nu_{13}\nu_{31} - \nu_{23}\nu_{32} - \nu_{12}\nu_{23}\nu_{31} -
         \nu_{13}\nu_{21}\nu_{32}`, the constitutive constants are the
         three-dimensional stiffnesses of the orthotropic material in its
-        principal axes [2]_ (also Hansen and Hvejsen, 2007, p. 43;
-        TODO(author): full reference of Hansen and Hvejsen 2007, cited only
-        by its key ``hansen_hvejsen_2007`` in a former code comment):
+        principal axes [2]_:
 
         .. math::
 
