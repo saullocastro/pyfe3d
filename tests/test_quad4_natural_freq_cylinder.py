@@ -51,12 +51,12 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     circumference and nearly square elements::
 
         ntheta    n = 2      n = 3
-           16    +3.68 %   +16.06 %
-           24    +1.65 %    +6.58 %
-           32    +0.87 %    +3.55 %
-           48    +0.36 %    +1.48 %
-           64    +0.18 %    +0.78 %
-           96    +0.05 %    +0.28 %
+           16    +3.76 %   +16.15 %
+           24    +1.68 %    +6.64 %
+           32    +0.89 %    +3.59 %
+           48    +0.37 %    +1.52 %
+           64    +0.19 %    +0.81 %
+           96    +0.06 %    +0.30 %
 
     so the element converges to the three-dimensional solution: Table 2.6
     (concluded), p. 53, of the same reference puts the Flugge shell theory
@@ -73,7 +73,7 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
             1         48      1440    0.12169936  0.13185390    1 s
             2         96      5760    0.12132261  0.13026712   11 s
 
-    with the default ``shear_model = 1`` of Quad4 since 0.12.0, the assumed
+    with the default ``shear_model = 1`` of Quad4, the assumed
     transverse shear strains of the MITC4 element (measured on 2026-10-30);
     the one-point transverse shear of ``shear_model = 0`` gave 0.12168186,
     0.13180857, 0.12131378 and 0.13024089, up to 0.034 per cent less.

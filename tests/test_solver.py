@@ -295,9 +295,9 @@ def test_natural_frequency_plate():
 
     With ``b/h = 250`` the frequency of the Mindlin plate, with its rotary
     inertia, is 0.003 % below the reference. With 60x18 elements and the
-    consistent mass matrix the frequency is 0.32 % above it, with 20x6
-    elements 3.05 %, with 40x12 elements 0.74 %, with 80x24 elements
-    0.17 %.
+    consistent mass matrix the frequency is 0.35 % above it, with 20x6
+    elements 3.28 %, with 40x12 elements 0.80 %, with 80x24 elements
+    0.19 %.
     """
     KC0uu, KGuu, Muu = plate_matrices(with_mass=True, nx=61, ny=19)
     omegan, eigvecs = natural_frequency(KC0uu, Muu, num_eigvalues=4)
