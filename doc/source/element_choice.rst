@@ -211,7 +211,7 @@ Beams, truss and spring
         equations of the beam with an uncoupled section, such that one
         element gives the exact tip deflection of a cantilever with shear
         deformation, and the nodal displacements of a frame under nodal
-        loads, see :doc:`ex_beam_frame`. With couplings in the sectional
+        loads, see ``tests/test_beamc_frame.py``. With couplings in the sectional
         stiffness matrix other than extension-twist, e.g. an axis off the
         centroid or the bending-shear couplings of a composite section, its
         shape functions are derived from the same equations with the full
@@ -233,10 +233,10 @@ Beams, truss and spring
         refinement, quadratically, and needs many more elements, see
         ``tests/test_timoshenko_beam_literature.py``. Since version 0.12.0
         its buckling load includes the reduction due to shear deformation,
-        see :doc:`ex_linear_buckling_column`, and its constant slopes leave
+        see ``tests/test_beam_linear_buckling_3D_column.py``, and its constant slopes leave
         it free of membrane locking in the geometrically non-linear
         cantilever under an end moment, as :class:`.BeamC` with its
-        averaged axial strain, see :doc:`tut-nonlinear-benchmarks`. Its
+        averaged axial strain, see ``tests/test_nonlinear_benchmarks_sze2004.py``. Its
         interpolation does not depend on the sectional stiffness matrix,
         and it converges as fast with strong bending-shear couplings, e.g.
         of composite box beams, as without them, while :class:`.BeamC` is

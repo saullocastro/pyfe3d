@@ -59,7 +59,7 @@ The reference support
 The reference support sets to zero as many dofs as there are rigid-body
 modes, six for a free structure in 3D, fewer with ``bfix``, e.g. two, heave
 and pitch, for the half model of the airplane of
-:doc:`tut-inertia-relief-aircraft-ha144a`, whose plane of symmetry and
+``tests/test_inertia_relief_ha144a.py``, whose plane of symmetry and
 fore-aft translation are constrained by ``bfix``. It must be
 statically determinate: it suppresses every rigid-body mode without
 restraining any deformation, i.e. the rows of the rigid-body modes at the
@@ -114,22 +114,6 @@ d'Alembert forces added to the external forces. The difference is the
 choice of these dofs: a support of a linear static analysis restrains the
 structure and carries the loads, whereas the reference support of inertia
 relief only fixes the rigid-body motion and carries no load.
-
-
-Worked examples
----------------
-
-- :doc:`tut-inertia-relief`: springs and point masses, with the closed-form
-  solutions, a free beam under a balanced load set, and a free beam and bar
-  under an end force, against closed-form solutions;
-- :doc:`tut-inertia-relief-aircraft-ha144a`: the stick model of an airplane
-  in trimmed level flight, the MSC Nastran example HA144A, against the
-  published results. The published aerodynamic box forces, transferred to
-  the beams with Nastran's linear splines (SPLINE2), which carry the
-  moments of the forces through their rigid arms, reproduce the published
-  bar forces and displacements to the printed digits; an inverse-distance
-  load transfer and the loads of a vortex lattice method are compared as
-  well (see the references of the tutorial).
 
 
 References

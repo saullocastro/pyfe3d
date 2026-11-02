@@ -30,7 +30,7 @@ stiffnesses times `1`, `z` and `z^2`, and `\boldsymbol{A}_{ts}` = ``[[A44, A45],
 - :func:`.shellprop_from_LaminationParameters`, from the thickness, a
   :class:`.MatLamina` and the :class:`.LaminationParameters`, whose
   gradients are given by :class:`.GradABD`, e.g. for the optimisation of
-  the stiffness distribution, see the tutorials.
+  the stiffness distribution.
 
 The ply stiffnesses are those of plane stress, `\sigma_{33} = 0`, see
 :meth:`.Lamina.rebuild`, which depend on ``E11``, ``E22``, ``nu12``,

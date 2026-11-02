@@ -34,7 +34,7 @@ Key components
 * **Tests as examples** – scripts in ``tests/`` demonstrate how to build models
   and call the solver.  They act as both regression tests and usage examples.
 * **Documentation** – reStructuredText files under ``doc/`` are built with
-  Sphinx.  The tutorials are Jupyter notebooks in ``doc/source``.
+  Sphinx.
 * **Requirements** – ``requirements.txt`` lists runtime dependencies while other
   files specify packages for CI and documentation builds.
 
@@ -45,7 +45,7 @@ Suggested next steps
    compile the Cython extensions.
 2. **Explore the tests** in ``tests/`` as practical examples of typical
    analyses.
-3. **Browse the documentation** in ``doc/`` for tutorials and API references.
+3. **Browse the documentation** in ``doc/`` for the theory and the API references.
 4. **Create your own models** by adapting the test scripts.  Start with simple
    elements such as ``Quad4`` or ``BeamC``.
 5. **Check the citation** file if you use ``pyfe3d`` in research.
