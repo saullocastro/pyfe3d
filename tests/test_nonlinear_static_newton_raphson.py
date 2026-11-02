@@ -280,11 +280,10 @@ def test_triangles_under_refinement():
     """Which triangle converges to the quadrilateral answer, nonlinearly
 
     The nonlinear plate is refined and the triangles are compared with
-    Quad4R. Tria3DSG and the default Tria3R since 0.12.0, which takes the
-    discrete shear gap field of Tria3DSG, ``shear_model = 1``, close the gap.
-    Tria3R with ``shear_model = 0`` and ``alpha_shear_locking = 0.7``, the
-    centroid-sampled shear that was its default up to 0.11, set explicitly
-    here, settles about two and a half per cent away from the quadrilateral
+    Quad4R. Tria3DSG and the default Tria3R, which takes the discrete shear
+    gap field of Tria3DSG, ``shear_model = 1``, close the gap. Tria3R with
+    ``shear_model = 0`` and ``alpha_shear_locking = 0.7``, the
+    centroid-sampled shear, set explicitly here, settles about two and a half per cent away from the quadrilateral
     and stops improving, which is the same signature that stabilisation
     leaves on the linear problem in ``tests/test_tria3dsg.py`` and on the
     buckling problem in ``tests/test_quad4_linear_buckling_cylinder_displ.py``.

@@ -44,10 +44,6 @@ of :class:`pyfe3d.Quad4`. With the default ``shear_model = 1``, also since
 0.12.0, the thin elements take the assumed strains as well and there is no
 gate; the tests below check both.
 
-TODO(author): full reference of the I-beam of "Yu et al. (2005), Table 5"
-(Yu, W., Hodges, D. H., J. Am. Helicopter Soc., 50(1), 2005, as cited in
-``tests/test_vabs_isotropic.py``?).
-
 References
 ----------
 Hughes, T. J. R., Taylor, R. L. and Kanoknukulchai, W., 1977, "A simple
@@ -65,6 +61,10 @@ based on Mindlin/Reissner plate theory and a mixed interpolation", IJNME,
 MacNeal, R. H. and Harder, R. L., 1985, "A proposed standard set of
 problems to test finite element accuracy", Finite Elements in Analysis and
 Design, 1(1), pp. 3-20. doi:10.1016/0168-874X(85)90003-4
+
+Yu, W., Hodges, D. H., Volovoi, V. V. and Fuchs, E. D., 2005, "A
+generalized Vlasov theory for composite beams", Thin-Walled Structures,
+43(9), pp. 1493-1511. doi:10.1016/j.tws.2005.02.003
 
 """
 import sys

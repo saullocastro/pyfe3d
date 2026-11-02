@@ -54,10 +54,7 @@ def check_null_rows_cols(A, name='A'):
     known displacements are partitioned out before calling the solvers,
     e.g. ``KC0uu = KC0[bu, :][:, bu]`` with the boolean mask ``bu`` of the
     free degrees-of-freedom, or with ``Analysis(..., bu=bu)``, see
-    :class:`.FreeDofs`. This deliberately differs from structsolve, whose
-    semi-analytical Ritz models apply the boundary conditions by zeroing
-    approximation functions, which leaves null rows and columns that its
-    solvers remove.
+    :class:`.FreeDofs`.
 
     """
     A = csr_matrix(A)

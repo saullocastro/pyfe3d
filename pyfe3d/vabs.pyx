@@ -165,13 +165,6 @@ def isotropic(double E, double nu):
         If ``E`` is not positive or ``nu`` is not between ``-1`` and
         ``0.5``, both excluded.
 
-    Examples
-    --------
-    >>> from pyfe3d.vabs import isotropic
-    >>> D = isotropic(E=70e9, nu=0.3)
-    >>> D.shape
-    (6, 6)
-
     Notes
     -----
     The shear modulus is `G = E/(2 (1 + \nu))`, and the matrix is
@@ -214,15 +207,6 @@ def orthotropic(double E1, double E2, double E3, double G12, double G13,
     ------
     ValueError
         If the matrix is not positive definite.
-
-    Examples
-    --------
-    >>> from pyfe3d.vabs import orthotropic
-    >>> D = orthotropic(E1=20.59e6, E2=1.42e6, E3=1.42e6, G12=0.87e6,
-    ...                 G13=0.87e6, G23=0.696e6, nu12=0.30, nu13=0.30,
-    ...                 nu23=0.34)
-    >>> D.shape
-    (6, 6)
 
     Notes
     -----
@@ -371,13 +355,6 @@ def rotate_material(D, double theta1, double theta3):
     ------
     ValueError
         If ``D`` does not have shape ``(6, 6)``.
-
-    Examples
-    --------
-    >>> from pyfe3d.vabs import orthotropic, rotate_material
-    >>> D = orthotropic(20.59e6, 1.42e6, 1.42e6, 0.87e6, 0.87e6, 0.696e6,
-    ...                 0.30, 0.30, 0.34)
-    >>> Drot = rotate_material(D, theta1=90., theta3=15.)
 
     Notes
     -----
@@ -1460,17 +1437,6 @@ cdef class CrossSection:
         sec : CrossSection
             The translated cross section.
 
-        Examples
-        --------
-        >>> import numpy as np
-        >>> from pyfe3d.vabs import CrossSection, isotropic
-        >>> x2, x3 = np.meshgrid([-0.5, 0., 0.5], [-0.5, 0., 0.5])
-        >>> elements = [[0, 1, 4, 3], [1, 2, 5, 4], [3, 4, 7, 6], [4, 5, 8, 7]]
-        >>> sec = CrossSection(x2.ravel(), x3.ravel(), elements,
-        ...                    materials=[isotropic(1., 0.3)], mat_ids=[0]*4)
-        >>> float(sec.translated(0.5, 0.).x2.min())
-        -1.0
-
         """
         elements = [self.conn[e, :self.nen[e]]
                     for e in range(self.conn.shape[0])]
@@ -1513,18 +1479,6 @@ cdef class CrossSection:
             As :meth:`calc_stiffness`.
         RuntimeError
             As :meth:`calc_stiffness`.
-
-        Examples
-        --------
-        >>> import numpy as np
-        >>> from pyfe3d.vabs import CrossSection, isotropic
-        >>> x2, x3 = np.meshgrid([-0.5, 0., 0.5], [-0.5, 0., 0.5])
-        >>> elements = [[0, 1, 4, 3], [1, 2, 5, 4], [3, 4, 7, 6], [4, 5, 8, 7]]
-        >>> sec = CrossSection(x2.ravel(), x3.ravel(), elements,
-        ...                    materials=[isotropic(1., 0.3)], mat_ids=[0]*4)
-        >>> sec.calc_vlasov()
-        >>> sec.Kv.shape
-        (5, 5)
 
         Notes
         -----
@@ -1735,24 +1689,6 @@ cdef class CrossSection:
             If ``eps`` or ``deps`` does not have size ``4``, or if
             ``convention`` is not ``'yu'`` or ``'pyfe3d'``.
 
-        Examples
-        --------
-        Torsional warping per unit twist rate `\kappa_1 = 1` of a
-        rectangle, which is antisymmetric about both axes:
-
-        >>> import numpy as np
-        >>> from pyfe3d.vabs import CrossSection, isotropic
-        >>> x2, x3 = np.meshgrid([-1., 0., 1.], [-0.25, 0., 0.25])
-        >>> elements = [[0, 1, 4, 3], [1, 2, 5, 4], [3, 4, 7, 6], [4, 5, 8, 7]]
-        >>> sec = CrossSection(x2.ravel(), x3.ravel(), elements,
-        ...                    materials=[isotropic(1., 0.3)], mat_ids=[0]*4)
-        >>> sec.calc_stiffness()
-        >>> w = sec.warping([0., 1., 0., 0.])
-        >>> w.shape
-        (9, 3)
-        >>> bool(np.isclose(w[0, 0], -w[2, 0]))
-        True
-
         Notes
         -----
         The warping is `\boldsymbol{w} = \boldsymbol{V}_0 \boldsymbol{\epsilon}
@@ -1800,17 +1736,6 @@ cdef class CrossSection:
         -------
         tri : np.ndarray
             Node indices of the triangles, shape ``(n_triangles, 3)``.
-
-        Examples
-        --------
-        >>> import numpy as np
-        >>> from pyfe3d.vabs import CrossSection, isotropic
-        >>> x2, x3 = np.meshgrid([-0.5, 0., 0.5], [-0.5, 0., 0.5])
-        >>> elements = [[0, 1, 4, 3], [1, 2, 5, 4], [3, 4, 7, 6], [4, 5, 8, 7]]
-        >>> sec = CrossSection(x2.ravel(), x3.ravel(), elements,
-        ...                    materials=[isotropic(1., 0.3)], mat_ids=[0]*4)
-        >>> sec.triangles().shape
-        (8, 3)
 
         """
         tri = []
@@ -1891,14 +1816,6 @@ def yu_to_pyfe3d(C, double h=1.):
     --------
     pyfe3d_to_yu : the inverse conversion.
 
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from pyfe3d.vabs import yu_to_pyfe3d
-    >>> C = np.diag([1., 2., 3., 4., 5., 6.])
-    >>> np.diag(yu_to_pyfe3d(C))
-    array([1., 2., 3., 4., 6., 5.])
-
     Notes
     -----
     Without warping, the strains of the two conventions are related by
@@ -1959,14 +1876,6 @@ def pyfe3d_to_yu(Cs, double h=1.):
     --------
     yu_to_pyfe3d : the direct conversion.
 
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from pyfe3d.vabs import pyfe3d_to_yu, yu_to_pyfe3d
-    >>> C = np.diag([1., 2., 3., 4.])
-    >>> np.allclose(pyfe3d_to_yu(yu_to_pyfe3d(C)), C)
-    True
-
     Notes
     -----
     `\boldsymbol{C}_{sec}^{VABS} = \boldsymbol{H}^{-1} \boldsymbol{T}_s
@@ -2005,14 +1914,6 @@ def classical_from_timoshenko(Kt):
     ------
     ValueError
         If ``Kt`` does not have the shape ``(6, 6)``.
-
-    Examples
-    --------
-    >>> import numpy as np
-    >>> from pyfe3d.vabs import classical_from_timoshenko
-    >>> Kc = classical_from_timoshenko(np.diag([1., 2., 3., 4., 5., 6.]))
-    >>> np.diag(Kc)
-    array([1., 4., 5., 6.])
 
     Notes
     -----

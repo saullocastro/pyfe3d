@@ -8,18 +8,22 @@ Mindlin solution, Seide and Stowell (1950), Eq. (1), for a thick plate,
 checkerboard content of `w` in the buckling mode, which detects a spurious
 hourglass mode; a third test checks that the geometric stiffness KG is the
 one-point quadrature of its integrand and gives no geometric stiffness to
-the hourglass pattern of `w`.
+the hourglass pattern of `w`. KG of :class:`pyfe3d.Quad4R`, and the
+geometrically nonlinear terms that share its quadrature, take the slopes
+`w_{,x}` and `w_{,y}` at the centroid; slopes taken at the two-by-two
+points instead give large negative errors, see the Notes.
 
-Up to version 0.11, the geometric stiffness KG of :class:`pyfe3d.Quad4R`,
-and the geometrically nonlinear terms that share its quadrature, took the
-slopes `w_{,x}` and `w_{,y}` at the two-by-two Gauss-Legendre points. The
-hourglass pattern of `w`, `w = \xi \eta` with zero rotations, then had the
-geometric stiffness of the full quadrature, whereas KC0, integrated at the
-centroid, resists it only with the artificial hourglass stiffness. A linear
-buckling analysis could return a spurious mode of `w` alternating in sign
-from node to node below the physical buckling load. Simply supported square
-plate, side 0.5, uniaxial compression, lowest buckling load against the
-Mindlin solution, with the slopes at the two-by-two points::
+Notes
+-----
+With the slopes `w_{,x}` and `w_{,y}` at the two-by-two Gauss-Legendre
+points, the hourglass pattern of `w`, `w = \xi \eta` with zero rotations,
+has the geometric stiffness of the full quadrature, whereas KC0, integrated
+at the centroid, resists it only with the hourglass stiffness. A linear
+buckling analysis can then return a spurious mode of `w` alternating in
+sign from node to node below the physical buckling load. Simply supported
+square plate, side 0.5, uniaxial compression, lowest buckling load against
+the Mindlin solution, with the slopes at the two-by-two points and an
+artificial hourglass stiffness in place of the physical stabilisation::
 
     plate                                 mesh     h/l     error
     b/h = 10, hard simple supports        12x12    1.20    -3.0 %
@@ -29,12 +33,11 @@ Mindlin solution, with the slopes at the two-by-two points::
     isotropic value, hard simple supports
 
 With the slopes at the centroid the pattern carries no geometric stiffness
-and the same cases gave +4.7, +2.6, +0.3 and +7.0 %, converging to the
-Mindlin solution; with the physical stabilisation of Belytschko and
-Leviathan (1994), used since 0.12.0, +1.5, +0.8, +0.09 and +2.7 %.
+and the same cases give +4.7, +2.6, +0.3 and +7.0 % with that artificial
+hourglass stiffness, converging to the Mindlin solution, and +1.5, +0.8,
++0.09 and +2.7 % with the physical stabilisation of Belytschko and
+Leviathan [4]_ used by Quad4R.
 
-Notes
------
 The Mindlin solution of the hard simply supported plate, ``w = 0`` and the
 rotation about the axis of each edge equal to zero, is the Navier solution
 of a plate with transverse shear stiffness ``D_Q``, given by Seide and
@@ -49,7 +52,7 @@ A55`` reduced to 1/1000, two half-waves along the load give a load only
 
 The tolerances of the tests use grade B of MacNeal and Harder [3]_, p. 14,
 an error of at most 10 %, as a bound; the physical stabilisation of the
-bending and of the transverse shear used since 0.12.0 is that of Belytschko
+bending and of the transverse shear used by Quad4R is that of Belytschko
 and Leviathan [4]_.
 
 References
@@ -154,33 +157,31 @@ def buckling_ss_plate(n, h, shear_factor=1.):
 
 
 def test_thick_elements():
-    r"""``b/h = 10``: errors against the Mindlin solution, measured on
-    2026-10-29 (time of one buckling analysis, ``OMP_NUM_THREADS=1``):
+    r"""``b/h = 10``: errors against the Mindlin solution, measured:
 
-    =======  =========  ==========
-    mesh     error      up to 0.11
-    =======  =========  ==========
-    12x12    +1.489 %   +4.667 %
-    16x16    +0.833 %   +2.606 %
-    24x24    +0.369 %   +1.152 %
-    32x32    +0.207 %   +0.647 %
-    48x48    +0.092 %   +0.287 %
-    64x64    +0.052 %   +0.161 %
-    =======  =========  ==========
+    =======  =========
+    mesh     error
+    =======  =========
+    12x12    +1.489 %
+    16x16    +0.833 %
+    24x24    +0.369 %
+    32x32    +0.207 %
+    48x48    +0.092 %
+    64x64    +0.052 %
+    =======  =========
 
     converging as the square of the element size to the Mindlin solution,
     a mesh error; a regression of the hourglass pattern gives the negative
-    errors of the module documentation. Following the policy of the tests
+    errors of the Notes of the module. Following the policy of the tests
     whose reference is reached only on fine meshes, the 12x12 and 16x16
     meshes are compared with the errors pre-determined by this same test,
     as buckling loads with ``rtol = 1e-4`` for the round-off of the
     eigenvalue solver, and with grade B of MacNeal and Harder (1985), p. 14
     (at most 10 %), as a bound, see the module documentation for the
-    reference. Until 0.12.0 the 48x48 mesh was also run, with bounds that
-    followed the measured errors. The values changed in 0.12.0 with the
-    physical stabilisation of the bending and of the transverse shear of
-    Belytschko and Leviathan (1994), see :mod:`pyfe3d.quad4r`; the 64x64
-    mesh takes 5 s."""
+    reference. The errors are those of the physical stabilisation of the
+    bending and of the transverse shear of Belytschko and Leviathan (1994),
+    see :mod:`pyfe3d.quad4r`; one buckling analysis of the 64x64 mesh
+    takes about 5 s with ``OMP_NUM_THREADS=1``."""
     predetermined = {13: 0.014893691920608187, 17: 0.008331130410677456}
     for n in (13, 17):
         err, checkerboard = buckling_ss_plate(n, h=0.05)
@@ -193,14 +194,12 @@ def test_thick_elements():
 
 def test_low_transverse_shear_stiffness():
     r"""``b/h = 100`` with ``A44 = A55`` reduced to 1/1000: errors against
-    the Mindlin solution, measured on 2026-10-29: +2.700, +0.662, +0.165
-    and +0.041 % with 8x8, 16x16, 32x32 and 64x64 elements (0.05 to 5 s),
-    converging as the square of the element size, a mesh error; up to 0.11,
-    before the physical stabilisation of Belytschko and Leviathan (1994),
-    +7.001, +1.745, +0.436 and +0.109 %. The 8x8 and 16x16 meshes are compared with the errors
-    pre-determined by this same test, as buckling loads with ``rtol =
-    1e-4``, and with grade B of MacNeal and Harder (1985), see
-    :func:`test_thick_elements`."""
+    the Mindlin solution, measured: +2.700, +0.662, +0.165 and +0.041 %
+    with 8x8, 16x16, 32x32 and 64x64 elements (0.05 to 5 s), converging as
+    the square of the element size, a mesh error. The 8x8 and 16x16 meshes
+    are compared with the errors pre-determined by this same test, as
+    buckling loads with ``rtol = 1e-4``, and with grade B of MacNeal and
+    Harder (1985), see :func:`test_thick_elements`."""
     predetermined = {9: 0.026996360698192, 17: 0.0066243690464657945}
     for n in (9, 17):
         err, checkerboard = buckling_ss_plate(n, h=0.005, shear_factor=1e-3)

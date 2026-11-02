@@ -264,12 +264,6 @@ def diagonal_preconditioner(K, floor=1.e-30):
     entries, which usually reduces the condition number, see the notes of
     :mod:`pyfe3d.solver.eigen`.
 
-    Examples
-    --------
-    >>> P = diagonal_preconditioner(Kuu)                  # doctest: +SKIP
-    >>> eigvals, eigvecs = eigsh(A=P@KGuu@P, M=P@Kuu@P)   # doctest: +SKIP
-    >>> eigvecs = P @ eigvecs                             # doctest: +SKIP
-
     """
     d = np.abs(np.asarray(K.diagonal(), dtype=float))
     return diags(1.0/np.sqrt(np.maximum(d, floor)))
@@ -2308,7 +2302,7 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
     `\boldsymbol{K}_G`, `\det(\boldsymbol{K}_{C0} + \lambda \boldsymbol{K}_G) = 0` for every `\lambda`, a
     singular pencil whose computed eigenvalues are arbitrary, and otherwise
     `\lambda = 0` is a spurious load multiplier. It is therefore reported
-    instead of being removed, unlike in structsolve, see
+    instead of being removed, see
     :func:`.check_null_rows_cols`. A null row of `\boldsymbol{K}_G`, at a
     degree-of-freedom that the load does not destabilize, only gives an
     infinite load multiplier.
@@ -2754,7 +2748,7 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
     `\boldsymbol{M}`, `\det(\boldsymbol{K}_{C0} - \omega_n^2 \boldsymbol{M}) = 0` for every `\omega_n^2`,
     a singular pencil whose computed eigenvalues are arbitrary, and
     otherwise `\omega_n^2 = 0` is a spurious frequency. It is therefore
-    reported instead of being removed, unlike in structsolve, see
+    reported instead of being removed, see
     :func:`.check_null_rows_cols`.
 
     A mass matrix without rotary inertia, and one without inertia associated

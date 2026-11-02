@@ -139,14 +139,13 @@ def test_stiffness_is_invariant_to_the_offset():
 
 
 def legacy_tria3r(el):
-    r"""Give a Tria3R the centroid-sampled transverse shear of before 0.12.0
+    r"""Give a Tria3R the centroid-sampled transverse shear
 
-    ``shear_model = 0`` with ``alpha_shear_locking = 0.7``, the former
-    defaults. Since 0.12.0 Tria3R takes the discrete shear gap field of
-    Tria3DSG by default, ``shear_model = 1``, see
-    ``tests/test_tria3r_shear_model_dsg.py``. A Quad4 is given the one-point
-    transverse shear of before 0.12.0, ``shear_model = 0``; the default
-    since 0.12.0 is the MITC4 field, ``shear_model = 1``.
+    ``shear_model = 0`` with ``alpha_shear_locking = 0.7``. By default
+    Tria3R takes the discrete shear gap field of Tria3DSG, ``shear_model =
+    1``, see ``tests/test_tria3r_shear_model_dsg.py``. A Quad4 is given the
+    one-point transverse shear, ``shear_model = 0``; its default is the
+    MITC4 field, ``shear_model = 1``.
     """
     if isinstance(el, Tria3R):
         el.shear_model = 0
@@ -234,8 +233,7 @@ def test_quads_reproduce_a_constant_transverse_shear_state():
 def test_tria3r_scales_the_shear_stiffness_with_the_element_size():
     r"""Tria3R with ``shear_model = 0`` does not reproduce the state
 
-    That is the centroid-sampled transverse shear, the default before
-    0.12.0, set explicitly here. Its ``alpha_shear_locking`` stabilisation
+    That is the centroid-sampled transverse shear, set explicitly here. Its ``alpha_shear_locking`` stabilisation
     divides `A_{44}`, `A_{45}` and `A_{55}` by a factor of the longest edge
     `\ell` and the thickness `h`, so the energy of a constant transverse
     shear state comes out too small by exactly that factor. The
@@ -248,8 +246,8 @@ def test_tria3r_scales_the_shear_stiffness_with_the_element_size():
     ``test_quad4_linear_buckling_cylinder_displ.py``.
 
     This test pins the factor down so that any future change to the
-    stabilisation is visible. The default Tria3R since 0.12.0, the discrete
-    shear gap field of ``shear_model = 1`` with ``alpha_shear_locking = 0``,
+    stabilisation is visible. The default Tria3R, the discrete shear gap
+    field of ``shear_model = 1`` with ``alpha_shear_locking = 0``,
     reproduces the state to round-off, ``rtol=1e-12`` as for the
     quadrilaterals, which is checked here as well.
 
@@ -422,11 +420,10 @@ def test_shear_only_subspace_is_the_mechanism_the_stabilisation_opens():
     measured for a cylinder in
     ``test_quad4_linear_buckling_cylinder_displ.py``.
 
-    Quad4 with ``shear_model = 0``, the one-point transverse shear of
-    before 0.12.0, is the reference, and Tria3R with ``shear_model = 0``,
-    the centroid-sampled shear of before 0.12.0 set explicitly, is softer by
-    exactly its stabilisation factor. The default Tria3R since 0.12.0, the
-    discrete shear gap field, carries no factor and is printed for
+    Quad4 with ``shear_model = 0``, the one-point transverse shear, is the
+    reference, and Tria3R with ``shear_model = 0``, the centroid-sampled
+    shear set explicitly, is softer by exactly its stabilisation factor. The
+    default Tria3R, the discrete shear gap field, carries no factor and is printed for
     comparison. Quad4R and the default Quad4 are checked against a stored
     ratio to the reference.
 
@@ -564,11 +561,11 @@ def test_the_stabilisation_error_is_a_discretisation_error():
     `1/n^2`.
 
     The product is only the softening of the physical shear. It is not the
-    error of Tria3R with ``shear_model = 0``, the default before 0.12.0,
-    whose centroid-sampled shear field still locks under the factor: on a simply supported square plate with `a/h = 1000` under
-    a uniform pressure the error of its centre deflection stalls at -14 per
-    cent from 32x32 to 128x128 squares cut in two, see the Notes of
-    :mod:`pyfe3d.tria3r`.
+    error of Tria3R with ``shear_model = 0``, whose centroid-sampled shear
+    field still locks under the factor: on a simply supported square plate
+    with `a/h = 1000` under a uniform pressure the error of its centre
+    deflection stalls at -14 per cent from 32x32 to 128x128 squares cut in
+    two, see the Notes of :mod:`pyfe3d.tria3r`.
 
     Notes
     -----
@@ -615,12 +612,12 @@ def test_small_alpha_makes_tria3r_lock():
     (2019) the factor is applied on top of an assumed-strain or discrete
     shear gap field, whose operator already contains the cure of the shear
     locking, and `\alpha` is near `0.1`. Tria3R with ``shear_model = 0``,
-    the default before 0.12.0 and set explicitly here, has no such
-    formulation, its transverse shear coming from a single point at the
-    centroid, so reducing `\alpha` towards the literature value makes it
-    lock. Measured here on the constrained strip, whose exact answer is
-    elementary. The default Tria3R since 0.12.0, the discrete shear gap
-    field with `\alpha = 0`, is printed for comparison.
+    set explicitly here, has no such formulation, its transverse shear
+    coming from a single point at the centroid, so reducing `\alpha`
+    towards the literature value makes it lock. Measured here on the
+    constrained strip, whose exact answer is elementary. The default
+    Tria3R, the discrete shear gap field with `\alpha = 0`, is printed for
+    comparison.
 
     Notes
     -----
