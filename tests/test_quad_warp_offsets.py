@@ -2,12 +2,10 @@ r"""Rigid offsets of warped Quad4 and Quad4R, attribute ``warp_offsets``
 
 With ``warp_offsets = 1``, the default, the flat element of a warped
 quadrilateral is linked to the nodes by rigid offsets, ``J`` of the
-element documentation: ``KC0 = J^T KC0_flat J``, ``M = J^T M_flat J``,
-``fint = J^T fint_flat(J ue)``, also with the von Kármán terms of
-``nonlinear=1``, ``KG = KG_flat(J ue) + K_E``, with the eccentricity
-geometric stiffness ``K_E`` on the rotations, and ``KCNL = J^T
-KCNL_flat(J ue) J - K_E``, such that ``KC0 + KCNL + KG`` is the exact
-Jacobian of the von Kármán internal forces. Checked here:
+element documentation, which transform the matrices and internal forces of
+the flat element, also with the von Kármán terms of ``nonlinear=1``, and add
+the eccentricity geometric stiffness ``K_E`` on the rotations. Checked
+here:
 
 - flat elements: every matrix and force bit for bit equal with
   ``warp_offsets`` 0 and 1;
@@ -30,11 +28,25 @@ Jacobian of the von Kármán internal forces. Checked here:
   geometrically non-linear with the von Kármán strains against
   ``kinematics='corotational'`` of :class:`.CorotationalModel`.
 
+Notes
+-----
+The relations checked are ``KC0 = J^T KC0_flat J``, ``M = J^T M_flat J``,
+``fint = J^T fint_flat(J ue)``, also with the von Kármán terms of
+``nonlinear=1``, ``KG = KG_flat(J ue) + K_E`` and ``KCNL = J^T
+KCNL_flat(J ue) J - K_E``, such that ``KC0 + KCNL + KG`` is the exact
+Jacobian of the von Kármán internal forces.
+
+The twisted beam is that of MacNeal and Harder [1]_, Fig. 6, p. 8; the
+reference tip displacements along the load ``MH_REF`` are those of their
+Table 3, p. 10, for the "in-plane" load (along z, the width at the tip) and
+the "out-of-plane" load (along y, the width at the root).
+
 References
 ----------
 .. [1] MacNeal, R. H. and Harder, R. L., A proposed standard set of
    problems to test finite element accuracy, Finite Elements in Analysis
-   and Design, 1, 3-20, 1985. https://doi.org/10.1016/0168-874X(85)90003-4
+   and Design, 1, 3-20, 1985.
+   https://doi.org/10.1016/0168-874X(85)90003-4
 
 """
 import sys
@@ -450,12 +462,12 @@ def test_warped_KG_corotational(name):
 
 
 # ---------------------------------------------------------------------------
-# twisted cantilever, MacNeal and Harder (1985)
+# twisted cantilever benchmark
 # ---------------------------------------------------------------------------
 L_TW, B_TW, T_TW, E_TW, NU_TW = 12., 1.1, 0.32, 29.e6, 0.22
-#: MacNeal and Harder (1985), Table 3, p. 10: tip displacement along the
-#: load, "in-plane" load (along z, the width at the tip) and "out-of-plane"
-#: load (along y, the width at the root)
+#: reference tip displacement along the load, "in-plane" load (along z, the
+#: width at the tip) and "out-of-plane" load (along y, the width at the
+#: root), see the module Notes
 MH_REF = {'z': 0.005424, 'y': 0.001754}
 
 
@@ -549,16 +561,29 @@ def test_twisted_cantilever_6x1(name):
 def test_macneal_harder_twisted_beam(name, nx, ny):
     r"""Twisted beam of MacNeal and Harder (1985), Fig. 6, p. 8, 12x2 mesh
     of the benchmark and 24x4, against their Table 3, p. 10: with offsets
-    Quad4 is within 0.4 % (their QUAD4, Table 10, p. 15: 0.993 and 0.985),
-    and Quad4R within 7.1 and 2.3 %, limited by its stiff in-plane bending,
-    see ``test_twisted_cantilever_6x1``; without offsets both are more than
-    65 % too small with 12x2 elements. With 96x16 elements and offsets,
-    0.9992 and 0.9988 for Quad4, 0.9978 and 0.9987 for Quad4R. Since
-    0.12.0, with the MITC4 transverse shear of ``shear_model = 1``, Quad4
-    gives 0.9963 and 0.9974 with 12x2 elements, instead of 0.9974 and
-    0.9980 with the one-point transverse shear of ``shear_model = 0``,
-    hence the tolerance of 0.4 % (measured on 2026-10-30); the 96x16 values
-    are the same to four digits"""
+    Quad4 is within 0.4 %, and Quad4R within 7.1 and 2.3 %, limited by its
+    stiff in-plane bending, see ``test_twisted_cantilever_6x1``; without
+    offsets both are more than 65 % too small with 12x2 elements.
+
+    Notes
+    -----
+    The reference tip displacements ``MH_REF`` are those of Table 3, p. 10,
+    of MacNeal and Harder [1]_; their QUAD4 gives 0.993 and 0.985 of them
+    (Table 10, p. 15). With 96x16 elements and offsets, 0.9992 and 0.9988
+    for Quad4, 0.9978 and 0.9987 for Quad4R. Since 0.12.0, with the MITC4
+    transverse shear of ``shear_model = 1``, Quad4 gives 0.9963 and 0.9974
+    with 12x2 elements, instead of 0.9974 and 0.9980 with the one-point
+    transverse shear of ``shear_model = 0``, hence the tolerance of 0.4 %
+    (measured on 2026-10-30); the 96x16 values are the same to four digits.
+
+    References
+    ----------
+    .. [1] MacNeal, R. H. and Harder, R. L., A proposed standard set of
+       problems to test finite element accuracy, Finite Elements in Analysis
+       and Design, 1, 3-20, 1985.
+       https://doi.org/10.1016/0168-874X(85)90003-4
+
+    """
     tol = {('Quad4', 12): 0.004, ('Quad4', 24): 0.003,
            ('Quad4R', 12): 0.075, ('Quad4R', 24): 0.025}
     on = twisted_tip(name, nx, ny, 1)

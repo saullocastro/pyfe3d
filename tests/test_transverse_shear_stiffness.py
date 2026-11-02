@@ -4,18 +4,41 @@ The transverse shear stiffness `A_{ts} = [[A_{44}, A_{45}], [A_{45},
 A_{55}]]` is a property of the laminate alone. Its equilibrium-based form is
 computed by
 :meth:`pyfe3d.shellprop.ShellProp.calc_transverse_shear_stiffness` following
-
-    Rohwer, K., 1988, "Improved transverse shear stiffness for layered
-    finite elements", DFVLR-FB 88-32.
-
-    Vlachoutsis, S., 1992, "Shear correction factors for plates and
-    shells", International Journal for Numerical Methods in Engineering,
-    33(7), pp. 1537-1552. https://doi.org/10.1002/nme.1620330712
+Rohwer (1988) and Vlachoutsis (1992).
 
 There is no element size anywhere in that formula, so `A_{ts}` must not
 depend on the mesh, and an element that uses it correctly must reproduce a
 constant transverse shear state exactly at any element size. These tests
-check both halves.
+check both halves: the stiffness against analytical properties and against
+an independent implementation of Rohwer (1988), Eq. (43), on the laminate
+of cylinder Z22 of Castro et al. (2014); Quad4, Quad4R and Tria3R against
+the exact energy of a constant transverse shear state and the exact tip
+deflection of a strip in cylindrical bending.
+
+Notes
+-----
+The transverse shear stiffness follows Rohwer [1]_ and Vlachoutsis [2]_.
+The laminate ``LAMINAPROP``, ``STACK`` and ``PLYT`` is the stacking of
+cylinder Z22, ``[+-49/+-36/0_2]``, and the material Geier1997 of [3]_,
+Tables 3 and 4, p. 307, except ``G23``, which is set equal to ``G12 = G13 =
+5.695 GPa`` instead of ``3.400 GPa``, such that ``G h`` is the transverse
+shear stiffness without correction in
+:func:`test_rohwer_differs_from_the_constant_factor_on_a_real_laminate`.
+
+References
+----------
+.. [1] Rohwer, K., Improved transverse shear stiffness for layered finite
+   elements, DFVLR-FB 88-32, 1988.
+.. [2] Vlachoutsis, S., Shear correction factors for plates and shells,
+   International Journal for Numerical Methods in Engineering, 33(7),
+   1537-1552, 1992.
+   https://doi.org/10.1002/nme.1620330712
+.. [3] Castro, S. G. P., Mittelstedt, C., Monteiro, F. A. C., Arbelo, M. A.,
+   Ziegmann, G. and Degenhardt, R., Linear buckling predictions of
+   unstiffened laminated composite cylinders and cones under various
+   loading and boundary conditions using semi-analytical models, Composite
+   Structures, 118, 303-315, 2014.
+   https://doi.org/10.1016/j.compstruct.2014.07.037
 
 """
 import sys
@@ -34,17 +57,8 @@ from test_shellprop_transverse_shear import rohwer_stiffness
 
 E_ISO = 210.e9
 NU_ISO = 0.3
-# NOTE stacking of cylinder Z22, [+-49/+-36/0_2], and material Geier1997 of
-#      Castro, S. G. P., Mittelstedt, C., Monteiro, F. A. C., Arbelo, M. A.,
-#      Ziegmann, G. and Degenhardt, R., "Linear buckling predictions of
-#      unstiffened laminated composite cylinders and cones under various
-#      loading and boundary conditions using semi-analytical models",
-#      Composite Structures, 118, 303-315, 2014,
-#      https://doi.org/10.1016/j.compstruct.2014.07.037, Tables 3 and 4,
-#      p. 307, except G23, which is set equal to G12 = G13 = 5.695 GPa
-#      instead of 3.400 GPa, such that G h is the transverse shear stiffness
-#      without correction in
-#      test_rohwer_differs_from_the_constant_factor_on_a_real_laminate
+# NOTE laminate of cylinder Z22, with G23 set equal to G12 and G13, see the
+#      module Notes
 LAMINAPROP = (123.55e9, 8.708e9, 0.319, 5.695e9, 5.695e9, 5.695e9)
 STACK = [49, -49, 36, -36, 0, 0]
 PLYT = 0.125e-3
@@ -53,6 +67,11 @@ PLYT = 0.125e-3
 def test_homogeneous_plate_gives_five_sixths():
     r"""The equilibrium approach must give `k = 5/6` for a single ply
 
+    Checked against the analytical factor of a homogeneous plate, the same
+    at every thickness.
+
+    Notes
+    -----
     For a homogeneous plate the transverse shear stress of the equilibrium
     solution is the parabola `\tau(z) = 3Q/(2h)(1 - 4z^2/h^2)`, whose
     complementary energy gives `A_{55} = 5/6 G h` exactly. That is a pure
@@ -73,6 +92,11 @@ def test_homogeneous_plate_gives_five_sixths():
 def test_stiffness_is_invariant_to_ply_subdivision():
     r"""Splitting a ply into identical sub-plies is the same laminate
 
+    `A_{44}` and `A_{55}` must not change, to round-off, when each ply is
+    split into 2, 4 and 8 sub-plies.
+
+    Notes
+    -----
     The integrand of the complementary energy is a polynomial of degree 4 in
     `z` within each ply, so the 3-point Gauss-Legendre rule used per ply is
     exact and subdividing must change nothing. This is the check that the
@@ -95,6 +119,11 @@ def test_stiffness_is_invariant_to_ply_subdivision():
 def test_stiffness_is_invariant_to_the_offset():
     r"""Documented property of the equilibrium approach
 
+    `A_{44}` and `A_{55}` must not change, to round-off, with the offset of
+    the reference surface.
+
+    Notes
+    -----
     The tractions vanish at both faces whatever the reference surface is,
     so the recovered distribution, and hence `A_{ts}`, cannot depend on the
     offset.
@@ -129,14 +158,17 @@ def legacy_tria3r(el):
 def shear_energy(cls, Data, Probe, L, h, triangle=False, legacy=False):
     r"""Energy of `w = cx` with every rotation and in-plane DOF at zero
 
+    Returned as the ratio of the computed energy to the exact energy `U` of
+    this constant transverse shear state.
+
+    Notes
+    -----
     That is a state of constant transverse shear, `\gamma_{xz} = c` and
     `\gamma_{yz} = 0`, with zero curvature because the rotations are
     constant, and zero membrane strain, so the whole energy is
 
     .. math::
         U = \frac{1}{2} A_{55} c^2 A
-
-    Returned as the ratio of computed to exact.
 
     """
     prop = isotropic_plate(thickness=h, E=E_ISO, nu=NU_ISO)
@@ -182,6 +214,12 @@ def test_quads_reproduce_a_constant_transverse_shear_state():
     quadrature of the transverse shear gradient term, so this also checks
     that the switch does not spoil the state on either side of it.
 
+    Notes
+    -----
+    The reference is the exact energy `U = A_{55} c^2 A/2` of the constant
+    transverse shear state of :func:`shear_energy`, which an element that
+    uses `A_{ts}` without element-size dependence reproduces to round-off.
+
     """
     for label, cls, Data, Probe in [('Quad4', Quad4, Quad4Data, Quad4Probe),
                                     ('Quad4R', Quad4R, Quad4RData,
@@ -198,10 +236,10 @@ def test_tria3r_scales_the_shear_stiffness_with_the_element_size():
 
     That is the centroid-sampled transverse shear, the default before
     0.12.0, set explicitly here. Its ``alpha_shear_locking`` stabilisation
-    divides `A_{44}`, `A_{45}` and
-    `A_{55}` by `1 + \alpha \ell^2/h^2` with `\ell` the longest edge, so the
-    energy of a constant transverse shear state comes out too small by
-    exactly that factor. The stabilisation is the factor of Lyly, Stenberg
+    divides `A_{44}`, `A_{45}` and `A_{55}` by a factor of the longest edge
+    `\ell` and the thickness `h`, so the energy of a constant transverse
+    shear state comes out too small by exactly that factor. The
+    stabilisation is the factor of Lyly, Stenberg
     and Vihinen (1993), called Stenberg's method by Bischoff and Bletzinger
     (2004), in the form of Castro et al. (2019), and
     in the thin limit the transverse shear energy is asymptotically
@@ -215,16 +253,26 @@ def test_tria3r_scales_the_shear_stiffness_with_the_element_size():
     reproduces the state to round-off, ``rtol=1e-12`` as for the
     quadrilaterals, which is checked here as well.
 
+    Notes
+    -----
+    The stiffness is divided by `1 + \alpha \ell^2/h^2`, with
+    `\ell = L\sqrt{2}` for the right triangle with legs `L`, whose longest
+    edge is the diagonal.
+
     It is a check of the specification of Tria3R, not of a published value:
-    the form of the factor is Eq. (3.12) of Lyly, Stenberg and Vihinen
-    (1993), "A stable bilinear element for the Reissner-Mindlin plate model",
-    Computer Methods in Applied Mechanics and Engineering, 110, 343-357,
-    p. 347, https://doi.org/10.1016/0045-7825(93)90214-I, where the shear
-    energy coefficient `G\kappa t/2` becomes `G\kappa t^3/(2(t^2 + \alpha
-    h_K^2))`, i.e. it is divided by `1 + \alpha h_K^2/t^2`, with `h_K` "the
+    the form of the factor is Eq. (3.12) of Lyly, Stenberg and Vihinen [1]_,
+    p. 347, where the shear energy coefficient `G\kappa t/2` becomes
+    `G\kappa t^3/(2(t^2 + \alpha h_K^2))`, i.e. it is divided by `1 + \alpha h_K^2/t^2`, with `h_K` "the
     longest of the edges of the element" and `\alpha` "a fixed positive
     constant". Lyly et al. choose `\alpha = 0.1` (p. 349), while
     `\alpha = 0.7` was the default of pyfe3d before 0.12.0.
+
+    References
+    ----------
+    .. [1] Lyly, M., Stenberg, R. and Vihinen, T., A stable bilinear element
+       for the Reissner-Mindlin plate model, Computer Methods in Applied
+       Mechanics and Engineering, 110(3-4), 343-357, 1993.
+       https://doi.org/10.1016/0045-7825(93)90214-I
 
     """
     alpha = 0.7
@@ -251,9 +299,21 @@ def test_rohwer_differs_from_the_constant_factor_on_a_real_laminate():
     it is noticeably more compliant than `5/6`, and it produces a non-zero
     `A_{45}` that neither the constant factor nor the Vlachoutsis factors can
     represent, both of them leaving `A_{45} = 0` because `\bar{A}_{45} = 0`
-    for this stacking. No published value is known for this laminate, the
-    reference is Eq. (43) of Rohwer (1988) written out independently in
-    :func:`test_shellprop_transverse_shear.rohwer_stiffness`.
+    for this stacking. Checked against Rohwer (1988), Eq. (43), and against
+    the uncorrected stiffness `G h`.
+
+    Notes
+    -----
+    No published value is known for this laminate, the reference is Eq. (43)
+    of Rohwer [1]_ written out independently in
+    :func:`test_shellprop_transverse_shear.rohwer_stiffness`. With
+    `G_{12} = G_{13} = G_{23} = G`, see the module Notes, the stiffness
+    without correction is `G h` and the constant factor gives `5/6` of it.
+
+    References
+    ----------
+    .. [1] Rohwer, K., Improved transverse shear stiffness for layered finite
+       elements, DFVLR-FB 88-32, 1988.
 
     """
     got = {}
@@ -367,9 +427,17 @@ def test_shear_only_subspace_is_the_mechanism_the_stabilisation_opens():
     the centroid-sampled shear of before 0.12.0 set explicitly, is softer by
     exactly its stabilisation factor. The default Tria3R since 0.12.0, the
     discrete shear gap field, carries no factor and is printed for
-    comparison. Quad4R is stiffer than the reference by the factor
-    1.0131887, the same for the three thicknesses (measured on 2026-10-29):
-    its transverse shear, Belytschko and Leviathan (1994), adds the physical
+    comparison. Quad4R and the default Quad4 are checked against a stored
+    ratio to the reference.
+
+    Notes
+    -----
+    Tria3R divides the stiffness by `1 + 0.7 \ell^2/h^2`, with `\ell` the diagonal
+    of a square cell of the patch, its longest edge; ``rtol=0.2`` covers the
+    difference between a quadrilateral and two triangles.
+
+    Quad4R is stiffer than the reference by the factor 1.0131887, the same
+    for the three thicknesses (measured on 2026-10-29): its transverse shear, Belytschko and Leviathan (1994), adds the physical
     stabilisation of the nonconstant part of the assumed shear strains,
     which this subspace, with every rotation held at zero, activates in
     proportion to the one-point shear energy. Until 0.12.0 the two
@@ -414,12 +482,17 @@ def cylindrical_bending_strip(cls, Data, Probe, L, b, h, nx, ny,
 
     `v = r_x = r_z = u = 0` at every node and a unit transverse force spread
     over the tip edge, which makes the problem exactly a Timoshenko beam of
-    bending stiffness `D_{11} b` and shear stiffness `A_{55} b`, so
+    bending stiffness `D_{11} b` and shear stiffness `A_{55} b`.
+
+    Returns the computed tip deflection and the two exact contributions, of
+    bending and of shear, to the tip deflection `\delta` under a unit force.
+
+    Notes
+    -----
+    The exact tip deflection of the Timoshenko beam is
 
     .. math::
         \delta = \frac{P L^3}{3 D_{11} b} + \frac{P L}{A_{55} b}
-
-    Returns the computed tip deflection and the two exact contributions.
 
     """
     prop = isotropic_plate(thickness=h, E=E_ISO, nu=NU_ISO)
@@ -485,11 +558,10 @@ def test_the_stabilisation_error_is_a_discretisation_error():
 
     The stabilisation inflates the shear part of a load-driven response by
     ``factor``, so the relative error is `factor \times f_s` with `f_s` the
-    shear fraction. For a strip of span `L` cut into `n` elements,
-    `factor \sim \alpha (L/n)^2/h^2` while `f_s \sim c (h/L)^2`, so the
-    thickness cancels and the product is `\alpha c/n^2`. This test measures
-    that product over three decades of slenderness and shows it depends on
-    `n` alone, falling as `1/n^2`.
+    shear fraction. This test measures that product, with `f_s` from the
+    exact tip deflection of :func:`cylindrical_bending_strip`, over three
+    decades of slenderness and shows it depends on `n` alone, falling as
+    `1/n^2`.
 
     The product is only the softening of the physical shear. It is not the
     error of Tria3R with ``shear_model = 0``, the default before 0.12.0,
@@ -497,6 +569,14 @@ def test_the_stabilisation_error_is_a_discretisation_error():
     a uniform pressure the error of its centre deflection stalls at -14 per
     cent from 32x32 to 128x128 squares cut in two, see the Notes of
     :mod:`pyfe3d.tria3r`.
+
+    Notes
+    -----
+    For a strip of span `L` cut into `n` elements,
+    `factor \sim \alpha (L/n)^2/h^2` while `f_s \sim c (h/L)^2`, so the
+    thickness cancels and the product is `\alpha c/n^2`: the ratio of the
+    products at `n = 8` and `n = 32` is 16. The approximation of `f_s` is
+    exact only for `L \gg h`, hence the tolerances of 5 per cent.
 
     """
     h = 0.01
@@ -541,6 +621,12 @@ def test_small_alpha_makes_tria3r_lock():
     lock. Measured here on the constrained strip, whose exact answer is
     elementary. The default Tria3R since 0.12.0, the discrete shear gap
     field with `\alpha = 0`, is printed for comparison.
+
+    Notes
+    -----
+    The exact answer is the Timoshenko beam tip deflection of
+    :func:`cylindrical_bending_strip`. The default Tria3R, measured 0.999 of
+    it, and Quad4 must be within 1 per cent of it.
 
     """
     h = 0.01
