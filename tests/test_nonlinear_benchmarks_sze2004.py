@@ -1,14 +1,14 @@
 r"""Geometrically non-linear benchmarks of Sze, Liu and Lo (2004)
 
-Sze, K. Y., Liu, X. H. and Lo, S. H., Popular benchmark problems for
-geometric nonlinear analysis of shells, Finite Elements in Analysis and
-Design, 40(11), 1551-1569, 2004, https://doi.org/10.1016/j.finel.2003.11.001:
+The von Kármán elements of pyfe3d are compared with two benchmarks of Sze,
+Liu and Lo (2004), with the closed-form von Kármán solutions, with values
+pre-determined by these tests and, for the roof, with Tria3DSG and a Ritz
+solution:
 
 1. Section 3.2, Fig. 3 and Table 3: cantilever under an end moment, ``L =
    12``, ``b = 1``, ``h = 0.1``, ``E = 1.2e6``, ``nu = 0``, ``M_o = E*I/L =
    25/3`` and ``M_max = 2*pi*M_o`` (Fig. 3a), at which the cantilever is bent
-   into a full circle. Table 3a lists the exact tip deflections, ``U/L =
-   M_o/M*sin(M/M_o) - 1`` and ``W/L = M_o/M*(1 - cos(M/M_o))``, and those of
+   into a full circle; Table 3a lists the exact tip deflections and those of
    16x1 S4R elements.
 
 2. Section 3.8, Fig. 9 and Tables 9a and 9d: hinged cylindrical roof under a
@@ -18,7 +18,10 @@ Design, 40(11), 1551-1569, 2004, https://doi.org/10.1016/j.finel.2003.11.001:
    elements and Riks' method. The hinged edges have all the translations
    restrained, the curved edges are free.
 
-The elements of pyfe3d use the von Kármán strains, valid for moderate
+Notes
+-----
+The exact tip deflections of Table 3a are ``U/L = M_o/M*sin(M/M_o) - 1`` and
+``W/L = M_o/M*(1 - cos(M/M_o))``. The elements of pyfe3d use the von Kármán strains, valid for moderate
 rotations. In the first problem the von Kármán cantilever has no axial force,
 its deflection is that of the linear theory, ``W = M*L**2/(2*E*I)``, and its
 axial strain ``u_x + w_x**2/2 = 0`` gives ``U = -(M/(E*I))**2*L**3/6``: it
@@ -39,6 +42,28 @@ stabilisation, scaled with the ``hgfactor_physical`` of Quad4R, is measured
 by :func:`test_hinged_roof_hourglass_sensitivity`, against Tria3DSG, which
 has no hourglass control, and against the shallow-shell Kirchhoff solution
 of :func:`ritz_roof_WC`.
+
+References
+----------
+Sze, K. Y., Liu, X. H., Lo, S. H., Popular benchmark problems for geometric
+nonlinear analysis of shells, Finite Elements in Analysis and Design,
+40(11), 2004, pp. 1551-1569, https://doi.org/10.1016/j.finel.2003.11.001.
+
+Belytschko, T., Leviathan, I., Physical stabilization of the 4-node shell
+element with one point quadrature, Computer Methods in Applied Mechanics
+and Engineering, 113(3-4), 1994, pp. 321-350,
+https://doi.org/10.1016/0045-7825(94)90052-3.
+
+Brockman, R. A., Dynamics of the bilinear Mindlin plate element,
+International Journal for Numerical Methods in Engineering, 24(12), 1987,
+pp. 2343-2356, https://doi.org/10.1002/nme.1620241208.
+
+Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
+Structures, Volume 1: Essentials, Wiley, 1991.
+
+MacNeal, R. H., Harder, R. L., A proposed standard set of problems to test
+finite element accuracy, Finite Elements in Analysis and Design, 1(1),
+1985, pp. 3-20, https://doi.org/10.1016/0168-874X(85)90003-4.
 """
 import functools
 import sys
@@ -57,9 +82,9 @@ from pyfe3d import (BeamC, BeamCData, BeamCProbe, BeamLR, BeamLRData,
 from ritz import vecf, vecf_xi, vecf_xixi
 from test_solver_nonlinear_static import Model
 
-# NOTE Fig. 3a of Sze et al. (2004)
+# NOTE geometry and material of the cantilever benchmark
 CANTILEVER = dict(L=12., b=1., h=0.1, E=1.2e6)
-# NOTE Table 3a of Sze et al. (2004): M/M_max, exact -U_tip and W_tip
+# NOTE reference table of the cantilever: M/M_max, exact -U_tip and W_tip
 TABLE_3A_EXACT = np.array([
     [0.05, 0.196, 1.870], [0.10, 0.774, 3.648], [0.15, 1.699, 5.248],
     [0.20, 2.918, 6.598], [0.25, 4.361, 7.639], [0.30, 5.945, 8.333],
@@ -69,9 +94,9 @@ TABLE_3A_EXACT = np.array([
     [0.80, 14.270, 1.650], [0.85, 13.818, 0.926], [0.90, 13.247, 0.405],
     [0.95, 12.621, 0.098], [1.00, 12.000, 0.000]])
 
-# NOTE Fig. 9a of Sze et al. (2004)
+# NOTE geometry and material of the roof benchmark
 ROOF = dict(R=2540., L=254., theta=0.1, E=3102.75, nu=0.3, Pmax=3000.)
-# NOTE Table 9a of Sze et al. (2004), 12.7 thick isotropic roof, 16x16 S4R
+# NOTE reference table of the 12.7 thick isotropic roof, 16x16 S4R
 #      elements on one quarter: P/P_max and -W_C, in the order of the path
 TABLE_9A = np.array([
     [0.0877, 0.693], [0.1980, 1.638], [0.3473, 3.087], [0.4686, 4.477],
@@ -83,7 +108,7 @@ TABLE_9A = np.array([
     [0.1905, 20.771], [0.2303, 21.780], [0.2950, 22.875], [0.3871, 24.049],
     [0.4443, 24.663], [0.5093, 25.293], [0.5826, 25.940], [0.6644, 26.601],
     [0.7551, 27.276], [0.8549, 27.964], [0.9643, 28.663], [1.0835, 29.374]])
-# NOTE Table 9d of Sze et al. (2004), 6.35 thick isotropic roof, 24x24 S4R
+# NOTE reference table of the 6.35 thick isotropic roof, 24x24 S4R
 #      elements on one quarter: P/P_max and -W_C, in the order of the path
 TABLE_9D = np.array([
     [0.0517, 1.846], [0.1182, 5.271], [0.1583, 8.257], [0.1837, 10.799],
@@ -267,10 +292,10 @@ def test_cantilever_end_moment_beamc_no_membrane_locking(num_elements):
     r"""BeamC replaces the nonlinear part of the von Kármán axial strain,
     ``w_x**2/2``, by its mean over the element, constant as ``u_x``, so that
     the axial strain can vanish in each element and there is no membrane
-    locking (Crisfield, M. A., Non-linear Finite Element Analysis of Solids
-    and Structures, Volume 1: Essentials, Wiley, 1991, Section 7.1.3, Eqs.
-    (7.31)-(7.32)).
+    locking (Crisfield, 1991, Section 7.1.3, Eqs. (7.31)-(7.32)).
 
+    Notes
+    -----
     Under the end moment the von Kármán cantilever has no axial force, the
     curvature ``kappa = M/(E*I)`` is uniform and ``w = kappa*x**2/2``
     quadratic, which the consistent shape functions of BeamC represent
@@ -307,6 +332,8 @@ def test_cantilever_end_moment_beamlr_no_membrane_locking(num_elements):
     so that the axial strain ``u_x + w_x**2/2`` can vanish in each element
     and there is no membrane locking.
 
+    Notes
+    -----
     Under ``M = 0.05*M_max`` the von Kármán cantilever has no axial force,
     the curvature ``kappa = M/(E*I)`` is uniform, the rotation linear and
     ``w = kappa*x**2/2`` quadratic. The linear rotations of BeamLR give the
@@ -531,6 +558,8 @@ def test_hinged_roof_thick():
     Crisfield's arc-length method against Table 9a of Sze et al. (2004),
     computed with 16x16 S4R elements on the quarter
 
+    Notes
+    -----
     The path of :func:`run_hinged_roof` against the mesh, ``initialInc =
     maxInc = 0.05``, measured on 2026-10-29: the limit loads, relative to
     Table 9a, 0.7421 and 0.1729, the largest difference of the load at the
@@ -612,6 +641,8 @@ def test_hinged_roof_thin_snap_back():
     elements and Crisfield's arc-length method against Table 9d of Sze et
     al. (2004), computed with 24x24 S4R elements on the quarter
 
+    Notes
+    -----
     The path turns back in ``-W_C`` twice. Limit loads against the mesh,
     with the arc-length increments ``initialInc = maxInc = 0.02``, which
     sample the lower limit point more finely than the 0.075 of
@@ -643,10 +674,7 @@ def test_hinged_roof_thin_snap_back():
     (the path is sampled at fixed arc-length increments and each increment
     converges to ``relTOL = 1e-9``; two runs on one machine are identical to
     the bit). The upper limit load is also checked against Table 9d with the
-    tolerance of grade A of MacNeal, R. H. and Harder, R. L., A proposed
-    standard set of problems to test finite element accuracy, Finite
-    Elements in Analysis and Design, 1(1), 3-20, 1985,
-    https://doi.org/10.1016/0168-874X(85)90003-4, p. 14: a normalised
+    tolerance of grade A of MacNeal and Harder (1985), p. 14: a normalised
     error within 2 %. Until 0.12.0 this test used the 24x24 mesh, about 23
     s.
     """
@@ -675,6 +703,8 @@ def test_hinged_roof_thin_lower_limit_load():
     r"""Lower limit load of the 6.35 thick roof with the Quad4R elements of
     :func:`thin_roof_path` against Table 9d of Sze et al. (2004)
 
+    Notes
+    -----
     The lower limit load converges to Table 9d, -0.1288 P_max, see the table
     of :func:`test_hinged_roof_thin_snap_back`; Tria3DSG gives -0.12903 with
     32x32 elements. Up to 0.11 this was an expected failure: Quad4R
@@ -710,6 +740,8 @@ def test_hinged_roof_hourglass_sensitivity():
     shear of Quad4R, ``hgfactor_physical`` times the default, with 16x16
     meshes
 
+    Notes
+    -----
     Since 0.12.0 the bending and the transverse shear of Quad4R have the
     physical stabilisation of Belytschko and Leviathan (1994), which has no
     parameter; ``hgfactor_physical`` multiplies it. The deflection grows

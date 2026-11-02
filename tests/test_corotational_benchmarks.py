@@ -1,10 +1,10 @@
 r"""Large-rotation benchmarks of Sze, Liu and Lo (2004) with the co-rotational
 (EICR) layer, :mod:`pyfe3d.corotational`
 
-Sze, K. Y., Liu, X. H. and Lo, S. H., Popular benchmark problems for
-geometric nonlinear analysis of shells, Finite Elements in Analysis and
-Design, 40(11), 1551-1569, 2004, https://doi.org/10.1016/j.finel.2003.11.001
-(below "Sze"). The geometry, material, mesh, load and reference values of
+The benchmarks of Sze, Liu and Lo (2004) (below "Sze") are solved and the
+load-displacement paths compared with the reference values of Sze, with
+the grades of MacNeal and Harder (1985), and with values pre-determined by
+this test (see the Notes). The geometry, material, mesh, load and reference values of
 each case are read from the paper, at the figure, table and page given in
 the docstrings:
 
@@ -29,6 +29,8 @@ and solved with :class:`pyfe3d.solver.Analysis`, unchanged. The rotational
 degrees-of-freedom are total rotation vectors, see
 :mod:`pyfe3d.corotational`.
 
+Notes
+-----
 Convergence tolerance. The analyses use the default criterion of
 :class:`pyfe3d.solver.Analysis`, ``relTOL = 1e-9`` with the round-off
 floor of :mod:`pyfe3d.solver.convergence`, and no ``absTOL``. Up to
@@ -48,13 +50,21 @@ Policy, as in ``tests/test_nonlinear_benchmarks_sze2004.py``: when the
 reference is reached only on fine meshes, the test uses a coarse mesh,
 compares its path with the values pre-determined by this same test with
 ``rtol = 1e-4``, for the platform round-off, and with Sze with the grades
-of MacNeal, R. H. and Harder, R. L., A proposed standard set of problems to
-test finite element accuracy, Finite Elements in Analysis and Design, 1(1),
-3-20, 1985, https://doi.org/10.1016/0168-874X(85)90003-4, p. 14: A for a
+of MacNeal and Harder (1985), p. 14: A for a
 normalised error within 2 %, B within 10 %. The convergence with the mesh,
 measured once, is given in the docstrings. Times measured on 2026-10-31
 with ``OMP_NUM_THREADS=1`` and the compiled :mod:`pyfe3d.corotational`,
 several runs in parallel.
+
+References
+----------
+Sze, K. Y., Liu, X. H., Lo, S. H., Popular benchmark problems for geometric
+nonlinear analysis of shells, Finite Elements in Analysis and Design,
+40(11), 2004, pp. 1551-1569, https://doi.org/10.1016/j.finel.2003.11.001.
+
+MacNeal, R. H., Harder, R. L., A proposed standard set of problems to test
+finite element accuracy, Finite Elements in Analysis and Design, 1(1),
+1985, pp. 3-20, https://doi.org/10.1016/0168-874X(85)90003-4.
 """
 import sys
 import time
@@ -264,6 +274,8 @@ def elastica_end_force(alpha2):
     cantilever under an end force of fixed direction, perpendicular to the
     undeformed axis, ``alpha2 = P L**2/(E I)``
 
+    Notes
+    -----
     The moment equilibrium of the part beyond the arc length `s`, `E I
     \theta' = P (x_{tip} - x)`, gives `\theta'' = -\alpha^2 \cos\theta`, `x'
     = \cos\theta`, `z' = \sin\theta` in the arc length `s/L`, with
@@ -343,6 +355,8 @@ def test_cantilever_end_shear(element, num_elements):
     against Table 2a (16x1 S4R) at its 20 load levels and against the
     elastica of :func:`elastica_end_force`
 
+    Notes
+    -----
     The tip rotates by 64 degrees at ``P_max``. Measured with the 16
     elements of Table 2a and increments of ``0.05*P_max`` (no cut-back),
     the largest differences over the 20 levels: from Table 2a, 0.004 (-U)
@@ -379,6 +393,8 @@ def test_cantilever_end_shear_convergence():
     with 8, 16, 32 and 64 BeamC against the elastica of
     :func:`elastica_end_force`
 
+    Notes
+    -----
     Measured: the error of ``-U`` -0.070, -0.017, -0.003 and +0.001 %, of
     observed order 2.07 from 8 to 16 elements; that of ``W`` +0.166,
     +0.046, +0.017 and +0.009 %, of observed order 1.85 from 8 to 16 and
@@ -414,6 +430,8 @@ def test_cantilever_end_shear_translated(element, num_elements):
     (``relTOL = 1e-9``, round-off floor, no ``absTOL``): the same converged
     increments and tip deflections as at the origin
 
+    Notes
+    -----
     A translation of the origin leaves the linear stiffness matrix, the
     internal and external force vectors and thus the convergence criterion
     unchanged, but not the round-off of positions computed as `\boldsymbol{X}
@@ -481,6 +499,8 @@ def test_cantilever_end_shear_corotational_von_karman(element):
     with ``kinematics='corotational_von_karman'``, against
     ``'corotational'``, Table 2a and the elastica
 
+    Notes
+    -----
     Quad4R and Tria3R: their von Kármán terms vanish in the CR frame (see
     :class:`pyfe3d.corotational.CorotationalShell`), so the path is that of
     ``'corotational'`` to round-off. BeamC: its von Kármán axial strain,
@@ -569,6 +589,8 @@ def test_cantilever_end_moment_full_circle(element, inc):
     the end moment ``M_max = 2*pi*E*I/L`` that rolls it up into a full
     circle, the tip rotation reaching `2 \pi`, Newton-Raphson
 
+    Notes
+    -----
     The rotation-vector map is singular at `|\boldsymbol{\psi}| = 2 \pi`,
     see :mod:`pyfe3d.corotational`. Following decision D1 of the design,
     the out-of-plane rotations `\psi_X` and `\psi_Z` are restrained at all
@@ -682,6 +704,8 @@ def test_slit_annular_plate():
     force, with 6x30 Quad4R elements and Newton-Raphson in 40 increments of
     ``0.025*P_max``, against Table 4a (10x80 S4R) at its 23 load levels
 
+    Notes
+    -----
     The plate twists into a helix with large rotations, Fig. 4c of Sze.
     Measured at ``P_max`` (Table 4a: ``W_A = 13.891``, ``W_B =
     17.528``), Newton-Raphson, with ``OMP_NUM_THREADS=1`` and the compiled
@@ -733,6 +757,8 @@ def test_slit_annular_plate_corotational_von_karman():
     r"""The slit annular plate of :func:`test_slit_annular_plate`, 6x30
     Quad4R, with ``kinematics='corotational_von_karman'``
 
+    Notes
+    -----
     The von Kármán terms of Quad4R vanish in its CR frame, see
     :class:`pyfe3d.corotational.CorotationalShell`, so the path is that of
     ``'corotational'``. Measured at ``P_max``: ``W_A = 13.294417``, ``W_B
@@ -813,6 +839,8 @@ def test_hemisphere():
     on the quarter, the mesh of Table 5a (S4R), and Newton-Raphson in 20
     increments of ``0.05*P_max``, against Table 5a at its 20 load levels
 
+    Notes
+    -----
     Measured at ``P_max`` (Table 5a: ``V_A = 4.067``, ``-U_B = 8.178``),
     Newton-Raphson with increments of 0.05 and no cut-back, with
     ``OMP_NUM_THREADS=1``, and the linear radial deflection at A under
@@ -889,6 +917,8 @@ def test_hinged_roof_thick_corotational():
     against Table 9a (16x16 S4R) and against the von Kármán path of
     :func:`run_hinged_roof`, same mesh and increments
 
+    Notes
+    -----
     The rotations stay small, and the two paths agree up to the upper limit
     point, ``-W_C = 11``, within 0.001 P_max; they then part, by up to
     0.006 P_max in the snap-through and 0.020 P_max at the end of Table 9a,
@@ -945,6 +975,8 @@ def test_hinged_roof_thin_corotational():
     and against the von Kármán path of :func:`thin_roof_path`, same mesh
     and increments
 
+    Notes
+    -----
     Measured, the upper and lower limit loads (Table 9d: 0.1953 and
     -0.1288):
 
@@ -993,6 +1025,8 @@ def test_hinged_roof_corotational_von_karman(h):
     0.075), 8x8 Quad4R, with ``kinematics='corotational_von_karman'``,
     against ``'corotational'``
 
+    Notes
+    -----
     The von Kármán terms of Quad4R vanish in its CR frame, see
     :class:`pyfe3d.corotational.CorotationalShell`, so the arc-length path
     is that of ``'corotational'``: measured, the same number of increments
