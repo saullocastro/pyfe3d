@@ -247,7 +247,7 @@ are configuration-dependent loads and give an unsymmetric tangent
 stiffness matrix, which the solvers support, see
 :doc:`configuration_dependent_loads`. The theory of the co-rotational layer,
 its frames, its treatment of warped quadrilaterals and its verification
-are given with :mod:`pyfe3d.corotational`.
+are given in :doc:`corotational_formulation`.
 
 
 Log messages
