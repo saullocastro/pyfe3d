@@ -211,6 +211,34 @@ cdef class BeamLR:
     probe : :class:`.BeamLRProbe` object
         Pointer to the probe.
 
+    Examples
+    --------
+    Linear stiffness matrix of one element of length ``2`` along `x`:
+
+    >>> import numpy as np
+    >>> from scipy.sparse import coo_matrix
+    >>> from pyfe3d import BeamLR, BeamLRData, BeamLRProbe, DOF, INT, DOUBLE
+    >>> from pyfe3d.beamprop import BeamProp
+    >>> prop = BeamProp()
+    >>> prop.A, prop.E, prop.G = 0.0025, 203e9, 78e9
+    >>> prop.Iyy = prop.Izz = 0.05**4/12
+    >>> prop.J = prop.Iyy + prop.Izz
+    >>> x = np.array([0., 0., 0., 2., 0., 0.])
+    >>> data, probe = BeamLRData(), BeamLRProbe()
+    >>> beam = BeamLR(probe)
+    >>> beam.c1, beam.c2 = 0, DOF
+    >>> beam.update_rotation_matrix(0., 1., 0., x)
+    >>> beam.update_probe_xe(x)
+    >>> KC0r = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0c = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0v = np.zeros(data.KC0_SPARSE_SIZE, dtype=DOUBLE)
+    >>> beam.update_KC0(KC0r, KC0c, KC0v, prop)
+    >>> KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(2*DOF, 2*DOF)).toarray()
+    >>> KC0.shape
+    (12, 12)
+    >>> float(KC0[0, 0])
+    253750000.0
+
     Notes
     -----
     Formulation based on reference [1]_, replacing the consistent shape
@@ -540,7 +568,7 @@ cdef class BeamLR:
         """
         cdef double x1, x2, y1, y2, z1, z2
         with nogil:
-            # NOTE ignoring z in local coordinates
+            # NOTE distance between the two nodes in element coordinates
             x1 = self.probe.xe[0]
             y1 = self.probe.xe[1]
             z1 = self.probe.xe[2]
@@ -1881,7 +1909,7 @@ cdef class BeamLR:
             v_x += Sv_x[i]*ue[i]
             w_x += Sw_x[i]*ue[i]
 
-        # axial force of the nonlinear axial strain, eNL = (v_x**2 + w_x**2)/2
+        # axial force of the nonlinear axial strain, see the Notes
         NNL = C00*(v_x*v_x + w_x*w_x)/2.
 
         for i in range(NUM_NODES*DOF):
@@ -1895,13 +1923,13 @@ cdef class BeamLR:
         for i in range(NUM_NODES*DOF):
             for j in range(NUM_NODES*DOF):
                 KCNLve[12*i + j] += weight*(
-                    # KC0L = BL.T*D*BNL
+                    # KC0L, see the Notes
                       EBL[i]*BNL[j]
-                    # KCL0 = BNL.T*D*BL
+                    # KCL0
                     + BNL[i]*EBL[j]
-                    # KCLL = BNL.T*D*BNL
+                    # KCLL
                     + C00*BNL[i]*BNL[j]
-                    # KGNL = NNL*(Sv_x.T*Sv_x + Sw_x.T*Sw_x)
+                    # KGNL
                     + NNL*(Sv_x[i]*Sv_x[j] + Sw_x[i]*Sw_x[j])
                 )
 
@@ -2148,14 +2176,8 @@ cdef class BeamLR:
 
             self._update_probe_KCNLve(prop)
 
-            # NOTE from element to global coordinates:
-            #
-            # Kg = T @ Ke @ T.T
-            #
-            # in tensor notation:
-            #
-            # Kg_{mn} = r_{mi} * Ke_{ij} * r_{nj}
-            #
+            # NOTE from element to global coordinates, with the rotation
+            #      matrix r11, ..., r33, see the notes of the class
             for node_i in range(NUM_NODES):
                 for m in range(DOF):
                     for node_j in range(NUM_NODES):
@@ -2293,11 +2315,9 @@ cdef class BeamLR:
             # NOTE first row of C times the strains at the centre
             N = C01*(-ue[11]/2 - ue[5]/2 + (-ue[1] + ue[7])/L) + C02*(ue[10]/2 + ue[4]/2 + (-ue[2] + ue[8])/L) + (C00*(-ue[0] + ue[6]) + C03*(-ue[3] + ue[9]) + C04*(-ue[11] + ue[5]) + C05*(ue[10] - ue[4]))/L
 
-            # NOTE in element coordinates KG = N/L*[[1, -1], [-1, 1]] for v
-            #      and for w, i.e. N*L*(Sv_x.T*Sv_x + Sw_x.T*Sw_x) with the
-            #      constant rows of _update_probe_BL_G, transformed to global
-            #      coordinates as KG_mn = r_m1*N/L*r_n1 + r_m2*N/L*r_n2 for
-            #      each pair of nodes, with a minus sign between two nodes
+            # NOTE the matrix of the Notes, transformed to global
+            #      coordinates for each pair of nodes, with a minus sign
+            #      between two nodes
             for node_i in range(NUM_NODES):
                 for m in range(3):
                     for node_j in range(NUM_NODES):

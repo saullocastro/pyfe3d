@@ -30,10 +30,27 @@ cdef int NUM_NODES = 2
 
 
 cdef int _uncoupled(double *C) noexcept nogil:
-    # NOTE 1 when the only non-zero off-diagonal entries of C are C[0, 3] and
-    #      C[3, 0], for which the shape functions of Luo (2008) are the exact
-    #      solution and the generated expressions are used, see the notes of
-    #      BeamC; 0 otherwise
+    r"""1 when the only non-zero off-diagonal entries of the sectional
+    stiffness matrix ``C`` (36 entries, row by row) are ``C[0, 3]`` and
+    ``C[3, 0]``, 0 otherwise
+
+    With 1, the generated expressions of the shape functions are used, see
+    the Notes.
+
+    Notes
+    -----
+    With the extension-twist coupling `C_{03}` as the only coupling, the
+    consistent shape functions of Luo [1]_ are the exact solution of the
+    equilibrium equations of the element loaded at its nodes, see the Notes
+    of :class:`.BeamC`.
+
+    References
+    ----------
+    .. [1] Luo, Y., 2008, "An Efficient 3D Timoshenko Beam Element with
+       Consistent Shape Functions," Adv. Theor. Appl. Mech., 1(3),
+       pp. 95-106.
+
+    """
     cdef int i, j
     for i in range(6):
         for j in range(6):
@@ -89,17 +106,49 @@ cdef int _spd_inverse6(double *A, double *Ainv) noexcept nogil:
 
 cdef int _coupled_fields(double *C, double L, double *K22, double *Hf,
                          double *Nf) noexcept nogil:
-    # NOTE exact fields of a prismatic element loaded at its nodes, for any
-    #      positive definite C, see the notes of BeamC (derived here). From C
-    #      (36 entries, row by row) and the length L, writes, row by row:
-    #      - K22 (6x6), inverse of the flexibility Fc of the element clamped
-    #        at node 1, u2 = Fc P2 for the loads P2 at node 2
-    #      - Hf (6x12), q = Hf ue, with the sectional forces at node 1
-    #        q = {N, Vy, Vz, Mx, M4(0), M5(0)}, such that
-    #        C eps = {N, Vy, Vz, Mx, M4(0) + Vy x, M5(0) + Vz x}
-    #      - Nf (4x6x12), shape functions {u, v, w, rx, ry, rz} =
-    #        sum_k xi^k Nf[k] ue, xi = x/L, Nf[72*k + 12*i + j]
-    #      returns 1 if C or Fc is not positive definite
+    r"""Exact fields of a prismatic element loaded at its nodes, for any
+    positive definite sectional stiffness matrix ``C``
+
+    From ``C`` (36 entries, row by row) and the length ``L``, writes, row by
+    row: ``K22`` (6x6), the inverse of the flexibility of the element
+    clamped at node 1; ``Hf`` (6x12), which gives the sectional forces at
+    node 1 from the element displacements ``ue``; and ``Nf`` (4x6x12), the
+    coefficients of the shape functions of ``{u, v, w, rx, ry, rz}``, with
+    ``Nf[72*k + 12*i + j]`` the coefficient of the power ``k`` of ``x/L``.
+    Returns 1 if ``C`` or the flexibility is not positive definite, 0
+    otherwise.
+
+    Notes
+    -----
+    Derived here, see the Notes of :class:`.BeamC`, in the order of the
+    code, with `\boldsymbol{S} = \boldsymbol{C}^{-1}` and `\xi = x/L`:
+
+    1. strains per unit `\boldsymbol{q} = \{N, V_y, V_z, M_x, M_4(0),
+       M_5(0)\}`, `\boldsymbol{\epsilon} = \boldsymbol{S} \boldsymbol{q} + x
+       \boldsymbol{E}_1 \boldsymbol{q}` with `\boldsymbol{E}_1 =
+       \boldsymbol{S} \boldsymbol{Z}`, where `\boldsymbol{Z}` gives the
+       slopes `V_y` and `V_z` of `M_4` and `M_5`, such that
+       `\boldsymbol{C} \boldsymbol{\epsilon} = \{N, V_y, V_z, M_x, M_4(0) +
+       V_y x, M_5(0) + V_z x\}`;
+    2. displacements of the strains, zero at `x = 0`, with the coefficients
+       `\boldsymbol{P}_k` of `\xi^k`: `u = \int \epsilon_0`, `r_x = \int
+       \epsilon_3`, `r_z = -\int \epsilon_4`, `r_y = \int \epsilon_5`, `v
+       = \int (\epsilon_1 + r_z)`, `w = \int (\epsilon_2 - r_y)`;
+    3. statics of the element clamped at node 1, `\boldsymbol{q} =
+       \boldsymbol{T} \boldsymbol{P}_2` with `q_{0..3} = P_{2,0..3}`, `q_4 =
+       -P_{2,5} - L P_{2,1}`, `q_5 = P_{2,4} - L P_{2,2}`, and the
+       flexibility `\boldsymbol{F}_c = \boldsymbol{P}(L) \boldsymbol{T}`,
+       `\boldsymbol{u}_2 = \boldsymbol{F}_c \boldsymbol{P}_2`, symmetrized,
+       and ``K22`` `= \boldsymbol{F}_c^{-1}`;
+    4. `\boldsymbol{P}_2 = \boldsymbol{K}_{22} (\boldsymbol{u}_2 -
+       \boldsymbol{R}_L \boldsymbol{u}_1) = \boldsymbol{G}_2
+       \boldsymbol{u}_e`, with the rigid-body motion `\boldsymbol{R}_L` of
+       node 1 at node 2, which adds `L r_z` to `v` and `-L r_y` to `w`;
+    5. ``Hf`` `= \boldsymbol{T} \boldsymbol{G}_2`;
+    6. ``Nf``: the rigid-body motion of node 1 plus `\boldsymbol{P}_k`
+       ``Hf``.
+
+    """
     cdef int i, j, k, m
     cdef double S[36]
     cdef double E1[36]
@@ -111,16 +160,13 @@ cdef int _coupled_fields(double *C, double L, double *K22, double *Hf,
 
     if _spd_inverse6(C, S):
         return 1
-    # NOTE strains per unit q: eps = S q + x E1 q, E1 = S Z, where Z gives
-    #      the slopes Vy and Vz of M4 and M5
+    # NOTE step 1 of the Notes, strains per unit q
     for i in range(36):
         E1[i] = 0.
     for i in range(6):
         E1[6*i + 1] = S[6*i + 4]
         E1[6*i + 2] = S[6*i + 5]
-    # NOTE displacements of the strains, zero at x = 0, coefficients P[k]
-    #      of xi^k: u = int eps_0, rx = int eps_3, rz = -int eps_4,
-    #      ry = int eps_5, v = int (eps_1 + rz), w = int (eps_2 - ry)
+    # NOTE step 2 of the Notes, displacements of the strains
     for i in range(4*36):
         P[i] = 0.
     for j in range(6):
@@ -140,9 +186,7 @@ cdef int _coupled_fields(double *C, double L, double *K22, double *Hf,
         P[36*3 + 6*2 + j] = -L**3/6*E1[6*5 + j]
     for i in range(36):
         PL[i] = P[36*1 + i] + P[36*2 + i] + P[36*3 + i]
-    # NOTE q = T P2, statics of the element clamped at node 1:
-    #      q_0..3 = P2_0..3, q_4 = -P2_5 - L P2_1, q_5 = P2_4 - L P2_2;
-    #      flexibility Fc = PL T
+    # NOTE step 3 of the Notes, flexibility of the clamped element
     for i in range(6):
         Fc[6*i + 0] = PL[6*i + 0]
         Fc[6*i + 1] = PL[6*i + 1] - L*PL[6*i + 4]
@@ -157,15 +201,14 @@ cdef int _coupled_fields(double *C, double L, double *K22, double *Hf,
             Fc[6*j + i] = s
     if _spd_inverse6(Fc, K22):
         return 1
-    # NOTE P2 = K22 (u2 - RL u1) = G2 ue, with the rigid-body motion RL of
-    #      node 1 at node 2: v += L rz, w -= L ry
+    # NOTE step 4 of the Notes, nodal loads at node 2
     for i in range(6):
         for j in range(6):
             G2[12*i + j] = -K22[6*i + j]
             G2[12*i + 6 + j] = K22[6*i + j]
         G2[12*i + 5] -= L*K22[6*i + 1]
         G2[12*i + 4] += L*K22[6*i + 2]
-    # NOTE Hf = T G2
+    # NOTE step 5 of the Notes
     for j in range(12):
         Hf[12*0 + j] = G2[12*0 + j]
         Hf[12*1 + j] = G2[12*1 + j]
@@ -173,7 +216,7 @@ cdef int _coupled_fields(double *C, double L, double *K22, double *Hf,
         Hf[12*3 + j] = G2[12*3 + j]
         Hf[12*4 + j] = -G2[12*5 + j] - L*G2[12*1 + j]
         Hf[12*5 + j] = G2[12*4 + j] - L*G2[12*2 + j]
-    # NOTE Nf = rigid-body motion of node 1 + P Hf
+    # NOTE step 6 of the Notes, shape functions
     for i in range(4*72):
         Nf[i] = 0.
     for i in range(6):
@@ -191,8 +234,17 @@ cdef int _coupled_fields(double *C, double L, double *K22, double *Hf,
 
 
 cdef void _coupled_KC0e(double L, double *K22, double *KC0e) noexcept nogil:
-    # NOTE KC0e = G^T K22 G, G = [-RL, I] (6x12), 12x12 row by row, see
-    #      _coupled_fields
+    r"""Linear stiffness matrix ``KC0e`` (12x12, row by row) in element
+    coordinates, from ``K22`` of :func:`_coupled_fields` and the length ``L``
+
+    Notes
+    -----
+    `\boldsymbol{K}_{C0_e} = \boldsymbol{G}^\top \boldsymbol{K}_{22}
+    \boldsymbol{G}`, with `\boldsymbol{G} = [-\boldsymbol{R}_L,
+    \boldsymbol{I}]` (6x12) and `\boldsymbol{R}_L` the rigid-body motion of
+    node 1 at node 2, see the Notes of :class:`.BeamC`.
+
+    """
     cdef int i, j, k, m
     cdef double G[72]
     cdef double s
@@ -214,8 +266,24 @@ cdef void _coupled_KC0e(double L, double *K22, double *KC0e) noexcept nogil:
 
 
 cdef void _coupled_Hm(double L, double *Nf, double *Hm) noexcept nogil:
-    # NOTE Hm = (1/L) int_0^L (Sv_x^T Sv_x + Sw_x^T Sw_x) dx, with the slopes
-    #      v_x = sum_{k=1}^{3} k xi^(k-1) Nf[k, 1]/L, idem w_x with Nf[k, 2]
+    r"""Matrix ``Hm`` (12x12, row by row) of the element mean of the
+    nonlinear axial strain, from the shape functions ``Nf`` of
+    :func:`_coupled_fields` and the length ``L``
+
+    Notes
+    -----
+    .. math::
+        \boldsymbol{H}_m = \frac{1}{L} \int_0^L \left(
+        \boldsymbol{S}_{v,x}^\top \boldsymbol{S}_{v,x} +
+        \boldsymbol{S}_{w,x}^\top \boldsymbol{S}_{w,x} \right) dx
+
+    with the slopes `v_{,x} = \boldsymbol{S}_{v,x} \boldsymbol{u}_e =
+    \sum_{k=1}^{3} k \xi^{k-1} \boldsymbol{N}_{f,k,1} \boldsymbol{u}_e/L`,
+    and the same for `w_{,x}` with the row 2 of ``Nf``; the integrals of
+    the powers of `\xi` are exact, `\int_0^1 \xi^{a+b-2} d\xi = 1/(a + b -
+    1)`. See :meth:`.BeamC._update_means`.
+
+    """
     cdef int a, b, i, j, row
     for i in range(144):
         Hm[i] = 0.
@@ -409,6 +477,34 @@ cdef class BeamC:
     probe, : :class:`.BeamCProbe` object
         Pointer to the probe.
 
+    Examples
+    --------
+    Linear stiffness matrix of one element of length ``2`` along `x`:
+
+    >>> import numpy as np
+    >>> from scipy.sparse import coo_matrix
+    >>> from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
+    >>> from pyfe3d.beamprop import BeamProp
+    >>> prop = BeamProp()
+    >>> prop.A, prop.E, prop.G = 0.0025, 203e9, 78e9
+    >>> prop.Iyy = prop.Izz = 0.05**4/12
+    >>> prop.J = prop.Iyy + prop.Izz
+    >>> x = np.array([0., 0., 0., 2., 0., 0.])
+    >>> data, probe = BeamCData(), BeamCProbe()
+    >>> beam = BeamC(probe)
+    >>> beam.c1, beam.c2 = 0, DOF
+    >>> beam.update_rotation_matrix(0., 1., 0., x)
+    >>> beam.update_probe_xe(x)
+    >>> KC0r = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0c = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0v = np.zeros(data.KC0_SPARSE_SIZE, dtype=DOUBLE)
+    >>> beam.update_KC0(KC0r, KC0c, KC0v, prop)
+    >>> KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(2*DOF, 2*DOF)).toarray()
+    >>> KC0.shape
+    (12, 12)
+    >>> float(KC0[0, 0])
+    253750000.0
+
     Notes
     -----
     Formulation based on reference [1]_.
@@ -578,9 +674,8 @@ cdef class BeamC:
     element, and the mass, geometric and nonlinear matrices are integrated
     analytically with the same polynomial shape functions. With `C_{03}`
     as the only coupling they are the functions of [1]_ above, asserted
-    symbolically in
-    ``theory/deriving_equations/beamc/derive_beamc_coupled_shape_functions.py``,
-    whose closed-form expressions are then used, unchanged. Otherwise
+    symbolically with sympy, whose closed-form expressions are then used,
+    unchanged. Otherwise
     `\boldsymbol{S}`, `\boldsymbol{F}_c^{-1}`, `\boldsymbol{H}_f` and the
     coefficients of the shape functions are evaluated numerically for each
     element and call, from ``C``, which must then be positive definite,
@@ -909,7 +1004,7 @@ cdef class BeamC:
         """
         cdef double x1, x2, y1, y2, z1, z2
         with nogil:
-            # NOTE ignoring z in local coordinates
+            # NOTE distance between the two nodes in element coordinates
             x1 = self.probe.xe[0]
             y1 = self.probe.xe[1]
             z1 = self.probe.xe[2]
@@ -922,11 +1017,11 @@ cdef class BeamC:
     cdef int _coupled(BeamC self, BeamProp prop, double *K22, double *Hf,
                       double *Nf) except -1:
         # NOTE 0 when C has no coupling other than C[0, 3], for which the
-        #      generated expressions of the shape functions of Luo (2008) are
-        #      used; otherwise 1, with the exact fields of _coupled_fields
-        #      written to K22, Hf and Nf, see the notes of BeamC; raises if C
-        #      is not positive semi-definite, see BeamProp, or, with these
-        #      couplings, not positive definite
+        #      generated expressions of the shape functions are used, see
+        #      _uncoupled; otherwise 1, with the exact fields of
+        #      _coupled_fields written to K22, Hf and Nf, see the notes of
+        #      BeamC; raises if C is not positive semi-definite, see BeamProp,
+        #      or, with these couplings, not positive definite
         cdef double C[36]
         prop.check_C('BeamC')
         prop.get_C(C)
@@ -2178,8 +2273,10 @@ cdef class BeamC:
         the sectional stiffness matrix of ``prop``, see :class:`.BeamProp`,
         in element coordinates, overwrites the ``144`` entries of
         ``Hm``, stored row by row, and the ``12`` entries of ``EBLm`` and
-        ``BNLm``, and writes ``eNLm`` and ``Nm``:
+        ``BNLm``, and writes ``eNLm`` and ``Nm``, defined in the Notes.
 
+        Notes
+        -----
         .. math::
             \boldsymbol{H}_m = \frac{1}{L} \int_0^L \left[
             \left(\frac{\partial \boldsymbol{S}^v}{\partial x}\right)^\top
@@ -2210,8 +2307,7 @@ cdef class BeamC:
         strains, constant along the element, enter through `\alpha_y
         \beta_y` and `\alpha_z \beta_z`, see the notes of :class:`.BeamC`.
         The integrals are
-        analytical, printed by
-        ``theory/deriving_equations/beamc/derive_beamc_KC0L_KCL0_KCLL_KGLL_sparse.py``.
+        analytical, derived with sympy.
         With couplings in ``C`` other than ``C[0, 3]``, all entries of ``C``
         enter through the shape functions of "Shape functions with
         couplings" in the notes of :class:`.BeamC`, of which `\boldsymbol{H}_m`
@@ -2277,7 +2373,7 @@ cdef class BeamC:
             for j in range(NUM_NODES*DOF):
                 Hm[NUM_NODES*DOF*i + j] = 0.
 
-        # Hm = (1/L)*int_0^L (Sv_x.T*Sv_x + Sw_x.T*Sw_x) dx, stored row by row
+        # Hm, stored row by row, see the Notes
         Hm[13] = betay**2*(alphay**2 - 2*alphay + 6./5)/L**2
         Hm[17] = betay**2/(10*L)
         Hm[19] = betay**2*(-alphay**2 + 2*alphay - 6./5)/L**2
@@ -2311,8 +2407,8 @@ cdef class BeamC:
         Hm[139] = -betay**2/(10*L)
         Hm[143] = betay**2*(5*alphay**2 - 10*alphay + 8)/60
 
-        # EBLm = (1/L)*int_0^L C[0, :]*{BLexx, BLgy, BLgz, BLkx, BLky, BLkz} dx,
-        #        the first row of C times the rows of the strains
+        # EBLm, the mean of the first row of C times the rows of the
+        # strains, see the Notes
         EBLm[0] = -C00/L
         EBLm[1] = C01*alphay*betay/L
         EBLm[2] = C02*alphaz*betaz/L
@@ -2382,13 +2478,13 @@ cdef class BeamC:
         for i in range(NUM_NODES*DOF):
             for j in range(NUM_NODES*DOF):
                 KCNLve[NUM_NODES*DOF*i + j] = L*(
-                    # KC0L = L*EBLm.T*BNLm
+                    # KC0L, see the Notes
                       EBLm[i]*BNLm[j]
-                    # KCL0 = L*BNLm.T*EBLm
+                    # KCL0
                     + BNLm[i]*EBLm[j]
-                    # KCLL = L*C00*BNLm.T*BNLm
+                    # KCLL
                     + C00*BNLm[i]*BNLm[j]
-                    # KGNL = L*NNLm*Hm
+                    # KGNL
                     + NNLm*Hm[NUM_NODES*DOF*i + j]
                 )
 
@@ -2418,8 +2514,8 @@ cdef class BeamC:
         `u_{,x} + \bar{\epsilon}_{NL}` minus its linear part, `C_{00}` being
         the first entry of the sectional stiffness matrix of ``prop``,
         such that ``finte`` becomes the gradient of the strain energy whose
-        Hessian is KC0 + KCNL + KG (own derivation, asserted in
-        ``theory/deriving_equations/beamc/derive_beamc_KC0L_KCL0_KCLL_KGLL_sparse.py``).
+        Hessian is KC0 + KCNL + KG (own derivation, asserted symbolically
+        with sympy).
 
         """
         cdef int i
@@ -2520,8 +2616,8 @@ cdef class BeamC:
         `\overline{\boldsymbol{EB}}_L` of the mean axial force of the linear
         strains given in :meth:`._update_means`. With `\bar{N}_{NL} = C_{00}
         \bar{\epsilon}_{NL}`, `C_{00}` = ``C[0, 0]`` of :class:`.BeamProp`,
-        `E A` when ``C`` is not set (own derivation, asserted in
-        ``theory/deriving_equations/beamc/derive_beamc_KC0L_KCL0_KCLL_KGLL_sparse.py``):
+        `E A` when ``C`` is not set (own derivation, asserted symbolically
+        with sympy):
 
         - KC0L = `L \, \overline{\boldsymbol{EB}}_L^\top \bar{\boldsymbol{B}}_{NL}`
         - KCL0 = KC0L`^\top`
@@ -2628,14 +2724,8 @@ cdef class BeamC:
 
             self._update_probe_KCNLve(prop)
 
-            # NOTE from element to global coordinates:
-            #
-            # Kg = T @ Ke @ T.T
-            #
-            # in tensor notation:
-            #
-            # Kg_{mn} = r_{mi} * Ke_{ij} * r_{nj}
-            #
+            # NOTE from element to global coordinates, with the rotation
+            #      matrix r11, ..., r33, see the notes of the class
             for node_i in range(NUM_NODES):
                 for m in range(DOF):
                     for node_j in range(NUM_NODES):
@@ -2721,8 +2811,7 @@ cdef class BeamC:
         axial strain contains `\int_0^L N dx \, \bar{\epsilon}_{NL}`, such
         that ``KC0 + KCNL + KG`` is the exact Jacobian of the internal forces
         of :meth:`.update_fint` with ``nonlinear=1`` (own derivation, asserted
-        in
-        ``theory/deriving_equations/beamc/derive_beamc_KC0L_KCL0_KCLL_KGLL_sparse.py``);
+        symbolically with sympy);
         the geometric matrix of Crisfield [1]_, Eq. (7.95), also carries an
         axial force constant along the element. `N_m` is the axial force of
         the nodal internal forces, ``-finte[0] = finte[6]``. Since the shape
@@ -2765,7 +2854,7 @@ cdef class BeamC:
         if self._coupled(prop, K22, Hf, Nf):
             with nogil:
                 # NOTE shape functions of the coupled sectional equations,
-                #      see the notes of BeamC; KG = L*Nm*Hm
+                #      see the notes of BeamC and the Notes
                 self._update_means(prop, Hm, EBLm, BNLm, &eNLm, &Nm)
                 for i in range(144):
                     KGe[i] = self.length*Nm*Hm[i]
@@ -3615,7 +3704,12 @@ cdef class BeamC:
         "Shape functions with couplings" in the notes of :class:`.BeamC`,
         and ``C`` must be positive definite. The
         integral along the element is computed analytically (exactly), and
-        the rotary inertia is included.
+        the rotary inertia is included. With these couplings, with the
+        coefficients `\boldsymbol{N}_{f,a}` of `\xi^a` of the shape functions
+        and the matrix `\boldsymbol{M}_\rho` of the kinetic energy per unit
+        length above, in the order `\{u, v, w, r_x, r_y, r_z\}`, `\boldsymbol{M}_e
+        = L \sum_a \sum_b \boldsymbol{N}_{f,a}^\top \boldsymbol{M}_\rho
+        \boldsymbol{N}_{f,b}/(a + b + 1)`.
 
         ``mtype=1`` gives the lumped mass matrix, diagonal in element
         coordinates: at each node, `L m/2` for the three translations, `L
@@ -3693,7 +3787,7 @@ cdef class BeamC:
                 Mrho[6*0 + 4] = Mrho[6*4 + 0] = prop.intrhoz
                 Mrho[6*1 + 3] = Mrho[6*3 + 1] = -prop.intrhoz
                 Mrho[6*2 + 3] = Mrho[6*3 + 2] = prop.intrhoy
-                # NOTE Q[b] = Mrho Nf[b]
+                # NOTE products of Mrho and the coefficients Nf[b]
                 for b in range(4):
                     for i in range(6):
                         for j in range(12):
@@ -3701,7 +3795,7 @@ cdef class BeamC:
                             for m in range(6):
                                 s += Mrho[6*i + m]*Nf[72*b + 12*m + j]
                             Q[72*b + 12*i + j] = s
-                # NOTE Me = L sum_a sum_b Nf[a]^T Q[b]/(a + b + 1)
+                # NOTE exact integral along the element, see the Notes
                 for i in range(144):
                     Me[i] = 0.
                 for a in range(4):
