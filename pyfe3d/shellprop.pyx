@@ -70,8 +70,23 @@ cdef class LaminationParameters:
 
 cdef inline bint _poisson_admissible(double nuij, double ei,
                                      double ej) noexcept nogil:
-    # NOTE |nu_ij| < (e_i/e_j)**0.5, Jones (1999), Eq. (2.51), and its limit
-    #      nu_ij = 0 for e_i = 0 < e_j; no bound for e_j = 0
+    r"""Whether the Poisson's ratio ``nuij`` is admissible with the Young
+    moduli ``ei`` and ``ej``
+
+    Used by :meth:`.MatLamina.rebuild`; always ``True`` for ``ej <= 0``.
+
+    Notes
+    -----
+    The bound of a positive-definite orthotropic material, `|\nu_{ij}| <
+    (e_i/e_j)^{1/2}` for `e_j > 0` (Jones [1]_, Eq. (2.51)), with its limit
+    `\nu_{ij} = 0` for `e_i = 0 < e_j`; no bound is imposed for `e_j = 0`.
+
+    References
+    ----------
+    .. [1] Jones, R. M., Mechanics of Composite Materials, Second Edition,
+       Taylor & Francis, Philadelphia, 1999.
+
+    """
     if ej > 0:
         if ei > 0:
             return nuij*nuij*ej < ei
@@ -105,11 +120,22 @@ def _not_positive_definite(MatLamina mat, double det):
 
 
 cdef double _scaled_cond1(double *M) noexcept nogil:
-    # NOTE condition number in the 1-norm of the symmetric 6x6 matrix M
-    #      scaled by its diagonal, S M S with S = diag(M)^(-1/2), inverted by
-    #      Gauss-Jordan elimination with partial pivoting; INFINITY for a
-    #      non-positive diagonal term, inf or nan for a vanishing pivot,
-    #      divided by with cdivision, nan propagated; M is overwritten
+    r"""Condition number in the 1-norm of the symmetric 6x6 matrix ``M``
+    scaled by its diagonal
+
+    ``M`` is stored row by row and is overwritten by the scaled matrix.
+    Returns ``INFINITY`` for a non-positive diagonal term, and ``inf`` or
+    ``nan`` for a vanishing pivot (division with ``cdivision``, ``nan``
+    propagated).
+
+    Notes
+    -----
+    With `S = \mathrm{diag}(M)^{-1/2}`, the scaled matrix `\bar{M} = S M S`
+    has a unit diagonal and its condition number `\|\bar{M}\|_1
+    \|\bar{M}^{-1}\|_1` is returned, with the inverse computed by
+    Gauss-Jordan elimination with partial pivoting.
+
+    """
     cdef int i, j, k, p
     cdef double n1, n2, col, piv, f, tmp
     cdef double sq[6]
@@ -342,7 +368,9 @@ cdef class MatLamina:
         \nu_{13}\nu_{31} - \nu_{23}\nu_{32} - \nu_{12}\nu_{23}\nu_{31} -
         \nu_{13}\nu_{21}\nu_{32}`, the constitutive constants are the
         three-dimensional stiffnesses of the orthotropic material in its
-        principal axes [2]_:
+        principal axes [2]_ (also Hansen and Hvejsen, 2007, p. 43;
+        TODO(author): full reference of Hansen and Hvejsen 2007, cited only
+        by its key ``hansen_hvejsen_2007`` in a former code comment):
 
         .. math::
 
@@ -470,8 +498,8 @@ cdef class MatLamina:
         nu31 = self.nu31
         nu23 = self.nu23
         nu32 = self.nu32
-        # NOTE positive-definite material (Jones, 1999, Sec. 2.4.2), with
-        #      zero moduli as its limit, see the Notes
+        # NOTE positive-definite material, with zero moduli as its limit,
+        #      see the Notes
         det = 1-nu12*nu21-nu23*nu32-nu31*nu13-2*nu21*nu32*nu13
         if not (e1 >= 0 and e2 >= 0 and e3 >= 0 and self.g12 >= 0
                 and self.g13 >= 0 and self.g23 >= 0 and det > 0
@@ -489,8 +517,7 @@ cdef class MatLamina:
             self.c33 = e3*(1    - nu12*nu21)/(delta*e1*e2)
         else:
             # NOTE zero e1 or e2, e.g. an antiplane core: the same constants
-            #      with delta e1 e2 = 1 - nu12 nu21 - ..., without dividing by
-            #      the moduli, see the Notes
+            #      without dividing by the moduli, see the Notes
             self.c11 = e1*(1    - nu23*nu32)/det
             self.c12 = e1*(nu21 + nu31*nu23)/det
             self.c13 = e1*(nu31 + nu21*nu32)/det
@@ -503,9 +530,9 @@ cdef class MatLamina:
 
         self.plane_stress = plane_stress
         if plane_stress:
-            # NOTE plane-stress reduced stiffnesses, sigma_33 = 0, Jones
-            #      (1999), Eq. (2.66), the same as in Lamina.rebuild; with
-            #      e3 = 0 the same operations as the three-dimensional branch
+            # NOTE plane-stress reduced stiffnesses, the same as in
+            #      Lamina.rebuild, see the Notes; with e3 = 0 the same
+            #      operations as the three-dimensional branch
             den = 1 - self.nu12 * self.nu21
             self.q11 = self.e1 / den
             self.q12 = self.e1*self.nu21 / den
@@ -517,12 +544,7 @@ cdef class MatLamina:
             self.q32 = 0.
             self.q33 = 0.
         else:
-            # from references:
-            #   hansen_hvejsen_2007 page 43
-            #
-            #   Guerdal Z., R. T. Haftka and P. Hajela (1999), Design and
-            #   Optimization of Laminated Composite Materials,
-            #   Wiley-Interscience.
+            # NOTE three-dimensional stiffnesses, see the Notes
             den = (1 - self.nu12 * self.nu21
                      - self.nu13 * self.nu31
                      - self.nu23 * self.nu32
@@ -540,16 +562,8 @@ cdef class MatLamina:
         self.q66 = self.g12
         self.q44 = self.g23
         self.q55 = self.g13
-        #
-        # from reference:
-        #   Jones R. M. (1999), Mechanics of Composite Materials, second edn,
-        #   Taylor & Francis, Inc., 325 Chestnut Street, Philadelphia,
-        #   PA 19106. ISBN 1-56032-712-X
-        # slightly changed to include the transverse shear terms u6 and u7,
-        #   taken from ABAQUS Example Problems Manual, vol1, example 1.2.2
-        #   Laminated composite shell: buckling of a
-        #   cylindrical panel with a circular hole
-        #
+        # NOTE invariants, including the transverse shear terms u6 and u7,
+        #      see the Notes
         self.u1 = (3*self.q11 + 3*self.q22 + 2*self.q12 + 4*self.q66) / 8.
         self.u2 = (self.q11 - self.q22) / 2.
         self.u3 = (self.q11 + self.q22 - 2*self.q12 - 4*self.q66) / 8.

@@ -173,7 +173,7 @@ and here the factor has to do the unlocking.
     ``tests/test_quad4_linear_buckling_cylinder_displ.py``; no single value
     serves every problem or every mesh. On the coarse meshes of very thin
     plates, where the DSG field of the default is itself stiff, e.g. the
-    clamped plates of ``doc/source/tut-bench-macneal-harder.ipynb``, this
+    clamped plates of MacNeal and Harder [13]_, this
     field gives a closer answer, but it does not converge to it.
 
 The transverse shear stiffnesses `A_{44}`, `A_{45}` and `A_{55}` are read
@@ -992,6 +992,32 @@ cdef class Tria3R:
     .. [4] Hughes, T. J. R., and Brezzi, F., On drilling degrees of freedom,
        Computer Methods in Applied Mechanics and Engineering, 72(1), 105-121,
        1989. https://doi.org/10.1016/0045-7825(89)90124-2
+
+    Examples
+    --------
+    The constitutive stiffness matrix of one triangular element of an
+    isotropic plate:
+
+    >>> import numpy as np
+    >>> from scipy.sparse import coo_matrix
+    >>> from pyfe3d import Tria3R, Tria3RData, Tria3RProbe, DOF, INT, DOUBLE
+    >>> from pyfe3d.shellprop_utils import isotropic_plate
+    >>> x = np.array([0., 0., 0., 1., 0., 0., 1., 1., 0.])
+    >>> prop = isotropic_plate(thickness=0.01, E=70e9, nu=0.3)
+    >>> data = Tria3RData()
+    >>> elem = Tria3R(Tria3RProbe())
+    >>> elem.n1, elem.n2, elem.n3 = 1, 2, 3
+    >>> elem.c1, elem.c2, elem.c3 = 0, 6, 12
+    >>> elem.update_rotation_matrix(x)
+    >>> elem.update_probe_xe(x)
+    >>> KC0r = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0c = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0v = np.zeros(data.KC0_SPARSE_SIZE, dtype=DOUBLE)
+    >>> elem.update_KC0(KC0r, KC0c, KC0v, prop)
+    >>> N = 3*DOF
+    >>> KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).toarray()
+    >>> print(KC0.shape, elem.area, np.allclose(KC0, KC0.T))
+    (18, 18) 0.5 True
 
     """
     cdef public int eid, pid

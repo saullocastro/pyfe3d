@@ -410,16 +410,28 @@ cdef int NUM_NODES = 4
 
 
 # NOTE rigid offsets of a warped element, see the attribute warp_offsets of
-#      the element class. The flat element lies in the mean plane of the
-#      nodes, the plane z = zm of the element coordinates, which is parallel
-#      to both diagonals, and node a is at the height z_a = xe[3*a + 2] - zm
-#      above its node. The degrees-of-freedom of the flat element are
-#      J ue: u_f = u - z_a r_y, v_f = v + z_a r_x, the others unchanged.
-#      With z_a = 0 every function below leaves its result unchanged, bit
-#      for bit
+#      the element class and the Notes of _warp_z. With zero heights every
+#      function below leaves its result unchanged, bit for bit
 cdef inline int _warp_z(double *xe, int warp_offsets, double *z) noexcept nogil:
-    r"""Heights ``z`` of the nodes above the flat element, returns 1 when
-    one of them is not zero and ``warp_offsets`` is not ``0``"""
+    r"""Heights ``z`` of the four nodes above the flat element
+
+    ``xe`` holds the nodal coordinates in the element coordinate system, 12
+    entries. With ``warp_offsets`` equal to ``0`` the heights are set to zero
+    and ``0`` is returned; otherwise ``1`` is returned when one of them is
+    not zero, else ``0``.
+
+    Notes
+    -----
+    The flat element lies in the mean plane of the nodes, the plane `z =
+    z_m`, `z_m = (z_1 + z_2 + z_3 + z_4)/4`, of the element coordinates,
+    which is parallel to both diagonals, and node `a` is at the height `z_a
+    = z_{e,a} - z_m` above its node of the flat element, with `z_{e,a}` =
+    ``xe[3*a + 2]``. With these rigid offsets, the degrees-of-freedom of the
+    flat element are `\boldsymbol{u}_f = J \boldsymbol{u}_e`, with `u_f = u -
+    z_a r_y` and `v_f = v + z_a r_x` at node `a` and the other
+    degrees-of-freedom unchanged.
+
+    """
     cdef int a, warped
     cdef double zm
     warped = 0
@@ -437,7 +449,18 @@ cdef inline int _warp_z(double *xe, int warp_offsets, double *z) noexcept nogil:
 
 
 cdef inline void _warp_ue(double *z, double *ue, double *uf) noexcept nogil:
-    r"""``uf = J ue``, the displacements of the flat element"""
+    r"""Displacements ``uf`` of the flat element from the nodal
+    displacements ``ue``
+
+    Both have 24 entries in the element coordinate system; ``z`` are the
+    heights of :func:`_warp_z`.
+
+    Notes
+    -----
+    `\boldsymbol{u}_f = J \boldsymbol{u}_e`, see the Notes of
+    :func:`_warp_z`.
+
+    """
     cdef int i, a
     for i in range(24):
         uf[i] = ue[i]
@@ -447,7 +470,19 @@ cdef inline void _warp_ue(double *z, double *ue, double *uf) noexcept nogil:
 
 
 cdef inline void _warp_f(double *z, double *f) noexcept nogil:
-    r"""``f = J^T f`` in place, forces of the flat element to the nodes"""
+    r"""Forces ``f`` of the nodes of the flat element transformed in place
+    to the forces of the nodes
+
+    ``f`` has 24 entries in the element coordinate system; ``z`` are the
+    heights of :func:`_warp_z`.
+
+    Notes
+    -----
+    `\boldsymbol{f} \leftarrow J^\top \boldsymbol{f}`, with `J` of
+    :func:`_warp_z`: at node `a`, the moment about `x` gains `z_a f_y` and
+    the moment about `y` gains `-z_a f_x`.
+
+    """
     cdef int a
     for a in range(4):
         f[6*a + 3] += z[a]*f[6*a + 1]
@@ -455,7 +490,17 @@ cdef inline void _warp_f(double *z, double *f) noexcept nogil:
 
 
 cdef inline void _warp_K(double *z, double *K) noexcept nogil:
-    r"""``K = J^T K J`` in place, ``K`` of size 24x24 stored row by row"""
+    r"""Stiffness matrix ``K`` of the flat element transformed in place to
+    the nodes
+
+    ``K`` has size 24x24, stored row by row, in the element coordinate
+    system; ``z`` are the heights of :func:`_warp_z`.
+
+    Notes
+    -----
+    `K \leftarrow J^\top K J`, with `J` of :func:`_warp_z`.
+
+    """
     cdef int a, p
     for a in range(4):
         for p in range(24):
@@ -468,8 +513,19 @@ cdef inline void _warp_K(double *z, double *K) noexcept nogil:
 
 
 cdef inline void _warp_dK(double *z, double *K, double *dK) noexcept nogil:
-    r"""``dK = J^T K J - K``, without forming ``J^T K J``, 24x24 row by
-    row: ``K J - K`` followed by the rows of ``J^T`` applied to ``K J``"""
+    r"""Change ``dK`` of the stiffness matrix ``K`` of the flat element
+    transformed to the nodes
+
+    ``K`` and ``dK`` have size 24x24, stored row by row, in the element
+    coordinate system; ``z`` are the heights of :func:`_warp_z`. The
+    transformed matrix itself is not formed.
+
+    Notes
+    -----
+    `dK = J^\top K J - K`, with `J` of :func:`_warp_z`, computed as `K J -
+    K` followed by the rows of `J^\top` applied to `K J`.
+
+    """
     cdef int a, p
     for p in range(576):
         dK[p] = 0.
@@ -487,9 +543,17 @@ cdef inline void _warp_dK(double *z, double *K, double *dK) noexcept nogil:
 
 
 cdef inline void _rotate_add_24(double *dK, double *R, double *Kv) noexcept nogil:
-    r"""``Kv[24*I + J] += (T dK T^T)[I, J]``, with ``T`` block diagonal, the
-    3x3 matrix ``R[3*m + i]`` of ``r11, ..., r33`` on each block of three
-    degrees-of-freedom"""
+    r"""Add the 24x24 matrix ``dK`` rotated by ``R`` to ``Kv``
+
+    ``dK`` and ``Kv`` are stored row by row, ``R`` holds the 3x3 rotation
+    matrix ``r11, ..., r33`` row by row, ``R[3*m + i]``.
+
+    Notes
+    -----
+    `K_v[24 I + J] \mathrel{+}= (T\, dK\, T^\top)_{IJ}`, with `T` block
+    diagonal, the 3x3 matrix `R` on each block of three degrees-of-freedom.
+
+    """
     cdef int bi, bj, m, n, i, j
     cdef double s
     for bi in range(8):
@@ -504,11 +568,29 @@ cdef inline void _rotate_add_24(double *dK, double *R, double *Kv) noexcept nogi
 
 
 cdef inline void _warp_KE_sub(double *z, double *f, double *K) noexcept nogil:
-    r"""``K -= K_E`` in element coordinates, ``K`` of size 24x24 stored row
-    by row: the eccentricity geometric stiffness of :func:`_warp_KE`, before
-    its rotation to global coordinates, on the rotations of each node, from
-    the forces ``f`` of the nodes of the flat element in element
-    coordinates, see the Notes of ``update_KCNL``"""
+    r"""Subtract the eccentricity geometric stiffness of :func:`_warp_KE`
+    from ``K`` in element coordinates
+
+    ``K`` has size 24x24, stored row by row; the stiffness is the one of
+    :func:`_warp_KE` before its rotation to global coordinates, on the
+    rotations of each node, from the forces ``f`` of the nodes of the flat
+    element in element coordinates and the heights ``z`` of
+    :func:`_warp_z`.
+
+    Notes
+    -----
+    `K \leftarrow K - K_E`, with the block of the rotations `r_x`, `r_y`,
+    `r_z` of node `a`
+
+    .. math::
+
+        K_E^{(a)} = z_a \begin{bmatrix} f_z & 0 & -f_x/2 \\
+        0 & f_z & -f_y/2 \\ -f_x/2 & -f_y/2 & 0 \end{bmatrix}
+
+    with `f_x`, `f_y`, `f_z` the forces of node `a` of the flat element,
+    see :func:`_warp_KE` and the Notes of ``update_KCNL``.
+
+    """
     cdef int a, p
     for a in range(4):
         # NOTE row r_x of node a, columns r_x, r_y, r_z of node a
@@ -523,9 +605,27 @@ cdef inline void _warp_KE_sub(double *z, double *f, double *K) noexcept nogil:
 
 cdef inline void _warp_KE(double *z, double *f, double *R, double *KE) noexcept nogil:
     r"""Eccentricity geometric stiffness of the rotations of each node, in
-    global coordinates, ``KE[9*a + 3*m + n]``, from the forces ``f`` of the
-    nodes of the flat element in element coordinates: ``(n.r) I - (n r^T +
-    r n^T)/2`` with ``r = z_a e_3``, see the Notes of ``update_KG``"""
+    global coordinates
+
+    Written in ``KE[9*a + 3*m + n]``, a 3x3 block per node, from the forces
+    ``f`` of the nodes of the flat element in element coordinates, the
+    heights ``z`` of :func:`_warp_z` and the 3x3 rotation matrix ``R``
+    stored row by row.
+
+    Notes
+    -----
+    With the force `\boldsymbol{n} = \{f_x, f_y, f_z\}^\top` of node `a` of
+    the flat element and its offset `\boldsymbol{r} = z_a \boldsymbol{e}_3`,
+    the block in element coordinates is
+
+    .. math::
+
+        L = (\boldsymbol{n} \cdot \boldsymbol{r}) I - (\boldsymbol{n}
+        \boldsymbol{r}^\top + \boldsymbol{r} \boldsymbol{n}^\top)/2
+
+    and ``KE`` holds `R L R^\top`, see the Notes of ``update_KG``.
+
+    """
     cdef int a, m, n, i, j
     cdef double nx, ny, nz, s
     cdef double L[9]
@@ -1176,6 +1276,32 @@ cdef class Quad4R:
        and Design, 1(1), 3-20, 1985.
        https://doi.org/10.1016/0168-874X(85)90003-4
 
+    Examples
+    --------
+    The constitutive stiffness matrix of one square element of an
+    isotropic plate:
+
+    >>> import numpy as np
+    >>> from scipy.sparse import coo_matrix
+    >>> from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, DOF, INT, DOUBLE
+    >>> from pyfe3d.shellprop_utils import isotropic_plate
+    >>> x = np.array([0., 0., 0., 1., 0., 0., 1., 1., 0., 0., 1., 0.])
+    >>> prop = isotropic_plate(thickness=0.01, E=70e9, nu=0.3)
+    >>> data = Quad4RData()
+    >>> elem = Quad4R(Quad4RProbe())
+    >>> elem.n1, elem.n2, elem.n3, elem.n4 = 1, 2, 3, 4
+    >>> elem.c1, elem.c2, elem.c3, elem.c4 = 0, 6, 12, 18
+    >>> elem.update_rotation_matrix(x)
+    >>> elem.update_probe_xe(x)
+    >>> KC0r = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0c = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0v = np.zeros(data.KC0_SPARSE_SIZE, dtype=DOUBLE)
+    >>> elem.update_KC0(KC0r, KC0c, KC0v, prop)
+    >>> N = 4*DOF
+    >>> KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).toarray()
+    >>> print(KC0.shape, elem.area, np.allclose(KC0, KC0.T))
+    (24, 24) 1.0 True
+
     """
     cdef public int eid, pid
     cdef public int n1, n2, n3, n4
@@ -1268,6 +1394,35 @@ cdef class Quad4R:
             the element `x` axis while calculating the stiffness matrices.
             Only the direction of the vector is used. Default ``0.``, the
             zero vector, which leaves ``m11, m12, m21, m22`` unchanged.
+
+        Notes
+        -----
+        With `\boldsymbol{v}_{13} = \boldsymbol{x}_3 - \boldsymbol{x}_1` and
+        `\boldsymbol{v}_{42} = \boldsymbol{x}_2 - \boldsymbol{x}_4`, the
+        vectors along the diagonals, the element axes are
+
+        .. math::
+
+            \boldsymbol{e}_z = \frac{\boldsymbol{v}_{42} \times
+            \boldsymbol{v}_{13}}{\|\boldsymbol{v}_{42} \times
+            \boldsymbol{v}_{13}\|}, \qquad
+            \boldsymbol{e}_x = \frac{\boldsymbol{v}_{13} +
+            \boldsymbol{v}_{42}}{\|\boldsymbol{v}_{13} +
+            \boldsymbol{v}_{42}\|}, \qquad
+            \boldsymbol{e}_y = \boldsymbol{e}_z \times \boldsymbol{e}_x
+
+        and `\boldsymbol{T}_{3\times 3} = [\boldsymbol{e}_x, \boldsymbol{e}_y,
+        \boldsymbol{e}_z]`. The material direction `\boldsymbol{x}_m` is
+        projected onto the element plane as `\boldsymbol{x}_m' =
+        (\boldsymbol{e}_z \times \boldsymbol{x}_m) \times \boldsymbol{e}_z`,
+        normalized, and with `\theta` the angle from `\boldsymbol{e}_x` to
+        `\boldsymbol{x}_m'`, positive towards `\boldsymbol{e}_y`, `m_{11} =
+        m_{22} = \cos\theta = \boldsymbol{x}_m' \cdot \boldsymbol{e}_x`,
+        `m_{21} = -m_{12} = \sin\theta`, the sign of `\sin\theta` being that
+        of `\boldsymbol{x}_m \cdot \boldsymbol{e}_y`. The material direction
+        is ignored when its norm, or the norm of `\boldsymbol{e}_z \times
+        \boldsymbol{x}_m` after its normalization, is not larger than
+        `10^{-10} \|\boldsymbol{v}_{42} \times \boldsymbol{v}_{13}\|`.
 
         """
         cdef double xi, xj, xk, yi, yj, yk, zi, zj, zk
@@ -1400,6 +1555,14 @@ cdef class Quad4R:
             1-D array of size ``DOF*M``, translations with dimension of
             length and rotations dimensionless.
 
+        Notes
+        -----
+        For each node, `\{u, v, w\}_e^\top = \boldsymbol{T}_{3\times 3}^\top
+        \{u, v, w\}^\top` and `\{r_x, r_y, r_z\}_e^\top =
+        \boldsymbol{T}_{3\times 3}^\top \{r_x, r_y, r_z\}^\top`, with
+        `\boldsymbol{T}_{3\times 3}` of :meth:`.update_rotation_matrix`,
+        whose columns are the element axes in global coordinates.
+
         """
         cdef int i, j
         cdef int c[4]
@@ -1462,6 +1625,14 @@ cdef class Quad4R:
             y_2, z_2, ..., x_M, y_M, z_M`.
             1-D array of size ``3*M``, dimension of length.
 
+        Notes
+        -----
+        For each node, `\{x, y, z\}_e^\top = \boldsymbol{T}_{3\times 3}^\top
+        \{x, y, z\}^\top`, with `\boldsymbol{T}_{3\times 3}` of
+        :meth:`.update_rotation_matrix`, whose columns are the element axes in
+        global coordinates. The element coordinates are thus measured from
+        the origin of the global system along the element axes.
+
         """
         cdef int i, j
         cdef int c[4]
@@ -1506,6 +1677,16 @@ cdef class Quad4R:
         The ``area`` attribute is updated with the area of the quadrilateral
         given by the element coordinates ``probe.xe``, ignoring the ``z``
         coordinates. Called by :meth:`.update_probe_xe`.
+
+        Notes
+        -----
+        The shoelace formula of the quadrilateral with the vertices `(x_i,
+        y_i)` of nodes 1 to 4 in element coordinates:
+
+        .. math::
+
+            A = \frac{1}{2} \left| (x_1 y_2 + x_2 y_3 + x_3 y_4 + x_4 y_1)
+            - (x_2 y_1 + x_3 y_2 + x_4 y_3 + x_1 y_4) \right|
 
         """
         cdef double x1, x2, x3, x4, y1, y2, y3, y4

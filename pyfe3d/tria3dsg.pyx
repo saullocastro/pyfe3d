@@ -592,6 +592,32 @@ cdef class Tria3DSG:
        Structures, 209, 67-78, 2019.
        https://doi.org/10.1016/j.compstruct.2018.10.058
 
+    Examples
+    --------
+    The constitutive stiffness matrix of one triangular element of an
+    isotropic plate:
+
+    >>> import numpy as np
+    >>> from scipy.sparse import coo_matrix
+    >>> from pyfe3d import Tria3DSG, Tria3DSGData, Tria3DSGProbe, DOF, INT, DOUBLE
+    >>> from pyfe3d.shellprop_utils import isotropic_plate
+    >>> x = np.array([0., 0., 0., 1., 0., 0., 1., 1., 0.])
+    >>> prop = isotropic_plate(thickness=0.01, E=70e9, nu=0.3)
+    >>> data = Tria3DSGData()
+    >>> elem = Tria3DSG(Tria3DSGProbe())
+    >>> elem.n1, elem.n2, elem.n3 = 1, 2, 3
+    >>> elem.c1, elem.c2, elem.c3 = 0, 6, 12
+    >>> elem.update_rotation_matrix(x)
+    >>> elem.update_probe_xe(x)
+    >>> KC0r = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0c = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0v = np.zeros(data.KC0_SPARSE_SIZE, dtype=DOUBLE)
+    >>> elem.update_KC0(KC0r, KC0c, KC0v, prop)
+    >>> N = 3*DOF
+    >>> KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(N, N)).toarray()
+    >>> print(KC0.shape, elem.area, np.allclose(KC0, KC0.T))
+    (18, 18) 0.5 True
+
     """
     cdef public int eid, pid
     cdef public int n1, n2, n3
