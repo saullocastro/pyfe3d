@@ -64,7 +64,6 @@ User guide
     :maxdepth: 1
 
     overview.rst
-    documentation_levels.rst
     conventions.rst
     element_choice.rst
     shell_properties.rst
@@ -75,29 +74,37 @@ User guide
     eigenvalue_analyses.rst
 
 
-Usage examples
---------------
+.. toctree::
+    :maxdepth: 1
+    :caption: Usage examples
+
+    notebooks/ex_linear_static
+    notebooks/ex_beam_frame
+    notebooks/ex_linear_buckling_plate
+    notebooks/ex_linear_buckling_column
+    notebooks/ex_linear_buckling_cylinder_torsion
+    notebooks/ex_natural_frequency_plate
+    notebooks/ex_natural_frequency_cylinder
+    notebooks/ex_nonlinear_static
 
 .. toctree::
     :maxdepth: 1
+    :caption: Tutorials
 
-    ex_linear_static.rst
-    ex_beam_frame.rst
-    ex_linear_buckling_plate.rst
-    ex_linear_buckling_column.rst
-    ex_linear_buckling_cylinder_torsion.rst
-    ex_natural_frequency_plate.rst
-    ex_natural_frequency_cylinder.rst
-    ex_nonlinear_static.rst
-
-
-Tutorials
----------
-
-.. toctree::
-    :maxdepth: 2
-
-    tutorials.rst
+    notebooks/tut-opt-lightweight-smeared-deflection-GA
+    notebooks/tut-opt-lightweight-smeared-deflection-SLSQP
+    notebooks/tut-opt-topology
+    notebooks/tut-timoshenko-beam-benchmarks
+    notebooks/tut-shell-lumped-mass
+    notebooks/tut-bench-macneal-harder
+    notebooks/tut-bench-shell-obstacle-course
+    notebooks/tut-nonlinear-benchmarks
+    notebooks/tut-corotational-large-rotations
+    notebooks/tut-prescribed-displacement-cantilever
+    notebooks/tut-prescribed-displacement-dome-riks
+    notebooks/tut-nafems-cap-axisymmetric
+    notebooks/tut-inertia-relief
+    notebooks/tut-inertia-relief-aircraft-ha144a
 
 
 pyfe3d API
@@ -129,14 +136,6 @@ layout of the repository.
 
     installation.rst
     repository_structure.rst
-
-
-Changelog
----------
-
-.. toctree::
-    :maxdepth: 1
-
     changelog.rst
 
 

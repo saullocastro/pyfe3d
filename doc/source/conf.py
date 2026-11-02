@@ -41,6 +41,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'matplotlib.sphinxext.plot_directive',
     'nbsphinx',
+    'nbsphinx_link',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -49,7 +50,9 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = []
+# NOTE documentation_levels.rst is not part of the documentation; it
+#      refers to the former tutorials page
+exclude_patterns = ['documentation_levels.rst']
 
 default_role = 'math'
 
