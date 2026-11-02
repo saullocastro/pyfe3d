@@ -152,7 +152,7 @@ The methods of each element are listed in :doc:`element_choice`.
 Steps of an analysis
 --------------------
 
-The tests of the repository, e.g. :doc:`ex_linear_static`, follow these
+The tests of the repository, e.g. ``tests/test_quad4_static_point_load.py``, follow these
 steps:
 
 1. Nodes: the array ``x`` of the coordinates and a map from the node

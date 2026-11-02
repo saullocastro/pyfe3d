@@ -72,10 +72,9 @@ Solvers
   calc_fext()`` at the known dofs. A configuration-dependent load is
   corrected by iterations, see :meth:`.Analysis.static`.
 
-The worked example
-:doc:`tut-prescribed-displacement-cantilever` solves a cantilever with a
-prescribed tip deflection both ways, and :doc:`ex_linear_static` a plate
-under a point load.
+``tests/test_prescribed_displacement_linear.py`` solves a cantilever with a
+prescribed tip deflection, and ``tests/test_quad4_static_point_load.py`` a
+plate under a point load.
 
 
 Errors of the supports

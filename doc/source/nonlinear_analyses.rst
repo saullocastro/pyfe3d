@@ -40,7 +40,7 @@ From the elements to the callables
 ``calc_kC() + calc_kG()`` is then the exact Jacobian of ``calc_fint``,
 `\boldsymbol{K}_T = \partial \boldsymbol{R}/\partial \boldsymbol{u}`, and the full Newton-Raphson method
 converges quadratically. The class ``Model`` of
-``tests/test_solver_nonlinear_static.py``, see :doc:`ex_nonlinear_static`,
+``tests/test_solver_nonlinear_static.py``
 wraps a list of elements of one type into these four callables.
 ``calc_kC()``, the linear stiffness matrix, also gives the scaling of the
 convergence criterion.
@@ -62,7 +62,7 @@ a prescribed dof is ``calc_fint(u)`` at that dof minus the load applied
 there.
 
 In ``test_prescribed_displacement_and_reaction`` of
-:doc:`ex_nonlinear_static`, a point-loaded plate is first solved under load
+``tests/test_solver_nonlinear_static.py``, a point-loaded plate is first solved under load
 control; its central deflection ``w_c``, at the dof ``dof``, is then
 prescribed without load, with the callables of the full model::
 
@@ -82,13 +82,12 @@ prescribed without load, with the callables of the full model::
 Each ``cs[i][dof]`` is ``increments[i]*w_c``, the displacement field at
 `\lambda = 1` is that of the load-controlled analysis, and the reaction
 equals the load. The same ``bu`` and ``uk`` serve the linear analysis,
-``an.static(NLgeom=False)``, see :doc:`linear_analyses` and the worked
-example :doc:`tut-prescribed-displacement-cantilever`.
+``an.static(NLgeom=False)``, see :doc:`linear_analyses`.
 
-The worked example :doc:`tut-prescribed-displacement-dome-riks` traces with
+``tests/test_dome_prescribed_displacement.py`` traces with
 Riks' method the reaction of a clamped spherical cap and of a hinged shallow
 shell pressed down by a deflection prescribed at their crown, and
-:doc:`tut-nafems-cap-axisymmetric` restricts the co-rotational model of the
+restricts the co-rotational model of the
 cap to its axisymmetric deformations with a linear constraint ``u = T q``,
 passing the restricted callables to :class:`.Analysis`.
 
@@ -175,10 +174,10 @@ displacements of the free dofs, and the Euclidean norm with
 computed more accurately, and, under large self-equilibrated axial forces,
 e.g. of an arch near a null load, `\zeta` would otherwise stagnate above
 ``relTOL`` and the analysis stop, see ``test_fung_kaplan_beam_arch`` in
-:doc:`ex_nonlinear_static`. The log messages mark the iterations converged
+``tests/test_solver_arc_length_fung_kaplan.py``. The log messages mark the iterations converged
 at the round-off floor. With a consistent tangent
 stiffness matrix and full Newton-Raphson, `\zeta` falls quadratically, as
-verified in :doc:`ex_nonlinear_static`; a slow decrease of `\zeta` reveals
+verified in ``tests/test_solver_nonlinear_static.py``; a slow decrease of `\zeta` reveals
 an inconsistent tangent stiffness matrix, e.g. a missing ``calc_kG``, which
 changes the iterations but not the converged solution.
 
@@ -203,7 +202,7 @@ arguments, passed only to the callables that declare them, see
 The aerodynamic load of the piston theory, `\lambda \beta
 \boldsymbol{K}_{A_\beta} \boldsymbol{u}`, with ``update_KA_beta`` of :class:`.Quad4R` or
 :class:`.Quad4`, is such a load, see ``test_piston_theory_load_unsymmetric_tangent``
-in :doc:`ex_nonlinear_static`. The keyword argument ``lbd`` of
+in ``tests/test_solver_nonlinear_static.py``. The keyword argument ``lbd`` of
 ``calc_fext`` gives a load vector that depends on the load factor, which is
 how :class:`.FreeDofs` imposes the prescribed displacements.
 
@@ -407,8 +406,7 @@ shell) and 3.8 (hinged cylindrical roof, with the arc-length method) of
 Sze, Liu and Lo (2004) with :class:`.BeamC`, :class:`.Quad4R` and
 :class:`.Tria3R`, and ``tests/test_corotational_core.py`` checks the
 finite-rotation utilities, the wrappers and their tangent stiffness
-matrices by finite differences. The worked example
-:doc:`tut-corotational-large-rotations` shows such analyses step by step.
+matrices by finite differences.
 
 
 Log messages

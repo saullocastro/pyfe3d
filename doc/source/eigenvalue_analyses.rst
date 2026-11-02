@@ -90,8 +90,7 @@ the offsets, the linear buckling load of 12x2, 24x4 and 48x8 elements is
 +0.00, +0.01 and +0.01 % off with the offsets and +366, +102 and +26 %
 without them (:class:`.Quad4`), +1.2, +0.4 and +0.1 % against +329, +101
 and +27 % (:class:`.Quad4R`), and the first natural frequency of 12x2
-elements +0.07 and +0.13 % against +40 %, see :doc:`changelog`, version
-0.12.0.
+elements +0.07 and +0.13 % against +40 % (version 0.12.0).
 
 
 Natural frequencies
@@ -249,7 +248,3 @@ the analytical modal values:
 
 .. literalinclude:: ../../tests/test_solver_complex_frequency.py
     :pyobject: test_rayleigh_damping_chain
-
-Complete models are in :doc:`ex_linear_buckling_plate`,
-:doc:`ex_linear_buckling_cylinder_torsion`, :doc:`ex_natural_frequency_plate`
-and :doc:`ex_natural_frequency_cylinder`.
