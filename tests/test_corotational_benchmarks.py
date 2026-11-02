@@ -147,11 +147,11 @@ def round_off_absTOL(model, bu, factor=10.):
     r"""``factor`` times `\varepsilon \max_j (|\boldsymbol{K}_{C0}|
     \boldsymbol{z})_j` over the free degrees-of-freedom, `\boldsymbol{z}`
     the absolute nodal coordinates at the translations and 1 at the
-    rotations: the round-off of the co-rotational internal force computed
-    from `\boldsymbol{X} + \boldsymbol{u}`, up to 2026-10-30, see the module
-    documentation (derived here). No longer used by :func:`analysis`, kept
-    for the ``absTOL`` argument of :func:`analysis` and for the other test
-    modules that import it."""
+    rotations: the round-off of a co-rotational internal force computed
+    from the absolute positions `\boldsymbol{X} + \boldsymbol{u}`, see the
+    module documentation (derived here). Not used by :func:`analysis`;
+    available for its ``absTOL`` argument and for the other test modules
+    that import it."""
     z = np.ones(model.N)
     for i in range(3):
         z[i::DOF] = np.abs(model.x[i::3])

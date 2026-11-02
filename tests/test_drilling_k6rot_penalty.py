@@ -1,24 +1,24 @@
 r"""Regression tests for the fictitious (K6ROT penalty) drilling stiffness.
 
-The penalty model is the pre-0.10.0 default and remains available through
-``drilling_model = 1``. It is the approach adopted in MSC Nastran and Autodesk
-Nastran through the K6ROT parameter, and is very close to Eq. 2.20 of Adam,
-Mohamed and Hassaballa (2013). The penalty energy of a uniform drilling state
-is compared with its closed form, which is independent of the element shape,
-and the drilling blocks of Quad4 and Quad4R, which integrate the same
-drilling operator with the same 2x2 rule, must agree to machine precision on
-the same geometry. Since 0.10.0 none of the three shell elements reads
-``K6ROT`` by default, which :func:`test_k6rot_penalty_is_not_the_default`
-checks.
-
-These tests exist because the coefficient `K6ROT \cdot 10^{-6} A_{66}` was
-lost from Quad4 between 0.8.0 and 0.9.0, leaving an effective coefficient of 1
-and making the ``K6ROT`` attribute a no-op. Only non-coplanar models were
-affected, because on a flat mesh the drilling row is decoupled from every other
-degree-of-freedom and its magnitude cannot change any displacement.
+The penalty model is available through ``drilling_model = 1``. It is the
+approach adopted in MSC Nastran and Autodesk Nastran through the K6ROT
+parameter, and is very close to Eq. 2.20 of Adam, Mohamed and Hassaballa
+(2013). The penalty energy of a uniform drilling state is compared with its
+closed form, which is independent of the element shape, such that the
+coefficient `K6ROT \cdot 10^{-6} A_{66}` is checked and not only the pattern
+of the drilling block, and the drilling blocks of Quad4 and Quad4R, which
+integrate the same drilling operator with the same 2x2 rule, must agree to
+machine precision on the same geometry. With the default ``drilling_model``
+none of the three shell elements reads ``K6ROT``, which
+:func:`test_k6rot_penalty_is_not_the_default` checks.
 
 Notes
 -----
+The magnitude of the penalty matters in non-coplanar models only: on a flat
+mesh the drilling row is decoupled from every other degree-of-freedom and its
+magnitude cannot change any displacement, so a wrong coefficient is not seen
+in the displacements of flat models.
+
 The penalty energy per element is
 
 .. math::
@@ -173,8 +173,8 @@ def test_k6rot_penalty_quad4_matches_quad4r():
 def test_k6rot_penalty_is_not_the_default():
     r"""The penalty must not be active unless it is selected
 
-    Documents the 0.10.0 behaviour change: with the default physics-based
-    drilling stiffness the ``K6ROT`` attribute is not read at all. This
+    With the default physics-based drilling stiffness the ``K6ROT``
+    attribute is not read at all. This
     applies to all three shell elements. Note that Quad4R reaches it by a
     different route from Quad4 and Tria3R: it applies the coefficient
     `\gamma_{r_z} = A_{66}` of Hughes and Brezzi (1989) to the same operator

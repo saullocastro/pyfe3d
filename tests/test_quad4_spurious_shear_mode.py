@@ -1,11 +1,11 @@
 r"""The two zero-energy modes of the selectively underintegrated element
 
-These tests record a known and documented property of the element that
-:class:`pyfe3d.Quad4` is built on, they do not report an implementation
-error. Since 0.12.0 it is the element of ``shear_model = 0``, the one-point
-transverse shear of the versions up to 0.11, and the default ``shear_model =
-1`` takes the assumed transverse shear strains of the MITC4 element for
-every thickness, which removes both modes, see
+These tests record a known and documented property of the element of
+``shear_model = 0`` of :class:`pyfe3d.Quad4`, the one-point transverse shear
+of Hughes et al. (1977) for `h/\ell < 1`; they do not report an
+implementation error. The default ``shear_model = 1`` takes the assumed
+transverse shear strains of the MITC4 element for every thickness, which
+removes both modes, see
 ``test_the_default_has_no_zero_energy_mode``. Unless said otherwise, every
 Quad4 below is given ``shear_model = 0`` by :func:`set_legacy_shear`. The
 two modes are the ones of Figure 10 of Hughes, Taylor and Kanoknukulchai
@@ -146,10 +146,10 @@ GAUSS2 = (-0.5773502691896257, 0.5773502691896257)
 
 
 def set_legacy_shear(el):
-    r"""Give a Tria3R or a Quad4 the transverse shear of before 0.12.0
+    r"""Give a Tria3R or a Quad4 the transverse shear of ``shear_model = 0``
 
     For Tria3R the centroid-sampled field, ``shear_model = 0`` with
-    ``alpha_shear_locking = 0.7``, the former defaults; for Quad4 the
+    ``alpha_shear_locking = 0.7``; for Quad4 the
     one-point rule of Hughes et al. (1977) for `h/\ell < 1`, ``shear_model
     = 0``. Any other element is left alone.
     """
@@ -219,9 +219,13 @@ def test_figure_10_modes_of_hughes_taylor_kanoknukulchai():
         2.0             0.0187               0.1496
 
     The step is the switch to the assumed transverse shear strains of the
-    MITC4 element, which :class:`.Quad4` applies at `h/\ell \ge 1` since
-    0.12.0. The modified one-point shear rule of the paper, applied up to
-    0.11, gave the same 0.1496 to Mode 1 but left Mode 2 free, consistently
+    MITC4 element, which :class:`.Quad4` with ``shear_model = 0`` applies
+    at `h/\ell \ge 1`.
+
+    Notes
+    -----
+    The modified one-point shear rule of the paper, applied at `h/\ell \ge
+    1`, gives the same 0.1496 to Mode 1 but leaves Mode 2 free, consistently
     with the paper, which offers no remedy for it and argues instead that it
     cannot persist in a mesh.
 
@@ -276,16 +280,16 @@ def test_figure_10_modes_of_hughes_taylor_kanoknukulchai():
 
 
 def test_mode_2_is_shared_by_the_three_shell_elements():
-    r"""All three sample the rotation part of the shear at the centroid
+    r"""Mode 2 in Quad4 and Tria3R with ``shear_model = 0``, which sample
+    the rotation part of the shear at the centroid, and in Quad4R
 
     Exactly free on a regular shape, and of order `(h/\ell)^2` on a distorted
     one, so still a mechanism for any thin element.
 
-    Quad4R shared it up to 0.11. Since 0.12.0 its transverse shear is that
-    of Belytschko and Leviathan (1994), whose stabilisation of the
-    nonconstant part of the assumed shear strains gives Mode 2 the energy
-    0.018697 times the largest eigenvalue on the square, at both
-    thicknesses (measured on 2026-10-29), see
+    Quad4R does not share it: its transverse shear is that of Belytschko
+    and Leviathan (1994), whose stabilisation of the nonconstant part of the
+    assumed shear strains gives Mode 2 the energy 0.018697 times the largest
+    eigenvalue on the square, at both thicknesses (measured), see
     ``test_twisting_mode_is_stabilised`` in
     ``test_quad4r_hourglass_control.py``.
 
@@ -435,7 +439,7 @@ def bl94_stabilisation(xy, prop):
 
 
 def test_the_default_has_no_zero_energy_mode():
-    r"""``shear_model = 1``, the default since 0.12.0: six zero eigenvalues,
+    r"""``shear_model = 1``, the default: six zero eigenvalues,
     and on a parallelogram the element of Hughes et al. (1977) plus the
     stabilisation of Belytschko and Leviathan (1994)
 
@@ -446,6 +450,8 @@ def test_the_default_has_no_zero_energy_mode():
     the distorted one and on a free-free mesh. Bathe and Dvorkin (1985),
     pp. 372-373, state that their element has no spurious zero-energy mode.
 
+    Notes
+    -----
     On a parallelogram the Jacobian is constant, the MITC4 strain at the
     centroid is the displacement-based one, and the two-by-two integral of
     the MITC4 shear energy is the one-point term plus the energy of the
@@ -759,9 +765,8 @@ def reference_K(nx, ny, Lx, Ly, h, E, nu, scheme):
     - ``pure1``: the whole term at the centroid, which is what Quad4 uses
       below the thickness gate
     - ``modified``: two-by-two on the gradient-gradient part and one point on
-      the rest, the modified rule of the paper, which Quad4 used above the
-      gate up to 0.11; since 0.12.0 Quad4 uses there the assumed strains of
-      the MITC4 element, not rebuilt here
+      the rest, the modified rule of the paper; above the gate Quad4 uses
+      instead the assumed strains of the MITC4 element, not rebuilt here
     - ``full2x2``: the whole term at two-by-two
 
     """
@@ -866,8 +871,7 @@ def test_no_cheap_quadrature_fix_exists():
     modified rule of the paper, applied without its thickness gate, locks the
     plate just as badly and makes the strip thirty times too stiff as well,
     so it could only be used behind the thickness gate, where :class:`.Quad4`
-    applied it up to 0.11 and has applied the MITC4 assumed strains since
-    0.12.0.
+    applies the MITC4 assumed strains instead.
 
     """
     # (a) the strip

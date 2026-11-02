@@ -747,7 +747,7 @@ def test_warped_quad_base_tangent(name, warp_ratio):
     does not, differ from ``KC0`` by the order of the warp ratio and keep
     its lowest non-zero eigenvalue (Quad4 and Quad4R have six zero
     eigenvalues in this geometry, Quad4 eight with ``shear_model = 0``, the
-    one-point transverse shear of its versions up to 0.11)"""
+    one-point transverse shear of its thin elements)"""
     for warping in (None, 'offsets'):
         w = warped_quad(name, warp_ratio, warping)
         f, KM, KG = w.evaluate(np.zeros(24))
