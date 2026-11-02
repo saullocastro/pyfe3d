@@ -347,7 +347,7 @@ def laminated_plate(stack, plyt=None, laminaprop=None, rho=0., plyts=None,
 
 def isotropic_plate(thickness, E, nu, offset=0., rho=0.,
         shear_correction='rohwer'):
-    """Read data for an isotropic plate
+    r"""Read data for an isotropic plate
 
     :class:`.ShellProp` object is returned based on the inputs given.
 
