@@ -1,8 +1,8 @@
 r"""Natural frequencies of a cantilever modelled with BeamC
 
-The first three bending frequencies, in both planes of its square cross section, for the
-consistent and the lumped mass matrices, are compared with the exact
-frequencies of a Timoshenko beam (Petyt, 2010, Example 3.10); the exact
+The first three bending frequencies, in both planes of its square cross
+section, for the consistent and the lumped mass matrices, are compared with
+the exact frequencies of a Timoshenko beam (Petyt, 2010, Example 3.10); the exact
 Euler-Bernoulli coefficients (Petyt, 2010, Table 10.2) and the Timoshenko
 coefficients of Petyt's Table 3.6 check the reference functions.
 """

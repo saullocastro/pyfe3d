@@ -1,8 +1,17 @@
 r"""Linear buckling of a clamped-free column free to buckle in both planes
 
+The two lowest buckling loads of BeamC and BeamLR columns with a square and
+a rectangular cross section, aligned with `X` and with the direction
+``(1, 2, 3)``, are compared with the Euler loads of both planes with shear
+deformation (Timoshenko and Gere, 1961, Eqs. (2-4) and (2-57)).
+:func:`test_shear_flexible_column` checks Eq. (2-57) where the shear
+deformation dominates, with ``P_e/(A*G/n) = 0.2`` and ``0.6``.
+
+Notes
+-----
 Each bending plane buckles at its own Euler load, ``pi**2*E*I/(4*L**2)``,
-Eq. (2-4) of Timoshenko, S. P., Gere, J. M., Theory of Elastic Stability,
-2nd ed., McGraw-Hill, 1961, Sec. 2.1, p. 48, where the second mode of a
+Eq. (2-4) of Timoshenko and Gere (1961), Sec. 2.1, p. 48, where the second
+mode of a
 plane buckles at nine times this load (p. 48). The geometric stiffness
 matrix has to keep the two planes uncoupled: built from the square of the
 summed slopes, (v,x + w,x)**2, instead of the sum of the squares, v,x**2 +
@@ -26,8 +35,10 @@ stiffness matrix from the rotations, converged to the Euler load of Eq.
 (2-4) instead, and its loads with 100 elements were 2.0e-4 and 7.3e-4
 above Eq. (2-57).
 
-:func:`test_shear_flexible_column` checks Eq. (2-57) where the shear
-deformation dominates, with ``P_e/(A*G/n) = 0.2`` and ``0.6``.
+References
+----------
+Timoshenko, S. P., Gere, J. M., Theory of Elastic Stability, 2nd ed.,
+McGraw-Hill, 1961.
 """
 import sys
 sys.path.append('..')
@@ -71,7 +82,7 @@ def buckling_loads(name, b, h, direction, vxy, shear_ratio=None,
     prop.Iyy = b**3*h/12
     prop.J = prop.Izz + prop.Iyy
     if shear_ratio is not None:
-        # NOTE Eq. (2-4) of Timoshenko and Gere (1961), weak plane
+        # NOTE from the Euler load of the weak plane
         prop.G = pi**2*E*min(prop.Izz, prop.Iyy)/(4*L**2)/(shear_ratio*prop.A)
 
     direction = np.asarray(direction, dtype=float)
@@ -118,7 +129,7 @@ def buckling_loads(name, b, h, direction, vxy, shear_ratio=None,
     # KC0*phi = -lambda*KG*phi, solved as -KG*phi = mu*KC0*phi, lambda = 1/mu
     mu = eigh(-KG[np.ix_(bu, bu)], KC0[np.ix_(bu, bu)], eigvals_only=True)
     loads = np.sort(1/mu[mu > 1.e-12])
-    # NOTE Eq. (2-4) of Timoshenko and Gere (1961)
+    # NOTE Euler loads of the clamped-free column
     euler_z = pi**2*E*prop.Izz/(4*L**2)
     euler_y = pi**2*E*prop.Iyy/(4*L**2)
     return (loads[:2], min(euler_z, euler_y), max(euler_z, euler_y),
@@ -133,7 +144,7 @@ def test_column_buckles_at_the_euler_load(name, b, h, direction, vxy):
     loads, euler_weak, euler_strong, kGA = buckling_loads(name, b, h,
                                                           direction, vxy)
     rtol = BEAMS[name][4]
-    # NOTE Eq. (2-57) of Timoshenko and Gere (1961), n/(A*G) = 1/(kappa*G*A)
+    # NOTE Euler load with shear deformation
     shear = lambda Pe: Pe/(1 + Pe/kGA)
     assert np.isclose(loads[0], shear(euler_weak), rtol=rtol)
     # square section: the second plane buckles at the same load; rectangular
@@ -150,8 +161,14 @@ def test_shear_flexible_column(name, num_elements, shear_ratio):
     r"""Clamped-free column whose buckling load is governed by the shear
     deformation, as in sandwich and composite columns
 
-    The shear modulus is set such that ``P_e/(A*G/n)`` is ``0.2`` or ``0.6``,
-    ``P_e`` being the Euler load of Eq. (2-4), so that Eq. (2-57) of
+    The shear modulus is set such that ``P_e/(A*G/n)`` is ``0.2`` or
+    ``0.6``; the buckling loads of both planes are compared with the Euler
+    load with shear deformation (Timoshenko and Gere, 1961, Eq. (2-57)),
+    ``rtol = 1e-3``.
+
+    Notes
+    -----
+    ``P_e`` is the Euler load of Eq. (2-4), so that Eq. (2-57) of
     Timoshenko and Gere (1961), Sec. 2.17, p. 133, ``P_cr = P_e/(1 +
     n*P_e/(A*G))``, lowers the load by 16.7 % and 37.5 %. The square
     section along the direction ``(1, 2, 3)`` buckles at this load in both
@@ -174,12 +191,17 @@ def test_shear_flexible_column(name, num_elements, shear_ratio):
     pyfe3d 0.11, BeamLR took the slopes of its geometric stiffness matrix
     from the rotations and converged to ``P_e`` instead, 20 % and 60 % above
     Eq. (2-57).
+
+    References
+    ----------
+    Timoshenko, S. P., Gere, J. M., Theory of Elastic Stability, 2nd ed.,
+    McGraw-Hill, 1961.
     """
     loads, euler, _, kGA = buckling_loads(name, 0.05, 0.05, (1, 2, 3),
                                           (0, 0, 1), shear_ratio=shear_ratio,
                                           num_elements=num_elements)
     assert np.isclose(euler/kGA, shear_ratio, rtol=1e-12)
-    # NOTE Eq. (2-57) of Timoshenko and Gere (1961), n/(A*G) = 1/(kappa*G*A)
+    # NOTE Euler load with shear deformation
     expected = euler/(1 + euler/kGA)
     assert np.allclose(loads, expected, rtol=1e-3)
 

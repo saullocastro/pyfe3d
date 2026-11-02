@@ -1,3 +1,10 @@
+r"""Natural frequencies of a hinged circular arch modelled with BeamLR
+
+The first three in-plane frequencies of the arch, rotated to lie in the
+XZ plane (rotations of 90 and 270 degrees about X), are compared with the curved-element results of Yoon et al. (2006), Table 6,
+with and without shear deformation, for the consistent and the lumped mass
+matrices, and with values pre-determined by this test.
+"""
 import sys
 sys.path.append('..')
 
@@ -13,11 +20,17 @@ def test_nat_freq_curved_beam(refinement=2, mtypes=range(2)):
     r"""First three in-plane frequencies of a hinged circular arch, in the
     XZ plane
 
-    The reference is Table 6, p. 1186, of Yoon, K.-Y., Park, N.-H., Choi,
-    Y.-J., Kang, Y.-J., Natural frequencies of thin-walled curved beams,
-    Finite Elements in Analysis and Design, 42(13), 2006, pp. 1176-1186,
-    https://doi.org/10.1016/j.finel.2006.05.002: 396.98, 931.22 and 1797.31
-    rad/s for the hinged-hinged arch of Sec. 5.5 and Fig. 8, p. 1185, with
+    The frequencies are compared with Table 6 of Yoon et al. (2006), with
+    ``rtol = 0.10`` with shear deformation (shear correction factor 5/6)
+    and ``rtol = 0.003`` without (``G`` multiplied by ``1e4``), and, with
+    the default ``refinement``, with frequencies pre-determined by this
+    test, ``rtol = 1e-4``; for the consistent (``mtype=0``) and the lumped
+    (``mtype=1``) mass matrices.
+
+    Notes
+    -----
+    The reference is Table 6, p. 1186, of Yoon et al. (2006): 396.98, 931.22
+    and 1797.31 rad/s for the hinged-hinged arch of Sec. 5.5 and Fig. 8, p. 1185, with
     ``R = 2.438 m``, an angle of 97 degrees, ``A = 4.071e-3 m**2``, ``I_z =
     6.456e-6 m**4``, ``E = 206.8 GPa``, ``G = 77.9 GPa`` and ``rho = 7855
     kg/m**3``. These values come from the curved finite element of the
@@ -32,8 +45,8 @@ def test_nat_freq_curved_beam(refinement=2, mtypes=range(2)):
     - with shear deformation, shear correction factor 5/6, the frequencies
       converge to 394.42, 918.51 and 1756.26 rad/s (800 elements), 0.64,
       1.36 and 2.28 % below the reference; with 99 elements they are 0.60
-      to 2.22 % below, with 49 elements 0.44 to 2.01 %. The tolerance of 3 %
-      covers this difference of model;
+      to 2.22 % below, with 49 elements 0.44 to 2.01 %. The tolerance, grade B
+      (10 %), covers this difference of model;
     - without shear deformation, with ``G`` multiplied by ``1e4`` (the
       frequencies change by less than 1e-5 between ``1e3`` and ``1e6``),
       the frequencies converge to 396.71, 929.86 and 1795.51 rad/s, 0.07,
@@ -48,11 +61,18 @@ def test_nat_freq_curved_beam(refinement=2, mtypes=range(2)):
     ``rtol = 1e-4`` for the round-off of the eigenvalue solver, called with
     ``tol=1e-9``; the frequencies with shear deformation, whose difference
     to the reference is one of the model, are compared with the reference
-    with grade B of MacNeal, R. H. and Harder, R. L., A proposed standard set
-    of problems to test finite element accuracy, Finite Elements in Analysis
-    and Design, 1(1), 3-20, 1985,
-    https://doi.org/10.1016/0168-874X(85)90003-4, p. 14 (at most 10 %), as a
+    with grade B of MacNeal and Harder (1985), p. 14 (at most 10 %), as a
     bound; until 0.12.0 with 3 %, close to the 2.3 % of the model.
+
+    References
+    ----------
+    Yoon, K.-Y., Park, N.-H., Choi, Y.-J., Kang, Y.-J., Natural frequencies
+    of thin-walled curved beams, Finite Elements in Analysis and Design,
+    42(13), 2006, pp. 1176-1186, https://doi.org/10.1016/j.finel.2006.05.002.
+
+    MacNeal, R. H., Harder, R. L., A proposed standard set of problems to
+    test finite element accuracy, Finite Elements in Analysis and Design,
+    1(1), 1985, pp. 3-20, https://doi.org/10.1016/0168-874X(85)90003-4.
     """
     # NOTE frequencies pre-determined with refinement=2, see the
     #      docstring, keyed by G_factor and mtype
@@ -172,7 +192,7 @@ def test_nat_freq_curved_beam(refinement=2, mtypes=range(2)):
                 #      before calling the eigensolver and returns the circular
                 #      frequencies already sorted
                 omegan, eigvecsu = natural_frequency(Kuu, Muu, num_eigvalues=num_eigenvalues, tol=1e-9)
-                # NOTE Table 6 of Yoon et al. (2006)
+                # NOTE reference frequencies, see the docstring
                 omega123_from_paper = [396.98, 931.22, 1797.31]
                 print('Reference omega123_from_paper', omega123_from_paper)
                 print('Numerical omega123', omegan)
