@@ -174,18 +174,18 @@ steps:
    ``KC0uu = KC0[bu, :][:, bu]`` and, for non-zero prescribed
    displacements, ``KC0uk = KC0[bu, :][:, bk]``, and the solution is
    expanded, ``u[bu] = uu`` and ``u[bk] = uk[bk]``, see
-   :doc:`linear_analyses`. With :class:`.Analysis`, ``bu`` and ``uk`` are
-   passed instead and the partition is done by the solver, see
-   :doc:`nonlinear_analyses`. A dof without stiffness or a missing support
-   raises an error, see :doc:`linear_analyses`. A structure without
-   supports is solved with inertia relief, see :doc:`inertia_relief`.
+   :doc:`boundary_conditions`. With :class:`.Analysis`, ``bu`` and ``uk``
+   are passed instead and the partition is done by the solver. A dof
+   without stiffness or a missing support raises an error. A structure
+   without supports is solved with inertia relief, see
+   :doc:`inertia_relief`.
 6. Solution: the linear static system `\boldsymbol{K}_{{C0}_{uu}} \boldsymbol{u}_u =
-   \boldsymbol{f}_u - \boldsymbol{K}_{{C0}_{uk}} \boldsymbol{u}_k`, with :func:`.solve`,
-   :func:`.linear_static` or :meth:`.Analysis.static`, see
-   :doc:`linear_analyses`; the eigenvalue
-   problems with :func:`.linear_buckling`, :func:`.natural_frequency` and
-   :func:`.complex_frequency`,
-   see :doc:`eigenvalue_analyses`; the non-linear analyses with
+   \boldsymbol{F}_{{ext}_u} - \boldsymbol{K}_{{C0}_{uk}} \bar{\boldsymbol{u}}_k`, with
+   :func:`.solve`, :func:`.linear_static` or :meth:`.Analysis.static`, see
+   :doc:`linear_analyses`; the eigenvalue problems with
+   :func:`.linear_buckling`, :func:`.natural_frequency` and
+   :func:`.complex_frequency`, see :doc:`eigenvalue_analyses` and
+   :doc:`eigenvalue_solvers`; the non-linear analyses with
    :class:`.Analysis`, see :doc:`nonlinear_analyses`, also with the
    co-rotational elements of :class:`.CorotationalModel` for large
    rotations.
@@ -193,15 +193,15 @@ steps:
    element to element coordinates, in ``probe.ue``; ``update_fint`` adds
    its internal forces, in global coordinates, to a global vector, whose
    values at the constrained dofs are the reactions, `\boldsymbol{F}_{{int}_k} -
-   \boldsymbol{f}_k`, equal to `\boldsymbol{K}_{{C0}_{ku}} \boldsymbol{u}_u +
-   \boldsymbol{K}_{{C0}_{kk}} \boldsymbol{u}_k - \boldsymbol{f}_k` in a linear analysis,
-   with or without prescribed displacements; and the strains of :class:`.Quad4` are recovered with
-   :meth:`.Quad4Probe.update_BL`.
+   \boldsymbol{F}_{{ext}_k}`, equal to `\boldsymbol{K}_{{C0}_{ku}} \boldsymbol{u}_u +
+   \boldsymbol{K}_{{C0}_{kk}} \bar{\boldsymbol{u}}_k - \boldsymbol{F}_{{ext}_k}` in a linear
+   analysis, with or without prescribed displacements; and the strains of
+   :class:`.Quad4` are recovered with :meth:`.Quad4Probe.update_BL`.
 
 Since the probe is shared, ``update_probe_xe`` and ``update_probe_ue``
 must be called for an element right before the methods that read the
 probe, e.g. ``update_KG``, ``update_KCNL`` and ``update_fint``, as in the
-loops of the examples.
+loops of the tests.
 
 
 Linear and non-linear problems
@@ -212,7 +212,7 @@ static problem use the same element matrices:
 
 .. math::
 
-    \boldsymbol{K}_{C0} \boldsymbol{u} = \boldsymbol{f}
+    \boldsymbol{K}_{C0} \boldsymbol{u} = \boldsymbol{F}_{ext}
 
 .. math::
 
@@ -230,9 +230,18 @@ buckling analysis and `\boldsymbol{F}_{int}(\boldsymbol{u})` is the vector of ``
 nonlinear=1)``, whose exact derivative is `\boldsymbol{K}_T` for every element with
 ``update_KCNL`` (verified in ``tests/test_tangent_consistency.py``). The
 linear internal force vector, ``nonlinear=0``, is `\boldsymbol{K}_{C0} \boldsymbol{u}`.
+A load that follows the deformation adds its load stiffness matrix to
+`\boldsymbol{K}_T`, see :doc:`configuration_dependent_loads`.
 
 These are the von Kármán strains of the elements, for small to moderate
 rotations. For large rotations, :class:`.CorotationalModel` adds the
 elements with co-rotational kinematics and provides the callables of
 :class:`.Analysis`, with total rotation vectors as rotational dofs, see
 :doc:`nonlinear_analyses`.
+
+The theory of the analyses and of their solvers is given in the chapters
+:doc:`boundary_conditions`, :doc:`linear_analyses`,
+:doc:`inertia_relief`, :doc:`nonlinear_analyses`,
+:doc:`newton_raphson_method`, :doc:`arc_length_methods`,
+:doc:`convergence_criteria`, :doc:`configuration_dependent_loads`,
+:doc:`eigenvalue_analyses` and :doc:`eigenvalue_solvers`.

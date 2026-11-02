@@ -48,7 +48,7 @@ With the solvers of :mod:`pyfe3d.solver` you can run:
   :mod:`pyfe3d.corotational`
 
 The eigenvalue solvers verify their results and use a dense solver only as
-a last resort, see :doc:`eigenvalue_analyses`.
+a last resort, see :doc:`eigenvalue_solvers`.
 
 
 Code repository
@@ -77,12 +77,26 @@ User guide
     beam_theory.rst
     beam_properties.rst
     truss_spring.rst
+    corotational_formulation.rst
     cross_sectional_analysis.rst
+
+
+Analyses and solvers
+--------------------
+
+.. toctree::
+    :maxdepth: 1
+
+    boundary_conditions.rst
     linear_analyses.rst
     inertia_relief.rst
     nonlinear_analyses.rst
-    corotational_formulation.rst
+    newton_raphson_method.rst
+    arc_length_methods.rst
+    convergence_criteria.rst
+    configuration_dependent_loads.rst
     eigenvalue_analyses.rst
+    eigenvalue_solvers.rst
 
 
 .. toctree::
