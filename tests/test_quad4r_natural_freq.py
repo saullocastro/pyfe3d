@@ -1,3 +1,11 @@
+r"""Natural frequency of a simply supported plate modelled with Quad4R,
+against the exact solution of Leissa (1969)
+
+The fundamental frequency of a hard simply supported plate, with the
+consistent, lumped and reduced mass matrices, is compared with Leissa
+(1969), Eq. (4.20), within 1 per cent.
+
+"""
 import sys
 sys.path.append('..')
 
@@ -14,8 +22,13 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=3):
     ``b = 0.5``, ``h = 0.01``, with the consistent, lumped and reduced mass
     matrices
 
-    The reference is the exact solution of Leissa, A. W., Vibration of
-    Plates, NASA SP-160, 1969, Sec. 4.1, p. 44, Eq. (4.20),
+    The first circular frequency of each mass matrix is compared with the
+    exact solution of Leissa (1969), Sec. 4.1, p. 44, Eq. (4.20), with
+    ``rtol=0.01``.
+
+    Notes
+    -----
+    The reference is the exact solution of [1]_, Sec. 4.1, p. 44, Eq. (4.20),
     ``omega = sqrt(D/rho)*((m*pi/a)**2 + (n*pi/b)**2)``, with ``m = n = 1``
     and Leissa's ``rho`` the mass per unit area, here ``rho*h``.
 
@@ -24,10 +37,7 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=3):
     zero, for which the Navier mode is also exact for the Mindlin plate: with
     ``a/h = 30``, the rotary inertia and ``A44 = A55 = 5/6 G h``, its
     frequency is 0.28 % below the reference, from the characteristic equation
-    (76) of Wittrick, W. H., Analytical, three-dimensional elasticity
-    solutions to some plate problems, and some observations on Mindlin's
-    plate theory, International Journal of Solids and Structures, 23(4),
-    441-464, 1987, Sec. 3.2, p. 457, and the elements converge to that
+    (76) of [2]_, Sec. 3.2, p. 457, and the elements converge to that
     value. With the soft simple support used before, rotations free, they
     converge to about 1 % below the reference, through the boundary layer
     of the Mindlin plate along the edges.
@@ -38,10 +48,26 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=3):
     35x43 elements 0.14 to 0.31 % below it, with 53x65 elements 0.22 to 0.30 %
     below it, converging to the Mindlin value above, measured on 2026-10-29
     with the physical stabilisation of the bending and of the transverse shear
-    of Belytschko and Leviathan (1994) that Quad4R uses since 0.12.0, see
+    of Belytschko and Leviathan (1994) [3]_ that Quad4R uses since 0.12.0, see
     :mod:`pyfe3d.quad4r`. Up to 0.11, with the hourglass stiffnesses of
-    Brockman (1987), they were 0.09 % below to 0.22 % above the reference with
+    Brockman (1987) [4]_, they were 0.09 % below to 0.22 % above the reference with
     26x32 elements and 1.78 to 5.07 % above it with 8x10 elements.
+
+    References
+    ----------
+    .. [1] Leissa, A. W., Vibration of Plates, NASA SP-160, 1969.
+    .. [2] Wittrick, W. H., Analytical, three-dimensional elasticity
+       solutions to some plate problems, and some observations on Mindlin's
+       plate theory, International Journal of Solids and Structures, 23(4),
+       441-464, 1987.
+    .. [3] Belytschko, T., and Leviathan, I., Physical stabilization of the
+       4-node shell element with one point quadrature, Computer Methods in
+       Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
+       https://doi.org/10.1016/0045-7825(94)90052-3
+    .. [4] Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
+       International Journal for Numerical Methods in Engineering, 24(12),
+       2343-2356, 1987. https://doi.org/10.1002/nme.1620241208
+
     """
     data = Quad4RData()
     probe = Quad4RProbe()
@@ -166,7 +192,9 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=3):
         u = np.zeros(N)
         u[bu] = eigvecsu[:, mode]
 
-        # NOTE Leissa (1969), Eq. (4.20), with rho*h the mass per unit area
+        # NOTE reference frequency of the simply supported plate, rho*h the
+        #      mass per unit area
+
         m = 1
         n = 1
         D = E*h**3/(12*(1 - nu**2))

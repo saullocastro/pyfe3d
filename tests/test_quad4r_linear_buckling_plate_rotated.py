@@ -1,3 +1,7 @@
+r"""Linear buckling of a rotated plate modelled with Quad4R, invariance to
+the orientation of the plate in space
+
+"""
 import sys
 sys.path.append('..')
 
@@ -17,13 +21,24 @@ def test_linear_buckling_plate(plot=False, mode=0):
     :func:`test_quad4r_linear_buckling_plate_given_stress.test_linear_buckling`
     with 30x14 elements, rotated by 25 combinations of pitch and yaw
 
-    The buckling load must not depend on the orientation of the plate. With
-    this mesh it is 1.5 % above the exact solution of Leissa, A. W.,
-    Vibration of Plates, NASA SP-160, 1969, Sec. 10.2.1, p. 277, Eq.
-    (10.46); the convergence to that solution with the mesh is verified by
-    the flat plate of
+    The buckling load must not depend on the orientation of the plate: the
+    loads of all orientations are compared with the first with
+    ``rtol=1e-6``. The exact solution of Leissa (1969), Eq. (10.46), is only
+    printed.
+
+    Notes
+    -----
+    With this mesh the buckling load is 1.5 % above the exact solution of
+    [1]_, Sec. 10.2.1, p. 277, Eq. (10.46); the convergence to that solution
+    with the mesh is verified by the flat plate of
     :func:`test_quad4r_linear_buckling_plate_given_stress.test_linear_buckling`.
+
+    References
+    ----------
+    .. [1] Leissa, A. W., Vibration of Plates, NASA SP-160, 1969.
+
     """
+
     thetas = np.linspace(-np.pi, np.pi, 5)
     P_cr_calcs = []
 
