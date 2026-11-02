@@ -64,10 +64,8 @@ def solve(A, b, **kwargs):
     The system `\boldsymbol{A} \boldsymbol{x} = \boldsymbol{b}` is solved as given. In a finite element
     model the known displacements are partitioned out beforehand, and a null
     row or column of `\boldsymbol{A}` is a degree-of-freedom without stiffness, i.e. a
-    modelling error, which is reported instead of being removed. This
-    deliberately differs from structsolve, whose solvers remove the null
-    rows and columns left by the boundary conditions of its semi-analytical
-    models, see :func:`.check_null_rows_cols`.
+    modelling error, which is reported instead of being removed, see
+    :func:`.check_null_rows_cols`.
 
     An exactly singular matrix is detected by the factorization, which
     raises, instead of the :class:`scipy.sparse.linalg.MatrixRankWarning` and
