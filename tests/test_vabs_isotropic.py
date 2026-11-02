@@ -15,10 +15,30 @@ solutions and published values:
 - reference axis offset from the centroid: sign of the extension-bending
   couplings, conversion to the convention of pyfe3d and :class:`BeamProp`.
 
-References: Yu, W., and Hodges, D. H., Journal of the American Helicopter
-Society, 50(1), pp. 46-55, 2005; Yu, W., Hodges, D. H., Volovoi, V., and
-Cesnik, C. E. S., International Journal of Solids and Structures, 39(19),
-pp. 5101-5121, 2002.
+Notes
+-----
+The shear correction factors of the rectangle and of the T-section are
+those of Eq. (25), p. 50, and Table 1 of Yu and Hodges (2005) [1]_, the
+square that of Table 3 of Yu et al. (2002) [2]_; the axial strain of the
+offset reference axis is Eq. (36) of Yu et al. (2012) [3]_. The
+elasticity solutions are derived in the docstrings of
+:func:`rect_torsion_J` and :func:`circle_k`.
+
+References
+----------
+.. [1] Yu, W., and Hodges, D. H., "Generalized Timoshenko Theory of the
+   Variational Asymptotic Beam Sectional Analysis", Journal of the
+   American Helicopter Society, 50(1), pp. 46--55, 2005.
+   https://doi.org/10.4050/1.3092842
+.. [2] Yu, W., Hodges, D. H., Volovoi, V. V., and Cesnik, C. E. S., "On
+   Timoshenko-like modeling of initially curved and twisted composite
+   beams", International Journal of Solids and Structures, 39(19),
+   pp. 5101--5121, 2002. https://doi.org/10.1016/S0020-7683(02)00399-2
+.. [3] Yu, W., Hodges, D. H., and Ho, J. C., "Variational asymptotic
+   beam sectional analysis -- An updated version", International
+   Journal of Engineering Science, 59, pp. 40--64, 2012.
+   https://doi.org/10.1016/j.ijengsci.2012.03.006
+
 """
 import sys
 import os
@@ -34,8 +54,11 @@ import vabs_meshes as vm
 
 
 def rect_torsion_J(a, b, nterms=200):
-    r"""Torsion constant of the rectangle `|y| \le a/2`, `|z| \le b/2`
+    r"""Torsion constant of the rectangle `|y| \le a/2`, `|z| \le b/2`,
+    Saint-Venant series solution
 
+    Notes
+    -----
     Derivation: with the Prandtl stress function `\phi`, `\nabla^2 \phi =
     -2` (`G \theta = 1`), `\phi = 0` on the boundary and `J = 2 \int \phi \,
     dA`. With the Fourier series `1 = \sum_{n \, odd} \frac{4}{n \pi}
@@ -52,7 +75,20 @@ def rect_torsion_J(a, b, nterms=200):
 
 def rect_c2(a, b, nu, nterms=2000):
     r"""Shear correction factor `c_2` of a rectangle of width `2a` along
-    `x_2` and height `2b` along `x_3`, Eq. (25) of Yu and Hodges (2005)"""
+    `x_2` and height `2b` along `x_3`, Eq. (25) of Yu and Hodges (2005)
+
+    Notes
+    -----
+    The series of Eq. (25) of [1]_ is summed with ``nterms`` terms.
+
+    References
+    ----------
+    .. [1] Yu, W., and Hodges, D. H., "Generalized Timoshenko Theory of the
+       Variational Asymptotic Beam Sectional Analysis", Journal of the
+       American Helicopter Society, 50(1), pp. 46--55, 2005.
+       https://doi.org/10.4050/1.3092842
+
+    """
     rho = a/b
     m = np.arange(1, nterms + 1, dtype=float)
     s = np.sum(np.tanh(m*np.pi*rho)/m**5)
@@ -62,8 +98,11 @@ def rect_c2(a, b, nu, nterms=2000):
 
 
 def circle_k(nu):
-    r"""Shear correction factor of a solid circle
+    r"""Shear correction factor of a solid circle, from the Saint-Venant
+    flexure solution
 
+    Notes
+    -----
     Derivation (scratch script of the author's run, reproduced here): the
     stresses `\sigma_{zz} = -P (l - z) x/I`, `\tau_{xz} = \frac{3 + 2\nu}{8
     (1 + \nu)} \frac{P}{I} (R^2 - x^2 - \frac{1 - 2\nu}{3 + 2\nu} y^2)`,
@@ -86,7 +125,22 @@ def run(x2, x3, els, E, nu, rho=0., constraint='yu2012'):
 
 
 def test_rect_c2_exact():
-    # NOTE value printed on p. 50 of Yu and Hodges (2005)
+    r"""Series of :func:`rect_c2` against the value printed by Yu and Hodges
+    (2005)
+
+    Notes
+    -----
+    The value ``0.784442`` is printed on p. 50 of [1]_ for `2a = 1`, `2b =
+    2` and `\nu = 0.3`.
+
+    References
+    ----------
+    .. [1] Yu, W., and Hodges, D. H., "Generalized Timoshenko Theory of the
+       Variational Asymptotic Beam Sectional Analysis", Journal of the
+       American Helicopter Society, 50(1), pp. 46--55, 2005.
+       https://doi.org/10.4050/1.3092842
+
+    """
     assert np.isclose(rect_c2(0.5, 1., 0.3), 0.784442, rtol=1e-6)
 
 
@@ -96,6 +150,26 @@ def test_rect_c2_exact():
                                               (6, 8, 2.e-5), (8, 8, 5.e-5),
                                               (9, 8, 5.e-5)])
 def test_rectangle(etype, n, rtol_c):
+    r"""Rectangle, every element type: area, `EA`, `EI_2`, `EI_3`, the
+    torsion constant and the shear correction factors against the
+    analytical values, and the classical stiffness against the condensed
+    Timoshenko stiffness
+
+    Notes
+    -----
+    The reference values are `A = a b`, `E A`, `E a b^3/12` and `E b
+    a^3/12`, `G J` with `J` the Saint-Venant series of
+    :func:`rect_torsion_J`, and `c_2`, `c_3` of Eq. (25) of [1]_,
+    :func:`rect_c2`.
+
+    References
+    ----------
+    .. [1] Yu, W., and Hodges, D. H., "Generalized Timoshenko Theory of the
+       Variational Asymptotic Beam Sectional Analysis", Journal of the
+       American Helicopter Society, 50(1), pp. 46--55, 2005.
+       https://doi.org/10.4050/1.3092842
+
+    """
     E, nu = 70.e9, 0.3
     G = E/(2*(1 + nu))
     a, b = 1., 2.
@@ -125,7 +199,21 @@ def test_rectangle(etype, n, rtol_c):
 def test_rectangle_convergence():
     r"""Error of `c_2` against Eq. (25) of Yu and Hodges (2005) decreases
     with the mesh; with 8-node elements it decreases by about `2^4` per
-    halving of the element size, see Fig. 2 of the same paper for VABS"""
+    halving of the element size
+
+    Notes
+    -----
+    The reference is `c_2` of Eq. (25) of [1]_, :func:`rect_c2`; Fig. 2 of
+    [1]_ shows the convergence of VABS.
+
+    References
+    ----------
+    .. [1] Yu, W., and Hodges, D. H., "Generalized Timoshenko Theory of the
+       Variational Asymptotic Beam Sectional Analysis", Journal of the
+       American Helicopter Society, 50(1), pp. 46--55, 2005.
+       https://doi.org/10.4050/1.3092842
+
+    """
     E, nu = 1., 0.3
     G = E/(2*(1 + nu))
     ref = rect_c2(0.5, 1., nu)
@@ -142,8 +230,23 @@ def test_rectangle_convergence():
 
 def test_square_Yu2002_Table3():
     r"""Isotropic square ``0.5 in. x 0.5 in.``, ``E = 2.6e7 psi``, ``nu =
-    0.3``, meshed with 8 x 8 8-node quadrilaterals as on p. 5113 of Yu et
-    al. (2002); prismatic column of their Table 3"""
+    0.3``, meshed with 8 x 8 8-node quadrilaterals, against the prismatic
+    column of Table 3 of Yu et al. (2002)
+
+    Notes
+    -----
+    Data and mesh are those of p. 5113 of [1]_, the reference values those
+    of the prismatic column of its Table 3, compared to their three printed
+    digits.
+
+    References
+    ----------
+    .. [1] Yu, W., Hodges, D. H., Volovoi, V. V., and Cesnik, C. E. S., "On
+       Timoshenko-like modeling of initially curved and twisted composite
+       beams", International Journal of Solids and Structures, 39(19),
+       pp. 5101--5121, 2002. https://doi.org/10.1016/S0020-7683(02)00399-2
+
+    """
     x2, x3, els = vm.rectangle(0.5, 0.5, 8, 8, 8)
     sec = run(x2, x3, els, 2.6e7, 0.3)
     Kt = sec.Kt
@@ -158,6 +261,15 @@ def test_square_Yu2002_Table3():
 @pytest.mark.parametrize('etype', [6, 8,
                                    pytest.param(9, marks=pytest.mark.slow)])
 def test_circle(etype):
+    r"""Solid circle: area, `EA`, `EI`, `GJ` and the shear correction
+    factor against the elasticity solutions
+
+    Notes
+    -----
+    The reference values are `A = \pi R^2`, `I = \pi R^4/4`, `J = \pi
+    R^4/2` and the shear correction factor of the Saint-Venant flexure
+    solution, :func:`circle_k`.
+    """
     E, nu, R = 1., 0.3, 1.
     G = E/(2*(1 + nu))
     x2, x3, els = vm.circle(R, 8, etype)
@@ -175,6 +287,13 @@ def test_circle(etype):
 
 
 def test_tube():
+    r"""Tube: `EA`, `EI` and `GJ` against the elasticity solutions
+
+    Notes
+    -----
+    The reference values are `A = \pi (R_o^2 - R_i^2)`, `I = \pi (R_o^4 -
+    R_i^4)/4` and `J = 2 I`.
+    """
     E, nu, Ri, Ro = 1., 0.3, 0.6, 1.
     G = E/(2*(1 + nu))
     x2, x3, els = vm.annulus(Ri, Ro, 4, 32, 8)
@@ -191,10 +310,23 @@ def test_tube():
                                         (0.25, 0.7367, 0.6764)])
 def test_T_section_Yu2005_Table1(nu, c2, c3):
     r"""T-section of Fig. 3 of Yu and Hodges (2005): a `4a \times 2a`
-    flange under a `2a \times 2a` web; VABS values of their Table 1. Their
-    mesh is not given; with this mesh the difference is below 0.05 %, and
-    it decreases slowly with refinement because of the re-entrant
-    corners"""
+    flange under a `2a \times 2a` web; shear correction factors against the
+    VABS values of their Table 1. Their mesh is not given; with this mesh
+    the difference is below 0.05 %, and it decreases slowly with refinement
+    because of the re-entrant corners
+
+    Notes
+    -----
+    Geometry of Fig. 3 and reference values of Table 1 of [1]_, p. 51.
+
+    References
+    ----------
+    .. [1] Yu, W., and Hodges, D. H., "Generalized Timoshenko Theory of the
+       Variational Asymptotic Beam Sectional Analysis", Journal of the
+       American Helicopter Society, 50(1), pp. 46--55, 2005.
+       https://doi.org/10.4050/1.3092842
+
+    """
     a = 1.
     parts = [vm.rectangle(4*a, 2*a, 16, 8, 8, 0., a),
              vm.rectangle(2*a, 2*a, 8, 8, 8, 0., 3*a)]
@@ -211,11 +343,16 @@ def test_T_section_Yu2005_Table1(nu, c2, c3):
 
 @pytest.mark.parametrize('d2, d3', [(0.3, 0.), (0., 0.4), (0.3, -0.2)])
 def test_offset_reference_axis(d2, d3):
-    r"""Rectangle with its centroid at `(d_2, d_3)`
+    r"""Rectangle with its centroid at `(d_2, d_3)`: extension-bending and
+    shear-twist couplings, centres, conversion to the convention of pyfe3d
+    and :class:`BeamProp` against the centroidal properties transported to
+    the reference axis
 
+    Notes
+    -----
     In the convention of :mod:`pyfe3d.vabs`, the axial strain is
-    `\gamma_{11} + x_3 \kappa_2 - x_2 \kappa_3`, Eq. (36) of Yu et al.
-    (2012), such that the extension-bending couplings of a homogeneous
+    `\gamma_{11} + x_3 \kappa_2 - x_2 \kappa_3`, Eq. (36) of [1]_, such
+    that the extension-bending couplings of a homogeneous
     isotropic section are `\langle E (-x_2) \rangle = -E A d_2` with
     `\kappa_3` and `\langle E x_3 \rangle = E A d_3` with `\kappa_2`. In the
     convention of pyfe3d they become `E A d_2 = E Q_z` with `\kappa_y` and
@@ -223,6 +360,14 @@ def test_offset_reference_axis(d2, d3):
     :class:`pyfe3d.BeamC`. The shear centre and the tension centre are at
     the centroid, and the shear-twist couplings are those of the transport
     of the centroidal matrix to the reference axis.
+
+    References
+    ----------
+    .. [1] Yu, W., Hodges, D. H., and Ho, J. C., "Variational asymptotic
+       beam sectional analysis -- An updated version", International
+       Journal of Engineering Science, 59, pp. 40--64, 2012.
+       https://doi.org/10.1016/j.ijengsci.2012.03.006
+
     """
     E, nu, rho = 1., 0.3, 2.
     a, b = 1., 2.
@@ -273,9 +418,22 @@ def test_offset_reference_axis(d2, d3):
 
 
 def test_constraints():
-    r"""The classical stiffness does not depend on the warping constraints,
-    Section 5.2 of Yu et al. (2012); for this isotropic section neither does
-    the Timoshenko stiffness"""
+    r"""The classical stiffness does not depend on the warping constraints;
+    for this isotropic section neither does the Timoshenko stiffness
+
+    Notes
+    -----
+    The independence of the classical stiffness from the warping
+    constraints is stated in Section 5.2 of [1]_.
+
+    References
+    ----------
+    .. [1] Yu, W., Hodges, D. H., and Ho, J. C., "Variational asymptotic
+       beam sectional analysis -- An updated version", International
+       Journal of Engineering Science, 59, pp. 40--64, 2012.
+       https://doi.org/10.1016/j.ijengsci.2012.03.006
+
+    """
     x2, x3, els = vm.rectangle(1., 2., 4, 8, 8)
     s1 = run(x2 + 0.1, x3 - 0.2, els, 1., 0.3, constraint='yu2012')
     s2 = run(x2 + 0.1, x3 - 0.2, els, 1., 0.3, constraint='yu2002')

@@ -1,3 +1,12 @@
+"""Axial natural frequencies of a clamped-free rod of Truss elements, against
+Petyt (2010)
+
+Straight rod of 100 linear Truss elements with only the axial displacement
+free, consistent and lumped mass matrices; the first five frequencies are
+checked against the exact solution of Petyt (2010), Example 3.1, with
+``rtol=0.002``.
+
+"""
 import sys
 sys.path.append('..')
 
@@ -11,16 +20,25 @@ from pyfe3d.solver import natural_frequency
 def test_truss_natural_freq(refinement=1, mtypes=range(2)):
     r"""First five axial frequencies of a clamped-free rod
 
+    Compared with the exact solution of Petyt (2010), Example 3.1,
+    Eq. (3.26), for the consistent and the lumped mass matrices.
+
+    Notes
+    -----
     The reference is the exact solution of Example 3.1, Eq. (3.26), p. 49,
-    of Petyt, M., Introduction to Finite Element Vibration Analysis, 2nd
-    ed., Cambridge University Press, 2010:
-    ``omega_r = (2*r - 1)*pi/2*sqrt(E/(rho*L**2))``.
+    of Petyt [1]_: ``omega_r = (2*r - 1)*pi/2*sqrt(E/(rho*L**2))``.
 
     The linear elements converge quadratically, from above with the
     consistent mass matrix and from below with the lumped one, with nearly
     the same errors: 0.001, 0.009, 0.026, 0.050 and 0.083 % with 100
     elements, 0.004 to 0.33 % with 50 elements, 0.017 to 1.34 % with 25
     elements.
+
+    References
+    ----------
+    .. [1] Petyt, M., Introduction to Finite Element Vibration Analysis, 2nd
+       ed., Cambridge University Press, 2010.
+
     """
     for mtype in mtypes:
         print('mtype', mtype)

@@ -1,13 +1,7 @@
 r"""Verification of Tria3DSG, the discrete shear gap triangle
 
-The element is described in :mod:`pyfe3d.tria3dsg` and follows
-
-    Bletzinger, K.-U., Bischoff, M., and Ramm, E., 2000, "A unified approach
-    for shear-locking-free triangular and rectangular shell finite
-    elements", Computers & Structures, 75(3), pp. 321-334.
-    https://doi.org/10.1016/S0045-7949(99)00140-6
-
-It was written because :class:`pyfe3d.tria3r.Tria3R`, up to 0.11, cured
+The element is described in :mod:`pyfe3d.tria3dsg` and follows Bletzinger,
+Bischoff and Ramm (2000). It was written because :class:`pyfe3d.tria3r.Tria3R`, up to 0.11, cured
 its shear locking by dividing the transverse shear stiffnesses of a
 centroid-sampled shear field by `1 + \alpha \ell^2/h^2`, which leaves it
 unable to reproduce a constant transverse shear state and makes it converge
@@ -19,6 +13,36 @@ default of Tria3R is this element's DSG field, ``shear_model = 1``, see
 available with ``shear_model = 0``, and every Tria3R built in this module is
 given that field and ``alpha_shear_locking = 0.7`` explicitly by
 :func:`legacy_tria3r`, unless a test sets ``alpha_shear_locking`` itself.
+
+The tests check the element against exact states with closed-form energies
+(rigid-body modes, constant transverse shear, Kirchhoff curvatures,
+constant membrane strain, an imposed slope for the von Kármán terms, an
+unsymmetric laminate), against Tria3R and Quad4, and against the thin-plate
+references of Timoshenko and Woinowsky-Krieger (1959) and Leissa (1969).
+
+Notes
+-----
+The discrete shear gap field is the one of Bletzinger, Bischoff and Ramm
+[1]_.
+
+The unsymmetric laminate of
+:func:`test_unsymmetric_laminate_couples_membrane_and_bending_exactly`,
+``UNSYM_STACK``, ``UNSYM_PLYT`` and ``UNSYM_LAMINAPROP``, is the stacking of
+cylinder Z22 and the material Geier1997 of Castro et al. [2]_, Tables 3 and
+4, p. 307, with ``G23`` set equal to ``G12 = G13`` instead of 3.400 GPa.
+
+References
+----------
+.. [1] Bletzinger, K.-U., Bischoff, M. and Ramm, E., A unified approach for
+   shear-locking-free triangular and rectangular shell finite elements,
+   Computers & Structures, 75(3), 321-334, 2000.
+   https://doi.org/10.1016/S0045-7949(99)00140-6
+.. [2] Castro, S. G. P., Mittelstedt, C., Monteiro, F. A. C., Arbelo, M. A.,
+   Ziegmann, G. and Degenhardt, R., Linear buckling predictions of
+   unstiffened laminated composite cylinders and cones under various loading
+   and boundary conditions using semi-analytical models, Composite
+   Structures, 118, 303-315, 2014.
+   https://doi.org/10.1016/j.compstruct.2014.07.037
 
 """
 import sys
@@ -200,10 +224,16 @@ def test_rank_matches_tria3r_and_assembly_removes_the_spurious_modes():
 def test_constant_transverse_shear_state_is_exact():
     r"""The property Tria3R cannot deliver
 
-    With `w = cx` and every rotation at zero the curvature vanishes, so the
-    whole energy is `A_{55} c^2 A/2`. The DSG reproduces it exactly at any
-    element size, while Tria3R is short by its stabilisation factor, which
-    reaches `7 \times 10^{-9}` for the largest element below.
+    The strain energy of the state `w = cx`, every rotation at zero, against
+    its closed form, the transverse shear energy. The DSG reproduces it
+    exactly at any element size, while Tria3R is short by its stabilisation
+    factor, which reaches `7 \times 10^{-9}` for the largest element below.
+
+    Notes
+    -----
+    With `w = cx` and every rotation at zero the curvature vanishes and the
+    transverse shear strain is the constant `c`, so the whole energy is
+    `A_{55} c^2 A/2`, with `A` the element area.
 
     """
     for L, h in [(1.0, 0.01), (0.1, 0.01), (0.01, 0.01), (0.01, 0.1),
@@ -228,16 +258,23 @@ def test_constant_transverse_shear_state_is_exact():
 def test_kirchhoff_states_produce_no_parasitic_shear():
     r"""The locking-free property, and the reason no parameter is needed
 
-    For each of the three constant-curvature states, with the rotations set
-    to the Kirchhoff values `\boldsymbol{\phi} = \nabla w`, the exact transverse
-    shear strain is zero. A displacement-based three-node triangle cannot
-    represent the quadratic `w` in its interior and so develops parasitic
-    shear, which is what locks it. The DSG operator uses only the nodal
-    values and gives exactly zero, so the element energy equals the bending
-    energy `\boldsymbol{\kappa}^\top \boldsymbol{D} \boldsymbol{\kappa} A/2` to machine precision.
+    The strain energy of the three constant-curvature states with the
+    Kirchhoff rotations, against the closed-form bending energy. A
+    displacement-based three-node triangle cannot represent the quadratic
+    `w` in its interior and so develops parasitic shear, which is what locks
+    it. The DSG operator uses only the nodal values and gives exactly zero
+    shear, so the element energy equals the bending energy to machine
+    precision.
 
     Tria3R is 8 to 23 per cent above that on the same triangle, which is the
     parasitic shear its stabilisation is there to suppress.
+
+    Notes
+    -----
+    With the rotations set to the Kirchhoff values `\boldsymbol{\phi} =
+    \nabla w` the exact transverse shear strain is zero, and the energy is
+    the bending energy `\boldsymbol{\kappa}^\top \boldsymbol{D}
+    \boldsymbol{\kappa} A/2`, with `A` the element area.
 
     """
     kap = 1.e-3
@@ -273,10 +310,19 @@ def test_kirchhoff_states_produce_no_parasitic_shear():
 def test_membrane_constant_strain_patch_test():
     r"""Constant in-plane strain must be exact, the triangle being a CST
 
-    The drilling constraint is part of the element, so the test field has to
-    satisfy it: `r_z` is set to `	heta_z`, otherwise the Hughes and Brezzi
-    term correctly charges energy for the mismatch, which it did at 0.8 per
-    cent while this test was being written.
+    The strain energy of a constant membrane strain state against its closed
+    form. The drilling constraint is part of the element, so the test field
+    has to satisfy it: `r_z` is set to `\theta_z`, otherwise the Hughes and
+    Brezzi term correctly charges energy for the mismatch, which it did at
+    0.8 per cent while this test was being written.
+
+    Notes
+    -----
+    For the constant strains `\boldsymbol{\epsilon} = \{\epsilon_{xx},
+    \epsilon_{yy}, \gamma_{xy}\}` the energy is `\boldsymbol{\epsilon}^\top
+    \boldsymbol{A} \boldsymbol{\epsilon} A/2`, with `A` the element area,
+    and the drilling rotation that satisfies the constraint is `r_z =
+    \theta_z = (v_{,x} - u_{,y})/2`.
 
     """
     K, el, prop = element_K(Tria3DSG, Tria3DSGData, Tria3DSGProbe,
@@ -287,7 +333,7 @@ def test_membrane_constant_strain_patch_test():
     ue[0::DOF] = exx*X + gxy*Y
     ue[1::DOF] = eyy*Y
     # NOTE the drilling degree-of-freedom has to follow the in-plane
-    #      rotation, r_z = theta_z = (v_,x - u_,y)/2, or the Hughes and
+    #      rotation theta_z of the Notes, or the Hughes and
     #      Brezzi term legitimately adds energy and the state is not a
     #      constant-strain one at all
     ue[5::DOF] = -gxy/2.
@@ -419,10 +465,18 @@ def test_clockwise_node_ordering():
 def plate_point_load(cls, Data, Probe, n, h, triangles=True):
     r"""Central deflection of a simply supported square plate, point load
 
-    The thin-plate reference is `w = 0.01160 P a^2/D` for `\nu = 0.3`:
+    Returned as the ratio to the thin-plate reference of Timoshenko and
+    Woinowsky-Krieger (1959), Table 8, for `\nu = 0.3`.
 
-        Timoshenko, S., and Woinowsky-Krieger, S., 1959, "Theory of Plates
-        and Shells", 2nd ed., McGraw-Hill, Table 8.
+    Notes
+    -----
+    The reference is `w = 0.01160 P a^2/D` for `\nu = 0.3`, Table 8 of
+    Timoshenko and Woinowsky-Krieger [1]_.
+
+    References
+    ----------
+    .. [1] Timoshenko, S. and Woinowsky-Krieger, S., Theory of Plates and
+       Shells, 2nd ed., McGraw-Hill, 1959.
 
     """
     L = 1.0
@@ -478,6 +532,20 @@ def test_converges_where_tria3r_converges_to_the_wrong_answer():
     it converges to the reference. Tria3R looks better on the coarsest mesh,
     because its soft transverse shear happens to compensate, and then
     settles about ten per cent away from the reference and stays there.
+
+    Notes
+    -----
+    The reference is the thin-plate central deflection `w = 0.01160 P
+    a^2/D` for `\nu = 0.3`, Table 8 of Timoshenko and Woinowsky-Krieger
+    [1]_, computed in :func:`plate_point_load` for the side ``a = 1`` and
+    the thickness ``h = 0.01``. The tolerances: within one per cent of the
+    reference on the finest mesh for Tria3DSG, more than five per cent away
+    for Tria3R.
+
+    References
+    ----------
+    .. [1] Timoshenko, S. and Woinowsky-Krieger, S., Theory of Plates and
+       Shells, 2nd ed., McGraw-Hill, 1959.
 
     """
     ratios = {'Tria3DSG': [], 'Tria3R': []}
@@ -559,15 +627,22 @@ def shape_function_gradients(ncoords):
 def test_nonlinear_internal_forces_of_an_imposed_slope():
     r"""The von Kármán terms, against virtual work on a state with a closed form
 
+    The internal forces of ``update_fint`` for the linearised rigid rotation
+    about the `y` axis, against the virtual work of the uniform membrane
+    stress of its nonlinear strain on three elementary virtual fields, and
+    against the exact nodal forces entry by entry. That a rotation is
+    charged any energy at all is the known price of the von Kármán
+    kinematics, not a defect of the element.
+
+    Notes
+    -----
     The field `w = c x`, `r_y = -c`, with everything else zero, is the
     linearised rigid rotation about the `y` axis. Every linear strain of the
     element vanishes for it: the curvatures because `r_y` is constant, and
     the discrete shear gap exactly, since
     `\Delta w_q = c(x_q - x_p) - c(x_q - x_p) = 0` edge by edge. So
     ``update_fint`` with ``nonlinear=0`` returns zero and everything left is
-    the von Kármán contribution, which is what this test is after. That a
-    rotation is charged any energy at all is the known price of the von
-    Kármán kinematics, not a defect of the element.
+    the von Kármán contribution, which is what this test is after.
 
     The only nonlinear strain is `\epsilon_{NL} = \{c^2/2, 0, 0\}`, giving
     the uniform membrane stress `\boldsymbol{N} = \boldsymbol{A} \boldsymbol{\epsilon}_{NL}`, and the
@@ -581,6 +656,12 @@ def test_nonlinear_internal_forces_of_an_imposed_slope():
 
     The third one is the term that carries the factor `w_{,x}` and not
     `w_{,x}/2`, the classic place to get the von Kármán variation wrong.
+
+    The exact nodal forces of the same uniform stress are
+    `\boldsymbol{B}_m^\top \boldsymbol{N} A` for the in-plane rows and
+    `w_{,x} \boldsymbol{G}^\top \boldsymbol{N} A` for the transverse one,
+    with `\boldsymbol{B}_m` and `\boldsymbol{G}` built from the shape
+    function gradients of :func:`shape_function_gradients`.
 
     """
     h = 0.02
@@ -639,8 +720,7 @@ def test_nonlinear_internal_forces_of_an_imposed_slope():
         assert abs(fint[d::DOF].sum())/scale < 1e-14, d
 
     # NOTE the exact nodal forces, entry by entry, from the same uniform
-    #      stress: Bm.T*N for the in-plane rows and w_x*G.T*N for the
-    #      transverse one
+    #      stress, given in the Notes
     expected = np.zeros(n)
     expected[0::DOF] = area*S_x*Nxx
     expected[1::DOF] = area*S_y*Nyy
@@ -690,9 +770,8 @@ def test_transverse_shear_stays_out_of_the_nonlinear_terms():
 #      and that is exactly why the two tests below had to be added: they
 #      cover the only part of this element that an isotropic plate cannot
 #      exercise. See test_material_direction_matches_tria3r.
-#      Stacking of cylinder Z22 and material Geier1997 of Castro et al.,
-#      Composite Structures, 118, 303-315, 2014, Tables 3 and 4, p. 307,
-#      with G23 set equal to G12 = G13 instead of 3.400 GPa.
+#      Stacking and material of a laminated cylinder, sourced in the Notes
+#      of the module docstring, with G23 set equal to G12 = G13
 UNSYM_STACK = [+49, -49, +36, -36, 0, 0]
 UNSYM_PLYT = 0.125e-3
 UNSYM_LAMINAPROP = (123.55e9, 8.708e9, 0.319, 5.695e9, 5.695e9, 5.695e9)
@@ -734,8 +813,9 @@ def test_material_direction_matches_tria3r():
     to give the same element-frame stiffness whichever element is used.
 
     Three parts of that construction are easy to get wrong and an earlier
-    hand-written version of :meth:`pyfe3d.tria3dsg.Tria3DSG.\
-update_rotation_matrix` got all three wrong at once:
+    hand-written version of
+    :meth:`pyfe3d.tria3dsg.Tria3DSG.update_rotation_matrix` got all three
+    wrong at once:
 
     * the material direction must be projected onto the element plane and
       renormalised before the angle is taken, otherwise any component along
@@ -791,6 +871,12 @@ def combined_state_energy(cls, Data, Probe, n, prop, matangle,
                           Lx=0.37, Ly=0.29):
     r"""Strain energy of a constant membrane *and* curvature state
 
+    Returns the energy of the assembled patch for that state, the constant
+    strains `\boldsymbol{\epsilon}`, the constant curvatures
+    `\boldsymbol{\kappa}` and the patch area.
+
+    Notes
+    -----
     The field is
 
     .. math::
@@ -865,18 +951,11 @@ def combined_state_energy(cls, Data, Probe, n, prop, matangle,
 def test_unsymmetric_laminate_couples_membrane_and_bending_exactly():
     r"""The B block, against a closed form and against Quad4
 
-    For a state of constant membrane strain and constant curvature the
-    strain energy is
-
-    .. math::
-        U = \frac{A}{2} \left( \boldsymbol{\epsilon}^\top \boldsymbol{A} \boldsymbol{\epsilon}
-            + 2 \boldsymbol{\epsilon}^\top \boldsymbol{B} \boldsymbol{\kappa}
-            + \boldsymbol{\kappa}^\top \boldsymbol{D} \boldsymbol{\kappa} \right)
-
-    and the cross term is the only place `\boldsymbol{B}` appears, so this is the one
-    state that tests it. With the material direction along the element `x`
-    axis the closed form can be written straight from the laminate, and it
-    is checked first. At other material directions the laminate has to be
+    The strain energy of a state of constant membrane strain and constant
+    curvature on an unsymmetric laminate, the one state whose energy has a
+    membrane-bending coupling term. With the material direction along the
+    element `x` axis it is checked against the closed form written straight
+    from the laminate. At other material directions the laminate has to be
     rotated, and rather than repeat that rotation here the element is
     checked against :class:`pyfe3d.quad4.Quad4`, which reproduces the same
     state exactly and is the element this one was written from.
@@ -885,6 +964,19 @@ def test_unsymmetric_laminate_couples_membrane_and_bending_exactly():
     :func:`test_material_direction_matches_tria3r`: the energy was wrong by
     a mesh-independent factor, 0.714 in the case first measured, while every
     isotropic test in this file stayed exact.
+
+    Notes
+    -----
+    For a state of constant membrane strain and constant curvature, see
+    :func:`combined_state_energy`, the strain energy is
+
+    .. math::
+        U = \frac{A}{2} \left( \boldsymbol{\epsilon}^\top \boldsymbol{A} \boldsymbol{\epsilon}
+            + 2 \boldsymbol{\epsilon}^\top \boldsymbol{B} \boldsymbol{\kappa}
+            + \boldsymbol{\kappa}^\top \boldsymbol{D} \boldsymbol{\kappa} \right)
+
+    and the cross term is the only place `\boldsymbol{B}` appears, so this is the one
+    state that tests it.
 
     """
     prop = unsymmetric_prop()
@@ -944,8 +1036,12 @@ def triangulated_plate_buckling(cls, Data, Probe, n, h, second='diagonal',
     ``update_KG_given_stress`` has to be given.
 
     ``rotate_prestress`` selects how the uniaxial state `N_{xx}` along the
-    global `x` axis is handed over. The correct way is a tensor rotation:
-    with `\boldsymbol{T}_{3\times 3}` the transformation matrix of the element, whose
+    global `x` axis is handed over: rotated into the element coordinate
+    system, the correct way, or as `(N_{xx}, 0, 0)` unrotated.
+
+    Notes
+    -----
+    The correct way is a tensor rotation: with `\boldsymbol{T}_{3\times 3}` the transformation matrix of the element, whose
     columns are the element axes, and `\boldsymbol{a} = \boldsymbol{T}_{3\times 3}^\top \{1, 0, 0\}`
     the loading direction in element coordinates, the state `N_{xx} \boldsymbol{a}
     \boldsymbol{a}^\top` has components
@@ -1102,40 +1198,37 @@ def test_buckling_load_does_not_depend_on_triangle_node_numbering():
 def test_optional_stabilisation_is_off_by_default_and_mild_when_on():
     r"""``alpha_shear_locking`` on top of the discrete shear gap
 
-    Source: the stabilisation is Eq. (26) of
-
-        Castro, S. G. P., Donadon, M. V., and Guimaraes, T. A. M., 2019,
-        "ES-PIM applied to buckling of variable angle tow laminates",
-        Composite Structures, 209, pp. 67-78.
-        https://doi.org/10.1016/j.compstruct.2018.10.058
-
-    following
-
-        Bischoff, M., and Bletzinger, K.-U., 2004, "Improving stability and
-        accuracy of Reissner-Mindlin plate finite elements via algebraic
-        subgrid scale stabilization", Computer Methods in Applied Mechanics
-        and Engineering, 193(15-16), pp. 1517-1528.
-        https://doi.org/10.1016/j.cma.2003.12.036
-
-    In both papers the factor `1/(1 + \alpha \ell^2/h^2)` is applied on top
-    of a field whose operator already contains the cure of the locking, a
-    discrete shear gap field in Castro et al. and an assumed-strain or
-    discrete shear gap field in Bischoff and Bletzinger, and the
-    recommended `\alpha` is near 0.1. Tria3R applies the same factor to a
-    centroid-sampled shear field, where it has to do the unlocking itself,
-    which is why its default is 0.7. This test pins both halves of that
-    statement, on the plate of tests/test_tria3r_natural_freq.py so that the
-    geometry, material, mesh and analytical reference are the recorded ones.
+    The stabilisation is Eq. (26) of Castro, Donadon and Guimaraes (2019),
+    following Bischoff and Bletzinger (2004), where it is applied on top of
+    a field that already cures the locking, with `\alpha` near 0.1, whereas
+    Tria3R applies it to a centroid-sampled shear field, which is why its
+    default is 0.7. This test pins both halves of that statement, on the
+    plate of tests/test_tria3r_natural_freq.py so that the geometry,
+    material, mesh and analytical reference are the recorded ones.
 
     Two things are checked. First that the default is a strict no-op, to the
     bit, so that nothing about Tria3DSG changed by the attribute existing.
     Second that on top of the DSG the parameter is mild, while on the
-    centroid-sampled element it is load bearing.
+    centroid-sampled element it is load bearing. The fundamental frequency
+    is compared with that of the simply supported Kirchhoff plate, Leissa
+    (1969), Eq. (4.20), graded with the rules of MacNeal and Harder (1985),
+    and the error of Tria3DSG without stabilisation with a value
+    pre-determined by this test.
+
+    Notes
+    -----
+    In both papers [1]_ [2]_ the factor `1/(1 + \alpha \ell^2/h^2)` is
+    applied on top of a field whose operator already contains the cure of
+    the locking, a discrete shear gap field in Castro et al. [1]_ and an
+    assumed-strain or discrete shear gap field in Bischoff and Bletzinger
+    [2]_, and the recommended `\alpha` is near 0.1. Tria3R applies the same
+    factor to a centroid-sampled shear field, where it has to do the
+    unlocking itself.
 
     The reference is the fundamental frequency of the simply supported
-    Kirchhoff plate, Leissa, A. W., Vibration of Plates, NASA SP-160, 1969,
-    Sec. 4.1, Eq. (4.20), p. 44, ``omega_11 = pi**2*(1/a**2 +
-    1/b**2)*sqrt(D/(rho*h))``. The mesh restrains only the translations of
+    Kirchhoff plate, Leissa [3]_, Sec. 4.1, Eq. (4.20), p. 44, ``omega_11 =
+    pi**2*(1/a**2 + 1/b**2)*sqrt(D/(rho*h))``, with ``m = n = 1``. The mesh
+    restrains only the translations of
     the edges, a soft simple support of the Mindlin plate, which is more
     flexible than the Kirchhoff plate: the error of Tria3DSG without
     stabilisation is +2.75, +0.20, -0.61 and -0.96 % with 9x11, 17x21, 33x41
@@ -1168,12 +1261,9 @@ def test_optional_stabilisation_is_off_by_default_and_mild_when_on():
     ``rtol = 1e-4`` for the round-off of the eigenvalue solver, and with
     grade B against Leissa as a bound.
 
-    The accuracy on the 9x11 mesh is graded with the rules of MacNeal, R. H.,
-    and Harder, R. L., 1985, "A proposed standard set of problems to test
-    finite element accuracy", Finite Elements in Analysis and Design, 1(1),
-    pp. 3-20, https://doi.org/10.1016/0168-874X(85)90003-4, p. 14: A for an
-    error of at most 2 %, B 10 %, C 20 %, D 50 %, F above 50 %. Measured,
-    in %:
+    The accuracy on the 9x11 mesh is graded with the rules of MacNeal and
+    Harder [4]_, p. 14: A for an error of at most 2 %, B 10 %, C 20 %, D
+    50 %, F above 50 %. Measured, in %:
 
     ======  ========  =======
     alpha   Tria3DSG  Tria3R
@@ -1184,12 +1274,33 @@ def test_optional_stabilisation_is_off_by_default_and_mild_when_on():
     0.7     -5.41     +0.60
     ======  ========  =======
 
+    The value 0.07 checked below is the lower bound of the range of `\alpha`
+    recommended by Castro et al. [1]_, the value the attribute documentation
+    recommends for a coarse mesh of a thin plate.
+
+    References
+    ----------
+    .. [1] Castro, S. G. P., Donadon, M. V. and Guimaraes, T. A. M., ES-PIM
+       applied to buckling of variable angle tow laminates, Composite
+       Structures, 209, 67-78, 2019.
+       https://doi.org/10.1016/j.compstruct.2018.10.058
+    .. [2] Bischoff, M. and Bletzinger, K.-U., Improving stability and
+       accuracy of Reissner-Mindlin plate finite elements via algebraic
+       subgrid scale stabilization, Computer Methods in Applied Mechanics
+       and Engineering, 193(15-16), 1517-1528, 2004.
+       https://doi.org/10.1016/j.cma.2003.12.036
+    .. [3] Leissa, A. W., Vibration of Plates, NASA SP-160, 1969.
+    .. [4] MacNeal, R. H. and Harder, R. L., A proposed standard set of
+       problems to test finite element accuracy, Finite Elements in Analysis
+       and Design, 1(1), 3-20, 1985.
+       https://doi.org/10.1016/0168-874X(85)90003-4
+
     """
     nx, ny = 9, 11
     a, b = 0.3, 0.5
     E, nu, rho, h = 203.e9, 0.33, 7.83e3, 0.01
 
-    # NOTE Leissa (1969), Eq. (4.20), m = n = 1
+    # NOTE reference frequency of the simply supported plate, m = n = 1
     D = E*h**3/(12*(1 - nu**2))
     wmn = np.pi**2*(1/a**2 + 1/b**2)*np.sqrt(D/(rho*h))
 
@@ -1302,7 +1413,7 @@ def test_optional_stabilisation_is_off_by_default_and_mild_when_on():
 
     # NOTE 0.07 is the value the attribute documentation recommends for a
     #      coarse mesh of a thin plate, being the lower bound of the range
-    #      of Castro et al. It has to sit between alpha = 0 and 0.1 and to
+    #      of the Notes. It has to sit between alpha = 0 and 0.1 and to
     #      improve on alpha = 0, which is the whole basis of recommending
     #      it, and this is what pins the table in that docstring
     assert e_dsg[0.] > e_dsg[0.07] > e_dsg[0.1]

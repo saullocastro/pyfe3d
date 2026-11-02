@@ -1,8 +1,9 @@
 r"""Meshes of cross sections for the tests of :mod:`pyfe3d.vabs`
 
 Structured patches of linear or quadratic elements, mapped from the unit
-square, are merged into the meshes of rectangles, circles, tubes, boxes and
-other sections. Every function returns the node coordinates ``x2``, ``x3``,
+square, are merged into the meshes of rectangles, annuli, circles, thin-walled
+sections made of walls, such as rectangular boxes, and I-sections and channels
+made of rectangles. Every function returns the node coordinates ``x2``, ``x3``,
 the connectivity ``elements``, with the nodes numbered counter-clockwise as
 required by :class:`pyfe3d.vabs.CrossSection`, and, for the walls, the
 information needed to orient the plies.

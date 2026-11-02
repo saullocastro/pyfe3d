@@ -4,6 +4,35 @@ Both arc-length methods trace the equilibrium path until the load factor
 reaches exactly 1.0, the cumulative arc length reaches ``maxArcLength`` or the
 arc-length increment becomes smaller than ``minInc``.
 
+The problems of :mod:`analytic_problems` have an exact tangent stiffness
+matrix: a linear problem, a chain of hardening springs and the shallow von
+Mises truss, with or without a spring in series. Checked here, for the
+methods of Riks and Crisfield: equilibrium at every converged point, the
+final state against a dense Newton-Raphson reference solution, the
+quadratic convergence of the iterations, the sampled limit points of the
+truss against their exact values, snap-through and snap-back, step cutting,
+the modified Newton-Raphson, ``maxArcLength``, silent output, independence
+of the units of forces and displacements, and the handling of invalid
+methods, singular tangent stiffness matrices, sharp peaks and complex roots
+of Crisfield's constraint.
+
+Notes
+-----
+The internal force of the von Mises truss is the shallow truss theory of
+Crisfield [1]_, Sec. 1.2, Eq. (1.7), p. 4, as given in
+:func:`analytic_problems.von_mises_truss`: ``F(w) = w**3 - 3*w**2 + 2*w``,
+with ``w`` the apex deflection. ``dF/dw = 3*w**2 - 6*w + 2 = 0`` gives the
+limit points ``w = 1 -+ 1/sqrt(3)``, of loads ``+-F_LIMIT``, ``F_LIMIT =
+2/(3*sqrt(3))``, and the load factors ``+-1/frac`` for the load ``frac``
+times ``F_LIMIT``; the spring in series carries the same force, so that the
+load factor at a given apex deflection does not depend on its stiffness.
+``F = 0`` again at ``w = 2``, the inverted configuration.
+
+References
+----------
+.. [1] Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
+   Structures, Volume 1: Essentials, John Wiley & Sons, Chichester, 1991.
+
 """
 import numpy as np
 import pytest
@@ -26,6 +55,13 @@ def check_limit_points(p, frac, which=(0, 1), rtol=1e-5):
     Mises truss of :func:`von_mises_truss`, of exact values ``1/frac`` at
     ``w = 1 - 1/sqrt(3)`` and ``-1/frac`` at ``w = 1 + 1/sqrt(3)``
 
+    The gap between each limit load factor and the largest (smallest)
+    sampled load factor bracketing it is bounded as derived in the Notes,
+    with ``rtol`` the tolerance of :func:`check_equilibrium`. The apex
+    deflection must increase along the path.
+
+    Notes
+    -----
     The arc-length method samples the path at discrete points, and the
     largest (smallest) sampled load factor is below (above) the limit load
     factor by an amount that depends on the step. Along the equilibrium path
@@ -36,8 +72,7 @@ def check_limit_points(p, frac, which=(0, 1), rtol=1e-5):
     1| <= 6*m`` in the bracket, ``m = max(|w_k - 1|, |w_k+1 - 1|)``, bounds
     the gap:
     ``|lambda_lim| - max(|lambda_k|, |lambda_k+1|) <= 3*m*dw**2/(4*P)``.
-    ``rtol`` is the tolerance of :func:`check_equilibrium`. The apex
-    deflection must increase along the path.
+
     """
     P = frac*F_LIMIT
     inc = np.asarray(p.an.increments)

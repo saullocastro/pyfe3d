@@ -1,3 +1,13 @@
+r"""Natural frequency of a prestressed simply supported plate modelled with
+Quad4R, against the exact solution of Leissa (1969)
+
+The prestress comes from a static solution under a uniform compressive edge
+load equal to half of the buckling load, the geometric stiffness from
+``Quad4R.update_KG``, and the fundamental frequency, with the consistent,
+lumped and reduced mass matrices, is compared with Leissa (1969),
+Eq. (10.44), within 1 per cent.
+
+"""
 import sys
 sys.path.append('..')
 
@@ -15,17 +25,34 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=2):
     r"""Fundamental frequency of a simply supported plate under a uniform
     compression ``N_xx`` equal to half of its buckling load
 
-    The reference is the exact solution of Leissa, A. W., Vibration of Plates,
-    NASA SP-160, 1969, Sec. 10.2.1, p. 277: the frequency equation (10.44),
+    The first circular frequency of each mass matrix is compared with the
+    exact solution of Leissa (1969), Sec. 10.2.1, p. 277, Eq. (10.44), with
+    ``rtol=0.01``.
+
+    Notes
+    -----
+    The reference is the exact solution of [1]_, Sec. 10.2.1, p. 277: the frequency equation (10.44),
     ``rho*h*omega_mn**2 = D*((m*pi/a)**2 + (n*pi/b)**2)**2 + N_xx*(m*pi/a)**2``,
     minimised over ``m`` and ``n``, and the buckling load (10.46).
 
     With 42x26 elements the frequencies of the three mass matrices are 0.03 to
     0.29 % above the reference, with 20x12 elements 0.21 to 1.39 %, measured on
     2026-10-29 with the physical stabilisation of the bending and of the
-    transverse shear of Belytschko and Leviathan (1994) that Quad4R uses since
+    transverse shear of Belytschko and Leviathan (1994) [2]_ that Quad4R uses since
     0.12.0, see :mod:`pyfe3d.quad4r`; up to 0.11, with the hourglass
-    stiffnesses of Brockman (1987), 0.14 to 0.39 % and 0.77 to 1.95 %.
+    stiffnesses of Brockman (1987) [3]_, 0.14 to 0.39 % and 0.77 to 1.95 %.
+
+    References
+    ----------
+    .. [1] Leissa, A. W., Vibration of Plates, NASA SP-160, 1969.
+    .. [2] Belytschko, T., and Leviathan, I., Physical stabilization of the
+       4-node shell element with one point quadrature, Computer Methods in
+       Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
+       https://doi.org/10.1016/0045-7825(94)90052-3
+    .. [3] Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
+       International Journal for Numerical Methods in Engineering, 24(12),
+       2343-2356, 1987. https://doi.org/10.1002/nme.1620241208
+
     """
     data = Quad4RData()
     probe = Quad4RProbe()
@@ -139,7 +166,7 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=2):
 
         bu = ~bk
 
-        # NOTE buckling load of Leissa (1969), Eq. (10.46), with N_yy = 0
+        # NOTE buckling load of the docstring, with N_yy = 0
         D = E*h**3/(12*(1 - nu**2))
         Nxx_cr = max(-D*(a/(m*np.pi))**2*((m*np.pi/a)**2 + (np.pi/b)**2)**2
                      for m in range(1, 21))
@@ -227,7 +254,8 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=2):
         u = np.zeros(N)
         u[bu] = eigvecsu[:, mode]
 
-        # NOTE frequency equation of Leissa (1969), Eq. (10.44), with N_yy = 0
+        # NOTE frequency equation of the docstring, with N_yy = 0
+
         omega_theory = min(np.sqrt((D*((m*np.pi/a)**2 + (n*np.pi/b)**2)**2
                                     + Nxx*(m*np.pi/a)**2)/(rho*h))
                            for m in range(1, 21) for n in range(1, 6))

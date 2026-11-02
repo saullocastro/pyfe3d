@@ -1,7 +1,18 @@
+r"""Linear buckling of an orthotropic plate modelled with Quad4R, invariance
+to the material coordinate system
+
+The material direction ``matx`` given to ``update_rotation_matrix`` is
+rotated by ``thetadeg`` and the single ply by ``-thetadeg``, so that the
+fibres stay along the global x axis. The buckling load of the simply
+supported plate under a uniform compressive edge load must not change: each
+``thetadeg`` is compared with ``thetadeg = 0`` with ``rtol=1e-5``.
+
+"""
 import sys
 sys.path.append('..')
 
 import numpy as np
+
 from numpy import isclose
 from scipy.sparse.linalg import cg
 from scipy.sparse import coo_matrix, diags as sp_diags

@@ -1,3 +1,27 @@
+r"""Verify the in-plane rotation of the ABD matrices and the equivalent moduli.
+
+A single orthotropic ply is built with
+:func:`pyfe3d.shellprop_utils.laminated_plate` at 0 and at 30 degrees. The
+`A`, `B` and `D` matrices of the rotated ply are compared against those of the
+0-degree ply rotated by an explicit, independently written transformation, and
+the equivalent moduli ``e1`` and ``e2`` of the rotated ply are compared against
+the values computed from the inverse of its `A` matrix.
+
+Notes
+-----
+The rotation uses the direction cosines `m_{11} = \cos(-\theta)`,
+`m_{12} = \sin(-\theta)`, `m_{21} = -\sin(-\theta)`, `m_{22} = \cos(-\theta)`,
+and each entry of the rotated matrices is written out term by term in the
+test. The equivalent moduli follow from the in-plane compliance
+`a = A^{-1}` of the laminate of thickness `h`:
+
+.. math::
+
+    E_{1,eq} = \frac{1}{h\, a_{11}}, \qquad E_{2,eq} = \frac{1}{h\, a_{22}}
+
+with `a_{11}` and `a_{22}` written explicitly in terms of the entries of `A`.
+
+"""
 import sys
 sys.path.append('..')
 

@@ -1,11 +1,86 @@
-r"""
-Shear correction factors of Whitney, Chow, Birman and Bert and of the
-thickness-shear frequency, a posteriori recovery of the transverse shear
-stresses, and evaluation about the mid-surface for large offsets
+r"""Verify the shear correction factors against published values and closed forms.
+
+The shear correction factors ``'chow'``, ``'whitney'``, ``'birman_bert'`` and
+``'thickness_shear'`` of :func:`pyfe3d.shellprop_utils.laminated_plate` are
+compared against the values published by Chow (1971), Table 1, Whitney
+(1973), p. 303, Birman and Bert (2002), Table 1, and Noor (1975), Table 1,
+against their homogeneous-plate limits and the closed form of Birman and
+Bert (2002), Eq. (14), and against ``'vlachoutsis'`` where they coincide.
+The a posteriori recovery of the transverse shear stresses and energies of
+Noor and Peters (1989) is checked against the cylindrical bending
+distribution and the homogeneous plate, and all quantities are checked to be
+independent of large offsets. The remaining tests check the error branches.
 
 Vlachoutsis' and Chow's ``K13`` and ``K23``, and Whitney's ``k1^2`` and
 ``k2^2``, are ``scf_k13`` and ``scf_k23``. Conventions: ``Ats = [[A44, A45],
 [A45, A55]]``, 4 <-> yz, 5 <-> xz.
+
+Notes
+-----
+Results computed in the papers are kept as strings, exactly as printed, so
+that each comparison uses half a unit of the last printed digit as
+tolerance, see ``assert_printed``. Input data are kept as floats. Pages are
+as printed in the journals.
+
+``CFRP`` is Table 1, p. 19, of Rohwer [1]_, "CFRP material constants", in
+kN/mm^2, `E_L`, `E_T`, `G_{LT}`, `G_{TT}`, `\nu_{LT}`, given as
+``laminaprop = (E11, E22, nu12, G12, G13, G23)`` of a transversely isotropic
+ply.
+
+``CHOW_1971`` is from Chow [2]_. ``'cross_ply'``: Section VII, p. 316, "a
+4-layer symmetric cross-ply fiber-reinforced composite in the directions (0,
+90, 90, 0), and 0 degree being parallel to x-axis of the body; the thickness
+of each layer is the same", with Eq. (32): "G12/E22 = 0.6, G23/E22 = 0.5,
+nu12 = 0.25 together with E11/E22 = 3 for glass-epoxy and E11/E22 = 40 for
+graphite-epoxy". Table 1, p. 316: "Values of k1 and k2 Calculated from the
+Equations (12)", printed as `k_1^2` and `k_2^2`, which are ``scf_k13`` and
+``scf_k23``. ``'homogeneous'``: Table 1, p. 316, and p. 312, "homogeneous
+plate isotropic or anisotropic", `k_1^2 = 5/6`.
+
+``WHITNEY_1973`` is from Whitney [3]_, p. 303: "each ply has the following
+unidirectional properties: EL = 25 x 10^6 psi, ET = 10^6 psi, nu_LT = 0.25,
+G_LT = 0.5 x 10^6 psi, G_TT = 0.2 x 10^6 psi", "Both a 4-layer symmetric and
+a 2-layer unsymmetric square plate are considered", [0/90/90/0] and [0/90]
+in his Fig. 1, "For the two-ply laminate k1^2 = k2^2 = 0.8212, and for the
+four-ply laminate k1^2 = 0.5952 and k2^2 = 0.7205".
+
+``BIRMAN_BERT_2002`` is from Birman and Bert [4]_. ``'homogeneous'``: p. 89,
+below Eq. (13), "It is easy to show that in the case of a single layer, K =
+1." ``'type_2'``: p. 90, "Type 2 sandwich is a typical shipbuilding
+configuration with E-glass/vinyl ester facings and a balsa core. The
+properties of the facings and core for Type 2 are: Ef = 24.4 GPa, Gf = 2.89
+GPa and Ec = 2.41 GPa, Gc = 0.103 GPa. Two geometries considered for this
+beam were hf = 5 mm, hc = 20 mm and hf = hc = 10 mm." Table 1, p. 90, column
+"Average shear strain", Eq. (14). The beam stiffness Q11 is read as E, i.e.
+nu = 0.
+
+``NOOR_1975`` is Table 1, p. 83, of Noor [5]_: "composite shear correction
+factors" of cross-ply laminates in cylindrical bending, following Chow and
+Whitney, with EL/ET = 30, GLT/ET = 0.6, GTT/ET = 0.5, nu_LT = 0.25, the
+total thickness of the 0 and 90 deg layers being the same (p. 84).
+
+References
+----------
+.. [1] Rohwer, K., 1988, Improved transverse shear stiffness for layered
+   finite elements, DFVLR-FB 88-32.
+.. [2] Chow, T. S., 1971, On the propagation of flexural waves in an
+   orthotropic laminated plate and its response to an impulsive load,
+   Journal of Composite Materials, 5, pp. 306-319.
+.. [3] Whitney, J. M., 1973, Shear correction factors for orthotropic
+   laminates under static load, Journal of Applied Mechanics, 40,
+   pp. 302-304.
+.. [4] Birman, V. and Bert, C. W., 2002, On the choice of shear correction
+   factor in sandwich structures, Journal of Sandwich Structures and
+   Materials, 4, pp. 83-95.
+.. [5] Noor, A. K., Stability of multilayered composite plates, Fibre
+   Science and Technology, 8, 81-89, 1975.
+.. [6] Noor, A. K. and Peters, J. M., 1989, A posteriori estimates for the
+   shear correction factors in multi-layered composite cylinders, Journal of
+   Engineering Mechanics, 115, pp. 1225-1244.
+.. [7] Mindlin, R. D., 1951, Influence of rotatory inertia and shear on
+   flexural motions of isotropic, elastic plates, Journal of Applied
+   Mechanics, 18, pp. 31-38.
+
 """
 import sys
 sys.path.append('..')
@@ -19,69 +94,39 @@ from pyfe3d.shellprop_utils import (laminated_plate, isotropic_plate,
         read_laminaprop)
 
 
-# Published values
-# ----------------
-#
-# Results computed in the papers are kept as strings, exactly as printed, so
-# that each comparison uses half a unit of the last printed digit as tolerance,
-# see ``assert_printed``. Input data are kept as floats.
+# Published values, kept as printed, see the module Notes
+# -------------------------------------------------------
 
-# Rohwer, K. "Improved transverse shear stiffness for layered finite elements",
-# DFVLR-FB 88-32, 1988. Table 1, p. 19: "CFRP material constants", kN/mm^2
-# E_L, E_T, G_LT, G_TT, nu_LT, as laminaprop = (E11, E22, nu12, G12, G13, G23)
-# of a transversely isotropic ply
+# material constants of a transversely isotropic CFRP ply
 CFRP = (138.0, 9.3, 0.3, 4.6, 4.6, 2.3)
 
-# Chow, T. S. "On the propagation of flexural waves in an orthotropic laminated
-# plate and its response to an impulsive load", Journal of Composite
-# Materials, Vol. 5, 306-319, 1971. Pages as printed in the journal.
+# shear correction factors of Chow
 CHOW_1971 = {
-    # Section VII, p. 316: "a 4-layer symmetric cross-ply fiber-reinforced
-    # composite in the directions (0, 90, 90, 0), and 0 degree being parallel
-    # to x-axis of the body; the thickness of each layer is the same", with
-    # Eq. (32): "G12/E22 = 0.6, G23/E22 = 0.5, nu12 = 0.25 together with
-    # E11/E22 = 3 for glass-epoxy and E11/E22 = 40 for graphite-epoxy".
-    # Table 1, p. 316: "Values of k1 and k2 Calculated from the Equations
-    # (12)", printed as k1^2 and k2^2, which are scf_k13 and scf_k23
+    # symmetric cross-ply of glass-epoxy and graphite-epoxy, printed k1^2
+    # and k2^2, which are scf_k13 and scf_k23
     'cross_ply': dict(stack=[0, 90, 90, 0], G12_E2=0.6, G23_E2=0.5,
         nu12=0.25, rows=[
             # E11/E22, k1^2, k2^2
             (3., '0.815', '0.807'),
             (40., '0.828', '0.521'),
             ]),
-    # Table 1, p. 316, and p. 312: "homogeneous plate isotropic or
-    # anisotropic", k1^2 = 5/6
+    # homogeneous plate, isotropic or anisotropic
     'homogeneous': dict(K=5/6),
 }
 
-# Whitney, J. M. "Shear correction factors for orthotropic laminates under
-# static load", Journal of Applied Mechanics, Vol. 40, 302-304, 1973. p. 303:
-# "each ply has the following unidirectional properties: EL = 25 x 10^6 psi,
-# ET = 10^6 psi, nu_LT = 0.25, G_LT = 0.5 x 10^6 psi, G_TT = 0.2 x 10^6 psi",
-# "Both a 4-layer symmetric and a 2-layer unsymmetric square plate are
-# considered", [0/90/90/0] and [0/90] in his Fig. 1, "For the two-ply
-# laminate k1^2 = k2^2 = 0.8212, and for the four-ply laminate k1^2 = 0.5952
-# and k2^2 = 0.7205".
+# ply and laminates of Whitney, printed k1^2 and k2^2
 WHITNEY_1973 = {
     'ply': (25., 1., 0.25, 0.5, 0.5, 0.2),
     'laminates': [([0, 90], '0.8212', '0.8212'),
                   ([0, 90, 90, 0], '0.5952', '0.7205')],
 }
 
-# Birman, V. and Bert, C. W. "On the choice of shear correction factor in
-# sandwich structures", Journal of Sandwich Structures and Materials, Vol. 4,
-# 83-95, 2002. Pages as printed in the journal.
+# shear correction factors of Birman and Bert
 BIRMAN_BERT_2002 = {
-    # p. 89, below Eq. (13): "It is easy to show that in the case of a single
-    # layer, K = 1."
+    # single layer
     'homogeneous': dict(K=1.),
-    # p. 90: "Type 2 sandwich is a typical shipbuilding configuration with
-    # E-glass/vinyl ester facings and a balsa core. The properties of the
-    # facings and core for Type 2 are: Ef = 24.4 GPa, Gf = 2.89 GPa and Ec =
-    # 2.41 GPa, Gc = 0.103 GPa. Two geometries considered for this beam were
-    # hf = 5 mm, hc = 20 mm and hf = hc = 10 mm." Table 1, p. 90, column
-    # "Average shear strain", Eq. (14). The beam stiffness Q11 is read as E,
-    # i.e. nu = 0.
+    # Type 2 sandwich beam, two geometries, factor of the average shear
+    # strain; the beam stiffness Q11 is read as E, i.e. nu = 0
     'type_2': dict(Ef=24.4, Gf=2.89, Ec=2.41, Gc=0.103, rows=[
         # hf, hc, K
         (5., 20., '0.124'),
@@ -89,11 +134,8 @@ BIRMAN_BERT_2002 = {
         ]),
 }
 
-# Noor, A. K., "Stability of multilayered composite plates", Fibre Sci.
-# Technol., 8, 81-89, 1975, Table 1, p. 83: "composite shear correction
-# factors" of cross-ply laminates in cylindrical bending, following Chow and
-# Whitney, with EL/ET = 30, GLT/ET = 0.6, GTT/ET = 0.5, nu_LT = 0.25, the total
-# thickness of the 0 and 90 deg layers being the same (p. 84)
+# composite shear correction factors of Noor of cross-ply laminates in
+# cylindrical bending, equal total thickness of the 0 and 90 deg layers
 NOOR_1975 = {
     'ply': (30., 1., 0.25, 0.6, 0.6, 0.5),
     'rows': [
@@ -161,11 +203,22 @@ def _manual_shellprop(stack, plyt, laminaprops, shear_correction):
     return prop
 
 
-# Chow (1971), Birman and Bert (2002) and thickness-shear frequency
-# -----------------------------------------------------------------
+# Chow, Birman and Bert, and thickness-shear frequency factors
+# ------------------------------------------------------------
 
 @pytest.mark.parametrize('E1_E2, k13, k23', CHOW_1971['cross_ply']['rows'])
 def test_chow_published_cross_ply(E1_E2, k13, k23):
+    r"""``'chow'`` factors against Chow (1971), Table 1, p. 316
+
+    Notes
+    -----
+    The symmetric cross-ply laminates and the printed factors are those of
+    ``CHOW_1971``, see the module Notes. The value `k_2^2 = 0.52165`
+    computed for graphite-epoxy is printed by Chow as 0.521, hence the
+    relative tolerance 1.3e-3 for that value; the other three values round
+    to the printed ones.
+
+    """
     ref = CHOW_1971['cross_ply']
     E2 = 1.
     laminaprop = (E1_E2*E2, E2, ref['nu12'], ref['G12_E2']*E2,
@@ -209,7 +262,26 @@ def test_chow_unsymmetric(stack):
 @pytest.mark.parametrize('nu', [0.0, 0.3, 0.49])
 @pytest.mark.parametrize('offset', [0., +0.37, -1.5])
 def test_homogeneous_limits(mode, K, nu, offset):
-    # pi^2/12 is the value of Mindlin (1951), independent of nu
+    r"""Factors of a homogeneous plate against their known limits
+
+    For any Poisson's ratio and offset, the factors of ``'chow'``,
+    ``'whitney'``, ``'birman_bert'`` and ``'thickness_shear'`` of a
+    homogeneous isotropic plate are compared against 5/6 (Chow, 1971), 5/6,
+    1 (Birman and Bert, 2002) and `\pi^2/12` (Mindlin, 1951).
+
+    Notes
+    -----
+    Chow (1971), Table 1, p. 316, and p. 312, gives `k_1^2 = 5/6` for the
+    homogeneous plate; Birman and Bert (2002), p. 89, below Eq. (13), give
+    `K = 1` for a single layer. ``'whitney'`` is identical to ``'vlachoutsis'``,
+    see ``test_whitney_equals_vlachoutsis``, and for a homogeneous plate the
+    parabolic transverse shear distribution gives 5/6, see
+    ``test_aposteriori_energy_homogeneous``. `\pi^2/12` is the
+    thickness-shear value of Mindlin (1951), independent of `\nu`; the full
+    references are in the module docstring.
+
+    """
+    # NOTE the thickness-shear value is independent of nu
     prop = isotropic_plate(thickness=2., E=70e3, nu=nu, rho=2.7e-6,
             offset=offset, shear_correction=mode)
     assert np.isclose(prop.scf_k13, K, rtol=1e-12, atol=0)
@@ -235,6 +307,15 @@ def _beam_sandwich(Ef, Gf, Ec, Gc, hf, hc, **kwargs):
 
 @pytest.mark.parametrize('hf, hc, K', BIRMAN_BERT_2002['type_2']['rows'])
 def test_birman_bert_published_type_2(hf, hc, K):
+    r"""``'birman_bert'`` factors against Birman and Bert (2002), Table 1
+
+    Notes
+    -----
+    The Type 2 sandwich beam, its two geometries and the printed factors of
+    the column "Average shear strain", Eq. (14), are those of
+    ``BIRMAN_BERT_2002``, see the module Notes.
+
+    """
     ref = BIRMAN_BERT_2002['type_2']
     prop = _beam_sandwich(ref['Ef'], ref['Gf'], ref['Ec'], ref['Gc'], hf, hc,
             shear_correction='birman_bert')
@@ -245,6 +326,23 @@ def test_birman_bert_published_type_2(hf, hc, K):
 @pytest.mark.parametrize('Ef_Ec, Gf_Gc, hf_hc', [(1e1, 1e1, 0.25),
     (1e3, 30., 0.05), (5e2, 1e3, 1.), (1., 1., 0.5)])
 def test_birman_bert_closed_form(Ef_Ec, Gf_Gc, hf_hc):
+    r"""``'birman_bert'`` factor against Eq. (14) of Birman and Bert (2002)
+
+    Notes
+    -----
+    For a symmetric sandwich beam with faces `Q_f`, `G_f` of thickness `h_f`
+    and a core `Q_c`, `G_c` of thickness `h_c`, ``_birman_bert_eq14``
+    evaluates, with `x = h_c/(2 h_f + h_c)`,
+
+    .. math::
+
+        K = \frac{\frac{2}{3}\left(Q_f (1 - x^3) + Q_c x^3\right)}
+        {\left(G_f (1 - x) + G_c x\right)
+        \left(\frac{Q_f}{G_f}\left(\frac{2}{3} - x + \frac{x^3}{3}\right)
+        + \frac{Q_f}{G_c} x (1 - x^2) + \frac{2}{3}\frac{Q_c}{G_c} x^3
+        \right)}
+
+    """
     Ef, Gf, hc = 70., 26., 1.
     prop = _beam_sandwich(Ef, Gf, Ef/Ef_Ec, Gf/Gf_Gc, hf_hc*hc, hc,
             shear_correction='birman_bert')
@@ -277,7 +375,15 @@ def test_thickness_shear_density():
 
 
 def test_thickness_shear_frequency():
-    # homogeneous layer with traction-free faces: omega = pi/h sqrt(G/rho)
+    r"""Thickness-shear frequency of a homogeneous layer against its closed form
+
+    Notes
+    -----
+    For a homogeneous layer with traction-free faces the lowest non-zero
+    thickness-shear frequency is `\omega = \frac{\pi}{h}\sqrt{G/\rho}`.
+
+    """
+    # homogeneous layer with traction-free faces, see the Notes
     omega = _thickness_shear_frequency([4.], [1.], [2.], 1.)
     assert np.isclose(omega, np.pi/2.*np.sqrt(4./1.), rtol=1e-14)
     # the search stops at 100 times the reference frequency
@@ -285,12 +391,20 @@ def test_thickness_shear_frequency():
         _thickness_shear_frequency([1.], [1.], [1.], 1e-3)
 
 
-# Whitney (1973) and Noor (1975)
-# ------------------------------
+# Whitney and Noor factors
+# -------------------------
 
 @pytest.mark.parametrize('stack, k13, k23', WHITNEY_1973['laminates'])
 @pytest.mark.parametrize('mode', ['whitney', 'vlachoutsis'])
 def test_whitney_published_laminates(stack, k13, k23, mode):
+    r"""``'whitney'`` and ``'vlachoutsis'`` against Whitney (1973), p. 303
+
+    Notes
+    -----
+    The ply, the [0/90] and [0/90/90/0] laminates and the printed factors
+    are those of ``WHITNEY_1973``, see the module Notes.
+
+    """
     prop = laminated_plate(stack, plyt=0.25, laminaprop=WHITNEY_1973['ply'],
             shear_correction=mode)
     assert_printed(prop.scf_k13, k13)
@@ -299,6 +413,7 @@ def test_whitney_published_laminates(stack, k13, k23, mode):
 
 @pytest.mark.parametrize('seed', SEEDS)
 def test_whitney_equals_vlachoutsis(seed):
+    r"""``'whitney'`` gives the same stiffness as ``'vlachoutsis'``"""
     props = [random_laminate(seed) for _ in range(2)]
     for prop, mode in zip(props, ['whitney', 'vlachoutsis']):
         prop.shear_correction = mode
@@ -308,6 +423,15 @@ def test_whitney_equals_vlachoutsis(seed):
 
 @pytest.mark.parametrize('NL, k13, k23', NOOR_1975['rows'])
 def test_noor_1975_published_factors(NL, k13, k23):
+    r"""``'whitney'`` factors against Noor (1975), Table 1, p. 83
+
+    Notes
+    -----
+    The cross-ply laminates of `N_L` alternating 0 and 90 deg layers, with
+    the same total thickness of the 0 and of the 90 deg layers, and the
+    printed factors are those of ``NOOR_1975``, see the module Notes.
+
+    """
     stack = [0 if i % 2 == 0 else 90 for i in range(NL)]
     n0 = sum(1 for t in stack if t == 0)
     n90 = NL - n0
@@ -318,8 +442,8 @@ def test_noor_1975_published_factors(NL, k13, k23):
     assert_printed(prop.scf_k23, k23)
 
 
-# A posteriori recovery (Noor and Peters, 1989)
-# ---------------------------------------------
+# A posteriori recovery of the transverse shear stresses
+# -----------------------------------------------------
 
 @pytest.mark.parametrize('seed', SEEDS)
 def test_equilibrium_recovery_cylindrical_bending(seed):
@@ -346,15 +470,29 @@ def test_equilibrium_recovery_cylindrical_bending(seed):
 
 
 def test_aposteriori_energy_homogeneous():
-    r"""Homogeneous plate in cylindrical bending: parabola, energy
-    3/5 Qx^2/(G h), i.e. k = 5/6 with Eq. (8) of Noor and Peters (1989)"""
+    r"""A posteriori energy of a homogeneous plate in cylindrical bending
+
+    The recovered shear force and transverse shear energy of
+    ``calc_aposteriori_energy`` are compared against the parabolic
+    distribution of the homogeneous plate, and the resulting factor against
+    5/6 with Eq. (8) of Noor and Peters (1989).
+
+    Notes
+    -----
+    The curvature gradient of cylindrical bending is set from `M_{xx,x} =
+    Q_x` with the plane-strain bending stiffness `D = E h^3/(12 (1 -
+    \nu^2))`. The parabolic distribution gives the energy `\frac{3}{5}
+    Q_x^2/(G h)`, and with Eq. (8) of Noor and Peters (1989) the factor is
+    `\frac{1}{2} Q_x^2/(G h)` divided by this energy, `k = 5/6`.
+
+    """
     h, E, nu = 2., 70e3, 0.3
     G = E/(2*(1 + nu))
     prop = isotropic_plate(thickness=h, E=E, nu=nu)
     Qx = 1.7
     D = E*h**3/(12*(1 - nu**2))
     eps_x = np.zeros(6)
-    # M_xx,x = Qx with the plane strain curvature of cylindrical bending
+    # curvature gradient of cylindrical bending, see the Notes
     eps_x[3] = Qx/D
     U13, U23, Qy_r, Qx_r = prop.calc_aposteriori_energy(eps_x, np.zeros(6))
     assert np.isclose(Qx_r[0], Qx, rtol=1e-12)

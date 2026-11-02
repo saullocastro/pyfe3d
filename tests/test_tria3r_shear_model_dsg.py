@@ -17,6 +17,23 @@ The tests check that the shear stiffness is the one of Tria3DSG to round-off,
 that the internal forces stay consistent with the stiffness matrix, and that
 the element converges to the closed-form solution of a thin plate.
 
+Notes
+-----
+The stabilisation of the centroid-sampled field is the one of Lyly,
+Stenberg and Vihinen [1]_, p. 348, and the DSG field the one of Bletzinger,
+Bischoff and Ramm [2]_.
+
+References
+----------
+.. [1] Lyly, M., Stenberg, R. and Vihinen, T., A stable bilinear element for
+   the Reissner-Mindlin plate model, Computer Methods in Applied Mechanics
+   and Engineering, 110(3-4), 343-357, 1993.
+   https://doi.org/10.1016/0045-7825(93)90214-I
+.. [2] Bletzinger, K.-U., Bischoff, M. and Ramm, E., A unified approach for
+   shear-locking-free triangular and rectangular shell finite elements,
+   Computers & Structures, 75(3), 321-334, 2000.
+   https://doi.org/10.1016/S0045-7949(99)00140-6
+
 """
 import sys
 sys.path.append('..')
@@ -161,13 +178,18 @@ def plate_centre_deflection(n, h, shear_model, alpha):
 def test_thin_plate_converges():
     r"""Thin simply supported square plate, ``a/h = 1000``, uniform load
 
-    The reference is the Kirchhoff plate of Timoshenko, S., and
-    Woinowsky-Krieger, S., Theory of Plates and Shells, 2nd ed.,
-    McGraw-Hill, 1959, Art. 30, Table 8, p. 120: `w_{max} = 0.00406 q a^4/D`
-    for `b/a = 1` and `\nu = 0.3`; the double series of the Navier solution
-    summed to 400 terms in each direction gives 0.00406235, used here. At
-    `a/h = 1000` the transverse shear deflection of the Mindlin plate adds
-    0.0005 per cent to it.
+    The centre deflection with ``shear_model = 1`` on a 32x32 mesh, against
+    the Kirchhoff plate of Timoshenko and Woinowsky-Krieger (1959), Art. 30,
+    Table 8, within 2 %.
+
+    Notes
+    -----
+    The reference is the Kirchhoff plate of Timoshenko and
+    Woinowsky-Krieger [1]_, Art. 30, Table 8, p. 120: `w_{max} = 0.00406 q
+    a^4/D` for `b/a = 1` and `\nu = 0.3`; the double series of the Navier
+    solution summed to 400 terms in each direction gives 0.00406235, used
+    here. At `a/h = 1000` the transverse shear deflection of the Mindlin
+    plate adds 0.0005 per cent to it.
 
     Measured error of the centre deflection, ``shear_model = 1`` with
     ``alpha_shear_locking = 0``, i.e. the field of Tria3DSG, against the
@@ -181,7 +203,17 @@ def test_thin_plate_converges():
 
     The DSG field converges at second order once the mesh resolves the
     plate; the former default stalls at -14 per cent. The 32x32 mesh is asserted
-    with the tolerance of grade A of MacNeal and Harder (1985), p. 14, 2 %.
+    with the tolerance of grade A of MacNeal and Harder [2]_, p. 14, 2 %.
+
+    References
+    ----------
+    .. [1] Timoshenko, S. and Woinowsky-Krieger, S., Theory of Plates and
+       Shells, 2nd ed., McGraw-Hill, 1959.
+    .. [2] MacNeal, R. H. and Harder, R. L., A proposed standard set of
+       problems to test finite element accuracy, Finite Elements in Analysis
+       and Design, 1(1), 3-20, 1985.
+       https://doi.org/10.1016/0168-874X(85)90003-4
+
     """
     ref = 0.00406235
     got = plate_centre_deflection(32, 0.001, shear_model=1, alpha=0.)

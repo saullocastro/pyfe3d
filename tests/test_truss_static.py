@@ -1,3 +1,12 @@
+r"""Static displacement of a tetrahedral truss of Truss elements, against the
+analytical solution
+
+Regular tetrahedron of six bars of side ``L``, the three base nodes fixed
+and a vertical load ``P`` at the apex; the vertical displacement of the
+apex is checked against the closed form ``P*L/(2*A*E)``, and the internal
+forces against the external and reaction forces.
+
+"""
 import sys
 sys.path.append('..')
 
@@ -9,6 +18,19 @@ from pyfe3d.beamprop import BeamProp
 from pyfe3d import Truss, TrussData, TrussProbe, DOF, INT, DOUBLE
 
 def test_truss_static():
+    r"""Apex displacement of a regular tetrahedron under a vertical load
+
+    Notes
+    -----
+    The apex is at the height ``H = L*sqrt(6)/3`` over the base, so each of
+    the three bars that meet there has ``sin(theta) = H/L = sqrt(2/3)``
+    with the base plane. With the base nodes fixed the base bars carry no
+    force, and the vertical equilibrium of the apex gives the force
+    ``F = P/(3*sin(theta))`` in each inclined bar, which shortens it by
+    ``F*L/(E*A)``; by symmetry the apex moves vertically, by
+    ``F*L/(E*A*sin(theta)) = P*L/(3*E*A*sin(theta)**2) = P*L/(2*A*E)``.
+
+    """
     L = 3.
 
     E = 203.e9 # Pa

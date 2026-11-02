@@ -1,8 +1,30 @@
-"""Tests for pyfe3d.solver.newton_raphson using analytic problems
+r"""Tests for :mod:`pyfe3d.solver.newton_raphson`, against analytic problems and dense reference solutions
 
 All problems have an exact tangent stiffness matrix ``kT = kC + kG`` that is
 the Jacobian of ``fint``, such that full Newton-Raphson must converge
-quadratically near the solution.
+quadratically near the solution. The problems of ``analytic_problems.py``,
+hardening springs, the shallow von Mises truss of Crisfield (1991), Sec. 1.2,
+Eq. (1.7), and a linear problem, are checked against the equilibrium, the
+solution of a plain dense Newton-Raphson, the exact apex deflection of the
+truss, and the measured convergence orders; the load-step control, the
+line search, the modified Newton-Raphson method and the logger are also
+covered.
+
+Notes
+-----
+With the internal force of the shallow truss theory of [1]_, Sec. 1.2, Eq.
+(1.7), two bars, ``EA/l**3 = 1`` and the rise ``z = 1``, the apex
+deflection ``w``, positive towards the base, satisfies ``F(w) = w**3 -
+3*w**2 + 2*w``, with the limit point at ``w = 1 - 1/sqrt(3)``, ``dF/dw =
+0``, and the limit load ``2/(3*sqrt(3))``; the spring in series of
+``von_mises_truss`` carries the same force. The exact apex deflection under
+``frac`` times the limit load is the smallest positive root of ``F(w) =
+frac*2/(3*sqrt(3))``, see ``exact_apex_deflection``.
+
+References
+----------
+.. [1] Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
+   Structures, Vol. 1, Wiley, 1991.
 
 """
 import numpy as np
@@ -25,6 +47,8 @@ def check_increments_and_equilibrium(p, rtol=1e-5):
 
 
 def test_nr_full_load_quadratic_convergence():
+    """A single step at full load converges quadratically to the dense
+    reference solution, in at most 9 residual evaluations"""
     p = hardening_springs()
     p.analysis(initialInc=1.)
     p.an.static(NLgeom=True, silent=True)
@@ -43,6 +67,8 @@ def test_nr_full_load_quadratic_convergence():
 
 
 def test_nr_line_search_does_not_spoil_quadratic_convergence():
+    """With the line search the Newton step is accepted as is: the same
+    quadratic convergence and the same number of residual evaluations"""
     p0 = hardening_springs()
     p0.analysis(initialInc=1., line_search=False)
     p0.an.static(NLgeom=True, silent=True)
@@ -63,6 +89,8 @@ def test_nr_line_search_does_not_spoil_quadratic_convergence():
 
 
 def test_nr_incremental_hardening():
+    """Load increments of 0.1 on the hardening springs, at most 5 residual
+    evaluations per step"""
     p = hardening_springs()
     p.analysis(initialInc=0.1)
     p.an.static(NLgeom=True, silent=True)
@@ -72,6 +100,8 @@ def test_nr_incremental_hardening():
 
 
 def test_nr_modified_NR_option():
+    """The modified Newton-Raphson method, the tangent updated every 3
+    iterations, reaches the equilibrium of every increment"""
     p = hardening_springs()
     p.analysis(initialInc=0.1, modified_NR=True, compute_every_n=3)
     p.an.static(NLgeom=True, silent=True)
@@ -115,6 +145,15 @@ def exact_apex_deflection(frac):
 
 
 def test_nr_softening_with_step_cutting():
+    """At 0.99 of the limit load of the von Mises truss, a budget of 4
+    corrections forces the step to be cut; the solution is the dense
+    reference and the exact apex deflection, before the limit point
+
+    Notes
+    -----
+    The reference apex deflection is ``exact_apex_deflection(0.99)``, the
+    root of the shallow truss equilibrium given in the module Notes.
+    """
     p = von_mises_truss(frac=0.99)
     # plain Newton needs 5 corrections to reach relTOL=1e-6 at full load, a
     # budget of 4 corrections forces the solver to cut the step
@@ -133,6 +172,14 @@ def test_nr_softening_with_step_cutting():
 
 
 def test_nr_softening_incremental():
+    """Load increments of 0.1 up to 0.99 of the limit load of the von Mises
+    truss, against the exact apex deflection, before the limit point
+
+    Notes
+    -----
+    The reference apex deflection is ``exact_apex_deflection(0.99)``, the
+    root of the shallow truss equilibrium given in the module Notes.
+    """
     p = von_mises_truss(frac=0.99)
     p.analysis(initialInc=0.1)
     p.an.static(NLgeom=True, silent=True)

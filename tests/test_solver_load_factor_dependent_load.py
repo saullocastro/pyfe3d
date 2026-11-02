@@ -1,9 +1,23 @@
-r"""Load vector depending on the load factor: prescribed displacements
+r"""Load vector depending on the load factor: prescribed displacements, against the exact solution of hardening springs in series
 
 Three hardening springs in series, `f_i(e) = k_i e + a_i e^3`, between a
 wall and the nodes 1, 2 and 3, with the displacement of node 3 prescribed,
 `x_3 = d_0 + \lambda d_1`, and an optional load `\lambda F` on node 1. The
-constraint is imposed exactly, by a null-space reduction:
+constraint is imposed exactly, by a null-space reduction, such that the
+reduced problem has two degrees of freedom and a derivative of the residual
+with respect to the load factor that depends on the configuration and on the
+load factor, passed to :class:`pyfe3d.solver.Analysis`
+with ``calc_fext(inc=1., c=c_r, lbd=lbd)``, see :mod:`pyfe3d.solver.callbacks`.
+Under the prescribed displacement alone, `F = 0`, the reference vector
+``calc_fext(inc=1.)`` is null. The converged increments are checked against
+the exact solution of ``SpringsProblem.exact`` without the load on node 1,
+and against a dense Newton-Raphson with continuation,
+``SpringsProblem.solve_reference``, with it; the convergence order of Riks'
+method is also measured.
+
+Notes
+-----
+The null-space reduction is
 
 .. math::
 
@@ -21,10 +35,12 @@ such that the reduced problem has two degrees of freedom and the residual
     \boldsymbol{K}_T(\boldsymbol{c}) \boldsymbol{c}_{p1}\right)
 
 whose derivative with respect to the load factor depends on the
-configuration and on the load factor, passed to :class:`pyfe3d.solver.Analysis`
-with ``calc_fext(inc=1., c=c_r, lbd=lbd)``, see :mod:`pyfe3d.solver.callbacks`.
-Under the prescribed displacement alone, `F = 0`, the reference vector
-``calc_fext(inc=1.)`` is null.
+configuration and on the load factor.
+
+Without the load on node 1 the three springs carry the same force `P`,
+found from `\sum_i e_i(P) = x_3` by root finding, each `e_i(P)` being the
+root of `k_i e_i + a_i e_i^3 = P`; the displacements of the nodes 1 and 2
+are `e_1` and `e_1 + e_2`, and `P` is the reaction of the support on node 3.
 
 """
 import numpy as np
@@ -151,6 +167,8 @@ class SpringsProblem(object):
 
 
 def test_calc_load_vector_passes_lbd_only_when_declared():
+    """``calc_fext`` receives ``c`` and ``lbd`` only when it declares them,
+    not through ``**kwargs``, and is not called without ``c``"""
     fext = np.array([1., 2.])
     calls = []
 
@@ -196,7 +214,13 @@ def test_displacement_control_relative_criterion(method, convergence):
     r"""The prescribed displacement alone, with the tolerance of the relative
     force imbalance only, ``absTOL=None``: every converged increment is the
     exact solution, and ``calc_fext`` receives the load factor of the
-    configuration"""
+    configuration
+
+    Notes
+    -----
+    The reference is the exact solution of the springs in series given in
+    the module Notes.
+    """
     pb = SpringsProblem(d1=0.8)
     an = pb.analysis(NL_method=method, initialInc=0.2, relTOL=1e-10,
                      absTOL=None, convergence=convergence)
@@ -236,7 +260,13 @@ def test_displacement_control_without_lbd_does_not_converge(monkeypatch):
 def test_newton_raphson_first_predictor_is_linear_solution():
     r"""With linear springs the predictor of the first increment,
     `-\boldsymbol{K}_{C0}^{-1} \partial \boldsymbol{R}/\partial \lambda`, is the solution: each
-    increment converges at its first evaluation of the residual"""
+    increment converges at its first evaluation of the residual
+
+    Notes
+    -----
+    The reference is the exact solution of the springs in series given in
+    the module Notes.
+    """
     pb = SpringsProblem(a=(0., 0., 0.), d1=0.5)
     an = pb.analysis(initialInc=0.3, relTOL=1e-12)
     an.static(NLgeom=True, silent=True)
@@ -292,7 +322,13 @@ def test_null_load_vector_at_the_origin(method):
     r"""The last spring is purely cubic, `f_3 = a_3 e^3`, such that
     `\partial \boldsymbol{R}/\partial \lambda = 0` at `\boldsymbol{c} = \boldsymbol{0}`, `\lambda = 0`: the
     reference of the relative criterion is `-\lambda \partial \boldsymbol{R}/\partial
-    \lambda` at the current iterate, not at the origin"""
+    \lambda` at the current iterate, not at the origin
+
+    Notes
+    -----
+    The reference is the exact solution of the springs in series given in
+    the module Notes.
+    """
     pb = SpringsProblem(k=(100., 150., 0.), a=(20., 40., 600.), d1=0.5)
     assert np.linalg.norm(pb.load_vector(np.zeros(2), 0.)) == 0.
     an = pb.analysis(NL_method=method, initialInc=0.2, relTOL=1e-10,
@@ -310,7 +346,13 @@ def test_free_dofs_and_prescribed_displacement(method):
     r"""The same springs with the callables of the full model and ``bu``,
     ``uk``: the reduction of :class:`pyfe3d.solver.FreeDofs` gives the exact
     solution, the full configuration with the prescribed displacement, and
-    the reaction from the internal force vector of the full model"""
+    the reaction from the internal force vector of the full model
+
+    Notes
+    -----
+    The reference is the exact solution of the springs in series given in
+    the module Notes.
+    """
     pb = SpringsProblem(d1=0.8)
     calls = []
 

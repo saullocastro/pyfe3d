@@ -1,3 +1,12 @@
+r"""Linear buckling of a simply supported plate modelled with Quad4R,
+against the exact solution of Leissa (1969)
+
+The prestress of the plate, ``a/b = 4``, comes from a static solution under
+a uniform compressive edge load, the geometric stiffness from
+``Quad4R.update_KG``, and the buckling load is compared with Leissa (1969),
+Eq. (10.46), within 1 per cent.
+
+"""
 import sys
 sys.path.append('..')
 
@@ -15,16 +24,33 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=3):
     r"""Linear buckling of a simply supported plate, ``a/b = 4``, under a
     uniform compression ``N_xx``
 
-    The reference is the exact solution of Leissa, A. W., Vibration of Plates,
-    NASA SP-160, 1969, Sec. 10.2.1, p. 277, Eq. (10.46), the buckling load for
+    The buckling load is compared with the exact solution of Leissa (1969),
+    Sec. 10.2.1, p. 277, Eq. (10.46), with ``rtol=0.01``.
+
+    Notes
+    -----
+    The reference is the exact solution of [1]_, Sec. 10.2.1, p. 277,
+    Eq. (10.46), the buckling load for
     which the frequency of Eq. (10.44) vanishes, minimised over the number
     ``m`` of half-waves along ``x``: ``N_xx,cr = -k_c*pi**2*D/b**2``, ``k_c =
     (m*b/a + a/(m*b))**2``. With 92x44 elements the buckling load is above the
     reference by 0.05 %, with 62x30 elements 0.25 %, with 30x14 elements
     1.45 %, measured on 2026-10-29 with the physical stabilisation of the
-    bending and of the transverse shear of Belytschko and Leviathan (1994) that
+    bending and of the transverse shear of Belytschko and Leviathan (1994) [2]_ that
     Quad4R uses since 0.12.0, see :mod:`pyfe3d.quad4r`; up to 0.11, with the
-    hourglass stiffnesses of Brockman (1987), 0.27, 0.99 and 5.6 %.
+    hourglass stiffnesses of Brockman (1987) [3]_, 0.27, 0.99 and 5.6 %.
+
+    References
+    ----------
+    .. [1] Leissa, A. W., Vibration of Plates, NASA SP-160, 1969.
+    .. [2] Belytschko, T., and Leviathan, I., Physical stabilization of the
+       4-node shell element with one point quadrature, Computer Methods in
+       Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
+       https://doi.org/10.1016/0045-7825(94)90052-3
+    .. [3] Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
+       International Journal for Numerical Methods in Engineering, 24(12),
+       2343-2356, 1987. https://doi.org/10.1002/nme.1620241208
+
     """
     data = Quad4RData()
     probe = Quad4RProbe()
@@ -197,7 +223,8 @@ def test_linear_buckling_plate(plot=False, mode=0, refinement=3):
     print('linear buckling load_mult =', load_mult)
     print('linear buckling P_cr_calc =', P_cr_calc)
 
-    # theoretical reference
+    # theoretical reference, Eq. (10.46) of the docstring
+
     kcmin = 1e6
     mmin = 0
     for m in range(1, 21):
