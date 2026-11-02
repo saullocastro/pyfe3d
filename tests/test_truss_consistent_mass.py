@@ -1,11 +1,19 @@
 """Consistent mass matrix of Truss from the kinetic energy
 
+The consistent mass matrix of an element not aligned with the global axes
+is compared with an independent Gauss quadrature of the kinetic energy,
+transformed to global coordinates, including the coupling of the
+translations with the torsional rotation ``r_x`` through ``intrhoy`` and
+``intrhoz``, as in BeamLR and BeamC.
+
+Notes
+-----
 The displacements of a point ``(y, z)`` of the rigid cross section are
 ``u_x = u``, ``u_y = v - z*r_x`` and ``u_z = w + y*r_x``, with ``u, v, w, r_x``
 interpolated linearly, such that the kinetic energy couples ``v`` with ``r_x``
-through ``-intrhoz`` and ``w`` with ``r_x`` through ``+intrhoy``, as in
-BeamLR and BeamC. The matrix of the element is compared with an independent
-Gauss quadrature of the kinetic energy, transformed to global coordinates.
+through ``-intrhoz`` and ``w`` with ``r_x`` through ``+intrhoy``. The
+quadrature uses three Gauss-Legendre points, exact for the quadratic
+integrand.
 """
 import sys
 sys.path.append('..')

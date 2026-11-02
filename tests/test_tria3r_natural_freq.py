@@ -1,3 +1,13 @@
+r"""Natural frequency of a simply supported plate of Tria3R, against Leissa
+(1969)
+
+Rectangular plate on a regular mesh, each quadrilateral cell split into two
+triangles, with the default discrete shear gap field of Tria3R and the
+consistent, lumped and reduced mass matrices; the fundamental frequency is
+checked against the exact solution of Leissa (1969) and against values
+pre-determined by this test.
+
+"""
 import sys
 sys.path.append('..')
 
@@ -15,10 +25,16 @@ def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
     ``b = 0.5``, ``h = 0.01``, with the consistent, lumped and reduced mass
     matrices
 
-    The reference is the exact solution of Leissa, A. W., Vibration of
-    Plates, NASA SP-160, 1969, Sec. 4.1, p. 44, Eq. (4.20),
-    ``omega = sqrt(D/rho)*((m*pi/a)**2 + (n*pi/b)**2)``, with ``m = n = 1``
-    and Leissa's ``rho`` the mass per unit area, here ``rho*h``.
+    The frequency is compared with the exact solution of Leissa (1969),
+    Eq. (4.20), and, for ``refinement=1``, with values pre-determined by
+    this test.
+
+    Notes
+    -----
+    The reference is the exact solution of Leissa [1]_, Sec. 4.1, p. 44,
+    Eq. (4.20), ``omega = sqrt(D/rho)*((m*pi/a)**2 + (n*pi/b)**2)``, with
+    ``m = n = 1`` and Leissa's ``rho`` the mass per unit area, here
+    ``rho*h``.
 
     The edges are soft simply supported, rotations free. With the default
     transverse shear since 0.12.0, the discrete shear gap field of
@@ -43,12 +59,21 @@ def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
     hard simple support. That limit is a measurement, not a published
     value. ``refinement=1`` is compared with the values pre-determined by
     this test, with ``rtol=1e-4`` for the round-off of the eigensolver, and
-    with grade B of MacNeal and Harder (1985), p. 14, as the bound against
+    with grade B of MacNeal and Harder [2]_, p. 14, as the bound against
     the reference; from ``refinement=2`` grade A is asserted against the
     reference alone. Before 0.12.0, with the centroid-sampled shear and
     ``alpha_shear_locking = 0.7``, the errors were -1.47 to +1.31 % with
     8x10 elements and rose to +2.65 to +3.29 % with 17x21 before falling,
     see :mod:`pyfe3d.tria3r`.
+
+    References
+    ----------
+    .. [1] Leissa, A. W., Vibration of Plates, NASA SP-160, 1969.
+    .. [2] MacNeal, R. H. and Harder, R. L., A proposed standard set of
+       problems to test finite element accuracy, Finite Elements in Analysis
+       and Design, 1(1), 3-20, 1985.
+       https://doi.org/10.1016/0168-874X(85)90003-4
+
     """
     # NOTE pre-determined by this test with refinement=1 on 2026-10-29
     predetermined = {0: 2386.04605865, 1: 2336.69402554, 2: 2403.19824795}
@@ -186,7 +211,8 @@ def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
         u = np.zeros(N)
         u[bu] = eigvecsu[:, mode]
 
-        # NOTE Leissa (1969), Eq. (4.20), with rho*h the mass per unit area
+        # NOTE reference frequency of the simply supported plate, with rho*h
+        #      the mass per unit area
         m = 1
         n = 1
         D = E*h**3/(12*(1 - nu**2))
