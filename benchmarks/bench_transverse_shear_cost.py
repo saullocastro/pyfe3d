@@ -4,7 +4,7 @@ Times ``update_KC0``, ``update_fint`` and ``update_KG`` of the
 shell elements over a flat plate mesh, with and without a material coordinate
 system, for laminates with a different number of plies. It is used to assess
 the cost of evaluating the transverse shear stiffness in the element coordinate
-system, see ``CHANGELOG.md``.
+system.
 
 Run it against the version of pyfe3d to be assessed, e.g.::
 

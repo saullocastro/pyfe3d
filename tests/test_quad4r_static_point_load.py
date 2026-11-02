@@ -19,8 +19,8 @@ from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
 
 def test_static_plate_quad_point_load(plot=False):
     r"""Simply supported rectangular plate, ``a = 3``, ``b = 7``,
-    ``h = 0.005``, under a point load at its centre, with the hourglass
-    factors equal to 0.1
+    ``h = 0.005``, under a point load at its centre, with the default hourglass
+    factors (``hgfactor_membrane = hgfactor_physical = 1``)
 
     The deflection at the centre is compared with the Navier solution of
     Timoshenko and Woinowsky-Krieger (1959), Eq. (147), with rtol=0.01,

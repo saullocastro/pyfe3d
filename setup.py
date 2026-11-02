@@ -4,7 +4,7 @@ The package metadata, including the version, is in ``pyproject.toml``.
 This file keeps only what ``pyproject.toml`` cannot express: the Cython
 extensions with their compiler flags per platform and the file
 ``pyfe3d/version.py``, written from the version of ``pyproject.toml``
-and read by ``pyfe3d.version`` and ``doc/source/conf.py``.
+and read by ``pyfe3d.version`` and by the configuration of the documentation.
 """
 import platform
 import os

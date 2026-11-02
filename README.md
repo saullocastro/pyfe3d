@@ -94,8 +94,6 @@ recommend using the BeamLR instead, which is physically more consistent.
 Development history
 -------------------
 
-See [CHANGELOG.md](CHANGELOG.md) for the details of each version.
-
 | Main versions | Changes |
 | - | - |
 | 0.12.0 | New module `pyfe3d.vabs`: variational asymptotic cross-sectional analysis (VABS) of prismatic beams with arbitrary cross sections and anisotropic materials, giving the classical 4x4 and the generalized Timoshenko 6x6 stiffness matrices, the tension and shear centres and the mass properties, with the conversion to the convention of pyfe3d and to a `BeamProp`; general 6x6 sectional stiffness matrix `BeamProp.C` of the beams, with BeamC exact under nodal loads for any coupling; new module `pyfe3d.corotational`, an element-independent co-rotational formulation for large rotations; inertia relief with `apply_inertia_relief()`; MITC4 transverse shear of Quad4 by default; physical hourglass stabilisation of Quad4R; discrete shear gap transverse shear of Tria3R by default; rigid offsets of warped quadrilaterals; eigenvalue solvers that complete missing eigenvalues. |
