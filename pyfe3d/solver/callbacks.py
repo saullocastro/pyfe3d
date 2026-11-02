@@ -145,6 +145,15 @@ def calc_fint(pb, c, lbd):
     fint : np.ndarray
         The internal force vector returned by ``pb.calc_fint``.
 
+    Notes
+    -----
+    The vector is `\boldsymbol{F}_{int}(\boldsymbol{c}, \lambda)` of the
+    residual `\boldsymbol{R}(\boldsymbol{c}, \lambda) =
+    \boldsymbol{F}_{int}(\boldsymbol{c}, \lambda) - \lambda
+    \boldsymbol{F}_{ext}`, see the module documentation: with ``inc`` it may
+    contain the configuration-dependent part of the load, scaled by the load
+    factor.
+
     """
     kwargs = dict(inc=lbd) if accepts_kwarg(pb.calc_fint, 'inc') else {}
     return pb.calc_fint(c=c, silent=True, **kwargs)
@@ -173,6 +182,14 @@ def calc_kT(pb, c, lbd):
     kT : sparse_matrix or np.ndarray
         The sum of the matrices returned by ``pb.calc_kC`` and
         ``pb.calc_kG``, of the type given by them.
+
+    Notes
+    -----
+    The sum is the tangent stiffness matrix `\boldsymbol{K}_T =
+    \boldsymbol{K}_C + \boldsymbol{K}_G`, which should be the exact Jacobian
+    `\partial \boldsymbol{R}/\partial \boldsymbol{c}` of the residual at
+    `(\boldsymbol{c}, \lambda)`, including the load stiffness of a
+    configuration-dependent load, see the module documentation.
 
     """
     kwC = dict(inc=lbd) if accepts_kwarg(pb.calc_kC, 'inc') else {}

@@ -10,7 +10,7 @@ without supports, e.g. an aircraft or a spacecraft in flight, whose loads
 need not be balanced: the rigid-body accelerations are computed from the
 mass matrix, and the displacements relative to a statically determinate
 reference support from the loads plus the d'Alembert forces of these
-accelerations. The user guide is :doc:`inertia_relief`.
+accelerations.
 
 """
 import numpy as np
@@ -133,9 +133,9 @@ def apply_inertia_relief(KC0, M, fext, bref, bfix=None,
 
     Notes
     -----
-    The degrees-of-freedom are partitioned as in :doc:`linear_analyses`:
-    the known set `k`, ``bk = bref | bfix``, with zero displacements, and
-    the free set `u`, ``bu = ~bk``. The `n_r` rigid-body modes, the columns
+    The degrees-of-freedom are partitioned into the known set `k`, ``bk =
+    bref | bfix``, with zero displacements, and the free set `u`, ``bu =
+    ~bk``. The `n_r` rigid-body modes, the columns
     of `\boldsymbol{\Phi}`, satisfy `\boldsymbol{K}_{C0} \boldsymbol{\Phi}
     = \boldsymbol{0}`, and a static solution of `\boldsymbol{K}_{C0}
     \boldsymbol{u} = \boldsymbol{F}_{ext}` exists only for loads with
@@ -219,10 +219,7 @@ def apply_inertia_relief(KC0, M, fext, bref, bfix=None,
     --------
     Three point masses along `x`, ``m = (1, 2, 3)``, joined by the springs
     ``k1`` and ``k2``, with the force ``F`` at the third mass and the
-    reference support at the first one: the rigid-body acceleration is
-    ``F/(m1 + m2 + m3)``, and the spring forces ``k1*u[1] = m1*acc`` and
-    ``k2*(u[2] - u[1]) = (m1 + m2)*acc`` accelerate the masses on their
-    left, see :doc:`tut-inertia-relief`.
+    reference support at the first one:
 
     >>> import numpy as np
     >>> from scipy.sparse import csc_matrix
@@ -282,7 +279,7 @@ def apply_inertia_relief(KC0, M, fext, bref, bfix=None,
             'below pivot_rtol = %g, i.e. a deformation mode without strain '
             'energy' % (d.min()/d.max(), pivot_rtol) + hint)
 
-    # rigid-body modes, Phi_k = I at bref
+    # rigid-body modes, with unit displacements at bref
     Kuref = KC0[bu, :][:, bref].toarray()
     Phi = np.zeros((N, nr))
     Phi[bref] = np.eye(nr)

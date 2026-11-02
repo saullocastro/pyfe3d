@@ -100,6 +100,30 @@ class FreeDofs(object):
     forces are `\boldsymbol{F}_{{int}_k}(\boldsymbol{u}) - \lambda \boldsymbol{F}_{{ext}_k}`, given by the
     callables of the full model at a converged configuration.
 
+    Examples
+    --------
+    Two springs in series along `x`, fixed at the first node, with the
+    displacement ``0.01`` prescribed at the last one:
+
+    >>> import numpy as np
+    >>> from scipy.sparse import csr_matrix
+    >>> from pyfe3d.solver import FreeDofs
+    >>> k = 1000.
+    >>> KC0 = csr_matrix([[k, -k, 0.], [-k, 2*k, -k], [0., -k, k]])
+    >>> def calc_fext(inc=1., silent=False):
+    ...     return np.zeros(3)
+    >>> def calc_fint(c, silent=False):
+    ...     return KC0 @ c
+    >>> def calc_kC(c=None, NLgeom=False, silent=False):
+    ...     return KC0
+    >>> def calc_kG(c=None, NLgeom=False, silent=False):
+    ...     return csr_matrix((3, 3))
+    >>> bu = np.array([False, True, False])
+    >>> uk = np.array([0., 0., 0.01])
+    >>> free = FreeDofs(calc_fext, calc_fint, calc_kC, calc_kG, bu, uk)
+    >>> print(free.linear_fext(), free.full(np.array([0.005]), 1.))
+    [10.] [0.    0.005 0.01 ]
+
     """
     def __init__(self, calc_fext, calc_fint, calc_kC, calc_kG, bu, uk=None):
         bu = np.asarray(bu)
@@ -143,6 +167,10 @@ class FreeDofs(object):
     def full(self, c, lbd):
         r"""Configuration of the full model
 
+        Places ``c`` at the free degrees-of-freedom and the prescribed
+        displacements ``lbd*uk`` at the constrained ones, null when no
+        displacement is prescribed.
+
         Parameters
         ----------
         c : np.ndarray
@@ -172,6 +200,11 @@ class FreeDofs(object):
     def calc_fint(self, c, silent=True, inc=1.):
         r"""Internal force vector of the free degrees-of-freedom
 
+        Calls the ``calc_fint`` of the full model at the configuration of
+        :meth:`full` for ``c`` and the load factor ``inc``, passing ``inc``
+        only when it declares it, and returns the entries of the free
+        degrees-of-freedom.
+
         Parameters
         ----------
         c : np.ndarray
@@ -185,7 +218,14 @@ class FreeDofs(object):
         -------
         fint : np.ndarray
             ``calc_fint`` of the full model at :meth:`full`, restricted to
-            the free degrees-of-freedom.
+            the free degrees-of-freedom, 1-D array of the size of ``c``.
+
+        Notes
+        -----
+        The vector returned is `\boldsymbol{F}_{{int}_f}(\boldsymbol{Z}
+        \boldsymbol{c} + \lambda \bar{\boldsymbol{u}}_k)`, with `\lambda` =
+        ``inc``, the internal force term of the reduced residual
+        `\boldsymbol{R}_f`, see :class:`FreeDofs`.
 
         """
         kwargs = (dict(inc=inc)
@@ -206,6 +246,13 @@ class FreeDofs(object):
     def calc_kC(self, c=None, NLgeom=False, silent=True, inc=1.):
         r"""Constitutive stiffness matrix of the free degrees-of-freedom
 
+        Calls the ``calc_kC`` of the full model at the configuration of
+        :meth:`full` for ``c`` and ``inc`` when ``c`` is given and
+        ``NLgeom=True``, passing ``inc`` only when it declares it, or for the
+        linear stiffness matrix otherwise, and returns its free-free block.
+        The full matrix of a non-linear evaluation is kept for the
+        free-constrained block used with prescribed displacements.
+
         Parameters
         ----------
         c : np.ndarray or None, optional
@@ -222,7 +269,14 @@ class FreeDofs(object):
         Returns
         -------
         kC : sparse_matrix
-            Free-free block of ``calc_kC`` of the full model.
+            Free-free block of ``calc_kC`` of the full model, in CSR format.
+
+        Notes
+        -----
+        The free-free block `\boldsymbol{K}_{C_{ff}} = \boldsymbol{Z}^\top
+        \boldsymbol{K}_C \boldsymbol{Z}` is the constitutive part of the
+        Jacobian `\boldsymbol{K}_{T_{ff}}` of the reduced residual, see
+        :class:`FreeDofs`.
 
         """
         A, key = self._matrix(self.full_kC, c, NLgeom, silent, inc)
@@ -231,6 +285,8 @@ class FreeDofs(object):
 
     def calc_kG(self, c=None, NLgeom=False, silent=True, inc=1.):
         r"""Geometric stiffness matrix of the free degrees-of-freedom
+
+        As :meth:`calc_kC`, with the ``calc_kG`` of the full model.
 
         Parameters
         ----------
@@ -246,7 +302,13 @@ class FreeDofs(object):
         Returns
         -------
         kG : sparse_matrix
-            Free-free block of ``calc_kG`` of the full model.
+            Free-free block of ``calc_kG`` of the full model, in CSR format.
+
+        Notes
+        -----
+        The free-free block `\boldsymbol{K}_{G_{ff}}` is the geometric part
+        of the Jacobian `\boldsymbol{K}_{T_{ff}}` of the reduced residual, see
+        :class:`FreeDofs`.
 
         """
         A, key = self._matrix(self.full_kG, c, NLgeom, silent, inc)
@@ -263,7 +325,16 @@ class FreeDofs(object):
     def _kT_fk(self, c, lbd):
         r"""Free-constrained block of the tangent stiffness matrix of the
         full model at ``c`` and ``lbd``, reused from the last evaluation of
-        ``calc_kC`` and ``calc_kG`` when done there"""
+        ``calc_kC`` and ``calc_kG`` when done there
+
+        Notes
+        -----
+        The block is the `\boldsymbol{K}_{T_{fk}}` of the derivative
+        `-\partial \boldsymbol{R}_f/\partial \lambda =
+        \boldsymbol{F}_{{ext}_f} - \boldsymbol{K}_{T_{fk}}
+        \bar{\boldsymbol{u}}_k`, see :class:`FreeDofs`.
+
+        """
         if self._same(self._kC, c, lbd) and self._same(self._kG, c, lbd):
             kT = csr_matrix(self._kC[1]) + csr_matrix(self._kG[1])
         else:
@@ -296,6 +367,13 @@ class FreeDofs(object):
     def linear_fext(self, c=None):
         r"""Load vector of the linear static analysis, at a unit load factor
 
+        Calls the ``calc_fext`` of the full model, at the configuration of
+        :meth:`full` for ``c`` and a unit load factor when ``c`` is given and
+        the load depends on the configuration, and returns the entries of
+        the free degrees-of-freedom minus the forces that the prescribed
+        displacements ``uk`` produce on them through the linear stiffness
+        matrix of the full model.
+
         Parameters
         ----------
         c : np.ndarray or None, optional
@@ -306,8 +384,17 @@ class FreeDofs(object):
         Returns
         -------
         f : np.ndarray
-            `\boldsymbol{F}_{{ext}_f} - \boldsymbol{K}_{{C0}_{fk}} \bar{\boldsymbol{u}}_k`, with `\boldsymbol{K}_{C0}`
-            the linear stiffness matrix of the full model.
+            Load vector of the free degrees-of-freedom, 1-D array.
+
+        Notes
+        -----
+        The vector returned is `\boldsymbol{F}_{{ext}_f} -
+        \boldsymbol{K}_{{C0}_{fk}} \bar{\boldsymbol{u}}_k`, with
+        `\boldsymbol{K}_{C0}` the linear stiffness matrix of the full model:
+        the right-hand side of the linear static analysis
+        `\boldsymbol{K}_{{C0}_{ff}} \boldsymbol{c} = \boldsymbol{F}_{{ext}_f}
+        - \boldsymbol{K}_{{C0}_{fk}} \bar{\boldsymbol{u}}_k`, see
+        :meth:`Analysis.static`.
 
         """
         kwargs = {}
@@ -552,6 +639,33 @@ class Analysis(object):
     .. [2] Schweizerhof, K. and Ramm, E., Displacement dependent pressure
        loads in nonlinear finite element analyses, Computers & Structures,
        18(6), 1099-1114, 1984.
+
+    Examples
+    --------
+    A spring with the internal force ``k*c + k3*c**3`` under the force
+    ``10.``, linear and non-linear static analyses:
+
+    >>> import numpy as np
+    >>> from scipy.sparse import csr_matrix
+    >>> from pyfe3d.solver import Analysis
+    >>> k, k3 = 1000., 1.e6
+    >>> def calc_fext(inc=1., silent=False):
+    ...     return inc*np.array([10.])
+    >>> def calc_fint(c, silent=False):
+    ...     return k*c + k3*c**3
+    >>> def calc_kC(c=None, NLgeom=False, silent=False):
+    ...     if c is None or not NLgeom:
+    ...         return csr_matrix([[k]])
+    ...     return csr_matrix([[k + 3*k3*c[0]**2]])
+    >>> def calc_kG(c=None, NLgeom=False, silent=False):
+    ...     return csr_matrix((1, 1))
+    >>> an = Analysis(calc_fext, calc_fint, calc_kC, calc_kG)
+    >>> increments, cs = an.static(NLgeom=False, silent=True)
+    >>> print(increments, cs[0])
+    [1.0] [0.01]
+    >>> increments, cs = an.static(NLgeom=True, silent=True)
+    >>> print(increments[-1], np.round(cs[-1], 6))
+    1.0 [0.009217]
 
     """
     __slots__ = ['NL_method', 'line_search', 'max_iter_line_search',

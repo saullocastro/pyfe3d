@@ -445,6 +445,19 @@ def _symmetric_lu(A):
         The number of negative pivots, ``None`` when it is unknown, see
         :func:`_negative_pivots`.
 
+    Notes
+    -----
+    With the same row and column permutations, ``perm_r == perm_c``, the
+    factorization is `\boldsymbol{\Pi} \boldsymbol{A} \boldsymbol{\Pi}^\top =
+    \boldsymbol{L} \boldsymbol{U}` with `\boldsymbol{U} = \boldsymbol{D}
+    \boldsymbol{L}^\top` for a symmetric `\boldsymbol{A}`, a congruence of
+    `\boldsymbol{A}` with the diagonal `\boldsymbol{D}` of the pivots, whose
+    signs give the inertia of `\boldsymbol{A}` by Sylvester's law of inertia,
+    see :func:`_negative_pivots`. A row interchange breaks the congruence,
+    and a null or non-finite pivot leaves the count undefined, hence
+    ``None``. The same factorization solves the linear systems of
+    `\boldsymbol{A}`, e.g. in :func:`.linear_static`.
+
     """
     try:
         lu = splu(csc_matrix(A), permc_spec='MMD_AT_PLUS_A',
@@ -859,6 +872,16 @@ def _null_mu(mu, scale=None):
     null : np.ndarray
         Boolean array, ``True`` where `|\mu| \le` ``NULL_MU_RTOL`` ``scale``.
 
+    Notes
+    -----
+    A null `\mu` of `\boldsymbol{K}_G \boldsymbol{u} = \mu \boldsymbol{K}
+    \boldsymbol{u}` is an infinite load multiplier `\lambda = -1/\mu`, e.g.
+    of a degree-of-freedom where `\boldsymbol{K}_G` is null. The solvers
+    return it as a `\mu` of the order of the round-off relative to the
+    largest `|\mu|`, of either sign, whose `\lambda` would be a large and
+    spurious load multiplier; the relative threshold ``NULL_MU_RTOL``
+    separates it from the genuine eigenvalues.
+
     """
     absmu = np.abs(np.asarray(mu))
     finite = np.isfinite(absmu)
@@ -957,6 +980,15 @@ def _lb_order(mu, scale=None):
         first, then the complex `\lambda` by increasing modulus, and at the
         end the null `\mu`, see :func:`_null_mu`, and the eigenvalues that
         are not finite.
+
+    Notes
+    -----
+    With `\lambda = -1/\mu`, a negative real `\mu` gives a positive
+    `\lambda`, the most negative `\mu` the lowest one, and a positive real
+    `\mu` a negative `\lambda`, the largest `\mu` the one closest to zero;
+    the order of the complex `\lambda` by increasing `|\lambda| = 1/|\mu|`
+    is that of the `\mu` by decreasing modulus. The sorts are stable, such
+    that equal eigenvalues keep the order of the solver.
 
     """
     mu = np.asarray(mu)
@@ -1174,6 +1206,16 @@ def _check_both_signs(K, KG, mu, eigvecs, rtol, K_positive_definite=None):
     error : str or None
         Description of the check that failed, or ``None``.
 
+    Notes
+    -----
+    A negative load multiplier `\lambda` of `(\boldsymbol{K} + \lambda
+    \boldsymbol{K}_G) \boldsymbol{u} = \boldsymbol{0}` is the positive load
+    multiplier `-\lambda` of `(\boldsymbol{K} + (-\lambda)(-\boldsymbol{K}_G))
+    \boldsymbol{u} = \boldsymbol{0}`, the problem of the reversed load. The
+    inertia check of :func:`check_eigenpairs`, which counts the positive
+    load multipliers below a value, thus applies to each sign with its own
+    geometric stiffness matrix.
+
     """
     mu = np.asarray(mu)
     kept = np.isfinite(mu) & ~_null_mu(mu)
@@ -1222,6 +1264,19 @@ def _condense(K, KG, active):
     ------
     ValueError
         When no degree-of-freedom is active, i.e. ``KG`` is null.
+
+    Notes
+    -----
+    With `\boldsymbol{K}_G` null in the rows of `a` and in the columns of
+    `a`, the rows `a` of `(\boldsymbol{K} + \lambda \boldsymbol{K}_G)
+    \boldsymbol{u} = \boldsymbol{0}` are `\boldsymbol{K}_{aa} \boldsymbol{u}_a
+    + \boldsymbol{K}_{ab} \boldsymbol{u}_b = \boldsymbol{0}`, independent of
+    `\lambda`, which give `\boldsymbol{u}_a`, and the rows `b` become the
+    eigenvalue problem of the Schur complement and `\boldsymbol{K}_{G_{bb}}`,
+    see :func:`_eigh_condensed`. `\boldsymbol{K}_{aa}` is factorized once with
+    SuperLU, and the Schur complement is computed by blocks of columns of
+    `\boldsymbol{K}_{ab}`, which limits the memory of the dense right-hand
+    sides.
 
     """
     b = np.flatnonzero(active)
@@ -1442,6 +1497,16 @@ def _eig_condensed(K, KG, k):
         are all real; the null `\mu` of :func:`_null_mu_pencil`, e.g. the
         round-off splitting of a defective null eigenvalue, are set to 0.
 
+    Notes
+    -----
+    For unsymmetric matrices, the condensation of :func:`_condense` needs
+    both the rows and the columns of `\boldsymbol{K}_G` null at the
+    condensed degrees-of-freedom `a`: the null rows make the rows `a`
+    independent of `\lambda`, and the null columns keep `\boldsymbol{K}_{G_{ba}}
+    \boldsymbol{u}_a` out of the rows `b`, such that the condensed problem
+    is that of the Schur complement and `\boldsymbol{K}_{G_{bb}}`. The left
+    eigenvectors give the condition numbers of :func:`_null_mu_pencil`.
+
     """
     KG = csr_matrix(KG)
     active = ((np.asarray(abs(KG).sum(axis=1)).ravel() > 0)
@@ -1470,7 +1535,15 @@ def _splu(A):
 
 
 def _permutation_parity(p):
-    r"""``1`` for an even permutation ``p``, ``-1`` for an odd one"""
+    r"""``1`` for an even permutation ``p``, ``-1`` for an odd one
+
+    Notes
+    -----
+    The permutation is decomposed into its cycles; a cycle of length `l` is
+    the product of `l - 1` transpositions, and the parity is that of the
+    sum of the `l - 1` over the cycles.
+
+    """
     p = np.asarray(p)
     seen = np.zeros(p.size, dtype=bool)
     odd = False
@@ -1489,7 +1562,28 @@ def _permutation_parity(p):
 
 def _det_sign(lu):
     r"""Sign of the determinant of a real matrix from its SuperLU
-    factorization `\boldsymbol{\Pi}_r \boldsymbol{A} \boldsymbol{\Pi}_c = \boldsymbol{L} \boldsymbol{U}`, with a unit `\boldsymbol{L}`"""
+    factorization
+
+    Parameters
+    ----------
+    lu : SuperLU
+        Factorization of a real square matrix.
+
+    Returns
+    -------
+    sign : int
+        ``1`` or ``-1``, ``0`` when a pivot is null.
+
+    Notes
+    -----
+    With the factorization `\boldsymbol{\Pi}_r \boldsymbol{A}
+    \boldsymbol{\Pi}_c = \boldsymbol{L} \boldsymbol{U}` and a unit lower
+    triangular `\boldsymbol{L}`, `\det \boldsymbol{\Pi}_r \det \boldsymbol{A}
+    \det \boldsymbol{\Pi}_c = \prod_i U_{ii}`, the determinant of a
+    permutation matrix being the parity `\pm 1` of its permutation, see
+    :func:`_permutation_parity`, its own inverse.
+
+    """
     d = lu.U.diagonal()
     return (int(np.prod(np.sign(d))) * _permutation_parity(lu.perm_r)
             * _permutation_parity(lu.perm_c))
@@ -1871,6 +1965,16 @@ def _missing_counter(K, B, s_of, k):
     num_missing : callable
         See :func:`_complete_repeated`.
 
+    Notes
+    -----
+    With `s` the ``k``-th lowest value found reduced by the relative gap
+    ``COMPLETION_REL_GAP``, the number of negative pivots of `\boldsymbol{K}
+    + s \boldsymbol{B}` is, by Sylvester's law of inertia, the number of
+    eigenvalues below `s`, see :func:`check_eigenpairs`; the eigenvalues
+    missing are those counted in excess of the ones found below `s`. The
+    gap keeps an eigenvalue found at `s`, up to the accuracy of the solver,
+    out of the count.
+
     """
     def num_missing(w):
         s_found = np.sort(s_of(w))
@@ -2222,6 +2326,20 @@ def linear_buckling(K, KG, num_eigvalues=6, tol=0, sigma=None,
     by flutter, which this static criterion does not detect, see
     :func:`natural_frequency`. When no returned load multiplier is positive
     and real, no divergence load was found.
+
+    Examples
+    --------
+    Ten uncoupled degrees-of-freedom with the stiffnesses ``1`` to ``10``
+    and a unit compressive geometric stiffness:
+
+    >>> import numpy as np
+    >>> from scipy.sparse import diags
+    >>> from pyfe3d.solver import linear_buckling
+    >>> K = diags(np.arange(1., 11.)).tocsr()
+    >>> KG = diags(-np.ones(10)).tocsr()
+    >>> eigvals, eigvecs = linear_buckling(K, KG, num_eigvalues=4)
+    >>> print(eigvals, eigvecs.shape)
+    [1. 2. 3. 4.] (10, 4)
 
     """
     check_null_rows_cols(K, 'K')
@@ -2664,6 +2782,22 @@ def natural_frequency(K, M, num_eigvalues=6, tol=0, precondition=True,
     .. [1] Bolotin, V. V., Nonconservative Problems of the Theory of Elastic
        Stability, Pergamon Press, Oxford, 1963.
 
+    Examples
+    --------
+    Four springs ``k`` in series, fixed at one end, with the point masses
+    ``m`` at the four free nodes:
+
+    >>> import numpy as np
+    >>> from scipy.sparse import diags
+    >>> from pyfe3d.solver import natural_frequency
+    >>> k, m = 1000., 2.
+    >>> K = diags([[2*k, 2*k, 2*k, k], -k*np.ones(3), -k*np.ones(3)],
+    ...           [0, 1, -1]).tocsr()
+    >>> M = diags(m*np.ones(4)).tocsr()
+    >>> omegan, eigvecs = natural_frequency(K, M, num_eigvalues=2)
+    >>> print(np.round(omegan, 4), eigvecs.shape)
+    [ 7.7658 22.3607] (4, 2)
+
     """
     check_null_rows_cols(K, 'K')
     K, M = csr_matrix(K), csr_matrix(M)
@@ -3022,7 +3156,36 @@ def _qep_modes(lam, U, k, sigma):
 
 def _companion(K, C, M):
     r"""Dense first companion linearization ``(A, B)`` of `(\lambda^2 \boldsymbol{M} +
-    \lambda \boldsymbol{C} + \boldsymbol{K}) \boldsymbol{u} = \boldsymbol{0}`, see :func:`complex_frequency`"""
+    \lambda \boldsymbol{C} + \boldsymbol{K}) \boldsymbol{u} = \boldsymbol{0}`, see :func:`complex_frequency`
+
+    Parameters
+    ----------
+    K, C, M : sparse_matrix
+        Stiffness, damping and mass matrices, shape ``(n, n)``.
+
+    Returns
+    -------
+    A, B : np.ndarray
+        Dense matrices of the linearization, shape ``(2n, 2n)``.
+
+    Notes
+    -----
+    The linearization is
+
+    .. math::
+
+        \begin{bmatrix} \boldsymbol{0} & \boldsymbol{I} \\ -\boldsymbol{K} &
+        -\boldsymbol{C} \end{bmatrix} \boldsymbol{z} = \lambda
+        \begin{bmatrix} \boldsymbol{I} & \boldsymbol{0} \\ \boldsymbol{0} &
+        \boldsymbol{M} \end{bmatrix} \boldsymbol{z}, \qquad \boldsymbol{z} =
+        \begin{Bmatrix} \boldsymbol{u} \\ \lambda \boldsymbol{u}
+        \end{Bmatrix}
+
+    whose first block row is `\lambda \boldsymbol{u} = \lambda
+    \boldsymbol{u}` and whose second is the quadratic problem, see the
+    Notes of :func:`complex_frequency`.
+
+    """
     n = K.shape[0]
     I = np.eye(n)
     Z = np.zeros((n, n))
@@ -3406,6 +3569,23 @@ def complex_frequency(K, C, M, num_eigvalues=6, tol=0, sigma=None,
     .. [1] Tisseur, F. and Meerbergen, K., The quadratic eigenvalue
        problem, SIAM Review, 43(2), 235-286, 2001.
        https://doi.org/10.1137/S0036144500381988
+
+    Examples
+    --------
+    Four springs ``k`` in series, fixed at one end, with the point masses
+    ``m`` at the four free nodes and the damping matrix ``C = 0.01*K``:
+
+    >>> import numpy as np
+    >>> from scipy.sparse import diags
+    >>> from pyfe3d.solver import complex_frequency
+    >>> k, m = 1000., 2.
+    >>> K = diags([[2*k, 2*k, 2*k, k], -k*np.ones(3), -k*np.ones(3)],
+    ...           [0, 1, -1]).tocsr()
+    >>> M = diags(m*np.ones(4)).tocsr()
+    >>> lam, eigvecs = complex_frequency(K, 0.01*K, M, num_eigvalues=2)
+    >>> omegad, zeta = np.abs(lam.imag), -lam.real/np.abs(lam)
+    >>> print(np.round(omegad, 4), np.round(zeta, 4))
+    [ 7.7599 22.2205] [0.0388 0.1118]
 
     """
     check_null_rows_cols(K, 'K')
