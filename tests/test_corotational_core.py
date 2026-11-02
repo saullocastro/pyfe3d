@@ -9,11 +9,10 @@ Verified:
   \boldsymbol{\psi}` against central finite differences of their
   definitions, and the continuity of the small-angle series;
 - the local stiffness matrix of the identity trick: symmetric, rigid
-  rotations in its null space for flat elements (Felippa and Haugen 2005,
-  Eq. (50), `\boldsymbol{K}_M \boldsymbol{S} = \boldsymbol{0}`), equal to
-  the element ``KC0`` rotated to the element frame; `\boldsymbol{G}
-  \boldsymbol{S} = \boldsymbol{I}` and `\boldsymbol{P}^2 = \boldsymbol{P}`
-  (their Eqs. (17), (34));
+  rotations in its null space for flat elements (Felippa and Haugen, 2005,
+  Eq. (50)), equal to the element ``KC0`` rotated to the element frame;
+  the identities of the spin-fitter and of the projector, their Eqs. (17)
+  and (34);
 - zero internal force under large rigid motions, for every wrapped element;
 - the tangent stiffness matrix equal to central finite differences of the
   internal force, for every element and for a model mixing the three
@@ -36,7 +35,7 @@ Verified:
   in a model mixing it with the other kinematics, the tangent at ``u = 0``
   equal to that of ``'corotational'``, the same force and tangent as
   ``'corotational'`` for the shells and BeamLR, the axial force of BeamC
-  against Crisfield, Vol. 2, Eqs. (17.56a)-(17.56b), the order of the
+  against Crisfield (1997), Eqs. (17.56a)-(17.56b), the order of the
   agreement with ``'von_karman'`` for small rotations, Spring and Truss
   treated as ``'corotational'``;
 - the cantilever of Sze, Liu and Lo (2004), Section 3.2, under an end
@@ -45,10 +44,30 @@ Verified:
   form of the circular arc and against the exact solution of the
   discretised problem.
 
-References: Felippa, C. A. and Haugen, B., CMAME 194, 2285-2335, 2005,
-https://doi.org/10.1016/j.cma.2004.07.035; Sze, K. Y., Liu, X. H. and Lo,
-S. H., Finite Elements in Analysis and Design, 40(11), 1551-1569, 2004,
-https://doi.org/10.1016/j.finel.2003.11.001.
+Notes
+-----
+The identities of the identity trick checked here are, in the notation of
+Felippa and Haugen (2005), `\boldsymbol{K}_M \boldsymbol{S} =
+\boldsymbol{0}` for flat elements (their Eq. (50)), `\boldsymbol{G}
+\boldsymbol{S} = \boldsymbol{I}` (Eq. (17)) and `\boldsymbol{P}^2 =
+\boldsymbol{P}` (Eq. (34)), with `\boldsymbol{S}` the nodal
+displacements of the infinitesimal rigid rotations (:func:`S_matrix`),
+`\boldsymbol{G}` the spin-fitter matrix and `\boldsymbol{P}` the
+projector.
+
+References
+----------
+Felippa, C. A., Haugen, B., A unified formulation of small-strain
+corotational finite elements: I. Theory, Computer Methods in Applied
+Mechanics and Engineering, 194(21-24), 2005, pp. 2285-2335,
+https://doi.org/10.1016/j.cma.2004.07.035.
+
+Sze, K. Y., Liu, X. H., Lo, S. H., Popular benchmark problems for geometric
+nonlinear analysis of shells, Finite Elements in Analysis and Design,
+40(11), 2004, pp. 1551-1569, https://doi.org/10.1016/j.finel.2003.11.001.
+
+Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
+Structures, Volume 2: Advanced Topics, John Wiley & Sons, 1997.
 """
 import warnings
 
@@ -594,6 +613,8 @@ def test_sze_cantilever_half_circle():
     into a half circle, the tip rotation reaching ``pi``. Newton-Raphson
     with :class:`pyfe3d.solver.Analysis` in 10 increments.
 
+    Notes
+    -----
     Closed form of the circular arc (Sze et al. Section 3.2; Table 3a at
     ``M/M_max = 0.5``: ``-U = 12.000``, ``W = 7.639``): ``U/L =
     sin(phi)/phi - 1``, ``W/L = (1 - cos(phi))/phi``, ``phi = M L/(E I)``.
@@ -1406,6 +1427,8 @@ def test_cr_von_karman_small_rotations():
     with `w` and the rotations of order `\varepsilon`, `u` of order
     `\varepsilon^2`, so the internal forces are of order `\varepsilon^2`
 
+    Notes
+    -----
     Expected (derived here): the transverse forces and the moments of the
     two kinematics differ by `O(\varepsilon^3)`. The axial forces differ
     by `O(\varepsilon^4)` plus the axial component of the transverse shear

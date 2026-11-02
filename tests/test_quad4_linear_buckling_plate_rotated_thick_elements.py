@@ -1,3 +1,10 @@
+r"""Linear buckling of a thick square plate modelled with Quad4, rotated in
+space
+
+The buckling load of a hard simply supported plate with `b/h = 10` and
+elements with `h/\ell = 1.2`, rotated in space, is compared with the Navier
+solution of the Mindlin plate within 2 %.
+"""
 import sys
 sys.path.append('..')
 
@@ -16,8 +23,13 @@ def test_linear_buckling_plate(plot=False, mode=0):
     r"""Square plate with b/h = 10 and elements with h/l = 1.2
 
     The plate is hard simply supported, `w = 0` and the rotation about the
-    normal to each edge in the plane of the plate equal to zero, such that the
-    Navier solution of the Mindlin plate,
+    normal to each edge in the plane of the plate equal to zero; the
+    buckling load of each orientation is compared with the Navier solution
+    of the Mindlin plate, ``rtol = 0.02``.
+
+    Notes
+    -----
+    With these boundary conditions the Navier solution of the Mindlin plate,
 
     .. math::
 
@@ -31,11 +43,19 @@ def test_linear_buckling_plate(plot=False, mode=0):
     at the centroid, ``shear_model = 0`` or ``centroid_slopes = 1``
     (measured on 2026-11-01), see
     ``tests/test_quad4_geometric_hourglass.py``. Up to version 0.11 the thick
-    elements used the modified one-point shear rule of Hughes et al. (1977),
+    elements used the modified one-point shear rule of Hughes, Taylor and
+    Kanoknukulchai (1977),
     whose spurious twist stiffness gave +11.2 %, see
     ``tests/test_quad4_thick_twist.py``; with the soft simple support
     previously used here, the same spurious stiffness brought the result
     within 3 % of the Kirchhoff value.
+
+    References
+    ----------
+    Hughes, T. J. R., Taylor, R. L., and Kanoknukulchai, W., A simple and
+    efficient finite element for plate bending, International Journal for
+    Numerical Methods in Engineering, 11(10), 1977, pp. 1529-1543,
+    https://doi.org/10.1002/nme.1620111005.
 
     """
     thetas = np.linspace(-np.pi, np.pi, 5)

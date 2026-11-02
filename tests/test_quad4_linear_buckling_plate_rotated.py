@@ -1,3 +1,9 @@
+r"""Linear buckling of a simply supported plate modelled with Quad4, rotated
+in space
+
+The buckling load of the plate, rotated by 25 combinations of pitch and yaw,
+must not depend on the orientation (``rtol = 1e-6``).
+"""
 import sys
 sys.path.append('..')
 
@@ -17,14 +23,21 @@ def test_linear_buckling_plate(plot=False, mode=0):
     :func:`test_solver.test_linear_buckling_plate` with 20x6 elements,
     rotated by 25 combinations of pitch and yaw
 
-    The buckling load must not depend on the orientation of the plate. With
-    this mesh it is 4.3 % above the exact solution of Leissa, A. W.,
-    Vibration of Plates, NASA SP-160, 1969, Sec. 10.2.1, p. 277, Eq.
-    (10.46), with the default ``shear_model = 1`` (measured on 2026-11-01);
+    The buckling load must not depend on the orientation of the plate; the
+    solution of Leissa (1969) is printed for comparison.
+
+    Notes
+    -----
+    With this mesh the buckling load is 4.3 % above the exact solution of
+    Leissa (1969), Sec. 10.2.1, p. 277, Eq. (10.46), with the default ``shear_model = 1`` (measured on 2026-11-01);
     the convergence to that solution with the mesh is verified by the flat
     plate of :func:`test_solver.test_linear_buckling_plate`, the same
     element, plate, boundary conditions and given stress, where it is
     0.44 % above it with 60x18 elements.
+
+    References
+    ----------
+    Leissa, A. W., Vibration of Plates, NASA SP-160, 1969.
     """
     thetas = np.linspace(-np.pi, np.pi, 5)
     P_cr_calcs = []
@@ -146,7 +159,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
             print('linear buckling P_cr_calc =', P_cr_calc)
             P_cr_calcs.append(P_cr_calc)
 
-            # NOTE Leissa (1969), Eq. (10.46), for comparison
+            # NOTE exact solution, for comparison
             kcmin = 1e6
             mmin = 0
             for m in range(1, 21):

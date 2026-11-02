@@ -1,5 +1,15 @@
 r"""Quad4: slopes of `w` in the geometric stiffness
 
+The lowest buckling load of a hard simply supported square sandwich-like
+plate under uniaxial compression, with reduced transverse shear stiffness,
+is compared with Eq. (1) of Seide and Stowell (1950) for the rules of the
+slopes of `w` (``shear_model = 0``, ``centroid_slopes = 1`` and the default);
+the geometric stiffness of the pre-buckling state, the slope rule of KG, the
+nonlinear terms of the hourglass pattern and the tangent stiffness against
+the Jacobian of the internal forces are checked as well.
+
+Notes
+-----
 Up to version 0.11, and with ``shear_model = 0`` since 0.12.0, the elements
 of :class:`pyfe3d.Quad4` with `h/\ell < 1` integrate the transverse shear
 with one point at the centroid, after Hughes et al. (1977), such that the
@@ -39,7 +49,7 @@ plates: with the one-point transverse shear of ``shear_model = 0`` and the
 slopes at the two-by-two points (before, up to 0.11) and at the centroid
 (``shear_model = 0``), and with the MITC4 strains of ``shear_model = 1`` and
 the slopes at the centroid (``centroid_slopes = 1``) and at the two-by-two
-points (default):
+points (default)::
 
     A44, A55   mesh   h/l    before    shear_model=0  centroid   default
     1/100      8x8    0.08   +1.98 %     +3.33 %      +3.41 %    +2.06 %
@@ -69,11 +79,16 @@ element, and the 32x32 mesh is within 0.5 % of the reference. The case 1/100
 with 8x8 elements is not affected by the spurious mode, whose load decreases
 as the square of the element size.
 
-Reference
----------
+References
+----------
 Seide, P., and Stowell, E. Z., Elastic and plastic buckling of simply
 supported solid-core sandwich plates in compression, NACA Report 967, 1950,
 Eq. (1), p. 2.
+
+Hughes, T. J. R., Taylor, R. L., and Kanoknukulchai, W., A simple and
+efficient finite element for plate bending, International Journal for
+Numerical Methods in Engineering, 11(10), 1977, pp. 1529-1543,
+https://doi.org/10.1002/nme.1620111005.
 
 """
 import sys
@@ -214,7 +229,7 @@ def test_low_transverse_shear_stiffness():
                 assert err > 0
                 assert checkerboard < 0.05
                 errs.append(err)
-            # NOTE second-order convergence to Seide and Stowell (1950)
+            # NOTE second-order convergence to the reference
             assert 3.8 < errs[1]/errs[2] < 4.2
             assert errs[2] < 0.005
 
@@ -239,6 +254,8 @@ def test_thick_plate_two_by_two_slopes():
     compression, 12 by 12 elements, `h/\ell = 1.2`, against the Navier
     solution of the Mindlin plate,
 
+    Notes
+    -----
     .. math::
 
         N_{cr} = \frac{N_{cr,K}}{1 + D \alpha^2/A_{55}}, \qquad \alpha^2 =

@@ -1,5 +1,12 @@
 """Piston-theory matrices of Quad4 and Quad4R on an element rotated in plane
 
+For a flow along the global ``X`` axis and elements whose axes are rotated
+in their plane, the load of a linear normal displacement is compared with
+the resultant of a constant pressure (pressure times area), and a
+displacement varying only along ``Y`` must give no load in ``beta``.
+
+Notes
+-----
 The aerodynamic matrices are the matrices of the load along the element
 normal, ``f = beta*KA_beta*u + gamma*KA_gamma*u + mu*CA*udot``, of the
 pressure law ``q = -beta*w_{,X} + gamma*w - mu*wdot`` for a flow along the

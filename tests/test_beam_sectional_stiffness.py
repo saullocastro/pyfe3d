@@ -10,22 +10,14 @@ built from the 11 stiffness attributes, see the notes of
    of :class:`pyfe3d.beamprop.BeamProp`, and setting ``C`` to it gives the
    matrices and internal forces of the default bit by bit.
 2. Cantilever clamped at `x = 0` with the loads ``f`` at the tip `x = L`,
-   closed form derived here, see :func:`tip_closed_form`: the sectional
-   forces are linear in `x`, the strains are ``inv(C)`` times them, and the
-   tip displacements follow by integrating the strains. With the
-   extension-twist coupling ``C[0, 3]`` alone, the strains of an axial load
-   or of a torque are constant, the tip twist under an axial load ``P`` is
-   ``S[3, 0]*P*L``, ``S = inv(C)``, and both elements reproduce it with
-   any mesh. BeamC, whose shape functions are derived from the same
-   equations for any ``C``, see the notes of :class:`pyfe3d.beamc.BeamC`,
-   reproduces the six load cases with one element for any coupling, and
-   BeamLR converges as the square of the element length.
-3. Thin-walled box beam CUS of Yu, W., Hodges, D. H., and Ho, J. C.,
-   International Journal of Engineering Science, 59, pp. 40-64, 2012,
-   https://doi.org/10.1016/j.ijengsci.2012.03.006, Tables 1-2 (VABS 3.2
+   against the closed form of :func:`tip_closed_form`: with the
+   extension-twist coupling ``C[0, 3]`` alone both elements reproduce it
+   with any mesh; BeamC reproduces the six load cases with one element for
+   any coupling, and BeamLR converges as the square of the element length.
+3. Thin-walled box beam CUS of Yu et al. (2012), Tables 1-2 (VABS 3.2
    column), converted with :func:`pyfe3d.vabs.yu_to_pyfe3d` and
    :func:`pyfe3d.vabs.beamprop_from_vabs`: extension-twist and
-   bending-shear couplings in a cantilever.
+   bending-shear couplings in a cantilever, against the same closed form.
 4. ``KC0 + KCNL + KG`` is the Jacobian of the nonlinear internal forces for
    a section with all 21 entries of ``C`` non-zero.
 5. Without couplings other than ``C[0, 3]``, BeamC keeps the closed-form
@@ -35,6 +27,26 @@ built from the 11 stiffness attributes, see the notes of
 6. Mass matrices with couplings: the kinetic energy of the rigid-body
    motions is exact, and BeamC and BeamLR converge to the same natural
    frequencies of the CUS box cantilever.
+
+Notes
+-----
+The closed form of item 2 is derived in :func:`tip_closed_form`: the
+sectional forces are linear in `x`, the strains are ``inv(C)`` times them,
+and the tip displacements follow by integrating the strains. With the
+extension-twist coupling ``C[0, 3]`` alone, the strains of an axial load or
+of a torque are constant and the tip twist under an axial load ``P`` is
+``S[3, 0]*P*L``, ``S = inv(C)``. BeamC is exact for any coupling because its
+shape functions are derived from the same equations for any ``C``, see the
+notes of :class:`pyfe3d.beamc.BeamC`.
+
+References
+----------
+Yu, W., Hodges, D. H., Ho, J. C., Variational asymptotic beam sectional
+analysis - An updated version, International Journal of Engineering
+Science, 59, 2012, pp. 40-64, https://doi.org/10.1016/j.ijengsci.2012.03.006.
+
+Luo, Y., An Efficient 3D Timoshenko Beam Element with Consistent Shape
+Functions, Adv. Theor. Appl. Mech., 1(3), 2008, pp. 95-106.
 """
 import copy
 import pickle
@@ -287,6 +299,10 @@ def test_explicit_C_reproduces_default(name):
 
 
 def test_C_set_get_copy_and_errors():
+    """``BeamProp.C`` returns a copy, stores the symmetric part, survives
+    pickling and ``copy.deepcopy``, is reset to zero by ``del``, and raises
+    ``ValueError`` for a wrong shape, an unsymmetric or a non-finite
+    matrix"""
     p = BeamProp()
     C = rectangle_C()
     C[0, 3] = C[3, 0] = 1.e3

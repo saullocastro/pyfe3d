@@ -2,10 +2,17 @@ r"""Linear static analysis of an L-shaped frame of BeamC elements
 
 A column along `Y`, clamped at its base, of height `H`, and a beam along `X`
 of length `L`, rigidly connected at the top of the column, loaded at the
-free end of the beam. With the shear deformation of the Timoshenko theory,
-the axial deformation and the Saint-Venant torsion, the displacements of the
-free end follow from the principle of virtual work (unit-load method). For
-the in-plane load `F_Y = -P`:
+free end of the beam. With 1 and 4 elements per member, the displacements
+of the free end under an in-plane load `F_Y = -P` and an out-of-plane load
+`F_Z = P` are compared with the closed form of the unit-load method, and
+the internal forces at the base with the support reactions.
+
+Notes
+-----
+With the shear deformation of the Timoshenko theory, the axial deformation
+and the Saint-Venant torsion, the displacements of the free end follow from
+the principle of virtual work (unit-load method). For the in-plane load
+`F_Y = -P`:
 
 .. math::
 

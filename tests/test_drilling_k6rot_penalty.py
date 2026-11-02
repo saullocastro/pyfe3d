@@ -2,12 +2,23 @@ r"""Regression tests for the fictitious (K6ROT penalty) drilling stiffness.
 
 The penalty model is the pre-0.10.0 default and remains available through
 ``drilling_model = 1``. It is the approach adopted in MSC Nastran and Autodesk
-Nastran through the K6ROT parameter, and is very close to Eq. 2.20 of:
+Nastran through the K6ROT parameter, and is very close to Eq. 2.20 of Adam,
+Mohamed and Hassaballa (2013). The penalty energy of a uniform drilling state
+is compared with its closed form, which is independent of the element shape,
+and the drilling blocks of Quad4 and Quad4R, which integrate the same
+drilling operator with the same 2x2 rule, must agree to machine precision on
+the same geometry. Since 0.10.0 none of the three shell elements reads
+``K6ROT`` by default, which :func:`test_k6rot_penalty_is_not_the_default`
+checks.
 
-    Adam, F. M., Mohamed, A. E., and Hassaballa, A. E., 2013, "Degenerated Four
-    Nodes Shell Element with Drilling Degree of Freedom", IOSR J. Eng., 3(8),
-    pp. 10-20. doi:10.9790/3021-03831020
+These tests exist because the coefficient `K6ROT \cdot 10^{-6} A_{66}` was
+lost from Quad4 between 0.8.0 and 0.9.0, leaving an effective coefficient of 1
+and making the ``K6ROT`` attribute a no-op. Only non-coplanar models were
+affected, because on a flat mesh the drilling row is decoupled from every other
+degree-of-freedom and its magnitude cannot change any displacement.
 
+Notes
+-----
 The penalty energy per element is
 
 .. math::
@@ -21,18 +32,13 @@ functions form a partition of unity, the energy has the closed form
 .. math::
     U = \frac{1}{2} K6ROT \cdot 10^{-6} A_{66} A_e \omega_0^2
 
-with `A_e` the element area. That closed form is the reference used below, and
-it is independent of the element shape. The second reference used is
-cross-element: Quad4 and Quad4R integrate the same drilling operator with the
-same 2x2 rule, so their drilling blocks must agree to machine precision on the
-same geometry. Since 0.10.0 none of the three shell elements reads ``K6ROT``
-by default, which :func:`test_k6rot_penalty_is_not_the_default` checks.
+with `A_e` the element area.
 
-These tests exist because the coefficient `K6ROT \cdot 10^{-6} A_{66}` was
-lost from Quad4 between 0.8.0 and 0.9.0, leaving an effective coefficient of 1
-and making the ``K6ROT`` attribute a no-op. Only non-coplanar models were
-affected, because on a flat mesh the drilling row is decoupled from every other
-degree-of-freedom and its magnitude cannot change any displacement.
+References
+----------
+Adam, F. M., Mohamed, A. E., and Hassaballa, A. E., 2013, "Degenerated Four
+Nodes Shell Element with Drilling Degree of Freedom", IOSR J. Eng., 3(8),
+pp. 10-20. doi:10.9790/3021-03831020
 
 """
 import sys

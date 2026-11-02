@@ -82,9 +82,10 @@ def von_mises_truss(frac=0.99, ks=10.):
     a limit point at ``w = 1 - 1/sqrt(3)``; the load is ``frac`` of the
     limit load.
 
+    Notes
+    -----
     The internal force of the two bars is the "shallow truss theory" of
-    Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
-    Structures, Vol. 1, Wiley, 1991, Sec. 1.2, Eq. (1.7), p. 4, ``W =
+    Crisfield (1991), Sec. 1.2, Eq. (1.7), p. 4, ``W =
     EA/l**3*(z**2*w + 3/2*z*w**2 + 1/2*w**3)`` for one bar, with ``w``
     positive towards the base (``w -> -w``, ``W -> -W``), two bars,
     ``EA/l**3 = 1`` and the rise ``z = 1``: ``F(w) = w**3 - 3*w**2 + 2*w``.
@@ -93,6 +94,11 @@ def von_mises_truss(frac=0.99, ks=10.):
     maximum ``1/frac`` at ``w = 1 - 1/sqrt(3)`` and the minimum ``-1/frac``
     at ``w = 1 + 1/sqrt(3)``, ``dF/dw = 3*w**2 - 6*w + 2 = 0``, and ``F =
     0`` again at ``w = 2``, the inverted configuration.
+
+    References
+    ----------
+    Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
+    Structures, Vol. 1, Wiley, 1991.
 
     """
     Flim = 2/(3*np.sqrt(3))
@@ -111,6 +117,7 @@ def von_mises_truss(frac=0.99, ks=10.):
 
 
 def linear_problem():
+    """Linear problem of 3 DOFs with a constant stiffness matrix"""
     K = np.array([[4., -1., 0.], [-1., 3., -1.], [0., -1., 2.]])
     fext = np.array([1., 2., 3.])
     return Problem(fext, lambda c: K @ c, K, lambda c: np.zeros_like(K))

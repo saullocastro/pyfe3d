@@ -35,6 +35,22 @@ The tests check, against the output of Listing 7-3 (pp. 198-205):
   GRID 98 and 99, and all published bar forces and displacements of
   subcase 2 are reproduced to the printed digits.
 
+Units: lb, ft, s; the masses are the weights times PARAM WTMASS = 0.031081
+s^2/ft, in slug.
+
+Notes
+-----
+The reference values are the printed output of Listing 7-3 of Rodden and
+Johnson (1994), compared to the printed precision. The inertia relief
+follows Barnett et al. (1995): with the reference support, the rigid-body
+modes are those of the statically determinate support, the rigid-body
+accelerations balance the applied loads with the inertia loads, and the
+displacements are relative to the support. With a balanced load set the
+accelerations and the reactions of the support vanish, which is the check
+of the subcase 2 box forces.
+
+References
+----------
 Rodden, W. P., Johnson, E. H., 1994, MSC/NASTRAN Aeroelastic Analysis User's
 Guide, Version 68, The MacNeal-Schwendler Corporation, Los Angeles.
 
@@ -47,9 +63,6 @@ all-electric aircraft, preprint, https://engrxiv.org/preprint/view/7893/version/
 Barnett, A. R., Widrick, T. W., Ludwiczak, D. R., 1995, Closed-Form Static
 Analysis with Inertia Relief and Displacement-Dependent Loads Using a
 MSC/NASTRAN DMAP Alter, NASA TM-106836, https://ntrs.nasa.gov/citations/19950013233
-
-Units: lb, ft, s; the masses are the weights times PARAM WTMASS = 0.031081
-s^2/ft, in slug.
 """
 import sys
 sys.path.append('..')
