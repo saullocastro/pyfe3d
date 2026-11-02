@@ -67,10 +67,14 @@ User guide
     conventions.rst
     element_choice.rst
     shell_properties.rst
+    beam_theory.rst
+    beam_properties.rst
+    truss_spring.rst
     cross_sectional_analysis.rst
     linear_analyses.rst
     inertia_relief.rst
     nonlinear_analyses.rst
+    corotational_formulation.rst
     eigenvalue_analyses.rst
 
 
