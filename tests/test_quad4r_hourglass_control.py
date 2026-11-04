@@ -343,15 +343,15 @@ def brockman_stiffnesses(area, E=E_BROCKMAN, t=T_BROCKMAN):
 def homogeneous_stiffnesses(area, E=E_BROCKMAN, t=T_BROCKMAN):
     r"""The dimensionally homogeneous stiffnesses pyfe3d uses
 
-    Brockman's `1/(1 + 1/A)` is replaced by the area itself for the in-plane
-    translations and for the rotations, which is what the dimensions
-    require, see the section "Dimensional homogeneity of the hourglass
-    stiffnesses" of the :mod:`pyfe3d.quad4r` documentation. The
-    transverse displacement `w` has no such coefficient, see
-    :func:`test_transverse_shear_matches_belytschko_leviathan`.
-
-    The rotations `r_x` and `r_y` have the physical stabilisation of the
-    bending of Belytschko and Leviathan (1994), see
+    The stiffnesses of the hourglass modes of the in-plane displacements
+    `u` and `v`: Eq. (16a) of Brockman (1987) with his factor `1/(1 +
+    1/A)` replaced by the area itself, which is what the dimensions
+    require, see the rubric "Hourglass control of the membrane" of the
+    :mod:`pyfe3d.quad4r` documentation. There is no stiffness of this kind
+    for `w`, `r_x` and `r_y`: Brockman's Eq. (16b) is not used, and their
+    hourglass modes have the physical stabilisation of the transverse shear
+    and of the bending of Belytschko and Leviathan (1994), see
+    :func:`test_transverse_shear_matches_belytschko_leviathan` and
     :func:`test_bending_stabilisation_matches_belytschko_leviathan`.
 
     """
@@ -438,12 +438,12 @@ def test_hourglass_operator_equals_second_derivative_of_N():
 def test_generalized_stiffnesses_are_dimensionally_homogeneous():
     r"""The generalized stiffnesses actually implemented, one at a time
 
-    pyfe3d departs from Brockman's Eq. (16) as set out in the
-    section "Dimensional homogeneity of the hourglass stiffnesses" of the
-    :mod:`pyfe3d.quad4r` documentation: his `1/(1 + 1/A)` is replaced by the
-    area itself, which is what the dimensions of `K_{ij} = A E^{(h)}
-    \gamma_i \gamma_j` require. The transverse displacement `w` has no such
-    coefficient, see
+    The hourglass stiffnesses of `u` and `v` of Quad4R are those of
+    Brockman's Eq. (16a) with his `1/(1 + 1/A)` replaced by the area itself,
+    which is what the dimensions of `K_{ij} = A E^{(h)} \gamma_i \gamma_j`
+    require, see the rubric "Hourglass control of the membrane" of the
+    :mod:`pyfe3d.quad4r` documentation and :func:`homogeneous_stiffnesses`.
+    The hourglass modes of `w`, `r_x` and `r_y` have no such stiffness, see
     :func:`test_transverse_shear_matches_belytschko_leviathan`.
 
     The energy of each hourglass pattern is linear in the corresponding
@@ -956,17 +956,37 @@ def test_hourglass_stiffness_is_independent_of_the_length_unit():
 
 
 def test_homogeneous_stiffnesses_agree_with_brockman_for_small_areas():
-    r"""The departure from Eq. (16) is confined to the regime that needed it
+    r"""The membrane hourglass stiffnesses tend to Brockman's Eq. (16a) for small areas
 
-    `1/(1 + 1/A) \to A` as `A \to 0`, so for the in-plane translations the
-    homogeneous form and Eq. (16a) converge as the element area shrinks in
-    the unit used, which is the regime Brockman calibrated in. This test
-    measures that convergence, so the change is documented as a
-    reinterpretation of his factor rather than a different magnitude of
-    stabilisation.
+    The stiffnesses of :func:`homogeneous_stiffnesses`, used by Quad4R for
+    the hourglass modes of `u` and `v`, are compared with Eq. (16a) of
+    Brockman (1987), :func:`brockman_stiffnesses`, for element areas of
+    0.1, 0.01 and 0.0001 in the unit of length used, the regime in which
+    Brockman calibrated his factor, with the relative tolerance `2 A`; for
+    an area of `10^4` they differ by more than a factor 1000. Only `u` and
+    `v` are compared: Quad4R does not use Eq. (16b) of Brockman for `w`,
+    `r_x` and `r_y`, whose hourglass modes have the physical stabilisation
+    of Belytschko and Leviathan (1994), see
+    :func:`test_transverse_shear_matches_belytschko_leviathan` and
+    :func:`test_bending_stabilisation_matches_belytschko_leviathan`.
 
-    The `w` term is excluded: it keeps Brockman's factor and is Eq. (16b)
-    itself, see :func:`homogeneous_stiffnesses`.
+    Notes
+    -----
+    Eq. (16a) of Brockman (1987), p. 2347, gives the generalized hourglass
+    stiffnesses of the in-plane displacements
+
+    .. math::
+        E^{(h)}_u = E^{(h)}_v = \frac{0.10 E t}{1 + 1/A}
+
+    and Quad4R uses `0.10 E t A`, dimensionally homogeneous. Their ratio is
+    `A (1 + 1/A) = 1 + A`, so the relative difference is exactly `A`: the
+    two agree as `A \to 0` and diverge without bound for large areas, where
+    Brockman's factor tends to one and his stiffness does not scale with
+    the length unit. His Eq. (16b), `0.10 E t^3/(1 + 1/A)` for `w`, `r_x`
+    and `r_y`, has no counterpart in Quad4R, whose hourglass modes of
+    `w`, `r_x` and `r_y` are stabilised with the nonconstant part of the
+    physical transverse shear and bending strains of Belytschko and
+    Leviathan (1994). The full references are in the module documentation.
 
     """
     for area, tol in [(1.e-1, 2.e-1), (1.e-2, 2.e-2), (1.e-4, 2.e-4)]:
