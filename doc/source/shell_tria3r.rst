@@ -104,6 +104,28 @@ mode at two elements per wavelength the critical one. The measurements are
 in the Notes of :mod:`pyfe3d.tria3r`.
 
 
+Zero-energy modes
+-----------------
+
+A single free element has seven zero-energy modes: the six rigid-body
+motions and the mode of the rotations
+
+.. math::
+
+    u = v = w = r_z = 0, \qquad r_x = c \, (x - x_c), \qquad
+    r_y = c \, (y - y_c)
+
+about the centroid `(x_c, y_c)`, without curvature, `{r_y}_{,x} =
+{r_x}_{,y} = 0` and `-{r_x}_{,x} + {r_y}_{,y} = 0`, and without transverse
+shear strain. The bending and the transverse shear of the triangle have nine
+degrees-of-freedom and at most five independent constant strains, three
+curvatures and two transverse shear strains, so at least four of their
+modes have no energy, three being rigid-body motions. As the twisting mode
+of the one-point quadrilateral, Eq. (13) of Brockman (1987), the mode exists
+for a single element only: in an assembled mesh the neighbouring elements
+restrain it, see the Notes of :mod:`pyfe3d.tria3r`.
+
+
 What the element computes
 -------------------------
 
@@ -140,6 +162,9 @@ References
   Stress projection for membrane and shear locking in shell finite
   elements, Computer Methods in Applied Mechanics and Engineering, 51(1-3),
   221-258, 1985. https://doi.org/10.1016/0045-7825(85)90035-0
+- Brockman, R. A., Dynamics of the bilinear Mindlin plate element,
+  International Journal for Numerical Methods in Engineering, 24(12),
+  2343-2356, 1987. https://doi.org/10.1002/nme.1620241208
 - Castro, S. G. P., Donadon, M. V. and Guimaraes, T. A. M., ES-PIM applied
   to buckling of variable angle tow laminates, Composite Structures, 209,
   67-78, 2019. https://doi.org/10.1016/j.compstruct.2018.10.058

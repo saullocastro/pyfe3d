@@ -284,6 +284,36 @@ to be trusted. It is markedly more accurate in in-plane bending: on Cook's
 skew membrane with a four by four mesh of split quadrilaterals it gives 20.7
 against the reference 23.9, where the penalty gives 11.3.
 
+.. rubric:: Zero-energy modes of a single element
+
+The stiffness matrix ``KC0`` of a single free element has seven zero
+eigenvalues: the six rigid-body motions and one mode of the rotations,
+
+.. math::
+
+    u = v = w = r_z = 0, \qquad r_x = c \, (x - x_c), \qquad
+    r_y = c \, (y - y_c)
+
+in the element coordinates, `(x_c, y_c)` being the centroid and `c` an
+arbitrary constant. Its curvatures vanish, `\kappa_{xx} = {r_y}_{,x} = 0`,
+`\kappa_{yy} = -{r_x}_{,y} = 0` and `\kappa_{xy} = -{r_x}_{,x} +
+{r_y}_{,y} = c - c = 0`, and so does its transverse shear strain, constant with either ``shear_model``.
+The bending and the transverse shear have nine degrees-of-freedom, `w`,
+`r_x` and `r_y` of the three nodes, and at most five independent strains,
+the three constant curvatures and the two constant transverse shear
+strains, hence at least four zero modes, three of which are the rigid-body
+motions `w = \text{const.}` and the rotations about the in-plane axes; the
+membrane with its drilling term has only the three in-plane rigid-body
+motions. The mode is the triangular counterpart of the spurious twisting
+mode of the one-point quadrilateral, Eq. (13) of Brockman [15]_, p. 2347,
+which exists for a single element but not in a mesh of two or more
+elements. Measured with both ``shear_model`` and both ``drilling_model``,
+thicknesses of 0.001 to 0.1 times the size of the triangle, in the `xy`
+plane and rotated out of it: seven zero eigenvalues, below `10^{-15}` times
+the largest, with the eighth above `10^{-8}` times it; assembled, two
+triangles of a square and four triangles about an interior node have only
+the six rigid-body modes.
+
 References
 ----------
 .. [1] Lyly, M., Stenberg, R., and Vihinen, T., A stable bilinear element for
@@ -334,6 +364,9 @@ References
    https://doi.org/10.1016/0168-874X(85)90003-4
 .. [14] Timoshenko, S., and Woinowsky-Krieger, S., Theory of Plates and
    Shells, 2nd ed., McGraw-Hill, 1959.
+.. [15] Brockman, R. A., Dynamics of the bilinear Mindlin plate element,
+   International Journal for Numerical Methods in Engineering, 24(12),
+   2343-2356, 1987. https://doi.org/10.1002/nme.1620241208
 
 """
 from libc.math cimport fabs
