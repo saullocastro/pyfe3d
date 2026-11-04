@@ -32,6 +32,15 @@ their weak axis and twists the column with the torque `P L`:
 The consistent shape functions of BeamC solve the equilibrium equations of
 the Timoshenko beam, such that these nodal displacements are exact with any
 number of elements per member.
+
+TODO(author): these expressions are derived here; no textbook that states
+the unit-load method with the axial, shear, bending and torsion terms was
+available in the reference folders. Proposed source, not read: Megson
+(2019), chapter "Virtual Work and Energy Methods", pp. 467-524,
+doi:10.1016/B978-0-08-102586-4.00015-9 (chapter of Megson, T. H. G.,
+Structural and Stress Analysis, 4th ed., Elsevier, 2019, ISBN
+978-0-08-102586-4; chapter data checked on Crossref). Cite it, with the
+equation numbers, once the chapter is checked?
 """
 import sys
 sys.path.append('..')

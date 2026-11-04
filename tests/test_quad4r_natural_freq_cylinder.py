@@ -47,19 +47,15 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     circumference and nearly square elements::
 
         ntheta    n = 2      n = 3
-           16    +5.30 %   +20.43 %
-           24    +2.43 %    +8.53 %
-           32    +1.24 %    +4.53 %
-           48    +0.52 %    +1.91 %
-           64    +0.27 %    +1.02 %
-           96    +0.09 %    +0.38 %
+           16    +4.78 %   +16.57 %
+           24    +2.19 %    +6.86 %
+           32    +1.13 %    +3.69 %
+           48    +0.48 %    +1.56 %
+           64    +0.25 %    +0.83 %
+           96    +0.09 %    +0.31 %
 
-    TODO(author): this table was measured with the hourglass stiffnesses of
-    Brockman (1987), not with the current stabilisation, which gives +0.48
-    and +1.56 % at ``ntheta = 48`` and +0.09 and +0.31 % at ``ntheta = 96``,
-    see below; re-measure the table?
-
-    so the element converges to the three-dimensional solution: Table 2.6
+    measured on 2026-11-04 with the default stabilisation of Quad4R, see
+    below, so the element converges to the three-dimensional solution: Table 2.6
     (concluded), p. 53, of the same reference puts the Flugge shell theory
     0.40 % above the elasticity value for ``n = 3`` at this geometry, and at
     ``ntheta = 96`` the error is already below that. The same meshes of the
