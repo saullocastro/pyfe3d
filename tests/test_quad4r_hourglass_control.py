@@ -19,7 +19,7 @@ The tests check the implementation term by term against these references:
   Belytschko and Leviathan (1994), against closed forms written here
   independently of the element code, the constant-twist patch test, their
   thin-plate bending patch test, the twisted strip of MacNeal and Harder
-  (1985) and the FSDT Navier solution of laminated plates, Reddy (2004),
+  (1985) and the FSDT Navier solution of laminated plates, Reddy (2003),
   Sec. 7.2.1;
 * the classification of the element modes of Brockman's p. 2347, including
   the twisting mode of his Eq. (13) and his remark attributing it to Hughes
@@ -180,7 +180,7 @@ References
 .. [6] Cook, R. D., Improved two-dimensional finite element, Journal of the
    Structural Division, ASCE, 100(ST9), 1851-1863, 1974.
 .. [7] Reddy, J. N., Mechanics of Laminated Composite Plates and Shells:
-   Theory and Analysis, 2nd ed., CRC Press, 2004.
+   Theory and Analysis, 2nd ed., CRC Press, 2003.
    https://doi.org/10.1201/b12409
 
 """
@@ -1661,7 +1661,7 @@ def navier_ss1_center_deflection(prop, a, nterms=199):
     r"""Centre deflection of a simply supported square plate under a unit
     uniform pressure, FSDT Navier solution with SS-1 conditions
 
-    The series of the Navier solution of Reddy (2004), Sec. 7.2.1, with
+    The series of the Navier solution of Reddy (2003), Sec. 7.2.1, with
     the odd `m` and `n` up to ``nterms``, for a laminate
     without the couplings listed in the Notes; the transverse shear
     stiffnesses are those of ``prop``, so the comparison with Quad4R
@@ -1685,7 +1685,7 @@ def navier_ss1_center_deflection(prop, a, nterms=199):
     the stationarity of `a^2/8 \, Q - q_{mn} W a^2/4` gives one 5 by 5 linear
     system per term, with `q_{mn} = 16/(\pi^2 m n)` for odd `m` and `n`,
     see the Notes of :func:`test_laminated_plates_against_navier` for the
-    equations of Reddy (2004) these follow.
+    equations of Reddy (2003) these follow.
 
     """
     ABD = prop.ABD
@@ -1774,7 +1774,7 @@ def test_laminated_plates_against_navier():
     Simply supported square plates under uniform pressure, 8 by 8, 16 by 16
     and 32 by 32 Quad4R, against :func:`navier_ss1_center_deflection`, the
     Navier solution of the first-order shear deformation theory of Reddy
-    (2004), Sec. 7.2.1, which is first checked against the deflections of
+    (2003), Sec. 7.2.1, which is first checked against the deflections of
     his Table 7.2.1, p. 385. The plates are isotropic, the symmetric and the
     unsymmetric cross-ply and a sandwich: the ply has `E_1/E_2 = 25`,
     `G_{12} = G_{13} = 0.5 E_2`, `G_{23} = 0.2 E_2`, `\nu_{12} = 0.25`, and
@@ -1835,7 +1835,7 @@ def test_laminated_plates_against_navier():
     References
     ----------
     .. [1] Reddy, J. N., Mechanics of Laminated Composite Plates and Shells:
-       Theory and Analysis, 2nd ed., CRC Press, 2004.
+       Theory and Analysis, 2nd ed., CRC Press, 2003.
        https://doi.org/10.1201/b12409
     .. [2] Reddy, J. N., Chandrashekhara, K. and Chao, W. C., Geometrically
        nonlinear analysis of laminated elastic structures, NASA CR-191055,
