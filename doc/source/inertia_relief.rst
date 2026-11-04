@@ -29,7 +29,7 @@ exists only for loads orthogonal to the rigid-body modes,
     \boldsymbol{\Phi}^\top \boldsymbol{F}_{ext} = \boldsymbol{0}
 
 i.e. without a resultant force or moment (Farhat and Géradin 1998;
-Cavaliere et al. 2021, Sec. 3), and that it is then defined up to a
+Cavaliere et al. 2021, Sec. 3, Eqs. (12) and (15)), and that it is then defined up to a
 rigid-body motion `\boldsymbol{\Phi} \boldsymbol{\alpha}`. A particular solution is
 obtained by prescribing `n_r` null displacements, the reference support,
 chosen such that they suppress the rigid-body modes without restraining any
@@ -125,8 +125,8 @@ fictitious support of the singular static problem: the displacements are
 those of the structure supported by the reference support, which carries no
 reaction. For unbalanced loads, the plain linear static solution with the
 same support would carry the resultant of the loads at the support, with
-unrealistic reactions and internal forces near it (Cavaliere et al. 2021,
-Sec. 1). Inertia relief replaces these reactions by the d'Alembert forces
+unrealistic reactions and an unrealistic distribution of the internal
+forces (Cavaliere et al. 2021, Sec. 1). Inertia relief replaces these reactions by the d'Alembert forces
 of the rigid-body acceleration, distributed as the mass. The element forces
 of a distributed inertia load contain the element's own share of it, as
 for any distributed load. The result is a quasi-static state, valid when
