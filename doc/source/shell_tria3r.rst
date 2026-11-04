@@ -83,8 +83,7 @@ The centroid-sampled shear of ``shear_model = 0``
 
 With ``shear_model = 0`` the transverse shear strains are sampled at the
 centroid, and the transverse shear stiffnesses are divided by :eq:`sh-alpha`
-with ``alpha_shear_locking``, ``0.7`` for the element of the versions up
-to 0.11; it is kept to reproduce former results. Here the factor does the
+with ``alpha_shear_locking``, e.g. ``0.7``. Here the factor does the
 unlocking, since the centroid sample still locks, and its value is about
 seven times the values near 0.1 of the references, where the factor sits
 on top of a field that is already free of locking (Lyly, Stenberg and

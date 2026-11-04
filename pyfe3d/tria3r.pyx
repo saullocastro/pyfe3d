@@ -24,17 +24,16 @@ internal force vector.
 Three-node triangular shell element with 6 degrees-of-freedom per node, `u`,
 `v`, `w`, `r_x`, `r_y`, `r_z`, first-order shear deformation theory.
 
-Since version 0.12.0 the transverse shear strains are, by default, those of
-the discrete shear gap (DSG) field of :class:`pyfe3d.tria3dsg.Tria3DSG`,
+The transverse shear strains are, by default, those of the discrete shear
+gap (DSG) field of :class:`pyfe3d.tria3dsg.Tria3DSG`,
 selected by the ``shear_model`` attribute of :class:`.Tria3R`, ``1`` by
 default, with the ``alpha_shear_locking`` attribute ``0.`` by default. The
 membrane field is enriched with the drilling rotations of Allman, which is
-what distinguishes this element from :class:`pyfe3d.tria3dsg.Tria3DSG`. Up
-to version 0.11 the transverse shear was sampled at the centroid and its
-stiffness divided by `1 + 0.7 \ell^2/h^2`; that field is still available with
-``shear_model = 0`` and ``alpha_shear_locking = 0.7``, for the reproduction
-of former results only, because it does not converge on thin plates and
-shells, see the Notes.
+what distinguishes this element from :class:`pyfe3d.tria3dsg.Tria3DSG`. With
+``shear_model = 0`` the transverse shear is sampled at the centroid and its
+stiffness divided by `1 + \alpha \ell^2/h^2`, e.g. with
+``alpha_shear_locking = 0.7``; that field does not converge on thin plates
+and shells and is not recommended, see the Notes.
 
 :class:`.Tria3R` is the recommended triangle of pyfe3d. With the same
 transverse shear field, it gives the results of
@@ -49,8 +48,7 @@ The drilling rotation `r_z` is given stiffness by one of two models, selected
 with the ``drilling_model`` attribute of :class:`.Tria3R`: the physics-based
 default, for which the nodal moments about the shell normal recovered in the
 internal force vector are physical and no user parameter is involved, and a
-fictitious penalty scaled by ``K6ROT``, the default before version 0.10.0,
-whose only purpose is to remove the singularity of the drilling
+fictitious penalty scaled by ``K6ROT``, whose only purpose is to remove the singularity of the drilling
 degree-of-freedom. Geometrically nonlinear analyses with the von Kármán
 membrane strains are supported by :meth:`.Tria3R.update_fint` with
 ``nonlinear=1``, :meth:`.Tria3R.update_KCNL` and :meth:`.Tria3R.update_KG`.
@@ -119,7 +117,7 @@ These measurements are why :class:`.Tria3R` is the recommended triangle, and
 why :class:`.Tria3DSG` is the better choice on a coarse mesh of a doubly
 curved shell.
 
-.. rubric:: Transverse shear with ``shear_model = 0``, before 0.12.0
+.. rubric:: Transverse shear with ``shear_model = 0``
 
 The transverse shear strains are sampled at the centroid, and the transverse
 shear stiffnesses `A_{44}`, `A_{45}` and `A_{55}` are divided by `1 +
@@ -134,11 +132,11 @@ edge of the triangle and `h` the total thickness. It is the scalar factor
 that Lyly, Stenberg and Vihinen [1]_ proposed for the MITC4 quadrilateral,
 their Eq. (3.12), called Stenberg's method by Bischoff and Bletzinger [2]_
 (Sec. 3.1), in the form of Castro et al. [3]_ (Eq. (26)), with the longest
-edge of the triangle as the element size. The value used up to version 0.11
-was `\alpha = 0.7`, roughly seven times the values of those references, near
-`0.1`: in all of them the factor sits on top of an assumed-strain or DSG
-field, which already removes the locking, whereas the centroid sample locks,
-and here the factor has to do the unlocking.
+edge of the triangle as the element size. The values of those references
+are near `0.1`, roughly seven times smaller than `\alpha = 0.7` of the
+measurements below: in all of them the factor sits on top of an
+assumed-strain or DSG field, which already removes the locking, whereas the
+centroid sample locks, and here the factor has to do the unlocking.
 
 .. warning:: With ``shear_model = 0`` the element does not converge on thin
     plates and shells. The factor tends to zero only when `\ell` falls well
@@ -245,8 +243,7 @@ stabilisation documented above scales the transverse shear stiffness only
 and does not interact with the drilling term, which draws its scale from
 `A_{66}` of the extensional stiffness matrix.
 
-**Fictitious penalty** (``drilling_model = 1``), the default before version
-0.10.0, following the approach adopted in MSC Nastran and Autodesk Nastran
+**Fictitious penalty** (``drilling_model = 1``), following the approach adopted in MSC Nastran and Autodesk Nastran
 through their ``K6ROT`` parameter. It provides a small artificial stiffness
 whose only purpose is to remove the singularity, so the forces associated
 with it are spurious and any moment recovered about the shell normal is
@@ -285,8 +282,7 @@ when shells are connected to beams or stiffeners that must transmit in-plane
 moments, or when the mesh is too coarse for the unenriched membrane response
 to be trusted. It is markedly more accurate in in-plane bending: on Cook's
 skew membrane with a four by four mesh of split quadrilaterals it gives 20.7
-against the reference 23.9, where the penalty gives 11.3. The penalty remains
-available for reproducing results obtained before 0.10.0.
+against the reference 23.9, where the penalty gives 11.3.
 
 References
 ----------
@@ -649,7 +645,7 @@ cdef void dsg_shear_Ke(double *S_x, double *S_y, double *xe, double area,
     Bischoff and Ramm (2000), averaged over the three choices of the
     starting node, identical to the operator of
     :class:`pyfe3d.tria3dsg.Tria3DSG`. Used by :class:`.Tria3R` when
-    ``shear_model = 1``, the default since 0.12.0, see the attribute.
+    ``shear_model = 1``, the default, see the attribute.
 
     Parameters
     ----------
@@ -900,35 +896,30 @@ cdef class Tria3R:
         Element area.
         Dimension of length squared. Updated by :meth:`.update_area`.
     shear_model, : int
-        Selects the transverse shear field. The default ``1``, since version
-        0.12.0, is the discrete shear gap field of :class:`.Tria3DSG`, free of
-        shear locking without any parameter, see :func:`.dsg_shear_Ke`. ``0``
-        samples the shear strains at the centroid, the field used up to
-        version 0.11 with ``alpha_shear_locking = 0.7``; it is kept to
-        reproduce former results and does not converge on thin plates and
-        shells, see the module documentation.
+        Selects the transverse shear field. The default ``1`` is the discrete
+        shear gap field of :class:`.Tria3DSG`, free of shear locking without
+        any parameter, see :func:`.dsg_shear_Ke`. ``0`` samples the shear
+        strains at the centroid, to be used with a non-zero
+        ``alpha_shear_locking``; it does not converge on thin plates and
+        shells and is not recommended, see the module documentation.
     alpha_shear_locking, : double
         Factor `\alpha` dividing the transverse shear stiffnesses ``A44``,
         ``A45``, ``A55``, already in the element coordinate system and with
         the shear correction applied (see :meth:`.ShellProp.calc_Ats_element`),
         by `1 + \alpha \ell^2/h^2`, with `\ell` the longest edge and `h` the
-        thickness. The default ``0.``, since version 0.12.0, applies no
-        factor. With ``shear_model = 1`` a non-zero value is the
+        thickness. The default ``0.`` applies no factor. With ``shear_model = 1`` a non-zero value is the
         stabilisation of Lyly, Stenberg and Vihinen on top of a locking-free
         field, as for :class:`.Tria3DSG`, whose Notes give its effect. With
-        ``shear_model = 0`` the factor does the unlocking and ``0.7`` was
-        the value used up to version 0.11; ``0.`` there leaves the field
-        locked.
+        ``shear_model = 0`` the factor does the unlocking, e.g. with ``0.7``;
+        ``0.`` there leaves the field locked.
         Dimensionless.
     drilling_model, : int
         Selects how the drilling degree-of-freedom `r_z` is given stiffness.
         The default ``0`` is the physics-based stiffness, for which the
         recovered nodal moments about the shell normal are physical, and no
         user parameter is involved. Any other value selects the fictitious
-        penalty of MSC Nastran and Autodesk Nastran, which was the default up
-        to version 0.9.0 and is controlled by ``K6ROT``. Setting
-        ``elem.drilling_model = 1`` before calling :meth:`.update_KC0` is the
-        way to reproduce results obtained before 0.10.0.
+        penalty of MSC Nastran and Autodesk Nastran, controlled by
+        ``K6ROT``.
     K6ROT, : double
         Dimensionless multiplier for the fictitious drilling stiffness, only
         read when ``drilling_model`` is not ``0``. It has no effect under the
@@ -974,8 +965,7 @@ cdef class Tria3R:
         A55 = 1 / (1 + factor) * A55
 
     .. warning:: ``shear_model = 0``, with ``alpha_shear_locking = 0.7``,
-        reproduces the element of the versions up to 0.11 and does not
-        converge on thin plates and shells: on a simply supported square
+        does not converge on thin plates and shells: on a simply supported square
         plate with `a/h = 1000` the error of the centre deflection stalls
         at -14 per cent, of the buckling load at +16 per cent and of the
         first frequency at +8 per cent under refinement, and on a thin
@@ -1080,7 +1070,7 @@ cdef class Tria3R:
         self.K6ROT = 100. # NOTE default value in MSC Nastran
         self.alpha_shear_locking = 0. # NOTE no stabilisation on the DSG field
         self.drilling_model = 0 # NOTE Allman + Hughes-Brezzi, the default
-        self.shear_model = 1 # NOTE discrete shear gap field, the default since 0.12.0
+        self.shear_model = 1 # NOTE discrete shear gap field, the default
         self.gamma_rz = -1. # NOTE negative means "use A66"
         self.r11 = self.r12 = self.r13 = 0.
         self.r21 = self.r22 = self.r23 = 0.

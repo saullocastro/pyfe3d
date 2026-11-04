@@ -187,8 +187,7 @@ cdef enum:
 # NOTE all the matrices are stored row-major in C arrays: a 3x3 matrix M is
 #      M[3*i + j], an n x m matrix A is A[m*i + j]. The kernels follow the
 #      Python functions of the same name below and the steps of
-#      _CorotationalElement.evaluate, operation by operation, such that the
-#      results agree with the former pure-Python implementation to round-off
+#      _CorotationalElement.evaluate, operation by operation
 cdef inline double _dot3(const double *a, const double *b) noexcept nogil:
     return a[0]*b[0] + a[1]*b[1] + a[2]*b[2]
 

@@ -478,8 +478,7 @@ def check_convergence(an, R, fint, fext_total, fext_ref=None, q_ref=None,
 
     Notes
     -----
-    The relative criterion is that of the first versions of these solvers;
-    its reference ``fext_ref`` is useful when the load factor is close to
+    The reference ``fext_ref`` of the relative criterion is useful when the load factor is close to
     zero, where ``fext_total`` and ``fint`` are small. When all its
     references are null, the relative residual is ``norm(R)`` itself.
 

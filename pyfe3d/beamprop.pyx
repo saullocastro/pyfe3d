@@ -104,8 +104,8 @@ cdef class BeamProp:
     with the values of ``G`` and ``J`` at the time of reading. Once set, the
     attribute keeps its own value, independently of ``G`` and ``J``, until
     it is deleted, e.g. ``del prop.G12``, which makes it follow ``G`` again.
-    A property that sets only ``G`` and ``J`` gives the same matrices as in
-    the versions of pyfe3d without ``G12``, ``G13`` and ``GJ``.
+    A property that sets only ``G`` and ``J`` uses ``G`` in the two
+    transverse shear planes and ``G*J`` in torsion.
 
     The elements read the stiffness of the cross section through the
     sectional stiffness matrix ``C``, see the Notes. ``C`` follows the 11
@@ -114,8 +114,7 @@ cdef class BeamProp:
     returns the matrix built from them. Once set, ``C`` keeps its own 21
     independent entries and the elements no longer read the 11 attributes,
     until it is deleted, ``del prop.C``. A property that does not set ``C``
-    gives the same matrices as the versions of pyfe3d without ``C``, to
-    round-off.
+    gives the matrices of the 11 stiffness attributes.
 
     ``C`` must be positive semi-definite: the strain energy per unit length,
     see the Notes, must not be negative for any strains. :class:`.BeamC` and :class:`.BeamLR` check it each time one of

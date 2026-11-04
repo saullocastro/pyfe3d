@@ -31,11 +31,11 @@ membrane and in their cost; the theory of each one is in
         the MITC4 element against shear locking, two-by-two bending, and
         the drilling enrichment of the in-plane displacement field, see
         :mod:`.quad4`; only the six rigid-body modes have zero energy and
-        the element passes the membrane and bending patch tests. Up to
-        0.11, and with ``shear_model = 0``, the transverse shear of the
-        elements with `h/\ell < 1` was integrated with one point, after
-        Hughes et al. (1977), whose two zero-energy modes made a strip one
-        element wide too flexible in torsion, see the zero-energy modes in
+        the element passes the membrane and bending patch tests. With
+        ``shear_model = 0``, the transverse shear of the elements with
+        `h/\ell < 1` is integrated with one point, after Hughes et al.
+        (1977), whose two zero-energy modes make a strip one element wide
+        too flexible in torsion, see the zero-energy modes in
         the Notes of :mod:`.quad4`. The geometric stiffness takes the
         slopes of `w` at the two-by-two points by default, and at the
         centroid with ``shear_model = 0`` or ``centroid_slopes = 1``, such
@@ -57,12 +57,10 @@ membrane and in their cost; the theory of each one is in
         Brockman (1987), with the membrane moduli of a laminate, and the
         one-element-deep strips of MacNeal and Harder lock in in-plane
         bending. ``hgfactor_physical`` and ``hgfactor_membrane`` of
-        :meth:`.Quad4R.update_KC0` multiply the two. Up to 0.11 the
-        hourglass modes of `w`, `r_x` and `r_y` had Brockman's artificial
-        stiffnesses, set with ``hgfactor_w``, ``hgfactor_rx`` and
-        ``hgfactor_ry``, which also stiffened a uniform twist, by up to 78 %
-        of its energy whatever the mesh where the element areas were large
-        in the unit of length.
+        :meth:`.Quad4R.update_KC0` multiply the two. Brockman's artificial
+        stiffnesses on the hourglass modes of `w`, `r_x` and `r_y` would
+        also stiffen a uniform twist, by up to 78 % of its energy whatever
+        the mesh where the element areas are large in the unit of length.
     * - :class:`.Tria3DSG`
       - 3
       - Discrete shear gap transverse shear field, free of shear locking
@@ -78,7 +76,7 @@ membrane and in their cost; the theory of each one is in
         :mod:`.tria3r`.
     * - :class:`.Tria3R`
       - 3
-      - The recommended triangle. Since 0.12.0 the same discrete shear gap
+      - The recommended triangle. The same discrete shear gap
         transverse shear field as :class:`.Tria3DSG`, ``shear_model = 1``,
         free of shear locking without a tuning parameter, with the membrane
         enriched by the drilling rotations of Allman: identical to
@@ -86,9 +84,8 @@ membrane and in their cost; the theory of each one is in
         vibration, better in in-plane bending, on the Scordelis-Lo roof and
         on the twisted beam, stiffer on the coarse meshes of the pinched
         hemisphere, and assembled in half the time, see :mod:`.tria3r`.
-        ``shear_model = 0`` with ``alpha_shear_locking = 0.7`` reproduces
-        the centroid-sampled shear of the versions up to 0.11, which does not
-        converge on thin plates and shells: -14 % on the deflection of a
+        ``shear_model = 0`` with ``alpha_shear_locking = 0.7`` gives the
+        centroid-sampled shear, which does not converge on thin plates and shells: -14 % on the deflection of a
         simply supported plate with `a/h = 1000`.
 
 Practical rules:
@@ -109,8 +106,7 @@ Practical rules:
 - The drilling rotation `r_z` of all the shells has, by default, a
   physics-based stiffness, ``drilling_model = 0``, without user parameter.
   ``drilling_model = 1`` selects the fictitious penalty of Nastran,
-  controlled by ``K6ROT``, which reproduces the results of versions older
-  than 0.10.0.
+  controlled by ``K6ROT``.
 - The aerodynamic matrices of the piston theory, ``update_KA_beta``,
   ``update_KA_gamma`` and ``update_CA``, exist for :class:`.Quad4` and
   :class:`.Quad4R` only.
@@ -133,7 +129,7 @@ in-plane axis moves the nodes of the facet in an alternating in-plane
 pattern, which strains it, and the facet alone is too stiff in warped
 meshes.
 
-Since version 0.12.0 the attribute ``warp_offsets`` of both elements,
+The attribute ``warp_offsets`` of both elements,
 ``1`` by default, links the facet to the nodes by rigid offsets along its
 normal, `u^f_a = u_a - \tilde{z}_a r_{y,a}` and `v^f_a = v_a + \tilde{z}_a
 r_{x,a}` in element coordinates, `\boldsymbol{u}^f = \boldsymbol{J}
@@ -150,7 +146,7 @@ and ``KC0`` annihilates the six rigid motions of the warped nodes, see the
 Notes of :class:`.Quad4`, :meth:`.Quad4.update_KG` and
 :meth:`.Quad4.update_KCNL`. Flat elements
 give the same results, bit for bit, with ``warp_offsets`` ``0`` and ``1``,
-and ``0`` reproduces the versions up to 0.11. The correction is derived in
+and ``0`` uses the facet alone. The correction is derived in
 pyfe3d; MacNeal (1978), p. 180, and Cook (1994), p. 552, correct warped
 quadrilaterals differently, balancing the moment of the offset membrane
 forces with normal nodal forces, and Belytschko, Wong and Chiang (1992),
@@ -184,8 +180,8 @@ correction and the twisted beam.
 
 Practical rules for warped quadrilaterals:
 
-- Keep the default ``warp_offsets = 1``; ``0`` serves only to reproduce
-  earlier results. The offsets were measured up to the warping ratio of
+- Keep the default ``warp_offsets = 1``; with ``0`` the facet alone is too
+  stiff in warped meshes. The offsets were measured up to the warping ratio of
   0.049 above, and :class:`.CorotationalShell` warns above 0.07, the
   ratio up to which its exact offsets were verified: beyond it, refine the
   mesh or use triangles.
@@ -222,12 +218,13 @@ Beams, truss and spring
         shape functions are derived from the same equations with the full
         matrix, evaluated numerically for each element, and one element
         remains exact under nodal loads, see the Notes of
-        :class:`.BeamC`. Since version 0.12.0 its von Kármán axial
+        :class:`.BeamC`. Its von Kármán axial
         strain takes the element mean of `(v_{,x}^2 + w_{,x}^2)/2`, after
         Crisfield (1991), Section 7.1.3, which removes its membrane
         locking: the central deflection of a beam clamped at both ends,
         with a linear deflection three times its height, is 0.60 % below
-        the converged one with 4 elements, against 8.1 % before, and the
+        the converged one with 4 elements, against 8.1 % with the pointwise
+        strain, and the
         lower limit load of the arch of Fung and Kaplan (1952) with 40
         elements is within 0.38 % of theirs, against 5.8 %, see the Notes
         of :class:`.BeamC` and
@@ -236,8 +233,7 @@ Beams, truss and spring
       - Timoshenko kinematics with linear interpolation and reduced
         integration; it converges to the same solutions with mesh
         refinement, quadratically, and needs many more elements, see
-        ``tests/test_timoshenko_beam_literature.py``. Since version 0.12.0
-        its buckling load includes the reduction due to shear deformation,
+        ``tests/test_timoshenko_beam_literature.py``. Its buckling load includes the reduction due to shear deformation,
         see ``tests/test_beam_linear_buckling_3D_column.py``, and its constant slopes leave
         it free of membrane locking in the geometrically non-linear
         cantilever under an end moment, as :class:`.BeamC` with its

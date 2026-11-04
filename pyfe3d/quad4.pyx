@@ -102,8 +102,7 @@ transverse shear energy terms depend on the ``shear_model`` attribute of
 calculated as the square root of the element area `\ell =
 \sqrt{\text{area}}`:
 
-- With the default ``shear_model = 1``, since version 0.12.0, for every
-  thickness, the assumed transverse shear strains of the MITC4 element of
+- With the default ``shear_model = 1``, for every thickness, the assumed transverse shear strains of the MITC4 element of
   Dvorkin and Bathe [8]_, in the plate form of Bathe and Dvorkin [9]_, with
   two-by-two quadrature: the covariant strain `\gamma_{\xi z}` is
   interpolated linearly in `\eta` between its values at the mid-points of
@@ -112,26 +111,26 @@ calculated as the square root of the element area `\ell =
 
 - With ``shear_model = 0``, for thin and moderately thick plates, when
   `h/\ell < 1`, the one-point quadrature of the scheme of Hughes et al.
-  (1977), the rule of pyfe3d up to version 0.11, and for very thick plates,
+  (1977), and for very thick plates,
   when `h/\ell \ge 1`, the MITC4 strains above
 
 For `h/\ell \ge 1`, Hughes et al. [1]_ propose instead the "modified
 one-point shear" element (pp. 1541-1542), which integrates the
 `(\partial w/\partial x)^2` and `(\partial w/\partial y)^2` contributions to
 the shear energy with two-by-two quadrature and the remaining terms with one
-point. It was the rule of pyfe3d up to version 0.11. Because the products of
+point. Because the products of
 the gradients of `w` and the terms that contain the rotations are integrated
 with different rules, a state of pure twist, `w = \kappa x y`, `r_x =
 \kappa x`, `r_y = -\kappa y`, whose transverse shear strains vanish
 everywhere, stores the spurious shear energy `A_{55} \ell^4 \kappa^2/12` in a
 square element, `(5/12)(\ell/h)^2` times its twist energy for an isotropic
-plate, 42 % at `h/\ell = 1`, and a mesh refined across `h/\ell = 1` became
-abruptly stiffer in torsion, e.g. by 21 % for the tip twist of a thin-walled
+plate, 42 % at `h/\ell = 1`, and a mesh refined across `h/\ell = 1` would
+become abruptly stiffer in torsion, e.g. by 21 % for the tip twist of a thin-walled
 I-beam, see ``tests/test_quad4_thick_twist.py``. The assumed strains are
 exact for pure twist and pure bending of a rectangle. With ``shear_model =
-0`` the elements with `h/\ell < 1` keep the one-point rule, such that their
-results are those of the earlier versions; with the default they take the
-assumed strains as well, and no gate on the thickness remains.
+0`` the elements with `h/\ell < 1` use the one-point rule; with the default
+they take the assumed strains as well, and there is no gate on the
+thickness.
 
 The membrane stiffness terms, which are not specified in the paper of Hughes
 et al. (1977), are integrated with a three-by-three quadrature when the
@@ -163,8 +162,8 @@ and the remedy that removes both modes without locking is an assumed
 transverse shear field, that of Hughes and Tezduyar, which Bathe and
 Dvorkin [9]_, p. 367, list as closely related to theirs, or that of the
 MITC4 element, which has no spurious zero-energy mode and passes the patch
-test ([9]_, pp. 372-373). The MITC4 strains are therefore the default since
-version 0.12.0, and the element has only the six rigid-body modes.
+test ([9]_, pp. 372-373). The MITC4 strains are therefore the default, and
+the element has only the six rigid-body modes.
 
 The two rules differ only in the transverse shear term. On a parallelogram,
 whose Jacobian is constant, the MITC4 strain at the centroid is the
@@ -207,7 +206,7 @@ and `w_{,y}` depend on ``shear_model``:
 
 - with the default ``shear_model = 1``, the MITC4 transverse shear, they
   are taken at the two-by-two points, the full quadrature of the geometric
-  stiffness, as up to version 0.11;
+  stiffness;
 - with ``shear_model = 0`` they are taken at the centroid, for `h/\ell < 1`
   and for `h/\ell \ge 1`.
 
@@ -223,8 +222,8 @@ every rule.
 The rule depends on ``shear_model`` because of the hourglass pattern of
 `w`, `w = \xi \eta` with zero rotations. The one-point transverse shear of
 ``shear_model = 0`` gives it no stiffness in ``KC0``, see the zero-energy
-modes above. With the slopes at the two-by-two points, as up to version
-0.11, the pattern had the geometric stiffness of the full quadrature. In a
+modes above. With the slopes at the two-by-two points, the pattern would
+have the geometric stiffness of the full quadrature. In a
 supported plate, the pattern modulated by a smooth envelope then costs only
 the transverse shear energy of the envelope, independent of the element size
 `\ell`, whereas its geometric work grows as `1/\ell^2`, and a linear
@@ -233,7 +232,7 @@ from node to node, with nearly zero rotations, below the physical buckling
 load, once the transverse shear stiffness is low compared with the bending
 stiffness, as in a sandwich plate. On a hard simply supported square plate
 with `b/h = 100` under uniaxial compression and `A_{44}`, `A_{55}` reduced
-to 1/100 of the isotropic value, the lowest buckling load was 49 % below the
+to 1/100 of the isotropic value, the lowest buckling load would be 49 % below the
 solution of Seide and Stowell [10]_ with 16 by 16 elements and 87 % below
 with 32 by 32; with 1/1000, 71 % below with 8 by 8 elements. At the
 centroid the pattern has no slope and no geometric stiffness, consistently
@@ -396,8 +395,7 @@ that when `\boldsymbol{B} \neq \boldsymbol{0}`, for an offset reference surface 
 unsymmetric laminate, the enriched membrane operator couples `r_z` to the
 curvatures, which is physically correct.
 
-**Fictitious penalty** (``drilling_model = 1``), the default before version
-0.10.0, following the approach adopted in MSC Nastran and Autodesk Nastran
+**Fictitious penalty** (``drilling_model = 1``), following the approach adopted in MSC Nastran and Autodesk Nastran
 through their ``K6ROT`` parameter. It provides a small artificial stiffness
 whose only purpose is to remove the singularity, so the forces associated
 with it are spurious and any moment recovered about the shell normal is
@@ -457,8 +455,7 @@ when shells are connected to beams or stiffeners that must transmit in-plane
 moments, or when the mesh is too coarse for the unenriched membrane response
 to be trusted. It is markedly more accurate in in-plane bending: on Cook's
 skew membrane with a two-by-two mesh it gives 20.8 against the reference
-23.9, where the penalty gives 11.8. The penalty remains available for
-reproducing results obtained before 0.10.0, and it is cheaper, since it
+23.9, where the penalty gives 11.8. The penalty is cheaper, since it
 leaves the membrane term on the two-by-two quadrature.
 
 References
@@ -1554,10 +1551,7 @@ cdef class Quad4:
         stiffness, with the drilling enrichment of the in-plane displacement
         field and a regularisation term whose coefficient is set by
         ``gamma_rz``. Any other value selects the fictitious penalty of MSC
-        Nastran and Autodesk Nastran, which was the default up to version
-        0.9.0 and is controlled by ``K6ROT``. Setting ``elem.drilling_model =
-        1`` before calling :meth:`.update_KC0` is the way to reproduce results
-        obtained before 0.10.0.
+        Nastran and Autodesk Nastran, controlled by ``K6ROT``.
 
         .. note:: The attribute must be set before the element matrices are
                   updated, and the same value must be passed to
@@ -1582,20 +1576,18 @@ cdef class Quad4:
         ``update_KG_given_stress``, ``update_KCNL``, the internal forces of
         ``update_probe_finte`` and ``update_fint``, also with
         ``nonlinear``, and the rows of the strains of
-        ``Quad4Probe.update_BL``; ``0`` uses the flat element without them, as
-        before version 0.12.0. A flat element gives the same results, bit
+        ``Quad4Probe.update_BL``; ``0`` uses the flat element without them.
+        A flat element gives the same results, bit
         for bit, with both values.
     shear_model, : int
         Transverse shear of the element, see the module documentation. The
-        default ``1``, since version 0.12.0, gives the assumed transverse
+        default ``1`` gives the assumed transverse
         shear strains of the MITC4 element of Dvorkin and Bathe, integrated
         with two-by-two points, for every thickness, and the element has only
         the six rigid-body modes as zero-energy modes. ``0`` gives the
         one-point transverse shear of Hughes et al. (1977) when `h/\ell < 1`,
-        with its two zero-energy modes, and the MITC4 strains otherwise:
-        setting ``elem.shear_model = 0`` before calling :meth:`.update_KC0`
-        is the way to reproduce the results of thin elements obtained before
-        0.12.0. It also selects where the slopes of `w` of the geometric
+        with its two zero-energy modes, and the MITC4 strains otherwise. It
+        also selects where the slopes of `w` of the geometric
         terms are taken, see ``centroid_slopes``.
     centroid_slopes, : int
         Slopes `w_{,x}` and `w_{,y}` of the geometric stiffness of
@@ -2231,7 +2223,7 @@ cdef class Quad4:
         et al. [4]_, used with ``shear_model = 0`` for `h/\ell < 1`, has two
         zero-energy modes and stores spurious shear energy in a state of pure
         twist. The fictitious penalty of the ``K6ROT`` model is integrated
-        with the two-point rule used before version 0.10.0, whereas the
+        with the two-point rule, whereas the
         physics-based constraint term is integrated with a single point,
         following Ibrahimbegovic et al. [1]_.
 
@@ -2609,7 +2601,7 @@ cdef class Quad4:
                                 )
 
             # NOTE the fictitious penalty of the K6ROT model is integrated
-            #      with the same two-point rule used before 0.10.0, whereas
+            #      with the two-point rule, whereas
             #      the physics-based constraint term is integrated with a
             #      single point in the block further below, see the Notes
             if not enriched:
@@ -3879,14 +3871,14 @@ cdef class Quad4:
         the hourglass pattern of `w`, `w = \xi \eta`, which has no gradient
         at the centroid: the one-point transverse shear of the elements with
         `h/\ell < 1` and ``shear_model = 0`` gives it no stiffness in KC0,
-        and with the slopes at the two-by-two points, as up to version 0.11,
-        it had the geometric stiffness of the full quadrature, and a linear
-        buckling analysis could return a spurious mode of `w` alternating in
+        and with the slopes at the two-by-two points it would have the
+        geometric stiffness of the full quadrature, and a linear buckling
+        analysis could return a spurious mode of `w` alternating in
         sign from node to node, with nearly zero rotations, below the
         physical buckling load. On a hard simply supported square plate with
         `b/h = 100` under uniaxial compression and the transverse shear
         stiffness reduced to 1/100 of the isotropic one, as in a sandwich,
-        the lowest buckling load was 49 % below the solution of Seide and
+        the lowest buckling load would be 49 % below the solution of Seide and
         Stowell (1950) with 16 by 16 elements and 87 % below with 32 by 32;
         with 1/1000, 71 % below with 8 by 8 elements. With the slopes at the
         centroid these cases converge to that solution, +0.81, +0.20 and

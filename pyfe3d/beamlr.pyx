@@ -113,9 +113,8 @@ cdef class BeamLRProbe:
     Sv_x, Sw_x : array-like
         Arrays of size ``NUM_NODES*DOF=12`` with the rows giving the slopes
         `v_{,x}` and `w_{,x}` of the linear interpolations of `v` and `w`,
-        constant along the element, as in :class:`.BeamCProbe`. Up to
-        version 0.11 they held the interpolations of the rotations, `r_z`
-        and `-r_y`, see the notes of :class:`.BeamLR`.
+        constant along the element, as in :class:`.BeamCProbe`, see the
+        notes of :class:`.BeamLR`.
     KCNLve : array-like
         Array of size ``(NUM_NODES*DOF)**2=144`` with the nonlinear
         constitutive stiffness matrix KCNL in element coordinates, stored row
@@ -283,26 +282,22 @@ cdef class BeamLR:
     matrix of :meth:`.update_KCNL` and the nonlinear internal forces of
     :meth:`.update_probe_finte` come from the von Kármán axial strain
     `\epsilon_{xx} = u_{,x} + (v_{,x}^2 + w_{,x}^2)/2`, whose slopes
-    `v_{,x}` and `w_{,x}` are taken, since version 0.12.0, from the linear
+    `v_{,x}` and `w_{,x}` are taken from the linear
     interpolations of `v` and `w`, as the axial strain requires and as in
     :class:`.BeamC`. They are constant along the element, and the geometric
     stiffness matrix is that of a string, `N/L` times ``[[1, -1], [-1,
-    1]]`` for `v` and for `w`. Up to version 0.11 the slopes were taken from
-    the rotations, `v_{,x} = r_z` and `w_{,x} = -r_y`, which holds only
-    without shear deformation: the buckling mode could then deflect with
-    vanishing shear strains, and the buckling load converged to the Euler
-    load `P_e` whatever the shear stiffness `\kappa G A`, instead of `P_e/(1
-    + P_e/(\kappa G A))`, Eq. (2-57) of [4]_. For a clamped-free column with
-    `P_e/(\kappa G A)` = 0.0002, 0.018, 0.18 and 0.59, `P_{cr}/P_e` was
-    1.0000 with 100 and with 800 elements, against 0.9998, 0.9825, 0.8488
-    and 0.6274 from Eq. (2-57), i.e. 0.02 % to 59 % unconservative. It is
-    now 0.9998, 0.9825, 0.8488 and 0.6274 with 160 elements, converging to
-    Eq. (2-57) as the square of the element length, see
-    ``tests/test_beam_linear_buckling_3D_column.py``. For slender columns
-    the discretization error is about twice that of the former matrix: for
-    `P_e/(\kappa G A) = 0.0002`, the load is 4.1e-3 and 1.0e-3 above Eq.
-    (2-57) with 10 and 20 elements, where it was 2.1e-3 and 5.1e-4 above
-    `P_e`. With constant slopes the axial strain `u_{,x} + w_{,x}^2/2` can
+    1]]`` for `v` and for `w`. Slopes taken from the rotations, `v_{,x} =
+    r_z` and `w_{,x} = -r_y`, would hold only without shear deformation:
+    the buckling mode could then deflect with vanishing shear strains, and
+    the buckling load would converge to the Euler load `P_e` whatever the
+    shear stiffness `\kappa G A`, instead of `P_e/(1 + P_e/(\kappa G A))`,
+    Eq. (2-57) of [4]_. For a clamped-free column with `P_e/(\kappa G A)` =
+    0.0002, 0.018, 0.18 and 0.59, `P_{cr}/P_e` is 0.9998, 0.9825, 0.8488
+    and 0.6274 with 160 elements, as from Eq. (2-57), converging to Eq.
+    (2-57) as the square of the element length, see
+    ``tests/test_beam_linear_buckling_3D_column.py``. For `P_e/(\kappa G A)
+    = 0.0002`, the load is 4.1e-3 and 1.0e-3 above Eq. (2-57) with 10 and
+    20 elements. With constant slopes the axial strain `u_{,x} + w_{,x}^2/2` can
     vanish in each element, so BeamLR is free of membrane locking; BeamC
     avoids it with the element-averaged axial strain described in its
     notes, see ``tests/test_nonlinear_benchmarks_sze2004.py``.
@@ -1761,9 +1756,8 @@ cdef class BeamLR:
         - ``BLgammaz``: `\gamma_{xz} = w_{,x} + r_y`
         - ``BLkx``: `\kappa_x = {r_x}_{,x}`
         - ``Sv_x``, ``Sw_x``: the slopes `v_{,x}` and `w_{,x}` of the
-          interpolations of `v` and `w`, as in :meth:`.update_KG`; up to
-          version 0.11 they were taken from the rotations, `v_{,x} = r_z`
-          and `w_{,x} = -r_y`, see the notes of :class:`.BeamLR`
+          interpolations of `v` and `w`, as in :meth:`.update_KG`, see the
+          notes of :class:`.BeamLR`
 
         """
         cdef int i
@@ -2090,7 +2084,7 @@ cdef class BeamLR:
             \epsilon_{xx} = u_{,x} + \frac{1}{2} \left( v_{,x}^2 + w_{,x}^2 \right)
 
         whose nonlinear part is `\epsilon_{NL} = \frac{1}{2} \boldsymbol{B}_{NL} \boldsymbol{u}_e`, with
-        `\boldsymbol{B}_{NL} = v_{,x} \frac{\partial \boldsymbol{S}^v}{\partial x} + w_{,x} \frac{\partial \boldsymbol{S}^w}{\partial x}` its variation, `\boldsymbol{S}^v` and `\boldsymbol{S}^w` being the linear interpolations of `v` and `w`, whose derivatives, the rows ``Sv_x`` and ``Sw_x`` of :meth:`._update_probe_BL_G`, are constant along the element. Up to version 0.11 the slopes were taken from the rotations, `v_{,x} = r_z` and `w_{,x} = -r_y`, see the notes of :class:`.BeamLR`. With
+        `\boldsymbol{B}_{NL} = v_{,x} \frac{\partial \boldsymbol{S}^v}{\partial x} + w_{,x} \frac{\partial \boldsymbol{S}^w}{\partial x}` its variation, `\boldsymbol{S}^v` and `\boldsymbol{S}^w` being the linear interpolations of `v` and `w`, whose derivatives, the rows ``Sv_x`` and ``Sw_x`` of :meth:`._update_probe_BL_G`, are constant along the element, see the notes of :class:`.BeamLR`. With
         `\boldsymbol{B}_L` the linear strain-displacement matrix, `\boldsymbol{C}_{sec}` the sectional
         stiffness matrix ``C`` of :class:`.BeamProp`, whose first row couples the axial strain with
         the other strains, e.g. through `E A_y` and `E A_z`, and `N_{NL} = C_{00} \epsilon_{NL}`, `C_{00} = E A` when ``C`` is not set:
@@ -2209,7 +2203,7 @@ cdef class BeamLR:
         before, see
         :meth:`.update_probe_ue` and :meth:`.update_probe_xe`. The rows and
         columns of the entries are those of the translations of the two
-        nodes; up to version 0.11 they were those of the rotations.
+        nodes.
 
         Parameters
         ----------
@@ -2251,11 +2245,11 @@ cdef class BeamLR:
         finte[6]``. In element coordinates the matrix is `N/L` times
         ``[[1, -1], [-1, 1]]`` for the `v` and for the `w` of the two nodes.
 
-        The slopes are those that enter the axial strain: up to version 0.11
-        they were taken from the rotations, `v_{,x} = r_z` and `w_{,x} =
-        -r_y`, which neglects the shear deformation in buckling, so that the
-        buckling load converged to the Euler load instead of Eq. (2-57) of
-        Timoshenko and Gere (1961), see the notes of :class:`.BeamLR`.
+        The slopes are those that enter the axial strain. Slopes taken from
+        the rotations, `v_{,x} = r_z` and `w_{,x} = -r_y`, would neglect the
+        shear deformation in buckling, so that the buckling load would
+        converge to the Euler load instead of Eq. (2-57) of Timoshenko and
+        Gere (1961), see the notes of :class:`.BeamLR`.
 
         `\boldsymbol{K}_G` is homogeneous of degree one in ``probe.ue``. With ``probe.ue``
         from the linear static solution of a reference load, the critical

@@ -35,7 +35,7 @@ attribute: by default the in-plane shear stiffness ``A66`` of the laminate,
 otherwise a small fictitious penalty scaled by ``K6ROT``. The in-plane
 displacement field has no drilling enrichment; for problems dominated by
 in-plane bending, :class:`pyfe3d.tria3r.Tria3R` and :class:`pyfe3d.quad4.Quad4`
-carry one. Since version 0.12.0 :class:`pyfe3d.tria3r.Tria3R` takes, by
+carry one. :class:`pyfe3d.tria3r.Tria3R` takes, by
 default, the transverse shear field of this element, so the two triangles
 differ only in the membrane and drilling terms, see :mod:`pyfe3d.tria3r`.
 With its enriched membrane :class:`pyfe3d.tria3r.Tria3R` is the recommended
@@ -51,12 +51,12 @@ method of Bletzinger, Bischoff and Ramm (2000) [1]_.
 
 .. rubric:: Why this element exists
 
-Up to version 0.11, :class:`pyfe3d.tria3r.Tria3R` took its transverse
-shear from a single point at the centroid, which still locks, and cured the
-locking by dividing the transverse shear stiffnesses by `1 + \alpha
-\ell^2/h^2` with `\alpha = 0.7`, following Lyly, Stenberg and Vihinen (1993)
-[2]_, a field still available there with ``shear_model = 0``. On a thin
-plate the error that remains stalls under refinement at a value set by
+A transverse shear taken from a single point at the centroid, as in
+:class:`pyfe3d.tria3r.Tria3R` with ``shear_model = 0``, still locks;
+dividing the transverse shear stiffnesses by `1 + \alpha \ell^2/h^2`, e.g.
+with `\alpha = 0.7`, following Lyly, Stenberg and Vihinen (1993) [2]_,
+cures the locking only in part. On a thin plate the error that remains
+stalls under refinement at a value set by
 `\alpha`, -14 per cent on the deflection of a simply supported plate with
 `a/h = 1000`, see the Notes of :mod:`pyfe3d.tria3r`, and the factor leaves
 the element unable to reproduce a state of
@@ -87,9 +87,8 @@ Castro et al., takes the first natural frequency of a `5 \times 7` mesh from
 of a thin plate from `+1.71` to `+0.11` per cent. That is the opposite of
 its role in :class:`pyfe3d.tria3r.Tria3R` with ``shear_model = 0``, where the
 same factor is applied to a centroid-sampled shear field and has to do the
-unlocking itself, which is why that element used `\alpha = 0.7` up to
-version 0.11. Its default since 0.12.0 is this element's field with
-`\alpha = 0`, and the same remarks then apply to it.
+unlocking itself, with values such as `\alpha = 0.7`. Its default is this
+element's field with `\alpha = 0`, and the same remarks then apply to it.
 
 The default here is zero because the factor is unbounded in `\ell/h`, so any
 non-zero `\alpha` removes nearly all of the transverse shear stiffness on a
@@ -515,11 +514,10 @@ cdef class Tria3DSG:
     et al. (2019) [3]_ (Eq. (26)) do, which is not how
     :class:`pyfe3d.tria3r.Tria3R` with ``shear_model = 0`` uses the same
     symbol. There the factor is applied to a centroid-sampled shear field
-    and has to do the unlocking itself, which is why that field was used
-    with 0.7 up to version 0.11, seven times the literature value, and why
-    it is load bearing there and merely helpful here. The default Tria3R
-    since 0.12.0 uses the field of this element, with the same default
-    ``0.``.
+    and has to do the unlocking itself, with values such as 0.7, seven
+    times the literature value, which is why it is load bearing there and
+    merely helpful here. The default Tria3R uses the field of this element,
+    with the same default ``0.``.
 
     **Recommended value.** ``0.07``, the lower bound of the range
     recommended by Castro et al. (2019), on a thin plate discretised

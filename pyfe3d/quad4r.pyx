@@ -204,33 +204,32 @@ strips, and the physical form is the stiffer, so the membrane keeps
 Brockman's stabilisation. :class:`.Quad4`, with its drilling enrichment,
 does not lock in in-plane bending.
 
-Up to 0.11 the hourglass modes of `w`, `r_x` and `r_y` also had Brockman's
-artificial stiffnesses, `0.1 E t^3/(1 + 1/A)` for `w` and `0.1 E_{b} t^3
-A` for the rotations, with the bending moduli, and the transverse shear was
-the displacement-based one at the centroid. The operator `\gamma^\top w`
-is `w_{,xy}`, `k` for a uniform twist, and added the fraction `0.6 (1 +
-\nu)/(1 + 1/A)` to its energy, 0.78 for `\nu = 0.3` and `A \gg 1`, a
-failure of the constant-twist patch test that refinement did not remove
-where the element areas were large in the unit of length of the model; the
-parameters were ``hgfactor_u``, ``hgfactor_v``, ``hgfactor_w``,
-``hgfactor_rx`` and ``hgfactor_ry``. The consequences, measured on
-2026-10-29, before and after:
+Brockman's artificial stiffnesses applied to the hourglass modes of `w`,
+`r_x` and `r_y`, `0.1 E t^3/(1 + 1/A)` for `w` and `0.1 E_{b} t^3 A` for
+the rotations, with the bending moduli, together with the
+displacement-based transverse shear at the centroid, would not pass the
+constant-twist patch test: the operator `\gamma^\top w` is `w_{,xy}`, `k`
+for a uniform twist, and would add the fraction `0.6 (1 + \nu)/(1 + 1/A)`
+to its energy, 0.78 for `\nu = 0.3` and `A \gg 1`, an error that
+refinement does not remove where the element areas are large in the unit
+of length of the model. The results of that alternative, measured on
+2026-10-29, against those of the element:
 
 * the one-element-wide torsion strip of MacNeal and Harder (1985) [7]_:
   4.78 times the reference twist, grade F, against 0.941, grade B, the
   value of their QUAD4, see ``test_one_element_wide_strip_in_torsion``;
 * the hinged cylindrical roof of Sze et al. (2004) [8]_, `t = 6.35`: the
-  lower limit load converged to -0.1435 to -0.1440 `P_{max}`, 11 % below
+  lower limit load converges to -0.1435 to -0.1440 `P_{max}`, 11 % below
   the -0.1288 of their Table 9d, against 0.2 % with 32x32 elements on the
   quarter, see ``test_hinged_roof_thin_snap_back``; with `t = 12.7` the
-  linear deflection was 6 to 7 % smaller than with :class:`.Tria3DSG`;
-* the thin-plate bending patch test above: the interior deflections were
+  linear deflection is 6 to 7 % smaller than with :class:`.Tria3DSG`;
+* the thin-plate bending patch test above: the interior deflections are
   0.88 to 1.21 times the exact ones;
 * simply supported laminated plates under uniform pressure, 8x8 elements:
-  the centre deflection was 8 to 15 % below the Navier solution, against
+  the centre deflection is 8 to 15 % below the Navier solution, against
   0.5 to 3 %, see ``test_laminated_plates_against_navier``;
 * the thin plates of ``test_quad4r_linear_buckling_plate.py``: the
-  buckling load was 0.27 % above Leissa's with 92x44 elements, against
+  buckling load is 0.27 % above Leissa's with 92x44 elements, against
   0.05 %; the thick plate of
   ``test_quad4r_linear_buckling_plate_rotated_thick_elements.py``, 30x14
   elements: 10.7 % above the reference with tuned hourglass factors,
@@ -1259,8 +1258,8 @@ cdef class Quad4R:
         ``update_KC0``, ``update_M``, ``update_KG``,
         ``update_KG_given_stress``, ``update_KCNL`` and the internal forces
         of ``update_probe_finte`` and ``update_fint``, also with
-        ``nonlinear``; ``0`` uses the flat element without them, as before
-        version 0.12.0. A flat element gives the same results, bit for bit,
+        ``nonlinear``; ``0`` uses the flat element without them. A flat
+        element gives the same results, bit for bit,
         with both values.
     r11, r12, r13, r21, r22, r23, r31, r32, r33 : double
         Entries `T_{ij}` of the transformation matrix `\boldsymbol{T}_{3\times 3}` from
@@ -7537,20 +7536,19 @@ cdef class Quad4R:
         centroid, so it has no geometric stiffness, just as it has no
         stiffness in KC0 besides the stabilisation of the transverse shear,
         see :meth:`.update_KC0`. With the slopes at the two-point quadrature
-        points, as before version 0.12.0, that pattern had the geometric
-        stiffness of the full quadrature, and a linear buckling analysis could
-        return a spurious mode of `w` alternating in sign from node to node,
+        points that pattern would have the geometric stiffness of the full
+        quadrature, and a linear buckling analysis could return a spurious mode of `w` alternating in sign from node to node,
         below the physical buckling load. On a simply supported square plate
         with `b/h = 10` under uniaxial compression, the lowest buckling load
-        was 41 % below the Mindlin solution with 16 by 16 elements, `h/\ell =
+        would be 41 % below the Mindlin solution with 16 by 16 elements, `h/\ell =
         1.6`, and 86 % below with 48 by 48 elements; with `b/h = 100` and the
         transverse shear stiffness reduced to 1/1000 of the isotropic one, as
-        in a sandwich, it was 60 % below with 8 by 8 elements, `h/\ell =
-        0.08`. The thin elements of the isotropic plate were protected only
+        in a sandwich, 60 % below with 8 by 8 elements, `h/\ell =
+        0.08`. The thin elements of the isotropic plate would be protected only
         because the transverse shear energy of the smooth envelope of that
-        pattern exceeded its geometric work. With the slopes at the centroid
+        pattern exceeds its geometric work. With the slopes at the centroid
         these cases converge to the Mindlin solution, and the buckling loads
-        of coarse meshes of thin plates increase slightly, e.g. 11.4 % instead
+        of coarse meshes of thin plates are slightly higher, e.g. 11.4 % instead
         of 10.0 % above the Mindlin solution with 8 by 8 elements, `b/h =
         100` and hard simple supports. See
         ``tests/test_quad4r_geometric_hourglass.py``.

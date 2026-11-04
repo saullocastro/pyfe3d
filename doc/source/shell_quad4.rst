@@ -84,8 +84,8 @@ The one-point transverse shear of ``shear_model = 0``
 With ``shear_model = 0`` the transverse shear is integrated with one point
 at the centroid when the thickness of the property and the length `\ell =
 \sqrt{A}` of the element give `h/\ell < 1`, the selective scheme of Hughes
-et al. (1977), and with the assumed strains above otherwise. It is kept to
-reproduce the results of the versions up to 0.11. The one-point rule has
+et al. (1977), and with the assumed strains above otherwise. The one-point
+rule has
 two zero-energy modes besides the rigid-body modes (Hughes et al., 1977,
 p. 1542; Hughes, Cohen and Haroun, 1978, Sec. 3.6): the hourglass mode `w
 = (x - x_c)(y - y_c)` with zero rotations and the in-plane twist `w = 0`,

@@ -51,8 +51,7 @@ internal forces is meaningless. The quick reference guide of Autodesk
 Nastran recommends ``K6ROT = 100`` for static analyses and `10^4` for
 modal analyses, whereas that of MSC Nastran states that values above 100
 should not be used. The approach is similar to Eq. (2.20) of Adam et al.
-(2013). It was the default of ``pyfe3d`` before version 0.10.0, and it is
-kept to reproduce those results.
+(2013).
 
 
 Physics-based stiffness, ``drilling_model = 0``
@@ -193,8 +192,7 @@ in in-plane bending: on the skew membrane of Cook, reference 23.9, a two
 by two mesh of :class:`.Quad4` gives 20.8 against 11.8 with the penalty,
 and a four by four mesh of split quadrilaterals of :class:`.Tria3R` gives
 20.7 against 11.3. On coarse meshes of doubly curved shells the
-enrichment stiffens :class:`.Tria3R`, see :doc:`shell_tria3r`. The penalty
-reproduces the results obtained before version 0.10.0.
+enrichment stiffens :class:`.Tria3R`, see :doc:`shell_tria3r`.
 
 
 References
