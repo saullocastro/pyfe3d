@@ -124,7 +124,7 @@ positive real load multiplier, the divergence load. A non-conservative
 system may lose its stability by flutter, a dynamic instability that this
 static criterion does not detect: Ziegler's double pendulum under a
 follower force has no finite load multiplier, its stiffness matrix being
-singular for no load, and loses its stability by flutter, see
+singular for no value of the load, and loses its stability by flutter, see
 ``tests/test_solver_linear_buckling.py``. Its stability is studied with the
 dynamic method below. For a uniform pressure on a closed surface, or on a
 surface whose edges satisfy the conditions of

@@ -175,7 +175,7 @@ conservative.
 On the low sinusoidal arch of Fung and Kaplan (1952), traced with both
 arc-length methods and both criteria with `\epsilon = 10^{-9}`, the
 analyses stop close to the null load between the two limit points without
-the floor, with residuals at 0.3 to 0.5 times `\varepsilon \| |\boldsymbol{K}_{C0}|
+the floor, with residuals at 0.29 to 0.47 times `\varepsilon \| |\boldsymbol{K}_{C0}|
 \, |\boldsymbol{u}| \|`, and all of them reach the load factor 1.0 with it, see
 the module documentation of :mod:`pyfe3d.solver.convergence` and
 ``tests/test_solver_arc_length_fung_kaplan.py``.

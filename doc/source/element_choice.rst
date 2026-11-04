@@ -171,8 +171,9 @@ out of plane, normalised by those of their Table 3:
 
 The remaining error of :class:`.Quad4R` is that of its in-plane bending
 with one element across the width. With 6x1 :class:`.Quad4` elements,
-warping ratio 0.049, the tip displacements are 0.6 % from those of a 96x16
-mesh, against 74 to 91 % without the offsets. On the same beam, the offsets
+warping ratio 0.049, the tip displacements are within 1 % of those of a
+96x16 mesh, and more than 70 % too small without the offsets. On the same
+beam, the offsets
 also bring the linear buckling load under an axial tip load and the first
 natural frequency of coarse meshes to those of fine meshes, see
 :doc:`eigenvalue_analyses`. ``tests/test_quad_warp_offsets.py`` checks the
@@ -221,13 +222,9 @@ Beams, truss and spring
         :class:`.BeamC`. Its von Kármán axial
         strain takes the element mean of `(v_{,x}^2 + w_{,x}^2)/2`, after
         Crisfield (1991), Section 7.1.3, which removes its membrane
-        locking: the central deflection of a beam clamped at both ends,
-        with a linear deflection three times its height, is 0.60 % below
-        the converged one with 4 elements, against 8.1 % with the pointwise
-        strain, and the
-        lower limit load of the arch of Fung and Kaplan (1952) with 40
-        elements is within 0.38 % of theirs, against 5.8 %, see the Notes
-        of :class:`.BeamC` and
+        locking: the lower limit load of the arch of Fung and Kaplan (1952)
+        with 40 elements is within 0.38 % of theirs, against 5.8 % with
+        the pointwise strain, see the Notes of :class:`.BeamC` and
         ``tests/test_solver_arc_length_fung_kaplan.py``.
     * - :class:`.BeamLR`
       - Timoshenko kinematics with linear interpolation and reduced
