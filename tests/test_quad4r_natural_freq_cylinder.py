@@ -54,6 +54,11 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
            64    +0.27 %    +1.02 %
            96    +0.09 %    +0.38 %
 
+    TODO(author): this table was measured with the hourglass stiffnesses of
+    Brockman (1987), not with the current stabilisation, which gives +0.48
+    and +1.56 % at ``ntheta = 48`` and +0.09 and +0.31 % at ``ntheta = 96``,
+    see below; re-measure the table?
+
     so the element converges to the three-dimensional solution: Table 2.6
     (concluded), p. 53, of the same reference puts the Flugge shell theory
     0.40 % above the elasticity value for ``n = 3`` at this geometry, and at
@@ -71,11 +76,10 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
             1         48      1440    0.12182617  0.13190618    2 s
             2         96      5760    0.12135407  0.13027999   17 s
 
-    measured on 2026-10-29 with the default stabilisation of Quad4R since
-    0.12.0, the physical stabilisation of the bending and of the transverse shear of Belytschko and Leviathan (1994) [3]_, +0.48 and +1.56 % and +0.09 and +0.31 % from the table;
-    up to 0.11, with the hourglass stiffnesses of Brockman (1987) [4]_,
-    0.12188130, 0.13236280, 0.12136325 and 0.13037796, the values of the
-    table of relative errors above, which predates that change.
+    measured on 2026-10-29 with the default stabilisation of Quad4R, the
+    physical stabilisation of the bending and of the transverse shear of
+    Belytschko and Leviathan (1994) [3]_, +0.48 and +1.56 % and +0.09 and
+    +0.31 % from the table.
 
     In the code, the geometry is that of Table 2.8 of [1]_, ``R/h = 20`` and
     ``l/mR = 4`` with ``m = 1``, the shear diaphragms those of Eq. (2.33),
@@ -92,9 +96,6 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
        4-node shell element with one point quadrature, Computer Methods in
        Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
        https://doi.org/10.1016/0045-7825(94)90052-3
-    .. [4] Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
-       International Journal for Numerical Methods in Engineering, 24(12),
-       2343-2356, 1987. https://doi.org/10.1002/nme.1620241208
 
     """
     data = Quad4RData()

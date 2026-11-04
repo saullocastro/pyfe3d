@@ -92,7 +92,7 @@ def test_quad4_thin_limit():
     sign with ``shear_model = 1`` (2.3e-5, -9.6e-5 and 3.0e-4 at `6
     \times 10^4`, `1.25 \times 10^5` and `2.5 \times 10^5`). The
     two-by-two transverse shear of the assumed strains of the MITC4
-    element, the default since 0.12.0, accumulates about twenty times the
+    element, the default, accumulates about twenty times the
     round-off of the one-point rule of ``shear_model = 0``, and is asserted
     within 3e-4 instead of 1e-4.
 

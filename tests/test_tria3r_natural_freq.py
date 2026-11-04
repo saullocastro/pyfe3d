@@ -37,7 +37,7 @@ def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
     ``rho*h``.
 
     The edges are soft simply supported, rotations free. With the default
-    transverse shear since 0.12.0, the discrete shear gap field of
+    transverse shear, the discrete shear gap field of
     ``shear_model = 1``, the errors against the reference, measured with
     this test for the consistent (``mtype=0``), lumped (``1``) and reduced
     (``2``) mass matrices (quadrilaterals split in two triangles, time of
@@ -61,9 +61,9 @@ def test_tria3r_nat_freq(plot=False, mode=0, mtypes=range(3), refinement=1):
     this test, with ``rtol=1e-4`` for the round-off of the eigensolver, and
     with grade B of MacNeal and Harder [2]_, p. 14, as the bound against
     the reference; from ``refinement=2`` grade A is asserted against the
-    reference alone. Before 0.12.0, with the centroid-sampled shear and
-    ``alpha_shear_locking = 0.7``, the errors were -1.47 to +1.31 % with
-    8x10 elements and rose to +2.65 to +3.29 % with 17x21 before falling,
+    reference alone. With the centroid-sampled shear of ``shear_model = 0``
+    and ``alpha_shear_locking = 0.7``, the errors are -1.47 to +1.31 % with
+    8x10 elements and rise to +2.65 to +3.29 % with 17x21 before falling,
     see :mod:`pyfe3d.tria3r`.
 
     References

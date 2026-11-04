@@ -100,11 +100,7 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
     (p. 132), i.e. 0.018 % below ``P_e`` for this beam. The buckling load
     of BeamLR converges to Eq. (2-57) as the square of the element length,
     1.71e-4, 4.20e-5 and 1.04e-5 above it with 49, 99 and 199 elements
-    (``refinement`` 1, 2 and 4), hence the tolerance 5e-4. Up to pyfe3d
-    0.11, BeamLR took the slopes of its geometric stiffness matrix from the
-    rotations and its buckling load converged to ``P_e``, without the
-    reduction due to shear deformation (2.6e-4 and 2.0e-4 above Eq. (2-57)
-    with 49 and 99 elements).
+    (``refinement`` 1, 2 and 4), hence the tolerance 5e-4.
 
     The frequencies under the axial load are compared with the exact ones of
     a Timoshenko beam, with shear deformation and rotary inertia, as BeamLR,
@@ -133,10 +129,7 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
     ==========  ========  ============================  ===========================
 
     hence the tolerances 5e-3 (consistent) and 5e-4 (lumped) with 49
-    elements. Up to pyfe3d 0.11, with the slopes of the geometric stiffness
-    matrix taken from the rotations, the frequencies stopped converging at
-    0.009 to 0.027 % above the reference with 199 elements, since the
-    buckling load converged to ``P_e`` instead of Eq. (2-57).
+    elements.
 
     References
     ----------

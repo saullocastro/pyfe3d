@@ -23,9 +23,8 @@ The Section "Application to thick plates" of the paper states plainly that
 employed on the shear term, reveals that there are five zero eigenvalues, two
 more than the usual three rigid body modes. Thus the element by itself is
 rank deficient". The tests exist so that the extent of it is measured rather
-than guessed, and so that the behaviour is pinned while the drilling work of
-0.10.0 changes the in-plane part of the element: every assertion below holds
-identically for both values of ``drilling_model``.
+than guessed, and every assertion below holds identically for both values
+of ``drilling_model``, which changes only the in-plane part of the element.
 
 Their Figure 10 uses the rotations `\theta_1` and `\theta_2` of the normal,
 which pair with `\partial w/\partial x_1` and `\partial w/\partial x_2` in the
@@ -50,12 +49,11 @@ at the centroid alone.
 The paper also gives a remedy for Mode 1, the "modified one-point shear"
 element, which moves the `(\partial w/\partial x_\alpha)^2` contributions to a
 two-by-two rule and leaves the rest at one point, and recommends it "when the
-t/h ratio exceeds unity". :class:`pyfe3d.Quad4` applied it, gated at
-`h/\ell \ge 1`, up to version 0.11, but the modified rule stores spurious shear
-energy in a state of pure twist, see ``tests/test_quad4_thick_twist.py``, and
-since 0.12.0 the elements with `h/\ell \ge 1` use the assumed transverse shear
-strains of Dvorkin and Bathe given at the end of this docstring, which remove
-both modes. The gate is measured below: Modes 1 and 2 cost nothing at `h/\ell
+t/h ratio exceeds unity". The modified rule stores spurious shear energy in
+a state of pure twist, see ``tests/test_quad4_thick_twist.py``, and
+:class:`pyfe3d.Quad4` does not use it: the elements with `h/\ell \ge 1` use
+the assumed transverse shear strains of Dvorkin and Bathe given at the end of
+this docstring, which remove both modes. The gate is measured below: Modes 1 and 2 cost nothing at `h/\ell
 < 1`, and at `h/\ell \ge 1` exactly the energies of their transverse shear
 strains interpolated as in Eqs. (6) and (7) of Bathe and Dvorkin (1985).
 
@@ -71,17 +69,17 @@ twist of such a strip *is* the hourglass pattern `w \propto xy`, so the
 element has no stiffness against precisely the deformation being asked for.
 On the twist case of the straight cantilever of MacNeal and Harder (1985),
 see ``test_torsion_of_a_one_element_wide_strip``, at their 6 by 1 mesh, the
-ratio to the reference value is 377 for Quad4, 4.8 for Quad4R and 1.7 for
-Tria3R with ``shear_model = 0``, the last two being helped by the hourglass
-control of Brockman (1987) and by the transverse shear stabilisation of
-Bischoff and Bletzinger (2004) respectively. Two elements across the width
-bring Quad4 to 1.02 and Quad4R to 0.92.
+ratio to the reference value is 377 for Quad4 and 1.7 for Tria3R with
+``shear_model = 0``, the latter helped by the transverse shear stabilisation
+of Bischoff and Bletzinger (2004), and 0.94 for Quad4R, whose bending and
+transverse shear have the physical stabilisation of Belytschko and Leviathan
+(1994). Two elements across the width bring Quad4 to 1.02.
 
-``shear_model = 0`` is also the centroid-sampled transverse shear that
-Tria3R used by default up to 0.11, and it is the one these tests are about,
-so every Tria3R built here is given it, with ``alpha_shear_locking = 0.7``,
-by :func:`set_legacy_shear`, except in the torsion of the strip, which also
-measures the defaults since 0.12.0, the discrete shear gap field of
+``shear_model = 0`` is also the centroid-sampled transverse shear of
+Tria3R, and it is the one these tests are about, so every Tria3R built here
+is given it, with ``alpha_shear_locking = 0.7``, by
+:func:`set_legacy_shear`, except in the torsion of the strip, which also
+measures the defaults, the discrete shear gap field of
 ``shear_model = 1`` of Tria3R and the MITC4 strains of ``shear_model = 1``
 of Quad4.
 
@@ -95,7 +93,7 @@ written to avoid, and which its Tables I and II report for the beam.
 Ungating the paper's own modified scheme is worse still, locking the plate to
 the same degree while also making the strip 33 times too stiff. The remedy
 that removes the modes without locking is an assumed transverse shear field,
-which :class:`pyfe3d.Quad4` uses for `h/\ell \ge 1` since 0.12.0, and for
+which :class:`pyfe3d.Quad4` uses for `h/\ell \ge 1`, and for
 every thickness with the default ``shear_model = 1``, whereas with
 ``shear_model = 0`` the thin elements keep the one-point rule and the two
 modes, see Dvorkin and Bathe (1984) and Bathe and Dvorkin (1985).
@@ -653,7 +651,7 @@ def test_torsion_of_a_one_element_wide_strip():
         Tria3R, shear_model=0    1.67   1.649   1.645
         Tria3R, default          0.675  0.674   0.674
 
-    (Quad4R up to 0.11: 4.78, 0.923 and 1.001.) "Quad4, default" is
+    "Quad4, default" is
     ``shear_model = 1``, the assumed transverse shear strains of the MITC4
     element, whose twists agree with those of Quad4R within 1e-12: on a
     rectangle the two elements have the same out-of-plane stiffness, the
@@ -667,15 +665,15 @@ def test_torsion_of_a_one_element_wide_strip():
     20 %, D at most 50 %, F above. Quad4 has no stiffness against the
     deformation being asked for, more than 100 times the reference. Tria3R
     with ``shear_model = 0`` is helped by its stabilisation but still fails
-    at ny=1, grade F, as Quad4R did up to 0.11, so the practical rule for
+    at ny=1, grade F, so the practical rule for
     these elements is at least two elements across the width for any strip
     that carries torsion; with two and four Quad4 gets grade B or better.
-    Since 0.12.0 Quad4R, with the physical stabilisation of the bending
+    Quad4R, with the physical stabilisation of the bending
     and of the transverse shear of Belytschko and Leviathan (1994), gets
     grade B with one and two and A with four. Tria3R with
     ``shear_model = 0`` stays at 1.65 with 6 elements along the length,
-    still grade F, and is not asserted at ny > 1. The default Tria3R since
-    0.12.0, the discrete shear gap field of ``shear_model = 1``, is 33 per
+    still grade F, and is not asserted at ny > 1. The default Tria3R, the
+    discrete shear gap field of ``shear_model = 1``, is 33 per
     cent too stiff on every one of the three meshes, grade D, the same as
     :class:`pyfe3d.Tria3DSG`, with six pairs of triangles along the length;
     it is asserted at ny=1 only.

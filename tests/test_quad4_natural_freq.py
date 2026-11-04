@@ -38,7 +38,7 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=3):
     ``a/h = 30``, the rotary inertia and ``A44 = A55 = 5/6 G h``, its
     frequency is 0.28 % below the reference, from the characteristic equation
     (76) of Wittrick (1987), Sec. 3.2, p. 457, and the elements converge to that
-    value. With the soft simple support used before, rotations free, they
+    value. With the soft simple support, rotations free, they
     converge to about 1 % below the reference, through the boundary layer
     of the Mindlin plate along the edges.
 

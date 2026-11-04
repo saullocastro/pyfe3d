@@ -192,7 +192,8 @@ def test_thin_plate_converges():
 
     Measured error of the centre deflection, ``shear_model = 1`` with
     ``alpha_shear_locking = 0``, i.e. the field of Tria3DSG, against the
-    former default ``shear_model = 0`` with ``alpha_shear_locking = 0.7``:
+    centroid-sampled shear of ``shear_model = 0`` with
+    ``alpha_shear_locking = 0.7``:
 
         n x n      shear_model = 1     shear_model = 0
         16x16          -12.33 %            -13.00 %
@@ -201,7 +202,7 @@ def test_thin_plate_converges():
         128x128         -0.02 %            -14.32 %
 
     The DSG field converges at second order once the mesh resolves the
-    plate; the former default stalls at -14 per cent. The 32x32 mesh is asserted
+    plate; ``shear_model = 0`` stalls at -14 per cent. The 32x32 mesh is asserted
     with the tolerance of grade A of MacNeal and Harder [2]_, p. 14, 2 %.
 
     References

@@ -42,13 +42,12 @@ def test_linear_buckling_plate(plot=False, mode=0):
     slopes of `w` of KG at the two-by-two points, +1.49 % with the slopes
     at the centroid, ``shear_model = 0`` or ``centroid_slopes = 1``
     (measured on 2026-11-01), see
-    ``tests/test_quad4_geometric_hourglass.py``. Up to version 0.11 the thick
-    elements used the modified one-point shear rule of Hughes, Taylor and
-    Kanoknukulchai (1977),
-    whose spurious twist stiffness gave +11.2 %, see
-    ``tests/test_quad4_thick_twist.py``; with the soft simple support
-    previously used here, the same spurious stiffness brought the result
-    within 3 % of the Kirchhoff value.
+    ``tests/test_quad4_geometric_hourglass.py``. The modified one-point
+    shear rule of Hughes, Taylor and Kanoknukulchai (1977) for the thick
+    elements, which :class:`pyfe3d.Quad4` does not use, gave +11.2 % through
+    its spurious twist stiffness, see ``tests/test_quad4_thick_twist.py``,
+    and with a soft simple support the same spurious stiffness brought the
+    result within 3 % of the Kirchhoff value.
 
     References
     ----------

@@ -33,18 +33,18 @@ Notes
 -----
 Convergence tolerance. The analyses use the default criterion of
 :class:`pyfe3d.solver.Analysis`, ``relTOL = 1e-9`` with the round-off
-floor of :mod:`pyfe3d.solver.convergence`, and no ``absTOL``. Up to
-2026-10-30 the co-rotational elements computed the current nodal positions
-as `\boldsymbol{X} + \boldsymbol{u}`, with a round-off of the order of
-`\varepsilon |\boldsymbol{K}_{C0}| |\boldsymbol{X}|`, `\boldsymbol{X}` the
-nodal coordinates, above the round-off floor: the iterations of the first
-increments of the cantilever with 64 BeamC elements, or with 16x1 Tria3R,
-stagnated at `\zeta` of 3e-9 to 1e-8, and this module set ``absTOL`` to
-ten times `\varepsilon \max_j (|\boldsymbol{K}_{C0}| \boldsymbol{z})_j`,
-see :func:`round_off_absTOL`. The positions are now taken relative to the
-base centroid of each element, see :class:`pyfe3d.corotational.CorotationalShell`,
-and ``test_cantilever_end_shear_translated`` checks that the iterations
-no longer depend on the origin of the coordinates.
+floor of :mod:`pyfe3d.solver.convergence`, and no ``absTOL``. The
+co-rotational elements take the current nodal positions relative to the
+base centroid of each element, see :class:`pyfe3d.corotational.CorotationalShell`.
+Positions computed as `\boldsymbol{X} + \boldsymbol{u}` carry a round-off of
+the order of `\varepsilon |\boldsymbol{K}_{C0}| |\boldsymbol{X}|`,
+`\boldsymbol{X}` the nodal coordinates, above the round-off floor: with
+them the iterations of the first increments of the cantilever with 64
+BeamC elements, or with 16x1 Tria3R, stagnated at `\zeta` of 3e-9 to 1e-8,
+unless ``absTOL`` was set to ten times `\varepsilon \max_j
+(|\boldsymbol{K}_{C0}| \boldsymbol{z})_j`, see :func:`round_off_absTOL`.
+``test_cantilever_end_shear_translated`` checks that the iterations do not
+depend on the origin of the coordinates.
 
 Policy, as in ``tests/test_nonlinear_benchmarks_sze2004.py``: when the
 reference is reached only on fine meshes, the test uses a coarse mesh,
@@ -533,9 +533,7 @@ def test_cantilever_end_shear_corotational_von_karman(element):
 
     Following the policy of the module documentation, BeamC is compared
     with its values at ``P_max`` pre-determined by this same test with
-    ``rtol = 1e-4``. Up to pyfe3d 0.11 the pointwise von Kármán strain of
-    BeamC locked in membrane, with -59.0 %, -33.3 % (4 elements), -15.6 %,
-    -7.5 % (8) and -1.48 %, -0.69 % (16).
+    ``rtol = 1e-4``.
     """
     L = CANTILEVER_SHEAR['L']
     Ue, We = elastica_end_force(4.)

@@ -570,10 +570,10 @@ def test_macneal_harder_twisted_beam(name, nx, ny):
     The reference tip displacements ``MH_REF`` are those of Table 3, p. 10,
     of MacNeal and Harder [1]_; their QUAD4 gives 0.993 and 0.985 of them
     (Table 10, p. 15). With 96x16 elements and offsets, 0.9992 and 0.9988
-    for Quad4, 0.9978 and 0.9987 for Quad4R. Since 0.12.0, with the MITC4
-    transverse shear of ``shear_model = 1``, Quad4 gives 0.9963 and 0.9974
-    with 12x2 elements, instead of 0.9974 and 0.9980 with the one-point
-    transverse shear of ``shear_model = 0``, hence the tolerance of 0.4 %
+    for Quad4, 0.9978 and 0.9987 for Quad4R. With the MITC4 transverse
+    shear of the default ``shear_model = 1``, Quad4 gives 0.9963 and 0.9974
+    with 12x2 elements, and 0.9974 and 0.9980 with the one-point transverse
+    shear of ``shear_model = 0``, hence the tolerance of 0.4 %
     (measured on 2026-10-30); the 96x16 values are the same to four digits.
 
     References
@@ -662,8 +662,8 @@ def test_von_karman_tangent(name):
     of the von Kármán internal forces, with the ``hgfactor_*`` of Quad4R
     passed to all the methods, or only to ``update_KC0`` and
     ``update_fint``: ``K_E`` of ``KG`` and that subtracted by ``KCNL``
-    cancel out for any factors. The relative error with ``warp_offsets =
-    1`` before the von Kármán terms used the offsets was 6e-5"""
+    cancel out for any factors. Without the offsets in the von Kármán
+    terms, the relative error with ``warp_offsets = 1`` is 6e-5"""
     prop = isotropic_plate(thickness=0.01, E=70e9, nu=0.3)
     u = np.random.default_rng(1).standard_normal(24)*2e-3
     cases = [(None, None)]
@@ -860,7 +860,7 @@ def twisted_tip_nonlinear(name, kinematics, comp, loads, nx=12, ny=2):
 #: tip displacements of the non-linear twisted beam with 12x2 elements, von
 #: Kármán strains with offsets and co-rotational with exact offsets,
 #: pre-determined by test_twisted_beam_von_karman; Quad4 with the default
-#: shear_model = 1 since 0.12.0, whose von Kármán terms take the slopes of
+#: shear_model = 1, whose von Kármán terms take the slopes of
 #: w at the two-by-two points, 0.540811 and 0.524690 with the slopes at the
 #: centroid (measured on 2026-11-01); (0.541658, 0.539894) and (0.525850,
 #: 0.525783) with the one-point transverse shear of shear_model = 0 and the
@@ -879,9 +879,9 @@ def test_twisted_beam_von_karman(name, comp, P):
     y in two increments, rotations up to 0.07: the von Kármán strains of the
     elements with offsets (``kinematics='von_karman'``) against
     ``kinematics='corotational'``, whose offsets are exact, within 0.4 %,
-    with the quadratic convergence of the exact tangent. Before the von
-    Kármán terms used the offsets, Newton-Raphson diverged above a load of
-    about 60 along z (measured with a numpy prototype of that state)"""
+    with the quadratic convergence of the exact tangent. Without the
+    offsets in the von Kármán terms, Newton-Raphson diverges above a load of
+    about 60 along z (measured with a numpy prototype)"""
     loads = [0.5*P, P]
     vk, its_vk = twisted_tip_nonlinear(name, 'von_karman', comp, loads)
     cr, its_cr = twisted_tip_nonlinear(name, 'corotational', comp, loads)

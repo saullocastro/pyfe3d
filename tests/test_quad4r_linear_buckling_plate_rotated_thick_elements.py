@@ -52,19 +52,11 @@ def test_linear_buckling_plate(plot=False, mode=0):
 
     The buckling load must not depend on the orientation of the plate. With
     30x14 elements it is 1.41 % above the reference, measured on 2026-10-29
-    with the default stabilisation of Quad4R since 0.12.0, the physical
-    stabilisation of the bending and of the transverse shear of Belytschko
-    and Leviathan (1994) [4]_, see :mod:`pyfe3d.quad4r`. Up to 0.11, with twice
-    the hourglass stiffnesses of Brockman (1987) [5]_ for `u`, `v`, `r_x` and
-    `r_y` and four times that of `w`, it was 10.7 % above the reference
-    (-195870012.17574 N), and the flat plate converged to it, 2.64 % above
-    it with 60x28 elements, 1.17 % with 90x42 elements, 0.66 % with 120x56
-    elements; with the soft simple support used before those, rotations
-    free, the 30x14 mesh gave a buckling load 1.8 % below the Kirchhoff value
-    and 4.0 % above the reference.
+    with the default stabilisation of Quad4R, the physical stabilisation of
+    the bending and of the transverse shear of Belytschko and Leviathan
+    (1994) [4]_, see :mod:`pyfe3d.quad4r`.
 
-    The grade A, at most 2 %, is that of [6]_, p. 14. The 90x42 flat plate,
-    run until 0.12.0 against the reference within 2 %, is no longer run.
+    The grade A, at most 2 %, is that of [5]_, p. 14.
 
     References
     ----------
@@ -78,10 +70,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
        4-node shell element with one point quadrature, Computer Methods in
        Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
        https://doi.org/10.1016/0045-7825(94)90052-3
-    .. [5] Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
-       International Journal for Numerical Methods in Engineering, 24(12),
-       2343-2356, 1987. https://doi.org/10.1002/nme.1620241208
-    .. [6] MacNeal, R. H. and Harder, R. L., A proposed standard set of
+    .. [5] MacNeal, R. H. and Harder, R. L., A proposed standard set of
        problems to test finite element accuracy, Finite Elements in Analysis
        and Design, 1(1), 3-20, 1985.
        https://doi.org/10.1016/0168-874X(85)90003-4
@@ -171,9 +160,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
             quad.init_k_KG = init_k_KG
             quad.update_rotation_matrix(ncoords_flatten)
             quad.update_probe_xe(ncoords_flatten)
-            # NOTE the default stabilisation: until 0.12.0 this test used
-            #      twice the hourglass stiffnesses of u, v, r_x and r_y and
-            #      four times that of w, see the docstring
+            # NOTE the default stabilisation of Quad4R, see the docstring
             quad.update_KC0(KC0r, KC0c, KC0v, prop)
             quads.append(quad)
             init_k_KC0 += data.KC0_SPARSE_SIZE

@@ -62,7 +62,7 @@ def test_nat_freq_curved_beam(refinement=2, mtypes=range(2)):
     ``tol=1e-9``; the frequencies with shear deformation, whose difference
     to the reference is one of the model, are compared with the reference
     with grade B of MacNeal and Harder (1985), p. 14 (at most 10 %), as a
-    bound; until 0.12.0 with 3 %, close to the 2.3 % of the model.
+    bound, the difference of the model being 2.3 %.
 
     References
     ----------

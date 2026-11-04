@@ -11,9 +11,8 @@ value (Timoshenko and Goodier, 1951) within grade A of MacNeal and Harder
 
 Notes
 -----
-Up to version 0.11, :class:`pyfe3d.Quad4` integrated the transverse shear of
-the elements with `h/\ell \ge 1` with the "modified one-point shear" rule of
-Hughes, Taylor and Kanoknukulchai (1977), pp. 1541-1542: two-by-two
+For the elements with `h/\ell \ge 1`, Hughes, Taylor and Kanoknukulchai
+(1977), pp. 1541-1542, propose the "modified one-point shear" rule: two-by-two
 quadrature for the `(\partial w/\partial x)^2` and `(\partial
 w/\partial y)^2` terms and one point for the rest. In a state of pure twist,
 `w = \kappa x y`, `r_x = \kappa x`, `r_y = -\kappa y`, the transverse shear
@@ -22,7 +21,7 @@ everywhere, but the rule integrates `w_{,x}^2 = \kappa^2 y^2` with two-by-two
 and the terms that cancel it at the centroid only, storing `A_{55}
 \ell^4 \kappa^2/12` in a square element of side `\ell`, i.e. `(5/12)(\ell/h)^2`
 times its twist energy for an isotropic plate, 42 % at the gate. Measured
-with the old rule::
+with that rule::
 
     h/l       U_twist/U_exact
     0.99         1.00000
@@ -30,19 +29,21 @@ with the old rule::
     1.20         1.28935
     2.00         1.10417
 
-A mesh refined across the gate therefore became abruptly stiffer in torsion.
+With that rule a mesh refined across the gate becomes abruptly stiffer in
+torsion.
 The tip twist (x100) of the isotropic I-beam of Yu et al. (2005), Table 5,
 as a cantilever of length 10 under a unit tip torque, meshed with 20 + 20
 elements across the flanges and 20 along the web, was 3.005, 2.764 and 2.368
 with 100, 150 and 200 elements along the length, the web and then the
-flanges crossing `h/\ell = 1`, against 3.003 for Quad4R and 2.987 for
-Tria3DSG. With the assumed transverse shear strains of the MITC4 element of
-Dvorkin and Bathe (1984) and Bathe and Dvorkin (1985), used since 0.12.0 for
-`h/\ell \ge 1`, the I-beam gives 3.005, 3.005 and 2.999, and the thin
-elements, `h/\ell < 1`, are unchanged, with the attribute ``shear_model = 0``
-of :class:`pyfe3d.Quad4`. With the default ``shear_model = 1``, also since
-0.12.0, the thin elements take the assumed strains as well and there is no
-gate; the tests below check both.
+flanges crossing `h/\ell = 1`, against 3.003 for Quad4R (TODO(author):
+measured with the hourglass control of Brockman (1987) for `w`; is it still
+the value of Quad4R?) and 2.987 for Tria3DSG. :class:`pyfe3d.Quad4` uses
+instead, for `h/\ell \ge 1`, the assumed transverse shear strains of the
+MITC4 element of Dvorkin and Bathe (1984) and Bathe and Dvorkin (1985),
+with which the I-beam gives 3.005, 3.005 and 2.999 with ``shear_model =
+0``, whose thin elements, `h/\ell < 1`, keep the one-point rule. With the
+default ``shear_model = 1`` the thin elements take the assumed strains as
+well and there is no gate; the tests below check both.
 
 References
 ----------
@@ -267,11 +268,11 @@ def test_strip_torsion_is_continuous_across_the_gate():
     ``shear_model = 1``, the assumed strains of the MITC4 element on both
     meshes; 0.048880 and 0.048278 with ``shear_model = 0``, one point for
     the thin elements; 0.048880 and 0.036544 with the modified one-point
-    shear rule of Hughes et al. (1977) above the gate, as up to 0.11, whose
+    shear rule of Hughes et al. (1977) above the gate, whose
     spurious twist stiffness made the finer mesh 25 % stiffer. Continuity
     across the gate is asserted within 2 % for both values of
     ``shear_model``, the grade A of MacNeal and Harder (1985), see below;
-    the old rule fails it by 25 %.
+    that rule fails it by 25 %.
 
     The reference is the Saint-Venant twist rate `\theta' = T/(G J)` of the
     `b \times h` rectangle, `b/h = 12.5`, with the series of

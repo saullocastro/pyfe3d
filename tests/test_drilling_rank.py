@@ -153,11 +153,10 @@ def test_B1_rank_of_a_single_free_element():
         # the enrichment must not add any zero mode of its own. The absolute
         # count is a property of the transverse shear of the underlying plate
         # formulation: the assumed transverse shear strains of the MITC4
-        # element, the default shear_model = 1 since 0.12.0, leave only the
-        # six rigid-body modes on both shapes. With shear_model = 0 the
-        # square, h/l = 1, gets them as well (seven zeros with the modified
-        # one-point shear rule used up to 0.11), and the distorted
-        # quadrilateral, h/l = 0.63, the one-point rule, which leaves eight.
+        # element, the default shear_model = 1, leave only the six
+        # rigid-body modes on both shapes. With shear_model = 0 the square,
+        # h/l = 1, gets them as well, and the distorted quadrilateral,
+        # h/l = 0.63, the one-point rule, which leaves eight.
         # Those extra modes live entirely in the out-of-plane block, which
         # the enrichment leaves untouched, so the meaningful assertion is
         # that the two models agree

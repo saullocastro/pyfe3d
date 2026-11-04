@@ -322,8 +322,8 @@ def test_triangles_under_refinement():
             assert dsg[k + 1] < dsg[k], (key, dsg)
         assert dsg[0]/dsg[-1] > 5., (key, dsg)
         assert dsg[-1] < 0.005, (key, dsg)
-    # NOTE whereas the legacy Tria3R stalls: its last two meshes agree
-    #      with each other
+    # NOTE whereas Tria3R with shear_model = 0 stalls: its last two
+    #      meshes agree with each other
     #      much better than either agrees with the quadrilateral
     assert t3r[-1] > 0.02, t3r
     assert abs(t3r[-1] - t3r[-2]) < 0.1*t3r[-1], t3r

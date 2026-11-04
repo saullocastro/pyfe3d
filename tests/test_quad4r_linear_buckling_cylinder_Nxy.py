@@ -93,7 +93,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     relative difference to the intercept of Fig. 13 of the same sign, with
     the wall time of the test, both laminates, on a machine shared with
     other jobs, measured on 2026-10-29 with the default stabilisation of
-    Quad4R since 0.12.0, the physical stabilisation of the bending and of the transverse shear of Belytschko and Leviathan (1994) [2]_::
+    Quad4R, the physical stabilisation of the bending and of the transverse shear of Belytschko and Leviathan (1994) [2]_::
 
         refinement ntheta elements  Z11, Nxy < 0      Z33, Nxy < 0     time
            0.5       40      480   26930.5 +60.3 %   17906.1 +94.6 %     2 s
@@ -112,16 +112,12 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
     and 9136 Nm, see
     tests/test_quad4_linear_buckling_cylinder_Nxy.py, where the model is also
     run with ``Nxy > 0`` and reproduces the negative intercepts. The
-    geometric stiffness taking the slopes of `w` at the centroid, in
-    version 0.12.0, changed none of these values: under a pure shear
-    prestress it coincides with that of the two-by-two quadrature on
-    rectangles. Up to 0.11 this test used a thousandth of the hourglass
-    stiffnesses of Brockman (1987) [3]_, and gave 18537.7 and 10509.2 Nm with
-    ``refinement=1``, 17113.2 and 9480.9 Nm with ``refinement=2``, and the
-    extrapolated values 16684 and 9136 Nm.
+    geometric stiffness takes the slopes of `w` at the centroid; under a
+    pure shear prestress it coincides with that of the two-by-two
+    quadrature on rectangles.
 
     The figure is matched within grade A, 2 per cent, of MacNeal and Harder
-    [4]_, p. 14, only from ``refinement=3``, too expensive for every run,
+    [3]_, p. 14, only from ``refinement=3``, too expensive for every run,
     which is why the default ``refinement=1`` compares ``-Tcr`` with the
     values of the table pre-determined by this same test, 18864.8 and
     10883.3 Nm, with a tolerance for the round-off of other platforms only,
@@ -146,10 +142,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
        4-node shell element with one point quadrature, Computer Methods in
        Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
        https://doi.org/10.1016/0045-7825(94)90052-3
-    .. [3] Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
-       International Journal for Numerical Methods in Engineering, 24(12),
-       2343-2356, 1987. https://doi.org/10.1002/nme.1620241208
-    .. [4] MacNeal, R. H., and Harder, R. L., A proposed standard set of
+    .. [3] MacNeal, R. H., and Harder, R. L., A proposed standard set of
        problems to test finite element accuracy, Finite Elements in Analysis
        and Design, 1(1), 3-20, 1985.
        https://doi.org/10.1016/0168-874X(85)90003-4
@@ -313,17 +306,16 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         # NOTE removing the rigid axial translation with a single node
         middle = np.where(isclose(z, L/2))[0]
         bk[2::DOF][middle[0]] = True
-        # NOTE earlier versions of this test held the axial displacement of the
-        #      whole ring of nodes at mid-length and both rotations at the
-        #      edges, which is not CC2. That ring constraint stiffens the
-        #      torsional mode, whose buckles are inclined helices crossing
-        #      the mid-length: for the enriched Quad4 at ntheta = 80 it raised
-        #      Tcr of Z11 from -18980.9 to -22193.3 Nm, +16.9 per cent, and
-        #      holding the rotation about the radial direction at the edges
-        #      added another 1.1 per cent. Together they were the 16 per cent (Z11) and
-        #      23 per cent (Z33) by which the converged values exceeded
-        #      Fig. 13, -19197.8 and -11093.7 Nm at ntheta = 320 with
-        #      this element
+        # NOTE holding the axial displacement of the whole ring of nodes at
+        #      mid-length and both rotations at the edges is not CC2. That
+        #      ring constraint stiffens the torsional mode, whose buckles are
+        #      inclined helices crossing the mid-length: for the enriched
+        #      Quad4 at ntheta = 80 it raises Tcr of Z11 from -18980.9 to
+        #      -22193.3 Nm, +16.9 per cent, and holding the rotation about
+        #      the radial direction at the edges adds another 1.1 per cent.
+        #      Together they make the converged values exceed Fig. 13 by 16
+        #      per cent (Z11) and 23 per cent (Z33), -19197.8 and -11093.7 Nm
+        #      at ntheta = 320 with this element
 
         bu = ~bk
 
@@ -435,10 +427,9 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
            3          192     23424    585175.2   0.9905   252 s
         extrapolated                              0.984
 
-    measured on 2026-10-29 with the default stabilisation of Quad4R since
-    0.12.0, the physical stabilisation of the bending and of the transverse shear of Belytschko and Leviathan (1994) [3]_; up to 0.11, with the hourglass stiffnesses of Brockman
-    (1987) [4]_, 765745.5, 659117.4, 623627.9, 599769.1, 591694.8 and 585982.2
-    N/m, extrapolated 0.984 as well. The extrapolation fits ``a +
+    measured on 2026-10-29 with the default stabilisation of Quad4R, the
+    physical stabilisation of the bending and of the transverse shear of
+    Belytschko and Leviathan (1994) [3]_. The extrapolation fits ``a +
     c*ntheta**-p`` to the three finest meshes (p = 2.0). The converged element is therefore 1.6 per cent below the
     formula, which is within the accuracy of the formula itself: it is a
     straight-line fit of Batdorf's Galerkin solution of a Donnell-type
@@ -462,7 +453,7 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
     of this test are both 0.984.
 
     The grades B, 10 per cent, and A, 2 per cent, are those of MacNeal and
-    Harder [5]_, p. 14.
+    Harder [4]_, p. 14.
 
     References
     ----------
@@ -474,10 +465,7 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
        4-node shell element with one point quadrature, Computer Methods in
        Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
        https://doi.org/10.1016/0045-7825(94)90052-3
-    .. [4] Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
-       International Journal for Numerical Methods in Engineering, 24(12),
-       2343-2356, 1987. https://doi.org/10.1002/nme.1620241208
-    .. [5] MacNeal, R. H., and Harder, R. L., A proposed standard set of
+    .. [4] MacNeal, R. H., and Harder, R. L., A proposed standard set of
        problems to test finite element accuracy, Finite Elements in Analysis
        and Design, 1(1), 3-20, 1985.
        https://doi.org/10.1016/0168-874X(85)90003-4

@@ -263,7 +263,7 @@ def test_tria3r_scales_the_shear_stiffness_with_the_element_size():
     `G\kappa t^3/(2(t^2 + \alpha h_K^2))`, i.e. it is divided by `1 + \alpha h_K^2/t^2`, with `h_K` "the
     longest of the edges of the element" and `\alpha` "a fixed positive
     constant". Lyly et al. choose `\alpha = 0.1` (p. 349), while
-    `\alpha = 0.7` was the default of pyfe3d before 0.12.0.
+    this test uses `\alpha = 0.7`.
 
     References
     ----------
@@ -437,8 +437,7 @@ def test_shear_only_subspace_is_the_mechanism_the_stabilisation_opens():
     for the three thicknesses (measured on 2026-10-29): its transverse shear, Belytschko and Leviathan (1994), adds the physical
     stabilisation of the nonconstant part of the assumed shear strains,
     which this subspace, with every rotation held at zero, activates in
-    proportion to the one-point shear energy. Until 0.12.0 the two
-    quadrilaterals agreed within 1e-5. The default Quad4 since 0.12.0, the
+    proportion to the one-point shear energy. The default Quad4, the
     assumed shear strains of the MITC4 element with two-by-two points,
     equals Quad4R on these squares, within 1e-12 (measured on 2026-10-30).
 

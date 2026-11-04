@@ -37,10 +37,8 @@ def test_linear_buckling(mode=0, refinement=3):
     reference by 0.11 %, with 62x30 elements 0.30 %, with 30x14 elements
     1.48 %, with 124x60 elements 0.02 %, with 186x90 elements 0.04 % below it,
     measured on 2026-10-29 with the physical stabilisation of the bending and
-    of the transverse shear of Belytschko and Leviathan (1994) [2]_ that Quad4R uses
-    since 0.12.0, see :mod:`pyfe3d.quad4r`; up to 0.11, with the hourglass
-    stiffnesses of Brockman (1987) [3]_, 0.39, 1.11 and 5.7 % above it with 92x44,
-    62x30 and 30x14 elements.
+    of the transverse shear of Belytschko and Leviathan (1994) [2]_ that
+    Quad4R uses, see :mod:`pyfe3d.quad4r`.
 
     References
     ----------
@@ -49,9 +47,6 @@ def test_linear_buckling(mode=0, refinement=3):
        4-node shell element with one point quadrature, Computer Methods in
        Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
        https://doi.org/10.1016/0045-7825(94)90052-3
-    .. [3] Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
-       International Journal for Numerical Methods in Engineering, 24(12),
-       2343-2356, 1987. https://doi.org/10.1002/nme.1620241208
 
     """
 

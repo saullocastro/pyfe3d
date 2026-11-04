@@ -48,10 +48,8 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=3):
     35x43 elements 0.14 to 0.31 % below it, with 53x65 elements 0.22 to 0.30 %
     below it, converging to the Mindlin value above, measured on 2026-10-29
     with the physical stabilisation of the bending and of the transverse shear
-    of Belytschko and Leviathan (1994) [3]_ that Quad4R uses since 0.12.0, see
-    :mod:`pyfe3d.quad4r`. Up to 0.11, with the hourglass stiffnesses of
-    Brockman (1987) [4]_, they were 0.09 % below to 0.22 % above the reference with
-    26x32 elements and 1.78 to 5.07 % above it with 8x10 elements.
+    of Belytschko and Leviathan (1994) [3]_ that Quad4R uses, see
+    :mod:`pyfe3d.quad4r`.
 
     References
     ----------
@@ -64,9 +62,6 @@ def test_nat_freq_plate(plot=False, mode=0, mtypes=range(3), refinement=3):
        4-node shell element with one point quadrature, Computer Methods in
        Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
        https://doi.org/10.1016/0045-7825(94)90052-3
-    .. [4] Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
-       International Journal for Numerical Methods in Engineering, 24(12),
-       2343-2356, 1987. https://doi.org/10.1002/nme.1620241208
 
     """
     data = Quad4RData()

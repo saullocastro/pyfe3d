@@ -613,9 +613,9 @@ def test_K_not_positive_definite_message():
 def reentrant_plate():
     r"""``KC0uu``, ``Muu`` and ``KGuu`` of the hard simply supported plate of
     ``test_quad4r_natural_freq_distorted.py``, 40x50 ``Quad4R`` elements,
-    with the former distortion of that test, the same random fraction, up
-    to 0.4 of the element size, along `x` and `y`, which makes elements
-    re-entrant, and the number of re-entrant elements"""
+    with the inner nodes moved by the same random fraction, up to 0.4 of
+    the element size, along `x` and `y`, which makes elements re-entrant,
+    and the number of re-entrant elements"""
     from scipy.sparse import coo_matrix
     from pyfe3d.shellprop_utils import isotropic_plate
     from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
@@ -686,18 +686,12 @@ def reentrant_plate():
 
 
 def test_reentrant_elements():
-    r"""The re-entrant elements of the former distortion of
-    ``test_quad4r_natural_freq_distorted.py`` make the stiffness matrix of
-    the 40x50 mesh indefinite, measured with 119 re-entrant elements of 2000
-    and 3 negative pivots: the frequency analysis, for which the solvers
-    fail, the linear buckling analysis and the linear static analysis raise
-    errors that say so, with the likely causes, instead of the former
-    message of the frequency analysis, "Frequency analysis failed, no
-    eigenvalue solver passed the verification. Attempted: eigsh() in
-    shift-invert mode: 6 eigenvalues omega**2 lower than 5.56422e+07 exist,
-    3 were found; eigh(): dense fallback skipped, size 11822 >
-    max_dense_size=2000. Try sparse_solver=False or a larger
-    max_dense_size.", and the former results of the two others"""
+    r"""The re-entrant elements of :func:`reentrant_plate` make the
+    stiffness matrix of the 40x50 mesh indefinite, measured with 119
+    re-entrant elements of 2000 and 3 negative pivots: the frequency
+    analysis, for which the solvers fail, the linear buckling analysis and
+    the linear static analysis raise errors that say so, with the likely
+    causes"""
     from pyfe3d.solver import linear_buckling, linear_static
     K, M, KG, num_reentrant = reentrant_plate()
     assert num_reentrant > 0

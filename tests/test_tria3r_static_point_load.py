@@ -46,7 +46,7 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
     where the transverse shear deflection of the Mindlin plate is shown to be
     negligible here.
 
-    With the default transverse shear since 0.12.0, the discrete shear gap
+    With the default transverse shear, the discrete shear gap
     field of ``shear_model = 1``, the deflection converges to that
     reference from below, measured with this test (``b/h = 1400``,
     quadrilaterals split in two triangles, time on one thread):
@@ -65,10 +65,10 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
     with ``rtol=1e-6`` for the round-off of the direct solution, and with
     grade D of MacNeal and Harder [2]_, p. 14, as the bound against the
     reference; finer meshes are graded against the reference alone, B from
-    ``refinement=2`` and A from ``refinement=4``. Before 0.12.0, with the
-    centroid-sampled shear and ``alpha_shear_locking = 0.7``, the deflection
-    was 26.2 % above the reference with 6x10 elements and settled 9.6 %
-    below it with 112x176, see :mod:`pyfe3d.tria3r`.
+    ``refinement=2`` and A from ``refinement=4``. With the centroid-sampled
+    shear of ``shear_model = 0`` and ``alpha_shear_locking = 0.7``, the
+    deflection is 26.2 % above the reference with 6x10 elements and
+    settles 9.6 % below it with 112x176, see :mod:`pyfe3d.tria3r`.
 
     References
     ----------

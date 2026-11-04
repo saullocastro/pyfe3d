@@ -24,9 +24,8 @@ on coarse meshes, one element across the depth of the beams, and the grade is
 their measure of the accuracy that can be expected there, see
 :func:`mh_grade`. The convergence with mesh refinement is checked separately.
 
-A limitation of the element up to version 0.11 shows up in two of these
-cases and is asserted here, with ``shear_model = 0``, so that it is on
-record. With a single element across the width, a strip of Quad4 elements
+A limitation of the element with ``shear_model = 0`` shows up in two of
+these cases and is asserted here, so that it is on record. With a single element across the width, a strip of Quad4 elements
 with the one-point transverse shear has almost no torsional stiffness,
 because of the zero-energy mode documented in
 ``test_quad4_spurious_shear_mode.py``, which is Mode 1 of Figure 10 of
@@ -37,7 +36,7 @@ mesh that MacNeal and Harder specify, identically for both drilling models,
 and two elements across the width are enough to recover them. That mode
 lives entirely in the out-of-plane block and has nothing to do with the
 drilling rotation. The assumed transverse shear strains of the MITC4
-element, the default ``shear_model = 1`` since 0.12.0, give it stiffness,
+element, the default ``shear_model = 1``, give it stiffness,
 and the 6 by 1 meshes then get grade B in both cases.
 
 The reference of C1, 23.91, is "obtained by numerical analysis for a refined
@@ -328,11 +327,11 @@ def test_C2_macneal_harder_straight_cantilever():
         out-of-plane shear    trapezoidal     0.41621     0.41621
         out-of-plane shear    parallelogram   0.42257     0.42257
 
-    The out-of-plane values are those of the default ``shear_model = 1``;
-    with ``shear_model = 0``, the one-point transverse shear up to 0.11, they
-    were 0.42349, 0.42410 and 0.42427, within 1.9 % of the reference, and
-    are now within 3.7 %, grade B, against 0.986, 0.968 and 0.977 of the
-    reference for the QUAD4 of MacNeal and Harder (1985), Table 8, p. 15.
+    The out-of-plane values are those of the default ``shear_model = 1``,
+    within 3.7 % of the reference, grade B; with ``shear_model = 0``, the
+    one-point transverse shear, they are 0.42349, 0.42410 and 0.42427,
+    within 1.9 %; against 0.986, 0.968 and 0.977 of the reference for the
+    QUAD4 of MacNeal and Harder (1985), Table 8, p. 15.
 
     In-plane shear is the drilling-sensitive case, and the one that motivates
     the enrichment. Normalised by the reference and graded with the rule of

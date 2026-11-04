@@ -10,23 +10,23 @@ the Jacobian of the internal forces are checked as well.
 
 Notes
 -----
-Up to version 0.11, and with ``shear_model = 0`` since 0.12.0, the elements
-of :class:`pyfe3d.Quad4` with `h/\ell < 1` integrate the transverse shear
-with one point at the centroid, after Hughes et al. (1977), such that the
-hourglass pattern of `w`, `w = \xi \eta` with zero rotations, has no
-stiffness in KC0, see ``tests/test_quad4_spurious_shear_mode.py``. Up to
-version 0.11, the geometric stiffness KG, and the geometrically nonlinear
-terms that share its quadrature, took the slopes `w_{,x}` and `w_{,y}` at the
-two-by-two Gauss-Legendre points, which gave that pattern the geometric
-stiffness of the full quadrature. In a supported plate the pattern then
-costs only the transverse shear energy of its smooth envelope, independent of
-the mesh, whereas its geometric work grows with the square of the number of
-elements per side, and a linear buckling analysis could return a spurious
-mode of `w` alternating in sign from node to node, with rotations close to
-zero, below the physical buckling load, once the transverse shear stiffness
-is low compared with the bending stiffness, as in a sandwich plate.
+With ``shear_model = 0`` the elements of :class:`pyfe3d.Quad4` with
+`h/\ell < 1` integrate the transverse shear with one point at the centroid,
+after Hughes et al. (1977), such that the hourglass pattern of `w`, `w =
+\xi \eta` with zero rotations, has no stiffness in KC0, see
+``tests/test_quad4_spurious_shear_mode.py``. If the geometric stiffness KG,
+and the geometrically nonlinear terms that share its quadrature, took the
+slopes `w_{,x}` and `w_{,y}` at the two-by-two Gauss-Legendre points with
+that transverse shear, the pattern would have the geometric stiffness of
+the full quadrature. In a supported plate the pattern then costs only the
+transverse shear energy of its smooth envelope, independent of the mesh,
+whereas its geometric work grows with the square of the number of elements
+per side, and a linear buckling analysis can return a spurious mode of `w`
+alternating in sign from node to node, with rotations close to zero, below
+the physical buckling load, once the transverse shear stiffness is low
+compared with the bending stiffness, as in a sandwich plate.
 
-Since 0.12.0 the slopes depend on ``shear_model``, see the Notes of
+The slopes therefore depend on ``shear_model``, see the Notes of
 :meth:`pyfe3d.Quad4.update_KG`: with ``shear_model = 0`` they are taken at
 the centroid, where the pattern has no slope, and with the default
 ``shear_model = 1``, the assumed transverse shear strains of the MITC4
@@ -46,12 +46,13 @@ value, lowest buckling load against Eq. (1) of Seide and Stowell (1950),
 
 with the transverse shear stiffness `D_Q = A_{55}`, `m = 1` for these
 plates: with the one-point transverse shear of ``shear_model = 0`` and the
-slopes at the two-by-two points (before, up to 0.11) and at the centroid
+slopes at the two-by-two points (``2x2``, a combination that
+:class:`pyfe3d.Quad4` does not offer) and at the centroid
 (``shear_model = 0``), and with the MITC4 strains of ``shear_model = 1`` and
 the slopes at the centroid (``centroid_slopes = 1``) and at the two-by-two
 points (default)::
 
-    A44, A55   mesh   h/l    before    shear_model=0  centroid   default
+    A44, A55   mesh   h/l    2x2       shear_model=0  centroid   default
     1/100      8x8    0.08   +1.98 %     +3.33 %      +3.41 %    +2.06 %
                16x16  0.16  -49.18 %     +0.81 %      +0.83 %    +0.51 %
                32x32  0.32  -87.08 %     +0.20 %      +0.21 %    +0.13 %
@@ -71,7 +72,8 @@ two successive meshes from 4x4 to 64x64 is, for 1/100, 4.36, 4.08, 4.02 and
 with ``centroid_slopes = 1``, +0.052 %, and 4.22, 4.05, 4.01 and 4.00 with
 the default, +0.032 %; for 1/1000, 4.21, 4.05, 4.01 and 4.00, +0.034 %,
 4.32, 4.08, 4.02 and 4.00, +0.041 %, and 4.13, 4.03, 4.01 and 4.00,
-+0.021 % (``before`` measured up to 0.11, the other columns on 2026-11-01).
++0.021 % (``2x2`` measured with an element that takes the slopes at the
+two-by-two points, the other columns on 2026-11-01).
 :func:`test_low_transverse_shear_stiffness` asserts this convergence for the
 three rules: the error is positive on every mesh, the ratio of the errors of
 the 16x16 and 32x32 meshes lies between 3.8 and 4.2, the order 2 of the

@@ -30,14 +30,10 @@ small and never rolls up into a circle. In the second problem the rotations
 stay small and the snap-through is traced with the arc-length method.
 
 The roof is modelled with Quad4R and its default stabilisation, see
-:mod:`pyfe3d.quad4r`: since 0.12.0 the bending and the transverse shear have
-the physical stabilisation of Belytschko and Leviathan (1994), which passes
+:mod:`pyfe3d.quad4r`: the bending and the transverse shear have the
+physical stabilisation of Belytschko and Leviathan (1994), which passes
 the constant-twist patch test, see ``test_constant_twist_patch_test`` in
-``tests/test_quad4r_hourglass_control.py``. Up to 0.11 the hourglass mode
-of `w` was controlled with Brockman (1987), ``0.10*E*h**3/(1 + 1/A)``,
-which added 73 to 78 % to the energy of a uniform twist in this model,
-whatever the mesh; the lower limit load of the thinner roof then
-converged 11 % below Table 9d. The sensitivity of the roof to the
+``tests/test_quad4r_hourglass_control.py``. The sensitivity of the roof to the
 stabilisation, scaled with the ``hgfactor_physical`` of Quad4R, is measured
 by :func:`test_hinged_roof_hourglass_sensitivity`, against Tria3DSG, which
 has no hourglass control, and against the shallow-shell Kirchhoff solution
@@ -312,11 +308,7 @@ def test_cantilever_end_moment_beamc_no_membrane_locking(num_elements):
     the 20 increments up to ``M_max`` is 1.3e-13, 6.4e-14 and 2.7e-12, and
     the largest ``|U/U_vk - 1|`` 2.5e-13, 1.1e-13 and 5.2e-12, below the
     convergence criterion of the Newton-Raphson increments, ``relTOL =
-    1e-9``. Up to pyfe3d 0.11 BeamC integrated the
-    pointwise ``w_x**2/2``, which the constant ``u_x`` cannot balance, and
-    locked: under ``M = 0.05*M_max``, ``W/W_vk - 1`` = -43.6 %, -12.6 %,
-    -1.21 % and -0.313 % with 16, 64, 256 and 512 elements, converging as
-    ``num_elements**-2``.
+    1e-9``.
     """
     m, U, W = run_cantilever_end_moment('BeamC', num_elements)
     U_vk, W_vk = von_karman_tip(m)
@@ -349,9 +341,7 @@ def test_cantilever_end_moment_beamlr_no_membrane_locking(num_elements):
     Measured with 4, 16 and 64 elements: ``W/W_vk - 1`` = 3.9e-12, -7.7e-11
     and -5.7e-10, at the level of the convergence criterion of the
     Newton-Raphson increments, ``relTOL = 1e-9``; ``U/U_vk - 1`` =
-    -1.5625e-2, -9.766e-4 and -6.104e-5, the closed form above. Up to pyfe3d
-    0.11 BeamLR took the slopes from the rotations, linear in the element,
-    and locked as BeamC did: ``W/W_vk - 1`` = -43.6 % with 16 elements.
+    -1.5625e-2, -9.766e-4 and -6.104e-5, the closed form above.
     """
     m, U, W = run_cantilever_end_moment('BeamLR', num_elements, inc=0.25,
                                         m_max=0.05)
@@ -581,13 +571,11 @@ def test_hinged_roof_thick():
 
     (Tria3DSG: 2 x n x n elements.) Quad4R and Tria3DSG converge to the
     same path: the upper limit load within 0.1 % of Table 9a, the lower one
-    about 3.5 % below it, Table 9a being itself a 16x16 S4R result. Up to
-    0.11, with the hourglass stiffnesses of Brockman (1987), Quad4R was 6.7
-    to 9.1 % stiffer at the first point, with the upper limit loads 0.5 to
-    0.7 % above Table 9a and the lower ones +1.6 to -1.4 %; since 0.12.0 the
-    bending and the transverse shear have the physical stabilisation of
-    Belytschko and Leviathan (1994), see ``test_constant_twist_patch_test``
-    in ``tests/test_quad4r_hourglass_control.py``.
+    about 3.5 % below it, Table 9a being itself a 16x16 S4R result. The
+    bending and the transverse shear of Quad4R have the physical
+    stabilisation of Belytschko and Leviathan (1994), see
+    ``test_constant_twist_patch_test`` in
+    ``tests/test_quad4r_hourglass_control.py``.
 
     Following the policy of the tests whose reference is reached only on
     fine meshes, this test uses the 8x8 mesh and compares the two limit
@@ -675,8 +663,7 @@ def test_hinged_roof_thin_snap_back():
     converges to ``relTOL = 1e-9``; two runs on one machine are identical to
     the bit). The upper limit load is also checked against Table 9d with the
     tolerance of grade A of MacNeal and Harder (1985), p. 14: a normalised
-    error within 2 %. Until 0.12.0 this test used the 24x24 mesh, about 23
-    s.
+    error within 2 %.
     """
     P, W = thin_roof_path()
     assert np.isclose(P[-1], 1.1)
@@ -707,15 +694,11 @@ def test_hinged_roof_thin_lower_limit_load():
     -----
     The lower limit load converges to Table 9d, -0.1288 P_max, see the table
     of :func:`test_hinged_roof_thin_snap_back`; Tria3DSG gives -0.12903 with
-    32x32 elements. Up to 0.11 this was an expected failure: Quad4R
-    controlled the hourglass mode of `w` with Brockman's operator, which
-    added 73 to 78 % to the energy of a uniform twist whatever the mesh in
-    the unit of length of this model, and the lower limit load converged to
-    -0.1435 to -0.1440, 11.4 to 11.8 % below Table 9d, from 8x8 to 48x48
-    elements; see ``test_constant_twist_patch_test`` in
-    ``tests/test_quad4r_hourglass_control.py``. Since 0.12.0 the bending and
-    the transverse shear of Quad4R have the physical stabilisation of
-    Belytschko and Leviathan (1994), which passes that patch test.
+    32x32 elements. The bending and the transverse shear of Quad4R have
+    the physical stabilisation of Belytschko and Leviathan (1994), which
+    passes the constant-twist patch test, see
+    ``test_constant_twist_patch_test`` in
+    ``tests/test_quad4r_hourglass_control.py``.
 
     With the 8x8 mesh and the increments 0.075 of :func:`thin_roof_path`
     the lower limit load is -0.12908, 0.2 % below Table 9d; sampled with the
@@ -742,7 +725,7 @@ def test_hinged_roof_hourglass_sensitivity():
 
     Notes
     -----
-    Since 0.12.0 the bending and the transverse shear of Quad4R have the
+    The bending and the transverse shear of Quad4R have the
     physical stabilisation of Belytschko and Leviathan (1994), which has no
     parameter; ``hgfactor_physical`` multiplies it. The deflection grows
     monotonically as ``hgfactor_physical`` decreases from 1 to 0.002, by
@@ -766,12 +749,7 @@ def test_hinged_roof_hourglass_sensitivity():
     128x128 elements, 0.061 % (Tria3DSG) and 0.085 % (Quad4R), the residual
     transverse shear flexibility of the stiffnesses x100. With the actual
     transverse shear stiffness Quad4R with the default is 1.05, 0.51 and
-    0.34 % more flexible than Tria3DSG on the three meshes. Up to 0.11,
-    with the hourglass stiffnesses of Brockman (1987), Quad4R with the
-    default was 6.4 to 7.1 % stiffer than Tria3DSG and 6.95, 6.35 and 5.95 %
-    stiffer than the Ritz solution with the shear x100, an excess that
-    refinement did not remove, see ``test_constant_twist_patch_test`` in
-    ``tests/test_quad4r_hourglass_control.py``.
+    0.34 % more flexible than Tria3DSG on the three meshes.
 
     Following the policy of the tests whose reference is reached only on
     fine meshes, this test uses the 16x16 meshes and compares the ten

@@ -51,10 +51,8 @@ def test_static_plate_quad_point_load(plot=False):
     With 18x30 elements the deflection at the centre is 0.35 % below the
     reference, identical to the case without a material direction, measured on
     2026-10-29 with the physical stabilisation of the bending and of the
-    transverse shear of Belytschko and Leviathan (1994) [2]_ that Quad4R uses since
-    0.12.0, see :mod:`pyfe3d.quad4r`; up to 0.11, with the hourglass
-    stiffnesses of Brockman (1987) [3]_, 0.27 %, with 6x10 elements 1.77 %, with
-    12x20 elements 0.57 %, with 24x40 elements 0.15 %.
+    transverse shear of Belytschko and Leviathan (1994) [2]_ that Quad4R
+    uses, see :mod:`pyfe3d.quad4r`.
 
     References
     ----------
@@ -64,9 +62,6 @@ def test_static_plate_quad_point_load(plot=False):
        4-node shell element with one point quadrature, Computer Methods in
        Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
        https://doi.org/10.1016/0045-7825(94)90052-3
-    .. [3] Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
-       International Journal for Numerical Methods in Engineering, 24(12),
-       2343-2356, 1987. https://doi.org/10.1002/nme.1620241208
 
     """
     data = Quad4RData()

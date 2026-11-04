@@ -169,17 +169,17 @@ def test_fung_kaplan_beam_arch(method, convergence_criterion, monkeypatch):
 
     the upper limit load converging to the sampling difference above, the
     lower one to about -0.002, which does not depend on the increment.
-    Before the element-averaged axial strain of BeamC (see its notes), the
-    lower limit load of 40 elements was +0.0406 from that of Fung and
-    Kaplan, the membrane locking of the pointwise strain. Following the
+    With the pointwise axial strain instead of the element-averaged one of
+    BeamC (see its notes), the lower limit load of 40 elements is +0.0406
+    from that of Fung and Kaplan, the membrane locking of the pointwise
+    strain. Following the
     policy of the tests whose reference is reached only on fine meshes, the
     limit loads of the 40 elements are compared with the values
     pre-determined by this same test, 5.0842965731 and -0.6936707458, with
     ``rtol = 1e-6`` (the methods and criteria differ by 2e-10 relative),
     and with Fung and Kaplan [1]_ with grade A of MacNeal and Harder [2]_,
     p. 14, as bound (at most 2 %): 0.24 % measured for the upper limit load
-    and 0.38 % for the lower one. Until 0.12.0 both were compared with
-    ``0.01*R_cr = 0.051``.
+    and 0.38 % for the lower one.
 
     References
     ----------

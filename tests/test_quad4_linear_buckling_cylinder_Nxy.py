@@ -112,7 +112,7 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
 
     Rows 1 and 2 of the first table are those of the default ``shear_model
     = 1`` of Quad4, the assumed transverse shear strains of the MITC4
-    element, since 0.12.0 (measured on 2026-10-30); the other rows, and the
+    element (measured on 2026-10-30); the other rows, and the
     second table, were measured with the one-point transverse shear,
     ``shear_model = 0``, which gave 18773.5 and 10788.3 Nm with
     ``refinement=1`` and 17162.0 and 9543.3 Nm with ``refinement=2``, 0.005
@@ -308,16 +308,15 @@ def test_linear_buckling_cylinder_Nxy(mode=0, plot_pyvista=False, refinement=1):
         # NOTE removing the rigid axial translation with a single node
         middle = np.where(isclose(z, L/2))[0]
         bk[2::DOF][middle[0]] = True
-        # NOTE earlier versions of this test held the axial displacement of the
-        #      whole ring of nodes at mid-length and both rotations at the
-        #      edges, which is not CC2. That ring constraint stiffens the
-        #      torsional mode, whose buckles are inclined helices crossing
-        #      the mid-length: at ntheta = 80 it raised Tcr of Z11 from
-        #      -18980.9 to -22193.3 Nm, +16.9 per cent, and holding the
-        #      rotation about the radial direction at the edges added another
-        #      1.1 per cent. Together they were the 16 per cent (Z11) and
-        #      23 per cent (Z33) by which the converged values exceeded
-        #      Fig. 13, -19214.0 and -11110.4 Nm at ntheta = 320
+        # NOTE holding the axial displacement of the whole ring of nodes at
+        #      mid-length and both rotations at the edges is not CC2. That
+        #      ring constraint stiffens the torsional mode, whose buckles are
+        #      inclined helices crossing the mid-length: at ntheta = 80 it
+        #      raised Tcr of Z11 from -18980.9 to -22193.3 Nm, +16.9 per
+        #      cent, and holding the rotation about the radial direction at
+        #      the edges added another 1.1 per cent. Together they made the
+        #      converged values exceed Fig. 13 by 16 per cent (Z11) and 23
+        #      per cent (Z33), -19214.0 and -11110.4 Nm at ntheta = 320
 
         bu = ~bk
 
@@ -425,7 +424,7 @@ def test_linear_buckling_cylinder_torsion_isotropic(refinement=1):
         extrapolated                              0.984
 
     Rows 1 and 2 are those of the default ``shear_model = 1`` of Quad4, the
-    assumed transverse shear strains of the MITC4 element, since 0.12.0
+    assumed transverse shear strains of the MITC4 element
     (measured on 2026-10-30); the other rows were measured with the
     one-point transverse shear, ``shear_model = 0``, which gave 613557.8 and
     589288.8 N/m for rows 1 and 2, 0.012 and 0.009 per cent less. The

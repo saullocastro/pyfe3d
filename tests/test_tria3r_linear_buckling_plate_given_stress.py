@@ -42,7 +42,7 @@ def test_tria3r_linear_buckling_plate_given_stress(mode=0, refinement=1):
     ``x``: ``N_xx,cr = -k_c*pi**2*D/b**2``, ``k_c = (m*b/a + a/(m*b))**2``.
     With ``b/h = 250`` the Mindlin plate buckles 0.01 % below it.
 
-    With the default transverse shear since 0.12.0, the discrete shear gap
+    With the default transverse shear, the discrete shear gap
     field of ``shear_model = 1``, the buckling load converges to the
     reference, measured with this test (quadrilaterals split in two
     triangles, time on one thread):
@@ -58,9 +58,7 @@ def test_tria3r_linear_buckling_plate_given_stress(mode=0, refinement=1):
     with ``rtol=1e-4`` for the round-off of the eigensolver, and with grade B
     of MacNeal and Harder [2]_, p. 14, as the bound against the
     reference; from ``refinement=2`` grade A is asserted against the
-    reference alone. Before 0.12.0, with the centroid-sampled shear,
-    ``alpha_shear_locking = 0.7`` and the unrotated load, the load was 4.8 %
-    above the reference with 30x14 elements and 11.8 % above with 92x44.
+    reference alone.
 
     References
     ----------
@@ -204,7 +202,7 @@ def test_tria3r_linear_buckling_plate_given_stress(mode=0, refinement=1):
         #      triangle follows its edge 1-2, along the diagonal for the
         #      second triangle of each quadrilateral, so the global Nxx is
         #      rotated: the global x axis has the components (r11, r12) in
-        #      the element axes. Before 0.12.0 it was passed unrotated
+        #      the element axes
         ax = tria.r11
         ay = tria.r12
         tria.update_KG_given_stress(Nxx*ax*ax, Nxx*ay*ay, Nxx*ax*ay, KGr,

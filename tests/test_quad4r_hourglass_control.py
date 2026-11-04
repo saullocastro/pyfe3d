@@ -64,8 +64,8 @@ the quantities being verified are
   their mean, `w`, all of which reduce to Eq. (16) for an isotropic plate,
   see :func:`test_laminate_hourglass_stiffnesses_use_membrane_and_bending_moduli`;
 
-* the transverse displacement `w` is not stabilised with Eq. (16b) since
-  0.12.0: the transverse shear of :class:`pyfe3d.Quad4R` is that of
+* the transverse displacement `w` is not stabilised with Eq. (16b): the
+  transverse shear of :class:`pyfe3d.Quad4R` is that of
   Belytschko and Leviathan [4]_, the constant part of the assumed strains
   of Dvorkin and Bathe (1984) and the physical stabilisation of their
   nonconstant part, which controls the hourglass mode of `w` and passes the
@@ -123,7 +123,7 @@ calibration of Eq. (16):
    element gives a rigid-body rotation and a uniform strain state a spurious
    energy and fails the constant-strain patch test.
 
-   Since 0.10.0 :class:`pyfe3d.Quad4R` therefore applies the two correction
+   :class:`pyfe3d.Quad4R` therefore applies the two correction
    terms of Eq. (14), scaled by the normalisation of Eq. (15) so that the
    generalized stiffnesses of Eq. (16) keep their calibration. The
    correction changes nothing on a parallelogram, where `\boldsymbol{h}^\top
@@ -131,7 +131,7 @@ calibration of Eq. (16):
    the energy of the five hourglass patterns on any shape, because the
    centroidal sums `\boldsymbol{h}^\top \boldsymbol{b}_1` and `\boldsymbol{h}^\top \boldsymbol{b}_2`
    vanish identically. What it does change is that the hourglass strains are
-   now orthogonal to the rigid-body motions and to the uniform strain states
+   orthogonal to the rigid-body motions and to the uniform strain states
    on any shape, see
    :func:`test_hourglass_strains_orthogonal_to_linear_fields`,
    :func:`test_rigid_body_rotation_energy` and
@@ -545,12 +545,12 @@ def test_twisting_mode_is_stabilised():
           + \frac{1}{4}(\boldsymbol{s}^\top \boldsymbol{x}) y
         \quad , \quad \theta_x = x \quad , \quad \theta_y = y
 
-    Since 0.12.0 the transverse
+    The transverse
     shear of :class:`pyfe3d.Quad4R` is that of Belytschko and Leviathan
     (1994), whose stabilisation of the nonconstant part of the assumed
     shear strains gives the mode energy: `r_x = x` and `r_y = y` vary the
     covariant shear strains along the element, Eqs. (3.38)-(3.39), so a
-    single element is no longer singular in it. Without the stabilisation,
+    single element is not singular in it. Without the stabilisation,
     ``hgfactor = 0``, it is a zero-energy mode, as in Brockman's element.
 
     Brockman measures the transverse shear as `\boldsymbol{\nabla} w -
@@ -1058,13 +1058,12 @@ def test_one_element_wide_strip_in_torsion():
 
     Notes
     -----
-    Up to 0.11 Quad4R controlled the hourglass mode of `w` with Brockman's
-    coefficient `E^{(h)}_w`, which also stiffened a uniform twist, see
+    Brockman's coefficient `E^{(h)}_w`, applied to the hourglass mode of
+    `w`, also stiffens a uniform twist, see
     :func:`test_constant_twist_patch_test`: on a single element across the
-    width the twist was the hourglass pattern `w = xy` and the 6x1 strip
-    gave 4.78 times the reference, grade F. Since 0.12.0 the bending and
-    the transverse shear have the physical stabilisation of Belytschko and
-    Leviathan (1994), and the 6x1 strip gives 0.941 times the reference,
+    width the twist is the hourglass pattern `w = xy`. In Quad4R the bending
+    and the transverse shear have the physical stabilisation of Belytschko
+    and Leviathan (1994) instead, and the 6x1 strip gives 0.941 times the reference,
     grade B, as the QUAD4 of MacNeal and Harder. Tip twist over 0.03208,
     measured on 2026-10-29, the torque applied as the corner forces of this
     test (corner) or as normal forces proportional to the distance from the
@@ -1463,11 +1462,8 @@ def test_bending_patch_test_belytschko_leviathan():
     for the YASE element, both with a constant shear strain that is not
     zero under constant curvature on a non-rectangular element, and 1.00
     for MITC4 and for their element. Quad4R, whose constant transverse shear
-    is that of Dvorkin and Bathe since 0.12.0, passes for any
-    ``hgfactor_physical``; up to 0.11, with the displacement-based shear at the
-    centroid, it gave 0.875, 1.21, 0.98 and 1.20 times the exact `w` of
-    nodes 5 to 8 with ``h = 0.01`` (measured on 2026-10-29 with
-    ``hgfactor_physical = 0``). The full reference is in the module
+    is that of Dvorkin and Bathe, passes for any
+    ``hgfactor_physical``. The full reference is in the module
     documentation.
 
     """

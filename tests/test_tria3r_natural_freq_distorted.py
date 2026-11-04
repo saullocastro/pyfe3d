@@ -41,7 +41,7 @@ def test_tria3r_nat_freq_distorted(plot=False, mode=0, refinement=1):
     ``rho*h``.
 
     The edges are soft simply supported, rotations free. With the default
-    transverse shear since 0.12.0, the discrete shear gap field of
+    transverse shear, the discrete shear gap field of
     ``shear_model = 1``, the error against the reference, measured with
     this test (quadrilaterals split in two triangles, the inner nodes
     distorted with the same seed, time on one thread), is:
@@ -60,9 +60,9 @@ def test_tria3r_nat_freq_distorted(plot=False, mode=0, refinement=1):
     for the round-off of the eigensolver, and with grade B of MacNeal and
     Harder [2]_, p. 14, as the bound against the reference; from
     ``refinement=2`` grade A is asserted against the reference alone.
-    Before 0.12.0, with the centroid-sampled shear and
-    ``alpha_shear_locking = 0.7``, the frequency was 1.65 % above the
-    reference with 8x10 elements and rose to 3.58 % with 16x20 before
+    With the centroid-sampled shear of ``shear_model = 0`` and
+    ``alpha_shear_locking = 0.7``, the frequency is 1.65 % above the
+    reference with 8x10 elements and rises to 3.58 % with 16x20 before
     falling to 1.82 % with 48x60.
 
     References

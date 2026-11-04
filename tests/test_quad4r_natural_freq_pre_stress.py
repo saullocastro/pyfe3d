@@ -38,9 +38,8 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=2):
     With 42x26 elements the frequencies of the three mass matrices are 0.03 to
     0.29 % above the reference, with 20x12 elements 0.21 to 1.39 %, measured on
     2026-10-29 with the physical stabilisation of the bending and of the
-    transverse shear of Belytschko and Leviathan (1994) [2]_ that Quad4R uses since
-    0.12.0, see :mod:`pyfe3d.quad4r`; up to 0.11, with the hourglass
-    stiffnesses of Brockman (1987) [3]_, 0.14 to 0.39 % and 0.77 to 1.95 %.
+    transverse shear of Belytschko and Leviathan (1994) [2]_ that Quad4R
+    uses, see :mod:`pyfe3d.quad4r`.
 
     References
     ----------
@@ -49,9 +48,6 @@ def test_nat_freq_pre_stress(plot=False, mode=0, mtypes=range(3), refinement=2):
        4-node shell element with one point quadrature, Computer Methods in
        Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
        https://doi.org/10.1016/0045-7825(94)90052-3
-    .. [3] Brockman, R. A., Dynamics of the Bilinear Mindlin Plate Element,
-       International Journal for Numerical Methods in Engineering, 24(12),
-       2343-2356, 1987. https://doi.org/10.1002/nme.1620241208
 
     """
     data = Quad4RData()

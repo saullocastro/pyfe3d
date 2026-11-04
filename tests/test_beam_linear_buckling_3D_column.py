@@ -30,10 +30,7 @@ element length: its loads are above it by 1.03e-3, 1.65e-4, 4.11e-5 and
 1.03e-5 with 20, 50, 100 and 200 elements, in both planes and for both
 sections and directions. Its tolerance with 100 elements, 1e-4, is below
 the reduction due to shear deformation, 1.8e-4, which the test therefore
-resolves: up to pyfe3d 0.11, BeamLR took the slopes of its geometric
-stiffness matrix from the rotations, converged to the Euler load of Eq.
-(2-4) instead, and its loads with 100 elements were 2.0e-4 and 7.3e-4
-above Eq. (2-57).
+resolves.
 
 References
 ----------
@@ -187,10 +184,7 @@ def test_shear_flexible_column(name, num_elements, shear_ratio):
     ======  ========  ===========  ===========
 
     The tolerance, 1e-3, is above these errors and two orders of magnitude
-    below the reduction due to shear deformation that the test checks. Up to
-    pyfe3d 0.11, BeamLR took the slopes of its geometric stiffness matrix
-    from the rotations and converged to ``P_e`` instead, 20 % and 60 % above
-    Eq. (2-57).
+    below the reduction due to shear deformation that the test checks.
 
     References
     ----------
