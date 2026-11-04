@@ -50,9 +50,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-# NOTE the excluded page is not part of the documentation; it refers to
-#      the former page of the tutorials
-exclude_patterns = ['documentation_levels.rst']
+exclude_patterns = []
 
 default_role = 'math'
 

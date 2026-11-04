@@ -64,6 +64,7 @@ User guide
     :maxdepth: 1
 
     overview.rst
+    documentation_levels.rst
     conventions.rst
     element_choice.rst
     shell_properties.rst
@@ -101,7 +102,7 @@ Analyses and solvers
 
 .. toctree::
     :maxdepth: 1
-    :caption: Usage examples
+    :caption: Worked examples
 
     notebooks/ex_linear_static.nblink
     notebooks/ex_beam_frame.nblink
@@ -161,6 +162,11 @@ layout of the repository.
 
     installation.rst
     repository_structure.rst
+
+.. toctree::
+    :maxdepth: 1
+    :caption: Changelog
+
     changelog.rst
 
 

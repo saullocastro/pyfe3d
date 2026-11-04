@@ -14,26 +14,32 @@ function does to why it does it without the levels repeating each other.
     * - 1, functional
       - docstrings of the modules, classes, functions and methods, except
         their ``Notes`` and ``References`` sections; comments in the code;
-        docstrings and comments of the tests
+        docstrings and comments of the tests, except their ``Notes`` and
+        ``References``; the ``README.md``
       - what each resource does: a one-line summary, an extended summary
         (what, not why), ``Parameters`` with type, unit, shape and
         default, ``Returns``, ``Raises`` and ``See Also``
     * - 2, theory
-      - the ``Notes`` and ``References`` sections of the docstrings, used
-        only for theory
+      - the ``Notes`` and ``References`` sections of the docstrings of the
+        library and of the tests, used only for theory
       - the theory that each resource implements, local to it: the
         governing equations in the notation of the code, the assumptions
         and limits of validity, the meaning of each parameter in that
         context, the algorithm, and the published sources
-    * - 3, overview
-      - the pages of this documentation, user guide and usage examples
-      - how the pieces of level 2 fit together: the workflow of an
-        analysis, the conventions shared by the modules, the choice of
-        element, with links to the API instead of repeating level 2
+    * - 3, theory in a larger context
+      - the pages of this documentation, under "User guide" and "Analyses
+        and solvers"
+      - the theory written like a book: how the pieces of level 2 fit
+        together, the workflow of an analysis, the conventions shared by
+        the modules, the choice of element, with links to the API instead
+        of repeating level 2
     * - 4, worked examples
-      - the notebooks of the :doc:`tutorials`
+      - the Jupyter notebooks in ``notebooks/`` at the root of the
+        repository, rendered on this site under "Worked examples" and
+        "Tutorials"
       - complete analyses, mostly benchmarks reproduced from the
-        literature, with stored outputs
+        literature, with stored outputs and the results compared with
+        their reference values
 
 The API pages render levels 1 and 2 together. To find the theory of a
 resource, read the ``Notes`` of its docstring; to find how a method fits in
@@ -43,9 +49,10 @@ an analysis, read the pages of level 3, starting from :doc:`overview`.
 The tests
 ---------
 
-The tests in ``tests/`` are part of level 1 and are also usage examples,
-see :doc:`repository_structure`. Each test states in its docstring what it
-verifies and against what:
+The docstrings and comments of the tests in ``tests/`` are part of level 1,
+their ``Notes`` and ``References`` of level 2; the tests are also usage
+examples, see :doc:`repository_structure`. Each test states in its
+docstring what it verifies and against what:
 
 * a published value, a table or an equation of the literature, cited with
   its location, e.g. the buckling load of a simply supported plate of
