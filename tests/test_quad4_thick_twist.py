@@ -20,44 +20,32 @@ strains `\gamma_{xz} = w_{,x} + r_y` and `\gamma_{yz} = w_{,y} - r_x` vanish
 everywhere, but the rule integrates `w_{,x}^2 = \kappa^2 y^2` with two-by-two
 and the terms that cancel it at the centroid only, storing `A_{55}
 \ell^4 \kappa^2/12` in a square element of side `\ell`, i.e. `(5/12)(\ell/h)^2`
-times its twist energy for an isotropic plate, 42 % at the gate. Measured
-with that rule::
+times its twist energy for an isotropic plate, 42 % at the gate, such that
+a mesh refined across the gate would become abruptly stiffer in torsion.
+:class:`pyfe3d.Quad4` uses instead, for `h/\ell \ge 1`, the assumed
+transverse shear strains of the MITC4 element of Dvorkin and Bathe (1984)
+and Bathe and Dvorkin (1985); with ``shear_model = 0`` its thin elements,
+`h/\ell < 1`, keep the one-point rule. With the default ``shear_model =
+1`` the thin elements take the assumed strains as well and there is no
+gate; the tests below check both.
 
-    h/l       U_twist/U_exact
-    0.99         1.00000
-    1.00         1.41667
-    1.20         1.28935
-    2.00         1.10417
-
-With that rule a mesh refined across the gate becomes abruptly stiffer in
-torsion.
 The tip twist (x100) of the isotropic I-beam of Yu et al. (2005), Table 5,
 as a cantilever of length 10 under a unit tip torque, meshed with 20 + 20
-elements across the flanges and 20 along the web, was 3.005, 2.764 and 2.368
-with 100, 150 and 200 elements along the length, the web and then the
-flanges crossing `h/\ell = 1`. :class:`pyfe3d.Quad4` uses
-instead, for `h/\ell \ge 1`, the assumed transverse shear strains of the
-MITC4 element of Dvorkin and Bathe (1984) and Bathe and Dvorkin (1985),
-with which the I-beam gives 3.005, 3.005 and 2.999 with ``shear_model =
-0``, whose thin elements, `h/\ell < 1`, keep the one-point rule. With the
-default ``shear_model = 1`` the thin elements take the assumed strains as
-well and there is no gate; the tests below check both.
-
-How the torque was applied and the twist taken for these values is not
-recorded. With the walls at their mid-planes (flanges at `z = \pm 0.23`),
-`E = 10^7`, `\nu = 0.3`, the clamped root, the unit torque applied as
-moments about the beam axis at the tip nodes, uniform per unit length of
-the contour, and the twist taken as the mean rotation about the axis of
-the tip nodes, the same meshes give, measured on 2026-11-04 (x100, 100,
-150 and 200 elements along the length)::
+elements across the flanges and 20 along the web, with the walls at their
+mid-planes (flanges at `z = \pm 0.23`), `E = 10^7`, `\nu = 0.3`, the
+clamped root, the unit torque applied as moments about the beam axis at the
+tip nodes, uniform per unit length of the contour, and the twist taken as
+the mean rotation about the axis of the tip nodes, is, with 100, 150 and
+200 elements along the length (with ``shear_model = 0``, the web and then
+the flanges crossing `h/\ell = 1`)::
 
     Quad4, shear_model = 0   2.9995  2.9983  2.9906
     Quad4, default           2.9881  2.9896  2.9906
     Quad4R                   2.9853  2.9881  2.9897
     Tria3DSG                 2.9578  2.9723  2.9788
 
-within 0.3 % of the Quad4 values above, the Tria3DSG mesh splitting each
-quadrilateral along its diagonal from the first node.
+the Tria3DSG mesh splitting each quadrilateral along its diagonal from the
+first node.
 
 References
 ----------
@@ -281,12 +269,9 @@ def test_strip_torsion_is_continuous_across_the_gate():
     14, `h/\ell = 1.12`: 0.048122 and 0.048278 with the default
     ``shear_model = 1``, the assumed strains of the MITC4 element on both
     meshes; 0.048880 and 0.048278 with ``shear_model = 0``, one point for
-    the thin elements; 0.048880 and 0.036544 with the modified one-point
-    shear rule of Hughes et al. (1977) above the gate, whose
-    spurious twist stiffness made the finer mesh 25 % stiffer. Continuity
-    across the gate is asserted within 2 % for both values of
-    ``shear_model``, the grade A of MacNeal and Harder (1985), see below;
-    that rule fails it by 25 %.
+    the thin elements. Continuity across the gate is asserted within 2 %
+    for both values of ``shear_model``, the grade A of MacNeal and Harder
+    (1985), see below.
 
     The reference is the Saint-Venant twist rate `\theta' = T/(G J)` of the
     `b \times h` rectangle, `b/h = 12.5`, with the series of
