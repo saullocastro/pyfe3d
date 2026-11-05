@@ -104,8 +104,8 @@ cdef class BeamProp:
     with the values of ``G`` and ``J`` at the time of reading. Once set, the
     attribute keeps its own value, independently of ``G`` and ``J``, until
     it is deleted, e.g. ``del prop.G12``, which makes it follow ``G`` again.
-    A property that sets only ``G`` and ``J`` gives the same matrices as in
-    the versions of pyfe3d without ``G12``, ``G13`` and ``GJ``.
+    A property that sets only ``G`` and ``J`` uses ``G`` in the two
+    transverse shear planes and ``G*J`` in torsion.
 
     The elements read the stiffness of the cross section through the
     sectional stiffness matrix ``C``, see the Notes. ``C`` follows the 11
@@ -114,13 +114,10 @@ cdef class BeamProp:
     returns the matrix built from them. Once set, ``C`` keeps its own 21
     independent entries and the elements no longer read the 11 attributes,
     until it is deleted, ``del prop.C``. A property that does not set ``C``
-    gives the same matrices as the versions of pyfe3d without ``C``, to
-    round-off.
+    gives the matrices of the 11 stiffness attributes.
 
-    ``C`` must be positive semi-definite: the strain energy per unit length
-    `\frac{1}{2} \boldsymbol{\epsilon}^\top \boldsymbol{C}
-    \boldsymbol{\epsilon}`, see the Notes, must not be negative for any
-    strains. :class:`.BeamC` and :class:`.BeamLR` check it each time one of
+    ``C`` must be positive semi-definite: the strain energy per unit length,
+    see the Notes, must not be negative for any strains. :class:`.BeamC` and :class:`.BeamLR` check it each time one of
     their ``update_*`` methods reads ``C``, set or built from the 11
     attributes, and raise ``ValueError`` for a negative diagonal entry, a
     zero diagonal entry with a non-zero entry in its row, or a ``C`` whose
@@ -200,6 +197,23 @@ cdef class BeamProp:
         any, must not exceed ``1e-10`` times its largest entry; the
         symmetric part is stored. It must be positive semi-definite, see
         above.
+
+    Examples
+    --------
+    A steel square section of side ``0.05``, in SI units:
+
+    >>> from pyfe3d.beamprop import BeamProp
+    >>> prop = BeamProp()
+    >>> prop.A = 0.05*0.05
+    >>> prop.E = 203e9
+    >>> prop.G = 78e9
+    >>> prop.Iyy = prop.Izz = 0.05**4/12
+    >>> prop.J = prop.Iyy + prop.Izz
+    >>> prop.intrho = 7830*prop.A
+    >>> prop.C.shape
+    (6, 6)
+    >>> float(prop.G12)
+    78000000000.0
 
     Notes
     -----
@@ -425,53 +439,144 @@ cdef class BeamProp:
                     'Izz and Iyz, see BeamProp' % element)
         return 0
 
-    # NOTE the properties have no docstring, they are documented in the
-    #      Attributes of the class, as the public attributes
+    # NOTE the properties are also documented in the Attributes of the class
 
     @property
     def G12(BeamProp self):
+        """Return the transverse shear modulus ``G12`` of the element plane `xy`
+
+        The value read by the elements: the value set, or ``G`` when ``G12`` is not set.
+
+        Returns
+        -------
+        G12 : float
+            The transverse shear modulus ``G12`` of the element plane `xy`, force per unit area.
+
+        """
         return self.get_G12()
 
     @G12.setter
     def G12(BeamProp self, double value):
+        """Set the transverse shear modulus ``G12`` of the element plane `xy`
+
+        The value is kept independently of ``G`` and ``J`` until the attribute
+        is deleted.
+
+        Parameters
+        ----------
+        value : float
+            The transverse shear modulus ``G12`` of the element plane `xy`, force per unit area.
+
+        """
         self._G12 = value
         self._G12_given = True
 
     @G12.deleter
     def G12(BeamProp self):
+        """Delete the value set for the transverse shear modulus ``G12`` of the element plane `xy`
+
+        After deletion, reading ``G12`` returns ``G`` when ``G12`` is not set.
+
+        """
         self._G12 = 0
         self._G12_given = False
 
     @property
     def G13(BeamProp self):
+        """Return the transverse shear modulus ``G13`` of the element plane `xz`
+
+        The value read by the elements: the value set, or ``G`` when ``G13`` is not set.
+
+        Returns
+        -------
+        G13 : float
+            The transverse shear modulus ``G13`` of the element plane `xz`, force per unit area.
+
+        """
         return self.get_G13()
 
     @G13.setter
     def G13(BeamProp self, double value):
+        """Set the transverse shear modulus ``G13`` of the element plane `xz`
+
+        The value is kept independently of ``G`` and ``J`` until the attribute
+        is deleted.
+
+        Parameters
+        ----------
+        value : float
+            The transverse shear modulus ``G13`` of the element plane `xz`, force per unit area.
+
+        """
         self._G13 = value
         self._G13_given = True
 
     @G13.deleter
     def G13(BeamProp self):
+        """Delete the value set for the transverse shear modulus ``G13`` of the element plane `xz`
+
+        After deletion, reading ``G13`` returns ``G`` when ``G13`` is not set.
+
+        """
         self._G13 = 0
         self._G13_given = False
 
     @property
     def GJ(BeamProp self):
+        """Return the torsional stiffness ``GJ``
+
+        The value read by the elements: the value set, or ``G*J`` when ``GJ`` is not set, with the values of ``G`` and ``J`` at the time of reading.
+
+        Returns
+        -------
+        GJ : float
+            The torsional stiffness ``GJ``, force times length squared.
+
+        """
         return self.get_GJ()
 
     @GJ.setter
     def GJ(BeamProp self, double value):
+        """Set the torsional stiffness ``GJ``
+
+        The value is kept independently of ``G`` and ``J`` until the attribute
+        is deleted.
+
+        Parameters
+        ----------
+        value : float
+            The torsional stiffness ``GJ``, force times length squared.
+
+        """
         self._GJ = value
         self._GJ_given = True
 
     @GJ.deleter
     def GJ(BeamProp self):
+        """Delete the value set for the torsional stiffness ``GJ``
+
+        After deletion, reading ``GJ`` returns ``G*J`` when ``GJ`` is not set, with the values of ``G`` and ``J`` at the time of reading.
+
+        """
         self._GJ = 0
         self._GJ_given = False
 
     @property
     def C(BeamProp self):
+        """Return the sectional stiffness matrix ``C``
+
+        The matrix read by the elements: the matrix set, or the matrix built
+        from the 11 stiffness attributes ``A``, ``E``, ``G12``, ``G13``, ``GJ``,
+        ``Ay``, ``Az``, ``Iyy``, ``Izz`` and ``Iyz`` when ``C`` is not set. A
+        copy is returned: changing it does not change the property.
+
+        Returns
+        -------
+        C : np.ndarray
+            Symmetric matrix of shape ``(6, 6)``, in the order of the strains
+            and the dimensions given in the attribute ``C`` of the class.
+
+        """
         cdef double Cv[36]
         cdef int i
         self.get_C(Cv)
@@ -482,6 +587,25 @@ cdef class BeamProp:
 
     @C.setter
     def C(BeamProp self, value):
+        """Set the sectional stiffness matrix ``C``
+
+        The symmetric part of ``value`` is stored and read by the elements in
+        place of the 11 stiffness attributes until ``C`` is deleted.
+
+        Parameters
+        ----------
+        value : array-like
+            Matrix of shape ``(6, 6)``, finite, symmetric to ``1e-10`` times its
+            largest entry, in the order of the strains and the dimensions given
+            in the attribute ``C`` of the class.
+
+        Raises
+        ------
+        ValueError
+            If ``value`` does not have shape ``(6, 6)``, has a non-finite entry
+            or is not symmetric.
+
+        """
         cdef int i, j
         Cin = np.array(value, dtype=np.float64)
         if Cin.shape != (6, 6):
@@ -498,6 +622,12 @@ cdef class BeamProp:
 
     @C.deleter
     def C(BeamProp self):
+        """Delete the sectional stiffness matrix set for ``C``
+
+        After deletion, reading ``C`` returns the matrix built from the 11
+        stiffness attributes, and the elements read these attributes again.
+
+        """
         cdef int i
         for i in range(36):
             self._C[i] = 0

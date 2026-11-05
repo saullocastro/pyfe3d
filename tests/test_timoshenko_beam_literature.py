@@ -1,37 +1,51 @@
 r"""Timoshenko beam benchmarks from the literature, for BeamC and BeamLR
 
-1. Bathe, K. J., Finite Element Procedures, 2nd ed., K. J. Bathe, Watertown,
-   MA, 2014 (ISBN 978-0-9790049-5-7), Section 1.2, p. 5, Eq. (1.2) and
-   Fig. 1.2(b):
-   tip deflection of a cantilever with shear deformation,
-   ``delta = W*L**3/(3*E*I) + W*L/(5/6*A*G) = 0.053 cm`` for ``L = 28 cm``,
-   ``h = 6 cm``, ``t = 0.4 cm``, ``E = 2e7 N/cm2``, ``nu = 0.3``,
-   ``W = 1000 N``.
+The tip deflection of a cantilever with shear deformation is checked against
+Bathe (2014), Section 1.2, Eq. (1.2) and Fig. 1.2(b), and against the
+analytical deflection of a cantilever as long as deep; the frequency
+coefficients of a cantilever with shear deformation and rotary inertia are
+checked against Petyt (2010), Section 3.9, Example 3.10 and Table 3.6. BeamC
+is exact with one element for the static cases and reproduces the
+one-element results of Petyt; BeamLR, with linear interpolation and reduced
+integration, only converges to these values with mesh refinement.
 
-2. Petyt, M., Introduction to Finite Element Vibration Analysis, 2nd ed.,
-   Cambridge University Press, 2010, https://doi.org/10.1017/CBO9780511761195,
-   Section 3.9:
+Notes
+-----
+Bathe [1]_, Section 1.2, p. 5, Eq. (1.2) and Fig. 1.2(b), gives the tip
+deflection of a cantilever with shear deformation,
+``delta = W*L**3/(3*E*I) + W*L/(5/6*A*G) = 0.053 cm`` for ``L = 28 cm``,
+``h = 6 cm``, ``t = 0.4 cm``, ``E = 2e7 N/cm2``, ``nu = 0.3``,
+``W = 1000 N``.
 
-   - Eq. (3.236): the shape functions that solve the static equilibrium
-     equations (3.226) and (3.227) of the Timoshenko beam are divided by
-     ``1 + 3*beta``, ``beta = E*I/(kappa*A*G*a**2)`` with ``a = L/2``, i.e.
-     by ``1 + phi``, ``phi = 12*E*I/(kappa*G*A*L**2)``, which is the
-     ``1/(1 - alpha)`` of BeamC only with ``alpha = -phi``;
-   - Example 3.10 and Table 3.6: cantilever with ``r_z/L = 0.08``,
-     ``kappa = 2/3``, ``E/G = 8/3``, with shear deformation and rotary
-     inertia; one element gives the frequency coefficients
-     ``omega*sqrt(rho*A*L**4/(E*I)) = 3.322`` and ``26.569`` (p. 99-100);
-     the exact coefficients are ``3.284, 15.488, 34.301`` and, for ``r_z/L =
-     0.02``, ``3.500, 21.353, 57.474``; three elements give the errors
-     ``0.12, 2.47, 8.80`` and ``0.02, 0.59, 2.37`` per cent (Table 3.6).
+Petyt [2]_, Section 3.9:
+
+- Eq. (3.236): the shape functions that solve the static equilibrium
+  equations (3.226) and (3.227) of the Timoshenko beam are divided by
+  ``1 + 3*beta``, ``beta = E*I/(kappa*A*G*a**2)`` with ``a = L/2``, i.e.
+  by ``1 + phi``, ``phi = 12*E*I/(kappa*G*A*L**2)``, which is the
+  ``1/(1 - alpha)`` of BeamC only with ``alpha = -phi``;
+- Example 3.10 and Table 3.6: cantilever with ``r_z/L = 0.08``,
+  ``kappa = 2/3``, ``E/G = 8/3``, with shear deformation and rotary
+  inertia; one element gives the frequency coefficients
+  ``omega*sqrt(rho*A*L**4/(E*I)) = 3.322`` and ``26.569`` (p. 99-100);
+  the exact coefficients are ``3.284, 15.488, 34.301`` and, for ``r_z/L =
+  0.02``, ``3.500, 21.353, 57.474``; three elements give the errors
+  ``0.12, 2.47, 8.80`` and ``0.02, 0.59, 2.37`` per cent (Table 3.6).
 
 The interdependent interpolation of BeamC solves the static equilibrium
 equations, so that one element is exact for a cantilever under a tip force
-(case 1 and the deep beam) and reproduces the one-element results of Petyt,
-whose element has the same shape functions and the same consistent mass
-matrix with rotary inertia, Eq. (3.237). BeamLR, with linear interpolation
-and reduced integration, only converges to these values with mesh
-refinement.
+(the case of Bathe and the deep beam) and reproduces the one-element results
+of Petyt, whose element has the same shape functions and the same consistent
+mass matrix with rotary inertia, Eq. (3.237) of [2]_.
+
+References
+----------
+.. [1] Bathe, K. J., Finite Element Procedures, 2nd ed., K. J. Bathe,
+   Watertown, MA, 2014 (ISBN 978-0-9790049-5-7).
+.. [2] Petyt, M., Introduction to Finite Element Vibration Analysis, 2nd ed.,
+   Cambridge University Press, 2010.
+   https://doi.org/10.1017/CBO9780511761195
+
 """
 import sys
 sys.path.append('..')
@@ -105,7 +119,7 @@ def bathe_prop():
     prop = BeamProp()
     prop.A = h*t
     prop.E = E
-    # NOTE shear correction factor 5/6 of Eq. (1.2) of Bathe (2014)
+    # NOTE shear correction factor 5/6 of the reference deflection
     prop.G = 5/6*E/(2*(1 + nu))
     prop.Izz = prop.Iyy = t*h**3/12
     prop.J = prop.Izz + prop.Iyy
@@ -119,11 +133,12 @@ def bathe_prop():
     ('BeamLR', 100, 1e-4),
     ])
 def test_bathe_cantilever_shear_deflection(name, num_elements, rtol):
-    L = 28. # cm, L + r_N in Fig. 1.2(b) of Bathe (2014)
+    """Tip deflection with shear deformation against Bathe (2014), Eq. (1.2)"""
+    L = 28. # cm, length L + r_N of the reference cantilever
     W = 1000. # N
     prop = bathe_prop()
     delta = W*cantilever_tip(name, prop, L, num_elements)
-    # Eq. (1.2) of Bathe (2014)
+    # reference deflection with shear deformation
     delta_ref = W*L**3/(3*prop.E*prop.Izz) + W*L/(prop.A*prop.G)
     print(name, num_elements, delta, delta_ref)
     assert np.allclose(delta, delta_ref, rtol=rtol)
@@ -185,7 +200,8 @@ def petyt_coefficients(name, rz_L, num_elements, num_modes=3):
 
 
 def test_petyt_one_element():
-    # Example 3.10 of Petyt (2010), p. 99-100
+    """One BeamC element against Petyt (2010), Example 3.10"""
+    # one-element frequency coefficients of the reference example
     coef = petyt_coefficients('BeamC', 0.08, 1, num_modes=2)
     print(coef)
     # NOTE published with three decimals
@@ -197,8 +213,10 @@ def test_petyt_one_element():
     (0.02, [3.500, 21.353, 57.474], [0.02, 0.59, 2.37]),
     ])
 def test_petyt_table_3_6(rz_L, exact, errors):
+    """Three BeamC elements and converged meshes against Petyt (2010),
+    Table 3.6"""
     exact = np.array(exact)
-    # three elements, Table 3.6 of Petyt (2010)
+    # three elements, errors of the reference table
     coef = petyt_coefficients('BeamC', rz_L, 3)
     err = 100*(coef - exact)/exact
     print('3 elements', coef, err)

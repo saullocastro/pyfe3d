@@ -1,3 +1,11 @@
+r"""Static point load on a simply supported plate modelled with Quad4R,
+against the Navier solution of Timoshenko and Woinowsky-Krieger (1959)
+
+The deflection at the centre is compared with Timoshenko and
+Woinowsky-Krieger (1959), Eq. (147), within 1 per cent, and the internal
+forces with the external forces and the reactions.
+
+"""
 import sys
 sys.path.append('..')
 
@@ -11,12 +19,17 @@ from pyfe3d import Quad4R, Quad4RData, Quad4RProbe, INT, DOUBLE, DOF
 
 def test_static_plate_quad_point_load(plot=False):
     r"""Simply supported rectangular plate, ``a = 3``, ``b = 7``,
-    ``h = 0.005``, under a point load at its centre, with the hourglass
-    factors equal to 0.1
+    ``h = 0.005``, under a point load at its centre, with the default hourglass
+    factors (``hgfactor_membrane = hgfactor_physical = 1``)
 
-    The reference is the Navier solution of Timoshenko, S., and
-    Woinowsky-Krieger, S., Theory of Plates and Shells, 2nd ed., McGraw-Hill,
-    1959, Art. 29, p. 111, Eq. (133), at the centre, summed in Art. 34,
+    The deflection at the centre is compared with the Navier solution of
+    Timoshenko and Woinowsky-Krieger (1959), Eq. (147), with rtol=0.01,
+    and the internal forces of update_fint with the external forces plus
+    the reactions.
+
+    Notes
+    -----
+    The reference is the Navier solution of [1]_, Art. 29, p. 111, Eq. (133), at the centre, summed in Art. 34,
     p. 143, as the single series of Eq. (147),
     ``w_max = alpha*P*a**2/D``, with
     ``alpha = sum((tanh(alpha_m) - alpha_m/cosh(alpha_m)**2)/m**3)/(2*pi**3)``
@@ -35,10 +48,18 @@ def test_static_plate_quad_point_load(plot=False):
 
     With 18x30 elements the deflection at the centre is 0.35 % below the
     reference, measured on 2026-10-29 with the physical stabilisation of the
-    bending and of the transverse shear of Belytschko and Leviathan (1994) that
-    Quad4R uses since 0.12.0, see :mod:`pyfe3d.quad4r`; up to 0.11, with the
-    hourglass stiffnesses of Brockman (1987), 0.27 %, with 6x10 elements
-    1.77 %, with 12x20 elements 0.57 %, with 24x40 elements 0.15 %.
+    bending and of the transverse shear of Belytschko and Leviathan (1994) [2]_ that
+    Quad4R uses, see :mod:`pyfe3d.quad4r`.
+
+    References
+    ----------
+    .. [1] Timoshenko, S., and Woinowsky-Krieger, S., Theory of Plates and
+       Shells, 2nd ed., McGraw-Hill, 1959.
+    .. [2] Belytschko, T., and Leviathan, I., Physical stabilization of the
+       4-node shell element with one point quadrature, Computer Methods in
+       Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
+       https://doi.org/10.1016/0045-7825(94)90052-3
+
     """
     data = Quad4RData()
     probe = Quad4RProbe()
@@ -137,7 +158,8 @@ def test_static_plate_quad_point_load(plot=False):
 
     w = u[2::DOF].reshape(nx, ny).T
 
-    # NOTE Timoshenko and Woinowsky-Krieger (1959), Eq. (147)
+    # NOTE reference deflection at the centre, single series of the docstring
+
     D = E*h**3/(12*(1 - nu**2))
     m = np.arange(1, 80, 2)
     alpha_m = m*np.pi*b/(2*a)

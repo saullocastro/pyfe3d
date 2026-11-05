@@ -3,49 +3,66 @@ Riks' arc-length method
 
 The deflection is prescribed with ``Analysis(..., bu=bu, uk=uk)`` and
 ``calc_fext`` returning zeros, and the reaction is ``calc_fint(u)`` at the
-prescribed dof, see the notebook
-``doc/source/tut-prescribed-displacement-dome-riks.ipynb``. Two cases:
+prescribed dof. The load-deflection paths of two cases are compared with
+literature results:
 
-1. Clamped spherical cap under a central point load, the benchmark of Lyons,
-   P. and Holsgrove, S., Finite Element Benchmarks for 2D Beams and
-   Axisymmetric Shells Involving Geometric Non-Linearity, NAFEMS, 2005,
-   whose reference values are tabulated in the verification model
-   "Spherical Cap with Central Point Load" of the COMSOL Multiphysics 6.4
-   Application Library, Structural Mechanics Module,
-   https://doc.comsol.com/6.4/doc/com.comsol.help.models.sme.spherical_cap_with_central_point_load/models.sme.spherical_cap_with_central_point_load.pdf:
-   radius ``a = 10`` m, thickness ``th = 0.20384`` m, half-angle 45 degrees
-   (p. 2), ``E = 210`` GPa, ``nu = 0.3`` (Parameters 1, p. 9), clamped edge,
-   nondimensional load ``F a/(2 pi E th**3)`` and deflection ``w/th``
-   (Variables, p. 9), reference shell results in Tables 3 and 4, p. 7. One
-   quarter is modelled with :class:`.Tria3R` and symmetry conditions. The
-   elements use the von Kármán strains, valid for moderate rotations: the
-   path agrees with the reference within 5 % up to ``w/th = 6.72``, where
-   the largest rotation of the meridian is about 30 degrees, and departs
-   from it beyond.
+1. Clamped spherical cap under a central point load, the NAFEMS benchmark of
+   Lyons and Holsgrove (2005), reference values as tabulated in the COMSOL
+   verification model "Spherical Cap with Central Point Load"; one quarter
+   modelled with :class:`.Tria3R` and symmetry conditions.
 
 2. Hinged shallow spherical shell on a square base under a central point
-   load, Fig. 17 (p. 33) of Horrigmoe, G. and Bergan, P. G., Nonlinear
-   analysis of free-form shells by flat finite elements, Computer Methods in
-   Applied Mechanics and Engineering, 16(1), 11-35, 1978,
-   https://doi.org/10.1016/0045-7825(78)90030-0, and Fig. 4 (p. 1688) of
-   Bergan, P. G., Horrigmoe, G., Krakeland, B. and Soreide, T. H., Solution
-   techniques for non-linear finite element problems, International Journal
-   for Numerical Methods in Engineering, 12(11), 1677-1696, 1978,
-   https://doi.org/10.1002/nme.1620121106: ``R = 2540`` mm, half-side of
-   the base ``a = 784.9`` mm, thickness ``h = 99.45`` mm, ``E = 68.95``
-   N/mm2, ``nu = 0.3``, all edges hinged and immovable (p. 30 of Horrigmoe
-   and Bergan), compared with the series solution of shallow shell theory of
-   Leicester, R. H., Finite deformations of shallow shells, Journal of the
-   Engineering Mechanics Division, ASCE, 94(EM6), 1409-1423, 1968, read from
-   the figures. One quarter is modelled with :class:`.Tria3R`.
+   load, Horrigmoe and Bergan (1978), Fig. 17, and Bergan et al. (1978), Fig.
+   4, against the series solution of Leicester (1968) read from these
+   figures; one quarter modelled with :class:`.Tria3R`.
 
 Both cases are also traced with the co-rotational kinematics of
 :class:`pyfe3d.corotational.CorotationalModel`, ``kinematics='corotational'``,
 with :class:`.Quad4R`: :func:`run_cap_corotational` and
 :func:`run_leicester_corotational`. The cap is also traced restricted to
 the axisymmetric deformations, a sector of a polar mesh with the nodal dofs
-``u = T q`` of three dofs per ring, :func:`run_cap_axisymmetric`, see the
-notebook ``doc/source/tut-nafems-cap-axisymmetric.ipynb``.
+``u = T q`` of three dofs per ring, :func:`run_cap_axisymmetric`.
+
+Notes
+-----
+Case 1: radius ``a = 10`` m, thickness ``th = 0.20384`` m, half-angle 45
+degrees (p. 2 of the COMSOL model), ``E = 210`` GPa, ``nu = 0.3``
+(Parameters 1, p. 9), clamped edge, nondimensional load ``F a/(2 pi E
+th**3)`` and deflection ``w/th`` (Variables, p. 9), reference shell results
+in Tables 3 and 4, p. 7. The elements use the von Kármán strains, valid for
+moderate rotations: the path agrees with the reference within 5 % up to
+``w/th = 6.72``, where the largest rotation of the meridian is about 30
+degrees, and departs from it beyond.
+
+Case 2: ``R = 2540`` mm, half-side of the base ``a = 784.9`` mm, thickness
+``h = 99.45`` mm, ``E = 68.95`` N/mm2, ``nu = 0.3``, all edges hinged and
+immovable (p. 30 of Horrigmoe and Bergan, 1978); Fig. 17 is on p. 33 of
+Horrigmoe and Bergan (1978) and Fig. 4 on p. 1688 of Bergan et al. (1978).
+The series solution of shallow shell theory of Leicester (1968) and the
+limit loads of the flat triangles of Horrigmoe and Bergan are read from the
+figures, rendered at 400 dpi, as the mean of the two readings.
+
+References
+----------
+Lyons, P., Holsgrove, S., Finite Element Benchmarks for 2D Beams and
+Axisymmetric Shells Involving Geometric Non-Linearity, NAFEMS, 2005.
+
+COMSOL Multiphysics 6.4 Application Library, Structural Mechanics Module,
+Spherical Cap with Central Point Load,
+https://doc.comsol.com/6.4/doc/com.comsol.help.models.sme.spherical_cap_with_central_point_load/models.sme.spherical_cap_with_central_point_load.pdf.
+
+Horrigmoe, G., Bergan, P. G., Nonlinear analysis of free-form shells by
+flat finite elements, Computer Methods in Applied Mechanics and
+Engineering, 16(1), 1978, pp. 11-35,
+https://doi.org/10.1016/0045-7825(78)90030-0.
+
+Bergan, P. G., Horrigmoe, G., Krakeland, B., Soreide, T. H., Solution
+techniques for non-linear finite element problems, International Journal
+for Numerical Methods in Engineering, 12(11), 1978, pp. 1677-1696,
+https://doi.org/10.1002/nme.1620121106.
+
+Leicester, R. H., Finite deformations of shallow shells, Journal of the
+Engineering Mechanics Division, ASCE, 94(EM6), 1968, pp. 1409-1423.
 """
 import sys
 sys.path.append('..')
@@ -71,8 +88,8 @@ from test_solver_nonlinear_static import Model
 CAP = dict(a=10., th=0.20384, E=210e9, nu=0.3, alpha=np.pi/4)
 
 #: Tables 3 and 4, p. 7 of the COMSOL model: reference shell results of
-#: Lyons and Holsgrove (2005), nondimensional load ``F a/(2 pi E th**3)``
-#: and crown deflection ``w/th``, in the order of the path
+#: the NAFEMS benchmark, nondimensional load and crown deflection ``w/th``,
+#: in the order of the path
 TABLE_SHELL_REF = np.array([
     [0.332, 2.326], [0.580, 6.720], [0.994, 13.642], [1.502, 18.487],
     [1.757, 20.887], [1.678, 25.668], [3.705, 28.680]])
@@ -92,26 +109,24 @@ TABLE_SHELL_COMSOL16 = np.array([
 #: its top surface on that arc (Thickness and Offset 1, pp. 13-14)
 FIG3_SHELL_COMSOL16 = np.array([[1.806, 23.057], [1.717, 25.510],
                                 [2.787, 28.454]])
-#: Table 1, p. 6: reference solid results of Lyons and Holsgrove (2005)
+#: Table 1, p. 6: reference solid results of the NAFEMS benchmark
 TABLE_SOLID_REF = np.array([
     [0.320, 2.165], [0.584, 6.769], [0.975, 13.335], [1.624, 19.706],
     [1.808, 22.073], [1.758, 24.398], [1.962, 26.788], [4.699, 29.851]])
 
-#: Fig. 17 of Horrigmoe and Bergan (1978) and Fig. 4 of Bergan et al.
-#: (1978): radius, half-side of the square base, thickness [mm], Young's
+#: Case 2 of the module docstring: radius, half-side of the square base, thickness [mm], Young's
 #: modulus [N/mm2] and Poisson's ratio
 LEICESTER = dict(R=2540., a=784.9, h=99.45, E=68.95, nu=0.3)
-#: Series solution of Leicester (1968), read from Fig. 17 of Horrigmoe and
-#: Bergan (1978) and Fig. 4 of Bergan et al. (1978) rendered at 400 dpi,
-#: the mean of the two readings: central load P [kN] and central deflection
+#: Series solution of case 2, read from the two figures of the module
+#: docstring, the mean of the two readings: central load P [kN] and central deflection
 #: w [mm] of the rising branch, and the upper and lower limit points as
 #: ``(P, w)``; reading uncertainty +-0.4 kN and +-5 mm
 LEICESTER_RISING = np.array([[10., 13.9], [15., 21.2], [20., 29.3],
                              [25., 38.1], [30., 47.6]])
 LEICESTER_UPPER = (49.25, 138.)
 LEICESTER_LOWER = (36.0, 237.)
-#: Limit loads [kN] of the flat triangles of Horrigmoe and Bergan (1978),
-#: read from the same figures, +-0.4 kN
+#: Limit loads [kN] of the flat triangles of case 2, read from the same
+#: figures, +-0.4 kN
 HORRIGMOE_LIMIT_LOADS = (50.2, 38.1)
 
 ELEMENTS = {'Quad4': (Quad4, Quad4Data, Quad4Probe),

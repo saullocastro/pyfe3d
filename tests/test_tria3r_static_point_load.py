@@ -1,3 +1,13 @@
+r"""Static deflection of a simply supported plate of Tria3R under a point
+load, against Timoshenko and Woinowsky-Krieger (1959)
+
+Rectangular plate ``a = 3``, ``b = 7``, each quadrilateral cell split into
+two triangles, with the default discrete shear gap field of Tria3R; the
+centre deflection is checked against the Navier solution of the Kirchhoff
+plate and against a value pre-determined by this test, and the internal
+forces against the external and reaction forces.
+
+"""
 import sys
 sys.path.append('..')
 
@@ -13,15 +23,30 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
     r"""Simply supported rectangular plate, ``a = 3``, ``b = 7``,
     ``h = 0.005``, under a point load at its centre
 
+    The centre deflection is compared with the Navier solution of the
+    Kirchhoff plate, Timoshenko and Woinowsky-Krieger (1959), Eq. (147), and,
+    for ``refinement=1``, with a value pre-determined by this test; the
+    internal forces are checked against the external and reaction forces.
+
+    Notes
+    -----
     The exact deflection at the centre of the Kirchhoff plate is
-    ``6.5986e-5``, from the Navier solution of Timoshenko, S., and
-    Woinowsky-Krieger, S., Theory of Plates and Shells, 2nd ed., McGraw-Hill,
-    1959, Art. 29, p. 111, Eq. (133), summed in Art. 34, p. 143, Eq. (147),
-    see :func:`test_quad4r_static_point_load.test_static_plate_quad_point_load`,
+    ``6.5986e-5``, from the Navier solution of Timoshenko and
+    Woinowsky-Krieger [1]_, Art. 29, p. 111, Eq. (133), summed in Art. 34,
+    p. 143, Eq. (147),
+
+    .. math::
+        w_{max} = \frac{P a^2}{2 \pi^3 D} \sum_{m = 1, 3, 5, \ldots}
+            \frac{1}{m^3} \left( \tanh \alpha_m
+            - \frac{\alpha_m}{\cosh^2 \alpha_m} \right), \qquad
+        \alpha_m = \frac{m \pi b}{2 a}
+
+    as evaluated in the code, see
+    :func:`test_quad4r_static_point_load.test_static_plate_quad_point_load`,
     where the transverse shear deflection of the Mindlin plate is shown to be
     negligible here.
 
-    With the default transverse shear since 0.12.0, the discrete shear gap
+    With the default transverse shear, the discrete shear gap
     field of ``shear_model = 1``, the deflection converges to that
     reference from below, measured with this test (``b/h = 1400``,
     quadrilaterals split in two triangles, time on one thread):
@@ -38,12 +63,22 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
     than they are thick. Following the coarse-mesh policy of the tests,
     ``refinement=1`` is compared with the value pre-determined by this test,
     with ``rtol=1e-6`` for the round-off of the direct solution, and with
-    grade D of MacNeal and Harder (1985), p. 14, as the bound against the
+    grade D of MacNeal and Harder [2]_, p. 14, as the bound against the
     reference; finer meshes are graded against the reference alone, B from
-    ``refinement=2`` and A from ``refinement=4``. Before 0.12.0, with the
-    centroid-sampled shear and ``alpha_shear_locking = 0.7``, the deflection
-    was 26.2 % above the reference with 6x10 elements and settled 9.6 %
-    below it with 112x176, see :mod:`pyfe3d.tria3r`.
+    ``refinement=2`` and A from ``refinement=4``. With the centroid-sampled
+    shear of ``shear_model = 0`` and ``alpha_shear_locking = 0.7``, the
+    deflection is 26.2 % above the reference with 6x10 elements and
+    settles 9.6 % below it with 112x176, see :mod:`pyfe3d.tria3r`.
+
+    References
+    ----------
+    .. [1] Timoshenko, S. and Woinowsky-Krieger, S., Theory of Plates and
+       Shells, 2nd ed., McGraw-Hill, 1959.
+    .. [2] MacNeal, R. H. and Harder, R. L., A proposed standard set of
+       problems to test finite element accuracy, Finite Elements in Analysis
+       and Design, 1(1), 3-20, 1985.
+       https://doi.org/10.1016/0168-874X(85)90003-4
+
     """
     data = Tria3RData()
     probe = Tria3RProbe()
@@ -165,7 +200,7 @@ def test_tria3r_static_point_load(plot=False, refinement=1):
 
     w = u[2::DOF].reshape(nx, ny).T
 
-    # NOTE Timoshenko and Woinowsky-Krieger (1959), Eq. (147), b/a = 7/3
+    # NOTE reference centre deflection of the Navier solution, b/a = 7/3
     D = E*h**3/(12*(1 - nu**2))
     wmax_ref = 0.
     for m in range(1, 200, 2):

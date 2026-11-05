@@ -2,7 +2,7 @@ r"""Cost of the constitutive matrices in the element coordinate system
 
 Times :meth:`pyfe3d.shellprop.ShellProp.get_constitutive_element`, called by
 all shell elements, in a compiled loop without Python overhead, for laminates
-with a different number of plies, see ``CHANGELOG.md``. The repository root
+with a different number of plies. The repository root
 must be importable, e.g.::
 
     PYTHONPATH=<path to pyfe3d repository> python bench_constitutive_element.py

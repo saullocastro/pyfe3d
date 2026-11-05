@@ -1,3 +1,13 @@
+r"""Linear buckling of a rotated thick plate modelled with Quad4R, against
+the shear-deformable solution of Seide and Stowell (1950)
+
+A hard simply supported plate with ``a/b = 4`` and ``b/h = 10`` under a
+uniform ``N_xx``, rotated by 25 combinations of pitch and yaw: invariance of
+the buckling load to the orientation, a pre-determined value and the
+Navier solution with transverse shear deformation of Seide and Stowell
+(1950), Eq. (1).
+
+"""
 import sys
 sys.path.append('..')
 
@@ -15,47 +25,56 @@ def test_linear_buckling_plate(plot=False, mode=0):
     ``N_xx``, hard simply supported, 30x14 elements rotated by 25
     combinations of pitch and yaw
 
+    The buckling load must not depend on the orientation of the plate: all
+    orientations are compared with the first with ``rtol=1e-6``. The 30x14
+    meshes are compared with the load pre-determined by this same test with
+    that mesh, -179433757.7496 N, with ``rtol = 1e-4`` for the round-off of
+    the eigenvalue solver, and with the Navier solution of Seide and Stowell
+    (1950), Eq. (1), within grade A of MacNeal and Harder (1985), p. 14 (at
+    most 2 %).
+
+    Notes
+    -----
     The edges are hard simply supported, ``w = 0`` and the rotation about the
     axis of each edge equal to zero, for which the Navier solution of the
     plate with transverse shear deformation is exact. The reference is that
-    solution as given by Seide, P., and Stowell, E. Z., Elastic and Plastic
-    Buckling of Simply Supported Solid-Core Sandwich Plates in Compression,
-    NACA Report 967, 1950, Eq. (1), p. 2, derived in Appendix A, Eq. (A7),
+    solution as given by [1]_, Eq. (1), p. 2, derived in Appendix A, Eq. (A7),
     p. 7: ``N_xx,cr = -k*pi**2*D/b**2``,
     ``k = (m/beta + beta/m)**2/(1 + r*(1 + m**2/beta**2))``,
     ``beta = a/b``, ``r = pi**2*D/(b**2*D_Q)``, with the transverse shear
     stiffness ``D_Q`` of the sandwich core taken equal to ``A55``, minimised
     over ``m``; their governing equation (A5) is that of a plate with
-    transverse shear stiffness ``D_Q``. The same load follows from Wang,
-    C. M., Wang, C. Y., and Reddy, J. N., Exact Solutions for Buckling of
-    Structural Members, CRC Press, 2005, Sec. 4.7.2, Eq. (4.7.17), with the
+    transverse shear stiffness ``D_Q``. The same load follows from [2]_,
+    Sec. 4.7.2, Eq. (4.7.17), with the
     foundation moduli equal to zero and ``gamma = 0`` (page not verified,
     the PDF consulted has no page numbers). It is 5.6 % below the Kirchhoff
-    solution of Leissa, A. W., Vibration of Plates, NASA SP-160, 1969, Sec.
-    10.2.1, p. 277, Eq. (10.46).
+    solution of [3]_, Sec. 10.2.1, p. 277, Eq. (10.46).
 
     The buckling load must not depend on the orientation of the plate. With
     30x14 elements it is 1.41 % above the reference, measured on 2026-10-29
-    with the default stabilisation of Quad4R since 0.12.0, the physical
-    stabilisation of the bending and of the transverse shear of Belytschko
-    and Leviathan (1994), see :mod:`pyfe3d.quad4r`. Up to 0.11, with twice
-    the hourglass stiffnesses of Brockman (1987) for `u`, `v`, `r_x` and
-    `r_y` and four times that of `w`, it was 10.7 % above the reference
-    (-195870012.17574 N), and the flat plate converged to it, 2.64 % above
-    it with 60x28 elements, 1.17 % with 90x42 elements, 0.66 % with 120x56
-    elements; with the soft simple support used before those, rotations
-    free, the 30x14 mesh gave a buckling load 1.8 % below the Kirchhoff value
-    and 4.0 % above the reference.
+    with the default stabilisation of Quad4R, the physical stabilisation of
+    the bending and of the transverse shear of Belytschko and Leviathan
+    (1994) [4]_, see :mod:`pyfe3d.quad4r`.
 
-    The 30x14 meshes are compared with the load pre-determined by this same
-    test with that mesh, -179433757.7496 N, with ``rtol = 1e-4`` for the
-    round-off of the eigenvalue solver, and with the reference within grade
-    A of MacNeal, R. H. and Harder, R. L., A proposed standard set of
-    problems to test finite element accuracy, Finite Elements in Analysis
-    and Design, 1(1), 3-20, 1985,
-    https://doi.org/10.1016/0168-874X(85)90003-4, p. 14 (at most 2 %). The
-    90x42 flat plate, run until 0.12.0 against the reference within 2 %, is
-    no longer run.
+    The grade A, at most 2 %, is that of [5]_, p. 14.
+
+    References
+    ----------
+    .. [1] Seide, P., and Stowell, E. Z., Elastic and Plastic Buckling of
+       Simply Supported Solid-Core Sandwich Plates in Compression, NACA
+       Report 967, 1950.
+    .. [2] Wang, C. M., Wang, C. Y., and Reddy, J. N., Exact Solutions for
+       Buckling of Structural Members, CRC Press, 2005.
+    .. [3] Leissa, A. W., Vibration of Plates, NASA SP-160, 1969.
+    .. [4] Belytschko, T., and Leviathan, I., Physical stabilization of the
+       4-node shell element with one point quadrature, Computer Methods in
+       Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
+       https://doi.org/10.1016/0045-7825(94)90052-3
+    .. [5] MacNeal, R. H. and Harder, R. L., A proposed standard set of
+       problems to test finite element accuracy, Finite Elements in Analysis
+       and Design, 1(1), 3-20, 1985.
+       https://doi.org/10.1016/0168-874X(85)90003-4
+
     """
     thetas = np.linspace(-np.pi, np.pi, 5)
     # NOTE (pitch, yaw, nx, ny)
@@ -141,9 +160,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
             quad.init_k_KG = init_k_KG
             quad.update_rotation_matrix(ncoords_flatten)
             quad.update_probe_xe(ncoords_flatten)
-            # NOTE the default stabilisation: until 0.12.0 this test used
-            #      twice the hourglass stiffnesses of u, v, r_x and r_y and
-            #      four times that of w of Brockman (1987)
+            # NOTE the default stabilisation of Quad4R, see the docstring
             quad.update_KC0(KC0r, KC0c, KC0v, prop)
             quads.append(quad)
             init_k_KC0 += data.KC0_SPARSE_SIZE
@@ -197,7 +214,7 @@ def test_linear_buckling_plate(plot=False, mode=0):
         print('linear buckling P_cr_calc =', P_cr_calc)
         P_cr_calcs.append(P_cr_calc)
 
-    # NOTE Seide and Stowell (1950), Eq. (1), with D_Q = A55
+    # NOTE reference buckling load of the docstring, with D_Q = A55
     D = E*h**3/(12*(1 - nu**2))
     r = np.pi**2*D/(b**2*prop.A55)
     beta = a/b
@@ -208,7 +225,8 @@ def test_linear_buckling_plate(plot=False, mode=0):
     assert np.allclose(P_cr_calcs, P_cr_calcs[0], rtol=1e-6)
     # NOTE value pre-determined with the 30x14 mesh, see the docstring
     assert isclose(P_cr_calcs[0], -179433757.7496, rtol=1e-4)
-    # NOTE grade A against Seide and Stowell (1950)
+    # NOTE grade A against the reference
+
     assert abs(P_cr_calcs[0]/P_cr_theory - 1) <= 0.02
 
     if plot:

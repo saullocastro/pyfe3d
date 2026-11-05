@@ -1,22 +1,36 @@
-r"""Tests for :mod:`pyfe3d.solver`
+r"""Tests for :mod:`pyfe3d.solver`, against the analytical solutions of a simply supported plate
 
-The plate used for the two end-to-end tests is the one of
+The helpers of :mod:`pyfe3d.solver` (diagonal preconditioner, estimate of the
+Cayley shift, positive-definiteness test, verification of the eigenpairs) are
+checked on small diagonal matrices with known eigenvalues and on the plate
+assembled by ``plate_matrices``. The plate is the one of
 ``test_quad4_linear_buckling_plate_rotated.py``, with a finer mesh, so that
-the load multiplier can be compared with the buckling load of Leissa, A. W.,
-Vibration of Plates, NASA SP-160, 1969, Sec. 10.2.1, p. 277, Eq. (10.46),
+the two end-to-end tests compare the load multiplier of
+:func:`.linear_buckling` with the buckling load of Leissa (1969), Sec.
+10.2.1, p. 277, Eq. (10.46), and, with the mass matrix added, the first
+frequency of :func:`.natural_frequency` with the natural frequency of a
+simply supported plate of Leissa (1969), Sec. 4.1, p. 44, Eq. (4.20).
+
+Notes
+-----
+The buckling load of the plate under uniform compression, Eq. (10.46) of
+[1]_, is
 
 .. math::
     k_c = \left(\frac{m b}{a} + \frac{a}{m b}\right)^2
     \quad , \quad
     \sigma_{cr} = -k_c \frac{\pi^2 E}{12(1 - \nu^2)} \frac{h^2}{b^2}
 
-minimised over `m`, and, with the mass matrix added, with the natural
-frequency of a simply supported plate of Leissa (1969), Sec. 4.1, p. 44,
-Eq. (4.20), with `\rho h` the mass per unit area,
+minimised over `m`, and the natural frequency, Eq. (4.20) of [1]_, with
+`\rho h` the mass per unit area, is
 
 .. math::
     \omega_{mn} = \sqrt{\frac{D}{\rho h}}\left[\left(\frac{m \pi}{a}\right)^2
                   + \left(\frac{n \pi}{b}\right)^2\right]
+
+References
+----------
+.. [1] Leissa, A. W., Vibration of Plates, NASA SP-160, 1969.
 
 """
 import sys
@@ -215,8 +229,12 @@ def test_is_positive_definite():
 @pytest.mark.slow
 def test_linear_buckling_plate():
     r"""End-to-end against the buckling load of Leissa (1969), Eq. (10.46),
-    see the module documentation, and against the hand-rolled recipe used
-    elsewhere in this suite
+    and against the hand-rolled recipe used elsewhere in this suite
+
+    Notes
+    -----
+    The reference load is Eq. (10.46) of Leissa (1969), given in the module
+    Notes, minimised over ``m = 1, ..., 20``; the tolerance is 1 %.
 
     With ``b/h = 250`` the Mindlin plate buckles 0.01 % below the reference.
     With the default Quad4, the MITC4 transverse shear and the slopes of
@@ -268,13 +286,18 @@ def test_linear_buckling_plate():
 @pytest.mark.slow
 def test_natural_frequency_plate():
     r"""End-to-end against the natural frequency of a simply supported
-    plate of Leissa (1969), Eq. (4.20), see the module documentation
+    plate of Leissa (1969), Eq. (4.20)
+
+    Notes
+    -----
+    The reference is Eq. (4.20) of Leissa (1969), given in the module Notes,
+    with ``m = n = 1``; the tolerance is 1 %.
 
     With ``b/h = 250`` the frequency of the Mindlin plate, with its rotary
     inertia, is 0.003 % below the reference. With 60x18 elements and the
-    consistent mass matrix the frequency is 0.32 % above it, with 20x6
-    elements 3.05 %, with 40x12 elements 0.74 %, with 80x24 elements
-    0.17 %.
+    consistent mass matrix the frequency is 0.35 % above it, with 20x6
+    elements 3.28 %, with 40x12 elements 0.80 %, with 80x24 elements
+    0.19 %.
     """
     KC0uu, KGuu, Muu = plate_matrices(with_mass=True, nx=61, ny=19)
     omegan, eigvecs = natural_frequency(KC0uu, Muu, num_eigvalues=4)

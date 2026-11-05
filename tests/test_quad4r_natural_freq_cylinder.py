@@ -1,3 +1,7 @@
+r"""Natural frequencies of a circular cylindrical shell modelled with
+Quad4R, against the three-dimensional elasticity solution of Leissa (1973)
+
+"""
 import sys
 sys.path.append('..')
 
@@ -15,8 +19,15 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     r"""Lowest natural frequencies of an isotropic circular cylindrical shell
     supported at both ends by shear diaphragms
 
-    The reference is Leissa, A. W., Vibration of Shells, NASA SP-288, 1973,
-    Sec. 2.3, Table 2.8, p. 55: lowest frequency parameters according to the
+    The frequency parameters Omega of the ``n = 2`` and ``n = 3`` pairs are
+    compared with Leissa (1973), Sec. 2.3, Table 2.8, p. 55, within grade A,
+    2 per cent, of MacNeal and Harder (1985), p. 14, and with the values
+    pre-determined by this same test, with a tolerance for the round-off of
+    other platforms only.
+
+    Notes
+    -----
+    The reference is [1]_, Sec. 2.3, Table 2.8, p. 55: lowest frequency parameters according to the
     three-dimensional theory of elasticity, SD-SD supports, ``nu = 0.3``. For
     ``R/h = 20`` and ``l/mR = 4`` the table gives
 
@@ -36,14 +47,15 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     circumference and nearly square elements::
 
         ntheta    n = 2      n = 3
-           16    +5.30 %   +20.43 %
-           24    +2.43 %    +8.53 %
-           32    +1.24 %    +4.53 %
-           48    +0.52 %    +1.91 %
-           64    +0.27 %    +1.02 %
-           96    +0.09 %    +0.38 %
+           16    +4.78 %   +16.57 %
+           24    +2.19 %    +6.86 %
+           32    +1.13 %    +3.69 %
+           48    +0.48 %    +1.56 %
+           64    +0.25 %    +0.83 %
+           96    +0.09 %    +0.31 %
 
-    so the element converges to the three-dimensional solution: Table 2.6
+    measured on 2026-11-04 with the default stabilisation of Quad4R, see
+    below, so the element converges to the three-dimensional solution: Table 2.6
     (concluded), p. 53, of the same reference puts the Flugge shell theory
     0.40 % above the elasticity value for ``n = 3`` at this geometry, and at
     ``ntheta = 96`` the error is already below that. The same meshes of the
@@ -51,9 +63,7 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     closer, +0.36 and +1.48 % at ``ntheta = 48``.
 
     From ``ntheta = 48``, the default ``refinement=1``, the errors are within
-    grade A, 2 per cent, of MacNeal, R. H., and Harder, R. L., "A proposed
-    standard set of problems to test finite element accuracy", Finite
-    Elements in Analysis and Design, 1(1), 3-20, 1985, p. 14, which the test
+    grade A, 2 per cent, of [2]_, p. 14, which the test
     checks. It also compares Omega with the values pre-determined by this
     same test, with a tolerance for the round-off of other platforms only;
     wall times on a machine shared with other jobs::
@@ -62,17 +72,32 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
             1         48      1440    0.12182617  0.13190618    2 s
             2         96      5760    0.12135407  0.13027999   17 s
 
-    measured on 2026-10-29 with the default stabilisation of Quad4R since
-    0.12.0, the physical stabilisation of the bending and of the transverse shear of Belytschko and Leviathan (1994), +0.48 and +1.56 % and +0.09 and +0.31 % from the table;
-    up to 0.11, with the hourglass stiffnesses of Brockman (1987),
-    0.12188130, 0.13236280, 0.12136325 and 0.13037796, the values of the
-    table of relative errors above, which predates that change.
+    measured on 2026-10-29 with the default stabilisation of Quad4R, the
+    physical stabilisation of the bending and of the transverse shear of
+    Belytschko and Leviathan (1994) [3]_, +0.48 and +1.56 % and +0.09 and
+    +0.31 % from the table.
+
+    In the code, the geometry is that of Table 2.8 of [1]_, ``R/h = 20`` and
+    ``l/mR = 4`` with ``m = 1``, the shear diaphragms those of Eq. (2.33),
+    and the frequency parameter that of Eq. (2.26).
+
+    References
+    ----------
+    .. [1] Leissa, A. W., Vibration of Shells, NASA SP-288, 1973.
+    .. [2] MacNeal, R. H., and Harder, R. L., A proposed standard set of
+       problems to test finite element accuracy, Finite Elements in Analysis
+       and Design, 1(1), 3-20, 1985.
+       https://doi.org/10.1016/0168-874X(85)90003-4
+    .. [3] Belytschko, T., and Leviathan, I., Physical stabilization of the
+       4-node shell element with one point quadrature, Computer Methods in
+       Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
+       https://doi.org/10.1016/0045-7825(94)90052-3
 
     """
     data = Quad4RData()
     probe = Quad4RProbe()
 
-    # NOTE geometry of Table 2.8 of Leissa (1973): R/h = 20 and l/mR = 4 with
+    # NOTE geometry of the reference, see Notes: R/h = 20 and l/mR = 4 with
     #      m = 1. The frequency parameter Omega is dimensionless, so only
     #      R/h, L/R and nu matter; E and rho are arbitrary
     R = 0.250 # m
@@ -162,7 +187,7 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
 
     bk = np.zeros(N, dtype=bool)
 
-    # NOTE shear diaphragms, Eq. (2.33) of Leissa (1973): the radial and the
+    # NOTE shear diaphragms of the reference, see Notes: the radial and the
     #      circumferential displacements vanish at both ends, which for a
     #      cylinder along the global z axis are the global x and y
     #      translations, while the axial displacement and the rotations are
@@ -192,11 +217,11 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     print('natural frequency analysis OK')
     print('omegan =', omegan)
 
-    # NOTE frequency parameter of Leissa (1973), Eq. (2.26)
+    # NOTE frequency parameter of the reference, see Notes
     Omega = omegan*R*np.sqrt(rho*(1 - nu**2)/E)
     print('Omega =', Omega)
 
-    # NOTE Leissa (1973), Table 2.8, R/h = 20, l/mR = 4
+    # NOTE reference frequency parameters, R/h = 20, l/mR = 4, see Notes
     Omega_n2 = 0.121249
     Omega_n3 = 0.129881
 
@@ -206,8 +231,8 @@ def test_linear_nat_freq_cylinder(mode=0, plot_pyvista=False, refinement=1):
     assert isclose(Omega[2], Omega[3], rtol=1e-6)
 
     # NOTE convergence is from above, and from ntheta = 48 the errors of
-    #      the docstring are within grade A of MacNeal and Harder (1985),
-    #      p. 14, 2 per cent
+    #      the docstring are within grade A, 2 per cent, see Notes
+
     assert Omega[0] > Omega_n2
     assert Omega[2] > Omega_n3
     assert isclose(Omega[0], Omega_n2, rtol=0.02)

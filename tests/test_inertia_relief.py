@@ -1,7 +1,21 @@
 r"""Static analysis with inertia relief of unsupported structures
 
 The function :func:`pyfe3d.solver.apply_inertia_relief` is checked with the
-models of the notebook ``doc/source/tut-inertia-relief.ipynb``, built here.
+formulation of Barnett et al. (1995), Eqs. (19) to (24). The first tests
+check the function itself: the errors of its inputs, the rigid-body modes,
+zero accelerations for balanced loads and the invariance of the strains
+under the choice of the reference support. The others check, against
+closed-form solutions: three point masses joined by two springs, with
+balanced and unbalanced loads, a fictitious support and inertia relief; a
+chain of springs and point masses; a free-free BeamC beam under a balanced
+load set, its own weight and axial loads, for which the rigid-body
+accelerations and the reactions of the reference support vanish; and a
+free-free beam and bar under an end force, for which the deflection relative
+to the reference support is the Euler-Bernoulli solution with the inertia
+load linear in `x`.
+
+Notes
+-----
 With the reference (statically determinate) degrees of freedom ``bref``,
 whose values are set to zero and which are part of ``bk``, the rigid-body
 modes are, Barnett et al. (1995), p. 6, Eq. (19),
@@ -19,22 +33,17 @@ reference support are, p. 7, Eqs. (23) and (24),
 `\boldsymbol{K}_{{C0}_{uu}} \boldsymbol{u}_u = \boldsymbol{F}_{{ext}_u} - \boldsymbol{M}_u
 \boldsymbol{\Phi} \ddot{\boldsymbol{\alpha}}`.
 
+The deflection of the free-free beam and bar under an end force is the
+solution of `E I w'''' = q`, with the inertia load `q(x)` linear in
+`x`; the
+closed forms were derived and checked with SymPy.
+
+References
+----------
 Barnett, A. R., Widrick, T. W., Ludwiczak, D. R., 1995, Closed-Form Static
 Analysis with Inertia Relief and Displacement-Dependent Loads Using a
 MSC/NASTRAN DMAP Alter, NASA TM-106836, https://ntrs.nasa.gov/citations/19950013233
 
-The first tests check the function itself: the errors of its inputs, the
-rigid-body modes, zero accelerations for balanced loads and the invariance
-of the strains under the choice of the reference support. The others
-check, against closed-form solutions derived in the notebook: three point
-masses joined by two springs, with balanced and unbalanced loads, a
-fictitious support and inertia relief; a chain of springs and point masses; a
-free-free BeamC beam under a balanced load set, its own weight and axial
-loads, for which the rigid-body accelerations and the reactions of the
-reference support vanish; and a free-free beam and bar under an end force,
-for which the deflection relative to the reference support is the
-Euler-Bernoulli solution of `E I w'''' = q`, with the inertia load `q(x)`
-linear in `x`.
 """
 import sys
 sys.path.append('..')
@@ -344,6 +353,8 @@ def test_three_node_springs():
     r"""Three point masses joined by two springs, `k_1` between the nodes 1
     and 2 and `k_2` between the nodes 2 and 3, free to move only along `x`
 
+    Notes
+    -----
     The stiffness matrix has rank 2 and the null space `\{1, 1, 1\}`. For
     balanced loads, `F_1 + F_2 + F_3 = 0`, the static solution is `u = \{0,
     -F_1/k_1, -F_1/k_1 + F_3/k_2\} + \alpha \{1, 1, 1\}`. The fictitious
@@ -355,7 +366,7 @@ def test_three_node_springs():
     `\boldsymbol{\Phi}_u = \{1, 1\}`, `\ddot{\alpha} = (F_1 + F_2 + F_3)/(m_1
     + m_2 + m_3)`, `u_2 = (F_2 + F_3 - (m_2 + m_3) \ddot{\alpha})/k_1` and
     `u_3 = u_2 + (F_3 - m_3 \ddot{\alpha})/k_2`, derived and checked with
-    SymPy in the notebook. With the reference support at node 3, the
+    SymPy. With the reference support at node 3, the
     displacements change by `-u_3` and the spring forces do not.
     """
     k1, k2 = 2000., 500.
@@ -429,6 +440,8 @@ def chain_data():
 def test_spring_chain():
     r"""Chain of point masses and springs under unbalanced loads
 
+    Notes
+    -----
     `\ddot{\alpha} = \sum F_i / \sum m_i`; the force of the spring between
     the nodes `j` and `j + 1`, positive in tension, is that of the masses and
     loads to its right, `N_j = \sum_{i > j} (F_i - m_i \ddot{\alpha})`; the
@@ -498,6 +511,8 @@ def test_beam_balanced_loads():
     r"""Free-free BeamC beam under its own weight, two upward point loads
     `W/2` at `x = a` and `x = L - a` and opposite axial end forces
 
+    Notes
+    -----
     The load set is balanced in force and moment: the rigid-body
     accelerations and the reactions of the reference support vanish to
     round-off, for two statically determinate supports, and the bending
@@ -532,10 +547,15 @@ def test_beam_balanced_loads():
 
 def free_free_closed_form(xs, L, P, EI, GA, choice):
     r"""Deflection relative to the reference support of a free-free beam
-    under the end force `P` at `x = L`, derived in the notebook:
-    `M(x) = P x^2 (L - x)/L^2` and `w = P (L x^4/12 - x^5/20)/(E I L^2) -
-    M/(G A)`, for the clamp at `x = 0`; the pin-roller subtracts the chord
-    through `w(0) = w(L) = 0`."""
+    under the end force `P` at `x = L`, for the reference support
+    ``choice``, a clamp at `x = 0` or a pin-roller
+
+    Notes
+    -----
+    Derived with SymPy: `M(x) = P x^2 (L - x)/L^2` and `w = P (L x^4/12 -
+    x^5/20)/(E I L^2) - M/(G A)`, for the clamp at `x = 0`; the pin-roller
+    subtracts the chord through `w(0) = w(L) = 0`.
+    """
     Mx = P*xs**2*(L - xs)/L**2
     w = P*(L*xs**4/12 - xs**5/20)/(EI*L**2) - Mx/GA
     if choice == 'pin-roller':
@@ -546,6 +566,8 @@ def free_free_closed_form(xs, L, P, EI, GA, choice):
 def test_free_free_beam_end_force():
     r"""Free-free BeamC beam under a transverse end force `P`
 
+    Notes
+    -----
     Newton-Euler: `\ddot{w}_0 = -2 P/(m L)` and `\ddot{r}_{y0} = -6 P/(m
     L^2)` at the first node; the deflection relative to the reference
     support is that of `E I w'''' = q(x)`, `q = (P/L)(2 - 6 x/L)`, plus the
@@ -587,6 +609,8 @@ def test_free_free_beam_end_force():
 def test_free_free_bar_end_force():
     r"""Free-free bar under an axial end force `P` at `x = L`
 
+    Notes
+    -----
     `\ddot{u} = P/(m L)`, `N(x) = P x/L` and, relative to `u(0) = 0`, `u =
     P x^2/(2 E A L)`; with the consistent mass matrix, the nodal
     displacements are exact, and so is the constant axial force of each

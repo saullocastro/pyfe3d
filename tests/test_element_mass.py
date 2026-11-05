@@ -4,8 +4,15 @@ Every element with ``update_M`` is placed in a generic orientation in space
 and its mass matrix `\boldsymbol{M}`, in global coordinates, is projected on the six
 rigid-body motions, the three translations and the three rotations about the
 global origin, whose nodal values are the columns of `\boldsymbol{\Phi}`. The 6 x 6
-matrix `\boldsymbol{\Phi}^\top \boldsymbol{M} \boldsymbol{\Phi}` contains the mass `m`, the first moment of the
-mass `\boldsymbol{Q}` and the inertia tensor of the element,
+matrix `\boldsymbol{\Phi}^\top \boldsymbol{M} \boldsymbol{\Phi}`, which contains the mass, the first
+moment of the mass and the inertia tensor of the element, is compared with
+its exact value for each scheme of ``update_M`` (consistent and lumped), and
+the numbering of the mass types is checked.
+
+Notes
+-----
+The 6 x 6 matrix contains the mass `m`, the first moment of the mass
+`\boldsymbol{Q}` and the inertia tensor of the element,
 
 .. math::
 
@@ -32,7 +39,15 @@ rule of points `\boldsymbol{x}_q` and weights `w_q` over the area, for which
 
 and the exact values of the shell are those of a rule exact for the
 quadratic integrands. The lumped mass matrices are the nodal quadrature, with
-the points at the nodes.
+the points at the nodes. The three-point rule of the triangles exact for
+the quadratic integrands is that of Cowper (1973), Table I, first row,
+degree of precision 2.
+
+References
+----------
+Cowper, G. R., Gaussian quadrature formulas for triangles, International
+Journal for Numerical Methods in Engineering, 7(3), 1973, pp. 405-408,
+https://doi.org/10.1002/nme.1620070316.
 
 """
 import sys
@@ -194,7 +209,7 @@ def area_rule(xy, scheme):
         return [(np.ones(nnodes)/nnodes, A)]
     if nnodes == 3:
         if scheme == 'exact':
-            # Cowper (1973), Table I, first row, degree of precision 2
+            # NOTE three-point rule of degree of precision 2
             return [(np.array(N), A/3) for N in ([2/3, 1/6, 1/6],
                                                  [1/6, 2/3, 1/6],
                                                  [1/6, 1/6, 2/3])]
@@ -503,6 +518,9 @@ def unsupported():
 
 @pytest.mark.parametrize('name, mtype', list(unsupported()))
 def test_unsupported_mtype_raises(name, mtype):
+    """``update_M`` raises ``ValueError`` for an ``mtype`` the element does
+    not support, with a message naming the element, the value and the valid
+    options"""
     e, data, prop, nnodes, _, _ = mass_element(name)
     Mr = np.zeros(data.M_SPARSE_SIZE, dtype=INT)
     Mc = np.zeros(data.M_SPARSE_SIZE, dtype=INT)

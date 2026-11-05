@@ -1,11 +1,17 @@
 """Consistent Timoshenko shape functions of BeamC
 
+One element of BeamC must give the exact tip deflection of a cantilever under
+a tip force, with shear deformation (closed form), and its geometric
+stiffness and mass matrices must equal an independent Gauss quadrature of the
+same integrals with the same interpolation.
+
+Notes
+-----
 The cubic interpolation of the deflection with the shear parameter, with
 ``beta = 1/(1 + 12*E*I/(G*A*L**2))``, satisfies the homogeneous equilibrium of
 the Timoshenko beam, so that one element gives the exact tip deflection of a
 cantilever under a tip force, ``P*L**3/(3*E*I) + P*L/(G*A)``. The geometric
-stiffness and mass matrices must use the same interpolation; they are
-compared here with an independent Gauss quadrature of the same integrals.
+stiffness and mass matrices must use the same interpolation.
 """
 import sys
 sys.path.append('..')

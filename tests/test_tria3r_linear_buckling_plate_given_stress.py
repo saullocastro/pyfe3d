@@ -1,3 +1,13 @@
+r"""Linear buckling of a simply supported plate of Tria3R, ``KG`` from a
+given membrane stress, against Leissa (1969)
+
+Rectangular plate ``a/b = 4`` under a uniform ``N_xx`` given to
+``update_KG_given_stress``, rotated to the element coordinate system of
+each triangle, with the default discrete shear gap field of Tria3R; the
+buckling load is checked against the exact solution of Leissa (1969) and
+against a value pre-determined by this test.
+
+"""
 import sys
 sys.path.append('..')
 
@@ -14,21 +24,25 @@ def test_tria3r_linear_buckling_plate_given_stress(mode=0, refinement=1):
     r"""Linear buckling of a simply supported plate, ``a/b = 4``, under a
     uniform compression ``N_xx`` given to ``KG``
 
-    The reference is the exact solution of Leissa, A. W., Vibration of
-    Plates, NASA SP-160, 1969, Sec. 10.2.1, p. 277, Eq. (10.46), minimised
-    over the number ``m`` of half-waves along ``x``:
-    ``N_xx,cr = -k_c*pi**2*D/b**2``, ``k_c = (m*b/a + a/(m*b))**2``. With
-    ``b/h = 250`` the Mindlin plate buckles 0.01 % below it.
+    The buckling load is compared with the exact solution of Leissa (1969),
+    Eq. (10.46), and, for ``refinement=1``, with a value pre-determined by
+    this test.
 
     The resultants given to ``update_KG_given_stress`` are in the element
     coordinate system, so the global ``N_xx`` is rotated to the axes of each
     triangle, whose x axis is along the diagonal for one triangle out of
-    two. Before 0.12.0 it was passed unrotated, which applies a different
-    load to those triangles; with the default element below, the unrotated
-    load gives a buckling load 1.96 % under the reference with 248x120
+    two. Passed unrotated, it would apply a different load to those
+    triangles: with the default element below, the unrotated load gives a buckling load 1.96 % under the reference with 248x120
     elements, and not approaching it.
 
-    With the default transverse shear since 0.12.0, the discrete shear gap
+    Notes
+    -----
+    The reference is the exact solution of Leissa [1]_, Sec. 10.2.1,
+    p. 277, Eq. (10.46), minimised over the number ``m`` of half-waves along
+    ``x``: ``N_xx,cr = -k_c*pi**2*D/b**2``, ``k_c = (m*b/a + a/(m*b))**2``.
+    With ``b/h = 250`` the Mindlin plate buckles 0.01 % below it.
+
+    With the default transverse shear, the discrete shear gap
     field of ``shear_model = 1``, the buckling load converges to the
     reference, measured with this test (quadrilaterals split in two
     triangles, time on one thread):
@@ -42,11 +56,18 @@ def test_tria3r_linear_buckling_plate_given_stress(mode=0, refinement=1):
 
     ``refinement=1`` is compared with the value pre-determined by this test,
     with ``rtol=1e-4`` for the round-off of the eigensolver, and with grade B
-    of MacNeal and Harder (1985), p. 14, as the bound against the
+    of MacNeal and Harder [2]_, p. 14, as the bound against the
     reference; from ``refinement=2`` grade A is asserted against the
-    reference alone. Before 0.12.0, with the centroid-sampled shear,
-    ``alpha_shear_locking = 0.7`` and the unrotated load, the load was 4.8 %
-    above the reference with 30x14 elements and 11.8 % above with 92x44.
+    reference alone.
+
+    References
+    ----------
+    .. [1] Leissa, A. W., Vibration of Plates, NASA SP-160, 1969.
+    .. [2] MacNeal, R. H. and Harder, R. L., A proposed standard set of
+       problems to test finite element accuracy, Finite Elements in Analysis
+       and Design, 1(1), 3-20, 1985.
+       https://doi.org/10.1016/0168-874X(85)90003-4
+
     """
     data = Tria3RData()
     probe = Tria3RProbe()
@@ -181,7 +202,7 @@ def test_tria3r_linear_buckling_plate_given_stress(mode=0, refinement=1):
         #      triangle follows its edge 1-2, along the diagonal for the
         #      second triangle of each quadrilateral, so the global Nxx is
         #      rotated: the global x axis has the components (r11, r12) in
-        #      the element axes. Before 0.12.0 it was passed unrotated
+        #      the element axes
         ax = tria.r11
         ay = tria.r12
         tria.update_KG_given_stress(Nxx*ax*ax, Nxx*ay*ay, Nxx*ax*ay, KGr,

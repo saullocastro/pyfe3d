@@ -4,7 +4,9 @@ r"""Tests for :mod:`pyfe3d.solver.static` and :mod:`pyfe3d.solver.sparseutils`
 the degrees-of-freedom of its null rows and columns, see
 :func:`pyfe3d.solver.check_null_rows_cols`, and
 :func:`pyfe3d.solver.linear_static` is based on it, tested with a Ritz plate
-whose deflection is compared with the Navier solution.
+whose deflection is compared with the Navier solution of Timoshenko and
+Woinowsky-Krieger (1959), Art. 29, Eq. (c). The small systems are checked
+against their exact or dense solutions.
 """
 import sys
 sys.path.append('..')
@@ -24,6 +26,7 @@ from ritz import isotropic_plate, vecf, vecf_xi, vecf_xixi
 
 
 def test_solve_diagonal_system():
+    """A diagonal system, against its exact solution"""
     n = 10
     diag = np.arange(1, n + 1, dtype=float)
     u = solve(csc_matrix(np.diag(diag)), np.ones(n))
@@ -50,6 +53,7 @@ def test_solve_with_null_columns():
 
 
 def test_solve_symmetric_system():
+    """A symmetric system, against the dense solution"""
     A = np.array([[4., 1., 0.], [1., 3., 1.], [0., 1., 2.]])
     f = np.array([1., 2., 3.])
     np.testing.assert_allclose(solve(csc_matrix(A), f),
@@ -96,6 +100,8 @@ def test_factorize():
 
 
 def test_linear_static():
+    """:func:`linear_static` of a diagonal system, a single increment with
+    the exact solution"""
     n = 5
     increments, cs = linear_static(csc_matrix(np.eye(n)*2.0), 4.*np.ones(n))
     assert increments == [1.0]
@@ -114,12 +120,13 @@ def test_linear_static_unsymmetric():
 
 def test_static_deflection_plate_clpt():
     r"""Simply supported Ritz plate under a central point load, classical
-    plate theory, against the Navier solution
+    plate theory, against the Navier solution of Timoshenko and
+    Woinowsky-Krieger (1959), Art. 29, Eq. (c)
 
-    The reference is the Navier solution of Timoshenko, S., and
-    Woinowsky-Krieger, S., Theory of Plates and Shells, 2nd ed.,
-    McGraw-Hill, 1959, Art. 29, p. 111, Eq. (c), the deflection at the
-    centre under a load at the centre,
+    Notes
+    -----
+    The reference is the Navier solution of [1]_, Art. 29, p. 111, Eq. (c),
+    the deflection at the centre under a load at the centre,
     ``w_max = 4*P/(pi**4*a*b*D)*sum(1/((m/a)**2 + (n/b)**2)**2)`` over
     ``m, n = 1, 3, 5, ...``, here summed up to 1999, which changes it by
     less than 1e-5. For ``b/a = 7/3`` it gives ``w_max = alpha*P*a**2/D``
@@ -130,6 +137,12 @@ def test_static_deflection_plate_clpt():
     under the point load: with 20x20 terms it is 1.09 % below the reference,
     with 30x30 terms 0.44 %, with 40x40 terms 0.24 %; the two finer
     approximations take 23 s and 160 s to assemble.
+
+    References
+    ----------
+    .. [1] Timoshenko, S., and Woinowsky-Krieger, S., Theory of Plates and
+       Shells, 2nd ed., McGraw-Hill, 1959.
+
     """
     m1 = m2 = 20
     N = m1*m2
@@ -178,7 +191,7 @@ def test_static_deflection_plate_clpt():
     assert np.count_nonzero(bu) < N
     u = solve(csc_matrix(K[bu, :][:, bu]), Pforce*Sw[bu])
     w_center = Sw[bu] @ u
-    # NOTE Timoshenko and Woinowsky-Krieger (1959), Eq. (c) of Art. 29
+    # NOTE Navier solution of the deflection at the centre, see Notes
     D = E*h**3/(12*(1 - nu**2))
     m = np.arange(1, 2000, 2)[:, None]
     n = np.arange(1, 2000, 2)[None, :]
@@ -217,6 +230,8 @@ def test_check_null_rows_cols():
 
 
 def test_is_symmetric():
+    """Symmetric up to a relative tolerance, also an empty matrix, and an
+    unsymmetric random matrix"""
     A = sprandom(30, 30, density=0.2, random_state=1)
     S = A + A.T
     assert is_symmetric(S)

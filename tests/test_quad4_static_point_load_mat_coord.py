@@ -1,3 +1,11 @@
+r"""Static deflection of an orthotropic plate modelled with Quad4, with the
+material axes given by ``matx``
+
+The maximum deflection under a central point load, with the material
+direction ``matx`` at several angles in the plane, must equal that of
+``thetadeg = 0`` to ``rtol = 1e-5``, and the internal forces the external
+forces.
+"""
 import sys
 sys.path.append('..')
 
@@ -10,6 +18,8 @@ from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF
 
 
 def test_static_plate_quad_point_load(plot=False):
+    """Maximum deflection for each material direction ``matx``, compared
+    with that of ``thetadeg = 0``; ``plot`` plots the deflection"""
     # NOTE keep thetadeg = 0 as first, to work as reference wmax_ref
     thetadegs = [0, -90, -60, -30, 30, 60, 90]
     for thetadeg in thetadegs:

@@ -2,20 +2,34 @@ r"""Verification of the hourglass control of :class:`pyfe3d.Quad4R`.
 
 The reduced integration of :class:`pyfe3d.Quad4R` samples the strains at the
 element centroid only, which leaves the element rank-deficient, and the
-missing rank is restored with the hourglass control of
+missing rank is restored with the hourglass control of Brockman (1987),
+whose Eq. (14) is quoted from, and is attributed here to, Belytschko and
+Tsay (1983), for the in-plane displacements, and with the physical
+stabilisation of Belytschko and Leviathan (1994) for the transverse
+displacement and the rotations.
+The tests check the implementation term by term against these references:
 
-    Brockman, R. A., 1987, "Dynamics of the Bilinear Mindlin Plate Element",
-    Int. J. Numer. Methods Eng., 24(12), pp. 2343-2356.
-    https://doi.org/10.1002/nme.1620241208
+* the hourglass operator of Brockman's Eqs. (14) and (15), its
+  orthogonality to the rigid-body motions and the uniform strain states,
+  and the constant-strain patch test of MacNeal and Harder (1985);
+* the generalized hourglass stiffnesses of Brockman's Eq. (16) of `u` and
+  `v`, made dimensionally homogeneous and generalised to laminates, against
+  Cook's tapered cantilever, Cook (1974), in several units of length;
+* the stabilisation of the bending and of the transverse shear of
+  Belytschko and Leviathan (1994), against closed forms written here
+  independently of the element code, the constant-twist patch test, their
+  thin-plate bending patch test, the twisted strip of MacNeal and Harder
+  (1985) and the FSDT Navier solution of laminated plates, Reddy (2003),
+  Sec. 7.2.1;
+* the classification of the element modes of Brockman's p. 2347, including
+  the twisting mode of his Eq. (13) and his remark attributing it to Hughes
+  (1980);
+* the mass formulations of Brockman's Eqs. (21), (22) and (31) and of his
+  p. 2349, offered by :meth:`pyfe3d.Quad4R.update_M` through ``mtype``.
 
-whose Eq. (14) is quoted from, and is attributed here to,
-
-    Belytschko, T., and Tsay, C. S., 1983, "A stabilization procedure for the
-    quadrilateral plate element with one-point quadrature", Int. J. Numer.
-    Methods Eng., 19(3), pp. 405-419.
-    https://doi.org/10.1002/nme.1620190308
-
-The tests below check the implementation against that reference term by term.
+Notes
+-----
+The tests check the implementation against Brockman [1]_ term by term.
 Writing `\boldsymbol{h} = [1, -1, 1, -1]^\top` for the hourglass pattern of the
 bilinear element, `\boldsymbol{s} = [1, 1, 1, 1]^\top`, and `A` for the element area,
 the quantities being verified are
@@ -50,9 +64,9 @@ the quantities being verified are
   their mean, `w`, all of which reduce to Eq. (16) for an isotropic plate,
   see :func:`test_laminate_hourglass_stiffnesses_use_membrane_and_bending_moduli`;
 
-* the transverse displacement `w` is not stabilised with Eq. (16b) since
-  0.12.0: the transverse shear of :class:`pyfe3d.Quad4R` is that of
-  Belytschko and Leviathan (1994), the constant part of the assumed strains
+* the transverse displacement `w` is not stabilised with Eq. (16b): the
+  transverse shear of :class:`pyfe3d.Quad4R` is that of
+  Belytschko and Leviathan [4]_, the constant part of the assumed strains
   of Dvorkin and Bathe (1984) and the physical stabilisation of their
   nonconstant part, which controls the hourglass mode of `w` and passes the
   constant-twist and the thin-plate bending patch tests, see
@@ -79,13 +93,8 @@ the quantities being verified are
 
   which it does not, and which Brockman notes "exists for a single element,
   but cannot occur in a mesh of two or more elements, as shown by Hughes",
-  citing there
-
-      Hughes, T. J. R., 1980, "Recent developments in computer methods for
-      structural analysis", Nucl. Eng. Des., 57(2), pp. 427-439.
-
-  The mode is verified below to be the same one as Mode 2 of Figure 10 of
-  Hughes, Taylor and Kanoknukulchai (1977), documented in
+  citing there Hughes [3]_. The mode is verified below to be the same one
+  as Mode 2 of Figure 10 of Hughes, Taylor and Kanoknukulchai (1977), documented in
   ``test_quad4_spurious_shear_mode.py``, which is a separate reference from
   the one Brockman cites;
 
@@ -95,7 +104,7 @@ the quantities being verified are
 Two further points concern the choice of hourglass operator and the
 calibration of Eq. (16):
 
-1. Brockman quotes the operator of Belytschko and Tsay as his Eq. (14),
+1. Brockman quotes the operator of Belytschko and Tsay [2]_ as his Eq. (14),
 
    .. math::
        \boldsymbol{\gamma} = \boldsymbol{h} - (\boldsymbol{h}^\top \boldsymbol{x}) \boldsymbol{b}_1
@@ -114,7 +123,7 @@ calibration of Eq. (16):
    element gives a rigid-body rotation and a uniform strain state a spurious
    energy and fails the constant-strain patch test.
 
-   Since 0.10.0 :class:`pyfe3d.Quad4R` therefore applies the two correction
+   :class:`pyfe3d.Quad4R` therefore applies the two correction
    terms of Eq. (14), scaled by the normalisation of Eq. (15) so that the
    generalized stiffnesses of Eq. (16) keep their calibration. The
    correction changes nothing on a parallelogram, where `\boldsymbol{h}^\top
@@ -122,7 +131,7 @@ calibration of Eq. (16):
    the energy of the five hourglass patterns on any shape, because the
    centroidal sums `\boldsymbol{h}^\top \boldsymbol{b}_1` and `\boldsymbol{h}^\top \boldsymbol{b}_2`
    vanish identically. What it does change is that the hourglass strains are
-   now orthogonal to the rigid-body motions and to the uniform strain states
+   orthogonal to the rigid-body motions and to the uniform strain states
    on any shape, see
    :func:`test_hourglass_strains_orthogonal_to_linear_fields`,
    :func:`test_rigid_body_rotation_energy` and
@@ -138,8 +147,41 @@ calibration of Eq. (16):
    unit of length, but the magnitude of the artificial stiffness itself still
    depends on that unit, and a response that legitimately contains hourglass
    components, which Brockman lists on p. 2348 as "torsional or inplane
-   bending modes", still moves with it, see
-   :func:`test_hourglass_stiffness_depends_on_the_length_unit`.
+   bending modes", still moves with it. The dimensionally homogeneous
+   stiffnesses used by pyfe3d remove that dependence, see
+   :func:`test_hourglass_stiffness_is_independent_of_the_length_unit`.
+
+The constant-strain patch and the twisted strip are those of MacNeal and
+Harder [5]_, the tapered cantilever is that of Cook [6]_, and the Navier
+solution of the laminated plates is that of Reddy [7]_; each test gives
+in its own Notes the figure, table or equation used.
+
+References
+----------
+.. [1] Brockman, R. A., Dynamics of the bilinear Mindlin plate element,
+   International Journal for Numerical Methods in Engineering, 24(12),
+   2343-2356, 1987.
+   https://doi.org/10.1002/nme.1620241208
+.. [2] Belytschko, T. and Tsay, C. S., A stabilization procedure for the
+   quadrilateral plate element with one-point quadrature, International
+   Journal for Numerical Methods in Engineering, 19(3), 405-419, 1983.
+   https://doi.org/10.1002/nme.1620190308
+.. [3] Hughes, T. J. R., Recent developments in computer methods for
+   structural analysis, Nuclear Engineering and Design, 57(2), 427-439,
+   1980.
+.. [4] Belytschko, T. and Leviathan, I., Physical stabilization of the
+   4-node shell element with one point quadrature, Computer Methods in
+   Applied Mechanics and Engineering, 113(3-4), 321-350, 1994.
+   https://doi.org/10.1016/0045-7825(94)90052-3
+.. [5] MacNeal, R. H. and Harder, R. L., A proposed standard set of
+   problems to test finite element accuracy, Finite Elements in Analysis
+   and Design, 1(1), 3-20, 1985.
+   https://doi.org/10.1016/0168-874X(85)90003-4
+.. [6] Cook, R. D., Improved two-dimensional finite element, Journal of the
+   Structural Division, ASCE, 100(ST9), 1851-1863, 1974.
+.. [7] Reddy, J. N., Mechanics of Laminated Composite Plates and Shells:
+   Theory and Analysis, 2nd ed., CRC Press, 2003.
+   https://doi.org/10.1201/b12409
 
 """
 import sys
@@ -228,10 +270,9 @@ def to_global(el, ue_element):
 
     The columns of the matrix of :func:`rotation` are the element axes, so
     a vector in element coordinates is brought to global ones by that
-    matrix, not by its transpose, which this function used until 0.12.0;
-    the tests that used it pass with both, the patterns they map being
-    insensitive to that error, which
-    :func:`test_transverse_shear_matches_belytschko_leviathan` revealed on
+    matrix, not by its transpose; most patterns mapped by the tests are
+    insensitive to that difference, which
+    :func:`test_transverse_shear_matches_belytschko_leviathan` detects on
     the distorted element.
 
     """
@@ -302,15 +343,15 @@ def brockman_stiffnesses(area, E=E_BROCKMAN, t=T_BROCKMAN):
 def homogeneous_stiffnesses(area, E=E_BROCKMAN, t=T_BROCKMAN):
     r"""The dimensionally homogeneous stiffnesses pyfe3d uses
 
-    Brockman's `1/(1 + 1/A)` is replaced by the area itself for the in-plane
-    translations and for the rotations, which is what the dimensions
-    require, see the section "Dimensional homogeneity of the hourglass
-    stiffnesses" of the :mod:`pyfe3d.quad4r` documentation. The
-    transverse displacement `w` has no such coefficient since 0.12.0, see
-    :func:`test_transverse_shear_matches_belytschko_leviathan`.
-
-    The rotations `r_x` and `r_y` have the physical stabilisation of the
-    bending of Belytschko and Leviathan (1994) since 0.12.0, see
+    The stiffnesses of the hourglass modes of the in-plane displacements
+    `u` and `v`: Eq. (16a) of Brockman (1987) with his factor `1/(1 +
+    1/A)` replaced by the area itself, which is what the dimensions
+    require, see the rubric "Hourglass control of the membrane" of the
+    :mod:`pyfe3d.quad4r` documentation. There is no stiffness of this kind
+    for `w`, `r_x` and `r_y`: Brockman's Eq. (16b) is not used, and their
+    hourglass modes have the physical stabilisation of the transverse shear
+    and of the bending of Belytschko and Leviathan (1994), see
+    :func:`test_transverse_shear_matches_belytschko_leviathan` and
     :func:`test_bending_stabilisation_matches_belytschko_leviathan`.
 
     """
@@ -320,22 +361,30 @@ def homogeneous_stiffnesses(area, E=E_BROCKMAN, t=T_BROCKMAN):
 def test_hourglass_operator_matches_brockman_eq15():
     r"""The hourglass energy against the closed form of Eqs. (15) and (16)
 
-    Each of the hourglass patterns of p. 2347 of `u` and `v` produces no
-    strain at the centroid, so the one-point rule gives it no
-    energy and the whole of its energy comes from the stabilisation,
+    The energy of the hourglass patterns of p. 2347 of `u` and `v` of
+    Brockman (1987) is compared with the closed form of his Eqs. (15) and
+    (16) on four shapes, including two irregular ones, to machine
+    precision, which verifies the operator of Eq. (15) and the stiffnesses
+    of Eq. (16) together. The patterns of `w`, `r_x` and `r_y` are
+    controlled by the physical stabilisation of Belytschko and Leviathan
+    (1994), see
+    :func:`test_transverse_shear_matches_belytschko_leviathan` and
+    :func:`test_bending_stabilisation_matches_belytschko_leviathan`.
+
+    Notes
+    -----
+    Each of the hourglass patterns of `u` and `v` produces no strain at the
+    centroid, so the one-point rule gives it no energy and the whole of its
+    energy comes from the stabilisation,
 
     .. math::
         U = \frac{1}{2} E^{(h)} (\boldsymbol{\gamma}^\top \boldsymbol{h})^2 A
           = \frac{1}{2} E^{(h)} \tilde\gamma^2 A
 
-    since `\boldsymbol{\gamma}^\top \boldsymbol{h} = \tilde\gamma \boldsymbol{h}^\top \boldsymbol{h}/4 =
-    \tilde\gamma`. The identity is checked on four shapes, including two
-    irregular ones, and holds to machine precision on all of them, which
-    verifies the operator of Eq. (15) and the stiffnesses of Eq. (16)
-    together. The patterns of `w`, `r_x` and `r_y` are controlled by the
-    physical stabilisation of Belytschko and Leviathan (1994) since 0.12.0,
-    see :func:`test_transverse_shear_matches_belytschko_leviathan` and
-    :func:`test_bending_stabilisation_matches_belytschko_leviathan`.
+    since `\boldsymbol{\gamma}^\top \boldsymbol{h} = \tilde\gamma
+    \boldsymbol{h}^\top \boldsymbol{h}/4 = \tilde\gamma`, with the
+    homogeneous stiffnesses of :func:`homogeneous_stiffnesses`. The full
+    references are in the module documentation.
 
     """
     prop = isotropic_plate(thickness=T_BROCKMAN, E=E_BROCKMAN,
@@ -389,12 +438,12 @@ def test_hourglass_operator_equals_second_derivative_of_N():
 def test_generalized_stiffnesses_are_dimensionally_homogeneous():
     r"""The generalized stiffnesses actually implemented, one at a time
 
-    pyfe3d departs from Brockman's Eq. (16) as set out in the
-    section "Dimensional homogeneity of the hourglass stiffnesses" of the
-    :mod:`pyfe3d.quad4r` documentation: his `1/(1 + 1/A)` is replaced by the
-    area itself, which is what the dimensions of `K_{ij} = A E^{(h)}
-    \gamma_i \gamma_j` require. The transverse displacement `w` has no such
-    coefficient since 0.12.0, see
+    The hourglass stiffnesses of `u` and `v` of Quad4R are those of
+    Brockman's Eq. (16a) with his `1/(1 + 1/A)` replaced by the area itself,
+    which is what the dimensions of `K_{ij} = A E^{(h)} \gamma_i \gamma_j`
+    require, see the rubric "Hourglass control of the membrane" of the
+    :mod:`pyfe3d.quad4r` documentation and :func:`homogeneous_stiffnesses`.
+    The hourglass modes of `w`, `r_x` and `r_y` have no such stiffness, see
     :func:`test_transverse_shear_matches_belytschko_leviathan`.
 
     The energy of each hourglass pattern is linear in the corresponding
@@ -454,11 +503,11 @@ def test_stabilisation_restores_the_rank_of_a_rectangular_element():
     the six proper rigid-body motions plus the five hourglass patterns plus
     the twisting mode. With it on, only the rigid-body motions remain, the
     drilling rotations being held by their own operator: the stabilisation
-    of the transverse shear of Belytschko and Leviathan (1994), which
-    replaces Brockman's control of `w` since 0.12.0, also stiffens the
-    twisting mode, which Brockman's does not, see
-    :func:`test_twisting_mode_is_stabilised`. Up to 0.11 the twisting mode
-    remained, 7 zero eigenvalues.
+    of the transverse shear of Belytschko and Leviathan (1994), used in
+    place of Brockman's control of `w`, also stiffens the twisting mode,
+    which Brockman's does not, see :func:`test_twisting_mode_is_stabilised`;
+    with Brockman's control of `w` the twisting mode remains, 7 zero
+    eigenvalues.
 
     """
     prop = isotropic_plate(thickness=T_BROCKMAN, E=E_BROCKMAN,
@@ -479,6 +528,16 @@ def test_stabilisation_restores_the_rank_of_a_rectangular_element():
 def test_twisting_mode_is_stabilised():
     r"""Brockman's Eq. (13) and his remark attributing it to Hughes
 
+    The twisting mode of Brockman (1987), Eq. (13), is not an hourglass
+    pattern, so Brockman's stabilisation does not reach it. Brockman notes
+    that it "cannot occur in a mesh of two or more elements, as shown by
+    Hughes", Hughes (1980), which is checked here by counting the zero
+    eigenvalues of a two-element mesh; on a single rectangle and
+    parallelogram the mode is checked to carry no energy without the
+    stabilisation and a positive energy with it.
+
+    Notes
+    -----
     Brockman's Eq. (13) is
 
     .. math::
@@ -486,15 +545,12 @@ def test_twisting_mode_is_stabilised():
           + \frac{1}{4}(\boldsymbol{s}^\top \boldsymbol{x}) y
         \quad , \quad \theta_x = x \quad , \quad \theta_y = y
 
-    which is not an hourglass pattern, so Brockman's stabilisation does not
-    reach it. Brockman notes that it "cannot occur in a mesh of two or more
-    elements, as shown by Hughes", which is checked here by counting the
-    zero eigenvalues of a two-element mesh. Since 0.12.0 the transverse
+    The transverse
     shear of :class:`pyfe3d.Quad4R` is that of Belytschko and Leviathan
     (1994), whose stabilisation of the nonconstant part of the assumed
     shear strains gives the mode energy: `r_x = x` and `r_y = y` vary the
     covariant shear strains along the element, Eqs. (3.38)-(3.39), so a
-    single element is no longer singular in it. Without the stabilisation,
+    single element is not singular in it. Without the stabilisation,
     ``hgfactor = 0``, it is a zero-energy mode, as in Brockman's element.
 
     Brockman measures the transverse shear as `\boldsymbol{\nabla} w -
@@ -670,13 +726,9 @@ def test_rigid_body_rotation_energy():
                                                            energies)
 
 
-# NOTE MacNeal and Harder's patch, Figure 2: a rectangle of 0.24 by 0.12
-#      split into five quadrilaterals by four arbitrarily placed interior
-#      nodes. Reference:
-#
-#          MacNeal, R. H., and Harder, R. L., 1985, "A Proposed Standard Set
-#          of Problems to Test Finite Element Accuracy", Finite Elem. Anal.
-#          Des., 1(1), pp. 3-20. doi:10.1016/0168-874X(85)90003-4
+# NOTE irregular patch of the constant-strain patch test: a rectangle of
+#      0.24 by 0.12 split into five quadrilaterals by four arbitrarily
+#      placed interior nodes
 PATCH_OUTER = np.array([[0., 0.], [0.24, 0.], [0.24, 0.12], [0., 0.12]])
 PATCH_INNER = np.array([[0.04, 0.02], [0.18, 0.03], [0.16, 0.08],
                         [0.08, 0.08]])
@@ -758,6 +810,15 @@ def test_constant_strain_patch_test_on_an_irregular_mesh():
     out wrong by about eight per cent, which is what motivated adopting the
     two correction terms.
 
+    Notes
+    -----
+    The patch is that of MacNeal and Harder (1985), Figure 2, a rectangle of
+    0.24 by 0.12 split into five quadrilaterals by four arbitrarily placed
+    interior nodes, ``PATCH_OUTER`` and ``PATCH_INNER``; the four corners
+    carry the displacements of the uniform strain state ``PATCH_EXX``,
+    ``PATCH_EYY``, ``PATCH_GXY``, and the interior nodes must take its exact
+    displacements. The full reference is in the module documentation.
+
     """
     exact_q4 = patch_solution(Quad4, Quad4Data, Quad4Probe)
     off = patch_solution(Quad4R, Quad4RData, Quad4RProbe, hgfactor=0.)
@@ -776,10 +837,8 @@ def test_constant_strain_patch_test_on_an_irregular_mesh():
 def cook_solution(scale=1., n=4):
     r"""Cook's tapered cantilever, in-plane only, tip displacement
 
-        Cook, R. D., 1974, "Improved Two-Dimensional Finite Element",
-        J. Struct. Div. ASCE, 100(ST9), pp. 1851-1863.
-
-    Corners (0,0), (48,44), (48,60), (0,44), thickness 1, E = 1, nu = 1/3,
+    The tapered cantilever of Cook (1974), see the module documentation for
+    the full reference. Corners (0,0), (48,44), (48,60), (0,44), thickness 1, E = 1, nu = 1/3,
     clamped at x = 0 and a unit total shear on x = 48, for which the
     reference vertical displacement at (48, 52) is 23.96. The geometry and
     the thickness are scaled by ``scale`` and the modulus by ``1/scale**2``,
@@ -866,14 +925,13 @@ def test_hourglass_stiffness_is_independent_of_the_length_unit():
     that claim over nine orders of magnitude of length unit:
 
     * the constant-strain patch test is exact in every unit, which is what
-      the correction terms of Eq. (14) buy and which held before this change
-      as well;
+      the correction terms of Eq. (14) buy, with either factor;
     * Cook's in-plane bending problem, whose response legitimately contains
       the hourglass components Brockman lists on p. 2348 as "torsional or
-      inplane bending modes", now gives the *same* answer in every unit. It
-      previously drifted by a fraction of a per cent at the metre and
-      collapsed at the kilometre, where the element areas are so small in
-      that unit that Eq. (16) left almost no stabilisation at all.
+      inplane bending modes", gives the *same* answer in every unit. With
+      Brockman's factor it drifts by a fraction of a per cent at the metre
+      and collapses at the kilometre, where the element areas are so small
+      in that unit that Eq. (16) leaves almost no stabilisation at all.
 
     """
     for name, scale in [('metre', 1.), ('millimetre', 1.e3),
@@ -898,17 +956,37 @@ def test_hourglass_stiffness_is_independent_of_the_length_unit():
 
 
 def test_homogeneous_stiffnesses_agree_with_brockman_for_small_areas():
-    r"""The departure from Eq. (16) is confined to the regime that needed it
+    r"""The membrane hourglass stiffnesses tend to Brockman's Eq. (16a) for small areas
 
-    `1/(1 + 1/A) \to A` as `A \to 0`, so for the in-plane translations the
-    homogeneous form and Eq. (16a) converge as the element area shrinks in
-    the unit used, which is the regime Brockman calibrated in. This test
-    measures that convergence, so the change is documented as a
-    reinterpretation of his factor rather than a different magnitude of
-    stabilisation.
+    The stiffnesses of :func:`homogeneous_stiffnesses`, used by Quad4R for
+    the hourglass modes of `u` and `v`, are compared with Eq. (16a) of
+    Brockman (1987), :func:`brockman_stiffnesses`, for element areas of
+    0.1, 0.01 and 0.0001 in the unit of length used, the regime in which
+    Brockman calibrated his factor, with the relative tolerance `2 A`; for
+    an area of `10^4` they differ by more than a factor 1000. Only `u` and
+    `v` are compared: Quad4R does not use Eq. (16b) of Brockman for `w`,
+    `r_x` and `r_y`, whose hourglass modes have the physical stabilisation
+    of Belytschko and Leviathan (1994), see
+    :func:`test_transverse_shear_matches_belytschko_leviathan` and
+    :func:`test_bending_stabilisation_matches_belytschko_leviathan`.
 
-    The `w` term is excluded: it keeps Brockman's factor and is Eq. (16b)
-    itself, see :func:`homogeneous_stiffnesses`.
+    Notes
+    -----
+    Eq. (16a) of Brockman (1987), p. 2347, gives the generalized hourglass
+    stiffnesses of the in-plane displacements
+
+    .. math::
+        E^{(h)}_u = E^{(h)}_v = \frac{0.10 E t}{1 + 1/A}
+
+    and Quad4R uses `0.10 E t A`, dimensionally homogeneous. Their ratio is
+    `A (1 + 1/A) = 1 + A`, so the relative difference is exactly `A`: the
+    two agree as `A \to 0` and diverge without bound for large areas, where
+    Brockman's factor tends to one and his stiffness does not scale with
+    the length unit. His Eq. (16b), `0.10 E t^3/(1 + 1/A)` for `w`, `r_x`
+    and `r_y`, has no counterpart in Quad4R, whose hourglass modes of
+    `w`, `r_x` and `r_y` are stabilised with the nonconstant part of the
+    physical transverse shear and bending strains of Belytschko and
+    Leviathan (1994). The full references are in the module documentation.
 
     """
     for area, tol in [(1.e-1, 2.e-1), (1.e-2, 2.e-2), (1.e-4, 2.e-4)]:
@@ -929,16 +1007,12 @@ def test_homogeneous_stiffnesses_agree_with_brockman_for_small_areas():
 def strip_twist(hgfactor_physical=1., nx=6, ny=1):
     r"""Twist of the MacNeal and Harder (1985) 6 by 0.2 strip, reference 0.03208
 
-        MacNeal, R. H., and Harder, R. L., 1985, "A proposed standard set of
-        problems to test finite element accuracy," Finite Elements in
-        Analysis and Design, 1(1), pp. 3-20.
-        https://doi.org/10.1016/0168-874X(85)90003-4
-
-    With Brockman's control of `w`, used up to 0.11, the twist of a
-    one-element-wide strip is the hourglass pattern `w = xy`, and its answer
-    was set by the coefficient `E^{(h)}_w`. Root fully clamped, a unit torque applied as a pair of
-    opposite transverse forces on the tip edge, and the returned value is
-    the tip twist per unit width.
+    The full reference is in the module documentation. The twist of a
+    one-element-wide strip is the hourglass pattern `w = xy`, whose answer
+    Brockman's control of `w` would set by the coefficient `E^{(h)}_w`.
+    Root fully clamped, a unit torque applied as a pair of opposite
+    transverse forces on the tip edge, and the returned value is the tip
+    twist per unit width.
 
     """
     a, b, h = 6., 0.2, 0.1
@@ -996,13 +1070,20 @@ def test_one_element_wide_strip_in_torsion():
     10 %, C 20 %, D 50 %, F above 50 %; their QUAD4 gives 0.941, Table 8,
     p. 15.
 
-    Up to 0.11 Quad4R controlled the hourglass mode of `w` with Brockman's
-    coefficient `E^{(h)}_w`, which also stiffened a uniform twist, see
+    Following the policy of the tests whose reference is not reached on the
+    mesh used, the 6x1 and 12x4 meshes are compared with the values
+    pre-determined by :func:`strip_twist`, 0.03017887108568292 and
+    0.032672815829645464, with ``rtol = 1e-6`` for the round-off of the
+    linear solution, and with grade B against 0.03208 as a bound.
+
+    Notes
+    -----
+    Brockman's coefficient `E^{(h)}_w`, applied to the hourglass mode of
+    `w`, also stiffens a uniform twist, see
     :func:`test_constant_twist_patch_test`: on a single element across the
-    width the twist was the hourglass pattern `w = xy` and the 6x1 strip
-    gave 4.78 times the reference, grade F. Since 0.12.0 the bending and
-    the transverse shear have the physical stabilisation of Belytschko and
-    Leviathan (1994), and the 6x1 strip gives 0.941 times the reference,
+    width the twist is the hourglass pattern `w = xy`. In Quad4R the bending
+    and the transverse shear have the physical stabilisation of Belytschko
+    and Leviathan (1994) instead, and the 6x1 strip gives 0.941 times the reference,
     grade B, as the QUAD4 of MacNeal and Harder. Tip twist over 0.03208,
     measured on 2026-10-29, the torque applied as the corner forces of this
     test (corner) or as normal forces proportional to the distance from the
@@ -1037,14 +1118,11 @@ def test_one_element_wide_strip_in_torsion():
     flexible: one element across the width cannot represent the twist
     without the nonconstant strains that the stabilisation resists.
 
-    Following the policy of the tests whose reference is not reached on the
-    mesh used, the 6x1 and 12x4 meshes are compared with the values
-    pre-determined by :func:`strip_twist`, 0.03017887108568292 and
-    0.032672815829645464, with ``rtol = 1e-6`` for the round-off of the
-    linear solution, and with grade B against 0.03208 as a bound.
+    The reference tip twist 0.03208 is that of Table 3, p. 10, of MacNeal
+    and Harder (1985); the full reference is in the module documentation.
 
     """
-    # NOTE MacNeal and Harder (1985), Table 3, p. 10
+    # NOTE reference tip twist of the strip, see the Notes
     ref = 0.03208
     one = strip_twist(hgfactor_physical=1.)
     refined = strip_twist(hgfactor_physical=1., nx=12, ny=4)
@@ -1216,14 +1294,20 @@ def test_bending_stabilisation_matches_belytschko_leviathan():
     r"""The stabilisation of the rotations of Quad4R against the closed
     form and :func:`bl94_bending_reference`
 
-    Belytschko, T., and Leviathan, I., 1994, "Physical stabilization of the
-    4-node shell element with one point quadrature", Comput. Methods Appl.
-    Mech. Engrg., 113(3-4), pp. 321-350,
-    https://doi.org/10.1016/0045-7825(94)90052-3: the nonconstant part of
-    the curvatures, Eq. (3.28), p. 327, gives the stabilisation of Eq.
-    (4.13), p. 331, and of Eqs. (B.17) and (B.18), p. 349, with the
-    integrals `H_{xx}`, `H_{yy}` and `H_{xy}` of Eq. (4.14), here with the
-    bending stiffness `\boldsymbol{D} - \boldsymbol{B} \boldsymbol{A}^{-1}
+    The physical stabilisation of the bending of Belytschko and Leviathan
+    (1994), Eqs. (4.13), (B.17) and (B.18), is checked on a rectangle
+    against the closed-form energies of the hourglass patterns of `r_x` and
+    `r_y`, for the plates of :func:`laminates`, and on four shapes against
+    :func:`bl94_bending_reference` plus the shear stabilisation of
+    :func:`bl94_shear_reference`.
+
+    Notes
+    -----
+    In Belytschko and Leviathan (1994), the nonconstant part of the
+    curvatures, Eq. (3.28), p. 327, gives the stabilisation of Eq. (4.13),
+    p. 331, and of Eqs. (B.17) and (B.18), p. 349, with the integrals
+    `H_{xx}`, `H_{yy}` and `H_{xy}` of Eq. (4.14), here with the bending
+    stiffness `\boldsymbol{D} - \boldsymbol{B} \boldsymbol{A}^{-1}
     \boldsymbol{B}` of the laminate in the element coordinate system, which
     is `\boldsymbol{D}` for a symmetric laminate and does not depend on the
     offset. On a rectangle of half-sides `a` and `b` the patterns `r_x = h`
@@ -1235,7 +1319,8 @@ def test_bending_stabilisation_matches_belytschko_leviathan():
     shear, the difference between ``hgfactor_physical = 1`` and ``0``, is
     the sum of :func:`bl94_bending_reference` and of the matrix ``KH`` of
     :func:`bl94_shear_reference`, for random displacements, see
-    :func:`test_transverse_shear_matches_belytschko_leviathan`.
+    :func:`test_transverse_shear_matches_belytschko_leviathan`. The full
+    reference is in the module documentation.
 
     """
     a, b = 1., 0.5
@@ -1262,10 +1347,15 @@ def test_bending_stabilisation_matches_belytschko_leviathan():
 def test_transverse_shear_matches_belytschko_leviathan():
     r"""The transverse shear of Quad4R against :func:`bl94_shear_reference`
 
-    Belytschko, T., and Leviathan, I., 1994, "Physical stabilization of the
-    4-node shell element with one point quadrature", Comput. Methods Appl.
-    Mech. Engrg., 113(3-4), pp. 321-350,
-    https://doi.org/10.1016/0045-7825(94)90052-3: the assumed transverse
+    The stabilisation of the transverse shear of Belytschko and Leviathan
+    (1994), Eq. (4.13), is checked on four shapes with random displacements
+    against :func:`bl94_shear_reference` plus :func:`bl94_bending_reference`,
+    with its linearity in ``hgfactor_physical``, and on a rectangle against
+    the closed-form energy of the hourglass pattern of `w`.
+
+    Notes
+    -----
+    In Belytschko and Leviathan (1994), the assumed transverse
     shear strains of Dvorkin and Bathe (1984) split into a constant and a
     nonconstant part, Eqs. (3.35)-(3.42), pp. 328-329; the one-point
     stiffness of the constant part, Eq. (4.12), p. 330, and the
@@ -1276,10 +1366,10 @@ def test_transverse_shear_matches_belytschko_leviathan():
     :func:`test_bending_stabilisation_matches_belytschko_leviathan`, and its
     linearity in ``hgfactor_physical`` are checked on four shapes with
     random displacements, and on the rectangle of sides `2a = 2` and `2b =
-    1` the
-    hourglass pattern `w = \xi\eta`, whose assumed shear strains are
+    1` the hourglass pattern `w = \xi\eta`, whose assumed shear strains are
     `\gamma_{xz} = \eta/a` and `\gamma_{yz} = \xi/b`, has the energy
-    `A (A_{55}/a^2 + A_{44}/b^2)/6`, all of it from the stabilisation.
+    `A (A_{55}/a^2 + A_{44}/b^2)/6`, all of it from the stabilisation. The
+    full reference is in the module documentation.
 
     """
     prop = isotropic_plate(thickness=T_BROCKMAN, E=E_BROCKMAN,
@@ -1329,14 +1419,23 @@ def test_constant_twist_patch_test():
     The assumed shear strains of Belytschko and Leviathan (1994), see
     :func:`test_transverse_shear_matches_belytschko_leviathan`, vanish for
     this state, constant and nonconstant parts, so their stabilisation adds
-    no energy. Up to 0.11 the hourglass mode of `w` was controlled with
-    Brockman's operator `\gamma^\top w = w_{,xy}` alone, which is `k` for
-    this state: it added the fraction `0.6 (1 + \nu)/(1 + 1/A)` to the
-    energy, 1.7798 times the exact one with 4x4 elements and 1.7334 with
-    64x64 in the unit of length of the roof of Sze et al. (2004), but only
-    1.0031 and 1.00001 in a unit 1000 times larger, a failure of the patch
-    test that refinement did not remove where the element areas were large
-    in the unit used. See :func:`twist_patch_energy_ratio`.
+    no energy. See :func:`twist_patch_energy_ratio`.
+
+    Notes
+    -----
+    A control of the hourglass mode of `w` with Brockman's operator
+    `\gamma^\top w = w_{,xy}` alone, which is `k` for this state, adds the
+    fraction `0.6 (1 + \nu)/(1 + 1/A)` to the energy: 1.7798 times the exact
+    one with 4x4 elements and 1.7334 with 64x64 in the unit of length of the
+    roof of Sze et al. (2004), but only 1.0031 and 1.00001 in a unit 1000
+    times larger, a failure of the patch test that refinement does not
+    remove where the element areas are large in the unit used.
+
+    With `\kappa_{xy} = r_{y,y} - r_{x,x}`, the uniform twist gives
+    `\kappa_{xy} = -2k`, `\kappa_{xx} = \kappa_{yy} = 0` and no transverse
+    shear, so the exact strain energy per unit area of the isotropic plate
+    is `D_{66} \kappa_{xy}^2/2 = 2 D_{66} k^2`, with `D_{66} = E h^3/(24 (1
+    + \nu))`, the reference of :func:`twist_patch_energy_ratio`.
 
     """
     for scale in (1., 1.e-3):
@@ -1348,8 +1447,8 @@ def test_constant_twist_patch_test():
                 assert abs(ratio - 1) < 1e-9, (scale, hg, n, ratio)
 
 
-# NOTE Belytschko and Leviathan (1994), Fig. 3 and Table 2, p. 336: nodes 1
-#      to 4 on the boundary, 5 to 8 inside
+# NOTE mesh of the thin-plate bending patch test: nodes 1 to 4 on the
+#      boundary, 5 to 8 inside
 BL94_PATCH_XY = np.array([[0., 10.], [0., 0.], [10., 0.], [10., 10.],
                           [2., 2.], [8., 3.], [8., 7.], [4., 7.]])
 BL94_PATCH_CONN = [(1, 2, 5, 4), (2, 3, 6, 5), (3, 0, 7, 6), (0, 1, 4, 7),
@@ -1360,7 +1459,16 @@ def test_bending_patch_test_belytschko_leviathan():
     r"""Thin-plate bending patch test of Belytschko and Leviathan (1994),
     Section 6.1, Fig. 3 and Table 2, p. 336, Table 3, p. 337
 
-    The quadratic field of their Eq. (6.1), `w = 0.001 x^2 + 0.002 xy +
+    A constant-curvature field is prescribed at the boundary nodes of an
+    irregular five-element mesh and the interior nodes must take the exact
+    values, for two thicknesses and with and without the stabilisation.
+
+    Notes
+    -----
+    The mesh ``BL94_PATCH_XY`` and ``BL94_PATCH_CONN`` is that of Fig. 3 and
+    Table 2, p. 336, of Belytschko and Leviathan (1994), nodes 1 to 4 on
+    the boundary and 5 to 8 inside; the exact nodal values of `w` asserted
+    first are those of their Table 2. The quadratic field of their Eq. (6.1), `w = 0.001 x^2 + 0.002 xy +
     0.0015 y^2 + 0.025 x + 0.03 y + 0.09`, with the Kirchhoff rotations of
     Eqs. (6.2) and (6.3), `\theta_x = w_{,y}` and `\theta_y = -w_{,x}`,
     which are `r_x` and `r_y` of pyfe3d, prescribed at the boundary nodes 1
@@ -1374,11 +1482,9 @@ def test_bending_patch_test_belytschko_leviathan():
     for the YASE element, both with a constant shear strain that is not
     zero under constant curvature on a non-rectangular element, and 1.00
     for MITC4 and for their element. Quad4R, whose constant transverse shear
-    is that of Dvorkin and Bathe since 0.12.0, passes for any
-    ``hgfactor_physical``; up to 0.11, with the displacement-based shear at the
-    centroid, it gave 0.875, 1.21, 0.98 and 1.20 times the exact `w` of
-    nodes 5 to 8 with ``h = 0.01`` (measured on 2026-10-29 with
-    ``hgfactor_physical = 0``).
+    is that of Dvorkin and Bathe, passes for any
+    ``hgfactor_physical``. The full reference is in the module
+    documentation.
 
     """
     def w(X, Y):
@@ -1392,7 +1498,7 @@ def test_bending_patch_test_belytschko_leviathan():
         return -(0.002*X + 0.002*Y + 0.025)
 
     X, Y = BL94_PATCH_XY[:, 0], BL94_PATCH_XY[:, 1]
-    # NOTE Table 2 of Belytschko and Leviathan (1994)
+    # NOTE exact nodal values of w of the reference, see the Notes
     assert np.allclose(w(X, Y), [0.54, 0.09, 0.44, 1.09, 0.2180, 0.5055,
                                  0.7495, 0.5455], atol=1e-12)
     ncoords_flatten = np.vstack((X, Y, 0*X)).T.flatten()
@@ -1480,7 +1586,7 @@ def equivalent_moduli(prop, thetadeg):
 def test_laminate_hourglass_stiffnesses_use_membrane_and_bending_moduli():
     r"""`u`, `v` with the membrane moduli, in the element coordinate
     system; `w`, `r_x` and `r_y` have the physical stabilisation of
-    Belytschko and Leviathan (1994) since 0.12.0, see
+    Belytschko and Leviathan (1994), see
     :func:`test_bending_stabilisation_matches_belytschko_leviathan`
 
     The generalized stiffness of each hourglass pattern is recovered from
@@ -1571,6 +1677,14 @@ def navier_ss1_center_deflection(prop, a, nterms=199):
     r"""Centre deflection of a simply supported square plate under a unit
     uniform pressure, FSDT Navier solution with SS-1 conditions
 
+    The series of the Navier solution of Reddy (2003), Sec. 7.2.1, with
+    the odd `m` and `n` up to ``nterms``, for a laminate
+    without the couplings listed in the Notes; the transverse shear
+    stiffnesses are those of ``prop``, so the comparison with Quad4R
+    isolates the discretisation.
+
+    Notes
+    -----
     For a laminate with `A_{16} = A_{26} = B_{16} = B_{26} = D_{16} = D_{26}
     = A_{45} = 0`, e.g. a cross-ply, symmetric or not, the fields
 
@@ -1585,9 +1699,9 @@ def navier_ss1_center_deflection(prop, a, nterms=199):
     and cosines, so the strain energy of a term `(m, n)` is `a^2/8` times a
     quadratic form `Q` of `(U, V, W, X, Y)` with constant coefficients, and
     the stationarity of `a^2/8 \, Q - q_{mn} W a^2/4` gives one 5 by 5 linear
-    system per term, with `q_{mn} = 16/(\pi^2 m n)` for odd `m` and `n`.
-    The transverse shear stiffnesses are those of ``prop``, so the
-    comparison isolates the discretisation.
+    system per term, with `q_{mn} = 16/(\pi^2 m n)` for odd `m` and `n`,
+    see the Notes of :func:`test_laminated_plates_against_navier` for the
+    equations of Reddy (2003) these follow.
 
     """
     ABD = prop.ABD
@@ -1674,11 +1788,46 @@ def test_laminated_plates_against_navier():
     the bending moduli in the hourglass stiffnesses
 
     Simply supported square plates under uniform pressure, 8 by 8, 16 by 16
-    and 32 by 32 Quad4R, against :func:`navier_ss1_center_deflection`. The
-    reference is the Navier solution of the first-order shear deformation
-    theory of Reddy, J. N., Mechanics of Laminated Composite Plates and
-    Shells: Theory and Analysis, 2nd ed., CRC Press, 2004,
-    https://doi.org/10.1201/b12409, Sec. 7.2.1, pp. 379-380: the SS-1
+    and 32 by 32 Quad4R, against :func:`navier_ss1_center_deflection`, the
+    Navier solution of the first-order shear deformation theory of Reddy
+    (2003), Sec. 7.2.1, which is first checked against the deflections of
+    his Table 7.2.1, p. 385. The plates are isotropic, the symmetric and the
+    unsymmetric cross-ply and a sandwich: the ply has `E_1/E_2 = 25`,
+    `G_{12} = G_{13} = 0.5 E_2`, `G_{23} = 0.2 E_2`, `\nu_{12} = 0.25`, and
+    the sandwich has two `[0/90]` faces of 0.5 mm on a 10 mm core of 100
+    MPa and 40 MPa.
+
+    Quad4R is stiffer than the reference, so its deflection is smaller, and
+    the error decreases as `h^2`, the rate of the bilinear element.
+    Measured `w/w_{ref}`, with the physical stabilisation of the bending and
+    of the transverse shear of Belytschko and Leviathan (1994):
+
+    ==========  ======  ======  ======
+    plate       8x8     16x16   32x32
+    ==========  ======  ======  ======
+    isotropic   0.9949  0.9987  0.9997
+    [0/90]s     0.9924  0.9981  0.9995
+    [0/90]      0.9687  0.9921  0.9980
+    sandwich    0.9913  0.9979  0.9995
+    ==========  ======  ======  ======
+
+    The observed order of convergence from 16x16 to 32x32 is 2.00 to 2.01,
+    and the Richardson extrapolation of these two meshes with the order 2
+    agrees with the Navier solution within 1e-5, so the meshes converge to
+    the reference and not to another limit.
+
+    Notes
+    -----
+    With an artificial hourglass stiffness of the rotations instead,
+    Brockman's with 0.1 times the bending modulus, the meshes are stiffer:
+    `w/w_{ref}` = 0.9210, 0.8521, 0.8465 and 0.8612 for the four plates
+    with 8x8 elements, 8 to 15 % too stiff, and 0.9948, 0.9895, 0.9890 and
+    0.9902 with 32x32 (measured). The physical stabilisation, the
+    nonconstant part of the curvatures integrated with the bending
+    stiffness of the laminate, leaves 0.5 to 3 % with 8x8 elements.
+
+    The reference is the Navier solution of the first-order shear
+    deformation theory of Reddy [1]_, Sec. 7.2.1, pp. 379-380: the SS-1
     conditions, Eq. (7.2.1a) and Fig. 7.2.1, the expansions, Eqs. (7.2.2) to
     (7.2.4), and the load, Eq. (7.2.6a), which for a uniform pressure gives
     ``16/(pi**2*m*n)``, and the condition ``A16 = A26 = B16 = B26 = D16 =
@@ -1687,48 +1836,26 @@ def test_laminated_plates_against_navier():
     are the conditions and the coefficients of
     :func:`navier_ss1_center_deflection`, with `\phi_x = r_y` and `\phi_y =
     -r_x`. The same conditions are stated as Eqs. (14) and (15), pp. 9-10,
-    of Part 1 of Reddy, J. N., Chandrashekhara, K., and Chao, W. C.,
-    "Geometrically nonlinear analysis of laminated elastic structures", NASA
-    CR-191055, 1993. The series changes by less than 1e-8 from 199 to 399
-    terms in each direction, and with the transverse shear stiffnesses of
-    Reddy, ``K = 5/6`` times the thickness-weighted sum of `G_{13}` and
-    `G_{23}`, it reproduces the deflections of the (0/90/90/0) square plate
-    under uniform load of his Table 7.2.1, p. 385, which uses the ply of
-    this test, ``100*w*E_2*h**3/(a**4*q_0)`` = 1.0250, 0.7694 and 0.6833 for
-    `a/h` = 10, 20 and 100, within half a unit of the last printed digit.
-    The plates below keep the transverse shear stiffnesses of
+    of Part 1 of Reddy, Chandrashekhara and Chao [2]_. The series changes by
+    less than 1e-8 from 199 to 399 terms in each direction, and with the
+    transverse shear stiffnesses of Reddy, ``K = 5/6`` times the
+    thickness-weighted sum of `G_{13}` and `G_{23}`, it reproduces the
+    deflections of the (0/90/90/0) square plate under uniform load of his
+    Table 7.2.1, p. 385, which uses the ply of this test,
+    ``100*w*E_2*h**3/(a**4*q_0)`` = 1.0250, 0.7694 and 0.6833 for `a/h` =
+    10, 20 and 100, within half a unit of the last printed digit. The plates
+    below keep the transverse shear stiffnesses of
     :func:`pyfe3d.shellprop_utils.laminated_plate`, so their reference
     differs from Reddy's, by 0.21 % for the [0/90]s plate with `a/h = 100`.
 
-    The ply has `E_1/E_2 = 25`, `G_{12} = G_{13} = 0.5 E_2`, `G_{23} = 0.2
-    E_2`, `
-u_{12} = 0.25`, and the sandwich has two `[0/90]` faces of 0.5
-    mm on a 10 mm core of 100 MPa and 40 MPa.
-
-    Quad4R is stiffer than the reference, so its deflection is smaller, and
-    the error decreases as `h^2`, the rate of the bilinear element.
-    Measured `w/w_{ref}` on 2026-10-29, with the physical stabilisation of
-    the bending and of the transverse shear of Belytschko and Leviathan
-    (1994) used since 0.12.0, and, up to 0.11, with Brockman's hourglass
-    stiffnesses of the rotations with the bending moduli:
-
-    ==========  ===============  ===============  ===============
-    plate       8x8              16x16            32x32
-    ==========  ===============  ===============  ===============
-    isotropic   0.9949 (0.9210)  0.9987 (0.9794)  0.9997 (0.9948)
-    [0/90]s     0.9924 (0.8521)  0.9981 (0.9590)  0.9995 (0.9895)
-    [0/90]      0.9687 (0.8465)  0.9921 (0.9572)  0.9980 (0.9890)
-    sandwich    0.9913 (0.8612)  0.9979 (0.9617)  0.9995 (0.9902)
-    ==========  ===============  ===============  ===============
-
-    The observed order of convergence from 16x16 to 32x32 is 2.00 to 2.01,
-    and the Richardson extrapolation of these two meshes with the order 2
-    agrees with the Navier solution within 1e-5, so the meshes converge to
-    the reference and not to another limit. Up to 0.11 the artificial
-    stiffness of the rotations, 0.1 times the bending modulus, made the 8x8
-    meshes 8 to 15 % too stiff; the physical stabilisation, the
-    nonconstant part of the curvatures integrated with the bending
-    stiffness of the laminate, leaves 0.5 to 3 %.
+    References
+    ----------
+    .. [1] Reddy, J. N., Mechanics of Laminated Composite Plates and Shells:
+       Theory and Analysis, 2nd ed., CRC Press, 2003.
+       https://doi.org/10.1201/b12409
+    .. [2] Reddy, J. N., Chandrashekhara, K. and Chao, W. C., Geometrically
+       nonlinear analysis of laminated elastic structures, NASA CR-191055,
+       1993.
 
     """
     E2 = 1.e9
@@ -1746,7 +1873,8 @@ u_{12} = 0.25`, and the sandwich has two `[0/90]` faces of 0.5
             laminaprops=[laminaprop, laminaprop, core, laminaprop,
                          laminaprop]), 0.5),
     }
-    # NOTE Reddy (2003), Table 7.2.1, (0/90/90/0), uniform load
+    # NOTE reference deflections of the (0/90/90/0) plate under uniform
+    #      load, see the Notes
     for a_h, wbar in ((10, 1.0250), (20, 0.7694), (100, 0.6833)):
         h = 1./a_h
         prop = laminated_plate([0, 90, 90, 0], plyt=h/4,
@@ -1782,6 +1910,14 @@ u_{12} = 0.25`, and the sandwich has two `[0/90]` faces of 0.5
 def test_mass_formulations_match_brockman():
     r"""Equations (21), (22) and (31) and the lumped mass of p. 2349
 
+    The three mass matrices of ``mtype = 0, 1, 2`` against those of
+    Brockman (1987): the total mass on a rectangle, a parallelogram and a
+    distorted element, and the per-node closed forms on the regular shapes.
+    All three conserve the total mass on any shape. The per-node closed
+    forms hold where the constant-Jacobian assumption holds.
+
+    Notes
+    -----
     For a parallelogram the Jacobian determinant is constant, which is the
     assumption under which Brockman evaluates his Eq. (22),
 
@@ -1795,10 +1931,7 @@ def test_mass_formulations_match_brockman():
     ``mtype = 2``. The lumped mass of pp. 2348-2349, by Gauss-Lobatto
     integration at the nodes, used by ``mtype = 1``, is diagonal provided
     `R_2 = 0`, as here without offset, with `R_1 A/4` and `R_3 A/4` per
-    node.
-
-    All three conserve the total mass on any shape. The per-node closed
-    forms hold where the constant-Jacobian assumption holds.
+    node. The full reference is in the module documentation.
 
     """
     prop = isotropic_plate(thickness=0.01, E=70.e9, nu=0.3, rho=2700.)

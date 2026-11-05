@@ -3,8 +3,7 @@ r"""Computational cost of the element methods, to assess the build flags
 Times ``update_KC0``, ``update_M``, ``update_KG``, ``update_fint`` with
 ``nonlinear=1`` and ``update_KCNL`` of the shell elements over a flat plate
 mesh, called from a Python loop as in normal use. It is used to assess the
-Cython directives and the compiler flags of ``setup.py``, see
-``CHANGELOG.md``.
+Cython directives and the compiler flags of ``setup.py``.
 
 Run it against the build of pyfe3d to be assessed, e.g.::
 

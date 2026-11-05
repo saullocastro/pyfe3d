@@ -1,3 +1,10 @@
+r"""Static deflection of a simply supported plate modelled with Quad4 under a
+central point load
+
+The deflection at the centre is compared with the Navier solution of
+Timoshenko and Woinowsky-Krieger (1959), Eq. (147), within 1 %, and the
+internal forces with the external forces.
+"""
 import sys
 sys.path.append('..')
 
@@ -13,9 +20,14 @@ def test_static_plate_quad_point_load(plot=False):
     r"""Simply supported rectangular plate, ``a = 3``, ``b = 7``,
     ``h = 0.005``, under a point load at its centre
 
-    The reference is the Navier solution of Timoshenko, S., and
-    Woinowsky-Krieger, S., Theory of Plates and Shells, 2nd ed., McGraw-Hill,
-    1959, Art. 29, p. 111, Eq. (133), at the centre, summed in Art. 34,
+    The deflection at the centre is compared with the Navier solution of
+    the Kirchhoff plate, ``rtol = 0.01``, and the internal forces with the
+    external forces; ``plot`` plots the deflection.
+
+    Notes
+    -----
+    The reference is the Navier solution of Timoshenko and
+    Woinowsky-Krieger (1959), Art. 29, p. 111, Eq. (133), at the centre, summed in Art. 34,
     p. 143, as the single series of Eq. (147),
     ``w_max = alpha*P*a**2/D``, with
     ``alpha = sum((tanh(alpha_m) - alpha_m/cosh(alpha_m)**2)/m**3)/(2*pi**3)``
@@ -32,9 +44,14 @@ def test_static_plate_quad_point_load(plot=False):
     below resolve, ``m < 2*(nx - 1)`` and ``n < 2*(ny - 1)``, it adds
     2.0e-5 to 3.6e-5 of the reference deflection.
 
-    With 18x30 elements the deflection at the centre is 0.24 % below the
-    reference, with 6x10 elements 1.54 %, with 12x20 elements 0.49 %, with
-    24x40 elements 0.13 %.
+    With 18x30 elements the deflection at the centre is 0.35 % below the
+    reference, with 6x10 elements 2.61 %, with 12x20 elements 0.74 %, with
+    24x40 elements 0.20 %.
+
+    References
+    ----------
+    Timoshenko, S., and Woinowsky-Krieger, S., Theory of Plates and Shells,
+    2nd ed., McGraw-Hill, 1959.
     """
     data = Quad4Data()
     probe = Quad4Probe()
@@ -133,7 +150,7 @@ def test_static_plate_quad_point_load(plot=False):
 
     w = u[2::DOF].reshape(nx, ny).T
 
-    # NOTE Timoshenko and Woinowsky-Krieger (1959), Eq. (147)
+    # NOTE Navier solution summed as a single series
     D = E*h**3/(12*(1 - nu**2))
     m = np.arange(1, 80, 2)
     alpha_m = m*np.pi*b/(2*a)

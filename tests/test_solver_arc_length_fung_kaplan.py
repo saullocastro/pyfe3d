@@ -1,5 +1,29 @@
 r"""Snap-through of a low sinusoidal arch of BeamC elements, Fung and Kaplan (1952)
 
+The arc-length solvers follow the symmetric path of a pinned low sinusoidal
+arch through both limit points, compared with the analytical limit loads of
+Fung and Kaplan (1952), Eqs. (23) and (25), and with values pre-determined
+by the test.
+
+The model: span ``L = 100``, square cross-section ``1 x 1``, ``E = 1e7``,
+``nu = 0.3``, `\lambda_1 = 2.2`, i.e. a rise ``a_1 L = 1.27``, 40 BeamC
+elements in the ``xz`` plane, the out-of-plane displacement and the rotations
+about ``x`` and ``z`` restrained at every node, ``u`` and ``w`` restrained at
+both ends; the load is lumped at the nodes with the weights of the
+trapezoidal rule. `B_1` is computed from the deflection at mid-span. The
+reference load is ``1.25`` times `R_{cr}`, such that the load factor 1.0 is
+reached on the inverted configuration only, after both limit points and two
+null loads.
+
+At the default ``relTOL = 1e-9`` the arc-length solvers pass the null load
+between the limit points only with the round-off floor of the convergence
+criteria, see :mod:`pyfe3d.solver.convergence`: without it, they stop near
+the load factor 0.03, the residual of the large self-equilibrated axial
+forces being then larger than ``relTOL`` times the references of the
+criteria.
+
+Notes
+-----
 Fung and Kaplan [1]_ give the equilibrium of a low arch hinged at both ends,
 whose initial and deflected center lines are `y_0 = \sum a_m L \sin(m \pi
 x/L)` and `y = \sum b_m L \sin(m \pi x/L)`, in terms of the nondimensional
@@ -19,23 +43,6 @@ thrust, the symmetric path is their Eq. (23), `B_1^3 - B_1(\lambda_1^2 - 1)
 (23), at `B_1 = -\sqrt{(\lambda_1^2 - 1)/3}`, is at `\lambda_1 -
 \sqrt{4(\lambda_1^2 - 1)^3/27}`. With `\lambda_1^2 < 5.5` the arch buckles
 at the limit point, their Eq. (29).
-
-The model: span ``L = 100``, square cross-section ``1 x 1``, ``E = 1e7``,
-``nu = 0.3``, `\lambda_1 = 2.2`, i.e. a rise ``a_1 L = 1.27``, 40 BeamC
-elements in the ``xz`` plane, the out-of-plane displacement and the rotations
-about ``x`` and ``z`` restrained at every node, ``u`` and ``w`` restrained at
-both ends; the load is lumped at the nodes with the weights of the
-trapezoidal rule. `B_1` is computed from the deflection at mid-span. The
-reference load is ``1.25`` times `R_{cr}`, such that the load factor 1.0 is
-reached on the inverted configuration only, after both limit points and two
-null loads.
-
-At the default ``relTOL = 1e-9`` the arc-length solvers pass the null load
-between the limit points only with the round-off floor of the convergence
-criteria, see :mod:`pyfe3d.solver.convergence`: without it, they stop near
-the load factor 0.03, the residual of the large self-equilibrated axial
-forces being then larger than ``relTOL`` times the references of the
-criteria.
 
 References
 ----------
@@ -133,6 +140,14 @@ def arch(lam1, num_elements=40, L=100., t=1., b=1., E=1.e7, nu=0.3,
 def test_fung_kaplan_beam_arch(method, convergence_criterion, monkeypatch):
     r"""Symmetric path through both limit points at the default tolerances
 
+    The limit loads of the 40 elements are compared with values
+    pre-determined by this same test, with ``rtol = 1e-6``, and with those of
+    Fung and Kaplan (1952) with grade A of MacNeal and Harder (1985), p. 14,
+    as bound (at most 2 %). The round-off floor of the convergence criteria
+    must accept at least one iteration, see the module documentation.
+
+    Notes
+    -----
     The limit loads of 40 elements differ from those of Fung and Kaplan by
     -0.0106 (upper) and +0.0026 (lower), measured with arc-length increments
     of 0.025; with 80 and 160 elements these differences become -0.0056 and
@@ -154,22 +169,28 @@ def test_fung_kaplan_beam_arch(method, convergence_criterion, monkeypatch):
 
     the upper limit load converging to the sampling difference above, the
     lower one to about -0.002, which does not depend on the increment.
-    Before the element-averaged axial strain of BeamC (see its notes), the
-    lower limit load of 40 elements was +0.0406 from that of Fung and
-    Kaplan, the membrane locking of the pointwise strain. Following the
+    With the pointwise axial strain instead of the element-averaged one of
+    BeamC (see its notes), the lower limit load of 40 elements is +0.0406
+    from that of Fung and Kaplan, the membrane locking of the pointwise
+    strain. Following the
     policy of the tests whose reference is reached only on fine meshes, the
     limit loads of the 40 elements are compared with the values
     pre-determined by this same test, 5.0842965731 and -0.6936707458, with
     ``rtol = 1e-6`` (the methods and criteria differ by 2e-10 relative),
-    and with Fung and Kaplan with grade A of MacNeal, R. H. and Harder, R.
-    L., A proposed standard set of problems to test finite element
-    accuracy, Finite Elements in Analysis and Design, 1(1), 3-20, 1985,
-    https://doi.org/10.1016/0168-874X(85)90003-4, p. 14, as bound (at most
-    2 %): 0.24 % measured for the upper limit load and 0.38 % for the lower
-    one. Until 0.12.0 both were compared with ``0.01*R_cr = 0.051``.
+    and with Fung and Kaplan [1]_ with grade A of MacNeal and Harder [2]_,
+    p. 14, as bound (at most 2 %): 0.24 % measured for the upper limit load
+    and 0.38 % for the lower one.
 
-    The round-off floor of the convergence criteria must accept at least one
-    iteration, see the module documentation.
+    References
+    ----------
+    .. [1] Fung, Y. C. and Kaplan, A., Buckling of low arches or curved
+       beams of small curvature, NACA Technical Note 2840, National Advisory
+       Committee for Aeronautics, Washington, 1952.
+       https://ntrs.nasa.gov/citations/19930083579
+    .. [2] MacNeal, R. H. and Harder, R. L., A proposed standard set of
+       problems to test finite element accuracy, Finite Elements in Analysis
+       and Design, 1(1), 3-20, 1985.
+       https://doi.org/10.1016/0168-874X(85)90003-4
 
     """
     lam1 = 2.2

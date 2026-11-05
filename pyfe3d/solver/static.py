@@ -64,10 +64,8 @@ def solve(A, b, **kwargs):
     The system `\boldsymbol{A} \boldsymbol{x} = \boldsymbol{b}` is solved as given. In a finite element
     model the known displacements are partitioned out beforehand, and a null
     row or column of `\boldsymbol{A}` is a degree-of-freedom without stiffness, i.e. a
-    modelling error, which is reported instead of being removed. This
-    deliberately differs from structsolve, whose solvers remove the null
-    rows and columns left by the boundary conditions of its semi-analytical
-    models, see :func:`.check_null_rows_cols`.
+    modelling error, which is reported instead of being removed, see
+    :func:`.check_null_rows_cols`.
 
     An exactly singular matrix is detected by the factorization, which
     raises, instead of the :class:`scipy.sparse.linalg.MatrixRankWarning` and
@@ -242,6 +240,22 @@ def linear_static(K, fext):
     `\boldsymbol{K}_{C0}`. For a follower load affine in the displacements, `\boldsymbol{F}(\boldsymbol{u})
     = \boldsymbol{F}_0 - \boldsymbol{K}_F \boldsymbol{u}`, the linear solution is that of `(\boldsymbol{K}_{C0} +
     \boldsymbol{K}_F) \boldsymbol{u} = \boldsymbol{F}_0`.
+
+    Examples
+    --------
+    Two springs in series along `x`, fixed at the first node, with the force
+    ``10.`` at the last one:
+
+    >>> import numpy as np
+    >>> from scipy.sparse import csr_matrix
+    >>> from pyfe3d.solver import linear_static
+    >>> k = 1000.
+    >>> KC0 = csr_matrix([[k, -k, 0.], [-k, 2*k, -k], [0., -k, k]])
+    >>> fext = np.array([0., 0., 10.])
+    >>> bu = np.array([False, True, True])
+    >>> increments, cs = linear_static(KC0[bu, :][:, bu], fext[bu])
+    >>> print(increments, cs[0])
+    [1.0] [0.01 0.02]
 
     """
     return [1.], [_solve_linear_static(K, fext)]

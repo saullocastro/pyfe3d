@@ -1,6 +1,12 @@
-r"""Tests for :class:`pyfe3d.solver.Analysis`: linear static analysis,
-Newton-Raphson on a linear system, invalid parameters and the convergence
-criteria, relative and Crisfield's
+r"""Tests for :class:`pyfe3d.solver.Analysis`, against the closed-form solutions of small linear systems
+
+Linear static analysis, Newton-Raphson on a linear system, prescribed
+displacements and load-factor dependent loads through ``bu`` and ``uk``,
+invalid parameters and singular stiffness matrices, and the convergence
+criteria, relative and Crisfield's, with the round-off floor. The models are
+diagonal matrices and a chain of two springs in series, whose solutions are
+known in closed form; the reduced model of the springs is the reference of
+the analysis through ``bu``.
 """
 import sys
 sys.path.append('..')
@@ -15,6 +21,12 @@ from pyfe3d.solver.convergence import check_convergence
 
 
 def test_analysis_linear_static():
+    r"""Linear static analysis of a diagonal system, against its exact solution
+
+    Notes
+    -----
+    With ``K = 3 I`` and ``f = 6``, the solution is ``c = f/3 = 2``.
+    """
     n = 10
     K = csc_matrix(np.eye(n)*3.0)
     f = np.ones(n)*6.0
@@ -70,6 +82,8 @@ def test_null_row_raises(NLgeom, NL_method, modified_NR, convergence):
 
 
 def test_invalid_parameters():
+    r"""An invalid ``NL_method`` or ``convergence``, no tolerance, and ``uk``
+    without ``bu`` raise a ValueError"""
     n = 3
     K = csc_matrix(np.eye(n))
     an = Analysis(calc_fext=lambda inc=1., silent=True: np.ones(n),
@@ -197,6 +211,8 @@ def test_check_convergence_roundoff_floor(convergence, monkeypatch):
 
 
 def test_free_dofs_invalid_bu_and_uk():
+    r"""``FreeDofs`` rejects a ``bu`` that is not a 1-D boolean array and a
+    ``uk`` whose size differs from that of ``bu``"""
     from pyfe3d.solver import FreeDofs
 
     def f(*args, **kwargs):
@@ -217,7 +233,14 @@ def springs_chain(k1=100., k2=300.):
 def test_linear_static_prescribed_displacement():
     """Linear static analysis with ``bu`` and ``uk``: the prescribed
     displacement of the last DOF stretches the springs, the first DOF being
-    fixed"""
+    fixed, against the exact solution
+
+    Notes
+    -----
+    With ``u_0 = 0`` and ``u_2 = 0.3``, the equilibrium of the free middle
+    node, ``k_1 u_1 = k_2 (u_2 - u_1)``, gives ``u_1 = k_2 u_2/(k_1 + k_2) =
+    300 x 0.3/400``.
+    """
     K = springs_chain()
     an = Analysis(calc_fext=lambda inc=1., silent=True: np.zeros(3),
                   calc_kC=lambda c=None, NLgeom=False, silent=True:

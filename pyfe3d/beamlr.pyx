@@ -113,9 +113,8 @@ cdef class BeamLRProbe:
     Sv_x, Sw_x : array-like
         Arrays of size ``NUM_NODES*DOF=12`` with the rows giving the slopes
         `v_{,x}` and `w_{,x}` of the linear interpolations of `v` and `w`,
-        constant along the element, as in :class:`.BeamCProbe`. Up to
-        version 0.11 they held the interpolations of the rotations, `r_z`
-        and `-r_y`, see the notes of :class:`.BeamLR`.
+        constant along the element, as in :class:`.BeamCProbe`, see the
+        notes of :class:`.BeamLR`.
     KCNLve : array-like
         Array of size ``(NUM_NODES*DOF)**2=144`` with the nonlinear
         constitutive stiffness matrix KCNL in element coordinates, stored row
@@ -211,6 +210,34 @@ cdef class BeamLR:
     probe : :class:`.BeamLRProbe` object
         Pointer to the probe.
 
+    Examples
+    --------
+    Linear stiffness matrix of one element of length ``2`` along `x`:
+
+    >>> import numpy as np
+    >>> from scipy.sparse import coo_matrix
+    >>> from pyfe3d import BeamLR, BeamLRData, BeamLRProbe, DOF, INT, DOUBLE
+    >>> from pyfe3d.beamprop import BeamProp
+    >>> prop = BeamProp()
+    >>> prop.A, prop.E, prop.G = 0.0025, 203e9, 78e9
+    >>> prop.Iyy = prop.Izz = 0.05**4/12
+    >>> prop.J = prop.Iyy + prop.Izz
+    >>> x = np.array([0., 0., 0., 2., 0., 0.])
+    >>> data, probe = BeamLRData(), BeamLRProbe()
+    >>> beam = BeamLR(probe)
+    >>> beam.c1, beam.c2 = 0, DOF
+    >>> beam.update_rotation_matrix(0., 1., 0., x)
+    >>> beam.update_probe_xe(x)
+    >>> KC0r = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0c = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0v = np.zeros(data.KC0_SPARSE_SIZE, dtype=DOUBLE)
+    >>> beam.update_KC0(KC0r, KC0c, KC0v, prop)
+    >>> KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(2*DOF, 2*DOF)).toarray()
+    >>> KC0.shape
+    (12, 12)
+    >>> float(KC0[0, 0])
+    253750000.0
+
     Notes
     -----
     Formulation based on reference [1]_, replacing the consistent shape
@@ -255,26 +282,22 @@ cdef class BeamLR:
     matrix of :meth:`.update_KCNL` and the nonlinear internal forces of
     :meth:`.update_probe_finte` come from the von Kármán axial strain
     `\epsilon_{xx} = u_{,x} + (v_{,x}^2 + w_{,x}^2)/2`, whose slopes
-    `v_{,x}` and `w_{,x}` are taken, since version 0.12.0, from the linear
+    `v_{,x}` and `w_{,x}` are taken from the linear
     interpolations of `v` and `w`, as the axial strain requires and as in
     :class:`.BeamC`. They are constant along the element, and the geometric
     stiffness matrix is that of a string, `N/L` times ``[[1, -1], [-1,
-    1]]`` for `v` and for `w`. Up to version 0.11 the slopes were taken from
-    the rotations, `v_{,x} = r_z` and `w_{,x} = -r_y`, which holds only
-    without shear deformation: the buckling mode could then deflect with
-    vanishing shear strains, and the buckling load converged to the Euler
-    load `P_e` whatever the shear stiffness `\kappa G A`, instead of `P_e/(1
-    + P_e/(\kappa G A))`, Eq. (2-57) of [4]_. For a clamped-free column with
-    `P_e/(\kappa G A)` = 0.0002, 0.018, 0.18 and 0.59, `P_{cr}/P_e` was
-    1.0000 with 100 and with 800 elements, against 0.9998, 0.9825, 0.8488
-    and 0.6274 from Eq. (2-57), i.e. 0.02 % to 59 % unconservative. It is
-    now 0.9998, 0.9825, 0.8488 and 0.6274 with 160 elements, converging to
-    Eq. (2-57) as the square of the element length, see
-    ``tests/test_beam_linear_buckling_3D_column.py``. For slender columns
-    the discretization error is about twice that of the former matrix: for
-    `P_e/(\kappa G A) = 0.0002`, the load is 4.1e-3 and 1.0e-3 above Eq.
-    (2-57) with 10 and 20 elements, where it was 2.1e-3 and 5.1e-4 above
-    `P_e`. With constant slopes the axial strain `u_{,x} + w_{,x}^2/2` can
+    1]]`` for `v` and for `w`. Slopes taken from the rotations, `v_{,x} =
+    r_z` and `w_{,x} = -r_y`, would hold only without shear deformation:
+    the buckling mode could then deflect with vanishing shear strains, and
+    the buckling load would converge to the Euler load `P_e` whatever the
+    shear stiffness `\kappa G A`, instead of `P_e/(1 + P_e/(\kappa G A))`,
+    Eq. (2-57) of [4]_. For a clamped-free column with `P_e/(\kappa G A)` =
+    0.0002, 0.018, 0.18 and 0.59, `P_{cr}/P_e` is 0.9998, 0.9825, 0.8488
+    and 0.6274 with 160 elements, as from Eq. (2-57), converging to Eq.
+    (2-57) as the square of the element length, see
+    ``tests/test_beam_linear_buckling_3D_column.py``. For `P_e/(\kappa G A)
+    = 0.0002`, the load is 4.1e-3 and 1.0e-3 above Eq. (2-57) with 10 and
+    20 elements. With constant slopes the axial strain `u_{,x} + w_{,x}^2/2` can
     vanish in each element, so BeamLR is free of membrane locking; BeamC
     avoids it with the element-averaged axial strain described in its
     notes, see ``tests/test_nonlinear_benchmarks_sze2004.py``.
@@ -540,7 +563,7 @@ cdef class BeamLR:
         """
         cdef double x1, x2, y1, y2, z1, z2
         with nogil:
-            # NOTE ignoring z in local coordinates
+            # NOTE distance between the two nodes in element coordinates
             x1 = self.probe.xe[0]
             y1 = self.probe.xe[1]
             z1 = self.probe.xe[2]
@@ -1733,9 +1756,8 @@ cdef class BeamLR:
         - ``BLgammaz``: `\gamma_{xz} = w_{,x} + r_y`
         - ``BLkx``: `\kappa_x = {r_x}_{,x}`
         - ``Sv_x``, ``Sw_x``: the slopes `v_{,x}` and `w_{,x}` of the
-          interpolations of `v` and `w`, as in :meth:`.update_KG`; up to
-          version 0.11 they were taken from the rotations, `v_{,x} = r_z`
-          and `w_{,x} = -r_y`, see the notes of :class:`.BeamLR`
+          interpolations of `v` and `w`, as in :meth:`.update_KG`, see the
+          notes of :class:`.BeamLR`
 
         """
         cdef int i
@@ -1881,7 +1903,7 @@ cdef class BeamLR:
             v_x += Sv_x[i]*ue[i]
             w_x += Sw_x[i]*ue[i]
 
-        # axial force of the nonlinear axial strain, eNL = (v_x**2 + w_x**2)/2
+        # axial force of the nonlinear axial strain, see the Notes
         NNL = C00*(v_x*v_x + w_x*w_x)/2.
 
         for i in range(NUM_NODES*DOF):
@@ -1895,13 +1917,13 @@ cdef class BeamLR:
         for i in range(NUM_NODES*DOF):
             for j in range(NUM_NODES*DOF):
                 KCNLve[12*i + j] += weight*(
-                    # KC0L = BL.T*D*BNL
+                    # KC0L, see the Notes
                       EBL[i]*BNL[j]
-                    # KCL0 = BNL.T*D*BL
+                    # KCL0
                     + BNL[i]*EBL[j]
-                    # KCLL = BNL.T*D*BNL
+                    # KCLL
                     + C00*BNL[i]*BNL[j]
-                    # KGNL = NNL*(Sv_x.T*Sv_x + Sw_x.T*Sw_x)
+                    # KGNL
                     + NNL*(Sv_x[i]*Sv_x[j] + Sw_x[i]*Sw_x[j])
                 )
 
@@ -2062,7 +2084,7 @@ cdef class BeamLR:
             \epsilon_{xx} = u_{,x} + \frac{1}{2} \left( v_{,x}^2 + w_{,x}^2 \right)
 
         whose nonlinear part is `\epsilon_{NL} = \frac{1}{2} \boldsymbol{B}_{NL} \boldsymbol{u}_e`, with
-        `\boldsymbol{B}_{NL} = v_{,x} \frac{\partial \boldsymbol{S}^v}{\partial x} + w_{,x} \frac{\partial \boldsymbol{S}^w}{\partial x}` its variation, `\boldsymbol{S}^v` and `\boldsymbol{S}^w` being the linear interpolations of `v` and `w`, whose derivatives, the rows ``Sv_x`` and ``Sw_x`` of :meth:`._update_probe_BL_G`, are constant along the element. Up to version 0.11 the slopes were taken from the rotations, `v_{,x} = r_z` and `w_{,x} = -r_y`, see the notes of :class:`.BeamLR`. With
+        `\boldsymbol{B}_{NL} = v_{,x} \frac{\partial \boldsymbol{S}^v}{\partial x} + w_{,x} \frac{\partial \boldsymbol{S}^w}{\partial x}` its variation, `\boldsymbol{S}^v` and `\boldsymbol{S}^w` being the linear interpolations of `v` and `w`, whose derivatives, the rows ``Sv_x`` and ``Sw_x`` of :meth:`._update_probe_BL_G`, are constant along the element, see the notes of :class:`.BeamLR`. With
         `\boldsymbol{B}_L` the linear strain-displacement matrix, `\boldsymbol{C}_{sec}` the sectional
         stiffness matrix ``C`` of :class:`.BeamProp`, whose first row couples the axial strain with
         the other strains, e.g. through `E A_y` and `E A_z`, and `N_{NL} = C_{00} \epsilon_{NL}`, `C_{00} = E A` when ``C`` is not set:
@@ -2148,14 +2170,8 @@ cdef class BeamLR:
 
             self._update_probe_KCNLve(prop)
 
-            # NOTE from element to global coordinates:
-            #
-            # Kg = T @ Ke @ T.T
-            #
-            # in tensor notation:
-            #
-            # Kg_{mn} = r_{mi} * Ke_{ij} * r_{nj}
-            #
+            # NOTE from element to global coordinates, with the rotation
+            #      matrix r11, ..., r33, see the notes of the class
             for node_i in range(NUM_NODES):
                 for m in range(DOF):
                     for node_j in range(NUM_NODES):
@@ -2187,7 +2203,7 @@ cdef class BeamLR:
         before, see
         :meth:`.update_probe_ue` and :meth:`.update_probe_xe`. The rows and
         columns of the entries are those of the translations of the two
-        nodes; up to version 0.11 they were those of the rotations.
+        nodes.
 
         Parameters
         ----------
@@ -2229,11 +2245,11 @@ cdef class BeamLR:
         finte[6]``. In element coordinates the matrix is `N/L` times
         ``[[1, -1], [-1, 1]]`` for the `v` and for the `w` of the two nodes.
 
-        The slopes are those that enter the axial strain: up to version 0.11
-        they were taken from the rotations, `v_{,x} = r_z` and `w_{,x} =
-        -r_y`, which neglects the shear deformation in buckling, so that the
-        buckling load converged to the Euler load instead of Eq. (2-57) of
-        Timoshenko and Gere (1961), see the notes of :class:`.BeamLR`.
+        The slopes are those that enter the axial strain. Slopes taken from
+        the rotations, `v_{,x} = r_z` and `w_{,x} = -r_y`, would neglect the
+        shear deformation in buckling, so that the buckling load would
+        converge to the Euler load instead of Eq. (2-57) of Timoshenko and
+        Gere (1961), see the notes of :class:`.BeamLR`.
 
         `\boldsymbol{K}_G` is homogeneous of degree one in ``probe.ue``. With ``probe.ue``
         from the linear static solution of a reference load, the critical
@@ -2293,11 +2309,9 @@ cdef class BeamLR:
             # NOTE first row of C times the strains at the centre
             N = C01*(-ue[11]/2 - ue[5]/2 + (-ue[1] + ue[7])/L) + C02*(ue[10]/2 + ue[4]/2 + (-ue[2] + ue[8])/L) + (C00*(-ue[0] + ue[6]) + C03*(-ue[3] + ue[9]) + C04*(-ue[11] + ue[5]) + C05*(ue[10] - ue[4]))/L
 
-            # NOTE in element coordinates KG = N/L*[[1, -1], [-1, 1]] for v
-            #      and for w, i.e. N*L*(Sv_x.T*Sv_x + Sw_x.T*Sw_x) with the
-            #      constant rows of _update_probe_BL_G, transformed to global
-            #      coordinates as KG_mn = r_m1*N/L*r_n1 + r_m2*N/L*r_n2 for
-            #      each pair of nodes, with a minus sign between two nodes
+            # NOTE the matrix of the Notes, transformed to global
+            #      coordinates for each pair of nodes, with a minus sign
+            #      between two nodes
             for node_i in range(NUM_NODES):
                 for m in range(3):
                     for node_j in range(NUM_NODES):

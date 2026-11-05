@@ -1,8 +1,19 @@
+r"""Natural frequency of an orthotropic plate modelled with a distorted
+Quad4R mesh, invariance to the material coordinate system
+
+The material direction ``matx`` given to ``update_rotation_matrix`` is
+rotated by ``thetadeg`` and the single ply by ``-thetadeg``, so that the
+fibres stay along the global x axis. The fundamental frequency of the plate,
+with randomly distorted inner nodes, must not change: each ``thetadeg`` is
+compared with ``thetadeg = 0`` with ``rtol=1e-5``.
+
+"""
 import sys
 sys.path.append('..')
 
 import numpy as np
 from numpy import isclose
+
 from scipy.sparse import coo_matrix
 
 from pyfe3d.shellprop_utils import laminated_plate

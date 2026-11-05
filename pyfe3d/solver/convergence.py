@@ -275,6 +275,11 @@ def crisfield_weights(K0):
 def scaled_norm(v, w):
     r"""Scaled norm `\|v\|_{\boldsymbol{d}}` of a force-like vector
 
+    The Euclidean norm of ``v`` with each squared component multiplied by
+    its weight ``w``, used by Crisfield's criterion for the residual and the
+    reference force vectors. A complex ``v`` enters through the moduli of
+    its components.
+
     Parameters
     ----------
     v : np.ndarray
@@ -285,8 +290,18 @@ def scaled_norm(v, w):
     Returns
     -------
     norm : float
-        `\sqrt{\sum_j w_j v_j^2}`, of the dimension of the square root of an
-        energy.
+        The scaled norm, of the dimension of the square root of an energy.
+
+    See Also
+    --------
+    crisfield_zeta : the criterion that uses it.
+
+    Notes
+    -----
+    `\|v\|_{\boldsymbol{d}} = \sqrt{\sum_j w_j |v_j|^2}`, with `w_j =
+    1/|d_j|` and `d_j = K_{{C0}_{jj}}`, see the module documentation: each
+    term `|v_j|^2/|d_j|` has the units of energy, whether the
+    degree-of-freedom `j` is a translation or a rotation.
 
     """
     v = np.asarray(v)
@@ -295,6 +310,10 @@ def scaled_norm(v, w):
 
 def crisfield_zeta(R, fext, fint, w, q=None, fext_inc=None):
     r"""Relative force imbalance `\zeta` of Crisfield's criterion
+
+    The scaled norm of the residual ``R`` divided by the largest scaled norm
+    of the references ``fext`` and ``fint``, and of ``q`` and ``fext_inc``
+    when given, see :func:`scaled_norm`.
 
     Parameters
     ----------
@@ -346,6 +365,11 @@ def crisfield_zeta(R, fext, fint, w, q=None, fext_inc=None):
 
 def roundoff_floor(Kc_abs, w=None):
     r"""Round-off floor of the residual norm
+
+    The level below which the norm of the residual cannot be reduced in
+    floating-point arithmetic, from the norm of ``Kc_abs`` in the norm of the
+    criterion, scaled with ``w`` or Euclidean, times ``ROUNDOFF_FACTOR`` and
+    the machine precision. Used by :func:`check_convergence`.
 
     Parameters
     ----------
@@ -454,8 +478,7 @@ def check_convergence(an, R, fint, fext_total, fext_ref=None, q_ref=None,
 
     Notes
     -----
-    The relative criterion is that of the first versions of these solvers;
-    its reference ``fext_ref`` is useful when the load factor is close to
+    The reference ``fext_ref`` of the relative criterion is useful when the load factor is close to
     zero, where ``fext_total`` and ``fint`` are small. When all its
     references are null, the relative residual is ``norm(R)`` itself.
 

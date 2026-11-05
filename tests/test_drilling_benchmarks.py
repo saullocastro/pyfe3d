@@ -1,25 +1,15 @@
 r"""Literature benchmarks for the drilling degree-of-freedom, on Quad4
 
 C1, Cook's skew membrane, is the standard test of a membrane element with
-drilling rotations, and the convergence sequence is compared against Table
-III of:
+drilling rotations; its convergence sequence is compared against Table III of
+Ibrahimbegovic, Taylor and Wilson (1990). C2 and C3 are the straight and the
+curved cantilever of MacNeal and Harder (1985), and C4 is the cantilever of
+Section 8.3 and Table 3 of Allman (1984). The accuracy on the coarse meshes
+is graded with the rule of MacNeal and Harder (1985), see :func:`mh_grade`,
+and the convergence with mesh refinement is checked separately.
 
-    Ibrahimbegovic, A., Taylor, R. L. and Wilson, E. L., 1990, "A robust
-    quadrilateral membrane finite element with drilling degrees of freedom",
-    IJNME, 30(3), pp. 445-457. doi:10.1002/nme.1620300305
-
-C2 and C3 are the straight and the curved cantilever of:
-
-    MacNeal, R. H. and Harder, R. L., 1985, "A proposed standard set of
-    problems to test finite element accuracy", Finite Elements in Analysis and
-    Design, 1(1), pp. 3-20. doi:10.1016/0168-874X(85)90003-4
-
-C4 is the cantilever of Section 8.3 and Table 3 of:
-
-    Allman, D. J., 1984, "A compatible triangular element including vertex
-    rotations for plane elasticity analysis", Computers & Structures, 19(1-2),
-    pp. 1-8. doi:10.1016/0045-7949(84)90197-4
-
+Notes
+-----
 The reference values quoted in the comments were taken from those tables. The
 values of the penalty model are recorded next to them because the point of
 the comparison is the in-plane bending response, which is where the drilling
@@ -34,9 +24,8 @@ on coarse meshes, one element across the depth of the beams, and the grade is
 their measure of the accuracy that can be expected there, see
 :func:`mh_grade`. The convergence with mesh refinement is checked separately.
 
-A limitation of the element up to version 0.11 shows up in two of these
-cases and is asserted here, with ``shear_model = 0``, so that it is on
-record. With a single element across the width, a strip of Quad4 elements
+A limitation of the element with ``shear_model = 0`` shows up in two of
+these cases and is asserted here, so that it is on record. With a single element across the width, a strip of Quad4 elements
 with the one-point transverse shear has almost no torsional stiffness,
 because of the zero-energy mode documented in
 ``test_quad4_spurious_shear_mode.py``, which is Mode 1 of Figure 10 of
@@ -47,8 +36,37 @@ mesh that MacNeal and Harder specify, identically for both drilling models,
 and two elements across the width are enough to recover them. That mode
 lives entirely in the out-of-plane block and has nothing to do with the
 drilling rotation. The assumed transverse shear strains of the MITC4
-element, the default ``shear_model = 1`` since 0.12.0, give it stiffness,
+element, the default ``shear_model = 1``, give it stiffness,
 and the 6 by 1 meshes then get grade B in both cases.
+
+The reference of C1, 23.91, is "obtained by numerical analysis for a refined
+model" (Ibrahimbegovic et al., 1990, Section 4.4, p. 454); Felippa (2003),
+Section 9.3, p. 2157, states "There is no known analytical solution", and
+the extrapolation of his 64x64 results with Wynn's epsilon algorithm gives
+23.956. The reference of C4 in Table 3 of Allman (1984), p. 7, is from
+Olsen and Bearden, his reference 9.
+
+References
+----------
+Ibrahimbegovic, A., Taylor, R. L. and Wilson, E. L., 1990, "A robust
+quadrilateral membrane finite element with drilling degrees of freedom",
+IJNME, 30(3), pp. 445-457. doi:10.1002/nme.1620300305
+
+MacNeal, R. H. and Harder, R. L., 1985, "A proposed standard set of
+problems to test finite element accuracy", Finite Elements in Analysis and
+Design, 1(1), pp. 3-20. doi:10.1016/0168-874X(85)90003-4
+
+Allman, D. J., 1984, "A compatible triangular element including vertex
+rotations for plane elasticity analysis", Computers & Structures, 19(1-2),
+pp. 1-8. doi:10.1016/0045-7949(84)90197-4
+
+Felippa, C. A., 2003, "A study of optimal membrane triangles with drilling
+freedoms", CMAME, 192(16-18), pp. 2125-2168.
+doi:10.1016/S0045-7825(03)00253-6
+
+Hughes, T. J. R., Taylor, R. L. and Kanoknukulchai, W., 1977, "A simple and
+efficient finite element for plate bending", IJNME, 11(10), pp. 1529-1543.
+doi:10.1002/nme.1620111005
 
 """
 import sys
@@ -125,17 +143,10 @@ def structured_quads(X, Y):
 
 # ------------------------------------------------------------------- C1
 COOK_CORNERS = np.array([[0., 0.], [48., 44.], [48., 60.], [0., 44.]])
-# Table III of Ibrahimbegovic et al. (1990), p. 454, displacement-type
-# formulation
+# Table III of the C1 reference, p. 454, displacement-type formulation
 COOK_ITW_DTYPE = {1: 14.065, 2: 20.682, 4: 22.984, 8: 23.626}
-# NOTE Ibrahimbegovic et al. (1990), Section 4.4, p. 454: "the reference value
-#      23.91, obtained by numerical analysis for a refined model"
+# NOTE reference value of a refined model, see the module Notes
 COOK_REF = 23.91
-# NOTE Felippa, C. A., 2003, "A study of optimal membrane triangles with
-#      drilling freedoms", CMAME, 192(16-18), pp. 2125-2168,
-#      doi:10.1016/S0045-7825(03)00253-6, Section 9.3, p. 2157: "There is no
-#      known analytical solution", the extrapolation of his 64x64 results
-#      with Wynn's epsilon algorithm gives 23.956
 COOK_FELIPPA = 23.956
 
 
@@ -175,9 +186,11 @@ def cook(n, drilling_model):
 def test_C1_cook_skew_membrane():
     r"""Tip displacement at (48, 52), reference 23.91
 
+    Notes
+    -----
     Measured, against Table III of Ibrahimbegovic et al. (1990), p. 454, with
     the grade of MacNeal and Harder (1985), p. 14, against ``COOK_REF`` =
-    23.91 in brackets:
+    23.91 in brackets::
 
         mesh    penalty      enriched     ITW D-type
         1x1      5.9685 (F)  13.6808 (D)  14.065 (D)
@@ -235,10 +248,10 @@ def test_C1_cook_skew_membrane():
 
 
 # ------------------------------------------------------------------- C2
-# Table 3 of MacNeal and Harder (1985), p. 10, straight cantilever
+# Table 3 of the C2 and C3 reference, p. 10, straight cantilever
 MH_STRAIGHT_REF = {'extension': 3.0e-5, 'in-plane shear': 0.1081,
                    'out-of-plane shear': 0.4321, 'twist': 0.03208}
-# Table 8 of MacNeal and Harder (1985), p. 15, normalised in-plane shear tip
+# Table 8 of the C2 and C3 reference, p. 15, normalised in-plane shear tip
 # displacement of the MSC/NASTRAN QUAD4 on the 6 by 1 meshes
 MH_QUAD4_IN_PLANE_SHEAR = {'regular': 0.904, 'trapezoidal': 0.071,
                            'parallelogram': 0.080}
@@ -299,6 +312,8 @@ def straight_cantilever(shape, load, drilling_model, nx=6, ny=1,
 def test_C2_macneal_harder_straight_cantilever():
     r"""Tip displacement of the 6 by 1 cantilever, three element shapes
 
+    Notes
+    -----
     Measured, with the references of Table 3, p. 10, in brackets:
 
         load                  mesh            penalty    enriched     ref
@@ -312,11 +327,11 @@ def test_C2_macneal_harder_straight_cantilever():
         out-of-plane shear    trapezoidal     0.41621     0.41621
         out-of-plane shear    parallelogram   0.42257     0.42257
 
-    The out-of-plane values are those of the default ``shear_model = 1``;
-    with ``shear_model = 0``, the one-point transverse shear up to 0.11, they
-    were 0.42349, 0.42410 and 0.42427, within 1.9 % of the reference, and
-    are now within 3.7 %, grade B, against 0.986, 0.968 and 0.977 of the
-    reference for the QUAD4 of MacNeal and Harder (1985), Table 8, p. 15.
+    The out-of-plane values are those of the default ``shear_model = 1``,
+    within 3.7 % of the reference, grade B; with ``shear_model = 0``, the
+    one-point transverse shear, they are 0.42349, 0.42410 and 0.42427,
+    within 1.9 %; against 0.986, 0.968 and 0.977 of the reference for the
+    QUAD4 of MacNeal and Harder (1985), Table 8, p. 15.
 
     In-plane shear is the drilling-sensitive case, and the one that motivates
     the enrichment. Normalised by the reference and graded with the rule of
@@ -379,6 +394,8 @@ def test_C2_macneal_harder_straight_cantilever():
 def test_C2_twist_of_the_strip():
     r"""Twist of the 6 by ny strip, unit tip torque, both drilling models
 
+    Notes
+    -----
     Measured, regular mesh, reference 0.03208, Table 3, p. 10:
 
         elements across   shear_model = 1     shear_model = 0     eigmin/eigmax
@@ -441,9 +458,9 @@ def test_C2_twist_of_the_strip():
 
 
 # ------------------------------------------------------------------- C3
-# Table 3 of MacNeal and Harder (1985), p. 10, curved beam
+# Table 3 of the C2 and C3 reference, p. 10, curved beam
 MH_CURVED_REF = {'in-plane': 0.08734, 'out-of-plane': 0.5022}
-# Table 9 of MacNeal and Harder (1985), p. 15, normalised in-plane tip
+# Table 9 of the C2 and C3 reference, p. 15, normalised in-plane tip
 # displacement of the MSC/NASTRAN QUAD4
 MH_QUAD4_CURVED_IN_PLANE = 0.833
 
@@ -473,6 +490,8 @@ def curved_beam(load, drilling_model, nx=6, ny=1, shear_model=1):
 def test_C3_macneal_harder_curved_beam():
     r"""Tip displacement of the 6 by 1 curved cantilever
 
+    Notes
+    -----
     Measured, references 0.08734 in-plane and 0.5022 out-of-plane, Table 3,
     p. 10, of MacNeal and Harder (1985):
 
@@ -534,11 +553,10 @@ def test_C3_macneal_harder_curved_beam():
 
 
 # ------------------------------------------------------------------- C4
-# Table 3 of Allman (1984), p. 7, his own triangular element, and Table II of
-# Ibrahimbegovic et al. (1990) for the same problem
+# Table 3 of the C4 reference, p. 7, its own triangular element, and Table
+# II of the C1 reference for the same problem
 ALLMAN_TABLE = {(4, 1): 0.2696, (8, 2): 0.3261, (16, 4): 0.3471}
-# NOTE the reference of Table 3 of Allman (1984), p. 7, from Olsen and
-#      Bearden, his reference 9
+# NOTE the reference of Table 3 of the C4 reference, see the module Notes
 ALLMAN_REF = 0.3558
 
 
@@ -593,8 +611,10 @@ def allman_cantilever(nx, ny, drilling_model):
 def test_C4_allman_cantilever():
     r"""Tip deflection of Allman's cantilever, reference 0.3558
 
+    Notes
+    -----
     Measured, with Allman's own triangular element from his Table 3 and the
-    displacement-type element of Ibrahimbegovic et al. Table II:
+    displacement-type element of Ibrahimbegovic et al. Table II::
 
         mesh    penalty   enriched   Allman tri   ITW D-type
         4x1     0.24242    0.32812     0.2696       0.3445

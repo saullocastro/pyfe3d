@@ -156,6 +156,26 @@ cdef class Spring:
     probe : :class:`.SpringProbe` object
         Pointer to the probe.
 
+    Examples
+    --------
+    Linear stiffness matrix of an axial spring between two nodes:
+
+    >>> import numpy as np
+    >>> from scipy.sparse import coo_matrix
+    >>> from pyfe3d import Spring, SpringData, SpringProbe, DOF, INT, DOUBLE
+    >>> data, probe = SpringData(), SpringProbe()
+    >>> spring = Spring(probe)
+    >>> spring.c1, spring.c2 = 0, DOF
+    >>> spring.kxe = 1e6
+    >>> spring.update_rotation_matrix(1., 0., 0., 0., 1., 0.)
+    >>> KC0r = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0c = np.zeros(data.KC0_SPARSE_SIZE, dtype=INT)
+    >>> KC0v = np.zeros(data.KC0_SPARSE_SIZE, dtype=DOUBLE)
+    >>> spring.update_KC0(KC0r, KC0c, KC0v)
+    >>> KC0 = coo_matrix((KC0v, (KC0r, KC0c)), shape=(2*DOF, 2*DOF)).toarray()
+    >>> float(KC0[0, 0]), float(KC0[0, 6])
+    (1000000.0, -1000000.0)
+
     Notes
     -----
     The strain energy of the element is
@@ -369,6 +389,12 @@ cdef class Spring:
         and from the displacements ``probe.ue``, which must be updated before,
         see :meth:`.update_probe_ue`.
 
+        Notes
+        -----
+        ``finte = [K_e] ue``, with `\boldsymbol{K}_e` of the notes of
+        :class:`.Spring`: each stiffness `k_i` times the difference of the
+        displacements `i` of the two nodes, in element coordinates.
+
         """
         cdef double *ue
         cdef double *finte
@@ -424,6 +450,12 @@ cdef class Spring:
             The default ``0`` means that the row and column indices ``KC0r``
             and ``KC0c`` should also be updated. Any other value will only
             update the stiffness matrix values ``KC0v``.
+
+        Notes
+        -----
+        `\boldsymbol{K} = \boldsymbol{T} \boldsymbol{K}_e
+        \boldsymbol{T}^\top`, with `\boldsymbol{K}_e` and `\boldsymbol{T}`
+        of the notes of :class:`.Spring`.
 
         """
         cdef int c1, c2, k
@@ -835,6 +867,13 @@ cdef class Spring:
             the parameter ``finte`` of the :class:`.SpringProbe` with the
             internal forces in local coordinates. 1-D array of size ``6*M``,
             for `M` nodes in the model.
+
+        Notes
+        -----
+        The internal forces of :meth:`.update_probe_finte` transformed to
+        global coordinates, `\boldsymbol{f} = \boldsymbol{T}
+        \boldsymbol{f}_e`, with `\boldsymbol{T}` of the notes of
+        :class:`.Spring`.
 
         """
         cdef double *finte

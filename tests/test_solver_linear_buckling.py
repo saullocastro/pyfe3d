@@ -2,7 +2,13 @@ r"""Tests for :func:`pyfe3d.solver.linear_buckling`: order of the load
 multipliers, verification, dense fallback and unsymmetric matrices
 
 With analytic matrices and the Quad4 plate of ``test_solver.py`` under a
-compressive and a tensile reference load.
+compressive and a tensile reference load. Against literature: a Ritz plate
+of first-order shear deformation theory against the critical load of Seide
+and Stowell (1950), and Ziegler's double pendulum, Ziegler (1952), which
+has no finite load multiplier; the matrices of a blade-stiffened plate with
+penalty connections and of a Quad4 cylinder under torsion check the
+verification and the completion of repeated load multipliers, see the
+docstrings of the tests.
 """
 import os
 import subprocess
@@ -248,10 +254,15 @@ def test_plate_buckling_fsdt_ritz():
     theory, ``a/b = 3``, ``b/h = 33``, uniform compression, against the
     Navier solution of the same theory
 
-    The reference is given by Seide, P., and Stowell, E. Z., Elastic and
-    Plastic Buckling of Simply Supported Solid-Core Sandwich Plates in
-    Compression, NACA Report 967, 1950, Eq. (1), p. 2, derived in Appendix
-    A, Eq. (A7), p. 7,
+    The critical load `N_{cr}` is compared with that of Seide and Stowell
+    (1950), Eq. (1), with ``rtol = 1e-5``. The rotations are zero across the
+    edges they are tangent to, the hard simple support of the Navier
+    solution.
+
+    Notes
+    -----
+    The reference is given by Seide and Stowell [1]_, Eq. (1), p. 2, derived
+    in Appendix A, Eq. (A7), p. 7,
 
     .. math::
         N_{cr} = k \frac{\pi^2 D}{b^2}, \qquad
@@ -261,18 +272,25 @@ def test_plate_buckling_fsdt_ritz():
     minimised over `m`, with the transverse shear stiffness `D_Q` of the
     sandwich core taken equal to `A_{55}`, their governing equation (A5)
     being that of a plate with transverse shear stiffness `D_Q`; the same
-    load follows from Wang, C. M., Wang, C. Y., and Reddy, J. N., Exact
-    Solutions for Buckling of Structural Members, CRC Press, 2005, Sec.
-    4.7.2, Eq. (4.7.17), with the foundation moduli equal to zero and
-    `\gamma = 0` (page not verified). It is 0.51 % below the classical load
-    `4 \pi^2 D/b^2`. The rotations are zero across the edges they are
-    tangent to, the hard simple support of their Navier solution, Wang et al.
-    (2005), Eq. (4.7.10b). With 20x10 terms the load agrees with the
-    reference to 1e-8, with 10x5 terms it is 0.025 % above it. With the
-    rotations free on all edges, the soft simple support used before, the
-    load is 1.28 % below the reference with 20x10 terms and 1.73 % with
-    30x15, the soft support lowering the load as the terms resolve the
-    boundary layer along the edges.
+    load follows from Wang, Wang and Reddy [2]_, Sec. 4.7.2, Eq. (4.7.17),
+    with the foundation moduli equal to zero and `\gamma = 0` (page not
+    verified). It is 0.51 % below the classical load `4 \pi^2 D/b^2`. The
+    rotations are zero across the edges they are tangent to, the hard simple
+    support of their Navier solution, Eq. (4.7.10b) of [2]_. With 20x10
+    terms the load agrees with the reference to 1e-8, with 10x5 terms it is
+    0.025 % above it. With the rotations free on all edges, the soft simple
+    support used before, the load is 1.28 % below the reference with 20x10
+    terms and 1.73 % with 30x15, the soft support lowering the load as the
+    terms resolve the boundary layer along the edges.
+
+    References
+    ----------
+    .. [1] Seide, P., and Stowell, E. Z., Elastic and Plastic Buckling of
+       Simply Supported Solid-Core Sandwich Plates in Compression, NACA
+       Report 967, 1950.
+    .. [2] Wang, C. M., Wang, C. Y., and Reddy, J. N., Exact Solutions for
+       Buckling of Structural Members, CRC Press, 2005.
+
     """
     m1 = 20
     m2 = 10
@@ -346,7 +364,7 @@ def test_plate_buckling_fsdt_ritz():
     eigvals, eigvecs = linear_buckling(csc_matrix(K[bu, :][:, bu]),
                                        csc_matrix(KG[bu, :][:, bu]),
                                        num_eigvalues=4)
-    # NOTE Seide and Stowell (1950), Eq. (1), with D_Q = A55
+    # NOTE reference critical load of the Notes, D_Q taken equal to A55
     D = E*h**3/(12*(1 - nu**2))
     r = np.pi**2*D/(b**2*prop.A55)
     beta = a/b
@@ -427,10 +445,12 @@ def test_penalty_connections(precondition):
     springs 100 times those of ``calc_kt_kr``, under a uniform compression
     of 1 N/m.
 
-    Reference: Stamatelos, D.G. and Labeas, G.N., Buckling analysis of
-    laminated stiffened plates with material anisotropy using the
-    Rayleigh-Ritz approach, Computation, 11(6), 110, 2023,
-    https://doi.org/10.3390/computation11060110.
+    References
+    ----------
+    .. [1] Stamatelos, D.G. and Labeas, G.N., Buckling analysis of
+       laminated stiffened plates with material anisotropy using the
+       Rayleigh-Ritz approach, Computation, 11(6), 110, 2023.
+       https://doi.org/10.3390/computation11060110
 
     """
     from scipy.sparse import load_npz
@@ -799,11 +819,19 @@ def test_ziegler_no_divergence():
     defective null pair of the condensed problem, split into about +-1e-9 by
     the round-off, being null
 
-    Reference: H. Ziegler, Die Stabilitätskriterien der Elastomechanik,
-    Ingenieur-Archiv, 20(1), 49-56, 1952,
-    https://doi.org/10.1007/BF00536796: the follower force does not make
-    the stiffness singular, ``det K(P) = k**2`` for every ``P``, and the
-    pendulum loses stability by flutter, not by divergence."""
+    Notes
+    -----
+    In Ziegler's double pendulum [1]_ the follower force does not make the
+    stiffness singular, ``det K(P) = k**2`` for every ``P``, and the
+    pendulum loses stability by flutter, not by divergence.
+
+    References
+    ----------
+    .. [1] Ziegler, H., Die Stabilitätskriterien der Elastomechanik,
+       Ingenieur-Archiv, 20(1), 49-56, 1952.
+       https://doi.org/10.1007/BF00536796
+
+    """
     k, l = 3., 0.5
     K0 = block_diag(np.array([[2*k, -k], [-k, k]]), np.diag(np.arange(1., 9.)))
     KF = block_diag(np.array([[-l, l], [0., 0.]]), np.zeros((8, 8)))
@@ -836,7 +864,7 @@ def test_null_mu_pencil():
     mu, null = flags(np.array([[-l, l], [0., 0.]]),
                      np.array([[2*k, -k], [-k, k]]))
     assert np.all(np.abs(mu) < 1e-8) and np.all(null)
-    # Jordan blocks of size m, B^-1 A = T J T^-1
+    # Jordan blocks of size m: B^-1 A similar to J, of null eigenvalues
     rng = np.random.default_rng(1)
     for m in (2, 3, 4):
         J = np.eye(m, k=1)
@@ -865,13 +893,23 @@ def test_null_mu_pencil():
 
 
 def ziegler_decoupled(extra=8):
-    r"""``K0`` and ``KF`` of Ziegler's double pendulum (Ziegler, H., Die
-    Stabilitätskriterien der Elastomechanik, Ingenieur-Archiv, 20(1), 49-56,
-    1952, https://doi.org/10.1007/BF00536796, see
-    ``test_solver_natural_frequency.py``) with ``extra`` decoupled
-    degrees-of-freedom: ``K0^-1 KF = (l/k)*[[-1, 1], [-1, 1]]`` in the
-    pendulum block, of rank 1, nilpotent (null trace and determinant) and of
-    2-norm ``2*l/k = 1/3`` for ``k = 3`` and ``l = 0.5``"""
+    r"""``K0`` and ``KF`` of Ziegler's double pendulum, Ziegler (1952), see
+    ``test_solver_natural_frequency.py``, with ``extra`` decoupled
+    degrees-of-freedom
+
+    Notes
+    -----
+    ``K0^-1 KF = (l/k)*[[-1, 1], [-1, 1]]`` in the pendulum block, of rank
+    1, nilpotent (null trace and determinant) and of 2-norm ``2*l/k = 1/3``
+    for ``k = 3`` and ``l = 0.5``.
+
+    References
+    ----------
+    .. [1] Ziegler, H., Die Stabilitätskriterien der Elastomechanik,
+       Ingenieur-Archiv, 20(1), 49-56, 1952.
+       https://doi.org/10.1007/BF00536796
+
+    """
     from scipy.sparse import block_diag as sparse_block_diag
 
     k, l = 3., 0.5
@@ -1357,9 +1395,20 @@ def test_dense_solver_error_K_positive_definite(monkeypatch):
 def torsion_cylinder_Z33(ntheta):
     r"""``K`` and ``KG`` of the cylinder Z33 under torsion of
     ``test_quad4_linear_buckling_cylinder_Nxy.py``, with ``ntheta`` elements
-    around the circumference: Castro et al. (2014), Composite Structures,
-    118, 303-315, Table 3 (material Geier1997), Table 4 (geometry and
-    stacking sequence), Table 1 (boundary condition CC2)"""
+    around the circumference: Castro et al. (2014), Table 3 (material
+    Geier1997), Table 4 (geometry and stacking sequence), Table 1 (boundary
+    condition CC2)
+
+    References
+    ----------
+    .. [1] Castro, S. G. P., Mittelstedt, C., Monteiro, F. A. C., Arbelo,
+       M. A., Ziegmann, G., and Degenhardt, R., Linear buckling predictions
+       of unstiffened laminated composite cylinders and cones under various
+       loading and boundary conditions using semi-analytical models,
+       Composite Structures, 118, 303-315, 2014.
+       https://doi.org/10.1016/j.compstruct.2014.07.037
+
+    """
     from scipy.sparse import coo_matrix
     from pyfe3d.shellprop_utils import laminated_plate
     from pyfe3d import Quad4, Quad4Data, Quad4Probe, INT, DOUBLE, DOF

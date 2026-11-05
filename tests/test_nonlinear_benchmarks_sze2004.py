@@ -1,14 +1,14 @@
 r"""Geometrically non-linear benchmarks of Sze, Liu and Lo (2004)
 
-Sze, K. Y., Liu, X. H. and Lo, S. H., Popular benchmark problems for
-geometric nonlinear analysis of shells, Finite Elements in Analysis and
-Design, 40(11), 1551-1569, 2004, https://doi.org/10.1016/j.finel.2003.11.001:
+The von Kármán elements of pyfe3d are compared with two benchmarks of Sze,
+Liu and Lo (2004), with the closed-form von Kármán solutions, with values
+pre-determined by these tests and, for the roof, with Tria3DSG and a Ritz
+solution:
 
 1. Section 3.2, Fig. 3 and Table 3: cantilever under an end moment, ``L =
    12``, ``b = 1``, ``h = 0.1``, ``E = 1.2e6``, ``nu = 0``, ``M_o = E*I/L =
    25/3`` and ``M_max = 2*pi*M_o`` (Fig. 3a), at which the cantilever is bent
-   into a full circle. Table 3a lists the exact tip deflections, ``U/L =
-   M_o/M*sin(M/M_o) - 1`` and ``W/L = M_o/M*(1 - cos(M/M_o))``, and those of
+   into a full circle; Table 3a lists the exact tip deflections and those of
    16x1 S4R elements.
 
 2. Section 3.8, Fig. 9 and Tables 9a and 9d: hinged cylindrical roof under a
@@ -18,7 +18,10 @@ Design, 40(11), 1551-1569, 2004, https://doi.org/10.1016/j.finel.2003.11.001:
    elements and Riks' method. The hinged edges have all the translations
    restrained, the curved edges are free.
 
-The elements of pyfe3d use the von Kármán strains, valid for moderate
+Notes
+-----
+The exact tip deflections of Table 3a are ``U/L = M_o/M*sin(M/M_o) - 1`` and
+``W/L = M_o/M*(1 - cos(M/M_o))``. The elements of pyfe3d use the von Kármán strains, valid for moderate
 rotations. In the first problem the von Kármán cantilever has no axial force,
 its deflection is that of the linear theory, ``W = M*L**2/(2*E*I)``, and its
 axial strain ``u_x + w_x**2/2 = 0`` gives ``U = -(M/(E*I))**2*L**3/6``: it
@@ -27,18 +30,36 @@ small and never rolls up into a circle. In the second problem the rotations
 stay small and the snap-through is traced with the arc-length method.
 
 The roof is modelled with Quad4R and its default stabilisation, see
-:mod:`pyfe3d.quad4r`: since 0.12.0 the bending and the transverse shear have
-the physical stabilisation of Belytschko and Leviathan (1994), which passes
+:mod:`pyfe3d.quad4r`: the bending and the transverse shear have the
+physical stabilisation of Belytschko and Leviathan (1994), which passes
 the constant-twist patch test, see ``test_constant_twist_patch_test`` in
-``tests/test_quad4r_hourglass_control.py``. Up to 0.11 the hourglass mode
-of `w` was controlled with Brockman (1987), ``0.10*E*h**3/(1 + 1/A)``,
-which added 73 to 78 % to the energy of a uniform twist in this model,
-whatever the mesh; the lower limit load of the thinner roof then
-converged 11 % below Table 9d. The sensitivity of the roof to the
+``tests/test_quad4r_hourglass_control.py``. The sensitivity of the roof to the
 stabilisation, scaled with the ``hgfactor_physical`` of Quad4R, is measured
 by :func:`test_hinged_roof_hourglass_sensitivity`, against Tria3DSG, which
 has no hourglass control, and against the shallow-shell Kirchhoff solution
 of :func:`ritz_roof_WC`.
+
+References
+----------
+Sze, K. Y., Liu, X. H., Lo, S. H., Popular benchmark problems for geometric
+nonlinear analysis of shells, Finite Elements in Analysis and Design,
+40(11), 2004, pp. 1551-1569, https://doi.org/10.1016/j.finel.2003.11.001.
+
+Belytschko, T., Leviathan, I., Physical stabilization of the 4-node shell
+element with one point quadrature, Computer Methods in Applied Mechanics
+and Engineering, 113(3-4), 1994, pp. 321-350,
+https://doi.org/10.1016/0045-7825(94)90052-3.
+
+Brockman, R. A., Dynamics of the bilinear Mindlin plate element,
+International Journal for Numerical Methods in Engineering, 24(12), 1987,
+pp. 2343-2356, https://doi.org/10.1002/nme.1620241208.
+
+Crisfield, M. A., Non-linear Finite Element Analysis of Solids and
+Structures, Volume 1: Essentials, Wiley, 1991.
+
+MacNeal, R. H., Harder, R. L., A proposed standard set of problems to test
+finite element accuracy, Finite Elements in Analysis and Design, 1(1),
+1985, pp. 3-20, https://doi.org/10.1016/0168-874X(85)90003-4.
 """
 import functools
 import sys
@@ -57,9 +78,9 @@ from pyfe3d import (BeamC, BeamCData, BeamCProbe, BeamLR, BeamLRData,
 from ritz import vecf, vecf_xi, vecf_xixi
 from test_solver_nonlinear_static import Model
 
-# NOTE Fig. 3a of Sze et al. (2004)
+# NOTE geometry and material of the cantilever benchmark
 CANTILEVER = dict(L=12., b=1., h=0.1, E=1.2e6)
-# NOTE Table 3a of Sze et al. (2004): M/M_max, exact -U_tip and W_tip
+# NOTE reference table of the cantilever: M/M_max, exact -U_tip and W_tip
 TABLE_3A_EXACT = np.array([
     [0.05, 0.196, 1.870], [0.10, 0.774, 3.648], [0.15, 1.699, 5.248],
     [0.20, 2.918, 6.598], [0.25, 4.361, 7.639], [0.30, 5.945, 8.333],
@@ -69,9 +90,9 @@ TABLE_3A_EXACT = np.array([
     [0.80, 14.270, 1.650], [0.85, 13.818, 0.926], [0.90, 13.247, 0.405],
     [0.95, 12.621, 0.098], [1.00, 12.000, 0.000]])
 
-# NOTE Fig. 9a of Sze et al. (2004)
+# NOTE geometry and material of the roof benchmark
 ROOF = dict(R=2540., L=254., theta=0.1, E=3102.75, nu=0.3, Pmax=3000.)
-# NOTE Table 9a of Sze et al. (2004), 12.7 thick isotropic roof, 16x16 S4R
+# NOTE reference table of the 12.7 thick isotropic roof, 16x16 S4R
 #      elements on one quarter: P/P_max and -W_C, in the order of the path
 TABLE_9A = np.array([
     [0.0877, 0.693], [0.1980, 1.638], [0.3473, 3.087], [0.4686, 4.477],
@@ -83,7 +104,7 @@ TABLE_9A = np.array([
     [0.1905, 20.771], [0.2303, 21.780], [0.2950, 22.875], [0.3871, 24.049],
     [0.4443, 24.663], [0.5093, 25.293], [0.5826, 25.940], [0.6644, 26.601],
     [0.7551, 27.276], [0.8549, 27.964], [0.9643, 28.663], [1.0835, 29.374]])
-# NOTE Table 9d of Sze et al. (2004), 6.35 thick isotropic roof, 24x24 S4R
+# NOTE reference table of the 6.35 thick isotropic roof, 24x24 S4R
 #      elements on one quarter: P/P_max and -W_C, in the order of the path
 TABLE_9D = np.array([
     [0.0517, 1.846], [0.1182, 5.271], [0.1583, 8.257], [0.1837, 10.799],
@@ -267,10 +288,10 @@ def test_cantilever_end_moment_beamc_no_membrane_locking(num_elements):
     r"""BeamC replaces the nonlinear part of the von Kármán axial strain,
     ``w_x**2/2``, by its mean over the element, constant as ``u_x``, so that
     the axial strain can vanish in each element and there is no membrane
-    locking (Crisfield, M. A., Non-linear Finite Element Analysis of Solids
-    and Structures, Volume 1: Essentials, Wiley, 1991, Section 7.1.3, Eqs.
-    (7.31)-(7.32)).
+    locking (Crisfield, 1991, Section 7.1.3, Eqs. (7.31)-(7.32)).
 
+    Notes
+    -----
     Under the end moment the von Kármán cantilever has no axial force, the
     curvature ``kappa = M/(E*I)`` is uniform and ``w = kappa*x**2/2``
     quadratic, which the consistent shape functions of BeamC represent
@@ -287,11 +308,7 @@ def test_cantilever_end_moment_beamc_no_membrane_locking(num_elements):
     the 20 increments up to ``M_max`` is 1.3e-13, 6.4e-14 and 2.7e-12, and
     the largest ``|U/U_vk - 1|`` 2.5e-13, 1.1e-13 and 5.2e-12, below the
     convergence criterion of the Newton-Raphson increments, ``relTOL =
-    1e-9``. Up to pyfe3d 0.11 BeamC integrated the
-    pointwise ``w_x**2/2``, which the constant ``u_x`` cannot balance, and
-    locked: under ``M = 0.05*M_max``, ``W/W_vk - 1`` = -43.6 %, -12.6 %,
-    -1.21 % and -0.313 % with 16, 64, 256 and 512 elements, converging as
-    ``num_elements**-2``.
+    1e-9``.
     """
     m, U, W = run_cantilever_end_moment('BeamC', num_elements)
     U_vk, W_vk = von_karman_tip(m)
@@ -307,6 +324,8 @@ def test_cantilever_end_moment_beamlr_no_membrane_locking(num_elements):
     so that the axial strain ``u_x + w_x**2/2`` can vanish in each element
     and there is no membrane locking.
 
+    Notes
+    -----
     Under ``M = 0.05*M_max`` the von Kármán cantilever has no axial force,
     the curvature ``kappa = M/(E*I)`` is uniform, the rotation linear and
     ``w = kappa*x**2/2`` quadratic. The linear rotations of BeamLR give the
@@ -322,9 +341,7 @@ def test_cantilever_end_moment_beamlr_no_membrane_locking(num_elements):
     Measured with 4, 16 and 64 elements: ``W/W_vk - 1`` = 3.9e-12, -7.7e-11
     and -5.7e-10, at the level of the convergence criterion of the
     Newton-Raphson increments, ``relTOL = 1e-9``; ``U/U_vk - 1`` =
-    -1.5625e-2, -9.766e-4 and -6.104e-5, the closed form above. Up to pyfe3d
-    0.11 BeamLR took the slopes from the rotations, linear in the element,
-    and locked as BeamC did: ``W/W_vk - 1`` = -43.6 % with 16 elements.
+    -1.5625e-2, -9.766e-4 and -6.104e-5, the closed form above.
     """
     m, U, W = run_cantilever_end_moment('BeamLR', num_elements, inc=0.25,
                                         m_max=0.05)
@@ -531,6 +548,8 @@ def test_hinged_roof_thick():
     Crisfield's arc-length method against Table 9a of Sze et al. (2004),
     computed with 16x16 S4R elements on the quarter
 
+    Notes
+    -----
     The path of :func:`run_hinged_roof` against the mesh, ``initialInc =
     maxInc = 0.05``, measured on 2026-10-29: the limit loads, relative to
     Table 9a, 0.7421 and 0.1729, the largest difference of the load at the
@@ -552,13 +571,11 @@ def test_hinged_roof_thick():
 
     (Tria3DSG: 2 x n x n elements.) Quad4R and Tria3DSG converge to the
     same path: the upper limit load within 0.1 % of Table 9a, the lower one
-    about 3.5 % below it, Table 9a being itself a 16x16 S4R result. Up to
-    0.11, with the hourglass stiffnesses of Brockman (1987), Quad4R was 6.7
-    to 9.1 % stiffer at the first point, with the upper limit loads 0.5 to
-    0.7 % above Table 9a and the lower ones +1.6 to -1.4 %; since 0.12.0 the
-    bending and the transverse shear have the physical stabilisation of
-    Belytschko and Leviathan (1994), see ``test_constant_twist_patch_test``
-    in ``tests/test_quad4r_hourglass_control.py``.
+    about 3.5 % below it, Table 9a being itself a 16x16 S4R result. The
+    bending and the transverse shear of Quad4R have the physical
+    stabilisation of Belytschko and Leviathan (1994), see
+    ``test_constant_twist_patch_test`` in
+    ``tests/test_quad4r_hourglass_control.py``.
 
     Following the policy of the tests whose reference is reached only on
     fine meshes, this test uses the 8x8 mesh and compares the two limit
@@ -612,6 +629,8 @@ def test_hinged_roof_thin_snap_back():
     elements and Crisfield's arc-length method against Table 9d of Sze et
     al. (2004), computed with 24x24 S4R elements on the quarter
 
+    Notes
+    -----
     The path turns back in ``-W_C`` twice. Limit loads against the mesh,
     with the arc-length increments ``initialInc = maxInc = 0.02``, which
     sample the lower limit point more finely than the 0.075 of
@@ -643,12 +662,8 @@ def test_hinged_roof_thin_snap_back():
     (the path is sampled at fixed arc-length increments and each increment
     converges to ``relTOL = 1e-9``; two runs on one machine are identical to
     the bit). The upper limit load is also checked against Table 9d with the
-    tolerance of grade A of MacNeal, R. H. and Harder, R. L., A proposed
-    standard set of problems to test finite element accuracy, Finite
-    Elements in Analysis and Design, 1(1), 3-20, 1985,
-    https://doi.org/10.1016/0168-874X(85)90003-4, p. 14: a normalised
-    error within 2 %. Until 0.12.0 this test used the 24x24 mesh, about 23
-    s.
+    tolerance of grade A of MacNeal and Harder (1985), p. 14: a normalised
+    error within 2 %.
     """
     P, W = thin_roof_path()
     assert np.isclose(P[-1], 1.1)
@@ -675,17 +690,15 @@ def test_hinged_roof_thin_lower_limit_load():
     r"""Lower limit load of the 6.35 thick roof with the Quad4R elements of
     :func:`thin_roof_path` against Table 9d of Sze et al. (2004)
 
+    Notes
+    -----
     The lower limit load converges to Table 9d, -0.1288 P_max, see the table
     of :func:`test_hinged_roof_thin_snap_back`; Tria3DSG gives -0.12903 with
-    32x32 elements. Up to 0.11 this was an expected failure: Quad4R
-    controlled the hourglass mode of `w` with Brockman's operator, which
-    added 73 to 78 % to the energy of a uniform twist whatever the mesh in
-    the unit of length of this model, and the lower limit load converged to
-    -0.1435 to -0.1440, 11.4 to 11.8 % below Table 9d, from 8x8 to 48x48
-    elements; see ``test_constant_twist_patch_test`` in
-    ``tests/test_quad4r_hourglass_control.py``. Since 0.12.0 the bending and
-    the transverse shear of Quad4R have the physical stabilisation of
-    Belytschko and Leviathan (1994), which passes that patch test.
+    32x32 elements. The bending and the transverse shear of Quad4R have
+    the physical stabilisation of Belytschko and Leviathan (1994), which
+    passes the constant-twist patch test, see
+    ``test_constant_twist_patch_test`` in
+    ``tests/test_quad4r_hourglass_control.py``.
 
     With the 8x8 mesh and the increments 0.075 of :func:`thin_roof_path`
     the lower limit load is -0.12908, 0.2 % below Table 9d; sampled with the
@@ -710,7 +723,9 @@ def test_hinged_roof_hourglass_sensitivity():
     shear of Quad4R, ``hgfactor_physical`` times the default, with 16x16
     meshes
 
-    Since 0.12.0 the bending and the transverse shear of Quad4R have the
+    Notes
+    -----
+    The bending and the transverse shear of Quad4R have the
     physical stabilisation of Belytschko and Leviathan (1994), which has no
     parameter; ``hgfactor_physical`` multiplies it. The deflection grows
     monotonically as ``hgfactor_physical`` decreases from 1 to 0.002, by
@@ -734,12 +749,7 @@ def test_hinged_roof_hourglass_sensitivity():
     128x128 elements, 0.061 % (Tria3DSG) and 0.085 % (Quad4R), the residual
     transverse shear flexibility of the stiffnesses x100. With the actual
     transverse shear stiffness Quad4R with the default is 1.05, 0.51 and
-    0.34 % more flexible than Tria3DSG on the three meshes. Up to 0.11,
-    with the hourglass stiffnesses of Brockman (1987), Quad4R with the
-    default was 6.4 to 7.1 % stiffer than Tria3DSG and 6.95, 6.35 and 5.95 %
-    stiffer than the Ritz solution with the shear x100, an excess that
-    refinement did not remove, see ``test_constant_twist_patch_test`` in
-    ``tests/test_quad4r_hourglass_control.py``.
+    0.34 % more flexible than Tria3DSG on the three meshes.
 
     Following the policy of the tests whose reference is reached only on
     fine meshes, this test uses the 16x16 meshes and compares the ten

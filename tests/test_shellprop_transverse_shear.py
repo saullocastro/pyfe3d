@@ -1,3 +1,101 @@
+r"""Verify the transverse shear stiffness, its element-frame evaluation and stresses.
+
+The improved transverse shear stiffness of Rohwer (1988), the default
+``'rohwer'`` of :func:`pyfe3d.shellprop_utils.laminated_plate`, is compared
+against the printed values of Rohwer (1988), Table 2, and against
+``rohwer_stiffness``, an independent implementation of his Eq. (43), also for
+rotated plies, offsets and unsymmetric laminates. The evaluation in the
+element frame, :meth:`pyfe3d.shellprop.ShellProp.calc_Ats_element` and
+:meth:`pyfe3d.shellprop.ShellProp.calc_constitutive_element`, is compared
+against the laminate with all ply angles shifted by the element angle, also
+through the stiffness matrices of the Quad4, Quad4R and Tria3R elements. The
+transverse shear stress distribution is checked against the parabola of the
+homogeneous plate, the traction-free faces and the shear forces it carries.
+Sandwich sections are checked against the closed forms and printed values of
+Vlachoutsis (1992) and against the shear stiffness of Allen (1969). The
+remaining tests check the error branches, pickling and copying.
+
+Notes
+-----
+``CFRP`` is Table 1, p. 19, of Rohwer [1]_, "CFRP material constants", in
+kN/mm^2, `E_L`, `E_T`, `G_{LT}`, `G_{TT}`, `\nu_{LT}`, given as
+``laminaprop = (E11, E22, nu12, G12, G13, G23)`` of a transversely isotropic
+ply.
+
+``ROHWER_1988_TABLE_2`` is from Rohwer [1]_, p. 18: "A laminate with a
+stacking sequence of [0,90]s is built from this material where each of the
+four layers is 0.25mm thick. The simple tansverse shear stiffnesses as
+calculated from Eqs. (22) and (25) and the improved values according to Eq.
+(43) are given in Table 2. Coupling terms are zero." Table 2, p. 19, "Shear
+stiffnesses in kN/mm", printed as `\bar{H}_{11} = \bar{H}_{22}`,
+`\bar{\bar{H}}_{11} = \bar{\bar{H}}_{22}`, `H_{11}`, `H_{22}`. Index 1 of
+Rohwer is `x` and 2 is `y`, Eq. (41), i.e. `H_{11}` is ``A55`` and `H_{22}`
+is ``A44``.
+
+Rohwer [1]_, Sec. 4.3, pp. 22-23, gives a second example, the sandwich solar
+panel of Fig. 9, p. 22: faces of four CFRP layers of 0.125 mm, [0,90,+45,-45]
+on top and [-45,+45,90,0] at the bottom, the -45 layers adhered to the core,
+a foam core of 9 mm with E = 0.1 kN/mm^2 and nu = 0.3 (Table 3, p. 22), and
+the CFRP of Table 1. Its stiffnesses, Table 4, p. 23, are not used as a test,
+because they cannot be reproduced from these data and are not consistent
+with the stated lay-up:
+
+- the transverse shear stiffnesses, H11 = 0.416, H12 = 0.008 and H22 = 0.403
+  kN/mm, depend on the foam only through its shear modulus; with nu = 0.3, G
+  = 0.0385 kN/mm^2, Eq. (43) gives 0.400, 0.008 and 0.387; all three round
+  to the printed values for G between 0.03999 and 0.04005 kN/mm^2, i.e. nu =
+  0.25 with E = 0.1, which is the suspected value of the computation;
+- D13 = D23 = 9.36 kNmm, the bending-twisting couplings, written D16 and D26
+  in pyfe3d, are reproduced, 9.3573, but D11 = 1366.08, D12 = 395.09 and D22
+  = 1321.97 kNmm are not, +0.12, +0.62 and +0.47 per cent with nu = 0.3 and
+  nearly the same with nu = 0.25;
+- the printed bending entries contradict each other for this lay-up: for any
+  ply material, the +-45 layers and the isotropic core add the same amount to
+  D11 and D22 and Qbar16 = +-(Q11 - Q22)/4 at +-45 degrees, such that (D11 -
+  D22)/D13 = 4 (I0 - I90)/(I+45 - I-45), with I the integral of z^2 over the
+  layers of each angle, a number given by the layer positions alone: 4.2162
+  for Fig. 9, against 4.709 to 4.716 from the printed values within half a
+  unit of their last digits. No change of the material constants, of the
+  foam or of the CFRP, can reproduce Table 4; its bending entries were
+  computed for layer positions, or a lay-up, other than those of Fig. 9, or
+  are misprinted. A search over all orderings of the face layers and over
+  the material constants and thicknesses found no single correction of the
+  data that reproduces the whole table.
+
+The only other publication of this panel found is by the same author,
+Rohwer [2]_, not available here. The sandwich case is tested instead against
+Vlachoutsis [3]_ and Allen [4]_, see
+``test_sandwich_vlachoutsis_1992_reference_values`` and
+``test_sandwich_antiplane_core_converges_to_allen_1969``.
+
+``VLACHOUTSIS_1992_SANDWICH`` is the symmetrical sandwich of Vlachoutsis
+[3]_, Fig. 7, p. 1544, faces of thickness `t` and core of thickness `c`, `h =
+c + 2t`, `p = c/h`, Eq. (31), "homogeneous and isotropic materials", p. 1547,
+with `\nu_1 = \nu_2 = 0.3`, Fig. 11 caption, p. 1548; index 1 the faces and 2
+the core. `K` is the single factor of the section, `A = K \sum_i G_i h_i`,
+Eqs. (24)-(25), p. 1541, i.e. ``scf_k13 = A55/Abar55``, and `r_f =
+U_f/(U_f + U_c)` the share of the faces in the transverse shear energy, Eq.
+(48), p. 1545. Rows (`E_1/E_2`, `c/h`, `K`, `r_f`): Table I (`c/h = 0.8`), p.
+1548; Table II (`E_1/E_2 = 15`), p. 1548, without its row `c/h = 0.8`, which
+repeats Table I; and the example of p. 1546, Eqs. (49)-(50), "Dc/Df = Gc/Gf =
+10^-3 and p = c/h = 0.95", i.e. `E_1/E_2 = 1000` with equal Poisson ratios.
+
+References
+----------
+.. [1] Rohwer, K., 1988, Improved transverse shear stiffness for layered
+   finite elements, DFVLR-FB 88-32.
+.. [2] Rohwer, K., Improved transverse shear stiffnesses for anisotropic
+   sandwich plates and shells, Sandwich Constructions 2, Vol. 1, EMAS, 1992,
+   pp. 465-484.
+.. [3] Vlachoutsis, S., 1992, Shear correction factors for plates and
+   shells, International Journal for Numerical Methods in Engineering,
+   33(7), pp. 1537-1552.
+   https://doi.org/10.1002/nme.1620330712
+.. [4] Allen, H. G., Analysis and Design of Structural Sandwich Panels,
+   Pergamon Press, Oxford, 1969, Chap. 2, pp. 8-47.
+   https://doi.org/10.1016/B978-0-08-012870-2.50006-7
+
+"""
 import sys
 sys.path.append('..')
 from decimal import Decimal
@@ -13,65 +111,18 @@ from pyfe3d import (Quad4, Quad4Data, Quad4Probe, Quad4R, Quad4RData,
 
 from test_shellprop import qbar
 
-# Rohwer, K. "Improved transverse shear stiffness for layered finite elements",
-# DFVLR-FB 88-32, 1988. Table 1, p. 19: "CFRP material constants", kN/mm^2
-# E_L, E_T, G_LT, G_TT, nu_LT, as laminaprop = (E11, E22, nu12, G12, G13, G23)
-# of a transversely isotropic ply
+# material constants of a transversely isotropic CFRP ply, see the module
+# Notes
 CFRP = (138., 9.3, 0.3, 4.6, 4.6, 2.3)
 PLYT = 0.25
 CROSS_PLY = [0, 90, 90, 0]
 QUASI_ISO = [0, 45, -45, 90, 90, -45, 45, 0]
 UNSYM = [30, -60, 15, 75, 0]
 
-# Rohwer (1988), p. 18: "A laminate with a stacking sequence of [0,90]s is
-# built from this material where each of the four layers is 0.25mm thick. The
-# simple tansverse shear stiffnesses as calculated from Eqs. (22) and (25) and
-# the improved values according to Eq. (43) are given in Table 2. Coupling
-# terms are zero." Table 2, p. 19, "Shear stiffnesses in kN/mm", printed as
-# Hbar11 = Hbar22, Hbarbar11 = Hbarbar22, H11, H22. Index 1 of Rohwer is x
-# and 2 is y, Eq. (41), i.e. H11 is A55 and H22 is A44.
+# printed simple and improved shear stiffnesses of the [0,90]s laminate of
+# CFRP, kN/mm, see the module Notes
 ROHWER_1988_TABLE_2 = dict(Abar='3.450', Abarbar='3.067', A55='2.313',
                            A44='2.521')
-
-
-# NOTE Rohwer (1988), Sec. 4.3, pp. 22-23, gives a second example, the
-#      sandwich solar panel of Fig. 9, p. 22: faces of four CFRP layers of
-#      0.125 mm, [0,90,+45,-45] on top and [-45,+45,90,0] at the bottom, the
-#      -45 layers adhered to the core, a foam core of 9 mm with E = 0.1
-#      kN/mm^2 and nu = 0.3 (Table 3, p. 22), and the CFRP of Table 1. Its
-#      stiffnesses, Table 4, p. 23, are not used as a test, because they
-#      cannot be reproduced from these data and are not consistent with the
-#      stated lay-up:
-#      - the transverse shear stiffnesses, H11 = 0.416, H12 = 0.008 and
-#        H22 = 0.403 kN/mm, depend on the foam only through its shear
-#        modulus; with nu = 0.3, G = 0.0385 kN/mm^2, Eq. (43) gives 0.400,
-#        0.008 and 0.387; all three round to the printed values for G
-#        between 0.03999 and 0.04005 kN/mm^2, i.e. nu = 0.25 with E = 0.1,
-#        which is the suspected value of the computation;
-#      - D13 = D23 = 9.36 kNmm, the bending-twisting couplings, written D16
-#        and D26 in pyfe3d, are reproduced, 9.3573, but D11 = 1366.08, D12
-#        = 395.09 and D22 = 1321.97 kNmm are not, +0.12, +0.62 and +0.47 per
-#        cent with nu = 0.3 and nearly the same with nu = 0.25;
-#      - the printed bending entries contradict each other for this lay-up:
-#        for any ply material, the +-45 layers and the isotropic core add the
-#        same amount to D11 and D22 and Qbar16 = +-(Q11 - Q22)/4 at +-45
-#        degrees, such that (D11 - D22)/D13 = 4 (I0 - I90)/(I+45 - I-45),
-#        with I the integral of z^2 over the layers of each angle, a number
-#        given by the layer positions alone: 4.2162 for Fig. 9, against
-#        4.709 to 4.716 from the printed values within half a unit of their
-#        last digits. No change of the material constants, of the foam or of
-#        the CFRP, can reproduce Table 4; its bending entries were computed
-#        for layer positions, or a lay-up, other than those of Fig. 9, or
-#        are misprinted. A search over all orderings of the face layers and
-#        over the material constants and thicknesses found no single
-#        correction of the data that reproduces the whole table.
-#      The only other publication of this panel found is by the same author,
-#      Rohwer, K., "Improved transverse shear stiffnesses for anisotropic
-#      sandwich plates and shells", Sandwich Constructions 2, Vol. 1, EMAS,
-#      1992, pp. 465-484, not available here. The sandwich case is tested
-#      instead against Vlachoutsis (1992) and Allen (1969), see
-#      test_sandwich_vlachoutsis_1992_reference_values and
-#      test_sandwich_antiplane_core_converges_to_allen_1969.
 
 
 def assert_printed(value, printed, rtol=None):
@@ -158,6 +209,16 @@ def rohwer_stiffness(stack, plyts, laminaprops, offset=0.):
 
 
 def test_isotropic_five_sixths():
+    r"""Homogeneous isotropic plate: factor 5/6 for every correction
+
+    Notes
+    -----
+    For a homogeneous isotropic plate the improved stiffness of Rohwer
+    (1988), Sec. 4.1, p. 17, is 5/6 of the simple ones, `\bar{A}_{ts} =
+    \bar{\bar{A}}_{ts} = G h I`, for any offset; ``'vlachoutsis'`` and
+    ``'constant'`` give the same, and without correction `A_{ts} = G h I`.
+
+    """
     E = 71e9
     nu = 0.33
     h = 0.002
@@ -178,14 +239,33 @@ def test_isotropic_five_sixths():
 
 
 def test_rohwer_cross_ply_reference_values():
-    # NOTE Rohwer (1988), [0,90]s of Table 2, p. 19
+    r"""[0,90]s laminate against Rohwer (1988), Table 2, p. 19
+
+    The simple constant-strain and constant-stress stiffnesses are compared
+    against their closed forms and the printed values, and the improved
+    stiffness against ``rohwer_stiffness`` and the printed values.
+
+    Notes
+    -----
+    The simple stiffnesses are the constant-strain `\sum_k G_k h_k` and the
+    constant-stress `h^2/\sum_k (h_k/G_k)`: in the `yz` plane `G_{23}` for
+    the 0 plies and `G_{13}` for the 90 plies, the reverse in the `xz` plane.
+    The improved stiffness is Eq. (43) of Rohwer (1988), written out in
+    ``rohwer_stiffness``. ``A44`` is 2.52525, and the independent
+    ``rohwer_stiffness`` gives the same, which Rohwer prints as `H_{22} =
+    2.521`, hence the relative tolerance 1.7e-3 for this value; the other
+    three values round correctly. Both 2.52525/3.067 and 2.521/3.067 round to
+    the reduction 0.82 given for the `y` direction on pp. 18-19. "Coupling
+    terms are zero", p. 18.
+
+    """
+    # NOTE [0,90]s of the printed table, see the module Notes
     ref = ROHWER_1988_TABLE_2
     prop = laminated_plate(stack=CROSS_PLY, plyt=PLYT, laminaprop=CFRP)
     G12, G13, G23 = CFRP[3:]
     h = PLYT*len(CROSS_PLY)
-    # NOTE simple stiffnesses, constant strain sum_k G_k h_k and constant
-    #      stress h^2/sum_k (h_k/G_k): in the yz plane G23 for the 0 plies
-    #      and G13 for the 90 plies, the reverse in the xz plane
+    # NOTE simple constant-strain and constant-stress stiffnesses, see the
+    #      Notes
     Abar = 2*PLYT*G23 + 2*PLYT*G13
     Abarbar = h**2/(2*PLYT/G23 + 2*PLYT/G13)
     for name in ['Abar44', 'Abar55']:
@@ -194,28 +274,37 @@ def test_rohwer_cross_ply_reference_values():
     for name in ['Abarbar44', 'Abarbar55']:
         assert np.isclose(getattr(prop, name), Abarbar, rtol=1e-14)
         assert_printed(getattr(prop, name), ref['Abarbar'])
-    # NOTE improved stiffness, Eq. (43), written out in rohwer_stiffness
+    # NOTE improved stiffness, written out in rohwer_stiffness
     Ats, top = rohwer_stiffness(CROSS_PLY, [PLYT]*4, [CFRP]*4)
     assert np.allclose(top, 0., atol=1e-14)
     assert np.allclose(prop.Ats, Ats, rtol=1e-12, atol=1e-14*Ats.max())
     assert_printed(prop.A55, ref['A55'])
-    # NOTE A44 = 2.52525, and the independent rohwer_stiffness gives the same,
-    #      which Rohwer prints as H22 = 2.521; the other three values round
-    #      correctly. Both 2.52525/3.067 and 2.521/3.067 round to the
-    #      reduction 0.82 given for the y-direction on p. 18-19
+    # NOTE the printed A44 differs from the computed value by more than its
+    #      last digit, see the Notes
     assert_printed(prop.A44, ref['A44'], rtol=1.7e-3)
-    # NOTE "Coupling terms are zero", p. 18
+    # NOTE the coupling term vanishes, as stated with the printed table
     assert abs(prop.A45) < 1e-14*prop.A44
     assert np.isclose(prop.scf_k13, prop.A55/prop.Abar55, rtol=1e-14)
     assert np.isclose(prop.scf_k23, prop.A44/prop.Abar44, rtol=1e-14)
 
 
 def test_rohwer_rotated_plies_reference_values():
-    # NOTE plies at theta_k - phi, the cases of Table plate-shear-rotation of
-    #      the theory, whose values are computed with pyfe3d and therefore
-    #      not used here; the reference is Eq. (43) of Rohwer (1988) written
-    #      out in rohwer_stiffness, also with an offset and an unsymmetric
-    #      laminate, for which A45 does not vanish
+    r"""Improved stiffness of rotated plies against ``rohwer_stiffness``
+
+    Laminates with plies at `\theta_k - \phi`, also with an offset and an
+    unsymmetric laminate, for which ``A45`` does not vanish, are compared
+    against Eq. (43) of Rohwer (1988), written out independently in
+    ``rohwer_stiffness``.
+
+    Notes
+    -----
+    Tabulated values of these rotated-ply cases computed with pyfe3d exist
+    but are not used here; the reference is the independent
+    ``rohwer_stiffness``, see its docstring for the equations of Rohwer
+    (1988), Sec. 3.4, pp. 15-17.
+
+    """
+    # NOTE plies at theta_k - phi, compared with rohwer_stiffness
     cases = [(CROSS_PLY, 45, 0.), (CROSS_PLY, 30, 0.), (QUASI_ISO, 0, 0.),
              (QUASI_ISO, 60, 0.), (QUASI_ISO, 60, 0.3), (UNSYM, 0, 0.),
              (UNSYM, 20, 0.3)]
@@ -325,6 +414,20 @@ def test_vlachoutsis_cross_ply():
 
 
 def test_transverse_shear_stress():
+    r"""Transverse shear stress distribution of ``calc_transverse_shear_stress``
+
+    For an isotropic plate with an offset the distribution is compared
+    against the parabola of the homogeneous plate; for laminates, with and
+    without correction, the faces must be traction free and the integral of
+    the distribution must carry the shear forces.
+
+    Notes
+    -----
+    For the homogeneous plate, with `\bar{z}` measured from the mid-surface,
+    `\tau_{xz} = \frac{3 Q_x}{2 h}\left(1 - 4 \bar{z}^2/h^2\right)` and
+    likewise `\tau_{yz}` with `Q_y`.
+
+    """
     E = 71e9
     nu = 0.33
     h = 0.002
@@ -498,18 +601,8 @@ def test_element_material_direction_consistency(element):
                                atol=1e-11*np.abs(fint_ref).max())
 
 
-# Vlachoutsis, S. "Shear correction factors for plates and shells", Int. J.
-# Numer. Meth. Engng 33(7), 1537-1552, 1992, https://doi.org/10.1002/nme.1620330712.
-# Symmetrical sandwich of Fig. 7, p. 1544, faces of thickness t and core of
-# thickness c, h = c + 2t, p = c/h, Eq. (31), "homogeneous and isotropic
-# materials", p. 1547, with nu1 = nu2 = 0.3, Fig. 11 caption, p. 1548; index 1
-# the faces and 2 the core. K is the single factor of the section, A = K
-# sum_i G_i h_i, Eqs. (24)-(25), p. 1541, i.e. scf_k13 = A55/Abar55, and r_f =
-# U_f/(U_f + U_c) the share of the faces in the transverse shear energy, Eq.
-# (48), p. 1545. Rows (E1/E2, c/h, K, r_f): Table I (c/h = 0.8), p. 1548;
-# Table II (E1/E2 = 15), p. 1548, without its row c/h = 0.8, which repeats
-# Table I; and the example of p. 1546, Eqs. (49)-(50), "Dc/Df = Gc/Gf =
-# 10^-3 and p = c/h = 0.95", i.e. E1/E2 = 1000 with equal Poisson ratios
+# sandwich rows (E1/E2, c/h, K, r_f) of printed factors and energy shares
+# of the faces, see the module Notes
 VLACHOUTSIS_1992_SANDWICH = [
     (1, 0.8, '0.8333', '0.01712'),
     (5, 0.8, '0.5324', '0.01130'),
@@ -570,19 +663,29 @@ def test_sandwich_vlachoutsis_1992_reference_values(E1_E2, c_h, K_printed,
     r"""Isotropic sandwich of Vlachoutsis (1992), Tables I and II, p. 1548
 
     A strongly heterogeneous section, E1/E2 up to 1000, for which the factor
-    K = A55/Abar55 falls far below 5/6, down to 0.01964. For isotropic layers
-    with one Poisson ratio, the cylindrical bending of Rohwer (1988), Eq.
-    (34), with M_y = 0, gives the bending stress E_k z M_x/D of a beam, as
-    assumed by Vlachoutsis, Sec. 2, such that ``'rohwer'`` and
-    ``'vlachoutsis'`` both reproduce K of Eq. (44) and r_f of Eq. (48) to
+    K = A55/Abar55 falls far below 5/6, down to 0.01964. ``'rohwer'``,
+    ``'vlachoutsis'`` and ``rohwer_stiffness`` are compared against K of
+    Vlachoutsis (1992), Eq. (44), the share of the faces in the shear energy
+    of the equilibrium distribution against r_f of Eq. (48), both to
     round-off (rtol 1e-12, 1e-10 for r_f, a difference of energies), and K
     and r_f must round to the printed digits (half a unit of the last printed
-    digit). Measured: all 9 rows agree with Eq. (44) within 2e-15, r_f
-    within 5e-15, and round to the printed K and r_f; e.g. E1/E2 = 50, K =
-    0.093854 (printed 0.09385),
-    and p = 0.95, K = 0.0196419 (printed 0.01964) and r_f = 1.7552e-5
-    (printed 1.755e-5), where the constant 5/6 overestimates the shear
-    stiffness 42 times.
+    digit).
+
+    Notes
+    -----
+    For isotropic layers with one Poisson ratio, the cylindrical bending of
+    Rohwer (1988), Eq. (34), with M_y = 0, gives the bending stress E_k z
+    M_x/D of a beam, as assumed by Vlachoutsis, Sec. 2, such that both
+    corrections reproduce the closed forms of ``vlachoutsis_sandwich_K``.
+    The complementary energy of the distribution for Qx = 1 is 1/A55.
+    ``'constant'`` is wrong by the factor (5/6)/K, from 1 to 42.
+
+    Measured: all 9 rows agree with Eq. (44) within 2e-15, r_f within 5e-15,
+    and round to the printed K and r_f; e.g. E1/E2 = 50, K = 0.093854
+    (printed 0.09385), and p = 0.95, K = 0.0196419 (printed 0.01964) and r_f
+    = 1.7552e-5 (printed 1.755e-5), where the constant 5/6 overestimates the
+    shear stiffness 42 times.
+
     """
     nu = 0.3
     h = 0.04  # Fig. 11 caption, p. 1548; K does not depend on h or on E2
@@ -606,13 +709,13 @@ def test_sandwich_vlachoutsis_1992_reference_values(E1_E2, c_h, K_printed,
             assert_printed(getattr(prop, name), K_printed)
         assert np.isclose(prop.A44, prop.A55, rtol=1e-12)
         assert abs(prop.A45) <= 1e-14*prop.A55
-    # NOTE independent implementation of Eq. (43) of Rohwer (1988)
+    # NOTE independent implementation of the improved stiffness
     Ats, top = rohwer_stiffness([0, 0, 0], plyts, laminaprops)
     assert np.allclose(top, 0., atol=1e-12*np.abs(Ats).max())
     assert np.allclose(Ats, K*Abar*np.eye(2), rtol=1e-12,
                        atol=1e-14*K*Abar)
-    # NOTE the equilibrium stress distribution: energy share of the faces,
-    #      Eq. (48), and the complementary energy 1/A55 for Qx = 1
+    # NOTE the equilibrium stress distribution: energy share of the faces
+    #      and complementary energy, see the Notes
     prop = laminated_plate(stack=[0, 0, 0], plyts=plyts,
                            laminaprops=laminaprops)
     U = _shear_energies(prop, plyts, [G1, G2, G1])
@@ -629,16 +732,24 @@ def test_sandwich_vlachoutsis_1992_reference_values(E1_E2, c_h, K_printed,
 def test_sandwich_vlachoutsis_1992_example_close_to_allen_1969():
     r"""Example of Vlachoutsis (1992), p. 1546, and Allen (1969), Eq. (2.15b)
 
-    For ``Dc/Df = Gc/Gf = 1e-3`` and ``p = c/h = 0.95`` Vlachoutsis prints K
-    = 0.01964, Eq. (50), and K = 0.01865, Eqs. (52)-(53), for a constant core
-    shear stress Q/c ignoring the faces, "5 per cent below". The shear
-    stiffness of Allen (1969), Eq. (2.15b), p. 17, ``A G = G_c d^2/c`` per
-    unit width, with ``d = (h + c)/2``, Eq. (2.3), p. 9, the distance between
-    the centroids of the faces, includes the lever arm d of the faces and
-    rounds to the same printed K = 0.01964; pyfe3d gives A55/(G_c d^2/c) - 1
-    = 9.6e-5. The deviation from Allen is bounded with the terms that Allen
-    neglects in :func:`test_sandwich_antiplane_core_converges_to_allen_1969`;
-    here the core is not antiplane, so only the printed digits are compared.
+    For ``Dc/Df = Gc/Gf = 1e-3`` and ``p = c/h = 0.95`` the factor
+    ``scf_k13`` and the factors of the shear stiffness of Allen (1969) and of
+    a constant core shear stress are compared against the values printed by
+    Vlachoutsis (1992), and ``A55`` against the shear stiffness of Allen.
+
+    Notes
+    -----
+    Vlachoutsis prints K = 0.01964, Eq. (50), and K = 0.01865, Eqs.
+    (52)-(53), for a constant core shear stress Q/c ignoring the faces, "5
+    per cent below". The shear stiffness of Allen (1969), Eq. (2.15b), p. 17,
+    ``A G = G_c d^2/c`` per unit width, with ``d = (h + c)/2``, Eq. (2.3), p.
+    9, the distance between the centroids of the faces, includes the lever
+    arm d of the faces and rounds to the same printed K = 0.01964; pyfe3d
+    gives A55/(G_c d^2/c) - 1 = 9.6e-5. The deviation from Allen is bounded
+    with the terms that Allen neglects in
+    :func:`test_sandwich_antiplane_core_converges_to_allen_1969`; here the
+    core is not antiplane, so only the printed digits are compared.
+
     """
     nu = 0.3
     h = 1.
@@ -661,12 +772,18 @@ def test_sandwich_vlachoutsis_1992_example_close_to_allen_1969():
 def test_sandwich_antiplane_core_converges_to_allen_1969():
     r"""Antiplane core: closed form and convergence to Allen (1969)
 
-    Allen, H. G., "Analysis and Design of Structural Sandwich Panels",
-    Pergamon Press, 1969, Chap. 2, pp. 8-47,
-    https://doi.org/10.1016/B978-0-08-012870-2.50006-7. An antiplane core is
-    "an idealized core in which the modulus of elasticity in planes parallel
+    For a family of sandwiches with an antiplane core and ever thinner and
+    stiffer faces, ``A44`` and ``A55`` of ``'rohwer'``, ``'vlachoutsis'`` and
+    ``rohwer_stiffness`` are compared against the closed form of Vlachoutsis
+    (1992), Eq. (45), to round-off, and their deviation from the shear
+    stiffness of Allen (1969), Chap. 2, Eq. (2.15b), against bounds derived
+    from the terms Allen neglects, which tend to zero.
+
+    Notes
+    -----
+    An antiplane core is "an idealized core in which the modulus of elasticity in planes parallel
     with the faces is zero but the shear modulus in planes perpendicular to
-    the faces is finite", ``E_c = 0``, p. 14, given here as ``laminaprop =
+    the faces is finite", ``E_c = 0``, Allen [1]_, p. 14, given here as ``laminaprop =
     (0, 0, nu, 0, G_c, G_c)``, see :func:`.read_laminaprop`. Then
     the shear stress is constant in the core, Eq. (2.12), p. 13, ``tau_c = Q
     E_f t d/(2 D)``, with ``D = E_f (t^3/6 + t d^2/2)``, Eq. (2.2), p. 9,
@@ -693,12 +810,12 @@ def test_sandwich_antiplane_core_converges_to_allen_1969():
     ``E_f = 70 GPa``, ``nu = 0.3``, ``c = 10 mm``:
 
     ===  =======  =========  =============  ===========  ======
-     k    eps      phi^2-1    A/A_Allen - 1  pyfe3d vs    K
-                                             Eq. (45)
+    k    eps      phi^2-1    A/A_Allen - 1  pyfe3d vs    K
+                                            Eq. (45)
     ===  =======  =========  =============  ===========  ======
-     1    3.4e-4   1.51e-3    1.17e-3        7e-16        0.1003
-     2    3.3e-6   1.65e-5    1.32e-5        1e-14        0.0918
-     3    3.3e-8   1.67e-7    1.33e-7        7e-14        0.0910
+    1    3.4e-4   1.51e-3    1.17e-3        7e-16        0.1003
+    2    3.3e-6   1.65e-5    1.32e-5        1e-14        0.0918
+    3    3.3e-8   1.67e-7    1.33e-7        7e-14        0.0910
     ===  =======  =========  =============  ===========  ======
 
     The deviation from Allen decreases by a factor 100 per step, as both
@@ -710,6 +827,13 @@ def test_sandwich_antiplane_core_converges_to_allen_1969():
     reduces to Eq. (45), ``K = K_ant``, checked exactly, and the only
     allowance added to the derived bounds is 1e-12 for round-off, also the
     tolerance against Eq. (45).
+
+    References
+    ----------
+    .. [1] Allen, H. G., Analysis and Design of Structural Sandwich Panels,
+       Pergamon Press, Oxford, 1969, Chap. 2, pp. 8-47.
+       https://doi.org/10.1016/B978-0-08-012870-2.50006-7
+
     """
     Ef = 70e3
     nu = 0.3
@@ -731,8 +855,8 @@ def test_sandwich_antiplane_core_converges_to_allen_1969():
         A_allen = Gc*d**2/c
         Abar = 2*t*Gf + c*Gc
         K, K_ant, _ = vlachoutsis_sandwich_K(p, 0., Gc/Gf)
-        # NOTE the closed form above is Eq. (45) of Vlachoutsis (1992), and
-        #      Eq. (44) reduces to it for Dc/Df = 0
+        # NOTE the closed form above is the antiplane-core factor K_ant, to
+        #      which K reduces for Dc/Df = 0, see the Notes
         assert np.isclose(A_allen*phi**2/(1 + eps), K_ant*Abar, rtol=1e-13)
         assert K == K_ant
         slack = 1e-12

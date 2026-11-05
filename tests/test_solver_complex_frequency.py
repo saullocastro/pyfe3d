@@ -1,6 +1,18 @@
 r"""Tests for :func:`pyfe3d.solver.complex_frequency`: damped free vibrations,
 `(\lambda^2 \boldsymbol{M} + \lambda \boldsymbol{C} + \boldsymbol{K}) \boldsymbol{u} = \boldsymbol{0}`
 
+Decoupled single degrees-of-freedom and a chain of masses with proportional
+(Rayleigh) damping are checked against their analytical roots; the
+non-proportional, gyroscopic and complex-shift cases against
+:func:`scipy.linalg.eig` on the second companion linearization of Tisseur and
+Meerbergen (2001), Section 3.4, Eq. (3.7), independent of the first companion
+form used by the solver; the undamped plate of ``test_solver.py`` against
+:func:`pyfe3d.solver.natural_frequency`. Rigid-body modes, singular mass
+matrices, singular shifts, the dense fallback and the options are also
+covered.
+
+Notes
+-----
 A single degree-of-freedom `m \lambda^2 + c \lambda + k = 0` has the roots
 `\lambda = -\zeta \omega_n \pm i \omega_n \sqrt{1 - \zeta^2}`, with `\omega_n
 = \sqrt{k/m}` and `\zeta = c/(2 \sqrt{k m})`, for `\zeta < 1`, and the real
@@ -18,9 +30,12 @@ Section 3.4, Eq. (3.7) with `\boldsymbol{N} = \boldsymbol{I}`, p. 253),
 
 independent of the first companion form used by the solver.
 
+References
+----------
 .. [1] Tisseur, F. and Meerbergen, K., The quadratic eigenvalue problem,
    SIAM Review, 43(2), 235-286, 2001.
    https://doi.org/10.1137/S0036144500381988
+
 """
 import sys
 sys.path.append('..')
@@ -88,7 +103,13 @@ def test_sdof_damped_oscillator():
     r"""Decoupled single degrees-of-freedom, light to heavy and overdamped:
     the analytical roots, one per complex conjugate pair, the real roots
     of the overdamped one first; a single degree-of-freedom with the dense
-    fallback, ARPACK requiring at least 2 degrees-of-freedom"""
+    fallback, ARPACK requiring at least 2 degrees-of-freedom
+
+    Notes
+    -----
+    The reference roots, computed by ``sdof_roots``, are those of the single
+    degree-of-freedom given in the module Notes.
+    """
     k = np.array([1., 4., 9., 16., 25., 36., 49., 64.])*100
     m = 2.*np.ones_like(k)
     zeta = np.array([0.01, 0.05, 0.1, 0.3, 0.5, 0.9, 2., 0.02])
@@ -134,7 +155,15 @@ def test_sdof_damped_oscillator():
 
 def test_rayleigh_damping_chain():
     r"""Rayleigh damping of a chain of masses: the analytical modal
-    eigenvalues and modes"""
+    eigenvalues and modes
+
+    Notes
+    -----
+    The undamped chain fixed at both ends has `\omega_j = 2 \sqrt{k/m}
+    \sin(j \pi/(2 (n + 1)))` and the modes `\sin(i j \pi/(n + 1))`, see
+    ``chain``; each mode is a single degree-of-freedom with the `\zeta_j` of
+    the Rayleigh damping given in the module Notes.
+    """
     n, k, m = 40, 100., 2.
     K, M = chain(n, k, m)
     alpha, beta = 0.2, 2e-3
@@ -313,6 +342,8 @@ def test_qep_modes_pairs():
 
 
 def test_normalize_vectors_null_column():
+    """A null eigenvector is left null by the normalization, the others get a
+    unit norm and a real positive pivot"""
     U = eigen._normalize_vectors(np.array([[0., 3j], [0., -4.]]))
     np.testing.assert_allclose(U, [[0., -0.6j], [0., 0.8]])
 
@@ -329,6 +360,8 @@ def test_options():
 
 
 def test_silent(capsys):
+    """Nothing is printed by default, and the log messages of the sparse and
+    dense solvers with ``silent=False``"""
     lam, _ = complex_frequency(chain(10)[0], csr_matrix((10, 10)),
                                chain(10)[1], num_eigvalues=2)
     assert capsys.readouterr().out == ''
@@ -345,6 +378,8 @@ def test_silent(capsys):
 
 
 def test_errors():
+    """A null row and column of ``K`` raises an error naming it, and complex
+    matrices raise a ValueError"""
     K, C, M = nonproportional(n=10)
     K0 = K.tolil()
     K0[3, :] = 0.
@@ -395,6 +430,8 @@ def test_dense_fallback(monkeypatch):
 
 
 def test_check_qep():
+    """The verification of the eigenpairs: no eigenpair, an exact one, and
+    one with a large relative residual"""
     K = diags([1., 4.]).tocsr()
     C = csr_matrix((2, 2))
     M = diags([1., 1.]).tocsr()

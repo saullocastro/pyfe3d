@@ -1,3 +1,13 @@
+r"""Natural frequencies of a cantilever modelled with BeamC, clamped through a
+stiff spring
+
+The first three bending frequencies, in both planes of the square cross
+section, for the consistent and the lumped mass matrices, are compared with
+the exact frequencies of the clamped Timoshenko beam (Petyt, 2010, Example
+3.10); the exact Euler-Bernoulli coefficients (Petyt, 2010, Table 10.2) and
+the Timoshenko coefficients of Petyt's Table 3.6 check the reference
+functions.
+"""
 import sys
 sys.path.append('..')
 
@@ -14,9 +24,13 @@ from pyfe3d import BeamC, BeamCData, BeamCProbe, DOF, INT, DOUBLE
 
 def euler_bernoulli_cantilever(num):
     r"""Frequency coefficients ``omega*sqrt(rho*A*L**4/(E*I)) = (beta*L)**2``
-    of an Euler-Bernoulli cantilever, ``beta*L`` being the roots of
-    ``cos(beta*L)*cosh(beta*L) + 1 = 0``, one in each interval
-    ``((k - 1)*pi, k*pi)``"""
+    of an Euler-Bernoulli cantilever
+
+    Notes
+    -----
+    ``beta*L`` are the roots of ``cos(beta*L)*cosh(beta*L) + 1 = 0``, one in
+    each interval ``((k - 1)*pi, k*pi)``.
+    """
     f = lambda x: np.cos(x)*np.cosh(x) + 1
     return np.array([brentq(f, (k - 1)*np.pi, k*np.pi, xtol=1e-14)**2
                      for k in range(1, num + 1)])
@@ -26,6 +40,11 @@ def timoshenko_cantilever(S, r2, num):
     r"""Frequency coefficients ``omega*sqrt(rho*A*L**4/(E*I))`` of a
     Timoshenko cantilever, ``S = kappa*G*A*L**2/(E*I)``, ``r2 = I/(A*L**2)``
 
+    Returns the first ``num`` coefficients, from the roots of the
+    characteristic determinant of the clamped-free beam.
+
+    Notes
+    -----
     Exact solution of Eqs. (3.241) of Petyt (2010) with the boundary
     conditions (3.242), written for ``y = [v/L, theta, M*L/(E*I),
     Q*L**2/(E*I)]``, ``Q = kappa*A*G*(v' - theta)``, as ``y' = C*y`` along
@@ -54,27 +73,29 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
     The beam is clamped through a :class:`.Spring` of stiffness ``1e9`` in
     all six degrees-of-freedom, 8.5e4 times the tip stiffness
     ``3*E*I/L**3`` and 2.8e4 times the rotational stiffness ``E*I/L`` of the
-    beam. The flexibility of the spring lowers the converged frequencies by
+    beam. The expected frequencies are the exact ones of the clamped
+    Timoshenko beam (Petyt, 2010, Example 3.10), for the consistent
+    (``mtype=0``) and the lumped (``mtype=1``) mass matrices, with
+    ``50*refinement`` beam nodes.
+
+    Notes
+    -----
+    The flexibility of the spring lowers the converged frequencies by
     0.0085, 0.025 and 0.055 % with respect to those of the clamped beam
     (measured with 49 and 99 beam elements and the consistent mass matrix).
 
     The expected frequencies are the exact ones of a Timoshenko beam, with
     shear deformation and rotary inertia, as BeamC: the frequency
     coefficients ``omega*sqrt(rho*A*L**4/(E*I))`` of
-    :func:`timoshenko_cantilever`, from Eqs. (3.241) and (3.242) of Petyt,
-    M., Introduction to Finite Element Vibration Analysis, 2nd ed.,
-    Cambridge University Press, 2010, Sec. 3.9, Example 3.10, p. 99. The
-    function reproduces the exact coefficients of Petyt's Table 3.6, p. 100,
+    :func:`timoshenko_cantilever`, from Eqs. (3.241) and (3.242) of Petyt
+    (2010), Sec. 3.9, Example 3.10, p. 99. The function reproduces the exact coefficients of Petyt's Table 3.6, p. 100,
     to 0.008 %.
 
     The Euler-Bernoulli frequencies, Eq. (3.31) of Petyt (2010), p. 52,
     ``omega_r = (beta_r*L)**2*sqrt(E*I/(rho*A*L**4))``, are those of the
     roots ``beta_r*L = 1.87510, 4.69409, 7.85476`` of ``cos(beta*L)*cosh(
-    beta*L) = -1``, Table 5.1, No. 3, p. 201, of Abramovich, H.,
-    Vibration of composite columns and plates, in: Abramovich, H. (ed.),
-    Stability and Vibrations of Thin-Walled Composite Structures, Elsevier,
-    2017, pp. 191-222, https://doi.org/10.1016/B978-0-08-100410-4.00005-3,
-    where the third root is misprinted as 7.85340; the coefficients
+    beta*L) = -1``, Table 5.1, No. 3, p. 201, of Abramovich (2017), where
+    the third root is misprinted as 7.85340; the coefficients
     ``(beta_r*L)**2 = 3.516, 22.034, 61.697`` are the exact solution of
     Petyt's Table 10.2, p. 303. For this beam, ``L/r = 208``, shear
     deformation and rotary inertia lower the three frequencies by 0.022,
@@ -85,6 +106,16 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
     beam, with 24 elements 0.0085 to 0.052 %; those of the lumped mass
     matrix are 0.028, 0.091 and 0.163 % below with 49 elements, 0.088 to
     0.51 % below with 24 elements.
+
+    References
+    ----------
+    Petyt, M., Introduction to Finite Element Vibration Analysis, 2nd ed.,
+    Cambridge University Press, 2010, https://doi.org/10.1017/CBO9780511761195.
+
+    Abramovich, H., Vibration of composite columns and plates, in:
+    Abramovich, H. (ed.), Stability and Vibrations of Thin-Walled Composite
+    Structures, Elsevier, 2017, pp. 191-222,
+    https://doi.org/10.1016/B978-0-08-100410-4.00005-3.
     """
     L = 3
     E = 203.e9 # Pa
@@ -97,11 +128,11 @@ def test_nat_freq_cantilever(refinement=1, mtypes=range(2)):
     scf = 5/6.
     G = scf*E/2/(1+0.3)
 
-    # NOTE exact coefficients of Table 10.2 of Petyt (2010)
+    # NOTE the reference functions reproduce the exact coefficients
     coeff_eb = euler_bernoulli_cantilever(3)
     assert np.allclose(coeff_eb, [3.516, 22.034, 61.697], atol=5e-4)
-    # NOTE exact coefficients of Table 3.6 of Petyt (2010), kappa = 2/3,
-    #      E/G = 8/3, r_z/L = 0.08 and 0.02
+    # NOTE Timoshenko coefficients with kappa = 2/3, E/G = 8/3,
+    #      r_z/L = 0.08 and 0.02
     for rL, coeffs in [(0.08, [3.284, 15.488, 34.301]),
                        (0.02, [3.500, 21.353, 57.474])]:
         assert np.allclose(timoshenko_cantilever(2/3/(8/3)/rL**2, rL**2, 3),
