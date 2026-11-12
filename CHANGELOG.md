@@ -1,5 +1,22 @@
 # Changelog
 
+## Unreleased
+
+### Tests
+
+- `tests/test_dome_prescribed_displacement.py`: the comparisons of the
+  spherical cap and of the hinged shell with the literature that take more
+  than 30 s, the whole von Kármán and co-rotational paths of the NAFEMS cap,
+  the mesh convergence of the axisymmetric cap and the lower limit load of
+  Leicester (1968) with 32x32 cells, are shown in the notebooks
+  `tut-prescribed-displacement-dome-riks` and `tut-nafems-cap-axisymmetric`
+  only. Fast tests on coarse meshes keep their code paths tested:
+  `test_cap_von_karman_whole_path`, the von Kármán path up to `w/th = 30`;
+  `test_cap_corotational_snap_back`, the co-rotational path through the
+  limit load and the snap-back of the prescribed deflection; and
+  `test_cap_axisymmetric_mesh_trend`, the second-order trend of the limit
+  load with the mesh and the Kirchhoff limit.
+
 ## 0.12.0 (2026-11-01)
 
 ### New features
