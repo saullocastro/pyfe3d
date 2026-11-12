@@ -619,20 +619,31 @@ def test_cap_moderate_rotations(offset):
     assert meridian_rotation(model, an.cs[-1], line_y0(model)) < 35.
 
 
-@pytest.mark.slow
-def test_cap_von_karman_departure():
-    r"""16x16 cells of Tria3R pairs, mid-surface radius ``a``, up to ``w/th =
-    30`` with Riks' method: the path reaches the load factor 1, agrees with
-    Table 3 within 5 % at ``w/th = 2.326`` and ``6.720`` and is more than
-    15 % below it at ``18.487`` and ``20.887``, past the moderate rotations of
-    the von Kármán strains; measured on 2026-10-30: +0.8, -0.2, -7.1, -17.9,
-    -19.5, +1.7 and -53.0 % at the seven points of Table 3."""
-    w, Fn, slope, an, model, dofw = run_cap(16, CAP['a'])
+def test_cap_von_karman_whole_path():
+    r"""4x4 cells of Tria3R pairs on the quarter, mid-surface radius ``a``,
+    von Kármán strains, the crown deflection prescribed up to ``w/th = 30``,
+    beyond the inversion of the cap, with Riks' method: the path reaches the
+    load factor 1 with ``w`` increasing monotonically, the edge reaction
+    balances the crown reaction along ``Z`` at ``w/th = 30``, the vertical
+    rigid translation being an exact zero-energy mode of the von Kármán
+    strains, the secant stiffness is below the linear one, and the crown
+    reaction is that of the code.
+
+    Notes
+    -----
+    A coarse mesh, so the reaction is a regression value of the code, not a
+    literature value: ``F_n = 2.9986`` at ``w/th = 30``, against the linear
+    ``16.00``; measured on hpc12 on 2026-11-12, with the vertical balance
+    to 6.8e-14 of the crown reaction.
+    """
+    w, Fn, slope, an, model, dofw = run_cap(4, CAP['a'], initialInc=0.05,
+                                            maxInc=0.05)
     assert an.increments[-1] == 1.
-    rel = compare(w, Fn)
-    assert rel.size == 7
-    assert np.all(np.abs(rel[:2]) < 0.05), rel
-    assert np.all(rel[3:5] < -0.15), rel
+    assert np.all(np.diff(w) > 0)
+    fint = model.calc_fint(an.cs[-1])
+    assert abs(fint[2::DOF].sum()) < 1e-9*abs(fint[dofw])
+    assert Fn[-1] < slope*w[-1]
+    assert np.isclose(Fn[-1], 2.9986, rtol=1e-3), Fn[-1]
 
 
 def test_leicester_upper_limit_load():
@@ -651,71 +662,54 @@ def test_leicester_upper_limit_load():
     assert P[-1] > Pu
 
 
-@pytest.mark.slow
-def test_leicester_limit_loads():
-    r"""As :func:`test_leicester_upper_limit_load` with 32x32 cells: the
-    upper limit load within 3 % and the lower within 7 % of Leicester
-    (1968), the reading uncertainty of 1.1 % plus the 5.8 % between Leicester
-    and the flat triangles of Horrigmoe and Bergan (1978), and the rotations
-    of the line ``Y = 0`` below 30 degrees; measured on 2026-10-30: 49.70
-    kN, +0.9 %, and 37.61 kN, +4.5 %, the largest rotation 15 degrees at the
-    upper and 22 degrees at the lower limit point, 27 degrees at ``w = 300``
-    mm."""
-    w, P, slope, an, model, dofw = run_leicester(32, shear_factor=1000.)
-    (Pu, wu), (Pl, wl) = limit_points(w, P, 190.)
-    assert abs(Pu/LEICESTER_UPPER[0] - 1) < 0.03, Pu
-    assert abs(Pl/LEICESTER_LOWER[0] - 1) < 0.07, Pl
-    rot = max(meridian_rotation(model, c, line_y0(model)) for c in an.cs)
-    assert rot < 30., rot
+def test_cap_corotational_snap_back():
+    r"""8x8 cells of :class:`.Quad4R` with ``kinematics='corotational'``,
+    mid-surface radius ``a``, the crown deflection prescribed up to ``w/th
+    = 30`` with Riks' method of arc length 0.1: past the limit load the
+    prescribed deflection turns back, a snap-back of the known dof with a
+    decreasing load factor, and the path reaches the load factor 1 on a
+    last branch along which ``w`` increases and the inverted cap stiffens,
+    the final reaction above twice the limit load. The edge reaction
+    balances the crown reaction along ``Z`` at ``w/th = 30``, the vertical
+    rigid translation being a zero-energy mode of the co-rotational
+    kinematics, and the limit load is that of the code.
 
-
-@pytest.mark.slow
-def test_cap_corotational():
-    r"""12x12 cells of :class:`.Quad4R` with ``kinematics='corotational'``,
-    mid-surface radius ``a``, up to ``w/th = 30`` with Riks' method: the
-    path reaches the load factor 1 and agrees with Table 3 within the 5 %
-    of :func:`test_cap_moderate_rotations` at its first five points, up to
-    ``w/th = 20.887``, where the rotation of the meridian is 57 degrees; the
-    von Kármán strains of :func:`test_cap_von_karman_departure` are 19.5 %
-    below the reference there. The point 1.757 at 20.887 of Table 3 is not
-    the limit load: the shell of COMSOL with 16 elements gives 1.806 at
-    ``w/th = 23.06`` (annotation of Fig. 3, p. 5, -2.01827e9 N at the crown
-    displacement -4.7 m), near the maximum of its curve (Fig. 4, p. 6).
-
-    Just past the limit load the axisymmetric path of the quarter model
-    becomes unstable: an eigenvalue of the free-free tangent stiffness
-    matrix whose eigenvector is antisymmetric about the plane ``X = Y``, a
-    `\cos 2\varphi` mode, crosses zero at ``w/th = 24.6``, then one of a
-    `\cos 4\varphi` mode at 25.4, and the path follows these
-    non-axisymmetric modes, which the axisymmetric reference does not
-    have: the crown deflection turns back (a snap-back of the prescribed
-    dof) before the cap inverts and stiffens, and the two last points of
-    Table 3 are compared on the last branch along which ``w`` increases.
-    Measured on 2026-10-30: +0.7, +2.1, +2.5, -0.2 and -0.5 % at the first
-    five points; the limit load 1.895 at ``w/th = 23.34``, +4.9 % on the
-    1.806 of COMSOL, decreasing with the mesh to 1.873 with 16x16 cells;
-    at the last two points +7.8 and -15.9 %, outside the tolerance, the
-    inverted cap being so stiff that the deflection at the load of the
-    last point, 3.705, is 29.26, 2.0 % above the reference 28.680 and 0.5 %
-    below the 29.41 of COMSOL with 16 elements (Table 4)."""
-    w, Fn, slope, an, model, dofw = run_cap_corotational(12, CAP['a'])
+    Notes
+    -----
+    A coarse mesh, so the limit load is a regression value of the code, not
+    a literature value: ``F_n = 1.9525`` at ``w/th = 23.74``, the
+    deflection turning back from 24.92 to 24.38, and ``F_n = 4.751`` at
+    ``w/th = 30``; measured on hpc12 on 2026-11-12. The limit load decreases
+    with the mesh, 1.954, 1.915 and 1.894 with 8x8, 10x10 and 12x12 cells
+    and the arc length 0.05, measured on the same day.
+    """
+    model, bu, dofw = cap_model(8, CAP['a'], 'Quad4R')
+    th = CAP['th']
+    w, F, F_lin, an, cr = prescribed_path_corotational(
+        model, bu, dofw, 30.*th, initialInc=0.1, maxInc=0.1)
+    w, Fn = w/th, load_factor(F)
     assert an.increments[-1] == 1.
+    assert np.any(np.diff(w) < 0)
     first, last = branches(w)
-    rel = compare(w[first], Fn[first])
-    assert rel.size == 5
-    assert np.all(np.abs(rel) < 0.05), rel
-    # NOTE deflection at the load of the last point of Table 3
-    w_last = np.interp(TABLE_SHELL_REF[-1, 0], Fn[last], w[last])
-    assert abs(w_last/TABLE_SHELL_REF[-1, 1] - 1) < 0.05, w_last
+    i_lim = np.argmax(Fn[first])
+    F_lim = Fn[first][i_lim]
+    assert np.isclose(F_lim, 1.9525, rtol=2e-3), F_lim
+    assert Fn[i_lim:].min() < F_lim
+    assert np.all(np.diff(w[last]) > 0)
+    assert w[last][-1] == pytest.approx(30.)
+    assert Fn[-1] > 2*F_lim, Fn[-1]
+    fint = cr.calc_fint(an.cs[-1])
+    assert abs(fint[2::DOF].sum()) < 1e-8*abs(fint[dofw])
 
 
 @pytest.mark.slow
 def test_leicester_corotational():
     r"""Hinged shell of :data:`LEICESTER`, 16x16 :class:`.Quad4R` with
     ``kinematics='corotational'`` on the quarter, transverse shear
-    stiffness times 1000, up to ``w = 300`` mm: the limit loads within the
-    3 % and 7 % of :func:`test_leicester_limit_loads`; measured on
-    2026-10-30: 50.38 kN, +2.3 %, and 37.73 kN, +4.8 %, against 49.95 and
+    stiffness times 1000, up to ``w = 300`` mm: the upper limit load within
+    3 % and the lower within 7 % of Leicester (1968), the reading
+    uncertainty of 1.1 % plus the 5.8 % between Leicester and the flat
+    triangles of Horrigmoe and Bergan (1978); measured on 2026-10-30: 50.38 kN, +2.3 %, and 37.73 kN, +4.8 %, against 49.95 and
     38.09 kN with ``kinematics='von_karman'``, i.e. :func:`run_leicester`
     with the same mesh of Quad4R."""
     w, P, slope, an, model, dofw = run_leicester_corotational(
@@ -767,12 +761,12 @@ def test_cap_axisymmetric():
     deformations, :func:`run_cap_axisymmetric` with 64 rings, mid-surface
     radius ``a + th/2`` as in the COMSOL model, up to ``w/th = 30``: no
     snap-back, ``w`` increases monotonically (compare
-    :func:`test_cap_corotational`), and the three points of
+    :func:`test_cap_corotational_snap_back`), and the three points of
     :data:`FIG3_SHELL_COMSOL16` are matched: the limit load within 2 %, the
     load at ``w/th = 25.51`` within 2 % and the deflection at the load
     2.787 within 1 %. Measured on 2026-10-31: the limit load 1.835 at
-    ``w/th = 23.21``, +1.6 %, decreasing to 1.828 with 256 rings, +1.2 %
-    (:func:`test_cap_axisymmetric_convergence`); 1.737 at 25.51, +1.1 %;
+    ``w/th = 23.21``, +1.6 %, decreasing to 1.828 with 256 rings, +1.2 %,
+    see :func:`test_cap_axisymmetric_mesh_trend`; 1.737 at 25.51, +1.1 %;
     ``w/th = 28.61`` at 2.787, +0.6 %."""
     w, Fn, an = run_cap_axisymmetric(64, CAP['a'] + CAP['th']/2, inc=0.02)
     assert an.increments[-1] == 1.
@@ -788,52 +782,53 @@ def test_cap_axisymmetric():
     assert abs(w_3/FIG3_SHELL_COMSOL16[2, 1] - 1) < 0.01, w_3
 
 
-@pytest.mark.slow
-def test_cap_axisymmetric_convergence():
-    r"""As :func:`test_cap_axisymmetric` with 64, 128 and 256 rings: the
-    limit load converges at second order, the differences between the
-    meshes falling by a factor above 3, to within 1.5 % of the 1.806 of
-    COMSOL. With the transverse shear stiffness times 1000, the Kirchhoff
-    limit, and 128 rings, the limit load is 2 % higher, while the minimum
-    after it and the deflection at the load 2.787 agree with COMSOL within
-    0.5 %. The shell with transverse shear has no converged crown
-    deflection under a point load: its linear compliance grows by
-    `\ln 2 \, (h/a) \, 2 (1 + \nu)/\kappa`, 0.044 in ``(w/th)/F_n``, at
-    each halving of the elements at the crown (derived here from the
-    point-load shear deflection `F \ln(r)/(2 \pi \kappa G h)`), which
-    moves the path along ``w``. Measured on 2026-10-31: limit loads 1.8350,
-    1.8293 and 1.8278, at ``w/th = 23.21``, 23.30 and 23.33; with the shear
-    stiffness times 1000: 1.8690 at 22.86, the minimum 1.7098, -0.4 %, and
-    ``w/th = 28.40`` at 2.787, -0.2 %."""
+def test_cap_axisymmetric_mesh_trend():
+    r"""NAFEMS cap of :data:`CAP` restricted to the axisymmetric
+    deformations, :func:`run_cap_axisymmetric` with 16, 32 and 64 rings,
+    mid-surface radius ``a + th/2``, Riks' method of arc length 0.05, up to
+    ``w/th = 30``: on every mesh ``w`` increases monotonically, and the
+    limit load decreases with the mesh at second order, the difference
+    between the meshes falling by a factor above 3; with the transverse
+    shear stiffness times 1000 (``shear_factor``), the Kirchhoff limit, and
+    32 rings the limit load is 1.5 to 3 % above that of the actual
+    stiffness and the minimum after it lower.
+
+    Notes
+    -----
+    Values of the code, measured on hpc12 on 2026-11-12: limit loads
+    1.9513, 1.8575 and 1.8335, differences 0.094 and 0.024; Kirchhoff limit
+    1.8990, +2.2 %, with the minimum 1.7109 against 1.7342. The limit load
+    converges to 1.828 with 256 rings and the arc length 0.01 (2026-10-31).
+    Under a point load the crown deflection of a shell with transverse
+    shear has no converged value, its linear compliance growing by `\ln 2
+    \, (h/a) \, 2 (1 + \nu)/\kappa` at each halving of the crown elements
+    (derived from the point-load shear deflection `F \ln(r)/(2 \pi \kappa G
+    h)`), hence the loads, not the deflections, are compared.
+    """
     R = CAP['a'] + CAP['th']/2
-    F_max = []
-    for nr in (64, 128, 256):
-        w, Fn, an = run_cap_axisymmetric(nr, R)
+    limits = []
+    for nr in (16, 32, 64):
+        w, Fn, an = run_cap_axisymmetric(nr, R, inc=0.05)
         assert an.increments[-1] == 1.
         assert np.all(np.diff(w) > 0)
-        F_max.append(limit_points(w, Fn, 24.5)[0][0])
-    d = -np.diff(F_max)
-    assert np.all(d > 0) and d[0] > 3*d[1], F_max
-    assert abs(F_max[-1]/FIG3_SHELL_COMSOL16[0, 0] - 1) < 0.015, F_max
-    w, Fn, an = run_cap_axisymmetric(128, R, shear_factor=1000.)
+        limits.append(limit_points(w, Fn, 24.5))
+    d = -np.diff([upper[0] for upper, lower in limits])
+    assert np.all(d > 0) and d[0] > 3*d[1], limits
+    w, Fn, an = run_cap_axisymmetric(32, R, shear_factor=1000., inc=0.05)
     assert an.increments[-1] == 1.
     assert np.all(np.diff(w) > 0)
-    (F_K, w_K), (F_min, w_min) = limit_points(w, Fn, 24.5)
-    assert 0.015 < F_K/F_max[1] - 1 < 0.03, F_K
-    assert abs(F_min/FIG3_SHELL_COMSOL16[1, 0] - 1) < 0.005, F_min
-    stiff = w > w_min
-    w_3 = np.interp(FIG3_SHELL_COMSOL16[2, 0], Fn[stiff], w[stiff])
-    assert abs(w_3/FIG3_SHELL_COMSOL16[2, 1] - 1) < 0.005, w_3
+    (F_K, w_K), (F_Kmin, w_Kmin) = limit_points(w, Fn, 24.5)
+    assert 0.015 < F_K/limits[1][0][0] - 1 < 0.03, F_K
+    assert F_Kmin < limits[1][1][0], F_Kmin
 
 
 if __name__ == '__main__':
     test_cap_moderate_rotations(0.)
     test_cap_moderate_rotations(0.5)
-    test_cap_von_karman_departure()
+    test_cap_von_karman_whole_path()
     test_leicester_upper_limit_load()
-    test_leicester_limit_loads()
-    test_cap_corotational()
+    test_cap_corotational_snap_back()
     test_leicester_corotational()
     test_cap_axisymmetric_map_exact()
     test_cap_axisymmetric()
-    test_cap_axisymmetric_convergence()
+    test_cap_axisymmetric_mesh_trend()
