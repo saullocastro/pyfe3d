@@ -619,6 +619,7 @@ def test_cap_moderate_rotations(offset):
     assert meridian_rotation(model, an.cs[-1], line_y0(model)) < 35.
 
 
+@pytest.mark.slow
 def test_cap_von_karman_whole_path():
     r"""4x4 cells of Tria3R pairs on the quarter, mid-surface radius ``a``,
     von Kármán strains, the crown deflection prescribed up to ``w/th = 30``,
@@ -662,6 +663,7 @@ def test_leicester_upper_limit_load():
     assert P[-1] > Pu
 
 
+@pytest.mark.slow
 def test_cap_corotational_snap_back():
     r"""8x8 cells of :class:`.Quad4R` with ``kinematics='corotational'``,
     mid-surface radius ``a``, the crown deflection prescribed up to ``w/th
@@ -782,6 +784,7 @@ def test_cap_axisymmetric():
     assert abs(w_3/FIG3_SHELL_COMSOL16[2, 1] - 1) < 0.01, w_3
 
 
+@pytest.mark.slow
 def test_cap_axisymmetric_mesh_trend():
     r"""NAFEMS cap of :data:`CAP` restricted to the axisymmetric
     deformations, :func:`run_cap_axisymmetric` with 16, 32 and 64 rings,
