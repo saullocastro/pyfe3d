@@ -711,9 +711,10 @@ def test_leicester_corotational():
     stiffness times 1000, up to ``w = 300`` mm: the upper limit load within
     3 % and the lower within 7 % of Leicester (1968), the reading
     uncertainty of 1.1 % plus the 5.8 % between Leicester and the flat
-    triangles of Horrigmoe and Bergan (1978); measured on 2026-10-30: 50.38 kN, +2.3 %, and 37.73 kN, +4.8 %, against 49.95 and
-    38.09 kN with ``kinematics='von_karman'``, i.e. :func:`run_leicester`
-    with the same mesh of Quad4R."""
+    triangles of Horrigmoe and Bergan (1978); measured on 2026-10-30:
+    50.38 kN, +2.3 %, and 37.73 kN, +4.8 %, against 49.95 and 38.09 kN
+    with ``kinematics='von_karman'``, i.e. :func:`run_leicester` with the
+    same mesh of Quad4R."""
     w, P, slope, an, model, dofw = run_leicester_corotational(
         16, shear_factor=1000.)
     assert an.increments[-1] == 1.
